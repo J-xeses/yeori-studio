@@ -1,0 +1,89 @@
+.bar {
+  height: 44px;
+  background: var(--bg-bar);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.bar::-webkit-scrollbar { height: 2px; }
+
+.group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.label { font-size: 10.5px; font-weight: 700; color: var(--text-3); letter-spacing: .6px; white-space: nowrap; }
+
+.input {
+  height: 26px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 0 8px;
+  width: 160px;
+  outline: none;
+  transition: border-color .15s;
+}
+.input:focus { border-color: var(--accent); }
+
+.checkBtn {
+  height: 26px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  color: var(--text-2);
+  border-radius: 5px;
+  font-size: 12px;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.checkBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); background: var(--accent-glow); }
+.checkBtn:disabled { opacity: .5; cursor: default; }
+
+.divider { width: 1px; height: 24px; background: var(--border); margin: 0 6px; flex-shrink: 0; }
+
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.on { background: var(--accent); border-color: var(--accent); }
+.toggleThumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .2s;
+}
+.on .toggleThumb { transform: translateX(16px); }
+.toggleLabel { font-size: 11px; color: var(--text-3); min-width: 22px; }
+
+.googleBtn {
+  display: flex; align-items: center; gap: 5px;
+  height: 26px; padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  color: var(--text-2);
+  border-radius: 5px; font-size: 12px;
+  transition: all .15s; white-space: nowrap;
+}
+.googleBtn:hover { border-color: var(--blue); color: #fff; }
+
+.elStatus {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; color: var(--text-3);
+  padding: 2px 8px; border-radius: 4px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.connected { color: var(--green); border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.08); }
+.statusDot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }

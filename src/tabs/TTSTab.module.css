@@ -1,0 +1,107 @@
+.root { display: flex; height: 100%; overflow: hidden; }
+
+.sidebar {
+  width: 240px; min-width: 240px;
+  background: var(--bg-panel); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.sideHead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.sideTitle { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .6px; text-transform: uppercase; }
+.elBadge {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px;
+  background: var(--bg-input); color: var(--text-3); border: 1px solid var(--border);
+}
+.connected { color: var(--green) !important; border-color: rgba(34,197,94,.3) !important; background: rgba(34,197,94,.08) !important; }
+
+.cutList { flex: 1; overflow-y: auto; padding: 6px; }
+.cutItem {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 10px; border-radius: 7px;
+  background: none; border: 1px solid transparent;
+  text-align: left; width: 100%; margin-bottom: 2px; transition: all .12s;
+}
+.cutItem:hover { background: var(--bg-hover); }
+.cutActive { background: var(--accent-glow) !important; border-color: var(--accent-border) !important; }
+.cutTop { display: flex; align-items: center; justify-content: space-between; }
+.cutNo { font-size: 11px; font-weight: 700; color: var(--accent-light); }
+.doneTag { font-size: 10px; color: var(--green); background: rgba(34,197,94,.12); padding: 1px 5px; border-radius: 3px; }
+.cutPrev { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.main { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+
+.panel {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.panelTitle { font-size: 13px; font-weight: 700; color: var(--text); }
+
+.voices { display: flex; flex-wrap: wrap; gap: 8px; }
+.voiceCard {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  text-align: left; transition: all .15s;
+}
+.voiceCard:hover { border-color: var(--accent-light); }
+.voiceActive { border-color: var(--accent) !important; background: var(--accent-glow) !important; }
+.voiceName { font-size: 13px; font-weight: 600; color: var(--text); }
+.voiceDesc { font-size: 11px; color: var(--text-3); }
+
+.sliders { display: flex; flex-direction: column; gap: 10px; }
+.sliderRow { display: flex; align-items: center; gap: 10px; }
+.sliderLabel { font-size: 12.5px; color: var(--text-2); min-width: 55px; }
+input[type=range] {
+  flex: 1; height: 4px; border-radius: 2px;
+  appearance: none; background: var(--bg-input);
+  outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent); cursor: pointer;
+}
+.sliderVal { font-size: 12px; color: var(--accent-light); min-width: 36px; text-align: right; }
+
+.textArea {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-size: 13.5px; padding: 10px;
+  outline: none; resize: vertical; line-height: 1.7; transition: border-color .15s;
+}
+.textArea:focus { border-color: var(--accent); }
+.textMeta { font-size: 11.5px; color: var(--text-3); display: flex; gap: 8px; }
+
+.genRow { display: flex; gap: 8px; }
+.genBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent); border: none; color: #fff;
+  padding: 9px 18px; border-radius: 7px; font-size: 13px; font-weight: 600;
+  transition: background .15s; flex: 1;
+}
+.genBtn:hover:not(:disabled) { background: #6d28d9; }
+.genBtn:disabled { opacity: .6; cursor: default; }
+.fillBtn {
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-2);
+  padding: 9px 14px; border-radius: 7px; font-size: 12.5px; transition: all .15s;
+}
+.fillBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.audioResult { display: flex; flex-direction: column; gap: 8px; }
+.audioPlayer { width: 100%; height: 36px; border-radius: 6px; }
+.dlBtn {
+  align-self: flex-start;
+  background: var(--bg-input); border: 1px solid var(--green); color: var(--green);
+  padding: 6px 14px; border-radius: 6px; font-size: 12.5px; transition: all .15s;
+}
+.dlBtn:hover { background: rgba(34,197,94,.12); }
+
+.batchDesc { font-size: 12.5px; color: var(--text-2); }
+.batchBtn {
+  background: var(--bg-input); border: 1px solid var(--accent-border); color: var(--accent-light);
+  padding: 9px 18px; border-radius: 7px; font-size: 13px; transition: all .15s; align-self: flex-start;
+}
+.batchBtn:hover { background: var(--accent-glow); }
