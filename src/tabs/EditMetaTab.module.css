@@ -1,0 +1,72 @@
+/* src/tabs/EditMetaTab.module.css */
+
+.wrap { padding: 24px; max-width: 960px; }
+
+.header { margin-bottom: 20px; }
+.title  { font-size: 18px; font-weight: 600; color: #e8e6e0; margin-bottom: 6px; }
+.desc   { font-size: 13px; color: #888; }
+
+.section      { margin-bottom: 16px; }
+.sectionLabel { font-size: 11px; color: #666; margin-bottom: 8px; }
+
+.hookRow    { display: flex; flex-wrap: wrap; gap: 6px; }
+.cutTag     { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 0.5px solid #333; background: #1a1a18; color: #888; cursor: pointer; transition: all .15s; }
+.cutTag:hover   { background: #222; }
+.cutTagActive   { background: #185FA5; color: #fff; border-color: transparent; }
+
+.genBtn {
+  width: 100%;
+  padding: 11px 0;
+  border-radius: 8px;
+  border: 0.5px solid #333;
+  background: #1a1a18;
+  color: #d4d2cc;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: background .15s;
+}
+.genBtn:hover    { background: #222; }
+.genBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.error {
+  font-size: 12px; color: #f09595;
+  padding: 10px 12px; background: #2a1515;
+  border-radius: 8px; margin-bottom: 12px;
+}
+
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.statCard  { background: #1a1a18; border-radius: 8px; border: 0.5px solid #2a2a28; padding: 12px 14px; }
+.statLabel { font-size: 11px; color: #666; margin-bottom: 5px; }
+.statValue { font-size: 18px; font-weight: 500; color: #e8e6e0; }
+
+.tableWrap { overflow-x: auto; margin-bottom: 14px; }
+.table     { width: 100%; border-collapse: collapse; font-size: 12px; }
+.th        { padding: 8px 10px; text-align: left; color: #666; font-weight: 500; border-bottom: 0.5px solid #2a2a28; }
+.td        { padding: 7px 10px; border-bottom: 0.5px solid #1e1e1c; color: #c2c0b6; vertical-align: middle; }
+.hookRow2  { background: rgba(24,95,165,.12); }
+.mono      { font-family: 'Courier New', monospace; font-size: 11px; color: #888; }
+.muted     { color: #666; }
+
+.badge     { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: #252523; color: #666; }
+.badgeHook { font-size: 10px; padding: 2px 7px; border-radius: 4px; background: #185FA5; color: #fff; }
+
+.aiNote      { background: #1a1a18; border-radius: 10px; border: 0.5px solid #2a2a28; padding: 14px; margin-bottom: 14px; }
+.aiNoteLabel { font-size: 11px; font-weight: 500; color: #666; margin-bottom: 8px; }
+.aiNoteText  { font-size: 12px; line-height: 1.75; color: #c2c0b6; white-space: pre-wrap; }
+
+.exportRow { display: flex; gap: 8px; }
+.exportBtn {
+  flex: 1; padding: 8px 0;
+  border-radius: 8px; border: 0.5px solid #333;
+  background: #1a1a18; color: #888;
+  font-size: 12px; cursor: pointer;
+  transition: background .15s;
+}
+.exportBtn:hover { background: #222; color: #c2c0b6; }
