@@ -20,6 +20,12 @@ const TAB_MAP = {
   video: VideoTab,
   thumbnail: ThumbnailTab,
   dashboard: DashboardTab,
+  import RetentionHookTab from './tabs/RetentionHookTab'
+  import EditMetaTab      from './tabs/EditMetaTab'
+
+// TAB_MAP 안에
+retention: RetentionHookTab,
+editmeta:  EditMetaTab,
 }
 
 function Layout() {
