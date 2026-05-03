@@ -10,6 +10,8 @@ const TABS = [
   { id: 'video',    label: '영상 만들기',         icon: '🎞️' },
   { id: 'thumbnail',label: '썸네일',             icon: '🖼️' },
   { id: 'dashboard',label: '대시보드',            icon: '📊' },
+  { id: 'retention', label: '리텐션 훅', icon: '🎯' },
+  { id: 'editmeta',  label: '편집 메타', icon: '🗂️' },
 ]
 
 export default function NavBar() {

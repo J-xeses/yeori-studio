@@ -1,0 +1,104 @@
+/* src/tabs/RetentionHookTab.module.css */
+
+.wrap { padding: 24px; max-width: 900px; }
+
+.header { margin-bottom: 20px; }
+.title  { font-size: 18px; font-weight: 600; color: #e8e6e0; margin-bottom: 6px; }
+.desc   { font-size: 13px; color: #888; }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: #1a1a18;
+  border-radius: 10px;
+  border: 0.5px solid #333;
+  border-left: 3px solid #534AB7;
+  padding: 14px;
+}
+.cardLabel { font-size: 10px; font-weight: 600; color: #888; margin-bottom: 3px; letter-spacing: .5px; text-transform: uppercase; }
+.cardTime  { font-size: 11px; color: #666; margin-bottom: 10px; }
+
+.textarea {
+  width: 100%;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 0.5px solid #333;
+  background: #111;
+  color: #d4d2cc;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+.textarea:focus { outline: none; border-color: #555; }
+
+.emotions { display: flex; flex-wrap: wrap; gap: 5px; }
+.tag {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: #252523;
+  color: #888;
+  cursor: pointer;
+  transition: all .15s;
+  border: 0.5px solid #333;
+}
+.tag:hover  { background: #2e2e2c; }
+.tagActive  { color: #fff !important; border-color: transparent; }
+
+.genBtn {
+  width: 100%;
+  padding: 11px 0;
+  border-radius: 8px;
+  border: 0.5px solid #333;
+  background: #1a1a18;
+  color: #d4d2cc;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s;
+  margin-bottom: 14px;
+}
+.genBtn:hover    { background: #222; }
+.genBtn:disabled { opacity: .5; cursor: not-allowed; }
+
+.error {
+  font-size: 12px;
+  color: #f09595;
+  padding: 10px 12px;
+  background: #2a1515;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.result {
+  background: #1a1a18;
+  border-radius: 10px;
+  border: 0.5px solid #333;
+  padding: 16px;
+}
+.resultLabel { font-size: 11px; font-weight: 500; color: #666; margin-bottom: 10px; }
+.resultText  {
+  font-size: 12px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  color: #c2c0b6;
+  font-family: inherit;
+  margin-bottom: 12px;
+}
+.copyBtn {
+  font-size: 11px;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 0.5px solid #333;
+  background: #111;
+  color: #888;
+  cursor: pointer;
+}
+.copyBtn:hover { background: #1a1a18; }
