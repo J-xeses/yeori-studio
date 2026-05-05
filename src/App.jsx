@@ -11,6 +11,7 @@ import ThumbnailTab from './tabs/ThumbnailTab'
 import DashboardTab from './tabs/DashboardTab'
 import RetentionHookTab from './tabs/RetentionHookTab'
 import EditMetaTab from './tabs/EditMetaTab'
+import StoryArchiveTab from './tabs/StoryArchiveTab'  // ✅ 추가
 import s from './App.module.css'
 
 const TAB_MAP = {
@@ -24,6 +25,7 @@ const TAB_MAP = {
     dashboard: DashboardTab,
     retention: RetentionHookTab,
     editmeta: EditMetaTab,
+    storyarchive: StoryArchiveTab,  // ✅ 추가
 }
 
 function Layout() {
