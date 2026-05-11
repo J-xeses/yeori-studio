@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/claude/v1/messages",
+      "destination": "/api/claude"
+    },
+    {
+      "source": "/api/elevenlabs/:path*",
+      "destination": "/api/elevenlabs"
+    }
+  ]
+}
