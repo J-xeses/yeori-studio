@@ -11,6 +11,7 @@ const VOICES = [
   { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', desc: '남성 · 성숙함' },
   { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',   desc: '남성 · 젊음' },
   { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam',   desc: '남성 · 중후함' },
+  { id: '5n5gqmaQi9Ewevrz7bOS', name: 'Sian',   desc: '여성 · 진솔함' },
 ]
 
 export default function TTSTab() {
