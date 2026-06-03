@@ -36,6 +36,7 @@ const defaultState = {
 
   // ── 멀티 에피소드 구조 ──────────────────────────────────
   activeEpisodeId: defaultEpisodeId,
+  openTabIds: [defaultEpisodeId],   // 탭 바에 표시할 에피소드 ID 목록
   episodes: {
     [defaultEpisodeId]: makeEpisode(defaultEpisodeId, 1),
   },
@@ -57,13 +58,17 @@ const defaultState = {
 function reducer(state, action) {
   switch (action.type) {
 
-    // ── 에피소드 전환 ────────────────────────────────────────
+    // ── 에피소드 전환 (탭 자동 추가) ────────────────────────────
     case 'SWITCH_EPISODE': {
       const ep = state.episodes[action.id]
       if (!ep) return state
+      const openTabIds = (state.openTabIds || []).includes(action.id)
+        ? state.openTabIds
+        : [...(state.openTabIds || []), action.id]
       return {
         ...state,
         activeEpisodeId: action.id,
+        openTabIds,
         episode: ep.episode,
         cuts: ep.cuts,
         scriptRaw: ep.scriptRaw || '',
@@ -72,12 +77,13 @@ function reducer(state, action) {
 
     // ── 새 에피소드 추가 ─────────────────────────────────────
     case 'ADD_EPISODE': {
-      const epCount = Object.keys(state.episodes).length
+      const maxNum = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number))
       const newId = `ep_${Date.now()}`
-      const newEp = makeEpisode(newId, epCount + 1)
+      const newEp = makeEpisode(newId, maxNum + 1)
       return {
         ...state,
         episodes: { ...state.episodes, [newId]: newEp },
+        openTabIds: [...(state.openTabIds || []), newId],
         activeEpisodeId: newId,
         episode: newEp.episode,
         cuts: newEp.cuts,
@@ -85,20 +91,54 @@ function reducer(state, action) {
       }
     }
 
+    // ── 탭 닫기 (데이터는 유지) ──────────────────────────────
+    case 'CLOSE_TAB': {
+      const tabs = (state.openTabIds || []).filter(id => id !== action.id)
+      if (!tabs.length) return state   // 마지막 탭은 닫을 수 없음
+      const newActiveId = state.activeEpisodeId === action.id
+        ? tabs[tabs.length - 1]
+        : state.activeEpisodeId
+      const ep = state.episodes[newActiveId]
+      return {
+        ...state,
+        openTabIds: tabs,
+        activeEpisodeId: newActiveId,
+        episode: ep.episode,
+        cuts: ep.cuts,
+        scriptRaw: ep.scriptRaw || '',
+      }
+    }
+
     // ── 에피소드 삭제 ────────────────────────────────────────
     case 'DELETE_EPISODE': {
-      if (Object.keys(state.episodes).length <= 1) return state // 마지막 에피소드 삭제 금지
+      if (Object.keys(state.episodes).length <= 1) return state
       const newEpisodes = { ...state.episodes }
       delete newEpisodes[action.id]
-      const firstId = Object.keys(newEpisodes)[0]
-      const firstEp = newEpisodes[firstId]
+      const openTabIds = (state.openTabIds || []).filter(id => id !== action.id)
+      const fallbackId = openTabIds.length
+        ? (state.activeEpisodeId === action.id ? openTabIds[openTabIds.length - 1] : state.activeEpisodeId)
+        : Object.keys(newEpisodes)[0]
+      const firstEp = newEpisodes[fallbackId]
       return {
         ...state,
         episodes: newEpisodes,
-        activeEpisodeId: firstId,
+        openTabIds: openTabIds.length ? openTabIds : [fallbackId],
+        activeEpisodeId: fallbackId,
         episode: firstEp.episode,
         cuts: firstEp.cuts,
         scriptRaw: firstEp.scriptRaw || '',
+      }
+    }
+
+    // ── 에피소드 번호 변경 (중복 허용, UI에서 경고) ──────────
+    case 'RENUMBER_EPISODE': {
+      const ep = state.episodes[action.id]
+      if (!ep) return state
+      const updated = { ...ep, episode: { ...ep.episode, number: action.number } }
+      return {
+        ...state,
+        episodes: { ...state.episodes, [action.id]: updated },
+        ...(state.activeEpisodeId === action.id ? { episode: updated.episode } : {}),
       }
     }
 
@@ -209,6 +249,13 @@ export function AppProvider({ children }) {
           }
           saved.activeEpisodeId = epId
         }
+        // openTabIds 없으면 현재 활성 에피소드로 초기화
+        if (!saved.openTabIds || !saved.openTabIds.length) {
+          saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
+        }
+        // openTabIds에 포함된 ID가 실제로 존재하는지 검증
+        saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
+        if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
         return { ...init, ...saved }
       }
     } catch {}

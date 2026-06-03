@@ -81,7 +81,7 @@ function parseCuts(raw, n) {
 
 export default function ScriptGenTab() {
   const { state, dispatch } = useApp()
-  const { episode, scriptRaw, cuts, apiKeys } = state
+  const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
@@ -287,8 +287,14 @@ ${YEORI_RULESET}
 
         <div className={s.field}>
           <label>에피소드 번호</label>
-          <input type="number" min="1" value={episode.number}
-            onChange={e => dispatch({ type: 'SET_EPISODE', p: { number: parseInt(e.target.value) || 1 } })} />
+          <input
+            type="number" min="1" value={episode.number}
+            style={Object.values(episodes || {}).some(ep => ep.id !== activeEpisodeId && ep.episode.number === episode.number) ? { borderColor: '#ef4444' } : {}}
+            onChange={e => dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: parseInt(e.target.value) || 1 })}
+          />
+          {Object.values(episodes || {}).some(ep => ep.id !== activeEpisodeId && ep.episode.number === episode.number) && (
+            <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ 이미 사용 중인 번호입니다</div>
+          )}
         </div>
         <div className={s.field}>
           <label>에피소드 제목</label>
