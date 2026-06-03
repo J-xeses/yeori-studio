@@ -1,9 +1,34 @@
 {
   "episode": 2,
+  "title": "이어폰 끼는 순간, 내 인생이 영화가 돼",
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "Start frame featuring Seo Yeori's face clearly visible. Young Korean woman early-20s appearing no older than 22-23, COMPLETELY FLAT HORIZONTAL EYEBROWS no arch at all (일자 눈썹), honey-amber brown eyes, long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace clearly visible, effortlessly photogenic not posing just existing beautifully, K-model proportions very small face long slim legs slender figure, DO NOT make chubby face DO NOT make average body DO NOT make arched eyebrows. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Seoul street golden afternoon light, walking naturally. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+      "imagePrompt": "Start frame featuring Seo Yeori's face clearly visible. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Standing beside building wall on Seoul street, golden afternoon light, reaching into bag to pull out earphones. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    },
+    {
+      "no": 2,
+      "imagePrompt": "Start frame featuring Seo Yeori's face close-up. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Earphone just inserted into right ear, eyes slowly opening wide with quiet sense of wonder. Seoul street background blurred. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    },
+    {
+      "no": 3,
+      "imagePrompt": "Start frame showing Seo Yeori's face and upper body. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Walking slowly along Seoul shopping street, passing store window that reflects her silhouette. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    },
+    {
+      "no": 4,
+      "imagePrompt": "Start frame featuring Seo Yeori's face and upper body slight low-angle. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap held lightly at brim as wind moves hair. Standing near street bench looking upward at sky. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    },
+    {
+      "no": 5,
+      "imagePrompt": "Start frame showing Seo Yeori's face clearly with upper body. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Glancing down at smartphone screen briefly while walking on Seoul street, stopping at crosswalk. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    },
+    {
+      "no": 6,
+      "imagePrompt": "Start frame featuring Seo Yeori's face close-up. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Paused at entrance of narrow Seoul alley, holding one earphone just removed from ear. Eyes slightly narrowed, introspective expression. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    },
+    {
+      "no": 7,
+      "imagePrompt": "Start frame showing Seo Yeori's back and profile. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Re-inserting earphone, beginning to walk away from camera down Seoul street at golden hour. Figure growing smaller in distance. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
     }
   ]
 }

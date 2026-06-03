@@ -48,8 +48,12 @@ const CONFIG = {
   referenceImage:  path.join(ROOT, 'assets', 'yeori-reference.jpg'),
   faceCacheFile:   path.join(ROOT, 'downloads', 'flow', 'yeori-face-cache.json'),
 
-  // ── Step 1 클로즈업 얼굴 프롬프트 ──────────────────────────────────
-  closeupFacePrompt: 'Close-up face shot. Same face as reference. Long wavy dark brown hair, delicate gold necklace, warm skin tone, natural skin texture, natural smile. Photorealistic 8K cinematic.',
+  // ── 클로즈업 얼굴 프롬프트 (에피소드당 1회) ────────────────────────
+  closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, natural skin texture, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
+
+  // ── 전신샷 자동 추가 프리픽스/서픽스 ──────────────────────────────
+  bodyPrefix:   'Same face as closeup reference. Maintain exact same facial features. Face clearly visible. tall K-model proportions, very small face, long slim legs, slender figure, tall fashion model body, small head-to-body ratio, NOT petite, NOT short stature, NOT average body, DO NOT change body proportions.',
+  bgSuffix:     'background people blurred and far away, must not interact with or touch main character, main character is clearly separated from background.',
 
   // ── 서여리 캐릭터 설정 ──────────────────────────────────────────────
   characterName:   '서여리',
@@ -195,12 +199,13 @@ function loadPrompts() {
 
   // 배열 직접 or { episode, cuts: [...] } 형식 모두 처리
   const episode = raw.episode ?? null
+  const type    = raw.type ?? 'shorts'   // "shorts" → 9:16 / "longform" → 16:9
   const cuts = (Array.isArray(raw) ? raw : raw.cuts ?? [])
     .filter(c => c.imagePrompt?.trim())
     .filter(c => !args.ep  || String(c.episode ?? episode) === String(args.ep))
     .filter(c => !args.cut || String(c.no) === String(args.cut))
 
-  return { episode, cuts }
+  return { episode, type, cuts }
 }
 
 // ── 메인 ─────────────────────────────────────────────────────────────
@@ -237,7 +242,7 @@ async function main() {
   }
 
   // ── 일반 이미지 생성 모드 ─────────────────────────────────────────
-  const { episode, cuts } = loadPrompts()
+  const { episode, type, cuts } = loadPrompts()
   if (!cuts.length) {
     log('warn', '처리할 프롬프트가 없습니다. 조건을 확인하세요.')
     return
@@ -250,7 +255,7 @@ async function main() {
     log('ok', `얼굴 특징 ${cuts.length}개 컷 프롬프트에 자동 추가`)
   }
 
-  printHeader(episode, cuts)
+  printHeader(episode, type, cuts)
 
   if (args.dry) {
     cuts.forEach((c, i) =>
@@ -267,6 +272,20 @@ async function main() {
   try {
     await navigateToFlow(page)
 
+    // ── 에피소드 클로즈업 1회 생성 또는 재사용 ──────────────────────
+    const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
+    ensureDir(epDir)
+    const closeupPath = path.join(epDir, 'yeori_closeup.jpg')
+
+    if (fs.existsSync(closeupPath)) {
+      log('ok', `yeori_closeup.jpg 재사용: ${path.relative(ROOT, closeupPath)}`)
+    } else {
+      log('step', '클로즈업 얼굴 이미지 생성 중 (에피소드 1회)…')
+      await generateEpisodeCloseup(page, closeupPath)
+      log('ok', `클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
+      await sleep(CONFIG.delayMs)
+    }
+
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const label = `[${i + 1}/${cuts.length}] CUT ${cut.no}`
@@ -275,7 +294,7 @@ async function main() {
       let success = false
       for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
         try {
-          const savedPath = await processCut(page, cut, episode)
+          const savedPath = await processCut(page, cut, episode, closeupPath, type)
           log('ok', `${label} → ${path.relative(ROOT, savedPath)}`)
           results.push({ cutNo: cut.no, status: 'ok', file: savedPath })
           ok++; success = true; break
@@ -789,47 +808,155 @@ async function prepareInput(page) {
   return inputPos
 }
 
-// ── 컷 처리 — 2단계 체이닝 ──────────────────────────────────────────
+// ── 컷 처리 — 클로즈업 레퍼런스 재사용 ─────────────────────────────
 
-async function processCut(page, cut, defaultEpisode) {
+async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts') {
   const ep = cut.episode ?? defaultEpisode ?? 'x'
 
-  // ── Step 1: 캐릭터 탭 → Seo Yeori → 클로즈업 얼굴 생성 ─────────
-  log('step', `Step 1 — 캐릭터 탭 선택 후 클로즈업 얼굴 생성 중…`)
-  const pos1 = await prepareInput(page)
-  log('info', `입력창: (${Math.round(pos1.x)}, ${Math.round(pos1.y)})`)
+  // 전신샷 프롬프트에 K모델 비율 + 얼굴 일관성 + 배경 통제 자동 주입
+  const finalPrompt = [
+    CONFIG.bodyPrefix,
+    cut.imagePrompt.trim(),
+    CONFIG.bgSuffix,
+  ].join(' ')
 
-  await attachYeoriCharacterToPrompt(page)   // 캐릭터만
+  log('step', `전신 컷 생성 중… (yeori_closeup.jpg 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
+  const pos = await prepareInput(page)
+  log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  await page.mouse.click(pos1.x, pos1.y)
+  await attachYeoriCharacterToPrompt(page)
+  await attachCloseupToPrompt(page, closeupPath)
+  await setAspectRatio(page, type)
+
+  await page.mouse.click(pos.x, pos.y)
+  await sleep(300); await page.keyboard.press('End'); await sleep(100)
+  await page.keyboard.type(finalPrompt, { delay: 15 })
+  await sleep(500)
+
+  const before = await collectImageSrcs(page)
+  await clickGenerate(page)
+  await waitForNewImage(page, before)
+  return saveNewImage(page, before, cut.no, ep, 'cut')
+}
+
+// ── 에피소드 클로즈업 1회 생성 ──────────────────────────────────────
+
+async function generateEpisodeCloseup(page, savePath) {
+  const pos = await prepareInput(page)
+  await attachYeoriCharacterToPrompt(page)
+
+  await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
   await page.keyboard.type(CONFIG.closeupFacePrompt, { delay: 15 })
   await sleep(500)
 
-  const before1 = await collectImageSrcs(page)
+  const before = await collectImageSrcs(page)
   await clickGenerate(page)
-  await waitForNewImage(page, before1)
-  const closeupPath = await saveNewImage(page, before1, cut.no, ep, 'closeup_cut')
-  log('ok', `Step 1 완료 → ${path.relative(ROOT, closeupPath)}`)
+  await waitForNewImage(page, before)
 
-  await sleep(CONFIG.delayMs)
+  const allItems = await collectImageSrcs(page)
+  const beforeSet = new Set(before.map(i => i.src))
+  const newItems = allItems.filter(i => !beforeSet.has(i.src))
+  if (!newItems.length) throw new Error('클로즈업 이미지를 찾지 못했습니다')
 
-  // ── Step 2: 캐릭터 탭 → Seo Yeori + Step1 클로즈업 → 전신 컷 ──
-  log('step', `Step 2 — 캐릭터 + Step1 클로즈업 레퍼런스로 전신 컷 생성 중…`)
-  const pos2 = await prepareInput(page)
+  const imgSrc = newItems[newItems.length - 1].src
+  let saved = false
+  if (imgSrc.startsWith('data:')) {
+    fs.writeFileSync(savePath, Buffer.from(imgSrc.split(',')[1], 'base64'))
+    saved = true
+  } else {
+    const data = await page.evaluate(async (src) => {
+      try { const res = await fetch(src); const buf = await res.arrayBuffer(); return Array.from(new Uint8Array(buf)) }
+      catch { return null }
+    }, imgSrc)
+    if (data) { fs.writeFileSync(savePath, Buffer.from(data)); saved = true }
+  }
+  if (!saved) throw new Error('클로즈업 이미지 저장 실패')
+}
 
-  await attachYeoriCharacterToPrompt(page)   // 캐릭터
-  await attachMostRecentProjectImage(page)   // Step1 클로즈업 (★ 항상 클로즈업이 먼저 생성됨)
+// ── 클로즈업 이미지 프롬프트 첨부 ───────────────────────────────────
 
-  await page.mouse.click(pos2.x, pos2.y)
-  await sleep(300); await page.keyboard.press('End'); await sleep(100)
-  await page.keyboard.type(cut.imagePrompt, { delay: 15 })
-  await sleep(500)
+async function attachCloseupToPrompt(page, closeupPath) {
+  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
+  await sleep(1200)
 
-  const before2 = await collectImageSrcs(page)
-  await clickGenerate(page)
-  await waitForNewImage(page, before2)
-  return saveNewImage(page, before2, cut.no, ep, 'cut')
+  // 이미지 탭 클릭
+  const imgTabClicked = await page.evaluate(() => {
+    const items = [...document.querySelectorAll('*')].filter(el => {
+      const txt = el.textContent.trim()
+      const r = el.getBoundingClientRect()
+      return txt === '이미지'
+        && r.left > 130 && r.left < 400
+        && r.top > 200
+        && el.offsetWidth > 0 && el.offsetWidth < 200
+    })
+    if (items[0]) { items[0].click(); return true }
+    return false
+  })
+  if (!imgTabClicked) log('warn', 'closeup: 이미지 탭 못 찾음')
+  await sleep(800)
+
+  // 파일 input 탐색 → 클로즈업 업로드 시도
+  const fileInput = await page.evaluateHandle(() => {
+    function search(root) {
+      for (const el of root.querySelectorAll('input[type="file"]')) return el
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
+      }
+      return null
+    }
+    return search(document)
+  })
+  const fileEl = fileInput.asElement()
+  if (fileEl) {
+    await fileEl.uploadFile(closeupPath)
+    log('info', `클로즈업 업로드: ${path.basename(closeupPath)}`)
+    await sleep(1500)
+    const addClicked = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('button')) {
+        if (el.textContent.includes('프롬프트에 추가') && !el.disabled) { el.click(); return true }
+      }
+      return false
+    })
+    if (addClicked) { log('info', '클로즈업 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
+  }
+
+  // 폴백: 프로젝트 이미지 목록에서 가장 오래된(첫 번째 생성된) 이미지 선택
+  const imgInfo = await page.evaluate(() => {
+    const items = [...document.querySelectorAll('*')].filter(el => {
+      const txt = el.textContent.trim()
+      const r = el.getBoundingClientRect()
+      return txt.endsWith('이미지') && txt.length > 5
+        && el.offsetWidth > 50 && el.offsetWidth < 400
+        && r.top > 200 && r.left > 350
+    }).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    if (!items.length) return null
+    // 가장 오래된(첫 생성) 이미지 = 리스트 맨 아래 (최신순 정렬 기준)
+    const target = items[items.length - 1]
+    const r = target.getBoundingClientRect()
+    return { txt: target.textContent.trim().slice(0, 40), x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2) }
+  })
+
+  if (!imgInfo) {
+    log('warn', 'closeup: 이미지 첨부 실패 (목록 없음), 건너뜀')
+    await page.keyboard.press('Escape')
+    return false
+  }
+
+  log('info', `클로즈업 이미지 선택 (폴백): "${imgInfo.txt}"`)
+  await page.mouse.click(imgInfo.x, imgInfo.y)
+  await sleep(800)
+
+  const addClicked = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('button')) {
+      if (el.textContent.includes('프롬프트에 추가') && !el.disabled) { el.click(); return true }
+    }
+    return false
+  })
+  if (addClicked) log('info', '클로즈업 이미지 프롬프트에 추가 완료 (폴백)')
+  else log('warn', '"프롬프트에 추가" 못 찾음')
+  await sleep(800)
+  return !!addClicked
 }
 
 // 접근성 트리 기반 입력창 위치 반환
@@ -926,17 +1053,24 @@ async function findPromptInput(page) {
   return { _isRect: true, rect: fallback }
 }
 
-async function setAspectRatio(page) {
-  // 9:16 비율 선택 시도 (없으면 무시)
-  const clicked = await page.evaluate(() => {
-    const candidates = [
-      ...document.querySelectorAll('[aria-label*="9:16"], [aria-label*="Portrait"], [data-ratio="9:16"], [data-aspect="portrait"]'),
-      ...[...document.querySelectorAll('button')].filter(b => b.textContent.includes('9:16')),
-    ]
-    if (candidates[0]) { candidates[0].click(); return true }
-    return false
-  })
-  if (clicked) await sleep(300)
+async function setAspectRatio(page, type = 'shorts') {
+  const is169 = type === 'longform'
+  const ratio = is169 ? '16:9' : '9:16'
+  const clicked = await page.evaluate((r, is169) => {
+    const portrait = ['[aria-label*="9:16"]', '[aria-label*="Portrait"]', '[data-ratio="9:16"]', '[data-aspect="portrait"]']
+    const landscape = ['[aria-label*="16:9"]', '[aria-label*="Landscape"]', '[data-ratio="16:9"]', '[data-aspect="landscape"]']
+    const selectors = is169 ? landscape : portrait
+    for (const sel of selectors) {
+      const el = document.querySelector(sel)
+      if (el) { el.click(); return r }
+    }
+    // 텍스트 매칭 폴백
+    const btn = [...document.querySelectorAll('button')].find(b => b.textContent.includes(r))
+    if (btn) { btn.click(); return r }
+    return null
+  }, ratio, is169)
+  if (clicked) { log('info', `화면 비율 설정: ${clicked}`); await sleep(400) }
+  else log('warn', `화면 비율 버튼 못 찾음 (${ratio}), 기본값 사용`)
 }
 
 async function clickGenerate(page) {
@@ -1242,11 +1376,13 @@ async function clickIfExists(page, selectors) {
 
 // ── 로그 및 리포트 ────────────────────────────────────────────────────
 
-function printHeader(episode, cuts) {
+function printHeader(episode, type, cuts) {
+  const ratio = type === 'longform' ? '16:9 (longform)' : '9:16 (shorts)'
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log('  🎬 여리 스튜디오 - Google Flow 자동화')
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   if (episode) console.log(`  에피소드: ${episode}`)
+  console.log(`  화면 비율: ${ratio}`)
   console.log(`  처리 컷 수: ${cuts.length}개`)
   console.log(`  저장 위치: downloads/flow/`)
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
