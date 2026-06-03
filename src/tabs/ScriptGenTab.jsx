@@ -52,6 +52,7 @@ function parseCuts(raw, n) {
       cur.character  = getField(/캐릭터[:：]\s*/) || '서여리'
       cur.dialogue   = getField(/대사[:：]\s*/)
       cur.narration  = getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/)
+      cur.shotType   = (getField(/샷 타입[:：]\s*/) || '').toUpperCase().includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
       cur.imagePrompt = getField(/이미지 프롬프트[:：]\s*/) || getField(/프롬프트[:：]\s*/)
 
       // 룰셋 통과 표시 제거 (UI에서 별도 표시)
@@ -85,28 +86,45 @@ export default function ScriptGenTab() {
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
 
-  // ── 서여리 연출 원칙 룰셋 v1.0 ─────────────────────────────
+  // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
-=== 서여리 연출 원칙 룰셋 v1.0 (반드시 준수) ===
+=== 서여리 연출 원칙 룰셋 v1.1 (반드시 준수) ===
+
+[샷 타입 분류 — 필수]
+모든 컷은 반드시 아래 두 가지 중 하나로 분류한다:
+
+◆ CLOSEUP (클로즈업)
+  - 얼굴·상반신 위주 컷 (표정, 눈빛, 감정 강조)
+  - 서여리 레퍼런스 이미지를 직접 활용하는 컷
+  - 이미지 프롬프트: "CLOSEUP SHOT —" 으로 시작
+  - 얼굴 재현이 핵심이므로 프롬프트에 얼굴 특징 정밀 기술 생략 가능
+    (레퍼런스 이미지가 직접 사용됨)
+  - 대신 표정·감정·조명·분위기 묘사에 집중
+
+◆ FULLBODY (풀바디/씬)
+  - 전신·배경·이동·공간감 강조 컷
+  - Google Flow로 생성하는 컷
+  - 이미지 프롬프트: "FULLBODY SHOT —" 으로 시작
+  - 얼굴이 작게 보이므로 씬·의상·체형·배경 묘사에 집중
+  - K-model proportions, very small face, long slim legs 필수 포함
 
 [캐릭터 일관성 — 절대 원칙]
 - 스타트 프레임: 반드시 서여리 얼굴 있는 이미지 기준
 - 헤어: long wavy dark brown hair / NOT short — 이중 강조 필수
-- 시그니처: "a small natural beauty mark on right cheek" — 클로즈업 컷마다 포함
+- 시그니처: "natural skin texture on right cheek" — 아주 희미하게, 과장 금지
 - 의상: DO NOT change clothing — 색상·소재·스타일 명시
 - 소품: 골드 목걸이·브레이슬렛 등 디테일 명시
 - 나이: "early 20s, appearing no older than 22-23" 명시
 - 스타일: Photorealistic 8K cinematic, natural Korean beauty
-- 체형: "K-model proportions, very small face, long slim legs, slender figure, tall fashion model body" — 전신샷 필수 포함
-- 비율: "small head-to-body ratio, model-like slim waist, DO NOT make average body proportions"
+- 체형: "K-model proportions, very small face, long slim legs, slender figure" — FULLBODY 필수 포함
+- 비율: "small head-to-body ratio, DO NOT make average body proportions" — FULLBODY 필수 포함
 
 [영상 생성 원칙]
 - 프롬프트에 대사 텍스트 절대 금지 (립싱크+행동 동시 발생 방지)
 - 행동은 시간 단위로 분리: "First 3s / Next 3s / Final 4s"
-- 전신샷 지양 → B-roll + 클로즈업 조합 권장
+- CLOSEUP과 FULLBODY를 스토리 흐름에 맞게 교차 편집
 - 배경 인물은 허용하되 서여리 연출에 개입·간섭 금지
   → "background people must not interact with the main character"
-- 얼굴 클로즈업 적극 활용 (일관성 가장 높음)
 
 [K감성 / 리얼리티]
 - "effortlessly photogenic, not posing, just existing beautifully"
@@ -122,12 +140,11 @@ export default function ScriptGenTab() {
 - BGM 대비: 감정 전환점에서 BGM 완전 중단 → 현장감 극대화
 
 [이미지 프롬프트 생성 시 체크리스트]
-□ 스타트 프레임 = 서여리 얼굴 이미지 명시
+□ 샷 타입 명시: "CLOSEUP SHOT —" 또는 "FULLBODY SHOT —" 으로 시작
 □ long wavy dark brown hair, NOT short 이중 강조 포함
-□ 매력점 문구 (클로즈업 컷) 포함
+□ CLOSEUP: natural skin texture 문구 + 표정/감정/조명 묘사 집중
+□ FULLBODY: K-model proportions, small face, long legs, DO NOT make average body
 □ DO NOT change clothing 포함
-□ K-model proportions, small face, long legs, slender figure 포함
-□ DO NOT make average body proportions 포함
 □ 배경 인물 개입 방지 문구 포함
 □ 대사 텍스트 없음
 □ 행동이 시간 단위로 분리됨
@@ -163,23 +180,26 @@ ${YEORI_RULESET}
 캐릭터: 서여리
 대사: 실제 대사 (자연스러운 한국어, 없으면 "없음" 으로 표기)
 나레이션: 보이스오버 나레이션 (감성적으로)
-이미지 프롬프트: 영어로 작성, 룰셋 체크리스트 전체 반영
+샷 타입: CLOSEUP 또는 FULLBODY (반드시 명시)
+이미지 프롬프트: 영어로 작성, "CLOSEUP SHOT —" 또는 "FULLBODY SHOT —" 으로 시작, 룰셋 체크리스트 전체 반영
 
 [CUT 2]
-씬: 
-액션: 
+씬:
+액션:
 캐릭터: 서여리
-대사: 
-나레이션: 
-이미지 프롬프트: 
+대사:
+나레이션:
+샷 타입:
+이미지 프롬프트:
 
 [CUT ${episode.cutCount}]
-씬: 
-액션: 
+씬:
+액션:
 캐릭터: 서여리
-대사: 
-나레이션: 
-이미지 프롬프트: 
+대사:
+나레이션:
+샷 타입:
+이미지 프롬프트:
 
 ⚠️ 절대 지킬 것:
 - 마크다운 ** ## --- 완전 금지
@@ -209,8 +229,13 @@ ${YEORI_RULESET}
       let passCount = 0, failItems = []
       parsed.forEach(cut => {
         const p = cut.imagePrompt || ''
-        if (!p.includes('long wavy hair') && !p.includes('NOT short')) failItems.push(`CUT${cut.no}: 헤어 이중강조 누락`)
-        if (!p.includes('beauty mark') && (p.includes('close') || p.includes('face'))) failItems.push(`CUT${cut.no}: 매력점 문구 누락`)
+        const isClose = cut.shotType === 'CLOSEUP'
+        const isFull  = cut.shotType === 'FULLBODY'
+        if (!isClose && !isFull) failItems.push(`CUT${cut.no}: 샷 타입 누락 (CLOSEUP/FULLBODY 미명시)`)
+        if (!p.match(/CLOSEUP SHOT|FULLBODY SHOT/i)) failItems.push(`CUT${cut.no}: 프롬프트 샷 타입 접두어 누락`)
+        if (!p.includes('NOT short')) failItems.push(`CUT${cut.no}: 헤어 이중강조 누락`)
+        if (isClose && !p.includes('skin texture') && !p.includes('beauty mark')) failItems.push(`CUT${cut.no}: CLOSEUP natural skin texture 문구 누락`)
+        if (isFull && !p.match(/K-model|small face|long.*legs/i)) failItems.push(`CUT${cut.no}: FULLBODY 체형 문구 누락`)
         if (!p.includes('DO NOT change clothing')) failItems.push(`CUT${cut.no}: 의상 고정 문구 누락`)
         else passCount++
       })

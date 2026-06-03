@@ -108,22 +108,47 @@ export default function StudioTab() {
   const rulesetCheck = (prompt) => {
     const issues = []
     if (!prompt.includes('NOT short')) issues.push('헤어 이중강조')
-    if (!prompt.includes('beauty mark')) issues.push('매력점')
+    if (!prompt.includes('skin texture') && !prompt.includes('beauty mark')) issues.push('매력점')
     if (!prompt.includes('DO NOT change')) issues.push('캐릭터 고정')
     if (!prompt.includes('K-model') && !prompt.includes('proportions')) issues.push('K모델 비율')
     return issues
   }
 
   // ── 서여리 베이스 프롬프트 ────────────────────────────────────
-  const YEORI_BASE = `Young Korean woman early 20s (22-23 years old), long wavy dark brown hair NOT short, small natural beauty mark on right cheek, delicate gold necklace, effortlessly photogenic not posing just existing beautifully, K-model proportions very small face long slim legs slender figure tall fashion model body, small head-to-body ratio DO NOT make average body proportions, appearing no older than 22-23, DO NOT change character appearance, Photorealistic 8K cinematic, natural Korean beauty`
+  const YEORI_BASE = `Young Korean woman early 20s (22-23 years old), long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, effortlessly photogenic not posing just existing beautifully, K-model proportions very small face long slim legs slender figure tall fashion model body, small head-to-body ratio DO NOT make average body proportions, appearing no older than 22-23, DO NOT change character appearance, Photorealistic 8K cinematic, natural Korean beauty`
 
   // 툴별 접미사
   const TOOL_SUFFIX = {
-    'Flow':             'Photorealistic 8K cinematic 9:16, background people must not interact with main character',
+    'Flow':             'Photorealistic 8K cinematic 9:16, background people must not interact with main character, consistent character face',
     'Imagen':           'Photorealistic 8K cinematic, semi-realistic Korean style',
     'Midjourney':       'photorealistic, 8K, cinematic lighting, --ar 9:16 --v 6',
     'DALL-E 3':         'photorealistic, cinematic, high quality, 9:16 aspect ratio',
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
+  }
+
+  const exportPromptsJson = () => {
+    const { episode, cuts: allCuts } = state
+    const payload = {
+      episode: episode.number,
+      title: episode.title || '',
+      generatedAt: new Date().toISOString(),
+      cuts: allCuts
+        .filter(c => c.imagePrompt?.trim())
+        .map(c => ({
+          no: c.no,
+          episode: episode.number,
+          scene: c.scene || '',
+          dialogue: c.dialogue || '',
+          imagePrompt: c.imagePrompt,
+        })),
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `prompts_ep${episode.number}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const generateAllPrompts = () => {
@@ -133,14 +158,12 @@ export default function StudioTab() {
       const action = c.action || ''
       const isCloseup = action.toLowerCase().includes('close') ||
         action.includes('클로즈') || action.includes('표정') || action.includes('얼굴')
-      const beautyMark = isCloseup
-        ? 'small natural beauty mark on right cheek clearly visible'
-        : 'small natural beauty mark on right cheek'
+      const beautyMark = 'natural skin texture on right cheek (subtle, not a prominent mark)'
       const actionPrompt = action
         ? `First 3 seconds: ${action.split('.')[0] || action}`
         : ''
       const prompt = [
-        YEORI_BASE.replace('small natural beauty mark on right cheek', beautyMark),
+        YEORI_BASE.replace('natural skin texture on right cheek (subtle, not a prominent mark)', beautyMark),
         c.imagePrompt || '',
         scene,
         actionPrompt,
@@ -170,6 +193,11 @@ export default function StudioTab() {
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
           <button className={s.autoBtn} onClick={generateAllPrompts}>⚡ 전체 프롬프트 자동 생성</button>
+          <button className={s.autoBtn} onClick={exportPromptsJson}
+            title="downloads/flow/prompts.json 생성 → npm run flow 실행"
+            style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', border: 'none' }}>
+            📤 Flow용 JSON 내보내기
+          </button>
           <button
             onClick={generateAllImages}
             disabled={autoProgress.running}
