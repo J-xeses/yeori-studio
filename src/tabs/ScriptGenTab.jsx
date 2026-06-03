@@ -85,6 +85,7 @@ export default function ScriptGenTab() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
+  const [numError, setNumError] = useState('')
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -289,11 +290,22 @@ ${YEORI_RULESET}
           <label>에피소드 번호</label>
           <input
             type="number" min="1" value={episode.number}
-            style={Object.values(episodes || {}).some(ep => ep.id !== activeEpisodeId && ep.episode.number === episode.number) ? { borderColor: '#ef4444' } : {}}
-            onChange={e => dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: parseInt(e.target.value) || 1 })}
+            style={numError ? { borderColor: '#ef4444' } : {}}
+            onChange={e => {
+              const num = parseInt(e.target.value) || 1
+              const isDup = Object.values(episodes || {}).some(
+                ep => ep.id !== activeEpisodeId && ep.episode.number === num
+              )
+              if (isDup) {
+                setNumError(`EP${num}은 이미 사용 중입니다`)
+              } else {
+                setNumError('')
+                dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
+              }
+            }}
           />
-          {Object.values(episodes || {}).some(ep => ep.id !== activeEpisodeId && ep.episode.number === episode.number) && (
-            <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ 이미 사용 중인 번호입니다</div>
+          {numError && (
+            <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
           )}
         </div>
         <div className={s.field}>

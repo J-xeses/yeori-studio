@@ -130,10 +130,14 @@ function reducer(state, action) {
       }
     }
 
-    // ── 에피소드 번호 변경 (중복 허용, UI에서 경고) ──────────
+    // ── 에피소드 번호 변경 (중복 시 차단) ───────────────────
     case 'RENUMBER_EPISODE': {
       const ep = state.episodes[action.id]
       if (!ep) return state
+      const isDup = Object.values(state.episodes).some(
+        e => e.id !== action.id && e.episode.number === action.number
+      )
+      if (isDup) return state   // 중복이면 변경하지 않음 (UI에서 에러 표시)
       const updated = { ...ep, episode: { ...ep.episode, number: action.number } }
       return {
         ...state,
@@ -221,6 +225,34 @@ function reducer(state, action) {
         cuts: newCuts,
         episode: newEpisode,
         episodes: { ...state.episodes, [state.activeEpisodeId]: updatedEp },
+      }
+    }
+
+    // ── 빈 에피소드 정리 (scriptRaw 없고 컷 내용 없는 것 삭제) ──
+    case 'CLEANUP_EMPTY_EPISODES': {
+      const isEmpty = (ep) =>
+        !ep.scriptRaw &&
+        ep.cuts.every(c => !c.scene && !c.action && !c.dialogue && !c.narration && !c.imagePrompt)
+
+      const kept = Object.entries(state.episodes).filter(
+        ([id, ep]) => id === state.activeEpisodeId || !isEmpty(ep)
+      )
+      if (kept.length === Object.keys(state.episodes).length) return state // 변화 없음
+
+      const newEpisodes = Object.fromEntries(kept)
+      const openTabIds = (state.openTabIds || []).filter(id => newEpisodes[id])
+      const newActiveId = newEpisodes[state.activeEpisodeId]
+        ? state.activeEpisodeId
+        : Object.keys(newEpisodes)[0]
+      const ep = newEpisodes[newActiveId]
+      return {
+        ...state,
+        episodes: newEpisodes,
+        openTabIds: openTabIds.length ? openTabIds : [newActiveId],
+        activeEpisodeId: newActiveId,
+        episode: ep.episode,
+        cuts: ep.cuts,
+        scriptRaw: ep.scriptRaw || '',
       }
     }
 
