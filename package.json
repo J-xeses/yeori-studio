@@ -9,7 +9,10 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "flow": "node scripts/flow-automation.js"
+    "flow": "node scripts/flow-automation.js",
+    "tts": "node scripts/tts-automation.js",
+    "edit": "node scripts/edit-automation.js",
+    "pipeline": "node scripts/pipeline.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
