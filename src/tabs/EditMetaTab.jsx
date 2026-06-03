@@ -23,6 +23,13 @@ export default function EditMetaTab() {
   const [error, setError]     = useState('')
   const [hookIndices, setHookIndices] = useState([0])
 
+  // FFmpeg 자동 실행 상태
+  const [workDir, setWorkDir]         = useState('downloads/flow/ep2')
+  const [ffmpegRunning, setFfmpegRunning] = useState(false)
+  const [ffmpegProgress, setFfmpegProgress] = useState(null)   // { current, total, label }
+  const [ffmpegResults, setFfmpegResults]   = useState([])     // [{ cutNo, file, status }]
+  const [ffmpegError, setFfmpegError]       = useState('')
+
   // 음성 타이밍 상태 (컷별)
   const [audioSettings, setAudioSettings] = useState({})
 
@@ -173,6 +180,51 @@ export default function EditMetaTab() {
     const a = document.createElement('a')
     a.href = url; a.download = 'yeori_ffmpeg.ps1'; a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const runFFmpegAuto = async () => {
+    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
+    setFfmpegRunning(true)
+    setFfmpegProgress(null)
+    setFfmpegResults([])
+    setFfmpegError('')
+    try {
+      const res = await fetch('/api/ffmpeg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ meta, workDir }),
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        setFfmpegError(err.error || 'FFmpeg 실행 오류')
+        return
+      }
+      const reader = res.body.getReader()
+      const dec = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop() ?? ''
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'progress')  setFfmpegProgress({ current: ev.current, total: ev.total, label: ev.label })
+            if (ev.type === 'cut_done')  setFfmpegProgress(p => p ? { ...p, current: p.current } : p)
+            if (ev.type === 'done')      setFfmpegResults(ev.results ?? [])
+            if (ev.type === 'cut_error') setFfmpegError(p => p + `\nCUT ${ev.cutNo} 오류 → ${ev.log}`)
+            if (ev.type === 'error')     setFfmpegError(ev.message)
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFfmpegError(err.message)
+    } finally {
+      setFfmpegRunning(false)
+    }
   }
 
   const toggleHook = idx =>
@@ -339,6 +391,76 @@ export default function EditMetaTab() {
             <button className={styles.exportBtn} onClick={generateFFmpeg} style={{background:'#7c3aed', color:'#fff', borderColor:'#7c3aed'}}>
               ⚡ FFmpeg 스크립트 생성
             </button>
+          </div>
+
+          {/* ── FFmpeg 자동 실행 ── */}
+          <div style={{marginTop:'24px', padding:'16px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.25)', borderRadius:'8px'}}>
+            <div style={{fontWeight:600, fontSize:'13px', color:'#c4b5fd', marginBottom:'10px'}}>⚡ FFmpeg 자동 실행</div>
+
+            <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px'}}>
+              <span style={{fontSize:'12px', color:'#9ca3af', whiteSpace:'nowrap'}}>작업 폴더</span>
+              <input
+                type="text"
+                value={workDir}
+                onChange={e => setWorkDir(e.target.value)}
+                placeholder="downloads/flow/ep2"
+                style={{flex:1, background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'5px 8px', fontSize:'12px'}}
+              />
+            </div>
+
+            <button
+              onClick={runFFmpegAuto}
+              disabled={ffmpegRunning}
+              style={{background: ffmpegRunning ? '#4b4b5a' : '#7c3aed', color:'#fff', border:'none', borderRadius:'6px', padding:'8px 16px', fontSize:'13px', fontWeight:600, cursor: ffmpegRunning ? 'not-allowed' : 'pointer', width:'100%'}}
+            >
+              {ffmpegRunning ? '실행 중...' : '⚡ FFmpeg 자동 실행'}
+            </button>
+
+            {/* 진행률 바 */}
+            {ffmpegRunning && ffmpegProgress && (
+              <div style={{marginTop:'12px'}}>
+                <div style={{fontSize:'12px', color:'#c4b5fd', marginBottom:'4px'}}>
+                  CUT {ffmpegProgress.current}/{ffmpegProgress.total} — {ffmpegProgress.label}
+                </div>
+                <div style={{background:'rgba(255,255,255,0.08)', borderRadius:'4px', height:'6px', overflow:'hidden'}}>
+                  <div style={{
+                    background:'#7c3aed',
+                    height:'100%',
+                    width: `${(ffmpegProgress.current / ffmpegProgress.total) * 100}%`,
+                    transition:'width 0.3s ease',
+                    borderRadius:'4px',
+                  }} />
+                </div>
+              </div>
+            )}
+
+            {/* 에러 */}
+            {ffmpegError && (
+              <div style={{marginTop:'10px', padding:'8px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'4px', fontSize:'11px', color:'#fca5a5', whiteSpace:'pre-wrap'}}>
+                {ffmpegError}
+              </div>
+            )}
+
+            {/* 결과 */}
+            {ffmpegResults.length > 0 && (
+              <div style={{marginTop:'12px'}}>
+                <div style={{fontSize:'12px', color:'#86efac', marginBottom:'6px', fontWeight:600}}>
+                  ✅ 완료 — output_final 폴더 확인
+                </div>
+                <div style={{display:'flex', flexWrap:'wrap', gap:'6px'}}>
+                  {ffmpegResults.map(r => (
+                    <span key={r.cutNo} style={{
+                      fontSize:'11px', padding:'3px 8px', borderRadius:'4px',
+                      background: r.status === 'ok' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                      color: r.status === 'ok' ? '#86efac' : '#fca5a5',
+                      border: `1px solid ${r.status === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                    }}>
+                      {r.status === 'ok' ? '✓' : '✗'} CUT {r.cutNo}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
