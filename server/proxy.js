@@ -1,5 +1,11 @@
 import express from 'express'
 import cors from 'cors'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import { writeFileSync, mkdirSync } from 'fs'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const PROJECT_ROOT = join(__dirname, '..')
 
 const app = express()
 const PORT = 3001
@@ -85,6 +91,19 @@ app.post('/api/elevenlabs/text-to-speech/:voiceId', async (req, res) => {
     res.send(Buffer.from(await upstream.arrayBuffer()))
   } catch (err) {
     res.status(502).json({ error: err.message })
+  }
+})
+
+// ── 파이프라인 내보내기 ─────────────────────────────────────
+app.post('/api/save-prompts', (req, res) => {
+  try {
+    const dir = join(PROJECT_ROOT, 'downloads', 'flow')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'prompts.json'), JSON.stringify(req.body, null, 2), 'utf8')
+    res.json({ success: true })
+  } catch (err) {
+    console.error('[proxy] save-prompts 오류:', err.message)
+    res.status(500).json({ error: err.message })
   }
 })
 

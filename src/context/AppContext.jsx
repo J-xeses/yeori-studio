@@ -7,7 +7,7 @@ const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,
   scene: '', action: '', character: '서여리',
   dialogue: '', narration: '', imagePrompt: '',
-  duration: 5,
+  duration: 5, cutType: 'NORMAL',
 }))
 
 const defaultState = {
@@ -15,8 +15,8 @@ const defaultState = {
   apiKeys: { claude: '', elevenLabs: '', gemini: '' },
   vertexAI: false,
   elevenLabsStatus: { connected: false, remainingChars: 0 },
-  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 7, character: '서여리 - 20대 여성, 감성적인 유튜브 크리에이터' },
-  cuts: makeCuts(7),
+  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 17, character: '서여리 - 20대 여성, 감성적인 유튜브 크리에이터' },
+  cuts: makeCuts(17),
   scriptRaw: '',
   ttsSettings: { voiceId: '21m00Tcm4TlvDq8ikWAM', emotion: 50, tone: 50, speed: 1.0 },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi' },
