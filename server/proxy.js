@@ -228,17 +228,22 @@ app.post('/api/run-flow', (req, res) => {
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders()
 
-  const send = data => res.write(`data: ${JSON.stringify(data)}\n\n`)
+  const send = data => {
+    try { res.write(`data: ${JSON.stringify(data)}\n\n`) } catch {}
+  }
   send({ type: 'saved', message: 'prompts.json 저장 완료' })
 
-  const nodeArgs = [path.join(ROOT, 'scripts', 'flow-automation.js')]
+  // process.execPath: 현재 서버와 동일한 node 바이너리 절대 경로 사용 (Windows PATH 의존 제거)
+  const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
+  const nodeArgs = [scriptPath]
   if (ep) nodeArgs.push(`--ep=${ep}`)
 
-  const proc = spawn('node', nodeArgs, { cwd: ROOT, env: process.env })
+  console.log(`[run-flow] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
 
-  let buf = ''
-  const onLine = line => {
-    if (!line.trim() || line.startsWith('>')) return
+  const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
+
+  const parseLine = line => {
+    if (!line.trim()) return
 
     const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*생성/)
     if (progressMatch) {
@@ -260,25 +265,48 @@ app.post('/api/run-flow', (req, res) => {
     }
   }
 
+  // stdout / stderr 버퍼 분리 (혼합 시 라인 파싱 오류 방지)
+  let outBuf = ''
   proc.stdout.on('data', chunk => {
-    buf += chunk.toString()
-    const lines = buf.split('\n')
-    buf = lines.pop()
-    lines.forEach(onLine)
+    outBuf += chunk.toString()
+    const lines = outBuf.split('\n')
+    outBuf = lines.pop()
+    lines.forEach(l => parseLine(l))
   })
+
+  let errBuf = ''
   proc.stderr.on('data', chunk => {
-    buf += chunk.toString()
-    const lines = buf.split('\n')
-    buf = lines.pop()
-    lines.forEach(onLine)
+    errBuf += chunk.toString()
+    const lines = errBuf.split('\n')
+    errBuf = lines.pop()
+    lines.forEach(l => {
+      const line = l.trim()
+      if (!line) return
+      console.error('[run-flow stderr]', line)
+      // 치명적 오류(ExperimentalWarning 제외)만 클라이언트에 전달
+      if (!line.startsWith('ExperimentalWarning') && (line.includes('Error') || line.includes('오류') || line.includes('실패'))) {
+        send({ type: 'log', level: 'error', message: line })
+      }
+    })
   })
+
   proc.on('close', code => {
-    if (buf.trim()) onLine(buf)
+    if (outBuf.trim()) parseLine(outBuf)
+    if (errBuf.trim()) console.error('[run-flow stderr]', errBuf)
+    console.log(`[run-flow] 종료 코드: ${code}`)
     send({ type: 'complete', success: code === 0, code })
     res.end()
   })
-  proc.on('error', err => { send({ type: 'error', message: err.message }); res.end() })
-  req.on('close', () => proc.kill())
+
+  proc.on('error', err => {
+    console.error('[run-flow] spawn 오류:', err.message)
+    send({ type: 'error', message: `flow-automation 실행 실패: ${err.message}` })
+    res.end()
+  })
+
+  req.on('close', () => {
+    try { proc.kill() } catch {}
+  })
 })
 
 const server = app.listen(PORT, () => {
