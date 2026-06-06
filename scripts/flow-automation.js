@@ -251,16 +251,23 @@ async function main() {
 
   // ── 일반 이미지 생성 모드 ─────────────────────────────────────────
   const { episode, type, cuts } = loadPrompts()
-  const promptsMeta = (() => {
-    const raw = JSON.parse(fs.readFileSync(
-      path.join(CONFIG.downloadDir, 'prompts.json'), 'utf-8'
-    ))
-    return raw.title || `EP${raw.episode ?? episode}`
-  })()
   if (!cuts.length) {
     log('warn', '처리할 프롬프트가 없습니다. 조건을 확인하세요.')
     return
   }
+
+  // prompts.json에서 제목 읽기 → 프로젝트 이름: "EP4_한강라이딩"
+  const rawPrompts = JSON.parse(fs.readFileSync(
+    path.join(CONFIG.downloadDir, 'prompts.json'), 'utf-8'
+  ))
+  const epTitle    = (rawPrompts.title || '').replace(/\s+/g, '')
+  const projectTitle = epTitle ? `EP${episode}_${epTitle}` : `EP${episode}`
+
+  const epDir       = path.join(CONFIG.downloadDir, `ep${episode}`)
+  const projectMarker = path.join(epDir, 'project_url.txt')
+  const charMarker    = path.join(epDir, 'character_registered.txt')
+  const closeupPath   = path.join(epDir, 'yeori_closeup.jpg')
+  ensureDir(epDir)
 
   // 레퍼런스 이미지 → Claude API 얼굴 분석 → 프롬프트 앞에 자동 추가
   const faceFeatures = await analyzeReferenceImage()
@@ -292,56 +299,68 @@ async function main() {
   const results = []
 
   try {
-    // ── Step 0-A: 로그인 + 대시보드 이동 ────────────────────────────
+    // ── ① Google Flow 로그인 + 대시보드 ─────────────────────────────
     await navigateToFlow(page)
 
-    const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
-    ensureDir(epDir)
+    // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
+    //    project_url.txt 있으면 재사용 / 없으면 "EP{N}_{제목}" 신규 생성
+    if (fs.existsSync(projectMarker)) {
+      const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
+      _projectUrl = savedUrl
+      log('ok', `② 기존 프로젝트 재사용: ${savedUrl}`)
+      await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+      await sleep(2500)
+      await waitForImagesStable(page)
+    } else {
+      log('step', `② 새 프로젝트 생성: "${projectTitle}"`)
+      const newUrl = await createNewProject(page, projectTitle)
+      if (newUrl) {
+        _projectUrl = newUrl
+        fs.writeFileSync(projectMarker, newUrl, 'utf-8')
+        log('ok', `② 프로젝트 생성 완료: ${newUrl}`)
+      } else {
+        log('warn', '② 프로젝트 생성 실패 — 기존 프로젝트에서 계속')
+      }
+      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project.png'), fullPage: true })
+    }
 
-    // ── Step 0-B: 에피소드 전용 프로젝트 확보 (새 생성 or 재사용) ────
-    await ensureProject(page, epDir, promptsMeta)
-
-    // ── Step 1: 서여리 캐릭터 등록 (에피소드별 최초 1회) ─────────────
-    const charMarker = path.join(epDir, 'character_registered.txt')
+    // ── ③ 서여리 캐릭터 등록 (최초 1회, character_registered.txt 마커) ─
     if (!fs.existsSync(charMarker)) {
-      log('step', '서여리 캐릭터 등록 중 (assets/yeori-reference.jpg)…')
+      log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, CONFIG.referenceImage)})…`)
       const regOk = await registerCharacterWithImage(page, CONFIG.referenceImage)
       if (regOk) {
         fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
-        log('ok', '캐릭터 등록 완료')
+        log('ok', '③ 캐릭터 등록 완료')
       } else {
-        log('warn', '캐릭터 등록 실패 → 계속 진행')
+        log('warn', '③ 캐릭터 등록 실패 — 계속 진행 (이미지 일관성 저하 가능)')
       }
-      // 캐릭터 페이지 → 프로젝트로 복귀
       await navigateBackToProject(page)
     } else {
-      log('ok', `서여리 캐릭터 이미 등록됨 (스킵)`)
+      log('ok', `③ 서여리 캐릭터 이미 등록됨 (스킵)`)
     }
 
-    // ── Step 2: 클로즈업 1회 생성 또는 재사용 ───────────────────────
-    const closeupPath = path.join(epDir, 'yeori_closeup.jpg')
-
-    if (fs.existsSync(closeupPath)) {
-      log('ok', `yeori_closeup.jpg 재사용: ${path.relative(ROOT, closeupPath)}`)
-    } else {
-      log('step', '클로즈업 얼굴 이미지 생성 중 (에피소드 1회)…')
+    // ── ④ 클로즈업 생성 (최초 1회, yeori_closeup.jpg 캐시) ──────────
+    if (!fs.existsSync(closeupPath)) {
+      log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
       await generateEpisodeCloseup(page, closeupPath)
-      log('ok', `클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
+      log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
       await sleep(CONFIG.delayMs)
+    } else {
+      log('ok', `④ 클로즈업 재사용: ${path.relative(ROOT, closeupPath)}`)
     }
 
+    // ── ⑤ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const label = `[${i + 1}/${cuts.length}] CUT ${cut.no}`
-      log('step', `${label} 생성 중…`)
+      log('step', `⑤ ${label} 생성 중…`)
 
-      let success = false
       for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
         try {
           const savedPath = await processCut(page, cut, episode, closeupPath, type)
           log('ok', `${label} → ${path.relative(ROOT, savedPath)}`)
           results.push({ cutNo: cut.no, status: 'ok', file: savedPath })
-          ok++; success = true; break
+          ok++; break
         } catch (err) {
           if (attempt < CONFIG.retryCount) {
             log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount}: ${err.message}`)
@@ -504,9 +523,9 @@ async function ensureProject(page, epDir, title) {
   log('info', '프로젝트 UI 스크린샷 저장 완료')
 }
 
-// 새 프로젝트 생성 후 프로젝트 URL 반환
+// 새 프로젝트 생성 → 이름 입력 → 프로젝트 URL 반환
 async function createNewProject(page, title) {
-  // "새 프로젝트" / "+" 버튼 클릭
+  // "새 프로젝트" 버튼 클릭
   const clicked = await page.evaluate(() => {
     function search(root) {
       for (const el of root.querySelectorAll('button, a, [role="button"]')) {
@@ -516,7 +535,6 @@ async function createNewProject(page, title) {
           el.click(); return true
         }
       }
-      // "+" 단독 버튼 (플로팅 아닌 상단 버튼)
       for (const el of root.querySelectorAll('button, [role="button"]')) {
         const r = el.getBoundingClientRect()
         if (el.textContent.trim() === '+' && r.top < 200) { el.click(); return true }
@@ -530,21 +548,71 @@ async function createNewProject(page, title) {
   })
 
   if (!clicked) { log('warn', '"새 프로젝트" 버튼 못 찾음'); return null }
-  log('info', '"새 프로젝트" 클릭 완료')
-  await sleep(3000)
+  log('info', `"새 프로젝트" 클릭 → 이름: "${title}"`)
+  await sleep(2000)
 
-  // 프로젝트 URL 확인 (이동됐으면 성공)
-  const currentUrl = page.url()
-  if (currentUrl.includes('/flow/project/')) {
-    log('ok', `프로젝트 페이지 진입: ${currentUrl}`)
-    return currentUrl
+  // 이름 입력 모달이 열렸으면 타이핑 후 Enter
+  const modalInput = await page.evaluate(() => {
+    const inputs = [...document.querySelectorAll('input[type="text"], [contenteditable="true"], textarea')]
+      .filter(el => el.getBoundingClientRect().width > 0)
+    return inputs.length > 0
+  })
+
+  if (modalInput) {
+    // 기존 내용 지우고 제목 입력
+    await page.keyboard.down('Control')
+    await page.keyboard.press('a')
+    await page.keyboard.up('Control')
+    await page.keyboard.press('Backspace')
+    await sleep(200)
+    await page.keyboard.type(title, { delay: 30 })
+    await sleep(500)
+    await page.keyboard.press('Enter')
+    log('info', `프로젝트 이름 입력 완료: "${title}"`)
+    await sleep(3000)
+  } else {
+    await sleep(3000)
   }
 
-  // 아직 모달/입력창이 열린 경우: Enter로 확인
-  await page.keyboard.press('Enter').catch(() => {})
-  await sleep(2000)
-  const afterUrl = page.url()
-  return afterUrl.includes('/flow/project/') ? afterUrl : null
+  // 프로젝트 URL 진입 확인
+  let projectUrl = page.url()
+  if (!projectUrl.includes('/flow/project/')) {
+    // 한 번 더 대기
+    await sleep(2000)
+    projectUrl = page.url()
+  }
+
+  if (!projectUrl.includes('/flow/project/')) {
+    log('warn', `프로젝트 URL 미진입: ${projectUrl}`)
+    return null
+  }
+
+  log('ok', `새 프로젝트 생성 완료: ${projectUrl}`)
+
+  // 프로젝트 제목 영역 클릭해서 이름 변경 시도 (모달 없이 바로 프로젝트로 이동한 경우)
+  if (!modalInput) {
+    const renamed = await page.evaluate((t) => {
+      const titleEl = document.querySelector(
+        'h1[contenteditable], [aria-label="Project name"], input[placeholder*="roject"], [data-placeholder*="roject"]'
+      )
+      if (!titleEl) return false
+      titleEl.focus()
+      titleEl.click()
+      document.execCommand('selectAll')
+      titleEl.value = t
+      titleEl.textContent = t
+      titleEl.dispatchEvent(new Event('input', { bubbles: true }))
+      titleEl.dispatchEvent(new Event('change', { bubbles: true }))
+      return true
+    }, title)
+    if (renamed) {
+      await page.keyboard.press('Enter').catch(() => {})
+      log('info', `프로젝트 이름 변경: "${title}"`)
+      await sleep(1000)
+    }
+  }
+
+  return projectUrl
 }
 
 // ── 캐릭터 등록 ──────────────────────────────────────────────────────
