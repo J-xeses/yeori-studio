@@ -32,7 +32,9 @@ export default function StudioTab() {
   const [selected, setSelected] = useState(TOOLS[0])
   const [copiedId, setCopiedId] = useState(null)
   const [generating, setGenerating] = useState({}) // { cutId: true/false }
-  const [autoProgress, setAutoProgress] = useState({ running: false, current: 0, total: 0, log: [] })
+  const [flowRunning, setFlowRunning] = useState(false)
+  const [flowLogs, setFlowLogs] = useState([])
+  const [flowDone, setFlowDone] = useState(false)
   const fileRefs = useRef({})
 
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
@@ -69,39 +71,92 @@ export default function StudioTab() {
     }
   }
 
-  // ── 전체 컷 자동 생성 ─────────────────────────────────────────
-  const generateAllImages = async () => {
-    if (!apiKeys.gemini) { alert('GEMINI API 키를 입력하세요!'); return }
-    const validCuts = cuts.filter(c => c.imagePrompt)
-    if (!validCuts.length) { alert('프롬프트가 있는 컷이 없어요!\n먼저 전체 프롬프트 자동 생성을 실행하세요.'); return }
-    if (!confirm(`${validCuts.length}컷 이미지를 자동 생성할까요?\n(무료 한도: 하루 500장)`)) return
-
-    setAutoProgress({ running: true, current: 0, total: validCuts.length, log: [] })
-
-    for (let i = 0; i < validCuts.length; i++) {
-      const cut = validCuts[i]
-      setAutoProgress(prev => ({
-        ...prev, current: i + 1,
-        log: [...prev.log, `CUT ${cut.no} 생성 중...`]
-      }))
-      try {
-        const imgUrl = await generateImageWithGemini(cut.imagePrompt, apiKeys.gemini)
-        setImages(prev => ({ ...prev, [cut.id]: imgUrl }))
-        setGPoint(cut.no, 'g3', true)
-        setAutoProgress(prev => ({
-          ...prev,
-          log: [...prev.log.slice(0, -1), `✅ CUT ${cut.no} 완료`]
-        }))
-      } catch(e) {
-        setAutoProgress(prev => ({
-          ...prev,
-          log: [...prev.log.slice(0, -1), `❌ CUT ${cut.no} 실패: ${e.message}`]
-        }))
-      }
-      // API 레이트 리밋 방지 (1초 대기)
-      if (i < validCuts.length - 1) await new Promise(r => setTimeout(r, 1000))
+  // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
+  const runFlow = async () => {
+    const { episode, cuts: allCuts } = state
+    const prompts = {
+      episode: episode.number,
+      title: episode.title || '',
+      cuts: allCuts.filter(c => c.imagePrompt?.trim()).map(c => ({
+        no: c.no,
+        imagePrompt: c.imagePrompt,
+        ...(c.narration?.trim() ? { narration: c.narration.trim() } : {}),
+        ...(c.dialogue?.trim() && !/^없음$/i.test(c.dialogue) ? { dialogue: c.dialogue.trim() } : {}),
+        duration: c.duration || 5,
+      })),
     }
-    setAutoProgress(prev => ({ ...prev, running: false }))
+    if (!prompts.cuts.length) { alert('이미지 프롬프트가 있는 컷이 없어요!'); return }
+
+    setFlowRunning(true)
+    setFlowDone(false)
+    setFlowLogs([{ type: 'info', message: 'prompts.json 저장 중…' }])
+
+    try {
+      const res = await fetch('http://localhost:3001/api/run-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep: episode.number, prompts }),
+      })
+      if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'saved') {
+              setFlowLogs(prev => [...prev, { type: 'ok', message: '✅ prompts.json 저장 완료' }])
+            } else if (ev.type === 'progress') {
+              setFlowLogs(prev => [...prev, {
+                type: 'progress', cutNo: ev.cutNo,
+                message: `🔄 C${String(ev.cutNo).padStart(2,'0')} 생성 중… (${ev.current}/${ev.total})`,
+              }])
+            } else if (ev.type === 'cut_done') {
+              setFlowLogs(prev => {
+                const next = [...prev]
+                for (let j = next.length - 1; j >= 0; j--) {
+                  if (next[j].cutNo === ev.cutNo && next[j].type === 'progress') {
+                    next[j] = { type: 'done', cutNo: ev.cutNo, message: `✅ C${String(ev.cutNo).padStart(2,'0')} 완료 (${ev.current}/${ev.total})` }
+                    break
+                  }
+                }
+                return next
+              })
+              // 생성된 이미지 자동 로드
+              const padded = String(ev.cutNo).padStart(2, '0')
+              const cut = allCuts.find(c => c.no === ev.cutNo)
+              if (cut) {
+                for (const ext of ['jpg', 'jpeg', 'png']) {
+                  const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}?t=${Date.now()}`
+                  try {
+                    const r = await fetch(url, { method: 'HEAD' })
+                    if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(cut.no, 'g3', true); break }
+                  } catch {}
+                }
+              }
+            } else if (ev.type === 'cut_error') {
+              setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
+            } else if (ev.type === 'complete') {
+              setFlowRunning(false)
+              setFlowDone(ev.success)
+              if (!ev.success) setFlowLogs(prev => [...prev, { type: 'error', message: '파이프라인 실패' }])
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFlowLogs(prev => [...prev, { type: 'error', message: `❌ ${err.message}` }])
+      setFlowRunning(false)
+    }
   }
 
   // ── 룰셋 체크 ─────────────────────────────────────────────────
@@ -126,30 +181,7 @@ export default function StudioTab() {
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
   }
 
-  const exportPromptsJson = () => {
-    const { episode, cuts: allCuts } = state
-    const payload = {
-      episode: episode.number,
-      title: episode.title || '',
-      generatedAt: new Date().toISOString(),
-      cuts: allCuts
-        .filter(c => c.imagePrompt?.trim())
-        .map(c => ({
-          no: c.no,
-          episode: episode.number,
-          scene: c.scene || '',
-          dialogue: c.dialogue || '',
-          imagePrompt: c.imagePrompt,
-        })),
-    }
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `prompts_ep${episode.number}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+  const exportPromptsJson = () => runFlow()
 
   const generateAllPrompts = () => {
     let failCount = 0
@@ -194,70 +226,56 @@ export default function StudioTab() {
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
           <button className={s.autoBtn} onClick={generateAllPrompts}>⚡ 전체 프롬프트 자동 생성</button>
           <button className={s.autoBtn} onClick={exportPromptsJson}
-            title="downloads/flow/prompts.json 생성 → npm run flow 실행"
-            style={{ background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', border: 'none' }}>
-            📤 Flow용 JSON 내보내기
+            disabled={flowRunning}
+            title="prompts.json 저장 후 Google Flow 자동 실행"
+            style={{ background: flowRunning ? 'var(--surface3)' : 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', border: 'none', opacity: flowRunning ? 0.7 : 1 }}>
+            {flowRunning ? '⏳ Flow 실행 중…' : '📤 Flow용 JSON 내보내기'}
           </button>
           <button
-            onClick={generateAllImages}
-            disabled={autoProgress.running}
+            onClick={runFlow}
+            disabled={flowRunning}
             style={{
               padding:'8px 14px', borderRadius:6,
-              background: autoProgress.running ? 'var(--surface3)' : 'linear-gradient(135deg,#a78bfa,#60a5fa)',
+              background: flowRunning ? 'var(--surface3)' : 'linear-gradient(135deg,#a78bfa,#60a5fa)',
               color:'#fff', border:'none', fontSize:12, fontWeight:700,
-              cursor: autoProgress.running ? 'not-allowed' : 'pointer',
+              cursor: flowRunning ? 'not-allowed' : 'pointer',
               display:'flex', alignItems:'center', gap:6,
               fontFamily:'Noto Sans KR, sans-serif',
-              opacity: autoProgress.running ? 0.7 : 1,
+              opacity: flowRunning ? 0.7 : 1,
             }}
           >
-            {autoProgress.running
-              ? `🤖 생성 중... ${autoProgress.current}/${autoProgress.total}`
-              : '🤖 전체 이미지 자동 생성'}
+            {flowRunning ? '🔄 Flow 실행 중…' : '🤖 전체 이미지 자동 생성'}
           </button>
         </div>
       </div>
 
-      {/* 자동 생성 진행 로그 */}
-      {(autoProgress.running || autoProgress.log.length > 0) && (
+      {/* Flow 실행 로그 */}
+      {flowLogs.length > 0 && (
         <div style={{
           background:'var(--surface2)', border:'1px solid var(--border)',
           borderRadius:8, padding:'12px 16px', margin:'0 0 12px',
           fontSize:11, fontFamily:'Space Mono, monospace',
         }}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-            <div style={{fontWeight:700,color:'var(--purple)'}}>
-              🤖 이미지 자동 생성
-              {autoProgress.running && ` (${autoProgress.current}/${autoProgress.total})`}
-            </div>
-            {!autoProgress.running && (
-              <button
-                onClick={() => setAutoProgress({ running:false, current:0, total:0, log:[] })}
-                style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}
-              >✕ 닫기</button>
+            <div style={{fontWeight:700,color:'var(--purple)'}}>🤖 Google Flow 이미지 생성</div>
+            {!flowRunning && (
+              <button onClick={() => { setFlowLogs([]); setFlowDone(false) }}
+                style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
             )}
           </div>
-          {autoProgress.running && (
-            <div style={{background:'var(--surface3)',borderRadius:4,height:6,marginBottom:8,overflow:'hidden'}}>
-              <div style={{
-                width:`${(autoProgress.current/autoProgress.total)*100}%`,
-                height:'100%', background:'linear-gradient(90deg,var(--purple),var(--teal))',
-                borderRadius:4, transition:'width 0.3s'
-              }}/>
-            </div>
-          )}
-          <div style={{maxHeight:80,overflowY:'auto',color:'var(--text2)'}}>
-            {autoProgress.log.map((l,i) => (
+          <div style={{maxHeight:100,overflowY:'auto',color:'var(--text2)',display:'flex',flexDirection:'column',gap:2}}>
+            {flowLogs.map((l,i) => (
               <div key={i} style={{
-                color: l.startsWith('✅') ? 'var(--teal)' : l.startsWith('❌') ? 'var(--red)' : 'var(--text3)'
-              }}>{l}</div>
+                color: l.type==='done'||l.type==='ok' ? 'var(--teal)'
+                     : l.type==='error' ? 'var(--red)'
+                     : l.type==='progress' ? 'var(--purple)'
+                     : 'var(--text3)'
+              }}>{l.message}</div>
             ))}
           </div>
-          {!autoProgress.running && autoProgress.log.length > 0 && (
-            <div style={{marginTop:8,color:'var(--teal)',fontWeight:700}}>
-              ✅ {autoProgress.log.filter(l=>l.startsWith('✅')).length}컷 완료
-              {autoProgress.log.filter(l=>l.startsWith('❌')).length > 0 &&
-                ` / ❌ ${autoProgress.log.filter(l=>l.startsWith('❌')).length}컷 실패`}
+          {flowDone && (
+            <div style={{marginTop:8,color:'var(--teal)',fontWeight:700,borderTop:'1px solid var(--border)',paddingTop:8}}>
+              🎉 전체 완료!
             </div>
           )}
         </div>
