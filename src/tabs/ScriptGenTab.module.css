@@ -91,6 +91,33 @@
 }
 .edField input:focus, .edField textarea:focus { border-color: var(--accent); }
 
+.exportBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: #059669; border: none; color: #fff;
+  padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  transition: background .15s;
+}
+.exportBtn:hover:not(:disabled) { background: #047857; }
+.exportBtn:disabled { opacity: .5; cursor: default; }
+.exportBtnRunning { background: var(--accent) !important; }
+
+.flowLog {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 150px; overflow-y: auto;
+  font-size: 11px; font-family: var(--mono);
+}
+.flowLogLine { color: var(--text-2); line-height: 1.6; }
+.flowLog_ok       { color: var(--green); }
+.flowLog_done     { color: var(--green); }
+.flowLog_error    { color: #ef4444; }
+.flowComplete {
+  color: var(--green); font-weight: 700; font-size: 12px;
+  text-align: center; margin-top: 4px; padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
 .rawSection { margin-top: 8px; }
 .rawSection summary { font-size: 12px; color: var(--text-3); cursor: pointer; padding: 6px 0; }
 .rawText {

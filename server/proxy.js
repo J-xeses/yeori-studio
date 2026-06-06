@@ -178,6 +178,73 @@ app.post('/api/ffmpeg', async (req, res) => {
   res.end()
 })
 
+// ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
+app.post('/api/run-flow', (req, res) => {
+  const { ep, prompts } = req.body
+  if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
+
+  const promptsPath = path.join(ROOT, 'downloads', 'flow', 'prompts.json')
+  fs.mkdirSync(path.dirname(promptsPath), { recursive: true })
+  fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+
+  const send = data => res.write(`data: ${JSON.stringify(data)}\n\n`)
+  send({ type: 'saved', message: 'prompts.json 저장 완료' })
+
+  const spawnArgs = ['run', 'flow']
+  if (ep) spawnArgs.push('--', `--ep=${ep}`)
+
+  const proc = spawn('npm', spawnArgs, { cwd: ROOT, shell: true, env: process.env })
+
+  let buf = ''
+  const onLine = line => {
+    if (!line.trim() || line.startsWith('>')) return
+
+    const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*생성/)
+    if (progressMatch) {
+      send({ type: 'progress', current: +progressMatch[1], total: +progressMatch[2], cutNo: +progressMatch[3] })
+      return
+    }
+    const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
+    if (doneMatch) {
+      send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo: +doneMatch[3] })
+      return
+    }
+    const errMatch = line.match(/CUT\s*(\d+).*실패/)
+    if (errMatch) {
+      send({ type: 'cut_error', cutNo: +errMatch[1] })
+      return
+    }
+    if (line.includes('성공') && line.includes('실패')) {
+      send({ type: 'summary', message: line.trim() })
+    }
+  }
+
+  proc.stdout.on('data', chunk => {
+    buf += chunk.toString()
+    const lines = buf.split('\n')
+    buf = lines.pop()
+    lines.forEach(onLine)
+  })
+  proc.stderr.on('data', chunk => {
+    buf += chunk.toString()
+    const lines = buf.split('\n')
+    buf = lines.pop()
+    lines.forEach(onLine)
+  })
+  proc.on('close', code => {
+    if (buf.trim()) onLine(buf)
+    send({ type: 'complete', success: code === 0, code })
+    res.end()
+  })
+  proc.on('error', err => { send({ type: 'error', message: err.message }); res.end() })
+  req.on('close', () => proc.kill())
+})
+
 app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')

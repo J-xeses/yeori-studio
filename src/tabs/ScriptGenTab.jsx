@@ -86,6 +86,9 @@ export default function ScriptGenTab() {
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
   const [numError, setNumError] = useState('')
+  const [flowRunning, setFlowRunning] = useState(false)
+  const [flowLogs, setFlowLogs] = useState([])
+  const [flowDone, setFlowDone] = useState(false)
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -280,6 +283,78 @@ ${YEORI_RULESET}
     dispatch({ type: 'RESET_CUTS', n: count })
   }
 
+  const handlePipelineExport = async () => {
+    if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
+
+    const promptsData = {
+      episode: episode.number,
+      title: episode.title,
+      cuts: cuts.map(c => {
+        const cut = { no: c.no, imagePrompt: c.imagePrompt || '' }
+        if (c.narration?.trim()) cut.narration = c.narration.trim()
+        if (c.dialogue?.trim() && !/^없음$/i.test(c.dialogue.trim())) cut.dialogue = c.dialogue.trim()
+        cut.duration = c.duration || 5
+        return cut
+      }),
+    }
+
+    setFlowRunning(true)
+    setFlowDone(false)
+    setFlowLogs([{ type: 'info', message: 'prompts.json 저장 중…' }])
+
+    try {
+      const res = await fetch('http://localhost:3001/api/run-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep: episode.number, prompts: promptsData }),
+      })
+      if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy가 실행 중인지 확인하세요`)
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'saved') {
+              setFlowLogs(prev => [...prev, { type: 'ok', message: '✅ prompts.json 저장 완료' }])
+            } else if (ev.type === 'progress') {
+              setFlowLogs(prev => [...prev, { type: 'progress', cutNo: ev.cutNo, message: `C${String(ev.cutNo).padStart(2,'0')} 생성 중… (${ev.current}/${ev.total})` }])
+            } else if (ev.type === 'cut_done') {
+              setFlowLogs(prev => {
+                const next = [...prev]
+                for (let j = next.length - 1; j >= 0; j--) {
+                  if (next[j].cutNo === ev.cutNo && next[j].type === 'progress') {
+                    next[j] = { type: 'done', cutNo: ev.cutNo, message: `✅ C${String(ev.cutNo).padStart(2,'0')} 완료 (${ev.current}/${ev.total})` }
+                    break
+                  }
+                }
+                return next
+              })
+            } else if (ev.type === 'cut_error') {
+              setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
+            } else if (ev.type === 'complete') {
+              setFlowRunning(false)
+              setFlowDone(ev.success)
+              if (!ev.success) setFlowLogs(prev => [...prev, { type: 'error', message: '파이프라인 실패' }])
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFlowLogs(prev => [...prev, { type: 'error', message: `❌ ${err.message}` }])
+      setFlowRunning(false)
+    }
+  }
+
   return (
     <div className={s.root}>
       {/* Left: Settings */}
@@ -368,6 +443,27 @@ ${YEORI_RULESET}
         </button>
 
         {progress && !loading && <div className={s.progressMsg}>{progress}</div>}
+
+        <button
+          className={`${s.exportBtn} ${flowRunning ? s.exportBtnRunning : ''}`}
+          onClick={handlePipelineExport}
+          disabled={flowRunning || !cuts.length}
+        >
+          {flowRunning
+            ? <><span className={s.spinner} />Flow 실행 중…</>
+            : '🚀 파이프라인 내보내기'}
+        </button>
+
+        {flowLogs.length > 0 && (
+          <div className={s.flowLog}>
+            {flowLogs.map((log, i) => (
+              <div key={i} className={`${s.flowLogLine} ${s[`flowLog_${log.type}`] || ''}`}>
+                {log.message}
+              </div>
+            ))}
+            {flowDone && <div className={s.flowComplete}>🎉 G3 이미지 생성 완료!</div>}
+          </div>
+        )}
 
         <div className={s.divider} />
         <div className={s.sideTitle}>컷 목록</div>
