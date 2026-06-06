@@ -25,7 +25,8 @@ export default function TTSTab() {
 
   const remaining = elevenLabsStatus.remainingChars
 
-  const getTextForCut = (cut) => cut.dialogue || cut.narration || ''
+  const getTextForCut = (cut) =>
+    (cut.dialogue || '').replace(/^\s*\[?(CLOSEUP|FULLBODY)\s*(SHOT)?\]?[\s:：]*/i, '').trim()
 
   const generateTTS = async (cutId, inputText) => {
     if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return }
