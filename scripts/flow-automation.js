@@ -20,6 +20,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { execSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -339,19 +340,50 @@ async function main() {
 // ── 브라우저 설정 ─────────────────────────────────────────────────────
 
 async function launchBrowser() {
+  // YeoriStudio 프로필을 사용 중인 Chrome 프로세스만 종료 (일반 Chrome 탭 보존)
+  killYeoriChrome()
+
   log('info', 'Chrome 실행 중 (YeoriStudio 프로필)…')
   return puppeteer.launch({
     executablePath: CONFIG.chromeExe,
     userDataDir:    CONFIG.chromeProfile,
-    headless:       false,         // 기존 Google 로그인 유지를 위해 headful
+    headless:       false,
     defaultViewport: null,
     args: [
       '--start-maximized',
       '--disable-blink-features=AutomationControlled',
       '--no-first-run',
       '--no-default-browser-check',
+      '--disable-dev-shm-usage',
     ],
   })
+}
+
+function killYeoriChrome() {
+  try {
+    // YeoriStudio 프로필이 commandline에 포함된 chrome.exe 프로세스만 타겟 종료
+    const result = execSync(
+      'wmic process where "name=\'chrome.exe\' and commandline like \'%YeoriStudio%\'" get processid /format:value',
+      { encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }
+    )
+    const pids = [...result.matchAll(/ProcessId=(\d+)/gi)].map(m => m[1]).filter(Boolean)
+    if (pids.length) {
+      pids.forEach(pid => {
+        try { execSync(`taskkill /f /pid ${pid}`, { stdio: 'ignore' }) } catch {}
+      })
+      log('info', `YeoriStudio Chrome ${pids.length}개 프로세스 종료 완료`)
+      // 종료 후 잠금 해제 대기
+      const lockFile = path.join(CONFIG.chromeProfile, 'lockfile')
+      let waited = 0
+      while (fs.existsSync(lockFile) && waited < 3000) {
+        execSync('timeout /t 1 /nobreak >nul 2>&1 || sleep 1', { shell: true, stdio: 'ignore' })
+        waited += 1000
+      }
+      try { if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile) } catch {}
+    }
+  } catch {
+    log('warn', 'YeoriStudio Chrome 프로세스 정리 건너뜀')
+  }
 }
 
 async function setupPage(browser) {
