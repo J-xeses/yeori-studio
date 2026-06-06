@@ -233,13 +233,14 @@ app.post('/api/run-flow', (req, res) => {
   }
   send({ type: 'saved', message: 'prompts.json 저장 완료' })
 
-  // 에피소드 번호: 요청 body의 ep 우선, 없으면 prompts.json의 episode 필드 사용
-  const episode = ep ?? prompts.episode ?? null
+  // 에피소드 번호: prompts.episode 우선 (클라이언트 상태 싱크 문제 방지), ep는 fallback
+  const episode = prompts.episode ?? ep ?? null
   const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
   const nodeArgs = [scriptPath]
   if (episode != null) nodeArgs.push(`--ep=${episode}`)
 
-  console.log(`[run-flow] EP=${episode ?? 'all'} spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
+  console.log(`[run-flow] EP=${episode ?? 'all'} (req.ep=${ep ?? 'none'}, prompts.episode=${prompts.episode ?? 'none'})`)
+  console.log(`[run-flow] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
 
   const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
 
@@ -317,8 +318,10 @@ app.post('/api/run-flow', (req, res) => {
     res.end()
   })
 
+  // 클라이언트 연결 종료 시 proc.kill() 하지 않음
+  // flow-automation.js는 20분 이상 걸리므로 SSE 연결 끊겨도 백그라운드에서 완료까지 실행
   req.on('close', () => {
-    try { proc.kill() } catch {}
+    console.log('[run-flow] 클라이언트 연결 종료 (flow 프로세스는 계속 실행)')
   })
 })
 

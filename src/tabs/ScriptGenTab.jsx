@@ -341,10 +341,17 @@ ${YEORI_RULESET}
               })
             } else if (ev.type === 'cut_error') {
               setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
+            } else if (ev.type === 'log' && ev.level === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `⚠️ ${ev.message}` }])
+            } else if (ev.type === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `❌ ${ev.message}${ev.detail ? ` (${ev.detail})` : ''}` }])
             } else if (ev.type === 'complete') {
               setFlowRunning(false)
               setFlowDone(ev.success)
-              if (!ev.success) setFlowLogs(prev => [...prev, { type: 'error', message: '파이프라인 실패' }])
+              if (!ev.success) {
+                const reason = ev.reason ? ` — ${ev.reason}` : ''
+                setFlowLogs(prev => [...prev, { type: 'error', message: `파이프라인 실패${reason} (code: ${ev.code ?? 'null'})` }])
+              }
             }
           } catch {}
         }
