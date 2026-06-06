@@ -251,6 +251,12 @@ async function main() {
 
   // ── 일반 이미지 생성 모드 ─────────────────────────────────────────
   const { episode, type, cuts } = loadPrompts()
+  const promptsMeta = (() => {
+    const raw = JSON.parse(fs.readFileSync(
+      path.join(CONFIG.downloadDir, 'prompts.json'), 'utf-8'
+    ))
+    return raw.title || `EP${raw.episode ?? episode}`
+  })()
   if (!cuts.length) {
     log('warn', '처리할 프롬프트가 없습니다. 조건을 확인하세요.')
     return
@@ -286,10 +292,14 @@ async function main() {
   const results = []
 
   try {
+    // ── Step 0-A: 로그인 + 대시보드 이동 ────────────────────────────
     await navigateToFlow(page)
 
     const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
     ensureDir(epDir)
+
+    // ── Step 0-B: 에피소드 전용 프로젝트 확보 (새 생성 or 재사용) ────
+    await ensureProject(page, epDir, promptsMeta)
 
     // ── Step 1: 서여리 캐릭터 등록 (에피소드별 최초 1회) ─────────────
     const charMarker = path.join(epDir, 'character_registered.txt')
@@ -426,18 +436,17 @@ async function setupPage(browser) {
   return page
 }
 
+// 로그인 + 쿠키 처리 + 대시보드 이동 (프로젝트 이동은 별도)
 async function navigateToFlow(page) {
   log('info', `Flow 접속 중: ${CONFIG.flowUrl}`)
   await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
 
-  // 로그인 필요 여부 확인
   if (page.url().includes('accounts.google.com') || page.url().includes('signin')) {
     log('warn', '구글 로그인이 필요합니다. 브라우저에서 로그인 후 Enter를 눌러주세요.')
     await waitForEnter()
     await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
   }
 
-  // 쿠키 동의 배너 처리 (클릭 후 대시보드로 강제 이동)
   const hadCookie = await page.evaluate(() => {
     const btns = [...document.querySelectorAll('button')]
     const agree = btns.find(b => /^(agree|동의)$/i.test(b.textContent.trim()))
@@ -446,33 +455,96 @@ async function navigateToFlow(page) {
   })
   if (hadCookie) await sleep(500)
 
-  // 대시보드 URL로 직접 이동
   const dashboardUrl = 'https://labs.google/fx/ko/tools/flow'
   if (!page.url().startsWith(dashboardUrl) || page.url().includes('/about')) {
     await page.goto(dashboardUrl, { waitUntil: 'networkidle2', timeout: 30000 })
     await sleep(2000)
   }
 
-  // 기존 프로젝트 링크 추출 후 이동
-  const projectUrl = await page.evaluate(() => {
-    const a = document.querySelector('a[href*="/flow/project/"]')
-    return a?.href ?? null
-  })
+  log('ok', `Flow 대시보드 준비 완료`)
+}
 
-  if (projectUrl) {
-    _projectUrl = projectUrl  // 캐릭터 등록 후 복귀용으로 저장
-    log('info', `프로젝트 페이지로 이동: ${projectUrl}`)
-    await page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+// 에피소드별 프로젝트 확보: 저장된 URL 재사용 OR 새 프로젝트 생성
+async function ensureProject(page, epDir, title) {
+  const marker = path.join(epDir, 'project_url.txt')
+
+  if (fs.existsSync(marker)) {
+    const savedUrl = fs.readFileSync(marker, 'utf-8').trim()
+    log('ok', `기존 프로젝트 사용: ${savedUrl}`)
+    _projectUrl = savedUrl
+    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
     await sleep(2500)
   } else {
-    log('warn', '기존 프로젝트를 찾지 못했습니다. Flow에서 프로젝트를 먼저 만들어주세요.')
+    log('step', `새 프로젝트 생성 중: ${title}…`)
+    const newUrl = await createNewProject(page, title)
+    if (newUrl) {
+      _projectUrl = newUrl
+      fs.writeFileSync(marker, newUrl, 'utf-8')
+      log('ok', `새 프로젝트 생성 완료: ${newUrl}`)
+    } else {
+      log('warn', '새 프로젝트 생성 실패 → 첫 번째 기존 프로젝트 사용 시도')
+      const fallbackUrl = await page.evaluate(() => {
+        const a = document.querySelector('a[href*="/flow/project/"]')
+        return a?.href ?? null
+      })
+      if (fallbackUrl) {
+        _projectUrl = fallbackUrl
+        fs.writeFileSync(marker, fallbackUrl, 'utf-8')
+        await page.goto(fallbackUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+        await sleep(2500)
+        log('info', `폴백 프로젝트로 이동: ${fallbackUrl}`)
+      } else {
+        log('warn', '프로젝트를 찾지 못했습니다. Flow에서 프로젝트를 먼저 만들어주세요.')
+      }
+    }
   }
 
-  log('ok', `Flow 준비 완료: ${page.url()}`)
-  // 기존 이미지가 모두 로드될 때까지 대기 (beforeItems 정확도 확보)
   await waitForImagesStable(page)
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project.png'), fullPage: true })
-  log('info', '프로젝트 UI 스크린샷: downloads/flow/debug_project.png')
+  log('info', '프로젝트 UI 스크린샷 저장 완료')
+}
+
+// 새 프로젝트 생성 후 프로젝트 URL 반환
+async function createNewProject(page, title) {
+  // "새 프로젝트" / "+" 버튼 클릭
+  const clicked = await page.evaluate(() => {
+    function search(root) {
+      for (const el of root.querySelectorAll('button, a, [role="button"]')) {
+        const txt = el.textContent.trim()
+        const label = (el.getAttribute('aria-label') || '').toLowerCase()
+        if (/(새 프로젝트|new project|create.*project|프로젝트 만들기)/i.test(txt + label)) {
+          el.click(); return true
+        }
+      }
+      // "+" 단독 버튼 (플로팅 아닌 상단 버튼)
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (el.textContent.trim() === '+' && r.top < 200) { el.click(); return true }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot && search(el.shadowRoot)) return true
+      }
+      return false
+    }
+    return search(document)
+  })
+
+  if (!clicked) { log('warn', '"새 프로젝트" 버튼 못 찾음'); return null }
+  log('info', '"새 프로젝트" 클릭 완료')
+  await sleep(3000)
+
+  // 프로젝트 URL 확인 (이동됐으면 성공)
+  const currentUrl = page.url()
+  if (currentUrl.includes('/flow/project/')) {
+    log('ok', `프로젝트 페이지 진입: ${currentUrl}`)
+    return currentUrl
+  }
+
+  // 아직 모달/입력창이 열린 경우: Enter로 확인
+  await page.keyboard.press('Enter').catch(() => {})
+  await sleep(2000)
+  const afterUrl = page.url()
+  return afterUrl.includes('/flow/project/') ? afterUrl : null
 }
 
 // ── 캐릭터 등록 ──────────────────────────────────────────────────────
