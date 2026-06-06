@@ -471,7 +471,10 @@ ${YEORI_RULESET}
           {cuts.map((c, i) => (
             <button key={c.id} className={`${s.cutItem} ${activeCut === i ? s.cutActive : ''}`}
               onClick={() => setActiveCut(i)}>
-              <span className={s.cutNo}>CUT {c.no}</span>
+              <span className={s.cutNo}>
+                CUT {c.no}
+                {c.cutType === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
+              </span>
               <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
             </button>
           ))}
@@ -498,12 +501,11 @@ ${YEORI_RULESET}
                 { key: 'character', label: '캐릭터', ph: '서여리' },
                 { key: 'dialogue', label: '대사', ph: '오늘 여기서 처음 써보는 이야기야.' },
                 { key: 'narration', label: '나레이션 (VO)', ph: '평범한 화요일 오후, 새로운 루틴이 시작된다.' },
-                { key: 'imagePrompt', label: '이미지 프롬프트', ph: 'Young Korean woman at cafe window, cinematic, 4K' },
               ].map(({ key, label, ph }) => (
                 <div key={key} className={s.edField}>
                   <label>{label}</label>
-                  {key === 'imagePrompt' || key === 'action' || key === 'narration' || key === 'dialogue' ? (
-                    <textarea rows={key === 'imagePrompt' ? 3 : 2}
+                  {key === 'action' || key === 'narration' || key === 'dialogue' ? (
+                    <textarea rows={2}
                       placeholder={ph}
                       value={cuts[activeCut]?.[key] || ''}
                       onChange={e => updateCut(cuts[activeCut].id, key, e.target.value)} />
@@ -514,6 +516,29 @@ ${YEORI_RULESET}
                   )}
                 </div>
               ))}
+              <div className={s.edField}>
+                <label>컷 타입</label>
+                <div className={s.cutTypeBtns}>
+                  {['NORMAL', 'SIGNATURE'].map(type => {
+                    const active = (cuts[activeCut]?.cutType ?? 'NORMAL') === type
+                    return (
+                      <button key={type}
+                        className={`${s.cutTypeBtn} ${active ? (type === 'SIGNATURE' ? s.cutTypeBtnSig : s.cutTypeBtnNormal) : ''}`}
+                        onClick={() => updateCut(cuts[activeCut].id, 'cutType', type)}
+                      >
+                        {type === 'NORMAL' ? '⬜ NORMAL' : '✨ SIGNATURE'}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className={s.edField}>
+                <label>이미지 프롬프트</label>
+                <textarea rows={3}
+                  placeholder="Young Korean woman at cafe window, cinematic, 4K"
+                  value={cuts[activeCut]?.imagePrompt || ''}
+                  onChange={e => updateCut(cuts[activeCut].id, 'imagePrompt', e.target.value)} />
+              </div>
               <div className={s.edField}>
                 <label>컷 길이 (초)</label>
                 <input type="number" min="1" max="60" value={cuts[activeCut]?.duration || 5}

@@ -118,6 +118,25 @@
   border-top: 1px solid var(--border);
 }
 
+/* 컷 타입 선택 */
+.cutTypeBtns { display: flex; gap: 8px; }
+.cutTypeBtn {
+  padding: 6px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--bg-input); color: var(--text-3);
+  transition: all .15s;
+}
+.cutTypeBtn:hover { border-color: var(--text-2); color: var(--text-2); }
+.cutTypeBtnNormal { border-color: var(--accent-border); color: var(--accent-light); background: var(--accent-glow); }
+.cutTypeBtnSig { border-color: #ca8a04; color: #fbbf24; background: rgba(234,179,8,.12); }
+
+/* 컷 목록 SIGNATURE 배지 */
+.sigBadge {
+  display: inline-block; margin-left: 6px;
+  font-size: 10px; font-weight: 700; color: #fbbf24;
+  background: rgba(234,179,8,.15); border: 1px solid #ca8a04;
+  border-radius: 4px; padding: 1px 5px; vertical-align: middle; line-height: 1.4;
+}
+
 .rawSection { margin-top: 8px; }
 .rawSection summary { font-size: 12px; color: var(--text-3); cursor: pointer; padding: 6px 0; }
 .rawText {

@@ -9,7 +9,7 @@ const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,
   scene: '', action: '', character: '서여리',
   dialogue: '', narration: '', imagePrompt: '',
-  duration: 5,
+  duration: 5, cutType: 'NORMAL',
 }))
 
 // 새 에피소드 기본값 생성
