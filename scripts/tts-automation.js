@@ -36,12 +36,12 @@ const ROOT = path.resolve(__dirname, '..')
 
 const CONFIG = {
   downloadDir:  path.join(ROOT, 'downloads'),
-  voiceName:    'Sian',
-  voiceId:      process.env.ELEVENLABS_VOICE_ID ?? null,
-  stability:    0.30,
-  similarity:   0.60,
-  style:        0.50,
-  speed:        0.8,
+  voiceName:    '서여리',
+  voiceId:      process.env.ELEVENLABS_VOICE_ID ?? 'RmYuvmCbqOMBJxDLW4k8',
+  stability:    0.35,
+  similarity:   0.75,
+  style:        0.40,
+  speed:        1.0,
   modelId:      'eleven_multilingual_v2',
   apiKey:       process.env.ELEVENLABS_API_KEY ?? '',
   ffprobe:      process.env.FFPROBE_PATH ?? 'ffprobe',
@@ -223,12 +223,12 @@ async function main() {
     if (i < cutsWithText.length - 1) await sleep(CONFIG.delayMs)
   }
 
-  const timingPath = path.join(audioDir, 'timing.json')
-  fs.writeFileSync(timingPath, JSON.stringify(
-    { episode, generatedAt: new Date().toISOString(), timing },
+  const reportPath = path.join(audioDir, `report_ep${episode}.json`)
+  fs.writeFileSync(reportPath, JSON.stringify(
+    { episode, generatedAt: new Date().toISOString(), voiceId: CONFIG.voiceId, timing },
     null, 2
   ))
-  log('info', `타이밍 저장: ${path.relative(ROOT, timingPath)}`)
+  log('info', `리포트 저장: ${path.relative(ROOT, reportPath)}`)
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log(`  완료: ✅ ${ok}개 성공 / ❌ ${fail}개 실패`)
