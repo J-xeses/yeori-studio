@@ -233,12 +233,13 @@ app.post('/api/run-flow', (req, res) => {
   }
   send({ type: 'saved', message: 'prompts.json 저장 완료' })
 
-  // process.execPath: 현재 서버와 동일한 node 바이너리 절대 경로 사용 (Windows PATH 의존 제거)
+  // 에피소드 번호: 요청 body의 ep 우선, 없으면 prompts.json의 episode 필드 사용
+  const episode = ep ?? prompts.episode ?? null
   const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
   const nodeArgs = [scriptPath]
-  if (ep) nodeArgs.push(`--ep=${ep}`)
+  if (episode != null) nodeArgs.push(`--ep=${episode}`)
 
-  console.log(`[run-flow] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
+  console.log(`[run-flow] EP=${episode ?? 'all'} spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
 
   const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
 
@@ -283,8 +284,10 @@ app.post('/api/run-flow', (req, res) => {
       const line = l.trim()
       if (!line) return
       console.error('[run-flow stderr]', line)
-      // 치명적 오류(ExperimentalWarning 제외)만 클라이언트에 전달
-      if (!line.startsWith('ExperimentalWarning') && (line.includes('Error') || line.includes('오류') || line.includes('실패'))) {
+      // ExperimentalWarning 제외, 에러 관련 라인은 SSE로 전달
+      if (!line.startsWith('ExperimentalWarning') &&
+          (line.includes('Error') || line.includes('error') ||
+           line.includes('오류') || line.includes('실패') || line.includes('치명'))) {
         send({ type: 'log', level: 'error', message: line })
       }
     })
@@ -292,15 +295,25 @@ app.post('/api/run-flow', (req, res) => {
 
   proc.on('close', code => {
     if (outBuf.trim()) parseLine(outBuf)
-    if (errBuf.trim()) console.error('[run-flow stderr]', errBuf)
-    console.log(`[run-flow] 종료 코드: ${code}`)
-    send({ type: 'complete', success: code === 0, code })
+    if (errBuf.trim()) {
+      console.error('[run-flow stderr 잔여]', errBuf)
+      send({ type: 'log', level: 'error', message: errBuf.trim() })
+    }
+
+    // code === null: 프로세스가 시그널로 강제 종료됨 (비정상)
+    if (code === null) {
+      console.error('[run-flow] 프로세스 비정상 종료 (signal kill)')
+      send({ type: 'complete', success: false, code: null, reason: '프로세스가 예기치 않게 종료되었습니다 (signal)' })
+    } else {
+      console.log(`[run-flow] 종료 코드: ${code}`)
+      send({ type: 'complete', success: code === 0, code })
+    }
     res.end()
   })
 
   proc.on('error', err => {
     console.error('[run-flow] spawn 오류:', err.message)
-    send({ type: 'error', message: `flow-automation 실행 실패: ${err.message}` })
+    send({ type: 'error', message: `flow-automation 실행 실패: ${err.message}`, detail: err.code ?? '' })
     res.end()
   })
 

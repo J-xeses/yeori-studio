@@ -80,7 +80,11 @@ const PROMPTS_EXAMPLE = {
 
 // ── 진입점 ────────────────────────────────────────────────────────────
 const args = parseArgs()
+
+// 상세 에러 로그: stack trace 포함 출력 → proxy의 stderr 파이프로 전달됨
 main().catch(err => {
+  console.error(`[flow] 치명적 오류: ${err.message}`)
+  if (err.stack) console.error(err.stack)
   log('error', `치명적 오류: ${err.message}`)
   process.exit(1)
 })
@@ -264,7 +268,15 @@ async function main() {
     return
   }
 
-  const browser = await launchBrowser()
+  let browser
+  try {
+    browser = await launchBrowser()
+  } catch (err) {
+    console.error(`[flow] Chrome 실행 실패: ${err.message}`)
+    console.error(`[flow] chromeExe 경로: ${CONFIG.chromeExe}`)
+    throw err
+  }
+
   const page = await setupPage(browser)
   let ok = 0, fail = 0
   const results = []
@@ -317,7 +329,7 @@ async function main() {
       }
     }
   } finally {
-    await browser.close()
+    if (browser) await browser.close().catch(() => {})
   }
 
   printSummary(ok, fail, results)
