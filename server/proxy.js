@@ -231,10 +231,10 @@ app.post('/api/run-flow', (req, res) => {
   const send = data => res.write(`data: ${JSON.stringify(data)}\n\n`)
   send({ type: 'saved', message: 'prompts.json 저장 완료' })
 
-  const spawnArgs = ['run', 'flow']
-  if (ep) spawnArgs.push('--', `--ep=${ep}`)
+  const nodeArgs = [path.join(ROOT, 'scripts', 'flow-automation.js')]
+  if (ep) nodeArgs.push(`--ep=${ep}`)
 
-  const proc = spawn('npm', spawnArgs, { cwd: ROOT, shell: true, env: process.env })
+  const proc = spawn('node', nodeArgs, { cwd: ROOT, env: process.env })
 
   let buf = ''
   const onLine = line => {
