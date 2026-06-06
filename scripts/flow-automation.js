@@ -326,8 +326,12 @@ async function main() {
 
     // ── ③ 서여리 캐릭터 등록 (최초 1회, character_registered.txt 마커) ─
     if (!fs.existsSync(charMarker)) {
-      log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, CONFIG.referenceImage)})…`)
-      const regOk = await registerCharacterWithImage(page, CONFIG.referenceImage)
+      // yeori-face.jpg 우선 사용, 없으면 referenceImage 폴백
+      const charImgPath = fs.existsSync(CONFIG.characterImage)
+        ? CONFIG.characterImage
+        : CONFIG.referenceImage
+      log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, charImgPath)})…`)
+      const regOk = await registerCharacterWithImage(page, charImgPath)
       if (regOk) {
         fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
         log('ok', '③ 캐릭터 등록 완료')
