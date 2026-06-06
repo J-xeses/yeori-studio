@@ -40,6 +40,7 @@ const ROOT = path.resolve(__dirname, '..')
 
 const CONFIG = {
   downloadDir:  path.join(ROOT, 'downloads'),
+  hooksDir:     path.join(ROOT, 'downloads', 'hooks'),
   ffmpeg:       process.env.FFMPEG_PATH  ?? 'ffmpeg',
   ffprobe:      process.env.FFPROBE_PATH ?? 'ffprobe',
   videoCodec:   'libx264',
@@ -79,7 +80,29 @@ function getPromptsMeta() {
     process.exit(1)
   }
   const raw = JSON.parse(fs.readFileSync(file, 'utf-8'))
-  return { episode: raw.episode ?? 'x', title: raw.title ?? '' }
+  return { episode: raw.episode ?? 'x', title: raw.title ?? '', hookClip: raw.hookClip ?? null }
+}
+
+function prepareHookClip(hookId, outputDir, targetW, targetH) {
+  const hookPath = path.join(CONFIG.hooksDir, `${hookId}.mp4`)
+  if (!fs.existsSync(hookPath)) {
+    log('warn', `훅 클립 없음: ${hookPath}`)
+    return null
+  }
+  const hookOut = path.join(outputDir, `_hook_${hookId}.mp4`)
+  log('step', `훅 클립 인코딩 중: ${hookId} → ${targetW}×${targetH}`)
+  runFFmpeg([
+    '-y', '-i', hookPath,
+    '-c:v', CONFIG.videoCodec,
+    '-crf', String(CONFIG.crf),
+    '-vf', `scale=${targetW}:${targetH},fps=${CONFIG.fps},format=yuv420p`,
+    '-c:a', CONFIG.audioCodec, '-b:a', '192k',
+    '-movflags', '+faststart',
+    hookOut,
+  ], `hook-${hookId}`)
+  const dur = getAudioDuration(hookOut)
+  log('ok', `훅 클립 준비 완료 (${dur.toFixed(1)}초)`)
+  return hookOut
 }
 
 function getAudioDuration(filePath) {
@@ -157,7 +180,8 @@ function concatVideos(cutPaths, outputPath) {
 }
 
 async function main() {
-  const { episode, title } = getPromptsMeta()
+  const { episode, title, hookClip: metaHook } = getPromptsMeta()
+  const hookId = args['no-hook'] ? null : (args.hook ?? metaHook ?? null)
 
   const flowDir   = path.join(CONFIG.downloadDir, 'flow',   `ep${episode}`)
   const audioDir  = path.join(CONFIG.downloadDir, 'audio',  `ep${episode}`)
@@ -240,9 +264,32 @@ async function main() {
   // 전체 concat
   if (!args['no-concat'] && outputCuts.length > 1) {
     const finalPath = path.join(outputDir, `ep${episode}_final.mp4`)
-    log('step', `최종 영상 합치기 (${outputCuts.length}컷, 총 ${totalDur.toFixed(1)}초)…`)
+    let concatList = [...outputCuts]
+
+    // 훅 클립 앞에 붙이기
+    if (hookId) {
+      const sampleVideo = outputCuts[0]
+      let targetW = 1376, targetH = 768
+      try {
+        const info = JSON.parse(execSync(
+          `"${CONFIG.ffprobe}" -v quiet -print_format json -show_streams "${sampleVideo}"`,
+          { encoding: 'utf-8' }
+        ))
+        const vs = info.streams.find(s => s.codec_type === 'video')
+        if (vs) { targetW = vs.width; targetH = vs.height }
+      } catch {}
+
+      const hookOut = prepareHookClip(hookId, outputDir, targetW, targetH)
+      if (hookOut) {
+        concatList.unshift(hookOut)
+        const hookDur = getAudioDuration(hookOut)
+        totalDur += hookDur
+      }
+    }
+
+    log('step', `최종 영상 합치기 (${concatList.length}클립, 총 ${totalDur.toFixed(1)}초)…`)
     try {
-      concatVideos(outputCuts, finalPath)
+      concatVideos(concatList, finalPath)
       log('ok', `최종 → ${path.relative(ROOT, finalPath)}`)
     } catch (err) {
       log('error', `concat 실패: ${err.message}`)

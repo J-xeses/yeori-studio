@@ -38,9 +38,10 @@ const CONFIG = {
   downloadDir:  path.join(ROOT, 'downloads'),
   voiceName:    'Sian',
   voiceId:      process.env.ELEVENLABS_VOICE_ID ?? null,
-  stability:    0.35,
-  similarity:   0.75,
-  style:        0.4,
+  stability:    0.30,
+  similarity:   0.60,
+  style:        0.50,
+  speed:        0.8,
   modelId:      'eleven_multilingual_v2',
   apiKey:       process.env.ELEVENLABS_API_KEY ?? '',
   ffprobe:      process.env.FFPROBE_PATH ?? 'ffprobe',
@@ -132,6 +133,7 @@ async function generateTTS(text, voiceId, outputPath) {
     body: JSON.stringify({
       text,
       model_id: CONFIG.modelId,
+      speed: CONFIG.speed,
       voice_settings: {
         stability:         CONFIG.stability,
         similarity_boost:  CONFIG.similarity,
