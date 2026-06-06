@@ -12,6 +12,14 @@ const ROOT = path.resolve(__dirname, '..')
 const app = express()
 const PORT = 3001
 
+// Node.js 18+에서 unhandledRejection이 프로세스를 종료하지 않도록 처리
+process.on('unhandledRejection', (reason) => {
+  console.error('[proxy] unhandledRejection:', reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('[proxy] uncaughtException:', err.message)
+})
+
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/downloads', express.static(path.join(ROOT, 'downloads')))
@@ -273,10 +281,20 @@ app.post('/api/run-flow', (req, res) => {
   req.on('close', () => proc.kill())
 })
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
   console.log(`  → http://localhost:${PORT}`)
   console.log('  → Claude / ElevenLabs API 요청을 중계합니다')
   console.log('')
+})
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n  ❌ 포트 ${PORT} 이미 사용 중입니다.`)
+    console.error(`  → 기존 프록시 프로세스를 종료 후 다시 실행하세요.\n`)
+  } else {
+    console.error(`\n  ❌ 서버 오류: ${err.message}\n`)
+  }
+  process.exit(1)
 })
