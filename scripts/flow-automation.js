@@ -658,11 +658,25 @@ async function registerCharacterWithImage(page, imagePath) {
   }
   log('info', `캐릭터 이미지: ${path.relative(ROOT, imagePath)}`)
 
-  // 대시보드 캐릭터 페이지로 이동
   const charUrl = 'https://labs.google/fx/ko/tools/flow/characters'
   await page.goto(charUrl, { waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {})
-  await sleep(1500)
+  await sleep(2000)
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_tab.png'), fullPage: true })
+
+  // 이미 등록된 캐릭터가 있는지 확인
+  const alreadyExists = await page.evaluate(() => {
+    const NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'yeori']
+    return NAMES.some(n =>
+      [...document.querySelectorAll('*')].some(el =>
+        el.textContent.trim().toLowerCase().includes(n.toLowerCase())
+        && el.getBoundingClientRect().width > 0
+      )
+    )
+  })
+  if (alreadyExists) {
+    log('ok', '서여리 캐릭터 이미 등록되어 있음 (스킵)')
+    return true
+  }
 
   // "캐릭터 만들기" 버튼 클릭
   const createClicked = await page.evaluate(() => {
@@ -678,19 +692,25 @@ async function registerCharacterWithImage(page, imagePath) {
     }
     return search(document)
   })
-  if (!createClicked) { log('warn', '"캐릭터 만들기" 버튼 못 찾음'); return false }
+  if (!createClicked) {
+    log('warn', '"캐릭터 만들기" 버튼 못 찾음 → debug_character_tab.png 확인')
+    return false
+  }
+  log('info', '"캐릭터 만들기" 클릭 완료')
   await sleep(2000)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_create.png'), fullPage: true })
 
   // 이미지 업로드
   const uploaded = await uploadCharacterImage(page, imagePath)
-  if (!uploaded) { log('warn', '이미지 업로드 실패'); return false }
-  await sleep(2000)
+  if (!uploaded) { log('warn', '이미지 업로드 실패 → debug_character_create.png 확인'); return false }
+  log('info', `이미지 업로드 완료: ${path.basename(imagePath)}`)
+  await sleep(2500)
 
   // 이름 입력
   await typeCharacterName(page, CONFIG.characterName)
   await sleep(800)
 
-  // 저장
+  // 저장 버튼 클릭
   const saved = await page.evaluate(() => {
     function search(root) {
       for (const el of root.querySelectorAll('button')) {
@@ -704,11 +724,34 @@ async function registerCharacterWithImage(page, imagePath) {
     }
     return search(document)
   })
-  await sleep(2000)
+  await sleep(2500)
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_done.png'), fullPage: true })
-  if (saved) log('ok', '캐릭터 저장 완료')
-  else log('warn', '저장 버튼 못 찾음 (스크린샷 확인)')
-  return !!saved
+
+  if (!saved) {
+    log('warn', '저장 버튼 못 찾음 → debug_character_done.png 확인')
+    return false
+  }
+
+  // 등록 완료 검증: 캐릭터 목록에 이름이 나타나는지 확인 (최대 5초 대기)
+  let verified = false
+  for (let i = 0; i < 5; i++) {
+    verified = await page.evaluate(() => {
+      const NAMES = ['서여리', 'Seo Yeori', 'yeori']
+      return NAMES.some(n =>
+        [...document.querySelectorAll('*')].some(el =>
+          el.textContent.trim().toLowerCase().includes(n.toLowerCase())
+          && el.getBoundingClientRect().width > 0
+        )
+      )
+    })
+    if (verified) break
+    await sleep(1000)
+  }
+
+  if (verified) log('ok', '캐릭터 등록 완료 및 목록 확인')
+  else log('warn', '캐릭터 목록에서 이름 확인 실패 (등록은 됐을 수 있음)')
+
+  return true
 }
 
 // ── 캐릭터 등록 후 프로젝트 페이지로 복귀 ──────────────────────────
@@ -904,33 +947,52 @@ async function clickPlusButton(page) {
 
 async function attachYeoriCharacterToPrompt(page) {
   if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
-  await sleep(1200)
+  await sleep(1500)
 
-  // 왼쪽 패널 "캐릭터" 탭 클릭
-  await page.evaluate(() => {
-    for (const el of document.querySelectorAll('*')) {
+  // 패널 오픈 직후 스크린샷 (선택자 디버깅용)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_char_panel.png') })
+
+  // "캐릭터" 탭 클릭 — 위치 제약 없이 텍스트 매칭
+  const tabClicked = await page.evaluate(() => {
+    const candidates = [...document.querySelectorAll('*')].filter(el => {
       const txt = el.textContent.trim()
       const r = el.getBoundingClientRect()
-      if ((txt === '캐릭터' || txt.includes('accessibility_new캐릭터'))
-          && r.left < 700 && r.top > 400 && el.offsetWidth > 0 && el.offsetWidth < 200) {
-        el.click(); return
-      }
-    }
-  })
-  await sleep(800)
-
-  // 우측 패널에서 Seo Yeori 캐릭터 선택
-  const charClicked = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('*')) {
-      const txt = el.textContent.trim()
-      if ((txt.includes('Untitled Character') || txt === '서여리' || txt.includes('Seo Yeori'))
-          && el.offsetWidth > 0 && el.offsetWidth < 300) {
-        el.click(); return txt.slice(0, 30)
-      }
+      return (txt === '캐릭터' || txt === 'Character' || txt === 'Characters' ||
+              txt.includes('accessibility_new캐릭터'))
+        && r.width > 0 && r.height > 0 && r.width < 250
+    })
+    // y 오름차순 정렬 후 y > 100인 첫 번째 요소 클릭
+    candidates.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    for (const el of candidates) {
+      if (el.getBoundingClientRect().top > 100) { el.click(); return el.textContent.trim().slice(0, 20) }
     }
     return null
   })
-  if (!charClicked) { log('warn', 'Seo Yeori 캐릭터 못 찾음, 건너뜀'); return false }
+  if (tabClicked) log('info', `캐릭터 탭 클릭: "${tabClicked}"`)
+  else log('warn', '캐릭터 탭 못 찾음 — 현재 패널에서 직접 검색')
+  await sleep(1000)
+
+  // 캐릭터 이름 검색 — 이름 조건 완화 (등록된 이름이 달라도 매칭)
+  const charClicked = await page.evaluate(() => {
+    const NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'yeori', 'Yeori', 'Untitled Character']
+    for (const name of NAMES) {
+      const found = [...document.querySelectorAll('*')].find(el => {
+        const txt = el.textContent.trim()
+        const r = el.getBoundingClientRect()
+        return txt.toLowerCase().includes(name.toLowerCase())
+          && r.width > 0 && r.width < 400 && r.height > 0 && r.height < 120
+      })
+      if (found) { found.click(); return found.textContent.trim().slice(0, 40) }
+    }
+    return null
+  })
+
+  if (!charClicked) {
+    log('warn', `Seo Yeori 캐릭터 못 찾음 → debug_char_panel.png 확인`)
+    log('warn', '캐릭터가 등록되지 않은 경우 --register-character 플래그로 먼저 등록하세요')
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
   log('info', `캐릭터 선택: "${charClicked}"`)
   await sleep(800)
 
