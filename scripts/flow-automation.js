@@ -79,6 +79,9 @@ const PROMPTS_EXAMPLE = {
   ],
 }
 
+// 프로젝트 URL 전역 추적 (캐릭터 등록 후 복귀에 사용)
+let _projectUrl = null
+
 // ── 진입점 ────────────────────────────────────────────────────────────
 const args = parseArgs()
 
@@ -285,9 +288,27 @@ async function main() {
   try {
     await navigateToFlow(page)
 
-    // ── 에피소드 클로즈업 1회 생성 또는 재사용 ──────────────────────
     const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
     ensureDir(epDir)
+
+    // ── Step 1: 서여리 캐릭터 등록 (에피소드별 최초 1회) ─────────────
+    const charMarker = path.join(epDir, 'character_registered.txt')
+    if (!fs.existsSync(charMarker)) {
+      log('step', '서여리 캐릭터 등록 중 (assets/yeori-reference.jpg)…')
+      const regOk = await registerCharacterWithImage(page, CONFIG.referenceImage)
+      if (regOk) {
+        fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
+        log('ok', '캐릭터 등록 완료')
+      } else {
+        log('warn', '캐릭터 등록 실패 → 계속 진행')
+      }
+      // 캐릭터 페이지 → 프로젝트로 복귀
+      await navigateBackToProject(page)
+    } else {
+      log('ok', `서여리 캐릭터 이미 등록됨 (스킵)`)
+    }
+
+    // ── Step 2: 클로즈업 1회 생성 또는 재사용 ───────────────────────
     const closeupPath = path.join(epDir, 'yeori_closeup.jpg')
 
     if (fs.existsSync(closeupPath)) {
@@ -439,6 +460,7 @@ async function navigateToFlow(page) {
   })
 
   if (projectUrl) {
+    _projectUrl = projectUrl  // 캐릭터 등록 후 복귀용으로 저장
     log('info', `프로젝트 페이지로 이동: ${projectUrl}`)
     await page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
     await sleep(2500)
@@ -552,6 +574,82 @@ async function registerCharacter(page) {
     log('ok', `서여리 캐릭터 등록 완료! (스크린샷: downloads/flow/debug_character_done.png)`)
   } else {
     log('warn', '저장 버튼을 찾지 못했습니다. 스크린샷을 확인하세요.')
+  }
+}
+
+// ── 캐릭터 등록 래퍼 (imagePath 지정, 성공 여부 반환) ────────────────
+
+async function registerCharacterWithImage(page, imagePath) {
+  if (!fs.existsSync(imagePath)) {
+    log('warn', `캐릭터 이미지 없음: ${imagePath}`)
+    return false
+  }
+  log('info', `캐릭터 이미지: ${path.relative(ROOT, imagePath)}`)
+
+  // 대시보드 캐릭터 페이지로 이동
+  const charUrl = 'https://labs.google/fx/ko/tools/flow/characters'
+  await page.goto(charUrl, { waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {})
+  await sleep(1500)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_tab.png'), fullPage: true })
+
+  // "캐릭터 만들기" 버튼 클릭
+  const createClicked = await page.evaluate(() => {
+    function search(root) {
+      for (const el of root.querySelectorAll('button, a')) {
+        const txt = el.textContent.trim()
+        if (/(캐릭터 만들기|create.{0,10}character|새 캐릭터)/i.test(txt)) { el.click(); return true }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot && search(el.shadowRoot)) return true
+      }
+      return false
+    }
+    return search(document)
+  })
+  if (!createClicked) { log('warn', '"캐릭터 만들기" 버튼 못 찾음'); return false }
+  await sleep(2000)
+
+  // 이미지 업로드
+  const uploaded = await uploadCharacterImage(page, imagePath)
+  if (!uploaded) { log('warn', '이미지 업로드 실패'); return false }
+  await sleep(2000)
+
+  // 이름 입력
+  await typeCharacterName(page, CONFIG.characterName)
+  await sleep(800)
+
+  // 저장
+  const saved = await page.evaluate(() => {
+    function search(root) {
+      for (const el of root.querySelectorAll('button')) {
+        const txt = el.textContent.trim()
+        if (/(저장|완료|확인|save|done|confirm|create)/i.test(txt) && !el.disabled) { el.click(); return true }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot && search(el.shadowRoot)) return true
+      }
+      return false
+    }
+    return search(document)
+  })
+  await sleep(2000)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_done.png'), fullPage: true })
+  if (saved) log('ok', '캐릭터 저장 완료')
+  else log('warn', '저장 버튼 못 찾음 (스크린샷 확인)')
+  return !!saved
+}
+
+// ── 캐릭터 등록 후 프로젝트 페이지로 복귀 ──────────────────────────
+
+async function navigateBackToProject(page) {
+  if (_projectUrl) {
+    log('info', `프로젝트 페이지로 복귀: ${_projectUrl}`)
+    await page.goto(_projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    await sleep(2500)
+    await waitForImagesStable(page)
+  } else {
+    log('warn', '프로젝트 URL 없음 — navigateToFlow 재실행')
+    await navigateToFlow(page)
   }
 }
 
