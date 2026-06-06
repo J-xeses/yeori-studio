@@ -1208,11 +1208,10 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
     CONFIG.bgSuffix,
   ].join(' ')
 
-  log('step', `전신 컷 생성 중… (yeori_closeup.jpg 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
+  log('step', `전신 컷 생성 중… (closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  await attachYeoriCharacterToPrompt(page)
   await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
 
@@ -1231,7 +1230,6 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
 
 async function generateEpisodeCloseup(page, savePath) {
   const pos = await prepareInput(page)
-  await attachYeoriCharacterToPrompt(page)
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
@@ -1266,25 +1264,11 @@ async function generateEpisodeCloseup(page, savePath) {
 
 async function attachCloseupToPrompt(page, closeupPath) {
   if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
-  await sleep(1200)
+  await sleep(1500)
 
-  // 이미지 탭 클릭
-  const imgTabClicked = await page.evaluate(() => {
-    const items = [...document.querySelectorAll('*')].filter(el => {
-      const txt = el.textContent.trim()
-      const r = el.getBoundingClientRect()
-      return txt === '이미지'
-        && r.left > 130 && r.left < 400
-        && r.top > 200
-        && el.offsetWidth > 0 && el.offsetWidth < 200
-    })
-    if (items[0]) { items[0].click(); return true }
-    return false
-  })
-  if (!imgTabClicked) log('warn', 'closeup: 이미지 탭 못 찾음')
-  await sleep(800)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
 
-  // 파일 input 탐색 → 클로즈업 업로드 시도
+  // ── 전략 1: file input 발견 시 직접 파일 업로드 ──────────────────
   const fileInput = await page.evaluateHandle(() => {
     function search(root) {
       for (const el of root.querySelectorAll('input[type="file"]')) return el
@@ -1298,53 +1282,57 @@ async function attachCloseupToPrompt(page, closeupPath) {
   const fileEl = fileInput.asElement()
   if (fileEl) {
     await fileEl.uploadFile(closeupPath)
-    log('info', `클로즈업 업로드: ${path.basename(closeupPath)}`)
+    log('info', `closeup 파일 업로드: ${path.basename(closeupPath)}`)
     await sleep(1500)
-    const addClicked = await page.evaluate(() => {
-      for (const el of document.querySelectorAll('button')) {
-        if (el.textContent.includes('프롬프트에 추가') && !el.disabled) { el.click(); return true }
-      }
-      return false
-    })
-    if (addClicked) { log('info', '클로즈업 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
+    const added = await clickAddToPrompt(page)
+    if (added) { await sleep(800); return true }
   }
 
-  // 폴백: 프로젝트 이미지 목록에서 가장 오래된(첫 번째 생성된) 이미지 선택
-  const imgInfo = await page.evaluate(() => {
-    const items = [...document.querySelectorAll('*')].filter(el => {
-      const txt = el.textContent.trim()
-      const r = el.getBoundingClientRect()
-      return txt.endsWith('이미지') && txt.length > 5
-        && el.offsetWidth > 50 && el.offsetWidth < 400
-        && r.top > 200 && r.left > 350
-    }).sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    if (!items.length) return null
-    // 가장 오래된(첫 생성) 이미지 = 리스트 맨 아래 (최신순 정렬 기준)
-    const target = items[items.length - 1]
+  // ── 전략 2: 패널 내 img 썸네일 클릭 (텍스트 매칭 X, 크기/위치 기반) ─
+  const thumbInfo = await page.evaluate(() => {
+    const imgs = [...document.querySelectorAll('img')].filter(img => {
+      const r = img.getBoundingClientRect()
+      return img.complete
+        && img.naturalWidth > 60
+        && r.width > 40 && r.width < 400
+        && r.height > 40
+        && r.top > 80
+        // 사이드바 아이콘(x<80) 제외, 전체폭 이미지 제외
+        && r.left > 80
+    })
+    if (!imgs.length) return null
+    // 가장 위에 있는 썸네일 = 가장 최근 생성 이미지
+    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    const target = imgs[0]
     const r = target.getBoundingClientRect()
-    return { txt: target.textContent.trim().slice(0, 40), x: Math.round(r.left + r.width/2), y: Math.round(r.top + r.height/2) }
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
   })
 
-  if (!imgInfo) {
-    log('warn', 'closeup: 이미지 첨부 실패 (목록 없음), 건너뜀')
-    await page.keyboard.press('Escape')
+  if (!thumbInfo) {
+    log('warn', 'closeup: 썸네일 못 찾음 → debug_plus_panel.png 확인, 건너뜀')
+    await page.keyboard.press('Escape').catch(() => {})
     return false
   }
 
-  log('info', `클로즈업 이미지 선택 (폴백): "${imgInfo.txt}"`)
-  await page.mouse.click(imgInfo.x, imgInfo.y)
+  log('info', `closeup 썸네일 클릭: (${thumbInfo.x}, ${thumbInfo.y})`)
+  await page.mouse.click(thumbInfo.x, thumbInfo.y)
   await sleep(800)
 
-  const addClicked = await page.evaluate(() => {
+  const added = await clickAddToPrompt(page)
+  if (added) { log('info', 'closeup 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
+
+  log('warn', '"프롬프트에 추가" 못 찾음')
+  await page.keyboard.press('Escape').catch(() => {})
+  return false
+}
+
+async function clickAddToPrompt(page) {
+  return page.evaluate(() => {
     for (const el of document.querySelectorAll('button')) {
       if (el.textContent.includes('프롬프트에 추가') && !el.disabled) { el.click(); return true }
     }
     return false
   })
-  if (addClicked) log('info', '클로즈업 이미지 프롬프트에 추가 완료 (폴백)')
-  else log('warn', '"프롬프트에 추가" 못 찾음')
-  await sleep(800)
-  return !!addClicked
 }
 
 // 접근성 트리 기반 입력창 위치 반환
