@@ -1196,40 +1196,81 @@ async function prepareInput(page) {
   return inputPos
 }
 
-// ── 컷 처리 — 클로즈업 레퍼런스 재사용 ─────────────────────────────
+// ── 로컬 파일을 "+" 패널에 직접 업로드해서 프롬프트 레퍼런스로 첨부 ──
 
-async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts') {
-  const ep = cut.episode ?? defaultEpisode ?? 'x'
+async function attachLocalFile(page, filePath) {
+  if (!fs.existsSync(filePath)) {
+    log('warn', `레퍼런스 파일 없음: ${filePath}`)
+    return false
+  }
 
-  // 전신샷 프롬프트에 K모델 비율 + 얼굴 일관성 + 배경 통제 자동 주입
-  const finalPrompt = [
-    CONFIG.bodyPrefix,
-    cut.imagePrompt.trim(),
-    CONFIG.bgSuffix,
-  ].join(' ')
+  if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
+  await sleep(1200)
 
-  log('step', `전신 컷 생성 중… (closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
-  const pos = await prepareInput(page)
-  log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
+  // 전략 1: 패널에 이미 file input이 있으면 바로 업로드
+  let fileEl = (await page.evaluateHandle(() => {
+    function s(root) {
+      for (const el of root.querySelectorAll('input[type="file"]')) return el
+      for (const el of root.querySelectorAll('*'))
+        if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
+      return null
+    }
+    return s(document)
+  })).asElement()
 
-  await attachCloseupToPrompt(page, closeupPath)
-  await setAspectRatio(page, type)
+  // 전략 2: "새 미디어" / "업로드" 버튼 클릭 후 file input 재탐색
+  if (!fileEl) {
+    const clicked = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('button, a, [role="button"]')) {
+        const t = el.textContent.trim()
+        const label = el.getAttribute('aria-label') || ''
+        if (/(새 미디어|업로드|upload|add media|new media)/i.test(t + label)
+            && el.getBoundingClientRect().width > 0) {
+          el.click(); return t
+        }
+      }
+      return null
+    })
+    if (clicked) {
+      log('info', `"${clicked}" 클릭 → file input 대기`)
+      await sleep(1000)
+      fileEl = (await page.evaluateHandle(() => {
+        function s(root) {
+          for (const el of root.querySelectorAll('input[type="file"]')) return el
+          for (const el of root.querySelectorAll('*'))
+            if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
+          return null
+        }
+        return s(document)
+      })).asElement()
+    }
+  }
 
-  await page.mouse.click(pos.x, pos.y)
-  await sleep(300); await page.keyboard.press('End'); await sleep(100)
-  await page.keyboard.type(finalPrompt, { delay: 15 })
-  await sleep(500)
+  if (!fileEl) {
+    log('warn', `file input 없음 → ${path.basename(filePath)} 첨부 건너뜀`)
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
 
-  const before = await collectImageSrcs(page)
-  await clickGenerate(page)
-  await waitForNewImage(page, before)
-  return saveNewImage(page, before, cut.no, ep, 'cut')
+  await fileEl.uploadFile(filePath)
+  log('info', `업로드: ${path.basename(filePath)}`)
+  await sleep(2000)
+
+  const added = await clickAddToPrompt(page)
+  if (added) { log('info', `${path.basename(filePath)} 레퍼런스 추가 완료`); await sleep(800); return true }
+
+  log('warn', '"프롬프트에 추가" 못 찾음')
+  return false
 }
 
-// ── 에피소드 클로즈업 1회 생성 ──────────────────────────────────────
+// ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
   const pos = await prepareInput(page)
+
+  // yeori-face.jpg를 레퍼런스로 첨부
+  const faceAttached = await attachLocalFile(page, CONFIG.characterImage)
+  if (!faceAttached) log('warn', 'yeori-face.jpg 레퍼런스 첨부 실패 — 텍스트만으로 생성')
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
@@ -1258,6 +1299,33 @@ async function generateEpisodeCloseup(page, savePath) {
     if (data) { fs.writeFileSync(savePath, Buffer.from(data)); saved = true }
   }
   if (!saved) throw new Error('클로즈업 이미지 저장 실패')
+}
+
+// ── 컷 생성: yeori-face.jpg + yeori_closeup.jpg 둘 다 레퍼런스 ────────
+
+async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts') {
+  const ep = cut.episode ?? defaultEpisode ?? 'x'
+  const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
+
+  log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
+  const pos = await prepareInput(page)
+  log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
+
+  // 레퍼런스 1: yeori-face.jpg (원본 얼굴)
+  await attachLocalFile(page, CONFIG.characterImage)
+  // 레퍼런스 2: yeori_closeup.jpg (이번 에피소드 클로즈업)
+  await attachLocalFile(page, closeupPath)
+  await setAspectRatio(page, type)
+
+  await page.mouse.click(pos.x, pos.y)
+  await sleep(300); await page.keyboard.press('End'); await sleep(100)
+  await page.keyboard.type(finalPrompt, { delay: 15 })
+  await sleep(500)
+
+  const before = await collectImageSrcs(page)
+  await clickGenerate(page)
+  await waitForNewImage(page, before)
+  return saveNewImage(page, before, cut.no, ep, 'cut')
 }
 
 // ── 클로즈업 이미지 프롬프트 첨부 ───────────────────────────────────
