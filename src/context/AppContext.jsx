@@ -1,4 +1,6 @@
-import { createContext, useContext, useReducer, useEffect } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
+
+const SERVER = 'http://localhost:3001'
 
 const AppContext = createContext(null)
 const STORAGE_KEY = 'yeori-studio-v2'
@@ -261,44 +263,94 @@ function reducer(state, action) {
   }
 }
 
+function migrateState(saved, init) {
+  if (!saved.episodes) {
+    const epId = defaultEpisodeId
+    saved.episodes = {
+      [epId]: {
+        id: epId,
+        episode: saved.episode || init.episode,
+        cuts: saved.cuts || init.cuts,
+        scriptRaw: saved.scriptRaw || '',
+        createdAt: new Date().toISOString(),
+      }
+    }
+    saved.activeEpisodeId = epId
+  }
+  if (!saved.openTabIds || !saved.openTabIds.length)
+    saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
+  saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
+  if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
+  return { ...init, ...saved }
+}
+
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, defaultState, (init) => {
     try {
       const s = localStorage.getItem(STORAGE_KEY)
-      if (s) {
-        const saved = JSON.parse(s)
-        // 기존 데이터 마이그레이션 (episodes 없는 구버전 호환)
-        if (!saved.episodes) {
-          const epId = defaultEpisodeId
-          saved.episodes = {
-            [epId]: {
-              id: epId,
-              episode: saved.episode || init.episode,
-              cuts: saved.cuts || init.cuts,
-              scriptRaw: saved.scriptRaw || '',
-              createdAt: new Date().toISOString(),
-            }
-          }
-          saved.activeEpisodeId = epId
-        }
-        // openTabIds 없으면 현재 활성 에피소드로 초기화
-        if (!saved.openTabIds || !saved.openTabIds.length) {
-          saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
-        }
-        // openTabIds에 포함된 ID가 실제로 존재하는지 검증
-        saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
-        if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
-        return { ...init, ...saved }
-      }
+      if (s) return migrateState(JSON.parse(s), init)
     } catch {}
     return init
   })
 
+  const [syncStatus, setSyncStatus] = useState('idle')
+  const serverChecked = useRef(false)
+  const skipNextSync  = useRef(false)
+  const syncTimer     = useRef(null)
+
+  // 앱 시작 시 서버 데이터 로드 (서버 우선)
+  useEffect(() => {
+    ;(async () => {
+      setSyncStatus('syncing')
+      try {
+        const controller = new AbortController()
+        const tid = setTimeout(() => controller.abort(), 4000)
+        const res = await fetch(`${SERVER}/api/studio-data`, { signal: controller.signal })
+        clearTimeout(tid)
+        if (!res.ok) throw new Error()
+        const data = await res.json()
+        if (data && Object.keys(data).length > 0) {
+          skipNextSync.current = true
+          dispatch({ type: 'LOAD', p: migrateState(data, defaultState) })
+        }
+        setSyncStatus('synced')
+      } catch {
+        setSyncStatus('offline')
+      } finally {
+        serverChecked.current = true
+      }
+    })()
+  }, [])
+
+  // 상태 변경 시 localStorage 저장 + 서버 동기화 (디바운스 1.2초)
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+
+    if (!serverChecked.current) return   // 서버 확인 전엔 동기화 보류
+    if (skipNextSync.current) { skipNextSync.current = false; return }
+
+    clearTimeout(syncTimer.current)
+    setSyncStatus('syncing')
+    syncTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${SERVER}/api/studio-data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state),
+        })
+        if (!res.ok) throw new Error()
+        setSyncStatus('synced')
+      } catch {
+        setSyncStatus('offline')
+      }
+    }, 1200)
   }, [state])
 
-  return <AppContext.Provider value={{ state, dispatch }}>{children}</AppContext.Provider>
+  return (
+    <AppContext.Provider value={{ state, dispatch, syncStatus }}>
+      {children}
+    </AppContext.Provider>
+  )
 }
 export const useApp = () => useContext(AppContext)
 

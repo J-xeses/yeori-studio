@@ -16,7 +16,14 @@ const TABS = [
 ]
 
 export default function NavBar() {
-  const { state, dispatch } = useApp()
+  const { state, dispatch, syncStatus } = useApp()
+
+  const syncLabel = {
+    synced:  { icon: '🟢', text: '동기화됨' },
+    syncing: { icon: '🔄', text: '동기화 중' },
+    offline: { icon: '🔴', text: '오프라인' },
+    idle:    { icon: '⚪', text: '대기 중' },
+  }[syncStatus] ?? { icon: '⚪', text: '' }
 
   const handleSave = () => {
     dispatch({ type: 'MARK_SAVED' })
@@ -65,6 +72,11 @@ export default function NavBar() {
         <div className={styles.status}>
           <span className={`${styles.dot} ${state.savedAt ? styles.green : styles.red}`} />
           <span>{state.savedAt ? '저장됨' : '미저장'}</span>
+        </div>
+        <div className={styles.status} title={`서버 동기화: ${syncLabel.text}`}
+          style={{ marginLeft: 4, opacity: syncStatus === 'idle' ? 0.4 : 1 }}>
+          <span style={{ fontSize: 11 }}>{syncLabel.icon}</span>
+          <span style={{ fontSize: 11 }}>{syncLabel.text}</span>
         </div>
       </div>
     </nav>

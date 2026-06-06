@@ -179,6 +179,33 @@ app.post('/api/ffmpeg', async (req, res) => {
   res.end()
 })
 
+// ── GET /api/studio-data ─────────────────────────────────────────
+app.get('/api/studio-data', (req, res) => {
+  const dataPath = path.join(ROOT, 'data', 'studio-data.json')
+  try {
+    if (fs.existsSync(dataPath)) {
+      res.json(JSON.parse(fs.readFileSync(dataPath, 'utf-8')))
+    } else {
+      res.json({})
+    }
+  } catch {
+    res.json({})
+  }
+})
+
+// ── POST /api/studio-data ────────────────────────────────────────
+app.post('/api/studio-data', (req, res) => {
+  const dataDir  = path.join(ROOT, 'data')
+  const dataPath = path.join(dataDir, 'studio-data.json')
+  try {
+    fs.mkdirSync(dataDir, { recursive: true })
+    fs.writeFileSync(dataPath, JSON.stringify(req.body, null, 2), 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
   const { ep, prompts } = req.body
