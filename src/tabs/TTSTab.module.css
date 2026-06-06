@@ -38,17 +38,35 @@
 }
 .panelTitle { font-size: 13px; font-weight: 700; color: var(--text); }
 
-.voices { display: flex; flex-wrap: wrap; gap: 8px; }
-.voiceCard {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 14px; border-radius: 8px;
-  background: var(--bg-input); border: 1px solid var(--border);
-  text-align: left; transition: all .15s;
+.voiceIdRow { display: flex; align-items: center; gap: 8px; }
+.voiceIdLabel { font-size: 12px; font-weight: 700; color: var(--text-3); min-width: 58px; flex-shrink: 0; }
+.voiceIdInput {
+  flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-size: 12.5px; padding: 7px 10px;
+  outline: none; font-family: monospace; transition: border-color .15s;
 }
-.voiceCard:hover { border-color: var(--accent-light); }
-.voiceActive { border-color: var(--accent) !important; background: var(--accent-glow) !important; }
-.voiceName { font-size: 13px; font-weight: 600; color: var(--text); }
-.voiceDesc { font-size: 11px; color: var(--text-3); }
+.voiceIdInput:focus { border-color: var(--accent); }
+.saveBtn {
+  background: var(--accent); border: none; color: #fff;
+  padding: 7px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600;
+  transition: all .15s; flex-shrink: 0;
+}
+.saveBtn:hover { background: #6d28d9; }
+.saveBtnDone { background: var(--green) !important; }
+.fetchBtn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-2);
+  padding: 8px 14px; border-radius: 7px; font-size: 12.5px; transition: all .15s;
+  align-self: flex-start;
+}
+.fetchBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); }
+.fetchBtn:disabled { opacity: .6; cursor: default; }
+.voiceSelect {
+  width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-size: 13px; padding: 8px 10px;
+  outline: none; cursor: pointer; transition: border-color .15s;
+}
+.voiceSelect:focus { border-color: var(--accent); }
 
 .sliders { display: flex; flex-direction: column; gap: 10px; }
 .sliderRow { display: flex; align-items: center; gap: 10px; }

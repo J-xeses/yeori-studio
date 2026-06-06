@@ -187,6 +187,27 @@ app.post('/api/ffmpeg', async (req, res) => {
   res.end()
 })
 
+// ── POST /api/update-env — .env.local 특정 키 업데이트 ──────────
+app.post('/api/update-env', (req, res) => {
+  const { updates } = req.body
+  const envPath = path.join(ROOT, '.env.local')
+  try {
+    let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : ''
+    for (const [key, value] of Object.entries(updates || {})) {
+      const regex = new RegExp(`^${key}=.*$`, 'm')
+      if (regex.test(content)) {
+        content = content.replace(regex, `${key}=${value}`)
+      } else {
+        content += (content.endsWith('\n') ? '' : '\n') + `${key}=${value}\n`
+      }
+    }
+    fs.writeFileSync(envPath, content, 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/studio-data ─────────────────────────────────────────
 app.get('/api/studio-data', (req, res) => {
   const dataPath = path.join(ROOT, 'data', 'studio-data.json')

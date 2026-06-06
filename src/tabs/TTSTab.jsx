@@ -1,18 +1,10 @@
 import { useState, useRef } from 'react'
 import { useApp } from '../context/AppContext'
-import { elTTS } from '../lib/api'
+import { elTTS, elVoices } from '../lib/api'
 import { setGPoint } from '../lib/gpoints'
 import s from './TTSTab.module.css'
 
-const VOICES = [
-  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', desc: '여성 · 차분함' },
-  { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi',   desc: '여성 · 강렬함' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella',  desc: '여성 · 부드러움' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', desc: '남성 · 성숙함' },
-  { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',   desc: '남성 · 젊음' },
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam',   desc: '남성 · 중후함' },
-  { id: '5n5gqmaQi9Ewevrz7bOS', name: 'Sian',   desc: '여성 · 진솔함' },
-]
+const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 
 export default function TTSTab() {
   const { state, dispatch } = useApp()
@@ -23,10 +15,45 @@ export default function TTSTab() {
   const [activeCut, setActiveCut] = useState(0)
   const audioRefs = useRef({})
 
+  const [localVoiceId, setLocalVoiceId] = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
+  const [myVoices, setMyVoices] = useState([])
+  const [fetchingVoices, setFetchingVoices] = useState(false)
+  const [saved, setSaved] = useState(false)
+
   const remaining = elevenLabsStatus.remainingChars
 
   const getTextForCut = (cut) =>
     (cut.dialogue || '').replace(/^\s*\[?(CLOSEUP|FULLBODY)\s*(SHOT)?\]?[\s:：]*/i, '').trim()
+
+  const saveVoiceId = async () => {
+    dispatch({ type: 'SET_TTS', p: { voiceId: localVoiceId } })
+    try {
+      await fetch('http://localhost:3001/api/update-env', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ updates: { ELEVENLABS_VOICE_ID: localVoiceId } }),
+      })
+    } catch {}
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  const fetchVoices = async () => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 먼저 입력하세요'); return }
+    setFetchingVoices(true)
+    try {
+      const res = await elVoices(apiKeys.elevenLabs)
+      if (!res.ok) throw new Error('목소리 목록 로드 실패')
+      const data = await res.json()
+      const cloned = (data.voices || []).filter(v => v.category !== 'premade')
+      setMyVoices(cloned)
+      if (!cloned.length) alert('클론 목소리가 없습니다.')
+    } catch (err) {
+      alert('목소리 로드 오류: ' + err.message)
+    } finally {
+      setFetchingVoices(false)
+    }
+  }
 
   const generateTTS = async (cutId, inputText) => {
     if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return }
@@ -36,7 +63,7 @@ export default function TTSTab() {
     try {
       const res = await elTTS(
         apiKeys.elevenLabs,
-        ttsSettings.voiceId || VOICES[0].id,
+        ttsSettings.voiceId || DEFAULT_VOICE_ID,
         {
           text: finalText,
           model_id: 'eleven_multilingual_v2',
@@ -51,7 +78,6 @@ export default function TTSTab() {
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       setAudios(p => ({ ...p, [cutId]: { url, blob, text: finalText } }))
-      // ── G2 포인트 자동 저장 ──────────────────────────────
       const cut = cuts.find(c => c.id === cutId)
       if (cut) setGPoint(cut.no, 'g2', true)
     } catch (err) {
@@ -100,18 +126,36 @@ export default function TTSTab() {
       {/* Right: TTS settings + generate */}
       <div className={s.main}>
         <div className={s.panel}>
-          <h3 className={s.panelTitle}>목소리 선택</h3>
-          <div className={s.voices}>
-            {VOICES.map(v => (
-              <button key={v.id}
-                className={`${s.voiceCard} ${ttsSettings.voiceId === v.id ? s.voiceActive : ''}`}
-                onClick={() => dispatch({ type: 'SET_TTS', p: { voiceId: v.id } })}
-              >
-                <span className={s.voiceName}>{v.name}</span>
-                <span className={s.voiceDesc}>{v.desc}</span>
-              </button>
-            ))}
+          <h3 className={s.panelTitle}>목소리 설정</h3>
+
+          <div className={s.voiceIdRow}>
+            <label className={s.voiceIdLabel}>Voice ID</label>
+            <input
+              className={s.voiceIdInput}
+              value={localVoiceId}
+              onChange={e => setLocalVoiceId(e.target.value)}
+              placeholder={DEFAULT_VOICE_ID}
+              spellCheck={false}
+            />
+            <button className={`${s.saveBtn} ${saved ? s.saveBtnDone : ''}`} onClick={saveVoiceId}>
+              {saved ? '✓' : '저장'}
+            </button>
           </div>
+
+          <button className={s.fetchBtn} onClick={fetchVoices} disabled={fetchingVoices}>
+            {fetchingVoices ? <><span className={s.spinner} />불러오는 중...</> : '내 목소리 목록 불러오기'}
+          </button>
+
+          {myVoices.length > 0 && (
+            <select className={s.voiceSelect}
+              value={localVoiceId}
+              onChange={e => setLocalVoiceId(e.target.value)}
+            >
+              {myVoices.map(v => (
+                <option key={v.voice_id} value={v.voice_id}>{v.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className={s.panel}>
@@ -172,7 +216,7 @@ export default function TTSTab() {
 
         <div className={s.panel}>
           <h3 className={s.panelTitle}>전체 일괄 생성</h3>
-          <p className={s.batchDesc}>모든 컷의 대사/나레이션을 순서대로 음성 생성합니다.</p>
+          <p className={s.batchDesc}>모든 컷의 대사를 순서대로 음성 생성합니다.</p>
           <button className={s.batchBtn}
             onClick={async () => {
               for (const c of cuts) {

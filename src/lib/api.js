@@ -24,3 +24,8 @@ export const elTTS = (apiKey, voiceId, body) =>
     headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify(body),
   })
+
+export const elVoices = (apiKey) =>
+  fetch('/api/elevenlabs/voices', {
+    headers: { 'xi-api-key': apiKey },
+  })
