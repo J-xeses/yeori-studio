@@ -724,104 +724,144 @@ async function registerCharacter(page) {
 // ── 캐릭터 등록 래퍼 (imagePath 지정, 성공 여부 반환) ────────────────
 
 async function registerCharacterWithImage(page, imagePath) {
+  // ── 전제조건 확인 ────────────────────────────────────────────────────
   if (!fs.existsSync(imagePath)) {
-    log('warn', `캐릭터 이미지 없음: ${imagePath}`)
+    log('error', `[REG-1] 캐릭터 이미지 파일 없음: ${imagePath}`)
     return false
   }
-  log('info', `캐릭터 이미지: ${path.relative(ROOT, imagePath)}`)
+  log('info', `[REG-1] 캐릭터 이미지 확인: ${path.relative(ROOT, imagePath)}`)
 
+  // ── 캐릭터 페이지 이동 ───────────────────────────────────────────────
   const charUrl = 'https://labs.google/fx/ko/tools/flow/characters'
-  await page.goto(charUrl, { waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {})
-  await sleep(2000)
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_tab.png'), fullPage: true })
+  log('info', `[REG-2] 캐릭터 페이지 이동: ${charUrl}`)
+  try {
+    await page.goto(charUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+  } catch {
+    log('warn', '[REG-2] networkidle2 타임아웃 → domcontentloaded로 재시도')
+    await page.goto(charUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {})
+  }
+  await sleep(2500)
 
-  // 이미 등록된 캐릭터가 있는지 확인
-  const alreadyExists = await page.evaluate(() => {
-    const NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'yeori']
-    return NAMES.some(n =>
+  const actualUrl = page.url()
+  log('info', `[REG-2] 현재 URL: ${actualUrl}`)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_01_charpage.png'), fullPage: true })
+
+  // ── 페이지에 있는 버튼 목록 출력 (디버깅) ───────────────────────────
+  const allBtns = await page.evaluate(() =>
+    [...document.querySelectorAll('button, a[role="button"]')]
+      .filter(el => el.getBoundingClientRect().width > 0)
+      .map(el => el.textContent.trim().slice(0, 40))
+      .filter(Boolean)
+  )
+  log('info', `[REG-2] 페이지 버튼 목록: ${JSON.stringify(allBtns)}`)
+
+  // ── 이미 등록 여부 확인 ──────────────────────────────────────────────
+  const CHAR_NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'yeori']
+  const alreadyExists = await page.evaluate((names) =>
+    names.some(n =>
       [...document.querySelectorAll('*')].some(el =>
-        el.textContent.trim().toLowerCase().includes(n.toLowerCase())
-        && el.getBoundingClientRect().width > 0
+        el.offsetWidth > 0
+        && el.textContent.trim().toLowerCase().includes(n.toLowerCase())
       )
     )
-  })
+  , CHAR_NAMES)
+
   if (alreadyExists) {
-    log('ok', '서여리 캐릭터 이미 등록되어 있음 (스킵)')
+    log('ok', '[REG-2] 서여리 캐릭터 이미 등록됨 → 스킵')
     return true
   }
+  log('info', '[REG-2] 등록된 캐릭터 없음 → 신규 등록 시작')
 
-  // "캐릭터 만들기" 버튼 클릭
-  const createClicked = await page.evaluate(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('button, a')) {
-        const txt = el.textContent.trim()
-        if (/(캐릭터 만들기|create.{0,10}character|새 캐릭터)/i.test(txt)) { el.click(); return true }
+  // ── "캐릭터 만들기" 버튼 클릭 ────────────────────────────────────────
+  const createResult = await page.evaluate(() => {
+    const patterns = /(캐릭터 만들기|create.{0,15}character|새 캐릭터|character 추가|add character)/i
+    for (const el of document.querySelectorAll('button, a')) {
+      const txt = el.textContent.trim()
+      if (patterns.test(txt) && el.getBoundingClientRect().width > 0) {
+        el.click()
+        return txt
       }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot && search(el.shadowRoot)) return true
-      }
-      return false
     }
-    return search(document)
+    return null
   })
-  if (!createClicked) {
-    log('warn', '"캐릭터 만들기" 버튼 못 찾음 → debug_character_tab.png 확인')
+
+  if (!createResult) {
+    log('warn', '[REG-3] "캐릭터 만들기" 버튼 못 찾음 → debug_reg_01_charpage.png 확인')
     return false
   }
-  log('info', '"캐릭터 만들기" 클릭 완료')
-  await sleep(2000)
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_create.png'), fullPage: true })
-
-  // 이미지 업로드
-  const uploaded = await uploadCharacterImage(page, imagePath)
-  if (!uploaded) { log('warn', '이미지 업로드 실패 → debug_character_create.png 확인'); return false }
-  log('info', `이미지 업로드 완료: ${path.basename(imagePath)}`)
+  log('info', `[REG-3] "캐릭터 만들기" 클릭: "${createResult}"`)
   await sleep(2500)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_02_create.png'), fullPage: true })
 
-  // 이름 입력
+  // ── 파일 업로드 ──────────────────────────────────────────────────────
+  log('info', `[REG-4] 이미지 업로드 시도: ${path.basename(imagePath)}`)
+  const uploaded = await uploadCharacterImage(page, imagePath)
+  if (!uploaded) {
+    log('warn', '[REG-4] 파일 업로드 실패 → debug_reg_02_create.png 확인')
+    return false
+  }
+  log('ok', `[REG-4] 업로드 완료: ${path.basename(imagePath)}`)
+  await sleep(2500)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_03_uploaded.png'), fullPage: true })
+
+  // ── 이름 입력 ────────────────────────────────────────────────────────
+  log('info', `[REG-5] 캐릭터 이름 입력: "${CONFIG.characterName}"`)
   await typeCharacterName(page, CONFIG.characterName)
   await sleep(800)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_04_named.png'), fullPage: true })
 
-  // 저장 버튼 클릭
+  // ── 저장 버튼 클릭 ───────────────────────────────────────────────────
+  const saveBtns = await page.evaluate(() =>
+    [...document.querySelectorAll('button')]
+      .filter(el => el.getBoundingClientRect().width > 0 && !el.disabled)
+      .map(el => el.textContent.trim().slice(0, 30))
+  )
+  log('info', `[REG-6] 사용 가능한 버튼: ${JSON.stringify(saveBtns)}`)
+
   const saved = await page.evaluate(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('button')) {
-        const txt = el.textContent.trim()
-        if (/(저장|완료|확인|save|done|confirm|create)/i.test(txt) && !el.disabled) { el.click(); return true }
+    for (const el of document.querySelectorAll('button')) {
+      const txt = el.textContent.trim()
+      if (/(저장|완료|확인|save|done|confirm|create|등록)/i.test(txt) && !el.disabled
+          && el.getBoundingClientRect().width > 0) {
+        el.click()
+        return txt
       }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot && search(el.shadowRoot)) return true
-      }
-      return false
     }
-    return search(document)
+    return null
   })
+
   await sleep(2500)
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_character_done.png'), fullPage: true })
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_05_saved.png'), fullPage: true })
 
   if (!saved) {
-    log('warn', '저장 버튼 못 찾음 → debug_character_done.png 확인')
+    log('warn', '[REG-6] 저장 버튼 못 찾음 → debug_reg_04_named.png 확인')
     return false
   }
+  log('ok', `[REG-6] 저장 버튼 클릭: "${saved}"`)
 
-  // 등록 완료 검증: 캐릭터 목록에 이름이 나타나는지 확인 (최대 5초 대기)
+  // ── 등록 완료 검증 ───────────────────────────────────────────────────
   let verified = false
-  for (let i = 0; i < 5; i++) {
-    verified = await page.evaluate(() => {
-      const NAMES = ['서여리', 'Seo Yeori', 'yeori']
-      return NAMES.some(n =>
+  for (let i = 0; i < 6; i++) {
+    await sleep(1000)
+    verified = await page.evaluate((names) =>
+      names.some(n =>
         [...document.querySelectorAll('*')].some(el =>
-          el.textContent.trim().toLowerCase().includes(n.toLowerCase())
-          && el.getBoundingClientRect().width > 0
+          el.offsetWidth > 0
+          && el.textContent.trim().toLowerCase().includes(n.toLowerCase())
         )
       )
-    })
+    , CHAR_NAMES)
     if (verified) break
-    await sleep(1000)
+    log('info', `[REG-7] 목록 확인 중… (${i + 1}/6)`)
   }
 
-  if (verified) log('ok', '캐릭터 등록 완료 및 목록 확인')
-  else log('warn', '캐릭터 목록에서 이름 확인 실패 (등록은 됐을 수 있음)')
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_06_verify.png'), fullPage: true })
+
+  if (verified) {
+    log('ok', '[REG-7] 캐릭터 등록 완료 + 목록에서 이름 확인')
+  } else {
+    log('warn', '[REG-7] 목록에서 이름 못 찾음 (등록 됐을 수 있음) → debug_reg_06_verify.png 확인')
+  }
 
   return true
 }
