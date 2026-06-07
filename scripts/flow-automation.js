@@ -420,22 +420,24 @@ async function ensureProject(page, epDir) {
   log('ok', `프로젝트 URL 로드: ${savedUrl}`)
   _projectUrl = savedUrl
   await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-  await sleep(3000)
+  await sleep(4000)
   // 페이지가 내부 리다이렉트 후 안정될 때까지 재시도
   for (let i = 0; i < 3; i++) {
     try { await waitForImagesStable(page); break } catch { await sleep(2000) }
   }
 
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project_load.png') })
+
   const isError = await page.evaluate(() =>
     document.body.innerText.includes('문제가 발생했습니다') ||
-    document.body.innerText.includes('Something went wrong') ||
-    document.body.innerText.includes('프로젝트로 돌아가기')
+    document.body.innerText.includes('Something went wrong')
   ).catch(() => false)
   if (isError) {
-    console.error(`❌ 프로젝트 에러: ${savedUrl}`)
-    console.error(`   Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.`)
+    log('error', `프로젝트 로드 실패: ${savedUrl}`)
+    log('error', 'Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.')
     process.exit(1)
   }
+  log('ok', `프로젝트 로드 완료`)
 }
 
 // 새 프로젝트 생성 → 이름 입력 → 프로젝트 URL 반환
