@@ -294,6 +294,14 @@ function migrateState(saved, init) {
   saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
   if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
 
+  // 캐릭터 설정 구버전 → 신버전 자동 마이그레이션
+  const OLD_CHAR = '서여리 - 20대 중반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, AI 크리에이터'
+  const NEW_CHAR = '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터'
+  for (const ep of Object.values(saved.episodes)) {
+    if (ep.episode?.character === OLD_CHAR) ep.episode.character = NEW_CHAR
+  }
+  if (saved.episode?.character === OLD_CHAR) saved.episode.character = NEW_CHAR
+
   // 모든 에피소드 컷에서 샷타입 지시어 일괄 정리
   for (const ep of Object.values(saved.episodes)) {
     ep.cuts = cleanShotCuts(ep.cuts)
