@@ -420,14 +420,17 @@ async function ensureProject(page, epDir) {
   log('ok', `프로젝트 URL 로드: ${savedUrl}`)
   _projectUrl = savedUrl
   await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-  await sleep(2500)
-  await waitForImagesStable(page)
+  await sleep(3000)
+  // 페이지가 내부 리다이렉트 후 안정될 때까지 재시도
+  for (let i = 0; i < 3; i++) {
+    try { await waitForImagesStable(page); break } catch { await sleep(2000) }
+  }
 
   const isError = await page.evaluate(() =>
     document.body.innerText.includes('문제가 발생했습니다') ||
     document.body.innerText.includes('Something went wrong') ||
     document.body.innerText.includes('프로젝트로 돌아가기')
-  )
+  ).catch(() => false)
   if (isError) {
     console.error(`❌ 프로젝트 에러: ${savedUrl}`)
     console.error(`   Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.`)
@@ -964,17 +967,9 @@ async function clickPlusButton(page) {
   return false
 }
 
-// ── 얼굴 이미지 경로 탐색 ─────────────────────────────────────────
+// ── 얼굴 이미지 경로 반환 (downloads/flow/character/yeori-face.jpg 고정) ──
 function findFaceImagePath() {
-  const candidates = [
-    path.join(CONFIG.characterDir, 'yeori-face.jpg'),
-    path.join(CONFIG.characterDir, 'yeori-face.jpeg'),
-    path.join(ROOT, 'assets', 'yeori-reference.jpg'),
-  ]
-  for (const p of candidates) {
-    if (fs.existsSync(p)) return p
-  }
-  return null
+  return fs.existsSync(CONFIG.characterImage) ? CONFIG.characterImage : null
 }
 
 // ── 공통 업로드 헬퍼: 업로드 탭 → 파일 올리기 → 새 썸네일 클릭 → 프롬프트에 추가 ──
@@ -1065,9 +1060,9 @@ async function uploadAndAttachImage(page, imgPath, label) {
 // ── yeori-face.jpg 를 "+" 패널 업로드로 직접 첨부 ───────────────────
 
 async function attachFaceImageToPrompt(page, faceImagePath) {
-  const imgPath = faceImagePath || findFaceImagePath()
-  if (!imgPath) {
-    log('warn', '서여리 얼굴 이미지 없음 (attachFaceImageToPrompt)')
+  const imgPath = faceImagePath || CONFIG.characterImage
+  if (!fs.existsSync(imgPath)) {
+    log('warn', `서여리 얼굴 이미지 없음: ${imgPath}`)
     return false
   }
 
@@ -1244,10 +1239,10 @@ async function attachLocalFile(page, filePath) {
 // ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
-  const faceImagePath = findFaceImagePath()
-  if (!faceImagePath) {
+  const faceImagePath = CONFIG.characterImage
+  if (!fs.existsSync(faceImagePath)) {
     console.error('❌ 서여리 얼굴 이미지 없음.')
-    console.error('   downloads/flow/character/yeori-face.jpg 또는 assets/yeori-reference.jpg를 준비하세요.')
+    console.error('   downloads/flow/character/yeori-face.jpg 를 준비하세요.')
     process.exit(1)
   }
   log('info', `얼굴 이미지 사용: ${path.relative(ROOT, faceImagePath)}`)
@@ -1317,7 +1312,7 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
     log('info', `closeup 재사용: ${path.relative(ROOT, closeupPath)}`)
   }
 
-  const faceImagePath = findFaceImagePath()
+  const faceImagePath = CONFIG.characterImage
   log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
 
   // 레퍼런스 첨부 먼저 (prepareInput의 키보드 조작이 + 버튼 탐지 방해하므로)
