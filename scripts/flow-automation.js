@@ -1036,7 +1036,7 @@ async function attachFaceImageToPrompt(page) {
       const r = el.getBoundingClientRect()
       const txt = el.textContent.trim()
       if ((txt === '이미지' || txt === 'Images' || txt === 'Image')
-          && r.top > 200 && r.right < window.innerWidth * 0.65) {
+          && r.top > 80 && r.right < window.innerWidth * 0.65) {
         el.click(); return true
       }
     }
@@ -1045,12 +1045,13 @@ async function attachFaceImageToPrompt(page) {
   await sleep(800)
 
   const thumbInfo = await page.evaluate(() => {
-    const panelRight = window.innerWidth * 0.75
+    const vw = window.innerWidth, vh = window.innerHeight
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
       return img.complete && img.naturalWidth > 60
         && r.width > 40 && r.height > 40
-        && r.top > 200 && r.left > 80 && r.right < panelRight
+        && r.top > 80 && r.top < vh - 50
+        && r.left > 300 && r.right < vw * 0.78
     })
     if (!imgs.length) return null
     imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
@@ -1073,7 +1074,7 @@ async function attachFaceImageToPrompt(page) {
       const r = el.getBoundingClientRect()
       const txt = el.textContent.trim()
       if ((txt === '업로드' || txt === 'Upload')
-          && r.top > 200 && r.right < window.innerWidth * 0.65) {
+          && r.top > 80 && r.right < window.innerWidth * 0.65) {
         el.click(); return true
       }
     }
@@ -1371,27 +1372,36 @@ async function attachCloseupToPrompt(page, closeupPath) {
   if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
   await sleep(1500)
 
+  // 이미지 탭 클릭 (기본 탭이 "모두"이므로)
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect()
+      const txt = el.textContent.trim()
+      if ((txt === '이미지' || txt === 'Images') && r.top > 80 && r.right < window.innerWidth * 0.65)
+        { el.click(); return true }
+    }
+    return false
+  })
+  await sleep(600)
+
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
 
-  // ── 전략: 패널 내 img 썸네일 클릭 ─
-  // 패널 구조 확인: x≈395~1068, 사이드바 x<200, 패널 우측 경계 75%로 설정
+  // 패널 내 img 썸네일 탐색
+  // 패널 x≈395~1068 (뷰포트 74%), 사이드바 x<200, 탭 x<500
+  // 썸네일은 x>300, y>80 범위에 있음
   const thumbInfo = await page.evaluate(() => {
-    const panelRight = window.innerWidth * 0.75
+    const vw = window.innerWidth, vh = window.innerHeight
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
-      return img.complete
-        && img.naturalWidth > 60
-        && r.width > 40 && r.width < 400
-        && r.height > 40
-        && r.top > 200
-        && r.left > 80              // 사이드바 아이콘(x<80) 제외
-        && r.right < panelRight
+      return img.complete && img.naturalWidth > 60
+        && r.width > 40 && r.height > 40
+        && r.top > 80 && r.top < vh - 50
+        && r.left > 300              // 패널 탭(x<500) 제외 + 사이드바(x<200) 완전 제외
+        && r.right < vw * 0.78       // 뷰포트 78% 이내
     })
     if (!imgs.length) return null
-    // 가장 위에 있는 썸네일 = 가장 최근 생성 이미지
     imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    const target = imgs[0]
-    const r = target.getBoundingClientRect()
+    const r = imgs[0].getBoundingClientRect()
     return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
   })
 
