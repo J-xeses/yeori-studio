@@ -1257,7 +1257,62 @@ async function attachLocalFile(page, filePath) {
     }
     log('warn', `${baseName}: 행 클릭 후 "프롬프트에 추가" 못 찾음 → debug_panel_${baseName}.png 확인`)
   } else {
-    log('warn', `${baseName}: 패널 목록에서 파일 못 찾음 → debug_panel_${baseName}.png 확인`)
+    log('warn', `${baseName}: 패널 목록에서 파일 못 찾음 → 업로드 시도`)
+
+    // 폴백: 패널 내 업로드 버튼 클릭 + waitForFileChooser (Promise.all로 타이밍 보장)
+    try {
+      const [chooser] = await Promise.all([
+        page.waitForFileChooser({ timeout: 6000 }),
+        page.evaluate(() => {
+          const half = window.innerWidth * 0.6
+          for (const el of [...document.querySelectorAll('button, a, [role="button"], *')]) {
+            const r = el.getBoundingClientRect()
+            if (r.width === 0 || r.left > half) continue
+            const txt = el.textContent.trim()
+            const label = (el.getAttribute('aria-label') || '').toLowerCase()
+            if (/(업로드|upload|↑|파일 추가|add file)/i.test(txt + label)) {
+              el.click(); return txt || label
+            }
+          }
+          return null
+        }),
+      ])
+      await chooser.accept([filePath])
+      log('info', `${baseName}: 파일 업로드 완료`)
+      await sleep(3500)
+
+      // 업로드 후 패널에서 파일 재탐색 + 클릭
+      const clicked2 = await page.evaluate((name, fname) => {
+        const half = window.innerWidth * 0.6
+        let el = [...document.querySelectorAll('*')].find(e => {
+          const txt = e.textContent.trim().toLowerCase()
+          const r = e.getBoundingClientRect()
+          return (txt === fname || txt === name) && r.width > 0 && r.left < half
+        })
+        if (!el) return null
+        for (let i = 0; i < 5; i++) {
+          const p = el.parentElement; if (!p) break
+          const r = p.getBoundingClientRect()
+          if (r.width > half || r.height > 200) break
+          el = p
+        }
+        el.click()
+        const r = el.getBoundingClientRect()
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+      }, baseName, fileName)
+
+      if (clicked2) {
+        await sleep(2000)
+        const added2 = await clickAddToPrompt(page)
+        if (added2) {
+          log('info', `${path.basename(filePath)} 업로드 후 프롬프트에 추가 완료`)
+          await sleep(800)
+          return true
+        }
+      }
+    } catch (e) {
+      log('warn', `${baseName}: 업로드 폴백 실패 (${e.message})`)
+    }
   }
 
   // 패널 닫기
@@ -1338,8 +1393,9 @@ async function attachCloseupToPrompt(page, closeupPath) {
 
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
 
-  // ── 전략: 패널 내 img 썸네일 클릭 (텍스트 매칭 X, 크기/위치 기반) ─
+  // ── 전략: 패널 내 img 썸네일 클릭 (패널은 화면 좌측 60% 이내) ─
   const thumbInfo = await page.evaluate(() => {
+    const panelRight = window.innerWidth * 0.6  // 패널은 항상 좌반부
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
       return img.complete
@@ -1347,8 +1403,8 @@ async function attachCloseupToPrompt(page, closeupPath) {
         && r.width > 40 && r.width < 400
         && r.height > 40
         && r.top > 80
-        // 사이드바 아이콘(x<80) 제외, 전체폭 이미지 제외
-        && r.left > 80
+        && r.left > 80              // 사이드바 아이콘(x<80) 제외
+        && r.right < panelRight     // 우측 메인 영역 이미지 완전 제외
     })
     if (!imgs.length) return null
     // 가장 위에 있는 썸네일 = 가장 최근 생성 이미지
