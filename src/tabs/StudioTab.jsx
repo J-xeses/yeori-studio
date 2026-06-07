@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint } from '../lib/gpoints'
 import s from './StudioTab.module.css'
@@ -36,7 +36,23 @@ export default function StudioTab() {
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
+  const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
   const fileRefs = useRef({})
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 3000)
+        await fetch('http://localhost:3001/api/studio-data', { signal: controller.signal })
+        clearTimeout(timer)
+        setProxyOk(true)
+      } catch {
+        setProxyOk(false)
+      }
+    }
+    check()
+  }, [])
 
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
 
@@ -331,6 +347,18 @@ export default function StudioTab() {
         </div>
       </div>
 
+      {/* 프록시 서버 연결 경고 */}
+      {proxyOk === false && (
+        <div style={{
+          background:'rgba(239,68,68,.12)', border:'1px solid rgba(239,68,68,.35)',
+          borderRadius:8, padding:'10px 16px', margin:'8px 16px 0',
+          fontSize:12.5, color:'#fca5a5', fontWeight:600, flexShrink:0,
+          display:'flex', alignItems:'center', gap:8,
+        }}>
+          ⚠️ 프록시 서버가 실행되지 않았습니다. 터미널에서 <code style={{background:'rgba(0,0,0,.3)',padding:'1px 6px',borderRadius:4,fontFamily:'monospace'}}>npm run studio</code>를 실행해주세요.
+        </div>
+      )}
+
       {/* Flow 실행 로그 */}
       {flowLogs.length > 0 && (
         <div style={{
@@ -463,6 +491,10 @@ export default function StudioTab() {
               )}
               <button className={s.regenBtn}
                 onClick={() => {
+                  if (selected === 'Flow' && !proxyOk) {
+                    alert('프록시 서버를 먼저 실행해주세요 (npm run studio)')
+                    return
+                  }
                   setConfirmed(p => ({ ...p, [cut.id]: false }))
                   setImages(p => { const n = {...p}; delete n[cut.id]; return n })
                   if (selected === 'Flow') {
