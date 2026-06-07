@@ -46,7 +46,7 @@ const CONFIG = {
   retryCount:      2,      // 실패 시 재시도 횟수
 
   // ── 레퍼런스 이미지 분석 ────────────────────────────────────────────
-  referenceImage:  path.join(ROOT, 'assets', 'yeori-reference.jpg'),
+  referenceImage:  path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
   faceCacheFile:   path.join(ROOT, 'downloads', 'flow', 'yeori-face-cache.json'),
 
   // ── 클로즈업 얼굴 프롬프트 (에피소드당 1회) ────────────────────────
