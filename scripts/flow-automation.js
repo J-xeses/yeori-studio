@@ -977,73 +977,9 @@ function findFaceImagePath() {
   return null
 }
 
-// ── yeori-face.jpg 를 "+" 패널에서 직접 첨부 ────────────────────────
-// 전략 1: 패널 이미지 탭에 이미 있으면 선택
-// 전략 2: 없으면 업로드 탭에서 파일 업로드
+// ── 공통 업로드 헬퍼: 업로드 탭 → 파일 올리기 → 새 썸네일 클릭 → 프롬프트에 추가 ──
 
-async function attachFaceImageToPrompt(page, faceImagePath) {
-  const imgPath = faceImagePath || findFaceImagePath()
-  if (!imgPath) {
-    log('warn', '서여리 얼굴 이미지 없음 (attachFaceImageToPrompt)')
-    return false
-  }
-
-  const projectUrl = page.url()
-
-  if (!await clickPlusButton(page)) { log('warn', 'face: + 버튼 못 찾음'); return false }
-  await sleep(1500)
-
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_opened.png') })
-
-  if (page.url() !== projectUrl) {
-    log('warn', `face: + 클릭 후 URL 변경 → 복귀`)
-    await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() =>
-      page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-    )
-    await sleep(1500)
-    return false
-  }
-
-  // 전략 1: 이미지 탭 → 썸네일 선택
-  // 패널 탭 y≈264~456 (확인됨), 사이드바 y≈134 이하이므로 y>200 조건으로 구분
-  await page.evaluate(() => {
-    for (const el of document.querySelectorAll('*')) {
-      const r = el.getBoundingClientRect()
-      const txt = el.textContent.trim()
-      if ((txt === '이미지' || txt === 'Images' || txt === 'Image')
-          && r.top > 80 && r.right < window.innerWidth * 0.65) {
-        el.click(); return true
-      }
-    }
-    return false
-  })
-  await sleep(800)
-
-  const thumbInfo = await page.evaluate(() => {
-    const vw = window.innerWidth, vh = window.innerHeight
-    const imgs = [...document.querySelectorAll('img')].filter(img => {
-      const r = img.getBoundingClientRect()
-      return img.complete && img.naturalWidth > 60
-        && r.width > 40 && r.height > 40
-        && r.top > 80 && r.top < vh - 50
-        && r.left > 300 && r.right < vw * 0.78
-    })
-    if (!imgs.length) return null
-    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    const r = imgs[0].getBoundingClientRect()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
-  })
-
-  if (thumbInfo) {
-    log('info', `face: 이미지 썸네일 클릭 (${thumbInfo.x}, ${thumbInfo.y})`)
-    await page.mouse.click(thumbInfo.x, thumbInfo.y)
-    await sleep(800)
-    const added = await clickAddToPrompt(page)
-    if (added) { log('info', 'face: 서여리 얼굴 이미지 프롬프트에 추가'); await sleep(800); return true }
-  }
-
-  // 전략 2: 업로드 탭에서 yeori-face.jpg 업로드
-  log('info', 'face: 패널에 이미지 없음 → 업로드 탭 시도')
+async function uploadAndAttachImage(page, imgPath, label) {
   const uploadTabClicked = await page.evaluate(() => {
     for (const el of document.querySelectorAll('*')) {
       const r = el.getBoundingClientRect()
@@ -1055,13 +991,17 @@ async function attachFaceImageToPrompt(page, faceImagePath) {
     }
     return false
   })
-
   if (!uploadTabClicked) {
-    log('warn', 'face: 업로드 탭 못 찾음')
+    log('warn', `${label}: 업로드 탭 못 찾음`)
     await page.keyboard.press('Escape').catch(() => {})
     return false
   }
   await sleep(800)
+
+  // 업로드 전 현재 썸네일 src 목록 저장 (업로드 후 새 것과 구별)
+  const beforeSrcs = await page.evaluate(() =>
+    [...document.querySelectorAll('img')].map(img => img.src)
+  )
 
   try {
     const [fileChooser] = await Promise.all([
@@ -1078,35 +1018,75 @@ async function attachFaceImageToPrompt(page, faceImagePath) {
       })
     ])
     await fileChooser.accept([imgPath])
-    log('info', `face: 얼굴 이미지 업로드 중… (${path.basename(imgPath)})`)
+    log('info', `${label}: 업로드 중… (${path.basename(imgPath)})`)
     await sleep(3000)
 
-    // 업로드 후 썸네일 클릭
-    const thumb = await page.evaluate(() => {
+    // 업로드 후 새로 생긴 썸네일만 클릭 (기존 src와 비교)
+    const thumb = await page.evaluate((beforeSrcs) => {
       const panelRight = window.innerWidth * 0.75
-      const imgs = [...document.querySelectorAll('img')].filter(img => {
+      const filter = img => {
         const r = img.getBoundingClientRect()
         return img.complete && img.naturalWidth > 60 && r.width > 40
           && r.top > 200 && r.left > 80 && r.right < panelRight
-      })
-      if (!imgs.length) return null
-      imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-      const r = imgs[0].getBoundingClientRect()
-      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
-    })
-    if (thumb) {
-      await page.mouse.click(thumb.x, thumb.y)
-      await sleep(800)
+      }
+      const newImgs = [...document.querySelectorAll('img')].filter(img =>
+        filter(img) && !beforeSrcs.includes(img.src)
+      )
+      const target = newImgs.length
+        ? newImgs[0]
+        : ([...document.querySelectorAll('img')].filter(filter)
+            .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0])
+      if (!target) return null
+      const r = target.getBoundingClientRect()
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), isNew: newImgs.length > 0 }
+    }, beforeSrcs)
+
+    if (!thumb) {
+      log('warn', `${label}: 업로드 후 썸네일 없음`)
+      await page.keyboard.press('Escape').catch(() => {})
+      return false
     }
+    log('info', `${label}: 썸네일 클릭 (${thumb.x}, ${thumb.y})${thumb.isNew ? '' : ' [폴백]'}`)
+    await page.mouse.click(thumb.x, thumb.y)
+    await sleep(800)
 
     const added = await clickAddToPrompt(page)
-    if (added) { log('info', 'face: 업로드 후 프롬프트에 추가 완료'); await sleep(800); return true }
+    if (added) { log('info', `${label}: 이미지 프롬프트에 추가 완료`); await sleep(800); return true }
+    log('warn', `${label}: "프롬프트에 추가" 못 찾음`)
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
   } catch (err) {
-    log('warn', `face: 업로드 실패 (${err.message})`)
+    log('warn', `${label}: 업로드 실패 (${err.message})`)
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
+}
+
+// ── yeori-face.jpg 를 "+" 패널 업로드로 직접 첨부 ───────────────────
+
+async function attachFaceImageToPrompt(page, faceImagePath) {
+  const imgPath = faceImagePath || findFaceImagePath()
+  if (!imgPath) {
+    log('warn', '서여리 얼굴 이미지 없음 (attachFaceImageToPrompt)')
+    return false
   }
 
-  await page.keyboard.press('Escape').catch(() => {})
-  return false
+  const projectUrl = page.url()
+  if (!await clickPlusButton(page)) { log('warn', 'face: + 버튼 못 찾음'); return false }
+  await sleep(1500)
+
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_opened.png') })
+
+  if (page.url() !== projectUrl) {
+    log('warn', `face: + 클릭 후 URL 변경 → 복귀`)
+    await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() =>
+      page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    )
+    await sleep(1500)
+    return false
+  }
+
+  return uploadAndAttachImage(page, imgPath, 'face')
 }
 
 // ── Step 2용: "+" → 이미지 탭 클릭 → 최신 이미지(Step1 클로즈업) → 프롬프트에 추가
@@ -1363,58 +1343,13 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
 // ── 클로즈업 이미지 프롬프트 첨부 ───────────────────────────────────
 
 async function attachCloseupToPrompt(page, closeupPath) {
-  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
-  await sleep(1500)
-
-  // 이미지 탭 클릭 (기본 탭이 "모두"이므로)
-  await page.evaluate(() => {
-    for (const el of document.querySelectorAll('*')) {
-      const r = el.getBoundingClientRect()
-      const txt = el.textContent.trim()
-      if ((txt === '이미지' || txt === 'Images') && r.top > 80 && r.right < window.innerWidth * 0.65)
-        { el.click(); return true }
-    }
-    return false
-  })
-  await sleep(600)
-
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
-
-  // 패널 내 img 썸네일 탐색
-  // 패널 x≈395~1068 (뷰포트 74%), 사이드바 x<200, 탭 x<500
-  // 썸네일은 x>300, y>80 범위에 있음
-  const thumbInfo = await page.evaluate(() => {
-    const vw = window.innerWidth, vh = window.innerHeight
-    const imgs = [...document.querySelectorAll('img')].filter(img => {
-      const r = img.getBoundingClientRect()
-      return img.complete && img.naturalWidth > 60
-        && r.width > 40 && r.height > 40
-        && r.top > 80 && r.top < vh - 50
-        && r.left > 300              // 패널 탭(x<500) 제외 + 사이드바(x<200) 완전 제외
-        && r.right < vw * 0.78       // 뷰포트 78% 이내
-    })
-    if (!imgs.length) return null
-    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    const r = imgs[0].getBoundingClientRect()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
-  })
-
-  if (!thumbInfo) {
-    log('warn', 'closeup: 썸네일 못 찾음 → debug_plus_panel.png 확인, 건너뜀')
-    await page.keyboard.press('Escape').catch(() => {})
+  if (!fs.existsSync(closeupPath)) {
+    log('warn', `closeup: 파일 없음 (${path.basename(closeupPath)})`)
     return false
   }
-
-  log('info', `closeup 썸네일 클릭: (${thumbInfo.x}, ${thumbInfo.y})`)
-  await page.mouse.click(thumbInfo.x, thumbInfo.y)
-  await sleep(800)
-
-  const added = await clickAddToPrompt(page)
-  if (added) { log('info', 'closeup 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
-
-  log('warn', '"프롬프트에 추가" 못 찾음')
-  await page.keyboard.press('Escape').catch(() => {})
-  return false
+  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
+  await sleep(1500)
+  return uploadAndAttachImage(page, closeupPath, 'closeup')
 }
 
 async function clickAddToPrompt(page) {
