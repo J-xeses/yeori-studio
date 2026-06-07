@@ -222,34 +222,7 @@ async function main() {
   ensureDir(CONFIG.downloadDir)
   ensureDir(CONFIG.characterDir)
 
-  // ── 캐릭터 등록 모드 ───────────────────────────────────────────────
-  if (args['register-character'] || args['gen-face']) {
-    const browser = await launchBrowser()
-    const page = await setupPage(browser)
-    try {
-      await navigateToFlow(page)
-
-      // --gen-face: 클로즈업 얼굴 먼저 생성
-      if (args['gen-face'] && !fs.existsSync(CONFIG.characterImage)) {
-        log('info', '서여리 시그니처 얼굴 이미지 생성 중…')
-        await generateFaceImage(page)
-      }
-
-      // 캐릭터 이미지 확인
-      if (!fs.existsSync(CONFIG.characterImage)) {
-        log('warn', `캐릭터 이미지 없음: ${CONFIG.characterImage}`)
-        log('info', '해당 경로에 클로즈업 얼굴 이미지를 넣거나 --gen-face 옵션을 사용하세요.')
-        return
-      }
-
-      await registerCharacter(page)
-    } finally {
-      log('info', '✅ 완료 — 브라우저를 직접 닫아주세요.')
-    }
-    return
-  }
-
-  // ── 일반 이미지 생성 모드 ─────────────────────────────────────────
+  // ── 이미지 생성 모드 ──────────────────────────────────────────────
   const { episode, type, cuts } = loadPrompts()
   if (!cuts.length) {
     log('warn', '처리할 프롬프트가 없습니다. 조건을 확인하세요.')
@@ -257,15 +230,8 @@ async function main() {
   }
 
   // prompts.json에서 제목 읽기 → 프로젝트 이름: "EP4_한강라이딩"
-  const rawPrompts = JSON.parse(fs.readFileSync(
-    path.join(CONFIG.downloadDir, 'prompts.json'), 'utf-8'
-  ))
-  const epTitle    = (rawPrompts.title || '').replace(/\s+/g, '')
-  const projectTitle = epTitle ? `EP${episode}_${epTitle}` : `EP${episode}`
-
   const epDir       = path.join(CONFIG.downloadDir, `ep${episode}`)
   const projectMarker = path.join(epDir, 'project_url.txt')
-  const charMarker    = path.join(epDir, 'character_registered.txt')
   const closeupPath   = path.join(epDir, 'yeori_closeup.jpg')
   ensureDir(epDir)
 
@@ -302,80 +268,43 @@ async function main() {
     // ── ① Google Flow 로그인 + 대시보드 ─────────────────────────────
     await navigateToFlow(page)
 
-    // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
-    //    project_url.txt 있으면 재사용 / 없으면 "EP{N}_{제목}" 신규 생성
-    if (fs.existsSync(projectMarker)) {
-      const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
-      _projectUrl = savedUrl
-      log('ok', `② 기존 프로젝트 재사용: ${savedUrl}`)
-      await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-      await sleep(2500)
-      await waitForImagesStable(page)
-
-      // 에러 페이지 감지 ("문제가 발생했습니다.") → 마커 삭제 후 새 프로젝트 생성
-      const isError = await page.evaluate(() =>
-        document.body.innerText.includes('문제가 발생했습니다') ||
-        document.body.innerText.includes('Something went wrong') ||
-        document.body.innerText.includes('프로젝트로 돌아가기')
-      )
-      if (isError) {
-        log('warn', `② 프로젝트 에러 감지 (${savedUrl}) → 새 프로젝트 생성`)
-        fs.unlinkSync(projectMarker)
-        await page.goto('https://labs.google/fx/ko/tools/flow', { waitUntil: 'networkidle2', timeout: 30000 })
-        await sleep(2000)
-        const newUrl = await createNewProject(page, projectTitle)
-        if (newUrl) {
-          _projectUrl = newUrl
-          fs.writeFileSync(projectMarker, newUrl, 'utf-8')
-          log('ok', `② 새 프로젝트 생성: ${newUrl}`)
-        }
-      }
-    } else {
-      log('step', `② 새 프로젝트 생성: "${projectTitle}"`)
-      const newUrl = await createNewProject(page, projectTitle)
-      if (newUrl) {
-        _projectUrl = newUrl
-        fs.writeFileSync(projectMarker, newUrl, 'utf-8')
-        log('ok', `② 프로젝트 생성 완료: ${newUrl}`)
-      } else {
-        log('warn', '② 프로젝트 생성 실패 — 기존 프로젝트에서 계속')
-      }
-      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project.png'), fullPage: true })
+    // ── ② 프로젝트 URL 로드 (project_url.txt 수동 설정 필요) ──────────
+    if (!fs.existsSync(projectMarker)) {
+      log('error', 'Flow 프로젝트 URL을 다음 파일에 저장해주세요:')
+      log('info', `  ${projectMarker}`)
+      log('info', '  예) https://labs.google/fx/ko/tools/flow/project/xxxxx')
+      return
     }
 
-    // ── ③ 서여리 캐릭터 등록 (최초 1회, character_registered.txt 마커) ─
-    // yeori-face.jpg가 없으면 등록하지 않음 — 잘못된 이미지 절대 사용 금지
-    if (!fs.existsSync(charMarker)) {
-      if (!fs.existsSync(CONFIG.characterImage)) {
-        log('warn', '③ yeori-face.jpg 없음 — 캐릭터 등록 건너뜀')
-        log('info', '   서여리 얼굴 이미지를 생성하려면:')
-        log('info', '   npm run flow -- --gen-face')
-      } else {
-        log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, CONFIG.characterImage)})…`)
-        const regOk = await registerCharacterWithImage(page, CONFIG.characterImage)
-        if (regOk) {
-          fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
-          log('ok', '③ 캐릭터 등록 완료')
-        } else {
-          log('warn', '③ 캐릭터 등록 실패 — 계속 진행 (이미지 일관성 저하 가능)')
-        }
-        await navigateBackToProject(page)
-      }
-    } else {
-      log('ok', `③ 서여리 캐릭터 이미 등록됨 (스킵)`)
+    const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
+    _projectUrl = savedUrl
+    log('ok', `② 프로젝트 로드: ${savedUrl}`)
+    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    await sleep(2500)
+    await waitForImagesStable(page)
+
+    const isError = await page.evaluate(() =>
+      document.body.innerText.includes('문제가 발생했습니다') ||
+      document.body.innerText.includes('Something went wrong') ||
+      document.body.innerText.includes('프로젝트로 돌아가기')
+    )
+    if (isError) {
+      log('error', `프로젝트 에러: ${savedUrl}`)
+      log('info', 'Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.')
+      return
     }
 
-    // ── ④ 클로즈업 생성 (매 실행마다 재생성 — 2단계 체이닝 보장) ──────────
-    log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
+    // ── ③ 클로즈업 생성 (매 실행마다 재생성 — 2단계 체이닝 보장) ──────────
+    log('step', '③ 클로즈업 얼굴 이미지 생성 중…')
     await generateEpisodeCloseup(page, closeupPath)
-    log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
+    log('ok', `③ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
     await sleep(CONFIG.delayMs)
 
-    // ── ⑤ 컷별 이미지 생성 ──────────────────────────────────────────
+    // ── ④ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const label = `[${i + 1}/${cuts.length}] CUT ${cut.no}`
-      log('step', `⑤ ${label} 생성 중…`)
+      log('step', `④ ${label} 생성 중…`)
 
       for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
         try {
@@ -1055,24 +984,7 @@ async function clickPlusButton(page) {
     return true
   }
 
-  // 전략 2: 하단 영역 가장 왼쪽 소형 요소 (w≤60px) 클릭
-  const r2 = await page.evaluate(() => {
-    const h = window.innerHeight, w = window.innerWidth
-    const candidates = [...document.querySelectorAll('*')].filter(el => {
-      const r = el.getBoundingClientRect()
-      return r.width > 5 && r.height > 5 && r.width <= 60 && r.height <= 60
-        && r.top > h * 0.75 && r.left < w * 0.5
-    })
-    if (!candidates.length) return null
-    candidates.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left)
-    const el = candidates[0]
-    const r = el.getBoundingClientRect()
-    el.click()
-    return `${el.tagName} at (${Math.round(r.left + r.width / 2)}, ${Math.round(r.top + r.height / 2)})`
-  })
-  if (r2) { log('info', `+ 버튼 클릭 (소형 요소): "${r2}"`); return true }
-
-  // 전략 3: aria-label / 텍스트 "+" 기반
+  // 전략 2: aria-label / 텍스트 "+" 기반
   const r3 = await page.evaluate(() => {
     for (const el of document.querySelectorAll('[aria-label], button, [role="button"]')) {
       const r = el.getBoundingClientRect()
@@ -1091,22 +1003,25 @@ async function clickPlusButton(page) {
   return false
 }
 
-// ── "+" 패널 → 캐릭터 탭 클릭 → Untitled Character 선택 → 프롬프트에 추가 ──
-// 스크린샷 확인: 패널 왼쪽에 이미지/캐릭터/장면 탭 존재, 기본은 이미지 탭
-// 캐릭터를 찾으려면 먼저 "캐릭터" 탭을 클릭해야 함
+// ── yeori-face.jpg 를 "+" 패널에서 직접 첨부 ────────────────────────
+// 전략 1: 패널 이미지 탭에 이미 있으면 선택
+// 전략 2: 없으면 업로드 탭에서 파일 업로드
 
-async function attachYeoriCharacterToPrompt(page) {
+async function attachFaceImageToPrompt(page) {
+  if (!fs.existsSync(CONFIG.characterImage)) {
+    log('warn', '서여리 얼굴 이미지 없음: ' + CONFIG.characterImage)
+    return false
+  }
+
   const projectUrl = page.url()
 
-  if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
+  if (!await clickPlusButton(page)) { log('warn', 'face: + 버튼 못 찾음'); return false }
   await sleep(1500)
 
-  // + 버튼 클릭 직후 스크린샷 (패널 열린 상태 확인)
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_opened.png') })
 
-  // + 클릭이 페이지 이동을 유발했는지 감지 (사이드바 항목 클릭 오클릭 방지)
   if (page.url() !== projectUrl) {
-    log('warn', `+ 클릭 후 URL 변경 (${page.url()}) → 뒤로가기`)
+    log('warn', `face: + 클릭 후 URL 변경 → 복귀`)
     await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() =>
       page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
     )
@@ -1114,70 +1029,108 @@ async function attachYeoriCharacterToPrompt(page) {
     return false
   }
 
-  // ── 캐릭터 탭 클릭 (패널 내비게이션) ──
-  // y > 400 으로 상단 고정 사이드바 "캐릭터"(y≈125) 완전 제외
-  const tabClicked = await page.evaluate(() => {
-    const panelRight = window.innerWidth * 0.65
+  // 전략 1: 이미지 탭 → 썸네일 선택
+  // 패널 탭 y≈264~456 (확인됨), 사이드바 y≈134 이하이므로 y>200 조건으로 구분
+  await page.evaluate(() => {
     for (const el of document.querySelectorAll('*')) {
       const r = el.getBoundingClientRect()
-      if (r.width === 0 || r.right > panelRight) continue
       const txt = el.textContent.trim()
-      if ((txt === '캐릭터' || txt === 'Characters' || txt === 'Character') && r.top > 400) {
-        el.click(); return txt
+      if ((txt === '이미지' || txt === 'Images' || txt === 'Image')
+          && r.top > 200 && r.right < window.innerWidth * 0.65) {
+        el.click(); return true
       }
     }
-    return null
+    return false
   })
-  if (tabClicked) {
-    log('info', `캐릭터 탭 클릭: "${tabClicked}"`)
-    await sleep(1000)
+  await sleep(800)
 
-    // 탭 클릭이 페이지 이동 유발했으면 즉시 복귀
-    if (page.url() !== projectUrl) {
-      log('warn', `캐릭터 탭 후 URL 변경 (${page.url()}) → 뒤로가기`)
-      await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() =>
-        page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-      )
-      await sleep(1500)
-      return false
-    }
-  } else {
-    log('warn', '캐릭터 탭 못 찾음 — 현재 패널에서 시도')
+  const thumbInfo = await page.evaluate(() => {
+    const panelRight = window.innerWidth * 0.75
+    const imgs = [...document.querySelectorAll('img')].filter(img => {
+      const r = img.getBoundingClientRect()
+      return img.complete && img.naturalWidth > 60
+        && r.width > 40 && r.height > 40
+        && r.top > 200 && r.left > 80 && r.right < panelRight
+    })
+    if (!imgs.length) return null
+    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    const r = imgs[0].getBoundingClientRect()
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+  })
+
+  if (thumbInfo) {
+    log('info', `face: 이미지 썸네일 클릭 (${thumbInfo.x}, ${thumbInfo.y})`)
+    await page.mouse.click(thumbInfo.x, thumbInfo.y)
+    await sleep(800)
+    const added = await clickAddToPrompt(page)
+    if (added) { log('info', 'face: 서여리 얼굴 이미지 프롬프트에 추가'); await sleep(800); return true }
   }
 
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_char_panel.png') })
-
-  // 캐릭터 이름 매칭 (패널 내 좌측 65% 영역)
-  const charClicked = await page.evaluate(() => {
-    const panelRight = window.innerWidth * 0.65
-    const NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'Yeori', 'yeori', 'Untitled Character']
-    for (const name of NAMES) {
-      const found = [...document.querySelectorAll('*')].find(el => {
-        const txt = el.textContent.trim()
-        const r = el.getBoundingClientRect()
-        return txt.toLowerCase().includes(name.toLowerCase())
-          && r.width > 0 && r.right < panelRight && r.height > 0 && r.height < 150
-          && r.top > 80
-      })
-      if (found) { found.click(); return found.textContent.trim().slice(0, 40) }
+  // 전략 2: 업로드 탭에서 yeori-face.jpg 업로드
+  log('info', 'face: 패널에 이미지 없음 → 업로드 탭 시도')
+  const uploadTabClicked = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect()
+      const txt = el.textContent.trim()
+      if ((txt === '업로드' || txt === 'Upload')
+          && r.top > 200 && r.right < window.innerWidth * 0.65) {
+        el.click(); return true
+      }
     }
-    return null
+    return false
   })
 
-  if (!charClicked) {
-    log('warn', `캐릭터 못 찾음 → debug_char_panel.png 확인`)
+  if (!uploadTabClicked) {
+    log('warn', 'face: 업로드 탭 못 찾음')
     await page.keyboard.press('Escape').catch(() => {})
-    await sleep(500)
     return false
   }
-  log('info', `캐릭터 선택: "${charClicked}"`)
-  await sleep(1000)
-
-  const addClicked = await clickAddToPrompt(page)
-  if (!addClicked) { log('warn', '"프롬프트에 추가" 못 찾음'); await page.keyboard.press('Escape').catch(() => {}); return false }
-  log('info', 'Seo Yeori 캐릭터 프롬프트에 추가 완료')
   await sleep(800)
-  return true
+
+  try {
+    const [fileChooser] = await Promise.all([
+      page.waitForFileChooser({ timeout: 8000 }),
+      page.evaluate(() => {
+        const btn = [...document.querySelectorAll('button, [role="button"], *')].find(el => {
+          const txt = el.textContent.trim()
+          const r = el.getBoundingClientRect()
+          return (txt.includes('미디어 업로드') || txt.includes('업로드') || txt.includes('Upload'))
+            && r.width > 0 && r.top > 500
+        })
+        if (btn) { btn.click(); return true }
+        return false
+      })
+    ])
+    await fileChooser.accept([CONFIG.characterImage])
+    log('info', 'face: 얼굴 이미지 업로드 중…')
+    await sleep(3000)
+
+    // 업로드 후 썸네일 클릭
+    const thumb = await page.evaluate(() => {
+      const panelRight = window.innerWidth * 0.75
+      const imgs = [...document.querySelectorAll('img')].filter(img => {
+        const r = img.getBoundingClientRect()
+        return img.complete && img.naturalWidth > 60 && r.width > 40
+          && r.top > 200 && r.left > 80 && r.right < panelRight
+      })
+      if (!imgs.length) return null
+      imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+      const r = imgs[0].getBoundingClientRect()
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+    })
+    if (thumb) {
+      await page.mouse.click(thumb.x, thumb.y)
+      await sleep(800)
+    }
+
+    const added = await clickAddToPrompt(page)
+    if (added) { log('info', 'face: 업로드 후 프롬프트에 추가 완료'); await sleep(800); return true }
+  } catch (err) {
+    log('warn', `face: 업로드 실패 (${err.message})`)
+  }
+
+  await page.keyboard.press('Escape').catch(() => {})
+  return false
 }
 
 // ── Step 2용: "+" → 이미지 탭 클릭 → 최신 이미지(Step1 클로즈업) → 프롬프트에 추가
@@ -1337,9 +1290,9 @@ async function attachLocalFile(page, filePath) {
 async function generateEpisodeCloseup(page, savePath) {
   const projectUrl = page.url()
 
-  // 레퍼런스 첨부를 prepareInput 이전에 (prepareInput의 키보드 조작이 + 버튼 탐지 방해)
-  const charAttached = await attachYeoriCharacterToPrompt(page)
-  if (!charAttached) log('warn', 'closeup: 캐릭터 첨부 실패 — 텍스트만으로 생성')
+  // 서여리 얼굴 이미지 첨부 (prepareInput 이전에 — 키보드 조작이 + 버튼 탐지 방해)
+  const faceAttached = await attachFaceImageToPrompt(page)
+  if (!faceAttached) log('warn', 'closeup: 얼굴 이미지 첨부 실패 — 텍스트만으로 생성')
 
   // 캐릭터 첨부 후 URL 이탈 복귀 (신규 캐릭터 페이지 등)
   if (page.url() !== projectUrl) {
@@ -1393,7 +1346,7 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
 
   // 레퍼런스 첨부 먼저 (prepareInput의 키보드 조작이 + 버튼 탐지 방해하므로)
-  await attachYeoriCharacterToPrompt(page)
+  await attachFaceImageToPrompt(page)
   await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
 
@@ -1420,18 +1373,19 @@ async function attachCloseupToPrompt(page, closeupPath) {
 
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
 
-  // ── 전략: 패널 내 img 썸네일 클릭 (패널은 화면 좌측 60% 이내) ─
+  // ── 전략: 패널 내 img 썸네일 클릭 ─
+  // 패널 구조 확인: x≈395~1068, 사이드바 x<200, 패널 우측 경계 75%로 설정
   const thumbInfo = await page.evaluate(() => {
-    const panelRight = window.innerWidth * 0.6  // 패널은 항상 좌반부
+    const panelRight = window.innerWidth * 0.75
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
       return img.complete
         && img.naturalWidth > 60
         && r.width > 40 && r.width < 400
         && r.height > 40
-        && r.top > 80
+        && r.top > 200
         && r.left > 80              // 사이드바 아이콘(x<80) 제외
-        && r.right < panelRight     // 우측 메인 영역 이미지 완전 제외
+        && r.right < panelRight
     })
     if (!imgs.length) return null
     // 가장 위에 있는 썸네일 = 가장 최근 생성 이미지
