@@ -5,10 +5,39 @@
   background: var(--bg-panel);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;
-  overflow-y: auto; padding: 16px 14px; gap: 10px;
+  overflow: hidden;
 }
 
-.sideTitle { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .8px; text-transform: uppercase; margin-top: 4px; }
+.sideTitle { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .8px; text-transform: uppercase; }
+
+.settingsSection { flex-shrink: 0; }
+.settingsHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; width: 100%; background: none; border: none;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; text-align: left; transition: background .12s;
+}
+.settingsHeader:hover { background: var(--bg-hover); }
+.toggleIcon { font-size: 9px; color: var(--text-3); }
+.settingsBody {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 14px; overflow-y: auto; max-height: 45vh;
+}
+
+.cutSection {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+.cutSectionTitle {
+  font-size: 11px; font-weight: 700; color: var(--text-3);
+  letter-spacing: .8px; text-transform: uppercase;
+  padding: 8px 14px 4px; flex-shrink: 0;
+}
+
+.bottomActions {
+  flex-shrink: 0; border-top: 1px solid var(--border);
+  padding: 10px 14px; display: flex; flex-direction: column; gap: 8px;
+}
 
 .field { display: flex; flex-direction: column; gap: 5px; }
 .field label { font-size: 12px; color: var(--text-2); }
@@ -74,7 +103,7 @@
 
 .divider { height: 1px; background: var(--border); margin: 4px 0; }
 
-.cutList { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
+.cutList { flex: 1; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; padding: 4px 6px; }
 .cutItem {
   display: flex; flex-direction: column; gap: 2px;
   padding: 8px 10px; border-radius: 7px;
