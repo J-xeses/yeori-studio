@@ -1181,62 +1181,101 @@ async function attachLocalFile(page, filePath) {
     return false
   }
 
+  const baseName = path.basename(filePath, path.extname(filePath)).toLowerCase()
+
   if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
-  await sleep(1200)
+  await sleep(1500)
 
-  // 전략 1: 패널에 이미 file input이 있으면 바로 업로드
-  let fileEl = (await page.evaluateHandle(() => {
-    function s(root) {
-      for (const el of root.querySelectorAll('input[type="file"]')) return el
-      for (const el of root.querySelectorAll('*'))
-        if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
-      return null
-    }
-    return s(document)
-  })).asElement()
-
-  // 전략 2: "새 미디어" / "업로드" 버튼 클릭 후 file input 재탐색
-  if (!fileEl) {
-    const clicked = await page.evaluate(() => {
-      for (const el of document.querySelectorAll('button, a, [role="button"]')) {
-        const t = el.textContent.trim()
-        const label = el.getAttribute('aria-label') || ''
-        if (/(새 미디어|업로드|upload|add media|new media)/i.test(t + label)
-            && el.getBoundingClientRect().width > 0) {
-          el.click(); return t
-        }
-      }
-      return null
+  // ── 전략 A: 패널 미디어 목록에 이미 있으면 클릭 → "프롬프트에 추가" ──
+  const existingPos = await page.evaluate((name) => {
+    const all = [...document.querySelectorAll('*')]
+    const matches = all.filter(el => {
+      const txt = (el.textContent || el.getAttribute('alt') || el.getAttribute('title') || '').trim().toLowerCase()
+      const r = el.getBoundingClientRect()
+      return txt.includes(name) && r.width > 10 && r.height > 10 && r.left > 80
     })
-    if (clicked) {
-      log('info', `"${clicked}" 클릭 → file input 대기`)
-      await sleep(1000)
-      fileEl = (await page.evaluateHandle(() => {
-        function s(root) {
-          for (const el of root.querySelectorAll('input[type="file"]')) return el
-          for (const el of root.querySelectorAll('*'))
-            if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
-          return null
-        }
-        return s(document)
-      })).asElement()
+    if (!matches.length) return null
+    matches.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    const el = matches[0]
+    const r = el.getBoundingClientRect()
+    el.click()
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+  }, baseName)
+
+  if (existingPos) {
+    log('info', `기존 미디어 선택: ${baseName}`)
+    await sleep(800)
+    const added = await clickAddToPrompt(page)
+    if (added) { log('info', `${path.basename(filePath)} 추가 완료 (기존 미디어)`); await sleep(800); return true }
+  }
+
+  // ── 전략 B: "새 미디어 업로드" → waitForFileChooser로 네이티브 다이얼로그 인터셉트 ──
+  log('info', `${baseName} 신규 업로드 시도…`)
+  let uploaded = false
+  try {
+    const chooserPromise = page.waitForFileChooser({ timeout: 6000 })
+    await page.evaluate(() => {
+      const btn = [...document.querySelectorAll('button, a, [role="button"], *')].find(el => {
+        const t = (el.textContent || '').trim()
+        const r = el.getBoundingClientRect()
+        return /(새 미디어|업로드|upload|add media|new media)/i.test(t) && r.width > 0
+      })
+      if (btn) btn.click()
+    })
+    const chooser = await chooserPromise
+    await chooser.accept([filePath])
+    log('info', `파일 다이얼로그로 업로드: ${path.basename(filePath)}`)
+    await sleep(3000)
+    uploaded = true
+  } catch {
+    // ── 전략 C: DOM input[type="file"] 폴백 (Shadow DOM 포함) ──
+    const inputHandle = await page.evaluateHandle(() => {
+      function s(root) {
+        for (const el of root.querySelectorAll('input[type="file"]')) return el
+        for (const el of root.querySelectorAll('*'))
+          if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
+        return null
+      }
+      return s(document)
+    })
+    const inputEl = inputHandle.asElement()
+    if (inputEl) {
+      await inputEl.uploadFile(filePath)
+      log('info', `DOM 직접 업로드: ${path.basename(filePath)}`)
+      await sleep(3000)
+      uploaded = true
     }
   }
 
-  if (!fileEl) {
-    log('warn', `file input 없음 → ${path.basename(filePath)} 첨부 건너뜀`)
+  if (!uploaded) {
+    log('warn', `업로드 실패: ${path.basename(filePath)}`)
     await page.keyboard.press('Escape').catch(() => {})
     return false
   }
 
-  await fileEl.uploadFile(filePath)
-  log('info', `업로드: ${path.basename(filePath)}`)
-  await sleep(2000)
+  // 업로드 직후 "프롬프트에 추가" 시도
+  const added1 = await clickAddToPrompt(page)
+  if (added1) { log('info', `${path.basename(filePath)} 추가 완료 (업로드 직후)`); await sleep(800); return true }
 
-  const added = await clickAddToPrompt(page)
-  if (added) { log('info', `${path.basename(filePath)} 레퍼런스 추가 완료`); await sleep(800); return true }
+  // 업로드된 썸네일이 자동 선택 안 됐을 수 있음 → 가장 최근 썸네일 클릭 후 재시도
+  const thumbClicked = await page.evaluate(() => {
+    const imgs = [...document.querySelectorAll('img')].filter(img => {
+      const r = img.getBoundingClientRect()
+      return img.complete && img.naturalWidth > 50 && r.width > 30 && r.left > 80 && r.top > 100
+    })
+    if (!imgs.length) return false
+    imgs.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)
+    imgs[0].click()
+    return true
+  })
+  if (thumbClicked) {
+    await sleep(600)
+    const added2 = await clickAddToPrompt(page)
+    if (added2) { log('info', `${path.basename(filePath)} 추가 완료 (썸네일 클릭)`); await sleep(800); return true }
+  }
 
-  log('warn', '"프롬프트에 추가" 못 찾음')
+  log('warn', `"프롬프트에 추가" 못 찾음 → ${path.basename(filePath)} 첨부 실패`)
+  await page.keyboard.press('Escape').catch(() => {})
   return false
 }
 
