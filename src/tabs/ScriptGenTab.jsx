@@ -422,6 +422,8 @@ ${YEORI_RULESET}
     reader.readAsText(file, 'utf-8')
   }
 
+  const allG1 = cuts.length > 0 && cuts.every(c => c.dialogue || c.narration || c.scene)
+
   return (
     <div className={s.root}>
       {importToast && <div className={s.toast}>{importToast}</div>}
@@ -558,6 +560,18 @@ ${YEORI_RULESET}
       <div className={s.editor}>
         {cuts.length > 0 && (
           <>
+            {allG1 && (
+              <div className={s.approveBar}>
+                <div>
+                  <div className={s.approveBadge}>✅ G1 완료</div>
+                  <div className={s.approveText}>모든 컷 대본 작성됨 — 이미지 생성을 시작할까요?</div>
+                </div>
+                <button className={s.approveBtn}
+                  onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
+                  스튜디오 이미지 생성 시작 →
+                </button>
+              </div>
+            )}
             <div className={s.editorHeader}>
               <h2>CUT {cuts[activeCut]?.no}</h2>
               <div className={s.editorNav}>

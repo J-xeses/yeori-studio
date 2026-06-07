@@ -95,3 +95,36 @@
   flex-shrink: 0; margin-top: 1px;
 }
 .narr { color: var(--text-3); font-style: italic; }
+
+.confirmRow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px 10px;
+}
+.confirmBtn {
+  flex: 1; padding: 6px; border-radius: 6px;
+  background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
+  color: var(--green); font-size: 12px; font-weight: 700; transition: all .15s; cursor: pointer;
+}
+.confirmBtn:hover { background: rgba(34,197,94,.2); }
+.confirmedTag { font-size: 11px; color: var(--green); font-weight: 700; flex-shrink: 0; }
+.regenBtn {
+  flex: 1; padding: 6px; border-radius: 6px;
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.3);
+  color: var(--accent-light); font-size: 12px; font-weight: 700; transition: all .15s; cursor: pointer;
+}
+.regenBtn:hover { background: rgba(167,139,250,.2); }
+
+.approveBarWrap { padding: 0 16px 8px; flex-shrink: 0; }
+.approveBar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 14px 18px; border-radius: 10px;
+  background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.3);
+}
+.approveBadge { font-size: 12px; font-weight: 800; color: var(--green); margin-bottom: 2px; }
+.approveText { font-size: 12.5px; color: var(--text-2); }
+.approveBtn {
+  background: var(--green); border: none; color: #fff;
+  padding: 9px 20px; border-radius: 7px; font-size: 13px; font-weight: 700;
+  white-space: nowrap; transition: background .15s; flex-shrink: 0; cursor: pointer;
+}
+.approveBtn:hover { background: #15803d; }

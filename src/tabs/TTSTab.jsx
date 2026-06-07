@@ -8,7 +8,7 @@ const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 
 export default function TTSTab() {
   const { state, dispatch } = useApp()
-  const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
+  const { cuts, episode, apiKeys, ttsSettings, elevenLabsStatus } = state
   const [audios, setAudios] = useState({})
   const [loading, setLoading] = useState({})
   const [text, setText] = useState('')
@@ -91,6 +91,20 @@ export default function TTSTab() {
     const a = audios[cutId]; if (!a) return
     const link = document.createElement('a')
     link.href = a.url; link.download = `cut_${cutNo}.mp3`; link.click()
+  }
+
+  const cutsWithText = cuts.filter(c => getTextForCut(c))
+  const allG3 = cutsWithText.length > 0 && cutsWithText.every(c => audios[c.id])
+
+  const handleG3Approve = async () => {
+    try {
+      await fetch('http://localhost:3001/api/studio-data', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ episode, cuts, type: 'report', generatedAt: new Date().toISOString() }),
+      })
+    } catch {}
+    dispatch({ type: 'SET_TAB', p: 'extract' })
   }
 
   const cut = cuts[activeCut]
@@ -226,6 +240,20 @@ export default function TTSTab() {
             }}
           >🎙️ 전체 컷 일괄 생성</button>
         </div>
+
+        {allG3 && (
+          <div className={s.panel}>
+            <div className={s.approveBar}>
+              <div>
+                <div className={s.approveBadge}>✅ G3 완료</div>
+                <div className={s.approveText}>모든 대사 TTS 생성됨 — 데이터 추출을 시작할까요?</div>
+              </div>
+              <button className={s.approveBtn} onClick={handleG3Approve}>
+                추출 탭으로 이동 →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

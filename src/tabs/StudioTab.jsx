@@ -31,7 +31,8 @@ export default function StudioTab() {
   const [images, setImages] = useState({})
   const [selected, setSelected] = useState(TOOLS[0])
   const [copiedId, setCopiedId] = useState(null)
-  const [generating, setGenerating] = useState({}) // { cutId: true/false }
+  const [generating, setGenerating] = useState({})
+  const [confirmed, setConfirmed] = useState({})
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -188,6 +189,9 @@ export default function StudioTab() {
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
   }
 
+  const cutsWithImages = cuts.filter(c => images[c.id])
+  const allG2 = cutsWithImages.length > 0 && cutsWithImages.every(c => confirmed[c.id])
+
   const exportPromptsJson = () => runFlow()
 
   const generateAllPrompts = () => {
@@ -288,6 +292,21 @@ export default function StudioTab() {
         </div>
       )}
 
+      {allG2 && (
+        <div className={s.approveBarWrap}>
+          <div className={s.approveBar}>
+            <div>
+              <div className={s.approveBadge}>✅ G2 완료</div>
+              <div className={s.approveText}>모든 이미지 컨펌됨 — TTS 생성을 시작할까요?</div>
+            </div>
+            <button className={s.approveBtn}
+              onClick={() => dispatch({ type: 'SET_TAB', p: 'tts' })}>
+              TTS 탭으로 이동 →
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className={s.grid}>
         {cuts.map((cut) => (
           <div key={cut.id} className={s.card}>
@@ -360,6 +379,29 @@ export default function StudioTab() {
               {cut.dialogue && <div className={s.dial}><span className={s.dialLabel}>대사</span>{cut.dialogue}</div>}
               {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
             </div>
+
+            {images[cut.id] && (
+              <div className={s.confirmRow}>
+                {!confirmed[cut.id] ? (
+                  <button className={s.confirmBtn}
+                    onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
+                    ✅ 컨펌
+                  </button>
+                ) : (
+                  <>
+                    <span className={s.confirmedTag}>✅ 컨펌됨</span>
+                    <button className={s.regenBtn}
+                      onClick={() => {
+                        setConfirmed(p => ({ ...p, [cut.id]: false }))
+                        setImages(p => { const n = {...p}; delete n[cut.id]; return n })
+                        if (apiKeys.gemini && cut.imagePrompt) generateSingleImage(cut)
+                      }}>
+                      🔄 재생성
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>
