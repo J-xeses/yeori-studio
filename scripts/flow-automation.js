@@ -1257,62 +1257,7 @@ async function attachLocalFile(page, filePath) {
     }
     log('warn', `${baseName}: 행 클릭 후 "프롬프트에 추가" 못 찾음 → debug_panel_${baseName}.png 확인`)
   } else {
-    log('warn', `${baseName}: 패널 목록에서 파일 못 찾음 → 업로드 시도`)
-
-    // 폴백: 패널 내 업로드 버튼 클릭 + waitForFileChooser (Promise.all로 타이밍 보장)
-    try {
-      const [chooser] = await Promise.all([
-        page.waitForFileChooser({ timeout: 6000 }),
-        page.evaluate(() => {
-          const half = window.innerWidth * 0.6
-          for (const el of [...document.querySelectorAll('button, a, [role="button"], *')]) {
-            const r = el.getBoundingClientRect()
-            if (r.width === 0 || r.left > half) continue
-            const txt = el.textContent.trim()
-            const label = (el.getAttribute('aria-label') || '').toLowerCase()
-            if (/(업로드|upload|↑|파일 추가|add file)/i.test(txt + label)) {
-              el.click(); return txt || label
-            }
-          }
-          return null
-        }),
-      ])
-      await chooser.accept([filePath])
-      log('info', `${baseName}: 파일 업로드 완료`)
-      await sleep(3500)
-
-      // 업로드 후 패널에서 파일 재탐색 + 클릭
-      const clicked2 = await page.evaluate((name, fname) => {
-        const half = window.innerWidth * 0.6
-        let el = [...document.querySelectorAll('*')].find(e => {
-          const txt = e.textContent.trim().toLowerCase()
-          const r = e.getBoundingClientRect()
-          return (txt === fname || txt === name) && r.width > 0 && r.left < half
-        })
-        if (!el) return null
-        for (let i = 0; i < 5; i++) {
-          const p = el.parentElement; if (!p) break
-          const r = p.getBoundingClientRect()
-          if (r.width > half || r.height > 200) break
-          el = p
-        }
-        el.click()
-        const r = el.getBoundingClientRect()
-        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
-      }, baseName, fileName)
-
-      if (clicked2) {
-        await sleep(2000)
-        const added2 = await clickAddToPrompt(page)
-        if (added2) {
-          log('info', `${path.basename(filePath)} 업로드 후 프롬프트에 추가 완료`)
-          await sleep(800)
-          return true
-        }
-      }
-    } catch (e) {
-      log('warn', `${baseName}: 업로드 폴백 실패 (${e.message})`)
-    }
+    log('warn', `${baseName}: 패널 목록에서 파일 못 찾음`)
   }
 
   // 패널 닫기
@@ -1325,37 +1270,9 @@ async function attachLocalFile(page, filePath) {
 async function generateEpisodeCloseup(page, savePath) {
   const pos = await prepareInput(page)
 
-  // yeori-face.jpg 직접 파일 업로드 (패널 목록 검색 방식 제거)
-  if (!await clickPlusButton(page)) {
-    log('warn', 'closeup: + 버튼 못 찾음 — 텍스트만으로 생성')
-  } else {
-    await sleep(1500)
-    try {
-      const [chooser] = await Promise.all([
-        page.waitForFileChooser({ timeout: 6000 }),
-        page.evaluate(() => {
-          const half = window.innerWidth * 0.6
-          for (const el of [...document.querySelectorAll('button, a, [role="button"], *')]) {
-            const r = el.getBoundingClientRect()
-            if (r.width === 0 || r.left > half) continue
-            const txt = el.textContent.trim()
-            const lbl = (el.getAttribute('aria-label') || '').toLowerCase()
-            if (/(업로드|upload|↑|파일 추가)/i.test(txt + lbl)) { el.click(); return true }
-          }
-          return null
-        }),
-      ])
-      await chooser.accept([CONFIG.characterImage])
-      log('info', 'yeori-face.jpg 직접 업로드 완료')
-      await sleep(3500)
-      const added = await clickAddToPrompt(page)
-      if (added) { log('info', 'yeori-face.jpg 프롬프트에 추가 완료'); await sleep(800) }
-      else log('warn', 'closeup: 업로드 후 "프롬프트에 추가" 못 찾음')
-    } catch (e) {
-      log('warn', `yeori-face.jpg 업로드 실패 (${e.message}) — 텍스트만으로 생성`)
-      await page.keyboard.press('Escape').catch(() => {})
-    }
-  }
+  // Untitled Character를 레퍼런스로 첨부 (전역 등록 캐릭터, 파일 업로드 불필요)
+  const charAttached = await attachYeoriCharacterToPrompt(page)
+  if (!charAttached) log('warn', 'closeup: 캐릭터 첨부 실패 — 텍스트만으로 생성')
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
@@ -1396,8 +1313,8 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  // 레퍼런스 1: yeori-face.jpg (원본 얼굴)
-  await attachLocalFile(page, CONFIG.characterImage)
+  // 레퍼런스 1: Untitled Character (전역 등록, 어느 프로젝트에서나 패널에 나타남)
+  await attachYeoriCharacterToPrompt(page)
   // 레퍼런스 2: yeori_closeup.jpg (이번 에피소드 클로즈업, 썸네일 기반)
   await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
