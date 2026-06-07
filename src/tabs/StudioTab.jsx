@@ -380,28 +380,25 @@ export default function StudioTab() {
               {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
             </div>
 
-            {images[cut.id] && (
-              <div className={s.confirmRow}>
-                {!confirmed[cut.id] ? (
-                  <button className={s.confirmBtn}
-                    onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
-                    ✅ 컨펌
-                  </button>
-                ) : (
-                  <>
-                    <span className={s.confirmedTag}>✅ 컨펌됨</span>
-                    <button className={s.regenBtn}
-                      onClick={() => {
-                        setConfirmed(p => ({ ...p, [cut.id]: false }))
-                        setImages(p => { const n = {...p}; delete n[cut.id]; return n })
-                        if (apiKeys.gemini && cut.imagePrompt) generateSingleImage(cut)
-                      }}>
-                      🔄 재생성
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
+            <div className={s.confirmRow}>
+              {!confirmed[cut.id] ? (
+                <button className={s.confirmBtn}
+                  disabled={!images[cut.id]}
+                  onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
+                  ✅ 컨펌
+                </button>
+              ) : (
+                <span className={s.confirmedTag}>✅ 컨펌됨</span>
+              )}
+              <button className={s.regenBtn}
+                onClick={() => {
+                  setConfirmed(p => ({ ...p, [cut.id]: false }))
+                  setImages(p => { const n = {...p}; delete n[cut.id]; return n })
+                  if (apiKeys.gemini && cut.imagePrompt) generateSingleImage(cut)
+                }}>
+                🔄 재생성
+              </button>
+            </div>
           </div>
         ))}
       </div>
