@@ -1096,18 +1096,33 @@ async function clickPlusButton(page) {
 // 캐릭터를 찾으려면 먼저 "캐릭터" 탭을 클릭해야 함
 
 async function attachYeoriCharacterToPrompt(page) {
+  const projectUrl = page.url()
+
   if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
   await sleep(1500)
 
-  // ── 캐릭터 탭 클릭 (패널 왼쪽 내비게이션) ──
+  // + 버튼 클릭 직후 스크린샷 (패널 열린 상태 확인)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_opened.png') })
+
+  // + 클릭이 페이지 이동을 유발했는지 감지 (사이드바 항목 클릭 오클릭 방지)
+  if (page.url() !== projectUrl) {
+    log('warn', `+ 클릭 후 URL 변경 (${page.url()}) → 뒤로가기`)
+    await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() =>
+      page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    )
+    await sleep(1500)
+    return false
+  }
+
+  // ── 캐릭터 탭 클릭 (패널 내비게이션) ──
+  // y > 400 으로 상단 고정 사이드바 "캐릭터"(y≈125) 완전 제외
   const tabClicked = await page.evaluate(() => {
     const panelRight = window.innerWidth * 0.65
-    // 패널 왼쪽 내비게이션 (x < 65%) 에서 "캐릭터" 텍스트 항목 클릭
     for (const el of document.querySelectorAll('*')) {
       const r = el.getBoundingClientRect()
       if (r.width === 0 || r.right > panelRight) continue
       const txt = el.textContent.trim()
-      if ((txt === '캐릭터' || txt === 'Characters' || txt === 'Character') && r.top > 80) {
+      if ((txt === '캐릭터' || txt === 'Characters' || txt === 'Character') && r.top > 400) {
         el.click(); return txt
       }
     }
@@ -1115,7 +1130,17 @@ async function attachYeoriCharacterToPrompt(page) {
   })
   if (tabClicked) {
     log('info', `캐릭터 탭 클릭: "${tabClicked}"`)
-    await sleep(1200)
+    await sleep(1000)
+
+    // 탭 클릭이 페이지 이동 유발했으면 즉시 복귀
+    if (page.url() !== projectUrl) {
+      log('warn', `캐릭터 탭 후 URL 변경 (${page.url()}) → 뒤로가기`)
+      await page.goBack({ waitUntil: 'networkidle2', timeout: 15000 }).catch(() =>
+        page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+      )
+      await sleep(1500)
+      return false
+    }
   } else {
     log('warn', '캐릭터 탭 못 찾음 — 현재 패널에서 시도')
   }
@@ -1140,8 +1165,9 @@ async function attachYeoriCharacterToPrompt(page) {
   })
 
   if (!charClicked) {
-    log('warn', `캐릭터 못 찾음 → debug_char_panel.png 확인 (캐릭터 등록 필요 시 --register-character)`)
+    log('warn', `캐릭터 못 찾음 → debug_char_panel.png 확인`)
     await page.keyboard.press('Escape').catch(() => {})
+    await sleep(500)
     return false
   }
   log('info', `캐릭터 선택: "${charClicked}"`)
@@ -1309,14 +1335,30 @@ async function attachLocalFile(page, filePath) {
 // ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
+  const projectUrl = page.url()
+
   // 레퍼런스 첨부를 prepareInput 이전에 (prepareInput의 키보드 조작이 + 버튼 탐지 방해)
   const charAttached = await attachYeoriCharacterToPrompt(page)
   if (!charAttached) log('warn', 'closeup: 캐릭터 첨부 실패 — 텍스트만으로 생성')
 
-  // 레퍼런스 첨부 완료 후 입력창 초기화 + 프롬프트 입력
+  // 캐릭터 첨부 후 URL 이탈 복귀 (신규 캐릭터 페이지 등)
+  if (page.url() !== projectUrl) {
+    log('warn', `URL 이탈: ${page.url()} → 프로젝트 복귀`)
+    await page.goto(projectUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    await sleep(2500)
+  }
+
+  // 입력창 초기화 + 명시적 포커스 재클릭 + 프롬프트 입력
   const pos = await prepareInput(page)
+  await page.mouse.click(pos.x, pos.y)  // 재클릭으로 포커스 보장
+  await sleep(300)
+
   await page.keyboard.type(CONFIG.closeupFacePrompt, { delay: 15 })
-  await sleep(500)
+  await sleep(300)
+
+  // 생성 전 스크린샷 — 프롬프트 입력 확인
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_before_generate.png') })
+  await sleep(200)
 
   const before = await collectImageSrcs(page)
   await clickGenerate(page)
