@@ -72,6 +72,77 @@ export default function StudioTab() {
     }
   }
 
+  // ── 단일 컷 Flow 재생성 ────────────────────────────────────────
+  const runFlowForCut = async (cut) => {
+    const { episode } = state
+    if (!cut.imagePrompt?.trim()) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
+
+    const prompts = {
+      episode: episode.number,
+      title: episode.title || '',
+      cuts: [{
+        no: cut.no,
+        imagePrompt: cut.imagePrompt,
+        ...(cut.narration?.trim() ? { narration: cut.narration.trim() } : {}),
+        ...(cut.dialogue?.trim() && !/^없음$/i.test(cut.dialogue) ? { dialogue: cut.dialogue.trim() } : {}),
+        duration: cut.duration || 5,
+      }],
+    }
+
+    setGenerating(prev => ({ ...prev, [cut.id]: true }))
+    setFlowLogs(prev => [...prev, { type: 'info', message: `🔄 CUT ${cut.no} Flow 재생성 중…` }])
+
+    try {
+      const res = await fetch('http://localhost:3001/api/run-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep: episode.number, prompts }),
+      })
+      if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'cut_done') {
+              const padded = String(ev.cutNo).padStart(2, '0')
+              for (const ext of ['jpg', 'jpeg', 'png']) {
+                const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}?t=${Date.now()}`
+                try {
+                  const r = await fetch(url, { method: 'HEAD' })
+                  if (r.ok) {
+                    setImages(p => ({ ...p, [cut.id]: url }))
+                    setGPoint(cut.no, 'g3', true)
+                    setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
+                    break
+                  }
+                } catch {}
+              }
+            } else if (ev.type === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no} Flow 실패: ${ev.message}` }])
+            } else if (ev.type === 'log' && ev.level === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `⚠️ ${ev.message}` }])
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no}: ${err.message}` }])
+    } finally {
+      setGenerating(prev => ({ ...prev, [cut.id]: false }))
+    }
+  }
+
   // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
   const runFlow = async () => {
     const { episode, cuts: allCuts } = state
@@ -329,7 +400,7 @@ export default function StudioTab() {
               {generating[cut.id] && (
                 <div className={s.uploadPlaceholder}>
                   <span style={{fontSize:24,animation:'spin 1s linear infinite'}}>⟳</span>
-                  <span style={{fontSize:11,color:'var(--purple)'}}>Gemini 생성 중...</span>
+                  <span style={{fontSize:11,color:'var(--purple)'}}>{selected === 'Flow' ? 'Flow 생성 중...' : 'Gemini 생성 중...'}</span>
                 </div>
               )}
               {images[cut.id] && (
@@ -394,7 +465,11 @@ export default function StudioTab() {
                 onClick={() => {
                   setConfirmed(p => ({ ...p, [cut.id]: false }))
                   setImages(p => { const n = {...p}; delete n[cut.id]; return n })
-                  if (apiKeys.gemini && cut.imagePrompt) generateSingleImage(cut)
+                  if (selected === 'Flow') {
+                    runFlowForCut(cut)
+                  } else if (apiKeys.gemini && cut.imagePrompt) {
+                    generateSingleImage(cut)
+                  }
                 }}>
                 🔄 재생성
               </button>
