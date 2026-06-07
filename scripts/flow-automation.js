@@ -1325,9 +1325,37 @@ async function attachLocalFile(page, filePath) {
 async function generateEpisodeCloseup(page, savePath) {
   const pos = await prepareInput(page)
 
-  // yeori-face.jpg를 레퍼런스로 첨부
-  const faceAttached = await attachLocalFile(page, CONFIG.characterImage)
-  if (!faceAttached) log('warn', 'yeori-face.jpg 레퍼런스 첨부 실패 — 텍스트만으로 생성')
+  // yeori-face.jpg 직접 파일 업로드 (패널 목록 검색 방식 제거)
+  if (!await clickPlusButton(page)) {
+    log('warn', 'closeup: + 버튼 못 찾음 — 텍스트만으로 생성')
+  } else {
+    await sleep(1500)
+    try {
+      const [chooser] = await Promise.all([
+        page.waitForFileChooser({ timeout: 6000 }),
+        page.evaluate(() => {
+          const half = window.innerWidth * 0.6
+          for (const el of [...document.querySelectorAll('button, a, [role="button"], *')]) {
+            const r = el.getBoundingClientRect()
+            if (r.width === 0 || r.left > half) continue
+            const txt = el.textContent.trim()
+            const lbl = (el.getAttribute('aria-label') || '').toLowerCase()
+            if (/(업로드|upload|↑|파일 추가)/i.test(txt + lbl)) { el.click(); return true }
+          }
+          return null
+        }),
+      ])
+      await chooser.accept([CONFIG.characterImage])
+      log('info', 'yeori-face.jpg 직접 업로드 완료')
+      await sleep(3500)
+      const added = await clickAddToPrompt(page)
+      if (added) { log('info', 'yeori-face.jpg 프롬프트에 추가 완료'); await sleep(800) }
+      else log('warn', 'closeup: 업로드 후 "프롬프트에 추가" 못 찾음')
+    } catch (e) {
+      log('warn', `yeori-face.jpg 업로드 실패 (${e.message}) — 텍스트만으로 생성`)
+      await page.keyboard.press('Escape').catch(() => {})
+    }
+  }
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
