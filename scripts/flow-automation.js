@@ -325,20 +325,23 @@ async function main() {
     }
 
     // ── ③ 서여리 캐릭터 등록 (최초 1회, character_registered.txt 마커) ─
+    // yeori-face.jpg가 없으면 등록하지 않음 — 잘못된 이미지 절대 사용 금지
     if (!fs.existsSync(charMarker)) {
-      // yeori-face.jpg 우선 사용, 없으면 referenceImage 폴백
-      const charImgPath = fs.existsSync(CONFIG.characterImage)
-        ? CONFIG.characterImage
-        : CONFIG.referenceImage
-      log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, charImgPath)})…`)
-      const regOk = await registerCharacterWithImage(page, charImgPath)
-      if (regOk) {
-        fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
-        log('ok', '③ 캐릭터 등록 완료')
+      if (!fs.existsSync(CONFIG.characterImage)) {
+        log('warn', '③ yeori-face.jpg 없음 — 캐릭터 등록 건너뜀')
+        log('info', '   서여리 얼굴 이미지를 생성하려면:')
+        log('info', '   npm run flow -- --gen-face')
       } else {
-        log('warn', '③ 캐릭터 등록 실패 — 계속 진행 (이미지 일관성 저하 가능)')
+        log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, CONFIG.characterImage)})…`)
+        const regOk = await registerCharacterWithImage(page, CONFIG.characterImage)
+        if (regOk) {
+          fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
+          log('ok', '③ 캐릭터 등록 완료')
+        } else {
+          log('warn', '③ 캐릭터 등록 실패 — 계속 진행 (이미지 일관성 저하 가능)')
+        }
+        await navigateBackToProject(page)
       }
-      await navigateBackToProject(page)
     } else {
       log('ok', `③ 서여리 캐릭터 이미 등록됨 (스킵)`)
     }
