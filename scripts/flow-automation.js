@@ -268,43 +268,14 @@ async function main() {
     // ── ① Google Flow 로그인 + 대시보드 ─────────────────────────────
     await navigateToFlow(page)
 
-    // ── ② 프로젝트 URL 로드 (project_url.txt 수동 설정 필요) ──────────
-    if (!fs.existsSync(projectMarker)) {
-      log('error', 'Flow 프로젝트 URL을 다음 파일에 저장해주세요:')
-      log('info', `  ${projectMarker}`)
-      log('info', '  예) https://labs.google/fx/ko/tools/flow/project/xxxxx')
-      return
-    }
+    // ── ② 프로젝트 로드 (ensureProject — project_url.txt 수동 설정 필수) ──
+    await ensureProject(page, epDir)
 
-    const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
-    _projectUrl = savedUrl
-    log('ok', `② 프로젝트 로드: ${savedUrl}`)
-    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-    await sleep(2500)
-    await waitForImagesStable(page)
-
-    const isError = await page.evaluate(() =>
-      document.body.innerText.includes('문제가 발생했습니다') ||
-      document.body.innerText.includes('Something went wrong') ||
-      document.body.innerText.includes('프로젝트로 돌아가기')
-    )
-    if (isError) {
-      log('error', `프로젝트 에러: ${savedUrl}`)
-      log('info', 'Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.')
-      return
-    }
-
-    // ── ③ 클로즈업 생성 (매 실행마다 재생성 — 2단계 체이닝 보장) ──────────
-    log('step', '③ 클로즈업 얼굴 이미지 생성 중…')
-    await generateEpisodeCloseup(page, closeupPath)
-    log('ok', `③ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
-    await sleep(CONFIG.delayMs)
-
-    // ── ④ 컷별 이미지 생성 ──────────────────────────────────────────
+    // ── ③ 컷별 이미지 생성 (closeup 캐시 처리는 processCut 내부) ──────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const label = `[${i + 1}/${cuts.length}] CUT ${cut.no}`
-      log('step', `④ ${label} 생성 중…`)
+      log('step', `③ ${label} 생성 중…`)
 
       for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
         try {
@@ -434,44 +405,34 @@ async function navigateToFlow(page) {
   log('ok', `Flow 대시보드 준비 완료`)
 }
 
-// 에피소드별 프로젝트 확보: 저장된 URL 재사용 OR 새 프로젝트 생성
-async function ensureProject(page, epDir, title) {
+// 에피소드별 프로젝트 확보: project_url.txt 수동 설정 필수
+async function ensureProject(page, epDir) {
   const marker = path.join(epDir, 'project_url.txt')
+  const ep = path.basename(epDir)
 
-  if (fs.existsSync(marker)) {
-    const savedUrl = fs.readFileSync(marker, 'utf-8').trim()
-    log('ok', `기존 프로젝트 사용: ${savedUrl}`)
-    _projectUrl = savedUrl
-    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-    await sleep(2500)
-  } else {
-    log('step', `새 프로젝트 생성 중: ${title}…`)
-    const newUrl = await createNewProject(page, title)
-    if (newUrl) {
-      _projectUrl = newUrl
-      fs.writeFileSync(marker, newUrl, 'utf-8')
-      log('ok', `새 프로젝트 생성 완료: ${newUrl}`)
-    } else {
-      log('warn', '새 프로젝트 생성 실패 → 첫 번째 기존 프로젝트 사용 시도')
-      const fallbackUrl = await page.evaluate(() => {
-        const a = document.querySelector('a[href*="/flow/project/"]')
-        return a?.href ?? null
-      })
-      if (fallbackUrl) {
-        _projectUrl = fallbackUrl
-        fs.writeFileSync(marker, fallbackUrl, 'utf-8')
-        await page.goto(fallbackUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-        await sleep(2500)
-        log('info', `폴백 프로젝트로 이동: ${fallbackUrl}`)
-      } else {
-        log('warn', '프로젝트를 찾지 못했습니다. Flow에서 프로젝트를 먼저 만들어주세요.')
-      }
-    }
+  if (!fs.existsSync(marker)) {
+    console.error(`❌ downloads/flow/${ep}/project_url.txt 없음.`)
+    console.error(`   Flow에서 프로젝트 생성 후 URL을 저장해주세요.`)
+    process.exit(1)
   }
 
+  const savedUrl = fs.readFileSync(marker, 'utf-8').trim()
+  log('ok', `프로젝트 URL 로드: ${savedUrl}`)
+  _projectUrl = savedUrl
+  await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+  await sleep(2500)
   await waitForImagesStable(page)
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project.png'), fullPage: true })
-  log('info', '프로젝트 UI 스크린샷 저장 완료')
+
+  const isError = await page.evaluate(() =>
+    document.body.innerText.includes('문제가 발생했습니다') ||
+    document.body.innerText.includes('Something went wrong') ||
+    document.body.innerText.includes('프로젝트로 돌아가기')
+  )
+  if (isError) {
+    console.error(`❌ 프로젝트 에러: ${savedUrl}`)
+    console.error(`   Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.`)
+    process.exit(1)
+  }
 }
 
 // 새 프로젝트 생성 → 이름 입력 → 프로젝트 URL 반환
@@ -1003,13 +964,27 @@ async function clickPlusButton(page) {
   return false
 }
 
+// ── 얼굴 이미지 경로 탐색 ─────────────────────────────────────────
+function findFaceImagePath() {
+  const candidates = [
+    path.join(CONFIG.characterDir, 'yeori-face.jpg'),
+    path.join(CONFIG.characterDir, 'yeori-face.jpeg'),
+    path.join(ROOT, 'assets', 'yeori-reference.jpg'),
+  ]
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p
+  }
+  return null
+}
+
 // ── yeori-face.jpg 를 "+" 패널에서 직접 첨부 ────────────────────────
 // 전략 1: 패널 이미지 탭에 이미 있으면 선택
 // 전략 2: 없으면 업로드 탭에서 파일 업로드
 
-async function attachFaceImageToPrompt(page) {
-  if (!fs.existsSync(CONFIG.characterImage)) {
-    log('warn', '서여리 얼굴 이미지 없음: ' + CONFIG.characterImage)
+async function attachFaceImageToPrompt(page, faceImagePath) {
+  const imgPath = faceImagePath || findFaceImagePath()
+  if (!imgPath) {
+    log('warn', '서여리 얼굴 이미지 없음 (attachFaceImageToPrompt)')
     return false
   }
 
@@ -1102,8 +1077,8 @@ async function attachFaceImageToPrompt(page) {
         return false
       })
     ])
-    await fileChooser.accept([CONFIG.characterImage])
-    log('info', 'face: 얼굴 이미지 업로드 중…')
+    await fileChooser.accept([imgPath])
+    log('info', `face: 얼굴 이미지 업로드 중… (${path.basename(imgPath)})`)
     await sleep(3000)
 
     // 업로드 후 썸네일 클릭
@@ -1289,10 +1264,18 @@ async function attachLocalFile(page, filePath) {
 // ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
+  const faceImagePath = findFaceImagePath()
+  if (!faceImagePath) {
+    console.error('❌ 서여리 얼굴 이미지 없음.')
+    console.error('   downloads/flow/character/yeori-face.jpg 또는 assets/yeori-reference.jpg를 준비하세요.')
+    process.exit(1)
+  }
+  log('info', `얼굴 이미지 사용: ${path.relative(ROOT, faceImagePath)}`)
+
   const projectUrl = page.url()
 
   // 서여리 얼굴 이미지 첨부 (prepareInput 이전에 — 키보드 조작이 + 버튼 탐지 방해)
-  const faceAttached = await attachFaceImageToPrompt(page)
+  const faceAttached = await attachFaceImageToPrompt(page, faceImagePath)
   if (!faceAttached) log('warn', 'closeup: 얼굴 이미지 첨부 실패 — 텍스트만으로 생성')
 
   // 캐릭터 첨부 후 URL 이탈 복귀 (신규 캐릭터 페이지 등)
@@ -1344,10 +1327,21 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   const ep = cut.episode ?? defaultEpisode ?? 'x'
   const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
 
+  // closeup 캐시: 없으면 먼저 생성
+  if (!fs.existsSync(closeupPath)) {
+    log('step', 'closeup 없음 → 먼저 생성')
+    await generateEpisodeCloseup(page, closeupPath)
+    log('ok', `closeup 생성 완료: ${path.relative(ROOT, closeupPath)}`)
+    await sleep(CONFIG.delayMs)
+  } else {
+    log('info', `closeup 재사용: ${path.relative(ROOT, closeupPath)}`)
+  }
+
+  const faceImagePath = findFaceImagePath()
   log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
 
   // 레퍼런스 첨부 먼저 (prepareInput의 키보드 조작이 + 버튼 탐지 방해하므로)
-  await attachFaceImageToPrompt(page)
+  await attachFaceImageToPrompt(page, faceImagePath)
   await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
 
