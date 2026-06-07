@@ -346,15 +346,11 @@ async function main() {
       log('ok', `③ 서여리 캐릭터 이미 등록됨 (스킵)`)
     }
 
-    // ── ④ 클로즈업 생성 (최초 1회, yeori_closeup.jpg 캐시) ──────────
-    if (!fs.existsSync(closeupPath)) {
-      log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
-      await generateEpisodeCloseup(page, closeupPath)
-      log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
-      await sleep(CONFIG.delayMs)
-    } else {
-      log('ok', `④ 클로즈업 재사용: ${path.relative(ROOT, closeupPath)}`)
-    }
+    // ── ④ 클로즈업 생성 (매 실행마다 재생성 — 2단계 체이닝 보장) ──────────
+    log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
+    await generateEpisodeCloseup(page, closeupPath)
+    log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
+    await sleep(CONFIG.delayMs)
 
     // ── ⑤ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
@@ -1014,51 +1010,65 @@ async function generateFaceImage(page) {
 }
 
 // ── 공통: 하단 "+" 버튼 클릭 ───────────────────────────────────────
-// debug_bottom.png 확인: + 버튼은 "무엇을 만들고 싶으신가요?" 입력창 바로 왼쪽에 위치
+// debug_bottom.png 레이아웃: [+] [에이전트] ... [🍌 Nano Banana 2 x2] [→]
+// + 버튼은 "에이전트" 텍스트 바로 왼쪽에 위치
 
 async function clickPlusButton(page) {
-  // 전략 1: 프롬프트 입력창 왼쪽 버튼 (위치 기반) — 아이콘 전용 버튼이라 텍스트 없을 수 있음
-  const r1 = await page.evaluate(() => {
-    let input = null
-    for (const el of document.querySelectorAll(
-      '[role="textbox"], [role="combobox"], textarea, input[type="text"], [contenteditable="true"]'
-    )) {
-      if (el.classList.contains('g-recaptcha-response')) continue
+  // 전략 1: "에이전트" 버튼을 앵커로 사용 → 바로 왼쪽 35px 클릭
+  const agentPos = await page.evaluate(() => {
+    const els = [...document.querySelectorAll('*')].filter(el => {
+      const txt = el.textContent.trim()
       const r = el.getBoundingClientRect()
-      if (r.width > 100 && r.top > window.innerHeight * 0.55) { input = el; break }
-    }
-    if (!input) return null
-    const ir = input.getBoundingClientRect()
-    // 입력창 왼쪽 80px 이내, 같은 높이 ±30px
-    const btns = [...document.querySelectorAll('button, [role="button"], [tabindex="0"]')].filter(el => {
-      if (el === input) return false
-      const r = el.getBoundingClientRect()
-      if (r.width === 0 || r.height === 0) return false
-      const cy = r.top + r.height / 2
-      const icy = ir.top + ir.height / 2
-      return Math.abs(cy - icy) < 30 && r.right <= ir.left + 8 && r.left >= ir.left - 80
+      return (txt === '에이전트' || txt === 'Agent')
+        && r.width > 0 && r.width < 200 && r.top > window.innerHeight * 0.6
     })
-    if (btns.length) { btns[0].click(); return '+ (left of input)' }
-    return null
+    if (!els.length) return null
+    els.sort((a, b) => a.getBoundingClientRect().width - b.getBoundingClientRect().width)
+    const r = els[0].getBoundingClientRect()
+    return { x: r.left, y: r.top + r.height / 2, w: r.width }
   })
-  if (r1) { log('info', `+ 버튼 클릭: "${r1}"`); return true }
 
-  // 전략 2: 텍스트/aria-label 기반 (하단 30%)
+  if (agentPos) {
+    // + 버튼 = 에이전트 왼쪽에 인접 — 에이전트 left - 35px 클릭
+    const plusX = agentPos.x - 35
+    await page.mouse.click(plusX, agentPos.y)
+    log('info', `+ 버튼 클릭 (에이전트 기준 좌표): (${Math.round(plusX)}, ${Math.round(agentPos.y)})`)
+    return true
+  }
+
+  // 전략 2: 하단 영역 가장 왼쪽 소형 요소 (w≤60px) 클릭
   const r2 = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
+    const h = window.innerHeight, w = window.innerWidth
+    const candidates = [...document.querySelectorAll('*')].filter(el => {
+      const r = el.getBoundingClientRect()
+      return r.width > 5 && r.height > 5 && r.width <= 60 && r.height <= 60
+        && r.top > h * 0.75 && r.left < w * 0.5
+    })
+    if (!candidates.length) return null
+    candidates.sort((a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left)
+    const el = candidates[0]
+    const r = el.getBoundingClientRect()
+    el.click()
+    return `${el.tagName} at (${Math.round(r.left + r.width / 2)}, ${Math.round(r.top + r.height / 2)})`
+  })
+  if (r2) { log('info', `+ 버튼 클릭 (소형 요소): "${r2}"`); return true }
+
+  // 전략 3: aria-label / 텍스트 "+" 기반
+  const r3 = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('[aria-label], button, [role="button"]')) {
       const r = el.getBoundingClientRect()
       if (r.width === 0 || r.top < window.innerHeight * 0.6) continue
       const txt = el.textContent.trim()
       const lbl = (el.getAttribute('aria-label') || '').toLowerCase()
-      if (txt === '+' || lbl === '+' || lbl.includes('add') || lbl.includes('추가')) {
+      if (txt === '+' || lbl === '+' || lbl.includes('add') || lbl.includes('추가') || lbl.includes('미디어')) {
         el.click(); return txt || lbl
       }
     }
     return null
   })
-  if (r2) { log('info', `+ 버튼 클릭: "${r2}"`); return true }
+  if (r3) { log('info', `+ 버튼 클릭 (텍스트/aria): "${r3}"`); return true }
 
-  log('warn', '+ 버튼 못 찾음 (debug_bottom.png 레이아웃 변경 확인 필요)')
+  log('warn', '+ 버튼 못 찾음')
   return false
 }
 
@@ -1179,7 +1189,9 @@ async function prepareInput(page) {
   return inputPos
 }
 
-// ── 로컬 파일을 "+" 패널에 직접 업로드해서 프롬프트 레퍼런스로 첨부 ──
+// ── 로컬 파일을 "+" 패널에서 선택해 프롬프트 레퍼런스로 첨부 ──────────
+// Strategy B/C(파일 다이얼로그) 제거: 파일 다이얼로그가 열리면 이후 키보드 이벤트 전체 차단됨
+// 대신 패널에 이미 있는 파일을 클릭하는 방식만 사용 (debug_add_menu.png 확인: 파일이 목록에 있음)
 
 async function attachLocalFile(page, filePath) {
   if (!fs.existsSync(filePath)) {
@@ -1188,99 +1200,67 @@ async function attachLocalFile(page, filePath) {
   }
 
   const baseName = path.basename(filePath, path.extname(filePath)).toLowerCase()
+  const fileName  = path.basename(filePath).toLowerCase()
 
-  if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
-  await sleep(1500)
+  if (!await clickPlusButton(page)) { log('warn', `${baseName}: + 버튼 못 찾음`); return false }
+  await sleep(2500)  // 패널 열림 애니메이션 대기
 
-  // ── 전략 A: 패널 미디어 목록에 이미 있으면 클릭 → "프롬프트에 추가" ──
-  const existingPos = await page.evaluate((name) => {
-    const all = [...document.querySelectorAll('*')]
-    const matches = all.filter(el => {
-      const txt = (el.textContent || el.getAttribute('alt') || el.getAttribute('title') || '').trim().toLowerCase()
+  // 패널 상태 스크린샷 (서여리 파일 못 찾을 경우 원인 파악용)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, `debug_panel_${baseName}.png`) })
+
+  // ── 전략 A: 패널 목록에서 파일명 매칭 → 행(row) 클릭 → "프롬프트에 추가" ──
+  // 패널은 화면 왼쪽(x < innerWidth*0.6)에 위치 → 오른쪽 메인 영역 이미지 배제
+  const clicked = await page.evaluate((name, fname) => {
+    const half = window.innerWidth * 0.6
+
+    // 1) 정확히 fname("yeori-face.jpg")이 textContent인 요소 탐색
+    let textEl = [...document.querySelectorAll('*')].find(el => {
+      const txt = el.textContent.trim().toLowerCase()
       const r = el.getBoundingClientRect()
-      return txt.includes(name) && r.width > 10 && r.height > 10 && r.left > 80
+      return (txt === fname || txt === name) && r.width > 0 && r.left < half
     })
-    if (!matches.length) return null
-    matches.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    const el = matches[0]
-    const r = el.getBoundingClientRect()
-    el.click()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
-  }, baseName)
 
-  if (existingPos) {
-    log('info', `기존 미디어 선택: ${baseName}`)
-    await sleep(800)
-    const added = await clickAddToPrompt(page)
-    if (added) { log('info', `${path.basename(filePath)} 추가 완료 (기존 미디어)`); await sleep(800); return true }
-  }
-
-  // ── 전략 B: "새 미디어 업로드" → waitForFileChooser로 네이티브 다이얼로그 인터셉트 ──
-  log('info', `${baseName} 신규 업로드 시도…`)
-  let uploaded = false
-  try {
-    const chooserPromise = page.waitForFileChooser({ timeout: 6000 })
-    await page.evaluate(() => {
-      const btn = [...document.querySelectorAll('button, a, [role="button"], *')].find(el => {
-        const t = (el.textContent || '').trim()
+    // 2) alt/title 폴백 (img 요소)
+    if (!textEl) {
+      textEl = [...document.querySelectorAll('img, *')].find(el => {
+        const alt = (el.getAttribute('alt') || el.getAttribute('title') || '').toLowerCase()
         const r = el.getBoundingClientRect()
-        return /(새 미디어|업로드|upload|add media|new media)/i.test(t) && r.width > 0
+        return (alt.includes(name) || alt.includes(fname)) && r.width > 0 && r.left < half
       })
-      if (btn) btn.click()
-    })
-    const chooser = await chooserPromise
-    await chooser.accept([filePath])
-    log('info', `파일 다이얼로그로 업로드: ${path.basename(filePath)}`)
-    await sleep(3000)
-    uploaded = true
-  } catch {
-    // ── 전략 C: DOM input[type="file"] 폴백 (Shadow DOM 포함) ──
-    const inputHandle = await page.evaluateHandle(() => {
-      function s(root) {
-        for (const el of root.querySelectorAll('input[type="file"]')) return el
-        for (const el of root.querySelectorAll('*'))
-          if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
-        return null
-      }
-      return s(document)
-    })
-    const inputEl = inputHandle.asElement()
-    if (inputEl) {
-      await inputEl.uploadFile(filePath)
-      log('info', `DOM 직접 업로드: ${path.basename(filePath)}`)
-      await sleep(3000)
-      uploaded = true
     }
+
+    if (!textEl) return null
+
+    // 조상 요소를 타고 올라가 클릭 가능한 행(row) 요소 찾기 (최대 5단계)
+    let target = textEl
+    for (let i = 0; i < 5; i++) {
+      const p = target.parentElement
+      if (!p) break
+      const r = p.getBoundingClientRect()
+      if (r.width > half || r.height > 200) break  // 너무 넓으면 컨테이너
+      target = p
+    }
+
+    const r = target.getBoundingClientRect()
+    target.click()
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), txt: target.textContent.trim().slice(0, 40) }
+  }, baseName, fileName)
+
+  if (clicked) {
+    log('info', `패널 행 클릭: "${clicked.txt}" at (${clicked.x}, ${clicked.y})`)
+    await sleep(2000)  // 우측 미리보기 + "프롬프트에 추가" 버튼 나타날 때까지 대기
+    const added = await clickAddToPrompt(page)
+    if (added) {
+      log('info', `${path.basename(filePath)} 프롬프트에 추가 완료`)
+      await sleep(800)
+      return true
+    }
+    log('warn', `${baseName}: 행 클릭 후 "프롬프트에 추가" 못 찾음 → debug_panel_${baseName}.png 확인`)
+  } else {
+    log('warn', `${baseName}: 패널 목록에서 파일 못 찾음 → debug_panel_${baseName}.png 확인`)
   }
 
-  if (!uploaded) {
-    log('warn', `업로드 실패: ${path.basename(filePath)}`)
-    await page.keyboard.press('Escape').catch(() => {})
-    return false
-  }
-
-  // 업로드 직후 "프롬프트에 추가" 시도
-  const added1 = await clickAddToPrompt(page)
-  if (added1) { log('info', `${path.basename(filePath)} 추가 완료 (업로드 직후)`); await sleep(800); return true }
-
-  // 업로드된 썸네일이 자동 선택 안 됐을 수 있음 → 가장 최근 썸네일 클릭 후 재시도
-  const thumbClicked = await page.evaluate(() => {
-    const imgs = [...document.querySelectorAll('img')].filter(img => {
-      const r = img.getBoundingClientRect()
-      return img.complete && img.naturalWidth > 50 && r.width > 30 && r.left > 80 && r.top > 100
-    })
-    if (!imgs.length) return false
-    imgs.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)
-    imgs[0].click()
-    return true
-  })
-  if (thumbClicked) {
-    await sleep(600)
-    const added2 = await clickAddToPrompt(page)
-    if (added2) { log('info', `${path.basename(filePath)} 추가 완료 (썸네일 클릭)`); await sleep(800); return true }
-  }
-
-  log('warn', `"프롬프트에 추가" 못 찾음 → ${path.basename(filePath)} 첨부 실패`)
+  // 패널 닫기
   await page.keyboard.press('Escape').catch(() => {})
   return false
 }
@@ -1335,8 +1315,8 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
 
   // 레퍼런스 1: yeori-face.jpg (원본 얼굴)
   await attachLocalFile(page, CONFIG.characterImage)
-  // 레퍼런스 2: yeori_closeup.jpg (이번 에피소드 클로즈업)
-  await attachLocalFile(page, closeupPath)
+  // 레퍼런스 2: yeori_closeup.jpg (이번 에피소드 클로즈업, 썸네일 기반)
+  await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
 
   await page.mouse.click(pos.x, pos.y)
@@ -1358,27 +1338,7 @@ async function attachCloseupToPrompt(page, closeupPath) {
 
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
 
-  // ── 전략 1: file input 발견 시 직접 파일 업로드 ──────────────────
-  const fileInput = await page.evaluateHandle(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('input[type="file"]')) return el
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
-      }
-      return null
-    }
-    return search(document)
-  })
-  const fileEl = fileInput.asElement()
-  if (fileEl) {
-    await fileEl.uploadFile(closeupPath)
-    log('info', `closeup 파일 업로드: ${path.basename(closeupPath)}`)
-    await sleep(1500)
-    const added = await clickAddToPrompt(page)
-    if (added) { await sleep(800); return true }
-  }
-
-  // ── 전략 2: 패널 내 img 썸네일 클릭 (텍스트 매칭 X, 크기/위치 기반) ─
+  // ── 전략: 패널 내 img 썸네일 클릭 (텍스트 매칭 X, 크기/위치 기반) ─
   const thumbInfo = await page.evaluate(() => {
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
@@ -1417,11 +1377,22 @@ async function attachCloseupToPrompt(page, closeupPath) {
 }
 
 async function clickAddToPrompt(page) {
+  // button 이외에도 커스텀 요소, Shadow DOM 포함해서 탐색
   return page.evaluate(() => {
-    for (const el of document.querySelectorAll('button')) {
-      if (el.textContent.includes('프롬프트에 추가') && !el.disabled) { el.click(); return true }
+    function search(root) {
+      for (const el of root.querySelectorAll('*')) {
+        const txt = el.textContent.trim()
+        if (txt.includes('프롬프트에 추가') && !el.disabled) {
+          const r = el.getBoundingClientRect()
+          if (r.width > 0 && r.height > 0) { el.click(); return true }
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot && search(el.shadowRoot)) return true
+      }
+      return false
     }
-    return false
+    return search(document)
   })
 }
 
