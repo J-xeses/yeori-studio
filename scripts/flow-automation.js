@@ -1203,9 +1203,9 @@ async function prepareInput(page) {
   const inputPos = await findPromptInputPos(page)
   await page.mouse.click(inputPos.x, inputPos.y)
   await sleep(400)
+  // triple-click으로 input 내부 텍스트만 선택 (Ctrl+A는 포커스 이탈 시 페이지 전체 선택 → Backspace 뒤로가기 위험)
   await page.mouse.click(inputPos.x, inputPos.y, { clickCount: 3 })
   await sleep(200)
-  await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control')
   await page.keyboard.press('Backspace')
   await sleep(100)
   return inputPos
@@ -1290,16 +1290,12 @@ async function attachLocalFile(page, filePath) {
 // ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
-  const pos = await prepareInput(page)
-
-  // Untitled Character를 레퍼런스로 첨부 (전역 등록 캐릭터, 파일 업로드 불필요)
+  // 레퍼런스 첨부를 prepareInput 이전에 (prepareInput의 키보드 조작이 + 버튼 탐지 방해)
   const charAttached = await attachYeoriCharacterToPrompt(page)
   if (!charAttached) log('warn', 'closeup: 캐릭터 첨부 실패 — 텍스트만으로 생성')
 
-  // 캐릭터 패널 열고 닫은 후 pos 재탐색 (stale position → Target closed 방지)
-  const pos2 = await findPromptInputPos(page)
-  await page.mouse.click(pos2.x, pos2.y)
-  await sleep(300); await page.keyboard.press('End'); await sleep(100)
+  // 레퍼런스 첨부 완료 후 입력창 초기화 + 프롬프트 입력
+  const pos = await prepareInput(page)
   await page.keyboard.type(CONFIG.closeupFacePrompt, { delay: 15 })
   await sleep(500)
 
@@ -1334,14 +1330,15 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
 
   log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
-  const pos = await prepareInput(page)
-  log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  // 레퍼런스 1: Untitled Character (전역 등록, 어느 프로젝트에서나 패널에 나타남)
+  // 레퍼런스 첨부 먼저 (prepareInput의 키보드 조작이 + 버튼 탐지 방해하므로)
   await attachYeoriCharacterToPrompt(page)
-  // 레퍼런스 2: yeori_closeup.jpg (이번 에피소드 클로즈업, 썸네일 기반)
   await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
+
+  // 레퍼런스 첨부 후 입력창 초기화 + 프롬프트 입력
+  const pos = await prepareInput(page)
+  log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
