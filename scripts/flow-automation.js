@@ -1020,12 +1020,82 @@ async function selectPanelImage(page, label, newest = true) {
   return false
 }
 
-// ── face: 패널 내 가장 오래된 이미지(수동 업로드된 yeori-face) ──────────
+// ── face: downloads/flow/character/yeori-face.jpg 직접 업로드 ───────────
 
 async function attachFaceImageToPrompt(page) {
+  const facePath = path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg')
+  if (!fs.existsSync(facePath)) {
+    log('error', `yeori-face.jpg 없음: ${facePath}`)
+    process.exit(1)
+  }
+
   if (!await clickPlusButton(page)) { log('warn', 'face: + 버튼 못 찾음'); return false }
+  await sleep(2000)
+
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_opened.png') })
+
+  // 업로드 탭 클릭 (좌표 제한 없이 텍스트만으로 탐색)
+  const uploadClicked = await page.evaluate(() => {
+    const el = [...document.querySelectorAll('*')].find(el => {
+      const txt = el.textContent.trim()
+      const r = el.getBoundingClientRect()
+      return (txt === '업로드' || txt === 'Upload') && r.width > 0 && r.height > 0
+    })
+    if (el) { el.click(); return true }
+    return false
+  })
+  if (!uploadClicked) {
+    log('warn', 'face: 업로드 탭 못 찾음')
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
   await sleep(1500)
-  return selectPanelImage(page, 'face', false)  // oldest = 수동 업로드된 face
+
+  try {
+    const [fileChooser] = await Promise.all([
+      page.waitForFileChooser({ timeout: 10000 }),
+      page.evaluate(() => {
+        // 업로드 버튼 탐색 — y좌표 제한 없이
+        const btn = [...document.querySelectorAll('button, [role="button"], label, *')].find(el => {
+          const txt = (el.textContent || '').trim()
+          const r = el.getBoundingClientRect()
+          return (txt.includes('미디어 업로드') || txt.includes('파일 업로드') || txt.includes('Upload'))
+            && r.width > 0 && r.height > 0
+        })
+        if (btn) { btn.click(); return true }
+        return false
+      })
+    ])
+    await fileChooser.accept([facePath])
+    log('info', 'face: yeori-face.jpg 업로드 중…')
+    await sleep(4000)
+
+    // 업로드된 썸네일 클릭 후 프롬프트에 추가
+    const thumb = await page.evaluate(() => {
+      const vw = window.innerWidth
+      const imgs = [...document.querySelectorAll('img')].filter(img => {
+        const r = img.getBoundingClientRect()
+        return img.complete && img.naturalWidth > 60 && r.width > 40 && r.top > 100 && r.right < vw * 0.85
+      })
+      if (!imgs.length) return null
+      imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+      const r = imgs[0].getBoundingClientRect()
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+    })
+    if (thumb) { await page.mouse.click(thumb.x, thumb.y); await sleep(800) }
+
+    const added = await clickAddToPrompt(page)
+    if (added) { log('info', 'face: 프롬프트에 추가 완료'); await sleep(800); return true }
+
+    log('warn', 'face: "프롬프트에 추가" 못 찾음')
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  } catch (err) {
+    log('warn', `face: 업로드 실패 (${err.message})`)
+    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_face_error.png') })
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
 }
 
 // ── closeup: 패널 내 가장 최신 이미지(방금 생성된 closeup) ──────────────
@@ -1148,17 +1218,7 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   return saveNewImage(page, before, cut.no, ep, 'cut')
 }
 
-// ── 클로즈업 이미지 프롬프트 첨부 ───────────────────────────────────
 
-async function attachCloseupToPrompt(page, closeupPath) {
-  if (!fs.existsSync(closeupPath)) {
-    log('warn', `closeup: 파일 없음 (${path.basename(closeupPath)})`)
-    return false
-  }
-  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
-  await sleep(1500)
-  return uploadAndAttachImage(page, closeupPath, 'closeup')
-}
 
 async function clickAddToPrompt(page) {
   // button 이외에도 커스텀 요소, Shadow DOM 포함해서 탐색
@@ -1335,9 +1395,16 @@ async function clickGenerate(page) {
 // 페이지의 모든 큰 이미지 src + 크기 수집
 async function collectImageSrcs(page) {
   return page.evaluate(() => {
+    function isGenerated(src) {
+      if (!src) return false
+      if (src.endsWith('.svg') || src.includes('/icons/') || src.includes('x-logo')) return false
+      return src.includes('media.getMediaUrlRedirect') ||
+        src.includes('trpc/media') ||
+        (src.startsWith('data:image/') && !src.startsWith('data:image/svg'))
+    }
     function collect(root, list = []) {
       for (const img of root.querySelectorAll('img')) {
-        if (img.naturalWidth > 80 && img.complete && img.src) {
+        if (img.naturalWidth > 80 && img.complete && isGenerated(img.src)) {
           list.push({ src: img.src, w: img.naturalWidth, h: img.naturalHeight })
         }
       }
@@ -1350,15 +1417,22 @@ async function collectImageSrcs(page) {
   })
 }
 
-// 새 이미지가 나타날 때까지 대기
+// 새 이미지가 나타날 때까지 대기 (SVG·아이콘·로고 제외, Flow 생성 이미지만 허용)
 async function waitForNewImage(page, beforeItems) {
   const beforeSrcs = beforeItems.map(i => i.src)
   try {
     await page.waitForFunction(
       (before) => {
+        function isGenerated(src) {
+          if (!src) return false
+          if (src.endsWith('.svg') || src.includes('/icons/') || src.includes('x-logo')) return false
+          return src.includes('media.getMediaUrlRedirect') ||
+            src.includes('trpc/media') ||
+            (src.startsWith('data:image/') && !src.startsWith('data:image/svg'))
+        }
         function collect(root, list = []) {
           for (const img of root.querySelectorAll('img')) {
-            if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
+            if (img.naturalWidth > 80 && img.complete && isGenerated(img.src)) list.push(img.src)
           }
           for (const el of root.querySelectorAll('*')) {
             if (el.shadowRoot) collect(el.shadowRoot, list)
