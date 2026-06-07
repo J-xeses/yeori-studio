@@ -311,6 +311,25 @@ async function main() {
       await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
       await sleep(2500)
       await waitForImagesStable(page)
+
+      // 에러 페이지 감지 ("문제가 발생했습니다.") → 마커 삭제 후 새 프로젝트 생성
+      const isError = await page.evaluate(() =>
+        document.body.innerText.includes('문제가 발생했습니다') ||
+        document.body.innerText.includes('Something went wrong') ||
+        document.body.innerText.includes('프로젝트로 돌아가기')
+      )
+      if (isError) {
+        log('warn', `② 프로젝트 에러 감지 (${savedUrl}) → 새 프로젝트 생성`)
+        fs.unlinkSync(projectMarker)
+        await page.goto('https://labs.google/fx/ko/tools/flow', { waitUntil: 'networkidle2', timeout: 30000 })
+        await sleep(2000)
+        const newUrl = await createNewProject(page, projectTitle)
+        if (newUrl) {
+          _projectUrl = newUrl
+          fs.writeFileSync(projectMarker, newUrl, 'utf-8')
+          log('ok', `② 새 프로젝트 생성: ${newUrl}`)
+        }
+      }
     } else {
       log('step', `② 새 프로젝트 생성: "${projectTitle}"`)
       const newUrl = await createNewProject(page, projectTitle)
