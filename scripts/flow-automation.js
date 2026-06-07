@@ -967,10 +967,6 @@ async function clickPlusButton(page) {
   return false
 }
 
-// ── 얼굴 이미지 경로 반환 (downloads/flow/character/yeori-face.jpg 고정) ──
-function findFaceImagePath() {
-  return fs.existsSync(CONFIG.characterImage) ? CONFIG.characterImage : null
-}
 
 // ── 공통 업로드 헬퍼: 업로드 탭 → 파일 올리기 → 새 썸네일 클릭 → 프롬프트에 추가 ──
 
@@ -1059,11 +1055,11 @@ async function uploadAndAttachImage(page, imgPath, label) {
 
 // ── yeori-face.jpg 를 "+" 패널 업로드로 직접 첨부 ───────────────────
 
-async function attachFaceImageToPrompt(page, faceImagePath) {
-  const imgPath = faceImagePath || CONFIG.characterImage
-  if (!fs.existsSync(imgPath)) {
-    log('warn', `서여리 얼굴 이미지 없음: ${imgPath}`)
-    return false
+async function attachFaceImageToPrompt(page) {
+  const facePath = path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg')
+  if (!fs.existsSync(facePath)) {
+    console.error('❌ 서여리 얼굴 이미지 없음: downloads/flow/character/yeori-face.jpg')
+    process.exit(1)
   }
 
   const projectUrl = page.url()
@@ -1081,7 +1077,7 @@ async function attachFaceImageToPrompt(page, faceImagePath) {
     return false
   }
 
-  return uploadAndAttachImage(page, imgPath, 'face')
+  return uploadAndAttachImage(page, facePath, 'face')
 }
 
 // ── Step 2용: "+" → 이미지 탭 클릭 → 최신 이미지(Step1 클로즈업) → 프롬프트에 추가
@@ -1239,18 +1235,17 @@ async function attachLocalFile(page, filePath) {
 // ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
-  const faceImagePath = CONFIG.characterImage
-  if (!fs.existsSync(faceImagePath)) {
-    console.error('❌ 서여리 얼굴 이미지 없음.')
-    console.error('   downloads/flow/character/yeori-face.jpg 를 준비하세요.')
+  const facePath = path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg')
+  if (!fs.existsSync(facePath)) {
+    console.error('❌ 서여리 얼굴 이미지 없음: downloads/flow/character/yeori-face.jpg')
     process.exit(1)
   }
-  log('info', `얼굴 이미지 사용: ${path.relative(ROOT, faceImagePath)}`)
+  log('info', `얼굴 이미지 사용: downloads/flow/character/yeori-face.jpg`)
 
   const projectUrl = page.url()
 
   // 서여리 얼굴 이미지 첨부 (prepareInput 이전에 — 키보드 조작이 + 버튼 탐지 방해)
-  const faceAttached = await attachFaceImageToPrompt(page, faceImagePath)
+  const faceAttached = await attachFaceImageToPrompt(page)
   if (!faceAttached) log('warn', 'closeup: 얼굴 이미지 첨부 실패 — 텍스트만으로 생성')
 
   // 캐릭터 첨부 후 URL 이탈 복귀 (신규 캐릭터 페이지 등)
@@ -1312,11 +1307,10 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
     log('info', `closeup 재사용: ${path.relative(ROOT, closeupPath)}`)
   }
 
-  const faceImagePath = CONFIG.characterImage
   log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
 
   // 레퍼런스 첨부 먼저 (prepareInput의 키보드 조작이 + 버튼 탐지 방해하므로)
-  await attachFaceImageToPrompt(page, faceImagePath)
+  await attachFaceImageToPrompt(page)
   await attachCloseupToPrompt(page, closeupPath)
   await setAspectRatio(page, type)
 
