@@ -1058,7 +1058,7 @@ async function uploadAndAttachImage(page, imgPath, label) {
 async function attachFaceImageToPrompt(page) {
   const facePath = path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg')
   if (!fs.existsSync(facePath)) {
-    console.error('❌ 서여리 얼굴 이미지 없음: downloads/flow/character/yeori-face.jpg')
+    log('error', `yeori-face.jpg 없음: ${facePath}`)
     process.exit(1)
   }
 
@@ -1160,84 +1160,12 @@ async function prepareInput(page) {
 // Strategy B/C(파일 다이얼로그) 제거: 파일 다이얼로그가 열리면 이후 키보드 이벤트 전체 차단됨
 // 대신 패널에 이미 있는 파일을 클릭하는 방식만 사용 (debug_add_menu.png 확인: 파일이 목록에 있음)
 
-async function attachLocalFile(page, filePath) {
-  if (!fs.existsSync(filePath)) {
-    log('warn', `레퍼런스 파일 없음: ${filePath}`)
-    return false
-  }
-
-  const baseName = path.basename(filePath, path.extname(filePath)).toLowerCase()
-  const fileName  = path.basename(filePath).toLowerCase()
-
-  if (!await clickPlusButton(page)) { log('warn', `${baseName}: + 버튼 못 찾음`); return false }
-  await sleep(2500)  // 패널 열림 애니메이션 대기
-
-  // 패널 상태 스크린샷 (서여리 파일 못 찾을 경우 원인 파악용)
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, `debug_panel_${baseName}.png`) })
-
-  // ── 전략 A: 패널 목록에서 파일명 매칭 → 행(row) 클릭 → "프롬프트에 추가" ──
-  // 패널은 화면 왼쪽(x < innerWidth*0.6)에 위치 → 오른쪽 메인 영역 이미지 배제
-  const clicked = await page.evaluate((name, fname) => {
-    const half = window.innerWidth * 0.6
-
-    // 1) 정확히 fname("yeori-face.jpg")이 textContent인 요소 탐색
-    let textEl = [...document.querySelectorAll('*')].find(el => {
-      const txt = el.textContent.trim().toLowerCase()
-      const r = el.getBoundingClientRect()
-      return (txt === fname || txt === name) && r.width > 0 && r.left < half
-    })
-
-    // 2) alt/title 폴백 (img 요소)
-    if (!textEl) {
-      textEl = [...document.querySelectorAll('img, *')].find(el => {
-        const alt = (el.getAttribute('alt') || el.getAttribute('title') || '').toLowerCase()
-        const r = el.getBoundingClientRect()
-        return (alt.includes(name) || alt.includes(fname)) && r.width > 0 && r.left < half
-      })
-    }
-
-    if (!textEl) return null
-
-    // 조상 요소를 타고 올라가 클릭 가능한 행(row) 요소 찾기 (최대 5단계)
-    let target = textEl
-    for (let i = 0; i < 5; i++) {
-      const p = target.parentElement
-      if (!p) break
-      const r = p.getBoundingClientRect()
-      if (r.width > half || r.height > 200) break  // 너무 넓으면 컨테이너
-      target = p
-    }
-
-    const r = target.getBoundingClientRect()
-    target.click()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), txt: target.textContent.trim().slice(0, 40) }
-  }, baseName, fileName)
-
-  if (clicked) {
-    log('info', `패널 행 클릭: "${clicked.txt}" at (${clicked.x}, ${clicked.y})`)
-    await sleep(2000)  // 우측 미리보기 + "프롬프트에 추가" 버튼 나타날 때까지 대기
-    const added = await clickAddToPrompt(page)
-    if (added) {
-      log('info', `${path.basename(filePath)} 프롬프트에 추가 완료`)
-      await sleep(800)
-      return true
-    }
-    log('warn', `${baseName}: 행 클릭 후 "프롬프트에 추가" 못 찾음 → debug_panel_${baseName}.png 확인`)
-  } else {
-    log('warn', `${baseName}: 패널 목록에서 파일 못 찾음`)
-  }
-
-  // 패널 닫기
-  await page.keyboard.press('Escape').catch(() => {})
-  return false
-}
-
 // ── 클로즈업 생성: yeori-face.jpg 레퍼런스 → 클로즈업 프롬프트 ────────
 
 async function generateEpisodeCloseup(page, savePath) {
   const facePath = path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg')
   if (!fs.existsSync(facePath)) {
-    console.error('❌ 서여리 얼굴 이미지 없음: downloads/flow/character/yeori-face.jpg')
+    log('error', `yeori-face.jpg 없음: ${facePath}`)
     process.exit(1)
   }
   log('info', `얼굴 이미지 사용: downloads/flow/character/yeori-face.jpg`)
