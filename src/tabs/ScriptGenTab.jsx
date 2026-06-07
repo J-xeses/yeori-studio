@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint } from '../lib/gpoints'
@@ -42,7 +42,7 @@ function parseCuts(raw, n) {
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
         // 다음 필드 키워드 전까지
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|이미지 프롬프트)[:：]/)
+        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|이미지 프롬프트|샷 타입|길이)[:：]/)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -54,6 +54,12 @@ function parseCuts(raw, n) {
       cur.narration  = getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/)
       cur.shotType   = (getField(/샷 타입[:：]\s*/) || '').toUpperCase().includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
       cur.imagePrompt = getField(/이미지 프롬프트[:：]\s*/) || getField(/프롬프트[:：]\s*/)
+
+      const durationStr = getField(/길이[:：]\s*/)
+      if (durationStr) {
+        const d = parseInt(durationStr)
+        if (!isNaN(d)) cur.duration = Math.min(60, Math.max(1, d))
+      }
 
       // 룰셋 통과 표시 제거 (UI에서 별도 표시)
       cur.imagePrompt = cur.imagePrompt
@@ -79,6 +85,36 @@ function parseCuts(raw, n) {
   return cuts
 }
 
+function parseImportFile(content) {
+  const trimmed = content.trim()
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    try {
+      const data = JSON.parse(trimmed)
+      const arr = Array.isArray(data) ? data : [data]
+      return arr.map(item => {
+        const no = parseInt(item.cut || item.no || item.cutNo || 1)
+        const text = (item.dialogue || '') + (item.narration || '')
+        const chars = text.replace(/\s/g, '').length
+        const autoDur = chars > 0 ? Math.min(20, Math.max(4, Math.round(chars / 5) + 2)) : 5
+        return {
+          id: `cut-${no}`,
+          no,
+          scene: item.scene || '',
+          action: item.action || '',
+          character: item.character || '서여리',
+          dialogue: item.dialogue || '',
+          narration: item.narration || '',
+          imagePrompt: item.imagePrompt || item.image_prompt || '',
+          duration: item.duration || autoDur,
+          cutType: item.cutType || item.cut_type || 'NORMAL',
+          shotType: item.shotType || item.shot_type || '',
+        }
+      })
+    } catch {}
+  }
+  return parseCuts(trimmed, 0)
+}
+
 export default function ScriptGenTab() {
   const { state, dispatch } = useApp()
   const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
@@ -89,6 +125,8 @@ export default function ScriptGenTab() {
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
+  const [importToast, setImportToast] = useState('')
+  const fileInputRef = useRef(null)
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -362,8 +400,31 @@ ${YEORI_RULESET}
     }
   }
 
+  const handleImport = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const parsed = parseImportFile(ev.target.result)
+        if (!parsed.length) { alert('파싱된 컷이 없습니다. 파일 형식을 확인하세요.'); return }
+        dispatch({ type: 'SET_CUTS', p: parsed })
+        parsed.forEach(cut => {
+          setGPoint(cut.no, 'g1', !!(cut.dialogue || cut.narration || cut.scene))
+        })
+        setImportToast(`${parsed.length}개 컷 가져오기 완료`)
+        setTimeout(() => setImportToast(''), 3000)
+      } catch (err) {
+        alert('파일 파싱 오류: ' + err.message)
+      }
+      e.target.value = ''
+    }
+    reader.readAsText(file, 'utf-8')
+  }
+
   return (
     <div className={s.root}>
+      {importToast && <div className={s.toast}>{importToast}</div>}
       {/* Left: Settings */}
       <div className={s.sidebar}>
         <div className={s.sideTitle}>에피소드 설정</div>
@@ -450,6 +511,11 @@ ${YEORI_RULESET}
         </button>
 
         {progress && !loading && <div className={s.progressMsg}>{progress}</div>}
+
+        <button className={s.importBtn} onClick={() => fileInputRef.current?.click()}>
+          📂 대본 파일 가져오기
+        </button>
+        <input type="file" accept=".json,.txt" ref={fileInputRef} onChange={handleImport} style={{display:'none'}} />
 
         <button
           className={`${s.exportBtn} ${flowRunning ? s.exportBtnRunning : ''}`}
