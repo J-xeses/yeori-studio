@@ -5,6 +5,17 @@ const SERVER = 'http://localhost:3001'
 const AppContext = createContext(null)
 const STORAGE_KEY = 'yeori-studio-v2'
 
+const stripShotDir = (t) => (t || '')
+  .replace(/^\s*(샷\s*타입\s*[:：]\s*)?(CLOSEUP|FULLBODY)(\s+SHOT)?\s*[-—·]?\s*/i, '')
+  .replace(/\s*(CLOSEUP|FULLBODY)(\s+SHOT)?\s*$/i, '')
+  .trim()
+
+const cleanShotCuts = (cuts) => cuts.map(c => ({
+  ...c,
+  dialogue:  stripShotDir(c.dialogue),
+  narration: stripShotDir(c.narration),
+}))
+
 const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,
   scene: '', action: '', character: '서여리',
@@ -67,12 +78,13 @@ function reducer(state, action) {
       const openTabIds = (state.openTabIds || []).includes(action.id)
         ? state.openTabIds
         : [...(state.openTabIds || []), action.id]
+      const cleanedCuts = cleanShotCuts(ep.cuts)
       return {
         ...state,
         activeEpisodeId: action.id,
         openTabIds,
         episode: ep.episode,
-        cuts: ep.cuts,
+        cuts: cleanedCuts,
         scriptRaw: ep.scriptRaw || '',
       }
     }
@@ -281,6 +293,13 @@ function migrateState(saved, init) {
     saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
   saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
   if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
+
+  // 모든 에피소드 컷에서 샷타입 지시어 일괄 정리
+  for (const ep of Object.values(saved.episodes)) {
+    ep.cuts = cleanShotCuts(ep.cuts)
+  }
+  if (saved.cuts) saved.cuts = cleanShotCuts(saved.cuts)
+
   return { ...init, ...saved }
 }
 
