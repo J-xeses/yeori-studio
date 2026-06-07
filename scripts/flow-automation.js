@@ -409,35 +409,53 @@ async function navigateToFlow(page) {
 async function ensureProject(page, epDir) {
   const marker = path.join(epDir, 'project_url.txt')
   const ep = path.basename(epDir)
+  const dashUrl = 'https://labs.google/fx/ko/tools/flow'
 
-  if (!fs.existsSync(marker)) {
-    console.error(`❌ downloads/flow/${ep}/project_url.txt 없음.`)
-    console.error(`   Flow에서 프로젝트 생성 후 URL을 저장해주세요.`)
+  const needsNew = async (url) => {
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 })
+    await sleep(4000)
+    for (let i = 0; i < 3; i++) {
+      try { await waitForImagesStable(page); break } catch { await sleep(2000) }
+    }
+    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project_load.png') })
+    return page.evaluate(() =>
+      document.body.innerText.includes('문제가 발생했습니다') ||
+      document.body.innerText.includes('Something went wrong')
+    ).catch(() => true)
+  }
+
+  // ── project_url.txt 있으면 로드 시도 ─────────────────────────────
+  if (fs.existsSync(marker)) {
+    const savedUrl = fs.readFileSync(marker, 'utf-8').trim()
+    log('info', `프로젝트 URL 로드: ${savedUrl}`)
+    const isError = await needsNew(savedUrl)
+    if (!isError) {
+      _projectUrl = page.url()
+      log('ok', `프로젝트 로드 완료: ${_projectUrl}`)
+      return
+    }
+    log('warn', '프로젝트 에러 감지 → 새 프로젝트 자동 생성')
+  } else {
+    log('warn', `${ep}/project_url.txt 없음 → 새 프로젝트 자동 생성`)
+  }
+
+  // ── 대시보드로 이동 후 새 프로젝트 생성 ─────────────────────────
+  await page.goto(dashUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+  await sleep(2000)
+
+  const today = new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
+  const title = `${today} ${ep}`
+  const newUrl = await createNewProject(page, title)
+
+  if (!newUrl) {
+    log('error', '새 프로젝트 생성 실패 — Flow 대시보드를 확인하세요.')
     process.exit(1)
   }
 
-  const savedUrl = fs.readFileSync(marker, 'utf-8').trim()
-  log('ok', `프로젝트 URL 로드: ${savedUrl}`)
-  _projectUrl = savedUrl
-  await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-  await sleep(4000)
-  // 페이지가 내부 리다이렉트 후 안정될 때까지 재시도
-  for (let i = 0; i < 3; i++) {
-    try { await waitForImagesStable(page); break } catch { await sleep(2000) }
-  }
-
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project_load.png') })
-
-  const isError = await page.evaluate(() =>
-    document.body.innerText.includes('문제가 발생했습니다') ||
-    document.body.innerText.includes('Something went wrong')
-  ).catch(() => false)
-  if (isError) {
-    log('error', `프로젝트 로드 실패: ${savedUrl}`)
-    log('error', 'Flow에서 새 프로젝트를 만든 후 project_url.txt를 업데이트하세요.')
-    process.exit(1)
-  }
-  log('ok', `프로젝트 로드 완료`)
+  fs.writeFileSync(marker, newUrl, 'utf-8')
+  _projectUrl = newUrl
+  log('ok', `새 프로젝트 생성 완료: ${newUrl}`)
+  log('ok', `project_url.txt 저장 완료`)
 }
 
 // 새 프로젝트 생성 → 이름 입력 → 프로젝트 URL 반환
