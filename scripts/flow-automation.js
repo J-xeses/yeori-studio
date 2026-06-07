@@ -1072,25 +1072,47 @@ async function clickPlusButton(page) {
   return false
 }
 
-// ── Step 1용: "+" 패널 → Seo Yeori(Untitled Character) 선택 → 프롬프트에 추가 ──
-// debug_add_menu.png 확인: 패널에 별도 탭 없음, 미디어+캐릭터 혼합 목록으로 표시됨
+// ── "+" 패널 → 캐릭터 탭 클릭 → Untitled Character 선택 → 프롬프트에 추가 ──
+// 스크린샷 확인: 패널 왼쪽에 이미지/캐릭터/장면 탭 존재, 기본은 이미지 탭
+// 캐릭터를 찾으려면 먼저 "캐릭터" 탭을 클릭해야 함
 
 async function attachYeoriCharacterToPrompt(page) {
   if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
   await sleep(1500)
 
+  // ── 캐릭터 탭 클릭 (패널 왼쪽 내비게이션) ──
+  const tabClicked = await page.evaluate(() => {
+    const panelRight = window.innerWidth * 0.65
+    // 패널 왼쪽 내비게이션 (x < 65%) 에서 "캐릭터" 텍스트 항목 클릭
+    for (const el of document.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect()
+      if (r.width === 0 || r.right > panelRight) continue
+      const txt = el.textContent.trim()
+      if ((txt === '캐릭터' || txt === 'Characters' || txt === 'Character') && r.top > 80) {
+        el.click(); return txt
+      }
+    }
+    return null
+  })
+  if (tabClicked) {
+    log('info', `캐릭터 탭 클릭: "${tabClicked}"`)
+    await sleep(1200)
+  } else {
+    log('warn', '캐릭터 탭 못 찾음 — 현재 패널에서 시도')
+  }
+
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_char_panel.png') })
 
-  // 캐릭터 목록에서 이름 매칭 — 탭 구분 없이 현재 목록에서 직접 탐색
+  // 캐릭터 이름 매칭 (패널 내 좌측 65% 영역)
   const charClicked = await page.evaluate(() => {
+    const panelRight = window.innerWidth * 0.65
     const NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'Yeori', 'yeori', 'Untitled Character']
     for (const name of NAMES) {
       const found = [...document.querySelectorAll('*')].find(el => {
         const txt = el.textContent.trim()
         const r = el.getBoundingClientRect()
-        // 패널 영역 (사이드바 x>80 제외하지 않음 — 패널이 사이드바 위에 열릴 수 있음)
         return txt.toLowerCase().includes(name.toLowerCase())
-          && r.width > 0 && r.width < 500 && r.height > 0 && r.height < 150
+          && r.width > 0 && r.right < panelRight && r.height > 0 && r.height < 150
           && r.top > 80
       })
       if (found) { found.click(); return found.textContent.trim().slice(0, 40) }
@@ -1104,10 +1126,10 @@ async function attachYeoriCharacterToPrompt(page) {
     return false
   }
   log('info', `캐릭터 선택: "${charClicked}"`)
-  await sleep(800)
+  await sleep(1000)
 
   const addClicked = await clickAddToPrompt(page)
-  if (!addClicked) { log('warn', '"프롬프트에 추가" 못 찾음'); return false }
+  if (!addClicked) { log('warn', '"프롬프트에 추가" 못 찾음'); await page.keyboard.press('Escape').catch(() => {}); return false }
   log('info', 'Seo Yeori 캐릭터 프롬프트에 추가 완료')
   await sleep(800)
   return true
@@ -1274,7 +1296,9 @@ async function generateEpisodeCloseup(page, savePath) {
   const charAttached = await attachYeoriCharacterToPrompt(page)
   if (!charAttached) log('warn', 'closeup: 캐릭터 첨부 실패 — 텍스트만으로 생성')
 
-  await page.mouse.click(pos.x, pos.y)
+  // 캐릭터 패널 열고 닫은 후 pos 재탐색 (stale position → Target closed 방지)
+  const pos2 = await findPromptInputPos(page)
+  await page.mouse.click(pos2.x, pos2.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
   await page.keyboard.type(CONFIG.closeupFacePrompt, { delay: 15 })
   await sleep(500)
