@@ -244,7 +244,7 @@ async function main() {
 
       await registerCharacter(page)
     } finally {
-      await browser.close()
+      log('info', '✅ 완료 — 브라우저를 직접 닫아주세요.')
     }
     return
   }
@@ -387,7 +387,7 @@ async function main() {
       }
     }
   } finally {
-    if (browser) await browser.close().catch(() => {})
+    log('info', '✅ 완료 — 결과 확인 후 브라우저를 직접 닫아주세요.')
   }
 
   printSummary(ok, fail, results)
