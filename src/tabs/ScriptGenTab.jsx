@@ -7,6 +7,13 @@ import s from './ScriptGenTab.module.css'
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
 const MOODS = ['감성', '유머', '정보', '힐링', '동기부여', '일상', '여행', 'K문화', '공감', '치명']
 
+function stripShotDirective(text) {
+  return (text || '')
+    .replace(/^\s*(샷\s*타입\s*[:：]\s*)?(CLOSEUP|FULLBODY)(\s+SHOT)?\s*[-—·]?\s*/i, '')
+    .replace(/\s*(CLOSEUP|FULLBODY)(\s+SHOT)?\s*$/i, '')
+    .trim()
+}
+
 function cleanMarkdown(text) {
   return text
     .replace(/\*\*/g, '')     // ** 굵은 글씨 제거
@@ -50,8 +57,8 @@ function parseCuts(raw, n) {
       cur.scene      = getField(/씬[:：]\s*/) || getField(/장면[:：]\s*/)
       cur.action     = getField(/액션[:：]\s*/) || getField(/행동[:：]\s*/)
       cur.character  = getField(/캐릭터[:：]\s*/) || '서여리'
-      cur.dialogue   = getField(/대사[:：]\s*/)
-      cur.narration  = getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/)
+      cur.dialogue   = stripShotDirective(getField(/대사[:：]\s*/))
+      cur.narration  = stripShotDirective(getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/))
       cur.shotType   = (getField(/샷 타입[:：]\s*/) || '').toUpperCase().includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
       cur.imagePrompt = getField(/이미지 프롬프트[:：]\s*/) || getField(/프롬프트[:：]\s*/)
 
