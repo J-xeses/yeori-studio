@@ -978,68 +978,42 @@ async function typeCharacterName(page, name) {
 // ── 클로즈업 얼굴 생성 ────────────────────────────────────────────────
 
 async function generateFaceImage(page) {
-  const inputPos = await findPromptInputPos(page)
-  await page.mouse.click(inputPos.x, inputPos.y)
-  await sleep(400)
-  await page.mouse.click(inputPos.x, inputPos.y, { clickCount: 3 })
-  await sleep(200)
-  await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control')
-  await page.keyboard.press('Backspace')
+  const pos = await prepareInput(page)
+  await page.mouse.click(pos.x, pos.y)
+  await sleep(300)
+  await page.keyboard.press('End')
   await sleep(100)
   await page.keyboard.type(CONFIG.facePrompt, { delay: 15 })
   await sleep(500)
-  await page.keyboard.press('Enter')
   log('info', '서여리 얼굴 이미지 생성 요청 전송…')
 
-  // 생성 대기
-  const beforeCount = await page.evaluate(() => {
-    function count(root) {
-      let n = 0
-      for (const img of root.querySelectorAll('img')) { if (img.naturalWidth > 80 && img.complete) n++ }
-      for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) n += count(el.shadowRoot) }
-      return n
-    }
-    return count(document)
-  })
+  const before = await collectImageSrcs(page)
+  await clickGenerate(page)
+  await waitForNewImage(page, before)
 
-  await page.waitForFunction(
-    (b) => {
-      function count(root) {
-        let n = 0
-        for (const img of root.querySelectorAll('img')) { if (img.naturalWidth > 80 && img.complete) n++ }
-        for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) n += count(el.shadowRoot) }
-        return n
-      }
-      return count(document) > b
-    },
-    { timeout: CONFIG.timeoutMs },
-    beforeCount
-  )
-  await sleep(1000)
+  const allItems = await collectImageSrcs(page)
+  const beforeSet = new Set(before.map(i => i.src))
+  const newItems = allItems.filter(i => !beforeSet.has(i.src))
+  if (!newItems.length) throw new Error('얼굴 이미지 생성 결과를 찾지 못했습니다')
 
-  // 생성된 이미지 저장
-  const srcs = await page.evaluate(() => {
-    function collect(root, list = []) {
-      for (const img of root.querySelectorAll('img')) {
-        if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
-      }
-      for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) collect(el.shadowRoot, list) }
-      return list
-    }
-    return collect(document)
-  })
+  const imgSrc = newItems[newItems.length - 1].src
+  let saved = false
+  if (imgSrc.startsWith('data:')) {
+    fs.writeFileSync(CONFIG.characterImage, Buffer.from(imgSrc.split(',')[1], 'base64'))
+    saved = true
+  } else {
+    const data = await page.evaluate(async (src) => {
+      try {
+        const res = await fetch(src)
+        const buf = await res.arrayBuffer()
+        return Array.from(new Uint8Array(buf))
+      } catch { return null }
+    }, imgSrc)
+    if (data) { fs.writeFileSync(CONFIG.characterImage, Buffer.from(data)); saved = true }
+  }
 
-  if (!srcs.length) throw new Error('얼굴 이미지 생성 결과를 찾지 못했습니다')
-
-  const imgSrc = srcs[srcs.length - 1]
-  const data = await page.evaluate(async (src) => {
-    const res = await fetch(src)
-    const buf = await res.arrayBuffer()
-    return Array.from(new Uint8Array(buf))
-  }, imgSrc)
-
-  fs.writeFileSync(CONFIG.characterImage, Buffer.from(data))
-  log('ok', `얼굴 이미지 저장: ${path.relative(ROOT, CONFIG.characterImage)}`)
+  if (!saved) throw new Error('얼굴 이미지 저장 실패')
+  log('ok', `서여리 얼굴 이미지 저장: ${path.relative(ROOT, CONFIG.characterImage)}`)
 }
 
 // ── 공통: 하단 "만들기(+)" 버튼 클릭 ───────────────────────────────
