@@ -48,7 +48,7 @@ const ROOT = (() => {
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  chromeProfile:   path.join(process.env.LOCALAPPDATA || 'C:\\Users\\won56\\AppData\\Local', 'Google', 'Chrome', 'User Data'),
+  chromeProfile:   path.join(process.env.LOCALAPPDATA || 'C:\\Users\\won56\\AppData\\Local', 'YeoriStudio', 'chrome-profile'),
   chromeProfileDir: 'Default',
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
@@ -427,28 +427,20 @@ async function launchBrowser() {
 }
 
 function killYeoriChrome() {
+  log('info', 'Chrome 프로세스 종료 중… (탭이 닫힙니다)')
   try {
-    // 실행 중인 Chrome 프로세스 수 확인
-    const result = execSync(
-      'wmic process where "name=\'chrome.exe\'" get processid /format:value',
-      { encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }
-    )
-    const pids = [...result.matchAll(/ProcessId=(\d+)/gi)].map(m => m[1]).filter(Boolean)
-    if (pids.length) {
-      log('info', `Chrome ${pids.length}개 프로세스 종료 중… (탭이 닫힙니다)`)
-      try { execSync('taskkill /f /im chrome.exe', { stdio: 'ignore' }) } catch {}
-      // 잠금 파일 해제 대기
-      const lockFile = path.join(CONFIG.chromeProfile, 'lockfile')
-      let waited = 0
-      while (fs.existsSync(lockFile) && waited < 3000) {
-        execSync('timeout /t 1 /nobreak >nul 2>&1 || sleep 1', { shell: true, stdio: 'ignore' })
-        waited += 1000
-      }
-      try { if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile) } catch {}
-    }
+    execSync('taskkill /f /im chrome.exe', { stdio: 'ignore', timeout: 8000 })
+    log('info', 'Chrome 종료 완료')
   } catch {
-    log('warn', 'Chrome 프로세스 정리 건너뜀')
+    log('info', 'Chrome 실행 중 아님 (정상)')
   }
+  // 잠금 파일 제거
+  for (const lock of ['SingletonLock', 'lockfile', 'SingletonSocket', 'SingletonCookie']) {
+    const p = path.join(CONFIG.chromeProfile, lock)
+    try { if (fs.existsSync(p)) fs.unlinkSync(p) } catch {}
+  }
+  // 종료 후 잠시 대기
+  execSync('ping -n 3 127.0.0.1 >nul', { shell: true, stdio: 'ignore' })
 }
 
 async function setupPage(browser) {
