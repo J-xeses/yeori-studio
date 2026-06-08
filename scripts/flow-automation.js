@@ -204,9 +204,15 @@ async function analyzeReferenceImage() {
 // ── 프롬프트 로드 ────────────────────────────────────────────────────
 
 function loadPrompts() {
-  const file = args.prompts
-    ? path.resolve(args.prompts)
-    : path.join(CONFIG.downloadDir, 'prompts.json')
+  let file
+  if (args.prompts) {
+    file = path.resolve(args.prompts)
+  } else if (args.ep) {
+    const epFile = path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json')
+    file = fs.existsSync(epFile) ? epFile : path.join(CONFIG.downloadDir, 'prompts.json')
+  } else {
+    file = path.join(CONFIG.downloadDir, 'prompts.json')
+  }
 
   if (!fs.existsSync(file)) {
     log('warn', `프롬프트 파일 없음: ${file}`)
@@ -269,9 +275,10 @@ async function main() {
   }
 
   // prompts.json에서 제목 읽기 → 프로젝트 이름: "EP4_한강라이딩"
-  const rawPrompts = JSON.parse(fs.readFileSync(
-    path.join(CONFIG.downloadDir, 'prompts.json'), 'utf-8'
-  ))
+  const _epPromptFile = args.ep && fs.existsSync(path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json'))
+    ? path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json')
+    : path.join(CONFIG.downloadDir, 'prompts.json')
+  const rawPrompts = JSON.parse(fs.readFileSync(_epPromptFile, 'utf-8'))
   const epTitle    = (rawPrompts.title || '').replace(/\s+/g, '')
   const projectTitle = epTitle ? `EP${episode}_${epTitle}` : `EP${episode}`
 
@@ -421,18 +428,16 @@ async function launchBrowser() {
 
 function killYeoriChrome() {
   try {
-    // YeoriStudio 프로필이 commandline에 포함된 chrome.exe 프로세스만 타겟 종료
+    // 실행 중인 Chrome 프로세스 수 확인
     const result = execSync(
-      'wmic process where "name=\'chrome.exe\' and commandline like \'%YeoriStudio%\'" get processid /format:value',
+      'wmic process where "name=\'chrome.exe\'" get processid /format:value',
       { encoding: 'utf-8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }
     )
     const pids = [...result.matchAll(/ProcessId=(\d+)/gi)].map(m => m[1]).filter(Boolean)
     if (pids.length) {
-      pids.forEach(pid => {
-        try { execSync(`taskkill /f /pid ${pid}`, { stdio: 'ignore' }) } catch {}
-      })
-      log('info', `YeoriStudio Chrome ${pids.length}개 프로세스 종료 완료`)
-      // 종료 후 잠금 해제 대기
+      log('info', `Chrome ${pids.length}개 프로세스 종료 중… (탭이 닫힙니다)`)
+      try { execSync('taskkill /f /im chrome.exe', { stdio: 'ignore' }) } catch {}
+      // 잠금 파일 해제 대기
       const lockFile = path.join(CONFIG.chromeProfile, 'lockfile')
       let waited = 0
       while (fs.existsSync(lockFile) && waited < 3000) {
@@ -442,7 +447,7 @@ function killYeoriChrome() {
       try { if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile) } catch {}
     }
   } catch {
-    log('warn', 'YeoriStudio Chrome 프로세스 정리 건너뜀')
+    log('warn', 'Chrome 프로세스 정리 건너뜀')
   }
 }
 
