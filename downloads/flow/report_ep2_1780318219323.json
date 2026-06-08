@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-06-01T12:50:19.323Z",
+  "episode": 2,
+  "results": [
+    {
+      "cutNo": 1,
+      "status": "fail",
+      "reason": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:has-text(\"New\")' is not a valid selector."
+    }
+  ]
+}

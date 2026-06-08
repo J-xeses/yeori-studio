@@ -25,6 +25,12 @@ export default defineConfig({
 
       // /api/elevenlabs/user              →  https://api.elevenlabs.io/v1/user
       // /api/elevenlabs/text-to-speech/*  →  https://api.elevenlabs.io/v1/text-to-speech/*
+      // /api/ffmpeg → 로컬 프록시 서버 (FFmpeg 실행)
+      '/api/ffmpeg': {
+        target: 'http://localhost:3001',
+        changeOrigin: false,
+      },
+
       '/api/elevenlabs': {
         target: 'https://api.elevenlabs.io',
         changeOrigin: true,

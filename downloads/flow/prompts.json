@@ -1,0 +1,44 @@
+{
+  "episode": 2,
+  "title": "이어폰 끼는 순간, 내 인생이 영화가 돼",
+  "hookClip": "hook_01",
+  "cuts": [
+    {
+      "no": 1,
+      "imagePrompt": "Start frame featuring Seo Yeori's face clearly visible. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Standing beside building wall on Seoul street, golden afternoon light, reaching into bag to pull out earphones. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "narration": "이 순간 알고 있어? 이어폰 하나가 세상을 완전히 바꿔버린다는 거."
+    },
+    {
+      "no": 2,
+      "imagePrompt": "Start frame featuring Seo Yeori's face close-up. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Earphone just inserted into right ear, eyes slowly opening wide with quiet sense of wonder. Seoul street background blurred. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "narration": "같은 거리인데… 갑자기 내가 영화 주인공이 된 것 같잖아."
+    },
+    {
+      "no": 3,
+      "imagePrompt": "Start frame showing Seo Yeori's face and upper body. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Walking slowly along Seoul shopping street, passing store window that reflects her silhouette. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "narration": "음악이 깔리면… 심지어 걷는 것도 연기가 돼."
+    },
+    {
+      "no": 4,
+      "imagePrompt": "Start frame featuring Seo Yeori's face and upper body slight low-angle. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap held lightly at brim as wind moves hair. Standing near street bench looking upward at sky. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "dialogue": "있잖아, 나 진짜로 묻고 싶은 게 있어. 너도 이런 적 있지 않아?"
+    },
+    {
+      "no": 5,
+      "imagePrompt": "Start frame showing Seo Yeori's face clearly with upper body. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Glancing down at smartphone screen briefly while walking on Seoul street, stopping at crosswalk. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "dialogue": "이 노래 나올 때마다… 진짜 어디든 갈 수 있을 것 같거든.",
+      "narration": "목적지가 없어도 괜찮아. 음악이 있으면 그냥, 어디든 이야기가 돼."
+    },
+    {
+      "no": 6,
+      "imagePrompt": "Start frame featuring Seo Yeori's face close-up. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Paused at entrance of narrow Seoul alley, holding one earphone just removed from ear. Eyes slightly narrowed, introspective expression. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "narration": "가끔은 이어폰을 빼는 순간도 필요해. 그래야 다시 끼는 게 더 좋으니까."
+    },
+    {
+      "no": 7,
+      "imagePrompt": "Start frame showing Seo Yeori's back and profile. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Re-inserting earphone, beginning to walk away from camera down Seoul street at golden hour. Figure growing smaller in distance. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+      "dialogue": "오늘도… 내 인생은 영화야.",
+      "narration": "이어폰 하나면 충분해. 어디서든, 네 인생은 이미 영화니까."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { elTTS } from '../lib/api'
+import { setGPoint } from '../lib/gpoints'
 import s from './TTSTab.module.css'
 
 const VOICES = [
@@ -10,6 +11,7 @@ const VOICES = [
   { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', desc: '남성 · 성숙함' },
   { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',   desc: '남성 · 젊음' },
   { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam',   desc: '남성 · 중후함' },
+  { id: '5n5gqmaQi9Ewevrz7bOS', name: 'Sian',   desc: '여성 · 진솔함' },
 ]
 
 export default function TTSTab() {
@@ -48,6 +50,9 @@ export default function TTSTab() {
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       setAudios(p => ({ ...p, [cutId]: { url, blob, text: finalText } }))
+      // ── G2 포인트 자동 저장 ──────────────────────────────
+      const cut = cuts.find(c => c.id === cutId)
+      if (cut) setGPoint(cut.no, 'g2', true)
     } catch (err) {
       alert('TTS 오류: ' + err.message)
     } finally {

@@ -8,13 +8,20 @@
     "proxy": "node server/proxy.js",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "studio": "concurrently \"node server/proxy.js\" \"vite\"",
+    "flow": "node scripts/flow-automation.js",
+    "tts": "node scripts/tts-automation.js",
+    "edit": "node scripts/edit-automation.js",
+    "pipeline": "node scripts/pipeline.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jszip": "^3.10.1",
+    "puppeteer-core": "^23.11.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

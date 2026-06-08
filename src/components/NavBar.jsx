@@ -2,18 +2,28 @@ import { useApp } from '../context/AppContext'
 import styles from './NavBar.module.css'
 
 const TABS = [
-  { id: 'script',    label: '대본 생성',        icon: '📝' },
-  { id: 'studio',   label: '스튜디오',           icon: '🎬' },
-  { id: 'tts',      label: 'ElevenLabs TTS',    icon: '🔊' },
-  { id: 'voice',    label: '내 음성 삽입',       icon: '🎙️' },
-  { id: 'extract',  label: '추출',               icon: '📤' },
-  { id: 'video',    label: '영상 만들기',         icon: '🎞️' },
-  { id: 'thumbnail',label: '썸네일',             icon: '🖼️' },
-  { id: 'dashboard',label: '대시보드',            icon: '📊' },
+  { id: 'script',        label: '대본 생성',        icon: '📝' },
+  { id: 'studio',        label: '스튜디오',          icon: '🎬' },
+  { id: 'tts',           label: 'ElevenLabs TTS',   icon: '🔊' },
+  { id: 'voice',         label: '내 음성 삽입',      icon: '🎙️' },
+  { id: 'extract',       label: '추출',              icon: '📤' },
+  { id: 'video',         label: '영상 만들기',        icon: '🎞️' },
+  { id: 'thumbnail',     label: '썸네일',            icon: '🖼️' },
+  { id: 'dashboard',     label: '대시보드',           icon: '📊' },
+  { id: 'retention',     label: '리텐션 훅',          icon: '🎯' },
+  { id: 'editmeta',      label: '편집 메타',          icon: '🗂️' },
+  { id: 'storyarchive',  label: '스토리 아카이브',    icon: '📚' },  // ✅ 추가
 ]
 
 export default function NavBar() {
-  const { state, dispatch } = useApp()
+  const { state, dispatch, syncStatus } = useApp()
+
+  const syncLabel = {
+    synced:  { icon: '🟢', text: '동기화됨' },
+    syncing: { icon: '🔄', text: '동기화 중' },
+    offline: { icon: '🔴', text: '오프라인' },
+    idle:    { icon: '⚪', text: '대기 중' },
+  }[syncStatus] ?? { icon: '⚪', text: '' }
 
   const handleSave = () => {
     dispatch({ type: 'MARK_SAVED' })
@@ -45,7 +55,6 @@ export default function NavBar() {
         <span className={styles.icon}>✦</span>
         <span className={styles.name}>A Creative Studio</span>
       </div>
-
       <div className={styles.tabs}>
         {TABS.map(t => (
           <button key={t.id}
@@ -57,13 +66,17 @@ export default function NavBar() {
           </button>
         ))}
       </div>
-
       <div className={styles.right}>
         <button className={styles.btn} onClick={handleSave}>💾 저장</button>
         <button className={styles.btn} onClick={handleLoad}>📂 열기</button>
         <div className={styles.status}>
           <span className={`${styles.dot} ${state.savedAt ? styles.green : styles.red}`} />
           <span>{state.savedAt ? '저장됨' : '미저장'}</span>
+        </div>
+        <div className={styles.status} title={`서버 동기화: ${syncLabel.text}`}
+          style={{ marginLeft: 4, opacity: syncStatus === 'idle' ? 0.4 : 1 }}>
+          <span style={{ fontSize: 11 }}>{syncLabel.icon}</span>
+          <span style={{ fontSize: 11 }}>{syncLabel.text}</span>
         </div>
       </div>
     </nav>

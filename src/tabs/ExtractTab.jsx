@@ -1,4 +1,5 @@
 import { useApp } from '../context/AppContext'
+import { setGPoint } from '../lib/gpoints'
 import s from './ExtractTab.module.css'
 
 function downloadText(content, filename) {
@@ -49,6 +50,8 @@ export default function ExtractTab() {
   const exportJSON = () => {
     const data = { episode, cuts }
     downloadText(JSON.stringify(data, null, 2), `ep${episode.number}_data.json`)
+    // ── G4 포인트 자동 저장 ──────────────────────────────
+    cuts.forEach(c => setGPoint(c.no, 'g4', true))
   }
 
   const exportRaw = () => {

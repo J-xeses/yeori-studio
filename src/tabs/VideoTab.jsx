@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
+import { setGPoint } from '../lib/gpoints'
 import s from './VideoTab.module.css'
 
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
@@ -80,6 +81,8 @@ export default function VideoTab() {
     const a = document.createElement('a'); a.href = url; a.download = 'subtitles.srt'; a.click()
     URL.revokeObjectURL(url)
     setRenderLog(l => [...l, '✅ SRT 자막 파일 생성 완료'])
+    // ── G3 포인트 자동 저장 ──────────────────────────────
+    cuts.forEach(c => { if (c.dialogue || c.narration) setGPoint(c.no, 'g3', true) })
   }
 
   const exportZip = async () => {
@@ -90,12 +93,13 @@ export default function VideoTab() {
     for (let i = 0; i < cuts.length; i++) {
       const c = cuts[i]
       dispatch({ type: 'SET_RENDER', p: { current: i + 1 } })
-      // Add dialogue text
       const text = c.dialogue || c.narration || ''; const dur = c.duration || 5
       if (text) { srt += `${i+1}\n${secondsToSrt(t)} --> ${secondsToSrt(t+dur)}\n${text}\n\n`; t += dur }
       const info = `씬: ${c.scene || ''}\n액션: ${c.action || ''}\n대사: ${c.dialogue || ''}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
       zip.file(`cut_${c.no}/info.txt`, info)
       setRenderLog(l => [...l, `  CUT ${c.no} 처리됨`])
+      // ── G3 포인트 자동 저장 ──────────────────────────────
+      setGPoint(c.no, 'g3', true)
     }
     if (srt) zip.file('subtitles.srt', srt)
     const readme = `여리 Script Studio - 영상 패키지\n생성일: ${new Date().toLocaleString('ko-KR')}\n\n포함 파일:\n- cut_*/info.txt: 각 컷 정보\n- subtitles.srt: SRT 자막 파일\n\n이미지, 음성은 각 탭에서 별도 다운로드하세요.`

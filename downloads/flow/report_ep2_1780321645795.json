@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-06-01T13:47:25.795Z",
+  "episode": 2,
+  "results": [
+    {
+      "cutNo": 1,
+      "status": "fail",
+      "reason": "Waiting failed: 120000ms exceeded"
+    }
+  ]
+}

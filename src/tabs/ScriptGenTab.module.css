@@ -91,55 +91,50 @@
 }
 .edField input:focus, .edField textarea:focus { border-color: var(--accent); }
 
-/* Export pipeline */
 .exportBtn {
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-2);
-  padding: 9px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: #059669; border: none; color: #fff;
+  padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  transition: background .15s;
+}
+.exportBtn:hover:not(:disabled) { background: #047857; }
+.exportBtn:disabled { opacity: .5; cursor: default; }
+.exportBtnRunning { background: var(--accent) !important; }
+
+.flowLog {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 150px; overflow-y: auto;
+  font-size: 11px; font-family: var(--mono);
+}
+.flowLogLine { color: var(--text-2); line-height: 1.6; }
+.flowLog_ok       { color: var(--green); }
+.flowLog_done     { color: var(--green); }
+.flowLog_error    { color: #ef4444; }
+.flowComplete {
+  color: var(--green); font-weight: 700; font-size: 12px;
+  text-align: center; margin-top: 4px; padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* 컷 타입 선택 */
+.cutTypeBtns { display: flex; gap: 8px; }
+.cutTypeBtn {
+  padding: 6px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--bg-input); color: var(--text-3);
   transition: all .15s;
 }
-.exportBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); background: var(--accent-glow); }
-.exportBtn:disabled { opacity: .4; cursor: default; }
+.cutTypeBtn:hover { border-color: var(--text-2); color: var(--text-2); }
+.cutTypeBtnNormal { border-color: var(--accent-border); color: var(--accent-light); background: var(--accent-glow); }
+.cutTypeBtnSig { border-color: #ca8a04; color: #fbbf24; background: rgba(234,179,8,.12); }
 
-.exportMsg {
-  font-size: 11.5px; color: var(--green); text-align: center;
-  background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25);
-  border-radius: 6px; padding: 7px 10px; line-height: 1.5;
-}
-
-/* Cut type badges in list */
-.badgeSig {
-  margin-left: 6px; font-size: 9.5px; font-weight: 700;
-  background: rgba(234,179,8,.18); color: #f59e0b;
-  border: 1px solid rgba(234,179,8,.4); border-radius: 4px;
-  padding: 1px 5px; vertical-align: middle;
-}
-.badgeNorm {
-  margin-left: 6px; font-size: 9.5px; font-weight: 600;
-  background: rgba(120,120,120,.12); color: var(--text-3);
-  border: 1px solid var(--border); border-radius: 4px;
-  padding: 1px 5px; vertical-align: middle;
-}
-
-/* Cut type selector */
-.cutTypeRow { display: flex; flex-direction: column; gap: 6px; }
-.cutTypeBtn {
-  padding: 8px 12px; border-radius: 7px; text-align: left;
-  background: var(--bg-input); border: 1px solid var(--border);
-  color: var(--text-2); font-size: 12.5px; transition: all .15s;
-}
-.cutTypeBtn:hover { border-color: var(--accent-border); }
-.cutTypeNormActive {
-  background: rgba(120,120,120,.15) !important;
-  border-color: #6b7280 !important; color: #d1d5db !important; font-weight: 600;
-}
-.cutTypeSigActive {
-  background: rgba(234,179,8,.12) !important;
-  border-color: #f59e0b !important; color: #fbbf24 !important; font-weight: 700;
-}
-.sigHint {
-  font-size: 11px; color: #f59e0b; opacity: .8;
-  background: rgba(234,179,8,.06); border-radius: 5px; padding: 5px 8px;
+/* 컷 목록 SIGNATURE 배지 */
+.sigBadge {
+  display: inline-block; margin-left: 6px;
+  font-size: 10px; font-weight: 700; color: #fbbf24;
+  background: rgba(234,179,8,.15); border: 1px solid #ca8a04;
+  border-radius: 4px; padding: 1px 5px; vertical-align: middle; line-height: 1.4;
 }
 
 .rawSection { margin-top: 8px; }

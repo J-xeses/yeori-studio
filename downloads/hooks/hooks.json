@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": [
+    {
+      "id": "hook_01",
+      "label": "서울 거리 골든아워 이어폰 클로즈업",
+      "file": "hook_01.mp4",
+      "thumb": "hook_01_thumb.jpg",
+      "duration": 10.04,
+      "width": 752,
+      "height": 416,
+      "fps": 24,
+      "tags": ["closeup", "earphone", "golden-hour", "seoul-street"],
+      "registeredAt": "2026-06-03T00:00:00.000Z"
+    }
+  ]
+}
