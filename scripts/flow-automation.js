@@ -23,7 +23,18 @@ import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = path.resolve(__dirname, '..')
+
+// ── ROOT 자동 감지 ──────────────────────────────────────────────────────
+const COMPANY_PATH = 'C:\\yeori-studio'
+const HOME_PATH = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
+const ROOT = (() => {
+  if (fs.existsSync(COMPANY_PATH)) { console.log('[ROOT] 회사 PC'); return COMPANY_PATH }
+  if (fs.existsSync(HOME_PATH)) { console.log('[ROOT] 집 PC'); return HOME_PATH }
+  console.error('[ERROR] ROOT 경로를 찾을 수 없습니다.')
+  console.error(`  회사PC: ${COMPANY_PATH}`)
+  console.error(`  집PC:   ${HOME_PATH}`)
+  process.exit(1)
+})()
 
 // .env 및 .env.local 로드
 ;['.env', '.env.local'].forEach(name => {
@@ -37,7 +48,7 @@ const ROOT = path.resolve(__dirname, '..')
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  chromeProfile:   'C:\\Users\\user\\AppData\\Local\\YeoriStudio\\chrome-profile',
+  chromeProfile:   path.join(ROOT, '.chrome-profile'),
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
@@ -304,25 +315,18 @@ async function main() {
 
     // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
     //    project_url.txt 있으면 재사용 / 없으면 "EP{N}_{제목}" 신규 생성
-    if (fs.existsSync(projectMarker)) {
-      const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
-      _projectUrl = savedUrl
-      log('ok', `② 기존 프로젝트 재사용: ${savedUrl}`)
-      await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-      await sleep(2500)
-      await waitForImagesStable(page)
-    } else {
-      log('step', `② 새 프로젝트 생성: "${projectTitle}"`)
-      const newUrl = await createNewProject(page, projectTitle)
-      if (newUrl) {
-        _projectUrl = newUrl
-        fs.writeFileSync(projectMarker, newUrl, 'utf-8')
-        log('ok', `② 프로젝트 생성 완료: ${newUrl}`)
-      } else {
-        log('warn', '② 프로젝트 생성 실패 — 기존 프로젝트에서 계속')
-      }
-      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project.png'), fullPage: true })
+    if (!fs.existsSync(projectMarker)) {
+      log('error', `project_url.txt 없음: ${projectMarker}`)
+      log('info', `  downloads/flow/ep${episode}/project_url.txt 에 Flow 프로젝트 URL을 저장하세요.`)
+      await browser.close().catch(() => {})
+      process.exit(1)
     }
+    const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
+    _projectUrl = savedUrl
+    log('ok', `② 프로젝트 URL: ${savedUrl}`)
+    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    await sleep(2500)
+    await waitForImagesStable(page)
 
     // ── ③ 서여리 캐릭터 등록 (최초 1회, character_registered.txt 마커) ─
     if (!fs.existsSync(charMarker)) {
@@ -361,7 +365,7 @@ async function main() {
 
       for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
         try {
-          const savedPath = await processCut(page, cut, episode, closeupPath, type)
+          const savedPath = await processCut(page, cut, episode, type)
           log('ok', `${label} → ${path.relative(ROOT, savedPath)}`)
           results.push({ cutNo: cut.no, status: 'ok', file: savedPath })
           ok++; break
@@ -465,9 +469,8 @@ async function navigateToFlow(page) {
   await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
 
   if (page.url().includes('accounts.google.com') || page.url().includes('signin')) {
-    log('warn', '구글 로그인이 필요합니다. 브라우저에서 로그인 후 Enter를 눌러주세요.')
-    await waitForEnter()
-    await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 60000 })
+    log('warn', '구글 로그인 필요 — .chrome-profile에서 미리 로그인하세요. 30초 대기 후 자동 진행.')
+    await sleep(30000)
   }
 
   const hadCookie = await page.evaluate(() => {
@@ -487,137 +490,6 @@ async function navigateToFlow(page) {
   log('ok', `Flow 대시보드 준비 완료`)
 }
 
-// 에피소드별 프로젝트 확보: 저장된 URL 재사용 OR 새 프로젝트 생성
-async function ensureProject(page, epDir, title) {
-  const marker = path.join(epDir, 'project_url.txt')
-
-  if (fs.existsSync(marker)) {
-    const savedUrl = fs.readFileSync(marker, 'utf-8').trim()
-    log('ok', `기존 프로젝트 사용: ${savedUrl}`)
-    _projectUrl = savedUrl
-    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-    await sleep(2500)
-  } else {
-    log('step', `새 프로젝트 생성 중: ${title}…`)
-    const newUrl = await createNewProject(page, title)
-    if (newUrl) {
-      _projectUrl = newUrl
-      fs.writeFileSync(marker, newUrl, 'utf-8')
-      log('ok', `새 프로젝트 생성 완료: ${newUrl}`)
-    } else {
-      log('warn', '새 프로젝트 생성 실패 → 첫 번째 기존 프로젝트 사용 시도')
-      const fallbackUrl = await page.evaluate(() => {
-        const a = document.querySelector('a[href*="/flow/project/"]')
-        return a?.href ?? null
-      })
-      if (fallbackUrl) {
-        _projectUrl = fallbackUrl
-        fs.writeFileSync(marker, fallbackUrl, 'utf-8')
-        await page.goto(fallbackUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-        await sleep(2500)
-        log('info', `폴백 프로젝트로 이동: ${fallbackUrl}`)
-      } else {
-        log('warn', '프로젝트를 찾지 못했습니다. Flow에서 프로젝트를 먼저 만들어주세요.')
-      }
-    }
-  }
-
-  await waitForImagesStable(page)
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_project.png'), fullPage: true })
-  log('info', '프로젝트 UI 스크린샷 저장 완료')
-}
-
-// 새 프로젝트 생성 → 이름 입력 → 프로젝트 URL 반환
-async function createNewProject(page, title) {
-  // "새 프로젝트" 버튼 클릭
-  const clicked = await page.evaluate(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('button, a, [role="button"]')) {
-        const txt = el.textContent.trim()
-        const label = (el.getAttribute('aria-label') || '').toLowerCase()
-        if (/(새 프로젝트|new project|create.*project|프로젝트 만들기)/i.test(txt + label)) {
-          el.click(); return true
-        }
-      }
-      for (const el of root.querySelectorAll('button, [role="button"]')) {
-        const r = el.getBoundingClientRect()
-        if (el.textContent.trim() === '+' && r.top < 200) { el.click(); return true }
-      }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot && search(el.shadowRoot)) return true
-      }
-      return false
-    }
-    return search(document)
-  })
-
-  if (!clicked) { log('warn', '"새 프로젝트" 버튼 못 찾음'); return null }
-  log('info', `"새 프로젝트" 클릭 → 이름: "${title}"`)
-  await sleep(2000)
-
-  // 이름 입력 모달이 열렸으면 타이핑 후 Enter
-  const modalInput = await page.evaluate(() => {
-    const inputs = [...document.querySelectorAll('input[type="text"], [contenteditable="true"], textarea')]
-      .filter(el => el.getBoundingClientRect().width > 0)
-    return inputs.length > 0
-  })
-
-  if (modalInput) {
-    // 기존 내용 지우고 제목 입력
-    await page.keyboard.down('Control')
-    await page.keyboard.press('a')
-    await page.keyboard.up('Control')
-    await page.keyboard.press('Backspace')
-    await sleep(200)
-    await page.keyboard.type(title, { delay: 30 })
-    await sleep(500)
-    await page.keyboard.press('Enter')
-    log('info', `프로젝트 이름 입력 완료: "${title}"`)
-    await sleep(3000)
-  } else {
-    await sleep(3000)
-  }
-
-  // 프로젝트 URL 진입 확인
-  let projectUrl = page.url()
-  if (!projectUrl.includes('/flow/project/')) {
-    // 한 번 더 대기
-    await sleep(2000)
-    projectUrl = page.url()
-  }
-
-  if (!projectUrl.includes('/flow/project/')) {
-    log('warn', `프로젝트 URL 미진입: ${projectUrl}`)
-    return null
-  }
-
-  log('ok', `새 프로젝트 생성 완료: ${projectUrl}`)
-
-  // 프로젝트 제목 영역 클릭해서 이름 변경 시도 (모달 없이 바로 프로젝트로 이동한 경우)
-  if (!modalInput) {
-    const renamed = await page.evaluate((t) => {
-      const titleEl = document.querySelector(
-        'h1[contenteditable], [aria-label="Project name"], input[placeholder*="roject"], [data-placeholder*="roject"]'
-      )
-      if (!titleEl) return false
-      titleEl.focus()
-      titleEl.click()
-      document.execCommand('selectAll')
-      titleEl.value = t
-      titleEl.textContent = t
-      titleEl.dispatchEvent(new Event('input', { bubbles: true }))
-      titleEl.dispatchEvent(new Event('change', { bubbles: true }))
-      return true
-    }, title)
-    if (renamed) {
-      await page.keyboard.press('Enter').catch(() => {})
-      log('info', `프로젝트 이름 변경: "${title}"`)
-      await sleep(1000)
-    }
-  }
-
-  return projectUrl
-}
 
 // ── 캐릭터 등록 ──────────────────────────────────────────────────────
 
@@ -1303,7 +1175,7 @@ async function generateEpisodeCloseup(page, savePath) {
 
 // ── 컷 생성: yeori-face.jpg + yeori_closeup.jpg 둘 다 레퍼런스 ────────
 
-async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts') {
+async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const ep = cut.episode ?? defaultEpisode ?? 'x'
   const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
 
@@ -1311,10 +1183,10 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  // 레퍼런스 1: yeori-face.jpg (원본 얼굴)
-  await attachLocalFile(page, CONFIG.characterImage)
-  // 레퍼런스 2: yeori_closeup.jpg (이번 에피소드 클로즈업)
-  await attachLocalFile(page, closeupPath)
+  // 레퍼런스 1: 패널 첫 번째(oldest) = yeori-face.jpg
+  await attachFaceImageToPrompt(page)
+  // 레퍼런스 2: 패널 마지막(newest) = 이번 에피소드 클로즈업
+  await attachCloseupToPrompt(page)
   await setAspectRatio(page, type)
 
   await page.mouse.click(pos.x, pos.y)
@@ -1328,68 +1200,115 @@ async function processCut(page, cut, defaultEpisode, closeupPath, type = 'shorts
   return saveNewImage(page, before, cut.no, ep, 'cut')
 }
 
-// ── 클로즈업 이미지 프롬프트 첨부 ───────────────────────────────────
+// ── 이미지 탭 클릭 헬퍼 (플로팅 패널) ───────────────────────────────
 
-async function attachCloseupToPrompt(page, closeupPath) {
-  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
+async function clickImageTab(page) {
+  return page.evaluate(() => {
+    const items = [...document.querySelectorAll('*')].filter(el => {
+      const txt = el.textContent.trim()
+      const r = el.getBoundingClientRect()
+      return txt === '이미지'
+        && r.left > 130 && r.left < 400
+        && r.top > 200
+        && el.offsetWidth > 0 && el.offsetWidth < 200
+    })
+    if (items[0]) { items[0].click(); return true }
+    return false
+  })
+}
+
+// ── attachFaceImageToPrompt: 패널 첫 번째(oldest) 이미지 선택 ────────
+
+async function attachFaceImageToPrompt(page) {
+  if (!await clickPlusButton(page)) { log('warn', 'face: + 버튼 못 찾음'); return false }
   await sleep(1500)
 
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_panel.png') })
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_face_panel.png') })
 
-  // ── 전략 1: file input 발견 시 직접 파일 업로드 ──────────────────
-  const fileInput = await page.evaluateHandle(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('input[type="file"]')) return el
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
-      }
-      return null
-    }
-    return search(document)
-  })
-  const fileEl = fileInput.asElement()
-  if (fileEl) {
-    await fileEl.uploadFile(closeupPath)
-    log('info', `closeup 파일 업로드: ${path.basename(closeupPath)}`)
-    await sleep(1500)
-    const added = await clickAddToPrompt(page)
-    if (added) { await sleep(800); return true }
-  }
+  const tabOk = await clickImageTab(page)
+  if (!tabOk) log('warn', 'face: 이미지 탭 못 찾음, 현재 패널에서 시도')
+  await sleep(800)
 
-  // ── 전략 2: 패널 내 img 썸네일 클릭 (텍스트 매칭 X, 크기/위치 기반) ─
+  // 가장 아래(bottom) = oldest (newest-first 패널 기준)
   const thumbInfo = await page.evaluate(() => {
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
-      return img.complete
-        && img.naturalWidth > 60
-        && r.width > 40 && r.width < 400
-        && r.height > 40
-        && r.top > 80
-        // 사이드바 아이콘(x<80) 제외, 전체폭 이미지 제외
-        && r.left > 80
+      return img.complete && img.naturalWidth > 60
+        && r.width > 40 && r.width < 400 && r.height > 40
+        && r.top > 80 && r.left > 80
     })
     if (!imgs.length) return null
-    // 가장 위에 있는 썸네일 = 가장 최근 생성 이미지
-    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    imgs.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)
     const target = imgs[0]
     const r = target.getBoundingClientRect()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), total: imgs.length }
   })
 
   if (!thumbInfo) {
-    log('warn', 'closeup: 썸네일 못 찾음 → debug_plus_panel.png 확인, 건너뜀')
+    log('warn', 'face: 이미지 패널 비어있음 → debug_face_panel.png 확인, 건너뜀')
     await page.keyboard.press('Escape').catch(() => {})
     return false
   }
 
-  log('info', `closeup 썸네일 클릭: (${thumbInfo.x}, ${thumbInfo.y})`)
+  log('info', `face: oldest 이미지 선택 (${thumbInfo.total}개 중 bottom) at (${thumbInfo.x}, ${thumbInfo.y})`)
   await page.mouse.click(thumbInfo.x, thumbInfo.y)
   await sleep(800)
 
   const added = await clickAddToPrompt(page)
-  if (added) { log('info', 'closeup 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
+  if (added) { log('info', '얼굴 이미지(oldest) 프롬프트에 추가 완료'); await sleep(800); return true }
 
-  log('warn', '"프롬프트에 추가" 못 찾음')
+  log('warn', 'face: "프롬프트에 추가" 못 찾음')
+  await page.keyboard.press('Escape').catch(() => {})
+  return false
+}
+
+// ── attachCloseupToPrompt: 패널 마지막(newest) 이미지 선택 ───────────
+
+async function attachCloseupToPrompt(page) {
+  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
+  await sleep(1500)
+
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_closeup_panel.png') })
+
+  const tabOk = await clickImageTab(page)
+  if (!tabOk) log('warn', 'closeup: 이미지 탭 못 찾음, 현재 패널에서 시도')
+  await sleep(800)
+
+  // 가장 위(top) = newest (newest-first 패널 기준)
+  const thumbInfo = await page.evaluate(() => {
+    const imgs = [...document.querySelectorAll('img')].filter(img => {
+      const r = img.getBoundingClientRect()
+      return img.complete && img.naturalWidth > 60
+        && r.width > 40 && r.width < 400 && r.height > 40
+        && r.top > 80 && r.left > 80
+    })
+    if (!imgs.length) return null
+    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+    const target = imgs[0]
+    const r = target.getBoundingClientRect()
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), total: imgs.length }
+  })
+
+  if (!thumbInfo) {
+    log('warn', 'closeup: 이미지 패널 비어있음 → 건너뜀')
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
+
+  if (thumbInfo.total <= 1) {
+    log('warn', `closeup: 이미지 1개 이하 (${thumbInfo.total}개) → 건너뜀`)
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
+
+  log('info', `closeup: newest 이미지 선택 (${thumbInfo.total}개 중 top) at (${thumbInfo.x}, ${thumbInfo.y})`)
+  await page.mouse.click(thumbInfo.x, thumbInfo.y)
+  await sleep(800)
+
+  const added = await clickAddToPrompt(page)
+  if (added) { log('info', 'closeup(newest) 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
+
+  log('warn', 'closeup: "프롬프트에 추가" 못 찾음')
   await page.keyboard.press('Escape').catch(() => {})
   return false
 }
