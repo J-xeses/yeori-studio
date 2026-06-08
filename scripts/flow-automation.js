@@ -911,19 +911,63 @@ async function generateFaceImage(page) {
   log('ok', `얼굴 이미지 저장: ${path.relative(ROOT, CONFIG.characterImage)}`)
 }
 
-// ── 공통: 하단 "만들기(+)" 버튼 클릭 ───────────────────────────────
+// ── 공통: 하단 레퍼런스 "+" 버튼 클릭 ──────────────────────────────
+// Flow UI는 SVG 아이콘 버튼 → 텍스트 매칭 대신 위치·aria-label 기반
 
 async function clickPlusButton(page) {
   const result = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      const r = el.getBoundingClientRect()
-      if (r.top < window.innerHeight * 0.7 || r.width === 0) continue
-      const txt = el.textContent.trim()
-      if (txt.includes('만들기') || txt === '+') { el.click(); return txt }
+    function search(root) {
+      // 1순위: aria-label에 add/media/미디어/추가 포함된 버튼
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '').toLowerCase()
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.top < window.innerHeight * 0.55) continue
+        if (/(add|media|미디어|추가|reference|레퍼런스|attach|첨부)/i.test(label)) {
+          el.click(); return `aria:${label}`
+        }
+      }
+      // 2순위: 텍스트가 "+", "만들기", "add" 인 버튼
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.top < window.innerHeight * 0.55) continue
+        const txt = el.textContent.trim()
+        if (txt === '+' || txt.includes('만들기') || txt.toLowerCase() === 'add') {
+          el.click(); return `txt:${txt}`
+        }
+      }
+      // 3순위: 하단 입력창 왼쪽 영역(x<200, y>55%)의 소형 버튼
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.width > 80) continue
+        if (r.top < window.innerHeight * 0.55 || r.left > 300) continue
+        if (r.height < 60 && r.height > 10) { el.click(); return `pos:(${Math.round(r.left)},${Math.round(r.top)})` }
+      }
+      // Shadow DOM 재귀
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
+      }
+      return null
     }
-    return null
+    return search(document)
   })
   if (result) log('info', `+ 버튼 클릭: "${result}"`)
+  else {
+    // 디버깅: 하단 버튼 목록 덤프
+    const btns = await page.evaluate(() => {
+      const h = window.innerHeight
+      return [...document.querySelectorAll('button, [role="button"]')]
+        .filter(el => {
+          const r = el.getBoundingClientRect()
+          return r.width > 0 && r.top > h * 0.5
+        })
+        .map(el => {
+          const r = el.getBoundingClientRect()
+          return `[${el.tagName}] txt="${el.textContent.trim().slice(0,20)}" aria="${el.getAttribute('aria-label')||''}" x=${Math.round(r.left)} y=${Math.round(r.top)} w=${Math.round(r.width)}`
+        })
+    })
+    log('warn', `+ 버튼 못 찾음. 하단 버튼 목록:\n  ${btns.slice(0,10).join('\n  ')}`)
+    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_plus_not_found.png') })
+  }
   return !!result
 }
 
