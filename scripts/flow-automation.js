@@ -48,7 +48,8 @@ const ROOT = (() => {
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  chromeProfile:   path.join(ROOT, '.chrome-profile'),
+  chromeProfile:   path.join(process.env.LOCALAPPDATA || 'C:\\Users\\won56\\AppData\\Local', 'Google', 'Chrome', 'User Data'),
+  chromeProfileDir: 'Default',
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
@@ -408,6 +409,7 @@ async function launchBrowser() {
     headless:       false,
     defaultViewport: null,
     args: [
+      `--profile-directory=${CONFIG.chromeProfileDir}`,
       '--start-maximized',
       '--disable-blink-features=AutomationControlled',
       '--no-first-run',
@@ -469,7 +471,7 @@ async function navigateToFlow(page) {
   await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
 
   if (page.url().includes('accounts.google.com') || page.url().includes('signin')) {
-    log('warn', '구글 로그인 필요 — .chrome-profile에서 미리 로그인하세요. 30초 대기 후 자동 진행.')
+    log('warn', `구글 로그인 필요 — Chrome ${CONFIG.chromeProfileDir} 프로필에서 미리 로그인하세요. 30초 대기 후 자동 진행.`)
     await sleep(30000)
   }
 
