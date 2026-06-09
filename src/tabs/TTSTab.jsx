@@ -4,16 +4,6 @@ import { elTTS } from '../lib/api'
 import { setGPoint } from '../lib/gpoints'
 import s from './TTSTab.module.css'
 
-const VOICES = [
-  { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel', desc: '여성 · 차분함' },
-  { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi',   desc: '여성 · 강렬함' },
-  { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Bella',  desc: '여성 · 부드러움' },
-  { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni', desc: '남성 · 성숙함' },
-  { id: 'TxGEqnHWrfWFTfGW9XjX', name: 'Josh',   desc: '남성 · 젊음' },
-  { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam',   desc: '남성 · 중후함' },
-  { id: '5n5gqmaQi9Ewevrz7bOS', name: 'Sian',   desc: '여성 · 진솔함' },
-]
-
 export default function TTSTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
@@ -21,6 +11,7 @@ export default function TTSTab() {
   const [loading, setLoading] = useState({})
   const [text, setText] = useState('')
   const [activeCut, setActiveCut] = useState(0)
+  const [voiceInput, setVoiceInput] = useState(ttsSettings.voiceId || '')
   const audioRefs = useRef({})
 
   const remaining = elevenLabsStatus.remainingChars
@@ -100,17 +91,28 @@ export default function TTSTab() {
       <div className={s.main}>
         <div className={s.panel}>
           <h3 className={s.panelTitle}>목소리 선택</h3>
-          <div className={s.voices}>
-            {VOICES.map(v => (
-              <button key={v.id}
-                className={`${s.voiceCard} ${ttsSettings.voiceId === v.id ? s.voiceActive : ''}`}
-                onClick={() => dispatch({ type: 'SET_TTS', p: { voiceId: v.id } })}
-              >
-                <span className={s.voiceName}>{v.name}</span>
-                <span className={s.voiceDesc}>{v.desc}</span>
-              </button>
-            ))}
+          <div className={s.voiceInputRow}>
+            <input
+              className={s.voiceInput}
+              type="text"
+              placeholder="ElevenLabs Voice ID 입력"
+              value={voiceInput}
+              onChange={e => setVoiceInput(e.target.value)}
+            />
+            <button
+              className={s.voiceLoadBtn}
+              onClick={() => {
+                const id = voiceInput.trim()
+                if (!id) { alert('Voice ID를 입력하세요'); return }
+                dispatch({ type: 'SET_TTS', p: { voiceId: id } })
+              }}
+            >불러오기</button>
           </div>
+          {ttsSettings.voiceId && (
+            <div className={s.voiceApplied}>
+              적용됨: <code>{ttsSettings.voiceId}</code>
+            </div>
+          )}
         </div>
 
         <div className={s.panel}>
