@@ -456,6 +456,8 @@ async function launchBrowser() {
       '--disable-blink-features=AutomationControlled',
       '--no-first-run',
       '--no-default-browser-check',
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
     ],
   })
