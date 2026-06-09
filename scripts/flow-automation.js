@@ -19,6 +19,7 @@ import puppeteer from 'puppeteer-core'
 import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'
 import path from 'path'
+import readline from 'readline'
 import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
 
@@ -126,6 +127,13 @@ function log(level, msg) {
 
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms))
+}
+
+function promptInput(question) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise(resolve => {
+    rl.question(question, answer => { rl.close(); resolve(answer) })
+  })
 }
 
 // 이미지 개수가 2초간 변화 없을 때까지 대기 (최대 10초)
@@ -325,18 +333,15 @@ async function main() {
     // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
     //    project_url.txt 있으면 재사용 / 없으면 "EP{N}_{제목}" 신규 생성
     if (!fs.existsSync(projectMarker)) {
-      await browser.close().catch(() => {})
-      browser = null
-      console.log(`\nproject_url.txt 없음. Flow에서 프로젝트 생성 후\ndownloads/flow/ep${episode}/project_url.txt에 URL 저장해주세요.\n파일 생성되면 자동으로 계속 진행합니다.`)
-      while (!fs.existsSync(projectMarker)) {
-        process.stdout.write(`\r   확인 중... ${new Date().toLocaleTimeString()}`)
-        await sleep(30000)
-      }
-      console.log()
-      log('ok', 'project_url.txt 발견! 브라우저 재시작 중…')
-      browser = await launchBrowser()
-      page = await setupPage(browser)
-      await navigateToFlow(page)
+      const projectId = await promptInput(
+        `\nFlow 프로젝트 ID를 입력하세요 (URL의 마지막 부분):\n예) 77a33d02-f7d7-40d7-9a1f-b9983d92fc79\n> `
+      )
+      const trimmedId = projectId.trim()
+      if (!trimmedId) throw new Error('프로젝트 ID를 입력하지 않았습니다.')
+      const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${trimmedId}`
+      ensureDir(path.dirname(projectMarker))
+      fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
+      log('ok', `project_url.txt 저장: ${projectUrl}`)
     }
     const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
     _projectUrl = savedUrl
