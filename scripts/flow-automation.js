@@ -49,10 +49,9 @@ const ROOT = (() => {
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  // 기존 로그인된 Chrome 프로필 사용 (Google 로그인 유지)
-  // ⚠️  실행 전 Chrome을 완전히 종료하고 스튜디오는 Edge 등 다른 브라우저로 열 것
-  chromeProfile:   'C:\\Users\\won56\\AppData\\Local\\Google\\Chrome\\User Data',
-  chromeProfileDir: 'Default',
+  // remote debugging 방식: Chrome을 --remote-debugging-port=9222 로 미리 실행
+  // chrome.exe --remote-debugging-port=9222
+  debuggingPort:   9222,
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
@@ -252,7 +251,7 @@ async function main() {
 
   // ── 캐릭터 등록 모드 ───────────────────────────────────────────────
   if (args['register-character'] || args['gen-face']) {
-    const browser = await launchBrowser()
+    const browser = await connectBrowser()
     const page = await setupPage(browser)
     try {
       await navigateToFlow(page)
@@ -316,11 +315,9 @@ async function main() {
 
   let browser
   try {
-    browser = await launchBrowser()
+    browser = await connectBrowser()
   } catch (err) {
-    console.error(`[flow] Chrome 실행 실패: ${err.message}`)
-    console.error(`[flow] chromeExe 경로: ${CONFIG.chromeExe}`)
-    throw err
+    process.exit(1)
   }
 
   let page = await setupPage(browser)
@@ -429,39 +426,26 @@ async function main() {
 
 // ── 브라우저 설정 ─────────────────────────────────────────────────────
 
-async function launchBrowser() {
-  // 기존 프로필 잠금 파일 정리 (이전 실행 크래시 대비)
-  cleanProfileLocks()
-
-  log('info', `Chrome 실행 중 (기존 로그인 프로필: ${CONFIG.chromeProfileDir})…`)
-  log('warn', 'Chrome이 이미 열려있으면 충돌합니다. Chrome을 완전히 종료한 후 실행하세요.')
-  return puppeteer.launch({
-    executablePath: CONFIG.chromeExe,
-    userDataDir:    CONFIG.chromeProfile,
-    headless:       false,
-    defaultViewport: null,
-    args: [
-      `--profile-directory=${CONFIG.chromeProfileDir}`,
-      '--start-maximized',
-      '--disable-blink-features=AutomationControlled',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-    ],
-  })
-}
-
-// 전용 프로필의 잠금 파일만 정리 — 다른 Chrome 탭/프로세스 건드리지 않음
-function cleanProfileLocks() {
-  if (!fs.existsSync(CONFIG.chromeProfile)) return
-  let cleaned = 0
-  for (const lock of ['SingletonLock', 'lockfile', 'SingletonSocket', 'SingletonCookie']) {
-    const p = path.join(CONFIG.chromeProfile, lock)
-    try { if (fs.existsSync(p)) { fs.unlinkSync(p); cleaned++ } } catch {}
+async function connectBrowser() {
+  const wsUrl = `http://127.0.0.1:${CONFIG.debuggingPort}/json/version`
+  let version
+  try {
+    const res = await fetch(wsUrl)
+    version = await res.json()
+  } catch {
+    console.error('\n' + '═'.repeat(56))
+    console.error('  Chrome에 연결할 수 없습니다.')
+    console.error('  Chrome을 먼저 아래 명령으로 실행해주세요:')
+    console.error(`\n  "${CONFIG.chromeExe}" --remote-debugging-port=${CONFIG.debuggingPort}`)
+    console.error('\n  (실행 중인 Chrome이 있으면 완전히 종료 후 위 명령 사용)')
+    console.error('═'.repeat(56) + '\n')
+    throw new Error(`Chrome remote debugging 포트(${CONFIG.debuggingPort})에 연결 실패`)
   }
-  if (cleaned > 0) log('info', `프로필 잠금 파일 ${cleaned}개 정리`)
+  log('info', `Chrome 연결 완료 (${version.Browser})`)
+  return puppeteer.connect({
+    browserWSEndpoint: version.webSocketDebuggerUrl,
+    defaultViewport:   null,
+  })
 }
 
 async function setupPage(browser) {
