@@ -367,15 +367,11 @@ async function main() {
       log('ok', `③ 서여리 캐릭터 이미 등록됨 (스킵)`)
     }
 
-    // ── ④ 클로즈업 생성 (최초 1회, yeori_closeup.jpg 캐시) ──────────
-    if (!fs.existsSync(closeupPath)) {
-      log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
-      await generateEpisodeCloseup(page, closeupPath)
-      log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
-      await sleep(CONFIG.delayMs)
-    } else {
-      log('ok', `④ 클로즈업 재사용: ${path.relative(ROOT, closeupPath)}`)
-    }
+    // ── ④ 클로즈업 생성 (항상 재생성) ──────────────────────────────
+    log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
+    await generateEpisodeCloseup(page, closeupPath)
+    log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
+    await sleep(CONFIG.delayMs)
 
     // ── ⑤ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
@@ -1242,10 +1238,11 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  // 레퍼런스 1: 패널 첫 번째(oldest) = yeori-face.jpg
+  // 레퍼런스 1: yeori-face.jpg (이름 매칭)
   await attachFaceImageToPrompt(page)
-  // 레퍼런스 2: 패널 마지막(newest) = 이번 에피소드 클로즈업
-  await attachCloseupToPrompt(page)
+  // 레퍼런스 2: yeori-face.jpg 제외 최신 이미지 (closeup)
+  const closeupOk = await attachCloseupToPrompt(page)
+  if (!closeupOk) log('warn', 'closeup 첨부 실패 → yeori-face.jpg 단독으로 진행')
   await setAspectRatio(page, type)
 
   await page.mouse.click(pos.x, pos.y)
@@ -1320,7 +1317,7 @@ async function attachFaceImageToPrompt(page) {
   return false
 }
 
-// ── attachCloseupToPrompt: 패널 마지막(newest) 이미지 선택 ───────────
+// ── attachCloseupToPrompt: yeori-face.jpg 제외 최신 이미지 선택 ────────
 
 async function attachCloseupToPrompt(page) {
   if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
@@ -1332,39 +1329,52 @@ async function attachCloseupToPrompt(page) {
   if (!tabOk) log('warn', 'closeup: 이미지 탭 못 찾음, 현재 패널에서 시도')
   await sleep(800)
 
-  // 가장 위(top) = newest (newest-first 패널 기준)
-  const thumbInfo = await page.evaluate(() => {
+  // 패널 이미지 전체 수집 + 레이블 추출 + yeori-face.jpg 제외
+  const result = await page.evaluate(() => {
+    const FACE_NAMES = ['yeori-face', 'yeori_face']
     const imgs = [...document.querySelectorAll('img')].filter(img => {
       const r = img.getBoundingClientRect()
       return img.complete && img.naturalWidth > 60
         && r.width > 40 && r.width < 400 && r.height > 40
         && r.top > 80 && r.left > 80
     })
-    if (!imgs.length) return null
-    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    const target = imgs[0]
-    const r = target.getBoundingClientRect()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), total: imgs.length }
+
+    const items = imgs.map(img => {
+      const r = img.getBoundingClientRect()
+      // 부모 체인에서 파일명 레이블 탐색 (최대 5단계)
+      let label = ''
+      let el = img.parentElement
+      for (let i = 0; i < 5; i++) {
+        if (!el) break
+        const txt = el.textContent.trim()
+        if (txt && txt.length > 0 && txt.length < 100) { label = txt; break }
+        el = el.parentElement
+      }
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), top: r.top, label: label.slice(0, 60) }
+    })
+
+    const logList = items.map((item, i) => `[${i}] y=${Math.round(item.top)} "${item.label}"`)
+    const isFace = item => FACE_NAMES.some(n => item.label.toLowerCase().includes(n))
+    const candidates = items.filter(item => !isFace(item)).sort((a, b) => a.top - b.top)
+
+    return { logList, total: items.length, candidate: candidates[0] || null }
   })
 
-  if (!thumbInfo) {
-    log('warn', 'closeup: 이미지 패널 비어있음 → 건너뜀')
+  log('info', `closeup: 패널 이미지 ${result.total}개:`)
+  result.logList.forEach(l => log('info', `  ${l}`))
+
+  if (!result.candidate) {
+    log('warn', 'closeup: yeori-face.jpg 외 이미지 없음 → 건너뜀')
     await page.keyboard.press('Escape').catch(() => {})
     return false
   }
 
-  if (thumbInfo.total <= 1) {
-    log('warn', `closeup: 이미지 1개 이하 (${thumbInfo.total}개) → 건너뜀`)
-    await page.keyboard.press('Escape').catch(() => {})
-    return false
-  }
-
-  log('info', `closeup: newest 이미지 선택 (${thumbInfo.total}개 중 top) at (${thumbInfo.x}, ${thumbInfo.y})`)
-  await page.mouse.click(thumbInfo.x, thumbInfo.y)
+  log('info', `closeup: 선택 → "${result.candidate.label}" at (${result.candidate.x}, ${result.candidate.y})`)
+  await page.mouse.click(result.candidate.x, result.candidate.y)
   await sleep(800)
 
   const added = await clickAddToPrompt(page)
-  if (added) { log('info', 'closeup(newest) 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
+  if (added) { log('info', 'closeup 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
 
   log('warn', 'closeup: "프롬프트에 추가" 못 찾음')
   await page.keyboard.press('Escape').catch(() => {})
