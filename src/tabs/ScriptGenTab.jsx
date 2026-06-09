@@ -18,6 +18,15 @@ function cleanMarkdown(text) {
     .trim()
 }
 
+// 나레이션·대사에 혼입된 촬영 지시어 제거
+function stripShotDirective(text) {
+  if (!text) return text
+  return text
+    .replace(/\n?샷\s*타입[:：]\s*(CLOSEUP|FULLBODY|클로즈업|풀바디)[^\n]*/gi, '')
+    .replace(/^(CLOSEUP|FULLBODY)\s*(SHOT)?\s*[-—]?\s*/i, '')
+    .trim()
+}
+
 function parseCuts(raw, n) {
   // 마크다운 정리
   const cleaned = cleanMarkdown(raw)
@@ -41,8 +50,8 @@ function parseCuts(raw, n) {
         if (!m) return ''
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
-        // 다음 필드 키워드 전까지
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|이미지 프롬프트)[:：]/)
+        // 다음 필드 키워드 전까지 (샷 타입 포함)
+        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트)[:：]/)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -50,8 +59,8 @@ function parseCuts(raw, n) {
       cur.scene      = getField(/씬[:：]\s*/) || getField(/장면[:：]\s*/)
       cur.action     = getField(/액션[:：]\s*/) || getField(/행동[:：]\s*/)
       cur.character  = getField(/캐릭터[:：]\s*/) || '서여리'
-      cur.dialogue   = getField(/대사[:：]\s*/)
-      cur.narration  = getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/)
+      cur.dialogue   = stripShotDirective(getField(/대사[:：]\s*/))
+      cur.narration  = stripShotDirective(getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/))
       cur.shotType   = (getField(/샷 타입[:：]\s*/) || '').toUpperCase().includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
       cur.imagePrompt = getField(/이미지 프롬프트[:：]\s*/) || getField(/프롬프트[:：]\s*/)
 
