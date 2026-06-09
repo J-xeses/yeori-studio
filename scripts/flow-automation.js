@@ -49,8 +49,9 @@ const ROOT = (() => {
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  // Flow 전용 Chrome 프로필 — 일반 Chrome과 충돌 없이 독립 실행
-  chromeProfile:   path.join(ROOT, '.chrome-profile-flow'),
+  // 기존 로그인된 Chrome 프로필 사용 (Google 로그인 유지)
+  // ⚠️  실행 전 Chrome을 완전히 종료하고 스튜디오는 Edge 등 다른 브라우저로 열 것
+  chromeProfile:   'C:\\Users\\won56\\AppData\\Local\\Google\\Chrome\\User Data',
   chromeProfileDir: 'Default',
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
@@ -429,22 +430,11 @@ async function main() {
 // ── 브라우저 설정 ─────────────────────────────────────────────────────
 
 async function launchBrowser() {
-  // 프로필 잠금 파일만 정리 (다른 Chrome 창 건드리지 않음)
+  // 기존 프로필 잠금 파일 정리 (이전 실행 크래시 대비)
   cleanProfileLocks()
 
-  // 최초 실행 감지: Default 프로필 디렉토리가 없으면 Google 로그인 필요
-  const profileDefaultDir = path.join(CONFIG.chromeProfile, 'Default')
-  const isFirstRun = !fs.existsSync(profileDefaultDir)
-  if (isFirstRun) {
-    console.log('\n' + '═'.repeat(52))
-    console.log('  [최초 실행] Flow 전용 Chrome 프로필 생성 중')
-    console.log('  Chrome이 열리면 Google 계정으로 로그인하세요.')
-    console.log('  로그인 완료 후 자동으로 계속 진행됩니다.')
-    console.log('  (로그인 정보는 .chrome-profile-flow 에 저장됩니다)')
-    console.log('═'.repeat(52) + '\n')
-  }
-
-  log('info', `Chrome 실행 중 (전용 프로필: ${path.relative(ROOT, CONFIG.chromeProfile)})…`)
+  log('info', `Chrome 실행 중 (기존 로그인 프로필: ${CONFIG.chromeProfileDir})…`)
+  log('warn', 'Chrome이 이미 열려있으면 충돌합니다. Chrome을 완전히 종료한 후 실행하세요.')
   return puppeteer.launch({
     executablePath: CONFIG.chromeExe,
     userDataDir:    CONFIG.chromeProfile,
