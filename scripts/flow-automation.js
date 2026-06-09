@@ -48,7 +48,8 @@ const ROOT = (() => {
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  chromeProfile:   path.join(process.env.LOCALAPPDATA || 'C:\\Users\\won56\\AppData\\Local', 'YeoriStudio', 'chrome-profile'),
+  // Flow 전용 Chrome 프로필 — 일반 Chrome과 충돌 없이 독립 실행
+  chromeProfile:   path.join(ROOT, '.chrome-profile-flow'),
   chromeProfileDir: 'Default',
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
@@ -313,7 +314,7 @@ async function main() {
     throw err
   }
 
-  const page = await setupPage(browser)
+  let page = await setupPage(browser)
   let ok = 0, fail = 0
   const results = []
 
@@ -324,10 +325,18 @@ async function main() {
     // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
     //    project_url.txt 있으면 재사용 / 없으면 "EP{N}_{제목}" 신규 생성
     if (!fs.existsSync(projectMarker)) {
-      log('error', `project_url.txt 없음: ${projectMarker}`)
-      log('info', `  downloads/flow/ep${episode}/project_url.txt 에 Flow 프로젝트 URL을 저장하세요.`)
       await browser.close().catch(() => {})
-      process.exit(1)
+      browser = null
+      console.log(`\nproject_url.txt 없음. Flow에서 프로젝트 생성 후\ndownloads/flow/ep${episode}/project_url.txt에 URL 저장해주세요.\n파일 생성되면 자동으로 계속 진행합니다.`)
+      while (!fs.existsSync(projectMarker)) {
+        process.stdout.write(`\r   확인 중... ${new Date().toLocaleTimeString()}`)
+        await sleep(30000)
+      }
+      console.log()
+      log('ok', 'project_url.txt 발견! 브라우저 재시작 중…')
+      browser = await launchBrowser()
+      page = await setupPage(browser)
+      await navigateToFlow(page)
     }
     const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
     _projectUrl = savedUrl
@@ -368,6 +377,15 @@ async function main() {
     // ── ⑤ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
+      const _ep = cut.episode ?? episode ?? 'x'
+      const existingPath = path.join(CONFIG.downloadDir, `ep${_ep}`, `cut_${String(cut.no).padStart(2, '0')}.jpg`)
+      if (fs.existsSync(existingPath)) {
+        log('ok', `[${i + 1}/${cuts.length}] CUT ${cut.no} 이미 존재 → 스킵`)
+        results.push({ cutNo: cut.no, status: 'ok', file: existingPath })
+        ok++
+        continue
+      }
+
       const label = `[${i + 1}/${cuts.length}] CUT ${cut.no}`
       log('step', `⑤ ${label} 생성 중…`)
 
@@ -406,10 +424,22 @@ async function main() {
 // ── 브라우저 설정 ─────────────────────────────────────────────────────
 
 async function launchBrowser() {
-  // YeoriStudio 프로필을 사용 중인 Chrome 프로세스만 종료 (일반 Chrome 탭 보존)
-  killYeoriChrome()
+  // 프로필 잠금 파일만 정리 (다른 Chrome 창 건드리지 않음)
+  cleanProfileLocks()
 
-  log('info', 'Chrome 실행 중 (YeoriStudio 프로필)…')
+  // 최초 실행 감지: Default 프로필 디렉토리가 없으면 Google 로그인 필요
+  const profileDefaultDir = path.join(CONFIG.chromeProfile, 'Default')
+  const isFirstRun = !fs.existsSync(profileDefaultDir)
+  if (isFirstRun) {
+    console.log('\n' + '═'.repeat(52))
+    console.log('  [최초 실행] Flow 전용 Chrome 프로필 생성 중')
+    console.log('  Chrome이 열리면 Google 계정으로 로그인하세요.')
+    console.log('  로그인 완료 후 자동으로 계속 진행됩니다.')
+    console.log('  (로그인 정보는 .chrome-profile-flow 에 저장됩니다)')
+    console.log('═'.repeat(52) + '\n')
+  }
+
+  log('info', `Chrome 실행 중 (전용 프로필: ${path.relative(ROOT, CONFIG.chromeProfile)})…`)
   return puppeteer.launch({
     executablePath: CONFIG.chromeExe,
     userDataDir:    CONFIG.chromeProfile,
@@ -426,21 +456,15 @@ async function launchBrowser() {
   })
 }
 
-function killYeoriChrome() {
-  log('info', 'Chrome 프로세스 종료 중… (탭이 닫힙니다)')
-  try {
-    execSync('taskkill /f /im chrome.exe', { stdio: 'ignore', timeout: 8000 })
-    log('info', 'Chrome 종료 완료')
-  } catch {
-    log('info', 'Chrome 실행 중 아님 (정상)')
-  }
-  // 잠금 파일 제거
+// 전용 프로필의 잠금 파일만 정리 — 다른 Chrome 탭/프로세스 건드리지 않음
+function cleanProfileLocks() {
+  if (!fs.existsSync(CONFIG.chromeProfile)) return
+  let cleaned = 0
   for (const lock of ['SingletonLock', 'lockfile', 'SingletonSocket', 'SingletonCookie']) {
     const p = path.join(CONFIG.chromeProfile, lock)
-    try { if (fs.existsSync(p)) fs.unlinkSync(p) } catch {}
+    try { if (fs.existsSync(p)) { fs.unlinkSync(p); cleaned++ } } catch {}
   }
-  // 종료 후 잠시 대기
-  execSync('ping -n 3 127.0.0.1 >nul', { shell: true, stdio: 'ignore' })
+  if (cleaned > 0) log('info', `프로필 잠금 파일 ${cleaned}개 정리`)
 }
 
 async function setupPage(browser) {
@@ -1183,9 +1207,9 @@ async function attachLocalFile(page, filePath) {
 async function generateEpisodeCloseup(page, savePath) {
   const pos = await prepareInput(page)
 
-  // yeori-face.jpg를 레퍼런스로 첨부
-  const faceAttached = await attachLocalFile(page, CONFIG.characterImage)
-  if (!faceAttached) log('warn', 'yeori-face.jpg 레퍼런스 첨부 실패 — 텍스트만으로 생성')
+  // yeori-face.jpg 패널 목록에서 이름 클릭 (파일 업로드 시도 금지)
+  const faceAttached = await attachFaceImageToPrompt(page)
+  if (!faceAttached) log('warn', 'yeori-face.jpg 패널 항목 클릭 실패 — 텍스트만으로 생성')
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
@@ -1272,33 +1296,32 @@ async function attachFaceImageToPrompt(page) {
   if (!tabOk) log('warn', 'face: 이미지 탭 못 찾음, 현재 패널에서 시도')
   await sleep(800)
 
-  // 가장 아래(bottom) = oldest (newest-first 패널 기준)
-  const thumbInfo = await page.evaluate(() => {
-    const imgs = [...document.querySelectorAll('img')].filter(img => {
-      const r = img.getBoundingClientRect()
-      return img.complete && img.naturalWidth > 60
-        && r.width > 40 && r.width < 400 && r.height > 40
-        && r.top > 80 && r.left > 80
-    })
-    if (!imgs.length) return null
-    imgs.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)
-    const target = imgs[0]
-    const r = target.getBoundingClientRect()
-    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), total: imgs.length }
+  // 패널 목록에서 "yeori-face.jpg" 이름 항목 클릭 (파일 업로드 시도 금지)
+  const faceItemClicked = await page.evaluate(() => {
+    const NAMES = ['yeori-face.jpg', 'yeori-face', 'yeori_face.jpg', 'yeori_face']
+    for (const name of NAMES) {
+      const found = [...document.querySelectorAll('*')].find(el => {
+        const txt = el.textContent.trim()
+        const r = el.getBoundingClientRect()
+        return txt.toLowerCase().includes(name.toLowerCase())
+          && r.width > 0 && r.width < 400 && r.height > 0 && r.height < 200
+      })
+      if (found) { found.click(); return found.textContent.trim().slice(0, 40) }
+    }
+    return null
   })
 
-  if (!thumbInfo) {
-    log('warn', 'face: 이미지 패널 비어있음 → debug_face_panel.png 확인, 건너뜀')
+  if (!faceItemClicked) {
+    log('warn', 'face: yeori-face.jpg 패널 항목 못 찾음 → debug_face_panel.png 확인, 건너뜀')
     await page.keyboard.press('Escape').catch(() => {})
     return false
   }
 
-  log('info', `face: oldest 이미지 선택 (${thumbInfo.total}개 중 bottom) at (${thumbInfo.x}, ${thumbInfo.y})`)
-  await page.mouse.click(thumbInfo.x, thumbInfo.y)
+  log('info', `face: yeori-face.jpg 클릭: "${faceItemClicked}"`)
   await sleep(800)
 
   const added = await clickAddToPrompt(page)
-  if (added) { log('info', '얼굴 이미지(oldest) 프롬프트에 추가 완료'); await sleep(800); return true }
+  if (added) { log('info', 'yeori-face.jpg 프롬프트에 추가 완료'); await sleep(800); return true }
 
   log('warn', 'face: "프롬프트에 추가" 못 찾음')
   await page.keyboard.press('Escape').catch(() => {})
