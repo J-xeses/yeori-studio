@@ -343,7 +343,7 @@ async function main() {
       fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
       log('ok', `project_url.txt 저장: ${projectUrl}`)
     }
-    const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim()
+    const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim().split('#')[0].trim()
     _projectUrl = savedUrl
     log('ok', `② 프로젝트 URL: ${savedUrl}`)
     await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
@@ -498,9 +498,20 @@ async function navigateToFlow(page) {
   log('info', `Flow 접속 중: ${CONFIG.flowUrl}`)
   await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
 
-  if (page.url().includes('accounts.google.com') || page.url().includes('signin')) {
-    log('warn', `구글 로그인 필요 — Chrome ${CONFIG.chromeProfileDir} 프로필에서 미리 로그인하세요. 30초 대기 후 자동 진행.`)
-    await sleep(30000)
+  // 로그인 필요 판단: Google 로그인 페이지 또는 pricing 리다이렉트
+  const needsLogin = () => {
+    const u = page.url()
+    return u.includes('accounts.google.com') || u.includes('signin') ||
+           u.includes('#pricing') || u.includes('/pricing')
+  }
+
+  if (needsLogin()) {
+    log('warn', '전용 프로필에 Google 로그인이 필요합니다.')
+    console.log('\n브라우저에서 Google 계정으로 로그인 후 Enter를 눌러주세요.')
+    await promptInput('')
+    // 로그인 후 Flow 대시보드 재접속
+    await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    if (needsLogin()) throw new Error('로그인 후에도 pricing 페이지로 리다이렉트됩니다. 로그인 상태를 확인하세요.')
   }
 
   const hadCookie = await page.evaluate(() => {
