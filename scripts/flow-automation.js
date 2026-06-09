@@ -1285,8 +1285,7 @@ async function attachFaceImageToPrompt(page) {
   if (!tabOk) log('warn', 'face: 이미지 탭 못 찾음, 현재 패널에서 시도')
   await sleep(800)
 
-  // 1순위: "yeori-face.jpg" 이름 항목 클릭
-  // 2순위(폴백): 이름 매칭 실패 시 newest(top) 이미지 클릭
+  // 파일명 "yeori-face" / "yeori-face.jpg" 텍스트 매칭만 사용 (위치 기준 없음)
   const faceItemClicked = await page.evaluate(() => {
     const NAMES = ['yeori-face.jpg', 'yeori-face', 'yeori_face.jpg', 'yeori_face']
     for (const name of NAMES) {
@@ -1298,27 +1297,15 @@ async function attachFaceImageToPrompt(page) {
       })
       if (found) { found.click(); return found.textContent.trim().slice(0, 40) }
     }
-    // 폴백: 가장 위(newest) 이미지 클릭
-    const imgs = [...document.querySelectorAll('img')].filter(img => {
-      const r = img.getBoundingClientRect()
-      return img.complete && img.naturalWidth > 60
-        && r.width > 40 && r.width < 400 && r.height > 40
-        && r.top > 80 && r.left > 80
-    })
-    if (!imgs.length) return null
-    imgs.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-    const r = imgs[0].getBoundingClientRect()
-    imgs[0].click()
-    return `fallback:newest at (${Math.round(r.left + r.width / 2)}, ${Math.round(r.top + r.height / 2)})`
+    return null
   })
 
   if (!faceItemClicked) {
-    log('warn', 'face: 패널 이미지 없음 → debug_face_panel.png 확인, 건너뜀')
     await page.keyboard.press('Escape').catch(() => {})
-    return false
+    throw new Error('yeori-face.jpg를 찾을 수 없습니다. 패널에 yeori-face.jpg가 등록되어 있는지 확인하세요.')
   }
 
-  log('info', `face: 클릭: "${faceItemClicked}"`)
+  log('info', `face: yeori-face.jpg 클릭: "${faceItemClicked}"`)
   await sleep(800)
 
   const added = await clickAddToPrompt(page)
