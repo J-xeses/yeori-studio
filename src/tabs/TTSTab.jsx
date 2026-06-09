@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react'
 import { useApp } from '../context/AppContext'
-import { elTTS } from '../lib/api'
+import { elTTS, elVoices } from '../lib/api'
 import { setGPoint } from '../lib/gpoints'
 import s from './TTSTab.module.css'
+
+const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 
 export default function TTSTab() {
   const { state, dispatch } = useApp()
@@ -11,12 +13,48 @@ export default function TTSTab() {
   const [loading, setLoading] = useState({})
   const [text, setText] = useState('')
   const [activeCut, setActiveCut] = useState(0)
-  const [voiceInput, setVoiceInput] = useState(ttsSettings.voiceId || '')
+  const [voiceInput, setVoiceInput] = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
+  const [myVoices, setMyVoices] = useState([])
+  const [voicesLoading, setVoicesLoading] = useState(false)
   const audioRefs = useRef({})
 
   const remaining = elevenLabsStatus.remainingChars
 
   const getTextForCut = (cut) => cut.dialogue || cut.narration || ''
+
+  const saveVoiceId = async () => {
+    const id = voiceInput.trim()
+    if (!id) { alert('Voice ID를 입력하세요'); return }
+    dispatch({ type: 'SET_TTS', p: { voiceId: id } })
+    try {
+      const res = await fetch('http://localhost:3001/api/update-env', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'ELEVENLABS_VOICE_ID', value: id }),
+      })
+      if (!res.ok) throw new Error()
+      alert(`저장 완료: ${id}`)
+    } catch {
+      alert('.env.local 저장 실패 — 프록시 서버가 실행 중인지 확인하세요')
+    }
+  }
+
+  const loadMyVoices = async () => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 먼저 연동하세요'); return }
+    setVoicesLoading(true)
+    try {
+      const res = await elVoices(apiKeys.elevenLabs)
+      if (!res.ok) throw new Error('API 오류')
+      const data = await res.json()
+      const clones = (data.voices || []).filter(v => v.category !== 'premade')
+      setMyVoices(clones)
+      if (!clones.length) alert('클론 목소리가 없어요. ElevenLabs에서 Voice Clone을 먼저 만들어주세요.')
+    } catch (err) {
+      alert('목소리 불러오기 실패: ' + err.message)
+    } finally {
+      setVoicesLoading(false)
+    }
+  }
 
   const generateTTS = async (cutId, inputText) => {
     if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return }
@@ -26,7 +64,7 @@ export default function TTSTab() {
     try {
       const res = await elTTS(
         apiKeys.elevenLabs,
-        ttsSettings.voiceId || VOICES[0].id,
+        ttsSettings.voiceId || DEFAULT_VOICE_ID,
         {
           text: finalText,
           model_id: 'eleven_multilingual_v2',
@@ -99,15 +137,23 @@ export default function TTSTab() {
               value={voiceInput}
               onChange={e => setVoiceInput(e.target.value)}
             />
-            <button
-              className={s.voiceLoadBtn}
-              onClick={() => {
-                const id = voiceInput.trim()
-                if (!id) { alert('Voice ID를 입력하세요'); return }
-                dispatch({ type: 'SET_TTS', p: { voiceId: id } })
-              }}
-            >불러오기</button>
+            <button className={s.voiceLoadBtn} onClick={saveVoiceId}>저장</button>
           </div>
+          {myVoices.length > 0 && (
+            <select
+              className={s.voiceSelect}
+              value=""
+              onChange={e => { if (e.target.value) setVoiceInput(e.target.value) }}
+            >
+              <option value="">— 목소리 선택 —</option>
+              {myVoices.map(v => (
+                <option key={v.voice_id} value={v.voice_id}>{v.name}</option>
+              ))}
+            </select>
+          )}
+          <button className={s.voiceFetchBtn} onClick={loadMyVoices} disabled={voicesLoading}>
+            {voicesLoading ? '불러오는 중...' : '🎤 내 목소리 목록 불러오기'}
+          </button>
           {ttsSettings.voiceId && (
             <div className={s.voiceApplied}>
               적용됨: <code>{ttsSettings.voiceId}</code>

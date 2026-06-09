@@ -32,6 +32,7 @@ export default function StudioTab() {
   const [selected, setSelected] = useState(TOOLS[0])
   const [copiedId, setCopiedId] = useState(null)
   const [generating, setGenerating] = useState({}) // { cutId: true/false }
+  const [confirmed, setConfirmed] = useState({})
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -359,6 +360,22 @@ export default function StudioTab() {
             <div className={s.dialoguePreview}>
               {cut.dialogue && <div className={s.dial}><span className={s.dialLabel}>대사</span>{cut.dialogue}</div>}
               {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
+            </div>
+
+            <div className={s.actionRow}>
+              <button
+                className={`${s.confirmBtn} ${confirmed[cut.id] ? s.confirmedActive : ''}`}
+                disabled={!images[cut.id]}
+                onClick={() => {
+                  setConfirmed(p => ({ ...p, [cut.id]: true }))
+                  setGPoint(cut.no, 'g3', true)
+                }}
+              >✅ 컨펌</button>
+              <button
+                className={s.regenBtn}
+                disabled={generating[cut.id]}
+                onClick={() => generateSingleImage(cut)}
+              >🔄 재생성</button>
             </div>
           </div>
         ))}

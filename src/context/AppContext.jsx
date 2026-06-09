@@ -48,7 +48,7 @@ const defaultState = {
   cuts: makeCuts(7),
   scriptRaw: '',
 
-  ttsSettings: { voiceId: '21m00Tcm4TlvDq8ikWAM', emotion: 50, tone: 50, speed: 1.0 },
+  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0 },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70 },

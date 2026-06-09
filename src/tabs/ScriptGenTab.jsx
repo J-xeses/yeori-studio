@@ -98,6 +98,7 @@ export default function ScriptGenTab() {
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
+  const [episodeOpen, setEpisodeOpen] = useState(true)
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -375,126 +376,137 @@ ${YEORI_RULESET}
     <div className={s.root}>
       {/* Left: Settings */}
       <div className={s.sidebar}>
-        <div className={s.sideTitle}>에피소드 설정</div>
 
-        <div className={s.field}>
-          <label>에피소드 번호</label>
-          <input
-            type="number" min="1" value={episode.number}
-            style={numError ? { borderColor: '#ef4444' } : {}}
-            onChange={e => {
-              const num = parseInt(e.target.value) || 1
-              const isDup = Object.values(episodes || {}).some(
-                ep => ep.id !== activeEpisodeId && ep.episode.number === num
-              )
-              if (isDup) {
-                setNumError(`EP${num}은 이미 사용 중입니다`)
-              } else {
-                setNumError('')
-                dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
-              }
-            }}
-          />
-          {numError && (
-            <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
-          )}
-        </div>
-        <div className={s.field}>
-          <label>에피소드 제목</label>
-          <input placeholder="예: 카페에서 혼자 쓰는 편지" value={episode.title}
-            onChange={e => dispatch({ type: 'SET_EPISODE', p: { title: e.target.value } })} />
-        </div>
-        <div className={s.field}>
-          <label>배경 장소</label>
-          <select value={episode.location}
-            onChange={e => dispatch({ type: 'SET_EPISODE', p: { location: e.target.value } })}>
-            {LOCATIONS.map(l => <option key={l}>{l}</option>)}
-          </select>
-        </div>
-        <div className={s.field}>
-          <label>전체 분위기 <span style={{fontSize:10,color:'var(--text3)'}}>(최대 2개)</span></label>
-          <div className={s.chips}>
-            {MOODS.map(m => {
-              const selected = Array.isArray(episode.mood)
-                ? episode.mood.includes(m)
-                : episode.mood === m
-              const moodArr = Array.isArray(episode.mood) ? episode.mood : [episode.mood]
-              return (
-                <button key={m}
-                  className={`${s.chip} ${selected ? s.chipActive : ''}`}
-                  onClick={() => {
-                    if (selected) {
-                      // 선택 해제 (최소 1개 유지)
-                      const next = moodArr.filter(x => x !== m)
-                      dispatch({ type: 'SET_EPISODE', p: { mood: next.length ? next : moodArr } })
+        {/* 에피소드 설정 - 접기/펼치기 */}
+        <div className={s.epSection}>
+          <button className={s.epToggle} onClick={() => setEpisodeOpen(o => !o)}>
+            <span className={s.sideTitle}>에피소드 설정</span>
+            <span className={s.toggleIcon}>{episodeOpen ? '▲' : '▼'}</span>
+          </button>
+          {episodeOpen && (
+            <div className={s.epBody}>
+              <div className={s.field}>
+                <label>에피소드 번호</label>
+                <input
+                  type="number" min="1" value={episode.number}
+                  style={numError ? { borderColor: '#ef4444' } : {}}
+                  onChange={e => {
+                    const num = parseInt(e.target.value) || 1
+                    const isDup = Object.values(episodes || {}).some(
+                      ep => ep.id !== activeEpisodeId && ep.episode.number === num
+                    )
+                    if (isDup) {
+                      setNumError(`EP${num}은 이미 사용 중입니다`)
                     } else {
-                      // 최대 2개
-                      const next = moodArr.length >= 2 ? [moodArr[1], m] : [...moodArr, m]
-                      dispatch({ type: 'SET_EPISODE', p: { mood: next } })
+                      setNumError('')
+                      dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
                     }
                   }}
-                >{m}</button>
-              )
-            })}
-          </div>
-        </div>
-        <div className={s.field}>
-          <label>컷 수</label>
-          <div className={s.cutCountRow}>
-            <input type="number" min="1" max="20" value={episode.cutCount}
-              onChange={e => handleCutCountChange(e.target.value)} />
-            <span className={s.cutHint}>컷 (최대 20)</span>
-          </div>
-        </div>
-        <div className={s.field}>
-          <label>캐릭터 설정</label>
-          <textarea rows={3} value={episode.character}
-            onChange={e => dispatch({ type: 'SET_EPISODE', p: { character: e.target.value } })} />
-        </div>
-
-        <button className={s.genBtn} onClick={generateScript} disabled={loading}>
-          {loading ? (
-            <><span className={s.spinner} />{progress || '생성 중...'}</>
-          ) : '✨ Claude로 대본 생성'}
-        </button>
-
-        {progress && !loading && <div className={s.progressMsg}>{progress}</div>}
-
-        <button
-          className={`${s.exportBtn} ${flowRunning ? s.exportBtnRunning : ''}`}
-          onClick={handlePipelineExport}
-          disabled={flowRunning || !cuts.length}
-        >
-          {flowRunning
-            ? <><span className={s.spinner} />Flow 실행 중…</>
-            : '🚀 파이프라인 내보내기'}
-        </button>
-
-        {flowLogs.length > 0 && (
-          <div className={s.flowLog}>
-            {flowLogs.map((log, i) => (
-              <div key={i} className={`${s.flowLogLine} ${s[`flowLog_${log.type}`] || ''}`}>
-                {log.message}
+                />
+                {numError && (
+                  <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
+                )}
               </div>
-            ))}
-            {flowDone && <div className={s.flowComplete}>🎉 G3 이미지 생성 완료!</div>}
-          </div>
-        )}
-
-        <div className={s.divider} />
-        <div className={s.sideTitle}>컷 목록</div>
-        <div className={s.cutList}>
-          {cuts.map((c, i) => (
-            <button key={c.id} className={`${s.cutItem} ${activeCut === i ? s.cutActive : ''}`}
-              onClick={() => setActiveCut(i)}>
-              <span className={s.cutNo}>
-                CUT {c.no}
-                {c.cutType === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
-              </span>
-              <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
-            </button>
-          ))}
+              <div className={s.field}>
+                <label>에피소드 제목</label>
+                <input placeholder="예: 카페에서 혼자 쓰는 편지" value={episode.title}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { title: e.target.value } })} />
+              </div>
+              <div className={s.field}>
+                <label>배경 장소</label>
+                <select value={episode.location}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { location: e.target.value } })}>
+                  {LOCATIONS.map(l => <option key={l}>{l}</option>)}
+                </select>
+              </div>
+              <div className={s.field}>
+                <label>전체 분위기 <span style={{fontSize:10,color:'var(--text3)'}}>(최대 2개)</span></label>
+                <div className={s.chips}>
+                  {MOODS.map(m => {
+                    const selected = Array.isArray(episode.mood)
+                      ? episode.mood.includes(m)
+                      : episode.mood === m
+                    const moodArr = Array.isArray(episode.mood) ? episode.mood : [episode.mood]
+                    return (
+                      <button key={m}
+                        className={`${s.chip} ${selected ? s.chipActive : ''}`}
+                        onClick={() => {
+                          if (selected) {
+                            const next = moodArr.filter(x => x !== m)
+                            dispatch({ type: 'SET_EPISODE', p: { mood: next.length ? next : moodArr } })
+                          } else {
+                            const next = moodArr.length >= 2 ? [moodArr[1], m] : [...moodArr, m]
+                            dispatch({ type: 'SET_EPISODE', p: { mood: next } })
+                          }
+                        }}
+                      >{m}</button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div className={s.field}>
+                <label>컷 수</label>
+                <div className={s.cutCountRow}>
+                  <input type="number" min="1" max="20" value={episode.cutCount}
+                    onChange={e => handleCutCountChange(e.target.value)} />
+                  <span className={s.cutHint}>컷 (최대 20)</span>
+                </div>
+              </div>
+              <div className={s.field}>
+                <label>캐릭터 설정</label>
+                <textarea rows={3} value={episode.character}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { character: e.target.value } })} />
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* 컷 목록 - 나머지 공간 채움 */}
+        <div className={s.cutSection}>
+          <div className={s.cutSectionTitle}>컷 목록</div>
+          <div className={s.cutList}>
+            {cuts.map((c, i) => (
+              <button key={c.id} className={`${s.cutItem} ${activeCut === i ? s.cutActive : ''}`}
+                onClick={() => setActiveCut(i)}>
+                <span className={s.cutNo}>
+                  CUT {c.no}
+                  {c.cutType === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
+                </span>
+                <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 버튼 3개 하단 고정 */}
+        <div className={s.sideBottom}>
+          <button className={s.genBtn} onClick={generateScript} disabled={loading}>
+            {loading ? (
+              <><span className={s.spinner} />{progress || '생성 중...'}</>
+            ) : '✨ Claude로 대본 생성'}
+          </button>
+          {progress && !loading && <div className={s.progressMsg}>{progress}</div>}
+          <button
+            className={`${s.exportBtn} ${flowRunning ? s.exportBtnRunning : ''}`}
+            onClick={handlePipelineExport}
+            disabled={flowRunning || !cuts.length}
+          >
+            {flowRunning
+              ? <><span className={s.spinner} />Flow 실행 중…</>
+              : '🚀 파이프라인 내보내기'}
+          </button>
+          {flowLogs.length > 0 && (
+            <div className={s.flowLog}>
+              {flowLogs.map((log, i) => (
+                <div key={i} className={`${s.flowLogLine} ${s[`flowLog_${log.type}`] || ''}`}>
+                  {log.message}
+                </div>
+              ))}
+              {flowDone && <div className={s.flowComplete}>🎉 G3 이미지 생성 완료!</div>}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* Right: Editor */}

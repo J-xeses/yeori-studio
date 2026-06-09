@@ -325,6 +325,43 @@ app.post('/api/run-flow', (req, res) => {
   })
 })
 
+// ── ElevenLabs 목소리 목록 (클론 필터용) ─────────────────────
+app.get('/api/elevenlabs/voices', async (req, res) => {
+  const apiKey = req.headers['xi-api-key']
+  if (!apiKey) return res.status(401).json({ error: 'API 키 없음' })
+  try {
+    const upstream = await fetch('https://api.elevenlabs.io/v1/voices', {
+      headers: { 'xi-api-key': apiKey },
+    })
+    const body = await upstream.json()
+    res.status(upstream.status).json(body)
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
+// ── .env.local 키 업데이트 ────────────────────────────────────
+app.post('/api/update-env', (req, res) => {
+  const { key, value } = req.body
+  if (!key || value === undefined) return res.status(400).json({ error: 'key, value 필요' })
+  const envPath = path.join(ROOT, '.env.local')
+  try {
+    let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : ''
+    const lines = content.split('\n')
+    const idx = lines.findIndex(l => l.startsWith(`${key}=`))
+    if (idx >= 0) {
+      lines[idx] = `${key}=${value}`
+    } else {
+      if (content && !content.endsWith('\n')) lines.push('')
+      lines.push(`${key}=${value}`)
+    }
+    fs.writeFileSync(envPath, lines.join('\n'), 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')

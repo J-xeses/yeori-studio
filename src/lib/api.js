@@ -18,6 +18,11 @@ export const elUser = (apiKey) =>
     headers: { 'xi-api-key': apiKey },
   })
 
+export const elVoices = (apiKey) =>
+  fetch('/api/elevenlabs/voices', {
+    headers: { 'xi-api-key': apiKey },
+  })
+
 export const elTTS = (apiKey, voiceId, body) =>
   fetch(`/api/elevenlabs/text-to-speech/${voiceId}`, {
     method: 'POST',
