@@ -49,9 +49,10 @@ const ROOT = (() => {
 
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
+  // remote debugging 방식: Chrome을 --remote-debugging-port=9222 로 미리 실행
+  // chrome.exe --remote-debugging-port=9222
+  debuggingPort:   9222,
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  chromeProfile:   'C:\\Users\\won56\\AppData\\Local\\Google\\Chrome\\User Data',
-  chromeProfileDir: 'Default',
   downloadDir:     path.join(ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
   delayMs:         4000,   // 생성 요청 사이 대기 (레이트 리밋 방지)
@@ -270,7 +271,7 @@ async function main() {
 
       await registerCharacter(page)
     } finally {
-      await browser.close()
+      // 브라우저 유지
     }
     return
   }
@@ -292,8 +293,6 @@ async function main() {
 
   const epDir       = path.join(CONFIG.downloadDir, `ep${episode}`)
   const projectMarker = path.join(epDir, 'project_url.txt')
-  const charMarker    = path.join(epDir, 'character_registered.txt')
-  const closeupPath   = path.join(epDir, 'yeori_closeup.jpg')
   ensureDir(epDir)
 
   // 레퍼런스 이미지 → Claude API 얼굴 분석 → 프롬프트 앞에 자동 추가
@@ -316,8 +315,6 @@ async function main() {
   try {
     browser = await connectBrowser()
   } catch (err) {
-    console.error(`[flow] Chrome 실행 실패: ${err.message}`)
-    if (err.stack) console.error(err.stack)
     process.exit(1)
   }
 
@@ -349,32 +346,7 @@ async function main() {
     await sleep(2500)
     await waitForImagesStable(page)
 
-    // ── ③ 서여리 캐릭터 등록 (최초 1회, character_registered.txt 마커) ─
-    if (!fs.existsSync(charMarker)) {
-      // yeori-face.jpg 우선 사용, 없으면 referenceImage 폴백
-      const charImgPath = fs.existsSync(CONFIG.characterImage)
-        ? CONFIG.characterImage
-        : CONFIG.referenceImage
-      log('step', `③ 서여리 캐릭터 등록 중 (${path.relative(ROOT, charImgPath)})…`)
-      const regOk = await registerCharacterWithImage(page, charImgPath)
-      if (regOk) {
-        fs.writeFileSync(charMarker, new Date().toISOString(), 'utf-8')
-        log('ok', '③ 캐릭터 등록 완료')
-      } else {
-        log('warn', '③ 캐릭터 등록 실패 — 계속 진행 (이미지 일관성 저하 가능)')
-      }
-      await navigateBackToProject(page)
-    } else {
-      log('ok', `③ 서여리 캐릭터 이미 등록됨 (스킵)`)
-    }
-
-    // ── ④ 클로즈업 생성 (항상 재생성) ──────────────────────────────
-    log('step', '④ 클로즈업 얼굴 이미지 생성 중…')
-    await generateEpisodeCloseup(page, closeupPath)
-    log('ok', `④ 클로즈업 저장: ${path.relative(ROOT, closeupPath)}`)
-    await sleep(CONFIG.delayMs)
-
-    // ── ⑤ 컷별 이미지 생성 ──────────────────────────────────────────
+    // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const _ep = cut.episode ?? episode ?? 'x'
@@ -414,7 +386,7 @@ async function main() {
       }
     }
   } finally {
-    if (browser) await browser.close().catch(() => {})
+    // 브라우저 유지
   }
 
   printSummary(ok, fail, results)
@@ -424,25 +396,24 @@ async function main() {
 // ── 브라우저 설정 ─────────────────────────────────────────────────────
 
 async function connectBrowser() {
-  const profileDir = path.join(ROOT, '.chrome-profile-flow')
-  if (!fs.existsSync(profileDir)) fs.mkdirSync(profileDir, { recursive: true })
-
-  log('info', 'Chrome 전용 프로필로 실행 중…')
-  return puppeteer.launch({
-    executablePath:  CONFIG.chromeExe,
-    userDataDir:     profileDir,
-    headless:        false,
-    defaultViewport: null,
-    args: [
-      '--start-maximized',
-      '--disable-blink-features=AutomationControlled',
-      '--no-first-run',
-      '--no-default-browser-check',
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-extensions',
-    ],
+  const wsUrl = `http://127.0.0.1:${CONFIG.debuggingPort}/json/version`
+  let version
+  try {
+    const res = await fetch(wsUrl)
+    version = await res.json()
+  } catch {
+    console.error('\n' + '═'.repeat(56))
+    console.error('  Chrome에 연결할 수 없습니다.')
+    console.error('  Chrome을 먼저 아래 명령으로 실행해주세요:')
+    console.error(`\n  "${CONFIG.chromeExe}" --remote-debugging-port=${CONFIG.debuggingPort}`)
+    console.error('\n  (실행 중인 Chrome이 있으면 완전히 종료 후 위 명령 사용)')
+    console.error('═'.repeat(56) + '\n')
+    throw new Error(`Chrome remote debugging 포트(${CONFIG.debuggingPort})에 연결 실패`)
+  }
+  log('info', `Chrome 연결 완료 (${version.Browser})`)
+  return puppeteer.connect({
+    browserWSEndpoint: version.webSocketDebuggerUrl,
+    defaultViewport:   null,
   })
 }
 
@@ -470,22 +441,20 @@ async function navigateToFlow(page) {
   log('info', `Flow 접속 중: ${CONFIG.flowUrl}`)
   await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
 
-  // pricing 리다이렉트 = 로그인 필요. 로그인 후 재시도 (루프)
-  while (true) {
+  // 로그인 필요 판단: Google 로그인 페이지 또는 pricing 리다이렉트
+  const needsLogin = () => {
     const u = page.url()
-    if (!u.includes('#pricing') && !u.includes('/pricing')) break
-    log('warn', 'pricing 페이지로 리다이렉트됨 → Google 로그인 필요')
-    console.log('\n브라우저에서 Google 계정으로 로그인 후 Enter를 눌러주세요:')
-    await promptInput('')
-    await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    return u.includes('accounts.google.com') || u.includes('signin') ||
+           u.includes('#pricing') || u.includes('/pricing')
   }
 
-  // Google 계정 로그인 페이지로 넘어간 경우
-  if (page.url().includes('accounts.google.com') || page.url().includes('signin')) {
-    log('warn', 'Google 로그인 페이지 감지')
-    console.log('\n브라우저에서 Google 계정으로 로그인 후 Enter를 눌러주세요:')
+  if (needsLogin()) {
+    log('warn', '전용 프로필에 Google 로그인이 필요합니다.')
+    console.log('\n브라우저에서 Google 계정으로 로그인 후 Enter를 눌러주세요.')
     await promptInput('')
+    // 로그인 후 Flow 대시보드 재접속
     await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    if (needsLogin()) throw new Error('로그인 후에도 pricing 페이지로 리다이렉트됩니다. 로그인 상태를 확인하세요.')
   }
 
   const hadCookie = await page.evaluate(() => {
@@ -1127,18 +1096,92 @@ async function prepareInput(page) {
   return inputPos
 }
 
-// ── 로컬 파일을 "+" 패널에 직접 업로드해서 프롬프트 레퍼런스로 첨부 ──
+// ── 로컬 파일을 input[type="file"]에 직접 주입해서 프롬프트 레퍼런스로 첨부 ──
 
-async function attachLocalFile(page, filePath) {
+async function attachFileToPrompt(page, filePath) {
   if (!fs.existsSync(filePath)) {
-    log('warn', `레퍼런스 파일 없음: ${filePath}`)
+    log('warn', `[attachFileToPrompt] 파일 없음: ${filePath}`)
     return false
   }
 
-  if (!await clickPlusButton(page)) { log('warn', '+ 버튼 못 찾음'); return false }
+  const fileName = path.basename(filePath)
+
+  // contenteditable 근처 또는 전체 페이지(Shadow DOM 포함)에서 input[type="file"] 탐색
+  const fileInputHandle = await page.evaluateHandle(() => {
+    function deepFind(root) {
+      // contenteditable 부모 체인에서 먼저 탐색
+      for (const ce of root.querySelectorAll('div[contenteditable="true"]')) {
+        const r = ce.getBoundingClientRect()
+        if (r.width > 100 && r.top > window.innerHeight * 0.4) {
+          let node = ce.parentElement
+          for (let i = 0; i < 15 && node; i++, node = node.parentElement) {
+            const inp = node.querySelector('input[type="file"]')
+            if (inp) return inp
+          }
+        }
+      }
+      // 전체 Shadow DOM 포함 탐색
+      function search(r2) {
+        for (const el of r2.querySelectorAll('input[type="file"]')) return el
+        for (const el of r2.querySelectorAll('*'))
+          if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
+        return null
+      }
+      return search(root)
+    }
+    return deepFind(document)
+  })
+
+  const fileInput = fileInputHandle.asElement()
+  if (!fileInput) {
+    log('warn', `[attachFileToPrompt] input[type=file] 없음 → ${fileName} 건너뜀`)
+    await fileInputHandle.dispose()
+    return false
+  }
+
+  // 숨겨진 input도 파일 주입 가능하게 스타일 잠깐 해제
+  await page.evaluate(el => {
+    el.style.display = 'block'
+    el.style.visibility = 'visible'
+    el.style.opacity = '1'
+    el.style.position = 'fixed'
+    el.style.top = '0'
+    el.style.left = '0'
+    el.style.zIndex = '99999'
+  }, fileInput)
+
+  await fileInput.uploadFile(filePath)
+  log('info', `[attachFileToPrompt] ${fileName} → input[type=file] 주입 성공`)
   await sleep(1200)
 
-  // 전략 1: 패널에 이미 file input이 있으면 바로 업로드
+  // "프롬프트에 추가" 버튼 클릭
+  const addClicked = await clickAddToPrompt(page)
+  log(addClicked ? 'info' : 'warn',
+    `[attachFileToPrompt] ${fileName} 프롬프트에 추가 ${addClicked ? '완료' : '실패'}`)
+  await sleep(500)
+  return addClicked
+}
+
+// (구) attachLocalFile — 하위 호환용 래퍼
+async function attachLocalFile(page, filePath) {
+  if (!fs.existsSync(filePath)) {
+    log('warn', `[attachLocalFile] 파일 없음: ${filePath}`)
+    return false
+  }
+
+  const fileName = path.basename(filePath)
+  const fileBaseName = path.basename(filePath, path.extname(filePath))
+
+  if (!await clickPlusButton(page)) { log('warn', '[attachLocalFile] + 버튼 못 찾음'); return false }
+  await sleep(1200)
+
+  // 업로드 전 패널 이미지 src 스냅샷 (새 썸네일 감지용)
+  const beforeSrcs = await page.evaluate(() =>
+    [...document.querySelectorAll('img')].map(img => img.src)
+  )
+
+  // file input 탐색 (전략 1: 직접, 전략 2: 업로드 버튼 클릭 후)
+  let strategy = null
   let fileEl = (await page.evaluateHandle(() => {
     function s(root) {
       for (const el of root.querySelectorAll('input[type="file"]')) return el
@@ -1149,8 +1192,11 @@ async function attachLocalFile(page, filePath) {
     return s(document)
   })).asElement()
 
-  // 전략 2: "새 미디어" / "업로드" 버튼 클릭 후 file input 재탐색
-  if (!fileEl) {
+  if (fileEl) {
+    strategy = 1
+    log('ok', '[attachLocalFile][전략1] file input 발견')
+  } else {
+    log('info', '[attachLocalFile][전략1] file input 없음 → [전략2] 업로드 버튼 클릭')
     const clicked = await page.evaluate(() => {
       for (const el of document.querySelectorAll('button, a, [role="button"]')) {
         const t = el.textContent.trim()
@@ -1163,7 +1209,7 @@ async function attachLocalFile(page, filePath) {
       return null
     })
     if (clicked) {
-      log('info', `"${clicked}" 클릭 → file input 대기`)
+      log('info', `[attachLocalFile][전략2] "${clicked}" 클릭 → file input 대기`)
       await sleep(1000)
       fileEl = (await page.evaluateHandle(() => {
         function s(root) {
@@ -1174,23 +1220,73 @@ async function attachLocalFile(page, filePath) {
         }
         return s(document)
       })).asElement()
+      if (fileEl) { strategy = 2; log('ok', '[attachLocalFile][전략2] file input 발견') }
+      else log('warn', '[attachLocalFile][전략2] file input 여전히 없음')
+    } else {
+      log('warn', '[attachLocalFile][전략2] 업로드 버튼 못 찾음')
     }
   }
 
   if (!fileEl) {
-    log('warn', `file input 없음 → ${path.basename(filePath)} 첨부 건너뜀`)
+    log('warn', `[attachLocalFile] file input 없음 → ${fileName} 건너뜀`)
     await page.keyboard.press('Escape').catch(() => {})
     return false
   }
 
   await fileEl.uploadFile(filePath)
-  log('info', `업로드: ${path.basename(filePath)}`)
+  log('info', `[attachLocalFile] 업로드 완료: ${fileName} (전략${strategy})`)
   await sleep(2000)
 
-  const added = await clickAddToPrompt(page)
-  if (added) { log('info', `${path.basename(filePath)} 레퍼런스 추가 완료`); await sleep(800); return true }
+  // 업로드 후 새로 나타난 썸네일 img 탐색 → 부모 카드 클릭
+  const thumbInfo = await page.evaluate((prevSrcs) => {
+    function clickCard(img) {
+      let el = img
+      for (let i = 0; i < 8; i++) {
+        if (!el) break
+        const role = (el.getAttribute('role') || '').toLowerCase()
+        const tag = el.tagName.toLowerCase()
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 && (
+          role === 'option' || role === 'button' || role === 'listitem' || role === 'gridcell' ||
+          tag === 'li' || tag === 'article'
+        )) { el.click(); return `<${el.tagName} role="${role}">` }
+        if (r.width > 0 && tag === 'div' && el.querySelector('img') && r.width > 30 && r.height > 30 && r.height < 300) {
+          el.click(); return `<DIV ${Math.round(r.width)}x${Math.round(r.height)}>`
+        }
+        el = el.parentElement
+      }
+      img.click(); return '<IMG fallback>'
+    }
+    const newImgs = [...document.querySelectorAll('img')].filter(img => {
+      const r = img.getBoundingClientRect()
+      return !prevSrcs.includes(img.src) && r.width > 20 && r.width < 400 && r.height > 20
+    })
+    if (!newImgs.length) return null
+    return clickCard(newImgs[0])
+  }, beforeSrcs)
 
-  log('warn', '"프롬프트에 추가" 못 찾음')
+  if (thumbInfo) log('ok', `[attachLocalFile] 새 썸네일 카드 클릭: ${thumbInfo}`)
+  else log('warn', '[attachLocalFile] 새 썸네일 없음 — 선택 없이 진행')
+  await sleep(800)
+
+  // 진단: 버튼 목록 + 스크린샷
+  const visibleBtns = await page.evaluate(() =>
+    [...document.querySelectorAll('button, [role="button"]')]
+      .filter(el => el.getBoundingClientRect().width > 0)
+      .map(el => el.textContent.trim().slice(0, 30))
+      .filter(Boolean)
+  )
+  log('info', `[attachLocalFile] 버튼 목록: ${JSON.stringify(visibleBtns)}`)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, `debug_attach_${fileBaseName}.png`) })
+
+  const added = await clickAddToPrompt(page)
+  if (added) {
+    log('ok', `[attachLocalFile] "${fileName}" 프롬프트 추가 완료 (전략${strategy})`)
+    await sleep(800)
+    return true
+  }
+
+  log('warn', `[attachLocalFile] "프롬프트에 추가" 못 찾음 → debug_attach_${fileBaseName}.png 확인`)
   return false
 }
 
@@ -1198,10 +1294,6 @@ async function attachLocalFile(page, filePath) {
 
 async function generateEpisodeCloseup(page, savePath) {
   const pos = await prepareInput(page)
-
-  // yeori-face.jpg 패널 목록에서 이름 클릭 (파일 업로드 시도 금지)
-  const faceAttached = await attachFaceImageToPrompt(page)
-  if (!faceAttached) log('warn', 'yeori-face.jpg 패널 항목 클릭 실패 — 텍스트만으로 생성')
 
   await page.mouse.click(pos.x, pos.y)
   await sleep(300); await page.keyboard.press('End'); await sleep(100)
@@ -1232,25 +1324,118 @@ async function generateEpisodeCloseup(page, savePath) {
   if (!saved) throw new Error('클로즈업 이미지 저장 실패')
 }
 
-// ── 컷 생성: yeori-face.jpg + yeori_closeup.jpg 둘 다 레퍼런스 ────────
+// ── hover로 레퍼런스 썸네일 좌표 탐색 ──────────────────────────────────
+
+async function findReferenceThumbs(page) {
+  // 컷이 쌓이면 레퍼런스 썸네일이 오른쪽으로 밀려나므로, 상단 이미지 스트립을 오른쪽 끝으로 스크롤
+  await page.evaluate(() => {
+    const strip = [...document.querySelectorAll('*')].find(el => {
+      const r = el.getBoundingClientRect()
+      return el.scrollWidth > el.clientWidth + 50
+        && r.top < window.innerHeight * 0.45
+        && r.top > 0
+        && r.height > 50
+        && r.height < 450
+    })
+    if (strip) strip.scrollLeft = strip.scrollWidth
+  })
+  await sleep(400)
+
+  // 화면에 보이는 img 요소 좌표 수집 (40px 이상, 화면 높이 90% 이내, 화면 폭 이내)
+  const imgPositions = await page.evaluate(() =>
+    [...document.querySelectorAll('img')]
+      .map(img => {
+        const r = img.getBoundingClientRect()
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), w: Math.round(r.width), h: Math.round(r.height) }
+      })
+      .filter(p => p.w >= 40 && p.h >= 40
+        && p.y > 0 && p.y < window.innerHeight * 0.9
+        && p.x > 0 && p.x < window.innerWidth)
+  )
+
+  log('info', `[findReferenceThumbs] 탐색 이미지 수: ${imgPositions.length}`)
+
+  const result = { face: null, closeup: null }
+
+  for (const pos of imgPositions) {
+    if (result.face && result.closeup) break
+
+    await page.mouse.move(pos.x, pos.y)
+    await sleep(600)
+
+    const appeared = await page.evaluate(() => {
+      const text = document.body.innerText.toLowerCase()
+      return {
+        face: text.includes('yeori-face') || text.includes('yeori_face'),
+        closeup: text.includes('yeori-closeup') || text.includes('yeori_closeup')
+      }
+    })
+
+    if (appeared.face && !result.face) {
+      result.face = pos
+      log('info', `[findReferenceThumbs] yeori-face 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    }
+    if (appeared.closeup && !result.closeup) {
+      result.closeup = pos
+      log('info', `[findReferenceThumbs] yeori-closeup 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    }
+  }
+
+  if (!result.face) log('warn', '[findReferenceThumbs] yeori-face 썸네일 못 찾음')
+  if (!result.closeup) log('warn', '[findReferenceThumbs] yeori-closeup 썸네일 못 찾음')
+  return result
+}
+
+// ── 썸네일 좌표 → 프롬프트 입력창으로 드래그 ────────────────────────────
+
+async function dragToPrompt(page, fromPos, toPos) {
+  await page.mouse.move(fromPos.x, fromPos.y)
+  await sleep(200)
+  await page.mouse.down()
+  await sleep(150)
+  const steps = 12
+  for (let i = 1; i <= steps; i++) {
+    await page.mouse.move(
+      Math.round(fromPos.x + (toPos.x - fromPos.x) * (i / steps)),
+      Math.round(fromPos.y + (toPos.y - fromPos.y) * (i / steps))
+    )
+    await sleep(25)
+  }
+  await sleep(200)
+  await page.mouse.up()
+  await sleep(600)
+}
+
+// ── 컷 생성: hover로 레퍼런스 탐색 → 드래그앤드롭 → 프롬프트 텍스트 → 생성 ──
 
 async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const ep = cut.episode ?? defaultEpisode ?? 'x'
   const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
 
-  log('step', `컷 생성 중… (face + closeup 레퍼런스, ${type === 'longform' ? '16:9' : '9:16'})`)
+  log('step', `컷 생성 중… (${type === 'longform' ? '16:9' : '9:16'})`)
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  // 레퍼런스 1: yeori-face.jpg (이름 매칭)
-  await attachFaceImageToPrompt(page)
-  // 레퍼런스 2: yeori-face.jpg 제외 최신 이미지 (closeup)
-  const closeupOk = await attachCloseupToPrompt(page)
-  if (!closeupOk) log('warn', 'closeup 첨부 실패 → yeori-face.jpg 단독으로 진행')
-  await setAspectRatio(page, type)
+  // hover로 레퍼런스 썸네일 탐색 후 프롬프트 입력창으로 드래그
+  const thumbs = await findReferenceThumbs(page)
+  if (thumbs.face) {
+    await dragToPrompt(page, thumbs.face, pos)
+    log('info', '[processCut] yeori-face 드래그 완료')
+  } else {
+    log('warn', '[processCut] yeori-face 썸네일 못 찾음 → 건너뜀')
+  }
+  if (thumbs.closeup) {
+    await dragToPrompt(page, thumbs.closeup, pos)
+    log('info', '[processCut] yeori-closeup 드래그 완료')
+  } else {
+    log('warn', '[processCut] yeori-closeup 썸네일 못 찾음 → 건너뜀')
+  }
 
+  await setAspectRatio(page, type)
   await page.mouse.click(pos.x, pos.y)
-  await sleep(300); await page.keyboard.press('End'); await sleep(100)
+  await sleep(300)
+  await page.keyboard.press('End')
+  await sleep(100)
   await page.keyboard.type(finalPrompt, { delay: 15 })
   await sleep(500)
 
@@ -1277,119 +1462,34 @@ async function clickImageTab(page) {
   })
 }
 
-// ── attachFaceImageToPrompt: 패널 첫 번째(oldest) 이미지 선택 ────────
-
-async function attachFaceImageToPrompt(page) {
-  if (!await clickPlusButton(page)) { log('warn', 'face: + 버튼 못 찾음'); return false }
-  await sleep(1500)
-
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_face_panel.png') })
-
-  const tabOk = await clickImageTab(page)
-  if (!tabOk) log('warn', 'face: 이미지 탭 못 찾음, 현재 패널에서 시도')
-  await sleep(800)
-
-  // 파일명 "yeori-face" / "yeori-face.jpg" 텍스트 매칭만 사용 (위치 기준 없음)
-  const faceItemClicked = await page.evaluate(() => {
-    const NAMES = ['yeori-face.jpg', 'yeori-face', 'yeori_face.jpg', 'yeori_face']
-    for (const name of NAMES) {
-      const found = [...document.querySelectorAll('*')].find(el => {
-        const txt = el.textContent.trim()
-        const r = el.getBoundingClientRect()
-        return txt.toLowerCase().includes(name.toLowerCase())
-          && r.width > 0 && r.width < 400 && r.height > 0 && r.height < 200
-      })
-      if (found) { found.click(); return found.textContent.trim().slice(0, 40) }
-    }
-    return null
-  })
-
-  if (!faceItemClicked) {
-    await page.keyboard.press('Escape').catch(() => {})
-    throw new Error('yeori-face.jpg를 찾을 수 없습니다. 패널에 yeori-face.jpg가 등록되어 있는지 확인하세요.')
-  }
-
-  log('info', `face: yeori-face.jpg 클릭: "${faceItemClicked}"`)
-  await sleep(800)
-
-  const added = await clickAddToPrompt(page)
-  if (added) { log('info', 'yeori-face.jpg 프롬프트에 추가 완료'); await sleep(800); return true }
-
-  log('warn', 'face: "프롬프트에 추가" 못 찾음')
-  await page.keyboard.press('Escape').catch(() => {})
-  return false
-}
-
-// ── attachCloseupToPrompt: yeori-face.jpg 제외 최신 이미지 선택 ────────
-
-async function attachCloseupToPrompt(page) {
-  if (!await clickPlusButton(page)) { log('warn', 'closeup: + 버튼 못 찾음'); return false }
-  await sleep(1500)
-
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_closeup_panel.png') })
-
-  const tabOk = await clickImageTab(page)
-  if (!tabOk) log('warn', 'closeup: 이미지 탭 못 찾음, 현재 패널에서 시도')
-  await sleep(800)
-
-  // 패널 이미지 전체 수집 + 레이블 추출 + yeori-face.jpg 제외
-  const result = await page.evaluate(() => {
-    const FACE_NAMES = ['yeori-face', 'yeori_face']
-    const imgs = [...document.querySelectorAll('img')].filter(img => {
-      const r = img.getBoundingClientRect()
-      return img.complete && img.naturalWidth > 60
-        && r.width > 40 && r.width < 400 && r.height > 40
-        && r.top > 80 && r.left > 80
-    })
-
-    const items = imgs.map(img => {
-      const r = img.getBoundingClientRect()
-      // 부모 체인에서 파일명 레이블 탐색 (최대 5단계)
-      let label = ''
-      let el = img.parentElement
-      for (let i = 0; i < 5; i++) {
-        if (!el) break
-        const txt = el.textContent.trim()
-        if (txt && txt.length > 0 && txt.length < 100) { label = txt; break }
-        el = el.parentElement
-      }
-      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), top: r.top, label: label.slice(0, 60) }
-    })
-
-    const logList = items.map((item, i) => `[${i}] y=${Math.round(item.top)} "${item.label}"`)
-    const isFace = item => FACE_NAMES.some(n => item.label.toLowerCase().includes(n))
-    const candidates = items.filter(item => !isFace(item)).sort((a, b) => a.top - b.top)
-
-    return { logList, total: items.length, candidate: candidates[0] || null }
-  })
-
-  log('info', `closeup: 패널 이미지 ${result.total}개:`)
-  result.logList.forEach(l => log('info', `  ${l}`))
-
-  if (!result.candidate) {
-    log('warn', 'closeup: yeori-face.jpg 외 이미지 없음 → 건너뜀')
-    await page.keyboard.press('Escape').catch(() => {})
-    return false
-  }
-
-  log('info', `closeup: 선택 → "${result.candidate.label}" at (${result.candidate.x}, ${result.candidate.y})`)
-  await page.mouse.click(result.candidate.x, result.candidate.y)
-  await sleep(800)
-
-  const added = await clickAddToPrompt(page)
-  if (added) { log('info', 'closeup 이미지 프롬프트에 추가 완료'); await sleep(800); return true }
-
-  log('warn', 'closeup: "프롬프트에 추가" 못 찾음')
-  await page.keyboard.press('Escape').catch(() => {})
-  return false
-}
-
 async function clickAddToPrompt(page) {
-  return page.evaluate(() => {
-    for (const el of document.querySelectorAll('button')) {
-      if (el.textContent.includes('프롬프트에 추가') && !el.disabled) { el.click(); return true }
+  // 1순위: XPath로 텍스트 직접 매칭
+  try {
+    const btns = await page.$x('//button[contains(normalize-space(.), "프롬프트에 추가") and not(@disabled)]')
+    for (const btn of btns) {
+      const clicked = await btn.evaluate(el => {
+        if (el.getBoundingClientRect().width === 0) return false
+        el.click(); return true
+      })
+      if (clicked) return true
     }
-    return false
+  } catch {}
+
+  // 2순위: Shadow DOM 포함 전체 탐색 (button + [role="button"])
+  return page.evaluate(() => {
+    const re = /프롬프트에 추가|add to prompt/i
+    function search(root) {
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        if (re.test(el.textContent) && !el.disabled && el.getBoundingClientRect().width > 0) {
+          el.click(); return true
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
+      }
+      return false
+    }
+    return search(document)
   })
 }
 
@@ -1673,10 +1773,11 @@ async function saveNewImage(page, beforeItems, cutNo, episode, prefix = 'cut') {
   // 3분할 감지 (가로/세로 비율 > 1.3): 중앙 패널만 크롭
   if (target.w > target.h * 1.3) {
     log('info', `3분할 이미지 감지 → 중앙 패널 크롭 (${target.w}×${target.h})`)
-    const croppedBase64 = await page.evaluate(async (filePath, panels) => {
+    // file:// URL 대신 base64 data URL 사용 (file:// 로드 시 페이지 프레임 분리 버그 방지)
+    const fileBase64 = fs.readFileSync(outPath).toString('base64')
+    const croppedBase64 = await page.evaluate(async (b64, panels) => {
       return new Promise(resolve => {
         const img = new Image()
-        img.crossOrigin = 'anonymous'
         img.onload = () => {
           const panelW = Math.floor(img.width / panels)
           const startX = Math.floor((img.width - panelW) / 2) // 중앙 패널
@@ -1688,9 +1789,9 @@ async function saveNewImage(page, beforeItems, cutNo, episode, prefix = 'cut') {
           resolve(canvas.toDataURL('image/jpeg', 0.95).split(',')[1])
         }
         img.onerror = () => resolve(null)
-        img.src = 'file://' + filePath.replace(/\\/g, '/')
+        img.src = 'data:image/jpeg;base64,' + b64
       })
-    }, outPath, 3)
+    }, fileBase64, 3)
 
     if (croppedBase64) {
       fs.writeFileSync(outPath, Buffer.from(croppedBase64, 'base64'))
