@@ -1,0 +1,12 @@
+{
+  "episode": 4,
+  "title": "EP4 테스트",
+  "cuts": [
+    {
+      "no": 1,
+      "episode": 4,
+      "scene": "카페 창가",
+      "imagePrompt": "Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. Sitting by cafe window, morning light streaming in, holding a warm latte with both hands, soft smile, looking out window. Photorealistic 8K cinematic 9:16, background people must not interact with main character."
+    }
+  ]
+}

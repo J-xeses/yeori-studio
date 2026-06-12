@@ -5,17 +5,6 @@ const SERVER = 'http://localhost:3001'
 const AppContext = createContext(null)
 const STORAGE_KEY = 'yeori-studio-v2'
 
-const stripShotDir = (t) => (t || '')
-  .replace(/^\s*(샷\s*타입\s*[:：]\s*)?(CLOSEUP|FULLBODY)(\s+SHOT)?\s*[-—·]?\s*/i, '')
-  .replace(/\s*(CLOSEUP|FULLBODY)(\s+SHOT)?\s*$/i, '')
-  .trim()
-
-const cleanShotCuts = (cuts) => cuts.map(c => ({
-  ...c,
-  dialogue:  stripShotDir(c.dialogue),
-  narration: stripShotDir(c.narration),
-}))
-
 const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,
   scene: '', action: '', character: '서여리',
@@ -59,7 +48,7 @@ const defaultState = {
   cuts: makeCuts(7),
   scriptRaw: '',
 
-  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 50, tone: 50, speed: 1.0 },
+  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0 },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70 },
@@ -78,13 +67,12 @@ function reducer(state, action) {
       const openTabIds = (state.openTabIds || []).includes(action.id)
         ? state.openTabIds
         : [...(state.openTabIds || []), action.id]
-      const cleanedCuts = cleanShotCuts(ep.cuts)
       return {
         ...state,
         activeEpisodeId: action.id,
         openTabIds,
         episode: ep.episode,
-        cuts: cleanedCuts,
+        cuts: ep.cuts,
         scriptRaw: ep.scriptRaw || '',
       }
     }
@@ -275,6 +263,13 @@ function reducer(state, action) {
   }
 }
 
+const LEGACY_CHARACTER = '서여리 - 20대 중반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, AI 크리에이터'
+const CURRENT_CHARACTER = '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터'
+
+function upgradeCharacter(val) {
+  return val === LEGACY_CHARACTER ? CURRENT_CHARACTER : val
+}
+
 function migrateState(saved, init) {
   if (!saved.episodes) {
     const epId = defaultEpisodeId
@@ -289,25 +284,19 @@ function migrateState(saved, init) {
     }
     saved.activeEpisodeId = epId
   }
+  // 캐릭터 기본값 구버전 → 현재버전 자동 업데이트
+  if (saved.episode?.character)
+    saved.episode = { ...saved.episode, character: upgradeCharacter(saved.episode.character) }
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.episode?.character)
+        ep.episode = { ...ep.episode, character: upgradeCharacter(ep.episode.character) }
+    })
+  }
   if (!saved.openTabIds || !saved.openTabIds.length)
     saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
   saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
   if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
-
-  // 캐릭터 설정 구버전 → 신버전 자동 마이그레이션
-  const OLD_CHAR = '서여리 - 20대 중반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, AI 크리에이터'
-  const NEW_CHAR = '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터'
-  for (const ep of Object.values(saved.episodes)) {
-    if (ep.episode?.character === OLD_CHAR) ep.episode.character = NEW_CHAR
-  }
-  if (saved.episode?.character === OLD_CHAR) saved.episode.character = NEW_CHAR
-
-  // 모든 에피소드 컷에서 샷타입 지시어 일괄 정리
-  for (const ep of Object.values(saved.episodes)) {
-    ep.cuts = cleanShotCuts(ep.cuts)
-  }
-  if (saved.cuts) saved.cuts = cleanShotCuts(saved.cuts)
-
   return { ...init, ...saved }
 }
 
