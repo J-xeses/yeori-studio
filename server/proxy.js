@@ -361,6 +361,104 @@ app.get('/api/elevenlabs/voices', async (req, res) => {
   }
 })
 
+// ── POST /api/run-video — video-prompts 저장 후 Veo 자동 실행 (SSE) ──
+app.post('/api/run-video', (req, res) => {
+  const { ep, prompts } = req.body
+  if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
+
+  const videoDir    = path.join(ROOT, 'downloads', 'video')
+  const promptsPath = path.join(videoDir, 'video-prompts.json')
+  fs.mkdirSync(videoDir, { recursive: true })
+  fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+
+  const send = data => {
+    try { res.write(`data: ${JSON.stringify(data)}\n\n`) } catch {}
+  }
+  send({ type: 'saved', message: 'video-prompts.json 저장 완료' })
+
+  const episode    = prompts.episode ?? ep ?? null
+  const scriptPath = path.join(ROOT, 'scripts', 'video-automation.js')
+  const nodeArgs   = [scriptPath]
+  if (episode != null) nodeArgs.push(`--ep=${episode}`)
+
+  console.log(`[run-video] EP=${episode ?? 'all'} (req.ep=${ep ?? 'none'}, prompts.episode=${prompts.episode ?? 'none'})`)
+  console.log(`[run-video] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
+
+  const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
+
+  const parseLine = line => {
+    if (!line.trim()) return
+    const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*생성/)
+    if (progressMatch) {
+      send({ type: 'progress', current: +progressMatch[1], total: +progressMatch[2], cutNo: +progressMatch[3] })
+      return
+    }
+    const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
+    if (doneMatch) {
+      send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo: +doneMatch[3] })
+      return
+    }
+    const errMatch = line.match(/CUT\s*(\d+).*실패/)
+    if (errMatch) {
+      send({ type: 'cut_error', cutNo: +errMatch[1] })
+    }
+  }
+
+  let outBuf = ''
+  proc.stdout.on('data', chunk => {
+    outBuf += chunk.toString()
+    const lines = outBuf.split('\n')
+    outBuf = lines.pop()
+    lines.forEach(l => parseLine(l))
+  })
+
+  let errBuf = ''
+  proc.stderr.on('data', chunk => {
+    errBuf += chunk.toString()
+    const lines = errBuf.split('\n')
+    errBuf = lines.pop()
+    lines.forEach(l => {
+      const line = l.trim()
+      if (!line || line.startsWith('ExperimentalWarning')) return
+      console.error('[run-video stderr]', line)
+      if (line.includes('Error') || line.includes('error') ||
+          line.includes('오류') || line.includes('실패') || line.includes('치명')) {
+        send({ type: 'log', level: 'error', message: line })
+      }
+    })
+  })
+
+  proc.on('close', code => {
+    if (outBuf.trim()) parseLine(outBuf)
+    if (errBuf.trim()) {
+      console.error('[run-video stderr 잔여]', errBuf)
+      send({ type: 'log', level: 'error', message: errBuf.trim() })
+    }
+    if (code === null) {
+      send({ type: 'complete', success: false, code: null, reason: '프로세스가 예기치 않게 종료되었습니다 (signal)' })
+    } else {
+      console.log(`[run-video] 종료 코드: ${code}`)
+      send({ type: 'complete', success: code === 0, code })
+    }
+    res.end()
+  })
+
+  proc.on('error', err => {
+    console.error('[run-video] spawn 오류:', err.message)
+    send({ type: 'error', message: `video-automation 실행 실패: ${err.message}`, detail: err.code ?? '' })
+    res.end()
+  })
+
+  req.on('close', () => {
+    console.log('[run-video] 클라이언트 연결 종료 (video 프로세스는 계속 실행)')
+  })
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
