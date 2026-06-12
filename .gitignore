@@ -29,3 +29,7 @@ dist-ssr
 *.sw?
 .vercel
 .env*
+
+# 런타임 생성 파일
+downloads/
+data/

@@ -361,28 +361,6 @@ app.get('/api/elevenlabs/voices', async (req, res) => {
   }
 })
 
-// ── .env.local 키 업데이트 ────────────────────────────────────
-app.post('/api/update-env', (req, res) => {
-  const { key, value } = req.body
-  if (!key || value === undefined) return res.status(400).json({ error: 'key, value 필요' })
-  const envPath = path.join(ROOT, '.env.local')
-  try {
-    let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : ''
-    const lines = content.split('\n')
-    const idx = lines.findIndex(l => l.startsWith(`${key}=`))
-    if (idx >= 0) {
-      lines[idx] = `${key}=${value}`
-    } else {
-      if (content && !content.endsWith('\n')) lines.push('')
-      lines.push(`${key}=${value}`)
-    }
-    fs.writeFileSync(envPath, lines.join('\n'), 'utf-8')
-    res.json({ ok: true })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
