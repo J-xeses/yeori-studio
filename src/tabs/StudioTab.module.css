@@ -115,6 +115,34 @@
 }
 .regenBtn:hover { background: rgba(167,139,250,.2); }
 
+/* Flow status bar */
+.flowStatusBar {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 20px; background: var(--bg-panel);
+  border-bottom: 1px solid var(--border); flex-shrink: 0;
+  overflow-x: auto;
+}
+.flowStep {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 5px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg-input);
+  min-width: 80px; text-align: center;
+}
+.flowStepDone { border-color: rgba(34,197,94,.4); background: rgba(34,197,94,.08); }
+.flowStepPartial { border-color: rgba(167,139,250,.4); background: rgba(167,139,250,.08); }
+.flowStepKey { font-size: 11px; font-weight: 800; color: var(--text-3); }
+.flowStepDone .flowStepKey { color: #4ade80; }
+.flowStepPartial .flowStepKey { color: var(--accent-light); }
+.flowStepLabel { font-size: 10px; color: var(--text-3); }
+.flowStepCount { font-size: 11px; font-weight: 700; color: var(--text-2); }
+.flowArrow { color: var(--text-3); font-size: 14px; font-weight: 700; padding: 0 4px; flex-shrink: 0; }
+
+/* G-point card badges */
+.gBadge { font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
+.g1Badge { background: rgba(99,102,241,.15); color: #818cf8; border: 1px solid rgba(99,102,241,.3); }
+.g3Badge { background: rgba(20,184,166,.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,.3); }
+.g2Badge { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+
 .approveBarWrap { padding: 0 16px 8px; flex-shrink: 0; }
 .approveBar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;

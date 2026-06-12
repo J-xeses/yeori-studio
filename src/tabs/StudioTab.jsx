@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
-import { setGPoint } from '../lib/gpoints'
+import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import s from './StudioTab.module.css'
 
 const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
@@ -37,6 +37,7 @@ export default function StudioTab() {
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
   const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
+  const [gData, setGData] = useState(() => loadGPoints())
   const fileRefs = useRef({})
 
   useEffect(() => {
@@ -276,8 +277,10 @@ export default function StudioTab() {
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
   }
 
-  const cutsWithImages = cuts.filter(c => images[c.id])
-  const allG2 = cutsWithImages.length > 0 && cutsWithImages.every(c => confirmed[c.id])
+  const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id])
+  const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+  const g3Count = cuts.filter(c => images[c.id]).length
+  const g2Count = cuts.filter(c => confirmed[c.id]).length
 
   const exportPromptsJson = () => runFlow()
 
@@ -347,6 +350,29 @@ export default function StudioTab() {
         </div>
       </div>
 
+      {/* G1→G3→G2→G4 흐름 상태 바 */}
+      {cuts.length > 0 && (
+        <div className={s.flowStatusBar}>
+          {[
+            { key: 'G1', label: '스크립트', count: g1Count },
+            { key: 'G3', label: '이미지 생성', count: g3Count },
+            { key: 'G2', label: '이미지 컨펌', count: g2Count },
+            { key: 'G4', label: '최종 승인', count: allConfirmed ? cuts.length : 0 },
+          ].flatMap((step, i, arr) => {
+            const done = step.count === cuts.length
+            const partial = step.count > 0 && !done
+            return [
+              <div key={step.key} className={`${s.flowStep} ${done ? s.flowStepDone : partial ? s.flowStepPartial : ''}`}>
+                <span className={s.flowStepKey}>{step.key}</span>
+                <span className={s.flowStepLabel}>{step.label}</span>
+                <span className={s.flowStepCount}>{step.count}/{cuts.length}</span>
+              </div>,
+              ...(i < arr.length - 1 ? [<span key={`arr${i}`} className={s.flowArrow}>→</span>] : []),
+            ]
+          })}
+        </div>
+      )}
+
       {/* 프록시 서버 연결 경고 */}
       {proxyOk === false && (
         <div style={{
@@ -391,16 +417,19 @@ export default function StudioTab() {
         </div>
       )}
 
-      {allG2 && (
+      {allConfirmed && (
         <div className={s.approveBarWrap}>
           <div className={s.approveBar}>
             <div>
-              <div className={s.approveBadge}>✅ G2 완료</div>
-              <div className={s.approveText}>모든 이미지 컨펌됨 — TTS 생성을 시작할까요?</div>
+              <div className={s.approveBadge}>🏆 G4 최종 승인 준비 완료</div>
+              <div className={s.approveText}>모든 이미지 컨펌됨 — G4 승인 후 TTS 생성을 시작합니다</div>
             </div>
             <button className={s.approveBtn}
-              onClick={() => dispatch({ type: 'SET_TAB', p: 'tts' })}>
-              TTS 탭으로 이동 →
+              onClick={() => {
+                cuts.forEach(c => setGPoints(c.no, { g2: true, g4: true }))
+                dispatch({ type: 'SET_TAB', p: 'tts' })
+              }}>
+              G4 최종 승인 → TTS 탭
             </button>
           </div>
         </div>
@@ -412,6 +441,9 @@ export default function StudioTab() {
             <div className={s.cardHeader}>
               <span className={s.cutBadge}>CUT {cut.no}</span>
               <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
+              {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
+              {images[cut.id] && <span className={`${s.gBadge} ${s.g3Badge}`}>G3</span>}
+              {confirmed[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
             </div>
 
             <div className={s.imageArea}
@@ -483,7 +515,10 @@ export default function StudioTab() {
               {!confirmed[cut.id] ? (
                 <button className={s.confirmBtn}
                   disabled={!images[cut.id]}
-                  onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
+                  onClick={() => {
+                    setConfirmed(p => ({ ...p, [cut.id]: true }))
+                    setGPoint(cut.no, 'g2', true)
+                  }}>
                   ✅ 컨펌
                 </button>
               ) : (
