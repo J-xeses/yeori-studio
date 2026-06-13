@@ -493,94 +493,157 @@ async function switchToVideoMode(page, imagePath) {
   return true
 }
 
+// ── DOM 전체 인터랙티브 요소 덤프 (디버깅용) ──────────────────────────
+
+async function debugDump(page, label) {
+  const items = await page.evaluate(() => {
+    const results = []
+    function scan(root, depth = 0) {
+      if (depth > 12) return
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 4 || r.height < 4) continue
+        const txt = (el.textContent || '').trim()
+        if (!txt || txt.length > 80) continue
+        const isInteractive = (
+          el.tagName === 'BUTTON' || el.tagName === 'INPUT' || el.tagName === 'SELECT' ||
+          el.getAttribute('role') || el.onclick || el.getAttribute('tabindex') != null
+        )
+        if (isInteractive && el.children.length <= 6) {
+          results.push({
+            tag: el.tagName,
+            role: el.getAttribute('role') || '',
+            txt: txt.slice(0, 50),
+            label: (el.getAttribute('aria-label') || '').slice(0, 40),
+            x: Math.round(r.left), y: Math.round(r.top),
+            w: Math.round(r.width), h: Math.round(r.height),
+          })
+        }
+        if (el.shadowRoot) scan(el.shadowRoot, depth + 1)
+      }
+    }
+    scan(document)
+    return results
+  })
+  log('info', `[dump:${label}] ${items.length}개 요소:`)
+  items.slice(0, 25).forEach(e =>
+    log('info', `  <${e.tag} role="${e.role}"> "${e.txt}" aria="${e.label}" (${e.x},${e.y}) ${e.w}x${e.h}`)
+  )
+  await page.screenshot({ path: path.join(CONFIG.videoDir, `debug_dump_${label}.png`) })
+}
+
 // ── 비디오 모델 선택 (Omni Flash) ────────────────────────────────────
+// 전체 DOM 스캔: role/tag 무관하게 텍스트 매칭 → 직접 클릭
 
 async function selectVideoModel(page, modelName = CONFIG.preferredModel) {
-  // 1단계: 모델 드롭다운 트리거 찾기
-  const trigger = await page.evaluate((name) => {
-    const patterns = [name, 'Flash', 'Omni', '모델', 'model', 'Veo']
-    for (const el of document.querySelectorAll('button, [role="combobox"], [role="button"], select')) {
-      const txt = el.textContent.trim()
-      const r   = el.getBoundingClientRect()
-      if (r.width === 0) continue
-      if (patterns.some(p => txt.includes(p))) { el.click(); return `trigger:${txt.slice(0, 30)}` }
+  await debugDump(page, 'model')
+
+  // 전략 1: 텍스트가 정확히 modelName/Flash/Omni를 포함하는 가장 작은 leaf 요소
+  const clicked = await page.evaluate((name) => {
+    const targets = [name, 'Omni Flash', 'Flash', 'Omni']
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+      for (const target of targets) {
+        for (const el of root.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect()
+          if (r.width < 4 || r.height < 4) continue
+          if (el.children.length > 8) continue          // 컨테이너 제외
+          const txt = (el.textContent || '').trim()
+          if (txt.includes(target) && txt.length < 60) {
+            el.click()
+            return `${el.tagName}:"${txt.slice(0, 40)}"`
+          }
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+      }
+      return null
     }
-    for (const el of document.querySelectorAll('[aria-label]')) {
-      const label = el.getAttribute('aria-label') || ''
-      const r = el.getBoundingClientRect()
-      if (r.width === 0) continue
-      if (/model|모델/i.test(label)) { el.click(); return `aria:${label}` }
-    }
-    return null
+    return scan(document)
   }, modelName)
 
-  if (trigger) {
-    await sleep(700)
-    // 드롭다운 열린 후 옵션 선택
+  if (clicked) {
+    log('ok', `[model] 클릭: ${clicked}`)
+    await sleep(900)
+    // 드롭다운이 열렸으면 옵션 한 번 더 선택
     const option = await page.evaluate((name) => {
-      function search(root) {
-        for (const el of root.querySelectorAll('[role="option"], [role="menuitem"], button, li')) {
-          const txt = el.textContent.trim()
-          const r   = el.getBoundingClientRect()
-          if (r.width === 0) continue
-          if (txt.includes(name) || txt.includes('Flash') || txt.includes('Omni')) {
-            el.click(); return txt
+      const targets = [name, 'Omni Flash', 'Flash', 'Omni']
+      function scan(root, depth = 0) {
+        if (depth > 10) return null
+        for (const target of targets) {
+          for (const el of root.querySelectorAll('*')) {
+            const r = el.getBoundingClientRect()
+            if (r.width < 4) continue
+            if (el.children.length > 8) continue
+            const txt = (el.textContent || '').trim()
+            if (txt.includes(target) && txt.length < 60) {
+              el.click(); return `${el.tagName}:"${txt.slice(0, 40)}"`
+            }
           }
         }
         for (const el of root.querySelectorAll('*')) {
-          if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+          if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
         }
         return null
       }
-      return search(document)
+      return scan(document)
     }, modelName)
-    if (option) log('info', `[model] "${option}" 선택`)
-    else log('warn', `[model] ${modelName} 옵션 못 찾음 (기본값 사용)`)
+    if (option) log('ok', `[model] 드롭다운 옵션: ${option}`)
   } else {
-    // 직접 버튼/라디오 탐색
-    const direct = await page.evaluate((name) => {
-      function search(root) {
-        for (const el of root.querySelectorAll('button, [role="radio"], [role="tab"], [role="option"]')) {
-          const txt = el.textContent.trim()
-          const r   = el.getBoundingClientRect()
-          if (r.width === 0) continue
-          if (txt.includes(name) || txt.includes('Flash') || txt.includes('Omni')) {
-            el.click(); return txt
-          }
-        }
-        for (const el of root.querySelectorAll('*')) {
-          if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
-        }
-        return null
-      }
-      return search(document)
-    }, modelName)
-    if (direct) log('info', `[model] "${direct}" 직접 선택`)
-    else log('warn', `[model] ${modelName} 선택 실패 (기본값 사용)`)
+    log('warn', `[model] ${modelName} 텍스트 없음 — debug_dump_model.png 확인`)
   }
+
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_after.png') })
   await sleep(400)
 }
 
 // ── 영상 길이 설정 ────────────────────────────────────────────────────
+// 전체 DOM 스캔: "8초", "8s", "8", "8 sec" 등 다양한 패턴
 
 async function setVideoDuration(page, seconds = CONFIG.defaultDuration) {
-  const set = await page.evaluate((sec) => {
-    function search(root) {
-      // 프리셋 버튼 (5s, 8s, 10s 등)
-      for (const el of root.querySelectorAll('button, [role="option"], [role="radio"], [role="tab"]')) {
-        const txt = el.textContent.trim()
-        const r   = el.getBoundingClientRect()
-        if (r.width === 0) continue
-        if (txt === `${sec}s` || txt === `${sec}초` || txt === String(sec)
-            || txt === `${sec} seconds` || txt === `${sec}초 동영상`) {
-          el.click(); return `btn:${txt}`
+  // seconds 관련 가능한 텍스트 패턴 목록
+  const patterns = [
+    `${seconds}초`, `${seconds}s`, `${seconds} seconds`, `${seconds} sec`,
+    `${seconds}초 동영상`, `${seconds}초짜리`,
+    String(seconds),
+  ]
+
+  const set = await page.evaluate((patterns, sec) => {
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+
+      // 1순위: 텍스트가 패턴과 정확히 일치하는 작은 요소
+      for (const pat of patterns) {
+        for (const el of root.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect()
+          if (r.width < 4 || r.height < 4) continue
+          if (el.children.length > 5) continue
+          const txt = (el.textContent || '').trim()
+          if (txt === pat || txt.startsWith(pat)) {
+            el.click(); return `exact:"${txt}"`
+          }
         }
       }
-      // 숫자 입력 필드
-      for (const el of root.querySelectorAll('input[type="number"], input[type="text"]')) {
-        const label = (el.getAttribute('aria-label') || el.getAttribute('placeholder') || '').toLowerCase()
+
+      // 2순위: duration/길이 컨텍스트 + 숫자 포함 요소
+      for (const el of root.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
-        if (r.width === 0) continue
+        if (r.width < 4 || r.height < 4) continue
+        if (el.children.length > 5) continue
+        const txt = (el.textContent || '').trim()
+        const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '').toLowerCase()
+        if ((label.includes('duration') || label.includes('길이') || label.includes('초') || label.includes('second'))
+            && txt.includes(String(sec))) {
+          el.click(); return `ctx:"${txt}" aria:"${label}"`
+        }
+      }
+
+      // 3순위: input 필드
+      for (const el of root.querySelectorAll('input[type="number"], input[type="range"], input[type="text"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 4) continue
+        const label = (el.getAttribute('aria-label') || el.getAttribute('placeholder') || '').toLowerCase()
         if (label.includes('duration') || label.includes('길이') || label.includes('초') || label.includes('second')) {
           el.focus()
           const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
@@ -591,108 +654,184 @@ async function setVideoDuration(page, seconds = CONFIG.defaultDuration) {
           return `input:${sec}`
         }
       }
+
       for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
       }
       return null
     }
-    return search(document)
-  }, seconds)
+    return scan(document)
+  }, patterns, seconds)
 
-  if (set) log('info', `[duration] ${seconds}초 설정: "${set}"`)
-  else log('warn', `[duration] ${seconds}초 설정 실패 (기본값 사용)`)
+  if (set) log('info', `[duration] ${seconds}초 설정: ${set}`)
+  else log('warn', `[duration] ${seconds}초 설정 실패 — debug_dump_model.png 확인`)
   await sleep(300)
 }
 
 // ── 비율 설정 ─────────────────────────────────────────────────────────
+// 9:16 = 세로(portrait), 16:9 = 가로(landscape)
+// 다양한 표현: "9:16", "세로", "Portrait", aria-label, data 속성
 
 async function setVideoRatio(page, ratio = RATIO) {
   const is169 = ratio === '16:9'
-  const clicked = await page.evaluate((r, is169) => {
-    const portrait  = ['[aria-label*="9:16"]', '[aria-label*="Portrait"]', '[data-ratio="9:16"]', '[data-aspect="portrait"]']
-    const landscape = ['[aria-label*="16:9"]', '[aria-label*="Landscape"]', '[data-ratio="16:9"]', '[data-aspect="landscape"]']
-    const selectors = is169 ? landscape : portrait
-    for (const sel of selectors) {
-      const el = document.querySelector(sel)
-      if (el) { el.click(); return r }
-    }
-    const btn = [...document.querySelectorAll('button, [role="radio"], [role="option"]')]
-      .find(b => b.textContent.trim().includes(r) && b.getBoundingClientRect().width > 0)
-    if (btn) { btn.click(); return r }
-    return null
-  }, ratio, is169)
 
-  if (clicked) { log('info', `[ratio] ${ratio} 설정`); await sleep(300) }
-  else log('warn', `[ratio] ${ratio} 버튼 못 찾음 (기본값 사용)`)
+  // 비율별 검색 키워드 (한국어 포함)
+  const portraitKeys  = ['9:16', '세로', 'portrait', 'Portrait', '포트레이트', 'vertical', '9 : 16']
+  const landscapeKeys = ['16:9', '가로', 'landscape', 'Landscape', '랜드스케이프', 'horizontal', '16 : 9']
+  const keys = is169 ? landscapeKeys : portraitKeys
+
+  const clicked = await page.evaluate((keys, ratio) => {
+    // 1순위: aria-label / data 속성
+    const attrSelectors = keys.flatMap(k => [
+      `[aria-label*="${k}"]`, `[data-ratio="${k}"]`, `[data-aspect="${k}"]`,
+      `[title*="${k}"]`,
+    ])
+    for (const sel of attrSelectors) {
+      try {
+        const el = document.querySelector(sel)
+        if (el && el.getBoundingClientRect().width > 0) { el.click(); return `attr:${sel}` }
+      } catch {}
+    }
+
+    // 2순위: 전체 DOM 텍스트/aria 스캔 (Shadow DOM 포함)
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 4 || r.height < 4) continue
+        if (el.children.length > 8) continue
+        const txt   = (el.textContent || '').trim()
+        const label = el.getAttribute('aria-label') || el.getAttribute('title') || ''
+        const combined = `${txt} ${label}`.toLowerCase()
+        if (keys.some(k => combined.includes(k.toLowerCase()))) {
+          el.click(); return `txt:"${txt.slice(0,30)}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+      }
+      return null
+    }
+    return scan(document)
+  }, keys, ratio)
+
+  if (clicked) { log('info', `[ratio] ${ratio} 설정: ${clicked}`); await sleep(300) }
+  else log('warn', `[ratio] ${ratio} 못 찾음 (기본값 사용) — debug_dump_model.png 확인`)
 }
 
-// ── 레퍼런스 썸네일 탐색 (hover 기반) ────────────────────────────────
-// flow-automation.js의 findReferenceThumbs()를 video 용으로 확장
-// yeori-face.jpg + 업로드된 cut_NN.jpg 양쪽을 탐색
+// ── 레퍼런스 썸네일 탐색 ─────────────────────────────────────────────
+// 동영상 모드 전환 후 패널 구조가 달라지므로 3가지 전략 병행
+//   A: img.src / alt 속성에서 파일명 직접 매칭
+//   B: hover → tooltip/innerText 변화 감지 (flow 이미지 생성 방식)
+//   C: 스크린샷 후 수동 확인용 위치 목록 출력
 
 async function findVideoReferenceThumbs(page, cutNo) {
   const padded = String(cutNo).padStart(2, '0')
   const cutFilename = `cut_${padded}`
 
-  // 상단 이미지 스트립을 오른쪽 끝으로 스크롤
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_before.png') })
+
+  // ── 스트립 스크롤 (스트립이 있으면) ─────────────────────────────────
   await page.evaluate(() => {
     const strip = [...document.querySelectorAll('*')].find(el => {
       const r = el.getBoundingClientRect()
       return el.scrollWidth > el.clientWidth + 50
-        && r.top < window.innerHeight * 0.45
-        && r.top > 0 && r.height > 50 && r.height < 450
+        && r.top < window.innerHeight * 0.5 && r.top > 0
+        && r.height > 40 && r.height < 500
     })
     if (strip) strip.scrollLeft = strip.scrollWidth
   })
   await sleep(400)
 
-  // 화면에 보이는 img 좌표 수집
-  const imgPositions = await page.evaluate(() =>
+  // 화면에 보이는 img 목록 수집 (src 포함)
+  const imgs = await page.evaluate(() =>
     [...document.querySelectorAll('img')]
       .map(img => {
         const r = img.getBoundingClientRect()
         return {
-          x: Math.round(r.left + r.width / 2),
-          y: Math.round(r.top + r.height / 2),
-          w: Math.round(r.width),
-          h: Math.round(r.height),
+          x:   Math.round(r.left + r.width  / 2),
+          y:   Math.round(r.top  + r.height / 2),
+          w:   Math.round(r.width),
+          h:   Math.round(r.height),
+          src: img.src || img.getAttribute('data-src') || '',
+          alt: (img.alt || '').toLowerCase(),
         }
       })
-      .filter(p => p.w >= 40 && p.h >= 40
-        && p.y > 0 && p.y < window.innerHeight * 0.9
+      .filter(p => p.w >= 30 && p.h >= 30
+        && p.y > 0 && p.y < window.innerHeight
         && p.x > 0 && p.x < window.innerWidth)
   )
 
-  log('info', `[thumbs] 탐색 이미지 수: ${imgPositions.length}`)
+  log('info', `[thumbs] 화면 이미지 수: ${imgs.length}`)
+  imgs.forEach((p, i) =>
+    log('info', `  [${i}] (${p.x},${p.y}) ${p.w}×${p.h} src:${p.src.slice(-40)} alt:${p.alt}`)
+  )
 
   const result = { face: null, cut: null }
 
-  for (const pos of imgPositions) {
-    if (result.face && result.cut) break
-
-    await page.mouse.move(pos.x, pos.y)
-    await sleep(550)
-
-    const appeared = await page.evaluate((cutFile) => {
-      const text = document.body.innerText.toLowerCase()
-      return {
-        face: text.includes('yeori-face') || text.includes('yeori_face'),
-        cut:  text.includes(cutFile),
-      }
-    }, cutFilename)
-
-    if (appeared.face && !result.face) {
-      result.face = pos
-      log('info', `[thumbs] yeori-face 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+  // ── 전략 A: src / alt 속성으로 파일명 직접 매칭 ──────────────────
+  for (const p of imgs) {
+    const srcLow = p.src.toLowerCase()
+    const combined = `${srcLow} ${p.alt}`
+    if (!result.face && (combined.includes('yeori-face') || combined.includes('yeori_face'))) {
+      result.face = p; log('ok', `[thumbs-A] yeori-face src 매칭: (${p.x},${p.y})`)
     }
-    if (appeared.cut && !result.cut) {
-      result.cut = pos
-      log('info', `[thumbs] ${cutFilename} 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    if (!result.cut && combined.includes(cutFilename.toLowerCase())) {
+      result.cut = p; log('ok', `[thumbs-A] ${cutFilename} src 매칭: (${p.x},${p.y})`)
     }
   }
 
-  if (!result.face) log('warn', '[thumbs] yeori-face 썸네일 못 찾음')
-  if (!result.cut)  log('warn', `[thumbs] ${cutFilename} 썸네일 못 찾음`)
+  // ── 전략 B: hover → tooltip/innerText 변화 감지 (A에서 못 찾은 것만) ─
+  const needHover = (!result.face || !result.cut) && imgs.length > 0
+  if (needHover) {
+    log('info', '[thumbs-B] hover 감지 시작…')
+    for (const p of imgs) {
+      if (result.face && result.cut) break
+      await page.mouse.move(p.x, p.y)
+      await sleep(600)
+      const appeared = await page.evaluate((cutFile) => {
+        const text = document.body.innerText.toLowerCase()
+        return {
+          face: text.includes('yeori-face') || text.includes('yeori_face'),
+          cut:  text.includes(cutFile),
+        }
+      }, cutFilename)
+      if (appeared.face && !result.face) {
+        result.face = p; log('ok', `[thumbs-B] yeori-face hover: (${p.x},${p.y})`)
+      }
+      if (appeared.cut && !result.cut) {
+        result.cut = p; log('ok', `[thumbs-B] ${cutFilename} hover: (${p.x},${p.y})`)
+      }
+    }
+  }
+
+  // ── 전략 C: 폴백 — 위치 기준으로 추정 ───────────────────────────────
+  // face: 왼쪽 위 영역 (x<window/2, y<window/2)에서 가장 작은 이미지
+  // cut:  가장 최근 업로드 → 가장 오른쪽/아래에 있는 이미지
+  if (!result.face && imgs.length > 0) {
+    const candidates = imgs.filter(p => p.w < 200 && p.h < 200)
+    if (candidates.length) {
+      result.face = candidates[0]
+      log('warn', `[thumbs-C] yeori-face 추정 폴백: (${result.face.x},${result.face.y})`)
+    }
+  }
+  if (!result.cut && imgs.length > 0) {
+    // 업로드한 cut 이미지는 가장 최근 → y 기준 가장 아래 또는 x 기준 가장 오른쪽
+    const candidates = imgs.filter(p => p.w < 200 && p.h < 200 && p !== result.face)
+    if (candidates.length) {
+      // 가장 최근 = y가 크거나 x가 큰 것
+      const latest = candidates.reduce((a, b) =>
+        (a.x + a.y) > (b.x + b.y) ? a : b
+      )
+      result.cut = latest
+      log('warn', `[thumbs-C] cut_${padded} 추정 폴백: (${result.cut.x},${result.cut.y})`)
+    }
+  }
+
+  if (!result.face) log('warn', '[thumbs] yeori-face 못 찾음 — 드래그 스킵')
+  if (!result.cut)  log('warn', `[thumbs] ${cutFilename} 못 찾음 — 드래그 스킵`)
+
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_after.png') })
   return result
 }
 
