@@ -408,25 +408,59 @@ async function uploadCutImage(page, imagePath) {
   return true
 }
 
-// ── 업로드된 썸네일 클릭 → 동영상 모드 전환 ─────────────────────────
+// ── 동영상 모드 전환 + 비율 + 모델 (팝업 한 번에 처리) ──────────────
+//
+// UI 흐름:
+//   1. 하단 프롬프트 우측 "Nano Banana *" 버튼 클릭 → 팝업 열림
+//   2. 팝업 > "동영상" 탭 클릭 → 동영상 모드 전환
+//   3. 팝업 > ratio 버튼 클릭 (9:16 or 16:9)
+//   4. 팝업 > Omni Flash 드롭다운 선택
 
-// 하단 프롬프트 창 우측 "동영상" 토글 버튼 클릭으로 이미지→동영상 모드 전환
-
-async function switchToVideoMode(page) {
+async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferredModel) {
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // y > 55% 영역에서 텍스트가 정확히 "동영상" / "Video" 인 leaf 요소 탐색
-  const clicked = await page.evaluate(() => {
-    const TARGETS = ['동영상', 'Video', '비디오', 'video']
+  // ── 1. "Nano Banana *" 버튼 클릭 (하단 절반, y > 50%) ───────────────
+  const modelBtnClicked = await page.evaluate(() => {
     function scan(root, depth = 0) {
       if (depth > 12) return null
       for (const el of root.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
         if (r.width < 5 || r.height < 5) continue
-        if (r.top < window.innerHeight * 0.55) continue  // 하단 절반만
-        if (el.children.length > 5) continue              // leaf 요소 우선
+        if (r.top < window.innerHeight * 0.5) continue
         const txt = (el.textContent || '').trim()
-        if (TARGETS.includes(txt)) {
+        if (txt.includes('Nano Banana') || txt.toLowerCase().includes('nano banana')) {
+          el.click()
+          return `${el.tagName} "${txt.slice(0, 50)}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+      }
+      return null
+    }
+    return scan(document)
+  })
+
+  if (!modelBtnClicked) {
+    log('warn', '[videoMode] "Nano Banana" 버튼 못 찾음')
+    await debugDump(page, 'toggle')
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
+    return false
+  }
+  log('ok', `[videoMode] 모델 버튼 클릭: ${modelBtnClicked}`)
+  await sleep(1200)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_popup_opened.png') })
+
+  // ── 2. 팝업 > "동영상" 탭 클릭 ─────────────────────────────────────
+  const videoTabClicked = await page.evaluate(() => {
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 5 || r.height < 5) continue
+        if (el.children.length > 5) continue
+        const txt = (el.textContent || '').trim()
+        if (txt === '동영상' || txt === 'Video') {
           el.click()
           return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
         }
@@ -439,16 +473,77 @@ async function switchToVideoMode(page) {
     return scan(document)
   })
 
-  if (clicked) {
-    log('ok', `[videoMode] 동영상 토글 클릭: ${clicked}`)
-    await sleep(1200)
+  if (videoTabClicked) {
+    log('ok', `[videoMode] "동영상" 탭: ${videoTabClicked}`)
   } else {
-    log('warn', '[videoMode] "동영상" 토글 못 찾음')
-    await debugDump(page, 'toggle')
+    log('warn', '[videoMode] "동영상" 탭 못 찾음')
+    await debugDump(page, 'video_tab')
   }
+  await sleep(1000)
+
+  // ── 3. 팝업 > 비율 버튼 클릭 ────────────────────────────────────────
+  const is169 = ratio === '16:9'
+  const ratioKeys = is169
+    ? ['16:9', '가로', 'landscape', 'Landscape', 'horizontal', '16 : 9']
+    : ['9:16', '세로', 'portrait', 'Portrait', 'vertical', '9 : 16']
+
+  const ratioClicked = await page.evaluate((keys) => {
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 4 || r.height < 4) continue
+        if (el.children.length > 8) continue
+        const txt   = (el.textContent || '').trim()
+        const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '')
+        if (keys.some(k => `${txt} ${label}`.toLowerCase().includes(k.toLowerCase()))) {
+          el.click()
+          return `${el.tagName} "${txt.slice(0, 30)}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+      }
+      return null
+    }
+    return scan(document)
+  }, ratioKeys)
+
+  if (ratioClicked) log('ok', `[videoMode] ${ratio} 비율: ${ratioClicked}`)
+  else log('warn', `[videoMode] ${ratio} 비율 못 찾음`)
+  await sleep(600)
+
+  // ── 4. 팝업 > Omni Flash 모델 선택 ──────────────────────────────────
+  const modelTargets = [modelName, 'Omni Flash', 'Flash', 'Omni']
+  const modelClicked = await page.evaluate((targets) => {
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+      for (const target of targets) {
+        for (const el of root.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect()
+          if (r.width < 4 || r.height < 4) continue
+          if (el.children.length > 8) continue
+          const txt = (el.textContent || '').trim()
+          if (txt.includes(target) && txt.length < 60) {
+            el.click()
+            return `${el.tagName} "${txt.slice(0, 40)}" (${Math.round(r.left)},${Math.round(r.top)})`
+          }
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+      }
+      return null
+    }
+    return scan(document)
+  }, modelTargets)
+
+  if (modelClicked) log('ok', `[videoMode] 모델: ${modelClicked}`)
+  else log('warn', `[videoMode] ${modelName} 못 찾음`)
+  await sleep(800)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
-  return !!clicked
+  return !!videoTabClicked
 }
 
 // ── DOM 전체 인터랙티브 요소 덤프 (디버깅용) ──────────────────────────
@@ -1015,18 +1110,12 @@ async function processCut(page, cut, episode, ratio) {
   log('step', `CUT ${cut.no}: cut_${padded}.jpg 업로드`)
   await uploadCutImage(page, imgPath)
 
-  // ② 업로드된 썸네일 클릭 → 동영상 모드 전환
-  log('step', `CUT ${cut.no}: 동영상 모드 전환`)
-  await switchToVideoMode(page)
+  // ② 모델 버튼 → 팝업 (동영상 탭 + 비율 + 모델) 한 번에 처리
+  log('step', `CUT ${cut.no}: 동영상 모드 전환 (ratio=${ratio}, model=${CONFIG.preferredModel})`)
+  await switchToVideoMode(page, ratio, CONFIG.preferredModel)
 
-  // ③ Omni Flash 모델 선택
-  await selectVideoModel(page, CONFIG.preferredModel)
-
-  // ④ 영상 길이 설정
+  // ③ 영상 길이 설정
   await setVideoDuration(page, cut.duration ?? CONFIG.defaultDuration)
-
-  // ⑤ 비율 설정 (--ratio 파라미터, 기본 9:16)
-  await setVideoRatio(page, ratio)
 
   // ⑦ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가 (없으면 에러)
   log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
