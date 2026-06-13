@@ -687,86 +687,67 @@ async function setVideoRatio(page, ratio = RATIO) {
 //   cut_01 = 업로드 직후 상단 스트립의 가장 오른쪽(rightmost) 썸네일
 //   yeori-face = 나머지 중 hover tooltip 매칭 → 없으면 cut_01 바로 왼쪽
 
+// flow-automation.js의 findReferenceThumbs() 로직 그대로 사용.
+// closeup → cut_NN 으로만 교체 (첫 번째: yeori-face, 두 번째: cut_NN)
 async function findVideoReferenceThumbs(page, cutNo) {
   const padded = String(cutNo).padStart(2, '0')
 
-  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_before.png') })
-
-  // 상단 스트립 오른쪽 끝으로 스크롤
+  // 상단 스트립 오른쪽 끝으로 스크롤 (flow-automation.js 동일)
   await page.evaluate(() => {
     const strip = [...document.querySelectorAll('*')].find(el => {
       const r = el.getBoundingClientRect()
       return el.scrollWidth > el.clientWidth + 50
-        && r.top < window.innerHeight * 0.5 && r.top > 0
-        && r.height > 40 && r.height < 500
+        && r.top < window.innerHeight * 0.45
+        && r.top > 0
+        && r.height > 50
+        && r.height < 450
     })
     if (strip) strip.scrollLeft = strip.scrollWidth
   })
-  await sleep(600)
+  await sleep(400)
 
-  // 상단 절반(y < 50%)의 썸네일 크기(30~300px) img만 수집 → x 오름차순 정렬
-  const imgs = await page.evaluate(() =>
+  // 화면에 보이는 img 좌표 수집 (flow-automation.js 동일: 40px 이상, 화면 90% 이내)
+  const imgPositions = await page.evaluate(() =>
     [...document.querySelectorAll('img')]
       .map(img => {
         const r = img.getBoundingClientRect()
-        return {
-          x:   Math.round(r.left + r.width  / 2),
-          y:   Math.round(r.top  + r.height / 2),
-          w:   Math.round(r.width),
-          h:   Math.round(r.height),
-          src: (img.src || img.getAttribute('data-src') || '').slice(-60),
-        }
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), w: Math.round(r.width), h: Math.round(r.height) }
       })
-      .filter(p =>
-        p.w >= 30 && p.w <= 300 && p.h >= 30 &&
-        p.y > 0   && p.y < window.innerHeight * 0.5 &&
-        p.x > 0   && p.x < window.innerWidth
-      )
-      .sort((a, b) => a.x - b.x)   // 왼쪽→오른쪽 순서
+      .filter(p => p.w >= 40 && p.h >= 40
+        && p.y > 0 && p.y < window.innerHeight * 0.9
+        && p.x > 0 && p.x < window.innerWidth)
   )
 
-  log('info', `[thumbs] 스트립 이미지 수: ${imgs.length}`)
-  imgs.forEach((p, i) =>
-    log('info', `  [${i}] (${p.x},${p.y}) ${p.w}×${p.h}  …${p.src}`)
-  )
+  log('info', `[findVideoReferenceThumbs] 탐색 이미지 수: ${imgPositions.length}`)
 
   const result = { face: null, cut: null }
 
-  if (imgs.length === 0) {
-    log('warn', '[thumbs] 스트립에 이미지 없음 — 드래그 스킵')
-    return result
-  }
+  for (const pos of imgPositions) {
+    if (result.face && result.cut) break
 
-  // ── cut_01 = 가장 오른쪽 썸네일 (업로드 직후 최신) ─────────────────
-  result.cut = imgs[imgs.length - 1]
-  log('ok', `[thumbs] cut_${padded} = rightmost (${result.cut.x},${result.cut.y})`)
+    await page.mouse.move(pos.x, pos.y)
+    await sleep(600)
 
-  // ── yeori-face = 나머지에서 hover 감지 ───────────────────────────
-  const remaining = imgs.slice(0, -1)
-  if (remaining.length > 0) {
-    log('info', `[thumbs-B] yeori-face hover 탐색 (${remaining.length}개)…`)
-    for (const p of remaining) {
-      await page.mouse.move(p.x, p.y)
-      await sleep(600)
-      const matched = await page.evaluate(() => {
-        const text = document.body.innerText.toLowerCase()
-        return text.includes('yeori-face') || text.includes('yeori_face')
-      })
-      if (matched) {
-        result.face = p
-        log('ok', `[thumbs-B] yeori-face hover 매칭: (${p.x},${p.y})`)
-        break
+    const appeared = await page.evaluate((padded) => {
+      const text = document.body.innerText.toLowerCase()
+      return {
+        face: text.includes('yeori-face') || text.includes('yeori_face'),
+        cut:  text.includes(`cut_${padded}`) || text.includes(`cut${padded}`),
       }
-    }
+    }, padded)
 
-    // 폴백: hover 실패 시 cut_01 바로 왼쪽을 yeori-face로 사용
-    if (!result.face) {
-      result.face = remaining[remaining.length - 1]
-      log('warn', `[thumbs-C] yeori-face 폴백 (cut_01 좌측): (${result.face.x},${result.face.y})`)
+    if (appeared.face && !result.face) {
+      result.face = pos
+      log('info', `[findVideoReferenceThumbs] yeori-face 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
     }
-  } else {
-    log('warn', '[thumbs] 썸네일 1개뿐 — yeori-face 드래그 스킵')
+    if (appeared.cut && !result.cut) {
+      result.cut = pos
+      log('info', `[findVideoReferenceThumbs] cut_${padded} 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    }
   }
+
+  if (!result.face) log('warn', '[findVideoReferenceThumbs] yeori-face 썸네일 못 찾음')
+  if (!result.cut)  log('warn', `[findVideoReferenceThumbs] cut_${padded} 썸네일 못 찾음`)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_after.png') })
   return result
