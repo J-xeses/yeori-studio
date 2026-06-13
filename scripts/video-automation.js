@@ -410,87 +410,45 @@ async function uploadCutImage(page, imagePath) {
 
 // ── 업로드된 썸네일 클릭 → 동영상 모드 전환 ─────────────────────────
 
-async function switchToVideoMode(page, imagePath) {
-  const fileName = path.basename(imagePath, path.extname(imagePath))
-  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_video_mode.png') })
+// 하단 프롬프트 창 우측 "동영상" 토글 버튼 클릭으로 이미지→동영상 모드 전환
 
-  // 방법 A: 파일명 텍스트가 포함된 카드 클릭
-  const nameClicked = await page.evaluate((name) => {
-    const cards = [...document.querySelectorAll('*')].filter(el => {
-      const txt = el.textContent.trim()
-      const r   = el.getBoundingClientRect()
-      return txt.toLowerCase().includes(name.toLowerCase())
-        && r.width > 20 && r.width < 500 && r.height > 20 && r.height < 400
-    })
-    if (cards.length) {
-      cards.sort((a, b) => {
-        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect()
-        return (ra.width * ra.height) - (rb.width * rb.height)
-      })
-      cards[0].click()
-      return `name:${name}`
-    }
-    return null
-  }, fileName)
-  if (nameClicked) {
-    log('info', `[videoMode] 썸네일 클릭 (이름): ${nameClicked}`)
-    await sleep(1200)
-  }
+async function switchToVideoMode(page) {
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // 방법 B: "동영상 만들기" / "Generate video" 버튼 탐색
-  const videoModeBtn = await page.evaluate(() => {
-    const keywords = ['동영상 만들기', 'Generate video', 'Create video', '비디오 만들기', 'Make video', 'Video generation', '동영상 생성']
-    function search(root) {
-      for (const el of root.querySelectorAll('button, [role="button"], a, [role="menuitem"]')) {
-        const txt   = el.textContent.trim()
-        const label = el.getAttribute('aria-label') || ''
-        const r     = el.getBoundingClientRect()
-        if (r.width === 0) continue
-        if (keywords.some(k => (txt + label).includes(k))) { el.click(); return txt || label }
+  // y > 55% 영역에서 텍스트가 정확히 "동영상" / "Video" 인 leaf 요소 탐색
+  const clicked = await page.evaluate(() => {
+    const TARGETS = ['동영상', 'Video', '비디오', 'video']
+    function scan(root, depth = 0) {
+      if (depth > 12) return null
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 5 || r.height < 5) continue
+        if (r.top < window.innerHeight * 0.55) continue  // 하단 절반만
+        if (el.children.length > 5) continue              // leaf 요소 우선
+        const txt = (el.textContent || '').trim()
+        if (TARGETS.includes(txt)) {
+          el.click()
+          return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
       }
       for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
       }
       return null
     }
-    return search(document)
+    return scan(document)
   })
 
-  if (videoModeBtn) {
-    log('info', `[videoMode] 동영상 버튼 클릭: "${videoModeBtn}"`)
-    await sleep(1500)
+  if (clicked) {
+    log('ok', `[videoMode] 동영상 토글 클릭: ${clicked}`)
+    await sleep(1200)
   } else {
-    // 방법 C: 업로드된 img의 부모 카드 클릭 (hover로 컨텍스트 메뉴 활성화)
-    const hoverBtn = await page.evaluate(() => {
-      const imgs = [...document.querySelectorAll('img')].filter(img => {
-        const r = img.getBoundingClientRect()
-        return r.width > 40 && r.width < 300 && r.left > 100
-      })
-      if (!imgs.length) return null
-      const latest = imgs.reduce((a, b) =>
-        a.getBoundingClientRect().top > b.getBoundingClientRect().top ? a : b
-      )
-      let el = latest.parentElement
-      for (let i = 0; i < 5 && el; i++) {
-        const r = el.getBoundingClientRect()
-        if (r.width > 60 && r.height > 60 && r.width < 400) {
-          el.click()
-          return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
-        }
-        el = el.parentElement
-      }
-      latest.click(); return 'img-fallback'
-    })
-    if (hoverBtn) {
-      log('info', `[videoMode] 썸네일 카드 클릭 (폴백): ${JSON.stringify(hoverBtn)}`)
-      await sleep(1200)
-    } else {
-      log('warn', '[videoMode] 동영상 모드 진입 버튼 못 찾음 — 현재 상태에서 진행')
-    }
+    log('warn', '[videoMode] "동영상" 토글 못 찾음')
+    await debugDump(page, 'toggle')
   }
 
-  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_mode.png') })
-  return true
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
+  return !!clicked
 }
 
 // ── DOM 전체 인터랙티브 요소 덤프 (디버깅용) ──────────────────────────
@@ -725,13 +683,16 @@ async function setVideoRatio(page, ratio = RATIO) {
 //   B: hover → tooltip/innerText 변화 감지 (flow 이미지 생성 방식)
 //   C: 스크린샷 후 수동 확인용 위치 목록 출력
 
+// 전략:
+//   cut_01 = 업로드 직후 상단 스트립의 가장 오른쪽(rightmost) 썸네일
+//   yeori-face = 나머지 중 hover tooltip 매칭 → 없으면 cut_01 바로 왼쪽
+
 async function findVideoReferenceThumbs(page, cutNo) {
   const padded = String(cutNo).padStart(2, '0')
-  const cutFilename = `cut_${padded}`
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_before.png') })
 
-  // ── 스트립 스크롤 (스트립이 있으면) ─────────────────────────────────
+  // 상단 스트립 오른쪽 끝으로 스크롤
   await page.evaluate(() => {
     const strip = [...document.querySelectorAll('*')].find(el => {
       const r = el.getBoundingClientRect()
@@ -741,9 +702,9 @@ async function findVideoReferenceThumbs(page, cutNo) {
     })
     if (strip) strip.scrollLeft = strip.scrollWidth
   })
-  await sleep(400)
+  await sleep(600)
 
-  // 화면에 보이는 img 목록 수집 (src 포함)
+  // 상단 절반(y < 50%)의 썸네일 크기(30~300px) img만 수집 → x 오름차순 정렬
   const imgs = await page.evaluate(() =>
     [...document.querySelectorAll('img')]
       .map(img => {
@@ -753,83 +714,59 @@ async function findVideoReferenceThumbs(page, cutNo) {
           y:   Math.round(r.top  + r.height / 2),
           w:   Math.round(r.width),
           h:   Math.round(r.height),
-          src: img.src || img.getAttribute('data-src') || '',
-          alt: (img.alt || '').toLowerCase(),
+          src: (img.src || img.getAttribute('data-src') || '').slice(-60),
         }
       })
-      .filter(p => p.w >= 30 && p.h >= 30
-        && p.y > 0 && p.y < window.innerHeight
-        && p.x > 0 && p.x < window.innerWidth)
+      .filter(p =>
+        p.w >= 30 && p.w <= 300 && p.h >= 30 &&
+        p.y > 0   && p.y < window.innerHeight * 0.5 &&
+        p.x > 0   && p.x < window.innerWidth
+      )
+      .sort((a, b) => a.x - b.x)   // 왼쪽→오른쪽 순서
   )
 
-  log('info', `[thumbs] 화면 이미지 수: ${imgs.length}`)
+  log('info', `[thumbs] 스트립 이미지 수: ${imgs.length}`)
   imgs.forEach((p, i) =>
-    log('info', `  [${i}] (${p.x},${p.y}) ${p.w}×${p.h} src:${p.src.slice(-40)} alt:${p.alt}`)
+    log('info', `  [${i}] (${p.x},${p.y}) ${p.w}×${p.h}  …${p.src}`)
   )
 
   const result = { face: null, cut: null }
 
-  // ── 전략 A: src / alt 속성으로 파일명 직접 매칭 ──────────────────
-  for (const p of imgs) {
-    const srcLow = p.src.toLowerCase()
-    const combined = `${srcLow} ${p.alt}`
-    if (!result.face && (combined.includes('yeori-face') || combined.includes('yeori_face'))) {
-      result.face = p; log('ok', `[thumbs-A] yeori-face src 매칭: (${p.x},${p.y})`)
-    }
-    if (!result.cut && combined.includes(cutFilename.toLowerCase())) {
-      result.cut = p; log('ok', `[thumbs-A] ${cutFilename} src 매칭: (${p.x},${p.y})`)
-    }
+  if (imgs.length === 0) {
+    log('warn', '[thumbs] 스트립에 이미지 없음 — 드래그 스킵')
+    return result
   }
 
-  // ── 전략 B: hover → tooltip/innerText 변화 감지 (A에서 못 찾은 것만) ─
-  const needHover = (!result.face || !result.cut) && imgs.length > 0
-  if (needHover) {
-    log('info', '[thumbs-B] hover 감지 시작…')
-    for (const p of imgs) {
-      if (result.face && result.cut) break
+  // ── cut_01 = 가장 오른쪽 썸네일 (업로드 직후 최신) ─────────────────
+  result.cut = imgs[imgs.length - 1]
+  log('ok', `[thumbs] cut_${padded} = rightmost (${result.cut.x},${result.cut.y})`)
+
+  // ── yeori-face = 나머지에서 hover 감지 ───────────────────────────
+  const remaining = imgs.slice(0, -1)
+  if (remaining.length > 0) {
+    log('info', `[thumbs-B] yeori-face hover 탐색 (${remaining.length}개)…`)
+    for (const p of remaining) {
       await page.mouse.move(p.x, p.y)
       await sleep(600)
-      const appeared = await page.evaluate((cutFile) => {
+      const matched = await page.evaluate(() => {
         const text = document.body.innerText.toLowerCase()
-        return {
-          face: text.includes('yeori-face') || text.includes('yeori_face'),
-          cut:  text.includes(cutFile),
-        }
-      }, cutFilename)
-      if (appeared.face && !result.face) {
-        result.face = p; log('ok', `[thumbs-B] yeori-face hover: (${p.x},${p.y})`)
-      }
-      if (appeared.cut && !result.cut) {
-        result.cut = p; log('ok', `[thumbs-B] ${cutFilename} hover: (${p.x},${p.y})`)
+        return text.includes('yeori-face') || text.includes('yeori_face')
+      })
+      if (matched) {
+        result.face = p
+        log('ok', `[thumbs-B] yeori-face hover 매칭: (${p.x},${p.y})`)
+        break
       }
     }
-  }
 
-  // ── 전략 C: 폴백 — 위치 기준으로 추정 ───────────────────────────────
-  // face: 왼쪽 위 영역 (x<window/2, y<window/2)에서 가장 작은 이미지
-  // cut:  가장 최근 업로드 → 가장 오른쪽/아래에 있는 이미지
-  if (!result.face && imgs.length > 0) {
-    const candidates = imgs.filter(p => p.w < 200 && p.h < 200)
-    if (candidates.length) {
-      result.face = candidates[0]
-      log('warn', `[thumbs-C] yeori-face 추정 폴백: (${result.face.x},${result.face.y})`)
+    // 폴백: hover 실패 시 cut_01 바로 왼쪽을 yeori-face로 사용
+    if (!result.face) {
+      result.face = remaining[remaining.length - 1]
+      log('warn', `[thumbs-C] yeori-face 폴백 (cut_01 좌측): (${result.face.x},${result.face.y})`)
     }
+  } else {
+    log('warn', '[thumbs] 썸네일 1개뿐 — yeori-face 드래그 스킵')
   }
-  if (!result.cut && imgs.length > 0) {
-    // 업로드한 cut 이미지는 가장 최근 → y 기준 가장 아래 또는 x 기준 가장 오른쪽
-    const candidates = imgs.filter(p => p.w < 200 && p.h < 200 && p !== result.face)
-    if (candidates.length) {
-      // 가장 최근 = y가 크거나 x가 큰 것
-      const latest = candidates.reduce((a, b) =>
-        (a.x + a.y) > (b.x + b.y) ? a : b
-      )
-      result.cut = latest
-      log('warn', `[thumbs-C] cut_${padded} 추정 폴백: (${result.cut.x},${result.cut.y})`)
-    }
-  }
-
-  if (!result.face) log('warn', '[thumbs] yeori-face 못 찾음 — 드래그 스킵')
-  if (!result.cut)  log('warn', `[thumbs] ${cutFilename} 못 찾음 — 드래그 스킵`)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_after.png') })
   return result
@@ -1118,7 +1055,7 @@ async function processCut(page, cut, episode, ratio) {
 
   // ② 업로드된 썸네일 클릭 → 동영상 모드 전환
   log('step', `CUT ${cut.no}: 동영상 모드 전환`)
-  await switchToVideoMode(page, imgPath)
+  await switchToVideoMode(page)
 
   // ③ Omni Flash 모델 선택
   await selectVideoModel(page, CONFIG.preferredModel)
