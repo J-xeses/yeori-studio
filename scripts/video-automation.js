@@ -408,92 +408,53 @@ async function uploadCutImage(page, imagePath) {
   return true
 }
 
-// ── 동영상 모드 전환 + 비율 + 모델 (팝업 한 번에 처리) ──────────────
+// ── 동영상 모드 전환 + 비율 + 모델 ─────────────────────────────────
 //
-// UI 흐름:
-//   1. 하단 프롬프트 우측 "Nano Banana *" 버튼 클릭 → 팝업 열림
-//   2. 팝업 > "동영상" 탭 클릭 → 동영상 모드 전환
-//   3. 팝업 > ratio 버튼 클릭 (9:16 or 16:9)
-//   4. 팝업 > Omni Flash 드롭다운 선택
+// UI 구조 (페이지 소스 기반):
+//   - 하단 프롬프트 바 placeholder = "무엇을 만들고 싶으신가요?" (y ≥ 800)
+//   - 프롬프트 바에 "이미지" / "동영상" 탭 버튼이 직접 노출됨
+//   - "동영상" 탭 클릭 후 비율(9:16 등) 버튼, 모델 버튼 순서대로 텍스트로 찾아 클릭
+//   - 좌표 기반 클릭 전혀 사용하지 않음
 
 async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferredModel) {
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // ── 1. "Nano Banana *" 버튼 클릭 (하단 절반, y > 50%) ───────────────
-  const modelBtnClicked = await page.evaluate(() => {
-    function scan(root, depth = 0) {
-      if (depth > 12) return null
-      for (const el of root.querySelectorAll('*')) {
-        const r = el.getBoundingClientRect()
-        if (r.width < 5 || r.height < 5) continue
-        if (r.top < window.innerHeight * 0.5) continue
-        const txt = (el.textContent || '').trim()
-        if (txt.includes('Nano Banana') || txt.toLowerCase().includes('nano banana')) {
-          el.click()
-          return `${el.tagName} "${txt.slice(0, 50)}" (${Math.round(r.left)},${Math.round(r.top)})`
-        }
+  // ── 1. "동영상" 탭 클릭 (y ≥ 800, 텍스트 정확 매칭) ─────────────────
+  const videoTabClicked = await page.evaluate(() => {
+    const all = [...document.querySelectorAll('*')]
+    for (const el of all) {
+      const r = el.getBoundingClientRect()
+      if (r.top < 800 || r.width < 5 || r.height < 5) continue
+      const txt = (el.textContent || '').trim()
+      if (txt === '동영상' || txt === 'Video') {
+        el.click()
+        return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
       }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
-      }
-      return null
     }
-    return scan(document)
+    return null
   })
 
-  if (!modelBtnClicked) {
-    log('warn', '[videoMode] "Nano Banana" 버튼 못 찾음')
+  if (!videoTabClicked) {
+    log('warn', '[videoMode] "동영상" 탭 못 찾음 (y≥800)')
     await debugDump(page, 'toggle')
     await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
     return false
   }
-  log('ok', `[videoMode] 모델 버튼 클릭: ${modelBtnClicked}`)
+  log('ok', `[videoMode] "동영상" 탭: ${videoTabClicked}`)
   await sleep(1200)
-  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_popup_opened.png') })
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab.png') })
 
-  // ── 2. 팝업 > "동영상" 탭 클릭 ─────────────────────────────────────
-  const videoTabClicked = await page.evaluate(() => {
-    function scan(root, depth = 0) {
-      if (depth > 12) return null
-      for (const el of root.querySelectorAll('*')) {
-        const r = el.getBoundingClientRect()
-        if (r.width < 5 || r.height < 5) continue
-        if (el.children.length > 5) continue
-        const txt = (el.textContent || '').trim()
-        if (txt === '동영상' || txt === 'Video') {
-          el.click()
-          return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
-        }
-      }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
-      }
-      return null
-    }
-    return scan(document)
-  })
-
-  if (videoTabClicked) {
-    log('ok', `[videoMode] "동영상" 탭: ${videoTabClicked}`)
-  } else {
-    log('warn', '[videoMode] "동영상" 탭 못 찾음')
-    await debugDump(page, 'video_tab')
-  }
-  await sleep(1000)
-
-  // ── 3. 팝업 > 비율 버튼 클릭 ────────────────────────────────────────
+  // ── 2. 비율 버튼 클릭 (텍스트 기반, Shadow DOM 포함) ────────────────
   const is169 = ratio === '16:9'
   const ratioKeys = is169
-    ? ['16:9', '가로', 'landscape', 'Landscape', 'horizontal', '16 : 9']
-    : ['9:16', '세로', 'portrait', 'Portrait', 'vertical', '9 : 16']
+    ? ['16:9', '가로', 'landscape', 'Landscape', '16 : 9']
+    : ['9:16', '세로', 'portrait', 'Portrait', '9 : 16']
 
   const ratioClicked = await page.evaluate((keys) => {
-    function scan(root, depth = 0) {
-      if (depth > 12) return null
+    function scan(root) {
       for (const el of root.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
         if (r.width < 4 || r.height < 4) continue
-        if (el.children.length > 8) continue
         const txt   = (el.textContent || '').trim()
         const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '')
         if (keys.some(k => `${txt} ${label}`.toLowerCase().includes(k.toLowerCase()))) {
@@ -502,7 +463,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         }
       }
       for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+        if (el.shadowRoot) { const r = scan(el.shadowRoot); if (r) return r }
       }
       return null
     }
@@ -512,12 +473,12 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   if (ratioClicked) log('ok', `[videoMode] ${ratio} 비율: ${ratioClicked}`)
   else log('warn', `[videoMode] ${ratio} 비율 못 찾음`)
   await sleep(600)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_ratio.png') })
 
-  // ── 4. 팝업 > Omni Flash 모델 선택 ──────────────────────────────────
+  // ── 3. Omni Flash 모델 선택 (텍스트 기반, Shadow DOM 포함) ──────────
   const modelTargets = [modelName, 'Omni Flash', 'Flash', 'Omni']
   const modelClicked = await page.evaluate((targets) => {
-    function scan(root, depth = 0) {
-      if (depth > 12) return null
+    function scan(root) {
       for (const target of targets) {
         for (const el of root.querySelectorAll('*')) {
           const r = el.getBoundingClientRect()
@@ -531,7 +492,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         }
       }
       for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
+        if (el.shadowRoot) { const r = scan(el.shadowRoot); if (r) return r }
       }
       return null
     }
@@ -543,7 +504,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   await sleep(800)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
-  return !!videoTabClicked
+  return true
 }
 
 // ── DOM 전체 인터랙티브 요소 덤프 (디버깅용) ──────────────────────────
