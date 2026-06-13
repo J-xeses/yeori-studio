@@ -1,39 +1,35 @@
 /**
- * 여리 스튜디오 - Google Veo 3.1 영상 자동화
+ * 여리 스튜디오 - Google Flow 영상 자동화 (Veo 3.1 통합)
  *
  * 사용법:
- *   npm run video                          # downloads/video/video-prompts.json 기반 실행
- *   npm run video -- --ep=1              # 에피소드 1만 처리
- *   npm run video -- --cut=3             # CUT 3만 처리
- *   npm run video -- --dry               # 실제 생성 없이 목록 출력
- *   npm run video -- --prompts=my.json  # 외부 프롬프트 파일 지정
- *
- * 입력:  downloads/flow/ep{N}/cut_NN.jpg  (Flow 생성 이미지)
- * 출력:  downloads/video/ep{N}/cut_NN.mp4
- *
- * 사전 준비:
- *   Chrome을 아래 명령으로 실행하세요:
- *   "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+ *   npm run video                           # downloads/video/video-prompts.json 기반 실행
+ *   npm run video -- --ep=4               # 에피소드 4만 처리
+ *   npm run video -- --cut=3              # CUT 3만 처리
+ *   npm run video -- --ratio=9:16         # 비율 지정 (기본 9:16)
+ *   npm run video -- --dry                # 목록만 출력 (실제 생성 없음)
+ *   npm run video -- --reset              # video-progress.json 초기화 후 처음부터
+ *   npm run video -- --prompts=my.json   # 외부 프롬프트 파일 지정
  */
 
 import puppeteer from 'puppeteer-core'
 import fs from 'fs'
 import path from 'path'
+import readline from 'readline'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ── ROOT 자동 감지 ──────────────────────────────────────────────────────
 const COMPANY_PATH = 'C:\\yeori-studio'
-const HOME_PATH    = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
+const HOME_PATH = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
 const ROOT = (() => {
   if (fs.existsSync(COMPANY_PATH)) { console.log('[ROOT] 회사 PC'); return COMPANY_PATH }
-  if (fs.existsSync(HOME_PATH))    { console.log('[ROOT] 집 PC');   return HOME_PATH    }
+  if (fs.existsSync(HOME_PATH)) { console.log('[ROOT] 집 PC'); return HOME_PATH }
   console.error('[ERROR] ROOT 경로를 찾을 수 없습니다.')
   process.exit(1)
 })()
 
-// .env / .env.local 로드
+// .env 및 .env.local 로드
 ;['.env', '.env.local'].forEach(name => {
   const envPath = path.join(ROOT, name)
   if (!fs.existsSync(envPath)) return
@@ -43,20 +39,23 @@ const ROOT = (() => {
   })
 })
 
-// ── 설정 ─────────────────────────────────────────────────────────────────
+// ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
-  debuggingPort: 9222,
-  chromeExe:     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  flowDir:       path.join(ROOT, 'downloads', 'flow'),
-  downloadDir:   path.join(ROOT, 'downloads', 'video'),
-  veoUrl:        'https://labs.google/fx/ko/tools/veo',
-  delayMs:       5000,    // 컷 사이 대기 (레이트 리밋 방지)
-  timeoutMs:     300000,  // 5분 — 영상 생성은 이미지보다 오래 걸림
-  retryCount:    1,
+  debuggingPort:   9222,
+  chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  flowDir:         path.join(ROOT, 'downloads', 'flow'),
+  videoDir:        path.join(ROOT, 'downloads', 'video'),
+  characterImage:  path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
+  preferredModel:  'Omni Flash',
+  defaultDuration: 8,
+  delayMs:         6000,
+  timeoutMs:       300000, // 5분 (영상 생성은 이미지보다 오래 걸림)
+  retryCount:      1,
 }
 
-// ── 진입점 ────────────────────────────────────────────────────────────────
+// ── 인자 파싱 ────────────────────────────────────────────────────────
 const args = parseArgs()
+const RATIO = args.ratio || '9:16'
 
 main().catch(err => {
   console.error(`[video] 치명적 오류: ${err.message}`)
@@ -65,7 +64,7 @@ main().catch(err => {
   process.exit(1)
 })
 
-// ── 유틸리티 ─────────────────────────────────────────────────────────────
+// ── 유틸리티 ─────────────────────────────────────────────────────────
 
 function parseArgs() {
   return Object.fromEntries(
@@ -84,18 +83,46 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms))
 }
 
+function promptInput(question) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise(resolve => {
+    rl.question(question, answer => { rl.close(); resolve(answer) })
+  })
+}
+
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true })
 }
 
-// ── 프롬프트 로드 ─────────────────────────────────────────────────────────
-// 우선순위: --prompts 인자 > downloads/video/video-prompts.json > downloads/flow/prompts.json
+// ── 진행 상태 관리 (크레딧 부족 중단 → 재개) ────────────────────────
+
+function progressPath(episode) {
+  const ep = episode ?? 'x'
+  return path.join(CONFIG.videoDir, `ep${ep}`, 'video-progress.json')
+}
+
+function loadProgress(episode) {
+  const p = progressPath(episode)
+  if (!fs.existsSync(p)) return { episode, completed: [], failed: [] }
+  try { return JSON.parse(fs.readFileSync(p, 'utf-8')) }
+  catch { return { episode, completed: [], failed: [] } }
+}
+
+function saveProgress(episode, progress) {
+  const p = progressPath(episode)
+  ensureDir(path.dirname(p))
+  fs.writeFileSync(p, JSON.stringify({ ...progress, lastUpdated: new Date().toISOString() }, null, 2))
+  log('info', `진행 상태 저장: ${path.relative(ROOT, p)}`)
+}
+
+// ── 프롬프트 로드 ─────────────────────────────────────────────────────
+
 function loadPrompts() {
   let file
   if (args.prompts) {
     file = path.resolve(args.prompts)
   } else {
-    const videoFile = path.join(CONFIG.downloadDir, 'video-prompts.json')
+    const videoFile = path.join(CONFIG.videoDir, 'video-prompts.json')
     const flowFile  = path.join(CONFIG.flowDir, 'prompts.json')
     if (fs.existsSync(videoFile)) {
       file = videoFile
@@ -103,24 +130,35 @@ function loadPrompts() {
       file = flowFile
       log('info', 'video-prompts.json 없음 → flow/prompts.json 사용')
     } else {
-      log('warn', '입력 파일 없음. video-prompts.json 또는 flow/prompts.json이 필요합니다.')
-      log('info', '여리 스튜디오 → 영상 탭 → "영상 프롬프트 JSON 내보내기" 버튼을 먼저 실행하세요.')
+      log('warn', '프롬프트 파일 없음. video-prompts.json 또는 flow/prompts.json이 필요합니다.')
       process.exit(0)
     }
   }
 
   const raw = JSON.parse(fs.readFileSync(file, 'utf-8'))
   const episode = raw.episode ?? null
-
   const cuts = (Array.isArray(raw) ? raw : raw.cuts ?? [])
-    .filter(c => c.imagePrompt?.trim() || c.videoPrompt?.trim() || c.narration?.trim())
     .filter(c => !args.ep  || String(c.episode ?? episode) === String(args.ep))
     .filter(c => !args.cut || String(c.no) === String(args.cut))
 
-  return { episode, cuts }
+  return { episode: args.ep ?? episode, cuts }
 }
 
-// ── 브라우저 연결 ─────────────────────────────────────────────────────────
+// ── 크레딧 부족 감지 ──────────────────────────────────────────────────
+
+async function detectCreditExhaustion(page) {
+  return page.evaluate(() => {
+    const text = document.body.innerText.toLowerCase()
+    const keywords = [
+      '크레딧 부족', '크레딧이 없', '크레딧을 모두', '크레딧이 소진',
+      'out of credits', 'insufficient credits', 'no credits remaining',
+      'upgrade your plan', '구독을 업그레이드', '한도에 도달', 'limit reached',
+    ]
+    return keywords.some(k => text.includes(k))
+  })
+}
+
+// ── 브라우저 연결 ─────────────────────────────────────────────────────
 
 async function connectBrowser() {
   const wsUrl = `http://127.0.0.1:${CONFIG.debuggingPort}/json/version`
@@ -129,12 +167,12 @@ async function connectBrowser() {
     const res = await fetch(wsUrl)
     version = await res.json()
   } catch {
-    console.error('\n' + '═'.repeat(56))
+    console.error('\n' + '═'.repeat(60))
     console.error('  Chrome에 연결할 수 없습니다.')
-    console.error('  아래 명령으로 Chrome을 먼저 실행해주세요:')
+    console.error('  다음 명령으로 Chrome을 먼저 실행하세요:')
     console.error(`\n  "${CONFIG.chromeExe}" --remote-debugging-port=${CONFIG.debuggingPort}`)
     console.error('\n  (실행 중인 Chrome이 있으면 완전히 종료 후 위 명령 사용)')
-    console.error('═'.repeat(56) + '\n')
+    console.error('═'.repeat(60) + '\n')
     throw new Error(`Chrome remote debugging 포트(${CONFIG.debuggingPort})에 연결 실패`)
   }
   log('info', `Chrome 연결 완료 (${version.Browser})`)
@@ -149,48 +187,538 @@ async function setupPage(browser) {
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
   })
+  // 영상 다운로드 경로: downloads/video/ (에피소드별 이동은 waitAndSaveVideo에서 처리)
+  ensureDir(CONFIG.videoDir)
   const client = await page.createCDPSession()
   await client.send('Page.setDownloadBehavior', {
     behavior:     'allow',
-    downloadPath: CONFIG.downloadDir,
+    downloadPath: CONFIG.videoDir,
   })
   page._cdpClient = client
   return page
 }
 
-// ── Veo 3.1 접속 ──────────────────────────────────────────────────────────
+// ── Flow 프로젝트 페이지 진입 ──────────────────────────────────────────
 
-async function navigateToVeo(page) {
-  log('info', `Veo 접속 중: ${CONFIG.veoUrl}`)
-  await page.goto(CONFIG.veoUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+async function navigateToProject(page, episode) {
+  const ep = episode ?? 'x'
+  const projectMarker = path.join(CONFIG.flowDir, `ep${ep}`, 'project_url.txt')
 
+  if (!fs.existsSync(projectMarker)) {
+    log('warn', `project_url.txt 없음: ${projectMarker}`)
+    const projectId = await promptInput(
+      `\nEP${ep} Flow 프로젝트 ID를 입력하세요 (URL의 마지막 부분):\n예) 77a33d02-f7d7-40d7-9a1f-b9983d92fc79\n> `
+    )
+    const trimmedId = projectId.trim()
+    if (!trimmedId) throw new Error('프로젝트 ID를 입력하지 않았습니다.')
+    const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${trimmedId}`
+    ensureDir(path.dirname(projectMarker))
+    fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
+    log('ok', `project_url.txt 저장: ${projectUrl}`)
+  }
+
+  const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim().split('#')[0].trim()
+  log('info', `Flow 접속: ${savedUrl}`)
+
+  // 로그인 체크
+  await page.goto('https://labs.google/fx/ko/tools/flow', { waitUntil: 'networkidle2', timeout: 30000 })
   const needsLogin = () => {
     const u = page.url()
     return u.includes('accounts.google.com') || u.includes('signin') ||
            u.includes('#pricing') || u.includes('/pricing')
   }
-
   if (needsLogin()) {
     log('warn', 'Google 로그인이 필요합니다.')
-    console.log('\n브라우저에서 Google 계정으로 로그인 후 Enter를 눌러주세요.')
-    await new Promise(resolve => process.stdin.once('data', resolve))
-    await page.goto(CONFIG.veoUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-    if (needsLogin()) throw new Error('로그인 후에도 pricing 페이지로 리다이렉트됩니다. 로그인 상태를 확인하세요.')
+    console.log('\n브라우저에서 로그인 후 Enter를 눌러주세요.')
+    await promptInput('')
   }
 
-  // 쿠키 동의 처리
-  const hadCookie = await page.evaluate(() => {
-    const btns = [...document.querySelectorAll('button')]
-    const agree = btns.find(b => /^(agree|동의)$/i.test(b.textContent.trim()))
-    if (agree) { agree.click(); return true }
-    return false
-  })
-  if (hadCookie) await sleep(500)
-
-  log('ok', 'Veo 준비 완료')
+  await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+  await sleep(2500)
+  log('ok', `Flow 프로젝트 준비 완료`)
 }
 
-// ── 입력창 위치 탐색 (Shadow DOM 포함) ───────────────────────────────────
+// ── '+' 버튼 클릭 ─────────────────────────────────────────────────────
+// flow-automation.js의 clickPlusButton()과 동일
+
+async function clickPlusButton(page) {
+  const result = await page.evaluate(() => {
+    function search(root) {
+      // 1순위: aria-label에 add/media/미디어/추가 포함된 버튼
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '').toLowerCase()
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.top < window.innerHeight * 0.55) continue
+        if (/(add|media|미디어|추가|reference|레퍼런스|attach|첨부)/i.test(label)) {
+          el.click(); return `aria:${label}`
+        }
+      }
+      // 2순위: 텍스트가 '+', '만들기', 'add'인 버튼
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.top < window.innerHeight * 0.55) continue
+        const txt = el.textContent.trim()
+        if (txt === '+' || txt.includes('만들기') || txt.toLowerCase() === 'add') {
+          el.click(); return `txt:${txt}`
+        }
+      }
+      // 3순위: 하단 입력창 왼쪽(x<300, y>55%)의 소형 버튼
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.width > 80) continue
+        if (r.top < window.innerHeight * 0.55 || r.left > 300) continue
+        if (r.height < 60 && r.height > 10) { el.click(); return `pos:(${Math.round(r.left)},${Math.round(r.top)})` }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
+      }
+      return null
+    }
+    return search(document)
+  })
+
+  if (result) log('info', `+ 버튼 클릭: "${result}"`)
+  else {
+    const btns = await page.evaluate(() => {
+      const h = window.innerHeight
+      return [...document.querySelectorAll('button, [role="button"]')]
+        .filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.top > h * 0.5 })
+        .map(el => {
+          const r = el.getBoundingClientRect()
+          return `txt="${el.textContent.trim().slice(0, 20)}" aria="${el.getAttribute('aria-label') || ''}" x=${Math.round(r.left)} y=${Math.round(r.top)}`
+        })
+    })
+    log('warn', `+ 버튼 못 찾음. 하단 버튼:\n  ${btns.slice(0, 8).join('\n  ')}`)
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_plus_not_found.png') })
+  }
+  return !!result
+}
+
+// ── cut 이미지 업로드 ('+' → 미디어 패널 → file input 주입) ──────────
+
+async function uploadCutImage(page, imagePath) {
+  if (!fs.existsSync(imagePath)) {
+    throw new Error(`입력 이미지 없음: ${path.relative(ROOT, imagePath)}`)
+  }
+
+  const fileName = path.basename(imagePath, path.extname(imagePath))
+
+  if (!await clickPlusButton(page)) {
+    log('warn', '[upload] + 버튼 클릭 실패 — 건너뜀')
+    return false
+  }
+  await sleep(1200)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_plus_panel.png') })
+
+  // 업로드 전 이미지 src 스냅샷 (새 썸네일 감지용)
+  const beforeSrcs = await page.evaluate(() =>
+    [...document.querySelectorAll('img')].map(img => img.src)
+  )
+
+  // file input 탐색 (전략 1: 직접)
+  let fileEl = (await page.evaluateHandle(() => {
+    function s(root) {
+      for (const el of root.querySelectorAll('input[type="file"]')) return el
+      for (const el of root.querySelectorAll('*'))
+        if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
+      return null
+    }
+    return s(document)
+  })).asElement()
+
+  if (!fileEl) {
+    // 전략 2: "새 미디어" / "업로드" 버튼 클릭 후 재탐색
+    const clicked = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('button, a, [role="button"]')) {
+        const t     = (el.textContent || '').trim()
+        const label = el.getAttribute('aria-label') || ''
+        if (/(새 미디어|업로드|upload|add media|new media|내 기기|device)/i.test(t + label)
+            && el.getBoundingClientRect().width > 0) {
+          el.click(); return t || label
+        }
+      }
+      return null
+    })
+    if (clicked) {
+      log('info', `[upload] "${clicked}" 클릭 → file input 대기`)
+      await sleep(1000)
+      fileEl = (await page.evaluateHandle(() => {
+        function s(root) {
+          for (const el of root.querySelectorAll('input[type="file"]')) return el
+          for (const el of root.querySelectorAll('*'))
+            if (el.shadowRoot) { const f = s(el.shadowRoot); if (f) return f }
+          return null
+        }
+        return s(document)
+      })).asElement()
+    }
+  }
+
+  if (!fileEl) {
+    log('warn', '[upload] file input 없음')
+    await page.keyboard.press('Escape').catch(() => {})
+    return false
+  }
+
+  await fileEl.uploadFile(imagePath)
+  log('info', `[upload] 업로드 완료: ${path.basename(imagePath)}`)
+  await sleep(2500)
+
+  // 업로드 후 새로 나타난 썸네일 카드 클릭 (선택 활성화)
+  const thumbClicked = await page.evaluate((prevSrcs, name) => {
+    function clickCard(img) {
+      let el = img
+      for (let i = 0; i < 8; i++) {
+        if (!el) break
+        const role = (el.getAttribute('role') || '').toLowerCase()
+        const tag  = el.tagName.toLowerCase()
+        const r    = el.getBoundingClientRect()
+        if (r.width > 0 && (
+          role === 'option' || role === 'button' || role === 'listitem' ||
+          role === 'gridcell' || tag === 'li' || tag === 'article'
+        )) { el.click(); return `<${el.tagName} role="${role}">` }
+        if (r.width > 0 && tag === 'div' && el.querySelector('img') && r.width > 30 && r.height > 30 && r.height < 300) {
+          el.click(); return `<DIV ${Math.round(r.width)}x${Math.round(r.height)}>`
+        }
+        el = el.parentElement
+      }
+      img.click(); return '<IMG fallback>'
+    }
+    // 방법 A: 파일명 텍스트 포함 요소
+    const byName = [...document.querySelectorAll('*')].find(el => {
+      const txt = el.textContent.trim()
+      const r   = el.getBoundingClientRect()
+      return txt.toLowerCase().includes(name.toLowerCase())
+        && r.width > 20 && r.width < 500 && r.height > 20
+    })
+    if (byName) { byName.click(); return `name:${name}` }
+    // 방법 B: 새로 나타난 img 요소의 카드
+    const newImgs = [...document.querySelectorAll('img')].filter(img => {
+      const r = img.getBoundingClientRect()
+      return !prevSrcs.includes(img.src) && r.width > 20 && r.width < 400 && r.height > 20
+    })
+    if (newImgs.length) return clickCard(newImgs[0])
+    return null
+  }, beforeSrcs, fileName)
+
+  if (thumbClicked) log('info', `[upload] 썸네일 클릭: ${thumbClicked}`)
+  else log('warn', '[upload] 새 썸네일 감지 실패 — 선택 없이 진행')
+
+  await sleep(800)
+  return true
+}
+
+// ── 업로드된 썸네일 클릭 → 동영상 모드 전환 ─────────────────────────
+
+async function switchToVideoMode(page, imagePath) {
+  const fileName = path.basename(imagePath, path.extname(imagePath))
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_video_mode.png') })
+
+  // 방법 A: 파일명 텍스트가 포함된 카드 클릭
+  const nameClicked = await page.evaluate((name) => {
+    const cards = [...document.querySelectorAll('*')].filter(el => {
+      const txt = el.textContent.trim()
+      const r   = el.getBoundingClientRect()
+      return txt.toLowerCase().includes(name.toLowerCase())
+        && r.width > 20 && r.width < 500 && r.height > 20 && r.height < 400
+    })
+    if (cards.length) {
+      cards.sort((a, b) => {
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect()
+        return (ra.width * ra.height) - (rb.width * rb.height)
+      })
+      cards[0].click()
+      return `name:${name}`
+    }
+    return null
+  }, fileName)
+  if (nameClicked) {
+    log('info', `[videoMode] 썸네일 클릭 (이름): ${nameClicked}`)
+    await sleep(1200)
+  }
+
+  // 방법 B: "동영상 만들기" / "Generate video" 버튼 탐색
+  const videoModeBtn = await page.evaluate(() => {
+    const keywords = ['동영상 만들기', 'Generate video', 'Create video', '비디오 만들기', 'Make video', 'Video generation', '동영상 생성']
+    function search(root) {
+      for (const el of root.querySelectorAll('button, [role="button"], a, [role="menuitem"]')) {
+        const txt   = el.textContent.trim()
+        const label = el.getAttribute('aria-label') || ''
+        const r     = el.getBoundingClientRect()
+        if (r.width === 0) continue
+        if (keywords.some(k => (txt + label).includes(k))) { el.click(); return txt || label }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+      }
+      return null
+    }
+    return search(document)
+  })
+
+  if (videoModeBtn) {
+    log('info', `[videoMode] 동영상 버튼 클릭: "${videoModeBtn}"`)
+    await sleep(1500)
+  } else {
+    // 방법 C: 업로드된 img의 부모 카드 클릭 (hover로 컨텍스트 메뉴 활성화)
+    const hoverBtn = await page.evaluate(() => {
+      const imgs = [...document.querySelectorAll('img')].filter(img => {
+        const r = img.getBoundingClientRect()
+        return r.width > 40 && r.width < 300 && r.left > 100
+      })
+      if (!imgs.length) return null
+      const latest = imgs.reduce((a, b) =>
+        a.getBoundingClientRect().top > b.getBoundingClientRect().top ? a : b
+      )
+      let el = latest.parentElement
+      for (let i = 0; i < 5 && el; i++) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 60 && r.height > 60 && r.width < 400) {
+          el.click()
+          return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+        }
+        el = el.parentElement
+      }
+      latest.click(); return 'img-fallback'
+    })
+    if (hoverBtn) {
+      log('info', `[videoMode] 썸네일 카드 클릭 (폴백): ${JSON.stringify(hoverBtn)}`)
+      await sleep(1200)
+    } else {
+      log('warn', '[videoMode] 동영상 모드 진입 버튼 못 찾음 — 현재 상태에서 진행')
+    }
+  }
+
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_mode.png') })
+  return true
+}
+
+// ── 비디오 모델 선택 (Omni Flash) ────────────────────────────────────
+
+async function selectVideoModel(page, modelName = CONFIG.preferredModel) {
+  // 1단계: 모델 드롭다운 트리거 찾기
+  const trigger = await page.evaluate((name) => {
+    const patterns = [name, 'Flash', 'Omni', '모델', 'model', 'Veo']
+    for (const el of document.querySelectorAll('button, [role="combobox"], [role="button"], select')) {
+      const txt = el.textContent.trim()
+      const r   = el.getBoundingClientRect()
+      if (r.width === 0) continue
+      if (patterns.some(p => txt.includes(p))) { el.click(); return `trigger:${txt.slice(0, 30)}` }
+    }
+    for (const el of document.querySelectorAll('[aria-label]')) {
+      const label = el.getAttribute('aria-label') || ''
+      const r = el.getBoundingClientRect()
+      if (r.width === 0) continue
+      if (/model|모델/i.test(label)) { el.click(); return `aria:${label}` }
+    }
+    return null
+  }, modelName)
+
+  if (trigger) {
+    await sleep(700)
+    // 드롭다운 열린 후 옵션 선택
+    const option = await page.evaluate((name) => {
+      function search(root) {
+        for (const el of root.querySelectorAll('[role="option"], [role="menuitem"], button, li')) {
+          const txt = el.textContent.trim()
+          const r   = el.getBoundingClientRect()
+          if (r.width === 0) continue
+          if (txt.includes(name) || txt.includes('Flash') || txt.includes('Omni')) {
+            el.click(); return txt
+          }
+        }
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+        }
+        return null
+      }
+      return search(document)
+    }, modelName)
+    if (option) log('info', `[model] "${option}" 선택`)
+    else log('warn', `[model] ${modelName} 옵션 못 찾음 (기본값 사용)`)
+  } else {
+    // 직접 버튼/라디오 탐색
+    const direct = await page.evaluate((name) => {
+      function search(root) {
+        for (const el of root.querySelectorAll('button, [role="radio"], [role="tab"], [role="option"]')) {
+          const txt = el.textContent.trim()
+          const r   = el.getBoundingClientRect()
+          if (r.width === 0) continue
+          if (txt.includes(name) || txt.includes('Flash') || txt.includes('Omni')) {
+            el.click(); return txt
+          }
+        }
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+        }
+        return null
+      }
+      return search(document)
+    }, modelName)
+    if (direct) log('info', `[model] "${direct}" 직접 선택`)
+    else log('warn', `[model] ${modelName} 선택 실패 (기본값 사용)`)
+  }
+  await sleep(400)
+}
+
+// ── 영상 길이 설정 ────────────────────────────────────────────────────
+
+async function setVideoDuration(page, seconds = CONFIG.defaultDuration) {
+  const set = await page.evaluate((sec) => {
+    function search(root) {
+      // 프리셋 버튼 (5s, 8s, 10s 등)
+      for (const el of root.querySelectorAll('button, [role="option"], [role="radio"], [role="tab"]')) {
+        const txt = el.textContent.trim()
+        const r   = el.getBoundingClientRect()
+        if (r.width === 0) continue
+        if (txt === `${sec}s` || txt === `${sec}초` || txt === String(sec)
+            || txt === `${sec} seconds` || txt === `${sec}초 동영상`) {
+          el.click(); return `btn:${txt}`
+        }
+      }
+      // 숫자 입력 필드
+      for (const el of root.querySelectorAll('input[type="number"], input[type="text"]')) {
+        const label = (el.getAttribute('aria-label') || el.getAttribute('placeholder') || '').toLowerCase()
+        const r = el.getBoundingClientRect()
+        if (r.width === 0) continue
+        if (label.includes('duration') || label.includes('길이') || label.includes('초') || label.includes('second')) {
+          el.focus()
+          const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+          if (setter) setter.call(el, String(sec))
+          else el.value = String(sec)
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+          el.dispatchEvent(new Event('change', { bubbles: true }))
+          return `input:${sec}`
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+      }
+      return null
+    }
+    return search(document)
+  }, seconds)
+
+  if (set) log('info', `[duration] ${seconds}초 설정: "${set}"`)
+  else log('warn', `[duration] ${seconds}초 설정 실패 (기본값 사용)`)
+  await sleep(300)
+}
+
+// ── 비율 설정 ─────────────────────────────────────────────────────────
+
+async function setVideoRatio(page, ratio = RATIO) {
+  const is169 = ratio === '16:9'
+  const clicked = await page.evaluate((r, is169) => {
+    const portrait  = ['[aria-label*="9:16"]', '[aria-label*="Portrait"]', '[data-ratio="9:16"]', '[data-aspect="portrait"]']
+    const landscape = ['[aria-label*="16:9"]', '[aria-label*="Landscape"]', '[data-ratio="16:9"]', '[data-aspect="landscape"]']
+    const selectors = is169 ? landscape : portrait
+    for (const sel of selectors) {
+      const el = document.querySelector(sel)
+      if (el) { el.click(); return r }
+    }
+    const btn = [...document.querySelectorAll('button, [role="radio"], [role="option"]')]
+      .find(b => b.textContent.trim().includes(r) && b.getBoundingClientRect().width > 0)
+    if (btn) { btn.click(); return r }
+    return null
+  }, ratio, is169)
+
+  if (clicked) { log('info', `[ratio] ${ratio} 설정`); await sleep(300) }
+  else log('warn', `[ratio] ${ratio} 버튼 못 찾음 (기본값 사용)`)
+}
+
+// ── 레퍼런스 썸네일 탐색 (hover 기반) ────────────────────────────────
+// flow-automation.js의 findReferenceThumbs()를 video 용으로 확장
+// yeori-face.jpg + 업로드된 cut_NN.jpg 양쪽을 탐색
+
+async function findVideoReferenceThumbs(page, cutNo) {
+  const padded = String(cutNo).padStart(2, '0')
+  const cutFilename = `cut_${padded}`
+
+  // 상단 이미지 스트립을 오른쪽 끝으로 스크롤
+  await page.evaluate(() => {
+    const strip = [...document.querySelectorAll('*')].find(el => {
+      const r = el.getBoundingClientRect()
+      return el.scrollWidth > el.clientWidth + 50
+        && r.top < window.innerHeight * 0.45
+        && r.top > 0 && r.height > 50 && r.height < 450
+    })
+    if (strip) strip.scrollLeft = strip.scrollWidth
+  })
+  await sleep(400)
+
+  // 화면에 보이는 img 좌표 수집
+  const imgPositions = await page.evaluate(() =>
+    [...document.querySelectorAll('img')]
+      .map(img => {
+        const r = img.getBoundingClientRect()
+        return {
+          x: Math.round(r.left + r.width / 2),
+          y: Math.round(r.top + r.height / 2),
+          w: Math.round(r.width),
+          h: Math.round(r.height),
+        }
+      })
+      .filter(p => p.w >= 40 && p.h >= 40
+        && p.y > 0 && p.y < window.innerHeight * 0.9
+        && p.x > 0 && p.x < window.innerWidth)
+  )
+
+  log('info', `[thumbs] 탐색 이미지 수: ${imgPositions.length}`)
+
+  const result = { face: null, cut: null }
+
+  for (const pos of imgPositions) {
+    if (result.face && result.cut) break
+
+    await page.mouse.move(pos.x, pos.y)
+    await sleep(550)
+
+    const appeared = await page.evaluate((cutFile) => {
+      const text = document.body.innerText.toLowerCase()
+      return {
+        face: text.includes('yeori-face') || text.includes('yeori_face'),
+        cut:  text.includes(cutFile),
+      }
+    }, cutFilename)
+
+    if (appeared.face && !result.face) {
+      result.face = pos
+      log('info', `[thumbs] yeori-face 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    }
+    if (appeared.cut && !result.cut) {
+      result.cut = pos
+      log('info', `[thumbs] ${cutFilename} 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    }
+  }
+
+  if (!result.face) log('warn', '[thumbs] yeori-face 썸네일 못 찾음')
+  if (!result.cut)  log('warn', `[thumbs] ${cutFilename} 썸네일 못 찾음`)
+  return result
+}
+
+// ── 썸네일 → 프롬프트 입력창 드래그 ─────────────────────────────────
+// flow-automation.js의 dragToPrompt()와 동일
+
+async function dragToPrompt(page, fromPos, toPos) {
+  await page.mouse.move(fromPos.x, fromPos.y)
+  await sleep(200)
+  await page.mouse.down()
+  await sleep(150)
+  const steps = 12
+  for (let i = 1; i <= steps; i++) {
+    await page.mouse.move(
+      Math.round(fromPos.x + (toPos.x - fromPos.x) * (i / steps)),
+      Math.round(fromPos.y + (toPos.y - fromPos.y) * (i / steps))
+    )
+    await sleep(25)
+  }
+  await sleep(200)
+  await page.mouse.up()
+  await sleep(600)
+}
+
+// ── 입력창 위치 탐색 ─────────────────────────────────────────────────
+// flow-automation.js의 findPromptInputPos()와 동일
 
 async function findPromptInputPos(page) {
   const found = await page.evaluate(() => {
@@ -200,7 +728,7 @@ async function findPromptInputPos(page) {
       )) {
         if (el.classList.contains('g-recaptcha-response')) continue
         const r = el.getBoundingClientRect()
-        if (r.width > 100 && r.top > window.innerHeight * 0.4) {
+        if (r.width > 100 && r.top > window.innerHeight * 0.5) {
           return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
         }
       }
@@ -214,125 +742,38 @@ async function findPromptInputPos(page) {
   if (found) return found
   const vp = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }))
   log('warn', '입력창 좌표 추론 (폴백)')
-  return { x: vp.w * 0.48, y: vp.h * 0.87 }
+  return { x: vp.w * 0.48, y: vp.h * 0.895 }
 }
 
-// ── 시작 프레임 이미지 업로드 ─────────────────────────────────────────────
-
-async function uploadStartFrame(page, imagePath) {
-  if (!fs.existsSync(imagePath)) {
-    log('warn', `시작 프레임 없음: ${path.relative(ROOT, imagePath)}`)
-    return false
-  }
-
-  // 전략 1: file input 직접 탐색 (Shadow DOM 포함)
-  const fileInputHandle = await page.evaluateHandle(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('input[type="file"]')) return el
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
-      }
-      return null
-    }
-    return search(document)
-  })
-
-  const fileInput = fileInputHandle.asElement()
-  if (fileInput) {
-    await page.evaluate(el => {
-      el.style.display    = 'block'
-      el.style.visibility = 'visible'
-      el.style.opacity    = '1'
-      el.style.position   = 'fixed'
-      el.style.top = '0'; el.style.left = '0'
-      el.style.zIndex     = '99999'
-    }, fileInput)
-    await fileInput.uploadFile(imagePath)
-    log('info', `시작 프레임 업로드: ${path.basename(imagePath)}`)
-    await sleep(2000)
-    await fileInputHandle.dispose()
-    return true
-  }
-  await fileInputHandle.dispose()
-
-  // 전략 2: 업로드 트리거 버튼 클릭 후 file input 재탐색
-  const triggered = await page.evaluate(() => {
-    function search(root) {
-      for (const el of root.querySelectorAll('button, [role="button"], label')) {
-        const txt   = (el.textContent || '').trim().toLowerCase()
-        const label = (el.getAttribute('aria-label') || '').toLowerCase()
-        const combined = txt + ' ' + label
-        if (/(이미지|사진|upload|add photo|add image|reference|시작 프레임|start frame|image to video)/i.test(combined)
-            && el.getBoundingClientRect().width > 0) {
-          el.click(); return combined.slice(0, 40)
-        }
-      }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
-      }
-      return null
-    }
-    return search(document)
-  })
-
-  if (triggered) {
-    log('info', `업로드 트리거 클릭: "${triggered}"`)
-    await sleep(800)
-    const fileInputHandle2 = await page.evaluateHandle(() => {
-      function search(root) {
-        for (const el of root.querySelectorAll('input[type="file"]')) return el
-        for (const el of root.querySelectorAll('*')) {
-          if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
-        }
-        return null
-      }
-      return search(document)
-    })
-    const fi2 = fileInputHandle2.asElement()
-    if (fi2) {
-      await fi2.uploadFile(imagePath)
-      log('info', `시작 프레임 업로드 (트리거 후): ${path.basename(imagePath)}`)
-      await sleep(2000)
-      await fileInputHandle2.dispose()
-      return true
-    }
-    await fileInputHandle2.dispose()
-  }
-
-  log('warn', '시작 프레임 업로드 실패 — 텍스트 프롬프트만으로 진행합니다')
-  return false
-}
-
-// ── 영상 프롬프트 입력 ────────────────────────────────────────────────────
+// ── 프롬프트 입력 ─────────────────────────────────────────────────────
 
 async function typeVideoPrompt(page, prompt) {
   const pos = await findPromptInputPos(page)
   await page.mouse.click(pos.x, pos.y)
   await sleep(300)
-  await page.keyboard.down('Control')
-  await page.keyboard.press('a')
-  await page.keyboard.up('Control')
+  await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control')
   await page.keyboard.press('Backspace')
   await sleep(100)
   await page.keyboard.type(prompt, { delay: 15 })
-  log('info', `프롬프트: ${prompt.slice(0, 80)}${prompt.length > 80 ? '…' : ''}`)
+  log('info', `프롬프트 입력: ${prompt.slice(0, 90)}${prompt.length > 90 ? '…' : ''}`)
   await sleep(500)
 }
 
-// ── 생성 버튼 클릭 ────────────────────────────────────────────────────────
+// ── 생성 버튼 클릭 ────────────────────────────────────────────────────
+// flow-automation.js의 clickGenerate()와 동일
 
 async function clickGenerate(page) {
   const rect = await page.evaluate(() => {
     function search(root) {
       for (const el of root.querySelectorAll('button')) {
         if (el.disabled) continue
-        const r = el.getBoundingClientRect()
-        if (r.top < window.innerHeight * 0.5 || r.width < 1) continue
+        const r     = el.getBoundingClientRect()
+        if (r.top < window.innerHeight * 0.6 || r.width < 1) continue
         const txt   = el.textContent.trim()
         const label = (el.getAttribute('aria-label') || '').toLowerCase()
         if (txt === '→' || txt === '▶' ||
             label.includes('send') || label.includes('전송') || label.includes('보내기') ||
-            label.includes('generate') || label.includes('생성')) {
+            label.includes('submit') || label.includes('generate')) {
           return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
         }
       }
@@ -353,21 +794,21 @@ async function clickGenerate(page) {
   await page.keyboard.press('Enter')
 }
 
-// ── 영상 생성 대기 + 저장 ────────────────────────────────────────────────
+// ── 영상 완료 대기 + 저장 ────────────────────────────────────────────
 
 async function waitAndSaveVideo(page, outPath) {
-  log('step', `영상 생성 대기 중… (최대 ${CONFIG.timeoutMs / 60000}분)`)
-  const epDir = path.dirname(outPath)
-  ensureDir(epDir)
+  ensureDir(path.dirname(outPath))
 
-  // 생성 전 다운로드 폴더 스냅샷
+  // 다운로드 폴더 기존 영상 파일 스냅샷
   const beforeFiles = new Set(
-    fs.existsSync(CONFIG.downloadDir)
-      ? fs.readdirSync(CONFIG.downloadDir).filter(f => /\.(mp4|webm|mov)$/i.test(f))
+    fs.existsSync(CONFIG.videoDir)
+      ? fs.readdirSync(CONFIG.videoDir).filter(f => /\.(mp4|webm|mov)$/i.test(f))
       : []
   )
 
-  // video 태그에 src가 생길 때까지 대기
+  log('step', `영상 생성 대기 중… (최대 ${Math.round(CONFIG.timeoutMs / 60000)}분)`)
+
+  // video 태그 src 생성 대기
   try {
     await page.waitForFunction(
       () => {
@@ -387,52 +828,70 @@ async function waitAndSaveVideo(page, outPath) {
     )
     log('ok', '영상 생성 감지')
   } catch {
-    // 타임아웃 — 다운로드 버튼이 먼저 나타났을 수도 있음
-    log('warn', '영상 태그 대기 타임아웃 → 다운로드 버튼 시도')
-    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_video_timeout.png'), fullPage: true })
+    log('warn', '영상 태그 대기 타임아웃 — 다른 방법 시도')
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_timeout.png'), fullPage: true })
   }
-  await sleep(1000)
+  await sleep(2000)
 
-  // 방법 A: 다운로드 버튼 클릭
-  const dlClicked = await page.evaluate(() => {
+  // 방법 A: video 위에 hover → 다운로드 버튼 클릭 → 파일 폴링
+  const dlResult = await page.evaluate(() => {
     function search(root) {
-      for (const el of root.querySelectorAll('button, a')) {
-        const txt   = (el.textContent || '').toLowerCase()
+      for (const el of root.querySelectorAll('button, a, [role="button"]')) {
+        const txt   = (el.textContent || '').trim()
         const label = (el.getAttribute('aria-label') || '').toLowerCase()
-        if (/(다운로드|download)/i.test(txt + label) && el.getBoundingClientRect().width > 0) {
-          el.click(); return true
-        }
+        const r     = el.getBoundingClientRect()
+        if (r.width === 0) continue
+        if (/(다운로드|download)/i.test(txt + label)) { el.click(); return true }
       }
       for (const el of root.querySelectorAll('*')) {
         if (el.shadowRoot && search(el.shadowRoot)) return true
       }
       return false
     }
+    // video 요소 위 hover → 다운로드 버튼 활성화
+    const video = (() => {
+      function find(root) {
+        for (const v of root.querySelectorAll('video')) {
+          if (v.getBoundingClientRect().width > 0) return v
+        }
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) { const r = find(el.shadowRoot); if (r) return r }
+        }
+        return null
+      }
+      return find(document)
+    })()
+    if (video) {
+      video.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      video.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
+    }
     return search(document)
   })
 
-  if (dlClicked) {
+  if (dlResult) {
     log('info', '다운로드 버튼 클릭 — 파일 대기 중…')
-    // 최대 30초 동안 새 파일 폴링
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       await sleep(1000)
-      const after = fs.readdirSync(CONFIG.downloadDir).filter(f => /\.(mp4|webm|mov)$/i.test(f))
-      const newFile = after.find(f => !beforeFiles.has(f) && !f.endsWith('.crdownload'))
+      const after   = fs.existsSync(CONFIG.videoDir) ? fs.readdirSync(CONFIG.videoDir) : []
+      const newFile = after.find(f =>
+        /\.(mp4|webm|mov)$/i.test(f) && !beforeFiles.has(f) && !f.endsWith('.crdownload')
+      )
       if (newFile) {
-        fs.renameSync(path.join(CONFIG.downloadDir, newFile), outPath)
-        log('ok', `영상 저장: ${path.relative(ROOT, outPath)}`)
+        const src = path.join(CONFIG.videoDir, newFile)
+        fs.renameSync(src, outPath)
+        log('ok', `영상 저장 (다운로드): ${path.relative(ROOT, outPath)}`)
         return outPath
       }
     }
-    log('warn', '다운로드 파일이 감지되지 않음 → video src 직접 저장 시도')
+    log('warn', '다운로드 파일 미감지 → video src 직접 저장 시도')
   }
 
-  // 방법 B: video src를 페이지 컨텍스트에서 직접 fetch
+  // 방법 B: video src fetch
   const videoSrc = await page.evaluate(() => {
     function search(root) {
       for (const v of root.querySelectorAll('video')) {
         const src = v.src || v.querySelector('source')?.src || ''
-        if (src && !src.includes('poster') && src.length > 10) return src
+        if (src && src.length > 10) return src
       }
       for (const el of root.querySelectorAll('*')) {
         if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
@@ -443,10 +902,11 @@ async function waitAndSaveVideo(page, outPath) {
   })
 
   if (videoSrc) {
-    log('info', `video src 직접 저장: ${videoSrc.slice(0, 80)}…`)
+    log('info', `[방법B] video src fetch: ${videoSrc.slice(0, 80)}…`)
     const data = await page.evaluate(async (src) => {
       try {
         const res = await fetch(src)
+        if (!res.ok) return null
         const buf = await res.arrayBuffer()
         return Array.from(new Uint8Array(buf))
       } catch { return null }
@@ -454,72 +914,189 @@ async function waitAndSaveVideo(page, outPath) {
 
     if (data) {
       fs.writeFileSync(outPath, Buffer.from(data))
-      log('ok', `영상 저장: ${path.relative(ROOT, outPath)}`)
+      log('ok', `영상 저장 (src fetch): ${path.relative(ROOT, outPath)}`)
       return outPath
+    }
+
+    // 방법 C: CDP anchor-click download
+    if (page._cdpClient) {
+      try {
+        await page._cdpClient.send('Page.setDownloadBehavior', {
+          behavior:     'allow',
+          downloadPath: path.dirname(outPath),
+        })
+        await page.evaluate((src) => {
+          const a = document.createElement('a')
+          a.href = src
+          a.download = 'video_download.mp4'
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        }, videoSrc)
+        await sleep(5000)
+        const epFiles = fs.readdirSync(path.dirname(outPath)).filter(f => /\.(mp4|webm|mov)$/i.test(f))
+        const rootFiles = fs.readdirSync(CONFIG.videoDir).filter(f => /\.(mp4|webm|mov)$/i.test(f) && !beforeFiles.has(f))
+        const allNew = [...epFiles.map(f => path.join(path.dirname(outPath), f)), ...rootFiles.map(f => path.join(CONFIG.videoDir, f))]
+        if (allNew.length) {
+          const latest = allNew
+            .map(f => ({ f, t: fs.statSync(f).mtimeMs }))
+            .sort((a, b) => b.t - a.t)[0]
+          if (latest && !fs.existsSync(outPath)) {
+            fs.renameSync(latest.f, outPath)
+            log('ok', `영상 저장 (CDP): ${path.relative(ROOT, outPath)}`)
+            return outPath
+          } else if (fs.existsSync(outPath)) {
+            return outPath
+          }
+        }
+      } catch (e) {
+        log('warn', `[방법C] CDP 다운로드 실패: ${e.message}`)
+      }
     }
   }
 
-  // 방법 C: 스크린샷 남기고 실패
-  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_video_save_fail.png'), fullPage: true })
-  throw new Error('영상을 저장할 수 없습니다 (debug_video_save_fail.png 확인)')
+  // 모든 방법 실패
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_save_fail.png'), fullPage: true })
+  throw new Error('영상 저장 실패. debug_video_save_fail.png 확인')
 }
 
-// ── 컷 1개 처리 ──────────────────────────────────────────────────────────
+// ── 컷 1개 처리 ──────────────────────────────────────────────────────
 
-async function processCut(page, cut, episode) {
+async function processCut(page, cut, episode, ratio) {
   const ep     = cut.episode ?? episode ?? 'x'
   const padded = String(cut.no).padStart(2, '0')
   const imgPath = path.join(CONFIG.flowDir, `ep${ep}`, `cut_${padded}.jpg`)
-  const outPath = path.join(CONFIG.downloadDir, `ep${ep}`, `cut_${padded}.mp4`)
+  const outPath = path.join(CONFIG.videoDir, `ep${ep}`, `cut_${padded}.mp4`)
 
   if (fs.existsSync(outPath)) {
     log('ok', `CUT ${cut.no} 이미 존재 → 스킵`)
-    return outPath
+    return { status: 'skip', outPath }
   }
 
-  // 시작 프레임 업로드 (jpg 있을 때만)
-  await uploadStartFrame(page, imgPath)
+  // ① '+' 버튼 → 미디어 패널 → input[type=file]에 cut_NN.jpg 주입
+  log('step', `CUT ${cut.no}: cut_${padded}.jpg 업로드`)
+  await uploadCutImage(page, imgPath)
 
-  // 영상 프롬프트 우선순위: videoPrompt > narration 첫 줄 > imagePrompt 앞 200자
+  // ② 업로드된 썸네일 클릭 → 동영상 모드 전환
+  log('step', `CUT ${cut.no}: 동영상 모드 전환`)
+  await switchToVideoMode(page, imgPath)
+
+  // ③ Omni Flash 모델 선택
+  await selectVideoModel(page, CONFIG.preferredModel)
+
+  // ④ 영상 길이 설정
+  await setVideoDuration(page, cut.duration ?? CONFIG.defaultDuration)
+
+  // ⑤ 비율 설정 (--ratio 파라미터, 기본 9:16)
+  await setVideoRatio(page, ratio)
+
+  // ⑥ 입력창 좌표 확보
+  const inputPos = await findPromptInputPos(page)
+  log('info', `입력창: (${Math.round(inputPos.x)}, ${Math.round(inputPos.y)})`)
+
+  // ⑦ yeori-face.jpg + cut_NN.jpg 썸네일 → 드래그
+  const thumbs = await findVideoReferenceThumbs(page, cut.no)
+  if (thumbs.face) {
+    await dragToPrompt(page, thumbs.face, inputPos)
+    log('info', 'yeori-face 드래그 완료')
+  } else {
+    log('warn', 'yeori-face 썸네일 없음 — 건너뜀')
+  }
+  if (thumbs.cut) {
+    await dragToPrompt(page, thumbs.cut, inputPos)
+    log('info', `cut_${padded} 드래그 완료`)
+  } else {
+    log('warn', `cut_${padded} 썸네일 없음 — 건너뜀`)
+  }
+
+  // ⑧ 영상 프롬프트 입력
   const videoPrompt = (
     cut.videoPrompt?.trim()
-    || cut.narration?.split('\n')[0]?.replace(/샷\s*타입[:\s].*$/i, '').trim()
-    || cut.imagePrompt?.slice(0, 200).trim()
-    || 'Cinematic shot, subtle camera movement, photorealistic'
+    || cut.narration?.split('\n')[0]?.trim()
+    || cut.imagePrompt?.slice(0, 200)
+    || 'Smooth cinematic camera motion. Character moves naturally. Photorealistic.'
   )
-
   await typeVideoPrompt(page, videoPrompt)
+
+  // ⑨ 생성 버튼 클릭
+  log('step', `CUT ${cut.no}: 영상 생성 요청`)
   await clickGenerate(page)
-  return waitAndSaveVideo(page, outPath)
+
+  // ⑩ 완료 대기 → downloads/video/ep{N}/cut_NN.mp4 저장
+  const savedPath = await waitAndSaveVideo(page, outPath)
+  return { status: 'ok', outPath: savedPath }
 }
 
-// ── 메인 ─────────────────────────────────────────────────────────────────
+// ── 헤더 / 서머리 / 리포트 ──────────────────────────────────────────
+
+function printHeader(episode, cuts, ratio) {
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log('  🎬 여리 스튜디오 — Google Flow 영상 자동화')
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  if (episode) console.log(`  에피소드: EP${episode}`)
+  console.log(`  처리 컷: ${cuts.length}개  비율: ${ratio}  모델: ${CONFIG.preferredModel}`)
+  console.log(`  저장 위치: downloads/video/ep${episode ?? 'x'}/`)
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+}
+
+function printSummary(ok, fail, results) {
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+  console.log(`  완료: ✅ ${ok}개 성공 / ❌ ${fail}개 실패`)
+  if (fail > 0) {
+    results.filter(r => r.status === 'fail')
+      .forEach(r => console.log(`    CUT ${r.cutNo}: ${r.reason}`))
+  }
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+}
+
+function saveReport(episode, ratio, results) {
+  ensureDir(CONFIG.videoDir)
+  const reportPath = path.join(CONFIG.videoDir, `report_ep${episode ?? 'x'}_${Date.now()}.json`)
+  fs.writeFileSync(reportPath, JSON.stringify({
+    generatedAt: new Date().toISOString(), episode, ratio, results,
+  }, null, 2))
+  log('info', `리포트: ${path.relative(ROOT, reportPath)}`)
+}
+
+// ── 메인 ─────────────────────────────────────────────────────────────
 
 async function main() {
-  ensureDir(CONFIG.downloadDir)
+  ensureDir(CONFIG.videoDir)
   const { episode, cuts } = loadPrompts()
 
   if (!cuts.length) {
-    log('warn', '처리할 컷이 없습니다. --ep / --cut 조건을 확인하세요.')
+    log('warn', '처리할 컷이 없습니다.')
     return
   }
 
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log('  🎬 여리 스튜디오 — Google Veo 3.1 자동화')
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  if (episode) console.log(`  에피소드: ${episode}`)
-  console.log(`  처리 컷 수: ${cuts.length}개`)
-  console.log(`  저장 위치: downloads/video/`)
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
+  // 진행 상태 로드 (--reset 시 초기화)
+  let progress = loadProgress(episode)
+  if (args.reset) {
+    progress = { episode, completed: [], failed: [] }
+    saveProgress(episode, progress)
+    log('info', '진행 상태 초기화 완료')
+  }
+
+  // 이미 완료된 컷 제외
+  const pending = cuts.filter(c => !progress.completed.includes(c.no))
+
+  printHeader(episode, pending, RATIO)
 
   if (args.dry) {
-    cuts.forEach((c, i) => {
-      const prompt = c.videoPrompt
-        || c.narration?.split('\n')[0]
-        || c.imagePrompt?.slice(0, 80)
+    pending.forEach((c, i) => {
+      const prompt = c.videoPrompt || c.narration?.split('\n')[0] || c.imagePrompt?.slice(0, 80)
       console.log(`  [${i + 1}] CUT ${c.no}: ${prompt}`)
     })
     return
+  }
+
+  if (!pending.length) {
+    log('ok', '모든 컷이 이미 완료됐습니다.')
+    return
+  }
+
+  if (progress.completed.length) {
+    log('info', `이전 진행 이어받기: 완료 [${progress.completed.join(', ')}], 대기 ${pending.length}개`)
   }
 
   let browser
@@ -530,21 +1107,26 @@ async function main() {
   }
 
   const page = await setupPage(browser)
-  await navigateToVeo(page)
+  await navigateToProject(page, episode)
 
   let ok = 0, fail = 0
   const results = []
 
-  for (let i = 0; i < cuts.length; i++) {
-    const cut   = cuts[i]
-    const label = `[${i + 1}/${cuts.length}] CUT ${cut.no}`
-    log('step', `${label} 생성 중…`)
+  for (let i = 0; i < pending.length; i++) {
+    const cut   = pending[i]
+    const label = `[${i + 1}/${pending.length}] CUT ${cut.no}`
+
+    log('step', `${label} 영상 생성 중…`)
 
     for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
       try {
-        const savedPath = await processCut(page, cut, episode)
-        log('ok', `${label} → ${path.relative(ROOT, savedPath)}`)
-        results.push({ cutNo: cut.no, status: 'ok', file: savedPath })
+        const { status, outPath } = await processCut(page, cut, episode, RATIO)
+        const relPath = path.relative(ROOT, outPath)
+        log('ok', `${label} → ${relPath} (${status})`)
+        results.push({ cutNo: cut.no, status: 'ok', file: outPath })
+        progress.completed.push(cut.no)
+        progress.failed = progress.failed.filter(n => n !== cut.no)
+        saveProgress(episode, progress)
         ok++; break
       } catch (err) {
         if (attempt < CONFIG.retryCount) {
@@ -553,29 +1135,29 @@ async function main() {
         } else {
           log('error', `${label} 실패: ${err.message}`)
           results.push({ cutNo: cut.no, status: 'fail', reason: err.message })
+          if (!progress.failed.includes(cut.no)) progress.failed.push(cut.no)
+          saveProgress(episode, progress)
           fail++
         }
       }
     }
 
-    if (i < cuts.length - 1) {
+    // 크레딧 부족 감지 → 진행 상태 저장 후 중단
+    if (await detectCreditExhaustion(page)) {
+      log('error', '크레딧 부족 감지 → 진행 상태 저장 후 중단')
+      saveProgress(episode, progress)
+      log('info', `재실행 명령: npm run video -- --ep=${episode ?? 'x'}`)
+      break
+    }
+
+    // 컷 사이 대기 (마지막 컷 제외)
+    if (i < pending.length - 1) {
       process.stdout.write(`   ${CONFIG.delayMs / 1000}초 대기 중…`)
       await sleep(CONFIG.delayMs)
       process.stdout.write('\r' + ' '.repeat(30) + '\r')
     }
   }
 
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-  console.log(`  완료: ✅ ${ok}개 성공 / ❌ ${fail}개 실패`)
-  if (fail > 0) {
-    results.filter(r => r.status === 'fail')
-      .forEach(r => console.log(`    CUT ${r.cutNo}: ${r.reason}`))
-  }
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n')
-
-  const reportPath = path.join(CONFIG.downloadDir, `report_ep${episode ?? 'x'}_${Date.now()}.json`)
-  fs.writeFileSync(reportPath, JSON.stringify({
-    generatedAt: new Date().toISOString(), episode, results,
-  }, null, 2))
-  log('info', `리포트: ${path.relative(ROOT, reportPath)}`)
+  printSummary(ok, fail, results)
+  saveReport(episode, RATIO, results)
 }

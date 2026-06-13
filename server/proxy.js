@@ -363,7 +363,7 @@ app.get('/api/elevenlabs/voices', async (req, res) => {
 
 // ── POST /api/run-video — video-prompts 저장 후 Veo 자동 실행 (SSE) ──
 app.post('/api/run-video', (req, res) => {
-  const { ep, prompts } = req.body
+  const { ep, ratio, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
   const videoDir    = path.join(ROOT, 'downloads', 'video')
@@ -385,8 +385,9 @@ app.post('/api/run-video', (req, res) => {
   const scriptPath = path.join(ROOT, 'scripts', 'video-automation.js')
   const nodeArgs   = [scriptPath]
   if (episode != null) nodeArgs.push(`--ep=${episode}`)
+  if (ratio)           nodeArgs.push(`--ratio=${ratio}`)
 
-  console.log(`[run-video] EP=${episode ?? 'all'} (req.ep=${ep ?? 'none'}, prompts.episode=${prompts.episode ?? 'none'})`)
+  console.log(`[run-video] EP=${episode ?? 'all'} ratio=${ratio ?? '9:16'} (req.ep=${ep ?? 'none'}, prompts.episode=${prompts.episode ?? 'none'})`)
   console.log(`[run-video] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
 
   const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
