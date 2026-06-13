@@ -677,101 +677,82 @@ async function setVideoRatio(page, ratio = RATIO) {
   else log('warn', `[ratio] ${ratio} 못 찾음 (기본값 사용) — debug_dump_model.png 확인`)
 }
 
-// ── 레퍼런스 썸네일 탐색 ─────────────────────────────────────────────
-// 동영상 모드 전환 후 패널 구조가 달라지므로 3가지 전략 병행
-//   A: img.src / alt 속성에서 파일명 직접 매칭
-//   B: hover → tooltip/innerText 변화 감지 (flow 이미지 생성 방식)
-//   C: 스크린샷 후 수동 확인용 위치 목록 출력
+// ── "프롬프트에 추가" 버튼 클릭 (flow-automation.js 동일) ────────────
 
-// 전략:
-//   cut_01 = 업로드 직후 상단 스트립의 가장 오른쪽(rightmost) 썸네일
-//   yeori-face = 나머지 중 hover tooltip 매칭 → 없으면 cut_01 바로 왼쪽
-
-// flow-automation.js의 findReferenceThumbs() 로직 그대로 사용.
-// closeup → cut_NN 으로만 교체 (첫 번째: yeori-face, 두 번째: cut_NN)
-async function findVideoReferenceThumbs(page, cutNo) {
-  const padded = String(cutNo).padStart(2, '0')
-
-  // 상단 스트립 오른쪽 끝으로 스크롤 (flow-automation.js 동일)
-  await page.evaluate(() => {
-    const strip = [...document.querySelectorAll('*')].find(el => {
-      const r = el.getBoundingClientRect()
-      return el.scrollWidth > el.clientWidth + 50
-        && r.top < window.innerHeight * 0.45
-        && r.top > 0
-        && r.height > 50
-        && r.height < 450
-    })
-    if (strip) strip.scrollLeft = strip.scrollWidth
-  })
-  await sleep(400)
-
-  // 화면에 보이는 img 좌표 수집 (flow-automation.js 동일: 40px 이상, 화면 90% 이내)
-  const imgPositions = await page.evaluate(() =>
-    [...document.querySelectorAll('img')]
-      .map(img => {
-        const r = img.getBoundingClientRect()
-        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), w: Math.round(r.width), h: Math.round(r.height) }
+async function clickAddToPrompt(page) {
+  try {
+    const btns = await page.$x('//button[contains(normalize-space(.), "프롬프트에 추가") and not(@disabled)]')
+    for (const btn of btns) {
+      const clicked = await btn.evaluate(el => {
+        if (el.getBoundingClientRect().width === 0) return false
+        el.click(); return true
       })
-      .filter(p => p.w >= 40 && p.h >= 40
-        && p.y > 0 && p.y < window.innerHeight * 0.9
-        && p.x > 0 && p.x < window.innerWidth)
-  )
-
-  log('info', `[findVideoReferenceThumbs] 탐색 이미지 수: ${imgPositions.length}`)
-
-  const result = { face: null, cut: null }
-
-  for (const pos of imgPositions) {
-    if (result.face && result.cut) break
-
-    await page.mouse.move(pos.x, pos.y)
-    await sleep(600)
-
-    const appeared = await page.evaluate((padded) => {
-      const text = document.body.innerText.toLowerCase()
-      return {
-        face: text.includes('yeori-face') || text.includes('yeori_face'),
-        cut:  text.includes(`cut_${padded}`) || text.includes(`cut${padded}`),
+      if (clicked) return true
+    }
+  } catch {}
+  return page.evaluate(() => {
+    const re = /프롬프트에 추가|add to prompt/i
+    function search(root) {
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        if (re.test(el.textContent) && !el.disabled && el.getBoundingClientRect().width > 0) {
+          el.click(); return true
+        }
       }
-    }, padded)
-
-    if (appeared.face && !result.face) {
-      result.face = pos
-      log('info', `[findVideoReferenceThumbs] yeori-face 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
+      }
+      return false
     }
-    if (appeared.cut && !result.cut) {
-      result.cut = pos
-      log('info', `[findVideoReferenceThumbs] cut_${padded} 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
-    }
-  }
-
-  if (!result.face) log('warn', '[findVideoReferenceThumbs] yeori-face 썸네일 못 찾음')
-  if (!result.cut)  log('warn', `[findVideoReferenceThumbs] cut_${padded} 썸네일 못 찾음`)
-
-  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_thumbs_after.png') })
-  return result
+    return search(document)
+  })
 }
 
-// ── 썸네일 → 프롬프트 입력창 드래그 ─────────────────────────────────
-// flow-automation.js의 dragToPrompt()와 동일
+// ── '+' 패널에서 파일명으로 정확히 선택 → "프롬프트에 추가" ──────────
+// 파일 없으면 즉시 Error (폴백 없음)
 
-async function dragToPrompt(page, fromPos, toPos) {
-  await page.mouse.move(fromPos.x, fromPos.y)
-  await sleep(200)
-  await page.mouse.down()
-  await sleep(150)
-  const steps = 12
-  for (let i = 1; i <= steps; i++) {
-    await page.mouse.move(
-      Math.round(fromPos.x + (toPos.x - fromPos.x) * (i / steps)),
-      Math.round(fromPos.y + (toPos.y - fromPos.y) * (i / steps))
-    )
-    await sleep(25)
+async function addFileToPromptByName(page, fileName) {
+  const nameBase = path.basename(fileName, path.extname(fileName)).toLowerCase()
+
+  if (!await clickPlusButton(page)) {
+    throw new Error(`[addToPrompt] '+' 버튼 클릭 실패 (${fileName})`)
   }
-  await sleep(200)
-  await page.mouse.up()
-  await sleep(600)
+  await sleep(1200)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, `debug_panel_${nameBase}.png`) })
+
+  const clicked = await page.evaluate((nameBase) => {
+    function search(root) {
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 10 || r.height < 10) continue
+        const txt   = (el.textContent        || '').trim().toLowerCase()
+        const alt   = (el.getAttribute('alt')        || '').toLowerCase()
+        const title = (el.getAttribute('title')      || '').toLowerCase()
+        const label = (el.getAttribute('aria-label') || '').toLowerCase()
+        if (txt === nameBase || txt.includes(nameBase) ||
+            alt.includes(nameBase) || title.includes(nameBase) || label.includes(nameBase)) {
+          el.click()
+          return `${el.tagName} "${(txt || alt || title || label).slice(0, 40)}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
+      }
+      return null
+    }
+    return search(document)
+  }, nameBase)
+
+  if (!clicked) {
+    await page.keyboard.press('Escape').catch(() => {})
+    throw new Error(`[addToPrompt] 파일 없음: ${fileName}`)
+  }
+  log('ok', `[addToPrompt] 선택: ${clicked}`)
+  await sleep(800)
+
+  const added = await clickAddToPrompt(page)
+  if (!added) throw new Error(`[addToPrompt] "프롬프트에 추가" 버튼 못 찾음 (${fileName})`)
+  log('ok', `[addToPrompt] 완료: ${fileName}`)
+  await sleep(800)
 }
 
 // ── 입력창 위치 탐색 ─────────────────────────────────────────────────
@@ -1047,24 +1028,12 @@ async function processCut(page, cut, episode, ratio) {
   // ⑤ 비율 설정 (--ratio 파라미터, 기본 9:16)
   await setVideoRatio(page, ratio)
 
-  // ⑥ 입력창 좌표 확보
-  const inputPos = await findPromptInputPos(page)
-  log('info', `입력창: (${Math.round(inputPos.x)}, ${Math.round(inputPos.y)})`)
+  // ⑦ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가 (없으면 에러)
+  log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
+  await addFileToPromptByName(page, 'yeori-face.jpg')
 
-  // ⑦ yeori-face.jpg + cut_NN.jpg 썸네일 → 드래그
-  const thumbs = await findVideoReferenceThumbs(page, cut.no)
-  if (thumbs.face) {
-    await dragToPrompt(page, thumbs.face, inputPos)
-    log('info', 'yeori-face 드래그 완료')
-  } else {
-    log('warn', 'yeori-face 썸네일 없음 — 건너뜀')
-  }
-  if (thumbs.cut) {
-    await dragToPrompt(page, thumbs.cut, inputPos)
-    log('info', `cut_${padded} 드래그 완료`)
-  } else {
-    log('warn', `cut_${padded} 썸네일 없음 — 건너뜀`)
-  }
+  log('step', `CUT ${cut.no}: cut_${padded}.jpg → 프롬프트 추가`)
+  await addFileToPromptByName(page, `cut_${padded}.jpg`)
 
   // ⑧ 영상 프롬프트 입력 (imagePrompt 우선)
   const videoPrompt = (
