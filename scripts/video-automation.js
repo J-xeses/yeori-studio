@@ -1148,11 +1148,10 @@ async function processCut(page, cut, episode, ratio) {
     log('warn', `cut_${padded} 썸네일 없음 — 건너뜀`)
   }
 
-  // ⑧ 영상 프롬프트 입력
+  // ⑧ 영상 프롬프트 입력 (imagePrompt 우선)
   const videoPrompt = (
-    cut.videoPrompt?.trim()
-    || cut.narration?.split('\n')[0]?.trim()
-    || cut.imagePrompt?.slice(0, 200)
+    cut.imagePrompt?.trim()
+    || cut.videoPrompt?.trim()
     || 'Smooth cinematic camera motion. Character moves naturally. Photorealistic.'
   )
   await typeVideoPrompt(page, videoPrompt)
@@ -1223,7 +1222,7 @@ async function main() {
 
   if (args.dry) {
     pending.forEach((c, i) => {
-      const prompt = c.videoPrompt || c.narration?.split('\n')[0] || c.imagePrompt?.slice(0, 80)
+      const prompt = c.imagePrompt?.slice(0, 80) || c.videoPrompt?.slice(0, 80)
       console.log(`  [${i + 1}] CUT ${c.no}: ${prompt}`)
     })
     return
