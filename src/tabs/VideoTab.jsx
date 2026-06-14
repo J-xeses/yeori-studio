@@ -12,6 +12,14 @@ function secondsToSrt(sec) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(Math.floor(ss)).padStart(2,'0')},000`
 }
 
+function stripMeta(text) {
+  if (!text) return text
+  return text
+    .replace(/\n?샷\s*타입[:：][^\n]*/gi, '')
+    .replace(/^(CLOSEUP|FULLBODY)\s*(SHOT)?\s*[-—]?\s*/i, '')
+    .trim()
+}
+
 export default function VideoTab() {
   const { state, dispatch } = useApp()
   const { cuts, videoSettings, renderProgress } = state
@@ -70,7 +78,7 @@ export default function VideoTab() {
   const exportSRT = () => {
     let srt = '', t = 0
     cuts.forEach((c, i) => {
-      const text = c.dialogue || c.narration; if (!text) return
+      const text = stripMeta(c.dialogue || c.narration); if (!text) return
       const dur = c.duration || 5
       srt += `${i + 1}\n${secondsToSrt(t)} --> ${secondsToSrt(t + dur)}\n${text}\n\n`
       t += dur
@@ -93,7 +101,7 @@ export default function VideoTab() {
     for (let i = 0; i < cuts.length; i++) {
       const c = cuts[i]
       dispatch({ type: 'SET_RENDER', p: { current: i + 1 } })
-      const text = c.dialogue || c.narration || ''; const dur = c.duration || 5
+      const text = stripMeta(c.dialogue || c.narration || ''); const dur = c.duration || 5
       if (text) { srt += `${i+1}\n${secondsToSrt(t)} --> ${secondsToSrt(t+dur)}\n${text}\n\n`; t += dur }
       const info = `씬: ${c.scene || ''}\n액션: ${c.action || ''}\n대사: ${c.dialogue || ''}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
       zip.file(`cut_${c.no}/info.txt`, info)
