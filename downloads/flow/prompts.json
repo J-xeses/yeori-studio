@@ -1,44 +1,50 @@
 {
-  "episode": 2,
-  "title": "이어폰 끼는 순간, 내 인생이 영화가 돼",
-  "hookClip": "hook_01",
+  "episode": 5,
+  "title": "카페에서 혼자 쓰는 편지",
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "Start frame featuring Seo Yeori's face clearly visible. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Standing beside building wall on Seoul street, golden afternoon light, reaching into bag to pull out earphones. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "narration": "이 순간 알고 있어? 이어폰 하나가 세상을 완전히 바꿔버린다는 거."
+      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting by a sunlit cafe window, long wavy dark brown hair NOT short, hair resting softly over shoulders. She wears a cream-colored knit top tucked into wide-leg beige trousers with subtle ankle cuff roll-up detail. Gold necklace and thin gold bracelet visible. She pulls out stationery paper from a tote bag and places it gently on the wooden table, uncapping a pen with a quiet smile. K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio, DO NOT make average body proportions. DO NOT change clothing. Warm afternoon golden light streaming through large cafe windows, soft bokeh of coffee cups and plants in background. Background people sitting quietly, background people must not interact with the main character. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. natural Korean beauty.",
+      "narration": "가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.",
+      "duration": 8
     },
     {
       "no": 2,
-      "imagePrompt": "Start frame featuring Seo Yeori's face close-up. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Earphone just inserted into right ear, eyes slowly opening wide with quiet sense of wonder. Seoul street background blurred. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "narration": "같은 거리인데… 갑자기 내가 영화 주인공이 된 것 같잖아."
+      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle and never exaggerated. She gazes down at stationery paper with a quietly contemplative expression, lips gently pressed together, then a barely-there soft smile forms at the corner of her mouth. Warm golden afternoon backlight from cafe window kissing her hair. Soft shadow under her chin. DO NOT change clothing, cream knit top visible at shoulder. Gold necklace glinting softly. Emotion: thoughtful, tender, searching. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
+      "dialogue": "근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.",
+      "duration": 7
     },
     {
       "no": 3,
-      "imagePrompt": "Start frame showing Seo Yeori's face and upper body. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Walking slowly along Seoul shopping street, passing store window that reflects her silhouette. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "narration": "음악이 깔리면… 심지어 걷는 것도 연기가 돼."
+      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting at a wooden cafe table by the window, slightly turned to the side in profile, long wavy dark brown hair NOT short, falling softly over one shoulder. She holds a pen and writes slowly on cream stationery paper laid on the table, wrist moving in gentle fluid motion. Gold bracelet on wrist catches the afternoon light. Warm window light falls across her hand and the paper. DO NOT change clothing, cream knit top and wide-leg beige trousers visible. K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio, DO NOT make average body proportions. Tote bag visible on the seat beside her. Background people seated quietly at distance, background people must not interact with the main character. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully, natural Korean beauty.",
+      "narration": "받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.",
+      "duration": 8
     },
     {
       "no": 4,
-      "imagePrompt": "Start frame featuring Seo Yeori's face and upper body slight low-angle. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap held lightly at brim as wind moves hair. Standing near street bench looking upward at sky. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "dialogue": "있잖아, 나 진짜로 묻고 싶은 게 있어. 너도 이런 적 있지 않아?"
+      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle. She holds a white ceramic coffee cup with both hands, gold bracelet visible on wrist, taking a gentle sip, eyes drifting toward the window with a soft faraway gaze. Then she lowers the cup and a small amused smile flickers across her face as she glances back down. Emotion: warmly self-aware, gently amused, tender. DO NOT change clothing, gold necklace visible. Warm afternoon light, soft bokeh background of cafe interior. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
+      "dialogue": "이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...",
+      "duration": 7
     },
     {
       "no": 5,
-      "imagePrompt": "Start frame showing Seo Yeori's face clearly with upper body. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Glancing down at smartphone screen briefly while walking on Seoul street, stopping at crosswalk. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "dialogue": "이 노래 나올 때마다… 진짜 어디든 갈 수 있을 것 같거든.",
-      "narration": "목적지가 없어도 괜찮아. 음악이 있으면 그냥, 어디든 이야기가 돼."
+      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle. She rests her chin on both hands, elbows on the wooden table, reading a handwritten letter below her. Expression is quiet, softly satisfied, eyes moving gently as she reads. Then eyes soften further and she gives a tiny, barely perceptible nod. Emotion: peaceful, introspective, quietly moved. DO NOT change clothing, gold necklace visible, warm golden cafe light. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
+      "narration": "편지는 쓰는 사람의 마음도 함께 정리해주니까요.",
+      "dialogue": "다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.",
+      "duration": 12
     },
     {
       "no": 6,
-      "imagePrompt": "Start frame featuring Seo Yeori's face close-up. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Paused at entrance of narrow Seoul alley, holding one earphone just removed from ear. Eyes slightly narrowed, introspective expression. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "narration": "가끔은 이어폰을 빼는 순간도 필요해. 그래야 다시 끼는 게 더 좋으니까."
+      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting at a wooden cafe table by the window, long wavy dark brown hair NOT short. She carefully folds stationery paper into a white envelope, seals it with her fingertip, then gently holds the sealed envelope up near her chest, looking at it briefly before placing it into her tote bag. Gold bracelet and gold necklace visible. Warm late-afternoon amber light, slightly cooler than before. DO NOT change clothing, cream knit top and wide-leg beige trousers. K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio, DO NOT make average body proportions. Background people seated quietly further away, background people must not interact with the main character. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully, natural Korean beauty.",
+      "narration": "쓴다는 것 자체로 이미 충분한 용기니까요.",
+      "dialogue": "보낼지 말지는 나중에 결정하기로 했어요.",
+      "duration": 9
     },
     {
       "no": 7,
-      "imagePrompt": "Start frame showing Seo Yeori's back and profile. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture, delicate gold necklace, K-model proportions small face long slim legs slender. White APC tee, cropped bootcut jeans rolled up, red strappy heels, beige mini bag, black baseball cap worn loosely. Re-inserting earphone, beginning to walk away from camera down Seoul street at golden hour. Figure growing smaller in distance. Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
-      "dialogue": "오늘도… 내 인생은 영화야.",
-      "narration": "이어폰 하나면 충분해. 어디서든, 네 인생은 이미 영화니까."
+      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle. She takes the last quiet sip from a white ceramic cup, then sets it down and turns her gaze toward the window. Her expression is still, soft, emotionally settled, not smiling but deeply at peace. After a long beat, her eyes gently lower, lashes casting faint shadow. Emotion: quiet resolution, lingering warmth, gentle melancholy. DO NOT change clothing. Gold necklace catches last rays of late afternoon light. Window light is amber and cooler, soft lens flare at edge of frame. No movement except the subtle shift of her gaze. BGM silence implied, ambient cafe sound only. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
+      "narration": "오늘 이 카페는, 나의 아주 작은 고백함이었어요.",
+      "duration": 6
     }
   ]
 }

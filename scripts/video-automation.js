@@ -419,29 +419,151 @@ async function uploadCutImage(page, imagePath) {
 async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferredModel) {
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // ── 1. "동영상" 탭 클릭 (y ≥ 800, 텍스트 정확 매칭) ─────────────────
-  const videoTabClicked = await page.evaluate(() => {
-    const all = [...document.querySelectorAll('*')]
-    for (const el of all) {
-      const r = el.getBoundingClientRect()
-      if (r.top < 800 || r.width < 5 || r.height < 5) continue
-      const txt = (el.textContent || '').trim()
-      if (txt === '동영상' || txt === 'Video') {
-        el.click()
-        return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
+  // ── 0. 탭 DOM 구조 출력 (active 상태 판별 기준 확인용) ───────────────
+  const tabInfo = await page.evaluate(() => {
+    const results = []
+    function scan(root, depth = 0) {
+      if (depth > 12) return
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.top < 700 || r.width < 4 || r.height < 4) continue
+        const txt = (el.textContent || '').trim()
+        if (txt === '동영상' || txt === '이미지' || txt === 'Video' || txt === 'Image') {
+          results.push({
+            tag: el.tagName,
+            txt,
+            className: el.className || '',
+            role: el.getAttribute('role') || '',
+            ariaSelected: el.getAttribute('aria-selected'),
+            ariaPressed: el.getAttribute('aria-pressed'),
+            ariaChecked: el.getAttribute('aria-checked'),
+            dataActive: el.getAttribute('data-active'),
+            dataSelected: el.getAttribute('data-selected'),
+            tabindex: el.getAttribute('tabindex'),
+            x: Math.round(r.left), y: Math.round(r.top),
+          })
+        }
+        if (el.shadowRoot) scan(el.shadowRoot, depth + 1)
       }
     }
-    return null
+    scan(document)
+    return results
   })
 
-  if (!videoTabClicked) {
+  console.log('[videoMode] 탭 DOM 구조 (클릭 전):')
+  if (!tabInfo.length) console.log('  (탭 요소 없음 — y≥700 기준)')
+  tabInfo.forEach(t => console.log(
+    `  <${t.tag} role="${t.role}"> "${t.txt}" | aria-selected=${t.ariaSelected} aria-pressed=${t.ariaPressed} aria-checked=${t.ariaChecked} | data-active=${t.dataActive} | class="${t.className.slice(0, 100)}" | (${t.x},${t.y})`
+  ))
+
+  // ── 탭 클릭 + 전환 검증 헬퍼 ─────────────────────────────────────────
+  const clickAndVerify = async () => {
+    const clicked = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.top < 800 || r.width < 5 || r.height < 5) continue
+        const txt = (el.textContent || '').trim()
+        if (txt === '동영상' || txt === 'Video') {
+          el.click()
+          return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
+      }
+      return null
+    })
+    if (!clicked) return { clicked: false, verified: false }
+    log('ok', `[videoMode] "동영상" 탭 클릭: ${clicked}`)
+    await sleep(1200)
+
+    const { verified, postInfo } = await page.evaluate(() => {
+      const postInfo = []
+      function scanInfo(root, depth = 0) {
+        if (depth > 12) return
+        for (const el of root.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect()
+          if (r.top < 700 || r.width < 4 || r.height < 4) continue
+          const txt = (el.textContent || '').trim()
+          if (txt === '동영상' || txt === '이미지' || txt === 'Video' || txt === 'Image') {
+            postInfo.push({
+              txt,
+              ariaSelected: el.getAttribute('aria-selected'),
+              ariaPressed: el.getAttribute('aria-pressed'),
+              ariaChecked: el.getAttribute('aria-checked'),
+              dataActive: el.getAttribute('data-active'),
+              className: (el.className || '').slice(0, 80),
+            })
+          }
+          if (el.shadowRoot) scanInfo(el.shadowRoot, depth + 1)
+        }
+      }
+      scanInfo(document)
+
+      // 방법 A: 동영상 탭 자체 active 속성 확인
+      function checkVideoActive(root, depth = 0) {
+        if (depth > 12) return false
+        for (const el of root.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect()
+          if (r.top < 700 || r.width < 4 || r.height < 4) continue
+          const txt = (el.textContent || '').trim()
+          if (txt !== '동영상' && txt !== 'Video') continue
+          if (el.getAttribute('aria-selected') === 'true') return true
+          if (el.getAttribute('aria-pressed') === 'true') return true
+          if (el.getAttribute('aria-checked') === 'true') return true
+          const da = el.getAttribute('data-active')
+          if (da === 'true' || da === '') return true
+          if (el.getAttribute('data-selected') === 'true') return true
+          const cls = (el.className || '').toLowerCase()
+          if (/\b(active|selected|current|pressed|on)\b/.test(cls)) return true
+          if (el.shadowRoot && checkVideoActive(el.shadowRoot, depth + 1)) return true
+        }
+        return false
+      }
+
+      // 방법 B: 이미지 탭이 비활성 상태 → 동영상이 활성 추론
+      function checkImageInactive(root, depth = 0) {
+        if (depth > 12) return false
+        for (const el of root.querySelectorAll('*')) {
+          const r = el.getBoundingClientRect()
+          if (r.top < 700 || r.width < 4 || r.height < 4) continue
+          const txt = (el.textContent || '').trim()
+          if (txt !== '이미지' && txt !== 'Image') continue
+          if (el.getAttribute('aria-selected') === 'false') return true
+          if (el.getAttribute('aria-pressed') === 'false') return true
+          if (el.shadowRoot && checkImageInactive(el.shadowRoot, depth + 1)) return true
+        }
+        return false
+      }
+
+      const verified = checkVideoActive(document) || checkImageInactive(document)
+      return { verified, postInfo }
+    })
+
+    console.log(`[videoMode] 클릭 후 탭 상태: ${JSON.stringify(postInfo)}`)
+    console.log(`[videoMode] 검증 결과: ${verified ? '성공' : '실패'}`)
+    return { clicked: true, verified }
+  }
+
+  // ── 1. 첫 번째 시도 ─────────────────────────────────────────────────
+  let { clicked, verified } = await clickAndVerify()
+
+  if (!clicked) {
     log('warn', '[videoMode] "동영상" 탭 못 찾음 (y≥800)')
     await debugDump(page, 'toggle')
     await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
     return false
   }
-  log('ok', `[videoMode] "동영상" 탭: ${videoTabClicked}`)
-  await sleep(1200)
+
+  if (!verified) {
+    log('warn', '[videoMode] 동영상 모드 전환 검증 실패 — 1회 재시도')
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_verify_fail.png') })
+    await sleep(1000)
+    ;({ clicked, verified } = await clickAndVerify())
+    if (!verified) {
+      await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_verify_retry_fail.png') })
+      throw new Error('[videoMode] 동영상 모드 전환 실패 (재시도 포함) — 미디어 라이브러리/비율/모델 선택 중단')
+    }
+  }
+
+  log('ok', '[videoMode] 동영상 모드 전환 확인')
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab.png') })
 
   // ── 2. 비율 버튼 클릭 (텍스트 기반, Shadow DOM 포함) ────────────────
