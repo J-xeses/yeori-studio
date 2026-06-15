@@ -410,220 +410,145 @@ async function uploadCutImage(page, imagePath) {
 
 // ── 동영상 모드 전환 + 비율 + 모델 ─────────────────────────────────
 //
-// UI 구조 (페이지 소스 기반):
-//   - 하단 프롬프트 바 placeholder = "무엇을 만들고 싶으신가요?" (y ≥ 800)
-//   - 프롬프트 바에 "이미지" / "동영상" 탭 버튼이 직접 노출됨
-//   - "동영상" 탭 클릭 후 비율(9:16 등) 버튼, 모델 버튼 순서대로 텍스트로 찾아 클릭
-//   - 좌표 기반 클릭 전혀 사용하지 않음
+// UI 구조 (debug-tabs.js 확인 결과):
+//   1. 프롬프트 바 "Nano Banana" 모델 버튼 클릭 → 드롭다운 오픈
+//   2. 드롭다운(role="menu" .DropdownMenuContent) 내부:
+//      - role="tablist" > role="tab" .flow_tab_slider_trigger : 이미지/동영상 전환
+//      - 비율 버튼 (9:16 등) 및 모델 버튼이 동일 드롭다운 내에 존재
 
 async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferredModel) {
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // ── 0. 탭 DOM 구조 출력 (active 상태 판별 기준 확인용) ───────────────
-  const tabInfo = await page.evaluate(() => {
-    const results = []
-    function scan(root, depth = 0) {
-      if (depth > 12) return
-      for (const el of root.querySelectorAll('*')) {
-        const r = el.getBoundingClientRect()
-        if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
-        const txt = (el.textContent || '').trim()
-        if (txt === '동영상' || txt === '이미지' || txt === 'Video' || txt === 'Image') {
-          results.push({
-            tag: el.tagName,
-            txt,
-            className: el.className || '',
-            role: el.getAttribute('role') || '',
-            ariaSelected: el.getAttribute('aria-selected'),
-            ariaPressed: el.getAttribute('aria-pressed'),
-            ariaChecked: el.getAttribute('aria-checked'),
-            dataActive: el.getAttribute('data-active'),
-            dataSelected: el.getAttribute('data-selected'),
-            tabindex: el.getAttribute('tabindex'),
-            x: Math.round(r.left), y: Math.round(r.top),
-          })
-        }
-        if (el.shadowRoot) scan(el.shadowRoot, depth + 1)
+  // ── 1. "Nano Banana" 드롭다운 트리거 클릭 ───────────────────────────
+  const triggerClicked = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      const r = el.getBoundingClientRect()
+      if (r.width < 1 || r.height < 1) continue
+      const txt = (el.textContent || '').trim()
+      if (txt.includes('Nano Banana')) {
+        el.click()
+        return `${el.tagName} "${txt.slice(0, 50)}" (${Math.round(r.left)},${Math.round(r.top)})`
       }
     }
-    scan(document)
-    return results
+    return null
   })
 
-  console.log('[videoMode] 탭 DOM 구조 (클릭 전):')
-  if (!tabInfo.length) console.log('  (탭 요소 없음 — y≥580, x>300 기준)')
-  tabInfo.forEach(t => console.log(
-    `  <${t.tag} role="${t.role}"> "${t.txt}" | aria-selected=${t.ariaSelected} aria-pressed=${t.ariaPressed} aria-checked=${t.ariaChecked} | data-active=${t.dataActive} | class="${t.className.slice(0, 100)}" | (${t.x},${t.y})`
-  ))
-
-  // ── 탭 클릭 + 전환 검증 헬퍼 ─────────────────────────────────────────
-  const clickAndVerify = async () => {
-    const clicked = await page.evaluate(() => {
-      for (const el of document.querySelectorAll('*')) {
-        const r = el.getBoundingClientRect()
-        if (r.top < 580 || r.left < 300 || r.width < 5 || r.height < 5) continue
-        const txt = (el.textContent || '').trim()
-        if (txt === '동영상' || txt === 'Video') {
-          el.click()
-          return `${el.tagName} "${txt}" (${Math.round(r.left)},${Math.round(r.top)})`
-        }
-      }
-      return null
-    })
-    if (!clicked) return { clicked: false, verified: false }
-    log('ok', `[videoMode] "동영상" 탭 클릭: ${clicked}`)
-    await sleep(1200)
-
-    const { verified, postInfo } = await page.evaluate(() => {
-      const postInfo = []
-      function scanInfo(root, depth = 0) {
-        if (depth > 12) return
-        for (const el of root.querySelectorAll('*')) {
-          const r = el.getBoundingClientRect()
-          if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
-          const txt = (el.textContent || '').trim()
-          if (txt === '동영상' || txt === '이미지' || txt === 'Video' || txt === 'Image') {
-            postInfo.push({
-              txt,
-              ariaSelected: el.getAttribute('aria-selected'),
-              ariaPressed: el.getAttribute('aria-pressed'),
-              ariaChecked: el.getAttribute('aria-checked'),
-              dataActive: el.getAttribute('data-active'),
-              className: (el.className || '').slice(0, 80),
-            })
-          }
-          if (el.shadowRoot) scanInfo(el.shadowRoot, depth + 1)
-        }
-      }
-      scanInfo(document)
-
-      // 방법 A: 동영상 탭 자체 active 속성 확인
-      function checkVideoActive(root, depth = 0) {
-        if (depth > 12) return false
-        for (const el of root.querySelectorAll('*')) {
-          const r = el.getBoundingClientRect()
-          if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
-          const txt = (el.textContent || '').trim()
-          if (txt !== '동영상' && txt !== 'Video') continue
-          if (el.getAttribute('aria-selected') === 'true') return true
-          if (el.getAttribute('aria-pressed') === 'true') return true
-          if (el.getAttribute('aria-checked') === 'true') return true
-          const da = el.getAttribute('data-active')
-          if (da === 'true' || da === '') return true
-          if (el.getAttribute('data-selected') === 'true') return true
-          const cls = (el.className || '').toLowerCase()
-          if (/\b(active|selected|current|pressed|on)\b/.test(cls)) return true
-          if (el.shadowRoot && checkVideoActive(el.shadowRoot, depth + 1)) return true
-        }
-        return false
-      }
-
-      // 방법 B: 이미지 탭이 비활성 상태 → 동영상이 활성 추론
-      function checkImageInactive(root, depth = 0) {
-        if (depth > 12) return false
-        for (const el of root.querySelectorAll('*')) {
-          const r = el.getBoundingClientRect()
-          if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
-          const txt = (el.textContent || '').trim()
-          if (txt !== '이미지' && txt !== 'Image') continue
-          if (el.getAttribute('aria-selected') === 'false') return true
-          if (el.getAttribute('aria-pressed') === 'false') return true
-          if (el.shadowRoot && checkImageInactive(el.shadowRoot, depth + 1)) return true
-        }
-        return false
-      }
-
-      const verified = checkVideoActive(document) || checkImageInactive(document)
-      return { verified, postInfo }
-    })
-
-    console.log(`[videoMode] 클릭 후 탭 상태: ${JSON.stringify(postInfo)}`)
-    console.log(`[videoMode] 검증 결과: ${verified ? '성공' : '실패'}`)
-    return { clicked: true, verified }
+  if (!triggerClicked) {
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_trigger_fail.png') })
+    throw new Error('[videoMode] "Nano Banana" 드롭다운 트리거 없음 — 동영상 모드 전환 중단')
   }
+  log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerClicked}`)
 
-  // ── 1. 첫 번째 시도 ─────────────────────────────────────────────────
-  let { clicked, verified } = await clickAndVerify()
-
-  if (!clicked) {
-    log('warn', '[videoMode] "동영상" 탭 못 찾음 (y≥580, x>300)')
-    await debugDump(page, 'toggle')
-    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
-    return false
-  }
-
-  if (!verified) {
-    log('warn', '[videoMode] 동영상 모드 전환 검증 실패 — 1회 재시도')
-    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_verify_fail.png') })
-    await sleep(1000)
-    ;({ clicked, verified } = await clickAndVerify())
-    if (!verified) {
-      await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_verify_retry_fail.png') })
-      throw new Error('[videoMode] 동영상 모드 전환 실패 (재시도 포함) — 미디어 라이브러리/비율/모델 선택 중단')
+  // ── 2. 드롭다운(DropdownMenuContent) 열릴 때까지 대기 ───────────────
+  try {
+    await page.waitForFunction(
+      () => !!document.querySelector('[role="menu"][class*="DropdownMenuContent"]'),
+      { timeout: 5000 }
+    )
+  } catch {
+    try {
+      await page.waitForFunction(() => !!document.querySelector('[role="menu"]'), { timeout: 3000 })
+    } catch {
+      await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_dropdown_fail.png') })
+      throw new Error('[videoMode] 드롭다운이 열리지 않음 — 동영상 모드 전환 중단')
     }
   }
+  log('ok', '[videoMode] 드롭다운 열림 확인')
+  await sleep(400)
 
-  log('ok', '[videoMode] 동영상 모드 전환 확인')
+  // ── 3. 드롭다운 내 "동영상" 탭 클릭 ─────────────────────────────────
+  const tabClicked = await page.evaluate(() => {
+    for (const menu of document.querySelectorAll('[role="menu"]')) {
+      for (const btn of menu.querySelectorAll('[role="tab"]')) {
+        const r = btn.getBoundingClientRect()
+        if (r.width < 1 || r.height < 1) continue
+        const txt = (btn.textContent || '').trim()
+        const cls = btn.className || ''
+        if (txt.includes('동영상') && cls.includes('flow_tab_slider_trigger')) {
+          btn.click()
+          return `role=tab "${txt.slice(0, 40)}" aria-selected=${btn.getAttribute('aria-selected')} (${Math.round(r.left)},${Math.round(r.top)})`
+        }
+      }
+    }
+    return null
+  })
+
+  if (!tabClicked) {
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab_fail.png') })
+    throw new Error('[videoMode] 드롭다운 내 "동영상" 탭 없음 — 전환 중단')
+  }
+  log('ok', `[videoMode] "동영상" 탭 클릭: ${tabClicked}`)
+  await sleep(600)
+
+  // ── 4. 검증: "동영상" 탭 aria-selected === "true" ─────────────────
+  const verified = await page.evaluate(() => {
+    for (const menu of document.querySelectorAll('[role="menu"]')) {
+      for (const btn of menu.querySelectorAll('[role="tab"]')) {
+        const txt = (btn.textContent || '').trim()
+        if (txt.includes('동영상') && btn.getAttribute('aria-selected') === 'true') return true
+      }
+    }
+    return false
+  })
+
+  if (!verified) {
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_verify_fail.png') })
+    throw new Error('[videoMode] "동영상" 탭 aria-selected=true 검증 실패 — 전환 중단')
+  }
+  log('ok', '[videoMode] 동영상 모드 전환 검증 성공 (aria-selected=true)')
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab.png') })
 
-  // ── 2. 비율 버튼 클릭 (텍스트 기반, Shadow DOM 포함) ────────────────
+  // ── 5. 비율 선택 (드롭다운 내부) ─────────────────────────────────────
   const is169 = ratio === '16:9'
   const ratioKeys = is169
-    ? ['16:9', '가로', 'landscape', 'Landscape', '16 : 9']
-    : ['9:16', '세로', 'portrait', 'Portrait', '9 : 16']
+    ? ['16:9', '16 : 9', '가로', 'landscape']
+    : ['9:16', '9 : 16', '세로', 'portrait']
 
   const ratioClicked = await page.evaluate((keys) => {
-    function scan(root) {
-      for (const el of root.querySelectorAll('*')) {
+    for (const menu of document.querySelectorAll('[role="menu"]')) {
+      for (const el of menu.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
-        if (r.width < 4 || r.height < 4) continue
-        const txt   = (el.textContent || '').trim()
-        const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '')
+        if (r.width < 1 || r.height < 1) continue
+        if (el.children.length > 5) continue
+        const txt = (el.textContent || '').trim()
+        const label = el.getAttribute('aria-label') || el.getAttribute('title') || ''
         if (keys.some(k => `${txt} ${label}`.toLowerCase().includes(k.toLowerCase()))) {
           el.click()
           return `${el.tagName} "${txt.slice(0, 30)}" (${Math.round(r.left)},${Math.round(r.top)})`
         }
       }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot); if (r) return r }
-      }
-      return null
     }
-    return scan(document)
+    return null
   }, ratioKeys)
 
   if (ratioClicked) log('ok', `[videoMode] ${ratio} 비율: ${ratioClicked}`)
   else log('warn', `[videoMode] ${ratio} 비율 못 찾음`)
-  await sleep(600)
+  await sleep(400)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_ratio.png') })
 
-  // ── 3. Omni Flash 모델 선택 (텍스트 기반, Shadow DOM 포함) ──────────
-  const modelTargets = [modelName, 'Omni Flash', 'Flash', 'Omni']
+  // ── 6. 모델 선택 (드롭다운 내부) ─────────────────────────────────────
+  const modelTargets = [modelName, 'Veo 3.1 Fast Light', 'Veo', 'Fast Light']
   const modelClicked = await page.evaluate((targets) => {
-    function scan(root) {
+    for (const menu of document.querySelectorAll('[role="menu"]')) {
       for (const target of targets) {
-        for (const el of root.querySelectorAll('*')) {
+        for (const el of menu.querySelectorAll('*')) {
           const r = el.getBoundingClientRect()
-          if (r.width < 4 || r.height < 4) continue
+          if (r.width < 1 || r.height < 1) continue
           if (el.children.length > 8) continue
           const txt = (el.textContent || '').trim()
-          if (txt.includes(target) && txt.length < 60) {
+          if (txt.includes(target) && txt.length < 80) {
             el.click()
-            return `${el.tagName} "${txt.slice(0, 40)}" (${Math.round(r.left)},${Math.round(r.top)})`
+            return `${el.tagName} "${txt.slice(0, 50)}" (${Math.round(r.left)},${Math.round(r.top)})`
           }
         }
       }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot); if (r) return r }
-      }
-      return null
     }
-    return scan(document)
+    return null
   }, modelTargets)
 
   if (modelClicked) log('ok', `[videoMode] 모델: ${modelClicked}`)
-  else log('warn', `[videoMode] ${modelName} 못 찾음`)
-  await sleep(800)
+  else log('warn', `[videoMode] 모델 "${modelName}" 못 찾음`)
+  await sleep(600)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
   return true
