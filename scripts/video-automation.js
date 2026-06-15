@@ -1138,25 +1138,30 @@ async function processCut(page, cut, episode, ratio) {
     return { status: 'skip', outPath }
   }
 
-  // ① '+' 버튼 → 미디어 패널 → input[type=file]에 cut_NN.jpg 주입
+  // ① 동영상 모드 전환 (탭 + 비율) — 실패 시 noRetry로 즉시 중단
+  log('step', `CUT ${cut.no}: 동영상 모드 전환 (ratio=${ratio}, model=${CONFIG.preferredModel})`)
+  try {
+    await switchToVideoMode(page, ratio, CONFIG.preferredModel)
+  } catch (err) {
+    err.noRetry = true
+    throw err
+  }
+
+  // ② '+' 버튼 → 미디어 패널 → input[type=file]에 cut_NN.jpg 주입
   log('step', `CUT ${cut.no}: cut_${padded}.jpg 업로드`)
   await uploadCutImage(page, imgPath)
-
-  // ② 모델 버튼 → 팝업 (동영상 탭 + 비율 + 모델) 한 번에 처리
-  log('step', `CUT ${cut.no}: 동영상 모드 전환 (ratio=${ratio}, model=${CONFIG.preferredModel})`)
-  await switchToVideoMode(page, ratio, CONFIG.preferredModel)
 
   // ③ 영상 길이 설정
   await setVideoDuration(page, cut.duration ?? CONFIG.defaultDuration)
 
-  // ⑦ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가 (없으면 에러)
+  // ④ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가
   log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
   await addFileToPromptByName(page, 'yeori-face.jpg')
 
   log('step', `CUT ${cut.no}: cut_${padded}.jpg → 프롬프트 추가`)
   await addFileToPromptByName(page, `cut_${padded}.jpg`)
 
-  // ⑧ 영상 프롬프트 입력 (imagePrompt 우선)
+  // ⑤ 영상 프롬프트 입력 (imagePrompt 우선)
   const videoPrompt = (
     cut.imagePrompt?.trim()
     || cut.videoPrompt?.trim()
@@ -1164,11 +1169,11 @@ async function processCut(page, cut, episode, ratio) {
   )
   await typeVideoPrompt(page, videoPrompt)
 
-  // ⑨ 생성 버튼 클릭
+  // ⑥ 생성 버튼 클릭
   log('step', `CUT ${cut.no}: 영상 생성 요청`)
   await clickGenerate(page)
 
-  // ⑩ 완료 대기 → downloads/video/ep{N}/cut_NN.mp4 저장
+  // ⑦ 완료 대기 → downloads/video/ep{N}/cut_NN.mp4 저장
   const savedPath = await waitAndSaveVideo(page, outPath)
   return { status: 'ok', outPath: savedPath }
 }
@@ -1275,15 +1280,17 @@ async function main() {
         saveProgress(episode, progress)
         ok++; break
       } catch (err) {
-        if (attempt < CONFIG.retryCount) {
-          log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount}: ${err.message}`)
-          await sleep(2000)
-        } else {
+        const isLastAttempt = attempt >= CONFIG.retryCount
+        if (err.noRetry || isLastAttempt) {
           log('error', `${label} 실패: ${err.message}`)
           results.push({ cutNo: cut.no, status: 'fail', reason: err.message })
           if (!progress.failed.includes(cut.no)) progress.failed.push(cut.no)
           saveProgress(episode, progress)
           fail++
+          break
+        } else {
+          log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount}: ${err.message}`)
+          await sleep(2000)
         }
       }
     }
