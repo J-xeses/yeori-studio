@@ -419,25 +419,66 @@ async function uploadCutImage(page, imagePath) {
 async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferredModel) {
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // ── 1. "Nano Banana" 드롭다운 트리거 클릭 ───────────────────────────
-  const triggerClicked = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      const r = el.getBoundingClientRect()
-      if (r.width < 1 || r.height < 1) continue
-      const txt = (el.textContent || '').trim()
-      if (txt.includes('Nano Banana')) {
-        el.click()
-        return `${el.tagName} "${txt.slice(0, 50)}" (${Math.round(r.left)},${Math.round(r.top)})`
-      }
-    }
-    return null
-  })
+  // ── 1. 모델 드롭다운 트리거 클릭 ────────────────────────────────────
+  // 매칭 조건 (하나라도 만족하면 트리거로 판단):
+  //   A. textContent.includes('Nano Banana')
+  //   B. textContent.includes('Omni Flash')
+  //   C. children.length === 2 이면서 텍스트에 모델명+배수/시간 조합 포함
+  //      (예: "x1", "x2", "8s", "4s" 등 — 비율·속도 표시가 붙는 트리거 버튼)
+  const TRIGGER_MODEL_KEYWORDS = ['Nano Banana', 'Omni Flash', 'Veo 3', 'Veo3']
+  const TRIGGER_SUFFIX_RE = /\b(x\d|[\d]+s)\b/i
 
-  if (!triggerClicked) {
-    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_trigger_fail.png') })
-    throw new Error('[videoMode] "Nano Banana" 드롭다운 트리거 없음 — 동영상 모드 전환 중단')
+  const triggerResult = await page.evaluate((modelKws, suffixRe) => {
+    const suffixRegex = new RegExp(suffixRe)
+    const visible = (el) => {
+      const r = el.getBoundingClientRect()
+      return r.width > 1 && r.height > 1
+    }
+    const isModelTrigger = (el) => {
+      const txt = (el.textContent || '').trim()
+      // 조건 A / B: 알려진 모델명 포함
+      if (modelKws.some(k => txt.includes(k))) return true
+      // 조건 C: 자식 2개 이하이면서 배수/시간 텍스트 포함 (예: "Omni Flashx18s")
+      if (el.children.length <= 2 && suffixRegex.test(txt)) return true
+      return false
+    }
+
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      if (!visible(el)) continue
+      if (!isModelTrigger(el)) continue
+      const r = el.getBoundingClientRect()
+      const txt = (el.textContent || '').trim()
+      el.click()
+      return { clicked: `${el.tagName} "${txt.slice(0, 60)}" (${Math.round(r.left)},${Math.round(r.top)})`, buttons: [] }
+    }
+
+    // 실패: 화면 내 모든 button 텍스트 수집 (진단용)
+    const buttons = []
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      if (!visible(el)) continue
+      const r = el.getBoundingClientRect()
+      const txt = (el.textContent || '').trim()
+      buttons.push({
+        tag: el.tagName,
+        txt: txt.slice(0, 80),
+        children: el.children.length,
+        haspopup: el.getAttribute('aria-haspopup'),
+        x: Math.round(r.left),
+        y: Math.round(r.top),
+      })
+    }
+    return { clicked: null, buttons }
+  }, TRIGGER_MODEL_KEYWORDS, TRIGGER_SUFFIX_RE.source)
+
+  if (!triggerResult.clicked) {
+    console.log(`[videoMode] 드롭다운 트리거 못 찾음 — 화면 내 button 전체 목록 (${triggerResult.buttons.length}개):`)
+    triggerResult.buttons.forEach((b, i) =>
+      console.log(`  [${i}] <${b.tag}> children=${b.children} haspopup=${b.haspopup} (${b.x},${b.y}) "${b.txt}"`)
+    )
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_no_trigger.png') })
+    throw new Error('[videoMode] 모델 드롭다운 트리거 없음 — 동영상 모드 전환 중단')
   }
-  log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerClicked}`)
+  log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerResult.clicked}`)
 
   // ── 2. 드롭다운(DropdownMenuContent) 열릴 때까지 대기 ───────────────
   try {
@@ -526,29 +567,12 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   await sleep(400)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_ratio.png') })
 
-  // ── 6. 모델 선택 (드롭다운 내부) ─────────────────────────────────────
-  const modelTargets = [modelName, 'Veo 3.1 Fast Light', 'Veo', 'Fast Light']
-  const modelClicked = await page.evaluate((targets) => {
-    for (const menu of document.querySelectorAll('[role="menu"]')) {
-      for (const target of targets) {
-        for (const el of menu.querySelectorAll('*')) {
-          const r = el.getBoundingClientRect()
-          if (r.width < 1 || r.height < 1) continue
-          if (el.children.length > 8) continue
-          const txt = (el.textContent || '').trim()
-          if (txt.includes(target) && txt.length < 80) {
-            el.click()
-            return `${el.tagName} "${txt.slice(0, 50)}" (${Math.round(r.left)},${Math.round(r.top)})`
-          }
-        }
-      }
-    }
-    return null
-  }, modelTargets)
-
-  if (modelClicked) log('ok', `[videoMode] 모델: ${modelClicked}`)
-  else log('warn', `[videoMode] 모델 "${modelName}" 못 찾음`)
-  await sleep(600)
+  // ── 6. 모델 선택 (비활성화) ──────────────────────────────────────────
+  // const modelTargets = [modelName, 'Veo 3.1 Fast Light', 'Veo', 'Fast Light']
+  // const modelClicked = await page.evaluate((targets) => { ... }, modelTargets)
+  // if (modelClicked) log('ok', `[videoMode] 모델: ${modelClicked}`)
+  // else log('warn', `[videoMode] 모델 "${modelName}" 못 찾음`)
+  // await sleep(600)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
   return true
