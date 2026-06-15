@@ -849,52 +849,74 @@ async function clickAddToPrompt(page) {
   })
 }
 
-// ── '+' 패널에서 파일명으로 정확히 선택 → "프롬프트에 추가" ──────────
-// 파일 없으면 즉시 Error (폴백 없음)
+// ── hover로 썸네일 좌표 탐색 (flow-automation.js 검증된 방식) ──────────
+// namePatterns: ['yeori-face', 'cut_01'] 등 파일명 키워드 배열
+// returns: { 'yeori-face': {x,y,w,h} | null, ... }
 
-async function addFileToPromptByName(page, fileName) {
-  const nameBase = path.basename(fileName, path.extname(fileName)).toLowerCase()
+async function findThumbByHover(page, namePatterns) {
+  // 상단 이미지 스트립이 오른쪽으로 밀려난 경우 끝까지 스크롤
+  await page.evaluate(() => {
+    const strip = [...document.querySelectorAll('*')].find(el => {
+      const r = el.getBoundingClientRect()
+      return el.scrollWidth > el.clientWidth + 50
+        && r.top < window.innerHeight * 0.45
+        && r.top > 0
+        && r.height > 50 && r.height < 450
+    })
+    if (strip) strip.scrollLeft = strip.scrollWidth
+  })
+  await sleep(400)
 
-  if (!await clickPlusButton(page)) {
-    throw new Error(`[addToPrompt] '+' 버튼 클릭 실패 (${fileName})`)
-  }
-  await sleep(1200)
-  await page.screenshot({ path: path.join(CONFIG.videoDir, `debug_panel_${nameBase}.png`) })
+  const imgPositions = await page.evaluate(() =>
+    [...document.querySelectorAll('img')]
+      .map(img => {
+        const r = img.getBoundingClientRect()
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), w: Math.round(r.width), h: Math.round(r.height) }
+      })
+      .filter(p => p.w >= 40 && p.h >= 40 && p.y > 0 && p.y < window.innerHeight * 0.9 && p.x > 0 && p.x < window.innerWidth)
+  )
+  log('info', `[findThumb] 탐색 img 수: ${imgPositions.length}`)
 
-  const clicked = await page.evaluate((nameBase) => {
-    function search(root) {
-      for (const el of root.querySelectorAll('*')) {
-        const r = el.getBoundingClientRect()
-        if (r.width < 10 || r.height < 10) continue
-        const txt   = (el.textContent        || '').trim().toLowerCase()
-        const alt   = (el.getAttribute('alt')        || '').toLowerCase()
-        const title = (el.getAttribute('title')      || '').toLowerCase()
-        const label = (el.getAttribute('aria-label') || '').toLowerCase()
-        if (txt === nameBase || txt.includes(nameBase) ||
-            alt.includes(nameBase) || title.includes(nameBase) || label.includes(nameBase)) {
-          el.click()
-          return `${el.tagName} "${(txt || alt || title || label).slice(0, 40)}" (${Math.round(r.left)},${Math.round(r.top)})`
-        }
+  const results = {}
+  for (const pat of namePatterns) results[pat] = null
+
+  for (const pos of imgPositions) {
+    if (Object.values(results).every(v => v !== null)) break
+    await page.mouse.move(pos.x, pos.y)
+    await sleep(600)
+    const bodyText = await page.evaluate(() => document.body.innerText.toLowerCase())
+    for (const pat of namePatterns) {
+      if (results[pat]) continue
+      if (bodyText.includes(pat.toLowerCase())) {
+        results[pat] = pos
+        log('info', `[findThumb] "${pat}" 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
       }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
-      }
-      return null
     }
-    return search(document)
-  }, nameBase)
-
-  if (!clicked) {
-    await page.keyboard.press('Escape').catch(() => {})
-    throw new Error(`[addToPrompt] 파일 없음: ${fileName}`)
   }
-  log('ok', `[addToPrompt] 선택: ${clicked}`)
-  await sleep(800)
+  for (const pat of namePatterns) {
+    if (!results[pat]) log('warn', `[findThumb] "${pat}" 썸네일 못 찾음`)
+  }
+  return results
+}
 
-  const added = await clickAddToPrompt(page)
-  if (!added) throw new Error(`[addToPrompt] "프롬프트에 추가" 버튼 못 찾음 (${fileName})`)
-  log('ok', `[addToPrompt] 완료: ${fileName}`)
-  await sleep(800)
+// ── 썸네일 좌표 → 프롬프트 입력창으로 드래그 (flow-automation.js 동일) ──
+
+async function dragToPrompt(page, fromPos, toPos) {
+  await page.mouse.move(fromPos.x, fromPos.y)
+  await sleep(200)
+  await page.mouse.down()
+  await sleep(150)
+  const steps = 12
+  for (let i = 1; i <= steps; i++) {
+    await page.mouse.move(
+      Math.round(fromPos.x + (toPos.x - fromPos.x) * (i / steps)),
+      Math.round(fromPos.y + (toPos.y - fromPos.y) * (i / steps))
+    )
+    await sleep(25)
+  }
+  await sleep(200)
+  await page.mouse.up()
+  await sleep(600)
 }
 
 // ── 입력창 위치 탐색 ─────────────────────────────────────────────────
@@ -1169,12 +1191,27 @@ async function processCut(page, cut, episode, ratio) {
   // ③ 영상 길이 설정
   await setVideoDuration(page, cut.duration ?? CONFIG.defaultDuration)
 
-  // ④ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가
-  log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
-  await addFileToPromptByName(page, 'yeori-face.jpg')
+  // ④ hover로 썸네일 탐색 → 프롬프트 입력창으로 드래그 (flow-automation.js 방식)
+  log('step', `CUT ${cut.no}: 레퍼런스 이미지 첨부 (hover+drag)`)
+  const promptPos = await findPromptInputPos(page)
+  await page.mouse.click(promptPos.x, promptPos.y)
+  await sleep(300)
 
-  log('step', `CUT ${cut.no}: cut_${padded}.jpg → 프롬프트 추가`)
-  await addFileToPromptByName(page, `cut_${padded}.jpg`)
+  const thumbs = await findThumbByHover(page, ['yeori-face', `cut_${padded}`])
+
+  if (thumbs['yeori-face']) {
+    await dragToPrompt(page, thumbs['yeori-face'], promptPos)
+    log('ok', '[addToPrompt] yeori-face.jpg 드래그 완료')
+  } else {
+    log('warn', '[addToPrompt] yeori-face.jpg 썸네일 못 찾음 → 건너뜀')
+  }
+
+  if (thumbs[`cut_${padded}`]) {
+    await dragToPrompt(page, thumbs[`cut_${padded}`], promptPos)
+    log('ok', `[addToPrompt] cut_${padded}.jpg 드래그 완료`)
+  } else {
+    log('warn', `[addToPrompt] cut_${padded}.jpg 썸네일 못 찾음 → 건너뜀`)
+  }
 
   // ⑤ 영상 프롬프트 입력 (imagePrompt 우선)
   const videoPrompt = (
