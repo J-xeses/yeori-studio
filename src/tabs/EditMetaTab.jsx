@@ -24,7 +24,7 @@ export default function EditMetaTab() {
   const [hookIndices, setHookIndices] = useState([0])
 
   // FFmpeg 자동 실행 상태
-  const [workDir, setWorkDir]         = useState('downloads/flow/ep2')
+  const [workDir, setWorkDir]         = useState('downloads/video/ep5')
   const [ffmpegRunning, setFfmpegRunning] = useState(false)
   const [ffmpegProgress, setFfmpegProgress] = useState(null)   // { current, total, label }
   const [ffmpegResults, setFfmpegResults]   = useState([])     // [{ cutNo, file, status }]
@@ -142,7 +142,7 @@ export default function EditMetaTab() {
 
     meta.forEach(m => {
       const cutNum = m.cutNo
-      const videoFile = 'C' + cutNum + '_video.mp4'
+      const videoFile = 'cut_' + cutNum + '.mp4'
       const outFile = 'output_final\\C' + cutNum + '_final.mp4'
       const videoDur = parseFloat(m.duration)
 
@@ -403,7 +403,7 @@ export default function EditMetaTab() {
                 type="text"
                 value={workDir}
                 onChange={e => setWorkDir(e.target.value)}
-                placeholder="downloads/flow/ep2"
+                placeholder="downloads/video/ep5"
                 style={{flex:1, background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'5px 8px', fontSize:'12px'}}
               />
             </div>

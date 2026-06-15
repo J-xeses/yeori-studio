@@ -143,7 +143,7 @@ app.post('/api/ffmpeg', async (req, res) => {
       const cutNum = String(m.cutNo).padStart(2, '0')
       send({ type: 'progress', current: i + 1, total: meta.length, label: m.label || `CUT ${cutNum}` })
 
-      const videoFile = path.join(dir, `C${cutNum}_video.mp4`)
+      const videoFile = path.join(dir, `cut_${cutNum}.mp4`)
       const outFile   = path.join(outputDir, `C${cutNum}_final.mp4`)
       const logFile   = path.join(outputDir, `C${cutNum}_ffmpeg.log`)
       const dur       = parseFloat(m.duration)
