@@ -426,7 +426,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
       if (depth > 12) return
       for (const el of root.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
-        if (r.top < 700 || r.width < 4 || r.height < 4) continue
+        if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
         const txt = (el.textContent || '').trim()
         if (txt === '동영상' || txt === '이미지' || txt === 'Video' || txt === 'Image') {
           results.push({
@@ -451,7 +451,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   })
 
   console.log('[videoMode] 탭 DOM 구조 (클릭 전):')
-  if (!tabInfo.length) console.log('  (탭 요소 없음 — y≥700 기준)')
+  if (!tabInfo.length) console.log('  (탭 요소 없음 — y≥580, x>300 기준)')
   tabInfo.forEach(t => console.log(
     `  <${t.tag} role="${t.role}"> "${t.txt}" | aria-selected=${t.ariaSelected} aria-pressed=${t.ariaPressed} aria-checked=${t.ariaChecked} | data-active=${t.dataActive} | class="${t.className.slice(0, 100)}" | (${t.x},${t.y})`
   ))
@@ -461,7 +461,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
     const clicked = await page.evaluate(() => {
       for (const el of document.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
-        if (r.top < 800 || r.width < 5 || r.height < 5) continue
+        if (r.top < 580 || r.left < 300 || r.width < 5 || r.height < 5) continue
         const txt = (el.textContent || '').trim()
         if (txt === '동영상' || txt === 'Video') {
           el.click()
@@ -480,7 +480,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         if (depth > 12) return
         for (const el of root.querySelectorAll('*')) {
           const r = el.getBoundingClientRect()
-          if (r.top < 700 || r.width < 4 || r.height < 4) continue
+          if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
           const txt = (el.textContent || '').trim()
           if (txt === '동영상' || txt === '이미지' || txt === 'Video' || txt === 'Image') {
             postInfo.push({
@@ -502,7 +502,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         if (depth > 12) return false
         for (const el of root.querySelectorAll('*')) {
           const r = el.getBoundingClientRect()
-          if (r.top < 700 || r.width < 4 || r.height < 4) continue
+          if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
           const txt = (el.textContent || '').trim()
           if (txt !== '동영상' && txt !== 'Video') continue
           if (el.getAttribute('aria-selected') === 'true') return true
@@ -523,7 +523,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         if (depth > 12) return false
         for (const el of root.querySelectorAll('*')) {
           const r = el.getBoundingClientRect()
-          if (r.top < 700 || r.width < 4 || r.height < 4) continue
+          if (r.top < 580 || r.left < 300 || r.width < 4 || r.height < 4) continue
           const txt = (el.textContent || '').trim()
           if (txt !== '이미지' && txt !== 'Image') continue
           if (el.getAttribute('aria-selected') === 'false') return true
@@ -546,7 +546,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   let { clicked, verified } = await clickAndVerify()
 
   if (!clicked) {
-    log('warn', '[videoMode] "동영상" 탭 못 찾음 (y≥800)')
+    log('warn', '[videoMode] "동영상" 탭 못 찾음 (y≥580, x>300)')
     await debugDump(page, 'toggle')
     await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
     return false
