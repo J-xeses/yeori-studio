@@ -434,19 +434,17 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
       const r = el.getBoundingClientRect()
       return r.width > 1 && r.height > 1
     }
-    const isModelTrigger = (el) => {
-      const txt = (el.textContent || '').trim()
-      // 조건 A / B: 알려진 모델명 포함
-      if (modelKws.some(k => txt.includes(k))) return true
-      // 조건 C: 자식 2개 이하이면서 배수/시간 텍스트 포함 (예: "Omni Flashx18s")
-      if (el.children.length <= 2 && suffixRegex.test(txt)) return true
-      return false
-    }
-
     for (const el of document.querySelectorAll('button, [role="button"]')) {
       if (!visible(el)) continue
-      if (!isModelTrigger(el)) continue
       const r = el.getBoundingClientRect()
+      const txt = (el.textContent || '').trim()
+      const haspopup = el.getAttribute('aria-haspopup')
+      const isModelTrigger = (
+        modelKws.some(k => txt.includes(k)) ||               // A/B: 알려진 모델명 포함
+        (el.children.length <= 2 && suffixRegex.test(txt)) || // C: children≤2 + 배수/시간 패턴
+        (haspopup === 'menu' && r.top > 600)                  // D: 화면 하단(y>600) menu 트리거
+      )
+      if (!isModelTrigger) continue
       const txt = (el.textContent || '').trim()
       // 좌표만 반환 — 실제 클릭은 Puppeteer mouse.click()으로
       return {
