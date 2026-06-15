@@ -448,8 +448,15 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
       if (!isModelTrigger(el)) continue
       const r = el.getBoundingClientRect()
       const txt = (el.textContent || '').trim()
-      el.click()
-      return { clicked: `${el.tagName} "${txt.slice(0, 60)}" (${Math.round(r.left)},${Math.round(r.top)})`, buttons: [] }
+      // 좌표만 반환 — 실제 클릭은 Puppeteer mouse.click()으로
+      return {
+        found: true,
+        txt: txt.slice(0, 60),
+        cx: Math.round(r.left + r.width / 2),
+        cy: Math.round(r.top + r.height / 2),
+        label: `${el.tagName} "${txt.slice(0, 60)}" (${Math.round(r.left)},${Math.round(r.top)})`,
+        buttons: [],
+      }
     }
 
     // 실패: 화면 내 모든 button 텍스트 수집 (진단용)
@@ -467,10 +474,10 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         y: Math.round(r.top),
       })
     }
-    return { clicked: null, buttons }
+    return { found: false, buttons }
   }, TRIGGER_MODEL_KEYWORDS, TRIGGER_SUFFIX_RE.source)
 
-  if (!triggerResult.clicked) {
+  if (!triggerResult.found) {
     console.log(`[videoMode] 드롭다운 트리거 못 찾음 — 화면 내 button 전체 목록 (${triggerResult.buttons.length}개):`)
     triggerResult.buttons.forEach((b, i) =>
       console.log(`  [${i}] <${b.tag}> children=${b.children} haspopup=${b.haspopup} (${b.x},${b.y}) "${b.txt}"`)
@@ -478,7 +485,10 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
     await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_no_trigger.png') })
     throw new Error('[videoMode] 모델 드롭다운 트리거 없음 — 동영상 모드 전환 중단')
   }
-  log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerResult.clicked}`)
+
+  // 실제 마우스 클릭 (합성 click()은 React 드롭다운을 열지 못함)
+  await page.mouse.click(triggerResult.cx, triggerResult.cy)
+  log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerResult.label}`)
 
   // ── 2. 드롭다운(DropdownMenuContent) 열릴 때까지 대기 ───────────────
   try {
