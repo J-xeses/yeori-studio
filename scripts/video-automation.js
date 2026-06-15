@@ -554,40 +554,92 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   log('ok', '[videoMode] 동영상 모드 전환 검증 성공 (aria-selected=true)')
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab.png') })
 
-  // ── 5. 비율 선택 (드롭다운 내부) ─────────────────────────────────────
-  const is169 = ratio === '16:9'
-  const ratioKeys = is169
-    ? ['16:9', '16 : 9', '가로', 'landscape']
-    : ['9:16', '9 : 16', '세로', 'portrait']
-
-  const ratioClicked = await page.evaluate((keys) => {
+  // ── 5~10. 드롭다운 내 명시적 설정 ─────────────────────────────────────
+  // flow_tab_slider_trigger 클래스 버튼 탐색 헬퍼 (좌표 반환, 클릭은 밖에서)
+  const findSliderTab = (fnStr) => page.evaluate((fnStr) => {
+    const match = new Function('txt', `return (${fnStr})`)
     for (const menu of document.querySelectorAll('[role="menu"]')) {
       for (const el of menu.querySelectorAll('*')) {
         const r = el.getBoundingClientRect()
         if (r.width < 1 || r.height < 1) continue
-        if (el.children.length > 5) continue
+        const cls = el.className || ''
+        if (!cls.includes('flow_tab_slider_trigger')) continue
         const txt = (el.textContent || '').trim()
-        const label = el.getAttribute('aria-label') || el.getAttribute('title') || ''
-        if (keys.some(k => `${txt} ${label}`.toLowerCase().includes(k.toLowerCase()))) {
-          el.click()
-          return `${el.tagName} "${txt.slice(0, 30)}" (${Math.round(r.left)},${Math.round(r.top)})`
+        if (match(txt)) {
+          return {
+            cx: Math.round(r.left + r.width / 2),
+            cy: Math.round(r.top + r.height / 2),
+            txt: txt.slice(0, 40),
+            cls: cls.slice(0, 80),
+            x: Math.round(r.left),
+            y: Math.round(r.top),
+          }
         }
       }
     }
     return null
-  }, ratioKeys)
+  }, fnStr)
 
-  if (ratioClicked) log('ok', `[videoMode] ${ratio} 비율: ${ratioClicked}`)
-  else log('warn', `[videoMode] ${ratio} 비율 못 찾음`)
+  const clickSlider = async (stepName, fnStr) => {
+    const pos = await findSliderTab(fnStr)
+    if (pos) {
+      log('info', `[videoMode] ${stepName} 클릭 전: "${pos.txt}" (${pos.x},${pos.y}) cls="${pos.cls}"`)
+      await page.mouse.click(pos.cx, pos.cy)
+      await sleep(500)
+      log('info', `[videoMode] ${stepName} 클릭 완료`)
+    } else {
+      log('warn', `[videoMode] ${stepName} 못 찾음 — 건너뜀`)
+    }
+  }
+
+  // ─ 5. "애셋" 탭 클릭
+  await clickSlider('"애셋" 탭', `txt === '애셋' || txt.includes('애셋')`)
   await sleep(400)
-  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_ratio.png') })
 
-  // ── 6. 모델 선택 (비활성화) ──────────────────────────────────────────
-  // const modelTargets = [modelName, 'Veo 3.1 Fast Light', 'Veo', 'Fast Light']
-  // const modelClicked = await page.evaluate((targets) => { ... }, modelTargets)
-  // if (modelClicked) log('ok', `[videoMode] 모델: ${modelClicked}`)
-  // else log('warn', `[videoMode] 모델 "${modelName}" 못 찾음`)
-  // await sleep(600)
+  // ─ 6. 비율 (9:16 / 16:9)
+  const ratioTarget = ratio === '16:9' ? '16:9' : '9:16'
+  await clickSlider(`"${ratioTarget}" 비율`, `txt === '${ratioTarget}' || txt.endsWith('${ratioTarget}')`)
+  await sleep(400)
+
+  // ─ 7. 생성 개수 "1x"
+  await clickSlider('"1x" 개수', `txt === '1x'`)
+  await sleep(400)
+
+  // ─ 8. 모델 "Omni Flash" (flow_tab_slider_trigger 또는 일반 요소)
+  const modelPos = await page.evaluate(() => {
+    for (const menu of document.querySelectorAll('[role="menu"]')) {
+      for (const el of menu.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 1 || r.height < 1) continue
+        if (el.children.length > 8) continue
+        const txt = (el.textContent || '').trim()
+        if (txt.includes('Omni Flash') && txt.length < 80) {
+          return {
+            cx: Math.round(r.left + r.width / 2),
+            cy: Math.round(r.top + r.height / 2),
+            txt: txt.slice(0, 50),
+            cls: (el.className || '').slice(0, 80),
+            x: Math.round(r.left),
+            y: Math.round(r.top),
+          }
+        }
+      }
+    }
+    return null
+  })
+  if (modelPos) {
+    log('info', `[videoMode] "Omni Flash" 모델 클릭 전: "${modelPos.txt}" (${modelPos.x},${modelPos.y}) cls="${modelPos.cls}"`)
+    await page.mouse.click(modelPos.cx, modelPos.cy)
+    await sleep(500)
+    log('info', '[videoMode] "Omni Flash" 모델 클릭 완료')
+  } else {
+    log('warn', '[videoMode] "Omni Flash" 모델 못 찾음 — 건너뜀')
+  }
+  await sleep(400)
+
+  // ─ 9. 길이 "8s"
+  await clickSlider('"8s" 길이', `txt === '8s'`)
+  await sleep(400)
 
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
   return true
