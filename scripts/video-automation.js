@@ -486,6 +486,10 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
     throw new Error('[videoMode] 모델 드롭다운 트리거 없음 — 동영상 모드 전환 중단')
   }
 
+  // Escape로 혹시 열려있는 드롭다운 먼저 닫기 (이전 컷 잔류 방지)
+  await page.keyboard.press('Escape')
+  await sleep(300)
+
   // 실제 마우스 클릭 (합성 click()은 React 드롭다운을 열지 못함)
   await page.mouse.click(triggerResult.cx, triggerResult.cy)
   log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerResult.label}`)
@@ -507,8 +511,8 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   log('ok', '[videoMode] 드롭다운 열림 확인')
   await sleep(400)
 
-  // ── 3. 드롭다운 내 "동영상" 탭 클릭 ─────────────────────────────────
-  const tabClicked = await page.evaluate(() => {
+  // ── 3. 드롭다운 내 "동영상" 탭 클릭 (page.mouse.click으로 실제 클릭) ──
+  const tabPos = await page.evaluate(() => {
     for (const menu of document.querySelectorAll('[role="menu"]')) {
       for (const btn of menu.querySelectorAll('[role="tab"]')) {
         const r = btn.getBoundingClientRect()
@@ -516,20 +520,24 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         const txt = (btn.textContent || '').trim()
         const cls = btn.className || ''
         if (txt.includes('동영상') && cls.includes('flow_tab_slider_trigger')) {
-          btn.click()
-          return `role=tab "${txt.slice(0, 40)}" aria-selected=${btn.getAttribute('aria-selected')} (${Math.round(r.left)},${Math.round(r.top)})`
+          return {
+            cx: Math.round(r.left + r.width / 2),
+            cy: Math.round(r.top + r.height / 2),
+            label: `role=tab "${txt.slice(0, 40)}" aria-selected=${btn.getAttribute('aria-selected')} (${Math.round(r.left)},${Math.round(r.top)})`,
+          }
         }
       }
     }
     return null
   })
 
-  if (!tabClicked) {
+  if (!tabPos) {
     await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab_fail.png') })
     throw new Error('[videoMode] 드롭다운 내 "동영상" 탭 없음 — 전환 중단')
   }
-  log('ok', `[videoMode] "동영상" 탭 클릭: ${tabClicked}`)
-  await sleep(600)
+  await page.mouse.click(tabPos.cx, tabPos.cy)
+  log('ok', `[videoMode] "동영상" 탭 클릭: ${tabPos.label}`)
+  await sleep(800)
 
   // ── 4. 검증: "동영상" 탭 aria-selected === "true" ─────────────────
   const verified = await page.evaluate(() => {
