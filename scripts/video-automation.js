@@ -445,7 +445,6 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
         (haspopup === 'menu' && r.top > 600)                  // D: 화면 하단(y>600) menu 트리거
       )
       if (!isModelTrigger) continue
-      const txt = (el.textContent || '').trim()
       // 좌표만 반환 — 실제 클릭은 Puppeteer mouse.click()으로
       return {
         found: true,
