@@ -7,7 +7,7 @@
 
 .epInfo { font-size: 13px; color: var(--text-3); }
 .bigProgress { display: flex; align-items: center; gap: 12px; }
-.bigBar { flex: 1; height: 10px; background: var(--bg-input); border-radius: 5px; overflow: hidden; }
+.bigBar { flex: 1; height: 10px; background: var(--bg-input); border-radius: 5px; overflow-y: auto; }
 .bigFill { height: 100%; background: var(--accent); border-radius: 5px; transition: width .3s; }
 .bigPct { font-size: 18px; font-weight: 700; color: var(--accent-light); min-width: 44px; text-align: right; }
 .epStats { display: flex; gap: 20px; }

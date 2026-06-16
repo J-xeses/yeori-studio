@@ -3,7 +3,7 @@
 .left { width: 320px; min-width: 320px; overflow-y: auto; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; padding: 14px; }
 .right { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; padding: 14px; }
 
-.panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow-y: auto; }
 .panelHeader { padding: 10px 14px; font-size: 12.5px; font-weight: 700; color: var(--text-2); border-bottom: 1px solid var(--border); background: var(--bg-input); text-transform: uppercase; letter-spacing: .4px; }
 
 .row { padding: 10px 14px 0; }

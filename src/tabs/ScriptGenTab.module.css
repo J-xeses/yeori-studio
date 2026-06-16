@@ -1,4 +1,4 @@
-.root { display: flex; height: 100%; overflow: hidden; }
+.root { display: flex; height: 100%; overflow-y: auto; }
 
 .sidebar {
   width: 280px; min-width: 280px;
