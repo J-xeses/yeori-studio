@@ -1,50 +1,51 @@
 {
-  "episode": 5,
-  "title": "카페에서 혼자 쓰는 편지",
+  "episode": 4,
+  "title": "한강 라이딩의 묘미",
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting by a sunlit cafe window, long wavy dark brown hair NOT short, hair resting softly over shoulders. She wears a cream-colored knit top tucked into wide-leg beige trousers with subtle ankle cuff roll-up detail. Gold necklace and thin gold bracelet visible. She pulls out stationery paper from a tote bag and places it gently on the wooden table, uncapping a pen with a quiet smile. K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio, DO NOT make average body proportions. DO NOT change clothing. Warm afternoon golden light streaming through large cafe windows, soft bokeh of coffee cups and plants in background. Background people sitting quietly, background people must not interact with the main character. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. natural Korean beauty.",
-      "narration": "가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.",
-      "duration": 8
+      "imagePrompt": "FULLBODY SHOT — young Korean woman in her early 20s, appearing no older than 22-23, standing beside a rental bicycle at Han River park, late afternoon golden hour light, long wavy dark brown hair NOT short cascading past shoulders, wearing an oversized soft ivory cotton crewneck top tucked loosely into wide-leg light beige linen pants with a subtle cuffed rollup at the ankle, white low-top canvas sneakers, gold necklace and gold bracelet visible, gently gripping bicycle handlebars with both hands, slight tiptoe as she tests the saddle height, soft natural smile forming, K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio DO NOT make average body proportions, DO NOT change clothing, background shows Han River park with soft blurred greenery and rental station signage, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, warm golden hour rim light, natural Korean beauty",
+      "narration": "어떤 날은 그냥, 이유 없이 밖으로 나가고 싶어질 때가 있잖아요.\n샷 타입:",
+      "duration": 10
     },
     {
       "no": 2,
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle and never exaggerated. She gazes down at stationery paper with a quietly contemplative expression, lips gently pressed together, then a barely-there soft smile forms at the corner of her mouth. Warm golden afternoon backlight from cafe window kissing her hair. Soft shadow under her chin. DO NOT change clothing, cream knit top visible at shoulder. Gold necklace glinting softly. Emotion: thoughtful, tender, searching. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
-      "dialogue": "근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.",
-      "duration": 7
+      "imagePrompt": "FULLBODY SHOT — young Korean woman in her early 20s, appearing no older than 22-23, riding a pastel mint rental bicycle along Han River cycling path, golden afternoon sunlight casting long warm shadows on the path, long wavy dark brown hair NOT short flowing back in the wind, wearing oversized soft ivory cotton crewneck top loosely tucked into wide-leg light beige linen pants with cuffed rollup at the ankle, white low-top canvas sneakers, gold necklace catching the light, both hands relaxed on handlebars, head slightly turned toward the river with a soft distant gaze, K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio DO NOT make average body proportions, DO NOT change clothing, background shows shimmering Han River surface, distant bridge silhouette softly blurred, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, warm golden backlighting, natural Korean beauty",
+      "narration": "두 바퀴가 굴러가는 소리만 들리는 순간, 머릿속이 조용해지더라고요.\n샷 타입:",
+      "duration": 10
     },
     {
       "no": 3,
-      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting at a wooden cafe table by the window, slightly turned to the side in profile, long wavy dark brown hair NOT short, falling softly over one shoulder. She holds a pen and writes slowly on cream stationery paper laid on the table, wrist moving in gentle fluid motion. Gold bracelet on wrist catches the afternoon light. Warm window light falls across her hand and the paper. DO NOT change clothing, cream knit top and wide-leg beige trousers visible. K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio, DO NOT make average body proportions. Tote bag visible on the seat beside her. Background people seated quietly at distance, background people must not interact with the main character. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully, natural Korean beauty.",
-      "narration": "받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.",
-      "duration": 8
+      "imagePrompt": "CLOSEUP SHOT — young Korean woman in her early 20s, appearing no older than 22-23, just dismounted from bicycle at Han River park, removing a pastel mint helmet and hooking it on the handlebar, long wavy dark brown hair NOT short spilling naturally over shoulders as she lifts her head, natural skin texture on right cheek very subtle not exaggerated, soft expression of relief and refreshment, lips slightly parted as if exhaling a contented breath, warm golden afternoon light hitting her face from the side creating a soft glow, gold necklace visible at neckline of ivory cotton crewneck, DO NOT change clothing, background softly blurred Han River and green park lawn, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty",
+      "narration": "잠깐 멈추는 것만으로도, 이미 충분한 여행이 될 수 있어요.\n샷 타입:",
+      "dialogue": "아, 시원하다.",
+      "duration": 11
     },
     {
       "no": 4,
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle. She holds a white ceramic coffee cup with both hands, gold bracelet visible on wrist, taking a gentle sip, eyes drifting toward the window with a soft faraway gaze. Then she lowers the cup and a small amused smile flickers across her face as she glances back down. Emotion: warmly self-aware, gently amused, tender. DO NOT change clothing, gold necklace visible. Warm afternoon light, soft bokeh background of cafe interior. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
-      "dialogue": "이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...",
-      "duration": 7
+      "imagePrompt": "CLOSEUP SHOT — young Korean woman in her early 20s, appearing no older than 22-23, seated on Han River park grass with knees gently raised, holding a smartphone toward the river to capture the view, long wavy dark brown hair NOT short falling softly around her shoulders, natural skin texture on right cheek barely visible not exaggerated, warm golden sunlight flooding the frame from the front-left creating a luminous glow on her face, small gentle smile as she checks the photo on screen, then lowering the phone with a quietly moved expression, gold necklace and gold bracelet catching the warm light, DO NOT change clothing, ivory crewneck and beige linen pants visible, background is softly blurred shimmering Han River bathed in orange-gold sunset light, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty",
+      "narration": "좋은 걸 발견했을 때, 제일 먼저 드는 생각은 항상 — 이거 나눠주고 싶다, 였어요.\n샷 타입:",
+      "dialogue": "이거 진짜 너무 예쁘다. 사람들한테 보여주고 싶어.",
+      "duration": 15
     },
     {
       "no": 5,
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle. She rests her chin on both hands, elbows on the wooden table, reading a handwritten letter below her. Expression is quiet, softly satisfied, eyes moving gently as she reads. Then eyes soften further and she gives a tiny, barely perceptible nod. Emotion: peaceful, introspective, quietly moved. DO NOT change clothing, gold necklace visible, warm golden cafe light. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
-      "narration": "편지는 쓰는 사람의 마음도 함께 정리해주니까요.",
-      "dialogue": "다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.",
-      "duration": 12
+      "imagePrompt": "FULLBODY SHOT — young Korean woman in her early 20s, appearing no older than 22-23, riding a pastel mint rental bicycle along Han River cycling path at sunset, long wavy dark brown hair NOT short flowing dramatically behind her in the wind, right arm extended sideways away from the handlebar as if feeling the breeze, left hand loosely gripping handlebar, looking straight ahead with a calm liberated expression, K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio DO NOT make average body proportions, wearing oversized ivory cotton crewneck top loosely tucked into wide-leg light beige linen pants with cuffed rollup at ankle, white low-top canvas sneakers, gold necklace and bracelet catching warm sunset light, DO NOT change clothing, background shows Han River bathed in deep orange and pink sunset hues with silhouetted tree lines, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, dramatic warm backlight, natural Korean beauty",
+      "narration": "속도보다 방향보다, 지금 이 바람이 더 중요한 것 같았어요.\n샷 타입:",
+      "duration": 9
     },
     {
       "no": 6,
-      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting at a wooden cafe table by the window, long wavy dark brown hair NOT short. She carefully folds stationery paper into a white envelope, seals it with her fingertip, then gently holds the sealed envelope up near her chest, looking at it briefly before placing it into her tote bag. Gold bracelet and gold necklace visible. Warm late-afternoon amber light, slightly cooler than before. DO NOT change clothing, cream knit top and wide-leg beige trousers. K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio, DO NOT make average body proportions. Background people seated quietly further away, background people must not interact with the main character. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully, natural Korean beauty.",
-      "narration": "쓴다는 것 자체로 이미 충분한 용기니까요.",
-      "dialogue": "보낼지 말지는 나중에 결정하기로 했어요.",
+      "imagePrompt": "FULLBODY SHOT — young Korean woman in her early 20s, appearing no older than 22-23, leaning on Han River railing with both forearms resting on the metal rail, body facing the river, pastel mint bicycle leaned against the railing beside her, long wavy dark brown hair NOT short gently moved by the river breeze, head slightly lowered gazing at the river, blue hour lighting with the city lights just beginning to glow on the far bank reflecting on the river surface, K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio DO NOT make average body proportions, wearing oversized ivory cotton crewneck top loosely tucked into wide-leg light beige linen pants with cuffed rollup at ankle, white low-top canvas sneakers, gold necklace and bracelet visible, DO NOT change clothing, background shows Han River with emerging city lights and deep blue twilight sky, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, cool blue hour ambient light with warm city glow, natural Korean beauty",
+      "narration": "도시가 불을 켜는 순간을, 강이 가장 먼저 받아요.\n샷 타입:",
       "duration": 9
     },
     {
       "no": 7,
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek, very subtle. She takes the last quiet sip from a white ceramic cup, then sets it down and turns her gaze toward the window. Her expression is still, soft, emotionally settled, not smiling but deeply at peace. After a long beat, her eyes gently lower, lashes casting faint shadow. Emotion: quiet resolution, lingering warmth, gentle melancholy. DO NOT change clothing. Gold necklace catches last rays of late afternoon light. Window light is amber and cooler, soft lens flare at edge of frame. No movement except the subtle shift of her gaze. BGM silence implied, ambient cafe sound only. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully.",
-      "narration": "오늘 이 카페는, 나의 아주 작은 고백함이었어요.",
-      "duration": 6
+      "imagePrompt": "CLOSEUP SHOT — young Korean woman in her early 20s, appearing no older than 22-23, at Han River railing during blue hour, body slightly turned toward camera with back lightly leaning on the railing, long wavy dark brown hair NOT short falling gently over one shoulder with river breeze catching the ends, natural skin texture on right cheek subtly visible not exaggerated, warm calm gaze directed at camera with a soft sincere expression, lips just finishing a sentence then relaxing into a quiet smile that slowly fades as she turns her face back toward the river in the final seconds, gold necklace catching the cool blue ambient light with warm city glow from across the river, DO NOT change clothing, ivory crewneck visible, background is softly blurred Han River with emerging yellow city lights and deep indigo blue hour sky, background people must not interact with the main character, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, cool blue hour light with warm reflected city glow on skin, natural Korean beauty",
+      "narration": "오늘 한강은, 꽤 좋은 대답을 해줬어요.\n샷 타입:",
+      "dialogue": "가끔은 아무 계획 없이 그냥 나와도 돼요. 한강이 다 받아줄 테니까.",
+      "duration": 13
     }
   ]
 }
