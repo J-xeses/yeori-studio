@@ -152,7 +152,7 @@ app.post('/api/ffmpeg', async (req, res) => {
       if (m.sfxOnly || !m.audioFile) {
         args = ['-i', videoFile, '-c:v', 'copy', '-an', outFile, '-y']
       } else {
-        const audioFile  = path.join(dir, m.audioFile)
+        const audioFile  = path.isAbsolute(m.audioFile) ? m.audioFile : path.join(dir, m.audioFile)
         const delay      = parseFloat(m.audioStart) || 0
         const audioEnd   = parseFloat(m.audioEnd) || dur
         const audioDur   = Math.max(0.01, audioEnd - delay)
