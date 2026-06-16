@@ -23,14 +23,14 @@ export default function EditMetaTab() {
   const [error, setError]     = useState('')
   const [hookIndices, setHookIndices] = useState([0])
 
-  // FFmpeg 자동 실행 상태
+  // FFmpeg ?�동 ?�행 ?�태
   const [workDir, setWorkDir]         = useState('downloads/video/ep5')
   const [ffmpegRunning, setFfmpegRunning] = useState(false)
   const [ffmpegProgress, setFfmpegProgress] = useState(null)   // { current, total, label }
   const [ffmpegResults, setFfmpegResults]   = useState([])     // [{ cutNo, file, status }]
   const [ffmpegError, setFfmpegError]       = useState('')
 
-  // 음성 타이밍 상태 (컷별)
+  // ?�성 ?�?�밍 ?�태 (컷별)
   const [audioSettings, setAudioSettings] = useState({})
 
   const cuts = state.cuts?.length
@@ -69,9 +69,9 @@ export default function EditMetaTab() {
         start: toTimecode(start),
         end:   toTimecode(cursor),
         duration: dur,
-        type: isHook ? '훅' : '일반',
-        transition: i === 0 ? '페이드 인/아웃' : '컷 편집',
-        note: isHook ? '리텐션 훅 구간 — 강조 효과 권장' : '',
+        type: isHook ? '?? : '?�반',
+        transition: i === 0 ? '?�이?????�웃' : '�??�집',
+        note: isHook ? '리텐????구간 ??강조 ?�과 권장' : '',
         audioFile: audio.audioFile,
         audioStart: audio.audioStart,
         audioEnd: audio.audioEnd || dur,
@@ -88,20 +88,20 @@ export default function EditMetaTab() {
     try {
       const apiKey   = state.apiKeys?.claude || state.apiKey || ''
       const totalSec = computed.reduce((a,c) => a + c.duration, 0)
-      const hookCuts = computed.filter(c => c.type === '훅').map(c => c.label).join(', ')
+      const hookCuts = computed.filter(c => c.type === '??).map(c => c.label).join(', ')
       const data = await claudeMessages(apiKey, {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 400,
         messages: [{
           role: 'user',
-          content: `AI 버추얼 인플루언서 "서여리" 유튜브 영상 CapCut 편집 시 주의사항 3줄 요약.
-총 길이: ${toTimecode(totalSec)} / CUT: ${computed.length}개 / 훅 CUT: ${hookCuts || '없음'}
-실용적인 조언만.`,
+          content: `AI 버추???�플루언??"?�여�? ?�튜�??�상 CapCut ?�집 ??주의?�항 3�??�약.
+�?길이: ${toTimecode(totalSec)} / CUT: ${computed.length}�?/ ??CUT: ${hookCuts || '?�음'}
+?�용?�인 조언�?`,
         }],
       }).then(r => r.json())
       setAiNote(data.content?.map(b => b.text || '').join('') || '')
     } catch (e) {
-      setError('AI 주의사항 생성 오류: ' + e.message)
+      setError('AI 주의?�항 ?�성 ?�류: ' + e.message)
     } finally {
       setLoading(false)
     }
@@ -116,7 +116,7 @@ export default function EditMetaTab() {
   }
 
   const exportCSV = () => {
-    const headers = ['CUT번호','레이블','시작','끝','길이(초)','타입','트랜지션','음성파일','음성시작','음성끝','효과음만','자막']
+    const headers = ['CUT번호','?�이�?,'?�작','??,'길이(�?','?�??,'?�랜지??,'?�성?�일','?�성?�작','?�성??,'?�과?�만','?�막']
     const rows = meta.map(m =>
       [m.cutNo, m.label, m.start, m.end, m.duration, m.type, m.transition,
        m.audioFile, m.audioStart, m.audioEnd, m.sfxOnly, m.hasSubtitle].join(',')
@@ -130,11 +130,11 @@ export default function EditMetaTab() {
   }
 
   const generateFFmpeg = () => {
-    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
+    if (!meta.length) { alert('먼�? ?�집 메�?�??�성?�주?�요'); return }
     const lines = [
-      '# 서여리 FFmpeg 편집 자동화 스크립트',
-      '# 원칙: 음성 길이 = 영상 길이 (앞뒤 무음으로 패딩)',
-      '# 실행: PowerShell에서 .\yeori_ffmpeg.ps1',
+      '# ?�여�?FFmpeg ?�집 ?�동???�크립트',
+      '# ?�칙: ?�성 길이 = ?�상 길이 (?�뒤 무음?�로 ?�딩)',
+      '# ?�행: PowerShell?�서 .\yeori_ffmpeg.ps1',
       '',
       'New-Item -ItemType Directory -Force -Path "output_final" | Out-Null',
       '',
@@ -146,10 +146,10 @@ export default function EditMetaTab() {
       const outFile = 'output_final\\C' + cutNum + '_final.mp4'
       const videoDur = parseFloat(m.duration)
 
-      lines.push('# C' + cutNum + ' (' + videoDur + '초)')
+      lines.push('# C' + cutNum + ' (' + videoDur + '�?')
 
       if (m.sfxOnly || !m.audioFile) {
-        lines.push('# 음성 없음 - 효과음만')
+        lines.push('# ?�성 ?�음 - ?�과?�만')
         lines.push('ffmpeg -i "' + videoFile + '" -c:v copy -an "' + outFile + '" -y')
       } else {
         const audioDelay = parseFloat(m.audioStart) || 0
@@ -157,7 +157,7 @@ export default function EditMetaTab() {
         const audioDuration = audioEnd - audioDelay
         const delayMs = Math.round(audioDelay * 1000)
 
-        lines.push('# 음성 시작: +' + audioDelay + 's / 끝: ' + audioEnd + 's / 영상: ' + videoDur + 's')
+        lines.push('# ?�성 ?�작: +' + audioDelay + 's / ?? ' + audioEnd + 's / ?�상: ' + videoDur + 's')
 
         if (audioDelay > 0) {
           lines.push('ffmpeg -i "' + videoFile + '" -i "' + m.audioFile + '" `')
@@ -172,7 +172,7 @@ export default function EditMetaTab() {
       lines.push('')
     })
 
-    lines.push('Write-Host "✅ 완료! output_final 폴더 확인하세요." -ForegroundColor Green')
+    lines.push('Write-Host "???�료! output_final ?�더 ?�인?�세??" -ForegroundColor Green')
 
     const script = lines.join('\n')
     const blob = new Blob([script], { type: 'text/plain;charset=utf-8' })
@@ -183,20 +183,20 @@ export default function EditMetaTab() {
   }
 
   const runFFmpegAuto = async () => {
-    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
+    if (!meta.length) { alert('먼�? ?�집 메�?�??�성?�주?�요'); return }
     setFfmpegRunning(true)
     setFfmpegProgress(null)
     setFfmpegResults([])
     setFfmpegError('')
     try {
-      const res = await fetch('/api/ffmpeg', {
+      const res = await fetch('http://localhost:3001/api/ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ meta, workDir }),
       })
       if (!res.ok) {
         const err = await res.json()
-        setFfmpegError(err.error || 'FFmpeg 실행 오류')
+        setFfmpegError(err.error || 'FFmpeg ?�행 ?�류')
         return
       }
       const reader = res.body.getReader()
@@ -215,7 +215,7 @@ export default function EditMetaTab() {
             if (ev.type === 'progress')  setFfmpegProgress({ current: ev.current, total: ev.total, label: ev.label })
             if (ev.type === 'cut_done')  setFfmpegProgress(p => p ? { ...p, current: p.current } : p)
             if (ev.type === 'done')      setFfmpegResults(ev.results ?? [])
-            if (ev.type === 'cut_error') setFfmpegError(p => p + `\nCUT ${ev.cutNo} 오류 → ${ev.log}`)
+            if (ev.type === 'cut_error') setFfmpegError(p => p + `\nCUT ${ev.cutNo} ?�류 ??${ev.log}`)
             if (ev.type === 'error')     setFfmpegError(ev.message)
           } catch {}
         }
@@ -237,13 +237,13 @@ export default function EditMetaTab() {
   return (
     <div className={styles.wrap}>
       <div className={styles.header}>
-        <h2 className={styles.title}>편집 메타 자동 생성</h2>
-        <p className={styles.desc}>CUT별 타임코드·음성 타이밍·FFmpeg 스크립트를 자동으로 생성합니다</p>
+        <h2 className={styles.title}>?�집 메�? ?�동 ?�성</h2>
+        <p className={styles.desc}>CUT�??�?�코?�·음???�?�밍·FFmpeg ?�크립트�??�동?�로 ?�성?�니??/p>
       </div>
 
-      {/* 훅 CUT 지정 */}
+      {/* ??CUT 지??*/}
       <div className={styles.section}>
-        <div className={styles.sectionLabel}>훅 CUT 지정 (클릭으로 토글)</div>
+        <div className={styles.sectionLabel}>??CUT 지??(?�릭?�로 ?��?)</div>
         <div className={styles.hookRow}>
           {cuts.map((cut, i) => (
             <span
@@ -257,19 +257,19 @@ export default function EditMetaTab() {
         </div>
       </div>
 
-      {/* 음성 타이밍 설정 */}
+      {/* ?�성 ?�?�밍 ?�정 */}
       <div className={styles.section}>
-        <div className={styles.sectionLabel}>컷별 음성 타이밍 설정</div>
+        <div className={styles.sectionLabel}>컷별 ?�성 ?�?�밍 ?�정</div>
         <div className={styles.audioTable}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th className={styles.th}>CUT</th>
-                <th className={styles.th}>음성 파일명</th>
-                <th className={styles.th}>시작(초)</th>
-                <th className={styles.th}>끝(초)</th>
-                <th className={styles.th}>효과음만</th>
-                <th className={styles.th}>자막</th>
+                <th className={styles.th}>?�성 ?�일�?/th>
+                <th className={styles.th}>?�작(�?</th>
+                <th className={styles.th}>??�?</th>
+                <th className={styles.th}>?�과?�만</th>
+                <th className={styles.th}>?�막</th>
               </tr>
             </thead>
             <tbody>
@@ -301,7 +301,7 @@ export default function EditMetaTab() {
                       type="number"
                       step="0.1"
                       min="0"
-                      placeholder="영상끝"
+                      placeholder="?�상??
                       value={getAudio(i).audioEnd}
                       onChange={e => setAudio(i, 'audioEnd', e.target.value)}
                       style={{width:'60px', background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'3px 6px', fontSize:'11px'}}
@@ -329,7 +329,7 @@ export default function EditMetaTab() {
       </div>
 
       <button className={styles.genBtn} onClick={generate} disabled={loading}>
-        {loading ? '메타 생성 중...' : '편집 메타 자동 생성'}
+        {loading ? '메�? ?�성 �?..' : '?�집 메�? ?�동 ?�성'}
       </button>
 
       {error && <div className={styles.error}>{error}</div>}
@@ -338,9 +338,9 @@ export default function EditMetaTab() {
         <>
           <div className={styles.statRow}>
             {[
-              { label: '총 길이', value: toTimecode(totalDur) },
-              { label: 'CUT 수',  value: `${meta.length}개` },
-              { label: '훅 CUT', value: `${meta.filter(m => m.type === '훅').length}개` },
+              { label: '�?길이', value: toTimecode(totalDur) },
+              { label: 'CUT ??,  value: `${meta.length}�? },
+              { label: '??CUT', value: `${meta.filter(m => m.type === '??).length}�? },
             ].map(s => (
               <div key={s.label} className={styles.statCard}>
                 <div className={styles.statLabel}>{s.label}</div>
@@ -353,23 +353,23 @@ export default function EditMetaTab() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  {['CUT','구간','길이','타입','트랜지션','음성파일','시작','끝','메모'].map(h => (
+                  {['CUT','구간','길이','?�??,'?�랜지??,'?�성?�일','?�작','??,'메모'].map(h => (
                     <th key={h} className={styles.th}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {meta.map((m, i) => (
-                  <tr key={i} className={m.type === '훅' ? styles.hookRow2 : ''}>
+                  <tr key={i} className={m.type === '?? ? styles.hookRow2 : ''}>
                     <td className={styles.td}>{m.label}</td>
                     <td className={`${styles.td} ${styles.mono}`}>{m.start} ~ {m.end}</td>
-                    <td className={styles.td}>{m.duration}초</td>
+                    <td className={styles.td}>{m.duration}�?/td>
                     <td className={styles.td}>
-                      <span className={m.type === '훅' ? styles.badgeHook : styles.badge}>{m.type}</span>
+                      <span className={m.type === '?? ? styles.badgeHook : styles.badge}>{m.type}</span>
                     </td>
                     <td className={`${styles.td} ${styles.muted}`}>{m.transition}</td>
                     <td className={`${styles.td} ${styles.muted}`}>{m.audioFile || '-'}</td>
-                    <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '효과음' : `+${m.audioStart}s`}</td>
+                    <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '?�과?? : `+${m.audioStart}s`}</td>
                     <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '-' : `${m.audioEnd}s`}</td>
                     <td className={`${styles.td} ${styles.muted}`}>{m.note}</td>
                   </tr>
@@ -380,25 +380,25 @@ export default function EditMetaTab() {
 
           {aiNote && (
             <div className={styles.aiNote}>
-              <div className={styles.aiNoteLabel}>AI 편집 주의사항</div>
+              <div className={styles.aiNoteLabel}>AI ?�집 주의?�항</div>
               <div className={styles.aiNoteText}>{aiNote}</div>
             </div>
           )}
 
           <div className={styles.exportRow}>
-            <button className={styles.exportBtn} onClick={exportJSON}>JSON 내보내기</button>
-            <button className={styles.exportBtn} onClick={exportCSV}>CSV 내보내기</button>
+            <button className={styles.exportBtn} onClick={exportJSON}>JSON ?�보?�기</button>
+            <button className={styles.exportBtn} onClick={exportCSV}>CSV ?�보?�기</button>
             <button className={styles.exportBtn} onClick={generateFFmpeg} style={{background:'#7c3aed', color:'#fff', borderColor:'#7c3aed'}}>
-              ⚡ FFmpeg 스크립트 생성
+              ??FFmpeg ?�크립트 ?�성
             </button>
           </div>
 
-          {/* ── FFmpeg 자동 실행 ── */}
+          {/* ?�?� FFmpeg ?�동 ?�행 ?�?� */}
           <div style={{marginTop:'24px', padding:'16px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.25)', borderRadius:'8px'}}>
-            <div style={{fontWeight:600, fontSize:'13px', color:'#c4b5fd', marginBottom:'10px'}}>⚡ FFmpeg 자동 실행</div>
+            <div style={{fontWeight:600, fontSize:'13px', color:'#c4b5fd', marginBottom:'10px'}}>??FFmpeg ?�동 ?�행</div>
 
             <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px'}}>
-              <span style={{fontSize:'12px', color:'#9ca3af', whiteSpace:'nowrap'}}>작업 폴더</span>
+              <span style={{fontSize:'12px', color:'#9ca3af', whiteSpace:'nowrap'}}>?�업 ?�더</span>
               <input
                 type="text"
                 value={workDir}
@@ -413,14 +413,14 @@ export default function EditMetaTab() {
               disabled={ffmpegRunning}
               style={{background: ffmpegRunning ? '#4b4b5a' : '#7c3aed', color:'#fff', border:'none', borderRadius:'6px', padding:'8px 16px', fontSize:'13px', fontWeight:600, cursor: ffmpegRunning ? 'not-allowed' : 'pointer', width:'100%'}}
             >
-              {ffmpegRunning ? '실행 중...' : '⚡ FFmpeg 자동 실행'}
+              {ffmpegRunning ? '?�행 �?..' : '??FFmpeg ?�동 ?�행'}
             </button>
 
-            {/* 진행률 바 */}
+            {/* 진행�?�?*/}
             {ffmpegRunning && ffmpegProgress && (
               <div style={{marginTop:'12px'}}>
                 <div style={{fontSize:'12px', color:'#c4b5fd', marginBottom:'4px'}}>
-                  CUT {ffmpegProgress.current}/{ffmpegProgress.total} — {ffmpegProgress.label}
+                  CUT {ffmpegProgress.current}/{ffmpegProgress.total} ??{ffmpegProgress.label}
                 </div>
                 <div style={{background:'rgba(255,255,255,0.08)', borderRadius:'4px', height:'6px', overflow:'hidden'}}>
                   <div style={{
@@ -434,7 +434,7 @@ export default function EditMetaTab() {
               </div>
             )}
 
-            {/* 에러 */}
+            {/* ?�러 */}
             {ffmpegError && (
               <div style={{marginTop:'10px', padding:'8px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'4px', fontSize:'11px', color:'#fca5a5', whiteSpace:'pre-wrap'}}>
                 {ffmpegError}
@@ -445,7 +445,7 @@ export default function EditMetaTab() {
             {ffmpegResults.length > 0 && (
               <div style={{marginTop:'12px'}}>
                 <div style={{fontSize:'12px', color:'#86efac', marginBottom:'6px', fontWeight:600}}>
-                  ✅ 완료 — output_final 폴더 확인
+                  ???�료 ??output_final ?�더 ?�인
                 </div>
                 <div style={{display:'flex', flexWrap:'wrap', gap:'6px'}}>
                   {ffmpegResults.map(r => (
@@ -455,7 +455,7 @@ export default function EditMetaTab() {
                       color: r.status === 'ok' ? '#86efac' : '#fca5a5',
                       border: `1px solid ${r.status === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
                     }}>
-                      {r.status === 'ok' ? '✓' : '✗'} CUT {r.cutNo}
+                      {r.status === 'ok' ? '?? : '??} CUT {r.cutNo}
                     </span>
                   ))}
                 </div>
