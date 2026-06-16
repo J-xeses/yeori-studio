@@ -71,3 +71,8 @@
   transition: background .15s;
 }
 .exportBtn:hover { background: #222; color: #c2c0b6; }
+
+.root::-webkit-scrollbar { width: 6px; }
+.root::-webkit-scrollbar-track { background: transparent; }
+.root::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+.root::-webkit-scrollbar-thumb:hover { background: #666; }
