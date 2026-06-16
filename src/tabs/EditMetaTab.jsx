@@ -241,6 +241,7 @@ export default function EditMetaTab() {
   const totalDur = meta.reduce((a,c) => a + c.duration, 0)
 
   return (
+    <div className={styles.root}>
     <div className={styles.wrap}>
       <div className={styles.header}>
         <h2 className={styles.title}>편집 메타 자동 생성</h2>
@@ -470,6 +471,7 @@ export default function EditMetaTab() {
           </div>
         </>
       )}
+    </div>
     </div>
   )
 }
