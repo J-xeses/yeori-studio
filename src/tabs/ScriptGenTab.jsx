@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
-import { setGPoints, setGPoint } from '../lib/gpoints'
+import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -99,6 +99,8 @@ export default function ScriptGenTab() {
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
   const [episodeOpen, setEpisodeOpen] = useState(true)
+  const [episodeListOpen, setEpisodeListOpen] = useState(false)
+  const [gData, setGData] = useState(() => loadGPoints())
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -284,9 +286,17 @@ ${YEORI_RULESET}
         const updated = { ...cut, [field]: val }
         const hasContent = !!(updated.dialogue || updated.narration || updated.scene)
         setGPoint(cut.no, 'g1', hasContent)
+        setGData(loadGPoints())
       }
     }
   }
+
+  // ── G1 승인/취소 ─────────────────────────────────────────────
+  const approveG1 = (cutNo) => { setGPoint(cutNo, 'g1', true); setGData(loadGPoints()) }
+  const revokeG1  = (cutNo) => { setGPoint(cutNo, 'g1', false); setGData(loadGPoints()) }
+  const approveAllG1 = () => { cuts.forEach(c => setGPoint(c.no, 'g1', true)); setGData(loadGPoints()) }
+  const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+  const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
   const handleCutCountChange = (n) => {
     const count = Math.max(1, Math.min(20, parseInt(n) || 7))
@@ -461,7 +471,55 @@ ${YEORI_RULESET}
           )}
         </div>
 
-        {/* 컷 목록 - 나머지 공간 채움 */}
+        {/* 에피소드 목록 패널 */}
+        <div className={s.epSection}>
+          <button className={s.epToggle} onClick={() => setEpisodeListOpen(o => !o)}>
+            <span className={s.sideTitle}>📋 에피소드 목록</span>
+            <span className={s.toggleIcon}>{episodeListOpen ? '▲' : '▼'}</span>
+          </button>
+          {episodeListOpen && (
+            <div className={s.epListBody}>
+              {Object.values(episodes || {}).map(ep => {
+                const epCuts = ep.cuts || []
+                const epG1 = epCuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+                const epTotal = epCuts.length
+                const epAllDone = epTotal > 0 && epG1 === epTotal
+                const isActive = ep.id === activeEpisodeId
+                return (
+                  <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
+                    <div className={s.epListHeader}
+                      onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}>
+                      <span className={s.epListNum}>EP{ep.episode?.number}</span>
+                      <span className={s.epListTitle}>{ep.episode?.title || '(제목 없음)'}</span>
+                      {epAllDone && <span className={s.epG1Badge}>G1 ✅</span>}
+                    </div>
+                    {epTotal > 0 && (
+                      <div className={s.epG1Bar}>
+                        <div className={s.epG1BarTrack}>
+                          <div className={s.epG1BarFill} style={{ width: `${(epG1/epTotal)*100}%` }} />
+                        </div>
+                        <span className={s.epG1Count}>{epG1}/{epTotal}</span>
+                      </div>
+                    )}
+                    {isActive && epTotal > 0 && !epAllDone && (
+                      <button className={s.epApproveBtn} onClick={approveAllG1}>
+                        ✅ 전체 G1 승인
+                      </button>
+                    )}
+                    {isActive && epAllDone && (
+                      <button className={s.epApproveBtn} style={{background:'rgba(34,197,94,.2)',borderColor:'rgba(34,197,94,.4)',color:'#4ade80'}}
+                        onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
+                        🎬 스튜디오 탭으로 →
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 컷 목록 */}
         <div className={s.cutSection}>
           <div className={s.cutSectionTitle}>컷 목록</div>
           <div className={s.cutList}>
@@ -471,6 +529,7 @@ ${YEORI_RULESET}
                 <span className={s.cutNo}>
                   CUT {c.no}
                   {c.cutType === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
+                  {gData[`cut_${c.no}`]?.g1 && <span className={s.g1Badge}>G1</span>}
                 </span>
                 <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
               </button>
@@ -515,10 +574,25 @@ ${YEORI_RULESET}
           <>
             <div className={s.editorHeader}>
               <h2>CUT {cuts[activeCut]?.no}</h2>
-              <div className={s.editorNav}>
-                <button disabled={activeCut === 0} onClick={() => setActiveCut(i => i - 1)}>◀ 이전</button>
-                <span>{activeCut + 1} / {cuts.length}</span>
-                <button disabled={activeCut === cuts.length - 1} onClick={() => setActiveCut(i => i + 1)}>다음 ▶</button>
+              <div style={{display:'flex', alignItems:'center', gap:8}}>
+                {gData[`cut_${cuts[activeCut]?.no}`]?.g1 ? (
+                  <button onClick={() => revokeG1(cuts[activeCut].no)}
+                    style={{padding:'4px 10px',borderRadius:6,background:'rgba(34,197,94,.15)',
+                      border:'1px solid rgba(34,197,94,.4)',color:'#4ade80',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                    ✅ G1 승인됨 (취소)
+                  </button>
+                ) : (
+                  <button onClick={() => approveG1(cuts[activeCut].no)}
+                    style={{padding:'4px 10px',borderRadius:6,background:'rgba(167,139,250,.15)',
+                      border:'1px solid rgba(167,139,250,.4)',color:'var(--accent-light)',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                    ☑ G1 승인
+                  </button>
+                )}
+                <div className={s.editorNav}>
+                  <button disabled={activeCut === 0} onClick={() => setActiveCut(i => i - 1)}>◀ 이전</button>
+                  <span>{activeCut + 1} / {cuts.length}</span>
+                  <button disabled={activeCut === cuts.length - 1} onClick={() => setActiveCut(i => i + 1)}>다음 ▶</button>
+                </div>
               </div>
             </div>
 
