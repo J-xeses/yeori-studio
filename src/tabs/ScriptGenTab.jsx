@@ -292,9 +292,29 @@ ${YEORI_RULESET}
   }
 
   // ── G1 승인/취소 ─────────────────────────────────────────────
-  const approveG1 = (cutNo) => { setGPoint(cutNo, 'g1', true); setGData(loadGPoints()) }
+  const approveG1 = (cutNo) => {
+    setGPoint(cutNo, 'g1', true)
+    const updated = loadGPoints()
+    setGData(updated)
+    // 타입 무관하게 문자열로 통일 후 비교
+    const cutNoStr = String(cutNo)
+    const allDone = cuts.length > 0 && cuts.every(c => {
+      if (String(c.no) === cutNoStr) return true
+      return !!updated[`cut_${c.no}`]?.g1
+    })
+    console.log('[G1] cutNo:', cutNo, 'allDone:', allDone, 'cuts:', cuts.map(c=>c.no), 'updated:', updated)
+    if (allDone) {
+      console.log('[G1] 전체 승인 완료 → 스튜디오 탭으로 이동')
+      setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
+    }
+  }
   const revokeG1  = (cutNo) => { setGPoint(cutNo, 'g1', false); setGData(loadGPoints()) }
-  const approveAllG1 = () => { cuts.forEach(c => setGPoint(c.no, 'g1', true)); setGData(loadGPoints()) }
+  const approveAllG1 = () => {
+    cuts.forEach(c => setGPoint(c.no, 'g1', true))
+    const updated = loadGPoints()
+    setGData(updated)
+    setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
+  }
   const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
   const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
