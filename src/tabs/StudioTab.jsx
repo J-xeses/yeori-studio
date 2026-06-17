@@ -28,7 +28,8 @@ async function generateImageWithGemini(prompt, apiKey) {
 export default function StudioTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys } = state
-  const [images, setImages] = useState({})
+  const [images, setImages] = useState({})      // cut.id → [url, url, ...]
+  const [selectedImage, setSelectedImage] = useState({}) // cut.id → index
   const [selected, setSelected] = useState(TOOLS[0])
   const [copiedId, setCopiedId] = useState(null)
   const [generating, setGenerating] = useState({})
@@ -60,7 +61,11 @@ export default function StudioTab() {
   const handleImageUpload = (cutId, file) => {
     if (!file) return
     const url = URL.createObjectURL(file)
-    setImages(prev => ({ ...prev, [cutId]: url }))
+    setImages(prev => {
+      const existing = Array.isArray(prev[cutId]) ? prev[cutId] : (prev[cutId] ? [prev[cutId]] : [])
+      return { ...prev, [cutId]: [...existing, url] }
+    })
+    setSelectedImage(prev => ({ ...prev, [cutId]: (Array.isArray(images[cutId]) ? images[cutId].length : 0) }))
     // G3 포인트 자동 저장
     const cut = cuts.find(c => c.id === cutId)
     if (cut) setGPoint(cut.no, 'g3', true)
@@ -80,7 +85,11 @@ export default function StudioTab() {
     setGenerating(prev => ({ ...prev, [cut.id]: true }))
     try {
       const imgUrl = await generateImageWithGemini(cut.imagePrompt, apiKeys.gemini)
-      setImages(prev => ({ ...prev, [cut.id]: imgUrl }))
+      setImages(prev => {
+        const existing = Array.isArray(prev[cut.id]) ? prev[cut.id] : (prev[cut.id] ? [prev[cut.id]] : [])
+        return { ...prev, [cut.id]: [...existing, imgUrl] }
+      })
+      setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
       setGPoint(cut.no, 'g3', true)
     } catch(e) {
       alert(`CUT ${cut.no} 생성 실패: ${e.message}`)
@@ -277,9 +286,9 @@ export default function StudioTab() {
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
   }
 
-  const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id])
+  const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id]?.length > 0)
   const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
-  const g3Count = cuts.filter(c => images[c.id]).length
+  const g3Count = cuts.filter(c => images[c.id]?.length > 0).length
   const g2Count = cuts.filter(c => confirmed[c.id]).length
 
   const exportPromptsJson = () => runFlow()
@@ -442,15 +451,32 @@ export default function StudioTab() {
               <span className={s.cutBadge}>CUT {cut.no}</span>
               <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
               {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
-              {images[cut.id] && <span className={`${s.gBadge} ${s.g3Badge}`}>G3</span>}
+              {images[cut.id]?.length > 0 && <span className={`${s.gBadge} ${s.g3Badge}`}>G3</span>}
               {confirmed[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
             </div>
 
+            {/* 다중 이미지 썸네일 */}
+            {images[cut.id]?.length > 0 && (
+              <div style={{display:'flex',gap:'6px',flexWrap:'wrap',padding:'6px',background:'rgba(0,0,0,0.2)',borderRadius:'8px',marginBottom:'6px'}}>
+                {images[cut.id].map((url, idx) => (
+                  <div key={idx} onClick={() => setSelectedImage(prev => ({...prev, [cut.id]: idx}))}
+                    style={{width:'72px',height:'72px',borderRadius:'6px',overflow:'hidden',cursor:'pointer',
+                      border: (selectedImage[cut.id]??0) === idx ? '2px solid #a78bfa' : '2px solid transparent',
+                      flexShrink:0}}>
+                    <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
+                  </div>
+                ))}
+                <div onClick={() => fileRefs.current[cut.id]?.click()}
+                  style={{width:'72px',height:'72px',borderRadius:'6px',border:'2px dashed rgba(255,255,255,0.2)',
+                    display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',
+                    flexShrink:0,color:'#5c5870',fontSize:'20px'}}>+</div>
+              </div>
+            )}
             <div className={s.imageArea}
-              onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}
-              style={images[cut.id] ? { backgroundImage: `url(${images[cut.id]})` } : {}}
+              onClick={() => !images[cut.id]?.length && !generating[cut.id] && fileRefs.current[cut.id]?.click()}
+              style={images[cut.id]?.length > 0 ? { backgroundImage: `url(${images[cut.id][selectedImage[cut.id]??0]})` } : {}}
             >
-              {!images[cut.id] && !generating[cut.id] && (
+              {!images[cut.id]?.length && !generating[cut.id] && (
                 <div className={s.uploadPlaceholder}>
                   <span className={s.uploadIcon}>🖼️</span>
                   <span>이미지 업로드</span>
@@ -466,7 +492,16 @@ export default function StudioTab() {
               {images[cut.id] && (
                 <button className={s.removeImg} onClick={e => {
                   e.stopPropagation()
-                  setImages(p => { const n={...p}; delete n[cut.id]; return n })
+                  setImages(p => {
+                    const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                    const idx = selectedImage[cut.id] ?? 0
+                    const newArr = arr.filter((_, i) => i !== idx)
+                    const n = {...p}
+                    if (newArr.length) n[cut.id] = newArr
+                    else delete n[cut.id]
+                    return n
+                  })
+                  setSelectedImage(prev => ({...prev, [cut.id]: 0}))
                 }}>✕</button>
               )}
               <input ref={el => fileRefs.current[cut.id] = el} type="file" accept="image/*"
@@ -514,7 +549,7 @@ export default function StudioTab() {
             <div className={s.confirmRow}>
               {!confirmed[cut.id] ? (
                 <button className={s.confirmBtn}
-                  disabled={!images[cut.id]}
+                  disabled={!images[cut.id]?.length}
                   onClick={() => {
                     setConfirmed(p => ({ ...p, [cut.id]: true }))
                     setGPoint(cut.no, 'g2', true)
