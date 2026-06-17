@@ -344,14 +344,14 @@ export default function EditMetaTab() {
       </div>
 
       {/* 탭 네비게이션 */}
-      <div style={{display:'flex', gap:'8px', marginBottom:'20px', flexWrap:'wrap'}}>
+      <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'6px', marginBottom:'20px'}}>
         {[
           { key:'meta',    label:'① 메타 생성' },
           { key:'srt',     label:'② SRT 생성' },
           { key:'analyze', label:'③ 컷 분석' },
           { key:'guide',   label:'④ 캡컷 가이드' },
         ].map(t => (
-          <button key={t.key} style={tabStyle(t.key)} onClick={() => setActiveTab(t.key)}>
+          <button key={t.key} style={{...tabStyle(t.key), width:'100%', textAlign:'center'}} onClick={() => setActiveTab(t.key)}>
             {t.label}
           </button>
         ))}
@@ -602,6 +602,42 @@ export default function EditMetaTab() {
               {analyzeResult && (
                 <div style={{background:'#141418',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'8px',padding:'16px'}}>
                   <div style={{fontSize:'14px',fontWeight:700,color:'#e8e6f0',marginBottom:'14px'}}>{analyzeResult.cutLabel} 분석</div>
+
+                  {/* 영상 미리보기 */}
+                  {analyzeResult.videoPath && (
+                    <div style={{marginBottom:'16px',borderRadius:'8px',overflow:'hidden',background:'#000',border:'1px solid rgba(255,255,255,0.07)'}}>
+                      <video
+                        key={analyzeResult.videoPath}
+                        controls
+                        style={{width:'100%',maxHeight:'300px',display:'block'}}
+                        src={analyzeResult.videoPath}
+                      >
+                        영상을 재생할 수 없습니다
+                      </video>
+                    </div>
+                  )}
+                  {!analyzeResult.videoPath && (
+                    <div style={{marginBottom:'16px',padding:'20px',background:'rgba(255,255,255,0.03)',border:'1px dashed rgba(255,255,255,0.1)',borderRadius:'8px',textAlign:'center'}}>
+                      <div style={{fontSize:'12px',color:'#5c5870',marginBottom:'8px'}}>영상 파일을 선택하면 미리보기가 표시됩니다</div>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        id={`video-preview-${selectedCut}`}
+                        style={{display:'none'}}
+                        onChange={e => {
+                          const file = e.target.files[0]
+                          if (file) {
+                            const url = URL.createObjectURL(file)
+                            setAnalyzeResult(prev => ({ ...prev, videoPath: url }))
+                          }
+                        }}
+                      />
+                      <label htmlFor={`video-preview-${selectedCut}`}
+                        style={{display:'inline-block',padding:'6px 16px',background:'rgba(167,139,250,0.15)',border:'1px solid rgba(167,139,250,0.3)',borderRadius:'6px',color:'#a78bfa',fontSize:'12px',cursor:'pointer',fontWeight:600}}>
+                        🎬 영상 파일 선택
+                      </label>
+                    </div>
+                  )}
 
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px',marginBottom:'14px'}}>
                     {[
