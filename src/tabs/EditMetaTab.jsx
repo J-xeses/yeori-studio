@@ -15,23 +15,40 @@ function toTimecode(sec) {
   return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
 }
 
+function toSRTTime(sec) {
+  const h = Math.floor(sec / 3600)
+  const m = Math.floor((sec % 3600) / 60)
+  const s = Math.floor(sec % 60)
+  const ms = Math.round((sec % 1) * 1000)
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`
+}
+
 export default function EditMetaTab() {
   const { state } = useApp()
+  const [activeTab, setActiveTab] = useState('meta') // meta | srt | analyze | guide
   const [loading, setLoading] = useState(false)
-  const [meta, setMeta]       = useState([])
-  const [aiNote, setAiNote]   = useState('')
-  const [error, setError]     = useState('')
+  const [meta, setMeta] = useState([])
+  const [aiNote, setAiNote] = useState('')
+  const [error, setError] = useState('')
   const [hookIndices, setHookIndices] = useState([0])
 
-  // FFmpeg 자동 실행 상태
-  const [workDir, setWorkDir]         = useState('downloads/video/ep5')
+  // FFmpeg 상태 (선택적 사용)
+  const [workDir, setWorkDir] = useState('downloads/video/ep5')
   const [ffmpegRunning, setFfmpegRunning] = useState(false)
-  const [ffmpegProgress, setFfmpegProgress] = useState(null)   // { current, total, label }
-  const [ffmpegResults, setFfmpegResults]   = useState([])     // [{ cutNo, file, status }]
-  const [ffmpegError, setFfmpegError]       = useState('')
+  const [ffmpegProgress, setFfmpegProgress] = useState(null)
+  const [ffmpegResults, setFfmpegResults] = useState([])
+  const [ffmpegError, setFfmpegError] = useState('')
+  const [showFFmpeg, setShowFFmpeg] = useState(false)
 
-  // 음성 타이밍 상태 (컷별)
+  // 음성 타이밍 상태
   const [audioSettings, setAudioSettings] = useState({})
+
+  // 컷 상세 분석
+  const [selectedCut, setSelectedCut] = useState(null)
+  const [analyzeResult, setAnalyzeResult] = useState(null)
+
+  // SRT 설정
+  const [srtOffset, setSrtOffset] = useState(0)
 
   const cuts = state.cuts?.length
     ? state.cuts
@@ -45,7 +62,7 @@ export default function EditMetaTab() {
     audioStart: 0,
     audioEnd: '',
     sfxOnly: false,
-    hasSubtitle: false,
+    hasSubtitle: true,
   }
 
   const setAudio = (i, key, value) => {
@@ -58,7 +75,7 @@ export default function EditMetaTab() {
   const buildMeta = () => {
     let cursor = 0
     return cuts.map((cut, i) => {
-      const dur   = cut.sec || cut.duration || estimateDuration(cut.script || cut.text || '')
+      const dur = cut.sec || cut.duration || estimateDuration(cut.script || cut.text || '')
       const start = cursor
       cursor += dur
       const isHook = hookIndices.includes(i)
@@ -67,7 +84,9 @@ export default function EditMetaTab() {
         cutNo: String(i+1).padStart(2,'0'),
         label: cut.label || `CUT ${String(i+1).padStart(2,'0')}`,
         start: toTimecode(start),
-        end:   toTimecode(cursor),
+        end: toTimecode(cursor),
+        startSec: start,
+        endSec: cursor,
         duration: dur,
         type: isHook ? '훅' : '일반',
         transition: i === 0 ? '페이드 인/아웃' : '컷 편집',
@@ -77,6 +96,9 @@ export default function EditMetaTab() {
         audioEnd: audio.audioEnd || dur,
         sfxOnly: audio.sfxOnly,
         hasSubtitle: audio.hasSubtitle,
+        script: cut.script || cut.text || '',
+        dialogue: cut.dialogue || cut.대사 || '',
+        narration: cut.narration || cut.나레이션 || '',
       }
     })
   }
@@ -86,7 +108,7 @@ export default function EditMetaTab() {
     const computed = buildMeta()
     setMeta(computed)
     try {
-      const apiKey   = state.apiKeys?.claude || state.apiKey || ''
+      const apiKey = state.apiKeys?.claude || state.apiKey || ''
       const totalSec = computed.reduce((a,c) => a + c.duration, 0)
       const hookCuts = computed.filter(c => c.type === '훅').map(c => c.label).join(', ')
       const data = await claudeMessages(apiKey, {
@@ -107,12 +129,103 @@ export default function EditMetaTab() {
     }
   }
 
+  // ── SRT 생성 ──
+  const generateSRT = () => {
+    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
+    let srt = ''
+    let idx = 1
+    const offset = parseFloat(srtOffset) || 0
+
+    meta.forEach(m => {
+      const text = m.dialogue || m.narration || m.script
+      if (!text || m.sfxOnly) return
+      const start = m.startSec + offset
+      const end = m.endSec + offset
+      srt += `${idx}\n`
+      srt += `${toSRTTime(start)} --> ${toSRTTime(end)}\n`
+      srt += `${text}\n\n`
+      idx++
+    })
+
+    if (!srt) { alert('자막으로 사용할 대사/나레이션이 없습니다'); return }
+
+    const blob = new Blob([srt], { type: 'text/plain;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `yeori_ep${state.episodeNo || '00'}_subtitles.srt`
+    a.click()
+  }
+
+  // ── 컷 상세 분석 ──
+  const analyzeCut = (cutIdx) => {
+    const m = meta[cutIdx]
+    if (!m) return
+    setSelectedCut(cutIdx)
+
+    const videoDur = m.duration
+    const audioEnd = parseFloat(m.audioEnd) || videoDur
+    const audioStart = parseFloat(m.audioStart) || 0
+    const audioDur = audioEnd - audioStart
+    const diff = videoDur - audioDur
+    const textLen = (m.dialogue || m.narration || '').replace(/\s/g,'').length
+    const estimatedSpeechSec = Math.round(textLen / 5) // 한국어 평균 5자/초
+
+    const issues = []
+    if (diff < -1) issues.push({ type: 'error', msg: `음성(${audioDur}s)이 영상(${videoDur}s)보다 ${Math.abs(diff).toFixed(1)}s 깁니다 → 영상 재생성 필요` })
+    if (diff > 3) issues.push({ type: 'warn', msg: `영상(${videoDur}s)이 음성(${audioDur}s)보다 ${diff.toFixed(1)}s 깁니다 → 여운 구간으로 활용 가능` })
+    if (!m.audioFile) issues.push({ type: 'warn', msg: '음성 파일이 지정되지 않았습니다' })
+    if (estimatedSpeechSec > videoDur) issues.push({ type: 'warn', msg: `대사 길이 추정(${estimatedSpeechSec}s)이 영상(${videoDur}s)보다 깁니다 → TTS 속도 확인 필요` })
+
+    setAnalyzeResult({
+      cutLabel: m.label,
+      videoDur,
+      audioDur,
+      diff,
+      textLen,
+      estimatedSpeechSec,
+      issues,
+      hasDialogue: !!m.dialogue,
+      hasNarration: !!m.narration,
+      isHook: m.type === '훅',
+    })
+  }
+
+  // ── 캡컷 가이드 생성 ──
+  const generateCapcutGuide = () => {
+    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
+    let guide = `# 서여리 캡컷 편집 가이드\n`
+    guide += `생성: ${new Date().toLocaleString('ko-KR')}\n`
+    guide += `${'='.repeat(50)}\n\n`
+
+    meta.forEach(m => {
+      guide += `## ${m.label} (${m.type})\n`
+      guide += `- 구간: ${m.start} ~ ${m.end} (${m.duration}초)\n`
+      guide += `- 영상파일: cut_${m.cutNo}.mp4\n`
+      guide += `- 음성파일: ${m.audioFile || '미지정'}\n`
+      guide += `- 자막: ${m.hasSubtitle ? '있음' : '없음'}\n`
+      if (m.dialogue) guide += `- 대사: ${m.dialogue}\n`
+      if (m.narration) guide += `- 나레이션: ${m.narration}\n`
+      if (m.note) guide += `- 주의: ${m.note}\n`
+      guide += `- 립싱크: ${m.dialogue ? '필요 (대사 있음)' : '불필요'}\n`
+      guide += `\n`
+    })
+
+    if (aiNote) {
+      guide += `${'='.repeat(50)}\n`
+      guide += `## AI 편집 주의사항\n${aiNote}\n`
+    }
+
+    const blob = new Blob([guide], { type: 'text/plain;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `yeori_capcut_guide.txt`
+    a.click()
+  }
+
   const exportJSON = () => {
     const blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href = url; a.download = 'yeori_edit_meta.json'; a.click()
-    URL.revokeObjectURL(url)
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob); a.download = 'yeori_edit_meta.json'; a.click()
   }
 
   const exportCSV = () => {
@@ -121,12 +234,10 @@ export default function EditMetaTab() {
       [m.cutNo, m.label, m.start, m.end, m.duration, m.type, m.transition,
        m.audioFile, m.audioStart, m.audioEnd, m.sfxOnly, m.hasSubtitle].join(',')
     )
-    const csv  = [headers.join(','), ...rows].join('\n')
+    const csv = [headers.join(','), ...rows].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href = url; a.download = 'yeori_edit_meta.csv'; a.click()
-    URL.revokeObjectURL(url)
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob); a.download = 'yeori_edit_meta.csv'; a.click()
   }
 
   const generateFFmpeg = () => {
@@ -134,31 +245,24 @@ export default function EditMetaTab() {
     const lines = [
       '# 서여리 FFmpeg 편집 자동화 스크립트',
       '# 원칙: 음성 길이 = 영상 길이 (앞뒤 무음으로 패딩)',
-      '# 실행: PowerShell에서 .\yeori_ffmpeg.ps1',
+      '# 실행: PowerShell에서 .\\yeori_ffmpeg.ps1',
       '',
       'New-Item -ItemType Directory -Force -Path "output_final" | Out-Null',
       '',
     ]
-
     meta.forEach(m => {
       const cutNum = m.cutNo
       const videoFile = 'cut_' + cutNum + '.mp4'
       const outFile = 'output_final\\C' + cutNum + '_final.mp4'
       const videoDur = parseFloat(m.duration)
-
       lines.push('# C' + cutNum + ' (' + videoDur + '초)')
-
       if (m.sfxOnly || !m.audioFile) {
-        lines.push('# 음성 없음 - 효과음만')
         lines.push('ffmpeg -i "' + videoFile + '" -c:v copy -an "' + outFile + '" -y')
       } else {
         const audioDelay = parseFloat(m.audioStart) || 0
         const audioEnd = parseFloat(m.audioEnd) || videoDur
         const audioDuration = audioEnd - audioDelay
         const delayMs = Math.round(audioDelay * 1000)
-
-        lines.push('# 음성 시작: +' + audioDelay + 's / 끝: ' + audioEnd + 's / 영상: ' + videoDur + 's')
-
         if (audioDelay > 0) {
           lines.push('ffmpeg -i "' + videoFile + '" -i "' + m.audioFile + '" `')
           lines.push('  -filter_complex "[1:a]atrim=duration=' + audioDuration + ',adelay=' + delayMs + '|' + delayMs + ',apad=whole_dur=' + videoDur + '[a]" `')
@@ -171,26 +275,16 @@ export default function EditMetaTab() {
       }
       lines.push('')
     })
-
-    lines.push('Write-Host "✅ 완료! output_final 폴더 확인하세요." -ForegroundColor Green')
-
-    const script = lines.join('\n')
-    const blob = new Blob([script], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
+    lines.push('Write-Host "완료! output_final 폴더 확인하세요." -ForegroundColor Green')
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
     const a = document.createElement('a')
-    a.href = url; a.download = 'yeori_ffmpeg.ps1'; a.click()
-    URL.revokeObjectURL(url)
+    a.href = URL.createObjectURL(blob); a.download = 'yeori_ffmpeg.ps1'; a.click()
   }
 
   const runFFmpegAuto = async () => {
     if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
-    setFfmpegRunning(true)
-    setFfmpegProgress(null)
-    setFfmpegResults([])
-    setFfmpegError('')
+    setFfmpegRunning(true); setFfmpegProgress(null); setFfmpegResults([]); setFfmpegError('')
     try {
-      // FFmpeg는 파일시스템 접근 필요 → 항상 로컬 프록시 서버 직접 호출
-      // (여리스튜디오_시작.bat 실행 시 localhost:3001 자동 기동)
       const res = await fetch('http://localhost:3001/api/ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,8 +292,7 @@ export default function EditMetaTab() {
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: '프록시 서버 응답 오류' }))
-        setFfmpegError(err.error || 'FFmpeg 실행 오류')
-        return
+        setFfmpegError(err.error || 'FFmpeg 실행 오류'); return
       }
       const reader = res.body.getReader()
       const dec = new TextDecoder()
@@ -214,263 +307,409 @@ export default function EditMetaTab() {
           if (!line.startsWith('data: ')) continue
           try {
             const ev = JSON.parse(line.slice(6))
-            if (ev.type === 'progress')  setFfmpegProgress({ current: ev.current, total: ev.total, label: ev.label })
-            if (ev.type === 'cut_done')  setFfmpegProgress(p => p ? { ...p, current: p.current } : p)
-            if (ev.type === 'done')      setFfmpegResults(ev.results ?? [])
-            if (ev.type === 'cut_error') setFfmpegError(p => p + `\nCUT ${ev.cutNo} 오류 → ${ev.log}`)
-            if (ev.type === 'error')     setFfmpegError(ev.message)
+            if (ev.type === 'progress') setFfmpegProgress({ current: ev.current, total: ev.total, label: ev.label })
+            if (ev.type === 'done') setFfmpegResults(ev.results ?? [])
+            if (ev.type === 'error') setFfmpegError(ev.message)
           } catch {}
         }
       }
     } catch (err) {
-      const isConnErr = err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('ERR_CONNECTION_REFUSED')
-      setFfmpegError(isConnErr
-        ? '⚠️ 프록시 서버에 연결할 수 없습니다.\n여리스튜디오_시작.bat을 먼저 실행하고 "여리스튜디오-프록시서버" 창이 열려있는지 확인하세요.'
-        : err.message
-      )
+      setFfmpegError(err.message.includes('Failed to fetch')
+        ? '프록시 서버에 연결할 수 없습니다. 여리스튜디오_시작.bat을 먼저 실행하세요.'
+        : err.message)
     } finally {
       setFfmpegRunning(false)
     }
   }
 
   const toggleHook = idx =>
-    setHookIndices(prev =>
-      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
-    )
+    setHookIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx])
 
   const totalDur = meta.reduce((a,c) => a + c.duration, 0)
+
+  const tabStyle = (t) => ({
+    padding: '8px 16px', border: 'none', borderRadius: '6px',
+    cursor: 'pointer', fontSize: '12px', fontWeight: 600,
+    background: activeTab === t ? '#7c3aed' : 'rgba(255,255,255,0.06)',
+    color: activeTab === t ? '#fff' : '#9490a8',
+    transition: 'all 0.15s',
+  })
 
   return (
     <div className={styles.root}>
     <div className={styles.wrap}>
       <div className={styles.header}>
-        <h2 className={styles.title}>편집 메타 자동 생성</h2>
-        <p className={styles.desc}>CUT별 타임코드·음성 타이밍·FFmpeg 스크립트를 자동으로 생성합니다</p>
+        <h2 className={styles.title}>편집 메타</h2>
+        <p className={styles.desc}>타임코드 · SRT 자막 · 컷 분석 · 캡컷 가이드</p>
       </div>
 
-      {/* 훅 CUT 지정 */}
-      <div className={styles.section}>
-        <div className={styles.sectionLabel}>훅 CUT 지정 (클릭으로 토글)</div>
-        <div className={styles.hookRow}>
-          {cuts.map((cut, i) => (
-            <span
-              key={i}
-              className={`${styles.cutTag} ${hookIndices.includes(i) ? styles.cutTagActive : ''}`}
-              onClick={() => toggleHook(i)}
-            >
-              {cut.label || `CUT ${i+1}`}
-            </span>
-          ))}
-        </div>
+      {/* 탭 네비게이션 */}
+      <div style={{display:'flex', gap:'8px', marginBottom:'20px', flexWrap:'wrap'}}>
+        {[
+          { key:'meta',    label:'① 메타 생성' },
+          { key:'srt',     label:'② SRT 생성' },
+          { key:'analyze', label:'③ 컷 분석' },
+          { key:'guide',   label:'④ 캡컷 가이드' },
+        ].map(t => (
+          <button key={t.key} style={tabStyle(t.key)} onClick={() => setActiveTab(t.key)}>
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      {/* 음성 타이밍 설정 */}
-      <div className={styles.section}>
-        <div className={styles.sectionLabel}>컷별 음성 타이밍 설정</div>
-        <div className={styles.audioTable}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th className={styles.th}>CUT</th>
-                <th className={styles.th}>음성 파일명</th>
-                <th className={styles.th}>시작(초)</th>
-                <th className={styles.th}>끝(초)</th>
-                <th className={styles.th}>효과음만</th>
-                <th className={styles.th}>자막</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cuts.map((cut, i) => (
-                <tr key={i}>
-                  <td className={styles.td}>{cut.label || `CUT ${i+1}`}</td>
-                  <td className={styles.td}>
-                    <input
-                      type="text"
-                      placeholder="ElevenLabs_04.mp3"
-                      value={getAudio(i).audioFile}
-                      onChange={e => setAudio(i, 'audioFile', e.target.value)}
-                      style={{width:'160px', background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'3px 6px', fontSize:'11px'}}
-                    />
-                  </td>
-                  <td className={styles.td}>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="0"
-                      value={getAudio(i).audioStart}
-                      onChange={e => setAudio(i, 'audioStart', e.target.value)}
-                      style={{width:'60px', background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'3px 6px', fontSize:'11px'}}
-                    />
-                  </td>
-                  <td className={styles.td}>
-                    <input
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      placeholder="영상끝"
-                      value={getAudio(i).audioEnd}
-                      onChange={e => setAudio(i, 'audioEnd', e.target.value)}
-                      style={{width:'60px', background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'3px 6px', fontSize:'11px'}}
-                    />
-                  </td>
-                  <td className={styles.td} style={{textAlign:'center'}}>
-                    <input
-                      type="checkbox"
-                      checked={getAudio(i).sfxOnly}
-                      onChange={e => setAudio(i, 'sfxOnly', e.target.checked)}
-                    />
-                  </td>
-                  <td className={styles.td} style={{textAlign:'center'}}>
-                    <input
-                      type="checkbox"
-                      checked={getAudio(i).hasSubtitle}
-                      onChange={e => setAudio(i, 'hasSubtitle', e.target.checked)}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <button className={styles.genBtn} onClick={generate} disabled={loading}>
-        {loading ? '메타 생성 중...' : '편집 메타 자동 생성'}
-      </button>
-
-      {error && <div className={styles.error}>{error}</div>}
-
-      {meta.length > 0 && (
+      {/* ── ① 메타 생성 탭 ── */}
+      {activeTab === 'meta' && (
         <>
-          <div className={styles.statRow}>
-            {[
-              { label: '총 길이', value: toTimecode(totalDur) },
-              { label: 'CUT 수',  value: `${meta.length}개` },
-              { label: '훅 CUT', value: `${meta.filter(m => m.type === '훅').length}개` },
-            ].map(s => (
-              <div key={s.label} className={styles.statCard}>
-                <div className={styles.statLabel}>{s.label}</div>
-                <div className={styles.statValue}>{s.value}</div>
-              </div>
-            ))}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>훅 CUT 지정 (클릭으로 토글)</div>
+            <div className={styles.hookRow}>
+              {cuts.map((cut, i) => (
+                <span key={i}
+                  className={`${styles.cutTag} ${hookIndices.includes(i) ? styles.cutTagActive : ''}`}
+                  onClick={() => toggleHook(i)}>
+                  {cut.label || `CUT ${i+1}`}
+                </span>
+              ))}
+            </div>
           </div>
 
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  {['CUT','구간','길이','타입','트랜지션','음성파일','시작','끝','메모'].map(h => (
-                    <th key={h} className={styles.th}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {meta.map((m, i) => (
-                  <tr key={i} className={m.type === '훅' ? styles.hookRow2 : ''}>
-                    <td className={styles.td}>{m.label}</td>
-                    <td className={`${styles.td} ${styles.mono}`}>{m.start} ~ {m.end}</td>
-                    <td className={styles.td}>{m.duration}초</td>
-                    <td className={styles.td}>
-                      <span className={m.type === '훅' ? styles.badgeHook : styles.badge}>{m.type}</span>
-                    </td>
-                    <td className={`${styles.td} ${styles.muted}`}>{m.transition}</td>
-                    <td className={`${styles.td} ${styles.muted}`}>{m.audioFile || '-'}</td>
-                    <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '효과음' : `+${m.audioStart}s`}</td>
-                    <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '-' : `${m.audioEnd}s`}</td>
-                    <td className={`${styles.td} ${styles.muted}`}>{m.note}</td>
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>컷별 음성 타이밍 설정</div>
+            <div className={styles.audioTable}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    {['CUT','음성 파일명','시작(초)','끝(초)','효과음만','자막'].map(h => (
+                      <th key={h} className={styles.th}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {aiNote && (
-            <div className={styles.aiNote}>
-              <div className={styles.aiNoteLabel}>AI 편집 주의사항</div>
-              <div className={styles.aiNoteText}>{aiNote}</div>
-            </div>
-          )}
-
-          <div className={styles.exportRow}>
-            <button className={styles.exportBtn} onClick={exportJSON}>JSON 내보내기</button>
-            <button className={styles.exportBtn} onClick={exportCSV}>CSV 내보내기</button>
-            <button className={styles.exportBtn} onClick={generateFFmpeg} style={{background:'#7c3aed', color:'#fff', borderColor:'#7c3aed'}}>
-              ⚡ FFmpeg 스크립트 생성
-            </button>
-          </div>
-
-          {/* ── FFmpeg 자동 실행 ── */}
-          <div style={{marginTop:'24px', padding:'16px', background:'rgba(124,58,237,0.08)', border:'1px solid rgba(124,58,237,0.25)', borderRadius:'8px'}}>
-            <div style={{fontWeight:600, fontSize:'13px', color:'#c4b5fd', marginBottom:'10px'}}>⚡ FFmpeg 자동 실행</div>
-
-            <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'12px'}}>
-              <span style={{fontSize:'12px', color:'#9ca3af', whiteSpace:'nowrap'}}>작업 폴더</span>
-              <input
-                type="text"
-                value={workDir}
-                onChange={e => setWorkDir(e.target.value)}
-                placeholder="downloads/video/ep5"
-                style={{flex:1, background:'#1c1c22', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:'4px', padding:'5px 8px', fontSize:'12px'}}
-              />
-            </div>
-
-            <button
-              onClick={runFFmpegAuto}
-              disabled={ffmpegRunning}
-              style={{background: ffmpegRunning ? '#4b4b5a' : '#7c3aed', color:'#fff', border:'none', borderRadius:'6px', padding:'8px 16px', fontSize:'13px', fontWeight:600, cursor: ffmpegRunning ? 'not-allowed' : 'pointer', width:'100%'}}
-            >
-              {ffmpegRunning ? '실행 중...' : '⚡ FFmpeg 자동 실행'}
-            </button>
-
-            {/* 진행률 바 */}
-            {ffmpegRunning && ffmpegProgress && (
-              <div style={{marginTop:'12px'}}>
-                <div style={{fontSize:'12px', color:'#c4b5fd', marginBottom:'4px'}}>
-                  CUT {ffmpegProgress.current}/{ffmpegProgress.total} — {ffmpegProgress.label}
-                </div>
-                <div style={{background:'rgba(255,255,255,0.08)', borderRadius:'4px', height:'6px', overflow:'hidden'}}>
-                  <div style={{
-                    background:'#7c3aed',
-                    height:'100%',
-                    width: `${(ffmpegProgress.current / ffmpegProgress.total) * 100}%`,
-                    transition:'width 0.3s ease',
-                    borderRadius:'4px',
-                  }} />
-                </div>
-              </div>
-            )}
-
-            {/* 에러 */}
-            {ffmpegError && (
-              <div style={{marginTop:'10px', padding:'8px', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:'4px', fontSize:'11px', color:'#fca5a5', whiteSpace:'pre-wrap'}}>
-                {ffmpegError}
-              </div>
-            )}
-
-            {/* 결과 */}
-            {ffmpegResults.length > 0 && (
-              <div style={{marginTop:'12px'}}>
-                <div style={{fontSize:'12px', color:'#86efac', marginBottom:'6px', fontWeight:600}}>
-                  ✅ 완료 — output_final 폴더 확인
-                </div>
-                <div style={{display:'flex', flexWrap:'wrap', gap:'6px'}}>
-                  {ffmpegResults.map(r => (
-                    <span key={r.cutNo} style={{
-                      fontSize:'11px', padding:'3px 8px', borderRadius:'4px',
-                      background: r.status === 'ok' ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-                      color: r.status === 'ok' ? '#86efac' : '#fca5a5',
-                      border: `1px solid ${r.status === 'ok' ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                    }}>
-                      {r.status === 'ok' ? '✓' : '✗'} CUT {r.cutNo}
-                    </span>
+                </thead>
+                <tbody>
+                  {cuts.map((cut, i) => (
+                    <tr key={i}>
+                      <td className={styles.td}>{cut.label || `CUT ${i+1}`}</td>
+                      <td className={styles.td}>
+                        <input type="text" placeholder="cut_01.mp3"
+                          value={getAudio(i).audioFile}
+                          onChange={e => setAudio(i, 'audioFile', e.target.value)}
+                          style={{width:'160px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'3px 6px',fontSize:'11px'}} />
+                      </td>
+                      <td className={styles.td}>
+                        <input type="number" step="0.1" min="0" placeholder="0"
+                          value={getAudio(i).audioStart}
+                          onChange={e => setAudio(i, 'audioStart', e.target.value)}
+                          style={{width:'60px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'3px 6px',fontSize:'11px'}} />
+                      </td>
+                      <td className={styles.td}>
+                        <input type="number" step="0.1" min="0" placeholder="영상끝"
+                          value={getAudio(i).audioEnd}
+                          onChange={e => setAudio(i, 'audioEnd', e.target.value)}
+                          style={{width:'60px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'3px 6px',fontSize:'11px'}} />
+                      </td>
+                      <td className={styles.td} style={{textAlign:'center'}}>
+                        <input type="checkbox" checked={getAudio(i).sfxOnly}
+                          onChange={e => setAudio(i, 'sfxOnly', e.target.checked)} />
+                      </td>
+                      <td className={styles.td} style={{textAlign:'center'}}>
+                        <input type="checkbox" checked={getAudio(i).hasSubtitle}
+                          onChange={e => setAudio(i, 'hasSubtitle', e.target.checked)} />
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </div>
-            )}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          <button className={styles.genBtn} onClick={generate} disabled={loading}>
+            {loading ? '메타 생성 중...' : '편집 메타 자동 생성'}
+          </button>
+
+          {error && <div className={styles.error}>{error}</div>}
+
+          {meta.length > 0 && (
+            <>
+              <div className={styles.statRow}>
+                {[
+                  { label:'총 길이', value: toTimecode(totalDur) },
+                  { label:'CUT 수',  value: `${meta.length}개` },
+                  { label:'훅 CUT',  value: `${meta.filter(m => m.type === '훅').length}개` },
+                ].map(s => (
+                  <div key={s.label} className={styles.statCard}>
+                    <div className={styles.statLabel}>{s.label}</div>
+                    <div className={styles.statValue}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      {['CUT','구간','길이','타입','트랜지션','음성파일','시작','끝','메모'].map(h => (
+                        <th key={h} className={styles.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {meta.map((m, i) => (
+                      <tr key={i} className={m.type === '훅' ? styles.hookRow2 : ''}>
+                        <td className={styles.td}>{m.label}</td>
+                        <td className={`${styles.td} ${styles.mono}`}>{m.start} ~ {m.end}</td>
+                        <td className={styles.td}>{m.duration}초</td>
+                        <td className={styles.td}>
+                          <span className={m.type === '훅' ? styles.badgeHook : styles.badge}>{m.type}</span>
+                        </td>
+                        <td className={`${styles.td} ${styles.muted}`}>{m.transition}</td>
+                        <td className={`${styles.td} ${styles.muted}`}>{m.audioFile || '-'}</td>
+                        <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '효과음' : `+${m.audioStart}s`}</td>
+                        <td className={`${styles.td} ${styles.muted}`}>{m.sfxOnly ? '-' : `${m.audioEnd}s`}</td>
+                        <td className={`${styles.td} ${styles.muted}`}>{m.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {aiNote && (
+                <div className={styles.aiNote}>
+                  <div className={styles.aiNoteLabel}>AI 편집 주의사항</div>
+                  <div className={styles.aiNoteText}>{aiNote}</div>
+                </div>
+              )}
+
+              <div className={styles.exportRow}>
+                <button className={styles.exportBtn} onClick={exportJSON}>JSON 내보내기</button>
+                <button className={styles.exportBtn} onClick={exportCSV}>CSV 내보내기</button>
+                <button className={styles.exportBtn}
+                  style={{background:'rgba(124,58,237,0.15)',color:'#c4b5fd',borderColor:'rgba(124,58,237,0.3)'}}
+                  onClick={() => setShowFFmpeg(v => !v)}>
+                  {showFFmpeg ? '▲ FFmpeg 닫기' : '⚡ FFmpeg (선택)'}
+                </button>
+              </div>
+
+              {/* FFmpeg 선택적 사용 */}
+              {showFFmpeg && (
+                <div style={{marginTop:'16px',padding:'16px',background:'rgba(124,58,237,0.08)',border:'1px solid rgba(124,58,237,0.25)',borderRadius:'8px'}}>
+                  <div style={{fontWeight:600,fontSize:'13px',color:'#c4b5fd',marginBottom:'10px'}}>⚡ FFmpeg 자동 실행 (선택적)</div>
+                  <div style={{fontSize:'11px',color:'#9ca3af',marginBottom:'10px'}}>
+                    캡컷에서 립싱크 처리 시에는 원본 영상을 사용하세요. FFmpeg는 음성+영상 사전 합성이 필요한 경우에만 사용합니다.
+                  </div>
+                  <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px'}}>
+                    <span style={{fontSize:'12px',color:'#9ca3af',whiteSpace:'nowrap'}}>작업 폴더</span>
+                    <input type="text" value={workDir} onChange={e => setWorkDir(e.target.value)}
+                      style={{flex:1,background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'5px 8px',fontSize:'12px'}} />
+                  </div>
+                  <div style={{display:'flex',gap:'8px'}}>
+                    <button onClick={generateFFmpeg}
+                      style={{background:'rgba(124,58,237,0.2)',color:'#c4b5fd',border:'1px solid rgba(124,58,237,0.3)',borderRadius:'6px',padding:'8px 16px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>
+                      📄 스크립트 생성
+                    </button>
+                    <button onClick={runFFmpegAuto} disabled={ffmpegRunning}
+                      style={{background:ffmpegRunning?'#4b4b5a':'#7c3aed',color:'#fff',border:'none',borderRadius:'6px',padding:'8px 16px',fontSize:'12px',fontWeight:600,cursor:ffmpegRunning?'not-allowed':'pointer'}}>
+                      {ffmpegRunning ? '실행 중...' : '⚡ 자동 실행'}
+                    </button>
+                  </div>
+                  {ffmpegError && (
+                    <div style={{marginTop:'10px',padding:'8px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'4px',fontSize:'11px',color:'#fca5a5',whiteSpace:'pre-wrap'}}>
+                      {ffmpegError}
+                    </div>
+                  )}
+                  {ffmpegResults.length > 0 && (
+                    <div style={{marginTop:'12px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
+                      {ffmpegResults.map(r => (
+                        <span key={r.cutNo} style={{fontSize:'11px',padding:'3px 8px',borderRadius:'4px',
+                          background:r.status==='ok'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)',
+                          color:r.status==='ok'?'#86efac':'#fca5a5',
+                          border:`1px solid ${r.status==='ok'?'rgba(34,197,94,0.3)':'rgba(239,68,68,0.3)'}`}}>
+                          {r.status==='ok'?'✓':'✗'} CUT {r.cutNo}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
         </>
       )}
+
+      {/* ── ② SRT 생성 탭 ── */}
+      {activeTab === 'srt' && (
+        <div>
+          {meta.length === 0 ? (
+            <div style={{padding:'32px',textAlign:'center',color:'#5c5870',fontSize:'13px'}}>
+              ① 메타 생성 탭에서 먼저 편집 메타를 생성해주세요
+            </div>
+          ) : (
+            <>
+              <div style={{background:'rgba(52,211,153,0.08)',border:'1px solid rgba(52,211,153,0.2)',borderRadius:'8px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:'#6ee7b7'}}>
+                💡 SRT 자막 파일을 생성합니다. 생성된 파일은 A Creative Cutter에서 사용하세요.
+              </div>
+
+              <div style={{marginBottom:'16px'}}>
+                <div style={{fontSize:'12px',color:'#9490a8',marginBottom:'6px'}}>시작 시간 오프셋 (초)</div>
+                <input type="number" step="0.1" value={srtOffset}
+                  onChange={e => setSrtOffset(e.target.value)}
+                  style={{width:'100px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'5px 8px',fontSize:'12px'}} />
+              </div>
+
+              <div style={{background:'#1c1c22',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'8px',padding:'14px',marginBottom:'16px',fontFamily:'monospace',fontSize:'11px',color:'#9490a8',maxHeight:'300px',overflowY:'auto'}}>
+                {meta.map((m, i) => {
+                  const text = m.dialogue || m.narration || m.script
+                  if (!text || m.sfxOnly) return null
+                  const offset = parseFloat(srtOffset) || 0
+                  return (
+                    <div key={i} style={{marginBottom:'12px',paddingBottom:'12px',borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
+                      <div style={{color:'#c4b5fd',fontWeight:700}}>{i+1}</div>
+                      <div style={{color:'#60a5fa'}}>{toSRTTime(m.startSec+offset)} --&gt; {toSRTTime(m.endSec+offset)}</div>
+                      <div style={{color:'#e8e6f0'}}>{text}</div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <button onClick={generateSRT}
+                style={{background:'#34d399',color:'#fff',border:'none',borderRadius:'6px',padding:'10px 24px',fontSize:'13px',fontWeight:700,cursor:'pointer',width:'100%'}}>
+                📝 SRT 자막 파일 다운로드
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── ③ 컷 분석 탭 ── */}
+      {activeTab === 'analyze' && (
+        <div>
+          {meta.length === 0 ? (
+            <div style={{padding:'32px',textAlign:'center',color:'#5c5870',fontSize:'13px'}}>
+              ① 메타 생성 탭에서 먼저 편집 메타를 생성해주세요
+            </div>
+          ) : (
+            <>
+              <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'16px'}}>
+                {meta.map((m, i) => (
+                  <button key={i} onClick={() => analyzeCut(i)}
+                    style={{padding:'6px 12px',border:'1px solid',borderRadius:'6px',cursor:'pointer',fontSize:'12px',fontWeight:600,
+                      borderColor: selectedCut===i ? '#a78bfa' : 'rgba(255,255,255,0.12)',
+                      background: selectedCut===i ? 'rgba(167,139,250,0.15)' : '#1c1c22',
+                      color: selectedCut===i ? '#a78bfa' : '#9490a8'}}>
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+
+              {analyzeResult && (
+                <div style={{background:'#141418',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'8px',padding:'16px'}}>
+                  <div style={{fontSize:'14px',fontWeight:700,color:'#e8e6f0',marginBottom:'14px'}}>{analyzeResult.cutLabel} 분석</div>
+
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px',marginBottom:'14px'}}>
+                    {[
+                      { label:'영상 길이', value:`${analyzeResult.videoDur}s`, color:'#60a5fa' },
+                      { label:'음성 길이', value:`${analyzeResult.audioDur}s`, color:'#a78bfa' },
+                      { label:'차이', value:`${analyzeResult.diff > 0 ? '+' : ''}${analyzeResult.diff.toFixed(1)}s`,
+                        color: Math.abs(analyzeResult.diff) > 2 ? '#f87171' : '#34d399' },
+                    ].map(s => (
+                      <div key={s.label} style={{background:'#1c1c22',borderRadius:'6px',padding:'10px',textAlign:'center'}}>
+                        <div style={{fontSize:'18px',fontWeight:700,color:s.color,fontFamily:'monospace'}}>{s.value}</div>
+                        <div style={{fontSize:'10px',color:'#5c5870',marginTop:'2px'}}>{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{display:'flex',gap:'8px',marginBottom:'14px',flexWrap:'wrap'}}>
+                    {[
+                      { label:'대사', active: analyzeResult.hasDialogue },
+                      { label:'나레이션', active: analyzeResult.hasNarration },
+                      { label:'훅', active: analyzeResult.isHook },
+                      { label:'립싱크 필요', active: analyzeResult.hasDialogue },
+                    ].map(b => (
+                      <span key={b.label} style={{fontSize:'11px',padding:'3px 10px',borderRadius:'20px',
+                        background: b.active ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)',
+                        color: b.active ? '#a78bfa' : '#5c5870',
+                        border: `1px solid ${b.active ? 'rgba(167,139,250,0.3)' : 'rgba(255,255,255,0.07)'}`}}>
+                        {b.label}
+                      </span>
+                    ))}
+                  </div>
+
+                  {analyzeResult.issues.length > 0 ? (
+                    <div>
+                      <div style={{fontSize:'11px',color:'#9490a8',marginBottom:'8px',fontWeight:600}}>발견된 이슈</div>
+                      {analyzeResult.issues.map((issue, i) => (
+                        <div key={i} style={{display:'flex',alignItems:'flex-start',gap:'8px',padding:'8px 10px',borderRadius:'6px',marginBottom:'6px',
+                          background: issue.type==='error' ? 'rgba(239,68,68,0.08)' : 'rgba(251,191,36,0.08)',
+                          border: `1px solid ${issue.type==='error' ? 'rgba(239,68,68,0.25)' : 'rgba(251,191,36,0.25)'}`}}>
+                          <span style={{fontSize:'12px'}}>{issue.type==='error' ? '🔴' : '🟡'}</span>
+                          <span style={{fontSize:'11px',color: issue.type==='error' ? '#fca5a5' : '#fde68a'}}>{issue.msg}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{padding:'10px',background:'rgba(52,211,153,0.08)',border:'1px solid rgba(52,211,153,0.2)',borderRadius:'6px',fontSize:'12px',color:'#6ee7b7'}}>
+                      ✅ 이슈 없음 — 정상 범위입니다
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── ④ 캡컷 가이드 탭 ── */}
+      {activeTab === 'guide' && (
+        <div>
+          {meta.length === 0 ? (
+            <div style={{padding:'32px',textAlign:'center',color:'#5c5870',fontSize:'13px'}}>
+              ① 메타 생성 탭에서 먼저 편집 메타를 생성해주세요
+            </div>
+          ) : (
+            <>
+              <div style={{background:'rgba(251,191,36,0.08)',border:'1px solid rgba(251,191,36,0.2)',borderRadius:'8px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:'#fde68a'}}>
+                💡 캡컷 편집 시 참고할 가이드를 생성합니다. 립싱크 필요 컷, 음성 타이밍, 주의사항을 확인하세요.
+              </div>
+
+              <div style={{display:'flex',flexDirection:'column',gap:'8px',marginBottom:'16px'}}>
+                {meta.map((m, i) => (
+                  <div key={i} style={{background:'#1c1c22',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'8px',padding:'12px'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px'}}>
+                      <span style={{fontSize:'12px',fontWeight:700,color:'#e8e6f0'}}>{m.label}</span>
+                      <span style={{fontSize:'10px',padding:'2px 8px',borderRadius:'20px',
+                        background: m.type==='훅' ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.06)',
+                        color: m.type==='훅' ? '#a78bfa' : '#5c5870',
+                        border: `1px solid ${m.type==='훅' ? 'rgba(167,139,250,0.3)' : 'rgba(255,255,255,0.07)'}`}}>
+                        {m.type}
+                      </span>
+                      {m.dialogue && (
+                        <span style={{fontSize:'10px',padding:'2px 8px',borderRadius:'20px',background:'rgba(96,165,250,0.1)',color:'#60a5fa',border:'1px solid rgba(96,165,250,0.2)'}}>
+                          립싱크 필요
+                        </span>
+                      )}
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'6px',fontSize:'11px',color:'#9490a8'}}>
+                      <div>🎬 {m.start} ~ {m.end}</div>
+                      <div>🎙 {m.audioFile || '음성 미지정'}</div>
+                      <div>⏱ {m.duration}초</div>
+                    </div>
+                    {(m.dialogue || m.narration) && (
+                      <div style={{marginTop:'8px',padding:'6px 10px',background:'rgba(255,255,255,0.03)',borderRadius:'4px',fontSize:'11px',color:'#6b7280',fontStyle:'italic'}}>
+                        "{m.dialogue || m.narration}"
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={generateCapcutGuide}
+                style={{background:'#fbbf24',color:'#000',border:'none',borderRadius:'6px',padding:'10px 24px',fontSize:'13px',fontWeight:700,cursor:'pointer',width:'100%'}}>
+                📋 캡컷 가이드 TXT 다운로드
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
     </div>
     </div>
   )
