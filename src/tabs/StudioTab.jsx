@@ -45,7 +45,7 @@ export default function StudioTab() {
       try {
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), 3000)
-        await fetch('http://localhost:3001/api/studio-data', { signal: controller.signal })
+        await fetch('http://localhost:3001/health', { signal: controller.signal })
         clearTimeout(timer)
         setProxyOk(true)
       } catch {
