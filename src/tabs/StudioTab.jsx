@@ -168,6 +168,15 @@ export default function StudioTab() {
                   }
                 } catch {}
               }
+            } else if (ev.type === 'cut_image') {
+              const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              setImages(p => {
+                const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                if (existing.some(u => u.includes(ev.url))) return p
+                return { ...p, [cut.id]: [...existing, imgUrl] }
+              })
+              setGPoint(cut.no, 'g3', true)
+              setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
             } else if (ev.type === 'error') {
               setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no} Flow 실패: ${ev.message}` }])
             } else if (ev.type === 'log' && ev.level === 'error') {
@@ -243,7 +252,7 @@ export default function StudioTab() {
                 }
                 return next
               })
-              // 생성된 이미지 자동 로드
+              // fallback: cut_image 이벤트가 없을 경우 HEAD 탐색
               const padded = String(ev.cutNo).padStart(2, '0')
               const cut = allCuts.find(c => c.no === ev.cutNo)
               if (cut) {
@@ -254,6 +263,19 @@ export default function StudioTab() {
                     if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(cut.no, 'g3', true); break }
                   } catch {}
                 }
+              }
+            } else if (ev.type === 'cut_image') {
+              // 서버에서 직접 전달한 이미지 URL → 컷카드 자동 표시
+              const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              const cut = allCuts.find(c => c.no === ev.cutNo)
+              if (cut) {
+                setImages(p => {
+                  const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                  const base = ev.url
+                  if (existing.some(u => u.includes(base))) return p
+                  return { ...p, [cut.id]: [...existing, imgUrl] }
+                })
+                setGPoint(cut.no, 'g3', true)
               }
             } else if (ev.type === 'cut_error') {
               setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])

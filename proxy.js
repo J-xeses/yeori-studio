@@ -281,7 +281,19 @@ app.post('/api/run-flow', (req, res) => {
     }
     const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
     if (doneMatch) {
-      send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo: +doneMatch[3] })
+      const cutNo = +doneMatch[3]
+      send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo })
+      // 파일 즉시 확인 후 cut_image 전송
+      if (episode != null) {
+        const padded = String(cutNo).padStart(2, '0')
+        for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
+          const imgPath = path.join(ROOT, 'downloads', 'flow', `ep${episode}`, `cut_${padded}.${ext}`)
+          if (fs.existsSync(imgPath)) {
+            send({ type: 'cut_image', cutNo, url: `/downloads/flow/ep${episode}/cut_${padded}.${ext}` })
+            break
+          }
+        }
+      }
       return
     }
     const errMatch = line.match(/CUT\s*(\d+).*실패/)
@@ -336,6 +348,18 @@ app.post('/api/run-flow', (req, res) => {
       console.log(`[run-flow] 종료 코드: ${code}`)
       send({ type: 'complete', success: code === 0, code })
     }
+
+    // 완료 후 에피소드 디렉토리 전체 스캔 → 누락된 cut_image 이벤트 전송
+    if (episode != null) {
+      const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
+      if (fs.existsSync(epDir)) {
+        fs.readdirSync(epDir).sort().forEach(file => {
+          const m = file.match(/^cut_(\d+)\.(jpg|jpeg|png|webp)$/i)
+          if (m) send({ type: 'cut_image', cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${episode}/${file}` })
+        })
+      }
+    }
+
     res.end()
   })
 
