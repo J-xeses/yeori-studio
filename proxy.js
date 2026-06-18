@@ -7,7 +7,13 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = 'C:\\yeori-studio'
+const ROOT = (() => {
+  const candidates = ['C:\\yeori-studio', 'C:\\Users\\user\\Desktop\\yeori-studio']
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p
+  }
+  return candidates[0]
+})()
 
 const app = express()
 const PORT = 3001

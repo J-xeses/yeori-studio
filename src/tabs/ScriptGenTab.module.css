@@ -180,4 +180,4 @@
 .epApproveBtn:hover { background: var(--accent); color: #fff; }
 
 /* 컷 목록 G1 배지 */
-.g1Badge { display: inline-block; margin-left: 4px; font-size: 9px; font-weight: 800; color: #818cf8; background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.3); border-radius: 3px; padding: 1px 4px; vertical-align: middle; }
+.g1Badge { display: inline-block; margin-left: 4px; font-size: 9px; font-weight: 800; color: #4ade80; background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); border-radius: 3px; padding: 1px 4px; vertical-align: middle; }

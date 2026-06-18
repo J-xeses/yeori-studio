@@ -126,3 +126,15 @@ input[type=range]::-webkit-slider-thumb {
   padding: 9px 18px; border-radius: 7px; font-size: 13px; transition: all .15s; align-self: flex-start;
 }
 .batchBtn:hover { background: var(--accent-glow); }
+
+.g3Btn {
+  background: rgba(167,139,250,.12); border: 1px solid rgba(167,139,250,.4); color: #a78bfa;
+  padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 700;
+  transition: all .15s; align-self: flex-start;
+}
+.g3Btn:hover { background: rgba(167,139,250,.25); }
+.g3Tag {
+  font-size: 11px; font-weight: 700; color: #a78bfa;
+  background: rgba(167,139,250,.12); border: 1px solid rgba(167,139,250,.3);
+  padding: 3px 10px; border-radius: 5px; align-self: flex-start;
+}

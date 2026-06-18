@@ -11,6 +11,7 @@ export default function TTSTab() {
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
   const [audios, setAudios] = useState({})
   const [loading, setLoading] = useState({})
+  const [g3Confirmed, setG3Confirmed] = useState({})
   const [text, setText] = useState('')
   const [activeCut, setActiveCut] = useState(0)
   const [voiceInput, setVoiceInput] = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -117,7 +118,10 @@ export default function TTSTab() {
             >
               <div className={s.cutTop}>
                 <span className={s.cutNo}>CUT {c.no}</span>
-                {audios[c.id] && <span className={s.doneTag}>✓ 생성됨</span>}
+                {g3Confirmed[c.id]
+                  ? <span className={s.g3Tag}>G3 완료</span>
+                  : audios[c.id] && <span className={s.doneTag}>✓ 생성됨</span>
+                }
               </div>
               <span className={s.cutPrev}>{getTextForCut(c) || '(내용 없음)'}</span>
             </button>
@@ -212,6 +216,21 @@ export default function TTSTab() {
                 <button className={s.dlBtn} onClick={() => downloadAudio(cut.id, cut.no)}>
                   ⬇ MP3 다운로드
                 </button>
+                {!g3Confirmed[cut.id] ? (
+                  <button className={s.g3Btn}
+                    onClick={() => {
+                      const next = { ...g3Confirmed, [cut.id]: true }
+                      setG3Confirmed(next)
+                      setGPoint(cut.no, 'g3', true)
+                      if (cuts.every(c => next[c.id])) {
+                        dispatch({ type: 'SET_TAB', p: 'video' })
+                      }
+                    }}>
+                    ✅ G3 승인
+                  </button>
+                ) : (
+                  <span className={s.g3Tag}>G3 완료</span>
+                )}
               </div>
             )}
           </div>
