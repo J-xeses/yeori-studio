@@ -22,17 +22,26 @@
 .autoBtn:hover { background: #6d28d9; }
 
 .grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px; padding: 16px;
+  display: grid; grid-template-columns: 1fr;
+  gap: 10px; padding: 16px;
 }
 
 .card {
   background: var(--bg-panel); border: 1px solid var(--border);
   border-radius: 12px; overflow: hidden;
-  display: flex; flex-direction: column;
-  transition: border-color .15s;
+  display: flex; flex-direction: row;
+  transition: border-color .15s; min-height: 180px;
 }
 .card:hover { border-color: var(--border-light); }
+
+.cardLeft {
+  width: 210px; min-width: 210px; display: flex; flex-direction: column;
+  border-right: 1px solid var(--border); flex-shrink: 0;
+}
+
+.cardRight {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
 
 .cardHeader {
   display: flex; align-items: center; gap: 8px;
@@ -46,7 +55,7 @@
 .scene { font-size: 12.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
 .imageArea {
-  height: 160px; background: var(--bg-input); cursor: pointer;
+  flex: 1; min-height: 130px; background: var(--bg-input); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   background-size: cover; background-position: center;
   position: relative; overflow: hidden; transition: background-color .15s;
