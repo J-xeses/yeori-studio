@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
+import { setGPoint, setGPoints } from '../lib/gpoints'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -24,21 +25,15 @@ function toSRTTime(sec) {
 }
 
 export default function EditMetaTab() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const [activeTab, setActiveTab] = useState('meta') // meta | srt | analyze | guide
   const [loading, setLoading] = useState(false)
   const [meta, setMeta] = useState([])
   const [aiNote, setAiNote] = useState('')
   const [error, setError] = useState('')
   const [hookIndices, setHookIndices] = useState([0])
-
-  // FFmpeg 상태 (선택적 사용)
-  const [workDir, setWorkDir] = useState('downloads/video/ep5')
-  const [ffmpegRunning, setFfmpegRunning] = useState(false)
-  const [ffmpegProgress, setFfmpegProgress] = useState(null)
-  const [ffmpegResults, setFfmpegResults] = useState([])
-  const [ffmpegError, setFfmpegError] = useState('')
-  const [showFFmpeg, setShowFFmpeg] = useState(false)
+  const [accRunning, setAccRunning] = useState(false)
+  const [g5Approved, setG5Approved] = useState({})
 
   // 음성 타이밍 상태
   const [audioSettings, setAudioSettings] = useState({})
@@ -240,86 +235,9 @@ export default function EditMetaTab() {
     a.href = URL.createObjectURL(blob); a.download = 'yeori_edit_meta.csv'; a.click()
   }
 
-  const generateFFmpeg = () => {
-    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
-    const lines = [
-      '# 서여리 FFmpeg 편집 자동화 스크립트',
-      '# 원칙: 음성 길이 = 영상 길이 (앞뒤 무음으로 패딩)',
-      '# 실행: PowerShell에서 .\\yeori_ffmpeg.ps1',
-      '',
-      'New-Item -ItemType Directory -Force -Path "output_final" | Out-Null',
-      '',
-    ]
-    meta.forEach(m => {
-      const cutNum = m.cutNo
-      const videoFile = 'cut_' + cutNum + '.mp4'
-      const outFile = 'output_final\\C' + cutNum + '_final.mp4'
-      const videoDur = parseFloat(m.duration)
-      lines.push('# C' + cutNum + ' (' + videoDur + '초)')
-      if (m.sfxOnly || !m.audioFile) {
-        lines.push('ffmpeg -i "' + videoFile + '" -c:v copy -an "' + outFile + '" -y')
-      } else {
-        const audioDelay = parseFloat(m.audioStart) || 0
-        const audioEnd = parseFloat(m.audioEnd) || videoDur
-        const audioDuration = audioEnd - audioDelay
-        const delayMs = Math.round(audioDelay * 1000)
-        if (audioDelay > 0) {
-          lines.push('ffmpeg -i "' + videoFile + '" -i "' + m.audioFile + '" `')
-          lines.push('  -filter_complex "[1:a]atrim=duration=' + audioDuration + ',adelay=' + delayMs + '|' + delayMs + ',apad=whole_dur=' + videoDur + '[a]" `')
-          lines.push('  -map 0:v -map "[a]" -t ' + videoDur + ' "' + outFile + '" -y')
-        } else {
-          lines.push('ffmpeg -i "' + videoFile + '" -i "' + m.audioFile + '" `')
-          lines.push('  -filter_complex "[1:a]atrim=duration=' + audioDuration + ',apad=whole_dur=' + videoDur + '[a]" `')
-          lines.push('  -map 0:v -map "[a]" -t ' + videoDur + ' "' + outFile + '" -y')
-        }
-      }
-      lines.push('')
-    })
-    lines.push('Write-Host "완료! output_final 폴더 확인하세요." -ForegroundColor Green')
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob); a.download = 'yeori_ffmpeg.ps1'; a.click()
-  }
-
-  const runFFmpegAuto = async () => {
-    if (!meta.length) { alert('먼저 편집 메타를 생성해주세요'); return }
-    setFfmpegRunning(true); setFfmpegProgress(null); setFfmpegResults([]); setFfmpegError('')
-    try {
-      const res = await fetch('http://localhost:3001/api/ffmpeg', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ meta, workDir }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: '프록시 서버 응답 오류' }))
-        setFfmpegError(err.error || 'FFmpeg 실행 오류'); return
-      }
-      const reader = res.body.getReader()
-      const dec = new TextDecoder()
-      let buf = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buf += dec.decode(value, { stream: true })
-        const lines = buf.split('\n')
-        buf = lines.pop() ?? ''
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue
-          try {
-            const ev = JSON.parse(line.slice(6))
-            if (ev.type === 'progress') setFfmpegProgress({ current: ev.current, total: ev.total, label: ev.label })
-            if (ev.type === 'done') setFfmpegResults(ev.results ?? [])
-            if (ev.type === 'error') setFfmpegError(ev.message)
-          } catch {}
-        }
-      }
-    } catch (err) {
-      setFfmpegError(err.message.includes('Failed to fetch')
-        ? '프록시 서버에 연결할 수 없습니다. 여리스튜디오_시작.bat을 먼저 실행하세요.'
-        : err.message)
-    } finally {
-      setFfmpegRunning(false)
-    }
+  const runACC = () => {
+    setAccRunning(true)
+    setTimeout(() => setAccRunning(false), 3000)
   }
 
   const toggleHook = idx =>
@@ -341,6 +259,24 @@ export default function EditMetaTab() {
       <div className={styles.header}>
         <h2 className={styles.title}>편집 메타</h2>
         <p className={styles.desc}>타임코드 · SRT 자막 · 컷 분석 · 캡컷 가이드</p>
+      </div>
+
+      {/* A Creative Cutter ON 버튼 */}
+      <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'16px',padding:'14px 16px',background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'10px'}}>
+        <div style={{flex:1}}>
+          <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
+          <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>draft_content.json + 원본영상 + SRT → CapCut 자동 배치</div>
+        </div>
+        <button
+          onClick={runACC}
+          disabled={accRunning}
+          style={{padding:'9px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:700,
+            background: accRunning ? 'rgba(249,115,22,0.2)' : '#f97316',
+            color: accRunning ? '#fb923c' : '#fff',
+            border: accRunning ? '1px solid rgba(249,115,22,0.4)' : 'none',
+            cursor: accRunning ? 'not-allowed' : 'pointer',whiteSpace:'nowrap'}}>
+          {accRunning ? '⏳ A Creative Cutter 실행 중...' : '▶ ON'}
+        </button>
       </div>
 
       {/* 탭 네비게이션 */}
@@ -481,54 +417,7 @@ export default function EditMetaTab() {
               <div className={styles.exportRow}>
                 <button className={styles.exportBtn} onClick={exportJSON}>JSON 내보내기</button>
                 <button className={styles.exportBtn} onClick={exportCSV}>CSV 내보내기</button>
-                <button className={styles.exportBtn}
-                  style={{background:'rgba(124,58,237,0.15)',color:'#c4b5fd',borderColor:'rgba(124,58,237,0.3)'}}
-                  onClick={() => setShowFFmpeg(v => !v)}>
-                  {showFFmpeg ? '▲ FFmpeg 닫기' : '⚡ FFmpeg (선택)'}
-                </button>
               </div>
-
-              {/* FFmpeg 선택적 사용 */}
-              {showFFmpeg && (
-                <div style={{marginTop:'16px',padding:'16px',background:'rgba(124,58,237,0.08)',border:'1px solid rgba(124,58,237,0.25)',borderRadius:'8px'}}>
-                  <div style={{fontWeight:600,fontSize:'13px',color:'#c4b5fd',marginBottom:'10px'}}>⚡ FFmpeg 자동 실행 (선택적)</div>
-                  <div style={{fontSize:'11px',color:'#9ca3af',marginBottom:'10px'}}>
-                    캡컷에서 립싱크 처리 시에는 원본 영상을 사용하세요. FFmpeg는 음성+영상 사전 합성이 필요한 경우에만 사용합니다.
-                  </div>
-                  <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px'}}>
-                    <span style={{fontSize:'12px',color:'#9ca3af',whiteSpace:'nowrap'}}>작업 폴더</span>
-                    <input type="text" value={workDir} onChange={e => setWorkDir(e.target.value)}
-                      style={{flex:1,background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'5px 8px',fontSize:'12px'}} />
-                  </div>
-                  <div style={{display:'flex',gap:'8px'}}>
-                    <button onClick={generateFFmpeg}
-                      style={{background:'rgba(124,58,237,0.2)',color:'#c4b5fd',border:'1px solid rgba(124,58,237,0.3)',borderRadius:'6px',padding:'8px 16px',fontSize:'12px',fontWeight:600,cursor:'pointer'}}>
-                      📄 스크립트 생성
-                    </button>
-                    <button onClick={runFFmpegAuto} disabled={ffmpegRunning}
-                      style={{background:ffmpegRunning?'#4b4b5a':'#7c3aed',color:'#fff',border:'none',borderRadius:'6px',padding:'8px 16px',fontSize:'12px',fontWeight:600,cursor:ffmpegRunning?'not-allowed':'pointer'}}>
-                      {ffmpegRunning ? '실행 중...' : '⚡ 자동 실행'}
-                    </button>
-                  </div>
-                  {ffmpegError && (
-                    <div style={{marginTop:'10px',padding:'8px',background:'rgba(239,68,68,0.1)',border:'1px solid rgba(239,68,68,0.3)',borderRadius:'4px',fontSize:'11px',color:'#fca5a5',whiteSpace:'pre-wrap'}}>
-                      {ffmpegError}
-                    </div>
-                  )}
-                  {ffmpegResults.length > 0 && (
-                    <div style={{marginTop:'12px',display:'flex',flexWrap:'wrap',gap:'6px'}}>
-                      {ffmpegResults.map(r => (
-                        <span key={r.cutNo} style={{fontSize:'11px',padding:'3px 8px',borderRadius:'4px',
-                          background:r.status==='ok'?'rgba(34,197,94,0.15)':'rgba(239,68,68,0.15)',
-                          color:r.status==='ok'?'#86efac':'#fca5a5',
-                          border:`1px solid ${r.status==='ok'?'rgba(34,197,94,0.3)':'rgba(239,68,68,0.3)'}`}}>
-                          {r.status==='ok'?'✓':'✗'} CUT {r.cutNo}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
             </>
           )}
         </>
@@ -741,6 +630,49 @@ export default function EditMetaTab() {
                 style={{background:'#fbbf24',color:'#000',border:'none',borderRadius:'6px',padding:'10px 24px',fontSize:'13px',fontWeight:700,cursor:'pointer',width:'100%'}}>
                 📋 캡컷 가이드 TXT 다운로드
               </button>
+
+              {/* G5 컷별 승인 */}
+              <div style={{marginTop:'20px',borderTop:'1px solid rgba(255,255,255,0.07)',paddingTop:'16px'}}>
+                <div style={{fontSize:'12.5px',fontWeight:700,color:'#e8e6f0',marginBottom:'10px'}}>G5 단계 — 편집 승인</div>
+                <div style={{display:'flex',flexDirection:'column',gap:'6px',marginBottom:'14px'}}>
+                  {meta.map((m, i) => {
+                    const cutId = cuts[i]?.id || `cut-${i}`
+                    return (
+                      <div key={i} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 12px',background:'#1c1c22',borderRadius:'6px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                        <span style={{fontSize:'12px',fontWeight:700,color:'#e8e6f0',minWidth:'60px'}}>{m.label}</span>
+                        <span style={{flex:1,fontSize:'11px',color:'#9490a8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{m.dialogue || m.narration || '(대사 없음)'}</span>
+                        {g5Approved[cutId] ? (
+                          <span style={{fontSize:'10.5px',fontWeight:700,color:'#4ade80',background:'rgba(34,197,94,0.12)',border:'1px solid rgba(34,197,94,0.3)',padding:'2px 8px',borderRadius:'4px',flexShrink:0}}>G5 ✓</span>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setG5Approved(p => ({ ...p, [cutId]: true }))
+                              if (cuts[i]) setGPoint(cuts[i].no, 'g5', true)
+                            }}
+                            style={{fontSize:'11px',fontWeight:700,color:'#fb923c',background:'rgba(249,115,22,0.1)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'4px',padding:'2px 10px',cursor:'pointer',flexShrink:0}}>
+                            G5 승인
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <button
+                  disabled={!meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`])}
+                  onClick={() => {
+                    cuts.forEach(c => setGPoints(c.no, { g5: true }))
+                    dispatch({ type: 'SET_TAB', p: 'dashboard' })
+                  }}
+                  style={{
+                    width:'100%', padding:'11px', borderRadius:'8px', fontSize:'13px', fontWeight:700,
+                    background: meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`]) ? 'linear-gradient(135deg,#f97316,#fb923c)' : 'rgba(249,115,22,0.12)',
+                    color: meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`]) ? '#fff' : '#9490a8',
+                    border: '1px solid rgba(249,115,22,0.3)', cursor: meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`]) ? 'pointer' : 'default',
+                    opacity: meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`]) ? 1 : 0.5,
+                  }}>
+                  {meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`]) ? '🎉 G5 전체 승인 → 업로드 탭' : `G5 전체 승인 (${Object.values(g5Approved).filter(Boolean).length}/${meta.length})`}
+                </button>
+              </div>
             </>
           )}
         </div>

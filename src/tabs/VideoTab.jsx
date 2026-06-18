@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
-import { setGPoint } from '../lib/gpoints'
+import { setGPoint, setGPoints } from '../lib/gpoints'
 import s from './VideoTab.module.css'
 
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
@@ -28,6 +28,7 @@ export default function VideoTab() {
   const [previewText, setPreviewText] = useState('여기서 처음 써보는 이야기야.')
   const [previewEditing, setPreviewEditing] = useState(false)
   const [renderLog, setRenderLog] = useState([])
+  const [g4Approved, setG4Approved] = useState({})
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
 
@@ -182,61 +183,34 @@ export default function VideoTab() {
           </div>
         </div>
 
-        {/* Export buttons */}
+        {/* SRT 생성 */}
         <div className={s.panel}>
-          <div className={s.panelHeader}>내보내기</div>
+          <div className={s.panelHeader}>SRT 자막 생성</div>
           <div className={s.exportBtns}>
-            <button className={`${s.exportBtn} ${s.green}`} onClick={exportSRT}>📄 SRT 자막 파일</button>
-            <button className={`${s.exportBtn} ${s.gray}`} onClick={() => alert('WebCodecs MP4 렌더링은 로컬 환경에서 FFmpeg 설치 후 지원됩니다.')}>🎬 WebCodecs MP4</button>
-            <button className={`${s.exportBtn} ${s.yellow}`} onClick={() => alert('FFmpeg MP4 렌더링은 서버 사이드에서 지원됩니다.')}>⚡ FFmpeg MP4</button>
-            <button className={`${s.exportBtn} ${s.gray}`} onClick={exportZip}>📦 ZIP 패키지</button>
-            <button className={`${s.exportBtn} ${s.yellow}`} onClick={exportFCPXML}>🎞️ Premiere FCPXML</button>
-            {renderProgress.isRendering && (
-              <button className={`${s.exportBtn} ${s.red}`} onClick={stopRender}>⛔ 중지</button>
-            )}
+            <button className={`${s.exportBtn} ${s.green}`} onClick={exportSRT}>📄 SRT 자막 파일 다운로드</button>
           </div>
-
-          {renderProgress.isRendering && (
-            <div className={s.progressWrap}>
-              <div className={s.progressBar}>
-                <div className={s.progressFill}
-                  style={{ width: `${(renderProgress.current / renderProgress.total) * 100}%` }} />
-              </div>
-              <span className={s.progressText}>
-                {renderProgress.current} / {renderProgress.total} 프레임 처리 중...
-              </span>
-            </div>
-          )}
         </div>
 
-        {/* Render log */}
-        {renderLog.length > 0 && (
-          <div className={s.panel}>
-            <div className={s.panelHeader}>렌더링 로그</div>
-            <div className={s.log}>
-              {renderLog.map((line, i) => <div key={i} className={s.logLine}>{line}</div>)}
-            </div>
-          </div>
-        )}
-
-        {/* NLE guide */}
+        {/* G4 전체 승인 */}
         <div className={s.panel}>
-          <div className={s.panelHeader}>NLE 임포트 방법</div>
-          <div className={s.nleList}>
-            {[
-              { name: 'Vrew', icon: '🎬', desc: 'SRT 파일 → 자막 가져오기' },
-              { name: 'CapCut', icon: '✂️', desc: 'SRT 자막 → 텍스트로 가져오기' },
-              { name: 'Premiere Pro', icon: '🎞️', desc: 'FCPXML 또는 SRT 캡션 가져오기' },
-              { name: 'DaVinci Resolve', icon: '🎥', desc: '자막 > SRT 가져오기' },
-            ].map(nle => (
-              <div key={nle.name} className={s.nleItem}>
-                <span className={s.nleIcon}>{nle.icon}</span>
-                <div>
-                  <div className={s.nleName}>{nle.name}</div>
-                  <div className={s.nleDesc}>{nle.desc}</div>
-                </div>
-              </div>
-            ))}
+          <div className={s.panelHeader}>G4 단계 — 영상 승인</div>
+          <div style={{padding:'14px',display:'flex',flexDirection:'column',gap:'10px'}}>
+            <div style={{fontSize:'12px',color:'var(--text-3)'}}>
+              각 컷 영상을 확인하고 G4 승인하세요.
+            </div>
+            <div style={{fontSize:'13px',fontWeight:700,color:'var(--text-2)'}}>
+              G4 완료: {Object.values(g4Approved).filter(Boolean).length} / {cuts.length}
+            </div>
+            <button
+              className={`${s.exportBtn} ${cuts.every(c => g4Approved[c.id]) ? s.green : s.gray}`}
+              disabled={!cuts.every(c => g4Approved[c.id])}
+              style={{opacity: cuts.every(c => g4Approved[c.id]) ? 1 : 0.4, cursor: cuts.every(c => g4Approved[c.id]) ? 'pointer' : 'default'}}
+              onClick={() => {
+                cuts.forEach(c => setGPoints(c.no, { g4: true }))
+                dispatch({ type: 'SET_TAB', p: 'editmeta' })
+              }}>
+              {cuts.every(c => g4Approved[c.id]) ? '🎉 G4 전체 승인 → 편집 메타' : 'G4 전체 승인'}
+            </button>
           </div>
         </div>
       </div>
@@ -276,6 +250,15 @@ export default function VideoTab() {
                   <div className={s.sceneDial}>{c.dialogue || c.narration || '(대사 없음)'}</div>
                 </div>
                 <div className={s.sceneDur}>{c.duration || 5}s</div>
+                <button
+                  className={`${s.g4Btn} ${g4Approved[c.id] ? s.g4Done : ''}`}
+                  disabled={g4Approved[c.id]}
+                  onClick={() => {
+                    setG4Approved(p => ({ ...p, [c.id]: true }))
+                    setGPoint(c.no, 'g4', true)
+                  }}>
+                  {g4Approved[c.id] ? 'G4 ✓' : 'G4 승인'}
+                </button>
               </div>
             ))}
           </div>

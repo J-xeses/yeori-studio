@@ -34,6 +34,7 @@ export default function StudioTab() {
   const [copiedId, setCopiedId] = useState(null)
   const [generating, setGenerating] = useState({})
   const [confirmed, setConfirmed] = useState({})
+  const [g2Approved, setG2Approved] = useState({})
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -57,10 +58,11 @@ export default function StudioTab() {
     check()
   }, [])
 
-  // G1 전체 승인 시 Flow 자동 실행
+  // G1 전체 승인 시 Flow 자동 실행 (항상 fresh gData 사용)
   useEffect(() => {
     if (autoFlowTriggered.current || !cuts.length) return
-    const allG1 = cuts.every(c => gData[`cut_${c.no}`]?.g1)
+    const gd = loadGPoints()
+    const allG1 = cuts.every(c => gd[`cut_${c.no}`]?.g1)
     if (allG1) {
       autoFlowTriggered.current = true
       runFlow()
@@ -346,7 +348,6 @@ export default function StudioTab() {
           ))}
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <button className={s.autoBtn} onClick={generateAllPrompts}>⚡ 전체 프롬프트 자동 생성</button>
           <button className={s.autoBtn} onClick={exportPromptsJson}
             disabled={flowRunning}
             title="prompts.json 저장 후 Google Flow 자동 실행"
@@ -495,8 +496,7 @@ export default function StudioTab() {
                 <span className={s.cutBadge}>CUT {cut.no}</span>
                 <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
                 {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
-                {images[cut.id]?.length > 0 && <span className={`${s.gBadge} ${s.g3Badge}`}>G3</span>}
-                {confirmed[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
+                {g2Approved[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
               </div>
 
               <div className={s.promptSection}>
@@ -520,23 +520,11 @@ export default function StudioTab() {
               </div>
 
               <div className={s.confirmRow} style={{marginTop:'auto'}}>
-                {!confirmed[cut.id] ? (
-                  <button className={s.confirmBtn}
-                    disabled={!images[cut.id]?.length}
-                    onClick={() => {
-                      const next = { ...confirmed, [cut.id]: true }
-                      setConfirmed(next)
-                      setGPoint(cut.no, 'g2', true)
-                      if (cuts.every(c => next[c.id] && images[c.id]?.length > 0)) {
-                        cuts.forEach(c => setGPoints(c.no, { g2: true }))
-                        dispatch({ type: 'SET_TAB', p: 'tts' })
-                      }
-                    }}>
-                    G2 승인
-                  </button>
-                ) : (
-                  <span className={s.confirmedTag}>G2 완료</span>
-                )}
+                <button className={s.confirmBtn}
+                  disabled={!images[cut.id]?.length || confirmed[cut.id]}
+                  onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
+                  {confirmed[cut.id] ? '✓ 컨펌' : '컨펌'}
+                </button>
                 <button className={s.regenBtn}
                   onClick={() => {
                     if (selected === 'Flow' && !proxyOk) {
@@ -553,11 +541,37 @@ export default function StudioTab() {
                   }}>
                   🔄 재생성
                 </button>
+                <button className={s.g2Btn}
+                  disabled={!confirmed[cut.id] || g2Approved[cut.id]}
+                  onClick={() => {
+                    setG2Approved(p => ({ ...p, [cut.id]: true }))
+                    setGPoint(cut.no, 'g2', true)
+                  }}>
+                  {g2Approved[cut.id] ? '✓ G2 완료' : 'G2 승인'}
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* G2 전체 승인 바 */}
+      {cuts.length > 0 && (
+        <div className={s.g2AllBar}>
+          <span className={s.g2AllCount}>
+            G2 완료 {Object.values(g2Approved).filter(Boolean).length} / {cuts.length}
+          </span>
+          <button
+            className={s.g2AllBtn}
+            disabled={!cuts.every(c => g2Approved[c.id])}
+            onClick={() => {
+              cuts.forEach(c => setGPoints(c.no, { g2: true }))
+              dispatch({ type: 'SET_TAB', p: 'tts' })
+            }}>
+            {cuts.every(c => g2Approved[c.id]) ? '🎉 G2 전체 승인 → TTS 탭' : 'G2 전체 승인'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
