@@ -237,7 +237,7 @@ app.post('/api/studio-data', (req, res) => {
 
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
-  const { ep, prompts } = req.body
+  const { ep, prompts, projectId } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
   const promptsPath = path.join(ROOT, 'downloads', 'flow', 'prompts.json')
@@ -256,6 +256,27 @@ app.post('/api/run-flow', (req, res) => {
 
   // 에피소드 번호: prompts.episode 우선 (클라이언트 상태 싱크 문제 방지), ep는 fallback
   const episode = prompts.episode ?? ep ?? null
+
+  // project_url.txt 사전 확인 — 없으면 flow-automation.js가 stdin을 기다려 hang됨
+  if (episode != null) {
+    const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
+    const projectMarker = path.join(epDir, 'project_url.txt')
+
+    // projectId가 요청에 포함된 경우 project_url.txt 자동 생성
+    if (projectId && !fs.existsSync(projectMarker)) {
+      fs.mkdirSync(epDir, { recursive: true })
+      const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${String(projectId).trim()}`
+      fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
+      send({ type: 'log', level: 'info', message: `Flow 프로젝트 등록 완료: ${projectUrl}` })
+    }
+
+    if (!fs.existsSync(projectMarker)) {
+      send({ type: 'error', message: `Flow 프로젝트 미등록 (ep${episode})\nproject_url.txt 없음 — 터미널에서 직접 실행하여 프로젝트 ID를 등록하세요:\n  node scripts/flow-automation.js --ep=${episode}` })
+      res.end()
+      return
+    }
+  }
+
   const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
   const nodeArgs = [scriptPath]
   if (episode != null) nodeArgs.push(`--ep=${episode}`)
