@@ -7,7 +7,16 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = path.resolve(__dirname, '..')
+const ROOT = (() => {
+  const candidates = ['C:\\yeori-studio', 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio']
+  for (const p of candidates) {
+    if (fs.existsSync(p)) { console.log(`[proxy] ROOT: ${p}`); return p }
+  }
+  // 후보 없으면 소스코드 상위(개발환경) fallback
+  const fallback = path.resolve(__dirname, '..')
+  console.log(`[proxy] ROOT fallback: ${fallback}`)
+  return fallback
+})()
 
 const app = express()
 const PORT = 3001
