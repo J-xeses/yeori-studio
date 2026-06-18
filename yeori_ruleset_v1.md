@@ -333,6 +333,16 @@ prompts.json: C:\yeori-studio\downloads\flow\prompts.json
 소스코드 수정 후 C:\yeori-studio\scripts\ 에도 복사 필수
 ```
 
+### 작업 완료 후 STATUS.md 자동 업데이트:
+
+```
+1. git log --oneline으로 오늘 완료된 커밋 확인
+2. 완료된 항목 STATUS.md에 반영
+3. 현재 진행 중 / 다음 할 것 업데이트
+4. 마지막 업데이트 날짜 갱신
+5. git push origin master
+```
+
 \---
 
 ## 제작 철학 요약 (핵심 원칙)

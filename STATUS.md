@@ -1,37 +1,34 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-06-18 (AI 자동화 생성도구 고도화-3 세션)
+> 마지막 업데이트: 2026-06-18 (AI 자동화 생성도구 고도화-4 세션)
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 
 ---
 
 ## 📌 현재 작업 중 (지금 당장 이어할 것)
 
-### 서여리 채널 소개 2컷 테스트 에피소드 전체 파이프라인 테스트
-- **상태**: G1 승인 완료 → 스튜디오 탭 자동 이동 확인
-- **즉시 수정 필요**: prompts.json 저장 경로 버그
-  - 현재: 소스코드 경로에 저장됨 (`yeori-studio/downloads/flow/prompts.json`)
-  - 정상: `C:\yeori-studio\downloads\flow\prompts.json`
-  - 원인: proxy.js ROOT = __dirname의 상위 폴더 (소스코드 경로)
-- **다음 단계**: G2 이미지 생성 → Flow 자동 실행 연결
+### G2 Flow 자동화 실제 실행 테스트
+- **상태**: flow-automation.js 전면 업그레이드 완료 — 실제 실행 테스트 필요
+- **선행 조건 (수동)**:
+  1. Flow 프로젝트 생성 후 `project_url.txt` 등록
+  2. yeori-face.jpg / yeori-closeup.jpg 프로젝트에 업로드
+- **확인 포인트**:
+  - preFlightCheck() 레퍼런스 썸네일 감지 정상 작동 여부
+  - switchToImageMode() 팝업 → 이미지 탭 → 9:16 → x2 클릭 정상 여부
+  - cut_NN_a.jpg / cut_NN_b.jpg 2장 저장 확인
+  - cut_image SSE → StudioTab 컷카드 자동 표시 확인
 
-### 스튜디오 탭 레이아웃 가로 전개
-- **상태**: fix_studio_layout.py 작성 완료, 실행/확인 미완료
-- **즉시**: python fix_studio_layout.py 실행 후 git push
+### 서여리 채널 소개 2컷 전체 파이프라인 완주
+- **상태**: G1 승인 완료 → G2 실행 대기
+- **다음 단계**: 위 Flow 자동화 테스트 후 G3 TTS → G4 영상 순서로 진행
 
 ---
 
 ## 📋 대기 중 (순서 기다리는 것)
 
-### Claude Code ↔ 프로젝트 Claude 협업 규칙 문서화
-- 역할 분담: 기획/설계 = 프로젝트 Claude, 코드실행/git = Claude Code
-- 명세서 형식 통일 필요
-- STATUS.md 자동 업데이트 규칙 필요
-
-### G2~G6 자동화 연결
-- G2 이미지: Flow 자동 실행 (prompts.json 경로 버그 수정 후)
-- G3 TTS: ElevenLabs 자동 실행 (이미 구현됨)
-- G4 영상: Google Flow video-automation.js 연결
-- G5 캡컷: A Creative Cutter 연동 (SRT + 원본영상 → draft_content.json)
+### G3~G6 실제 연결 테스트
+- G3 TTS: ElevenLabs 탭 자동 실행 (구현 완료, 연결 테스트 필요)
+- G4 영상: Google Flow video-automation.js (부분 완료)
+- G5 캡컷: A Creative Cutter 연동 구현 (방향 확정, 미구현)
 - G6 업로드: YouTube/인스타 API (미구현)
 
 ### ep5 FFmpeg 전체 합성 완성
@@ -46,6 +43,18 @@
 
 | 항목 | 커밋/비고 |
 |------|------|
+| yeori_ruleset_v1.1 완성 (섹션 ⑨~⑫ 추가) | 커밋 b4a8631 |
+| flow-automation.js 이미지 2장 저장 (cut_NN_a/b.jpg) | 커밋 ed02734 |
+| preFlightCheck() — 레퍼런스 썸네일 확인 후 미등록 시 즉시 중단 | 커밋 ed02734 |
+| switchToImageMode() — 팝업→이미지탭→9:16→x2 자동 전환 | 커밋 ed02734 |
+| flow-automation.js --ep 필터링 버그 수정 | 커밋 f5996ff |
+| server/proxy.js ROOT 경로 C:\yeori-studio 통일 | 커밋 5d7a594 |
+| flow-automation.js hang 수정 (project_url.txt 미등록 시 에러) | 커밋 8fd9447 |
+| cut_image SSE 이벤트 → StudioTab 컷카드 자동 이미지 표시 | 커밋 52c48ed, 1c7cecc |
+| start_yeori.bat 영문 전용 재작성 (인코딩 문제 영구 해결) | 커밋 72a0b18 |
+| A Creative Cutter HTML (a_creative_cutter.html) git 추가 | 커밋 6ec364a |
+| start_yeori.bat 원클릭 전체 시스템 시작 (Chrome+프록시+Vite+Edge) | 커밋 91d8c57 |
+| G2~G5 파이프라인 승인 체계 완성 | 커밋 aa6928c |
 | 프록시 상태 체크 URL /health로 수정 | 커밋 1cb200d |
 | 편집 메타 탭 4탭 재설계 (SRT생성/컷분석/캡컷가이드/FFmpeg선택) | 커밋 6a3473f |
 | 편집 메타 탭 전체너비 균등배치 + 컷분석 영상 미리보기 | 커밋 9e78066 |
@@ -69,7 +78,7 @@
 
 ---
 
-## 🗺️ 자동화 전체 현황 (~68%)
+## 🗺️ 자동화 전체 현황 (~72%)
 
 ### Step 1 — 소재 발굴
 - 트렌드 레이더: 🟡 부분 자동화
@@ -81,7 +90,12 @@
 
 ### Step 3 — G2 이미지 생성
 - 스튜디오 탭 다중 이미지 업로드: ✅ 완료
-- Flow 자동 실행 연결: 🟡 진행중 (prompts.json 경로 버그 수정 필요)
+- Flow 자동 실행 (flow-automation.js): ✅ 완료
+  - preFlightCheck (레퍼런스 확인): ✅ 완료
+  - switchToImageMode (이미지탭/9:16/x2): ✅ 완료
+  - cut_NN_a.jpg / cut_NN_b.jpg 2장 저장: ✅ 완료
+  - cut_image SSE → 컷카드 자동 표시: ✅ 완료
+- 실제 실행 테스트: 🟡 대기 (레퍼런스 이미지 업로드 후 실행 필요)
 
 ### Step 4 — G3 TTS
 - ElevenLabs TTS 탭: ✅ 완료
@@ -105,35 +119,42 @@
 
 ## 🚨 다음 세션 즉시 할 것 (우선순위 순)
 
-1. **prompts.json 경로 버그 수정** — proxy.js ROOT 경로를 C:\yeori-studio로 수정
-2. **스튜디오 레이아웃 가로 전개** — fix_studio_layout.py 실행 확인
-3. **G2 Flow 자동 실행 연결** — 파이프라인 내보내기 → Flow 자동 이미지 생성
-4. **Claude Code 협업 규칙 문서화** — CLAUDE_CODE_RULES.md 생성
-5. **서여리 채널 소개 2컷 전체 파이프라인 완주**
+1. **G2 Flow 자동화 실제 테스트** — Flow 프로젝트에 yeori-face/closeup 업로드 후 전체 실행
+2. **cut_image SSE 수신 확인** — 2장 생성 후 StudioTab 컷카드 자동 표시 검증
+3. **G3~G5 파이프라인 연결 테스트** — 소개 2컷 에피소드로 전체 완주
+4. **A Creative Cutter 연동 구현** — draft_content.json + SRT → 캡컷 자동 배치
 
 ---
 
 ## ⚠️ 알아야 할 핵심 메모
 
 ### A Creative Studio 실행 방법
-- **항상 `start_yeori.bat` (프로젝트 폴더 안)으로 실행**
-- 프록시 서버: `localhost:3001`
-- 웹앱 접속: `http://localhost:5173`
+- **항상 `start_yeori.bat` (프로젝트 폴더 안)으로 실행** — 원클릭 전체 시스템 시작
+  - [1] Chrome 9222 포트 확인 → Flow 자동 열기
+  - [2] a_creative_cutter.html 자동 열기
+  - [3] npm run studio (프록시 3001 + Vite 5173)
+  - [4] Edge → localhost:5173
 - 소스코드 경로 (회사): `C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio`
 - 파일 경로 (회사/집 공통): `C:\yeori-studio\downloads\`
 
-
 ### G1~G6 파이프라인 흐름 (확정)
 
+```
 G1  대본생성 승인 → 스튜디오 탭 자동 이동
-G2  이미지 승인 (다중 이미지 중 선택)
+G2  이미지 승인 (컷별 2장 생성 → 1장 선택)
 G3  TTS 승인
 G4  영상 승인 (Google Flow 원본 무음 영상)
-    - [영상 만들기 탭] SRT 자막 파일 생성
+    - [편집 메타 탭] SRT 자막 파일 생성
     - [A Creative Cutter] draft_content.json + 원본영상 + SRT → 캡컷 자동 배치
 G5  캡컷 편집 승인 (립싱크 포함)
 G6  업로드 승인
+```
 
+### Flow 자동화 실행 규칙
+- 수동 선행 작업: Flow 프로젝트 생성 + yeori-face/closeup 업로드 + project_url.txt 등록
+- 자동화 체크리스트: project_url.txt 존재 → Flow 탭 접속 → 레퍼런스 썸네일 감지
+- 이미지 저장: `cut_NN_a.jpg` / `cut_NN_b.jpg` (컷당 2장)
+- scripts/ 수정 시: `C:\yeori-studio\scripts\` 에도 복사 필수
 
 ### 편집 메타 탭 4탭 구조
 - ① 메타 생성: 타임코드 자동 계산, FFmpeg 선택적 사용
@@ -144,6 +165,7 @@ G6  업로드 승인
 ### 캐릭터 일관성
 - 전신샷: `1:8 head-to-body ratio, supermodel body proportions`
 - 헤어: `hair is long, NOT short` 이중 강조
+- 피부 텍스처: `a very subtle natural skin texture on her right cheek (subtle, never exaggerated)`
 - Google Flow: "서여리" 직접 사용 금지 → "20대 초반 한국 여성"으로 대체
 
 ### 영상 생성
@@ -167,11 +189,13 @@ G6  업로드 승인
 
 ## 📁 프로젝트 파일 위치
 - `C:\yeori-studio\downloads\video\ep5\output_final\C01_final.mp4` — ep5 CUT01 합성본
-- `C:\yeori-studio\downloads\flow\character\` — 서여리 레퍼런스 이미지
+- `C:\yeori-studio\downloads\flow\character\` — 서여리 레퍼런스 이미지 (yeori-face.jpg, yeori-closeup.jpg)
+- `C:\yeori-studio\downloads\flow\ep{N}\project_url.txt` — Flow 프로젝트 URL
 - `yeori_elevenlabs_emotion_tags.html` — 롱폼 1화 TTS 대본
+- `yeori_ruleset_v1.md` — 서여리 연출 원칙 룰셋 (git 루트)
 
 ---
 
 ## 🔄 이 파일 업데이트 방법
 세션 끝날 때 "STATUS 업데이트해줘" → 완료된 것 이동 + 새 작업 추가
-Claude Code 세션에서는 작업 완료 시 자동 업데이트
+Claude Code 세션에서는 작업 완료 시 자동 업데이트 (yeori_ruleset_v1.md ⑫ 참조)
