@@ -366,13 +366,17 @@ async function main() {
     await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
     await sleep(2500)
     await waitForImagesStable(page)
+    await preFlightCheck(page)
 
     // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const _ep = cut.episode ?? episode ?? 'x'
-      const existingPath = path.join(CONFIG.downloadDir, `ep${_ep}`, `cut_${String(cut.no).padStart(2, '0')}.jpg`)
-      if (fs.existsSync(existingPath)) {
+      const _padded = String(cut.no).padStart(2, '0')
+      const existingA = path.join(CONFIG.downloadDir, `ep${_ep}`, `cut_${_padded}_a.jpg`)
+      const existingLegacy = path.join(CONFIG.downloadDir, `ep${_ep}`, `cut_${_padded}.jpg`)
+      if (fs.existsSync(existingA) || fs.existsSync(existingLegacy)) {
+        const existingPath = fs.existsSync(existingA) ? existingA : existingLegacy
         log('ok', `[${i + 1}/${cuts.length}] CUT ${cut.no} 이미 존재 → 스킵`)
         results.push({ cutNo: cut.no, status: 'ok', file: existingPath })
         ok++
@@ -384,9 +388,10 @@ async function main() {
 
       for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
         try {
-          const savedPath = await processCut(page, cut, episode, type)
-          log('ok', `${label} → ${path.relative(ROOT, savedPath)}`)
-          results.push({ cutNo: cut.no, status: 'ok', file: savedPath })
+          const savedPaths = await processCut(page, cut, episode, type)
+          const savedArr = Array.isArray(savedPaths) ? savedPaths : [savedPaths]
+          log('ok', `${label} → ${savedArr.map(p => path.relative(ROOT, p)).join(', ')}`)
+          results.push({ cutNo: cut.no, status: 'ok', file: savedArr[0] })
           ok++; break
         } catch (err) {
           if (attempt < CONFIG.retryCount) {
@@ -1407,6 +1412,19 @@ async function findReferenceThumbs(page) {
   return result
 }
 
+// ── 시작 전 체크리스트 ────────────────────────────────────────────────────
+
+async function preFlightCheck(page) {
+  log('step', '[체크리스트] 레퍼런스 썸네일 확인 중…')
+  const thumbs = await findReferenceThumbs(page)
+  if (!thumbs.face && !thumbs.closeup) {
+    throw new Error('레퍼런스 이미지를 Flow 프로젝트에 먼저 업로드하세요 (yeori-face, yeori-closeup)')
+  }
+  if (!thumbs.face) log('warn', '[체크리스트] yeori-face 없음 — 진행 계속')
+  if (!thumbs.closeup) log('warn', '[체크리스트] yeori-closeup 없음 — 진행 계속')
+  log('ok', '[체크리스트] 레퍼런스 썸네일 확인 완료')
+}
+
 // ── 썸네일 좌표 → 프롬프트 입력창으로 드래그 ────────────────────────────
 
 async function dragToPrompt(page, fromPos, toPos) {
@@ -1434,6 +1452,10 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
 
   log('step', `컷 생성 중… (${type === 'longform' ? '16:9' : '9:16'})`)
+
+  // 이미지 모드 전환 (9:16, x2)
+  await switchToImageMode(page)
+
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
@@ -1462,8 +1484,8 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
 
   const before = await collectImageSrcs(page)
   await clickGenerate(page)
-  await waitForNewImage(page, before)
-  return saveNewImage(page, before, cut.no, ep, 'cut')
+  await waitForTwoNewImages(page, before)
+  return saveTwoNewImages(page, before, cut.no, ep, 'cut')
 }
 
 // ── 이미지 탭 클릭 헬퍼 (플로팅 패널) ───────────────────────────────
@@ -1481,6 +1503,69 @@ async function clickImageTab(page) {
     if (items[0]) { items[0].click(); return true }
     return false
   })
+}
+
+// ── 이미지 모드 전환: 설정 팝업 → 이미지 탭 → 9:16 → x2 ─────────────────
+
+async function switchToImageMode(page) {
+  const alreadyOpen = await page.evaluate(() =>
+    document.querySelectorAll('[role="tab"].flow_tab_slider_trigger').length > 0
+  )
+
+  if (!alreadyOpen) {
+    const popupInfo = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('button')) {
+        const txt = (el.textContent || '').trim()
+        if (/Nano Banana 2/.test(txt) && /x[1-4]/.test(txt) && el.children.length === 2) {
+          const r = el.getBoundingClientRect()
+          return { txt: txt.slice(0, 60), x: Math.round(r.left), y: Math.round(r.top) }
+        }
+      }
+      return null
+    })
+    if (popupInfo) {
+      log('info', `[imageMode] 팝업 트리거 클릭 — "${popupInfo.txt}"`)
+      await page.mouse.click(popupInfo.x + 10, popupInfo.y + 10)
+      await sleep(1000)
+    } else {
+      log('warn', '[imageMode] 팝업 트리거 버튼 못 찾음')
+    }
+  } else {
+    log('info', '[imageMode] 설정 팝업 이미 열려있음')
+  }
+  await sleep(400)
+
+  // 1. '이미지' 탭
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+      if ((el.textContent || '').trim().includes('이미지')) { el.click(); return }
+    }
+  })
+  log('info', '[imageMode] 이미지 탭 클릭')
+  await sleep(500)
+
+  // 2. '9:16' 비율
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+      if ((el.textContent || '').trim().endsWith('9:16')) { el.click(); return }
+    }
+  })
+  log('info', '[imageMode] 9:16 비율 클릭')
+  await sleep(400)
+
+  // 3. 'x2' 생성 개수
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+      if ((el.textContent || '').trim() === 'x2') { el.click(); return }
+    }
+  })
+  log('info', '[imageMode] x2 개수 클릭')
+  await sleep(400)
+
+  // 팝업 닫기
+  await page.mouse.click(100, 100)
+  log('info', '[imageMode] 팝업 닫기')
+  await sleep(500)
 }
 
 async function clickAddToPrompt(page) {
@@ -1712,6 +1797,33 @@ async function waitForNewImage(page, beforeItems) {
   await sleep(800)
 }
 
+// 2장의 새 이미지가 나타날 때까지 대기 (x2 생성 모드)
+async function waitForTwoNewImages(page, beforeItems) {
+  const beforeSrcs = beforeItems.map(i => i.src)
+  try {
+    await page.waitForFunction(
+      (before) => {
+        function collect(root, list = []) {
+          for (const img of root.querySelectorAll('img')) {
+            if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
+          }
+          for (const el of root.querySelectorAll('*')) {
+            if (el.shadowRoot) collect(el.shadowRoot, list)
+          }
+          return list
+        }
+        return collect(document).filter(src => !before.includes(src)).length >= 2
+      },
+      { timeout: CONFIG.timeoutMs },
+      beforeSrcs
+    )
+  } catch {
+    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_timeout.png'), fullPage: true })
+    log('warn', '2장 대기 타임아웃 → 현재 상태로 진행')
+  }
+  await sleep(800)
+}
+
 async function waitForResult(page) {
   const beforeCount = await page.evaluate(() => {
     function countBigImgs(root) {
@@ -1821,6 +1933,92 @@ async function saveNewImage(page, beforeItems, cutNo, episode, prefix = 'cut') {
   }
 
   return outPath
+}
+
+// 단일 이미지 타깃을 파일로 저장 (fetch → 3분할 크롭 포함)
+async function _saveImageTarget(page, target, outPath) {
+  const imgSrc = target.src
+  if (imgSrc.startsWith('data:')) {
+    fs.writeFileSync(outPath, Buffer.from(imgSrc.split(',')[1], 'base64'))
+  } else {
+    const data = await page.evaluate(async (src) => {
+      try {
+        const res = await fetch(src)
+        const buf = await res.arrayBuffer()
+        return Array.from(new Uint8Array(buf))
+      } catch { return null }
+    }, imgSrc)
+    if (data) {
+      fs.writeFileSync(outPath, Buffer.from(data))
+    } else {
+      const downloaded = await tryDownloadButton(page, outPath)
+      if (!downloaded) throw new Error('이미지 저장 실패: ' + path.basename(outPath))
+    }
+  }
+  if (target.w > target.h * 1.3) {
+    log('info', `3분할 이미지 감지 → 중앙 패널 크롭 (${target.w}×${target.h})`)
+    const fileBase64 = fs.readFileSync(outPath).toString('base64')
+    const croppedBase64 = await page.evaluate(async (b64, panels) => {
+      return new Promise(resolve => {
+        const img = new Image()
+        img.onload = () => {
+          const panelW = Math.floor(img.width / panels)
+          const startX = Math.floor((img.width - panelW) / 2)
+          const canvas = document.createElement('canvas')
+          canvas.width = panelW
+          canvas.height = img.height
+          const ctx = canvas.getContext('2d')
+          ctx.drawImage(img, startX, 0, panelW, img.height, 0, 0, panelW, img.height)
+          resolve(canvas.toDataURL('image/jpeg', 0.95).split(',')[1])
+        }
+        img.onerror = () => resolve(null)
+        img.src = 'data:image/jpeg;base64,' + b64
+      })
+    }, fileBase64, 3)
+    if (croppedBase64) {
+      fs.writeFileSync(outPath, Buffer.from(croppedBase64, 'base64'))
+      log('info', '중앙 패널 크롭 저장 완료')
+    }
+  }
+  return outPath
+}
+
+// x2 생성 결과를 cut_NN_a.jpg + cut_NN_b.jpg 로 저장
+async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut') {
+  const beforeSet = new Set(beforeItems.map(i => i.src))
+  const allItems = await collectImageSrcs(page)
+  const newItems = allItems.filter(i => !beforeSet.has(i.src))
+
+  const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
+  ensureDir(epDir)
+  const padded = String(cutNo).padStart(2, '0')
+
+  if (!newItems.length) {
+    log('warn', '새 이미지 src를 찾지 못함 — saveImage fallback')
+    await saveImage(page, cutNo, episode)
+    const legacyPath = path.join(epDir, `${prefix}_${padded}.jpg`)
+    const fallbackPath = path.join(epDir, `${prefix}_${padded}_a.jpg`)
+    if (fs.existsSync(legacyPath) && !fs.existsSync(fallbackPath)) {
+      fs.renameSync(legacyPath, fallbackPath)
+    }
+    return [fallbackPath]
+  }
+
+  // 마지막 2개 (가장 최근 생성)
+  const targets = newItems.length >= 2
+    ? [newItems[newItems.length - 2], newItems[newItems.length - 1]]
+    : [newItems[newItems.length - 1]]
+  const suffixes = targets.length === 2 ? ['a', 'b'] : ['a']
+  const saved = []
+
+  for (let idx = 0; idx < targets.length; idx++) {
+    const outPath = path.join(epDir, `${prefix}_${padded}_${suffixes[idx]}.jpg`)
+    log('info', `저장 ${suffixes[idx].toUpperCase()}: ${path.basename(outPath)} (${targets[idx].w}×${targets[idx].h})`)
+    await _saveImageTarget(page, targets[idx], outPath)
+    saved.push(outPath)
+  }
+
+  return saved
 }
 
 async function saveImage(page, cutNo, episode) {
