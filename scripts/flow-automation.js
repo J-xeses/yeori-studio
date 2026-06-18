@@ -214,11 +214,20 @@ async function analyzeReferenceImage() {
 
 function loadPrompts() {
   let file
+  let usingEpFile = false
+
   if (args.prompts) {
     file = path.resolve(args.prompts)
   } else if (args.ep) {
     const epFile = path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json')
-    file = fs.existsSync(epFile) ? epFile : path.join(CONFIG.downloadDir, 'prompts.json')
+    if (fs.existsSync(epFile)) {
+      file = epFile
+      usingEpFile = true
+      log('info', `ep 전용 파일 사용: ${epFile}`)
+    } else {
+      file = path.join(CONFIG.downloadDir, 'prompts.json')
+      log('info', `ep${args.ep} 전용 파일 없음 → 글로벌 fallback: ${file}`)
+    }
   } else {
     file = path.join(CONFIG.downloadDir, 'prompts.json')
   }
@@ -233,12 +242,24 @@ function loadPrompts() {
   const raw = JSON.parse(fs.readFileSync(file, 'utf-8'))
 
   // 배열 직접 or { episode, cuts: [...] } 형식 모두 처리
-  const episode = raw.episode ?? null
+  const rawEpisode = raw.episode ?? null
+  // --ep 지정 시 해당 값을 episode로 우선 사용 (글로벌 파일 episode 값 무시)
+  const episode = args.ep ? Number(args.ep) : rawEpisode
   const type    = raw.type ?? 'shorts'   // "shorts" → 9:16 / "longform" → 16:9
-  const cuts = (Array.isArray(raw) ? raw : raw.cuts ?? [])
-    .filter(c => c.imagePrompt?.trim())
-    .filter(c => !args.ep  || String(c.episode ?? episode) === String(args.ep))
-    .filter(c => !args.cut || String(c.no) === String(args.cut))
+
+  log('info', `파일 episode: ${rawEpisode} | 실행 episode: ${episode} | --ep: ${args.ep ?? '없음'}`)
+
+  const allCuts = (Array.isArray(raw) ? raw : raw.cuts ?? [])
+  const withPrompt = allCuts.filter(c => c.imagePrompt?.trim())
+  const epFiltered = withPrompt.filter(c => {
+    if (!args.ep) return true           // --ep 없으면 전체 포함
+    if (usingEpFile) return true        // ep 전용 파일이면 이미 해당 ep 데이터
+    if (c.episode != null) return String(c.episode) === String(args.ep)  // 컷별 episode 있으면 그걸로 필터
+    return true                          // 컷별 episode 없고 글로벌 fallback이면 포함
+  })
+  const cuts = epFiltered.filter(c => !args.cut || String(c.no) === String(args.cut))
+
+  log('info', `컷 필터링: 전체 ${allCuts.length} → 프롬프트 있음 ${withPrompt.length} → ep필터 ${epFiltered.length} → 최종 ${cuts.length}`)
 
   return { episode, type, cuts }
 }
