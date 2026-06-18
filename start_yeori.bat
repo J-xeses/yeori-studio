@@ -3,7 +3,7 @@ chcp 65001 >nul
 title Yeori Studio
 cd /d "%~dp0"
 
-set ACC_HTML=%~dp0a-creative-cutter.html
+set ACC_HTML=%~dp0a_creative_cutter.html
 set CHROME="C:\Program Files\Google\Chrome\Application\chrome.exe"
 set EDGE="C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 
@@ -38,7 +38,7 @@ if exist "%ACC_HTML%" (
         "%ACC_HTML%"
     set ACC_STATUS=준비완료
 ) else (
-    echo        a-creative-cutter.html 없음 -- 스킵
+    echo        a_creative_cutter.html 없음 -- 스킵
     set ACC_STATUS=파일 없음 (스킵)
 )
 
