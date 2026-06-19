@@ -81,6 +81,31 @@
 .g4Done { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: #4ade80; }
 .g4Done:disabled { opacity: 1; }
 
+/* 좌측 컷 목록 */
+.cutSideList { flex: 1; display: flex; flex-direction: column; min-height: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.cutSideListHeader { padding: 8px 14px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0; }
+.cutSideItems { overflow-y: auto; flex: 1; }
+.cutSideItem { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .1s; }
+.cutSideItem:hover { background: var(--bg-hover); }
+.cutSideItemActive { background: rgba(139,92,246,.12); border-left: 2px solid var(--accent); }
+.cutSideThumb { width: 52px; height: 34px; object-fit: cover; border-radius: 4px; background: #000; flex-shrink: 0; }
+.cutSideThumbEmpty { width: 52px; height: 34px; background: var(--bg-input); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; border: 1px solid var(--border); }
+.cutSideInfo { flex: 1; overflow: hidden; }
+.cutSideNo { font-size: 12px; font-weight: 700; color: var(--text); }
+.cutSideStatus { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+/* 우측 메인 영역 */
+.mainArea { flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+.mainTabRow { display: flex; gap: 6px; flex-shrink: 0; }
+.mainTabBtn { flex: 1; padding: 8px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.mainTabActive { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: var(--accent-light); }
+.mainVideoArea { background: #000; border-radius: 10px; overflow: hidden; min-height: 280px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mainVideo { width: 100%; max-height: 400px; display: block; }
+.mainVideoEmpty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px; color: var(--text-3); font-size: 13px; }
+.mainVideoEmptyIcon { font-size: 36px; opacity: .4; }
+.mainSubtitleArea { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+
 /* Cut cards */
 .cutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
 .cutCardHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
