@@ -363,9 +363,15 @@ async function main() {
     const savedUrl = fs.readFileSync(projectMarker, 'utf-8').trim().split('#')[0].trim()
     _projectUrl = savedUrl
     log('ok', `② 프로젝트 URL: ${savedUrl}`)
-    await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
-    await sleep(2500)
-    await waitForImagesStable(page)
+    const projectId = savedUrl.split('/').pop()
+    if (!page.url().includes(projectId)) {
+      await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+      await sleep(2500)
+      await waitForImagesStable(page)
+    } else {
+      log('info', '이미 프로젝트 페이지에 있음 — goto 스킵')
+      await sleep(1000)
+    }
     await preFlightCheck(page)
 
     // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
@@ -444,12 +450,24 @@ async function connectBrowser() {
 }
 
 async function setupPage(browser) {
-  const page = await browser.newPage()
-
-  // 자동화 감지 방지
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+  // 기존 Flow 탭 재사용 → 사용자가 보는 화면에서 직접 실행
+  const pages = await browser.pages()
+  const existing = pages.find(p => {
+    const url = p.url()
+    return url.includes('labs.google/fx') || url.includes('labs.google/flow')
   })
+
+  let page
+  if (existing) {
+    log('info', `기존 Flow 탭 재사용: ${existing.url().slice(0, 70)}`)
+    page = existing
+  } else {
+    log('info', '기존 Flow 탭 없음 → 새 탭 생성')
+    page = await browser.newPage()
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+    })
+  }
 
   // CDP 다운로드 경로 설정
   const client = await page.createCDPSession()
@@ -464,6 +482,14 @@ async function setupPage(browser) {
 
 // 로그인 + 쿠키 처리 + 대시보드 이동 (프로젝트 이동은 별도)
 async function navigateToFlow(page) {
+  const currentUrl = page.url()
+  // 이미 Flow에 있으면 불필요한 리다이렉트 건너뜀
+  if (currentUrl.includes('labs.google/fx') &&
+      !currentUrl.includes('pricing') && !currentUrl.includes('signin') &&
+      !currentUrl.includes('accounts.google.com')) {
+    log('ok', 'Flow 대시보드 준비 완료 (기존 탭)')
+    return
+  }
   log('info', `Flow 접속 중: ${CONFIG.flowUrl}`)
   await page.goto(CONFIG.flowUrl, { waitUntil: 'networkidle2', timeout: 30000 })
 
@@ -1533,22 +1559,31 @@ async function switchToImageMode(page) {
   )
 
   if (!alreadyOpen) {
+    // "Nano Banana 2" 모델명 하드코드 제거 → x1~x4 카운트 포함 하단 버튼으로 탐지
     const popupInfo = await page.evaluate(() => {
-      for (const el of document.querySelectorAll('button')) {
-        const txt = (el.textContent || '').trim()
-        if (/Nano Banana 2/.test(txt) && /x[1-4]/.test(txt) && el.children.length === 2) {
+      function search(root) {
+        for (const el of root.querySelectorAll('button')) {
+          const txt = (el.textContent || '').trim()
           const r = el.getBoundingClientRect()
-          return { txt: txt.slice(0, 60), x: Math.round(r.left), y: Math.round(r.top) }
+          if (r.top < window.innerHeight * 0.5 || r.width < 1 || r.height < 1) continue
+          if (/x[1-4]/.test(txt) && el.children.length >= 1) {
+            return { txt: txt.slice(0, 60), x: Math.round(r.left + 10), y: Math.round(r.top + 10) }
+          }
         }
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
+        }
+        return null
       }
-      return null
+      return search(document)
     })
     if (popupInfo) {
       log('info', `[imageMode] 팝업 트리거 클릭 — "${popupInfo.txt}"`)
-      await page.mouse.click(popupInfo.x + 10, popupInfo.y + 10)
-      await sleep(1000)
+      await page.mouse.click(popupInfo.x, popupInfo.y)
+      await sleep(1500)
     } else {
       log('warn', '[imageMode] 팝업 트리거 버튼 못 찾음')
+      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_fail.png') })
     }
   } else {
     log('info', '[imageMode] 설정 팝업 이미 열려있음')
