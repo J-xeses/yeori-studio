@@ -101,6 +101,9 @@ export default function ScriptGenTab() {
   const [episodeOpen, setEpisodeOpen] = useState(true)
   const [episodeListOpen, setEpisodeListOpen] = useState(false)
   const [gData, setGData] = useState(() => loadGPoints())
+  const [revisionInput, setRevisionInput] = useState('')
+  const [revisionLoading, setRevisionLoading] = useState(false)
+  const [revisionHistory, setRevisionHistory] = useState([])
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -315,6 +318,88 @@ ${YEORI_RULESET}
     setGData(updated)
     setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
   }
+  const handleRevisionFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => setRevisionInput(ev.target.result)
+    reader.readAsText(file, 'utf-8')
+  }
+
+  const handleRevision = async () => {
+    if (!apiKeys.claude || !revisionInput.trim() || !cuts.length) return
+    setRevisionLoading(true)
+
+    const currentScript = cuts.map(c =>
+      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
+    ).join('\n\n')
+
+    const prompt = `당신은 한국 유튜브 숏폼 대본 편집 전문가입니다.
+아래는 현재 작성된 대본 전체입니다.
+
+${YEORI_RULESET}
+
+=== 현재 대본 ===
+${currentScript}
+=== 대본 끝 ===
+
+아래 수정 요청을 처리해주세요:
+"${revisionInput}"
+
+수정 규칙:
+1. 요청한 컷만 수정, 나머지는 그대로 유지
+2. 수정된 컷은 반드시 아래 형식으로 출력 (그대로 파싱에 사용됨):
+[CUT N]
+씬: ...
+액션: ...
+캐릭터: 서여리
+대사: ...
+나레이션: ...
+샷 타입: CLOSEUP 또는 FULLBODY
+이미지 프롬프트: ...
+
+3. 수정 안 된 컷은 출력하지 말 것
+4. 마크다운 ** ## --- 절대 금지
+5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가`
+
+    try {
+      const res = await claudeMessages(apiKeys.claude, {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }],
+      })
+      if (!res.ok) throw new Error('Claude API 오류')
+      const data = await res.json()
+      const raw = data.content[0].text
+
+      const revisedCuts = parseCuts(raw, cuts.length)
+      revisedCuts.forEach(revised => {
+        const original = cuts.find(c => c.no === revised.no)
+        if (original) {
+          dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
+            scene: revised.scene || original.scene,
+            action: revised.action || original.action,
+            dialogue: revised.dialogue !== undefined ? revised.dialogue : original.dialogue,
+            narration: revised.narration || original.narration,
+            imagePrompt: revised.imagePrompt || original.imagePrompt,
+            shotType: revised.shotType || original.shotType,
+          }})
+        }
+      })
+
+      setRevisionHistory(prev => [...prev, {
+        id: Date.now(),
+        request: revisionInput.slice(0, 40) + (revisionInput.length > 40 ? '…' : ''),
+        ts: new Date().toLocaleTimeString('ko-KR'),
+      }])
+      setRevisionInput('')
+    } catch (err) {
+      alert('수정 실패: ' + err.message)
+    } finally {
+      setRevisionLoading(false)
+    }
+  }
+
   const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
   const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
@@ -669,6 +754,47 @@ ${YEORI_RULESET}
             </div>
           </>
         )}
+
+        <div className={s.revisionPanel}>
+          <div className={s.revisionTitle}>💬 Claude에게 수정 요청</div>
+
+          <textarea
+            className={s.revisionInput}
+            rows={3}
+            placeholder={"예) CUT 2 대사 더 가볍고 재미있게 수정해줘\n예) 전체 이미지 프롬프트에 골드 목걸이 디테일 추가해줘\n예) CUT 3 나레이션 감성적으로 다시 써줘"}
+            value={revisionInput}
+            onChange={e => setRevisionInput(e.target.value)}
+          />
+
+          <div className={s.revisionActions}>
+            <label className={s.fileUploadBtn}>
+              📄 텍스트 파일 업로드
+              <input type="file" accept=".txt" hidden onChange={handleRevisionFileUpload} />
+            </label>
+            <button
+              className={s.revisionSendBtn}
+              onClick={handleRevision}
+              disabled={revisionLoading || !revisionInput.trim() || !cuts.length}
+            >
+              {revisionLoading
+                ? <><span className={s.spinner} />수정 중…</>
+                : 'Claude에게 전송 →'}
+            </button>
+          </div>
+
+          {revisionHistory.length > 0 && (
+            <div className={s.revisionHistory}>
+              <div className={s.revisionHistTitle}>수정 이력</div>
+              {revisionHistory.map((h, i) => (
+                <div key={h.id} className={s.revisionHistItem}>
+                  <span className={s.revisionHistNum}>#{i+1}</span>
+                  <span className={s.revisionHistReq}>{h.request}</span>
+                  <span className={s.revisionHistStatus}>✅</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {scriptRaw && (
           <details className={s.rawSection}>
