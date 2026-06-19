@@ -1599,38 +1599,38 @@ async function switchToImageMode(page) {
   )
   log('info', `[imageMode] 팝업 탭 목록: ${JSON.stringify(allTabTexts)}`)
 
-  // 1. '이미지' 탭
-  const imgTabOk = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-      if ((el.textContent || '').trim().includes('이미지') || (el.textContent || '').trim().toLowerCase().includes('image')) {
-        el.click(); return true
+  // el.click()은 React/Lit 컴포넌트에 무시됨 → 좌표 추출 후 page.mouse.click() 사용
+  async function clickTab(matcher, label) {
+    const coords = await page.evaluate((m) => {
+      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+        const txt = (el.textContent || '').trim()
+        if (eval(m)) {
+          const r = el.getBoundingClientRect()
+          if (r.width > 0 && r.height > 0)
+            return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+        }
       }
+      return null
+    }, matcher)
+    if (coords) {
+      await page.mouse.click(coords.x, coords.y)
+      log('info', `[imageMode] ${label} 클릭 (${coords.x}, ${coords.y})`)
+      return true
     }
+    log('warn', `[imageMode] ${label} 탭 못 찾음`)
     return false
-  })
-  log(imgTabOk ? 'info' : 'warn', `[imageMode] 이미지 탭 ${imgTabOk ? '클릭 성공' : '못 찾음'}`)
+  }
+
+  // 1. '이미지' 탭
+  await clickTab(`txt.includes('이미지') || txt.toLowerCase().includes('image')`, '이미지 탭')
   await sleep(500)
 
   // 2. '9:16' 비율
-  const ratioOk = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-      const txt = (el.textContent || '').trim()
-      if (txt.endsWith('9:16') || txt === '9:16') { el.click(); return true }
-    }
-    return false
-  })
-  log(ratioOk ? 'info' : 'warn', `[imageMode] 9:16 비율 ${ratioOk ? '클릭 성공' : '못 찾음'}`)
+  await clickTab(`txt.endsWith('9:16') || txt === '9:16'`, '9:16 비율')
   await sleep(400)
 
   // 3. 'x2' 생성 개수
-  const countOk = await page.evaluate(() => {
-    for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-      const txt = (el.textContent || '').trim()
-      if (txt === 'x2') { el.click(); return true }
-    }
-    return false
-  })
-  log(countOk ? 'info' : 'warn', `[imageMode] x2 개수 ${countOk ? '클릭 성공' : '못 찾음'}`)
+  await clickTab(`txt === 'x2'`, 'x2 개수')
   await sleep(400)
 
   // 팝업 닫기
