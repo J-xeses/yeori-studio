@@ -8,14 +8,11 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = (() => {
-  const candidates = ['C:\\yeori-studio', 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio']
+  const candidates = ['C:\\yeori-studio', 'C:\\Users\\user\\Desktop\\yeori-studio']
   for (const p of candidates) {
-    if (fs.existsSync(p)) { console.log(`[proxy] ROOT: ${p}`); return p }
+    if (fs.existsSync(p)) return p
   }
-  // 후보 없으면 소스코드 상위(개발환경) fallback
-  const fallback = path.resolve(__dirname, '..')
-  console.log(`[proxy] ROOT fallback: ${fallback}`)
-  return fallback
+  return candidates[0]
 })()
 
 const app = express()
@@ -246,7 +243,7 @@ app.post('/api/studio-data', (req, res) => {
 
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
-  const { ep, prompts, projectId } = req.body
+  const { ep, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
   const promptsPath = path.join(ROOT, 'downloads', 'flow', 'prompts.json')
@@ -265,27 +262,6 @@ app.post('/api/run-flow', (req, res) => {
 
   // 에피소드 번호: prompts.episode 우선 (클라이언트 상태 싱크 문제 방지), ep는 fallback
   const episode = prompts.episode ?? ep ?? null
-
-  // project_url.txt 사전 확인 — 없으면 flow-automation.js가 stdin을 기다려 hang됨
-  if (episode != null) {
-    const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
-    const projectMarker = path.join(epDir, 'project_url.txt')
-
-    // projectId가 요청에 포함된 경우 project_url.txt 자동 생성
-    if (projectId && !fs.existsSync(projectMarker)) {
-      fs.mkdirSync(epDir, { recursive: true })
-      const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${String(projectId).trim()}`
-      fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
-      send({ type: 'log', level: 'info', message: `Flow 프로젝트 등록 완료: ${projectUrl}` })
-    }
-
-    if (!fs.existsSync(projectMarker)) {
-      send({ type: 'error', message: `Flow 프로젝트 미등록 (ep${episode})\nproject_url.txt 없음 — 터미널에서 직접 실행하여 프로젝트 ID를 등록하세요:\n  node scripts/flow-automation.js --ep=${episode}` })
-      res.end()
-      return
-    }
-  }
-
   const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
   const nodeArgs = [scriptPath]
   if (episode != null) nodeArgs.push(`--ep=${episode}`)
@@ -307,17 +283,14 @@ app.post('/api/run-flow', (req, res) => {
     if (doneMatch) {
       const cutNo = +doneMatch[3]
       send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo })
-      // cut 완료 시 파일 즉시 확인 후 cut_image 전송
+      // 파일 즉시 확인 후 cut_image 전송
       if (episode != null) {
         const padded = String(cutNo).padStart(2, '0')
-        const epUrlBase = `/downloads/flow/ep${episode}`
-        const epDirPath = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
-        for (const suffix of ['_a', '_b', '']) {
-          for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
-            const fname = `cut_${padded}${suffix}.${ext}`
-            if (fs.existsSync(path.join(epDirPath, fname))) {
-              send({ type: 'cut_image', cutNo, url: `${epUrlBase}/${fname}` })
-            }
+        for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
+          const imgPath = path.join(ROOT, 'downloads', 'flow', `ep${episode}`, `cut_${padded}.${ext}`)
+          if (fs.existsSync(imgPath)) {
+            send({ type: 'cut_image', cutNo, url: `/downloads/flow/ep${episode}/cut_${padded}.${ext}` })
+            break
           }
         }
       }
@@ -376,12 +349,12 @@ app.post('/api/run-flow', (req, res) => {
       send({ type: 'complete', success: code === 0, code })
     }
 
-    // 완료 후 에피소드 디렉토리 전체 스캔 -> 누락된 cut_image 이벤트 전송
+    // 완료 후 에피소드 디렉토리 전체 스캔 → 누락된 cut_image 이벤트 전송
     if (episode != null) {
       const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
       if (fs.existsSync(epDir)) {
         fs.readdirSync(epDir).sort().forEach(file => {
-          const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+          const m = file.match(/^cut_(\d+)\.(jpg|jpeg|png|webp)$/i)
           if (m) send({ type: 'cut_image', cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${episode}/${file}` })
         })
       }

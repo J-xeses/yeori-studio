@@ -1,4 +1,4 @@
-.root { display: flex; height: 100%; overflow: hidden; }
+.root { display: flex; height: 100%; overflow-y: auto; }
 .left { width: 280px; min-width: 280px; overflow-y: auto; border-right: 1px solid var(--border); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
 .right { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 

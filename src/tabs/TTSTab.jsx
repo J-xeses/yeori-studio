@@ -11,6 +11,7 @@ export default function TTSTab() {
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
   const [audios, setAudios] = useState({})
   const [loading, setLoading] = useState({})
+  const [g3Confirmed, setG3Confirmed] = useState({})
   const [text, setText] = useState('')
   const [activeCut, setActiveCut] = useState(0)
   const [voiceInput, setVoiceInput] = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -89,6 +90,22 @@ export default function TTSTab() {
     }
   }
 
+  const restoreYeoriVoice = async () => {
+    setVoiceInput(DEFAULT_VOICE_ID)
+    dispatch({ type: 'SET_TTS', p: { voiceId: DEFAULT_VOICE_ID } })
+    try {
+      const res = await fetch('http://localhost:3001/api/update-env', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'ELEVENLABS_VOICE_ID', value: DEFAULT_VOICE_ID }),
+      })
+      if (!res.ok) throw new Error()
+      alert(`서여리 목소리로 복원 완료: ${DEFAULT_VOICE_ID}`)
+    } catch {
+      alert('.env.local 저장 실패 — 프록시 서버가 실행 중인지 확인하세요')
+    }
+  }
+
   const downloadAudio = (cutId, cutNo) => {
     const a = audios[cutId]; if (!a) return
     const link = document.createElement('a')
@@ -117,7 +134,10 @@ export default function TTSTab() {
             >
               <div className={s.cutTop}>
                 <span className={s.cutNo}>CUT {c.no}</span>
-                {audios[c.id] && <span className={s.doneTag}>✓ 생성됨</span>}
+                {g3Confirmed[c.id]
+                  ? <span className={s.g3Tag}>G3 완료</span>
+                  : audios[c.id] && <span className={s.doneTag}>✓ 생성됨</span>
+                }
               </div>
               <span className={s.cutPrev}>{getTextForCut(c) || '(내용 없음)'}</span>
             </button>
@@ -129,6 +149,16 @@ export default function TTSTab() {
       <div className={s.main}>
         <div className={s.panel}>
           <h3 className={s.panelTitle}>목소리 선택</h3>
+          {ttsSettings.voiceId === DEFAULT_VOICE_ID ? (
+            <div className={`${s.voiceBanner} ${s.voiceBannerOk}`}>
+              ✅ 서여리 목소리 적용 중
+            </div>
+          ) : (
+            <div className={`${s.voiceBanner} ${s.voiceBannerWarn}`}>
+              <span>⚠️ 서여리 목소리가 아닙니다</span>
+              <button className={s.restoreBtn} onClick={restoreYeoriVoice}>서여리로 복원</button>
+            </div>
+          )}
           <div className={s.voiceInputRow}>
             <input
               className={s.voiceInput}
@@ -212,6 +242,21 @@ export default function TTSTab() {
                 <button className={s.dlBtn} onClick={() => downloadAudio(cut.id, cut.no)}>
                   ⬇ MP3 다운로드
                 </button>
+                {!g3Confirmed[cut.id] ? (
+                  <button className={s.g3Btn}
+                    onClick={() => {
+                      const next = { ...g3Confirmed, [cut.id]: true }
+                      setG3Confirmed(next)
+                      setGPoint(cut.no, 'g3', true)
+                      if (cuts.every(c => next[c.id])) {
+                        dispatch({ type: 'SET_TAB', p: 'video' })
+                      }
+                    }}>
+                    ✅ G3 승인
+                  </button>
+                ) : (
+                  <span className={s.g3Tag}>G3 완료</span>
+                )}
               </div>
             )}
           </div>

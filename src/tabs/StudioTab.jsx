@@ -28,11 +28,13 @@ async function generateImageWithGemini(prompt, apiKey) {
 export default function StudioTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys } = state
-  const [images, setImages] = useState({})
+  const [images, setImages] = useState({})      // cut.id → [url, url, ...]
+  const [selectedImage, setSelectedImage] = useState({}) // cut.id → index
   const [selected, setSelected] = useState(TOOLS[0])
   const [copiedId, setCopiedId] = useState(null)
   const [generating, setGenerating] = useState({})
   const [confirmed, setConfirmed] = useState({})
+  const [g2Approved, setG2Approved] = useState({})
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -45,7 +47,7 @@ export default function StudioTab() {
       try {
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), 3000)
-        await fetch('http://localhost:3001/api/studio-data', { signal: controller.signal })
+        await fetch('http://localhost:3001/api/health', { signal: controller.signal })
         clearTimeout(timer)
         setProxyOk(true)
       } catch {
@@ -60,7 +62,11 @@ export default function StudioTab() {
   const handleImageUpload = (cutId, file) => {
     if (!file) return
     const url = URL.createObjectURL(file)
-    setImages(prev => ({ ...prev, [cutId]: url }))
+    setImages(prev => {
+      const existing = Array.isArray(prev[cutId]) ? prev[cutId] : (prev[cutId] ? [prev[cutId]] : [])
+      return { ...prev, [cutId]: [...existing, url] }
+    })
+    setSelectedImage(prev => ({ ...prev, [cutId]: (Array.isArray(images[cutId]) ? images[cutId].length : 0) }))
     // G3 포인트 자동 저장
     const cut = cuts.find(c => c.id === cutId)
     if (cut) setGPoint(cut.no, 'g3', true)
@@ -80,7 +86,11 @@ export default function StudioTab() {
     setGenerating(prev => ({ ...prev, [cut.id]: true }))
     try {
       const imgUrl = await generateImageWithGemini(cut.imagePrompt, apiKeys.gemini)
-      setImages(prev => ({ ...prev, [cut.id]: imgUrl }))
+      setImages(prev => {
+        const existing = Array.isArray(prev[cut.id]) ? prev[cut.id] : (prev[cut.id] ? [prev[cut.id]] : [])
+        return { ...prev, [cut.id]: [...existing, imgUrl] }
+      })
+      setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
       setGPoint(cut.no, 'g3', true)
     } catch(e) {
       alert(`CUT ${cut.no} 생성 실패: ${e.message}`)
@@ -145,6 +155,15 @@ export default function StudioTab() {
                   }
                 } catch {}
               }
+            } else if (ev.type === 'cut_image') {
+              const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              setImages(p => {
+                const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                if (existing.some(u => u.includes(ev.url))) return p
+                return { ...p, [cut.id]: [...existing, imgUrl] }
+              })
+              setGPoint(cut.no, 'g3', true)
+              setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
             } else if (ev.type === 'error') {
               setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no} Flow 실패: ${ev.message}` }])
             } else if (ev.type === 'log' && ev.level === 'error') {
@@ -220,7 +239,7 @@ export default function StudioTab() {
                 }
                 return next
               })
-              // 생성된 이미지 자동 로드
+              // fallback: cut_image 이벤트가 없을 경우 HEAD 탐색
               const padded = String(ev.cutNo).padStart(2, '0')
               const cut = allCuts.find(c => c.no === ev.cutNo)
               if (cut) {
@@ -231,6 +250,19 @@ export default function StudioTab() {
                     if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(cut.no, 'g3', true); break }
                   } catch {}
                 }
+              }
+            } else if (ev.type === 'cut_image') {
+              // 서버에서 직접 전달한 이미지 URL → 컷카드 자동 표시
+              const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              const cut = allCuts.find(c => c.no === ev.cutNo)
+              if (cut) {
+                setImages(p => {
+                  const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                  const base = ev.url
+                  if (existing.some(u => u.includes(base))) return p
+                  return { ...p, [cut.id]: [...existing, imgUrl] }
+                })
+                setGPoint(cut.no, 'g3', true)
               }
             } else if (ev.type === 'cut_error') {
               setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
@@ -277,9 +309,9 @@ export default function StudioTab() {
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
   }
 
-  const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id])
+  const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id]?.length > 0)
   const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
-  const g3Count = cuts.filter(c => images[c.id]).length
+  const g3Count = cuts.filter(c => images[c.id]?.length > 0).length
   const g2Count = cuts.filter(c => confirmed[c.id]).length
 
   const exportPromptsJson = () => runFlow()
@@ -325,7 +357,6 @@ export default function StudioTab() {
           ))}
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <button className={s.autoBtn} onClick={generateAllPrompts}>⚡ 전체 프롬프트 자동 생성</button>
           <button className={s.autoBtn} onClick={exportPromptsJson}
             disabled={flowRunning}
             title="prompts.json 저장 후 Google Flow 자동 실행"
@@ -349,29 +380,6 @@ export default function StudioTab() {
           </button>
         </div>
       </div>
-
-      {/* G1→G3→G2→G4 흐름 상태 바 */}
-      {cuts.length > 0 && (
-        <div className={s.flowStatusBar}>
-          {[
-            { key: 'G1', label: '스크립트', count: g1Count },
-            { key: 'G3', label: '이미지 생성', count: g3Count },
-            { key: 'G2', label: '이미지 컨펌', count: g2Count },
-            { key: 'G4', label: '최종 승인', count: allConfirmed ? cuts.length : 0 },
-          ].flatMap((step, i, arr) => {
-            const done = step.count === cuts.length
-            const partial = step.count > 0 && !done
-            return [
-              <div key={step.key} className={`${s.flowStep} ${done ? s.flowStepDone : partial ? s.flowStepPartial : ''}`}>
-                <span className={s.flowStepKey}>{step.key}</span>
-                <span className={s.flowStepLabel}>{step.label}</span>
-                <span className={s.flowStepCount}>{step.count}/{cuts.length}</span>
-              </div>,
-              ...(i < arr.length - 1 ? [<span key={`arr${i}`} className={s.flowArrow}>→</span>] : []),
-            ]
-          })}
-        </div>
-      )}
 
       {/* 프록시 서버 연결 경고 */}
       {proxyOk === false && (
@@ -417,133 +425,175 @@ export default function StudioTab() {
         </div>
       )}
 
-      {allConfirmed && (
-        <div className={s.approveBarWrap}>
-          <div className={s.approveBar}>
-            <div>
-              <div className={s.approveBadge}>🏆 G4 최종 승인 준비 완료</div>
-              <div className={s.approveText}>모든 이미지 컨펌됨 — G4 승인 후 TTS 생성을 시작합니다</div>
-            </div>
-            <button className={s.approveBtn}
-              onClick={() => {
-                cuts.forEach(c => setGPoints(c.no, { g2: true, g4: true }))
-                dispatch({ type: 'SET_TAB', p: 'tts' })
-              }}>
-              G4 최종 승인 → TTS 탭
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className={s.grid}>
         {cuts.map((cut) => (
           <div key={cut.id} className={s.card}>
-            <div className={s.cardHeader}>
-              <span className={s.cutBadge}>CUT {cut.no}</span>
-              <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
-              {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
-              {images[cut.id] && <span className={`${s.gBadge} ${s.g3Badge}`}>G3</span>}
-              {confirmed[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
-            </div>
-
-            <div className={s.imageArea}
-              onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}
-              style={images[cut.id] ? { backgroundImage: `url(${images[cut.id]})` } : {}}
-            >
-              {!images[cut.id] && !generating[cut.id] && (
-                <div className={s.uploadPlaceholder}>
-                  <span className={s.uploadIcon}>🖼️</span>
-                  <span>이미지 업로드</span>
-                  <span className={s.uploadSub}>클릭하여 선택</span>
+            {/* 왼쪽: 이미지 영역 */}
+            <div className={s.cardLeft}>
+              {images[cut.id]?.length > 0 && (
+                <div style={{display:'flex',gap:'4px',flexWrap:'wrap',padding:'6px',background:'rgba(0,0,0,0.2)',flexShrink:0}}>
+                  {images[cut.id].map((url, idx) => (
+                    <div key={idx} onClick={() => setSelectedImage(prev => ({...prev, [cut.id]: idx}))}
+                      style={{width:'58px',height:'58px',borderRadius:'5px',overflow:'hidden',cursor:'pointer',
+                        border: (selectedImage[cut.id]??0) === idx ? '2px solid #a78bfa' : '2px solid transparent',
+                        flexShrink:0}}>
+                      <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
+                    </div>
+                  ))}
+                  <div onClick={() => fileRefs.current[cut.id]?.click()}
+                    style={{width:'58px',height:'58px',borderRadius:'5px',border:'2px dashed rgba(255,255,255,0.2)',
+                      display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',
+                      flexShrink:0,color:'#5c5870',fontSize:'18px'}}>+</div>
                 </div>
               )}
-              {generating[cut.id] && (
-                <div className={s.uploadPlaceholder}>
-                  <span style={{fontSize:24,animation:'spin 1s linear infinite'}}>⟳</span>
-                  <span style={{fontSize:11,color:'var(--purple)'}}>{selected === 'Flow' ? 'Flow 생성 중...' : 'Gemini 생성 중...'}</span>
-                </div>
-              )}
-              {images[cut.id] && (
-                <button className={s.removeImg} onClick={e => {
-                  e.stopPropagation()
-                  setImages(p => { const n={...p}; delete n[cut.id]; return n })
-                }}>✕</button>
-              )}
-              <input ref={el => fileRefs.current[cut.id] = el} type="file" accept="image/*"
-                style={{ display: 'none' }}
-                onChange={e => handleImageUpload(cut.id, e.target.files[0])} />
-            </div>
-
-            {/* 개별 자동 생성 버튼 */}
-            {apiKeys.gemini && cut.imagePrompt && !images[cut.id] && (
-              <button
-                onClick={() => generateSingleImage(cut)}
-                disabled={generating[cut.id]}
-                style={{
-                  width:'100%', padding:'6px 0', margin:'4px 0',
-                  background:'var(--purple-bg)', border:'1px solid rgba(167,139,250,0.3)',
-                  borderRadius:6, color:'var(--purple)', fontSize:11, fontWeight:700,
-                  cursor: generating[cut.id] ? 'not-allowed' : 'pointer',
-                  fontFamily:'Noto Sans KR, sans-serif',
-                }}
+              <div className={s.imageArea}
+                onClick={() => !images[cut.id]?.length && !generating[cut.id] && fileRefs.current[cut.id]?.click()}
+                style={images[cut.id]?.length > 0 ? { backgroundImage: `url(${images[cut.id][selectedImage[cut.id]??0]})` } : {}}
               >
-                {generating[cut.id] ? '⟳ 생성 중...' : '🤖 이미지 자동 생성'}
-              </button>
-            )}
-
-            <div className={s.promptSection}>
-              <div className={s.promptHeader}>
-                <span className={s.promptLabel}>{selected} 프롬프트</span>
-                <button className={s.copyBtn} onClick={() => copyPrompt(cut.imagePrompt)}
-                  title="복사">📋 복사</button>
+                {!images[cut.id]?.length && !generating[cut.id] && (
+                  <div className={s.uploadPlaceholder}>
+                    <span className={s.uploadIcon}>🖼️</span>
+                    <span>이미지 업로드</span>
+                    <span className={s.uploadSub}>클릭하여 선택</span>
+                  </div>
+                )}
+                {generating[cut.id] && (
+                  <div className={s.uploadPlaceholder}>
+                    <span style={{fontSize:24,animation:'spin 1s linear infinite'}}>⟳</span>
+                    <span style={{fontSize:11,color:'var(--purple)'}}>{selected === 'Flow' ? 'Flow 생성 중...' : 'Gemini 생성 중...'}</span>
+                  </div>
+                )}
+                {images[cut.id] && (
+                  <button className={s.removeImg} onClick={e => {
+                    e.stopPropagation()
+                    setImages(p => {
+                      const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                      const idx = selectedImage[cut.id] ?? 0
+                      const newArr = arr.filter((_, i) => i !== idx)
+                      const n = {...p}
+                      if (newArr.length) n[cut.id] = newArr
+                      else delete n[cut.id]
+                      return n
+                    })
+                    setSelectedImage(prev => ({...prev, [cut.id]: 0}))
+                  }}>✕</button>
+                )}
+                <input ref={el => fileRefs.current[cut.id] = el} type="file" accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={e => handleImageUpload(cut.id, e.target.files[0])} />
               </div>
-              <textarea
-                className={s.promptInput}
-                rows={3}
-                placeholder={`${selected}용 이미지 프롬프트를 입력하세요...`}
-                value={cut.imagePrompt || ''}
-                onChange={e => updateCut(cut.id, { imagePrompt: e.target.value })}
-              />
+              {apiKeys.gemini && cut.imagePrompt && !images[cut.id] && (
+                <button
+                  onClick={() => generateSingleImage(cut)}
+                  disabled={generating[cut.id]}
+                  style={{
+                    width:'100%', padding:'5px 0', flexShrink:0,
+                    background:'var(--purple-bg)', border:'none', borderTop:'1px solid var(--border)',
+                    color:'var(--purple)', fontSize:11, fontWeight:700,
+                    cursor: generating[cut.id] ? 'not-allowed' : 'pointer',
+                    fontFamily:'Noto Sans KR, sans-serif',
+                  }}
+                >
+                  {generating[cut.id] ? '⟳ 생성 중...' : '🤖 자동 생성'}
+                </button>
+              )}
             </div>
 
-            <div className={s.dialoguePreview}>
-              {cut.dialogue && <div className={s.dial}><span className={s.dialLabel}>대사</span>{cut.dialogue}</div>}
-              {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
-            </div>
+            {/* 오른쪽: 정보·컨트롤 영역 */}
+            <div className={s.cardRight}>
+              <div className={s.cardHeader}>
+                <span className={s.cutBadge}>CUT {cut.no}</span>
+                <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
+                  {g2Approved[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
+                  <button
+                    onClick={() => {
+                      setImages(p => ({ ...p, [cut.id]: [] }))
+                      setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                    }}
+                    style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 4,
+                      background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)',
+                      color: '#fca5a5', cursor: 'pointer',
+                    }}
+                  >이미지 초기화</button>
+                </div>
+              </div>
 
-            <div className={s.confirmRow}>
-              {!confirmed[cut.id] ? (
+              <div className={s.promptSection}>
+                <div className={s.promptHeader}>
+                  <span className={s.promptLabel}>{selected} 프롬프트</span>
+                  <button className={s.copyBtn} onClick={() => copyPrompt(cut.imagePrompt)}
+                    title="복사">📋 복사</button>
+                </div>
+                <textarea
+                  className={s.promptInput}
+                  rows={4}
+                  placeholder={`${selected}용 이미지 프롬프트를 입력하세요...`}
+                  value={cut.imagePrompt || ''}
+                  onChange={e => updateCut(cut.id, { imagePrompt: e.target.value })}
+                />
+              </div>
+
+              <div className={s.dialoguePreview}>
+                {cut.dialogue && <div className={s.dial}><span className={s.dialLabel}>대사</span>{cut.dialogue}</div>}
+                {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
+              </div>
+
+              <div className={s.confirmRow} style={{marginTop:'auto'}}>
                 <button className={s.confirmBtn}
-                  disabled={!images[cut.id]}
+                  disabled={!images[cut.id]?.length || confirmed[cut.id]}
+                  onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
+                  {confirmed[cut.id] ? '✓ 컨펌' : '컨펌'}
+                </button>
+                <button className={s.regenBtn}
                   onClick={() => {
-                    setConfirmed(p => ({ ...p, [cut.id]: true }))
+                    if (selected === 'Flow' && !proxyOk) {
+                      alert('프록시 서버를 먼저 실행해주세요 (npm run studio)')
+                      return
+                    }
+                    setConfirmed(p => ({ ...p, [cut.id]: false }))
+                    setImages(p => { const n = {...p}; delete n[cut.id]; return n })
+                    if (selected === 'Flow') {
+                      runFlowForCut(cut)
+                    } else if (apiKeys.gemini && cut.imagePrompt) {
+                      generateSingleImage(cut)
+                    }
+                  }}>
+                  🔄 재생성
+                </button>
+                <button className={s.g2Btn}
+                  disabled={!confirmed[cut.id] || g2Approved[cut.id]}
+                  onClick={() => {
+                    setG2Approved(p => ({ ...p, [cut.id]: true }))
                     setGPoint(cut.no, 'g2', true)
                   }}>
-                  ✅ 컨펌
+                  {g2Approved[cut.id] ? '✓ G2 완료' : 'G2 승인'}
                 </button>
-              ) : (
-                <span className={s.confirmedTag}>✅ 컨펌됨</span>
-              )}
-              <button className={s.regenBtn}
-                onClick={() => {
-                  if (selected === 'Flow' && !proxyOk) {
-                    alert('프록시 서버를 먼저 실행해주세요 (npm run studio)')
-                    return
-                  }
-                  setConfirmed(p => ({ ...p, [cut.id]: false }))
-                  setImages(p => { const n = {...p}; delete n[cut.id]; return n })
-                  if (selected === 'Flow') {
-                    runFlowForCut(cut)
-                  } else if (apiKeys.gemini && cut.imagePrompt) {
-                    generateSingleImage(cut)
-                  }
-                }}>
-                🔄 재생성
-              </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* G2 전체 승인 바 */}
+      {cuts.length > 0 && (
+        <div className={s.g2AllBar}>
+          <span className={s.g2AllCount}>
+            G2 완료 {Object.values(g2Approved).filter(Boolean).length} / {cuts.length}
+          </span>
+          <button
+            className={s.g2AllBtn}
+            disabled={!cuts.every(c => g2Approved[c.id])}
+            onClick={() => {
+              cuts.forEach(c => setGPoints(c.no, { g2: true }))
+              dispatch({ type: 'SET_TAB', p: 'tts' })
+            }}>
+            {cuts.every(c => g2Approved[c.id]) ? '🎉 G2 전체 승인 → TTS 탭' : 'G2 전체 승인'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }

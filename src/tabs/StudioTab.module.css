@@ -1,4 +1,4 @@
-.root { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.root { display: flex; flex-direction: column; height: 100%; overflow-y: auto; }
 
 .toolbar {
   display: flex; align-items: center; justify-content: space-between;
@@ -22,18 +22,26 @@
 .autoBtn:hover { background: #6d28d9; }
 
 .grid {
-  flex: 1; overflow-y: auto;
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 14px; padding: 16px;
+  display: grid; grid-template-columns: 1fr;
+  gap: 10px; padding: 16px;
 }
 
 .card {
   background: var(--bg-panel); border: 1px solid var(--border);
   border-radius: 12px; overflow: hidden;
-  display: flex; flex-direction: column;
-  transition: border-color .15s;
+  display: flex; flex-direction: row;
+  transition: border-color .15s; min-height: 180px;
 }
 .card:hover { border-color: var(--border-light); }
+
+.cardLeft {
+  width: 300px; min-width: 300px; display: flex; flex-direction: column;
+  border-right: 1px solid var(--border); flex-shrink: 0;
+}
+
+.cardRight {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
 
 .cardHeader {
   display: flex; align-items: center; gap: 8px;
@@ -47,9 +55,9 @@
 .scene { font-size: 12.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
 .imageArea {
-  height: 160px; background: var(--bg-input); cursor: pointer;
+  flex: 1; min-height: 280px; background: var(--bg-input); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  background-size: cover; background-position: center;
+  background-size: contain; background-position: center; background-repeat: no-repeat;
   position: relative; overflow: hidden; transition: background-color .15s;
 }
 .imageArea:hover { background-color: var(--bg-hover); }
@@ -115,6 +123,29 @@
 }
 .regenBtn:hover { background: rgba(167,139,250,.2); }
 
+.g2Btn {
+  flex: 1; padding: 6px; border-radius: 6px;
+  background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.3);
+  color: #60a5fa; font-size: 12px; font-weight: 700; transition: all .15s; cursor: pointer;
+}
+.g2Btn:hover:not(:disabled) { background: rgba(59,130,246,.22); }
+.g2Btn:disabled { opacity: .4; cursor: default; }
+
+/* G2 전체 승인 바 */
+.g2AllBar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px; background: var(--bg-panel);
+  border-top: 2px solid var(--border); flex-shrink: 0; gap: 12px;
+}
+.g2AllCount { font-size: 12.5px; color: var(--text-3); font-weight: 600; }
+.g2AllBtn {
+  padding: 10px 28px; border-radius: 8px; font-size: 13px; font-weight: 700;
+  background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.4);
+  color: #60a5fa; transition: all .15s; cursor: pointer; white-space: nowrap;
+}
+.g2AllBtn:hover:not(:disabled) { background: rgba(59,130,246,.35); color: #fff; border-color: #60a5fa; }
+.g2AllBtn:disabled { opacity: .3; cursor: default; }
+
 /* Flow status bar */
 .flowStatusBar {
   display: flex; align-items: center; gap: 4px;
@@ -139,9 +170,10 @@
 
 /* G-point card badges */
 .gBadge { font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; }
-.g1Badge { background: rgba(99,102,241,.15); color: #818cf8; border: 1px solid rgba(99,102,241,.3); }
-.g3Badge { background: rgba(20,184,166,.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,.3); }
-.g2Badge { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+.g1Badge { background: rgba(34,197,94,.15);  color: #4ade80;  border: 1px solid rgba(34,197,94,.3); }
+.g2Badge { background: rgba(59,130,246,.15); color: #60a5fa;  border: 1px solid rgba(59,130,246,.3); }
+.g3Badge { background: rgba(167,139,250,.15); color: #a78bfa; border: 1px solid rgba(167,139,250,.3); }
+.g4Badge { background: rgba(249,115,22,.15); color: #fb923c;  border: 1px solid rgba(249,115,22,.3); }
 
 .approveBarWrap { padding: 0 16px 8px; flex-shrink: 0; }
 .approveBar {

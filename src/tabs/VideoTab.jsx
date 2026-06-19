@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
-import { setGPoint } from '../lib/gpoints'
+import { setGPoint, setGPoints } from '../lib/gpoints'
 import s from './VideoTab.module.css'
 
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
@@ -22,7 +22,7 @@ function stripMeta(text) {
 
 export default function VideoTab() {
   const { state, dispatch } = useApp()
-  const { cuts, videoSettings, renderProgress } = state
+  const { cuts, videoSettings, renderProgress, episode } = state
   const { subtitleEnabled, font, fontSize, color, bgStyle } = videoSettings
   const canvasRef = useRef(null)
   const [previewText, setPreviewText] = useState('여기서 처음 써보는 이야기야.')
@@ -134,7 +134,7 @@ export default function VideoTab() {
       const clip = `    <clip name="CUT ${c.no}" offset="${t}s" duration="${dur}s">\n      <title>${c.scene || 'Scene'}</title>\n    </clip>`
       t += dur; return clip
     }).join('\n')
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE fcpxml>\n<fcpxml version="1.9">\n  <library>\n    <event name="여리 Studio">\n      <project name="Ep ${state.episode.number}">\n        <sequence duration="${t}s">\n          <spine>\n${clips}\n          </spine>\n        </sequence>\n      </project>\n    </event>\n  </library>\n</fcpxml>`
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE fcpxml>\n<fcpxml version="1.9">\n  <library>\n    <event name="여리 Studio">\n      <project name="Ep ${episode?.number ?? ''}">\n        <sequence duration="${t}s">\n          <spine>\n${clips}\n          </spine>\n        </sequence>\n      </project>\n    </event>\n  </library>\n</fcpxml>`
     const blob = new Blob([xml], { type: 'text/xml' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a'); a.href = url; a.download = 'timeline.fcpxml'; a.click()
@@ -142,22 +142,37 @@ export default function VideoTab() {
     setRenderLog(l => [...l, '✅ Premiere Pro FCPXML 생성 완료'])
   }
 
-  const loadFromProxy = (cut) => {
-    const url = `http://localhost:7700/cut_${String(cut.no).padStart(2,'0')}.mp4`
-    setVideoClips(p => ({ ...p, [cut.id]: [...(p[cut.id] || []), url] }))
+  const loadFromProxy = async (cut) => {
+    const ep = episode?.number ?? ''
+    const padded = String(cut.no).padStart(2, '0')
+    for (const ext of ['mp4', 'mov', 'webm']) {
+      const url = `http://localhost:3001/downloads/video/ep${ep}/cut_${padded}.${ext}?t=${Date.now()}`
+      try {
+        const r = await fetch(url, { method: 'HEAD' })
+        if (r.ok) {
+          setVideoClips(p => ({ ...p, [cut.id]: [...new Set([...(p[cut.id] || []), url])] }))
+          return
+        }
+      } catch {}
+    }
+    alert(`CUT ${cut.no} 영상 파일이 프록시에 없습니다.\n경로: C:\\yeori-studio\\downloads\\video\\ep${ep}\\cut_${padded}.mp4`)
   }
 
-  const loadAllFromProxy = () => { cuts.forEach(c => loadFromProxy(c)) }
+  const loadAllFromProxy = async () => {
+    for (const cut of cuts) await loadFromProxy(cut)
+  }
 
   const handleVideoUpload = (cutId, files) => {
-    Array.from(files).forEach(file => {
-      const url = URL.createObjectURL(file)
-      setVideoClips(p => ({ ...p, [cutId]: [...(p[cutId] || []), url] }))
-    })
+    const urls = Array.from(files).map(f => URL.createObjectURL(f))
+    setVideoClips(p => ({ ...p, [cutId]: [...(p[cutId] || []), ...urls] }))
   }
 
   const removeClip = (cutId, idx) => {
-    setVideoClips(p => ({ ...p, [cutId]: (p[cutId] || []).filter((_, i) => i !== idx) }))
+    setVideoClips(p => {
+      const arr = [...(p[cutId] || [])]
+      arr.splice(idx, 1)
+      return { ...p, [cutId]: arr }
+    })
   }
 
   return (
@@ -318,7 +333,7 @@ export default function VideoTab() {
                   <div className={s.clipList}>
                     {clips.map((url, idx) => (
                       <div key={idx} className={s.clipItem}>
-                        <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] || idx+1}</span>
+                        <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx+1}</span>
                         <span className={s.clipName}>
                           {url.includes('localhost') ? `cut_${String(selCut.no).padStart(2,'0')}.mp4` : `로컬파일 ${idx+1}`}
                         </span>

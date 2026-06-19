@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
-import { setGPoints, setGPoint } from '../lib/gpoints'
+import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -50,8 +50,8 @@ function parseCuts(raw, n) {
         if (!m) return ''
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
-        // 다음 필드 키워드 전까지 (샷 타입 포함)
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트)[:：]/)
+        // 다음 필드 키워드 전까지 (샷 타입, 컷 길이 포함)
+        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트|컷 길이)[:：]/)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -70,12 +70,13 @@ function parseCuts(raw, n) {
         .replace(/⚠️.*확인 필요/g, '')
         .trim()
 
-      // duration 자동 계산: 대사+나레이션 글자수 기반 (5자/초 + 여유 2초)
+      // duration: 파일에 "컷 길이:" 값이 있으면 우선 사용, 없으면 글자수 자동 계산
+      const fileDuration = parseInt(getField(/컷 길이[:：]\s*/))
       const text = (cur.dialogue || '') + (cur.narration || '')
       const chars = text.replace(/\s/g, '').length
-      cur.duration = chars > 0
-        ? Math.min(20, Math.max(4, Math.round(chars / 5) + 2))
-        : 5
+      cur.duration = (!isNaN(fileDuration) && fileDuration > 0)
+        ? fileDuration
+        : (chars > 0 ? Math.min(20, Math.max(4, Math.round(chars / 5) + 2)) : 5)
     }
   }
   if (cur) cuts.push(cur)
@@ -99,6 +100,11 @@ export default function ScriptGenTab() {
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
   const [episodeOpen, setEpisodeOpen] = useState(true)
+  const [episodeListOpen, setEpisodeListOpen] = useState(false)
+  const [gData, setGData] = useState(() => loadGPoints())
+  const [revisionInput, setRevisionInput] = useState('')
+  const [revisionLoading, setRevisionLoading] = useState(false)
+  const [revisionHistory, setRevisionHistory] = useState([])
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -284,9 +290,178 @@ ${YEORI_RULESET}
         const updated = { ...cut, [field]: val }
         const hasContent = !!(updated.dialogue || updated.narration || updated.scene)
         setGPoint(cut.no, 'g1', hasContent)
+        setGData(loadGPoints())
       }
     }
   }
+
+  // ── G1 승인/취소 ─────────────────────────────────────────────
+  const approveG1 = (cutNo) => {
+    setGPoint(cutNo, 'g1', true)
+    const updated = loadGPoints()
+    setGData(updated)
+    // 타입 무관하게 문자열로 통일 후 비교
+    const cutNoStr = String(cutNo)
+    const allDone = cuts.length > 0 && cuts.every(c => {
+      if (String(c.no) === cutNoStr) return true
+      return !!updated[`cut_${c.no}`]?.g1
+    })
+    console.log('[G1] cutNo:', cutNo, 'allDone:', allDone, 'cuts:', cuts.map(c=>c.no), 'updated:', updated)
+    if (allDone) {
+      console.log('[G1] 전체 승인 완료 → 스튜디오 탭으로 이동')
+      setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
+    }
+  }
+  const revokeG1  = (cutNo) => { setGPoint(cutNo, 'g1', false); setGData(loadGPoints()) }
+  const approveAllG1 = () => {
+    cuts.forEach(c => setGPoint(c.no, 'g1', true))
+    const updated = loadGPoints()
+    setGData(updated)
+    setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
+  }
+  const handleRevisionFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => setRevisionInput(ev.target.result)
+    reader.readAsText(file, 'utf-8')
+  }
+
+  const handleRevision = async () => {
+    if (!apiKeys.claude || !revisionInput.trim() || !cuts.length) return
+    setRevisionLoading(true)
+
+    const currentScript = cuts.map(c =>
+      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
+    ).join('\n\n')
+
+    const prompt = `당신은 한국 유튜브 숏폼 대본 편집 전문가입니다.
+아래는 현재 작성된 대본 전체입니다.
+
+${YEORI_RULESET}
+
+=== 현재 대본 ===
+${currentScript}
+=== 대본 끝 ===
+
+아래 수정 요청을 처리해주세요:
+"${revisionInput}"
+
+수정 규칙:
+1. 요청한 컷만 수정, 나머지는 그대로 유지
+2. 수정된 컷은 반드시 아래 형식으로 출력 (그대로 파싱에 사용됨):
+[CUT N]
+씬: ...
+액션: ...
+캐릭터: 서여리
+대사: ...
+나레이션: ...
+샷 타입: CLOSEUP 또는 FULLBODY
+이미지 프롬프트: ...
+
+3. 수정 안 된 컷은 출력하지 말 것
+4. 마크다운 ** ## --- 절대 금지
+5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가`
+
+    try {
+      const res = await claudeMessages(apiKeys.claude, {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }],
+      })
+      if (!res.ok) throw new Error('Claude API 오류')
+      const data = await res.json()
+      const raw = data.content[0].text
+
+      const revisedCuts = parseCuts(raw, cuts.length)
+      revisedCuts.forEach(revised => {
+        const original = cuts.find(c => c.no === revised.no)
+        if (original) {
+          dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
+            scene: revised.scene || original.scene,
+            action: revised.action || original.action,
+            dialogue: revised.dialogue !== undefined ? revised.dialogue : original.dialogue,
+            narration: revised.narration || original.narration,
+            imagePrompt: revised.imagePrompt || original.imagePrompt,
+            shotType: revised.shotType || original.shotType,
+          }})
+        }
+      })
+
+      setRevisionHistory(prev => [...prev, {
+        id: Date.now(),
+        request: revisionInput.slice(0, 40) + (revisionInput.length > 40 ? '…' : ''),
+        ts: new Date().toLocaleTimeString('ko-KR'),
+      }])
+      setRevisionInput('')
+    } catch (err) {
+      alert('수정 실패: ' + err.message)
+    } finally {
+      setRevisionLoading(false)
+    }
+  }
+
+  const downloadScript = () => {
+    if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
+    const lines = cuts.map(c => [
+      `[CUT ${c.no}]`,
+      `씬: ${c.scene || ''}`,
+      `액션: ${c.action || ''}`,
+      `캐릭터: ${c.character || '서여리'}`,
+      `대사: ${c.dialogue || '없음'}`,
+      `나레이션: ${c.narration || ''}`,
+      `샷 타입: ${c.shotType || 'FULLBODY'}`,
+      `이미지 프롬프트: ${c.imagePrompt || ''}`,
+      `컷 길이: ${c.duration || 5}`,
+    ].join('\n')).join('\n\n')
+    const header = `# EP${episode.number} ${episode.title || ''} 대본\n# 생성일: ${new Date().toLocaleString('ko-KR')}\n# ※ [CUT N] 형식과 필드명(씬:/액션:/캐릭터:/대사:/나레이션:/샷 타입:/이미지 프롬프트:/컷 길이:) 유지 필수\n\n`
+    const blob = new Blob([header + lines], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `ep${episode.number}_script.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleScriptFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target.result
+      const parsed = parseCuts(text, cuts.length)
+      if (!parsed.length) {
+        alert('파싱 실패: 형식을 확인해주세요.\n[CUT N] 블록과 필드명이 정확해야 합니다.')
+        return
+      }
+      let updatedCount = 0
+      parsed.forEach(revised => {
+        const original = cuts.find(c => c.no === revised.no)
+        if (!original) return
+        dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
+          scene:       revised.scene       || original.scene,
+          action:      revised.action      || original.action,
+          character:   revised.character   || original.character,
+          dialogue:    revised.dialogue    !== '' ? revised.dialogue : original.dialogue,
+          narration:   revised.narration   || original.narration,
+          shotType:    revised.shotType    || original.shotType,
+          imagePrompt: revised.imagePrompt || original.imagePrompt,
+          duration:    revised.duration    || original.duration,
+        }})
+        const hasContent = !!(revised.dialogue || revised.narration || revised.scene)
+        setGPoint(revised.no, 'g1', hasContent)
+        updatedCount++
+      })
+      setGData(loadGPoints())
+      alert(`✅ ${updatedCount}개 컷 반영 완료`)
+    }
+    reader.readAsText(file, 'utf-8')
+    e.target.value = ''
+  }
+
+  const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+  const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
   const handleCutCountChange = (n) => {
     const count = Math.max(1, Math.min(20, parseInt(n) || 7))
@@ -461,7 +636,55 @@ ${YEORI_RULESET}
           )}
         </div>
 
-        {/* 컷 목록 - 나머지 공간 채움 */}
+        {/* 에피소드 목록 패널 */}
+        <div className={s.epSection}>
+          <button className={s.epToggle} onClick={() => setEpisodeListOpen(o => !o)}>
+            <span className={s.sideTitle}>📋 에피소드 목록</span>
+            <span className={s.toggleIcon}>{episodeListOpen ? '▲' : '▼'}</span>
+          </button>
+          {episodeListOpen && (
+            <div className={s.epListBody}>
+              {Object.values(episodes || {}).map(ep => {
+                const epCuts = ep.cuts || []
+                const epG1 = epCuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+                const epTotal = epCuts.length
+                const epAllDone = epTotal > 0 && epG1 === epTotal
+                const isActive = ep.id === activeEpisodeId
+                return (
+                  <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
+                    <div className={s.epListHeader}
+                      onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}>
+                      <span className={s.epListNum}>EP{ep.episode?.number}</span>
+                      <span className={s.epListTitle}>{ep.episode?.title || '(제목 없음)'}</span>
+                      {epAllDone && <span className={s.epG1Badge}>G1 ✅</span>}
+                    </div>
+                    {epTotal > 0 && (
+                      <div className={s.epG1Bar}>
+                        <div className={s.epG1BarTrack}>
+                          <div className={s.epG1BarFill} style={{ width: `${(epG1/epTotal)*100}%` }} />
+                        </div>
+                        <span className={s.epG1Count}>{epG1}/{epTotal}</span>
+                      </div>
+                    )}
+                    {isActive && epTotal > 0 && !epAllDone && (
+                      <button className={s.epApproveBtn} onClick={approveAllG1}>
+                        ✅ 전체 G1 승인
+                      </button>
+                    )}
+                    {isActive && epAllDone && (
+                      <button className={s.epApproveBtn} style={{background:'rgba(34,197,94,.2)',borderColor:'rgba(34,197,94,.4)',color:'#4ade80'}}
+                        onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
+                        🎬 스튜디오 탭으로 →
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 컷 목록 */}
         <div className={s.cutSection}>
           <div className={s.cutSectionTitle}>컷 목록</div>
           <div className={s.cutList}>
@@ -471,6 +694,7 @@ ${YEORI_RULESET}
                 <span className={s.cutNo}>
                   CUT {c.no}
                   {c.cutType === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
+                  {gData[`cut_${c.no}`]?.g1 && <span className={s.g1Badge}>G1</span>}
                 </span>
                 <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
               </button>
@@ -480,6 +704,15 @@ ${YEORI_RULESET}
 
         {/* 버튼 3개 하단 고정 */}
         <div className={s.sideBottom}>
+          <div className={s.scriptFileRow}>
+            <button className={s.scriptDownBtn} onClick={downloadScript} disabled={!cuts.length}>
+              📥 대본 다운로드
+            </button>
+            <label className={s.scriptUpBtn}>
+              📤 수정본 업로드
+              <input type="file" accept=".txt" hidden onChange={handleScriptFileUpload} />
+            </label>
+          </div>
           <button className={s.genBtn} onClick={generateScript} disabled={loading}>
             {loading ? (
               <><span className={s.spinner} />{progress || '생성 중...'}</>
@@ -515,10 +748,25 @@ ${YEORI_RULESET}
           <>
             <div className={s.editorHeader}>
               <h2>CUT {cuts[activeCut]?.no}</h2>
-              <div className={s.editorNav}>
-                <button disabled={activeCut === 0} onClick={() => setActiveCut(i => i - 1)}>◀ 이전</button>
-                <span>{activeCut + 1} / {cuts.length}</span>
-                <button disabled={activeCut === cuts.length - 1} onClick={() => setActiveCut(i => i + 1)}>다음 ▶</button>
+              <div style={{display:'flex', alignItems:'center', gap:8}}>
+                {gData[`cut_${cuts[activeCut]?.no}`]?.g1 ? (
+                  <button onClick={() => revokeG1(cuts[activeCut].no)}
+                    style={{padding:'4px 10px',borderRadius:6,background:'rgba(34,197,94,.15)',
+                      border:'1px solid rgba(34,197,94,.4)',color:'#4ade80',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                    ✅ G1 승인됨 (취소)
+                  </button>
+                ) : (
+                  <button onClick={() => approveG1(cuts[activeCut].no)}
+                    style={{padding:'4px 10px',borderRadius:6,background:'rgba(167,139,250,.15)',
+                      border:'1px solid rgba(167,139,250,.4)',color:'var(--accent-light)',fontSize:11,fontWeight:700,cursor:'pointer'}}>
+                    ☑ G1 승인
+                  </button>
+                )}
+                <div className={s.editorNav}>
+                  <button disabled={activeCut === 0} onClick={() => setActiveCut(i => i - 1)}>◀ 이전</button>
+                  <span>{activeCut + 1} / {cuts.length}</span>
+                  <button disabled={activeCut === cuts.length - 1} onClick={() => setActiveCut(i => i + 1)}>다음 ▶</button>
+                </div>
               </div>
             </div>
 
@@ -575,6 +823,47 @@ ${YEORI_RULESET}
             </div>
           </>
         )}
+
+        <div className={s.revisionPanel}>
+          <div className={s.revisionTitle}>💬 Claude에게 수정 요청</div>
+
+          <textarea
+            className={s.revisionInput}
+            rows={3}
+            placeholder={"예) CUT 2 대사 더 가볍고 재미있게 수정해줘\n예) 전체 이미지 프롬프트에 골드 목걸이 디테일 추가해줘\n예) CUT 3 나레이션 감성적으로 다시 써줘"}
+            value={revisionInput}
+            onChange={e => setRevisionInput(e.target.value)}
+          />
+
+          <div className={s.revisionActions}>
+            <label className={s.fileUploadBtn}>
+              📄 텍스트 파일 업로드
+              <input type="file" accept=".txt" hidden onChange={handleRevisionFileUpload} />
+            </label>
+            <button
+              className={s.revisionSendBtn}
+              onClick={handleRevision}
+              disabled={revisionLoading || !revisionInput.trim() || !cuts.length}
+            >
+              {revisionLoading
+                ? <><span className={s.spinner} />수정 중…</>
+                : 'Claude에게 전송 →'}
+            </button>
+          </div>
+
+          {revisionHistory.length > 0 && (
+            <div className={s.revisionHistory}>
+              <div className={s.revisionHistTitle}>수정 이력</div>
+              {revisionHistory.map((h, i) => (
+                <div key={h.id} className={s.revisionHistItem}>
+                  <span className={s.revisionHistNum}>#{i+1}</span>
+                  <span className={s.revisionHistReq}>{h.request}</span>
+                  <span className={s.revisionHistStatus}>✅</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {scriptRaw && (
           <details className={s.rawSection}>
