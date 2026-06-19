@@ -50,8 +50,8 @@ function parseCuts(raw, n) {
         if (!m) return ''
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
-        // 다음 필드 키워드 전까지 (샷 타입 포함)
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트)[:：]/)
+        // 다음 필드 키워드 전까지 (샷 타입, 컷 길이 포함)
+        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트|컷 길이)[:：]/)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -70,12 +70,13 @@ function parseCuts(raw, n) {
         .replace(/⚠️.*확인 필요/g, '')
         .trim()
 
-      // duration 자동 계산: 대사+나레이션 글자수 기반 (5자/초 + 여유 2초)
+      // duration: 파일에 "컷 길이:" 값이 있으면 우선 사용, 없으면 글자수 자동 계산
+      const fileDuration = parseInt(getField(/컷 길이[:：]\s*/))
       const text = (cur.dialogue || '') + (cur.narration || '')
       const chars = text.replace(/\s/g, '').length
-      cur.duration = chars > 0
-        ? Math.min(20, Math.max(4, Math.round(chars / 5) + 2))
-        : 5
+      cur.duration = (!isNaN(fileDuration) && fileDuration > 0)
+        ? fileDuration
+        : (chars > 0 ? Math.min(20, Math.max(4, Math.round(chars / 5) + 2)) : 5)
     }
   }
   if (cur) cuts.push(cur)
@@ -400,6 +401,65 @@ ${currentScript}
     }
   }
 
+  const downloadScript = () => {
+    if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
+    const lines = cuts.map(c => [
+      `[CUT ${c.no}]`,
+      `씬: ${c.scene || ''}`,
+      `액션: ${c.action || ''}`,
+      `캐릭터: ${c.character || '서여리'}`,
+      `대사: ${c.dialogue || '없음'}`,
+      `나레이션: ${c.narration || ''}`,
+      `샷 타입: ${c.shotType || 'FULLBODY'}`,
+      `이미지 프롬프트: ${c.imagePrompt || ''}`,
+      `컷 길이: ${c.duration || 5}`,
+    ].join('\n')).join('\n\n')
+    const header = `# EP${episode.number} ${episode.title || ''} 대본\n# 생성일: ${new Date().toLocaleString('ko-KR')}\n# ※ [CUT N] 형식과 필드명(씬:/액션:/캐릭터:/대사:/나레이션:/샷 타입:/이미지 프롬프트:/컷 길이:) 유지 필수\n\n`
+    const blob = new Blob([header + lines], { type: 'text/plain;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `ep${episode.number}_script.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleScriptFileUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target.result
+      const parsed = parseCuts(text, cuts.length)
+      if (!parsed.length) {
+        alert('파싱 실패: 형식을 확인해주세요.\n[CUT N] 블록과 필드명이 정확해야 합니다.')
+        return
+      }
+      let updatedCount = 0
+      parsed.forEach(revised => {
+        const original = cuts.find(c => c.no === revised.no)
+        if (!original) return
+        dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
+          scene:       revised.scene       || original.scene,
+          action:      revised.action      || original.action,
+          character:   revised.character   || original.character,
+          dialogue:    revised.dialogue    !== '' ? revised.dialogue : original.dialogue,
+          narration:   revised.narration   || original.narration,
+          shotType:    revised.shotType    || original.shotType,
+          imagePrompt: revised.imagePrompt || original.imagePrompt,
+          duration:    revised.duration    || original.duration,
+        }})
+        const hasContent = !!(revised.dialogue || revised.narration || revised.scene)
+        setGPoint(revised.no, 'g1', hasContent)
+        updatedCount++
+      })
+      setGData(loadGPoints())
+      alert(`✅ ${updatedCount}개 컷 반영 완료`)
+    }
+    reader.readAsText(file, 'utf-8')
+    e.target.value = ''
+  }
+
   const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
   const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
@@ -644,6 +704,15 @@ ${currentScript}
 
         {/* 버튼 3개 하단 고정 */}
         <div className={s.sideBottom}>
+          <div className={s.scriptFileRow}>
+            <button className={s.scriptDownBtn} onClick={downloadScript} disabled={!cuts.length}>
+              📥 대본 다운로드
+            </button>
+            <label className={s.scriptUpBtn}>
+              📤 수정본 업로드
+              <input type="file" accept=".txt" hidden onChange={handleScriptFileUpload} />
+            </label>
+          </div>
           <button className={s.genBtn} onClick={generateScript} disabled={loading}>
             {loading ? (
               <><span className={s.spinner} />{progress || '생성 중...'}</>
