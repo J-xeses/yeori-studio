@@ -1424,28 +1424,33 @@ async function findReferenceThumbs(page) {
 
   log('info', `[findReferenceThumbs] 탐색 이미지 수: ${imgPositions.length}`)
 
+  // 9:16 컷 이미지 썸네일(너비 ≈140px)을 제외하고 레퍼런스 이미지만 후보로 선택
+  // yeori-face ≈222px, yeori-closeup ≈448px → 너비 160px 초과 이미지만 호버
+  // (생성된 컷을 호버하면 "yeori-face" 툴팁이 나타나 오탐지 발생하는 문제 방지)
+  const candidates = imgPositions.filter(pos => pos.w > 160)
+  log('info', `[findReferenceThumbs] 레퍼런스 후보: ${candidates.length}개 (너비>160px)`)
+
   const result = { face: null, closeup: null }
 
-  for (const pos of imgPositions) {
+  for (const pos of candidates) {
     if (result.face && result.closeup) break
+
+    // 호버 전 기준 텍스트 스냅샷
+    const baseText = await page.evaluate(() => document.body.innerText.toLowerCase())
 
     await page.mouse.move(pos.x, pos.y)
     await sleep(600)
 
-    const appeared = await page.evaluate(() => {
-      function allText(root, parts = []) {
-        parts.push(root.innerText || root.textContent || '')
-        for (const el of root.querySelectorAll('*')) {
-          if (el.shadowRoot) allText(el.shadowRoot, parts)
-        }
-        return parts.join(' ').toLowerCase()
-      }
-      const text = allText(document.body)
+    const appeared = await page.evaluate((base) => {
+      const text = document.body.innerText.toLowerCase()
+      // 호버 전에 없던 텍스트가 새로 나타난 경우만 감지 (기존 DOM 오탐지 방지)
+      const newText = text.replace(base, '')
+      const checkText = newText || text
       return {
-        face: text.includes('yeori-face') || text.includes('yeori_face'),
-        closeup: text.includes('yeori-closeup') || text.includes('yeori_closeup')
+        face: checkText.includes('yeori-face') || checkText.includes('yeori_face'),
+        closeup: checkText.includes('yeori-closeup') || checkText.includes('yeori_closeup')
       }
-    })
+    }, baseText)
 
     if (appeared.face && !result.face) {
       result.face = pos
@@ -1619,6 +1624,77 @@ async function switchToImageMode(page) {
     }
     log('warn', `[imageMode] ${label} 탭 못 찾음`)
     return false
+  }
+
+  // 0. 모델 확인 → Nano Banana 2가 아니면 전환 (Pro는 일일 한도 있음)
+  // 트리거 버튼(하단 바)에는 "x2" 등 카운트가 붙어 있음 → /x[1-4]/ 포함 버튼 제외
+  // 팝업 내 모델 선택기는 "🍌 Nano Banana Pro ▼" 형태 (카운트 없음)
+  const modelBtn = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      const txt = (el.textContent || '').trim()
+      const r = el.getBoundingClientRect()
+      if (txt.includes('Banana') && !/x[1-4]/.test(txt) && r.width > 0 && r.height > 0)
+        return { txt: txt.slice(0, 60), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), isV2: /Banana\s*2/.test(txt) }
+    }
+    return null
+  })
+  if (modelBtn && !modelBtn.isV2) {
+    log('info', `[imageMode] 모델 전환: "${modelBtn.txt}" → Nano Banana 2`)
+    await page.mouse.click(modelBtn.x, modelBtn.y)
+    await sleep(900)
+    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_model_dropdown.png') })
+
+    const nb2 = await page.evaluate(() => {
+      function searchAll(root, results = []) {
+        for (const el of root.querySelectorAll('button, [role="option"], [role="menuitem"], [role="listbox"] *, li, span, div')) {
+          const txt = (el.textContent || '').trim()
+          if (/Banana/.test(txt)) {
+            const r = el.getBoundingClientRect()
+            if (r.width > 0 && r.height > 0)
+              results.push({ txt: txt.slice(0, 50), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) })
+          }
+        }
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) searchAll(el.shadowRoot, results)
+        }
+        return results
+      }
+      const all = searchAll(document)
+      // "Banana 2" 포함 + "Pro" 미포함 → 부모 컨테이너(Pro+2 혼재) 제외하고 정확한 옵션만 선택
+      const v2 = all.find(r => /Banana\s*2/.test(r.txt) && !r.txt.includes('Pro'))
+      return { v2: v2 || null, all: all.map(r => r.txt) }
+    })
+
+    log('info', `[imageMode] 모델 옵션 목록: ${JSON.stringify(nb2.all)}`)
+    if (nb2.v2) {
+      await page.mouse.click(nb2.v2.x, nb2.v2.y)
+      log('info', '[imageMode] Nano Banana 2 선택 완료 (querySelector)')
+      await sleep(600)
+    } else {
+      // 폴백: 드롭다운 행 높이 약 36px → Pro 아래 항목 클릭
+      log('info', `[imageMode] modelBtn 좌표: (${modelBtn.x}, ${modelBtn.y}) — 오프셋 탐색 중`)
+      let found = false
+      for (const offset of [36, 45, 55, 65]) {
+        const txt = await page.evaluate((x, y) => {
+          const el = document.elementFromPoint(x, y)
+          return el ? (el.textContent || '').trim().slice(0, 50) : null
+        }, modelBtn.x, modelBtn.y + offset)
+        log('info', `[imageMode] +${offset}px 위치 텍스트: "${txt}"`)
+        if (txt && /Banana\s*2/i.test(txt)) {
+          await page.mouse.click(modelBtn.x, modelBtn.y + offset)
+          log('info', `[imageMode] Nano Banana 2 선택 완료 (+${offset}px)`)
+          found = true
+          await sleep(600)
+          break
+        }
+      }
+      if (!found) {
+        log('warn', '[imageMode] Nano Banana 2 위치 탐색 실패 — Pro 유지')
+        await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_model_fail.png') })
+      }
+    }
+  } else if (modelBtn) {
+    log('info', '[imageMode] 모델 이미 Nano Banana 2')
   }
 
   // 1. '이미지' 탭
