@@ -1367,17 +1367,30 @@ async function findReferenceThumbs(page) {
   })
   await sleep(400)
 
-  // 화면에 보이는 img 요소 좌표 수집 (40px 이상, 화면 높이 90% 이내, 화면 폭 이내)
-  const imgPositions = await page.evaluate(() =>
-    [...document.querySelectorAll('img')]
-      .map(img => {
+  // 화면에 보이는 img 요소 좌표 수집 (shadow DOM 포함, 40px 이상)
+  const imgPositions = await page.evaluate(() => {
+    function collectVisible(root, list = []) {
+      for (const img of root.querySelectorAll('img')) {
         const r = img.getBoundingClientRect()
-        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), w: Math.round(r.width), h: Math.round(r.height) }
-      })
-      .filter(p => p.w >= 40 && p.h >= 40
-        && p.y > 0 && p.y < window.innerHeight * 0.9
-        && p.x > 0 && p.x < window.innerWidth)
-  )
+        const pos = {
+          x: Math.round(r.left + r.width / 2),
+          y: Math.round(r.top + r.height / 2),
+          w: Math.round(r.width),
+          h: Math.round(r.height)
+        }
+        if (pos.w >= 40 && pos.h >= 40
+          && pos.y > 0 && pos.y < window.innerHeight * 0.9
+          && pos.x > 0 && pos.x < window.innerWidth) {
+          list.push(pos)
+        }
+      }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) collectVisible(el.shadowRoot, list)
+      }
+      return list
+    }
+    return collectVisible(document)
+  })
 
   log('info', `[findReferenceThumbs] 탐색 이미지 수: ${imgPositions.length}`)
 
@@ -1390,7 +1403,14 @@ async function findReferenceThumbs(page) {
     await sleep(600)
 
     const appeared = await page.evaluate(() => {
-      const text = document.body.innerText.toLowerCase()
+      function allText(root, parts = []) {
+        parts.push(root.innerText || root.textContent || '')
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) allText(el.shadowRoot, parts)
+        }
+        return parts.join(' ').toLowerCase()
+      }
+      const text = allText(document.body)
       return {
         face: text.includes('yeori-face') || text.includes('yeori_face'),
         closeup: text.includes('yeori-closeup') || text.includes('yeori_closeup')
@@ -1455,6 +1475,7 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
 
   // 이미지 모드 전환 (9:16, x2)
   await switchToImageMode(page)
+  log('info', `[processCut] 모드 확인: 이미지 / ${type === 'longform' ? '16:9' : '9:16'} / x2`)
 
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
@@ -1474,7 +1495,6 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
     log('warn', '[processCut] yeori-closeup 썸네일 못 찾음 → 건너뜀')
   }
 
-  await setAspectRatio(page, type)
   await page.mouse.click(pos.x, pos.y)
   await sleep(300)
   await page.keyboard.press('End')
