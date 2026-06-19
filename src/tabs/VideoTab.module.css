@@ -54,8 +54,8 @@
 .liveTag { font-size: 10px; background: var(--red); color: #fff; padding: 2px 7px; border-radius: 4px; font-weight: 700; letter-spacing: .5px; }
 .canvas { display: block; width: 100%; height: auto; cursor: text; }
 .previewInputRow { padding: 10px 14px; border-top: 1px solid var(--border); }
-.previewInput { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-size: 13px; padding: 8px 10px; outline: none; transition: border-color .15s; }
-.previewInput:focus { border-color: var(--accent); }
+.previewInput { width: 100%; padding: 8px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-size: 12.5px; box-sizing: border-box; flex-shrink: 0; }
+.previewInput:focus { outline: none; border-color: var(--accent); }
 
 /* Scene list */
 .sceneList { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -71,3 +71,82 @@
 .sceneScene { font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sceneDial { font-size: 11.5px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
 .sceneDur { font-size: 12px; color: var(--accent-light); font-weight: 600; flex-shrink: 0; }
+
+/* ── NEW LAYOUT ── */
+
+.sidebar { width: 280px; min-width: 280px; display: flex; flex-direction: column; height: 100%; overflow: hidden; border-right: 1px solid var(--border); padding: 10px; gap: 8px; box-sizing: border-box; }
+
+/* 사이드바 압축 */
+.sidePanel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.sidePanelHeader { padding: 9px 14px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); cursor: pointer; display: flex; justify-content: space-between; user-select: none; }
+.sidePanelHeader:hover { color: var(--text); }
+.sidePanelBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.quickActions { display: flex; gap: 6px; flex-shrink: 0; }
+.qaBtn { flex: 1; padding: 7px 4px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.qaBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); }
+.qaBtn:disabled { opacity: .4; cursor: not-allowed; }
+.qaBtnDone { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: #4ade80; }
+.g4Count { font-size: 11px; color: var(--text-3); text-align: center; padding: 2px 0; flex-shrink: 0; }
+
+/* Cut side list */
+.cutSideList { flex: 1; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; }
+.cutSideListHeader { padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.cutSideItems { flex: 1; overflow-y: auto; }
+.cutSideItem { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+.cutSideItem:last-child { border-bottom: none; }
+.cutSideItem:hover { background: var(--bg-hover); }
+.cutSideItemActive { background: rgba(139,92,246,.1); border-left: 2px solid var(--accent); }
+.cutSideThumb { width: 48px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: #000; }
+.cutSideThumbEmpty { width: 48px; height: 28px; background: var(--bg-input); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; border: 1px solid var(--border); }
+.cutSideInfo { flex: 1; overflow: hidden; }
+.cutSideNo { font-size: 11.5px; font-weight: 700; color: var(--text); }
+.cutSideStatus { font-size: 10.5px; color: var(--text-3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Main area */
+.mainArea { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 14px; gap: 12px; }
+
+/* 메인 컨트롤 */
+.mainControls { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.ratioToggle { display: flex; gap: 4px; }
+.ratioBtn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.ratioBtnActive { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: var(--accent-light); }
+.overlayToggle { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-3); font-size: 11.5px; font-weight: 600; cursor: pointer; }
+.overlayOn { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: var(--accent-light); }
+
+/* 영상 래퍼 */
+.videoWrapper { position: relative; width: 100%; max-height: 65vh; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.mainVideo { width: 100%; height: 100%; object-fit: contain; display: block; }
+.mainVideoEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-3); font-size: 13px; width: 100%; padding: 40px 0; }
+.mainVideoEmptyIcon { font-size: 36px; }
+
+/* 자막 오버레이 */
+.subtitleOverlay { position: absolute; inset: 0; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8%; }
+.overlayCanvas { width: 100%; height: 100%; object-fit: contain; }
+
+/* Selected cut card */
+.selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.cutCardHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
+.cutCardTitle { font-size: 13px; font-weight: 700; color: var(--text); }
+.cutCardDur { font-size: 12px; color: var(--accent-light); font-weight: 600; }
+.cutCardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.cutCardFooter { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+
+/* Clip list */
+.clipList { display: flex; flex-direction: column; gap: 4px; }
+.clipItem { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; }
+.clipIdx { font-size: 13px; flex-shrink: 0; }
+.clipName { flex: 1; font-size: 11.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); }
+.clipDel { background: none; border: none; color: var(--text-3); cursor: pointer; font-size: 12px; padding: 0 4px; flex-shrink: 0; }
+.clipDel:hover { color: var(--red); }
+
+/* Upload / proxy buttons */
+.videoEmptyBtns { display: flex; gap: 8px; }
+.uploadBtn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer; flex: 1; }
+.uploadBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+.proxyBtn { padding: 8px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer; flex: 1; }
+.proxyBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+
+/* G4 button */
+.g4Btn { padding: 8px 20px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.g4Btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); }
+.g4Done { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: #4ade80; cursor: not-allowed; }
