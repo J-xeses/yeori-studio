@@ -22,13 +22,15 @@ function stripMeta(text) {
 
 export default function VideoTab() {
   const { state, dispatch } = useApp()
-  const { cuts, videoSettings, renderProgress } = state
+  const { cuts, videoSettings, renderProgress, episode } = state
   const { subtitleEnabled, font, fontSize, color, bgStyle } = videoSettings
   const canvasRef = useRef(null)
   const [previewText, setPreviewText] = useState('여기서 처음 써보는 이야기야.')
   const [previewEditing, setPreviewEditing] = useState(false)
   const [renderLog, setRenderLog] = useState([])
   const [g4Approved, setG4Approved] = useState({})
+  const [videoClips, setVideoClips] = useState({})
+  const [proxyStatus, setProxyStatus] = useState('idle')
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
 
@@ -141,6 +143,41 @@ export default function VideoTab() {
     setRenderLog(l => [...l, '⛔ 렌더링 중지됨'])
   }
 
+  const handleVideoUpload = (cutId, files) => {
+    const urls = Array.from(files).map(f => URL.createObjectURL(f))
+    setVideoClips(prev => ({ ...prev, [cutId]: [...(prev[cutId] || []), ...urls] }))
+  }
+
+  const loadFromProxy = async (cut) => {
+    const ep = episode.number
+    const padded = String(cut.no).padStart(2, '0')
+    for (const ext of ['mp4', 'mov', 'webm']) {
+      const url = `http://localhost:3001/downloads/video/ep${ep}/cut_${padded}.${ext}?t=${Date.now()}`
+      try {
+        const r = await fetch(url, { method: 'HEAD' })
+        if (r.ok) {
+          setVideoClips(prev => ({ ...prev, [cut.id]: [...new Set([...(prev[cut.id] || []), url])] }))
+          return
+        }
+      } catch {}
+    }
+    alert(`CUT ${cut.no} 영상 파일이 프록시에 없습니다.\n경로: C:\\yeori-studio\\downloads\\video\\ep${ep}\\cut_${padded}.mp4`)
+  }
+
+  const loadAllFromProxy = async () => {
+    setProxyStatus('loading')
+    for (const cut of cuts) await loadFromProxy(cut)
+    setProxyStatus('done')
+  }
+
+  const removeClip = (cutId, idx) => {
+    setVideoClips(prev => {
+      const arr = [...(prev[cutId] || [])]
+      arr.splice(idx, 1)
+      return { ...prev, [cutId]: arr }
+    })
+  }
+
   const totalDuration = cuts.reduce((a, c) => a + (c.duration || 5), 0)
 
   return (
@@ -213,6 +250,22 @@ export default function VideoTab() {
             </button>
           </div>
         </div>
+
+        {/* 영상 파일 관리 */}
+        <div className={s.panel}>
+          <div className={s.panelHeader}>영상 파일 관리</div>
+          <div className={s.exportBtns}>
+            <button className={`${s.exportBtn} ${s.yellow}`} onClick={loadAllFromProxy}
+              disabled={proxyStatus === 'loading'}>
+              {proxyStatus === 'loading' ? '불러오는 중…' : '🔄 전체 프록시 자동 불러오기'}
+            </button>
+            {proxyStatus === 'done' && (
+              <div style={{fontSize:11.5,color:'#4ade80',padding:'0 4px'}}>
+                ✅ 불러오기 완료 — 우측 컷 카드에서 영상 확인
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Right */}
@@ -233,34 +286,74 @@ export default function VideoTab() {
           </div>
         </div>
 
-        {/* Scene list */}
+        {/* Cut cards — sceneList 교체 */}
         <div className={s.sceneList}>
           <div className={s.sceneHeader}>
-            <span>장면 목록</span>
+            <span>컷 목록</span>
             <span className={s.totalDur}>총 {totalDuration}초</span>
           </div>
           <div className={s.scenes}>
-            {cuts.map(c => (
-              <div key={c.id} className={s.scene}>
-                <div className={s.sceneThumbnail}>
-                  <span className={s.sceneno}>CUT {c.no}</span>
+            {cuts.map(c => {
+              const clips = videoClips[c.id] || []
+              const circled = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩']
+              return (
+                <div key={c.id} className={s.cutCard}>
+                  <div className={s.cutCardHeader}>
+                    <span className={s.cutCardTitle}>CUT {String(c.no).padStart(2,'0')}  {c.scene || ''}</span>
+                    <span className={s.cutCardDur}>{c.duration || 5}s</span>
+                  </div>
+                  <div className={s.cutCardBody}>
+                    {clips.length > 0 ? (
+                      <>
+                        <video className={s.videoPlayer} src={clips[0]} controls />
+                        <div className={s.clipList}>
+                          {clips.map((url, idx) => (
+                            <div key={idx} className={s.clipItem}>
+                              <span className={s.clipIdx}>{circled[idx] ?? idx + 1}</span>
+                              <span className={s.clipName}>
+                                {url.startsWith('blob:') ? `클립 ${idx + 1}` : url.split('/').pop().split('?')[0]}
+                              </span>
+                              <button className={s.clipDel} onClick={() => removeClip(c.id, idx)}>삭제</button>
+                            </div>
+                          ))}
+                        </div>
+                        <label className={s.addClipBtn}>
+                          + 영상 추가
+                          <input type="file" accept=".mp4,.mov,.webm" multiple hidden
+                            onChange={e => handleVideoUpload(c.id, e.target.files)} />
+                        </label>
+                      </>
+                    ) : (
+                      <div className={s.videoEmpty}>
+                        <div className={s.videoEmptyIcon}>🎬</div>
+                        <div className={s.videoEmptyText}>영상 없음</div>
+                        <div className={s.videoEmptyBtns}>
+                          <label className={s.uploadBtn}>
+                            📁 로컬 파일 업로드
+                            <input type="file" accept=".mp4,.mov,.webm" multiple hidden
+                              onChange={e => handleVideoUpload(c.id, e.target.files)} />
+                          </label>
+                          <button className={s.proxyBtn} onClick={() => loadFromProxy(c)}>
+                            🔄 프록시에서 불러오기
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className={s.cutCardFooter}>
+                    <button
+                      className={`${s.g4Btn} ${g4Approved[c.id] ? s.g4Done : ''}`}
+                      disabled={g4Approved[c.id]}
+                      onClick={() => {
+                        setG4Approved(p => ({ ...p, [c.id]: true }))
+                        setGPoint(c.no, 'g4', true)
+                      }}>
+                      {g4Approved[c.id] ? 'G4 ✓' : 'G4 승인'}
+                    </button>
+                  </div>
                 </div>
-                <div className={s.sceneInfo}>
-                  <div className={s.sceneScene}>{c.scene || '씬 미입력'}</div>
-                  <div className={s.sceneDial}>{c.dialogue || c.narration || '(대사 없음)'}</div>
-                </div>
-                <div className={s.sceneDur}>{c.duration || 5}s</div>
-                <button
-                  className={`${s.g4Btn} ${g4Approved[c.id] ? s.g4Done : ''}`}
-                  disabled={g4Approved[c.id]}
-                  onClick={() => {
-                    setG4Approved(p => ({ ...p, [c.id]: true }))
-                    setGPoint(c.no, 'g4', true)
-                  }}>
-                  {g4Approved[c.id] ? 'G4 ✓' : 'G4 승인'}
-                </button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

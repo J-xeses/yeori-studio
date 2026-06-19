@@ -80,3 +80,28 @@
 .g4Btn:hover:not(:disabled) { background: rgba(249,115,22,.22); }
 .g4Done { background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); color: #4ade80; }
 .g4Done:disabled { opacity: 1; }
+
+/* Cut cards */
+.cutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+.cutCardHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
+.cutCardTitle { font-size: 13px; font-weight: 700; color: var(--text); }
+.cutCardDur { font-size: 12px; color: var(--accent-light); font-weight: 600; }
+.cutCardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.videoPlayer { width: 100%; max-height: 220px; border-radius: 7px; background: #000; display: block; }
+.videoEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 24px; background: var(--bg-input); border-radius: 8px; border: 1px dashed var(--border); }
+.videoEmptyIcon { font-size: 28px; opacity: .5; }
+.videoEmptyText { font-size: 12px; color: var(--text-3); }
+.videoEmptyBtns { display: flex; gap: 8px; margin-top: 4px; }
+.clipList { display: flex; flex-direction: column; gap: 5px; }
+.clipItem { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); background: var(--bg-input); border-radius: 6px; padding: 5px 10px; }
+.clipIdx { color: var(--text-3); font-size: 11px; min-width: 16px; }
+.clipName { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clipDel { font-size: 11px; color: var(--red); cursor: pointer; border: none; background: none; padding: 0 4px; flex-shrink: 0; }
+.clipDel:hover { opacity: .7; }
+.addClipBtn { font-size: 11.5px; padding: 5px 12px; border-radius: 6px; border: 1px dashed var(--border); background: transparent; color: var(--text-3); cursor: pointer; width: 100%; text-align: center; display: block; box-sizing: border-box; }
+.addClipBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+.cutCardFooter { display: flex; justify-content: flex-end; padding: 8px 14px; border-top: 1px solid var(--border); }
+.uploadBtn { font-size: 11.5px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); cursor: pointer; white-space: nowrap; }
+.uploadBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+.proxyBtn { font-size: 11.5px; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(139,92,246,.3); background: rgba(139,92,246,.1); color: var(--accent-light); cursor: pointer; white-space: nowrap; }
+.proxyBtn:hover { background: rgba(139,92,246,.2); }
