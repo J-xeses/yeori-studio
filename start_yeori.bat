@@ -12,47 +12,45 @@ echo   Yeori Studio -- Full System Start
 echo ============================================================
 echo.
 
-:: [1/3] Proxy server + Vite dev server
+:: [1/3] Proxy + Vite dev server
 echo [1/3] Starting proxy + Vite dev server...
 start "Yeori-Studio-Server" cmd /k "npm run studio"
 echo        Waiting 5 seconds for server init...
 timeout /t 5 /nobreak >nul
 
-:: [2/3] Chrome -- single window, all tabs
+:: [2/3] Chrome tabs
 echo [2/3] Opening Chrome tabs...
 netstat -ano | findstr ":9222" >nul 2>&1
-if %errorlevel% == 0 (
-    echo        Chrome already running -- adding tabs to existing window
-    start "" %CHROME% --user-data-dir=%PROFILE% "https://labs.google/fx/ko/tools/flow"
+if %errorlevel% == 0 goto :chrome_exists
+
+:: Chrome not running -- launch new maximized window with Flow tab first
+echo        Chrome not running -- launching new window...
+start "" %CHROME% --remote-debugging-port=9222 --user-data-dir=%PROFILE% --start-maximized "https://labs.google/fx/ko/tools/flow"
+timeout /t 3 /nobreak >nul
+goto :open_remaining_tabs
+
+:chrome_exists
+:: Chrome already running -- add Flow tab to existing window
+echo        Chrome already running -- adding tabs...
+start "" %CHROME% --user-data-dir=%PROFILE% "https://labs.google/fx/ko/tools/flow"
+timeout /t 1 /nobreak >nul
+
+:open_remaining_tabs
+:: Tab 2: A Creative Cutter
+if exist "%ACC_HTML%" (
+    start "" %CHROME% --user-data-dir=%PROFILE% "%ACC_HTML%"
     timeout /t 1 /nobreak >nul
-    if exist "%ACC_HTML%" (
-        start "" %CHROME% --user-data-dir=%PROFILE% "%ACC_HTML%"
-        timeout /t 1 /nobreak >nul
-    ) else (
-        echo        a_creative_cutter.html not found -- skip
-    )
-    start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:5173"
-    set CHROME_STATUS=New tabs added to existing window
 ) else (
-    echo        Launching Chrome with 3 tabs (maximized)...
-    if exist "%ACC_HTML%" (
-        start "" %CHROME% --remote-debugging-port=9222 --user-data-dir=%PROFILE% --start-maximized "https://labs.google/fx/ko/tools/flow" "%ACC_HTML%" "http://localhost:5173"
-    ) else (
-        start "" %CHROME% --remote-debugging-port=9222 --user-data-dir=%PROFILE% --start-maximized "https://labs.google/fx/ko/tools/flow" "http://localhost:5173"
-    )
-    set CHROME_STATUS=Started with 3 tabs (maximized)
+    echo        a_creative_cutter.html not found -- skip
 )
+:: Tab 3: Studio web app
+start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:5173"
 
 :: [3/3] Done
 echo.
 echo ============================================================
 echo   READY
 echo ============================================================
-echo   [v] Proxy server  (3001)  -- Started
-echo   [v] Studio app    (5173)  -- Started
-echo   [v] Chrome        (9222)  -- %CHROME_STATUS%
-echo ============================================================
-echo.
 echo   Tab 1  Flow    : https://labs.google/fx/ko/tools/flow
 echo   Tab 2  Cutter  : %ACC_HTML%
 echo   Tab 3  Studio  : http://localhost:5173
