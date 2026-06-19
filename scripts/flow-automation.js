@@ -374,6 +374,10 @@ async function main() {
     }
     await preFlightCheck(page)
 
+    // 이미지 모드 설정 — 루프 시작 전 한 번만 (매 컷마다 팝업 재오픈 시 탭 클릭 무시되는 문제 방지)
+    await switchToImageMode(page)
+    log('info', `모드 설정 완료: 이미지 / ${type === 'longform' ? '16:9' : '9:16'} / x2`)
+
     // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
@@ -1499,10 +1503,6 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
 
   log('step', `컷 생성 중… (${type === 'longform' ? '16:9' : '9:16'})`)
 
-  // 이미지 모드 전환 (9:16, x2)
-  await switchToImageMode(page)
-  log('info', `[processCut] 모드 확인: 이미지 / ${type === 'longform' ? '16:9' : '9:16'} / x2`)
-
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
@@ -1581,6 +1581,8 @@ async function switchToImageMode(page) {
       log('info', `[imageMode] 팝업 트리거 클릭 — "${popupInfo.txt}"`)
       await page.mouse.click(popupInfo.x, popupInfo.y)
       await sleep(1500)
+      // 팝업 열린 직후 스크린샷 — 실제 탭 구조 확인용
+      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_popup.png') })
     } else {
       log('warn', '[imageMode] 팝업 트리거 버튼 못 찾음')
       await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_fail.png') })
@@ -1590,31 +1592,45 @@ async function switchToImageMode(page) {
   }
   await sleep(400)
 
+  // 팝업 내 모든 flow_tab_slider_trigger 텍스트 덤프 (디버깅)
+  const allTabTexts = await page.evaluate(() =>
+    [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
+      .map(el => el.textContent.trim().slice(0, 30))
+  )
+  log('info', `[imageMode] 팝업 탭 목록: ${JSON.stringify(allTabTexts)}`)
+
   // 1. '이미지' 탭
-  await page.evaluate(() => {
+  const imgTabOk = await page.evaluate(() => {
     for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-      if ((el.textContent || '').trim().includes('이미지')) { el.click(); return }
+      if ((el.textContent || '').trim().includes('이미지') || (el.textContent || '').trim().toLowerCase().includes('image')) {
+        el.click(); return true
+      }
     }
+    return false
   })
-  log('info', '[imageMode] 이미지 탭 클릭')
+  log(imgTabOk ? 'info' : 'warn', `[imageMode] 이미지 탭 ${imgTabOk ? '클릭 성공' : '못 찾음'}`)
   await sleep(500)
 
   // 2. '9:16' 비율
-  await page.evaluate(() => {
+  const ratioOk = await page.evaluate(() => {
     for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-      if ((el.textContent || '').trim().endsWith('9:16')) { el.click(); return }
+      const txt = (el.textContent || '').trim()
+      if (txt.endsWith('9:16') || txt === '9:16') { el.click(); return true }
     }
+    return false
   })
-  log('info', '[imageMode] 9:16 비율 클릭')
+  log(ratioOk ? 'info' : 'warn', `[imageMode] 9:16 비율 ${ratioOk ? '클릭 성공' : '못 찾음'}`)
   await sleep(400)
 
   // 3. 'x2' 생성 개수
-  await page.evaluate(() => {
+  const countOk = await page.evaluate(() => {
     for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-      if ((el.textContent || '').trim() === 'x2') { el.click(); return }
+      const txt = (el.textContent || '').trim()
+      if (txt === 'x2') { el.click(); return true }
     }
+    return false
   })
-  log('info', '[imageMode] x2 개수 클릭')
+  log(countOk ? 'info' : 'warn', `[imageMode] x2 개수 ${countOk ? '클릭 성공' : '못 찾음'}`)
   await sleep(400)
 
   // 팝업 닫기
