@@ -50,13 +50,6 @@ export default function VideoTab() {
     const ctx = canvas.getContext('2d')
     const W = canvas.width, H = canvas.height
     ctx.clearRect(0, 0, W, H)
-    ctx.fillStyle = '#1a1030'
-    ctx.fillRect(0, 0, W, H)
-    ctx.strokeStyle = 'rgba(100,80,180,.15)'; ctx.lineWidth = 1
-    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke() }
-    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke() }
-    ctx.fillStyle = 'rgba(160,130,255,.25)'; ctx.font = '13px Apple SD Gothic Neo,sans-serif'; ctx.textAlign = 'center'
-    ctx.fillText('[ 자막 미리보기 ]', W/2, H/2 - 20)
     if (!subtitleEnabled) return
     const text = previewText
     const scale = H / 720
@@ -289,7 +282,12 @@ export default function VideoTab() {
         </div>
 
         <div className={s.videoWrapper}
-          style={{ aspectRatio: aspectRatio === '9:16' ? '9/16' : '16/9' }}>
+          style={{
+            aspectRatio: aspectRatio === '9:16' ? '9/16' : '16/9',
+            maxHeight: aspectRatio === '9:16' ? '70vh' : '55vh',
+            width: aspectRatio === '9:16' ? 'auto' : '100%',
+            margin: '0 auto',
+          }}>
           {(() => {
             const selCut = cuts.find(c => c.id === selectedCutId)
             const clips = selCut ? (videoClips[selCut.id] || []) : []
