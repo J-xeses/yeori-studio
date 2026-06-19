@@ -41,7 +41,6 @@ export default function StudioTab() {
   const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
   const [gData, setGData] = useState(() => loadGPoints())
   const fileRefs = useRef({})
-  const autoFlowTriggered = useRef(false)
 
   useEffect(() => {
     const check = async () => {
@@ -57,18 +56,6 @@ export default function StudioTab() {
     }
     check()
   }, [])
-
-  // G1 전체 승인 시 Flow 자동 실행 (항상 fresh gData 사용)
-  useEffect(() => {
-    if (autoFlowTriggered.current || !cuts.length) return
-    const gd = loadGPoints()
-    const allG1 = cuts.every(c => gd[`cut_${c.no}`]?.g1)
-    if (allG1) {
-      autoFlowTriggered.current = true
-      runFlow()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cuts.length])
 
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
 
@@ -517,8 +504,21 @@ export default function StudioTab() {
               <div className={s.cardHeader}>
                 <span className={s.cutBadge}>CUT {cut.no}</span>
                 <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
-                {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
-                {g2Approved[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
+                  {g2Approved[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
+                  <button
+                    onClick={() => {
+                      setImages(p => ({ ...p, [cut.id]: [] }))
+                      setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                    }}
+                    style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 4,
+                      background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)',
+                      color: '#fca5a5', cursor: 'pointer',
+                    }}
+                  >이미지 초기화</button>
+                </div>
               </div>
 
               <div className={s.promptSection}>

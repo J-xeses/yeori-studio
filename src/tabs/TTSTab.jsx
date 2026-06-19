@@ -90,6 +90,22 @@ export default function TTSTab() {
     }
   }
 
+  const restoreYeoriVoice = async () => {
+    setVoiceInput(DEFAULT_VOICE_ID)
+    dispatch({ type: 'SET_TTS', p: { voiceId: DEFAULT_VOICE_ID } })
+    try {
+      const res = await fetch('http://localhost:3001/api/update-env', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'ELEVENLABS_VOICE_ID', value: DEFAULT_VOICE_ID }),
+      })
+      if (!res.ok) throw new Error()
+      alert(`서여리 목소리로 복원 완료: ${DEFAULT_VOICE_ID}`)
+    } catch {
+      alert('.env.local 저장 실패 — 프록시 서버가 실행 중인지 확인하세요')
+    }
+  }
+
   const downloadAudio = (cutId, cutNo) => {
     const a = audios[cutId]; if (!a) return
     const link = document.createElement('a')
@@ -133,6 +149,16 @@ export default function TTSTab() {
       <div className={s.main}>
         <div className={s.panel}>
           <h3 className={s.panelTitle}>목소리 선택</h3>
+          {ttsSettings.voiceId === DEFAULT_VOICE_ID ? (
+            <div className={`${s.voiceBanner} ${s.voiceBannerOk}`}>
+              ✅ 서여리 목소리 적용 중
+            </div>
+          ) : (
+            <div className={`${s.voiceBanner} ${s.voiceBannerWarn}`}>
+              <span>⚠️ 서여리 목소리가 아닙니다</span>
+              <button className={s.restoreBtn} onClick={restoreYeoriVoice}>서여리로 복원</button>
+            </div>
+          )}
           <div className={s.voiceInputRow}>
             <input
               className={s.voiceInput}
