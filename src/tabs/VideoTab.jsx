@@ -219,14 +219,14 @@ export default function VideoTab() {
           <button
             className={`${s.qaBtn} ${allG4Done ? s.qaBtnDone : ''}`}
             onClick={() => {
+              const next = !allG4Done
               cuts.forEach(c => {
-                setG4Approved(p => ({ ...p, [c.id]: true }))
-                setGPoint(c.no, 'g4', true)
+                setG4Approved(p => ({ ...p, [c.id]: next }))
+                setGPoint(c.no, 'g4', next)
               })
             }}
-            disabled={allG4Done}
           >
-            {allG4Done ? 'G4 ✓' : 'G4 전체'}
+            {allG4Done ? '전체 취소' : 'G4 전체'}
           </button>
         </div>
 
@@ -306,15 +306,18 @@ export default function VideoTab() {
               <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
             </div>
           )}
-        </div>
 
-        {subtitleOverlay && (
-          <input
-            className={s.previewInput}
-            value={previewText}
-            onChange={e => setPreviewText(e.target.value)}
-            placeholder="자막 미리보기 텍스트 입력..." />
-        )}
+          {subtitleOverlay && (
+            <div className={s.subtitleControl}>
+              <input
+                className={s.subtitleInput}
+                value={previewText}
+                onChange={e => setPreviewText(e.target.value)}
+                placeholder="자막 텍스트 입력..."
+              />
+            </div>
+          )}
+        </div>
 
         {(() => {
           const selCut = cuts.find(c => c.id === selectedCutId)
@@ -354,12 +357,12 @@ export default function VideoTab() {
               <div className={s.cutCardFooter}>
                 <button
                   className={`${s.g4Btn} ${g4Approved[selCut.id] ? s.g4Done : ''}`}
-                  disabled={g4Approved[selCut.id]}
                   onClick={() => {
-                    setG4Approved(p => ({ ...p, [selCut.id]: true }))
-                    setGPoint(selCut.no, 'g4', true)
+                    const next = !g4Approved[selCut.id]
+                    setG4Approved(p => ({ ...p, [selCut.id]: next }))
+                    setGPoint(selCut.no, 'g4', next)
                   }}>
-                  {g4Approved[selCut.id] ? 'G4 ✓' : 'G4 승인'}
+                  {g4Approved[selCut.id] ? '✓ G4 취소' : 'G4 승인'}
                 </button>
               </div>
             </div>
