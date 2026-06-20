@@ -6,6 +6,12 @@ import s from './VideoTab.module.css'
 
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
 const BG_STYLES = ['반투명 직각 박스', '없음', '그림자']
+const CLIP_MAX_SEC = 8
+
+function estimateClipCount(targetSec) {
+  if (!targetSec || targetSec <= 0) return 1
+  return Math.ceil(targetSec / CLIP_MAX_SEC)
+}
 
 function secondsToSrt(sec) {
   const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), ss = sec % 60
@@ -371,6 +377,10 @@ export default function VideoTab() {
             {cuts.map(c => {
               const clips = videoClips[c.id] || []
               const isSelected = selectedCutId === c.id
+              const estCount = estimateClipCount(c.duration || 5)
+              const statusText = clips.length > 0
+                ? `영상 ${clips.length}개`
+                : (estCount > 1 ? `영상 없음 · 예상 ${estCount}개 필요` : '영상 없음')
               return (
                 <div key={c.id}
                   className={`${s.cutSideItem} ${isSelected ? s.cutSideItemActive : ''}`}
@@ -381,7 +391,7 @@ export default function VideoTab() {
                   <div className={s.cutSideInfo}>
                     <div className={s.cutSideNo}>CUT {String(c.no).padStart(2,'0')}</div>
                     <div className={s.cutSideStatus}>
-                      {clips.length > 0 ? `영상 ${clips.length}개` : '영상 없음'}
+                      {statusText}
                       {g4Approved[c.id] ? ' · ✓' : ''}
                     </div>
                   </div>
@@ -509,6 +519,15 @@ export default function VideoTab() {
               <div className={s.cutCardHeader}>
                 <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} — {selCut.scene || '씬 미입력'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {clips.length === 0 && (() => {
+                    const target = selCut.duration || 5
+                    const estCount = estimateClipCount(target)
+                    return estCount > 1 ? (
+                      <span className={s.clipEstimateBadge}>
+                        💡 예상 {estCount}개 클립 필요 (8초 기준)
+                      </span>
+                    ) : null
+                  })()}
                   {clips.length > 0 && (() => {
                     const target = selCut.duration || 5
                     const totalUsed = clips.reduce((sum, clip) => {
