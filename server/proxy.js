@@ -8,11 +8,20 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = (() => {
-  const candidates = ['C:\\yeori-studio', 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio']
+  const candidates = [
+    'C:\\yeori-studio',
+    'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio',
+    'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio',
+  ]
+  const isValidProjectRoot = (p) =>
+    fs.existsSync(p) &&
+    fs.existsSync(path.join(p, 'node_modules')) &&
+    fs.existsSync(path.join(p, 'package.json'))
+
   for (const p of candidates) {
-    if (fs.existsSync(p)) { console.log(`[proxy] ROOT: ${p}`); return p }
+    if (isValidProjectRoot(p)) { console.log(`[proxy] ROOT: ${p}`); return p }
   }
-  // 후보 없으면 소스코드 상위(개발환경) fallback
+  // 유효한 후보가 없으면 소스코드 상위(개발환경) fallback
   const fallback = path.resolve(__dirname, '..')
   console.log(`[proxy] ROOT fallback: ${fallback}`)
   return fallback
