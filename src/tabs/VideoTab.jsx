@@ -560,7 +560,6 @@ export default function VideoTab() {
                                 checked={clip.useFullDuration}
                                 onChange={e => updateClipTrim(selCut.id, idx, {
                                   useFullDuration: e.target.checked,
-                                  ...(e.target.checked ? { trimStart: 0, trimEnd: clip.duration || 0 } : {}),
                                 })} />
                               <span>전체 사용</span>
                             </label>
