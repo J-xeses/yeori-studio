@@ -49,12 +49,13 @@ const defaultState = {
   scriptRaw: '',
 
   ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0 },
-  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi' },
+  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70 },
   dashboard: { flowCredits: 100, klingCredits: 50, elevenlabsChars: 10000, monthBudget: 50000, spent: 0 },
   projectName: '새 프로젝트',
   savedAt: null,
+  videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null },
 }
 
 function reducer(state, action) {
@@ -211,6 +212,7 @@ function reducer(state, action) {
 
     case 'SET_TTS': return { ...state, ttsSettings: { ...state.ttsSettings, ...action.p } }
     case 'SET_VIDEO': return { ...state, videoSettings: { ...state.videoSettings, ...action.p } }
+    case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
     case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
     case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
     case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }

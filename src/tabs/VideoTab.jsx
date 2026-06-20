@@ -51,10 +51,18 @@ function wrapCanvasText(ctx, text, maxWidth) {
   return lines
 }
 
+function hexToRgba(hex, alpha) {
+  const h = (hex || '#000000').replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16)
+  const g = parseInt(h.substring(2, 4), 16)
+  const b = parseInt(h.substring(4, 6), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
 export default function VideoTab() {
   const { state, dispatch } = useApp()
   const { cuts, videoSettings, renderProgress, episode } = state
-  const { subtitleEnabled, font, fontSize, color, bgStyle } = videoSettings
+  const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor } = videoSettings
   const canvasRef = useRef(null)
   const textareaRef = useRef(null)
   const [previewText, setPreviewText] = useState('여기서 처음 써보는 이야기야.')
@@ -62,13 +70,22 @@ export default function VideoTab() {
 
   const [aspectRatio, setAspectRatio] = useState('9:16')
   const [subtitleOpen, setSubtitleOpen] = useState(false)
-  const [selectedCutId, setSelectedCutId] = useState(null)
-  const [videoClips, setVideoClips] = useState({})
-  const [g4Approved, setG4Approved] = useState({})
+  const { videoClips, g4Approved, selectedCutId } = state.videoTabState
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
+  const setVideoClips = (updater) => {
+    const next = typeof updater === 'function' ? updater(videoClips) : updater
+    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { videoClips: next } })
+  }
+  const setG4Approved = (updater) => {
+    const next = typeof updater === 'function' ? updater(g4Approved) : updater
+    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { g4Approved: next } })
+  }
+  const setSelectedCutId = (id) => {
+    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { selectedCutId: id } })
+  }
 
   useEffect(() => {
     if (cuts.length > 0 && !selectedCutId) {
@@ -98,9 +115,9 @@ export default function VideoTab() {
     const totalTextHeight = lineHeight * lines.length
 
     const subX = W / 2
-    const anchorY = subtitlePosition === 'top' ? H * 0.60
-                 : subtitlePosition === 'middle' ? H * 0.72
-                 : H * 0.85
+    const anchorY = subtitlePosition === 'top' ? H * 0.72
+                 : subtitlePosition === 'middle' ? H * 0.82
+                 : H * 0.90
 
     const boxBottom = anchorY
     let boxTop = boxBottom - totalTextHeight - padY * 2
@@ -112,7 +129,7 @@ export default function VideoTab() {
       let maxLineWidth = 0
       lines.forEach(l => { maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width) })
       const bw = maxLineWidth + padX * 2
-      ctx.fillStyle = 'rgba(0,0,0,.68)'
+      ctx.fillStyle = hexToRgba(boxColor || '#000000', 0.68)
       ctx.fillRect(subX - bw / 2, boxTop, bw, boxHeight)
     } else if (bgStyle === '그림자') {
       ctx.shadowColor = 'rgba(0,0,0,0.95)'
@@ -126,7 +143,7 @@ export default function VideoTab() {
       ctx.fillText(l, subX, lineY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, fontSize, color, bgStyle, previewText, subtitlePosition])
+  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -269,6 +286,18 @@ export default function VideoTab() {
                   {BG_STYLES.map(b => <option key={b}>{b}</option>)}
                 </select>
               </div>
+              {bgStyle === '반투명 직각 박스' && (
+                <div className={s.field}>
+                  <label>박스 색상</label>
+                  <div className={s.colorRow}>
+                    <input type="color" value={boxColor || '#000000'}
+                      disabled={!subtitleEnabled}
+                      onChange={e => set({ boxColor: e.target.value })}
+                      className={s.colorPicker} />
+                    <span className={s.colorVal}>{boxColor || '#000000'}</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -122,9 +122,9 @@
 
 /* 자막 미리보기 모드 */
 .subtitleDisplay { position: absolute; left: 0; right: 0; pointer-events: auto; cursor: pointer; height: 30%; display: flex; align-items: center; justify-content: center; }
-.pos_top { bottom: 40%; }
-.pos_middle { bottom: 28%; }
-.pos_bottom { bottom: 15%; }
+.pos_top { bottom: 24%; }
+.pos_middle { bottom: 14%; }
+.pos_bottom { bottom: 6%; }
 .overlayCanvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
 /* Selected cut card */
@@ -152,9 +152,9 @@
 
 /* 자막 수정 모드 */
 .subtitleEditBox { position: absolute; left: 5%; right: 5%; z-index: 20; background: rgba(0,0,0,.85); border: 1px solid rgba(139,92,246,.5); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,.5); }
-.subtitleEditBox.pos_top { bottom: 40%; }
-.subtitleEditBox.pos_middle { bottom: 28%; }
-.subtitleEditBox.pos_bottom { bottom: 15%; }
+.subtitleEditBox.pos_top { bottom: 24%; }
+.subtitleEditBox.pos_middle { bottom: 14%; }
+.subtitleEditBox.pos_bottom { bottom: 6%; }
 .subtitleEditInput { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.2); border-radius: 6px; color: #fff; font-size: 13px; padding: 8px 10px; resize: none; box-sizing: border-box; font-family: inherit; overflow: hidden; min-height: 36px; max-height: 140px; line-height: 1.4; }
 .subtitleEditInput:focus { outline: none; border-color: var(--accent); }
 .subtitleEditControls { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
