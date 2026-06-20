@@ -29,13 +29,12 @@ export default function VideoTab() {
   const [renderLog, setRenderLog] = useState([])
 
   const [aspectRatio, setAspectRatio] = useState('9:16')
-  const [subtitleOverlay, setSubtitleOverlay] = useState(true)
   const [subtitleOpen, setSubtitleOpen] = useState(false)
   const [selectedCutId, setSelectedCutId] = useState(null)
   const [videoClips, setVideoClips] = useState({})
   const [g4Approved, setG4Approved] = useState({})
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
-  const [subtitlePosition, setSubtitlePosition] = useState('bottom')
+  const [subtitlePosition, setSubtitlePosition] = useState('middle')
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
 
@@ -59,9 +58,9 @@ export default function VideoTab() {
     ctx.font = `${fSize}px "${font}",sans-serif`
     ctx.textAlign = 'center'
     const subX = W / 2
-    const subY = subtitlePosition === 'top' ? H * 0.15
-               : subtitlePosition === 'middle' ? H * 0.5
-               : H * 0.80
+    const subY = subtitlePosition === 'top' ? H * 0.60
+               : subtitlePosition === 'middle' ? H * 0.72
+               : H * 0.85
     const padX = 18, padY = 8
     if (bgStyle === '반투명 직각 박스') {
       const metrics = ctx.measureText(text)
@@ -79,7 +78,7 @@ export default function VideoTab() {
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
   }, [subtitleEnabled, font, fontSize, color, bgStyle, previewText, subtitlePosition])
 
-  useEffect(() => { drawPreview() }, [drawPreview])
+  useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
   const exportSRT = () => {
     let srt = '', t = 0
@@ -279,12 +278,12 @@ export default function VideoTab() {
             </button>
           </div>
           <button
-            className={`${s.overlayToggle} ${subtitleOverlay ? s.overlayOn : ''}`}
+            className={`${s.overlayToggle} ${subtitleEnabled ? s.overlayOn : ''}`}
             onClick={() => {
-              setSubtitleOverlay(p => !p)
-              if (subtitleOverlay) setSubtitleEditMode(false)
+              set({ subtitleEnabled: !subtitleEnabled })
+              if (subtitleEnabled) setSubtitleEditMode(false)
             }}>
-            💬 자막 {subtitleOverlay ? 'ON' : 'OFF'}
+            💬 자막 {subtitleEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -308,44 +307,46 @@ export default function VideoTab() {
                   </div>
                 )
             })()}
-          </div>
 
-          {subtitleOverlay && !subtitleEditMode && (
-            <div
-              className={`${s.subtitleDisplay} ${s[`pos_${subtitlePosition}`]}`}
-              onClick={() => setSubtitleEditMode(true)}
-              title="클릭하여 자막 수정"
-            >
-              <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
-            </div>
-          )}
-
-          {subtitleOverlay && subtitleEditMode && (
-            <div className={`${s.subtitleEditBox} ${s[`pos_${subtitlePosition}`]}`}>
-              <textarea
-                className={s.subtitleEditInput}
-                rows={2}
-                value={previewText}
-                onChange={e => setPreviewText(e.target.value)}
-                autoFocus
-                placeholder="자막 텍스트 입력..."
-              />
-              <div className={s.subtitleEditControls}>
-                <div className={s.posSelector}>
-                  {['top','middle','bottom'].map(pos => (
-                    <button key={pos}
-                      className={`${s.posBtn} ${subtitlePosition === pos ? s.posBtnActive : ''}`}
-                      onClick={() => setSubtitlePosition(pos)}>
-                      {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
-                    </button>
-                  ))}
-                </div>
-                <button className={s.subtitleDoneBtn} onClick={() => setSubtitleEditMode(false)}>
-                  완료
-                </button>
+            {subtitleEnabled && !subtitleEditMode && (
+              <div
+                className={`${s.subtitleDisplay} ${s[`pos_${subtitlePosition}`]}`}
+                onClick={() => setSubtitleEditMode(true)}
+                title="클릭하여 자막 수정"
+              >
+                <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
               </div>
-            </div>
-          )}
+            )}
+
+            {subtitleEnabled && subtitleEditMode && (
+              <div
+                className={`${s.subtitleEditBox} ${s[`pos_${subtitlePosition}`]}`}
+                onClick={(e) => e.stopPropagation()}>
+                <textarea
+                  className={s.subtitleEditInput}
+                  rows={2}
+                  value={previewText}
+                  onChange={e => setPreviewText(e.target.value)}
+                  autoFocus
+                  placeholder="자막 텍스트 입력..."
+                />
+                <div className={s.subtitleEditControls}>
+                  <div className={s.posSelector}>
+                    {['top','middle','bottom'].map(pos => (
+                      <button key={pos}
+                        className={`${s.posBtn} ${subtitlePosition === pos ? s.posBtnActive : ''}`}
+                        onClick={(e) => { e.stopPropagation(); setSubtitlePosition(pos) }}>
+                        {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
+                      </button>
+                    ))}
+                  </div>
+                  <button className={s.subtitleDoneBtn} onClick={(e) => { e.stopPropagation(); setSubtitleEditMode(false) }}>
+                    완료
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {(() => {
