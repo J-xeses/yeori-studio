@@ -72,6 +72,7 @@ export default function VideoTab() {
   const { videoClips = {}, g4Approved = {}, selectedCutId = null, subtitles = {} } = state.videoTabState || {}
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
+  const [selectedClipIdx, setSelectedClipIdx] = useState(0)
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
   const setVideoClips = (updater) => {
@@ -104,6 +105,8 @@ export default function VideoTab() {
       setSelectedCutId(cuts[0].id)
     }
   }, [cuts])
+
+  useEffect(() => { setSelectedClipIdx(0) }, [selectedCutId])
 
   const allG4Done = cuts.length > 0 && cuts.every(c => g4Approved[c.id])
 
@@ -443,8 +446,9 @@ export default function VideoTab() {
             {(() => {
               const selCut = cuts.find(c => c.id === selectedCutId)
               const clips = selCut ? (videoClips[selCut.id] || []) : []
-              return clips[0]
-                ? <video src={clips[0]?.url} controls className={s.mainVideo} />
+              const activeClip = clips[selectedClipIdx] || clips[0]
+              return activeClip
+                ? <video key={activeClip.url} src={activeClip.url} controls className={s.mainVideo} />
                 : (
                   <div className={s.mainVideoEmpty}>
                     <span className={s.mainVideoEmptyIcon}>🎬</span>
@@ -518,7 +522,16 @@ export default function VideoTab() {
                       </span>
                     )
                   })()}
-                  <span className={s.cutCardDur}>{selCut.duration || 5}s</span>
+                  <div className={s.cutCardDurEdit}>
+                    <label>목표</label>
+                    <input type="number" min="1" max="120" step="0.5"
+                      value={selCut.duration || 5}
+                      onChange={e => {
+                        const newDur = parseFloat(e.target.value) || 5
+                        dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { duration: newDur } })
+                      }} />
+                    <span>s</span>
+                  </div>
                 </div>
               </div>
               <div className={s.cutCardBody}>
@@ -529,14 +542,19 @@ export default function VideoTab() {
                         ? clip.duration
                         : (clip.trimEnd - clip.trimStart)
                       return (
-                        <div key={idx} className={s.clipTrimItem}>
+                        <div key={idx}
+                          className={`${s.clipTrimItem} ${selectedClipIdx === idx ? s.clipTrimItemActive : ''}`}
+                          onClick={() => setSelectedClipIdx(idx)}>
                           <div className={s.clipTrimHeader}>
                             <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx+1}</span>
-                            <span className={s.clipName}>{clip.name || `로컬파일 ${idx+1}`}</span>
+                            <span className={s.clipName}>
+                              {clip.name || `로컬파일 ${idx+1}`}
+                              <span className={s.clipLabel}> ({String.fromCharCode(97 + idx)})</span>
+                            </span>
                             <span className={s.clipDurLabel}>{clip.duration != null ? `${clip.duration}s` : '?'}</span>
-                            <button className={s.clipDel} onClick={() => removeClip(selCut.id, idx)}>✕</button>
+                            <button className={s.clipDel} onClick={e => { e.stopPropagation(); removeClip(selCut.id, idx) }}>✕</button>
                           </div>
-                          <div className={s.clipTrimBody}>
+                          <div className={s.clipTrimBody} onClick={e => e.stopPropagation()}>
                             <label className={s.check}>
                               <input type="checkbox"
                                 checked={clip.useFullDuration}
