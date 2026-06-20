@@ -232,7 +232,19 @@ export default function VideoTab() {
       try {
         const r = await fetch(url, { method: 'HEAD' })
         if (r.ok) {
-          setVideoClips(p => ({ ...p, [cut.id]: [...new Set([...(p[cut.id] || []), url])] }))
+          const name = `cut_${padded}.${ext}`
+          const vid = document.createElement('video')
+          vid.preload = 'metadata'
+          vid.onloadedmetadata = () => {
+            const dur = Math.round(vid.duration * 100) / 100
+            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true }
+            setVideoClips(p => {
+              const existing = p[cut.id] || []
+              if (existing.some(c => c.url === url)) return p
+              return { ...p, [cut.id]: [...existing, obj] }
+            })
+          }
+          vid.src = url
           return
         }
       } catch {}
@@ -245,14 +257,31 @@ export default function VideoTab() {
   }
 
   const handleVideoUpload = (cutId, files) => {
-    const urls = Array.from(files).map(f => URL.createObjectURL(f))
-    setVideoClips(p => ({ ...p, [cutId]: [...(p[cutId] || []), ...urls] }))
+    Array.from(files).forEach(f => {
+      const url = URL.createObjectURL(f)
+      const vid = document.createElement('video')
+      vid.preload = 'metadata'
+      vid.onloadedmetadata = () => {
+        const dur = Math.round(vid.duration * 100) / 100
+        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true }
+        setVideoClips(p => ({ ...p, [cutId]: [...(p[cutId] || []), obj] }))
+      }
+      vid.src = url
+    })
   }
 
   const removeClip = (cutId, idx) => {
     setVideoClips(p => {
       const arr = [...(p[cutId] || [])]
       arr.splice(idx, 1)
+      return { ...p, [cutId]: arr }
+    })
+  }
+
+  const updateClipTrim = (cutId, idx, patch) => {
+    setVideoClips(p => {
+      const arr = [...(p[cutId] || [])]
+      arr[idx] = { ...arr[idx], ...patch }
       return { ...p, [cutId]: arr }
     })
   }
@@ -344,7 +373,7 @@ export default function VideoTab() {
                   className={`${s.cutSideItem} ${isSelected ? s.cutSideItemActive : ''}`}
                   onClick={() => setSelectedCutId(c.id)}>
                   {clips[0]
-                    ? <video src={clips[0]} className={s.cutSideThumb} muted />
+                    ? <video src={clips[0]?.url} className={s.cutSideThumb} muted />
                     : <div className={s.cutSideThumbEmpty}>🎬</div>}
                   <div className={s.cutSideInfo}>
                     <div className={s.cutSideNo}>CUT {String(c.no).padStart(2,'0')}</div>
@@ -415,7 +444,7 @@ export default function VideoTab() {
               const selCut = cuts.find(c => c.id === selectedCutId)
               const clips = selCut ? (videoClips[selCut.id] || []) : []
               return clips[0]
-                ? <video src={clips[0]} controls className={s.mainVideo} />
+                ? <video src={clips[0]?.url} controls className={s.mainVideo} />
                 : (
                   <div className={s.mainVideoEmpty}>
                     <span className={s.mainVideoEmptyIcon}>🎬</span>
@@ -475,20 +504,71 @@ export default function VideoTab() {
             <div className={s.selectedCutCard}>
               <div className={s.cutCardHeader}>
                 <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} — {selCut.scene || '씬 미입력'}</span>
-                <span className={s.cutCardDur}>{selCut.duration || 5}s</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {clips.length > 0 && (() => {
+                    const target = selCut.duration || 5
+                    const totalUsed = clips.reduce((sum, clip) => {
+                      const used = clip.useFullDuration ? clip.duration : (clip.trimEnd - clip.trimStart)
+                      return sum + (used || 0)
+                    }, 0)
+                    const isOk = Math.abs(totalUsed - target) <= 1
+                    return (
+                      <span className={`${s.clipTotalLen} ${isOk ? s.clipTotalLenOk : s.clipTotalLenWarn}`}>
+                        합계 {totalUsed.toFixed(1)}s / 목표 {target}s
+                      </span>
+                    )
+                  })()}
+                  <span className={s.cutCardDur}>{selCut.duration || 5}s</span>
+                </div>
               </div>
               <div className={s.cutCardBody}>
                 {clips.length > 0 && (
                   <div className={s.clipList}>
-                    {clips.map((url, idx) => (
-                      <div key={idx} className={s.clipItem}>
-                        <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx+1}</span>
-                        <span className={s.clipName}>
-                          {url.includes('localhost') ? `cut_${String(selCut.no).padStart(2,'0')}.mp4` : `로컬파일 ${idx+1}`}
-                        </span>
-                        <button className={s.clipDel} onClick={() => removeClip(selCut.id, idx)}>✕</button>
-                      </div>
-                    ))}
+                    {clips.map((clip, idx) => {
+                      const usedSec = clip.useFullDuration
+                        ? clip.duration
+                        : (clip.trimEnd - clip.trimStart)
+                      return (
+                        <div key={idx} className={s.clipTrimItem}>
+                          <div className={s.clipTrimHeader}>
+                            <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx+1}</span>
+                            <span className={s.clipName}>{clip.name || `로컬파일 ${idx+1}`}</span>
+                            <span className={s.clipDurLabel}>{clip.duration != null ? `${clip.duration}s` : '?'}</span>
+                            <button className={s.clipDel} onClick={() => removeClip(selCut.id, idx)}>✕</button>
+                          </div>
+                          <div className={s.clipTrimBody}>
+                            <label className={s.check}>
+                              <input type="checkbox"
+                                checked={clip.useFullDuration}
+                                onChange={e => updateClipTrim(selCut.id, idx, {
+                                  useFullDuration: e.target.checked,
+                                  ...(e.target.checked ? { trimStart: 0, trimEnd: clip.duration || 0 } : {}),
+                                })} />
+                              <span>전체 사용</span>
+                            </label>
+                            {!clip.useFullDuration && (
+                              <div className={s.trimInputs}>
+                                <div className={s.trimField}>
+                                  <label>시작</label>
+                                  <input type="number" min={0} max={clip.duration || 9999} step={0.1}
+                                    value={clip.trimStart}
+                                    onChange={e => updateClipTrim(selCut.id, idx, { trimStart: parseFloat(e.target.value) || 0 })} />
+                                  <span>s</span>
+                                </div>
+                                <div className={s.trimField}>
+                                  <label>종료</label>
+                                  <input type="number" min={0} max={clip.duration || 9999} step={0.1}
+                                    value={clip.trimEnd}
+                                    onChange={e => updateClipTrim(selCut.id, idx, { trimEnd: parseFloat(e.target.value) || 0 })} />
+                                  <span>s</span>
+                                </div>
+                              </div>
+                            )}
+                            <span className={s.clipUsedLen}>사용: {usedSec != null ? usedSec.toFixed(1) : '?'}s</span>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
                 <div className={s.videoEmptyBtns}>
