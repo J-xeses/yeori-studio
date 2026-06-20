@@ -115,13 +115,17 @@
 
 /* 영상 래퍼 */
 .videoWrapper { position: relative; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.videoInner { width: 100%; height: 100%; position: relative; }
 .mainVideo { width: 100%; height: 100%; object-fit: contain; display: block; }
 .mainVideoEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-3); font-size: 13px; width: 100%; padding: 40px 0; }
 .mainVideoEmptyIcon { font-size: 36px; }
 
-/* 자막 오버레이 */
-.subtitleOverlay { position: absolute; bottom: 0; left: 0; right: 0; height: 35%; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6%; }
-.overlayCanvas { width: 100%; height: 100%; object-fit: contain; }
+/* 자막 미리보기 모드 */
+.subtitleDisplay { position: absolute; left: 0; right: 0; pointer-events: auto; cursor: pointer; height: 30%; display: flex; align-items: center; justify-content: center; }
+.pos_top { top: 32px; align-items: flex-start; }
+.pos_middle { top: 35%; align-items: center; }
+.pos_bottom { bottom: 56px; align-items: flex-end; }
+.overlayCanvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
 /* Selected cut card */
 .selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
@@ -146,11 +150,19 @@
 .proxyBtn { padding: 8px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; font-weight: 600; color: var(--text-2); cursor: pointer; flex: 1; }
 .proxyBtn:hover { border-color: var(--accent); color: var(--accent-light); }
 
-/* 자막 컨트롤 (videoWrapper 내부 절대 위치) */
-.subtitleControl { position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%); width: 90%; z-index: 10; }
-.subtitleInput { width: 100%; padding: 6px 12px; background: rgba(0,0,0,.6); border: 1px solid rgba(255,255,255,.2); border-radius: 6px; color: #fff; font-size: 12.5px; box-sizing: border-box; backdrop-filter: blur(4px); }
-.subtitleInput:focus { outline: none; border-color: var(--accent); }
-.subtitleInput::placeholder { color: rgba(255,255,255,.4); }
+/* 자막 수정 모드 */
+.subtitleEditBox { position: absolute; left: 5%; right: 5%; z-index: 20; background: rgba(0,0,0,.85); border: 1px solid rgba(139,92,246,.5); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+.subtitleEditBox.pos_top { top: 32px; }
+.subtitleEditBox.pos_middle { top: 35%; }
+.subtitleEditBox.pos_bottom { bottom: 56px; }
+.subtitleEditInput { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.2); border-radius: 6px; color: #fff; font-size: 13px; padding: 8px 10px; resize: none; box-sizing: border-box; font-family: inherit; }
+.subtitleEditInput:focus { outline: none; border-color: var(--accent); }
+.subtitleEditControls { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.posSelector { display: flex; gap: 4px; }
+.posBtn { padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.05); color: rgba(255,255,255,.7); font-size: 11px; cursor: pointer; }
+.posBtnActive { background: rgba(139,92,246,.3); border-color: var(--accent); color: #fff; }
+.subtitleDoneBtn { padding: 5px 16px; border-radius: 6px; border: none; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+.subtitleDoneBtn:hover { opacity: .85; }
 
 /* G4 button */
 .g4Btn { padding: 8px 20px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 12.5px; font-weight: 700; cursor: pointer; }
