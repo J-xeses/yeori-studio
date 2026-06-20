@@ -299,6 +299,13 @@ function migrateState(saved, init) {
     saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
   saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
   if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
+  saved.videoTabState = {
+    videoClips: {},
+    g4Approved: {},
+    selectedCutId: null,
+    subtitles: {},
+    ...(saved.videoTabState || {}),
+  }
   return { ...init, ...saved }
 }
 

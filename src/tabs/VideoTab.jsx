@@ -69,7 +69,7 @@ export default function VideoTab() {
 
   const [aspectRatio, setAspectRatio] = useState('9:16')
   const [subtitleOpen, setSubtitleOpen] = useState(false)
-  const { videoClips, g4Approved, selectedCutId, subtitles } = state.videoTabState
+  const { videoClips = {}, g4Approved = {}, selectedCutId = null, subtitles = {} } = state.videoTabState || {}
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
 
