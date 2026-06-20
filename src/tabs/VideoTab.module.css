@@ -155,7 +155,7 @@
 .subtitleEditBox.pos_top { bottom: 40%; }
 .subtitleEditBox.pos_middle { bottom: 28%; }
 .subtitleEditBox.pos_bottom { bottom: 15%; }
-.subtitleEditInput { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.2); border-radius: 6px; color: #fff; font-size: 13px; padding: 8px 10px; resize: none; box-sizing: border-box; font-family: inherit; }
+.subtitleEditInput { width: 100%; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.2); border-radius: 6px; color: #fff; font-size: 13px; padding: 8px 10px; resize: none; box-sizing: border-box; font-family: inherit; overflow: hidden; min-height: 36px; max-height: 140px; line-height: 1.4; }
 .subtitleEditInput:focus { outline: none; border-color: var(--accent); }
 .subtitleEditControls { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
 .posSelector { display: flex; gap: 4px; }

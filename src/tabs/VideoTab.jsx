@@ -20,11 +20,43 @@ function stripMeta(text) {
     .trim()
 }
 
+function wrapCanvasText(ctx, text, maxWidth) {
+  const words = text.split(' ')
+  const lines = []
+  let line = ''
+  for (const word of words) {
+    const test = line ? line + ' ' + word : word
+    if (ctx.measureText(test).width > maxWidth && line) {
+      if (ctx.measureText(word).width > maxWidth) {
+        let charLine = line
+        for (const ch of word) {
+          const t2 = charLine + ch
+          if (ctx.measureText(t2).width > maxWidth && charLine) {
+            lines.push(charLine)
+            charLine = ch
+          } else {
+            charLine = t2
+          }
+        }
+        line = charLine
+      } else {
+        lines.push(line)
+        line = word
+      }
+    } else {
+      line = test
+    }
+  }
+  if (line) lines.push(line)
+  return lines
+}
+
 export default function VideoTab() {
   const { state, dispatch } = useApp()
   const { cuts, videoSettings, renderProgress, episode } = state
   const { subtitleEnabled, font, fontSize, color, bgStyle } = videoSettings
   const canvasRef = useRef(null)
+  const textareaRef = useRef(null)
   const [previewText, setPreviewText] = useState('여기서 처음 써보는 이야기야.')
   const [renderLog, setRenderLog] = useState([])
 
@@ -55,30 +87,55 @@ export default function VideoTab() {
     const text = previewText
     const scale = H / 720
     const fSize = Math.max(10, Math.round(fontSize * scale))
+    const padX = 18, padY = 10, lineGap = 1.3
+
     ctx.font = `${fSize}px "${font}",sans-serif`
     ctx.textAlign = 'center'
+
+    const maxTextWidth = W * 0.86
+    const lines = wrapCanvasText(ctx, text, maxTextWidth)
+    const lineHeight = fSize * lineGap
+    const totalTextHeight = lineHeight * lines.length
+
     const subX = W / 2
-    const subY = subtitlePosition === 'top' ? H * 0.60
-               : subtitlePosition === 'middle' ? H * 0.72
-               : H * 0.85
-    const padX = 18, padY = 8
+    const anchorY = subtitlePosition === 'top' ? H * 0.60
+                 : subtitlePosition === 'middle' ? H * 0.72
+                 : H * 0.85
+
+    const boxBottom = anchorY
+    let boxTop = boxBottom - totalTextHeight - padY * 2
+    const boxHeight = totalTextHeight + padY * 2
+
+    boxTop = Math.max(boxTop, 8)
+
     if (bgStyle === '반투명 직각 박스') {
-      const metrics = ctx.measureText(text)
-      const bw = metrics.width + padX * 2
-      const bh = fSize + padY * 2
+      let maxLineWidth = 0
+      lines.forEach(l => { maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width) })
+      const bw = maxLineWidth + padX * 2
       ctx.fillStyle = 'rgba(0,0,0,.68)'
-      ctx.fillRect(subX - bw / 2, subY - fSize - padY, bw, bh)
+      ctx.fillRect(subX - bw / 2, boxTop, bw, boxHeight)
     } else if (bgStyle === '그림자') {
       ctx.shadowColor = 'rgba(0,0,0,0.95)'
       ctx.shadowBlur = Math.max(4, Math.round(fSize * 0.28))
       ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1
     }
+
     ctx.fillStyle = color
-    ctx.fillText(text, subX, subY)
+    lines.forEach((l, i) => {
+      const lineY = boxTop + padY + lineHeight * (i + 1) - (lineHeight - fSize) / 2
+      ctx.fillText(l, subX, lineY)
+    })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
   }, [subtitleEnabled, font, fontSize, color, bgStyle, previewText, subtitlePosition])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [previewText, subtitleEditMode])
 
   const exportSRT = () => {
     let srt = '', t = 0
@@ -323,12 +380,14 @@ export default function VideoTab() {
                 className={`${s.subtitleEditBox} ${s[`pos_${subtitlePosition}`]}`}
                 onClick={(e) => e.stopPropagation()}>
                 <textarea
+                  ref={textareaRef}
                   className={s.subtitleEditInput}
-                  rows={2}
+                  rows={1}
                   value={previewText}
                   onChange={e => setPreviewText(e.target.value)}
                   autoFocus
-                  placeholder="자막 텍스트 입력..."
+                  placeholder="자막 텍스트 입력... (Enter로 줄바꿈 가능)"
+                  onClick={(e) => e.stopPropagation()}
                 />
                 <div className={s.subtitleEditControls}>
                   <div className={s.posSelector}>
