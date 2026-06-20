@@ -5,6 +5,15 @@ import s from './StudioTab.module.css'
 
 const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
 
+function extractFlowProjectId(url) {
+  if (!url) return null
+  const trimmed = url.trim()
+  const match = trimmed.match(/project\/([0-9a-fA-F-]{36})/)
+  if (match) return match[1]
+  if (/^[0-9a-fA-F-]{36}$/.test(trimmed)) return trimmed
+  return null
+}
+
 // ── Gemini 이미지 생성 (Vercel 프록시 경유) ───────────────────
 // 한국 네트워크 차단 우회: 브라우저 → Vercel(미국) → Google API
 async function generateImageWithGemini(prompt, apiKey) {
@@ -39,6 +48,8 @@ export default function StudioTab() {
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
   const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
+  const [projectUrlInput, setProjectUrlInput] = useState('')
+  const [projectUrlSaved, setProjectUrlSaved] = useState(false)
   const [gData, setGData] = useState(() => loadGPoints())
   const fileRefs = useRef({})
 
@@ -123,7 +134,11 @@ export default function StudioTab() {
       const res = await fetch('http://localhost:3001/api/run-flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ep: episode.number, prompts }),
+        body: JSON.stringify({
+          ep: episode.number,
+          prompts,
+          projectId: extractFlowProjectId(projectUrlInput) || undefined,
+        }),
       })
       if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
 
@@ -203,7 +218,11 @@ export default function StudioTab() {
       const res = await fetch('http://localhost:3001/api/run-flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ep: episode.number, prompts }),
+        body: JSON.stringify({
+          ep: episode.number,
+          prompts,
+          projectId: extractFlowProjectId(projectUrlInput) || undefined,
+        }),
       })
       if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
 
@@ -379,6 +398,29 @@ export default function StudioTab() {
             {flowRunning ? '🔄 Flow 실행 중…' : '🤖 전체 이미지 자동 생성'}
           </button>
         </div>
+      </div>
+
+      {/* Flow 프로젝트 URL 등록 */}
+      <div className={s.flowUrlPanel}>
+        <div className={s.flowUrlLabel}>🔗 Flow 프로젝트 연결</div>
+        <div className={s.flowUrlRow}>
+          <input
+            className={s.flowUrlInput}
+            type="text"
+            placeholder="Flow 프로젝트 URL 또는 ID 붙여넣기 (예: labs.google/fx/.../project/xxxx-xxxx...)"
+            value={projectUrlInput}
+            onChange={e => { setProjectUrlInput(e.target.value); setProjectUrlSaved(false) }}
+          />
+          <button
+            className={s.flowUrlSaveBtn}
+            disabled={!extractFlowProjectId(projectUrlInput)}
+            onClick={() => setProjectUrlSaved(true)}>
+            {projectUrlSaved ? '✅ 등록됨' : '등록'}
+          </button>
+        </div>
+        {projectUrlInput && !extractFlowProjectId(projectUrlInput) && (
+          <div className={s.flowUrlError}>올바른 Flow 프로젝트 URL 또는 ID 형식이 아닙니다.</div>
+        )}
       </div>
 
       {/* 프록시 서버 연결 경고 */}
