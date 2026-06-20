@@ -164,6 +164,16 @@
 .subtitleDoneBtn { padding: 5px 16px; border-radius: 6px; border: none; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
 .subtitleDoneBtn:hover { opacity: .85; }
 
+/* 자막 모니터링 리스트 */
+.subtitleMonitor { flex-shrink: 0; max-height: 180px; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 8px; }
+.subtitleMonitorHeader { padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--text-2); background: var(--bg-input); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.subtitleMonitorList { overflow-y: auto; flex: 1; }
+.subMonItem { display: flex; gap: 6px; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.subMonItem:hover { background: var(--bg-hover); }
+.subMonItemActive { background: rgba(139,92,246,.12); border-left: 2px solid var(--accent); }
+.subMonNo { font-size: 10.5px; color: var(--text-3); font-weight: 700; flex-shrink: 0; padding-top: 1px; }
+.subMonText { font-size: 11px; color: var(--text-2); line-height: 1.4; word-break: keep-all; }
+
 /* G4 button */
 .g4Btn { padding: 8px 20px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 12.5px; font-weight: 700; cursor: pointer; }
 .g4Btn:hover { border-color: var(--accent); color: var(--accent-light); }

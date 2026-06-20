@@ -55,7 +55,7 @@ const defaultState = {
   dashboard: { flowCredits: 100, klingCredits: 50, elevenlabsChars: 10000, monthBudget: 50000, spent: 0 },
   projectName: '새 프로젝트',
   savedAt: null,
-  videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null },
+  videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
 }
 
 function reducer(state, action) {

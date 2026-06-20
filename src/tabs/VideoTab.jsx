@@ -65,12 +65,11 @@ export default function VideoTab() {
   const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor } = videoSettings
   const canvasRef = useRef(null)
   const textareaRef = useRef(null)
-  const [previewText, setPreviewText] = useState('여기서 처음 써보는 이야기야.')
   const [renderLog, setRenderLog] = useState([])
 
   const [aspectRatio, setAspectRatio] = useState('9:16')
   const [subtitleOpen, setSubtitleOpen] = useState(false)
-  const { videoClips, g4Approved, selectedCutId } = state.videoTabState
+  const { videoClips, g4Approved, selectedCutId, subtitles } = state.videoTabState
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
 
@@ -85,6 +84,19 @@ export default function VideoTab() {
   }
   const setSelectedCutId = (id) => {
     dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { selectedCutId: id } })
+  }
+  const setSubtitles = (updater) => {
+    const next = typeof updater === 'function' ? updater(subtitles) : updater
+    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { subtitles: next } })
+  }
+
+  const selCutForText = cuts.find(c => c.id === selectedCutId)
+  const previewText = selCutForText
+    ? (subtitles[selCutForText.id] ?? stripMeta(selCutForText.dialogue || selCutForText.narration || ''))
+    : ''
+  const setPreviewText = (text) => {
+    if (!selCutForText) return
+    setSubtitles(prev => ({ ...prev, [selCutForText.id]: text }))
   }
 
   useEffect(() => {
@@ -143,7 +155,7 @@ export default function VideoTab() {
       ctx.fillText(l, subX, lineY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition])
+  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -152,7 +164,7 @@ export default function VideoTab() {
       textareaRef.current.style.height = 'auto'
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
     }
-  }, [previewText, subtitleEditMode])
+  }, [previewText, subtitleEditMode, selectedCutId])
 
   const exportSRT = () => {
     let srt = '', t = 0
@@ -341,6 +353,24 @@ export default function VideoTab() {
                       {g4Approved[c.id] ? ' · ✓' : ''}
                     </div>
                   </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className={s.subtitleMonitor}>
+          <div className={s.subtitleMonitorHeader}>전체 자막 모니터링</div>
+          <div className={s.subtitleMonitorList}>
+            {cuts.map(c => {
+              const text = subtitles[c.id] ?? stripMeta(c.dialogue || c.narration || '')
+              const isActive = selectedCutId === c.id
+              return (
+                <div key={c.id}
+                  className={`${s.subMonItem} ${isActive ? s.subMonItemActive : ''}`}
+                  onClick={() => setSelectedCutId(c.id)}>
+                  <span className={s.subMonNo}>{String(c.no).padStart(2,'0')}</span>
+                  <span className={s.subMonText}>{text || '(자막 없음)'}</span>
                 </div>
               )
             })}
