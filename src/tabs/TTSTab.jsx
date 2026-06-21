@@ -9,9 +9,32 @@ const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 export default function TTSTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
-  const [audios, setAudios] = useState({})
   const [loading, setLoading] = useState({})
-  const [g3Confirmed, setG3Confirmed] = useState({})
+  const { audioUrls = {}, audioTexts = {}, g3Confirmed = {} } = state.ttsTabState || {}
+
+  const setAudios = (updater) => {
+    const prevShape = {}
+    Object.keys(audioUrls).forEach(cid => {
+      prevShape[cid] = { url: audioUrls[cid], text: audioTexts[cid] }
+    })
+    const next = typeof updater === 'function' ? updater(prevShape) : updater
+    const nextUrls = {}, nextTexts = {}
+    Object.keys(next).forEach(cid => {
+      nextUrls[cid] = next[cid].url
+      nextTexts[cid] = next[cid].text
+    })
+    dispatch({ type: 'SET_TTS_TAB_STATE', p: { audioUrls: nextUrls, audioTexts: nextTexts } })
+  }
+
+  const setG3Confirmed = (updater) => {
+    const next = typeof updater === 'function' ? updater(g3Confirmed) : updater
+    dispatch({ type: 'SET_TTS_TAB_STATE', p: { g3Confirmed: next } })
+  }
+
+  const audios = {}
+  Object.keys(audioUrls).forEach(cid => {
+    audios[cid] = { url: audioUrls[cid], text: audioTexts[cid] }
+  })
   const [text, setText] = useState('')
   const [activeCut, setActiveCut] = useState(0)
   const [voiceInput, setVoiceInput] = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -79,7 +102,16 @@ export default function TTSTab() {
       if (!res.ok) { const e = await res.json(); throw new Error(e.detail?.message || 'API 오류') }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
-      setAudios(p => ({ ...p, [cutId]: { url, blob, text: finalText } }))
+      setAudios(p => ({ ...p, [cutId]: { url, text: finalText } }))
+      dispatch({
+        type: 'SET_VIDEO_TAB_STATE',
+        p: {
+          subtitles: {
+            ...(state.videoTabState?.subtitles || {}),
+            [cutId]: finalText,
+          },
+        },
+      })
       // ── G2 포인트 자동 저장 ──────────────────────────────
       const cut = cuts.find(c => c.id === cutId)
       if (cut) setGPoint(cut.no, 'g2', true)
@@ -106,10 +138,15 @@ export default function TTSTab() {
     }
   }
 
-  const downloadAudio = (cutId, cutNo) => {
-    const a = audios[cutId]; if (!a) return
-    const link = document.createElement('a')
-    link.href = a.url; link.download = `cut_${cutNo}.mp3`; link.click()
+  const downloadAudio = async (cutId, cutNo) => {
+    const audio = audios[cutId]
+    if (!audio?.url) return
+    const res = await fetch(audio.url)
+    const blob = await res.blob()
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `cut_${String(cutNo).padStart(2, '0')}.mp3`
+    a.click()
   }
 
   const cut = cuts[activeCut]
@@ -248,9 +285,7 @@ export default function TTSTab() {
                       const next = { ...g3Confirmed, [cut.id]: true }
                       setG3Confirmed(next)
                       setGPoint(cut.no, 'g3', true)
-                      if (cuts.every(c => next[c.id])) {
-                        dispatch({ type: 'SET_TAB', p: 'video' })
-                      }
+                      if (cuts.every(c => next[c.id])) dispatch({ type: 'SET_TAB', p: 'video' })
                     }}>
                     ✅ G3 승인
                   </button>

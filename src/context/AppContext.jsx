@@ -56,6 +56,7 @@ const defaultState = {
   projectName: '새 프로젝트',
   savedAt: null,
   videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
+  ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {} },
 }
 
 function reducer(state, action) {
@@ -213,6 +214,7 @@ function reducer(state, action) {
     case 'SET_TTS': return { ...state, ttsSettings: { ...state.ttsSettings, ...action.p } }
     case 'SET_VIDEO': return { ...state, videoSettings: { ...state.videoSettings, ...action.p } }
     case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
+    case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
     case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
     case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
     case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }
@@ -305,6 +307,12 @@ function migrateState(saved, init) {
     selectedCutId: null,
     subtitles: {},
     ...(saved.videoTabState || {}),
+  }
+  saved.ttsTabState = {
+    audioUrls: {},
+    audioTexts: {},
+    g3Confirmed: {},
+    ...(saved.ttsTabState || {}),
   }
   return { ...init, ...saved }
 }
