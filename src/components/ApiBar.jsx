@@ -14,11 +14,8 @@ export default function ApiBar() {
     try {
       const res = await elUser(apiKeys.elevenLabs)
       const data = await res.json()
-      console.log('[ElevenLabs /v1/user 응답 전체]', JSON.stringify(data, null, 2))
       if (res.ok) {
         const sub = data.subscription ?? {}
-        console.log('[ElevenLabs subscription 객체]', sub)
-        console.log('[character_limit]', sub.character_limit, '[character_count]', sub.character_count)
         const limit = sub.character_limit ?? 0
         const used  = sub.character_count  ?? 0
         dispatch({ type: 'SET_EL_STATUS', p: {
