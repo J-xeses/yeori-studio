@@ -79,6 +79,8 @@ export default function VideoTab() {
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
   const [selectedClipIdx, setSelectedClipIdx] = useState(0)
+  const [videoGenStatus, setVideoGenStatus] = useState({})
+  const [videoGenLog, setVideoGenLog] = useState({})
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
   const setVideoClips = (updater) => {
@@ -295,6 +297,97 @@ export default function VideoTab() {
     })
   }
 
+  const ensureStandardImage = async (cut) => {
+    const ep = episode?.number ?? ''
+    const scanRes = await fetch(`http://localhost:3001/api/scan-images?ep=${ep}`)
+    const data = await scanRes.json()
+    const match = data.images?.find(img => img.cutNo === cut.no)
+    if (!match) throw new Error(`CUT ${cut.no}의 G2 이미지가 없습니다. 스튜디오 탭에서 먼저 이미지를 생성/승인하세요.`)
+    const confirmRes = await fetch('http://localhost:3001/api/confirm-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ep, cutNo: cut.no, imageUrl: match.url }),
+    })
+    if (!confirmRes.ok) {
+      const err = await confirmRes.json().catch(() => ({}))
+      throw new Error(err.error || '이미지 표준화 저장 실패')
+    }
+  }
+
+  const generateVideoForCut = async (cut) => {
+    setVideoGenStatus(p => ({ ...p, [cut.id]: 'running' }))
+    setVideoGenLog(p => ({ ...p, [cut.id]: '이미지 확인 중…' }))
+    try {
+      await ensureStandardImage(cut)
+      setVideoGenLog(p => ({ ...p, [cut.id]: 'Flow 영상 생성 요청 중…' }))
+      const ep = episode?.number ?? ''
+      const prompts = {
+        episode: ep,
+        cuts: [{ no: cut.no, imagePrompt: cut.imagePrompt || '', duration: cut.duration || 8 }],
+      }
+      const res = await fetch('http://localhost:3001/api/run-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep, ratio: aspectRatio, prompts }),
+      })
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const parts = buf.split('\n\n')
+        buf = parts.pop()
+        for (const part of parts) {
+          const line = part.split('\n').find(l => l.startsWith('data: '))
+          if (!line) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'progress' || ev.type === 'saved') {
+              setVideoGenLog(p => ({ ...p, [cut.id]: ev.message || `진행 중… (${ev.current ?? ''}/${ev.total ?? ''})` }))
+            } else if (ev.type === 'cut_video' && ev.cutNo === cut.no) {
+              const url = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              const tempVideo = document.createElement('video')
+              tempVideo.preload = 'metadata'
+              tempVideo.src = url
+              await new Promise(resolve => {
+                tempVideo.onloadedmetadata = resolve
+                tempVideo.onerror = resolve
+              })
+              const dur = isFinite(tempVideo.duration) ? Math.round(tempVideo.duration * 100) / 100 : (cut.duration || 8)
+              setVideoClips(p => {
+                const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                if (existing.some(c => c.url === url)) return p
+                return {
+                  ...p,
+                  [cut.id]: [...existing, {
+                    url,
+                    name: `AI 생성 (cut_${String(cut.no).padStart(2, '0')}.mp4)`,
+                    duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true,
+                  }],
+                }
+              })
+              setVideoGenStatus(p => ({ ...p, [cut.id]: 'done' }))
+              setVideoGenLog(p => ({ ...p, [cut.id]: '✅ 생성 완료' }))
+            } else if (ev.type === 'cut_error' && ev.cutNo === cut.no) {
+              setVideoGenStatus(p => ({ ...p, [cut.id]: 'error' }))
+              setVideoGenLog(p => ({ ...p, [cut.id]: '❌ 생성 실패' }))
+            } else if (ev.type === 'complete' && !ev.success) {
+              setVideoGenStatus(p => p[cut.id] === 'running' ? { ...p, [cut.id]: 'error' } : p)
+            } else if (ev.type === 'error') {
+              setVideoGenStatus(p => ({ ...p, [cut.id]: 'error' }))
+              setVideoGenLog(p => ({ ...p, [cut.id]: `❌ ${ev.message}` }))
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setVideoGenStatus(p => ({ ...p, [cut.id]: 'error' }))
+      setVideoGenLog(p => ({ ...p, [cut.id]: `❌ ${err.message}` }))
+    }
+  }
+
   return (
     <div className={s.root}>
       {/* Sidebar */}
@@ -393,6 +486,7 @@ export default function VideoTab() {
                     <div className={s.cutSideStatus}>
                       {statusText}
                       {g4Approved[c.id] ? ' · ✓' : ''}
+                      {videoGenStatus[c.id] === 'running' && <span className={s.sideGenBadge}>⏳ 생성중</span>}
                     </div>
                   </div>
                 </div>
@@ -616,7 +710,16 @@ export default function VideoTab() {
                   <button className={s.proxyBtn} onClick={() => loadFromProxy(selCut)}>
                     🔄 프록시
                   </button>
+                  <button
+                    className={s.aiGenBtn}
+                    disabled={videoGenStatus[selCut.id] === 'running'}
+                    onClick={() => generateVideoForCut(selCut)}>
+                    {videoGenStatus[selCut.id] === 'running' ? '⏳ 생성 중…' : '✨ AI 영상 생성'}
+                  </button>
                 </div>
+                {videoGenLog[selCut.id] && (
+                  <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
+                )}
               </div>
               <div className={s.cutCardFooter}>
                 <button
