@@ -4,24 +4,23 @@
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek (very subtle, not exaggerated), seated by a cafe window in soft afternoon natural light, holding an iced Americano in a clear glass cup with gold bracelet visible on wrist, delicate gold necklace, wearing an oversized cream-toned knit top DO NOT change clothing, expression: subtle half-smile with calm knowing eyes directed at camera, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty, warm bokeh background of cafe interior, background people sitting at tables must not interact with the main character",
-      "narration": "그녀는 항상 먼저 와 있었다. 기다리는 척, 안 기다린 척.",
-      "dialogue": "\"어, 왔어요?\"",
-      "duration": 8
+      "imagePrompt": "CLOSEUP SHOT — Korean female, early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek very subtle not exaggerated, gold necklace visible at collarbone, holding a tall iced americano glass with both hands lightly, sitting near a bright cafe window, soft natural daylight from the left, warm bokeh background of cafe interior, expression: suppressing a smirk, lips slightly curved upward, eyes subtly downcast then lifting back to camera, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic, natural Korean beauty, DO NOT change clothing, background people must not interact with the main character",
+      "narration": "설명할 수 없는 것들이 오히려 오래 남는다.",
+      "dialogue": "\"제 채널이요? 설명하기가 좀... 애매해요. 근데 그게 매력 아닌가요?\"",
+      "duration": 12
     },
     {
       "no": 2,
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek (very subtle, not exaggerated), sitting at cafe window seat, both hands loosely around a clear iced Americano glass, gold bracelet on wrist, delicate gold necklace, oversized cream-toned knit top DO NOT change clothing, expression: slightly raised eyebrow with a dry-humored almost deadpan look directly into camera, one corner of lips barely lifted, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty, soft afternoon diffused light from window, shallow depth of field with warm cafe bokeh, background people at nearby tables must not interact with the main character",
-      "narration": "설명하려 했는데, 설명이 안 됐다. 그래서 더 매력적이었다.",
-      "dialogue": "\"저 사실 이 채널... AI로 만들어요. 근데 생각보다 저 진짜 많이 나와요. 이상하죠?\"",
-      "duration": 15
+      "imagePrompt": "FULLBODY SHOT — Korean female, early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek very subtle, gold necklace and gold bracelet visible, wearing a casual yet stylish outfit — cream-tone oversized knit top, wide-leg dark navy trousers with subtle cuff roll at the ankle, white sneakers, slender figure with K-model proportions, very small face, long slim legs, small head-to-body ratio DO NOT make average body proportions, sitting at a window-side cafe table with open laptop then rising and stepping toward the large glass window, warm afternoon sunlight streaming through, soft golden hour atmosphere, multiple soft-focus cafe patrons in background must not interact with the main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic, natural Korean beauty, DO NOT change clothing",
+      "narration": "AI로 만들고, 감성으로 완성한다. 그게 서여리 채널이에요.",
+      "duration": 7
     },
     {
       "no": 3,
-      "imagePrompt": "FULLBODY SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear, long slim legs crossed under the table with slight view below, wearing oversized cream-toned knit top and straight-cut denim pants with subtle ankle roll-up DO NOT change clothing, gold necklace and gold bracelet visible, K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio DO NOT make average body proportions, iced Americano in clear glass on table, soft afternoon golden hour window light casting warm glow, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh, background people sitting at other tables must not interact with the main character",
-      "narration": "여기, 라고 했지만 그 의미는 조금 더 넓었다. 이 채널, 이 화면, 그리고 당신 앞.",
-      "dialogue": "\"자주 와요. 저 여기 맨날 있으니까.\"",
-      "duration": 12
+      "imagePrompt": "CLOSEUP SHOT — Korean female, early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short falling naturally over shoulders, natural skin texture on right cheek very subtle not exaggerated, gold necklace at collarbone, holding an iced americano glass, straw lightly placed between lips, eyes locked directly into camera with a calm yet quietly devastating gaze, expression: barely-there smirk, effortlessly fatal charm not trying too hard, soft warm cafe window light from the side creating gentle highlight on cheekbone and hair, shallow depth of field with warm bokeh background, DO NOT change clothing, no text in frame, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic, natural Korean beauty, background people must not interact with the main character, final 2-3 seconds held in complete silence for lingering aftertaste",
+      "narration": "오늘도 서여리는, 딱 그만큼만 웃는다.",
+      "dialogue": "\"구독이요? 뭐... 후회는 안 하실 거예요. 아마도.\"",
+      "duration": 10
     }
   ]
 }
