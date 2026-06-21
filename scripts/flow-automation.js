@@ -25,15 +25,23 @@ import { execSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// ── ROOT 자동 감지 ──────────────────────────────────────────────────────
-const COMPANY_PATH = 'C:\\yeori-studio'
-const HOME_PATH = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
+// ── ROOT 자동 감지 (node_modules + package.json 존재 여부로 유효성 검증) ──
+const ROOT_CANDIDATES = [
+  'C:\\yeori-studio',
+  'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio',
+  'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio',
+]
+function isValidProjectRoot(p) {
+  return fs.existsSync(p) &&
+    fs.existsSync(path.join(p, 'node_modules')) &&
+    fs.existsSync(path.join(p, 'package.json'))
+}
 const ROOT = (() => {
-  if (fs.existsSync(COMPANY_PATH)) { console.log('[ROOT] 회사 PC'); return COMPANY_PATH }
-  if (fs.existsSync(HOME_PATH)) { console.log('[ROOT] 집 PC'); return HOME_PATH }
-  console.error('[ERROR] ROOT 경로를 찾을 수 없습니다.')
-  console.error(`  회사PC: ${COMPANY_PATH}`)
-  console.error(`  집PC:   ${HOME_PATH}`)
+  for (const p of ROOT_CANDIDATES) {
+    if (isValidProjectRoot(p)) { console.log(`[ROOT] ${p}`); return p }
+  }
+  console.error('[ERROR] 유효한 ROOT 경로를 찾을 수 없습니다 (node_modules/package.json 기준).')
+  ROOT_CANDIDATES.forEach(p => console.error(`  후보: ${p}`))
   process.exit(1)
 })()
 
