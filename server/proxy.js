@@ -253,6 +253,23 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
+// ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
+app.post('/api/confirm-image', (req, res) => {
+  const { ep, cutNo, imageUrl } = req.body
+  if (!ep || !cutNo || !imageUrl) return res.status(400).json({ error: 'ep, cutNo, imageUrl 필요' })
+  const padded  = String(cutNo).padStart(2, '0')
+  const flowDir = path.join(ROOT, 'downloads', 'flow', `ep${ep}`)
+  try {
+    fs.mkdirSync(flowDir, { recursive: true })
+    const srcPath  = path.join(ROOT, imageUrl.replace(/^\//, ''))
+    const destPath = path.join(flowDir, `cut_${padded}.jpg`)
+    if (srcPath !== destPath) fs.copyFileSync(srcPath, destPath)
+    res.json({ ok: true, saved: `cut_${padded}.jpg` })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/scan-images — 기존 생성 이미지 재조회 ──────────────
 app.get('/api/scan-images', (req, res) => {
   const { ep } = req.query
@@ -474,14 +491,25 @@ app.post('/api/run-video', (req, res) => {
 
   const parseLine = line => {
     if (!line.trim()) return
-    const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*생성/)
+    // 실제 로그: ⏳ [1/5] CUT 3 영상 생성 중…
+    const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*영상\s*생성/)
     if (progressMatch) {
       send({ type: 'progress', current: +progressMatch[1], total: +progressMatch[2], cutNo: +progressMatch[3] })
       return
     }
-    const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
+    // 실제 로그: ✅ [1/5] CUT 3 → downloads\video\ep4\cut_03.mp4 (ok)
+    const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→\s*(\S+\.mp4)/i)
     if (doneMatch) {
-      send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo: +doneMatch[3] })
+      const cutNo = +doneMatch[3]
+      const url   = '/' + doneMatch[4].replace(/\\/g, '/')
+      send({ type: 'cut_done',  current: +doneMatch[1], total: +doneMatch[2], cutNo })
+      send({ type: 'cut_video', current: +doneMatch[1], total: +doneMatch[2], cutNo, url })
+      return
+    }
+    // .mp4 없는 → 라인 (예외 케이스 폴백)
+    const doneBasic = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
+    if (doneBasic) {
+      send({ type: 'cut_done', current: +doneBasic[1], total: +doneBasic[2], cutNo: +doneBasic[3] })
       return
     }
     const errMatch = line.match(/CUT\s*(\d+).*실패/)
