@@ -253,6 +253,20 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
+// ── GET /api/scan-images — 기존 생성 이미지 재조회 ──────────────
+app.get('/api/scan-images', (req, res) => {
+  const { ep } = req.query
+  if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
+  const epDir = path.join(ROOT, 'downloads', 'flow', `ep${ep}`)
+  if (!fs.existsSync(epDir)) return res.json({ images: [] })
+  const images = []
+  fs.readdirSync(epDir).sort().forEach(file => {
+    const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+    if (m) images.push({ cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${ep}/${file}` })
+  })
+  res.json({ images })
+})
+
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
   const { ep, prompts, projectId } = req.body

@@ -158,17 +158,22 @@ export default function StudioTab() {
             const ev = JSON.parse(line.slice(6))
             if (ev.type === 'cut_done') {
               const padded = String(ev.cutNo).padStart(2, '0')
-              for (const ext of ['jpg', 'jpeg', 'png']) {
-                const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}?t=${Date.now()}`
-                try {
-                  const r = await fetch(url, { method: 'HEAD' })
-                  if (r.ok) {
-                    setImages(p => ({ ...p, [cut.id]: url }))
-                    setGPoint(cut.no, 'g3', true)
-                    setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
-                    break
-                  }
-                } catch {}
+              for (const suffix of ['_a', '_b', '']) {
+                for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
+                  const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}${suffix}.${ext}?t=${Date.now()}`
+                  try {
+                    const r = await fetch(url, { method: 'HEAD' })
+                    if (r.ok) {
+                      setImages(p => {
+                        const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                        if (existing.some(u => u.includes(`cut_${padded}${suffix}.${ext}`))) return p
+                        return { ...p, [cut.id]: [...existing, url] }
+                      })
+                      setGPoint(cut.no, 'g3', true)
+                      setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
+                    }
+                  } catch {}
+                }
               }
             } else if (ev.type === 'cut_image') {
               const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
@@ -191,6 +196,30 @@ export default function StudioTab() {
       setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no}: ${err.message}` }])
     } finally {
       setGenerating(prev => ({ ...prev, [cut.id]: false }))
+    }
+  }
+
+  // ── 기존 생성 이미지 재조회 ─────────────────────────────────────
+  const reloadExistingImages = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/scan-images?ep=${state.episode.number}`)
+      const data = await res.json()
+      if (!data.images?.length) { alert('저장된 이미지가 없습니다.'); return }
+      data.images.forEach(img => {
+        const cut = state.cuts.find(c => c.no === img.cutNo)
+        if (!cut) return
+        const imgUrl = `http://localhost:3001${img.url}?t=${Date.now()}`
+        setImages(p => {
+          const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+          if (existing.some(u => u.includes(img.url))) return p
+          return { ...p, [cut.id]: [...existing, imgUrl] }
+        })
+        setGPoint(img.cutNo, 'g3', true)
+      })
+      setGData(loadGPoints())
+      alert(`✅ ${data.images.length}개 이미지 불러오기 완료`)
+    } catch (err) {
+      alert('불러오기 실패: ' + err.message)
     }
   }
 
@@ -396,6 +425,9 @@ export default function StudioTab() {
             }}
           >
             {flowRunning ? '🔄 Flow 실행 중…' : '🤖 전체 이미지 자동 생성'}
+          </button>
+          <button className={s.reloadImgBtn} onClick={reloadExistingImages}>
+            🔄 기존 이미지 다시 불러오기
           </button>
         </div>
       </div>
