@@ -347,7 +347,7 @@ ${YEORI_RULESET}
     setRevisionLoading(true)
 
     const currentScript = cuts.map(c =>
-      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
+      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n캐릭터: 서여리\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n샷 타입: ${c.shotType || 'FULLBODY'}\n이미지 프롬프트: ${c.imagePrompt || ''}\n컷 길이: ${c.duration || 5}`
     ).join('\n\n')
 
     const prompt = `당신은 한국 유튜브 숏폼 대본 편집 전문가입니다.
@@ -376,7 +376,8 @@ ${currentScript}
 
 3. 수정 안 된 컷은 출력하지 말 것
 4. 마크다운 ** ## --- 절대 금지
-5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가`
+5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가
+6. 컷 길이를 수정하는 요청이 있으면 반드시 해당 컷의 "컷 길이: N" 필드 값을 변경해서 출력할 것`
 
     try {
       const res = await claudeMessages(apiKeys.claude, {
@@ -393,12 +394,13 @@ ${currentScript}
         const original = cuts.find(c => c.no === revised.no)
         if (original) {
           dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
-            scene: revised.scene || original.scene,
-            action: revised.action || original.action,
-            dialogue: revised.dialogue !== undefined ? revised.dialogue : original.dialogue,
-            narration: revised.narration || original.narration,
+            scene:       revised.scene       || original.scene,
+            action:      revised.action      || original.action,
+            dialogue:    revised.dialogue    !== undefined ? revised.dialogue : original.dialogue,
+            narration:   revised.narration   || original.narration,
             imagePrompt: revised.imagePrompt || original.imagePrompt,
-            shotType: revised.shotType || original.shotType,
+            shotType:    revised.shotType    || original.shotType,
+            duration:    revised.duration    || original.duration,
           }})
         }
       })
