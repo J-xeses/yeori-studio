@@ -20,11 +20,21 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ── ROOT 자동 감지 ──────────────────────────────────────────────────────
-const COMPANY_PATH = 'C:\\yeori-studio'
-const HOME_PATH = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
+const CANDIDATES = [
+  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
+  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
+]
 const ROOT = (() => {
-  if (fs.existsSync(COMPANY_PATH)) { console.log('[ROOT] 회사 PC'); return COMPANY_PATH }
-  if (fs.existsSync(HOME_PATH)) { console.log('[ROOT] 집 PC'); return HOME_PATH }
+  for (const { label, p } of CANDIDATES) {
+    if (
+      fs.existsSync(p) &&
+      fs.existsSync(path.join(p, 'node_modules')) &&
+      fs.existsSync(path.join(p, 'package.json'))
+    ) {
+      console.log(`[ROOT] ${label}: ${p}`)
+      return p
+    }
+  }
   console.error('[ERROR] ROOT 경로를 찾을 수 없습니다.')
   process.exit(1)
 })()
