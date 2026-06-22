@@ -20,14 +20,26 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ── ROOT 자동 감지 ──────────────────────────────────────────────────────
-const COMPANY_PATH = 'C:\\yeori-studio'
-const HOME_PATH = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
-const ROOT = (() => {
-  if (fs.existsSync(COMPANY_PATH)) { console.log('[ROOT] 회사 PC'); return COMPANY_PATH }
-  if (fs.existsSync(HOME_PATH)) { console.log('[ROOT] 집 PC'); return HOME_PATH }
-  console.error('[ERROR] ROOT 경로를 찾을 수 없습니다.')
+const CANDIDATES = [
+  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
+  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
+]
+const CODE_ROOT = (() => {
+  for (const { label, p } of CANDIDATES) {
+    if (
+      fs.existsSync(p) &&
+      fs.existsSync(path.join(p, 'node_modules')) &&
+      fs.existsSync(path.join(p, 'package.json'))
+    ) {
+      console.log(`[CODE_ROOT] ${label}: ${p}`)
+      return p
+    }
+  }
+  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
   process.exit(1)
 })()
+const MEDIA_ROOT = 'C:\\yeori-studio'
+const ROOT = CODE_ROOT  // 하위 호환 유지
 
 // .env 및 .env.local 로드
 ;['.env', '.env.local'].forEach(name => {
@@ -43,9 +55,9 @@ const ROOT = (() => {
 const CONFIG = {
   debuggingPort:   9222,
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  flowDir:         path.join(ROOT, 'downloads', 'flow'),
-  videoDir:        path.join(ROOT, 'downloads', 'video'),
-  characterImage:  path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
+  flowDir:         path.join(MEDIA_ROOT, 'downloads', 'flow'),
+  videoDir:        path.join(MEDIA_ROOT, 'downloads', 'video'),
+  characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
   preferredModel:  'Omni Flash',
   defaultDuration: 8,
   delayMs:         6000,

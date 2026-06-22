@@ -139,6 +139,17 @@ export default function ScriptGenTab() {
 - 체형: "K-model proportions, very small face, long slim legs, slender figure" — FULLBODY 필수 포함
 - 비율: "small head-to-body ratio, DO NOT make average body proportions" — FULLBODY 필수 포함
 
+[컷 길이 기준 — 8초 단위 (필수)]
+- 1컷 기본 길이: 8초
+- 8~10초: 1컷으로 처리 (10초까지 허용)
+- 11초: 절대 금지 — 10초 이하로 압축하거나 12초 이상으로 늘려서 분할 처리할 것
+- 12~15초: 2컷으로 분할 (전반 8초 + 후반 4~7초, 후반이 8초 미만이면 액션 필드 끝에 "편집 가이드: 후반 N초로 마무리" 메모 추가)
+- 16초: 동작이 단순하면 2컷(전반 8초 + 후반 8초), 감정선이 깊거나 분위기 전환이 중요하면 3컷 롱테이크(앞 4~6초 + 메인 10초 + 뒤 4~6초)
+- 17~20초: 3컷 롱테이크 (앞 도입 4~6초 + 메인 테이크 10초 + 뒤 여운 4~6초)
+- 분할된 각 컷은 독립된 CUT 번호를 가지며(CUT 2, CUT 3...), "CUT 2-a" 같은 하위 표기는 절대 금지
+- 분할 시 전반 컷의 마지막 동작과 후반 컷의 시작 동작이 시각적으로 끊기지 않도록 자연스럽게 재배치
+- 대사는 분할하지 않고 각 컷에 자연스럽게 배분 가능
+
 [영상 생성 원칙]
 - 프롬프트에 대사 텍스트 절대 금지 (립싱크+행동 동시 발생 방지)
 - 행동은 시간 단위로 분리: "First 3s / Next 3s / Final 4s"
@@ -182,7 +193,10 @@ export default function ScriptGenTab() {
 ${YEORI_RULESET}
 
 위 룰셋을 완전히 내재화한 상태에서
-아래 설정에 맞는 ${episode.cutCount}컷 짜리 유튜브 영상 대본을 작성해주세요.
+아래 설정에 맞는 유튜브 영상 대본을 작성해주세요.
+기준 장면 수는 ${episode.cutCount}개이지만, 룰셋의 [컷 길이 기준]에 따라 8초를 초과하는 장면은
+여러 컷으로 자동 분할되므로 최종 컷 수는 ${episode.cutCount}개보다 많아질 수 있습니다.
+각 컷은 반드시 8초 기준 분할 규칙을 따르고, 컷 길이(초)를 정확히 명시하세요.
 
 에피소드 번호: ${episode.number}
 제목: ${episode.title || '(자유 설정)'}
@@ -221,6 +235,8 @@ ${YEORI_RULESET}
 샷 타입:
 이미지 프롬프트:
 
+※ 위는 형식 예시이며, 분할이 발생하면 [CUT N+1], [CUT N+2]... 형식으로 자연스럽게 이어서 작성하세요.
+
 ⚠️ 절대 지킬 것:
 - 마크다운 ** ## --- 완전 금지
 - 각 필드는 반드시 "씬:" "액션:" "캐릭터:" "대사:" "나레이션:" "이미지 프롬프트:" 로 시작
@@ -256,8 +272,7 @@ ${YEORI_RULESET}
         if (!p.includes('NOT short')) failItems.push(`CUT${cut.no}: 헤어 이중강조 누락`)
         if (isClose && !p.includes('skin texture') && !p.includes('beauty mark')) failItems.push(`CUT${cut.no}: CLOSEUP natural skin texture 문구 누락`)
         if (isFull && !p.match(/K-model|small face|long.*legs/i)) failItems.push(`CUT${cut.no}: FULLBODY 체형 문구 누락`)
-        if (!p.includes('DO NOT change clothing')) failItems.push(`CUT${cut.no}: 의상 고정 문구 누락`)
-        else passCount++
+        passCount++ // 의상 묘사는 형식 강제 없이 통과 처리 (2026-06-14/06-21 명령형 폐기 결정 반영)
       })
 
       // ── G1 포인트 자동 저장 ──────────────────────────────
@@ -332,7 +347,7 @@ ${YEORI_RULESET}
     setRevisionLoading(true)
 
     const currentScript = cuts.map(c =>
-      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
+      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n캐릭터: 서여리\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n샷 타입: ${c.shotType || 'FULLBODY'}\n이미지 프롬프트: ${c.imagePrompt || ''}\n컷 길이: ${c.duration || 5}`
     ).join('\n\n')
 
     const prompt = `당신은 한국 유튜브 숏폼 대본 편집 전문가입니다.
@@ -361,7 +376,8 @@ ${currentScript}
 
 3. 수정 안 된 컷은 출력하지 말 것
 4. 마크다운 ** ## --- 절대 금지
-5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가`
+5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가
+6. 컷 길이를 수정하는 요청이 있으면 반드시 해당 컷의 "컷 길이: N" 필드 값을 변경해서 출력할 것`
 
     try {
       const res = await claudeMessages(apiKeys.claude, {
@@ -378,12 +394,13 @@ ${currentScript}
         const original = cuts.find(c => c.no === revised.no)
         if (original) {
           dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
-            scene: revised.scene || original.scene,
-            action: revised.action || original.action,
-            dialogue: revised.dialogue !== undefined ? revised.dialogue : original.dialogue,
-            narration: revised.narration || original.narration,
+            scene:       revised.scene       || original.scene,
+            action:      revised.action      || original.action,
+            dialogue:    revised.dialogue    !== undefined ? revised.dialogue : original.dialogue,
+            narration:   revised.narration   || original.narration,
             imagePrompt: revised.imagePrompt || original.imagePrompt,
-            shotType: revised.shotType || original.shotType,
+            shotType:    revised.shotType    || original.shotType,
+            duration:    revised.duration    || original.duration,
           }})
         }
       })

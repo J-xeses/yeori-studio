@@ -449,6 +449,18 @@ export default function VideoTab() {
           <button className={s.qaBtn} onClick={exportSRT}>📄 SRT</button>
           <button className={s.qaBtn} onClick={loadAllFromProxy}>🔄 불러오기</button>
           <button
+            className={s.qaBtn}
+            disabled={cuts.some(c => videoGenStatus[c.id] === 'running')}
+            onClick={async () => {
+              for (const c of cuts) {
+                if (videoGenStatus[c.id] === 'running') continue
+                await generateVideoForCut(c)
+              }
+            }}
+          >
+            {cuts.some(c => videoGenStatus[c.id] === 'running') ? '⏳ 생성 중…' : '✨ 전체 AI 생성'}
+          </button>
+          <button
             className={`${s.qaBtn} ${allG4Done ? s.qaBtnDone : ''}`}
             onClick={() => {
               const next = !allG4Done
@@ -485,10 +497,20 @@ export default function VideoTab() {
                     <div className={s.cutSideNo}>CUT {String(c.no).padStart(2,'0')}</div>
                     <div className={s.cutSideStatus}>
                       {statusText}
-                      {g4Approved[c.id] ? ' · ✓' : ''}
-                      {videoGenStatus[c.id] === 'running' && <span className={s.sideGenBadge}>⏳ 생성중</span>}
+                      {g4Approved[c.id] ? ' · ✅' : ''}
+                      {videoGenStatus[c.id] === 'running' && <span className={s.sideGenBadge}>⏳생성중</span>}
+                      {videoGenStatus[c.id] === 'done' && <span className={s.sideGenBadgeDone}>✅완료</span>}
+                      {videoGenStatus[c.id] === 'error' && <span className={s.sideGenBadgeError}>❌오류</span>}
                     </div>
                   </div>
+                  <button
+                    className={`${s.sideAiBtn} ${videoGenStatus[c.id] === 'running' ? s.sideAiBtnRunning : ''}`}
+                    disabled={videoGenStatus[c.id] === 'running'}
+                    onClick={e => { e.stopPropagation(); generateVideoForCut(c) }}
+                    title={`CUT ${c.no} AI 영상 생성`}
+                  >
+                    {videoGenStatus[c.id] === 'running' ? '⏳' : '✨'}
+                  </button>
                 </div>
               )
             })}
