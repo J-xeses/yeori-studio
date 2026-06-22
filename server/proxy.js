@@ -7,25 +7,26 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = (() => {
-  const candidates = [
-    'C:\\yeori-studio',
-    'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio',
-    'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio',
-  ]
-  const isValidProjectRoot = (p) =>
-    fs.existsSync(p) &&
-    fs.existsSync(path.join(p, 'node_modules')) &&
-    fs.existsSync(path.join(p, 'package.json'))
-
-  for (const p of candidates) {
-    if (isValidProjectRoot(p)) { console.log(`[proxy] ROOT: ${p}`); return p }
+const CANDIDATES = [
+  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
+  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
+]
+const CODE_ROOT = (() => {
+  for (const { label, p } of CANDIDATES) {
+    if (
+      fs.existsSync(p) &&
+      fs.existsSync(path.join(p, 'node_modules')) &&
+      fs.existsSync(path.join(p, 'package.json'))
+    ) {
+      console.log(`[CODE_ROOT] ${label}: ${p}`)
+      return p
+    }
   }
-  // 유효한 후보가 없으면 소스코드 상위(개발환경) fallback
-  const fallback = path.resolve(__dirname, '..')
-  console.log(`[proxy] ROOT fallback: ${fallback}`)
-  return fallback
+  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
+  process.exit(1)
 })()
+const MEDIA_ROOT = 'C:\\yeori-studio'
+const ROOT = CODE_ROOT  // 하위 호환 유지
 
 const app = express()
 const PORT = 3001
@@ -40,7 +41,7 @@ process.on('uncaughtException', (err) => {
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }))
 app.use(express.json({ limit: '10mb' }))
-app.use('/downloads', express.static(path.join(ROOT, 'downloads')))
+app.use('/downloads', express.static(path.join(MEDIA_ROOT, 'downloads')))
 
 // ── 헬스 체크 ──────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
@@ -258,10 +259,10 @@ app.post('/api/confirm-image', (req, res) => {
   const { ep, cutNo, imageUrl } = req.body
   if (!ep || !cutNo || !imageUrl) return res.status(400).json({ error: 'ep, cutNo, imageUrl 필요' })
   const padded  = String(cutNo).padStart(2, '0')
-  const flowDir = path.join(ROOT, 'downloads', 'flow', `ep${ep}`)
+  const flowDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
   try {
     fs.mkdirSync(flowDir, { recursive: true })
-    const srcPath  = path.join(ROOT, imageUrl.replace(/^\//, ''))
+    const srcPath  = path.join(MEDIA_ROOT, imageUrl.replace(/^\//, ''))
     const destPath = path.join(flowDir, `cut_${padded}.jpg`)
     if (srcPath !== destPath) fs.copyFileSync(srcPath, destPath)
     res.json({ ok: true, saved: `cut_${padded}.jpg` })
@@ -274,7 +275,7 @@ app.post('/api/confirm-image', (req, res) => {
 app.get('/api/scan-images', (req, res) => {
   const { ep } = req.query
   if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
-  const epDir = path.join(ROOT, 'downloads', 'flow', `ep${ep}`)
+  const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
   if (!fs.existsSync(epDir)) return res.json({ images: [] })
   const images = []
   fs.readdirSync(epDir).sort().forEach(file => {
@@ -289,7 +290,7 @@ app.post('/api/run-flow', (req, res) => {
   const { ep, prompts, projectId } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
-  const promptsPath = path.join(ROOT, 'downloads', 'flow', 'prompts.json')
+  const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
   fs.mkdirSync(path.dirname(promptsPath), { recursive: true })
   fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
 
@@ -308,7 +309,7 @@ app.post('/api/run-flow', (req, res) => {
 
   // project_url.txt 사전 확인 — 없으면 flow-automation.js가 stdin을 기다려 hang됨
   if (episode != null) {
-    const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
+    const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
     const projectMarker = path.join(epDir, 'project_url.txt')
 
     // projectId가 요청에 포함된 경우 project_url.txt 자동 생성
@@ -351,7 +352,7 @@ app.post('/api/run-flow', (req, res) => {
       if (episode != null) {
         const padded = String(cutNo).padStart(2, '0')
         const epUrlBase = `/downloads/flow/ep${episode}`
-        const epDirPath = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
+        const epDirPath = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
         for (const suffix of ['_a', '_b', '']) {
           for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
             const fname = `cut_${padded}${suffix}.${ext}`
@@ -418,7 +419,7 @@ app.post('/api/run-flow', (req, res) => {
 
     // 완료 후 에피소드 디렉토리 전체 스캔 -> 누락된 cut_image 이벤트 전송
     if (episode != null) {
-      const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
+      const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
       if (fs.existsSync(epDir)) {
         fs.readdirSync(epDir).sort().forEach(file => {
           const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
@@ -463,7 +464,7 @@ app.post('/api/run-video', (req, res) => {
   const { ep, ratio, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
-  const videoDir    = path.join(ROOT, 'downloads', 'video')
+  const videoDir    = path.join(MEDIA_ROOT, 'downloads', 'video')
   const promptsPath = path.join(videoDir, 'video-prompts.json')
   fs.mkdirSync(videoDir, { recursive: true })
   fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')

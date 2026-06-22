@@ -25,25 +25,27 @@ import { execSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// ── ROOT 자동 감지 (node_modules + package.json 존재 여부로 유효성 검증) ──
-const ROOT_CANDIDATES = [
-  'C:\\yeori-studio',
-  'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio',
-  'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio',
+// ── ROOT 자동 감지 ──────────────────────────────────────────────────────
+const CANDIDATES = [
+  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
+  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
 ]
-function isValidProjectRoot(p) {
-  return fs.existsSync(p) &&
-    fs.existsSync(path.join(p, 'node_modules')) &&
-    fs.existsSync(path.join(p, 'package.json'))
-}
-const ROOT = (() => {
-  for (const p of ROOT_CANDIDATES) {
-    if (isValidProjectRoot(p)) { console.log(`[ROOT] ${p}`); return p }
+const CODE_ROOT = (() => {
+  for (const { label, p } of CANDIDATES) {
+    if (
+      fs.existsSync(p) &&
+      fs.existsSync(path.join(p, 'node_modules')) &&
+      fs.existsSync(path.join(p, 'package.json'))
+    ) {
+      console.log(`[CODE_ROOT] ${label}: ${p}`)
+      return p
+    }
   }
-  console.error('[ERROR] 유효한 ROOT 경로를 찾을 수 없습니다 (node_modules/package.json 기준).')
-  ROOT_CANDIDATES.forEach(p => console.error(`  후보: ${p}`))
+  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
   process.exit(1)
 })()
+const MEDIA_ROOT = 'C:\\yeori-studio'
+const ROOT = CODE_ROOT  // 하위 호환 유지
 
 // .env 및 .env.local 로드
 ;['.env', '.env.local'].forEach(name => {
@@ -61,15 +63,15 @@ const CONFIG = {
   // chrome.exe --remote-debugging-port=9222
   debuggingPort:   9222,
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  downloadDir:     path.join(ROOT, 'downloads', 'flow'),
+  downloadDir:     path.join(MEDIA_ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
   delayMs:         4000,   // 생성 요청 사이 대기 (레이트 리밋 방지)
   timeoutMs:       120000, // 이미지 생성 최대 대기 시간
   retryCount:      2,      // 실패 시 재시도 횟수
 
   // ── 레퍼런스 이미지 분석 ────────────────────────────────────────────
-  referenceImage:  path.join(ROOT, 'assets', 'yeori-reference.jpg'),
-  faceCacheFile:   path.join(ROOT, 'downloads', 'flow', 'yeori-face-cache.json'),
+  referenceImage:  path.join(CODE_ROOT, 'assets', 'yeori-reference.jpg'),
+  faceCacheFile:   path.join(MEDIA_ROOT, 'downloads', 'flow', 'yeori-face-cache.json'),
 
   // ── 클로즈업 얼굴 프롬프트 (에피소드당 1회) ────────────────────────
   closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, natural skin texture, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
@@ -80,8 +82,8 @@ const CONFIG = {
 
   // ── 서여리 캐릭터 설정 ──────────────────────────────────────────────
   characterName:   '서여리',
-  characterDir:    path.join(ROOT, 'downloads', 'flow', 'character'),
-  characterImage:  path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
+  characterDir:    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character'),
+  characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
   // 클로즈업 얼굴 생성 프롬프트 (--gen-face 사용 시)
   facePrompt: 'Young Korean woman early 20s, extreme close-up portrait, long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, natural effortless expression, K-model proportions very small face, appearing no older than 22-23, bright natural eyes, soft lips, flawless skin, soft studio lighting, neutral background, Photorealistic 8K cinematic headshot 1:1',
 }
