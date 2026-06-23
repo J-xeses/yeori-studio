@@ -353,6 +353,13 @@ export default function TTSTab() {
                     {track.type === 'dialogue' ? '💬 대사' : '🎙 나레이션'}
                   </span>
                   <div className={s.trackHeaderBtns}>
+                    <button className={s.trackResetBtn} title="기본값 복원"
+                      onClick={() => setTracksForCut(cut.id, prev =>
+                        prev.map(t => t.id === track.id
+                          ? { ...t, settings: { ...(trackDefaults[t.type] || FALLBACK_DEFAULTS[t.type]) } }
+                          : t
+                        )
+                      )}>🔄</button>
                     <button className={s.trackMoveBtn} disabled={idx === 0}
                       onClick={() => setTracksForCut(cut.id, prev => {
                         const a = [...prev]; [a[idx-1], a[idx]] = [a[idx], a[idx-1]]; return a
