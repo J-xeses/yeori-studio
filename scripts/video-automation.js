@@ -16,6 +16,7 @@ import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
 import { fileURLToPath } from 'url'
+import { spawn } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -1101,6 +1102,81 @@ async function waitAndSaveVideo(page, outPath) {
   throw new Error('영상 저장 실패. debug_video_save_fail.png 확인')
 }
 
+// ── FFmpeg 실행 헬퍼 ──────────────────────────────────────────────────
+
+function runFfmpeg(ffmpegPath, args) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(ffmpegPath, args)
+    let errBuf = ''
+    proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
+    proc.on('close', code => {
+      if (code === 0) resolve()
+      else reject(new Error(`FFmpeg 종료코드 ${code}: ${errBuf.slice(-300)}`))
+    })
+    proc.on('error', err => reject(new Error(`FFmpeg 실행 오류: ${err.message}`)))
+  })
+}
+
+// ── STS 후처리: Veo 음성 추출 → ElevenLabs STS → FFmpeg 합성 ──────────
+
+async function runStsPostProcess(cut, ep, padded, videoPath) {
+  const ffmpeg     = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+  const audioDir   = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  const veoVoice   = path.join(audioDir, `cut_${padded}_veo_voice.mp3`)
+  const yeoriVoice = path.join(audioDir, `cut_${padded}_yeori_voice.mp3`)
+  const finalPath  = path.join(path.dirname(videoPath), `cut_${padded}_final.mp4`)
+  const apiKey     = process.env.ELEVENLABS_API_KEY
+  const voiceId    = process.env.ELEVENLABS_VOICE_ID || 'RmYuvmCbqOMBJxDLW4k8'
+
+  if (!apiKey) {
+    log('warn', '[STS] ELEVENLABS_API_KEY 없음 — 후처리 건너뜀')
+    return
+  }
+
+  ensureDir(audioDir)
+
+  // ① Veo 영상에서 음성 추출
+  log('step', `[STS] CUT ${cut.no}: Veo 음성 추출`)
+  await runFfmpeg(ffmpeg, ['-y', '-i', videoPath, '-vn', '-acodec', 'mp3', veoVoice])
+  log('ok', `[STS] 음성 추출: ${path.basename(veoVoice)}`)
+
+  // ② ElevenLabs STS — Veo 음성 → 서여리 목소리 (타이밍·립싱크 보존)
+  log('step', `[STS] CUT ${cut.no}: ElevenLabs STS 변환 (model: eleven_multilingual_sts_v2)`)
+  const audioBuffer = fs.readFileSync(veoVoice)
+  const audioBlob   = new Blob([audioBuffer], { type: 'audio/mpeg' })
+  const fd = new FormData()
+  fd.append('audio', audioBlob, 'voice.mp3')
+  fd.append('model_id', 'eleven_multilingual_sts_v2')
+  fd.append('voice_settings', JSON.stringify({ stability: 0.30, similarity_boost: 0.75, speed: 1.0 }))
+
+  const stsRes = await fetch(`https://api.elevenlabs.io/v1/speech-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey },
+    body: fd,
+  })
+  if (!stsRes.ok) {
+    const errText = await stsRes.text()
+    throw new Error(`STS API 오류 (${stsRes.status}): ${errText.slice(0, 200)}`)
+  }
+  fs.writeFileSync(yeoriVoice, Buffer.from(await stsRes.arrayBuffer()))
+  log('ok', `[STS] 서여리 목소리 변환: ${path.basename(yeoriVoice)}`)
+
+  // ③ FFmpeg: 원본 영상 비디오 + 서여리 음성 합성
+  log('step', `[STS] CUT ${cut.no}: FFmpeg 합성 → cut_${padded}_final.mp4`)
+  await runFfmpeg(ffmpeg, [
+    '-y',
+    '-i', videoPath,
+    '-i', yeoriVoice,
+    '-map', '0:v',
+    '-map', '1:a',
+    '-c:v', 'copy',
+    '-c:a', 'aac',
+    '-shortest',
+    finalPath,
+  ])
+  log('ok', `[STS] 립싱크 합성 완료: ${path.basename(finalPath)}`)
+}
+
 // ── 컷 1개 처리 ──────────────────────────────────────────────────────
 
 async function processCut(page, cut, episode, ratio) {
@@ -1140,12 +1216,15 @@ async function processCut(page, cut, episode, ratio) {
   log('step', `CUT ${cut.no}: cut_${padded}.jpg → 프롬프트 추가`)
   await addFileToPromptByName(page, `cut_${padded}.jpg`)
 
-  // ⑧ 영상 프롬프트 입력 (imagePrompt 우선)
-  const videoPrompt = (
+  // ⑧ 영상 프롬프트 입력 (imagePrompt 우선 + 대사 있으면 립싱크 지시문 추가)
+  const basePrompt = (
     cut.imagePrompt?.trim()
     || cut.videoPrompt?.trim()
     || 'Smooth cinematic camera motion. Character moves naturally. Photorealistic.'
   )
+  const videoPrompt = cut.dialogue?.trim()
+    ? `${basePrompt}\n\nThe character naturally speaks out loud in Korean: "${cut.dialogue.trim()}"\nHer lips move naturally and clearly in sync with the Korean dialogue.\nRealistic mouth movement, natural speech animation.`
+    : basePrompt
   await typeVideoPrompt(page, videoPrompt)
 
   // ⑨ 생성 버튼 클릭
@@ -1154,6 +1233,17 @@ async function processCut(page, cut, episode, ratio) {
 
   // ⑩ 완료 대기 → downloads/video/ep{N}/cut_NN.mp4 저장
   const savedPath = await waitAndSaveVideo(page, outPath)
+
+  // ⑪ STS 후처리: Veo 음성 추출 → ElevenLabs STS → FFmpeg 합성
+  //    대사가 있는 컷만 실행 (나레이션만 있는 컷은 기존 FFmpeg 합성 사용)
+  if (cut.dialogue?.trim()) {
+    try {
+      await runStsPostProcess(cut, ep, padded, savedPath)
+    } catch (err) {
+      log('warn', `[STS] CUT ${cut.no} 후처리 실패 (영상은 저장됨): ${err.message}`)
+    }
+  }
+
   return { status: 'ok', outPath: savedPath }
 }
 
