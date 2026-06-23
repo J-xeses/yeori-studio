@@ -217,10 +217,19 @@ export default function EditMetaTab() {
     a.click()
   }
 
-  const exportJSON = () => {
+  const exportJSON = async () => {
     const blob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob); a.download = 'yeori_edit_meta.json'; a.click()
+    try {
+      await fetch('http://localhost:3001/api/save-edit-meta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(meta),
+      })
+    } catch (e) {
+      console.warn('[EditMeta] 서버 저장 실패:', e.message)
+    }
   }
 
   const exportCSV = () => {

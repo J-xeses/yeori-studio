@@ -4,9 +4,9 @@
 // Usage: node scripts/make-capcut-draft.js <episode_number>
 //
 // 생성 구조:
-//   VideoTrack:  downloads/video/ep{N}/cut_NN.mp4  순서대로 배치
-//   AudioTrack:  downloads/audio/ep{N}/cut_NN.mp3  순서대로 배치
-//   (립싱크 JSON 구조 파악 후 mouth_shape_driver 추가 예정)
+//   VideoTrack:  cut_NN_final.mp4 우선, 없으면 cut_NN.mp4
+//   AudioTrack:  audioFile 지정 → cut_NN_yeori_voice.mp3 → cut_NN.mp3 순으로 탐색
+//   타임라인 배치: yeori_edit_meta.json 의 startSec / endSec 기반
 
 import fs   from 'fs'
 import path from 'path'
@@ -154,25 +154,25 @@ if (!ep) {
   process.exit(1)
 }
 
-// prompts.json 읽기
-const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
-if (!fs.existsSync(promptsPath)) {
-  console.error(`❌ prompts.json 없음: ${promptsPath}`); process.exit(1)
+// yeori_edit_meta.json 읽기
+const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+if (!fs.existsSync(metaPath)) {
+  console.error(`❌ yeori_edit_meta.json 없음: ${metaPath}`); process.exit(1)
 }
-const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'))
-const cuts    = prompts.cuts || []
+const editMeta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'))
+const cuts = Array.isArray(editMeta) ? editMeta : []
 
 const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`)
 const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
 
-// 파일 존재 확인 후 유효 컷만 필터
+// 파일 존재 확인 후 유효 컷만 필터 (cut_NN_final.mp4 우선, 없으면 cut_NN.mp4)
 const validCuts = cuts.filter(cut => {
-  const p = String(cut.no).padStart(2, '0')
-  const vOk = fs.existsSync(path.join(videoDir, `cut_${p}.mp4`))
-  const aOk = fs.existsSync(path.join(audioDir, `cut_${p}.mp3`))
-  if (!vOk) console.warn(`⚠️  CUT ${cut.no}: 영상 없음`)
-  if (!aOk) console.warn(`⚠️  CUT ${cut.no}: 오디오 없음`)
-  return vOk && aOk
+  const p     = String(cut.cutNo).padStart(2, '0')
+  const vFin  = path.join(videoDir, `cut_${p}_final.mp4`)
+  const vBase = path.join(videoDir, `cut_${p}.mp4`)
+  const vOk   = fs.existsSync(vFin) || fs.existsSync(vBase)
+  if (!vOk) console.warn(`⚠️  CUT ${cut.cutNo}: 영상 없음`)
+  return vOk
 })
 
 if (!validCuts.length) {
@@ -190,7 +190,7 @@ const vocalSeps  = []
 const phInfos    = []
 
 const cutData = validCuts.map(cut => {
-  const p        = String(cut.no).padStart(2, '0')
+  const p        = String(cut.cutNo).padStart(2, '0')
   const dur      = cut.duration || 8
   const vMatId   = uid(); const vLocalId = uid()
   const aMatId   = uid(); const aLocalId = uid()
@@ -201,8 +201,26 @@ const cutData = validCuts.map(cut => {
   const vocalId  = uid()
   const phId     = uid()
 
-  videoMats.push(mkVideoMat(vMatId, vLocalId, path.join(videoDir, `cut_${p}.mp4`), dur, `cut_${p}.mp4`))
-  audioMats.push(mkAudioMat(aMatId, aLocalId, path.join(audioDir, `cut_${p}.mp3`), dur, `cut_${p}.mp3`))
+  // 영상 파일: cut_NN_final.mp4 우선, 없으면 cut_NN.mp4
+  const finalVid  = path.join(videoDir, `cut_${p}_final.mp4`)
+  const baseVid   = path.join(videoDir, `cut_${p}.mp4`)
+  const videoFile = fs.existsSync(finalVid) ? finalVid : baseVid
+  const videoName = path.basename(videoFile)
+
+  // 오디오 파일: audioFile 지정 → cut_NN_yeori_voice.mp3 → cut_NN.mp3
+  let audioFile, audioName
+  if (cut.audioFile) {
+    audioFile = path.isAbsolute(cut.audioFile) ? cut.audioFile : path.join(audioDir, cut.audioFile)
+    audioName = path.basename(audioFile)
+  } else {
+    const yeoriAudio = path.join(audioDir, `cut_${p}_yeori_voice.mp3`)
+    const baseAudio  = path.join(audioDir, `cut_${p}.mp3`)
+    audioFile = fs.existsSync(yeoriAudio) ? yeoriAudio : baseAudio
+    audioName = path.basename(audioFile)
+  }
+
+  videoMats.push(mkVideoMat(vMatId, vLocalId, videoFile, dur, videoName))
+  audioMats.push(mkAudioMat(aMatId, aLocalId, audioFile, dur, audioName))
 
   speeds.push(mkSpeed(speedVId))
   speeds.push(mkSpeed(speedAId))
@@ -215,6 +233,7 @@ const cutData = validCuts.map(cut => {
 
   return {
     cut, dur,
+    videoFile, videoName, audioFile, audioName,
     vMatId, aMatId, vLocalId, aLocalId,
     speedVId, speedAId, canvasId,
     soundVId, soundAId,
@@ -222,20 +241,23 @@ const cutData = validCuts.map(cut => {
   }
 })
 
-// ── 타임라인 세그먼트 배치 ────────────────────────────────
-let cursor = 0
+// ── 타임라인 세그먼트 배치 (startSec은 yeori_edit_meta.json 값 사용) ──
 const videoSegs = []
 const audioSegs = []
 
 for (const d of cutData) {
+  const startSec   = d.cut.startSec ?? 0
+  const audioDelay = parseFloat(d.cut.audioStart) || 0
+  const audioEnd   = parseFloat(d.cut.audioEnd) || d.dur
+  const audioDur   = Math.max(0.01, audioEnd - audioDelay)
   // video extra_refs: [speed, placeholder_info, canvas, sound_channel, material_color, vocal_separation]
-  videoSegs.push(mkVideoSeg(cursor, d.dur, d.vMatId, [d.speedVId, d.phId, d.canvasId, d.soundVId, d.matColId, d.vocalId]))
+  videoSegs.push(mkVideoSeg(startSec, d.dur, d.vMatId, [d.speedVId, d.phId, d.canvasId, d.soundVId, d.matColId, d.vocalId]))
   // audio extra_refs: [speed, sound_channel]
-  audioSegs.push(mkAudioSeg(cursor, d.dur, d.aMatId, [d.speedAId, d.soundAId]))
-  cursor += d.dur
+  audioSegs.push(mkAudioSeg(startSec + audioDelay, audioDur, d.aMatId, [d.speedAId, d.soundAId]))
 }
 
-const totalDurμs = μs(cursor)
+const totalSec   = validCuts.length ? Math.max(...validCuts.map(c => c.endSec ?? ((c.startSec ?? 0) + (c.duration ?? 8)))) : 0
+const totalDurμs = μs(totalSec)
 const draftId    = uid()
 const draftName  = `yeori_ep${ep}_${new Date().toISOString().slice(0, 10)}`
 const draftDir   = path.join(CAPCUT_ROOT, draftName)
@@ -339,42 +361,36 @@ const meta = {
   draft_materials: [
     {
       type: 0,
-      value: cutData.map(d => {
-        const p = String(d.cut.no).padStart(2, '0')
-        return {
-          ai_group_type: '', create_time: Math.floor(nowMs / 1000),
-          duration: μs(d.dur), enter_from: 0,
-          extra_info: `cut_${p}.mp4`,
-          file_Path: path.join(videoDir, `cut_${p}.mp4`).replace(/\\/g, '/'),
-          height: 1280, id: d.vLocalId,
-          import_time: Math.floor(nowMs / 1000),
-          import_time_ms: nowμs,
-          item_source: 1, md5: '', metetype: 'video',
-          roughcut_time_range: { duration: μs(d.dur), start: 0 },
-          sub_time_range: { duration: -1, start: -1 },
-          type: 0, width: 720,
-        }
-      }),
+      value: cutData.map(d => ({
+        ai_group_type: '', create_time: Math.floor(nowMs / 1000),
+        duration: μs(d.dur), enter_from: 0,
+        extra_info: d.videoName,
+        file_Path: d.videoFile.replace(/\\/g, '/'),
+        height: 1280, id: d.vLocalId,
+        import_time: Math.floor(nowMs / 1000),
+        import_time_ms: nowμs,
+        item_source: 1, md5: '', metetype: 'video',
+        roughcut_time_range: { duration: μs(d.dur), start: 0 },
+        sub_time_range: { duration: -1, start: -1 },
+        type: 0, width: 720,
+      })),
     },
     { type: 1, value: [] },
     {
       type: 2,
-      value: cutData.map(d => {
-        const p = String(d.cut.no).padStart(2, '0')
-        return {
-          ai_group_type: '', create_time: Math.floor(nowMs / 1000),
-          duration: μs(d.dur), enter_from: 0,
-          extra_info: `cut_${p}.mp3`,
-          file_Path: path.join(audioDir, `cut_${p}.mp3`).replace(/\\/g, '/'),
-          height: 0, id: d.aLocalId,
-          import_time: Math.floor(nowMs / 1000),
-          import_time_ms: nowμs,
-          item_source: 1, md5: '', metetype: 'audio',
-          roughcut_time_range: { duration: μs(d.dur), start: 0 },
-          sub_time_range: { duration: -1, start: -1 },
-          type: 2, width: 0,
-        }
-      }),
+      value: cutData.map(d => ({
+        ai_group_type: '', create_time: Math.floor(nowMs / 1000),
+        duration: μs(d.dur), enter_from: 0,
+        extra_info: d.audioName,
+        file_Path: d.audioFile.replace(/\\/g, '/'),
+        height: 0, id: d.aLocalId,
+        import_time: Math.floor(nowMs / 1000),
+        import_time_ms: nowμs,
+        item_source: 1, md5: '', metetype: 'audio',
+        roughcut_time_range: { duration: μs(d.dur), start: 0 },
+        sub_time_range: { duration: -1, start: -1 },
+        type: 2, width: 0,
+      })),
     },
     { type: 3, value: [] },
     { type: 6, value: [] },
@@ -410,6 +426,6 @@ fs.writeFileSync(path.join(draftDir, 'draft_biz_config.json'), '',              
 
 console.log(`\n✅ CapCut 드래프트 생성 완료!`)
 console.log(`   폴더: ${draftDir}`)
-console.log(`   컷 수: ${validCuts.length}개 / 총 길이: ${cursor}초`)
+console.log(`   컷 수: ${validCuts.length}개 / 총 길이: ${totalSec}초`)
 console.log(`\n   → CapCut 실행 후 [드래프트] 목록에 "${draftName}"으로 나타납니다.`)
 console.log(`     (CapCut이 이미 열려 있으면 재시작 후 확인)`)

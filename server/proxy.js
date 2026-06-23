@@ -254,6 +254,18 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
+// ── POST /api/save-edit-meta — yeori_edit_meta.json 서버 저장 ─────────────
+app.post('/api/save-edit-meta', (req, res) => {
+  const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+  try {
+    fs.mkdirSync(path.dirname(metaPath), { recursive: true })
+    fs.writeFileSync(metaPath, JSON.stringify(req.body, null, 2), 'utf-8')
+    res.json({ ok: true, path: metaPath })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
 app.post('/api/confirm-image', (req, res) => {
   const { ep, cutNo, imageUrl } = req.body
