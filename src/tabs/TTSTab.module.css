@@ -223,3 +223,6 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 4px; transition: opacity 0.15s;
 }
 .trackResetBtn:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+
+.savingBadge { font-size: 12px; color: #f59e0b; }
+.savedBadge  { font-size: 12px; color: #22c55e; }

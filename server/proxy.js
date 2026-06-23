@@ -569,6 +569,45 @@ app.post('/api/run-video', (req, res) => {
   })
 })
 
+// ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
+app.post('/api/save-audio', async (req, res) => {
+  const ep    = req.query.ep
+  const cutNo = req.query.cutNo
+  if (!ep || !cutNo) return res.status(400).json({ error: 'ep, cutNo 필요' })
+
+  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  fs.mkdirSync(audioDir, { recursive: true })
+
+  const wavPath = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}_tmp.wav`)
+  const mp3Path = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}.mp3`)
+
+  const chunks = []
+  req.on('data', chunk => chunks.push(chunk))
+  req.on('end', () => {
+    fs.writeFileSync(wavPath, Buffer.concat(chunks))
+
+    const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+    const proc = spawn(ffmpeg, [
+      '-y', '-i', wavPath,
+      '-codec:a', 'libmp3lame', '-qscale:a', '2',
+      mp3Path
+    ])
+
+    proc.on('close', code => {
+      fs.unlinkSync(wavPath)
+      if (code === 0) {
+        res.json({ ok: true, path: mp3Path })
+      } else {
+        res.status(500).json({ error: 'FFmpeg 변환 실패' })
+      }
+    })
+
+    proc.on('error', err => {
+      res.status(500).json({ error: 'FFmpeg 실행 오류: ' + err.message })
+    })
+  })
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')

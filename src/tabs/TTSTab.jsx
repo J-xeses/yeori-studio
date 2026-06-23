@@ -66,6 +66,8 @@ export default function TTSTab() {
   const [trackLoading,  setTrackLoading]  = useState({})
   const [merging,       setMerging]       = useState({})
   const [batchRunning,  setBatchRunning]  = useState(false)
+  const [saving,        setSaving]        = useState({})
+  const [saved,         setSaved]         = useState({})
 
   const setTTS = (p) => dispatch({ type: 'SET_TTS_TAB_STATE', p })
 
@@ -203,6 +205,27 @@ export default function TTSTab() {
       const blob = new Blob([wav], { type: 'audio/wav' })
       const url  = URL.createObjectURL(blob)
       setTTS({ mergedUrls: { ...mergedUrls, [cutId]: url } })
+
+      // 서버에 MP3로 저장
+      const c2 = cuts.find(c => c.id === cutId)
+      if (c2) {
+        const epNo = state.episode?.number ?? ''
+        setSaving(p => ({ ...p, [cutId]: true }))
+        try {
+          const wavRes  = await fetch(url)
+          const wavBlob = await wavRes.blob()
+          const saveRes = await fetch(
+            `http://localhost:3001/api/save-audio?ep=${epNo}&cutNo=${String(c2.no).padStart(2,'0')}`,
+            { method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: wavBlob }
+          )
+          if (!saveRes.ok) throw new Error('저장 실패')
+          setSaved(p => ({ ...p, [cutId]: true }))
+        } catch (err) {
+          alert('MP3 저장 오류: ' + err.message)
+        } finally {
+          setSaving(p => ({ ...p, [cutId]: false }))
+        }
+      }
 
       // videoTab subtitles 동기화
       const allText = list.map(t => t.text).filter(Boolean).join('\n')
@@ -448,6 +471,8 @@ export default function TTSTab() {
                   <button className={s.dlBtn} onClick={() => downloadMerged(cut.id, cut.no)}>
                     ⬇ 다운로드
                   </button>
+                  {saving[cut.id] && <span className={s.savingBadge}>💾 저장 중…</span>}
+                  {saved[cut.id]  && <span className={s.savedBadge}>✅ MP3 저장됨</span>}
                   {!g3Confirmed[cut.id] ? (
                     <button className={s.g3Btn} onClick={() => approveG3(cut.id, cut.no)}>
                       ✅ G3 승인
