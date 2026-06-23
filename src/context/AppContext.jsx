@@ -48,7 +48,12 @@ const defaultState = {
   cuts: makeCuts(7),
   scriptRaw: '',
 
-  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0 },
+  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0,
+    trackDefaults: {
+      dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
+      narration: { speed: 0.85, stability: 55, similarity: 75 },
+    }
+  },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70 },

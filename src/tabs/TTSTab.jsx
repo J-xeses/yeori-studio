@@ -5,26 +5,27 @@ import { setGPoint } from '../lib/gpoints'
 import s from './TTSTab.module.css'
 
 const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
-const DEFAULT_DIALOGUE_SETTINGS  = { speed: 1.0,  stability: 35, similarity: 75 }
-const DEFAULT_NARRATION_SETTINGS = { speed: 0.85, stability: 60, similarity: 75 }
+const FALLBACK_DEFAULTS = {
+  dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
+  narration: { speed: 0.85, stability: 55, similarity: 75 },
+}
 
-function makeTrack(type, text = '') {
+function makeTrack(type, text = '', trackDefaults) {
+  const defs = trackDefaults || FALLBACK_DEFAULTS
   return {
     id: `track_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     type,
     text,
     url: null,
-    settings: type === 'narration'
-      ? { ...DEFAULT_NARRATION_SETTINGS }
-      : { ...DEFAULT_DIALOGUE_SETTINGS },
+    settings: { ...(defs[type] || FALLBACK_DEFAULTS[type]) },
   }
 }
 
-function initTracksForCut(cut) {
+function initTracksForCut(cut, trackDefaults) {
   const tracks = []
-  if (cut.dialogue?.trim())  tracks.push(makeTrack('dialogue',  cut.dialogue))
-  if (cut.narration?.trim()) tracks.push(makeTrack('narration', cut.narration))
-  if (!tracks.length)        tracks.push(makeTrack('dialogue',  ''))
+  if (cut.dialogue?.trim())  tracks.push(makeTrack('dialogue',  cut.dialogue,  trackDefaults))
+  if (cut.narration?.trim()) tracks.push(makeTrack('narration', cut.narration, trackDefaults))
+  if (!tracks.length)        tracks.push(makeTrack('dialogue',  '',            trackDefaults))
   return tracks
 }
 
@@ -56,6 +57,7 @@ export default function TTSTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
   const { tracks = {}, mergedUrls = {}, g3Confirmed = {} } = state.ttsTabState || {}
+  const trackDefaults = ttsSettings.trackDefaults || FALLBACK_DEFAULTS
 
   const [activeCutIdx, setActiveCutIdx]   = useState(0)
   const [voiceInput,   setVoiceInput]     = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -70,7 +72,7 @@ export default function TTSTab() {
   const getTracksForCut = (cutId) => {
     if (tracks[cutId]) return tracks[cutId]
     const c = cuts.find(c => c.id === cutId)
-    return c ? initTracksForCut(c) : []
+    return c ? initTracksForCut(c, trackDefaults) : []
   }
 
   const setTracksForCut = (cutId, updater) => {
@@ -83,7 +85,7 @@ export default function TTSTab() {
     setActiveCutIdx(idx)
     const c = cuts[idx]
     if (c && !tracks[c.id]) {
-      setTTS({ tracks: { ...tracks, [c.id]: initTracksForCut(c) } })
+      setTTS({ tracks: { ...tracks, [c.id]: initTracksForCut(c, trackDefaults) } })
     }
   }
 
@@ -242,7 +244,7 @@ export default function TTSTab() {
     setBatchRunning(true)
     try {
       for (const c of cuts) {
-        let cutTrks = tracks[c.id] || initTracksForCut(c)
+        let cutTrks = tracks[c.id] || initTracksForCut(c, trackDefaults)
         // 각 트랙 생성
         const updated = []
         for (const t of cutTrks) {
@@ -412,11 +414,11 @@ export default function TTSTab() {
             {/* 트랙 추가 */}
             <div className={s.addTrackRow}>
               <button className={s.addTrackBtn}
-                onClick={() => setTracksForCut(cut.id, prev => [...prev, makeTrack('dialogue', '')])}>
+                onClick={() => setTracksForCut(cut.id, prev => [...prev, makeTrack('dialogue', '', trackDefaults)])}>
                 + 대사 추가
               </button>
               <button className={s.addTrackBtn}
-                onClick={() => setTracksForCut(cut.id, prev => [...prev, makeTrack('narration', '')])}>
+                onClick={() => setTracksForCut(cut.id, prev => [...prev, makeTrack('narration', '', trackDefaults)])}>
                 + 나레이션 추가
               </button>
             </div>
