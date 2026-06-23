@@ -81,6 +81,8 @@ export default function VideoTab() {
   const [selectedClipIdx, setSelectedClipIdx] = useState(0)
   const [videoGenStatus, setVideoGenStatus] = useState({})
   const [videoGenLog, setVideoGenLog] = useState({})
+  const [ffmpegStatus, setFfmpegStatus] = useState({})
+  const [ffmpegLog,    setFfmpegLog]    = useState({})
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
   const setVideoClips = (updater) => {
@@ -385,6 +387,61 @@ export default function VideoTab() {
     } catch (err) {
       setVideoGenStatus(p => ({ ...p, [cut.id]: 'error' }))
       setVideoGenLog(p => ({ ...p, [cut.id]: `❌ ${err.message}` }))
+    }
+  }
+
+  const runFfmpegForCut = async (cut) => {
+    setFfmpegStatus(p => ({ ...p, [cut.id]: 'running' }))
+    setFfmpegLog(p => ({ ...p, [cut.id]: '합성 시작…' }))
+    try {
+      const ep = episode?.number ?? ''
+      const res = await fetch('http://localhost:3001/api/run-ffmpeg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep, cutNo: cut.no }),
+      })
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const parts = buf.split('\n\n')
+        buf = parts.pop()
+        for (const part of parts) {
+          const line = part.split('\n').find(l => l.startsWith('data: '))
+          if (!line) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'progress') {
+              setFfmpegLog(p => ({ ...p, [cut.id]: ev.message }))
+            } else if (ev.type === 'complete') {
+              if (ev.success) {
+                setFfmpegStatus(p => ({ ...p, [cut.id]: 'done' }))
+                setFfmpegLog(p => ({ ...p, [cut.id]: `✅ ${ev.message}` }))
+                const url = `http://localhost:3001${ev.url}?t=${Date.now()}`
+                setVideoClips(p => ({
+                  ...p,
+                  [cut.id]: [...(p[cut.id] || []), {
+                    url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
+                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true,
+                  }],
+                }))
+              } else {
+                setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
+                setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${ev.message}` }))
+              }
+            } else if (ev.type === 'error') {
+              setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
+              setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${ev.message}` }))
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
+      setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${err.message}` }))
     }
   }
 
@@ -738,7 +795,16 @@ export default function VideoTab() {
                     onClick={() => generateVideoForCut(selCut)}>
                     {videoGenStatus[selCut.id] === 'running' ? '⏳ 생성 중…' : '✨ AI 영상 생성'}
                   </button>
+                  <button
+                    className={s.ffmpegBtn}
+                    disabled={ffmpegStatus[selCut.id] === 'running'}
+                    onClick={() => runFfmpegForCut(selCut)}>
+                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 합성 중…' : '🎬 FFmpeg 합성'}
+                  </button>
                 </div>
+                {ffmpegLog[selCut.id] && (
+                  <div className={s.ffmpegLog}>{ffmpegLog[selCut.id]}</div>
+                )}
                 {videoGenLog[selCut.id] && (
                   <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
                 )}

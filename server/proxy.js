@@ -608,6 +608,68 @@ app.post('/api/save-audio', async (req, res) => {
   })
 })
 
+// ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
+app.post('/api/run-ffmpeg', (req, res) => {
+  const { ep, cutNo } = req.body
+  if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
+
+  const padded   = String(cutNo).padStart(2, '0')
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`)
+  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  const outDir   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${ep}`)
+  fs.mkdirSync(outDir, { recursive: true })
+
+  const videoFile = path.join(videoDir, `cut_${padded}.mp4`)
+  const audioFile = path.join(audioDir, `cut_${padded}.mp3`)
+  const outFile   = path.join(outDir,   `cut_${padded}_final.mp4`)
+
+  if (!fs.existsSync(videoFile)) return res.status(404).json({ error: `영상 파일 없음: ${videoFile}` })
+  if (!fs.existsSync(audioFile)) return res.status(404).json({ error: `음성 파일 없음: ${audioFile}` })
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`)
+
+  send({ type: 'progress', message: 'FFmpeg 합성 시작…' })
+
+  const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+  const args = [
+    '-y',
+    '-i', videoFile,
+    '-i', audioFile,
+    '-filter_complex', '[1:a]apad=whole_dur=8[a]',
+    '-map', '0:v',
+    '-map', '[a]',
+    '-c:v', 'copy',
+    '-c:a', 'aac',
+    '-shortest',
+    outFile,
+  ]
+
+  const proc = spawn(ffmpeg, args)
+  let errBuf = ''
+
+  proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
+
+  proc.on('close', code => {
+    if (code === 0) {
+      const url = `/downloads/output/ep${ep}/cut_${padded}_final.mp4`
+      send({ type: 'complete', success: true, url, message: '합성 완료!' })
+      console.log(`[run-ffmpeg] 완료: ${outFile}`)
+    } else {
+      send({ type: 'complete', success: false, message: 'FFmpeg 실패', detail: errBuf.slice(-300) })
+      console.error('[run-ffmpeg] 실패:', errBuf.slice(-300))
+    }
+    res.end()
+  })
+
+  proc.on('error', err => {
+    send({ type: 'error', message: 'FFmpeg 실행 오류: ' + err.message })
+    res.end()
+  })
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
