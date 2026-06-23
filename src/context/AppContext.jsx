@@ -280,6 +280,13 @@ function upgradeCharacter(val) {
 }
 
 function migrateState(saved, init) {
+  // ttsSettings.trackDefaults 누락 시 기본값 병합
+  if (saved.ttsSettings && !saved.ttsSettings.trackDefaults) {
+    saved.ttsSettings = {
+      ...saved.ttsSettings,
+      trackDefaults: init.ttsSettings.trackDefaults,
+    }
+  }
   if (!saved.episodes) {
     const epId = defaultEpisodeId
     saved.episodes = {
