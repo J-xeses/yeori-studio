@@ -267,7 +267,15 @@ function reducer(state, action) {
       }
     }
 
-    case 'LOAD': return { ...defaultState, ...action.p, savedAt: new Date().toISOString() }
+    case 'LOAD': return {
+      ...defaultState,
+      ...action.p,
+      ttsSettings:  { ...defaultState.ttsSettings,  ...(action.p.ttsSettings  || {}) },
+      videoSettings: { ...defaultState.videoSettings, ...(action.p.videoSettings || {}) },
+      ttsTabState:  { ...defaultState.ttsTabState,  ...(action.p.ttsTabState  || {}) },
+      videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
+      savedAt: new Date().toISOString(),
+    }
     default: return state
   }
 }
@@ -280,13 +288,6 @@ function upgradeCharacter(val) {
 }
 
 function migrateState(saved, init) {
-  // ttsSettings.trackDefaults 누락 시 기본값 병합
-  if (saved.ttsSettings && !saved.ttsSettings.trackDefaults) {
-    saved.ttsSettings = {
-      ...saved.ttsSettings,
-      trackDefaults: init.ttsSettings.trackDefaults,
-    }
-  }
   if (!saved.episodes) {
     const epId = defaultEpisodeId
     saved.episodes = {
