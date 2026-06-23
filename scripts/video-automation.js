@@ -16,18 +16,31 @@ import fs from 'fs'
 import path from 'path'
 import readline from 'readline'
 import { fileURLToPath } from 'url'
+import { spawn } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ── ROOT 자동 감지 ──────────────────────────────────────────────────────
-const COMPANY_PATH = 'C:\\yeori-studio'
-const HOME_PATH = 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio'
-const ROOT = (() => {
-  if (fs.existsSync(COMPANY_PATH)) { console.log('[ROOT] 회사 PC'); return COMPANY_PATH }
-  if (fs.existsSync(HOME_PATH)) { console.log('[ROOT] 집 PC'); return HOME_PATH }
-  console.error('[ERROR] ROOT 경로를 찾을 수 없습니다.')
+const CANDIDATES = [
+  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
+  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
+]
+const CODE_ROOT = (() => {
+  for (const { label, p } of CANDIDATES) {
+    if (
+      fs.existsSync(p) &&
+      fs.existsSync(path.join(p, 'node_modules')) &&
+      fs.existsSync(path.join(p, 'package.json'))
+    ) {
+      console.log(`[CODE_ROOT] ${label}: ${p}`)
+      return p
+    }
+  }
+  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
   process.exit(1)
 })()
+const MEDIA_ROOT = 'C:\\yeori-studio'
+const ROOT = CODE_ROOT  // 하위 호환 유지
 
 // .env 및 .env.local 로드
 ;['.env', '.env.local'].forEach(name => {
@@ -43,9 +56,9 @@ const ROOT = (() => {
 const CONFIG = {
   debuggingPort:   9222,
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  flowDir:         path.join(ROOT, 'downloads', 'flow'),
-  videoDir:        path.join(ROOT, 'downloads', 'video'),
-  characterImage:  path.join(ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
+  flowDir:         path.join(MEDIA_ROOT, 'downloads', 'flow'),
+  videoDir:        path.join(MEDIA_ROOT, 'downloads', 'video'),
+  characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
   preferredModel:  'Omni Flash',
   defaultDuration: 8,
   delayMs:         6000,
@@ -410,237 +423,134 @@ async function uploadCutImage(page, imagePath) {
 
 // ── 동영상 모드 전환 + 비율 + 모델 ─────────────────────────────────
 //
-// UI 구조 (debug-tabs.js 확인 결과):
-//   1. 프롬프트 바 "Nano Banana" 모델 버튼 클릭 → 드롭다운 오픈
-//   2. 드롭다운(role="menu" .DropdownMenuContent) 내부:
-//      - role="tablist" > role="tab" .flow_tab_slider_trigger : 이미지/동영상 전환
-//      - 비율 버튼 (9:16 등) 및 모델 버튼이 동일 드롭다운 내에 존재
+// UI 구조 (페이지 소스 기반):
+//   - 하단 프롬프트 바 placeholder = "무엇을 만들고 싶으신가요?" (y ≥ 800)
+//   - 프롬프트 바에 "이미지" / "동영상" 탭 버튼이 직접 노출됨
+//   - "동영상" 탭 클릭 후 비율(9:16 등) 버튼, 모델 버튼 순서대로 텍스트로 찾아 클릭
+//   - 좌표 기반 클릭 전혀 사용하지 않음
 
 async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferredModel) {
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
-  // ── 1. 모델 드롭다운 트리거 클릭 ────────────────────────────────────
-  // 매칭 조건 (하나라도 만족하면 트리거로 판단):
-  //   A. textContent.includes('Nano Banana')
-  //   B. textContent.includes('Omni Flash')
-  //   C. children.length === 2 이면서 텍스트에 모델명+배수/시간 조합 포함
-  //      (예: "x1", "x2", "8s", "4s" 등 — 비율·속도 표시가 붙는 트리거 버튼)
-  const TRIGGER_MODEL_KEYWORDS = ['Nano Banana', 'Omni Flash', 'Veo 3', 'Veo3']
-  const TRIGGER_SUFFIX_RE = /\b(x\d|[\d]+s)\b/i
+  // ── 0. 설정 팝업 열기 — 이미 열려있으면 클릭 생략 (토글 방지) ──────────
+  // 확인된 DOM: button[textContent /Nano Banana 2.*x[1-4]/, children===2]
+  const alreadyOpen = await page.evaluate(() =>
+    document.querySelectorAll('[role="tab"].flow_tab_slider_trigger').length > 0
+  )
 
-  const triggerResult = await page.evaluate((modelKws, suffixRe) => {
-    const suffixRegex = new RegExp(suffixRe)
-    const visible = (el) => {
-      const r = el.getBoundingClientRect()
-      return r.width > 1 && r.height > 1
-    }
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      if (!visible(el)) continue
-      const r = el.getBoundingClientRect()
-      const txt = (el.textContent || '').trim()
-      const haspopup = el.getAttribute('aria-haspopup')
-      const isModelTrigger = (
-        modelKws.some(k => txt.includes(k)) ||               // A/B: 알려진 모델명 포함
-        (el.children.length <= 2 && suffixRegex.test(txt)) || // C: children≤2 + 배수/시간 패턴
-        (haspopup === 'menu' && r.top > 600)                  // D: 화면 하단(y>600) menu 트리거
-      )
-      if (!isModelTrigger) continue
-      // 좌표만 반환 — 실제 클릭은 Puppeteer mouse.click()으로
-      return {
-        found: true,
-        txt: txt.slice(0, 60),
-        cx: Math.round(r.left + r.width / 2),
-        cy: Math.round(r.top + r.height / 2),
-        label: `${el.tagName} "${txt.slice(0, 60)}" (${Math.round(r.left)},${Math.round(r.top)})`,
-        buttons: [],
-      }
-    }
-
-    // 실패: 화면 내 모든 button 텍스트 수집 (진단용)
-    const buttons = []
-    for (const el of document.querySelectorAll('button, [role="button"]')) {
-      if (!visible(el)) continue
-      const r = el.getBoundingClientRect()
-      const txt = (el.textContent || '').trim()
-      buttons.push({
-        tag: el.tagName,
-        txt: txt.slice(0, 80),
-        children: el.children.length,
-        haspopup: el.getAttribute('aria-haspopup'),
-        x: Math.round(r.left),
-        y: Math.round(r.top),
-      })
-    }
-    return { found: false, buttons }
-  }, TRIGGER_MODEL_KEYWORDS, TRIGGER_SUFFIX_RE.source)
-
-  if (!triggerResult.found) {
-    console.log(`[videoMode] 드롭다운 트리거 못 찾음 — 화면 내 button 전체 목록 (${triggerResult.buttons.length}개):`)
-    triggerResult.buttons.forEach((b, i) =>
-      console.log(`  [${i}] <${b.tag}> children=${b.children} haspopup=${b.haspopup} (${b.x},${b.y}) "${b.txt}"`)
-    )
-    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_no_trigger.png') })
-    throw new Error('[videoMode] 모델 드롭다운 트리거 없음 — 동영상 모드 전환 중단')
-  }
-
-  // Escape로 혹시 열려있는 드롭다운 먼저 닫기 (이전 컷 잔류 방지)
-  await page.keyboard.press('Escape')
-  await sleep(300)
-
-  // 실제 마우스 클릭 (합성 click()은 React 드롭다운을 열지 못함)
-  await page.mouse.click(triggerResult.cx, triggerResult.cy)
-  log('ok', `[videoMode] 드롭다운 트리거 클릭: ${triggerResult.label}`)
-
-  // ── 2. 드롭다운(DropdownMenuContent) 열릴 때까지 대기 ───────────────
-  try {
-    await page.waitForFunction(
-      () => !!document.querySelector('[role="menu"][class*="DropdownMenuContent"]'),
-      { timeout: 5000 }
-    )
-  } catch {
-    try {
-      await page.waitForFunction(() => !!document.querySelector('[role="menu"]'), { timeout: 3000 })
-    } catch {
-      await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_dropdown_fail.png') })
-      throw new Error('[videoMode] 드롭다운이 열리지 않음 — 동영상 모드 전환 중단')
-    }
-  }
-  log('ok', '[videoMode] 드롭다운 열림 확인')
-  await sleep(400)
-
-  // ── 3. 드롭다운 내 "동영상" 탭 클릭 (page.mouse.click으로 실제 클릭) ──
-  const tabPos = await page.evaluate(() => {
-    for (const menu of document.querySelectorAll('[role="menu"]')) {
-      for (const btn of menu.querySelectorAll('[role="tab"]')) {
-        const r = btn.getBoundingClientRect()
-        if (r.width < 1 || r.height < 1) continue
-        const txt = (btn.textContent || '').trim()
-        const cls = btn.className || ''
-        if (txt.includes('동영상') && cls.includes('flow_tab_slider_trigger')) {
-          return {
-            cx: Math.round(r.left + r.width / 2),
-            cy: Math.round(r.top + r.height / 2),
-            label: `role=tab "${txt.slice(0, 40)}" aria-selected=${btn.getAttribute('aria-selected')} (${Math.round(r.left)},${Math.round(r.top)})`,
-          }
+  if (alreadyOpen) {
+    log('info', '[videoMode] 설정 팝업 이미 열려있음 — 트리거 클릭 생략')
+  } else {
+    const popupInfo = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('button')) {
+        const txt = (el.textContent || '').trim()
+        if (/Nano Banana 2/.test(txt) && /x[1-4]/.test(txt) && el.children.length === 2) {
+          const r = el.getBoundingClientRect()
+          return { txt: txt.slice(0, 60), x: Math.round(r.left), y: Math.round(r.top) }
         }
+      }
+      return null
+    })
+
+    if (popupInfo) {
+      log('info', `[videoMode] 팝업 트리거 클릭 — txt="${popupInfo.txt}" x=${popupInfo.x} y=${popupInfo.y}`)
+      await page.mouse.click(popupInfo.x + 10, popupInfo.y + 10)
+      await sleep(1000)
+    } else {
+      log('warn', '[videoMode] 팝업 트리거 버튼 못 찾음')
+    }
+  }
+  await sleep(400)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_popup_open.png') })
+
+  // 공통: [role="tab"].flow_tab_slider_trigger 요소 목록
+  // 1·2·3단계 모두 이 집합에서 textContent 기준으로 선택
+
+  // ── 1. "동영상" 탭 ────────────────────────────────────────────────────
+  // textContent가 'play_circle동영상' 형태 → .includes('동영상') 로 매칭
+  const videoTabInfo = await page.evaluate(() => {
+    const tabs = [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
+    for (const el of tabs) {
+      const txt = (el.textContent || '').trim()
+      if (txt.includes('동영상')) {
+        const r = el.getBoundingClientRect()
+        return { txt, cls: el.className.slice(0, 80), x: Math.round(r.left), y: Math.round(r.top) }
       }
     }
     return null
   })
 
-  if (!tabPos) {
-    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab_fail.png') })
-    throw new Error('[videoMode] 드롭다운 내 "동영상" 탭 없음 — 전환 중단')
-  }
-  await page.mouse.click(tabPos.cx, tabPos.cy)
-  log('ok', `[videoMode] "동영상" 탭 클릭: ${tabPos.label}`)
-  await sleep(800)
-
-  // ── 4. 검증: "동영상" 탭 aria-selected === "true" ─────────────────
-  const verified = await page.evaluate(() => {
-    for (const menu of document.querySelectorAll('[role="menu"]')) {
-      for (const btn of menu.querySelectorAll('[role="tab"]')) {
-        const txt = (btn.textContent || '').trim()
-        if (txt.includes('동영상') && btn.getAttribute('aria-selected') === 'true') return true
+  if (videoTabInfo) {
+    log('info', `[videoMode] 동영상 탭 클릭 — txt="${videoTabInfo.txt}" x=${videoTabInfo.x} y=${videoTabInfo.y}`)
+    await page.evaluate(() => {
+      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+        if ((el.textContent || '').trim().includes('동영상')) { el.click(); return }
       }
-    }
-    return false
-  })
-
-  if (!verified) {
-    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_verify_fail.png') })
-    throw new Error('[videoMode] "동영상" 탭 aria-selected=true 검증 실패 — 전환 중단')
+    })
+  } else {
+    log('warn', '[videoMode] 동영상 탭 못 찾음')
   }
-  log('ok', '[videoMode] 동영상 모드 전환 검증 성공 (aria-selected=true)')
+  await sleep(500)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab.png') })
 
-  // ── 5~10. 드롭다운 내 명시적 설정 ─────────────────────────────────────
-  // flow_tab_slider_trigger 클래스 버튼 탐색 헬퍼 (좌표 반환, 클릭은 밖에서)
-  const findSliderTab = (fnStr) => page.evaluate((fnStr) => {
-    const match = new Function('txt', `return (${fnStr})`)
-    for (const menu of document.querySelectorAll('[role="menu"]')) {
-      for (const el of menu.querySelectorAll('*')) {
+  // ── 2. 비율 버튼 ─────────────────────────────────────────────────────
+  // textContent가 'crop_9_169:16' 형태 → .endsWith(ratio) 로 매칭
+  const ratioInfo = await page.evaluate((ratio) => {
+    const tabs = [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
+    for (const el of tabs) {
+      const txt = (el.textContent || '').trim()
+      if (txt.endsWith(ratio)) {
         const r = el.getBoundingClientRect()
-        if (r.width < 1 || r.height < 1) continue
-        const cls = el.className || ''
-        if (!cls.includes('flow_tab_slider_trigger')) continue
-        const txt = (el.textContent || '').trim()
-        if (match(txt)) {
-          return {
-            cx: Math.round(r.left + r.width / 2),
-            cy: Math.round(r.top + r.height / 2),
-            txt: txt.slice(0, 40),
-            cls: cls.slice(0, 80),
-            x: Math.round(r.left),
-            y: Math.round(r.top),
-          }
-        }
+        return { txt, cls: el.className.slice(0, 80), x: Math.round(r.left), y: Math.round(r.top) }
       }
     }
     return null
-  }, fnStr)
+  }, ratio)
 
-  const clickSlider = async (stepName, fnStr) => {
-    const pos = await findSliderTab(fnStr)
-    if (pos) {
-      log('info', `[videoMode] ${stepName} 클릭 전: "${pos.txt}" (${pos.x},${pos.y}) cls="${pos.cls}"`)
-      await page.mouse.click(pos.cx, pos.cy)
-      await sleep(500)
-      log('info', `[videoMode] ${stepName} 클릭 완료`)
-    } else {
-      log('warn', `[videoMode] ${stepName} 못 찾음 — 건너뜀`)
-    }
-  }
-
-  // ─ 5. "애셋" 탭 클릭
-  await clickSlider('"애셋" 탭', `txt === '애셋' || txt.includes('애셋')`)
-  await sleep(400)
-
-  // ─ 6. 비율 (9:16 / 16:9)
-  const ratioTarget = ratio === '16:9' ? '16:9' : '9:16'
-  await clickSlider(`"${ratioTarget}" 비율`, `txt === '${ratioTarget}' || txt.endsWith('${ratioTarget}')`)
-  await sleep(400)
-
-  // ─ 7. 생성 개수 "1x"
-  await clickSlider('"1x" 개수', `txt === '1x'`)
-  await sleep(400)
-
-  // ─ 8. 모델 "Omni Flash" (flow_tab_slider_trigger 또는 일반 요소)
-  const modelPos = await page.evaluate(() => {
-    for (const menu of document.querySelectorAll('[role="menu"]')) {
-      for (const el of menu.querySelectorAll('*')) {
-        const r = el.getBoundingClientRect()
-        if (r.width < 1 || r.height < 1) continue
-        if (el.children.length > 8) continue
-        const txt = (el.textContent || '').trim()
-        if (txt.includes('Omni Flash') && txt.length < 80) {
-          return {
-            cx: Math.round(r.left + r.width / 2),
-            cy: Math.round(r.top + r.height / 2),
-            txt: txt.slice(0, 50),
-            cls: (el.className || '').slice(0, 80),
-            x: Math.round(r.left),
-            y: Math.round(r.top),
-          }
-        }
+  if (ratioInfo) {
+    log('info', `[videoMode] ${ratio} 비율 클릭 — txt="${ratioInfo.txt}" x=${ratioInfo.x} y=${ratioInfo.y}`)
+    await page.evaluate((ratio) => {
+      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+        if ((el.textContent || '').trim().endsWith(ratio)) { el.click(); return }
       }
-    }
-    return null
-  })
-  if (modelPos) {
-    log('info', `[videoMode] "Omni Flash" 모델 클릭 전: "${modelPos.txt}" (${modelPos.x},${modelPos.y}) cls="${modelPos.cls}"`)
-    await page.mouse.click(modelPos.cx, modelPos.cy)
-    await sleep(500)
-    log('info', '[videoMode] "Omni Flash" 모델 클릭 완료')
+    }, ratio)
   } else {
-    log('warn', '[videoMode] "Omni Flash" 모델 못 찾음 — 건너뜀')
+    log('warn', `[videoMode] ${ratio} 비율 탭 못 찾음`)
+  }
+  await sleep(500)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_ratio.png') })
+
+  // ── 3. 업스케일 선택 (x2 고정) ───────────────────────────────────────
+  // textContent === 'x2'
+  const upscale = 'x2'
+  const upscaleInfo = await page.evaluate((up) => {
+    const tabs = [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
+    for (const el of tabs) {
+      const txt = (el.textContent || '').trim()
+      if (txt === up) {
+        const r = el.getBoundingClientRect()
+        return { txt, cls: el.className.slice(0, 80), x: Math.round(r.left), y: Math.round(r.top) }
+      }
+    }
+    return null
+  }, upscale)
+
+  if (upscaleInfo) {
+    log('info', `[videoMode] 업스케일 ${upscale} 클릭 — txt="${upscaleInfo.txt}" x=${upscaleInfo.x} y=${upscaleInfo.y}`)
+    await page.evaluate((up) => {
+      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+        if ((el.textContent || '').trim() === up) { el.click(); return }
+      }
+    }, upscale)
+  } else {
+    log('warn', `[videoMode] 업스케일 ${upscale} 못 찾음`)
   }
   await sleep(400)
 
-  // ─ 9. 길이 "8s"
-  await clickSlider('"8s" 길이', `txt === '8s'`)
-  await sleep(400)
-
+  // ── 4. 팝업 닫기 (바깥 클릭) ─────────────────────────────────────────
+  await page.mouse.click(100, 100)
+  log('info', '[videoMode] 팝업 닫기 (100,100 클릭)')
+  await sleep(500)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_after_toggle.png') })
   return true
 }
@@ -901,74 +811,52 @@ async function clickAddToPrompt(page) {
   })
 }
 
-// ── hover로 썸네일 좌표 탐색 (flow-automation.js 검증된 방식) ──────────
-// namePatterns: ['yeori-face', 'cut_01'] 등 파일명 키워드 배열
-// returns: { 'yeori-face': {x,y,w,h} | null, ... }
+// ── '+' 패널에서 파일명으로 정확히 선택 → "프롬프트에 추가" ──────────
+// 파일 없으면 즉시 Error (폴백 없음)
 
-async function findThumbByHover(page, namePatterns) {
-  // 상단 이미지 스트립이 오른쪽으로 밀려난 경우 끝까지 스크롤
-  await page.evaluate(() => {
-    const strip = [...document.querySelectorAll('*')].find(el => {
-      const r = el.getBoundingClientRect()
-      return el.scrollWidth > el.clientWidth + 50
-        && r.top < window.innerHeight * 0.45
-        && r.top > 0
-        && r.height > 50 && r.height < 450
-    })
-    if (strip) strip.scrollLeft = strip.scrollWidth
-  })
-  await sleep(400)
+async function addFileToPromptByName(page, fileName) {
+  const nameBase = path.basename(fileName, path.extname(fileName)).toLowerCase()
 
-  const imgPositions = await page.evaluate(() =>
-    [...document.querySelectorAll('img')]
-      .map(img => {
-        const r = img.getBoundingClientRect()
-        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), w: Math.round(r.width), h: Math.round(r.height) }
-      })
-      .filter(p => p.w >= 40 && p.h >= 40 && p.y > 0 && p.y < window.innerHeight * 0.9 && p.x > 0 && p.x < window.innerWidth)
-  )
-  log('info', `[findThumb] 탐색 img 수: ${imgPositions.length}`)
+  if (!await clickPlusButton(page)) {
+    throw new Error(`[addToPrompt] '+' 버튼 클릭 실패 (${fileName})`)
+  }
+  await sleep(1200)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, `debug_panel_${nameBase}.png`) })
 
-  const results = {}
-  for (const pat of namePatterns) results[pat] = null
-
-  for (const pos of imgPositions) {
-    if (Object.values(results).every(v => v !== null)) break
-    await page.mouse.move(pos.x, pos.y)
-    await sleep(600)
-    const bodyText = await page.evaluate(() => document.body.innerText.toLowerCase())
-    for (const pat of namePatterns) {
-      if (results[pat]) continue
-      if (bodyText.includes(pat.toLowerCase())) {
-        results[pat] = pos
-        log('info', `[findThumb] "${pat}" 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+  const clicked = await page.evaluate((nameBase) => {
+    function search(root) {
+      for (const el of root.querySelectorAll('*')) {
+        const r = el.getBoundingClientRect()
+        if (r.width < 10 || r.height < 10) continue
+        const txt   = (el.textContent        || '').trim().toLowerCase()
+        const alt   = (el.getAttribute('alt')        || '').toLowerCase()
+        const title = (el.getAttribute('title')      || '').toLowerCase()
+        const label = (el.getAttribute('aria-label') || '').toLowerCase()
+        if (txt === nameBase || txt.includes(nameBase) ||
+            alt.includes(nameBase) || title.includes(nameBase) || label.includes(nameBase)) {
+          el.click()
+          return `${el.tagName} "${(txt || alt || title || label).slice(0, 40)}" (${Math.round(r.left)},${Math.round(r.top)})`
+        }
       }
+      for (const el of root.querySelectorAll('*')) {
+        if (el.shadowRoot) { const r = search(el.shadowRoot); if (r) return r }
+      }
+      return null
     }
-  }
-  for (const pat of namePatterns) {
-    if (!results[pat]) log('warn', `[findThumb] "${pat}" 썸네일 못 찾음`)
-  }
-  return results
-}
+    return search(document)
+  }, nameBase)
 
-// ── 썸네일 좌표 → 프롬프트 입력창으로 드래그 (flow-automation.js 동일) ──
-
-async function dragToPrompt(page, fromPos, toPos) {
-  await page.mouse.move(fromPos.x, fromPos.y)
-  await sleep(200)
-  await page.mouse.down()
-  await sleep(150)
-  const steps = 12
-  for (let i = 1; i <= steps; i++) {
-    await page.mouse.move(
-      Math.round(fromPos.x + (toPos.x - fromPos.x) * (i / steps)),
-      Math.round(fromPos.y + (toPos.y - fromPos.y) * (i / steps))
-    )
-    await sleep(25)
+  if (!clicked) {
+    await page.keyboard.press('Escape').catch(() => {})
+    throw new Error(`[addToPrompt] 파일 없음: ${fileName}`)
   }
-  await sleep(200)
-  await page.mouse.up()
-  await sleep(600)
+  log('ok', `[addToPrompt] 선택: ${clicked}`)
+  await sleep(800)
+
+  const added = await clickAddToPrompt(page)
+  if (!added) throw new Error(`[addToPrompt] "프롬프트에 추가" 버튼 못 찾음 (${fileName})`)
+  log('ok', `[addToPrompt] 완료: ${fileName}`)
+  await sleep(800)
 }
 
 // ── 입력창 위치 탐색 ─────────────────────────────────────────────────
@@ -1214,6 +1102,109 @@ async function waitAndSaveVideo(page, outPath) {
   throw new Error('영상 저장 실패. debug_video_save_fail.png 확인')
 }
 
+// ── FFmpeg 실행 헬퍼 ──────────────────────────────────────────────────
+
+function runFfmpeg(ffmpegPath, args) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn(ffmpegPath, args)
+    let errBuf = ''
+    proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
+    proc.on('close', code => {
+      if (code === 0) resolve()
+      else reject(new Error(`FFmpeg 종료코드 ${code}: ${errBuf.slice(-300)}`))
+    })
+    proc.on('error', err => reject(new Error(`FFmpeg 실행 오류: ${err.message}`)))
+  })
+}
+
+// ── STS 후처리: demucs 음원 분리 → ElevenLabs STS → FFmpeg 3트랙 합성 ──
+
+async function runStsPostProcess(cut, ep, padded, videoPath) {
+  const ffmpeg     = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+  const audioDir   = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  const voicePath  = path.join(audioDir, `cut_${padded}_voice.mp3`)
+  const bgPath     = path.join(audioDir, `cut_${padded}_background.mp3`)
+  const yeoriVoice = path.join(audioDir, `cut_${padded}_yeori_voice.mp3`)
+  const finalPath  = path.join(path.dirname(videoPath), `cut_${padded}_final.mp4`)
+  const apiKey     = process.env.ELEVENLABS_API_KEY
+  const voiceId    = process.env.ELEVENLABS_VOICE_ID || 'RmYuvmCbqOMBJxDLW4k8'
+
+  if (!apiKey) {
+    log('warn', '[STS] ELEVENLABS_API_KEY 없음 — 후처리 건너뜀')
+    return
+  }
+
+  ensureDir(audioDir)
+
+  // ① demucs: 대사 / 배경음 분리 (htdemucs 모델)
+  log('step', `[STS] CUT ${cut.no}: demucs 음원 분리`)
+  const demucsOut      = path.join(audioDir, 'demucs')
+  const stemName       = path.basename(videoPath, path.extname(videoPath))
+  const demucsVocalsWav = path.join(demucsOut, 'htdemucs', stemName, 'vocals.wav')
+  const demucsNoBgWav   = path.join(demucsOut, 'htdemucs', stemName, 'no_vocals.wav')
+
+  ensureDir(demucsOut)
+
+  await new Promise((resolve, reject) => {
+    const proc = spawn('python', [
+      '-m', 'demucs',
+      '--two-stems=vocals',
+      '-o', demucsOut,
+      videoPath,
+    ])
+    proc.stdout.on('data', chunk => process.stdout.write(chunk))
+    proc.stderr.on('data', chunk => process.stderr.write(chunk))
+    proc.on('close', code => {
+      if (code === 0) resolve()
+      else reject(new Error(`demucs 종료코드 ${code}`))
+    })
+    proc.on('error', err => reject(new Error(`demucs 실행 오류: ${err.message}`)))
+  })
+
+  // WAV → MP3 변환
+  await runFfmpeg(ffmpeg, ['-y', '-i', demucsVocalsWav, '-acodec', 'libmp3lame', '-q:a', '2', voicePath])
+  await runFfmpeg(ffmpeg, ['-y', '-i', demucsNoBgWav,   '-acodec', 'libmp3lame', '-q:a', '2', bgPath])
+  log('ok', `[STS] 음원 분리 완료: ${path.basename(voicePath)}, ${path.basename(bgPath)}`)
+
+  // ② ElevenLabs STS — 대사 → 서여리 목소리 (타이밍·립싱크 보존)
+  log('step', `[STS] CUT ${cut.no}: ElevenLabs STS 변환 (model: eleven_multilingual_sts_v2)`)
+  const audioBuffer = fs.readFileSync(voicePath)
+  const audioBlob   = new Blob([audioBuffer], { type: 'audio/mpeg' })
+  const fd = new FormData()
+  fd.append('audio', audioBlob, 'voice.mp3')
+  fd.append('model_id', 'eleven_multilingual_sts_v2')
+  fd.append('voice_settings', JSON.stringify({ stability: 0.30, similarity_boost: 0.75, speed: 1.0 }))
+
+  const stsRes = await fetch(`https://api.elevenlabs.io/v1/speech-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey },
+    body: fd,
+  })
+  if (!stsRes.ok) {
+    const errText = await stsRes.text()
+    throw new Error(`STS API 오류 (${stsRes.status}): ${errText.slice(0, 200)}`)
+  }
+  fs.writeFileSync(yeoriVoice, Buffer.from(await stsRes.arrayBuffer()))
+  log('ok', `[STS] 서여리 목소리 변환: ${path.basename(yeoriVoice)}`)
+
+  // ③ FFmpeg: 영상(무음) + 서여리 음성 + 배경음 3트랙 합성
+  log('step', `[STS] CUT ${cut.no}: FFmpeg 3트랙 합성 → cut_${padded}_final.mp4`)
+  await runFfmpeg(ffmpeg, [
+    '-y',
+    '-i', videoPath,
+    '-i', yeoriVoice,
+    '-i', bgPath,
+    '-filter_complex', '[1:a][2:a]amix=inputs=2:normalize=0[aout]',
+    '-map', '0:v',
+    '-map', '[aout]',
+    '-c:v', 'copy',
+    '-c:a', 'aac',
+    '-shortest',
+    finalPath,
+  ])
+  log('ok', `[STS] 립싱크 합성 완료: ${path.basename(finalPath)}`)
+}
+
 // ── 컷 1개 처리 ──────────────────────────────────────────────────────
 
 async function processCut(page, cut, episode, ratio) {
@@ -1227,58 +1218,60 @@ async function processCut(page, cut, episode, ratio) {
     return { status: 'skip', outPath }
   }
 
-  // ① 동영상 모드 전환 (탭 + 비율) — 실패 시 noRetry로 즉시 중단
-  log('step', `CUT ${cut.no}: 동영상 모드 전환 (ratio=${ratio}, model=${CONFIG.preferredModel})`)
-  try {
-    await switchToVideoMode(page, ratio, CONFIG.preferredModel)
-  } catch (err) {
-    err.noRetry = true
-    throw err
-  }
-
-  // ② '+' 버튼 → 미디어 패널 → input[type=file]에 cut_NN.jpg 주입
+  // ① '+' 버튼 → 미디어 패널 → input[type=file]에 cut_NN.jpg 주입
   log('step', `CUT ${cut.no}: cut_${padded}.jpg 업로드`)
   await uploadCutImage(page, imgPath)
+
+  // ② 모델 버튼 → 팝업 (동영상 탭 + 비율 + 모델) 한 번에 처리
+  log('step', `CUT ${cut.no}: 동영상 모드 전환 (ratio=${ratio}, model=${CONFIG.preferredModel})`)
+  await switchToVideoMode(page, ratio, CONFIG.preferredModel)
 
   // ③ 영상 길이 설정
   await setVideoDuration(page, cut.duration ?? CONFIG.defaultDuration)
 
-  // ④ hover로 썸네일 탐색 → 프롬프트 입력창으로 드래그 (flow-automation.js 방식)
-  log('step', `CUT ${cut.no}: 레퍼런스 이미지 첨부 (hover+drag)`)
-  const promptPos = await findPromptInputPos(page)
-  await page.mouse.click(promptPos.x, promptPos.y)
-  await sleep(300)
-
-  const thumbs = await findThumbByHover(page, ['yeori-face', `cut_${padded}`])
-
-  if (thumbs['yeori-face']) {
-    await dragToPrompt(page, thumbs['yeori-face'], promptPos)
-    log('ok', '[addToPrompt] yeori-face.jpg 드래그 완료')
+  // ④ yeori-face.jpg 업로드 (미디어 패널에 없을 경우 대비 — 매번 업로드해도 무방)
+  if (fs.existsSync(CONFIG.characterImage)) {
+    log('step', `CUT ${cut.no}: yeori-face.jpg 업로드`)
+    await uploadCutImage(page, CONFIG.characterImage)
   } else {
-    log('warn', '[addToPrompt] yeori-face.jpg 썸네일 못 찾음 → 건너뜀')
+    log('warn', `yeori-face.jpg 없음: ${CONFIG.characterImage}`)
   }
 
-  if (thumbs[`cut_${padded}`]) {
-    await dragToPrompt(page, thumbs[`cut_${padded}`], promptPos)
-    log('ok', `[addToPrompt] cut_${padded}.jpg 드래그 완료`)
-  } else {
-    log('warn', `[addToPrompt] cut_${padded}.jpg 썸네일 못 찾음 → 건너뜀`)
-  }
+  // ⑦ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가 (없으면 에러)
+  log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
+  await addFileToPromptByName(page, 'yeori-face.jpg')
 
-  // ⑤ 영상 프롬프트 입력 (imagePrompt 우선)
-  const videoPrompt = (
+  log('step', `CUT ${cut.no}: cut_${padded}.jpg → 프롬프트 추가`)
+  await addFileToPromptByName(page, `cut_${padded}.jpg`)
+
+  // ⑧ 영상 프롬프트 입력 (imagePrompt 우선 + 대사 있으면 립싱크 지시문 추가)
+  const basePrompt = (
     cut.imagePrompt?.trim()
     || cut.videoPrompt?.trim()
     || 'Smooth cinematic camera motion. Character moves naturally. Photorealistic.'
   )
+  const videoPrompt = cut.dialogue?.trim()
+    ? `${basePrompt}\n\nThe character naturally speaks out loud in Korean: "${cut.dialogue.trim()}"\nHer lips move naturally and clearly in sync with the Korean dialogue.\nRealistic mouth movement, natural speech animation.`
+    : basePrompt
   await typeVideoPrompt(page, videoPrompt)
 
-  // ⑥ 생성 버튼 클릭
+  // ⑨ 생성 버튼 클릭
   log('step', `CUT ${cut.no}: 영상 생성 요청`)
   await clickGenerate(page)
 
-  // ⑦ 완료 대기 → downloads/video/ep{N}/cut_NN.mp4 저장
+  // ⑩ 완료 대기 → downloads/video/ep{N}/cut_NN.mp4 저장
   const savedPath = await waitAndSaveVideo(page, outPath)
+
+  // ⑪ STS 후처리: Veo 음성 추출 → ElevenLabs STS → FFmpeg 합성
+  //    대사가 있는 컷만 실행 (나레이션만 있는 컷은 기존 FFmpeg 합성 사용)
+  if (cut.dialogue?.trim()) {
+    try {
+      await runStsPostProcess(cut, ep, padded, savedPath)
+    } catch (err) {
+      log('warn', `[STS] CUT ${cut.no} 후처리 실패 (영상은 저장됨): ${err.message}`)
+    }
+  }
+
   return { status: 'ok', outPath: savedPath }
 }
 
@@ -1384,17 +1377,15 @@ async function main() {
         saveProgress(episode, progress)
         ok++; break
       } catch (err) {
-        const isLastAttempt = attempt >= CONFIG.retryCount
-        if (err.noRetry || isLastAttempt) {
+        if (attempt < CONFIG.retryCount) {
+          log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount}: ${err.message}`)
+          await sleep(2000)
+        } else {
           log('error', `${label} 실패: ${err.message}`)
           results.push({ cutNo: cut.no, status: 'fail', reason: err.message })
           if (!progress.failed.includes(cut.no)) progress.failed.push(cut.no)
           saveProgress(episode, progress)
           fail++
-          break
-        } else {
-          log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount}: ${err.message}`)
-          await sleep(2000)
         }
       }
     }
