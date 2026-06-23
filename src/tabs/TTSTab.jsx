@@ -436,7 +436,7 @@ export default function TTSTab() {
               onClick={() => mergeTracksForCut(cut.id)}>
               {merging[cut.id]
                 ? <><span className={s.spinner} />합치는 중…</>
-                : '🎵 전체 합치기'}
+                : '🎵 트랙 합치기'}
             </button>
 
             {/* 합친 결과 */}
@@ -468,7 +468,7 @@ export default function TTSTab() {
           <button className={s.batchBtn} disabled={batchRunning} onClick={runBatch}>
             {batchRunning
               ? <><span className={s.spinner} />실행 중…</>
-              : '🎙️ 전체 컷 합치기까지 자동 실행'}
+              : '🎙️ 전체 컷 일괄 생성 + 합치기'}
           </button>
         </div>
       </div>
