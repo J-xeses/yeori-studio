@@ -7,26 +7,13 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const CANDIDATES = [
-  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
-  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
-]
-const CODE_ROOT = (() => {
-  for (const { label, p } of CANDIDATES) {
-    if (
-      fs.existsSync(p) &&
-      fs.existsSync(path.join(p, 'node_modules')) &&
-      fs.existsSync(path.join(p, 'package.json'))
-    ) {
-      console.log(`[CODE_ROOT] ${label}: ${p}`)
-      return p
-    }
+const ROOT = (() => {
+  const candidates = ['C:\\yeori-studio', 'C:\\Users\\user\\Desktop\\yeori-studio']
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return p
   }
-  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
-  process.exit(1)
+  return candidates[0]
 })()
-const MEDIA_ROOT = 'C:\\yeori-studio'
-const ROOT = CODE_ROOT  // 하위 호환 유지
 
 const app = express()
 const PORT = 3001
@@ -41,7 +28,7 @@ process.on('uncaughtException', (err) => {
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }))
 app.use(express.json({ limit: '10mb' }))
-app.use('/downloads', express.static(path.join(MEDIA_ROOT, 'downloads')))
+app.use('/downloads', express.static(path.join(ROOT, 'downloads')))
 
 // ── 헬스 체크 ──────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
@@ -254,43 +241,12 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
-// ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
-app.post('/api/confirm-image', (req, res) => {
-  const { ep, cutNo, imageUrl } = req.body
-  if (!ep || !cutNo || !imageUrl) return res.status(400).json({ error: 'ep, cutNo, imageUrl 필요' })
-  const padded  = String(cutNo).padStart(2, '0')
-  const flowDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
-  try {
-    fs.mkdirSync(flowDir, { recursive: true })
-    const srcPath  = path.join(MEDIA_ROOT, imageUrl.replace(/^\//, ''))
-    const destPath = path.join(flowDir, `cut_${padded}.jpg`)
-    if (srcPath !== destPath) fs.copyFileSync(srcPath, destPath)
-    res.json({ ok: true, saved: `cut_${padded}.jpg` })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
-  }
-})
-
-// ── GET /api/scan-images — 기존 생성 이미지 재조회 ──────────────
-app.get('/api/scan-images', (req, res) => {
-  const { ep } = req.query
-  if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
-  const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
-  if (!fs.existsSync(epDir)) return res.json({ images: [] })
-  const images = []
-  fs.readdirSync(epDir).sort().forEach(file => {
-    const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
-    if (m) images.push({ cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${ep}/${file}` })
-  })
-  res.json({ images })
-})
-
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
-  const { ep, prompts, projectId } = req.body
+  const { ep, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
-  const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
+  const promptsPath = path.join(ROOT, 'downloads', 'flow', 'prompts.json')
   fs.mkdirSync(path.dirname(promptsPath), { recursive: true })
   fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
 
@@ -306,27 +262,6 @@ app.post('/api/run-flow', (req, res) => {
 
   // 에피소드 번호: prompts.episode 우선 (클라이언트 상태 싱크 문제 방지), ep는 fallback
   const episode = prompts.episode ?? ep ?? null
-
-  // project_url.txt 사전 확인 — 없으면 flow-automation.js가 stdin을 기다려 hang됨
-  if (episode != null) {
-    const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
-    const projectMarker = path.join(epDir, 'project_url.txt')
-
-    // projectId가 요청에 포함된 경우 project_url.txt 자동 생성
-    if (projectId && !fs.existsSync(projectMarker)) {
-      fs.mkdirSync(epDir, { recursive: true })
-      const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${String(projectId).trim()}`
-      fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
-      send({ type: 'log', level: 'info', message: `Flow 프로젝트 등록 완료: ${projectUrl}` })
-    }
-
-    if (!fs.existsSync(projectMarker)) {
-      send({ type: 'error', message: `Flow 프로젝트 미등록 (ep${episode})\nproject_url.txt 없음 — 터미널에서 직접 실행하여 프로젝트 ID를 등록하세요:\n  node scripts/flow-automation.js --ep=${episode}` })
-      res.end()
-      return
-    }
-  }
-
   const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
   const nodeArgs = [scriptPath]
   if (episode != null) nodeArgs.push(`--ep=${episode}`)
@@ -348,17 +283,14 @@ app.post('/api/run-flow', (req, res) => {
     if (doneMatch) {
       const cutNo = +doneMatch[3]
       send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo })
-      // cut 완료 시 파일 즉시 확인 후 cut_image 전송
+      // 파일 즉시 확인 후 cut_image 전송
       if (episode != null) {
         const padded = String(cutNo).padStart(2, '0')
-        const epUrlBase = `/downloads/flow/ep${episode}`
-        const epDirPath = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
-        for (const suffix of ['_a', '_b', '']) {
-          for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
-            const fname = `cut_${padded}${suffix}.${ext}`
-            if (fs.existsSync(path.join(epDirPath, fname))) {
-              send({ type: 'cut_image', cutNo, url: `${epUrlBase}/${fname}` })
-            }
+        for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
+          const imgPath = path.join(ROOT, 'downloads', 'flow', `ep${episode}`, `cut_${padded}.${ext}`)
+          if (fs.existsSync(imgPath)) {
+            send({ type: 'cut_image', cutNo, url: `/downloads/flow/ep${episode}/cut_${padded}.${ext}` })
+            break
           }
         }
       }
@@ -417,12 +349,12 @@ app.post('/api/run-flow', (req, res) => {
       send({ type: 'complete', success: code === 0, code })
     }
 
-    // 완료 후 에피소드 디렉토리 전체 스캔 -> 누락된 cut_image 이벤트 전송
+    // 완료 후 에피소드 디렉토리 전체 스캔 → 누락된 cut_image 이벤트 전송
     if (episode != null) {
-      const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
+      const epDir = path.join(ROOT, 'downloads', 'flow', `ep${episode}`)
       if (fs.existsSync(epDir)) {
         fs.readdirSync(epDir).sort().forEach(file => {
-          const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+          const m = file.match(/^cut_(\d+)\.(jpg|jpeg|png|webp)$/i)
           if (m) send({ type: 'cut_image', cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${episode}/${file}` })
         })
       }
@@ -464,7 +396,7 @@ app.post('/api/run-video', (req, res) => {
   const { ep, ratio, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
-  const videoDir    = path.join(MEDIA_ROOT, 'downloads', 'video')
+  const videoDir    = path.join(ROOT, 'downloads', 'video')
   const promptsPath = path.join(videoDir, 'video-prompts.json')
   fs.mkdirSync(videoDir, { recursive: true })
   fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
@@ -492,25 +424,14 @@ app.post('/api/run-video', (req, res) => {
 
   const parseLine = line => {
     if (!line.trim()) return
-    // 실제 로그: ⏳ [1/5] CUT 3 영상 생성 중…
-    const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*영상\s*생성/)
+    const progressMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+)\s*생성/)
     if (progressMatch) {
       send({ type: 'progress', current: +progressMatch[1], total: +progressMatch[2], cutNo: +progressMatch[3] })
       return
     }
-    // 실제 로그: ✅ [1/5] CUT 3 → downloads\video\ep4\cut_03.mp4 (ok)
-    const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→\s*(\S+\.mp4)/i)
+    const doneMatch = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
     if (doneMatch) {
-      const cutNo = +doneMatch[3]
-      const url   = '/' + doneMatch[4].replace(/\\/g, '/')
-      send({ type: 'cut_done',  current: +doneMatch[1], total: +doneMatch[2], cutNo })
-      send({ type: 'cut_video', current: +doneMatch[1], total: +doneMatch[2], cutNo, url })
-      return
-    }
-    // .mp4 없는 → 라인 (예외 케이스 폴백)
-    const doneBasic = line.match(/\[(\d+)\/(\d+)\].*CUT\s*(\d+).*→/)
-    if (doneBasic) {
-      send({ type: 'cut_done', current: +doneBasic[1], total: +doneBasic[2], cutNo: +doneBasic[3] })
+      send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo: +doneMatch[3] })
       return
     }
     const errMatch = line.match(/CUT\s*(\d+).*실패/)
@@ -566,107 +487,6 @@ app.post('/api/run-video', (req, res) => {
 
   req.on('close', () => {
     console.log('[run-video] 클라이언트 연결 종료 (video 프로세스는 계속 실행)')
-  })
-})
-
-// ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
-app.post('/api/save-audio', async (req, res) => {
-  const ep    = req.query.ep
-  const cutNo = req.query.cutNo
-  if (!ep || !cutNo) return res.status(400).json({ error: 'ep, cutNo 필요' })
-
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
-  fs.mkdirSync(audioDir, { recursive: true })
-
-  const wavPath = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}_tmp.wav`)
-  const mp3Path = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}.mp3`)
-
-  const chunks = []
-  req.on('data', chunk => chunks.push(chunk))
-  req.on('end', () => {
-    fs.writeFileSync(wavPath, Buffer.concat(chunks))
-
-    const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
-    const proc = spawn(ffmpeg, [
-      '-y', '-i', wavPath,
-      '-codec:a', 'libmp3lame', '-qscale:a', '2',
-      mp3Path
-    ])
-
-    proc.on('close', code => {
-      fs.unlinkSync(wavPath)
-      if (code === 0) {
-        res.json({ ok: true, path: mp3Path })
-      } else {
-        res.status(500).json({ error: 'FFmpeg 변환 실패' })
-      }
-    })
-
-    proc.on('error', err => {
-      res.status(500).json({ error: 'FFmpeg 실행 오류: ' + err.message })
-    })
-  })
-})
-
-// ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
-app.post('/api/run-ffmpeg', (req, res) => {
-  const { ep, cutNo } = req.body
-  if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
-
-  const padded   = String(cutNo).padStart(2, '0')
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`)
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
-  const outDir   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${ep}`)
-  fs.mkdirSync(outDir, { recursive: true })
-
-  const videoFile = path.join(videoDir, `cut_${padded}.mp4`)
-  const audioFile = path.join(audioDir, `cut_${padded}.mp3`)
-  const outFile   = path.join(outDir,   `cut_${padded}_final.mp4`)
-
-  if (!fs.existsSync(videoFile)) return res.status(404).json({ error: `영상 파일 없음: ${videoFile}` })
-  if (!fs.existsSync(audioFile)) return res.status(404).json({ error: `음성 파일 없음: ${audioFile}` })
-
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`)
-
-  send({ type: 'progress', message: 'FFmpeg 합성 시작…' })
-
-  const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
-  const args = [
-    '-y',
-    '-i', videoFile,
-    '-i', audioFile,
-    '-filter_complex', '[1:a]apad=whole_dur=8[a]',
-    '-map', '0:v',
-    '-map', '[a]',
-    '-c:v', 'copy',
-    '-c:a', 'aac',
-    '-shortest',
-    outFile,
-  ]
-
-  const proc = spawn(ffmpeg, args)
-  let errBuf = ''
-
-  proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
-
-  proc.on('close', code => {
-    if (code === 0) {
-      const url = `/downloads/output/ep${ep}/cut_${padded}_final.mp4`
-      send({ type: 'complete', success: true, url, message: '합성 완료!' })
-      console.log(`[run-ffmpeg] 완료: ${outFile}`)
-    } else {
-      send({ type: 'complete', success: false, message: 'FFmpeg 실패', detail: errBuf.slice(-300) })
-      console.error('[run-ffmpeg] 실패:', errBuf.slice(-300))
-    }
-    res.end()
-  })
-
-  proc.on('error', err => {
-    send({ type: 'error', message: 'FFmpeg 실행 오류: ' + err.message })
-    res.end()
   })
 })
 

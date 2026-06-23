@@ -15,7 +15,6 @@ export default function ApiBar() {
       const res = await elUser(apiKeys.elevenLabs)
       const data = await res.json()
       if (res.ok) {
-        // GET /v1/user 응답: { subscription: { character_count, character_limit } }
         const sub = data.subscription ?? {}
         const limit = sub.character_limit ?? 0
         const used  = sub.character_count  ?? 0

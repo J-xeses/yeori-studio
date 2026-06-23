@@ -47,7 +47,7 @@
 .kwBottom { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
 .kwCategory { font-size: 10px; font-weight: 600; border: 1px solid; border-radius: 4px; padding: 1px 6px; }
 .kwCount { font-size: 10px; color: var(--color-text-tertiary, #888); }
-.kwBar { height: 2px; background: var(--color-border, #2a2a3e); border-radius: 1px; overflow: hidden; }
+.kwBar { height: 2px; background: var(--color-border, #2a2a3e); border-radius: 1px; overflow-y: auto; }
 .kwBarFill { height: 100%; border-radius: 1px; opacity: 0.7; transition: width 0.3s; }
 
 /* 형식 분석 */

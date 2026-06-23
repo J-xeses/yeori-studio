@@ -1,5 +1,5 @@
-// Vite 개발 서버가 /api/* 요청을 외부 API로 프록시합니다 (vite.config.js)
-// 별도 서버 없이 상대 경로만 사용하면 됩니다.
+﻿// Vite 媛쒕컻 ?쒕쾭媛 /api/* ?붿껌???몃? API濡??꾨줉?쒗빀?덈떎 (vite.config.js)
+// 蹂꾨룄 ?쒕쾭 ?놁씠 ?곷? 寃쎈줈留??ъ슜?섎㈃ ?⑸땲??
 
 export const claudeMessages = (apiKey, body) =>
   fetch('/api/claude/v1/messages', {
@@ -12,7 +12,7 @@ export const claudeMessages = (apiKey, body) =>
     body: JSON.stringify(body),
   })
 
-// GET /v1/user → { subscription: { character_count, character_limit, ... } }
+// GET /v1/user ??{ subscription: { character_count, character_limit, ... } }
 export const elUser = (apiKey) =>
   fetch('/api/elevenlabs/user', {
     headers: { 'xi-api-key': apiKey },
@@ -28,9 +28,4 @@ export const elTTS = (apiKey, voiceId, body) =>
     method: 'POST',
     headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify(body),
-  })
-
-export const elVoices = (apiKey) =>
-  fetch('/api/elevenlabs/voices', {
-    headers: { 'xi-api-key': apiKey },
   })

@@ -48,13 +48,20 @@ const defaultState = {
   cuts: makeCuts(7),
   scriptRaw: '',
 
-  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0 },
-  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi' },
+  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0,
+    trackDefaults: {
+      dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
+      narration: { speed: 0.85, stability: 55, similarity: 75 },
+    }
+  },
+  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70 },
   dashboard: { flowCredits: 100, klingCredits: 50, elevenlabsChars: 10000, monthBudget: 50000, spent: 0 },
   projectName: '새 프로젝트',
   savedAt: null,
+  videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
+  ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {} },
 }
 
 function reducer(state, action) {
@@ -211,6 +218,8 @@ function reducer(state, action) {
 
     case 'SET_TTS': return { ...state, ttsSettings: { ...state.ttsSettings, ...action.p } }
     case 'SET_VIDEO': return { ...state, videoSettings: { ...state.videoSettings, ...action.p } }
+    case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
+    case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
     case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
     case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
     case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }
@@ -258,7 +267,15 @@ function reducer(state, action) {
       }
     }
 
-    case 'LOAD': return { ...defaultState, ...action.p, savedAt: new Date().toISOString() }
+    case 'LOAD': return {
+      ...defaultState,
+      ...action.p,
+      ttsSettings:  { ...defaultState.ttsSettings,  ...(action.p.ttsSettings  || {}) },
+      videoSettings: { ...defaultState.videoSettings, ...(action.p.videoSettings || {}) },
+      ttsTabState:  { ...defaultState.ttsTabState,  ...(action.p.ttsTabState  || {}) },
+      videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
+      savedAt: new Date().toISOString(),
+    }
     default: return state
   }
 }
@@ -297,6 +314,19 @@ function migrateState(saved, init) {
     saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
   saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
   if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
+  saved.videoTabState = {
+    videoClips: {},
+    g4Approved: {},
+    selectedCutId: null,
+    subtitles: {},
+    ...(saved.videoTabState || {}),
+  }
+  saved.ttsTabState = {
+    audioUrls: {},
+    audioTexts: {},
+    g3Confirmed: {},
+    ...(saved.ttsTabState || {}),
+  }
   return { ...init, ...saved }
 }
 
