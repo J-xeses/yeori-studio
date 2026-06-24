@@ -33,6 +33,7 @@ export default function EditMetaTab() {
   const [error, setError] = useState('')
   const [hookIndices, setHookIndices] = useState([0])
   const [accRunning, setAccRunning] = useState(false)
+  const [accStatus, setAccStatus]   = useState('')
   const [g5Approved, setG5Approved] = useState({})
 
   // 음성 타이밍 상태
@@ -244,9 +245,61 @@ export default function EditMetaTab() {
     a.href = URL.createObjectURL(blob); a.download = 'yeori_edit_meta.csv'; a.click()
   }
 
-  const runACC = () => {
+  const runACC = async () => {
+    const epNum = state.episode?.number
+    if (!epNum) { setAccStatus('❌ 에피소드 번호가 없습니다'); return }
+
     setAccRunning(true)
-    setTimeout(() => setAccRunning(false), 3000)
+
+    const post = (url, body) =>
+      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(r => r.json())
+
+    try {
+      // ① SRT 생성
+      setAccStatus('① SRT 생성 중...')
+      const srtRes = await post('http://localhost:3001/api/generate-srt', { epNum })
+      if (!srtRes.success) {
+        setAccStatus(`❌ SRT 생성 실패: ${srtRes.error}`)
+        setAccRunning(false); return
+      }
+
+      // ② 영상 합치기
+      setAccStatus('② 영상 합치는 중...')
+      const concatRes = await post('http://localhost:3001/api/concat-video', { epNum })
+      if (!concatRes.success) {
+        setAccStatus(`❌ 영상 합치기 실패: ${concatRes.error}`)
+        setAccRunning(false); return
+      }
+
+      // ③ CapCut 드래프트
+      setAccStatus('③ CapCut 드래프트 생성 중...')
+      const draftRes = await post('http://localhost:3001/api/run-script', {
+        script: 'make-capcut-draft', args: [`--ep=${epNum}`],
+      })
+      if (!draftRes.success) {
+        setAccStatus(`❌ CapCut 드래프트 생성 실패: ${draftRes.error || ''}`)
+        setAccRunning(false); return
+      }
+
+      // ④ CapCut 재시작 (실패해도 계속)
+      setAccStatus('④ CapCut 재시작 중...')
+      try {
+        const restartRes = await post('http://localhost:3001/api/restart-capcut', {})
+        if (!restartRes.success) {
+          setAccStatus('⚠️ CapCut 자동 재시작 실패 — 수동으로 재시작하세요')
+        } else {
+          setAccStatus('✅ 완료! CapCut에서 확인하세요.')
+        }
+      } catch {
+        setAccStatus('⚠️ CapCut 자동 재시작 실패 — 수동으로 재시작하세요')
+      }
+
+      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 5000)
+    } catch (err) {
+      setAccStatus(`❌ 오류: ${err.message}`)
+      setAccRunning(false)
+    }
   }
 
   const toggleHook = idx =>
@@ -271,21 +324,31 @@ export default function EditMetaTab() {
       </div>
 
       {/* A Creative Cutter ON 버튼 */}
-      <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'16px',padding:'14px 16px',background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'10px'}}>
-        <div style={{flex:1}}>
-          <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
-          <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>draft_content.json + 원본영상 + SRT → CapCut 자동 배치</div>
+      <div style={{marginBottom:'16px',padding:'14px 16px',background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'10px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
+            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>SRT 생성 → 영상 합치기 → CapCut 드래프트 → CapCut 재시작</div>
+          </div>
+          <button
+            onClick={runACC}
+            disabled={accRunning}
+            style={{padding:'9px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:700,
+              background: accRunning ? 'rgba(249,115,22,0.2)' : '#f97316',
+              color: accRunning ? '#fb923c' : '#fff',
+              border: accRunning ? '1px solid rgba(249,115,22,0.4)' : 'none',
+              cursor: accRunning ? 'not-allowed' : 'pointer',whiteSpace:'nowrap'}}>
+            {accRunning ? '⏳ 실행 중...' : '▶ ON'}
+          </button>
         </div>
-        <button
-          onClick={runACC}
-          disabled={accRunning}
-          style={{padding:'9px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:700,
-            background: accRunning ? 'rgba(249,115,22,0.2)' : '#f97316',
-            color: accRunning ? '#fb923c' : '#fff',
-            border: accRunning ? '1px solid rgba(249,115,22,0.4)' : 'none',
-            cursor: accRunning ? 'not-allowed' : 'pointer',whiteSpace:'nowrap'}}>
-          {accRunning ? '⏳ A Creative Cutter 실행 중...' : '▶ ON'}
-        </button>
+        {accStatus && (
+          <div style={{marginTop:'8px',fontSize:'12px',fontWeight:600,
+            color: accStatus.startsWith('❌') ? '#f87171'
+                 : accStatus.startsWith('⚠️') ? '#fbbf24'
+                 : accStatus.startsWith('✅') ? '#4ade80' : '#fb923c'}}>
+            {accStatus}
+          </div>
+        )}
       </div>
 
       {/* 탭 네비게이션 */}

@@ -79,6 +79,7 @@ const CONFIG = {
   // ── 전신샷 자동 추가 프리픽스/서픽스 ──────────────────────────────
   bodyPrefix:   'Same face as closeup reference. Maintain exact same facial features. Face clearly visible. tall K-model proportions, very small face, long slim legs, slender figure, tall fashion model body, small head-to-body ratio, NOT petite, NOT short stature, NOT average body, DO NOT change body proportions.',
   bgSuffix:     'background people blurred and far away, must not interact with or touch main character, main character is clearly separated from background.',
+  subtitleSuppression: 'NO subtitles. NO captions. NO text overlay. NO dialogue text visible in frame. NO watermark. NO on-screen text of any kind.',
 
   // ── 서여리 캐릭터 설정 ──────────────────────────────────────────────
   characterName:   '서여리',
@@ -1514,7 +1515,17 @@ async function dragToPrompt(page, fromPos, toPos) {
 
 async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const ep = cut.episode ?? defaultEpisode ?? 'x'
-  const finalPrompt = [CONFIG.bodyPrefix, cut.imagePrompt.trim(), CONFIG.bgSuffix].join(' ')
+
+  // episode_style_guide.json이 있으면 promptPrefix를 프롬프트 앞에 삽입
+  const styleGuidePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`, 'episode_style_guide.json')
+  const promptPrefix = fs.existsSync(styleGuidePath)
+    ? (() => { try { return JSON.parse(fs.readFileSync(styleGuidePath, 'utf-8')).promptPrefix || '' } catch { return '' } })()
+    : ''
+  const baseImagePrompt = promptPrefix
+    ? `${promptPrefix}. ${cut.imagePrompt.trim()}`
+    : cut.imagePrompt.trim()
+
+  const finalPrompt = [CONFIG.bodyPrefix, baseImagePrompt, CONFIG.bgSuffix].join(' ') + '\n\n' + CONFIG.subtitleSuppression
 
   log('step', `컷 생성 중… (${type === 'longform' ? '16:9' : '9:16'})`)
 

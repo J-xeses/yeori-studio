@@ -53,6 +53,14 @@ export default function StudioTab() {
   const [gData, setGData] = useState(() => loadGPoints())
   const fileRefs = useRef({})
 
+  // ── 스타일 가이드 ────────────────────────────────────────────
+  const [styleGuide, setStyleGuide]         = useState(null)
+  const [analyzeStatus, setAnalyzeStatus]   = useState('')   // '', 'uploading', 'analyzing', 'done', 'error'
+  const [analyzeMsg, setAnalyzeMsg]         = useState('')
+  const [guideExpanded, setGuideExpanded]   = useState(false)
+  const [cutNoInput, setCutNoInput]         = useState('1')
+  const pollRef = useRef(null)
+
   useEffect(() => {
     const check = async () => {
       try {
@@ -221,6 +229,61 @@ export default function StudioTab() {
     } catch (err) {
       alert('불러오기 실패: ' + err.message)
     }
+  }
+
+  // ── 스타일 가이드 분석 ───────────────────────────────────────
+  const startAnalyze = async () => {
+    const epNum = state.episode?.number
+    const cutNo = parseInt(cutNoInput, 10) || 1
+    if (!epNum) { setAnalyzeMsg('에피소드 번호 없음'); setAnalyzeStatus('error'); return }
+
+    setAnalyzeStatus('uploading')
+    setAnalyzeMsg('① 영상 업로드 중...')
+
+    try {
+      const upRes = await fetch('http://localhost:3001/api/analyze-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum, cutNo }),
+      }).then(r => r.json())
+
+      if (!upRes.success) { setAnalyzeMsg(`❌ ${upRes.error}`); setAnalyzeStatus('error'); return }
+
+      setAnalyzeStatus('analyzing')
+      setAnalyzeMsg('② Higgsfield 분석 중... (약 3~5분)')
+
+      // 3초마다 폴링
+      const poll = async () => {
+        const sRes = await fetch('http://localhost:3001/api/analysis-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ analysisId: upRes.analysisId, epNum, cutNo }),
+        }).then(r => r.json())
+
+        if (!sRes.success) { setAnalyzeMsg(`❌ ${sRes.error}`); setAnalyzeStatus('error'); return }
+
+        if (sRes.status === 'in_progress') {
+          pollRef.current = setTimeout(poll, 3000)
+        } else {
+          setAnalyzeMsg('③ 스타일 가이드 저장 중...')
+          setTimeout(() => {
+            setStyleGuide(sRes.styleGuide)
+            setAnalyzeMsg('✅ 완료! 이후 컷 프롬프트에 자동 적용됩니다.')
+            setAnalyzeStatus('done')
+          }, 500)
+        }
+      }
+      pollRef.current = setTimeout(poll, 3000)
+    } catch (err) {
+      setAnalyzeMsg(`❌ ${err.message}`)
+      setAnalyzeStatus('error')
+    }
+  }
+
+  const cancelAnalyze = () => {
+    if (pollRef.current) clearTimeout(pollRef.current)
+    setAnalyzeStatus('')
+    setAnalyzeMsg('')
   }
 
   // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
@@ -430,6 +493,71 @@ export default function StudioTab() {
             🔄 기존 이미지 다시 불러오기
           </button>
         </div>
+      </div>
+
+      {/* ── 스타일 가이드 패널 ─────────────────────────────── */}
+      <div style={{
+        background:'var(--surface2)', border:'1px solid var(--border)',
+        borderRadius:8, padding:'12px 16px', margin:'0 0 10px',
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+          <span style={{fontWeight:700,fontSize:13,color:'var(--purple)'}}>🎯 스타일 가이드</span>
+          {!styleGuide && analyzeStatus === '' && (
+            <>
+              <input
+                type="number" min="1" value={cutNoInput}
+                onChange={e => setCutNoInput(e.target.value)}
+                style={{width:52,padding:'3px 6px',borderRadius:4,border:'1px solid var(--border)',
+                  background:'var(--surface3)',color:'var(--text1)',fontSize:12,textAlign:'center'}}
+                title="분석할 컷 번호"
+              />
+              <span style={{fontSize:11,color:'var(--text3)'}}>번 컷 기준</span>
+              <button onClick={startAnalyze} style={{
+                padding:'5px 12px',borderRadius:5,background:'linear-gradient(135deg,#a78bfa,#60a5fa)',
+                color:'#fff',border:'none',fontSize:12,fontWeight:700,cursor:'pointer',
+              }}>🎯 스타일 가이드 생성</button>
+            </>
+          )}
+          {styleGuide && analyzeStatus !== 'analyzing' && (
+            <>
+              <span style={{fontSize:11,color:'var(--teal)'}}>✅ 적용 중</span>
+              <button onClick={() => { setStyleGuide(null); setAnalyzeStatus(''); setAnalyzeMsg('') }}
+                style={{padding:'3px 8px',borderRadius:4,background:'var(--surface3)',border:'1px solid var(--border)',
+                  color:'var(--text2)',fontSize:11,cursor:'pointer'}}>🔄 재분석</button>
+              <button onClick={() => setGuideExpanded(v => !v)}
+                style={{padding:'3px 8px',borderRadius:4,background:'var(--surface3)',border:'1px solid var(--border)',
+                  color:'var(--text2)',fontSize:11,cursor:'pointer'}}>
+                {guideExpanded ? '▲ 접기' : '▼ 보기'}
+              </button>
+            </>
+          )}
+          {analyzeStatus === 'uploading' || analyzeStatus === 'analyzing' ? (
+            <>
+              <span style={{fontSize:11,color:'var(--yellow)'}}>{analyzeMsg}</span>
+              <button onClick={cancelAnalyze} style={{padding:'3px 8px',borderRadius:4,
+                background:'transparent',border:'1px solid var(--border)',color:'var(--text3)',fontSize:11,cursor:'pointer'}}>취소</button>
+            </>
+          ) : analyzeStatus === 'error' ? (
+            <span style={{fontSize:11,color:'var(--red)'}}>{analyzeMsg}</span>
+          ) : analyzeStatus === 'done' ? (
+            <span style={{fontSize:11,color:'var(--teal)'}}>{analyzeMsg}</span>
+          ) : null}
+        </div>
+
+        {guideExpanded && styleGuide && (
+          <div style={{marginTop:10,fontSize:11,color:'var(--text2)',lineHeight:1.6,
+            background:'var(--surface3)',borderRadius:6,padding:'10px 12px'}}>
+            <div><b>얼굴:</b> {styleGuide.character?.face?.ageAppearance} | {styleGuide.character?.face?.skin}</div>
+            <div><b>헤어:</b> {styleGuide.character?.face?.hair}</div>
+            <div><b>의상:</b> {styleGuide.outfit?.description || '-'}</div>
+            <div><b>조명:</b> {styleGuide.cinematography?.lighting} | <b>색감:</b> {styleGuide.cinematography?.colorPalette}</div>
+            <div><b>카메라:</b> {styleGuide.cinematography?.cameraStyle} | <b>배경:</b> {styleGuide.cinematography?.background}</div>
+            <div style={{marginTop:6,borderTop:'1px solid var(--border)',paddingTop:6}}>
+              <b>promptPrefix:</b><br/>
+              <span style={{fontFamily:'monospace',fontSize:10,wordBreak:'break-all'}}>{styleGuide.promptPrefix}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Flow 프로젝트 URL 등록 */}

@@ -28,6 +28,17 @@ const CODE_ROOT = (() => {
 const MEDIA_ROOT = 'C:\\yeori-studio'
 const ROOT = CODE_ROOT  // 하위 호환 유지
 
+// ── .env.local 로드 (CODE_ROOT 기준) ──────────────────────────
+;(() => {
+  const envPath = path.join(CODE_ROOT, '.env.local')
+  if (!fs.existsSync(envPath)) return
+  fs.readFileSync(envPath, 'utf-8').split('\n').forEach(line => {
+    const m = line.match(/^([^=\s#][^=]*)=(.*)$/)
+    if (m) { const k = m[1].trim(); if (!process.env[k]) process.env[k] = m[2].trim() }
+  })
+})()
+const HIGGSFIELD_API_KEY = process.env.HIGGSFIELD_API_KEY || ''
+
 const app = express()
 const PORT = 3001
 
@@ -249,6 +260,21 @@ app.post('/api/studio-data', (req, res) => {
     fs.mkdirSync(dataDir, { recursive: true })
     fs.writeFileSync(dataPath, JSON.stringify(req.body, null, 2), 'utf-8')
     res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/save-video-prompts — video-prompts.json 에피소드별 저장 ────────
+app.post('/api/save-video-prompts', (req, res) => {
+  const { epNum, prompts } = req.body
+  if (!epNum || !Array.isArray(prompts)) return res.status(400).json({ error: 'epNum, prompts[] 필요' })
+  const dir  = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const dest = path.join(dir, 'video-prompts.json')
+  try {
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(dest, JSON.stringify(prompts, null, 2), 'utf-8')
+    res.json({ success: true, path: dest, count: prompts.length })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -680,6 +706,337 @@ app.post('/api/run-ffmpeg', (req, res) => {
     send({ type: 'error', message: 'FFmpeg 실행 오류: ' + err.message })
     res.end()
   })
+})
+
+// ── ffprobe 길이 측정 헬퍼 ──────────────────────────────────────────
+const FFPROBE = 'C:\\ffmpeg\\bin\\ffprobe.exe'
+function getMediaDuration(filePath) {
+  return new Promise((resolve) => {
+    const proc = spawn(FFPROBE, [
+      '-v', 'error', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', filePath,
+    ])
+    let out = ''
+    proc.stdout.on('data', d => { out += d.toString() })
+    proc.on('close', () => resolve(parseFloat(out.trim()) || 0))
+    proc.on('error', () => resolve(0))
+  })
+}
+
+function toSRTTimecode(sec) {
+  const h  = Math.floor(sec / 3600)
+  const m  = Math.floor((sec % 3600) / 60)
+  const s  = Math.floor(sec % 60)
+  const ms = Math.round((sec % 1) * 1000)
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`
+}
+
+// ── POST /api/generate-srt — audio/ep{N}/*.mp3 → ep{N}.srt 생성 ──────
+app.post('/api/generate-srt', async (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+  const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+  const srtPath  = path.join(audioDir, `ep${epNum}.srt`)
+
+  try {
+    if (!fs.existsSync(audioDir)) return res.status(404).json({ error: `audioDir 없음: ${audioDir}` })
+
+    const mp3Files = fs.readdirSync(audioDir)
+      .filter(f => /^cut_\d+\.mp3$/.test(f))
+      .sort()
+    if (!mp3Files.length) return res.status(404).json({ error: `cut_NN.mp3 파일 없음` })
+
+    const editMeta = fs.existsSync(metaPath)
+      ? JSON.parse(fs.readFileSync(metaPath, 'utf-8'))
+      : []
+    const metaMap = {}
+    for (const m of (Array.isArray(editMeta) ? editMeta : [])) {
+      metaMap[String(m.cutNo).padStart(2, '0')] = m
+    }
+
+    let cursor = 0
+    let srtIdx = 1
+    const lines = []
+
+    for (const file of mp3Files) {
+      const match = file.match(/^cut_(\d+)\.mp3$/)
+      if (!match) continue
+      const padded = String(parseInt(match[1], 10)).padStart(2, '0')
+      const filePath = path.join(audioDir, file)
+      const dur = await getMediaDuration(filePath) || 8
+
+      const m = metaMap[padded]
+      const text = (m?.narration?.trim() || m?.dialogue?.trim() || '').replace(/\n/g, ' ')
+
+      if (text) {
+        lines.push(`${srtIdx}`)
+        lines.push(`${toSRTTimecode(cursor)} --> ${toSRTTimecode(cursor + dur)}`)
+        lines.push(text)
+        lines.push('')
+        srtIdx++
+      }
+      cursor += dur
+    }
+
+    fs.writeFileSync(srtPath, lines.join('\n'), 'utf-8')
+
+    const mm = String(Math.floor(cursor / 60)).padStart(2, '0')
+    const ss = String(Math.floor(cursor % 60)).padStart(2, '0')
+    res.json({ success: true, srtPath, cutCount: mp3Files.length, totalDuration: `${mm}:${ss}` })
+  } catch (err) {
+    console.error('[generate-srt]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/concat-video — cut_NN_final.mp4 순서대로 concat ─────────
+app.post('/api/concat-video', async (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const videoDir  = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const outputDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+  const concatTxt = path.join(videoDir, 'concat_list.txt')
+  const outFile   = path.join(outputDir, `ep${epNum}_raw.mp4`)
+
+  try {
+    if (!fs.existsSync(videoDir)) return res.status(404).json({ error: `videoDir 없음: ${videoDir}` })
+    fs.mkdirSync(outputDir, { recursive: true })
+
+    // cut_NN_final.mp4 우선, 없으면 cut_NN.mp4
+    const allFiles = fs.readdirSync(videoDir)
+    const cutNums = new Set()
+    for (const f of allFiles) {
+      const m = f.match(/^cut_(\d+)(?:_final)?\.mp4$/)
+      if (m) cutNums.add(parseInt(m[1], 10))
+    }
+    const sortedNums = [...cutNums].sort((a, b) => a - b)
+    if (!sortedNums.length) return res.status(404).json({ error: `cut_NN.mp4 파일 없음` })
+
+    const selectedFiles = sortedNums.map(n => {
+      const p = String(n).padStart(2, '0')
+      const fin = path.join(videoDir, `cut_${p}_final.mp4`)
+      const base = path.join(videoDir, `cut_${p}.mp4`)
+      return fs.existsSync(fin) ? fin : base
+    })
+
+    const listContent = selectedFiles.map(f => `file '${f.replace(/\\/g, '/')}'`).join('\n')
+    fs.writeFileSync(concatTxt, listContent, 'utf-8')
+
+    const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+    const code = await new Promise((resolve) => {
+      let errBuf = ''
+      const proc = spawn(ffmpeg, ['-y', '-f', 'concat', '-safe', '0', '-i', concatTxt, '-c', 'copy', outFile])
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', c => { console.error('[concat-video]', errBuf.slice(-200)); resolve(c) })
+      proc.on('error', () => resolve(1))
+    })
+
+    try { fs.unlinkSync(concatTxt) } catch {}
+
+    if (code !== 0) return res.status(500).json({ error: 'FFmpeg concat 실패' })
+
+    const totalSec = await getMediaDuration(outFile)
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, '0')
+    const ss = String(Math.floor(totalSec % 60)).padStart(2, '0')
+
+    res.json({ success: true, outputPath: outFile, cutCount: sortedNums.length, totalDuration: `${mm}:${ss}` })
+  } catch (err) {
+    console.error('[concat-video]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/restart-capcut — CapCut 종료 후 재실행 ─────────────────
+app.post('/api/restart-capcut', (req, res) => {
+  if (process.platform !== 'win32') {
+    return res.status(400).json({ error: 'Windows 전용 기능입니다' })
+  }
+
+  spawn('taskkill', ['/F', '/IM', 'CapCut.exe', '/T'], { shell: true })
+    .on('error', () => {})
+
+  setTimeout(() => {
+    const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
+    const candidates = [
+      'C:\\Program Files\\CapCut\\CapCut.exe',
+      path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
+      path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'CapCut.exe'),
+    ]
+    if (fs.existsSync(exePathTxt)) candidates.push(fs.readFileSync(exePathTxt, 'utf-8').trim())
+
+    const capCutExe = candidates.find(p => fs.existsSync(p))
+    if (!capCutExe) {
+      return res.json({ success: false, message: 'CapCut.exe 경로를 찾을 수 없습니다. capcut_exe_path.txt에 경로를 저장하세요.' })
+    }
+
+    const proc = spawn(capCutExe, [], { detached: true, stdio: 'ignore' })
+    proc.unref()
+    res.json({ success: true, message: 'CapCut 재시작 완료. 프로젝트 로딩 대기 중...' })
+  }, 1000)
+})
+
+// ── POST /api/run-script — scripts/{name}.js 실행 ─────────────────────
+app.post('/api/run-script', (req, res) => {
+  const { script, args = [] } = req.body
+  if (!script) return res.status(400).json({ error: 'script 필요' })
+
+  const scriptPath = path.join(CODE_ROOT, 'scripts', `${script}.js`)
+  if (!fs.existsSync(scriptPath)) {
+    return res.status(404).json({ error: `스크립트 없음: ${scriptPath}` })
+  }
+
+  let stdout = ''
+  let stderr = ''
+  const proc = spawn(process.execPath, [scriptPath, ...args], { cwd: CODE_ROOT, env: process.env })
+  proc.stdout.on('data', d => { stdout += d.toString() })
+  proc.stderr.on('data', d => { stderr += d.toString() })
+  proc.on('close', code => {
+    if (code === 0) {
+      res.json({ success: true, output: stdout.trim() })
+    } else {
+      res.status(500).json({ success: false, error: stderr.trim() || stdout.trim() })
+    }
+  })
+  proc.on('error', err => {
+    res.status(500).json({ success: false, error: err.message })
+  })
+})
+
+// ── POST /api/analyze-video — cut 영상 → Higgsfield 분석 시작 ──
+app.post('/api/analyze-video', async (req, res) => {
+  const { epNum, cutNo } = req.body
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  if (!HIGGSFIELD_API_KEY) return res.status(500).json({ error: 'HIGGSFIELD_API_KEY 미설정 (.env.local 확인)' })
+
+  const padded   = String(cutNo).padStart(2, '0')
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const finalP   = path.join(videoDir, `cut_${padded}_final.mp4`)
+  const rawP     = path.join(videoDir, `cut_${padded}.mp4`)
+  const videoFile = fs.existsSync(finalP) ? finalP : fs.existsSync(rawP) ? rawP : null
+  if (!videoFile) return res.status(404).json({ error: '영상 파일을 찾을 수 없습니다' })
+
+  try {
+    // ① 영상 업로드 (multipart/form-data)
+    // TODO: Higgsfield media upload 정확한 엔드포인트 확인
+    const formData = new FormData()
+    const buf = fs.readFileSync(videoFile)
+    formData.append('file', new Blob([buf], { type: 'video/mp4' }), path.basename(videoFile))
+
+    const uploadRes = await fetch('https://api.higgsfield.ai/v1/media/upload', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${HIGGSFIELD_API_KEY}` },
+      body: formData,
+    })
+    if (!uploadRes.ok) {
+      const t = await uploadRes.text()
+      return res.status(502).json({ error: `Higgsfield 업로드 실패 (${uploadRes.status}): ${t.slice(0,200)}` })
+    }
+    const upData = await uploadRes.json()
+    const mediaId = upData.id || upData.media_id || upData.data?.id
+
+    // ② 분석 생성
+    // TODO: Higgsfield video analysis 정확한 엔드포인트 확인
+    const anaRes = await fetch('https://api.higgsfield.ai/v1/video-analysis', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_input_id: mediaId }),
+    })
+    if (!anaRes.ok) {
+      const t = await anaRes.text()
+      return res.status(502).json({ error: `Higgsfield 분석 시작 실패 (${anaRes.status}): ${t.slice(0,200)}` })
+    }
+    const anaData = await anaRes.json()
+    const analysisId = anaData.id || anaData.analysis_id || anaData.data?.id
+
+    res.json({ success: true, analysisId, status: 'queued', message: '분석 시작됨. /api/analysis-status로 폴링하세요' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/analysis-status — 분석 상태 폴링 → episode_style_guide.json 저장 ──
+app.post('/api/analysis-status', async (req, res) => {
+  const { analysisId, epNum, cutNo } = req.body
+  if (!analysisId || !epNum) return res.status(400).json({ error: 'analysisId, epNum 필요' })
+  if (!HIGGSFIELD_API_KEY) return res.status(500).json({ error: 'HIGGSFIELD_API_KEY 미설정' })
+
+  try {
+    // TODO: Higgsfield video analysis status 정확한 엔드포인트 확인
+    const r = await fetch(`https://api.higgsfield.ai/v1/video-analysis/${analysisId}`, {
+      headers: { Authorization: `Bearer ${HIGGSFIELD_API_KEY}` },
+    })
+    if (!r.ok) {
+      const t = await r.text()
+      return res.status(502).json({ error: `Higgsfield 상태 조회 실패 (${r.status}): ${t.slice(0,200)}` })
+    }
+    const data = await r.json()
+    const status = data.status || data.state
+
+    if (status !== 'completed') return res.json({ success: true, status: 'in_progress' })
+
+    // ── 완료 → 데이터 추출 ─────────────────────────────────────
+    const scenes = data.scenes || data.data?.scenes || []
+    const scene  = scenes[0] || {}
+    const visual = scene.visual || scene.description || ''
+    const shotType = scene.shot_type || scene.shotType || ''
+
+    const extr = (re) => { const m = visual.match(re); return m ? m[1].trim() : '' }
+
+    const ageAppearance = extr(/approximately ([\d\-\s]+years? old[^,.\n]*)/i)
+      || 'approximately 20-25 years old, appearing no older than 24-25'
+    const skin    = extr(/([\w\s]+skin[^,.\n]*)/i) || ''
+    const hair    = extr(/([\w\s]+hair[^,.\n]*)/i) || ''
+    const outfit  = visual.match(/wearing ([^.]+)/i)?.[1]?.trim() || ''
+    const lighting = extr(/([\w\s]+lighting[^,.\n]*)/i) || ''
+    const colorPalette = extr(/(color palette[^,.\n]*)/i) || extr(/([\w\s]+palette[^,.\n]*)/i) || ''
+    const bg      = extr(/(background[^,.\n]+)/i) || ''
+    const camera  = shotType || extr(/([\w\-]+ shot[^,.\n]*)/i) || ''
+
+    const promptPrefix = [
+      ageAppearance, skin, hair,
+      'small natural beauty mark on right cheek',
+      'K-model proportions, small face to body ratio, slim delicate frame, tall, long legs',
+      outfit, lighting, colorPalette,
+    ].filter(Boolean).join(', ')
+
+    const styleGuide = {
+      epNum, generatedAt: new Date().toISOString(),
+      sourceCut: `cut_${String(cutNo || 1).toString().padStart(2, '0')}`,
+      analysisId,
+      character: {
+        face: {
+          ageAppearance,
+          skin,
+          beautyMark: 'small natural beauty mark on right cheek',
+          hair,
+        },
+        body: {
+          proportions: 'K-model proportions, small face to body ratio',
+          build: 'slim delicate frame, tall, long legs',
+          height: 'tall, long-legged silhouette',
+        },
+      },
+      outfit: outfit ? { description: outfit } : {},
+      cinematography: {
+        lighting,
+        colorPalette,
+        background: bg ? `${bg}, background must not interact with subject` : 'background must not interact with subject',
+        cameraStyle: camera,
+      },
+      promptPrefix,
+    }
+
+    const savePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, 'episode_style_guide.json')
+    fs.mkdirSync(path.dirname(savePath), { recursive: true })
+    fs.writeFileSync(savePath, JSON.stringify(styleGuide, null, 2), 'utf-8')
+
+    res.json({ success: true, status: 'completed', styleGuide, savedPath: savePath })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 const server = app.listen(PORT, () => {

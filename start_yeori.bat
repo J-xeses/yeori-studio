@@ -12,6 +12,23 @@ echo   Yeori Studio -- Full System Start
 echo ============================================================
 echo.
 
+set SRC=C:\yeori-studio
+set DST=C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio
+
+:: [0/3] Sync code files: C:\yeori-studio -> OneDrive 실행 경로
+echo [0/3] Syncing code files to run directory...
+robocopy "%SRC%\src"     "%DST%\src"     /E /XO /NFL /NDL /NJH /NJS >nul 2>&1
+robocopy "%SRC%\scripts" "%DST%\scripts" /E /XO /NFL /NDL /NJH /NJS >nul 2>&1
+copy /Y "%SRC%\server\proxy.js" "%DST%\server\proxy.js" >nul 2>&1
+echo        Sync complete.
+
+:: [0/3] Kill any leftover proxy process on port 3001
+echo [0/3] Killing any existing proxy on port 3001...
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3001 " ^| findstr "LISTENING"') do (
+    taskkill /PID %%p /F >nul 2>&1
+)
+timeout /t 1 /nobreak >nul
+
 :: [1/3] Proxy + Vite dev server
 echo [1/3] Starting proxy + Vite dev server...
 start "Yeori-Studio-Server" cmd /k "npm run studio"

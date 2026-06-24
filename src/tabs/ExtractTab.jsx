@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint } from '../lib/gpoints'
 import s from './ExtractTab.module.css'
@@ -12,6 +13,7 @@ function downloadText(content, filename) {
 export default function ExtractTab() {
   const { state } = useApp()
   const { cuts, episode, scriptRaw } = state
+  const [saveStatus, setSaveStatus] = useState('')
 
   const exportFullScript = () => {
     const lines = [
@@ -59,6 +61,34 @@ export default function ExtractTab() {
     downloadText(scriptRaw, `ep${episode.number}_원본.txt`)
   }
 
+  const saveVideoPrompts = async () => {
+    const prompts = cuts.map(c => ({
+      cutNo:       c.no,
+      imagePrompt: c.imagePrompt || '',
+      scene:       c.scene       || '',
+      action:      c.action      || '',
+      shotType:    c.shotType    || c.cutType || '',
+      duration:    c.duration    || 5,
+      dialogue:    c.dialogue    || '',
+      narration:   c.narration   || '',
+    }))
+    try {
+      const res = await fetch('http://localhost:3001/api/save-video-prompts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, prompts }),
+      }).then(r => r.json())
+      if (res.success) {
+        setSaveStatus(`✅ 저장 완료: downloads/video/ep${episode.number}/video-prompts.json`)
+      } else {
+        setSaveStatus(`❌ 저장 실패: ${res.error}`)
+      }
+    } catch (e) {
+      setSaveStatus(`❌ 저장 실패: ${e.message}`)
+    }
+    setTimeout(() => setSaveStatus(''), 4000)
+  }
+
   const totalDialogue = cuts.reduce((acc, c) => acc + (c.dialogue?.length || 0) + (c.narration?.length || 0), 0)
   const cutsWithPrompt = cuts.filter(c => c.imagePrompt).length
   const cutsWithDialogue = cuts.filter(c => c.dialogue || c.narration).length
@@ -104,7 +134,14 @@ export default function ExtractTab() {
         <div className={s.sectionTitle}>📦 데이터</div>
         <div className={s.cards}>
           <ExportCard icon="{ }" title="JSON 데이터" desc="에피소드 설정 + 전체 컷 데이터 JSON" color="green" onClick={exportJSON} />
+          <ExportCard icon="🎬" title="video-prompts.json" desc="영상 프롬프트 + 대사/나레이션 서버 저장 (downloads/video/ep{N}/)" color="accent" onClick={saveVideoPrompts} />
         </div>
+        {saveStatus && (
+          <div style={{marginTop:'10px',fontSize:'12px',fontWeight:600,
+            color: saveStatus.startsWith('✅') ? '#4ade80' : '#f87171'}}>
+            {saveStatus}
+          </div>
+        )}
       </div>
 
       <div className={s.preview}>
