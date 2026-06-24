@@ -254,6 +254,21 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
+// ── POST /api/save-video-prompts — video-prompts.json 에피소드별 저장 ────────
+app.post('/api/save-video-prompts', (req, res) => {
+  const { epNum, prompts } = req.body
+  if (!epNum || !Array.isArray(prompts)) return res.status(400).json({ error: 'epNum, prompts[] 필요' })
+  const dir  = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const dest = path.join(dir, 'video-prompts.json')
+  try {
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(dest, JSON.stringify(prompts, null, 2), 'utf-8')
+    res.json({ success: true, path: dest, count: prompts.length })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/save-edit-meta — yeori_edit_meta.json 서버 저장 ─────────────
 app.post('/api/save-edit-meta', (req, res) => {
   const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')

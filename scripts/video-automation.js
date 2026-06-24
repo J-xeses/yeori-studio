@@ -66,6 +66,9 @@ const CONFIG = {
   retryCount:      1,
 }
 
+// Veo 생성 시 자막/텍스트 오버레이 억제 문구 — 모든 프롬프트 끝에 자동 추가
+const SUBTITLE_SUPPRESSION = 'NO subtitles. NO captions. NO text overlay. NO dialogue text visible in frame. NO watermark. NO on-screen text of any kind.'
+
 // ── 인자 파싱 ────────────────────────────────────────────────────────
 const args = parseArgs()
 const RATIO = args.ratio || '9:16'
@@ -1250,9 +1253,10 @@ async function processCut(page, cut, episode, ratio) {
     || cut.videoPrompt?.trim()
     || 'Smooth cinematic camera motion. Character moves naturally. Photorealistic.'
   )
-  const videoPrompt = cut.dialogue?.trim()
-    ? `${basePrompt}\n\nThe character naturally speaks out loud in Korean: "${cut.dialogue.trim()}"\nHer lips move naturally and clearly in sync with the Korean dialogue.\nRealistic mouth movement, natural speech animation.`
-    : basePrompt
+  const dialogueSegment = cut.dialogue?.trim()
+    ? `\n\nThe character naturally speaks out loud in Korean: "${cut.dialogue.trim()}"\nHer lips move naturally and clearly in sync with the Korean dialogue.\nRealistic mouth movement, natural speech animation.`
+    : ''
+  const videoPrompt = basePrompt + dialogueSegment + '\n\n' + SUBTITLE_SUPPRESSION
   await typeVideoPrompt(page, videoPrompt)
 
   // ⑨ 생성 버튼 클릭
