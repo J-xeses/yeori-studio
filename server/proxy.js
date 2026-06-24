@@ -682,6 +682,202 @@ app.post('/api/run-ffmpeg', (req, res) => {
   })
 })
 
+// ── ffprobe 길이 측정 헬퍼 ──────────────────────────────────────────
+const FFPROBE = 'C:\\ffmpeg\\bin\\ffprobe.exe'
+function getMediaDuration(filePath) {
+  return new Promise((resolve) => {
+    const proc = spawn(FFPROBE, [
+      '-v', 'error', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', filePath,
+    ])
+    let out = ''
+    proc.stdout.on('data', d => { out += d.toString() })
+    proc.on('close', () => resolve(parseFloat(out.trim()) || 0))
+    proc.on('error', () => resolve(0))
+  })
+}
+
+function toSRTTimecode(sec) {
+  const h  = Math.floor(sec / 3600)
+  const m  = Math.floor((sec % 3600) / 60)
+  const s  = Math.floor(sec % 60)
+  const ms = Math.round((sec % 1) * 1000)
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`
+}
+
+// ── POST /api/generate-srt — audio/ep{N}/*.mp3 → ep{N}.srt 생성 ──────
+app.post('/api/generate-srt', async (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+  const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+  const srtPath  = path.join(audioDir, `ep${epNum}.srt`)
+
+  try {
+    if (!fs.existsSync(audioDir)) return res.status(404).json({ error: `audioDir 없음: ${audioDir}` })
+
+    const mp3Files = fs.readdirSync(audioDir)
+      .filter(f => /^cut_\d+\.mp3$/.test(f))
+      .sort()
+    if (!mp3Files.length) return res.status(404).json({ error: `cut_NN.mp3 파일 없음` })
+
+    const editMeta = fs.existsSync(metaPath)
+      ? JSON.parse(fs.readFileSync(metaPath, 'utf-8'))
+      : []
+    const metaMap = {}
+    for (const m of (Array.isArray(editMeta) ? editMeta : [])) {
+      metaMap[String(m.cutNo).padStart(2, '0')] = m
+    }
+
+    let cursor = 0
+    let srtIdx = 1
+    const lines = []
+
+    for (const file of mp3Files) {
+      const match = file.match(/^cut_(\d+)\.mp3$/)
+      if (!match) continue
+      const padded = String(parseInt(match[1], 10)).padStart(2, '0')
+      const filePath = path.join(audioDir, file)
+      const dur = await getMediaDuration(filePath) || 8
+
+      const m = metaMap[padded]
+      const text = (m?.narration?.trim() || m?.dialogue?.trim() || '').replace(/\n/g, ' ')
+
+      if (text) {
+        lines.push(`${srtIdx}`)
+        lines.push(`${toSRTTimecode(cursor)} --> ${toSRTTimecode(cursor + dur)}`)
+        lines.push(text)
+        lines.push('')
+        srtIdx++
+      }
+      cursor += dur
+    }
+
+    fs.writeFileSync(srtPath, lines.join('\n'), 'utf-8')
+
+    const mm = String(Math.floor(cursor / 60)).padStart(2, '0')
+    const ss = String(Math.floor(cursor % 60)).padStart(2, '0')
+    res.json({ success: true, srtPath, cutCount: mp3Files.length, totalDuration: `${mm}:${ss}` })
+  } catch (err) {
+    console.error('[generate-srt]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/concat-video — cut_NN_final.mp4 순서대로 concat ─────────
+app.post('/api/concat-video', async (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const videoDir  = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const outputDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+  const concatTxt = path.join(videoDir, 'concat_list.txt')
+  const outFile   = path.join(outputDir, `ep${epNum}_raw.mp4`)
+
+  try {
+    if (!fs.existsSync(videoDir)) return res.status(404).json({ error: `videoDir 없음: ${videoDir}` })
+    fs.mkdirSync(outputDir, { recursive: true })
+
+    // cut_NN_final.mp4 우선, 없으면 cut_NN.mp4
+    const allFiles = fs.readdirSync(videoDir)
+    const cutNums = new Set()
+    for (const f of allFiles) {
+      const m = f.match(/^cut_(\d+)(?:_final)?\.mp4$/)
+      if (m) cutNums.add(parseInt(m[1], 10))
+    }
+    const sortedNums = [...cutNums].sort((a, b) => a - b)
+    if (!sortedNums.length) return res.status(404).json({ error: `cut_NN.mp4 파일 없음` })
+
+    const selectedFiles = sortedNums.map(n => {
+      const p = String(n).padStart(2, '0')
+      const fin = path.join(videoDir, `cut_${p}_final.mp4`)
+      const base = path.join(videoDir, `cut_${p}.mp4`)
+      return fs.existsSync(fin) ? fin : base
+    })
+
+    const listContent = selectedFiles.map(f => `file '${f.replace(/\\/g, '/')}'`).join('\n')
+    fs.writeFileSync(concatTxt, listContent, 'utf-8')
+
+    const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+    const code = await new Promise((resolve) => {
+      let errBuf = ''
+      const proc = spawn(ffmpeg, ['-y', '-f', 'concat', '-safe', '0', '-i', concatTxt, '-c', 'copy', outFile])
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', c => { console.error('[concat-video]', errBuf.slice(-200)); resolve(c) })
+      proc.on('error', () => resolve(1))
+    })
+
+    try { fs.unlinkSync(concatTxt) } catch {}
+
+    if (code !== 0) return res.status(500).json({ error: 'FFmpeg concat 실패' })
+
+    const totalSec = await getMediaDuration(outFile)
+    const mm = String(Math.floor(totalSec / 60)).padStart(2, '0')
+    const ss = String(Math.floor(totalSec % 60)).padStart(2, '0')
+
+    res.json({ success: true, outputPath: outFile, cutCount: sortedNums.length, totalDuration: `${mm}:${ss}` })
+  } catch (err) {
+    console.error('[concat-video]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/restart-capcut — CapCut 종료 후 재실행 ─────────────────
+app.post('/api/restart-capcut', (req, res) => {
+  if (process.platform !== 'win32') {
+    return res.status(400).json({ error: 'Windows 전용 기능입니다' })
+  }
+
+  spawn('taskkill', ['/F', '/IM', 'CapCut.exe', '/T'], { shell: true })
+    .on('error', () => {})
+
+  setTimeout(() => {
+    const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
+    const candidates = [
+      'C:\\Program Files\\CapCut\\CapCut.exe',
+      path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'CapCut.exe'),
+    ]
+    if (fs.existsSync(exePathTxt)) candidates.push(fs.readFileSync(exePathTxt, 'utf-8').trim())
+
+    const capCutExe = candidates.find(p => fs.existsSync(p))
+    if (!capCutExe) {
+      return res.json({ success: false, message: 'CapCut.exe 경로를 찾을 수 없습니다. capcut_exe_path.txt에 경로를 저장하세요.' })
+    }
+
+    const proc = spawn(capCutExe, [], { detached: true, stdio: 'ignore' })
+    proc.unref()
+    res.json({ success: true, message: 'CapCut 재시작 완료. 프로젝트 로딩 대기 중...' })
+  }, 1000)
+})
+
+// ── POST /api/run-script — scripts/{name}.js 실행 ─────────────────────
+app.post('/api/run-script', (req, res) => {
+  const { script, args = [] } = req.body
+  if (!script) return res.status(400).json({ error: 'script 필요' })
+
+  const scriptPath = path.join(CODE_ROOT, 'scripts', `${script}.js`)
+  if (!fs.existsSync(scriptPath)) {
+    return res.status(404).json({ error: `스크립트 없음: ${scriptPath}` })
+  }
+
+  let stdout = ''
+  let stderr = ''
+  const proc = spawn(process.execPath, [scriptPath, ...args], { cwd: CODE_ROOT, env: process.env })
+  proc.stdout.on('data', d => { stdout += d.toString() })
+  proc.stderr.on('data', d => { stderr += d.toString() })
+  proc.on('close', code => {
+    if (code === 0) {
+      res.json({ success: true, output: stdout.trim() })
+    } else {
+      res.status(500).json({ success: false, error: stderr.trim() || stdout.trim() })
+    }
+  })
+  proc.on('error', err => {
+    res.status(500).json({ success: false, error: err.message })
+  })
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
