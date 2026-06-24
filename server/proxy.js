@@ -905,6 +905,57 @@ app.post('/api/run-script', (req, res) => {
   })
 })
 
+// ── POST /api/send-to-cutter — A Creative Cutter로 파일 전달 ────────
+app.post('/api/send-to-cutter', (req, res) => {
+  const { epNum, rawVideoPath, srtPath, editMetaPath, mode = 'yeori' } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const rawAbs  = path.join(MEDIA_ROOT, rawVideoPath  || `downloads/output/ep${epNum}/ep${epNum}_raw.mp4`)
+  const srtAbs  = path.join(MEDIA_ROOT, srtPath       || `downloads/audio/ep${epNum}/ep${epNum}.srt`)
+  const metaAbs = path.join(MEDIA_ROOT, editMetaPath  || 'downloads/video/yeori_edit_meta.json')
+
+  if (!fs.existsSync(rawAbs))  return res.status(404).json({ error: `ep${epNum}_raw.mp4 없음: ${rawAbs}` })
+  if (!fs.existsSync(srtAbs))  return res.status(404).json({ error: `ep${epNum}.srt 없음: ${srtAbs}` })
+  if (!fs.existsSync(metaAbs)) return res.status(404).json({ error: `yeori_edit_meta.json 없음: ${metaAbs}` })
+
+  // cutter_input.json 생성
+  const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+  fs.mkdirSync(outDir, { recursive: true })
+  const cutterInputPath = path.join(outDir, 'cutter_input.json')
+  fs.writeFileSync(cutterInputPath, JSON.stringify({
+    epNum, mode,
+    rawVideo:  rawAbs,
+    srt:       srtAbs,
+    editMeta:  metaAbs,
+    kenburns:  'pan_up',
+    timestamp: new Date().toISOString(),
+  }, null, 2), 'utf-8')
+
+  // Cutter 실행 경로 확인
+  const cutterTxtPath = path.join(MEDIA_ROOT, 'cutter_exe_path.txt')
+  if (!fs.existsSync(cutterTxtPath)) {
+    return res.status(500).json({
+      error: `A Creative Cutter 경로를 설정하세요: ${path.join(MEDIA_ROOT, 'cutter_exe_path.txt')} 에 Cutter 실행파일 경로를 저장하세요`,
+    })
+  }
+  const cutterPath = fs.readFileSync(cutterTxtPath, 'utf-8').trim()
+  if (!cutterPath || !fs.existsSync(cutterPath)) {
+    return res.status(500).json({ error: `Cutter 실행파일을 찾을 수 없습니다: ${cutterPath}` })
+  }
+
+  const proc = spawn(cutterPath, ['--input', cutterInputPath, '--mode', mode], {
+    detached: true, stdio: 'ignore',
+  })
+  proc.unref()
+
+  res.json({
+    success: true,
+    message: 'A Creative Cutter로 전달 완료. Cutter에서 작업을 확인하세요.',
+    cutterInputPath,
+    status: 'waiting_cutter',
+  })
+})
+
 // ── Claude API + Higgsfield MCP 헬퍼 ─────────────────────────────
 async function callClaudeWithMCP(systemPrompt, userContent, maxTokens = 4096) {
   if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY 미설정 (.env.local에 VITE_ANTHROPIC_API_KEY 확인)')

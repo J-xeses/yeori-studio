@@ -272,30 +272,23 @@ export default function EditMetaTab() {
         setAccRunning(false); return
       }
 
-      // ③ CapCut 드래프트
-      setAccStatus('③ CapCut 드래프트 생성 중...')
-      const draftRes = await post('http://localhost:3001/api/run-script', {
-        script: 'make-capcut-draft', args: [`--ep=${epNum}`],
+      // ③ A Creative Cutter로 전달
+      setAccStatus('③ A Creative Cutter로 전달 중...')
+      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', {
+        epNum,
+        rawVideoPath: `downloads/output/ep${epNum}/ep${epNum}_raw.mp4`,
+        srtPath: `downloads/audio/ep${epNum}/ep${epNum}.srt`,
+        editMetaPath: 'downloads/video/yeori_edit_meta.json',
+        mode: 'yeori',
       })
-      if (!draftRes.success) {
-        setAccStatus(`❌ CapCut 드래프트 생성 실패: ${draftRes.error || ''}`)
+      if (!cutterRes.success) {
+        setAccStatus(`❌ Cutter 전달 실패: ${cutterRes.error || ''}`)
         setAccRunning(false); return
       }
 
-      // ④ CapCut 재시작 (실패해도 계속)
-      setAccStatus('④ CapCut 재시작 중...')
-      try {
-        const restartRes = await post('http://localhost:3001/api/restart-capcut', {})
-        if (!restartRes.success) {
-          setAccStatus('⚠️ CapCut 자동 재시작 실패 — 수동으로 재시작하세요')
-        } else {
-          setAccStatus('✅ 완료! CapCut에서 확인하세요.')
-        }
-      } catch {
-        setAccStatus('⚠️ CapCut 자동 재시작 실패 — 수동으로 재시작하세요')
-      }
-
-      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 5000)
+      // ④ 완료
+      setAccStatus('✅ A Creative Cutter로 전달 완료!\nCutter에서 서여리 모드로 작업을 확인하세요.')
+      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 6000)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
       setAccRunning(false)
