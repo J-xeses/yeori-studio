@@ -37,7 +37,7 @@ const ROOT = CODE_ROOT  // 하위 호환 유지
     if (m) { const k = m[1].trim(); if (!process.env[k]) process.env[k] = m[2].trim() }
   })
 })()
-const HIGGSFIELD_API_KEY = process.env.HIGGSFIELD_API_KEY || ''
+const ANTHROPIC_API_KEY = process.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || ''
 
 const app = express()
 const PORT = 3001
@@ -905,11 +905,45 @@ app.post('/api/run-script', (req, res) => {
   })
 })
 
-// ── POST /api/analyze-video — cut 영상 → Higgsfield 분석 시작 ──
+// ── Claude API + Higgsfield MCP 헬퍼 ─────────────────────────────
+async function callClaudeWithMCP(systemPrompt, userContent, maxTokens = 4096) {
+  if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY 미설정 (.env.local에 VITE_ANTHROPIC_API_KEY 확인)')
+  const body = {
+    model: 'claude-sonnet-4-6',
+    max_tokens: maxTokens,
+    mcp_servers: [{ type: 'url', url: 'https://mcp.higgsfield.ai/mcp', name: 'higgsfield' }],
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userContent }],
+  }
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${ANTHROPIC_API_KEY}`,
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': 'mcp-client-2025-04-04',
+    },
+    body: JSON.stringify(body),
+  })
+  if (!r.ok) {
+    const t = await r.text()
+    throw new Error(`Claude API 오류 (${r.status}): ${t.slice(0, 300)}`)
+  }
+  return r.json()
+}
+
+function extractJsonFromClaude(claudeRes) {
+  const blocks = claudeRes.content || []
+  const textBlock = [...blocks].reverse().find(b => b.type === 'text')
+  if (!textBlock) throw new Error('Claude 응답에 text 블록 없음')
+  const raw = textBlock.text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+  return JSON.parse(raw)
+}
+
+// ── POST /api/analyze-video — Claude + Higgsfield MCP 경유 분석 시작 ──
 app.post('/api/analyze-video', async (req, res) => {
   const { epNum, cutNo } = req.body
   if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
-  if (!HIGGSFIELD_API_KEY) return res.status(500).json({ error: 'HIGGSFIELD_API_KEY 미설정 (.env.local 확인)' })
 
   const padded   = String(cutNo).padStart(2, '0')
   const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
@@ -918,88 +952,103 @@ app.post('/api/analyze-video', async (req, res) => {
   const videoFile = fs.existsSync(finalP) ? finalP : fs.existsSync(rawP) ? rawP : null
   if (!videoFile) return res.status(404).json({ error: '영상 파일을 찾을 수 없습니다' })
 
+  const buf = fs.readFileSync(videoFile)
+  if (buf.length > 10 * 1024 * 1024) {
+    return res.status(400).json({ error: '영상 파일이 너무 큽니다. 10MB 이하의 파일을 사용하세요' })
+  }
+  const base64Data = buf.toString('base64')
+
   try {
-    // ① 영상 업로드 (multipart/form-data)
-    // TODO: Higgsfield media upload 정확한 엔드포인트 확인
-    const formData = new FormData()
-    const buf = fs.readFileSync(videoFile)
-    formData.append('file', new Blob([buf], { type: 'video/mp4' }), path.basename(videoFile))
+    const systemPrompt = `You are a video analysis assistant.
+Your job is to:
+1. Upload the provided video to Higgsfield using media_upload
+2. Start video analysis using video_analysis_create
+3. Return ONLY a JSON object with this structure:
+{"analysisId":"...","mediaId":"...","status":"queued"}
+Do not include any other text.`
 
-    const uploadRes = await fetch('https://api.higgsfield.ai/v1/media/upload', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${HIGGSFIELD_API_KEY}` },
-      body: formData,
+    const userContent = [
+      { type: 'image', source: { type: 'base64', media_type: 'video/mp4', data: base64Data } },
+      { type: 'text', text: 'Upload this video to Higgsfield and start video analysis. Return only the JSON with analysisId and mediaId.' },
+    ]
+
+    const claudeRes = await callClaudeWithMCP(systemPrompt, userContent, 4096)
+    const parsed = extractJsonFromClaude(claudeRes)
+
+    res.json({
+      success: true,
+      analysisId: parsed.analysisId,
+      mediaId: parsed.mediaId,
+      status: 'queued',
+      message: '분석 시작됨. /api/analysis-status로 폴링하세요',
     })
-    if (!uploadRes.ok) {
-      const t = await uploadRes.text()
-      return res.status(502).json({ error: `Higgsfield 업로드 실패 (${uploadRes.status}): ${t.slice(0,200)}` })
-    }
-    const upData = await uploadRes.json()
-    const mediaId = upData.id || upData.media_id || upData.data?.id
-
-    // ② 분석 생성
-    // TODO: Higgsfield video analysis 정확한 엔드포인트 확인
-    const anaRes = await fetch('https://api.higgsfield.ai/v1/video-analysis', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${HIGGSFIELD_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ video_input_id: mediaId }),
-    })
-    if (!anaRes.ok) {
-      const t = await anaRes.text()
-      return res.status(502).json({ error: `Higgsfield 분석 시작 실패 (${anaRes.status}): ${t.slice(0,200)}` })
-    }
-    const anaData = await anaRes.json()
-    const analysisId = anaData.id || anaData.analysis_id || anaData.data?.id
-
-    res.json({ success: true, analysisId, status: 'queued', message: '분석 시작됨. /api/analysis-status로 폴링하세요' })
   } catch (err) {
+    console.error('[analyze-video]', err.message)
     res.status(500).json({ error: err.message })
   }
 })
 
-// ── POST /api/analysis-status — 분석 상태 폴링 → episode_style_guide.json 저장 ──
+// ── POST /api/analysis-status — Claude + Higgsfield MCP 상태 폴링 → episode_style_guide.json ──
 app.post('/api/analysis-status', async (req, res) => {
   const { analysisId, epNum, cutNo } = req.body
   if (!analysisId || !epNum) return res.status(400).json({ error: 'analysisId, epNum 필요' })
-  if (!HIGGSFIELD_API_KEY) return res.status(500).json({ error: 'HIGGSFIELD_API_KEY 미설정' })
 
   try {
-    // TODO: Higgsfield video analysis status 정확한 엔드포인트 확인
-    const r = await fetch(`https://api.higgsfield.ai/v1/video-analysis/${analysisId}`, {
-      headers: { Authorization: `Bearer ${HIGGSFIELD_API_KEY}` },
-    })
-    if (!r.ok) {
-      const t = await r.text()
-      return res.status(502).json({ error: `Higgsfield 상태 조회 실패 (${r.status}): ${t.slice(0,200)}` })
+    const systemPrompt = `You are a video analysis assistant.
+Check the status of a Higgsfield video analysis.
+If status is not "completed", return:
+{"status":"in_progress"}
+
+If status is "completed", extract from scenes data and return ONLY this JSON structure:
+{
+  "status": "completed",
+  "extracted": {
+    "ageAppearance": "approximately 20-25 years old",
+    "skin": "피부 특징",
+    "hair": "헤어 특징",
+    "outfit": {"top":"상의","bottom":"하의","shoes":"신발","cap":null},
+    "accessories": {"necklace":"목걸이","bracelet":"팔찌","earrings":null},
+    "lighting": "조명 특징",
+    "colorPalette": "색감",
+    "background": "배경 특징",
+    "shotType": "샷 타입",
+    "cameraStyle": "카메라 스타일"
+  }
+}
+Do not include any other text. Return only JSON.`
+
+    const userContent = `Check video analysis status for analysisId: ${analysisId}
+Use video_analysis_status tool to get the result.
+Extract all character and cinematography details from scenes.`
+
+    const claudeRes = await callClaudeWithMCP(systemPrompt, userContent, 8192)
+    const parsed = extractJsonFromClaude(claudeRes)
+
+    if (parsed.status !== 'completed') {
+      return res.json({ success: true, status: 'in_progress' })
     }
-    const data = await r.json()
-    const status = data.status || data.state
 
-    if (status !== 'completed') return res.json({ success: true, status: 'in_progress' })
-
-    // ── 완료 → 데이터 추출 ─────────────────────────────────────
-    const scenes = data.scenes || data.data?.scenes || []
-    const scene  = scenes[0] || {}
-    const visual = scene.visual || scene.description || ''
-    const shotType = scene.shot_type || scene.shotType || ''
-
-    const extr = (re) => { const m = visual.match(re); return m ? m[1].trim() : '' }
-
-    const ageAppearance = extr(/approximately ([\d\-\s]+years? old[^,.\n]*)/i)
-      || 'approximately 20-25 years old, appearing no older than 24-25'
-    const skin    = extr(/([\w\s]+skin[^,.\n]*)/i) || ''
-    const hair    = extr(/([\w\s]+hair[^,.\n]*)/i) || ''
-    const outfit  = visual.match(/wearing ([^.]+)/i)?.[1]?.trim() || ''
-    const lighting = extr(/([\w\s]+lighting[^,.\n]*)/i) || ''
-    const colorPalette = extr(/(color palette[^,.\n]*)/i) || extr(/([\w\s]+palette[^,.\n]*)/i) || ''
-    const bg      = extr(/(background[^,.\n]+)/i) || ''
-    const camera  = shotType || extr(/([\w\-]+ shot[^,.\n]*)/i) || ''
+    // ── completed → episode_style_guide.json 생성 ────────────
+    const e = parsed.extracted || {}
+    const age  = e.ageAppearance || 'approximately 20-25 years old'
+    const hair = e.hair || ''
+    const skin = e.skin || ''
+    const neck = e.accessories?.necklace || ''
+    const brac = e.accessories?.bracelet || ''
+    const light = e.lighting || ''
 
     const promptPrefix = [
-      ageAppearance, skin, hair,
+      `Young Korean woman ${age}`,
+      hair ? `${hair} NOT short` : '',
       'small natural beauty mark on right cheek',
-      'K-model proportions, small face to body ratio, slim delicate frame, tall, long legs',
-      outfit, lighting, colorPalette,
+      skin,
+      neck,
+      brac,
+      'K-model proportions small face long legs slim delicate frame',
+      'effortlessly photogenic not posing just existing beautifully',
+      light,
+      'shallow depth of field',
+      'Photorealistic 8K cinematic 9:16',
     ].filter(Boolean).join(', ')
 
     const styleGuide = {
@@ -1008,7 +1057,7 @@ app.post('/api/analysis-status', async (req, res) => {
       analysisId,
       character: {
         face: {
-          ageAppearance,
+          ageAppearance: age,
           skin,
           beautyMark: 'small natural beauty mark on right cheek',
           hair,
@@ -1019,12 +1068,16 @@ app.post('/api/analysis-status', async (req, res) => {
           height: 'tall, long-legged silhouette',
         },
       },
-      outfit: outfit ? { description: outfit } : {},
+      outfit: e.outfit || {},
+      accessories: e.accessories || {},
       cinematography: {
-        lighting,
-        colorPalette,
-        background: bg ? `${bg}, background must not interact with subject` : 'background must not interact with subject',
-        cameraStyle: camera,
+        lighting: light,
+        colorPalette: e.colorPalette || '',
+        background: e.background
+          ? `${e.background}, background people must not interact with subject`
+          : 'background people must not interact with subject',
+        shotType: e.shotType || '',
+        cameraStyle: e.cameraStyle || '',
       },
       promptPrefix,
     }
@@ -1035,6 +1088,7 @@ app.post('/api/analysis-status', async (req, res) => {
 
     res.json({ success: true, status: 'completed', styleGuide, savedPath: savePath })
   } catch (err) {
+    console.error('[analysis-status]', err.message)
     res.status(500).json({ error: err.message })
   }
 })

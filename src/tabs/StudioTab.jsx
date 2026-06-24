@@ -263,7 +263,7 @@ export default function StudioTab() {
         if (!sRes.success) { setAnalyzeMsg(`❌ ${sRes.error}`); setAnalyzeStatus('error'); return }
 
         if (sRes.status === 'in_progress') {
-          pollRef.current = setTimeout(poll, 3000)
+          pollRef.current = setTimeout(poll, 10000)
         } else {
           setAnalyzeMsg('③ 스타일 가이드 저장 중...')
           setTimeout(() => {
