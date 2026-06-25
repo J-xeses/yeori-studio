@@ -50,7 +50,7 @@ process.on('uncaughtException', (err) => {
   console.error('[proxy] uncaughtException:', err.message)
 })
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'] }))
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'null'] }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/downloads', express.static(path.join(MEDIA_ROOT, 'downloads')))
 
@@ -905,6 +905,35 @@ app.post('/api/run-script', (req, res) => {
   })
 })
 
+// ── POST /api/read-file — 텍스트 파일 읽기 ─────────────────────────
+app.post('/api/read-file', (req, res) => {
+  const { path: filePath } = req.body
+  if (!filePath) return res.status(400).json({ success: false, error: 'path 필요' })
+  try {
+    const content = fs.readFileSync(filePath, 'utf8')
+    res.json({ success: true, content })
+  } catch (err) {
+    res.json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/read-file-binary — 바이너리 파일 읽기 ────────────────
+app.post('/api/read-file-binary', (req, res) => {
+  const { path: filePath } = req.body
+  if (!filePath) return res.status(400).json({ success: false, error: 'path 필요' })
+  const mimeMap = { '.mp4': 'video/mp4', '.srt': 'text/plain', '.mp3': 'audio/mpeg', '.jpg': 'image/jpeg', '.png': 'image/png' }
+  try {
+    const buffer = fs.readFileSync(filePath)
+    const ext = path.extname(filePath).toLowerCase()
+    const mimeType = mimeMap[ext] || 'application/octet-stream'
+    res.setHeader('Content-Type', mimeType)
+    res.send(buffer)
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+
 // ── POST /api/send-to-cutter — A Creative Cutter로 파일 전달 ────────
 app.post('/api/send-to-cutter', (req, res) => {
   const { epNum, rawVideoPath, srtPath, editMetaPath, mode = 'yeori' } = req.body
@@ -931,28 +960,27 @@ app.post('/api/send-to-cutter', (req, res) => {
     timestamp: new Date().toISOString(),
   }, null, 2), 'utf-8')
 
-  // Cutter 실행 경로 확인
-  const cutterTxtPath = path.join(MEDIA_ROOT, 'cutter_exe_path.txt')
-  if (!fs.existsSync(cutterTxtPath)) {
-    return res.status(500).json({
-      error: `A Creative Cutter 경로를 설정하세요: ${path.join(MEDIA_ROOT, 'cutter_exe_path.txt')} 에 Cutter 실행파일 경로를 저장하세요`,
-    })
-  }
-  const cutterPath = fs.readFileSync(cutterTxtPath, 'utf-8').trim()
-  if (!cutterPath || !fs.existsSync(cutterPath)) {
-    return res.status(500).json({ error: `Cutter 실행파일을 찾을 수 없습니다: ${cutterPath}` })
-  }
+  // HTML 경로: cutter_html_path.txt 우선, 없으면 기본 경로
+  const cutterHtmlTxtPath = path.join(MEDIA_ROOT, 'cutter_html_path.txt')
+  const DEFAULT_CUTTER_HTML = 'C:\\Users\\won56\\OneDrive - CTEC\\바탕 화면\\안성준(원드라이브수시확인)\\01. JW Archive\\09. 구축\\01. 부업\\01. AI 콘텐츠\\00. AI 자동화 지식 모음\\06. AI 자동화 도구 개발\\04. A Creative Cutter\\a_creative_cutter.html'
+  const cutterHtmlPath = fs.existsSync(cutterHtmlTxtPath)
+    ? fs.readFileSync(cutterHtmlTxtPath, 'utf-8').trim()
+    : DEFAULT_CUTTER_HTML
 
-  const proc = spawn(cutterPath, ['--input', cutterInputPath, '--mode', mode], {
+  // Chrome으로 열기
+  const encodedInput = encodeURIComponent(cutterInputPath)
+  const fileUrl = 'file:///' + cutterHtmlPath.replace(/\\/g, '/')
+  const url = `${fileUrl}?input=${encodedInput}`
+
+  const proc = spawn('cmd', ['/c', 'start', 'chrome', url], {
     detached: true, stdio: 'ignore',
   })
   proc.unref()
 
   res.json({
     success: true,
-    message: 'A Creative Cutter로 전달 완료. Cutter에서 작업을 확인하세요.',
-    cutterInputPath,
-    status: 'waiting_cutter',
+    message: 'A Creative Cutter 자동 실행 완료',
+    cutterUrl: url,
   })
 })
 
