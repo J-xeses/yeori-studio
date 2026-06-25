@@ -255,7 +255,7 @@ function loadPrompts() {
   // 배열 직접 or { episode, cuts: [...] } 형식 모두 처리
   const rawEpisode = raw.episode ?? null
   // --ep 지정 시 해당 값을 episode로 우선 사용 (글로벌 파일 episode 값 무시)
-  const episode = args.ep ? Number(args.ep) : rawEpisode
+  const episode = args.ep ?? rawEpisode
   const type    = raw.type ?? 'shorts'   // "shorts" → 9:16 / "longform" → 16:9
 
   log('info', `파일 episode: ${rawEpisode} | 실행 episode: ${episode} | --ep: ${args.ep ?? '없음'}`)
