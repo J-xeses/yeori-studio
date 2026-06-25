@@ -1525,7 +1525,7 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
     ? `${promptPrefix}. ${cut.imagePrompt.trim()}`
     : cut.imagePrompt.trim()
 
-  const finalPrompt = [CONFIG.bodyPrefix, baseImagePrompt, CONFIG.bgSuffix].join(' ') + '\n\n' + CONFIG.subtitleSuppression
+  const finalPrompt = [CONFIG.bodyPrefix, baseImagePrompt, CONFIG.bgSuffix, CONFIG.subtitleSuppression].join(' ')
 
   log('step', `컷 생성 중… (${type === 'longform' ? '16:9' : '9:16'})`)
 
