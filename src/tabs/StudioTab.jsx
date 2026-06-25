@@ -76,6 +76,38 @@ export default function StudioTab() {
     check()
   }, [])
 
+  // ── 에피소드 변경 시 미디어 자동 스캔 ──────────────────────────────
+  useEffect(() => {
+    const epNum = state.episode?.number
+    if (!epNum) return
+    fetch('http://localhost:3001/api/scan-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        const toUrl = (absPath) =>
+          `http://localhost:3001/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}?t=${Date.now()}`
+
+        Object.entries(data.images || {}).forEach(([key, absPath]) => {
+          const cutNo = parseInt(key.replace('cut_', ''), 10)
+          const cut = state.cuts.find(c => c.no === cutNo)
+          if (!cut) return
+          const url = toUrl(absPath)
+          const fname = absPath.split(/[\\/]/).pop()
+          setImages(p => {
+            const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+            if (existing.some(u => u.includes(fname))) return p
+            return { ...p, [cut.id]: [...existing, url] }
+          })
+          setGPoint(cutNo, 'g3', true)
+        })
+        setGData(loadGPoints())
+      })
+      .catch(() => {})
+  }, [state.episode?.number])
+
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
 
   const handleImageUpload = (cutId, file) => {

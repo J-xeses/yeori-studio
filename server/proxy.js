@@ -323,6 +323,55 @@ app.get('/api/scan-images', (req, res) => {
   res.json({ images })
 })
 
+// ── POST /api/scan-media — ep 전체 미디어 스캔 ─────────────────────
+app.post('/api/scan-media', (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const flowDir  = path.join(MEDIA_ROOT, 'downloads', 'flow',  `ep${epNum}`)
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+  const styleGuidePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, 'episode_style_guide.json')
+
+  const images = {}
+  const videos = {}
+  const audios = {}
+
+  if (fs.existsSync(flowDir)) {
+    fs.readdirSync(flowDir).sort().forEach(file => {
+      const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+      if (m) {
+        const key = `cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`
+        if (!images[key]) images[key] = path.join(flowDir, file)
+      }
+    })
+  }
+
+  if (fs.existsSync(videoDir)) {
+    fs.readdirSync(videoDir).sort().forEach(file => {
+      const mFin  = file.match(/^cut_(\d+)_final\.mp4$/i)
+      const mBase = file.match(/^cut_(\d+)\.mp4$/i)
+      const m = mFin || mBase
+      if (m) {
+        const key = `cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`
+        if (mFin || !videos[key]) videos[key] = path.join(videoDir, file)
+      }
+    })
+  }
+
+  if (fs.existsSync(audioDir)) {
+    fs.readdirSync(audioDir).sort().forEach(file => {
+      const m = file.match(/^cut_(\d+)\.mp3$/i)
+      if (m) {
+        const key = `cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`
+        audios[key] = path.join(audioDir, file)
+      }
+    })
+  }
+
+  res.json({ images, videos, audios, styleGuide: fs.existsSync(styleGuidePath) })
+})
+
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
   const { ep, prompts, projectId } = req.body
