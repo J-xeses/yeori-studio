@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { spawn } from 'child_process'
+import { spawn, execSync } from 'child_process'
 import { createWriteStream } from 'fs'
 import fs from 'fs'
 import path from 'path'
@@ -947,7 +947,23 @@ app.post('/api/send-to-cutter', (req, res) => {
   if (!fs.existsSync(srtAbs))  return res.status(404).json({ error: `ep${epNum}.srt 없음: ${srtAbs}` })
   if (!fs.existsSync(metaAbs)) return res.status(404).json({ error: `yeori_edit_meta.json 없음: ${metaAbs}` })
 
-  // cutter_input.json 생성
+  // 1. make-capcut-draft.js 실행 (동기 대기)
+  const draftScriptPath = path.join(CODE_ROOT, 'scripts', 'make-capcut-draft.js')
+  try {
+    execSync(`node "${draftScriptPath}" --ep=${epNum}`, {
+      cwd: CODE_ROOT,
+      env: process.env,
+      stdio: 'inherit',
+    })
+  } catch (err) {
+    return res.status(500).json({ error: `make-capcut-draft.js 실행 실패: ${err.message}` })
+  }
+
+  // draft_content.json 경로 읽기
+  const projectPathFile = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_project_path.txt')
+  const draftPath = fs.existsSync(projectPathFile) ? fs.readFileSync(projectPathFile, 'utf-8').trim() : ''
+
+  // 2. cutter_input.json 생성
   const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
   fs.mkdirSync(outDir, { recursive: true })
   const cutterInputPath = path.join(outDir, 'cutter_input.json')
@@ -956,6 +972,7 @@ app.post('/api/send-to-cutter', (req, res) => {
     rawVideo:  rawAbs,
     srt:       srtAbs,
     editMeta:  metaAbs,
+    draft:     draftPath,
     kenburns:  'pan_up',
     timestamp: new Date().toISOString(),
   }, null, 2), 'utf-8')
