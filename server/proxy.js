@@ -972,7 +972,13 @@ app.post('/api/send-to-cutter', (req, res) => {
   const fileUrl = 'file:///' + cutterHtmlPath.replace(/\\/g, '/')
   const url = `${fileUrl}?input=${encodedInput}`
 
-  const proc = spawn('cmd', ['/c', 'start', 'chrome', url], {
+  const chromeArgs = [
+    '--allow-file-access-from-files',
+    '--disable-web-security',
+    '--user-data-dir=C:\\yeori-studio\\.chrome-profile-cutter',
+    url,
+  ]
+  const proc = spawn('cmd', ['/c', 'start', 'chrome', ...chromeArgs], {
     detached: true, stdio: 'ignore',
   })
   proc.unref()
