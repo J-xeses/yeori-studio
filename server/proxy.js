@@ -1020,7 +1020,7 @@ async function callClaudeWithMCP(systemPrompt, userContent, maxTokens = 4096) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${ANTHROPIC_API_KEY}`,
+      'x-api-key': ANTHROPIC_API_KEY,
       'Content-Type': 'application/json',
       'anthropic-version': '2023-06-01',
       'anthropic-beta': 'mcp-client-2025-04-04',
