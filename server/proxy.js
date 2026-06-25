@@ -996,7 +996,7 @@ app.post('/api/send-to-cutter', (req, res) => {
     url,
   ]
   const proc = spawn('cmd', ['/c', 'start', 'chrome', ...chromeArgs], {
-    detached: true, stdio: 'ignore',
+    detached: true, stdio: 'ignore', shell: true,
   })
   proc.unref()
 
