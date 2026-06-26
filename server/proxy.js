@@ -1028,7 +1028,7 @@ app.post('/api/send-to-cutter', (req, res) => {
 
   // HTML 경로: cutter_html_path.txt 우선, 없으면 기본 경로
   const cutterHtmlTxtPath = path.join(MEDIA_ROOT, 'cutter_html_path.txt')
-  const DEFAULT_CUTTER_HTML = 'C:\\Users\\won56\\OneDrive - CTEC\\바탕 화면\\안성준(원드라이브수시확인)\\01. JW Archive\\09. 구축\\01. 부업\\01. AI 콘텐츠\\00. AI 자동화 지식 모음\\06. AI 자동화 도구 개발\\04. A Creative Cutter\\a_creative_cutter.html'
+  const DEFAULT_CUTTER_HTML = 'C:\\yeori-studio\\a_creative_cutter.html'
   const cutterHtmlPath = fs.existsSync(cutterHtmlTxtPath)
     ? fs.readFileSync(cutterHtmlTxtPath, 'utf-8').trim()
     : DEFAULT_CUTTER_HTML
