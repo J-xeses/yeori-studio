@@ -781,6 +781,75 @@ function downloadTxt() {
   const blob = new Blob([timecodeText], {type:'text/plain;charset=utf-8'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='타임코드_목록.txt'; a.click();
 }
+
+async function autoLoadFromInput() {
+  const params = new URLSearchParams(window.location.search);
+  const inputPath = params.get('input');
+  if (!inputPath) return;
+
+  const decodedPath = decodeURIComponent(inputPath);
+  const fileUrl = 'file:///' + decodedPath.replace(/\\/g, '/');
+
+  try {
+    const cutterInput = await fetch(fileUrl).then(r => r.json());
+    const epNum = cutterInput.epNum;
+
+    // 1. draft_content.json 로드
+    const draftUrl = 'file:///' + cutterInput.draft.replace(/\\/g, '/');
+    jsonData = await fetch(draftUrl).then(r => r.json());
+    const videoDir = 'C:\\yeori-studio\\downloads\\video\\ep' + epNum;
+    document.getElementById('imgPath').value = videoDir;
+    document.getElementById('pathDetected').textContent = '자동 감지: ' + videoDir;
+    document.getElementById('pathDetected').style.display = 'block';
+    document.getElementById('jsonStatus').innerHTML = '<div class="file-ok">✅ draft_content.json 자동 로드</div>';
+
+    // 2. SRT 로드
+    const srtUrl = 'file:///' + cutterInput.srt.replace(/\\/g, '/');
+    const srtText = await fetch(srtUrl).then(r => r.text());
+    srtData = parseSRT(srtText);
+    useSRT = srtData.length > 0;
+    document.getElementById('srtStatus').innerHTML =
+      `<div class="file-ok">✅ SRT 자동 로드 — ${srtData.length}개 자막</div>`;
+
+    // 3. editMeta → 컷 목록으로 imageFiles 구성
+    const metaUrl = 'file:///' + cutterInput.editMeta.replace(/\\/g, '/');
+    const editMeta = await fetch(metaUrl).then(r => r.json());
+    if (Array.isArray(editMeta) && editMeta.length > 0) {
+      imageFiles = editMeta.map(m => ({ name: `cut_${String(m.cutNo).padStart(2,'0')}.mp4` }));
+    }
+    document.getElementById('imgStatus').innerHTML =
+      `<div class="file-ok">✅ ${imageFiles.length}개 컷 자동 로드</div>`;
+
+    checkReady();
+
+    // 4. 자동 실행 + 자동 저장
+    runMatch();
+    await autoSaveDraft(cutterInput.draft);
+
+  } catch(err) {
+    console.error('[autoLoad] 오류:', err.message);
+  }
+}
+
+async function autoSaveDraft(draftPath) {
+  if (!modifiedJSON) return;
+  try {
+    await fetch('http://localhost:3001/api/save-draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: draftPath, data: modifiedJSON }),
+    });
+    const resultSection = document.getElementById('resultSection');
+    resultSection.insertAdjacentHTML('afterbegin',
+      '<div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px;color:#34d399">' +
+      '✅ draft_content.json 자동 저장 완료 → CapCut을 재실행하세요</div>'
+    );
+  } catch(err) {
+    console.error('[autoSaveDraft] 오류:', err.message);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', autoLoadFromInput);
 </script>
 </body>
 </html>

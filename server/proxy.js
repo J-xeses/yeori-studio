@@ -1244,6 +1244,19 @@ Extract all character and cinematography details from scenes.`
   }
 })
 
+// ── POST /api/save-draft — draft_content.json을 CapCut 프로젝트 경로에 저장 ──
+app.post('/api/save-draft', (req, res) => {
+  const { path: filePath, data } = req.body
+  if (!filePath || !data) return res.status(400).json({ error: 'path, data 필요' })
+  try {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true })
+    fs.writeFileSync(filePath, JSON.stringify(data), 'utf-8')
+    res.json({ ok: true, path: filePath })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
