@@ -1,29 +1,16 @@
 @echo off
-setlocal EnableDelayedExpansion
+chcp 65001 >nul
+title ø©∏Æ Ω∫∆©µø¿ ƒ‹≈Ÿ√˜ µø±‚»≠
+set LOCAL=C:\yeori-studio\downloads
+set CLOUD=%USERPROFILE%\OneDrive\yeori-studio-sync
 
-set SRC=C:\yeori-studio\
-set DST=C:\Users\user\Desktop\yeori-studio\yeori-studio\
-
-echo.
-echo [sync-content] =============================================
-echo [sync-content]  SRC : %SRC%
-echo [sync-content]  DST : %DST%
-echo [sync-content] =============================================
-echo.
-
-robocopy "%SRC%" "%DST%" /MIR ^
-  /XD .git node_modules dist .cache __pycache__ .vite ^
-  /XF *.log *.tmp *.pyc ^
-  /R:3 /W:1 /TEE /LOG:"%DST%sync-content.log"
-
-set RC=%ERRORLEVEL%
-
-echo.
-if %RC% LEQ 1 (
-  echo [sync-content] ÏôÑÎ£å ^(robocopy exit: %RC%^)
-) else (
-  echo [sync-content] Ïò§Î•ò Î∞úÏÉù ^(exit: %RC%^)
-  exit /b %RC%
+if "%USERNAME%"=="won56" (
+    if not exist "%CLOUD%\" mkdir "%CLOUD%"
+    robocopy "%LOCAL%" "%CLOUD%" /E /XO /XD ".git" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
+    echo æ˜∑ŒµÂ øœ∑·!
+) else if "%USERNAME%"=="user" (
+    if not exist "%LOCAL%\" mkdir "%LOCAL%"
+    robocopy "%CLOUD%" "%LOCAL%" /E /XO /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
+    echo ¥ŸøÓ∑ŒµÂ øœ∑·!
 )
-
-endlocal
+pause
