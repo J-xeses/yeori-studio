@@ -99,25 +99,29 @@ const totalDuration = meta[meta.length - 1]?.endSec ?? 0
 console.log(`   컷 수: ${meta.length}개, 총 길이: ${totalDuration}초`)
 
 // ── 비디오 트랙 ─────────────────────────────────────────────
+// duration 생략 → capcut-cli가 ffprobe로 자동 감지
+// 이미지(sfxOnly) 컷은 ffprobe로 길이를 알 수 없으므로 duration 명시
 const videoItems = meta.map(cut => {
   const { filePath, isPhoto } = resolveVideoPath(videoDir, cut.cutNo, cut.sfxOnly)
   const item = {
-    path: filePath,
+    path:  filePath,
     start: cut.startSec,
-    duration: cut.duration,
-    ref: `v${cut.cutNo}`,
+    ref:   `v${cut.cutNo}`,
   }
-  if (isPhoto) item.type = 'photo'
+  if (isPhoto) {
+    item.type     = 'photo'
+    item.duration = cut.duration
+  }
   return item
 })
 
 // ── 음성(VO) 오디오 트랙 ──────────────────────────────────────
+// duration 생략 → capcut-cli ffprobe 자동 감지
 const audioItems = meta
   .filter(cut => cut.audioFile && !cut.sfxOnly)
   .map(cut => ({
-    path: path.join(audioDir, cut.audioFile),
-    start: cut.startSec,
-    duration: Math.max(0.1, (cut.audioEnd ?? cut.endSec) - (cut.audioStart ?? 0)),
+    path:   path.join(audioDir, cut.audioFile),
+    start:  cut.startSec,
     volume: 1.0,
   }))
 
