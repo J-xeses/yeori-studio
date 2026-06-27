@@ -108,7 +108,7 @@ export default function EditMetaTab() {
       const totalSec = computed.reduce((a,c) => a + c.duration, 0)
       const hookCuts = computed.filter(c => c.type === '훅').map(c => c.label).join(', ')
       const data = await claudeMessages(apiKey, {
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 400,
         messages: [{
           role: 'user',
