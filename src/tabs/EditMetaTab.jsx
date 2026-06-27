@@ -54,11 +54,18 @@ export default function EditMetaTab() {
       }))
 
   const getAudio = (i) => audioSettings[i] || {
-    audioFile: '',
+    audioFile: `cut_${String(i + 1).padStart(2, '0')}.mp3`,
     audioStart: 0,
     audioEnd: '',
     sfxOnly: false,
     hasSubtitle: true,
+  }
+
+  const getAudioStatus = (i) => {
+    const a = getAudio(i)
+    if (!a.audioFile) return { dot: '🔴', label: '미설정' }
+    if (!a.audioEnd)  return { dot: '🟡', label: '기본타이밍' }
+    return { dot: '🟢', label: '완료' }
   }
 
   const setAudio = (i, key, value) => {
@@ -282,22 +289,8 @@ export default function EditMetaTab() {
         setAccRunning(false); return
       }
 
-      // ⑤ A Creative Cutter로 전달
-      setAccStatus('⑤ A Creative Cutter로 전달 중...')
-      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', {
-        epNum,
-        rawVideoPath: `downloads/output/ep${epNum}/ep${epNum}_raw.mp4`,
-        srtPath: `downloads/audio/ep${epNum}/ep${epNum}.srt`,
-        editMetaPath: 'downloads/video/yeori_edit_meta.json',
-        mode: 'yeori',
-      })
-      if (!cutterRes.success) {
-        setAccStatus(`❌ Cutter 전달 실패: ${cutterRes.error || ''}`)
-        setAccRunning(false); return
-      }
-
-      // ⑤ 완료
-      setAccStatus('✅ A Creative Cutter로 전달 완료!\nCutter에서 서여리 모드로 작업을 확인하세요.')
+      // ④ 완료
+      setAccStatus('✅ 완료! 편집 메타 → SRT → 영상 합치기 성공.')
       setTimeout(() => { setAccRunning(false); setAccStatus('') }, 6000)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
@@ -331,7 +324,7 @@ export default function EditMetaTab() {
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
             <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
-            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>SRT 생성 → 영상 합치기 → CapCut 드래프트 → CapCut 재시작</div>
+            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 메타 저장 → ③ SRT 생성 → ④ 영상 합치기</div>
           </div>
           <button
             onClick={runACC}
@@ -390,14 +383,17 @@ export default function EditMetaTab() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    {['CUT','음성 파일명','시작(초)','끝(초)','효과음만','자막'].map(h => (
+                    {['상태','CUT','음성 파일명','시작(초)','끝(초)','효과음만','자막'].map(h => (
                       <th key={h} className={styles.th}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {cuts.map((cut, i) => (
+                  {cuts.map((cut, i) => {
+                    const st = getAudioStatus(i)
+                    return (
                     <tr key={i}>
+                      <td className={styles.td} style={{textAlign:'center',fontSize:'14px'}} title={st.label}>{st.dot}</td>
                       <td className={styles.td}>{cut.label || `CUT ${i+1}`}</td>
                       <td className={styles.td}>
                         <input type="text" placeholder="cut_01.mp3"
@@ -426,7 +422,8 @@ export default function EditMetaTab() {
                           onChange={e => setAudio(i, 'hasSubtitle', e.target.checked)} />
                       </td>
                     </tr>
-                  ))}
+                  )})}
+
                 </tbody>
               </table>
             </div>
