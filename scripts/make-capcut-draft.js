@@ -267,7 +267,12 @@ async function main() {
     console.error(`   ${projectPathFile} 에 저장하세요`)
     process.exit(1)
   }
-  const draftContentPath = fs.readFileSync(projectPathFile, 'utf-8').trim()
+  let draftContentPath = fs.readFileSync(projectPathFile, 'utf-8').trim()
+  if (fs.existsSync(draftContentPath) && fs.statSync(draftContentPath).isDirectory()) {
+    draftContentPath = path.join(draftContentPath, 'draft_content.json')
+  } else if (!draftContentPath.endsWith('draft_content.json')) {
+    draftContentPath = path.join(draftContentPath, 'draft_content.json')
+  }
   if (!fs.existsSync(path.dirname(draftContentPath))) {
     console.error(`❌ CapCut 프로젝트 폴더 없음: ${path.dirname(draftContentPath)}`)
     process.exit(1)
