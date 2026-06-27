@@ -983,76 +983,112 @@ app.post('/api/read-file-binary', (req, res) => {
 })
 
 
-// ── POST /api/send-to-cutter — A Creative Cutter로 파일 전달 ────────
-app.post('/api/send-to-cutter', (req, res) => {
-  const { epNum, rawVideoPath, srtPath, editMetaPath, mode = 'yeori' } = req.body
+// ── POST /api/generate-capcut-spec — 편집 메타 → capcut compile 스펙 생성 ──
+app.post('/api/generate-capcut-spec', (req, res) => {
+  const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
-  const rawAbs  = path.join(MEDIA_ROOT, rawVideoPath  || `downloads/output/ep${epNum}/ep${epNum}_raw.mp4`)
-  const srtAbs  = path.join(MEDIA_ROOT, srtPath       || `downloads/audio/ep${epNum}/ep${epNum}.srt`)
-  const metaAbs = path.join(MEDIA_ROOT, editMetaPath  || 'downloads/video/yeori_edit_meta.json')
+  const specScriptPath = path.join(CODE_ROOT, 'scripts', 'generate-capcut-spec.js')
+  const specOutputPath = path.join(MEDIA_ROOT, 'downloads', 'capcut_spec.json')
 
-  if (!fs.existsSync(rawAbs))  return res.status(404).json({ error: `ep${epNum}_raw.mp4 없음: ${rawAbs}` })
-  if (!fs.existsSync(srtAbs))  return res.status(404).json({ error: `ep${epNum}.srt 없음: ${srtAbs}` })
-  if (!fs.existsSync(metaAbs)) return res.status(404).json({ error: `yeori_edit_meta.json 없음: ${metaAbs}` })
-
-  // 1. make-capcut-draft.js 실행 (동기 대기)
-  const draftScriptPath = path.join(CODE_ROOT, 'scripts', 'make-capcut-draft.js')
+  let output = ''
   try {
-    execSync(`node "${draftScriptPath}" --ep=${epNum}`, {
-      cwd: CODE_ROOT,
-      env: process.env,
-      stdio: 'inherit',
+    output = execSync(`node "${specScriptPath}" ${epNum}`, {
+      cwd:      CODE_ROOT,
+      env:      process.env,
+      encoding: 'utf-8',
     })
+    console.log('[generate-capcut-spec]', output.trim())
   } catch (err) {
-    return res.status(500).json({ error: `make-capcut-draft.js 실행 실패: ${err.message}` })
+    return res.status(500).json({ error: `generate-capcut-spec.js 실행 실패: ${err.stderr || err.message}` })
   }
 
-  // draft_content.json 경로 읽기
-  const projectPathFile = path.join(MEDIA_ROOT, 'capcut_project_path.txt')
-  const draftPath = fs.existsSync(projectPathFile) ? fs.readFileSync(projectPathFile, 'utf-8').trim() : ''
-
-  // 2. cutter_input.json 생성
-  const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
-  fs.mkdirSync(outDir, { recursive: true })
-  const cutterInputPath = path.join(outDir, 'cutter_input.json')
-  fs.writeFileSync(cutterInputPath, JSON.stringify({
-    epNum, mode,
-    rawVideo:  rawAbs,
-    srt:       srtAbs,
-    editMeta:  metaAbs,
-    draft:     draftPath,
-    kenburns:  'pan_up',
-    timestamp: new Date().toISOString(),
-  }, null, 2), 'utf-8')
-
-  // HTML 경로: cutter_html_path.txt 우선, 없으면 기본 경로
-  const cutterHtmlTxtPath = path.join(MEDIA_ROOT, 'cutter_html_path.txt')
-  const DEFAULT_CUTTER_HTML = 'C:\\yeori-studio\\a_creative_cutter.html'
-  const cutterHtmlPath = fs.existsSync(cutterHtmlTxtPath)
-    ? fs.readFileSync(cutterHtmlTxtPath, 'utf-8').trim()
-    : DEFAULT_CUTTER_HTML
-
-  // Chrome으로 열기
-  const encodedInput = encodeURIComponent(cutterInputPath)
-  const fileUrl = 'file:///' + cutterHtmlPath.replace(/\\/g, '/')
-  const url = `${fileUrl}?input=${encodedInput}`
-
-  const chromeArgs = [
-    '--allow-file-access-from-files',
-    '--disable-web-security',
-    '--user-data-dir=C:\\yeori-studio\\.chrome-profile-cutter',
-    url,
-  ]
-  const proc = spawn('cmd', ['/c', 'start', 'chrome', ...chromeArgs], {
-    detached: true, stdio: 'ignore', shell: true,
-  })
-  proc.unref()
+  if (!fs.existsSync(specOutputPath)) {
+    return res.status(500).json({ error: 'capcut_spec.json 생성 실패' })
+  }
 
   res.json({
-    success: true,
-    message: 'A Creative Cutter 자동 실행 완료',
-    cutterUrl: url,
+    success:  true,
+    specPath: specOutputPath,
+    message:  'capcut_spec.json 생성 완료',
+    log:      output.trim(),
+  })
+})
+
+// ── POST /api/send-to-cutter — capcut compile 기반 드래프트 생성 + CapCut 실행 ──
+app.post('/api/send-to-cutter', async (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+
+  const specScriptPath = path.join(CODE_ROOT, 'scripts', 'generate-capcut-spec.js')
+  const specPath       = path.join(MEDIA_ROOT, 'downloads', 'capcut_spec.json')
+
+  // ① generate-capcut-spec.js 실행
+  try {
+    const out = execSync(`node "${specScriptPath}" ${epNum}`, {
+      cwd:      CODE_ROOT,
+      env:      process.env,
+      encoding: 'utf-8',
+    })
+    console.log('[send-to-cutter] spec 생성:', out.trim())
+  } catch (err) {
+    return res.status(500).json({ error: `spec 생성 실패: ${err.stderr || err.message}` })
+  }
+
+  if (!fs.existsSync(specPath)) {
+    return res.status(500).json({ error: 'capcut_spec.json 생성 실패' })
+  }
+
+  // ② CapCut 드래프트 디렉토리 결정
+  const username  = process.env.USERNAME || process.env.USER || 'user'
+  const draftsDir = path.join('C:\\Users', username,
+    'AppData', 'Local', 'CapCut', 'User Data', 'Projects', 'com.lveditor.draft')
+
+  // ③ capcut compile 실행
+  try {
+    const out = execSync(`capcut compile "${specPath}" --drafts "${draftsDir}"`, {
+      cwd:      CODE_ROOT,
+      env:      process.env,
+      encoding: 'utf-8',
+    })
+    console.log('[send-to-cutter] compile 완료:', out.trim())
+  } catch (err) {
+    return res.status(500).json({ error: `capcut compile 실패: ${err.stderr || err.message}` })
+  }
+
+  // ④ CapCut 실행 중이면 종료 후 대기
+  try {
+    execSync('taskkill /F /IM CapCut.exe /T', { shell: true, stdio: 'ignore' })
+    console.log('[send-to-cutter] 기존 CapCut 종료')
+    await new Promise(r => setTimeout(r, 1500))
+  } catch {
+    // CapCut 실행 중 아님 — 정상
+  }
+
+  // ⑤ CapCut 재실행
+  const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
+  const candidates = [
+    path.join('C:\\Users', username, 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
+    path.join('C:\\Users', username, 'AppData', 'Local', 'CapCut', 'CapCut.exe'),
+    'C:\\Program Files\\CapCut\\CapCut.exe',
+  ]
+  if (fs.existsSync(exePathTxt)) candidates.unshift(fs.readFileSync(exePathTxt, 'utf-8').trim())
+
+  const capCutExe = candidates.find(p => fs.existsSync(p))
+  if (capCutExe) {
+    const proc = spawn(capCutExe, [], { detached: true, stdio: 'ignore' })
+    proc.unref()
+    console.log('[send-to-cutter] CapCut 실행:', capCutExe)
+  } else {
+    console.warn('[send-to-cutter] CapCut.exe 경로를 찾을 수 없습니다 (capcut_exe_path.txt에 경로 저장 필요)')
+  }
+
+  res.json({
+    success:    true,
+    message:    `capcut compile 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}`,
+    specPath,
+    draftsDir,
+    capCutExe:  capCutExe || null,
   })
 })
 
