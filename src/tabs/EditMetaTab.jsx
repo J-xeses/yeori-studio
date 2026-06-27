@@ -1,8 +1,8 @@
 // src/tabs/EditMetaTab.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
-import { setGPoint, setGPoints } from '../lib/gpoints'
+import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -38,6 +38,18 @@ export default function EditMetaTab() {
 
   // 음성 타이밍 상태
   const [audioSettings, setAudioSettings] = useState({})
+
+  // G4 대기 접수 큐
+  const [gpointData, setGpointData] = useState(() => loadGPoints())
+  const [g4Queue, setG4Queue] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('acc_queue_v1') || '[]') } catch { return [] }
+  })
+
+  useEffect(() => {
+    const handler = () => setGpointData(loadGPoints())
+    window.addEventListener('gpoints_updated', handler)
+    return () => window.removeEventListener('gpoints_updated', handler)
+  }, [])
 
   // 컷 상세 분석
   const [selectedCut, setSelectedCut] = useState(null)
@@ -298,6 +310,35 @@ export default function EditMetaTab() {
     }
   }
 
+  // G4 대기 → 실행 큐 계산
+  const g4Pending = cuts
+    .filter((cut, i) => {
+      const no = cut.no || i + 1
+      const gData = gpointData[`cut_${no}`] || {}
+      return gData.g4 && !g4Queue.some(q => q.cutNo === no)
+    })
+    .map((cut, i) => ({
+      cutNo: cut.no || i + 1,
+      label: cut.label || `CUT ${String((cut.no || i + 1)).padStart(2, '0')}`,
+      preview: (cut.dialogue || cut.narration || '(대사 없음)').slice(0, 45),
+    }))
+
+  const acceptCut = (item) => {
+    const next = [...g4Queue, { ...item, acceptedAt: new Date().toISOString(), status: 'waiting' }]
+    setG4Queue(next)
+    localStorage.setItem('acc_queue_v1', JSON.stringify(next))
+  }
+
+  const removeFromQueue = (cutNo) => {
+    const next = g4Queue.filter(q => q.cutNo !== cutNo)
+    setG4Queue(next)
+    localStorage.setItem('acc_queue_v1', JSON.stringify(next))
+  }
+
+  const hasEpisode  = !!state.episode?.number
+  const hasApiKey   = !!(state.apiKeys?.claude || state.apiKey)
+  const autoRunReady = g4Queue.length > 0 && hasEpisode && hasApiKey
+
   const toggleHook = idx =>
     setHookIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx])
 
@@ -313,7 +354,10 @@ export default function EditMetaTab() {
 
   return (
     <div className={styles.root}>
-    <div className={styles.wrap}>
+    <div className={styles.layout}>
+
+    {/* ── 왼쪽: 메인 콘텐츠 ── */}
+    <div className={styles.mainCol}>
       <div className={styles.header}>
         <h2 className={styles.title}>편집 메타</h2>
         <p className={styles.desc}>타임코드 · SRT 자막 · 컷 분석 · 캡컷 가이드</p>
@@ -749,6 +793,77 @@ export default function EditMetaTab() {
           )}
         </div>
       )}
+
+    </div>
+    {/* ── 오른쪽: G4 대기 접수 패널 ── */}
+    <div className={styles.sidePanel}>
+      <div className={styles.sidePanelInner}>
+        <div className={styles.sideTitle}>편집 대기 접수</div>
+        <div className={styles.sideDesc}>G4 승인된 컷이 자동으로 접수대기에 올라옵니다. 접수 후 자동실행 큐에서 관리하세요.</div>
+
+        {/* 접수대기 */}
+        <div className={styles.sideSectionLabel}>
+          접수대기 <span>{g4Pending.length}</span>
+        </div>
+        {g4Pending.length === 0
+          ? <div className={styles.emptyNote}>G4 승인된 컷이 없습니다</div>
+          : g4Pending.map(item => (
+            <div key={item.cutNo} className={styles.pendingCard}>
+              <div className={styles.cardLabel}>🔵 {item.label}</div>
+              <div className={styles.cardPreview}>{item.preview}</div>
+              <button className={styles.acceptBtn} onClick={() => acceptCut(item)}>
+                접수 ↓ 실행 큐로
+              </button>
+            </div>
+          ))
+        }
+
+        {/* 실행 큐 */}
+        <div className={styles.sideSectionLabel} style={{marginTop:'18px'}}>
+          실행 큐 <span>{g4Queue.length}</span>
+        </div>
+        {g4Queue.length === 0
+          ? <div className={styles.emptyNote}>접수된 컷이 없습니다</div>
+          : g4Queue.map(item => (
+            <div key={item.cutNo} className={styles.queueCard}>
+              <div className={styles.cardLabel}>🟠 {item.label}</div>
+              <div className={styles.cardPreview}>{item.preview}</div>
+              <button className={styles.removeBtn} onClick={() => removeFromQueue(item.cutNo)}>
+                × 큐에서 제거
+              </button>
+            </div>
+          ))
+        }
+      </div>
+
+      {/* 자동실행 조건 */}
+      <div className={styles.autoRunPanel}>
+        <div className={styles.autoRunTitle}>자동실행 조건</div>
+        <div className={`${styles.conditionRow} ${g4Queue.length > 0 ? styles.ok : styles.bad}`}>
+          {g4Queue.length > 0 ? '✅' : '○'} 실행 큐에 컷 있음 ({g4Queue.length}개)
+        </div>
+        <div className={`${styles.conditionRow} ${hasEpisode ? styles.ok : styles.bad}`}>
+          {hasEpisode ? '✅' : '○'} 에피소드 번호 설정
+        </div>
+        <div className={`${styles.conditionRow} ${hasApiKey ? styles.ok : styles.bad}`}>
+          {hasApiKey ? '✅' : '○'} Claude API 키 있음
+        </div>
+        <button
+          className={`${styles.autoRunBtn} ${autoRunReady ? styles.ready : styles.notReady}`}
+          disabled={!autoRunReady || accRunning}
+          onClick={runACC}
+        >
+          {accRunning ? '⏳ 실행 중...' : autoRunReady ? '▶ 자동실행 ON' : '조건 미충족'}
+        </button>
+        {accStatus && (
+          <div style={{marginTop:'8px',fontSize:'11px',fontWeight:600,lineHeight:1.5,
+            color: accStatus.startsWith('❌') ? '#f87171'
+                 : accStatus.startsWith('✅') ? '#4ade80' : '#fb923c'}}>
+            {accStatus}
+          </div>
+        )}
+      </div>
+    </div>
 
     </div>
     </div>
