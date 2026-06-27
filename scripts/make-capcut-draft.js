@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url'
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url))
 const MEDIA_ROOT = 'C:\\yeori-studio'
-const FFPROBE    = 'C:\\ffmpeg\\bin\\ffprobe.exe'
+const FFPROBE    = 'ffprobe'
 
 // ── UUID ─────────────────────────────────────────────────────
 function uid() {
@@ -258,7 +258,7 @@ async function main() {
     : []
 
   // 5. capcut_project_path.txt → draft_content.json 경로
-  const projectPathFile = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_project_path.txt')
+  const projectPathFile = path.join(MEDIA_ROOT, 'capcut_project_path.txt')
   if (!fs.existsSync(projectPathFile)) {
     console.error(`❌ capcut_project_path.txt 없음`)
     console.error(`   CapCut 프로젝트 경로를 설정하세요:`)

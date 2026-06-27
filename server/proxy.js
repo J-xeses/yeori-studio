@@ -1009,7 +1009,7 @@ app.post('/api/send-to-cutter', (req, res) => {
   }
 
   // draft_content.json 경로 읽기
-  const projectPathFile = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_project_path.txt')
+  const projectPathFile = path.join(MEDIA_ROOT, 'capcut_project_path.txt')
   const draftPath = fs.existsSync(projectPathFile) ? fs.readFileSync(projectPathFile, 'utf-8').trim() : ''
 
   // 2. cutter_input.json 생성
