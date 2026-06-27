@@ -256,30 +256,34 @@ export default function EditMetaTab() {
         .then(r => r.json())
 
     try {
-      // ① 편집 메타 자동 생성 + 서버 저장
+      // ① 편집 메타 자동 생성 (AI 주의사항 포함)
       setAccStatus('① 편집 메타 생성 중...')
+      await generate()
+
+      // ② 편집 메타 서버 저장
+      setAccStatus('② 편집 메타 저장 중...')
       const computed = buildMeta()
       setMeta(computed)
       await post('http://localhost:3001/api/save-edit-meta', computed)
 
-      // ② SRT 생성
-      setAccStatus('② SRT 생성 중...')
+      // ③ SRT 생성
+      setAccStatus('③ SRT 생성 중...')
       const srtRes = await post('http://localhost:3001/api/generate-srt', { epNum })
       if (!srtRes.success) {
         setAccStatus(`❌ SRT 생성 실패: ${srtRes.error}`)
         setAccRunning(false); return
       }
 
-      // ③ 영상 합치기
-      setAccStatus('③ 영상 합치는 중...')
+      // ④ 영상 합치기
+      setAccStatus('④ 영상 합치는 중...')
       const concatRes = await post('http://localhost:3001/api/concat-video', { epNum })
       if (!concatRes.success) {
         setAccStatus(`❌ 영상 합치기 실패: ${concatRes.error}`)
         setAccRunning(false); return
       }
 
-      // ④ A Creative Cutter로 전달
-      setAccStatus('④ A Creative Cutter로 전달 중...')
+      // ⑤ A Creative Cutter로 전달
+      setAccStatus('⑤ A Creative Cutter로 전달 중...')
       const cutterRes = await post('http://localhost:3001/api/send-to-cutter', {
         epNum,
         rawVideoPath: `downloads/output/ep${epNum}/ep${epNum}_raw.mp4`,
