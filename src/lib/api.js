@@ -2,7 +2,7 @@
 // 蹂꾨룄 ?쒕쾭 ?놁씠 ?곷? 寃쎈줈留??ъ슜?섎㈃ ?⑸땲??
 
 export const claudeMessages = (apiKey, body) =>
-  fetch('/api/claude/v1/messages', {
+  fetch('http://localhost:3001/api/claude/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,
