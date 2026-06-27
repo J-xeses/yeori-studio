@@ -673,7 +673,7 @@ app.post('/api/save-audio', async (req, res) => {
   req.on('end', () => {
     fs.writeFileSync(wavPath, Buffer.concat(chunks))
 
-    const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+    const ffmpeg = 'ffmpeg'
     const proc = spawn(ffmpeg, [
       '-y', '-i', wavPath,
       '-codec:a', 'libmp3lame', '-qscale:a', '2',
@@ -758,7 +758,7 @@ app.post('/api/run-ffmpeg', (req, res) => {
 })
 
 // ── ffprobe 길이 측정 헬퍼 ──────────────────────────────────────────
-const FFPROBE = 'C:\\ffmpeg\\bin\\ffprobe.exe'
+const FFPROBE = 'ffprobe'
 function getMediaDuration(filePath) {
   return new Promise((resolve) => {
     const proc = spawn(FFPROBE, [
@@ -874,7 +874,7 @@ app.post('/api/concat-video', async (req, res) => {
     const listContent = selectedFiles.map(f => `file '${f.replace(/\\/g, '/')}'`).join('\n')
     fs.writeFileSync(concatTxt, listContent, 'utf-8')
 
-    const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+    const ffmpeg = 'ffmpeg'
     const code = await new Promise((resolve) => {
       let errBuf = ''
       const proc = spawn(ffmpeg, ['-y', '-f', 'concat', '-safe', '0', '-i', concatTxt, '-c', 'copy', outFile])
