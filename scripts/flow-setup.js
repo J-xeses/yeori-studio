@@ -231,23 +231,36 @@ async function createProject(page, epNum) {
 }
 
 // ── "+" (미디어 추가) 버튼 클릭 ────────────────────────────────────
+// flow-automation.js의 3단계 전략 동일하게 적용
 async function clickPlusButton(page) {
   const result = await page.evaluate(() => {
+    const h = window.innerHeight
+
     function search(root) {
-      // aria-label 기반
+      // 1순위: aria-label/title에 add/media/미디어 포함된 하단(y>55%) 버튼
       for (const el of root.querySelectorAll('button, [role="button"]')) {
         const label = (el.getAttribute('aria-label') || el.getAttribute('title') || '').toLowerCase()
-        if (/(add|media|미디어|추가|reference|레퍼런스|attach|upload)/i.test(label)
-            && el.getBoundingClientRect().width > 0) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.top < h * 0.55) continue
+        if (/(add|media|미디어|추가|reference|레퍼런스|attach)/i.test(label)) {
           el.click(); return `aria:${label}`
         }
       }
-      // 텍스트 기반
+      // 2순위: 텍스트가 + 또는 미디어 포함 하단 버튼
       for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.top < h * 0.55) continue
         const txt = el.textContent.trim()
-        if ((txt === '+' || txt.toLowerCase() === 'add') && el.getBoundingClientRect().width > 0) {
-          el.click(); return `txt:${txt}`
+        if (txt === '+' || txt.startsWith('+') || /^add$/i.test(txt) || /미디어|media/i.test(txt)) {
+          el.click(); return `txt:${txt.slice(0, 20)}`
         }
+      }
+      // 3순위: 하단 입력창 왼쪽(x<300, y>55%) 소형 버튼 (위치 기반)
+      for (const el of root.querySelectorAll('button, [role="button"]')) {
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 || r.width > 80) continue
+        if (r.top < h * 0.55 || r.left > 300) continue
+        if (r.height > 10 && r.height < 60) { el.click(); return `pos:(${Math.round(r.left)},${Math.round(r.top)})` }
       }
       // Shadow DOM 재귀
       for (const el of root.querySelectorAll('*')) {
@@ -258,12 +271,24 @@ async function clickPlusButton(page) {
     return search(document)
   })
 
-  if (result) log('info', `+ 버튼 클릭: "${result}"`)
-  else {
-    log('warn', '+ 버튼 못 찾음')
-    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_setup_plus_notfound.png') })
+  if (result) {
+    log('info', `+ 버튼 클릭: "${result}"`)
+    return true
   }
-  return !!result
+
+  // 최후 수단: 하단 버튼 목록 덤프 후 스크린샷
+  const btns = await page.evaluate(() => {
+    const h = window.innerHeight
+    return [...document.querySelectorAll('button, [role="button"]')]
+      .filter(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.top > h * 0.5 })
+      .map(el => {
+        const r = el.getBoundingClientRect()
+        return `txt="${el.textContent.trim().slice(0,20)}" aria="${el.getAttribute('aria-label')||''}" x=${Math.round(r.left)} y=${Math.round(r.top)} w=${Math.round(r.width)}`
+      })
+  })
+  log('warn', `+ 버튼 못 찾음. 하단 버튼 목록:\n  ${btns.slice(0, 10).join('\n  ')}`)
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_setup_plus_notfound.png') })
+  return false
 }
 
 // ── Step 3: 레퍼런스 이미지 업로드 ────────────────────────────────
