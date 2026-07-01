@@ -301,9 +301,25 @@ export default function EditMetaTab() {
         setAccRunning(false); return
       }
 
-      // ④ 완료
-      setAccStatus('✅ 완료! 편집 메타 → SRT → 영상 합치기 성공.')
-      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 6000)
+      // ⑤ CapCut 스펙 생성
+      setAccStatus('⑤ CapCut 스펙 생성 중...')
+      const specRes = await post('http://localhost:3001/api/generate-capcut-spec', { epNum })
+      if (!specRes.success) {
+        setAccStatus(`❌ CapCut 스펙 생성 실패: ${specRes.error}`)
+        setAccRunning(false); return
+      }
+
+      // ⑥ CapCut 웹 자동화 시작
+      setAccStatus('⑥ CapCut 웹 자동화 시작 중...')
+      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum })
+      if (!cutterRes.success) {
+        setAccStatus(`⚠️ CapCut 연동 실패 (수동 편집 필요): ${cutterRes.error}`)
+        setAccRunning(false); return
+      }
+
+      // 완료
+      setAccStatus('✅ 완료! 메타 → SRT → 영상 합치기 → CapCut 웹 자동화 시작됨.')
+      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 8000)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
       setAccRunning(false)
@@ -438,7 +454,7 @@ export default function EditMetaTab() {
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
             <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
-            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 메타 저장 → ③ SRT 생성 → ④ 영상 합치기</div>
+            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ CapCut 웹 자동화</div>
           </div>
           <button
             onClick={runACC}

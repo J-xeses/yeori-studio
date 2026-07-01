@@ -1083,12 +1083,30 @@ app.post('/api/send-to-cutter', async (req, res) => {
     console.warn('[send-to-cutter] CapCut.exe 경로를 찾을 수 없습니다 (capcut_exe_path.txt에 경로 저장 필요)')
   }
 
+  // CapCut 웹버전 자동화 백그라운드 시작
+  const webScriptPath = path.join(CODE_ROOT, 'scripts', 'capcut-web-automation.js')
+  let webAutomationStarted = false
+  if (fs.existsSync(webScriptPath)) {
+    const webProc = spawn(process.execPath, [webScriptPath, `--ep=${epNum}`], {
+      detached: true,
+      stdio:    'ignore',
+      cwd:      CODE_ROOT,
+      env:      process.env,
+    })
+    webProc.unref()
+    webAutomationStarted = true
+    console.log(`[send-to-cutter] 웹 자동화 백그라운드 시작: ep${epNum}`)
+  } else {
+    console.warn('[send-to-cutter] capcut-web-automation.js 스크립트 없음')
+  }
+
   res.json({
-    success:    true,
-    message:    `capcut compile 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}`,
+    success:           true,
+    message:           `capcut compile 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'} + 웹 자동화 ${webAutomationStarted ? '시작됨' : '스크립트 없음'}`,
     specPath,
     draftsDir,
-    capCutExe:  capCutExe || null,
+    capCutExe:         capCutExe || null,
+    webAutomation:     webAutomationStarted,
   })
 })
 
