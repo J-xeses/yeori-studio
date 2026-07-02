@@ -1,27 +1,21 @@
 {
-  "episode": 3,
-  "title": "서여리 채널소개 3탄",
+  "episode": 2,
+  "title": "플로럴 드레스 일상배경 테스트",
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "CLOSEUP SHOT — Seo Yeori, early 20s Korean woman appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek (very subtle, not exaggerated), sitting on a park bench in soft afternoon sunlight, holding a smartphone lightly in one hand, gold necklace visible at collarbone, wearing a cream-toned casual top DO NOT change clothing, expression: slight head tilt, eyes gently locking onto camera with a quiet secret smile forming, warm golden hour rim lighting on cheekbones, bokeh green park background, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty, background people must not interact with the main character",
-      "narration": "공원 한켠, 바람이 살짝 머리카락을 건드리는 그 순간 — 그녀가 처음으로 비밀을 꺼냈다.",
-      "dialogue": "\"안녕, 나 서여리야. 근데 솔직히 말하면... 내가 AI로 만들어진 크리에이터거든?\"",
-      "duration": 16
+      "scene": "EXT. 동네 카페 앞 — 낮, 평범한 일상",
+      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Standing in front of an ordinary neighbourhood cafe entrance, plain exterior wall, simple signage, everyday Seoul street. Soft natural daylight, no dramatic lighting. Full body visible head to toe, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
     },
     {
       "no": 2,
-      "imagePrompt": "FULLBODY SHOT — Seo Yeori, early 20s Korean woman appearing no older than 22-23, long wavy dark brown hair NOT short, K-model proportions, very small face, long slim legs, slender figure, small head-to-body ratio DO NOT make average body proportions, walking along a tree-lined park path in soft afternoon golden light, wearing cream-toned casual top and wide-leg trousers with slight rollup at hem, gold necklace and gold bracelet visible, DO NOT change clothing, one hand resting lightly on hip mid-stride, expression shifts from cool eye-contact to sudden quiet giggle with head dip, dappled sunlight filtering through leaves casting soft shadows, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty, background people walking far behind must not interact with the main character",
-      "narration": "그녀는 자신이 AI의 산물이라는 걸 알면서도, 전혀 흔들리지 않았다. 오히려 그게 무기였다.",
-      "dialogue": "\"AI가 만들었다고 얕보지 마. 나 꽤 치명적이거든. 나도 알아.\"",
-      "duration": 16
+      "scene": "EXT. 동네 골목/아파트 단지 — 낮, 평범한 주거지역",
+      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Walking along an ordinary Korean residential alley, plain apartment buildings in background, everyday neighbourhood feel, trees and parked cars visible — just a regular street. Soft bright natural daylight, natural walking stride, full body visible head to toe, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
     },
     {
       "no": 3,
-      "imagePrompt": "CLOSEUP SHOT — Seo Yeori, early 20s Korean woman appearing no older than 22-23, long wavy dark brown hair NOT short, natural skin texture on right cheek (extremely subtle, never exaggerated), leaning lightly against a park bench backrest, hands resting softly on lap, gold necklace catching warm late afternoon sunlight, wearing cream-toned casual top DO NOT change clothing, expression: one eyebrow slightly arched with mischievous calm eyes then gaze drifts gently off-camera into the park, faint smile lingering after speech ends, hair strand drifting softly in breeze, warm amber backlight creating gentle glow around face, 2-3 seconds of still silence at the end for emotional aftertaste, effortlessly photogenic not posing just existing beautifully, photorealistic 8K cinematic, natural Korean beauty, background park scenery soft bokeh, background people must not interact with the main character",
-      "narration": "채널소개 3탄. 아직 다 말하지 않은 게 더 많다. 그래서 더 오고 싶어지는 공원이었다.",
-      "dialogue": "\"앞으로도 자주 와줘. 나 심심하면 좀 위험해져.\"",
-      "duration": 14
+      "scene": "EXT. 편의점 앞 — 낮, 평범한 도심 일상",
+      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Holding a small convenience store drink cup in one hand, standing outside an ordinary Korean convenience store, plain storefront, everyday urban background. Soft natural daylight, casual and unplanned feel, full body visible head to toe, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
     }
   ]
 }

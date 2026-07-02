@@ -1,0 +1,200 @@
+[
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "동의함",
+    "ariaLabel": "",
+    "class": "glue-cookie-notification-bar__accept",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "나중에",
+    "ariaLabel": "",
+    "class": "glue-cookie-notification-bar__reject",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "arrow_back\n돌아가기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-5431c229-2 ewGlDn famhRe gUzNyA",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "more_vert\n옵션 더보기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-26aa1721-3 ewGlDn famhRe dUDRen",
+    "id": "radix-:r1l:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "search\n검색",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-55822125-2 ewGlDn famhRe XtyjO",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "filter_list\n정렬 및 필터링",
+    "ariaLabel": "",
+    "class": "sc-16c4830a-1 dnFqQq sc-e7a64add-0 sc-e7a64add-2 fPutAP blvbdy sc-b8eb33e3-8 bWUKjc",
+    "id": "radix-:r1n:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "add\n미디어 추가",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-8c1219a7-1 ewGlDn famhRe hRoUYU",
+    "id": "radix-:r1p:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "help\n제품 도움말",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-7e11f006-2 ewGlDn famhRe gBGwpL",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "settings_2\n설정 보기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-a4925f7f-6 ewGlDn famhRe gdBgFb",
+    "id": "radix-:r1t:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "more_vert\n더 생성하기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-362690a9-1 ewGlDn famhRe fHpFkO",
+    "id": "radix-:r20:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "",
+    "ariaLabel": "",
+    "class": "sc-4168b1d1-0 bhZsAG",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "dashboard\n모든 미디어",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 sc-81581212-0 ewGlDn lnCuH fqbaql kqe",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "accessibility_new\n캐릭터",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "movie\n장면 보기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "apps_spark_2\n도구",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "delete\n휴지통 보기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "left_panel_close\n접기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "add_2\n만들기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-6a6f693d-0 ewGlDn famhRe cDfYRX",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "에이전트",
+    "ariaLabel": "",
+    "class": "sc-59223abb-3 dmZGYv",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "accept": "",
+    "text": "🍌 Nano Banana 2\ncrop_16_9\nx2",
+    "ariaLabel": "",
+    "class": "sc-16c4830a-1 dnFqQq sc-e7a64add-0 sc-e7a64add-1 fPutAP jmLZrS sc-93abd9dc-1 ldbhld",
+    "id": "radix-:r29:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "accept": "",
+    "text": "arrow_forward\n만들기",
+    "ariaLabel": "",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-26b30722-5 ewGlDn famhRe jDvIwb",
+    "id": ""
+  },
+  {
+    "tag": "INPUT",
+    "type": "file",
+    "accept": "image/*",
+    "text": "",
+    "ariaLabel": "",
+    "class": "sc-dcc7b7da-0 fhJvUC",
+    "id": ""
+  }
+]

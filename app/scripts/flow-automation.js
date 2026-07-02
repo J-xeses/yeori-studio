@@ -1435,11 +1435,10 @@ async function findReferenceThumbs(page) {
 
   log('info', `[findReferenceThumbs] 탐색 이미지 수: ${imgPositions.length}`)
 
-  // 9:16 컷 이미지 썸네일(너비 ≈140px)을 제외하고 레퍼런스 이미지만 후보로 선택
-  // yeori-face ≈222px, yeori-closeup ≈448px → 너비 160px 초과 이미지만 호버
-  // (생성된 컷을 호버하면 "yeori-face" 툴팁이 나타나 오탐지 발생하는 문제 방지)
-  const candidates = imgPositions.filter(pos => pos.w > 160)
-  log('info', `[findReferenceThumbs] 레퍼런스 후보: ${candidates.length}개 (너비>160px)`)
+  // 너비 필터 없이 모든 이미지를 hover → tooltip 텍스트로만 판별
+  // (width 기준은 배치 썸네일이 넓게 표시될 때 오탐지 발생)
+  const candidates = imgPositions
+  log('info', `[findReferenceThumbs] 레퍼런스 후보: ${candidates.length}개 (전체 탐색)`)
 
   const result = { face: null, closeup: null }
 

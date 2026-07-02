@@ -1,0 +1,546 @@
+[
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "동의함",
+    "class": "glue-cookie-notification-bar__accept",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "나중에",
+    "class": "glue-cookie-notification-bar__reject",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "more_vert",
+    "class": "sc-1dc499b-15 iGcjra",
+    "id": "radix-:R9oi2tm:"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Create with Google Flow",
+    "class": "sc-fe61cac2-1 iwEYmY",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "pause",
+    "class": "sc-fe61cac2-1 gEzgpX sc-71313c27-12 dUzzce",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "play_arrow",
+    "class": "sc-f0b3fa4f-4 zBWXU",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try in Google Flow",
+    "class": "sc-fe61cac2-1 rSbBk",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "chevron_left",
+    "class": "sc-e3140f5d-14 heNdkZ",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "chevron_right",
+    "class": "sc-e3140f5d-14 heNdkZ",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_left",
+    "class": "sc-97fd9d2d-1 hRXrQT",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_right",
+    "class": "sc-97fd9d2d-1 hRXrQT",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_left",
+    "class": "sc-97fd9d2d-1 hRXrQT",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_right",
+    "class": "sc-97fd9d2d-1 hRXrQT",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_left",
+    "class": "sc-97fd9d2d-1 hRXrQT",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_right",
+    "class": "sc-97fd9d2d-1 hRXrQT",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "Plan",
+    "class": "sc-a5d8816b-31 dmAXaK",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "Create",
+    "class": "sc-a5d8816b-31 eovqGJ",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "Refine",
+    "class": "sc-a5d8816b-31 eovqGJ",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "Create with Google Flow",
+    "class": "sc-a5d8816b-34 dYVERH",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Type Overlays\n\nAdd animated text to your videos",
+    "class": "sc-ff810a41-20 buYkHo",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Video Resizer\nResize your videos into any aspect r",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Image Editor\nTransform objects, add text, and adju",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Storyboard Studio\nWrite a script, create the cast,",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Shader Effects\nApply customizable visual filters t",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Mockup\nComp your image into different environments",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Ribbit\nPerform videos live as the beat drives play",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Converge\nRender your sketches",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Character X-ray\nDevelop your characters and their ",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "pixelBento\nApply post-processing effects like lo-f",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Grid Architect\nCreate image grids and extract indi",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Scout360\nCapture a 360 degree environment from an ",
+    "class": "sc-ff810a41-20 gkRFpV",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Explore Tools in Google Flow",
+    "class": "sc-fe61cac2-1 fZyGxr",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_left",
+    "class": "sc-ff810a41-38 jOqbUF",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_right",
+    "class": "sc-ff810a41-38 jOqbUF",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Explore Tools in Google Flow",
+    "class": "sc-fe61cac2-1 fZyGxr",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Calvin\nHerbst",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "COMBO &\nCharline Prat",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Léo\nCannone",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Katie\nLuo",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "OLD NEW\nRARE",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Julie\nWieland",
+    "class": "sc-30dc2f89-8 cqGYBz",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Calvin\nHerbst",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "COMBO &\nCharline Prat",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Léo\nCannone",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Katie\nLuo",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "OLD NEW\nRARE",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Julie\nWieland",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Calvin\nHerbst",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "COMBO &\nCharline Prat",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Léo\nCannone",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Katie\nLuo",
+    "class": "sc-30dc2f89-8 dcwxcs",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "arrow_upward",
+    "class": "sc-30dc2f89-20 jGDBCp",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "arrow_downward",
+    "class": "sc-30dc2f89-20 jGDBCp",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "arrow_upward",
+    "class": "sc-30dc2f89-20 jGDBCp",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "arrow_downward",
+    "class": "sc-30dc2f89-20 jGDBCp",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_left",
+    "class": "sc-30dc2f89-38 cKEzfx",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "chevron_right",
+    "class": "sc-30dc2f89-38 cKEzfx",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Try Google Flow",
+    "class": "sc-fe61cac2-1 lbUfSS",
+    "id": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "Get started",
+    "class": "sc-fe61cac2-1 dkmoud",
+    "id": ""
+  },
+  {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "placeholder": "",
+    "text": "",
+    "class": "g-recaptcha-response",
+    "id": "g-recaptcha-response-100000"
+  }
+]

@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 set ACC_HTML=%~dp0a_creative_cutter.html
 set CHROME="C:\Program Files\Google\Chrome\Application\chrome.exe"
-set PROFILE=C:\yeori-studio\.chrome-profile-flow
+set PROFILE=C:\yeori-studio\app\.chrome-profile-flow
 
 echo.
 echo ============================================================
@@ -12,7 +12,7 @@ echo   Yeori Studio -- Full System Start
 echo ============================================================
 echo.
 
-set SRC=C:\yeori-studio
+set SRC=C:\yeori-studio\app
 set DST=C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio
 
 :: [0/3] Sync code files: C:\yeori-studio -> OneDrive 실행 경로
