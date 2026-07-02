@@ -28,7 +28,7 @@ async function callClaude(system, userContent, apiKey, maxTokens = 1500) {
       'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       system,
       messages: [{ role: 'user', content: userContent }]

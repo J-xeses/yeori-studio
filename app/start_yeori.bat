@@ -15,6 +15,9 @@ echo.
 set SRC=C:\yeori-studio\app
 set DST=C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio
 
+:: [pre] 콘텐츠 동기화 (집 PC: 다운로드 / 회사 PC: 업로드)
+call "%~dp0sync-content.bat"
+
 :: [0/3] Sync code files: C:\yeori-studio -> OneDrive 실행 경로
 echo [0/3] Syncing code files to run directory...
 robocopy "%SRC%\src"     "%DST%\src"     /E /XO /NFL /NDL /NJH /NJS >nul 2>&1

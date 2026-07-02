@@ -1,8 +1,8 @@
 // src/tabs/EditMetaTab.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
-import { setGPoint, setGPoints } from '../lib/gpoints'
+import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -39,6 +39,18 @@ export default function EditMetaTab() {
   // 음성 타이밍 상태
   const [audioSettings, setAudioSettings] = useState({})
 
+  // G4 대기 접수 큐
+  const [gpointData, setGpointData] = useState(() => loadGPoints())
+  const [g4Queue, setG4Queue] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('acc_queue_v1') || '[]') } catch { return [] }
+  })
+
+  useEffect(() => {
+    const handler = () => setGpointData(loadGPoints())
+    window.addEventListener('gpoints_updated', handler)
+    return () => window.removeEventListener('gpoints_updated', handler)
+  }, [])
+
   // 컷 상세 분석
   const [selectedCut, setSelectedCut] = useState(null)
   const [analyzeResult, setAnalyzeResult] = useState(null)
@@ -54,11 +66,18 @@ export default function EditMetaTab() {
       }))
 
   const getAudio = (i) => audioSettings[i] || {
-    audioFile: '',
+    audioFile: `cut_${String(i + 1).padStart(2, '0')}.mp3`,
     audioStart: 0,
     audioEnd: '',
     sfxOnly: false,
     hasSubtitle: true,
+  }
+
+  const getAudioStatus = (i) => {
+    const a = getAudio(i)
+    if (!a.audioFile) return { dot: '🔴', label: '미설정' }
+    if (!a.audioEnd)  return { dot: '🟡', label: '기본타이밍' }
+    return { dot: '🟢', label: '완료' }
   }
 
   const setAudio = (i, key, value) => {
@@ -108,7 +127,7 @@ export default function EditMetaTab() {
       const totalSec = computed.reduce((a,c) => a + c.duration, 0)
       const hookCuts = computed.filter(c => c.type === '훅').map(c => c.label).join(', ')
       const data = await claudeMessages(apiKey, {
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 400,
         messages: [{
           role: 'user',
@@ -256,50 +275,85 @@ export default function EditMetaTab() {
         .then(r => r.json())
 
     try {
-      // ① 편집 메타 자동 생성 + 서버 저장
+      // ① 편집 메타 자동 생성 (AI 주의사항 포함)
       setAccStatus('① 편집 메타 생성 중...')
+      await generate()
+
+      // ② 편집 메타 서버 저장
+      setAccStatus('② 편집 메타 저장 중...')
       const computed = buildMeta()
       setMeta(computed)
       await post('http://localhost:3001/api/save-edit-meta', computed)
 
-      // ② SRT 생성
-      setAccStatus('② SRT 생성 중...')
+      // ③ SRT 생성
+      setAccStatus('③ SRT 생성 중...')
       const srtRes = await post('http://localhost:3001/api/generate-srt', { epNum })
       if (!srtRes.success) {
         setAccStatus(`❌ SRT 생성 실패: ${srtRes.error}`)
         setAccRunning(false); return
       }
 
-      // ③ 영상 합치기
-      setAccStatus('③ 영상 합치는 중...')
+      // ④ 영상 합치기
+      setAccStatus('④ 영상 합치는 중...')
       const concatRes = await post('http://localhost:3001/api/concat-video', { epNum })
       if (!concatRes.success) {
         setAccStatus(`❌ 영상 합치기 실패: ${concatRes.error}`)
         setAccRunning(false); return
       }
 
-      // ④ A Creative Cutter로 전달
-      setAccStatus('④ A Creative Cutter로 전달 중...')
-      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', {
-        epNum,
-        rawVideoPath: `downloads/output/ep${epNum}/ep${epNum}_raw.mp4`,
-        srtPath: `downloads/audio/ep${epNum}/ep${epNum}.srt`,
-        editMetaPath: 'downloads/video/yeori_edit_meta.json',
-        mode: 'yeori',
-      })
-      if (!cutterRes.success) {
-        setAccStatus(`❌ Cutter 전달 실패: ${cutterRes.error || ''}`)
+      // ⑤ CapCut 스펙 생성
+      setAccStatus('⑤ CapCut 스펙 생성 중...')
+      const specRes = await post('http://localhost:3001/api/generate-capcut-spec', { epNum })
+      if (!specRes.success) {
+        setAccStatus(`❌ CapCut 스펙 생성 실패: ${specRes.error}`)
         setAccRunning(false); return
       }
 
-      // ⑤ 완료
-      setAccStatus('✅ A Creative Cutter로 전달 완료!\nCutter에서 서여리 모드로 작업을 확인하세요.')
-      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 6000)
+      // ⑥ CapCut 웹 자동화 시작
+      setAccStatus('⑥ CapCut 웹 자동화 시작 중...')
+      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum })
+      if (!cutterRes.success) {
+        setAccStatus(`⚠️ CapCut 연동 실패 (수동 편집 필요): ${cutterRes.error}`)
+        setAccRunning(false); return
+      }
+
+      // 완료
+      setAccStatus('✅ 완료! 메타 → SRT → 영상 합치기 → CapCut 웹 자동화 시작됨.')
+      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 8000)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
       setAccRunning(false)
     }
   }
+
+  // G4 대기 → 실행 큐 계산
+  const g4Pending = cuts
+    .filter((cut, i) => {
+      const no = cut.no || i + 1
+      const gData = gpointData[`cut_${no}`] || {}
+      return gData.g4 && !g4Queue.some(q => q.cutNo === no)
+    })
+    .map((cut, i) => ({
+      cutNo: cut.no || i + 1,
+      label: cut.label || `CUT ${String((cut.no || i + 1)).padStart(2, '0')}`,
+      preview: (cut.dialogue || cut.narration || '(대사 없음)').slice(0, 45),
+    }))
+
+  const acceptCut = (item) => {
+    const next = [...g4Queue, { ...item, acceptedAt: new Date().toISOString(), status: 'waiting' }]
+    setG4Queue(next)
+    localStorage.setItem('acc_queue_v1', JSON.stringify(next))
+  }
+
+  const removeFromQueue = (cutNo) => {
+    const next = g4Queue.filter(q => q.cutNo !== cutNo)
+    setG4Queue(next)
+    localStorage.setItem('acc_queue_v1', JSON.stringify(next))
+  }
+
+  const hasEpisode  = !!state.episode?.number
+  const hasApiKey   = !!(state.apiKeys?.claude || state.apiKey)
+  const autoRunReady = g4Queue.length > 0 && hasEpisode && hasApiKey
 
   const toggleHook = idx =>
     setHookIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx])
@@ -316,7 +370,80 @@ export default function EditMetaTab() {
 
   return (
     <div className={styles.root}>
-    <div className={styles.wrap}>
+    <div className={styles.layout}>
+
+    {/* ── 왼쪽: G4 대기 접수 패널 ── */}
+    <div className={styles.sidePanel}>
+      <div className={styles.sidePanelInner}>
+        <div className={styles.sideTitle}>편집 대기 접수</div>
+        <div className={styles.sideDesc}>G4 승인된 컷이 자동으로 접수대기에 올라옵니다. 접수 후 자동실행 큐에서 관리하세요.</div>
+
+        {/* 접수대기 */}
+        <div className={styles.sideSectionLabel}>
+          접수대기 <span>{g4Pending.length}</span>
+        </div>
+        {g4Pending.length === 0
+          ? <div className={styles.emptyNote}>G4 승인된 컷이 없습니다</div>
+          : g4Pending.map(item => (
+            <div key={item.cutNo} className={styles.pendingCard}>
+              <div className={styles.cardLabel}>🔵 {item.label}</div>
+              <div className={styles.cardPreview}>{item.preview}</div>
+              <button className={styles.acceptBtn} onClick={() => acceptCut(item)}>
+                접수 ↓ 실행 큐로
+              </button>
+            </div>
+          ))
+        }
+
+        {/* 실행 큐 */}
+        <div className={styles.sideSectionLabel} style={{marginTop:'18px'}}>
+          실행 큐 <span>{g4Queue.length}</span>
+        </div>
+        {g4Queue.length === 0
+          ? <div className={styles.emptyNote}>접수된 컷이 없습니다</div>
+          : g4Queue.map(item => (
+            <div key={item.cutNo} className={styles.queueCard}>
+              <div className={styles.cardLabel}>🟠 {item.label}</div>
+              <div className={styles.cardPreview}>{item.preview}</div>
+              <button className={styles.removeBtn} onClick={() => removeFromQueue(item.cutNo)}>
+                × 큐에서 제거
+              </button>
+            </div>
+          ))
+        }
+      </div>
+
+      {/* 자동실행 조건 */}
+      <div className={styles.autoRunPanel}>
+        <div className={styles.autoRunTitle}>자동실행 조건</div>
+        <div className={`${styles.conditionRow} ${g4Queue.length > 0 ? styles.ok : styles.bad}`}>
+          {g4Queue.length > 0 ? '✅' : '○'} 실행 큐에 컷 있음 ({g4Queue.length}개)
+        </div>
+        <div className={`${styles.conditionRow} ${hasEpisode ? styles.ok : styles.bad}`}>
+          {hasEpisode ? '✅' : '○'} 에피소드 번호 설정
+        </div>
+        <div className={`${styles.conditionRow} ${hasApiKey ? styles.ok : styles.bad}`}>
+          {hasApiKey ? '✅' : '○'} Claude API 키 있음
+        </div>
+        <button
+          className={`${styles.autoRunBtn} ${autoRunReady ? styles.ready : styles.notReady}`}
+          disabled={!autoRunReady || accRunning}
+          onClick={runACC}
+        >
+          {accRunning ? '⏳ 실행 중...' : autoRunReady ? '▶ 자동실행 ON' : '조건 미충족'}
+        </button>
+        {accStatus && (
+          <div style={{marginTop:'8px',fontSize:'11px',fontWeight:600,lineHeight:1.5,
+            color: accStatus.startsWith('❌') ? '#f87171'
+                 : accStatus.startsWith('✅') ? '#4ade80' : '#fb923c'}}>
+            {accStatus}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* ── 오른쪽: 메인 콘텐츠 ── */}
+    <div className={styles.mainCol}>
       <div className={styles.header}>
         <h2 className={styles.title}>편집 메타</h2>
         <p className={styles.desc}>타임코드 · SRT 자막 · 컷 분석 · 캡컷 가이드</p>
@@ -327,7 +454,7 @@ export default function EditMetaTab() {
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
             <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
-            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>SRT 생성 → 영상 합치기 → CapCut 드래프트 → CapCut 재시작</div>
+            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ CapCut 웹 자동화</div>
           </div>
           <button
             onClick={runACC}
@@ -386,14 +513,17 @@ export default function EditMetaTab() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    {['CUT','음성 파일명','시작(초)','끝(초)','효과음만','자막'].map(h => (
+                    {['상태','CUT','음성 파일명','시작(초)','끝(초)','효과음만','자막'].map(h => (
                       <th key={h} className={styles.th}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {cuts.map((cut, i) => (
+                  {cuts.map((cut, i) => {
+                    const st = getAudioStatus(i)
+                    return (
                     <tr key={i}>
+                      <td className={styles.td} style={{textAlign:'center',fontSize:'14px'}} title={st.label}>{st.dot}</td>
                       <td className={styles.td}>{cut.label || `CUT ${i+1}`}</td>
                       <td className={styles.td}>
                         <input type="text" placeholder="cut_01.mp3"
@@ -422,7 +552,8 @@ export default function EditMetaTab() {
                           onChange={e => setAudio(i, 'hasSubtitle', e.target.checked)} />
                       </td>
                     </tr>
-                  ))}
+                  )})}
+
                 </tbody>
               </table>
             </div>
@@ -748,6 +879,8 @@ export default function EditMetaTab() {
           )}
         </div>
       )}
+
+    </div>
 
     </div>
     </div>

@@ -54,7 +54,7 @@ export default function ApiBar() {
     <div className={styles.bar}>
       <div className={styles.group}>
         <span className={styles.label}>GEMINI</span>
-        <input className={styles.input} type="text" autoComplete="off" placeholder="API 키 입력"
+        <input className={styles.input} type="password" autoComplete="off" placeholder="API 키 입력"
           value={apiKeys.gemini}
           onChange={e => dispatch({ type: 'SET_API_KEY', key: 'gemini', val: e.target.value })} />
         <button className={styles.checkBtn}>확인</button>
@@ -90,7 +90,7 @@ export default function ApiBar() {
             ? `연결됨 · ${elevenLabsStatus.remainingChars.toLocaleString()}자 남음`
             : '미연결'}
         </div>
-        <input className={styles.input} type="text" autoComplete="off" placeholder="API 키"
+        <input className={styles.input} type="password" autoComplete="off" placeholder="API 키"
           value={apiKeys.elevenLabs}
           onChange={e => dispatch({ type: 'SET_API_KEY', key: 'elevenLabs', val: e.target.value })} />
         <button className={styles.checkBtn} onClick={checkElevenLabs} disabled={checking.el}>
@@ -102,7 +102,7 @@ export default function ApiBar() {
 
       <div className={styles.group}>
         <span className={styles.label}>CLAUDE</span>
-        <input className={styles.input} type="text" autoComplete="off" placeholder="API 키 입력"
+        <input className={styles.input} type="password" autoComplete="off" placeholder="API 키 입력"
           value={apiKeys.claude}
           onChange={e => dispatch({ type: 'SET_API_KEY', key: 'claude', val: e.target.value })} />
         <button className={styles.checkBtn} onClick={checkClaude} disabled={checking.claude}>

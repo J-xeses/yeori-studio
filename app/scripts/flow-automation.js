@@ -1579,81 +1579,106 @@ async function clickImageTab(page) {
 // ── 이미지 모드 전환: 설정 팝업 → 이미지 탭 → 9:16 → x2 ─────────────────
 
 async function switchToImageMode(page) {
-  const alreadyOpen = await page.evaluate(() =>
-    document.querySelectorAll('[role="tab"].flow_tab_slider_trigger').length > 0
-  )
+  // 팝업이 이미 열려있는지 확인 (이미지/동영상 탭 텍스트 존재 여부로 판단)
+  const alreadyOpen = await page.evaluate(() => {
+    const tabs = [...document.querySelectorAll('[role="tab"], [role="option"]')]
+    return tabs.some(el => /이미지|동영상|image|video/i.test((el.textContent || '').trim()))
+  })
 
   if (!alreadyOpen) {
-    // "Nano Banana 2" 모델명 하드코드 제거 → x1~x4 카운트 포함 하단 버튼으로 탐지
+    // 하단 바 오른쪽 모드 설정 버튼 탐색
+    // Flow UI 예: "동영상 · 9:16 □ 1x" 또는 "이미지 · 9:16 □ 2x"
+    // ⚠️ 이전 코드 버그: /x[1-4]/ 는 "x1"/"x2" 형식만 매칭, 실제 UI의 "1x"/"2x"는 매칭 안 됨
     const popupInfo = await page.evaluate(() => {
-      function search(root) {
-        for (const el of root.querySelectorAll('button')) {
-          const txt = (el.textContent || '').trim()
-          const r = el.getBoundingClientRect()
-          if (r.top < window.innerHeight * 0.5 || r.width < 1 || r.height < 1) continue
-          if (/x[1-4]/.test(txt) && el.children.length >= 1) {
-            return { txt: txt.slice(0, 60), x: Math.round(r.left + 10), y: Math.round(r.top + 10) }
-          }
+      const h = window.innerHeight
+      const w = window.innerWidth
+
+      // 전략 1: 하단 60% 이하에서 모드/개수 텍스트 포함 버튼
+      const modeRe = /[1-9]x|x[1-9]|동영상|이미지|video|image/i
+      for (const el of document.querySelectorAll('button, [role="button"]')) {
+        const txt = (el.textContent || '').trim()
+        const r = el.getBoundingClientRect()
+        if (r.top < h * 0.6 || r.width < 1 || r.height < 1) continue
+        if (modeRe.test(txt)) {
+          return { strategy: 1, txt: txt.slice(0, 80), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
         }
-        for (const el of root.querySelectorAll('*')) {
-          if (el.shadowRoot) { const res = search(el.shadowRoot); if (res) return res }
-        }
-        return null
       }
-      return search(document)
+
+      // 전략 2: 하단 우측 영역(x > 40%, y > 70%)의 첫 번째 클릭 가능 요소
+      const candidates = [...document.querySelectorAll('button, [role="button"], [tabindex]')]
+        .map(el => ({ el, r: el.getBoundingClientRect() }))
+        .filter(({ r }) => r.width > 10 && r.height > 10 && r.top > h * 0.7 && r.left > w * 0.4 && r.left < w * 0.95)
+        .sort((a, b) => a.r.left - b.r.left)
+      if (candidates.length > 0) {
+        const { el, r } = candidates[0]
+        return { strategy: 2, txt: (el.textContent || '').trim().slice(0, 80), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+      }
+
+      // 전략 3: 화면 하단 우측 고정 좌표 (최후 수단)
+      return { strategy: 3, txt: '(고정좌표)', x: Math.round(w * 0.75), y: Math.round(h * 0.93) }
     })
-    if (popupInfo) {
-      log('info', `[imageMode] 팝업 트리거 클릭 — "${popupInfo.txt}"`)
-      await page.mouse.click(popupInfo.x, popupInfo.y)
-      await sleep(1500)
-      // 팝업 열린 직후 스크린샷 — 실제 탭 구조 확인용
-      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_popup.png') })
-    } else {
-      log('warn', '[imageMode] 팝업 트리거 버튼 못 찾음')
-      await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_fail.png') })
-    }
+
+    log('info', `[imageMode] 팝업 트리거 전략${popupInfo.strategy} — "${popupInfo.txt}" at (${popupInfo.x}, ${popupInfo.y})`)
+    await page.mouse.click(popupInfo.x, popupInfo.y)
+    await sleep(1500)
+    await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_popup.png') })
   } else {
     log('info', '[imageMode] 설정 팝업 이미 열려있음')
   }
   await sleep(400)
 
-  // 팝업 내 모든 flow_tab_slider_trigger 텍스트 덤프 (디버깅)
+  // 팝업 내 클릭 가능한 짧은 요소 덤프 (디버깅)
   const allTabTexts = await page.evaluate(() =>
-    [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
-      .map(el => el.textContent.trim().slice(0, 30))
-  )
-  log('info', `[imageMode] 팝업 탭 목록: ${JSON.stringify(allTabTexts)}`)
-
-  // el.click()은 React/Lit 컴포넌트에 무시됨 → 좌표 추출 후 page.mouse.click() 사용
-  async function clickTab(matcher, label) {
-    const coords = await page.evaluate((m) => {
-      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
+    [...document.querySelectorAll('[role="tab"], [role="option"], button, [role="button"]')]
+      .filter(el => {
+        const r = el.getBoundingClientRect()
         const txt = (el.textContent || '').trim()
-        if (eval(m)) {
+        return r.width > 0 && r.height > 0 && txt.length > 0 && txt.length < 25
+      })
+      .map(el => {
+        const r = el.getBoundingClientRect()
+        return `"${(el.textContent || '').trim().slice(0, 15)}"@(${Math.round(r.left)},${Math.round(r.top)})`
+      })
+      .slice(0, 25)
+  )
+  log('info', `[imageMode] 팝업 요소 목록: ${JSON.stringify(allTabTexts)}`)
+
+  // 범용 탭/버튼 클릭 — eval() 미사용, 클래스명 의존 없음
+  async function clickTab(textPattern, label, excludePattern) {
+    const coords = await page.evaluate((pattern, exclusion) => {
+      const re = new RegExp(pattern, 'i')
+      const excl = exclusion ? new RegExp(exclusion, 'i') : null
+      // role="tab" 우선, 없으면 role="option"/button으로 폴백
+      const selectors = ['[role="tab"]', '[role="option"]', '[role="menuitem"]', 'button', '[role="button"]']
+      for (const sel of selectors) {
+        for (const el of document.querySelectorAll(sel)) {
+          const txt = (el.textContent || '').trim()
           const r = el.getBoundingClientRect()
-          if (r.width > 0 && r.height > 0)
-            return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+          if (r.width < 1 || r.height < 1) continue
+          if (!re.test(txt)) continue
+          if (excl && excl.test(txt)) continue
+          return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), txt: txt.slice(0, 30) }
         }
       }
       return null
-    }, matcher)
+    }, textPattern, excludePattern || null)
+
     if (coords) {
       await page.mouse.click(coords.x, coords.y)
-      log('info', `[imageMode] ${label} 클릭 (${coords.x}, ${coords.y})`)
+      log('info', `[imageMode] ${label} 클릭 — "${coords.txt}" at (${coords.x}, ${coords.y})`)
       return true
     }
-    log('warn', `[imageMode] ${label} 탭 못 찾음`)
+    log('warn', `[imageMode] ${label} 못 찾음 (pattern: ${textPattern})`)
     return false
   }
 
   // 0. 모델 확인 → Nano Banana 2가 아니면 전환 (Pro는 일일 한도 있음)
-  // 트리거 버튼(하단 바)에는 "x2" 등 카운트가 붙어 있음 → /x[1-4]/ 포함 버튼 제외
-  // 팝업 내 모델 선택기는 "🍌 Nano Banana Pro ▼" 형태 (카운트 없음)
   const modelBtn = await page.evaluate(() => {
     for (const el of document.querySelectorAll('button, [role="button"]')) {
       const txt = (el.textContent || '').trim()
       const r = el.getBoundingClientRect()
-      if (txt.includes('Banana') && !/x[1-4]/.test(txt) && r.width > 0 && r.height > 0)
+      // "Banana" 포함, 개수 버튼(1x/2x/x1/x2 형식) 제외
+      if (txt.includes('Banana') && !/[0-9]x|x[0-9]/i.test(txt) && r.width > 0 && r.height > 0)
         return { txt: txt.slice(0, 60), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), isV2: /Banana\s*2/.test(txt) }
     }
     return null
@@ -1680,7 +1705,6 @@ async function switchToImageMode(page) {
         return results
       }
       const all = searchAll(document)
-      // "Banana 2" 포함 + "Pro" 미포함 → 부모 컨테이너(Pro+2 혼재) 제외하고 정확한 옵션만 선택
       const v2 = all.find(r => /Banana\s*2/.test(r.txt) && !r.txt.includes('Pro'))
       return { v2: v2 || null, all: all.map(r => r.txt) }
     })
@@ -1688,10 +1712,9 @@ async function switchToImageMode(page) {
     log('info', `[imageMode] 모델 옵션 목록: ${JSON.stringify(nb2.all)}`)
     if (nb2.v2) {
       await page.mouse.click(nb2.v2.x, nb2.v2.y)
-      log('info', '[imageMode] Nano Banana 2 선택 완료 (querySelector)')
+      log('info', '[imageMode] Nano Banana 2 선택 완료')
       await sleep(600)
     } else {
-      // 폴백: 드롭다운 행 높이 약 36px → Pro 아래 항목 클릭
       log('info', `[imageMode] modelBtn 좌표: (${modelBtn.x}, ${modelBtn.y}) — 오프셋 탐색 중`)
       let found = false
       for (const offset of [36, 45, 55, 65]) {
@@ -1713,25 +1736,28 @@ async function switchToImageMode(page) {
         await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_model_fail.png') })
       }
     }
-  } else if (modelBtn) {
+  } else if (modelBtn?.isV2) {
     log('info', '[imageMode] 모델 이미 Nano Banana 2')
   }
 
-  // 1. '이미지' 탭
-  await clickTab(`txt.includes('이미지') || txt.toLowerCase().includes('image')`, '이미지 탭')
+  // 1. '이미지' 탭 (동영상 모드에서 이미지로 전환)
+  const imgOk = await clickTab('이미지|^image$', '이미지 탭')
   await sleep(500)
+  if (!imgOk) await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_tab_fail.png') })
 
-  // 2. '9:16' 비율
-  await clickTab(`txt.endsWith('9:16') || txt === '9:16'`, '9:16 비율')
+  // 2. '9:16' 비율 (9:16, 9/16, 916 등 매칭)
+  await clickTab('9.{0,2}16', '9:16 비율')
   await sleep(400)
 
-  // 3. 'x2' 생성 개수
-  await clickTab(`txt === 'x2'`, 'x2 개수')
+  // 3. 'x2' 생성 개수 (x2, 2x, ×2, 2 등) — 모드/비율 텍스트는 제외
+  await clickTab('[x×]2|2[x×]|^2$', 'x2 개수', '동영상|이미지|image|video|9|16|Banana')
   await sleep(400)
 
-  // 팝업 닫기
-  await page.mouse.click(100, 100)
-  log('info', '[imageMode] 팝업 닫기')
+  await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_done.png') })
+
+  // 팝업 닫기 (Escape 키 — 바깥 클릭보다 안전)
+  await page.keyboard.press('Escape')
+  log('info', '[imageMode] 팝업 닫기 (Escape)')
   await sleep(500)
 }
 
