@@ -124,17 +124,39 @@ async function waitForDownload(dir, beforeFiles, timeoutMs) {
 }
 
 // ── STEP 1: capcut.com/recent-list 접속 확인 ──────────────────────────
-async function step1_navigate(page) {
+// 이미 에디터가 열려있거나 캐시된 프로젝트 URL이 있으면 그 에디터를 재사용하고,
+// 새 프로젝트 생성(step2)을 건너뛸 수 있도록 재사용 가능한 page를 반환한다.
+// 반환값: 재사용 가능한 에디터 page (step2 스킵) 또는 null (step2 진행 필요)
+async function step1_navigate(page, urlCache) {
   const url = page.url()
-  // 이미 에디터에 있으면 이동하지 않음
+  // 이미 에디터에 있으면 그대로 사용 — 새 프로젝트 생성 스킵
   if (url.includes('capcut.com/editor')) {
-    console.log(`[1] 이미 에디터 열림: ${url}`)
-    return
+    console.log(`[1] 이미 에디터 열림 — 재사용: ${url}`)
+    return page
   }
+
+  // 캐시된 프로젝트 URL이 있으면 그 URL로 이동 — 새 프로젝트 생성 스킵
+  if (urlCache && fs.existsSync(urlCache)) {
+    const cachedUrl = fs.readFileSync(urlCache, 'utf-8').trim()
+    if (cachedUrl) {
+      console.log(`[1] 캐시된 프로젝트 URL 발견 — 이동: ${cachedUrl}`)
+      try {
+        await page.goto(cachedUrl, { waitUntil: 'networkidle2', timeout: CONFIG.navTimeout })
+        if (page.url().includes('capcut.com/editor')) {
+          console.log(`[1] 캐시 URL로 에디터 재사용: ${page.url()}`)
+          return page
+        }
+        console.warn('[1] ⚠ 캐시 URL 이동 후 에디터가 아님 — 새 프로젝트 생성으로 진행')
+      } catch (e) {
+        console.warn(`[1] ⚠ 캐시 URL 이동 실패 (${e.message}) — 새 프로젝트 생성으로 진행`)
+      }
+    }
+  }
+
   if (url.includes('capcut.com/recent-list')) {
     console.log(`[1] capcut.com/recent-list 이미 열림`)
     await sleep(2000)
-    return
+    return null
   }
   console.log('[1] capcut.com/recent-list 이동...')
   await page.goto(CONFIG.capcutRecent, { waitUntil: 'networkidle2', timeout: CONFIG.navTimeout })
@@ -144,6 +166,7 @@ async function step1_navigate(page) {
   }
   console.log(`[1] capcut.com 접속 완료: ${cur}`)
   await sleep(3000)
+  return null
 }
 
 // ── STEP 2: 새로 만들기 → 9:16 선택 (새 탭 오픈) ──────────────────────
@@ -783,10 +806,14 @@ async function main() {
 
   // ── 파이프라인 실행 ───────────────────────────────────────────────
   try {
-    await step1_navigate(page)
+    let editorPage = await step1_navigate(page, urlCache)
 
-    // step2는 browser도 필요, 반환값이 새 에디터 page일 수 있음
-    const editorPage = await step2_createProject(page, browser)
+    if (!editorPage) {
+      // step2는 browser도 필요, 반환값이 새 에디터 page일 수 있음
+      editorPage = await step2_createProject(page, browser)
+    } else {
+      console.log('[2] 새 프로젝트 생성 건너뜀')
+    }
     if (editorPage !== page) {
       page = editorPage
       // 새 탭에도 다운로드 설정 적용
