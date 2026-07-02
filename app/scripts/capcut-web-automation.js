@@ -319,6 +319,31 @@ async function step4_uploadVideo(page, videoPath) {
   console.log('[4] 업로드 완료')
 }
 
+// ── STEP 4b: "자료 리소스" 업로드 확인 팝업 처리 ──────────────────────
+async function step4b_handleResourcePopup(page) {
+  console.log('[4b] 자료 리소스 팝업 확인 중...')
+  await sleep(1000)
+
+  const hasPopupText = await page.evaluate(() => document.body.innerText.includes('자료 리소스'))
+  const nextBtn = await findFirstXP(page, [
+    '//button[contains(., "다음")]',
+    '//*[@role="button" and contains(., "다음")]',
+  ])
+
+  if (!hasPopupText && !nextBtn) {
+    console.log('[4b] 팝업 없음 — 진행')
+    return
+  }
+
+  if (nextBtn) {
+    console.log('[4b] "자료 리소스" 팝업 감지 — "다음" 버튼 클릭')
+    await nextBtn.click()
+    await sleep(1500)
+  } else {
+    console.warn('[4b] "자료 리소스" 텍스트는 감지됐지만 "다음" 버튼을 찾지 못함')
+  }
+}
+
 // ── STEP 5: 타임라인에 영상 추가 ─────────────────────────────────────
 async function step5_addToTimeline(page) {
   console.log('[5] 영상을 타임라인에 추가 중...')
@@ -770,6 +795,7 @@ async function main() {
 
     await step3_confirmEditor(page)
     await step4_uploadVideo(page, videoPath)
+    await step4b_handleResourcePopup(page)
     await step5_addToTimeline(page)
     await step6_kenBurns(page, specOps)
     await step7_insertSubtitles(page, srtPath)
