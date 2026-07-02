@@ -12,18 +12,8 @@ echo   Yeori Studio -- Full System Start
 echo ============================================================
 echo.
 
-set SRC=C:\yeori-studio\app
-set DST=C:\yeori-studio\app
-
 :: [pre] 콘텐츠 동기화 (집 PC: 다운로드 / 회사 PC: 업로드)
 call "%~dp0sync-content.bat"
-
-:: [0/3] Sync code files: C:\yeori-studio\app -> run directory
-echo [0/3] Syncing code files to run directory...
-robocopy "%SRC%\src"     "%DST%\src"     /E /XO /NFL /NDL /NJH /NJS >nul 2>&1
-robocopy "%SRC%\scripts" "%DST%\scripts" /E /XO /NFL /NDL /NJH /NJS >nul 2>&1
-copy /Y "%SRC%\server\proxy.js" "%DST%\server\proxy.js" >nul 2>&1
-echo        Sync complete.
 
 :: [0/3] Kill any leftover proxy process on port 3001
 echo [0/3] Killing any existing proxy on port 3001...
