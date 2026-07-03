@@ -86,8 +86,13 @@ async function findFirstXP(page, xpaths) {
 
 // stale element 방지: 클릭 직전 요소를 locate()로 재탐색 → 화면 중앙으로
 // scrollIntoView → 일반 클릭 시도 → 실패 시 page.evaluate()로 직접 클릭
-async function robustClick(page, locate, label = '') {
-  const el = await locate()
+async function robustClick(page, locate, label = '', retries = 5, retryDelayMs = 500) {
+  let el = null
+  for (let i = 0; i < retries; i++) {
+    el = await locate()
+    if (el) break
+    await sleep(retryDelayMs)
+  }
   if (!el) return false
   await page.evaluate(node => node.scrollIntoView({ block: 'center', inline: 'center' }), el).catch(() => {})
   await sleep(200)
