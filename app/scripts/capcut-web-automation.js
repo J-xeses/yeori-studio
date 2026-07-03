@@ -84,6 +84,28 @@ async function findFirstXP(page, xpaths) {
   return null
 }
 
+// stale element 방지: 클릭 직전 요소를 locate()로 재탐색 → 화면 중앙으로
+// scrollIntoView → 일반 클릭 시도 → 실패 시 page.evaluate()로 직접 클릭
+async function robustClick(page, locate, label = '') {
+  const el = await locate()
+  if (!el) return false
+  await page.evaluate(node => node.scrollIntoView({ block: 'center', inline: 'center' }), el).catch(() => {})
+  await sleep(200)
+  try {
+    await el.click()
+    return true
+  } catch (e) {
+    console.warn(`[click] 일반 클릭 실패 (${label}): ${e.message} — evaluate 클릭 시도`)
+    try {
+      await page.evaluate(node => node.click(), el)
+      return true
+    } catch (e2) {
+      console.warn(`[click] evaluate 클릭도 실패 (${label}): ${e2.message}`)
+      return false
+    }
+  }
+}
+
 // 파일 선택 다이얼로그 처리 (puppeteer v22+)
 async function pickFile(page, triggerFn, filePaths, timeoutMs = 30000) {
   return new Promise(async (resolve, reject) => {
@@ -368,42 +390,67 @@ async function step4b_handleResourcePopup(page) {
 }
 
 // ── STEP 5: 타임라인에 영상 추가 ─────────────────────────────────────
+// 실제 DOM 조사 결과 (2026-07-02): 업로드 시 자동으로 타임라인에 추가되는
+// 경우가 있어 ".badge-added"로 먼저 확인. 아니면 "타임라인에 추가" 버튼 →
+// 미디어 카드(.card-item) 더블클릭 → 카드를 타임라인(.timeline-drop)으로
+// 드래그 순으로 시도.
 async function step5_addToTimeline(page) {
   console.log('[5] 영상을 타임라인에 추가 중...')
   await sleep(1500)
 
-  // 미디어 패널의 첫 번째 클립 더블클릭
-  const clip = await findFirst(page, [
-    '[class*="media-item"]:first-child',
-    '[class*="clip-item"]:first-child',
-    '[class*="asset-item"]:first-child',
-    '[class*="material-item"]:first-child',
-    '[class*="file-item"]:first-child',
-    '[class*="resource-item"]:first-child',
-  ])
-  if (clip) {
-    console.log('[5] 클립 더블클릭으로 타임라인 추가')
-    await clip.dblclick()
-    await sleep(2000)
+  // 업로드 시 이미 자동으로 타임라인에 추가된 경우
+  const alreadyAdded = await page.$('[class*="badge-added"]')
+  if (alreadyAdded) {
+    console.log('[5] 이미 타임라인에 추가됨 (업로드 시 자동 반영) — 건너뜀')
     return
   }
 
-  // "+" 버튼 또는 "Add to timeline" 버튼
+  // 방법 A: "타임라인에 추가" 텍스트를 가진 버튼
   const addBtn = await findFirstXP(page, [
-    '//button[@aria-label="Add to timeline"]',
     '//button[contains(., "타임라인에 추가")]',
-    '//button[contains(., "Add all")]',
-    '//button[contains(., "모두 추가")]',
-    '//*[contains(@class, "add-to-timeline")]',
+    '//button[contains(., "Add to timeline")]',
+    '//*[@role="button" and contains(., "타임라인에 추가")]',
+    '//button[@aria-label="Add to timeline"]',
   ])
   if (addBtn) {
-    console.log('[5] Add to timeline 버튼 클릭')
+    console.log('[5] "타임라인에 추가" 버튼 클릭')
     await addBtn.click()
     await sleep(2000)
     return
   }
 
-  console.warn('[5] ⚠ 타임라인 추가 버튼 미발견 — 수동 추가가 필요할 수 있습니다')
+  // 방법 B: 미디어 패널의 첫 번째 카드(.card-item) 더블클릭
+  const card = await findFirst(page, [
+    '[class*="card-item"]:first-child',
+    '[class*="card-item"]',
+  ])
+  if (card) {
+    console.log('[5] 미디어 카드 더블클릭으로 타임라인 추가')
+    await card.dblclick()
+    await sleep(2000)
+    if (await page.$('[class*="badge-added"]')) {
+      console.log('[5] 타임라인 추가 확인됨')
+      return
+    }
+
+    // 방법 C: 카드를 타임라인 드롭 영역(.timeline-drop)으로 드래그
+    const timelineDrop = await findFirst(page, ['[class*="timeline-drop"]'])
+    const cardBox = await card.boundingBox()
+    const dropBox = timelineDrop ? await timelineDrop.boundingBox() : null
+    if (cardBox && dropBox) {
+      console.log('[5] 미디어 카드를 타임라인으로 드래그')
+      await page.mouse.move(cardBox.x + cardBox.width / 2, cardBox.y + cardBox.height / 2)
+      await page.mouse.down()
+      await sleep(200)
+      await page.mouse.move(dropBox.x + 50, dropBox.y + dropBox.height / 2, { steps: 15 })
+      await sleep(200)
+      await page.mouse.up()
+      await sleep(2000)
+      return
+    }
+  }
+
+  console.warn('[5] ⚠ 타임라인 추가 방법을 찾지 못함 — 수동 추가가 필요할 수 있습니다')
 }
 
 // ── STEP 6: 켄번스 효과 적용 (ops 있을 때만) ─────────────────────────
@@ -456,6 +503,9 @@ async function step6_kenBurns(page, specOps) {
 }
 
 // ── STEP 7: SRT 자막 삽입 ─────────────────────────────────────────────
+// 실제 DOM 조사 결과 (2026-07-02): 좌측 사이드바 "캡션" 탭(.siderMenuCaption-menu)
+// 안에 SRT 전용 hidden input(accept=".srt,.ass,.lrc")이 있어 버튼 클릭 없이
+// uploadFile()로 바로 업로드 가능.
 async function step7_insertSubtitles(page, srtPath) {
   if (!fs.existsSync(srtPath)) {
     console.log(`[7] SRT 파일 없음: ${srtPath} — 건너뜀`)
@@ -463,44 +513,24 @@ async function step7_insertSubtitles(page, srtPath) {
   }
   console.log(`[7] SRT 자막 삽입: ${path.basename(srtPath)}`)
 
-  const textTab = await findFirst(page, [
-    '[data-testid="text-tab"]',
-    '[data-testid="caption-tab"]',
-    '[aria-label="Text"]',
-    '[aria-label="자막"]',
-    '[aria-label="Captions"]',
-  ]) || await findFirstXP(page, [
-    '//*[@role="tab" and (contains(., "Text") or contains(., "자막") or contains(., "Captions"))]',
-    '//button[contains(., "Text") or contains(., "자막") or contains(., "Captions")]',
+  const captionTab = await page.$('.siderMenuCaption-menu') || await findFirstXP(page, [
+    '//*[@role="menuitem" and (contains(., "캡션") or contains(., "Captions"))]',
   ])
-
-  if (!textTab) {
-    console.warn('[7] ⚠ Text/Captions 탭 미발견 — 자막 건너뜀')
+  if (!captionTab) {
+    console.warn('[7] ⚠ 캡션 탭 미발견 — 자막 건너뜀')
     return
   }
-  await textTab.click()
-  await sleep(2000)
+  await captionTab.click()
+  await sleep(1500)
 
-  const importSrt = await findFirst(page, [
-    '[data-testid="import-srt"]',
-    '[aria-label*="SRT"]',
-    '[class*="import-srt"]',
-    '[class*="importSrt"]',
-  ]) || await findFirstXP(page, [
-    '//button[contains(., "SRT")]',
-    '//button[contains(., "자막 파일")]',
-    '//button[contains(., "Import caption")]',
-    '//button[contains(., "Import SRT")]',
-    '//*[contains(., "SRT") and @role="button"]',
-  ])
-
-  if (!importSrt) {
-    console.warn('[7] ⚠ SRT 가져오기 버튼 미발견 — 자막 건너뜀')
+  const srtInput = await page.$('input[type="file"][accept*=".srt"]')
+  if (!srtInput) {
+    console.warn('[7] ⚠ SRT 업로드 input 미발견 — 자막 건너뜀')
     return
   }
 
-  console.log('[7] SRT 파일 선택')
-  await pickFile(page, () => importSrt.click(), [srtPath], 10000)
+  console.log('[7] SRT 파일 업로드')
+  await srtInput.uploadFile(srtPath)
   await sleep(3000)
   console.log('[7] SRT 자막 삽입 완료')
 }
@@ -664,70 +694,97 @@ async function step9_colorCorrection(page, specOps) {
 }
 
 // ── STEP 10: 내보내기 ─────────────────────────────────────────────────
+// 실제 DOM 조사 결과 (2026-07-02) — 4단계로 구성됨:
+//  ① 상단 "내보내기" 버튼(.export-vid) 클릭 → 공유 패널이 열림
+//     (프로젝트당 최초 1회, 안내 툴팁(.guide-confirm-button)이 대신 뜨면
+//      닫고 "내보내기" 버튼을 다시 클릭해야 공유 패널이 열림)
+//  ② 공유 패널의 "다운로드" 행 클릭 → 내보내기 설정 패널이 열림
+//  ③ 해상도 드롭다운(.lv-select-view-selector)에서 1080p 선택 후
+//     설정 패널의 최종 "내보내기" 버튼(.lv-btn-long) 클릭 → 인코딩 시작
+//  ④ 진행률 100%("내보냄" 텍스트) 도달 후 뜨는 최종 "다운로드" 버튼
+//     (.downloadButton) 클릭 → 로컬로 실제 파일 다운로드
 async function step10_export(page) {
-  console.log('[10] 내보내기 버튼 찾는 중...')
   await page.waitForNetworkIdle({ idleTime: 2000, timeout: 15000 }).catch(() => {})
   await sleep(2000)
 
-  // 실제 DOM에서 확인된 클래스: "lv-btn lv-btn-primary lv-btn-size-small lv-btn-shape-square export-vid"
-  const exportBtn = await findFirst(page, [
+  // ① 내보내기 버튼 클릭 → 공유 패널
+  console.log('[10] ① 내보내기 버튼 클릭...')
+  const locateExportBtn = async () => (await findFirst(page, [
     'button[class*="export-vid"]',
     '[class*="export-vid"]',
-    '[data-testid="export-button"]',
-    '[data-testid="export-btn"]',
-    '[class*="export-btn"]',
-    '[class*="exportBtn"]',
-    'button[aria-label="Export"]',
     'button[aria-label="내보내기"]',
-  ]) || await findFirstXP(page, [
+  ])) || (await findFirstXP(page, [
     '//button[normalize-space(.)="Export"]',
     '//button[contains(., "내보내기")]',
-    '//*[@role="button" and normalize-space(.)="Export"]',
-  ])
+  ]))
 
-  if (!exportBtn) {
-    const headerBtns = await page.$$('header button, [class*="topbar"] button, [class*="header"] button')
-    if (headerBtns.length > 0) {
-      console.log('[10] 헤더 마지막 버튼 클릭 (fallback)')
-      await headerBtns[headerBtns.length - 1].click()
-    } else {
-      throw new Error('내보내기 버튼을 찾을 수 없습니다.')
+  if (!(await robustClick(page, locateExportBtn, '내보내기 버튼'))) {
+    throw new Error('내보내기 버튼을 찾을 수 없습니다.')
+  }
+  await sleep(1500)
+
+  // 최초 1회성 안내 툴팁이 뜨면 닫고 내보내기 버튼을 다시 클릭
+  const guideTooltip = await page.$('.guide-confirm-button')
+  if (guideTooltip) {
+    console.log('[10] 안내 툴팁 감지 — 닫고 재클릭')
+    await robustClick(page, () => page.$('.guide-confirm-button'), '안내 툴팁 확인')
+    await sleep(500)
+    if (!(await robustClick(page, locateExportBtn, '내보내기 버튼(재클릭)'))) {
+      throw new Error('안내 툴팁을 닫은 후 내보내기 버튼을 다시 찾을 수 없습니다.')
     }
-  } else {
-    console.log('[10] 내보내기 버튼 클릭')
-    await exportBtn.click()
+    await sleep(1500)
   }
 
-  await sleep(2000)
-
-  // 1080p 선택
-  const q1080 = await findFirst(page, [
-    '[data-value="1080p"]',
-    'input[value="1080"]',
-    '[aria-label="1080p"]',
-  ]) || await findFirstXP(page, [
-    '//*[contains(text(), "1080") and (@role="option" or @role="radio" or contains(@class, "quality") or contains(@class, "resolution"))]',
+  // ② 공유 패널의 "다운로드" 행 클릭 → 내보내기 설정 패널
+  console.log('[10] ② "다운로드" 행 클릭...')
+  const locateDownloadRow = async () => await findFirstXP(page, [
+    '//button[normalize-space(.)="다운로드"]',
   ])
-  if (q1080) { await q1080.click(); await sleep(400); console.log('[10] 1080p 선택') }
+  if (!(await robustClick(page, locateDownloadRow, '다운로드 행'))) {
+    throw new Error('공유 패널의 "다운로드" 행을 찾을 수 없습니다.')
+  }
+  await sleep(1500)
 
-  // 확인/다운로드 버튼
-  const confirmBtn = await findFirst(page, [
-    '[data-testid="export-confirm-btn"]',
-    '[class*="export-dialog"] button[class*="primary"]',
-    '[class*="export-modal"] button[class*="primary"]',
-    '[class*="download-btn"]',
-  ]) || await findFirstXP(page, [
-    '//button[contains(., "내보내기") and (contains(@class,"primary") or contains(@class,"confirm"))]',
-    '//button[contains(., "Export") and contains(@class,"primary")]',
-    '//button[contains(., "Download") or contains(., "다운로드")]',
-    '//*[@role="dialog"]//button[last()]',
-  ])
-
-  if (confirmBtn) {
-    console.log('[10] 다운로드 확인 클릭')
-    await confirmBtn.click()
+  // ③ 해상도 1080p 선택
+  console.log('[10] ③ 해상도 1080p 선택...')
+  const selectOpened = await robustClick(page, () => page.$('.lv-select-view-selector'), '해상도 드롭다운')
+  if (selectOpened) {
+    await sleep(500)
+    const locate1080 = async () => await findFirstXP(page, [
+      '//li[contains(@class, "material-export-modal-option") and starts-with(normalize-space(.), "1080p")]',
+    ])
+    if (await robustClick(page, locate1080, '1080p 옵션')) {
+      console.log('[10] ③ 1080p 선택 완료')
+    } else {
+      console.warn('[10] ⚠ 1080p 옵션 미발견 — 기본 해상도로 진행')
+    }
   } else {
-    console.warn('[10] ⚠ 확인 버튼 미발견 — 수동으로 확인하세요')
+    console.warn('[10] ⚠ 해상도 드롭다운 미발견 — 기본 해상도로 진행')
+  }
+
+  // ③ 설정 패널의 최종 "내보내기" 버튼 클릭 → 인코딩 시작
+  const locateFinalExportBtn = async () => await findFirstXP(page, [
+    '//button[contains(@class, "lv-btn-long") and normalize-space(.)="내보내기"]',
+  ])
+  if (!(await robustClick(page, locateFinalExportBtn, '최종 내보내기 버튼'))) {
+    throw new Error('내보내기 설정 패널의 최종 내보내기 버튼을 찾을 수 없습니다.')
+  }
+  console.log('[10] ③ 최종 내보내기 버튼 클릭 완료 — 인코딩 시작')
+
+  // ④ 진행률 100% 대기 후 최종 "다운로드" 버튼 클릭
+  console.log('[10] ④ 내보내기 완료 대기 중...')
+  await page.waitForFunction(
+    () => document.body.innerText.includes('내보냄') || !!document.querySelector('[class*="downloadButton"]'),
+    { timeout: CONFIG.exportTimeout }
+  ).catch(() => console.warn('[10] ⚠ 내보내기 완료 감지 타임아웃'))
+  await sleep(1000)
+
+  const locateFinalDownloadBtn = async () => (await findFirst(page, ['[class*="downloadButton"]']))
+    || (await findFirstXP(page, ['//button[normalize-space(.)="다운로드"]']))
+  if (await robustClick(page, locateFinalDownloadBtn, '최종 다운로드 버튼')) {
+    console.log('[10] ④ 다운로드 버튼 클릭 완료')
+  } else {
+    console.warn('[10] ⚠ 최종 다운로드 버튼을 찾지 못함 — 수동으로 다운로드하세요')
   }
 }
 
