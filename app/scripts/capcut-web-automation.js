@@ -904,6 +904,10 @@ async function main() {
     browser = await puppeteer.connect({
       browserURL:      `http://localhost:${CONFIG.debuggingPort}`,
       defaultViewport: null,
+      // send-to-cutter가 CapCut.exe를 재시작한 직후 이 스크립트가 바로 이어
+      // 실행되면 시스템 부하로 CDP 응답이 느려져 기본 타임아웃(180초)을
+      // 넘기는 경우가 있어 여유 있게 늘림
+      protocolTimeout: 300000,
     })
   } catch (err) {
     console.error(`❌ Chrome 연결 실패: ${err.message}`)

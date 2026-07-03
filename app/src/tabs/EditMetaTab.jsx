@@ -309,16 +309,16 @@ export default function EditMetaTab() {
         setAccRunning(false); return
       }
 
-      // ⑥ CapCut 웹 자동화 시작
-      setAccStatus('⑥ CapCut 웹 자동화 시작 중...')
+      // ⑥⑦ 커터(켄번스) 실행 + CapCut 재시작
+      setAccStatus('⑥ 커터 실행 중 (켄번스 적용) + CapCut 실행...')
       const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum })
       if (!cutterRes.success) {
-        setAccStatus(`⚠️ CapCut 연동 실패 (수동 편집 필요): ${cutterRes.error}`)
+        setAccStatus(`⚠️ 커터 연동 실패 (수동 편집 필요): ${cutterRes.error}`)
         setAccRunning(false); return
       }
 
       // 완료
-      setAccStatus('✅ 완료! 메타 → SRT → 영상 합치기 → CapCut 웹 자동화 시작됨.')
+      setAccStatus('✅ 완료! 메타 → SRT → 영상 합치기 → 커터(켄번스) → CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
       setTimeout(() => { setAccRunning(false); setAccStatus('') }, 8000)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
@@ -454,7 +454,7 @@ export default function EditMetaTab() {
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
             <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
-            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ CapCut 웹 자동화</div>
+            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ 커터(켄번스) → ⑦ CapCut 실행</div>
           </div>
           <button
             onClick={runACC}
@@ -480,10 +480,10 @@ export default function EditMetaTab() {
       {/* 탭 네비게이션 */}
       <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'6px', marginBottom:'20px'}}>
         {[
-          { key:'meta',    label:'① 메타 생성' },
-          { key:'srt',     label:'② SRT 생성' },
-          { key:'analyze', label:'③ 컷 분석' },
-          { key:'guide',   label:'④ 캡컷 가이드' },
+          { key:'meta',    label:'메타 생성' },
+          { key:'srt',     label:'SRT 생성' },
+          { key:'analyze', label:'컷 분석' },
+          { key:'guide',   label:'캡컷 가이드' },
         ].map(t => (
           <button key={t.key} style={{...tabStyle(t.key), width:'100%', textAlign:'center'}} onClick={() => setActiveTab(t.key)}>
             {t.label}
@@ -630,7 +630,7 @@ export default function EditMetaTab() {
         <div>
           {meta.length === 0 ? (
             <div style={{padding:'32px',textAlign:'center',color:'#5c5870',fontSize:'13px'}}>
-              ① 메타 생성 탭에서 먼저 편집 메타를 생성해주세요
+              메타 생성 탭에서 먼저 편집 메타를 생성해주세요
             </div>
           ) : (
             <>
@@ -674,7 +674,7 @@ export default function EditMetaTab() {
         <div>
           {meta.length === 0 ? (
             <div style={{padding:'32px',textAlign:'center',color:'#5c5870',fontSize:'13px'}}>
-              ① 메타 생성 탭에서 먼저 편집 메타를 생성해주세요
+              메타 생성 탭에서 먼저 편집 메타를 생성해주세요
             </div>
           ) : (
             <>
@@ -789,7 +789,7 @@ export default function EditMetaTab() {
         <div>
           {meta.length === 0 ? (
             <div style={{padding:'32px',textAlign:'center',color:'#5c5870',fontSize:'13px'}}>
-              ① 메타 생성 탭에서 먼저 편집 메타를 생성해주세요
+              메타 생성 탭에서 먼저 편집 메타를 생성해주세요
             </div>
           ) : (
             <>

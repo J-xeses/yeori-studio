@@ -1015,50 +1015,31 @@ app.post('/api/generate-capcut-spec', (req, res) => {
   })
 })
 
-// ── POST /api/send-to-cutter — capcut compile 기반 드래프트 생성 + CapCut 실행 ──
+// ── POST /api/send-to-cutter — run-cutter.js(데스크톱 커터+켄번스) 실행 + CapCut 재시작 ──
+// 데스크톱 CapCut 프로젝트(draft_content.json)에 컷을 배치하고 켄번스 키프레임을
+// 굽는 게 최종 산출물이다. capcut-web-automation.js(웹버전)는 별개 시스템이라
+// 이 흐름에서 제외했다 — 필요하면 직접 실행: node scripts/capcut-web-automation.js --ep=N
 app.post('/api/send-to-cutter', async (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
-  const specScriptPath = path.join(CODE_ROOT, 'scripts', 'generate-capcut-spec.js')
-  const specPath       = path.join(MEDIA_ROOT, 'downloads', 'capcut_spec.json')
+  const cutterScriptPath = path.join(CODE_ROOT, 'scripts', 'run-cutter.js')
 
-  // ① generate-capcut-spec.js 실행
+  // ① run-cutter.js 실행 — draft_content.json에 컷+켄번스 직접 기록
+  let cutterOut
   try {
-    const out = execSync(`node "${specScriptPath}" ${epNum}`, {
+    cutterOut = execSync(`node "${cutterScriptPath}" ${epNum}`, {
       cwd:      CODE_ROOT,
       env:      process.env,
       encoding: 'utf-8',
     })
-    console.log('[send-to-cutter] spec 생성:', out.trim())
+    console.log('[send-to-cutter] run-cutter 완료:', cutterOut.trim())
   } catch (err) {
-    return res.status(500).json({ error: `spec 생성 실패: ${err.stderr || err.message}` })
+    return res.status(500).json({ error: `커터 실행 실패: ${err.stderr || err.message}` })
   }
 
-  if (!fs.existsSync(specPath)) {
-    return res.status(500).json({ error: 'capcut_spec.json 생성 실패' })
-  }
-
-  // ② CapCut 드래프트 디렉토리 결정
-  const username  = process.env.USERNAME || process.env.USER || 'user'
-  const draftsDir = path.join('C:\\Users', username,
-    'AppData', 'Local', 'CapCut', 'User Data', 'Projects', 'com.lveditor.draft')
-
-  // ③ capcut compile 실행 (설치되어 있지 않거나 실패해도 웹 자동화는 계속 진행)
-  let compileOk = false
-  try {
-    const out = execSync(`capcut compile "${specPath}" --drafts "${draftsDir}"`, {
-      cwd:      CODE_ROOT,
-      env:      process.env,
-      encoding: 'utf-8',
-    })
-    console.log('[send-to-cutter] compile 완료:', out.trim())
-    compileOk = true
-  } catch (err) {
-    console.warn(`[send-to-cutter] capcut compile 건너뜀 (${err.stderr || err.message}) — 웹 자동화로 계속 진행`)
-  }
-
-  // ④ CapCut 실행 중이면 종료 후 대기
+  // ② CapCut 실행 중이면 종료 후 대기
+  const username = process.env.USERNAME || process.env.USER || 'user'
   try {
     execSync('taskkill /F /IM CapCut.exe /T', { shell: true, stdio: 'ignore' })
     console.log('[send-to-cutter] 기존 CapCut 종료')
@@ -1067,7 +1048,7 @@ app.post('/api/send-to-cutter', async (req, res) => {
     // CapCut 실행 중 아님 — 정상
   }
 
-  // ⑤ CapCut 재실행
+  // ③ CapCut 재실행 (run-cutter.js가 방금 갱신한 프로젝트를 사람이 직접 열어 마무리)
   const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
   const candidates = [
     path.join('C:\\Users', username, 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
@@ -1085,39 +1066,11 @@ app.post('/api/send-to-cutter', async (req, res) => {
     console.warn('[send-to-cutter] CapCut.exe 경로를 찾을 수 없습니다 (capcut_exe_path.txt에 경로 저장 필요)')
   }
 
-  // CapCut 웹버전 자동화 백그라운드 시작
-  // stdio:'ignore'였던 이전 버전은 실행 여부/진행 상황을 확인할 방법이 전혀 없었음
-  // (콘솔 출력이 통째로 버려짐) — 로그 파일로 리다이렉트해서 사후 확인 가능하게 함
-  const webScriptPath = path.join(CODE_ROOT, 'scripts', 'capcut-web-automation.js')
-  let webAutomationStarted = false
-  let webAutomationLogPath = null
-  if (fs.existsSync(webScriptPath)) {
-    const logDir = path.join(MEDIA_ROOT, 'logs')
-    fs.mkdirSync(logDir, { recursive: true })
-    webAutomationLogPath = path.join(logDir, `capcut-web-automation-ep${epNum}-${Date.now()}.log`)
-    const logFd = fs.openSync(webAutomationLogPath, 'a')
-    const webProc = spawn(process.execPath, [webScriptPath, `--ep=${epNum}`], {
-      detached: true,
-      stdio:    ['ignore', logFd, logFd],
-      cwd:      CODE_ROOT,
-      env:      process.env,
-    })
-    webProc.unref()
-    webAutomationStarted = true
-    console.log(`[send-to-cutter] 웹 자동화 백그라운드 시작: ep${epNum} (로그: ${webAutomationLogPath})`)
-  } else {
-    console.warn('[send-to-cutter] capcut-web-automation.js 스크립트 없음')
-  }
-
   res.json({
-    success:           true,
-    message:           `capcut compile ${compileOk ? '완료' : '건너뜀'} + CapCut ${capCutExe ? '실행' : '경로 미확인'} + 웹 자동화 ${webAutomationStarted ? '시작됨' : '스크립트 없음'}`,
-    specPath,
-    draftsDir,
-    compileOk,
-    capCutExe:         capCutExe || null,
-    webAutomation:     webAutomationStarted,
-    webAutomationLog:  webAutomationLogPath,
+    success:    true,
+    message:    `커터 실행 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}. 프로젝트를 열어 BGM/색보정/내보내기를 마무리하세요.`,
+    cutterLog:  cutterOut.trim(),
+    capCutExe:  capCutExe || null,
   })
 })
 
