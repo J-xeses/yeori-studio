@@ -286,6 +286,28 @@ async function step2_createProject(page, browser) {
   return editorPage
 }
 
+// 이전 실행이 "다운로드" 완료 모달(.lv_share_export)을 닫지 않고 끝난 경우
+// (에디터를 재사용하는 step1과 맞물려) 화면을 가려 이후 모든 클릭을
+// 방해하므로, 새 파이프라인을 시작하기 전에 먼저 정리한다.
+// 우측 상단 축소 아이콘은 CSS 클릭(evaluate)으로는 반응하지 않고 실제
+// 마우스 클릭(ElementHandle.click)이 필요함이 확인됨 — robustClick 사용.
+async function closeLingeringExportModal(page) {
+  const modal = await page.$('.lv_share_export')
+  if (!modal) return
+  console.log('[0] 이전 실행의 다운로드 모달 감지 — 닫는 중...')
+  // 다운로드를 막 트리거한 직후에는 닫기 아이콘이 잠시 반응하지 않는 경우가
+  // 있어 최대 3회까지 재시도
+  for (let i = 0; i < 3 && (await page.$('.lv_share_export')); i++) {
+    await robustClick(page, () => page.$('.lv_share_export-container-header-right'), '다운로드 모달 닫기')
+    await sleep(800)
+  }
+  if (await page.$('.lv_share_export')) {
+    console.warn('[0] ⚠ 다운로드 모달을 닫지 못함 — 이후 단계가 방해받을 수 있습니다')
+  } else {
+    console.log('[0] 다운로드 모달 닫음')
+  }
+}
+
 // ── STEP 3: 에디터 로딩 확인 ──────────────────────────────────────────
 // step2에서 9:16로 이미 비율 설정 — 별도 다이얼로그 없음
 async function step3_confirmEditor(page) {
@@ -299,6 +321,8 @@ async function step3_confirmEditor(page) {
   ).catch(() => console.warn('[3] ⚠ 에디터 UI 감지 타임아웃 — 계속 진행'))
   await sleep(2000)
   console.log(`[3] 에디터 URL: ${page.url()}`)
+
+  await closeLingeringExportModal(page)
 }
 
 // ── STEP 4: ep{N}_raw.mp4 업로드 ─────────────────────────────────────
@@ -523,7 +547,8 @@ async function step7_insertSubtitles(page, srtPath) {
   await captionTab.click()
   await sleep(1500)
 
-  const srtInput = await page.$('input[type="file"][accept*=".srt"]')
+  // 업로드 직후 캡션 패널이 늦게 초기화되는 경우가 있어 최대 6초까지 폴링
+  const srtInput = await page.waitForSelector('input[type="file"][accept*=".srt"]', { timeout: 6000 }).catch(() => null)
   if (!srtInput) {
     console.warn('[7] ⚠ SRT 업로드 input 미발견 — 자막 건너뜀')
     return
@@ -703,6 +728,10 @@ async function step9_colorCorrection(page, specOps) {
 //     설정 패널의 최종 "내보내기" 버튼(.lv-btn-long) 클릭 → 인코딩 시작
 //  ④ 진행률 100%("내보냄" 텍스트) 도달 후 뜨는 최종 "다운로드" 버튼
 //     (.downloadButton) 클릭 → 로컬로 실제 파일 다운로드
+//     (모달 정리는 여기서 하지 않음 — main()이 waitForDownload로 실제
+//      다운로드 완료를 확인한 뒤 closeLingeringExportModal을 호출한다.
+//      다운로드 트리거 직후 모달을 닫으면 다운로드 자체가 끊기는 것이
+//      관찰됨)
 async function step10_export(page) {
   await page.waitForNetworkIdle({ idleTime: 2000, timeout: 15000 }).catch(() => {})
   await sleep(2000)
@@ -803,6 +832,9 @@ async function step10_export(page) {
 
   if (await robustClick(page, locateFinalDownloadBtn, '최종 다운로드 버튼')) {
     console.log('[10] ④ 다운로드 버튼 클릭 완료')
+    // 주의: 여기서 바로 모달을 닫으면 다운로드가 막 시작된 시점이라
+    // 실제 파일 다운로드를 방해할 수 있음이 관찰됨 — 모달 정리는
+    // main()에서 다운로드 완료(waitForDownload)를 확인한 뒤에 수행한다.
   } else {
     console.warn('[10] ⚠ 최종 다운로드 버튼을 찾지 못함 — 수동으로 다운로드하세요')
   }
@@ -836,6 +868,14 @@ async function main() {
 
   fs.mkdirSync(destDir, { recursive: true })
   fs.mkdirSync(tempDir, { recursive: true })
+
+  // CapCut은 프로젝트 이름 기준 고정 파일명으로 내보내므로, 이전 실행이
+  // 실패해 tempDir에 남긴 동일 파일명이 있으면 beforeFiles에 잡혀 새
+  // 다운로드를 "기존 파일"로 오인해 waitForDownload가 타임아웃된다.
+  // 매 실행 시작 시 tempDir을 비워 항상 정확히 감지되도록 한다.
+  for (const f of fs.readdirSync(tempDir)) {
+    fs.rmSync(path.join(tempDir, f), { force: true })
+  }
 
   // capcut_spec.json 로드
   let specOps = []
@@ -925,6 +965,9 @@ async function main() {
     const sizeMB = (fs.statSync(destFile).size / 1024 / 1024).toFixed(1)
     console.log(`\n✅ ep${epNum} 완료!`)
     console.log(`   → ${destFile} (${sizeMB} MB)\n`)
+
+    // 다운로드 완료를 확인한 뒤에야 모달을 정리 — 다음 실행이 막히지 않도록
+    await closeLingeringExportModal(page)
 
   } catch (err) {
     console.error(`\n❌ 오류: ${err.message}\n`)
