@@ -771,16 +771,36 @@ async function step10_export(page) {
   }
   console.log('[10] ③ 최종 내보내기 버튼 클릭 완료 — 인코딩 시작')
 
-  // ④ 진행률 100% 대기 후 최종 "다운로드" 버튼 클릭
+  // ④ 진행률 100% 대기 후 "다운로드" 팝업의 다운로드 버튼 클릭
+  // 팝업 구조: 제목 "다운로드" / 완료 텍스트 "내보냄" 또는
+  // "동영상을 장치에 다운로드할 수 있습니다" / 파란색(primary) "다운로드" 버튼
+  // (하단에 "데스크톱 앱에서 다운로드" 같은 보조 링크가 별도로 있을 수 있어
+  // 텍스트만으로는 모호함 — 알려진 클래스 우선, 없으면 primary 스타일로 판별)
   console.log('[10] ④ 내보내기 완료 대기 중...')
   await page.waitForFunction(
-    () => document.body.innerText.includes('내보냄') || !!document.querySelector('[class*="downloadButton"]'),
+    () => document.body.innerText.includes('내보냄') ||
+          document.body.innerText.includes('동영상을 장치에 다운로드할 수 있습니다') ||
+          !!document.querySelector('[class*="downloadButton"]'),
     { timeout: CONFIG.exportTimeout }
   ).catch(() => console.warn('[10] ⚠ 내보내기 완료 감지 타임아웃'))
   await sleep(1000)
 
-  const locateFinalDownloadBtn = async () => (await findFirst(page, ['[class*="downloadButton"]']))
-    || (await findFirstXP(page, ['//button[normalize-space(.)="다운로드"]']))
+  const locateFinalDownloadBtn = async () => (await page.evaluateHandle(() => {
+    const btns = Array.from(document.querySelectorAll('button'))
+    // 1순위: 실제 DOM에서 확인된 클래스
+    let btn = btns.find(b => b.className.includes('downloadButton'))
+    if (btn) return btn
+    // 2순위: 텍스트가 "다운로드"인 버튼 중 primary(파란색) 스타일인 것
+    //        (하단 "데스크톱 앱에서 다운로드" 보조 링크는 제외)
+    btn = btns.find(b => {
+      if (b.textContent.trim() !== '다운로드') return false
+      if (b.className.includes('primary')) return true
+      const bg = getComputedStyle(b).backgroundColor
+      return bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent'
+    })
+    return btn || null
+  })).asElement()
+
   if (await robustClick(page, locateFinalDownloadBtn, '최종 다운로드 버튼')) {
     console.log('[10] ④ 다운로드 버튼 클릭 완료')
   } else {
