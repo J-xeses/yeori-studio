@@ -703,14 +703,18 @@ function makeSegAndMaterials(d, r, tmplSeg) {
   return seg;
 }
 
-function runMatch() {
-  matchResult = useSRT ? doMatchSRT() : doMatchAuto();
+// matchResult(유효 항목만)를 jsonData 템플릿에 적용해 새 draft JSON을 만든다.
+// 실패 시 null 반환 (alert로 사유 표시).
+function buildDraftFromMatch(valid) {
   const d = JSON.parse(JSON.stringify(jsonData));
   const videoTrack = d.tracks.find(t=>t.type==='video');
-  if(!videoTrack) { alert('video 트랙을 찾을 수 없습니다'); return; }
+  if(!videoTrack) { alert('video 트랙을 찾을 수 없습니다'); return null; }
+  if(!videoTrack.segments[0]) {
+    alert('이 캡컷 프로젝트의 video 트랙에 기존 클립이 하나도 없습니다.\nCapCut에서 이 프로젝트를 열어 이미지/영상 클립을 최소 1개 추가한 뒤 다시 시도하세요.\n(커터가 그 클립을 템플릿으로 복제해서 새 컷들을 만듭니다.)');
+    return null;
+  }
 
   const tmplSeg = JSON.parse(JSON.stringify(videoTrack.segments[0]));
-  const valid = matchResult.filter(r=>!r.failed);
 
   if(currentMode === 'A') {
     videoTrack.segments = [];
@@ -738,6 +742,14 @@ function runMatch() {
     d.duration = videoTrack.segments.reduce((max,s)=>Math.max(max,s.target_timerange.start+s.target_timerange.duration),0);
   }
 
+  return d;
+}
+
+function runMatch() {
+  matchResult = useSRT ? doMatchSRT() : doMatchAuto();
+  const valid = matchResult.filter(r=>!r.failed);
+  const d = buildDraftFromMatch(valid);
+  if(!d) return;
   modifiedJSON = d;
   showResult(valid, matchResult.filter(r=>r.failed));
 }
@@ -782,21 +794,48 @@ function downloadTxt() {
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='타임코드_목록.txt'; a.click();
 }
 
+// file:// 페이지에서 로컬 파일을 fetch()하면 Chrome이 CORS로 차단한다
+// (origin 'null' → file:// 요청 자체가 거부됨). 프록시 서버(/api/read-file)는
+// cors({origin:[...,'null']})로 이 origin을 명시적으로 허용해두었으므로,
+// 반드시 이 경로를 거쳐서 로컬 파일을 읽어야 한다.
+async function readLocalFile(path) {
+  const resp = await fetch('http://localhost:3001/api/read-file', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ path })
+  });
+  const data = await resp.json();
+  if (!data.success) throw new Error(`파일 읽기 실패 (${path}): ${data.error}`);
+  return data.content;
+}
+
 async function autoLoadFromInput() {
   const params = new URLSearchParams(window.location.search);
   const inputPath = params.get('input');
   if (!inputPath) return;
 
   const decodedPath = decodeURIComponent(inputPath);
-  const fileUrl = 'file:///' + decodedPath.replace(/\\/g, '/');
 
   try {
-    const cutterInput = await fetch(fileUrl).then(r => r.json());
+    const cutterInput = JSON.parse(await readLocalFile(decodedPath));
     const epNum = cutterInput.epNum;
 
+    // 0. 켄번스 효과 적용 (cutter_input.json의 kenburns 필드)
+    const kbMap = {
+      'none': 'none',
+      'random': 'random',
+      'zoom_in': 'zoomIn',
+      'zoom_out': 'zoomOut',
+      'pan_left': 'rightToLeft',
+      'pan_right': 'leftToRight',
+      'pan_up': 'bottomToTop',
+      'pan_down': 'topToBottom'
+    };
+    const kbValue = kbMap[cutterInput.kenburns] || 'random';
+    selectKb(kbValue, null);
+
     // 1. draft_content.json 로드
-    const draftUrl = 'file:///' + cutterInput.draft.replace(/\\/g, '/');
-    jsonData = await fetch(draftUrl).then(r => r.json());
+    jsonData = JSON.parse(await readLocalFile(cutterInput.draft));
     const videoDir = 'C:\\yeori-studio\\downloads\\video\\ep' + epNum;
     document.getElementById('imgPath').value = videoDir;
     document.getElementById('pathDetected').textContent = '자동 감지: ' + videoDir;
@@ -804,30 +843,50 @@ async function autoLoadFromInput() {
     document.getElementById('jsonStatus').innerHTML = '<div class="file-ok">✅ draft_content.json 자동 로드</div>';
 
     // 2. SRT 로드
-    const srtUrl = 'file:///' + cutterInput.srt.replace(/\\/g, '/');
-    const srtText = await fetch(srtUrl).then(r => r.text());
+    const srtText = await readLocalFile(cutterInput.srt);
     srtData = parseSRT(srtText);
     useSRT = srtData.length > 0;
     document.getElementById('srtStatus').innerHTML =
       `<div class="file-ok">✅ SRT 자동 로드 — ${srtData.length}개 자막</div>`;
 
-    // 3. editMeta → 컷 목록으로 imageFiles 구성
-    const metaUrl = 'file:///' + cutterInput.editMeta.replace(/\\/g, '/');
-    const editMeta = await fetch(metaUrl).then(r => r.json());
-    if (Array.isArray(editMeta) && editMeta.length > 0) {
-      imageFiles = editMeta.map(m => ({ name: `cut_${String(m.cutNo).padStart(2,'0')}.mp4` }));
-    }
+    // 3. editMeta → 컷 목록 구성
+    //    editMeta에는 이미 컷별 정확한 타임코드(startSec/endSec)가 있으므로
+    //    SRT 텍스트 매칭(doMatchSRT)을 거치지 않고 바로 matchResult를 만든다.
+    //    ("cut_01.mp4" 같은 규격 파일명은 자막 텍스트와 일치할 수 없어
+    //     doMatchSRT를 쓰면 항상 매칭 실패로 끝났음)
+    const editMeta = JSON.parse(await readLocalFile(cutterInput.editMeta));
+    const cuts = Array.isArray(editMeta) ? editMeta : [];
+    imageFiles = cuts.map(m => ({ name: `cut_${String(m.cutNo).padStart(2,'0')}.mp4` }));
+    matchResult = cuts.map((m, i) => ({
+      idx: i + 1,
+      file: `cut_${String(m.cutNo).padStart(2,'0')}.mp4`,
+      start: Math.round((m.startSec || 0) * 1000000),
+      end: Math.round((m.endSec || 0) * 1000000),
+      duration: Math.round(((m.endSec || 0) - (m.startSec || 0)) * 1000000),
+      preview: (m.narration || m.dialogue || '').slice(0, 50),
+      failed: false
+    }));
     document.getElementById('imgStatus').innerHTML =
-      `<div class="file-ok">✅ ${imageFiles.length}개 컷 자동 로드</div>`;
+      `<div class="file-ok">✅ ${imageFiles.length}개 컷 자동 로드 (editMeta 타임코드 사용)</div>`;
 
     checkReady();
 
     // 4. 자동 실행 + 자동 저장
-    runMatch();
-    await autoSaveDraft(cutterInput.draft);
+    const valid = matchResult.filter(r => !r.failed);
+    const d = buildDraftFromMatch(valid);
+    if (d) {
+      modifiedJSON = d;
+      showResult(valid, []);
+      await autoSaveDraft(cutterInput.draft);
+    }
 
   } catch(err) {
     console.error('[autoLoad] 오류:', err.message);
+    document.body.insertAdjacentHTML('afterbegin',
+      `<div style="position:sticky;top:0;z-index:200;background:#f87171;color:#1a0505;padding:12px 28px;font-size:13px;font-weight:700">
+        ❌ 자동 로드 실패: ${err.message}
+      </div>`
+    );
   }
 }
 
