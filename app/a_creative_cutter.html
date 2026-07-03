@@ -836,7 +836,7 @@ async function autoLoadFromInput() {
 
     // 1. draft_content.json 로드
     jsonData = JSON.parse(await readLocalFile(cutterInput.draft));
-    const videoDir = 'C:\\yeori-studio\\downloads\\video\\ep' + epNum;
+    const videoDir = 'C:/yeori-studio/downloads/video/ep' + epNum;
     document.getElementById('imgPath').value = videoDir;
     document.getElementById('pathDetected').textContent = '자동 감지: ' + videoDir;
     document.getElementById('pathDetected').style.display = 'block';
