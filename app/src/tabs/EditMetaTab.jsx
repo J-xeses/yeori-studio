@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
-import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
+import { setGPoint, setGPoints, loadGPoints, getGPointSummary } from '../lib/gpoints'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -327,6 +327,10 @@ export default function EditMetaTab() {
         ? `✅ 완료! CapCut 프로젝트 "${r.projectName}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용 완료. CapCut에서 "${r.projectName}"을 열어 확인하세요.`
         : '✅ 완료! 커터 실행 + CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
       setCutterResult(r)
+      // G5(편집/커터) 승인 — 커터가 실제로 draft_content.json에 반영한 컷들만 자동 승인
+      if (r?.cuts?.length) {
+        for (const c of r.cuts) setGPoint(c.cutNo, 'g5', true)
+      }
       setAccRunning(false)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
@@ -461,7 +465,12 @@ export default function EditMetaTab() {
       <div style={{marginBottom:'16px',padding:'14px 16px',background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'10px'}}>
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
-            <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
+            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+              <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
+              <span style={{fontSize:'10.5px',fontWeight:700,color:'#4ade80',background:'rgba(74,222,128,0.12)',border:'1px solid rgba(74,222,128,0.3)',borderRadius:'20px',padding:'2px 9px'}}>
+                G5 완료: {getGPointSummary(cuts.length).g5} / {cuts.length}
+              </span>
+            </div>
             <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ 커터(켄번스) → ⑦ CapCut 실행</div>
           </div>
           <button
@@ -508,6 +517,7 @@ export default function EditMetaTab() {
                     <th style={{padding:'4px 8px'}}>길이</th>
                     <th style={{padding:'4px 8px'}}>파일</th>
                     <th style={{padding:'4px 8px'}}>켄번스</th>
+                    <th style={{padding:'4px 8px'}}>G5</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -518,6 +528,7 @@ export default function EditMetaTab() {
                       <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.durationSec}초</td>
                       <td style={{padding:'4px 8px',color:'#9490a8'}}>{c.file}</td>
                       <td style={{padding:'4px 8px',color:'#fb923c'}}>{c.kenburns}</td>
+                      <td style={{padding:'4px 8px',color:'#4ade80',fontWeight:700}}>✓</td>
                     </tr>
                   ))}
                 </tbody>

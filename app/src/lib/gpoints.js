@@ -48,19 +48,20 @@ export function setGPoints(cutNo, updates) {
 // CUT의 G포인트 현황 가져오기
 export function getGPoint(cutNo) {
   const data = loadGPoints()
-  return data[`cut_${cutNo}`] || { g1: false, g2: false, g3: false, g4: false }
+  return data[`cut_${cutNo}`] || { g1: false, g2: false, g3: false, g4: false, g5: false }
 }
 
 // 전체 에피소드 G포인트 요약
 export function getGPointSummary(cutCount) {
   const data = loadGPoints()
-  let g1=0, g2=0, g3=0, g4=0
+  let g1=0, g2=0, g3=0, g4=0, g5=0
   for(let i = 1; i <= cutCount; i++) {
     const d = data[`cut_${i}`] || {}
     if(d.g1) g1++
     if(d.g2) g2++
     if(d.g3) g3++
     if(d.g4) g4++
+    if(d.g5) g5++
   }
-  return { g1, g2, g3, g4, total: cutCount }
+  return { g1, g2, g3, g4, g5, total: cutCount }
 }
