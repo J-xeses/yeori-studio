@@ -328,8 +328,10 @@ export default function EditMetaTab() {
         : '✅ 완료! 커터 실행 + CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
       setCutterResult(r)
       // G5(편집/커터) 승인 — 커터가 실제로 draft_content.json에 반영한 컷들만 자동 승인
+      // editMeta의 cutNo는 "01","02" 같은 0-패딩 문자열이지만, gpoints.js의
+      // cut_${i} 키는 숫자 그대로(1,2,3...)를 쓰므로 반드시 정수로 변환해야 매칭됨
       if (r?.cuts?.length) {
-        for (const c of r.cuts) setGPoint(c.cutNo, 'g5', true)
+        for (const c of r.cuts) setGPoint(parseInt(c.cutNo, 10), 'g5', true)
       }
       setAccRunning(false)
     } catch (err) {
