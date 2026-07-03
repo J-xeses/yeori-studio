@@ -34,6 +34,7 @@ export default function EditMetaTab() {
   const [hookIndices, setHookIndices] = useState([0])
   const [accRunning, setAccRunning] = useState(false)
   const [accStatus, setAccStatus]   = useState('')
+  const [cutterResult, setCutterResult] = useState(null)
   const [g5Approved, setG5Approved] = useState({})
 
   // 음성 타이밍 상태
@@ -269,6 +270,7 @@ export default function EditMetaTab() {
     if (!epNum) { setAccStatus('❌ 에피소드 번호가 없습니다'); return }
 
     setAccRunning(true)
+    setCutterResult(null)
 
     const post = (url, body) =>
       fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -324,6 +326,7 @@ export default function EditMetaTab() {
       setAccStatus(r
         ? `✅ 완료! CapCut 프로젝트 "${r.projectName}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용 완료. CapCut에서 "${r.projectName}"을 열어 확인하세요.`
         : '✅ 완료! 커터 실행 + CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
+      setCutterResult(r)
       setAccRunning(false)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
@@ -478,6 +481,48 @@ export default function EditMetaTab() {
                  : accStatus.startsWith('⚠️') ? '#fbbf24'
                  : accStatus.startsWith('✅') ? '#4ade80' : '#fb923c'}}>
             {accStatus}
+          </div>
+        )}
+        {cutterResult && (
+          <div style={{marginTop:'12px',background:'rgba(0,0,0,0.2)',border:'1px solid rgba(74,222,128,0.25)',borderRadius:'8px',padding:'12px'}}>
+            <div style={{display:'flex',gap:'10px',marginBottom:'10px',flexWrap:'wrap'}}>
+              <div style={{flex:1,minWidth:'90px',background:'rgba(255,255,255,0.04)',borderRadius:'6px',padding:'8px 12px'}}>
+                <div style={{fontSize:'18px',fontWeight:700,color:'#4ade80'}}>{cutterResult.segCount}</div>
+                <div style={{fontSize:'10px',color:'#9490a8'}}>배치된 컷</div>
+              </div>
+              <div style={{flex:1,minWidth:'90px',background:'rgba(255,255,255,0.04)',borderRadius:'6px',padding:'8px 12px'}}>
+                <div style={{fontSize:'18px',fontWeight:700,color:'#4ade80'}}>{cutterResult.durationSec}초</div>
+                <div style={{fontSize:'10px',color:'#9490a8'}}>총 재생 시간</div>
+              </div>
+              <div style={{flex:1,minWidth:'90px',background:'rgba(255,255,255,0.04)',borderRadius:'6px',padding:'8px 12px'}}>
+                <div style={{fontSize:'18px',fontWeight:700,color:'#4ade80'}}>{cutterResult.projectName}</div>
+                <div style={{fontSize:'10px',color:'#9490a8'}}>CapCut 프로젝트</div>
+              </div>
+            </div>
+            {Array.isArray(cutterResult.cuts) && cutterResult.cuts.length > 0 && (
+              <table style={{width:'100%',fontSize:'11px',borderCollapse:'collapse'}}>
+                <thead>
+                  <tr style={{color:'#9490a8',textAlign:'left'}}>
+                    <th style={{padding:'4px 8px'}}>컷</th>
+                    <th style={{padding:'4px 8px'}}>구간</th>
+                    <th style={{padding:'4px 8px'}}>길이</th>
+                    <th style={{padding:'4px 8px'}}>파일</th>
+                    <th style={{padding:'4px 8px'}}>켄번스</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cutterResult.cuts.map(c => (
+                    <tr key={c.cutNo} style={{borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+                      <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.label}</td>
+                      <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.startSec}s ~ {c.endSec}s</td>
+                      <td style={{padding:'4px 8px',color:'#e8e6f0'}}>{c.durationSec}초</td>
+                      <td style={{padding:'4px 8px',color:'#9490a8'}}>{c.file}</td>
+                      <td style={{padding:'4px 8px',color:'#fb923c'}}>{c.kenburns}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>

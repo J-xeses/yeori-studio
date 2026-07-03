@@ -107,15 +107,16 @@ function makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode) {
   seg.target_timerange = { start: r.start, duration: r.duration }
   seg.extra_material_refs = [spdId, phId, cvId, scmId, mcId, vsId]
 
+  let effectType = 'none'
   if (kbMode !== 'none') {
-    const effectType = kbMode === 'random'
+    effectType = kbMode === 'random'
       ? kenBurnsEffects[Math.floor(Math.random() * kenBurnsEffects.length)]
       : kbMode
     seg.common_keyframes = makeKenBurns(r.duration, effectType)
   } else {
     seg.common_keyframes = []
   }
-  return seg
+  return { seg, effectType }
 }
 
 function run(epNum) {
@@ -147,6 +148,8 @@ function run(epNum) {
   if (cuts.length === 0) throw new Error('editMeta에 컷이 없습니다')
 
   const matchResult = cuts.map(m => ({
+    cutNo: m.cutNo,
+    label: m.label || `CUT ${m.cutNo}`,
     file: `cut_${String(m.cutNo).padStart(2, '0')}.mp4`,
     start: Math.round((m.startSec || 0) * 1000000),
     end: Math.round((m.endSec || 0) * 1000000),
@@ -165,8 +168,15 @@ function run(epNum) {
   d.materials.material_colors = []
   d.materials.vocal_separations = []
 
+  const cutDetails = []
   for (const r of matchResult) {
-    videoTrack.segments.push(makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode))
+    const { seg, effectType } = makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode)
+    videoTrack.segments.push(seg)
+    cutDetails.push({
+      cutNo: r.cutNo, label: r.label, file: r.file,
+      startSec: r.start / 1000000, endSec: r.end / 1000000,
+      durationSec: r.duration / 1000000, kenburns: effectType,
+    })
   }
   d.duration = matchResult.reduce((max, r) => Math.max(max, r.end), 0)
 
@@ -175,7 +185,7 @@ function run(epNum) {
   console.log(`✅ 커터 실행 완료: ${matchResult.length}개 컷, duration=${d.duration}`)
   console.log(`   → 프로젝트: ${projectName} (${cutterInput.draft})`)
 
-  const result = { segCount: matchResult.length, durationSec: Math.round(d.duration / 1000000), draftPath: cutterInput.draft, projectName }
+  const result = { segCount: matchResult.length, durationSec: Math.round(d.duration / 1000000), draftPath: cutterInput.draft, projectName, cuts: cutDetails }
   // proxy.js가 stdout에서 파싱해 프론트엔드에 결과를 그대로 전달할 수 있도록
   // 마지막 줄에 기계 판독 가능한 요약을 남김
   console.log(`RESULT_JSON:${JSON.stringify(result)}`)
