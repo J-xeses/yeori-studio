@@ -1066,11 +1066,19 @@ app.post('/api/send-to-cutter', async (req, res) => {
     console.warn('[send-to-cutter] CapCut.exe 경로를 찾을 수 없습니다 (capcut_exe_path.txt에 경로 저장 필요)')
   }
 
+  // run-cutter.js가 마지막 줄에 남긴 RESULT_JSON:{...}을 파싱해 프론트엔드에 전달
+  let cutterResult = null
+  const resultLine = cutterOut.trim().split('\n').find(l => l.startsWith('RESULT_JSON:'))
+  if (resultLine) {
+    try { cutterResult = JSON.parse(resultLine.slice('RESULT_JSON:'.length)) } catch {}
+  }
+
   res.json({
-    success:    true,
-    message:    `커터 실행 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}. 프로젝트를 열어 BGM/색보정/내보내기를 마무리하세요.`,
-    cutterLog:  cutterOut.trim(),
-    capCutExe:  capCutExe || null,
+    success:      true,
+    message:      `커터 실행 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}. 프로젝트를 열어 BGM/색보정/내보내기를 마무리하세요.`,
+    cutterLog:    cutterOut.trim(),
+    cutterResult, // { segCount, durationSec, draftPath, projectName } | null
+    capCutExe:    capCutExe || null,
   })
 })
 

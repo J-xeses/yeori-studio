@@ -171,10 +171,15 @@ function run(epNum) {
   d.duration = matchResult.reduce((max, r) => Math.max(max, r.end), 0)
 
   fs.writeFileSync(cutterInput.draft, JSON.stringify(d), 'utf-8')
+  const projectName = path.basename(path.dirname(cutterInput.draft))
   console.log(`✅ 커터 실행 완료: ${matchResult.length}개 컷, duration=${d.duration}`)
-  console.log(`   → ${cutterInput.draft}`)
+  console.log(`   → 프로젝트: ${projectName} (${cutterInput.draft})`)
 
-  return { segCount: matchResult.length, duration: d.duration, draftPath: cutterInput.draft }
+  const result = { segCount: matchResult.length, durationSec: Math.round(d.duration / 1000000), draftPath: cutterInput.draft, projectName }
+  // proxy.js가 stdout에서 파싱해 프론트엔드에 결과를 그대로 전달할 수 있도록
+  // 마지막 줄에 기계 판독 가능한 요약을 남김
+  console.log(`RESULT_JSON:${JSON.stringify(result)}`)
+  return result
 }
 
 const epNum = process.argv[2]

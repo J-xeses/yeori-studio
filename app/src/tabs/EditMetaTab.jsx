@@ -317,9 +317,14 @@ export default function EditMetaTab() {
         setAccRunning(false); return
       }
 
-      // 완료
-      setAccStatus('✅ 완료! 메타 → SRT → 영상 합치기 → 커터(켄번스) → CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
-      setTimeout(() => { setAccRunning(false); setAccStatus('') }, 8000)
+      // 완료 — run-cutter.js가 실제로 몇 개 컷을 어느 프로젝트에 썼는지 구체적으로 표시
+      // (문구만 바뀌고 사라지면 "진짜 됐는지" 확인할 방법이 없다는 피드백 반영 —
+      //  자동으로 사라지지 않고, 클릭해서 확인했다는 걸 알 수 있게 유지)
+      const r = cutterRes.cutterResult
+      setAccStatus(r
+        ? `✅ 완료! CapCut 프로젝트 "${r.projectName}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용 완료. CapCut에서 "${r.projectName}"을 열어 확인하세요.`
+        : '✅ 완료! 커터 실행 + CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
+      setAccRunning(false)
     } catch (err) {
       setAccStatus(`❌ 오류: ${err.message}`)
       setAccRunning(false)
