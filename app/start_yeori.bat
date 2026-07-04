@@ -12,6 +12,12 @@ echo   Yeori Studio -- Full System Start
 echo ============================================================
 echo.
 
+:: [pre] Git 최신 코드 자동 동기화
+echo [pre] Git pull 중...
+cd /d C:\yeori-studio
+git pull origin master
+cd /d "%~dp0"
+
 :: [pre] 콘텐츠 동기화 (집 PC: 다운로드 / 회사 PC: 업로드)
 call "%~dp0sync-content.bat"
 
