@@ -20,25 +20,13 @@ import { spawn } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// ── ROOT 자동 감지 ──────────────────────────────────────────────────────
-const CANDIDATES = [
-  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
-  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
-]
-const CODE_ROOT = (() => {
-  for (const { label, p } of CANDIDATES) {
-    if (
-      fs.existsSync(p) &&
-      fs.existsSync(path.join(p, 'node_modules')) &&
-      fs.existsSync(path.join(p, 'package.json'))
-    ) {
-      console.log(`[CODE_ROOT] ${label}: ${p}`)
-      return p
-    }
-  }
-  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
+// ── ROOT ──────────────────────────────────────────────────────────────
+const CODE_ROOT = 'C:\\yeori-studio\\app'
+if (!fs.existsSync(path.join(CODE_ROOT, 'package.json'))) {
+  console.error(`[ERROR] CODE_ROOT 경로를 찾을 수 없습니다: ${CODE_ROOT}`)
   process.exit(1)
-})()
+}
+console.log(`[CODE_ROOT] ${CODE_ROOT}`)
 const MEDIA_ROOT = 'C:\\yeori-studio'
 const ROOT = CODE_ROOT  // 하위 호환 유지
 

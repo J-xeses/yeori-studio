@@ -25,25 +25,13 @@ import { execSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// ── ROOT 자동 감지 ──────────────────────────────────────────────────────
-const CANDIDATES = [
-  { label: '회사 PC', p: 'C:\\Users\\won56\\OneDrive - CTEC\\문서\\GitHub\\yeori-studio\\yeori-studio' },
-  { label: '집 PC',   p: 'C:\\Users\\user\\Desktop\\yeori-studio\\yeori-studio' },
-]
-const CODE_ROOT = (() => {
-  for (const { label, p } of CANDIDATES) {
-    if (
-      fs.existsSync(p) &&
-      fs.existsSync(path.join(p, 'node_modules')) &&
-      fs.existsSync(path.join(p, 'package.json'))
-    ) {
-      console.log(`[CODE_ROOT] ${label}: ${p}`)
-      return p
-    }
-  }
-  console.error('[ERROR] CODE_ROOT 경로를 찾을 수 없습니다.')
+// ── ROOT ──────────────────────────────────────────────────────────────
+const CODE_ROOT = 'C:\\yeori-studio\\app'
+if (!fs.existsSync(path.join(CODE_ROOT, 'package.json'))) {
+  console.error(`[ERROR] CODE_ROOT 경로를 찾을 수 없습니다: ${CODE_ROOT}`)
   process.exit(1)
-})()
+}
+console.log(`[CODE_ROOT] ${CODE_ROOT}`)
 const MEDIA_ROOT = 'C:\\yeori-studio'
 const ROOT = CODE_ROOT  // 하위 호환 유지
 
@@ -1393,7 +1381,7 @@ async function generateEpisodeCloseup(page, savePath) {
 
 // ── hover로 레퍼런스 썸네일 좌표 탐색 ──────────────────────────────────
 
-async function findReferenceThumbs(page) {
+async function scanReferenceThumbsOnce(page, result) {
   // 컷이 쌓이면 레퍼런스 썸네일이 오른쪽으로 밀려나므로, 상단 이미지 스트립을 오른쪽 끝으로 스크롤
   await page.evaluate(() => {
     const strip = [...document.querySelectorAll('*')].find(el => {
@@ -1440,8 +1428,6 @@ async function findReferenceThumbs(page) {
   const candidates = imgPositions
   log('info', `[findReferenceThumbs] 레퍼런스 후보: ${candidates.length}개 (전체 탐색)`)
 
-  const result = { face: null, closeup: null }
-
   for (const pos of candidates) {
     if (result.face && result.closeup) break
 
@@ -1470,6 +1456,20 @@ async function findReferenceThumbs(page) {
       result.closeup = pos
       log('info', `[findReferenceThumbs] yeori-closeup 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
     }
+  }
+}
+
+async function findReferenceThumbs(page) {
+  const result = { face: null, closeup: null }
+  const maxAttempts = 3
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (attempt > 1) {
+      log('warn', `[findReferenceThumbs] 재시도 ${attempt}/${maxAttempts} — 스크롤/스캔 다시 시도`)
+      await sleep(700)
+    }
+    await scanReferenceThumbsOnce(page, result)
+    if (result.face && result.closeup) break
   }
 
   if (!result.face) log('warn', '[findReferenceThumbs] yeori-face 썸네일 못 찾음')
