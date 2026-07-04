@@ -1,21 +1,49 @@
 {
-  "episode": 2,
-  "title": "플로럴 드레스 일상배경 테스트",
+  "episode": 3,
+  "title": "동작+방향+표정 모듈 테스트 — 전신3컷+바스트3컷",
+  "note": "의상 모듈 고정(플로럴 드레스), 동작/각도/표정 변수만 테스트. 얼굴 고정 키포인트 발굴 목적.",
   "cuts": [
     {
       "no": 1,
+      "code": "FS-T1",
+      "module": "동작: A-01 걷기",
       "scene": "EXT. 동네 카페 앞 — 낮, 평범한 일상",
-      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Standing in front of an ordinary neighbourhood cafe entrance, plain exterior wall, simple signage, everyday Seoul street. Soft natural daylight, no dramatic lighting. Full body visible head to toe, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
+      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT straight deep waves throughout, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Walking naturally toward camera at a relaxed unhurried pace, arms swinging gently at sides, weight shifting naturally with each step, expression calm and effortlessly composed. Full body visible head to toe including shoes. Ordinary Seoul neighbourhood street, soft natural daylight, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
     },
     {
       "no": 2,
-      "scene": "EXT. 동네 골목/아파트 단지 — 낮, 평범한 주거지역",
-      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Walking along an ordinary Korean residential alley, plain apartment buildings in background, everyday neighbourhood feel, trees and parked cars visible — just a regular street. Soft bright natural daylight, natural walking stride, full body visible head to toe, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
+      "code": "FS-T2",
+      "module": "동작: A-04 걷다가 뒤돌아보기",
+      "scene": "EXT. 동네 골목 — 낮, 평범한 주거지역",
+      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT straight deep waves throughout, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Walking away then naturally turning head back over shoulder toward camera, body still angled forward only face and neck turning, expression soft surprised or warmly curious — caught off guard mid-walk. Full body visible head to toe including shoes, long wavy hair swinging with the turn. Ordinary Korean residential alley, soft natural daylight, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
     },
     {
       "no": 3,
+      "code": "FS-T3",
+      "module": "동작: D-01 핸드폰 확인",
       "scene": "EXT. 편의점 앞 — 낮, 평범한 도심 일상",
-      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Holding a small convenience store drink cup in one hand, standing outside an ordinary Korean convenience store, plain storefront, everyday urban background. Soft natural daylight, casual and unplanned feel, full body visible head to toe, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
+      "imagePrompt": "FULLBODY SHOT — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT straight deep waves throughout, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves, tie waist detail, nude lace-up strappy heeled sandals. Standing still looking down at phone screen held in one hand, expression reacting to what she sees — neutral then shifting to slight smile, other hand relaxed at side. Full body visible head to toe including shoes. Ordinary Korean convenience store exterior, soft natural daylight, background people must not interact with main character, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
+    },
+    {
+      "no": 4,
+      "code": "BS-T1",
+      "module": "방향: 정면 + 표정: C-01 자연스러운 미소",
+      "scene": "EXT. 동네 카페 앞 — 낮, 평범한 일상",
+      "imagePrompt": "BUST SHOT FRONT VIEW — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT straight deep waves throughout, small face with soft refined Korean features, warm honey-brown eyes, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves. Framed from chest to top of head, facing directly toward camera. Soft natural smile, eyes crinkling slightly with genuine warmth, lips gently curved — like smiling at a close friend. Ordinary Seoul neighbourhood cafe exterior background softly blurred, soft natural daylight, shallow depth of field, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
+    },
+    {
+      "no": 5,
+      "code": "BS-T2",
+      "module": "방향: 3/4뷰 + 표정: C-06 감성/여운",
+      "scene": "EXT. 동네 골목 — 낮, 감성적 순간",
+      "imagePrompt": "BUST SHOT THREE-QUARTER VIEW — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT straight deep waves throughout, small face with soft refined Korean features, warm honey-brown eyes, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves. Framed from chest to top of head, body angled 45 degrees away from camera, face turning softly toward camera, classic editorial 3/4 angle. Soft emotional expression, eyes slightly warmer than neutral, lips gently closed, gaze drifting softly off-camera — emotional aftertaste, quiet and still. Ordinary Seoul street background softly blurred, soft natural daylight, shallow depth of field, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
+    },
+    {
+      "no": 6,
+      "code": "BS-T3",
+      "module": "방향: 측면 + 표정: C-05 깨달음/수긍",
+      "scene": "EXT. 동네 어딘가 — 낮, 생각에 잠긴 순간",
+      "imagePrompt": "BUST SHOT SIDE PROFILE VIEW — 20대 초반 한국 여성, Korean woman early 20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT straight deep waves throughout, small face with soft refined Korean features, defined jawline visible in profile, warm honey-brown eyes, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, soft natural skin texture, thin gold necklace, small gold hoop earrings, natural minimal Korean makeup, warm skin tone. Floral wrap mini dress with coral peach green cream flower pattern, short flutter sleeves. Framed from chest to top of head, facing 90 degrees to the side pure side profile, gaze directed forward. Expression shifting from neutral to quiet realization, slight nod barely visible, eyes becoming slightly more focused, corner of lips lifting barely — internal aha moment becoming visible. Ordinary Seoul street background softly blurred, soft natural daylight, shallow depth of field, effortlessly photogenic not posing just existing beautifully, Photorealistic 8K cinematic 9:16."
     }
   ]
 }
