@@ -253,6 +253,33 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
+// ── GET /api/studio-state — 회사/집 PC 간 동기화되는 상태 (downloads/, OneDrive 릴레이) ──
+app.get('/api/studio-state', (req, res) => {
+  const statePath = path.join(MEDIA_ROOT, 'downloads', 'studio-state.json')
+  try {
+    if (fs.existsSync(statePath)) {
+      res.json(JSON.parse(fs.readFileSync(statePath, 'utf-8')))
+    } else {
+      res.json({})
+    }
+  } catch {
+    res.json({})
+  }
+})
+
+// ── POST /api/studio-state ───────────────────────────────────────
+app.post('/api/studio-state', (req, res) => {
+  const stateDir  = path.join(MEDIA_ROOT, 'downloads')
+  const statePath = path.join(stateDir, 'studio-state.json')
+  try {
+    fs.mkdirSync(stateDir, { recursive: true })
+    fs.writeFileSync(statePath, JSON.stringify(req.body, null, 2), 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/save-video-prompts — video-prompts.json 에피소드별 저장 ────────
 app.post('/api/save-video-prompts', (req, res) => {
   const { epNum, prompts } = req.body

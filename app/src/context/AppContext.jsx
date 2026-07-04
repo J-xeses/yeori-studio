@@ -343,20 +343,38 @@ export function AppProvider({ children }) {
   const serverChecked = useRef(false)
   const skipNextSync  = useRef(false)
   const syncTimer     = useRef(null)
+  const skipNextFileSync = useRef(false)
+  const fileSyncTimer    = useRef(null)
 
-  // 앱 시작 시 서버 데이터 로드 (서버 우선)
+  // 앱 시작 시 서버 데이터 로드 (studio-state.json 우선, 없으면 studio-data.json)
   useEffect(() => {
     ;(async () => {
       setSyncStatus('syncing')
       try {
         const controller = new AbortController()
         const tid = setTimeout(() => controller.abort(), 4000)
-        const res = await fetch(`${SERVER}/api/studio-data`, { signal: controller.signal })
+        const stateRes = await fetch(`${SERVER}/api/studio-state`, { signal: controller.signal })
         clearTimeout(tid)
+        if (stateRes.ok) {
+          const stateData = await stateRes.json()
+          if (stateData && Object.keys(stateData).length > 0) {
+            skipNextSync.current = true
+            skipNextFileSync.current = true
+            dispatch({ type: 'LOAD', p: migrateState(stateData, defaultState) })
+            setSyncStatus('synced')
+            return
+          }
+        }
+
+        const controller2 = new AbortController()
+        const tid2 = setTimeout(() => controller2.abort(), 4000)
+        const res = await fetch(`${SERVER}/api/studio-data`, { signal: controller2.signal })
+        clearTimeout(tid2)
         if (!res.ok) throw new Error()
         const data = await res.json()
         if (data && Object.keys(data).length > 0) {
           skipNextSync.current = true
+          skipNextFileSync.current = true
           dispatch({ type: 'LOAD', p: migrateState(data, defaultState) })
         }
         setSyncStatus('synced')
@@ -390,6 +408,23 @@ export function AppProvider({ children }) {
         setSyncStatus('offline')
       }
     }, 1200)
+  }, [state])
+
+  // 상태 변경 시 studio-state.json 저장 (디바운스 3초, 회사/집 PC 간 동기화용)
+  useEffect(() => {
+    if (!serverChecked.current) return
+    if (skipNextFileSync.current) { skipNextFileSync.current = false; return }
+
+    clearTimeout(fileSyncTimer.current)
+    fileSyncTimer.current = setTimeout(async () => {
+      try {
+        await fetch(`${SERVER}/api/studio-state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state),
+        })
+      } catch {}
+    }, 3000)
   }, [state])
 
   return (
