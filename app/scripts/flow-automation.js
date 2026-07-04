@@ -1679,7 +1679,7 @@ async function switchToImageMode(page) {
       const r = el.getBoundingClientRect()
       // "Banana" 포함, 개수 버튼(1x/2x/x1/x2 형식) 제외
       if (txt.includes('Banana') && !/[0-9]x|x[0-9]/i.test(txt) && r.width > 0 && r.height > 0)
-        return { txt: txt.slice(0, 60), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), isV2: /Banana\s*2/.test(txt) }
+        return { txt: txt.slice(0, 60), x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), isV2: /Banana\s*2/.test(txt) && !/lite/i.test(txt) }
     }
     return null
   })
@@ -1705,7 +1705,7 @@ async function switchToImageMode(page) {
         return results
       }
       const all = searchAll(document)
-      const v2 = all.find(r => /Banana\s*2/.test(r.txt) && !r.txt.includes('Pro'))
+      const v2 = all.find(r => /Banana\s*2/.test(r.txt) && !r.txt.includes('Pro') && !/lite/i.test(r.txt))
       return { v2: v2 || null, all: all.map(r => r.txt) }
     })
 
@@ -1723,7 +1723,7 @@ async function switchToImageMode(page) {
           return el ? (el.textContent || '').trim().slice(0, 50) : null
         }, modelBtn.x, modelBtn.y + offset)
         log('info', `[imageMode] +${offset}px 위치 텍스트: "${txt}"`)
-        if (txt && /Banana\s*2/i.test(txt)) {
+        if (txt && /Banana\s*2/i.test(txt) && !/lite/i.test(txt)) {
           await page.mouse.click(modelBtn.x, modelBtn.y + offset)
           log('info', `[imageMode] Nano Banana 2 선택 완료 (+${offset}px)`)
           found = true
