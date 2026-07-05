@@ -1,0 +1,104 @@
+{
+  "meta": {
+    "version_ref": "STATUS.md 최신 버전을 따를 것",
+    "usage": "이 프로젝트는 AI 캐릭터 서여리의 유튜브 채널 제작 프로젝트. 모든 대화/생성에서 항상 참조. 영상/이미지 프롬프트 생성 시 해당 에피소드 룩을 정확히 반영."
+  },
+
+  "base_prompts": {
+    "fixed_base": "Young Korean woman early-20s, long wavy dark brown hair, NOT short hair, soft natural skin texture on right cheek, delicate gold necklace, effortlessly photogenic not posing just existing beautifully, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure, natural makeup, warm skin tone, Photorealistic, 8K cinematic, natural Korean beauty, appearing no older than 22-23",
+
+    "video_base_veo3": "Young Korean woman early-20s, long wavy dark brown hair, NOT short, soft natural skin texture on right cheek, delicate gold necklace, effortlessly photogenic not posing, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, small face, long legs, Photorealistic 8K cinematic 9:16, background people must not interact with main character.",
+
+    "video_suffix_silent_film": "THIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING. NO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO. MOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.",
+
+    "image_base_gemini_kling": "Young Korean woman early-20s, long wavy dark brown hair, NOT short, soft natural skin texture on right cheek, delicate gold necklace, effortlessly photogenic not posing just existing beautifully, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, small face, natural makeup, warm skin tone, Photorealistic, 8K cinematic, natural Korean beauty, appearing no older than 22-23"
+  },
+
+  "combination_formula": "[base] + [outfit] + [location/situation] + [emotion/mood]",
+
+  "prompt_examples": [
+    {
+      "id": "example_cafe",
+      "label": "카페 감성 컷",
+      "outfit": "oversized cream knit sweater, wide-leg grey trousers",
+      "location": "sitting by cafe window, warm morning golden light streaming in",
+      "emotion": "soft melancholic expression, looking outside pensively",
+      "suffix": "Photorealistic 8K cinematic 9:16"
+    },
+    {
+      "id": "example_street",
+      "label": "거리 활기찬 컷",
+      "outfit": "white crop top, blue plaid mini skirt, white heels, black crossbody bag",
+      "location": "walking on busy Seoul street, bright afternoon",
+      "emotion": "bright natural smile, confident stride",
+      "suffix": "Photorealistic 8K cinematic 9:16"
+    },
+    {
+      "id": "example_closeup",
+      "label": "클로즈업 감정 컷",
+      "outfit": "",
+      "location": "extreme close-up face shot, soft side lighting, shallow depth of field",
+      "emotion": "subtle emotional expression, eyes slightly watery",
+      "suffix": "Photorealistic 8K cinematic"
+    }
+  ],
+
+  "outfit_input_guide": {
+    "fields": {
+      "top": "색상 + 소재 + 스타일 (예: white cotton square-neck crop top)",
+      "bottom": "색상 + 스타일 + 디테일 (예: blue plaid pleated mini skirt)",
+      "shoes": "색상 + 스타일 (예: white high-heel strap sandals)",
+      "bag": "크기 + 색상 + 스타일 (예: small black structured crossbody bag)",
+      "accessory": "있으면 명시 (예: black baseball cap worn loosely)"
+    },
+    "k_aesthetic_rules": {
+      "do": [
+        "볼캡: worn loosely, slightly oversized (딱 맞으면 K감성 아님)",
+        "롤업진: 부츠컷 롤업 (스키니 롤업 = 반바지처럼 보임)",
+        "전체적으로 밖에서 본 기억이 있는 자연스러운 스타일"
+      ],
+      "avoid": [
+        "너무 과한 액세서리 (프롬프트 제어 어려움)",
+        "복잡한 패턴 (일관성 유지 어려움)"
+      ]
+    }
+  },
+
+  "agent_auto_combination_flow": [
+    "① 서여리 베이스 불러오기 (base_prompts.fixed_base)",
+    "② 의상 설명 생성 (outfit_input_guide 필드 기준)",
+    "③ 씬별 상황 추가",
+    "④ 완성된 프롬프트 출력",
+    "⑤ 룰셋 체크리스트 자동 검토",
+    "⑥ 통과 시 성준님 확인 요청"
+  ],
+
+  "immutable_traits": [
+    "헤어 길이 (항상 long, NOT short)",
+    "soft natural skin texture on right cheek",
+    "골드 목걸이 (시그니처)",
+    "신체비율 (1:8 head-to-body ratio, supermodel proportions, K모델 비율)",
+    "나이 (항상 early-20s, no older than 22-23)",
+    "effortlessly photogenic"
+  ],
+
+  "variable_fields": [
+    "의상 전체 (상의/하의/신발/가방)",
+    "장소/배경",
+    "감정/표정",
+    "조명/분위기",
+    "카메라 앵글",
+    "시간대"
+  ],
+
+  "deprecated_do_not_use": [
+    "beauty mark",
+    "very small ... clearly visible 류의 강조 표현 (점 과장 재발 위험)",
+    "DO NOT change character appearance",
+    "DO NOT change clothing",
+    "absolutely mandatory",
+    "strictly required"
+  ],
+
+  "name_substitution_rule": "Flow 프롬프트 내부에서 '서여리'/'Seo Yeori' 직접 사용 금지 → 'Young Korean woman early-20s' / '20대 초반 한국 여성'으로 대체"
+}

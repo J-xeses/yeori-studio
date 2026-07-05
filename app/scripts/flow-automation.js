@@ -65,7 +65,9 @@ const CONFIG = {
   closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, natural skin texture, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
 
   // ── 전신샷 자동 추가 프리픽스/서픽스 ──────────────────────────────
-  bodyPrefix:   'Same face as closeup reference. Maintain exact same facial features. Face clearly visible. tall K-model proportions, very small face, long slim legs, slender figure, tall fashion model body, small head-to-body ratio, NOT petite, NOT short stature, NOT average body, DO NOT change body proportions.',
+  // yeori_ruleset_v1.3 반영: "DO NOT change ~" 류 강한 명령형은 정책위반 오인 유발 가능성으로 제거,
+  // 서술형 표현으로 대체 (v1.2에서 "DO NOT change clothing" 금지가 확정된 것과 동일 사유)
+  bodyPrefix:   'Same face as closeup reference, maintaining consistent facial features. Face clearly visible in frame. 1:8 head-to-body ratio, supermodel body proportions, tall K-model proportions, small face, long slender legs, slim figure.',
   bgSuffix:     'background people blurred and far away, must not interact with or touch main character, main character is clearly separated from background.',
   subtitleSuppression: 'NO subtitles. NO captions. NO text overlay. NO dialogue text visible in frame. NO watermark. NO on-screen text of any kind.',
 
@@ -1382,19 +1384,26 @@ async function generateEpisodeCloseup(page, savePath) {
 // ── hover로 레퍼런스 썸네일 좌표 탐색 ──────────────────────────────────
 
 async function scanReferenceThumbsOnce(page, result) {
-  // 컷이 쌓이면 레퍼런스 썸네일이 오른쪽으로 밀려나므로, 상단 이미지 스트립을 오른쪽 끝으로 스크롤
-  await page.evaluate(() => {
-    const strip = [...document.querySelectorAll('*')].find(el => {
-      const r = el.getBoundingClientRect()
-      return el.scrollWidth > el.clientWidth + 50
-        && r.top < window.innerHeight * 0.45
-        && r.top > 0
-        && r.height > 50
-        && r.height < 450
-    })
-    if (strip) strip.scrollLeft = strip.scrollWidth
+  // "모든 미디어"는 컷이 쌓일수록 레퍼런스 썸네일을 찾기 어려워지므로,
+  // 업로드한 원본 2장만 들어있는 좌측 "업로드" 탭에서 바로 찾는다.
+  const clickedUpload = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('*')) {
+      const txt = (el.textContent || '').trim()
+      if (txt === '업로드' && el.children.length === 0) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 && r.height > 0) {
+          return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+        }
+      }
+    }
+    return null
   })
-  await sleep(400)
+  if (clickedUpload) {
+    await page.mouse.click(clickedUpload.x, clickedUpload.y)
+    await sleep(500)
+  } else {
+    log('warn', '[findReferenceThumbs] "업로드" 탭 못 찾음 — 현재 화면에서 탐색')
+  }
 
   // 화면에 보이는 img 요소 좌표 수집 (shadow DOM 포함, 40px 이상)
   const imgPositions = await page.evaluate(() => {
@@ -1483,7 +1492,8 @@ async function preFlightCheck(page) {
   log('step', '[체크리스트] 레퍼런스 썸네일 확인 중…')
   const thumbs = await findReferenceThumbs(page)
   if (!thumbs.face && !thumbs.closeup) {
-    throw new Error('레퍼런스 이미지를 Flow 프로젝트에 먼저 업로드하세요 (yeori-face, yeori-closeup)')
+    log('warn', '[체크리스트] 레퍼런스 이미지 없음 — 레퍼런스 없이 진행 (텍스트 프롬프트만 사용)')
+    return
   }
   if (!thumbs.face) log('warn', '[체크리스트] yeori-face 없음 — 진행 계속')
   if (!thumbs.closeup) log('warn', '[체크리스트] yeori-closeup 없음 — 진행 계속')
@@ -1553,7 +1563,25 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   await page.keyboard.type(finalPrompt, { delay: 15 })
   await sleep(500)
 
+  // before 스냅샷 전에 "모든 미디어" 탭을 명시적으로 열어
+  // 전체 그리드가 이미 렌더링된 상태에서 기준선을 잡는다.
+  const clickedAllMedia = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('*')) {
+      const txt = (el.textContent || '').trim()
+      if (txt === '모든 미디어' && el.children.length === 0) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 && r.height > 0) return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+      }
+    }
+    return null
+  })
+  if (clickedAllMedia) {
+    await page.mouse.click(clickedAllMedia.x, clickedAllMedia.y)
+    await sleep(800)
+  }
+
   const before = await collectImageSrcs(page)
+  if (process.env.DIAG_NEWIMG) log('info', `[진단] 전체 스크롤 후 before=${before.length}`)
   await clickGenerate(page)
   await waitForTwoNewImages(page, before)
   return saveTwoNewImages(page, before, cut.no, ep, 'cut')
@@ -1917,8 +1945,9 @@ async function clickGenerate(page) {
         const txt = el.textContent.trim()
         const label = (el.getAttribute('aria-label') || '').toLowerCase()
         if (txt === '→' || txt === '▶' ||
+            /arrow_forward/.test(txt) ||
             label.includes('send') || label.includes('전송') || label.includes('보내기') ||
-            label.includes('submit') || label.includes('generate')) {
+            label.includes('submit') || label.includes('generate') || label.includes('만들기')) {
           return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
         }
       }
@@ -1950,7 +1979,8 @@ async function collectImageSrcs(page) {
     function collect(root, list = []) {
       for (const img of root.querySelectorAll('img')) {
         if (img.naturalWidth > 80 && img.complete && img.src) {
-          list.push({ src: img.src, w: img.naturalWidth, h: img.naturalHeight })
+          const r = img.getBoundingClientRect()
+          list.push({ src: img.src, w: img.naturalWidth, h: img.naturalHeight, top: Math.round(r.top), left: Math.round(r.left) })
         }
       }
       for (const el of root.querySelectorAll('*')) {
@@ -2181,6 +2211,21 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
   const beforeSet = new Set(beforeItems.map(i => i.src))
   const allItems = await collectImageSrcs(page)
   const newItems = allItems.filter(i => !beforeSet.has(i.src))
+
+  if (process.env.DIAG_NEWIMG) {
+    log('info', `[진단] before=${beforeItems.length} all=${allItems.length} new=${newItems.length}`)
+    const diagDir = path.join(CONFIG.downloadDir, '_diag')
+    ensureDir(diagDir)
+    for (let i = 0; i < newItems.length; i++) {
+      const it = newItems[i]
+      log('info', `[진단] new[${i}] top=${it.top} left=${it.left} ${it.w}x${it.h} ...${it.src.slice(-24)}`)
+      try {
+        await _saveImageTarget(page, it, path.join(diagDir, `cut${cutNo}_new${i}_top${it.top}_left${it.left}.jpg`))
+      } catch (e) {
+        log('warn', `[진단] new[${i}] 저장 실패: ${e.message}`)
+      }
+    }
+  }
 
   const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
   ensureDir(epDir)
