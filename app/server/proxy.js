@@ -280,6 +280,34 @@ app.post('/api/studio-state', (req, res) => {
   }
 })
 
+// ── GET/POST /api/gpoints — G포인트를 서버 경유로 공유 ───────────────────
+// lib/gpoints.js는 localStorage('aca_gpoints_v1')에 저장하는데, content_matrix_v3.html
+// 같은 다른 오리진(file://)에서는 localStorage를 절대 읽을 수 없어 이 엔드포인트로 중계한다.
+app.get('/api/gpoints', (req, res) => {
+  const gpPath = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
+  try {
+    if (fs.existsSync(gpPath)) {
+      res.json(JSON.parse(fs.readFileSync(gpPath, 'utf-8')))
+    } else {
+      res.json({})
+    }
+  } catch {
+    res.json({})
+  }
+})
+
+app.post('/api/gpoints', (req, res) => {
+  const gpDir  = path.join(MEDIA_ROOT, 'downloads')
+  const gpPath = path.join(gpDir, 'gpoints.json')
+  try {
+    fs.mkdirSync(gpDir, { recursive: true })
+    fs.writeFileSync(gpPath, JSON.stringify(req.body, null, 2), 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/save-video-prompts — video-prompts.json 에피소드별 저장 ────────
 app.post('/api/save-video-prompts', (req, res) => {
   const { epNum, prompts } = req.body
