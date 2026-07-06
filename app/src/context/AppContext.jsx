@@ -56,7 +56,7 @@ const defaultState = {
   },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
-  thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9' },
+  thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '' },
   publishing: {
     youtube:   { title: '', description: '', tags: '' },
     instagram: { title: '', description: '', tags: '' },
@@ -407,7 +407,12 @@ export function AppProvider({ children }) {
 
   // 상태 변경 시 localStorage 저장 + 서버 동기화 (디바운스 1.2초)
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch (err) {
+      // 썸네일 배경 이미지(데이터 URL) 등으로 용량 초과 시에도 서버 동기화는 계속 진행
+      console.error('[localStorage] 저장 실패 (용량 초과 가능성):', err)
+    }
 
     if (!serverChecked.current) return   // 서버 확인 전엔 동기화 보류
     if (skipNextSync.current) { skipNextSync.current = false; return }

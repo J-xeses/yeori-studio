@@ -91,11 +91,28 @@ function ThumbnailSection({ epNum }) {
 
   useEffect(() => { draw() }, [draw])
 
+  // 탭 전환/재접속 후에도 배경 이미지가 유지되도록 thumbnail.bgImageUrl(데이터 URL 또는 서버 URL)로 복원
+  useEffect(() => {
+    const bgUrl = thumbnail.bgImageUrl
+    if (!bgUrl || bgImage) return
+    const img = new Image()
+    if (/^https?:\/\//.test(bgUrl)) img.crossOrigin = 'anonymous'
+    img.onload = () => { bgRef.current = img; setBgImage(img) }
+    img.src = bgUrl
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thumbnail.bgImageUrl])
+
   const handleBgUpload = (file) => {
     if (!file) return
-    const url = URL.createObjectURL(file)
-    const img = new Image(); img.src = url
-    img.onload = () => { bgRef.current = img; setBgImage(img) }
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result
+      const img = new Image()
+      img.onload = () => { bgRef.current = img; setBgImage(img) }
+      img.src = dataUrl
+      set({ bgImageUrl: dataUrl })
+    }
+    reader.readAsDataURL(file)
   }
 
   const downloadPNG = () => {
@@ -148,6 +165,7 @@ function ThumbnailSection({ epNum }) {
     img.crossOrigin = 'anonymous' // 캔버스 toDataURL 시 오염 방지
     img.src = url
     img.onload = () => { bgRef.current = img; setBgImage(img) }
+    set({ bgImageUrl: url })
   }
 
   const saveThumbnail = async () => {
@@ -214,7 +232,7 @@ function ThumbnailSection({ epNum }) {
             {bgImage ? (
               <div className={s.bgLoaded}>
                 <span>✓ 이미지 로드됨</span>
-                <button className={s.removeBg} onClick={e => { e.stopPropagation(); setBgImage(null) }}>제거</button>
+                <button className={s.removeBg} onClick={e => { e.stopPropagation(); setBgImage(null); bgRef.current = null; set({ bgImageUrl: '' }) }}>제거</button>
               </div>
             ) : (
               <div className={s.bgPlaceholder}>
