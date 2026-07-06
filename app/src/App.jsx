@@ -65,7 +65,7 @@ function EpisodeSidebar({ onClose }) {
 
     return (
         <div style={{
-            width: 240, flexShrink: 0,
+            width: 240, flexShrink: 0, height: '100%',
             background: 'var(--bg2)',
             borderRight: '1px solid var(--border)',
             display: 'flex', flexDirection: 'column',
@@ -88,7 +88,7 @@ function EpisodeSidebar({ onClose }) {
             </div>
 
             {/* 에피소드 목록 */}
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 {epList.map(ep => {
                     const status = getEpStatus(ep)
                     const isActive = ep.id === activeEpisodeId
