@@ -57,6 +57,11 @@ const defaultState = {
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70 },
+  publishing: {
+    youtube:   { title: '', description: '', tags: '' },
+    instagram: { title: '', description: '', tags: '' },
+    tiktok:    { title: '', description: '', tags: '' },
+  },
   dashboard: { flowCredits: 100, klingCredits: 50, elevenlabsChars: 10000, monthBudget: 50000, spent: 0 },
   projectName: '새 프로젝트',
   savedAt: null,
@@ -222,6 +227,13 @@ function reducer(state, action) {
     case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
     case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
     case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
+    case 'SET_PUBLISHING': return {
+      ...state,
+      publishing: {
+        ...state.publishing,
+        [action.platform]: { ...(state.publishing?.[action.platform] || {}), ...action.p },
+      },
+    }
     case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }
     case 'SET_PROJECT': return { ...state, projectName: action.p }
     case 'MARK_SAVED': return { ...state, savedAt: new Date().toISOString() }
@@ -274,6 +286,7 @@ function reducer(state, action) {
       videoSettings: { ...defaultState.videoSettings, ...(action.p.videoSettings || {}) },
       ttsTabState:  { ...defaultState.ttsTabState,  ...(action.p.ttsTabState  || {}) },
       videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
+      publishing:   { ...defaultState.publishing,   ...(action.p.publishing   || {}) },
       savedAt: new Date().toISOString(),
     }
     default: return state
@@ -326,6 +339,12 @@ function migrateState(saved, init) {
     audioTexts: {},
     g3Confirmed: {},
     ...(saved.ttsTabState || {}),
+  }
+  saved.publishing = {
+    youtube:   { title: '', description: '', tags: '' },
+    instagram: { title: '', description: '', tags: '' },
+    tiktok:    { title: '', description: '', tags: '' },
+    ...(saved.publishing || {}),
   }
   return { ...init, ...saved }
 }

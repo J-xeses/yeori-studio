@@ -8,11 +8,11 @@ const TABS = [
   { id: 'voice',         label: '내 음성 삽입',      icon: '🎙️' },
   { id: 'extract',       label: '추출',              icon: '📤' },
   { id: 'video',         label: '영상 만들기',        icon: '🎞️' },
-  { id: 'thumbnail',     label: '썸네일',            icon: '🖼️' },
-  { id: 'dashboard',     label: '대시보드',           icon: '📊' },
   { id: 'retention',     label: '리텐션 훅',          icon: '🎯' },
   { id: 'editmeta',      label: '편집 메타',          icon: '🗂️' },
-  { id: 'storyarchive',  label: '스토리 아카이브',    icon: '📚' },  // ✅ 추가
+  { id: 'publishing',    label: '퍼블리싱',          icon: '🚀' },
+  { id: 'dashboard',     label: '대시보드',           icon: '📊' },
+  { id: 'storyarchive',  label: '스토리 아카이브',    icon: '📚' },
 ]
 
 export default function NavBar() {

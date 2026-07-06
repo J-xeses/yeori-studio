@@ -8,7 +8,7 @@ import TTSTab from './tabs/TTSTab'
 import VoiceTab from './tabs/VoiceTab'
 import ExtractTab from './tabs/ExtractTab'
 import VideoTab from './tabs/VideoTab'
-import ThumbnailTab from './tabs/ThumbnailTab'
+import PublishingTab from './tabs/PublishingTab'
 import DashboardTab from './tabs/DashboardTab'
 import RetentionHookTab from './tabs/RetentionHookTab'
 import EditMetaTab from './tabs/EditMetaTab'
@@ -22,7 +22,7 @@ const TAB_MAP = {
     voice: VoiceTab,
     extract: ExtractTab,
     video: VideoTab,
-    thumbnail: ThumbnailTab,
+    publishing: PublishingTab,
     dashboard: DashboardTab,
     retention: RetentionHookTab,
     editmeta: EditMetaTab,

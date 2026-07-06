@@ -1298,6 +1298,60 @@ app.post('/api/save-draft', (req, res) => {
   }
 })
 
+// ── POST /api/save-thumbnail — 썸네일 JPEG 저장 (downloads/final/ep{N}/thumb.jpg) ──
+app.post('/api/save-thumbnail', (req, res) => {
+  const { epNum, dataUrl } = req.body
+  if (!epNum || !dataUrl) return res.status(400).json({ error: 'epNum, dataUrl 필요' })
+  try {
+    const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
+    const buffer = Buffer.from(base64, 'base64')
+    const dir = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`)
+    fs.mkdirSync(dir, { recursive: true })
+    const outPath = path.join(dir, 'thumb.jpg')
+    fs.writeFileSync(outPath, buffer)
+    res.json({ success: true, path: outPath })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/check-final-assets — 최종 산출물(영상/썸네일) 존재 확인 ──
+app.post('/api/check-final-assets', (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
+  const thumbPath = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`, 'thumb.jpg')
+  res.json({
+    videoExists: fs.existsSync(videoPath), videoPath,
+    thumbExists: fs.existsSync(thumbPath), thumbPath,
+  })
+})
+
+// ── POST /api/package-final — ep{N}_final.mp4을 downloads/final/ep{N}/로 복사 ──
+// (thumb.jpg는 /api/save-thumbnail이 이미 같은 폴더에 저장해두므로 별도 복사 불필요)
+app.post('/api/package-final', (req, res) => {
+  const { epNum } = req.body
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
+  const finalDir  = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`)
+  const thumbPath = path.join(finalDir, 'thumb.jpg')
+  if (!fs.existsSync(videoPath)) {
+    return res.status(404).json({ error: `${videoPath} 없음 — 먼저 편집(G5)을 완료하세요` })
+  }
+  try {
+    fs.mkdirSync(finalDir, { recursive: true })
+    const destVideo = path.join(finalDir, `ep${epNum}_final.mp4`)
+    fs.copyFileSync(videoPath, destVideo)
+    res.json({
+      success: true,
+      finalDir,
+      files: { video: destVideo, thumb: fs.existsSync(thumbPath) ? thumbPath : null },
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')

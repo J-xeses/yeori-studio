@@ -8,8 +8,7 @@ const CYCLE = [
   { step: 3, label: 'TTS 음성', icon: '🔊', tab: 'tts' },
   { step: 4, label: '내 음성 삽입', icon: '🎙️', tab: 'voice' },
   { step: 5, label: '자막/영상 편집', icon: '🎞️', tab: 'video' },
-  { step: 6, label: '썸네일 제작', icon: '🖼️', tab: 'thumbnail' },
-  { step: 7, label: '업로드', icon: '🚀', tab: null },
+  { step: 6, label: '퍼블리싱', icon: '🚀', tab: 'publishing' },
 ]
 
 function CreditBar({ label, used, total, color }) {
