@@ -405,7 +405,6 @@ function PackageSection({ epNum }) {
       })
       setAssets(await res.json())
       setError('')
-      setPackageResult(null)
     } catch (err) {
       setError('확인 오류: ' + err.message)
     } finally {
@@ -420,7 +419,7 @@ function PackageSection({ epNum }) {
       body: JSON.stringify({ epNum }),
     })
       .then(r => r.json())
-      .then(data => { setAssets(data); setError(''); setPackageResult(null) })
+      .then(data => { setAssets(data); setError('') })
       .catch(err => setError('확인 오류: ' + err.message))
       .finally(() => setChecking(false))
   }, [epNum])
