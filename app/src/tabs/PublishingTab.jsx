@@ -11,6 +11,30 @@ const SECTIONS = [
   { key: 'upload',  label: '④ 업로드' },
 ]
 
+const RATIOS = [
+  { key: '16:9', label: '16:9 (YouTube)', w: 1280, h: 720 },
+  { key: '9:16', label: '9:16 (인스타/TikTok)', w: 1080, h: 1920 },
+]
+
+// object-fit: cover와 동일하게 비율을 유지하며 대상 영역을 꽉 채워 그린다
+function drawImageCover(ctx, img, x, y, w, h) {
+  const imgRatio = img.width / img.height
+  const boxRatio = w / h
+  let sx, sy, sw, sh
+  if (imgRatio > boxRatio) {
+    sh = img.height
+    sw = sh * boxRatio
+    sx = (img.width - sw) / 2
+    sy = 0
+  } else {
+    sw = img.width
+    sh = sw / boxRatio
+    sx = 0
+    sy = (img.height - sh) / 2
+  }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
+}
+
 // ── ① 썸네일 섹션 (기존 캔버스 편집기 + 스튜디오 이미지 불러오기 + 서버 저장) ──
 function ThumbnailSection({ epNum }) {
   const { state, dispatch } = useApp()
@@ -24,6 +48,8 @@ function ThumbnailSection({ epNum }) {
   const [saveStatus, setSaveStatus] = useState('')
 
   const set = (p) => dispatch({ type: 'SET_THUMB', p })
+  const ratio = thumbnail.ratio || '16:9'
+  const dims = RATIOS.find(r => r.key === ratio) || RATIOS[0]
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
@@ -31,7 +57,7 @@ function ThumbnailSection({ epNum }) {
     const W = canvas.width, H = canvas.height
     ctx.clearRect(0, 0, W, H)
     if (bgImage) {
-      ctx.drawImage(bgImage, 0, 0, W, H)
+      drawImageCover(ctx, bgImage, 0, 0, W, H)
     } else {
       const grad = ctx.createLinearGradient(0, 0, W, H)
       grad.addColorStop(0, '#1a0a2e'); grad.addColorStop(1, '#0a0a1f')
@@ -144,6 +170,19 @@ function ThumbnailSection({ epNum }) {
     <div className={s.root}>
       <div className={s.left}>
         <div className={s.panel}>
+          <div className={s.panelTitle}>썸네일 비율</div>
+          <div className={s.ratioRow}>
+            {RATIOS.map(r => (
+              <button key={r.key}
+                className={`${s.ratioBtn} ${ratio === r.key ? s.ratioBtnActive : ''}`}
+                onClick={() => set({ ratio: r.key })}>
+                {r.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={s.panel}>
           <div className={s.panelTitle}>썸네일 텍스트</div>
           <textarea className={s.textInput} rows={3}
             placeholder={'첫 줄 텍스트\n둘째 줄 텍스트'}
@@ -222,7 +261,7 @@ function ThumbnailSection({ epNum }) {
         </div>
 
         <button className={s.downloadBtn} onClick={downloadPNG}>
-          ⬇ PNG 다운로드 (1280×720)
+          ⬇ PNG 다운로드 ({dims.w}×{dims.h})
         </button>
         <button className={s.downloadBtn} onClick={saveThumbnail} style={{ background: '#059669' }}>
           💾 thumb.jpg로 서버 저장
@@ -233,10 +272,10 @@ function ThumbnailSection({ epNum }) {
       <div className={s.right}>
         <div className={s.previewHeader}>
           <span>썸네일 미리보기</span>
-          <span className={s.size}>1280 × 720</span>
+          <span className={s.size}>{dims.w} × {dims.h}</span>
         </div>
-        <div className={s.canvasWrap}>
-          <canvas ref={canvasRef} width={1280} height={720} className={s.canvas} />
+        <div className={s.canvasWrap} style={ratio === '9:16' ? { maxWidth: 320, aspectRatio: '9/16' } : undefined}>
+          <canvas ref={canvasRef} width={dims.w} height={dims.h} className={s.canvas} />
         </div>
       </div>
     </div>
@@ -376,11 +415,19 @@ function PackageSection({ epNum }) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ epNum }),
       })
-      const data = await res.json()
-      if (!data.success) { setError(data.error || '패키징 실패'); return }
+      const data = await res.json().catch((parseErr) => {
+        console.error('[패키징] 응답 JSON 파싱 실패:', parseErr)
+        return {}
+      })
+      if (!res.ok || !data.success) {
+        console.error('[패키징 실패]', { status: res.status, statusText: res.statusText, body: data })
+        setError(data.error || `패키징 실패 (HTTP ${res.status} ${res.statusText})`)
+        return
+      }
       setPackageResult(data)
       checkAssets()
     } catch (err) {
+      console.error('[패키징] 서버 요청 실패 (proxy.js가 실행 중인지 확인):', err)
       setError('패키징 오류: ' + err.message)
     } finally {
       setPackaging(false)

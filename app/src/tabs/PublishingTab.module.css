@@ -5,6 +5,11 @@
 .sectionTabActive { background: var(--accent); color: #fff; }
 .sectionBody { flex: 1; overflow: hidden; min-height: 0; }
 
+.ratioRow { display: flex; gap: 8px; padding: 12px 14px; }
+.ratioBtn { flex: 1; padding: 9px 10px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.06); color: var(--text-2); transition: all .15s; }
+.ratioBtn:hover { background: rgba(255,255,255,0.1); }
+.ratioBtnActive { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 .root { display: flex; height: 100%; overflow-y: auto; }
 
 .studioImgGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 12px 14px; }
