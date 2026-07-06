@@ -1327,6 +1327,18 @@ app.post('/api/check-final-assets', (req, res) => {
   })
 })
 
+// ── GET /api/check-final?ep={N} — 최종 영상/썸네일 존재 확인 (video/thumb 개별 { exists, path }) ──
+app.get('/api/check-final', (req, res) => {
+  const epNum = req.query.ep
+  if (!epNum) return res.status(400).json({ error: 'ep 쿼리 파라미터 필요' })
+  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
+  const thumbPath = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`, 'thumb.jpg')
+  res.json({
+    video: { exists: fs.existsSync(videoPath), path: videoPath },
+    thumb: { exists: fs.existsSync(thumbPath), path: thumbPath },
+  })
+})
+
 // ── POST /api/package-final — ep{N}_final.mp4을 downloads/final/ep{N}/로 복사 ──
 // (thumb.jpg는 /api/save-thumbnail이 이미 같은 폴더에 저장해두므로 별도 복사 불필요)
 app.post('/api/package-final', (req, res) => {
