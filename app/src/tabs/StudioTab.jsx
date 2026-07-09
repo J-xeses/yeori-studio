@@ -55,6 +55,7 @@ export default function StudioTab() {
   const [g2Approved, setG2Approved] = useState({})
   const [checklist, setChecklist] = useState({})       // cut.id → { face, hair, outfit, proportion, background }
   const [checklistCutId, setChecklistCutId] = useState(null) // 체크리스트 팝업이 열려있는 컷 id
+  const [imageRatio, setImageRatio] = useState({})     // `${cut.id}_${idx}` → '9:16' | '16:9' (파일 실제 비율과 무관하게 사용자가 직접 지정)
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -678,13 +679,24 @@ export default function StudioTab() {
               <div className={s.imageCompareRow}>
                 {(images[cut.id] || []).map((url, idx) => {
                   const isSelected = (selectedImage[cut.id] ?? 0) === idx
+                  const ratioKey = `${cut.id}_${idx}`
+                  const ratio = imageRatio[ratioKey] || '9:16'
                   return (
                     <div key={idx}
                       className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
+                      style={{ aspectRatio: ratio === '16:9' ? '16/9' : '9/16' }}
                       onClick={() => setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))}
                     >
                       <img src={url} alt="" />
                       <span className={s.compareLetter}>{String.fromCharCode(97 + idx).toUpperCase()}</span>
+                      <div className={s.ratioToggle} onClick={e => e.stopPropagation()}>
+                        {['9:16', '16:9'].map(r => (
+                          <button key={r}
+                            className={ratio === r ? s.ratioToggleActive : ''}
+                            onClick={() => setImageRatio(p => ({ ...p, [ratioKey]: r }))}
+                          >{r}</button>
+                        ))}
+                      </div>
                       {isSelected && <div className={s.selectedBadge}>✓ G2 승인용 선택됨</div>}
                       <button className={s.compareRemove} onClick={e => {
                         e.stopPropagation()
