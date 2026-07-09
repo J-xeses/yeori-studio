@@ -69,12 +69,13 @@
 }
 .scene { font-size: 12.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
-/* a/b 이미지 비교 뷰 */
-.imageCompareRow { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-height: 22vh; }
+/* a/b 이미지 비교 뷰 — 높이를 먼저 고정하고 폭은 비율에서 자동으로 나오게 함.
+   (반대로 폭을 고정하고 비율로 높이를 뽑으면, 9:16처럼 세로로 긴 비율에서는
+   높이가 뷰포트를 넘어서 버려서 화면 배율을 아무리 조정해도 안 고쳐졌음) */
+.imageCompareRow { display: flex; align-items: flex-start; gap: 8px; height: 40vh; }
 
 .compareImg {
-  position: relative; flex: 0 1 calc(50% - 4px); width: calc(50% - 4px); max-width: calc(50% - 4px);
-  min-width: 0;
+  position: relative; height: 100%; max-width: calc(50% - 4px);
   /* aspect-ratio는 JSX에서 인라인 스타일로 지정(9:16 숏폼 / 16:9 롱폼 토글) —
      파일의 실제 픽셀 비율에 의존하지 않고 사용자가 지정한 비율로 강제 표시 */
   border-radius: 8px; overflow: hidden; cursor: pointer;
@@ -118,8 +119,7 @@
 .compareRemove:hover { background: var(--red); }
 
 .compareEmpty {
-  flex: 0 1 calc(50% - 4px); width: calc(50% - 4px); max-width: calc(50% - 4px);
-  min-width: 0; aspect-ratio: 9/16; border-radius: 8px;
+  height: 100%; max-width: calc(50% - 4px); aspect-ratio: 9/16; border-radius: 8px;
   border: 2px dashed var(--border); background: var(--bg-input); cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; transition: background-color .15s;
