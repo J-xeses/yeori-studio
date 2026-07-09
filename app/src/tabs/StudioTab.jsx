@@ -701,7 +701,7 @@ export default function StudioTab() {
                     </div>
                   )
                 })}
-                {!images[cut.id]?.length && (
+                {(images[cut.id]?.length || 0) < 2 && (
                   <div className={s.compareEmpty}
                     onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}>
                     {generating[cut.id] ? (
@@ -711,8 +711,8 @@ export default function StudioTab() {
                       </>
                     ) : (
                       <>
-                        <span className={s.uploadIcon}>🖼️</span>
-                        <span>이미지 업로드</span>
+                        <span className={s.uploadIcon}>{images[cut.id]?.length ? '➕' : '🖼️'}</span>
+                        <span>{images[cut.id]?.length ? '이미지 추가' : '이미지 업로드'}</span>
                         <span className={s.uploadSub}>클릭하여 선택</span>
                       </>
                     )}
@@ -722,7 +722,7 @@ export default function StudioTab() {
                   style={{ display: 'none' }}
                   onChange={e => handleImageUpload(cut.id, e.target.files[0])} />
               </div>
-              {images[cut.id]?.length > 0 && (
+              {(images[cut.id]?.length || 0) >= 2 && (
                 <div className={s.addMoreRow} onClick={() => fileRefs.current[cut.id]?.click()}>
                   + 이미지 추가
                 </div>
