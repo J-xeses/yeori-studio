@@ -75,7 +75,10 @@
 .imageCompareRow { display: flex; align-items: flex-start; gap: 8px; height: 40vh; }
 
 .compareImg {
-  position: relative; height: 100%; max-width: calc(50% - 4px);
+  /* height:100%(고정)를 쓰면 16:9처럼 원래 폭이 넓어야 하는 비율에서
+     max-width가 폭만 줄이고 높이는 그대로라 비율이 깨짐 — max-height로
+     바꿔서 세로/가로 캡 중 더 타이트한 쪽에 맞춰 비율이 정확히 유지되도록 함 */
+  position: relative; max-height: 100%; max-width: calc(50% - 4px);
   /* aspect-ratio는 JSX에서 인라인 스타일로 지정(9:16 숏폼 / 16:9 롱폼 토글) —
      파일의 실제 픽셀 비율에 의존하지 않고 사용자가 지정한 비율로 강제 표시 */
   border-radius: 8px; overflow: hidden; cursor: pointer;
@@ -119,7 +122,7 @@
 .compareRemove:hover { background: var(--red); }
 
 .compareEmpty {
-  height: 100%; max-width: calc(50% - 4px); aspect-ratio: 9/16; border-radius: 8px;
+  max-height: 100%; max-width: calc(50% - 4px); aspect-ratio: 9/16; border-radius: 8px;
   border: 2px dashed var(--border); background: var(--bg-input); cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; transition: background-color .15s;
