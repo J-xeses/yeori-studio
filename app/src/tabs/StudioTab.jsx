@@ -5,6 +5,15 @@ import s from './StudioTab.module.css'
 
 const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
 
+// G2 승인 전 체크리스트 항목
+const CHECKLIST_ITEMS = [
+  { key: 'face',       label: '얼굴 자연스럽게 고정됨' },
+  { key: 'hair',       label: '헤어 웨이브/다크브라운 유지' },
+  { key: 'outfit',     label: '의상 프롬프트와 일치' },
+  { key: 'proportion', label: '신체비율 정상 (슬림/모델 비율)' },
+  { key: 'background', label: '배경 씬과 적합' },
+]
+
 function extractFlowProjectId(url) {
   if (!url) return null
   const trimmed = url.trim()
@@ -44,6 +53,8 @@ export default function StudioTab() {
   const [generating, setGenerating] = useState({})
   const [confirmed, setConfirmed] = useState({})
   const [g2Approved, setG2Approved] = useState({})
+  const [checklist, setChecklist] = useState({})       // cut.id → { face, hair, outfit, proportion, background }
+  const [checklistCutId, setChecklistCutId] = useState(null) // 체크리스트 팝업이 열려있는 컷 id
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -662,71 +673,65 @@ export default function StudioTab() {
       <div className={s.grid}>
         {cuts.map((cut) => (
           <div key={cut.id} className={s.card}>
-            {/* 왼쪽: 이미지 영역 */}
+            {/* 왼쪽: a/b 이미지 비교 영역 */}
             <div className={s.cardLeft}>
-              {images[cut.id]?.length > 0 && (
-                <div style={{display:'flex',gap:'4px',flexWrap:'wrap',padding:'6px',background:'rgba(0,0,0,0.2)',flexShrink:0}}>
-                  {images[cut.id].map((url, idx) => (
-                    <div key={idx} onClick={() => setSelectedImage(prev => ({...prev, [cut.id]: idx}))}
-                      style={{width:'58px',height:'58px',borderRadius:'5px',overflow:'hidden',cursor:'pointer',
-                        border: (selectedImage[cut.id]??0) === idx ? '2px solid #a78bfa' : '2px solid transparent',
-                        flexShrink:0}}>
-                      <img src={url} style={{width:'100%',height:'100%',objectFit:'cover'}} alt="" />
+              <div className={s.imageCompareRow}>
+                {(images[cut.id] || []).map((url, idx) => {
+                  const isSelected = (selectedImage[cut.id] ?? 0) === idx
+                  return (
+                    <div key={idx}
+                      className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
+                      onClick={() => setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))}
+                    >
+                      <img src={url} alt="" />
+                      <span className={s.compareLetter}>{String.fromCharCode(97 + idx).toUpperCase()}</span>
+                      {isSelected && <div className={s.selectedBadge}>✓ G2 승인용 선택됨</div>}
+                      <button className={s.compareRemove} onClick={e => {
+                        e.stopPropagation()
+                        setImages(p => {
+                          const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                          const newArr = arr.filter((_, i) => i !== idx)
+                          const n = { ...p }
+                          if (newArr.length) n[cut.id] = newArr
+                          else delete n[cut.id]
+                          return n
+                        })
+                        setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                      }}>✕</button>
                     </div>
-                  ))}
-                  <div onClick={() => fileRefs.current[cut.id]?.click()}
-                    style={{width:'58px',height:'58px',borderRadius:'5px',border:'2px dashed rgba(255,255,255,0.2)',
-                      display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',
-                      flexShrink:0,color:'#5c5870',fontSize:'18px'}}>+</div>
-                </div>
-              )}
-              <div className={s.imageArea}
-                onClick={() => !images[cut.id]?.length && !generating[cut.id] && fileRefs.current[cut.id]?.click()}
-                style={images[cut.id]?.length > 0 ? { backgroundImage: `url(${images[cut.id][selectedImage[cut.id]??0]})` } : {}}
-              >
-                {!images[cut.id]?.length && !generating[cut.id] && (
-                  <div className={s.uploadPlaceholder}>
-                    <span className={s.uploadIcon}>🖼️</span>
-                    <span>이미지 업로드</span>
-                    <span className={s.uploadSub}>클릭하여 선택</span>
+                  )
+                })}
+                {!images[cut.id]?.length && (
+                  <div className={s.compareEmpty}
+                    onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}>
+                    {generating[cut.id] ? (
+                      <>
+                        <span style={{ fontSize: 24, animation: 'spin 1s linear infinite' }}>⟳</span>
+                        <span style={{ fontSize: 11, color: 'var(--purple)' }}>{selected === 'Flow' ? 'Flow 생성 중...' : 'Gemini 생성 중...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className={s.uploadIcon}>🖼️</span>
+                        <span>이미지 업로드</span>
+                        <span className={s.uploadSub}>클릭하여 선택</span>
+                      </>
+                    )}
                   </div>
-                )}
-                {generating[cut.id] && (
-                  <div className={s.uploadPlaceholder}>
-                    <span style={{fontSize:24,animation:'spin 1s linear infinite'}}>⟳</span>
-                    <span style={{fontSize:11,color:'var(--purple)'}}>{selected === 'Flow' ? 'Flow 생성 중...' : 'Gemini 생성 중...'}</span>
-                  </div>
-                )}
-                {images[cut.id] && (
-                  <button className={s.removeImg} onClick={e => {
-                    e.stopPropagation()
-                    setImages(p => {
-                      const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
-                      const idx = selectedImage[cut.id] ?? 0
-                      const newArr = arr.filter((_, i) => i !== idx)
-                      const n = {...p}
-                      if (newArr.length) n[cut.id] = newArr
-                      else delete n[cut.id]
-                      return n
-                    })
-                    setSelectedImage(prev => ({...prev, [cut.id]: 0}))
-                  }}>✕</button>
                 )}
                 <input ref={el => fileRefs.current[cut.id] = el} type="file" accept="image/*"
                   style={{ display: 'none' }}
                   onChange={e => handleImageUpload(cut.id, e.target.files[0])} />
               </div>
-              {apiKeys.gemini && cut.imagePrompt && !images[cut.id] && (
+              {images[cut.id]?.length > 0 && (
+                <div className={s.addMoreRow} onClick={() => fileRefs.current[cut.id]?.click()}>
+                  + 이미지 추가
+                </div>
+              )}
+              {apiKeys.gemini && cut.imagePrompt && !images[cut.id]?.length && (
                 <button
                   onClick={() => generateSingleImage(cut)}
                   disabled={generating[cut.id]}
-                  style={{
-                    width:'100%', padding:'5px 0', flexShrink:0,
-                    background:'var(--purple-bg)', border:'none', borderTop:'1px solid var(--border)',
-                    color:'var(--purple)', fontSize:11, fontWeight:700,
-                    cursor: generating[cut.id] ? 'not-allowed' : 'pointer',
-                    fontFamily:'Noto Sans KR, sans-serif',
-                  }}
+                  className={s.autoGenBtn}
                 >
                   {generating[cut.id] ? '⟳ 생성 중...' : '🤖 자동 생성'}
                 </button>
@@ -745,6 +750,8 @@ export default function StudioTab() {
                     onClick={() => {
                       setImages(p => ({ ...p, [cut.id]: [] }))
                       setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                      setConfirmed(p => ({ ...p, [cut.id]: false }))
+                      setChecklist(p => ({ ...p, [cut.id]: {} }))
                     }}
                     style={{
                       fontSize: 10, padding: '2px 7px', borderRadius: 4,
@@ -778,7 +785,7 @@ export default function StudioTab() {
               <div className={s.confirmRow} style={{marginTop:'auto'}}>
                 <button className={s.confirmBtn}
                   disabled={!images[cut.id]?.length || confirmed[cut.id]}
-                  onClick={() => setConfirmed(p => ({ ...p, [cut.id]: true }))}>
+                  onClick={() => setChecklistCutId(cut.id)}>
                   {confirmed[cut.id] ? '✓ 컨펌' : '컨펌'}
                 </button>
                 <button className={s.regenBtn}
@@ -788,6 +795,7 @@ export default function StudioTab() {
                       return
                     }
                     setConfirmed(p => ({ ...p, [cut.id]: false }))
+                    setChecklist(p => ({ ...p, [cut.id]: {} }))
                     setImages(p => { const n = {...p}; delete n[cut.id]; return n })
                     if (selected === 'Flow') {
                       runFlowForCut(cut)
@@ -828,6 +836,42 @@ export default function StudioTab() {
           </button>
         </div>
       )}
+
+      {/* G2 승인 전 체크리스트 팝업 */}
+      {checklistCutId && (() => {
+        const checklistCut = cuts.find(c => c.id === checklistCutId)
+        const cl = checklist[checklistCutId] || {}
+        const doneCount = CHECKLIST_ITEMS.filter(item => cl[item.key]).length
+        const allDone = doneCount === CHECKLIST_ITEMS.length
+        return (
+          <div className={s.checklistOverlay} onClick={() => setChecklistCutId(null)}>
+            <div className={s.checklistModal} onClick={e => e.stopPropagation()}>
+              <div className={s.checklistTitle}>CUT {checklistCut?.no} · G2 승인 전 체크리스트</div>
+              <div className={s.checklistSub}>{doneCount}/{CHECKLIST_ITEMS.length}개 확인됨</div>
+              {CHECKLIST_ITEMS.map(item => (
+                <label key={item.key} className={s.checklistItem}>
+                  <input type="checkbox" checked={!!cl[item.key]}
+                    onChange={e => setChecklist(p => ({
+                      ...p,
+                      [checklistCutId]: { ...p[checklistCutId], [item.key]: e.target.checked },
+                    }))} />
+                  <span>{item.label}</span>
+                </label>
+              ))}
+              <div className={s.checklistActions}>
+                <button className={s.checklistClose} onClick={() => setChecklistCutId(null)}>닫기</button>
+                <button className={s.checklistDone} disabled={!allDone}
+                  onClick={() => {
+                    setConfirmed(p => ({ ...p, [checklistCutId]: true }))
+                    setChecklistCutId(null)
+                  }}>
+                  {allDone ? '✓ 컨펌 완료' : `${CHECKLIST_ITEMS.length - doneCount}개 더 체크하세요`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
