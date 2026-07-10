@@ -49,10 +49,10 @@
 .card:hover { border-color: var(--border-light); }
 
 .cardLeft {
-  /* 프레임(imageCompareRow)이 정사각형(40vh × 40vh)으로 고정되므로,
+  /* 프레임(imageCompareRow)이 정사각형(60vh × 60vh)으로 고정되므로,
      cardLeft 폭도 그 프레임 크기에 맞춰 딱 맞게(패딩만 더해서) 감싸도록 함 —
      남는 폭은 오른쪽 프롬프트 영역(cardRight)이 더 넓게 쓰게 됨 */
-  flex: 0 0 auto; width: calc(40vh + 20px); display: flex; flex-direction: column;
+  flex: 0 0 auto; width: calc(60vh + 20px); display: flex; flex-direction: column;
   border-right: 1px solid var(--border); flex-shrink: 0;
   padding: 10px; gap: 6px;
 }
@@ -72,12 +72,12 @@
 }
 .scene { font-size: 12.5px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
 
-/* a/b 이미지 비교 뷰 — 프레임을 정사각형(width:height를 같은 단위 40vh로 고정)으로
+/* a/b 이미지 비교 뷰 — 프레임을 정사각형(width:height를 같은 단위 60vh로 고정)으로
    만듦. 9:16 두 장을 나란히 놓은 전체 모양은 대략 9:8, 16:9 두 장을 쌓은 전체
    모양은 대략 8:9라 둘 다 1:1(정사각형)에 가까워서, 정사각형 프레임을 쓰면
    어느 배치든 여백이 대칭적으로 최소화됨. width/height를 같은 vh 단위로 고정하면
    뷰포트 가로세로 비율과 무관하게 항상 정사각형이 유지됨 */
-.imageCompareRow { display: flex; align-items: flex-start; gap: 8px; width: 40vh; height: 40vh; }
+.imageCompareRow { display: flex; align-items: flex-start; gap: 8px; width: 60vh; height: 60vh; }
 
 .compareImg {
   /* height:100%(고정)를 쓰면 16:9처럼 원래 폭이 넓어야 하는 비율에서
