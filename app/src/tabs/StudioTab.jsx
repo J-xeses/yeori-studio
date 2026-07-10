@@ -674,17 +674,25 @@ export default function StudioTab() {
       <div className={s.grid}>
         {cuts.map((cut) => (
           <div key={cut.id} className={s.card}>
-            {/* 왼쪽: a/b 이미지 비교 영역 */}
+            {/* 왼쪽: a/b 이미지 비교 영역 — 프레임(전체 영역) 크기는 컷마다 항상 동일하게
+                고정하고, 그 안에서 9:16이면 좌우 분할, 16:9가 하나라도 있으면 상하 분할 */}
             <div className={s.cardLeft}>
-              <div className={s.imageCompareRow}>
-                {(images[cut.id] || []).map((url, idx) => {
+              {(() => {
+                const cutImages = images[cut.id] || []
+                const isStacked = cutImages.some((_, i) => (imageRatio[`${cut.id}_${i}`] || '9:16') === '16:9')
+                const slotStyle = isStacked
+                  ? { maxWidth: '100%', maxHeight: 'calc(50% - 4px)' }
+                  : { maxWidth: 'calc(50% - 4px)', maxHeight: '100%' }
+                return (
+              <div className={s.imageCompareRow} style={{ flexDirection: isStacked ? 'column' : 'row' }}>
+                {cutImages.map((url, idx) => {
                   const isSelected = (selectedImage[cut.id] ?? 0) === idx
                   const ratioKey = `${cut.id}_${idx}`
                   const ratio = imageRatio[ratioKey] || '9:16'
                   return (
                     <div key={idx}
                       className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
-                      style={{ aspectRatio: ratio === '16:9' ? '16/9' : '9/16' }}
+                      style={{ aspectRatio: ratio === '16:9' ? '16/9' : '9/16', ...slotStyle }}
                       onClick={() => setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))}
                     >
                       <img src={url} alt="" />
@@ -713,8 +721,8 @@ export default function StudioTab() {
                     </div>
                   )
                 })}
-                {(images[cut.id]?.length || 0) < 2 && (
-                  <div className={s.compareEmpty}
+                {cutImages.length < 2 && (
+                  <div className={s.compareEmpty} style={{ ...slotStyle, aspectRatio: isStacked ? '16/9' : '9/16' }}
                     onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}>
                     {generating[cut.id] ? (
                       <>
@@ -723,8 +731,8 @@ export default function StudioTab() {
                       </>
                     ) : (
                       <>
-                        <span className={s.uploadIcon}>{images[cut.id]?.length ? '➕' : '🖼️'}</span>
-                        <span>{images[cut.id]?.length ? '이미지 추가' : '이미지 업로드'}</span>
+                        <span className={s.uploadIcon}>{cutImages.length ? '➕' : '🖼️'}</span>
+                        <span>{cutImages.length ? '이미지 추가' : '이미지 업로드'}</span>
                         <span className={s.uploadSub}>클릭하여 선택</span>
                       </>
                     )}
@@ -734,6 +742,8 @@ export default function StudioTab() {
                   style={{ display: 'none' }}
                   onChange={e => handleImageUpload(cut.id, e.target.files[0])} />
               </div>
+                )
+              })()}
               {(images[cut.id]?.length || 0) >= 2 && (
                 <div className={s.addMoreRow} onClick={() => fileRefs.current[cut.id]?.click()}>
                   + 이미지 추가
