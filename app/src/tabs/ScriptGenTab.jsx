@@ -827,7 +827,7 @@ ${currentScript}
               </div>
               <div className={s.edField}>
                 <label>이미지 프롬프트</label>
-                <textarea rows={3}
+                <textarea rows={6}
                   placeholder="Young Korean woman at cafe window, cinematic, 4K"
                   value={cuts[activeCut]?.imagePrompt || ''}
                   onChange={e => updateCut(cuts[activeCut].id, 'imagePrompt', e.target.value)} />
