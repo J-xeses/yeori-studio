@@ -122,7 +122,19 @@ export default function VideoTab() {
   // (이전 컷에서 선택한 9:16/16:9가 그대로 남아있어 다른 컷 영상이 잘못된 비율로 보이던 문제)
   useEffect(() => {
     const clips = videoClips[selectedCutId] || []
-    if (clips[0]?.ratio) setAspectRatio(clips[0].ratio)
+    const first = clips[0]
+    if (!first) return
+    if (first.ratio) { setAspectRatio(first.ratio); return }
+    // 이 fix 이전에 올라온 클립처럼 ratio가 저장돼 있지 않으면 즉석에서 감지
+    let cancelled = false
+    const probe = document.createElement('video')
+    probe.preload = 'metadata'
+    probe.onloadedmetadata = () => {
+      if (cancelled || !probe.videoWidth || !probe.videoHeight) return
+      setAspectRatio(probe.videoWidth >= probe.videoHeight ? '16:9' : '9:16')
+    }
+    probe.src = first.url
+    return () => { cancelled = true }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCutId])
 
@@ -258,7 +270,8 @@ export default function VideoTab() {
           vid.preload = 'metadata'
           vid.onloadedmetadata = () => {
             const dur = Math.round(vid.duration * 100) / 100
-            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true }
+            const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
+            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio }
             setVideoClips(p => {
               const existing = p[cut.id] || []
               if (existing.some(c => c.url === url)) return p
@@ -367,6 +380,9 @@ export default function VideoTab() {
                 tempVideo.onerror = resolve
               })
               const dur = isFinite(tempVideo.duration) ? Math.round(tempVideo.duration * 100) / 100 : (cut.duration || 8)
+              const ratio = tempVideo.videoWidth && tempVideo.videoHeight
+                ? (tempVideo.videoWidth >= tempVideo.videoHeight ? '16:9' : '9:16')
+                : undefined
               setVideoClips(p => {
                 const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
                 if (existing.some(c => c.url === url)) return p
@@ -375,7 +391,7 @@ export default function VideoTab() {
                   [cut.id]: [...existing, {
                     url,
                     name: `AI 생성 (cut_${String(cut.no).padStart(2, '0')}.mp4)`,
-                    duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true,
+                    duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio,
                   }],
                 }
               })
@@ -430,11 +446,21 @@ export default function VideoTab() {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'done' }))
                 setFfmpegLog(p => ({ ...p, [cut.id]: `✅ ${ev.message}` }))
                 const url = `http://localhost:3001${ev.url}?t=${Date.now()}`
+                const tempVideo = document.createElement('video')
+                tempVideo.preload = 'metadata'
+                tempVideo.src = url
+                await new Promise(resolve => {
+                  tempVideo.onloadedmetadata = resolve
+                  tempVideo.onerror = resolve
+                })
+                const ratio = tempVideo.videoWidth && tempVideo.videoHeight
+                  ? (tempVideo.videoWidth >= tempVideo.videoHeight ? '16:9' : '9:16')
+                  : undefined
                 setVideoClips(p => ({
                   ...p,
                   [cut.id]: [...(p[cut.id] || []), {
                     url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
-                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true,
+                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio,
                   }],
                 }))
               } else {
