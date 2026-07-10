@@ -798,7 +798,7 @@ ${currentScript}
                 <div key={key} className={s.edField}>
                   <label>{label}</label>
                   {key === 'action' || key === 'narration' || key === 'dialogue' ? (
-                    <textarea rows={2}
+                    <textarea rows={key === 'action' ? 5 : 3}
                       placeholder={ph}
                       value={cuts[activeCut]?.[key] || ''}
                       onChange={e => updateCut(cuts[activeCut].id, key, e.target.value)} />
