@@ -74,7 +74,7 @@
 
 /* ── NEW LAYOUT ── */
 
-.sidebar { width: 280px; min-width: 280px; display: flex; flex-direction: column; height: 100%; overflow: hidden; border-right: 1px solid var(--border); padding: 10px; gap: 8px; box-sizing: border-box; }
+.sidebar { width: 30vh; min-width: 30vh; display: flex; flex-direction: column; height: 80vh; overflow: hidden; border-right: 1px solid var(--border); padding: 10px; gap: 8px; box-sizing: border-box; }
 
 /* 사이드바 압축 */
 .sidePanel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }

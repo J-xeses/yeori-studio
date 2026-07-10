@@ -1,7 +1,7 @@
 .root { display: flex; height: 100%; overflow: hidden; }
 
 .sidebar {
-  width: 280px; min-width: 280px;
+  width: 30vh; min-width: 30vh; height: 80vh;
   background: var(--bg-panel);
   border-right: 1px solid var(--border);
   display: flex; flex-direction: column;

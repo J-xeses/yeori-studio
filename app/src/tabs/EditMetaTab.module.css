@@ -5,9 +5,10 @@
 /* 왼쪽: 기존 메인 콘텐츠 */
 .mainCol { flex: 1; min-width: 0; padding: 24px; overflow-y: auto; }
 
-/* 오른쪽: G4 대기 접수 패널 */
+/* 왼쪽: G4 대기 접수 패널 (주석과 달리 JSX 렌더 순서상 실제로는 왼쪽 사이드바) */
 .sidePanel {
-  width: 300px;
+  width: 30vh;
+  height: 80vh;
   flex-shrink: 0;
   border-right: 0.5px solid #252523;
   background: #0d0d0b;
