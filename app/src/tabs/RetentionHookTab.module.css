@@ -1,6 +1,6 @@
 /* src/tabs/RetentionHookTab.module.css */
 
-.wrap { padding: 24px; max-width: 900px; }
+.wrap { padding: 24px; width: 100%; box-sizing: border-box; }
 
 .header { margin-bottom: 20px; }
 .title  { font-size: 18px; font-weight: 600; color: #e8e6e0; margin-bottom: 6px; }
