@@ -738,6 +738,31 @@ app.post('/api/save-audio', async (req, res) => {
   })
 })
 
+// ── POST /api/save-voice-insert — 사용자 업로드 음성 파일 원본 그대로 저장 ──
+app.post('/api/save-voice-insert', (req, res) => {
+  const ep      = req.query.ep
+  const cutNo   = req.query.cutNo
+  const idx     = req.query.idx
+  const ext     = (req.query.ext || 'mp3').replace(/[^a-z0-9]/gi, '') || 'mp3'
+  if (!ep || cutNo == null || idx == null) return res.status(400).json({ error: 'ep, cutNo, idx 필요' })
+
+  const dir = path.join(MEDIA_ROOT, 'downloads', 'voice-insert', `ep${ep}`)
+  fs.mkdirSync(dir, { recursive: true })
+  const fileName = `cut_${String(cutNo).padStart(2,'0')}_${idx}.${ext}`
+  const filePath = path.join(dir, fileName)
+
+  const chunks = []
+  req.on('data', chunk => chunks.push(chunk))
+  req.on('end', () => {
+    try {
+      fs.writeFileSync(filePath, Buffer.concat(chunks))
+      res.json({ ok: true, url: `/downloads/voice-insert/ep${ep}/${fileName}` })
+    } catch (err) {
+      res.status(500).json({ error: err.message })
+    }
+  })
+})
+
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
 app.post('/api/run-ffmpeg', (req, res) => {
   const { ep, cutNo } = req.body

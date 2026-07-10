@@ -67,6 +67,7 @@ const defaultState = {
   savedAt: null,
   videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
   ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {} },
+  voiceInsertState: { tracks: {} },
 }
 
 function reducer(state, action) {
@@ -225,6 +226,7 @@ function reducer(state, action) {
     case 'SET_VIDEO': return { ...state, videoSettings: { ...state.videoSettings, ...action.p } }
     case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
     case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
+    case 'SET_VOICE_INSERT_STATE': return { ...state, voiceInsertState: { ...state.voiceInsertState, ...action.p } }
     case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
     case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
     case 'SET_PUBLISHING': return {
@@ -285,6 +287,7 @@ function reducer(state, action) {
       ttsSettings:  { ...defaultState.ttsSettings,  ...(action.p.ttsSettings  || {}) },
       videoSettings: { ...defaultState.videoSettings, ...(action.p.videoSettings || {}) },
       ttsTabState:  { ...defaultState.ttsTabState,  ...(action.p.ttsTabState  || {}) },
+      voiceInsertState: { ...defaultState.voiceInsertState, ...(action.p.voiceInsertState || {}) },
       videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
       publishing:   { ...defaultState.publishing,   ...(action.p.publishing   || {}) },
       savedAt: new Date().toISOString(),
@@ -339,6 +342,10 @@ function migrateState(saved, init) {
     audioTexts: {},
     g3Confirmed: {},
     ...(saved.ttsTabState || {}),
+  }
+  saved.voiceInsertState = {
+    tracks: {},
+    ...(saved.voiceInsertState || {}),
   }
   saved.publishing = {
     youtube:   { title: '', description: '', tags: '' },
