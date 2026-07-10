@@ -118,6 +118,14 @@ export default function VideoTab() {
 
   useEffect(() => { setSelectedClipIdx(0) }, [selectedCutId])
 
+  // 컷을 바꾸면 그 컷에 이미 올라온 영상의 실제 비율로 미리보기 모드를 자동 전환
+  // (이전 컷에서 선택한 9:16/16:9가 그대로 남아있어 다른 컷 영상이 잘못된 비율로 보이던 문제)
+  useEffect(() => {
+    const clips = videoClips[selectedCutId] || []
+    if (clips[0]?.ratio) setAspectRatio(clips[0].ratio)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCutId])
+
   const allG4Done = cuts.length > 0 && cuts.every(c => g4Approved[c.id])
 
   const drawPreview = useCallback(() => {
@@ -276,7 +284,8 @@ export default function VideoTab() {
       vid.preload = 'metadata'
       vid.onloadedmetadata = () => {
         const dur = Math.round(vid.duration * 100) / 100
-        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true }
+        const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
+        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio }
         setVideoClips(p => ({ ...p, [cutId]: [...(p[cutId] || []), obj] }))
       }
       vid.src = url
@@ -744,6 +753,12 @@ export default function VideoTab() {
                               <span className={s.clipLabel}> ({String.fromCharCode(97 + idx)})</span>
                             </span>
                             <span className={s.clipDurLabel}>{clip.duration != null ? `${clip.duration}s` : '?'}</span>
+                            {clip.ratio && (
+                              <span className={`${s.clipRatioBadge} ${clip.ratio !== aspectRatio ? s.clipRatioMismatch : ''}`}
+                                title={clip.ratio !== aspectRatio ? `현재 미리보기 모드(${aspectRatio})와 다른 비율입니다` : ''}>
+                                {clip.ratio}
+                              </span>
+                            )}
                             <button className={s.clipDel} onClick={e => { e.stopPropagation(); removeClip(selCut.id, idx) }}>✕</button>
                           </div>
                           <div className={s.clipTrimBody} onClick={e => e.stopPropagation()}>
@@ -783,7 +798,7 @@ export default function VideoTab() {
                 <div className={s.videoEmptyBtns}>
                   <label className={s.uploadBtn}>
                     📁 로컬 업로드
-                    <input type="file" accept=".mp4,.mov,.webm" multiple hidden
+                    <input type="file" accept="video/*" multiple hidden
                       onChange={e => handleVideoUpload(selCut.id, e.target.files)} />
                   </label>
                   <button className={s.proxyBtn} onClick={() => loadFromProxy(selCut)}>
