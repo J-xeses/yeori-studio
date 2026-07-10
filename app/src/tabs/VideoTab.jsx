@@ -621,8 +621,8 @@ export default function VideoTab() {
         <div className={s.videoWrapper}
           style={{
             aspectRatio: aspectRatio === '9:16' ? '9/16' : '16/9',
-            maxHeight: aspectRatio === '9:16' ? '70vh' : '55vh',
-            width: aspectRatio === '9:16' ? 'auto' : '100%',
+            maxHeight: aspectRatio === '9:16' ? '78vh' : '60vh',
+            maxWidth: '100%',
             margin: '0 auto',
           }}>
           <div className={s.videoInner}>

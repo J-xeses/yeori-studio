@@ -114,7 +114,7 @@
 .overlayOn { background: rgba(139,92,246,.15); border-color: rgba(139,92,246,.4); color: var(--accent-light); }
 
 /* 영상 래퍼 */
-.videoWrapper { position: relative; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.videoWrapper { position: relative; background: #000; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; align-self: center; }
 .videoInner { width: 100%; height: calc(100% - 40px); position: relative; }
 .mainVideo { width: 100%; height: 100%; object-fit: contain; display: block; }
 .mainVideoEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-3); font-size: 13px; width: 100%; padding: 40px 0; }
