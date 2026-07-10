@@ -162,7 +162,14 @@ input[type=range]::-moz-range-thumb {
   background: var(--bg-input); border: 1px solid var(--border);
   border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
 }
-.trackHeader { display: flex; align-items: center; justify-content: space-between; }
+.trackHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.trackVoiceOverride {
+  flex: 1; min-width: 0; background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text-3); font-size: 11px; font-family: var(--mono);
+  padding: 4px 8px; outline: none; transition: all .15s;
+}
+.trackVoiceOverride:focus { border-color: var(--accent); color: var(--text-2); }
+.trackVoiceOverride:not(:placeholder-shown) { color: var(--accent-light); border-color: var(--accent-border); }
 .trackLabel {
   font-size: 12px; font-weight: 700; color: var(--accent-light);
   background: var(--accent-glow); border: 1px solid var(--accent-border);

@@ -17,6 +17,7 @@ function makeTrack(type, text = '', trackDefaults) {
     type,
     text,
     url: null,
+    voiceId: '', // 비어있으면 목소리 탭의 기본값을 사용 — 트랙별로 다른 목소리를 지정해 한 컷에 여러 목소리를 조합할 수 있음
     settings: { ...(defs[type] || FALLBACK_DEFAULTS[type]) },
   }
 }
@@ -212,7 +213,7 @@ export default function TTSTab() {
     const track = list.find(t => t.id === trackId)
     if (!track || !track.text.trim()) { alert('텍스트를 입력하세요'); return null }
     const variant = getVoiceTabsForCut(cutId).find(v => v.id === voiceTabId)
-    const voiceId = variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+    const voiceId = track.voiceId?.trim() || variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
 
     setTrackLoading(p => ({ ...p, [trackId]: true }))
     try {
@@ -341,12 +342,12 @@ export default function TTSTab() {
         const vts     = getVoiceTabsForCut(c.id)
         const primary = vts[0]
         const key     = trackKey(c.id, primary.id)
-        const voiceId = primary.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
         let cutTrks = tracks[key] || initTracksForCut(c, trackDefaults)
-        // 각 트랙 생성
+        // 각 트랙 생성 (트랙별 목소리 지정이 있으면 우선 사용 — 한 컷에 여러 목소리 조합 가능)
         const updated = []
         for (const t of cutTrks) {
           if (!t.text.trim()) { updated.push(t); continue }
+          const voiceId = t.voiceId?.trim() || primary.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
           setTrackLoading(p => ({ ...p, [t.id]: true }))
           try {
             const res = await elTTS(
@@ -475,6 +476,13 @@ export default function TTSTab() {
                   <span className={`${s.trackLabel} ${track.type === 'narration' ? s.trackLabelNarr : ''}`}>
                     {track.type === 'dialogue' ? '💬 대사' : '🎙 나레이션'}
                   </span>
+                  <input className={s.trackVoiceOverride}
+                    placeholder={`탭 기본값 (${activeVariant.voiceId.slice(0, 8)}…)`}
+                    title="이 트랙만 다른 목소리로 생성 — 한 컷에 여러 목소리를 조합할 때 사용"
+                    value={track.voiceId}
+                    onChange={e => setTracksForKey(activeKey, prev =>
+                      prev.map(t => t.id === track.id ? { ...t, voiceId: e.target.value } : t)
+                    )} />
                   <div className={s.trackHeaderBtns}>
                     <button className={s.trackResetBtn} title="기본값 복원"
                       onClick={() => setTracksForKey(activeKey, prev =>
