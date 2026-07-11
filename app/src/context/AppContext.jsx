@@ -21,6 +21,7 @@ const makeEpisode = (id, number) => ({
     location: '카페',
     mood: '감성',
     cutCount: 7,
+    contentType: 'LF',
     character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
   },
   cuts: makeCuts(7),
@@ -44,7 +45,7 @@ const defaultState = {
   },
 
   // 하위 호환: 현재 에피소드 직접 접근용 (기존 탭들 그대로 작동)
-  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 7, character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터' },
+  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 7, contentType: 'LF', character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터' },
   cuts: makeCuts(7),
   scriptRaw: '',
 
@@ -326,6 +327,16 @@ function migrateState(saved, init) {
         ep.episode = { ...ep.episode, character: upgradeCharacter(ep.episode.character) }
     })
   }
+  // contentType 마이그레이션 (기존 에피소드 하위 호환)
+  if (saved.episode && !saved.episode.contentType)
+    saved.episode = { ...saved.episode, contentType: 'LF' }
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.episode && !ep.episode.contentType)
+        ep.episode = { ...ep.episode, contentType: 'LF' }
+    })
+  }
+
   if (!saved.openTabIds || !saved.openTabIds.length)
     saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
   saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])

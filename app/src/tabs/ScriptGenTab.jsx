@@ -7,6 +7,27 @@ import s from './ScriptGenTab.module.css'
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
 const MOODS = ['감성', '유머', '정보', '힐링', '동기부여', '일상', '여행', 'K문화', '공감', '치명']
 
+const CONTENT_TYPES = [
+  { value: 'LF',   label: 'LF — YouTube 롱폼' },
+  { value: 'SF',   label: 'SF — YouTube 숏폼' },
+  { value: 'IG_R', label: 'IG_R — Instagram 릴스' },
+  { value: 'IG_P', label: 'IG_P — Instagram 피드' },
+  { value: 'IG_S', label: 'IG_S — Instagram 스토리' },
+  { value: 'TK',   label: 'TK — TikTok' },
+]
+
+const EP_GROUPS = [
+  { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'] },
+  { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
+  { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'] },
+]
+
+function getEpisodeCode(contentType, number) {
+  const n = String(number).padStart(2, '0')
+  if (['IG_R', 'IG_P', 'IG_S'].includes(contentType)) return `${contentType}${n}`
+  return `${contentType}_E${n}`
+}
+
 function cleanMarkdown(text) {
   return text
     .replace(/\*\*/g, '')     // ** 굵은 글씨 제거
@@ -105,6 +126,7 @@ export default function ScriptGenTab() {
   const [revisionInput, setRevisionInput] = useState('')
   const [revisionLoading, setRevisionLoading] = useState(false)
   const [revisionHistory, setRevisionHistory] = useState([])
+  const [collapsedGroups, setCollapsedGroups] = useState({})
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -578,23 +600,35 @@ ${currentScript}
           {episodeOpen && (
             <div className={s.epBody}>
               <div className={s.field}>
+                <label>콘텐츠 유형</label>
+                <select value={episode.contentType || 'LF'}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { contentType: e.target.value } })}>
+                  {CONTENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className={s.field}>
                 <label>에피소드 번호</label>
-                <input
-                  type="number" min="1" value={episode.number}
-                  style={numError ? { borderColor: '#ef4444' } : {}}
-                  onChange={e => {
-                    const num = parseInt(e.target.value) || 1
-                    const isDup = Object.values(episodes || {}).some(
-                      ep => ep.id !== activeEpisodeId && ep.episode.number === num
-                    )
-                    if (isDup) {
-                      setNumError(`EP${num}은 이미 사용 중입니다`)
-                    } else {
-                      setNumError('')
-                      dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
-                    }
-                  }}
-                />
+                <div className={s.epNumRow}>
+                  <input
+                    type="number" min="1" value={episode.number}
+                    style={numError ? { borderColor: '#ef4444' } : {}}
+                    onChange={e => {
+                      const num = parseInt(e.target.value) || 1
+                      const isDup = Object.values(episodes || {}).some(
+                        ep => ep.id !== activeEpisodeId && ep.episode.number === num
+                      )
+                      if (isDup) {
+                        setNumError(`EP${num}은 이미 사용 중입니다`)
+                      } else {
+                        setNumError('')
+                        dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
+                      }
+                    }}
+                  />
+                  <span className={s.epCodeBadge}>
+                    {getEpisodeCode(episode.contentType || 'LF', episode.number)}
+                  </span>
+                </div>
                 {numError && (
                   <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
                 )}
@@ -661,39 +695,57 @@ ${currentScript}
           </button>
           {episodeListOpen && (
             <div className={s.epListBody}>
-              {Object.values(episodes || {}).map(ep => {
-                const epCuts = ep.cuts || []
-                const epG1 = epCuts.filter(c => gData[`cut_${c.no}`]?.g1).length
-                const epTotal = epCuts.length
-                const epAllDone = epTotal > 0 && epG1 === epTotal
-                const isActive = ep.id === activeEpisodeId
+              {EP_GROUPS.map(group => {
+                const groupEps = Object.values(episodes || {}).filter(ep =>
+                  group.types.includes(ep.episode?.contentType || 'LF')
+                )
+                if (groupEps.length === 0) return null
+                const isCollapsed = collapsedGroups[group.id]
                 return (
-                  <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
-                    <div className={s.epListHeader}
-                      onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}>
-                      <span className={s.epListNum}>EP{ep.episode?.number}</span>
-                      <span className={s.epListTitle}>{ep.episode?.title || '(제목 없음)'}</span>
-                      {epAllDone && <span className={s.epG1Badge}>G1 ✅</span>}
-                    </div>
-                    {epTotal > 0 && (
-                      <div className={s.epG1Bar}>
-                        <div className={s.epG1BarTrack}>
-                          <div className={s.epG1BarFill} style={{ width: `${(epG1/epTotal)*100}%` }} />
+                  <div key={group.id} className={s.epGroup}>
+                    <button className={s.epGroupHeader}
+                      onClick={() => setCollapsedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}>
+                      <span className={s.epGroupLabel}>{group.label}</span>
+                      <span className={s.epGroupCount}>{groupEps.length}</span>
+                      <span className={s.toggleIcon}>{isCollapsed ? '▶' : '▼'}</span>
+                    </button>
+                    {!isCollapsed && groupEps.map(ep => {
+                      const epCuts = ep.cuts || []
+                      const epG1 = epCuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+                      const epTotal = epCuts.length
+                      const epAllDone = epTotal > 0 && epG1 === epTotal
+                      const isActive = ep.id === activeEpisodeId
+                      const epCode = getEpisodeCode(ep.episode?.contentType || 'LF', ep.episode?.number)
+                      return (
+                        <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
+                          <div className={s.epListHeader}
+                            onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}>
+                            <span className={s.epTypeBadge}>{epCode}</span>
+                            <span className={s.epListTitle}>{ep.episode?.title || '(제목 없음)'}</span>
+                            {epAllDone && <span className={s.epG1Badge}>G1 ✅</span>}
+                          </div>
+                          {epTotal > 0 && (
+                            <div className={s.epG1Bar}>
+                              <div className={s.epG1BarTrack}>
+                                <div className={s.epG1BarFill} style={{ width: `${(epG1/epTotal)*100}%` }} />
+                              </div>
+                              <span className={s.epG1Count}>{epG1}/{epTotal}</span>
+                            </div>
+                          )}
+                          {isActive && epTotal > 0 && !epAllDone && (
+                            <button className={s.epApproveBtn} onClick={approveAllG1}>
+                              ✅ 전체 G1 승인
+                            </button>
+                          )}
+                          {isActive && epAllDone && (
+                            <button className={s.epApproveBtn} style={{background:'rgba(34,197,94,.2)',borderColor:'rgba(34,197,94,.4)',color:'#4ade80'}}
+                              onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
+                              🎬 스튜디오 탭으로 →
+                            </button>
+                          )}
                         </div>
-                        <span className={s.epG1Count}>{epG1}/{epTotal}</span>
-                      </div>
-                    )}
-                    {isActive && epTotal > 0 && !epAllDone && (
-                      <button className={s.epApproveBtn} onClick={approveAllG1}>
-                        ✅ 전체 G1 승인
-                      </button>
-                    )}
-                    {isActive && epAllDone && (
-                      <button className={s.epApproveBtn} style={{background:'rgba(34,197,94,.2)',borderColor:'rgba(34,197,94,.4)',color:'#4ade80'}}
-                        onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
-                        🎬 스튜디오 탭으로 →
-                      </button>
-                    )}
+                      )
+                    })}
                   </div>
                 )
               })}

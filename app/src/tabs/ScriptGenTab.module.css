@@ -179,6 +179,40 @@
 .epApproveBtn { width: 100%; padding: 5px 0; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; background: var(--accent-glow); border: 1px solid var(--accent-border); color: var(--accent-light); transition: all .15s; }
 .epApproveBtn:hover { background: var(--accent); color: #fff; }
 
+/* 에피소드 번호 + 코드 배지 */
+.epNumRow { display: flex; align-items: center; gap: 8px; }
+.epNumRow input { width: 70px; flex-shrink: 0; }
+.epCodeBadge {
+  font-size: 11px; font-weight: 800; letter-spacing: .5px;
+  color: var(--accent-light); background: var(--accent-glow);
+  border: 1px solid var(--accent-border); border-radius: 5px;
+  padding: 3px 8px; font-family: var(--mono); white-space: nowrap;
+}
+
+/* 에피소드 목록 그룹 */
+.epGroup { display: flex; flex-direction: column; gap: 4px; }
+.epGroupHeader {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; padding: 5px 6px; border-radius: 6px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-3); transition: background .12s;
+}
+.epGroupHeader:hover { background: var(--bg-hover); }
+.epGroupLabel { font-size: 11px; font-weight: 700; flex: 1; text-align: left; }
+.epGroupCount {
+  font-size: 10px; font-weight: 700;
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1px 6px; color: var(--text-3);
+}
+
+/* 에피소드 유형 코드 배지 */
+.epTypeBadge {
+  font-size: 10px; font-weight: 800; letter-spacing: .4px;
+  color: var(--accent-light); background: var(--accent-glow);
+  border: 1px solid var(--accent-border); border-radius: 4px;
+  padding: 1px 5px; font-family: var(--mono); flex-shrink: 0;
+}
+
 /* 컷 목록 G1 배지 */
 .g1Badge { display: inline-block; margin-left: 4px; font-size: 9px; font-weight: 800; color: #4ade80; background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); border-radius: 3px; padding: 1px 4px; vertical-align: middle; }
 
