@@ -3,6 +3,8 @@ title Yeori Studio
 cd /d "%~dp0"
 
 set ACC_HTML=%~dp0a_creative_cutter.html
+set MATRIX_HTML=%~dp0content_matrix_v3.html
+set RADAR_HTML=%~dp0TREND RADAR v7.html
 set CHROME="C:\Program Files\Google\Chrome\Application\chrome.exe"
 set PROFILE=C:\yeori-studio\app\.chrome-profile-flow
 
@@ -54,6 +56,18 @@ if exist "%ACC_HTML%" (
     echo        a_creative_cutter.html not found -- skip
 )
 start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:5173"
+if exist "%MATRIX_HTML%" (
+    start "" %CHROME% --user-data-dir=%PROFILE% "%MATRIX_HTML%"
+    timeout /t 1 /nobreak >nul
+) else (
+    echo        content_matrix_v3.html not found -- skip
+)
+if exist "%RADAR_HTML%" (
+    start "" %CHROME% --user-data-dir=%PROFILE% "%RADAR_HTML%"
+    timeout /t 1 /nobreak >nul
+) else (
+    echo        TREND RADAR v7.html not found -- skip
+)
 
 :: [2] Start server in foreground (blocks here until Ctrl+C)
 echo.
