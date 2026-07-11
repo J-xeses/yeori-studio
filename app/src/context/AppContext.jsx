@@ -146,10 +146,15 @@ function reducer(state, action) {
     case 'RENUMBER_EPISODE': {
       const ep = state.episodes[action.id]
       if (!ep) return state
+      const epCode = (type, num) => {
+        const n = String(num).padStart(2, '0')
+        return ['IG_R', 'IG_P', 'IG_S'].includes(type) ? `${type}${n}` : `${type}_E${n}`
+      }
+      const newCode = epCode(ep.episode.contentType || 'LF', action.number)
       const isDup = Object.values(state.episodes).some(
-        e => e.id !== action.id && e.episode.number === action.number
+        e => e.id !== action.id && epCode(e.episode.contentType || 'LF', e.episode.number) === newCode
       )
-      if (isDup) return state   // 중복이면 변경하지 않음 (UI에서 에러 표시)
+      if (isDup) return state   // 전체 코드 중복이면 변경하지 않음 (UI에서 에러 표시)
       const updated = { ...ep, episode: { ...ep.episode, number: action.number } }
       return {
         ...state,
