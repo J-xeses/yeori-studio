@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Creative Agent — 콘텐츠 제작 매트릭스 v3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0c0c0f;
+    --surface: #141418;
+    --surface2: #1c1c22;
+    --surface3: #242430;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e6f0;
+    --text2: #9490a8;
+    --text3: #5c5870;
+    --purple: #a78bfa;
+    --purple-bg: rgba(167,139,250,0.12);
+    --teal: #34d399;
+    --teal-bg: rgba(52,211,153,0.1);
+    --amber: #fbbf24;
+    --amber-bg: rgba(251,191,36,0.1);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.1);
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.1);
+    --pink: #f472b6;
+    --pink-bg: rgba(244,114,182,0.1);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; line-height: 1.6; min-height: 100vh; }
+
+  /* ── 헤더 ── */
+  .app-header {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 14px 24px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .app-logo { display: flex; align-items: center; gap: 10px; font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--purple); }
+  .app-logo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-meta { font-size: 11px; color: var(--text3); font-family: 'Space Mono', monospace; }
+
+  /* ── 탭 네비게이션 ── */
+  .tab-nav {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; display: flex; gap: 4px;
+  }
+  .tab-btn {
+    padding: 12px 16px; border: none; background: transparent;
+    color: var(--text3); font-size: 12px; font-weight: 500;
+    font-family: 'Noto Sans KR', sans-serif; cursor: pointer;
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+  /* ── 레이아웃 ── */
+  .layout { display: flex; height: calc(100vh - 97px); }
+
+  /* ── 사이드바 ── */
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 16px 12px; }
+  .sidebar-section { margin-bottom: 20px; }
+  .sidebar-label { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; padding: 0 4px; }
+
+  .channel-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+  }
+  .channel-item:hover { background: var(--surface2); }
+  .channel-item.active { background: var(--purple-bg); border: 1px solid rgba(167,139,250,0.25); }
+  .channel-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .channel-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+  .channel-item.active .channel-name { color: var(--purple); }
+  .channel-count { font-size: 10px; font-family: 'Space Mono', monospace; color: var(--text3); background: var(--surface3); padding: 1px 6px; border-radius: 10px; }
+
+  .ep-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px 7px 20px; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+  }
+  .ep-item:hover { background: var(--surface2); }
+  .ep-item.active { background: var(--purple-bg); }
+  .ep-type-badge { font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 700; flex-shrink: 0; }
+  .ep-type-shorts { background: var(--blue-bg); color: var(--blue); }
+  .ep-type-midform { background: var(--pink-bg); color: var(--pink); }
+  .ep-type-longform { background: var(--purple-bg); color: var(--purple); }
+  .ep-type-series { background: var(--amber-bg); color: var(--amber); }
+  .ep-name { font-size: 11px; color: var(--text2); flex: 1; }
+  .ep-item.active .ep-name { color: var(--purple); }
+
+  .sidebar-add {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: var(--radius-sm);
+    cursor: pointer; border: 1px dashed var(--border2);
+    color: var(--text3); font-size: 11px; transition: all 0.15s; margin-top: 6px;
+  }
+  .sidebar-add:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-bg); }
+
+  /* ── 메인 ── */
+  .main { flex: 1; overflow: auto; padding: 20px 24px; }
+
+  /* ── 대시보드 탭 ── */
+  .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .dash-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .dash-card-label { font-size: 10px; color: var(--text3); margin-bottom: 6px; letter-spacing: 0.3px; }
+  .dash-card-value { font-size: 24px; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .dash-card-sub { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  .channel-overview { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .channel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .channel-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .channel-card-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .channel-card-title { font-size: 14px; font-weight: 700; }
+  .channel-card-type { font-size: 10px; color: var(--text3); margin-left: auto; }
+  .progress-bar-wrap { background: var(--surface2); border-radius: 4px; height: 6px; margin-bottom: 8px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+  .channel-card-stats { display: flex; gap: 16px; }
+  .channel-stat { font-size: 11px; color: var(--text3); }
+  .channel-stat strong { color: var(--text); font-family: 'Space Mono', monospace; }
+
+  /* ── 제작 매트릭스 탭 ── */
+  .matrix-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .matrix-title { font-size: 18px; font-weight: 700; flex: 1; }
+  .matrix-subtitle { font-size: 12px; color: var(--text3); margin-left: 8px; font-weight: 400; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .stat-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .stat-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* 개런티 포인트 행 */
+  .gp-row { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; }
+  .gp-label { font-size: 10px; color: var(--text3); margin-right: 4px; font-weight: 700; letter-spacing: 0.8px; }
+  .gp-badge {
+    padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700;
+    border: 1px solid var(--border2); color: var(--text3); background: transparent; cursor: default;
+  }
+  .gp-badge.pass { background: var(--teal-bg); color: var(--teal); border-color: rgba(52,211,153,0.3); }
+  .gp-badge.fail { background: var(--red-bg); color: var(--red); border-color: rgba(248,113,113,0.3); }
+  .gp-badge.pending { background: var(--surface2); color: var(--text3); }
+
+  /* 타임라인 */
+  .timeline-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+  .timeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 11px; color: var(--text3); }
+  .tl-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 1px; }
+  .tl-seg { border-radius: 2px; transition: width 0.4s; cursor: pointer; }
+  .tl-legend { display: flex; gap: 14px; margin-top: 8px; flex-wrap: wrap; }
+  .tl-leg { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text3); }
+  .tl-leg-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* 칩 필터 */
+  .chips-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .chip-label { font-size: 10px; color: var(--text3); margin-right: 2px; }
+  .chip { padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text2); font-size: 11px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; white-space: nowrap; }
+  .chip:hover { border-color: var(--purple); color: var(--purple); }
+  .chip.active { background: var(--purple-bg); border-color: rgba(167,139,250,0.4); color: var(--purple); font-weight: 500; }
+  .chip-clear { padding: 4px 10px; border-radius: 20px; border: 1px dashed var(--border2); background: transparent; color: var(--text3); font-size: 11px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .chip-clear:hover { color: var(--red); border-color: var(--red); }
+
+  /* 테이블 */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--surface2); padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 0.8px; text-transform: uppercase; border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+  thead th:hover { color: var(--text); }
+  thead th.sorted { color: var(--purple); }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+  tbody tr.highlighted { background: rgba(167,139,250,0.05); }
+  td { padding: 10px 12px; vertical-align: middle; }
+
+  .cut-no { font-family: 'Space Mono', monospace; font-size: 13px; font-weight: 700; color: var(--purple); }
+  .hook-flag { display: block; font-size: 9px; color: var(--amber); font-family: 'Space Mono', monospace; margin-top: 2px; }
+  .special-flag { display: block; font-size: 9px; color: var(--pink); font-family: 'Space Mono', monospace; margin-top: 2px; }
+  .scene-name { font-size: 12px; font-weight: 500; }
+  .timecode { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text2); }
+  .duration { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; white-space: nowrap; }
+  .b-portrait { background: var(--blue-bg); color: var(--blue); }
+  .b-detail   { background: var(--purple-bg); color: var(--purple); }
+  .b-broll    { background: rgba(100,116,139,0.15); color: #94a3b8; }
+  .b-special  { background: var(--pink-bg); color: var(--pink); }
+  .b-veo      { background: var(--blue-bg); color: var(--blue); }
+  .b-kling    { background: var(--teal-bg); color: var(--teal); }
+  .b-high     { background: var(--red-bg); color: var(--red); }
+  .b-mid      { background: var(--amber-bg); color: var(--amber); }
+  .b-low      { background: var(--teal-bg); color: var(--teal); }
+  .b-todo     { background: rgba(100,116,139,0.15); color: #94a3b8; }
+  .b-wip      { background: var(--amber-bg); color: var(--amber); }
+  .b-done     { background: var(--teal-bg); color: var(--teal); }
+
+  /* 개런티 포인트 셀 */
+  .gp-cell { display: flex; gap: 3px; }
+  .gp-dot { width: 14px; height: 14px; border-radius: 3px; font-size: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; transition: all 0.1s; }
+  .gp-dot.pass { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(52,211,153,0.3); }
+  .gp-dot.fail { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+
+  .note-text { font-size: 11px; color: var(--text3); max-width: 180px; line-height: 1.4; }
+  .status-sel { background: transparent; border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text2); font-size: 11px; padding: 3px 6px; font-family: 'Noto Sans KR', sans-serif; cursor: pointer; outline: none; }
+  .status-sel:focus { border-color: var(--purple); }
+
+  .row-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+  tbody tr:hover .row-actions { opacity: 1; }
+  .row-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text3); cursor: pointer; font-size: 11px; transition: all 0.1s; }
+  .row-btn:hover { color: var(--text); border-color: var(--border2); }
+  .row-btn.del:hover { color: var(--red); border-color: var(--red-bg); }
+
+  /* 메모 */
+  .memo-btn { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid var(--border); background: var(--surface2); color: var(--text3); cursor: pointer; font-size: 12px; transition: all 0.15s; }
+  .memo-btn:hover { color: var(--purple); border-color: rgba(167,139,250,0.4); }
+  .memo-btn.has-memo { color: var(--amber); border-color: rgba(251,191,36,0.35); background: var(--amber-bg); }
+  .memo-btn.active { color: var(--purple); border-color: rgba(167,139,250,0.6); background: var(--purple-bg); }
+  .memo-row td { padding: 0 !important; border-bottom: 1px solid var(--border) !important; }
+  .memo-panel { padding: 10px 14px 12px 48px; background: rgba(167,139,250,0.04); border-top: 1px solid rgba(167,139,250,0.12); }
+  .memo-textarea { width: 100%; background: var(--surface2); border: 1px solid rgba(167,139,250,0.25); border-radius: var(--radius-sm); color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; padding: 8px 10px; resize: vertical; min-height: 64px; outline: none; }
+  .memo-textarea:focus { border-color: rgba(167,139,250,0.6); }
+  .memo-save-row { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+
+  /* 빈 상태 */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text3); }
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+  .total-row td { background: var(--surface2); font-weight: 700; font-size: 12px; }
+
+  /* ── 에이전트 리더 탭 ── */
+  .leader-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .leader-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .leader-card-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .leader-card-title .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .rule-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--surface2); margin-bottom: 6px; font-size: 11px; }
+  .rule-item .rule-if { color: var(--text3); flex: 1; }
+  .rule-item .rule-then { color: var(--amber); font-weight: 700; white-space: nowrap; }
+
+  .agent-status { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .agent-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; text-align: center; }
+  .agent-icon { font-size: 20px; margin-bottom: 4px; }
+  .agent-name { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .agent-state { font-size: 10px; font-weight: 700; }
+  .agent-state.idle { color: var(--text3); }
+  .agent-state.running { color: var(--amber); }
+  .agent-state.done { color: var(--teal); }
+
+  /* ── 공통 버튼 ── */
+  .btn-primary { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); background: var(--purple); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; border: none; font-family: 'Noto Sans KR', sans-serif; transition: opacity 0.15s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius-sm); background: var(--surface2); color: var(--text2); font-size: 12px; cursor: pointer; border: 1px solid var(--border2); font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; }
+  .btn-secondary:hover { border-color: var(--purple); color: var(--purple); }
+  .icon-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface2); color: var(--text2); cursor: pointer; transition: all 0.15s; }
+  .icon-btn:hover { border-color: var(--purple); color: var(--purple); }
+
+  /* ── 모달 ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 24px; width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto; transform: translateY(20px); transition: transform 0.2s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-full { grid-column: 1 / -1; }
+  .form-label { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 5px; display: block; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; padding: 8px 10px; outline: none; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--purple); }
+  .form-textarea { resize: vertical; min-height: 72px; }
+  .form-select option { background: var(--surface2); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .btn-cancel { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: transparent; color: var(--text2); font-size: 12px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .btn-save { padding: 8px 20px; border-radius: var(--radius-sm); background: var(--purple); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; border: none; font-family: 'Noto Sans KR', sans-serif; }
+
+  /* ── 인스타 채널 ── */
+  .ig-stage-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 18px; }
+  .ig-stage-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color 0.15s; }
+  .ig-stage-card:hover { border-color: var(--pink); }
+  .ig-stage-card.active { border-color: var(--pink); background: var(--pink-bg); }
+  .ig-stage-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .ig-stage-badge { width: 28px; height: 28px; border-radius: 50%; background: var(--pink-bg); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .ig-stage-title { font-size: 12px; font-weight: 700; color: var(--text); }
+  .ig-stage-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .ig-auto-bar { height: 4px; background: var(--surface3); border-radius: 2px; margin: 8px 0 4px; overflow: hidden; }
+  .ig-auto-fill { height: 100%; border-radius: 2px; background: var(--pink); }
+  .ig-auto-label { font-size: 10px; color: var(--text3); display: flex; justify-content: space-between; }
+  .ig-kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 16px; }
+  .ig-kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+  .ig-kpi-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .ig-kpi-value { font-size: 18px; font-weight: 700; font-family: 'Space Mono', monospace; }
+  .ig-kpi-target { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .ig-kpi-pass { color: var(--teal); } .ig-kpi-fail { color: var(--red); } .ig-kpi-pend { color: var(--amber); }
+  .ig-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+  .ig-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ig-gp-row { display: flex; gap: 6px; margin-bottom: 14px; align-items: center; }
+  .ig-gp-badge { padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700; border: 1px solid var(--border2); color: var(--text3); background: transparent; }
+  .ig-gp-badge.pass { background: var(--teal-bg); color: var(--teal); border-color: rgba(52,211,153,0.3); }
+  .ig-gp-badge.pending { background: var(--surface2); color: var(--text3); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid rgba(52,211,153,0.4); color: var(--teal); font-size: 12px; padding: 8px 16px; border-radius: var(--radius-sm); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .toast.show { opacity: 1; }
+
+  /* 검색 */
+  .search-wrap { position: relative; display: flex; align-items: center; }
+  .search-wrap svg { position: absolute; left: 10px; color: var(--text3); }
+  .search-input { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 12px; padding: 7px 10px 7px 32px; width: 200px; outline: none; transition: border-color 0.15s; }
+  .search-input:focus { border-color: var(--purple); }
+  .search-input::placeholder { color: var(--text3); }
+
+  /* 섹션 타이틀 */
+  .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<header class="app-header">
+  <div class="app-logo">
+    <div class="app-logo-dot"></div>
+    A Creative Agent — 콘텐츠 제작 매트릭스 v3
+  </div>
+  <div class="header-right">
+    <div class="header-meta" id="header-meta">로드 중...</div>
+    <div class="icon-btn" onclick="exportCSV()" title="CSV 내보내기">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v8M4 6l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+</header>
+
+<!-- 탭 네비게이션 -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 대시보드</button>
+  <button class="tab-btn" data-tab="matrix" onclick="switchTab('matrix', this)">✂️ 제작 매트릭스</button>
+  <button class="tab-btn" data-tab="leader" onclick="switchTab('leader', this)">🤖 에이전트 리더</button>
+  <button class="tab-btn" data-tab="studio" onclick="switchTab('studio', this)">🎬 스튜디오 연동</button>
+  <button class="tab-btn" data-tab="settings" onclick="switchTab('settings', this)">⚙️ 설정</button>
+</nav>
+
+<div class="layout">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">채널</div>
+      <div id="channel-list"></div>
+      <!-- 인스타 채널 고정 -->
+      <div class="channel-item ${currentChannel==='ch_insta_yeori'?'active':''}" id="insta-sidebar-item" onclick="switchToInsta()">
+        <div class="channel-dot" style="background:#f472b6"></div>
+        <div class="channel-name">📱 서여리 인스타</div>
+        <div class="channel-count" id="insta-post-count">0</div>
+      </div>
+      <div class="sidebar-add" onclick="openChannelModal()">+ 채널 추가</div>
+    </div>
+    <div class="sidebar-section" id="ep-section">
+      <div class="sidebar-label">에피소드</div>
+      <div id="ep-list"></div>
+      <div class="sidebar-add" onclick="openEpModal()">+ 에피소드 추가</div>
+    </div>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main">
+
+    <!-- 대시보드 탭 -->
+    <div id="tab-dashboard">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <span style="font-size:11px;color:var(--text3)">기준:</span>
+        <span class="chip active" id="dash-scope-all" onclick="setDashScope('all',this)">전체 프로젝트</span>
+        <span class="chip" id="dash-scope-ch" onclick="setDashScope('channel',this)">현재 채널</span>
+      </div>
+      <div class="section-title">전체 현황</div>
+      <div class="dashboard-grid" id="dash-stats"></div>
+
+      <!-- 파이프라인 모니터링 -->
+      <div class="section-title">파이프라인 모니터링</div>
+      <div id="dash-pipeline" style="margin-bottom:20px"></div>
+
+      <div class="section-title">에이전트 가동 현황</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        <div class="dash-card" style="text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">📡</div>
+          <div class="dash-card-label">트렌드 레이더</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+        </div>
+        <div class="dash-card" style="text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">✍️</div>
+          <div class="dash-card-label">대본 에이전트</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+        </div>
+        <div class="dash-card" style="text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🎙️</div>
+          <div class="dash-card-label">음성 에이전트</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+        </div>
+        <div class="dash-card" style="text-align:center">
+          <div style="font-size:22px;margin-bottom:4px">🎬</div>
+          <div class="dash-card-label">영상 에이전트</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+        </div>
+      </div>
+      <div class="section-title">다음 작업 우선순위</div>
+      <div id="dash-todo" style="margin-bottom:20px"></div>
+      <div class="section-title">채널별 현황</div>
+      <div class="channel-overview" id="channel-overview"></div>
+    </div>
+
+    <!-- 제작 매트릭스 탭 -->
+    <div id="tab-matrix" style="display:none">
+
+      <!-- 헤더 -->
+      <div class="matrix-header">
+        <div>
+          <span class="matrix-title" id="ep-title">에피소드</span>
+          <span class="matrix-subtitle" id="ep-subtitle"></span>
+          <span id="ep-status-badge" style="margin-left:8px"></span>
+        </div>
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5.5" cy="5.5" r="4"/><path d="M9 9l2.5 2.5" stroke-linecap="round"/></svg>
+          <input type="text" class="search-input" placeholder="씬 검색..." id="search-input" oninput="renderTable()">
+        </div>
+        <div class="icon-btn" onclick="exportCSV()" title="CSV 내보내기">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v8M4 6l3 3 3-3" stroke-linecap="round" stroke-linejoin="round"/><path d="M1 10v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke-linecap="round"/></svg>
+        </div>
+        <button class="btn-primary" onclick="openCutModal()">+ 컷 추가</button>
+      </div>
+
+      <!-- 통계 카드 -->
+      <div class="stats-row" id="stats-row"></div>
+
+      <!-- 3축 프레임워크 헤더 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:var(--surface);border:1px solid rgba(167,139,250,0.3);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">📋</span>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.8px">축 1 · 콘텐츠 스펙</div>
+            <div style="font-size:10px;color:var(--text3)">유형 · 플랫폼 · 길이 · 난이도</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(251,191,36,0.3);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">🤖</span>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px">축 2 · 에이전트 리더 판단</div>
+            <div style="font-size:10px;color:var(--text3)">트렌드 연관도 · 시청자 반응 · 훅 위험도</div>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(52,211,153,0.3);border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">⚙️</span>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.8px">축 3 · 제작 진행 + 에이전트 책임</div>
+            <div style="font-size:10px;color:var(--text3)">G1~G4 개런티 포인트 · 담당 에이전트</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 개런티 포인트 전체 현황 -->
+      <div class="gp-row">
+        <span class="gp-label">개런티 포인트:</span>
+        <span class="gp-badge" id="gp-g1">G1 대본</span>
+        <span class="gp-badge" id="gp-g2">G2 음성</span>
+        <span class="gp-badge" id="gp-g3">G3 영상</span>
+        <span class="gp-badge" id="gp-g4">G4 편집</span>
+      </div>
+
+      <!-- 타임라인 -->
+      <div class="timeline-wrap">
+        <div class="timeline-header">
+          <span>감정 아크 타임라인</span>
+          <span id="tl-total" style="font-family:'Space Mono',monospace"></span>
+        </div>
+        <div class="tl-bar" id="tl-bar"></div>
+        <div class="tl-legend">
+          <div class="tl-leg"><div class="tl-leg-dot" style="background:#60a5fa"></div>인물 클로즈업</div>
+          <div class="tl-leg"><div class="tl-leg-dot" style="background:#a78bfa"></div>디테일 컷</div>
+          <div class="tl-leg"><div class="tl-leg-dot" style="background:#fbbf24"></div>특수 앵글</div>
+          <div class="tl-leg"><div class="tl-leg-dot" style="background:#34d399"></div>배경/B-roll</div>
+        </div>
+      </div>
+
+      <!-- 필터 칩 -->
+      <div class="chips-bar">
+        <span class="chip-label">유형:</span>
+        <span class="chip active" data-filter="type" data-val="all" onclick="chipFilter(this)">전체</span>
+        <span class="chip" data-filter="type" data-val="인물 클로즈업" onclick="chipFilter(this)">인물 클로즈업</span>
+        <span class="chip" data-filter="type" data-val="디테일 컷" onclick="chipFilter(this)">디테일 컷</span>
+        <span class="chip" data-filter="type" data-val="특수 앵글" onclick="chipFilter(this)">특수 앵글</span>
+        <span class="chip" data-filter="type" data-val="배경/B-roll" onclick="chipFilter(this)">배경/B-roll</span>
+        <span class="chip-label" style="margin-left:8px">플랫폼:</span>
+        <span class="chip" data-filter="platform" data-val="Veo3.1" onclick="chipFilter(this)">Veo3.1</span>
+        <span class="chip" data-filter="platform" data-val="Kling" onclick="chipFilter(this)">Kling</span>
+        <span class="chip-label" style="margin-left:8px">난이도:</span>
+        <span class="chip" data-filter="hard" data-val="높음" onclick="chipFilter(this)">높음</span>
+        <span class="chip" data-filter="hard" data-val="중간" onclick="chipFilter(this)">중간</span>
+        <span class="chip" data-filter="hard" data-val="낮음" onclick="chipFilter(this)">낮음</span>
+        <span class="chip-label" style="margin-left:8px">상태:</span>
+        <span class="chip" data-filter="status" data-val="대기" onclick="chipFilter(this)">대기</span>
+        <span class="chip" data-filter="status" data-val="생성중" onclick="chipFilter(this)">생성중</span>
+        <span class="chip" data-filter="status" data-val="완료" onclick="chipFilter(this)">완료</span>
+        <span class="chip-label" style="margin-left:8px">특수:</span>
+        <span class="chip" data-filter="special" data-val="hook" onclick="chipFilter(this)">훅 CUT</span>
+        <span class="chip" data-filter="special" data-val="special" onclick="chipFilter(this)">★ 특수</span>
+        <span class="chip-clear" onclick="clearChips()">초기화</span>
+      </div>
+
+      <!-- 3축 매트릭스 테이블 -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <!-- 축1: 콘텐츠 스펙 -->
+              <th colspan="1" style="background:rgba(167,139,250,0.08);border-bottom:2px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="sortBy('no')">CUT ↑</th>
+              <th colspan="1" style="background:rgba(167,139,250,0.08);border-bottom:2px solid rgba(167,139,250,0.3);color:var(--purple)">씬 설명</th>
+              <th colspan="1" style="background:rgba(167,139,250,0.08);border-bottom:2px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="sortBy('sec')">길이 ↕</th>
+              <th colspan="1" style="background:rgba(167,139,250,0.08);border-bottom:2px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="sortBy('type')">유형 ↕</th>
+              <th colspan="1" style="background:rgba(167,139,250,0.08);border-bottom:2px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="sortBy('platform')">플랫폼 ↕</th>
+              <th colspan="1" style="background:rgba(167,139,250,0.08);border-bottom:2px solid rgba(167,139,250,0.3);color:var(--purple)" onclick="sortBy('hard')">난이도 ↕</th>
+              <!-- 축2: 에이전트 리더 판단 -->
+              <th colspan="1" style="background:rgba(251,191,36,0.08);border-bottom:2px solid rgba(251,191,36,0.3);color:var(--amber)">트렌드</th>
+              <th colspan="1" style="background:rgba(251,191,36,0.08);border-bottom:2px solid rgba(251,191,36,0.3);color:var(--amber)">시청자 반응</th>
+              <th colspan="1" style="background:rgba(251,191,36,0.08);border-bottom:2px solid rgba(251,191,36,0.3);color:var(--amber)">훅 위험도</th>
+              <!-- 축3: 제작 진행 -->
+              <th colspan="1" style="background:rgba(52,211,153,0.08);border-bottom:2px solid rgba(52,211,153,0.3);color:var(--teal)">진행</th>
+              <th colspan="1" style="background:rgba(52,211,153,0.08);border-bottom:2px solid rgba(52,211,153,0.3);color:var(--teal)">G포인트</th>
+              <th colspan="1" style="background:rgba(52,211,153,0.08);border-bottom:2px solid rgba(52,211,153,0.3);color:var(--teal)">메모</th>
+              <th colspan="1" style="background:rgba(52,211,153,0.08);border-bottom:2px solid rgba(52,211,153,0.3)"></th>
+            </tr>
+          </thead>
+          <tbody id="cut-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 에이전트 리더 탭 -->
+    <div id="tab-leader" style="display:none">
+
+      <!-- 리더 소개 -->
+      <div style="background:linear-gradient(135deg,rgba(167,139,250,0.12),rgba(251,191,36,0.08));border:1px solid rgba(167,139,250,0.25);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px">
+        <div style="font-size:36px">🤖</div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:var(--purple);margin-bottom:4px">에이전트 리더</div>
+          <div style="font-size:12px;color:var(--text3);line-height:1.6">
+            트렌드 레이더 · A Creative Studio · 병렬 에이전트에 임무를 부여하는 자동화 시스템 총괄.<br>
+            성준님과 긴밀한 소통으로 워크플로우를 <strong style="color:var(--text)">더 진보되고, 더 영향력있고, 더 조직적이고, 더 스마트하게</strong> 향상시킵니다.
+          </div>
+        </div>
+        <button class="btn-primary" onclick="runLeaderAnalysis()" style="white-space:nowrap">
+          ▶ 리더 분석 실행
+        </button>
+      </div>
+
+      <!-- 에이전트 가동 현황 -->
+      <div class="section-title">에이전트 가동 현황</div>
+      <div class="agent-status" style="margin-bottom:20px">
+        <div class="agent-card" id="ag-card-trend">
+          <div class="agent-icon">📡</div>
+          <div class="agent-name">트렌드 레이더</div>
+          <div class="agent-state idle" id="ag-trend">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">소재 발굴</div>
+        </div>
+        <div class="agent-card" id="ag-card-script">
+          <div class="agent-icon">✍️</div>
+          <div class="agent-name">대본 에이전트</div>
+          <div class="agent-state idle" id="ag-script">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">G1 담당</div>
+        </div>
+        <div class="agent-card" id="ag-card-voice">
+          <div class="agent-icon">🎙️</div>
+          <div class="agent-name">음성 에이전트</div>
+          <div class="agent-state idle" id="ag-voice">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">G2 담당</div>
+        </div>
+        <div class="agent-card" id="ag-card-video">
+          <div class="agent-icon">🎬</div>
+          <div class="agent-name">영상 에이전트</div>
+          <div class="agent-state idle" id="ag-video">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:4px">G3 담당</div>
+        </div>
+      </div>
+
+      <!-- 임무 배분 규칙 + Claude API 판단 -->
+      <div class="section-title">임무 배분 프로토콜</div>
+      <div class="leader-grid" style="margin-bottom:20px">
+
+        <!-- Rule-based -->
+        <div class="leader-card">
+          <div class="leader-card-title">
+            <div class="dot" style="background:var(--amber)"></div>
+            규칙 기반 자동 배분
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px">조건이 명확한 케이스는 즉시 자동 배분해요.</div>
+          <div class="rule-item">
+            <span class="rule-if">인물 클로즈업 + 높음</span>
+            <span class="rule-then">→ Veo3.1 우선</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">디테일 컷 + 한국어 텍스트</span>
+            <span class="rule-then">→ Kling + CapCut</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">배경/B-roll + 낮음</span>
+            <span class="rule-then">→ Kling 효율 우선</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">훅 CUT (flag=hook)</span>
+            <span class="rule-then">→ 최우선 처리</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">품질 미달 3회 이상</span>
+            <span class="rule-then">→ 전략 재수립</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">G4 통과 완료</span>
+            <span class="rule-then">→ 성준님 검토 요청</span>
+          </div>
+        </div>
+
+        <!-- Claude API 판단 -->
+        <div class="leader-card">
+          <div class="leader-card-title">
+            <div class="dot" style="background:var(--purple)"></div>
+            Claude API 판단 (복잡한 케이스)
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px">규칙으로 해결 안 되는 케이스를 Claude가 판단합니다.</div>
+          <div class="rule-item">
+            <span class="rule-if">★ 특수 앵글 + 예외 상황</span>
+            <span class="rule-then">→ AI 판단</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">신규 에피소드 유형</span>
+            <span class="rule-then">→ 배분 계획 생성</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">트렌드 급변 감지</span>
+            <span class="rule-then">→ 소재 방향 재검토</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">시청자 반응 예측 필요</span>
+            <span class="rule-then">→ 훅/이탈 분석</span>
+          </div>
+          <div style="margin-top:12px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px">
+            <div style="font-size:10px;color:var(--text3);margin-bottom:6px">리더 분석 결과</div>
+            <div id="leader-result" style="font-size:11px;color:var(--text2);line-height:1.6">분석 대기 중...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 개런티 포인트 기준 -->
+      <div class="section-title">개런티 포인트 기준</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        <div style="background:var(--surface);border:1px solid rgba(167,139,250,0.25);border-radius:var(--radius);padding:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px">G1 · 대본 ✍️</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.8">
+            ✓ 감정 태그 포함<br>
+            ✓ 대사 길이 적정<br>
+            ✓ CUT 번호 매칭<br>
+            ✓ VO 나레이션 포함
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(96,165,250,0.25);border-radius:var(--radius);padding:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">G2 · 음성 🎙️</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.8">
+            ✓ Sian v3 생성<br>
+            ✓ Stability 35%<br>
+            ✓ 길이 ±1초 이내<br>
+            ✓ 감정 기준 통과
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(251,191,36,0.25);border-radius:var(--radius);padding:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">G3 · 영상 🎬</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.8">
+            ✓ 1080×1920 세로<br>
+            ✓ 목표 길이 ±2초<br>
+            ✓ 립싱크 확인<br>
+            ✓ Veo/Kling 기준
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:8px">G4 · 편집 ✂️</div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.8">
+            ✓ 영상+음성 싱크<br>
+            ✓ 자막 포함<br>
+            ✓ 최종 길이 확정<br>
+            ✓ 성준님 검토 준비
+          </div>
+        </div>
+      </div>
+
+      <!-- CUT별 리더 임무 현황 -->
+      <div class="section-title">CUT별 리더 임무 현황</div>
+      <div id="leader-cut-status"></div>
+    </div>
+
+    <!-- 인스타 채널 뷰 (사이드바 채널 선택 시) -->
+    <div id="tab-insta" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+        <div style="font-size:18px;font-weight:700;color:var(--text)">📱 서여리 인스타그램</div>
+        <div style="font-size:12px;color:var(--text3)">인스타툰 · 릴스 · 스토리</div>
+      </div>
+
+      <!-- KPI 카드 -->
+      <div class="section-title">채널 현황</div>
+      <div class="ig-kpi-row">
+        <div class="ig-kpi-card"><div class="ig-kpi-label">총 게시물</div><div class="ig-kpi-value ig-kpi-pend" id="ig-stat-total">0</div><div class="ig-kpi-target">누적</div></div>
+        <div class="ig-kpi-card"><div class="ig-kpi-label">평균 저장율</div><div class="ig-kpi-value ig-kpi-pend" id="ig-stat-save">—</div><div class="ig-kpi-target">목표 1%+</div></div>
+        <div class="ig-kpi-card"><div class="ig-kpi-label">평균 공유율</div><div class="ig-kpi-value ig-kpi-pend" id="ig-stat-share">—</div><div class="ig-kpi-target">목표 0.5%+</div></div>
+        <div class="ig-kpi-card"><div class="ig-kpi-label">팔로워 전환</div><div class="ig-kpi-value ig-kpi-pend" id="ig-stat-follow">—</div><div class="ig-kpi-target">목표 0.3%+</div></div>
+      </div>
+
+      <!-- IG 개런티 포인트 -->
+      <div class="ig-gp-row">
+        <span style="font-size:10px;color:var(--text3);margin-right:4px;font-weight:700;letter-spacing:0.8px">개런티 포인트:</span>
+        <span class="ig-gp-badge pending" id="ig-gp1">IG1 소재확정</span>
+        <span class="ig-gp-badge pending" id="ig-gp2">IG2 비주얼</span>
+        <span class="ig-gp-badge pending" id="ig-gp3">IG3 카피</span>
+        <span class="ig-gp-badge pending" id="ig-gp4">IG4 업로드</span>
+      </div>
+
+      <!-- IG 제작 단계 카드 -->
+      <div class="section-title">IG 제작 단계</div>
+      <div class="ig-stage-grid">
+        <div class="ig-stage-card" onclick="selectIgStage('ig1',this)">
+          <div class="ig-stage-header"><div class="ig-stage-badge">IG1</div><div><div class="ig-stage-title">소재 확정</div><div class="ig-stage-sub">트렌드 레이더 연동</div></div></div>
+          <div class="ig-auto-bar"><div class="ig-auto-fill" style="width:70%"></div></div>
+          <div class="ig-auto-label"><span>자동화</span><span>70%</span></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">트렌드 점수 60↑ · 연관도 3/5↑</div>
+        </div>
+        <div class="ig-stage-card" onclick="selectIgStage('ig2',this)">
+          <div class="ig-stage-header"><div class="ig-stage-badge">IG2</div><div><div class="ig-stage-title">비주얼 제작</div><div class="ig-stage-sub">이미지·릴스 생성</div></div></div>
+          <div class="ig-auto-bar"><div class="ig-auto-fill" style="width:55%"></div></div>
+          <div class="ig-auto-label"><span>자동화</span><span>55%</span></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">1080px · 훅 3초 이내 · 캐릭터 일관성</div>
+        </div>
+        <div class="ig-stage-card" onclick="selectIgStage('ig3',this)">
+          <div class="ig-stage-header"><div class="ig-stage-badge">IG3</div><div><div class="ig-stage-title">카피 작성</div><div class="ig-stage-sub">캡션·해시태그</div></div></div>
+          <div class="ig-auto-bar"><div class="ig-auto-fill" style="width:85%"></div></div>
+          <div class="ig-auto-label"><span>자동화</span><span>85%</span></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">훅 15자↓ · 해시태그 10개 조합</div>
+        </div>
+        <div class="ig-stage-card" onclick="selectIgStage('ig4',this)">
+          <div class="ig-stage-header"><div class="ig-stage-badge">IG4</div><div><div class="ig-stage-title">업로드·분석</div><div class="ig-stage-sub">스케줄·KPI 추적</div></div></div>
+          <div class="ig-auto-bar"><div class="ig-auto-fill" style="width:80%"></div></div>
+          <div class="ig-auto-label"><span>자동화</span><span>80%</span></div>
+          <div style="font-size:10px;color:var(--text3);margin-top:6px">릴스 12시 · 피드 18시 · 주 1회 리포트</div>
+        </div>
+      </div>
+
+      <!-- 게시물 목록 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="section-title" style="margin:0;flex:1">게시물 목록</div>
+        <div style="display:flex;gap:6px">
+          <span style="padding:4px 12px;border-radius:20px;border:1px solid rgba(244,114,182,0.4);background:var(--pink-bg);color:var(--pink);font-size:11px;cursor:pointer" data-ig-filter="all" onclick="igChipFilter(this)">전체</span>
+          <span style="padding:4px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);font-size:11px;cursor:pointer" data-ig-filter="feed" onclick="igChipFilter(this)">피드툰</span>
+          <span style="padding:4px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);font-size:11px;cursor:pointer" data-ig-filter="reels" onclick="igChipFilter(this)">릴스</span>
+          <span style="padding:4px 12px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);font-size:11px;cursor:pointer" data-ig-filter="story" onclick="igChipFilter(this)">스토리</span>
+        </div>
+        <button class="btn-primary" onclick="openIgPostModal()">+ 게시물 추가</button>
+      </div>
+
+      <div class="ig-table-wrap">
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">NO</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">게시물 제목</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">유형</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">업로드 시간</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">IG단계</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">저장율</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">공유율</th>
+              <th style="background:var(--surface2);padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">상태</th>
+              <th style="background:var(--surface2);padding:10px 12px;border-bottom:1px solid var(--border)"></th>
+            </tr>
+          </thead>
+          <tbody id="ig-post-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- 업로드 스케줄 가이드 -->
+      <div class="section-title">업로드 스케줄 가이드</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);margin-bottom:6px">릴스 (JAB)</div>
+          <div style="font-size:18px;font-weight:700;font-family:'Space Mono',monospace;color:var(--text);margin-bottom:4px">12:00</div>
+          <div style="font-size:10px;color:var(--text3)">가볍게 프로필 유입 유도</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">비팔로워 노출 극대화</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid rgba(244,114,182,0.3);border-radius:var(--radius);padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--pink);margin-bottom:6px">피드툰 (UPPERCUT)</div>
+          <div style="font-size:18px;font-weight:700;font-family:'Space Mono',monospace;color:var(--text);margin-bottom:4px">18:00</div>
+          <div style="font-size:10px;color:var(--text3)">팔로우·저장 전환 담당</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">릴스 이후 6시간 내 업로드</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">스토리 (도달 보조)</div>
+          <div style="font-size:18px;font-weight:700;font-family:'Space Mono',monospace;color:var(--text);margin-bottom:4px">09:00 / 21:00</div>
+          <div style="font-size:10px;color:var(--text3)">기존 팔로워 리마인드</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:4px">피드·릴스 예고 활용</div>
+        </div>
+      </div>
+    </div>
+    <div id="tab-studio" style="display:none">
+
+      <!-- 상단: 연동 상태 + 빠른 이동 -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div style="font-size:18px;font-weight:700;color:var(--text)">A Creative Agent 연동</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">매트릭스 CUT ↔ 스튜디오 작업 현황 연결</div>
+        </div>
+        <a href="https://yeori-studio.vercel.app/" target="_blank"
+          style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--purple);color:#fff;border-radius:var(--radius-sm);font-size:12px;font-weight:700;text-decoration:none;transition:opacity 0.15s"
+          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          🎬 A Creative Studio 열기 →
+        </a>
+        <button onclick="syncGPointsFromStudio()" class="btn-secondary" style="font-size:12px">
+          🔄 G포인트 동기화
+        </button>
+      </div>
+
+      <!-- 연동 구조 안내 -->
+      <div class="section-title">연동 구조</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:16px">✍️</span>
+            <span style="font-size:12px;font-weight:700;color:var(--purple)">G1 · 대본 생성</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.6">
+            스튜디오 <strong style="color:var(--text)">대본 생성 탭</strong><br>
+            씬 헤딩 / 액션 / 대사<br>
+            나레이션(VO) / 이미지 프롬프트<br>
+            <span style="color:var(--purple)">→ Claude API 자동 생성</span>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:16px">🎙️</span>
+            <span style="font-size:12px;font-weight:700;color:var(--blue)">G2 · 음성 생성</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.6">
+            스튜디오 <strong style="color:var(--text)">ElevenLabs TTS 탭</strong><br>
+            Sian v3 · Stability 35%<br>
+            감정 태그 자동 삽입<br>
+            <span style="color:var(--blue)">→ 길이 ±1초 기준 확인</span>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:16px">🎬</span>
+            <span style="font-size:12px;font-weight:700;color:var(--amber)">G3 · 영상 생성</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.6">
+            스튜디오 <strong style="color:var(--text)">영상 만들기 탭</strong><br>
+            Veo3.1 / Kling 선택<br>
+            1080×1920 세로형<br>
+            <span style="color:var(--amber)">→ 목표 길이 ±2초 확인</span>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:16px">✂️</span>
+            <span style="font-size:12px;font-weight:700;color:var(--teal)">G4 · 편집 완성</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.6">
+            <strong style="color:var(--text)">FFmpeg 전처리</strong><br>
+            영상+음성 합치기<br>
+            CapCut 자막 추가<br>
+            <span style="color:var(--teal)">→ 최종 싱크 확인</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUT별 작업 현황 -->
+      <div class="section-title">CUT별 작업 현황</div>
+      <div id="studio-cut-list"></div>
+
+      <!-- 빠른 작업 가이드 -->
+      <div class="section-title" style="margin-top:20px">작업 가이드</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--purple)"></div>
+            ElevenLabs 음성 설정값
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px">
+              <span style="color:var(--text3)">모델</span>
+              <span style="color:var(--text);font-weight:700">Eleven v3</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px">
+              <span style="color:var(--text3)">음성</span>
+              <span style="color:var(--purple);font-weight:700">Sian - Tender, Clam & Clear</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px">
+              <span style="color:var(--text3)">Stability</span>
+              <span style="color:var(--text);font-weight:700">35%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px">
+              <span style="color:var(--text3)">Similarity</span>
+              <span style="color:var(--text);font-weight:700">75%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px">
+              <span style="color:var(--text3)">Style</span>
+              <span style="color:var(--text);font-weight:700">65%</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px">
+              <span style="color:var(--text3)">Speaker Boost</span>
+              <span style="color:var(--teal);font-weight:700">ON</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--amber)"></div>
+            FFmpeg 편집 표준 워크플로우
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;color:var(--text3)">
+              <span style="color:var(--purple);font-weight:700">STEP 1</span> · 영상 길이 부족 시 freeze/슬로모션
+            </div>
+            <div style="padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;color:var(--text3)">
+              <span style="color:var(--blue);font-weight:700">STEP 2</span> · 음성 공백 정리 (atempo 조정)
+            </div>
+            <div style="padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;color:var(--text3)">
+              <span style="color:var(--amber);font-weight:700">STEP 3</span> · 영상 + 음성 합치기 (-shortest)
+            </div>
+            <div style="padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;color:var(--text3)">
+              <span style="color:var(--teal);font-weight:700">STEP 4</span> · CapCut 자막 추가 후 내보내기
+            </div>
+            <div style="padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;color:var(--text3)">
+              <span style="color:var(--red);font-weight:700">기준</span> · 1080×1920 · 30fps · MP4
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 설정 탭 -->
+    <div id="tab-settings" style="display:none">
+      <div class="section-title">설정</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;text-align:center;color:var(--text3)">
+        <div style="font-size:32px;margin-bottom:12px">⚙️</div>
+        <div style="font-size:14px;margin-bottom:8px;color:var(--text)">API 키 및 기준값 설정</div>
+        <div style="font-size:12px">순차 설계 진행 후 구현 예정</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 컷 모달 -->
+<div class="modal-overlay" id="cut-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">새 컷 추가</div>
+    <div class="form-grid">
+      <div><label class="form-label">CUT 번호</label><input class="form-input" id="f-no" placeholder="01" maxlength="4"></div>
+      <div><label class="form-label">길이 (초)</label><input class="form-input" id="f-sec" type="number" min="1" max="120" placeholder="20"></div>
+      <div class="form-full"><label class="form-label">씬 설명</label><input class="form-input" id="f-scene" placeholder="장면을 설명하세요"></div>
+      <div><label class="form-label">유형</label>
+        <select class="form-select" id="f-type">
+          <option>인물 클로즈업</option><option>디테일 컷</option><option>특수 앵글</option><option>배경/B-roll</option>
+        </select>
+      </div>
+      <div><label class="form-label">플랫폼</label>
+        <select class="form-select" id="f-platform"><option>Veo3.1</option><option>Kling</option></select>
+      </div>
+      <div><label class="form-label">난이도</label>
+        <select class="form-select" id="f-hard"><option>높음</option><option>중간</option><option>낮음</option></select>
+      </div>
+      <div><label class="form-label">진행 상태</label>
+        <select class="form-select" id="f-status"><option>대기</option><option>생성중</option><option>완료</option></select>
+      </div>
+      <div><label class="form-label">특수 플래그</label>
+        <select class="form-select" id="f-flag"><option value="">없음</option><option value="hook">훅 CUT</option><option value="special">★ 특수</option><option value="both">훅 + 특수</option></select>
+      </div>
+      <div class="form-full"><label class="form-label">처리 포인트</label><textarea class="form-textarea" id="f-note" placeholder="생성 시 주의사항"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCutModal()">취소</button>
+      <button class="btn-save" onclick="saveCut()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 에피소드 모달 -->
+<div class="modal-overlay" id="ep-modal">
+  <div class="modal" style="width:380px">
+    <div class="modal-title">새 에피소드 추가</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="form-label">에피소드 제목</label><input class="form-input" id="ep-title-input" placeholder="예: 2화 · 여름 브이로그"></div>
+      <div><label class="form-label">유형</label>
+        <select class="form-select" id="ep-type-input">
+          <option value="shorts">쇼츠 (~60초)</option>
+          <option value="midform">미들폼 (2~5분)</option>
+          <option value="longform">롱폼 (10~12분)</option>
+          <option value="series">시리즈</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEpModal()">취소</button>
+      <button class="btn-save" onclick="saveEp()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 채널 모달 -->
+<div class="modal-overlay" id="channel-modal">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">새 채널 추가</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="form-label">채널명</label><input class="form-input" id="ch-title-input" placeholder="예: AI 트렌드"></div>
+      <div><label class="form-label">채널 유형</label><input class="form-input" id="ch-type-input" placeholder="예: 정보채널"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeChannelModal()">취소</button>
+      <button class="btn-save" onclick="saveChannel()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 인스타 게시물 모달 -->
+<div class="modal-overlay" id="ig-post-modal">
+  <div class="modal" style="width:500px">
+    <div class="modal-title" id="ig-modal-title">게시물 추가</div>
+    <div class="ig-form-grid">
+      <div class="form-full"><label class="form-label">게시물 제목</label><input class="form-input" id="ig-f-title" placeholder="예: AI로 인생 바꾼 직장인 이야기 1편"></div>
+      <div><label class="form-label">유형</label>
+        <select class="form-select" id="ig-f-type">
+          <option value="feed">피드툰</option><option value="reels">릴스</option><option value="story">스토리</option>
+        </select>
+      </div>
+      <div><label class="form-label">업로드 예정 시간</label>
+        <select class="form-select" id="ig-f-time">
+          <option>12:00</option><option>18:00</option><option>09:00</option><option>21:00</option>
+        </select>
+      </div>
+      <div><label class="form-label">IG 진행 단계</label>
+        <select class="form-select" id="ig-f-stage">
+          <option value="ig1">IG1 소재확정</option><option value="ig2">IG2 비주얼</option>
+          <option value="ig3">IG3 카피</option><option value="ig4">IG4 업로드</option><option value="done">완료</option>
+        </select>
+      </div>
+      <div><label class="form-label">저장율 (%)</label><input class="form-input" id="ig-f-save" type="number" step="0.1" placeholder="0.0"></div>
+      <div><label class="form-label">공유율 (%)</label><input class="form-input" id="ig-f-share" type="number" step="0.1" placeholder="0.0"></div>
+      <div class="form-full"><label class="form-label">훅 문구</label><input class="form-input" id="ig-f-hook" placeholder="예: 나 사실 AI예요. 근데 꿈은 진짜 유튜버입니다."></div>
+      <div class="form-full"><label class="form-label">해시태그</label><input class="form-input" id="ig-f-tags" placeholder="예: #AI크리에이터 #서여리 #직장인자기계발"></div>
+      <div class="form-full"><label class="form-label">메모</label><textarea class="form-input" id="ig-f-note" rows="2" style="resize:vertical" placeholder="제작 메모"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeIgPostModal()">취소</button>
+      <button class="btn-save" onclick="saveIgPost()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast">✓ 저장됐어요</div>
+
+<script>
+// ── 데이터 ─────────────────────────────────────────────────────
+const STORAGE_KEY = 'content_matrix_v3';
+const MEMO_KEY    = 'content_matrix_memo_v3';
+
+let currentProject = 'proj_01';
+let currentChannel = 'ch_yeori';
+let currentEpisode = 'ep_y_s05';
+let currentTab     = 'dashboard';
+let sortKey = 'no', sortDir = 1;
+let chipFilters = { type: 'all', platform: '', hard: '', status: '', special: '' };
+let editingCutId = null;
+let openMemoId = null;
+let memos = {};
+
+const TYPE_COLOR = {'인물 클로즈업':'#60a5fa','디테일 컷':'#a78bfa','특수 앵글':'#fbbf24','배경/B-roll':'#34d399'};
+const TYPE_CLASS = {'인물 클로즈업':'b-portrait','디테일 컷':'b-detail','특수 앵글':'b-special','배경/B-roll':'b-broll'};
+const HARD_CLASS = {'높음':'b-high','중간':'b-mid','낮음':'b-low'};
+const EP_TYPE_CLASS = {'shorts':'ep-type-shorts','midform':'ep-type-midform','longform':'ep-type-longform','series':'ep-type-series'};
+const EP_TYPE_LABEL = {'shorts':'쇼츠','midform':'미들폼','longform':'롱폼','series':'시리즈'};
+
+let appData = {
+  projects: {
+    proj_01: {
+      id:'proj_01', title:'AI 유튜브 채널 운영', created:'2026-05-01',
+      channels: {
+        ch_yeori: {
+          id:'ch_yeori', title:'서여리', type:'인플루언서', color:'#a78bfa',
+          episodes: {
+            ep_y_s01: {
+              id:'ep_y_s01', title:'1화 · 인플루언서 민낯', type:'shorts', status:'편집중', created:'2026-05-01',
+              cuts: [
+                {id:'cy01',no:'01',scene:'카페 창가 — 공허한 시선',sec:10,type:'인물 클로즈업',platform:'Veo3.1',hard:'높음',status:'완료',flag:'hook',note:'오프닝 훅',g1:true,g2:true,g3:true,g4:false},
+                {id:'cy02',no:'02',scene:'손 떨리는 스마트폰 클로즈업',sec:8,type:'디테일 컷',platform:'Kling',hard:'중간',status:'완료',flag:'',note:'슬렌더 손',g1:true,g2:true,g3:false,g4:false},
+              ]
+            },
+            ep_y_s05: {
+              id:'ep_y_s05', title:'5화 · 한국의 미의 기준', type:'shorts', status:'제작중', created:'2026-05-05',
+              cuts: [
+                {id:'cy501',no:'01',scene:'카페 창가 — 공허한 시선',sec:22,type:'인물 클로즈업',platform:'Veo3.1',hard:'높음',status:'대기',flag:'hook',note:'오프닝 훅, Image Str 30~40%',g1:false,g2:false,g3:false,g4:false},
+                {id:'cy502',no:'02',scene:'손 떨리는 스마트폰 클로즈업',sec:18,type:'디테일 컷',platform:'Kling',hard:'중간',status:'대기',flag:'',note:'슬렌더 손+브레이슬렛',g1:false,g2:false,g3:false,g4:false},
+                {id:'cy503',no:'03',scene:'창밖 응시, 폰 뒤집어 놓기',sec:25,type:'인물 클로즈업',platform:'Veo3.1',hard:'중간',status:'대기',flag:'',note:'표정 디테일 중요',g1:false,g2:false,g3:false,g4:false},
+                {id:'cy504',no:'04',scene:'유리창 반사 — 자기 인식 씬',sec:20,type:'특수 앵글',platform:'Veo3.1',hard:'높음',status:'대기',flag:'special',note:'★ 유리 반사, Str 30~35%',g1:false,g2:false,g3:false,g4:false},
+                {id:'cy505',no:'05',scene:'커피잔 두 손으로 감싸기',sec:22,type:'인물 클로즈업',platform:'Veo3.1',hard:'중간',status:'대기',flag:'',note:'감정 전환',g1:false,g2:false,g3:false,g4:false},
+              ]
+            }
+          }
+        },
+        ch_ai: {
+          id:'ch_ai', title:'AI 자기계발', type:'정보채널', color:'#34d399',
+          episodes: {}
+        }
+      }
+    }
+  }
+};
+
+// ── 저장/불러오기 ──────────────────────────────────────────────
+function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    localStorage.setItem(MEMO_KEY, JSON.stringify(memos));
+    localStorage.setItem(IG_KEY, JSON.stringify(igData));
+  } catch(e) { console.warn('저장 실패:', e); }
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      Object.keys(parsed.projects||{}).forEach(pKey => {
+        if (!appData.projects[pKey]) {
+          appData.projects[pKey] = parsed.projects[pKey];
+        } else {
+          Object.keys(parsed.projects[pKey].channels||{}).forEach(cKey => {
+            if (!appData.projects[pKey].channels[cKey]) {
+              appData.projects[pKey].channels[cKey] = parsed.projects[pKey].channels[cKey];
+            } else {
+              const savedEps = parsed.projects[pKey].channels[cKey].episodes||{};
+              Object.keys(savedEps).forEach(eKey => {
+                if (savedEps[eKey].cuts && savedEps[eKey].cuts.length > 0) {
+                  appData.projects[pKey].channels[cKey].episodes[eKey] = savedEps[eKey];
+                }
+              });
+            }
+          });
+        }
+      });
+    }
+    memos = JSON.parse(localStorage.getItem(MEMO_KEY)||'{}');
+    const igSaved = localStorage.getItem(IG_KEY);
+    if(igSaved) {
+      const igParsed = JSON.parse(igSaved);
+      Object.keys(igParsed).forEach(k => { igData[k] = igParsed[k]; });
+    }
+  } catch(e) { console.warn('로드 실패:', e); }
+}
+
+// ── 유틸 ───────────────────────────────────────────────────────
+const uid      = () => 'id_' + Date.now().toString(36);
+const secToMSS = s  => `${Math.floor(s/60)}:${(s%60<10?'0':'')+s%60}`;
+const getProject  = () => appData.projects[currentProject];
+const getChannel  = () => appData.projects[currentProject]?.channels[currentChannel];
+const getEpisode  = () => appData.projects[currentProject]?.channels[currentChannel]?.episodes[currentEpisode];
+const getCuts     = () => getEpisode()?.cuts || [];
+
+function showToast(msg='✓ 저장됐어요') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+// ── 탭 전환 ───────────────────────────────────────────────────
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ['dashboard','matrix','leader','studio','settings'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display = t===tab?'block':'none';
+  });
+  renderAll();
+}
+
+// ── 사이드바 렌더 ──────────────────────────────────────────────
+function renderSidebar() {
+  const ch = getProject()?.channels || {};
+  document.getElementById('channel-list').innerHTML = Object.values(ch).map(c => `
+    <div class="channel-item ${c.id===currentChannel?'active':''}" onclick="switchChannel('${c.id}')">
+      <div class="channel-dot" style="background:${c.color}"></div>
+      <div class="channel-name">${c.title}</div>
+      <div class="channel-count">${Object.keys(c.episodes).length}</div>
+    </div>`).join('');
+
+  const eps = getChannel()?.episodes || {};
+  document.getElementById('ep-list').innerHTML = Object.values(eps)
+    .sort((a,b)=>a.title.localeCompare(b.title))
+    .map(ep => `
+    <div class="ep-item ${ep.id===currentEpisode?'active':''}" onclick="switchEpisode('${ep.id}')">
+      <span class="ep-type-badge ${EP_TYPE_CLASS[ep.type]||'ep-type-shorts'}">${EP_TYPE_LABEL[ep.type]||ep.type}</span>
+      <div class="ep-name">${ep.title}</div>
+    </div>`).join('');
+}
+
+function switchChannel(id) {
+  currentChannel = id;
+  const eps = getChannel()?.episodes || {};
+  const firstEp = Object.keys(eps)[0];
+  if (firstEp) currentEpisode = firstEp;
+  renderAll();
+}
+
+function switchEpisode(id) {
+  currentEpisode = id;
+  chipFilters = {type:'all', special:''};
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  const allChip = document.querySelector('.chip[data-val="all"]');
+  if(allChip) allChip.classList.add('active');
+  renderAll();
+}
+
+// ── 대시보드 ──────────────────────────────────────────────────
+let dashScope = 'all'; // 'all' | 'channel'
+
+function setDashScope(scope, btn) {
+  dashScope = scope;
+  document.querySelectorAll('#dash-scope-all, #dash-scope-ch').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+  renderDashboard();
+}
+
+function calcStats(channels) {
+  let totalEps=0, totalCuts=0, doneCuts=0, totalSec=0, wipCuts=0, g1Pass=0, g2Pass=0, g3Pass=0, g4Pass=0;
+  Object.values(channels).forEach(ch => {
+    Object.values(ch.episodes).forEach(ep => {
+      totalEps++;
+      (ep.cuts||[]).forEach(c => {
+        totalCuts++;
+        if(c.status==='완료') doneCuts++;
+        if(c.status==='생성중') wipCuts++;
+        totalSec += c.sec||0;
+        if(c.g1) g1Pass++;
+        if(c.g2) g2Pass++;
+        if(c.g3) g3Pass++;
+        if(c.g4) g4Pass++;
+      });
+    });
+  });
+  return { totalEps, totalCuts, doneCuts, wipCuts, totalSec, g1Pass, g2Pass, g3Pass, g4Pass,
+    pct: totalCuts ? Math.round(doneCuts/totalCuts*100) : 0 };
+}
+
+// ── 파이프라인 모니터링 ────────────────────────────────────────
+const GP_INFO = {
+  g1: {
+    color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',
+    label: 'G1 대본', icon: '✍️',
+    steps: ['씬 설정', '대사 작성', '감정 태그', '완료']
+  },
+  g2: {
+    color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.3)',
+    label: 'G2 음성', icon: '🎙️',
+    steps: ['파라미터 설정', '음성 생성', '길이 확인', '완료']
+  },
+  g3: {
+    color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.3)',
+    label: 'G3 영상', icon: '🎬',
+    steps: ['프롬프트 작성', '영상 생성', '품질 확인', '완료']
+  },
+  g4: {
+    color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.3)',
+    label: 'G4 편집', icon: '✂️',
+    steps: ['FFmpeg 처리', '자막 추가', '싱크 확인', '완료']
+  },
+};
+
+function renderPipeline() {
+  const el = document.getElementById('dash-pipeline');
+  if(!el) return;
+
+  const proj = getProject();
+  if(!proj) return;
+
+  const allCh = proj.channels || {};
+  let html = '';
+
+  Object.values(allCh).forEach(ch => {
+    const epList = Object.values(ch.episodes || {});
+    if(!epList.length) return;
+
+    // 채널별 전체 통계
+    let chTotalSteps = 0, chDoneSteps = 0;
+    epList.forEach(ep => {
+      (ep.cuts||[]).forEach(c => {
+        chTotalSteps += 4;
+        chDoneSteps += (c.g1?1:0)+(c.g2?1:0)+(c.g3?1:0)+(c.g4?1:0);
+      });
+    });
+    const chPct = chTotalSteps ? Math.round(chDoneSteps/chTotalSteps*100) : 0;
+
+    html += `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden">
+
+      <!-- 채널 헤더 -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border)">
+        <div style="width:10px;height:10px;border-radius:50%;background:${ch.color}"></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${ch.title}</div>
+        <div style="font-size:10px;color:var(--text3)">${ch.type}</div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <div style="width:80px;height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">
+            <div style="width:${chPct}%;height:100%;background:${ch.color};border-radius:3px;transition:width 0.4s"></div>
+          </div>
+          <span style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:${ch.color}">${chPct}%</span>
+        </div>
+      </div>
+
+      <!-- 에피소드별 -->
+      ${epList.map(ep => {
+        const cuts = ep.cuts || [];
+        if(!cuts.length) return `
+          <div style="padding:12px 16px;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border)">
+            ${ep.title} · 컷 없음
+          </div>`;
+
+        const epTotalSteps = cuts.length * 4;
+        const epDoneSteps = cuts.reduce((a,c) => a+(c.g1?1:0)+(c.g2?1:0)+(c.g3?1:0)+(c.g4?1:0), 0);
+        const epPct = Math.round(epDoneSteps/epTotalSteps*100);
+        const epTypeLabel = EP_TYPE_LABEL[ep.type]||ep.type;
+
+        return `
+        <div style="border-bottom:1px solid var(--border)">
+          <!-- 에피소드 헤더 -->
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(255,255,255,0.01)">
+            <span class="ep-type-badge ${EP_TYPE_CLASS[ep.type]||'ep-type-shorts'}">${epTypeLabel}</span>
+            <span style="font-size:12px;font-weight:500;color:var(--text)">${ep.title}</span>
+            <span style="font-size:10px;color:var(--text3);margin-left:auto">${cuts.length}컷 · ${epPct}%</span>
+          </div>
+
+          <!-- G단계 범례 헤더 -->
+          <div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr 80px;gap:8px;padding:6px 16px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+            <div style="font-size:9px;color:var(--text3);font-weight:700;letter-spacing:0.5px">CUT</div>
+            ${['g1','g2','g3','g4'].map(g => `
+              <div style="display:flex;align-items:center;gap:4px">
+                <div style="width:8px;height:8px;border-radius:2px;background:${GP_INFO[g].color};flex-shrink:0"></div>
+                <span style="font-size:9px;font-weight:700;color:${GP_INFO[g].color}">${GP_INFO[g].label}</span>
+              </div>`).join('')}
+            <div style="font-size:9px;color:var(--text3);font-weight:700;text-align:right">상태</div>
+          </div>
+
+          <!-- CUT별 파이프라인 -->
+          <div style="padding:8px 16px;display:flex;flex-direction:column;gap:8px">
+            ${cuts.map(c => {
+              const gKeys = ['g1','g2','g3','g4'];
+              const currentStage = gKeys.findIndex(g => !c[g]);
+              const isComplete = currentStage === -1;
+
+              return `
+              <div style="display:grid;grid-template-columns:60px 1fr 1fr 1fr 1fr 80px;gap:8px;align-items:center">
+
+                <!-- CUT 번호 -->
+                <div>
+                  <div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--purple)">CUT ${String(c.no).padStart(2,'0')}</div>
+                  ${c.flag==='hook'||c.flag==='both'?'<div style="font-size:8px;color:var(--amber);font-weight:700">▶ HOOK</div>':''}
+                  ${c.flag==='special'||c.flag==='both'?'<div style="font-size:8px;color:var(--pink);font-weight:700">★ 특수</div>':''}
+                </div>
+
+                <!-- G1~G4 각 단계 -->
+                ${gKeys.map((g, gi) => {
+                  const info = GP_INFO[g];
+                  const isDone = c[g];
+                  const isCurrent = currentStage === gi;
+                  // 세부 단계 중 어느 단계인지 (현재는 완료/미완료만, 추후 세분화)
+                  const stepLabel = isDone
+                    ? info.steps[3]
+                    : isCurrent
+                    ? info.steps[0]
+                    : '대기';
+
+                  return `
+                  <div style="
+                    padding:5px 8px;
+                    border-radius:6px;
+                    border:1px solid ${isDone ? info.color : isCurrent ? info.border : 'var(--border)'};
+                    background:${isDone ? info.bg : isCurrent ? info.bg+'80' : 'var(--surface2)'};
+                    text-align:center;
+                    min-height:34px;
+                    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+                    ${isCurrent ? 'box-shadow:0 0 0 1px '+info.color+'44' : ''}
+                  ">
+                    <div style="font-size:10px;font-weight:700;color:${isDone?info.color:isCurrent?info.color:'var(--text3)'}">
+                      ${isDone ? '✓' : isCurrent ? '⟳' : '—'}
+                    </div>
+                    <div style="font-size:9px;color:${isDone?info.color:isCurrent?info.color:'var(--text3)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px">
+                      ${stepLabel}
+                    </div>
+                  </div>`;
+                }).join('')}
+
+                <!-- 상태 -->
+                <div style="text-align:right">
+                  ${isComplete
+                    ? `<span style="font-size:10px;font-weight:700;color:var(--teal)">완료 ✅</span>`
+                    : `<span style="font-size:10px;color:${GP_INFO[gKeys[currentStage]].color}">${GP_INFO[gKeys[currentStage]].icon} ${GP_INFO[gKeys[currentStage]].label}</span>`
+                  }
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+
+  el.innerHTML = html || `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;color:var(--text3);font-size:12px">채널 데이터가 없어요.</div>`;
+
+  // pulse 애니메이션
+  if(!document.getElementById('pipeline-style')) {
+    const style = document.createElement('style');
+    style.id = 'pipeline-style';
+    style.textContent = `@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}`;
+    document.head.appendChild(style);
+  }
+}
+
+function renderDashboard() {
+  const proj = getProject(); if(!proj) return;
+  const allCh = proj.channels || {};
+
+  // 기준에 따라 채널 범위 결정
+  const targetCh = dashScope === 'channel'
+    ? { [currentChannel]: getChannel() }
+    : allCh;
+
+  const s = calcStats(targetCh);
+  const scopeLabel = dashScope === 'channel' ? getChannel()?.title || '채널' : '전체';
+
+  // 통합 통계 카드
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="dash-card">
+      <div class="dash-card-label">총 에피소드 · ${scopeLabel}</div>
+      <div class="dash-card-value" style="color:var(--purple)">${s.totalEps}</div>
+      <div class="dash-card-sub">채널 ${Object.keys(targetCh).length}개</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">총 컷</div>
+      <div class="dash-card-value">${s.totalCuts}</div>
+      <div class="dash-card-sub">생성중 ${s.wipCuts}컷</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">완료율</div>
+      <div class="dash-card-value" style="color:${s.pct===100?'var(--teal)':'var(--purple)'}">${s.pct}%</div>
+      <div class="dash-card-sub">${s.doneCuts} / ${s.totalCuts} 완료</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-label">총 런닝타임</div>
+      <div class="dash-card-value">${secToMSS(s.totalSec)}</div>
+      <div class="dash-card-sub">${scopeLabel} 기준</div>
+    </div>
+  `;
+
+  // 다음 작업 우선순위 (대기 + 훅 CUT 우선)
+  let todoCuts = [];
+  Object.values(targetCh).forEach(ch => {
+    Object.values(ch.episodes).forEach(ep => {
+      (ep.cuts||[]).filter(c=>c.status!=='완료').forEach(c => {
+        todoCuts.push({ ...c, _epTitle: ep.title, _chTitle: ch.title, _chColor: ch.color });
+      });
+    });
+  });
+  // 우선순위: hook > special > 높음 난이도 > 나머지
+  const priority = c => (c.flag==='hook'||c.flag==='both') ? 0 : (c.flag==='special'||c.flag==='both') ? 1 : c.hard==='높음' ? 2 : 3;
+  todoCuts.sort((a,b) => priority(a)-priority(b));
+
+  // 다음 작업 단계 판단 (G1→G2→G3→G4 순서)
+  function getNextTask(c) {
+    if(!c.g1) return { label:'G1 대본 생성', color:'var(--purple)', icon:'✍️' };
+    if(!c.g2) return { label:'G2 음성 생성', color:'var(--blue)',   icon:'🎙️' };
+    if(!c.g3) return { label:'G3 영상 생성', color:'var(--amber)',  icon:'🎬' };
+    if(!c.g4) return { label:'G4 편집 완성', color:'var(--teal)',   icon:'✂️' };
+    return { label:'검토 대기', color:'var(--text3)', icon:'👀' };
+  }
+
+  const todoEl = document.getElementById('dash-todo');
+  if(!todoCuts.length) {
+    todoEl.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;color:var(--teal);font-size:12px">🎉 모든 컷 완료!</div>`;
+  } else {
+    todoEl.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:var(--surface2)">
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap">우선순위</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">채널</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">에피소드</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">CUT</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">씬 설명</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">다음 작업</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">플랫폼</th>
+            <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">난이도</th>
+          </tr>
+        </thead>
+      </table>
+      <div style="max-height:320px;overflow-y:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <tbody>
+            ${todoCuts.map((c,i) => {
+              const task = getNextTask(c);
+              return `
+              <tr style="border-bottom:1px solid var(--border);transition:background 0.1s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+                <td style="padding:10px 12px;width:80px">
+                  <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">#${i+1}</span>
+                  ${c.flag==='hook'||c.flag==='both'?'<span class="hook-flag">▶ HOOK</span>':''}
+                  ${c.flag==='special'||c.flag==='both'?'<span class="special-flag">★</span>':''}
+                </td>
+                <td style="padding:10px 12px">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <div style="width:6px;height:6px;border-radius:50%;background:${c._chColor};flex-shrink:0"></div>
+                    <div style="font-size:11px;color:var(--text);font-weight:500">${c._chTitle}</div>
+                  </div>
+                </td>
+                <td style="padding:10px 12px">
+                  <div style="font-size:11px;color:var(--text3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c._epTitle}</div>
+                </td>
+                <td style="padding:10px 12px">
+                  <div style="font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--purple)">CUT ${c.no}</div>
+                </td>
+                <td style="padding:10px 12px">
+                  <div style="font-size:12px;font-weight:500;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.scene}</div>
+                </td>
+                <td style="padding:10px 12px">
+                  <div style="display:flex;align-items:center;gap:5px">
+                    <span style="font-size:13px">${task.icon}</span>
+                    <span style="font-size:11px;font-weight:700;color:${task.color}">${task.label}</span>
+                  </div>
+                </td>
+                <td style="padding:10px 12px">
+                  <span class="badge ${c.platform==='Veo3.1'?'b-veo':'b-kling'}">${c.platform}</span>
+                </td>
+                <td style="padding:10px 12px">
+                  <span class="badge ${HARD_CLASS[c.hard]||'b-low'}">${c.hard}</span>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="padding:8px 14px;font-size:11px;color:var(--text3);background:var(--surface2);border-top:1px solid var(--border)">
+        총 ${todoCuts.length}건의 작업이 남아있어요
+      </div>
+    </div>`;
+  }
+
+  // 파이프라인 모니터링
+  renderPipeline();
+
+  // 채널별 현황
+  document.getElementById('channel-overview').innerHTML = Object.values(allCh).map(c => {
+    let tc=0, dc=0, ts=0, eps=0;
+    Object.values(c.episodes).forEach(ep => {
+      eps++;
+      (ep.cuts||[]).forEach(cut => { tc++; if(cut.status==='완료') dc++; ts+=cut.sec||0; });
+    });
+    const p = tc ? Math.round(dc/tc*100) : 0;
+    return `
+    <div class="channel-card" onclick="switchChannel('${c.id}')" style="cursor:pointer;transition:border-color 0.15s"
+      onmouseover="this.style.borderColor='${c.color}'" onmouseout="this.style.borderColor='var(--border)'">
+      <div class="channel-card-header">
+        <div class="channel-card-dot" style="background:${c.color}"></div>
+        <div class="channel-card-title">${c.title}</div>
+        <div class="channel-card-type">${c.type}</div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" style="width:${p}%;background:${c.color}"></div>
+      </div>
+      <div class="channel-card-stats">
+        <div class="channel-stat">에피소드 <strong>${eps}</strong></div>
+        <div class="channel-stat">컷 <strong>${tc}</strong></div>
+        <div class="channel-stat">완료율 <strong>${p}%</strong></div>
+        <div class="channel-stat">시간 <strong>${secToMSS(ts)}</strong></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 매트릭스 렌더 ──────────────────────────────────────────────
+function renderMatrix() {
+  const ep = getEpisode();
+  if(!ep) return;
+  document.getElementById('ep-title').textContent = ep.title;
+  document.getElementById('ep-subtitle').textContent = EP_TYPE_LABEL[ep.type]||ep.type;
+
+  const cuts = getCuts();
+  const total = cuts.reduce((a,c)=>a+c.sec,0);
+  const veo = cuts.filter(c=>c.platform==='Veo3.1').length;
+  const kling = cuts.filter(c=>c.platform==='Kling').length;
+  const done = cuts.filter(c=>c.status==='완료').length;
+  const hard = cuts.filter(c=>c.hard==='높음').length;
+  const pct = cuts.length ? Math.round(done/cuts.length*100) : 0;
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-label">총 런닝타임</div><div class="stat-value">${secToMSS(total)}</div><div class="stat-sub">${cuts.length}컷</div></div>
+    <div class="stat-card"><div class="stat-label">Veo3.1</div><div class="stat-value" style="color:var(--blue)">${veo}</div><div class="stat-sub">컷</div></div>
+    <div class="stat-card"><div class="stat-label">Kling</div><div class="stat-value" style="color:var(--teal)">${kling}</div><div class="stat-sub">컷</div></div>
+    <div class="stat-card"><div class="stat-label">★ 높음 난이도</div><div class="stat-value" style="color:var(--red)">${hard}</div><div class="stat-sub">컷</div></div>
+    <div class="stat-card"><div class="stat-label">완료율</div><div class="stat-value" style="color:${pct===100?'var(--teal)':'var(--purple)'}">${pct}%</div><div class="stat-sub">${done}/${cuts.length}</div></div>
+  `;
+
+  // 개런티 포인트
+  const g1All = cuts.length && cuts.every(c=>c.g1);
+  const g2All = cuts.length && cuts.every(c=>c.g2);
+  const g3All = cuts.length && cuts.every(c=>c.g3);
+  const g4All = cuts.length && cuts.every(c=>c.g4);
+  ['g1','g2','g3','g4'].forEach((g,i) => {
+    const el = document.getElementById('gp-'+g);
+    const labels = ['G1 대본','G2 음성','G3 영상','G4 편집'];
+    const pass = [g1All,g2All,g3All,g4All][i];
+    el.textContent = labels[i] + (pass?' ✓':'');
+    el.className = 'gp-badge ' + (pass?'pass':'pending');
+  });
+
+  // 타임라인
+  document.getElementById('tl-total').textContent = secToMSS(total);
+  document.getElementById('tl-bar').innerHTML = cuts.map(c=>
+    `<div class="tl-seg" style="width:${total?(c.sec/total*100).toFixed(1):0}%;background:${TYPE_COLOR[c.type]||'#6b7280'}" title="CUT ${c.no}: ${c.scene} (${c.sec}초)"></div>`
+  ).join('');
+
+  renderTable();
+}
+
+function getFilteredCuts() {
+  const search = (document.getElementById('search-input')?.value||'').toLowerCase();
+  return getCuts().filter(c => {
+    if(chipFilters.type!=='all' && c.type!==chipFilters.type) return false;
+    if(chipFilters.platform && c.platform!==chipFilters.platform) return false;
+    if(chipFilters.hard && c.hard!==chipFilters.hard) return false;
+    if(chipFilters.status && c.status!==chipFilters.status) return false;
+    if(chipFilters.special==='hook' && c.flag!=='hook' && c.flag!=='both') return false;
+    if(chipFilters.special==='special' && c.flag!=='special' && c.flag!=='both') return false;
+    if(search && !c.scene.includes(search) && !(c.note||'').includes(search)) return false;
+    return true;
+  }).sort((a,b) => {
+    let va=a[sortKey], vb=b[sortKey];
+    if(sortKey==='no'){va=parseInt(va);vb=parseInt(vb);}
+    if(sortKey==='sec'){va=+va;vb=+vb;}
+    return (va<vb?-1:va>vb?1:0)*sortDir;
+  });
+}
+
+// 축2 판단값 렌더 헬퍼
+function renderLeaderScore(val, type) {
+  if(val === undefined || val === null) {
+    return `<div style="font-size:10px;color:var(--text3);font-style:italic">분석 대기</div>`;
+  }
+  if(type === 'trend') {
+    const color = val>=70?'var(--teal)':val>=40?'var(--amber)':'var(--red)';
+    return `<div style="display:flex;align-items:center;gap:4px">
+      <div style="width:40px;height:4px;background:var(--surface3);border-radius:2px;overflow:hidden">
+        <div style="width:${val}%;height:100%;background:${color};border-radius:2px"></div>
+      </div>
+      <span style="font-size:10px;color:${color};font-family:'Space Mono',monospace">${val}%</span>
+    </div>`;
+  }
+  if(type === 'reaction') {
+    const icons = {'공감':'❤️','웃음':'😄','정보':'💡','힐링':'🌿','자극':'⚡'};
+    return `<div style="font-size:11px">${icons[val]||'—'} ${val||'—'}</div>`;
+  }
+  if(type === 'hook') {
+    const color = val==='높음'?'var(--red)':val==='중간'?'var(--amber)':'var(--teal)';
+    return `<span class="badge" style="background:${color}20;color:${color}">${val||'—'}</span>`;
+  }
+  return `<span style="font-size:11px;color:var(--text3)">—</span>`;
+}
+
+function renderTable() {
+  const cuts = getFilteredCuts();
+  const tbody = document.getElementById('cut-tbody');
+  if(!cuts.length){
+    tbody.innerHTML=`<tr><td colspan="13"><div class="empty-state"><div class="empty-icon">🎬</div><div>컷이 없어요</div></div></td></tr>`;
+    return;
+  }
+  let cursor=0;
+  getCuts().forEach(c=>{c._start=cursor;cursor+=c.sec;});
+
+  tbody.innerHTML = cuts.map(c => {
+    const hasMemo = !!(memos[c.id]?.trim());
+    const isOpen  = openMemoId===c.id;
+    const memoRow = isOpen ? `
+      <tr class="memo-row"><td colspan="13">
+        <div class="memo-panel">
+          <div style="font-size:10px;font-weight:700;color:var(--purple);margin-bottom:6px">📝 CUT ${c.no} 메모</div>
+          <textarea class="memo-textarea" id="memo-ta-${c.id}" placeholder="자유롭게 기록하세요...">${memos[c.id]||''}</textarea>
+          <div class="memo-save-row">
+            <button class="btn-cancel" style="font-size:11px;padding:4px 10px" onclick="closeMemo()">닫기</button>
+            <button class="btn-save" style="font-size:11px;padding:4px 12px" onclick="saveMemo('${c.id}')">저장</button>
+          </div>
+        </div>
+      </td></tr>` : '';
+
+    return `
+    <tr class="${c.flag?'highlighted':''}" id="row-${c.id}">
+      <!-- 축1: 콘텐츠 스펙 -->
+      <td style="background:rgba(167,139,250,0.03)">
+        <div class="cut-no">${c.no}</div>
+        ${c.flag==='hook'||c.flag==='both'?'<span class="hook-flag">▶ HOOK</span>':''}
+        ${c.flag==='special'||c.flag==='both'?'<span class="special-flag">★ 특수</span>':''}
+      </td>
+      <td style="background:rgba(167,139,250,0.03)">
+        <div class="scene-name">${c.scene}</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${c.note?c.note.slice(0,30)+(c.note.length>30?'…':''):''}</div>
+      </td>
+      <td style="background:rgba(167,139,250,0.03)">
+        <div class="timecode">${secToMSS(c._start||0)}~${secToMSS((c._start||0)+c.sec)}</div>
+        <div class="duration">${c.sec}초</div>
+      </td>
+      <td style="background:rgba(167,139,250,0.03)">
+        <span class="badge ${TYPE_CLASS[c.type]||'b-broll'}">${c.type}</span>
+      </td>
+      <td style="background:rgba(167,139,250,0.03)">
+        <span class="badge ${c.platform==='Veo3.1'?'b-veo':'b-kling'}">${c.platform}</span>
+      </td>
+      <td style="background:rgba(167,139,250,0.03)">
+        <span class="badge ${HARD_CLASS[c.hard]||'b-low'}">${c.hard}</span>
+      </td>
+      <!-- 축2: 에이전트 리더 판단 -->
+      <td style="background:rgba(251,191,36,0.03)">
+        ${renderLeaderScore(c.leaderTrend, 'trend')}
+      </td>
+      <td style="background:rgba(251,191,36,0.03)">
+        ${renderLeaderScore(c.leaderReaction, 'reaction')}
+      </td>
+      <td style="background:rgba(251,191,36,0.03)">
+        ${renderLeaderScore(c.leaderHook, 'hook')}
+      </td>
+      <!-- 축3: 제작 진행 -->
+      <td style="background:rgba(52,211,153,0.03)">
+        <select class="status-sel" onchange="updateStatus('${c.id}',this.value)">
+          <option ${c.status==='대기'?'selected':''}>대기</option>
+          <option ${c.status==='생성중'?'selected':''}>생성중</option>
+          <option ${c.status==='완료'?'selected':''}>완료</option>
+        </select>
+      </td>
+      <td style="background:rgba(52,211,153,0.03)">
+        <div class="gp-cell">
+          ${['g1','g2','g3','g4'].map(g=>`<div class="gp-dot ${c[g]?'pass':'fail'}" onclick="toggleGP('${c.id}','${g}')" title="${g.toUpperCase()}">${g.slice(1)}</div>`).join('')}
+        </div>
+      </td>
+      <td style="background:rgba(52,211,153,0.03)">
+        <div class="memo-btn ${hasMemo?'has-memo':''} ${isOpen?'active':''}" onclick="toggleMemo('${c.id}')" title="${hasMemo?'메모 있음':'메모 추가'}">
+          ${hasMemo?'📝':'＋'}
+        </div>
+      </td>
+      <td style="background:rgba(52,211,153,0.03)">
+        <div class="row-actions">
+          <div class="row-btn" onclick="editCut('${c.id}')">✏</div>
+          <div class="row-btn del" onclick="deleteCut('${c.id}')">✕</div>
+        </div>
+      </td>
+    </tr>${memoRow}`;
+  }).join('') + `
+    <tr class="total-row">
+      <td colspan="2" style="color:var(--text3);font-size:11px">필터 결과 ${cuts.length}컷</td>
+      <td style="font-family:'Space Mono',monospace;font-size:12px">${secToMSS(cuts.reduce((a,c)=>a+c.sec,0))}</td>
+      <td colspan="10"></td>
+    </tr>`;
+}
+
+// ── 개런티 포인트 토글 ────────────────────────────────────────
+function toggleGP(id, g) {
+  const cut = getCuts().find(c=>c.id===id);
+  if(cut){ cut[g]=!cut[g]; saveData(); renderMatrix(); showToast(`${g.toUpperCase()} ${cut[g]?'통과':'취소'}됐어요`); }
+}
+
+// ── 메모 ─────────────────────────────────────────────────────
+function toggleMemo(id) {
+  openMemoId = openMemoId===id ? null : id;
+  renderTable();
+  if(openMemoId) setTimeout(()=>{
+    const ta=document.getElementById(`memo-ta-${id}`);
+    if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+  },50);
+}
+function closeMemo(){openMemoId=null;renderTable();}
+function saveMemo(id){
+  const ta=document.getElementById(`memo-ta-${id}`);
+  if(!ta)return;
+  memos[id]=ta.value;
+  saveData();showToast('📝 메모 저장됐어요');renderTable();
+}
+
+// ── 컷 CRUD ───────────────────────────────────────────────────
+function openCutModal(cut=null) {
+  editingCutId = cut?cut.id:null;
+  document.getElementById('modal-title').textContent = cut?'컷 편집':'새 컷 추가';
+  document.getElementById('f-no').value = cut?.no||'';
+  document.getElementById('f-scene').value = cut?.scene||'';
+  document.getElementById('f-sec').value = cut?.sec||'';
+  document.getElementById('f-type').value = cut?.type||'인물 클로즈업';
+  document.getElementById('f-platform').value = cut?.platform||'Veo3.1';
+  document.getElementById('f-hard').value = cut?.hard||'중간';
+  document.getElementById('f-status').value = cut?.status||'대기';
+  document.getElementById('f-flag').value = cut?.flag||'';
+  document.getElementById('f-note').value = cut?.note||'';
+  document.getElementById('cut-modal').classList.add('open');
+}
+function closeCutModal(){document.getElementById('cut-modal').classList.remove('open');}
+
+function saveCut() {
+  const ep = getEpisode(); if(!ep) return;
+  const data = {
+    id: editingCutId||uid(),
+    no: document.getElementById('f-no').value.padStart(2,'0'),
+    scene: document.getElementById('f-scene').value,
+    sec: parseInt(document.getElementById('f-sec').value)||0,
+    type: document.getElementById('f-type').value,
+    platform: document.getElementById('f-platform').value,
+    hard: document.getElementById('f-hard').value,
+    status: document.getElementById('f-status').value,
+    flag: document.getElementById('f-flag').value,
+    note: document.getElementById('f-note').value,
+    g1:false, g2:false, g3:false, g4:false
+  };
+  if(editingCutId) {
+    const idx=ep.cuts.findIndex(c=>c.id===editingCutId);
+    if(idx>=0){data.g1=ep.cuts[idx].g1;data.g2=ep.cuts[idx].g2;data.g3=ep.cuts[idx].g3;data.g4=ep.cuts[idx].g4;ep.cuts[idx]=data;}
+  } else { ep.cuts.push(data); }
+  closeCutModal(); saveData(); showToast('✓ 컷 저장됐어요'); renderAll();
+}
+
+function editCut(id){const cut=getCuts().find(c=>c.id===id);if(cut)openCutModal(cut);}
+function deleteCut(id){
+  if(!confirm('이 컷을 삭제할까요?'))return;
+  const ep=getEpisode();if(!ep)return;
+  ep.cuts=ep.cuts.filter(c=>c.id!==id);
+  delete memos[id]; saveData(); renderAll();
+}
+
+function updateStatus(id,val){
+  const cut=getCuts().find(c=>c.id===id);
+  if(cut){cut.status=val;saveData();renderMatrix();showToast('✓ 상태 저장됐어요');}
+}
+
+// ── 에피소드 추가 ─────────────────────────────────────────────
+function openEpModal(){document.getElementById('ep-modal').classList.add('open');}
+function closeEpModal(){document.getElementById('ep-modal').classList.remove('open');}
+function saveEp(){
+  const title=document.getElementById('ep-title-input').value.trim();
+  const type=document.getElementById('ep-type-input').value;
+  if(!title)return;
+  const ch=getChannel();if(!ch)return;
+  const id='ep_'+uid();
+  ch.episodes[id]={id,title,type,status:'기획중',created:new Date().toISOString().slice(0,10),cuts:[]};
+  currentEpisode=id;
+  closeEpModal();saveData();showToast('✓ 에피소드 추가됐어요');renderAll();
+  document.getElementById('ep-title-input').value='';
+}
+
+// ── 채널 추가 ─────────────────────────────────────────────────
+function openChannelModal(){document.getElementById('channel-modal').classList.add('open');}
+function closeChannelModal(){document.getElementById('channel-modal').classList.remove('open');}
+function saveChannel(){
+  const title=document.getElementById('ch-title-input').value.trim();
+  const type=document.getElementById('ch-type-input').value.trim();
+  if(!title)return;
+  const proj=getProject();if(!proj)return;
+  const id='ch_'+uid();
+  const colors=['#f472b6','#60a5fa','#fbbf24','#a78bfa'];
+  proj.channels[id]={id,title,type:type||'채널',color:colors[Math.floor(Math.random()*colors.length)],episodes:{}};
+  currentChannel=id;
+  closeChannelModal();saveData();showToast('✓ 채널 추가됐어요');renderAll();
+  document.getElementById('ch-title-input').value='';document.getElementById('ch-type-input').value='';
+}
+
+// ── 필터 ─────────────────────────────────────────────────────
+function chipFilter(chip){
+  const f=chip.dataset.filter, v=chip.dataset.val;
+  // 같은 필터 그룹 중 동일 값 토글
+  if(f==='special'){
+    chipFilters.special = chipFilters.special===v ? '' : v;
+    document.querySelectorAll('.chip[data-filter="special"]').forEach(c=>c.classList.remove('active'));
+    if(chipFilters.special) chip.classList.add('active');
+    else chip.classList.remove('active');
+  } else {
+    document.querySelectorAll(`.chip[data-filter="${f}"]`).forEach(c=>c.classList.remove('active'));
+    // 이미 선택된 값 재클릭 시 해제
+    if(chipFilters[f]===v && v!=='all') {
+      chipFilters[f] = f==='type'?'all':'';
+    } else {
+      chipFilters[f] = v;
+      chip.classList.add('active');
+    }
+  }
+  renderTable();
+}
+function clearChips(){
+  chipFilters={type:'all', platform:'', hard:'', status:'', special:''};
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  document.querySelector('.chip[data-val="all"]')?.classList.add('active');
+  renderTable();
+}
+function sortBy(key){if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=1;}renderTable();}
+
+// ── 스튜디오 연동 탭 ──────────────────────────────────────────
+function renderStudio() {
+  const ep = getEpisode();
+  const cuts = getCuts();
+  const el = document.getElementById('studio-cut-list');
+  if(!el) return;
+
+  if(!cuts.length) {
+    el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;text-align:center;color:var(--text3)">
+      <div style="font-size:24px;margin-bottom:8px">🎬</div>
+      <div style="font-size:13px">현재 에피소드에 컷이 없어요. 제작 매트릭스에서 컷을 추가해주세요.</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:var(--surface2)">
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">CUT</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">씬 설명</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G1 대본</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G2 음성</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G3 영상</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G4 편집</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">다음 작업</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">플랫폼</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cuts.map(c => {
+          const nextTask = !c.g1 ? { label:'대본 생성', color:'var(--purple)', icon:'✍️', tab:'대본 생성' }
+            : !c.g2 ? { label:'음성 생성', color:'var(--blue)', icon:'🎙️', tab:'ElevenLabs TTS' }
+            : !c.g3 ? { label:'영상 생성', color:'var(--amber)', icon:'🎬', tab:'영상 만들기' }
+            : !c.g4 ? { label:'편집 완성', color:'var(--teal)', icon:'✂️', tab:'FFmpeg' }
+            : { label:'완료 ✓', color:'var(--teal)', icon:'✅', tab:'' };
+
+          const gpDot = (pass, color) => `
+            <div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;
+              background:${pass?'rgba(52,211,153,0.12)':'var(--surface2)'};
+              border:1px solid ${pass?'rgba(52,211,153,0.3)':'var(--border)'}">
+              ${pass ? '✓' : '·'}
+            </div>`;
+
+          return `
+          <tr style="border-bottom:1px solid var(--border);transition:background 0.1s"
+            onmouseover="this.style.background='rgba(255,255,255,0.02)'"
+            onmouseout="this.style.background=''">
+            <td style="padding:10px 12px">
+              <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--purple)">CUT ${c.no}</div>
+              ${c.flag==='hook'||c.flag==='both'?'<div style="font-size:9px;color:var(--amber);font-family:monospace">▶ HOOK</div>':''}
+              ${c.flag==='special'||c.flag==='both'?'<div style="font-size:9px;color:var(--pink);font-family:monospace">★ 특수</div>':''}
+            </td>
+            <td style="padding:10px 12px">
+              <div style="font-size:12px;font-weight:500;color:var(--text)">${c.scene}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">${c.sec}초 · ${c.type}</div>
+            </td>
+            <td style="padding:10px 12px;text-align:center">
+              <div style="display:flex;justify-content:center" onclick="toggleGP('${c.id}','g1')" title="클릭하여 G1 토글">
+                ${gpDot(c.g1, 'var(--purple)')}
+              </div>
+            </td>
+            <td style="padding:10px 12px;text-align:center">
+              <div style="display:flex;justify-content:center" onclick="toggleGP('${c.id}','g2')" title="클릭하여 G2 토글">
+                ${gpDot(c.g2, 'var(--blue)')}
+              </div>
+            </td>
+            <td style="padding:10px 12px;text-align:center">
+              <div style="display:flex;justify-content:center" onclick="toggleGP('${c.id}','g3')" title="클릭하여 G3 토글">
+                ${gpDot(c.g3, 'var(--amber)')}
+              </div>
+            </td>
+            <td style="padding:10px 12px;text-align:center">
+              <div style="display:flex;justify-content:center" onclick="toggleGP('${c.id}','g4')" title="클릭하여 G4 토글">
+                ${gpDot(c.g4, 'var(--teal)')}
+              </div>
+            </td>
+            <td style="padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:5px">
+                <span style="font-size:14px">${nextTask.icon}</span>
+                <span style="font-size:11px;font-weight:700;color:${nextTask.color}">${nextTask.label}</span>
+              </div>
+              ${nextTask.tab?`<div style="font-size:10px;color:var(--text3);margin-top:2px">→ 스튜디오 ${nextTask.tab} 탭</div>`:''}
+            </td>
+            <td style="padding:10px 12px">
+              <span class="badge ${c.platform==='Veo3.1'?'b-veo':'b-kling'}">${c.platform}</span>
+              <div style="font-size:10px;color:var(--text3);margin-top:3px">${HARD_CLASS[c.hard]?c.hard:''}</div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    <div style="padding:8px 14px;font-size:11px;color:var(--text3);background:var(--surface2);border-top:1px solid var(--border);display:flex;justify-content:space-between">
+      <span>총 ${cuts.length}컷 · G포인트 클릭으로 상태 업데이트</span>
+      <span style="color:var(--teal)">${cuts.filter(c=>c.g4).length}컷 완전 완료</span>
+    </div>
+  </div>`;
+}
+
+// ── 인스타 데이터 ──────────────────────────────────────────────
+const IG_KEY = 'content_matrix_ig_v1';
+let igData = { ch_yeori: { posts: [] }, ch_ai: { posts: [] } };
+let igFilter = 'all';
+let editingIgId = null;
+let isInstaMode = false; // 인스타 채널 선택 여부
+
+const IG_STAGE_LABEL = { ig1:'IG1 소재확정', ig2:'IG2 비주얼', ig3:'IG3 카피', ig4:'IG4 업로드', done:'완료' };
+
+// 인스타 채널 전환
+function switchToInsta() {
+  isInstaMode = true;
+  // 유튜브 채널 active 해제
+  document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('insta-sidebar-item')?.classList.add('active');
+  // 에피소드 섹션 숨기기
+  document.getElementById('ep-section').style.display = 'none';
+  // 메인 탭 전체 숨기고 인스타만 표시
+  ['dashboard','matrix','leader','studio','settings'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if(el) el.style.display = 'none';
+  });
+  document.getElementById('tab-insta').style.display = 'block';
+  renderInsta();
+}
+
+// 유튜브 채널로 복귀
+function switchChannel(id) {
+  isInstaMode = false;
+  currentChannel = id;
+  document.getElementById('insta-sidebar-item')?.classList.remove('active');
+  document.getElementById('ep-section').style.display = 'block';
+  const eps = getChannel()?.episodes || {};
+  const firstEp = Object.keys(eps)[0];
+  if(firstEp) currentEpisode = firstEp;
+  // 인스타 탭 숨기고 대시보드로 복귀
+  document.getElementById('tab-insta').style.display = 'none';
+  switchTab(currentTab, document.querySelector(`.tab-btn[data-tab="${currentTab}"]`) || document.querySelector('.tab-btn'));
+  renderAll();
+}
+
+function getIgPosts() {
+  return (igData['ch_yeori']?.posts || []).filter(p =>
+    igFilter === 'all' || p.type === igFilter
+  );
+}
+
+function renderInsta() {
+  const allPosts = igData['ch_yeori']?.posts || [];
+  document.getElementById('insta-post-count').textContent = allPosts.length;
+
+  // KPI
+  const withKpi = allPosts.filter(p => p.save > 0 || p.share > 0);
+  const avgSave = withKpi.length ? (withKpi.reduce((a,p)=>a+(+p.save||0),0)/withKpi.length).toFixed(1) : '—';
+  const avgShare = withKpi.length ? (withKpi.reduce((a,p)=>a+(+p.share||0),0)/withKpi.length).toFixed(1) : '—';
+  const setKpi = (id, val, target) => {
+    const el = document.getElementById(id); if(!el) return;
+    el.textContent = val === '—' ? '—' : val + '%';
+    el.className = 'ig-kpi-value ' + (val==='—' ? 'ig-kpi-pend' : (+val >= target ? 'ig-kpi-pass' : 'ig-kpi-fail'));
+  };
+  const totalEl = document.getElementById('ig-stat-total');
+  if(totalEl) totalEl.textContent = allPosts.length;
+  setKpi('ig-stat-save', avgSave, 1);
+  setKpi('ig-stat-share', avgShare, 0.5);
+
+  // IG 개런티 포인트
+  const latest = allPosts[allPosts.length - 1];
+  const stageOrder = ['ig1','ig2','ig3','ig4','done'];
+  ['ig-gp1','ig-gp2','ig-gp3','ig-gp4'].forEach((id, i) => {
+    const el = document.getElementById(id); if(!el) return;
+    const stageIdx = latest ? stageOrder.indexOf(latest.stage) : -1;
+    el.className = 'ig-gp-badge ' + (stageIdx > i ? 'pass' : 'pending');
+  });
+
+  // 테이블
+  const posts = getIgPosts();
+  const tbody = document.getElementById('ig-post-tbody');
+  if(!tbody) return;
+  if(!posts.length) {
+    tbody.innerHTML = `<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--text3)">게시물이 없어요. + 게시물 추가로 시작하세요.</td></tr>`;
+    return;
+  }
+  const stageColor = {ig1:'var(--pink)',ig2:'var(--purple)',ig3:'var(--amber)',ig4:'var(--blue)',done:'var(--teal)'};
+  const typeTag = {
+    feed:`<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--pink-bg);color:var(--pink)">피드툰</span>`,
+    reels:`<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--purple-bg);color:var(--purple)">릴스</span>`,
+    story:`<span style="font-size:10px;padding:2px 7px;border-radius:4px;background:var(--amber-bg);color:var(--amber)">스토리</span>`
+  };
+  tbody.innerHTML = posts.map((p, i) => `
+    <tr style="border-bottom:1px solid var(--border);transition:background 0.1s" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+      <td style="padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--pink)">${String(i+1).padStart(2,'0')}</td>
+      <td style="padding:10px 12px">
+        <div style="font-size:12px;font-weight:500;color:var(--text);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title||'—'}</div>
+        ${p.hook?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${p.hook}</div>`:''}
+      </td>
+      <td style="padding:10px 12px">${typeTag[p.type]||p.type}</td>
+      <td style="padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text2)">${p.time||'—'}</td>
+      <td style="padding:10px 12px">
+        <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,0.2);color:${stageColor[p.stage]||'var(--text3)'}">
+          ${IG_STAGE_LABEL[p.stage]||p.stage}
+        </span>
+      </td>
+      <td style="padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:${p.save>=1?'var(--teal)':p.save>0?'var(--amber)':'var(--text3)'}">
+        ${p.save>0?p.save+'%':'—'}
+      </td>
+      <td style="padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:${p.share>=0.5?'var(--teal)':p.share>0?'var(--amber)':'var(--text3)'}">
+        ${p.share>0?p.share+'%':'—'}
+      </td>
+      <td style="padding:10px 12px">
+        <select style="background:transparent;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:11px;padding:3px 6px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;outline:none"
+          onchange="updateIgStage('${p.id}',this.value)">
+          ${Object.entries(IG_STAGE_LABEL).map(([k,v])=>`<option value="${k}" ${p.stage===k?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:10px 12px">
+        <div style="display:flex;gap:4px">
+          <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text3);cursor:pointer;font-size:11px" onclick="editIgPost('${p.id}')">✏</div>
+          <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text3);cursor:pointer;font-size:11px" onclick="deleteIgPost('${p.id}')">✕</div>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function igChipFilter(chip) {
+  igFilter = chip.dataset.igFilter;
+  document.querySelectorAll('[data-ig-filter]').forEach(c => {
+    c.style.background=''; c.style.borderColor=''; c.style.color='var(--text2)';
+  });
+  chip.style.background='var(--pink-bg)'; chip.style.borderColor='rgba(244,114,182,0.4)'; chip.style.color='var(--pink)';
+  renderInsta();
+}
+function selectIgStage(stage, card) {
+  document.querySelectorAll('.ig-stage-card').forEach(c=>c.classList.remove('active'));
+  card.classList.add('active');
+}
+function updateIgStage(id, val) {
+  const posts = igData['ch_yeori']?.posts || [];
+  const p = posts.find(x=>x.id===id);
+  if(p){ p.stage=val; saveData(); renderInsta(); showToast('✓ 단계 업데이트됐어요'); }
+}
+function openIgPostModal(post=null) {
+  editingIgId = post?post.id:null;
+  document.getElementById('ig-modal-title').textContent = post?'게시물 편집':'게시물 추가';
+  document.getElementById('ig-f-title').value = post?.title||'';
+  document.getElementById('ig-f-type').value = post?.type||'feed';
+  document.getElementById('ig-f-time').value = post?.time||'18:00';
+  document.getElementById('ig-f-stage').value = post?.stage||'ig1';
+  document.getElementById('ig-f-save').value = post?.save||'';
+  document.getElementById('ig-f-share').value = post?.share||'';
+  document.getElementById('ig-f-hook').value = post?.hook||'';
+  document.getElementById('ig-f-tags').value = post?.tags||'';
+  document.getElementById('ig-f-note').value = post?.note||'';
+  document.getElementById('ig-post-modal').classList.add('open');
+}
+function closeIgPostModal(){ document.getElementById('ig-post-modal').classList.remove('open'); }
+function saveIgPost() {
+  if(!igData['ch_yeori']) igData['ch_yeori'] = {posts:[]};
+  const posts = igData['ch_yeori'].posts;
+  const data = {
+    id: editingIgId||'ig_'+Date.now().toString(36),
+    title: document.getElementById('ig-f-title').value.trim(),
+    type: document.getElementById('ig-f-type').value,
+    time: document.getElementById('ig-f-time').value,
+    stage: document.getElementById('ig-f-stage').value,
+    save: parseFloat(document.getElementById('ig-f-save').value)||0,
+    share: parseFloat(document.getElementById('ig-f-share').value)||0,
+    hook: document.getElementById('ig-f-hook').value.trim(),
+    tags: document.getElementById('ig-f-tags').value.trim(),
+    note: document.getElementById('ig-f-note').value.trim(),
+    created: new Date().toISOString().slice(0,10)
+  };
+  if(!data.title){ showToast('제목을 입력해주세요'); return; }
+  if(editingIgId){ const idx=posts.findIndex(p=>p.id===editingIgId); if(idx>=0)posts[idx]=data; }
+  else posts.push(data);
+  closeIgPostModal(); saveData(); showToast('✓ 게시물 저장됐어요'); renderInsta();
+}
+function editIgPost(id){ const p=(igData['ch_yeori']?.posts||[]).find(x=>x.id===id); if(p)openIgPostModal(p); }
+function deleteIgPost(id){
+  if(!confirm('이 게시물을 삭제할까요?')) return;
+  igData['ch_yeori'].posts = (igData['ch_yeori'].posts||[]).filter(p=>p.id!==id);
+  saveData(); renderInsta();
+}
+
+// 인스타 모달 닫기
+document.getElementById('ig-post-modal').addEventListener('click', e => {
+  if(e.target.id==='ig-post-modal') closeIgPostModal();
+});
+function renderLeader() {
+  renderLeaderCutStatus();
+}
+
+function renderLeaderCutStatus() {
+  const el = document.getElementById('leader-cut-status');
+  if(!el) return;
+  const cuts = getCuts();
+  if(!cuts.length) {
+    el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;text-align:center;color:var(--text3);font-size:12px">현재 에피소드에 컷이 없어요.</div>`;
+    return;
+  }
+
+  el.innerHTML = `
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:var(--surface2)">
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">CUT</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">씬 설명</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">트렌드</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">시청자 반응</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">훅 위험도</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">배분 임무</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G1~G4</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cuts.map(c => {
+          const assigned = c.platform==='Veo3.1' ? '🎬 Veo3.1 에이전트' : '🎬 Kling 에이전트';
+          const priority = c.flag==='hook'||c.flag==='both' ? '🔴 최우선' : c.hard==='높음' ? '🟡 높음' : '🟢 일반';
+          const gPass = [c.g1,c.g2,c.g3,c.g4].filter(Boolean).length;
+          return `
+          <tr style="border-bottom:1px solid var(--border);transition:background 0.1s"
+            onmouseover="this.style.background='rgba(255,255,255,0.02)'"
+            onmouseout="this.style.background=''">
+            <td style="padding:10px 12px">
+              <div style="font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--purple)">CUT ${c.no}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">${priority}</div>
+            </td>
+            <td style="padding:10px 12px">
+              <div style="font-size:12px;color:var(--text);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.scene}</div>
+            </td>
+            <td style="padding:10px 12px">${renderLeaderScore(c.leaderTrend,'trend')}</td>
+            <td style="padding:10px 12px">${renderLeaderScore(c.leaderReaction,'reaction')}</td>
+            <td style="padding:10px 12px">${renderLeaderScore(c.leaderHook,'hook')}</td>
+            <td style="padding:10px 12px">
+              <div style="font-size:11px;color:var(--text)">${assigned}</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">✍️ 대본 에이전트 G1</div>
+              <div style="font-size:10px;color:var(--text3)">🎙️ 음성 에이전트 G2</div>
+            </td>
+            <td style="padding:10px 12px">
+              <div style="display:flex;align-items:center;gap:4px">
+                ${['g1','g2','g3','g4'].map(g=>`
+                  <div style="width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;
+                    background:${c[g]?'rgba(52,211,153,0.15)':'var(--surface2)'};
+                    color:${c[g]?'var(--teal)':'var(--text3)'};
+                    border:1px solid ${c[g]?'rgba(52,211,153,0.3)':'var(--border)'}">
+                    ${g.slice(1)}
+                  </div>`).join('')}
+                <span style="font-size:10px;color:var(--text3);margin-left:4px">${gPass}/4</span>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function runLeaderAnalysis() {
+  const cuts = getCuts();
+  if(!cuts.length) { showToast('⚠️ 분석할 컷이 없어요'); return; }
+
+  // 에이전트 상태 업데이트
+  const setAgState = (id, state, label) => {
+    const el = document.getElementById(id);
+    if(el) { el.className = `agent-state ${state}`; el.textContent = label; }
+  };
+
+  showToast('🤖 리더 분석 시작...');
+  document.getElementById('leader-result').textContent = '분석 중...';
+  setAgState('ag-trend', 'running', '분석중');
+
+  const ep = getEpisode();
+  const cutSummary = cuts.map(c =>
+    `CUT${c.no}: ${c.scene} (${c.type}, ${c.platform}, ${c.hard}난이도, flag:${c.flag||'없음'})`
+  ).join('\n');
+
+  const prompt = `당신은 한국 유튜브 콘텐츠 제작 전문 에이전트 리더입니다.
+아래는 "${ep?.title}" 에피소드의 CUT 목록입니다:
+
+${cutSummary}
+
+각 CUT에 대해 다음을 JSON 형식으로 분석해주세요:
+- leaderTrend: 현재 AI/자기계발 트렌드 연관도 (0~100 숫자)
+- leaderReaction: 예상 시청자 반응 (공감/웃음/정보/힐링/자극 중 하나)
+- leaderHook: 훅 위험도 (높음/중간/낮음)
+
+응답 형식 (JSON만, 다른 텍스트 없이):
+{"cuts":[{"no":"01","leaderTrend":75,"leaderReaction":"공감","leaderHook":"낮음"},...],"summary":"전체 평가 2~3문장"}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.map(i=>i.text||'').join('') || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const result = JSON.parse(clean);
+
+    // CUT별 판단값 저장
+    const ep2 = getEpisode();
+    if(ep2 && result.cuts) {
+      result.cuts.forEach(r => {
+        const cut = ep2.cuts.find(c=>c.no===r.no);
+        if(cut) {
+          cut.leaderTrend = r.leaderTrend;
+          cut.leaderReaction = r.leaderReaction;
+          cut.leaderHook = r.leaderHook;
+        }
+      });
+      saveData();
+    }
+
+    // 결과 표시
+    document.getElementById('leader-result').innerHTML =
+      `<span style="color:var(--teal)">✓ 분석 완료</span><br>${result.summary||''}`;
+
+    setAgState('ag-trend','done','완료');
+    setAgState('ag-script','done','임무 배분됨');
+    setAgState('ag-voice','done','임무 배분됨');
+    setAgState('ag-video','done','임무 배분됨');
+
+    showToast('✅ 리더 분석 완료!');
+    renderLeaderCutStatus();
+    // 매트릭스 탭도 업데이트
+    if(currentTab==='leader') renderLeader();
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('leader-result').textContent = '분석 실패: API 연결을 확인해주세요.';
+    setAgState('ag-trend','idle','대기중');
+    showToast('⚠️ 분석 중 오류 발생');
+  }
+}
+
+// ── CSV 내보내기 ───────────────────────────────────────────────
+function exportCSV(){
+  const ep=getEpisode();if(!ep)return;
+  const cuts=getFilteredCuts();
+  const rows=[['CUT','씬 설명','길이(초)','유형','플랫폼','난이도','상태','G1','G2','G3','G4','처리 포인트']];
+  cuts.forEach(c=>rows.push([c.no,c.scene,c.sec,c.type,c.platform,c.hard,c.status,c.g1?'✓':'',c.g2?'✓':'',c.g3?'✓':'',c.g4?'✓':'',c.note]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`콘텐츠매트릭스_${ep.title}.csv`;
+  a.click();
+}
+
+// ── 헤더 메타 업데이트 ────────────────────────────────────────
+function updateHeaderMeta(){
+  const ch=getChannel();const ep=getEpisode();
+  if(!ch||!ep){document.getElementById('header-meta').textContent='';return;}
+  const cuts=getCuts();
+  const done=cuts.filter(c=>c.status==='완료').length;
+  document.getElementById('header-meta').textContent=
+    `${ch.title} · ${ep.title} · ${cuts.length}컷 · ${done}완료`;
+}
+
+// ── 모달 오버레이 닫기 ────────────────────────────────────────
+['cut-modal','ep-modal','channel-modal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target.id===id)document.getElementById(id).classList.remove('open');
+  });
+});
+
+// ── 전체 렌더 ─────────────────────────────────────────────────
+function renderAll(){
+  renderSidebar();
+  updateHeaderMeta();
+  if(currentTab==='dashboard') renderDashboard();
+  if(currentTab==='matrix') renderMatrix();
+  if(currentTab==='studio') renderStudio();
+  if(currentTab==='leader') renderLeader();
+}
+
+// ── 초기화 ────────────────────────────────────────────────────
+// ── 스튜디오 G포인트 동기화 ────────────────────────────────────
+const GP_SHARE_KEY = 'aca_gpoints_v1';
+
+function syncGPointsFromStudio() {
+  try {
+    const gpData = JSON.parse(localStorage.getItem(GP_SHARE_KEY) || '{}');
+    if(!Object.keys(gpData).length) return;
+    const ep = getEpisode();
+    if(!ep) return;
+    let updated = false;
+    ep.cuts.forEach(cut => {
+      const key = `cut_${cut.no}`;
+      const gp = gpData[key];
+      if(!gp) return;
+      ['g1','g2','g3','g4'].forEach(g => {
+        if(gp[g] !== undefined && gp[g] !== cut[g]) {
+          cut[g] = gp[g];
+          updated = true;
+        }
+      });
+    });
+    if(updated) {
+      saveData();
+      showToast('🔄 스튜디오 G포인트 동기화됨');
+      if(currentTab === 'matrix') renderMatrix();
+      if(currentTab === 'studio') renderStudio();
+      if(currentTab === 'leader') renderLeader();
+      if(currentTab === 'dashboard') renderDashboard();
+      // 탭에 상관없이 파이프라인 업데이트
+      renderPipeline();
+    }
+  } catch(e) { console.warn('G포인트 동기화 실패:', e); }
+}
+
+// 스튜디오에서 G포인트 변경 시 자동 감지
+window.addEventListener('gpoints_updated', () => syncGPointsFromStudio());
+// 다른 탭에서 변경 시 감지 (storage 이벤트)
+window.addEventListener('storage', (e) => {
+  if(e.key === GP_SHARE_KEY) syncGPointsFromStudio();
+});
+
+loadData();
+renderAll();
+</script>
+</body>
+</html>
