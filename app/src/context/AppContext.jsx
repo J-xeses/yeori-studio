@@ -91,19 +91,15 @@ function reducer(state, action) {
       }
     }
 
-    // ── 새 에피소드 추가 ─────────────────────────────────────
+    // ── 새 에피소드 추가 (사이드바에서만 호출 — 탭 자동 추가 없음) ─────
     case 'ADD_EPISODE': {
       const maxNum = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number))
       const newId = `ep_${Date.now()}`
       const newEp = makeEpisode(newId, maxNum + 1)
+      // openTabIds에 자동 추가하지 않음 — 사이드바에서 클릭해야 탭 열림
       return {
         ...state,
         episodes: { ...state.episodes, [newId]: newEp },
-        openTabIds: [...(state.openTabIds || []), newId],
-        activeEpisodeId: newId,
-        episode: newEp.episode,
-        cuts: newEp.cuts,
-        scriptRaw: '',
       }
     }
 

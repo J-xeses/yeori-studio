@@ -176,16 +176,12 @@ function EpisodeSidebar({ onClose }) {
 }
 
 // ── 에피소드 탭 바 (탭만, 사이드바 상태는 props로) ──────────────
-function EpisodeBar({ showSidebar, onToggleSidebar }) {
+function EpisodeBar({ showSidebar, onToggleSidebar, onOpenSidebar }) {
     const { state, dispatch } = useApp()
     const { episodes, activeEpisodeId, openTabIds = [] } = state
 
     const openTabs = openTabIds.map(id => episodes[id]).filter(Boolean)
 
-    const handleAdd = () => {
-        if (Object.keys(episodes).length >= 10) { alert('에피소드는 최대 10개까지 만들 수 있어요.'); return }
-        dispatch({ type: 'ADD_EPISODE' })
-    }
     const handleClose = (e, id) => {
         e.stopPropagation()
         dispatch({ type: 'CLOSE_TAB', id })
@@ -245,7 +241,7 @@ function EpisodeBar({ showSidebar, onToggleSidebar }) {
             })}
 
             <button
-                onClick={handleAdd}
+                onClick={onOpenSidebar}
                 style={{
                     padding: '3px 10px', borderRadius: 6, flexShrink: 0,
                     background: 'transparent', border: '1px dashed var(--border2)',
@@ -253,8 +249,8 @@ function EpisodeBar({ showSidebar, onToggleSidebar }) {
                 }}
                 onMouseEnter={e => { e.currentTarget.style.color = 'var(--purple)'; e.currentTarget.style.borderColor = 'var(--purple)' }}
                 onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.borderColor = 'var(--border2)' }}
-                title="새 에피소드 추가"
-            >+ 새 에피소드</button>
+                title="에피소드 목록 열기"
+            >+ 에피소드 목록</button>
         </div>
     )
 }
@@ -288,7 +284,7 @@ function Layout() {
                     transition: 'margin-left 0.2s ease',
                     overflow: 'hidden',
                 }}>
-                    <EpisodeBar showSidebar={showSidebar} onToggleSidebar={() => setShowSidebar(v => !v)} />
+                    <EpisodeBar showSidebar={showSidebar} onToggleSidebar={() => setShowSidebar(v => !v)} onOpenSidebar={() => setShowSidebar(true)} />
                     <div className={s.content}>
                         <Tab />
                     </div>
