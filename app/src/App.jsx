@@ -38,22 +38,30 @@ function getEpStatus(ep) {
     return { label: '생성됨', color: '#a78bfa' }
 }
 
+const SIDEBAR_EP_GROUPS = [
+    { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'] },
+    { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
+    { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'] },
+]
+function getEpCode(type, num) {
+    const n = String(num).padStart(2, '0')
+    return ['IG_R', 'IG_P', 'IG_S'].includes(type) ? `${type}${n}` : `${type}_E${n}`
+}
+
 // ── 에피소드 목록 사이드바 (좌측 고정 패널) ───────────────────
 function EpisodeSidebar({ onClose }) {
     const { state, dispatch } = useApp()
     const { episodes, activeEpisodeId, openTabIds = [] } = state
+    const [collapsed, setCollapsed] = useState({})
 
-    const epList = Object.values(episodes).sort((a, b) =>
-        new Date(a.createdAt) - new Date(b.createdAt)
+    const allEps = Object.values(episodes).sort((a, b) =>
+        (a.episode.number || 0) - (b.episode.number || 0)
     )
+    const knownTypes = SIDEBAR_EP_GROUPS.flatMap(g => g.types)
 
     const handleAdd = () => {
         if (Object.keys(episodes).length >= 10) { alert('에피소드는 최대 10개까지 만들 수 있어요.'); return }
         dispatch({ type: 'ADD_EPISODE' })
-    }
-
-    const handleSwitch = (id) => {
-        dispatch({ type: 'SWITCH_EPISODE', id })
     }
 
     const handleDelete = (e, id) => {
@@ -62,6 +70,100 @@ function EpisodeSidebar({ onClose }) {
         if (!confirm('에피소드를 완전히 삭제할까요?\n(탭만 닫으려면 탭의 ✕ 버튼을 이용하세요)')) return
         dispatch({ type: 'DELETE_EPISODE', id })
     }
+
+    const renderItem = (ep) => {
+        const status = getEpStatus(ep)
+        const isActive = ep.id === activeEpisodeId
+        const isOpen = openTabIds.includes(ep.id)
+        const ct = ep.episode?.contentType
+        const epCode = ct ? getEpCode(ct, ep.episode.number) : `EP${String(ep.episode.number).padStart(2, '0')}`
+        return (
+            <div
+                key={ep.id}
+                onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}
+                style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 8,
+                    padding: '8px 12px 8px 20px', cursor: 'pointer',
+                    background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent',
+                    borderLeft: `3px solid ${isActive ? '#a78bfa' : 'transparent'}`,
+                    transition: 'background 0.1s',
+                }}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(124,58,237,0.2)' : 'transparent' }}
+            >
+                {/* 코드 배지 */}
+                <div style={{
+                    fontSize: 9, fontWeight: 700, flexShrink: 0,
+                    color: isActive ? '#c4b5fd' : 'var(--text3)',
+                    paddingTop: 2, minWidth: 44,
+                }}>
+                    {epCode}
+                </div>
+
+                {/* 제목 + 메타 */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                        fontSize: 12, lineHeight: 1.3,
+                        color: isActive ? '#ede9fe' : 'var(--text)',
+                        fontWeight: isActive ? 700 : 400,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                        {ep.episode.title || '새 에피소드'}
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <span>{ep.cuts.length}컷</span>
+                        <span>·</span>
+                        <span>{ep.episode.location}</span>
+                        {isOpen && <span style={{ color: '#a78bfa', fontWeight: 600 }}>· 열림</span>}
+                    </div>
+                </div>
+
+                {/* 상태 + 삭제 */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                    <span style={{
+                        fontSize: 9, padding: '1px 5px', borderRadius: 8,
+                        color: status.color,
+                        background: `${status.color}18`,
+                        border: `1px solid ${status.color}30`,
+                    }}>{status.label}</span>
+                    {Object.keys(episodes).length > 1 && (
+                        <span
+                            onClick={e => handleDelete(e, ep.id)}
+                            title="에피소드 삭제"
+                            style={{ fontSize: 11, color: '#4b4b5a', cursor: 'pointer', lineHeight: 1 }}
+                            onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                            onMouseLeave={e => e.currentTarget.style.color = '#4b4b5a'}
+                        >🗑</span>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
+    const renderGroupHeader = (id, label, count) => (
+        <div
+            onClick={() => setCollapsed(prev => ({ ...prev, [id]: !prev[id] }))}
+            style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '5px 12px', cursor: 'pointer',
+                background: 'rgba(255,255,255,0.03)',
+                borderBottom: '1px solid var(--border)',
+                fontSize: 10, fontWeight: 600, color: 'var(--text3)',
+                letterSpacing: '0.04em',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+        >
+            <span>{label}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{
+                    fontSize: 9, padding: '1px 5px', borderRadius: 8,
+                    background: 'rgba(255,255,255,0.08)', color: 'var(--text3)',
+                }}>{count}</span>
+                <span style={{ fontSize: 9 }}>{collapsed[id] ? '▶' : '▼'}</span>
+            </div>
+        </div>
+    )
 
     return (
         <div style={{
@@ -78,7 +180,7 @@ function EpisodeSidebar({ onClose }) {
                 borderBottom: '1px solid var(--border)',
             }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.05em' }}>
-                    에피소드 목록 ({epList.length}/10)
+                    에피소드 목록 ({allEps.length}/10)
                 </span>
                 <button
                     onClick={onClose}
@@ -87,75 +189,34 @@ function EpisodeSidebar({ onClose }) {
                 >✕</button>
             </div>
 
-            {/* 에피소드 목록 */}
+            {/* 에피소드 목록 (유형별 그룹) */}
             <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                {epList.map(ep => {
-                    const status = getEpStatus(ep)
-                    const isActive = ep.id === activeEpisodeId
-                    const isOpen = openTabIds.includes(ep.id)
-                    const title = ep.episode.title || '새 에피소드'
+                {SIDEBAR_EP_GROUPS.map(group => {
+                    const groupEps = allEps.filter(ep =>
+                        ep.episode?.contentType && group.types.includes(ep.episode.contentType)
+                    )
+                    if (groupEps.length === 0) return null
                     return (
-                        <div
-                            key={ep.id}
-                            onClick={() => handleSwitch(ep.id)}
-                            style={{
-                                display: 'flex', alignItems: 'flex-start', gap: 8,
-                                padding: '9px 12px', cursor: 'pointer',
-                                background: isActive ? 'rgba(124,58,237,0.2)' : 'transparent',
-                                borderLeft: `3px solid ${isActive ? '#a78bfa' : 'transparent'}`,
-                                transition: 'background 0.1s',
-                            }}
-                            onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent' }}
-                        >
-                            {/* EP번호 */}
-                            <div style={{
-                                fontSize: 10, fontWeight: 700, flexShrink: 0,
-                                color: isActive ? '#c4b5fd' : 'var(--text3)',
-                                paddingTop: 2, minWidth: 28,
-                            }}>
-                                EP{ep.episode.number}
-                            </div>
-
-                            {/* 제목 + 메타 */}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{
-                                    fontSize: 12, lineHeight: 1.3,
-                                    color: isActive ? '#ede9fe' : 'var(--text)',
-                                    fontWeight: isActive ? 700 : 400,
-                                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                                }}>
-                                    {ep.episode.title || `EP${ep.episode.number} 새 에피소드`}
-                                </div>
-                                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, display: 'flex', gap: 4, alignItems: 'center' }}>
-                                    <span>{ep.cuts.length}컷</span>
-                                    <span>·</span>
-                                    <span>{ep.episode.location}</span>
-                                    {isOpen && <span style={{ color: '#a78bfa', fontWeight: 600 }}>· 열림</span>}
-                                </div>
-                            </div>
-
-                            {/* 상태 + 삭제 */}
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                                <span style={{
-                                    fontSize: 9, padding: '1px 5px', borderRadius: 8,
-                                    color: status.color,
-                                    background: `${status.color}18`,
-                                    border: `1px solid ${status.color}30`,
-                                }}>{status.label}</span>
-                                {Object.keys(episodes).length > 1 && (
-                                    <span
-                                        onClick={e => handleDelete(e, ep.id)}
-                                        title="에피소드 삭제"
-                                        style={{ fontSize: 11, color: '#4b4b5a', cursor: 'pointer', lineHeight: 1 }}
-                                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                                        onMouseLeave={e => e.currentTarget.style.color = '#4b4b5a'}
-                                    >🗑</span>
-                                )}
-                            </div>
+                        <div key={group.id}>
+                            {renderGroupHeader(group.id, group.label, groupEps.length)}
+                            {!collapsed[group.id] && groupEps.map(renderItem)}
                         </div>
                     )
                 })}
+
+                {/* 기타: contentType 없는 레거시 에피소드 */}
+                {(() => {
+                    const otherEps = allEps.filter(ep =>
+                        !ep.episode?.contentType || !knownTypes.includes(ep.episode.contentType)
+                    )
+                    if (otherEps.length === 0) return null
+                    return (
+                        <div>
+                            {renderGroupHeader('other', '📁 기타', otherEps.length)}
+                            {!collapsed['other'] && otherEps.map(renderItem)}
+                        </div>
+                    )
+                })()}
             </div>
 
             {/* 하단 추가 버튼 */}
