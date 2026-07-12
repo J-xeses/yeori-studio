@@ -1019,7 +1019,8 @@ ${currentScript}
               <span>CUT</span>
               <span>유형</span>
               <span>씬</span>
-              <span>대사 / 나레이션</span>
+              <span>대사</span>
+              <span>나레이션 (VO)</span>
               <span style={{textAlign:'right'}}>상태</span>
             </div>
             {cuts.map((c, i) => {
@@ -1027,12 +1028,6 @@ ${currentScript}
               const isG1 = !!gData[`cut_${c.no}`]?.g1
               const hasDial = c.dialogue && !/^없음$/i.test(c.dialogue.trim())
               const hasVo = c.narration && !/^없음$/i.test(c.narration.trim())
-              const dialLine = hasDial
-                ? c.dialogue.slice(0, 38) + (c.dialogue.length > 38 ? '…' : '')
-                : null
-              const voLine = hasVo
-                ? c.narration.slice(0, 38) + (c.narration.length > 38 ? '…' : '')
-                : null
               const isActive = i === activeCut
               return (
                 <div
@@ -1052,9 +1047,10 @@ ${currentScript}
                   </span>
                   <span className={s.cutListScene}>{c.scene || '—'}</span>
                   <span className={s.cutListDialogue}>
-                    {dialLine && <span className={s.cutListDial}>{dialLine}</span>}
-                    {voLine && <span className={s.cutListVo}>(VO) {voLine}</span>}
-                    {!dialLine && !voLine && <span style={{color:'var(--text-3)'}}>—</span>}
+                    {hasDial ? c.dialogue.slice(0, 42) + (c.dialogue.length > 42 ? '…' : '') : <span style={{color:'var(--text-3)'}}>—</span>}
+                  </span>
+                  <span className={s.cutListVo}>
+                    {hasVo ? c.narration.slice(0, 42) + (c.narration.length > 42 ? '…' : '') : <span style={{color:'var(--text-3)'}}>—</span>}
                   </span>
                   <span className={s.cutListBadges}>
                     {isG1 && <span className={s.g1Badge}>G1</span>}

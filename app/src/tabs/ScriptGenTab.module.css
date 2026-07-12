@@ -266,7 +266,7 @@
 }
 .cutListHeader {
   display: grid;
-  grid-template-columns: 56px 72px 160px 1fr 60px;
+  grid-template-columns: 56px 72px 150px 1fr 1fr 60px;
   gap: 0 8px; padding: 6px 14px;
   font-size: 10px; font-weight: 700; color: var(--text-3);
   text-transform: uppercase; letter-spacing: .6px;
@@ -274,9 +274,9 @@
 }
 .cutListRow {
   display: grid;
-  grid-template-columns: 56px 72px 160px 1fr 60px;
+  grid-template-columns: 56px 72px 150px 1fr 1fr 60px;
   gap: 0 8px; padding: 8px 14px;
-  align-items: start; cursor: pointer;
+  align-items: center; cursor: pointer;
   border-bottom: 1px solid rgba(255,255,255,.04);
   transition: background .1s;
 }
@@ -291,17 +291,14 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .cutListDialogue {
-  display: flex; flex-direction: column; gap: 2px;
-  overflow: hidden; min-width: 0;
-}
-.cutListDial {
   font-size: 11.5px; color: var(--text-2);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
 }
 .cutListVo {
-  font-size: 10.5px; color: var(--text-3);
+  font-size: 11px; color: var(--text-3);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  font-style: italic;
+  font-style: italic; min-width: 0;
 }
 .cutListBadges {
   display: flex; gap: 4px; justify-content: flex-end; align-items: center;
