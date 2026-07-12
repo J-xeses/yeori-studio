@@ -241,3 +241,59 @@
 .revisionHistNum { color: var(--text-3); font-size: 10.5px; min-width: 20px; }
 .revisionHistReq { color: var(--text-2); flex: 1; }
 .revisionHistStatus { color: #4ade80; font-size: 11px; }
+
+/* ── 뷰 토글 바 ─────────────────────────────────── */
+.viewToggleBar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.viewToggleBtn {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text-2); cursor: pointer; transition: all .15s;
+}
+.viewToggleBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+.viewToggleBtnActive {
+  background: rgba(139,92,246,.18); border-color: rgba(139,92,246,.5);
+  color: var(--accent-light);
+}
+
+/* ── 전체 목록 뷰 ────────────────────────────────── */
+.cutListView {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+  display: flex; flex-direction: column;
+}
+.cutListHeader {
+  display: grid;
+  grid-template-columns: 56px 72px 160px 1fr 60px;
+  gap: 0 8px; padding: 6px 14px;
+  font-size: 10px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 1px solid var(--border);
+}
+.cutListRow {
+  display: grid;
+  grid-template-columns: 56px 72px 160px 1fr 60px;
+  gap: 0 8px; padding: 9px 14px;
+  align-items: center; cursor: pointer;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .1s;
+}
+.cutListRow:hover { background: var(--bg-hover); }
+.cutListRowActive { background: rgba(139,92,246,.1); }
+.cutListNo {
+  font-size: 11px; font-weight: 700; color: var(--accent-light);
+  white-space: nowrap;
+}
+.cutListScene {
+  font-size: 11.5px; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cutListDialogue {
+  font-size: 11.5px; color: var(--text-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cutListBadges {
+  display: flex; gap: 4px; justify-content: flex-end; align-items: center;
+}

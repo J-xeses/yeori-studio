@@ -166,6 +166,7 @@ export default function ScriptGenTab() {
   const [revisionLoading, setRevisionLoading] = useState(false)
   const [revisionHistory, setRevisionHistory] = useState([])
   const [collapsedGroups, setCollapsedGroups] = useState({})
+  const [viewMode, setViewMode] = useState('detail') // 'list' | 'detail'
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -973,11 +974,20 @@ ${currentScript}
 
       {/* Right: Editor */}
       <div className={s.editor}>
+
+        {/* ── 뷰 토글 + 내비게이션 바 ─────────────────────── */}
         {cuts.length > 0 && (
-          <>
-            <div className={s.editorHeader}>
-              <h2>CUT {cuts[activeCut]?.no}</h2>
-              <div style={{display:'flex', alignItems:'center', gap:8}}>
+          <div className={s.viewToggleBar}>
+            <button
+              className={`${s.viewToggleBtn} ${viewMode === 'list' ? s.viewToggleBtnActive : ''}`}
+              onClick={() => setViewMode('list')}
+            >☰ 전체 목록</button>
+            <button
+              className={`${s.viewToggleBtn} ${viewMode === 'detail' ? s.viewToggleBtnActive : ''}`}
+              onClick={() => setViewMode('detail')}
+            >✏️ 상세 편집</button>
+            {viewMode === 'detail' && (
+              <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:8}}>
                 {gData[`cut_${cuts[activeCut]?.no}`]?.g1 ? (
                   <button onClick={() => revokeG1(cuts[activeCut].no)}
                     style={{padding:'4px 10px',borderRadius:6,background:'rgba(34,197,94,.15)',
@@ -997,6 +1007,64 @@ ${currentScript}
                   <button disabled={activeCut === cuts.length - 1} onClick={() => setActiveCut(i => i + 1)}>다음 ▶</button>
                 </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* ── 전체 목록 뷰 ──────────────────────────────────── */}
+        {viewMode === 'list' && cuts.length > 0 && (
+          <div className={s.cutListView}>
+            {/* 헤더 */}
+            <div className={s.cutListHeader}>
+              <span>CUT</span>
+              <span>유형</span>
+              <span>씬</span>
+              <span>대사 / 나레이션</span>
+              <span style={{textAlign:'right'}}>상태</span>
+            </div>
+            {cuts.map((c, i) => {
+              const ct = CUT_TYPES.find(x => x.value === (c.cutType || 'YEORI'))
+              const isG1 = !!gData[`cut_${c.no}`]?.g1
+              const hasDial = c.dialogue && !/^없음$/i.test(c.dialogue.trim())
+              const summary = hasDial
+                ? c.dialogue.slice(0, 32) + (c.dialogue.length > 32 ? '…' : '')
+                : c.narration
+                  ? '(VO) ' + c.narration.slice(0, 26) + (c.narration.length > 26 ? '…' : '')
+                  : '—'
+              const isActive = i === activeCut
+              return (
+                <div
+                  key={c.id}
+                  className={`${s.cutListRow} ${isActive ? s.cutListRowActive : ''}`}
+                  onClick={() => { setActiveCut(i); setViewMode('detail') }}
+                >
+                  <span className={s.cutListNo}>CUT {c.no}</span>
+                  <span>
+                    {ct && (
+                      <span style={{
+                        fontSize:10, padding:'1px 5px', borderRadius:3,
+                        color:ct.color, background:`${ct.color}18`, border:`1px solid ${ct.border}`,
+                        whiteSpace:'nowrap',
+                      }}>{ct.label}</span>
+                    )}
+                  </span>
+                  <span className={s.cutListScene}>{c.scene || '—'}</span>
+                  <span className={s.cutListDialogue}>{summary}</span>
+                  <span className={s.cutListBadges}>
+                    {isG1 && <span className={s.g1Badge}>G1</span>}
+                    {c.cutMark === 'SIGNATURE' && <span className={s.sigBadge}>✨</span>}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── 상세 편집 뷰 ──────────────────────────────────── */}
+        {viewMode === 'detail' && cuts.length > 0 && (
+          <>
+            <div className={s.editorHeader}>
+              <h2>CUT {cuts[activeCut]?.no}</h2>
             </div>
 
             <div className={s.fields}>
