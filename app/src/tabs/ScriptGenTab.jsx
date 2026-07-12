@@ -1026,11 +1026,13 @@ ${currentScript}
               const ct = CUT_TYPES.find(x => x.value === (c.cutType || 'YEORI'))
               const isG1 = !!gData[`cut_${c.no}`]?.g1
               const hasDial = c.dialogue && !/^없음$/i.test(c.dialogue.trim())
-              const summary = hasDial
-                ? c.dialogue.slice(0, 32) + (c.dialogue.length > 32 ? '…' : '')
-                : c.narration
-                  ? '(VO) ' + c.narration.slice(0, 26) + (c.narration.length > 26 ? '…' : '')
-                  : '—'
+              const hasVo = c.narration && !/^없음$/i.test(c.narration.trim())
+              const dialLine = hasDial
+                ? c.dialogue.slice(0, 38) + (c.dialogue.length > 38 ? '…' : '')
+                : null
+              const voLine = hasVo
+                ? c.narration.slice(0, 38) + (c.narration.length > 38 ? '…' : '')
+                : null
               const isActive = i === activeCut
               return (
                 <div
@@ -1049,7 +1051,11 @@ ${currentScript}
                     )}
                   </span>
                   <span className={s.cutListScene}>{c.scene || '—'}</span>
-                  <span className={s.cutListDialogue}>{summary}</span>
+                  <span className={s.cutListDialogue}>
+                    {dialLine && <span className={s.cutListDial}>{dialLine}</span>}
+                    {voLine && <span className={s.cutListVo}>(VO) {voLine}</span>}
+                    {!dialLine && !voLine && <span style={{color:'var(--text-3)'}}>—</span>}
+                  </span>
                   <span className={s.cutListBadges}>
                     {isG1 && <span className={s.g1Badge}>G1</span>}
                     {c.cutMark === 'SIGNATURE' && <span className={s.sigBadge}>✨</span>}
