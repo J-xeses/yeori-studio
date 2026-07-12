@@ -1417,6 +1417,83 @@ app.post('/api/package-final', (req, res) => {
   }
 })
 
+// ── POST /api/trend-to-episode — 트렌드 → 서여리 에피소드 후보 3개 생성 ──
+app.post('/api/trend-to-episode', async (req, res) => {
+  const { title, score, source, heat } = req.body
+  if (!title) return res.status(400).json({ error: 'title 필요' })
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY 미설정 (.env.local 확인)' })
+
+  const prompt = `트렌드 정보:
+- 제목: ${title}
+- 출처: ${source || '불명'}
+- 열기: ${heat || '불명'}
+- 트렌드 점수: ${score || 0}
+
+위 트렌드를 기반으로 서여리(20대 한국 여성 AI 버추얼 인플루언서) 채널에 적합한 에피소드 후보 3개를 생성하세요.
+
+JSON 배열만 출력하고 다른 텍스트는 포함하지 마세요:
+[
+  { "title": "에피소드 제목", "category": "LF", "angle": "트렌드를 서여리 관점에서 다루는 방향 한 문장" },
+  { "title": "에피소드 제목", "category": "SF", "angle": "..." },
+  { "title": "에피소드 제목", "category": "IG_R", "angle": "..." }
+]
+
+카테고리 규칙:
+- LF: 유튜브 롱폼 (10분+, 깊이 있는 이야기, 서여리의 일상/경험 연결)
+- SF: 유튜브 숏츠 (60초 이내, 강한 훅, 트렌드 핵심만)
+- IG_R: 인스타그램 릴스 (30-60초, 감성적·트렌디, 비주얼 중심)`
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_API_KEY,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    })
+
+    if (!r.ok) {
+      const t = await r.text()
+      throw new Error(`Claude API 오류 (${r.status}): ${t.slice(0, 200)}`)
+    }
+
+    const claudeRes = await r.json()
+    const textBlock = (claudeRes.content || []).find(b => b.type === 'text')
+    if (!textBlock) throw new Error('Claude 응답에 text 블록 없음')
+
+    const raw = textBlock.text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const episodes = JSON.parse(raw)
+
+    // downloads/trend_episodes.json에 누적 저장 (최신순)
+    const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
+    let existing = []
+    if (fs.existsSync(savePath)) {
+      try { existing = JSON.parse(fs.readFileSync(savePath, 'utf-8')) } catch {}
+    }
+    const entry = {
+      id: Date.now(),
+      createdAt: new Date().toISOString(),
+      trend: { title, score, source, heat },
+      episodes,
+    }
+    existing.unshift(entry)
+    fs.mkdirSync(path.dirname(savePath), { recursive: true })
+    fs.writeFileSync(savePath, JSON.stringify(existing, null, 2), 'utf-8')
+
+    console.log(`[trend-to-episode] "${title.slice(0, 40)}" → ${episodes.length}개 후보 생성`)
+    res.json({ ok: true, episodes, savedCount: existing.length })
+  } catch (err) {
+    console.error('[trend-to-episode]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 const server = app.listen(PORT, () => {
   console.log('')
   console.log('  ✦ 여리 Studio 프록시 서버')
