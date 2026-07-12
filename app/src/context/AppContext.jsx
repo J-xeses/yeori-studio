@@ -9,7 +9,7 @@ const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,
   scene: '', action: '', character: '서여리',
   dialogue: '', narration: '', imagePrompt: '',
-  duration: 5, cutType: 'NORMAL',
+  duration: 5, cutType: 'YEORI', cutMark: 'NORMAL',
 }))
 
 // 새 에피소드 기본값 생성
@@ -335,6 +335,22 @@ function migrateState(saved, init) {
     Object.values(saved.episodes).forEach(ep => {
       if (ep.episode && !ep.episode.contentType)
         ep.episode = { ...ep.episode, contentType: 'LF' }
+    })
+  }
+  // cutType NORMAL|SIGNATURE → cutMark 마이그레이션
+  const migrateCuts = (cuts) => {
+    if (!Array.isArray(cuts)) return cuts
+    return cuts.map(c => {
+      if (c.cutType === 'NORMAL' || c.cutType === 'SIGNATURE')
+        return { ...c, cutMark: c.cutType, cutType: 'YEORI' }
+      if (!c.cutMark) return { ...c, cutMark: 'NORMAL' }
+      return c
+    })
+  }
+  if (saved.cuts) saved.cuts = migrateCuts(saved.cuts)
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.cuts) ep.cuts = migrateCuts(ep.cuts)
     })
   }
 

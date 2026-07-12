@@ -28,6 +28,37 @@ function getEpisodeCode(contentType, number) {
   return `${contentType}_E${n}`
 }
 
+const CUT_TYPES = [
+  { value: 'YEORI',   label: 'YEORI',   color: '#a78bfa', border: 'rgba(167,139,250,0.45)' },
+  { value: 'BROLL',   label: 'B-ROLL',  color: '#60a5fa', border: 'rgba(96,165,250,0.45)'  },
+  { value: 'PIP',     label: 'PIP',     color: '#34d399', border: 'rgba(52,211,153,0.45)'  },
+  { value: 'GRAPHIC', label: 'GRAPHIC', color: '#fb923c', border: 'rgba(251,146,60,0.45)'  },
+  { value: 'CAPCUT',  label: 'CAPCUT',  color: '#9ca3af', border: 'rgba(156,163,175,0.45)' },
+]
+const PIPE_TYPES = new Set(['YEORI', 'BROLL', 'PIP', 'GRAPHIC', 'CAPCUT'])
+
+function getRunFlags(cut) {
+  switch (cut.cutType || 'YEORI') {
+    case 'BROLL':
+      return { run_g2:true, run_g3:true, g3_track:'나레이션', run_g4:true, run_g5:true }
+    case 'PIP': {
+      const f = { run_g2:true, run_g3:true, g3_track:'대사', run_g4:true, run_g5:true }
+      const t = parseInt(cut.pipTarget)
+      if (!isNaN(t) && t > 0) f.pip_target = t
+      return f
+    }
+    case 'GRAPHIC': {
+      const f = { run_g2:false, run_g3:true, g3_track:'나레이션', run_g4:false, run_g5:true, g5_tool:'browser_record' }
+      if (cut.graphicTool) f.graphic_tool = cut.graphicTool
+      return f
+    }
+    case 'CAPCUT':
+      return { run_g2:false, run_g3:false, run_g4:false, run_g5:true, g5_tool:'capcut_only' }
+    default: // YEORI
+      return { run_g2:true, run_g3:true, g3_track:'대사', run_g4:true, g4_mode:'lipsync', run_g5:true }
+  }
+}
+
 function cleanMarkdown(text) {
   return text
     .replace(/\*\*/g, '')     // ** 굵은 글씨 제거
@@ -71,8 +102,8 @@ function parseCuts(raw, n) {
         if (!m) return ''
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
-        // 다음 필드 키워드 전까지 (샷 타입, 컷 길이 포함)
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트|컷 길이)[:：]/)
+        // 다음 필드 키워드 전까지 (샷 타입, 컷 길이, 컷 타입, PIP_TARGET, 그래픽 도구 포함)
+        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -82,7 +113,15 @@ function parseCuts(raw, n) {
       cur.character  = getField(/캐릭터[:：]\s*/) || '서여리'
       cur.dialogue   = stripShotDirective(getField(/대사[:：]\s*/))
       cur.narration  = stripShotDirective(getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/))
-      cur.shotType   = (getField(/샷 타입[:：]\s*/) || '').toUpperCase().includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
+      const rawShot = (getField(/샷 타입[:：]\s*/) || '').trim().toUpperCase()
+      cur.shotType = rawShot.includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
+      // cutType: "컷 타입:" 필드 우선, 없으면 "샷 타입:" 값이 파이프라인 타입인지 체크
+      const rawCutTypeField = (getField(/컷 타입[:：]\s*/) || '').trim().toUpperCase()
+      cur.cutType = PIPE_TYPES.has(rawCutTypeField)
+        ? rawCutTypeField
+        : (PIPE_TYPES.has(rawShot) ? rawShot : 'YEORI')
+      cur.pipTarget    = getField(/PIP_TARGET[:：]\s*/) || ''
+      cur.graphicTool  = getField(/그래픽 도구[:：]\s*/) || ''
       cur.imagePrompt = getField(/이미지 프롬프트[:：]\s*/) || getField(/프롬프트[:：]\s*/)
 
       // 룰셋 통과 표시 제거 (UI에서 별도 표시)
@@ -442,18 +481,24 @@ ${currentScript}
 
   const downloadScript = () => {
     if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
-    const lines = cuts.map(c => [
-      `[CUT ${c.no}]`,
-      `씬: ${c.scene || ''}`,
-      `액션: ${c.action || ''}`,
-      `캐릭터: ${c.character || '서여리'}`,
-      `대사: ${c.dialogue || '없음'}`,
-      `나레이션: ${c.narration || ''}`,
-      `샷 타입: ${c.shotType || 'FULLBODY'}`,
-      `이미지 프롬프트: ${c.imagePrompt || ''}`,
-      `컷 길이: ${c.duration || 5}`,
-    ].join('\n')).join('\n\n')
-    const header = `# EP${episode.number} ${episode.title || ''} 대본\n# 생성일: ${new Date().toLocaleString('ko-KR')}\n# ※ [CUT N] 형식과 필드명(씬:/액션:/캐릭터:/대사:/나레이션:/샷 타입:/이미지 프롬프트:/컷 길이:) 유지 필수\n\n`
+    const lines = cuts.map(c => {
+      const fields = [
+        `[CUT ${c.no}]`,
+        `씬: ${c.scene || ''}`,
+        `액션: ${c.action || ''}`,
+        `캐릭터: ${c.character || '서여리'}`,
+        `대사: ${c.dialogue || '없음'}`,
+        `나레이션: ${c.narration || ''}`,
+        `샷 타입: ${c.shotType || 'FULLBODY'}`,
+        `컷 타입: ${c.cutType || 'YEORI'}`,
+        `이미지 프롬프트: ${c.imagePrompt || ''}`,
+        `컷 길이: ${c.duration || 5}`,
+      ]
+      if (c.cutType === 'PIP')     fields.push(`PIP_TARGET: ${c.pipTarget || ''}`)
+      if (c.cutType === 'GRAPHIC') fields.push(`그래픽 도구: ${c.graphicTool || 'HTML'}`)
+      return fields.join('\n')
+    }).join('\n\n')
+    const header = `# EP${episode.number} ${episode.title || ''} 대본\n# 생성일: ${new Date().toLocaleString('ko-KR')}\n# ※ [CUT N] 형식과 필드명(씬:/액션:/캐릭터:/대사:/나레이션:/샷 타입:/컷 타입:/이미지 프롬프트:/컷 길이:) 유지 필수\n\n`
     const blob = new Blob([header + lines], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -485,6 +530,9 @@ ${currentScript}
           dialogue:    revised.dialogue    !== '' ? revised.dialogue : original.dialogue,
           narration:   revised.narration   || original.narration,
           shotType:    revised.shotType    || original.shotType,
+          cutType:     revised.cutType     || original.cutType || 'YEORI',
+          pipTarget:   revised.pipTarget   !== undefined ? revised.pipTarget : (original.pipTarget || ''),
+          graphicTool: revised.graphicTool || original.graphicTool || '',
           imagePrompt: revised.imagePrompt || original.imagePrompt,
           duration:    revised.duration    || original.duration,
         }})
@@ -514,7 +562,7 @@ ${currentScript}
       episode: episode.number,
       title: episode.title,
       cuts: cuts.map(c => {
-        const cut = { no: c.no, imagePrompt: c.imagePrompt || '' }
+        const cut = { no: c.no, imagePrompt: c.imagePrompt || '', ...getRunFlags(c) }
         if (c.narration?.trim()) cut.narration = c.narration.trim()
         if (c.dialogue?.trim() && !/^없음$/i.test(c.dialogue.trim())) cut.dialogue = c.dialogue.trim()
         cut.duration = c.duration || 5
@@ -821,7 +869,16 @@ ${currentScript}
                 onClick={() => setActiveCut(i)}>
                 <span className={s.cutNo}>
                   CUT {c.no}
-                  {c.cutType === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
+                  {c.cutMark === 'SIGNATURE' && <span className={s.sigBadge}>✨ SIG</span>}
+                  {(() => {
+                    const t = CUT_TYPES.find(x => x.value === (c.cutType || 'YEORI'))
+                    return t ? (
+                      <span style={{
+                        fontSize:8, padding:'0 4px', borderRadius:3, marginLeft:2,
+                        color: t.color, background: `${t.color}18`, border: `1px solid ${t.border}`,
+                      }}>{t.label}</span>
+                    ) : null
+                  })()}
                   {gData[`cut_${c.no}`]?.g1 && <span className={s.g1Badge}>G1</span>}
                 </span>
                 <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
@@ -921,14 +978,14 @@ ${currentScript}
                 </div>
               ))}
               <div className={s.edField}>
-                <label>컷 타입</label>
+                <label>시그니처 마크</label>
                 <div className={s.cutTypeBtns}>
                   {['NORMAL', 'SIGNATURE'].map(type => {
-                    const active = (cuts[activeCut]?.cutType ?? 'NORMAL') === type
+                    const active = (cuts[activeCut]?.cutMark ?? 'NORMAL') === type
                     return (
                       <button key={type}
                         className={`${s.cutTypeBtn} ${active ? (type === 'SIGNATURE' ? s.cutTypeBtnSig : s.cutTypeBtnNormal) : ''}`}
-                        onClick={() => updateCut(cuts[activeCut].id, 'cutType', type)}
+                        onClick={() => updateCut(cuts[activeCut].id, 'cutMark', type)}
                       >
                         {type === 'NORMAL' ? '⬜ NORMAL' : '✨ SIGNATURE'}
                       </button>
@@ -936,6 +993,40 @@ ${currentScript}
                   })}
                 </div>
               </div>
+              <div className={s.edField}>
+                <label>파이프라인 유형</label>
+                <select
+                  value={cuts[activeCut]?.cutType || 'YEORI'}
+                  onChange={e => updateCut(cuts[activeCut].id, 'cutType', e.target.value)}
+                  style={{ width:'100%', padding:'6px 8px', borderRadius:6, background:'var(--bg3)', border:'1px solid var(--border2)', color:'var(--text)', fontSize:12, cursor:'pointer' }}
+                >
+                  {CUT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              {cuts[activeCut]?.cutType === 'PIP' && (
+                <div className={s.edField}>
+                  <label>PIP 타겟 컷 번호</label>
+                  <input type="number" min="1" placeholder="배경으로 쓸 컷 번호 (예: 2)"
+                    value={cuts[activeCut]?.pipTarget || ''}
+                    onChange={e => updateCut(cuts[activeCut].id, 'pipTarget', e.target.value)} />
+                </div>
+              )}
+              {cuts[activeCut]?.cutType === 'GRAPHIC' && (
+                <div className={s.edField}>
+                  <label>그래픽 도구</label>
+                  <div className={s.cutTypeBtns}>
+                    {[{v:'HTML',l:'🌐 HTML'},{v:'CANVA',l:'🎨 CANVA'}].map(({v,l}) => {
+                      const active = (cuts[activeCut]?.graphicTool || 'HTML') === v
+                      return (
+                        <button key={v}
+                          className={`${s.cutTypeBtn} ${active ? s.cutTypeBtnNormal : ''}`}
+                          onClick={() => updateCut(cuts[activeCut].id, 'graphicTool', v)}
+                        >{l}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               <div className={s.edField}>
                 <label>이미지 프롬프트</label>
                 <textarea rows={6}
