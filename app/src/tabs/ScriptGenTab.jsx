@@ -171,6 +171,35 @@ export default function ScriptGenTab() {
   const YEORI_RULESET = `
 === 서여리 연출 원칙 룰셋 v1.1 (반드시 준수) ===
 
+[컷 타입 분류 — 필수]
+모든 컷은 반드시 아래 5가지 중 하나로 분류하고, "컷 타입:" 필드에 명시한다:
+
+◆ YEORI  — 서여리가 직접 등장 (대사 or 감정 연기 있음)
+  → 립싱크 대사 컷, 서여리 얼굴·바디 있는 컷
+  → 이미지 프롬프트: CLOSEUP SHOT 또는 FULLBODY SHOT 필수
+  → G2(이미지)+G3(대사 TTS)+G4(립싱크 영상)+G5(편집) 전체 실행
+
+◆ BROLL  — 서여리 얼굴 없는 배경/소품 영상 + 나레이션
+  → 커피잔 클로즈업, 거리 풍경, 손동작, 배경 디테일
+  → 이미지 프롬프트: 서여리 미등장 배경/오브젝트 묘사
+  → G2(이미지)+G3(나레이션 TTS)+G4(영상)+G5(편집) 실행
+
+◆ GRAPHIC — 그래픽·데이터·인포그래픽·자막 카드
+  → 통계 차트, 텍스트 슬라이드, 인포그래픽
+  → 이미지 프롬프트 불필요 (그래픽 도구로 직접 제작)
+  → G3(나레이션 TTS)+G5(browser_record) 실행, G2·G4 건너뜀
+
+◆ CAPCUT — CapCut 전용 편집 컷 (텍스트 효과·화면 분할·모션 타이틀)
+  → 자막만 있는 컷, 인트로/아웃트로 모션
+  → 이미지 프롬프트 불필요
+  → G5(capcut_only) 실행, G2·G3·G4 건너뜀
+
+◆ PIP    — PIP 오버레이 (메인 영상 위 서여리 클로즈업 삽입)
+  → 화면 속 화면, 반응 PIP, 감정 오버레이
+  → 이미지 프롬프트: CLOSEUP SHOT 필수
+  → PIP_TARGET에 배경 컷 번호 반드시 기재
+  → G2(이미지)+G3(대사 TTS)+G4(영상)+G5(PIP합성) 실행
+
 [샷 타입 분류 — 필수]
 모든 컷은 반드시 아래 두 가지 중 하나로 분류한다:
 
@@ -276,6 +305,7 @@ ${YEORI_RULESET}
 대사: 실제 대사 (자연스러운 한국어, 없으면 "없음" 으로 표기)
 나레이션: 보이스오버 나레이션 (감성적으로)
 샷 타입: CLOSEUP 또는 FULLBODY (반드시 명시)
+컷 타입: YEORI 또는 BROLL 또는 GRAPHIC 또는 CAPCUT 또는 PIP (반드시 명시)
 이미지 프롬프트: 영어로 작성, "CLOSEUP SHOT —" 또는 "FULLBODY SHOT —" 으로 시작, 룰셋 체크리스트 전체 반영
 
 [CUT 2]
@@ -285,6 +315,7 @@ ${YEORI_RULESET}
 대사:
 나레이션:
 샷 타입:
+컷 타입:
 이미지 프롬프트:
 
 [CUT ${episode.cutCount}]
@@ -294,15 +325,19 @@ ${YEORI_RULESET}
 대사:
 나레이션:
 샷 타입:
+컷 타입:
 이미지 프롬프트:
 
 ※ 위는 형식 예시이며, 분할이 발생하면 [CUT N+1], [CUT N+2]... 형식으로 자연스럽게 이어서 작성하세요.
 
 ⚠️ 절대 지킬 것:
 - 마크다운 ** ## --- 완전 금지
-- 각 필드는 반드시 "씬:" "액션:" "캐릭터:" "대사:" "나레이션:" "이미지 프롬프트:" 로 시작
+- 각 필드는 반드시 "씬:" "액션:" "캐릭터:" "대사:" "나레이션:" "샷 타입:" "컷 타입:" "이미지 프롬프트:" 로 시작
 - [CUT 번호] 형식 정확히 유지
 - 대사 없는 컷은 대사: 없음 으로 표기
+- 컷 타입: 필드 반드시 명시 (YEORI/BROLL/GRAPHIC/CAPCUT/PIP 중 정확히 하나)
+- PIP 컷에는 PIP_TARGET: [배경 컷 번호] 추가 (예: PIP_TARGET: 3)
+- GRAPHIC·CAPCUT 컷은 이미지 프롬프트: 없음 으로 표기
 - 이미지 프롬프트 끝에 ✅ 룰셋 통과 또는 ⚠️ [항목명] 확인 필요 표시
 
 대사는 구어체로 자연스럽게, 나레이션은 감성적으로 작성하세요.
@@ -326,13 +361,22 @@ ${YEORI_RULESET}
       let passCount = 0, failItems = []
       parsed.forEach(cut => {
         const p = cut.imagePrompt || ''
-        const isClose = cut.shotType === 'CLOSEUP'
-        const isFull  = cut.shotType === 'FULLBODY'
-        if (!isClose && !isFull) failItems.push(`CUT${cut.no}: 샷 타입 누락 (CLOSEUP/FULLBODY 미명시)`)
-        if (!p.match(/CLOSEUP SHOT|FULLBODY SHOT/i)) failItems.push(`CUT${cut.no}: 프롬프트 샷 타입 접두어 누락`)
-        if (!p.includes('NOT short')) failItems.push(`CUT${cut.no}: 헤어 이중강조 누락`)
-        if (isClose && !p.includes('skin texture') && !p.includes('beauty mark')) failItems.push(`CUT${cut.no}: CLOSEUP natural skin texture 문구 누락`)
-        if (isFull && !p.match(/K-model|small face|long.*legs/i)) failItems.push(`CUT${cut.no}: FULLBODY 체형 문구 누락`)
+        const ct = cut.cutType || 'YEORI'
+        const needsImage = !['GRAPHIC', 'CAPCUT'].includes(ct)
+
+        if (!PIPE_TYPES.has(ct)) failItems.push(`CUT${cut.no}: 컷 타입 누락 또는 미인식 (현재: "${ct}")`)
+
+        if (needsImage) {
+          const isClose = cut.shotType === 'CLOSEUP'
+          const isFull  = cut.shotType === 'FULLBODY'
+          if (!isClose && !isFull) failItems.push(`CUT${cut.no}: 샷 타입 누락 (CLOSEUP/FULLBODY 미명시)`)
+          if (!p.match(/CLOSEUP SHOT|FULLBODY SHOT/i)) failItems.push(`CUT${cut.no}: 프롬프트 샷 타입 접두어 누락`)
+          if (['YEORI', 'PIP'].includes(ct)) {
+            if (!p.includes('NOT short')) failItems.push(`CUT${cut.no}: 헤어 이중강조 누락`)
+            if (isClose && !p.includes('skin texture') && !p.includes('beauty mark')) failItems.push(`CUT${cut.no}: CLOSEUP natural skin texture 문구 누락`)
+            if (isFull && !p.match(/K-model|small face|long.*legs/i)) failItems.push(`CUT${cut.no}: FULLBODY 체형 문구 누락`)
+          }
+        }
         passCount++ // 의상 묘사는 형식 강제 없이 통과 처리 (2026-06-14/06-21 명령형 폐기 결정 반영)
       })
 
