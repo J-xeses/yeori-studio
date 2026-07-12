@@ -421,10 +421,105 @@ ${formatsText}
 }
 
 // ════════════════════════════════════════════════
+// 📡 트렌드 에피소드 후보 (TREND RADAR 연동)
+// ════════════════════════════════════════════════
+const CAT_COLORS = {
+  LF:   { color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' },
+  SF:   { color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.35)'  },
+  IG_R: { color: '#f472b6', bg: 'rgba(244,114,182,0.12)', border: 'rgba(244,114,182,0.35)' },
+  IG_P: { color: '#fb923c', bg: 'rgba(251,146,60,0.12)',  border: 'rgba(251,146,60,0.35)'  },
+  TK:   { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.35)'  },
+}
+
+function TrendEpisodesSection({ dispatch }) {
+  const [entries, setEntries] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const load = () => {
+    setLoading(true); setError('')
+    fetch('http://localhost:3001/api/trend-episodes')
+      .then(r => r.json())
+      .then(d => { setEntries(d.entries || []); setLoading(false) })
+      .catch(() => { setError('서버 연결 실패'); setLoading(false) })
+  }
+
+  useEffect(() => { load() }, [])
+
+  const sendToScript = (ep) => {
+    dispatch({ type: 'SET_EPISODE', p: { title: ep.title, contentType: ep.category } })
+    dispatch({ type: 'SET_TAB', p: 'script' })
+  }
+
+  if (loading) return (
+    <div className={s.section}>
+      <div className={s.loadingCenter}><span className={s.loadingDots}>트렌드 후보 로딩<span>.</span><span>.</span><span>.</span></span></div>
+    </div>
+  )
+
+  if (error || !entries.length) return (
+    <div className={s.section}>
+      <div className={s.sectionLabel}>
+        <span className={s.step}>📡</span>
+        <span>트렌드 에피소드 후보</span>
+        <button className={s.refreshBtn} onClick={load}>↺ 새로고침</button>
+      </div>
+      <div className={s.empty}>
+        <div className={s.emptyIcon}>📡</div>
+        <p>{error || 'TREND RADAR에서 파이프라인 버튼을 눌러 후보를 추가하세요'}</p>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className={s.section}>
+      <div className={s.sectionLabel}>
+        <span className={s.step}>📡</span>
+        <span>트렌드 에피소드 후보</span>
+        <span className={s.liveTag}>{entries.length}건</span>
+        <button className={s.refreshBtn} onClick={load}>↺ 새로고침</button>
+      </div>
+      <div className={s.trendEpList}>
+        {entries.map(entry => (
+          <div key={entry.id} className={s.trendEpCard}>
+            <div className={s.trendEpMeta}>
+              <span className={s.trendEpSource}>{entry.trend.source}</span>
+              <span className={s.trendEpHeat}>{entry.trend.heat}</span>
+              <span className={s.trendEpScore}>점수 {entry.trend.score}</span>
+              <span className={s.trendEpDate}>{new Date(entry.createdAt).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })}</span>
+            </div>
+            <div className={s.trendEpTitle}>{entry.trend.title}</div>
+            <div className={s.trendEpCandidates}>
+              {(entry.episodes || []).map((ep, i) => {
+                const c = CAT_COLORS[ep.category] || CAT_COLORS.LF
+                return (
+                  <div key={i} className={s.trendEpRow}>
+                    <span className={s.catBadge} style={{ color: c.color, background: c.bg, border: `1px solid ${c.border}` }}>
+                      {ep.category}
+                    </span>
+                    <div className={s.trendEpInfo}>
+                      <span className={s.trendEpCandTitle}>{ep.title}</span>
+                      <span className={s.trendEpAngle}>{ep.angle}</span>
+                    </div>
+                    <button className={s.scriptBtn} onClick={() => sendToScript(ep)}>
+                      대본 생성 →
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════
 // 💡 단편 아이디어
 // ════════════════════════════════════════════════
 function ShortIdeaTab() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const apiKey = state.apiKeys?.claude || ""
   const [selectedTrend, setSelectedTrend] = useState(null)
   const [selectedEmotion, setSelectedEmotion] = useState('')
@@ -457,6 +552,9 @@ function ShortIdeaTab() {
   }
 
   return (
+    <div>
+      <TrendEpisodesSection dispatch={dispatch} />
+      <div style={{height:16}} />
     <div className={s.grid}>
       <div className={s.panel}>
         <div className={s.section}>
@@ -514,6 +612,7 @@ function ShortIdeaTab() {
         )}
         {stories.length === 0 && saved.length === 0 && !loading && <div className={s.empty}><div className={s.emptyIcon}>✦</div><p>트렌드 + 감정 + 상황 선택 후<br />스토리를 생성해보세요</p></div>}
       </div>
+    </div>
     </div>
   )
 }

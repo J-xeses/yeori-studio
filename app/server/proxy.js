@@ -1417,6 +1417,18 @@ app.post('/api/package-final', (req, res) => {
   }
 })
 
+// ── GET /api/trend-episodes — trend_episodes.json 최신 20개 반환 ──────
+app.get('/api/trend-episodes', (req, res) => {
+  const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
+  try {
+    if (!fs.existsSync(savePath)) return res.json({ entries: [] })
+    const all = JSON.parse(fs.readFileSync(savePath, 'utf-8'))
+    res.json({ entries: (Array.isArray(all) ? all : []).slice(0, 20) })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/trend-to-episode — 트렌드 → 서여리 에피소드 후보 3개 생성 ──
 app.post('/api/trend-to-episode', async (req, res) => {
   const { title, score, source, heat } = req.body

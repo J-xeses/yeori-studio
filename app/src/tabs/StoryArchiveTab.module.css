@@ -175,3 +175,34 @@
 .archiveHook { font-size: 12px; color: var(--color-text-secondary, #aaa); font-style: italic; margin: 0; }
 .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 60px 20px; color: var(--color-text-tertiary, #888); text-align: center; font-size: 13px; line-height: 1.7; }
 .emptyIcon { font-size: 32px; opacity: 0.4; }
+
+/* ── 트렌드 에피소드 후보 섹션 ────────────────────────── */
+.trendEpList { display: flex; flex-direction: column; gap: 12px; }
+.trendEpCard {
+  background: var(--color-surface-2, #12121e); border: 1px solid var(--color-border, #2a2a3e);
+  border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px;
+}
+.trendEpMeta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.trendEpSource { font-size: 10px; font-weight: 700; color: #f87171; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); border-radius: 20px; padding: 1px 8px; }
+.trendEpHeat   { font-size: 10px; font-weight: 700; color: #fbbf24; background: rgba(251,191,36,0.1);  border: 1px solid rgba(251,191,36,0.25);  border-radius: 20px; padding: 1px 8px; }
+.trendEpScore  { font-size: 10px; font-family: 'IBM Plex Mono', monospace; color: var(--color-text-tertiary, #888); margin-left: 2px; }
+.trendEpDate   { font-size: 10px; color: var(--color-text-tertiary, #666); margin-left: auto; }
+.trendEpTitle  { font-size: 13px; font-weight: 600; color: var(--color-text-primary, #f0f0f0); line-height: 1.5; }
+.trendEpCandidates { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.trendEpRow {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.1s;
+}
+.trendEpRow:hover { background: rgba(255,255,255,0.06); }
+.catBadge { font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+.trendEpInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.trendEpCandTitle { font-size: 12px; font-weight: 600; color: var(--color-text-primary, #f0f0f0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trendEpAngle { font-size: 11px; color: var(--color-text-tertiary, #888); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.scriptBtn {
+  flex-shrink: 0; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
+  background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.4);
+  color: #a78bfa; cursor: pointer; white-space: nowrap; transition: all 0.15s;
+}
+.scriptBtn:hover { background: rgba(124,92,252,0.3); border-color: rgba(124,92,252,0.7); }
