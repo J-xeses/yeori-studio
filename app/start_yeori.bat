@@ -4,7 +4,7 @@ cd /d "%~dp0"
 
 set ACC_HTML=%~dp0a_creative_cutter.html
 set MATRIX_HTML=%~dp0content_matrix_v3.html
-set RADAR_HTML=%~dp0TREND RADAR v7.html
+set TREND_RADAR_DIR=C:\Users\won56\OneDrive - CTEC\바탕 화면\안성준(원드라이브수시확인)\01. JW Archive\09. 구축\01. 부업\01. AI 콘텐츠\01. 트랜드\trend-radar
 set CHROME="C:\Program Files\Google\Chrome\Application\chrome.exe"
 set PROFILE=C:\yeori-studio\app\.chrome-profile-flow
 
@@ -33,8 +33,24 @@ for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3001 " ^| findstr "LISTENIN
 )
 timeout /t 1 /nobreak >nul
 
-:: [1] Open Chrome tabs
-echo [1] Opening Chrome tabs...
+:: [1] Start TREND RADAR dev server (needs a real server -- /api/youtube, /api/analyze
+::     routes can't work from a static html file)
+echo [1] Starting TREND RADAR dev server...
+netstat -ano | findstr ":3000 " | findstr "LISTENING" >nul 2>&1
+if %errorlevel% == 0 (
+    echo        TREND RADAR dev server already running on port 3000 -- skip
+) else (
+    if exist "%TREND_RADAR_DIR%\package.json" (
+        start "TREND RADAR Dev Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run dev"
+        timeout /t 5 /nobreak >nul
+    ) else (
+        echo        trend-radar project not found at %TREND_RADAR_DIR% -- skip
+    )
+)
+echo.
+
+:: [2] Open Chrome tabs
+echo [2] Opening Chrome tabs...
 netstat -ano | findstr ":9222" >nul 2>&1
 if %errorlevel% == 0 goto :chrome_exists
 
@@ -62,29 +78,26 @@ if exist "%MATRIX_HTML%" (
 ) else (
     echo        content_matrix_v3.html not found -- skip
 )
-if exist "%RADAR_HTML%" (
-    start "" %CHROME% --user-data-dir=%PROFILE% "%RADAR_HTML%"
-    timeout /t 1 /nobreak >nul
-) else (
-    echo        TREND RADAR v7.html not found -- skip
-)
+start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:3000"
+timeout /t 1 /nobreak >nul
 
-:: [2] Start server in foreground (blocks here until Ctrl+C)
+:: [3] Start server in foreground (blocks here until Ctrl+C)
 echo.
 echo ============================================================
 echo   READY
 echo ============================================================
-echo   Tab 1  Flow   : https://labs.google/fx/ko/tools/flow
-echo   Tab 2  Cutter : %ACC_HTML%
-echo   Tab 3  Studio : http://localhost:5173
-echo   Health        : http://localhost:3001/api/health
+echo   Tab 1  Flow        : https://labs.google/fx/ko/tools/flow
+echo   Tab 2  Cutter      : %ACC_HTML%
+echo   Tab 3  Studio      : http://localhost:5173
+echo   Tab 5  Trend Radar : http://localhost:3000
+echo   Health             : http://localhost:3001/api/health
 echo.
 echo   ** Stop: Ctrl+C then N (runs shutdown sync automatically)
 echo ============================================================
 echo.
 npm run studio
 
-:: [3] Auto-sync on shutdown
+:: [4] Auto-sync on shutdown
 echo.
 echo ============================================================
 echo   Server stopped -- running shutdown sync...
