@@ -4,6 +4,7 @@
  *
  * Usage:
  *   node scripts/flow-setup.js --ep=3
+ *   node scripts/flow-setup.js --name=face_lock_test_v1
  *
  * 사전 조건:
  *   Chrome이 --remote-debugging-port=9222 로 실행 중이어야 함
@@ -120,9 +121,7 @@ async function getFlowPage(browser) {
 }
 
 // ── Step 2: 새 프로젝트 생성 + project_url.txt 저장 ────────────────
-async function createProject(page, epNum) {
-  const epDir         = path.join(CONFIG.downloadDir, `ep${epNum}`)
-  const projectUrlFile = path.join(epDir, 'project_url.txt')
+async function createProject(page, epLabel, epDir, projectUrlFile) {
   ensureDir(epDir)
 
   // 이미 있으면 스킵
@@ -133,7 +132,7 @@ async function createProject(page, epNum) {
     return existingUrl
   }
 
-  log('step', `ep${epNum} 프로젝트 신규 생성 중…`)
+  log('step', `${epLabel} 프로젝트 신규 생성 중…`)
 
   // Flow 대시보드로 이동 (프로젝트 페이지에 있다면)
   if (page.url().includes('/project/')) {
@@ -164,7 +163,7 @@ async function createProject(page, epNum) {
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_setup_02_create_dialog.png') })
 
   // 프로젝트 이름 입력
-  const projectName = `ep${epNum}`
+  const projectName = epLabel
   const named = await page.evaluate((name) => {
     for (const el of document.querySelectorAll('input[type="text"], input:not([type]), [contenteditable="true"]')) {
       if (el.getBoundingClientRect().width > 0) {
@@ -397,18 +396,33 @@ async function preFlightCheck(page) {
 
 // ── 메인 ──────────────────────────────────────────────────────────
 async function main() {
-  const args  = parseArgs()
-  const epNum = args.ep
-  if (!epNum) {
-    log('error', '--ep=N 인수가 필요합니다. 예) node scripts/flow-setup.js --ep=3')
+  const args = parseArgs()
+
+  const epArg  = args.ep
+  const nameArg = args.name
+
+  if (!epArg && !nameArg) {
+    log('error', '--ep=N 또는 --name=XXX 인수가 필요합니다.')
+    log('info', '  예) node scripts/flow-setup.js --ep=3')
+    log('info', '  예) node scripts/flow-setup.js --name=face_lock_test_v1')
     process.exit(1)
   }
+
+  let EP_LABEL, EP_DIR
+  if (epArg) {
+    EP_LABEL = `ep${epArg}`
+    EP_DIR   = path.join(MEDIA_ROOT, 'downloads', 'flow', EP_LABEL)
+  } else {
+    EP_LABEL = nameArg
+    EP_DIR   = path.join(MEDIA_ROOT, 'downloads', 'flow', 'research', EP_LABEL)
+  }
+  const PROJECT_URL_FILE = path.join(EP_DIR, 'project_url.txt')
 
   ensureDir(CONFIG.downloadDir)
   ensureDir(CONFIG.characterDir)
 
   console.log('\n' + '═'.repeat(60))
-  console.log(`  🎬 Flow Setup — ep${epNum}`)
+  console.log(`  🎬 Flow Setup — ${EP_LABEL}`)
   console.log('═'.repeat(60) + '\n')
 
   // ① Chrome 연결 + Flow 탭 확보
@@ -419,7 +433,7 @@ async function main() {
 
   // ② 새 프로젝트 생성 + URL 저장
   log('step', 'Step 2 — 새 프로젝트 생성')
-  const projectUrl = await createProject(page, epNum)
+  const projectUrl = await createProject(page, EP_LABEL, EP_DIR, PROJECT_URL_FILE)
 
   // 프로젝트 페이지로 이동 (생성 후 이미 이동됐을 수 있음)
   if (!page.url().includes('/project/')) {
@@ -437,11 +451,11 @@ async function main() {
   const { faceFound, closeupFound } = await preFlightCheck(page)
 
   console.log('\n' + '═'.repeat(60))
-  console.log(`  세팅 완료 — ep${epNum}`)
+  console.log(`  세팅 완료 — ${EP_LABEL}`)
   console.log(`  yeori-face   : ${faceFound    ? '✅ 확인' : '⚠️  미확인'}`)
   console.log(`  yeori-closeup: ${closeupFound ? '✅ 확인' : '⚠️  미확인'}`)
   console.log(`\n  다음 단계:`)
-  console.log(`    node scripts/flow-automation.js --ep=${epNum}`)
+  console.log(`    node scripts/flow-automation.js ${epArg ? `--ep=${epArg}` : `--name=${nameArg}`}`)
   console.log('═'.repeat(60) + '\n')
 }
 

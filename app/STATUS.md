@@ -69,10 +69,26 @@
 | content_matrix_v3 + TREND_RADAR app/ 통합 | 커밋 54f9a70 |
 | start_yeori.bat 5개 탭 자동 열기 | 커밋 0ea86e0 |
 | sync-content.bat 양방향 동기화 | 커밋 5824c60 |
-| G5 전체 자동화 완성 | 커밋 5a219b1 |
-| 퍼블리싱 탭 완성 | 커밋 e08a022 |
-| G포인트 동기화 | 커밋 e0af279 |
-| ElevenLabs 서여리 목소리 | 코드: RmYuvmCbqOMBJxDLW4k8 |
+| G5 전체 자동화 완성 (ON버튼→켄번스→G5배지) | 커밋 5a219b1 |
+| 퍼블리싱 탭 완성 (썸네일/제목/패키징/업로드) | 커밋 e08a022 |
+| G포인트 동기화 (gpoints.json + /api/gpoints) | 커밋 e0af279 |
+| ElevenLabs 서여리 전용 목소리 | 코드: RmYuvmCbqOMBJxDLW4k8 |
+| 🆕 C-2 마스킹 전신샷 레퍼런스 전략 검증 | 정적/반정적 동작 얼굴 일관성 우수 확인 |
+| 🆕 동작 프롬프트 개선 원칙 확정 | 결과 상태 스냅샷 + 얼굴 앞배치 |
+| 🆕 프롬프트 코드 체계 초안 v0.1 | yeori_prompt_codebook_draft_v0.1.txt |
+| content_matrix_v3 에이전트 리더 API 실제 연동 | 파일 저장 완료 |
+| content_matrix_v3 G1~G5 구조 재구성 | 파일 저장 완료 |
+| 썸네일 9:16/16:9 비율 선택 | 커밋 f90e8f9 |
+| 결과물 패키징 → downloads/final/ep{N}/ | 커밋 9d160ab |
+| AI 제목/설명/태그 자동생성 (YouTube/인스타/TikTok) | 커밋 e08a022 |
+| start_yeori.bat 자동 git pull 추가 | 커밋 b55f357 |
+| studio-state.json PC간 동기화 | 커밋 5aab3e3 |
+| 집 PC 경로 통일 C:\yeori-studio\ | 완료 |
+| proxy.js CODE_ROOT 단일 경로 통일 | 커밋 d332329 |
+| CapCut 웹버전 자동화 (ep2_final.mp4 생성) | 커밋 f93bb00 |
+| capcut-cli 설치 + compile 테스트 성공 | 커밋 4bf8584 |
+| ElevenLabs TTS 탭 완성 | - |
+| 서여리 베이스 프롬프트 v1.0 확정 | - |
 
 ---
 
@@ -95,6 +111,7 @@
 ### Step 3 — G2 이미지 생성
 - 스튜디오 탭 + G2 체크리스트: ✅ 완료
 - Flow 자동화: ✅ 완료
+- 🆕 레퍼런스 전략 확정: face + closeup + fs-masked (C-2 방식)
 
 ### Step 4 — G3 TTS
 - ElevenLabs TTS + 트랙 분기: ✅ 완료
@@ -115,6 +132,12 @@
 - content_matrix_v3 + MCP 연동: ✅ 완료
 - 자동 오케스트레이션: 🟡 설계 완료, 구현 예정
 
+### 🆕 프롬프트 코드 체계
+- 초안 v0.1 완성: ✅
+- v1.0 확정: 🟡 성준님 검토 후
+- prompt_codebook.json: ⬜ 미작성
+- A Creative Studio 연동: ⬜ 미구현
+
 ---
 
 ## 🚨 다음 세션 즉시 할 것
@@ -123,6 +146,7 @@
 2. G1~G5 롱폼 파이프라인 실제 테스트
 3. BGM 파일 준비 + 자동 삽입
 4. 회사 PC에서 TREND_RADAR 최신본 git push
+5. prompt_codebook.json 정식 작성 (v0.1 → v1.0 확정 후속)
 
 ---
 
@@ -148,6 +172,18 @@ LF_E00 / SF_E00 / IG_R00 / IG_P00 / IG_S00 / TK_E00
 - PIP: G2→G3→G4→G5(PIP합성)
 - GRAPHIC: G3→G5 (G2/G4 스킵)
 - CAPCUT: G5만 (G2/G3/G4 전부 스킵)
+
+### 🆕 프롬프트 코드 체계 핵심 원칙 (2026-07-08 확정)
+- EP.HEADER: 에피소드 공통 요소 1회 선언 (CHAR/LOOK/BG/LIGHT/CAM.DEFAULT/REF)
+- CUT 라인: 변수만 입력 (MOVE/ACT/MOOD/CAM/초s)
+- 예외 선언: 헤더와 다를 때만 명시 (BG:/LOOK: 앞에 붙여서)
+- 코드 ↔ prompt_codebook.json 텍스트 자동 연동 구조
+- 파일: yeori_prompt_codebook_draft_v0.1.txt
+
+### 🆕 레퍼런스 전략 확정 (2026-07-08 검증)
+- C-2 방식: face + closeup + fs-masked (얼굴 마스킹 전신샷)
+- 정적/반정적 동작에서 얼굴 일관성 가장 우수
+- 동적 동작: 결과 상태 스냅샷 + face clearly visible 앞배치 필수
 
 ### ElevenLabs 서여리 목소리
 - 코드: RmYuvmCbqOMBJxDLW4k8
