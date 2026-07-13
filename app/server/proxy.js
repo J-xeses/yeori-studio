@@ -280,6 +280,18 @@ app.post('/api/studio-state', (req, res) => {
   }
 })
 
+// ── POST /api/update-status — STATUS.md 자동 갱신 (scripts/update-status.js 실행) ──
+app.post('/api/update-status', (req, res) => {
+  const scriptPath = path.join(CODE_ROOT, 'scripts', 'update-status.js')
+  try {
+    const output = execSync(`node "${scriptPath}"`, { cwd: CODE_ROOT, env: process.env, encoding: 'utf-8' })
+    const result = JSON.parse(output)
+    res.json({ ok: true, ...result })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.stderr?.toString() || err.message })
+  }
+})
+
 // ── GET/POST /api/gpoints — G포인트를 서버 경유로 공유 ───────────────────
 // lib/gpoints.js는 localStorage('aca_gpoints_v1')에 저장하는데, content_matrix_v3.html
 // 같은 다른 오리진(file://)에서는 localStorage를 절대 읽을 수 없어 이 엔드포인트로 중계한다.

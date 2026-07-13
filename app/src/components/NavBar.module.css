@@ -82,3 +82,23 @@
 .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .green { background: var(--green); box-shadow: 0 0 5px var(--green); }
 .red { background: var(--red); }
+
+.toast {
+  position: fixed;
+  top: 58px;
+  right: 16px;
+  z-index: 1000;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
+  animation: toastIn .15s ease-out;
+}
+.toastOk { background: var(--green, #22c55e); }
+.toastError { background: var(--red, #ef4444); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

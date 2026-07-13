@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './NavBar.module.css'
 
@@ -17,6 +18,27 @@ const TABS = [
 
 export default function NavBar() {
   const { state, dispatch, syncStatus } = useApp()
+  const [toast, setToast] = useState(null)
+  const [statusUpdating, setStatusUpdating] = useState(false)
+
+  const showToast = (message, ok = true) => {
+    setToast({ message, ok })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleUpdateStatus = async () => {
+    setStatusUpdating(true)
+    try {
+      const res = await fetch('http://localhost:3001/api/update-status', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error || '업데이트 실패')
+      showToast('✅ STATUS 업데이트 완료')
+    } catch (err) {
+      showToast(`❌ STATUS 업데이트 실패: ${err.message}`, false)
+    } finally {
+      setStatusUpdating(false)
+    }
+  }
 
   const syncLabel = {
     synced:  { icon: '🟢', text: '동기화됨' },
@@ -78,7 +100,15 @@ export default function NavBar() {
           <span style={{ fontSize: 11 }}>{syncLabel.icon}</span>
           <span style={{ fontSize: 11 }}>{syncLabel.text}</span>
         </div>
+        <button className={styles.btn} onClick={handleUpdateStatus} disabled={statusUpdating}>
+          {statusUpdating ? '⏳ 갱신 중…' : '📋 STATUS 업데이트'}
+        </button>
       </div>
+      {toast && (
+        <div className={`${styles.toast} ${toast.ok ? styles.toastOk : styles.toastError}`}>
+          {toast.message}
+        </div>
+      )}
     </nav>
   )
 }
