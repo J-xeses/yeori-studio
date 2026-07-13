@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { spawn, execSync } from 'child_process'
+import { spawn, execSync, execFileSync } from 'child_process'
 import { createWriteStream } from 'fs'
 import fs from 'fs'
 import path from 'path'
@@ -38,7 +38,7 @@ process.on('uncaughtException', (err) => {
   console.error('[proxy] uncaughtException:', err.message)
 })
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'null'] }))
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'] }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/downloads', express.static(path.join(MEDIA_ROOT, 'downloads')))
 
@@ -1514,6 +1514,194 @@ JSON 배열만 출력하고 다른 텍스트는 포함하지 마세요:
     res.json({ ok: true, episodes, savedCount: existing.length })
   } catch (err) {
     console.error('[trend-to-episode]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── BGM 레이더 — Chosic.com 무료 BGM 검색 + 다운로드 ──────────────
+// Bensound는 현재 완전 유료 카탈로그(라이선스 구매 필요)로 전환되어 있어
+// 자동 다운로드 대상에서 제외한다. Chosic은 CC BY 4.0(크레딧 표기 조건) 무료
+// 다운로드를 실제로 제공하므로 이것만 스크레이핑한다.
+const CHOSIC_UA_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept-Language': 'en-US,en;q=0.9',
+}
+
+// Chosic은 Cloudflare 봇 감지로 Node fetch(undici)의 TLS 핑거프린트를 차단한다
+// (헤더를 아무리 브라우저처럼 꾸며도 403 "Just a moment..." 발생).
+// Windows 기본 curl.exe(Schannel)는 통과하므로 HTML 페이지 요청은 curl로 우회한다.
+// (mp3 실 파일 다운로드는 Cloudflare 챌린지 대상이 아니라 fetch로 그대로 받는다)
+function curlFetchHtml(url) {
+  return execFileSync('curl', [
+    '-s', '-L',
+    '-A', CHOSIC_UA_HEADERS['User-Agent'],
+    '-H', `Accept-Language: ${CHOSIC_UA_HEADERS['Accept-Language']}`,
+    '--max-time', '15',
+    url,
+  ], { encoding: 'utf-8', maxBuffer: 20 * 1024 * 1024 })
+}
+
+const CHOSIC_MOOD_TAG = {
+  BGM_EMO:  'emotional',   // 감성
+  BGM_INFO: 'corporate',   // 정보전달/설명
+  BGM_HOOK: 'energetic',   // 훅/임팩트
+  BGM_CALM: 'calm',        // 차분
+}
+
+function sanitizePathSegment(s) {
+  return String(s || '').replace(/[\\/:*?"<>|]/g, '').replace(/\.\./g, '').trim()
+}
+
+async function fetchChosicListing(tag, limit = 8) {
+  const listUrl = `https://www.chosic.com/free-music/${encodeURIComponent(tag)}/`
+  let html
+  try {
+    html = curlFetchHtml(listUrl)
+  } catch (err) {
+    throw new Error(`Chosic 목록 조회 실패: ${err.message}`)
+  }
+  if (!html || !html.includes('track-info track')) throw new Error('Chosic 목록 조회 실패 (빈 응답 또는 차단됨)')
+
+  const blocks = html.split('class="track-info track"').slice(1, limit + 1)
+  const items = []
+  for (const block of blocks) {
+    const idMatch       = block.match(/data-track="(\d+)"/)
+    const titleMatch    = block.match(/trackF-title-inside"[^>]*>\s*<a href="([^"]+)"[^>]*>([^<]+)<\/a>/)
+    const artistMatch   = block.match(/artist-name"\s+href="[^"]*">([^<]+)<\/a>/)
+    const durationMatch = block.match(/time-full">([^<]+)<\/div>/)
+    if (!idMatch || !titleMatch) continue
+    items.push({
+      id: idMatch[1],
+      title: titleMatch[2].trim(),
+      artist: artistMatch ? artistMatch[1].trim() : '',
+      detailUrl: titleMatch[1],
+      duration: durationMatch ? durationMatch[1].trim() : '',
+    })
+  }
+  return items
+}
+
+async function fetchChosicDetail(detailUrl) {
+  let html
+  try {
+    html = curlFetchHtml(detailUrl)
+  } catch {
+    return null
+  }
+  if (!html) return null
+
+  const mainIdx = html.indexOf('main-track')
+  const scope = mainIdx >= 0 ? html.slice(mainIdx, mainIdx + 6000) : html
+
+  const mp3Match   = scope.match(/data-url="([^"]+\.mp3)"/)
+  const attrMatch  = scope.match(/data-attribution="([\s\S]*?)"\s*>/)
+  const tagsBlock  = scope.match(/tagcloud-names">([\s\S]*?)<\/div>/)
+  const tags = tagsBlock
+    ? [...tagsBlock[1].matchAll(/tag-cloud-link-names"[^>]*>([^<]+)</g)].map(m => m[1].trim())
+    : []
+
+  const attribution = attrMatch ? attrMatch[1].replace(/<br\s*\/?>/g, ' ').replace(/\s+/g, ' ').trim() : ''
+  const license = attribution.includes('CC BY')
+    ? 'CC BY 4.0 — 크레딧 표기 시 무료 사용 가능'
+    : (attribution || 'Chosic 라이선스 (원본 페이지 확인 필요)')
+
+  return {
+    mp3: mp3Match ? mp3Match[1] : null,
+    tags,
+    license,
+    attribution,
+  }
+}
+
+// ── POST /api/bgm-search — Chosic 무드/키워드 기반 BGM 검색 ──────────
+app.post('/api/bgm-search', async (req, res) => {
+  const { mood, keywords, source } = req.body || {}
+  if (!mood) return res.status(400).json({ error: 'mood 필요' })
+
+  if (source === 'bensound') {
+    return res.json({
+      results: [],
+      message: 'Bensound는 현재 유료 라이선스 카탈로그로 전환되어 자동 검색/다운로드를 지원하지 않습니다. Chosic을 이용하세요.',
+    })
+  }
+
+  const tag = CHOSIC_MOOD_TAG[mood]
+  if (!tag) return res.status(400).json({ error: `알 수 없는 mood: ${mood} (BGM_EMO/BGM_INFO/BGM_HOOK/BGM_CALM 중 하나)` })
+
+  try {
+    const listing = await fetchChosicListing(tag, 8)
+    const results = await Promise.all(listing.map(async item => {
+      const detail = await fetchChosicDetail(item.detailUrl).catch(() => null)
+      return {
+        title: item.title,
+        artist: item.artist,
+        url: item.detailUrl,
+        bpm: null, // Chosic은 트랙별 BPM을 제공하지 않음
+        duration: item.duration,
+        mood: detail?.tags?.length ? detail.tags.join(', ') : mood,
+        license: detail?.license || 'Chosic 라이선스 (원본 페이지 확인 필요)',
+        previewUrl: detail?.mp3 || null,
+        downloadUrl: detail?.mp3 || null,
+      }
+    }))
+
+    console.log(`[bgm-search] mood=${mood} tag=${tag} keywords=${JSON.stringify(keywords)} → ${results.length}건`)
+    res.json({ results })
+  } catch (err) {
+    console.error('[bgm-search]', err.message)
+    res.status(502).json({ error: err.message })
+  }
+})
+
+// ── POST /api/bgm-download — Chosic mp3 다운로드 + index.json 갱신 ────
+app.post('/api/bgm-download', async (req, res) => {
+  const { url, mood, filename } = req.body || {}
+  if (!url || !mood) return res.status(400).json({ error: 'url, mood 필요' })
+
+  try {
+    let mp3Url = url
+    if (!/\.mp3(\?.*)?$/i.test(mp3Url)) {
+      const detail = await fetchChosicDetail(url)
+      if (!detail?.mp3) return res.status(404).json({ error: '다운로드 가능한 mp3 URL을 찾을 수 없습니다' })
+      mp3Url = detail.mp3
+    }
+
+    const upstream = await fetch(mp3Url, { headers: CHOSIC_UA_HEADERS })
+    if (!upstream.ok) return res.status(502).json({ error: `원본 파일 다운로드 실패 (${upstream.status})` })
+    const buffer = Buffer.from(await upstream.arrayBuffer())
+
+    const moodDir = sanitizePathSegment(mood) || 'misc'
+    const baseName = filename
+      ? path.basename(sanitizePathSegment(filename))
+      : path.basename(new URL(mp3Url).pathname)
+    const safeName = /\.mp3$/i.test(baseName) ? baseName : `${baseName}.mp3`
+
+    const dir = path.join(MEDIA_ROOT, 'downloads', 'bgm', moodDir)
+    fs.mkdirSync(dir, { recursive: true })
+    const destPath = path.join(dir, safeName)
+    fs.writeFileSync(destPath, buffer)
+
+    // index.json 갱신 (최신순 배열)
+    const indexPath = path.join(MEDIA_ROOT, 'downloads', 'bgm', 'index.json')
+    let index = []
+    if (fs.existsSync(indexPath)) {
+      try { index = JSON.parse(fs.readFileSync(indexPath, 'utf-8')) } catch {}
+    }
+    index.unshift({
+      id: Date.now(),
+      title: safeName.replace(/\.mp3$/i, ''),
+      mood: moodDir,
+      sourceUrl: url,
+      mp3Url,
+      file: path.join('bgm', moodDir, safeName).replace(/\\/g, '/'),
+      downloadedAt: new Date().toISOString(),
+    })
+    fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf-8')
+
+    console.log(`[bgm-download] ${mp3Url} → ${destPath}`)
+    res.json({ success: true, path: destPath })
+  } catch (err) {
+    console.error('[bgm-download]', err.message)
     res.status(500).json({ error: err.message })
   }
 })
