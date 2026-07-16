@@ -16,6 +16,23 @@ const CONTENT_TYPES = [
   { value: 'TK',   label: 'TK — TikTok' },
 ]
 
+const TOPIC_CODES = [
+  { value: 'PSY', label: 'PSY — 심리' },
+  { value: 'SOC', label: 'SOC — 사회' },
+  { value: 'LIF', label: 'LIF — 라이프스타일' },
+  { value: 'REL', label: 'REL — 관계' },
+  { value: 'TRD', label: 'TRD — 트렌드' },
+]
+
+const SCN_CODES = [
+  { value: 'DOC',  label: 'DOC — 다큐' },
+  { value: 'MYS',  label: 'MYS — 미스터리' },
+  { value: 'NEWS', label: 'NEWS — 뉴스' },
+  { value: 'EDU',  label: 'EDU — 교육' },
+  { value: 'ENT',  label: 'ENT — 엔터테인먼트' },
+  { value: 'REL',  label: 'REL — 릴레이션십' },
+]
+
 const EP_GROUPS = [
   { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'] },
   { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
@@ -697,6 +714,20 @@ ${currentScript}
                 <select value={episode.contentType || 'LF'}
                   onChange={e => dispatch({ type: 'SET_EPISODE', p: { contentType: e.target.value } })}>
                   {CONTENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className={s.field}>
+                <label>주제 (TOPIC)</label>
+                <select value={episode.topicCode || 'PSY'}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { topicCode: e.target.value } })}>
+                  {TOPIC_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className={s.field}>
+                <label>시나리오 (SCN)</label>
+                <select value={episode.scnCode || 'DOC'}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { scnCode: e.target.value } })}>
+                  {SCN_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div className={s.field}>
