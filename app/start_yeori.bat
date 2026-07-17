@@ -4,9 +4,14 @@ cd /d "%~dp0"
 
 set ACC_HTML=%~dp0a_creative_cutter.html
 set MATRIX_HTML=%~dp0content_matrix_v3.html
-set TREND_RADAR_DIR=C:\Users\won56\OneDrive - CTEC\바탕 화면\안성준(원드라이브수시확인)\01. JW Archive\09. 구축\01. 부업\01. AI 콘텐츠\01. 트랜드\trend-radar
 set CHROME="C:\Program Files\Google\Chrome\Application\chrome.exe"
 set PROFILE=C:\yeori-studio\app\.chrome-profile-flow
+
+:: TREND_RADAR_DIR 탐색 (PC마다 위치가 달라서 우선순위대로 확인)
+set TREND_RADAR_DIR=
+if exist "C:\yeori-studio\app\trend-radar\package.json" set TREND_RADAR_DIR=C:\yeori-studio\app\trend-radar
+if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\Documents\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\Documents\GitHub\trend-radar
+if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\OneDrive\문서\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\OneDrive\문서\GitHub\trend-radar
 
 echo.
 echo ============================================================
@@ -40,11 +45,12 @@ netstat -ano | findstr ":3000 " | findstr "LISTENING" >nul 2>&1
 if %errorlevel% == 0 (
     echo        TREND RADAR dev server already running on port 3000 -- skip
 ) else (
-    if exist "%TREND_RADAR_DIR%\package.json" (
+    if defined TREND_RADAR_DIR (
+        echo        Found trend-radar at %TREND_RADAR_DIR%
         start "TREND RADAR Dev Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run dev"
         timeout /t 5 /nobreak >nul
     ) else (
-        echo        trend-radar project not found at %TREND_RADAR_DIR% -- skip
+        echo        trend-radar project not found in any known location -- skip
     )
 )
 echo.
