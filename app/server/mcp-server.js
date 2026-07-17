@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BASE_URL  = 'http://localhost:3001'
 const MEDIA_ROOT = 'C:\\yeori-studio'
+const CODE_ROOT = 'C:\\yeori-studio\\app'
 
 // ── HTTP 헬퍼 ──────────────────────────────────────────────────
 async function api(method, endpoint, body) {
@@ -147,7 +148,7 @@ async function executeTool(name, args) {
     }
 
     case 'list_episodes': {
-      const statePath = path.join(MEDIA_ROOT, 'downloads', 'studio-state.json')
+      const statePath = path.join(CODE_ROOT, 'studio-state.json')
       if (!fs.existsSync(statePath)) return 'studio-state.json 없음'
       const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
       const episodes = Object.values(state.episodes || {})
@@ -163,7 +164,7 @@ async function executeTool(name, args) {
 
     case 'export_pipeline': {
       const { episodeId } = args
-      const statePath = path.join(MEDIA_ROOT, 'downloads', 'studio-state.json')
+      const statePath = path.join(CODE_ROOT, 'studio-state.json')
       if (!fs.existsSync(statePath)) return 'studio-state.json 없음'
       const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
       const ep = state.episodes?.[episodeId]
@@ -195,7 +196,7 @@ async function executeTool(name, args) {
 
     case 'run_flow_images': {
       const { ep, projectId } = args
-      const statePath = path.join(MEDIA_ROOT, 'downloads', 'studio-state.json')
+      const statePath = path.join(CODE_ROOT, 'studio-state.json')
       if (!fs.existsSync(statePath)) return 'studio-state.json 없음 — 스튜디오 앱을 먼저 실행하세요'
       const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
       const epData = Object.values(state.episodes || {}).find(e => e.episode?.number === ep)

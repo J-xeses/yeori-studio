@@ -14,15 +14,15 @@ if not exist "%CLOUD%\" (
 )
 if not exist "%CLOUD_DATA%\" mkdir "%CLOUD_DATA%"
 
-:: [1/3] studio-state.json / studio-data.json smart sync (savedAt)
+:: [1/3] studio-data.json / studio-secrets.json smart sync
 echo.
-echo [1/3] studio-state.json / studio-data.json smart sync (savedAt)...
+echo [1/3] studio-data.json / studio-secrets.json smart sync...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0smart-sync-state.ps1"
 
-:: [2/3] downloads/ media sync (excluding studio-state.json handled above)
+:: [2/3] downloads/ media sync
 echo [2/3] downloads/ media sync...
-robocopy "%CLOUD%" "%LOCAL%" /E /XO /XD ".git" /XF "studio-state.json" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
-robocopy "%LOCAL%" "%CLOUD%" /E /XO /XD ".git" /XF "studio-state.json" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
+robocopy "%CLOUD%" "%LOCAL%" /E /XO /XD ".git" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
+robocopy "%LOCAL%" "%CLOUD%" /E /XO /XD ".git" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
 
 :: [3/3] app/data/ sync (excluding studio-data.json handled above)
 echo [3/3] app/data/ sync...

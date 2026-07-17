@@ -1,12 +1,13 @@
 # smart-sync-state.ps1
-# studio-state.json / studio-data.json을 파일 날짜가 아닌
-# JSON 내부 savedAt 필드 기준으로 더 최신인 쪽을 양방향 복사
+# studio-data.json은 JSON 내부 savedAt 필드 기준으로, studio-secrets.json(API 키)은
+# 파일 수정시각 기준으로 더 최신인 쪽을 양방향 복사
+# (studio-state.json은 app/ 하위로 이동, git push/pull로 PC간 동기화됨 — OneDrive 릴레이 대상 아님)
 
 param(
-    [string]$LocalDir  = "C:\yeori-studio\downloads",
-    [string]$LocalData = "C:\yeori-studio\app\data",
-    [string]$CloudDir  = "$env:USERPROFILE\OneDrive\yeori-studio-sync",
-    [string]$CloudData = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data"
+    [string]$LocalData    = "C:\yeori-studio\app\data",
+    [string]$CloudData    = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data",
+    [string]$LocalSecrets = "C:\yeori-studio\app\studio-secrets.json",
+    [string]$CloudSecrets = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data\studio-secrets.json"
 )
 
 function Sync-JsonBySavedAt {
@@ -51,14 +52,44 @@ function Sync-JsonBySavedAt {
     }
 }
 
-Write-Host ""
-Sync-JsonBySavedAt `
-    -LocalPath "$LocalDir\studio-state.json" `
-    -CloudPath  "$CloudDir\studio-state.json" `
-    -Label      "studio-state.json"
+function Sync-JsonByMTime {
+    param([string]$LocalPath, [string]$CloudPath, [string]$Label)
 
+    $cloudDir = Split-Path $CloudPath
+    $localDir = Split-Path $LocalPath
+    if (-not (Test-Path $cloudDir)) { New-Item -ItemType Directory -Force -Path $cloudDir | Out-Null }
+    if (-not (Test-Path $localDir))  { New-Item -ItemType Directory -Force -Path $localDir  | Out-Null }
+
+    $lt = if (Test-Path $LocalPath) { (Get-Item $LocalPath).LastWriteTimeUtc } else { $null }
+    $ct = if (Test-Path $CloudPath) { (Get-Item $CloudPath).LastWriteTimeUtc } else { $null }
+
+    if ($lt -and $ct) {
+        if ($lt -ge $ct) {
+            Write-Host "  [$Label] Local 최신 ($lt) -> Cloud 복사"
+            Copy-Item $LocalPath $CloudPath -Force
+        } else {
+            Write-Host "  [$Label] Cloud 최신 ($ct) -> Local 복사"
+            Copy-Item $CloudPath $LocalPath -Force
+        }
+    } elseif ($lt) {
+        Write-Host "  [$Label] Local만 있음 -> Cloud 복사"
+        Copy-Item $LocalPath $CloudPath -Force
+    } elseif ($ct) {
+        Write-Host "  [$Label] Cloud만 있음 -> Local 복사"
+        Copy-Item $CloudPath $LocalPath -Force
+    } else {
+        Write-Host "  [$Label] 양쪽 없음 - 건너뜀"
+    }
+}
+
+Write-Host ""
 Sync-JsonBySavedAt `
     -LocalPath "$LocalData\studio-data.json" `
     -CloudPath  "$CloudData\studio-data.json" `
     -Label      "studio-data.json"
+
+Sync-JsonByMTime `
+    -LocalPath $LocalSecrets `
+    -CloudPath $CloudSecrets `
+    -Label     "studio-secrets.json"
 Write-Host ""

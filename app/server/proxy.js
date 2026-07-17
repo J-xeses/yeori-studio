@@ -253,15 +253,15 @@ app.post('/api/studio-data', (req, res) => {
   }
 })
 
-// ── GET /api/studio-state — 회사/집 PC 간 동기화되는 상태 (downloads/, OneDrive 릴레이) ──
+// ── GET /api/studio-state — 회사/집 PC 간 동기화되는 상태 (app/studio-state.json, git 동기화) ──
+// apiKeys 등 시크릿은 studio-secrets.json(gitignore 대상, OneDrive 동기화)에 별도 보관 후 병합해서 내려줌
 app.get('/api/studio-state', (req, res) => {
-  const statePath = path.join(MEDIA_ROOT, 'downloads', 'studio-state.json')
+  const statePath   = path.join(CODE_ROOT, 'studio-state.json')
+  const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
   try {
-    if (fs.existsSync(statePath)) {
-      res.json(JSON.parse(fs.readFileSync(statePath, 'utf-8')))
-    } else {
-      res.json({})
-    }
+    const state   = fs.existsSync(statePath)   ? JSON.parse(fs.readFileSync(statePath, 'utf-8'))   : {}
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    res.json({ ...state, ...secrets })
   } catch {
     res.json({})
   }
@@ -269,11 +269,14 @@ app.get('/api/studio-state', (req, res) => {
 
 // ── POST /api/studio-state ───────────────────────────────────────
 app.post('/api/studio-state', (req, res) => {
-  const stateDir  = path.join(MEDIA_ROOT, 'downloads')
-  const statePath = path.join(stateDir, 'studio-state.json')
+  const statePath   = path.join(CODE_ROOT, 'studio-state.json')
+  const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
   try {
-    fs.mkdirSync(stateDir, { recursive: true })
-    fs.writeFileSync(statePath, JSON.stringify(req.body, null, 2), 'utf-8')
+    const { apiKeys, ...state } = req.body
+    fs.writeFileSync(statePath, JSON.stringify(state, null, 2), 'utf-8')
+    if (apiKeys) {
+      fs.writeFileSync(secretsPath, JSON.stringify({ apiKeys }, null, 2), 'utf-8')
+    }
     res.json({ ok: true })
   } catch (err) {
     res.status(500).json({ error: err.message })

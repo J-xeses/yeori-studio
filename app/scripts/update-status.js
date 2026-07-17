@@ -5,7 +5,7 @@
 // 1. 마지막 업데이트 날짜를 오늘 날짜로 갱신
 // 2. git log 최신 20개 커밋 중 "✅ 완료된 것" 표에 없는 것을 새 행으로 추가
 // 3. "🗺️ 자동화 전체 현황 (~NN%)" 제목의 NN%를 본문 ✅/🟡/⬜ 마커 집계로 재계산
-// 4. downloads/gpoints.json, downloads/studio-state.json은 읽어서 콘솔/응답 요약에만 사용
+// 4. downloads/gpoints.json, app/studio-state.json은 읽어서 콘솔/응답 요약에만 사용
 //    (Step 섹션 프로즈는 사람이 직접 쓴 서술이라 자동으로 고쳐 쓰지 않음)
 // 5. "🚨 다음 세션 즉시 할 것" 섹션은 절대 건드리지 않음 (사람이 관리)
 
@@ -130,7 +130,7 @@ function main() {
 
   const commits = getRecentCommits(20)
   const gpoints = readJsonSafe(path.join(MEDIA_ROOT, 'downloads', 'gpoints.json'))
-  const studioState = readJsonSafe(path.join(MEDIA_ROOT, 'downloads', 'studio-state.json'))
+  const studioState = readJsonSafe(path.join(CODE_ROOT, 'studio-state.json'))
   const gSummary = summarizeGPoints(gpoints)
   const epSummary = summarizeStudioState(studioState)
 

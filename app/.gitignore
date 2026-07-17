@@ -34,3 +34,8 @@ dist-ssr
 downloads/
 data/
 .chrome-profile-flow/
+
+.env.local
+
+# API 키 등 시크릿 (studio-state.json과 분리, PC간 동기화는 OneDrive로만)
+studio-secrets.json
