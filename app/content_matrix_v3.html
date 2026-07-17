@@ -562,6 +562,9 @@
         <button class="btn-primary" onclick="runLeaderAnalysis()" style="white-space:nowrap">
           ▶ 리더 분석 실행
         </button>
+        <button class="btn-cancel" onclick="runAllAgentsSequential()" style="white-space:nowrap" title="G1 대본 → G2 이미지 → G3 음성 → G4 영상 순서로 실행 (각 단계 완료 확인 후 다음 단계로 진행)">
+          ⏩ 전체 순차 실행
+        </button>
       </div>
 
       <!-- 에이전트 가동 현황 -->
@@ -613,7 +616,10 @@
       <div style="font-size:10px;color:var(--text3);margin:-12px 0 20px">💡 대본·음성·퍼블리싱은 클릭 시 실제 API가 실행됩니다. 이미지·영상·편집은 스튜디오와 브라우저/앱을 공유해 충돌 위험이 있어 <strong style="color:var(--text2)">현황 확인(모니터링)만</strong> 수행합니다 — 실제 생성/실행은 yeori-studio에서 직접 하세요.</div>
 
       <!-- 에이전트 실행 로그 -->
-      <div class="section-title">에이전트 실행 로그</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div class="section-title" style="flex:1;margin-bottom:12px">에이전트 실행 로그</div>
+        <button class="btn-cancel" onclick="clearAgentLog()" style="font-size:11px;padding:4px 10px;margin-bottom:12px;white-space:nowrap">🗑 로그 초기화</button>
+      </div>
       <div id="agent-log" data-empty="1" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-height:220px;overflow-y:auto;margin-bottom:20px">
         <div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">에이전트 카드를 클릭하면 실행 로그가 여기 표시됩니다.</div>
       </div>
@@ -2274,6 +2280,7 @@ document.getElementById('ig-post-modal').addEventListener('click', e => {
 });
 function renderLeader() {
   renderLeaderCutStatus();
+  updateAgentCardsFromLocalMatrix();
 }
 
 function renderLeaderCutStatus() {
@@ -2561,6 +2568,58 @@ function logAgent(agent, type, message) {
 function setAgentState(key, state, label) {
   const el = document.getElementById('ag-'+key);
   if(el) { el.className = `agent-state ${state}`; el.textContent = label; }
+}
+
+function clearAgentLog() {
+  const el = document.getElementById('agent-log');
+  if(!el) return;
+  el.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">에이전트 카드를 클릭하면 실행 로그가 여기 표시됩니다.</div>`;
+  el.dataset.empty = '1';
+  showToast('🗑 로그 초기화됨');
+}
+
+// 로컬 매트릭스(getCuts())의 g1~g4 플래그 기준으로 에이전트 카드 상태 반영 (10초 폴링)
+// G1→대본, G2→이미지, G3→음성, G4→영상 (카드에 표시된 라벨과 동일)
+const AGENT_G_MAP = { script:'g1', image:'g2', voice:'g3', video:'g4' };
+function updateAgentCardsFromLocalMatrix() {
+  const cuts = getCuts();
+  if(!cuts.length) return;
+  Object.entries(AGENT_G_MAP).forEach(([key, g]) => {
+    const el = document.getElementById('ag-'+key);
+    if(!el || el.classList.contains('running')) return; // 실행 중인 카드는 건드리지 않음
+    const allDone = cuts.every(c => c[g]);
+    if(allDone && !el.classList.contains('done')) setAgentState(key, 'done', '완료');
+    else if(!allDone && el.classList.contains('done')) setAgentState(key, 'idle', '대기중');
+  });
+}
+setInterval(updateAgentCardsFromLocalMatrix, 10000);
+
+// 전체 순차 실행 — G1 대본 → G2 이미지 → G3 음성 → G4 영상
+// G4(영상)는 컷 선택 확인이 필요한 단계라(스튜디오 Chrome CDP 세션 공유 + 실제 크레딧 소모),
+// 자동으로 생성을 트리거하지 않고 컷 선택 모달을 여는 데까지만 진행한다.
+async function runAllAgentsSequential() {
+  const seq = [
+    { key:'script', label:'G1 대본',   fn: runScriptAgent },
+    { key:'image',  label:'G2 이미지', fn: runImageAgent  },
+    { key:'voice',  label:'G3 음성',   fn: runVoiceAgent  },
+    { key:'video',  label:'G4 영상',   fn: runVideoAgent  },
+  ];
+  logAgent('전체실행','info','▶ 전체 순차 실행 시작 (G1 → G2 → G3 → G4)');
+  for(const step of seq) {
+    if(step.key === 'video') {
+      logAgent('전체실행','info','G4 영상은 컷 선택이 필요합니다 — 확인 모달을 엽니다.');
+      await step.fn();
+      break;
+    }
+    logAgent('전체실행','info', `${step.label} 단계 실행...`);
+    await step.fn();
+    const el = document.getElementById('ag-'+step.key);
+    if(!el?.classList.contains('done')) {
+      logAgent('전체실행','error', `${step.label} 단계가 완료되지 않아 순차 실행을 중단합니다.`);
+      return;
+    }
+  }
+  logAgent('전체실행','done','전체 순차 실행 절차 종료');
 }
 
 // ── ① 대본 에이전트 — /api/generate가 없어 Claude API(프록시 경유)로 검토/제안 ──
