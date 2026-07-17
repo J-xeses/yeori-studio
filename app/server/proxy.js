@@ -279,6 +279,17 @@ app.get('/api/elevenlabs-key', (req, res) => {
   }
 })
 
+// ── GET /api/claude-key — content_matrix_v3.html 등 다른 오리진에서 Claude 키 조회 ──
+app.get('/api/claude-key', (req, res) => {
+  const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+  try {
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    res.json({ key: secrets.apiKeys?.claude || '' })
+  } catch {
+    res.json({ key: '' })
+  }
+})
+
 // ── POST /api/studio-state ───────────────────────────────────────
 app.post('/api/studio-state', (req, res) => {
   const statePath   = path.join(CODE_ROOT, 'studio-state.json')

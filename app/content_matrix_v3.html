@@ -2353,10 +2353,9 @@ async function runLeaderAnalysis() {
   const cuts = getCuts();
   if(!cuts.length) { showToast('⚠️ 분석할 컷이 없어요'); return; }
 
-  await loadStudioState();
-  const apiKey = studioState.apiKeys?.claude;
+  const apiKey = await getClaudeKey();
   if(!apiKey) {
-    document.getElementById('leader-result').textContent = 'Claude API 키가 없습니다. yeori-studio 상단 API 바에 키를 입력해 저장하세요 (localStorage가 아니라 studio-state.json 기준입니다).';
+    document.getElementById('leader-result').textContent = 'Claude API 키가 없습니다. yeori-studio 상단 API 바에 키를 입력해 저장하세요 (localStorage가 아니라 studio-secrets.json 기준입니다).';
     showToast('⚠️ Claude API 키 없음'); return;
   }
 
@@ -2693,6 +2692,17 @@ async function getElevenLabsKey() {
     return data.key || '';
   } catch (e) {
     console.warn('ElevenLabs 키 조회 실패 (proxy.js 실행 중인지 확인):', e);
+    return '';
+  }
+}
+
+async function getClaudeKey() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/claude-key`);
+    const data = await res.json();
+    return data.key || '';
+  } catch (e) {
+    console.warn('Claude 키 조회 실패 (proxy.js 실행 중인지 확인):', e);
     return '';
   }
 }
