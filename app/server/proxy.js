@@ -267,6 +267,18 @@ app.get('/api/studio-state', (req, res) => {
   }
 })
 
+// ── GET /api/elevenlabs-key — content_matrix_v3.html 등 다른 오리진에서 ElevenLabs 키 조회 ──
+// (studio-secrets.json은 gitignore 대상이라 이 서버를 경유해야만 읽을 수 있음)
+app.get('/api/elevenlabs-key', (req, res) => {
+  const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+  try {
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    res.json({ key: secrets.apiKeys?.elevenLabs || '' })
+  } catch {
+    res.json({ key: '' })
+  }
+})
+
 // ── POST /api/studio-state ───────────────────────────────────────
 app.post('/api/studio-state', (req, res) => {
   const statePath   = path.join(CODE_ROOT, 'studio-state.json')

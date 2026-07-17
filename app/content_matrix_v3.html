@@ -2608,10 +2608,23 @@ async function runImageAgent() {
 }
 
 // ── ③ 음성 에이전트 — POST /api/elevenlabs/text-to-speech/:voiceId (오디오 바이너리 응답) ──
+// ElevenLabs 키는 GET /api/elevenlabs-key로 조회 (studio-secrets.json은 gitignore 대상이라
+// content_matrix_v3.html에서 직접 읽을 수 없고, localStorage도 오리진이 달라 공유 불가)
+async function getElevenLabsKey() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/elevenlabs-key`);
+    const data = await res.json();
+    return data.key || '';
+  } catch (e) {
+    console.warn('ElevenLabs 키 조회 실패 (proxy.js 실행 중인지 확인):', e);
+    return '';
+  }
+}
+
 async function runVoiceAgent() {
   setAgentState('voice','running','실행중');
   await loadStudioState();
-  const apiKey = studioState.apiKeys?.elevenLabs;
+  const apiKey = await getElevenLabsKey();
   if(!apiKey) {
     logAgent('음성','error','yeori-studio에 ElevenLabs API 키가 설정되어 있지 않습니다 (yeori-studio 상단 API 바에 키를 입력해 저장하세요)');
     setAgentState('voice','idle','대기중'); return;
