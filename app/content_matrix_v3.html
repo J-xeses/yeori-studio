@@ -591,7 +591,7 @@
           <div class="agent-state idle" id="ag-voice">대기중</div>
           <div style="font-size:9px;color:var(--text3);margin-top:4px">G3 담당</div>
         </div>
-        <div class="agent-card clickable" id="ag-card-video" onclick="runVideoAgent()" title="클릭하여 현황 확인 (모니터링 전용 — 생성은 영상 만들기 탭에서)">
+        <div class="agent-card clickable" id="ag-card-video" onclick="runVideoAgent()" title="클릭하여 컷 선택 후 영상 생성 실행 (/api/run-video)">
           <div class="agent-icon">🎬</div>
           <div class="agent-name">영상 에이전트</div>
           <div class="agent-state idle" id="ag-video">대기중</div>
@@ -1112,6 +1112,23 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeIgPostModal()">취소</button>
       <button class="btn-save" onclick="saveIgPost()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 영상 에이전트 컷 선택 모달 -->
+<div class="modal-overlay" id="video-cut-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">어떤 컷을 생성할까요?</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px" id="video-cut-modal-ep"></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="form-label">컷 번호</label>
+        <select class="form-select" id="video-cut-select"></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeVideoCutModal()">취소</button>
+      <button class="btn-save" onclick="confirmVideoCut()">확인 · 생성 시작</button>
     </div>
   </div>
 </div>
@@ -2652,30 +2669,95 @@ async function runVoiceAgent() {
 }
 
 // ── ④ 영상 에이전트 — POST /api/run-video (SSE 스트리밍) ──
-// 영상 생성도 이미지 에이전트와 동일하게 스튜디오 탭과 Chrome CDP 세션을
-// 공유하므로 여기서 직접 트리거하지 않고 실제 진행 현황만 확인한다.
+// 주의: 영상 생성은 이미지 에이전트와 동일하게 스튜디오 탭과 Chrome CDP 세션을
+// 공유하는 Puppeteer 자동화(video-automation.js)를 직접 구동한다. 스튜디오의
+// "영상 만들기" 탭이나 Flow 탭에서 동시에 다른 작업 중이면 충돌할 수 있으니
+// 실행 전 확인할 것.
 async function runVideoAgent() {
   setAgentState('video','running','확인중');
   await loadStudioState();
   const ep = studioState.episode;
   if(!ep) { logAgent('영상','error','활성 에피소드 정보를 찾을 수 없습니다'); setAgentState('video','idle','대기중'); return; }
-  const cuts = studioState.cuts || [];
-  const withPrompt = cuts.filter(c=>c.imagePrompt?.trim()).length;
-  logAgent('영상','info', `EP${ep.number} 영상 생성 현황 확인 중... (생성 트리거는 영상 만들기 탭에서 직접 실행하세요)`);
+  const cuts = (studioState.cuts||[]).filter(c=>c.imagePrompt?.trim() || c.videoPrompt?.trim());
+  if(!cuts.length) { logAgent('영상','error','이미지/영상 프롬프트가 있는 컷이 없습니다'); setAgentState('video','idle','대기중'); return; }
+
+  const sel = document.getElementById('video-cut-select');
+  sel.innerHTML = '';
+  cuts.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.no;
+    opt.textContent = `CUT ${c.no} — ${(c.imagePrompt||c.videoPrompt||'').slice(0,40)}${(c.imagePrompt||c.videoPrompt||'').length>40?'...':''}`;
+    sel.appendChild(opt);
+  });
+  document.getElementById('video-cut-modal-ep').textContent = `EP${ep.number} · ${ep.title||''}`;
+  setAgentState('video','idle','대기중');
+  openVideoCutModal();
+}
+
+function openVideoCutModal(){document.getElementById('video-cut-modal').classList.add('open');}
+function closeVideoCutModal(){document.getElementById('video-cut-modal').classList.remove('open');}
+
+async function confirmVideoCut() {
+  const cutNo = document.getElementById('video-cut-select').value;
+  if(!cutNo) return;
+  closeVideoCutModal();
+  await executeVideoGeneration(studioState.episode.number, cutNo);
+}
+
+// 로컬 매트릭스(getCuts())의 G4 배지를 완료로 표시 — toggleGP와 동일한 저장/렌더 방식
+function markLocalG4Done(cutNo) {
+  const cut = getCuts().find(c => String(c.no) === String(cutNo));
+  if (cut && !cut.g4) { cut.g4 = true; saveData(); renderMatrix(); }
+}
+
+async function executeVideoGeneration(epNum, cutNo) {
+  setAgentState('video','running','실행중');
+  logAgent('영상','info', `CUT ${cutNo} 영상 생성 요청 중 (스튜디오 Chrome 탭에서 자동 진행됩니다)...`);
   try {
-    const res = await fetch(`${YEORI_SERVER}/api/scan-media`, {
+    const res = await fetch(`${YEORI_SERVER}/api/run-video`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ epNum: ep.number }),
+      body: JSON.stringify({ ep: epNum, cut: cutNo, ratio: '9:16', prompts: { episode: epNum, cuts: studioState.cuts || [] } }),
     });
-    const data = await res.json();
-    const doneCount = Object.keys(data.videos||{}).length;
-    const allDone = cuts.length>0 && doneCount>=cuts.length;
-    logAgent('영상','done', `EP${ep.number}: 이미지프롬프트 ${withPrompt}/${cuts.length}컷 · 영상 생성 완료 ${doneCount}/${cuts.length}컷`);
-    setAgentState('video', allDone?'done':'idle', allDone?'완료':'대기중');
-    showToast('✅ 영상 현황 확인 완료');
+    if(!res.ok || !res.body) { const t = await res.json().catch(()=>({})); throw new Error(t.error || `HTTP ${res.status}`); }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '', success = false, gotComplete = false;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for (const part of parts) {
+        const line = part.split('\n').find(l => l.startsWith('data: '));
+        if (!line) continue;
+        let evt; try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+        if (evt.type === 'log') {
+          logAgent('영상', evt.level==='error' ? 'error' : 'info', evt.message);
+        } else if (evt.type === 'saved') {
+          logAgent('영상','info', evt.message);
+        } else if (evt.type === 'complete') {
+          gotComplete = true; success = !!evt.success;
+        } else if (evt.type === 'error') {
+          logAgent('영상','error', evt.message);
+        }
+      }
+    }
+
+    if (success) {
+      logAgent('영상','done', `CUT ${cutNo} 영상 생성 완료`);
+      setAgentState('video','done','완료');
+      markLocalG4Done(cutNo);
+      showToast('✅ 영상 에이전트 완료');
+    } else {
+      logAgent('영상','error', `CUT ${cutNo} 영상 생성 실패${gotComplete?'':' (완료 신호 없음)'}`);
+      setAgentState('video','idle','대기중');
+      showToast('⚠️ 영상 에이전트 실패');
+    }
   } catch(e) {
     logAgent('영상','error', e.message);
-    setAgentState('video','idle','대기중'); showToast('⚠️ 확인 실패: '+e.message);
+    setAgentState('video','idle','대기중'); showToast('⚠️ 영상 에이전트 실패: '+e.message);
   }
 }
 
