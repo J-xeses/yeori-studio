@@ -76,7 +76,7 @@ CODE_CATEGORIES = {
     "look_style":  {"LK_CS": "캐주얼", "LK_NT": "나이트·드레시", "LK_HM": "홈·편안", "LK_SH": "화보·촬영"},
     "look_top":    {"TOP_CRP": "크롭탑", "TOP_KNT": "니트", "TOP_TNK": "터틀넥", "TOP_OFS": "오프숄더"},
     "look_bottom": {"BTM_DNM": "데님쇼츠/팬츠", "BTM_SHT": "쇼츠", "BTM_SKT": "스커트"},
-    "look_shoes":  {"SH_HHL": "하이힐 (스틸레토)", "SH_SNK": "스니커즈", "SH_FLT": "플랫슈즈"},
+    "look_shoes":  {"SH_HHL": "하이힐", "SH_SNK": "스니커즈", "SH_FLT": "플랫슈즈"},
     "hair":        {"HR_CORE": "롱웨이비 다크브라운"},
 }
 
@@ -111,6 +111,19 @@ EN_INDEX = {
     "MD_INT": "focused, immersive mood", "MD_SAD": "sad, empty mood",
     "MD_REL": "relaxed, at-ease mood", "MD_DRM": "dreamy, sentimental mood",
     "MD_CUR": "curious, questioning mood", "MD_STR": "strong, confident mood",
+}
+
+# IP 배경 묘사 — 자주 쓰이는 (유형.장소.시간.조명) 조합은 다듬어진 문구를 직접 등록해두고,
+# 등록되지 않은 조합은 en_space_phrase()가 기계적으로 조합한다.
+SPACE_PHRASE_OVERRIDES = {
+    "OT.CF.TZ_GH.LT_WM": "outdoor cafe terrace, warm golden hour sunlight",
+    "OT.CF.TZ_AF.LT_WM": "outdoor cafe terrace, warm golden afternoon sunlight",
+    "IN.CF.TZ_GH.LT_WM": "inside cozy cafe, warm golden hour light streaming through window",
+    "IN.CF.TZ_NT.LT_NE": "inside cafe at night, neon city lights glowing outside",
+    "OT.ST.TZ_GH.LT_WM": "Seoul city street, warm golden hour sunlight",
+    "OT.ST.TZ_NT.LT_NE": "Seoul city street at night, neon lights glowing",
+    "IN.HM.TZ_AF.LT_WM": "cozy home interior, warm afternoon sunlight",
+    "IN.HM.TZ_NT.LT_NE": "home interior at night, soft warm lamp light",
 }
 
 # ⑬ 체크리스트: SH_CU/SH_MCU -> "CLOSEUP SHOT —", SH_FS/SH_MLS -> "FULLBODY SHOT —"
@@ -306,12 +319,22 @@ def kr_look_line(look_by_cat):
 
 
 def en_space_phrase(space_by_cat):
-    typ = en_labels(space_by_cat["space_type"])
-    place = en_labels(space_by_cat["space_place"])
-    time_ = en_labels(space_by_cat["space_time"])
-    light = en_labels(space_by_cat["space_light"])
-    part1 = " ".join(typ + place)
-    part2 = ", ".join(light + time_)
+    typ = first_or(space_by_cat["space_type"])
+    place = first_or(space_by_cat["space_place"])
+    time_ = first_or(space_by_cat["space_time"])
+    light = first_or(space_by_cat["space_light"])
+
+    key = ".".join(c for c in (typ, place, time_, light) if c)
+    if key in SPACE_PHRASE_OVERRIDES:
+        return SPACE_PHRASE_OVERRIDES[key]
+
+    # 등록 안 된 조합은 기계적으로 조합 (커버되지 않은 코드 조합을 위한 폴백)
+    typ_en = EN_INDEX.get(typ, "")
+    place_en = EN_INDEX.get(place, "")
+    time_en = EN_INDEX.get(time_, "")
+    light_en = EN_INDEX.get(light, "")
+    part1 = " ".join(x for x in (typ_en, place_en) if x)
+    part2 = ", ".join(x for x in (light_en, time_en) if x)
     if part1 and part2:
         return f"{part1} setting, {part2} light"
     return part1 or part2 or "an unspecified location"
