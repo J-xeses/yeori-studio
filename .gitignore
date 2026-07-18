@@ -7,6 +7,7 @@ logs/
 .chrome-profile-flow/
 *.py
 !app/scripts/script_generator.py
+!app/scripts/script_to_prompts.py
 debug_log.txt
 sync-log.txt
 *.log
