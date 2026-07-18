@@ -8,6 +8,7 @@ logs/
 *.py
 !app/scripts/script_generator.py
 !app/scripts/script_to_prompts.py
+!app/scripts/bridge_converter.py
 debug_log.txt
 sync-log.txt
 *.log
