@@ -166,6 +166,30 @@ function parseCuts(raw, n) {
   return cuts
 }
 
+// 마스터 코드 파이프라인(prompts.json)의 컷을 AppContext cuts 스키마로 변환
+const MASTER_CLOSEUP_SHOTS = new Set(['SH_ECU', 'SH_CU', 'SH_MCU'])
+
+function mapPromptsCutsToAppCuts(promptsCuts) {
+  return (promptsCuts || []).map(pc => {
+    const firstSh = (pc.sh || '').split('→')[0].trim()
+    return {
+      id: `cut-${pc.no}`,
+      no: parseInt(pc.no, 10) || pc.no,
+      scene: pc.sc || '',
+      action: pc.kr?.ac || '',
+      character: '서여리',
+      dialogue: pc.dl || '',
+      narration: pc.nr || '',
+      imagePrompt: pc.imagePrompt || '',
+      videoPrompt: pc.videoPrompt || '',
+      duration: pc.du || 8,
+      shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
+      cutType: 'YEORI',
+      masterCode: { sp: pc.sp, pl: pc.pl, sh: pc.sh, ca: pc.ca, md: pc.md, ac: pc.ac, kr: pc.kr },
+    }
+  })
+}
+
 export default function ScriptGenTab() {
   const { state, dispatch } = useApp()
   const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
@@ -184,6 +208,13 @@ export default function ScriptGenTab() {
   const [revisionHistory, setRevisionHistory] = useState([])
   const [collapsedGroups, setCollapsedGroups] = useState({})
   const [viewMode, setViewMode] = useState('detail') // 'list' | 'detail'
+
+  // ── 마스터 코드 대본 생성 (script_generator.py + script_to_prompts.py) ──
+  const [masterCodeOpen, setMasterCodeOpen] = useState(true)
+  const [masterCode, setMasterCode] = useState('')
+  const [mcLoading, setMcLoading] = useState(false)
+  const [mcError, setMcError] = useState('')
+  const [mcPreview, setMcPreview] = useState(null) // 생성된 prompts.json ({ episode, cuts })
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -416,6 +447,35 @@ ${YEORI_RULESET}
       setProgress('')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 마스터 코드 -> /api/generate-script (script_generator.py + script_to_prompts.py 실행,
+  // prompts.json 자동 갱신) -> 결과를 스튜디오 탭에서 바로 보이도록 cuts에 즉시 반영
+  const generateFromMasterCode = async () => {
+    if (!masterCode.trim()) { setMcError('마스터 코드를 입력하세요'); return }
+    setMcLoading(true)
+    setMcError('')
+    setMcPreview(null)
+    try {
+      const res = await fetch('http://localhost:3001/api/generate-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: masterCode }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`)
+
+      const mappedCuts = mapPromptsCutsToAppCuts(data.prompts.cuts)
+      dispatch({ type: 'SET_CUTS', p: mappedCuts })
+      mappedCuts.forEach(c => setGPoint(c.no, 'g1', false)) // 새 컷은 검토 전이므로 G1 미승인 상태로 시작
+      setGData(loadGPoints())
+      setMcPreview(data.prompts)
+      setActiveCut(0)
+    } catch (err) {
+      setMcError(err.message)
+    } finally {
+      setMcLoading(false)
     }
   }
 
@@ -932,6 +992,77 @@ ${currentScript}
                   </div>
                 )
               })()}
+            </div>
+          )}
+        </div>
+
+        {/* 마스터 코드 대본 생성 (script_generator.py + script_to_prompts.py) */}
+        <div className={s.epSection}>
+          <button className={s.epToggle} onClick={() => setMasterCodeOpen(o => !o)}>
+            <span className={s.sideTitle}>🔤 마스터 코드 대본 생성</span>
+            <span className={s.toggleIcon}>{masterCodeOpen ? '▲' : '▼'}</span>
+          </button>
+          {masterCodeOpen && (
+            <div className={s.epBody}>
+              {/* ① 마스터 코드 입력창 */}
+              <div className={s.field}>
+                <label>마스터 코드</label>
+                <textarea
+                  rows={4}
+                  placeholder={'SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM :: LK_CS.TOP_CRP.BTM_SHT.SH_HHL :: SH_CU CA_PS MD_JOY AT_SD_01'}
+                  style={{ fontFamily: 'monospace', fontSize: 11, resize: 'vertical' }}
+                  value={masterCode}
+                  onChange={e => setMasterCode(e.target.value)}
+                />
+              </div>
+
+              {/* ② 대본 생성 버튼 */}
+              <button
+                className={s.genBtn}
+                onClick={generateFromMasterCode}
+                disabled={mcLoading || !masterCode.trim()}
+                style={{ width: '100%' }}
+              >
+                {mcLoading ? (<><span className={s.spinner} />생성 중...</>) : '🧬 대본 생성'}
+              </button>
+              {mcError && (
+                <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>⚠️ {mcError}</div>
+              )}
+
+              {/* ③ KR 컨펌본 미리보기 */}
+              {mcPreview && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>
+                    KR 컨펌본 미리보기 ({mcPreview.cuts.length}컷)
+                  </div>
+                  <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {mcPreview.cuts.map(c => (
+                      <div key={c.no} style={{
+                        padding: 8, borderRadius: 6, background: 'var(--bg3)',
+                        border: '1px solid var(--border2)', fontSize: 11, lineHeight: 1.6,
+                      }}>
+                        <div style={{ fontWeight: 700, color: 'var(--accent-light)', marginBottom: 4 }}>CUT {c.no}</div>
+                        <div>SP(장소): {c.kr.sp}</div>
+                        <div>CH(캐릭터): {c.kr.ch}</div>
+                        <div>SH(샷): {c.kr.sh}</div>
+                        <div>CA(카메라): {c.kr.ca}</div>
+                        <div>AC(동작): {c.kr.ac}</div>
+                        <div>MD(감정): {c.kr.md}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={approveAllG1}
+                    style={{
+                      padding: '6px 10px', borderRadius: 6, background: 'rgba(34,197,94,.15)',
+                      border: '1px solid rgba(34,197,94,.4)', color: '#4ade80', fontSize: 11,
+                      fontWeight: 700, cursor: 'pointer',
+                    }}
+                  >
+                    ✅ 검토 완료 · 전체 승인 (스튜디오 탭으로)
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

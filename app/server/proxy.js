@@ -318,6 +318,43 @@ app.post('/api/update-status', (req, res) => {
   }
 })
 
+// ── POST /api/generate-script — 마스터 코드 -> script_generator.py -> script_to_prompts.py -> prompts.json ──
+app.post('/api/generate-script', (req, res) => {
+  const { code } = req.body
+  if (!code || !code.trim()) return res.status(400).json({ ok: false, error: '마스터 코드가 필요합니다' })
+
+  const scriptsDir = path.join(CODE_ROOT, 'scripts')
+  const tmpCodePath = path.join(scriptsDir, '.tmp_master_code.txt')
+  const generatorPath = path.join(scriptsDir, 'script_generator.py')
+  const converterPath = path.join(scriptsDir, 'script_to_prompts.py')
+
+  try {
+    fs.writeFileSync(tmpCodePath, code, 'utf-8')
+
+    const genOut = execFileSync('python', [generatorPath, '--file', tmpCodePath], {
+      cwd: scriptsDir, encoding: 'utf-8',
+    })
+    const m = genOut.match(/\[완료\]\s*(.+_script\.txt)/)
+    if (!m) throw new Error(`script_generator.py 출력에서 결과 파일을 찾지 못했습니다: ${genOut}`)
+    const scriptTxtName = path.basename(m[1].trim())
+
+    const convOut = execFileSync('python', [converterPath, '--file', scriptTxtName], {
+      cwd: scriptsDir, encoding: 'utf-8',
+    })
+
+    const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
+    const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'))
+
+    res.json({ ok: true, prompts, generatorLog: genOut, converterLog: convOut })
+  } catch (err) {
+    const detail = err.stderr?.toString() || err.stdout?.toString() || err.message
+    console.error('[generate-script] 오류:', detail)
+    res.status(500).json({ ok: false, error: detail })
+  } finally {
+    try { fs.unlinkSync(tmpCodePath) } catch {}
+  }
+})
+
 // ── GET/POST /api/gpoints — G포인트를 서버 경유로 공유 ───────────────────
 // lib/gpoints.js는 localStorage('aca_gpoints_v1')에 저장하는데, content_matrix_v3.html
 // 같은 다른 오리진(file://)에서는 localStorage를 절대 읽을 수 없어 이 엔드포인트로 중계한다.
