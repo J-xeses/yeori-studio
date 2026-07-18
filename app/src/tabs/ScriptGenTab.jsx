@@ -451,7 +451,8 @@ ${YEORI_RULESET}
   }
 
   // 마스터 코드 -> /api/generate-script (script_generator.py + script_to_prompts.py 실행,
-  // prompts.json 자동 갱신) -> 결과를 스튜디오 탭에서 바로 보이도록 cuts에 즉시 반영
+  // prompts.json 자동 갱신) -> 결과는 mcPreview에만 저장 (AppContext는 건드리지 않음 —
+  // "실제 적용" 버튼을 눌러야만 cuts/저장에 반영되는 테스트 모드 안전장치)
   const generateFromMasterCode = async () => {
     if (!masterCode.trim()) { setMcError('마스터 코드를 입력하세요'); return }
     setMcLoading(true)
@@ -466,17 +467,24 @@ ${YEORI_RULESET}
       const data = await res.json()
       if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`)
 
-      const mappedCuts = mapPromptsCutsToAppCuts(data.prompts.cuts)
-      dispatch({ type: 'SET_CUTS', p: mappedCuts })
-      mappedCuts.forEach(c => setGPoint(c.no, 'g1', false)) // 새 컷은 검토 전이므로 G1 미승인 상태로 시작
-      setGData(loadGPoints())
       setMcPreview(data.prompts)
-      setActiveCut(0)
     } catch (err) {
       setMcError(err.message)
     } finally {
       setMcLoading(false)
     }
+  }
+
+  // 미리보기(mcPreview)를 실제로 AppContext에 반영 — 이 버튼을 눌러야만 cuts가
+  // 교체되고 studio-state.json 자동저장이 트리거됨
+  const applyMasterCodeResult = () => {
+    if (!mcPreview) return
+    const mappedCuts = mapPromptsCutsToAppCuts(mcPreview.cuts)
+    dispatch({ type: 'SET_CUTS', p: mappedCuts })
+    mappedCuts.forEach(c => setGPoint(c.no, 'g1', false)) // 새 컷은 검토 전이므로 G1 미승인 상태로 시작
+    setGData(loadGPoints())
+    setActiveCut(0)
+    setMcPreview(null)
   }
 
   const updateCut = (id, field, val) => {
@@ -1029,9 +1037,15 @@ ${currentScript}
                 <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>⚠️ {mcError}</div>
               )}
 
-              {/* ③ KR 컨펌본 미리보기 */}
+              {/* ③ KR 컨펌본 미리보기 — 테스트 모드: "실제 적용" 전까지 AppContext/저장에 반영 안 됨 */}
               {mcPreview && (
                 <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{
+                    padding: '6px 10px', borderRadius: 6, background: 'rgba(234,179,8,.15)',
+                    border: '1px solid rgba(234,179,8,.4)', color: '#facc15', fontSize: 11, fontWeight: 700,
+                  }}>
+                    ⚠ 미리보기 상태 — 실제 적용 전까지 저장 안 됨
+                  </div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>
                     KR 컨펌본 미리보기 ({mcPreview.cuts.length}컷)
                   </div>
@@ -1051,16 +1065,28 @@ ${currentScript}
                       </div>
                     ))}
                   </div>
-                  <button
-                    onClick={approveAllG1}
-                    style={{
-                      padding: '6px 10px', borderRadius: 6, background: 'rgba(34,197,94,.15)',
-                      border: '1px solid rgba(34,197,94,.4)', color: '#4ade80', fontSize: 11,
-                      fontWeight: 700, cursor: 'pointer',
-                    }}
-                  >
-                    ✅ 검토 완료 · 전체 승인 (스튜디오 탭으로)
-                  </button>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      onClick={() => setMcPreview(null)}
+                      style={{
+                        flex: 1, padding: '6px 10px', borderRadius: 6, background: 'var(--bg3)',
+                        border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 11,
+                        fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      취소
+                    </button>
+                    <button
+                      onClick={applyMasterCodeResult}
+                      style={{
+                        flex: 2, padding: '6px 10px', borderRadius: 6, background: 'rgba(34,197,94,.15)',
+                        border: '1px solid rgba(34,197,94,.4)', color: '#4ade80', fontSize: 11,
+                        fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      ✅ 실제 적용 (cuts에 반영 + 저장)
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
