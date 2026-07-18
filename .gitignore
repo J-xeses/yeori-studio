@@ -6,6 +6,7 @@ logs/
 .chrome-profile-cutter/
 .chrome-profile-flow/
 *.py
+!app/scripts/script_generator.py
 debug_log.txt
 sync-log.txt
 *.log
