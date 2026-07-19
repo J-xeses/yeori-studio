@@ -36,9 +36,13 @@ script_generator.py
 """
 
 import argparse
+import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.request
+from datetime import datetime
 
 # Windows 콘솔(cp949 등) 환경에서도 한글 출력이 깨지지 않도록 stdout/stderr을 UTF-8로 고정
 for _stream in (sys.stdout, sys.stderr):
@@ -143,6 +147,11 @@ YEORI_BASE_LINES = [
 
 OUTPUT_DIR = r"C:\yeori-studio\app\scripts_output"
 DEFAULT_DU = 8
+EQ = "=" * 64
+UPDATE_SCRIPT_HISTORY_URL = "http://localhost:3001/api/update-script-history"
+
+# "# VERSION: v1.2" 형식에서 major/minor 추출
+VERSION_RE = re.compile(r"^#\s*VERSION:\s*v?(\d+)\.(\d+)", re.MULTILINE)
 
 # CL_{초}S_{구간수}[라벨:코드+코드|라벨:코드+코드|...]
 CL_PATTERN = re.compile(r"CL_(\d+)S_(\d+)\[([^\]]*)\]")
@@ -503,6 +512,80 @@ def join_wrapped_lines(raw_lines):
     return joined
 
 
+# ── 버전 헤더 / 스크립트 이력 ──────────────────────────────────────────
+
+def next_version(out_path):
+    """
+    out_path에 이미 script.txt가 있으면 그 SCRIPT META 헤더에서 VERSION을 읽어
+    minor를 1 올린 버전을 반환한다(예: v1.2 -> v1.3). 없거나 파싱 실패 시 v1.0.
+    """
+    if os.path.exists(out_path):
+        try:
+            with open(out_path, encoding="utf-8") as f:
+                head = f.read(2000)  # 헤더는 파일 맨 앞부분에 있어 전체를 읽을 필요 없음
+            m = VERSION_RE.search(head)
+            if m:
+                major, minor = int(m.group(1)), int(m.group(2))
+                return f"v{major}.{minor + 1}"
+        except OSError:
+            pass
+    return "v1.0"
+
+
+def build_meta_header(episode_code, version, date_str, status, changes, cuts_count):
+    lines = [
+        EQ,
+        "# SCRIPT META",
+        f"# EPISODE: {episode_code}",
+        f"# VERSION: {version}",
+        f"# DATE: {date_str}",
+        f"# STATUS: {status}",
+        f"# CHANGES: {changes}",
+        f"# CUTS: {cuts_count}",
+        EQ,
+    ]
+    return "\n".join(lines)
+
+
+def cut_detail_range(cuts_count):
+    if cuts_count <= 1:
+        return "C01"
+    return f"C01~C{cuts_count:02d}"
+
+
+def notify_script_history(episode_code, version, date_str, status, changes, cuts_count):
+    """
+    생성 완료 후 proxy.js의 /api/update-script-history를 호출해 Notion 스크립트
+    이력에 기록한다. 실패해도(proxy.js 미실행, Notion 오류 등) 경고만 출력하고
+    스크립트 생성 자체는 이미 끝난 상태이므로 절대 예외를 전파하지 않는다.
+    """
+    payload = json.dumps({
+        "episodeCode": episode_code,
+        "version": version,
+        "date": date_str,
+        "status": status,
+        "changes": changes,
+        "cuts": cuts_count,
+        "cutDetail": cut_detail_range(cuts_count),
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        UPDATE_SCRIPT_HISTORY_URL,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        if result.get("success"):
+            print(f"[Notion] 스크립트 이력 업데이트 완료 (page: {result.get('notionPageId')})")
+        else:
+            print(f"[Notion] 경고: {result.get('error', '알 수 없는 오류')}")
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        print(f"[Notion] 경고: 이력 업데이트 실패 (proxy.js 실행 중인지 확인) — {e}")
+
+
 # ── 메인 ──────────────────────────────────────────────────────────────
 
 def generate_script(raw_lines):
@@ -533,7 +616,7 @@ def generate_script(raw_lines):
     )
 
     body = "\n\n".join(block for block, _, _, _ in valid)
-    return episode_code, f"{header}\n\n{body}\n"
+    return episode_code, f"{header}\n\n{body}\n", len(valid)
 
 
 def main():
@@ -543,6 +626,12 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--code", type=str, help="마스터 코드 문자열 (여러 컷은 줄바꿈으로 구분)")
     group.add_argument("--file", type=str, help="마스터 코드가 담긴 텍스트 파일 경로 (한 줄 = 컷 1개)")
+    parser.add_argument("--changes", type=str, default="자동 생성", help="이번 버전의 변경 내용 한 줄 요약")
+    parser.add_argument(
+        "--status", type=str, default="draft",
+        choices=["draft", "review", "approved", "regenerate", "archived"],
+        help="draft/review/approved/regenerate/archived",
+    )
     args = parser.parse_args()
 
     if args.code:
@@ -552,17 +641,26 @@ def main():
             code_lines = f.readlines()
 
     try:
-        episode_code, script_text = generate_script(code_lines)
+        episode_code, script_text, cuts_count = generate_script(code_lines)
     except ValueError as e:
         print(f"오류: {e}", file=sys.stderr)
         sys.exit(1)
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     out_path = os.path.join(OUTPUT_DIR, f"{episode_code}_script.txt")
+
+    # 버전은 기존 파일(있다면)의 헤더를 먼저 읽어서 결정한 뒤에 덮어써야 하므로,
+    # 반드시 out_path에 새로 쓰기 전에 계산한다.
+    version = next_version(out_path)
+    date_str = datetime.now().strftime("%Y-%m-%d")
+    meta_header = build_meta_header(episode_code, version, date_str, args.status, args.changes, cuts_count)
+    full_text = f"{meta_header}\n\n{script_text}"
+
     with open(out_path, "w", encoding="utf-8") as f:
-        f.write(script_text)
+        f.write(full_text)
 
     print(f"[완료] {out_path}")
+    notify_script_history(episode_code, version, date_str, args.status, args.changes, cuts_count)
 
 
 if __name__ == "__main__":

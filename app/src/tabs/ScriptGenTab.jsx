@@ -215,6 +215,9 @@ export default function ScriptGenTab() {
   const [mcLoading, setMcLoading] = useState(false)
   const [mcError, setMcError] = useState('')
   const [mcPreview, setMcPreview] = useState(null) // 생성된 prompts.json ({ episode, cuts })
+  const [mcMeta, setMcMeta] = useState(null) // script.txt SCRIPT META 헤더 ({ episode, version, date, status, changes, cuts })
+  const [showChangesModal, setShowChangesModal] = useState(false)
+  const [changesInput, setChangesInput] = useState('')
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -468,6 +471,7 @@ ${YEORI_RULESET}
       if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`)
 
       setMcPreview(data.prompts)
+      setMcMeta(data.meta || null)
     } catch (err) {
       setMcError(err.message)
     } finally {
@@ -485,6 +489,38 @@ ${YEORI_RULESET}
     setGData(loadGPoints())
     setActiveCut(0)
     setMcPreview(null)
+    setMcMeta(null)
+  }
+
+  // "실제 적용" 클릭 -> 변경 내용 입력 모달을 확인한 뒤 실제 반영 + Notion 이력 기록
+  const confirmApplyMasterCode = async () => {
+    const changes = changesInput.trim() || '수동 수정'
+    const meta = mcMeta
+    setShowChangesModal(false)
+    setChangesInput('')
+    applyMasterCodeResult()
+
+    if (!meta) return // script_generator.py가 헤더를 못 남겼으면(구버전 등) 이력 기록은 건너뜀
+    const cutDetail = meta.cuts > 1 ? `C01~C${String(meta.cuts).padStart(2, '0')}` : 'C01'
+    try {
+      const res = await fetch('http://localhost:3001/api/update-script-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          episodeCode: meta.episode,
+          version: meta.version,
+          date: meta.date,
+          status: meta.status,
+          changes,
+          cuts: meta.cuts,
+          cutDetail,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) console.warn('[Notion] 스크립트 이력 업데이트 실패:', data.error)
+    } catch (err) {
+      console.warn('[Notion] 스크립트 이력 업데이트 실패(proxy.js 실행 중인지 확인):', err.message)
+    }
   }
 
   const updateCut = (id, field, val) => {
@@ -1067,7 +1103,7 @@ ${currentScript}
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button
-                      onClick={() => setMcPreview(null)}
+                      onClick={() => { setMcPreview(null); setMcMeta(null) }}
                       style={{
                         flex: 1, padding: '6px 10px', borderRadius: 6, background: 'var(--bg3)',
                         border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 11,
@@ -1077,7 +1113,7 @@ ${currentScript}
                       취소
                     </button>
                     <button
-                      onClick={applyMasterCodeResult}
+                      onClick={() => setShowChangesModal(true)}
                       style={{
                         flex: 2, padding: '6px 10px', borderRadius: 6, background: 'rgba(34,197,94,.15)',
                         border: '1px solid rgba(34,197,94,.4)', color: '#4ade80', fontSize: 11,
@@ -1092,6 +1128,56 @@ ${currentScript}
             </div>
           )}
         </div>
+
+        {/* ④ 변경 내용 입력 모달 — "실제 적용" 확인 후 /api/update-script-history 호출 */}
+        {showChangesModal && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10,
+              padding: 20, width: 380, display: 'flex', flexDirection: 'column', gap: 12,
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+                이번 변경 내용을 한 줄로 입력하세요 (선택)
+              </div>
+              <input
+                autoFocus
+                placeholder="예: C01-2 립싱크 구간 분할"
+                value={changesInput}
+                onChange={e => setChangesInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') confirmApplyMasterCode() }}
+                style={{
+                  padding: '8px 10px', borderRadius: 6, background: 'var(--bg3)',
+                  border: '1px solid var(--border2)', color: 'var(--text)', fontSize: 12,
+                }}
+              />
+              <div style={{ fontSize: 10, color: 'var(--text3)' }}>입력하지 않으면 "수동 수정"으로 기록됩니다.</div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => { setShowChangesModal(false); setChangesInput('') }}
+                  style={{
+                    padding: '6px 14px', borderRadius: 6, background: 'var(--bg3)',
+                    border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 12, cursor: 'pointer',
+                  }}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={confirmApplyMasterCode}
+                  style={{
+                    padding: '6px 14px', borderRadius: 6, background: 'rgba(34,197,94,.2)',
+                    border: '1px solid rgba(34,197,94,.5)', color: '#4ade80', fontSize: 12,
+                    fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  확인 · 실제 적용
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 컷 목록 */}
         <div className={s.cutSection}>

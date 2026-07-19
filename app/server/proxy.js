@@ -345,13 +345,144 @@ app.post('/api/generate-script', (req, res) => {
     const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
     const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'))
 
-    res.json({ ok: true, prompts, generatorLog: genOut, converterLog: convOut })
+    // script.txt 상단 SCRIPT META 헤더를 파싱해 함께 반환 (ScriptGenTab.jsx가 "실제 적용" 시
+    // /api/update-script-history 호출에 재사용 — 버전/날짜/상태를 다시 계산하지 않고 그대로 사용)
+    let meta = null
+    const scriptTxtPath = path.join(CODE_ROOT, 'scripts_output', scriptTxtName)
+    if (fs.existsSync(scriptTxtPath)) {
+      const scriptContent = fs.readFileSync(scriptTxtPath, 'utf-8')
+      const metaMatch = scriptContent.match(
+        /# SCRIPT META\r?\n# EPISODE:\s*(.+?)\r?\n# VERSION:\s*(.+?)\r?\n# DATE:\s*(.+?)\r?\n# STATUS:\s*(.+?)\r?\n# CHANGES:\s*(.+?)\r?\n# CUTS:\s*(.+?)\r?\n/
+      )
+      if (metaMatch) {
+        meta = {
+          episode: metaMatch[1].trim(),
+          version: metaMatch[2].trim(),
+          date: metaMatch[3].trim(),
+          status: metaMatch[4].trim(),
+          changes: metaMatch[5].trim(),
+          cuts: parseInt(metaMatch[6].trim(), 10),
+        }
+      }
+    }
+
+    res.json({ ok: true, prompts, meta, generatorLog: genOut, converterLog: convOut })
   } catch (err) {
     const detail = err.stderr?.toString() || err.stdout?.toString() || err.message
     console.error('[generate-script] 오류:', detail)
     res.status(500).json({ ok: false, error: detail })
   } finally {
     try { fs.unlinkSync(tmpCodePath) } catch {}
+  }
+})
+
+// ── POST /api/update-script-history — Notion 에피소드 DB에 스크립트 이력 행 추가 ──
+// 주의: Notion 호출이 실패해도(토큰 없음/페이지 없음/네트워크 오류) 항상 200으로
+// { success:false, error } 반환 — 호출부(script_generator.py, ScriptGenTab.jsx)가
+// 이 실패로 자기 작업을 중단하지 않도록 하기 위함.
+const NOTION_EPISODE_DB_ID = '2d093c5f-69c4-4e91-9d2d-0b997ddbe299'
+const NOTION_VERSION = '2022-06-28'
+const SCRIPT_HISTORY_HEADING = '📝 스크립트 이력'
+
+app.post('/api/update-script-history', async (req, res) => {
+  const { episodeCode, version, date, status, changes, cuts, cutDetail } = req.body
+  if (!episodeCode) return res.json({ success: false, error: 'episodeCode가 필요합니다' })
+
+  const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+  let notionToken = ''
+  try {
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    notionToken = secrets.apiKeys?.notion || ''
+  } catch { /* studio-secrets.json 읽기 실패 시 아래에서 토큰 없음으로 처리 */ }
+
+  if (!notionToken) {
+    console.warn('[update-script-history] Notion 토큰 없음 (studio-secrets.json apiKeys.notion) — 건너뜀')
+    return res.json({ success: false, error: 'Notion API 키가 설정되어 있지 않습니다 (apiKeys.notion)' })
+  }
+
+  const notionHeaders = {
+    'Authorization': `Bearer ${notionToken}`,
+    'Notion-Version': NOTION_VERSION,
+    'Content-Type': 'application/json',
+  }
+  const textCell = (v) => [[{ type: 'text', text: { content: String(v ?? '') } }]]
+  const buildRow = () => ({
+    object: 'block', type: 'table_row',
+    table_row: { cells: [
+      textCell(version)[0], textCell(date)[0], textCell(status)[0], textCell(cutDetail)[0], textCell(changes)[0],
+    ] },
+  })
+
+  try {
+    // 1. 에피소드 DB에서 title에 episodeCode가 포함된 페이지 검색
+    const queryRes = await fetch(`https://api.notion.com/v1/databases/${NOTION_EPISODE_DB_ID}/query`, {
+      method: 'POST', headers: notionHeaders,
+      body: JSON.stringify({ filter: { property: 'title', title: { contains: episodeCode } } }),
+    })
+    const queryData = await queryRes.json()
+    if (!queryRes.ok) throw new Error(queryData.message || `Notion 검색 실패 (${queryRes.status})`)
+
+    const page = queryData.results?.[0]
+    if (!page) {
+      console.warn(`[update-script-history] 에피소드 페이지를 찾지 못함: ${episodeCode}`)
+      return res.json({ success: false, error: `Notion에서 에피소드 페이지를 찾지 못함: ${episodeCode}` })
+    }
+    const pageId = page.id
+
+    // 2. 페이지 블록에서 "스크립트 이력" 헤딩 바로 다음의 table 블록 탐색
+    const blocksRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`, {
+      headers: notionHeaders,
+    })
+    const blocksData = await blocksRes.json()
+    if (!blocksRes.ok) throw new Error(blocksData.message || `Notion 블록 조회 실패 (${blocksRes.status})`)
+
+    const blocks = blocksData.results || []
+    let tableBlockId = null
+    for (let i = 0; i < blocks.length; i++) {
+      const headingText = (blocks[i].heading_2?.rich_text || []).map(t => t.plain_text).join('')
+      if (headingText.includes('스크립트 이력')) {
+        if (blocks[i + 1]?.type === 'table') tableBlockId = blocks[i + 1].id
+        break
+      }
+    }
+
+    if (tableBlockId) {
+      // 3a. 기존 테이블에 행만 추가
+      const appendRes = await fetch(`https://api.notion.com/v1/blocks/${tableBlockId}/children`, {
+        method: 'PATCH', headers: notionHeaders,
+        body: JSON.stringify({ children: [buildRow()] }),
+      })
+      const appendData = await appendRes.json()
+      if (!appendRes.ok) throw new Error(appendData.message || `Notion 행 추가 실패 (${appendRes.status})`)
+    } else {
+      // 3b. 섹션 + 테이블(헤더 행 포함) 신규 생성
+      const createRes = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+        method: 'PATCH', headers: notionHeaders,
+        body: JSON.stringify({
+          children: [
+            { object: 'block', type: 'heading_2',
+              heading_2: { rich_text: [{ type: 'text', text: { content: SCRIPT_HISTORY_HEADING } }] } },
+            { object: 'block', type: 'table',
+              table: {
+                table_width: 5, has_column_header: true, has_row_header: false,
+                children: [
+                  { object: 'block', type: 'table_row', table_row: { cells: [
+                    textCell('버전')[0], textCell('날짜')[0], textCell('상태')[0], textCell('변경 컷')[0], textCell('변경 내용')[0],
+                  ] } },
+                  buildRow(),
+                ],
+              } },
+          ],
+        }),
+      })
+      const createData = await createRes.json()
+      if (!createRes.ok) throw new Error(createData.message || `Notion 섹션 생성 실패 (${createRes.status})`)
+    }
+
+    res.json({ success: true, notionPageId: pageId, version })
+  } catch (err) {
+    console.warn('[update-script-history] Notion 연동 실패(무시하고 계속):', err.message)
+    res.json({ success: false, error: err.message })
   }
 })
 
