@@ -1,5 +1,6 @@
 downloads/
-data/
+data/*
+!app/data/codebook.json
 logs/
 .chrome-debug/
 .chrome-profile/
