@@ -23,6 +23,20 @@ function extractFlowProjectId(url) {
   return null
 }
 
+// G2 승인 시 선택된 이미지의 실제 서버 파일명 추출 (gpoints.json selectedImage용).
+// blob:/data: URL(업로드/Gemini 생성 직후, 아직 디스크에 저장 안 됨)은 실제 파일이
+// 아니므로 video-automation.js가 참조할 수 없어 null 반환 — /api/scan-media로 스캔된
+// Flow 생성 이미지(cut_NN_a.jpg 등)만 파일명을 얻을 수 있다.
+function extractImageFilename(url) {
+  if (!url || url.startsWith('blob:') || url.startsWith('data:')) return null
+  try {
+    const clean = url.split('?')[0]
+    return clean.split('/').pop() || null
+  } catch {
+    return null
+  }
+}
+
 // ── Gemini 이미지 생성 (Vercel 프록시 경유) ───────────────────
 // 한국 네트워크 차단 우회: 브라우저 → Vercel(미국) → Google API
 async function generateImageWithGemini(prompt, apiKey) {
@@ -831,7 +845,9 @@ export default function StudioTab() {
                   disabled={!confirmed[cut.id] || g2Approved[cut.id]}
                   onClick={() => {
                     setG2Approved(p => ({ ...p, [cut.id]: true }))
-                    setGPoint(cut.no, 'g2', true)
+                    const idx = selectedImage[cut.id] ?? 0
+                    const filename = extractImageFilename((images[cut.id] || [])[idx])
+                    setGPoints(cut.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
                   }}>
                   {g2Approved[cut.id] ? '✓ G2 완료' : 'G2 승인'}
                 </button>
@@ -851,7 +867,11 @@ export default function StudioTab() {
             className={s.g2AllBtn}
             disabled={!cuts.every(c => g2Approved[c.id])}
             onClick={() => {
-              cuts.forEach(c => setGPoints(c.no, { g2: true }))
+              cuts.forEach(c => {
+                const idx = selectedImage[c.id] ?? 0
+                const filename = extractImageFilename((images[c.id] || [])[idx])
+                setGPoints(c.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
+              })
               dispatch({ type: 'SET_TAB', p: 'tts' })
             }}>
             {cuts.every(c => g2Approved[c.id]) ? '🎉 G2 전체 승인 → TTS 탭' : 'G2 전체 승인'}

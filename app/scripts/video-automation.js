@@ -1198,10 +1198,38 @@ async function runStsPostProcess(cut, ep, padded, videoPath) {
 
 // ── 컷 1개 처리 ──────────────────────────────────────────────────────
 
+// gpoints.json(cut_N.selectedImage)에서 G2 승인 시 선택된 이미지 파일명을 읽는다.
+// StudioTab.jsx의 "G2 승인"이 저장하는 값과 동일한 파일(예: cut_01_a.jpg)을 가리키며,
+// 없거나 읽기 실패 시 null을 반환해 기존 방식(cut_NN.jpg)으로 폴백한다.
+function getSelectedImageFilename(cutNo) {
+  const gpPath = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
+  if (!fs.existsSync(gpPath)) return null
+  try {
+    const gpoints = JSON.parse(fs.readFileSync(gpPath, 'utf-8'))
+    return gpoints[`cut_${cutNo}`]?.selectedImage || null
+  } catch {
+    return null
+  }
+}
+
 async function processCut(page, cut, episode, ratio) {
   const ep     = cut.episode ?? episode ?? 'x'
   const padded = String(cut.no).padStart(2, '0')
-  const imgPath = path.join(CONFIG.flowDir, `ep${ep}`, `cut_${padded}.jpg`)
+
+  // G2 승인 시 선택된 이미지가 있고 실제로 존재하면 그걸 스타트 프레임으로 쓰고,
+  // 없으면(선택 정보 없음 / 파일 없음) 기존 방식(cut_NN.jpg)을 그대로 유지한다.
+  let imgFilename = `cut_${padded}.jpg`
+  const selectedFilename = getSelectedImageFilename(cut.no)
+  if (selectedFilename) {
+    const selectedPath = path.join(CONFIG.flowDir, `ep${ep}`, selectedFilename)
+    if (fs.existsSync(selectedPath)) {
+      imgFilename = selectedFilename
+      log('info', `CUT ${cut.no}: gpoints.json에서 선택된 이미지 사용 → ${selectedFilename}`)
+    } else {
+      log('warn', `CUT ${cut.no}: gpoints.json의 selectedImage(${selectedFilename})를 찾을 수 없어 기존 방식(${imgFilename})으로 대체`)
+    }
+  }
+  const imgPath = path.join(CONFIG.flowDir, `ep${ep}`, imgFilename)
   const outPath = path.join(CONFIG.videoDir, `ep${ep}`, `cut_${padded}.mp4`)
 
   if (fs.existsSync(outPath)) {
@@ -1209,8 +1237,8 @@ async function processCut(page, cut, episode, ratio) {
     return { status: 'skip', outPath }
   }
 
-  // ① '+' 버튼 → 미디어 패널 → input[type=file]에 cut_NN.jpg 주입
-  log('step', `CUT ${cut.no}: cut_${padded}.jpg 업로드`)
+  // ① '+' 버튼 → 미디어 패널 → input[type=file]에 스타트 프레임 이미지 주입
+  log('step', `CUT ${cut.no}: ${imgFilename} 업로드`)
   await uploadCutImage(page, imgPath)
 
   // ② 모델 버튼 → 팝업 (동영상 탭 + 비율 + 모델) 한 번에 처리
@@ -1232,8 +1260,8 @@ async function processCut(page, cut, episode, ratio) {
   log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
   await addFileToPromptByName(page, 'yeori-face.jpg')
 
-  log('step', `CUT ${cut.no}: cut_${padded}.jpg → 프롬프트 추가`)
-  await addFileToPromptByName(page, `cut_${padded}.jpg`)
+  log('step', `CUT ${cut.no}: ${imgFilename} → 프롬프트 추가`)
+  await addFileToPromptByName(page, imgFilename)
 
   // ⑧ 영상 프롬프트 입력 (imagePrompt 우선 + 대사 있으면 립싱크 지시문 추가)
   // episode_style_guide.json이 있으면 promptPrefix 앞에 삽입
