@@ -10,6 +10,7 @@ set PROFILE=C:\yeori-studio\app\.chrome-profile-flow
 :: TREND_RADAR_DIR 탐색 (PC마다 위치가 달라서 우선순위대로 확인)
 set TREND_RADAR_DIR=
 if exist "C:\yeori-studio\app\trend-radar\package.json" set TREND_RADAR_DIR=C:\yeori-studio\app\trend-radar
+if not defined TREND_RADAR_DIR if exist "C:\trend-radar\package.json" set TREND_RADAR_DIR=C:\trend-radar
 if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\Documents\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\Documents\GitHub\trend-radar
 if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\OneDrive - CTEC\문서\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\OneDrive - CTEC\문서\GitHub\trend-radar
 if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\OneDrive\문서\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\OneDrive\문서\GitHub\trend-radar
