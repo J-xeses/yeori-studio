@@ -40,16 +40,21 @@ for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3001 " ^| findstr "LISTENIN
 )
 timeout /t 1 /nobreak >nul
 
-:: [1] Start TREND RADAR dev server (needs a real server -- /api/youtube, /api/analyze
+:: [1] Start TREND RADAR production server (needs a real server -- /api/youtube, /api/analyze
 ::     routes can't work from a static html file)
-echo [1] Starting TREND RADAR dev server...
+echo [1] Starting TREND RADAR production server...
 netstat -ano | findstr ":3000 " | findstr "LISTENING" >nul 2>&1
 if %errorlevel% == 0 (
-    echo        TREND RADAR dev server already running on port 3000 -- skip
+    echo        TREND RADAR server already running on port 3000 -- skip
 ) else (
     if defined TREND_RADAR_DIR (
         echo        Found trend-radar at %TREND_RADAR_DIR%
-        start "TREND RADAR Dev Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run dev"
+        if exist "%TREND_RADAR_DIR%\.next" (
+            start "TREND RADAR Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run start"
+        ) else (
+            echo        No .next build found -- building first...
+            start "TREND RADAR Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run build && npm run start"
+        )
         timeout /t 5 /nobreak >nul
     ) else (
         echo        trend-radar project not found in any known location -- skip
