@@ -83,6 +83,9 @@ export default function VideoTab() {
   const [videoGenLog, setVideoGenLog] = useState({})
   const [ffmpegStatus, setFfmpegStatus] = useState({})
   const [ffmpegLog,    setFfmpegLog]    = useState({})
+  const [batchFfmpegStatus,   setBatchFfmpegStatus]   = useState('idle') // idle | running | done | error
+  const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
+  const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
   const setVideoClips = (updater) => {
@@ -480,6 +483,86 @@ export default function VideoTab() {
     }
   }
 
+  const runFfmpegBatchAll = async () => {
+    if (cuts.length === 0 || batchFfmpegStatus === 'running') return
+    const ep = episode?.number ?? ''
+    setBatchFfmpegStatus('running')
+    setBatchFfmpegProgress({ current: 0, total: cuts.length })
+    setBatchFfmpegLog('일괄 합성 시작…')
+    cuts.forEach(c => {
+      setFfmpegStatus(p => ({ ...p, [c.id]: 'running' }))
+      setFfmpegLog(p => ({ ...p, [c.id]: '일괄 합성 대기 중…' }))
+    })
+
+    const workDir = `C:\\yeori-studio\\downloads\\video\\ep${ep}`
+    const meta = cuts.map(c => ({
+      cutNo: c.no,
+      label: `CUT ${String(c.no).padStart(2, '0')}`,
+      duration: c.duration || 8,
+      audioFile: `C:\\yeori-studio\\downloads\\audio\\ep${ep}\\cut_${String(c.no).padStart(2, '0')}.mp3`,
+    }))
+
+    try {
+      const res = await fetch('http://localhost:3001/api/ffmpeg', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ workDir, meta }),
+      })
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const parts = buf.split('\n\n')
+        buf = parts.pop()
+        for (const part of parts) {
+          const line = part.split('\n').find(l => l.startsWith('data: '))
+          if (!line) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'progress') {
+              setBatchFfmpegProgress({ current: ev.current, total: ev.total })
+              setBatchFfmpegLog(`(${ev.current}/${ev.total}) ${ev.label} 합성 중…`)
+            } else if (ev.type === 'cut_done') {
+              const cut = cuts.find(c => String(c.no).padStart(2, '0') === ev.cutNo)
+              if (cut) {
+                const padded = String(cut.no).padStart(2, '0')
+                const url = `http://localhost:3001/downloads/video/ep${ep}/output_final/C${padded}_final.mp4?t=${Date.now()}`
+                setFfmpegStatus(p => ({ ...p, [cut.id]: 'done' }))
+                setFfmpegLog(p => ({ ...p, [cut.id]: '✅ 일괄 합성 완료' }))
+                setVideoClips(p => ({
+                  ...p,
+                  [cut.id]: [...(p[cut.id] || []), {
+                    url, name: `FFmpeg 일괄 합성 (C${padded}_final.mp4)`,
+                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true,
+                  }],
+                }))
+              }
+            } else if (ev.type === 'cut_error') {
+              const cut = cuts.find(c => String(c.no).padStart(2, '0') === ev.cutNo)
+              if (cut) {
+                setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
+                setFfmpegLog(p => ({ ...p, [cut.id]: '❌ 일괄 합성 실패' }))
+              }
+            } else if (ev.type === 'done') {
+              const errCount = (ev.results || []).filter(r => r.status === 'error').length
+              setBatchFfmpegStatus(errCount > 0 ? 'error' : 'done')
+              setBatchFfmpegLog(errCount > 0 ? `⚠️ 완료 (${errCount}개 실패)` : `✅ 전체 ${ev.results?.length ?? cuts.length}개 합성 완료`)
+            } else if (ev.type === 'error') {
+              setBatchFfmpegStatus('error')
+              setBatchFfmpegLog(`❌ ${ev.message}`)
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setBatchFfmpegStatus('error')
+      setBatchFfmpegLog(`❌ ${err.message}`)
+    }
+  }
+
   return (
     <div className={s.root}>
       {/* Sidebar */}
@@ -564,7 +647,18 @@ export default function VideoTab() {
           >
             {allG4Done ? '전체 취소' : 'G4 전체'}
           </button>
+          <button
+            className={`${s.qaBtn} ${batchFfmpegStatus === 'done' ? s.qaBtnDone : ''}`}
+            disabled={cuts.length === 0 || batchFfmpegStatus === 'running'}
+            onClick={runFfmpegBatchAll}
+          >
+            {batchFfmpegStatus === 'running'
+              ? `⏳ 합성 중… (${batchFfmpegProgress.current}/${batchFfmpegProgress.total})`
+              : '🎬 전체 일괄 합성'}
+          </button>
         </div>
+
+        {batchFfmpegLog && <div className={s.ffmpegLog}>{batchFfmpegLog}</div>}
 
         <div className={s.g4Count}>G4 완료: {Object.values(g4Approved).filter(Boolean).length} / {cuts.length}</div>
 
