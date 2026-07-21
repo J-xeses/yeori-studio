@@ -1,13 +1,15 @@
 # smart-sync-state.ps1
-# studio-data.json은 JSON 내부 savedAt 필드 기준으로, studio-secrets.json(API 키)은
+# studio-data.json / studio-state.json은 JSON 내부 savedAt 필드 기준으로, studio-secrets.json(API 키)은
 # 파일 수정시각 기준으로 더 최신인 쪽을 양방향 복사
-# (studio-state.json은 app/ 하위로 이동, git push/pull로 PC간 동기화됨 — OneDrive 릴레이 대상 아님)
+# (studio-state.json은 git push/pull 대신 OneDrive 동기화로 전환 — PC간 실시간 반영을 위해 git 동기화 대체)
 
 param(
     [string]$LocalData    = "C:\yeori-studio\app\data",
     [string]$CloudData    = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data",
     [string]$LocalSecrets = "C:\yeori-studio\app\studio-secrets.json",
-    [string]$CloudSecrets = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data\studio-secrets.json"
+    [string]$CloudSecrets = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data\studio-secrets.json",
+    [string]$LocalState   = "C:\yeori-studio\app\studio-state.json",
+    [string]$CloudState   = "$env:USERPROFILE\OneDrive\yeori-studio-sync\_app-data\studio-state.json"
 )
 
 function Sync-JsonBySavedAt {
@@ -87,6 +89,11 @@ Sync-JsonBySavedAt `
     -LocalPath "$LocalData\studio-data.json" `
     -CloudPath  "$CloudData\studio-data.json" `
     -Label      "studio-data.json"
+
+Sync-JsonBySavedAt `
+    -LocalPath $LocalState `
+    -CloudPath $CloudState `
+    -Label     "studio-state.json"
 
 Sync-JsonByMTime `
     -LocalPath $LocalSecrets `
