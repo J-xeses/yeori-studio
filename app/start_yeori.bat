@@ -33,11 +33,12 @@ echo [pre-2] Sync on start...
 call "%~dp0sync-content.bat"
 echo.
 
-:: [0] Kill existing proxy on port 3001
+:: [0] Kill existing proxy on port 3001 + existing Cloudflare Tunnel
 echo [0] Killing existing proxy on port 3001...
 for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3001 " ^| findstr "LISTENING"') do (
     taskkill /PID %%p /F >nul 2>&1
 )
+taskkill /IM cloudflared.exe /F >nul 2>&1
 timeout /t 1 /nobreak >nul
 
 :: [1] Start TREND RADAR production server (needs a real server -- /api/youtube, /api/analyze
@@ -94,6 +95,20 @@ if exist "%MATRIX_HTML%" (
 start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:3000"
 timeout /t 1 /nobreak >nul
 
+:: [2.5] Start Cloudflare Tunnel (yeori-studio MCP 원격 연결용, localhost:3001 -> HTTPS)
+echo [2.5] Starting Cloudflare Tunnel...
+set CLOUDFLARED=%LOCALAPPDATA%\cloudflared\cloudflared.exe
+if exist "%CLOUDFLARED%" (
+    start "Yeori Cloudflare Tunnel" cmd /k "timeout /t 6 /nobreak >nul && "%CLOUDFLARED%" tunnel --url http://localhost:3001"
+    echo        Tunnel window opened -- copy the https://*.trycloudflare.com URL shown there.
+    echo        Quick Tunnel URL changes every restart. If it changed, update Vercel:
+    echo          vercel env rm MCP_BRIDGE_URL production --yes --scope won566800-7736s-projects
+    echo          vercel env add MCP_BRIDGE_URL production --value ^<new-url^> --yes --scope won566800-7736s-projects
+) else (
+    echo        cloudflared.exe not found at %CLOUDFLARED% -- skip tunnel
+)
+echo.
+
 :: [3] Start server in foreground (blocks here until Ctrl+C)
 echo.
 echo ============================================================
@@ -104,6 +119,7 @@ echo   Tab 2  Cutter      : %ACC_HTML%
 echo   Tab 3  Studio      : http://localhost:5173
 echo   Tab 5  Trend Radar : http://localhost:3000
 echo   Health             : http://localhost:3001/api/health
+echo   MCP Tunnel         : see "Yeori Cloudflare Tunnel" window for the current URL
 echo.
 echo   ** Stop: Ctrl+C then N (runs shutdown sync automatically)
 echo ============================================================

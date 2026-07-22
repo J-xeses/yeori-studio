@@ -26,6 +26,7 @@ const ROOT = CODE_ROOT  // 하위 호환 유지
   })
 })()
 const ANTHROPIC_API_KEY = process.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || ''
+const MCP_BRIDGE_SECRET = process.env.MCP_BRIDGE_SECRET || ''
 
 const app = express()
 const PORT = 3001
@@ -1900,6 +1901,156 @@ app.post('/api/bgm-download', async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
+
+// ── /api/mcp/* — 원격 MCP 브리지 전용 (Cloudflare Tunnel 경유, Bearer 토큰 필요) ──
+// Vercel(api/mcp.js)의 Streamable HTTP MCP 서버가 이 라우터를 호출한다.
+// 로컬 프론트엔드(VideoTab 등)가 쓰는 /api/* 원본 엔드포인트는 그대로 무인증 유지.
+function requireMcpAuth(req, res, next) {
+  if (!MCP_BRIDGE_SECRET) {
+    return res.status(503).json({ error: 'MCP_BRIDGE_SECRET 미설정 -- .env.local에 추가 후 서버 재시작 필요' })
+  }
+  const auth = req.headers['authorization'] || ''
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
+  if (token !== MCP_BRIDGE_SECRET) return res.status(401).json({ error: 'unauthorized' })
+  next()
+}
+
+async function selfFetch(pathAndQuery, opts) {
+  const r = await fetch(`http://127.0.0.1:${PORT}${pathAndQuery}`, opts)
+  const text = await r.text()
+  let body
+  try { body = JSON.parse(text) } catch { body = { raw: text } }
+  return { status: r.status, body }
+}
+
+// run-flow는 SSE라 오래 열려있음 -- 첫 이벤트만 읽고 끊는다("SSE 스트림 대신 완료 여부만 반환" 원래 의도와 동일)
+async function readFirstSSEEvent(pathAndQuery, opts) {
+  try {
+    const r = await fetch(`http://127.0.0.1:${PORT}${pathAndQuery}`, opts)
+    const reader = r.body.getReader()
+    const decoder = new TextDecoder()
+    let buf = ''
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += decoder.decode(value, { stream: true })
+      const idx = buf.indexOf('\n\n')
+      if (idx !== -1) {
+        const line = buf.slice(0, idx).split('\n').find(l => l.startsWith('data: '))
+        reader.cancel().catch(() => {})
+        if (line) return JSON.parse(line.slice(6))
+        break
+      }
+    }
+  } catch (err) {
+    return { type: 'error', message: err.message }
+  }
+  return { type: 'error', message: '응답 스트림에서 이벤트를 읽지 못함' }
+}
+
+const mcpRouter = express.Router()
+mcpRouter.use(requireMcpAuth)
+
+mcpRouter.get('/trend-episodes', async (_req, res) => {
+  const { status, body } = await selfFetch('/api/trend-episodes')
+  res.status(status).json(body)
+})
+
+mcpRouter.post('/trend-to-episode', async (req, res) => {
+  const { status, body } = await selfFetch('/api/trend-to-episode', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(req.body),
+  })
+  res.status(status).json(body)
+})
+
+// studio-secrets.json(API 키)은 절대 병합하지 않는 전용 핸들러 -- /api/studio-state와 달리 secrets 미포함
+mcpRouter.get('/studio-state', (_req, res) => {
+  const statePath = path.join(CODE_ROOT, 'studio-state.json')
+  try {
+    const state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, 'utf-8')) : {}
+    res.json(state)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+mcpRouter.post('/run-flow', async (req, res) => {
+  const ev = await readFirstSSEEvent('/api/run-flow', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(req.body),
+  })
+  res.json(ev)
+})
+
+mcpRouter.post('/generate-srt', async (req, res) => {
+  const { status, body } = await selfFetch('/api/generate-srt', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(req.body),
+  })
+  res.status(status).json(body)
+})
+
+mcpRouter.post('/concat-video', async (req, res) => {
+  const { status, body } = await selfFetch('/api/concat-video', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(req.body),
+  })
+  res.status(status).json(body)
+})
+
+// mcp-server.js가 직접 fs로 읽던 것을 서버 엔드포인트로 이전 (Vercel에서도 쓸 수 있도록)
+mcpRouter.get('/list-episodes', (_req, res) => {
+  const statePath = path.join(CODE_ROOT, 'studio-state.json')
+  if (!fs.existsSync(statePath)) return res.json({ episodes: [] })
+  try {
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
+    const episodes = Object.values(state.episodes || {}).map(ep => {
+      const e = ep.episode || {}
+      return {
+        id: ep.id,
+        contentType: e.contentType || '?',
+        number: e.number || 1,
+        title: e.title || '제목 없음',
+        cutCount: (ep.cuts || []).length,
+        isActive: ep.id === state.activeEpisodeId,
+      }
+    })
+    res.json({ episodes })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+mcpRouter.post('/export-pipeline', (req, res) => {
+  const { episodeId } = req.body || {}
+  const statePath = path.join(CODE_ROOT, 'studio-state.json')
+  if (!fs.existsSync(statePath)) return res.status(404).json({ error: 'studio-state.json 없음' })
+  try {
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
+    const ep = state.episodes?.[episodeId]
+    if (!ep) return res.status(404).json({ error: `에피소드 ID ${episodeId} 없음` })
+    const gData = state.gData || {}
+    const approvedCuts = (ep.cuts || []).filter(c => gData[`cut_${c.no}`]?.g1)
+    if (!approvedCuts.length) return res.status(400).json({ error: 'G1 승인된 컷이 없습니다' })
+
+    const getFlags = c => {
+      switch (c.cutType || 'YEORI') {
+        case 'BROLL':   return { run_g2:true,  run_g3:true,  g3_track:'나레이션', run_g4:true,  run_g5:true }
+        case 'PIP':     return { run_g2:true,  run_g3:true,  g3_track:'대사',    run_g4:true,  run_g5:true, ...(parseInt(c.pipTarget)>0 ? {pip_target:parseInt(c.pipTarget)} : {}) }
+        case 'GRAPHIC': return { run_g2:false, run_g3:true,  g3_track:'나레이션', run_g4:false, run_g5:true, g5_tool:'browser_record', ...(c.graphicTool ? {graphic_tool:c.graphicTool} : {}) }
+        case 'CAPCUT':  return { run_g2:false, run_g3:false, run_g4:false, run_g5:true, g5_tool:'capcut_only' }
+        default:        return { run_g2:true,  run_g3:true,  g3_track:'대사',    run_g4:true,  g4_mode:'lipsync', run_g5:true }
+      }
+    }
+
+    const pipeline = approvedCuts.map(c => ({ no: c.no, imagePrompt: c.imagePrompt || '', ...getFlags(c) }))
+    const savePath = path.join(MEDIA_ROOT, 'downloads', 'pipeline_export.json')
+    fs.writeFileSync(savePath, JSON.stringify(pipeline, null, 2), 'utf-8')
+
+    res.json({ success: true, savePath, pipeline })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.use('/api/mcp', mcpRouter)
 
 const server = app.listen(PORT, () => {
   console.log('')
