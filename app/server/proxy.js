@@ -2105,9 +2105,19 @@ async function readFirstSSEEvent(pathAndQuery, opts) {
 const mcpRouter = express.Router()
 mcpRouter.use(requireMcpAuth)
 
-mcpRouter.get('/trend-episodes', async (_req, res) => {
-  const { status, body } = await selfFetch('/api/trend-episodes')
-  res.status(status).json(body)
+// studio-state/list-episodes와 동일하게 파일을 직접 읽는다 -- 이전에는 selfFetch로
+// 자기 자신에게 루프백 HTTP 요청을 보내는 방식이었는데, 터널을 통한 호출 시
+// 이 추가 왕복에서 응답이 지연/누락되어 "The connector's server isn't responding"
+// 오류가 발생했다.
+mcpRouter.get('/trend-episodes', (_req, res) => {
+  const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
+  try {
+    if (!fs.existsSync(savePath)) return res.json({ entries: [] })
+    const all = JSON.parse(fs.readFileSync(savePath, 'utf-8'))
+    res.json({ entries: (Array.isArray(all) ? all : []).slice(0, 20) })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 mcpRouter.post('/trend-to-episode', async (req, res) => {
