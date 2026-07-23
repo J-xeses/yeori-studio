@@ -96,14 +96,13 @@ start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:3000"
 timeout /t 1 /nobreak >nul
 
 :: [2.5] Start Cloudflare Tunnel (yeori-studio MCP 원격 연결용, localhost:3001 -> HTTPS)
-echo [2.5] Starting Cloudflare Tunnel...
+::       scripts/sync-tunnel.js가 cloudflared를 띄우고, URL이 바뀌면
+::       Vercel MCP_BRIDGE_URL을 자동으로 갱신 + redeploy까지 수행한다.
+echo [2.5] Starting Cloudflare Tunnel (auto Vercel sync)...
 set CLOUDFLARED=%LOCALAPPDATA%\cloudflared\cloudflared.exe
 if exist "%CLOUDFLARED%" (
-    start "Yeori Cloudflare Tunnel" cmd /k "timeout /t 6 /nobreak >nul && "%CLOUDFLARED%" tunnel --url http://localhost:3001"
-    echo        Tunnel window opened -- copy the https://*.trycloudflare.com URL shown there.
-    echo        Quick Tunnel URL changes every restart. If it changed, update Vercel:
-    echo          vercel env rm MCP_BRIDGE_URL production --yes --scope won566800-7736s-projects
-    echo          vercel env add MCP_BRIDGE_URL production --value ^<new-url^> --yes --scope won566800-7736s-projects
+    start "Yeori Cloudflare Tunnel" cmd /k "timeout /t 6 /nobreak >nul && node "%~dp0scripts\sync-tunnel.js""
+    echo        Tunnel window opened -- URL change is detected and synced to Vercel automatically.
 ) else (
     echo        cloudflared.exe not found at %CLOUDFLARED% -- skip tunnel
 )

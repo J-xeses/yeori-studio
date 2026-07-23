@@ -21,3 +21,5 @@ __pycache__/
 .env.local
 .env
 app/studio-state.json
+.vercel
+app/.tunnel-state.json
