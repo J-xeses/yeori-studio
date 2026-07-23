@@ -314,6 +314,39 @@
   /* 섹션 타이틀 */
   .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── 후보 풀 탭 ── */
+  .candidate-board { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
+  .candidate-col { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); width: 240px; flex-shrink: 0; display: flex; flex-direction: column; max-height: calc(100vh - 340px); }
+  .candidate-col-header { padding: 10px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--text2); position: sticky; top: 0; background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; }
+  .candidate-col-count { font-family: 'Space Mono', monospace; color: var(--purple); background: var(--purple-bg); border-radius: 10px; padding: 1px 8px; font-size: 10px; }
+  .candidate-col-body { padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .candidate-col-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 16px 4px; }
+
+  .candidate-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .candidate-card:hover { border-color: var(--purple); background: var(--purple-bg); }
+  .candidate-card-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+  .candidate-card-meta { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-bottom: 6px; }
+  .candidate-card-source { font-size: 10px; color: var(--text3); margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .candidate-progress-track { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; margin-bottom: 3px; }
+  .candidate-progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.15s; }
+  .candidate-progress-label { font-size: 9px; color: var(--text3); font-family: 'Space Mono', monospace; }
+
+  .b-sf { background: var(--purple-bg); color: var(--purple); }
+  .b-lf { background: var(--blue-bg); color: var(--blue); }
+  .b-ig_r { background: var(--pink-bg); color: var(--pink); }
+  .b-ig_p { background: var(--pink-bg); color: var(--pink); }
+  .b-ig_s { background: var(--pink-bg); color: var(--pink); }
+  .b-tk { background: var(--amber-bg); color: var(--amber); }
+
+  .candidate-checklist-group { margin-bottom: 10px; }
+  .candidate-checklist-group-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .candidate-checklist-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: var(--radius-sm); background: var(--surface2); margin-bottom: 4px; font-size: 11px; cursor: pointer; transition: background 0.1s; }
+  .candidate-checklist-item:hover { background: var(--surface3); }
+  .candidate-checklist-item.checked { color: var(--teal); }
+  .candidate-checklist-check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+  .candidate-checklist-item.checked .candidate-checklist-check { background: var(--teal-bg); border-color: rgba(52,211,153,0.4); color: var(--teal); }
+  #candidate-modal .btn-cancel:disabled, #candidate-modal .btn-save:disabled { opacity: 0.35; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -335,6 +368,7 @@
 <!-- 탭 네비게이션 -->
 <nav class="tab-nav">
   <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard', this)">📊 대시보드</button>
+  <button class="tab-btn" data-tab="candidate" onclick="switchTab('candidate', this)">📦 후보 풀</button>
   <button class="tab-btn" data-tab="matrix" onclick="switchTab('matrix', this)">✂️ 제작 매트릭스</button>
   <button class="tab-btn" data-tab="leader" onclick="switchTab('leader', this)">🤖 에이전트 리더</button>
   <button class="tab-btn" data-tab="studio" onclick="switchTab('studio', this)">🎬 스튜디오 연동</button>
@@ -418,6 +452,24 @@
       <div id="dash-todo" style="margin-bottom:20px"></div>
       <div class="section-title">채널별 현황</div>
       <div class="channel-overview" id="channel-overview"></div>
+    </div>
+
+    <!-- 후보 풀 탭 -->
+    <div id="tab-candidate" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="section-title" style="flex:1;margin-bottom:0">📦 콘텐츠 유형별 재고</div>
+        <button class="btn-primary" onclick="openCandidateModal(null)">+ 후보 추가</button>
+      </div>
+      <div style="height:14px"></div>
+      <div class="dashboard-grid" id="candidate-type-stats" style="grid-template-columns:repeat(6,1fr)"></div>
+
+      <div class="section-title">단계별 현황</div>
+      <div class="dashboard-grid" id="candidate-stage-stats" style="grid-template-columns:repeat(6,1fr);margin-bottom:6px"></div>
+
+      <div class="section-title">필터</div>
+      <div class="chips-bar" id="candidate-filters"></div>
+
+      <div id="candidate-board"></div>
     </div>
 
     <!-- 제작 매트릭스 탭 -->
@@ -1139,6 +1191,65 @@
   </div>
 </div>
 
+<!-- 후보 상세/생성 모달 -->
+<div class="modal-overlay" id="candidate-modal">
+  <div class="modal" style="width:640px">
+    <div class="modal-title" id="candidate-modal-title">후보 상세</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div class="form-grid">
+        <div class="form-full"><label class="form-label">후보명</label>
+          <input class="form-input" id="cand-f-title" placeholder="예: 숏폼 보다가 공허해진 이유"></div>
+        <div><label class="form-label">콘텐츠 유형</label>
+          <select class="form-select" id="cand-f-type">
+            <option value="SF">SF — 유튜브 숏폼</option>
+            <option value="LF">LF — 유튜브 롱폼</option>
+            <option value="IG_R">IG_R — 인스타 릴스</option>
+            <option value="IG_P">IG_P — 인스타 피드</option>
+            <option value="IG_S">IG_S — 인스타 스토리</option>
+            <option value="TK">TK — 틱톡</option>
+          </select>
+        </div>
+        <div><label class="form-label">단계</label>
+          <select class="form-select" id="cand-f-stage"></select>
+        </div>
+        <div class="form-full"><label class="form-label">트렌드 소스</label>
+          <input class="form-input" id="cand-f-source" placeholder="예: 유튜브 인기 키워드 · T1"></div>
+      </div>
+
+      <div class="form-full"><label class="form-label">핵심 키워드</label>
+        <input class="form-input" id="cand-f-keywords" placeholder="쉼표로 구분"></div>
+      <div class="form-full"><label class="form-label">주제 요약</label>
+        <textarea class="form-textarea" id="cand-f-topic" placeholder="이 에피소드가 다룰 핵심 주제를 2~3문장으로"></textarea></div>
+      <div class="form-full"><label class="form-label">스토리 기획</label>
+        <textarea class="form-textarea" id="cand-f-story" placeholder="3막 구조(사건→감정변화→선택) 기준 기획"></textarea></div>
+      <div class="form-full"><label class="form-label">한글 대본</label>
+        <textarea class="form-textarea" id="cand-f-script" style="min-height:120px" placeholder="STEP4에서 작성하는 한글 대본"></textarea></div>
+
+      <div>
+        <label class="form-label">에이전트 체크리스트</label>
+        <div id="cand-checklist"></div>
+      </div>
+
+      <div class="form-full"><label class="form-label">메모</label>
+        <textarea class="form-textarea" id="cand-f-memo" placeholder="자유 메모"></textarea></div>
+    </div>
+
+    <div class="modal-actions" style="justify-content:space-between;flex-wrap:wrap">
+      <div style="display:flex;gap:8px">
+        <button class="btn-cancel" id="cand-prev-btn" onclick="moveCandidateStage(-1)">← 이전단계</button>
+        <button class="btn-cancel" id="cand-next-btn" onclick="moveCandidateStage(1)">다음단계 →</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-cancel" style="color:var(--red)" id="cand-delete-btn" onclick="deleteCandidate()">삭제</button>
+        <button class="btn-cancel" onclick="closeCandidateModal()">닫기</button>
+        <button class="btn-save" id="cand-g1-btn" onclick="promoteCandidateToG1()">🚀 G1 투입</button>
+        <button class="btn-save" onclick="saveCandidateModal()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 토스트 -->
 <div class="toast" id="toast">✓ 저장됐어요</div>
 
@@ -1162,6 +1273,43 @@ const TYPE_CLASS = {'인물 클로즈업':'b-portrait','디테일 컷':'b-detail
 const HARD_CLASS = {'높음':'b-high','중간':'b-mid','낮음':'b-low'};
 const EP_TYPE_CLASS = {'shorts':'ep-type-shorts','midform':'ep-type-midform','longform':'ep-type-longform','series':'ep-type-series'};
 const EP_TYPE_LABEL = {'shorts':'쇼츠','midform':'미들폼','longform':'롱폼','series':'시리즈'};
+
+// ── 📦 후보 풀 ───────────────────────────────────────────────────
+const CANDIDATE_STORAGE_KEY = 'content_matrix_candidates_v3';
+let candidatePool = [];       // Notion DB와 동기화되는 후보 목록 (로컬 캐시 우선 표시)
+let candidateFilterType = 'all';
+let currentCandidateId = null;  // 모달에서 편집 중인 후보의 로컬 id. null이면 신규 생성 모드
+let candidateDraftChecklist = {}; // 모달 오픈 중 체크리스트 편집 드래프트(저장 시 반영)
+const CANDIDATE_TYPES = ['SF','LF','IG_R','IG_P','IG_S','TK'];
+const CANDIDATE_TYPE_LABEL = {SF:'SF 숏폼', LF:'LF 롱폼', IG_R:'IG 릴스', IG_P:'IG 피드', IG_S:'IG 스토리', TK:'틱톡'};
+const CANDIDATE_STAGES = [
+  {key:'step1', label:'STEP1 키워드수집'},
+  {key:'step2', label:'STEP2 주제설정'},
+  {key:'step3', label:'STEP3 에피소드기획'},
+  {key:'step4', label:'STEP4 한글대본'},
+  {key:'approval', label:'승인대기'},
+  {key:'g1', label:'G1투입'},
+];
+const CANDIDATE_CHECKLIST = [
+  {key:'script_msg',      agent:'script', label:'핵심메시지 명확'},
+  {key:'script_3act',     agent:'script', label:'3막구조 있음'},
+  {key:'script_tone',     agent:'script', label:'서여리 톤 맞음'},
+  {key:'image_scene',     agent:'image',  label:'씬별 시각요소 있음'},
+  {key:'image_setting',   agent:'image',  label:'의상·배경 설정 있음'},
+  {key:'tts_emotion',     agent:'tts',    label:'감정톤 지정됨'},
+  {key:'tts_length',      agent:'tts',    label:'대사길이 적절'},
+  {key:'video_cut',       agent:'video',  label:'컷분할 가능'},
+  {key:'video_8s',        agent:'video',  label:'8초배수 고려됨'},
+  {key:'edit_transition', agent:'edit',   label:'전환연출 있음'},
+  {key:'edit_bgm',        agent:'edit',   label:'BGM분위기 설정됨'},
+];
+const CANDIDATE_AGENT_GROUPS = [
+  {key:'script', icon:'✍️', label:'대본'},
+  {key:'image',  icon:'🖼️', label:'이미지'},
+  {key:'tts',    icon:'🔊', label:'TTS'},
+  {key:'video',  icon:'🎬', label:'영상'},
+  {key:'edit',   icon:'✂️', label:'편집'},
+];
 
 let appData = {
   projects: {
@@ -1261,9 +1409,10 @@ function switchTab(tab, btn) {
   currentTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  ['dashboard','matrix','leader','studio','settings'].forEach(t=>{
+  ['dashboard','candidate','matrix','leader','studio','settings'].forEach(t=>{
     document.getElementById('tab-'+t).style.display = t===tab?'block':'none';
   });
+  if(tab === 'candidate' && !candidatePool.length) loadCandidatesFromNotion();
   renderAll();
 }
 
@@ -2475,6 +2624,7 @@ function renderAll(){
   renderSidebar();
   updateHeaderMeta();
   if(currentTab==='dashboard') renderDashboard();
+  if(currentTab==='candidate') renderCandidateTab();
   if(currentTab==='matrix') renderMatrix();
   if(currentTab==='studio') renderStudio();
   if(currentTab==='leader') renderLeader();
@@ -2875,6 +3025,282 @@ async function runPublishAgent() {
     logAgent('퍼블리싱','error', e.message);
     setAgentState('publish','idle','대기중'); showToast('⚠️ 퍼블리싱 에이전트 실패: '+e.message);
   }
+}
+
+// ── 📦 후보 풀 ───────────────────────────────────────────────────
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+}
+
+function saveCandidatesLocal() {
+  localStorage.setItem(CANDIDATE_STORAGE_KEY, JSON.stringify(candidatePool));
+}
+
+async function loadCandidatesFromNotion() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CANDIDATE_STORAGE_KEY) || '[]');
+    if (Array.isArray(cached) && cached.length) candidatePool = cached;
+  } catch { /* 캐시 없음/손상 시 빈 목록으로 시작 */ }
+  renderCandidateTab();
+
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/candidates`);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.candidates)) {
+      candidatePool = data.candidates;
+      saveCandidatesLocal();
+      renderCandidateTab();
+    } else if (!data.success) {
+      console.warn('[candidates] Notion 로드 실패(로컬 캐시로 계속 진행):', data.error);
+    }
+  } catch (e) {
+    console.warn('[candidates] Notion 로드 실패(로컬 캐시로 계속 진행):', e.message);
+  }
+}
+
+async function syncCandidateToNotion(cand) {
+  try {
+    const method = cand.notionPageId ? 'PATCH' : 'POST';
+    const url = cand.notionPageId
+      ? `${YEORI_SERVER}/api/candidates/${cand.notionPageId}`
+      : `${YEORI_SERVER}/api/candidates`;
+    const res = await fetch(url, {
+      method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cand),
+    });
+    const data = await res.json();
+    if (data.success && data.notionPageId && !cand.notionPageId) {
+      cand.notionPageId = data.notionPageId;
+      saveCandidatesLocal();
+    }
+    if (!data.success) console.warn('[candidates] Notion 동기화 실패(로컬에는 반영됨):', data.error);
+  } catch (e) {
+    console.warn('[candidates] Notion 동기화 실패(로컬에는 반영됨):', e.message);
+  }
+}
+
+async function archiveCandidateInNotion(pageId) {
+  if (!pageId) return;
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/candidates/${pageId}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!data.success) console.warn('[candidates] Notion 삭제 실패(로컬에는 반영됨):', data.error);
+  } catch (e) {
+    console.warn('[candidates] Notion 삭제 실패(로컬에는 반영됨):', e.message);
+  }
+}
+
+function candidateProgress(cand) {
+  const total = CANDIDATE_CHECKLIST.length;
+  const checked = CANDIDATE_CHECKLIST.filter(it => cand.checklist?.[it.key]).length;
+  return { checked, total };
+}
+
+function renderCandidateTab() {
+  renderCandidateTypeStats();
+  renderCandidateStageStats();
+  renderCandidateFilters();
+  renderCandidateBoard();
+}
+
+function renderCandidateTypeStats() {
+  const el = document.getElementById('candidate-type-stats'); if (!el) return;
+  el.innerHTML = CANDIDATE_TYPES.map(t => {
+    const n = candidatePool.filter(c => c.type === t).length;
+    return `
+    <div class="dash-card" style="text-align:center">
+      <div class="dash-card-label">${CANDIDATE_TYPE_LABEL[t]}</div>
+      <div class="dash-card-value" style="color:var(--purple)">${n}</div>
+      <div class="dash-card-sub">${t}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCandidateStageStats() {
+  const el = document.getElementById('candidate-stage-stats'); if (!el) return;
+  el.innerHTML = CANDIDATE_STAGES.map(s => {
+    const n = candidatePool.filter(c => c.stage === s.key).length;
+    return `
+    <div class="dash-card" style="text-align:center">
+      <div class="dash-card-label">${s.label}</div>
+      <div class="dash-card-value" style="color:var(--teal)">${n}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCandidateFilters() {
+  const el = document.getElementById('candidate-filters'); if (!el) return;
+  const opts = [{ key: 'all', label: '전체' }, ...CANDIDATE_TYPES.map(t => ({ key: t, label: t }))];
+  el.innerHTML = opts.map(o => `<button class="chip ${candidateFilterType===o.key?'active':''}" onclick="setCandidateFilterType('${o.key}')">${o.label}</button>`).join('');
+}
+
+function setCandidateFilterType(type) {
+  candidateFilterType = type;
+  renderCandidateFilters();
+  renderCandidateBoard();
+}
+
+function renderCandidateCard(c) {
+  const prog = candidateProgress(c);
+  const pct = Math.round(prog.checked / prog.total * 100);
+  return `
+  <div class="candidate-card" onclick="openCandidateModal('${c.id}')">
+    <div class="candidate-card-title">${escapeHtml(c.title || '(제목 없음)')}</div>
+    <div class="candidate-card-meta">
+      <span class="badge b-${(c.type||'sf').toLowerCase()}">${c.type||'SF'}</span>
+    </div>
+    ${c.source ? `<div class="candidate-card-source">🔗 ${escapeHtml(c.source)}</div>` : ''}
+    <div class="candidate-progress-track"><div class="candidate-progress-fill" style="width:${pct}%"></div></div>
+    <div class="candidate-progress-label">${prog.checked} / ${prog.total} 체크</div>
+  </div>`;
+}
+
+function renderCandidateBoard() {
+  const el = document.getElementById('candidate-board'); if (!el) return;
+  const pool = candidateFilterType === 'all' ? candidatePool : candidatePool.filter(c => c.type === candidateFilterType);
+  el.innerHTML = `<div class="candidate-board">` + CANDIDATE_STAGES.map(s => {
+    const items = pool.filter(c => c.stage === s.key);
+    return `
+    <div class="candidate-col">
+      <div class="candidate-col-header"><span>${s.label}</span><span class="candidate-col-count">${items.length}</span></div>
+      <div class="candidate-col-body">
+        ${items.length ? items.map(renderCandidateCard).join('') : `<div class="candidate-col-empty">후보 없음</div>`}
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function renderCandidateChecklistUI(candLike) {
+  const el = document.getElementById('cand-checklist'); if (!el) return;
+  el.innerHTML = CANDIDATE_AGENT_GROUPS.map(g => {
+    const items = CANDIDATE_CHECKLIST.filter(it => it.agent === g.key);
+    return `
+    <div class="candidate-checklist-group">
+      <div class="candidate-checklist-group-title">${g.icon} ${g.label}</div>
+      ${items.map(it => {
+        const checked = !!candLike.checklist?.[it.key];
+        return `
+        <div class="candidate-checklist-item ${checked?'checked':''}" onclick="toggleCandidateChecklistItem('${it.key}')">
+          <div class="candidate-checklist-check">${checked?'✓':''}</div>
+          <div>${it.label}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+function toggleCandidateChecklistItem(key) {
+  candidateDraftChecklist[key] = !candidateDraftChecklist[key];
+  renderCandidateChecklistUI({ checklist: candidateDraftChecklist });
+}
+
+function openCandidateModal(id) {
+  currentCandidateId = id;
+  const cand = id ? candidatePool.find(c => c.id === id) : null;
+  candidateDraftChecklist = cand ? { ...(cand.checklist||{}) } : {};
+
+  document.getElementById('candidate-modal-title').textContent = cand ? '후보 상세' : '새 후보 추가';
+  document.getElementById('cand-f-title').value = cand?.title || '';
+  document.getElementById('cand-f-type').value = cand?.type || 'SF';
+  document.getElementById('cand-f-source').value = cand?.source || '';
+  document.getElementById('cand-f-keywords').value = cand?.keywords || '';
+  document.getElementById('cand-f-topic').value = cand?.topic || '';
+  document.getElementById('cand-f-story').value = cand?.story || '';
+  document.getElementById('cand-f-script').value = cand?.script || '';
+  document.getElementById('cand-f-memo').value = cand?.memo || '';
+
+  const stageSel = document.getElementById('cand-f-stage');
+  stageSel.innerHTML = CANDIDATE_STAGES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+  stageSel.value = cand?.stage || 'step1';
+
+  renderCandidateChecklistUI({ checklist: candidateDraftChecklist });
+
+  const idx = CANDIDATE_STAGES.findIndex(s => s.key === (cand?.stage || 'step1'));
+  document.getElementById('cand-prev-btn').disabled = !cand || idx <= 0;
+  document.getElementById('cand-next-btn').disabled = !cand || idx >= CANDIDATE_STAGES.length - 1;
+  document.getElementById('cand-delete-btn').style.display = cand ? '' : 'none';
+  document.getElementById('cand-g1-btn').disabled = !cand || cand.stage !== 'approval';
+
+  document.getElementById('candidate-modal').classList.add('open');
+}
+
+function closeCandidateModal() {
+  document.getElementById('candidate-modal').classList.remove('open');
+  currentCandidateId = null;
+  candidateDraftChecklist = {};
+}
+
+function saveCandidateModal() {
+  const title = document.getElementById('cand-f-title').value.trim();
+  if (!title) { showToast('⚠️ 후보명을 입력해주세요'); return; }
+
+  const fields = {
+    title,
+    type: document.getElementById('cand-f-type').value,
+    stage: document.getElementById('cand-f-stage').value,
+    source: document.getElementById('cand-f-source').value.trim(),
+    keywords: document.getElementById('cand-f-keywords').value.trim(),
+    topic: document.getElementById('cand-f-topic').value.trim(),
+    story: document.getElementById('cand-f-story').value.trim(),
+    script: document.getElementById('cand-f-script').value.trim(),
+    memo: document.getElementById('cand-f-memo').value.trim(),
+    checklist: { ...candidateDraftChecklist },
+  };
+
+  let cand;
+  if (currentCandidateId) {
+    cand = candidatePool.find(c => c.id === currentCandidateId);
+    Object.assign(cand, fields);
+  } else {
+    cand = { id: 'cand_'+uid(), notionPageId: null, ...fields };
+    candidatePool.push(cand);
+    currentCandidateId = cand.id;
+  }
+
+  saveCandidatesLocal();
+  syncCandidateToNotion(cand);
+  showToast('✓ 후보 저장됐어요');
+  closeCandidateModal();
+  renderCandidateTab();
+}
+
+function moveCandidateStage(direction) {
+  if (!currentCandidateId) return;
+  const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
+  const idx = CANDIDATE_STAGES.findIndex(s => s.key === cand.stage);
+  const nextIdx = Math.min(CANDIDATE_STAGES.length - 1, Math.max(0, idx + direction));
+  if (nextIdx === idx) return;
+  cand.stage = CANDIDATE_STAGES[nextIdx].key;
+  saveCandidatesLocal();
+  syncCandidateToNotion(cand);
+  showToast(direction > 0 ? '→ 다음 단계로 이동' : '← 이전 단계로 이동');
+  openCandidateModal(cand.id);
+  renderCandidateBoard();
+  renderCandidateStageStats();
+}
+
+function promoteCandidateToG1() {
+  if (!currentCandidateId) return;
+  const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
+  if (cand.stage !== 'approval') { showToast('⚠️ 승인대기 상태에서만 G1 투입할 수 있어요'); return; }
+  cand.stage = 'g1';
+  saveCandidatesLocal();
+  syncCandidateToNotion(cand);
+  showToast('🚀 G1 투입 완료');
+  closeCandidateModal();
+  renderCandidateTab();
+}
+
+function deleteCandidate() {
+  if (!currentCandidateId) return;
+  if (!confirm('이 후보를 삭제할까요?')) return;
+  const cand = candidatePool.find(c => c.id === currentCandidateId);
+  candidatePool = candidatePool.filter(c => c.id !== currentCandidateId);
+  saveCandidatesLocal();
+  if (cand?.notionPageId) archiveCandidateInNotion(cand.notionPageId);
+  showToast('🗑️ 후보 삭제됐어요');
+  closeCandidateModal();
+  renderCandidateTab();
 }
 
 loadData();

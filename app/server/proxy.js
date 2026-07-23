@@ -486,6 +486,160 @@ app.post('/api/update-script-history', async (req, res) => {
   }
 })
 
+// ── GET/POST/PATCH/DELETE /api/candidates — 후보 풀 Notion DB 연동 ───────
+// 주의: Notion 호출이 실패해도(토큰 없음/네트워크 오류 등) 항상 200으로
+// { success:false, error } 반환 — content_matrix_v3.html의 후보 풀 탭은 로컬
+// 캐시(localStorage)만으로도 완전히 동작해야 하며, Notion 연동은 best-effort임.
+const NOTION_CANDIDATE_DB_ID = 'c45d2b84-7522-4a2a-8cd7-3263bcbb2cef'
+const CANDIDATE_CHECKLIST_KEYS = [
+  'script_msg', 'script_3act', 'script_tone',
+  'image_scene', 'image_setting',
+  'tts_emotion', 'tts_length',
+  'video_cut', 'video_8s',
+  'edit_transition', 'edit_bgm',
+]
+
+function getNotionToken() {
+  const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+  try {
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    return secrets.apiKeys?.notion || ''
+  } catch {
+    return ''
+  }
+}
+function notionHeadersFor(token) {
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Notion-Version': NOTION_VERSION,
+    'Content-Type': 'application/json',
+  }
+}
+function richText(v) {
+  const s = (v ?? '').toString()
+  return s ? [{ type: 'text', text: { content: s } }] : []
+}
+function plainText(richTextArr) {
+  return (richTextArr || []).map(t => t.plain_text).join('')
+}
+function candidateToNotionProperties(cand) {
+  return {
+    '후보명': { title: richText(cand.title) },
+    '유형': cand.type ? { select: { name: cand.type } } : { select: null },
+    '단계': cand.stage ? { select: { name: cand.stage } } : { select: null },
+    '트렌드소스': { rich_text: richText(cand.source) },
+    '핵심키워드': { rich_text: richText(cand.keywords) },
+    '주제요약': { rich_text: richText(cand.topic) },
+    '스토리기획': { rich_text: richText(cand.story) },
+    '한글대본': { rich_text: richText(cand.script) },
+    '메모': { rich_text: richText(cand.memo) },
+    '체크리스트': { multi_select: CANDIDATE_CHECKLIST_KEYS.filter(k => cand.checklist?.[k]).map(name => ({ name })) },
+  }
+}
+function notionPageToCandidate(page) {
+  const p = page.properties || {}
+  const checklist = {}
+  ;(p['체크리스트']?.multi_select || []).forEach(o => { checklist[o.name] = true })
+  return {
+    id: page.id,
+    notionPageId: page.id,
+    title: plainText(p['후보명']?.title),
+    type: p['유형']?.select?.name || 'SF',
+    stage: p['단계']?.select?.name || 'step1',
+    source: plainText(p['트렌드소스']?.rich_text),
+    keywords: plainText(p['핵심키워드']?.rich_text),
+    topic: plainText(p['주제요약']?.rich_text),
+    story: plainText(p['스토리기획']?.rich_text),
+    script: plainText(p['한글대본']?.rich_text),
+    memo: plainText(p['메모']?.rich_text),
+    checklist,
+  }
+}
+
+app.get('/api/candidates', async (req, res) => {
+  const notionToken = getNotionToken()
+  if (!notionToken) {
+    console.warn('[candidates] Notion 토큰 없음 (studio-secrets.json apiKeys.notion) — 건너뜀')
+    return res.json({ success: false, error: 'Notion API 키가 설정되어 있지 않습니다 (apiKeys.notion)', candidates: [] })
+  }
+  try {
+    const results = []
+    let cursor
+    do {
+      const queryRes = await fetch(`https://api.notion.com/v1/databases/${NOTION_CANDIDATE_DB_ID}/query`, {
+        method: 'POST', headers: notionHeadersFor(notionToken),
+        body: JSON.stringify(cursor ? { start_cursor: cursor } : {}),
+      })
+      const queryData = await queryRes.json()
+      if (!queryRes.ok) throw new Error(queryData.message || `Notion 조회 실패 (${queryRes.status})`)
+      results.push(...(queryData.results || []))
+      cursor = queryData.has_more ? queryData.next_cursor : null
+    } while (cursor)
+
+    res.json({ success: true, candidates: results.map(notionPageToCandidate) })
+  } catch (err) {
+    console.warn('[candidates] Notion 조회 실패(무시):', err.message)
+    res.json({ success: false, error: err.message, candidates: [] })
+  }
+})
+
+app.post('/api/candidates', async (req, res) => {
+  const notionToken = getNotionToken()
+  if (!notionToken) return res.json({ success: false, error: 'Notion API 키가 설정되어 있지 않습니다 (apiKeys.notion)' })
+
+  try {
+    const createRes = await fetch(`https://api.notion.com/v1/pages`, {
+      method: 'POST', headers: notionHeadersFor(notionToken),
+      body: JSON.stringify({
+        parent: { database_id: NOTION_CANDIDATE_DB_ID },
+        properties: candidateToNotionProperties(req.body || {}),
+      }),
+    })
+    const createData = await createRes.json()
+    if (!createRes.ok) throw new Error(createData.message || `Notion 생성 실패 (${createRes.status})`)
+    res.json({ success: true, notionPageId: createData.id })
+  } catch (err) {
+    console.warn('[candidates] Notion 생성 실패(무시):', err.message)
+    res.json({ success: false, error: err.message })
+  }
+})
+
+app.patch('/api/candidates/:pageId', async (req, res) => {
+  const notionToken = getNotionToken()
+  if (!notionToken) return res.json({ success: false, error: 'Notion API 키가 설정되어 있지 않습니다 (apiKeys.notion)' })
+
+  try {
+    const updateRes = await fetch(`https://api.notion.com/v1/pages/${req.params.pageId}`, {
+      method: 'PATCH', headers: notionHeadersFor(notionToken),
+      body: JSON.stringify({ properties: candidateToNotionProperties(req.body || {}) }),
+    })
+    const updateData = await updateRes.json()
+    if (!updateRes.ok) throw new Error(updateData.message || `Notion 수정 실패 (${updateRes.status})`)
+    res.json({ success: true, notionPageId: req.params.pageId })
+  } catch (err) {
+    console.warn('[candidates] Notion 수정 실패(무시):', err.message)
+    res.json({ success: false, error: err.message })
+  }
+})
+
+app.delete('/api/candidates/:pageId', async (req, res) => {
+  const notionToken = getNotionToken()
+  if (!notionToken) return res.json({ success: false, error: 'Notion API 키가 설정되어 있지 않습니다 (apiKeys.notion)' })
+
+  try {
+    const archiveRes = await fetch(`https://api.notion.com/v1/pages/${req.params.pageId}`, {
+      method: 'PATCH', headers: notionHeadersFor(notionToken),
+      body: JSON.stringify({ archived: true }),
+    })
+    const archiveData = await archiveRes.json()
+    if (!archiveRes.ok) throw new Error(archiveData.message || `Notion 삭제 실패 (${archiveRes.status})`)
+    res.json({ success: true })
+  } catch (err) {
+    console.warn('[candidates] Notion 삭제 실패(무시):', err.message)
+    res.json({ success: false, error: err.message })
+  }
+})
+
 // ── GET/POST /api/gpoints — G포인트를 서버 경유로 공유 ───────────────────
 // lib/gpoints.js는 localStorage('aca_gpoints_v1')에 저장하는데, content_matrix_v3.html
 // 같은 다른 오리진(file://)에서는 localStorage를 절대 읽을 수 없어 이 엔드포인트로 중계한다.
