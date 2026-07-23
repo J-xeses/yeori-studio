@@ -31,6 +31,7 @@ async function executeTool(name, args) {
 
     case 'list_trend_episodes': {
       const data = await api('GET', '/api/trend-episodes')
+      if (data.error) return `오류: ${data.error}`
       const entries = data.entries || []
       if (!entries.length) return '저장된 트렌드 에피소드 후보가 없습니다. TREND RADAR에서 📋 파이프라인 버튼을 눌러 추가하세요.'
       return entries.map((e, i) => {
