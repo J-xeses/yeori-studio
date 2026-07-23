@@ -318,7 +318,7 @@
   /* ── 후보 풀 탭 (좌측 220px 사이드 + 우측 상세 2열) ── */
   .candidate-layout { display: flex; gap: 14px; align-items: stretch; height: calc(100vh - 190px); min-height: 480px; }
 
-  .candidate-side-panel { width: 220px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; padding: 12px; }
+  .candidate-side-panel { width: 360px; flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; padding: 12px; }
   .candidate-side-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .candidate-count-badge { font-family: 'Space Mono', monospace; color: var(--purple); background: var(--purple-bg); border-radius: 10px; padding: 1px 8px; font-size: 10px; }
 
@@ -354,6 +354,7 @@
   #candidate-detail-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .candidate-title-input { width: 100%; flex-shrink: 0; background: transparent; border: none; border-bottom: 1px solid var(--border2); font-size: 18px; font-weight: 700; color: var(--text); padding: 4px 0; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.15s; }
   .candidate-title-input:focus { border-color: var(--purple); }
+  .candidate-title-input::placeholder { color: var(--text3); opacity: 1; }
   .candidate-detail-headmeta { display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; }
   .candidate-detail-headmeta .form-select { flex: 1; min-width: 0; }
   .candidate-detail-section { margin-top: 16px; flex-shrink: 0; }
@@ -362,7 +363,8 @@
   .candidate-autosave-status { font-size: 10px; color: var(--text3); margin-top: 8px; text-align: right; flex-shrink: 0; }
 
   .candidate-split-columns { display: flex; gap: 16px; flex: 1; min-height: 0; margin-top: 16px; }
-  .candidate-col-checklist, .candidate-col-content { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-checklist { flex: 0 0 30%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-content { flex: 1 1 70%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
 
   .candidate-checklist-group { margin-bottom: 10px; }
   .candidate-checklist-group-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
@@ -3235,28 +3237,9 @@ function renderCandidateDetail() {
 
   renderCandidateChecklistUI(cand);
   refreshCandidateStageUI(cand);
-  setupCandidateColumnScrollSync();
 
   const statusEl = document.getElementById('candidate-autosave-status');
   if (statusEl) statusEl.textContent = '';
-}
-
-function setupCandidateColumnScrollSync() {
-  const colA = document.getElementById('candidate-col-checklist');
-  const colB = document.getElementById('candidate-col-content');
-  if (!colA || !colB || colA.dataset.syncBound) return;
-  colA.dataset.syncBound = '1';
-  let syncing = false;
-  const syncFrom = (src, dst) => {
-    if (syncing) return;
-    syncing = true;
-    const srcMax = src.scrollHeight - src.clientHeight;
-    const dstMax = dst.scrollHeight - dst.clientHeight;
-    if (srcMax > 0 && dstMax > 0) dst.scrollTop = (src.scrollTop / srcMax) * dstMax;
-    syncing = false;
-  };
-  colA.addEventListener('scroll', () => syncFrom(colA, colB));
-  colB.addEventListener('scroll', () => syncFrom(colB, colA));
 }
 
 function refreshCandidateStageUI(cand) {
