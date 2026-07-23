@@ -99,7 +99,7 @@ timeout /t 1 /nobreak >nul
 ::       scripts/sync-tunnel.js가 cloudflared를 띄우고, URL이 바뀌면
 ::       Vercel MCP_BRIDGE_URL을 자동으로 갱신 + redeploy까지 수행한다.
 echo [2.5] Starting Cloudflare Tunnel (auto Vercel sync)...
-set CLOUDFLARED=%LOCALAPPDATA%\cloudflared\cloudflared.exe
+set CLOUDFLARED=C:\Program Files (x86)\cloudflared\cloudflared.exe
 if exist "%CLOUDFLARED%" (
     start "Yeori Cloudflare Tunnel" cmd /k "timeout /t 6 /nobreak >nul && node "%~dp0scripts\sync-tunnel.js""
     echo        Tunnel window opened -- URL change is detected and synced to Vercel automatically.
