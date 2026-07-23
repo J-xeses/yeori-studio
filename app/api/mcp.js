@@ -123,8 +123,11 @@ function buildServer() {
 
 export default async function handler(req, res) {
   // claude.ai 커스텀 커넥터 URL에 ?key=... 형태로 등록 (헤더 설정 UI가 없어도 항상 동작하도록 쿼리 파라미터 사용)
+  // 401을 반환하면 MCP 클라이언트가 이를 "OAuth 필요" 신호로 해석해 OAuth discovery를
+  // 시도하다 실패("Failed to start MCP authorization")하므로, OAuth와 무관한 이
+  // 쿼리파라미터 인증 실패는 403으로 반환한다.
   if (!PUBLIC_SECRET || req.query.key !== PUBLIC_SECRET) {
-    return res.status(401).json({ error: 'unauthorized' })
+    return res.status(403).json({ error: 'unauthorized' })
   }
 
   const server = buildServer()
