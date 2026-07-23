@@ -7,6 +7,26 @@
     {
       "source": "/api/elevenlabs/:path*",
       "destination": "/api/elevenlabs"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server",
+      "destination": "/api/well-known-oauth-authorization-server"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "/api/well-known-oauth-protected-resource"
+    },
+    {
+      "source": "/register",
+      "destination": "/api/oauth-register"
+    },
+    {
+      "source": "/authorize",
+      "destination": "/api/oauth-authorize"
+    },
+    {
+      "source": "/token",
+      "destination": "/api/oauth-token"
     }
   ]
 }
