@@ -12,7 +12,14 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const APP_ROOT = 'C:\\yeori-studio\\app'
-const CLOUDFLARED = path.join(process.env.LOCALAPPDATA, 'cloudflared', 'cloudflared.exe')
+// 설치 방식(winget vs 수동 설치)에 따라 경로가 달라서 후보를 순서대로 확인한다.
+// start_yeori.bat도 동일한 winget 경로를 우선 사용하도록 맞춰져 있음.
+const CLOUDFLARED_CANDIDATES = [
+  'C:\\Program Files (x86)\\cloudflared\\cloudflared.exe',
+  path.join(process.env.LOCALAPPDATA || '', 'cloudflared', 'cloudflared.exe'),
+  'C:\\Program Files\\cloudflared\\cloudflared.exe',
+]
+const CLOUDFLARED = CLOUDFLARED_CANDIDATES.find((p) => p && fs.existsSync(p)) || CLOUDFLARED_CANDIDATES[0]
 const TUNNEL_TARGET = 'http://localhost:3001'
 const STATE_PATH = path.join(APP_ROOT, '.tunnel-state.json')
 const VERCEL_SCOPE = 'won566800-7736s-projects'

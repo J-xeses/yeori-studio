@@ -8,13 +8,26 @@ import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
+const MEDIA_ROOT = 'C:\\yeori-studio'
+const ROOT = CODE_ROOT  // 하위 호환 유지
+
+// ── 종료/에러 로그 (콘솔 창이 그냥 닫혀버리면 사후 확인할 방법이 없어서 추가) ──
+const LOG_PATH = path.join(MEDIA_ROOT, 'logs', 'proxy.log')
+function logToFile(line) {
+  try {
+    fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true })
+    fs.appendFileSync(LOG_PATH, `[${new Date().toISOString()}] ${line}\n`, 'utf-8')
+  } catch { /* 로그 기록 실패는 무시 -- 로그 때문에 서버가 죽으면 안 됨 */ }
+}
+
 if (!fs.existsSync(path.join(CODE_ROOT, 'package.json'))) {
-  console.error(`[ERROR] CODE_ROOT 경로를 찾을 수 없습니다: ${CODE_ROOT}`)
+  const msg = `[ERROR] CODE_ROOT 경로를 찾을 수 없습니다: ${CODE_ROOT}`
+  console.error(msg)
+  logToFile(`FATAL ${msg}`)
   process.exit(1)
 }
 console.log(`[CODE_ROOT] ${CODE_ROOT}`)
-const MEDIA_ROOT = 'C:\\yeori-studio'
-const ROOT = CODE_ROOT  // 하위 호환 유지
+logToFile('--- proxy 시작 ---')
 
 // ── .env.local 로드 (CODE_ROOT 기준) ──────────────────────────
 ;(() => {
@@ -34,9 +47,22 @@ const PORT = 3001
 // Node.js 18+에서 unhandledRejection이 프로세스를 종료하지 않도록 처리
 process.on('unhandledRejection', (reason) => {
   console.error('[proxy] unhandledRejection:', reason)
+  logToFile(`unhandledRejection: ${reason?.stack || reason}`)
 })
 process.on('uncaughtException', (err) => {
   console.error('[proxy] uncaughtException:', err.message)
+  logToFile(`uncaughtException: ${err?.stack || err?.message || err}`)
+})
+// 정상 종료 외의 경로(외부에서 taskkill, 콘솔 창 닫힘 등)로 프로세스가 사라지는 경우를
+// 구분하기 위해 signal/exit도 기록한다 -- 콘솔 창이 흔적 없이 닫혀버리는 문제 진단용.
+for (const sig of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(sig, () => {
+    logToFile(`신호 수신: ${sig} -- 종료`)
+    process.exit(0)
+  })
+}
+process.on('exit', (code) => {
+  logToFile(`--- proxy 종료 (code ${code}) ---`)
 })
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'] }))
@@ -2216,20 +2242,41 @@ mcpRouter.post('/export-pipeline', (req, res) => {
 
 app.use('/api/mcp', mcpRouter)
 
-const server = app.listen(PORT, () => {
-  console.log('')
-  console.log('  ✦ 여리 Studio 프록시 서버')
-  console.log(`  → http://localhost:${PORT}`)
-  console.log('  → Claude / ElevenLabs API 요청을 중계합니다')
-  console.log('')
-})
+// start_yeori.bat가 [0] 단계에서 기존 프로세스를 taskkill한 직후(1초 대기) 바로 이
+// 프록시를 재기동하는데, OS가 소켓을 즉시 회수하지 못하면 EADDRINUSE가 날 수 있다.
+// 즉시 죽는 대신 잠깐 재시도해서 이런 타이밍 경합을 흡수한다.
+const LISTEN_RETRY_MAX = 5
+const LISTEN_RETRY_DELAY_MS = 1000
+let listenAttempt = 0
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`\n  ❌ 포트 ${PORT} 이미 사용 중입니다.`)
-    console.error(`  → 기존 프록시 프로세스를 종료 후 다시 실행하세요.\n`)
-  } else {
-    console.error(`\n  ❌ 서버 오류: ${err.message}\n`)
-  }
-  process.exit(1)
-})
+function startServer() {
+  const server = app.listen(PORT, () => {
+    console.log('')
+    console.log('  ✦ 여리 Studio 프록시 서버')
+    console.log(`  → http://localhost:${PORT}`)
+    console.log('  → Claude / ElevenLabs API 요청을 중계합니다')
+    console.log('')
+    logToFile(`포트 ${PORT} 바인딩 성공 (attempt ${listenAttempt + 1})`)
+  })
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && listenAttempt < LISTEN_RETRY_MAX) {
+      listenAttempt++
+      console.error(`  ⚠ 포트 ${PORT} 아직 사용 중 -- ${LISTEN_RETRY_DELAY_MS}ms 후 재시도 (${listenAttempt}/${LISTEN_RETRY_MAX})`)
+      logToFile(`EADDRINUSE, 재시도 ${listenAttempt}/${LISTEN_RETRY_MAX}`)
+      setTimeout(startServer, LISTEN_RETRY_DELAY_MS)
+      return
+    }
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n  ❌ 포트 ${PORT} 이미 사용 중입니다 (재시도 ${LISTEN_RETRY_MAX}회 실패).`)
+      console.error(`  → 기존 프록시 프로세스를 종료 후 다시 실행하세요.\n`)
+      logToFile(`FATAL EADDRINUSE, 재시도 ${LISTEN_RETRY_MAX}회 모두 실패, 종료`)
+    } else {
+      console.error(`\n  ❌ 서버 오류: ${err.message}\n`)
+      logToFile(`FATAL server error: ${err.stack || err.message}`)
+    }
+    process.exit(1)
+  })
+}
+
+startServer()
