@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Creative Agent — Code Generator v1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    /* Codi_GEN CI 컬러 시스템 (틸 + 스칼렛 듀오톤) */
+    --bg: #080C0E;
+    --surface: #0C1418;
+    --surface2: #0F2A22;
+    --surface3: #143830;
+    --border: #1a2e28;
+    --border2: rgba(29,158,117,0.25);
+    --text: #FFFFFF;
+    --text2: #9FE1CB;
+    --text3: #2d6a5a;
+    --teal: #1D9E75;
+    --teal-bg: rgba(29,158,117,0.14);
+    --teal-dark: #085041;
+    --teal-dark-bg: rgba(8,80,65,0.35);
+    --teal-light: #9FE1CB;
+    --scarlet: #C43232;
+    --scarlet-bg: rgba(196,50,50,0.14);
+    --scarlet-deep: #4A0808;
+    --scarlet-light: #F07070;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; line-height: 1.6; }
+
+  .app-shell { display: flex; flex-direction: column; height: 100vh; }
+
+  /* ── 상단바 ── */
+  .topbar { height: 48px; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 10px; }
+  .tb-logo { display: flex; align-items: center; gap: 1px; }
+  .tb-logo .bk { font-size: 20px; font-weight: 300; color: var(--teal); line-height: 1; }
+  .tb-logo .nm { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; font-family: 'Space Mono', monospace; }
+  .tb-logo .us { font-size: 15px; font-weight: 700; color: var(--scarlet); font-family: 'Space Mono', monospace; }
+  .tb-logo .gn { font-size: 15px; font-weight: 300; color: var(--teal-light); letter-spacing: 0.1em; font-family: 'Space Mono', monospace; }
+  .tb-brand { font-size: 11px; font-weight: 500; color: var(--text3); }
+  .tb-sep { color: var(--border2); }
+  .tb-meta { margin-left: auto; display: flex; gap: 16px; font-size: 11px; color: var(--text3); }
+  .tb-meta b { color: var(--teal); font-family: 'Space Mono', monospace; font-weight: 700; }
+
+  /* ── 탭 ── */
+  .tabs { display: flex; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; overflow-x: auto; }
+  .tab { font-size: 12px; padding: 10px 16px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 700; }
+
+  .body { display: flex; flex: 1; min-height: 0; }
+
+  /* ── 사이드바 ── */
+  .sidebar { width: 180px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 14px 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .sb-sec { margin-bottom: 14px; }
+  .sb-label { font-size: 9px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 12px; margin-bottom: 6px; }
+  .sb-item { display: flex; align-items: center; gap: 7px; padding: 7px 12px; cursor: pointer; border-left: 2px solid transparent; }
+  .sb-item:hover { background: var(--surface2); }
+  .sb-item.active { background: var(--teal-bg); border-left-color: var(--teal); }
+  .sb-item-icon { font-size: 13px; }
+  .sb-item-label { font-size: 11px; color: var(--text2); }
+  .sb-item.active .sb-item-label { color: var(--teal); font-weight: 700; }
+  .sb-badge { margin-left: auto; font-size: 9px; padding: 1px 6px; border-radius: 8px; background: var(--surface2); color: var(--text3); border: 1px solid var(--border2); }
+  .sb-item.active .sb-badge { background: var(--teal-bg); color: var(--teal); border-color: rgba(29,158,117,0.3); }
+  .sb-div { height: 1px; background: var(--border); margin: 8px 12px; }
+
+  .cut-list { padding: 0 8px; flex: 1; }
+  .cut-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--radius-sm); margin-bottom: 2px; cursor: pointer; }
+  .cut-item:hover { background: var(--surface2); }
+  .cut-item.active { background: var(--teal-bg); }
+  .cut-num { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text3); min-width: 24px; }
+  .cut-item.active .cut-num { color: var(--teal); }
+  .cut-type { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+  .t-yr { background: var(--teal-bg); color: var(--teal); }
+  .t-br { background: var(--teal-dark-bg); color: var(--teal-light); }
+  .t-gr { background: var(--scarlet-bg); color: var(--scarlet-light); }
+  .cut-dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .d-done { background: var(--teal); }
+  .d-wip { background: var(--scarlet); }
+  .d-tbd { background: var(--border2); }
+  .cut-add { display: flex; align-items: center; gap: 6px; padding: 6px 10px; margin: 6px 8px 0; border-radius: var(--radius-sm); border: 1px dashed var(--border2); color: var(--text3); font-size: 11px; cursor: pointer; }
+  .cut-add:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* ── 메인 ── */
+  .main { flex: 1; overflow-y: auto; padding: 20px; }
+
+  .phase-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; padding: 3px 10px; border-radius: 12px; margin-bottom: 12px; font-weight: 700; }
+  .pb-0 { background: var(--surface2); color: var(--text3); border: 1px solid var(--border2); }
+  .pb-1 { background: var(--teal-bg); color: var(--teal); border: 1px solid rgba(29,158,117,0.3); }
+  .pb-2 { background: var(--scarlet-bg); color: var(--scarlet-light); border: 1px solid rgba(196,50,50,0.3); }
+
+  .section-label { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .g { display: grid; gap: 12px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .card.accent { border-color: rgba(29,158,117,0.4); }
+  .card-h { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+  .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 11px; padding: 5px 12px; border-radius: 20px; cursor: pointer; border: 1px solid var(--border2); background: var(--surface2); color: var(--text2); transition: all 0.15s; font-family: 'Noto Sans KR', sans-serif; }
+  .pill:hover { border-color: var(--teal); color: var(--text); }
+  .pill.on { background: var(--teal-bg); border-color: rgba(29,158,117,0.4); color: var(--teal); font-weight: 700; }
+  .pill.on-o { background: var(--scarlet-bg); border-color: rgba(196,50,50,0.4); color: var(--scarlet-light); font-weight: 700; }
+
+  .field-label { font-size: 10px; color: var(--text3); margin-bottom: 6px; }
+
+  .story-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: border-color 0.15s; }
+  .story-card:hover { border-color: var(--teal); }
+  .story-card.on { border-color: rgba(29,158,117,0.4); background: var(--teal-bg); }
+  .story-icon { font-size: 16px; }
+  .story-title { font-size: 12px; font-weight: 700; color: var(--text); }
+  .story-card.on .story-title { color: var(--teal); }
+  .story-tag { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .story-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 16px; }
+
+  .input { width: 100%; font-size: 12px; padding: 7px 10px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border2); color: var(--text); font-family: 'Space Mono', monospace; }
+  .input:focus { outline: none; border-color: var(--teal); }
+
+  .code-preview { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 12px 14px; font-family: 'Space Mono', monospace; font-size: 11px; line-height: 2; white-space: pre-wrap; word-break: break-all; }
+  .cp-m { color: var(--text3); }
+  .cp-a { color: var(--teal); font-weight: 700; }
+  .cp-b { color: var(--teal-light); }
+  .cp-c { color: var(--scarlet-light); }
+  .cp-d { color: var(--teal-light); }
+
+  .auto-link { font-size: 11px; color: var(--text2); line-height: 2; }
+  .auto-check { color: var(--teal); }
+  .auto-note { color: var(--text3); font-size: 10px; }
+
+  .btn-loadpool { font-size: 11px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--teal); color: #080C0E; border: none; cursor: pointer; font-weight: 700; font-family: 'Noto Sans KR', sans-serif; }
+  .btn-loadpool:hover { opacity: 0.85; }
+
+  .placeholder-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text3); gap: 10px; }
+  .placeholder-tab-icon { font-size: 34px; opacity: 0.5; }
+  .placeholder-tab-text { font-size: 12px; }
+
+  /* ── 하단바 ── */
+  .bottombar { border-top: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; background: var(--surface); flex-shrink: 0; }
+  .bb-info { font-size: 11px; color: var(--text3); }
+  .bb-right { margin-left: auto; display: flex; gap: 8px; }
+  .bb-btn { font-size: 12px; padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500; font-family: 'Noto Sans KR', sans-serif; border: none; }
+  .bb-ghost { background: var(--surface2); border: 1px solid var(--border2); color: var(--text2); }
+  .bb-ghost:hover { border-color: var(--teal); color: var(--teal); }
+  .bb-primary { background: var(--teal); color: #080C0E; }
+  .bb-primary:hover { opacity: 0.85; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid rgba(29,158,117,0.4); color: var(--teal); font-size: 12px; padding: 8px 16px; border-radius: var(--radius-sm); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- 상단바 -->
+  <div class="topbar">
+    <div class="tb-logo">
+      <span class="bk">[</span><span class="nm">Codi</span><span class="us">_</span><span class="gn">GEN</span><span class="bk" style="color:var(--teal-dark)">]</span>
+    </div>
+    <span class="tb-sep">—</span>
+    <span class="tb-brand">A Creative Agent · Code Generator</span>
+    <div class="tb-meta">
+      <span>에피소드 <b id="tb-ep-id">SF_E01</b></span>
+      <span>컷 <b id="tb-cut-pos">C01/05</b></span>
+      <span>완성도 <b id="tb-progress" style="color:var(--teal)">0%</b></span>
+    </div>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tabs">
+    <div class="tab active" data-tab="ep" onclick="showTab('ep', this)">🎬 에피소드</div>
+    <div class="tab" data-tab="cut" onclick="showTab('cut', this)">✂️ 컷 설계</div>
+    <div class="tab" data-tab="code" onclick="showTab('code', this)">🔍 코드 확인</div>
+    <div class="tab" data-tab="pkg" onclick="showTab('pkg', this)">📦 패키지</div>
+    <div class="tab" data-tab="bank" onclick="showTab('bank', this)">🗄 CA_BANK</div>
+  </div>
+
+  <div class="body">
+
+    <!-- 사이드바 -->
+    <div class="sidebar">
+      <div class="sb-sec">
+        <div class="sb-label">채널</div>
+        <div class="sb-item active">
+          <span class="sb-item-icon">👩</span>
+          <span class="sb-item-label">서여리</span>
+          <span class="sb-badge">2</span>
+        </div>
+        <div class="sb-item">
+          <span class="sb-item-icon">📱</span>
+          <span class="sb-item-label">AI 자기계발</span>
+        </div>
+      </div>
+      <div class="sb-div"></div>
+      <div class="sb-sec">
+        <div class="sb-label">에피소드</div>
+        <div class="sb-item active">
+          <span class="sb-item-icon">●</span>
+          <span class="sb-item-label" id="sb-ep-current">SF_E01</span>
+        </div>
+        <div class="sb-item">
+          <span class="sb-item-icon">○</span>
+          <span class="sb-item-label">LF_E01_MEM</span>
+        </div>
+      </div>
+      <div class="sb-div"></div>
+      <div class="sb-label" style="padding:0 12px;margin-bottom:6px">컷 목록</div>
+      <div class="cut-list" id="cut-list"></div>
+      <div class="cut-add" onclick="showToast('컷 설계 탭에서 컷을 추가할 수 있어요')">+ 컷 추가</div>
+    </div>
+
+    <!-- 메인 -->
+    <div class="main">
+
+      <!-- TAB: 에피소드 -->
+      <div id="tab-ep" class="tab-content">
+        <div class="phase-badge pb-0">Phase 0 — 스토리 연결</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="section-label" style="flex:1;margin-bottom:0">후보 풀 데이터</div>
+          <button class="btn-loadpool" onclick="loadFromCandidatePool()">📥 후보 풀에서 불러오기</button>
+        </div>
+        <div class="g" style="grid-template-columns:1fr;margin-bottom:16px" id="story-card-list"></div>
+
+        <div class="phase-badge pb-1">Phase 1 — 에피소드 기본 설정</div>
+        <div class="g g2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h">📺 플랫폼 · 포맷</div>
+            <div class="kw-wrap" id="pills-platform"></div>
+          </div>
+          <div class="card">
+            <div class="card-h">🏷️ 주제 × 시나리오</div>
+            <div class="kw-wrap" id="pills-topic" style="margin-bottom:8px"></div>
+            <div class="kw-wrap" id="pills-scenario"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h">🆔 에피소드 ID</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="input" id="ep-id-input" placeholder="예: SF_E01_PSY" oninput="state.epId=this.value; renderAll()">
+            <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
+          </div>
+        </div>
+
+        <div class="phase-badge pb-2">Phase 2 — 서여리 기본값</div>
+        <div class="g g3" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h">👗 의상 룩</div>
+            <div class="kw-wrap" id="pills-look" style="margin-bottom:8px"></div>
+            <div class="field-label">상의</div>
+            <div class="kw-wrap" id="pills-top" style="margin-bottom:8px"></div>
+            <div class="field-label">하의</div>
+            <div class="kw-wrap" id="pills-bottom" style="margin-bottom:8px"></div>
+            <div class="field-label">시즌</div>
+            <div class="kw-wrap" id="pills-season"></div>
+          </div>
+          <div class="card">
+            <div class="card-h">✨ 자동 연동</div>
+            <div class="auto-link" id="auto-link-box"></div>
+          </div>
+          <div class="card">
+            <div class="card-h">🖼️ 레퍼런스</div>
+            <div class="auto-link">
+              <span class="auto-check">✓</span> FA_01 고정<br>
+              <span class="auto-check">✓</span> FA_02 고정<br>
+              <span style="color:var(--scarlet-light)">→</span> <span id="ref-fs-code">FS_E01</span> 생성 필요
+            </div>
+          </div>
+        </div>
+
+        <div class="card accent">
+          <div class="card-h">💻 에피소드 코드 프리뷰</div>
+          <div class="code-preview" id="code-preview"></div>
+        </div>
+      </div>
+
+      <!-- TAB: 컷 설계 (플레이스홀더) -->
+      <div id="tab-cut" class="tab-content" style="display:none">
+        <div class="placeholder-tab">
+          <div class="placeholder-tab-icon">✂️</div>
+          <div class="placeholder-tab-text">컷 설계 탭은 다음 버전에서 구현될 예정입니다</div>
+        </div>
+      </div>
+
+      <!-- TAB: 코드 확인 (플레이스홀더) -->
+      <div id="tab-code" class="tab-content" style="display:none">
+        <div class="placeholder-tab">
+          <div class="placeholder-tab-icon">🔍</div>
+          <div class="placeholder-tab-text">코드 확인 탭은 다음 버전에서 구현될 예정입니다</div>
+        </div>
+      </div>
+
+      <!-- TAB: 패키지 (플레이스홀더) -->
+      <div id="tab-pkg" class="tab-content" style="display:none">
+        <div class="placeholder-tab">
+          <div class="placeholder-tab-icon">📦</div>
+          <div class="placeholder-tab-text">패키지 탭은 다음 버전에서 구현될 예정입니다</div>
+        </div>
+      </div>
+
+      <!-- TAB: CA_BANK (플레이스홀더) -->
+      <div id="tab-bank" class="tab-content" style="display:none">
+        <div class="placeholder-tab">
+          <div class="placeholder-tab-icon">🗄</div>
+          <div class="placeholder-tab-text">CA_BANK 탭은 다음 버전에서 구현될 예정입니다</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 하단바 -->
+  <div class="bottombar">
+    <div class="bb-info" id="bb-info">C01 · 에피소드 설정 진행 중</div>
+    <div class="bb-right">
+      <div class="bb-btn bb-ghost" onclick="moveCut(-1)">← 이전 컷</div>
+      <div class="bb-btn bb-ghost" onclick="moveCut(1)">다음 컷 →</div>
+      <div class="bb-btn bb-primary" onclick="generatePackage()">패키지 생성 ↗</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast">✓ 저장됐어요</div>
+
+<script>
+const YEORI_SERVER = 'http://localhost:3001';
+
+// ── 데이터 ─────────────────────────────────────────────────────
+const PLATFORM_OPTIONS = [
+  { code: 'SF',   label: 'SF 숏폼' },
+  { code: 'LF',   label: 'LF 롱폼' },
+  { code: 'IG_R', label: 'IG_R 릴스' },
+  { code: 'IG_P', label: 'IG_P 피드' },
+  { code: 'IG_S', label: 'IG_S 스토리' },
+  { code: 'TK',   label: 'TK 틱톡' },
+];
+const TOPIC_OPTIONS = [
+  { code: 'PSY', label: 'PSY 심리' },
+  { code: 'SOC', label: 'SOC 사회' },
+  { code: 'LIF', label: 'LIF 일상' },
+  { code: 'REL', label: 'REL 관계' },
+  { code: 'TRD', label: 'TRD 트렌드' },
+];
+const SCENARIO_OPTIONS = [
+  { code: 'MYS', label: 'MYS 미스터리' },
+  { code: 'DOC', label: 'DOC 다큐' },
+  { code: 'EDU', label: 'EDU 교육' },
+  { code: 'ENT', label: 'ENT 엔터' },
+];
+const LOOK_OPTIONS = [
+  { code: 'LK_CS', label: 'LK_CS 캐주얼' },
+  { code: 'LK_FM', label: 'LK_FM 포멀' },
+  { code: 'LK_AT', label: 'LK_AT 운동' },
+  { code: 'LK_HM', label: 'LK_HM 홈' },
+];
+const TOP_OPTIONS = [
+  { code: 'TOP_KNT', label: 'TOP_KNT 니트' },
+  { code: 'TOP_TSH', label: 'TOP_TSH 티셔츠' },
+  { code: 'TOP_SHT', label: 'TOP_SHT 셔츠' },
+  { code: 'TOP_HOD', label: 'TOP_HOD 후드' },
+];
+const BOTTOM_OPTIONS = [
+  { code: 'BTM_DNM', label: 'BTM_DNM 데님' },
+  { code: 'BTM_SLK', label: 'BTM_SLK 슬랙스' },
+  { code: 'BTM_SKT', label: 'BTM_SKT 스커트' },
+  { code: 'BTM_LGG', label: 'BTM_LGG 레깅스' },
+];
+const SEASON_OPTIONS = [
+  { code: 'SS', label: 'SS 봄/여름' },
+  { code: 'FW', label: 'FW 가을/겨울' },
+];
+// 의상 룩 → 헤어/메이크업/액세서리 자동 연동 매핑(초안 기본값)
+const LOOK_AUTO_LINK = {
+  LK_CS: { hr: 'HR_DN 다운스타일', mk: 'MK_WN 웜톤 메이크업', ac: 'AC_SC 목도리' },
+  LK_FM: { hr: 'HR_UP 업스타일',   mk: 'MK_CL 클래식 메이크업', ac: 'AC_EL 이어링' },
+  LK_AT: { hr: 'HR_PO 포니테일',   mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
+  LK_HM: { hr: 'HR_DN 다운스타일', mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
+};
+
+const DEMO_CANDIDATES = [
+  { icon: '🧠', title: '회의가 끝나면 기억이 안 나는 이유', type: 'LF', keywords: 'PSY · 트렌드레이더 수집', story: '', script: '' },
+  { icon: '😴', title: '한국인이 번아웃을 모르는 이유', type: 'SF', keywords: 'PSY · SOC · 직접 기획', story: '', script: '' },
+  { icon: '📱', title: '숏폼을 보고 나면 왜 공허할까', type: 'SF', keywords: 'PSY · LIF · 트렌드레이더 수집', story: '', script: '' },
+];
+
+const DEMO_CUTS = [
+  { num: 'C01', type: 'YR_VD', typeClass: 't-yr', status: 'done' },
+  { num: 'C02', type: 'BR_',   typeClass: 't-br', status: 'done' },
+  { num: 'C03', type: 'YR_VD', typeClass: 't-yr', status: 'wip' },
+  { num: 'C04', type: 'GR_',   typeClass: 't-gr', status: 'tbd' },
+  { num: 'C05', type: 'YR_VD', typeClass: 't-yr', status: 'tbd' },
+];
+
+// ── 상태 ─────────────────────────────────────────────────────
+let candidatePool = [...DEMO_CANDIDATES];
+let currentCutIndex = 2; // C03 활성(데모 기본값)
+
+const state = {
+  selectedCandidateIdx: 0,
+  platform: 'SF',
+  topic: 'PSY',
+  scenario: 'MYS',
+  epId: '',
+  look: 'LK_CS',
+  top: 'TOP_KNT',
+  bottom: 'BTM_DNM',
+  season: 'FW',
+};
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+}
+
+function showToast(msg='✓ 저장됐어요') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── 탭 ─────────────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).style.display = 'block';
+  btn.classList.add('active');
+}
+
+// ── 후보 풀 ─────────────────────────────────────────────────────
+async function loadFromCandidatePool() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/candidates`);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.candidates) && data.candidates.length) {
+      candidatePool = data.candidates.map(c => ({
+        icon: '📦',
+        title: c.title || '(제목 없음)',
+        type: c.type || 'SF',
+        keywords: c.keywords || '',
+        story: c.story || '',
+        script: c.script || '',
+      }));
+      state.selectedCandidateIdx = 0;
+      showToast('✓ 후보 풀에서 불러왔어요 (' + candidatePool.length + '건)');
+    } else {
+      showToast('⚠️ 후보 풀에 데이터가 없어요 — 데모 데이터를 유지합니다');
+    }
+  } catch (e) {
+    showToast('⚠️ 후보 풀 연결 실패 — 데모 데이터를 유지합니다');
+  }
+  renderAll();
+}
+
+function selectCandidate(idx) {
+  state.selectedCandidateIdx = idx;
+  const cand = candidatePool[idx];
+  if (cand && PLATFORM_OPTIONS.some(p => p.code === cand.type)) {
+    state.platform = cand.type;
+  }
+  renderAll();
+}
+
+function renderStoryCards() {
+  const el = document.getElementById('story-card-list');
+  if (!candidatePool.length) {
+    el.innerHTML = '<div class="story-empty">표시할 후보가 없어요. "후보 풀에서 불러오기"를 눌러보세요.</div>';
+    return;
+  }
+  el.innerHTML = candidatePool.map((c, i) => {
+    const on = i === state.selectedCandidateIdx;
+    const summary = [c.keywords, c.story ? c.story.slice(0, 40) + (c.story.length > 40 ? '…' : '') : '', c.script ? '대본 있음' : '']
+      .filter(Boolean).join(' · ');
+    return `
+    <div class="story-card ${on ? 'on' : ''}" onclick="selectCandidate(${i})">
+      <div class="story-icon">${c.icon || '📦'}</div>
+      <div>
+        <div class="story-title">${escapeHtml(c.title)}</div>
+        <div class="story-tag">${escapeHtml(c.type)}${summary ? ' · ' + escapeHtml(summary) : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 필 그룹 렌더링 ─────────────────────────────────────────────────────
+function renderPillGroup(containerId, options, stateKey, className) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(o => {
+    const on = state[stateKey] === o.code;
+    return `<div class="pill ${on ? (className || 'on') : ''}" onclick="setState('${stateKey}','${o.code}')">${escapeHtml(o.label)}</div>`;
+  }).join('');
+}
+
+function setState(key, value) {
+  state[key] = value;
+  renderAll();
+}
+
+// ── 에피소드 ID 자동생성 ─────────────────────────────────────────────────────
+function autoGenEpId() {
+  state.epId = `${state.platform}_E01_${state.topic}`;
+  renderAll();
+}
+
+// ── 컷 목록 ─────────────────────────────────────────────────────
+function renderCutList() {
+  const el = document.getElementById('cut-list');
+  el.innerHTML = DEMO_CUTS.map((c, i) => `
+    <div class="cut-item ${i === currentCutIndex ? 'active' : ''}" onclick="currentCutIndex=${i}; renderAll()">
+      <span class="cut-num">${c.num}</span>
+      <span class="cut-type ${c.typeClass}">${c.type}</span>
+      <span class="cut-dot d-${c.status}"></span>
+    </div>`).join('');
+  document.getElementById('tb-cut-pos').textContent = `${DEMO_CUTS[currentCutIndex].num}/${String(DEMO_CUTS.length).padStart(2,'0')}`;
+  document.getElementById('bb-info').textContent = `${DEMO_CUTS[currentCutIndex].num} · 에피소드 설정 진행 중`;
+}
+
+function moveCut(dir) {
+  currentCutIndex = Math.min(DEMO_CUTS.length - 1, Math.max(0, currentCutIndex + dir));
+  renderAll();
+}
+
+// ── 코드 프리뷰 / 자동연동 / 완성도 ─────────────────────────────────────────────────────
+function renderCodePreview() {
+  const cand = candidatePool[state.selectedCandidateIdx];
+  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
+  const title = cand ? cand.title : '(후보 미선택)';
+
+  const html = `<span class="cp-m">## A군 식별</span>
+<span class="cp-a">${escapeHtml(epId)}</span> <span class="cp-m">← ${escapeHtml(title)}</span>
+<span class="cp-m">## A군 기획</span>
+<span class="cp-b">TOPIC.${state.topic}</span> :: <span class="cp-b">SCN.${state.scenario}</span>
+<span class="cp-m">## D군 캐릭터 기본값</span>
+<span class="cp-d">${state.look}.${state.top}.${state.bottom}.${state.season}</span>
+<span class="cp-d">${link.hr.split(' ')[0]} + ${link.mk.split(' ')[0]} + ${link.ac.split(' ')[0]}</span> <span class="cp-m">← 자동연동</span>`;
+
+  document.getElementById('code-preview').innerHTML = html;
+  document.getElementById('tb-ep-id').textContent = epId;
+  document.getElementById('sb-ep-current').textContent = epId;
+  document.getElementById('ref-fs-code').textContent = `FS_${epId.split('_').slice(0,2).join('_')}`;
+}
+
+function renderAutoLink() {
+  const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
+  document.getElementById('auto-link-box').innerHTML = `
+    <span class="auto-check">✓</span> ${escapeHtml(link.hr)}<br>
+    <span class="auto-check">✓</span> ${escapeHtml(link.mk)}<br>
+    <span class="auto-check">✓</span> ${escapeHtml(link.ac)}<br>
+    <span class="auto-note">${state.season} 시즌 자동 연동</span>`;
+}
+
+function computeProgress() {
+  const fields = [state.platform, state.topic, state.scenario, state.epId, state.look, state.top, state.bottom, state.season];
+  const filled = fields.filter(Boolean).length;
+  const candBonus = candidatePool[state.selectedCandidateIdx] ? 1 : 0;
+  return Math.round(((filled + candBonus) / (fields.length + 1)) * 100);
+}
+
+function renderProgress() {
+  const pct = computeProgress();
+  const el = document.getElementById('tb-progress');
+  el.textContent = pct + '%';
+  el.style.color = pct >= 80 ? 'var(--teal)' : pct >= 40 ? 'var(--scarlet-light)' : 'var(--text3)';
+}
+
+// ── 패키지 생성 (초안 스텁) ─────────────────────────────────────────────────────
+function generatePackage() {
+  showToast('📦 패키지 탭은 다음 버전에서 구현될 예정이에요');
+}
+
+// ── 전체 렌더 ─────────────────────────────────────────────────────
+function renderAll() {
+  renderStoryCards();
+  renderPillGroup('pills-platform', PLATFORM_OPTIONS, 'platform', 'on');
+  renderPillGroup('pills-topic', TOPIC_OPTIONS, 'topic', 'on');
+  renderPillGroup('pills-scenario', SCENARIO_OPTIONS, 'scenario', 'on-o');
+  renderPillGroup('pills-look', LOOK_OPTIONS, 'look', 'on');
+  renderPillGroup('pills-top', TOP_OPTIONS, 'top', 'on');
+  renderPillGroup('pills-bottom', BOTTOM_OPTIONS, 'bottom', 'on');
+  renderPillGroup('pills-season', SEASON_OPTIONS, 'season', 'on');
+  renderAutoLink();
+  renderCodePreview();
+  renderCutList();
+  renderProgress();
+
+  const epIdInput = document.getElementById('ep-id-input');
+  if (document.activeElement !== epIdInput) {
+    epIdInput.value = state.epId || `${state.platform}_E01_${state.topic}`;
+  }
+}
+
+renderAll();
+</script>
+
+</body>
+</html>
