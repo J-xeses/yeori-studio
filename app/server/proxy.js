@@ -1996,6 +1996,24 @@ const CANDIDATE_FLOW_TYPE_LABEL = {
   IG_P: 'IG_P — 인스타 피드', IG_S: 'IG_S — 인스타 스토리', TK: 'TK — 틱톡',
 }
 
+// STEP1~4 각 호출이 서로 독립된 Claude API 요청(대화 맥락 공유 안 됨)이라
+// 매 단계 프롬프트에 이 컨텍스트를 반복 포함시켜야 한다. "SF"를 콘텐츠 유형이
+// 아닌 공상과학(Science Fiction) 장르로 오인해 미래도시/홀로그램/평행우주 같은
+// 소재를 생성하는 문제가 실제로 발생해 명시적 금지 문구를 추가함.
+const YEORI_CHANNEL_CONTEXT = `서여리는 20대 한국 여성 컨셉의 AI 버추얼 인플루언서로, 친근하고 공감가는 "일상 감성 채널"입니다.
+
+※ 매우 중요: 여기서 "SF"는 콘텐츠 포맷 분류인 "숏폼(Short Form, 짧은 영상)"의 약자일 뿐이며, 공상과학(Science Fiction) 장르와는 절대 무관합니다. 미래 도시, 홀로그램, 평행우주, 타임리프, AI 로봇, 우주 탐험, 사이버펑크 등 SF(공상과학) 소재는 이 채널과 전혀 맞지 않으니 절대 사용하지 마세요.
+
+서여리 채널은 현실적인 20대 여성의 일상과 감정을 다루며, 참고할 톤/분위기 예시는 다음과 같습니다(아래 항목 중 하나를 그대로 고르라는 뜻이 아니라 분위기 참고용입니다):
+- 연애 / 짝사랑 / 이별
+- 친구관계 / 외로움
+- 취업 / 자기계발
+- 일상 속 소소한 공감
+- 감정 정리 / 힐링
+- MZ세대 트렌드 공감
+
+당신은 지금 사용자와 대화하는 것이 아니라, 자동 콘텐츠 생성 파이프라인의 한 단계로 동작하고 있습니다. 이 요청에는 사람이 실시간으로 응답할 수 없으므로, 정보가 부족하다고 느껴지더라도 절대 되묻거나 추가 정보를 요청하지 말고, 주어진 내용만으로 완전히 새로운 구체적인 에피소드를 스스로 창작해 최종 결과물만 출력하세요.`
+
 async function callClaudeText(prompt, maxTokens = 512) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -2035,25 +2053,25 @@ app.post('/api/generate-candidate-flow', async (req, res) => {
 
   try {
     const keywords = await callClaudeText(
-      `서여리(20대 한국 여성 AI 버추얼 인플루언서) 채널의 새 에피소드 후보를 기획합니다.\n콘텐츠 유형: ${typeLabel}\n\n이 유형에 어울리는 핵심 키워드를 5~8개, 쉼표로 구분해서만 출력하세요. 다른 설명은 하지 마세요.`,
+      `${YEORI_CHANNEL_CONTEXT}\n\n새 에피소드 후보를 기획합니다.\n콘텐츠 유형: ${typeLabel}\n\n이 유형에 어울리는 핵심 키워드를 5~8개, 쉼표로 구분해서만 출력하세요. 다른 설명은 하지 마세요.`,
       200
     )
     send({ step: 'step1', label: '키워드 수집', value: keywords })
 
     const topic = await callClaudeText(
-      `핵심 키워드: ${keywords}\n\n위 키워드를 바탕으로 이 에피소드가 다룰 핵심 주제를 2~3문장으로 요약하세요. 서여리 채널 톤(친근하고 공감가는 20대 여성 관점)에 맞게 작성하고, 다른 설명 없이 요약문만 출력하세요.`,
+      `${YEORI_CHANNEL_CONTEXT}\n\n핵심 키워드: ${keywords}\n\n위 키워드들을 조합해서 완전히 새로운 에피소드 하나를 직접 창작하고, 그 핵심 주제를 2~3문장으로 작성하세요. 서여리 채널 톤(친근하고 공감가는 20대 여성 관점)에 맞게 작성하고, 다른 설명 없이 요약문만 출력하세요.`,
       300
     )
     send({ step: 'step2', label: '주제 설정', value: topic })
 
     const story = await callClaudeText(
-      `핵심 키워드: ${keywords}\n주제 요약: ${topic}\n\n위 내용을 바탕으로 3막 구조(사건→감정변화→선택) 기준 스토리 기획을 3~5문장으로 작성하세요. 다른 설명 없이 기획 내용만 출력하세요.`,
+      `${YEORI_CHANNEL_CONTEXT}\n\n핵심 키워드: ${keywords}\n주제 요약: ${topic}\n\n위 내용을 바탕으로 이어지는 3막 구조(사건→감정변화→선택) 기준 스토리 기획을 직접 창작해 3~5문장으로 작성하세요. 다른 설명 없이 기획 내용만 출력하세요.`,
       400
     )
     send({ step: 'step3', label: '에피소드 기획', value: story })
 
     const scriptRaw = await callClaudeText(
-      `핵심 키워드: ${keywords}\n주제 요약: ${topic}\n스토리 기획: ${story}\n\n위 내용을 바탕으로 서여리 채널의 [CUT] 포맷 한글 대본 초안을 3~5개 컷으로 작성하세요. 각 컷은 씬/액션/대사 또는 나레이션을 포함하세요.\n\n반드시 첫 줄에 "제목: <에피소드 제목>" 형식으로 제목을 먼저 출력하고, 그 다음 줄부터 대본을 출력하세요.`,
+      `${YEORI_CHANNEL_CONTEXT}\n\n핵심 키워드: ${keywords}\n주제 요약: ${topic}\n스토리 기획: ${story}\n\n위 내용을 바탕으로 서여리 채널의 [CUT] 포맷 한글 대본 초안을 3~5개 컷으로 작성하세요. 각 컷은 씬/액션/대사 또는 나레이션을 포함하세요.\n\n반드시 첫 줄에 "제목: <에피소드 제목>" 형식으로 제목을 먼저 출력하고, 그 다음 줄부터 대본을 출력하세요.`,
       1024
     )
     const titleMatch = scriptRaw.match(/^제목:\s*(.+)$/m)
