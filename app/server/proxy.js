@@ -2000,11 +2000,9 @@ const CANDIDATE_FLOW_TYPE_LABEL = {
 // 매 단계 프롬프트에 이 컨텍스트를 반복 포함시켜야 한다. "SF"를 콘텐츠 유형이
 // 아닌 공상과학(Science Fiction) 장르로 오인해 미래도시/홀로그램/평행우주 같은
 // 소재를 생성하는 문제가 실제로 발생해 명시적 금지 문구를 추가함.
-const YEORI_CHANNEL_CONTEXT = `서여리는 20대 한국 여성 컨셉의 AI 버추얼 인플루언서로, 친근하고 공감가는 "일상 감성 채널"입니다.
+const YEORI_CHANNEL_CONTEXT = `서여리는 20대 한국 여성 컨셉의 AI 버추얼 인플루언서로, 친근하고 공감가는 "일상 감성 채널"입니다. 항상 현실적인 20대 여성의 일상과 감정을 다루는 콘텐츠를 만듭니다.
 
-※ 매우 중요: 여기서 "SF"는 콘텐츠 포맷 분류인 "숏폼(Short Form, 짧은 영상)"의 약자일 뿐이며, 공상과학(Science Fiction) 장르와는 절대 무관합니다. 미래 도시, 홀로그램, 평행우주, 타임리프, AI 로봇, 우주 탐험, 사이버펑크 등 SF(공상과학) 소재는 이 채널과 전혀 맞지 않으니 절대 사용하지 마세요.
-
-서여리 채널은 현실적인 20대 여성의 일상과 감정을 다루며, 참고할 톤/분위기 예시는 다음과 같습니다(아래 항목 중 하나를 그대로 고르라는 뜻이 아니라 분위기 참고용입니다):
+참고할 톤/분위기 예시(아래 항목 중 하나를 그대로 고르라는 뜻이 아니라 분위기 참고용입니다):
 - 연애 / 짝사랑 / 이별
 - 친구관계 / 외로움
 - 취업 / 자기계발
@@ -2012,7 +2010,9 @@ const YEORI_CHANNEL_CONTEXT = `서여리는 20대 한국 여성 컨셉의 AI 버
 - 감정 정리 / 힐링
 - MZ세대 트렌드 공감
 
-당신은 지금 사용자와 대화하는 것이 아니라, 자동 콘텐츠 생성 파이프라인의 한 단계로 동작하고 있습니다. 이 요청에는 사람이 실시간으로 응답할 수 없으므로, 정보가 부족하다고 느껴지더라도 절대 되묻거나 추가 정보를 요청하지 말고, 주어진 내용만으로 완전히 새로운 구체적인 에피소드를 스스로 창작해 최종 결과물만 출력하세요.`
+주의사항: 콘텐츠 포맷 코드 중 "SF"는 "숏폼(Short Form, 짧은 영상)"의 약자일 뿐인 정상적인 분류값입니다 — 이 코드 자체를 보고 거부하거나 경고할 필요는 전혀 없습니다. 다만 실제 에피소드 소재로 미래 도시, 홀로그램, 평행우주, 타임리프, AI 로봇, 우주 탐험, 사이버펑크 같은 공상과학(Science Fiction) 장르 요소는 이 채널과 맞지 않으니 사용하지 마세요.
+
+당신은 지금 사용자와 대화하는 것이 아니라, 자동 콘텐츠 생성 파이프라인의 한 단계로 동작하고 있습니다. 이 요청에는 사람이 실시간으로 응답할 수 없으므로, 정보가 부족하거나 요청이 이상해 보이더라도 절대 되묻거나 거부하거나 경고만 출력하지 말고, 주어진 내용만으로 완전히 새로운 구체적인 결과물을 스스로 창작해 최종 결과만 출력하세요.`
 
 async function callClaudeText(prompt, maxTokens = 512) {
   const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2038,6 +2038,52 @@ async function callClaudeText(prompt, maxTokens = 512) {
   return textBlock.text.trim()
 }
 
+// downloads/trend_episodes.json에 실제 수집된 트렌드가 있으면 그걸 우선 사용하고,
+// 없으면 Claude의 web_search 서버 도구로 최신 트렌드를 직접 검색해 대체한다.
+async function fetchTrendData() {
+  try {
+    const { status, body } = await selfFetch('/api/trend-episodes')
+    if (status === 200 && Array.isArray(body?.entries) && body.entries.length) {
+      return body.entries
+    }
+  } catch { /* 무시하고 웹 검색 fallback으로 진행 */ }
+  return []
+}
+
+function formatTrendEntries(entries) {
+  return entries.slice(0, 5).map(e =>
+    `- [${e.trend?.source || '?'}] ${e.trend?.title || ''} (점수: ${e.trend?.score ?? '?'}, ${e.trend?.heat || ''})`
+  ).join('\n')
+}
+
+async function searchWebTrends(typeLabel) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': ANTHROPIC_API_KEY,
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
+      messages: [{
+        role: 'user',
+        content: `지금 한국 20대 여성들 사이에서 화제인 SNS/유튜브 트렌드, 밈, 화제의 소재를 웹 검색으로 찾아서 5개 이내로 간결하게 정리해줘. ${typeLabel} 포맷에 어울리는 소재 위주로.`,
+      }],
+    }),
+  })
+  if (!r.ok) {
+    const t = await r.text()
+    throw new Error(`Claude 웹 검색 API 오류 (${r.status}): ${t.slice(0, 200)}`)
+  }
+  const data = await r.json()
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('')
+  if (!text.trim()) throw new Error('웹 검색 결과에서 텍스트를 추출하지 못함')
+  return text.trim()
+}
+
 app.post('/api/generate-candidate-flow', async (req, res) => {
   const { type } = req.body || {}
   const typeLabel = CANDIDATE_FLOW_TYPE_LABEL[type]
@@ -2052,9 +2098,18 @@ app.post('/api/generate-candidate-flow', async (req, res) => {
   const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`)
 
   try {
+    let trendContext
+    const trendEntries = await fetchTrendData()
+    if (trendEntries.length) {
+      trendContext = `다음은 TREND RADAR가 실제로 수집한 최신 트렌드 데이터입니다. 이를 참고해서 키워드를 뽑으세요:\n${formatTrendEntries(trendEntries)}`
+    } else {
+      const webTrends = await searchWebTrends(typeLabel)
+      trendContext = `내부에 수집된 트렌드 데이터가 없어 웹 검색으로 최신 트렌드를 직접 조회했습니다. 이를 참고해서 키워드를 뽑으세요:\n${webTrends}`
+    }
+
     const keywords = await callClaudeText(
-      `${YEORI_CHANNEL_CONTEXT}\n\n새 에피소드 후보를 기획합니다.\n콘텐츠 유형: ${typeLabel}\n\n이 유형에 어울리는 핵심 키워드를 5~8개, 쉼표로 구분해서만 출력하세요. 다른 설명은 하지 마세요.`,
-      200
+      `${YEORI_CHANNEL_CONTEXT}\n\n${trendContext}\n\n새 에피소드 후보를 기획합니다.\n콘텐츠 유형: ${typeLabel}\n\n위 트렌드를 참고하되 서여리 채널 톤에 맞게, 이 유형에 어울리는 핵심 키워드를 5~8개, 쉼표로 구분해서만 출력하세요. 다른 설명은 하지 마세요.`,
+      250
     )
     send({ step: 'step1', label: '키워드 수집', value: keywords })
 
