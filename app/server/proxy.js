@@ -1894,6 +1894,89 @@ JSON 배열만 출력하고 다른 텍스트는 포함하지 마세요:
   }
 })
 
+// ── POST /api/generate-candidate-flow — 후보 풀 STEP1~4 자동 생성(SSE) ──
+// content_matrix_v3.html의 "🤖 자동 플로우 실행" 버튼이 호출. 콘텐츠 유형 하나를
+// 받아 키워드→주제→스토리→대본을 순서대로 Claude에게 생성시키고, 각 단계가 끝날
+// 때마다 SSE로 진행상황을 흘려보낸다. Notion 저장은 프론트가 완료 이벤트를 받은
+// 뒤 기존 /api/candidates 엔드포인트로 별도 수행한다.
+const CANDIDATE_FLOW_TYPE_LABEL = {
+  SF: 'SF — 유튜브 숏폼', LF: 'LF — 유튜브 롱폼', IG_R: 'IG_R — 인스타 릴스',
+  IG_P: 'IG_P — 인스타 피드', IG_S: 'IG_S — 인스타 스토리', TK: 'TK — 틱톡',
+}
+
+async function callClaudeText(prompt, maxTokens = 512) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': ANTHROPIC_API_KEY,
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  })
+  if (!r.ok) {
+    const t = await r.text()
+    throw new Error(`Claude API 오류 (${r.status}): ${t.slice(0, 200)}`)
+  }
+  const data = await r.json()
+  const textBlock = (data.content || []).find(b => b.type === 'text')
+  if (!textBlock) throw new Error('Claude 응답에 text 블록 없음')
+  return textBlock.text.trim()
+}
+
+app.post('/api/generate-candidate-flow', async (req, res) => {
+  const { type } = req.body || {}
+  const typeLabel = CANDIDATE_FLOW_TYPE_LABEL[type]
+  if (!typeLabel) return res.status(400).json({ error: '유효하지 않은 콘텐츠 유형' })
+  if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY 미설정 (.env.local 확인)' })
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+  })
+  const send = (obj) => res.write(`data: ${JSON.stringify(obj)}\n\n`)
+
+  try {
+    const keywords = await callClaudeText(
+      `서여리(20대 한국 여성 AI 버추얼 인플루언서) 채널의 새 에피소드 후보를 기획합니다.\n콘텐츠 유형: ${typeLabel}\n\n이 유형에 어울리는 핵심 키워드를 5~8개, 쉼표로 구분해서만 출력하세요. 다른 설명은 하지 마세요.`,
+      200
+    )
+    send({ step: 'step1', label: '키워드 수집', value: keywords })
+
+    const topic = await callClaudeText(
+      `핵심 키워드: ${keywords}\n\n위 키워드를 바탕으로 이 에피소드가 다룰 핵심 주제를 2~3문장으로 요약하세요. 서여리 채널 톤(친근하고 공감가는 20대 여성 관점)에 맞게 작성하고, 다른 설명 없이 요약문만 출력하세요.`,
+      300
+    )
+    send({ step: 'step2', label: '주제 설정', value: topic })
+
+    const story = await callClaudeText(
+      `핵심 키워드: ${keywords}\n주제 요약: ${topic}\n\n위 내용을 바탕으로 3막 구조(사건→감정변화→선택) 기준 스토리 기획을 3~5문장으로 작성하세요. 다른 설명 없이 기획 내용만 출력하세요.`,
+      400
+    )
+    send({ step: 'step3', label: '에피소드 기획', value: story })
+
+    const scriptRaw = await callClaudeText(
+      `핵심 키워드: ${keywords}\n주제 요약: ${topic}\n스토리 기획: ${story}\n\n위 내용을 바탕으로 서여리 채널의 [CUT] 포맷 한글 대본 초안을 3~5개 컷으로 작성하세요. 각 컷은 씬/액션/대사 또는 나레이션을 포함하세요.\n\n반드시 첫 줄에 "제목: <에피소드 제목>" 형식으로 제목을 먼저 출력하고, 그 다음 줄부터 대본을 출력하세요.`,
+      1024
+    )
+    const titleMatch = scriptRaw.match(/^제목:\s*(.+)$/m)
+    const title = titleMatch ? titleMatch[1].trim() : `${typeLabel} 자동 생성 에피소드`
+    const script = titleMatch ? scriptRaw.slice(titleMatch.index + titleMatch[0].length).trim() : scriptRaw
+    send({ step: 'step4', label: '한글 대본', value: script, title })
+
+    send({ step: 'complete' })
+  } catch (err) {
+    console.error('[generate-candidate-flow]', err.message)
+    send({ step: 'error', message: err.message })
+  }
+  res.end()
+})
+
 // ── BGM 레이더 — Chosic.com 무료 BGM 검색 + 다운로드 ──────────────
 // Bensound는 현재 완전 유료 카탈로그(라이선스 구매 필요)로 전환되어 있어
 // 자동 다운로드 대상에서 제외한다. Chosic은 CC BY 4.0(크레딧 표기 조건) 무료

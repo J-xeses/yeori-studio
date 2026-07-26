@@ -373,6 +373,10 @@
   .candidate-checklist-item.checked { color: var(--teal); }
   .candidate-checklist-check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
   .candidate-checklist-item.checked .candidate-checklist-check { background: var(--teal-bg); border-color: rgba(52,211,153,0.4); color: var(--teal); }
+
+  .candidate-flow-step { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--surface2); margin-bottom: 4px; font-size: 11px; color: var(--text2); }
+  .candidate-flow-step.done { color: var(--teal); }
+  .candidate-flow-step.error { color: var(--red); }
 </style>
 </head>
 <body>
@@ -488,7 +492,8 @@
           <div class="candidate-stat-mini-grid" id="candidate-type-stats"></div>
           <div class="candidate-stat-mini-grid" id="candidate-stage-stats" style="margin-bottom:12px"></div>
 
-          <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:10px" onclick="addCandidateCard()">+ 후보 추가</button>
+          <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:8px" onclick="addCandidateCard()">+ 후보 추가</button>
+          <button class="btn-cancel" style="width:100%;justify-content:center;margin-bottom:10px" onclick="openCandidateFlowModal()">🤖 자동 플로우 실행</button>
 
           <div class="candidate-side-title" style="margin-bottom:6px">후보 목록 <span class="candidate-count-badge" id="candidate-list-count">0</span></div>
           <div class="candidate-list-body" id="candidate-list-body"></div>
@@ -510,6 +515,11 @@
               </select>
               <select class="form-select" id="cand-f-stage" onchange="onCandidateFieldChange('stage', this.value)"></select>
               <select class="form-select" id="cand-f-source" onchange="onCandidateFieldChange('source', this.value)"></select>
+            </div>
+
+            <div class="candidate-detail-section" id="candidate-flow-progress" style="display:none">
+              <label class="form-label">🤖 자동 플로우 진행상황</label>
+              <div id="candidate-flow-steps"></div>
             </div>
 
             <div class="candidate-split-columns">
@@ -1273,6 +1283,25 @@
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeVideoCutModal()">취소</button>
       <button class="btn-save" onclick="confirmVideoCut()">확인 · 생성 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- 후보 풀 자동 플로우 — 콘텐츠 유형 선택 모달 -->
+<div class="modal-overlay" id="candidate-flow-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">🤖 자동 플로우 실행</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:14px">콘텐츠 유형을 선택하면 STEP1~4(키워드 수집 → 주제 설정 → 에피소드 기획 → 한글 대본)를 자동으로 진행합니다.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn-cancel" onclick="startCandidateAutoFlow('SF')">SF — 유튜브 숏폼</button>
+      <button class="btn-cancel" onclick="startCandidateAutoFlow('LF')">LF — 유튜브 롱폼</button>
+      <button class="btn-cancel" onclick="startCandidateAutoFlow('IG_R')">IG_R — 인스타 릴스</button>
+      <button class="btn-cancel" onclick="startCandidateAutoFlow('IG_P')">IG_P — 인스타 피드</button>
+      <button class="btn-cancel" onclick="startCandidateAutoFlow('IG_S')">IG_S — 인스타 스토리</button>
+      <button class="btn-cancel" onclick="startCandidateAutoFlow('TK')">TK — 틱톡</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeCandidateFlowModal()">취소</button>
     </div>
   </div>
 </div>
@@ -3385,6 +3414,125 @@ function addCandidateCard() {
   renderCandidateTab();
   const titleEl = document.getElementById('cand-f-title');
   if (titleEl) titleEl.focus();
+}
+
+// ── 🤖 후보 풀 자동 플로우 (STEP1~4 자동 생성) ──────────────────────
+const CANDIDATE_FLOW_STEPS = [
+  { key: 'step1', label: 'STEP1 키워드 수집' },
+  { key: 'step2', label: 'STEP2 주제 설정' },
+  { key: 'step3', label: 'STEP3 에피소드 기획' },
+  { key: 'step4', label: 'STEP4 한글 대본 작성' },
+];
+
+function openCandidateFlowModal() {
+  document.getElementById('candidate-flow-modal').classList.add('open');
+}
+
+function closeCandidateFlowModal() {
+  document.getElementById('candidate-flow-modal').classList.remove('open');
+}
+
+function renderCandidateFlowSteps(activeStep) {
+  const el = document.getElementById('candidate-flow-steps'); if (!el) return;
+  const activeIdx = activeStep === null ? CANDIDATE_FLOW_STEPS.length : CANDIDATE_FLOW_STEPS.findIndex(s => s.key === activeStep);
+  el.innerHTML = CANDIDATE_FLOW_STEPS.map((s, i) => {
+    const cls = i < activeIdx ? 'done' : '';
+    const icon = i < activeIdx ? '✅' : (i === activeIdx ? '⏳' : '⬜');
+    const suffix = i === activeIdx ? ' 중...' : (i < activeIdx ? ' 완료' : '');
+    return `<div class="candidate-flow-step ${cls}" data-step="${s.key}">${icon} ${s.label}${suffix}</div>`;
+  }).join('');
+}
+
+async function startCandidateAutoFlow(type) {
+  closeCandidateFlowModal();
+
+  const cand = {
+    id: 'cand_'+uid(), notionPageId: null,
+    title: '(자동 생성 중...)', type, stage: 'step1', source: '자동 플로우',
+    keywords: '', topic: '', story: '', script: '', memo: '',
+    checklist: {},
+  };
+  candidatePool.unshift(cand);
+  candidateFilterType = 'all';
+  candidateFilterStage = 'all';
+  currentCandidateId = cand.id;
+  renderCandidateTab();
+
+  const progressWrap = document.getElementById('candidate-flow-progress');
+  progressWrap.style.display = '';
+  renderCandidateFlowSteps('step1');
+  showToast('🤖 자동 플로우 시작됨');
+
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/generate-candidate-flow`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type }),
+    });
+    if (!res.ok || !res.body) throw new Error(`서버 응답 오류 (${res.status})`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) !== -1) {
+        const chunk = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        const line = chunk.split('\n').find(l => l.startsWith('data: '));
+        if (!line) continue;
+        const evt = JSON.parse(line.slice(6));
+        handleCandidateFlowEvent(cand, evt);
+      }
+    }
+  } catch (e) {
+    showToast('⚠️ 자동 플로우 실패: ' + e.message);
+    const stepsEl = document.getElementById('candidate-flow-steps');
+    if (stepsEl) stepsEl.innerHTML += `<div class="candidate-flow-step error">❌ ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function handleCandidateFlowEvent(cand, evt) {
+  if (evt.step === 'error') {
+    showToast('⚠️ 자동 플로우 실패: ' + evt.message);
+    const stepsEl = document.getElementById('candidate-flow-steps');
+    if (stepsEl) stepsEl.innerHTML += `<div class="candidate-flow-step error">❌ ${escapeHtml(evt.message)}</div>`;
+    return;
+  }
+
+  if (evt.step === 'complete') {
+    cand.stage = 'step4';
+    saveCandidatesLocal();
+    syncCandidateToNotion(cand);
+    showToast('✅ 자동 플로우 완료 — Notion에 저장됨');
+    const progressWrap = document.getElementById('candidate-flow-progress');
+    if (progressWrap) progressWrap.style.display = 'none';
+    renderCandidateTab();
+    return;
+  }
+
+  if (evt.step === 'step1') cand.keywords = evt.value;
+  if (evt.step === 'step2') cand.topic = evt.value;
+  if (evt.step === 'step3') cand.story = evt.value;
+  if (evt.step === 'step4') { cand.script = evt.value; cand.title = evt.title || cand.title; }
+
+  cand.stage = evt.step;
+  const nextIdx = CANDIDATE_FLOW_STEPS.findIndex(s => s.key === evt.step) + 1;
+  renderCandidateFlowSteps(nextIdx < CANDIDATE_FLOW_STEPS.length ? CANDIDATE_FLOW_STEPS[nextIdx].key : null);
+
+  saveCandidatesLocal();
+  renderCandidateList();
+  renderCandidateStageStats();
+  if (currentCandidateId === cand.id) {
+    document.getElementById('cand-f-title').value = cand.title || '';
+    document.getElementById('cand-f-keywords').value = cand.keywords || '';
+    document.getElementById('cand-f-topic').value = cand.topic || '';
+    document.getElementById('cand-f-story').value = cand.story || '';
+    document.getElementById('cand-f-script').value = cand.script || '';
+    refreshCandidateStageUI(cand);
+  }
 }
 
 loadData();
