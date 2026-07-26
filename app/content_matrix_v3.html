@@ -368,11 +368,13 @@
 
   .candidate-checklist-group { margin-bottom: 10px; }
   .candidate-checklist-group-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-  .candidate-checklist-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: var(--radius-sm); background: var(--surface2); margin-bottom: 4px; font-size: 11px; cursor: pointer; transition: background 0.1s; }
+  .candidate-checklist-item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: var(--radius-sm); background: var(--surface2); margin-bottom: 4px; font-size: 11px; cursor: pointer; transition: background 0.1s; color: var(--text2); }
   .candidate-checklist-item:hover { background: var(--surface3); }
-  .candidate-checklist-item.checked { color: var(--teal); }
-  .candidate-checklist-check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
-  .candidate-checklist-item.checked .candidate-checklist-check { background: var(--teal-bg); border-color: rgba(52,211,153,0.4); color: var(--teal); }
+  .candidate-checklist-item.state-no { color: var(--red); }
+  .candidate-checklist-item.state-partial { color: var(--amber); }
+  .candidate-checklist-item.state-full { color: var(--teal); }
+  .candidate-checklist-check { width: 16px; text-align: center; flex-shrink: 0; font-size: 11px; }
+  .candidate-checklist-state-label { font-size: 9px; color: var(--text3); flex-shrink: 0; }
 
   .candidate-flow-step { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); background: var(--surface2); margin-bottom: 4px; font-size: 11px; color: var(--text2); }
   .candidate-flow-step.done { color: var(--teal); }
@@ -1351,8 +1353,10 @@ const CANDIDATE_CHECKLIST = [
   {key:'script_msg',      agent:'script', label:'핵심메시지 명확'},
   {key:'script_3act',     agent:'script', label:'3막구조 있음'},
   {key:'script_tone',     agent:'script', label:'서여리 톤 맞음'},
+  {key:'script_emotion',  agent:'script', label:'감정흐름 자연스러움'},
   {key:'image_scene',     agent:'image',  label:'씬별 시각요소 있음'},
   {key:'image_setting',   agent:'image',  label:'의상·배경 설정 있음'},
+  {key:'image_mood',      agent:'image',  label:'색감·분위기 설정됨'},
   {key:'tts_emotion',     agent:'tts',    label:'감정톤 지정됨'},
   {key:'tts_length',      agent:'tts',    label:'대사길이 적절'},
   {key:'video_cut',       agent:'video',  label:'컷분할 가능'},
@@ -1366,6 +1370,20 @@ const CANDIDATE_AGENT_GROUPS = [
   {key:'tts',    icon:'🔊', label:'TTS'},
   {key:'video',  icon:'🎬', label:'영상'},
   {key:'edit',   icon:'✂️', label:'편집'},
+];
+const CANDIDATE_TYPE_EXTRA_ITEMS = {
+  SF:   [ {key:'sf_hook',       label:'훅 첫컷 있음'},        {key:'sf_duration',     label:'15~60초 완결'},       {key:'sf_noSubtitle', label:'자막없이 이해가능'} ],
+  LF:   [ {key:'lf_chapter',    label:'챕터구분 가능'},       {key:'lf_density',      label:'정보밀도 적절'},       {key:'lf_retention',  label:'중간이탈 방지장치'} ],
+  IG_R: [ {key:'igr_ratio',     label:'9:16구도 고려'},       {key:'igr_hook3s',      label:'첫3초 훅 있음'},       {key:'igr_musicsync', label:'음악싱크 포인트'} ],
+  IG_P: [ {key:'igp_thumbnail', label:'썸네일컷 있음'},       {key:'igp_textoverlay', label:'텍스트오버레이 계획'}, {key:'igp_carousel',  label:'캐러셀구성 가능'} ],
+  IG_S: [ {key:'igs_expire24h', label:'24시간 소멸 고려'},    {key:'igs_swipeup',     label:'스와이프업 유도'},     {key:'igs_sticker',   label:'스티커·인터랙션 요소'} ],
+  TK:   [ {key:'tk_trend',      label:'트렌드밈 요소'},       {key:'tk_comment',      label:'댓글유도 요소'},       {key:'tk_challenge',  label:'챌린지 연결 가능'} ],
+};
+const CANDIDATE_CHECK_STATES = [
+  { value:'',        icon:'⬜', label:'미확인' },
+  { value:'no',      icon:'❌', label:'미반영' },
+  { value:'partial', icon:'🟡', label:'부분반영' },
+  { value:'full',    icon:'✅', label:'충분반영' },
 ];
 
 let appData = {
@@ -3148,9 +3166,15 @@ async function archiveCandidateInNotion(pageId) {
 }
 
 function candidateProgress(cand) {
-  const total = CANDIDATE_CHECKLIST.length;
-  const checked = CANDIDATE_CHECKLIST.filter(it => cand.checklist?.[it.key]).length;
-  return { checked, total };
+  const items = [...CANDIDATE_CHECKLIST, ...(CANDIDATE_TYPE_EXTRA_ITEMS[cand.type] || [])];
+  const total = items.length;
+  let checked = 0;
+  items.forEach(it => {
+    const v = cand.checklist?.[it.key];
+    if (v === 'full') checked += 1;
+    else if (v === 'partial') checked += 0.5;
+  });
+  return { checked: Math.round(checked * 10) / 10, total };
 }
 
 function renderCandidateTab() {
@@ -3283,30 +3307,45 @@ function refreshCandidateStageUI(cand) {
   if (g1Btn) g1Btn.disabled = cand.stage !== 'approval';
 }
 
+function renderCandidateChecklistItem(cand, it) {
+  const status = cand.checklist?.[it.key] || '';
+  const state = CANDIDATE_CHECK_STATES.find(s => s.value === status) || CANDIDATE_CHECK_STATES[0];
+  return `
+  <div class="candidate-checklist-item state-${status||'none'}" onclick="toggleCandidateChecklistItem('${it.key}')">
+    <div class="candidate-checklist-check">${state.icon}</div>
+    <div style="flex:1">${it.label}</div>
+    <div class="candidate-checklist-state-label">${state.label}</div>
+  </div>`;
+}
+
 function renderCandidateChecklistUI(cand) {
   const el = document.getElementById('cand-checklist'); if (!el) return;
-  el.innerHTML = CANDIDATE_AGENT_GROUPS.map(g => {
+  const commonHtml = CANDIDATE_AGENT_GROUPS.map(g => {
     const items = CANDIDATE_CHECKLIST.filter(it => it.agent === g.key);
     return `
     <div class="candidate-checklist-group">
       <div class="candidate-checklist-group-title">${g.icon} ${g.label}</div>
-      ${items.map(it => {
-        const checked = !!cand.checklist?.[it.key];
-        return `
-        <div class="candidate-checklist-item ${checked?'checked':''}" onclick="toggleCandidateChecklistItem('${it.key}')">
-          <div class="candidate-checklist-check">${checked?'✓':''}</div>
-          <div>${it.label}</div>
-        </div>`;
-      }).join('')}
+      ${items.map(it => renderCandidateChecklistItem(cand, it)).join('')}
     </div>`;
   }).join('');
+
+  const extraItems = CANDIDATE_TYPE_EXTRA_ITEMS[cand.type] || [];
+  const extraHtml = extraItems.length ? `
+    <div class="candidate-checklist-group">
+      <div class="candidate-checklist-group-title">📌 ${cand.type} 전용 항목</div>
+      ${extraItems.map(it => renderCandidateChecklistItem(cand, it)).join('')}
+    </div>` : '';
+
+  el.innerHTML = commonHtml + extraHtml;
 }
 
 function toggleCandidateChecklistItem(key) {
   if (!currentCandidateId) return;
   const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
   cand.checklist = cand.checklist || {};
-  cand.checklist[key] = !cand.checklist[key];
+  const curIdx = CANDIDATE_CHECK_STATES.findIndex(s => s.value === (cand.checklist[key] || ''));
+  const next = CANDIDATE_CHECK_STATES[(curIdx + 1) % CANDIDATE_CHECK_STATES.length];
+  cand.checklist[key] = next.value;
   renderCandidateChecklistUI(cand);
   renderCandidateList();
   saveCandidatesLocal();
@@ -3352,6 +3391,7 @@ function onCandidateFieldChange(field, value) {
   renderCandidateStageStats();
   renderCandidateList();
   if (field === 'stage') refreshCandidateStageUI(cand);
+  if (field === 'type') renderCandidateChecklistUI(cand);
 }
 
 function moveCandidateStage(direction) {
@@ -3506,10 +3546,11 @@ function handleCandidateFlowEvent(cand, evt) {
     cand.stage = 'step4';
     saveCandidatesLocal();
     syncCandidateToNotion(cand);
-    showToast('✅ 자동 플로우 완료 — Notion에 저장됨');
+    showToast('✅ STEP4까지 완료 — 체크리스트 자동분석 중...');
     const progressWrap = document.getElementById('candidate-flow-progress');
     if (progressWrap) progressWrap.style.display = 'none';
     renderCandidateTab();
+    autoAnalyzeCandidate(cand);
     return;
   }
 
@@ -3532,6 +3573,30 @@ function handleCandidateFlowEvent(cand, evt) {
     document.getElementById('cand-f-story').value = cand.story || '';
     document.getElementById('cand-f-script').value = cand.script || '';
     refreshCandidateStageUI(cand);
+  }
+}
+
+async function autoAnalyzeCandidate(cand) {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/analyze-candidate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: cand.type, topic: cand.topic, story: cand.story, script: cand.script }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      console.warn('[candidates] 체크리스트 자동분석 실패:', data.error);
+      showToast('⚠️ 체크리스트 자동분석 실패: ' + data.error);
+      return;
+    }
+    cand.checklist = { ...cand.checklist, ...data.checklist };
+    saveCandidatesLocal();
+    syncCandidateToNotion(cand);
+    showToast('🤖 체크리스트 자동분석 완료 — Notion에 저장됨');
+    renderCandidateList();
+    if (currentCandidateId === cand.id) renderCandidateChecklistUI(cand);
+  } catch (e) {
+    console.warn('[candidates] 체크리스트 자동분석 실패:', e.message);
+    showToast('⚠️ 체크리스트 자동분석 실패: ' + e.message);
   }
 }
 

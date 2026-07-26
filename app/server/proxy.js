@@ -518,13 +518,35 @@ app.post('/api/update-script-history', async (req, res) => {
 // { success:false, error } 반환 — content_matrix_v3.html의 후보 풀 탭은 로컬
 // 캐시(localStorage)만으로도 완전히 동작해야 하며, Notion 연동은 best-effort임.
 const NOTION_CANDIDATE_DB_ID = 'c45d2b84-7522-4a2a-8cd7-3263bcbb2cef'
-const CANDIDATE_CHECKLIST_KEYS = [
-  'script_msg', 'script_3act', 'script_tone',
-  'image_scene', 'image_setting',
-  'tts_emotion', 'tts_length',
-  'video_cut', 'video_8s',
-  'edit_transition', 'edit_bgm',
+
+// 공통 13항목(4단계 반영도 SELECT) + 유형별 추가 3항목(MULTI_SELECT) — content_matrix_v3.html과 동일하게 유지
+const CANDIDATE_CHECKLIST_ITEMS = [
+  { key: 'script_msg',      agent: 'script', label: '핵심메시지 명확' },
+  { key: 'script_3act',     agent: 'script', label: '3막구조 있음' },
+  { key: 'script_tone',     agent: 'script', label: '서여리 톤 맞음' },
+  { key: 'script_emotion',  agent: 'script', label: '감정흐름 자연스러움' },
+  { key: 'image_scene',     agent: 'image',  label: '씬별 시각요소 있음' },
+  { key: 'image_setting',   agent: 'image',  label: '의상·배경 설정 있음' },
+  { key: 'image_mood',      agent: 'image',  label: '색감·분위기 설정됨' },
+  { key: 'tts_emotion',     agent: 'tts',    label: '감정톤 지정됨' },
+  { key: 'tts_length',      agent: 'tts',    label: '대사길이 적절' },
+  { key: 'video_cut',       agent: 'video',  label: '컷분할 가능' },
+  { key: 'video_8s',        agent: 'video',  label: '8초배수 고려됨' },
+  { key: 'edit_transition', agent: 'edit',   label: '전환연출 있음' },
+  { key: 'edit_bgm',        agent: 'edit',   label: 'BGM분위기 설정됨' },
 ]
+
+const CANDIDATE_TYPE_EXTRA_ITEMS = {
+  SF:   [ { key: 'sf_hook',       label: '훅 첫컷 있음' },        { key: 'sf_duration',     label: '15~60초 완결' },       { key: 'sf_noSubtitle', label: '자막없이 이해가능' } ],
+  LF:   [ { key: 'lf_chapter',    label: '챕터구분 가능' },       { key: 'lf_density',      label: '정보밀도 적절' },       { key: 'lf_retention',  label: '중간이탈 방지장치' } ],
+  IG_R: [ { key: 'igr_ratio',     label: '9:16구도 고려' },       { key: 'igr_hook3s',      label: '첫3초 훅 있음' },       { key: 'igr_musicsync', label: '음악싱크 포인트' } ],
+  IG_P: [ { key: 'igp_thumbnail', label: '썸네일컷 있음' },       { key: 'igp_textoverlay', label: '텍스트오버레이 계획' }, { key: 'igp_carousel',  label: '캐러셀구성 가능' } ],
+  IG_S: [ { key: 'igs_expire24h', label: '24시간 소멸 고려' },    { key: 'igs_swipeup',     label: '스와이프업 유도' },     { key: 'igs_sticker',   label: '스티커·인터랙션 요소' } ],
+  TK:   [ { key: 'tk_trend',      label: '트렌드밈 요소' },       { key: 'tk_comment',      label: '댓글유도 요소' },       { key: 'tk_challenge',  label: '챌린지 연결 가능' } ],
+}
+
+const CANDIDATE_CHECK_STATUS_TO_NOTION = { '': '⬜ 미확인', no: '❌ 미반영', partial: '🟡 부분반영', full: '✅ 충분반영' }
+const CANDIDATE_NOTION_STATUS_TO_CHECK = { '⬜ 미확인': '', '❌ 미반영': 'no', '🟡 부분반영': 'partial', '✅ 충분반영': 'full' }
 
 function getNotionToken() {
   const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
@@ -550,7 +572,7 @@ function plainText(richTextArr) {
   return (richTextArr || []).map(t => t.plain_text).join('')
 }
 function candidateToNotionProperties(cand) {
-  return {
+  const props = {
     '후보명': { title: richText(cand.title) },
     '유형': cand.type ? { select: { name: cand.type } } : { select: null },
     '단계': cand.stage ? { select: { name: cand.stage } } : { select: null },
@@ -560,18 +582,36 @@ function candidateToNotionProperties(cand) {
     '스토리기획': { rich_text: richText(cand.story) },
     '한글대본': { rich_text: richText(cand.script) },
     '메모': { rich_text: richText(cand.memo) },
-    '체크리스트': { multi_select: CANDIDATE_CHECKLIST_KEYS.filter(k => cand.checklist?.[k]).map(name => ({ name })) },
   }
+  CANDIDATE_CHECKLIST_ITEMS.forEach(it => {
+    const status = cand.checklist?.[it.key] || ''
+    props[it.label] = { select: { name: CANDIDATE_CHECK_STATUS_TO_NOTION[status] } }
+  })
+  const extraItems = CANDIDATE_TYPE_EXTRA_ITEMS[cand.type] || []
+  if (extraItems.length) {
+    props[`${cand.type} 추가항목`] = {
+      multi_select: extraItems.filter(it => cand.checklist?.[it.key] === 'full').map(it => ({ name: it.label })),
+    }
+  }
+  return props
 }
 function notionPageToCandidate(page) {
   const p = page.properties || {}
+  const type = p['유형']?.select?.name || 'SF'
   const checklist = {}
-  ;(p['체크리스트']?.multi_select || []).forEach(o => { checklist[o.name] = true })
+  CANDIDATE_CHECKLIST_ITEMS.forEach(it => {
+    checklist[it.key] = CANDIDATE_NOTION_STATUS_TO_CHECK[p[it.label]?.select?.name] ?? ''
+  })
+  const extraItems = CANDIDATE_TYPE_EXTRA_ITEMS[type] || []
+  if (extraItems.length) {
+    const selected = new Set((p[`${type} 추가항목`]?.multi_select || []).map(o => o.name))
+    extraItems.forEach(it => { checklist[it.key] = selected.has(it.label) ? 'full' : '' })
+  }
   return {
     id: page.id,
     notionPageId: page.id,
     title: plainText(p['후보명']?.title),
-    type: p['유형']?.select?.name || 'SF',
+    type,
     stage: p['단계']?.select?.name || 'step1',
     source: plainText(p['트렌드소스']?.rich_text),
     keywords: plainText(p['핵심키워드']?.rich_text),
@@ -663,6 +703,47 @@ app.delete('/api/candidates/:pageId', async (req, res) => {
     res.json({ success: true })
   } catch (err) {
     console.warn('[candidates] Notion 삭제 실패(무시):', err.message)
+    res.json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/analyze-candidate — 대본/기획 내용으로 체크리스트 자동 판정 ──
+// content_matrix_v3.html의 자동 플로우가 STEP4(한글 대본) 완료 직후 호출한다.
+// 공통 13항목 + 해당 유형의 추가 3항목을 한번에 Claude에게 판정시켜 반환한다.
+app.post('/api/analyze-candidate', async (req, res) => {
+  const { type, topic, story, script } = req.body || {}
+  if (!ANTHROPIC_API_KEY) return res.json({ success: false, error: 'ANTHROPIC_API_KEY 미설정 (.env.local 확인)' })
+  if (!script) return res.json({ success: false, error: 'script(대본) 내용이 필요합니다' })
+
+  const items = [...CANDIDATE_CHECKLIST_ITEMS, ...(CANDIDATE_TYPE_EXTRA_ITEMS[type] || [])]
+  const itemList = items.map(it => `- ${it.key}: ${it.label}`).join('\n')
+
+  const prompt = `다음은 서여리(20대 한국 여성 AI 버추얼 인플루언서) 채널 에피소드의 기획 내용입니다.
+
+주제 요약: ${topic || '(없음)'}
+스토리 기획: ${story || '(없음)'}
+한글 대본:
+${script}
+
+아래 체크리스트 항목 각각에 대해, 위 내용이 해당 항목을 얼마나 반영하고 있는지 판단하세요.
+각 항목마다 "없음"(전혀 반영 안 됨), "부분"(일부만 반영), "충분"(충분히 반영) 중 하나만 선택하세요.
+
+항목 목록:
+${itemList}
+
+아래 형식의 JSON 객체만 출력하세요. key는 위 목록의 key를 그대로 쓰고, 다른 텍스트는 포함하지 마세요:
+{"항목key": "충분", "항목key2": "부분", ...}`
+
+  try {
+    const raw = await callClaudeText(prompt, 1024)
+    const clean = raw.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    const parsed = JSON.parse(clean)
+    const STATUS_MAP = { '없음': 'no', '부분': 'partial', '충분': 'full' }
+    const checklist = {}
+    items.forEach(it => { checklist[it.key] = STATUS_MAP[parsed[it.key]] || '' })
+    res.json({ success: true, checklist })
+  } catch (err) {
+    console.error('[analyze-candidate]', err.message)
     res.json({ success: false, error: err.message })
   }
 })
