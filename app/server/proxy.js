@@ -571,16 +571,27 @@ function richText(v) {
 function plainText(richTextArr) {
   return (richTextArr || []).map(t => t.plain_text).join('')
 }
+
+// 실제 Notion DB 필드명은 content_matrix_v3.html 내부 필드명과 다르고(예: '후보명' → '에피소드 후보명'),
+// '현재 단계'는 내부 stage 키(step1 등)가 아니라 전체 라벨을 옵션으로 쓰고 있어 별도 매핑이 필요하다.
+const CANDIDATE_STAGE_LABELS = {
+  step1: 'STEP1 키워드수집', step2: 'STEP2 주제설정', step3: 'STEP3 에피소드기획',
+  step4: 'STEP4 한글대본', approval: '승인대기', g1: 'G1투입',
+}
+const CANDIDATE_STAGE_LABELS_REVERSE = Object.fromEntries(
+  Object.entries(CANDIDATE_STAGE_LABELS).map(([k, v]) => [v, k])
+)
+
 function candidateToNotionProperties(cand) {
   const props = {
-    '후보명': { title: richText(cand.title) },
-    '유형': cand.type ? { select: { name: cand.type } } : { select: null },
-    '단계': cand.stage ? { select: { name: cand.stage } } : { select: null },
-    '트렌드소스': { rich_text: richText(cand.source) },
-    '핵심키워드': { rich_text: richText(cand.keywords) },
-    '주제요약': { rich_text: richText(cand.topic) },
-    '스토리기획': { rich_text: richText(cand.story) },
-    '한글대본': { rich_text: richText(cand.script) },
+    '에피소드 후보명': { title: richText(cand.title) },
+    '콘텐츠 유형': cand.type ? { select: { name: cand.type } } : { select: null },
+    '현재 단계': cand.stage ? { select: { name: CANDIDATE_STAGE_LABELS[cand.stage] || cand.stage } } : { select: null },
+    '트렌드 소스': cand.source ? { select: { name: cand.source } } : { select: null },
+    '핵심 키워드': { rich_text: richText(cand.keywords) },
+    '주제 요약': { rich_text: richText(cand.topic) },
+    '스토리 기획': { rich_text: richText(cand.story) },
+    '한글 대본': { rich_text: richText(cand.script) },
     '메모': { rich_text: richText(cand.memo) },
   }
   CANDIDATE_CHECKLIST_ITEMS.forEach(it => {
@@ -597,7 +608,7 @@ function candidateToNotionProperties(cand) {
 }
 function notionPageToCandidate(page) {
   const p = page.properties || {}
-  const type = p['유형']?.select?.name || 'SF'
+  const type = p['콘텐츠 유형']?.select?.name || 'SF'
   const checklist = {}
   CANDIDATE_CHECKLIST_ITEMS.forEach(it => {
     checklist[it.key] = CANDIDATE_NOTION_STATUS_TO_CHECK[p[it.label]?.select?.name] ?? ''
@@ -610,14 +621,14 @@ function notionPageToCandidate(page) {
   return {
     id: page.id,
     notionPageId: page.id,
-    title: plainText(p['후보명']?.title),
+    title: plainText(p['에피소드 후보명']?.title),
     type,
-    stage: p['단계']?.select?.name || 'step1',
-    source: plainText(p['트렌드소스']?.rich_text),
-    keywords: plainText(p['핵심키워드']?.rich_text),
-    topic: plainText(p['주제요약']?.rich_text),
-    story: plainText(p['스토리기획']?.rich_text),
-    script: plainText(p['한글대본']?.rich_text),
+    stage: CANDIDATE_STAGE_LABELS_REVERSE[p['현재 단계']?.select?.name] || 'step1',
+    source: p['트렌드 소스']?.select?.name || '',
+    keywords: plainText(p['핵심 키워드']?.rich_text),
+    topic: plainText(p['주제 요약']?.rich_text),
+    story: plainText(p['스토리 기획']?.rich_text),
+    script: plainText(p['한글 대본']?.rich_text),
     memo: plainText(p['메모']?.rich_text),
     checklist,
   }
