@@ -26,6 +26,15 @@ const VERCEL_SCOPE = 'won566800-7736s-projects'
 const VERCEL_ENV_VAR = 'MCP_BRIDGE_URL'
 const URL_RE = /https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/
 
+// proxy.js와 동일한 이유(콘솔 창이 닫히면 사후 확인 불가)로 파일 로그를 남긴다.
+const LOG_PATH = path.join('C:\\yeori-studio', 'logs', 'sync-tunnel.log')
+function logToFile(line) {
+  try {
+    fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true })
+    fs.appendFileSync(LOG_PATH, `[${new Date().toISOString()}] ${line}\n`, 'utf-8')
+  } catch { /* 로그 실패로 스크립트가 죽으면 안 됨 */ }
+}
+
 function readState() {
   try {
     return JSON.parse(fs.readFileSync(STATE_PATH, 'utf-8'))
@@ -59,8 +68,12 @@ function run(cmd, args) {
       reject(new Error(`${commandLine} -- ${CMD_TIMEOUT_MS / 1000}초 내 응답 없음(타임아웃), 프로세스 강제 종료`))
     }, CMD_TIMEOUT_MS)
 
+    let errOut = ''
     proc.stdout.on('data', (d) => { out += d.toString() })
-    proc.stderr.on('data', (d) => process.stderr.write(d))
+    // stderr는 콘솔에 실시간으로 보여주는 것과 별개로 실패 원인 진단을 위해 로그 파일에도 남긴다
+    // -- 과거에 "vercel ... 종료 코드 1"만 로그에 남고 실제 stderr 내용이 없어서
+    // 원인을 알 수 없었던 사례가 있었음.
+    proc.stderr.on('data', (d) => { process.stderr.write(d); errOut += d.toString() })
     proc.on('error', (err) => {
       if (settled) return
       settled = true
@@ -72,7 +85,7 @@ function run(cmd, args) {
       settled = true
       clearTimeout(timer)
       if (code === 0) resolve(out)
-      else reject(new Error(`${commandLine} -- 종료 코드 ${code}`))
+      else reject(new Error(`${commandLine} -- 종료 코드 ${code}${errOut.trim() ? ` -- stderr: ${errOut.trim()}` : ''}`))
     })
   })
 }
@@ -106,42 +119,84 @@ async function updateVercel(newUrl) {
   console.log('[tunnel] Vercel 갱신 + 재배포 완료\n')
 }
 
-function main() {
+// ── 자동 재연결 (Quick Tunnel은 가동시간 보장이 없어 언제든 끊길 수 있음) ──
+// cloudflared 프로세스가 예기치 않게 죽으면(네트워크 문제, Cloudflare 엣지 쪽 문제 등)
+// 이전에는 스크립트 자체가 같이 종료돼서 사용자가 직접 다시 실행해야 했다.
+// 이제는 백오프를 두고 자동으로 재기동하고, 재시작할 때마다 새 URL을 다시 감지해
+// Vercel에 반영한다. 사용자가 Ctrl+C(SIGINT/SIGTERM)로 끈 경우에는 재시작하지 않는다.
+let shuttingDown = false
+let currentChild = null
+let restartCount = 0
+let lastStartedAt = 0
+const RESTART_BASE_DELAY_MS = 3_000
+const RESTART_MAX_DELAY_MS = 60_000
+const STABLE_UPTIME_MS = 120_000 // 이만큼 오래 떠있었으면 다음에 끊겨도 백오프를 처음부터 다시 센다
+
+function scheduleRestart() {
+  if (shuttingDown) return
+  const uptime = Date.now() - lastStartedAt
+  restartCount = uptime >= STABLE_UPTIME_MS ? 0 : restartCount + 1
+  const delay = Math.min(RESTART_BASE_DELAY_MS * 2 ** restartCount, RESTART_MAX_DELAY_MS)
+  console.log(`[tunnel] ${Math.round(delay / 1000)}초 후 터널 재연결 시도... (연속 재시작 ${restartCount}회째)`)
+  logToFile(`재연결 예약: ${delay}ms 후 (연속 재시작 ${restartCount}회째)`)
+  setTimeout(startTunnel, delay)
+}
+
+function startTunnel() {
   if (!fs.existsSync(CLOUDFLARED)) {
     console.error(`[tunnel] cloudflared.exe 없음: ${CLOUDFLARED}`)
+    logToFile(`FATAL cloudflared.exe 없음: ${CLOUDFLARED}`)
     process.exit(1)
   }
 
   console.log('[tunnel] Cloudflare Quick Tunnel 시작...')
+  logToFile(`--- 터널 프로세스 시작 (cloudflared: ${CLOUDFLARED}) ---`)
+  lastStartedAt = Date.now()
   const child = spawn(CLOUDFLARED, ['tunnel', '--url', TUNNEL_TARGET], { stdio: ['ignore', 'pipe', 'pipe'] })
+  currentChild = child
 
   let handled = false
+  // stdout/stderr는 파이프로 받으므로 한 줄(특히 박스로 그려지는 URL 배너)이
+  // 여러 data 이벤트로 쪼개져 도착할 수 있다 -- 청크 단위로만 정규식을 매칭하면
+  // URL이 경계에서 잘려 영원히 감지되지 않는 경우가 실제로 있었다(원인 확인됨).
+  // 그래서 누적 버퍼에 대해 매칭하고, 버퍼는 과도하게 자라지 않게 마지막 4000자만 유지한다.
+  let rollingBuffer = ''
 
   const onData = (buf) => {
     const text = buf.toString('utf-8')
     process.stdout.write(text)
     if (handled) return
-    const match = text.match(URL_RE)
+
+    rollingBuffer += text
+    if (rollingBuffer.length > 4000) rollingBuffer = rollingBuffer.slice(-4000)
+
+    const match = rollingBuffer.match(URL_RE)
     if (!match) return
     handled = true
 
     const newUrl = match[0]
     const prev = readState()
     console.log(`\n[tunnel] 감지된 터널 URL: ${newUrl}`)
+    logToFile(`감지된 터널 URL: ${newUrl} (이전: ${prev?.url || '없음'})`)
 
     if (prev?.url === newUrl) {
       console.log('[tunnel] 이전 URL과 동일 -- Vercel 갱신 생략\n')
+      logToFile('이전 URL과 동일 -- Vercel 갱신 생략')
       return
     }
 
     updateVercel(newUrl)
-      .then(() => writeState(newUrl))
+      .then(() => {
+        writeState(newUrl)
+        logToFile(`Vercel 갱신 + 재배포 완료: ${newUrl}`)
+      })
       .catch((err) => {
         console.error(`[tunnel] Vercel 갱신 실패: ${err.message}`)
         console.error('[tunnel] 수동 갱신 필요:')
         console.error(`  vercel env rm ${VERCEL_ENV_VAR} production --yes --scope ${VERCEL_SCOPE}`)
         console.error(`  vercel env add ${VERCEL_ENV_VAR} production --value ${newUrl} --yes --scope ${VERCEL_SCOPE}`)
         console.error(`  vercel redeploy <최신 production 배포 URL> --target production --scope ${VERCEL_SCOPE}`)
+        logToFile(`FATAL Vercel 갱신 실패 (url=${newUrl}): ${err.stack || err.message}`)
       })
   }
 
@@ -150,16 +205,33 @@ function main() {
 
   child.on('error', (err) => {
     console.error('[tunnel] cloudflared 실행 실패:', err.message)
-    process.exit(1)
+    logToFile(`cloudflared 실행 실패: ${err.stack || err.message}`)
+    scheduleRestart()
   })
 
-  child.on('exit', (code) => {
-    console.log(`[tunnel] cloudflared 종료됨 (code ${code})`)
-    process.exit(code ?? 0)
+  child.on('exit', (code, signal) => {
+    console.log(`[tunnel] cloudflared 종료됨 (code ${code}, signal ${signal})`)
+    logToFile(`cloudflared 종료됨 (code ${code}, signal ${signal}), handled=${handled}, shuttingDown=${shuttingDown}`)
+    if (shuttingDown) {
+      process.exit(code ?? 0)
+      return
+    }
+    scheduleRestart()
   })
-
-  process.on('SIGINT', () => child.kill())
-  process.on('SIGTERM', () => child.kill())
 }
 
-main()
+process.on('SIGINT', () => { shuttingDown = true; currentChild?.kill() })
+process.on('SIGTERM', () => { shuttingDown = true; currentChild?.kill() })
+
+// 이 스크립트도 장시간 떠있어야 하므로 proxy.js와 동일하게 예기치 못한 예외로
+// 조용히 죽지 않도록 방지(로그만 남기고 계속 진행).
+process.on('uncaughtException', (err) => {
+  console.error('[tunnel] uncaughtException:', err.message)
+  logToFile(`uncaughtException: ${err.stack || err.message}`)
+})
+process.on('unhandledRejection', (reason) => {
+  console.error('[tunnel] unhandledRejection:', reason)
+  logToFile(`unhandledRejection: ${reason?.stack || reason}`)
+})
+
+startTunnel()
