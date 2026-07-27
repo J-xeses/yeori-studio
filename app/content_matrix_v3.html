@@ -3432,6 +3432,31 @@ function moveCandidateStage(direction) {
   renderCandidateList();
 }
 
+// 코디_젠(code_generator_v1.html)과 공유하는 localStorage 키.
+// 두 파일 다 file:// 로 열리므로(같은 스킴) Chrome에서는 localStorage가 공유된다 --
+// http(s) origin과 file:// origin 사이(예: yeori-studio 웹앱)는 공유 안 되니 혼동 주의.
+const CODI_GEN_STORAGE_KEY = 'codi_gen_candidate';
+
+function sendCandidateToCodiGen(cand) {
+  const payload = {
+    id: cand.id,
+    title: cand.title,
+    type: cand.type,
+    keyword: cand.keywords,
+    topic: cand.topic,
+    story: cand.story,
+    script: cand.script,
+    checklist: cand.checklist || {},
+    timestamp: new Date().toISOString(),
+  };
+  try {
+    localStorage.setItem(CODI_GEN_STORAGE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    console.warn('[codi_gen] localStorage 저장 실패:', e.message);
+  }
+  window.open('code_generator_v1.html', '_blank');
+}
+
 function promoteCandidateToG1() {
   if (!currentCandidateId) return;
   const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
@@ -3440,7 +3465,8 @@ function promoteCandidateToG1() {
   saveCandidatesLocal();
   syncCandidateToNotion(cand);
   markCandidateSaved();
-  showToast('🚀 G1 투입 완료');
+  sendCandidateToCodiGen(cand);
+  showToast('🚀 코디_젠으로 전달됐습니다');
   refreshCandidateStageUI(cand);
   renderCandidateTypeStats();
   renderCandidateStageStats();

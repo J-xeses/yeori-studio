@@ -201,7 +201,7 @@
     <span class="ticker-sep">·</span>
     <span>PIPELINE READY</span>
     <span class="ticker-sep">·</span>
-    <span>CANDIDATE_POOL LINKED</span>
+    <span>CANDIDATE_POOL <span id="ticker-linked-state" style="color:var(--text3)">UNLINKED</span></span>
     <span class="ticker-sep">·</span>
     <span>CODI_GEN v1.0</span>
   </div>
@@ -366,6 +366,9 @@
 
 <script>
 const YEORI_SERVER = 'http://localhost:3001';
+// content_matrix_v3.html과 공유하는 localStorage 키 -- 둘 다 file://로 열리므로
+// (같은 스킴) Chrome에서는 이 값이 두 파일 사이에 실제로 공유된다.
+const CODI_GEN_STORAGE_KEY = 'codi_gen_candidate';
 
 // ── 데이터 ─────────────────────────────────────────────────────
 const PLATFORM_OPTIONS = [
@@ -470,6 +473,28 @@ function showTab(id, btn) {
 }
 
 // ── 후보 풀 ─────────────────────────────────────────────────────
+// 주제 요약/키워드 텍스트에서 TOPIC_OPTIONS 코드를 추측(간단한 키워드 매칭 -- 정교한
+// 분류가 아니라 Phase1 주제 필 기본 선택값을 대충이라도 맞혀주기 위한 용도)
+const TOPIC_KEYWORD_MAP = [
+  { code: 'PSY', words: ['심리', '정신', '마음'] },
+  { code: 'SOC', words: ['사회'] },
+  { code: 'LIF', words: ['일상', '라이프'] },
+  { code: 'REL', words: ['관계', '연애'] },
+  { code: 'TRD', words: ['트렌드', '유행'] },
+];
+function guessTopicCode(text) {
+  const t = String(text || '');
+  const hit = TOPIC_KEYWORD_MAP.find(e => e.words.some(w => t.includes(w)));
+  return hit ? hit.code : null;
+}
+
+function updateLinkedStatus(linked) {
+  const el = document.getElementById('ticker-linked-state');
+  if (!el) return;
+  el.textContent = linked ? 'LINKED' : 'UNLINKED';
+  el.style.color = linked ? 'var(--teal)' : 'var(--text3)';
+}
+
 async function loadFromCandidatePool() {
   try {
     const res = await fetch(`${YEORI_SERVER}/api/candidates`);
@@ -477,30 +502,73 @@ async function loadFromCandidatePool() {
     if (data.success && Array.isArray(data.candidates) && data.candidates.length) {
       candidatePool = data.candidates.map(c => ({
         icon: '📦',
+        id: c.id || null,
         title: c.title || '(제목 없음)',
         type: c.type || 'SF',
         keywords: c.keywords || '',
+        topic: c.topic || '',
         story: c.story || '',
         script: c.script || '',
+        checklist: c.checklist || {},
       }));
       state.selectedCandidateIdx = 0;
+      updateLinkedStatus(true);
       showToast('✓ 후보 풀에서 불러왔어요 (' + candidatePool.length + '건)');
     } else {
+      updateLinkedStatus(false);
       showToast('⚠️ 후보 풀에 데이터가 없어요 — 데모 데이터를 유지합니다');
     }
   } catch (e) {
+    updateLinkedStatus(false);
     showToast('⚠️ 후보 풀 연결 실패 — 데모 데이터를 유지합니다');
   }
   renderAll();
 }
 
+// content_matrix_v3.html의 "G1 투입" 버튼이 localStorage에 저장해둔 후보를 반영
+function applyIncomingCandidate(data) {
+  const cand = {
+    icon: '🔗',
+    id: data.id || null,
+    title: data.title || '(제목 없음)',
+    type: data.type || 'SF',
+    keywords: data.keyword || '',
+    topic: data.topic || '',
+    story: data.story || '',
+    script: data.script || '',
+    checklist: data.checklist || {},
+    linked: true,
+  };
+  candidatePool = [cand, ...candidatePool.filter(c => !c.linked)];
+  updateLinkedStatus(true);
+  showToast('📥 후보 풀에서 전달받았어요: ' + cand.title);
+  selectCandidate(0);
+}
+
+function loadCandidateFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(CODI_GEN_STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !data.title) return false;
+    applyIncomingCandidate(data);
+    localStorage.removeItem(CODI_GEN_STORAGE_KEY);
+    return true;
+  } catch (e) {
+    console.warn('[codi_gen] localStorage 후보 데이터 파싱 실패:', e.message);
+    return false;
+  }
+}
+
 function selectCandidate(idx) {
   state.selectedCandidateIdx = idx;
   const cand = candidatePool[idx];
-  if (cand && PLATFORM_OPTIONS.some(p => p.code === cand.type)) {
-    state.platform = cand.type;
+  if (cand) {
+    if (PLATFORM_OPTIONS.some(p => p.code === cand.type)) state.platform = cand.type;
+    const topicCode = guessTopicCode((cand.topic || '') + ' ' + (cand.keywords || ''));
+    if (topicCode) state.topic = topicCode;
   }
-  renderAll();
+  autoGenEpId();
 }
 
 function renderStoryCards() {
@@ -540,7 +608,8 @@ function setState(key, value) {
 
 // ── 에피소드 ID 자동생성 ─────────────────────────────────────────────────────
 function autoGenEpId() {
-  state.epId = `${state.platform}_E01_${state.topic}`;
+  const num = String(state.selectedCandidateIdx + 1).padStart(2, '0');
+  state.epId = `${state.platform}_E${num}_${state.topic}`;
   renderAll();
 }
 
@@ -628,10 +697,12 @@ function renderAll() {
 
   const epIdInput = document.getElementById('ep-id-input');
   if (document.activeElement !== epIdInput) {
-    epIdInput.value = state.epId || `${state.platform}_E01_${state.topic}`;
+    const num = String(state.selectedCandidateIdx + 1).padStart(2, '0');
+    epIdInput.value = state.epId || `${state.platform}_E${num}_${state.topic}`;
   }
 }
 
+loadCandidateFromLocalStorage();
 renderAll();
 </script>
 
