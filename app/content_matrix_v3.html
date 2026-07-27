@@ -335,8 +335,15 @@
   .candidate-stat-chip-label { color: var(--text2); font-weight: 600; }
   .candidate-stat-chip-value { font-family: 'Space Mono', monospace; color: var(--purple); font-weight: 700; }
 
-  .candidate-list-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .candidate-list-body { flex: 1 1 50%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
   .candidate-list-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 24px 8px; }
+
+  .candidate-side-divider { height: 1px; background: var(--border); margin: 12px 0; flex-shrink: 0; }
+  .candidate-trend-list { flex: 1 1 50%; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 80px; }
+  .candidate-trend-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .candidate-trend-card:hover { border-color: var(--amber); background: var(--surface3); }
+  .candidate-trend-card-title { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .candidate-trend-card-meta { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; }
 
   .candidate-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .candidate-card:hover { border-color: var(--purple); }
@@ -519,6 +526,10 @@
 
           <div class="candidate-side-title" style="margin-bottom:6px">후보 목록 <span class="candidate-count-badge" id="candidate-list-count">0</span></div>
           <div class="candidate-list-body" id="candidate-list-body"></div>
+
+          <div class="candidate-side-divider"></div>
+          <div class="candidate-side-title" style="margin-bottom:6px">🔥 트렌드 분석</div>
+          <div class="candidate-trend-list" id="candidate-trend-list"></div>
         </div>
 
         <div class="candidate-main-panel">
@@ -1364,7 +1375,11 @@ let candidateFilterStage = 'all';
 let currentCandidateId = null;  // 우측 상세 패널에 표시 중인 후보의 로컬 id. null이면 빈 상태
 const CANDIDATE_TYPES = ['SF','LF','IG_R','IG_P','IG_S','TK'];
 const CANDIDATE_TYPE_LABEL = {SF:'SF 숏폼', LF:'LF 롱폼', IG_R:'IG 릴스', IG_P:'IG 피드', IG_S:'IG 스토리', TK:'틱톡'};
-const CANDIDATE_SOURCE_PRESETS = ['유튜브 인기 키워드', '유튜브 급상승', '인스타 릴스 트렌드', '틱톡 트렌드', '자체 기획', '기타'];
+const CANDIDATE_SOURCE_PRESETS = ['유튜브 인기 키워드', '유튜브 급상승', '인스타 릴스 트렌드', '틱톡 트렌드', '트렌드레이더', '자체 기획', '기타'];
+// ── 🔥 트렌드 분석 (TREND RADAR 파이프라인 → 후보풀 전송) ──────────────────
+const TREND_CANDIDATES_STORAGE_KEY = 'trend_candidates';
+let trendCandidates = [];
+let trendCandidatesSorted = [];
 const CANDIDATE_STAGES = [
   {key:'step1', label:'STEP1 키워드수집'},
   {key:'step2', label:'STEP2 주제설정'},
@@ -1512,6 +1527,7 @@ function switchTab(tab, btn) {
     document.getElementById('tab-'+t).style.display = t===tab?'block':'none';
   });
   if(tab === 'candidate' && !candidatePool.length) loadCandidatesFromNotion();
+  if(tab === 'candidate' && !trendCandidates.length) loadTrendCandidatesFromServer();
   renderAll();
 }
 
@@ -3189,6 +3205,69 @@ async function archiveCandidateInNotion(pageId) {
   }
 }
 
+// ── 🔥 트렌드 분석 (TREND RADAR 파이프라인 → 후보풀 전송) ──────────────────
+// TREND RADAR(localhost:3000)가 proxy.js의 /api/trend-to-candidate로 저장한 목록을
+// 읽어온다. localStorage는 서버 조회 실패 시를 대비한 로컬 캐시일 뿐 -- TREND
+// RADAR와 content_matrix_v3.html은 서로 다른 origin(http://localhost:3000 vs
+// file://)이라 localStorage를 직접 공유할 수 없어서, 반드시 proxy.js를 거친다.
+async function loadTrendCandidatesFromServer() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(TREND_CANDIDATES_STORAGE_KEY) || '[]');
+    if (Array.isArray(cached) && cached.length) trendCandidates = cached;
+  } catch { /* 캐시 없음/손상 시 빈 목록으로 시작 */ }
+  renderTrendCandidateList();
+
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/trend-candidates`);
+    const data = await res.json();
+    if (Array.isArray(data.candidates)) {
+      trendCandidates = data.candidates;
+      try { localStorage.setItem(TREND_CANDIDATES_STORAGE_KEY, JSON.stringify(trendCandidates)); } catch { /* 저장 실패는 무시 */ }
+      renderTrendCandidateList();
+    }
+  } catch (e) {
+    console.warn('[trend-candidates] 서버 조회 실패(로컬 캐시로 계속 진행):', e.message);
+  }
+}
+
+function renderTrendCandidateList() {
+  const el = document.getElementById('candidate-trend-list'); if (!el) return;
+  trendCandidatesSorted = [...trendCandidates].sort((a, b) => (b.score || 0) - (a.score || 0));
+  if (!trendCandidatesSorted.length) {
+    el.innerHTML = '<div class="candidate-list-empty">전송된 트렌드 분석이 없어요</div>';
+    return;
+  }
+  el.innerHTML = trendCandidatesSorted.map((t, i) => {
+    const checks = ['ai', 'youtube', 'cross'].filter(k => t.steps?.[k]).map(() => '✅').join('');
+    const title = t.title || '(제목 없음)';
+    const shortTitle = title.length > 22 ? title.slice(0, 22) + '…' : title;
+    return `
+    <div class="candidate-trend-card" onclick="createCandidateFromTrend(${i})">
+      <div class="candidate-trend-card-title">[${escapeHtml(shortTitle)}]</div>
+      <div class="candidate-trend-card-meta">${Math.round(t.score || 0)}${checks ? ' ' + checks : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+// 트렌드 카드 클릭 → 새 후보를 만들어 우측 패널을 에피소드 기획(STEP3) 모드로 전환
+function createCandidateFromTrend(idx) {
+  const t = trendCandidatesSorted[idx]; if (!t) return;
+  const cand = {
+    id: 'cand_'+uid(), notionPageId: null,
+    title: t.title || '', type: 'SF', stage: 'step3', source: '트렌드레이더',
+    keywords: t.keyword || t.title || '', topic: t.topic || '', story: '', script: '', memo: '',
+    checklist: {},
+  };
+  candidatePool.unshift(cand);
+  candidateFilterType = 'all';
+  candidateFilterStage = 'all';
+  currentCandidateId = cand.id;
+  saveCandidatesLocal();
+  syncCandidateToNotion(cand);
+  renderCandidateTab();
+  showToast('🔥 트렌드 데이터로 에피소드 기획을 시작합니다');
+}
+
 function candidateProgress(cand) {
   const items = [...CANDIDATE_CHECKLIST, ...(CANDIDATE_TYPE_EXTRA_ITEMS[cand.type] || [])];
   const total = items.length;
@@ -3206,6 +3285,7 @@ function renderCandidateTab() {
   renderCandidateStageStats();
   renderCandidateList();
   renderCandidateDetail();
+  renderTrendCandidateList();
 }
 
 function renderCandidateTypeStats() {

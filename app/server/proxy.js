@@ -1897,6 +1897,54 @@ app.post('/api/package-final', (req, res) => {
   }
 })
 
+// ── GET /api/trend-candidates, POST /api/trend-to-candidate ──────────
+// TREND RADAR(localhost:3000) 파이프라인 탭의 "후보풀로 전송" 버튼이 호출한다.
+// content_matrix_v3.html(file://)과는 origin이 달라 localStorage를 직접 공유할 수
+// 없으므로, 이 엔드포인트(파일 저장)를 거쳐야 두 앱 사이에 실제로 데이터가 전달된다.
+const TREND_CANDIDATES_PATH = path.join(MEDIA_ROOT, 'downloads', 'trend_candidates.json')
+
+app.get('/api/trend-candidates', (req, res) => {
+  try {
+    if (!fs.existsSync(TREND_CANDIDATES_PATH)) return res.json({ candidates: [] })
+    const all = JSON.parse(fs.readFileSync(TREND_CANDIDATES_PATH, 'utf-8'))
+    res.json({ candidates: Array.isArray(all) ? all : [] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/trend-to-candidate', (req, res) => {
+  try {
+    const { id, title, source, score, keyword, topic, steps } = req.body
+    if (!title) return res.status(400).json({ error: 'title 필요' })
+
+    let list = []
+    if (fs.existsSync(TREND_CANDIDATES_PATH)) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(TREND_CANDIDATES_PATH, 'utf-8'))
+        if (Array.isArray(parsed)) list = parsed
+      } catch { /* 손상된 파일이면 새로 시작 */ }
+    }
+
+    const entry = {
+      id: id || `trend_${Date.now()}`,
+      title, source: source || '', score: Number(score) || 0,
+      keyword: keyword || title, topic: topic || '',
+      steps: steps || {},
+      createdAt: new Date().toISOString(),
+    }
+    const idx = list.findIndex(c => c.id === entry.id)
+    if (idx >= 0) list[idx] = entry; else list.unshift(entry)
+
+    fs.writeFileSync(TREND_CANDIDATES_PATH, JSON.stringify(list, null, 2), 'utf-8')
+    console.log(`[trend-to-candidate] "${title.slice(0, 40)}" → 후보풀 전송 (누적 ${list.length}건)`)
+    res.json({ success: true, candidate: entry, total: list.length })
+  } catch (err) {
+    console.error('[trend-to-candidate]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/trend-episodes — trend_episodes.json 최신 20개 반환 ──────
 app.get('/api/trend-episodes', (req, res) => {
   const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
