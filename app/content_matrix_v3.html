@@ -36,6 +36,12 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; line-height: 1.6; min-height: 100vh; }
 
+  /* ── 스크롤바 (앱 accent 색상 계열) ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.35); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--purple); }
+
   /* ── 헤더 ── */
   .app-header {
     background: var(--surface); border-bottom: 1px solid var(--border);
@@ -352,19 +358,24 @@
   .candidate-main-panel { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; overflow: hidden; display: flex; flex-direction: column; }
   .candidate-detail-empty { height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text3); font-size: 12px; padding: 40px; }
   #candidate-detail-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-  .candidate-title-input { width: 100%; flex-shrink: 0; background: transparent; border: none; border-bottom: 1px solid var(--border2); font-size: 18px; font-weight: 700; color: var(--text); padding: 4px 0; font-family: 'Noto Sans KR', sans-serif; outline: none; transition: border-color 0.15s; }
-  .candidate-title-input:focus { border-color: var(--purple); }
+  .candidate-detail-topbar { display: flex; align-items: center; gap: 14px; flex-shrink: 0; padding-bottom: 10px; border-bottom: 1px solid var(--border2); }
+  .candidate-detail-topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .candidate-title-input { flex: 1; min-width: 0; background: transparent; border: none; font-size: 18px; font-weight: 700; color: var(--text); padding: 4px 0; font-family: 'Noto Sans KR', sans-serif; outline: none; }
   .candidate-title-input::placeholder { color: var(--text3); opacity: 1; }
   .candidate-detail-headmeta { display: flex; gap: 8px; margin-top: 10px; flex-shrink: 0; }
   .candidate-detail-headmeta .form-select { flex: 1; min-width: 0; }
   .candidate-detail-section { margin-top: 16px; flex-shrink: 0; }
-  .candidate-detail-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+  .candidate-detail-actions { display: flex; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
   .candidate-detail-actions .btn-cancel:disabled, .candidate-detail-actions .btn-save:disabled { opacity: 0.35; cursor: not-allowed; }
   .candidate-autosave-status { font-size: 10px; color: var(--text3); margin-top: 8px; text-align: right; flex-shrink: 0; }
 
   .candidate-split-columns { display: flex; gap: 16px; flex: 1; min-height: 0; margin-top: 16px; }
-  .candidate-col-checklist { flex: 0 0 30%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
-  .candidate-col-content { flex: 1 1 70%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-checklist { flex: 0 0 35%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-content { flex: 1 1 65%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-content .form-textarea { resize: none; overflow-y: auto; background: var(--surface3); }
+  #cand-f-topic { height: 100px; }
+  #cand-f-story { height: 200px; }
+  #cand-f-script { height: 300px; }
 
   .candidate-checklist-group { margin-bottom: 10px; }
   .candidate-checklist-group-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
@@ -505,7 +516,13 @@
           <div class="candidate-detail-empty" id="candidate-detail-empty">← 왼쪽에서 후보를 선택하거나 "+ 후보 추가"로 새 후보를 만들어보세요</div>
 
           <div id="candidate-detail-form" style="display:none">
-            <input class="candidate-title-input" id="cand-f-title" placeholder="에피소드명" oninput="onCandidateFieldInput('title', this.value)">
+            <div class="candidate-detail-topbar">
+              <input class="candidate-title-input" id="cand-f-title" placeholder="에피소드명" oninput="onCandidateFieldInput('title', this.value)">
+              <div class="candidate-detail-topbar-actions">
+                <button class="btn-cancel" style="color:var(--red)" onclick="deleteCandidate()">🗑️ 삭제</button>
+                <button class="btn-save" id="cand-g1-btn" onclick="promoteCandidateToG1()">✨ G1 투입</button>
+              </div>
+            </div>
             <div class="candidate-detail-headmeta">
               <select class="form-select" id="cand-f-type" onchange="onCandidateFieldChange('type', this.value)">
                 <option value="SF">SF — 유튜브 숏폼</option>
@@ -544,7 +561,7 @@
                 </div>
                 <div class="candidate-detail-section">
                   <label class="form-label">한글 대본</label>
-                  <textarea class="form-textarea" id="cand-f-script" style="min-height:160px" placeholder="STEP4에서 작성하는 한글 대본" oninput="onCandidateFieldInput('script', this.value)"></textarea>
+                  <textarea class="form-textarea" id="cand-f-script" placeholder="STEP4에서 작성하는 한글 대본" oninput="onCandidateFieldInput('script', this.value)"></textarea>
                 </div>
               </div>
             </div>
@@ -558,10 +575,6 @@
               <div style="display:flex;gap:8px">
                 <button class="btn-cancel" id="cand-prev-btn" onclick="moveCandidateStage(-1)">← 이전단계</button>
                 <button class="btn-cancel" id="cand-next-btn" onclick="moveCandidateStage(1)">다음단계 →</button>
-              </div>
-              <div style="display:flex;gap:8px">
-                <button class="btn-cancel" style="color:var(--red)" onclick="deleteCandidate()">🗑️ 삭제</button>
-                <button class="btn-save" id="cand-g1-btn" onclick="promoteCandidateToG1()">✨ G1 투입</button>
               </div>
             </div>
             <div class="candidate-autosave-status" id="candidate-autosave-status"></div>
