@@ -370,14 +370,18 @@
   .candidate-autosave-status { font-size: 10px; color: var(--text3); margin-top: 8px; text-align: right; flex-shrink: 0; }
 
   .candidate-split-columns { display: flex; gap: 16px; flex: 1; min-height: 0; margin-top: 16px; }
-  .candidate-col-checklist { flex: 0 0 35%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
-  .candidate-col-content { flex: 1 1 65%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; }
+  /* 좌측: 체크리스트만 자체 스크롤, 메모·이전/다음단계는 고정 노출 */
+  .candidate-col-checklist { flex: 0 0 35%; min-width: 0; height: 100%; display: flex; flex-direction: column; }
+  .candidate-checklist-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-checklist .candidate-detail-section,
+  .candidate-col-checklist .candidate-detail-actions { flex-shrink: 0; }
+  /* 우측: 키워드/주제/스토리/대본 전체가 하나의 스크롤 영역 -- 주제·스토리가 위로
+     넘어가면서 대본의 아래쪽 내용이 드러나도록, 대본 박스 자체를 넉넉하게 키움 */
+  .candidate-col-content { flex: 1 1 65%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
   .candidate-col-content .form-textarea { resize: none; overflow-y: auto; background: var(--surface3); }
-  #cand-f-topic { height: 100px; flex-shrink: 0; }
-  #cand-f-story { height: 200px; flex-shrink: 0; }
-  /* 한글 대본 영역만 남는 세로 공간을 전부 차지하도록 확장 (좌측으로 옮긴 메모/이전·다음단계 만큼 우측이 더 길어짐) */
-  .candidate-detail-section-grow { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 220px; }
-  .candidate-detail-section-grow .form-textarea { flex: 1 1 auto; height: auto; }
+  #cand-f-topic { height: 100px; }
+  #cand-f-story { height: 200px; }
+  #cand-f-script { height: 520px; }
 
   .candidate-checklist-group { margin-bottom: 10px; }
   .candidate-checklist-group-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
@@ -545,8 +549,10 @@
 
             <div class="candidate-split-columns">
               <div class="candidate-col-checklist" id="candidate-col-checklist">
-                <label class="form-label">에이전트 체크리스트</label>
-                <div id="cand-checklist"></div>
+                <div class="candidate-checklist-scroll">
+                  <label class="form-label">에이전트 체크리스트</label>
+                  <div id="cand-checklist"></div>
+                </div>
 
                 <div class="candidate-detail-section">
                   <label class="form-label">메모</label>
@@ -573,7 +579,7 @@
                   <label class="form-label">스토리 기획</label>
                   <textarea class="form-textarea" id="cand-f-story" placeholder="3막 구조(사건→감정변화→선택) 기준 기획" oninput="onCandidateFieldInput('story', this.value)"></textarea>
                 </div>
-                <div class="candidate-detail-section candidate-detail-section-grow">
+                <div class="candidate-detail-section">
                   <label class="form-label">한글 대본</label>
                   <textarea class="form-textarea" id="cand-f-script" placeholder="STEP4에서 작성하는 한글 대본" oninput="onCandidateFieldInput('script', this.value)"></textarea>
                 </div>
