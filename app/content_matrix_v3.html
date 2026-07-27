@@ -371,11 +371,13 @@
 
   .candidate-split-columns { display: flex; gap: 16px; flex: 1; min-height: 0; margin-top: 16px; }
   .candidate-col-checklist { flex: 0 0 35%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
-  .candidate-col-content { flex: 1 1 65%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; }
+  .candidate-col-content { flex: 1 1 65%; min-width: 0; height: 100%; overflow-y: auto; padding-right: 4px; display: flex; flex-direction: column; }
   .candidate-col-content .form-textarea { resize: none; overflow-y: auto; background: var(--surface3); }
-  #cand-f-topic { height: 100px; }
-  #cand-f-story { height: 200px; }
-  #cand-f-script { height: 300px; }
+  #cand-f-topic { height: 100px; flex-shrink: 0; }
+  #cand-f-story { height: 200px; flex-shrink: 0; }
+  /* 한글 대본 영역만 남는 세로 공간을 전부 차지하도록 확장 (좌측으로 옮긴 메모/이전·다음단계 만큼 우측이 더 길어짐) */
+  .candidate-detail-section-grow { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 220px; }
+  .candidate-detail-section-grow .form-textarea { flex: 1 1 auto; height: auto; }
 
   .candidate-checklist-group { margin-bottom: 10px; }
   .candidate-checklist-group-title { font-size: 11px; font-weight: 700; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
@@ -545,6 +547,18 @@
               <div class="candidate-col-checklist" id="candidate-col-checklist">
                 <label class="form-label">에이전트 체크리스트</label>
                 <div id="cand-checklist"></div>
+
+                <div class="candidate-detail-section">
+                  <label class="form-label">메모</label>
+                  <textarea class="form-textarea" id="cand-f-memo" placeholder="자유 메모" style="min-height:52px" oninput="onCandidateFieldInput('memo', this.value)"></textarea>
+                </div>
+
+                <div class="candidate-detail-actions">
+                  <div style="display:flex;gap:8px">
+                    <button class="btn-cancel" id="cand-prev-btn" onclick="moveCandidateStage(-1)">← 이전단계</button>
+                    <button class="btn-cancel" id="cand-next-btn" onclick="moveCandidateStage(1)">다음단계 →</button>
+                  </div>
+                </div>
               </div>
               <div class="candidate-col-content" id="candidate-col-content">
                 <div class="candidate-detail-section" style="margin-top:0">
@@ -559,22 +573,10 @@
                   <label class="form-label">스토리 기획</label>
                   <textarea class="form-textarea" id="cand-f-story" placeholder="3막 구조(사건→감정변화→선택) 기준 기획" oninput="onCandidateFieldInput('story', this.value)"></textarea>
                 </div>
-                <div class="candidate-detail-section">
+                <div class="candidate-detail-section candidate-detail-section-grow">
                   <label class="form-label">한글 대본</label>
                   <textarea class="form-textarea" id="cand-f-script" placeholder="STEP4에서 작성하는 한글 대본" oninput="onCandidateFieldInput('script', this.value)"></textarea>
                 </div>
-              </div>
-            </div>
-
-            <div class="candidate-detail-section">
-              <label class="form-label">메모</label>
-              <textarea class="form-textarea" id="cand-f-memo" placeholder="자유 메모" style="min-height:52px" oninput="onCandidateFieldInput('memo', this.value)"></textarea>
-            </div>
-
-            <div class="candidate-detail-actions">
-              <div style="display:flex;gap:8px">
-                <button class="btn-cancel" id="cand-prev-btn" onclick="moveCandidateStage(-1)">← 이전단계</button>
-                <button class="btn-cancel" id="cand-next-btn" onclick="moveCandidateStage(1)">다음단계 →</button>
               </div>
             </div>
             <div class="candidate-autosave-status" id="candidate-autosave-status"></div>
