@@ -158,6 +158,9 @@
   .btn-loadpool { font-size: 11px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--teal); color: #080C0E; border: none; cursor: pointer; font-weight: 700; font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
   .btn-loadpool:hover { opacity: 0.85; }
 
+  .seg-box { background: rgba(15,42,34,0.25); border: 1px solid var(--border2); border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; }
+  .seg-label { font-size: 10px; font-weight: 700; color: var(--teal-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
+
   .placeholder-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text3); gap: 10px; }
   .placeholder-tab-icon { font-size: 34px; opacity: 0.5; }
   .placeholder-tab-text { font-size: 12px; }
@@ -314,11 +317,63 @@
         </div>
       </div>
 
-      <!-- TAB: 컷 설계 (플레이스홀더) -->
+      <!-- TAB: 컷 설계 -->
       <div id="tab-cut" class="tab-content" style="display:none">
-        <div class="placeholder-tab">
-          <div class="placeholder-tab-icon">✂️</div>
-          <div class="placeholder-tab-text">컷 설계 탭은 다음 버전에서 구현될 예정입니다</div>
+        <div class="phase-badge pb-1"><span class="idx">P3</span>Phase 3 — 컷 설계 · <span id="cut-phase-num">C01</span> 진행 중</div>
+
+        <div class="g g2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h"><span class="idx">09</span>🎭 감정 선택</div>
+            <div class="kw-wrap" id="pills-cut-emotion"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span class="idx">10</span>🎞️ 파이프라인</div>
+            <div class="kw-wrap" id="pills-cut-pipeline" style="margin-bottom:8px"></div>
+            <div class="field-label">G단계 흐름</div>
+            <div id="cut-pipeline-flow"></div>
+          </div>
+        </div>
+
+        <div class="g g2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h"><span class="idx">11</span>🗺️ C군 공간 설정</div>
+            <div class="field-label">실내 · 실외</div>
+            <div class="kw-wrap" id="pills-cut-indoor" style="margin-bottom:8px"></div>
+            <div class="field-label">장소</div>
+            <div class="kw-wrap" id="pills-cut-location" style="margin-bottom:8px"></div>
+            <div class="field-label">지역</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <select class="input" id="cut-region-select" onchange="setCutRegion(this.value)"></select>
+              <input class="input" id="cut-region-custom" placeholder="지역 직접입력" style="display:none" oninput="setCutField('regionCustom', this.value)">
+            </div>
+            <div class="field-label">시간대</div>
+            <div class="kw-wrap" id="pills-cut-timezone" style="margin-bottom:8px"></div>
+            <div class="field-label">조명</div>
+            <div class="kw-wrap" id="pills-cut-light"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><span class="idx">12</span>🎬 E군 연출 설계</div>
+            <div class="field-label">컷 길이</div>
+            <div class="kw-wrap" id="pills-cut-length" style="margin-bottom:8px"></div>
+            <div class="field-label">구간</div>
+            <div class="kw-wrap" id="pills-cut-segcount" style="margin-bottom:10px"></div>
+
+            <div id="cut-segment-editor"></div>
+
+            <div class="field-label" style="margin-top:8px">동작</div>
+            <div class="kw-wrap" id="pills-cut-action" style="margin-bottom:8px"></div>
+            <div class="field-label">감정코드</div>
+            <div class="kw-wrap" id="pills-cut-mood" style="margin-bottom:8px"></div>
+
+            <div class="field-label">감독 코멘트</div>
+            <textarea class="input" id="cut-director-comment" style="min-height:52px;font-family:'Noto Sans KR',sans-serif" placeholder="감독 코멘트를 입력하세요" oninput="setCutField('comment', this.value)"></textarea>
+          </div>
+        </div>
+
+        <div class="card accent">
+          <div class="card-h"><span class="idx">13</span>💻 C컷 코드 프리뷰</div>
+          <div class="code-preview" id="cut-code-preview"></div>
         </div>
       </div>
 
@@ -422,6 +477,84 @@ const LOOK_AUTO_LINK = {
   LK_HM: { hr: 'HR_DN 다운스타일', mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
 };
 
+// ── 컷 설계(Phase 3) 옵션 ─────────────────────────────────────────────────────
+const CUT_EMOTION_OPTIONS = [
+  { code: 'EMO_SUR', icon: '😲', label: '충격·각성' },
+  { code: 'EMO_CUR', icon: '🤔', label: '호기심·의문' },
+  { code: 'EMO_CLM', icon: '😌', label: '편안·여유' },
+  { code: 'EMO_EMP', icon: '😶', label: '공허·번아웃' },
+  { code: 'EMO_STR', icon: '💪', label: '강함·자신감' },
+  { code: 'EMO_DRM', icon: '🌙', label: '몽환·감성' },
+];
+const PIPELINE_OPTIONS = [
+  { code: 'YR_VD', label: 'YR_VD 립싱크', flow: ['G2','G3','G4','G5'] },
+  { code: 'YR_IM', label: 'YR_IM 이미지', flow: ['G2','G4','G5'] },
+  { code: 'BR_',   label: 'BR_ B-Roll',   flow: ['G4','G5'] },
+  { code: 'GR_',   label: 'GR_ 그래픽',   flow: ['G4','G5'] },
+  { code: 'CC_',   label: 'CC_ CapCut',   flow: ['G5'] },
+];
+const INDOOR_OPTIONS = [
+  { code: 'IN',  label: 'IN 실내' },
+  { code: 'OUT', label: 'OUT 실외' },
+];
+const LOCATION_OPTIONS = [
+  { code: 'CF', label: 'CF 카페' },
+  { code: 'RE', label: 'RE 식당' },
+  { code: 'HM', label: 'HM 집' },
+  { code: 'ST', label: 'ST 거리' },
+  { code: 'GY', label: 'GY 헬스' },
+  { code: 'KC', label: 'KC 찜질' },
+  { code: 'SW', label: 'SW 지하철' },
+  { code: 'RT', label: 'RT 루프탑' },
+];
+const REGION_OPTIONS = ['성수동', '이태원', '한강', '홍대', '직접입력'];
+const TIMEZONE_OPTIONS = [
+  { code: 'TZ_GH', label: 'TZ_GH 골든아워' },
+  { code: 'TZ_NT', label: 'TZ_NT 야간' },
+  { code: 'TZ_AM', label: 'TZ_AM 오전' },
+];
+const LIGHT_OPTIONS = [
+  { code: 'LT_WM', label: 'LT_WM 따뜻한빛' },
+  { code: 'LT_CL', label: 'LT_CL 차가운빛' },
+  { code: 'LT_NT', label: 'LT_NT 자연광' },
+];
+const LENGTH_OPTIONS = [
+  { code: '8s',  label: '8s' },
+  { code: '16s', label: '16s' },
+  { code: '24s', label: '24s' },
+];
+const SEGCOUNT_OPTIONS = [
+  { code: '2', label: '2구간' },
+  { code: '3', label: '3구간' },
+];
+const SHOT_OPTIONS = [
+  { code: 'SH_CU',  label: 'SH_CU 클로즈업' },
+  { code: 'SH_MS',  label: 'SH_MS 미디엄샷' },
+  { code: 'SH_WS',  label: 'SH_WS 와이드샷' },
+  { code: 'SH_MCU', label: 'SH_MCU 미디엄클로즈업' },
+  { code: 'SH_ECU', label: 'SH_ECU 익스트림클로즈업' },
+];
+const CAMERA_OPTIONS = [
+  { code: 'CA_ST',   label: 'CA_ST 고정' },
+  { code: 'CA_ZI',   label: 'CA_ZI 줌인' },
+  { code: 'CA_ZO',   label: 'CA_ZO 줌아웃' },
+  { code: 'CA_PN_L', label: 'CA_PN_L 패닝좌' },
+  { code: 'CA_PS',   label: 'CA_PS 푸시' },
+];
+const ACTION_OPTIONS = [
+  { code: 'AT_AC_05', label: 'AT_AC_05 카메라응시' },
+  { code: 'AT_SI_01', label: 'AT_SI_01 앉기' },
+  { code: 'AT_MW_01', label: 'AT_MW_01 걷기' },
+];
+const MOOD_OPTIONS = [
+  { code: 'MD_SUR', label: 'MD_SUR 충격' },
+  { code: 'MD_INT', label: 'MD_INT 집중' },
+  { code: 'MD_CUR', label: 'MD_CUR 호기심' },
+  { code: 'MD_DRM', label: 'MD_DRM 몽환' },
+];
+const SEGMENT_KEYS = ['CL_A', 'CL_B', 'CL_C'];
+const SEGMENT_LABELS = { CL_A: '구간 A', CL_B: '구간 B', CL_C: '구간 C' };
+
 const DEMO_CANDIDATES = [
   { icon: '🧠', title: '회의가 끝나면 기억이 안 나는 이유', type: 'LF', keywords: 'PSY · 트렌드레이더 수집', story: '', script: '' },
   { icon: '😴', title: '한국인이 번아웃을 모르는 이유', type: 'SF', keywords: 'PSY · SOC · 직접 기획', story: '', script: '' },
@@ -439,6 +572,7 @@ const DEMO_CUTS = [
 // ── 상태 ─────────────────────────────────────────────────────
 let candidatePool = [...DEMO_CANDIDATES];
 let currentCutIndex = 2; // C03 활성(데모 기본값)
+const cutDesignState = {}; // 컷 번호(C01 등)별 컷 설계(Phase 3) 상태
 
 const state = {
   selectedCandidateIdx: 0,
@@ -631,6 +765,152 @@ function moveCut(dir) {
   renderAll();
 }
 
+function currentCut() {
+  return DEMO_CUTS[currentCutIndex];
+}
+
+// ── 컷 설계(Phase 3) ─────────────────────────────────────────────────────
+function getCutDesign(cut) {
+  if (!cutDesignState[cut.num]) {
+    cutDesignState[cut.num] = {
+      emotion: 'EMO_SUR',
+      pipeline: PIPELINE_OPTIONS.some(p => p.code === cut.type) ? cut.type : 'YR_VD',
+      indoor: 'IN',
+      location: 'CF',
+      region: '성수동',
+      regionCustom: '',
+      timezone: 'TZ_GH',
+      light: 'LT_WM',
+      length: '8s',
+      segCount: '2',
+      segments: {
+        CL_A: { shot: 'SH_CU', cam: 'CA_ST' },
+        CL_B: { shot: 'SH_MS', cam: 'CA_ZI' },
+        CL_C: { shot: 'SH_WS', cam: 'CA_ZO' },
+      },
+      action: 'AT_AC_05',
+      mood: 'MD_CUR',
+      comment: '',
+    };
+  }
+  return cutDesignState[cut.num];
+}
+
+function setCutField(key, value) {
+  getCutDesign(currentCut())[key] = value;
+  renderCutDesignTab();
+}
+
+function setCutRegion(value) {
+  const d = getCutDesign(currentCut());
+  d.region = value;
+  if (value !== '직접입력') d.regionCustom = '';
+  renderCutDesignTab();
+}
+
+function setCutSegmentField(segKey, field, value) {
+  getCutDesign(currentCut()).segments[segKey][field] = value;
+  renderCutDesignTab();
+}
+
+// 코드가 아닌 값(예: 세그먼트 키)도 안전하게 다루기 위해 값은 항상 이 목록에 정의된
+// 코드 중 하나로 고정되어 있어 onclick 문자열에 그대로 꽂아 넣어도 안전하다.
+function pillsHtml(options, currentValue, onclickTemplate, cls) {
+  return options.map(o => {
+    const label = o.icon ? `${o.icon} ${o.label}` : o.label;
+    const on = currentValue === o.code;
+    const onclick = onclickTemplate.replace('{v}', o.code);
+    return `<div class="pill ${on ? (cls || 'on') : ''}" onclick="${onclick}">${escapeHtml(label)}</div>`;
+  }).join('');
+}
+
+function setPills(containerId, options, currentValue, onclickTemplate, cls) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = pillsHtml(options, currentValue, onclickTemplate, cls);
+}
+
+function renderPipelineFlow(d) {
+  const el = document.getElementById('cut-pipeline-flow');
+  if (!el) return;
+  const opt = PIPELINE_OPTIONS.find(p => p.code === d.pipeline);
+  const flow = opt ? opt.flow : [];
+  el.innerHTML = flow.map(g => `<span class="idx">${g}</span>`).join(' <span class="cp-m">→</span> ');
+}
+
+function renderCutSegmentEditor(d) {
+  const el = document.getElementById('cut-segment-editor');
+  if (!el) return;
+  const segCount = Number(d.segCount);
+  el.innerHTML = SEGMENT_KEYS.slice(0, segCount).map(segKey => {
+    const seg = d.segments[segKey];
+    return `
+    <div class="seg-box">
+      <div class="seg-label">${SEGMENT_LABELS[segKey]} <span class="idx">${segKey}</span></div>
+      <div class="field-label">샷타입</div>
+      <div class="kw-wrap" style="margin-bottom:6px">${pillsHtml(SHOT_OPTIONS, seg.shot, `setCutSegmentField('${segKey}','shot','{v}')`)}</div>
+      <div class="field-label">카메라</div>
+      <div class="kw-wrap">${pillsHtml(CAMERA_OPTIONS, seg.cam, `setCutSegmentField('${segKey}','cam','{v}')`)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCutCodePreview(d, cut) {
+  const el = document.getElementById('cut-code-preview');
+  if (!el) return;
+  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const idPart = `${epId}_${cut.num}`;
+  const spacePart = `${d.indoor}.${d.location}.${d.timezone}.${d.light}`;
+  const segCount = Number(d.segCount);
+  const segParts = SEGMENT_KEYS.slice(0, segCount).map(k => `${d.segments[k].shot}+${d.segments[k].cam}`).join(' → ');
+  const amPart = `${d.action}+${d.mood}`;
+  const region = d.region === '직접입력' ? (d.regionCustom || '미입력') : d.region;
+
+  el.innerHTML = `<span class="cp-m">## C컷 코드</span>
+<span class="cp-a">${escapeHtml(idPart)}</span> :: <span class="cp-b">${escapeHtml(d.pipeline)}</span> :: <span class="cp-d">${escapeHtml(spacePart)}</span> :: <span class="cp-c">${escapeHtml(segParts)}</span> :: <span class="cp-d">${escapeHtml(amPart)}</span> :: <span class="cp-b">${escapeHtml(d.length)}</span>
+<span class="cp-m">## 메모</span>
+<span class="cp-m">지역 ${escapeHtml(region)} · 구간 ${segCount}개 · 감독 코멘트: ${escapeHtml(d.comment || '(미입력)')}</span>`;
+}
+
+function renderCutDesignTab() {
+  const cut = currentCut();
+  const d = getCutDesign(cut);
+
+  const phaseNumEl = document.getElementById('cut-phase-num');
+  if (phaseNumEl) phaseNumEl.textContent = cut.num;
+
+  setPills('pills-cut-emotion', CUT_EMOTION_OPTIONS, d.emotion, "setCutField('emotion','{v}')", 'on-o');
+  setPills('pills-cut-pipeline', PIPELINE_OPTIONS, d.pipeline, "setCutField('pipeline','{v}')");
+  renderPipelineFlow(d);
+
+  setPills('pills-cut-indoor', INDOOR_OPTIONS, d.indoor, "setCutField('indoor','{v}')");
+  setPills('pills-cut-location', LOCATION_OPTIONS, d.location, "setCutField('location','{v}')");
+  setPills('pills-cut-timezone', TIMEZONE_OPTIONS, d.timezone, "setCutField('timezone','{v}')");
+  setPills('pills-cut-light', LIGHT_OPTIONS, d.light, "setCutField('light','{v}')");
+
+  const regionSelect = document.getElementById('cut-region-select');
+  if (regionSelect) {
+    regionSelect.innerHTML = REGION_OPTIONS.map(r => `<option value="${escapeHtml(r)}" ${d.region === r ? 'selected' : ''}>${escapeHtml(r)}</option>`).join('');
+  }
+  const customInput = document.getElementById('cut-region-custom');
+  if (customInput) {
+    customInput.style.display = d.region === '직접입력' ? 'block' : 'none';
+    if (document.activeElement !== customInput) customInput.value = d.regionCustom;
+  }
+
+  setPills('pills-cut-length', LENGTH_OPTIONS, d.length, "setCutField('length','{v}')");
+  setPills('pills-cut-segcount', SEGCOUNT_OPTIONS, d.segCount, "setCutField('segCount','{v}')");
+
+  renderCutSegmentEditor(d);
+
+  setPills('pills-cut-action', ACTION_OPTIONS, d.action, "setCutField('action','{v}')");
+  setPills('pills-cut-mood', MOOD_OPTIONS, d.mood, "setCutField('mood','{v}')", 'on-o');
+
+  const commentEl = document.getElementById('cut-director-comment');
+  if (commentEl && document.activeElement !== commentEl) commentEl.value = d.comment;
+
+  renderCutCodePreview(d, cut);
+}
+
 // ── 코드 프리뷰 / 자동연동 / 완성도 ─────────────────────────────────────────────────────
 function renderCodePreview() {
   const cand = candidatePool[state.selectedCandidateIdx];
@@ -693,6 +973,7 @@ function renderAll() {
   renderAutoLink();
   renderCodePreview();
   renderCutList();
+  renderCutDesignTab();
   renderProgress();
 
   const epIdInput = document.getElementById('ep-id-input');
