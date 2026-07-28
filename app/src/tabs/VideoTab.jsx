@@ -426,7 +426,7 @@ export default function VideoTab() {
       const res = await fetch('http://localhost:3001/api/run-ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ep, cutNo: cut.no }),
+        body: JSON.stringify({ ep, cutNo: cut.no, duration: cut.duration || 8 }),
       })
       const reader = res.body.getReader()
       const decoder = new TextDecoder()

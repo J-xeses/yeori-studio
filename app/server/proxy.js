@@ -1245,8 +1245,9 @@ app.post('/api/save-voice-insert', (req, res) => {
 
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
 app.post('/api/run-ffmpeg', (req, res) => {
-  const { ep, cutNo } = req.body
+  const { ep, cutNo, duration } = req.body
   if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
+  const dur = parseFloat(duration) || 8
 
   const padded   = String(cutNo).padStart(2, '0')
   const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`)
@@ -1268,12 +1269,12 @@ app.post('/api/run-ffmpeg', (req, res) => {
 
   send({ type: 'progress', message: 'FFmpeg 합성 시작…' })
 
-  const ffmpeg = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
+  const ffmpeg = 'ffmpeg'
   const args = [
     '-y',
     '-i', videoFile,
     '-i', audioFile,
-    '-filter_complex', '[1:a]apad=whole_dur=8[a]',
+    '-filter_complex', `[1:a]apad=whole_dur=${dur}[a]`,
     '-map', '0:v',
     '-map', '[a]',
     '-c:v', 'copy',
