@@ -338,7 +338,6 @@
   .candidate-list-body { flex: 1 1 50%; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
   .candidate-list-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 24px 8px; }
 
-  .candidate-side-divider { height: 1px; background: var(--border); margin: 12px 0; flex-shrink: 0; }
   .candidate-trend-list { flex: 1 1 50%; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 80px; }
   .candidate-trend-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .candidate-trend-card:hover { border-color: var(--amber); background: var(--surface3); }
@@ -454,6 +453,10 @@
       <div id="ep-list"></div>
       <div class="sidebar-add" onclick="openEpModal()">+ 에피소드 추가</div>
     </div>
+    <div class="sidebar-section">
+      <div class="candidate-side-title" style="margin-bottom:6px">🔥 트렌드 분석</div>
+      <div class="candidate-trend-list" id="candidate-trend-list"></div>
+    </div>
   </aside>
 
   <!-- 메인 -->
@@ -526,10 +529,6 @@
 
           <div class="candidate-side-title" style="margin-bottom:6px">후보 목록 <span class="candidate-count-badge" id="candidate-list-count">0</span></div>
           <div class="candidate-list-body" id="candidate-list-body"></div>
-
-          <div class="candidate-side-divider"></div>
-          <div class="candidate-side-title" style="margin-bottom:6px">🔥 트렌드 분석</div>
-          <div class="candidate-trend-list" id="candidate-trend-list"></div>
         </div>
 
         <div class="candidate-main-panel">
