@@ -185,9 +185,247 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
       duration: pc.du || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType: 'YEORI',
-      masterCode: { sp: pc.sp, pl: pc.pl, sh: pc.sh, ca: pc.ca, md: pc.md, ac: pc.ac, kr: pc.kr },
+      masterCode: {
+        sp: pc.sp || '', pl: pc.pl || '', ch: '', sh: pc.sh || '', ca: pc.ca || '',
+        md: pc.md || '', ac: pc.ac || '', lookId: '', du: pc.du || 8,
+        audio: { bgm: '', voice: '', sfx: '', ambience: '' },
+        kr: {
+          sp: pc.kr?.sp || '', ch: pc.kr?.ch || '', sh: pc.kr?.sh || '',
+          ca: pc.kr?.ca || '', ac: pc.kr?.ac || '', md: pc.kr?.md || '',
+        },
+      },
     }
   })
+}
+
+// ── v3 표준 포맷(SF_E01_SHOE_v3.txt 기준) 대본 파서 ──────────────────────
+// script_generator.py/script_to_prompts.py가 만드는 단순 포맷([C01] 헤더,
+// 구분선 없이 SC:~DU: 곧바로 이어짐)과 달리, v3.1 수기 표준 포맷은
+// "[CUT N]  제목 / N초" 헤더 + ━ 구분선 + SC~DU/오디오 + KR/IP/VP 3개
+// 섹션으로 구성된다. 구분선 개수에 의존하지 않고 섹션 제목 줄로 상태를
+// 전환하는 방식이라 구분선 스타일이 조금 달라져도 안전하게 파싱된다.
+const V3_SEP_LINE_RE = /^━{6,}$/
+const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
+const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
+const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
+
+function isV3Format(raw) {
+  return /KR\s*\(한글\s*컨펌본\)/.test(raw) && /^\s*SP:/m.test(raw) && /^\s*PL:/m.test(raw)
+}
+
+function parseCutHeaderMeta(headerRest) {
+  const lipsync = /★\s*립싱크/.test(headerRest)
+  let rest = headerRest.replace(/★\s*립싱크/g, '').trim()
+  const emDashIdx = rest.search(/[—-]/)
+  if (emDashIdx > -1) rest = rest.slice(emDashIdx + 1).trim()
+  const slashIdx = rest.lastIndexOf('/')
+  const cutTitle = (slashIdx > -1 ? rest.slice(0, slashIdx) : rest).trim()
+  return { cutTitle, lipsync }
+}
+
+// 원본 텍스트를 컷 단위로 쪼개 { no, cutTitle, lipsync, mainLines, krLines, ipLines, vpLines } 배열로 반환
+function splitV3Cuts(raw) {
+  const lines = raw.split('\n')
+  const cuts = []
+  let cur = null
+  let section = null
+
+  const flush = () => { if (cur) cuts.push(cur) }
+
+  for (const line of lines) {
+    if (V3_SEP_LINE_RE.test(line.trim())) continue
+
+    const headerM = line.match(V3_CUT_HEADER_RE)
+    if (headerM) {
+      flush()
+      const { cutTitle, lipsync } = parseCutHeaderMeta(headerM[2] || '')
+      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
+      section = 'main'
+      continue
+    }
+    if (!cur) continue // [CUT N] 등장 전(마스터 코드/EP.HEADER 영역)은 별도 파서에서 처리
+
+    const trimmed = line.trim()
+    if (trimmed === 'KR (한글 컨펌본)') { section = 'kr'; continue }
+    if (trimmed === 'IP (이미지 프롬프트)') { section = 'ip'; continue }
+    if (trimmed === 'VP (영상 프롬프트)') { section = 'vp'; continue }
+
+    if (section === 'main') cur.mainLines.push(line)
+    else if (section === 'kr') cur.krLines.push(line)
+    else if (section === 'ip') cur.ipLines.push(line)
+    else if (section === 'vp') cur.vpLines.push(line)
+  }
+  flush()
+  return cuts
+}
+
+function parseV3MainBlock(mainLines) {
+  const fields = {}
+  const audio = { bgm: '', voice: '', sfx: '', ambience: '' }
+  let inAudio = false
+  for (const line of mainLines) {
+    if (/^오디오:\s*$/.test(line.trim())) { inAudio = true; continue }
+    if (inAudio) {
+      const am = line.match(V3_AUDIO_SUBFIELD_RE)
+      if (am) { audio[V3_AUDIO_KEY_MAP[am[1]]] = am[2].trim(); continue }
+      if (line.trim() === '') continue
+      inAudio = false
+    }
+    const fm = line.match(V3_MAIN_FIELD_RE)
+    if (fm) fields[fm[1]] = fm[2].trim()
+  }
+  return { fields, audio }
+}
+
+function parseV3KrBlock(krLines) {
+  const kr = {}
+  for (const line of krLines) {
+    const m = line.trim().match(V3_KR_FIELD_RE)
+    if (m) kr[m[1]] = m[3].trim()
+  }
+  return kr
+}
+
+function joinTrimmedLines(lines) {
+  let start = 0, end = lines.length
+  while (start < end && lines[start].trim() === '') start++
+  while (end > start && lines[end - 1].trim() === '') end--
+  return lines.slice(start, end).join('\n')
+}
+
+function pipelineCodeToCutType(plCode) {
+  const p = (plCode || '').toUpperCase()
+  if (p.startsWith('BR_')) return 'BROLL'
+  if (p.startsWith('GR_')) return 'GRAPHIC'
+  if (p.startsWith('CC_')) return 'CAPCUT'
+  return 'YEORI' // YR_VD, YR_IM 등
+}
+
+function parseCutsV3(raw) {
+  const rawCuts = splitV3Cuts(raw)
+  if (!rawCuts.length) return []
+
+  return rawCuts.map(rc => {
+    const { fields, audio } = parseV3MainBlock(rc.mainLines)
+    const kr = parseV3KrBlock(rc.krLines)
+    const ip = joinTrimmedLines(rc.ipLines)
+    const vp = joinTrimmedLines(rc.vpLines)
+
+    const shCode = fields.SH || ''
+    const firstSh = shCode.split(/[→>]/)[0].trim()
+    const dl = fields.DL && fields.DL !== '없음' ? fields.DL : ''
+    const nr = fields.NR && fields.NR !== '없음' ? fields.NR : ''
+
+    return {
+      id: `cut-${rc.no}`,
+      no: rc.no,
+      cutTitle: rc.cutTitle || '',
+      lipsync: rc.lipsync || /★/.test(audio.voice || ''),
+      scene: fields.SC || '',
+      action: kr.AC || '',
+      character: '서여리',
+      dialogue: dl,
+      narration: nr,
+      imagePrompt: ip,
+      videoPrompt: vp,
+      duration: parseInt(fields.DU, 10) || 8,
+      shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
+      cutType: pipelineCodeToCutType(fields.PL),
+      cutMark: 'NORMAL',
+      masterCode: {
+        sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
+        sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',
+        lookId: fields.LOOK_ID || '', du: parseInt(fields.DU, 10) || 8,
+        audio,
+        kr: { sp: kr.SP || '', ch: kr.CH || '', sh: kr.SH || '', ca: kr.CA || '', ac: kr.AC || '', md: kr.MD || '' },
+      },
+    }
+  })
+}
+
+// 마스터 코드 / EP.HEADER 글로벌 블록(====으로 감싼 부분) — 컷별 파서와 별개로
+// 에피소드 단위 메타로 보관해둔다(2단계 사이드바 표시용, 현재는 원문 그대로 저장만)
+function parseV3GlobalHeader(raw) {
+  // "마스터 코드" 제목 줄 바로 다음 줄이 코드 본문(중간에 ==== 구분선 없음),
+  // EP.HEADER는 제목과 본문 사이에 ==== 구분선이 하나 더 있어 패턴이 다르다.
+  const mcMatch = raw.match(/마스터\s*코드\s*\n([^\n=][^\n]*)/)
+  const masterCode = mcMatch ? mcMatch[1].trim() : ''
+  const headerMatch = raw.match(/EP\.HEADER\s*\n={10,}\s*\n([\s\S]*?)\n={10,}/)
+  const epHeaderRaw = headerMatch ? headerMatch[1].trim() : ''
+  return { masterCode, epHeaderRaw }
+}
+
+// cuts 배열 -> v3 표준 포맷 텍스트 (다운로드용, parseCutsV3로 다시 읽을 수 있게 대칭 유지)
+function buildV3ScriptText(cuts, episode) {
+  const sep = '━'.repeat(24)
+  const eq = '='.repeat(64)
+  const blocks = cuts.map(c => {
+    const mc = c.masterCode || {}
+    const audio = mc.audio || {}
+    const kr = mc.kr || {}
+    const titlePart = c.cutTitle ? ` ${mc.pl || ''} — ${c.cutTitle} / ${c.duration || 8}초${c.lipsync ? '  ★립싱크' : ''}` : ` ${mc.pl || ''} / ${c.duration || 8}초`
+    const lines = [
+      sep,
+      `[CUT ${c.no}] ${titlePart}`,
+      sep,
+      `SC: ${c.scene || ''}`,
+      `SP: ${mc.sp || ''}`,
+      `PL: ${mc.pl || ''}`,
+      `CH: ${mc.ch || ''}`,
+      `DL: ${c.dialogue || '없음'}`,
+      `NR: ${c.narration || '없음'}`,
+      `SH: ${mc.sh || ''}`,
+      `CA: ${mc.ca || ''}`,
+      `MD: ${mc.md || ''}`,
+      `AC: ${mc.ac || ''}`,
+      `LOOK_ID: ${mc.lookId || ''}`,
+      `DU: ${c.duration || 8}`,
+      '오디오:',
+      `  BGM: ${audio.bgm || ''}`,
+      `  음성: ${audio.voice || ''}`,
+      `  효과음: ${audio.sfx || ''}`,
+      `  앰비언스: ${audio.ambience || ''}`,
+      '',
+      sep,
+      'KR (한글 컨펌본)',
+      sep,
+      `SP(장소):     ${kr.sp || ''}`,
+      `CH(캐릭터):   ${kr.ch || ''}`,
+      `SH(샷):       ${kr.sh || ''}`,
+      `CA(카메라):   ${kr.ca || ''}`,
+      `AC(동작):     ${kr.ac || ''}`,
+      `MD(감정):     ${kr.md || ''}`,
+      `DL(대사):     ${c.dialogue || ''}`,
+      `NR(나레이션): ${c.narration || ''}`,
+      '',
+      sep,
+      'IP (이미지 프롬프트)',
+      sep,
+      c.imagePrompt || '',
+      '',
+      sep,
+      'VP (영상 프롬프트)',
+      sep,
+      c.videoPrompt || '',
+      sep,
+    ]
+    return lines.join('\n')
+  })
+
+  const header = [
+    eq,
+    '마스터 코드',
+    episode?.masterCode || '(미지정)',
+    eq,
+    'EP.HEADER',
+    eq,
+    episode?.epHeaderRaw || `EP    : ${episode?.title || ''}`,
+    eq,
+  ].join('\n')
+
+  return `${header}\n\n\n${blocks.join('\n\n\n')}\n`
 }
 
 export default function ScriptGenTab() {
@@ -537,6 +775,20 @@ ${YEORI_RULESET}
     }
   }
 
+  // 씬 설명 카드의 SP/PL/CH/SH/CA/MD/AC/LOOK_ID 코드 필드 (cut.masterCode.{key})
+  const updateCutMC = (id, key, val) => {
+    const cut = cuts.find(c => c.id === id)
+    const mc = cut?.masterCode || {}
+    dispatch({ type: 'UPDATE_CUT', id, p: { masterCode: { ...mc, [key]: val } } })
+  }
+  // 오디오(masterCode.audio.*) / KR 컨펌본(masterCode.kr.*) 처럼 한 단계 더 중첩된 필드
+  const updateCutMCNested = (id, group, key, val) => {
+    const cut = cuts.find(c => c.id === id)
+    const mc = cut?.masterCode || {}
+    const groupVal = mc[group] || {}
+    dispatch({ type: 'UPDATE_CUT', id, p: { masterCode: { ...mc, [group]: { ...groupVal, [key]: val } } } })
+  }
+
   // ── G1 승인/취소 ─────────────────────────────────────────────
   const approveG1 = (cutNo) => {
     setGPoint(cutNo, 'g1', true)
@@ -647,29 +899,12 @@ ${currentScript}
 
   const downloadScript = () => {
     if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
-    const lines = cuts.map(c => {
-      const fields = [
-        `[CUT ${c.no}]`,
-        `씬: ${c.scene || ''}`,
-        `액션: ${c.action || ''}`,
-        `캐릭터: ${c.character || '서여리'}`,
-        `대사: ${c.dialogue || '없음'}`,
-        `나레이션: ${c.narration || ''}`,
-        `샷 타입: ${c.shotType || 'FULLBODY'}`,
-        `컷 타입: ${c.cutType || 'YEORI'}`,
-        `이미지 프롬프트: ${c.imagePrompt || ''}`,
-        `컷 길이: ${c.duration || 5}`,
-      ]
-      if (c.cutType === 'PIP')     fields.push(`PIP_TARGET: ${c.pipTarget || ''}`)
-      if (c.cutType === 'GRAPHIC') fields.push(`그래픽 도구: ${c.graphicTool || 'HTML'}`)
-      return fields.join('\n')
-    }).join('\n\n')
-    const header = `# EP${episode.number} ${episode.title || ''} 대본\n# 생성일: ${new Date().toLocaleString('ko-KR')}\n# ※ [CUT N] 형식과 필드명(씬:/액션:/캐릭터:/대사:/나레이션:/샷 타입:/컷 타입:/이미지 프롬프트:/컷 길이:) 유지 필수\n\n`
-    const blob = new Blob([header + lines], { type: 'text/plain;charset=utf-8' })
+    const text = buildV3ScriptText(cuts, episode)
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `ep${episode.number}_script.txt`
+    a.download = `${getEpisodeCode(episode.contentType || 'LF', episode.number)}_v3.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -680,6 +915,25 @@ ${currentScript}
     const reader = new FileReader()
     reader.onload = (ev) => {
       const text = ev.target.result
+
+      // ── v3 표준 포맷(SC/SP/PL/CH/DL/NR + KR/IP/VP 섹션) 감지 ──
+      if (isV3Format(text)) {
+        const parsedV3 = parseCutsV3(text)
+        if (!parsedV3.length) {
+          alert('v3 포맷 파싱 실패: [CUT N] 헤더와 SC:/SP:/PL: 필드, KR/IP/VP 섹션을 확인해주세요.')
+          return
+        }
+        dispatch({ type: 'SET_CUTS', p: parsedV3 })
+        const { masterCode, epHeaderRaw } = parseV3GlobalHeader(text)
+        if (masterCode || epHeaderRaw) dispatch({ type: 'SET_EPISODE', p: { masterCode, epHeaderRaw } })
+        parsedV3.forEach(c => setGPoint(c.no, 'g1', !!(c.dialogue || c.narration || c.scene)))
+        setGData(loadGPoints())
+        setActiveCut(0)
+        alert(`✅ v3 포맷 대본 ${parsedV3.length}개 컷 불러오기 완료`)
+        return
+      }
+
+      // ── 기존 단순 포맷(씬:/액션:/대사:/... 한 줄 필드) ──
       const parsed = parseCuts(text, cuts.length)
       if (!parsed.length) {
         alert('파싱 실패: 형식을 확인해주세요.\n[CUT N] 블록과 필드명이 정확해야 합니다.')
@@ -1336,100 +1590,231 @@ ${currentScript}
           </div>
         )}
 
-        {/* ── 상세 편집 뷰 ──────────────────────────────────── */}
-        {viewMode === 'detail' && cuts.length > 0 && (
-          <>
-            <div className={s.editorHeader}>
-              <h2>CUT {cuts[activeCut]?.no}</h2>
-            </div>
+        {/* ── 상세 편집 뷰 (v3 포맷: 씬 설명 / KR 컨펌본 / IP / VP 4분할) ── */}
+        {viewMode === 'detail' && cuts.length > 0 && (() => {
+          const cut = cuts[activeCut]
+          const mc = cut?.masterCode || {}
+          const audio = mc.audio || {}
+          const kr = mc.kr || {}
+          const mcField = (key, val) => updateCutMC(cut.id, key, val)
+          const audioField = (key, val) => updateCutMCNested(cut.id, 'audio', key, val)
+          const krField = (key, val) => updateCutMCNested(cut.id, 'kr', key, val)
 
-            <div className={s.fields}>
-              {[
-                { key: 'scene', label: '씬 헤딩', ph: 'INT. 카페 - 낮' },
-                { key: 'action', label: '액션/지문', ph: '여리가 창가에 앉아 노트북을 연다.' },
-                { key: 'character', label: '캐릭터', ph: '서여리' },
-                { key: 'dialogue', label: '대사', ph: '오늘 여기서 처음 써보는 이야기야.' },
-                { key: 'narration', label: '나레이션 (VO)', ph: '평범한 화요일 오후, 새로운 루틴이 시작된다.' },
-              ].map(({ key, label, ph }) => (
-                <div key={key} className={s.edField}>
-                  <label>{label}</label>
-                  {key === 'action' || key === 'narration' || key === 'dialogue' ? (
-                    <textarea rows={key === 'action' ? 5 : 3}
-                      placeholder={ph}
-                      value={cuts[activeCut]?.[key] || ''}
-                      onChange={e => updateCut(cuts[activeCut].id, key, e.target.value)} />
-                  ) : (
-                    <input placeholder={ph}
-                      value={cuts[activeCut]?.[key] || ''}
-                      onChange={e => updateCut(cuts[activeCut].id, key, e.target.value)} />
-                  )}
-                </div>
-              ))}
-              <div className={s.edField}>
-                <label>시그니처 마크</label>
-                <div className={s.cutTypeBtns}>
-                  {['NORMAL', 'SIGNATURE'].map(type => {
-                    const active = (cuts[activeCut]?.cutMark ?? 'NORMAL') === type
-                    return (
-                      <button key={type}
-                        className={`${s.cutTypeBtn} ${active ? (type === 'SIGNATURE' ? s.cutTypeBtnSig : s.cutTypeBtnNormal) : ''}`}
-                        onClick={() => updateCut(cuts[activeCut].id, 'cutMark', type)}
-                      >
-                        {type === 'NORMAL' ? '⬜ NORMAL' : '✨ SIGNATURE'}
-                      </button>
-                    )
-                  })}
-                </div>
+          return (
+            <>
+              <div className={s.editorHeader}>
+                <h2>
+                  CUT {cut?.no}
+                  {cut?.cutTitle && <span className={s.cutTitleHint}> — {cut.cutTitle}</span>}
+                  {cut?.lipsync && <span className={s.sigBadge} style={{marginLeft:8}}>★ 립싱크</span>}
+                </h2>
               </div>
-              <div className={s.edField}>
-                <label>파이프라인 유형</label>
-                <select
-                  value={cuts[activeCut]?.cutType || 'YEORI'}
-                  onChange={e => updateCut(cuts[activeCut].id, 'cutType', e.target.value)}
-                  style={{ width:'100%', padding:'6px 8px', borderRadius:6, background:'var(--bg3)', border:'1px solid var(--border2)', color:'var(--text)', fontSize:12, cursor:'pointer' }}
-                >
-                  {CUT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              {cuts[activeCut]?.cutType === 'PIP' && (
-                <div className={s.edField}>
-                  <label>PIP 타겟 컷 번호</label>
-                  <input type="number" min="1" placeholder="배경으로 쓸 컷 번호 (예: 2)"
-                    value={cuts[activeCut]?.pipTarget || ''}
-                    onChange={e => updateCut(cuts[activeCut].id, 'pipTarget', e.target.value)} />
+
+              <div className={s.v3Grid}>
+                {/* ── 좌측: 씬 설명 + KR 컨펌본 ── */}
+                <div className={s.v3Col}>
+
+                  <div className={s.v3Card}>
+                    <div className={s.v3CardTitle}>🎬 씬 설명 <span className={s.v3CardHint}>SC · SP · PL · CH · DL · NR</span></div>
+
+                    <div className={s.v3MiniField}>
+                      <label>SC (씬 설명)</label>
+                      <textarea rows={2} placeholder="카페 테라스 외부 / 촬영 마무리 직전 세팅샷"
+                        value={cut?.scene || ''} onChange={e => updateCut(cut.id, 'scene', e.target.value)} />
+                    </div>
+                    <div className={s.v3SubGrid}>
+                      <div className={s.v3MiniField}>
+                        <label>SP (공간코드)</label>
+                        <input placeholder="OT.CF.TZ_AF.LT_WM" value={mc.sp || ''} onChange={e => mcField('sp', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>PL (파이프라인)</label>
+                        <input placeholder="YR_VD" value={mc.pl || ''} onChange={e => mcField('pl', e.target.value)} />
+                      </div>
+                      <div className={`${s.v3MiniField} ${s.full}`}>
+                        <label>CH (캐릭터·룩 코드)</label>
+                        <input placeholder="서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL" value={mc.ch || ''} onChange={e => mcField('ch', e.target.value)} />
+                      </div>
+                    </div>
+                    <div className={s.v3MiniField}>
+                      <label>DL (대사)</label>
+                      <textarea rows={2} placeholder="없음" value={cut?.dialogue || ''} onChange={e => updateCut(cut.id, 'dialogue', e.target.value)} />
+                    </div>
+                    <div className={s.v3MiniField}>
+                      <label>NR (나레이션)</label>
+                      <textarea rows={2} placeholder="없음" value={cut?.narration || ''} onChange={e => updateCut(cut.id, 'narration', e.target.value)} />
+                    </div>
+
+                    <div className={s.v3Divider} />
+
+                    <div className={s.v3SubGrid}>
+                      <div className={s.v3MiniField}>
+                        <label>SH (샷타입)</label>
+                        <input placeholder="SH_MCU → SH_CU" value={mc.sh || ''} onChange={e => mcField('sh', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>CA (카메라)</label>
+                        <input placeholder="CA_ST → CA_PS" value={mc.ca || ''} onChange={e => mcField('ca', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>MD (감정)</label>
+                        <input placeholder="MD_JOY" value={mc.md || ''} onChange={e => mcField('md', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>AC (동작)</label>
+                        <input placeholder="AT_SD_01 + AT_EM_01" value={mc.ac || ''} onChange={e => mcField('ac', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>LOOK_ID</label>
+                        <input placeholder="LOOK_CS" value={mc.lookId || ''} onChange={e => mcField('lookId', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>DU (컷 길이·초)</label>
+                        <input type="number" min="1" max="60" value={cut?.duration || 8}
+                          onChange={e => updateCut(cut.id, 'duration', parseInt(e.target.value) || 8)} />
+                      </div>
+                    </div>
+
+                    <div className={s.v3Divider} />
+
+                    <div className={s.v3MiniField}><label>오디오</label></div>
+                    <div className={s.v3SubGrid}>
+                      <div className={s.v3MiniField}>
+                        <label>BGM</label>
+                        <input placeholder="밝은 오프닝 BGM 잔잔하게" value={audio.bgm || ''} onChange={e => audioField('bgm', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>음성</label>
+                        <input placeholder="★립싱크 여부·톤" value={audio.voice || ''} onChange={e => audioField('voice', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>효과음</label>
+                        <input placeholder="힐 소리" value={audio.sfx || ''} onChange={e => audioField('sfx', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>앰비언스</label>
+                        <input placeholder="카페 환경음" value={audio.ambience || ''} onChange={e => audioField('ambience', e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div className={s.v3Divider} />
+
+                    <div className={s.v3SubGrid}>
+                      <div className={s.v3MiniField}>
+                        <label>시그니처 마크</label>
+                        <div className={s.cutTypeBtns}>
+                          {['NORMAL', 'SIGNATURE'].map(type => {
+                            const active = (cut?.cutMark ?? 'NORMAL') === type
+                            return (
+                              <button key={type}
+                                className={`${s.cutTypeBtn} ${active ? (type === 'SIGNATURE' ? s.cutTypeBtnSig : s.cutTypeBtnNormal) : ''}`}
+                                onClick={() => updateCut(cut.id, 'cutMark', type)}
+                              >{type === 'NORMAL' ? '⬜ NORMAL' : '✨ SIGNATURE'}</button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>파이프라인 유형 (자동화 라우팅)</label>
+                        <select
+                          value={cut?.cutType || 'YEORI'}
+                          onChange={e => updateCut(cut.id, 'cutType', e.target.value)}
+                          style={{ width:'100%', padding:'6px 8px', borderRadius:6, background:'var(--bg3)', border:'1px solid var(--border)', color:'var(--text)', fontSize:12, cursor:'pointer' }}
+                        >
+                          {CUT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    {cut?.cutType === 'PIP' && (
+                      <div className={s.v3MiniField}>
+                        <label>PIP 타겟 컷 번호</label>
+                        <input type="number" min="1" placeholder="배경으로 쓸 컷 번호 (예: 2)"
+                          value={cut?.pipTarget || ''} onChange={e => updateCut(cut.id, 'pipTarget', e.target.value)} />
+                      </div>
+                    )}
+                    {cut?.cutType === 'GRAPHIC' && (
+                      <div className={s.v3MiniField}>
+                        <label>그래픽 도구</label>
+                        <div className={s.cutTypeBtns}>
+                          {[{v:'HTML',l:'🌐 HTML'},{v:'CANVA',l:'🎨 CANVA'}].map(({v,l}) => {
+                            const active = (cut?.graphicTool || 'HTML') === v
+                            return (
+                              <button key={v}
+                                className={`${s.cutTypeBtn} ${active ? s.cutTypeBtnNormal : ''}`}
+                                onClick={() => updateCut(cut.id, 'graphicTool', v)}
+                              >{l}</button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={s.v3Card}>
+                    <div className={s.v3CardTitle}>✅ KR 컨펌본 <span className={s.v3CardHint}>한글 대본</span></div>
+                    <div className={s.v3SubGrid}>
+                      <div className={s.v3MiniField}>
+                        <label>SP(장소)</label>
+                        <textarea rows={2} placeholder="카페 테라스 외부 / 오후 따뜻한 햇살" value={kr.sp || ''} onChange={e => krField('sp', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>CH(캐릭터)</label>
+                        <textarea rows={2} placeholder="흰색 스퀘어넥 크롭탑 + 연청 데님 숏츠" value={kr.ch || ''} onChange={e => krField('ch', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>SH(샷)</label>
+                        <textarea rows={2} placeholder="와이드샷 — 테라스 전체 구도" value={kr.sh || ''} onChange={e => krField('sh', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>CA(카메라)</label>
+                        <textarea rows={2} placeholder="고정 (삼각대)" value={kr.ca || ''} onChange={e => krField('ca', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>AC(동작)</label>
+                        <textarea rows={2} placeholder="천천히 카메라 쪽으로 걸어옴" value={kr.ac || ''} onChange={e => krField('ac', e.target.value)} />
+                      </div>
+                      <div className={s.v3MiniField}>
+                        <label>MD(감정)</label>
+                        <textarea rows={2} placeholder="차분하고 따뜻한 일상적 분위기" value={kr.md || ''} onChange={e => krField('md', e.target.value)} />
+                      </div>
+                    </div>
+                    <div className={s.v3Divider} />
+                    <div className={s.v3KrRow}>
+                      <b>DL(대사)</b>
+                      <span className={s.v3KrMirror}>{cut?.dialogue || '없음'}</span>
+                    </div>
+                    <div className={s.v3KrRow}>
+                      <b>NR(나레이션)</b>
+                      <span className={s.v3KrMirror}>{cut?.narration || '없음'}</span>
+                    </div>
+                    <div className={s.v3CardHint}>※ DL/NR은 좌측 "씬 설명"의 DL/NR과 자동으로 같은 값을 사용해요.</div>
+                  </div>
+
                 </div>
-              )}
-              {cuts[activeCut]?.cutType === 'GRAPHIC' && (
-                <div className={s.edField}>
-                  <label>그래픽 도구</label>
-                  <div className={s.cutTypeBtns}>
-                    {[{v:'HTML',l:'🌐 HTML'},{v:'CANVA',l:'🎨 CANVA'}].map(({v,l}) => {
-                      const active = (cuts[activeCut]?.graphicTool || 'HTML') === v
-                      return (
-                        <button key={v}
-                          className={`${s.cutTypeBtn} ${active ? s.cutTypeBtnNormal : ''}`}
-                          onClick={() => updateCut(cuts[activeCut].id, 'graphicTool', v)}
-                        >{l}</button>
-                      )
-                    })}
+
+                {/* ── 우측: IP + VP ── */}
+                <div className={s.v3Col}>
+                  <div className={s.v3Card} style={{ flex: 1 }}>
+                    <div className={s.v3CardTitle}>🖼️ IP <span className={s.v3CardHint}>이미지 프롬프트</span></div>
+                    <textarea rows={14}
+                      placeholder="CLOSEUP SHOT — Young Korean woman early-20s, ..."
+                      value={cut?.imagePrompt || ''}
+                      onChange={e => updateCut(cut.id, 'imagePrompt', e.target.value)}
+                      style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.6 }} />
+                  </div>
+                  <div className={s.v3Card} style={{ flex: 1 }}>
+                    <div className={s.v3CardTitle}>🎥 VP <span className={s.v3CardHint}>영상 프롬프트</span></div>
+                    <textarea rows={14}
+                      placeholder="First 0-3s: ... / Next 3-6s: ... / Final 6-8s: ..."
+                      value={cut?.videoPrompt || ''}
+                      onChange={e => updateCut(cut.id, 'videoPrompt', e.target.value)}
+                      style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.6 }} />
                   </div>
                 </div>
-              )}
-              <div className={s.edField}>
-                <label>이미지 프롬프트</label>
-                <textarea rows={6}
-                  placeholder="Young Korean woman at cafe window, cinematic, 4K"
-                  value={cuts[activeCut]?.imagePrompt || ''}
-                  onChange={e => updateCut(cuts[activeCut].id, 'imagePrompt', e.target.value)} />
               </div>
-              <div className={s.edField}>
-                <label>컷 길이 (초)</label>
-                <input type="number" min="1" max="60" value={cuts[activeCut]?.duration || 5}
-                  onChange={e => updateCut(cuts[activeCut].id, 'duration', parseInt(e.target.value) || 5)} />
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          )
+        })()}
 
         <div className={s.revisionPanel}>
           <div className={s.revisionTitle}>💬 Claude에게 수정 요청</div>
