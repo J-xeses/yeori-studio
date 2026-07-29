@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { elTTS, elVoices } from '../lib/api'
 import { setGPoint } from '../lib/gpoints'
+import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import s from './TTSTab.module.css'
 
 const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
@@ -382,6 +383,7 @@ export default function TTSTab() {
     <div className={s.root}>
       {/* 왼쪽 사이드바 */}
       <div className={s.sidebar}>
+        <EpisodeOverviewBlock />
         <div className={s.sideHead}>
           <span className={s.sideTitle}>컷 목록</span>
           <div className={`${s.elBadge} ${elevenLabsStatus.connected ? s.connected : ''}`}>
@@ -408,8 +410,8 @@ export default function TTSTab() {
 
       {/* 오른쪽 메인 */}
       <div className={s.main}>
-        {/* 1. 목소리 설정 (기본값) */}
-        <div className={s.panel}>
+        {/* 1. 목소리 설정 (기본값) — ElevenLabs 연동 등록/사양 표시 겸 상단바 고정 */}
+        <div className={`${s.panel} ${s.topBar}`}>
           <h3 className={s.panelTitle}>목소리 선택 (기본값)</h3>
           {ttsSettings.voiceId === DEFAULT_VOICE_ID ? (
             <div className={`${s.voiceBanner} ${s.voiceBannerOk}`}>✅ 서여리 목소리 적용 중</div>
@@ -439,6 +441,7 @@ export default function TTSTab() {
           )}
         </div>
 
+        <div className={s.scrollBody}>
         {/* 2. 트랙 구성 패널 */}
         {cut && activeVariant && (
           <div className={s.panel}>
@@ -608,6 +611,7 @@ export default function TTSTab() {
               ? <><span className={s.spinner} />실행 중…</>
               : '🎙️ 전체 컷 일괄 생성 + 합치기'}
           </button>
+        </div>
         </div>
       </div>
     </div>

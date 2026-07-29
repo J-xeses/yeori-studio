@@ -1,5 +1,5 @@
-.root { display: flex; height: 100%; overflow-y: auto; }
-.sidebar { width: 30vh; min-width: 30vh; height: 100%; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; padding: 12px; gap: 8px; }
+.root { display: flex; height: 100%; overflow: hidden; }
+.sidebar { width: 30vh; min-width: 30vh; height: 100%; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; padding: 12px; gap: 8px; }
 .sideTitle { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .6px; text-transform: uppercase; }
 .cutList { display: flex; flex-direction: column; gap: 3px; overflow-y: auto; }
 .cutItem { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border-radius: 7px; background: none; border: 1px solid transparent; text-align: left; transition: all .12s; }
@@ -10,7 +10,9 @@
 .tag { font-size: 10px; color: var(--green); }
 .cutPrev { font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.main { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.main { flex: 1; min-width: 0; overflow: hidden; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.topBar { flex-shrink: 0; }
+.scrollBody { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; margin: 0 -20px; padding: 0 20px; }
 .header { }
 .header h2 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
 .desc { font-size: 13px; color: var(--text-2); }

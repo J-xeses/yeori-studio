@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
 import { setGPoint, setGPoints } from '../lib/gpoints'
+import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import s from './VideoTab.module.css'
 
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
@@ -567,6 +568,7 @@ export default function VideoTab() {
     <div className={s.root}>
       {/* Sidebar */}
       <div className={s.sidebar}>
+        <EpisodeOverviewBlock />
         <div className={s.sidePanel}>
           <div className={s.sidePanelHeader} onClick={() => setSubtitleOpen(p => !p)}>
             자막 디자인 설정 {subtitleOpen ? '▲' : '▼'}
@@ -618,44 +620,6 @@ export default function VideoTab() {
               )}
             </div>
           )}
-        </div>
-
-        <div className={s.quickActions}>
-          <button className={s.qaBtn} onClick={exportSRT}>📄 SRT</button>
-          <button className={s.qaBtn} onClick={loadAllFromProxy}>🔄 불러오기</button>
-          <button
-            className={s.qaBtn}
-            disabled={cuts.some(c => videoGenStatus[c.id] === 'running')}
-            onClick={async () => {
-              for (const c of cuts) {
-                if (videoGenStatus[c.id] === 'running') continue
-                await generateVideoForCut(c)
-              }
-            }}
-          >
-            {cuts.some(c => videoGenStatus[c.id] === 'running') ? '⏳ 생성 중…' : '✨ 전체 AI 생성'}
-          </button>
-          <button
-            className={`${s.qaBtn} ${allG4Done ? s.qaBtnDone : ''}`}
-            onClick={() => {
-              const next = !allG4Done
-              cuts.forEach(c => {
-                setG4Approved(p => ({ ...p, [c.id]: next }))
-                setGPoint(c.no, 'g4', next)
-              })
-            }}
-          >
-            {allG4Done ? '전체 취소' : 'G4 전체'}
-          </button>
-          <button
-            className={`${s.qaBtn} ${batchFfmpegStatus === 'done' ? s.qaBtnDone : ''}`}
-            disabled={cuts.length === 0 || batchFfmpegStatus === 'running'}
-            onClick={runFfmpegBatchAll}
-          >
-            {batchFfmpegStatus === 'running'
-              ? `⏳ 합성 중… (${batchFfmpegProgress.current}/${batchFfmpegProgress.total})`
-              : '🎬 전체 일괄 합성'}
-          </button>
         </div>
 
         {batchFfmpegLog && <div className={s.ffmpegLog}>{batchFfmpegLog}</div>}
@@ -724,21 +688,20 @@ export default function VideoTab() {
 
       {/* Main area */}
       <div className={s.mainArea}>
-      <div className={s.mainSplit}>
-        <div className={s.mainSplitCol}>
-        <div className={s.mainControls}>
-          <div className={s.ratioToggle}>
-            <button
-              className={`${s.ratioBtn} ${aspectRatio === '9:16' ? s.ratioBtnActive : ''}`}
-              onClick={() => setAspectRatio('9:16')}>
-              9:16 숏폼
-            </button>
-            <button
-              className={`${s.ratioBtn} ${aspectRatio === '16:9' ? s.ratioBtnActive : ''}`}
-              onClick={() => setAspectRatio('16:9')}>
-              16:9 롱폼
-            </button>
-          </div>
+      <div className={`${s.mainControls} ${s.topBar}`}>
+        <div className={s.ratioToggle}>
+          <button
+            className={`${s.ratioBtn} ${aspectRatio === '9:16' ? s.ratioBtnActive : ''}`}
+            onClick={() => setAspectRatio('9:16')}>
+            9:16 숏폼
+          </button>
+          <button
+            className={`${s.ratioBtn} ${aspectRatio === '16:9' ? s.ratioBtnActive : ''}`}
+            onClick={() => setAspectRatio('16:9')}>
+            16:9 롱폼
+          </button>
+        </div>
+        <div className={s.topBarRight}>
           <button
             className={`${s.overlayToggle} ${subtitleEnabled ? s.overlayOn : ''}`}
             onClick={() => {
@@ -747,8 +710,49 @@ export default function VideoTab() {
             }}>
             💬 자막 {subtitleEnabled ? 'ON' : 'OFF'}
           </button>
+          <div className={s.quickActions}>
+            <button className={s.qaBtn} onClick={exportSRT}>📄 SRT</button>
+            <button className={s.qaBtn} onClick={loadAllFromProxy}>🔄 불러오기</button>
+            <button
+              className={s.qaBtn}
+              disabled={cuts.some(c => videoGenStatus[c.id] === 'running')}
+              onClick={async () => {
+                for (const c of cuts) {
+                  if (videoGenStatus[c.id] === 'running') continue
+                  await generateVideoForCut(c)
+                }
+              }}
+            >
+              {cuts.some(c => videoGenStatus[c.id] === 'running') ? '⏳ 생성 중…' : '✨ 전체 AI 생성'}
+            </button>
+            <button
+              className={`${s.qaBtn} ${allG4Done ? s.qaBtnDone : ''}`}
+              onClick={() => {
+                const next = !allG4Done
+                cuts.forEach(c => {
+                  setG4Approved(p => ({ ...p, [c.id]: next }))
+                  setGPoint(c.no, 'g4', next)
+                })
+              }}
+            >
+              {allG4Done ? '전체 취소' : 'G4 전체'}
+            </button>
+            <button
+              className={`${s.qaBtn} ${batchFfmpegStatus === 'done' ? s.qaBtnDone : ''}`}
+              disabled={cuts.length === 0 || batchFfmpegStatus === 'running'}
+              onClick={runFfmpegBatchAll}
+            >
+              {batchFfmpegStatus === 'running'
+                ? `⏳ 합성 중… (${batchFfmpegProgress.current}/${batchFfmpegProgress.total})`
+                : '🎬 전체 일괄 합성'}
+            </button>
+          </div>
         </div>
+      </div>
 
+      <div className={s.scrollBody}>
+      <div className={s.mainSplit}>
+        <div className={s.mainSplitCol}>
         <div className={s.videoWrapper}
           style={{
             aspectRatio: aspectRatio === '9:16' ? '9/16' : '16/9',
@@ -963,6 +967,7 @@ export default function VideoTab() {
           )
         })()}
         </div>
+      </div>
       </div>
       </div>
     </div>

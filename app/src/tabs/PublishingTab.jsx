@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
+import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import s from './PublishingTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -513,21 +514,24 @@ export default function PublishingTab() {
   const [activeSection, setActiveSection] = useState('thumb')
 
   return (
-    <div className={s.page}>
-      <div className={s.sectionTabs}>
-        {SECTIONS.map(sec => (
-          <button key={sec.key}
-            className={`${s.sectionTab} ${activeSection === sec.key ? s.sectionTabActive : ''}`}
-            onClick={() => setActiveSection(sec.key)}>
-            {sec.label}
-          </button>
-        ))}
-      </div>
-      <div className={s.sectionBody}>
-        {activeSection === 'thumb' && <ThumbnailSection epNum={epNum} />}
-        {activeSection === 'meta' && <MetaSection />}
-        {activeSection === 'package' && <PackageSection epNum={epNum} />}
-        {activeSection === 'upload' && <UploadSection />}
+    <div className={s.pageOuter}>
+      <EpisodeInfoSidebar />
+      <div className={s.page}>
+        <div className={s.sectionTabs}>
+          {SECTIONS.map(sec => (
+            <button key={sec.key}
+              className={`${s.sectionTab} ${activeSection === sec.key ? s.sectionTabActive : ''}`}
+              onClick={() => setActiveSection(sec.key)}>
+              {sec.label}
+            </button>
+          ))}
+        </div>
+        <div className={s.sectionBody}>
+          {activeSection === 'thumb' && <ThumbnailSection epNum={epNum} />}
+          {activeSection === 'meta' && <MetaSection />}
+          {activeSection === 'package' && <PackageSection epNum={epNum} />}
+          {activeSection === 'upload' && <UploadSection />}
+        </div>
       </div>
     </div>
   )

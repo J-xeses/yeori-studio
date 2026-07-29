@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { useApp } from '../context/AppContext'
+import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import s from './VoiceTab.module.css'
 
 function makeVoiceTrack() {
@@ -72,6 +73,7 @@ export default function VoiceTab() {
   return (
     <div className={s.root}>
       <div className={s.sidebar}>
+        <EpisodeOverviewBlock />
         <div className={s.sideTitle}>컷 목록</div>
         <div className={s.cutList}>
           {cuts.map((c) => (
@@ -92,11 +94,12 @@ export default function VoiceTab() {
       </div>
 
       <div className={s.main}>
-        <div className={s.header}>
+        <div className={`${s.header} ${s.topBar}`}>
           <h2>내 음성 삽입</h2>
           <p className={s.desc}>직접 녹음한 음성 파일을 각 컷에 연결합니다. 롱컷처럼 한 컷에 목소리가 여럿 필요하면 트랙을 추가하세요. MP3, WAV, M4A, OGG 지원.</p>
         </div>
 
+        <div className={s.scrollBody}>
         {cut && (
           <div className={s.card}>
             <div className={s.cardHeader}>
@@ -169,6 +172,7 @@ export default function VoiceTab() {
               </div>
             ))}
           </div>
+        </div>
         </div>
       </div>
     </div>

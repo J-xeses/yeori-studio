@@ -3,7 +3,9 @@
 .layout { display: flex; flex: 1; min-width: 0; overflow: hidden; }
 
 /* 왼쪽: 기존 메인 콘텐츠 */
-.mainCol { flex: 1; min-width: 0; padding: 24px; overflow-y: auto; }
+.mainCol { flex: 1; min-width: 0; padding: 24px; overflow: hidden; display: flex; flex-direction: column; }
+.topBar { flex-shrink: 0; }
+.scrollBody { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -24px; padding: 0 24px; }
 
 /* 왼쪽: G4 대기 접수 패널 (주석과 달리 JSX 렌더 순서상 실제로는 왼쪽 사이드바) */
 .sidePanel {

@@ -4,6 +4,7 @@
 
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import styles from './RetentionHookTab.module.css'
 
 const HOOK_CONFIG = [
@@ -89,12 +90,15 @@ ${hookSummary}
   }
 
   return (
-    <div className={styles.wrap}>
-      <div className={styles.header}>
+    <div className={styles.page}>
+      <EpisodeInfoSidebar />
+      <div className={styles.wrap}>
+      <div className={`${styles.header} ${styles.topBar}`}>
         <h2 className={styles.title}>리텐션 훅 설계</h2>
         <p className={styles.desc}>4구간 훅을 설정하면 서여리 말투로 CUT 스크립트를 자동 생성합니다</p>
       </div>
 
+      <div className={styles.scrollBody}>
       <div className={styles.grid}>
         {HOOK_CONFIG.map(h => (
           <div key={h.key} className={styles.card} style={{ borderLeftColor: h.color }}>
@@ -139,6 +143,8 @@ ${hookSummary}
           </button>
         </div>
       )}
+      </div>
+      </div>
     </div>
   )
 }

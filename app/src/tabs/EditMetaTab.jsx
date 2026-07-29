@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoint, setGPoints, loadGPoints, getGPointSummary } from '../lib/gpoints'
+import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -389,6 +390,7 @@ export default function EditMetaTab() {
     {/* ── 왼쪽: G4 대기 접수 패널 ── */}
     <div className={styles.sidePanel}>
       <div className={styles.sidePanelInner}>
+        <EpisodeOverviewBlock />
         <div className={styles.sideTitle}>편집 대기 접수</div>
         <div className={styles.sideDesc}>G4 승인된 컷이 자동으로 접수대기에 올라옵니다. 접수 후 자동실행 큐에서 관리하세요.</div>
 
@@ -458,12 +460,14 @@ export default function EditMetaTab() {
 
     {/* ── 오른쪽: 메인 콘텐츠 ── */}
     <div className={styles.mainCol}>
+      <div className={styles.topBar}>
       <div className={styles.header}>
         <h2 className={styles.title}>편집 메타</h2>
         <p className={styles.desc}>타임코드 · SRT 자막 · 컷 분석 · 캡컷 가이드</p>
       </div>
 
-      {/* A Creative Cutter ON 버튼 */}
+      {/* A Creative Cutter 진행 상태 — 실행 트리거는 좌측 "자동실행 조건" 패널의
+          ON 버튼 하나로 통일 (기존엔 이 패널에도 별도 ON 버튼이 있어 두 개가 중복됐음) */}
       <div style={{marginBottom:'16px',padding:'14px 16px',background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'10px'}}>
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
@@ -474,17 +478,8 @@ export default function EditMetaTab() {
               </span>
             </div>
             <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ 커터(켄번스) → ⑦ CapCut 실행</div>
+            <div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px'}}>← 실행은 좌측 "자동실행 조건" 패널의 ON 버튼으로 시작하세요</div>
           </div>
-          <button
-            onClick={runACC}
-            disabled={accRunning}
-            style={{padding:'9px 22px',borderRadius:'8px',fontSize:'13px',fontWeight:700,
-              background: accRunning ? 'rgba(249,115,22,0.2)' : '#f97316',
-              color: accRunning ? '#fb923c' : '#fff',
-              border: accRunning ? '1px solid rgba(249,115,22,0.4)' : 'none',
-              cursor: accRunning ? 'not-allowed' : 'pointer',whiteSpace:'nowrap'}}>
-            {accRunning ? '⏳ 실행 중...' : '▶ ON'}
-          </button>
         </div>
         {accStatus && (
           <div style={{marginTop:'8px',fontSize:'12px',fontWeight:600,
@@ -553,7 +548,9 @@ export default function EditMetaTab() {
           </button>
         ))}
       </div>
+      </div>
 
+      <div className={styles.scrollBody}>
       {/* ── ① 메타 생성 탭 ── */}
       {activeTab === 'meta' && (
         <>
@@ -942,6 +939,7 @@ export default function EditMetaTab() {
           )}
         </div>
       )}
+      </div>
 
     </div>
 

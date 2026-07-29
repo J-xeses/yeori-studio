@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint } from '../lib/gpoints'
+import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import s from './ExtractTab.module.css'
 
 function downloadText(content, filename) {
@@ -94,12 +95,15 @@ export default function ExtractTab() {
   const cutsWithDialogue = cuts.filter(c => c.dialogue || c.narration).length
 
   return (
-    <div className={s.root}>
-      <div className={s.header}>
+    <div className={s.page}>
+      <EpisodeInfoSidebar />
+      <div className={s.root}>
+      <div className={`${s.header} ${s.topBar}`}>
         <h2>추출 및 내보내기</h2>
         <p className={s.desc}>대본 데이터를 다양한 형식으로 내보냅니다.</p>
       </div>
 
+      <div className={s.scrollBody}>
       <div className={s.statsRow}>
         {[
           { label: '총 컷 수', value: cuts.length },
@@ -160,6 +164,8 @@ export default function ExtractTab() {
             </div>
           ))}
         </div>
+      </div>
+      </div>
       </div>
     </div>
   )
