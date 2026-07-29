@@ -5,6 +5,7 @@ import { createWriteStream } from 'fs'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { isV3Format, parseCutsV3, parseV3GlobalHeader } from './lib/scriptParserV3.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -2534,6 +2535,392 @@ mcpRouter.post('/export-pipeline', (req, res) => {
     res.json({ success: true, savePath, pipeline })
   } catch (err) {
     res.status(500).json({ error: err.message })
+  }
+})
+
+// ── G1~G5 스튜디오 자동화 오케스트레이션 (Claude MCP가 직접 호출) ──────────
+// gpoints.json은 에피소드로 구분되지 않고 cut_N 키 하나만 쓰므로(studio 브라우저와
+// 동일한 제약), studio-set-episode로 대상 에피소드를 studio-state.json의 최상위
+// (episode/cuts/activeEpisodeId)로 먼저 옮긴 뒤 이후 단계를 진행하는 것을 전제로 한다.
+const STUDIO_STATE_PATH = path.join(CODE_ROOT, 'studio-state.json')
+const GPOINTS_PATH = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
+const DEFAULT_YEORI_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
+
+function loadStudioState() {
+  return fs.existsSync(STUDIO_STATE_PATH) ? JSON.parse(fs.readFileSync(STUDIO_STATE_PATH, 'utf-8')) : {}
+}
+function saveStudioState(state) {
+  fs.writeFileSync(STUDIO_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8')
+}
+function loadGpointsFile() {
+  return fs.existsSync(GPOINTS_PATH) ? JSON.parse(fs.readFileSync(GPOINTS_PATH, 'utf-8')) : {}
+}
+function saveGpointsFile(data) {
+  fs.mkdirSync(path.dirname(GPOINTS_PATH), { recursive: true })
+  fs.writeFileSync(GPOINTS_PATH, JSON.stringify(data, null, 2), 'utf-8')
+}
+function getEpisodeOrThrow(state, episodeId) {
+  const ep = state.episodes?.[episodeId]
+  if (!ep) { const e = new Error(`에피소드 ID ${episodeId} 없음`); e.statusCode = 404; throw e }
+  return ep
+}
+// cutIds: cut.id("cut-3") 또는 cut.no(3) 어느 쪽으로 와도 매칭
+function filterCutsByIds(cuts, cutIds) {
+  if (!Array.isArray(cutIds) || !cutIds.length) return cuts
+  const idSet = new Set(cutIds.map(String))
+  return cuts.filter(c => idSet.has(String(c.id)) || idSet.has(String(c.no)))
+}
+function scanFlowImagesByCut(epNum) {
+  const dir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`)
+  const byCut = {}
+  if (fs.existsSync(dir)) {
+    fs.readdirSync(dir).sort().forEach(file => {
+      const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+      if (m) {
+        const no = parseInt(m[1], 10)
+        if (!byCut[no]) byCut[no] = []
+        byCut[no].push(file)
+      }
+    })
+  }
+  return byCut
+}
+function approveGForCuts(cuts, gKey) {
+  const gData = loadGpointsFile()
+  const now = new Date().toISOString()
+  cuts.forEach(c => {
+    const key = `cut_${c.no}`
+    gData[key] = { ...gData[key], [gKey]: true, updatedAt: now }
+  })
+  saveGpointsFile(gData)
+  return cuts.length
+}
+
+// ① studio-set-episode — 대상 에피소드를 studio-state.json 최상위(활성 에피소드)로 전환
+mcpRouter.post('/studio-set-episode', (req, res) => {
+  const { episodeId } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    state.activeEpisodeId = episodeId
+    state.episode = ep.episode
+    state.cuts = ep.cuts
+    state.scriptRaw = ep.scriptRaw || ''
+    saveStudioState(state)
+    res.json({ success: true, episodeId, episode: state.episode, cutCount: (state.cuts || []).length })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ② studio-upload-script — v3 표준 포맷 대본 파일을 읽어 해당 에피소드의 cuts로 반영
+mcpRouter.post('/studio-upload-script', (req, res) => {
+  const { episodeId, scriptPath } = req.body || {}
+  if (!episodeId || !scriptPath) return res.status(400).json({ error: 'episodeId, scriptPath 필요' })
+  try {
+    const resolvedPath = path.isAbsolute(scriptPath) ? scriptPath : path.join(CODE_ROOT, scriptPath)
+    if (!fs.existsSync(resolvedPath)) return res.status(404).json({ error: `파일 없음: ${resolvedPath}` })
+    const raw = fs.readFileSync(resolvedPath, 'utf-8')
+    if (!isV3Format(raw)) return res.status(400).json({ error: 'v3 표준 포맷([CUT N] + SC/SP/PL 필드 + KR(한글 컨펌본) 섹션)이 아닙니다' })
+
+    const cuts = parseCutsV3(raw)
+    if (!cuts.length) return res.status(400).json({ error: 'v3 포맷 파싱 실패 — [CUT N] 블록을 확인하세요' })
+    const { masterCode, epHeaderRaw } = parseV3GlobalHeader(raw)
+
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    ep.cuts = cuts
+    ep.scriptRaw = raw
+    if (masterCode || epHeaderRaw) {
+      ep.episode = { ...ep.episode, ...(masterCode ? { masterCode } : {}), ...(epHeaderRaw ? { epHeaderRaw } : {}) }
+    }
+    state.episodes[episodeId] = ep
+
+    if (state.activeEpisodeId === episodeId) {
+      state.cuts = ep.cuts
+      state.scriptRaw = ep.scriptRaw
+      state.episode = ep.episode
+    }
+    saveStudioState(state)
+    res.json({ success: true, cutCount: cuts.length, masterCode, epHeaderRaw })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ③ studio-approve-g1 — 현재 에피소드 전체 컷 G1(대본) 승인
+mcpRouter.post('/studio-approve-g1', (req, res) => {
+  const { episodeId } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const approvedCount = approveGForCuts(ep.cuts || [], 'g1')
+    res.json({ success: true, approvedCount })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ④ studio-run-g2 — flow-automation.js 호출(이미지 생성). 오래 걸리므로 시작 확인만 반환
+mcpRouter.post('/studio-run-g2', async (req, res) => {
+  const { episodeId, cutIds } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.imagePrompt?.trim())
+    if (!targetCuts.length) return res.status(400).json({ error: '이미지 프롬프트가 있는 컷이 없습니다' })
+
+    const epNum = ep.episode?.number
+    const prompts = {
+      episode: epNum,
+      title: ep.episode?.title || '',
+      cuts: targetCuts.map(c => ({
+        no: c.no,
+        imagePrompt: c.imagePrompt || '',
+        ...(c.narration?.trim() ? { narration: c.narration.trim() } : {}),
+        ...(c.dialogue?.trim() && !/^없음$/i.test(c.dialogue) ? { dialogue: c.dialogue.trim() } : {}),
+        duration: c.duration || 5,
+      })),
+    }
+
+    const ev = await readFirstSSEEvent('/api/run-flow', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ep: epNum, prompts }),
+    })
+    res.json({ ...ev, requestedCuts: targetCuts.map(c => c.no) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑤ studio-approve-g2 — 지정한 컷의 생성된 이미지 중 하나를 G2 선택본으로 승인
+mcpRouter.post('/studio-approve-g2', (req, res) => {
+  const { episodeId, cutId, imageIndex } = req.body || {}
+  if (!episodeId || cutId == null) return res.status(400).json({ error: 'episodeId, cutId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const cut = (ep.cuts || []).find(c => String(c.id) === String(cutId) || String(c.no) === String(cutId))
+    if (!cut) return res.status(404).json({ error: `컷을 찾을 수 없음: ${cutId}` })
+
+    const epNum = ep.episode?.number
+    const byCut = scanFlowImagesByCut(epNum)
+    const files = byCut[cut.no] || []
+    if (!files.length) return res.status(404).json({ error: `CUT ${cut.no}의 생성된 이미지가 없습니다 (downloads/flow/ep${epNum})` })
+    const idx = Number.isInteger(imageIndex) && imageIndex >= 0 && imageIndex < files.length ? imageIndex : 0
+    const filename = files[idx]
+
+    const gData = loadGpointsFile()
+    const key = `cut_${cut.no}`
+    gData[key] = { ...gData[key], g2: true, selectedImage: filename, updatedAt: new Date().toISOString() }
+    saveGpointsFile(gData)
+    res.json({ success: true, cutNo: cut.no, selectedImage: filename, availableImages: files })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑥ studio-run-g3 — ElevenLabs TTS로 대사/나레이션 오디오 생성 (컷당 1개 파일)
+mcpRouter.post('/studio-run-g3', async (req, res) => {
+  const { episodeId, cutIds } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    const apiKey = secrets.apiKeys?.elevenLabs
+    if (!apiKey) return res.status(400).json({ error: 'ElevenLabs API 키가 studio-secrets.json에 없습니다 (스튜디오 앱에서 먼저 연동하세요)' })
+
+    const voiceId = state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID
+    const epNum = ep.episode?.number
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.dialogue?.trim() || c.narration?.trim())
+    if (!targetCuts.length) return res.status(400).json({ error: '대사/나레이션이 있는 컷이 없습니다' })
+
+    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+    fs.mkdirSync(audioDir, { recursive: true })
+
+    const results = []
+    for (const c of targetCuts) {
+      const text = c.dialogue?.trim() || c.narration?.trim()
+      try {
+        const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+          method: 'POST',
+          headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
+          body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+        })
+        if (!upstream.ok) {
+          const errBody = await upstream.json().catch(() => ({}))
+          results.push({ cutNo: c.no, status: 'error', error: errBody.detail?.message || `HTTP ${upstream.status}` })
+          continue
+        }
+        const buf = Buffer.from(await upstream.arrayBuffer())
+        const dest = path.join(audioDir, `cut_${String(c.no).padStart(2, '0')}.mp3`)
+        fs.writeFileSync(dest, buf)
+        results.push({ cutNo: c.no, status: 'ok', path: dest })
+      } catch (err) {
+        results.push({ cutNo: c.no, status: 'error', error: err.message })
+      }
+    }
+    const failCount = results.filter(r => r.status === 'error').length
+    res.json({ success: failCount === 0, results, generatedCount: results.length - failCount, failCount })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑦ studio-approve-g3 — 현재 에피소드 전체 컷 G3(TTS) 승인
+mcpRouter.post('/studio-approve-g3', (req, res) => {
+  const { episodeId } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const approvedCount = approveGForCuts(ep.cuts || [], 'g3')
+    res.json({ success: true, approvedCount })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑧ studio-run-g4 — video-automation.js 호출(영상 생성). G2 승인된 컷만 대상으로 함
+// (video-automation.js가 gpoints.json의 selectedImage를 자체적으로 읽어 스타트 프레임으로 사용)
+mcpRouter.post('/studio-run-g4', async (req, res) => {
+  const { episodeId, cutIds, ratio } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const gData = loadGpointsFile()
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => gData[`cut_${c.no}`]?.g2)
+    if (!targetCuts.length) return res.status(400).json({ error: 'G2 승인된 컷이 없습니다 — 먼저 studio_approve_g2를 실행하세요' })
+
+    const epNum = ep.episode?.number
+    const prompts = {
+      episode: epNum,
+      cuts: targetCuts.map(c => ({
+        no: c.no,
+        imagePrompt: c.imagePrompt || '',
+        ...(c.videoPrompt?.trim() ? { videoPrompt: c.videoPrompt.trim() } : {}),
+        duration: c.duration || 8,
+        ...(c.dialogue?.trim() && !/^없음$/i.test(c.dialogue) ? { dialogue: c.dialogue.trim() } : {}),
+      })),
+    }
+
+    const ev = await readFirstSSEEvent('/api/run-video', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ep: epNum, ratio: ratio || '9:16', prompts }),
+    })
+    res.json({ ...ev, requestedCuts: targetCuts.map(c => c.no) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑨ studio-approve-g4 — 현재 에피소드 전체 컷 G4(영상) 승인
+mcpRouter.post('/studio-approve-g4', (req, res) => {
+  const { episodeId } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const approvedCount = approveGForCuts(ep.cuts || [], 'g4')
+    res.json({ success: true, approvedCount })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑩ studio-run-g5 — 편집 메타 생성 → SRT 생성 → 컷 영상 순서대로 합치기(FFmpeg concat)
+mcpRouter.post('/studio-run-g5', async (req, res) => {
+  const { episodeId } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const epNum = ep.episode?.number
+    const cuts = ep.cuts || []
+
+    let cursor = 0
+    const meta = cuts.map(c => {
+      const dur = c.duration || 5
+      const start = cursor
+      cursor += dur
+      return {
+        cutNo: String(c.no).padStart(2, '0'),
+        label: `CUT ${String(c.no).padStart(2, '0')}`,
+        start, end: cursor, duration: dur,
+        audioFile: `cut_${String(c.no).padStart(2, '0')}.mp3`,
+        dialogue: c.dialogue || '', narration: c.narration || '',
+      }
+    })
+    const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+    fs.mkdirSync(path.dirname(metaPath), { recursive: true })
+    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8')
+
+    const srtRes = await selfFetch('/api/generate-srt', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
+    })
+    if (srtRes.status !== 200) return res.status(srtRes.status).json({ step: 'generate-srt', ...srtRes.body })
+
+    const concatRes = await selfFetch('/api/concat-video', {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
+    })
+    if (concatRes.status !== 200) return res.status(concatRes.status).json({ step: 'concat-video', ...concatRes.body })
+
+    res.json({ success: true, srt: srtRes.body, concat: concatRes.body })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ⑪ studio-status — 현재(또는 지정) 에피소드의 컷별 G1~G5 진행 상태 + 산출물 존재 여부
+mcpRouter.get('/studio-status', (req, res) => {
+  const episodeId = req.query.episodeId
+  try {
+    const state = loadStudioState()
+    const ep = episodeId ? getEpisodeOrThrow(state, episodeId) : state.episodes?.[state.activeEpisodeId]
+    if (!ep) return res.status(404).json({ error: '에피소드를 찾을 수 없습니다 (episodeId 지정 또는 studio_set_episode 먼저 실행)' })
+
+    const epNum = ep.episode?.number
+    const cuts = ep.cuts || []
+    const gData = loadGpointsFile()
+
+    const flowDir  = path.join(MEDIA_ROOT, 'downloads', 'flow',  `ep${epNum}`)
+    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+    const hasFile = (dir, re) => fs.existsSync(dir) && fs.readdirSync(dir).some(f => re.test(f))
+
+    const cutStatus = cuts.map(c => {
+      const g = gData[`cut_${c.no}`] || {}
+      const padded = String(c.no).padStart(2, '0')
+      return {
+        no: c.no,
+        g1: !!g.g1, g2: !!g.g2, g3: !!g.g3, g4: !!g.g4, g5: !!g.g5,
+        selectedImage: g.selectedImage || null,
+        hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
+        hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)),
+        hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
+      }
+    })
+
+    const summary = ['g1', 'g2', 'g3', 'g4', 'g5'].reduce((acc, k) => {
+      acc[k] = cutStatus.filter(c => c[k]).length
+      return acc
+    }, {})
+
+    res.json({
+      episodeId: episodeId || state.activeEpisodeId,
+      episode: ep.episode,
+      cutCount: cuts.length,
+      summary,
+      cuts: cutStatus,
+    })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
   }
 })
 

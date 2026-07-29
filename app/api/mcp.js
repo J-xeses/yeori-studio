@@ -95,6 +95,83 @@ async function executeTool(name, args) {
       return `영상 합치기 완료\n출력: ${data.outputPath}\n컷 수: ${data.cutCount}개 | 총 길이: ${data.totalDuration}`
     }
 
+    // ── G1~G5 스튜디오 자동화 오케스트레이션 ────────────────────
+    case 'studio_set_episode': {
+      const data = await bridge('POST', '/studio-set-episode', { episodeId: args.episodeId })
+      if (data.error) return `오류: ${data.error}`
+      return `활성 에피소드 전환 완료: ${data.episode?.title || '(제목 없음)'} (컷 ${data.cutCount}개)`
+    }
+
+    case 'studio_upload_script': {
+      const data = await bridge('POST', '/studio-upload-script', args)
+      if (data.error) return `오류: ${data.error}`
+      return `대본 업로드 완료: ${data.cutCount}개 컷 반영됨${data.masterCode ? `\n마스터 코드: ${data.masterCode}` : ''}`
+    }
+
+    case 'studio_approve_g1': {
+      const data = await bridge('POST', '/studio-approve-g1', { episodeId: args.episodeId })
+      if (data.error) return `오류: ${data.error}`
+      return `G1 승인 완료: ${data.approvedCount}개 컷`
+    }
+
+    case 'studio_run_g2': {
+      const data = await bridge('POST', '/studio-run-g2', args)
+      if (data.error) return `오류: ${data.error}`
+      if (data.type === 'error') return `오류: ${data.message}`
+      return `G2 이미지 생성 시작됨 (컷 ${data.requestedCuts?.join(', ')})\n상태: ${data.message || data.type || '진행 중'}`
+    }
+
+    case 'studio_approve_g2': {
+      const data = await bridge('POST', '/studio-approve-g2', args)
+      if (data.error) return `오류: ${data.error}`
+      return `G2 승인 완료: CUT ${data.cutNo} → ${data.selectedImage} (후보 ${data.availableImages?.length}개 중 선택)`
+    }
+
+    case 'studio_run_g3': {
+      const data = await bridge('POST', '/studio-run-g3', args)
+      if (data.error) return `오류: ${data.error}`
+      const failLines = (data.results || []).filter(r => r.status === 'error')
+        .map(r => `  CUT ${r.cutNo}: ${r.error}`).join('\n')
+      return `G3 TTS 생성 완료: 성공 ${data.generatedCount}개 / 실패 ${data.failCount}개` + (failLines ? `\n${failLines}` : '')
+    }
+
+    case 'studio_approve_g3': {
+      const data = await bridge('POST', '/studio-approve-g3', { episodeId: args.episodeId })
+      if (data.error) return `오류: ${data.error}`
+      return `G3 승인 완료: ${data.approvedCount}개 컷`
+    }
+
+    case 'studio_run_g4': {
+      const data = await bridge('POST', '/studio-run-g4', args)
+      if (data.error) return `오류: ${data.error}`
+      if (data.type === 'error') return `오류: ${data.message}`
+      return `G4 영상 생성 시작됨 (컷 ${data.requestedCuts?.join(', ')})\n상태: ${data.message || data.type || '진행 중'}`
+    }
+
+    case 'studio_approve_g4': {
+      const data = await bridge('POST', '/studio-approve-g4', { episodeId: args.episodeId })
+      if (data.error) return `오류: ${data.error}`
+      return `G4 승인 완료: ${data.approvedCount}개 컷`
+    }
+
+    case 'studio_run_g5': {
+      const data = await bridge('POST', '/studio-run-g5', { episodeId: args.episodeId })
+      if (data.error) return `오류: ${data.error}`
+      return `G5 합성 완료\nSRT: ${data.srt?.srtPath}\n최종 영상: ${data.concat?.outputPath} (${data.concat?.totalDuration})`
+    }
+
+    case 'studio_get_status': {
+      const data = await bridge('GET', `/studio-status${args.episodeId ? `?episodeId=${encodeURIComponent(args.episodeId)}` : ''}`)
+      if (data.error) return `오류: ${data.error}`
+      const s = data.summary || {}
+      const rows = (data.cuts || []).map(c =>
+        `CUT ${c.no}: G1${c.g1?'✅':'⬜'} G2${c.g2?'✅':'⬜'} G3${c.g3?'✅':'⬜'} G4${c.g4?'✅':'⬜'} G5${c.g5?'✅':'⬜'}` +
+        ` | 이미지${c.hasImage?'✓':'✗'} 오디오${c.hasAudio?'✓':'✗'} 영상${c.hasVideo?'✓':'✗'}`
+      ).join('\n')
+      return `${data.episode?.title || '(제목 없음)'} (컷 ${data.cutCount}개)\n` +
+        `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
+    }
+
     default:
       return `알 수 없는 도구: ${name}`
   }
