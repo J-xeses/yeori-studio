@@ -47,8 +47,10 @@
 .uploadRow { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; }
 .uploadPlatform { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: var(--text); }
 .uploadBtn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-3); padding: 8px 16px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: not-allowed; }
-.left { width: 30vh; min-width: 30vh; height: 80vh; min-height: 0; overflow-y: auto; border-right: 1px solid var(--border); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
-.right { flex: 1; height: 100%; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+/* 앱 전체 "메인화면 2분할" 비율(1:1) 통일 — 설정 패널(left)과 캔버스 미리보기(right)를
+   StudioTab의 cardLeft/cardRight와 같은 flex:1 반반으로 */
+.left { flex: 1; min-width: 0; height: 80vh; min-height: 0; overflow-y: auto; border-right: 1px solid var(--border); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.right { flex: 1; min-width: 0; height: 100%; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
 
 .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
 .panelTitle { padding: 10px 14px; font-size: 12px; font-weight: 700; color: var(--text-2); border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: .5px; }

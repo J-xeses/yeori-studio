@@ -724,6 +724,8 @@ export default function VideoTab() {
 
       {/* Main area */}
       <div className={s.mainArea}>
+      <div className={s.mainSplit}>
+        <div className={s.mainSplitCol}>
         <div className={s.mainControls}>
           <div className={s.ratioToggle}>
             <button
@@ -811,7 +813,9 @@ export default function VideoTab() {
             )}
           </div>
         </div>
+        </div>
 
+        <div className={s.mainSplitCol}>
         {(() => {
           const selCut = cuts.find(c => c.id === selectedCutId)
           if (!selCut) return null
@@ -958,6 +962,8 @@ export default function VideoTab() {
             </div>
           )
         })()}
+        </div>
+      </div>
       </div>
     </div>
   )
