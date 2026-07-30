@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import styles from './RetentionHookTab.module.css'
 
 const HOOK_CONFIG = [
@@ -90,6 +91,8 @@ ${hookSummary}
   }
 
   return (
+    <div className={styles.outer}>
+      <TabToolbar />
     <div className={styles.page}>
       <EpisodeInfoSidebar />
       <div className={styles.wrap}>
@@ -145,6 +148,7 @@ ${hookSummary}
       )}
       </div>
       </div>
+    </div>
     </div>
   )
 }

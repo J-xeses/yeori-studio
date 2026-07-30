@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
+import TabToolbar from '../components/TabToolbar'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -1055,6 +1056,21 @@ ${currentScript}
   }
 
   return (
+    <div className={s.page}>
+      <TabToolbar
+        actions={[
+          {
+            key: 'gen-script', variant: 'accent', disabled: loading,
+            label: loading ? <><span className={s.spinner} />{progress || '생성 중...'}</> : '✨ Claude로 대본 생성',
+            onClick: generateScript,
+          },
+          {
+            key: 'pipeline-export', variant: 'green', disabled: flowRunning || !cuts.length,
+            label: flowRunning ? <><span className={s.spinner} />Flow 실행 중…</> : '🚀 파이프라인 내보내기',
+            onClick: handlePipelineExport,
+          },
+        ]}
+      />
     <div className={s.root}>
       {/* Left: Settings */}
       <div className={s.sidebar}>
@@ -1460,7 +1476,7 @@ ${currentScript}
           </div>
         </div>
 
-        {/* 버튼 3개 하단 고정 */}
+        {/* 버튼 하단 고정 (생성/내보내기 버튼은 상단 툴바로 이동, 다운로드/업로드만 유지) */}
         <div className={s.sideBottom}>
           <div className={s.scriptFileRow}>
             <button className={s.scriptDownBtn} onClick={downloadScript} disabled={!cuts.length}>
@@ -1471,21 +1487,7 @@ ${currentScript}
               <input type="file" accept=".txt" hidden onChange={handleScriptFileUpload} />
             </label>
           </div>
-          <button className={s.genBtn} onClick={generateScript} disabled={loading}>
-            {loading ? (
-              <><span className={s.spinner} />{progress || '생성 중...'}</>
-            ) : '✨ Claude로 대본 생성'}
-          </button>
           {progress && !loading && <div className={s.progressMsg}>{progress}</div>}
-          <button
-            className={`${s.exportBtn} ${flowRunning ? s.exportBtnRunning : ''}`}
-            onClick={handlePipelineExport}
-            disabled={flowRunning || !cuts.length}
-          >
-            {flowRunning
-              ? <><span className={s.spinner} />Flow 실행 중…</>
-              : '🚀 파이프라인 내보내기'}
-          </button>
           {flowLogs.length > 0 && (
             <div className={s.flowLog}>
               {flowLogs.map((log, i) => (
@@ -1864,6 +1866,7 @@ ${currentScript}
           </details>
         )}
       </div>
+    </div>
     </div>
   )
 }

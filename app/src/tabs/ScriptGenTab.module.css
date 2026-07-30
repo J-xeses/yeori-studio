@@ -1,4 +1,6 @@
-.root { display: flex; height: 100%; overflow: hidden; }
+/* 앱 전체 통일 상단바(TabToolbar) 적용 — .page(세로) 안에 툴바 + .root(가로: 사이드바+에디터) */
+.page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.root { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 
 .sidebar {
   width: 30vh; min-width: 30vh; height: 100%;
@@ -95,17 +97,6 @@
 }
 .editorNav button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); }
 .editorNav button:disabled { opacity: .4; cursor: default; }
-
-
-.exportBtn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: #059669; border: none; color: #fff;
-  padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600;
-  transition: background .15s;
-}
-.exportBtn:hover:not(:disabled) { background: #047857; }
-.exportBtn:disabled { opacity: .5; cursor: default; }
-.exportBtnRunning { background: var(--accent) !important; }
 
 .flowLog {
   background: var(--bg-input); border: 1px solid var(--border);

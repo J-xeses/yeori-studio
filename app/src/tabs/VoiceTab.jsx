@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './VoiceTab.module.css'
 
 function makeVoiceTrack() {
@@ -71,6 +72,8 @@ export default function VoiceTab() {
   const cutTracks = cut ? getTracksForCut(cut.id) : []
 
   return (
+    <div className={s.page}>
+      <TabToolbar />
     <div className={s.root}>
       <div className={s.sidebar}>
         <EpisodeOverviewBlock />
@@ -175,6 +178,7 @@ export default function VoiceTab() {
         </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }

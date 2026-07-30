@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoint, setGPoints, loadGPoints, getGPointSummary } from '../lib/gpoints'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -384,6 +385,8 @@ export default function EditMetaTab() {
   })
 
   return (
+    <div className={styles.outer}>
+      <TabToolbar />
     <div className={styles.root}>
     <div className={styles.layout}>
 
@@ -943,6 +946,7 @@ export default function EditMetaTab() {
 
     </div>
 
+    </div>
     </div>
     </div>
   )

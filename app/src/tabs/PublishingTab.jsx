@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './PublishingTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -514,6 +515,8 @@ export default function PublishingTab() {
   const [activeSection, setActiveSection] = useState('thumb')
 
   return (
+    <div className={s.appOuter}>
+      <TabToolbar />
     <div className={s.pageOuter}>
       <EpisodeInfoSidebar />
       <div className={s.page}>
@@ -533,6 +536,7 @@ export default function PublishingTab() {
           {activeSection === 'upload' && <UploadSection />}
         </div>
       </div>
+    </div>
     </div>
   )
 }

@@ -1,5 +1,7 @@
 /* ── 루트 레이아웃 ──────────────────────────────────────────── */
-.root   { height: 100%; overflow: hidden; display: flex; }
+/* 앱 전체 통일 상단바(TabToolbar) 적용 — .outer(세로) 안에 툴바 + .root(가로: 사이드바+본문) */
+.outer  { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.root   { flex: 1; min-height: 0; overflow: hidden; display: flex; }
 .layout { display: flex; flex: 1; min-width: 0; overflow: hidden; }
 
 /* 왼쪽: 기존 메인 콘텐츠 */

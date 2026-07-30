@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './StudioTab.module.css'
 
 const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
@@ -443,7 +444,32 @@ export default function StudioTab() {
   }
 
   return (
-    <div className={s.root}>
+    <div className={s.page}>
+      <TabToolbar
+        toolLabel="이미지 생성 도구"
+        tools={TOOLS}
+        activeTool={selected}
+        onToolChange={setSelected}
+        actions={[
+          {
+            key: 'flow-json', variant: 'green', disabled: flowRunning,
+            title: 'prompts.json 저장 후 Google Flow 자동 실행',
+            label: flowRunning ? '⏳ Flow 실행 중…' : '📤 Flow용 JSON 내보내기',
+            onClick: exportPromptsJson,
+          },
+          {
+            key: 'flow-auto', variant: 'purple', disabled: flowRunning,
+            label: flowRunning ? '🔄 Flow 실행 중…' : '🤖 전체 이미지 자동 생성',
+            onClick: runFlow,
+          },
+          {
+            key: 'reload-img', variant: 'green',
+            label: '🔄 기존 이미지 다시 불러오기',
+            onClick: reloadExistingImages,
+          },
+        ]}
+      />
+      <div className={s.root}>
       <EpisodeInfoSidebar
         activeCutId={activeCutId}
         onCutClick={(cut) => {
@@ -452,42 +478,6 @@ export default function StudioTab() {
         }}
       />
       <div className={s.main}>
-      <div className={s.toolbar}>
-        <div className={s.toolLeft}>
-          <span className={s.toolLabel}>이미지 생성 도구</span>
-          {TOOLS.map(t => (
-            <button key={t} className={`${s.toolBtn} ${selected === t ? s.toolActive : ''}`}
-              onClick={() => setSelected(t)}>{t}</button>
-          ))}
-        </div>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <button className={s.autoBtn} onClick={exportPromptsJson}
-            disabled={flowRunning}
-            title="prompts.json 저장 후 Google Flow 자동 실행"
-            style={{ background: flowRunning ? 'var(--surface3)' : 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', border: 'none', opacity: flowRunning ? 0.7 : 1 }}>
-            {flowRunning ? '⏳ Flow 실행 중…' : '📤 Flow용 JSON 내보내기'}
-          </button>
-          <button
-            onClick={runFlow}
-            disabled={flowRunning}
-            style={{
-              padding:'8px 14px', borderRadius:6,
-              background: flowRunning ? 'var(--surface3)' : 'linear-gradient(135deg,#a78bfa,#60a5fa)',
-              color:'#fff', border:'none', fontSize:12, fontWeight:700,
-              cursor: flowRunning ? 'not-allowed' : 'pointer',
-              display:'flex', alignItems:'center', gap:6,
-              fontFamily:'Noto Sans KR, sans-serif',
-              opacity: flowRunning ? 0.7 : 1,
-            }}
-          >
-            {flowRunning ? '🔄 Flow 실행 중…' : '🤖 전체 이미지 자동 생성'}
-          </button>
-          <button className={s.reloadImgBtn} onClick={reloadExistingImages}>
-            🔄 기존 이미지 다시 불러오기
-          </button>
-        </div>
-      </div>
-
       <div className={s.scrollBody}>
       {/* 프록시 서버 연결 경고 */}
       {proxyOk === false && (
@@ -764,6 +754,7 @@ export default function StudioTab() {
         )
       })()}
       </div>
+    </div>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint } from '../lib/gpoints'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './ExtractTab.module.css'
 
 function downloadText(content, filename) {
@@ -95,6 +96,8 @@ export default function ExtractTab() {
   const cutsWithDialogue = cuts.filter(c => c.dialogue || c.narration).length
 
   return (
+    <div className={s.outer}>
+      <TabToolbar />
     <div className={s.page}>
       <EpisodeInfoSidebar />
       <div className={s.root}>
@@ -167,6 +170,7 @@ export default function ExtractTab() {
       </div>
       </div>
       </div>
+    </div>
     </div>
   )
 }

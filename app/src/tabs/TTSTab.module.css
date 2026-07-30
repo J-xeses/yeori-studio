@@ -1,4 +1,6 @@
-.root { display: flex; height: 100%; overflow: hidden; }
+/* 앱 전체 통일 상단바(TabToolbar) 적용 — .page(세로) 안에 툴바 + .root(가로: 사이드바+본문) */
+.page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.root { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 
 .sidebar {
   width: 30vh; min-width: 30vh; height: 100%;

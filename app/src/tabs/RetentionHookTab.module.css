@@ -1,6 +1,8 @@
 /* src/tabs/RetentionHookTab.module.css */
 
-.page { display: flex; height: 100%; overflow: hidden; }
+/* 앱 전체 통일 상단바(TabToolbar) 적용 — .outer(세로) 안에 툴바 + .page(가로: 사이드바+본문) */
+.outer { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.page { display: flex; flex: 1; min-height: 0; overflow: hidden; }
 .wrap { flex: 1; min-width: 0; height: 100%; overflow: hidden; padding: 24px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
 .topBar { flex-shrink: 0; }
 .scrollBody { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -24px; padding: 0 24px; }

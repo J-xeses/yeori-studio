@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { elTTS, elVoices } from '../lib/api'
 import { setGPoint } from '../lib/gpoints'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './TTSTab.module.css'
 
 const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
@@ -380,6 +381,8 @@ export default function TTSTab() {
 
   // ── 렌더 ─────────────────────────────────────────────────
   return (
+    <div className={s.page}>
+      <TabToolbar />
     <div className={s.root}>
       {/* 왼쪽 사이드바 */}
       <div className={s.sidebar}>
@@ -614,6 +617,7 @@ export default function TTSTab() {
         </div>
         </div>
       </div>
+    </div>
     </div>
   )
 }
