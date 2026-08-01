@@ -1,10 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-script_to_prompts.py
+script_to_prompts.py (v2 — AT/CP 필드 + 신규 [CUT N] 헤더 대응)
 
-script_generator.py가 생성한 {에피소드코드}_script.txt를 읽어
+script_generator.py(v2)가 생성한 {에피소드코드}_script.txt를 읽어
 스튜디오가 사용하는 downloads/flow/prompts.json 형식으로 변환한다.
+
+v1 대비 변경점:
+    - 컷 헤더가 "[C01]"(단독 줄) → "[CUT 1]  {제목} / {du}초"(제목 포함)로
+      바뀌어서, 줄 끝 고정 정규식 대신 "[CUT N]"으로 시작하는지만 확인하도록 변경
+    - 섹션 파싱을 SEP.split()의 위치(인덱스) 계산 대신, 줄 단위로 섹션
+      제목("KR (한글 컨펌본)"/"IP (이미지 프롬프트)"/"VP (영상 프롬프트)")을
+      직접 인식하는 상태 머신 방식으로 재작성 — 헤더 줄바꿈 구조가 바뀌어도
+      안 깨지도록 견고하게 만듦(ScriptGenTab.jsx의 v3 파서와 동일한 접근)
+    - AC 필드 → AT로 통일해서 읽음. 단, 기존 스튜디오 앱(ScriptGenTab.jsx)이
+      아직 pc.ac / pc.kr.ac를 참조하므로, 출력 JSON에는 at와 함께 ac(=at와
+      동일 값)도 같이 내려준다 — ScriptGenTab.jsx가 at 참조로 바뀌기 전까지의
+      호환용 별칭이니, 그쪽 마이그레이션이 끝나면 ac 출력은 제거해도 된다.
+    - CP(자막) 필드 신규 추가 → 출력 JSON에는 "subtitle" 키로 저장
+      (codebook.json의 CP.script_to_prompts_key와 동일하게 맞춤)
+    - LOOK_ID 필드 신규 추가 → 출력 JSON에 lookId로 포함
 
 입력:
     C:\\yeori-studio\\app\\scripts_output\\{에피소드코드}_script.txt
@@ -24,7 +39,6 @@ import os
 import re
 import sys
 
-# Windows 콘솔(cp949 등) 환경에서도 한글 출력이 깨지지 않도록 stdout/stderr을 UTF-8로 고정
 for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8")
@@ -35,10 +49,20 @@ PROMPTS_OUTPUT_PATH = r"C:\yeori-studio\downloads\flow\prompts.json"
 # script_generator.py가 컷 블록 안에서 섹션 구분에 쓰는 구분선과 동일해야 한다.
 SEP = "━" * 24
 
-CUT_HEADER_RE = re.compile(r"^\[C(\d+)\]\s*$")
-MAIN_FIELD_RE = re.compile(r"^(SC|SP|PL|CH|DL|NR|SH|CA|MD|AC|DU):\s?(.*)$")
+CUT_HEADER_RE = re.compile(r"^\[CUT\s+(\d+)\]")
+MAIN_FIELD_RE = re.compile(r"^(SC|SP|PL|CH|DL|NR|CP|AT|SH|CA|MD|LOOK_ID|DU):\s?(.*)$")
 KR_FIELD_RE = re.compile(r"^([A-Z]+)\(([^)]*)\):\s*(.*)$")
 HEADER_RE = re.compile(r"^={10,}\n마스터 코드\n(.+)\n={10,}", re.MULTILINE)
+
+SECTION_TITLES = {
+    "KR (한글 컨펌본)": "kr",
+    "IP (이미지 프롬프트)": "ip",
+    "VP (영상 프롬프트)": "vp",
+}
+
+# "(작성 필요)"는 v2 script_generator.py가 DL/NR/CP 미입력 필드에 쓰는 표시.
+# prompts.json에는 실제 미입력 상태를 나타내도록 빈 문자열로 정규화한다.
+PLACEHOLDER_VALUES = {"(작성 필요)", "없음"}
 
 
 def tokenize(segment):
@@ -46,20 +70,23 @@ def tokenize(segment):
     return [t for t in re.split(r"[+.\s,]+", segment.strip()) if t]
 
 
+def normalize_placeholder(val):
+    return "" if val in PLACEHOLDER_VALUES else val
+
+
 def parse_header(text):
-    """
-    "마스터 코드" 헤더(=== 사이의 원본 마스터 코드 줄)에서
-    episode 메타데이터(code/pipeline/quality/ratio/platform)를 추출한다.
-    quality/ratio/platform은 codebook이 없는 F군을 접두어(Q_/RT_/PB_)로 판별한다.
-    """
+    """"마스터 코드" 헤더(=== 사이의 원본 마스터 코드 줄)에서 episode 메타데이터
+    (code/pipeline/quality/ratio/platform)를 추출한다. cuts.json 구조화 입력으로
+    생성된 경우 이 줄이 마스터 코드 문법이 아닐 수 있어(예: "EP (cuts.json 구조화
+    입력, N컷)") 그때는 code만 채우고 나머지는 빈 값으로 둔다."""
     episode = {"code": "", "pipeline": "", "quality": "", "ratio": "", "platform": ""}
     m = HEADER_RE.search(text)
     if not m:
         return episode
 
-    parts = [p.strip() for p in m.group(1).strip().split("::")]
-    if parts:
-        episode["code"] = parts[0]
+    raw = m.group(1).strip()
+    parts = [p.strip() for p in raw.split("::")]
+    episode["code"] = parts[0].split(" ")[0] if parts else ""
     if len(parts) > 1:
         pipeline_tokens = tokenize(parts[1])
         episode["pipeline"] = pipeline_tokens[0] if pipeline_tokens else ""
@@ -74,33 +101,55 @@ def parse_header(text):
     return episode
 
 
-def parse_cut_block(block_text):
-    """"[C01]"로 시작하는 컷 블록 하나를 파싱해 dict로 반환. 형식이 아니면 None."""
-    lines = block_text.splitlines()
-    if not lines or not CUT_HEADER_RE.match(lines[0].strip()):
-        return None
-    cut_no = CUT_HEADER_RE.match(lines[0].strip()).group(1)
+def split_cut_blocks(text):
+    """[CUT N] 줄을 기준으로 컷 블록 텍스트를 나눈다."""
+    starts = [(m.start(), int(m.group(1))) for m in re.finditer(r"^\[CUT\s+(\d+)\]", text, re.MULTILINE)]
+    blocks = []
+    for i, (start, no) in enumerate(starts):
+        end = starts[i + 1][0] if i + 1 < len(starts) else len(text)
+        blocks.append((no, text[start:end]))
+    return blocks
 
-    chunks = block_text.split(SEP)
-    main_text = chunks[0] if len(chunks) > 0 else ""
-    kr_text = chunks[2] if len(chunks) > 2 else ""
-    ip_text = chunks[4] if len(chunks) > 4 else ""
-    vp_text = chunks[6] if len(chunks) > 6 else ""
+
+def parse_cut_block(cut_no, block_text):
+    """컷 블록 하나를 줄 단위 상태 머신으로 파싱 — SEP.split() 위치 계산에
+    의존하지 않아 헤더/섹션 구조가 조금 바뀌어도 안 깨진다."""
+    section = "main"
+    buckets = {"main": [], "kr": [], "ip": [], "vp": []}
+
+    for line in block_text.splitlines():
+        stripped = line.strip()
+        if stripped == SEP:
+            continue
+        if CUT_HEADER_RE.match(stripped):
+            continue  # 헤더 줄 자체는 필드 파싱 대상이 아님(제목 텍스트라 MAIN_FIELD_RE와 안 겹침)
+        if stripped in SECTION_TITLES:
+            section = SECTION_TITLES[stripped]
+            continue
+        buckets[section].append(line)
 
     main_fields = {}
-    for line in main_text.splitlines():
+    for line in buckets["main"]:
         fm = MAIN_FIELD_RE.match(line.strip())
         if fm:
             main_fields[fm.group(1)] = fm.group(2).strip()
 
     kr_fields = {}
-    for line in kr_text.splitlines():
-        line = line.strip("\n")
+    for line in buckets["kr"]:
         if not line.strip():
             continue
-        fm = KR_FIELD_RE.match(line)
+        fm = KR_FIELD_RE.match(line.strip("\n"))
         if fm:
             kr_fields[fm.group(1).lower()] = fm.group(3).strip()
+
+    def joined(lines):
+        # 섹션 앞뒤 빈 줄만 제거하고 내용은 그대로 유지
+        start, end = 0, len(lines)
+        while start < end and not lines[start].strip():
+            start += 1
+        while end > start and not lines[end - 1].strip():
+            end -= 1
+        return "\n".join(lines[start:end])
 
     du_raw = main_fields.get("DU", "").strip()
     try:
@@ -108,44 +157,44 @@ def parse_cut_block(block_text):
     except ValueError:
         du_val = du_raw
 
+    at_val = normalize_placeholder(main_fields.get("AT", ""))
+    kr_at = normalize_placeholder(kr_fields.get("at", ""))
+
     return {
-        "no": cut_no,
+        "no": str(cut_no),
         "sc": main_fields.get("SC", ""),
         "sp": main_fields.get("SP", ""),
         "pl": main_fields.get("PL", ""),
-        "dl": main_fields.get("DL", ""),
-        "nr": main_fields.get("NR", ""),
+        "dl": normalize_placeholder(main_fields.get("DL", "")),
+        "nr": normalize_placeholder(main_fields.get("NR", "")),
+        "subtitle": normalize_placeholder(main_fields.get("CP", "")),   # CP → subtitle
+        "at": at_val,
+        "ac": at_val,   # 레거시 별칭 — ScriptGenTab.jsx가 at로 마이그레이션되면 제거 가능
         "sh": main_fields.get("SH", ""),
         "ca": main_fields.get("CA", ""),
         "md": main_fields.get("MD", ""),
-        "ac": main_fields.get("AC", ""),
+        "lookId": main_fields.get("LOOK_ID", ""),
         "du": du_val,
-        "imagePrompt": ip_text.strip("\n"),
-        "videoPrompt": vp_text.strip("\n"),
+        "imagePrompt": joined(buckets["ip"]),
+        "videoPrompt": joined(buckets["vp"]),
         "kr": {
             "sp": kr_fields.get("sp", ""),
             "ch": kr_fields.get("ch", ""),
             "sh": kr_fields.get("sh", ""),
             "ca": kr_fields.get("ca", ""),
-            "ac": kr_fields.get("ac", ""),
+            "at": kr_at,
+            "ac": kr_at,   # 레거시 별칭
             "md": kr_fields.get("md", ""),
-            "dl": kr_fields.get("dl", ""),
-            "nr": kr_fields.get("nr", ""),
+            "dl": normalize_placeholder(kr_fields.get("dl", "")),
+            "nr": normalize_placeholder(kr_fields.get("nr", "")),
+            "cp": normalize_placeholder(kr_fields.get("cp", "")),
         },
     }
 
 
 def parse_script(text):
     episode = parse_header(text)
-
-    cut_starts = [m.start() for m in re.finditer(r"^\[C\d+\]\s*$", text, re.MULTILINE)]
-    cuts = []
-    for i, start in enumerate(cut_starts):
-        end = cut_starts[i + 1] if i + 1 < len(cut_starts) else len(text)
-        cut = parse_cut_block(text[start:end])
-        if cut:
-            cuts.append(cut)
-
+    cuts = [parse_cut_block(no, block) for no, block in split_cut_blocks(text)]
     return {"episode": episode, "cuts": cuts}
 
 
