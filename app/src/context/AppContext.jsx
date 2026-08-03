@@ -57,7 +57,7 @@ const defaultState = {
       narration: { speed: 0.85, stability: 55, similarity: 75 },
     }
   },
-  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
+  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '' },
   publishing: {

@@ -76,13 +76,14 @@
 
 /* ── NEW LAYOUT ── */
 
-.sidebar { width: 30vh; min-width: 30vh; display: flex; flex-direction: column; height: 80vh; overflow: hidden; border-right: 1px solid var(--border); padding: 10px; gap: 8px; box-sizing: border-box; }
+.sidebar { width: 30vh; min-width: 30vh; display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-panel); border-right: 1px solid var(--border); padding: 10px; gap: 8px; box-sizing: border-box; }
 
 /* 사이드바 압축 */
 .sidePanel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
 .sidePanelHeader { padding: 9px 14px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); cursor: pointer; display: flex; justify-content: space-between; user-select: none; }
 .sidePanelHeader:hover { color: var(--text); }
-.sidePanelBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.sidePanelBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.sidePanelRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .g4Count { font-size: 11px; color: var(--text-3); text-align: center; padding: 2px 0; flex-shrink: 0; }
 
 /* Cut side list */
@@ -131,12 +132,16 @@
 .overlayCanvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
 
 /* Selected cut card */
-.selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; cursor: pointer; transition: border-color .12s; }
+.selectedCutCardActive { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-border); }
 .cutCardHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
 .cutCardTitle { font-size: 13px; font-weight: 700; color: var(--text); }
 .cutCardDur { font-size: 12px; color: var(--accent-light); font-weight: 600; }
-.cutCardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-.cutCardFooter { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; }
+.cutCardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; cursor: default; }
+.cutCardFooter { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; cursor: default; }
+.cutCardPromptPreview { font-size: 12px; color: var(--text-3); line-height: 1.5; overflow-wrap: anywhere; }
+.captionInput { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 12.5px; padding: 7px 9px; outline: none; resize: vertical; transition: border-color .15s; }
+.captionInput:focus { border-color: var(--accent); }
 
 /* Clip list */
 .clipList { display: flex; flex-direction: column; gap: 4px; }
@@ -168,14 +173,6 @@
 .subtitleDoneBtn:hover { opacity: .85; }
 
 /* 자막 모니터링 리스트 */
-.subtitleMonitor { flex-shrink: 0; max-height: 180px; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 8px; }
-.subtitleMonitorHeader { padding: 7px 12px; font-size: 11px; font-weight: 700; color: var(--text-2); background: var(--bg-input); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.subtitleMonitorList { overflow-y: auto; flex: 1; }
-.subMonItem { display: flex; gap: 6px; padding: 6px 10px; cursor: pointer; border-bottom: 1px solid var(--border); align-items: flex-start; }
-.subMonItem:hover { background: var(--bg-hover); }
-.subMonItemActive { background: rgba(139,92,246,.12); border-left: 2px solid var(--accent); }
-.subMonNo { font-size: 10.5px; color: var(--text-3); font-weight: 700; flex-shrink: 0; padding-top: 1px; }
-.subMonText { font-size: 11px; color: var(--text-2); line-height: 1.4; word-break: keep-all; }
 
 /* Clip trim controls */
 .clipTrimItem { display: flex; flex-direction: column; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; cursor: pointer; transition: border-color .12s, background .12s; }

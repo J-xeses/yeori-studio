@@ -36,6 +36,20 @@
   max-height: 160px; overflow-y: auto; margin: 0;
 }
 
+/* 마스터 코드 :: 구분자 기준 요소별 정렬 표시 */
+.codeRows {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 5px;
+  max-height: 160px; overflow-y: auto;
+}
+.codeRow {
+  font-size: 10.5px; font-family: var(--mono); color: var(--text-2);
+  line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere;
+  padding-left: 11px; position: relative;
+}
+.codeRow::before { content: '·'; position: absolute; left: 1px; color: var(--accent-light); font-weight: 800; }
+
 .cutSection { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding-top: 10px; }
 .cutSection .title { padding: 0 14px 6px; }
 .cutList { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; padding: 0 6px 8px; }

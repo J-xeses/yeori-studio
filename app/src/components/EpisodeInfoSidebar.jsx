@@ -74,7 +74,15 @@ export function EpisodeOverviewBlock() {
       {episode?.masterCode && (
         <div className={s.section}>
           <div className={s.title}>마스터 코드</div>
-          <pre className={s.code}>{episode.masterCode}</pre>
+          {episode.masterCode.includes('::') ? (
+            <div className={s.codeRows}>
+              {episode.masterCode.split('::').map((seg, i) => (
+                <div key={i} className={s.codeRow}>{seg.trim()}</div>
+              ))}
+            </div>
+          ) : (
+            <pre className={s.code}>{episode.masterCode}</pre>
+          )}
         </div>
       )}
 

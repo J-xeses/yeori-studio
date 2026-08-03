@@ -47,6 +47,7 @@ async function executeTool(name, args) {
 
     case 'get_studio_state': {
       const data = await bridge('GET', '/studio-state')
+      if (data.error) return `오류: ${data.error}`
       if (!data || Object.keys(data).length === 0) return '저장된 스튜디오 상태 없음'
       const ep = data.episode || {}
       const cuts = data.cuts || []
