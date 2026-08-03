@@ -169,7 +169,7 @@ async function executeTool(name, args) {
     }
 
     case 'studio_approve_g1': {
-      const data = await api('POST', '/api/mcp/studio-approve-g1', { episodeId: args.episodeId })
+      const data = await api('POST', '/api/mcp/studio-approve-g1', args)
       if (data.error) return `오류: ${data.error}`
       return `G1 승인 완료: ${data.approvedCount}개 컷`
     }
@@ -189,14 +189,19 @@ async function executeTool(name, args) {
 
     case 'studio_run_g3': {
       const data = await api('POST', '/api/mcp/studio-run-g3', args)
-      if (data.error) return `오류: ${data.error}`
+      if (data.error) return `오류: ${data.error}${data.remaining != null ? ` (잔여 ${data.remaining}자 / 필요 ${data.needed}자)` : ''}`
       const failLines = (data.results || []).filter(r => r.status === 'error')
         .map(r => `  CUT ${r.cutNo}: ${r.error}`).join('\n')
-      return `G3 TTS 생성 완료: 성공 ${data.generatedCount}개 / 실패 ${data.failCount}개` + (failLines ? `\n${failLines}` : '')
+      const skipLines = (data.results || []).filter(r => r.status === 'skipped')
+        .map(r => `  CUT ${r.cutNo}: 괄호 제거 후 텍스트 없음 (제거됨: ${r.removed?.join(', ')})`).join('\n')
+      const noteLines = (data.results || []).filter(r => r.status === 'ok' && r.removedNotes?.length)
+        .map(r => `  CUT ${r.cutNo}: 제작 메모 제거함 → ${r.removedNotes.join(', ')}`).join('\n')
+      return `G3 TTS 생성 완료: 성공 ${data.generatedCount}개 / 스킵 ${data.skippedCount || 0}개 / 실패 ${data.failCount}개`
+        + (failLines ? `\n${failLines}` : '') + (skipLines ? `\n${skipLines}` : '') + (noteLines ? `\n${noteLines}` : '')
     }
 
     case 'studio_approve_g3': {
-      const data = await api('POST', '/api/mcp/studio-approve-g3', { episodeId: args.episodeId })
+      const data = await api('POST', '/api/mcp/studio-approve-g3', args)
       if (data.error) return `오류: ${data.error}`
       return `G3 승인 완료: ${data.approvedCount}개 컷`
     }
@@ -209,7 +214,7 @@ async function executeTool(name, args) {
     }
 
     case 'studio_approve_g4': {
-      const data = await api('POST', '/api/mcp/studio-approve-g4', { episodeId: args.episodeId })
+      const data = await api('POST', '/api/mcp/studio-approve-g4', args)
       if (data.error) return `오류: ${data.error}`
       return `G4 승인 완료: ${data.approvedCount}개 컷`
     }

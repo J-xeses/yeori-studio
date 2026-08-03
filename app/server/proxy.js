@@ -2595,6 +2595,23 @@ function approveGForCuts(cuts, gKey) {
   saveGpointsFile(gData)
   return cuts.length
 }
+// gpoints.json이 cut_N 키만 쓰고 에피소드로 구분되지 않으므로, 승인/실행 계열 엔드포인트는
+// 항상 "요청한 episodeId가 지금 활성 에피소드와 같다"를 강제해서 다른 에피소드의 gpoints를
+// 실수로 덮어쓰는 사고를 막는다. studio_set_episode를 먼저 호출하지 않으면 여기서 막힌다.
+function requireActiveEpisode(state, episodeId) {
+  if (state.activeEpisodeId !== episodeId) {
+    const e = new Error(`episodeId(${episodeId})가 현재 활성 에피소드(${state.activeEpisodeId || '없음'})와 다릅니다 — 먼저 studio_set_episode를 호출하세요`)
+    e.statusCode = 409
+    throw e
+  }
+}
+// v3 대본의 대사/나레이션 필드에 촬영·제작 메모가 괄호로 섞여 들어오는 경우가 있어
+// (예: "아~ 살 것 같다 (음성 오버레이 — Veo3 대사 포함 금지)") TTS가 그대로 읽지 않도록 제거한다.
+function stripStageDirections(text) {
+  const removed = []
+  const clean = text.replace(/\s*\([^)]*\)/g, (m) => { removed.push(m.trim()); return '' }).trim()
+  return { clean, removed }
+}
 
 // ① studio-set-episode — 대상 에피소드를 studio-state.json 최상위(활성 에피소드)로 전환
 mcpRouter.post('/studio-set-episode', (req, res) => {
@@ -2649,14 +2666,16 @@ mcpRouter.post('/studio-upload-script', (req, res) => {
   }
 })
 
-// ③ studio-approve-g1 — 현재 에피소드 전체 컷 G1(대본) 승인
+// ③ studio-approve-g1 — G1(대본) 승인 (cutIds 생략 시 전체 컷)
 mcpRouter.post('/studio-approve-g1', (req, res) => {
-  const { episodeId } = req.body || {}
+  const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
-    const approvedCount = approveGForCuts(ep.cuts || [], 'g1')
+    requireActiveEpisode(state, episodeId)
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
+    const approvedCount = approveGForCuts(targetCuts, 'g1')
     res.json({ success: true, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
@@ -2670,6 +2689,7 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.imagePrompt?.trim())
     if (!targetCuts.length) return res.status(400).json({ error: '이미지 프롬프트가 있는 컷이 없습니다' })
 
@@ -2703,6 +2723,7 @@ mcpRouter.post('/studio-approve-g2', (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
     const cut = (ep.cuts || []).find(c => String(c.id) === String(cutId) || String(c.no) === String(cutId))
     if (!cut) return res.status(404).json({ error: `컷을 찾을 수 없음: ${cutId}` })
 
@@ -2730,6 +2751,7 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
     const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
     const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
     const apiKey = secrets.apiKeys?.elevenLabs
@@ -2740,17 +2762,44 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.dialogue?.trim() || c.narration?.trim())
     if (!targetCuts.length) return res.status(400).json({ error: '대사/나레이션이 있는 컷이 없습니다' })
 
+    // 괄호로 섞여 들어온 제작 메모 제거 후 실제로 읽을 텍스트만 남김
+    const prepared = targetCuts.map(c => {
+      const raw = c.dialogue?.trim() || c.narration?.trim() || ''
+      const { clean, removed } = stripStageDirections(raw)
+      return { cut: c, text: clean, removed }
+    })
+    const empties = prepared.filter(p => !p.text)
+    const toGenerate = prepared.filter(p => p.text)
+    if (!toGenerate.length) return res.status(400).json({ error: '괄호 제거 후 남는 텍스트가 없습니다 (대사가 전부 제작 메모였음)' })
+
+    // ── ElevenLabs 잔여 글자수 사전 체크 — 부족하면 중간에 끊기지 않도록 아예 시작을 막는다 ──
+    const totalChars = toGenerate.reduce((sum, p) => sum + p.text.length, 0)
+    try {
+      const userRes = await fetch('https://api.elevenlabs.io/v1/user', { headers: { 'xi-api-key': apiKey } })
+      if (userRes.ok) {
+        const userData = await userRes.json()
+        const limit = userData.subscription?.character_limit
+        const used = userData.subscription?.character_count
+        if (Number.isFinite(limit) && Number.isFinite(used)) {
+          const remaining = limit - used
+          if (remaining < totalChars) {
+            return res.status(400).json({ error: `ElevenLabs 잔여 글자수 부족 (필요: ${totalChars}자, 잔여: ${remaining}자)`, remaining, needed: totalChars })
+          }
+        }
+      }
+    } catch { /* 잔여량 조회 자체가 실패해도 생성은 막지 않음 — 사전체크는 보조 수단일 뿐 */ }
+
     const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
     fs.mkdirSync(audioDir, { recursive: true })
 
-    const results = []
-    for (const c of targetCuts) {
-      const text = c.dialogue?.trim() || c.narration?.trim()
+    const results = empties.map(p => ({ cutNo: p.cut.no, status: 'skipped', reason: '괄호 제거 후 텍스트 없음 (제작 메모만 있었음)', removed: p.removed }))
+    for (const p of toGenerate) {
+      const c = p.cut
       try {
         const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
           method: 'POST',
           headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
-          body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+          body: JSON.stringify({ text: p.text, model_id: 'eleven_multilingual_v2' }),
         })
         if (!upstream.ok) {
           const errBody = await upstream.json().catch(() => ({}))
@@ -2760,26 +2809,29 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
         const buf = Buffer.from(await upstream.arrayBuffer())
         const dest = path.join(audioDir, `cut_${String(c.no).padStart(2, '0')}.mp3`)
         fs.writeFileSync(dest, buf)
-        results.push({ cutNo: c.no, status: 'ok', path: dest })
+        results.push({ cutNo: c.no, status: 'ok', path: dest, ...(p.removed.length ? { removedNotes: p.removed } : {}) })
       } catch (err) {
         results.push({ cutNo: c.no, status: 'error', error: err.message })
       }
     }
     const failCount = results.filter(r => r.status === 'error').length
-    res.json({ success: failCount === 0, results, generatedCount: results.length - failCount, failCount })
+    const skippedCount = results.filter(r => r.status === 'skipped').length
+    res.json({ success: failCount === 0, results, generatedCount: results.filter(r => r.status === 'ok').length, failCount, skippedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
 })
 
-// ⑦ studio-approve-g3 — 현재 에피소드 전체 컷 G3(TTS) 승인
+// ⑦ studio-approve-g3 — G3(TTS) 승인 (cutIds 생략 시 전체 컷)
 mcpRouter.post('/studio-approve-g3', (req, res) => {
-  const { episodeId } = req.body || {}
+  const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
-    const approvedCount = approveGForCuts(ep.cuts || [], 'g3')
+    requireActiveEpisode(state, episodeId)
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
+    const approvedCount = approveGForCuts(targetCuts, 'g3')
     res.json({ success: true, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
@@ -2794,6 +2846,7 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
     const gData = loadGpointsFile()
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => gData[`cut_${c.no}`]?.g2)
     if (!targetCuts.length) return res.status(400).json({ error: 'G2 승인된 컷이 없습니다 — 먼저 studio_approve_g2를 실행하세요' })
@@ -2801,13 +2854,17 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
     const epNum = ep.episode?.number
     const prompts = {
       episode: epNum,
-      cuts: targetCuts.map(c => ({
-        no: c.no,
-        imagePrompt: c.imagePrompt || '',
-        ...(c.videoPrompt?.trim() ? { videoPrompt: c.videoPrompt.trim() } : {}),
-        duration: c.duration || 8,
-        ...(c.dialogue?.trim() && !/^없음$/i.test(c.dialogue) ? { dialogue: c.dialogue.trim() } : {}),
-      })),
+      cuts: targetCuts.map(c => {
+        const dl = c.dialogue?.trim()
+        const cleanDl = dl && !/^없음$/i.test(dl) ? stripStageDirections(dl).clean : ''
+        return {
+          no: c.no,
+          imagePrompt: c.imagePrompt || '',
+          ...(c.videoPrompt?.trim() ? { videoPrompt: c.videoPrompt.trim() } : {}),
+          duration: c.duration || 8,
+          ...(cleanDl ? { dialogue: cleanDl } : {}),
+        }
+      }),
     }
 
     const ev = await readFirstSSEEvent('/api/run-video', {
@@ -2820,14 +2877,16 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
   }
 })
 
-// ⑨ studio-approve-g4 — 현재 에피소드 전체 컷 G4(영상) 승인
+// ⑨ studio-approve-g4 — G4(영상) 승인 (cutIds 생략 시 전체 컷)
 mcpRouter.post('/studio-approve-g4', (req, res) => {
-  const { episodeId } = req.body || {}
+  const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
-    const approvedCount = approveGForCuts(ep.cuts || [], 'g4')
+    requireActiveEpisode(state, episodeId)
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
+    const approvedCount = approveGForCuts(targetCuts, 'g4')
     res.json({ success: true, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
@@ -2841,6 +2900,7 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
     const epNum = ep.episode?.number
     const cuts = ep.cuts || []
 
@@ -2849,12 +2909,14 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
       const dur = c.duration || 5
       const start = cursor
       cursor += dur
+      // SRT 자막에 괄호 안 제작 메모가 그대로 노출되지 않도록 G3와 동일하게 정리
       return {
         cutNo: String(c.no).padStart(2, '0'),
         label: `CUT ${String(c.no).padStart(2, '0')}`,
         start, end: cursor, duration: dur,
         audioFile: `cut_${String(c.no).padStart(2, '0')}.mp3`,
-        dialogue: c.dialogue || '', narration: c.narration || '',
+        dialogue: c.dialogue ? stripStageDirections(c.dialogue).clean : '',
+        narration: c.narration ? stripStageDirections(c.narration).clean : '',
       }
     })
     const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')

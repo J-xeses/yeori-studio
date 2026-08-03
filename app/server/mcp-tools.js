@@ -111,35 +111,36 @@ export const TOOLS = [
   },
   {
     name: 'studio_approve_g1',
-    description: '지정한 에피소드의 전체 컷 G1(대본 확정) 승인 처리합니다.',
+    description: 'G1(대본 확정) 승인 처리합니다. episodeId는 반드시 현재 studio_set_episode로 전환해둔 활성 에피소드와 같아야 합니다(다르면 409 오류).',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
+        cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 전체 컷)' },
       },
     },
   },
   {
     name: 'studio_run_g2',
-    description: 'flow-automation.js를 호출해 Google Flow로 컷 이미지(G2)를 자동 생성합니다. 실행 시작 여부만 반환하며 실제 생성은 백그라운드에서 계속 진행됩니다(수 분~20분 이상 소요 가능).',
+    description: 'flow-automation.js를 호출해 Google Flow로 컷 이미지(G2)를 자동 생성합니다. 실행 시작 여부만 반환하며 실제 생성은 백그라운드에서 계속 진행됩니다(수 분~20분 이상 소요 가능). episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
         cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 이미지 프롬프트가 있는 전체 컷)' },
       },
     },
   },
   {
     name: 'studio_approve_g2',
-    description: '지정한 컷의 생성된 이미지 중 하나를 G2 승인 선택본으로 지정합니다(downloads/flow/ep{N}/에서 스캔). 이후 G4 영상 생성이 이 이미지를 스타트 프레임으로 사용합니다.',
+    description: '지정한 컷의 생성된 이미지 중 하나를 G2 승인 선택본으로 지정합니다(downloads/flow/ep{N}/에서 스캔). 이후 G4 영상 생성이 이 이미지를 스타트 프레임으로 사용합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId', 'cutId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
         cutId: { type: 'string', description: '컷 id(cut-3) 또는 컷 번호(3)' },
         imageIndex: { type: 'number', description: '생성된 이미지 중 선택할 인덱스 (기본 0)' },
       },
@@ -147,58 +148,60 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g3',
-    description: 'ElevenLabs TTS로 각 컷의 대사/나레이션 오디오(G3)를 생성해 downloads/audio/ep{N}/cut_NN.mp3로 저장합니다. studio-secrets.json에 ElevenLabs API 키가 등록되어 있어야 합니다.',
+    description: 'ElevenLabs TTS로 각 컷의 대사/나레이션 오디오(G3)를 생성해 downloads/audio/ep{N}/cut_NN.mp3로 저장합니다. studio-secrets.json에 ElevenLabs API 키가 등록되어 있어야 합니다. 대사에 섞인 괄호 안 제작 메모(예: "(음성 오버레이 — Veo3 대사 포함 금지)")는 자동 제거 후 생성하며, ElevenLabs 잔여 글자수가 필요량보다 적으면 시작 전에 오류로 막습니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
         cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 대사/나레이션이 있는 전체 컷)' },
       },
     },
   },
   {
     name: 'studio_approve_g3',
-    description: '지정한 에피소드의 전체 컷 G3(TTS 음성) 승인 처리합니다.',
+    description: 'G3(TTS 음성) 승인 처리합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
+        cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 전체 컷)' },
       },
     },
   },
   {
     name: 'studio_run_g4',
-    description: 'video-automation.js를 호출해 G2 승인된 이미지를 스타트 프레임으로 컷 영상(G4)을 자동 생성합니다. 실행 시작 여부만 반환하며 실제 생성은 백그라운드에서 계속 진행됩니다.',
+    description: 'video-automation.js를 호출해 G2 승인된 이미지를 스타트 프레임으로 컷 영상(G4)을 자동 생성합니다. 실행 시작 여부만 반환하며 실제 생성은 백그라운드에서 계속 진행됩니다. 대사 중 괄호 안 제작 메모는 자동 제거 후 전달합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
         cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 G2 승인된 전체 컷)' },
       },
     },
   },
   {
     name: 'studio_approve_g4',
-    description: '지정한 에피소드의 전체 컷 G4(영상) 승인 처리합니다.',
+    description: 'G4(영상) 승인 처리합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
+        cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 전체 컷)' },
       },
     },
   },
   {
     name: 'studio_run_g5',
-    description: '편집 메타 생성 → SRT 자막 생성 → 컷 영상들을 순서대로 FFmpeg concat하여 ep{N}_raw.mp4를 만듭니다(G5 합성).',
+    description: '편집 메타 생성 → SRT 자막 생성 → 컷 영상들을 순서대로 FFmpeg concat하여 ep{N}_raw.mp4를 만듭니다(G5 합성). episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
-        episodeId: { type: 'string', description: '에피소드 ID' },
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
       },
     },
   },
