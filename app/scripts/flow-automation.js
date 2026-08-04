@@ -9,10 +9,17 @@
  *   npm run flow -- --prompts=my.json     # 외부 프롬프트 파일 지정
  *   npm run flow -- --register-character  # 서여리 시그니처 얼굴 캐릭터 등록
  *   npm run flow -- --gen-face            # 클로즈업 얼굴 이미지 먼저 생성 후 캐릭터 등록
+ *   npm run flow -- --check-credits       # 크레딧 표시 탐색(디스커버리 전용, 자동 파싱 아님) — 화면 스캔 + 스크린샷만 남김
+ *   npm run flow -- --profile=sub         # 서브 계정용 별도 Chrome 프로필/포트(9223) 사용. 기본은 main(9222)
  *
  * 캐릭터 등록 준비:
  *   downloads/flow/character/yeori-face.jpg  에 클로즈업 얼굴 이미지를 넣어두세요.
  *   (--gen-face 옵션 사용 시 자동 생성)
+ *
+ * 계정별 프로필: --profile=main(기본, 포트 9222) / --profile=sub(포트 9223), 둘 다 downloads/flow/chrome-profile-* 전용 폴더 사용.
+ * ⚠️ 크롬 136+ 부터 --remote-debugging-port는 "기본 프로필"에서 보안상 무시되므로,
+ * main/sub 둘 다 반드시 --user-data-dir로 비-기본 폴더를 지정해서 Chrome을 띄워야 함
+ * (연결 실패 시 뜨는 connectBrowser() 안내 명령 그대로 사용하면 됨. 최초 1회는 해당 프로필에 직접 로그인 필요).
  */
 
 import puppeteer from 'puppeteer-core'
@@ -45,11 +52,19 @@ const ROOT = CODE_ROOT  // 하위 호환 유지
   })
 })
 
+// ── 계정 프로필 (크레딧 모니터링용 — 메인/서브 구글 계정 분리) ─────────
+// 기존 단일 Chrome(9222) 공유 방식은 그대로 유지(하위 호환, --profile 생략 시 main과 동일).
+// 서브 계정을 동시에 확인하려면 --profile=sub 로 별도 포트/유저데이터 디렉터리의
+// Chrome을 별도로 띄워야 함(로그인 세션이 안 섞이도록).
+const PROFILE_PORTS = { main: 9222, sub: 9223 }
+const activeProfile = process.argv.includes('--profile=sub') ? 'sub' : 'main'
+
 // ── 설정 ─────────────────────────────────────────────────────────────
 const CONFIG = {
   // remote debugging 방식: Chrome을 --remote-debugging-port=9222 로 미리 실행
   // chrome.exe --remote-debugging-port=9222
-  debuggingPort:   9222,
+  debuggingPort:   PROFILE_PORTS[activeProfile],
+  userDataDir:     path.join('C:\\yeori-studio', 'downloads', 'flow', `chrome-profile-${activeProfile}`),
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   downloadDir:     path.join(MEDIA_ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
@@ -298,6 +313,18 @@ async function main() {
     return
   }
 
+  // ── 크레딧 표시 탐색 모드 (디스커버리 전용 — 자동 파싱 아님) ────────
+  if (args['check-credits']) {
+    const browser = await connectBrowser()
+    const page = await setupPage(browser)
+    await navigateToFlow(page)
+    await checkFlowCredits(page)
+    // puppeteer.connect()로 붙인 CDP 세션은 disconnect() 없이는 프로세스가 안 끝남
+    // (WebSocket 핸들이 이벤트루프를 계속 붙잡음) — Chrome 창 자체는 그대로 두고 연결만 해제.
+    await browser.disconnect()
+    process.exit(0)
+  }
+
   // ── 일반 이미지 생성 모드 ─────────────────────────────────────────
   const { episode, type, cuts } = loadPrompts()
   if (!cuts.length) {
@@ -440,10 +467,15 @@ async function connectBrowser() {
     version = await res.json()
   } catch {
     console.error('\n' + '═'.repeat(56))
-    console.error('  Chrome에 연결할 수 없습니다.')
+    console.error(`  Chrome에 연결할 수 없습니다. (프로필: ${activeProfile})`)
     console.error('  Chrome을 먼저 아래 명령으로 실행해주세요:')
-    console.error(`\n  "${CONFIG.chromeExe}" --remote-debugging-port=${CONFIG.debuggingPort}`)
-    console.error('\n  (실행 중인 Chrome이 있으면 완전히 종료 후 위 명령 사용)')
+    // Chrome 136+ 부터는 --remote-debugging-port가 "기본 프로필(디폴트 user-data-dir)"에서는
+    // 보안상 무시됨 — main/sub 둘 다 반드시 전용(비-기본) --user-data-dir 폴더가 있어야 함.
+    console.error(`\n  "${CONFIG.chromeExe}" --remote-debugging-port=${CONFIG.debuggingPort} --user-data-dir="${CONFIG.userDataDir}"`)
+    console.error(`\n  (--user-data-dir는 ${activeProfile === 'main' ? '메인' : '서브'} 계정 전용 Chrome 세션 폴더 — 최초 실행 시 해당 구글 계정으로 직접 로그인해두면 이후 세션이 유지됩니다.`)
+    console.error('   기존 크롬 프로필(비밀번호/북마크 등)과는 완전히 별개의 새 프로필이라 처음엔 빈 화면으로 뜹니다.)')
+    console.error('  다른 크롬이 하나라도 떠 있으면 먼저 taskkill /F /IM chrome.exe 로 전부 종료 후 실행하세요.')
+    if (activeProfile === 'main') console.error('  서브 계정을 동시에 켜려면 다른 터미널에서 --profile=sub 로 별도 실행하세요.')
     console.error('═'.repeat(56) + '\n')
     throw new Error(`Chrome remote debugging 포트(${CONFIG.debuggingPort})에 연결 실패`)
   }
@@ -531,6 +563,118 @@ async function navigateToFlow(page) {
   log('ok', `Flow 대시보드 준비 완료`)
 }
 
+
+// ── 크레딧 표시 탐색 (디스커버리 전용) ────────────────────────────────
+// 이 함수는 "자동으로 크레딧을 읽어온다"가 아니라, 화면에서 크레딧/숫자로
+// 보이는 후보 요소를 스캔해서 로그+스크린샷으로 남기는 것까지만 한다.
+// 사용자 확인 결과: 크레딧은 대시보드에 바로 안 보이고, 우측 상단 계정
+// 아바타(보라색 원형 배경 + 흰 글씨 이니셜, 예: "성준")를 클릭해야 열리는
+// 메뉴/패널 안에 있음 — 그래서 아바타를 먼저 찾아 클릭한 뒤 스캔한다.
+
+async function scanForCreditText(page) {
+  return page.evaluate(() => {
+    function deepLeaves(root, list = []) {
+      for (const el of root.querySelectorAll('*')) {
+        if (el.children.length === 0) list.push(el)
+        if (el.shadowRoot) deepLeaves(el.shadowRoot, list)
+      }
+      return list
+    }
+    const found = []
+    for (const el of deepLeaves(document)) {
+      const txt = (el.textContent || '').trim()
+      if (!txt || txt.length > 60) continue
+      const looksLikeCredit = /(크레딧|credit)/i.test(txt) || /^\d{1,4}\s*\/\s*\d{1,4}$/.test(txt)
+      if (!looksLikeCredit) continue
+      const r = el.getBoundingClientRect()
+      if (r.width === 0 || r.height === 0) continue
+      found.push({ txt, aria: el.getAttribute('aria-label') || '', x: Math.round(r.left), y: Math.round(r.top) })
+    }
+    return found
+  })
+}
+
+// 우측 상단의 원형 계정 아바타 버튼을 찾아 클릭.
+// 계정에 따라 표시가 다름 — 메인 계정: 짧은 이니셜 텍스트(예: "성준"),
+// 서브 계정: 프로필 사진(<img> 또는 background-image)이 표시됨 — 둘 다 매칭.
+// 색상은 브라우저/테마마다 다를 수 있어 색으로는 안 찾고,
+// 위치(우측 상단)+모양(가로≈세로, 원형 크기대)으로 찾는다.
+async function clickAccountAvatar(page) {
+  return page.evaluate(() => {
+    function deepAll(root, list = []) {
+      for (const el of root.querySelectorAll('button, [role="button"], a, div, span')) list.push(el)
+      for (const el of root.querySelectorAll('*')) { if (el.shadowRoot) deepAll(el.shadowRoot, list) }
+      return list
+    }
+    const candidates = deepAll(document).filter(el => {
+      const r = el.getBoundingClientRect()
+      if (r.width < 20 || r.width > 64) return false
+      if (Math.abs(r.width - r.height) > 10) return false        // 대략 원형/정사각형
+      if (r.top > window.innerHeight * 0.2) return false         // 화면 상단부
+      if (r.right < window.innerWidth * 0.55) return false       // 화면 우측부
+      const txt = el.textContent.trim()
+      const shortInitials = txt.length > 0 && txt.length <= 4    // 메인 계정: 이니셜
+      const hasPhoto = !!el.querySelector('img')
+        || (getComputedStyle(el).backgroundImage && getComputedStyle(el).backgroundImage !== 'none') // 서브 계정: 프로필 사진
+      return shortInitials || hasPhoto
+    })
+    // 우측 상단에 더 가까운 순서로 정렬 (right가 클수록, top이 작을수록 우선)
+    candidates.sort((a, b) => {
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect()
+      return (rb.right - rb.top) - (ra.right - ra.top)
+    })
+    if (candidates[0]) {
+      const r = candidates[0].getBoundingClientRect()
+      const txt = candidates[0].textContent.trim()
+      candidates[0].click()
+      return { txt, x: Math.round(r.left), y: Math.round(r.top) }
+    }
+    return null
+  })
+}
+
+async function checkFlowCredits(page) {
+  log('info', `Flow 크레딧 표시 탐색 중… (프로필: ${activeProfile})`)
+  await sleep(1500)
+
+  // 1차: 대시보드 화면 그대로 스캔
+  let matches = await scanForCreditText(page)
+  const dashShotPath = path.join(CONFIG.downloadDir, `debug_credits_dashboard_${activeProfile}.png`)
+  await page.screenshot({ path: dashShotPath, fullPage: true })
+
+  // 2차: 우측 상단 계정 아바타 클릭 후 재스캔 (실제 크레딧은 보통 여기 있음)
+  const avatar = await clickAccountAvatar(page)
+  if (avatar) {
+    log('info', `계정 아바타로 추정되는 버튼 클릭: "${avatar.txt}" @ (${avatar.x},${avatar.y})`)
+    await sleep(1200)
+    const menuMatches = await scanForCreditText(page)
+    matches = matches.concat(menuMatches)
+  } else {
+    log('warn', '우측 상단 계정 아바타 버튼을 자동으로 못 찾았습니다. debug_credits_dashboard 스크린샷에서 직접 위치를 알려주시면 좌표 기반으로 다시 시도할 수 있습니다.')
+  }
+
+  const shotPath = path.join(CONFIG.downloadDir, `debug_credits_menu_${activeProfile}.png`)
+  await page.screenshot({ path: shotPath, fullPage: true })
+
+  // "50 Google Flow 크레딧" 처럼 숫자로 시작하는 텍스트에서 잔여 크레딧 추출
+  const numberMatch = matches.map(m => m.txt.match(/^(\d+)\s/)).find(Boolean)
+  const remaining = numberMatch ? parseInt(numberMatch[1], 10) : null
+
+  if (matches.length) {
+    log('ok', `크레딧 관련 후보 ${matches.length}개 발견:`)
+    matches.forEach(m => log('info', `  "${m.txt}" aria="${m.aria}" @ (${m.x},${m.y})`))
+  } else {
+    log('warn', '크레딧 표시를 못 찾았습니다 — debug_credits_menu 스크린샷을 직접 확인해주세요.')
+  }
+  if (remaining != null) log('ok', `잔여 크레딧 파싱 결과: ${remaining}`)
+  else log('warn', '숫자 패턴을 못 찾아 자동 파싱 실패 — 후보 텍스트를 확인해주세요.')
+
+  log('info', `대시보드 스크린샷: ${path.relative(ROOT, dashShotPath)}`)
+  log('info', `아바타 클릭 후 스크린샷: ${path.relative(ROOT, shotPath)}`)
+
+  // 서버(proxy.js)가 stdout에서 이 한 줄만 grep해서 파싱함 — 형식 변경 시 proxy.js도 같이 수정할 것
+  console.log(`CREDIT_RESULT:${JSON.stringify({ profile: activeProfile, remaining, checkedAt: new Date().toISOString() })}`)
+}
 
 // ── 캐릭터 등록 ──────────────────────────────────────────────────────
 

@@ -13,6 +13,7 @@ import ExtractTab from './tabs/ExtractTab'
 import VideoTab from './tabs/VideoTab'
 import PublishingTab from './tabs/PublishingTab'
 import DashboardTab from './tabs/DashboardTab'
+import CreditsTab from './tabs/CreditsTab'
 import RetentionHookTab from './tabs/RetentionHookTab'
 import EditMetaTab from './tabs/EditMetaTab'
 import StoryArchiveTab from './tabs/StoryArchiveTab'
@@ -27,6 +28,7 @@ const TAB_MAP = {
     video: VideoTab,
     publishing: PublishingTab,
     dashboard: DashboardTab,
+    credits: CreditsTab,
     retention: RetentionHookTab,
     editmeta: EditMetaTab,
     storyarchive: StoryArchiveTab,

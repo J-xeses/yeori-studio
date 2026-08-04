@@ -788,6 +788,52 @@ app.post('/api/gpoints', (req, res) => {
   }
 })
 
+// ── POST /api/check-flow-credits — flow-automation.js --check-credits 실행 후 파싱된 잔여 크레딧 반환 ──
+// 이미 로그인돼 있는 전용 프로필 Chrome(9222/9223, --user-data-dir 필요, Chrome 136+ 정책)에
+// CDP로 붙어서 화면을 읽어옴 — Chrome이 안 떠 있으면 실패 응답.
+app.post('/api/check-flow-credits', (req, res) => {
+  const profile = req.body?.profile === 'sub' ? 'sub' : 'main'
+  const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
+  const args = [scriptPath, '--check-credits', ...(profile === 'sub' ? ['--profile=sub'] : [])]
+
+  const proc = spawn(process.execPath, args, { cwd: ROOT, env: process.env })
+  let out = '', err = '', settled = false
+
+  // 안전장치: Chrome이 멈춰있거나 예상 못한 화면 상태(로그인 대기 등)로 무한정 안 끝나는 경우 대비.
+  // 정상적으로는 몇 초~수십 초면 끝나는 작업이라 45초로 충분히 여유를 둠.
+  const timer = setTimeout(() => {
+    if (settled) return
+    settled = true
+    proc.kill('SIGKILL')
+    res.status(504).json({ ok: false, error: '45초 안에 응답이 없어 중단했습니다 (Chrome이 멈춰있거나 응답 없는 상태일 수 있음)' })
+  }, 45000)
+
+  proc.stdout.on('data', c => { out += c.toString() })
+  proc.stderr.on('data', c => { err += c.toString() })
+
+  proc.on('close', () => {
+    if (settled) return
+    settled = true
+    clearTimeout(timer)
+    const m = out.match(/CREDIT_RESULT:(\{.*\})/)
+    if (m) {
+      try {
+        const data = JSON.parse(m[1])
+        if (data.remaining != null) return res.json({ ok: true, ...data })
+        return res.status(422).json({ ok: false, error: '화면에서 크레딧 숫자를 못 찾음', ...data, log: out.slice(-1500) })
+      } catch {}
+    }
+    res.status(500).json({ ok: false, error: 'flow-automation 실행 결과 파싱 실패', log: out.slice(-1500), stderr: err.slice(-500) })
+  })
+
+  proc.on('error', e => {
+    if (settled) return
+    settled = true
+    clearTimeout(timer)
+    res.status(500).json({ ok: false, error: `실행 실패: ${e.message}` })
+  })
+})
+
 // ── POST /api/save-video-prompts — video-prompts.json 에피소드별 저장 ────────
 app.post('/api/save-video-prompts', (req, res) => {
   const { epNum, prompts } = req.body
