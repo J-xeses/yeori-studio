@@ -61,7 +61,7 @@ const defaultState = {
       narration: { speed: 0.85, stability: 55, similarity: 75 },
     }
   },
-  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: 'semi', boxColor: '#000000' },
+  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '' },
   publishing: {
@@ -69,7 +69,18 @@ const defaultState = {
     instagram: { title: '', description: '', tags: '' },
     tiktok:    { title: '', description: '', tags: '' },
   },
-  dashboard: { flowCredits: 100, klingCredits: 50, elevenlabsChars: 10000, monthBudget: 50000, spent: 0 },
+  dashboard: { monthBudget: 50000, spent: 0 },
+  creditTracker: {
+    main: {
+      flow: { remaining: 50, dailyTotal: 50, costPerCut: 12 },
+      qwen: { countToday: 0, targetMin: 5, targetMax: 6 },
+    },
+    sub: {
+      flow:     { remaining: 50, dailyTotal: 50, costPerCut: 12 },
+      pixverse: { remaining: 60, dailyTotal: 60 },
+    },
+    lastCheckedAt: null,
+  },
   projectName: '새 프로젝트',
   savedAt: null,
   videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
@@ -244,6 +255,35 @@ function reducer(state, action) {
       },
     }
     case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }
+
+    case 'SET_CREDIT_TOOL': {
+      const { account, tool, patch } = action.p
+      return {
+        ...state,
+        creditTracker: {
+          ...state.creditTracker,
+          [account]: {
+            ...state.creditTracker[account],
+            [tool]: { ...state.creditTracker[account][tool], ...patch },
+          },
+        },
+      }
+    }
+    case 'RESET_CREDITS_DAILY': return {
+      ...state,
+      creditTracker: {
+        ...state.creditTracker,
+        main: {
+          flow: { ...state.creditTracker.main.flow, remaining: state.creditTracker.main.flow.dailyTotal },
+          qwen: { ...state.creditTracker.main.qwen, countToday: 0 },
+        },
+        sub: {
+          flow:     { ...state.creditTracker.sub.flow, remaining: state.creditTracker.sub.flow.dailyTotal },
+          pixverse: { ...state.creditTracker.sub.pixverse, remaining: state.creditTracker.sub.pixverse.dailyTotal },
+        },
+        lastCheckedAt: new Date().toISOString(),
+      },
+    }
     case 'SET_PROJECT': return { ...state, projectName: action.p }
     case 'MARK_SAVED': return { ...state, savedAt: new Date().toISOString() }
 
@@ -297,6 +337,22 @@ function reducer(state, action) {
       voiceInsertState: { ...defaultState.voiceInsertState, ...(action.p.voiceInsertState || {}) },
       videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
       publishing:   { ...defaultState.publishing,   ...(action.p.publishing   || {}) },
+      creditTracker: {
+        ...defaultState.creditTracker,
+        ...(action.p.creditTracker || {}),
+        main: {
+          ...defaultState.creditTracker.main,
+          ...(action.p.creditTracker?.main || {}),
+          flow: { ...defaultState.creditTracker.main.flow, ...(action.p.creditTracker?.main?.flow || {}) },
+          qwen: { ...defaultState.creditTracker.main.qwen, ...(action.p.creditTracker?.main?.qwen || {}) },
+        },
+        sub: {
+          ...defaultState.creditTracker.sub,
+          ...(action.p.creditTracker?.sub || {}),
+          flow:     { ...defaultState.creditTracker.sub.flow,     ...(action.p.creditTracker?.sub?.flow     || {}) },
+          pixverse: { ...defaultState.creditTracker.sub.pixverse, ...(action.p.creditTracker?.sub?.pixverse || {}) },
+        },
+      },
       savedAt: new Date().toISOString(),
     }
     default: return state

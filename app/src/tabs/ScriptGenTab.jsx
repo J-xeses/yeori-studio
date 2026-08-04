@@ -35,12 +35,6 @@ const SCN_CODES = [
   { value: 'REL',  label: 'REL — 릴레이션십' },
 ]
 
-const EP_GROUPS = [
-  { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'] },
-  { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
-  { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'] },
-]
-
 const CUT_TYPES = [
   { value: 'YEORI',   label: 'YEORI',   color: '#a78bfa', border: 'rgba(167,139,250,0.45)' },
   { value: 'BROLL',   label: 'B-ROLL',  color: '#60a5fa', border: 'rgba(96,165,250,0.45)'  },
@@ -439,17 +433,14 @@ export default function ScriptGenTab() {
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
-  const [episodeOpen, setEpisodeOpen] = useState(true)
-  const [episodeListOpen, setEpisodeListOpen] = useState(false)
+  const [episodeOpen, setEpisodeOpen] = useState(false)
   const [gData, setGData] = useState(() => loadGPoints())
   const [revisionInput, setRevisionInput] = useState('')
   const [revisionLoading, setRevisionLoading] = useState(false)
   const [revisionHistory, setRevisionHistory] = useState([])
-  const [collapsedGroups, setCollapsedGroups] = useState({})
   const [viewMode, setViewMode] = useState('detail') // 'list' | 'detail'
 
   // ── 마스터 코드 대본 생성 (script_generator.py + script_to_prompts.py) ──
-  const [masterCodeOpen, setMasterCodeOpen] = useState(true)
   const [masterCode, setMasterCode] = useState('')
   const [mcLoading, setMcLoading] = useState(false)
   const [mcError, setMcError] = useState('')
@@ -808,12 +799,6 @@ ${YEORI_RULESET}
     }
   }
   const revokeG1  = (cutNo) => { setGPoint(episodeCode, cutNo, 'g1', false); setGData(loadGPoints()) }
-  const approveAllG1 = () => {
-    cuts.forEach(c => setGPoint(episodeCode, c.no, 'g1', true))
-    const updated = loadGPoints()
-    setGData(updated)
-    setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
-  }
   const handleRevisionFileUpload = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -971,10 +956,6 @@ ${currentScript}
   const g1Count = cuts.filter(c => gData[episodeCode]?.[`cut_${c.no}`]?.g1).length
   const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
-  const handleCutCountChange = (n) => {
-    const count = Math.max(1, Math.min(20, parseInt(n) || 7))
-    dispatch({ type: 'RESET_CUTS', n: count })
-  }
 
   const handlePipelineExport = async () => {
     if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
@@ -1075,64 +1056,68 @@ ${currentScript}
       {/* Left: Settings */}
       <div className={s.sidebar}>
 
-        {/* 에피소드 설정 - 접기/펼치기 */}
-        <div className={s.epSection}>
+        {/* 에피소드 설정 - 접기/펼치기, 열렸을 때만 스크롤 영역 차지 */}
+        <div className={`${s.epSection} ${episodeOpen ? s.epSectionOpen : ''}`}>
           <button className={s.epToggle} onClick={() => setEpisodeOpen(o => !o)}>
             <span className={s.sideTitle}>에피소드 설정</span>
             <span className={s.toggleIcon}>{episodeOpen ? '▲' : '▼'}</span>
           </button>
           {episodeOpen && (
             <div className={s.epBody}>
-              <div className={s.field}>
-                <label>콘텐츠 유형</label>
-                <select value={episode.contentType || 'LF'}
-                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { contentType: e.target.value } })}>
-                  {CONTENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div className={s.field}>
-                <label>주제 (TOPIC)</label>
-                <select value={episode.topicCode || 'PSY'}
-                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { topicCode: e.target.value } })}>
-                  {TOPIC_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div className={s.field}>
-                <label>시나리오 (SCN)</label>
-                <select value={episode.scnCode || 'DOC'}
-                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { scnCode: e.target.value } })}>
-                  {SCN_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <div className={s.field}>
-                <label>에피소드 번호</label>
-                <div className={s.epNumRow}>
-                  <input
-                    type="number" min="1" value={episode.number}
-                    style={numError ? { borderColor: '#ef4444' } : {}}
-                    onChange={e => {
-                      const num = parseInt(e.target.value) || 1
-                      const thisType = episode.contentType || 'LF'
-                      const newCode = formatEpisodeCode(thisType, num)
-                      const isDup = Object.values(episodes || {}).some(ep => {
-                        if (ep.id === activeEpisodeId) return false
-                        return formatEpisodeCode(ep.episode?.contentType || 'LF', ep.episode.number) === newCode
-                      })
-                      if (isDup) {
-                        setNumError(`${newCode}은 이미 사용 중입니다`)
-                      } else {
-                        setNumError('')
-                        dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
-                      }
-                    }}
-                  />
-                  <span className={s.epCodeBadge}>
-                    {displayEpisodeCode(episode)}
-                  </span>
+              <div className={s.fieldRow2}>
+                <div className={s.field}>
+                  <label>콘텐츠 유형</label>
+                  <select value={episode.contentType || 'LF'}
+                    onChange={e => dispatch({ type: 'SET_EPISODE', p: { contentType: e.target.value } })}>
+                    {CONTENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
                 </div>
-                {numError && (
-                  <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
-                )}
+                <div className={s.field}>
+                  <label>주제 (TOPIC)</label>
+                  <select value={episode.topicCode || 'PSY'}
+                    onChange={e => dispatch({ type: 'SET_EPISODE', p: { topicCode: e.target.value } })}>
+                    {TOPIC_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className={s.fieldRow2}>
+                <div className={s.field}>
+                  <label>시나리오 (SCN)</label>
+                  <select value={episode.scnCode || 'DOC'}
+                    onChange={e => dispatch({ type: 'SET_EPISODE', p: { scnCode: e.target.value } })}>
+                    {SCN_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div className={s.field}>
+                  <label>에피소드 번호</label>
+                  <div className={s.epNumRow}>
+                    <input
+                      type="number" min="1" value={episode.number}
+                      style={numError ? { borderColor: '#ef4444' } : {}}
+                      onChange={e => {
+                        const num = parseInt(e.target.value) || 1
+                        const thisType = episode.contentType || 'LF'
+                        const newCode = formatEpisodeCode(thisType, num)
+                        const isDup = Object.values(episodes || {}).some(ep => {
+                          if (ep.id === activeEpisodeId) return false
+                          return formatEpisodeCode(ep.episode?.contentType || 'LF', ep.episode.number) === newCode
+                        })
+                        if (isDup) {
+                          setNumError(`${newCode}은 이미 사용 중입니다`)
+                        } else {
+                          setNumError('')
+                          dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
+                        }
+                      }}
+                    />
+                    <span className={s.epCodeBadge}>
+                      {displayEpisodeCode(episode)}
+                    </span>
+                  </div>
+                  {numError && (
+                    <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
+                  )}
+                </div>
               </div>
               <div className={s.field}>
                 <label>에피소드 제목</label>
@@ -1171,232 +1156,88 @@ ${currentScript}
                   })}
                 </div>
               </div>
-              <div className={s.field}>
-                <label>컷 수</label>
-                <div className={s.cutCountRow}>
-                  <input type="number" min="1" max="20" value={episode.cutCount}
-                    onChange={e => handleCutCountChange(e.target.value)} />
-                  <span className={s.cutHint}>컷 (최대 20)</span>
-                </div>
-              </div>
-              <div className={s.field}>
-                <label>캐릭터 설정</label>
-                <textarea rows={3} value={episode.character}
-                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { character: e.target.value } })} />
-              </div>
             </div>
           )}
         </div>
 
-        {/* 에피소드 목록 패널 */}
-        <div className={s.epSection}>
-          <button className={s.epToggle} onClick={() => setEpisodeListOpen(o => !o)}>
-            <span className={s.sideTitle}>📋 에피소드 목록</span>
-            <span className={s.toggleIcon}>{episodeListOpen ? '▲' : '▼'}</span>
+        {/* 마스터 코드 대본 생성 (script_generator.py + script_to_prompts.py) — 항상 노출, 고정 영역 */}
+        <div className={s.masterCodeFixed}>
+          <div className={s.sideTitle} style={{ marginBottom: 10 }}>🔤 마스터 코드 대본 생성</div>
+          {/* ① 마스터 코드 입력창 */}
+          <div className={s.field}>
+            <label>마스터 코드</label>
+            <textarea
+              rows={7}
+              placeholder={'SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM :: LK_CS.TOP_CRP.BTM_SHT.SH_HHL :: SH_CU CA_PS MD_JOY AT_SD_01'}
+              style={{ fontFamily: 'monospace', fontSize: 11, resize: 'vertical' }}
+              value={masterCode}
+              onChange={e => setMasterCode(e.target.value)}
+            />
+          </div>
+
+          {/* ② 대본 생성 버튼 */}
+          <button
+            className={s.genBtn}
+            onClick={generateFromMasterCode}
+            disabled={mcLoading || !masterCode.trim()}
+            style={{ width: '100%' }}
+          >
+            {mcLoading ? (<><span className={s.spinner} />생성 중...</>) : '🧬 대본 생성'}
           </button>
-          {episodeListOpen && (
-            <div className={s.epListBody}>
-              {EP_GROUPS.map(group => {
-                const groupEps = Object.values(episodes || {}).filter(ep =>
-                  ep.episode?.contentType && group.types.includes(ep.episode.contentType)
-                )
-                if (groupEps.length === 0) return null
-                const isCollapsed = collapsedGroups[group.id]
-                return (
-                  <div key={group.id} className={s.epGroup}>
-                    <button className={s.epGroupHeader}
-                      onClick={() => setCollapsedGroups(prev => ({ ...prev, [group.id]: !prev[group.id] }))}>
-                      <span className={s.epGroupLabel}>{group.label}</span>
-                      <span className={s.epGroupCount}>{groupEps.length}</span>
-                      <span className={s.toggleIcon}>{isCollapsed ? '▶' : '▼'}</span>
-                    </button>
-                    {!isCollapsed && groupEps.map(ep => {
-                      const epCuts = ep.cuts || []
-                      const epGpKey = resolveEpisodeCode(ep.episode)
-                      const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
-                      const epTotal = epCuts.length
-                      const epAllDone = epTotal > 0 && epG1 === epTotal
-                      const isActive = ep.id === activeEpisodeId
-                      const epCode = displayEpisodeCode(ep.episode)
-                      return (
-                        <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
-                          <div className={s.epListHeader}
-                            onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}>
-                            <span className={s.epTypeBadge}>{epCode}</span>
-                            <span className={s.epListTitle}>{ep.episode?.title || '(제목 없음)'}</span>
-                            {epAllDone && <span className={s.epG1Badge}>G1 ✅</span>}
-                          </div>
-                          {epTotal > 0 && (
-                            <div className={s.epG1Bar}>
-                              <div className={s.epG1BarTrack}>
-                                <div className={s.epG1BarFill} style={{ width: `${(epG1/epTotal)*100}%` }} />
-                              </div>
-                              <span className={s.epG1Count}>{epG1}/{epTotal}</span>
-                            </div>
-                          )}
-                          {isActive && epTotal > 0 && !epAllDone && (
-                            <button className={s.epApproveBtn} onClick={approveAllG1}>
-                              ✅ 전체 G1 승인
-                            </button>
-                          )}
-                          {isActive && epAllDone && (
-                            <button className={s.epApproveBtn} style={{background:'rgba(34,197,94,.2)',borderColor:'rgba(34,197,94,.4)',color:'#4ade80'}}
-                              onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
-                              🎬 스튜디오 탭으로 →
-                            </button>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-              {/* 기타 그룹: contentType 없는 레거시 에피소드 */}
-              {(() => {
-                const knownTypes = EP_GROUPS.flatMap(g => g.types)
-                const otherEps = Object.values(episodes || {}).filter(ep =>
-                  !ep.episode?.contentType || !knownTypes.includes(ep.episode.contentType)
-                )
-                if (otherEps.length === 0) return null
-                const isCollapsed = collapsedGroups['other']
-                return (
-                  <div className={s.epGroup}>
-                    <button className={s.epGroupHeader}
-                      onClick={() => setCollapsedGroups(prev => ({ ...prev, other: !prev.other }))}>
-                      <span className={s.epGroupLabel}>📁 기타</span>
-                      <span className={s.epGroupCount}>{otherEps.length}</span>
-                      <span className={s.toggleIcon}>{isCollapsed ? '▶' : '▼'}</span>
-                    </button>
-                    {!isCollapsed && otherEps.map(ep => {
-                      const epCuts = ep.cuts || []
-                      const epGpKey = resolveEpisodeCode(ep.episode)
-                      const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
-                      const epTotal = epCuts.length
-                      const epAllDone = epTotal > 0 && epG1 === epTotal
-                      const isActive = ep.id === activeEpisodeId
-                      const epCode = `EP${String(ep.episode?.number || '?').padStart(2, '0')}`
-                      return (
-                        <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
-                          <div className={s.epListHeader}
-                            onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}>
-                            <span className={s.epTypeBadge}>{epCode}</span>
-                            <span className={s.epListTitle}>{ep.episode?.title || '(제목 없음)'}</span>
-                            {epAllDone && <span className={s.epG1Badge}>G1 ✅</span>}
-                          </div>
-                          {epTotal > 0 && (
-                            <div className={s.epG1Bar}>
-                              <div className={s.epG1BarTrack}>
-                                <div className={s.epG1BarFill} style={{ width: `${(epG1/epTotal)*100}%` }} />
-                              </div>
-                              <span className={s.epG1Count}>{epG1}/{epTotal}</span>
-                            </div>
-                          )}
-                          {isActive && epTotal > 0 && !epAllDone && (
-                            <button className={s.epApproveBtn} onClick={approveAllG1}>
-                              ✅ 전체 G1 승인
-                            </button>
-                          )}
-                          {isActive && epAllDone && (
-                            <button className={s.epApproveBtn} style={{background:'rgba(34,197,94,.2)',borderColor:'rgba(34,197,94,.4)',color:'#4ade80'}}
-                              onClick={() => dispatch({ type: 'SET_TAB', p: 'studio' })}>
-                              🎬 스튜디오 탭으로 →
-                            </button>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })()}
-            </div>
+          {mcError && (
+            <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>⚠️ {mcError}</div>
           )}
-        </div>
 
-        {/* 마스터 코드 대본 생성 (script_generator.py + script_to_prompts.py) */}
-        <div className={s.epSection}>
-          <button className={s.epToggle} onClick={() => setMasterCodeOpen(o => !o)}>
-            <span className={s.sideTitle}>🔤 마스터 코드 대본 생성</span>
-            <span className={s.toggleIcon}>{masterCodeOpen ? '▲' : '▼'}</span>
-          </button>
-          {masterCodeOpen && (
-            <div className={s.epBody}>
-              {/* ① 마스터 코드 입력창 */}
-              <div className={s.field}>
-                <label>마스터 코드</label>
-                <textarea
-                  rows={4}
-                  placeholder={'SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM :: LK_CS.TOP_CRP.BTM_SHT.SH_HHL :: SH_CU CA_PS MD_JOY AT_SD_01'}
-                  style={{ fontFamily: 'monospace', fontSize: 11, resize: 'vertical' }}
-                  value={masterCode}
-                  onChange={e => setMasterCode(e.target.value)}
-                />
+          {/* ③ KR 컨펌본 미리보기 — 테스트 모드: "실제 적용" 전까지 AppContext/저장에 반영 안 됨 */}
+          {mcPreview && (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{
+                padding: '6px 10px', borderRadius: 6, background: 'rgba(234,179,8,.15)',
+                border: '1px solid rgba(234,179,8,.4)', color: '#facc15', fontSize: 11, fontWeight: 700,
+              }}>
+                ⚠ 미리보기 상태 — 실제 적용 전까지 저장 안 됨
               </div>
-
-              {/* ② 대본 생성 버튼 */}
-              <button
-                className={s.genBtn}
-                onClick={generateFromMasterCode}
-                disabled={mcLoading || !masterCode.trim()}
-                style={{ width: '100%' }}
-              >
-                {mcLoading ? (<><span className={s.spinner} />생성 중...</>) : '🧬 대본 생성'}
-              </button>
-              {mcError && (
-                <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>⚠️ {mcError}</div>
-              )}
-
-              {/* ③ KR 컨펌본 미리보기 — 테스트 모드: "실제 적용" 전까지 AppContext/저장에 반영 안 됨 */}
-              {mcPreview && (
-                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <div style={{
-                    padding: '6px 10px', borderRadius: 6, background: 'rgba(234,179,8,.15)',
-                    border: '1px solid rgba(234,179,8,.4)', color: '#facc15', fontSize: 11, fontWeight: 700,
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>
+                KR 컨펌본 미리보기 ({mcPreview.cuts.length}컷)
+              </div>
+              <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {mcPreview.cuts.map(c => (
+                  <div key={c.no} style={{
+                    padding: 8, borderRadius: 6, background: 'var(--bg3)',
+                    border: '1px solid var(--border2)', fontSize: 11, lineHeight: 1.6,
                   }}>
-                    ⚠ 미리보기 상태 — 실제 적용 전까지 저장 안 됨
+                    <div style={{ fontWeight: 700, color: 'var(--accent-light)', marginBottom: 4 }}>CUT {c.no}</div>
+                    <div>SP(장소): {c.kr.sp}</div>
+                    <div>CH(캐릭터): {c.kr.ch}</div>
+                    <div>SH(샷): {c.kr.sh}</div>
+                    <div>CA(카메라): {c.kr.ca}</div>
+                    <div>AC(동작): {c.kr.ac}</div>
+                    <div>MD(감정): {c.kr.md}</div>
                   </div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>
-                    KR 컨펌본 미리보기 ({mcPreview.cuts.length}컷)
-                  </div>
-                  <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    {mcPreview.cuts.map(c => (
-                      <div key={c.no} style={{
-                        padding: 8, borderRadius: 6, background: 'var(--bg3)',
-                        border: '1px solid var(--border2)', fontSize: 11, lineHeight: 1.6,
-                      }}>
-                        <div style={{ fontWeight: 700, color: 'var(--accent-light)', marginBottom: 4 }}>CUT {c.no}</div>
-                        <div>SP(장소): {c.kr.sp}</div>
-                        <div>CH(캐릭터): {c.kr.ch}</div>
-                        <div>SH(샷): {c.kr.sh}</div>
-                        <div>CA(카메라): {c.kr.ca}</div>
-                        <div>AC(동작): {c.kr.ac}</div>
-                        <div>MD(감정): {c.kr.md}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      onClick={() => { setMcPreview(null); setMcMeta(null) }}
-                      style={{
-                        flex: 1, padding: '6px 10px', borderRadius: 6, background: 'var(--bg3)',
-                        border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 11,
-                        fontWeight: 700, cursor: 'pointer',
-                      }}
-                    >
-                      취소
-                    </button>
-                    <button
-                      onClick={() => setShowChangesModal(true)}
-                      style={{
-                        flex: 2, padding: '6px 10px', borderRadius: 6, background: 'rgba(34,197,94,.15)',
-                        border: '1px solid rgba(34,197,94,.4)', color: '#4ade80', fontSize: 11,
-                        fontWeight: 700, cursor: 'pointer',
-                      }}
-                    >
-                      ✅ 실제 적용 (cuts에 반영 + 저장)
-                    </button>
-                  </div>
-                </div>
-              )}
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => { setMcPreview(null); setMcMeta(null) }}
+                  style={{
+                    flex: 1, padding: '6px 10px', borderRadius: 6, background: 'var(--bg3)',
+                    border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 11,
+                    fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => setShowChangesModal(true)}
+                  style={{
+                    flex: 2, padding: '6px 10px', borderRadius: 6, background: 'rgba(34,197,94,.15)',
+                    border: '1px solid rgba(34,197,94,.4)', color: '#4ade80', fontSize: 11,
+                    fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  ✅ 실제 적용 (cuts에 반영 + 저장)
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1579,10 +1420,10 @@ ${currentScript}
                   </span>
                   <span className={s.cutListScene}>{c.scene || '—'}</span>
                   <span className={s.cutListDialogue}>
-                    {hasDial ? c.dialogue.slice(0, 42) + (c.dialogue.length > 42 ? '…' : '') : <span style={{color:'var(--text-3)'}}>—</span>}
+                    {hasDial ? c.dialogue : <span style={{color:'var(--text-3)'}}>—</span>}
                   </span>
                   <span className={s.cutListVo}>
-                    {hasVo ? c.narration.slice(0, 42) + (c.narration.length > 42 ? '…' : '') : <span style={{color:'var(--text-3)'}}>—</span>}
+                    {hasVo ? c.narration : <span style={{color:'var(--text-3)'}}>—</span>}
                   </span>
                   <span className={s.cutListBadges}>
                     {isG1 && <span className={s.g1Badge}>G1</span>}

@@ -12,10 +12,10 @@
 /* 왼쪽: G4 대기 접수 패널 (주석과 달리 JSX 렌더 순서상 실제로는 왼쪽 사이드바) */
 .sidePanel {
   width: 30vh;
-  height: 80vh;
+  height: 100%;
   flex-shrink: 0;
-  border-right: 0.5px solid #252523;
-  background: #0d0d0b;
+  border-right: 1px solid var(--border);
+  background: var(--bg-panel);
   display: flex;
   flex-direction: column;
   overflow: hidden;

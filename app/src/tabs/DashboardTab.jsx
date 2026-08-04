@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { getGPointSummary } from '../lib/gpoints'
+import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './DashboardTab.module.css'
 
 const CYCLE = [
@@ -11,18 +14,25 @@ const CYCLE = [
   { step: 6, label: '퍼블리싱', icon: '🚀', tab: 'publishing' },
 ]
 
-function CreditBar({ label, used, total, color }) {
-  const pct = total > 0 ? Math.min(100, (used / total) * 100) : 0
+const G_STEPS = [
+  { key: 'g1', label: 'G1 대본', color: '#a78bfa' },
+  { key: 'g2', label: 'G2 이미지', color: '#3b82f6' },
+  { key: 'g3', label: 'G3 음성', color: '#22c55e' },
+  { key: 'g4', label: 'G4 영상', color: '#f97316' },
+  { key: 'g5', label: 'G5 편집', color: '#eab308' },
+]
+
+function GStepBar({ label, count, total, color }) {
+  const pct = total > 0 ? Math.min(100, (count / total) * 100) : 0
   return (
     <div className={s.credit}>
       <div className={s.creditTop}>
         <span className={s.creditLabel}>{label}</span>
-        <span className={s.creditVal} style={{ color }}>{(total - used).toLocaleString()} <span className={s.creditUnit}>남음</span></span>
+        <span className={s.creditVal} style={{ color }}>{count} <span className={s.creditUnit}>/ {total}</span></span>
       </div>
       <div className={s.creditBar}>
         <div className={s.creditFill} style={{ width: `${pct}%`, background: color }} />
       </div>
-      <div className={s.creditMeta}>{used.toLocaleString()} 사용 / {total.toLocaleString()} 전체</div>
     </div>
   )
 }
@@ -35,9 +45,11 @@ export default function DashboardTab() {
   const go = (tab) => { if (tab) dispatch({ type: 'SET_TAB', p: tab }) }
 
   const cutsTotal = cuts.length
-  const cutsWithDialogue = cuts.filter(c => c.dialogue || c.narration).length
-  const cutsWithPrompt = cuts.filter(c => c.imagePrompt).length
-  const progress = cutsTotal > 0 ? Math.round(((cutsWithDialogue + cutsWithPrompt) / (cutsTotal * 2)) * 100) : 0
+  const gSummary = getGPointSummary(cutsTotal)
+  const gAvg = cutsTotal > 0
+    ? G_STEPS.reduce((sum, g) => sum + gSummary[g.key], 0) / (G_STEPS.length * cutsTotal) * 100
+    : 0
+  const progress = Math.round(gAvg)
 
   const apiStatus = [
     { name: 'Claude', connected: !!apiKeys.claude, color: '#a78bfa' },
@@ -47,20 +59,26 @@ export default function DashboardTab() {
   ]
 
   return (
-    <div className={s.root}>
+    <div className={s.page}>
+      <TabToolbar />
+      <div className={s.root}>
+        <EpisodeInfoSidebar />
+        <div className={s.main}>
+        <div className={s.scrollBody}>
+        <div className={s.content}>
       <div className={s.topRow}>
         {/* Episode progress */}
         <div className={s.card} style={{ flex: 2 }}>
           <div className={s.cardTitle}>에피소드 {episode.number} 진행률</div>
-          <div className={s.epInfo}>{episode.title || '제목 없음'} · {episode.location} · {episode.mood}</div>
+          <div className={s.epInfo}>{episode.title || '제목 없음'} · {episode.location} · {episode.mood} · 총 {cutsTotal}컷</div>
           <div className={s.bigProgress}>
             <div className={s.bigBar}><div className={s.bigFill} style={{ width: `${progress}%` }} /></div>
             <span className={s.bigPct}>{progress}%</span>
           </div>
-          <div className={s.epStats}>
-            <div className={s.epStat}><span>{cutsTotal}</span><span>총 컷</span></div>
-            <div className={s.epStat}><span className={s.green}>{cutsWithDialogue}</span><span>대사 완료</span></div>
-            <div className={s.epStat}><span className={s.purple}>{cutsWithPrompt}</span><span>프롬프트</span></div>
+          <div className={s.credits}>
+            {G_STEPS.map(g => (
+              <GStepBar key={g.key} label={g.label} count={gSummary[g.key]} total={cutsTotal} color={g.color} />
+            ))}
           </div>
         </div>
 
@@ -82,31 +100,8 @@ export default function DashboardTab() {
       </div>
 
       <div className={s.midRow}>
-        {/* Credits */}
-        <div className={s.card} style={{ flex: 1.5 }}>
-          <div className={s.cardTitle}>플랫폼 크레딧 현황</div>
-          <div className={s.credits}>
-            <CreditBar label="Flow (이미지)" used={200 - dashboard.flowCredits} total={200} color="#a78bfa" />
-            <CreditBar label="Kling (영상)" used={100 - dashboard.klingCredits} total={100} color="#3b82f6" />
-            <CreditBar label="ElevenLabs (TTS)" used={50000 - dashboard.elevenlabsChars} total={50000} color="#22c55e" />
-          </div>
-          <div className={s.creditEdit}>
-            {[
-              { key: 'flowCredits', label: 'Flow 잔여' },
-              { key: 'klingCredits', label: 'Kling 잔여' },
-              { key: 'elevenlabsChars', label: 'EL 잔여 글자' },
-            ].map(({ key, label }) => (
-              <div key={key} className={s.editRow}>
-                <span>{label}</span>
-                <input type="number" value={dashboard[key]}
-                  onChange={e => dispatch({ type: 'SET_DASH', p: { [key]: parseInt(e.target.value) || 0 } })} />
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Monthly cost */}
-        <div className={s.card}>
+        <div className={s.card} style={{ flex: 1 }}>
           <div className={s.cardTitle}>이번 달 비용</div>
           <div className={s.costBig}>
             <span className={s.costNum}>₩{spent.toLocaleString()}</span>
@@ -152,6 +147,10 @@ export default function DashboardTab() {
               {c.icon} {c.label}
             </button>
           ))}
+        </div>
+      </div>
+        </div>
+        </div>
         </div>
       </div>
     </div>

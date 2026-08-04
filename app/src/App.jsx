@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
-import { formatEpisodeCode, displayEpisodeCode, validateEpisodeCode } from './lib/episodeCode'
+import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode, validateEpisodeCode } from './lib/episodeCode'
+import { setGPoint, loadGPoints } from './lib/gpoints'
+
+const SIDEBAR_W = 288
 import NavBar from './components/NavBar'
 import ApiBar from './components/ApiBar'
 import ScriptGenTab from './tabs/ScriptGenTab'
@@ -11,6 +14,7 @@ import ExtractTab from './tabs/ExtractTab'
 import VideoTab from './tabs/VideoTab'
 import PublishingTab from './tabs/PublishingTab'
 import DashboardTab from './tabs/DashboardTab'
+import CreditsTab from './tabs/CreditsTab'
 import RetentionHookTab from './tabs/RetentionHookTab'
 import EditMetaTab from './tabs/EditMetaTab'
 import StoryArchiveTab from './tabs/StoryArchiveTab'
@@ -25,6 +29,7 @@ const TAB_MAP = {
     video: VideoTab,
     publishing: PublishingTab,
     dashboard: DashboardTab,
+    credits: CreditsTab,
     retention: RetentionHookTab,
     editmeta: EditMetaTab,
     storyarchive: StoryArchiveTab,
@@ -62,6 +67,15 @@ function EpisodeSidebar({ onClose }) {
     const [newType, setNewType] = useState('LF')
     const [newSlug, setNewSlug] = useState('')
     const [addError, setAddError] = useState('')
+    const [gData, setGData] = useState(() => loadGPoints())
+
+    const approveAllG1 = (e, ep) => {
+        e.stopPropagation()
+        const epCode = resolveEpisodeCode(ep.episode)
+        ;(ep.cuts || []).forEach(c => setGPoint(epCode, c.no, 'g1', true))
+        setGData(loadGPoints())
+        setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 600)
+    }
 
     const allEps = Object.values(episodes).sort((a, b) =>
         (a.episode.number || 0) - (b.episode.number || 0)
@@ -102,6 +116,11 @@ function EpisodeSidebar({ onClose }) {
         const isActive = ep.id === activeEpisodeId
         const isOpen = openTabIds.includes(ep.id)
         const epCode = ep.episode?.contentType ? displayEpisodeCode(ep.episode) : `EP${String(ep.episode.number).padStart(2, '0')}`
+        const epGpKey = resolveEpisodeCode(ep.episode)
+        const epCuts = ep.cuts || []
+        const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
+        const epTotal = epCuts.length
+        const epAllDone = epTotal > 0 && epG1 === epTotal
         return (
             <div
                 key={ep.id}
@@ -141,6 +160,34 @@ function EpisodeSidebar({ onClose }) {
                         <span>{ep.episode.location}</span>
                         {isOpen && <span style={{ color: '#a78bfa', fontWeight: 600 }}>· 열림</span>}
                     </div>
+                    {epTotal > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                            <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${(epG1 / epTotal) * 100}%`, background: epAllDone ? '#22c55e' : '#a78bfa' }} />
+                            </div>
+                            <span style={{ fontSize: 9, color: 'var(--text3)', flexShrink: 0 }}>G1 {epG1}/{epTotal}</span>
+                        </div>
+                    )}
+                    {isActive && epTotal > 0 && !epAllDone && (
+                        <button
+                            onClick={e => approveAllG1(e, ep)}
+                            style={{
+                                marginTop: 6, width: '100%', padding: '4px 0', borderRadius: 5,
+                                background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)',
+                                color: '#c4b5fd', fontSize: 10, cursor: 'pointer',
+                            }}
+                        >✅ 전체 G1 승인</button>
+                    )}
+                    {isActive && epAllDone && (
+                        <button
+                            onClick={e => { e.stopPropagation(); dispatch({ type: 'SET_TAB', p: 'studio' }) }}
+                            style={{
+                                marginTop: 6, width: '100%', padding: '4px 0', borderRadius: 5,
+                                background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)',
+                                color: '#4ade80', fontSize: 10, cursor: 'pointer',
+                            }}
+                        >🎬 스튜디오 탭으로 →</button>
+                    )}
                 </div>
 
                 {/* 상태 + 삭제 */}
@@ -192,7 +239,7 @@ function EpisodeSidebar({ onClose }) {
 
     return (
         <div style={{
-            width: 240, flexShrink: 0, height: '100%',
+            width: SIDEBAR_W, flexShrink: 0, height: '100%',
             background: 'var(--bg2)',
             borderRight: '1px solid var(--border)',
             display: 'flex', flexDirection: 'column',
@@ -201,7 +248,7 @@ function EpisodeSidebar({ onClose }) {
             {/* 헤더 */}
             <div style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '0 12px', height: 36, flexShrink: 0,
+                padding: '0 14px', height: 40, flexShrink: 0,
                 borderBottom: '1px solid var(--border)',
             }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.05em' }}>
@@ -313,70 +360,25 @@ function EpisodeSidebar({ onClose }) {
     )
 }
 
-// ── 에피소드 탭 바 (탭만, 사이드바 상태는 props로) ──────────────
-function EpisodeBar({ showSidebar, onToggleSidebar, onOpenSidebar }) {
-    const { state, dispatch } = useApp()
-    const { episodes, activeEpisodeId, openTabIds = [] } = state
+// ── 에피소드 탭 바 (활성 에피소드 제목 1개 + 목록 버튼) ──────────────
+function EpisodeBar({ onOpenSidebar }) {
+    const { state } = useApp()
+    const { episodes, activeEpisodeId } = state
 
-    const openTabs = openTabIds.map(id => episodes[id]).filter(Boolean)
-
-    const handleClose = (e, id) => {
-        e.stopPropagation()
-        dispatch({ type: 'CLOSE_TAB', id })
-    }
+    const activeEp = episodes[activeEpisodeId]
+    const title = activeEp?.episode.title || `EP${activeEp?.episode.number ?? ''} 새 에피소드`
 
     return (
         <div style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            padding: '0 8px 0 4px', background: 'var(--bg2)',
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '0 8px 0 14px', background: 'var(--bg2)',
             borderBottom: '1px solid var(--border)',
-            overflowX: 'auto', flexShrink: 0, minHeight: 36,
+            overflowX: 'auto', flexShrink: 0, minHeight: 40,
         }}>
-            {/* 목록 토글 버튼 */}
-            <button
-                onClick={onToggleSidebar}
-                title={showSidebar ? '사이드바 닫기' : '에피소드 목록'}
-                style={{
-                    padding: '4px 8px', borderRadius: 6, border: 'none', flexShrink: 0,
-                    background: showSidebar ? 'var(--purple)' : 'transparent',
-                    color: showSidebar ? '#fff' : 'var(--text3)',
-                    fontSize: 14, cursor: 'pointer', transition: 'all 0.15s',
-                }}
-            >☰</button>
-
-            {/* 열린 탭들 */}
-            {openTabs.map(ep => {
-                const isActive = ep.id === activeEpisodeId
-                const rawTitle = ep.episode.title || `EP${ep.episode.number} 새 에피소드`
-                const label = rawTitle.slice(0, 14) + (rawTitle.length > 14 ? '…' : '')
-                return (
-                    <div
-                        key={ep.id}
-                        onClick={() => dispatch({ type: 'SWITCH_EPISODE', id: ep.id })}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 4,
-                            padding: '4px 10px', borderRadius: 6, cursor: 'pointer',
-                            background: isActive ? 'var(--purple)' : 'transparent',
-                            color: isActive ? '#fff' : 'var(--text3)',
-                            fontSize: 11, fontWeight: isActive ? 700 : 400,
-                            border: isActive ? '1px solid var(--purple)' : '1px solid transparent',
-                            transition: 'all 0.15s', userSelect: 'none', whiteSpace: 'nowrap',
-                        }}
-                        onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = 'var(--text)' }}
-                        onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = 'var(--text3)' }}
-                    >
-                        {label}
-                        <span
-                            onClick={e => handleClose(e, ep.id)}
-                            title="탭 닫기 (데이터 유지)"
-                            style={{
-                                marginLeft: 2, fontSize: 10, lineHeight: 1, cursor: 'pointer',
-                                color: isActive ? 'rgba(255,255,255,0.6)' : 'var(--text3)',
-                            }}
-                        >✕</span>
-                    </div>
-                )
-            })}
+            <span style={{
+                fontSize: 16, fontWeight: 700, color: 'var(--text)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>{title}</span>
 
             <button
                 onClick={onOpenSidebar}
@@ -392,8 +394,6 @@ function EpisodeBar({ showSidebar, onToggleSidebar, onOpenSidebar }) {
         </div>
     )
 }
-
-const SIDEBAR_W = 240
 
 function Layout() {
     const { state } = useApp()
@@ -422,7 +422,7 @@ function Layout() {
                     transition: 'margin-left 0.2s ease',
                     overflow: 'hidden',
                 }}>
-                    <EpisodeBar showSidebar={showSidebar} onToggleSidebar={() => setShowSidebar(v => !v)} onOpenSidebar={() => setShowSidebar(true)} />
+                    <EpisodeBar onOpenSidebar={() => setShowSidebar(true)} />
                     <div className={s.content}>
                         <Tab />
                     </div>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
+import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
 import s from './StoryArchiveTab.module.css'
 
 const TREND_RADAR_URL = 'https://trend-radar-gamma.vercel.app'
@@ -725,7 +727,13 @@ export default function StoryArchiveTab() {
     { id: 'series',  label: '🎬 시리즈 기획' },
   ]
   return (
-    <div className={s.wrap}>
+    <div className={s.page}>
+      <TabToolbar />
+      <div className={s.root}>
+        <EpisodeInfoSidebar />
+        <div className={s.main}>
+        <div className={s.scrollBody}>
+      <div className={s.wrap}>
       <div className={s.header}>
         <div className={s.headerIcon}>📚</div>
         <div>
@@ -741,6 +749,10 @@ export default function StoryArchiveTab() {
       {activeInner === 'youtube' && <YoutubeAnalysisTab />}
       {activeInner === 'short'   && <ShortIdeaTab />}
       {activeInner === 'series'  && <SeriesPlanTab />}
+      </div>
+        </div>
+        </div>
+      </div>
     </div>
   )
 }

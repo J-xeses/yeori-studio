@@ -69,7 +69,15 @@ export function EpisodeOverviewBlock() {
       {episode?.masterCode && (
         <div className={s.section}>
           <div className={s.title}>마스터 코드</div>
-          <pre className={s.code}>{episode.masterCode}</pre>
+          {episode.masterCode.includes('::') ? (
+            <div className={s.codeRows}>
+              {episode.masterCode.split('::').map((seg, i) => (
+                <div key={i} className={s.codeRow}>{seg.trim()}</div>
+              ))}
+            </div>
+          ) : (
+            <pre className={s.code}>{episode.masterCode}</pre>
+          )}
           {/* episode.code(생성 시 확정한 정식 식별자)와 대본에서 파싱된 masterCode가
               다르면 경고만 표시 — 어느 쪽 값도 건드리지 않는다(둘 다 그대로 저장됨). */}
           {episode?.code && episode.masterCode !== episode.code && (

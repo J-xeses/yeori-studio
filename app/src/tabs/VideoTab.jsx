@@ -622,43 +622,47 @@ export default function VideoTab() {
                   <span>자막 포함</span>
                 </label>
               </div>
-              <div className={s.field}>
-                <label>글씨체</label>
-                <select value={font} onChange={e => set({ font: e.target.value })} disabled={!subtitleEnabled}>
-                  {FONTS.map(f => <option key={f}>{f}</option>)}
-                </select>
+              <div className={s.sidePanelRow2}>
+                <div className={s.field}>
+                  <label>글씨체</label>
+                  <select value={font} onChange={e => set({ font: e.target.value })} disabled={!subtitleEnabled}>
+                    {FONTS.map(f => <option key={f}>{f}</option>)}
+                  </select>
+                </div>
+                <div className={s.field}>
+                  <label>배경 스타일</label>
+                  <select value={bgStyle} onChange={e => set({ bgStyle: e.target.value })} disabled={!subtitleEnabled}>
+                    {BG_STYLES.map(b => <option key={b}>{b}</option>)}
+                  </select>
+                </div>
               </div>
               <div className={s.field}>
                 <label>글자 크기 <span className={s.val}>{fontSize}px</span></label>
                 <input type="range" min="16" max="72" value={fontSize} disabled={!subtitleEnabled}
                   onChange={e => set({ fontSize: parseInt(e.target.value) })} />
               </div>
-              <div className={s.field}>
-                <label>글자 색상</label>
-                <div className={s.colorRow}>
-                  <input type="color" value={color} disabled={!subtitleEnabled}
-                    onChange={e => set({ color: e.target.value })} className={s.colorPicker} />
-                  <span className={s.colorVal}>{color}</span>
-                </div>
-              </div>
-              <div className={s.field}>
-                <label>배경 스타일</label>
-                <select value={bgStyle} onChange={e => set({ bgStyle: e.target.value })} disabled={!subtitleEnabled}>
-                  {BG_STYLES.map(b => <option key={b}>{b}</option>)}
-                </select>
-              </div>
-              {bgStyle === '반투명 직각 박스' && (
+              <div className={s.sidePanelRow2}>
                 <div className={s.field}>
-                  <label>박스 색상</label>
+                  <label>글자 색상</label>
                   <div className={s.colorRow}>
-                    <input type="color" value={boxColor || '#000000'}
-                      disabled={!subtitleEnabled}
-                      onChange={e => set({ boxColor: e.target.value })}
-                      className={s.colorPicker} />
-                    <span className={s.colorVal}>{boxColor || '#000000'}</span>
+                    <input type="color" value={color} disabled={!subtitleEnabled}
+                      onChange={e => set({ color: e.target.value })} className={s.colorPicker} />
+                    <span className={s.colorVal}>{color}</span>
                   </div>
                 </div>
-              )}
+                {bgStyle === '반투명 직각 박스' && (
+                  <div className={s.field}>
+                    <label>박스 색상</label>
+                    <div className={s.colorRow}>
+                      <input type="color" value={boxColor || '#000000'}
+                        disabled={!subtitleEnabled}
+                        onChange={e => set({ boxColor: e.target.value })}
+                        className={s.colorPicker} />
+                      <span className={s.colorVal}>{boxColor || '#000000'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -702,24 +706,6 @@ export default function VideoTab() {
                   >
                     {videoGenStatus[c.id] === 'running' ? '⏳' : '✨'}
                   </button>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className={s.subtitleMonitor}>
-          <div className={s.subtitleMonitorHeader}>전체 자막 모니터링</div>
-          <div className={s.subtitleMonitorList}>
-            {cuts.map(c => {
-              const text = subtitles[c.id] ?? stripMeta(c.dialogue || c.narration || '')
-              const isActive = selectedCutId === c.id
-              return (
-                <div key={c.id}
-                  className={`${s.subMonItem} ${isActive ? s.subMonItemActive : ''}`}
-                  onClick={() => setSelectedCutId(c.id)}>
-                  <span className={s.subMonNo}>{String(c.no).padStart(2,'0')}</span>
-                  <span className={s.subMonText}>{text || '(자막 없음)'}</span>
                 </div>
               )
             })}
@@ -822,12 +808,14 @@ export default function VideoTab() {
         </div>
 
         <div className={s.mainSplitCol}>
-        {(() => {
-          const selCut = cuts.find(c => c.id === selectedCutId)
-          if (!selCut) return null
+        {cuts.map(selCut => {
+          const isSelected = selCut.id === selectedCutId
           const clips = videoClips[selCut.id] || []
+          const captionText = subtitles[selCut.id] ?? stripMeta(selCut.dialogue || selCut.narration || '')
           return (
-            <div className={s.selectedCutCard}>
+            <div key={selCut.id}
+              className={`${s.selectedCutCard} ${isSelected ? s.selectedCutCardActive : ''}`}
+              onClick={() => setSelectedCutId(selCut.id)}>
               <div className={s.cutCardHeader}>
                 <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} — {selCut.scene || '씬 미입력'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -853,7 +841,7 @@ export default function VideoTab() {
                       </span>
                     )
                   })()}
-                  <div className={s.cutCardDurEdit}>
+                  <div className={s.cutCardDurEdit} onClick={e => e.stopPropagation()}>
                     <label>목표</label>
                     <input type="number" min="1" max="120" step="0.5"
                       value={selCut.duration || 5}
@@ -866,16 +854,31 @@ export default function VideoTab() {
                 </div>
               </div>
               <div className={s.cutCardBody}>
+                {(selCut.dialogue || selCut.narration || selCut.imagePrompt) && (
+                  <div className={s.cutCardPromptPreview}>
+                    {stripMeta(selCut.dialogue || selCut.narration || '') || selCut.imagePrompt}
+                  </div>
+                )}
+
+                <div className={s.field} onClick={e => e.stopPropagation()}>
+                  <label>컷 자막</label>
+                  <textarea rows={2} className={s.captionInput}
+                    value={captionText}
+                    placeholder="이 컷의 자막 텍스트..."
+                    onChange={e => setSubtitles(prev => ({ ...prev, [selCut.id]: e.target.value }))} />
+                </div>
+
                 {clips.length > 0 && (
                   <div className={s.clipList}>
                     {clips.map((clip, idx) => {
                       const usedSec = clip.useFullDuration
                         ? clip.duration
                         : (clip.trimEnd - clip.trimStart)
+                      const isClipActive = isSelected && selectedClipIdx === idx
                       return (
                         <div key={idx}
-                          className={`${s.clipTrimItem} ${selectedClipIdx === idx ? s.clipTrimItemActive : ''}`}
-                          onClick={() => setSelectedClipIdx(idx)}>
+                          className={`${s.clipTrimItem} ${isClipActive ? s.clipTrimItemActive : ''}`}
+                          onClick={e => { e.stopPropagation(); setSelectedCutId(selCut.id); setSelectedClipIdx(idx) }}>
                           <div className={s.clipTrimHeader}>
                             <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx+1}</span>
                             <span className={s.clipName}>
@@ -891,41 +894,43 @@ export default function VideoTab() {
                             )}
                             <button className={s.clipDel} onClick={e => { e.stopPropagation(); removeClip(selCut.id, idx) }}>✕</button>
                           </div>
-                          <div className={s.clipTrimBody} onClick={e => e.stopPropagation()}>
-                            <label className={s.check}>
-                              <input type="checkbox"
-                                checked={clip.useFullDuration}
-                                onChange={e => updateClipTrim(selCut.id, idx, {
-                                  useFullDuration: e.target.checked,
-                                })} />
-                              <span>전체 사용</span>
-                            </label>
-                            {!clip.useFullDuration && (
-                              <div className={s.trimInputs}>
-                                <div className={s.trimField}>
-                                  <label>시작</label>
-                                  <input type="number" min={0} max={clip.duration || 9999} step={0.1}
-                                    value={clip.trimStart}
-                                    onChange={e => updateClipTrim(selCut.id, idx, { trimStart: parseFloat(e.target.value) || 0 })} />
-                                  <span>s</span>
+                          {isClipActive && (
+                            <div className={s.clipTrimBody} onClick={e => e.stopPropagation()}>
+                              <label className={s.check}>
+                                <input type="checkbox"
+                                  checked={clip.useFullDuration}
+                                  onChange={e => updateClipTrim(selCut.id, idx, {
+                                    useFullDuration: e.target.checked,
+                                  })} />
+                                <span>전체 사용</span>
+                              </label>
+                              {!clip.useFullDuration && (
+                                <div className={s.trimInputs}>
+                                  <div className={s.trimField}>
+                                    <label>시작</label>
+                                    <input type="number" min={0} max={clip.duration || 9999} step={0.1}
+                                      value={clip.trimStart}
+                                      onChange={e => updateClipTrim(selCut.id, idx, { trimStart: parseFloat(e.target.value) || 0 })} />
+                                    <span>s</span>
+                                  </div>
+                                  <div className={s.trimField}>
+                                    <label>종료</label>
+                                    <input type="number" min={0} max={clip.duration || 9999} step={0.1}
+                                      value={clip.trimEnd}
+                                      onChange={e => updateClipTrim(selCut.id, idx, { trimEnd: parseFloat(e.target.value) || 0 })} />
+                                    <span>s</span>
+                                  </div>
                                 </div>
-                                <div className={s.trimField}>
-                                  <label>종료</label>
-                                  <input type="number" min={0} max={clip.duration || 9999} step={0.1}
-                                    value={clip.trimEnd}
-                                    onChange={e => updateClipTrim(selCut.id, idx, { trimEnd: parseFloat(e.target.value) || 0 })} />
-                                  <span>s</span>
-                                </div>
-                              </div>
-                            )}
-                            <span className={s.clipUsedLen}>사용: {usedSec != null ? usedSec.toFixed(1) : '?'}s</span>
-                          </div>
+                              )}
+                              <span className={s.clipUsedLen}>사용: {usedSec != null ? usedSec.toFixed(1) : '?'}s</span>
+                            </div>
+                          )}
                         </div>
                       )
                     })}
                   </div>
                 )}
-                <div className={s.videoEmptyBtns}>
+                <div className={s.videoEmptyBtns} onClick={e => e.stopPropagation()}>
                   <label className={s.uploadBtn}>
                     📁 로컬 업로드
                     <input type="file" accept="video/*" multiple hidden
@@ -954,7 +959,7 @@ export default function VideoTab() {
                   <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
                 )}
               </div>
-              <div className={s.cutCardFooter}>
+              <div className={s.cutCardFooter} onClick={e => e.stopPropagation()}>
                 <button
                   className={`${s.g4Btn} ${g4Approved[selCut.id] ? s.g4Done : ''}`}
                   onClick={() => {
@@ -967,7 +972,7 @@ export default function VideoTab() {
               </div>
             </div>
           )
-        })()}
+        })}
         </div>
       </div>
       </div>
