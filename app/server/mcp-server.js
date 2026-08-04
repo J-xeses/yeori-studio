@@ -164,7 +164,7 @@ async function executeTool(name, args) {
     case 'studio_upload_script': {
       const data = await api('POST', '/api/mcp/studio-upload-script', args)
       if (data.error) return `오류: ${data.error}`
-      return `대본 업로드 완료: ${data.cutCount}개 컷 반영됨${data.masterCode ? `\n마스터 코드: ${data.masterCode}` : ''}`
+      return `대본 업로드 완료: ${data.cutCount}개 컷 반영됨${data.masterCode ? `\n마스터 코드: ${data.masterCode}` : ''}${data.codeMismatch ? `\n⚠️ 대본 마스터 코드가 에피소드 코드와 다릅니다 — 값은 그대로 저장됐으니 확인해주세요` : ''}`
     }
 
     case 'studio_approve_g1': {

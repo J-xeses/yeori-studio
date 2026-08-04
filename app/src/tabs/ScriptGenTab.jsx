@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
+import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import TabToolbar from '../components/TabToolbar'
 import s from './ScriptGenTab.module.css'
 
@@ -39,12 +40,6 @@ const EP_GROUPS = [
   { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
   { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'] },
 ]
-
-function getEpisodeCode(contentType, number) {
-  const n = String(number).padStart(2, '0')
-  if (['IG_R', 'IG_P', 'IG_S'].includes(contentType)) return `${contentType}${n}`
-  return `${contentType}_E${n}`
-}
 
 const CUT_TYPES = [
   { value: 'YEORI',   label: 'YEORI',   color: '#a78bfa', border: 'rgba(167,139,250,0.45)' },
@@ -432,6 +427,11 @@ function buildV3ScriptText(cuts, episode) {
 export default function ScriptGenTab() {
   const { state, dispatch } = useApp()
   const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
+  // 과도기 코드: 정식 episode.code 도입 전까지 임시로 번호를 코드 자리에 사용(1~2차 라운드).
+  // 활성 에피소드 하나만 다루는 곳은 이 값을 쓰고, 에피소드 목록처럼 여러 에피소드를
+  // 동시에 순회하는 곳(아래 epCuts 관련 두 군데)은 반드시 각 ep 자신의 번호를 써야 함 —
+  // 안 그러면 다른 에피소드끼리 같은 컷 번호의 G1 상태를 서로 덮어써서 보여주는 버그가 남.
+  const episodeCode = resolveEpisodeCode(episode)
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
@@ -674,7 +674,7 @@ ${YEORI_RULESET}
       // ── G1 포인트 자동 저장 ──────────────────────────────
       parsed.forEach(cut => {
         const hasContent = !!(cut.dialogue || cut.narration || cut.scene)
-        setGPoint(cut.no, 'g1', hasContent)
+        setGPoint(episodeCode, cut.no, 'g1', hasContent)
       })
 
       if (failItems.length > 0) {
@@ -724,7 +724,7 @@ ${YEORI_RULESET}
     if (!mcPreview) return
     const mappedCuts = mapPromptsCutsToAppCuts(mcPreview.cuts)
     dispatch({ type: 'SET_CUTS', p: mappedCuts })
-    mappedCuts.forEach(c => setGPoint(c.no, 'g1', false)) // 새 컷은 검토 전이므로 G1 미승인 상태로 시작
+    mappedCuts.forEach(c => setGPoint(episodeCode, c.no, 'g1', false)) // 새 컷은 검토 전이므로 G1 미승인 상태로 시작
     setGData(loadGPoints())
     setActiveCut(0)
     setMcPreview(null)
@@ -770,7 +770,7 @@ ${YEORI_RULESET}
       if (cut) {
         const updated = { ...cut, [field]: val }
         const hasContent = !!(updated.dialogue || updated.narration || updated.scene)
-        setGPoint(cut.no, 'g1', hasContent)
+        setGPoint(episodeCode, cut.no, 'g1', hasContent)
         setGData(loadGPoints())
       }
     }
@@ -792,7 +792,7 @@ ${YEORI_RULESET}
 
   // ── G1 승인/취소 ─────────────────────────────────────────────
   const approveG1 = (cutNo) => {
-    setGPoint(cutNo, 'g1', true)
+    setGPoint(episodeCode, cutNo, 'g1', true)
     const updated = loadGPoints()
     setGData(updated)
     // 타입 무관하게 문자열로 통일 후 비교
@@ -807,9 +807,9 @@ ${YEORI_RULESET}
       setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
     }
   }
-  const revokeG1  = (cutNo) => { setGPoint(cutNo, 'g1', false); setGData(loadGPoints()) }
+  const revokeG1  = (cutNo) => { setGPoint(episodeCode, cutNo, 'g1', false); setGData(loadGPoints()) }
   const approveAllG1 = () => {
-    cuts.forEach(c => setGPoint(c.no, 'g1', true))
+    cuts.forEach(c => setGPoint(episodeCode, c.no, 'g1', true))
     const updated = loadGPoints()
     setGData(updated)
     setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 1000)
@@ -905,7 +905,7 @@ ${currentScript}
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${getEpisodeCode(episode.contentType || 'LF', episode.number)}_v3.txt`
+    a.download = `${displayEpisodeCode(episode)}_v3.txt`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -927,7 +927,7 @@ ${currentScript}
         dispatch({ type: 'SET_CUTS', p: parsedV3 })
         const { masterCode, epHeaderRaw } = parseV3GlobalHeader(text)
         if (masterCode || epHeaderRaw) dispatch({ type: 'SET_EPISODE', p: { masterCode, epHeaderRaw } })
-        parsedV3.forEach(c => setGPoint(c.no, 'g1', !!(c.dialogue || c.narration || c.scene)))
+        parsedV3.forEach(c => setGPoint(episodeCode, c.no, 'g1', !!(c.dialogue || c.narration || c.scene)))
         setGData(loadGPoints())
         setActiveCut(0)
         alert(`✅ v3 포맷 대본 ${parsedV3.length}개 컷 불러오기 완료`)
@@ -958,7 +958,7 @@ ${currentScript}
           duration:    revised.duration    || original.duration,
         }})
         const hasContent = !!(revised.dialogue || revised.narration || revised.scene)
-        setGPoint(revised.no, 'g1', hasContent)
+        setGPoint(episodeCode, revised.no, 'g1', hasContent)
         updatedCount++
       })
       setGData(loadGPoints())
@@ -968,7 +968,7 @@ ${currentScript}
     e.target.value = ''
   }
 
-  const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+  const g1Count = cuts.filter(c => gData[episodeCode]?.[`cut_${c.no}`]?.g1).length
   const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
   const handleCutCountChange = (n) => {
@@ -1113,10 +1113,10 @@ ${currentScript}
                     onChange={e => {
                       const num = parseInt(e.target.value) || 1
                       const thisType = episode.contentType || 'LF'
-                      const newCode = getEpisodeCode(thisType, num)
+                      const newCode = formatEpisodeCode(thisType, num)
                       const isDup = Object.values(episodes || {}).some(ep => {
                         if (ep.id === activeEpisodeId) return false
-                        return getEpisodeCode(ep.episode?.contentType || 'LF', ep.episode.number) === newCode
+                        return formatEpisodeCode(ep.episode?.contentType || 'LF', ep.episode.number) === newCode
                       })
                       if (isDup) {
                         setNumError(`${newCode}은 이미 사용 중입니다`)
@@ -1127,7 +1127,7 @@ ${currentScript}
                     }}
                   />
                   <span className={s.epCodeBadge}>
-                    {getEpisodeCode(episode.contentType || 'LF', episode.number)}
+                    {displayEpisodeCode(episode)}
                   </span>
                 </div>
                 {numError && (
@@ -1212,11 +1212,12 @@ ${currentScript}
                     </button>
                     {!isCollapsed && groupEps.map(ep => {
                       const epCuts = ep.cuts || []
-                      const epG1 = epCuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+                      const epGpKey = resolveEpisodeCode(ep.episode)
+                      const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
                       const epTotal = epCuts.length
                       const epAllDone = epTotal > 0 && epG1 === epTotal
                       const isActive = ep.id === activeEpisodeId
-                      const epCode = getEpisodeCode(ep.episode?.contentType || 'LF', ep.episode?.number)
+                      const epCode = displayEpisodeCode(ep.episode)
                       return (
                         <div key={ep.id} className={`${s.epListItem} ${isActive ? s.epListItemActive : ''}`}>
                           <div className={s.epListHeader}
@@ -1268,7 +1269,8 @@ ${currentScript}
                     </button>
                     {!isCollapsed && otherEps.map(ep => {
                       const epCuts = ep.cuts || []
-                      const epG1 = epCuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+                      const epGpKey = resolveEpisodeCode(ep.episode)
+                      const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
                       const epTotal = epCuts.length
                       const epAllDone = epTotal > 0 && epG1 === epTotal
                       const isActive = ep.id === activeEpisodeId
@@ -1468,7 +1470,7 @@ ${currentScript}
                       }}>{t.label}</span>
                     ) : null
                   })()}
-                  {gData[`cut_${c.no}`]?.g1 && <span className={s.g1Badge}>G1</span>}
+                  {gData[episodeCode]?.[`cut_${c.no}`]?.g1 && <span className={s.g1Badge}>G1</span>}
                 </span>
                 <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(비어있음)'}</span>
               </button>
@@ -1518,7 +1520,7 @@ ${currentScript}
             >✏️ 상세 편집</button>
             {viewMode === 'detail' && (
               <div style={{marginLeft:'auto', display:'flex', alignItems:'center', gap:8}}>
-                {gData[`cut_${cuts[activeCut]?.no}`]?.g1 ? (
+                {gData[episodeCode]?.[`cut_${cuts[activeCut]?.no}`]?.g1 ? (
                   <button onClick={() => revokeG1(cuts[activeCut].no)}
                     style={{padding:'4px 10px',borderRadius:6,background:'rgba(34,197,94,.15)',
                       border:'1px solid rgba(34,197,94,.4)',color:'#4ade80',fontSize:11,fontWeight:700,cursor:'pointer'}}>
@@ -1555,7 +1557,7 @@ ${currentScript}
             </div>
             {cuts.map((c, i) => {
               const ct = CUT_TYPES.find(x => x.value === (c.cutType || 'YEORI'))
-              const isG1 = !!gData[`cut_${c.no}`]?.g1
+              const isG1 = !!gData[episodeCode]?.[`cut_${c.no}`]?.g1
               const hasDial = c.dialogue && !/^없음$/i.test(c.dialogue.trim())
               const hasVo = c.narration && !/^없음$/i.test(c.narration.trim())
               const isActive = i === activeCut

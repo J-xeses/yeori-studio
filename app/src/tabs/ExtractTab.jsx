@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './ExtractTab.module.css'
@@ -16,6 +17,8 @@ export default function ExtractTab() {
   const { state } = useApp()
   const { cuts, episode, scriptRaw } = state
   const [saveStatus, setSaveStatus] = useState('')
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(episode)
 
   const exportFullScript = () => {
     const lines = [
@@ -55,7 +58,7 @@ export default function ExtractTab() {
     const data = { episode, cuts }
     downloadText(JSON.stringify(data, null, 2), `ep${episode.number}_data.json`)
     // ── G4 포인트 자동 저장 ──────────────────────────────
-    cuts.forEach(c => setGPoint(c.no, 'g4', true))
+    cuts.forEach(c => setGPoint(episodeCode, c.no, 'g4', true))
   }
 
   const exportRaw = () => {

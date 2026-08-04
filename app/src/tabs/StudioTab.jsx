@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './StudioTab.module.css'
@@ -53,6 +54,8 @@ async function generateImageWithGemini(prompt, apiKey) {
 export default function StudioTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys } = state
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(state.episode)
   const [images, setImages] = useState({})      // cut.id → [url, url, ...]
   const [selectedImage, setSelectedImage] = useState({}) // cut.id → index
   const [selected, setSelected] = useState(TOOLS[0])
@@ -112,7 +115,7 @@ export default function StudioTab() {
             if (existing.some(u => u.includes(fname))) return p
             return { ...p, [cut.id]: [...existing, url] }
           })
-          setGPoint(cutNo, 'g3', true)
+          setGPoint(episodeCode, cutNo, 'g3', true)
         })
         setGData(loadGPoints())
       })
@@ -131,7 +134,7 @@ export default function StudioTab() {
     setSelectedImage(prev => ({ ...prev, [cutId]: (Array.isArray(images[cutId]) ? images[cutId].length : 0) }))
     // G3 포인트 자동 저장
     const cut = cuts.find(c => c.id === cutId)
-    if (cut) setGPoint(cut.no, 'g3', true)
+    if (cut) setGPoint(episodeCode, cut.no, 'g3', true)
   }
 
   const copyPrompt = (text, cutId) => {
@@ -153,7 +156,7 @@ export default function StudioTab() {
         return { ...prev, [cut.id]: [...existing, imgUrl] }
       })
       setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
-      setGPoint(cut.no, 'g3', true)
+      setGPoint(episodeCode, cut.no, 'g3', true)
     } catch(e) {
       alert(`CUT ${cut.no} 생성 실패: ${e.message}`)
     } finally {
@@ -219,7 +222,7 @@ export default function StudioTab() {
                         if (existing.some(u => u.includes(`cut_${padded}${suffix}.${ext}`))) return p
                         return { ...p, [cut.id]: [...existing, url] }
                       })
-                      setGPoint(cut.no, 'g3', true)
+                      setGPoint(episodeCode, cut.no, 'g3', true)
                       setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
                     }
                   } catch {}
@@ -232,7 +235,7 @@ export default function StudioTab() {
                 if (existing.some(u => u.includes(ev.url))) return p
                 return { ...p, [cut.id]: [...existing, imgUrl] }
               })
-              setGPoint(cut.no, 'g3', true)
+              setGPoint(episodeCode, cut.no, 'g3', true)
               setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
             } else if (ev.type === 'error') {
               setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no} Flow 실패: ${ev.message}` }])
@@ -264,7 +267,7 @@ export default function StudioTab() {
           if (existing.some(u => u.includes(img.url))) return p
           return { ...p, [cut.id]: [...existing, imgUrl] }
         })
-        setGPoint(img.cutNo, 'g3', true)
+        setGPoint(episodeCode, img.cutNo, 'g3', true)
       })
       setGData(loadGPoints())
       alert(`✅ ${data.images.length}개 이미지 불러오기 완료`)
@@ -344,7 +347,7 @@ export default function StudioTab() {
                   const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}?t=${Date.now()}`
                   try {
                     const r = await fetch(url, { method: 'HEAD' })
-                    if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(cut.no, 'g3', true); break }
+                    if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(episodeCode, cut.no, 'g3', true); break }
                   } catch {}
                 }
               }
@@ -359,7 +362,7 @@ export default function StudioTab() {
                   if (existing.some(u => u.includes(base))) return p
                   return { ...p, [cut.id]: [...existing, imgUrl] }
                 })
-                setGPoint(cut.no, 'g3', true)
+                setGPoint(episodeCode, cut.no, 'g3', true)
               }
             } else if (ev.type === 'cut_error') {
               setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
@@ -407,7 +410,7 @@ export default function StudioTab() {
   }
 
   const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id]?.length > 0)
-  const g1Count = cuts.filter(c => gData[`cut_${c.no}`]?.g1).length
+  const g1Count = cuts.filter(c => gData[episodeCode]?.[`cut_${c.no}`]?.g1).length
   const g3Count = cuts.filter(c => images[c.id]?.length > 0).length
   const g2Count = cuts.filter(c => confirmed[c.id]).length
 
@@ -618,7 +621,7 @@ export default function StudioTab() {
                 <span className={s.cutBadge}>CUT {cut.no}</span>
                 <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {gData[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
+                  {gData[episodeCode]?.[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
                   {g2Approved[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
                   <button
                     onClick={() => {
@@ -685,7 +688,7 @@ export default function StudioTab() {
                     setG2Approved(p => ({ ...p, [cut.id]: true }))
                     const idx = selectedImage[cut.id] ?? 0
                     const filename = extractImageFilename((images[cut.id] || [])[idx])
-                    setGPoints(cut.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
+                    setGPoints(episodeCode, cut.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
                   }}>
                   {g2Approved[cut.id] ? '✓ G2 완료' : 'G2 승인'}
                 </button>
@@ -708,7 +711,7 @@ export default function StudioTab() {
               cuts.forEach(c => {
                 const idx = selectedImage[c.id] ?? 0
                 const filename = extractImageFilename((images[c.id] || [])[idx])
-                setGPoints(c.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
+                setGPoints(episodeCode, c.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
               })
               dispatch({ type: 'SET_TAB', p: 'tts' })
             }}>

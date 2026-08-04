@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { loadGPoints } from '../lib/gpoints'
+import { displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import s from './EpisodeInfoSidebar.module.css'
 
 // 대본생성 탭(ScriptGenTab.jsx)의 코드 라벨과 동일 — 이 사이드바는 읽기 전용
@@ -19,12 +20,6 @@ const SCN_LABELS = {
   EDU: 'EDU — 교육', ENT: 'ENT — 엔터테인먼트',
 }
 
-function getEpisodeCode(contentType, number) {
-  const n = String(number ?? 1).padStart(2, '0')
-  if (['IG_R', 'IG_P', 'IG_S'].includes(contentType)) return `${contentType}${n}`
-  return `${contentType || 'LF'}_E${n}`
-}
-
 // 대본생성 탭에서만 수정 가능한 에피소드 개요/마스터코드/EP.HEADER를 다른 탭에서
 // 참고용으로 표시하는 읽기 전용 블록. 이미 자체 컷 목록 사이드바가 있는 탭
 // (TTS/내음성삽입/편집메타 등)은 이 블록만 그 사이드바 상단에 끼워 넣고,
@@ -33,7 +28,7 @@ function getEpisodeCode(contentType, number) {
 export function EpisodeOverviewBlock() {
   const { state } = useApp()
   const { episode } = state
-  const code = getEpisodeCode(episode?.contentType, episode?.number)
+  const code = displayEpisodeCode(episode)
   const moods = Array.isArray(episode?.mood) ? episode.mood : (episode?.mood ? [episode.mood] : [])
 
   return (
@@ -75,6 +70,13 @@ export function EpisodeOverviewBlock() {
         <div className={s.section}>
           <div className={s.title}>마스터 코드</div>
           <pre className={s.code}>{episode.masterCode}</pre>
+          {/* episode.code(생성 시 확정한 정식 식별자)와 대본에서 파싱된 masterCode가
+              다르면 경고만 표시 — 어느 쪽 값도 건드리지 않는다(둘 다 그대로 저장됨). */}
+          {episode?.code && episode.masterCode !== episode.code && (
+            <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 4 }}>
+              ⚠️ 에피소드 코드({episode.code})와 다릅니다
+            </div>
+          )}
         </div>
       )}
 
@@ -91,7 +93,9 @@ export function EpisodeOverviewBlock() {
 // 자체 컷 목록 사이드바가 없는 탭에서 쓰는 풀 사이드바 (개요 블록 + 컷 목록)
 export default function EpisodeInfoSidebar({ onCutClick, activeCutId }) {
   const { state } = useApp()
-  const { cuts } = state
+  const { cuts, episode } = state
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(episode)
   const [gData, setGData] = useState(() => loadGPoints())
 
   useEffect(() => {
@@ -107,7 +111,7 @@ export default function EpisodeInfoSidebar({ onCutClick, activeCutId }) {
         <div className={s.title}>컷 목록 ({cuts?.length || 0})</div>
         <div className={s.cutList}>
           {(cuts || []).map(c => {
-            const g = gData[`cut_${c.no}`] || {}
+            const g = gData[episodeCode]?.[`cut_${c.no}`] || {}
             return (
               <button key={c.id}
                 className={`${s.cutItem} ${activeCutId === c.id ? s.cutItemActive : ''}`}

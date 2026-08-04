@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader } from './lib/scriptParserV3.js'
+import { resolveEpisodeCode } from './lib/episodeCode.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -2514,7 +2515,11 @@ mcpRouter.post('/export-pipeline', (req, res) => {
     const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
     const ep = state.episodes?.[episodeId]
     if (!ep) return res.status(404).json({ error: `에피소드 ID ${episodeId} 없음` })
-    const gData = state.gData || {}
+    // 이전엔 studio-state.json의 존재하지 않는 state.gData를 읽어서 항상 빈 값이었던
+    // 버그가 있었음(클라이언트가 gData를 studio-state.json에 쓴 적이 없음) — 실제
+    // g포인트 저장소(downloads/gpoints.json, 에피소드 코드로 중첩됨)를 읽도록 수정.
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const gData = loadGpointsFile()[episodeCode] || {}
     const approvedCuts = (ep.cuts || []).filter(c => gData[`cut_${c.no}`]?.g1)
     if (!approvedCuts.length) return res.status(400).json({ error: 'G1 승인된 컷이 없습니다' })
 
@@ -2552,8 +2557,21 @@ function loadStudioState() {
 function saveStudioState(state) {
   fs.writeFileSync(STUDIO_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8')
 }
+// v2(2026-08-02): { cut_N: {...} } 평면 구조 -> { [episodeCode]: { cut_N: {...} } } 중첩
+// 구조로 변경(에피소드 구분이 없어 서로 다른 에피소드의 같은 컷 번호가 덮어쓰던 문제
+// 수정). 기존 평면 데이터는 어느 에피소드 것인지 알 길이 없으므로 유실 방지 차원에서
+// "_LEGACY" 키 밑에 통째로 보존만 하고 더 이상 읽지는 않는다.
+const GPOINTS_LEGACY_KEY = '_LEGACY'
+function isLegacyFlatGpoints(data) {
+  return Object.keys(data).some(k => /^cut_\d+$/.test(k))
+}
 function loadGpointsFile() {
-  return fs.existsSync(GPOINTS_PATH) ? JSON.parse(fs.readFileSync(GPOINTS_PATH, 'utf-8')) : {}
+  if (!fs.existsSync(GPOINTS_PATH)) return {}
+  const raw = JSON.parse(fs.readFileSync(GPOINTS_PATH, 'utf-8'))
+  if (!isLegacyFlatGpoints(raw)) return raw
+  const migrated = { [GPOINTS_LEGACY_KEY]: raw }
+  saveGpointsFile(migrated)
+  return migrated
 }
 function saveGpointsFile(data) {
   fs.mkdirSync(path.dirname(GPOINTS_PATH), { recursive: true })
@@ -2585,13 +2603,15 @@ function scanFlowImagesByCut(epNum) {
   }
   return byCut
 }
-function approveGForCuts(cuts, gKey) {
+function approveGForCuts(episodeCode, cuts, gKey) {
   const gData = loadGpointsFile()
+  const epData = { ...gData[episodeCode] }
   const now = new Date().toISOString()
   cuts.forEach(c => {
     const key = `cut_${c.no}`
-    gData[key] = { ...gData[key], [gKey]: true, updatedAt: now }
+    epData[key] = { ...epData[key], [gKey]: true, updatedAt: now }
   })
+  gData[episodeCode] = epData
   saveGpointsFile(gData)
   return cuts.length
 }
@@ -2660,7 +2680,10 @@ mcpRouter.post('/studio-upload-script', (req, res) => {
       state.episode = ep.episode
     }
     saveStudioState(state)
-    res.json({ success: true, cutCount: cuts.length, masterCode, epHeaderRaw })
+    // episode.code(생성 시 확정한 정식 식별자)와 대본에서 파싱된 masterCode가 다르면 경고만 —
+    // 어느 쪽 값도 여기서 되돌리거나 덮어쓰지 않는다(둘 다 위에서 이미 그대로 저장됨).
+    const codeMismatch = !!(ep.episode?.code && masterCode && ep.episode.code !== masterCode)
+    res.json({ success: true, cutCount: cuts.length, masterCode, epHeaderRaw, codeMismatch })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -2674,8 +2697,9 @@ mcpRouter.post('/studio-approve-g1', (req, res) => {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
-    const approvedCount = approveGForCuts(targetCuts, 'g1')
+    const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g1')
     res.json({ success: true, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
@@ -2734,9 +2758,12 @@ mcpRouter.post('/studio-approve-g2', (req, res) => {
     const idx = Number.isInteger(imageIndex) && imageIndex >= 0 && imageIndex < files.length ? imageIndex : 0
     const filename = files[idx]
 
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const gData = loadGpointsFile()
+    const epData = { ...gData[episodeCode] }
     const key = `cut_${cut.no}`
-    gData[key] = { ...gData[key], g2: true, selectedImage: filename, updatedAt: new Date().toISOString() }
+    epData[key] = { ...epData[key], g2: true, selectedImage: filename, updatedAt: new Date().toISOString() }
+    gData[episodeCode] = epData
     saveGpointsFile(gData)
     res.json({ success: true, cutNo: cut.no, selectedImage: filename, availableImages: files })
   } catch (err) {
@@ -2830,8 +2857,9 @@ mcpRouter.post('/studio-approve-g3', (req, res) => {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
-    const approvedCount = approveGForCuts(targetCuts, 'g3')
+    const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g3')
     res.json({ success: true, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
@@ -2847,7 +2875,8 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
-    const gData = loadGpointsFile()
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const gData = loadGpointsFile()[episodeCode] || {}
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => gData[`cut_${c.no}`]?.g2)
     if (!targetCuts.length) return res.status(400).json({ error: 'G2 승인된 컷이 없습니다 — 먼저 studio_approve_g2를 실행하세요' })
 
@@ -2885,8 +2914,9 @@ mcpRouter.post('/studio-approve-g4', (req, res) => {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
-    const approvedCount = approveGForCuts(targetCuts, 'g4')
+    const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g4')
     res.json({ success: true, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
@@ -2940,53 +2970,73 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
 })
 
 // ⑪ studio-status — 현재(또는 지정) 에피소드의 컷별 G1~G5 진행 상태 + 산출물 존재 여부
+function buildStudioStatusPayload(episodeId) {
+  const state = loadStudioState()
+  const ep = episodeId ? getEpisodeOrThrow(state, episodeId) : state.episodes?.[state.activeEpisodeId]
+  if (!ep) {
+    const e = new Error('에피소드를 찾을 수 없습니다 (episodeId 지정 또는 studio_set_episode 먼저 실행)')
+    e.statusCode = 404
+    throw e
+  }
+
+  const epNum = ep.episode?.number
+  const episodeCode = resolveEpisodeCode(ep.episode, episodeId ?? state.activeEpisodeId)
+  const cuts = ep.cuts || []
+  const gData = loadGpointsFile()[episodeCode] || {}
+
+  const flowDir  = path.join(MEDIA_ROOT, 'downloads', 'flow',  `ep${epNum}`)
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+  const hasFile = (dir, re) => fs.existsSync(dir) && fs.readdirSync(dir).some(f => re.test(f))
+
+  const cutStatus = cuts.map(c => {
+    const g = gData[`cut_${c.no}`] || {}
+    const padded = String(c.no).padStart(2, '0')
+    return {
+      no: c.no,
+      g1: !!g.g1, g2: !!g.g2, g3: !!g.g3, g4: !!g.g4, g5: !!g.g5,
+      selectedImage: g.selectedImage || null,
+      hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
+      hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)),
+      hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
+    }
+  })
+
+  const summary = ['g1', 'g2', 'g3', 'g4', 'g5'].reduce((acc, k) => {
+    acc[k] = cutStatus.filter(c => c[k]).length
+    return acc
+  }, {})
+
+  return {
+    episodeId: episodeId || state.activeEpisodeId,
+    episode: ep.episode,
+    cutCount: cuts.length,
+    summary,
+    cuts: cutStatus,
+  }
+}
+
 mcpRouter.get('/studio-status', (req, res) => {
-  const episodeId = req.query.episodeId
   try {
-    const state = loadStudioState()
-    const ep = episodeId ? getEpisodeOrThrow(state, episodeId) : state.episodes?.[state.activeEpisodeId]
-    if (!ep) return res.status(404).json({ error: '에피소드를 찾을 수 없습니다 (episodeId 지정 또는 studio_set_episode 먼저 실행)' })
-
-    const epNum = ep.episode?.number
-    const cuts = ep.cuts || []
-    const gData = loadGpointsFile()
-
-    const flowDir  = path.join(MEDIA_ROOT, 'downloads', 'flow',  `ep${epNum}`)
-    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
-    const hasFile = (dir, re) => fs.existsSync(dir) && fs.readdirSync(dir).some(f => re.test(f))
-
-    const cutStatus = cuts.map(c => {
-      const g = gData[`cut_${c.no}`] || {}
-      const padded = String(c.no).padStart(2, '0')
-      return {
-        no: c.no,
-        g1: !!g.g1, g2: !!g.g2, g3: !!g.g3, g4: !!g.g4, g5: !!g.g5,
-        selectedImage: g.selectedImage || null,
-        hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
-        hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)),
-        hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
-      }
-    })
-
-    const summary = ['g1', 'g2', 'g3', 'g4', 'g5'].reduce((acc, k) => {
-      acc[k] = cutStatus.filter(c => c[k]).length
-      return acc
-    }, {})
-
-    res.json({
-      episodeId: episodeId || state.activeEpisodeId,
-      episode: ep.episode,
-      cutCount: cuts.length,
-      summary,
-      cuts: cutStatus,
-    })
+    res.json(buildStudioStatusPayload(req.query.episodeId))
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
 })
 
 app.use('/api/mcp', mcpRouter)
+
+// GET /api/studio-status-public — content_matrix_v3.html(정적 파일, 시크릿 보관 불가) 전용
+// 읽기전용 상태 조회. /api/mcp/studio-status와 로직은 동일하나 인증 없이 노출한다
+// (로컬 전용 서버라 실질 위험은 낮음). 상태를 변경하는 studio-run-*/approve-* 계열은
+// 여기 노출하지 않고 Bearer 인증이 걸린 /api/mcp 경로로만 유지한다.
+app.get('/api/studio-status-public', (req, res) => {
+  try {
+    res.json(buildStudioStatusPayload(req.query.episodeId))
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
 
 // start_yeori.bat가 [0] 단계에서 기존 프로세스를 taskkill한 직후(1초 대기) 바로 이
 // 프록시를 재기동하는데, OS가 소켓을 즉시 회수하지 못하면 EADDRINUSE가 날 수 있다.

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { elTTS, elVoices } from '../lib/api'
 import { setGPoint } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './TTSTab.module.css'
@@ -63,6 +64,8 @@ function audioBufferToWav(buffer) {
 export default function TTSTab() {
   const { state, dispatch } = useApp()
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(state.episode)
   const {
     tracks = {}, mergedUrls = {}, g3Confirmed = {},
     voiceTabs = {}, activeVoiceTab = {},
@@ -306,7 +309,7 @@ export default function TTSTab() {
         p: { subtitles: { ...(state.videoTabState?.subtitles || {}), [cutId]: allText } } })
 
       const c = cuts.find(c => c.id === cutId)
-      if (c) setGPoint(c.no, 'g2', true)
+      if (c) setGPoint(episodeCode, c.no, 'g2', true)
       await audioCtx.close()
     } catch (err) {
       alert('합치기 실패: ' + err.message)
@@ -331,7 +334,7 @@ export default function TTSTab() {
   const approveG3 = (cutId, cutNo) => {
     const next = { ...g3Confirmed, [cutId]: true }
     setTTS({ g3Confirmed: next })
-    setGPoint(cutNo, 'g3', true)
+    setGPoint(episodeCode, cutNo, 'g3', true)
     if (cuts.every(c => next[c.id])) dispatch({ type: 'SET_TAB', p: 'video' })
   }
 

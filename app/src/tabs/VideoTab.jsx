@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
 import { setGPoint, setGPoints } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VideoTab.module.css'
@@ -70,6 +71,8 @@ function hexToRgba(hex, alpha) {
 export default function VideoTab() {
   const { state, dispatch } = useApp()
   const { cuts, videoSettings, renderProgress, episode } = state
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(episode)
   const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor } = videoSettings
   const canvasRef = useRef(null)
   const textareaRef = useRef(null)
@@ -218,7 +221,7 @@ export default function VideoTab() {
     const a = document.createElement('a'); a.href = url; a.download = 'subtitles.srt'; a.click()
     URL.revokeObjectURL(url)
     setRenderLog(l => [...l, '✅ SRT 자막 파일 생성 완료'])
-    cuts.forEach(c => { if (c.dialogue || c.narration) setGPoint(c.no, 'g3', true) })
+    cuts.forEach(c => { if (c.dialogue || c.narration) setGPoint(episodeCode, c.no, 'g3', true) })
   }
 
   const exportZip = async () => {
@@ -234,7 +237,7 @@ export default function VideoTab() {
       const info = `씬: ${c.scene || ''}\n액션: ${c.action || ''}\n대사: ${c.dialogue || ''}\n나레이션: ${c.narration || ''}\n이미지 프롬프트: ${c.imagePrompt || ''}`
       zip.file(`cut_${c.no}/info.txt`, info)
       setRenderLog(l => [...l, `  CUT ${c.no} 처리됨`])
-      setGPoint(c.no, 'g3', true)
+      setGPoint(episodeCode, c.no, 'g3', true)
     }
     if (srt) zip.file('subtitles.srt', srt)
     const readme = `여리 Script Studio - 영상 패키지\n생성일: ${new Date().toLocaleString('ko-KR')}\n\n포함 파일:\n- cut_*/info.txt: 각 컷 정보\n- subtitles.srt: SRT 자막 파일\n\n이미지, 음성은 각 탭에서 별도 다운로드하세요.`
@@ -589,7 +592,7 @@ export default function VideoTab() {
               const next = !allG4Done
               cuts.forEach(c => {
                 setG4Approved(p => ({ ...p, [c.id]: next }))
-                setGPoint(c.no, 'g4', next)
+                setGPoint(episodeCode, c.no, 'g4', next)
               })
             },
           },
@@ -957,7 +960,7 @@ export default function VideoTab() {
                   onClick={() => {
                     const next = !g4Approved[selCut.id]
                     setG4Approved(p => ({ ...p, [selCut.id]: next }))
-                    setGPoint(selCut.no, 'g4', next)
+                    setGPoint(episodeCode, selCut.no, 'g4', next)
                   }}>
                   {g4Approved[selCut.id] ? '✓ G4 취소' : 'G4 승인'}
                 </button>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
+import { formatEpisodeCode, displayEpisodeCode, validateEpisodeCode } from './lib/episodeCode'
 import NavBar from './components/NavBar'
 import ApiBar from './components/ApiBar'
 import ScriptGenTab from './tabs/ScriptGenTab'
@@ -43,26 +44,51 @@ const SIDEBAR_EP_GROUPS = [
     { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
     { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'] },
 ]
-function getEpCode(type, num) {
-    const n = String(num).padStart(2, '0')
-    return ['IG_R', 'IG_P', 'IG_S'].includes(type) ? `${type}${n}` : `${type}_E${n}`
-}
+const CONTENT_TYPE_OPTIONS = [
+    { value: 'LF',   label: 'LF — YouTube 롱폼' },
+    { value: 'SF',   label: 'SF — YouTube 숏폼' },
+    { value: 'IG_R', label: 'IG_R — Instagram 릴스' },
+    { value: 'IG_P', label: 'IG_P — Instagram 피드' },
+    { value: 'IG_S', label: 'IG_S — Instagram 스토리' },
+    { value: 'TK',   label: 'TK — TikTok' },
+]
 
 // ── 에피소드 목록 사이드바 (좌측 고정 패널) ───────────────────
 function EpisodeSidebar({ onClose }) {
     const { state, dispatch } = useApp()
     const { episodes, activeEpisodeId, openTabIds = [] } = state
     const [collapsed, setCollapsed] = useState({})
+    const [addOpen, setAddOpen] = useState(false)
+    const [newType, setNewType] = useState('LF')
+    const [newSlug, setNewSlug] = useState('')
+    const [addError, setAddError] = useState('')
 
     const allEps = Object.values(episodes).sort((a, b) =>
         (a.episode.number || 0) - (b.episode.number || 0)
     )
     const knownTypes = SIDEBAR_EP_GROUPS.flatMap(g => g.types)
 
-    const handleAdd = () => {
+    // 다음 자동 배정될 번호 — 실제 배정은 ADD_EPISODE reducer가 다시 계산하지만
+    // 코드 미리보기/검증용으로 여기서도 동일하게 계산해둔다.
+    const nextNumber = Math.max(0, ...Object.values(episodes).map(e => e.episode.number)) + 1
+    const previewCode = formatEpisodeCode(newType, nextNumber, newSlug)
+
+    const openAddForm = () => {
         if (Object.keys(episodes).length >= 10) { alert('에피소드는 최대 10개까지 만들 수 있어요.'); return }
-        dispatch({ type: 'ADD_EPISODE' })
+        setNewType('LF'); setNewSlug(''); setAddError(''); setAddOpen(true)
     }
+
+    const confirmAdd = () => {
+        const code = formatEpisodeCode(newType, nextNumber, newSlug)
+        const { valid, error } = validateEpisodeCode(code)
+        if (!valid) { setAddError(error); return }
+        const isDup = Object.values(episodes).some(e => e.episode?.code === code)
+        if (isDup) { setAddError(`이미 사용 중인 코드입니다: ${code}`); return }
+        dispatch({ type: 'ADD_EPISODE', contentType: newType, code })
+        setAddOpen(false)
+    }
+
+    const cancelAdd = () => { setAddOpen(false); setAddError('') }
 
     const handleDelete = (e, id) => {
         e.stopPropagation()
@@ -75,8 +101,7 @@ function EpisodeSidebar({ onClose }) {
         const status = getEpStatus(ep)
         const isActive = ep.id === activeEpisodeId
         const isOpen = openTabIds.includes(ep.id)
-        const ct = ep.episode?.contentType
-        const epCode = ct ? getEpCode(ct, ep.episode.number) : `EP${String(ep.episode.number).padStart(2, '0')}`
+        const epCode = ep.episode?.contentType ? displayEpisodeCode(ep.episode) : `EP${String(ep.episode.number).padStart(2, '0')}`
         return (
             <div
                 key={ep.id}
@@ -219,18 +244,70 @@ function EpisodeSidebar({ onClose }) {
                 })()}
             </div>
 
-            {/* 하단 추가 버튼 */}
+            {/* 하단 추가 버튼 / 생성 폼 */}
             <div style={{ padding: '8px 10px', borderTop: '1px solid var(--border)', flexShrink: 0 }}>
-                <button
-                    onClick={handleAdd}
-                    style={{
-                        width: '100%', padding: '7px', borderRadius: 6,
-                        background: 'transparent', border: '1px dashed var(--border2)',
-                        color: 'var(--text3)', fontSize: 11, cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--purple)'; e.currentTarget.style.borderColor = 'var(--purple)' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.borderColor = 'var(--border2)' }}
-                >+ 새 에피소드 추가</button>
+                {!addOpen ? (
+                    <button
+                        onClick={openAddForm}
+                        style={{
+                            width: '100%', padding: '7px', borderRadius: 6,
+                            background: 'transparent', border: '1px dashed var(--border2)',
+                            color: 'var(--text3)', fontSize: 11, cursor: 'pointer',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--purple)'; e.currentTarget.style.borderColor = 'var(--purple)' }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text3)'; e.currentTarget.style.borderColor = 'var(--border2)' }}
+                    >+ 새 에피소드 추가</button>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <select
+                            value={newType}
+                            onChange={e => { setNewType(e.target.value); setAddError('') }}
+                            style={{
+                                width: '100%', padding: '6px 8px', borderRadius: 6,
+                                background: 'var(--bg2)', border: '1px solid var(--border2)',
+                                color: 'var(--text)', fontSize: 11,
+                            }}
+                        >
+                            {CONTENT_TYPE_OPTIONS.map(o => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                        </select>
+                        <input
+                            value={newSlug}
+                            onChange={e => { setNewSlug(e.target.value); setAddError('') }}
+                            placeholder="슬러그 (선택, 예: SHOE)"
+                            style={{
+                                width: '100%', padding: '6px 8px', borderRadius: 6,
+                                background: 'var(--bg2)', border: '1px solid var(--border2)',
+                                color: 'var(--text)', fontSize: 11, boxSizing: 'border-box',
+                            }}
+                        />
+                        <div style={{ fontSize: 10, color: 'var(--text3)' }}>
+                            코드: <b style={{ color: 'var(--purple)' }}>{previewCode}</b>
+                        </div>
+                        {addError && (
+                            <div style={{ fontSize: 11, color: '#ef4444' }}>⚠️ {addError}</div>
+                        )}
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            <button
+                                onClick={confirmAdd}
+                                style={{
+                                    flex: 1, padding: '6px', borderRadius: 6,
+                                    background: 'var(--purple)', border: 'none',
+                                    color: '#fff', fontSize: 11, cursor: 'pointer', fontWeight: 600,
+                                }}
+                            >생성</button>
+                            <button
+                                onClick={cancelAdd}
+                                style={{
+                                    flex: 1, padding: '6px', borderRadius: 6,
+                                    background: 'transparent', border: '1px solid var(--border2)',
+                                    color: 'var(--text3)', fontSize: 11, cursor: 'pointer',
+                                }}
+                            >취소</button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

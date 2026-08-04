@@ -1198,15 +1198,17 @@ async function runStsPostProcess(cut, ep, padded, videoPath) {
 
 // ── 컷 1개 처리 ──────────────────────────────────────────────────────
 
-// gpoints.json(cut_N.selectedImage)에서 G2 승인 시 선택된 이미지 파일명을 읽는다.
+// gpoints.json({episodeCode}.cut_N.selectedImage)에서 G2 승인 시 선택된 이미지 파일명을 읽는다.
 // StudioTab.jsx의 "G2 승인"이 저장하는 값과 동일한 파일(예: cut_01_a.jpg)을 가리키며,
 // 없거나 읽기 실패 시 null을 반환해 기존 방식(cut_NN.jpg)으로 폴백한다.
-function getSelectedImageFilename(cutNo) {
+// (2026-08-02: gpoints.json이 에피소드 코드로 중첩되도록 바뀌어서 episodeCode 인자 추가됨 —
+// 지금은 정식 코드가 아직 없어 호출부가 숫자 에피소드 번호를 문자열로 넘긴다.)
+function getSelectedImageFilename(episodeCode, cutNo) {
   const gpPath = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
   if (!fs.existsSync(gpPath)) return null
   try {
     const gpoints = JSON.parse(fs.readFileSync(gpPath, 'utf-8'))
-    return gpoints[`cut_${cutNo}`]?.selectedImage || null
+    return gpoints[String(episodeCode)]?.[`cut_${cutNo}`]?.selectedImage || null
   } catch {
     return null
   }
@@ -1219,7 +1221,7 @@ async function processCut(page, cut, episode, ratio) {
   // G2 승인 시 선택된 이미지가 있고 실제로 존재하면 그걸 스타트 프레임으로 쓰고,
   // 없으면(선택 정보 없음 / 파일 없음) 기존 방식(cut_NN.jpg)을 그대로 유지한다.
   let imgFilename = `cut_${padded}.jpg`
-  const selectedFilename = getSelectedImageFilename(cut.no)
+  const selectedFilename = getSelectedImageFilename(ep, cut.no)
   if (selectedFilename) {
     const selectedPath = path.join(CONFIG.flowDir, `ep${ep}`, selectedFilename)
     if (fs.existsSync(selectedPath)) {

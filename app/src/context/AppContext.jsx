@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
+import { formatEpisodeCode } from '../lib/episodeCode'
 
 const SERVER = 'http://localhost:3001'
 
@@ -12,8 +13,10 @@ const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   duration: 5, cutType: 'YEORI', cutMark: 'NORMAL',
 }))
 
-// 새 에피소드 기본값 생성
-const makeEpisode = (id, number) => ({
+// 새 에피소드 기본값 생성. opts.code가 있으면(3차부터 신규 생성 시 필수) episode.code로 저장 —
+// 레거시 호출(기본 상태 초기화 등)은 opts 생략 시 code 없이 만들어지고, gpoints/MCP 쪽에서
+// resolveEpisodeCode()가 number 기반으로 대체 처리한다.
+const makeEpisode = (id, number, opts = {}) => ({
   id,
   episode: {
     number,
@@ -21,10 +24,11 @@ const makeEpisode = (id, number) => ({
     location: '카페',
     mood: '감성',
     cutCount: 7,
-    contentType: 'LF',
+    contentType: opts.contentType || 'LF',
     topicCode: 'PSY',
     scnCode: 'DOC',
     character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
+    ...(opts.code ? { code: opts.code } : {}),
   },
   cuts: makeCuts(7),
   scriptRaw: '',
@@ -94,10 +98,11 @@ function reducer(state, action) {
     }
 
     // ── 새 에피소드 추가 (사이드바에서만 호출 — 탭 자동 추가 없음) ─────
+    // action.contentType/action.code: 사이드바 생성 폼에서 검증까지 마친 값을 그대로 전달받음
     case 'ADD_EPISODE': {
       const maxNum = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number))
       const newId = `ep_${Date.now()}`
-      const newEp = makeEpisode(newId, maxNum + 1)
+      const newEp = makeEpisode(newId, maxNum + 1, { contentType: action.contentType, code: action.code })
       // openTabIds에 자동 추가하지 않음 — 사이드바에서 클릭해야 탭 열림
       return {
         ...state,
@@ -145,16 +150,14 @@ function reducer(state, action) {
     }
 
     // ── 에피소드 번호 변경 (중복 시 차단) ───────────────────
+    // 여기서 비교하는 코드는 표시/파일경로용 {type}_E{번호} 조합일 뿐, episode.code(생성 시 고정된
+    // 정식 식별자)는 건드리지 않는다 — 번호를 바꿔도 code는 그대로 유지됨.
     case 'RENUMBER_EPISODE': {
       const ep = state.episodes[action.id]
       if (!ep) return state
-      const epCode = (type, num) => {
-        const n = String(num).padStart(2, '0')
-        return ['IG_R', 'IG_P', 'IG_S'].includes(type) ? `${type}${n}` : `${type}_E${n}`
-      }
-      const newCode = epCode(ep.episode.contentType || 'LF', action.number)
+      const newCode = formatEpisodeCode(ep.episode.contentType || 'LF', action.number)
       const isDup = Object.values(state.episodes).some(
-        e => e.id !== action.id && epCode(e.episode.contentType || 'LF', e.episode.number) === newCode
+        e => e.id !== action.id && formatEpisodeCode(e.episode.contentType || 'LF', e.episode.number) === newCode
       )
       if (isDup) return state   // 전체 코드 중복이면 변경하지 않음 (UI에서 에러 표시)
       const updated = { ...ep, episode: { ...ep.episode, number: action.number } }

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoint, setGPoints, loadGPoints, getGPointSummary } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import styles from './EditMetaTab.module.css'
@@ -28,6 +29,8 @@ function toSRTTime(sec) {
 
 export default function EditMetaTab() {
   const { state, dispatch } = useApp()
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(state.episode)
   const [activeTab, setActiveTab] = useState('meta') // meta | srt | analyze | guide
   const [loading, setLoading] = useState(false)
   const [meta, setMeta] = useState([])
@@ -170,7 +173,7 @@ export default function EditMetaTab() {
     const blob = new Blob([srt], { type: 'text/plain;charset=utf-8' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `yeori_ep${state.episodeNo || '00'}_subtitles.srt`
+    a.download = `yeori_ep${episodeCode || '00'}_subtitles.srt`
     a.click()
   }
 
@@ -333,7 +336,7 @@ export default function EditMetaTab() {
       // editMeta의 cutNo는 "01","02" 같은 0-패딩 문자열이지만, gpoints.js의
       // cut_${i} 키는 숫자 그대로(1,2,3...)를 쓰므로 반드시 정수로 변환해야 매칭됨
       if (r?.cuts?.length) {
-        for (const c of r.cuts) setGPoint(parseInt(c.cutNo, 10), 'g5', true)
+        for (const c of r.cuts) setGPoint(episodeCode, parseInt(c.cutNo, 10), 'g5', true)
       }
       setAccRunning(false)
     } catch (err) {
@@ -346,7 +349,7 @@ export default function EditMetaTab() {
   const g4Pending = cuts
     .filter((cut, i) => {
       const no = cut.no || i + 1
-      const gData = gpointData[`cut_${no}`] || {}
+      const gData = gpointData[episodeCode]?.[`cut_${no}`] || {}
       return gData.g4 && !g4Queue.some(q => q.cutNo === no)
     })
     .map((cut, i) => ({
@@ -477,7 +480,7 @@ export default function EditMetaTab() {
             <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
               <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
               <span style={{fontSize:'10.5px',fontWeight:700,color:'#4ade80',background:'rgba(74,222,128,0.12)',border:'1px solid rgba(74,222,128,0.3)',borderRadius:'20px',padding:'2px 9px'}}>
-                G5 완료: {getGPointSummary(cuts.length).g5} / {cuts.length}
+                G5 완료: {getGPointSummary(episodeCode, cuts.length).g5} / {cuts.length}
               </span>
             </div>
             <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ 커터(켄번스) → ⑦ CapCut 실행</div>
@@ -912,7 +915,7 @@ export default function EditMetaTab() {
                           <button
                             onClick={() => {
                               setG5Approved(p => ({ ...p, [cutId]: true }))
-                              if (cuts[i]) setGPoint(cuts[i].no, 'g5', true)
+                              if (cuts[i]) setGPoint(episodeCode, cuts[i].no, 'g5', true)
                             }}
                             style={{fontSize:'11px',fontWeight:700,color:'#fb923c',background:'rgba(249,115,22,0.1)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'4px',padding:'2px 10px',cursor:'pointer',flexShrink:0}}>
                             G5 승인
@@ -925,7 +928,7 @@ export default function EditMetaTab() {
                 <button
                   disabled={!meta.every((_, i) => g5Approved[cuts[i]?.id || `cut-${i}`])}
                   onClick={() => {
-                    cuts.forEach(c => setGPoints(c.no, { g5: true }))
+                    cuts.forEach(c => setGPoints(episodeCode, c.no, { g5: true }))
                     dispatch({ type: 'SET_TAB', p: 'dashboard' })
                   }}
                   style={{
