@@ -33,7 +33,7 @@
 - **클라이언트**: `npm run dev`로 실행 후 대본생성 탭 진입, 에피소드 목록 사이드바 펼침(수정한 크로스 에피소드 버그 코드 경로 직접 노출), G1 승인 버튼 클릭까지 — 콘솔 에러 없음. `localStorage['aca_gpoints_v1']`가 정확히 `{"1":{"cut_1":{"g1":true,...}}}` 형태로 기록됨을 확인.
 - 검증 중 발견: 테스트 vite 인스턴스가 우연히 5174 포트로 떴는데, proxy.js의 CORS 화이트리스트(5173/3000/null)에 없어서 서버 동기화 POST가 막힘 — 덕분에 실제 gpoints.json 파일이 테스트로 인해 덮어써지는 사고 없이 보호됨(설계상 의도치 않은 안전장치였을 뿐, 별도 조치 불필요).
 
-### 3차: episode.code 필드 정식 도입 — 완료 (2026-08-04)
+### 3차: episode.code 필드 정식 도입 — 완료 (2026-08-04, 커밋 `fe94711`)
 
 설계안: `C:\Users\user\.claude\plans\composed-wandering-newt.md`. 확정 결정 — `state.episodes`는 내부 id(`ep_<timestamp>`) 키를 유지(재구성 안 함), `episode.code`(생성 시 필수, 사용자 입력)와 `episode.masterCode`(대본 파싱, 표시용)는 별개 필드로 공존.
 
