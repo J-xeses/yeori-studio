@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { getGPointSummary } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './DashboardTab.module.css'
@@ -45,7 +46,8 @@ export default function DashboardTab() {
   const go = (tab) => { if (tab) dispatch({ type: 'SET_TAB', p: tab }) }
 
   const cutsTotal = cuts.length
-  const gSummary = getGPointSummary(cutsTotal)
+  const epCode = resolveEpisodeCode(episode)
+  const gSummary = getGPointSummary(epCode, cutsTotal)
   const gAvg = cutsTotal > 0
     ? G_STEPS.reduce((sum, g) => sum + gSummary[g.key], 0) / (G_STEPS.length * cutsTotal) * 100
     : 0

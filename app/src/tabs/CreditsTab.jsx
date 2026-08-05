@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { loadGPoints } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './CreditsTab.module.css'
@@ -36,7 +37,8 @@ function CreditBar({ label, remaining, total, color }) {
 
 export default function CreditsTab() {
   const { state, dispatch } = useApp()
-  const { creditTracker, cuts } = state
+  const { creditTracker, cuts, episode } = state
+  const epCode = resolveEpisodeCode(episode)
   const [gData, setGData] = useState(() => loadGPoints())
   const [planRows, setPlanRows] = useState([])
   const [checking, setChecking] = useState({ main: false, sub: false })
@@ -85,7 +87,7 @@ export default function CreditsTab() {
   const flowSubCuts  = Math.floor(creditTracker.sub.flow.remaining / creditTracker.sub.flow.costPerCut)
 
   // 사이드바 컷 목록 기준: G2(이미지) 승인 안 된 컷 = 아직 시그/별도 컷으로 보완할 여지가 있는 컷
-  const pendingCutNos = (cuts || []).filter(c => !gData[`cut_${c.no}`]?.g2).map(c => c.no)
+  const pendingCutNos = (cuts || []).filter(c => !gData[epCode]?.[`cut_${c.no}`]?.g2).map(c => c.no)
 
   const addPlanRow = () => {
     const usedLabels = new Set(planRows.map(r => r.label))
