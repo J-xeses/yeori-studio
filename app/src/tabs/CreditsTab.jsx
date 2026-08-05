@@ -41,8 +41,8 @@ export default function CreditsTab() {
   const epCode = resolveEpisodeCode(episode)
   const [gData, setGData] = useState(() => loadGPoints())
   const [planRows, setPlanRows] = useState([])
-  const [checking, setChecking] = useState({ main: false, sub: false })
-  const [checkMsg, setCheckMsg] = useState({ main: null, sub: null })
+  const [checking, setChecking] = useState({})
+  const [checkMsg, setCheckMsg] = useState({})
 
   useEffect(() => {
     const id = setInterval(() => setGData(loadGPoints()), 2000)
@@ -55,31 +55,32 @@ export default function CreditsTab() {
 
   const resetDaily = () => dispatch({ type: 'RESET_CREDITS_DAILY' })
 
-  const checkFlowCredits = async (account) => {
-    setChecking(prev => ({ ...prev, [account]: true }))
-    setCheckMsg(prev => ({ ...prev, [account]: null }))
+  const checkToolCredits = async (toolName, account) => {
+    const key = `${toolName}:${account}`
+    setChecking(prev => ({ ...prev, [key]: true }))
+    setCheckMsg(prev => ({ ...prev, [key]: null }))
     try {
       const controller = new AbortController()
       const timer = setTimeout(() => controller.abort(), 50000) // 서버 타임아웃(45s)보다 여유있게
-      const res = await fetch('http://localhost:3001/api/check-flow-credits', {
+      const res = await fetch('http://localhost:3001/api/check-tool-credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ profile: account }),
+        body: JSON.stringify({ tool: toolName, profile: account }),
         signal: controller.signal,
       })
       clearTimeout(timer)
       const data = await res.json()
       if (data.ok && data.remaining != null) {
-        setTool(account, 'flow', 'remaining', data.remaining)
-        setCheckMsg(prev => ({ ...prev, [account]: `✅ ${data.remaining} 확인됨 (${new Date(data.checkedAt).toLocaleTimeString('ko-KR')})` }))
+        setTool(account, toolName, 'remaining', data.remaining)
+        setCheckMsg(prev => ({ ...prev, [key]: `✅ ${data.remaining} 확인됨 (${new Date(data.checkedAt).toLocaleTimeString('ko-KR')})` }))
       } else {
-        setCheckMsg(prev => ({ ...prev, [account]: `❌ ${data.error || '확인 실패'}` }))
+        setCheckMsg(prev => ({ ...prev, [key]: `❌ ${data.error || '확인 실패'}` }))
       }
     } catch (e) {
       const msg = e.name === 'AbortError' ? '50초 넘게 응답이 없어 중단했습니다' : `서버 연결 실패: ${e.message} (전용 Chrome이 떠 있는지 확인)`
-      setCheckMsg(prev => ({ ...prev, [account]: `❌ ${msg}` }))
+      setCheckMsg(prev => ({ ...prev, [key]: `❌ ${msg}` }))
     } finally {
-      setChecking(prev => ({ ...prev, [account]: false }))
+      setChecking(prev => ({ ...prev, [key]: false }))
     }
   }
 
@@ -127,7 +128,7 @@ export default function CreditsTab() {
         <div>
           <div className={s.title}>일일 무료 크레딧 모니터링</div>
           <div className={s.subtitle}>
-            Flow는 "자동 확인" 버튼으로 크레딧을 읽어올 수 있습니다(전용 Chrome 프로필이 떠 있어야 함). Qwen/PixVerse는 아직 직접 입력만 지원합니다.
+            Flow/PixVerse는 "자동 확인" 버튼으로 크레딧을 읽어올 수 있습니다(전용 Chrome 프로필이 떠 있어야 함). Qwen은 크레딧 개념이 없어 하루 상한을 직접 카운트합니다.
             {creditTracker.lastCheckedAt && (
               <> 마지막 리셋: {new Date(creditTracker.lastCheckedAt).toLocaleString('ko-KR')}</>
             )}
@@ -146,20 +147,20 @@ export default function CreditsTab() {
             <div className={s.checkRow}>
               <input type="number" value={creditTracker.main.flow.remaining}
                 onChange={e => setTool('main', 'flow', 'remaining', parseInt(e.target.value) || 0)} />
-              <button className={s.checkBtn} onClick={() => checkFlowCredits('main')} disabled={checking.main}>
-                {checking.main ? '⏳' : '🔄 자동 확인'}
+              <button className={s.checkBtn} onClick={() => checkToolCredits('flow', 'main')} disabled={checking['flow:main']}>
+                {checking['flow:main'] ? '⏳' : '🔄 자동 확인'}
               </button>
             </div>
           </div>
-          {checkMsg.main && <div className={s.estimate}>{checkMsg.main}</div>}
+          {checkMsg['flow:main'] && <div className={s.estimate}>{checkMsg['flow:main']}</div>}
           <div className={s.estimate}>Omni 8s(12크레딧) 기준 약 {flowMainCuts}컷 더 가능</div>
 
           <div className={s.divider} />
 
           <div className={s.creditTop}>
             <span className={s.creditLabel}>Qwen 오늘 생성 컷</span>
-            <span className={s.creditVal} style={{ color: '#22c55e' }}>
-              {creditTracker.main.qwen.countToday} <span className={s.creditUnit}>/ 목표 {creditTracker.main.qwen.targetMin}~{creditTracker.main.qwen.targetMax}</span>
+            <span className={s.creditVal} style={{ color: creditTracker.main.qwen.countToday >= creditTracker.main.qwen.targetMax ? '#eab308' : '#22c55e' }}>
+              {creditTracker.main.qwen.countToday} <span className={s.creditUnit}>/ 맥시멈 {creditTracker.main.qwen.targetMax}</span>
             </span>
           </div>
           <div className={s.editRow}>
@@ -167,11 +168,14 @@ export default function CreditsTab() {
             <div className={s.counterBtns}>
               <button onClick={() => setTool('main', 'qwen', 'countToday', Math.max(0, creditTracker.main.qwen.countToday - 1))}>-</button>
               <input type="number" value={creditTracker.main.qwen.countToday}
-                onChange={e => setTool('main', 'qwen', 'countToday', parseInt(e.target.value) || 0)} />
-              <button onClick={() => setTool('main', 'qwen', 'countToday', creditTracker.main.qwen.countToday + 1)}>+</button>
+                onChange={e => setTool('main', 'qwen', 'countToday', Math.min(creditTracker.main.qwen.targetMax, Math.max(0, parseInt(e.target.value) || 0)))} />
+              <button onClick={() => setTool('main', 'qwen', 'countToday', Math.min(creditTracker.main.qwen.targetMax, creditTracker.main.qwen.countToday + 1))}>+</button>
             </div>
           </div>
-          <div className={s.estimate}>공식 하드리밋 없음(1080p 5s 기준 소프트 제한) — 매일 컷 수만 기록</div>
+          <div className={s.estimate}>
+            5초 × {creditTracker.main.qwen.targetMax}컷 = {creditTracker.main.qwen.targetMax * 5}초 → 10초 컷 기준 약 {(creditTracker.main.qwen.targetMax * 5 / 10).toFixed(1)}컷 분량
+          </div>
+          <div className={s.estimate}>플랫폼 자체 하드리밋은 없지만(1080p 5s 기준 소프트 제한), 안정적 사용을 위해 하루 {creditTracker.main.qwen.targetMax}컷을 자체 상한으로 운영</div>
         </div>
 
         {/* 서브 계정: Flow + PixVerse */}
@@ -184,12 +188,12 @@ export default function CreditsTab() {
             <div className={s.checkRow}>
               <input type="number" value={creditTracker.sub.flow.remaining}
                 onChange={e => setTool('sub', 'flow', 'remaining', parseInt(e.target.value) || 0)} />
-              <button className={s.checkBtn} onClick={() => checkFlowCredits('sub')} disabled={checking.sub}>
-                {checking.sub ? '⏳' : '🔄 자동 확인'}
+              <button className={s.checkBtn} onClick={() => checkToolCredits('flow', 'sub')} disabled={checking['flow:sub']}>
+                {checking['flow:sub'] ? '⏳' : '🔄 자동 확인'}
               </button>
             </div>
           </div>
-          {checkMsg.sub && <div className={s.estimate}>{checkMsg.sub}</div>}
+          {checkMsg['flow:sub'] && <div className={s.estimate}>{checkMsg['flow:sub']}</div>}
           <div className={s.estimate}>Omni 8s(12크레딧) 기준 약 {flowSubCuts}컷 더 가능</div>
 
           <div className={s.divider} />
@@ -197,9 +201,15 @@ export default function CreditsTab() {
           <CreditBar label="PixVerse" remaining={creditTracker.sub.pixverse.remaining} total={creditTracker.sub.pixverse.dailyTotal} color="#3b82f6" />
           <div className={s.editRow}>
             <span>PixVerse 잔여 크레딧</span>
-            <input type="number" value={creditTracker.sub.pixverse.remaining}
-              onChange={e => setTool('sub', 'pixverse', 'remaining', parseInt(e.target.value) || 0)} />
+            <div className={s.checkRow}>
+              <input type="number" value={creditTracker.sub.pixverse.remaining}
+                onChange={e => setTool('sub', 'pixverse', 'remaining', parseInt(e.target.value) || 0)} />
+              <button className={s.checkBtn} onClick={() => checkToolCredits('pixverse', 'sub')} disabled={checking['pixverse:sub']}>
+                {checking['pixverse:sub'] ? '⏳' : '🔄 자동 확인'}
+              </button>
+            </div>
           </div>
+          {checkMsg['pixverse:sub'] && <div className={s.estimate}>{checkMsg['pixverse:sub']}</div>}
           <div className={s.estimate}>설정(해상도/오디오)에 따라 소모가 달라 고정 컷수는 계산하지 않음 — 여유분으로만 참고</div>
         </div>
       </div>

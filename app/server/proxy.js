@@ -789,12 +789,14 @@ app.post('/api/gpoints', (req, res) => {
   }
 })
 
-// ── POST /api/check-flow-credits — flow-automation.js --check-credits 실행 후 파싱된 잔여 크레딧 반환 ──
+// ── POST /api/check-tool-credits — flow/pixverse-automation.js --check-credits 실행 후 파싱된 잔여 크레딧 반환 ──
 // 이미 로그인돼 있는 전용 프로필 Chrome(9222/9223, --user-data-dir 필요, Chrome 136+ 정책)에
 // CDP로 붙어서 화면을 읽어옴 — Chrome이 안 떠 있으면 실패 응답.
-app.post('/api/check-flow-credits', (req, res) => {
+const CREDIT_CHECK_SCRIPTS = { flow: 'flow-automation.js', pixverse: 'pixverse-automation.js' }
+app.post('/api/check-tool-credits', (req, res) => {
+  const tool = CREDIT_CHECK_SCRIPTS[req.body?.tool] ? req.body.tool : 'flow'
   const profile = req.body?.profile === 'sub' ? 'sub' : 'main'
-  const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
+  const scriptPath = path.join(ROOT, 'scripts', CREDIT_CHECK_SCRIPTS[tool])
   const args = [scriptPath, '--check-credits', ...(profile === 'sub' ? ['--profile=sub'] : [])]
 
   const proc = spawn(process.execPath, args, { cwd: ROOT, env: process.env })
@@ -824,7 +826,7 @@ app.post('/api/check-flow-credits', (req, res) => {
         return res.status(422).json({ ok: false, error: '화면에서 크레딧 숫자를 못 찾음', ...data, log: out.slice(-1500) })
       } catch {}
     }
-    res.status(500).json({ ok: false, error: 'flow-automation 실행 결과 파싱 실패', log: out.slice(-1500), stderr: err.slice(-500) })
+    res.status(500).json({ ok: false, error: `${tool}-automation 실행 결과 파싱 실패`, log: out.slice(-1500), stderr: err.slice(-500) })
   })
 
   proc.on('error', e => {

@@ -613,6 +613,9 @@ async function clickAccountAvatar(page) {
       if (r.top > window.innerHeight * 0.2) return false         // 화면 상단부
       if (r.right < window.innerWidth * 0.55) return false       // 화면 우측부
       const txt = el.textContent.trim()
+      // 편집 패널 등이 열려있을 때 "완료"/"저장" 같은 흔한 액션 버튼이 이니셜로 오인식되는 걸 방지
+      const COMMON_ACTION_WORDS = ['완료', '저장', '취소', '닫기', '확인', 'done', 'save', 'cancel', 'close', 'ok']
+      if (COMMON_ACTION_WORDS.includes(txt.toLowerCase())) return false
       const shortInitials = txt.length > 0 && txt.length <= 4    // 메인 계정: 이니셜
       const hasPhoto = !!el.querySelector('img')
         || (getComputedStyle(el).backgroundImage && getComputedStyle(el).backgroundImage !== 'none') // 서브 계정: 프로필 사진
@@ -673,7 +676,7 @@ async function checkFlowCredits(page) {
   log('info', `아바타 클릭 후 스크린샷: ${path.relative(ROOT, shotPath)}`)
 
   // 서버(proxy.js)가 stdout에서 이 한 줄만 grep해서 파싱함 — 형식 변경 시 proxy.js도 같이 수정할 것
-  console.log(`CREDIT_RESULT:${JSON.stringify({ profile: activeProfile, remaining, checkedAt: new Date().toISOString() })}`)
+  console.log(`CREDIT_RESULT:${JSON.stringify({ tool: 'flow', profile: activeProfile, remaining, checkedAt: new Date().toISOString() })}`)
 }
 
 // ── 캐릭터 등록 ──────────────────────────────────────────────────────
