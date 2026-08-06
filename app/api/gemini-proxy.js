@@ -22,6 +22,11 @@ export default async function handler(req, res) {
   let lastError = null
 
   for (const model of models) {
+    // 모델 하나가 응답 없이 멈춰있는 경우(TTS 프리뷰 모델에서 실측됨) Vercel 자체 타임아웃(300초)까지
+    // 그냥 기다리지 않도록 자체 타임아웃을 걸어서, 안 되면 빨리 다음 모델로 넘어간다.
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 30000)
+
     try {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -29,6 +34,7 @@ export default async function handler(req, res) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents, ...(generationConfig ? { generationConfig } : {}) }),
+          signal: controller.signal,
         }
       )
 
@@ -42,8 +48,10 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ success: true, model, data })
     } catch (e) {
-      lastError = e.message
-      console.log(`[gemini-proxy] 모델 ${model} 예외:`, e.message)
+      lastError = e.name === 'AbortError' ? `${model} 30초 응답 없음 (타임아웃)` : e.message
+      console.log(`[gemini-proxy] 모델 ${model} 예외:`, lastError)
+    } finally {
+      clearTimeout(timer)
     }
   }
 
