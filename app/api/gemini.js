@@ -23,8 +23,10 @@ export default async function handler(req, res) {
   }
 
   // 모델 순서대로 시도
+  // gemini-2.5-flash-image(프리뷰 아닌 정식판)는 2026-10-02 종료 예정이라 무료 할당량이
+  // 이미 0으로 줄어든 상태(실측 확인) — 여전히 무료인 -preview 버전을 우선 사용
   const models = [
-    'gemini-2.5-flash-image',          // Nano Banana (500장/일)
+    'gemini-2.5-flash-image-preview',  // Nano Banana (500장/일, 무료 유지 확인됨)
     'gemini-3.1-flash-image-preview',  // Nano Banana 2
     'gemini-3-pro-image-preview',      // Nano Banana Pro
   ]
