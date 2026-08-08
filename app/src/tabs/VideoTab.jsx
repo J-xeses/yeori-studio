@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
-import { setGPoint, setGPoints } from '../lib/gpoints'
+import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
+import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VideoTab.module.css'
 
@@ -91,6 +91,12 @@ export default function VideoTab() {
   const [batchFfmpegStatus,   setBatchFfmpegStatus]   = useState('idle') // idle | running | done | error
   const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
   const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
+  const [gData, setGData] = useState(() => loadGPoints())
+
+  useEffect(() => {
+    const id = setInterval(() => setGData(loadGPoints()), 2000)
+    return () => clearInterval(id)
+  }, [])
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
   const setVideoClips = (updater) => {
@@ -673,43 +679,40 @@ export default function VideoTab() {
 
         <div className={s.cutSideList}>
           <div className={s.cutSideListHeader}>컷 목록</div>
-          <div className={s.cutSideItems}>
-            {cuts.map(c => {
+          <CutList
+            cuts={cuts} gData={gData} episodeCode={episodeCode} maxStage={4}
+            activeCutId={selectedCutId}
+            onCutClick={c => setSelectedCutId(c.id)}
+            renderPreview={c => {
               const clips = videoClips[c.id] || []
-              const isSelected = selectedCutId === c.id
+              return clips[0]
+                ? <video src={clips[0]?.url} className={s.cutSideThumb} muted />
+                : <div className={s.cutSideThumbEmpty}>🎬</div>
+            }}
+            previewText={c => {
+              const clips = videoClips[c.id] || []
               const estCount = estimateClipCount(c.duration || 5)
               const statusText = clips.length > 0
                 ? `영상 ${clips.length}개`
                 : (estCount > 1 ? `영상 없음 · 예상 ${estCount}개 필요` : '영상 없음')
-              return (
-                <div key={c.id}
-                  className={`${s.cutSideItem} ${isSelected ? s.cutSideItemActive : ''}`}
-                  onClick={() => setSelectedCutId(c.id)}>
-                  {clips[0]
-                    ? <video src={clips[0]?.url} className={s.cutSideThumb} muted />
-                    : <div className={s.cutSideThumbEmpty}>🎬</div>}
-                  <div className={s.cutSideInfo}>
-                    <div className={s.cutSideNo}>CUT {String(c.no).padStart(2,'0')}</div>
-                    <div className={s.cutSideStatus}>
-                      {statusText}
-                      {g4Approved[c.id] ? ' · ✅' : ''}
-                      {videoGenStatus[c.id] === 'running' && <span className={s.sideGenBadge}>⏳생성중</span>}
-                      {videoGenStatus[c.id] === 'done' && <span className={s.sideGenBadgeDone}>✅완료</span>}
-                      {videoGenStatus[c.id] === 'error' && <span className={s.sideGenBadgeError}>❌오류</span>}
-                    </div>
-                  </div>
-                  <button
-                    className={`${s.sideAiBtn} ${videoGenStatus[c.id] === 'running' ? s.sideAiBtnRunning : ''}`}
-                    disabled={videoGenStatus[c.id] === 'running'}
-                    onClick={e => { e.stopPropagation(); generateVideoForCut(c) }}
-                    title={`CUT ${c.no} AI 영상 생성`}
-                  >
-                    {videoGenStatus[c.id] === 'running' ? '⏳' : '✨'}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
+              return statusText + (g4Approved[c.id] ? ' · ✅' : '')
+            }}
+            renderExtra={c => (
+              <>
+                {videoGenStatus[c.id] === 'running' && <span className={s.sideGenBadge}>⏳생성중</span>}
+                {videoGenStatus[c.id] === 'done' && <span className={s.sideGenBadgeDone}>✅완료</span>}
+                {videoGenStatus[c.id] === 'error' && <span className={s.sideGenBadgeError}>❌오류</span>}
+                <button
+                  className={`${s.sideAiBtn} ${videoGenStatus[c.id] === 'running' ? s.sideAiBtnRunning : ''}`}
+                  disabled={videoGenStatus[c.id] === 'running'}
+                  onClick={() => generateVideoForCut(c)}
+                  title={`CUT ${c.no} AI 영상 생성`}
+                >
+                  {videoGenStatus[c.id] === 'running' ? '⏳' : '✨'}
+                </button>
+              </>
+            )}
+          />
         </div>
       </div>
 

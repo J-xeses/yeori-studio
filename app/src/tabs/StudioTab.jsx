@@ -475,6 +475,7 @@ export default function StudioTab() {
       <div className={s.root}>
       <EpisodeInfoSidebar
         activeCutId={activeCutId}
+        maxStage={2}
         onCutClick={(cut) => {
           setActiveCutId(cut.id)
           cardRefs.current[cut.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' })

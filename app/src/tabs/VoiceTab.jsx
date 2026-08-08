@@ -1,6 +1,8 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
-import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
+import { loadGPoints } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
+import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VoiceTab.module.css'
 
@@ -16,6 +18,13 @@ export default function VoiceTab() {
   const { cuts } = state
   const { tracks = {} } = state.voiceInsertState || {}
   const fileRefs = useRef({})
+  const episodeCode = resolveEpisodeCode(state.episode)
+  const [gData, setGData] = useState(() => loadGPoints())
+
+  useEffect(() => {
+    const id = setInterval(() => setGData(loadGPoints()), 2000)
+    return () => clearInterval(id)
+  }, [])
 
   const setVoiceState = (p) => dispatch({ type: 'SET_VOICE_INSERT_STATE', p })
 
@@ -78,22 +87,14 @@ export default function VoiceTab() {
       <div className={s.sidebar}>
         <EpisodeOverviewBlock />
         <div className={s.sideTitle}>컷 목록</div>
-        <div className={s.cutList}>
-          {cuts.map((c) => (
-            <button key={c.id}
-              className={`${s.cutItem} ${cut?.id === c.id ? s.active : ''}`}
-              onClick={() => setActiveCut(c.id)}
-            >
-              <div className={s.cutRow}>
-                <span className={s.cutNo}>CUT {c.no}</span>
-                {hasCutAny(c.id) && (
-                  <span className={s.tag}>🎙️ {getTracksForCut(c.id).filter(t => t.url).length}개</span>
-                )}
-              </div>
-              <span className={s.cutPrev}>{c.dialogue || c.narration || '(내용 없음)'}</span>
-            </button>
-          ))}
-        </div>
+        <CutList
+          cuts={cuts} gData={gData} episodeCode={episodeCode} maxStage={3}
+          activeCutId={cut?.id}
+          onCutClick={c => setActiveCut(c.id)}
+          renderExtra={c => hasCutAny(c.id)
+            ? <span className={s.tag}>🎙️ {getTracksForCut(c.id).filter(t => t.url).length}개</span>
+            : null}
+        />
       </div>
 
       <div className={s.main}>

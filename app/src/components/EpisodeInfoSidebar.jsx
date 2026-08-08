@@ -98,8 +98,44 @@ export function EpisodeOverviewBlock() {
   )
 }
 
+// 컷 목록 (배지 + 미리보기) — 여러 탭이 공유하는 카드 골격.
+// maxStage: 그 탭이 실제로 다루는 단계까지만 배지를 보여줌(예: 스튜디오=2, TTS=3).
+// renderPreview: 기본 텍스트 미리보기 대신 커스텀 콘텐츠(예: 영상 탭의 썸네일)를 앞에 붙임 —
+// 넘기면 카드가 세로 쌓기 대신 가로 배치(썸네일 | 정보 | 액션)로 바뀐다.
+// previewText: 가운데 텍스트 줄을 대사/나레이션/씬 대신 탭 전용 문구(예: 영상 탭의 "영상 2개")로 교체.
+// renderExtra: 카드 오른쪽 끝에 탭 전용 액션(예: 영상 탭의 "✨생성" 버튼)을 추가.
+export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra }) {
+  const stages = ['g1', 'g2', 'g3', 'g4', 'g5'].slice(0, maxStage)
+  const isRow = !!(renderPreview || renderExtra)
+  return (
+    <div className={s.cutList}>
+      {(cuts || []).map(c => {
+        const g = gData?.[episodeCode]?.[`cut_${c.no}`] || {}
+        const badges = stages.filter(key => g[key])
+        return (
+          <div key={c.id}
+            className={`${s.cutItem} ${isRow ? s.cutItemRow : ''} ${activeCutId === c.id ? s.cutItemActive : ''}`}
+            onClick={() => onCutClick?.(c)}>
+            {renderPreview && <div className={s.cutThumb}>{renderPreview(c)}</div>}
+            <div className={s.cutInfo}>
+              <span className={s.cutNo}>CUT {c.no}</span>
+              <span className={s.cutPreview}>{previewText ? previewText(c) : (c.dialogue || c.narration || c.scene || '(내용 없음)')}</span>
+              {badges.length > 0 && (
+                <span className={s.cutBadges}>
+                  {badges.map(key => <span key={key} className={`${s.gBadge} ${s[key]}`}>{key.toUpperCase()}</span>)}
+                </span>
+              )}
+            </div>
+            {renderExtra && <div onClick={e => e.stopPropagation()}>{renderExtra(c)}</div>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // 자체 컷 목록 사이드바가 없는 탭에서 쓰는 풀 사이드바 (개요 블록 + 컷 목록)
-export default function EpisodeInfoSidebar({ onCutClick, activeCutId }) {
+export default function EpisodeInfoSidebar({ onCutClick, activeCutId, maxStage = 5 }) {
   const { state } = useApp()
   const { cuts, episode } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
@@ -117,24 +153,10 @@ export default function EpisodeInfoSidebar({ onCutClick, activeCutId }) {
 
       <div className={s.cutSection}>
         <div className={s.title}>컷 목록 ({cuts?.length || 0})</div>
-        <div className={s.cutList}>
-          {(cuts || []).map(c => {
-            const g = gData[episodeCode]?.[`cut_${c.no}`] || {}
-            return (
-              <button key={c.id}
-                className={`${s.cutItem} ${activeCutId === c.id ? s.cutItemActive : ''}`}
-                onClick={() => onCutClick?.(c)}>
-                <span className={s.cutNo}>CUT {c.no}</span>
-                <span className={s.cutPreview}>{c.dialogue || c.narration || c.scene || '(내용 없음)'}</span>
-                <span className={s.cutBadges}>
-                  {g.g1 && <span className={`${s.gBadge} ${s.g1}`}>G1</span>}
-                  {g.g2 && <span className={`${s.gBadge} ${s.g2}`}>G2</span>}
-                  {g.g3 && <span className={`${s.gBadge} ${s.g3}`}>G3</span>}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        <CutList
+          cuts={cuts} gData={gData} episodeCode={episodeCode}
+          activeCutId={activeCutId} onCutClick={onCutClick} maxStage={maxStage}
+        />
       </div>
     </div>
   )

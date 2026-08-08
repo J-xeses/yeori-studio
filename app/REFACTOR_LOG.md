@@ -79,8 +79,21 @@
 
 **검증:** `npm run build` 통과. Claude-in-Chrome으로 실제 브라우저 조작해서 3개 버그 수정 전부 라이브 확인(IG_R 선택 시 `코드: IG_R_E01` 정상 표시, LF 선택 시 독립적으로 `LF_E05` 유지, 마스터 코드 placeholder에 "예)" 접두어 확인, 에피소드 전환 시 마스터 코드 입력값 정상 초기화 확인). ep4의 gpoints는 최종적으로 g1:8/g3:8/g4:7로 정상 복구된 상태.
 
+**추가 리포트 2건 수정 (같은 날, 이어서):**
+1. **사이드바 "G1 N/N" 진행률·"스튜디오 탭으로" 버튼이 다른 탭에서 G1을 취소해도 안 바뀜** — `App.jsx`의 `EpisodeSidebar`가 `gData`를 마운트 시 한 번만 읽고(`useState(() => loadGPoints())`) 이후 갱신 경로가 없었음(같은 패턴을 쓰는 `EpisodeInfoSidebar.jsx`는 2초 폴링이 있는데 이 컴포넌트만 빠져있었음). ScriptGenTab.jsx에서 CUT의 G1을 승인/취소하면 그건 ScriptGenTab 자신의 독립된 `gData` state만 갱신되고 App.jsx 쪽엔 전혀 안 알려지는 구조라, 실제로 데이터는 바뀌었는데 사이드바만 낡은 값을 계속 보여주는 문제였음. 동일한 2초 폴링 `useEffect` 추가해서 해결 — 실사용 데이터(ep_1, 19컷 전체 G1 승인 상태)로 CUT1 G1을 취소했다가 사이드바가 2.5초 안에 "18/19"+"전체 G1 승인" 버튼으로 정확히 되돌아오는 것 확인 후 원상복구.
+2. **사이드바의 "다음 단계로" 버튼이 G2 이후 단계에서도 항상 "스튜디오 탭으로"만 표시됨** — G1 완료 후의 다음 액션 버튼이 하드코딩되어 있어서, G2/G3/G4까지 이미 끝난 에피소드에서도 계속 스튜디오 탭만 가리켰음. `NEXT_STAGE_STEPS`(g2→studio, g3→tts, g4→video, g5→editmeta) 배열을 추가해 G1 이후 아직 안 끝난 첫 단계로 안내하도록 변경, 전체 완료 시엔 "🎉 G1~G5 전체 완료" 정적 배지로 전환. **알려진 한계**: 컷 타입별 스킵(GRAPHIC/CAPCUT 등은 실제로 G2/G4가 필요 없음) 로직은 반영 안 된 단순 카운트 비교라, 그런 컷이 섞인 에피소드는 실제로는 끝났는데 "아직 남음"으로 보일 수 있음 — 그래도 이전의 "항상 스튜디오"보다는 훨씬 정확함. 격리된 로직으로 5단계 시나리오(G1만/G2까지/G3까지/G4까지/전체완료) 전부 올바른 라벨을 반환하는 것을 확인.
+
+**컷 목록 사이드바 — 탭별 배지·디자인 통일 (같은 날, 이어서):** 스크린샷으로 "스튜디오 탭은 G1만 보이는데 TTS 탭은 배지가 아예 안 보인다", "영상 만들기 탭만 디자인이 다르다"는 리포트 받고 조사 — 실제로는 컷 목록 구현이 4개나 따로 존재했음(공유 `EpisodeInfoSidebar.jsx` default export는 G1~G3만 하드코딩하고 G4/G5 렌더링 코드 자체가 없었음, TTSTab/VideoTab/VoiceTab은 각자 독립 구현이라 배지 표시가 전혀 없거나 디자인이 완전히 달랐음). `EpisodeInfoSidebar.jsx`에 신규 named export `CutList({cuts, gData, episodeCode, activeCutId, onCutClick, maxStage=5, renderPreview, previewText, renderExtra})`를 추가해 하나로 통합:
+- 배지를 G1~G5까지 확장(`.g4`=주황/`.g5`=핑크, 기존 "15%배경/30%테두리/원색글자" 공식 유지)하고 `maxStage`로 탭별 상한을 둠 — StudioTab=2, TTSTab=3, VoiceTab=3, VideoTab=4, 나머지 7개 탭(Extract/Publishing/RetentionHook/StoryArchive/Credits/Dashboard)은 기본값 5라 코드 수정 없이 자동으로 G4/G5까지 보이게 됨.
+- `renderPreview`/`previewText`/`renderExtra` render prop으로 영상 탭의 실제 `<video>` 썸네일 + "✨생성" 버튼 + 생성 상태 배지를 그대로 유지하면서 카드 골격(선택 상태·배지 위치·여백)은 공유.
+- TTSTab/VideoTab/VoiceTab에 각자 없던 `gData`(`loadGPoints()` + 2초 폴링) state를 새로 추가 — 이 셋 다 지금까지 실제 gpoints.json을 아예 안 읽고 있었음.
+- 각 탭에서 이제 죽은 코드가 된 개별 cutList/cutItem 계열 CSS 클래스 정리(TTSTab.module.css/VideoTab.module.css/VoiceTab.module.css).
+- `npm run build` 통과 + Claude-in-Chrome으로 4개 탭(스튜디오/TTS/영상만들기/내음성삽입) 전부 라이브 확인 — 배지 통일 표시, 영상 탭 썸네일/생성버튼 정상 동작, 컷 클릭 선택 정상 동작.
+- **범위 밖(다음에):** EditMetaTab.jsx는 구조가 근본적으로 달라(컷 목록이 아니라 G4 대기열+본문 인라인 G5 pill) 이번엔 안 건드림. 컷 타입별 스킵(GRAPHIC/CAPCUT은 원래 G2/G4 불필요) 로직도 배지에 반영 안 됨 — "완료" vs "필요없음" 구분 못하는 기존 한계 그대로.
+
 ### 다음 라운드 (3차 이후, 확인 후 별도 진행)
 - 4차: 파일시스템 경로 전면 교체 (proxy.js·scripts/*.js·클라이언트 탭들) — **위 8/8 변경으로 우선순위 상향**: episode.number가 콘텐츠유형별 독립이 되면서 서로 다른 유형이 같은 번호를 가질 때 downloads/ep{number}/ 경로가 실제로 충돌할 수 있음.
+- EditMetaTab.jsx도 공유 CutList/G5 배지 체계로 편입할지 검토 (구조가 달라 별도 설계 필요)
 - 5차: content_matrix_v3.html 쪽 확인
 - 6차: 실데이터 이관 (`ep4` → `SF_E01_SHOE` 폴더명 변경 + contentType 드리프트 수정)
 - 7차: 부수 버그 정리 (죽은 `src/AppContext.jsx` 삭제, `state.gData` 죽은 참조 수정 등)

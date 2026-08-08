@@ -58,6 +58,17 @@ const CONTENT_TYPE_OPTIONS = [
     { value: 'TK',   label: 'TK — TikTok' },
 ]
 
+// G1 이후(G2~G5) 단계별 "다음 탭으로" 버튼 설정 — 순서대로 검사해서 아직 다 안 끝난
+// 첫 단계로 안내한다. 컷 타입별 스킵(GRAPHIC/CAPCUT 등은 G2/G4 건너뜀) 로직까지는
+// 반영하지 않은 단순 카운트 비교라, 그런 컷이 섞인 에피소드는 실제로는 끝났는데도
+// "아직 남음"으로 표시될 수 있음 — 그래도 "항상 스튜디오 탭"보다는 훨씬 정확하다.
+const NEXT_STAGE_STEPS = [
+    { gKey: 'g2', tab: 'studio',   label: '🎨 스튜디오 탭으로 →' },
+    { gKey: 'g3', tab: 'tts',      label: '🔊 TTS 탭으로 →' },
+    { gKey: 'g4', tab: 'video',    label: '🎬 영상 만들기 탭으로 →' },
+    { gKey: 'g5', tab: 'editmeta', label: '✂️ 편집 메타 탭으로 →' },
+]
+
 // ── 에피소드 목록 사이드바 (좌측 고정 패널) ───────────────────
 function EpisodeSidebar({ onClose }) {
     const { state, dispatch } = useApp()
@@ -68,6 +79,15 @@ function EpisodeSidebar({ onClose }) {
     const [newSlug, setNewSlug] = useState('')
     const [addError, setAddError] = useState('')
     const [gData, setGData] = useState(() => loadGPoints())
+
+    // 다른 탭(대본생성 탭 등)에서 G1을 승인/취소해도 이 컴포넌트의 gData는 갱신되지
+    // 않아서(각자 독립된 useState라 서로 안 알려줌), 사이드바의 진행률·"스튜디오 탭으로"
+    // 버튼이 그 변경을 못 따라가고 낡은 값을 계속 보여주는 문제가 있었다 — 다른 곳
+    // (EpisodeInfoSidebar.jsx)과 동일한 폴링 방식으로 주기적으로 다시 읽어온다.
+    useEffect(() => {
+        const id = setInterval(() => setGData(loadGPoints()), 2000)
+        return () => clearInterval(id)
+    }, [])
 
     const approveAllG1 = (e, ep) => {
         e.stopPropagation()
@@ -129,6 +149,10 @@ function EpisodeSidebar({ onClose }) {
         const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
         const epTotal = epCuts.length
         const epAllDone = epTotal > 0 && epG1 === epTotal
+        // G1까지 끝났으면, G2~G5 중 아직 다 안 끝난 첫 단계로 안내 — 전부 끝났으면 null(완료 표시)
+        const nextStage = epAllDone
+            ? NEXT_STAGE_STEPS.find(step => epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.[step.gKey]).length < epTotal)
+            : null
         return (
             <div
                 key={ep.id}
@@ -186,15 +210,22 @@ function EpisodeSidebar({ onClose }) {
                             }}
                         >✅ 전체 G1 승인</button>
                     )}
-                    {isActive && epAllDone && (
+                    {isActive && epAllDone && nextStage && (
                         <button
-                            onClick={e => { e.stopPropagation(); dispatch({ type: 'SET_TAB', p: 'studio' }) }}
+                            onClick={e => { e.stopPropagation(); dispatch({ type: 'SET_TAB', p: nextStage.tab }) }}
                             style={{
                                 marginTop: 6, width: '100%', padding: '4px 0', borderRadius: 5,
                                 background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)',
                                 color: '#4ade80', fontSize: 10, cursor: 'pointer',
                             }}
-                        >🎬 스튜디오 탭으로 →</button>
+                        >{nextStage.label}</button>
+                    )}
+                    {isActive && epAllDone && !nextStage && (
+                        <div style={{
+                            marginTop: 6, width: '100%', padding: '4px 0', borderRadius: 5,
+                            background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                            color: '#4ade80', fontSize: 10, textAlign: 'center',
+                        }}>🎉 G1~G5 전체 완료</div>
                     )}
                 </div>
 

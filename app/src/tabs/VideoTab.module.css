@@ -86,19 +86,12 @@
 .sidePanelRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .g4Count { font-size: 11px; color: var(--text-3); text-align: center; padding: 2px 0; flex-shrink: 0; }
 
-/* Cut side list */
+/* Cut side list — 카드 골격(선택/배지/여백)은 공유 CutList(EpisodeInfoSidebar.jsx)가 담당,
+   여기 남은 건 이 탭 전용으로 renderPreview/renderExtra에 꽂아 넣는 조각들뿐 */
 .cutSideList { flex: 1; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; }
 .cutSideListHeader { padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-.cutSideItems { flex: 1; overflow-y: auto; }
-.cutSideItem { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
-.cutSideItem:last-child { border-bottom: none; }
-.cutSideItem:hover { background: var(--bg-hover); }
-.cutSideItemActive { background: rgba(139,92,246,.1); border-left: 2px solid var(--accent); }
 .cutSideThumb { width: 48px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: #000; }
 .cutSideThumbEmpty { width: 48px; height: 28px; background: var(--bg-input); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; border: 1px solid var(--border); }
-.cutSideInfo { flex: 1; overflow: hidden; }
-.cutSideNo { font-size: 11.5px; font-weight: 700; color: var(--text); }
-.cutSideStatus { font-size: 10.5px; color: var(--text-3); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Main area */
 .mainArea { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 14px; gap: 12px; }

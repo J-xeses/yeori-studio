@@ -62,6 +62,10 @@
 }
 .cutItem:hover { background: var(--bg-hover); }
 .cutItemActive { background: var(--accent-glow); border-color: var(--accent-border); }
+/* renderPreview/renderExtra가 있는 탭(영상 만들기 등)은 썸네일|정보|액션을 가로로 배치 */
+.cutItemRow { flex-direction: row; align-items: center; gap: 9px; }
+.cutThumb { flex-shrink: 0; }
+.cutInfo { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .cutNo { font-size: 11px; font-weight: 700; color: var(--accent-light); }
 .cutPreview { font-size: 11.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cutBadges { display: flex; gap: 3px; margin-top: 1px; }
@@ -70,3 +74,5 @@
 .g1 { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
 .g2 { background: rgba(59,130,246,.15); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
 .g3 { background: rgba(167,139,250,.15); color: #a78bfa; border: 1px solid rgba(167,139,250,.3); }
+.g4 { background: rgba(251,146,60,.15); color: #fb923c; border: 1px solid rgba(251,146,60,.3); }
+.g5 { background: rgba(244,114,182,.15); color: #f472b6; border: 1px solid rgba(244,114,182,.3); }

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { elTTS, elVoices } from '../lib/api'
-import { setGPoint } from '../lib/gpoints'
+import { setGPoint, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
+import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './TTSTab.module.css'
 
@@ -81,6 +81,12 @@ export default function TTSTab() {
   const [batchRunning,  setBatchRunning]  = useState(false)
   const [saving,        setSaving]        = useState({})
   const [saved,         setSaved]         = useState({})
+  const [gData, setGData] = useState(() => loadGPoints())
+
+  useEffect(() => {
+    const id = setInterval(() => setGData(loadGPoints()), 2000)
+    return () => clearInterval(id)
+  }, [])
 
   const setTTS = (p) => dispatch({ type: 'SET_TTS_TAB_STATE', p })
 
@@ -396,22 +402,16 @@ export default function TTSTab() {
             {elevenLabsStatus.connected ? `${remaining.toLocaleString()}자 남음` : 'EL 미연결'}
           </div>
         </div>
-        <div className={s.cutList}>
-          {cuts.map((c, i) => (
-            <button key={c.id}
-              className={`${s.cutItem} ${activeCutIdx === i ? s.cutActive : ''}`}
-              onClick={() => handleCutSelect(i)}>
-              <div className={s.cutTop}>
-                <span className={s.cutNo}>CUT {c.no}</span>
-                <div className={s.cutBadges}>
-                  {g3Confirmed[c.id] && <span className={s.g3Tag}>G3✅</span>}
-                  {!g3Confirmed[c.id] && hasCutMergedAny(c.id) && <span className={s.doneTag}>🎵완성</span>}
-                </div>
-              </div>
-              <span className={s.cutPrev}>{c.dialogue || c.narration || '(내용 없음)'}</span>
-            </button>
-          ))}
-        </div>
+        <CutList
+          cuts={cuts} gData={gData} episodeCode={episodeCode} maxStage={3}
+          activeCutId={cuts[activeCutIdx]?.id}
+          onCutClick={c => handleCutSelect(cuts.findIndex(x => x.id === c.id))}
+          renderExtra={c => (
+            // 실제 G3 승인 여부는 CutList의 공유 배지가 보여주므로, 여기선 그걸로는
+            // 안 드러나는 "합쳐진 오디오는 있는데 아직 확정 전" 상태만 별도 표시
+            !g3Confirmed[c.id] && hasCutMergedAny(c.id) ? <span className={s.doneTag}>🎵완성</span> : null
+          )}
+        />
       </div>
 
       {/* 오른쪽 메인 */}
