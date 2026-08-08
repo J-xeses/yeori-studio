@@ -28,6 +28,14 @@ git pull origin master
 cd /d "%~dp0"
 echo.
 
+:: [pre-1.5] Make sure the hourly auto commit+pull+push Task Scheduler job
+::           exists on THIS machine -- self-heals on a fresh PC or if the
+::           task was ever deleted, so there's no manual "set this up once"
+::           step to forget.
+echo [pre-1.5] Checking hourly auto-sync task...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-auto-sync-task.ps1"
+echo.
+
 :: [pre-2] Sync on start (download latest from cloud)
 echo [pre-2] Sync on start...
 call "%~dp0sync-content.bat"
