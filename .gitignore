@@ -10,6 +10,8 @@ logs/
 !app/scripts/script_generator.py
 !app/scripts/script_to_prompts.py
 !app/scripts/bridge_converter.py
+!app/scripts/handwriting_overlay.py
+!app/scripts/yeori_signature.py
 debug_log.txt
 sync-log.txt
 *.log
