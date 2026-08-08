@@ -82,9 +82,17 @@ function EpisodeSidebar({ onClose }) {
     )
     const knownTypes = SIDEBAR_EP_GROUPS.flatMap(g => g.types)
 
-    // 다음 자동 배정될 번호 — 실제 배정은 ADD_EPISODE reducer가 다시 계산하지만
+    // 다음 자동 배정될 번호 — 콘텐츠유형별 독립 번호(예: 기존 LF가 몇 개든 첫 IG_R은
+    // 항상 IG_R_E01)로 계산한다. 실제 배정은 ADD_EPISODE reducer가 다시 계산하지만
     // 코드 미리보기/검증용으로 여기서도 동일하게 계산해둔다.
-    const nextNumber = Math.max(0, ...Object.values(episodes).map(e => e.episode.number)) + 1
+    // 주의: episode.number는 downloads/{flow,video,audio}/ep{number}/ 파일 경로에도
+    // 그대로 쓰이는데, 유형별 독립 번호로 바뀌면서 서로 다른 유형이 같은 번호를 가질 수
+    // 있게 됐다 — 4차(파일경로를 episode.code 기준으로 전면 교체)가 끝나기 전까지는
+    // 예를 들어 LF_E01과 IG_R_E01이 downloads/flow/ep1/을 동시에 쓰면서 실제 생성 파일이
+    // 서로 덮어써질 위험이 있다. 사용자가 이 트레이드오프를 확인하고 승인함(2026-08-08).
+    const nextNumber = Math.max(0, ...Object.values(episodes)
+        .filter(e => (e.episode?.contentType || 'LF') === newType)
+        .map(e => e.episode.number)) + 1
     const previewCode = formatEpisodeCode(newType, nextNumber, newSlug)
 
     const openAddForm = () => {
@@ -316,7 +324,10 @@ function EpisodeSidebar({ onClose }) {
                             }}
                         >
                             {CONTENT_TYPE_OPTIONS.map(o => (
-                                <option key={o.value} value={o.value}>{o.label}</option>
+                                // 일부 브라우저는 <select>의 배경/글자색을 팝업 목록에 상속하지 않고
+                                // OS 기본값(밝은 배경)으로 렌더링해서, 옵션 자체에도 명시적으로
+                                // 색을 지정해야 다크 테마에서 글자가 안 보이는 문제가 안 생긴다.
+                                <option key={o.value} value={o.value} style={{ background: '#1a1a24', color: '#f0eeff' }}>{o.label}</option>
                             ))}
                         </select>
                         <input

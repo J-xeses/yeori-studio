@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
@@ -421,9 +421,9 @@ function buildV3ScriptText(cuts, episode) {
 export default function ScriptGenTab() {
   const { state, dispatch } = useApp()
   const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
-  // 과도기 코드: 정식 episode.code 도입 전까지 임시로 번호를 코드 자리에 사용(1~2차 라운드).
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체.
   // 활성 에피소드 하나만 다루는 곳은 이 값을 쓰고, 에피소드 목록처럼 여러 에피소드를
-  // 동시에 순회하는 곳(아래 epCuts 관련 두 군데)은 반드시 각 ep 자신의 번호를 써야 함 —
+  // 동시에 순회하는 곳(아래 epCuts 관련 두 군데)은 반드시 각 ep 자신의 코드를 써야 함 —
   // 안 그러면 다른 에피소드끼리 같은 컷 번호의 G1 상태를 서로 덮어써서 보여주는 버그가 남.
   const episodeCode = resolveEpisodeCode(episode)
   const [loading, setLoading] = useState(false)
@@ -448,6 +448,19 @@ export default function ScriptGenTab() {
   const [mcMeta, setMcMeta] = useState(null) // script.txt SCRIPT META 헤더 ({ episode, version, date, status, changes, cuts })
   const [showChangesModal, setShowChangesModal] = useState(false)
   const [changesInput, setChangesInput] = useState('')
+
+  // 이 탭은 에피소드를 전환해도 컴포넌트가 언마운트되지 않아서, 위 "마스터 코드로
+  // 대본 생성" 입력값이 이전 에피소드 것 그대로 남아있는 문제가 있었다(예: A 에피소드의
+  // 코드를 입력해두고 새 에피소드로 넘어가면 그 입력값이 그대로 남아 새 에피소드에
+  // 엉뚱한 대본을 생성시킬 수 있었음). 활성 에피소드가 바뀔 때마다 이 패널을 비운다.
+  useEffect(() => {
+    setMasterCode('')
+    setMcError('')
+    setMcPreview(null)
+    setMcMeta(null)
+    setShowChangesModal(false)
+    setChangesInput('')
+  }, [activeEpisodeId])
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -1168,7 +1181,7 @@ ${currentScript}
             <label>마스터 코드</label>
             <textarea
               rows={7}
-              placeholder={'SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM :: LK_CS.TOP_CRP.BTM_SHT.SH_HHL :: SH_CU CA_PS MD_JOY AT_SD_01'}
+              placeholder={'예) SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM :: LK_CS.TOP_CRP.BTM_SHT.SH_HHL :: SH_CU CA_PS MD_JOY AT_SD_01'}
               style={{ fontFamily: 'monospace', fontSize: 11, resize: 'vertical' }}
               value={masterCode}
               onChange={e => setMasterCode(e.target.value)}

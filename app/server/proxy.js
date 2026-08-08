@@ -777,12 +777,38 @@ app.get('/api/gpoints', (req, res) => {
   }
 })
 
+// 컷 단위로 updatedAt을 비교해서 더 최신 쪽만 반영하는 병합 — 예전엔 요청 바디로
+// 파일을 통째로 덮어써서, 오래된 localStorage 캐시를 가진 브라우저 탭이 열리기만 해도
+// 다른 곳(MCP 도구, 다른 탭)에서 이미 반영된 최신 진행상황을 지워버리는 사고가 실제로
+// 두 차례 발생했다(2026-08-04, 2026-08-08 — ep4의 g1/g4 데이터 유실, 백업으로 복구함).
+// episodeCode/cut 단위로 스코프를 좁혀 병합하면 클라이언트가 모르는 다른 에피소드·컷의
+// 최신 데이터는 절대 건드리지 않는다.
+function mergeGpointsData(existing, incoming) {
+  const result = { ...existing }
+  for (const epCode of Object.keys(incoming || {})) {
+    const incomingEp = incoming[epCode] || {}
+    const mergedEp = { ...(existing[epCode] || {}) }
+    for (const cutKey of Object.keys(incomingEp)) {
+      const incomingCut = incomingEp[cutKey]
+      const existingCut = mergedEp[cutKey]
+      if (!existingCut) { mergedEp[cutKey] = incomingCut; continue }
+      const incomingTime = Date.parse(incomingCut?.updatedAt || '') || 0
+      const existingTime = Date.parse(existingCut?.updatedAt || '') || 0
+      mergedEp[cutKey] = incomingTime >= existingTime ? incomingCut : existingCut
+    }
+    result[epCode] = mergedEp
+  }
+  return result
+}
+
 app.post('/api/gpoints', (req, res) => {
   const gpDir  = path.join(MEDIA_ROOT, 'downloads')
   const gpPath = path.join(gpDir, 'gpoints.json')
   try {
     fs.mkdirSync(gpDir, { recursive: true })
-    fs.writeFileSync(gpPath, JSON.stringify(req.body, null, 2), 'utf-8')
+    const existing = fs.existsSync(gpPath) ? JSON.parse(fs.readFileSync(gpPath, 'utf-8')) : {}
+    const merged = mergeGpointsData(existing, req.body || {})
+    fs.writeFileSync(gpPath, JSON.stringify(merged, null, 2), 'utf-8')
     res.json({ ok: true })
   } catch (err) {
     res.status(500).json({ error: err.message })

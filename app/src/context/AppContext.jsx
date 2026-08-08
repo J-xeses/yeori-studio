@@ -109,9 +109,14 @@ function reducer(state, action) {
     }
 
     // ── 새 에피소드 추가 (사이드바에서만 호출 — 탭 자동 추가 없음) ─────
-    // action.contentType/action.code: 사이드바 생성 폼에서 검증까지 마친 값을 그대로 전달받음
+    // action.contentType/action.code: 사이드바 생성 폼에서 검증까지 마친 값을 그대로 전달받음.
+    // 번호는 콘텐츠유형별 독립 계산(App.jsx의 previewCode 계산과 반드시 동일하게 유지) —
+    // 서로 다른 유형이 같은 번호를 가질 수 있어짐에 따른 파일경로 충돌 위험은
+    // App.jsx의 nextNumber 계산부 주석 참고.
     case 'ADD_EPISODE': {
-      const maxNum = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number))
+      const maxNum = Math.max(0, ...Object.values(state.episodes)
+        .filter(e => (e.episode?.contentType || 'LF') === (action.contentType || 'LF'))
+        .map(e => e.episode.number))
       const newId = `ep_${Date.now()}`
       const newEp = makeEpisode(newId, maxNum + 1, { contentType: action.contentType, code: action.code })
       // openTabIds에 자동 추가하지 않음 — 사이드바에서 클릭해야 탭 열림
