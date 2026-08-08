@@ -136,6 +136,13 @@ echo   Server stopped -- running shutdown sync...
 echo ============================================================
 echo.
 call "%~dp0sync-content.bat"
+
+:: [5] Git auto commit+push (code changes -- separate from the OneDrive content
+::     sync above, which never touched git). Safety net for the hourly
+::     scheduled task; this makes it happen immediately on a graceful exit too.
+echo.
+echo [5] Git auto-sync (commit + pull + push)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0git-auto-sync.ps1"
 echo.
 echo   Goodbye!
 echo ============================================================

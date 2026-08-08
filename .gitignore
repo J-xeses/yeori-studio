@@ -25,3 +25,6 @@ __pycache__/
 app/studio-state.json
 .vercel
 app/.tunnel-state.json
+# 개인 백업/브라우저 저장 부산물 -- 프로젝트 소스 아님
+_backup_desktop_tilde_movies_20260704/
+app/TREND RADAR v7_files/
