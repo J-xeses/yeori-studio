@@ -101,6 +101,14 @@ function pipelineCodeToCutType(plCode) {
   return 'YEORI'
 }
 
+// PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
+// 하위로 라우팅할지 반환. 이건 cutType(위 함수, G2~G5 실행여부를 좌우)과는 완전히 별개 축 —
+// 저장 경로·생성 비율만 결정하고 G-단계 스킵 여부에는 관여하지 않는다.
+export function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
+
 export function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []

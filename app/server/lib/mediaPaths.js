@@ -35,3 +35,19 @@ export function cutFile(no, ext) {
 export function paddedCutNo(no) {
   return String(no).padStart(2, '0')
 }
+
+// ── 인스타그램 콘텐츠(FD/RL/PT/ST) 경로 — episode.number 기반이 아니라
+// 사용자가 직접 붙이는 "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 하위폴더가
+// 없다(대사 촬영/화면녹화 위주라 Flow 생성 이미지를 따로 raw 폴더에 모을 일이 적음).
+export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
+export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
+
+// kind 생략 시 콘텐츠 루트(downloads/insta/{content}/{num}/), 지정 시 그 하위(raw/txt/final)
+export function instaDir(content, num, kind) {
+  const base = path.join(MEDIA_ROOT, 'downloads', 'insta', String(content), String(num))
+  return kind ? path.join(base, kind) : base
+}
+
+export function instaRatio(content) {
+  return INSTA_RATIO[content] || null
+}

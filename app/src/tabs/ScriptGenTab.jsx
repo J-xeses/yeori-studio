@@ -293,6 +293,14 @@ function pipelineCodeToCutType(plCode) {
   return 'YEORI' // YR_VD, YR_IM 등
 }
 
+// PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
+// 하위로 라우팅할지 반환. cutType(위 함수, G2~G5 실행여부를 좌우)과는 완전히 별개 축 —
+// 저장 경로·생성 비율만 결정하고 G-단계 스킵 여부에는 관여하지 않는다.
+export function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
+
 function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -1132,6 +1140,16 @@ ${currentScript}
                   )}
                 </div>
               </div>
+              {(episode.contentType || '').startsWith('IG_') && (
+                <div className={s.field}>
+                  <label>인스타 번호</label>
+                  <input placeholder="예: P01, RL03, PT01, ST01" value={episode.instaNum || ''}
+                    onChange={e => dispatch({ type: 'SET_EPISODE', p: { instaNum: e.target.value.trim() } })} />
+                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>
+                    컷의 PL이 IG_FD/IG_RL/IG_PT/IG_ST일 때 downloads/insta/&#123;유형&#125;/&#123;여기 값&#125;/ 경로로 저장됩니다.
+                  </div>
+                </div>
+              )}
               <div className={s.field}>
                 <label>에피소드 제목</label>
                 <input placeholder="예: 카페에서 혼자 쓰는 편지" value={episode.title}

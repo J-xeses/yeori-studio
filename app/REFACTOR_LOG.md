@@ -91,6 +91,30 @@
 - `npm run build` 통과 + Claude-in-Chrome으로 4개 탭(스튜디오/TTS/영상만들기/내음성삽입) 전부 라이브 확인 — 배지 통일 표시, 영상 탭 썸네일/생성버튼 정상 동작, 컷 클릭 선택 정상 동작.
 - **범위 밖(다음에):** EditMetaTab.jsx는 구조가 근본적으로 달라(컷 목록이 아니라 G4 대기열+본문 인라인 G5 pill) 이번엔 안 건드림. 컷 타입별 스킵(GRAPHIC/CAPCUT은 원래 G2/G4 불필요) 로직도 배지에 반영 안 됨 — "완료" vs "필요없음" 구분 못하는 기존 한계 그대로.
 
+### 2026-08-09: 인스타그램 콘텐츠 파이프라인 (폴더 구조 + CLI 라우팅 + 스튜디오 PL 감지)
+
+**배경:** 지금까지 전체 파이프라인(flow-automation.js, proxy.js `/api/run-flow`, StudioTab.jsx)이 저장 경로를 오직 에피소드 번호(`ep{N}`) 하나로만 계산해왔음(`downloads/flow/ep4/`). 인스타 피드(FD)/릴스(RL)/포스트(PT)/스토리(ST)는 각각 다른 폴더 구조·비율이 필요해서 이번에 완전히 병행하는 새 축으로 라우팅 로직을 추가(기존 `ep{N}` 경로는 건드리지 않음).
+
+**1. 폴더 구조:** `downloads/insta/{FD,RL,PT,ST}/...` 생성 완료 — FD/PT는 `raw/txt/final/project_url.txt`, RL은 `project_url.txt`만, ST는 `raw/final`만(사용자 지정 구조 그대로). `downloads/`가 `.gitignore` 대상이라 이 트리는 로컬 전용, 커밋 안 됨.
+
+**2. `server/lib/mediaPaths.js` / `src/lib/mediaPaths.js`:** 1차 라운드에서 미리 만들어놓고 지금까지 어디서도 안 쓰던 헬퍼 — 이번이 첫 실사용처. `INSTA_SUBDIR`(FD/PT/ST='raw', RL=null), `INSTA_RATIO`(FD/PT='1:1', RL/ST='9:16' — 사용자 확인 완료), `instaDir(content, num, kind)`, `instaRatio(content)` 추가. 클라이언트 쪽엔 대응하는 `instaUrl(content, num, no, ext, suffix)` 추가(StudioTab이 생성된 이미지 폴링할 때 씀).
+
+**3. PL → 콘텐츠 매핑:** 기존 `pipelineCodeToCutType()`(BR_/GR_/CC_ 접두어로 cutType 결정, G2~G5 실행 여부 좌우)과는 **완전히 별개의 새 축**으로 `pipelineCodeToInstaContent(plCode)`(IG_FD/IG_RL/IG_PT/IG_ST → FD/RL/PT/ST) 추가 — 기존 코드베이스 관례(작은 순수함수를 파일마다 중복 구현)를 따라 `server/lib/scriptParserV3.js`/`src/tabs/ScriptGenTab.jsx`/`src/tabs/StudioTab.jsx` 3곳에 각각 구현(cross-import 안 함).
+
+**4. 에피소드 "인스타 번호" 필드:** P01/RL03/PT01/ST01처럼 자동 추론 규칙이 없는 번호라 사용자가 직접 입력하는 신규 `episode.instaNum` 필드 추가(사용자 확인: "새 필드로 직접 입력"). `ScriptGenTab.jsx`에 `episode.contentType`이 `IG_`로 시작할 때만 조건부로 보이는 입력 UI 추가, `AppContext.jsx`의 `makeEpisode()`/`defaultState.episode` 스키마에도 반영.
+
+**5. `scripts/flow-automation.js`:** 6곳에 흩어져 `path.join(CONFIG.downloadDir, \`ep${episode}\`)`를 각자 재계산하던 걸 `resolveContentDir(episode)` 헬퍼로 통합(insta면 `instaDir()`, 아니면 기존 로직 그대로). **기존 숨은 버그 발견 및 수정**: `switchToImageMode()`가 비율을 `9:16`으로 하드코딩하고 있어서 롱폼(16:9)도 항상 9:16으로 나가고 있었음 — `ratio` 인자를 받아 `clickTab(...)` 정규식을 동적으로 조립하도록 변경(`${ratioA}.{0,2}${ratioB}`), insta면 `instaRatio(content)`, 아니면 기존 longform/shorts 분기 그대로. 죽은 채로 있던 기존 `setAspectRatio()` 함수는 손대지 않고 그대로 방치(더 검증된 `switchToImageMode` 클릭 로직을 확장하는 쪽을 택함).
+
+**6. `server/proxy.js`:** `/api/run-flow`가 `{type, content, num}`(insta) vs `{ep}`(기존) 양쪽을 다 받아 `epDir`/`projectMarker`/자식 프로세스 스폰 인자(`--type=insta --content=X --num=Y` vs `--ep=N`)/SSE `parseLine`의 파일 경로 재구성까지 전부 분기.
+
+**7. `StudioTab.jsx`:** `runFlowForCut()`/`runFlow()`가 이미지 생성 요청 전에 `cut.masterCode?.pl`을 검사해 insta 콘텐츠면 `instaNum` 미입력 시 에러로 막고, 매칭되면 `{type:'insta',content,num,prompts}`로 요청 바디 분기(안 매칭되면 기존 `{ep,prompts}` 그대로 — 회귀 없음), 폴링 URL도 `instaUrl()`로 분기.
+
+**검증 (2026-08-09):**
+- `node --check` — flow-automation.js/proxy.js 문법 통과.
+- `npm run build` — 통과(경고는 기존과 동일한 청크 크기 경고뿐, 신규 오류 없음).
+- `resolveContentDir()` 로직을 실제 import한 `mediaPaths.js` 함수로 재현한 독립 스크립트로 5개 케이스 전부 확인: 레거시 `--ep=4` → `downloads\flow\ep4`(기존과 완전히 동일, 회귀 없음), `FD/P01`→`.../FD/P01/raw`, `RL/RL03`→`.../RL/RL03`(하위폴더 없음), `PT/PT01`→`.../PT/PT01/raw`, `ST/ST01`→`.../ST/ST01/raw` — 전부 사전에 만들어둔 폴더 구조 및 사용자 확인 비율 매핑과 일치.
+- **아직 라이브 검증 안 됨(다음에 필요 시 진행):** StudioTab에서 실제 `IG_RL` 컷으로 "이미지 생성" 눌렀을 때 서버 요청 바디에 `type/content/num`이 정확히 들어가는지 브라우저 네트워크 로그 확인(실제 Flow 실행은 크레딧 소모라 사용자 승인 필요), Flow 웹 UI에 실제 "1:1" 탭이 존재하고 `clickTab('1.{0,2}1', ...)` 패턴으로 잡히는지 라이브 확인(코드 리뷰만으로는 확인 불가 — 기존 9:16도 같은 화면 텍스트 매칭 방식이라 동일 패턴 적용은 타당하나, 실제 화면에서 최소 1회 확인 권장).
+
 ### 다음 라운드 (3차 이후, 확인 후 별도 진행)
 - 4차: 파일시스템 경로 전면 교체 (proxy.js·scripts/*.js·클라이언트 탭들) — **위 8/8 변경으로 우선순위 상향**: episode.number가 콘텐츠유형별 독립이 되면서 서로 다른 유형이 같은 번호를 가질 때 downloads/ep{number}/ 경로가 실제로 충돌할 수 있음.
 - EditMetaTab.jsx도 공유 CutList/G5 배지 체계로 편입할지 검토 (구조가 달라 별도 설계 필요)

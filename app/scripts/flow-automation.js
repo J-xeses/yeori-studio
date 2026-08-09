@@ -29,6 +29,7 @@ import path from 'path'
 import readline from 'readline'
 import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
+import { instaDir, instaRatio, INSTA_SUBDIR } from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -134,6 +135,21 @@ function parseArgs() {
         return [k, v ?? true]
       })
   )
+}
+
+// 산출물 저장 폴더 계산 — 예전엔 saveNewImage/saveTwoNewImages/saveImage/main()
+// 각자 downloads/flow/ep{N}/ 을 따로 조립했는데, 여기 하나로 모으고
+// --type=insta 일 때만 downloads/insta/{content}/{num}/(raw) 로 분기한다.
+// --ep= 기반 기존 동작은 이 함수를 거쳐도 완전히 동일하게 유지됨(하위호환).
+function resolveContentDir(episode) {
+  if (args.type === 'insta') {
+    if (!args.content || !args.num) {
+      log('error', '--type=insta 사용 시 --content=FD|RL|PT|ST 와 --num=값이 모두 필요합니다')
+      process.exit(1)
+    }
+    return instaDir(args.content, args.num, INSTA_SUBDIR[args.content])
+  }
+  return path.join(CONFIG.downloadDir, `ep${episode}`)
 }
 
 function log(level, msg) {
@@ -338,10 +354,13 @@ async function main() {
     : path.join(CONFIG.downloadDir, 'prompts.json')
   const rawPrompts = JSON.parse(fs.readFileSync(_epPromptFile, 'utf-8'))
   const epTitle    = (rawPrompts.title || '').replace(/\s+/g, '')
-  const projectTitle = epTitle ? `EP${episode}_${epTitle}` : `EP${episode}`
+  const contentLabel = args.type === 'insta' ? `${args.content}${args.num}` : `EP${episode}`
+  const projectTitle = epTitle ? `${contentLabel}_${epTitle}` : contentLabel
 
-  const epDir       = path.join(CONFIG.downloadDir, `ep${episode}`)
-  const projectMarker = path.join(epDir, 'project_url.txt')
+  const epDir       = resolveContentDir(episode)
+  const projectMarker = args.type === 'insta'
+    ? path.join(instaDir(args.content, args.num), 'project_url.txt')  // 항상 콘텐츠 루트에 (raw 하위 아님)
+    : path.join(epDir, 'project_url.txt')
   ensureDir(epDir)
 
   // 레퍼런스 이미지 → Claude API 얼굴 분석 → 프롬프트 앞에 자동 추가
@@ -403,16 +422,20 @@ async function main() {
     await preFlightCheck(page)
 
     // 이미지 모드 설정 — 루프 시작 전 한 번만 (매 컷마다 팝업 재오픈 시 탭 클릭 무시되는 문제 방지)
-    await switchToImageMode(page)
-    log('info', `모드 설정 완료: 이미지 / ${type === 'longform' ? '16:9' : '9:16'} / x2`)
+    // 비율: --type=insta면 콘텐츠 유형별(FD/PT=1:1, RL/ST=9:16), 아니면 기존 longform/shorts 기준.
+    // (예전엔 switchToImageMode가 9:16을 하드코딩해서 longform도 항상 9:16으로 나가던 버그가 있었음 — 같이 수정)
+    const ratio = args.type === 'insta' ? (instaRatio(args.content) || '9:16') : (type === 'longform' ? '16:9' : '9:16')
+    await switchToImageMode(page, ratio)
+    log('info', `모드 설정 완료: 이미지 / ${ratio} / x2`)
 
     // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
       const _ep = cut.episode ?? episode ?? 'x'
       const _padded = String(cut.no).padStart(2, '0')
-      const existingA = path.join(CONFIG.downloadDir, `ep${_ep}`, `cut_${_padded}_a.jpg`)
-      const existingLegacy = path.join(CONFIG.downloadDir, `ep${_ep}`, `cut_${_padded}.jpg`)
+      const _cutDir = resolveContentDir(_ep)
+      const existingA = path.join(_cutDir, `cut_${_padded}_a.jpg`)
+      const existingLegacy = path.join(_cutDir, `cut_${_padded}.jpg`)
       if (fs.existsSync(existingA) || fs.existsSync(existingLegacy)) {
         const existingPath = fs.existsSync(existingA) ? existingA : existingLegacy
         log('ok', `[${i + 1}/${cuts.length}] CUT ${cut.no} 이미 존재 → 스킵`)
@@ -1753,7 +1776,7 @@ async function clickImageTab(page) {
 
 // ── 이미지 모드 전환: 설정 팝업 → 이미지 탭 → 9:16 → x2 ─────────────────
 
-async function switchToImageMode(page) {
+async function switchToImageMode(page, ratio = '9:16') {
   // 팝업이 이미 열려있는지 확인 (이미지/동영상 탭 텍스트 존재 여부로 판단)
   const alreadyOpen = await page.evaluate(() => {
     const tabs = [...document.querySelectorAll('[role="tab"], [role="option"]')]
@@ -1920,8 +1943,10 @@ async function switchToImageMode(page) {
   await sleep(500)
   if (!imgOk) await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_imagemode_tab_fail.png') })
 
-  // 2. '9:16' 비율 (9:16, 9/16, 916 등 매칭)
-  await clickTab('9.{0,2}16', '9:16 비율')
+  // 2. 비율 탭 (예: "9:16" → "9:16", "9/16", "916" 등 구분자 다양성까지 매칭)
+  //    예전엔 여기가 9:16으로 하드코딩돼 있어서 longform(16:9)도 항상 9:16으로 나가던 버그가 있었음.
+  const [_ratioA, _ratioB] = ratio.split(':')
+  await clickTab(`${_ratioA}.{0,2}${_ratioB}`, `${ratio} 비율`)
   await sleep(400)
 
   // 3. 'x2' 생성 개수 (x2, 2x, ×2, 2 등) — 모드/비율 텍스트는 제외
@@ -2251,7 +2276,7 @@ async function saveNewImage(page, beforeItems, cutNo, episode, prefix = 'cut') {
   const imgSrc = target.src
   log('info', `새 이미지 src (${target.w}×${target.h}): ${imgSrc.slice(0, 80)}…`)
 
-  const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
+  const epDir = resolveContentDir(episode)
   ensureDir(epDir)
   const outPath = path.join(epDir, `${prefix}_${String(cutNo).padStart(2, '0')}.jpg`)
 
@@ -2374,7 +2399,7 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
     }
   }
 
-  const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
+  const epDir = resolveContentDir(episode)
   ensureDir(epDir)
   const padded = String(cutNo).padStart(2, '0')
 
@@ -2407,7 +2432,7 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
 }
 
 async function saveImage(page, cutNo, episode) {
-  const epDir = path.join(CONFIG.downloadDir, `ep${episode}`)
+  const epDir = resolveContentDir(episode)
   ensureDir(epDir)
   const filename = `cut_${String(cutNo).padStart(2, '0')}.jpg`
   const outPath = path.join(epDir, filename)
@@ -2539,7 +2564,8 @@ function printSummary(ok, fail, results) {
 }
 
 function saveReport(episode, results) {
-  const reportPath = path.join(CONFIG.downloadDir, `report_ep${episode ?? 'x'}_${Date.now()}.json`)
+  const label = args.type === 'insta' ? `${args.content}${args.num}` : `ep${episode ?? 'x'}`
+  const reportPath = path.join(CONFIG.downloadDir, `report_${label}_${Date.now()}.json`)
   fs.writeFileSync(reportPath, JSON.stringify({
     generatedAt: new Date().toISOString(),
     episode,

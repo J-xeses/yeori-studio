@@ -27,3 +27,17 @@ export function videoUrl(code, no, ext = 'mp4') {
 export function audioUrl(code, no, ext = 'mp3') {
   return `${YEORI_SERVER}/downloads/audio/${code}/cut_${paddedCutNo(no)}.${ext}`
 }
+
+// 인스타그램 콘텐츠(FD/RL/PT/ST) — episode.number가 아니라 사용자가 직접 붙이는
+// "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 raw 하위폴더가 없어 콘텐츠 루트를 바로 씀
+// (server/lib/mediaPaths.js의 INSTA_SUBDIR와 반드시 동일하게 유지할 것).
+export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
+export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
+
+export function instaUrl(content, num, no, ext, suffix = '') {
+  const kind = INSTA_SUBDIR[content]
+  const dir = kind
+    ? `${YEORI_SERVER}/downloads/insta/${content}/${num}/${kind}`
+    : `${YEORI_SERVER}/downloads/insta/${content}/${num}`
+  return `${dir}/cut_${paddedCutNo(no)}${suffix}.${ext}`
+}

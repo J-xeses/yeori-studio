@@ -7,6 +7,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
+import { instaDir, INSTA_SUBDIR } from './lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -972,8 +973,12 @@ app.post('/api/scan-media', (req, res) => {
 
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
-  const { ep, prompts, projectId } = req.body
+  const { ep, prompts, projectId, type, content, num } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
+  const isInsta = type === 'insta'
+  if (isInsta && (!content || !num)) {
+    return res.status(400).json({ error: 'type=insta 사용 시 content(FD/RL/PT/ST)와 num(인스타 번호)이 모두 필요합니다' })
+  }
 
   const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
   fs.mkdirSync(path.dirname(promptsPath), { recursive: true })
@@ -990,23 +995,26 @@ app.post('/api/run-flow', (req, res) => {
   send({ type: 'saved', message: 'prompts.json 저장 완료' })
 
   // 에피소드 번호: prompts.episode 우선 (클라이언트 상태 싱크 문제 방지), ep는 fallback
+  // insta 모드에서는 episode 번호가 아니라 content/num이 저장 위치를 결정한다.
   const episode = prompts.episode ?? ep ?? null
+  const epDir = isInsta ? instaDir(content, num, INSTA_SUBDIR[content]) : path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
+  // project_url.txt는 항상 콘텐츠 루트에 둔다(insta는 raw 하위가 아니라 {content}/{num}/ 바로 아래)
+  const projectMarker = isInsta ? path.join(instaDir(content, num), 'project_url.txt') : path.join(epDir, 'project_url.txt')
 
   // project_url.txt 사전 확인 — 없으면 flow-automation.js가 stdin을 기다려 hang됨
-  if (episode != null) {
-    const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
-    const projectMarker = path.join(epDir, 'project_url.txt')
-
+  if (isInsta || episode != null) {
     // projectId가 요청에 포함된 경우 project_url.txt 자동 생성
     if (projectId && !fs.existsSync(projectMarker)) {
-      fs.mkdirSync(epDir, { recursive: true })
+      fs.mkdirSync(path.dirname(projectMarker), { recursive: true })
       const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${String(projectId).trim()}`
       fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
       send({ type: 'log', level: 'info', message: `Flow 프로젝트 등록 완료: ${projectUrl}` })
     }
 
     if (!fs.existsSync(projectMarker)) {
-      send({ type: 'error', message: `Flow 프로젝트 미등록 (ep${episode})\nproject_url.txt 없음 — 터미널에서 직접 실행하여 프로젝트 ID를 등록하세요:\n  node scripts/flow-automation.js --ep=${episode}` })
+      const label = isInsta ? `${content}/${num}` : `ep${episode}`
+      const cliHint = isInsta ? `--type=insta --content=${content} --num=${num}` : `--ep=${episode}`
+      send({ type: 'error', message: `Flow 프로젝트 미등록 (${label})\nproject_url.txt 없음 — 터미널에서 직접 실행하여 프로젝트 ID를 등록하세요:\n  node scripts/flow-automation.js ${cliHint}` })
       res.end()
       return
     }
@@ -1014,9 +1022,15 @@ app.post('/api/run-flow', (req, res) => {
 
   const scriptPath = path.join(ROOT, 'scripts', 'flow-automation.js')
   const nodeArgs = [scriptPath]
-  if (episode != null) nodeArgs.push(`--ep=${episode}`)
+  if (isInsta) {
+    nodeArgs.push(`--type=insta`, `--content=${content}`, `--num=${num}`)
+  } else if (episode != null) {
+    nodeArgs.push(`--ep=${episode}`)
+  }
 
-  console.log(`[run-flow] EP=${episode ?? 'all'} (req.ep=${ep ?? 'none'}, prompts.episode=${prompts.episode ?? 'none'})`)
+  console.log(isInsta
+    ? `[run-flow] INSTA content=${content} num=${num}`
+    : `[run-flow] EP=${episode ?? 'all'} (req.ep=${ep ?? 'none'}, prompts.episode=${prompts.episode ?? 'none'})`)
   console.log(`[run-flow] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
 
   const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
@@ -1034,10 +1048,12 @@ app.post('/api/run-flow', (req, res) => {
       const cutNo = +doneMatch[3]
       send({ type: 'cut_done', current: +doneMatch[1], total: +doneMatch[2], cutNo })
       // cut 완료 시 파일 즉시 확인 후 cut_image 전송
-      if (episode != null) {
+      if (isInsta || episode != null) {
         const padded = String(cutNo).padStart(2, '0')
-        const epUrlBase = `/downloads/flow/ep${episode}`
-        const epDirPath = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
+        const epUrlBase = isInsta
+          ? `/downloads/insta/${content}/${num}${INSTA_SUBDIR[content] ? '/' + INSTA_SUBDIR[content] : ''}`
+          : `/downloads/flow/ep${episode}`
+        const epDirPath = epDir
         for (const suffix of ['_a', '_b', '']) {
           for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
             const fname = `cut_${padded}${suffix}.${ext}`

@@ -27,6 +27,7 @@ const makeEpisode = (id, number, opts = {}) => ({
     contentType: opts.contentType || 'LF',
     topicCode: 'PSY',
     scnCode: 'DOC',
+    instaNum: '', // 인스타그램(IG_*) 에피소드 전용 — downloads/insta/{content}/{instaNum}/ 경로에 씀. 자동 추론 규칙이 없어 직접 입력.
     character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
     ...(opts.code ? { code: opts.code } : {}),
   },
@@ -51,7 +52,7 @@ const defaultState = {
   },
 
   // 하위 호환: 현재 에피소드 직접 접근용 (기존 탭들 그대로 작동)
-  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 7, contentType: 'LF', topicCode: 'PSY', scnCode: 'DOC', character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터' },
+  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 7, contentType: 'LF', topicCode: 'PSY', scnCode: 'DOC', instaNum: '', character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터' },
   cuts: makeCuts(7),
   scriptRaw: '',
 

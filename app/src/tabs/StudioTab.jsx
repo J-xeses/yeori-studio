@@ -2,11 +2,20 @@ import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
+import { instaUrl } from '../lib/mediaPaths'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './StudioTab.module.css'
 
 const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
+
+// PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
+// 하위로 라우팅할지 반환. server/lib/scriptParserV3.js·ScriptGenTab.jsx에 있는 것과 동일 로직
+// (이 코드베이스의 기존 관례대로 작은 순수함수라 탭마다 그대로 복제해서 씀).
+function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
 
 // G2 승인 전 체크리스트 항목
 const CHECKLIST_ITEMS = [
@@ -169,6 +178,14 @@ export default function StudioTab() {
     const { episode } = state
     if (!cut.imagePrompt?.trim()) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
 
+    // PL이 IG_FD/IG_RL/IG_PT/IG_ST면 downloads/insta/{content}/{instaNum}/으로 라우팅.
+    // 그 외(YR_VD/BR_VD 등)는 기존 downloads/flow/ep{N}/ 그대로 — 회귀 없음.
+    const instaContent = pipelineCodeToInstaContent(cut.masterCode?.pl)
+    if (instaContent && !episode.instaNum?.trim()) {
+      alert(`이 컷의 PL(${cut.masterCode?.pl})은 인스타 콘텐츠(${instaContent})인데, 에피소드에 "인스타 번호"가 입력되어 있지 않아요.\n대본 생성 탭 → 에피소드 설정에서 먼저 입력해주세요.`)
+      return
+    }
+
     const prompts = {
       episode: episode.number,
       title: episode.title || '',
@@ -188,10 +205,9 @@ export default function StudioTab() {
       const res = await fetch('http://localhost:3001/api/run-flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ep: episode.number,
-          prompts,
-        }),
+        body: JSON.stringify(instaContent
+          ? { type: 'insta', content: instaContent, num: episode.instaNum.trim(), prompts }
+          : { ep: episode.number, prompts }),
       })
       if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
 
@@ -213,7 +229,9 @@ export default function StudioTab() {
               const padded = String(ev.cutNo).padStart(2, '0')
               for (const suffix of ['_a', '_b', '']) {
                 for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
-                  const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}${suffix}.${ext}?t=${Date.now()}`
+                  const url = (instaContent
+                    ? instaUrl(instaContent, episode.instaNum.trim(), ev.cutNo, ext, suffix)
+                    : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}${suffix}.${ext}`) + `?t=${Date.now()}`
                   try {
                     const r = await fetch(url, { method: 'HEAD' })
                     if (r.ok) {
@@ -279,10 +297,11 @@ export default function StudioTab() {
   // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
   const runFlow = async () => {
     const { episode, cuts: allCuts } = state
+    const promptCuts = allCuts.filter(c => c.imagePrompt?.trim())
     const prompts = {
       episode: episode.number,
       title: episode.title || '',
-      cuts: allCuts.filter(c => c.imagePrompt?.trim()).map(c => ({
+      cuts: promptCuts.map(c => ({
         no: c.no,
         imagePrompt: c.imagePrompt,
         ...(c.narration?.trim() ? { narration: c.narration.trim() } : {}),
@@ -292,6 +311,14 @@ export default function StudioTab() {
     }
     if (!prompts.cuts.length) { alert('이미지 프롬프트가 있는 컷이 없어요!'); return }
 
+    // 이 에피소드의 컷들이 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST)면 그 경로로 일괄 라우팅.
+    // 한 에피소드 안에서 PL이 섞여 있어도 첫 인스타 매칭 컷의 유형을 그 에피소드의 콘텐츠 유형으로 본다.
+    const instaContent = promptCuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean) || null
+    if (instaContent && !episode.instaNum?.trim()) {
+      alert(`이 에피소드의 컷들이 인스타 콘텐츠(${instaContent})인데, "인스타 번호"가 입력되어 있지 않아요.\n에피소드 설정에서 먼저 입력해주세요.`)
+      return
+    }
+
     setFlowRunning(true)
     setFlowDone(false)
     setFlowLogs([{ type: 'info', message: 'prompts.json 저장 중…' }])
@@ -300,10 +327,9 @@ export default function StudioTab() {
       const res = await fetch('http://localhost:3001/api/run-flow', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ep: episode.number,
-          prompts,
-        }),
+        body: JSON.stringify(instaContent
+          ? { type: 'insta', content: instaContent, num: episode.instaNum.trim(), prompts }
+          : { ep: episode.number, prompts }),
       })
       if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
 
@@ -344,7 +370,9 @@ export default function StudioTab() {
               const cut = allCuts.find(c => c.no === ev.cutNo)
               if (cut) {
                 for (const ext of ['jpg', 'jpeg', 'png']) {
-                  const url = `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}?t=${Date.now()}`
+                  const url = (instaContent
+                    ? instaUrl(instaContent, episode.instaNum.trim(), ev.cutNo, ext)
+                    : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}`) + `?t=${Date.now()}`
                   try {
                     const r = await fetch(url, { method: 'HEAD' })
                     if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(episodeCode, cut.no, 'g3', true); break }
