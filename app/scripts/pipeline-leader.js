@@ -18,6 +18,11 @@
  *
  * G2(이미지)와 G3(TTS)는 둘 다 G1 승인만 있으면 되고 서로 의존관계가 없어 병렬로
  * 트리거한다(G4는 G2 승인된 이미지가 스타트 프레임으로 필요해 G2 이후로 순차).
+ * G2/G4는 Flow/Veo 브라우저 자동화라 Chrome 세션을 하나만 공유하므로, 컷별로 따로
+ * 승인될 때마다 개별 호출하면 이전 배치가 안 끝난 채로 새 요청이 겹쳐 같은 브라우저에
+ * 중복 탭이 열리고 서로 조작을 방해한다(실측 중 실제로 발생 — Google이 봇 행동으로
+ * 감지해 reCAPTCHA까지 뜸). 그래서 G2/G4는 에피소드당 동시에 1개 배치만 진행 중이도록
+ * 락을 걸고, 그 사이 새로 승인된 컷은 지금 배치가 끝난 다음 사이클에서 합쳐 처리한다.
  *
  * 사용법:
  *   node scripts/pipeline-leader.js --episodeId=ep_1784551030896
@@ -89,11 +94,16 @@ async function shouldAutoApprove(stage, cutStatus) {
   return false
 }
 
-// 이 프로세스가 살아있는 동안 "이미 요청 보냄" 상태를 기억해서 같은 컷에 중복으로
-// run-g2/g4를 쏘지 않는다(Flow/Veo 브라우저 자동화는 세션 1개라 동시 요청 시 충돌
-// 위험 — 프로세스 재시작하면 초기화됨. 재시작 직후 실제로 아직 진행 중인 생성이
-// 있었다면 중복 트리거될 수 있으니, 재시작 전엔 터미널 로그로 진행 상황을 확인할 것).
-const inFlight = new Set() // `${stage}:${cutNo}`
+// G2/G4는 Flow/Veo 브라우저 자동화라 Chrome 세션(CDP 디버깅 포트)을 하나만 공유한다.
+// 컷별로 승인 시점이 달라 매 폴링 사이클마다 "방금 승인된 컷"만 골라 개별 호출하면,
+// 이전 컷 처리가 아직 끝나지 않은 상태에서 새 run-g2/g4가 겹쳐서 같은 브라우저에
+// 중복 탭을 열고 서로 조작을 방해하는 사고가 실제로 발생했다(중복 탭 5개 + Google이
+// 봇 행동으로 감지해 reCAPTCHA를 띄우는 사태까지 이어짐, 2026-08-09 실측 테스트에서
+// 확인). 그래서 G2/G4는 "에피소드 단위" 1개 요청만 동시에 허용하고, 그 사이 새로
+// 승인된 컷은 지금 진행 중인 요청이 끝난 뒤 다음 사이클에서 한꺼번에 처리한다
+// (studio-run-g2/g4 자체가 여러 cutIds를 한 번에 배치 처리하도록 이미 설계되어 있음).
+let g2InFlight = false
+let g4InFlight = false
 let g5Triggered = false
 
 async function checkAndAdvance() {
@@ -105,40 +115,42 @@ async function checkAndAdvance() {
   const { episode, cuts, summary } = statusRes.data
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
 
-  // ── 완료 감지: 이전에 요청 보낸 컷의 산출물이 도착했으면 in-flight 해제 ──
-  cuts.filter(c => c.hasImage && inFlight.has(`g2:${c.no}`)).forEach(c => inFlight.delete(`g2:${c.no}`))
-  cuts.filter(c => c.hasVideo && inFlight.has(`g4:${c.no}`)).forEach(c => inFlight.delete(`g4:${c.no}`))
+  // ── 완료 감지: 이전에 요청 보낸 배치가 전부 산출물을 냈으면 에피소드 단위 락 해제 ──
+  if (g2InFlight && cuts.filter(c => c.g1).every(c => c.hasImage)) g2InFlight = false
+  if (g4InFlight && cuts.filter(c => c.g2).every(c => c.hasVideo)) g4InFlight = false
 
-  // ── G2 트리거: G1 승인됐고 이미지가 아직 없는 컷들을 한 번에 요청 ──
-  const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage && !inFlight.has(`g2:${c.no}`))
-  if (g2Candidates.length) {
-    const cutIds = g2Candidates.map(c => c.no)
-    cutIds.forEach(no => inFlight.add(`g2:${no}`))
-    log('G2', `이미지 생성 요청 → 컷 ${cutIds.join(',')}`)
-    const r = await api('POST', '/api/mcp/studio-run-g2', { episodeId: EPISODE_ID, cutIds })
-    if (!r.ok) { log('G2', `요청 실패 — ${r.data?.error || r.status}`); cutIds.forEach(no => inFlight.delete(`g2:${no}`)) }
+  // ── G2 트리거: G1 승인됐고 이미지가 아직 없는 컷들을 한 번에 요청(에피소드당 동시 1건) ──
+  if (!g2InFlight) {
+    const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage)
+    if (g2Candidates.length) {
+      const cutIds = g2Candidates.map(c => c.no)
+      g2InFlight = true
+      log('G2', `이미지 생성 요청 → 컷 ${cutIds.join(',')}`)
+      const r = await api('POST', '/api/mcp/studio-run-g2', { episodeId: EPISODE_ID, cutIds })
+      if (!r.ok) { log('G2', `요청 실패 — ${r.data?.error || r.status}`); g2InFlight = false }
+    }
   }
 
-  // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (G2와 독립적으로 병렬 진행, 동기 완료) ──
-  const g3Candidates = cuts.filter(c => c.g1 && !c.hasAudio && !inFlight.has(`g3:${c.no}`))
+  // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (동기 완료라 배치 겹칠 일 없음) ──
+  const g3Candidates = cuts.filter(c => c.g1 && !c.hasAudio)
   if (g3Candidates.length) {
     const cutIds = g3Candidates.map(c => c.no)
-    cutIds.forEach(no => inFlight.add(`g3:${no}`))
     log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
     const r = await api('POST', '/api/mcp/studio-run-g3', { episodeId: EPISODE_ID, cutIds })
-    cutIds.forEach(no => inFlight.delete(`g3:${no}`)) // 동기 완료라 응답 오면 바로 해제
     if (!r.ok) log('G3', `요청 실패 — ${r.data?.error || r.status}`)
     else log('G3', `완료 — 생성 ${r.data.generatedCount ?? '?'}건 · 실패 ${r.data.failCount ?? '?'}건 · 스킵 ${r.data.skippedCount ?? '?'}건`)
   }
 
-  // ── G4 트리거: G2 "승인"된(사람이 이미지 선택 완료) 컷 중 영상이 아직 없는 것들 ──
-  const g4Candidates = cuts.filter(c => c.g2 && !c.hasVideo && !inFlight.has(`g4:${c.no}`))
-  if (g4Candidates.length) {
-    const cutIds = g4Candidates.map(c => c.no)
-    cutIds.forEach(no => inFlight.add(`g4:${no}`))
-    log('G4', `영상 생성 요청 → 컷 ${cutIds.join(',')}`)
-    const r = await api('POST', '/api/mcp/studio-run-g4', { episodeId: EPISODE_ID, cutIds })
-    if (!r.ok) { log('G4', `요청 실패 — ${r.data?.error || r.status}`); cutIds.forEach(no => inFlight.delete(`g4:${no}`)) }
+  // ── G4 트리거: G2 "승인"된(사람이 이미지 선택 완료) 컷 중 영상이 아직 없는 것들(에피소드당 동시 1건) ──
+  if (!g4InFlight) {
+    const g4Candidates = cuts.filter(c => c.g2 && !c.hasVideo)
+    if (g4Candidates.length) {
+      const cutIds = g4Candidates.map(c => c.no)
+      g4InFlight = true
+      log('G4', `영상 생성 요청 → 컷 ${cutIds.join(',')}`)
+      const r = await api('POST', '/api/mcp/studio-run-g4', { episodeId: EPISODE_ID, cutIds })
+      if (!r.ok) { log('G4', `요청 실패 — ${r.data?.error || r.status}`); g4InFlight = false }
+    }
   }
 
   // ── 승인 대기 알림 (실행은 안 함, 사람이 스튜디오 UI에서 눌러야 함) ──

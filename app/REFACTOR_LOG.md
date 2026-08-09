@@ -180,6 +180,21 @@
 - `content_matrix_v3.html`의 "에이전트 리더" 탭을 이 오케스트레이터와 연동할지(예: 시작/중지 버튼 + 로그 스트리밍) 여부 — 이번 라운드는 독립 실행 스크립트로만 구현.
 - 위에서 발견한 ep_1786261078428 산출물 유실/불일치 원인 조사.
 
+### 2026-08-09(계속): 3컷 테스트 에피소드로 실측 + G4(영상) 라이브 디버깅
+
+사용자 승인으로 `pipeline-leader.js`를 3컷짜리 테스트 에피소드(`ep_test3cut`, episode.number=998)로 실제 라이브 실행. G1(수동 승인 즉시)·G3(TTS 3건, 6초)·G2(이미지 3장, 약 6~7분)까지는 정상 작동 확인. G4(영상)는 실측 도중 실제 프로덕션 버그 2개를 발견해 확정 수정함:
+
+1. **`episodeCode` 누락 (확정 수정, 프로덕션 영향 있던 버그):** `mcpRouter.post('/studio-run-g4', ...)`가 `video-prompts.json`에 `episode`(숫자, 예: 998)만 넣고 `episodeCode`(예: TEST_E998_PIPE)를 안 넣었음. `video-automation.js`의 `getSelectedImageFilename(ep, cutNo)`가 gpoints.json을 조회할 때 이 숫자로 찾는데, gpoints.json은 항상 코드를 키로 씀(`gpoints[String(epNum)]`은 존재한 적이 없음) → 조회 실패 → G2에서 사람이 고른 이미지 대신 존재하지도 않는 `cut_NN.jpg`(실제 파일명은 항상 `cut_NN_a/b.jpg`)로 폴백 → "입력 이미지 없음"으로 항상 실패. **이건 이 테스트 에피소드만의 문제가 아니라 G4를 쓰는 모든 실제 에피소드에 영향을 주고 있었을 가능성이 높음.** `proxy.js`(prompts에 episodeCode 추가) + `video-automation.js`(loadPrompts가 episodeCode를 읽어 processCut까지 전달, getSelectedImageFilename 조회 시 ep 숫자 대신 episodeCode 사용)를 수정.
+2. **업로드 완료 대기 없음(수정):** 캐릭터 참조 이미지 업로드 후 고정 2.5초만 기다리고 다음 단계로 넘어가서, 실측 확인 결과 2.5초 시점엔 27%만 업로드된 상태였음. 화면의 "NN%" 진행률 배지가 사라질 때까지 폴링하는 `waitForUploadComplete()` 추가(상한 20초).
+3. **파일명 재검색 방식 자체가 원천적으로 불가능함(수정 시도, 새 문제 발견):** Flow 미디어 그리드의 모든 항목이 `alt="생성된 이미지"`로 동일하고 `src`는 서버 UUID라 원본 파일명이 DOM 어디에도 안 남음 — `addFileToPromptByName(page, 'yeori-face.jpg')`처럼 나중에 이름으로 재검색하는 방식은 절대 성공할 수 없었음(실측: DOM 덤프로 확인). 업로드 직후 방금 활성화된 썸네일을 그 자리에서 바로 "프롬프트에 추가"까지 끝내도록 `uploadCutImage()`를 재구성(`processCut`의 업로드+추가 순서도 같이 바뀜 — 컷 이미지 먼저 업로드+추가, 그다음 얼굴 참조 업로드+추가로, 기존의 "둘 다 업로드 후 얼굴→컷 순서로 나중에 추가"와는 순서가 달라짐. 실패시 기존 이름-검색 방식을 폴백으로 남겨둠).
+
+**⚠️ 3번 수정 후 실제로 돌렸더니 새로운 심각한 문제 발견(미해결):** 서여리가 아닌 다른 사람 얼굴이 생성됨. 유력한 원인은 이번 테스트가 원래 무관한 이미지가 잔뜩 있는 공유 스크래치 프로젝트("7월 04일 레퍼런스 테스트", ep99에서 project_url.txt를 빌려옴)를 재사용해서, "방금 업로드한 새 이미지"를 찾는 휴리스틱(`prevSrcs`에 없는 새 `<img>` 탐색)이 그 크로와 다른 무관한 이미지를 잘못 집었을 가능성. **mp4로 저장되기 전에 중단했지만 화면에 실제 생성 결과가 나온 걸로 봐서 크레딧은 이미 소모됐을 것.** 다음엔 반드시 전용 깨끗한 프로젝트로 재검증 필요 — 지금 상태로 더 자동 재시도하는 건 보류.
+
+**정리한 인프라 사실(다음에 참고):**
+- `flow-automation.js`/`video-automation.js`는 자체 Chrome을 안 띄우고 **미리 떠있는 원격 디버깅 Chrome**(`--remote-debugging-port=9222 --user-data-dir=downloads/flow/chrome-profile-main`)에 연결하는 방식 — 이 창을 닫으면(브라우저 탭 하나만 닫아도 마지막 창이면 전체 프로세스 종료) 전체 자동화가 끊김.
+- `pipeline-leader.js`가 G4를 컷별로 개별 트리거하면(컷마다 승인 시점이 달라서) 같은 Chrome 세션에 중복 요청이 겹쳐 실제로 탭 5개가 열리고 Google이 봇 행동으로 감지해 reCAPTCHA를 띄우는 사고로 이어짐 — G2/G4는 에피소드당 동시 1건만 진행하도록 이미 수정 완료(위 항목 참고).
+- 라이브 디버깅에 `puppeteer-core`(app/node_modules에 이미 설치돼 있음, `puppeteer`가 아님)로 실행 중인 CDP 세션에 추가로 연결해서 스크린샷을 직접 찍는 방법이 상태 파악에 유용했음 — 이후에도 이 방식으로 실시간 확인 가능.
+
 ### 다음 라운드 (3차 이후, 확인 후 별도 진행)
 - 4차: 파일시스템 경로 전면 교체 (proxy.js·scripts/*.js·클라이언트 탭들) — **위 8/8 변경으로 우선순위 상향**: episode.number가 콘텐츠유형별 독립이 되면서 서로 다른 유형이 같은 번호를 가질 때 downloads/ep{number}/ 경로가 실제로 충돌할 수 있음.
 - EditMetaTab.jsx도 공유 CutList/G5 배지 체계로 편입할지 검토 (구조가 달라 별도 설계 필요)

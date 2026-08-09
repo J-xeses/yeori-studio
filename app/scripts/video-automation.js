@@ -87,6 +87,26 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms))
 }
 
+// 업로드 직후 고정 sleep(2.5초)만으로는 부족할 때가 있어(실측 확인: 캐릭터 참조
+// 이미지 업로드가 2.5초 시점에 27%밖에 안 끝나 있었음) 화면에 "NN%" 진행률 배지가
+// 남아있는 동안은 계속 대기한다. 배지를 못 찾으면(이미 사라졌거나 % 표시가 없는
+// 업로드 방식이면) 짧게만 기다리고 진행 — 무한 대기 방지용 상한(maxMs)은 항상 건다.
+async function waitForUploadComplete(page, maxMs = 20000) {
+  const start = Date.now()
+  while (Date.now() - start < maxMs) {
+    const stillUploading = await page.evaluate(() => {
+      return [...document.querySelectorAll('*')].some(el => {
+        if (el.children.length) return false // 텍스트 노드를 직접 가진 최말단 요소만
+        const txt = (el.textContent || '').trim()
+        return /^\d{1,3}%$/.test(txt)
+      })
+    })
+    if (!stillUploading) return true
+    await sleep(500)
+  }
+  return false // 상한 도달 — 그래도 다음 단계는 시도해본다(완전히 막지는 않음)
+}
+
 function promptInput(question) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise(resolve => {
@@ -141,11 +161,16 @@ function loadPrompts() {
 
   const raw = JSON.parse(fs.readFileSync(file, 'utf-8'))
   const episode = raw.episode ?? null
+  // gpoints.json은 에피소드 코드(예: "SF_E01_SHOE")를 키로 쓰지, ep 숫자를 키로
+  // 쓰지 않는다 — episodeCode가 없으면(구버전 prompts 파일 등) 폴백으로 숫자를
+  // 문자열화해서 써보되, 실제로는 못 찾아서 getSelectedImageFilename이 null을
+  // 반환하고 cut_NN.jpg(항상 존재하지 않는 파일명)로 폴백하게 된다는 걸 알아둘 것.
+  const episodeCode = raw.episodeCode ?? null
   const cuts = (Array.isArray(raw) ? raw : raw.cuts ?? [])
     .filter(c => !args.ep  || String(c.episode ?? episode) === String(args.ep))
     .filter(c => !args.cut || String(c.no) === String(args.cut))
 
-  return { episode: args.ep ?? episode, cuts }
+  return { episode: args.ep ?? episode, episodeCode, cuts }
 }
 
 // ── 크레딧 부족 감지 ──────────────────────────────────────────────────
@@ -365,8 +390,10 @@ async function uploadCutImage(page, imagePath) {
   }
 
   await fileEl.uploadFile(imagePath)
-  log('info', `[upload] 업로드 완료: ${path.basename(imagePath)}`)
-  await sleep(2500)
+  await sleep(800) // 진행률 배지가 뜰 시간을 잠깐 준 다음에 폴링 시작
+  const uploadDone = await waitForUploadComplete(page)
+  log('info', `[upload] 업로드 ${uploadDone ? '완료' : '진행률 배지 상한(20초) 도달 — 계속 진행'}: ${path.basename(imagePath)}`)
+  await sleep(1200)
 
   // 업로드 후 새로 나타난 썸네일 카드 클릭 (선택 활성화)
   const thumbClicked = await page.evaluate((prevSrcs, name) => {
@@ -409,7 +436,23 @@ async function uploadCutImage(page, imagePath) {
   else log('warn', '[upload] 새 썸네일 감지 실패 — 선택 없이 진행')
 
   await sleep(800)
-  return true
+
+  // Flow의 미디어 그리드는 업로드한 원본 파일명을 어디에도 보존하지 않는다
+  // (모든 항목의 alt="생성된 이미지"로 동일, src는 서버가 부여한 UUID) — 그래서
+  // 나중에 addFileToPromptByName(파일명으로 재검색)을 따로 호출하면 항상 실패한다
+  // (실측 확인: DOM 덤프로 alt/title/aria-label 전부 동일하거나 비어있음 확인).
+  // 업로드 직후 방금 선택한 이 썸네일이 아직 "활성" 상태일 때 바로 프롬프트에
+  // 추가까지 끝내는 게 유일하게 신뢰 가능한 방법이라 여기서 바로 처리한다.
+  if (thumbClicked) {
+    const added = await clickAddToPrompt(page)
+    if (added) {
+      log('ok', `[upload] 프롬프트에 추가 완료: ${path.basename(imagePath)}`)
+      await sleep(800)
+      return true
+    }
+    log('warn', `[upload] 썸네일은 선택했지만 "프롬프트에 추가" 버튼을 못 찾음: ${path.basename(imagePath)}`)
+  }
+  return false
 }
 
 // ── 동영상 모드 전환 + 비율 + 모델 ─────────────────────────────────
@@ -812,6 +855,9 @@ async function addFileToPromptByName(page, fileName) {
     throw new Error(`[addToPrompt] '+' 버튼 클릭 실패 (${fileName})`)
   }
   await sleep(1200)
+  // 방금 업로드한 파일이 아직 %진행률 배지 상태일 수 있어(uploadCutImage 쪽에서도
+  // 기다리지만, 패널을 다시 열고 찾는 이 시점에 재확인 한 번 더) 검색 전에 한 번 더 확인.
+  await waitForUploadComplete(page, 8000)
   await page.screenshot({ path: path.join(CONFIG.videoDir, `debug_panel_${nameBase}.png`) })
 
   const clicked = await page.evaluate((nameBase) => {
@@ -1214,14 +1260,16 @@ function getSelectedImageFilename(episodeCode, cutNo) {
   }
 }
 
-async function processCut(page, cut, episode, ratio) {
+async function processCut(page, cut, episode, ratio, episodeCode) {
   const ep     = cut.episode ?? episode ?? 'x'
   const padded = String(cut.no).padStart(2, '0')
 
   // G2 승인 시 선택된 이미지가 있고 실제로 존재하면 그걸 스타트 프레임으로 쓰고,
   // 없으면(선택 정보 없음 / 파일 없음) 기존 방식(cut_NN.jpg)을 그대로 유지한다.
+  // gpoints.json은 ep(숫자)가 아니라 episodeCode를 키로 쓰므로 조회는 반드시
+  // episodeCode로 해야 한다 — ep는 downloads/flow/ep{ep}/ 폴더 경로 조립에만 쓴다.
   let imgFilename = `cut_${padded}.jpg`
-  const selectedFilename = getSelectedImageFilename(ep, cut.no)
+  const selectedFilename = getSelectedImageFilename(episodeCode ?? ep, cut.no)
   if (selectedFilename) {
     const selectedPath = path.join(CONFIG.flowDir, `ep${ep}`, selectedFilename)
     if (fs.existsSync(selectedPath)) {
@@ -1240,8 +1288,15 @@ async function processCut(page, cut, episode, ratio) {
   }
 
   // ① '+' 버튼 → 미디어 패널 → input[type=file]에 스타트 프레임 이미지 주입
-  log('step', `CUT ${cut.no}: ${imgFilename} 업로드`)
-  await uploadCutImage(page, imgPath)
+  // → 업로드 직후 방금 생긴 썸네일이 아직 활성 상태일 때 바로 "프롬프트에 추가"까지
+  // uploadCutImage 안에서 한 번에 처리한다(Flow가 파일명을 어디에도 보존하지 않아서
+  // 나중에 이름으로 재검색하는 방식은 항상 실패함 — 2026-08-09 실측으로 확인).
+  log('step', `CUT ${cut.no}: ${imgFilename} 업로드 + 프롬프트 추가`)
+  const imgAdded = await uploadCutImage(page, imgPath)
+  if (!imgAdded) {
+    log('warn', `CUT ${cut.no}: 업로드 직후 추가 실패 — 이름 검색 폴백 시도`)
+    await addFileToPromptByName(page, imgFilename)
+  }
 
   // ② 모델 버튼 → 팝업 (동영상 탭 + 비율 + 모델) 한 번에 처리
   log('step', `CUT ${cut.no}: 동영상 모드 전환 (ratio=${ratio}, model=${CONFIG.preferredModel})`)
@@ -1250,20 +1305,17 @@ async function processCut(page, cut, episode, ratio) {
   // ③ 영상 길이 설정
   await setVideoDuration(page, cut.duration ?? CONFIG.defaultDuration)
 
-  // ④ yeori-face.jpg 업로드 (미디어 패널에 없을 경우 대비 — 매번 업로드해도 무방)
+  // ④ yeori-face.jpg 업로드 + 프롬프트 추가 (미디어 패널에 없을 경우 대비 — 매번 업로드해도 무방)
   if (fs.existsSync(CONFIG.characterImage)) {
-    log('step', `CUT ${cut.no}: yeori-face.jpg 업로드`)
-    await uploadCutImage(page, CONFIG.characterImage)
+    log('step', `CUT ${cut.no}: yeori-face.jpg 업로드 + 프롬프트 추가`)
+    const faceAdded = await uploadCutImage(page, CONFIG.characterImage)
+    if (!faceAdded) {
+      log('warn', `CUT ${cut.no}: yeori-face.jpg 업로드 직후 추가 실패 — 이름 검색 폴백 시도`)
+      await addFileToPromptByName(page, 'yeori-face.jpg')
+    }
   } else {
     log('warn', `yeori-face.jpg 없음: ${CONFIG.characterImage}`)
   }
-
-  // ⑦ '+' 패널에서 파일명으로 정확히 선택 → 프롬프트에 추가 (없으면 에러)
-  log('step', `CUT ${cut.no}: yeori-face.jpg → 프롬프트 추가`)
-  await addFileToPromptByName(page, 'yeori-face.jpg')
-
-  log('step', `CUT ${cut.no}: ${imgFilename} → 프롬프트 추가`)
-  await addFileToPromptByName(page, imgFilename)
 
   // ⑧ 영상 프롬프트 입력 (imagePrompt 우선 + 대사 있으면 립싱크 지시문 추가)
   // episode_style_guide.json이 있으면 promptPrefix 앞에 삽입
@@ -1334,7 +1386,7 @@ function saveReport(episode, ratio, results) {
 
 async function main() {
   ensureDir(CONFIG.videoDir)
-  const { episode, cuts } = loadPrompts()
+  const { episode, episodeCode, cuts } = loadPrompts()
 
   if (!cuts.length) {
     log('warn', '처리할 컷이 없습니다.')
@@ -1392,7 +1444,7 @@ async function main() {
 
     for (let attempt = 0; attempt <= CONFIG.retryCount; attempt++) {
       try {
-        const { status, outPath } = await processCut(page, cut, episode, RATIO)
+        const { status, outPath } = await processCut(page, cut, episode, RATIO, episodeCode)
         const relPath = path.relative(ROOT, outPath)
         log('ok', `${label} → ${relPath} (${status})`)
         results.push({ cutNo: cut.no, status: 'ok', file: outPath })

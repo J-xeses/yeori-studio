@@ -3033,6 +3033,10 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
     const epNum = ep.episode?.number
     const prompts = {
       episode: epNum,
+      episodeCode, // video-automation.js가 gpoints.json(코드 키 기준)에서 G2 선택 이미지를 찾을 때 씀 —
+      // epNum(숫자)만 있으면 gpoints[String(epNum)]이 존재하지 않아 항상 조회 실패 → cut_NN.jpg
+      // 폴백으로 빠지는데 실제 생성 파일명은 항상 cut_NN_a/b.jpg라 "입력 이미지 없음"으로 실패함
+      // (2026-08-09 실측 테스트에서 발견 — 이 필드가 빠져있던 게 원인).
       cuts: targetCuts.map(c => {
         const dl = c.dialogue?.trim()
         const cleanDl = dl && !/^없음$/i.test(dl) ? stripStageDirections(dl).clean : ''
