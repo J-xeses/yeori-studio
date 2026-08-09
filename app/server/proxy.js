@@ -421,6 +421,41 @@ app.post('/api/generate-script', (req, res) => {
   }
 })
 
+// ── Codi_GEN(code_generator_v1.html) → 스튜디오(ScriptGenTab.jsx) 대본 핸드오프 ──
+// 두 화면이 서로 다른 origin(file:// vs http://localhost:5173)이라 localStorage를
+// 공유할 수 없어(content_matrix_v3.html↔code_generator_v1.html 사이의 기존
+// 'codi_gen_candidate' localStorage 패턴은 둘 다 file://라서 가능했던 것) 서버 파일을
+// 경유한다. GET이 읽음과 동시에 파일을 지워 1회성 소비를 보장(localStorage의
+// getItem+removeItem 조합과 동일한 의도).
+const CODI_GEN_HANDOFF_PATH = path.join(MEDIA_ROOT, 'downloads', 'codi_gen_handoff.json')
+
+app.post('/api/codi-gen-handoff', (req, res) => {
+  const { prompts, meta } = req.body || {}
+  if (!prompts) return res.status(400).json({ ok: false, error: 'prompts가 필요합니다' })
+  try {
+    fs.mkdirSync(path.dirname(CODI_GEN_HANDOFF_PATH), { recursive: true })
+    fs.writeFileSync(
+      CODI_GEN_HANDOFF_PATH,
+      JSON.stringify({ prompts, meta: meta || null, sentAt: new Date().toISOString() }, null, 2),
+      'utf-8'
+    )
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+app.get('/api/codi-gen-handoff', (req, res) => {
+  try {
+    if (!fs.existsSync(CODI_GEN_HANDOFF_PATH)) return res.json({ ok: true, pending: false })
+    const data = JSON.parse(fs.readFileSync(CODI_GEN_HANDOFF_PATH, 'utf-8'))
+    fs.unlinkSync(CODI_GEN_HANDOFF_PATH)
+    res.json({ ok: true, pending: true, prompts: data.prompts, meta: data.meta })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
 // ── POST /api/update-script-history — Notion 에피소드 DB에 스크립트 이력 행 추가 ──
 // 주의: Notion 호출이 실패해도(토큰 없음/페이지 없음/네트워크 오류) 항상 200으로
 // { success:false, error } 반환 — 호출부(script_generator.py, ScriptGenTab.jsx)가

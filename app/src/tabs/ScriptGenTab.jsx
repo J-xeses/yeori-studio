@@ -470,6 +470,24 @@ export default function ScriptGenTab() {
     setChangesInput('')
   }, [activeEpisodeId])
 
+  // Codi_GEN(code_generator_v1.html)의 "생성" 버튼이 만든 결과를 마운트 시 1회
+  // 가져온다. Codi_GEN은 file://, 이 앱은 http://localhost:5173라 origin이 달라
+  // localStorage를 공유할 수 없어서 서버(/api/codi-gen-handoff)를 경유한다(GET이
+  // 읽음과 동시에 서버 파일을 지워 1회성 소비를 보장). 위 마스터 코드 입력 흐름과
+  // 동일하게 mcPreview/mcMeta에만 반영하고 "실제 적용" 버튼을 눌러야 cuts에 반영되는
+  // 안전장치는 그대로 유지 — Codi_GEN에서 왔다고 자동으로 덮어쓰지 않는다.
+  useEffect(() => {
+    fetch('http://localhost:3001/api/codi-gen-handoff')
+      .then(res => res.json())
+      .then(data => {
+        if (!data?.ok || !data.pending) return
+        setMcPreview(data.prompts)
+        setMcMeta(data.meta || null)
+        setMasterCode('(Codi_GEN에서 전달받음 — 코드 확인은 생략)')
+      })
+      .catch(err => console.warn('[codi_gen handoff] 조회 실패(proxy.js 실행 중인지 확인):', err.message))
+  }, [])
+
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
 === 서여리 연출 원칙 룰셋 v1.1 (반드시 준수) ===

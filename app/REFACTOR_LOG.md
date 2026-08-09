@@ -115,6 +115,37 @@
 - `resolveContentDir()` 로직을 실제 import한 `mediaPaths.js` 함수로 재현한 독립 스크립트로 5개 케이스 전부 확인: 레거시 `--ep=4` → `downloads\flow\ep4`(기존과 완전히 동일, 회귀 없음), `FD/P01`→`.../FD/P01/raw`, `RL/RL03`→`.../RL/RL03`(하위폴더 없음), `PT/PT01`→`.../PT/PT01/raw`, `ST/ST01`→`.../ST/ST01/raw` — 전부 사전에 만들어둔 폴더 구조 및 사용자 확인 비율 매핑과 일치.
 - **아직 라이브 검증 안 됨(다음에 필요 시 진행):** StudioTab에서 실제 `IG_RL` 컷으로 "이미지 생성" 눌렀을 때 서버 요청 바디에 `type/content/num`이 정확히 들어가는지 브라우저 네트워크 로그 확인(실제 Flow 실행은 크레딧 소모라 사용자 승인 필요), Flow 웹 UI에 실제 "1:1" 탭이 존재하고 `clickTab('1.{0,2}1', ...)` 패턴으로 잡히는지 라이브 확인(코드 리뷰만으로는 확인 불가 — 기존 9:16도 같은 화면 텍스트 매칭 방식이라 동일 패턴 적용은 타당하나, 실제 화면에서 최소 1회 확인 권장).
 
+### 2026-08-09: Codi_GEN(code_generator_v1.html) "컷 설계" 탭 → 실제 대본 생성 파이프라인 연동
+
+**배경:** Codi_GEN의 "컷 설계" 탭에 SP/SH/CA/MD/AT/LOOK 필드, "패키지 생성" 버튼이 있었지만 전부 데모/스텁이었음(사용자 확인 요청으로 발견) — 옵션 값 상당수가 실제 `codebook.json`에 없는 가짜 코드(CA_ZO/MD_SUR/MD_CUR/AT_AC_05 등)였고, "패키지 생성" 버튼은 토스트만 띄우는 스텁, `/api/generate-script` 호출도 studio-state 연동도 전혀 없었음. 조사 결과 `/api/generate-script`(script_generator.py+script_to_prompts.py 실행)는 이미 완성돼 있고 ScriptGenTab.jsx의 "마스터 코드로 대본 생성"이 이미 쓰고 있던 것으로 확인 — Codi_GEN을 이 기존 파이프라인에 새로 연결하는 작업으로 범위를 재정의함(IP/VP 생성 로직을 새로 만들 필요 없음, 이미 `script_generator.py`의 `build_ip`/`build_vp`가 처리).
+
+**1. `GET /api/codebook` 신규 엔드포인트(`proxy.js`):** `scripts/codebook.json`을 읽기전용으로 그대로 서빙 — Codi_GEN(정적 file:// 페이지라 codebook.json을 직접 import 불가)이 fetch로 가져다 씀. script_generator.py와 동일 파일을 보므로 두 쪽이 항상 같은 코드 정의를 공유.
+
+**2. 컷 설계 탭 필드 전면 교체:** `PL_OPTIONS`/`SHOT_OPTIONS`/`CAMERA_OPTIONS`/`MOOD_OPTIONS`/`ACTION_OPTIONS`/`SP_LOCATION_OPTIONS`/`SP_TIMEZONE_OPTIONS`/`SP_LIGHT_OPTIONS`를 하드코딩 데모 배열에서 `loadCodebook()` → `buildCodebookOptions()`로 실제 codebook.json 로드 후 채우는 방식으로 교체. 컷 단위 `LOOK_ID` 선택 UI(`LOOK_OPTIONS_CB`, codebook.LOOK_BANK 기반) 신규 추가 — 기존엔 에피소드 탭에 있는 별개의 LK_CS 계열 "룩 카테고리"(헤어/메이크업 자동연동용, 손대지 않음)만 있었고 컷 단위 LOOK_ID는 아예 없었음. `IN`/`OUT` → 마스터 코드 문법이 실제로 쓰는 `IN`/`OT`로 수정(기존 'OUT'은 애초에 유효하지 않은 값이었음).
+
+**3. 마스터 코드 프리뷰 재작성:** 기존 "C컷 코드"(임의 포맷)를 `script_generator.py`가 실제로 파싱하는 문법 `{episode_code} :: {PL} :: {SP} :: {LOOK_ID} :: {SH.CA.MD.AT...} :: DU_{n}`으로 정확히 생성하는 `buildMasterCodeLine()` 추가. SH는 구간(세그먼트)별 값을 "→"로(전환 표시), CA는 "+"로(동시 적용) 결합 — `script_generator.py`의 `build_cut_block` 표시 방식과 동일.
+
+**4. "패키지 생성" 버튼 → 실제 `/api/generate-script` 호출:** 스텁 제거, 컷 목록 전체(DEMO_CUTS)의 마스터 코드를 줄바꿈으로 합쳐 전송, 결과(meta/컷수)를 새 "생성 결과" 카드에 표시.
+
+**5. 스튜디오(ScriptGenTab.jsx)로 핸드오프 — 서버 경유 방식 채택:** 처음엔 기존 `codi_gen_candidate`(content_matrix_v3.html↔code_generator_v1.html 사이) localStorage 패턴을 그대로 재사용하려 했으나, **그 패턴은 둘 다 file://라서 가능했던 것이고 ScriptGenTab.jsx는 http://localhost:5173(다른 origin)이라 localStorage를 공유할 수 없음을 뒤늦게 확인** — 구현 전에 발견해서 방향 수정. 대신 신규 `POST/GET /api/codi-gen-handoff`(`downloads/codi_gen_handoff.json` 경유, GET이 읽음과 동시에 파일 삭제로 1회성 소비 보장)를 추가하고, ScriptGenTab.jsx에 마운트 시 1회 이 엔드포인트를 조회하는 `useEffect` 추가. 기존 "마스터 코드로 대본 생성" 흐름과 동일하게 `mcPreview`/`mcMeta`에만 반영하고 "실제 적용" 버튼을 눌러야 `cuts`에 반영되는 안전장치는 그대로 유지(Codi_GEN에서 왔다고 자동으로 덮어쓰지 않음).
+
+**검증 — 실제 브라우저로 end-to-end 완료(2026-08-09):** proxy.js에 임시 정적 라우트를 추가해(검증 후 제거) Codi_GEN을 `http://localhost:3001`에서 열어(file:// 직접 네비게이션은 Claude-in-Chrome 확장이 막음 — same-origin으로 CORS 우회) 실제 클릭으로 확인:
+- 컷 설계 탭의 파이프라인/LOOK_ID/공간/샷타입/카메라/동작/감정코드 pill이 전부 실제 codebook.json 값(PL 4종, SH 7종, CA 6종, MD 6종, AT 12종, LOOK_BANK 8종, 위치 8종/시간대 4종/조명 4종)으로 정확히 렌더링됨을 스크린샷으로 확인.
+- 마스터 코드 프리뷰가 `SF_E01_PSY :: YR_VD :: IN.CF.TZ_GH.LT_WM :: LOOK_CS :: SH_CU→SH_MS.CA_ST+CA_ZI.MD_JOY.AT_MW_01 :: DU_8` 형태로 정확히 생성됨을 확인.
+- "패키지 생성" 클릭 → 실제 `/api/generate-script` 호출 → script_generator.py/script_to_prompts.py 정상 실행 → "생성 결과: SF_E01_PSY · 버전 v1.0 · 5컷" 카드 표시 확인.
+- "스튜디오로 전달" 클릭 → 서버 curl로 `/api/codi-gen-handoff` GET 시 `pending:true`+정확한 컷 데이터 확인, 소비 후 재조회 시 `pending:false`(정리됨) 확인.
+- 실제 React 앱(`localhost:5173`)의 "대본 생성" 탭을 열어 마운트 시 자동으로 핸드오프를 가져와 "⚠️ 미리보기 상태 — 실제 적용 전까지 저장 안 됨" 배너 + KR 컨펌본 미리보기(5컷, Codi_GEN에서 만든 값 그대로: CH 크롭탑+데님숏츠+힐/SH 클로즈업→미디엄샷/CA 고정+줌인/AC 자연스럽게 걷기/MD 밝은 기쁨)가 정확히 뜨는 것을 확인. **실제 운영 중인 에피소드(IG_R_E01 "저, 사실 AI에요", 7컷)의 진짜 데이터를 덮어쓰지 않기 위해 "실제 적용"은 누르지 않고 "취소"로 미리보기만 안전하게 폐기** — 취소 후 원본 7컷 데이터가 그대로 남아있는 것까지 확인.
+- `node --check`(proxy.js) + `npm run build`(클라이언트) 둘 다 통과.
+
+**추가(같은 날, 이어서): "코드 확인"/"패키지"/"CA_BANK" 3개 플레이스홀더 탭 구현** — 사용자가 원본 기획 문서 3개(`code_generator_workflow_chart_v1.html`, `code_generator_interactive_dashboard_v2.html`, `code_generator_full_ui_v1.html`)를 전달해줘서 정확한 mockup을 확인함. `codi_gen_pipeline_spec_final.txt`(2026-07-27, "최종본")까지 대조한 결과 백엔드 파이프라인 설계(codebook.json 구조, 3단계 변환, 마스터 코드 문법)는 이미 위 라운드에서 만든 것과 100% 일치 — 하지만 "패키지"/"CA_BANK" 탭의 mockup은 codebook.json에 아직 없는 F군 코드(`BGM_INFO`/`HK_01`/`RT_169`/`PB_YT`/`Q_SF`/`Q_FM`)와 캐릭터 서브코드(`HR_`/`MK_`/`AC_`/`TOP_`/`BTM_`/`FA_`)에 의존하고 있어 그대로 구현하면 가짜 데이터로 장식만 하는 꼴이 됨을 발견 — 사용자에게 확인 후 "코드 확인"은 mockup대로 실제 데이터 기반 완성, "패키지"/"CA_BANK"는 codebook 확장 없이 지금 있는 실제 데이터만으로 축소판 구현하기로 결정:
+- **코드 확인**: 전체 컷 코드 표(CUT/파이프라인/공간/연출/감정/생성상태, `cutDesignState` 기반, 항상 최신) + 활성 컷의 실제 IP/VP/KR 프롬프트 미리보기(`lastGeneratedResult`가 있을 때만 표시, 없으면 "먼저 생성하세요" 안내 — 가짜 프리뷰 없음).
+- **패키지(축소판)**: F군 피커·`[EP]/[CHAR]/[C01]/[EDIT]` 확장 패키지 포맷은 제외. 대신 전체 컷의 마스터 코드 원문(항상 라이브) + 마지막 생성 결과 + "스튜디오로 전달" 버튼만(패키지 생성 자체는 기존 하단바 버튼 그대로 재사용).
+- **CA_BANK(축소판)**: "캐릭터 아카데미"(HR_/MK_/AC_ 조합 검증 상태 관리)는 제외. 대신 실제 `codebook.json`의 `LOOK_BANK` 8종을 코드/라벨/의상 문장/참조 에피소드 그대로 참고용 카드로 표시.
+- **검증 중 발견한 버그(수정 완료)**: (1) `generatePackage()` 성공 후 `renderGenerateResult()`만 호출하고 `renderAll()`을 안 불러서, 생성 직후 "코드 확인"/"패키지" 탭이 "미생성" 상태로 낡게 남아있던 문제 → `renderAll()` 호출로 교체. (2) prompts.json의 `cut.kr`이 문자열이 아니라 `{sp,ch,sh,ca,at,md,dl,nr,cp}` 구조화 객체인데 그대로 문자열 취급해서 "코드 확인" 미리보기에 `[object Object]`가 찍히던 버그 → `script_generator.py`의 `build_kr()`과 동일한 라벨로 조립하는 `formatKrSummary()` 추가.
+- **검증**: 3개 탭 전부 Claude-in-Chrome으로 실제 클릭 확인 — 코드 확인 탭이 실제 5컷 전부 정확한 요약을 보여주고 "패키지 생성" 클릭 직후 자동으로 "✓ 생성됨"+실제 IP/VP/KR 텍스트로 갱신되는 것, 패키지 탭이 실제 마스터 코드 5줄 + "에피소드: SF_E01_PSY · 버전 v1.4 · 5컷" 생성 결과를 보여주는 것, CA_BANK 탭이 LOOK_CS~LOOK_ST 8종을 정확한 실제 의상 텍스트로 보여주는 것 확인. 콘솔 에러 없음.
+
+**여전히 범위 밖(다음에, codebook.json 확장이 선행 과제):** F군(BGM_/HK_/RT_/PB_/Q_SF/Q_FM) + 캐릭터 서브코드(HR_/MK_/AC_/TOP_/BTM_/FA_)를 codebook.json 스키마에 추가하고 script_generator.py 파서가 이를 인식하도록 확장하는 별도 작업이 선행되어야, 패키지/CA_BANK 탭을 mockup 풀버전(F군 피커, `[EP]/[CHAR]/[C01]/[EDIT]` 확장 패키지 포맷, 캐릭터 아카데미 검증 상태 관리)으로 완성할 수 있음.
+
 ### 다음 라운드 (3차 이후, 확인 후 별도 진행)
 - 4차: 파일시스템 경로 전면 교체 (proxy.js·scripts/*.js·클라이언트 탭들) — **위 8/8 변경으로 우선순위 상향**: episode.number가 콘텐츠유형별 독립이 되면서 서로 다른 유형이 같은 번호를 가질 때 downloads/ep{number}/ 경로가 실제로 충돌할 수 있음.
 - EditMetaTab.jsx도 공유 CutList/G5 배지 체계로 편입할지 검토 (구조가 달라 별도 설계 필요)

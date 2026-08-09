@@ -330,7 +330,9 @@
             <div class="card-h"><span class="idx">10</span>🎞️ 파이프라인</div>
             <div class="kw-wrap" id="pills-cut-pipeline" style="margin-bottom:8px"></div>
             <div class="field-label">G단계 흐름</div>
-            <div id="cut-pipeline-flow"></div>
+            <div id="cut-pipeline-flow" style="margin-bottom:8px"></div>
+            <div class="field-label">캐릭터 룩(LOOK_ID)</div>
+            <div class="kw-wrap" id="pills-cut-look"></div>
           </div>
         </div>
 
@@ -375,30 +377,38 @@
           <div class="card-h"><span class="idx">13</span>💻 C컷 코드 프리뷰</div>
           <div class="code-preview" id="cut-code-preview"></div>
         </div>
+
+        <div class="card accent" id="cut-generate-result" style="display:none;margin-top:16px"></div>
       </div>
 
-      <!-- TAB: 코드 확인 (플레이스홀더) -->
+      <!-- TAB: 코드 확인 -->
       <div id="tab-code" class="tab-content" style="display:none">
-        <div class="placeholder-tab">
-          <div class="placeholder-tab-icon">🔍</div>
-          <div class="placeholder-tab-text">코드 확인 탭은 다음 버전에서 구현될 예정입니다</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><span class="idx">15</span>🔍 전체 컷 코드 현황</div>
+          <div style="overflow-x:auto">
+            <table id="code-check-table" style="width:100%;border-collapse:collapse;font-size:11px"></table>
+          </div>
+        </div>
+        <div class="card accent">
+          <div class="card-h"><span class="idx">16</span>⚡ 활성 컷 프롬프트 미리보기</div>
+          <div id="code-check-preview"></div>
         </div>
       </div>
 
-      <!-- TAB: 패키지 (플레이스홀더) -->
+      <!-- TAB: 패키지 -->
       <div id="tab-pkg" class="tab-content" style="display:none">
-        <div class="placeholder-tab">
-          <div class="placeholder-tab-icon">📦</div>
-          <div class="placeholder-tab-text">패키지 탭은 다음 버전에서 구현될 예정입니다</div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><span class="idx">17</span>💻 전체 마스터 코드</div>
+          <div class="code-preview" id="pkg-master-code"></div>
         </div>
+        <div class="card accent" id="pkg-generate-result"></div>
       </div>
 
-      <!-- TAB: CA_BANK (플레이스홀더) -->
+      <!-- TAB: CA_BANK — LOOK_BANK(codebook.json) 참고용 뷰. F군/캐릭터 서브코드(HR_/MK_/AC_ 등)는
+           codebook.json에 아직 없어 이번 범위에서는 다루지 않음(사용자 확인, 축소판) -->
       <div id="tab-bank" class="tab-content" style="display:none">
-        <div class="placeholder-tab">
-          <div class="placeholder-tab-icon">🗄</div>
-          <div class="placeholder-tab-text">CA_BANK 탭은 다음 버전에서 구현될 예정입니다</div>
-        </div>
+        <div class="card-h" style="margin-bottom:10px"><span class="idx">19</span>🗄 LOOK_BANK — codebook.json 등록 캐릭터 룩</div>
+        <div id="ca-bank-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
       </div>
 
     </div>
@@ -486,38 +496,28 @@ const CUT_EMOTION_OPTIONS = [
   { code: 'EMO_STR', icon: '💪', label: '강함·자신감' },
   { code: 'EMO_DRM', icon: '🌙', label: '몽환·감성' },
 ];
-const PIPELINE_OPTIONS = [
-  { code: 'YR_VD', label: 'YR_VD 립싱크', flow: ['G2','G3','G4','G5'] },
-  { code: 'YR_IM', label: 'YR_IM 이미지', flow: ['G2','G4','G5'] },
-  { code: 'BR_',   label: 'BR_ B-Roll',   flow: ['G4','G5'] },
-  { code: 'GR_',   label: 'GR_ 그래픽',   flow: ['G4','G5'] },
-  { code: 'CC_',   label: 'CC_ CapCut',   flow: ['G5'] },
-];
-const INDOOR_OPTIONS = [
-  { code: 'IN',  label: 'IN 실내' },
-  { code: 'OUT', label: 'OUT 실외' },
-];
-const LOCATION_OPTIONS = [
-  { code: 'CF', label: 'CF 카페' },
-  { code: 'RE', label: 'RE 식당' },
-  { code: 'HM', label: 'HM 집' },
-  { code: 'ST', label: 'ST 거리' },
-  { code: 'GY', label: 'GY 헬스' },
-  { code: 'KC', label: 'KC 찜질' },
-  { code: 'SW', label: 'SW 지하철' },
-  { code: 'RT', label: 'RT 루프탑' },
+// PL/SP/SH/CA/MD/AT/LOOK 필드는 script_generator.py가 실제로 읽는 codebook.json
+// (server/../scripts/codebook.json)에서 그대로 가져와야 마스터 코드가 유효하다.
+// 아래 배열들은 페이지 로드 시 loadCodebook()이 채우기 전까지는 빈 상태이며,
+// 채워지기 전 값(예: CA_ZO/MD_CUR/AT_AC_05 등)은 실제 codebook에 없는 코드라
+// 예전엔 겉보기만 그럴듯한 더미 데이터였다 — 전부 실제 codebook 로드로 대체한다.
+let codebook = null;
+let PL_OPTIONS = [];
+let SP_LOCATION_OPTIONS = [];
+let SP_TIMEZONE_OPTIONS = [];
+let SP_LIGHT_OPTIONS = [];
+let SHOT_OPTIONS = [];
+let CAMERA_OPTIONS = [];
+let ACTION_OPTIONS = [];
+let MOOD_OPTIONS = [];
+let LOOK_OPTIONS_CB = [];
+// IN/OT는 codebook 데이터가 아니라 마스터 코드 문법 자체에 고정된 값("_grammar":
+// "IN/OT . [LOCATION] . TZ_[TIME] . LT_[LIGHT]") 이라 codebook 로드와 무관하게 고정.
+const SP_INDOOR_OPTIONS = [
+  { code: 'IN', label: 'IN 실내' },
+  { code: 'OT', label: 'OT 실외' },
 ];
 const REGION_OPTIONS = ['성수동', '이태원', '한강', '홍대', '직접입력'];
-const TIMEZONE_OPTIONS = [
-  { code: 'TZ_GH', label: 'TZ_GH 골든아워' },
-  { code: 'TZ_NT', label: 'TZ_NT 야간' },
-  { code: 'TZ_AM', label: 'TZ_AM 오전' },
-];
-const LIGHT_OPTIONS = [
-  { code: 'LT_WM', label: 'LT_WM 따뜻한빛' },
-  { code: 'LT_CL', label: 'LT_CL 차가운빛' },
-  { code: 'LT_NT', label: 'LT_NT 자연광' },
-];
 const LENGTH_OPTIONS = [
   { code: '8s',  label: '8s' },
   { code: '16s', label: '16s' },
@@ -527,33 +527,38 @@ const SEGCOUNT_OPTIONS = [
   { code: '2', label: '2구간' },
   { code: '3', label: '3구간' },
 ];
-const SHOT_OPTIONS = [
-  { code: 'SH_CU',  label: 'SH_CU 클로즈업' },
-  { code: 'SH_MS',  label: 'SH_MS 미디엄샷' },
-  { code: 'SH_WS',  label: 'SH_WS 와이드샷' },
-  { code: 'SH_MCU', label: 'SH_MCU 미디엄클로즈업' },
-  { code: 'SH_ECU', label: 'SH_ECU 익스트림클로즈업' },
-];
-const CAMERA_OPTIONS = [
-  { code: 'CA_ST',   label: 'CA_ST 고정' },
-  { code: 'CA_ZI',   label: 'CA_ZI 줌인' },
-  { code: 'CA_ZO',   label: 'CA_ZO 줌아웃' },
-  { code: 'CA_PN_L', label: 'CA_PN_L 패닝좌' },
-  { code: 'CA_PS',   label: 'CA_PS 푸시' },
-];
-const ACTION_OPTIONS = [
-  { code: 'AT_AC_05', label: 'AT_AC_05 카메라응시' },
-  { code: 'AT_SI_01', label: 'AT_SI_01 앉기' },
-  { code: 'AT_MW_01', label: 'AT_MW_01 걷기' },
-];
-const MOOD_OPTIONS = [
-  { code: 'MD_SUR', label: 'MD_SUR 충격' },
-  { code: 'MD_INT', label: 'MD_INT 집중' },
-  { code: 'MD_CUR', label: 'MD_CUR 호기심' },
-  { code: 'MD_DRM', label: 'MD_DRM 몽환' },
-];
 const SEGMENT_KEYS = ['CL_A', 'CL_B', 'CL_C'];
 const SEGMENT_LABELS = { CL_A: '구간 A', CL_B: '구간 B', CL_C: '구간 C' };
+
+async function loadCodebook() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/codebook`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '코드북 로드 실패');
+    codebook = data.codebook;
+    buildCodebookOptions();
+    showToast('✓ 코드북 연동 완료 (SP/SH/CA/MD/AT/LOOK)');
+  } catch (e) {
+    console.warn('[codi_gen] codebook 로드 실패:', e.message);
+    showToast('⚠️ 코드북 서버 연결 실패 — proxy.js(localhost:3001) 실행 중인지 확인하세요');
+  }
+  renderAll();
+}
+
+function buildCodebookOptions() {
+  if (!codebook) return;
+  const entries = (obj) => Object.entries(obj || {});
+  PL_OPTIONS       = entries(codebook.PL).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  SHOT_OPTIONS      = entries(codebook.SH).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  CAMERA_OPTIONS    = entries(codebook.CA).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  MOOD_OPTIONS      = entries(codebook.MD).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  ACTION_OPTIONS    = entries(codebook.AT).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  LOOK_OPTIONS_CB   = entries(codebook.LOOK_BANK).filter(([k]) => !k.startsWith('_')).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  const sp = codebook.SP || {};
+  SP_LOCATION_OPTIONS = entries(sp._location_codes).map(([code, label]) => ({ code, label: `${code} ${String(label).split(' (')[0]}` }));
+  SP_TIMEZONE_OPTIONS = entries(sp._time_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  SP_LIGHT_OPTIONS    = entries(sp._light_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+}
 
 const DEMO_CANDIDATES = [
   { icon: '🧠', title: '회의가 끝나면 기억이 안 나는 이유', type: 'LF', keywords: 'PSY · 트렌드레이더 수집', story: '', script: '' },
@@ -774,7 +779,8 @@ function getCutDesign(cut) {
   if (!cutDesignState[cut.num]) {
     cutDesignState[cut.num] = {
       emotion: 'EMO_SUR',
-      pipeline: PIPELINE_OPTIONS.some(p => p.code === cut.type) ? cut.type : 'YR_VD',
+      pipeline: PL_OPTIONS.some(p => p.code === cut.type) ? cut.type : 'YR_VD',
+      look: 'LOOK_CS',
       indoor: 'IN',
       location: 'CF',
       region: '성수동',
@@ -786,10 +792,10 @@ function getCutDesign(cut) {
       segments: {
         CL_A: { shot: 'SH_CU', cam: 'CA_ST' },
         CL_B: { shot: 'SH_MS', cam: 'CA_ZI' },
-        CL_C: { shot: 'SH_WS', cam: 'CA_ZO' },
+        CL_C: { shot: 'SH_WS', cam: 'CA_TR' },
       },
-      action: 'AT_AC_05',
-      mood: 'MD_CUR',
+      action: 'AT_MW_01',
+      mood: 'MD_JOY',
       comment: '',
     };
   }
@@ -831,9 +837,15 @@ function setPills(containerId, options, currentValue, onclickTemplate, cls) {
 
 function renderPipelineFlow(d) {
   const el = document.getElementById('cut-pipeline-flow');
-  if (!el) return;
-  const opt = PIPELINE_OPTIONS.find(p => p.code === d.pipeline);
-  const flow = opt ? opt.flow : [];
+  if (!el || !codebook) return;
+  // codebook.PL엔 순서가 있는 flow 배열이 아니라 run_g2/run_g3/run_g4 불리언만 있음
+  // (G1/G5는 PL 무관하게 항상 실행되는 공통 단계라 codebook에 플래그 자체가 없음).
+  const plInfo = codebook.PL?.[d.pipeline] || {};
+  const flow = ['G1'];
+  if (plInfo.run_g2) flow.push('G2');
+  if (plInfo.run_g3) flow.push('G3');
+  if (plInfo.run_g4) flow.push('G4');
+  flow.push('G5');
   el.innerHTML = flow.map(g => `<span class="idx">${g}</span>`).join(' <span class="cp-m">→</span> ');
 }
 
@@ -854,21 +866,32 @@ function renderCutSegmentEditor(d) {
   }).join('');
 }
 
+// script_generator.py의 마스터 코드 문법 그대로:
+// {에피소드코드} :: {PL} :: {SP 프리셋키} :: {LOOK_ID} :: {SH.CA.MD.AT...} :: DU_{n}
+// (parse_master_code_line은 "::" 5개 이상만 요구하고 4번째 이후는 전부 하나의 토큰
+// 풀로 재분류하므로, DU를 별도 "::" 구간으로 둬도 SH/CA/MD/AT와 동일하게 인식된다)
+function buildMasterCodeLine(d, cut) {
+  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const spKey = `${d.indoor}.${d.location}.${d.timezone}.${d.light}`;
+  const segCount = Number(d.segCount);
+  const segKeys = SEGMENT_KEYS.slice(0, segCount);
+  const shPart = segKeys.map(k => d.segments[k].shot).join('→');
+  const caPart = segKeys.map(k => d.segments[k].cam).join('+');
+  const duNum = String(d.length).replace(/[^0-9]/g, '') || '8';
+  return `${epId} :: ${d.pipeline} :: ${spKey} :: ${d.look} :: ${shPart}.${caPart}.${d.mood}.${d.action} :: DU_${duNum}`;
+}
+
 function renderCutCodePreview(d, cut) {
   const el = document.getElementById('cut-code-preview');
   if (!el) return;
-  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
-  const idPart = `${epId}_${cut.num}`;
-  const spacePart = `${d.indoor}.${d.location}.${d.timezone}.${d.light}`;
-  const segCount = Number(d.segCount);
-  const segParts = SEGMENT_KEYS.slice(0, segCount).map(k => `${d.segments[k].shot}+${d.segments[k].cam}`).join(' → ');
-  const amPart = `${d.action}+${d.mood}`;
+  const line = buildMasterCodeLine(d, cut);
+  const locLabel = (SP_LOCATION_OPTIONS.find(o => o.code === d.location) || {}).label || d.location;
   const region = d.region === '직접입력' ? (d.regionCustom || '미입력') : d.region;
 
-  el.innerHTML = `<span class="cp-m">## C컷 코드</span>
-<span class="cp-a">${escapeHtml(idPart)}</span> :: <span class="cp-b">${escapeHtml(d.pipeline)}</span> :: <span class="cp-d">${escapeHtml(spacePart)}</span> :: <span class="cp-c">${escapeHtml(segParts)}</span> :: <span class="cp-d">${escapeHtml(amPart)}</span> :: <span class="cp-b">${escapeHtml(d.length)}</span>
+  el.innerHTML = `<span class="cp-m">## ${escapeHtml(cut.num)} 마스터 코드</span>
+<span class="cp-a">${escapeHtml(line)}</span>
 <span class="cp-m">## 메모</span>
-<span class="cp-m">지역 ${escapeHtml(region)} · 구간 ${segCount}개 · 감독 코멘트: ${escapeHtml(d.comment || '(미입력)')}</span>`;
+<span class="cp-m">${escapeHtml(d.indoor === 'IN' ? '실내' : '실외')} · ${escapeHtml(locLabel)} · 지역 ${escapeHtml(region)}(참고용, 코드 미포함) · 구간 ${Number(d.segCount)}개 · 감독 코멘트: ${escapeHtml(d.comment || '(미입력)')}</span>`;
 }
 
 function renderCutDesignTab() {
@@ -879,13 +902,14 @@ function renderCutDesignTab() {
   if (phaseNumEl) phaseNumEl.textContent = cut.num;
 
   setPills('pills-cut-emotion', CUT_EMOTION_OPTIONS, d.emotion, "setCutField('emotion','{v}')", 'on-o');
-  setPills('pills-cut-pipeline', PIPELINE_OPTIONS, d.pipeline, "setCutField('pipeline','{v}')");
+  setPills('pills-cut-pipeline', PL_OPTIONS, d.pipeline, "setCutField('pipeline','{v}')");
   renderPipelineFlow(d);
+  setPills('pills-cut-look', LOOK_OPTIONS_CB, d.look, "setCutField('look','{v}')");
 
-  setPills('pills-cut-indoor', INDOOR_OPTIONS, d.indoor, "setCutField('indoor','{v}')");
-  setPills('pills-cut-location', LOCATION_OPTIONS, d.location, "setCutField('location','{v}')");
-  setPills('pills-cut-timezone', TIMEZONE_OPTIONS, d.timezone, "setCutField('timezone','{v}')");
-  setPills('pills-cut-light', LIGHT_OPTIONS, d.light, "setCutField('light','{v}')");
+  setPills('pills-cut-indoor', SP_INDOOR_OPTIONS, d.indoor, "setCutField('indoor','{v}')");
+  setPills('pills-cut-location', SP_LOCATION_OPTIONS, d.location, "setCutField('location','{v}')");
+  setPills('pills-cut-timezone', SP_TIMEZONE_OPTIONS, d.timezone, "setCutField('timezone','{v}')");
+  setPills('pills-cut-light', SP_LIGHT_OPTIONS, d.light, "setCutField('light','{v}')");
 
   const regionSelect = document.getElementById('cut-region-select');
   if (regionSelect) {
@@ -955,9 +979,177 @@ function renderProgress() {
   el.style.color = pct >= 80 ? 'var(--teal)' : pct >= 40 ? 'var(--scarlet-light)' : 'var(--text3)';
 }
 
-// ── 패키지 생성 (초안 스텁) ─────────────────────────────────────────────────────
-function generatePackage() {
-  showToast('📦 패키지 탭은 다음 버전에서 구현될 예정이에요');
+// ── 대본/프롬프트 생성 (/api/generate-script -> script_generator.py -> script_to_prompts.py) ──
+let lastGeneratedResult = null;
+
+async function generatePackage() {
+  if (!codebook) { showToast('⚠️ 코드북이 아직 로드되지 않았어요 — 잠시 후 다시 시도하세요'); return; }
+  const code = DEMO_CUTS.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+
+  showToast('⏳ 대본 생성 중... (script_generator.py 실행)');
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/generate-script`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`);
+    lastGeneratedResult = { prompts: data.prompts, meta: data.meta };
+    renderAll(); // 코드 확인/패키지 탭의 "생성 상태"·프롬프트 미리보기도 같이 갱신
+    showToast(`✓ ${data.meta?.cuts ?? DEMO_CUTS.length}컷 생성 완료 — 아래 결과 확인`);
+  } catch (e) {
+    showToast('⚠️ 생성 실패: ' + e.message);
+    console.error('[generatePackage]', e);
+  }
+}
+
+function renderGenerateResult(result) {
+  const el = document.getElementById('cut-generate-result');
+  if (!el) return;
+  if (!result) { el.style.display = 'none'; return; }
+  const cutCount = result.prompts?.cuts?.length ?? 0;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="card-h"><span class="idx">14</span>✅ 생성 결과</div>
+    <div class="cp-m">에피소드: ${escapeHtml(result.meta?.episode || result.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(result.meta?.version || '?')} · ${cutCount}컷</div>
+    <div class="bb-btn bb-primary" style="margin-top:10px;display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
+  `;
+}
+
+// ── 스튜디오(ScriptGenTab.jsx)로 전달 ──────────────────────────────────────
+// Codi_GEN(file://)과 React 스튜디오 앱(http://localhost:5173)은 origin이 달라
+// localStorage를 공유할 수 없어서(content_matrix_v3.html<->code_generator_v1.html
+// 사이의 기존 codi_gen_candidate 핸드오프는 둘 다 file://라 가능했던 것) 서버
+// (/api/codi-gen-handoff)를 경유한다. ScriptGenTab.jsx가 마운트 시 이 값을 가져가
+// "마스터 코드로 대본 생성"의 미리보기 상태로 반영한다.
+async function sendToStudio() {
+  if (!lastGeneratedResult) return;
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/codi-gen-handoff`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompts: lastGeneratedResult.prompts, meta: lastGeneratedResult.meta }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '전달 실패');
+    showToast('📤 스튜디오 "대본생성" 탭에서 받아갈 수 있게 전달했어요');
+  } catch (e) {
+    showToast('⚠️ 전달 실패: ' + e.message);
+  }
+}
+
+// script_to_prompts.py의 prompts.json cut.kr은 문자열이 아니라
+// {sp,ch,sh,ca,at,md,dl,nr,cp} 구조화 객체 — script_generator.py의 build_kr()과
+// 동일한 라벨로 사람이 읽을 수 있게 조립한다.
+function formatKrSummary(kr) {
+  if (!kr || typeof kr !== 'object') return '(없음)';
+  const line = (label, val) => `${label}: ${val || '(작성 필요)'}`;
+  return [
+    line('SP(장소)', kr.sp), line('CH(캐릭터)', kr.ch), line('SH(샷)', kr.sh),
+    line('CA(카메라)', kr.ca), line('AT(동작)', kr.at), line('MD(감정)', kr.md),
+    line('DL(대사)', kr.dl), line('NR(나레이션)', kr.nr), line('CP(자막)', kr.cp),
+  ].join('\n');
+}
+
+// ── 코드 확인 탭 ─────────────────────────────────────────────────────
+// 전부 실제 데이터만 사용: 컷 코드 표는 cutDesignState에서, 프롬프트 미리보기는
+// 실제 /api/generate-script 응답(lastGeneratedResult)에서만 가져온다(가짜 프리뷰 없음).
+function renderCodeCheckTab() {
+  const table = document.getElementById('code-check-table');
+  const previewEl = document.getElementById('code-check-preview');
+  if (!table || !previewEl) return;
+
+  const active = currentCut();
+  const rows = DEMO_CUTS.map((cut, i) => {
+    const d = getCutDesign(cut);
+    const spSummary = `${d.indoor}.${d.location}.${d.timezone}`;
+    const segCount = Number(d.segCount);
+    const dirSummary = SEGMENT_KEYS.slice(0, segCount).map(k => `${d.segments[k].shot}+${d.segments[k].cam}`).join(' → ');
+    const mdLabel = (MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood;
+    const wasGenerated = lastGeneratedResult?.prompts?.cuts?.some(c => String(c.no) === String(i + 1));
+    const genBadge = wasGenerated
+      ? '<span style="color:var(--teal)">✓ 생성됨</span>'
+      : '<span style="color:var(--text3)">미생성</span>';
+    const isActive = cut === active;
+    return `<tr style="border-bottom:1px solid var(--border)${isActive ? ';background:rgba(29,158,117,0.07)' : ''}">
+      <td style="padding:7px 10px;font-family:'Space Mono',monospace;color:${isActive ? 'var(--teal)' : 'var(--text2)'}">${cut.num}${isActive ? ' ←' : ''}</td>
+      <td style="padding:7px 10px;font-family:'Space Mono',monospace;color:var(--text2)">${escapeHtml(d.pipeline)}</td>
+      <td style="padding:7px 10px;color:var(--text2)">${escapeHtml(spSummary)}</td>
+      <td style="padding:7px 10px;color:var(--text2)">${escapeHtml(dirSummary)}</td>
+      <td style="padding:7px 10px;color:var(--text2)">${escapeHtml(mdLabel)}</td>
+      <td style="padding:7px 10px">${genBadge}</td>
+    </tr>`;
+  }).join('');
+
+  table.innerHTML = `<thead><tr style="border-bottom:1px solid var(--border2)">
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">CUT</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">파이프라인</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">공간</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">연출</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">감정</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">생성 상태</th>
+  </tr></thead><tbody>${rows}</tbody>`;
+
+  const activeIdx = DEMO_CUTS.indexOf(active);
+  const activeGenerated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(activeIdx + 1));
+  if (!activeGenerated) {
+    previewEl.innerHTML = `<div style="font-size:11px;color:var(--text3)">아직 이 컷의 생성 결과가 없어요 — 컷 설계 탭에서 "패키지 생성"을 먼저 눌러주세요.</div>`;
+    return;
+  }
+  previewEl.innerHTML = `
+    <div class="g g2" style="gap:10px;margin-bottom:10px">
+      <div class="card"><div class="card-h" style="font-size:10px;color:#4A9EDE">G2 이미지 프롬프트</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(activeGenerated.imagePrompt || '(없음)')}</div></div>
+      <div class="card"><div class="card-h" style="font-size:10px;color:var(--scarlet-light)">G4 영상 프롬프트</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(activeGenerated.videoPrompt || '(없음)')}</div></div>
+    </div>
+    <div class="card"><div class="card-h" style="font-size:10px;color:var(--teal)">KR 컨펌본</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(formatKrSummary(activeGenerated.kr))}</div></div>
+  `;
+}
+
+// ── 패키지 탭 (축소판) ────────────────────────────────────────────────
+// mockup의 F군(BGM_/HK_/RT_/PB_/Q_SF/Q_FM) 피커와 [EP]/[CHAR]/[REF] 등 확장
+// 패키지 포맷은 codebook.json에 해당 코드가 없어 이번 범위에서 제외(사용자 확인).
+// 여기서는 실제로 동작하는 것만 보여준다: 전체 컷의 마스터 코드 원문 + 마지막
+// 생성 결과 + 스튜디오 전달(패키지 생성 자체는 하단바의 기존 버튼을 그대로 씀).
+function renderPackageTab() {
+  const codeEl = document.getElementById('pkg-master-code');
+  const resultEl = document.getElementById('pkg-generate-result');
+  if (!codeEl || !resultEl) return;
+
+  codeEl.textContent = DEMO_CUTS.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+
+  if (!lastGeneratedResult) {
+    resultEl.innerHTML = `<div class="card-h"><span class="idx">18</span>📦 생성 결과</div><div style="font-size:11px;color:var(--text3)">아직 생성된 패키지가 없어요 — 위 마스터 코드를 확인한 뒤 하단 "패키지 생성" 버튼을 눌러주세요.</div>`;
+    return;
+  }
+  const cutCount = lastGeneratedResult.prompts?.cuts?.length ?? 0;
+  resultEl.innerHTML = `
+    <div class="card-h"><span class="idx">18</span>📦 생성 결과</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px">에피소드: ${escapeHtml(lastGeneratedResult.meta?.episode || lastGeneratedResult.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(lastGeneratedResult.meta?.version || '?')} · ${cutCount}컷</div>
+    <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
+  `;
+}
+
+// ── CA_BANK 탭 (축소판) ───────────────────────────────────────────────
+// mockup의 "캐릭터 아카데미"(HR_/MK_/AC_ 조합 검증 상태 관리)는 그 서브코드들이
+// codebook.json에 없어 이번 범위에서 제외(사용자 확인). 대신 실제 codebook의
+// LOOK_BANK를 그대로 참고용으로 보여준다 — 컷 설계할 때 어떤 LOOK_ID가 있는지 찾아보는 용도.
+function renderCaBankTab() {
+  const el = document.getElementById('ca-bank-list');
+  if (!el) return;
+  if (!codebook) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--text3)">코드북 로딩 중...</div>`;
+    return;
+  }
+  el.innerHTML = LOOK_OPTIONS_CB.map(o => {
+    const info = codebook.LOOK_BANK?.[o.code] || {};
+    return `<div class="card">
+      <div class="card-h" style="font-size:11px">${escapeHtml(o.code)}</div>
+      <div style="font-size:10px;color:var(--text2);margin-bottom:6px">${escapeHtml(info.label || '')}</div>
+      <div style="font-size:9px;color:var(--text3);line-height:1.6;font-family:'Space Mono',monospace">${escapeHtml(info.ip_outfit || '')}</div>
+      <div style="margin-top:6px;font-size:9px;color:var(--teal)">참조: ${escapeHtml(info.ep || '-')}</div>
+    </div>`;
+  }).join('');
 }
 
 // ── 전체 렌더 ─────────────────────────────────────────────────────
@@ -974,6 +1166,10 @@ function renderAll() {
   renderCodePreview();
   renderCutList();
   renderCutDesignTab();
+  renderGenerateResult(lastGeneratedResult);
+  renderCodeCheckTab();
+  renderPackageTab();
+  renderCaBankTab();
   renderProgress();
 
   const epIdInput = document.getElementById('ep-id-input');
@@ -985,6 +1181,7 @@ function renderAll() {
 
 loadCandidateFromLocalStorage();
 renderAll();
+loadCodebook(); // 비동기 -- codebook.json 도착 시 buildCodebookOptions() + renderAll() 재실행
 </script>
 
 </body>
