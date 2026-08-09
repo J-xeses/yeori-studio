@@ -1,11 +1,41 @@
 {
   "episode": 1,
-  "title": "신발을 벗는다는 의미",
+  "title": "\"저, 사실 AI에요.\"",
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "WIDE SHOT —\nOutdoor cafe wooden deck terrace,\nwooden folding tables and chairs arranged naturally,\ncanvas awning overhead casting soft shadow,\nfilming camera on tripod visible to one side,\ncrew hands adjusting equipment,\nreal cafe patrons seated in background naturally,\ncity street and modern buildings softly visible behind,\nno main character in frame,\nbright warm golden afternoon sunlight,\nwide shot, eye level, vertical 9:16,\nCinematic, photorealistic, 8K",
-      "duration": 8
+      "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 교보손글씨2019 흰색 텍스트로 직접 제작",
+      "duration": 5
+    },
+    {
+      "no": 2,
+      "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요 (화면 녹화 원본 사용)",
+      "duration": 9
+    },
+    {
+      "no": 3,
+      "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요 (화면 녹화 원본 사용)",
+      "duration": 14
+    },
+    {
+      "no": 4,
+      "imagePrompt": "기존 소스 이미지 사용 — 신규 생성 불필요",
+      "duration": 7
+    },
+    {
+      "no": 5,
+      "imagePrompt": "기존 소스 이미지 사용 — 신규 생성 불필요",
+      "duration": 13
+    },
+    {
+      "no": 6,
+      "imagePrompt": "기존 소스 이미지 사용 — 신규 생성 불필요 (CapCut 분할화면 편집)",
+      "duration": 7
+    },
+    {
+      "no": 7,
+      "imagePrompt": "기존 소스 이미지 사용 — 신규 생성 불필요",
+      "duration": 5
     }
   ]
 }
