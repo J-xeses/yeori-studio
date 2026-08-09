@@ -161,6 +161,59 @@
   .seg-box { background: rgba(15,42,34,0.25); border: 1px solid var(--border2); border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; }
   .seg-label { font-size: 10px; font-weight: 700; color: var(--teal-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
 
+  /* ── 워크플로우 탭: 컷을 가로축(직렬 진행), 코드 군을 세로축(병렬 트랙)으로 배치한 행렬 뷰 ── */
+  .wf-legend { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 0 12px; font-size: 10px; color: var(--text2); }
+  .wf-leg { display: flex; align-items: center; gap: 5px; }
+  .wf-leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .wf-row-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  .wf-rc-label { font-size: 9px; color: var(--text3); margin-right: 2px; }
+  .wf-rc-btn { font-size: 9px; padding: 3px 9px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .wf-rc-btn.on { background: rgba(29,158,117,0.14); border-color: var(--teal); color: var(--teal); }
+  .wf-rc-sep { width: 1px; height: 14px; background: var(--border2); }
+  .wf-missing-badge { font-size: 9px; padding: 3px 9px; border-radius: 10px; background: var(--scarlet-bg); border: 1px solid var(--scarlet); color: var(--scarlet-light); margin-left: auto; font-family: 'Space Mono', monospace; }
+  .wf-canvas-outer { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--border2); border-radius: var(--radius-sm); }
+  .wf-canvas-inner { display: flex; flex-direction: column; min-width: max-content; }
+  .wf-header-row, .wf-data-row, .wf-master-row, .wf-arc-row { display: flex; border-bottom: 1px solid var(--border); }
+  .wf-header-row { background: rgba(15,42,34,0.3); border-bottom: 1px solid var(--border2); }
+  .wf-row-label-cell, .wf-row-label { width: 108px; flex-shrink: 0; background: rgba(15,42,34,0.2); border-right: 1px solid var(--border2); padding: 8px 10px; display: flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; cursor: default; }
+  .wf-row-label { cursor: pointer; }
+  .wf-row-label:hover { background: rgba(15,42,34,0.35); }
+  .wf-rl-toggle { margin-left: auto; font-size: 9px; }
+  .wf-cut-header-cell { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 8px 10px; }
+  .wf-chc-top { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+  .wf-chc-num { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; }
+  .wf-chc-status { margin-left: auto; font-size: 10px; }
+  .wf-chc-scene { font-size: 9px; color: var(--text2); line-height: 1.4; }
+  .wf-cut-header-cell.wf-col-done { border-top: 2px solid var(--teal); }
+  .wf-cut-header-cell.wf-col-done .wf-chc-num { color: var(--teal); }
+  .wf-cut-header-cell.wf-col-active { background: rgba(29,158,117,0.1); border-top: 2px solid var(--teal); }
+  .wf-cut-header-cell.wf-col-active .wf-chc-num { color: var(--teal); }
+  .wf-cut-header-cell.wf-col-tbd { border-top: 2px solid var(--border2); opacity: 0.65; }
+  .wf-cut-header-cell.wf-col-tbd .wf-chc-num { color: var(--text3); }
+  .wf-data-cell { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 6px 8px; }
+  .wf-data-cell.wf-col-active { background: rgba(29,158,117,0.06); }
+  .wf-data-cell.wf-col-tbd { opacity: 0.6; }
+  .wf-data-row.wf-hidden { display: none; }
+  .wf-ctags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .wf-ctag { font-family: 'Space Mono', monospace; font-size: 8px; padding: 2px 5px; border-radius: 2px; background: rgba(15,42,34,0.4); border: 1px solid var(--border2); color: var(--text2); }
+  .wf-ptext { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
+  .wf-gp-row { display: flex; gap: 3px; }
+  .wf-gp { width: 16px; height: 16px; border-radius: 50%; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border2); background: transparent; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .wf-gp.wf-done { background: rgba(29,158,117,0.18); border-color: var(--teal); color: var(--teal); }
+  .wf-gp.wf-na { opacity: 0.25; }
+  .wf-mood-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .wf-mood-tag { font-size: 8px; padding: 2px 6px; border-radius: 8px; background: rgba(15,42,34,0.4); border: 1px solid var(--border2); color: var(--text2); }
+  .wf-dir-text { font-size: 9px; color: var(--text2); font-style: italic; line-height: 1.5; }
+  .wf-empty { font-size: 9px; color: var(--text3); }
+  .wf-master-label, .wf-arc-label { width: 108px; flex-shrink: 0; padding: 6px 10px; display: flex; align-items: center; font-size: 9px; font-weight: 700; color: var(--text3); border-right: 1px solid var(--border2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wf-master-row { background: rgba(15,42,34,0.2); border-bottom: 1px solid var(--border2); }
+  .wf-master-cell { width: 190px; flex-shrink: 0; padding: 6px 8px; border-right: 1px solid var(--border); font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wf-arc-row { align-items: center; }
+  .wf-arc-cell { width: 190px; flex-shrink: 0; padding: 6px 8px; border-right: 1px solid var(--border); }
+  .wf-arc-bar { height: 4px; border-radius: 2px; background: var(--teal); margin-bottom: 4px; }
+  .wf-arc-code { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text2); }
+  .wf-summary-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-top: 12px; font-size: 10px; color: var(--text2); }
+
   .placeholder-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text3); gap: 10px; }
   .placeholder-tab-icon { font-size: 34px; opacity: 0.5; }
   .placeholder-tab-text { font-size: 12px; }
@@ -214,6 +267,7 @@
     <div class="tab active" data-tab="ep" onclick="showTab('ep', this)">🎬 에피소드</div>
     <div class="tab" data-tab="cut" onclick="showTab('cut', this)">✂️ 컷 설계</div>
     <div class="tab" data-tab="code" onclick="showTab('code', this)">🔍 코드 확인</div>
+    <div class="tab" data-tab="workflow" onclick="showTab('workflow', this)">📊 워크플로우</div>
     <div class="tab" data-tab="pkg" onclick="showTab('pkg', this)">📦 패키지</div>
     <div class="tab" data-tab="bank" onclick="showTab('bank', this)">🗄 CA_BANK</div>
   </div>
@@ -368,7 +422,10 @@
             <div class="field-label">감정코드</div>
             <div class="kw-wrap" id="pills-cut-mood" style="margin-bottom:8px"></div>
 
-            <div class="field-label">감독 코멘트</div>
+            <div class="field-label">무드보드 키워드</div>
+            <input class="input" id="cut-moodboard" placeholder="쉼표로 구분(예: 담담한, 창가, 공허한)" oninput="setCutField('moodboard', this.value)">
+
+            <div class="field-label" style="margin-top:8px">감독 코멘트</div>
             <textarea class="input" id="cut-director-comment" style="min-height:52px;font-family:'Noto Sans KR',sans-serif" placeholder="감독 코멘트를 입력하세요" oninput="setCutField('comment', this.value)"></textarea>
           </div>
         </div>
@@ -393,6 +450,26 @@
           <div class="card-h"><span class="idx">16</span>⚡ 활성 컷 프롬프트 미리보기</div>
           <div id="code-check-preview"></div>
         </div>
+      </div>
+
+      <!-- TAB: 워크플로우 — 컷(가로, 직렬 진행) × 코드 군(세로, 병렬 트랙) 통합 전개도.
+           표시 행 토글은 code_generator_interactive_dashboard_v2.html 기획을 그대로 따름.
+           모든 셀은 실제 cutDesignState/codebook/lastGeneratedResult 값만 사용(가짜 상태 없음) -->
+      <div id="tab-workflow" class="tab-content" style="display:none">
+        <div class="wf-legend">
+          <div class="wf-leg"><div class="wf-leg-dot" style="background:var(--teal)"></div>생성됨</div>
+          <div class="wf-leg"><div class="wf-leg-dot" style="background:rgba(29,158,117,0.4)"></div>활성 컷</div>
+          <div class="wf-leg"><div class="wf-leg-dot" style="background:var(--border2)"></div>미생성</div>
+          <span style="font-size:9px;color:var(--text3);margin-left:auto">← 가로: 컷 진행(직렬) · 세로: 코드 군(병렬) →</span>
+        </div>
+
+        <div class="wf-row-controls" id="wf-row-controls"></div>
+
+        <div class="wf-canvas-outer">
+          <div class="wf-canvas-inner" id="wf-canvas"></div>
+        </div>
+
+        <div class="wf-summary-bar" id="wf-summary"></div>
       </div>
 
       <!-- TAB: 패키지 -->
@@ -796,6 +873,7 @@ function getCutDesign(cut) {
       },
       action: 'AT_MW_01',
       mood: 'MD_JOY',
+      moodboard: '',
       comment: '',
     };
   }
@@ -929,6 +1007,9 @@ function renderCutDesignTab() {
   setPills('pills-cut-action', ACTION_OPTIONS, d.action, "setCutField('action','{v}')");
   setPills('pills-cut-mood', MOOD_OPTIONS, d.mood, "setCutField('mood','{v}')", 'on-o');
 
+  const moodboardEl = document.getElementById('cut-moodboard');
+  if (moodboardEl && document.activeElement !== moodboardEl) moodboardEl.value = d.moodboard;
+
   const commentEl = document.getElementById('cut-director-comment');
   if (commentEl && document.activeElement !== commentEl) commentEl.value = d.comment;
 
@@ -981,6 +1062,28 @@ function renderProgress() {
 
 // ── 대본/프롬프트 생성 (/api/generate-script -> script_generator.py -> script_to_prompts.py) ──
 let lastGeneratedResult = null;
+
+// ── 워크플로우 탭 표시 행 토글 상태 ────────────────────────────────────
+const WF_ROWS = [
+  { key: 'b',   icon: '⚙',  label: 'B군 파이프',   defaultOn: true },
+  { key: 'c',   icon: '📍', label: 'C군 공간',     defaultOn: true },
+  { key: 'd',   icon: '👤', label: 'D군 캐릭터',   defaultOn: true },
+  { key: 'e',   icon: '🎬', label: 'E군 연출',     defaultOn: true },
+  { key: 'pz',  icon: '⚡', label: '퍼즐 프롬프트', defaultOn: true },
+  { key: 'g',   icon: '✅', label: 'G포인트',      defaultOn: true },
+  { key: 'md',  icon: '🎨', label: '무드보드',     defaultOn: false },
+  { key: 'dir', icon: '💬', label: '감독 코멘트',   defaultOn: false },
+];
+const wfRowState = Object.fromEntries(WF_ROWS.map(r => [r.key, r.defaultOn]));
+
+function toggleWfRow(key) {
+  wfRowState[key] = !wfRowState[key];
+  renderWorkflowTab();
+}
+function toggleWfRowAll(show) {
+  WF_ROWS.forEach(r => { wfRowState[r.key] = show; });
+  renderWorkflowTab();
+}
 
 async function generatePackage() {
   if (!codebook) { showToast('⚠️ 코드북이 아직 로드되지 않았어요 — 잠시 후 다시 시도하세요'); return; }
@@ -1152,6 +1255,129 @@ function renderCaBankTab() {
   }).join('');
 }
 
+// ── 워크플로우 탭 — 컷(가로, 직렬) × 코드 군(세로, 병렬) 통합 전개도 ──────────
+// 모든 셀은 실제 데이터만 사용: G1은 lastGeneratedResult로 확인된 생성여부,
+// G2~G5는 codebook.PL 플래그로 "이 컷에 적용되는 단계인지"만 표시(실제 완료
+// 여부는 Codi_GEN에서 알 수 없음 — 스튜디오 앱이 진짜 출처라 그 쪽을 안내).
+function renderWorkflowTab() {
+  const controlsEl = document.getElementById('wf-row-controls');
+  const canvasEl = document.getElementById('wf-canvas');
+  const summaryEl = document.getElementById('wf-summary');
+  if (!controlsEl || !canvasEl || !summaryEl) return;
+
+  const active = currentCut();
+  const cutMeta = DEMO_CUTS.map((cut, i) => {
+    const d = getCutDesign(cut);
+    const generated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(i + 1));
+    const isActive = cut === active;
+    const status = isActive ? 'active' : (generated ? 'done' : 'tbd');
+    return { cut, i, d, generated, status };
+  });
+
+  const missingCount = cutMeta.filter(m => !m.generated).length;
+  controlsEl.innerHTML = `
+    <span class="wf-rc-label">표시 행:</span>
+    ${WF_ROWS.map(r => `<div class="wf-rc-btn ${wfRowState[r.key] ? 'on' : ''}" onclick="toggleWfRow('${r.key}')">${r.icon} ${escapeHtml(r.label)}</div>`).join('')}
+    <div class="wf-rc-sep"></div>
+    <div class="wf-rc-btn" onclick="toggleWfRowAll(true)">전체 펼침</div>
+    <div class="wf-rc-btn" onclick="toggleWfRowAll(false)">접기</div>
+    ${missingCount > 0 ? `<div class="wf-missing-badge">⚠ 미생성 ${missingCount}곳</div>` : ''}
+  `;
+
+  const headerCells = cutMeta.map(({ cut, d, generated, status }) => {
+    const sceneText = generated?.sc || `${d.pipeline} · ${(MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood}`;
+    const statusIcon = status === 'done' ? '✅' : status === 'active' ? '🔄' : '⬜';
+    return `<div class="wf-cut-header-cell wf-col-${status}">
+      <div class="wf-chc-top"><span class="wf-chc-num">${escapeHtml(cut.num)}</span><span class="wf-chc-status">${statusIcon}</span></div>
+      <div class="wf-chc-scene">${escapeHtml(sceneText)}</div>
+    </div>`;
+  }).join('');
+  const headerRow = `<div class="wf-header-row"><div class="wf-row-label-cell">CUT →</div>${headerCells}</div>`;
+
+  function dataRow(rowKey, icon, label, cellFn) {
+    const hidden = wfRowState[rowKey] ? '' : ' wf-hidden';
+    const cells = cutMeta.map(m => `<div class="wf-data-cell wf-col-${m.status}">${cellFn(m)}</div>`).join('');
+    return `<div class="wf-data-row${hidden}">
+      <div class="wf-row-label" onclick="toggleWfRow('${rowKey}')"><span>${icon}</span><span>${escapeHtml(label)}</span><span class="wf-rl-toggle">${wfRowState[rowKey] ? '▲' : '▼'}</span></div>
+      ${cells}
+    </div>`;
+  }
+
+  const rowB = dataRow('b', '⚙', 'B군 파이프', ({ d }) => {
+    const plInfo = codebook?.PL?.[d.pipeline] || {};
+    const flow = ['G1'];
+    if (plInfo.run_g2) flow.push('G2');
+    if (plInfo.run_g3) flow.push('G3');
+    if (plInfo.run_g4) flow.push('G4');
+    flow.push('G5');
+    return `<div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.pipeline)}</span><span class="wf-ctag">${flow.join('→')}</span></div>`;
+  });
+
+  const rowC = dataRow('c', '📍', 'C군 공간', ({ d }) => `<div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.indoor)}.${escapeHtml(d.location)}</span><span class="wf-ctag">${escapeHtml(d.timezone)}</span><span class="wf-ctag">${escapeHtml(d.light)}</span></div>`);
+
+  const rowD = dataRow('d', '👤', 'D군 캐릭터', ({ d }) => {
+    const lookLabel = (LOOK_OPTIONS_CB.find(o => o.code === d.look) || {}).label || d.look;
+    return `<div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.look)}</span></div><div style="font-size:8px;color:var(--text3);margin-top:3px">${escapeHtml(lookLabel)}</div>`;
+  });
+
+  const rowE = dataRow('e', '🎬', 'E군 연출', ({ d }) => {
+    const segCount = Number(d.segCount);
+    const segTags = SEGMENT_KEYS.slice(0, segCount).map(k => `<span class="wf-ctag">${escapeHtml(d.segments[k].shot)}+${escapeHtml(d.segments[k].cam)}</span>`).join('');
+    const mdLabel = (MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood;
+    return `<div class="wf-ctags" style="margin-bottom:3px">${segTags}</div><div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.action)}</span><span class="wf-ctag">${escapeHtml(mdLabel)}</span></div>`;
+  });
+
+  const rowPz = dataRow('pz', '⚡', '퍼즐 프롬프트', ({ generated }) => {
+    if (!generated) return `<div class="wf-empty">미생성</div>`;
+    const img = (generated.imagePrompt || '').split('\n').slice(0, 2).join(' ');
+    const vid = (generated.videoPrompt || '').split('\n').slice(0, 2).join(' ');
+    return `<div class="wf-ptext"><span style="color:#4A9EDE">G2</span> ${escapeHtml(img)}</div><div class="wf-ptext" style="margin-top:3px"><span style="color:var(--scarlet-light)">G4</span> ${escapeHtml(vid)}</div>`;
+  });
+
+  const rowG = dataRow('g', '✅', 'G포인트', ({ d, generated }) => {
+    const plInfo = codebook?.PL?.[d.pipeline] || {};
+    const stages = [
+      { k: '1', on: !!generated, na: false },
+      { k: '2', on: false, na: !plInfo.run_g2 },
+      { k: '3', on: false, na: !plInfo.run_g3 },
+      { k: '4', on: false, na: !plInfo.run_g4 },
+      { k: '5', on: false, na: false },
+    ];
+    const dots = stages.map(s => `<div class="wf-gp ${s.on ? 'wf-done' : ''} ${s.na ? 'wf-na' : ''}">${s.k}</div>`).join('');
+    return `<div class="wf-gp-row">${dots}</div><div style="font-size:8px;color:var(--text3);margin-top:4px">G2~G5 실제 진행은 스튜디오 앱에서 확인</div>`;
+  });
+
+  const rowMd = dataRow('md', '🎨', '무드보드', ({ d }) => {
+    const tags = (d.moodboard || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!tags.length) return `<div class="wf-empty">(미입력)</div>`;
+    return `<div class="wf-mood-tags">${tags.map(t => `<span class="wf-mood-tag">${escapeHtml(t)}</span>`).join('')}</div>`;
+  });
+
+  const rowDir = dataRow('dir', '💬', '감독 코멘트', ({ d }) => d.comment ? `<div class="wf-dir-text">"${escapeHtml(d.comment)}"</div>` : `<div class="wf-empty">(미입력)</div>`);
+
+  const masterCells = cutMeta.map(({ cut, d }) => `<div class="wf-master-cell">${escapeHtml(buildMasterCodeLine(d, cut))}</div>`).join('');
+  const masterRow = `<div class="wf-master-row"><div class="wf-master-label">마스터 코드</div>${masterCells}</div>`;
+
+  const arcCells = cutMeta.map(({ d }, idx) => {
+    const mdLabel = (MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood;
+    const arrow = idx < cutMeta.length - 1 ? '<span style="font-size:8px;color:var(--text3)">→</span>' : '';
+    return `<div class="wf-arc-cell"><div class="wf-arc-bar"></div><div style="display:flex;justify-content:space-between;align-items:center"><span class="wf-arc-code">${escapeHtml(d.mood)}</span>${arrow}</div><div style="font-size:8px;color:var(--text3)">${escapeHtml(mdLabel)}</div></div>`;
+  }).join('');
+  const arcRow = `<div class="wf-arc-row"><div class="wf-arc-label">감정 아크</div>${arcCells}</div>`;
+
+  canvasEl.innerHTML = headerRow + rowB + rowC + rowD + rowE + rowPz + rowG + rowMd + rowDir + masterRow + arcRow;
+
+  const doneCount = cutMeta.filter(m => m.status === 'done').length;
+  const activeCount = cutMeta.filter(m => m.status === 'active').length;
+  const tbdCount = cutMeta.filter(m => m.status === 'tbd').length;
+  summaryEl.innerHTML = `
+    <span>✅ 생성됨 ${doneCount}컷</span>
+    <span>🔄 활성 ${activeCount}컷</span>
+    <span>⬜ 미생성 ${tbdCount}컷</span>
+    <span style="margin-left:auto;color:var(--text3)">전체 ${cutMeta.length}컷 중 ${cutMeta.length - tbdCount}컷 생성 완료</span>
+  `;
+}
+
 // ── 전체 렌더 ─────────────────────────────────────────────────────
 function renderAll() {
   renderStoryCards();
@@ -1168,6 +1394,7 @@ function renderAll() {
   renderCutDesignTab();
   renderGenerateResult(lastGeneratedResult);
   renderCodeCheckTab();
+  renderWorkflowTab();
   renderPackageTab();
   renderCaBankTab();
   renderProgress();
