@@ -348,6 +348,21 @@ app.post('/api/update-status', (req, res) => {
   }
 })
 
+// ── GET /api/codebook — codebook.json 읽기전용 서빙 ──────────────
+// code_generator_v1.html(Codi_GEN, file:// 정적 파일이라 codebook.json을 직접
+// import할 수 없음)이 컷 설계 탭의 SP/SH/CA/MD/AT/LOOK_ID 필드를 실제 코드북
+// 기준으로 그리기 위해 fetch로 가져다 씀. script_generator.py와 동일한 파일을
+// 그대로 반환하므로 두 쪽이 항상 같은 코드 정의를 보게 된다.
+app.get('/api/codebook', (req, res) => {
+  const codebookPath = path.join(CODE_ROOT, 'scripts', 'codebook.json')
+  try {
+    const codebook = JSON.parse(fs.readFileSync(codebookPath, 'utf-8'))
+    res.json({ ok: true, codebook })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
 // ── POST /api/generate-script — 마스터 코드 -> script_generator.py -> script_to_prompts.py -> prompts.json ──
 app.post('/api/generate-script', (req, res) => {
   const { code } = req.body
