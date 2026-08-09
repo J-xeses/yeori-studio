@@ -2137,6 +2137,14 @@ const CANDIDATE_FLOW_TYPE_LABEL = {
   IG_P: 'IG_P — 인스타 피드', IG_S: 'IG_S — 인스타 스토리', TK: 'TK — 틱톡',
 }
 
+// LF만 롱폼(10분+)이라 컷 수가 압도적으로 많음 — 나머지는 전부 60초 내외 숏폼이라 SF와 동일 범위 적용
+const CANDIDATE_CUT_SPEC_BY_TYPE = {
+  LF: '12~20개 컷',
+}
+const CANDIDATE_CUT_SPEC_DEFAULT = '5~8개 컷(컷당 약 8초 분량)'
+const CANDIDATE_SCRIPT_MAX_TOKENS_BY_TYPE = { LF: 4096 }
+const CANDIDATE_SCRIPT_MAX_TOKENS_DEFAULT = 1024
+
 // STEP1~4 각 호출이 서로 독립된 Claude API 요청(대화 맥락 공유 안 됨)이라
 // 매 단계 프롬프트에 이 컨텍스트를 반복 포함시켜야 한다. "SF"를 콘텐츠 유형이
 // 아닌 공상과학(Science Fiction) 장르로 오인해 미래도시/홀로그램/평행우주 같은
@@ -2164,7 +2172,7 @@ async function callClaudeText(prompt, maxTokens = 512) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: maxTokens,
       messages: [{ role: 'user', content: prompt }],
     }),
@@ -2206,7 +2214,7 @@ async function searchWebTrends(typeLabel) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1024,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
       messages: [{
@@ -2266,9 +2274,11 @@ app.post('/api/generate-candidate-flow', async (req, res) => {
     )
     send({ step: 'step3', label: '에피소드 기획', value: story })
 
+    const cutSpec = CANDIDATE_CUT_SPEC_BY_TYPE[type] || CANDIDATE_CUT_SPEC_DEFAULT
+    const scriptMaxTokens = CANDIDATE_SCRIPT_MAX_TOKENS_BY_TYPE[type] || CANDIDATE_SCRIPT_MAX_TOKENS_DEFAULT
     const scriptRaw = await callClaudeText(
-      `${YEORI_CHANNEL_CONTEXT}\n\n핵심 키워드: ${keywords}\n주제 요약: ${topic}\n스토리 기획: ${story}\n\n위 내용을 바탕으로 서여리 채널의 [CUT] 포맷 한글 대본 초안을 3~5개 컷으로 작성하세요. 각 컷은 씬/액션/대사 또는 나레이션을 포함하세요.\n\n반드시 첫 줄에 "제목: <에피소드 제목>" 형식으로 제목을 먼저 출력하고, 그 다음 줄부터 대본을 출력하세요.`,
-      1024
+      `${YEORI_CHANNEL_CONTEXT}\n\n핵심 키워드: ${keywords}\n주제 요약: ${topic}\n스토리 기획: ${story}\n\n위 내용을 바탕으로 서여리 채널의 [CUT] 포맷 한글 대본 초안을 ${cutSpec}으로 작성하세요. 각 컷은 씬/액션/대사 또는 나레이션을 포함하세요.\n\n반드시 첫 줄에 "제목: <에피소드 제목>" 형식으로 제목을 먼저 출력하고, 그 다음 줄부터 대본을 출력하세요.`,
+      scriptMaxTokens
     )
     const titleMatch = scriptRaw.match(/^제목:\s*(.+)$/m)
     const title = titleMatch ? titleMatch[1].trim() : `${typeLabel} 자동 생성 에피소드`
