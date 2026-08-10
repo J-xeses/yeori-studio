@@ -1,168 +1,151 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-08-07 (AI 고도화-10 완료 / Codi_GEN 코드 체계 구축 / A Creative TTS Studio·스토리보드 도구)
+> 마지막 업데이트: 2026-08-10 (고도화-11 — 에이전트 리더 채팅 소통 기능 완성)
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 
 ---
 
 ## 📌 현재 작업 중 (지금 당장 이어할 것)
 
-### [최우선] ScriptGenTab.jsx — pc.ac → pc.at 참조 전환
-- d5613c3 커밋에서 script_to_prompts.py는 at+ac 병행 출력으로 호환 처리됨
-- ScriptGenTab.jsx 내 `pc.ac` 참조를 `pc.at`으로 정식 전환 후 하위 호환 코드 제거
+### 에이전트 리더 채팅 — 패턴 축적 단계
+- **상태**: 채팅 기능 구현 완료(4f07f65), 실제 사용하며 패턴 발견 중
+- **다음**: 자주 쓰는 지시 패턴이 모이면 시스템 프롬프트 고도화
+- **미결**: G4 파이프라인 타임아웃 처리 (15분 경과 시 재시도/스킵 로직 별도 처리 예정)
 
-### codebook 실전 테스트
-- 마스터 코드 입력 → script_generator.py → [C01] 대본 출력 검증
-- app/scripts/codebook_v1.0.0.json 기준
+### ScriptGenTab.jsx — pc.ac → pc.at 마이그레이션
+- **상태**: 미완료 이월 항목. codebook v1.0.0에서 AC→AT로 통일됐으나 JSX 참조 미변경
 
-### VideoTab.jsx — AI 영상 자동생성 UI 연결
-- scripts/video-automation.js + /api/run-video 엔드포인트는 완성 상태
-- VideoTab.jsx에 버튼/UI 미구현 — 좌측 컷 목록 사이드바 연동 설계 필요
-
-### Notion 마스터 허브 동기화
-- 07-14 이후 미업데이트 상태 → 고도화-11 세션 첫 작업으로 동기화 예정
+### Notion 마스터 허브 + STATUS.md
+- **상태**: 매 세션 반복 지적 사항. 이 파일로 대신하는 중
+- **다음**: 세션 시작 시 반드시 이 파일 먼저 읽을 것
 
 ---
 
-## 🎯 Codi_GEN 시스템 (2026-07-27~08-01 신규 구축)
+## 🎯 On the Horizon (예정 작업)
 
-### 개요
-- Codi_GEN: 서여리 영상 제작 언어를 DSL(도메인 특화 언어)로 코드화하는 범용 코드화 엔진
-- 현재 v1.0 — 서여리 채널 단일 도메인, 수동 관리 단계
-
-### 3단계 파이프라인
-```
-1단계: Codi_GEN (codebook.json) → 마스터 코드 → 풀 코드 스크립트 JSON
-2단계: script_generator.py → [C01] 텍스트 대본 (사람이 DL/NR/CP 채움)
-3단계: script_to_prompts.py → prompts.json (Veo3/Flow/ElevenLabs 투입용)
-```
-
-### 완료된 구현 (커밋 d5613c3)
-| 항목 | 내용 |
-|------|------|
-| codebook_v1.0.0.json | SF_E01~E06 47컷 역설계, PL/SP/SH/CA/MD/AT/LOOK/CP 전체 수록 |
-| script_generator.py | codebook.json 외부 로드, IP/VP/KR 조합 로직 재구성 |
-| script_to_prompts.py | AT/CP 필드 대응, at+ac 병행 출력 (ScriptGenTab 호환) |
-
-### 코드 필드 확정
-- **AC → AT** 통일 (동작 필드)
-- **CP** 신규 추가 (자막/Caption, DL과 별도 화면 표시용)
-- 파일 위치: `app/scripts/codebook_v1.0.0.json`
+- **SF_E07 실데이터로 codebook v1.0.0 검증** — 미완료 이월
+- **VideoTab.jsx AI 영상 자동생성 UI 연결** — `/api/run-video` 엔드포인트는 완성, 호출 버튼 없음
+- **G4 타임아웃 처리** — pipeline-leader.js 15분 경과 시 재시도/스킵 로직
+- **서여리 의상 프롬프트 카탈로그 고도화** — 15룩, 7카테고리(A~G), 계절별 태그 분류
+- **OneDrive 미디어 동기화** — 집 PC `C:\Users\user\OneDrive\yeori-studio-sync` 폴더 없음, 확인 필요
 
 ---
 
-## ✅ 완료된 것 (2026-06-22 ~ 2026-08-07)
+## ✅ 완료된 것
 
-### AI 고도화-9 (2026-07-24)
+### 고도화-11 (2026-08-10)
+
 | 항목 | 커밋 |
 |------|------|
-| MCP 서버 완전 안정화 (Secret 불일치 해결) | ce1c872 |
-| sync-tunnel.js 청크 버그 수정 | — |
-| MCP 도구 11개 완성 (studio_set_episode ~ studio_get_status) | ce1c872 |
-| 탭 공통 레이아웃 (사이드바+고정 상단바) 전체 통일 | a2df79a |
-| scriptParserV3.js 모듈화 | ce1c872 |
-| SF_E04 대본 수동 시뮬레이션 완주 (7컷) | — |
-| Notion 에피소드 후보 풀 DB 저장 | — |
+| POST /api/pipeline/start + GET /api/pipeline/status + POST /api/pipeline/stop (영구 락 버그 선제 처리 포함) | 7867f4c |
+| 에이전트 리더 탭 — 구간 선택(G1~G5) + 파이프라인 실행/중지 버튼 + 3초 폴링 실시간 로그 | a30caf2 |
+| 에이전트 리더 채팅 UI — 컨텍스트 자동주입 + 대화 히스토리 + 액션 파싱(pipeline_start/stop 실행) | 4f07f65 |
 
-### AI 고도화-10 (2026-08-01)
+**검증 완료**: 에이전트 리더 탭 UI → `/api/pipeline/start` → `pipeline-leader.js` MCP 체이닝 실제 관통 확인
+**버그 수정**: `studioState.episode?.id` → `studioState.activeEpisodeId` (조용한 실패 방지), pipelineStatus.meta?.xxx 구조 수정
+
+### 고도화-10 (2026-08-07~09)
+
 | 항목 | 커밋 |
 |------|------|
-| codebook_v1.0.0.json 생성 (E01~E06 47컷 역설계) | d5613c3 |
-| script_generator.py 재구성 (codebook 외부 로드 + IP/VP/KR 로직) | d5613c3 |
-| script_to_prompts.py AT/CP 필드 대응 | d5613c3 |
+| codebook_v1.0.0.json — SF_E01~E06 47컷 역설계, 전 필드 확정(SC/SP/PL/CH/DL/NR/SH/CA/MD/AT/DU/KR/IP/VP/CP) | d5613c3 |
+| script_generator.py 재작성 — 외부 codebook.json 로드 방식 | d5613c3 |
+| script_to_prompts.py — AT/CP 필드 대응, at+ac 듀얼 출력 하위 호환 | d5613c3 |
+| /api/generate-candidate-flow 모델 업그레이드(haiku→sonnet-4-6) + LF/SF 컷 수 분기(LF=12~20컷 4096토큰) | 별도 커밋 |
+| video-automation.js 팝업 트리거 하드코딩("Nano Banana 2") → 구조적 패턴으로 교체 | 별도 커밋 |
+| 프롬프트 \n\n → 공백 치환 (Flow Enter=전송 조기제출 버그 수정) | 별도 커밋 |
+| pipeline-leader.js — G1~G5 MCP 체이닝 오케스트레이터 검증 완료 (--episode/--from/--to 인자 추가) | 7867f4c 포함 |
 
-### 기타 도구 개발 (2026-08-06~07)
+### 고도화-9 (2026-07-14~30)
+
 | 항목 | 내용 |
 |------|------|
-| A Creative TTS Studio | 도구 재구축 완료 |
-| A Creative Storyboard | API 문제로 대안 전환 |
-| code_generator_v1.html | "컷 설계" 탭 → 🖼️ 러프 스케치 프리비주얼 카드 기능 완성 |
+| MCP 브릿지 구축 | claude.ai → Vercel api/mcp.js → Cloudflare Quick Tunnel → proxy.js(3001) |
+| MCP 도구 11개 완성 | studio_set_episode, studio_upload_script, studio_approve_g1, studio_run_g2~g4, studio_approve_g2~g4, studio_run_g5, studio_get_status |
+| content_matrix_v3.html 후보 풀 탭 | 좌우 분할 패널, 4단계 체크리스트(⬜❌🟡✅), 코디젠 핸드오프 연결 |
+| code_generator_v1.html (코디젠) | 에피소드/컷 설계/워크플로우 탭, /api/generate-script 연결 |
+| ScriptGenTab.jsx v3 파서 | SC/SP/PL/CH/DL/NR/SH/CA/MD/AT/DU/KR/IP/VP 필드 파싱 |
 
-### MCP 인프라 (2026-07-14 이전)
+### 인스타 릴스 제작 기능 (2026-08-07)
+
 | 항목 | 내용 |
 |------|------|
-| Notion 마스터 허브 구축 | ID: 38560cf6-afd9-81c7-ab52-f99a245a5fa5 |
-| 에피소드 파이프라인 DB | 2d093c5f-69c4-4e91-9d2d-0b997ddbe299 |
-| 작업·버그 로그 DB | b4f971f4-32bb-413b-b0fe-7aa4ca6d5e12 |
-| MCP_PUBLIC_SECRET | 3ab304e7a6c5eefb04676abb89afac23135da004d758635314d8541531d6cc91 |
-| video-automation.js switchToVideoMode() | ep5 cut_01 생성 성공 확인 |
+| handwriting_overlay.py | 인스타 릴스용 손글씨 오버레이 생성 |
+| yeori_signature.py | 서여리 시그니처 자동 삽입 |
 
-### G1~G5 파이프라인 검증 현황
-| Step | 실데이터 완주 | 비고 |
+### start_yeori.bat 자동 동기화 (2026-08-08)
+
+- bat 실행 시 이 PC에 1시간 자동 동기화 작업 등록 여부 확인 → 없으면 자동 등록, 있으면 스킵
+- 회사 PC에서도 git pull 후 bat 실행만으로 동일 설정 자동 적용 (별도 명령어 불필요)
+- "없으면 등록 / 있으면 스킵" 양쪽 경로 실제 검증 완료
+
+### 고도화-8 이전 완료 항목 (06-21 기준)
+
+<details>
+<summary>펼치기</summary>
+
+- 영상 만들기 탭 자막 시스템 전면 구축 (423b668 ~ f00d617)
+- 다중 클립 트림 시스템 (8928265 ~ e7b46ef)
+- G4 스타트 프레임 자동 연결 (gpoints.json selectedImage 필드)
+- VideoTab 전체 일괄 합성 버튼 (/api/ffmpeg 연동)
+- EP3 실전 테스트 완주 (G1~G2, 경로 버그 해결)
+- A Creative Cutter CapCut draft_content.json 외부 조작 경로 폐기 → FFmpeg 직접 합성으로 전환
+- studio-state.json OneDrive 동기화 전환 (git 추적 제외)
+- TTS 탭 — 전역 상태 보존 + 영상 자막 자동 동기화 (eca548a)
+
+</details>
+
+---
+
+## 🗺️ 자동화 전체 현황 (2026-08-10 기준)
+
+| 단계 | 상태 | 비고 |
 |------|------|------|
-| G1 대본생성 | ✅ 완주 검증 | 실데이터로 끝까지 확인 |
-| G2 이미지생성 (Flow) | 🟡 코드 경로 완성 | MCP 트리거 미검증, flow-automation.js 자체는 별도 디버깅 완료 |
-| G3 TTS (ElevenLabs) | ✅ 완주 검증 | 실데이터로 끝까지 확인 |
-| G4 영상생성 (video-automation.js) | 🟡 코드 경로 완성 | MCP 트리거 미검증, video-automation.js 자체는 별도 디버깅 완료 |
-| G5 편집 (FFmpeg) | ✅ 완주 검증 | 실데이터로 끝까지 확인 |
+| Step 0 트렌드 수집 | 🟡 부분 자동화 | TREND RADAR v7, 후보풀 탭 연결 완료 |
+| Step 1 후보 선정 | ✅ 완료 | 후보풀 → 코디젠 핸드오프 |
+| G1 대본 생성 | ✅ 완료 | /api/generate-script, codebook v1.0.0 |
+| G2 이미지 생성 | ✅ 완료 | flow-automation.js, MCP studio_run_g2 |
+| G3 TTS | ✅ 완료 | ElevenLabs 연동, 자막 자동 동기화 |
+| G4 영상 생성 | 🟡 부분 자동화 | video-automation.js 완성, VideoTab UI 미연결, 타임아웃 처리 미완 |
+| G5 편집 | 🟡 부분 자동화 | FFmpeg 합성 완성, pipeline-leader G5 체이닝 확인 |
+| G6 업로드 | ⬜ 미구현 | |
+| **오케스트레이터** | ✅ **완료** | **에이전트 리더 탭 ↔ pipeline-leader.js 연결, 채팅 소통 기능** |
 
 ---
 
-## 📋 대기 중
+## ⚠️ 핵심 메모
 
-### Codi_GEN 다음 단계
-- ScriptGenTab.jsx pc.ac → pc.at 전환
-- codebook 실전 테스트 (SF_E07 마스터 코드로 대본 출력)
-- Codi_GEN UI 설계 (codebook 편집 인터페이스, OK/FAIL 학습 데이터 수집)
+### MCP 브릿지
+- Quick Tunnel URL은 PC 재시작마다 변경 → `MCP_BRIDGE_URL` 갱신 + Vercel redeploy 필요
+- 브릿지 끊김 시 `get_studio_state` 실패 → `recent_chats(n=3)` 폴백으로 컨텍스트 재구성
+- `MCP_PUBLIC_SECRET`: 값은 문서에 적지 말 것 — Vercel 환경변수에서 직접 확인 (⚠️ 과거 버전의 이 문서에 평문으로 실려 GitHub public 저장소에 노출된 이력 있음 — 로테이션 권장, 2026-08-10 확인)
 
-### 영상/편집 파이프라인
-- VideoTab.jsx AI 영상 자동생성 UI 연결
-- G4 FFmpeg 실제 합성 로직 (컷별 클립+음성+자막 → MP4)
-- G5~G6 미착수 영역
+### 3개 도구 연결 구조 (2026-08-10 완성)
+```
+트렌드레이더(후보풀 탭)
+    ↓ promoteCandidateToG1() — localStorage → code_generator_v1.html
+코디젠 → /api/generate-script
+    ↓ (스튜디오 에피소드 등록)
+에이전트 리더 탭
+    ↓ /api/pipeline/start (채팅 액션 파싱 또는 직접 버튼)
+pipeline-leader.js — MCP G1→G5 체이닝
+```
 
-### 서여리 의상 프롬프트 카탈로그 고도화
-- 15룩, 7카테고리(A~G), 계절별 태그 + 캐릭터 보드 이미지 추가 예정
-- LOOK_BANK에 "검증된 것" vs "수정요청 필요했던 것" 구분
-
-### OneDrive 미디어 동기화
-- 집 PC OneDrive 폴더 미생성 상태 확인 필요
-
----
-
-## ⚠️ 알아야 할 핵심 메모
-
-### MCP 연결 구조
-- claude.ai → Vercel api/mcp.js → Cloudflare Quick Tunnel → proxy.js(3001)
-- ⚠️ Quick Tunnel URL은 PC 재시작마다 변경 → MCP_BRIDGE_URL 갱신 + Vercel redeploy 필요
-- Claude Code 로그인 만료 시: `/login` 실행
-
-### 경로 분리 원칙
-- CODE_ROOT(소스코드) ≠ MEDIA_ROOT(`C:\yeori-studio\` 고정)
-- 집 PC 소스: `C:\yeori-studio\app\`
-- 회사 PC 소스: `C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio`
-
-### Codi_GEN 핵심 원칙
-- codebook.json = 단일 진실 소스 (스튜디오와 분리)
-- 연결 매개체: script_generator.py (JSON→텍스트 변환)
-- Versioning: v1.x YEORI 전용 → v2.0 character_id 분기 → v3.0 범용 DSL
-
-### 실행 방법
-- 항상 `start_yeori.bat`으로 실행 (회사 PC: `.\start_yeori.bat`)
+### 실행 환경
+- `start_yeori.bat` — proxy.js(3001) + Vite(5173) + Chrome CDP(9222) + 1시간 자동동기화 등록
+- ⚠️ Chrome CDP 포트 9222: `/api/run-video`와 에이전트 리더 영상 에이전트 동시 실행 금지 (Puppeteer 세션 충돌)
+- ⚠️ node 스크립트 실행 전 `$env:NODE_OPTIONS=""` 초기화 필요 (양 PC 공통)
 - Claude API 모델명: `claude-sonnet-4-6`
 
-### ElevenLabs
-- 서여리 음성 ID: `RmYuvmCbqOMBJxDLW4k8`
-- 모델: eleven_multilingual_sts_v2
-
----
-
-## 🛠️ 툴 & 계정 현황
-
-| 도구 | 용도 | 상태 |
-|------|------|------|
-| Google Flow (Veo3/Omni Flash) | 이미지·영상 생성 | 활성 |
-| ElevenLabs (서여리 전용) | TTS | 활성 (RmYuvmCbqOMBJxDLW4k8) |
-| FFmpeg | 영상+음성 합성 | 설치 완료 (C:\ffmpeg\bin\ffmpeg.exe) |
-| Notion MCP | 마스터 허브 | 구축 완료, 07-14 이후 미동기화 |
-| A Creative TTS Studio | TTS 도구 | 재구축 완료 (08-06) |
-| code_generator_v1.html | 컷 설계 도구 | 러프 스케치 프리비주얼 완성 (08-07) |
-
----
-
-## 📁 프로젝트 파일 위치
+### 경로
+- 집 PC: `C:\yeori-studio\` (git 루트) / `C:\yeori-studio\app\`
+- 회사 PC: `C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio`
 - GitHub: `J-xeses/yeori-studio` (master 브랜치)
 - Vercel: `yeori-studio.vercel.app`
-- codebook: `app/scripts/codebook_v1.0.0.json`
-- 미디어 루트: `C:\yeori-studio\` (양쪽 PC 공통)
+
+### 캐릭터 일관성
+- 헤어: `hair is long, NOT short` 이중 강조 유지
+- ElevenLabs 보이스 ID: `RmYuvmCbqOMBJxDLW4k8`
+- Google Flow 프롬프트 내 "서여리"/"Seo Yeori" 직접 사용 금지 → "20대 초반 한국 여성"
 
 ---
 
