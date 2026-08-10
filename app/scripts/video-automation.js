@@ -47,7 +47,7 @@ const CONFIG = {
   flowDir:         path.join(MEDIA_ROOT, 'downloads', 'flow'),
   videoDir:        path.join(MEDIA_ROOT, 'downloads', 'video'),
   characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
-  preferredModel:  'Omni Flash',
+  preferredModel:  'Veo 3.1 - Lite',
   defaultDuration: 8,
   delayMs:         6000,
   timeoutMs:       300000, // 5분 (영상 생성은 이미지보다 오래 걸림)
@@ -211,8 +211,15 @@ async function connectBrowser() {
   })
 }
 
+// 항상 browser.newPage()로 새 탭을 열면, 스크립트를 여러 번 재시도/재실행할 때마다
+// (예: 실패 후 재시도, 사람이 중간에 프로세스를 kill하고 다시 실행) 탭이 계속 쌓인다.
+// 실측(2026-08-10): 짧은 시간에 재시도 3회로 같은 프로젝트 탭이 4개까지 쌓였고, 각 탭이
+// 서로 다른 진행 상태(모델 선택 안 됨/생성 중/완료)로 따로 놀면서 원인 파악이 어려워짐 —
+// flow-setup.js의 getFlowPage()와 동일하게 기존 labs.google 탭을 재사용한다.
 async function setupPage(browser) {
-  const page = await browser.newPage()
+  const existing = (await browser.pages()).find(p => p.url().includes('labs.google'))
+  const page = existing || await browser.newPage()
+  if (existing) log('info', `기존 Flow 탭 재사용: ${existing.url().slice(0, 70)}`)
   await page.evaluateOnNewDocument(() => {
     Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
   })
@@ -527,6 +534,15 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   await sleep(500)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_video_tab.png') })
 
+  // ── 1.5. 모델 선택 (Omni Flash / Veo 3.1) ───────────────────────────
+  // selectVideoModel()은 예전부터 구현돼 있었지만 여기서 호출된 적이 없어서,
+  // "동영상" 탭으로 전환한 뒤에도 모델 선택 위젯이 이전 모드(이미지, 예: Nano
+  // Banana 2)에 남아있는 채로 생성이 진행되고 있었다(2026-08-10 실측 스크린샷에서
+  // "Nano Banana 2 x2" 배지 확인 — 동영상 모델이 아님). 모델별 정책/기능이 다를 수
+  // 있어 잘못된 모델로 생성 시도하면 실패 원인 파악이 어려워지므로, 탭 전환 직후
+  // 비율/업스케일 선택 전에 명시적으로 선택한다.
+  await selectVideoModel(page, modelName)
+
   // ── 2. 비율 버튼 ─────────────────────────────────────────────────────
   // textContent가 'crop_9_169:16' 형태 → .endsWith(ratio) 로 매칭
   const ratioInfo = await page.evaluate((ratio) => {
@@ -554,9 +570,9 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   await sleep(500)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_ratio.png') })
 
-  // ── 3. 업스케일 선택 (x2 고정) ───────────────────────────────────────
-  // textContent === 'x2'
-  const upscale = 'x2'
+  // ── 3. 업스케일 선택 (x1 고정) ───────────────────────────────────────
+  // textContent === 'x1'
+  const upscale = 'x1'
   const upscaleInfo = await page.evaluate((up) => {
     const tabs = [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
     for (const el of tabs) {
@@ -631,67 +647,74 @@ async function debugDump(page, label) {
 // ── 비디오 모델 선택 (Omni Flash) ────────────────────────────────────
 // 전체 DOM 스캔: role/tag 무관하게 텍스트 매칭 → 직접 클릭
 
+// 실측 확인된 모델 드롭다운 옵션(2026-08-10): "Omni Flash" / "Veo 3.1 - Lite" /
+// "Veo 3.1 - Fast" / "Veo 3.1 - Quality". 드롭다운 트리거 버튼은 항상 "<현재모델>
+// arrow_drop_down" 형태라, 목표 모델명으로 트리거를 찾으면 현재 선택값이 이미
+// 목표와 같을 때만 우연히 맞고 다를 때는 못 찾아서 아예 못 바꾸는 버그가 있었다
+// (실측: 기본값 "Omni Flash"에서 "Veo 3.1 - Lite"로 못 바꾸고 있었음, 이게 곧
+// "동영상 모드가 제대로 설정 안 된 채 생성됨" 문제의 실제 원인으로 추정).
+// 트리거는 텍스트가 아니라 "arrow_drop_down" 아이콘 리거처로 찾고, 옵션은 드롭다운이
+// 열린 뒤에 목표 모델명으로 찾아야 한다.
 async function selectVideoModel(page, modelName = CONFIG.preferredModel) {
   await debugDump(page, 'model')
 
-  // 전략 1: 텍스트가 정확히 modelName/Flash/Omni를 포함하는 가장 작은 leaf 요소
-  const clicked = await page.evaluate((name) => {
-    const targets = [name, 'Omni Flash', 'Flash', 'Omni']
-    function scan(root, depth = 0) {
-      if (depth > 12) return null
-      for (const target of targets) {
-        for (const el of root.querySelectorAll('*')) {
-          const r = el.getBoundingClientRect()
-          if (r.width < 4 || r.height < 4) continue
-          if (el.children.length > 8) continue          // 컨테이너 제외
-          const txt = (el.textContent || '').trim()
-          if (txt.includes(target) && txt.length < 60) {
-            el.click()
-            return `${el.tagName}:"${txt.slice(0, 40)}"`
-          }
-        }
-      }
-      for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
-      }
-      return null
+  // 이미 목표 모델이 선택돼 있으면(트리거 텍스트에 modelName 포함) 건드릴 필요 없음
+  const already = await page.evaluate((name) => {
+    for (const el of document.querySelectorAll('button')) {
+      const txt = (el.textContent || '').trim()
+      if (txt.includes('arrow_drop_down') && txt.includes(name)) return true
     }
-    return scan(document)
+    return false
   }, modelName)
-
-  if (clicked) {
-    log('ok', `[model] 클릭: ${clicked}`)
-    await sleep(900)
-    // 드롭다운이 열렸으면 옵션 한 번 더 선택
-    const option = await page.evaluate((name) => {
-      const targets = [name, 'Omni Flash', 'Flash', 'Omni']
-      function scan(root, depth = 0) {
-        if (depth > 10) return null
-        for (const target of targets) {
-          for (const el of root.querySelectorAll('*')) {
-            const r = el.getBoundingClientRect()
-            if (r.width < 4) continue
-            if (el.children.length > 8) continue
-            const txt = (el.textContent || '').trim()
-            if (txt.includes(target) && txt.length < 60) {
-              el.click(); return `${el.tagName}:"${txt.slice(0, 40)}"`
-            }
-          }
-        }
-        for (const el of root.querySelectorAll('*')) {
-          if (el.shadowRoot) { const r = scan(el.shadowRoot, depth + 1); if (r) return r }
-        }
-        return null
-      }
-      return scan(document)
-    }, modelName)
-    if (option) log('ok', `[model] 드롭다운 옵션: ${option}`)
-  } else {
-    log('warn', `[model] ${modelName} 텍스트 없음 — debug_dump_model.png 확인`)
+  if (already) {
+    log('ok', `[model] 이미 "${modelName}" 선택돼있음 — 스킵`)
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_after.png') })
+    return
   }
 
+  // 1단계: 드롭다운 트리거 버튼 클릭 (텍스트에 "arrow_drop_down" 아이콘 리거처 포함)
+  const triggerClicked = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('button')) {
+      const txt = (el.textContent || '').trim()
+      if (txt.includes('arrow_drop_down')) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0) { el.click(); return `${el.tagName}:"${txt.slice(0, 40)}"` }
+      }
+    }
+    return null
+  })
+
+  if (!triggerClicked) {
+    log('warn', '[model] 드롭다운 트리거 버튼 못 찾음 — debug_dump_model.png 확인')
+    await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_after.png') })
+    return
+  }
+  log('info', `[model] 드롭다운 열기: ${triggerClicked}`)
+  await sleep(800)
+  await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_dropdown_open.png') })
+
+  // 2단계: 열린 드롭다운에서 목표 모델명과 정확히 일치하는 가장 작은 leaf 요소 클릭
+  const optionClicked = await page.evaluate((name) => {
+    let best = null
+    for (const el of document.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect()
+      if (r.width < 4 || r.height < 4) continue
+      if (el.children.length > 2) continue
+      const txt = (el.textContent || '').trim()
+      if (txt === name) { best = el; break }
+    }
+    if (!best) return null
+    best.click()
+    return `${best.tagName}:"${(best.textContent || '').trim().slice(0, 40)}"`
+  }, modelName)
+
+  if (optionClicked) {
+    log('ok', `[model] 선택: ${optionClicked}`)
+  } else {
+    log('warn', `[model] 드롭다운은 열렸지만 "${modelName}" 옵션을 못 찾음 — debug_model_dropdown_open.png 확인`)
+  }
+  await sleep(500)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_after.png') })
-  await sleep(400)
 }
 
 // ── 영상 길이 설정 ────────────────────────────────────────────────────

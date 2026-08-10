@@ -105,6 +105,18 @@ async function shouldAutoApprove(stage, cutStatus) {
 let g2InFlight = false
 let g4InFlight = false
 let g5Triggered = false
+let g2StartedAt = 0
+let g4StartedAt = 0
+
+// G2/G4 락 해제는 "요청 보낸 컷 전부 산출물이 생겼는지"로 판단하는데, Flow/Veo가
+// 정책 거부 등으로 일부 컷 생성에 실패하면 그 컷은 영원히 hasImage/hasVideo=false로
+// 남아 락이 절대 안 풀리는 버그가 있었다(실측: G4가 컷 1에서 "Google 정책 위반" 실패 후
+// pipeline-leader가 에러 로그 한 줄 없이 무한 대기 상태로 멈춤, 2026-08-10). 완료 감지가
+// 실패 케이스를 못 잡는 근본 원인은 안 고치더라도, 타임아웃으로 락을 강제 해제하고
+// 눈에 띄게 경고를 남겨 "조용히 멈춤" 대신 "다음 사이클에 다시 시도 + 사람이 알아챌 수
+// 있게" 만든다.
+const G2_TIMEOUT_MS = 10 * 60 * 1000
+const G4_TIMEOUT_MS = 15 * 60 * 1000
 
 async function checkAndAdvance() {
   const statusRes = await api('GET', `/api/mcp/studio-status?episodeId=${encodeURIComponent(EPISODE_ID)}`)
@@ -119,12 +131,23 @@ async function checkAndAdvance() {
   if (g2InFlight && cuts.filter(c => c.g1).every(c => c.hasImage)) g2InFlight = false
   if (g4InFlight && cuts.filter(c => c.g2).every(c => c.hasVideo)) g4InFlight = false
 
+  // ── 타임아웃 안전장치: 일부 컷이 생성 실패해서 완료 감지가 영원히 안 되는 경우 대비 ──
+  if (g2InFlight && Date.now() - g2StartedAt > G2_TIMEOUT_MS) {
+    log('G2', `⚠️ ${G2_TIMEOUT_MS / 60000}분 경과했는데도 미완료 컷 있음 — 일부 실패했을 가능성, 락 강제 해제 후 다음 사이클에 재시도`)
+    g2InFlight = false
+  }
+  if (g4InFlight && Date.now() - g4StartedAt > G4_TIMEOUT_MS) {
+    log('G4', `⚠️ ${G4_TIMEOUT_MS / 60000}분 경과했는데도 미완료 컷 있음 — 일부 실패했을 가능성(예: Google 정책 거부), 락 강제 해제 후 다음 사이클에 재시도`)
+    g4InFlight = false
+  }
+
   // ── G2 트리거: G1 승인됐고 이미지가 아직 없는 컷들을 한 번에 요청(에피소드당 동시 1건) ──
   if (!g2InFlight) {
     const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage)
     if (g2Candidates.length) {
       const cutIds = g2Candidates.map(c => c.no)
       g2InFlight = true
+      g2StartedAt = Date.now()
       log('G2', `이미지 생성 요청 → 컷 ${cutIds.join(',')}`)
       const r = await api('POST', '/api/mcp/studio-run-g2', { episodeId: EPISODE_ID, cutIds })
       if (!r.ok) { log('G2', `요청 실패 — ${r.data?.error || r.status}`); g2InFlight = false }
