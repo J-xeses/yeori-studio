@@ -832,6 +832,19 @@
         <div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">에이전트 카드를 클릭하면 실행 로그가 여기 표시됩니다.</div>
       </div>
 
+      <!-- ── 리더 채팅 ── -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:4px">
+        <div class="section-title" style="margin:0">💬 리더와 소통</div>
+        <button class="btn-cancel" onclick="clearLeaderChat()" style="font-size:11px;padding:4px 10px">🗑 초기화</button>
+      </div>
+      <div id="leader-chat-history" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);height:280px;overflow-y:auto;padding:12px;margin-bottom:10px;display:flex;flex-direction:column;gap:10px">
+        <div style="text-align:center;color:var(--text3);font-size:11px;margin:auto">에이전트 리더에게 말을 걸어보세요.<br>현황 확인, 실행 지시, 판단 요청 모두 가능합니다.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:24px">
+        <textarea id="leader-chat-input" rows="2" placeholder="예: 지금 상태 어때? / G3부터 G5 실행해 / 컷 실패 원인이 뭐야?" style="flex:1;font-size:12px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);resize:none;line-height:1.5;font-family:inherit" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendLeaderChat();}"></textarea>
+        <button class="btn-primary" onclick="sendLeaderChat()" id="btn-leader-send" style="white-space:nowrap;align-self:flex-end;padding:8px 16px">전송</button>
+      </div>
+
       <!-- 임무 배분 규칙 + Claude API 판단 -->
       <div class="section-title">임무 배분 프로토콜</div>
       <div class="leader-grid" style="margin-bottom:20px">
@@ -2977,6 +2990,160 @@ function startPipelinePoll() {
 function stopPipelinePoll() {
   if (pipelinePollTimer) { clearInterval(pipelinePollTimer); pipelinePollTimer = null; }
 }
+
+// ── 리더 채팅 ────────────────────────────────────────────────
+const LEADER_CHAT_KEY = 'yeori-leader-chat-v1';
+let leaderChatHistory = JSON.parse(localStorage.getItem(LEADER_CHAT_KEY) || '[]');
+
+function renderLeaderChat() {
+  const el = document.getElementById('leader-chat-history');
+  if (!el) return;
+  if (!leaderChatHistory.length) {
+    el.innerHTML = `<div style="text-align:center;color:var(--text3);font-size:11px;margin:auto">에이전트 리더에게 말을 걸어보세요.<br>현황 확인, 실행 지시, 판단 요청 모두 가능합니다.</div>`;
+    return;
+  }
+  el.innerHTML = leaderChatHistory.map(m => {
+    const isUser = m.role === 'user';
+    return `<div style="display:flex;flex-direction:column;align-items:${isUser ? 'flex-end' : 'flex-start'};gap:3px">
+      <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${isUser ? '성준님' : '🤖 에이전트 리더'} · ${m.time}</div>
+      <div style="max-width:85%;padding:8px 12px;border-radius:${isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px'};background:${isUser ? 'var(--purple-bg)' : 'var(--surface2)'};border:1px solid ${isUser ? 'rgba(167,139,250,0.35)' : 'var(--border)'};font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap">${m.content}</div>
+      ${m.action ? `<div style="font-size:10px;color:var(--teal);margin-top:2px">⚡ ${m.action}</div>` : ''}
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function saveLeaderChat() {
+  // 최근 40턴만 보관
+  if (leaderChatHistory.length > 40) leaderChatHistory = leaderChatHistory.slice(-40);
+  try { localStorage.setItem(LEADER_CHAT_KEY, JSON.stringify(leaderChatHistory)); } catch(e) {}
+}
+
+function clearLeaderChat() {
+  leaderChatHistory = [];
+  saveLeaderChat();
+  renderLeaderChat();
+  showToast('💬 채팅 초기화됨');
+}
+
+function appendLeaderMsg(role, content, action = null) {
+  const time = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
+  leaderChatHistory.push({ role, content, action, time });
+  saveLeaderChat();
+  renderLeaderChat();
+}
+
+async function sendLeaderChat() {
+  const input = document.getElementById('leader-chat-input');
+  const btn   = document.getElementById('btn-leader-send');
+  const text  = input?.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  btn.disabled = true;
+  btn.textContent = '...';
+  appendLeaderMsg('user', text);
+
+  // 컨텍스트 수집
+  await loadStudioState();
+  let pipelineStatus = {};
+  try {
+    const ps = await fetch(`${YEORI_SERVER}/api/pipeline/status`);
+    pipelineStatus = await ps.json();
+  } catch(e) {}
+
+  const ep = studioState.episode;
+  const cuts = studioState.cuts || [];
+  const activeEpisodeId = studioState.activeEpisodeId || '없음';
+  // /api/pipeline/status 응답은 {running, meta:{episodeId,startStage,endStage,...}, logs}
+  // 형태라(server/proxy.js), episodeId/startStage/endStage는 meta 안에 있다.
+  const pm = pipelineStatus.meta || {};
+
+  const systemPrompt = `당신은 서여리 채널의 AI 콘텐츠 파이프라인을 총괄하는 에이전트 리더입니다.
+성준님(제작자)과 한국어로 소통하며, 현황 파악·실행 지시·판단·조언을 수행합니다.
+
+=== 현재 스튜디오 상태 ===
+활성 에피소드: ${activeEpisodeId} · ${ep ? `EP${ep.number} "${ep.title}"` : '없음'}
+전체 컷 수: ${cuts.length}컷
+G1완료: ${cuts.filter(c=>c.g1).length} / G2완료: ${cuts.filter(c=>c.g2).length} / G3완료: ${cuts.filter(c=>c.g3).length} / G4완료: ${cuts.filter(c=>c.g4).length} / G5완료: ${cuts.filter(c=>c.g5).length}
+
+=== 파이프라인 상태 ===
+${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 구간: ${pm.startStage}→${pm.endStage}` : '⚫ 대기 중'}
+최근 로그: ${(pipelineStatus.logs || []).slice(-5).join(' | ') || '없음'}
+
+=== 당신이 실행할 수 있는 액션 ===
+- pipeline_start(episodeId, from, to): 파이프라인 구간 실행
+- pipeline_stop: 파이프라인 중지
+- 위 액션이 필요하면 답변 끝에 JSON 블록으로 명시: \`\`\`action\n{"type":"pipeline_start","episodeId":"...","from":"g1","to":"g5"}\n\`\`\`
+
+답변은 간결하고 실용적으로. 불필요한 공손한 수식어 없이.`;
+
+  // Claude API 호출 (대화 히스토리 포함)
+  const messages = leaderChatHistory
+    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .slice(-10) // 최근 10턴
+    .map(m => ({ role: m.role, content: m.content }));
+
+  try {
+    const apiKey = studioState.apiKeys?.claude;
+    if (!apiKey) {
+      appendLeaderMsg('assistant', 'Claude API 키가 없습니다. yeori-studio 설정에서 키를 입력해 주세요.');
+      return;
+    }
+
+    const res = await fetch(`${YEORI_SERVER}/api/claude/v1/messages`, {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+    const reply = data.content?.map(b=>b.text||'').join('') || '응답 없음';
+
+    // 액션 파싱
+    const actionMatch = reply.match(/```action\s*([\s\S]*?)```/);
+    let actionLabel = null;
+    if (actionMatch) {
+      try {
+        const act = JSON.parse(actionMatch[1].trim());
+        if (act.type === 'pipeline_start') {
+          await fetch(`${YEORI_SERVER}/api/pipeline/start`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ episodeId: act.episodeId, startStage: act.from, endStage: act.to }),
+          });
+          setPipelineRunningUI(true);
+          startPipelinePoll();
+          actionLabel = `파이프라인 시작 실행됨 (${act.from}→${act.to})`;
+        } else if (act.type === 'pipeline_stop') {
+          await fetch(`${YEORI_SERVER}/api/pipeline/stop`, { method: 'POST' });
+          setPipelineRunningUI(false);
+          stopPipelinePoll();
+          actionLabel = '파이프라인 중지 실행됨';
+        }
+      } catch(e) {}
+    }
+
+    // 액션 블록 제거 후 표시
+    const cleanReply = reply.replace(/```action[\s\S]*?```/g, '').trim();
+    appendLeaderMsg('assistant', cleanReply, actionLabel);
+
+  } catch(e) {
+    appendLeaderMsg('assistant', '오류: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '전송';
+  }
+}
+
+// 초기 렌더
+renderLeaderChat();
 
 let _lastLogCount = 0;
 async function pollPipelineStatus() {
