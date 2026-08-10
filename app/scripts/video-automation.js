@@ -474,7 +474,14 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_before_toggle.png') })
 
   // ── 0. 설정 팝업 열기 — 이미 열려있으면 클릭 생략 (토글 방지) ──────────
-  // 확인된 DOM: button[textContent /Nano Banana 2.*x[1-4]/, children===2]
+  // 트리거 버튼 텍스트는 "<모드> · <설정 요약> x<N>" 형태인데, 계정/프로젝트마다
+  // 마지막으로 쓴 모델(Nano Banana 2, Omni Flash 등)이 달라서 텍스트가 매번 다르다.
+  // 예전엔 "Nano Banana 2" 문자열을 하드코딩해서 찾았는데, 그 모델이 기본값이 아닌
+  // 계정(예: 새로 만든 부계정)에서는 트리거를 못 찾아 팝업이 아예 안 열리고 이후
+  // 동영상 탭/비율/모델/업스케일 설정이 전부 무시된 채 그 계정의 마지막 기본값으로
+  // 생성되는 사고로 이어졌다(실측 2026-08-10: Omni Flash·10초·15크레딧으로 생성됨).
+  // 모델명과 무관하게 "children이 2개, 업스케일 x1~x4 텍스트를 포함하는 짧은 버튼"
+  // 구조로 찾는다(수동 조사에서 이 패턴으로 안정적으로 찾힌 것 확인).
   const alreadyOpen = await page.evaluate(() =>
     document.querySelectorAll('[role="tab"].flow_tab_slider_trigger').length > 0
   )
@@ -485,8 +492,9 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
     const popupInfo = await page.evaluate(() => {
       for (const el of document.querySelectorAll('button')) {
         const txt = (el.textContent || '').trim()
-        if (/Nano Banana 2/.test(txt) && /x[1-4]/.test(txt) && el.children.length === 2) {
+        if (/x[1-4]$/.test(txt) && txt.length < 60 && el.children.length === 2) {
           const r = el.getBoundingClientRect()
+          if (r.width === 0) continue
           return { txt: txt.slice(0, 60), x: Math.round(r.left), y: Math.round(r.top) }
         }
       }
@@ -956,8 +964,14 @@ async function typeVideoPrompt(page, prompt) {
   await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control')
   await page.keyboard.press('Backspace')
   await sleep(100)
-  await page.keyboard.type(prompt, { delay: 15 })
-  log('info', `프롬프트 입력: ${prompt.slice(0, 90)}${prompt.length > 90 ? '…' : ''}`)
+  // page.keyboard.type()은 문자열의 개행(\n)을 실제 Enter 키 입력으로 그대로 전송한다.
+  // videoPrompt는 대사 지시문/자막억제문구 사이에 "\n\n"이 여러 번 섞여 있는데, Flow의
+  // 프롬프트 입력창은 Enter를 "전송"으로 처리해서 개행마다 아직 다 안 쓴 프롬프트가
+  // 조기 제출돼버리는 사고가 실측으로 확인됨(한 컷에 영상이 여러 개 동시 생성됨,
+  // 2026-08-10). Flow 프롬프트는 줄바꿈이 굳이 필요 없는 연속 텍스트라 공백으로 치환.
+  const singleLinePrompt = prompt.replace(/\s*\n+\s*/g, ' ').trim()
+  await page.keyboard.type(singleLinePrompt, { delay: 15 })
+  log('info', `프롬프트 입력: ${singleLinePrompt.slice(0, 90)}${singleLinePrompt.length > 90 ? '…' : ''}`)
   await sleep(500)
 }
 
