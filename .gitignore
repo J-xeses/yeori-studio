@@ -6,6 +6,7 @@ logs/
 .chrome-profile/
 .chrome-profile-cutter/
 .chrome-profile-flow/
+.rl03-chrome-profile/
 *.py
 !app/scripts/script_generator.py
 !app/scripts/script_to_prompts.py

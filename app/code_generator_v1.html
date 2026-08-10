@@ -436,6 +436,24 @@
         </div>
 
         <div class="card accent" id="cut-generate-result" style="display:none;margin-top:16px"></div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-h"><span class="idx">14</span>🖼️ 러프 스케치 프리비주얼</div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div id="sketch-preview" style="width:170px;height:226px;flex-shrink:0;background:rgba(0,0,0,0.25);border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <span style="color:var(--text3);font-size:10px;font-family:'Space Mono',monospace">미생성</span>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="field-label">자동 생성 프롬프트 (구도·연출 코드 기반)</div>
+              <div class="code-preview" id="sketch-prompt-preview" style="margin-bottom:10px;max-height:90px;overflow-y:auto;font-size:10px"></div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button class="btn-loadpool" id="sketch-gen-btn" onclick="generateSketch()">🎨 스케치 생성</button>
+                <span id="sketch-status" style="font-size:10px;color:var(--text3)"></span>
+              </div>
+              <div class="auto-note" style="margin-top:8px">생성(Pollinations) → 선화 변환(informative-drawings, 브라우저 내 실행) 2단계 — 첫 실행 시 변환 모델(약 17MB) 다운로드로 다소 걸릴 수 있음. 인물 얼굴은 컷마다 달라질 수 있음(구도·톤 확인용, 캐릭터 확정용 아님).</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- TAB: 코드 확인 -->
@@ -506,6 +524,7 @@
 <!-- 토스트 -->
 <div class="toast" id="toast">✓ 저장됐어요</div>
 
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.10.0/dist/ort.js"></script>
 <script>
 const YEORI_SERVER = 'http://localhost:3001';
 // content_matrix_v3.html과 공유하는 localStorage 키 -- 둘 다 file://로 열리므로
@@ -636,6 +655,14 @@ function buildCodebookOptions() {
   SP_TIMEZONE_OPTIONS = entries(sp._time_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
   SP_LIGHT_OPTIONS    = entries(sp._light_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
 }
+
+// ── 러프 스케치 프롬프트용 코드→영문 매핑 (2026-08-07 실측 기준, 상황별_스케치_구현기준.md 참고) ──
+const LOCATION_EN = { CF: 'cafe interior', RE: 'restaurant interior', HM: 'home living room', ST: 'city street', GY: 'gym', KC: 'Korean sauna jjimjilbang', SW: 'subway station', RT: 'rooftop' };
+const TIMEZONE_EN = { TZ_GH: 'golden hour warm light', TZ_NT: 'night time', TZ_AM: 'morning light' };
+const LIGHT_EN = { LT_WM: 'warm lighting', LT_CL: 'cool toned lighting', LT_NT: 'natural daylight' };
+const SHOT_EN = { SH_CU: 'close-up shot', SH_MCU: 'medium close-up shot', SH_ECU: 'extreme close-up shot', SH_MS: 'medium shot', SH_WS: 'wide shot' };
+const ACTION_EN = { AT_AC_05: 'looking directly at camera', AT_SI_01: 'sitting', AT_MW_01: 'walking' };
+const MOOD_EN = { MD_SUR: 'shocked expression', MD_INT: 'focused expression', MD_CUR: 'curious expression', MD_DRM: 'dreamy atmosphere' };
 
 const DEMO_CANDIDATES = [
   { icon: '🧠', title: '회의가 끝나면 기억이 안 나는 이유', type: 'LF', keywords: 'PSY · 트렌드레이더 수집', story: '', script: '' },
@@ -875,6 +902,8 @@ function getCutDesign(cut) {
       mood: 'MD_JOY',
       moodboard: '',
       comment: '',
+      sketchUrl: null,
+      sketchPrompt: '',
     };
   }
   return cutDesignState[cut.num];
@@ -972,6 +1001,131 @@ function renderCutCodePreview(d, cut) {
 <span class="cp-m">${escapeHtml(d.indoor === 'IN' ? '실내' : '실외')} · ${escapeHtml(locLabel)} · 지역 ${escapeHtml(region)}(참고용, 코드 미포함) · 구간 ${Number(d.segCount)}개 · 감독 코멘트: ${escapeHtml(d.comment || '(미입력)')}</span>`;
 }
 
+// ── 러프 스케치: ①Pollinations 장면 생성 → ②informative-drawings 선화 변환(브라우저 내 ONNX) ──
+// 실측 근거(상황별_스케치_구현기준.md): BR_/GR_(사물·B롤)은 얼굴이 없어 캐릭터 비일관성 문제가
+// 아예 없는 가장 안정적인 구간이라 우선 활용. 와이드샷은 배경에 군중 단어를 절대 넣지 않고
+// "simple background, minimal detail"로 단순화 — 안 그러면 선화 변환 단계에서 원형 아티팩트 발생(실측 확인).
+function buildSketchPrompt(d) {
+  const seg = d.segments[SEGMENT_KEYS[0]] || { shot: 'SH_MS' };
+  const shot = SHOT_EN[seg.shot] || 'medium shot';
+  const isWide = seg.shot === 'SH_WS';
+  const loc = LOCATION_EN[d.location] || 'indoor space';
+  const light = [TIMEZONE_EN[d.timezone], LIGHT_EN[d.light]].filter(Boolean).join(', ');
+
+  let subject;
+  if (d.pipeline === 'BR_' || d.pipeline === 'GR_') {
+    subject = `still life detail shot inside a ${loc}, relevant props and objects, no people`;
+  } else {
+    const action = ACTION_EN[d.action] || 'standing';
+    const mood = MOOD_EN[d.mood] || '';
+    subject = [`young Korean woman`, action, mood, loc].filter(Boolean).join(', ');
+  }
+
+  return [shot, subject, light, isWide ? 'simple background, minimal detail' : ''].filter(Boolean).join(', ').replace(/,\s*,/g, ',').trim();
+}
+
+let onnxSessionPromise = null;
+function getOnnxSession() {
+  if (!onnxSessionPromise) {
+    onnxSessionPromise = (async () => {
+      ort.env.wasm.proxy = true;
+      return await ort.InferenceSession.create(
+        'https://huggingface.co/rocca/informative-drawings-line-art-onnx/resolve/main/model.onnx',
+        { executionProviders: ['wasm'] }
+      );
+    })();
+  }
+  return onnxSessionPromise;
+}
+
+async function blobToLinearRGBArray(blob) {
+  const img = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(img.width, img.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const rgbData = [[], [], []];
+  const d = imageData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const x = (i / 4) % canvas.width;
+    const y = Math.floor((i / 4) / canvas.width);
+    if (!rgbData[0][y]) rgbData[0][y] = [];
+    if (!rgbData[1][y]) rgbData[1][y] = [];
+    if (!rgbData[2][y]) rgbData[2][y] = [];
+    rgbData[0][y][x] = d[i + 0] / 255;
+    rgbData[1][y][x] = d[i + 1] / 255;
+    rgbData[2][y][x] = d[i + 2] / 255;
+  }
+  return { data: Float32Array.from(rgbData.flat().flat()), width: img.width, height: img.height };
+}
+
+async function linearGreyscaleArrayToBlob(linearArr, dims) {
+  const dataArray = [];
+  for (let i = 0; i < linearArr.length; i++) {
+    const v = linearArr[i] * 255;
+    dataArray.push(v, v, v, 255);
+  }
+  const imageData = new ImageData(new Uint8ClampedArray(dataArray), dims.width, dims.height);
+  const canvas = new OffscreenCanvas(dims.width, dims.height);
+  canvas.getContext('2d').putImageData(imageData, 0, 0);
+  return canvas.convertToBlob({ type: 'image/jpeg' });
+}
+
+async function generateSketch() {
+  const cut = currentCut();
+  const d = getCutDesign(cut);
+  const prompt = buildSketchPrompt(d);
+  d.sketchPrompt = prompt;
+  renderCutDesignTab();
+
+  const btn = document.getElementById('sketch-gen-btn');
+  const status = document.getElementById('sketch-status');
+  btn.disabled = true;
+
+  try {
+    status.textContent = '모델 로딩 중… (최초 1회, ~17MB)';
+    const sessionPromise = getOnnxSession();
+
+    status.textContent = '장면 생성 중…';
+    // Pollinations를 브라우저에서 직접 fetch()하면 Origin 헤더 때문에 403 차단됨(실측 확인)
+    // → yeori-studio Vercel 프록시(서버 간 요청이라 Origin 헤더 없음) 경유
+    const proxyUrl = 'https://yeori-studio.vercel.app/api/pollinations-proxy?prompt=' + encodeURIComponent(prompt) +
+      '&width=640&height=832&seed=' + Math.floor(Math.random() * 1e6);
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error(`이미지 생성 실패 (HTTP ${res.status})`);
+    const sceneBlob = await res.blob();
+
+    status.textContent = '선화 변환 중…';
+    const session = await sessionPromise;
+    const { data, width, height } = await blobToLinearRGBArray(sceneBlob);
+    const results = await session.run({ input: new ort.Tensor('float32', data, [1, 3, height, width]) });
+    const out = results['output'];
+    const sketchBlob = await linearGreyscaleArrayToBlob(out.data, { width: out.dims[3], height: out.dims[2] });
+
+    if (d.sketchUrl) URL.revokeObjectURL(d.sketchUrl);
+    d.sketchUrl = URL.createObjectURL(sketchBlob);
+    status.textContent = '';
+    showToast('✓ 스케치 생성 완료');
+  } catch (e) {
+    status.textContent = '';
+    showToast('⚠️ 스케치 생성 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    renderCutDesignTab();
+  }
+}
+
+function renderSketchPanel(d) {
+  const preview = document.getElementById('sketch-preview');
+  if (preview) {
+    preview.innerHTML = d.sketchUrl
+      ? `<img src="${d.sketchUrl}" style="width:100%;height:100%;object-fit:cover">`
+      : '<span style="color:var(--text3);font-size:10px;font-family:\'Space Mono\',monospace">미생성</span>';
+  }
+  const promptEl = document.getElementById('sketch-prompt-preview');
+  if (promptEl) promptEl.textContent = d.sketchPrompt || buildSketchPrompt(d);
+}
+
 function renderCutDesignTab() {
   const cut = currentCut();
   const d = getCutDesign(cut);
@@ -1014,6 +1168,7 @@ function renderCutDesignTab() {
   if (commentEl && document.activeElement !== commentEl) commentEl.value = d.comment;
 
   renderCutCodePreview(d, cut);
+  renderSketchPanel(d);
 }
 
 // ── 코드 프리뷰 / 자동연동 / 완성도 ─────────────────────────────────────────────────────

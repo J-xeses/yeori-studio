@@ -1,0 +1,79 @@
+{
+  "output_size": [1080, 1920],
+  "scenes": [
+    {
+      "time": "0~3s",
+      "text": "AI 크리에이터 만드는 데\n든 비용: 0원 🫢",
+      "position": "center",
+      "bubble": "none",
+      "color": "white",
+      "deco": ["✨", "♡"],
+      "arrow": false
+    },
+    {
+      "time": "3~12s",
+      "text": "프롬프트 입력하면 →\n서여리가 만들어져요 ✨",
+      "position": "bottom_left",
+      "bubble": "arrow_box",
+      "color": "white",
+      "deco": ["♡"],
+      "arrow": true,
+      "arrow_direction": "right"
+    },
+    {
+      "time": "12~16s",
+      "text": "아, 진짜!\n너무 부끄러워.. 🙈",
+      "position": "top_right",
+      "bubble": "cloud",
+      "color": "pink",
+      "deco": ["♡", "✨"],
+      "arrow": false
+    },
+    {
+      "time": "16~28s",
+      "text": "목소리도 AI로 만들어요 🎙️",
+      "position": "top_left",
+      "bubble": "arrow_box",
+      "color": "white",
+      "deco": [],
+      "arrow": true,
+      "arrow_direction": "down"
+    },
+    {
+      "time": "28~30s",
+      "text": "잠깐, 남자 목소리?! 😱\nㅋㅋㅋ 설정 잘못했다",
+      "position": "center",
+      "bubble": "oval",
+      "color": "pink",
+      "deco": ["✨"],
+      "arrow": false
+    },
+    {
+      "time": "35~48s",
+      "text": "꿈만큼은 진짜예요. 💜",
+      "position": "bottom_center",
+      "bubble": "none",
+      "color": "lavender",
+      "deco": ["♡", "♡", "✨"],
+      "arrow": false
+    },
+    {
+      "time": "48~55s",
+      "text": "어느 쪽이 진짜 서여리일까요? 👀",
+      "position": "top_center",
+      "bubble": "none",
+      "color": "white",
+      "deco": [],
+      "arrow": false
+    },
+    {
+      "time": "55~60s",
+      "text": "같이 봐주실 거죠? 🙏\n팔로우하면 다음 화 먼저요 💜",
+      "position": "bottom_center",
+      "bubble": "cloud",
+      "color": "lavender",
+      "deco": ["♡", "✨", "♡"],
+      "arrow": false
+    }
+  ]
+}

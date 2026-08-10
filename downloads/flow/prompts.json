@@ -1,23 +1,23 @@
 {
   "episode": 998,
-  "title": "[TEST] 파이프라인 실측용 3컷",
+  "title": "파이프라인 테스트 (전용 프로젝트)",
   "cuts": [
     {
       "no": 1,
-      "imagePrompt": "Close-up shot of a young Korean woman smiling warmly, sitting in a cozy cafe, soft natural lighting, photorealistic, vertical 9:16",
-      "dialogue": "오늘 하루도 고생 많았어요",
+      "imagePrompt": "A Korean woman in her early 20s sitting alone by a cafe window, warm afternoon light, medium shot, contemplative expression, looking down at a coffee cup",
+      "dialogue": "오늘도 똑같은 하루였어.",
       "duration": 5
     },
     {
       "no": 2,
-      "imagePrompt": "Medium shot of a young Korean woman walking along a city street at sunset, warm golden light, photorealistic, vertical 9:16",
-      "dialogue": "가끔은 이렇게 걷는 게 좋더라구요",
+      "imagePrompt": "A Korean woman in her early 20s looking out a cafe window with a faint smile, soft natural light, medium close-up shot, calm and relaxed expression",
+      "dialogue": "근데 이상하게 마음이 편했어.",
       "duration": 5
     },
     {
       "no": 3,
-      "imagePrompt": "Wide shot of a young Korean woman standing on a rooftop looking at the city skyline, evening light, photorealistic, vertical 9:16",
-      "dialogue": "내일은 또 다른 하루가 시작되겠죠",
+      "imagePrompt": "A Korean woman in her early 20s looking directly at the camera with a warm confident expression, cafe interior background, close-up shot, golden hour lighting",
+      "dialogue": "가끔은 아무것도 안 하는 게 답일 때도 있으니까.",
       "duration": 5
     }
   ]
