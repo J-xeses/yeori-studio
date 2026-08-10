@@ -746,9 +746,33 @@
         <button class="btn-primary" onclick="runLeaderAnalysis()" style="white-space:nowrap">
           ▶ 리더 분석 실행
         </button>
-        <button class="btn-cancel" onclick="runAllAgentsSequential()" style="white-space:nowrap" title="G1 대본 → G2 이미지 → G3 음성 → G4 영상 순서로 실행 (각 단계 완료 확인 후 다음 단계로 진행)">
-          ⏩ 전체 순차 실행
+        <button class="btn-primary" id="btn-pipeline-start" onclick="startPipeline()" style="white-space:nowrap">
+          ▶ 파이프라인 실행
         </button>
+        <button class="btn-cancel" id="btn-pipeline-stop" onclick="stopPipeline()" style="white-space:nowrap;display:none">
+          ⏹ 중지
+        </button>
+      </div>
+
+      <!-- 파이프라인 구간 설정 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">구간</span>
+        <select id="pipeline-from" style="font-size:11px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)">
+          <option value="g1">G1 대본</option>
+          <option value="g2">G2 이미지</option>
+          <option value="g3">G3 음성</option>
+          <option value="g4">G4 영상</option>
+          <option value="g5">G5 편집</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3)">→</span>
+        <select id="pipeline-to" style="font-size:11px;padding:3px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text)">
+          <option value="g1">G1 대본</option>
+          <option value="g2">G2 이미지</option>
+          <option value="g3">G3 음성</option>
+          <option value="g4">G4 영상</option>
+          <option value="g5" selected>G5 편집</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3);font-family:'Space Mono',monospace" id="pipeline-status-badge">● 대기</span>
       </div>
 
       <!-- 에이전트 가동 현황 -->
@@ -2885,6 +2909,112 @@ async function runAllAgentsSequential() {
   logAgent('전체실행','done','전체 순차 실행 절차 종료');
 }
 
+// ── pipeline-leader.js 웹 오케스트레이터 연동 ──────────────────────
+let pipelinePollTimer = null;
+
+async function startPipeline() {
+  await loadStudioState();
+  // studioState.episode는 { number, title, ... } 형태의 에피소드 "내용" 객체일 뿐
+  // id 필드가 없다 — 실제 에피소드 ID는 studio-state.json 최상위의 activeEpisodeId.
+  const episodeId = studioState.activeEpisodeId;
+  if (!episodeId) {
+    showToast('⚠️ 스튜디오에 활성 에피소드가 없습니다'); return;
+  }
+  const startStage = document.getElementById('pipeline-from')?.value || 'g1';
+  const endStage   = document.getElementById('pipeline-to')?.value   || 'g5';
+
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/pipeline/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ episodeId, startStage, endStage }),
+    });
+    if (res.status === 409) { showToast('⚠️ 파이프라인이 이미 실행 중입니다'); return; }
+    if (!res.ok) throw new Error(await res.text());
+    logAgent('파이프라인', 'info', `▶ 시작 — EP: ${episodeId} · ${startStage.toUpperCase()} → ${endStage.toUpperCase()}`);
+    setPipelineRunningUI(true);
+    startPipelinePoll();
+  } catch(e) {
+    showToast('⚠️ 파이프라인 시작 실패: ' + e.message);
+    logAgent('파이프라인', 'error', '시작 실패: ' + e.message);
+  }
+}
+
+async function stopPipeline() {
+  try {
+    await fetch(`${YEORI_SERVER}/api/pipeline/stop`, { method: 'POST' });
+    logAgent('파이프라인', 'info', '⏹ 중지 요청됨');
+    setPipelineRunningUI(false);
+    stopPipelinePoll();
+  } catch(e) {
+    showToast('⚠️ 중지 실패: ' + e.message);
+  }
+}
+
+function setPipelineRunningUI(running) {
+  const btnStart = document.getElementById('btn-pipeline-start');
+  const btnStop  = document.getElementById('btn-pipeline-stop');
+  const badge    = document.getElementById('pipeline-status-badge');
+  if (btnStart) btnStart.style.display = running ? 'none' : '';
+  if (btnStop)  btnStop.style.display  = running ? '' : 'none';
+  if (badge) {
+    badge.textContent = running ? '🟢 실행 중' : '● 대기';
+    badge.style.color = running ? 'var(--teal)' : 'var(--text3)';
+  }
+  // 에이전트 카드 상태 반영
+  if (running) {
+    ['script','image','voice','video','edit'].forEach(k => {
+      const el = document.getElementById('ag-'+k);
+      if (el && !el.classList.contains('done')) setAgentState(k, 'running', '실행중');
+    });
+  }
+}
+
+function startPipelinePoll() {
+  stopPipelinePoll();
+  pipelinePollTimer = setInterval(pollPipelineStatus, 3000);
+}
+function stopPipelinePoll() {
+  if (pipelinePollTimer) { clearInterval(pipelinePollTimer); pipelinePollTimer = null; }
+}
+
+let _lastLogCount = 0;
+async function pollPipelineStatus() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/pipeline/status`);
+    const data = await res.json();
+
+    // 실행 중인데 아직 poll 타이머가 안 걸려있으면(예: 페이지 새로고침 직후) UI 복원
+    if (data.running && !pipelinePollTimer) {
+      setPipelineRunningUI(true);
+      startPipelinePoll();
+    }
+
+    // 신규 로그만 추가
+    const logs = data.logs || [];
+    if (logs.length > _lastLogCount) {
+      logs.slice(_lastLogCount).forEach(line => {
+        const type = /error|fail|오류/i.test(line) ? 'error'
+                   : /완료|done|✅/i.test(line)   ? 'done' : 'info';
+        logAgent('pipeline', type, line.replace(/^\[.*?\]\s*/, ''));
+      });
+      _lastLogCount = logs.length;
+    }
+
+    // 완료 감지
+    if (!data.running && pipelinePollTimer) {
+      setPipelineRunningUI(false);
+      stopPipelinePoll();
+      _lastLogCount = 0;
+      logAgent('파이프라인', 'done', '✅ 파이프라인 종료');
+      showToast('✅ 파이프라인 완료');
+      updateAgentCardsFromLocalMatrix();
+    }
+  } catch(e) {
+    // 서버 일시 응답 불가 시 조용히 재시도
+  }
+}
+
 // ── ① 대본 에이전트 — /api/generate가 없어 Claude API(프록시 경유)로 검토/제안 ──
 async function runScriptAgent() {
   setAgentState('script','running','실행중');
@@ -3732,6 +3862,7 @@ async function autoAnalyzeCandidate(cand) {
 loadData();
 renderAll();
 loadStudioState();
+pollPipelineStatus(); // 이미 실행 중인 파이프라인이 있으면(새로고침 등) UI 복원
 syncGPointsFromStudio();
 // 실시간 push가 불가능한 구조(오리진이 달라 storage/커스텀 이벤트 전파 안 됨)라
 // 20초 주기로 폴링해 G포인트를 서버 경유로 갱신한다. 급하면 스튜디오 연동 탭의
