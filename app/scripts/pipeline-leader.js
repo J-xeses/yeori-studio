@@ -25,9 +25,13 @@
  * 락을 걸고, 그 사이 새로 승인된 컷은 지금 배치가 끝난 다음 사이클에서 합쳐 처리한다.
  *
  * 사용법:
- *   node scripts/pipeline-leader.js --episodeId=ep_1784551030896
- *   node scripts/pipeline-leader.js --episodeId=... --interval=20   (폴링 간격, 초. 기본 30)
- *   node scripts/pipeline-leader.js --episodeId=... --once          (한 사이클만 실행 후 종료)
+ *   node scripts/pipeline-leader.js --episode=ep_1784551030896
+ *   node scripts/pipeline-leader.js --episode=... --interval=20   (폴링 간격, 초. 기본 30)
+ *   node scripts/pipeline-leader.js --episode=... --once          (한 사이클만 실행 후 종료)
+ *   node scripts/pipeline-leader.js --episode=... --from=g2 --to=g4  (g1~g5 중 이 구간만 실행)
+ *
+ * server/proxy.js의 POST /api/pipeline/start가 이 스크립트를 웹에서 spawn할 때도
+ * 위와 동일한 --key=value 형식의 인자를 그대로 사용한다.
  */
 
 import fs from 'fs'
@@ -61,13 +65,29 @@ function parseArgs() {
   )
 }
 const args = parseArgs()
-if (!args.episodeId) {
-  console.error('[pipeline-leader] --episodeId=<episodeId> 필요 (studio_set_episode로 미리 활성화해둘 것)')
+if (!args.episode) {
+  console.error('[pipeline-leader] --episode=<episodeId> 필요 (studio_set_episode로 미리 활성화해둘 것)')
   process.exit(1)
 }
-const EPISODE_ID = args.episodeId
+const EPISODE_ID = args.episode
 const INTERVAL_MS = (parseInt(args.interval, 10) || 30) * 1000
 const RUN_ONCE = !!args.once
+
+// ── 스테이지 범위(--from/--to) — 웹 UI(에이전트 리더 탭)가 "이 구간만 실행"을
+// 지정할 수 있도록 지원. 기본은 g1~g5 전체. G1은 사람이 스튜디오 UI에서 승인하는
+// 단계라 이 스크립트가 트리거하는 게 없으므로(승인대기 로그만) 범위에 넣어도
+// 동작에 영향 없음 — G2~G5 트리거 블록만 실제로 게이팅한다.
+const STAGE_ORDER = ['g1', 'g2', 'g3', 'g4', 'g5']
+const FROM_STAGE = (args.from || 'g1').toLowerCase()
+const TO_STAGE = (args.to || 'g5').toLowerCase()
+if (!STAGE_ORDER.includes(FROM_STAGE) || !STAGE_ORDER.includes(TO_STAGE)) {
+  console.error(`[pipeline-leader] --from/--to는 ${STAGE_ORDER.join('/')} 중 하나여야 합니다 (from=${FROM_STAGE}, to=${TO_STAGE})`)
+  process.exit(1)
+}
+function stageInRange(stage) {
+  const i = STAGE_ORDER.indexOf(stage)
+  return i >= STAGE_ORDER.indexOf(FROM_STAGE) && i <= STAGE_ORDER.indexOf(TO_STAGE)
+}
 
 async function api(method, endpoint, body) {
   const opts = {
@@ -142,7 +162,7 @@ async function checkAndAdvance() {
   }
 
   // ── G2 트리거: G1 승인됐고 이미지가 아직 없는 컷들을 한 번에 요청(에피소드당 동시 1건) ──
-  if (!g2InFlight) {
+  if (stageInRange('g2') && !g2InFlight) {
     const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage)
     if (g2Candidates.length) {
       const cutIds = g2Candidates.map(c => c.no)
@@ -155,7 +175,7 @@ async function checkAndAdvance() {
   }
 
   // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (동기 완료라 배치 겹칠 일 없음) ──
-  const g3Candidates = cuts.filter(c => c.g1 && !c.hasAudio)
+  const g3Candidates = stageInRange('g3') ? cuts.filter(c => c.g1 && !c.hasAudio) : []
   if (g3Candidates.length) {
     const cutIds = g3Candidates.map(c => c.no)
     log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
@@ -165,7 +185,7 @@ async function checkAndAdvance() {
   }
 
   // ── G4 트리거: G2 "승인"된(사람이 이미지 선택 완료) 컷 중 영상이 아직 없는 것들(에피소드당 동시 1건) ──
-  if (!g4InFlight) {
+  if (stageInRange('g4') && !g4InFlight) {
     const g4Candidates = cuts.filter(c => c.g2 && !c.hasVideo)
     if (g4Candidates.length) {
       const cutIds = g4Candidates.map(c => c.no)
@@ -188,7 +208,7 @@ async function checkAndAdvance() {
 
   // ── G5 트리거: 모든 컷이 G4 승인 완료 상태면 한 번만 실행 ──
   const allG4Approved = cuts.length > 0 && cuts.every(c => c.g4)
-  if (allG4Approved && !g5Triggered) {
+  if (stageInRange('g5') && allG4Approved && !g5Triggered) {
     g5Triggered = true
     log('G5', '전체 컷 G4 승인 완료 — 편집메타/SRT/합성 실행')
     const r = await api('POST', '/api/mcp/studio-run-g5', { episodeId: EPISODE_ID })
@@ -198,7 +218,7 @@ async function checkAndAdvance() {
 }
 
 async function main() {
-  log('시작', `episodeId=${EPISODE_ID} · interval=${INTERVAL_MS / 1000}s${RUN_ONCE ? ' · 1회 실행' : ''}`)
+  log('시작', `episodeId=${EPISODE_ID} · 구간=${FROM_STAGE}~${TO_STAGE} · interval=${INTERVAL_MS / 1000}s${RUN_ONCE ? ' · 1회 실행' : ''}`)
   await checkAndAdvance()
   if (RUN_ONCE) { log('종료', '1회 실행 완료'); return }
   setInterval(() => { checkAndAdvance().catch(e => log('오류', e.message)) }, INTERVAL_MS)

@@ -1321,6 +1321,78 @@ app.post('/api/run-video', (req, res) => {
   })
 })
 
+// ── /api/pipeline/* — scripts/pipeline-leader.js(G1~G5 MCP 체이닝 오케스트레이터,
+// 실측 검증 완료 2026-08-10)를 웹에서 spawn/조회/중지하는 배관. /api/run-video와
+// 동일한 child_process.spawn 패턴 — 다른 점은 pipeline-leader.js는 SSE 1회성 스트림이
+// 아니라 --once 없이 계속 폴링하는 장시간 백그라운드 프로세스라, 응답을 바로 반환하고
+// 로그는 별도 버퍼에 쌓아뒀다가 /status로 조회하는 구조로 뺐다.
+let pipelineProc = null
+let pipelineMeta = null   // { episodeId, startStage, endStage, startedAt, pid }
+let pipelineLogs = []      // 최근 로그 라인 버퍼 (최대 200줄 유지, 조회 시 최근 20줄만 반환)
+
+function pushPipelineLog(line) {
+  if (!line) return
+  pipelineLogs.push(line)
+  if (pipelineLogs.length > 200) pipelineLogs = pipelineLogs.slice(-200)
+}
+
+// ① POST /api/pipeline/start
+app.post('/api/pipeline/start', (req, res) => {
+  const { episodeId, startStage, endStage } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  if (pipelineProc) {
+    return res.status(409).json({ error: '이미 실행 중인 파이프라인이 있습니다', meta: pipelineMeta })
+  }
+
+  const from = startStage || 'g1'
+  const to = endStage || 'g5'
+  const scriptPath = path.join(ROOT, 'scripts', 'pipeline-leader.js')
+  const nodeArgs = [scriptPath, `--episode=${episodeId}`, `--from=${from}`, `--to=${to}`]
+
+  console.log(`[pipeline] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
+  const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
+
+  pipelineLogs = []
+  pipelineMeta = { episodeId, startStage: from, endStage: to, startedAt: new Date().toISOString(), pid: proc.pid }
+  pipelineProc = proc
+
+  proc.stdout.on('data', chunk => {
+    chunk.toString().split('\n').filter(l => l.trim()).forEach(l => { console.log('[pipeline]', l); pushPipelineLog(l) })
+  })
+  proc.stderr.on('data', chunk => {
+    chunk.toString().split('\n').filter(l => l.trim()).forEach(l => { console.error('[pipeline stderr]', l); pushPipelineLog(l) })
+  })
+  proc.on('close', code => {
+    console.log(`[pipeline] 종료 코드: ${code}`)
+    pushPipelineLog(`[프로세스 종료, 코드: ${code}]`)
+    pipelineProc = null
+  })
+  proc.on('error', err => {
+    console.error('[pipeline] spawn 오류:', err.message)
+    pushPipelineLog(`[spawn 오류: ${err.message}]`)
+    pipelineProc = null
+  })
+
+  res.json({ success: true, pid: proc.pid, episodeId, startStage: from, endStage: to })
+})
+
+// ② GET /api/pipeline/status
+app.get('/api/pipeline/status', (req, res) => {
+  res.json({
+    running: !!pipelineProc,
+    meta: pipelineMeta,
+    logs: pipelineLogs.slice(-20),
+  })
+})
+
+// ③ POST /api/pipeline/stop
+app.post('/api/pipeline/stop', (req, res) => {
+  if (!pipelineProc) return res.status(400).json({ error: '실행 중인 파이프라인이 없습니다' })
+  pipelineProc.kill('SIGTERM')
+  pipelineProc = null
+  res.json({ success: true })
+})
+
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
 app.post('/api/save-audio', async (req, res) => {
   const ep    = req.query.ep
