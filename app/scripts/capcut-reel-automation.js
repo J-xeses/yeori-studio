@@ -668,9 +668,12 @@ async function step9_transition(page, transSpec) {
 async function main() {
   const specArg = process.argv.find(a => a.startsWith('--spec='))
   if (!specArg) {
-    console.error('❌ 사용법: node scripts/capcut-reel-automation.js --spec=downloads/capcut_spec_IG_R01.json')
+    console.error('❌ 사용법: node scripts/capcut-reel-automation.js --spec=downloads/capcut_spec_IG_R01.json [--from=4~9]')
     process.exit(1)
   }
+  // --from=N: 이미 수동으로 끝낸 앞 단계(업로드/타임라인 배치 등)를 건너뛰고 N단계부터 시작
+  const fromArg = process.argv.find(a => a.startsWith('--from='))
+  const fromStep = fromArg ? parseInt(fromArg.replace('--from=', ''), 10) : 1
 
   const specPath = specArg.replace('--spec=', '').trim()
   if (!fs.existsSync(specPath)) {
@@ -715,12 +718,12 @@ async function main() {
     }
 
     await step3_confirmEditor(page)
-    await step4_uploadMedia(page, items)
-    await step5_addToTimeline(page, items)
-    await step6_captions(page, items)
-    await step7_stickers(page, items)
-    await step8_bgm(page, spec.bgm)
-    await step9_transition(page, spec.transition)
+    if (fromStep <= 4) await step4_uploadMedia(page, items)
+    if (fromStep <= 5) await step5_addToTimeline(page, items)
+    if (fromStep <= 6) await step6_captions(page, items)
+    if (fromStep <= 7) await step7_stickers(page, items)
+    if (fromStep <= 8) await step8_bgm(page, spec.bgm)
+    if (fromStep <= 9) await step9_transition(page, spec.transition)
 
     const editorUrl = page.url()
     console.log(`\n✅ 편집 세팅 완료!`)
