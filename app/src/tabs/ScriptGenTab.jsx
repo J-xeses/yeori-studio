@@ -166,7 +166,7 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
       id: `cut-${pc.no}`,
       no: parseInt(pc.no, 10) || pc.no,
       scene: pc.sc || '',
-      action: pc.kr?.ac || '',
+      action: pc.kr?.at || '',
       character: '서여리',
       dialogue: pc.dl || '',
       narration: pc.nr || '',
@@ -181,7 +181,7 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
         audio: { bgm: '', voice: '', sfx: '', ambience: '' },
         kr: {
           sp: pc.kr?.sp || '', ch: pc.kr?.ch || '', sh: pc.kr?.sh || '',
-          ca: pc.kr?.ca || '', ac: pc.kr?.ac || '', md: pc.kr?.md || '',
+          ca: pc.kr?.ca || '', ac: pc.kr?.at || '', md: pc.kr?.md || '',
         },
       },
     }

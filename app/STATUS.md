@@ -11,9 +11,6 @@
 - **다음**: 자주 쓰는 지시 패턴이 모이면 시스템 프롬프트 고도화
 - **미결**: G4 파이프라인 타임아웃 처리 (15분 경과 시 재시도/스킵 로직 별도 처리 예정)
 
-### ScriptGenTab.jsx — pc.ac → pc.at 마이그레이션
-- **상태**: 미완료 이월 항목. codebook v1.0.0에서 AC→AT로 통일됐으나 JSX 참조 미변경
-
 ### Notion 마스터 허브 + STATUS.md
 - **상태**: 매 세션 반복 지적 사항. 이 파일로 대신하는 중
 - **다음**: 세션 시작 시 반드시 이 파일 먼저 읽을 것
@@ -31,6 +28,14 @@
 ---
 
 ## ✅ 완료된 것
+
+### ScriptGenTab.jsx — pc.ac → pc.at 마이그레이션 완료 (2026-08-11)
+
+| 항목 | 커밋 |
+|------|------|
+| `mapPromptsCutsToAppCuts` 3곳(action, masterCode.ac, masterCode.kr.ac) 전부 `pc.at`/`pc.kr?.at` 참조로 변경 — codebook v1.0.0 AC→AT 통일에 맞춤 | bb7cae0 + 본 커밋 |
+
+**참고**: `script_to_prompts.py`가 내려주던 `ac`(레거시 별칭, at와 동일값) 듀얼 출력은 이 JSX 마이그레이션이 끝났으니 이제 제거 가능(별도 작업).
 
 ### 고도화-11 (2026-08-10)
 
