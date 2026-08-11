@@ -23,6 +23,7 @@ import puppeteer from 'puppeteer-core'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { execFileSync } from 'child_process'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -78,6 +79,30 @@ async function pickFile(page, triggerFn, filePaths, timeoutMs = 60_000) {
   })
 }
 
+// 프로모션 모달(업그레이드 유도 등)이 열려 있으면 사이드바 클릭을 가로채므로 먼저 닫는다
+async function dismissPromoModals(page) {
+  const closeBtns = await page.$$('.lv-modal-close-icon, [aria-label="Close"]').catch(() => [])
+  for (const btn of closeBtns) {
+    try { await btn.click(); await sleep(300) } catch {}
+  }
+}
+
+// CapCut의 "장치에서 업로드"는 브라우저 <input type=file>이 아니라 진짜 Windows 네이티브
+// 파일 대화상자를 띄운다 — Puppeteer의 filechooser 이벤트로 감지 불가(실측 확인, 스택된
+// 대화상자가 이후 클릭까지 다 막아버림). win-file-dialog-helper.ps1로 그 대화상자를 직접
+// 찾아서 파일명 입력창에 경로를 써넣고 Enter를 보낸다.
+function selectFilesViaNativeDialog(filePaths, timeoutMs = CONFIG.uploadTimeout) {
+  const helperPath = path.join(__dirname, 'win-file-dialog-helper.ps1')
+  const pathsJsonB64 = Buffer.from(JSON.stringify(filePaths), 'utf-8').toString('base64')
+  const result = execFileSync('powershell.exe', [
+    '-NoProfile', '-ExecutionPolicy', 'Bypass',
+    '-File', helperPath,
+    '-PathsJsonB64', pathsJsonB64,
+    '-TimeoutMs', String(timeoutMs),
+  ], { encoding: 'utf-8' }).trim()
+  if (result !== 'OK') throw new Error(`네이티브 파일 대화상자 처리 실패: ${result}`)
+}
+
 // ── STEP 1: capcut.com 접속 / 에디터 확인 ─────────────────────────────
 async function step1_navigate(page) {
   const url = page.url()
@@ -95,6 +120,7 @@ async function step1_navigate(page) {
 async function step2_createProject(page, browser) {
   console.log('[2] 새 프로젝트(9:16) 생성...')
   await sleep(1500)
+  await dismissPromoModals(page)
 
   const createBtn = await findFirst(page, ['[class*="createNewButton"]']) ||
     await findFirstXP(page, [
@@ -103,19 +129,31 @@ async function step2_createProject(page, browser) {
     ])
   if (!createBtn) throw new Error('"새로 만들기" 버튼 없음')
   await createBtn.click()
-  await sleep(1200)
 
-  const btn916 = await findFirst(page, ['[data-value="9:16"]']) ||
-    await findFirstXP(page, [
-      '//button[contains(., "9:16")]',
-      '//*[normalize-space(text())="9:16"]',
-    ])
-  if (!btn916) throw new Error('9:16 옵션 없음')
-
-  const [newPage] = await Promise.all([
-    new Promise(resolve => browser.once('targetcreated', t => t.page().then(resolve))),
-    btn916.click(),
+  const locateBtn916 = () => findFirstXP(page, [
+    '//button[contains(., "9:16")]',
+    '//*[normalize-space(text())="9:16"]',
   ])
+
+  // handle을 미리 캐싱하지 않고 매 재시도마다 다시 찾아서 클릭 — 패널 리렌더링으로
+  // handle이 detach되는 레이스 컨디션(실측 확인: "Node is detached from document")을 피한다
+  const clicked = await robustClick(page, locateBtn916, '9:16 옵션', 8)
+  if (!clicked) throw new Error('9:16 옵션 클릭 실패')
+
+  // 새 탭이 열리는지 같은 탭에서 SPA 네비게이션되는지 CapCut 쪽 동작이 일정하지 않아
+  // (targetcreated 단발 이벤트가 엉뚱한 target을 먼저 잡아 null을 반환하는 것도 실측됨),
+  // 두 경우 모두 대비해 에디터 URL이 뜬 페이지가 나올 때까지 직접 폴링한다
+  const newPage = await (async () => {
+    const deadline = Date.now() + 15_000
+    while (Date.now() < deadline) {
+      const pages = await browser.pages()
+      const editorPage = pages.find(p => p.url().includes('capcut.com/editor'))
+      if (editorPage) return editorPage
+      await sleep(500)
+    }
+    return null
+  })()
+  if (!newPage) throw new Error('에디터 페이지를 찾지 못함 (새 프로젝트 생성 실패로 추정)')
   await newPage.waitForNavigation({ waitUntil: 'networkidle2', timeout: CONFIG.navTimeout }).catch(() => {})
   await sleep(3000)
   console.log('[2] 에디터 오픈 완료')
@@ -139,19 +177,6 @@ async function step3_confirmEditor(page) {
 async function step4_uploadMedia(page, items) {
   console.log(`[4] 미디어 ${items.length}개 업로드 시작...`)
 
-  // 업로드 버튼 클릭
-  const uploadBtn = await findFirst(page, [
-    '[class*="uploadBtn"]', '[class*="upload-btn"]',
-    '[class*="importMedia"]', '[class*="import-media"]',
-  ]) || await findFirstXP(page, [
-    '//button[contains(., "Upload")]',
-    '//button[contains(., "업로드")]',
-    '//button[contains(., "가져오기")]',
-    '//*[contains(@class,"upload")]',
-  ])
-
-  if (!uploadBtn) throw new Error('업로드 버튼 없음')
-
   // 유효한 파일만 필터
   const validPaths = items
     .map(item => item.path)
@@ -162,7 +187,27 @@ async function step4_uploadMedia(page, items) {
 
   if (validPaths.length === 0) throw new Error('업로드할 파일 없음')
 
-  await pickFile(page, () => uploadBtn.click(), validPaths, CONFIG.uploadTimeout)
+  // "업로드" 카드 클릭 → 드롭다운에서 "장치에서 업로드" 클릭 (2단계 메뉴, 실측 확인)
+  const uploadCard = await findFirstXP(page, [
+    '//button[contains(@class,"asset-import-card")]',
+    '//button[contains(@class,"asset-import") and contains(., "업로드")]',
+    '//button[contains(@class,"asset-import") and contains(., "Upload")]',
+  ])
+  if (!uploadCard) throw new Error('업로드 버튼 없음')
+  await uploadCard.click()
+  await sleep(700)
+
+  const deviceClicked = await page.evaluate(() => {
+    const btns = document.querySelectorAll('button[role="menuitem"]')
+    for (const b of btns) {
+      const t = b.textContent.trim()
+      if (t.includes('장치에서 업로드') || t.includes('Upload from device')) { b.click(); return true }
+    }
+    return false
+  })
+  if (!deviceClicked) throw new Error('"장치에서 업로드" 메뉴 항목 없음')
+
+  selectFilesViaNativeDialog(validPaths)
   console.log(`  ✅ ${validPaths.length}개 파일 업로드 요청`)
   await sleep(3000)
 
@@ -656,7 +701,11 @@ async function main() {
   }
 
   const allPages = await browser.pages()
-  let page = allPages.find(p => p.url().includes('capcut.com')) || await browser.newPage()
+  // 에디터 탭이 이미 열려 있으면(이전 실행이 프로젝트 생성까지는 성공했던 경우 등)
+  // recent-list보다 우선 사용 — 안 그러면 새 프로젝트를 중복 생성하게 됨
+  let page = allPages.find(p => p.url().includes('capcut.com/editor')) ||
+    allPages.find(p => p.url().includes('capcut.com')) ||
+    await browser.newPage()
 
   try {
     await step1_navigate(page)
