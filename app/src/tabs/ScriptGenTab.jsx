@@ -177,7 +177,7 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
       cutType: 'YEORI',
       masterCode: {
         sp: pc.sp || '', pl: pc.pl || '', ch: '', sh: pc.sh || '', ca: pc.ca || '',
-        md: pc.md || '', ac: pc.ac || '', lookId: '', du: pc.du || 8,
+        md: pc.md || '', ac: pc.at || '', lookId: '', du: pc.du || 8,
         audio: { bgm: '', voice: '', sfx: '', ambience: '' },
         kr: {
           sp: pc.kr?.sp || '', ch: pc.kr?.ch || '', sh: pc.kr?.sh || '',
