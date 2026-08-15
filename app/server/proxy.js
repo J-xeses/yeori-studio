@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
+import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -3208,8 +3209,31 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
     requireActiveEpisode(state, episodeId)
     const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const gData = loadGpointsFile()[episodeCode] || {}
-    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => gData[`cut_${c.no}`]?.g2)
+    let targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => gData[`cut_${c.no}`]?.g2)
     if (!targetCuts.length) return res.status(400).json({ error: 'G2 승인된 컷이 없습니다 — 먼저 studio_approve_g2를 실행하세요' })
+
+    // ── 크레딧 게이트(G2는 크레딧 소모가 없어 대상 아님, G4만) ──────────────────
+    // creditTracker.main.flow.remaining은 사람이 마지막으로 확인/입력한 값(실시간 아님).
+    // G4를 실제로 보낼 때마다 여기서 예상 소모량만큼 creditUsage.js에 직접 차감해두므로,
+    // 폴링마다 브라우저를 안 건드리고도 어느 정도 정확도를 유지한다(2026-08-16, 사용자 확정
+    // 설계 — "남은 만큼만 일부 진행", 완전히 막지 않음).
+    const flowCredit = state.creditTracker?.main?.flow
+    let skippedForCredit = []
+    if (flowCredit) {
+      const costPerCut = flowCredit.costPerCut || 12
+      const usedToday = getUsedCount('main', 'flow')
+      const affordable = Math.max(0, Math.floor((flowCredit.remaining - usedToday * costPerCut) / costPerCut))
+      if (affordable <= 0) {
+        return res.status(400).json({
+          error: '오늘 Flow 크레딧이 부족해서 영상 생성을 진행할 수 없습니다 — 크레딧 탭에서 "자동 확인" 또는 리셋 후 다시 시도하세요',
+          remaining: flowCredit.remaining, usedToday, costPerCut,
+        })
+      }
+      if (targetCuts.length > affordable) {
+        skippedForCredit = targetCuts.slice(affordable).map(c => c.no)
+        targetCuts = targetCuts.slice(0, affordable)
+      }
+    }
 
     const epNum = ep.episode?.number
     const prompts = {
@@ -3235,7 +3259,8 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ ep: epNum, ratio: ratio || '9:16', prompts }),
     })
-    res.json({ ...ev, requestedCuts: targetCuts.map(c => c.no) })
+    if (flowCredit && targetCuts.length) recordUsage(targetCuts.length, 'main', 'flow')
+    res.json({ ...ev, requestedCuts: targetCuts.map(c => c.no), ...(skippedForCredit.length ? { skippedForCredit } : {}) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }

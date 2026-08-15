@@ -193,6 +193,9 @@ async function checkAndAdvance() {
       log('G4', `영상 생성 요청 → 컷 ${cutIds.join(',')}`)
       const r = await api('POST', '/api/mcp/studio-run-g4', { episodeId: EPISODE_ID, cutIds })
       if (!r.ok) { log('G4', `요청 실패 — ${r.data?.error || r.status}`); g4InFlight = false }
+      else if (r.data?.skippedForCredit?.length) {
+        log('G4', `⚠️ 크레딧 부족 — 컷 ${r.data.skippedForCredit.join(',')}는 이번엔 건너뜀(다음 사이클에 재시도, 크레딧 탭에서 "자동 확인"/리셋으로 보충 가능)`)
+      }
     }
   }
 
