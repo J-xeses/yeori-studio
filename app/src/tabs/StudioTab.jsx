@@ -100,6 +100,23 @@ export default function StudioTab() {
   }, [])
 
   // ── 에피소드 변경 시 미디어 자동 스캔 ──────────────────────────────
+  // 컷 id는 항상 "cut-N"(N=컷 번호)라 에피소드가 달라도 그대로 재사용됨 — 그래서 아래
+  // images/selectedImage/checklist 등 "cut.id 기준" 로컬 state는 에피소드를 전환해도 자동으론
+  // 안 비워짐. 예전엔 재조회 트리거가 episode.number였는데, 리팩터 과도기 데이터라 ep_1/
+  // IG_R_E01_AI/SF_E01처럼 서로 다른 에피소드가 전부 number:1로 겹치는 경우가 있어(2026-08-15
+  // 실측 확인) 이 셋 사이를 전환하면 재조회 자체가 아예 안 일어나서 "목록은 새 에피소드인데
+  // 화면(이미지·체크리스트)은 이전 에피소드 그대로"인 불일치가 발생했음. episodeCode(항상
+  // 고유)로 트리거를 바꾸고, 전환 시 로컬 state를 통째로 비워서(머지가 아니라 리셋) 컷 id가
+  // 겹치더라도 이전 에피소드 데이터가 새 에피소드 화면에 절대 안 남게 한다.
+  useEffect(() => {
+    setImages({})
+    setSelectedImage({})
+    setChecklist({})
+    setConfirmed({})
+    setG2Approved({})
+    setActiveCutId(null)
+  }, [episodeCode])
+
   useEffect(() => {
     const epNum = state.episode?.number
     if (!epNum) return
@@ -129,7 +146,7 @@ export default function StudioTab() {
         setGData(loadGPoints())
       })
       .catch(() => {})
-  }, [state.episode?.number])
+  }, [episodeCode])
 
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
 
@@ -297,7 +314,11 @@ export default function StudioTab() {
   // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
   const runFlow = async () => {
     const { episode, cuts: allCuts } = state
-    const promptCuts = allCuts.filter(c => c.imagePrompt?.trim())
+    // GRAPHIC/CAPCUT 컷(CapCut에서 직접 제작, 텍스트 훅/DM 목업 등)은 IP에 "이미지 생성
+    // 불필요" 안내문이 들어있어도 imagePrompt 자체는 비어있지 않게 파싱되므로 cutType으로도
+    // 걸러야 함 — 안 그러면 "전체 이미지 자동 생성" 한 번에 이런 컷까지 Flow 생성 대상에 잡혀서
+    // 크레딧이 낭비됨(server/proxy.js의 studio-run-g2와 동일한 문제, 2026-08-15 실측 발견).
+    const promptCuts = allCuts.filter(c => c.imagePrompt?.trim() && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
     const prompts = {
       episode: episode.number,
       title: episode.title || '',

@@ -3068,6 +3068,17 @@ async function sendLeaderChat() {
     const ps = await fetch(`${YEORI_SERVER}/api/pipeline/status`);
     pipelineStatus = await ps.json();
   } catch(e) {}
+  // G1~G5 완료 개수는 gpoints.json(에피소드 코드 기준)에만 있고 studioState.cuts에는 없음
+  // (studio-state.json의 cuts 배열엔 g1~g5 필드 자체가 없음 — 있다고 착각하고 cuts.filter(c=>c.g1)로
+  // 계산하면 항상 0이 나와서, 채팅이 "G1 승인 안 됨"이라고 잘못 보고하는 버그가 있었음. 2026-08-15
+  // 실측: gpoints.json엔 G1 5/5로 정확히 approved였는데 채팅은 "G1완료: 0"이라고 답함).
+  // /api/studio-status-public이 이 병합을 이미 해주므로 그 summary를 그대로 쓴다.
+  let gSummary = { g1: 0, g2: 0, g3: 0, g4: 0, g5: 0 };
+  try {
+    const ss = await fetch(`${YEORI_SERVER}/api/studio-status-public`);
+    const ssData = await ss.json();
+    if (ssData.summary) gSummary = ssData.summary;
+  } catch(e) {}
 
   const ep = studioState.episode;
   const cuts = studioState.cuts || [];
@@ -3082,7 +3093,7 @@ async function sendLeaderChat() {
 === 현재 스튜디오 상태 ===
 활성 에피소드: ${activeEpisodeId} · ${ep ? `EP${ep.number} "${ep.title}"` : '없음'}
 전체 컷 수: ${cuts.length}컷
-G1완료: ${cuts.filter(c=>c.g1).length} / G2완료: ${cuts.filter(c=>c.g2).length} / G3완료: ${cuts.filter(c=>c.g3).length} / G4완료: ${cuts.filter(c=>c.g4).length} / G5완료: ${cuts.filter(c=>c.g5).length}
+G1완료: ${gSummary.g1} / G2완료: ${gSummary.g2} / G3완료: ${gSummary.g3} / G4완료: ${gSummary.g4} / G5완료: ${gSummary.g5}
 
 === 파이프라인 상태 ===
 ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 구간: ${pm.startStage}→${pm.endStage}` : '⚫ 대기 중'}

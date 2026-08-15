@@ -5,7 +5,7 @@ import { createWriteStream } from 'fs'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { isV3Format, parseCutsV3, parseV3GlobalHeader } from './lib/scriptParserV3.js'
+import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { instaDir, INSTA_SUBDIR, scriptDir } from './lib/mediaPaths.js'
 
@@ -2777,6 +2777,13 @@ function loadStudioState() {
   return fs.existsSync(STUDIO_STATE_PATH) ? JSON.parse(fs.readFileSync(STUDIO_STATE_PATH, 'utf-8')) : {}
 }
 function saveStudioState(state) {
+  // 브라우저(AppContext.jsx의 MARK_SAVED)는 저장할 때마다 savedAt을 직접 찍는데, MCP/에이전트
+  // 리더/파이프라인 경로(이 함수)는 그동안 안 찍고 있었음 — smart-sync-state.ps1이 PC간 동기화를
+  // 정확히 이 필드로 "최신 쪽" 판단하므로, 여기서 안 찍으면 MCP로만 만든 변경이 사람이 브라우저에서
+  // 한 번도 저장 안 누르면 "최신"으로 인식 안 돼서 나중에 오래된 클라우드 사본에 덮어써질 위험이 있었음
+  // (2026-08-15 발견). 브라우저 저장 경로(POST /api/studio-state)는 이 함수를 안 거치고 클라이언트가
+  // 보낸 savedAt을 그대로 쓰므로 여기서 건드리지 않는다.
+  state.savedAt = new Date().toISOString()
   fs.writeFileSync(STUDIO_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8')
 }
 // v2(2026-08-02): { cut_N: {...} } 평면 구조 -> { [episodeCode]: { cut_N: {...} } } 중첩
@@ -3007,9 +3014,23 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
       })),
     }
 
+    // 이 에피소드의 컷이 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST)면 downloads/insta/{content}/{num}/
+    // 로 라우팅해야 함 — StudioTab.jsx의 runFlow()는 이미 이렇게 하는데 이 MCP 경로는 안 하고 있어서
+    // { ep, prompts }만 보내면 존재하지도 않는 숫자 폴더(downloads/flow/ep{episode.number}/)로
+    // 잘못 저장됐음(2026-08-15, 에이전트 리더로 G2 실행 준비 중 실측 발견 — 클라이언트 버튼과
+    // MCP/파이프라인 리더 경로가 서로 다른 동작을 하고 있었음).
+    const instaContent = targetCuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean) || null
+    if (instaContent && !ep.episode?.instaNum?.trim()) {
+      const e = new Error(`이 에피소드의 컷들이 인스타 콘텐츠(${instaContent})인데 episode.instaNum이 없습니다 — 먼저 설정해야 합니다`)
+      e.statusCode = 400
+      throw e
+    }
+
     const ev = await readFirstSSEEvent('/api/run-flow', {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ ep: epNum, prompts }),
+      body: JSON.stringify(instaContent
+        ? { type: 'insta', content: instaContent, num: ep.episode.instaNum.trim(), prompts }
+        : { ep: epNum, prompts }),
     })
     res.json({ ...ev, requestedCuts: targetCuts.map(c => c.no) })
   } catch (err) {
