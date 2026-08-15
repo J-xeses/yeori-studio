@@ -293,6 +293,14 @@ function pipelineCodeToCutType(plCode) {
   return 'YEORI' // YR_VD, YR_IM 등
 }
 
+// server/lib/scriptParserV3.js의 inferCutType()과 반드시 동일하게 유지할 것.
+// IG_RL 등 인스타 콘텐츠는 PL이 항상 "IG_RL" 하나뿐이라 PL만으로는 CapCut 직접제작 컷(텍스트
+// 훅/DM 목업 등)을 구분 못 함 — IP에 "이미지 생성 불필요"가 명시되면 PL보다 우선해 CAPCUT으로 분류.
+function inferCutType(plCode, ip) {
+  if (/이미지\s*생성\s*불필요/.test(ip || '')) return 'CAPCUT'
+  return pipelineCodeToCutType(plCode)
+}
+
 // PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
 // 하위로 라우팅할지 반환. cutType(위 함수, G2~G5 실행여부를 좌우)과는 완전히 별개 축 —
 // 저장 경로·생성 비율만 결정하고 G-단계 스킵 여부에는 관여하지 않는다.
@@ -330,7 +338,7 @@ function parseCutsV3(raw) {
       videoPrompt: vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
-      cutType: pipelineCodeToCutType(fields.PL),
+      cutType: inferCutType(fields.PL, ip),
       cutMark: 'NORMAL',
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',

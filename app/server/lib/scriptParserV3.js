@@ -101,6 +101,16 @@ function pipelineCodeToCutType(plCode) {
   return 'YEORI'
 }
 
+// IG_RL 등 인스타 콘텐츠는 PL이 항상 "IG_RL" 하나로 뭉뚱그려져 있어(BR_/GR_/CC_ 접두사가
+// 아예 안 씀) PL만으로는 CapCut 직접제작 컷(텍스트 훅/DM 목업 등, 이미지 생성 자체가 불필요)을
+// 구분할 수 없다 — 그 결과 studio_run_g2가 imagePrompt가 비어있지 않다는 이유만으로 이런 컷까지
+// Flow 생성 대상에 넣어버리는 문제를 2026-08-15 실측(IG_RL_E02)으로 확인함. IP 섹션에 "이미지
+// 생성 불필요"라고 명시된 경우는 PL 코드보다 이 마커를 우선해 CAPCUT으로 분류한다.
+function inferCutType(plCode, ip) {
+  if (/이미지\s*생성\s*불필요/.test(ip || '')) return 'CAPCUT'
+  return pipelineCodeToCutType(plCode)
+}
+
 // PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
 // 하위로 라우팅할지 반환. 이건 cutType(위 함수, G2~G5 실행여부를 좌우)과는 완전히 별개 축 —
 // 저장 경로·생성 비율만 결정하고 G-단계 스킵 여부에는 관여하지 않는다.
@@ -138,7 +148,7 @@ export function parseCutsV3(raw) {
       videoPrompt: vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
-      cutType: pipelineCodeToCutType(fields.PL),
+      cutType: inferCutType(fields.PL, ip),
       cutMark: 'NORMAL',
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',

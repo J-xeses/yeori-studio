@@ -26,6 +26,13 @@ export function outputDir(code) {
   return path.join(MEDIA_ROOT, 'downloads', 'output', String(code))
 }
 
+// 대본 원문(v3 텍스트) 저장 위치 — 지금까지는 사람이 임의 위치에 .txt로 두고
+// studio_upload_script에 경로를 직접 넘기는 방식뿐이라 "정식 저장 경로"가 없었음.
+// 서버 전용(클라이언트는 대본 파일에 직접 접근할 일이 없어 src/lib/mediaPaths.js엔 안 둠).
+export function scriptDir(code) {
+  return path.join(MEDIA_ROOT, 'downloads', 'script', String(code))
+}
+
 // cut 번호를 2자리로 zero-pad한 파일명 (예: cutFile(3, 'jpg') -> "cut_03.jpg")
 export function cutFile(no, ext) {
   const padded = String(no).padStart(2, '0')

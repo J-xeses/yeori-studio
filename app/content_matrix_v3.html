@@ -3026,6 +3026,23 @@ function clearLeaderChat() {
   showToast('💬 채팅 초기화됨');
 }
 
+// server/lib/scriptParserV3.js의 isV3Format()과 반드시 동일하게 유지할 것.
+function isV3ScriptText(raw) {
+  return /KR\s*\(한글\s*컨펌본\)/.test(raw) && /^\s*SP:/m.test(raw) && /^\s*PL:/m.test(raw);
+}
+
+// script_upload 액션은 LLM이 대본 원문을 JSON에 그대로 복사해 넣게 하지 않는다
+// (max_tokens:1000이라 8컷짜리 대본이면 통째로 잘릴 위험이 큼 + 인용부호/줄바꿈
+// JSON 이스케이프 중 텍스트가 미묘하게 바뀔 위험). 대신 사용자가 채팅에 직접
+// 붙여넣은 원문을 대화 기록에서 그대로 찾아 쓴다 — LLM은 "업로드해라"는 의도만 판단.
+function findLastScriptInHistory() {
+  for (let i = leaderChatHistory.length - 1; i >= 0; i--) {
+    const m = leaderChatHistory[i];
+    if (m.role === 'user' && isV3ScriptText(m.content)) return m.content;
+  }
+  return null;
+}
+
 function appendLeaderMsg(role, content, action = null) {
   const time = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'});
   leaderChatHistory.push({ role, content, action, time });
@@ -3072,9 +3089,17 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
 최근 로그: ${(pipelineStatus.logs || []).slice(-5).join(' | ') || '없음'}
 
 === 당신이 실행할 수 있는 액션 ===
-- pipeline_start(episodeId, from, to): 파이프라인 구간 실행
+- script_upload(episodeId): 사용자가 채팅에 붙여넣은 v3 표준 대본([CUT N]+SC/SP/PL+KR 섹션)을 활성 에피소드에 업로드. scriptText는 넣지 말 것 — 서버가 대화 기록에서 자동으로 찾아 씀. 성공하면 G1 승인까지 자동 처리됨.
+- pipeline_start(episodeId, from, to): 파이프라인 구간 실행(from/to는 g1~g5)
 - pipeline_stop: 파이프라인 중지
-- 위 액션이 필요하면 답변 끝에 JSON 블록으로 명시: \`\`\`action\n{"type":"pipeline_start","episodeId":"...","from":"g1","to":"g5"}\n\`\`\`
+- 액션이 필요하면 답변 끝에 JSON 블록으로 명시. 한 번에 여러 개도 가능(예: 대본 업로드 후 바로 이미지 생성까지 지시받으면 script_upload와 pipeline_start를 각각 별도 블록으로):
+\`\`\`action
+{"type":"script_upload","episodeId":"..."}
+\`\`\`
+\`\`\`action
+{"type":"pipeline_start","episodeId":"...","from":"g2","to":"g5"}
+\`\`\`
+- script_upload 뒤에 이어서 pipeline_start(from:"g2")를 낼 때는 script_upload가 G1까지 승인한다는 걸 전제로 g1부터 다시 돌리지 말 것.
 
 답변은 간결하고 실용적으로. 불필요한 공손한 수식어 없이.`;
 
@@ -3106,13 +3131,30 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
     if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
     const reply = data.content?.map(b=>b.text||'').join('') || '응답 없음';
 
-    // 액션 파싱
-    const actionMatch = reply.match(/```action\s*([\s\S]*?)```/);
-    let actionLabel = null;
-    if (actionMatch) {
+    // 액션 파싱 — 한 답변에 여러 ```action``` 블록이 올 수 있음(예: 대본 업로드 + 곧바로
+    // 이미지 생성 지시). 순서대로 하나씩 실행(script_upload가 끝나야 G1이 붙어서 이어지는
+    // pipeline_start(from:g2)가 의미가 있으므로 병렬이 아니라 순차 await).
+    const actionBlocks = [...reply.matchAll(/```action\s*([\s\S]*?)```/g)];
+    const actionLabels = [];
+    for (const block of actionBlocks) {
       try {
-        const act = JSON.parse(actionMatch[1].trim());
-        if (act.type === 'pipeline_start') {
+        const act = JSON.parse(block[1].trim());
+        if (act.type === 'script_upload') {
+          const scriptText = findLastScriptInHistory();
+          if (!scriptText) {
+            actionLabels.push('대본 업로드 실패: 대화 기록에서 v3 포맷 대본을 찾지 못함');
+            continue;
+          }
+          const upRes = await fetch(`${YEORI_SERVER}/api/script-upload`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ episodeId: act.episodeId || studioState.activeEpisodeId, scriptText }),
+          });
+          const upData = await upRes.json();
+          actionLabels.push(upRes.ok
+            ? `대본 업로드+G1승인됨 (${upData.cutCount}컷${upData.codeMismatch ? ' ⚠️코드불일치' : ''})`
+            : `대본 업로드 실패: ${upData.error}`);
+        } else if (act.type === 'pipeline_start') {
           await fetch(`${YEORI_SERVER}/api/pipeline/start`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3120,15 +3162,16 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
           });
           setPipelineRunningUI(true);
           startPipelinePoll();
-          actionLabel = `파이프라인 시작 실행됨 (${act.from}→${act.to})`;
+          actionLabels.push(`파이프라인 시작 실행됨 (${act.from}→${act.to})`);
         } else if (act.type === 'pipeline_stop') {
           await fetch(`${YEORI_SERVER}/api/pipeline/stop`, { method: 'POST' });
           setPipelineRunningUI(false);
           stopPipelinePoll();
-          actionLabel = '파이프라인 중지 실행됨';
+          actionLabels.push('파이프라인 중지 실행됨');
         }
       } catch(e) {}
     }
+    const actionLabel = actionLabels.length ? actionLabels.join(' · ') : null;
 
     // 액션 블록 제거 후 표시
     const cleanReply = reply.replace(/```action[\s\S]*?```/g, '').trim();

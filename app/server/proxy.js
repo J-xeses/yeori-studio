@@ -7,7 +7,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
-import { instaDir, INSTA_SUBDIR } from './lib/mediaPaths.js'
+import { instaDir, INSTA_SUBDIR, scriptDir } from './lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -2855,6 +2855,45 @@ function stripStageDirections(text) {
   return { clean, removed }
 }
 
+// v3 대본 원문(raw) 하나를 파싱해서 지정 에피소드의 cuts/scriptRaw/마스터코드에 반영.
+// studio-upload-script(MCP, scriptPath로 파일을 읽어옴)와 /api/script-upload(에이전트
+// 리더 채팅, scriptText를 직접 받음) 둘이 파일을 얻는 방식만 다르고 나머지는 완전히
+// 동일해서 공유. state는 호출부가 loadStudioState()로 미리 로드해서 넘기고,
+// saveStudioState까지 이 함수가 책임진다.
+function applyScriptToEpisode(state, episodeId, raw) {
+  if (!isV3Format(raw)) {
+    const e = new Error('v3 표준 포맷([CUT N] + SC/SP/PL 필드 + KR(한글 컨펌본) 섹션)이 아닙니다')
+    e.statusCode = 400
+    throw e
+  }
+  const cuts = parseCutsV3(raw)
+  if (!cuts.length) {
+    const e = new Error('v3 포맷 파싱 실패 — [CUT N] 블록을 확인하세요')
+    e.statusCode = 400
+    throw e
+  }
+  const { masterCode, epHeaderRaw } = parseV3GlobalHeader(raw)
+
+  const ep = getEpisodeOrThrow(state, episodeId)
+  ep.cuts = cuts
+  ep.scriptRaw = raw
+  if (masterCode || epHeaderRaw) {
+    ep.episode = { ...ep.episode, ...(masterCode ? { masterCode } : {}), ...(epHeaderRaw ? { epHeaderRaw } : {}) }
+  }
+  state.episodes[episodeId] = ep
+
+  if (state.activeEpisodeId === episodeId) {
+    state.cuts = ep.cuts
+    state.scriptRaw = ep.scriptRaw
+    state.episode = ep.episode
+  }
+  saveStudioState(state)
+  // episode.code(생성 시 확정한 정식 식별자)와 대본에서 파싱된 masterCode가 다르면 경고만 —
+  // 어느 쪽 값도 여기서 되돌리거나 덮어쓰지 않는다(둘 다 위에서 이미 그대로 저장됨).
+  const codeMismatch = !!(ep.episode?.code && masterCode && ep.episode.code !== masterCode)
+  return { cuts, cutCount: cuts.length, masterCode, epHeaderRaw, codeMismatch }
+}
+
 // ① studio-set-episode — 대상 에피소드를 studio-state.json 최상위(활성 에피소드)로 전환
 mcpRouter.post('/studio-set-episode', (req, res) => {
   const { episodeId } = req.body || {}
@@ -2881,31 +2920,43 @@ mcpRouter.post('/studio-upload-script', (req, res) => {
     const resolvedPath = path.isAbsolute(scriptPath) ? scriptPath : path.join(CODE_ROOT, scriptPath)
     if (!fs.existsSync(resolvedPath)) return res.status(404).json({ error: `파일 없음: ${resolvedPath}` })
     const raw = fs.readFileSync(resolvedPath, 'utf-8')
-    if (!isV3Format(raw)) return res.status(400).json({ error: 'v3 표준 포맷([CUT N] + SC/SP/PL 필드 + KR(한글 컨펌본) 섹션)이 아닙니다' })
-
-    const cuts = parseCutsV3(raw)
-    if (!cuts.length) return res.status(400).json({ error: 'v3 포맷 파싱 실패 — [CUT N] 블록을 확인하세요' })
-    const { masterCode, epHeaderRaw } = parseV3GlobalHeader(raw)
 
     const state = loadStudioState()
-    const ep = getEpisodeOrThrow(state, episodeId)
-    ep.cuts = cuts
-    ep.scriptRaw = raw
-    if (masterCode || epHeaderRaw) {
-      ep.episode = { ...ep.episode, ...(masterCode ? { masterCode } : {}), ...(epHeaderRaw ? { epHeaderRaw } : {}) }
-    }
-    state.episodes[episodeId] = ep
+    const { cutCount, masterCode, epHeaderRaw, codeMismatch } = applyScriptToEpisode(state, episodeId, raw)
+    res.json({ success: true, cutCount, masterCode, epHeaderRaw, codeMismatch })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
 
-    if (state.activeEpisodeId === episodeId) {
-      state.cuts = ep.cuts
-      state.scriptRaw = ep.scriptRaw
-      state.episode = ep.episode
-    }
-    saveStudioState(state)
-    // episode.code(생성 시 확정한 정식 식별자)와 대본에서 파싱된 masterCode가 다르면 경고만 —
-    // 어느 쪽 값도 여기서 되돌리거나 덮어쓰지 않는다(둘 다 위에서 이미 그대로 저장됨).
-    const codeMismatch = !!(ep.episode?.code && masterCode && ep.episode.code !== masterCode)
-    res.json({ success: true, cutCount: cuts.length, masterCode, epHeaderRaw, codeMismatch })
+// ②-b /api/script-upload — 에이전트 리더 채팅(content_matrix_v3.html, file:// 정적 페이지)
+// 전용 공개 엔드포인트. studio-upload-script(위)는 MCP_BRIDGE_SECRET Bearer 인증이 필요한데
+// file://로 여는 채팅 페이지는 그 시크릿을 안전하게 보관할 수 없어서(스튜디오 연동 탭의
+// /api/studio-status-public과 같은 이유), 파이프라인 제어(/api/pipeline/*)와 같은 패턴으로
+// 인증 없는 로컬 전용 엔드포인트를 별도로 둔다. scriptPath(파일)가 아니라 scriptText(채팅에
+// 붙여넣은 원문)를 직접 받아 downloads/script/{episodeCode}/script_v3.txt에 저장 — 지금까지
+// 대본 파일을 어디에 둘지 정해진 위치가 없어 사람이 임의 경로를 만들던 문제를 같이 해결한다.
+// 사용자 확정(2026-08-15): 채팅 업로드는 G1(대본) 승인까지 자동으로 같이 처리한다 — G1은
+// (G2/G3/G4와 달리) 검토할 생성물이 없는 단계라 "사람이 붙여넣은 대본을 그대로 채택" 이상의
+// 의미가 없다고 판단.
+app.post('/api/script-upload', (req, res) => {
+  const { episodeId, scriptText } = req.body || {}
+  if (!episodeId || !scriptText) return res.status(400).json({ error: 'episodeId, scriptText 필요' })
+  try {
+    const state = loadStudioState()
+    requireActiveEpisode(state, episodeId)
+    const { cuts, cutCount, masterCode, epHeaderRaw, codeMismatch } = applyScriptToEpisode(state, episodeId, scriptText)
+
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const dir = scriptDir(episodeCode)
+    fs.mkdirSync(dir, { recursive: true })
+    const scriptPath = path.join(dir, 'script_v3.txt')
+    fs.writeFileSync(scriptPath, scriptText, 'utf-8')
+
+    const approvedCount = approveGForCuts(episodeCode, cuts, 'g1')
+
+    res.json({ success: true, scriptPath, cutCount, masterCode, epHeaderRaw, codeMismatch, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -2936,8 +2987,12 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
-    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.imagePrompt?.trim())
-    if (!targetCuts.length) return res.status(400).json({ error: '이미지 프롬프트가 있는 컷이 없습니다' })
+    // GRAPHIC/CAPCUT 컷(CapCut에서 직접 제작, 텍스트 훅/DM 목업 등)은 IP에 안내문이 들어있어도
+    // imagePrompt가 비어있지 않게 파싱되므로 반드시 cutType으로도 걸러야 함(2026-08-15 실측
+    // IG_RL_E02에서 발견 — CAPCUT 컷까지 Flow 생성 대상에 잡혀 크레딧이 낭비될 뻔함).
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
+      .filter(c => c.imagePrompt?.trim() && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
+    if (!targetCuts.length) return res.status(400).json({ error: '이미지 생성이 필요한 컷이 없습니다(전부 이미지 프롬프트가 없거나 GRAPHIC/CAPCUT 타입)' })
 
     const epNum = ep.episode?.number
     const prompts = {
