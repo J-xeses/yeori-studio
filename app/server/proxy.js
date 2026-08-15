@@ -7,7 +7,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
-import { instaDir, INSTA_SUBDIR, scriptDir } from './lib/mediaPaths.js'
+import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -2832,6 +2832,22 @@ function scanFlowImagesByCut(epNum) {
   }
   return byCut
 }
+// 승인(G2~G4)/완료(G5) 시점에 확정된 산출물의 복사본을 downloads/deliverables/{code}/에 쌓는다.
+// 원본(작업 후보 파일)은 그대로 두고 복사만 함 — 실패해도(파일이 아직 없는 등) 승인 자체는
+// 막지 않고 경고만 남긴다(2026-08-15 신규, "업로드 준비된 산출물 모음소" 필요 요청).
+function copyToDeliverables(episodeCode, srcPath, destFilename) {
+  try {
+    if (!fs.existsSync(srcPath)) return { copied: false, reason: `원본 없음: ${srcPath}` }
+    const dir = deliverablesDir(episodeCode)
+    fs.mkdirSync(dir, { recursive: true })
+    const destPath = path.join(dir, destFilename)
+    fs.copyFileSync(srcPath, destPath)
+    return { copied: true, path: destPath }
+  } catch (err) {
+    return { copied: false, reason: err.message }
+  }
+}
+
 function approveGForCuts(episodeCode, cuts, gKey) {
   const gData = loadGpointsFile()
   const epData = { ...gData[episodeCode] }
@@ -3063,7 +3079,14 @@ mcpRouter.post('/studio-approve-g2', (req, res) => {
     epData[key] = { ...epData[key], g2: true, selectedImage: filename, updatedAt: new Date().toISOString() }
     gData[episodeCode] = epData
     saveGpointsFile(gData)
-    res.json({ success: true, cutNo: cut.no, selectedImage: filename, availableImages: files })
+
+    const ext = path.extname(filename) || '.jpg'
+    const deliverable = copyToDeliverables(
+      episodeCode,
+      path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`, filename),
+      `cut_${String(cut.no).padStart(2, '0')}_image${ext}`,
+    )
+    res.json({ success: true, cutNo: cut.no, selectedImage: filename, availableImages: files, deliverable })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -3156,9 +3179,19 @@ mcpRouter.post('/studio-approve-g3', (req, res) => {
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
     const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const epNum = ep.episode?.number
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
     const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g3')
-    res.json({ success: true, approvedCount })
+    const deliverables = targetCuts.map(c => {
+      const padded = String(c.no).padStart(2, '0')
+      const result = copyToDeliverables(
+        episodeCode,
+        path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`, `cut_${padded}.mp3`),
+        `cut_${padded}_audio.mp3`,
+      )
+      return { cutNo: c.no, ...result }
+    })
+    res.json({ success: true, approvedCount, deliverables })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -3217,9 +3250,21 @@ mcpRouter.post('/studio-approve-g4', (req, res) => {
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
     const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const epNum = ep.episode?.number
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
     const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g4')
-    res.json({ success: true, approvedCount })
+    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    const deliverables = targetCuts.map(c => {
+      const padded = String(c.no).padStart(2, '0')
+      // 편집(_final) 버전이 있으면 그걸, 없으면 원본 생성본을 사용 — buildStudioStatusPayload의
+      // videoDir 스캔(mFin 우선)과 동일한 우선순위.
+      const finalPath = path.join(videoDir, `cut_${padded}_final.mp4`)
+      const basePath  = path.join(videoDir, `cut_${padded}.mp4`)
+      const srcPath = fs.existsSync(finalPath) ? finalPath : basePath
+      const result = copyToDeliverables(episodeCode, srcPath, `cut_${padded}_video.mp4`)
+      return { cutNo: c.no, ...result }
+    })
+    res.json({ success: true, approvedCount, deliverables })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -3265,7 +3310,13 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     })
     if (concatRes.status !== 200) return res.status(concatRes.status).json({ step: 'concat-video', ...concatRes.body })
 
-    res.json({ success: true, srt: srtRes.body, concat: concatRes.body })
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const deliverable = copyToDeliverables(
+      episodeCode,
+      path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`),
+      `${episodeCode}_edit_raw.mp4`,
+    )
+    res.json({ success: true, srt: srtRes.body, concat: concatRes.body, deliverable })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }

@@ -58,10 +58,15 @@ if %errorlevel% == 0 (
 ) else (
     if defined TREND_RADAR_DIR (
         echo        Found trend-radar at %TREND_RADAR_DIR%
-        if exist "%TREND_RADAR_DIR%\.next" (
+        REM BUILD_ID(진짜 production build 완료 표시)가 있어야 "npm run start"가 성공함 --
+        REM .next 폴더 자체는 "next dev"만 돌려도 생기므로(build-manifest 등은 있지만
+        REM BUILD_ID가 없음), 폴더 존재만 확인하면 이 stale 상태를 진짜 빌드로 착각해서
+        REM start가 "Could not find a production build" 에러로 조용히 죽고 3000 포트가
+        REM 안 뜨는 사고로 이어짐 (2026-08-15 실측 확인).
+        if exist "%TREND_RADAR_DIR%\.next\BUILD_ID" (
             start "TREND RADAR Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run start"
         ) else (
-            echo        No .next build found -- building first...
+            echo        No valid production build (.next\BUILD_ID missing) -- building first...
             start "TREND RADAR Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run build && npm run start"
         )
         timeout /t 5 /nobreak >nul

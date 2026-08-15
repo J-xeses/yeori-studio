@@ -33,6 +33,15 @@ export function scriptDir(code) {
   return path.join(MEDIA_ROOT, 'downloads', 'script', String(code))
 }
 
+// 컷별로 승인(G2~G4)/완료(G5)된 산출물의 복사본을 한곳에 모으는 위치.
+// downloads/final/ep{N}/(PublishingTab의 "패키지" 기능, CapCut 편집까지 끝난 진짜 최종
+// 발행용 mp4+썸네일)과는 의도적으로 다른 폴더 — 여기는 "이 컷은 이걸로 확정했다"를
+// 단계별로 쌓아두는 중간 모음소(작업 후보 파일은 원래 위치에 그대로 남아있고, 승인 시점에
+// 복사본만 여기 추가됨). 사람이 "지금까지 확정된 게 뭔지" 한곳에서 바로 훑어볼 수 있게 함.
+export function deliverablesDir(code) {
+  return path.join(MEDIA_ROOT, 'downloads', 'deliverables', String(code))
+}
+
 // cut 번호를 2자리로 zero-pad한 파일명 (예: cutFile(3, 'jpg') -> "cut_03.jpg")
 export function cutFile(no, ext) {
   const padded = String(no).padStart(2, '0')

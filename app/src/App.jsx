@@ -102,16 +102,16 @@ function EpisodeSidebar({ onClose }) {
     )
     const knownTypes = SIDEBAR_EP_GROUPS.flatMap(g => g.types)
 
-    // 다음 자동 배정될 번호 — 콘텐츠유형별 독립 번호(예: 기존 LF가 몇 개든 첫 IG_R은
-    // 항상 IG_R_E01)로 계산한다. 실제 배정은 ADD_EPISODE reducer가 다시 계산하지만
-    // 코드 미리보기/검증용으로 여기서도 동일하게 계산해둔다.
-    // 주의: episode.number는 downloads/{flow,video,audio}/ep{number}/ 파일 경로에도
-    // 그대로 쓰이는데, 유형별 독립 번호로 바뀌면서 서로 다른 유형이 같은 번호를 가질 수
-    // 있게 됐다 — 4차(파일경로를 episode.code 기준으로 전면 교체)가 끝나기 전까지는
-    // 예를 들어 LF_E01과 IG_R_E01이 downloads/flow/ep1/을 동시에 쓰면서 실제 생성 파일이
-    // 서로 덮어써질 위험이 있다. 사용자가 이 트레이드오프를 확인하고 승인함(2026-08-08).
+    // 다음 자동 배정될 번호 — 전체 에피소드 통틀어 최댓값+1(전역 카운터). 실제 배정은
+    // ADD_EPISODE reducer가 다시 계산하지만 코드 미리보기/검증용으로 여기서도 동일하게 계산해둔다.
+    // 주의: episode.number는 downloads/{flow,video,audio}/ep{number}/ 파일 경로에도 그대로
+    // 쓰여서, 한때(2026-08-08) 콘텐츠유형별 독립 번호로 바꿨다가 서로 다른 유형이 같은 번호를
+    // 가지면서 실제로 downloads/flow/ep1/ 같은 폴더를 여러 에피소드가 공유하는 충돌이 발생함을
+    // 확인(2026-08-15). 파일경로를 episode.code 기준으로 전면 교체하는 근본 해법("4차")은 범위가
+    // 너무 커서 보류하고, 대신 번호를 다시 전역 유일값으로 되돌려 충돌 자체를 원천 차단한다 —
+    // 트레이드오프로 코드의 "E0N" 숫자가 유형별로 1부터 시작하지 않을 수 있음(예: 두 번째로
+    // 만들어진 콘텐츠유형의 첫 에피소드가 E02로 보일 수 있음).
     const nextNumber = Math.max(0, ...Object.values(episodes)
-        .filter(e => (e.episode?.contentType || 'LF') === newType)
         .map(e => e.episode.number)) + 1
     const previewCode = formatEpisodeCode(newType, nextNumber, newSlug)
 

@@ -1,5 +1,4 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
-import { formatEpisodeCode } from '../lib/episodeCode'
 
 const SERVER = 'http://localhost:3001'
 
@@ -111,12 +110,10 @@ function reducer(state, action) {
 
     // ── 새 에피소드 추가 (사이드바에서만 호출 — 탭 자동 추가 없음) ─────
     // action.contentType/action.code: 사이드바 생성 폼에서 검증까지 마친 값을 그대로 전달받음.
-    // 번호는 콘텐츠유형별 독립 계산(App.jsx의 previewCode 계산과 반드시 동일하게 유지) —
-    // 서로 다른 유형이 같은 번호를 가질 수 있어짐에 따른 파일경로 충돌 위험은
-    // App.jsx의 nextNumber 계산부 주석 참고.
+    // 번호는 전역 유일 계산(App.jsx의 nextNumber 계산과 반드시 동일하게 유지) — 이유는
+    // App.jsx의 nextNumber 계산부 주석 참고(2026-08-15, 유형별 독립 번호 되돌림).
     case 'ADD_EPISODE': {
       const maxNum = Math.max(0, ...Object.values(state.episodes)
-        .filter(e => (e.episode?.contentType || 'LF') === (action.contentType || 'LF'))
         .map(e => e.episode.number))
       const newId = `ep_${Date.now()}`
       const newEp = makeEpisode(newId, maxNum + 1, { contentType: action.contentType, code: action.code })
@@ -167,16 +164,17 @@ function reducer(state, action) {
     }
 
     // ── 에피소드 번호 변경 (중복 시 차단) ───────────────────
-    // 여기서 비교하는 코드는 표시/파일경로용 {type}_E{번호} 조합일 뿐, episode.code(생성 시 고정된
-    // 정식 식별자)는 건드리지 않는다 — 번호를 바꿔도 code는 그대로 유지됨.
+    // episode.number는 downloads/{flow,video,audio}/ep{number}/ 파일 경로에 그대로 쓰이므로
+    // 유형에 상관없이 전역으로 유일해야 함(2026-08-15) — 예전엔 코드 문자열({type}_E{번호})
+    // 중복만 검사해서, 서로 다른 유형끼리 번호가 겹쳐도(코드 문자열은 다르므로) 안 걸러지는
+    // 구멍이 있었다. episode.code(생성 시 고정된 정식 식별자)는 번호를 바꿔도 그대로 유지됨.
     case 'RENUMBER_EPISODE': {
       const ep = state.episodes[action.id]
       if (!ep) return state
-      const newCode = formatEpisodeCode(ep.episode.contentType || 'LF', action.number)
       const isDup = Object.values(state.episodes).some(
-        e => e.id !== action.id && formatEpisodeCode(e.episode.contentType || 'LF', e.episode.number) === newCode
+        e => e.id !== action.id && e.episode.number === action.number
       )
-      if (isDup) return state   // 전체 코드 중복이면 변경하지 않음 (UI에서 에러 표시)
+      if (isDup) return state   // 다른 에피소드와 번호가 겹치면 변경하지 않음 (UI에서 에러 표시)
       const updated = { ...ep, episode: { ...ep.episode, number: action.number } }
       return {
         ...state,

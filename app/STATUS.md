@@ -1,5 +1,5 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-08-11 (CapCut 데스크탑 자동화 전환 + 손글씨 애니메이션 착수)
+> 마지막 업데이트: 2026-08-15 (에피소드 번호 충돌 발견·리셋 + deliverables 산출물 모음 시스템 신규)
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 
 ---
@@ -28,6 +28,8 @@
 
 ## 🎯 On the Horizon (예정 작업)
 
+- **SF_E01 G2~G4 수동 승인 대기** — 8컷 이미지·오디오·영상 파일은 `downloads/{flow,video,audio}/ep4/`에 이미 있음(재등록 완료, 2026-08-15). 사람이 스튜디오/TTS/영상 탭에서 눈으로 확인 후 승인 버튼만 누르면 됨 — 승인 시 `downloads/deliverables/SF_E01/`에 자동 수집됨.
+- **4차(파일경로를 episode.code 기준 전면교체)는 보류** — proxy.js 약 25곳 + scripts/*.js 11개 + 클라이언트 탭 8개로 범위가 너무 커서(2026-08-15 전수조사 완료, 상세는 아래 핵심 메모 참고) 당장은 손 안 댐. 대신 `episode.number`를 전역 유일 카운터로 되돌려 충돌 자체를 막는 우회로 대응. 나중에 필요해지면 이 조사 결과부터 참고할 것.
 - **SF_E07 실데이터로 codebook v1.0.0 검증** — 미완료 이월
 - **VideoTab.jsx AI 영상 자동생성 UI 연결** — `/api/run-video` 엔드포인트는 완성, 호출 버튼 없음
 - **G4 타임아웃 처리** — pipeline-leader.js 15분 경과 시 재시도/스킵 로직
@@ -37,6 +39,26 @@
 ---
 
 ## ✅ 완료된 것
+
+### 에피소드 번호 충돌 발견 → 스튜디오 리셋 + deliverables 산출물 모음 시스템 (2026-08-15)
+
+**배경**: StudioTab.jsx의 "목록과 화면이 안 맞는다" 버그를 조사하다가, `ep_1`(LF)/`IG_R_E01_AI`(IG_R)/`SF_E01`(SF) 세 에피소드가 전부 `episode.number:1`이라 `downloads/flow/ep1/` 등 같은 폴더를 실제로 공유하고 있던 걸 발견(2026-08-08에 "콘텐츠유형별 독립 번호"로 바꾼 게 원인). 근본 해법(4차: 파일경로를 episode.code 기준 전면교체)은 proxy.js 약 25곳+scripts/*.js 11개+클라이언트 탭 8개로 범위가 너무 커서 보류.
+
+| 항목 | 내용 |
+|------|------|
+| 번호 자동제안 → 전역 유일 카운터로 전환 | `App.jsx`(nextNumber)·`AppContext.jsx`(`ADD_EPISODE`/`RENUMBER_EPISODE`) — 콘텐츠유형별 필터 제거. 트레이드오프: 코드의 "E0N"이 유형별로 1부터 안 시작할 수 있음(사용자 승인) |
+| 스튜디오 전면 리셋 | `studio-state.json`/`gpoints.json`을 `downloads/_archive_2026-08-15/`에 백업 후, 앱 최초실행 기본상태(에피소드 1개, `ep_1`)로 초기화. `downloads/{flow,video,audio,output}` 밑 번호기반 ep폴더 전부 아카이브로 이동 |
+| **`downloads/deliverables/{episodeCode}/` 신규** | G2/G3/G4 승인 시 자동으로 `cut_NN_image/audio/video.ext` 복사, G5 완료 시 `{code}_edit_raw.mp4` 복사(`server/lib/mediaPaths.js`의 `deliverablesDir()`, `proxy.js`의 `copyToDeliverables()`). 원본은 그대로 두고 복사만 함, 실패해도 승인 자체는 안 막음(비파괴적) |
+| `script_upload` 채팅 액션 신규 | 에이전트 리더 채팅(`content_matrix_v3.html`)에 대본을 붙여넣고 "업로드해줘"라고 하면 `POST /api/script-upload`(인증 없음, `/api/pipeline/*`와 같은 패턴)로 G1까지 자동 승인. 대본 원문의 정식 저장 위치도 처음 생김: `downloads/script/{code}/script_v3.txt` |
+| G2 CAPCUT 오분류 버그 수정 | IG_RL 등 인스타 콘텐츠는 PL이 전부 `IG_RL` 하나뿐이라 텍스트 전용 컷(이미지 불필요)도 `imagePrompt`가 안 비어서 G2 대상에 잘못 잡히던 버그. IP에 "이미지 생성 불필요" 문구 있으면 `CAPCUT` 타입으로 분류(`scriptParserV3.js`+`ScriptGenTab.jsx`) + `studio-run-g2`/`StudioTab.jsx`의 `runFlow()` 둘 다 GRAPHIC/CAPCUT 제외하도록 수정 |
+| `studio-run-g2` 인스타 라우팅 누락 수정 | MCP 경로가 `type:'insta'` 파라미터를 안 보내서 인스타 콘텐츠도 숫자 폴더로 잘못 저장될 뻔한 걸 발견·수정 |
+| 에이전트 리더 채팅 G1~G5 카운트 표시 버그 수정 | `studioState.cuts`엔 g1~g5 필드가 원래 없어서(gpoints.json에만 있음) 항상 0으로 잘못 보고하던 버그 — `/api/studio-status-public`의 `summary`를 쓰도록 수정 |
+| `saveStudioState()` savedAt 미갱신 버그 수정 | MCP/에이전트 리더 경로로 저장할 때 `savedAt`을 안 찍어서, PC간 동기화(`smart-sync-state.ps1`)가 최신 변경을 못 알아볼 위험이 있던 걸 발견·수정 |
+| SF_E01 재등록 | 리셋 때 아카이브된 SF_E01(8컷, 실제 이미지·영상 완결본 있음)을 `episode.number:4`로 교정해서 재등록, media 폴더도 원위치 복구, gpoints G1 기록도 복원 |
+
+**⚠️ 사고 기록(재발 방지용)**: 서버 코드(`proxy.js`) 수정 후 재시작을 안 하고 테스트 요청을 보냈다가, 예전(버그 있는) 코드가 그대로 돌면서 실제로 열려있던 Chrome(원격 디버깅 9222)에 `flow-automation.js`가 진짜로 붙어서 자동화를 시작한 사고가 있었음(10~15초 내 강제종료, 실제 생성까지 갔는지는 불확실). **서버 코드를 고친 뒤엔 반드시 재시작하고 나서 테스트할 것.**
+
+**검증**: `vite build` 통과, MCP 엔드포인트 실측(더미 테스트 에피소드로 G2/G3/G4 승인→deliverables 복사 확인 후 정리), `git status`로 의도한 파일만 변경됐는지 확인.
 
 ### ScriptGenTab.jsx — pc.ac → pc.at 마이그레이션 완료 (2026-08-11)
 
@@ -151,6 +173,8 @@ pipeline-leader.js — MCP G1→G5 체이닝
 - Claude API 모델명: `claude-sonnet-4-6`
 
 ### 경로
+- **`downloads/deliverables/{episodeCode}/`(신규, 2026-08-15)**: G2~G5 승인 시 자동 수집되는 산출물 모음 — `downloads/final/ep{N}/`(퍼블리싱 탭의 CapCut 편집 끝난 발행용 파일)과는 다른 폴더이니 혼동 주의
+- **`downloads/_archive_2026-08-15/`**: 리셋 때 옮긴 옛 ep번호 폴더들(ep2/ep3/ep98/ep99 등 테스트 데이터, SF_E01/IG_R_E01_AI는 복원해서 뺐음) + 리셋 전 studio-state.json/gpoints.json 백업
 - 집 PC: `C:\yeori-studio\` (git 루트) / `C:\yeori-studio\app\`
 - 회사 PC: `C:\Users\won56\OneDrive - CTEC\문서\GitHub\yeori-studio\yeori-studio`
 - GitHub: `J-xeses/yeori-studio` (master 브랜치)
