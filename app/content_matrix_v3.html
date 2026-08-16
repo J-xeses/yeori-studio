@@ -3100,16 +3100,21 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
 최근 로그: ${(pipelineStatus.logs || []).slice(-5).join(' | ') || '없음'}
 
 === 당신이 실행할 수 있는 액션 ===
+- create_episode(contentType, title): 새 에피소드 생성. contentType은 SF/LF/IG_R/IG_P/TK 중 하나. 성공하면 그 에피소드가 곧바로 활성 에피소드로 전환됨.
 - script_upload(episodeId): 사용자가 채팅에 붙여넣은 v3 표준 대본([CUT N]+SC/SP/PL+KR 섹션)을 활성 에피소드에 업로드. scriptText는 넣지 말 것 — 서버가 대화 기록에서 자동으로 찾아 씀. 성공하면 G1 승인까지 자동 처리됨.
 - pipeline_start(episodeId, from, to): 파이프라인 구간 실행(from/to는 g1~g5)
 - pipeline_stop: 파이프라인 중지
-- 액션이 필요하면 답변 끝에 JSON 블록으로 명시. 한 번에 여러 개도 가능(예: 대본 업로드 후 바로 이미지 생성까지 지시받으면 script_upload와 pipeline_start를 각각 별도 블록으로):
+- 액션이 필요하면 답변 끝에 JSON 블록으로 명시. 한 번에 여러 개도 가능(예: 새 에피소드 만들고 대본 업로드 후 이미지 생성까지 지시받으면 세 블록을 순서대로):
 \`\`\`action
-{"type":"script_upload","episodeId":"..."}
+{"type":"create_episode","contentType":"SF","title":"..."}
 \`\`\`
 \`\`\`action
-{"type":"pipeline_start","episodeId":"...","from":"g2","to":"g5"}
+{"type":"script_upload"}
 \`\`\`
+\`\`\`action
+{"type":"pipeline_start","from":"g2","to":"g5"}
+\`\`\`
+- 위처럼 create_episode 뒤에 이어지는 script_upload/pipeline_start는 episodeId를 넣지 말 것 — 방금 만든 에피소드가 자동으로 활성 에피소드가 되므로 생략하면 그걸 그대로 씀(새로 생긴 ID를 미리 알 방법이 없으니 애초에 넣을 수도 없음).
 - script_upload 뒤에 이어서 pipeline_start(from:"g2")를 낼 때는 script_upload가 G1까지 승인한다는 걸 전제로 g1부터 다시 돌리지 말 것.
 
 답변은 간결하고 실용적으로. 불필요한 공손한 수식어 없이.`;
@@ -3150,7 +3155,21 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
     for (const block of actionBlocks) {
       try {
         const act = JSON.parse(block[1].trim());
-        if (act.type === 'script_upload') {
+        if (act.type === 'create_episode') {
+          const cRes = await fetch(`${YEORI_SERVER}/api/episodes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contentType: act.contentType, title: act.title }),
+          });
+          const cData = await cRes.json();
+          if (cRes.ok) {
+            await loadStudioState(); // studioState.activeEpisodeId를 새 에피소드로 갱신 — 뒤이은
+            // script_upload/pipeline_start가 episodeId 생략 시 이걸 그대로 씀
+            actionLabels.push(`에피소드 ${cData.code} ${cData.title || ''} 생성됨`.trim());
+          } else {
+            actionLabels.push(`에피소드 생성 실패: ${cData.error}`);
+          }
+        } else if (act.type === 'script_upload') {
           const scriptText = findLastScriptInHistory();
           if (!scriptText) {
             actionLabels.push('대본 업로드 실패: 대화 기록에서 v3 포맷 대본을 찾지 못함');
@@ -3169,7 +3188,7 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
           await fetch(`${YEORI_SERVER}/api/pipeline/start`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ episodeId: act.episodeId, startStage: act.from, endStage: act.to }),
+            body: JSON.stringify({ episodeId: act.episodeId || studioState.activeEpisodeId, startStage: act.from, endStage: act.to }),
           });
           setPipelineRunningUI(true);
           startPipelinePoll();

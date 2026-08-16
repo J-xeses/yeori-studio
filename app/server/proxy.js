@@ -2985,6 +2985,71 @@ mcpRouter.post('/studio-set-episode', (req, res) => {
   }
 })
 
+// ── POST /api/episodes — 신규 에피소드 생성(에이전트 리더 채팅의 create_episode 액션 전용,
+// content_matrix_v3.html의 file:// 페이지가 직접 호출하므로 /api/script-upload·/api/pipeline/*와
+// 같은 패턴으로 인증 없이 둠). 지금까지 에피소드 생성은 스튜디오 UI의 "+ 새 에피소드 추가"
+// 폼(사람이 직접)으로만 가능했고 채팅/MCP 어디에도 없었던 걸 처음 채움(2026-08-17).
+//
+// 번호는 반드시 "전체 에피소드 통틀어 최댓값+1"(전역 유일 카운터)로 매긴다 — App.jsx/
+// AppContext.jsx의 ADD_EPISODE와 동일한 계산. 콘텐츠유형별로 독립 계산하면 안 됨: 바로 오늘
+// 오전에 episode.number가 유형별 독립이라 서로 다른 에피소드가 같은 번호를 가져서
+// downloads/flow/ep{N}/ 폴더를 실제로 공유하는 사고를 겪고 전역 카운터로 되돌렸는데, 여기서
+// 다시 유형별로 매기면 그 버그가 그대로 재발한다.
+app.post('/api/episodes', (req, res) => {
+  const { contentType, title } = req.body || {}
+  const VALID_TYPES = ['SF', 'LF', 'IG_R', 'IG_P', 'TK']
+  if (!VALID_TYPES.includes(contentType)) {
+    return res.status(400).json({ error: `contentType은 ${VALID_TYPES.join('/')} 중 하나여야 합니다` })
+  }
+  try {
+    const state = loadStudioState()
+    if (!state.episodes) state.episodes = {}
+    const nextNumber = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number)) + 1
+    const code = `${contentType}_E${String(nextNumber).padStart(2, '0')}`
+    const id = `ep_${Date.now()}`
+
+    const makeCut = (no) => ({
+      id: `cut-${no}`, no,
+      scene: '', action: '', character: '서여리',
+      dialogue: '', narration: '', imagePrompt: '',
+      duration: 5, cutType: 'YEORI', cutMark: 'NORMAL',
+    })
+
+    const newEp = {
+      id,
+      episode: {
+        number: nextNumber,
+        title: title || '',
+        location: '카페',
+        mood: '감성',
+        cutCount: 7,
+        contentType,
+        topicCode: 'PSY',
+        scnCode: 'DOC',
+        instaNum: '',
+        character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
+        code,
+      },
+      cuts: Array.from({ length: 7 }, (_, i) => makeCut(i + 1)),
+      scriptRaw: '',
+      createdAt: new Date().toISOString(),
+    }
+
+    state.episodes[id] = newEp
+    state.activeEpisodeId = id
+    state.episode = newEp.episode
+    state.cuts = newEp.cuts
+    state.scriptRaw = ''
+    if (!Array.isArray(state.openTabIds)) state.openTabIds = []
+    if (!state.openTabIds.includes(id)) state.openTabIds.push(id)
+
+    saveStudioState(state)
+    res.json({ success: true, episodeId: id, code, title: newEp.episode.title, number: nextNumber })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // ② studio-upload-script — v3 표준 포맷 대본 파일을 읽어 해당 에피소드의 cuts로 반영
 mcpRouter.post('/studio-upload-script', (req, res) => {
   const { episodeId, scriptPath } = req.body || {}
