@@ -271,6 +271,10 @@ async function checkAndAdvance() {
   // G5를 방금 이 사이클에서 트리거했더라도 summary는 사이클 시작 시점에 조회한 값이라
   // (gpoints 기록은 위에서 막 끝났으니) 다음 사이클에 반영돼 감지된다 — 최대 한 사이클
   // (interval초) 늦게 멈추는 정도라 실사용에 문제 없음.
+  // TO_STAGE가 g3면 위의 스킵 판정(isG3Complete)과 동일하게 대사/나레이션 있는 컷만
+  // 기준으로 봐야 함 — 안 그러면 B-roll 컷 있는 에피소드는 --to=g3로 걸어도 summary.g3가
+  // 절대 전체 컷 수와 같아질 수 없어서 자동 종료가 영원히 안 됨(2026-08-17 발견).
+  if (TO_STAGE === 'g3') return isG3Complete(cuts)
   return cuts.length > 0 && summary[TO_STAGE] === cuts.length
 }
 
