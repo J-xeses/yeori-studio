@@ -918,20 +918,26 @@ app.post('/api/check-tool-credits', (req, res) => {
 // ── GET /api/credits-status — G4(Flow) 크레딧 현황 조회 전용. studio-run-g4가 내부적으로
 // 쓰는 두 소스(사람이 마지막으로 확인/입력한 studio-state.json의 creditTracker.main.flow.remaining
 // + 오늘 자동화가 실제로 쓴 만큼을 세는 credit-usage-today.json)를 그대로 합쳐서 보여준다.
-// (2026-08-17 신규 — 지금까지는 이 둘을 합쳐서 보는 조회 전용 경로가 없었음.)
+// costPerCut/available/canRun 계산은 studio-run-g4와 완전히 동일한 공식(포인트 단위로 통일).
+// (2026-08-17 신규, 같은 날 costPerCut 단위 불일치 발견 후 수정.)
 app.get('/api/credits-status', (req, res) => {
   const state = loadStudioState()
-  const confirmed = state.creditTracker?.main?.flow?.remaining ?? 0
+  const flowCredit = state.creditTracker?.main?.flow || {}
+  const confirmed = flowCredit.remaining ?? 0
+  const costPerCut = flowCredit.costPerCut || 12
   const usedToday = getUsedCount('main', 'flow')
-  const available = confirmed - usedToday
+  const usedTodayPoints = usedToday * costPerCut
+  const available = confirmed - usedTodayPoints
   res.json({
     date: new Date().toISOString().slice(0, 10),
     main: {
       flow: {
         confirmed,
+        costPerCut,
         usedToday,
+        usedTodayPoints,
         available,
-        canRun: available > 0,
+        canRun: available >= costPerCut,
       },
     },
   })
