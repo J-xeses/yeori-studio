@@ -97,6 +97,16 @@ function isStageComplete(cuts, stage) {
   return cuts.length > 0 && cuts.every(c => c[stage])
 }
 
+// G3(TTS)만 예외 — 대사/나레이션이 없는 컷(B-roll 등)은 애초에 TTS 대상이 아니라서
+// g3가 영원히 false로 남는다. isStageComplete(cuts,'g3')로는 그런 컷이 하나라도 있으면
+// 절대 완료 판정이 안 나서 매 사이클 재시도하던 문제(2026-08-17 실측 발견) — "대사/
+// 나레이션이 있는 컷"만 걸러서 그 컷들만 기준으로 완료 여부를 본다. 대상 컷이 아예
+// 없는 에피소드(전부 B-roll 등)도 완료로 취급.
+function isG3Complete(cuts) {
+  const g3Targets = cuts.filter(c => c.dialogue?.trim() || c.narration?.trim())
+  return g3Targets.length === 0 || g3Targets.every(c => c.g3 === true)
+}
+
 async function api(method, endpoint, body) {
   const opts = {
     method,
@@ -195,7 +205,7 @@ async function checkAndAdvance() {
 
   // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (동기 완료라 배치 겹칠 일 없음) ──
   if (stageInRange('g3')) {
-    if (isStageComplete(cuts, 'g3')) {
+    if (isG3Complete(cuts)) {
       log('G3', '이미 완료된 단계 — 스킵')
     } else {
       const g3Candidates = cuts.filter(c => c.g1 && !c.hasAudio)
