@@ -138,11 +138,13 @@ let g4StartedAt = 0
 const G2_TIMEOUT_MS = 10 * 60 * 1000
 const G4_TIMEOUT_MS = 15 * 60 * 1000
 
+// 반환값: 목표 단계(TO_STAGE)까지 전체 컷이 완료됐는지(true/false) — main()이 이걸로
+// 더 이상 폴링할 필요가 없다고 판단해서 스스로 종료한다.
 async function checkAndAdvance() {
   const statusRes = await api('GET', `/api/mcp/studio-status?episodeId=${encodeURIComponent(EPISODE_ID)}`)
   if (!statusRes.ok) {
     log('상태조회', `실패 — ${statusRes.data?.error || statusRes.status}`)
-    return
+    return false
   }
   const { episode, cuts, summary } = statusRes.data
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
@@ -218,13 +220,34 @@ async function checkAndAdvance() {
     if (!r.ok) { log('G5', `실패 — ${r.data?.error || r.status}`); g5Triggered = false }
     else log('G5', `완료 — ${r.data.concat?.outputPath || '(출력 경로 확인 필요)'}`)
   }
+
+  // ── 목표 단계 완료 감지 — summary[TO_STAGE]가 전체 컷 수와 같아지면 더 할 일이 없음.
+  // G5를 방금 이 사이클에서 트리거했더라도 summary는 사이클 시작 시점에 조회한 값이라
+  // (gpoints 기록은 위에서 막 끝났으니) 다음 사이클에 반영돼 감지된다 — 최대 한 사이클
+  // (interval초) 늦게 멈추는 정도라 실사용에 문제 없음.
+  return cuts.length > 0 && summary[TO_STAGE] === cuts.length
 }
 
 async function main() {
   log('시작', `episodeId=${EPISODE_ID} · 구간=${FROM_STAGE}~${TO_STAGE} · interval=${INTERVAL_MS / 1000}s${RUN_ONCE ? ' · 1회 실행' : ''}`)
-  await checkAndAdvance()
+  const firstDone = await checkAndAdvance()
   if (RUN_ONCE) { log('종료', '1회 실행 완료'); return }
-  setInterval(() => { checkAndAdvance().catch(e => log('오류', e.message)) }, INTERVAL_MS)
+  if (firstDone) {
+    log('완료', `목표 단계(${TO_STAGE}) 전체 컷 완료 감지 — 자동 종료`)
+    return
+  }
+  const timer = setInterval(async () => {
+    try {
+      const done = await checkAndAdvance()
+      if (done) {
+        log('완료', `목표 단계(${TO_STAGE}) 전체 컷 완료 감지 — 자동 종료`)
+        clearInterval(timer)
+        process.exit(0)
+      }
+    } catch (e) {
+      log('오류', e.message)
+    }
+  }, INTERVAL_MS)
 }
 
 main()
