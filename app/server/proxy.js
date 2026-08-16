@@ -3341,7 +3341,10 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
       path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`),
       `${episodeCode}_edit_raw.mp4`,
     )
-    res.json({ success: true, srt: srtRes.body, concat: concatRes.body, deliverable })
+    // G1~G4와 동일한 패턴으로 gpoints에 G5 완료 기록 — 이게 없으면 concat까지 성공해도
+    // summary.g5가 계속 0으로 남아 "G5 미완료"로 잘못 보고됨(2026-08-17 발견).
+    const approvedCount = approveGForCuts(episodeCode, cuts, 'g5')
+    res.json({ success: true, srt: srtRes.body, concat: concatRes.body, deliverable, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
