@@ -2076,36 +2076,57 @@ app.post('/api/check-final-assets', (req, res) => {
   })
 })
 
-// ── GET /api/check-final?ep={N} — 최종 영상/썸네일 존재 확인 (video/thumb 개별 { exists, path }) ──
+// ── GET /api/check-final?epNum={N} — 최종 영상/썸네일 존재 확인 (video/thumb 개별 { exists, path }) ──
+// ep{N}_final.mp4(CapCut 등에서 마무리 편집해 export한 진짜 최종본)가 없으면 G5 산출물인
+// downloads/output/ep{N}/ep{N}_raw.mp4를 대신 확인 — 있으면 isRaw:true로 구분해서 알려준다
+// (2026-08-17 발견: G5가 만드는 파일과 이 엔드포인트가 찾던 파일이 이름부터 달라서, G5까지
+// 다 끝난 에피소드도 여기선 항상 "없음"으로 나오던 갭).
 app.get('/api/check-final', (req, res) => {
-  const epNum = req.query.ep
-  if (!epNum) return res.status(400).json({ error: 'ep 쿼리 파라미터 필요' })
+  const epNum = req.query.epNum
+  if (!epNum) return res.status(400).json({ error: 'epNum 쿼리 파라미터 필요' })
   const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
+  const rawPath   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`)
   const thumbPath = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`, 'thumb.jpg')
+
+  let video
+  if (fs.existsSync(videoPath)) {
+    video = { exists: true, path: videoPath }
+  } else if (fs.existsSync(rawPath)) {
+    video = { exists: true, path: rawPath, isRaw: true }
+  } else {
+    video = { exists: false, path: videoPath }
+  }
+
   res.json({
-    video: { exists: fs.existsSync(videoPath), path: videoPath },
+    video,
     thumb: { exists: fs.existsSync(thumbPath), path: thumbPath },
   })
 })
 
-// ── POST /api/package-final — ep{N}_final.mp4을 downloads/final/ep{N}/로 복사 ──
+// ── POST /api/package-final — ep{N}_final.mp4(없으면 raw)을 downloads/final/ep{N}/로 복사 ──
 // (thumb.jpg는 /api/save-thumbnail이 이미 같은 폴더에 저장해두므로 별도 복사 불필요)
 app.post('/api/package-final', (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
   const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
+  const rawPath   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`)
   const finalDir  = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`)
   const thumbPath = path.join(finalDir, 'thumb.jpg')
-  if (!fs.existsSync(videoPath)) {
+
+  const isRaw = !fs.existsSync(videoPath) && fs.existsSync(rawPath)
+  const srcPath = fs.existsSync(videoPath) ? videoPath : rawPath
+
+  if (!fs.existsSync(srcPath)) {
     return res.status(404).json({ error: `${videoPath} 없음 — 먼저 편집(G5)을 완료하세요` })
   }
   try {
     fs.mkdirSync(finalDir, { recursive: true })
     const destVideo = path.join(finalDir, `ep${epNum}_final.mp4`)
-    fs.copyFileSync(videoPath, destVideo)
+    fs.copyFileSync(srcPath, destVideo)
     res.json({
       success: true,
       finalDir,
+      isRaw,
       files: { video: destVideo, thumb: fs.existsSync(thumbPath) ? thumbPath : null },
     })
   } catch (err) {
