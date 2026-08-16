@@ -89,6 +89,14 @@ function stageInRange(stage) {
   return i >= STAGE_ORDER.indexOf(FROM_STAGE) && i <= STAGE_ORDER.indexOf(TO_STAGE)
 }
 
+// 해당 단계가 전체 컷에 대해 이미 gpoints 기준으로 완료됐는지 — /api/mcp/studio-status가
+// 내려주는 cuts[].g1~g5는 서버가 gpoints.json을 그대로 병합해 넣어주는 값이라, 이 스크립트
+// 안에서 gpoints.json을 따로 읽을 필요 없이 이 필드만 보면 된다. 프로세스를 재시작하면
+// g5Triggered 같은 메모리 플래그는 초기화되지만 이 값은 항상 서버의 실제 기록을 반영한다.
+function isStageComplete(cuts, stage) {
+  return cuts.length > 0 && cuts.every(c => c[stage])
+}
+
 async function api(method, endpoint, body) {
   const opts = {
     method,
@@ -163,40 +171,59 @@ async function checkAndAdvance() {
     g4InFlight = false
   }
 
+  // ── G1: 트리거할 게 없는 단계(사람이 스튜디오 UI에서 승인) — 완료 여부만 로그로 확인 ──
+  if (stageInRange('g1') && isStageComplete(cuts, 'g1')) {
+    log('G1', '이미 완료된 단계 — 스킵')
+  }
+
   // ── G2 트리거: G1 승인됐고 이미지가 아직 없는 컷들을 한 번에 요청(에피소드당 동시 1건) ──
-  if (stageInRange('g2') && !g2InFlight) {
-    const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage)
-    if (g2Candidates.length) {
-      const cutIds = g2Candidates.map(c => c.no)
-      g2InFlight = true
-      g2StartedAt = Date.now()
-      log('G2', `이미지 생성 요청 → 컷 ${cutIds.join(',')}`)
-      const r = await api('POST', '/api/mcp/studio-run-g2', { episodeId: EPISODE_ID, cutIds })
-      if (!r.ok) { log('G2', `요청 실패 — ${r.data?.error || r.status}`); g2InFlight = false }
+  if (stageInRange('g2')) {
+    if (isStageComplete(cuts, 'g2')) {
+      log('G2', '이미 완료된 단계 — 스킵')
+    } else if (!g2InFlight) {
+      const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage)
+      if (g2Candidates.length) {
+        const cutIds = g2Candidates.map(c => c.no)
+        g2InFlight = true
+        g2StartedAt = Date.now()
+        log('G2', `이미지 생성 요청 → 컷 ${cutIds.join(',')}`)
+        const r = await api('POST', '/api/mcp/studio-run-g2', { episodeId: EPISODE_ID, cutIds })
+        if (!r.ok) { log('G2', `요청 실패 — ${r.data?.error || r.status}`); g2InFlight = false }
+      }
     }
   }
 
   // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (동기 완료라 배치 겹칠 일 없음) ──
-  const g3Candidates = stageInRange('g3') ? cuts.filter(c => c.g1 && !c.hasAudio) : []
-  if (g3Candidates.length) {
-    const cutIds = g3Candidates.map(c => c.no)
-    log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
-    const r = await api('POST', '/api/mcp/studio-run-g3', { episodeId: EPISODE_ID, cutIds })
-    if (!r.ok) log('G3', `요청 실패 — ${r.data?.error || r.status}`)
-    else log('G3', `완료 — 생성 ${r.data.generatedCount ?? '?'}건 · 실패 ${r.data.failCount ?? '?'}건 · 스킵 ${r.data.skippedCount ?? '?'}건`)
+  if (stageInRange('g3')) {
+    if (isStageComplete(cuts, 'g3')) {
+      log('G3', '이미 완료된 단계 — 스킵')
+    } else {
+      const g3Candidates = cuts.filter(c => c.g1 && !c.hasAudio)
+      if (g3Candidates.length) {
+        const cutIds = g3Candidates.map(c => c.no)
+        log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
+        const r = await api('POST', '/api/mcp/studio-run-g3', { episodeId: EPISODE_ID, cutIds })
+        if (!r.ok) log('G3', `요청 실패 — ${r.data?.error || r.status}`)
+        else log('G3', `완료 — 생성 ${r.data.generatedCount ?? '?'}건 · 실패 ${r.data.failCount ?? '?'}건 · 스킵 ${r.data.skippedCount ?? '?'}건`)
+      }
+    }
   }
 
   // ── G4 트리거: G2 "승인"된(사람이 이미지 선택 완료) 컷 중 영상이 아직 없는 것들(에피소드당 동시 1건) ──
-  if (stageInRange('g4') && !g4InFlight) {
-    const g4Candidates = cuts.filter(c => c.g2 && !c.hasVideo)
-    if (g4Candidates.length) {
-      const cutIds = g4Candidates.map(c => c.no)
-      g4InFlight = true
-      log('G4', `영상 생성 요청 → 컷 ${cutIds.join(',')}`)
-      const r = await api('POST', '/api/mcp/studio-run-g4', { episodeId: EPISODE_ID, cutIds })
-      if (!r.ok) { log('G4', `요청 실패 — ${r.data?.error || r.status}`); g4InFlight = false }
-      else if (r.data?.skippedForCredit?.length) {
-        log('G4', `⚠️ 크레딧 부족 — 컷 ${r.data.skippedForCredit.join(',')}는 이번엔 건너뜀(다음 사이클에 재시도, 크레딧 탭에서 "자동 확인"/리셋으로 보충 가능)`)
+  if (stageInRange('g4')) {
+    if (isStageComplete(cuts, 'g4')) {
+      log('G4', '이미 완료된 단계 — 스킵')
+    } else if (!g4InFlight) {
+      const g4Candidates = cuts.filter(c => c.g2 && !c.hasVideo)
+      if (g4Candidates.length) {
+        const cutIds = g4Candidates.map(c => c.no)
+        g4InFlight = true
+        log('G4', `영상 생성 요청 → 컷 ${cutIds.join(',')}`)
+        const r = await api('POST', '/api/mcp/studio-run-g4', { episodeId: EPISODE_ID, cutIds })
+        if (!r.ok) { log('G4', `요청 실패 — ${r.data?.error || r.status}`); g4InFlight = false }
+        else if (r.data?.skippedForCredit?.length) {
+          log('G4', `⚠️ 크레딧 부족 — 컷 ${r.data.skippedForCredit.join(',')}는 이번엔 건너뜀(다음 사이클에 재시도, 크레딧 탭에서 "자동 확인"/리셋으로 보충 가능)`)
+        }
       }
     }
   }
@@ -212,13 +239,22 @@ async function checkAndAdvance() {
   if (waitingG4.length) log('승인대기', `G4(영상) — 컷 ${waitingG4.join(',')}`)
 
   // ── G5 트리거: 모든 컷이 G4 승인 완료 상태면 한 번만 실행 ──
-  const allG4Approved = cuts.length > 0 && cuts.every(c => c.g4)
-  if (stageInRange('g5') && allG4Approved && !g5Triggered) {
-    g5Triggered = true
-    log('G5', '전체 컷 G4 승인 완료 — 편집메타/SRT/합성 실행')
-    const r = await api('POST', '/api/mcp/studio-run-g5', { episodeId: EPISODE_ID })
-    if (!r.ok) { log('G5', `실패 — ${r.data?.error || r.status}`); g5Triggered = false }
-    else log('G5', `완료 — ${r.data.concat?.outputPath || '(출력 경로 확인 필요)'}`)
+  // 완료 여부는 이제 gpoints 기준(isStageComplete)으로 판단 — g5Triggered 메모리 플래그만
+  // 믿으면 프로세스를 재시작할 때마다 이미 끝난 SRT/concat을 또 돌리는 문제가 있었다
+  // (2026-08-17 실측 확인: 완료된 SF_E01을 재실행하니 G5가 불필요하게 다시 돎).
+  if (stageInRange('g5')) {
+    if (isStageComplete(cuts, 'g5')) {
+      log('G5', '이미 완료된 단계 — 스킵')
+    } else {
+      const allG4Approved = cuts.length > 0 && cuts.every(c => c.g4)
+      if (allG4Approved && !g5Triggered) {
+        g5Triggered = true
+        log('G5', '전체 컷 G4 승인 완료 — 편집메타/SRT/합성 실행')
+        const r = await api('POST', '/api/mcp/studio-run-g5', { episodeId: EPISODE_ID })
+        if (!r.ok) { log('G5', `실패 — ${r.data?.error || r.status}`); g5Triggered = false }
+        else log('G5', `완료 — ${r.data.concat?.outputPath || '(출력 경로 확인 필요)'}`)
+      }
+    }
   }
 
   // ── 목표 단계 완료 감지 — summary[TO_STAGE]가 전체 컷 수와 같아지면 더 할 일이 없음.
