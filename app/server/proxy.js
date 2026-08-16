@@ -3071,15 +3071,31 @@ mcpRouter.post('/studio-upload-script', (req, res) => {
 // 전용 공개 엔드포인트. studio-upload-script(위)는 MCP_BRIDGE_SECRET Bearer 인증이 필요한데
 // file://로 여는 채팅 페이지는 그 시크릿을 안전하게 보관할 수 없어서(스튜디오 연동 탭의
 // /api/studio-status-public과 같은 이유), 파이프라인 제어(/api/pipeline/*)와 같은 패턴으로
-// 인증 없는 로컬 전용 엔드포인트를 별도로 둔다. scriptPath(파일)가 아니라 scriptText(채팅에
-// 붙여넣은 원문)를 직접 받아 downloads/script/{episodeCode}/script_v3.txt에 저장 — 지금까지
-// 대본 파일을 어디에 둘지 정해진 위치가 없어 사람이 임의 경로를 만들던 문제를 같이 해결한다.
+// 인증 없는 로컬 전용 엔드포인트를 별도로 둔다. scriptText(채팅에 붙여넣은 원문)와 scriptPath
+// (로컬 파일 경로, studio-upload-script와 동일한 절대/상대경로 해석) 둘 다 지원 — 어느 쪽이든
+// 최종적으로 downloads/script/{episodeCode}/script_v3.txt에 정식 저장. 지금까지 대본 파일을
+// 어디에 둘지 정해진 위치가 없어 사람이 임의 경로를 만들던 문제를 같이 해결한다.
 // 사용자 확정(2026-08-15): 채팅 업로드는 G1(대본) 승인까지 자동으로 같이 처리한다 — G1은
 // (G2/G3/G4와 달리) 검토할 생성물이 없는 단계라 "사람이 붙여넣은 대본을 그대로 채택" 이상의
 // 의미가 없다고 판단.
 app.post('/api/script-upload', (req, res) => {
-  const { episodeId, scriptText } = req.body || {}
-  if (!episodeId || !scriptText) return res.status(400).json({ error: 'episodeId, scriptText 필요' })
+  const { episodeId, scriptText: bodyScriptText, scriptPath: inputScriptPath } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  if (!bodyScriptText && !inputScriptPath) {
+    return res.status(400).json({ error: 'scriptText 또는 scriptPath 중 하나가 필요합니다' })
+  }
+
+  let scriptText = bodyScriptText
+  if (!scriptText) {
+    const resolvedPath = path.isAbsolute(inputScriptPath) ? inputScriptPath : path.join(CODE_ROOT, inputScriptPath)
+    if (!fs.existsSync(resolvedPath)) return res.status(404).json({ error: `파일 없음: ${resolvedPath}` })
+    try {
+      scriptText = fs.readFileSync(resolvedPath, 'utf-8')
+    } catch (err) {
+      return res.status(500).json({ error: `파일 읽기 실패: ${err.message}` })
+    }
+  }
+
   try {
     const state = loadStudioState()
     requireActiveEpisode(state, episodeId)

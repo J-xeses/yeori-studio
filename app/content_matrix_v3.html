@@ -3101,7 +3101,12 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
 
 === 당신이 실행할 수 있는 액션 ===
 - create_episode(contentType, title): 새 에피소드 생성. contentType은 SF/LF/IG_R/IG_P/TK 중 하나. 성공하면 그 에피소드가 곧바로 활성 에피소드로 전환됨.
-- script_upload(episodeId): 사용자가 채팅에 붙여넣은 v3 표준 대본([CUT N]+SC/SP/PL+KR 섹션)을 활성 에피소드에 업로드. scriptText는 넣지 말 것 — 서버가 대화 기록에서 자동으로 찾아 씀. 성공하면 G1 승인까지 자동 처리됨.
+- script_upload(episodeId, scriptPath?): 두 가지 방식으로 대본을 업로드할 수 있음(성공하면 G1 승인까지 자동 처리됨).
+  1) 채팅에 직접 붙여넣은 v3 표준 대본([CUT N]+SC/SP/PL+KR 섹션) — 이 경우 scriptPath는 넣지 말 것. scriptText도 넣지 말 것 — 서버가 대화 기록에서 자동으로 찾아 씀.
+  2) 로컬 파일 경로가 주어진 경우 — scriptPath에 그 경로를 그대로 넣을 것(예: "C:\\yeori-studio\\downloads\\script\\test_chat_flow\\script_v3.txt"). 이땐 채팅 기록에서 대본 텍스트를 찾지 않고 그 파일을 직접 읽음.
+  예시(파일 경로 방식): \`\`\`action
+{"type":"script_upload","episodeId":"...","scriptPath":"C:\\\\yeori-studio\\\\downloads\\\\script\\\\test_chat_flow\\\\script_v3.txt"}
+\`\`\`
 - pipeline_start(episodeId, from, to): 파이프라인 구간 실행(from/to는 g1~g5)
 - pipeline_stop: 파이프라인 중지
 - 액션이 필요하면 답변 끝에 JSON 블록으로 명시. 한 번에 여러 개도 가능(예: 새 에피소드 만들고 대본 업로드 후 이미지 생성까지 지시받으면 세 블록을 순서대로):
@@ -3170,15 +3175,23 @@ ${pipelineStatus.running ? `🟢 실행 중 · 에피소드: ${pm.episodeId} · 
             actionLabels.push(`에피소드 생성 실패: ${cData.error}`);
           }
         } else if (act.type === 'script_upload') {
-          const scriptText = findLastScriptInHistory();
-          if (!scriptText) {
-            actionLabels.push('대본 업로드 실패: 대화 기록에서 v3 포맷 대본을 찾지 못함');
-            continue;
+          // scriptPath가 오면 파일 경로 방식(서버가 직접 읽음), 없으면 기존처럼 채팅에
+          // 붙여넣은 v3 대본을 대화 기록에서 찾아 씀.
+          const uploadBody = { episodeId: act.episodeId || studioState.activeEpisodeId };
+          if (act.scriptPath) {
+            uploadBody.scriptPath = act.scriptPath;
+          } else {
+            const scriptText = findLastScriptInHistory();
+            if (!scriptText) {
+              actionLabels.push('대본 업로드 실패: 대화 기록에서 v3 포맷 대본을 찾지 못함 (scriptPath도 안 주어짐)');
+              continue;
+            }
+            uploadBody.scriptText = scriptText;
           }
           const upRes = await fetch(`${YEORI_SERVER}/api/script-upload`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ episodeId: act.episodeId || studioState.activeEpisodeId, scriptText }),
+            body: JSON.stringify(uploadBody),
           });
           const upData = await upRes.json();
           actionLabels.push(upRes.ok
