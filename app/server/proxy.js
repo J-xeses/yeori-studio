@@ -3377,6 +3377,9 @@ function buildStudioStatusPayload(episodeId) {
       hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
       hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)),
       hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
+      cutType: c.cutType,
+      hasDialogue: c.dialogue?.trim() ? true : false,
+      hasNarration: c.narration?.trim() ? true : false,
     }
   })
 
