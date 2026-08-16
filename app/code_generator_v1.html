@@ -1271,8 +1271,56 @@ function renderGenerateResult(result) {
   el.innerHTML = `
     <div class="card-h"><span class="idx">14</span>✅ 생성 결과</div>
     <div class="cp-m">에피소드: ${escapeHtml(result.meta?.episode || result.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(result.meta?.version || '?')} · ${cutCount}컷</div>
-    <div class="bb-btn bb-primary" style="margin-top:10px;display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
+    <div style="margin-top:10px">
+      ${studioBadgeHtml()}
+      <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
+    </div>
   `;
+}
+
+// ── 스튜디오 활성 에피소드 배지 ──────────────────────────────────────────
+// "스튜디오로 전달"은 새 에피소드를 만드는 게 아니라 지금 스튜디오에서 활성화된
+// 에피소드의 cuts를 그대로 덮어쓰는 구조인데, 정작 코디젠 화면엔 그 대상이 뭔지
+// 표시가 없어서 다른 에피소드가 활성인 줄 모르고 전달했다가 잘못 덮어쓸 위험이 있었음
+// (2026-08-17 발견). 페이지 로드 시 한 번 조회해 배지로 보여주고, 실제 전달 클릭
+// 시점엔(그 사이 스튜디오에서 에피소드를 바꿨을 수 있으니) 다시 한번 최신값으로 확인한다.
+let studioActiveInfo = { status: 'loading' }; // 'loading' | 'ok' | 'no-episode' | 'disconnected'
+
+async function fetchStudioActiveInfo() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/studio-status-public`);
+    if (res.status === 404) return { status: 'no-episode' };
+    if (!res.ok) return { status: 'disconnected' };
+    const data = await res.json();
+    if (!data.episodeId) return { status: 'no-episode' };
+    return {
+      status: 'ok',
+      code: data.episode?.code || data.episodeId,
+      title: data.episode?.title || '(제목 없음)',
+      cutCount: data.cutCount ?? data.episode?.cutCount ?? 0,
+    };
+  } catch (e) {
+    return { status: 'disconnected' };
+  }
+}
+
+async function loadStudioActiveEpisode() {
+  studioActiveInfo = await fetchStudioActiveInfo();
+  document.querySelectorAll('.studio-active-badge').forEach(el => { el.outerHTML = studioBadgeHtml(); });
+}
+
+function studioBadgeHtml() {
+  const s = studioActiveInfo;
+  if (s.status === 'ok') {
+    return `<div class="studio-active-badge" style="font-size:11px;color:#1D9E75;margin-bottom:6px">→ ${escapeHtml(s.code)} ${escapeHtml(s.title)} (${s.cutCount}컷)</div>`;
+  }
+  if (s.status === 'no-episode') {
+    return `<div class="studio-active-badge" style="font-size:11px;color:#C99A2E;margin-bottom:6px">⚠ 활성 에피소드 없음</div>`;
+  }
+  if (s.status === 'disconnected') {
+    return `<div class="studio-active-badge" style="font-size:11px;color:var(--text3)">서버 연결 안 됨</div>`;
+  }
+  return `<div class="studio-active-badge" style="font-size:11px;color:var(--text3)">확인 중...</div>`;
 }
 
 // ── 스튜디오(ScriptGenTab.jsx)로 전달 ──────────────────────────────────────
@@ -1283,6 +1331,15 @@ function renderGenerateResult(result) {
 // "마스터 코드로 대본 생성"의 미리보기 상태로 반영한다.
 async function sendToStudio() {
   if (!lastGeneratedResult) return;
+
+  // 클릭 시점 재확인 — 배지는 페이지 로드 시점 스냅샷이라 그 사이 스튜디오에서 다른
+  // 에피소드로 전환했을 수 있음.
+  const info = await fetchStudioActiveInfo();
+  const target = info.status === 'ok' ? `${info.code} ${info.title}`
+    : info.status === 'no-episode' ? '(활성 에피소드 없음)'
+    : '(스튜디오 서버 연결 확인 불가)';
+  if (!confirm(`${target}에 덮어씁니다. 계속하시겠습니까?`)) return;
+
   try {
     const res = await fetch(`${YEORI_SERVER}/api/codi-gen-handoff`, {
       method: 'POST',
@@ -1384,6 +1441,7 @@ function renderPackageTab() {
   resultEl.innerHTML = `
     <div class="card-h"><span class="idx">18</span>📦 생성 결과</div>
     <div style="font-size:11px;color:var(--text2);margin-bottom:10px">에피소드: ${escapeHtml(lastGeneratedResult.meta?.episode || lastGeneratedResult.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(lastGeneratedResult.meta?.version || '?')} · ${cutCount}컷</div>
+    ${studioBadgeHtml()}
     <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
   `;
 }
@@ -1564,6 +1622,7 @@ function renderAll() {
 loadCandidateFromLocalStorage();
 renderAll();
 loadCodebook(); // 비동기 -- codebook.json 도착 시 buildCodebookOptions() + renderAll() 재실행
+loadStudioActiveEpisode(); // 비동기 -- 스튜디오 활성 에피소드 배지(결과 카드가 아직 없으면 표시할 곳도 없어 조용히 끝남)
 </script>
 
 </body>
