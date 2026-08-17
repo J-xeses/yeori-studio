@@ -8,24 +8,18 @@ import path from 'path'
 
 const FFMPEG_PATH = process.env.FFMPEG_PATH || 'ffmpeg'
 
-const QUALITY_PRESETS = {
-  low: ['-crf', '30', '-preset', 'ultrafast'],
-  medium: ['-crf', '23', '-preset', 'veryfast'],
-  high: ['-crf', '18', '-preset', 'fast'],
-}
+const QUALITY_CRF = { low: 28, medium: 23, high: 18 }
 
 // 동시에 하나의 녹화만 지원 — G2/G3 등 파이프라인 단계는 순차 실행되므로 충분함.
 let current = null // { proc, outputPath, startedAt }
 
 function buildArgs(outputPath, { fps, quality, region }) {
-  const args = ['-y', '-f', 'gdigrab', '-framerate', String(fps)]
+  const crf = QUALITY_CRF[quality] ?? QUALITY_CRF.medium
+  const args = ['-f', 'gdigrab', '-framerate', String(fps), '-i', 'desktop']
   if (region) {
-    args.push('-offset_x', String(region.x), '-offset_y', String(region.y))
-    args.push('-video_size', `${region.w}x${region.h}`)
+    args.push('-vf', `crop=${region.w}:${region.h}:${region.x}:${region.y}`)
   }
-  args.push('-i', 'desktop')
-  args.push('-vcodec', 'libx264', ...(QUALITY_PRESETS[quality] || QUALITY_PRESETS.medium))
-  args.push(outputPath)
+  args.push('-vcodec', 'libx264', '-preset', 'ultrafast', '-crf', String(crf), '-y', outputPath)
   return args
 }
 
@@ -50,14 +44,14 @@ export function start(outputPath, options = {}) {
     if (current && current.proc === proc) current = null
   })
 
-  return { success: true, path: outputPath }
+  return { success: true, pid: proc.pid, outputPath }
 }
 
 export function stop() {
   if (!current) {
     return Promise.reject(new Error('현재 녹화 중인 프로세스가 없습니다'))
   }
-  const { proc, outputPath, startedAt } = current
+  const { proc, outputPath } = current
 
   return new Promise((resolve) => {
     let settled = false
@@ -65,21 +59,20 @@ export function stop() {
       if (settled) return
       settled = true
       current = null
-      const duration = (Date.now() - startedAt) / 1000
-      let size = 0
+      let sizeBytes = 0
       let success = false
       try {
-        size = fs.statSync(outputPath).size
-        success = size > 0
+        sizeBytes = fs.statSync(outputPath).size
+        success = sizeBytes > 0
       } catch { /* 파일이 없으면 success:false로 반환 */ }
-      resolve({ success, path: outputPath, duration, size })
+      resolve({ success, path: outputPath, sizeBytes })
     }
 
     proc.once('close', finish)
     // gdigrab은 강제 종료(SIGKILL/kill)하면 mp4 트레일러가 안 써져서 파일이 깨짐 —
     // 'q' 입력으로 ffmpeg 자체 종료 루틴을 태워야 함(정상적인 파일 마무리).
     try {
-      proc.stdin.write('q')
+      proc.stdin.write('q\n')
       proc.stdin.end()
     } catch {
       proc.kill()

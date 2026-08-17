@@ -1424,12 +1424,27 @@ app.post('/api/pipeline/stop', (req, res) => {
 })
 
 // ── 화면 녹화(screen-recorder.js) — G2/G3 등 자동화 진행 과정을 메이킹 영상으로 남기기 위함 ──
+let recordingStartedAt = null // duration 계산용. screen-recorder.js 모듈은 이 값을 모름(관심사 분리).
+
 app.post('/api/recording/start', (req, res) => {
-  const { outputPath, options } = req.body || {}
-  if (!outputPath) return res.status(400).json({ error: 'outputPath 필요' })
-  const resolvedPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
+  // pl은 나중에 codebook.PL.making_record 기반으로 "이 PL코드는 이 단계에서 녹화 대상이
+  // 아님" 같은 검증에 쓸 수 있게 받아두되, 아직 그 검증 로직은 없음(요청 시 구현).
+  const { outputPath: bodyOutputPath, stage, cutNo, pl, options } = req.body || {}
+  let outputPath = bodyOutputPath
+  if (outputPath) {
+    outputPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
+  } else {
+    if (!stage || !cutNo) {
+      return res.status(400).json({ error: 'outputPath가 없으면 stage, cutNo가 필요합니다' })
+    }
+    const state = loadStudioState()
+    const activeEpNum = state.episode?.number
+    if (!activeEpNum) return res.status(400).json({ error: '활성 에피소드가 없습니다' })
+    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${activeEpNum}`, `g${stage}r_cut${cutNo}.mp4`)
+  }
   try {
-    const result = screenRecorder.start(resolvedPath, options || {})
+    const result = screenRecorder.start(outputPath, options || {})
+    recordingStartedAt = Date.now()
     res.json(result)
   } catch (err) {
     res.status(409).json({ error: err.message })
@@ -1439,7 +1454,9 @@ app.post('/api/recording/start', (req, res) => {
 app.post('/api/recording/stop', async (req, res) => {
   try {
     const result = await screenRecorder.stop()
-    res.json(result)
+    const duration = recordingStartedAt ? (Date.now() - recordingStartedAt) / 1000 : null
+    recordingStartedAt = null
+    res.json({ ...result, duration })
   } catch (err) {
     res.status(400).json({ error: err.message })
   }
