@@ -1,24 +1,24 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-08-16 (G4 크레딧 게이트 신규 + start_yeori.bat 트렌드레이더 버그 수정 + 시스템 지도 정리)
+> 마지막 업데이트: 2026-08-17 (고도화-12 — 스튜디오 전 기능 점검 + 메이킹 탭 완성)
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 
 ---
 
 ## 📌 현재 작업 중 (지금 당장 이어할 것)
 
-### 손글씨 텍스트 애니메이션(핸드라이팅 말풍선) — 다듬기 단계
-- **상태**: `scripts/handwriting_overlay_animate_test.py` 신규 — 회전/bob/투명도 pulse 애니메이션 + 다중 말풍선 동시배치(좌표 직접 지정) 검증 완료. IG_R01 컷1로 5버블 테스트 성공(`test_out/C01_multibubble_v3.mp4`)
-- **다음**: (1) `draw_cloud()` 구름 모양이 겹친 원처럼 보임 — 개선 필요 (2) 색상 팔레트를 버블 의도별로 의도적 조합 (3) 회전각(3.5도) 등 파라미터 미세조정 (4) 최종 결과물을 CapCut 프로젝트에 얹는 방법 설계 안 됨
+### 편집 의도 프롬프트 자동 생성
+- **다음**: 대본의 VP(영상 프롬프트)/SH(샷)/AT(동작) 필드를 CapCut 편집 명세로 자동 변환하는 기능 — 아직 미착수
+
+### G6 업로드 자동화
+- **상태**: MCP 도구 자체가 아직 없음, 퍼블리싱 탭의 패키지·썸네일 생성까지만 있음(이월 항목)
+
+### 손글씨 텍스트 애니메이션(핸드라이팅 말풍선) — 다듬기 단계, 회사 PC에서 진행
+- **상태**: `scripts/handwriting_overlay_animate_test.py` — 회전/bob/투명도 pulse 애니메이션 + 다중 말풍선 동시배치(좌표 직접 지정) 검증 완료. IG_R01 컷1로 5버블 테스트 성공(`test_out/C01_multibubble_v3.mp4`)
+- **다음**: (1) `draw_cloud()` 구름 모양이 겹친 원처럼 보임 — 개선 필요 (2) 색상 팔레트를 버블 의도별로 의도적 조합 (3) 회전각(3.5도) 등 파라미터 미세조정 (4) 최종 결과물을 CapCut 프로젝트에 얹는 방법 설계 안 됨. **집 PC가 아니라 회사 PC에서 이어서 진행 예정.**
 - **참고**: 대사 자막(CapCut 네이티브 텍스트트랙)과 이 손글씨 효과는 완전히 별개 레이어 — 속마음/상황/공감 코멘트를 자유배치하는 용도
 
-### CapCut 자동화 — 데스크탑 draft_content.json 직접쓰기로 전환 완료
-- **상태**: 웹(capcut.com) Puppeteer 자동화(`scripts/capcut-reel-automation.js`)는 캔버스 기반 타임라인 좌표 문제로 폐기, `scripts/build-capcut-desktop-draft.js`(신규)로 전환 — IG_R01(사진5+자막9) 검증 완료
-- **다음**: 스티커/BGM/트랜지션은 아직 이 방식으로 안 다룸(CapCut 리소스 ID 필요해서 더 어려움)
-
-### 에이전트 리더 채팅 — 패턴 축적 단계
-- **상태**: 채팅 기능 구현 완료(4f07f65), `script_upload` 액션 추가(2026-08-15)로 대본 업로드까지 채팅에서 가능. 실제 사용하며 패턴 발견 중
-- **다음**: 자주 쓰는 지시 패턴이 모이면 시스템 프롬프트 고도화
-- ~~미결: G4 파이프라인 타임아웃 처리~~ → **완료 확인됨**(`pipeline-leader.js`의 `G4_TIMEOUT_MS`, 이미 구현돼 있었음 — 이 파일이 낡아서 미결로 잘못 남아있던 것, 2026-08-16 정정)
+### SF_E07 codebook v1.0.0 검증
+- **상태**: 실데이터로 검증 미완료 — 이월
 
 ### Notion 마스터 허브 + STATUS.md
 - **상태**: 매 세션 반복 지적 사항. 이 파일로 대신하는 중
@@ -31,15 +31,44 @@
 - **SF_E01 CUT2~8 G2~G4 수동 승인 대기** — CUT1은 2026-08-16에 실제로 확인 후 승인 완료(`downloads/deliverables/SF_E01/cut_01_image.jpeg` 생성 확인). 나머지 7컷도 같은 방식으로 스튜디오/TTS/영상 탭에서 눈으로 확인 후 승인만 누르면 됨.
 - **크레딧 게이트 완전 정합 미완** — `downloads/credit-usage-today.json`(오늘 G4 소모량 자체 추적)이 사람이 "자동 확인" 눌러도 즉시 리셋되진 않음, 날짜 바뀔 때만 자동 초기화. 다음에 완전 정합 붙일 것(2026-08-16 설계 노트: `server/lib/creditUsage.js`).
 - **4차(파일경로를 episode.code 기준 전면교체)는 보류** — proxy.js 약 25곳 + scripts/*.js 11개 + 클라이언트 탭 8개로 범위가 너무 커서(2026-08-15 전수조사 완료, 상세는 아래 핵심 메모 참고) 당장은 손 안 댐. 대신 `episode.number`를 전역 유일 카운터로 되돌려 충돌 자체를 막는 우회로 대응. 나중에 필요해지면 이 조사 결과부터 참고할 것.
-- **SF_E07 실데이터로 codebook v1.0.0 검증** — 미완료 이월
 - **VideoTab.jsx AI 영상 자동생성 UI 연결** — `/api/run-video` 엔드포인트는 완성, 호출 버튼 없음(MCP 경로로는 크레딧 게이트까지 적용됨 — UI 버튼도 붙이게 되면 크레딧 게이트 로직 재사용할 것)
-- **G6(업로드) 자동화** — 아직 MCP 도구 자체가 없음, 퍼블리싱 탭의 패키지·썸네일 생성까지만 있음
 - **서여리 의상 프롬프트 카탈로그 고도화** — 15룩, 7카테고리(A~G), 계절별 태그 분류
 - **OneDrive 미디어 동기화** — 집 PC `C:\Users\user\OneDrive\yeori-studio-sync` 폴더 없음, 확인 필요
 
 ---
 
 ## ✅ 완료된 것
+
+### 스튜디오 전 기능 점검 + 메이킹 탭 완성 (고도화-12, 2026-08-17)
+
+**버그 수정 9건:**
+
+| 항목 | 커밋 |
+|------|------|
+| `studio_get_status` 컷별 응답에 `cutType`/`hasDialogue`/`hasNarration` 필드 추가 | `8cb8604` |
+| G5 완료 후 gpoints 미기록 수정(concat 성공해도 G5 완료로 안 잡히던 버그) | `7edeed3` |
+| `pipeline-leader.js` G5 완료 후에도 `running` 상태가 안 꺼지던 버그 | `63180ce` |
+| 이미 완료된 단계 재실행 방지 — G1~G5 전 단계 스킵 로직 | `a50837f` |
+| G3 스킵/자동종료 판정에서 무음(대사·나레이션 없음) 컷 제외 | `b1c27e2`, `baf9171` |
+| `check-final`/`package-final` 파라미터명 통일 + G5 raw 산출물 폴백 | `fe6cb26` |
+| `credits-status` 크레딧 단위 불일치(컷수 vs 포인트) 수정 | `db7f65e` |
+| 코디젠(Codi_GEN) "스튜디오로 전달" 버튼에 활성 에피소드 배지 + confirm | `efc9dff` |
+
+**신규 기능:**
+
+| 항목 | 커밋 |
+|------|------|
+| 에이전트 리더 채팅 `create_episode` 액션 + `POST /api/episodes` | `b2048e6` |
+| `script_upload`에 `scriptPath`(파일 경로) 방식 추가 | `ddd83ab` |
+| 채팅 3단계 체이닝(에피소드 생성→대본 업로드→G2 실행) 검증 완료 | - |
+| `PIP_VD` 컷타입 + `pipTarget`/`pipLayout`/`pipScale` 필드 | `f27e122` |
+| codebook `G2-R`/`G3-R`/`G4-R`/`G5-M` making_record 매트릭스 확정 | `5169556` |
+| `screen-recorder.js` + `POST /api/recording/start·stop` | `29ffe35`, `b1085cb` |
+| MakingTab.jsx 완성 — GRAPHIC 편집기(HTML→헤드리스 캡처→mp4) | `1be7e1f` |
+| MakingTab.jsx 완성 — BROLL 녹화(녹화→자동 트림+스케일 편집) | `31960f4` |
+| MakingTab.jsx 완성 — CAPCUT 녹화(창 자동감지) + 듀얼모니터 좌표 보정 | `17c8ff6` |
+| MakingTab.jsx 완성 — G5-M 메이킹 필름 조립 | `2a98586` |
+| MakingTab.jsx 완성 — Pexels 소스 검색/다운로드 | `8ba35b4` |
 
 ### G4 크레딧 게이트 + start_yeori.bat 버그 수정 + 시스템 지도 (2026-08-16)
 
