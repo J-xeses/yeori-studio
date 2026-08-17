@@ -18,6 +18,7 @@ import CreditsTab from './tabs/CreditsTab'
 import RetentionHookTab from './tabs/RetentionHookTab'
 import EditMetaTab from './tabs/EditMetaTab'
 import StoryArchiveTab from './tabs/StoryArchiveTab'
+import MakingTab from './tabs/MakingTab'
 import s from './App.module.css'
 
 const TAB_MAP = {
@@ -33,6 +34,7 @@ const TAB_MAP = {
     retention: RetentionHookTab,
     editmeta: EditMetaTab,
     storyarchive: StoryArchiveTab,
+    making: MakingTab,
 }
 
 // ── 에피소드 진행 상태 계산 ────────────────────────────────────

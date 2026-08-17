@@ -1483,6 +1483,23 @@ app.post('/api/recording/stop', async (req, res) => {
   }
 })
 
+// GET /api/making-files — downloads/making/ep{N}/ 폴더의 녹화본 목록 반환
+app.get('/api/making-files', (req, res) => {
+  const epNum = req.query.epNum
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  const dir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
+  if (!fs.existsSync(dir)) return res.json({ files: [] })
+  try {
+    const files = fs.readdirSync(dir)
+      .map(name => ({ name, stat: fs.statSync(path.join(dir, name)) }))
+      .filter(({ stat }) => stat.isFile())
+      .map(({ name, stat }) => ({ name, sizeBytes: stat.size, createdAt: stat.birthtime.toISOString() }))
+    res.json({ files })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
 app.post('/api/save-audio', async (req, res) => {
   const ep    = req.query.ep
