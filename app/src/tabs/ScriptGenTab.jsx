@@ -290,6 +290,7 @@ function pipelineCodeToCutType(plCode) {
   if (p.startsWith('BR_')) return 'BROLL'
   if (p.startsWith('GR_')) return 'GRAPHIC'
   if (p.startsWith('CC_')) return 'CAPCUT'
+  if (p.startsWith('PIP_')) return 'PIP'
   return 'YEORI' // YR_VD, YR_IM 등
 }
 
@@ -323,6 +324,7 @@ function parseCutsV3(raw) {
     const firstSh = shCode.split(/[→>]/)[0].trim()
     const dl = fields.DL && fields.DL !== '없음' ? fields.DL : ''
     const nr = fields.NR && fields.NR !== '없음' ? fields.NR : ''
+    const cutType = inferCutType(fields.PL, ip)
 
     return {
       id: `cut-${rc.no}`,
@@ -338,8 +340,10 @@ function parseCutsV3(raw) {
       videoPrompt: vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
-      cutType: inferCutType(fields.PL, ip),
+      cutType,
       cutMark: 'NORMAL',
+      // server/lib/scriptParserV3.js와 반드시 동일하게 유지 — PIP_VD 컷 전용 필드.
+      ...(cutType === 'PIP' ? { pipTargetCut: null, pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
         sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',

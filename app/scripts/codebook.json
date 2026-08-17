@@ -56,6 +56,22 @@
       "run_g2": false,
       "run_g3": false,
       "run_g4": false
+    },
+    "PIP_VD": {
+      "label": "PIP 합성컷",
+      "yeori_base": true,
+      "run_g2": true,
+      "run_g3": true,
+      "run_g4": true,
+      "pip": true,
+      "note": "YEORI 컷 위에 BROLL 컷을 PIP로 합성. pipTargetCut으로 대상 컷 번호 지정"
+    },
+    "making_record": {
+      "YR_VD": "Flow 영상생성 화면 녹화",
+      "BR_VD": "Flow B-roll 생성 또는 실촬영본 녹화",
+      "PIP_VD": "YEORI+BROLL 합성 과정 녹화",
+      "CC_ED": "CapCut 편집 화면 녹화",
+      "GR_ED": "그래픽 제작 화면 녹화"
     }
   },
   "SP": {
