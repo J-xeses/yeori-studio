@@ -32,11 +32,25 @@ public class CapCutWin {
   public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
   [DllImport("user32.dll")]
   public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+  [DllImport("user32.dll")]
+  public static extern int GetSystemMetrics(int nIndex);
 }
 "@
 
 $rect = New-Object CapCutWin+RECT
 [CapCutWin]::GetWindowRect($proc.MainWindowHandle, [ref]$rect) | Out-Null
+
+# SM_XVIRTUALSCREEN=76, SM_YVIRTUALSCREEN=77 -- top-left of the full virtual
+# desktop across all monitors. On a multi-monitor setup where a monitor sits
+# left of or above the primary, this is negative (e.g. -1920). ffmpeg's
+# gdigrab -i desktop captures the whole virtual desktop starting at THIS
+# origin as pixel (0,0), not at the primary monitor's (0,0) -- so a crop
+# filter needs window coordinates translated into that space, or a window on
+# a non-primary monitor gets cropped from the wrong place entirely (verified
+# by direct testing: raw GetWindowRect coords produced a black/empty crop,
+# origin-adjusted coords produced the correct CapCut window content).
+$vsX = [CapCutWin]::GetSystemMetrics(76)
+$vsY = [CapCutWin]::GetSystemMetrics(77)
 
 $titleB64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes([string]$proc.MainWindowTitle))
 
@@ -44,8 +58,8 @@ $result = @{
   running = $true
   pid = $proc.Id
   windowTitleB64 = $titleB64
-  x = $rect.Left
-  y = $rect.Top
+  x = ($rect.Left - $vsX)
+  y = ($rect.Top - $vsY)
   width = ($rect.Right - $rect.Left)
   height = ($rect.Bottom - $rect.Top)
 }
