@@ -1427,8 +1427,14 @@ app.post('/api/pipeline/stop', (req, res) => {
 // ── 화면 녹화(screen-recorder.js) — G2/G3 등 자동화 진행 과정을 메이킹 영상으로 남기기 위함 ──
 let recordingStartedAt = null // duration 계산용. screen-recorder.js 모듈은 이 값을 모름(관심사 분리).
 
+// BROLL 녹화 전용 대기 상태 — start()에서 body.broll이 오면 여기 채워두고, stop() 시점에
+// raw 녹화본을 자동으로 트림+1080x1920 스케일 편집해서 최종 컷 영상으로 확정한다.
+// 사용자 확정(2026-08-17): "녹화 후 편집을 거쳐 최종영상이 되어야 한다 + 편집도 사전 설정으로
+// 수동 없이 자동 진행". raw 원본은 삭제하지 않고 downloads/making/에 보관(재편집 대비).
+let pendingBrollEdit = null // { epNum, cutNo, targetDuration, trimMode, rawPath }
+
 app.post('/api/recording/start', (req, res) => {
-  const { outputPath: bodyOutputPath, stage, cutNo, pl, options } = req.body || {}
+  const { outputPath: bodyOutputPath, stage, cutNo, pl, options, broll } = req.body || {}
   const stageNum = stage != null ? String(stage).replace(/[^0-9]/g, '') : ''
 
   // stage+pl이 둘 다 오면 codebook.json의 PL.making_record["G{n}-R"][pl]로 이 조합이
@@ -1450,7 +1456,13 @@ app.post('/api/recording/start', (req, res) => {
   }
 
   let outputPath = bodyOutputPath
-  if (outputPath) {
+  if (broll) {
+    if (cutNo == null || !broll.epNum) {
+      return res.status(400).json({ error: 'broll 모드는 cutNo, broll.epNum이 필요합니다' })
+    }
+    const padded = String(cutNo).padStart(2, '0')
+    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${broll.epNum}`, `broll_raw_cut${padded}.mp4`)
+  } else if (outputPath) {
     outputPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
   } else {
     if (!stageNum || !cutNo) {
@@ -1464,6 +1476,13 @@ app.post('/api/recording/start', (req, res) => {
   try {
     const result = screenRecorder.start(outputPath, options || {})
     recordingStartedAt = Date.now()
+    pendingBrollEdit = broll ? {
+      epNum: broll.epNum,
+      cutNo,
+      targetDuration: parseFloat(broll.targetDuration) || null,
+      trimMode: broll.trimMode === 'start' ? 'start' : 'end',
+      rawPath: outputPath,
+    } : null
     res.json({
       ...result,
       ...(makingEntry ? { source: makingEntry.source, target: makingEntry.target } : {}),
@@ -1473,14 +1492,83 @@ app.post('/api/recording/start', (req, res) => {
   }
 })
 
+function ffprobeDuration(filePath) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('ffprobe', [
+      '-v', 'error', '-show_entries', 'format=duration',
+      '-of', 'default=noprint_wrappers=1:nokey=1', filePath,
+    ])
+    let out = ''
+    proc.stdout.on('data', chunk => { out += chunk.toString() })
+    proc.on('close', code => {
+      const dur = parseFloat(out.trim())
+      code === 0 && !isNaN(dur) ? resolve(dur) : reject(new Error('ffprobe 길이 조회 실패'))
+    })
+    proc.on('error', reject)
+  })
+}
+
+// raw 녹화본을 목표 길이로 트림 + 1080x1920 스케일/크롭해서 최종 컷 영상으로 확정.
+// force_original_aspect_ratio=increase(짧은 변을 목표 이상으로 키움) 후 중앙 crop —
+// 데스크톱 해상도로 찍힌 raw를 세로 숏폼 화면비로 맞추는 표준 처리.
+async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode }) {
+  const rawDuration = await ffprobeDuration(rawPath)
+  const target = targetDuration || rawDuration
+  const ssOffset = rawDuration > target && trimMode === 'end' ? rawDuration - target : 0
+
+  const finalDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  fs.mkdirSync(finalDir, { recursive: true })
+  const padded = String(cutNo).padStart(2, '0')
+  const finalPath = path.join(finalDir, `cut_${padded}.mp4`)
+
+  await new Promise((resolve, reject) => {
+    const args = ['-y']
+    if (ssOffset > 0) args.push('-ss', String(ssOffset))
+    args.push(
+      '-i', rawPath,
+      '-t', String(target),
+      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920',
+      '-c:v', 'libx264',
+      finalPath,
+    )
+    const proc = spawn('ffmpeg', args)
+    proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 편집 종료 코드 ${code}`)))
+    proc.on('error', reject)
+  })
+
+  const finalStat = fs.statSync(finalPath)
+  return { finalPath, finalSizeBytes: finalStat.size, finalDuration: target, rawDuration }
+}
+
 app.post('/api/recording/stop', async (req, res) => {
+  let rawResult
   try {
-    const result = await screenRecorder.stop()
-    const duration = recordingStartedAt ? (Date.now() - recordingStartedAt) / 1000 : null
-    recordingStartedAt = null
-    res.json({ ...result, duration })
+    rawResult = await screenRecorder.stop()
   } catch (err) {
-    res.status(400).json({ error: err.message })
+    return res.status(400).json({ error: err.message })
+  }
+  const duration = recordingStartedAt ? (Date.now() - recordingStartedAt) / 1000 : null
+  recordingStartedAt = null
+
+  const edit = pendingBrollEdit
+  pendingBrollEdit = null
+  if (!edit) {
+    return res.json({ ...rawResult, duration })
+  }
+  if (!rawResult.success) {
+    return res.status(500).json({ error: '원본 녹화 실패(파일 생성 안 됨)', raw: rawResult })
+  }
+
+  try {
+    const editResult = await editBrollRaw(edit)
+    res.json({
+      success: true,
+      rawPath: rawResult.path,
+      rawSizeBytes: rawResult.sizeBytes,
+      ...editResult,
+    })
+  } catch (err) {
+    res.status(500).json({ error: `자동 편집 실패: ${err.message}`, rawPath: rawResult.path })
   }
 })
 
