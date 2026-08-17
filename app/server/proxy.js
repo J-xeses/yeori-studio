@@ -1427,25 +1427,46 @@ app.post('/api/pipeline/stop', (req, res) => {
 let recordingStartedAt = null // duration 계산용. screen-recorder.js 모듈은 이 값을 모름(관심사 분리).
 
 app.post('/api/recording/start', (req, res) => {
-  // pl은 나중에 codebook.PL.making_record 기반으로 "이 PL코드는 이 단계에서 녹화 대상이
-  // 아님" 같은 검증에 쓸 수 있게 받아두되, 아직 그 검증 로직은 없음(요청 시 구현).
   const { outputPath: bodyOutputPath, stage, cutNo, pl, options } = req.body || {}
+  const stageNum = stage != null ? String(stage).replace(/[^0-9]/g, '') : ''
+
+  // stage+pl이 둘 다 오면 codebook.json의 PL.making_record["G{n}-R"][pl]로 이 조합이
+  // 애초에 녹화 대상인지 조회 — null이면 ffmpeg를 띄우지 않고 skip 응답으로 끝낸다.
+  let makingEntry
+  if (stageNum && pl) {
+    try {
+      const codebookPath = path.join(CODE_ROOT, 'scripts', 'codebook.json')
+      const codebook = JSON.parse(fs.readFileSync(codebookPath, 'utf-8'))
+      const stepDef = codebook.PL?.making_record?.[`G${stageNum}-R`]
+      makingEntry = stepDef ? stepDef[pl] : undefined
+    } catch (err) {
+      // codebook을 못 읽으면 검증 없이 기존처럼 녹화 진행(가용성 우선)
+      makingEntry = undefined
+    }
+  }
+  if (makingEntry === null) {
+    return res.json({ success: true, skipped: true, reason: '해당 PL코드는 이 단계 녹화 불필요' })
+  }
+
   let outputPath = bodyOutputPath
   if (outputPath) {
     outputPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
   } else {
-    if (!stage || !cutNo) {
+    if (!stageNum || !cutNo) {
       return res.status(400).json({ error: 'outputPath가 없으면 stage, cutNo가 필요합니다' })
     }
     const state = loadStudioState()
     const activeEpNum = state.episode?.number
     if (!activeEpNum) return res.status(400).json({ error: '활성 에피소드가 없습니다' })
-    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${activeEpNum}`, `g${stage}r_cut${cutNo}.mp4`)
+    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${activeEpNum}`, `g${stageNum}r_cut${cutNo}.mp4`)
   }
   try {
     const result = screenRecorder.start(outputPath, options || {})
     recordingStartedAt = Date.now()
-    res.json(result)
+    res.json({
+      ...result,
+      ...(makingEntry ? { source: makingEntry.source, target: makingEntry.target } : {}),
+    })
   } catch (err) {
     res.status(409).json({ error: err.message })
   }
