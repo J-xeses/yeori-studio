@@ -46,6 +46,7 @@ logToFile('--- proxy 시작 ---')
 })()
 const ANTHROPIC_API_KEY = process.env.VITE_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY || ''
 const MCP_BRIDGE_SECRET = process.env.MCP_BRIDGE_SECRET || ''
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY || ''
 
 const app = express()
 const PORT = 3001
@@ -1703,6 +1704,109 @@ app.post('/api/making-assemble', async (req, res) => {
   saveGpointsFile(gData)
 
   res.json({ success: true, outputPath: outFile, includedCuts, skippedCuts, duration })
+})
+
+// orientation 요청을 Pexels 자체 orientation 파라미터로 1차 필터링한 뒤, 응답 항목의
+// 실제 width/height도 다시 비교해 걸러낸다 — Pexels 태깅이 항상 정확하진 않아서
+// (세로 요청인데 가로 파일이 섞여 나오는 경우가 있음) 2중으로 확인한다.
+function matchesOrientation(width, height, orientation) {
+  if (orientation === 'portrait') return height > width
+  if (orientation === 'landscape') return width > height
+  return true
+}
+
+// GET /api/source-search — Pexels 영상/이미지 검색(BROLL/CAPCUT 컷의 소스 소재 탐색용).
+// Pexels 검색 API 자체는 무료이며 서버 사이드에서만 API 키를 사용(클라이언트에 노출 안 함).
+app.get('/api/source-search', async (req, res) => {
+  if (!PEXELS_API_KEY) return res.status(500).json({ error: 'PEXELS_API_KEY 미설정 (.env.local 확인)' })
+  const { q, type = 'all', orientation = 'all', page = 1, perPage = 15 } = req.query
+  if (!q) return res.status(400).json({ error: 'q(검색어) 필요' })
+
+  try {
+    const results = []
+
+    if (type === 'video' || type === 'all') {
+      const url = new URL('https://api.pexels.com/videos/search')
+      url.searchParams.set('query', q)
+      url.searchParams.set('page', String(page))
+      url.searchParams.set('per_page', String(perPage))
+      if (orientation !== 'all') url.searchParams.set('orientation', orientation)
+      const r = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } })
+      if (!r.ok) throw new Error(`Pexels 영상 검색 실패: HTTP ${r.status}`)
+      const data = await r.json()
+      for (const v of data.videos || []) {
+        // 여러 화질 변형(video_files) 중 orientation에 맞고 해상도가 가장 큰 것을 대표로 선택
+        const candidates = (v.video_files || []).filter(f => matchesOrientation(f.width, f.height, orientation))
+        const pick = candidates.sort((a, b) => (b.width * b.height) - (a.width * a.height))[0]
+        if (!pick) continue
+        results.push({
+          id: `video-${v.id}`,
+          type: 'video',
+          title: v.user?.name ? `${v.user.name} · 영상` : `Pexels 영상 #${v.id}`,
+          thumbnail: v.image,
+          downloadUrl: pick.link,
+          width: pick.width,
+          height: pick.height,
+          duration: v.duration,
+          photographer: v.user?.name || '',
+          pexelsUrl: v.url,
+        })
+      }
+    }
+
+    if (type === 'image' || type === 'all') {
+      const url = new URL('https://api.pexels.com/v1/search')
+      url.searchParams.set('query', q)
+      url.searchParams.set('page', String(page))
+      url.searchParams.set('per_page', String(perPage))
+      if (orientation !== 'all') url.searchParams.set('orientation', orientation)
+      const r = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } })
+      if (!r.ok) throw new Error(`Pexels 이미지 검색 실패: HTTP ${r.status}`)
+      const data = await r.json()
+      for (const p of data.photos || []) {
+        if (!matchesOrientation(p.width, p.height, orientation)) continue
+        results.push({
+          id: `image-${p.id}`,
+          type: 'image',
+          title: p.alt || `Pexels 사진 #${p.id}`,
+          thumbnail: p.src?.medium,
+          downloadUrl: p.src?.original,
+          width: p.width,
+          height: p.height,
+          duration: null,
+          photographer: p.photographer || '',
+          pexelsUrl: p.url,
+        })
+      }
+    }
+
+    res.json({ results })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /api/source-download — 검색 결과의 실제 파일을 서버로 다운로드해 컷 작업용
+// 소스 폴더에 저장. Pexels CDN 파일 자체는 인증 없이 받을 수 있다(API 키는 검색에만 필요).
+app.post('/api/source-download', async (req, res) => {
+  const { url, cutNo, epNum, filename } = req.body || {}
+  if (!url || cutNo == null || !epNum || !filename) {
+    return res.status(400).json({ error: 'url, cutNo, epNum, filename 필요' })
+  }
+  const safeFilename = String(filename).replace(/[/\\:*?"<>|]/g, '_')
+  const dir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'source')
+  fs.mkdirSync(dir, { recursive: true })
+  const localPath = path.join(dir, safeFilename)
+
+  try {
+    const r = await fetch(url)
+    if (!r.ok) throw new Error(`다운로드 실패: HTTP ${r.status}`)
+    const buf = Buffer.from(await r.arrayBuffer())
+    fs.writeFileSync(localPath, buf)
+    res.json({ success: true, localPath, sizeBytes: buf.length })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // POST /api/graphic-capture — GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해

@@ -54,6 +54,60 @@ export default function MakingTab() {
   const graphicCuts = (cuts || []).filter(c => c.cutType === 'GRAPHIC')
   const brollCuts = (cuts || []).filter(c => c.cutType === 'BROLL')
 
+  // ── 소스 검색(Pexels): BROLL/CAPCUT 컷에 쓸 영상/이미지 소재를 검색해 바로 다운로드.
+  // 특정 컷타입에 종속되지 않는 범용 유틸이라 대상 컷은 자체 드롭다운으로 선택.
+  const [sourceQuery, setSourceQuery] = useState('')
+  const [sourceType, setSourceType] = useState('all')
+  const [sourceOrientation, setSourceOrientation] = useState('portrait')
+  const [sourceTargetCutNo, setSourceTargetCutNo] = useState(null)
+  const [sourceSearching, setSourceSearching] = useState(false)
+  const [sourceError, setSourceError] = useState(null)
+  const [sourceResults, setSourceResults] = useState([])
+  const [sourceDownloading, setSourceDownloading] = useState({})
+  const [sourceDownloaded, setSourceDownloaded] = useState({})
+
+  const searchSources = async () => {
+    if (!sourceQuery.trim()) return
+    setSourceSearching(true)
+    setSourceError(null)
+    setSourceResults([])
+    try {
+      const params = new URLSearchParams({
+        q: sourceQuery, type: sourceType, orientation: sourceOrientation,
+        page: '1', perPage: '15',
+      })
+      const res = await fetch(`${YEORI_SERVER}/api/source-search?${params}`)
+      const data = await res.json()
+      if (!res.ok) { setSourceError(data.error || '검색 실패'); return }
+      setSourceResults(data.results || [])
+    } catch (e) {
+      setSourceError(`서버 연결 실패: ${e.message}`)
+    } finally {
+      setSourceSearching(false)
+    }
+  }
+
+  const downloadSource = async (item) => {
+    if (sourceTargetCutNo == null || !episode.number) return
+    setSourceDownloading(prev => ({ ...prev, [item.id]: true }))
+    try {
+      const ext = item.type === 'video' ? 'mp4' : 'jpg'
+      const filename = `${item.id}.${ext}`
+      const res = await fetch(`${YEORI_SERVER}/api/source-download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: item.downloadUrl, cutNo: sourceTargetCutNo, epNum: episode.number, filename }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setSourceDownloaded(prev => ({ ...prev, [item.id]: { error: data.error || '다운로드 실패' } })); return }
+      setSourceDownloaded(prev => ({ ...prev, [item.id]: data }))
+    } catch (e) {
+      setSourceDownloaded(prev => ({ ...prev, [item.id]: { error: `서버 연결 실패: ${e.message}` } }))
+    } finally {
+      setSourceDownloading(prev => ({ ...prev, [item.id]: false }))
+    }
+  }
+
   const [selectedCutNo, setSelectedCutNo] = useState(null)
   const [htmlSource, setHtmlSource] = useState('')
   const [previewHtml, setPreviewHtml] = useState('')
@@ -260,6 +314,87 @@ export default function MakingTab() {
                   <div className={s.subtitle}>
                     G2~G5 파이프라인이 자동 생성하지 않는 컷타입(BROLL/GRAPHIC 등)의 실제 영상을 여기서 제작합니다.
                   </div>
+                </div>
+              </div>
+
+              <div className={s.card}>
+                <div className={s.cardTitle}>소스 검색 (Pexels)</div>
+                <div className={s.settingRow}>
+                  <div className={s.settingGroup}>
+                    <div className={s.settingLabel}>검색어</div>
+                    <div className={s.urlRow}>
+                      <input className={s.urlInput} value={sourceQuery} placeholder="예: slot machine lever"
+                        onChange={e => setSourceQuery(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && searchSources()} />
+                      <button className={s.previewBtn} disabled={sourceSearching || !sourceQuery.trim()} onClick={searchSources}>
+                        {sourceSearching ? '⏳' : '검색'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={s.settingGroup}>
+                    <div className={s.settingLabel}>유형</div>
+                    <div className={s.radioRow}>
+                      {[['all', '전체'], ['video', '영상'], ['image', '이미지']].map(([v, l]) => (
+                        <label key={v} className={s.radioLabel}>
+                          <input type="radio" name="source-type" value={v}
+                            checked={sourceType === v} onChange={() => setSourceType(v)} />
+                          {l}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className={s.settingGroup}>
+                    <div className={s.settingLabel}>방향</div>
+                    <div className={s.radioRow}>
+                      {[['portrait', '세로우선'], ['landscape', '가로'], ['all', '전체']].map(([v, l]) => (
+                        <label key={v} className={s.radioLabel}>
+                          <input type="radio" name="source-orientation" value={v}
+                            checked={sourceOrientation === v} onChange={() => setSourceOrientation(v)} />
+                          {l}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className={s.settingGroup}>
+                    <div className={s.settingLabel}>대상 컷</div>
+                    <select className={s.stageSelect} value={sourceTargetCutNo ?? ''}
+                      onChange={e => setSourceTargetCutNo(e.target.value ? parseInt(e.target.value) : null)}>
+                      <option value="">선택 안 함</option>
+                      {(cuts || []).map(c => <option key={c.id} value={c.no}>#{c.no}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {sourceError && <div className={s.resultError}>❌ {sourceError}</div>}
+
+                {sourceResults.length > 0 && (
+                  <div className={s.sourceGrid}>
+                    {sourceResults.map(item => {
+                      const dl = sourceDownloaded[item.id]
+                      const downloading = sourceDownloading[item.id]
+                      return (
+                        <div key={item.id} className={s.sourceCard}>
+                          <img src={item.thumbnail} alt={item.title} className={s.sourceThumb} loading="lazy" />
+                          <div className={s.sourceMeta}>
+                            <span className={s.sourcePhotographer}>{item.photographer || '작자 미상'}</span>
+                            {item.type === 'video' && <span className={s.sourceDuration}>{item.duration}초</span>}
+                          </div>
+                          <button className={s.previewBtn} disabled={downloading || sourceTargetCutNo == null}
+                            onClick={() => downloadSource(item)}>
+                            {downloading ? '⏳' : dl?.success ? '저장됨 ✅' : '다운로드'}
+                          </button>
+                          {dl?.error && <div className={s.resultError}>❌ {dl.error}</div>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                <div className={s.pexelsCredit}>
+                  Photos provided by <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
                 </div>
               </div>
 
