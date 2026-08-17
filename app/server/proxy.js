@@ -1427,14 +1427,42 @@ app.post('/api/pipeline/stop', (req, res) => {
 // ── 화면 녹화(screen-recorder.js) — G2/G3 등 자동화 진행 과정을 메이킹 영상으로 남기기 위함 ──
 let recordingStartedAt = null // duration 계산용. screen-recorder.js 모듈은 이 값을 모름(관심사 분리).
 
-// BROLL 녹화 전용 대기 상태 — start()에서 body.broll이 오면 여기 채워두고, stop() 시점에
-// raw 녹화본을 자동으로 트림+1080x1920 스케일 편집해서 최종 컷 영상으로 확정한다.
+// BROLL/CAPCUT 녹화 공용 대기 상태 — start()에서 body.broll 또는 body.capcut이 오면
+// 여기 채워두고, stop() 시점에 raw 녹화본을 자동으로 트림+1080x1920 스케일 편집해서
+// 최종 컷 영상으로 확정한다(editBrollRaw, 두 모드가 완전히 동일한 편집 로직 공유).
 // 사용자 확정(2026-08-17): "녹화 후 편집을 거쳐 최종영상이 되어야 한다 + 편집도 사전 설정으로
 // 수동 없이 자동 진행". raw 원본은 삭제하지 않고 downloads/making/에 보관(재편집 대비).
 let pendingBrollEdit = null // { epNum, cutNo, targetDuration, trimMode, rawPath }
 
+// CapCut 데스크톱 앱의 실행 여부 + 창 좌표를 조회. capcut-window.ps1은 ASCII 전용
+// 파일(한글 주석이 Add-Type C# 파싱을 깨뜨린 전례가 있어 win-file-dialog-helper.ps1과
+// 동일 관례 유지)이라 창 제목은 Base64로 받아 여기서 UTF-8로 디코딩한다.
+function getCapCutWindow() {
+  try {
+    const helperPath = path.join(CODE_ROOT, 'scripts', 'capcut-window.ps1')
+    const out = execFileSync('powershell.exe', [
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', helperPath,
+    ], { encoding: 'utf-8' }).trim()
+    const data = JSON.parse(out)
+    if (!data.running) return { running: false }
+    return {
+      running: true,
+      pid: data.pid,
+      windowTitle: data.windowTitleB64 ? Buffer.from(data.windowTitleB64, 'base64').toString('utf-8') : '',
+      region: { x: data.x, y: data.y, w: data.width, h: data.height },
+    }
+  } catch (err) {
+    return { running: false, error: err.message }
+  }
+}
+
+// GET /api/capcut-window — CapCut 실행 여부 확인(MakingTab CAPCUT 섹션의 "상태 확인" 버튼)
+app.get('/api/capcut-window', (req, res) => {
+  res.json(getCapCutWindow())
+})
+
 app.post('/api/recording/start', (req, res) => {
-  const { outputPath: bodyOutputPath, stage, cutNo, pl, options, broll } = req.body || {}
+  const { outputPath: bodyOutputPath, stage, cutNo, pl, options, broll, capcut } = req.body || {}
   const stageNum = stage != null ? String(stage).replace(/[^0-9]/g, '') : ''
 
   // stage+pl이 둘 다 오면 codebook.json의 PL.making_record["G{n}-R"][pl]로 이 조합이
@@ -1455,6 +1483,9 @@ app.post('/api/recording/start', (req, res) => {
     return res.json({ success: true, skipped: true, reason: '해당 PL코드는 이 단계 녹화 불필요' })
   }
 
+  // capcut 모드는 region을 body.options에서 받지 않고 CapCut 창을 자동 감지해 덮어쓴다
+  // (창을 못 찾으면 null — screenRecorder가 전체화면으로 폴백).
+  let recordOptions = options || {}
   let outputPath = bodyOutputPath
   if (broll) {
     if (cutNo == null || !broll.epNum) {
@@ -1462,6 +1493,15 @@ app.post('/api/recording/start', (req, res) => {
     }
     const padded = String(cutNo).padStart(2, '0')
     outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${broll.epNum}`, `broll_raw_cut${padded}.mp4`)
+  } else if (capcut) {
+    if (cutNo == null || !capcut.epNum) {
+      return res.status(400).json({ error: 'capcut 모드는 cutNo, capcut.epNum이 필요합니다' })
+    }
+    // CapCut 창을 못 찾으면(미실행 등) region만 null로 남겨 전체화면으로 폴백 — 여기서
+    // 하드 에러로 막지 않는다(사전 상태 확인은 MakingTab의 "CapCut 상태 확인" 버튼이 담당).
+    const win = getCapCutWindow()
+    recordOptions = { ...recordOptions, region: win.running ? win.region : null }
+    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${capcut.epNum}`, `capcut_cut${cutNo}_raw.mp4`)
   } else if (outputPath) {
     outputPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
   } else {
@@ -1474,13 +1514,14 @@ app.post('/api/recording/start', (req, res) => {
     outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${activeEpNum}`, `g${stageNum}r_cut${cutNo}.mp4`)
   }
   try {
-    const result = screenRecorder.start(outputPath, options || {})
+    const result = screenRecorder.start(outputPath, recordOptions)
     recordingStartedAt = Date.now()
-    pendingBrollEdit = broll ? {
-      epNum: broll.epNum,
+    const editSpec = broll || capcut
+    pendingBrollEdit = editSpec ? {
+      epNum: editSpec.epNum,
       cutNo,
-      targetDuration: parseFloat(broll.targetDuration) || null,
-      trimMode: broll.trimMode === 'start' ? 'start' : 'end',
+      targetDuration: parseFloat(editSpec.targetDuration) || null,
+      trimMode: editSpec.trimMode === 'start' ? 'start' : 'end',
       rawPath: outputPath,
     } : null
     res.json({

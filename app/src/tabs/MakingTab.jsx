@@ -129,6 +129,77 @@ export default function MakingTab() {
     }
   }
 
+  // ── CAPCUT: CapCut 데스크톱 창을 자동 감지해 그 영역만 녹화 → BROLL과 동일한
+  // editBrollRaw() 편집 파이프라인(트림+1080x1920 스케일)을 그대로 재사용.
+  const capcutCuts = (cuts || []).filter(c => c.cutType === 'CAPCUT')
+  const [selectedCapcutCutNo, setSelectedCapcutCutNo] = useState(null)
+  const [capcutStatus, setCapcutStatus] = useState(null)
+  const [capcutChecking, setCapcutChecking] = useState(false)
+  const [capcutTargetDuration, setCapcutTargetDuration] = useState(5)
+  const [capcutTrimMode, setCapcutTrimMode] = useState('end')
+  const [capcutRecording, setCapcutRecording] = useState(false)
+  const [capcutBusy, setCapcutBusy] = useState(false)
+  const [capcutResult, setCapcutResult] = useState(null)
+
+  const selectCapcutCut = (cut) => {
+    setSelectedCapcutCutNo(cut.no)
+    setCapcutTargetDuration(cut.duration || 5)
+    setCapcutResult(null)
+    setCapcutStatus(null)
+  }
+
+  const checkCapcutWindow = async () => {
+    setCapcutChecking(true)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/capcut-window`)
+      const data = await res.json()
+      setCapcutStatus(data)
+    } catch (e) {
+      setCapcutStatus({ running: false, error: e.message })
+    } finally {
+      setCapcutChecking(false)
+    }
+  }
+
+  const startCapcutRecording = async () => {
+    if (selectedCapcutCutNo == null || !episode.number) return
+    setCapcutBusy(true)
+    setCapcutResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/recording/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cutNo: selectedCapcutCutNo,
+          options: { fps: 30, quality: 'medium' },
+          capcut: { epNum: episode.number, targetDuration: capcutTargetDuration, trimMode: capcutTrimMode },
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setCapcutResult({ error: data.error || '녹화 시작 실패' }); return }
+      setCapcutRecording(true)
+    } catch (e) {
+      setCapcutResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setCapcutBusy(false)
+    }
+  }
+
+  const stopCapcutRecording = async () => {
+    setCapcutBusy(true)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/recording/stop`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) { setCapcutResult({ error: data.error || '녹화 종료 실패' }); return }
+      setCapcutResult(data)
+    } catch (e) {
+      setCapcutResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setCapcutRecording(false)
+      setCapcutBusy(false)
+    }
+  }
+
   const captureGraphic = async () => {
     if (selectedCutNo == null || !episode.number) return
     setCapturing(true)
@@ -281,6 +352,94 @@ export default function MakingTab() {
                       <div className={s.resultOk}>
                         ✅ 편집 완료 — 최종: {brollResult.finalPath} ({(brollResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.finalDuration?.toFixed?.(1) ?? brollResult.finalDuration}초)
                         <br />원본(raw, 보관됨): {brollResult.rawPath} ({(brollResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.rawDuration?.toFixed(1)}초)
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+
+              <div className={s.card}>
+                <div className={s.cardTitle}>CAPCUT 컷 목록</div>
+                {!capcutCuts.length ? (
+                  <div className={s.emptyHint}>활성 에피소드에 CAPCUT 타입 컷이 없습니다.</div>
+                ) : (
+                  <div className={s.cutList}>
+                    {capcutCuts.map(cut => (
+                      <button key={cut.id}
+                        className={`${s.cutListItem} ${selectedCapcutCutNo === cut.no ? s.cutListItemActive : ''}`}
+                        onClick={() => selectCapcutCut(cut)}>
+                        <span className={s.cutNo}>#{cut.no}</span>
+                        <span className={s.cutSummary}>{cut.scene || '(내용 없음)'}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {selectedCapcutCutNo != null && (
+                <div className={s.card}>
+                  <div className={s.cardTitle}>#{selectedCapcutCutNo} CapCut 녹화 설정</div>
+
+                  <div className={s.editorActions}>
+                    <button className={s.previewBtn} disabled={capcutChecking} onClick={checkCapcutWindow}>
+                      {capcutChecking ? '⏳ 확인 중…' : 'CapCut 상태 확인'}
+                    </button>
+                  </div>
+
+                  {capcutStatus && (
+                    capcutStatus.running ? (
+                      <div className={s.resultOk}>
+                        ✅ 실행 중 — {capcutStatus.windowTitle || 'CapCut'} (PID {capcutStatus.pid}, 창 {capcutStatus.region?.w}×{capcutStatus.region?.h})
+                      </div>
+                    ) : (
+                      <div className={s.resultError}>⚠️ CapCut을 먼저 실행해주세요.</div>
+                    )
+                  )}
+
+                  {capcutStatus?.running && (
+                    <>
+                      <div className={s.settingRow}>
+                        <div className={s.settingGroup}>
+                          <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
+                          <div className={s.radioRow}>
+                            <input type="number" min="1" value={capcutTargetDuration} disabled={capcutRecording}
+                              onChange={e => setCapcutTargetDuration(parseInt(e.target.value) || 1)}
+                              className={s.durationInput} />
+                            <label className={s.radioLabel}>
+                              <input type="radio" name="capcut-trim" value="end"
+                                checked={capcutTrimMode === 'end'} onChange={() => setCapcutTrimMode('end')} disabled={capcutRecording} />
+                              끝에서부터
+                            </label>
+                            <label className={s.radioLabel}>
+                              <input type="radio" name="capcut-trim" value="start"
+                                checked={capcutTrimMode === 'start'} onChange={() => setCapcutTrimMode('start')} disabled={capcutRecording} />
+                              처음부터
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className={s.editorActions}>
+                        {!capcutRecording ? (
+                          <button className={s.captureBtn} disabled={capcutBusy} onClick={startCapcutRecording}>
+                            {capcutBusy ? '⏳' : '녹화 시작'}
+                          </button>
+                        ) : (
+                          <button className={s.stopBtn} disabled={capcutBusy} onClick={stopCapcutRecording}>
+                            🔴 녹화 중... 중지
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {capcutResult && (
+                    capcutResult.error ? (
+                      <div className={s.resultError}>❌ {capcutResult.error}</div>
+                    ) : (
+                      <div className={s.resultOk}>
+                        ✅ 편집 완료 — 최종: {capcutResult.finalPath} ({(capcutResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.finalDuration?.toFixed?.(1) ?? capcutResult.finalDuration}초)
+                        <br />원본(raw, 보관됨): {capcutResult.rawPath} ({(capcutResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.rawDuration?.toFixed(1)}초)
                       </div>
                     )
                   )}
