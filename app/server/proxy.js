@@ -10,6 +10,7 @@ import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
+import puppeteer from 'puppeteer-core'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -1498,6 +1499,58 @@ app.get('/api/making-files', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// POST /api/graphic-capture — GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해
+// 스크린샷 → ffmpeg로 정지화면 mp4 변환. 라이브 자동화용 전용 Chrome(9222, Flow/CapCut
+// 로그인 세션)과 완전히 분리된 독립 headless 인스턴스를 매번 새로 띄워서 그 세션에는
+// 전혀 영향을 주지 않는다. 결과 파일명(cut_{패딩2자리}.mp4)은 buildStudioStatusPayload의
+// hasVideo 정규식(^cut_(\d{2})(_final)?\.mp4$)과 동일 규칙 — G4를 건너뛴 GRAPHIC 컷의
+// "영상"으로 그대로 인식되게 하기 위함.
+app.post('/api/graphic-capture', async (req, res) => {
+  const { html, cutNo, epNum, duration } = req.body || {}
+  if (!html || cutNo == null || !epNum) return res.status(400).json({ error: 'html, cutNo, epNum 필요' })
+  const dur = parseInt(duration, 10) || 5
+  const padded = String(cutNo).padStart(2, '0')
+
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  fs.mkdirSync(videoDir, { recursive: true })
+  const imagePath = path.join(videoDir, `cut_${padded}_graphic.png`)
+  const videoPath = path.join(videoDir, `cut_${padded}.mp4`)
+
+  let browser
+  try {
+    browser = await puppeteer.launch({
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      headless: true,
+    })
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1080, height: 1920 })
+    await page.setContent(html, { waitUntil: 'networkidle0' })
+    await page.screenshot({ path: imagePath })
+  } catch (err) {
+    return res.status(500).json({ error: `HTML 렌더링/캡처 실패: ${err.message}` })
+  } finally {
+    if (browser) await browser.close()
+  }
+
+  try {
+    await new Promise((resolve, reject) => {
+      const proc = spawn('ffmpeg', [
+        '-y', '-loop', '1', '-i', imagePath,
+        '-t', String(dur),
+        '-vf', 'scale=1080:1920',
+        '-c:v', 'libx264',
+        videoPath,
+      ])
+      proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 종료 코드 ${code}`)))
+      proc.on('error', reject)
+    })
+  } catch (err) {
+    return res.status(500).json({ error: `mp4 변환 실패: ${err.message}`, imagePath })
+  }
+
+  res.json({ success: true, imagePath, videoPath })
 })
 
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
