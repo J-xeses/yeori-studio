@@ -220,6 +220,31 @@ export default function MakingTab() {
     }
   }
 
+  // ── G5-M: 컷 번호 순서대로 확정된 cut_{NN}.mp4(컷타입 무관, BROLL/CAPCUT/GRAPHIC이
+  // 자동편집으로 만든 것이든 YEORI의 기존 파일이든 전부 downloads/video/ep{N}/에
+  // 모여 있어 그대로 이어붙이면 됨)를 메이킹 필름 하나로 조립.
+  const [assembling, setAssembling] = useState(false)
+  const [assembleResult, setAssembleResult] = useState(null)
+
+  const assembleMaking = async () => {
+    setAssembling(true)
+    setAssembleResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/making-assemble`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(episode.number ? { epNum: episode.number } : {}),
+      })
+      const data = await res.json()
+      if (!res.ok) { setAssembleResult({ error: data.error || '조립 실패' }); return }
+      setAssembleResult(data)
+    } catch (e) {
+      setAssembleResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setAssembling(false)
+    }
+  }
+
   return (
     <div className={s.page}>
       <TabToolbar />
@@ -505,6 +530,30 @@ export default function MakingTab() {
                   )}
                 </div>
               )}
+
+              <div className={s.card}>
+                <div className={s.cardTitle}>메이킹 필름 조립 (G5-M)</div>
+                <div className={s.emptyHint}>
+                  위에서 확정한 BROLL/CAPCUT/GRAPHIC 컷 영상 + 기존 YEORI 컷 영상을 컷 번호 순서대로 이어붙입니다.
+                </div>
+                <div className={s.editorActions}>
+                  <button className={s.captureBtn} disabled={assembling} onClick={assembleMaking}>
+                    {assembling ? '⏳ 조립 중…' : '🎬 메이킹 필름 조립'}
+                  </button>
+                </div>
+                {assembleResult && (
+                  assembleResult.error ? (
+                    <div className={s.resultError}>❌ {assembleResult.error}</div>
+                  ) : (
+                    <div className={s.resultOk}>
+                      ✅ 조립 완료 — 포함 {assembleResult.includedCuts.length}컷(#{assembleResult.includedCuts.join(', #')})
+                      {assembleResult.skippedCuts.length > 0 && <> · 스킵 {assembleResult.skippedCuts.length}컷(#{assembleResult.skippedCuts.join(', #')})</>}
+                      {' '}· 총 {assembleResult.duration?.toFixed?.(1) ?? assembleResult.duration}초
+                      <br />출력: {assembleResult.outputPath}
+                    </div>
+                  )
+                )}
+              </div>
 
             </div>
           </div>

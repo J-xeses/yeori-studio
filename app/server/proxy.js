@@ -1630,6 +1630,81 @@ app.get('/api/making-files', (req, res) => {
   }
 })
 
+// POST /api/making-assemble — G5-M: 컷 번호 순서대로 확정된 downloads/video/ep{N}/
+// cut_{NN}.mp4(YEORI든 BROLL/CAPCUT/GRAPHIC이든 이제 전부 이 위치·네이밍으로 모임 —
+// 컷타입별로 분기할 필요 없이 "이 컷 번호 파일이 있는지"만 보면 됨)를 이어붙여
+// downloads/making/ep{N}/ep{N}_making.mp4로 조립. /api/concat-video(G5, "_final" 우선)와
+// 같은 ffmpeg concat 패턴이되 대상 폴더·의미가 다름(그쪽은 발행용, 여긴 메이킹 필름).
+app.post('/api/making-assemble', async (req, res) => {
+  const state = loadStudioState()
+  let epNum = req.body?.epNum
+
+  let epId, ep
+  if (epNum) {
+    const entry = Object.entries(state.episodes || {}).find(([, e]) => e.episode?.number === Number(epNum))
+    if (!entry) return res.status(404).json({ error: `에피소드 번호 ${epNum} 없음` })
+    ;[epId, ep] = entry
+  } else {
+    epId = state.activeEpisodeId
+    ep = state.episodes?.[epId]
+    if (!ep) return res.status(400).json({ error: '활성 에피소드가 없습니다' })
+    epNum = ep.episode?.number
+  }
+  const episodeCode = resolveEpisodeCode(ep.episode, epId)
+  const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
+  if (!cuts.length) return res.status(400).json({ error: '컷이 없습니다' })
+
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const includedCuts = []
+  const skippedCuts = []
+  const files = []
+  for (const c of cuts) {
+    const padded = String(c.no).padStart(2, '0')
+    const p = path.join(videoDir, `cut_${padded}.mp4`)
+    if (fs.existsSync(p)) {
+      files.push(p)
+      includedCuts.push(c.no)
+    } else {
+      skippedCuts.push(c.no)
+    }
+  }
+  if (!files.length) {
+    return res.status(404).json({ error: '합칠 영상이 하나도 없습니다(모든 컷의 cut_NN.mp4 없음)', skippedCuts })
+  }
+
+  const makingDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
+  fs.mkdirSync(makingDir, { recursive: true })
+  const concatTxt = path.join(makingDir, 'making_concat_list.txt')
+  const outFile = path.join(makingDir, `ep${epNum}_making.mp4`)
+
+  const listContent = files.map(f => `file '${f.replace(/\\/g, '/')}'`).join('\n')
+  fs.writeFileSync(concatTxt, listContent, 'utf-8')
+
+  const code = await new Promise((resolve) => {
+    let errBuf = ''
+    const proc = spawn('ffmpeg', ['-y', '-f', 'concat', '-safe', '0', '-i', concatTxt, '-c', 'copy', outFile])
+    proc.stderr.on('data', d => { errBuf += d.toString() })
+    proc.on('close', c => { if (c !== 0) console.error('[making-assemble]', errBuf.slice(-300)); resolve(c) })
+    proc.on('error', () => resolve(1))
+  })
+  try { fs.unlinkSync(concatTxt) } catch {}
+
+  if (code !== 0) {
+    return res.status(500).json({ error: 'FFmpeg concat 실패', includedCuts, skippedCuts })
+  }
+
+  const duration = await getMediaDuration(outFile)
+
+  const gData = loadGpointsFile()
+  const epData = { ...gData[episodeCode] }
+  epData.g5m = true
+  epData.g5mUpdatedAt = new Date().toISOString()
+  gData[episodeCode] = epData
+  saveGpointsFile(gData)
+
+  res.json({ success: true, outputPath: outFile, includedCuts, skippedCuts, duration })
+})
+
 // POST /api/graphic-capture — GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해
 // 스크린샷 → ffmpeg로 정지화면 mp4 변환. 라이브 자동화용 전용 Chrome(9222, Flow/CapCut
 // 로그인 세션)과 완전히 분리된 독립 headless 인스턴스를 매번 새로 띄워서 그 세션에는
