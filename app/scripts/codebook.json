@@ -64,14 +64,35 @@
       "run_g3": true,
       "run_g4": true,
       "pip": true,
-      "note": "YEORI 컷 위에 BROLL 컷을 PIP로 합성. pipTargetCut으로 대상 컷 번호 지정"
+      "note": "YEORI 컷 위에 BROLL 컷을 PIP로 합성. pipTarget으로 대상 컷 번호 지정"
     },
     "making_record": {
-      "YR_VD": "Flow 영상생성 화면 녹화",
-      "BR_VD": "Flow B-roll 생성 또는 실촬영본 녹화",
-      "PIP_VD": "YEORI+BROLL 합성 과정 녹화",
-      "CC_ED": "CapCut 편집 화면 녹화",
-      "GR_ED": "그래픽 제작 화면 녹화"
+      "G2-R": {
+        "YR_VD": { "source": "Flow", "target": "이미지/영상 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "BR_VD": { "source": "Flow", "target": "B-roll 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "PIP_VD": { "source": "Flow", "target": "이미지 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "CC_ED": null,
+        "GR_ED": null
+      },
+      "G3-R": {
+        "YR_VD": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "BR_VD": null,
+        "PIP_VD": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "CC_ED": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "GR_ED": null
+      },
+      "G4-R": {
+        "YR_VD": { "source": "Flow", "target": "영상 생성 화면", "output": "g4r_cut{N}.mp4" },
+        "BR_VD": { "source": "Flow", "target": "영상 생성 화면", "output": "g4r_cut{N}.mp4" },
+        "PIP_VD": { "source": "CapCut", "target": "PIP 합성 과정", "output": "g4r_cut{N}.mp4" },
+        "CC_ED": { "source": "CapCut", "target": "편집 화면", "output": "g4r_cut{N}.mp4" },
+        "GR_ED": { "source": "CapCut", "target": "그래픽 제작 화면", "output": "g4r_cut{N}.mp4" }
+      },
+      "G5-M": {
+        "label": "메이킹 필름 조립",
+        "input": "G2-R + G3-R + G4-R 녹화본",
+        "output": "ep{N}_making.mp4"
+      }
     }
   },
   "SP": {

@@ -343,7 +343,9 @@ function parseCutsV3(raw) {
       cutType,
       cutMark: 'NORMAL',
       // server/lib/scriptParserV3.js와 반드시 동일하게 유지 — PIP_VD 컷 전용 필드.
-      ...(cutType === 'PIP' ? { pipTargetCut: null, pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
+      // pipTarget은 이 파일의 기존 PIP 메커니즘(수동 입력 필드, cutType === 'PIP' 케이스)과
+      // 같은 필드명 — 별개로 두지 않고 그대로 재사용.
+      ...(cutType === 'PIP' ? { pipTarget: '', pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
         sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',

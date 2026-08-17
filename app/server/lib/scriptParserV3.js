@@ -153,9 +153,10 @@ export function parseCutsV3(raw) {
       cutType,
       cutMark: 'NORMAL',
       // PIP_VD(codebook PL) 컷 전용 필드 — YEORI 컷 위에 합성할 BROLL 컷 번호/레이아웃/크기.
-      // pipTargetCut은 대본 텍스트만으로는 알 수 없어(사람이 지정) null로 시작, 나머지는
-      // codebook 기본값(bottom_right / 0.35)으로 채워 둠.
-      ...(cutType === 'PIP' ? { pipTargetCut: null, pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
+      // pipTarget은 ScriptGenTab.jsx의 기존 PIP 메커니즘(수동 입력 필드, proxy.js가 이미
+      // c.pipTarget을 읽어 pip_target으로 씀)과 이름을 맞춘 것 — 대본 텍스트만으로는 알 수
+      // 없어(사람이 지정) 빈 문자열로 시작, 나머지는 codebook 기본값(bottom_right / 0.35).
+      ...(cutType === 'PIP' ? { pipTarget: '', pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
         sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',
