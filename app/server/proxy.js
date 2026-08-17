@@ -9,6 +9,7 @@ import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaConten
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
+import * as screenRecorder from '../scripts/screen-recorder.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -1420,6 +1421,28 @@ app.post('/api/pipeline/stop', (req, res) => {
   pipelineProc.kill('SIGTERM')
   pipelineProc = null
   res.json({ success: true })
+})
+
+// ── 화면 녹화(screen-recorder.js) — G2/G3 등 자동화 진행 과정을 메이킹 영상으로 남기기 위함 ──
+app.post('/api/recording/start', (req, res) => {
+  const { outputPath, options } = req.body || {}
+  if (!outputPath) return res.status(400).json({ error: 'outputPath 필요' })
+  const resolvedPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
+  try {
+    const result = screenRecorder.start(resolvedPath, options || {})
+    res.json(result)
+  } catch (err) {
+    res.status(409).json({ error: err.message })
+  }
+})
+
+app.post('/api/recording/stop', async (req, res) => {
+  try {
+    const result = await screenRecorder.stop()
+    res.json(result)
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
 })
 
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
