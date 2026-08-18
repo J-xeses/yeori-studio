@@ -1,5 +1,5 @@
 // app/api/kakao-bot.js
-// Vercel Serverless Function (Vite 프로젝트용)
+// 카카오 챗봇 + 유비 스토리보드 Claude 프록시 통합
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,7 +8,64 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // GET 테스트용
+  // ── URL 경로로 라우팅 ──────────────────────────
+  const url = req.url || '';
+
+  // /api/kakao-bot/claude-proxy 또는 쿼리로 구분
+  const isProxy = url.includes('claude-proxy') || req.query?.mode === 'proxy';
+
+  // ══════════════════════════════════════════════
+  // A. Claude 프록시 (유비 스토리보드용)
+  // ══════════════════════════════════════════════
+  if (isProxy) {
+    if (req.method === 'GET') {
+      return res.status(200).json({ status: 'ok', message: 'Claude proxy 정상 작동 중' });
+    }
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+
+    try {
+      const { model, max_tokens, messages, system } = req.body;
+
+      // 허용 모델 제한
+      const allowed = ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001'];
+      if (!allowed.includes(model)) {
+        return res.status(400).json({ error: 'Model not allowed' });
+      }
+
+      const body = {
+        model,
+        max_tokens: Math.min(max_tokens || 1000, 4000),
+        messages,
+      };
+      if (system) body.system = system;
+
+      const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await claudeRes.json();
+      return res.status(claudeRes.ok ? 200 : claudeRes.status).json(data);
+
+    } catch (err) {
+      console.error('[claude-proxy] error:', err);
+      return res.status(500).json({ error: 'Proxy error: ' + err.message });
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // B. 카카오 챗봇 (기존 로직 그대로)
+  // ══════════════════════════════════════════════
   if (req.method === 'GET') {
     return res.status(200).json({
       status: 'ok',
