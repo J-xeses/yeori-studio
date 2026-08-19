@@ -12,8 +12,8 @@ set TREND_RADAR_DIR=
 if exist "C:\yeori-studio\app\trend-radar\package.json" set TREND_RADAR_DIR=C:\yeori-studio\app\trend-radar
 if not defined TREND_RADAR_DIR if exist "C:\trend-radar\package.json" set TREND_RADAR_DIR=C:\trend-radar
 if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\Documents\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\Documents\GitHub\trend-radar
-if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\OneDrive - CTEC\문서\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\OneDrive - CTEC\문서\GitHub\trend-radar
-if not defined TREND_RADAR_DIR if exist "%USERPROFILE%\OneDrive\문서\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%USERPROFILE%\OneDrive\문서\GitHub\trend-radar
+if not defined TREND_RADAR_DIR for /d %%D in ("%USERPROFILE%\OneDrive - CTEC\*") do if not defined TREND_RADAR_DIR if exist "%%D\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%%D\GitHub\trend-radar
+if not defined TREND_RADAR_DIR for /d %%D in ("%USERPROFILE%\OneDrive\*") do if not defined TREND_RADAR_DIR if exist "%%D\GitHub\trend-radar\package.json" set TREND_RADAR_DIR=%%D\GitHub\trend-radar
 
 echo.
 echo ============================================================
@@ -58,16 +58,16 @@ if %errorlevel% == 0 (
 ) else (
     if defined TREND_RADAR_DIR (
         echo        Found trend-radar at %TREND_RADAR_DIR%
-        REM BUILD_ID(진짜 production build 완료 표시)가 있어야 "npm run start"가 성공함 --
-        REM .next 폴더 자체는 "next dev"만 돌려도 생기므로(build-manifest 등은 있지만
-        REM BUILD_ID가 없음), 폴더 존재만 확인하면 이 stale 상태를 진짜 빌드로 착각해서
-        REM start가 "Could not find a production build" 에러로 조용히 죽고 3000 포트가
-        REM 안 뜨는 사고로 이어짐 (2026-08-15 실측 확인).
+        REM BUILD_ID marks a real production build -- npm run start only succeeds
+        REM if it exists. A plain .next folder can exist from next dev too (has
+        REM build-manifest etc but no BUILD_ID), so checking folder existence alone
+        REM mistakes that stale state for a real build and start fails silently
+        REM with a production-build-not-found error, leaving port 3000 down.
         if exist "%TREND_RADAR_DIR%\.next\BUILD_ID" (
-            start "TREND RADAR Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run start"
+            start "TREND RADAR Server" /D "%TREND_RADAR_DIR%" cmd /k "npm run start"
         ) else (
-            echo        No valid production build (.next\BUILD_ID missing) -- building first...
-            start "TREND RADAR Server" cmd /k "cd /d "%TREND_RADAR_DIR%" && npm run build && npm run start"
+            echo        No valid production build ^(.next\BUILD_ID missing^) -- building first...
+            start "TREND RADAR Server" /D "%TREND_RADAR_DIR%" cmd /k "npm run build && npm run start"
         )
         timeout /t 5 /nobreak >nul
     ) else (
@@ -118,7 +118,7 @@ if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" set CLOUDFLARED=C:
 if not defined CLOUDFLARED if exist "%LOCALAPPDATA%\cloudflared\cloudflared.exe" set CLOUDFLARED=%LOCALAPPDATA%\cloudflared\cloudflared.exe
 if not defined CLOUDFLARED if exist "C:\Program Files\cloudflared\cloudflared.exe" set CLOUDFLARED=C:\Program Files\cloudflared\cloudflared.exe
 if defined CLOUDFLARED (
-    start "Yeori Cloudflare Tunnel" cmd /k "timeout /t 6 /nobreak >nul && node "%~dp0scripts\sync-tunnel.js""
+    start "Yeori Cloudflare Tunnel" /D "%~dp0" cmd /k "timeout /t 6 /nobreak >nul && node scripts\sync-tunnel.js"
     echo        Tunnel window opened -- URL change is detected and synced to Vercel automatically.
 ) else (
     echo        cloudflared.exe not found in any known location -- skip tunnel
