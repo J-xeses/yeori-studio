@@ -136,6 +136,7 @@ export default function MakingTab() {
   const [brollRecording, setBrollRecording] = useState(false)
   const [brollBusy, setBrollBusy] = useState(false)
   const [brollResult, setBrollResult] = useState(null)
+  const [brollCountdown, setBrollCountdown] = useState(null)
 
   const selectBrollCut = (cut) => {
     setSelectedBrollCutNo(cut.no)
@@ -144,8 +145,28 @@ export default function MakingTab() {
     setBrollResult(null)
   }
 
-  const startBrollRecording = async () => {
-    if (selectedBrollCutNo == null || !episode.number) return
+  // 전체화면 모드는 녹화가 시작되는 순간 화면 맨 위에 있는 창을 그대로 찍는다.
+  // 버튼을 누른 직후엔 이 브라우저 탭 자체가 최상단이므로, 곧장 gdigrab을
+  // 띄우면 사람이 대상 창으로 전환하기 전에 녹화가 시작돼버린다. 그래서
+  // 실제 API 호출 전에 3초 카운트다운을 넣어 전환할 시간을 준다.
+  const startBrollRecording = () => {
+    if (selectedBrollCutNo == null || !episode.number || brollCountdown != null) return
+    setBrollResult(null)
+    setBrollCountdown(3)
+    let remaining = 3
+    const tick = setInterval(() => {
+      remaining -= 1
+      if (remaining <= 0) {
+        clearInterval(tick)
+        setBrollCountdown(null)
+        doStartBrollRecording()
+      } else {
+        setBrollCountdown(remaining)
+      }
+    }, 1000)
+  }
+
+  const doStartBrollRecording = async () => {
     setBrollBusy(true)
     setBrollResult(null)
     try {
@@ -471,6 +492,11 @@ export default function MakingTab() {
                           </div>
                         )}
                       </div>
+                      {brollRegionMode === 'full' && (
+                        <div className={s.emptyHint}>
+                          녹화 시작을 누르면 3초 뒤에 실제로 녹화가 시작됩니다 — 그 사이 대상 화면으로 전환하세요.
+                        </div>
+                      )}
                     </div>
 
                     <div className={s.settingGroup}>
@@ -495,8 +521,8 @@ export default function MakingTab() {
 
                   <div className={s.editorActions}>
                     {!brollRecording ? (
-                      <button className={s.captureBtn} disabled={brollBusy} onClick={startBrollRecording}>
-                        {brollBusy ? '⏳' : '녹화 시작'}
+                      <button className={s.captureBtn} disabled={brollBusy || brollCountdown != null} onClick={startBrollRecording}>
+                        {brollCountdown != null ? `${brollCountdown}초 후 시작…` : brollBusy ? '⏳' : '녹화 시작'}
                       </button>
                     ) : (
                       <button className={s.stopBtn} disabled={brollBusy} onClick={stopBrollRecording}>
