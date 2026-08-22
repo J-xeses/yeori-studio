@@ -74,6 +74,11 @@ const CONFIG = {
   twoImageTimeoutMs: 300000, // 2장(x2 생성 모드) 대기 최대 시간 — timeoutMs와 공유하면
                               // 1장 기준 예산으로 2장이 다 뜨길 기다리게 돼 실제로 아직
                               // 생성 중인데 타임아웃으로 강제 저장되는 문제가 있었음(2026-08-22)
+  protocolTimeout: 300000, // puppeteer CDP 프로토콜(예: Page.captureScreenshot) 응답 대기
+                            // 시간. puppeteer-core 기본값은 180000ms(3분)인데 그 안에서도
+                            // "timed out" 이 발생해 5분으로 늘림(2026-08-22) — 기본값보다
+                            // 짧게 잡으면 오히려 타임아웃이 더 잦아지므로 절대 기본값
+                            // 밑으로 내리지 말 것.
   retryCount:      2,      // 실패 시 재시도 횟수
 
   // ── 레퍼런스 이미지 분석 ────────────────────────────────────────────
@@ -509,6 +514,7 @@ async function connectBrowser() {
   return puppeteer.connect({
     browserWSEndpoint: version.webSocketDebuggerUrl,
     defaultViewport:   null,
+    protocolTimeout:   CONFIG.protocolTimeout,
   })
 }
 
