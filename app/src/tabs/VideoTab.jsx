@@ -429,6 +429,10 @@ export default function VideoTab() {
     }
   }
 
+  // 편집메타 탭에서 고른 효과음(cut.sfxFile, downloads/ 기준 상대경로)을 이 탭이
+  // 항상 써온 절대경로 관례(C:\yeori-studio\downloads\...)로 변환.
+  const sfxAbsolutePath = (cut) => cut?.sfxFile ? `C:\\yeori-studio\\downloads\\${cut.sfxFile.replace(/\//g, '\\')}` : undefined
+
   const runFfmpegForCut = async (cut) => {
     setFfmpegStatus(p => ({ ...p, [cut.id]: 'running' }))
     setFfmpegLog(p => ({ ...p, [cut.id]: '합성 시작…' }))
@@ -437,7 +441,10 @@ export default function VideoTab() {
       const res = await fetch('http://localhost:3001/api/run-ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ep, cutNo: cut.no, duration: cut.duration || 8 }),
+        body: JSON.stringify({
+          ep, cutNo: cut.no, duration: cut.duration || 8,
+          sfxFile: sfxAbsolutePath(cut), sfxStart: cut.sfxStart,
+        }),
       })
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -511,6 +518,9 @@ export default function VideoTab() {
       label: `CUT ${String(c.no).padStart(2, '0')}`,
       duration: c.duration || 8,
       audioFile: `C:\\yeori-studio\\downloads\\audio\\ep${ep}\\cut_${String(c.no).padStart(2, '0')}.mp3`,
+      sfxOnly: c.sfxOnly || false,
+      sfxFile: sfxAbsolutePath(c),
+      sfxStart: c.sfxStart,
     }))
 
     try {

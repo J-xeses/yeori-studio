@@ -4,6 +4,7 @@ import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import TabToolbar from '../components/TabToolbar'
+import SfxPicker from '../components/SfxPicker'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -1597,7 +1598,10 @@ ${currentScript}
                       </div>
                       <div className={s.v3MiniField}>
                         <label>효과음</label>
-                        <input placeholder="힐 소리" value={audio.sfx || ''} onChange={e => audioField('sfx', e.target.value)} />
+                        <div className={s.sfxRow}>
+                          <input placeholder="힐 소리" value={audio.sfx || ''} onChange={e => audioField('sfx', e.target.value)} />
+                          <SfxPicker onSelect={item => audioField('sfx', `${item.filename} — ${item.purpose}`)} />
+                        </div>
                       </div>
                       <div className={s.v3MiniField}>
                         <label>앰비언스</label>

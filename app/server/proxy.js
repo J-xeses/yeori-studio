@@ -168,6 +168,49 @@ function runFFmpegCmd(args, logPath) {
   })
 }
 
+// ── 영상+음성(+효과음) 합성 args 빌더 ─────────────────────────────
+// /api/ffmpeg(일괄)와 /api/run-ffmpeg(단일) 둘 다 이 함수 하나를 공유한다.
+// audioFile(내레이션)과 sfxFile(효과음 카탈로그에서 고른 실제 음원)은 각각
+// 있을 수도 없을 수도 있음 — 하나만 있으면 그대로 쓰고, 둘 다 있으면
+// amix로 섞고, 둘 다 없으면 무음(-an) 처리. resolvePath는 상대경로를
+// 절대경로로 바꾸는 함수(호출부마다 기준 디렉터리가 다름)를 받는다.
+function buildAudioMergeArgs({ videoFile, outFile, dur, audioFile, audioStart, audioEnd, sfxFile, sfxStart, resolvePath }) {
+  const hasVoice = !!audioFile
+  const hasSfx = !!sfxFile
+  if (!hasVoice && !hasSfx) {
+    return ['-i', videoFile, '-c:v', 'copy', '-an', outFile, '-y']
+  }
+
+  const inputs = ['-i', videoFile]
+  const chains = []
+  const labels = []
+  let idx = 1
+
+  if (hasVoice) {
+    inputs.push('-i', resolvePath(audioFile))
+    const delay = parseFloat(audioStart) || 0
+    const end = parseFloat(audioEnd) || dur
+    const trimDur = Math.max(0.01, end - delay)
+    const delayMs = Math.round(delay * 1000)
+    chains.push(`[${idx}:a]atrim=duration=${trimDur},adelay=${delayMs}|${delayMs},apad=whole_dur=${dur}[a${idx}]`)
+    labels.push(`[a${idx}]`)
+    idx++
+  }
+  if (hasSfx) {
+    inputs.push('-i', resolvePath(sfxFile))
+    const delayMs = Math.round((parseFloat(sfxStart) || 0) * 1000)
+    chains.push(`[${idx}:a]adelay=${delayMs}|${delayMs},apad=whole_dur=${dur}[a${idx}]`)
+    labels.push(`[a${idx}]`)
+    idx++
+  }
+
+  const filter = labels.length > 1
+    ? `${chains.join(';')};${labels.join('')}amix=inputs=${labels.length}:duration=longest:dropout_transition=0[a]`
+    : chains[0].replace(/\[a\d+\]$/, '[a]')
+
+  return [...inputs, '-filter_complex', filter, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-t', String(dur), outFile, '-y']
+}
+
 // ── POST /api/ffmpeg — SSE 스트리밍 자동 편집 ─────────────────────
 app.post('/api/ffmpeg', async (req, res) => {
   const { meta, workDir } = req.body
@@ -200,26 +243,16 @@ app.post('/api/ffmpeg', async (req, res) => {
       const logFile   = path.join(outputDir, `C${cutNum}_ffmpeg.log`)
       const dur       = parseFloat(m.duration)
 
-      let args
-      if (m.sfxOnly || !m.audioFile) {
-        args = ['-i', videoFile, '-c:v', 'copy', '-an', outFile, '-y']
-      } else {
-        const audioFile  = path.isAbsolute(m.audioFile) ? m.audioFile : path.join(dir, m.audioFile)
-        const delay      = parseFloat(m.audioStart) || 0
-        const audioEnd   = parseFloat(m.audioEnd) || dur
-        const audioDur   = Math.max(0.01, audioEnd - delay)
-        const delayMs    = Math.round(delay * 1000)
-        // 원칙: 음성 길이 = 영상 길이 (adelay 패딩 + apad)
-        const filter = delay > 0
-          ? `[1:a]atrim=duration=${audioDur},adelay=${delayMs}|${delayMs},apad=whole_dur=${dur}[a]`
-          : `[1:a]atrim=duration=${audioDur},apad=whole_dur=${dur}[a]`
-        args = [
-          '-i', videoFile, '-i', audioFile,
-          '-filter_complex', filter,
-          '-map', '0:v', '-map', '[a]',
-          '-t', String(dur), outFile, '-y',
-        ]
-      }
+      // sfxOnly 컷은 나레이션 트랙을 안 쓴다(기존 기본값 cut_NN.mp3가 남아있어도 무시).
+      // sfxFile(효과음 카탈로그에서 고른 실제 음원)은 sfxOnly 여부와 무관하게 있으면 항상 반영 —
+      // 나레이션 있는 컷 위에 효과음을 얹는 것도 지원.
+      const args = buildAudioMergeArgs({
+        videoFile, outFile, dur,
+        audioFile: m.sfxOnly ? null : m.audioFile,
+        audioStart: m.audioStart, audioEnd: m.audioEnd,
+        sfxFile: m.sfxFile, sfxStart: m.sfxStart,
+        resolvePath: (p) => path.isAbsolute(p) ? p : path.join(dir, p),
+      })
 
       const code = await runFFmpegCmd(args, logFile)
       if (code === 0) {
@@ -362,6 +395,22 @@ app.get('/api/codebook', (req, res) => {
   try {
     const codebook = JSON.parse(fs.readFileSync(codebookPath, 'utf-8'))
     res.json({ ok: true, codebook })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+// ── GET /api/sfx-catalog — 효과음 카탈로그 읽기전용 서빙 ──────────────
+// app/data/sfx-catalog.json(카테고리별 파일명/용도/사용장면, git 추적)을 그대로
+// 반환. 실제 오디오 파일은 downloads/sfx/{categoryId}/{filename}에 있고, 이미
+// /downloads 정적 라우트로 서빙되므로(위 app.use('/downloads', ...)) 별도
+// 스트리밍 엔드포인트 없이 catalog의 item.path(=downloads 기준 상대경로)를
+// 그대로 /downloads/{path}로 붙이면 미리듣기/사용 둘 다 가능하다.
+app.get('/api/sfx-catalog', (req, res) => {
+  const catalogPath = path.join(CODE_ROOT, 'data', 'sfx-catalog.json')
+  try {
+    const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf-8'))
+    res.json({ ok: true, catalog })
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })
   }
@@ -1927,7 +1976,7 @@ app.post('/api/save-voice-insert', (req, res) => {
 
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
 app.post('/api/run-ffmpeg', (req, res) => {
-  const { ep, cutNo, duration } = req.body
+  const { ep, cutNo, duration, sfxFile, sfxStart } = req.body
   if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
   const dur = parseFloat(duration) || 8
 
@@ -1942,7 +1991,10 @@ app.post('/api/run-ffmpeg', (req, res) => {
   const outFile   = path.join(outDir,   `cut_${padded}_final.mp4`)
 
   if (!fs.existsSync(videoFile)) return res.status(404).json({ error: `영상 파일 없음: ${videoFile}` })
-  if (!fs.existsSync(audioFile)) return res.status(404).json({ error: `음성 파일 없음: ${audioFile}` })
+  // sfxFile이 없을 땐 기존 그대로 나레이션 필수(하위호환). sfxFile이 있으면
+  // 나레이션 파일이 없어도(효과음만 있는 컷일 수 있으므로) 막지 않는다.
+  const hasVoice = fs.existsSync(audioFile)
+  if (!sfxFile && !hasVoice) return res.status(404).json({ error: `음성 파일 없음: ${audioFile}` })
 
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -1951,21 +2003,14 @@ app.post('/api/run-ffmpeg', (req, res) => {
 
   send({ type: 'progress', message: 'FFmpeg 합성 시작…' })
 
-  const ffmpeg = 'ffmpeg'
-  const args = [
-    '-y',
-    '-i', videoFile,
-    '-i', audioFile,
-    '-filter_complex', `[1:a]apad=whole_dur=${dur}[a]`,
-    '-map', '0:v',
-    '-map', '[a]',
-    '-c:v', 'copy',
-    '-c:a', 'aac',
-    '-shortest',
-    outFile,
-  ]
+  const args = buildAudioMergeArgs({
+    videoFile, outFile, dur,
+    audioFile: hasVoice ? audioFile : null,
+    sfxFile: sfxFile || null, sfxStart,
+    resolvePath: (p) => path.isAbsolute(p) ? p : path.join(MEDIA_ROOT, 'downloads', p),
+  })
 
-  const proc = spawn(ffmpeg, args)
+  const proc = spawn('ffmpeg', args)
   let errBuf = ''
 
   proc.stderr.on('data', chunk => { errBuf += chunk.toString() })

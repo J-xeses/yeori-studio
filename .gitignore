@@ -1,6 +1,7 @@
 downloads/
 data/*
 !app/data/codebook.json
+!app/data/sfx-catalog.json
 logs/
 .chrome-debug/
 .chrome-profile/

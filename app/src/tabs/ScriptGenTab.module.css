@@ -237,6 +237,9 @@
 }
 .v3MiniField input:focus, .v3MiniField textarea:focus { border-color: var(--accent); }
 
+.sfxRow { display: flex; gap: 6px; align-items: center; }
+.sfxRow input { flex: 1; min-width: 0; }
+
 .v3Divider { height: 1px; background: var(--border); margin: 2px 0; }
 
 .v3KrRow { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }

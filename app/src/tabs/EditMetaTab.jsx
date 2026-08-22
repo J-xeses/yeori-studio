@@ -6,6 +6,7 @@ import { setGPoint, setGPoints, loadGPoints, getGPointSummary } from '../lib/gpo
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
+import SfxPicker from '../components/SfxPicker'
 import styles from './EditMetaTab.module.css'
 
 function estimateDuration(text = '') {
@@ -71,12 +72,24 @@ export default function EditMetaTab() {
         script: '',
       }))
 
-  const getAudio = (i) => audioSettings[i] || {
-    audioFile: `cut_${String(i + 1).padStart(2, '0')}.mp3`,
-    audioStart: 0,
-    audioEnd: '',
-    sfxOnly: false,
-    hasSubtitle: true,
+  // sfxOnly/sfxFile/sfxStart는 컷 자체의 정식 데이터(state.cuts, UPDATE_CUT로 저장)로
+  // 승격돼 있음 — 이 값이 실제로 영상 만들기 탭의 ffmpeg 합성에 반영되므로, 이 탭을
+  // 벗어나거나 새로고침해도 사라지면 안 된다. 나머지(audioFile/audioStart/audioEnd/
+  // hasSubtitle)는 아직 이 탭 안에서만 쓰는 계획용 값이라 기존처럼 로컬 상태 유지.
+  const getAudio = (i) => {
+    const cut = cuts[i] || {}
+    const local = audioSettings[i] || {
+      audioFile: `cut_${String(i + 1).padStart(2, '0')}.mp3`,
+      audioStart: 0,
+      audioEnd: '',
+      hasSubtitle: true,
+    }
+    return {
+      ...local,
+      sfxOnly: cut.sfxOnly || false,
+      sfxFile: cut.sfxFile || '',
+      sfxStart: cut.sfxStart ?? 0,
+    }
   }
 
   const getAudioStatus = (i) => {
@@ -87,6 +100,11 @@ export default function EditMetaTab() {
   }
 
   const setAudio = (i, key, value) => {
+    if (key === 'sfxOnly' || key === 'sfxFile' || key === 'sfxStart') {
+      const cut = cuts[i]
+      if (cut?.id) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { [key]: value } })
+      return
+    }
     setAudioSettings(prev => ({
       ...prev,
       [i]: { ...getAudio(i), [key]: value }
@@ -116,6 +134,8 @@ export default function EditMetaTab() {
         audioStart: audio.audioStart,
         audioEnd: audio.audioEnd || dur,
         sfxOnly: audio.sfxOnly,
+        sfxFile: audio.sfxFile,
+        sfxStart: audio.sfxStart,
         hasSubtitle: audio.hasSubtitle,
         script: cut.script || cut.text || '',
         dialogue: cut.dialogue || cut.대사 || '',
@@ -259,10 +279,10 @@ export default function EditMetaTab() {
   }
 
   const exportCSV = () => {
-    const headers = ['CUT번호','레이블','시작','끝','길이(초)','타입','트랜지션','음성파일','음성시작','음성끝','효과음만','자막']
+    const headers = ['CUT번호','레이블','시작','끝','길이(초)','타입','트랜지션','음성파일','음성시작','음성끝','효과음만','효과음파일','효과음시작','자막']
     const rows = meta.map(m =>
       [m.cutNo, m.label, m.start, m.end, m.duration, m.type, m.transition,
-       m.audioFile, m.audioStart, m.audioEnd, m.sfxOnly, m.hasSubtitle].join(',')
+       m.audioFile, m.audioStart, m.audioEnd, m.sfxOnly, m.sfxFile || '', m.sfxStart, m.hasSubtitle].join(',')
     )
     const csv = [headers.join(','), ...rows].join('\n')
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
@@ -579,7 +599,7 @@ export default function EditMetaTab() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    {['상태','CUT','음성 파일명','시작(초)','끝(초)','효과음만','자막'].map(h => (
+                    {['상태','CUT','음성 파일명','시작(초)','끝(초)','효과음만','효과음 파일','자막'].map(h => (
                       <th key={h} className={styles.th}>{h}</th>
                     ))}
                   </tr>
@@ -612,6 +632,24 @@ export default function EditMetaTab() {
                       <td className={styles.td} style={{textAlign:'center'}}>
                         <input type="checkbox" checked={getAudio(i).sfxOnly}
                           onChange={e => setAudio(i, 'sfxOnly', e.target.checked)} />
+                      </td>
+                      <td className={styles.td}>
+                        <div style={{display:'flex', alignItems:'center', gap:'4px'}}>
+                          <SfxPicker onSelect={item => setAudio(i, 'sfxFile', item.path)} />
+                          {getAudio(i).sfxFile && (
+                            <>
+                              <span style={{fontSize:'10px', color:'#9490a8', maxWidth:'90px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}} title={getAudio(i).sfxFile}>
+                                {getAudio(i).sfxFile.split('/').pop()}
+                              </span>
+                              <input type="number" step="0.1" min="0" title="효과음 시작(초)"
+                                value={getAudio(i).sfxStart}
+                                onChange={e => setAudio(i, 'sfxStart', e.target.value)}
+                                style={{width:'40px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'3px 4px',fontSize:'11px'}} />
+                              <button type="button" onClick={() => setAudio(i, 'sfxFile', '')}
+                                style={{background:'none', border:'none', color:'#9490a8', cursor:'pointer', fontSize:'11px'}}>✕</button>
+                            </>
+                          )}
+                        </div>
                       </td>
                       <td className={styles.td} style={{textAlign:'center'}}>
                         <input type="checkbox" checked={getAudio(i).hasSubtitle}
