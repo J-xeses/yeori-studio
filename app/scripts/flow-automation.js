@@ -408,8 +408,12 @@ async function main() {
       const projectId = await promptInput(
         `\nFlow 프로젝트 ID를 입력하세요 (URL의 마지막 부분):\n예) 77a33d02-f7d7-40d7-9a1f-b9983d92fc79\n> `
       )
-      const trimmedId = projectId.trim()
-      if (!trimmedId) throw new Error('프로젝트 ID를 입력하지 않았습니다.')
+      // 사람이 ID 대신 전체 URL을 붙여넣는 경우가 실제로 있었음(2026-08-22, RL02에서
+      // project_url.txt에 프리픽스가 두 번 붙는 사고 발견) — URL이면 마지막 경로
+      // 세그먼트만 뽑아 쓴다.
+      const rawInput = projectId.trim()
+      if (!rawInput) throw new Error('프로젝트 ID를 입력하지 않았습니다.')
+      const trimmedId = rawInput.replace(/^https?:\/\/.*\//, '').split(/[?#]/)[0]
       const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${trimmedId}`
       ensureDir(path.dirname(projectMarker))
       fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
@@ -464,8 +468,11 @@ async function main() {
           ok++; break
         } catch (err) {
           if (attempt < CONFIG.retryCount) {
-            log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount}: ${err.message}`)
-            await sleep(2000)
+            // Flow 자체 거부(레이트리밋/대기열초과)는 2초 기다린다고 안 풀림 —
+            // 60초로 더 길게 백오프.
+            const backoffMs = err.isFlowRejection ? 60000 : 2000
+            log('warn', `${label} 재시도 ${attempt + 1}/${CONFIG.retryCount} (${backoffMs / 1000}초 대기): ${err.message}`)
+            await sleep(backoffMs)
           } else {
             log('error', `${label} 실패: ${err.message}`)
             results.push({ cutNo: cut.no, status: 'fail', reason: err.message })
@@ -2173,29 +2180,77 @@ async function collectImageSrcs(page) {
   })
 }
 
+// Flow가 생성 요청 자체를 거부했을 때 뜨는 토스트 감지("너무 빨리 요청했습니다",
+// "대기열에 추가할" 25개 초과 등). 2026-08-22 실측(IG_R02/CUT4) — 이 토스트가 뜨면
+// 새 이미지는 영원히 안 생기는데 기존 코드는 이걸 구분 못 하고 waitForFunction
+// 타임아웃(수 분)을 그냥 다 날린 뒤 "현재 상태로 진행"해버렸음. live DOM에서 실제
+// 문구를 확인해 키워드로 잡음(스타일드컴포넌트 해시 클래스는 버전마다 바뀌므로
+// 텍스트 매칭이 더 안정적).
+const FLOW_REJECTION_KEYWORDS = ['너무 빨리 요청', '대기열에 추가할']
+
+async function detectFlowRejection(page) {
+  return page.evaluate((keywords) => {
+    for (const el of document.querySelectorAll('li, div')) {
+      const txt = (el.textContent || '').trim()
+      if (txt.length > 0 && txt.length < 150 && keywords.some(k => txt.includes(k))) return txt
+    }
+    return null
+  }, FLOW_REJECTION_KEYWORDS)
+}
+
+class FlowRejectionError extends Error {
+  constructor(message) {
+    super(message)
+    this.isFlowRejection = true
+  }
+}
+
+// page.waitForFunction 하나로는 "조건 충족"과 "Flow가 요청을 거부함"을 동시에
+// 감지할 수 없어서(둘 중 뭐가 됐는지 구분이 필요) 짧은 간격으로 직접 폴링한다.
+async function pollUntil(page, checkFn, checkArg, { timeout, pollMs = 1000 } = {}) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    const [ready, rejection] = await Promise.all([
+      page.evaluate(checkFn, checkArg),
+      detectFlowRejection(page),
+    ])
+    if (ready) return
+    if (rejection) throw new FlowRejectionError(`Flow 요청 거부: ${rejection}`)
+    await sleep(pollMs)
+  }
+  const err = new Error('polling timeout')
+  err.isPollTimeout = true
+  throw err
+}
+
+const COLLECT_NEW_IMAGE_SRCS = (before) => {
+  function collect(root, list = []) {
+    for (const img of root.querySelectorAll('img')) {
+      if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
+    }
+    for (const el of root.querySelectorAll('*')) {
+      if (el.shadowRoot) collect(el.shadowRoot, list)
+    }
+    return list
+  }
+  return collect(document).filter(src => !before.includes(src))
+}
+
 // 새 이미지가 나타날 때까지 대기
 async function waitForNewImage(page, beforeItems) {
   const beforeSrcs = beforeItems.map(i => i.src)
   try {
-    await page.waitForFunction(
-      (before) => {
-        function collect(root, list = []) {
-          for (const img of root.querySelectorAll('img')) {
-            if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
-          }
-          for (const el of root.querySelectorAll('*')) {
-            if (el.shadowRoot) collect(el.shadowRoot, list)
-          }
-          return list
-        }
-        return collect(document).some(src => !before.includes(src))
-      },
-      { timeout: CONFIG.timeoutMs },
-      beforeSrcs
+    await pollUntil(
+      page,
+      (before) => COLLECT_NEW_IMAGE_SRCS(before).length >= 1,
+      beforeSrcs,
+      { timeout: CONFIG.timeoutMs }
     )
   } catch (err) {
     await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_timeout.png'), fullPage: true })
-    log('info', '타임아웃 스크린샷: downloads/flow/debug_timeout.png')
+    log('info', err.isFlowRejection
+      ? `Flow 거부 감지, 타임아웃 스크린샷: downloads/flow/debug_timeout.png (${err.message})`
+      : '타임아웃 스크린샷: downloads/flow/debug_timeout.png')
     throw err
   }
   await sleep(800)
@@ -2205,24 +2260,19 @@ async function waitForNewImage(page, beforeItems) {
 async function waitForTwoNewImages(page, beforeItems) {
   const beforeSrcs = beforeItems.map(i => i.src)
   try {
-    await page.waitForFunction(
-      (before) => {
-        function collect(root, list = []) {
-          for (const img of root.querySelectorAll('img')) {
-            if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
-          }
-          for (const el of root.querySelectorAll('*')) {
-            if (el.shadowRoot) collect(el.shadowRoot, list)
-          }
-          return list
-        }
-        return collect(document).filter(src => !before.includes(src)).length >= 2
-      },
-      { timeout: CONFIG.twoImageTimeoutMs },
-      beforeSrcs
+    await pollUntil(
+      page,
+      (before) => COLLECT_NEW_IMAGE_SRCS(before).length >= 2,
+      beforeSrcs,
+      { timeout: CONFIG.twoImageTimeoutMs }
     )
-  } catch {
+  } catch (err) {
     await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_timeout.png'), fullPage: true })
+    if (err.isFlowRejection) {
+      log('warn', `2장 대기 중 Flow 거부 감지 → 재시도로 넘김: ${err.message}`)
+      throw err   // 예전엔 여기서 삼키고 "현재 상태로 진행"했음 — 그러면 바깥 재시도
+                  // 로직이 아예 발동을 안 해서, 거부됐는데도 다음 컷으로 그냥 넘어가버림
+    }
     log('warn', '2장 대기 타임아웃 → 현재 상태로 진행')
   }
   await sleep(800)
