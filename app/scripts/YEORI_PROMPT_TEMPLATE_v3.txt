@@ -1,0 +1,203 @@
+# 서여리 채널 — 표준 프롬프트 포맷 v3 템플릿
+# 작성일: 2026. 7. 25.
+# 버전: v3.0 (E01 fullprompt + v2 표준 포맷 통합)
+# ※ 이 파일을 복사해서 에피소드별로 작성할 것
+# ※ 구분선 ━*24 고정 (script_to_prompts.py 파싱 기준)
+# ※ [CUT N] 헤더 유지 (ScriptGenTab.jsx / bridge_converter.py 호환)
+
+================================================================
+마스터 코드
+{에피소드코드} :: {PL코드} :: {SP코드} :: {LK코드} :: {MD흐름} :: {Q코드}
+================================================================
+# 마스터 코드 작성 예시:
+# SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM :: LK_CS.TOP_CRP.BTM_SHT :: MD_JOY→MD_REL :: Q_SH.RT_916.PB_YT
+#
+# PL 코드:  YR_VD(서여리영상) / BR_VD(B-roll) / GR_HT(HTML그래픽) / CC_ED(CapCut)
+# SP 코드:  OT(외부)/IN(내부) + CF(카페)/HM(집)/ST(거리) + TZ_AF(오후)/TZ_NT(저녁) + LT_WM(따뜻한빛)/LT_DK(어두운빛)
+# LK 코드:  LK_CS(캐주얼) / LK_FML(포멀) + TOP/BTM/SH + LOOK_ID
+# MD 코드:  MD_JOY(기쁨) / MD_REL(해방/편안) / MD_SAD(슬픔) / MD_INT(진지) / MD_DRM(감성/몽환)
+# Q 코드:   Q_SH(고화질) / RT_916(9:16비율) / PB_YT(유튜브) / PB_IG(인스타)
+
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : {에피소드코드}
+TITLE : {에피소드 제목}
+LOOK.A: {LOOK_ID_A} ({의상 전체 설명})
+LOOK.B: {LOOK_ID_B} ({의상 전체 설명}) ← 멀티룩 없으면 삭제
+BG.A  : {배경 설명}
+BG.B  : {배경 설명} ← 멀티배경 없으면 삭제
+LIGHT : {LT_코드} ({조명 설명})
+REF   : face / closeup / fs-masked
+BGM   : {전체 BGM 방향}
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT N]  {PL코드} — {컷 제목} / {길이}초  {★립싱크 필요 or 없음}
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: {장소 텍스트 설명}
+SP: {SP코드}                    ← 예: OT.CF.TZ_AF.LT_WM
+PL: {PL코드}                    ← 예: YR_VD / BR_VD / GR_HT / CC_ED
+CH: {캐릭터} / {LK코드}         ← 예: 서여리 / LK_CS.TOP_CRP
+DL: {대사 텍스트 or 없음}
+NR: {나레이션 텍스트 or 없음}
+SH: {SH코드}                    ← 예: SH_CU / SH_MCU / SH_MS / SH_FS / SH_WS / SH_ECU
+CA: {CA코드}                    ← 예: CA_ST(고정) / CA_PS(푸시인) / CA_ZI(줌인) / CA_TR(트래킹) / CA_PAN(패닝) / CA_TLD(틸트다운)
+MD: {MD코드}                    ← 예: MD_JOY / MD_REL / MD_INT / MD_DRM
+AC: {AC코드}                    ← 예: AT_SD_01(손흔들기) / AT_EM_01(밝은표정) / AT_MW_01(걷기) / AT_SI_01(앉기) / AT_AC_01(소품동작)
+LOOK_ID: {LOOK_ID}              ← 예: LOOK02 / LOOK_YOGA / LOOK_JJM
+DU: {컷 길이 숫자}
+오디오:
+  BGM: {이 컷 BGM 방향}
+  음성: {음성 톤 설명}
+  효과음: {효과음 or 없음}
+  앰비언스: {앰비언스 설명}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     {한글 장소 설명}
+CH(캐릭터):   {한글 의상 설명}
+SH(샷):       {한글 샷 설명}
+CA(카메라):   {한글 카메라 설명}
+AC(동작):     {한글 동작 설명}
+MD(감정):     {한글 감정 설명}
+DL(대사):     {대사 or 없음}
+NR(나레이션): {나레이션 or 없음}
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+{CLOSEUP SHOT or FULLBODY SHOT or EXTREME CLOSEUP SHOT} —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+{의상: color + style + 소재},
+{배경/장소 묘사},
+{표정/감정/동작 묘사},
+{샷타입}, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트 — 무음 버전)
+━━━━━━━━━━━━━━━━━━━━━━━━
+THIS IS A SILENT FILM. NO talking, NO speaking, NO lip movement.
+NO dialogue, NO subtitles, NO audio.
+
+First 0-{N}s: {동작1}
+Next {N}-{N}s: {동작2}
+Final {N}-{총}s: {동작3}
+
+VP (립싱크 버전 — 별도 실행)    ← 립싱크 없는 컷은 이 섹션 삭제
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-{N}s: {동작1}
+Next {N}-{N}s: she says "{대사}" {음성톤}
+Final {N}-{총}s: {동작3 + 여운}
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목 | 길이 | PL     | LOOK     | SH    | CA     | 립싱크 | 상태 |
+|-----|------|------|--------|----------|-------|--------|--------|------|
+| C01 |      |  8s  | YR_VD  | LOOK_XX  | SH_CU | CA_ST |  ✅   | 신규 |
+| C02 |      |  8s  | BR_VD  | LOOK_XX  | SH_FS | CA_TR |  ❌   | 신규 |
+
+총 길이: {N}초 / 재생성: {컷번호} / 립싱크: {컷번호}
+BGM 흐름: {전체 BGM 방향}
+================================================================
+버전 이력
+================================================================
+v{N}.{N} ({날짜}) — {변경 내용}
+================================================================
+
+
+================================================================
+코드 레퍼런스 (작성 시 참고)
+================================================================
+
+[ SH — 샷 타입 ]
+SH_ECU   익스트림 클로즈업 (눈·입 디테일)
+SH_CU    클로즈업 (얼굴 전체)
+SH_MCU   미디엄 클로즈업 (가슴 위)
+SH_MS    미디엄샷 (허리 위)
+SH_MLS   미디엄 롱샷 (무릎 위)
+SH_FS    풀샷 (전신)
+SH_WS    와이드샷 (공간 전체)
+
+[ CA — 카메라 무브 ]
+CA_ST    스태틱/고정 (Veo3: THIS IS A SILENT FILM)
+CA_PS    푸시인 (천천히 가까워짐)
+CA_PO    풀아웃 (천천히 멀어짐)
+CA_ZI    줌인
+CA_ZO    줌아웃
+CA_TR    트래킹 (피사체 따라 이동)
+CA_PAN   패닝 (좌우 이동)
+CA_TLD   틸트 다운 (위→아래)
+CA_TLU   틸트 업 (아래→위)
+CA_HH    핸드헬드 (약간의 흔들림)
+
+[ MD — 감정/무드 ]
+MD_JOY   밝은 기쁨 / 에너지
+MD_REL   편안함 / 해방감
+MD_SAD   슬픔 / 아련함
+MD_INT   진지함 / 집중
+MD_DRM   감성 / 몽환적
+MD_COM   유머 / 장난
+MD_CON   자신감 / 당당함
+
+[ AC — 동작 코드 ]
+AT_SD_01  손 흔들기 (인사)
+AT_EM_01  밝은 표정 (미소·활기)
+AT_EM_02  슬픈 표정
+AT_EM_03  지친 표정 + 따뜻함
+AT_EM_04  진지한 표정 전환
+AT_EM_05  손 뻗기 (카메라 향해)
+AT_MW_01  걷기 (자연스럽게)
+AT_SI_01  앉기 (소파/의자)
+AT_AC_01  소품 동작 (신발 벗기)
+AT_AC_02  음료 들기
+AT_AC_03  음료 마시기
+AT_AC_04  폰 들기/내리기
+
+[ PL — 파이프라인 타입 ]
+YR_VD    서여리 등장 영상 → G2+G3+G4+G5
+YR_IM    서여리 이미지만 → G2
+BR_VD    B-roll 영상 → G2+G3+G4+G5
+PP_VD    PIP 오버레이 → G2+G3+G4+G5(PIP합성)
+GR_HT    HTML 그래픽 → G3+G5(브라우저녹화)
+GR_CA    Canva 그래픽 → G3+G5
+CC_ED    CapCut 편집 → G5만
+
+[ SP — 공간/배경 코드 ]
+OT       외부 (Outdoor)
+IN       내부 (Indoor)
+CF       카페 (Cafe)
+HM       집 (Home)
+ST       거리 (Street)
+JJ       찜질방
+RF       루프탑
+TZ_MN   아침
+TZ_AF   오후
+TZ_GH   황금시간대
+TZ_NT   저녁/밤
+LT_WM   따뜻한 자연광
+LT_DK   어두운/무드 조명
+LT_WD   창문빛
+LT_STD  스튜디오 링라이트
+
+[ IP 접두어 — 이미지 프롬프트 시작 ]
+CLOSEUP SHOT —          얼굴/상반신 위주 (레퍼런스 이미지 활용)
+FULLBODY SHOT —         전신/공간감 (Google Flow 생성)
+EXTREME CLOSEUP SHOT —  디테일 (손·발·소품)
+WIDE SHOT —             공간 전체 B-roll (서여리 미등장)
+================================================================

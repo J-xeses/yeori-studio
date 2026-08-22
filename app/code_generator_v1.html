@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Creative Agent — Code Generator v1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    /* Codi_GEN CI 컬러 시스템 (틸 + 스칼렛 듀오톤) */
+    --bg: #080C0E;
+    --surface: #0C1418;
+    --surface2: #0F2A22;
+    --surface3: #143830;
+    --border: #1a2e28;
+    --border2: rgba(29,158,117,0.25);
+    --text: #FFFFFF;
+    --text2: #9FE1CB;
+    --text3: #2d6a5a;
+    --teal: #1D9E75;
+    --teal-bg: rgba(29,158,117,0.14);
+    --teal-dark: #085041;
+    --teal-dark-bg: rgba(8,80,65,0.35);
+    --teal-light: #9FE1CB;
+    --scarlet: #C43232;
+    --scarlet-bg: rgba(196,50,50,0.14);
+    --scarlet-deep: #4A0808;
+    --scarlet-light: #F07070;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background:
+      radial-gradient(rgba(29,158,117,0.07) 1px, transparent 1px) 0 0/24px 24px,
+      var(--bg);
+    color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; line-height: 1.6;
+  }
+
+  /* 넘버링 인덱스 배지 — 라인 기반 프레임 강조용 */
+  .idx { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--teal); border: 1px solid rgba(29,158,117,0.4); border-radius: 3px; padding: 1px 5px; margin-right: 2px; letter-spacing: 0.5px; }
+
+  /* 시스템 상태 티커 */
+  .ticker { height: 24px; flex-shrink: 0; background: var(--bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 8px; font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text3); letter-spacing: 1px; }
+  .ticker-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); flex-shrink: 0; animation: blink 1.6s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+  .ticker-sep { color: var(--border2); }
+
+  .app-shell { display: flex; flex-direction: column; height: 100vh; }
+
+  /* ── 상단바 ── */
+  .topbar { height: 48px; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 10px; }
+  .tb-logo { display: flex; align-items: center; gap: 1px; }
+  .tb-logo .bk { font-size: 20px; font-weight: 300; color: var(--teal); line-height: 1; }
+  .tb-logo .nm { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; font-family: 'Space Mono', monospace; }
+  .tb-logo .us { font-size: 15px; font-weight: 700; color: var(--scarlet); font-family: 'Space Mono', monospace; }
+  .tb-logo .gn { font-size: 15px; font-weight: 300; color: var(--teal-light); letter-spacing: 0.1em; font-family: 'Space Mono', monospace; }
+  .tb-brand { font-size: 11px; font-weight: 500; color: var(--text3); }
+  .tb-sep { color: var(--border2); }
+  .tb-meta { margin-left: auto; display: flex; gap: 16px; font-size: 11px; color: var(--text3); }
+  .tb-meta b { color: var(--teal); font-family: 'Space Mono', monospace; font-weight: 700; }
+
+  /* ── 탭 ── */
+  .tabs { display: flex; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; overflow-x: auto; }
+  .tab { font-size: 12px; padding: 10px 16px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 700; }
+
+  .body { display: flex; flex: 1; min-height: 0; }
+
+  /* ── 사이드바 ── */
+  .sidebar { width: 180px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 14px 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .sb-sec { margin-bottom: 14px; }
+  .sb-label { font-size: 9px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 12px; margin-bottom: 6px; }
+  .sb-item { display: flex; align-items: center; gap: 7px; padding: 7px 12px; cursor: pointer; border-left: 2px solid transparent; }
+  .sb-item:hover { background: var(--surface2); }
+  .sb-item.active { background: transparent; border-left-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(29,158,117,0.2); }
+  .sb-item-icon { font-size: 13px; }
+  .sb-item-label { font-size: 11px; color: var(--text2); }
+  .sb-item.active .sb-item-label { color: var(--teal); font-weight: 700; }
+  .sb-badge { margin-left: auto; font-size: 9px; padding: 1px 6px; border-radius: 8px; background: transparent; color: var(--text3); border: 1px solid var(--border2); font-family: 'Space Mono', monospace; }
+  .sb-item.active .sb-badge { background: transparent; color: var(--teal); border-color: var(--teal); }
+  .sb-div { height: 1px; background: var(--border); margin: 8px 12px; }
+
+  .cut-list { padding: 0 8px; flex: 1; }
+  .cut-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--radius-sm); margin-bottom: 2px; cursor: pointer; border-left: 2px solid transparent; }
+  .cut-item:hover { background: var(--surface2); }
+  .cut-item.active { background: transparent; border-left-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(29,158,117,0.2); }
+  .cut-num { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text3); min-width: 24px; }
+  .cut-item.active .cut-num { color: var(--teal); }
+  .cut-type { font-size: 8px; padding: 1px 5px; border-radius: 3px; font-weight: 700; border: 1px solid transparent; }
+  .t-yr { background: transparent; color: var(--teal); border-color: rgba(29,158,117,0.4); }
+  .t-br { background: transparent; color: var(--teal-light); border-color: rgba(8,80,65,0.6); }
+  .t-gr { background: transparent; color: var(--scarlet-light); border-color: rgba(196,50,50,0.4); }
+  .cut-dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .d-done { background: var(--teal); }
+  .d-wip { background: var(--scarlet); }
+  .d-tbd { background: var(--border2); }
+  .cut-add { display: flex; align-items: center; gap: 6px; padding: 6px 10px; margin: 6px 8px 0; border-radius: var(--radius-sm); border: 1px dashed var(--border2); color: var(--text3); font-size: 11px; cursor: pointer; }
+  .cut-add:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* ── 메인 ── */
+  .main { flex: 1; overflow-y: auto; padding: 20px; }
+
+  .phase-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; padding: 3px 10px; border-radius: 3px; margin-bottom: 12px; font-weight: 700; background: transparent; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
+  .pb-0 { color: var(--text3); border: 1px solid var(--border2); }
+  .pb-1 { color: var(--teal); border: 1px solid var(--teal); }
+  .pb-2 { color: var(--scarlet-light); border: 1px solid var(--scarlet); }
+
+  .section-label { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--border2) 0, var(--border2) 4px, transparent 4px, transparent 8px); }
+
+  .g { display: grid; gap: 12px; }
+  .g2 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .card { position: relative; background: rgba(15,42,34,0.18); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 14px 16px; }
+  .card.accent { border-color: var(--teal); }
+  .card.accent::before, .card.accent::after { content: ''; position: absolute; width: 8px; height: 8px; border-color: var(--teal); }
+  .card.accent::before { top: -1px; left: -1px; border-top: 2px solid var(--teal); border-left: 2px solid var(--teal); }
+  .card.accent::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--teal); border-right: 2px solid var(--teal); }
+  .card-h { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.3px; }
+
+  .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', monospace; }
+  .pill:hover { border-color: var(--teal); color: var(--text); }
+  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset; }
+  .pill.on-o { background: transparent; border: 1px solid var(--scarlet); color: var(--scarlet-light); font-weight: 700; box-shadow: 0 0 0 1px rgba(196,50,50,0.25) inset; }
+
+  .field-label { font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Space Mono', monospace; }
+
+  .story-card { position: relative; background: rgba(15,42,34,0.12); border: 1px solid var(--border2); border-left: 2px solid transparent; border-radius: 3px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
+  .story-card:hover { border-color: var(--teal); }
+  .story-card.on { border-color: var(--teal); border-left-color: var(--teal); background: rgba(29,158,117,0.06); }
+  .story-icon { font-size: 16px; }
+  .story-title { font-size: 12px; font-weight: 700; color: var(--text); }
+  .story-card.on .story-title { color: var(--teal); }
+  .story-tag { font-size: 9px; color: var(--text3); margin-top: 2px; font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
+  .story-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 16px; font-family: 'Space Mono', monospace; }
+
+  .input { width: 100%; font-size: 12px; padding: 7px 10px; border-radius: 3px; background: transparent; border: 1px solid var(--border2); color: var(--text); font-family: 'Space Mono', monospace; }
+  .input:focus { outline: none; border-color: var(--teal); }
+
+  .code-preview { background: rgba(0,0,0,0.3); border: 1px solid var(--border2); border-left: 2px solid var(--teal); border-radius: 3px; padding: 12px 14px; font-family: 'Space Mono', monospace; font-size: 11px; line-height: 2; white-space: pre-wrap; word-break: break-all; }
+  .cp-m { color: var(--text3); }
+  .cp-a { color: var(--teal); font-weight: 700; }
+  .cp-b { color: var(--teal-light); }
+  .cp-c { color: var(--scarlet-light); }
+  .cp-d { color: var(--teal-light); }
+
+  .auto-link { font-size: 11px; color: var(--text2); line-height: 2; }
+  .auto-check { color: var(--teal); }
+  .auto-note { color: var(--text3); font-size: 10px; }
+
+  .btn-loadpool { font-size: 11px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--teal); color: #080C0E; border: none; cursor: pointer; font-weight: 700; font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
+  .btn-loadpool:hover { opacity: 0.85; }
+
+  .seg-box { background: rgba(15,42,34,0.25); border: 1px solid var(--border2); border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; }
+  .seg-label { font-size: 10px; font-weight: 700; color: var(--teal-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
+
+  /* ── 워크플로우 탭: 컷을 가로축(직렬 진행), 코드 군을 세로축(병렬 트랙)으로 배치한 행렬 뷰 ── */
+  .wf-legend { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 0 12px; font-size: 10px; color: var(--text2); }
+  .wf-leg { display: flex; align-items: center; gap: 5px; }
+  .wf-leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+  .wf-row-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  .wf-rc-label { font-size: 9px; color: var(--text3); margin-right: 2px; }
+  .wf-rc-btn { font-size: 9px; padding: 3px 9px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .wf-rc-btn.on { background: rgba(29,158,117,0.14); border-color: var(--teal); color: var(--teal); }
+  .wf-rc-sep { width: 1px; height: 14px; background: var(--border2); }
+  .wf-missing-badge { font-size: 9px; padding: 3px 9px; border-radius: 10px; background: var(--scarlet-bg); border: 1px solid var(--scarlet); color: var(--scarlet-light); margin-left: auto; font-family: 'Space Mono', monospace; }
+  .wf-canvas-outer { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--border2); border-radius: var(--radius-sm); }
+  .wf-canvas-inner { display: flex; flex-direction: column; min-width: max-content; }
+  .wf-header-row, .wf-data-row, .wf-master-row, .wf-arc-row { display: flex; border-bottom: 1px solid var(--border); }
+  .wf-header-row { background: rgba(15,42,34,0.3); border-bottom: 1px solid var(--border2); }
+  .wf-row-label-cell, .wf-row-label { width: 108px; flex-shrink: 0; background: rgba(15,42,34,0.2); border-right: 1px solid var(--border2); padding: 8px 10px; display: flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; cursor: default; }
+  .wf-row-label { cursor: pointer; }
+  .wf-row-label:hover { background: rgba(15,42,34,0.35); }
+  .wf-rl-toggle { margin-left: auto; font-size: 9px; }
+  .wf-cut-header-cell { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 8px 10px; }
+  .wf-chc-top { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+  .wf-chc-num { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; }
+  .wf-chc-status { margin-left: auto; font-size: 10px; }
+  .wf-chc-scene { font-size: 9px; color: var(--text2); line-height: 1.4; }
+  .wf-cut-header-cell.wf-col-done { border-top: 2px solid var(--teal); }
+  .wf-cut-header-cell.wf-col-done .wf-chc-num { color: var(--teal); }
+  .wf-cut-header-cell.wf-col-active { background: rgba(29,158,117,0.1); border-top: 2px solid var(--teal); }
+  .wf-cut-header-cell.wf-col-active .wf-chc-num { color: var(--teal); }
+  .wf-cut-header-cell.wf-col-tbd { border-top: 2px solid var(--border2); opacity: 0.65; }
+  .wf-cut-header-cell.wf-col-tbd .wf-chc-num { color: var(--text3); }
+  .wf-data-cell { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 6px 8px; }
+  .wf-data-cell.wf-col-active { background: rgba(29,158,117,0.06); }
+  .wf-data-cell.wf-col-tbd { opacity: 0.6; }
+  .wf-data-row.wf-hidden { display: none; }
+  .wf-ctags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .wf-ctag { font-family: 'Space Mono', monospace; font-size: 8px; padding: 2px 5px; border-radius: 2px; background: rgba(15,42,34,0.4); border: 1px solid var(--border2); color: var(--text2); }
+  .wf-ptext { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
+  .wf-gp-row { display: flex; gap: 3px; }
+  .wf-gp { width: 16px; height: 16px; border-radius: 50%; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border2); background: transparent; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .wf-gp.wf-done { background: rgba(29,158,117,0.18); border-color: var(--teal); color: var(--teal); }
+  .wf-gp.wf-na { opacity: 0.25; }
+  .wf-mood-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+  .wf-mood-tag { font-size: 8px; padding: 2px 6px; border-radius: 8px; background: rgba(15,42,34,0.4); border: 1px solid var(--border2); color: var(--text2); }
+  .wf-dir-text { font-size: 9px; color: var(--text2); font-style: italic; line-height: 1.5; }
+  .wf-empty { font-size: 9px; color: var(--text3); }
+  .wf-master-label, .wf-arc-label { width: 108px; flex-shrink: 0; padding: 6px 10px; display: flex; align-items: center; font-size: 9px; font-weight: 700; color: var(--text3); border-right: 1px solid var(--border2); text-transform: uppercase; letter-spacing: 0.5px; }
+  .wf-master-row { background: rgba(15,42,34,0.2); border-bottom: 1px solid var(--border2); }
+  .wf-master-cell { width: 190px; flex-shrink: 0; padding: 6px 8px; border-right: 1px solid var(--border); font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .wf-arc-row { align-items: center; }
+  .wf-arc-cell { width: 190px; flex-shrink: 0; padding: 6px 8px; border-right: 1px solid var(--border); }
+  .wf-arc-bar { height: 4px; border-radius: 2px; background: var(--teal); margin-bottom: 4px; }
+  .wf-arc-code { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text2); }
+  .wf-summary-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-top: 12px; font-size: 10px; color: var(--text2); }
+
+  .placeholder-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text3); gap: 10px; }
+  .placeholder-tab-icon { font-size: 34px; opacity: 0.5; }
+  .placeholder-tab-text { font-size: 12px; }
+
+  /* ── 하단바 ── */
+  .bottombar { border-top: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; background: var(--surface); flex-shrink: 0; }
+  .bb-info { font-size: 11px; color: var(--text3); }
+  .bb-right { margin-left: auto; display: flex; gap: 8px; }
+  .bb-btn { font-size: 11px; padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-family: 'Space Mono', monospace; border: none; letter-spacing: 0.3px; }
+  .bb-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+  .bb-ghost:hover { border-color: var(--teal); color: var(--teal); }
+  .bb-primary { background: var(--teal); color: #080C0E; }
+  .bb-primary:hover { opacity: 0.85; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(12,20,24,0.95); border: 1px solid var(--teal); color: var(--teal); font-size: 12px; padding: 8px 16px; border-radius: var(--radius-sm); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-family: 'Space Mono', monospace; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- 상단바 -->
+  <div class="topbar">
+    <div class="tb-logo">
+      <span class="bk">[</span><span class="nm">Codi</span><span class="us">_</span><span class="gn">GEN</span><span class="bk" style="color:var(--teal-dark)">]</span>
+    </div>
+    <span class="tb-sep">—</span>
+    <span class="tb-brand">A Creative Agent · Code Generator</span>
+    <div class="tb-meta">
+      <span>에피소드 <b id="tb-ep-id">SF_E01</b></span>
+      <span>컷 <b id="tb-cut-pos">C01/05</b></span>
+      <span>완성도 <b id="tb-progress" style="color:var(--teal)">0%</b></span>
+    </div>
+  </div>
+
+  <!-- 시스템 상태 티커 -->
+  <div class="ticker">
+    <span class="ticker-dot"></span>
+    <span id="ticker-text">SYSTEM ONLINE</span>
+    <span class="ticker-sep">·</span>
+    <span>PIPELINE READY</span>
+    <span class="ticker-sep">·</span>
+    <span>CANDIDATE_POOL <span id="ticker-linked-state" style="color:var(--text3)">UNLINKED</span></span>
+    <span class="ticker-sep">·</span>
+    <span>CODI_GEN v1.0</span>
+  </div>
+
+  <!-- 탭 -->
+  <div class="tabs">
+    <div class="tab active" data-tab="ep" onclick="showTab('ep', this)">🎬 에피소드</div>
+    <div class="tab" data-tab="cut" onclick="showTab('cut', this)">✂️ 컷 설계</div>
+    <div class="tab" data-tab="code" onclick="showTab('code', this)">🔍 코드 확인</div>
+    <div class="tab" data-tab="workflow" onclick="showTab('workflow', this)">📊 워크플로우</div>
+    <div class="tab" data-tab="pkg" onclick="showTab('pkg', this)">📦 패키지</div>
+    <div class="tab" data-tab="bank" onclick="showTab('bank', this)">🗄 CA_BANK</div>
+  </div>
+
+  <div class="body">
+
+    <!-- 사이드바 -->
+    <div class="sidebar">
+      <div class="sb-sec">
+        <div class="sb-label">채널</div>
+        <div class="sb-item active">
+          <span class="sb-item-icon">👩</span>
+          <span class="sb-item-label">서여리</span>
+          <span class="sb-badge">2</span>
+        </div>
+        <div class="sb-item">
+          <span class="sb-item-icon">📱</span>
+          <span class="sb-item-label">AI 자기계발</span>
+        </div>
+      </div>
+      <div class="sb-div"></div>
+      <div class="sb-sec">
+        <div class="sb-label">에피소드</div>
+        <div class="sb-item active">
+          <span class="sb-item-icon">●</span>
+          <span class="sb-item-label" id="sb-ep-current">SF_E01</span>
+        </div>
+        <div class="sb-item">
+          <span class="sb-item-icon">○</span>
+          <span class="sb-item-label">LF_E01_MEM</span>
+        </div>
+      </div>
+      <div class="sb-div"></div>
+      <div class="sb-label" style="padding:0 12px;margin-bottom:6px">컷 목록</div>
+      <div class="cut-list" id="cut-list"></div>
+      <div class="cut-add" onclick="showToast('컷 설계 탭에서 컷을 추가할 수 있어요')">+ 컷 추가</div>
+    </div>
+
+    <!-- 메인 -->
+    <div class="main">
+
+      <!-- TAB: 에피소드 -->
+      <div id="tab-ep" class="tab-content">
+        <div class="phase-badge pb-0"><span class="idx">P0</span>Phase 0 — 스토리 연결</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="section-label" style="flex:1;margin-bottom:0"><span class="idx">01</span>후보 풀 데이터</div>
+          <button class="btn-loadpool" onclick="loadFromCandidatePool()">📥 후보 풀에서 불러오기</button>
+        </div>
+        <div class="g" style="grid-template-columns:1fr;margin-bottom:16px" id="story-card-list"></div>
+
+        <div class="phase-badge pb-1"><span class="idx">P1</span>Phase 1 — 에피소드 기본 설정</div>
+        <div class="g g2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h"><span class="idx">02</span>📺 플랫폼 · 포맷</div>
+            <div class="kw-wrap" id="pills-platform"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span class="idx">03</span>🏷️ 주제 × 시나리오</div>
+            <div class="kw-wrap" id="pills-topic" style="margin-bottom:8px"></div>
+            <div class="kw-wrap" id="pills-scenario"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><span class="idx">04</span>🆔 에피소드 ID</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="input" id="ep-id-input" placeholder="예: SF_E01_PSY" oninput="state.epId=this.value; renderAll()">
+            <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
+          </div>
+        </div>
+
+        <div class="phase-badge pb-2"><span class="idx">P2</span>Phase 2 — 서여리 기본값</div>
+        <div class="g g3" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h"><span class="idx">05</span>👗 의상 룩</div>
+            <div class="kw-wrap" id="pills-look" style="margin-bottom:8px"></div>
+            <div class="field-label">상의</div>
+            <div class="kw-wrap" id="pills-top" style="margin-bottom:8px"></div>
+            <div class="field-label">하의</div>
+            <div class="kw-wrap" id="pills-bottom" style="margin-bottom:8px"></div>
+            <div class="field-label">시즌</div>
+            <div class="kw-wrap" id="pills-season"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span class="idx">06</span>✨ 자동 연동</div>
+            <div class="auto-link" id="auto-link-box"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span class="idx">07</span>🖼️ 레퍼런스</div>
+            <div class="auto-link">
+              <span class="auto-check">✓</span> FA_01 고정<br>
+              <span class="auto-check">✓</span> FA_02 고정<br>
+              <span style="color:var(--scarlet-light)">→</span> <span id="ref-fs-code">FS_E01</span> 생성 필요
+            </div>
+          </div>
+        </div>
+
+        <div class="card accent">
+          <div class="card-h"><span class="idx">08</span>💻 에피소드 코드 프리뷰</div>
+          <div class="code-preview" id="code-preview"></div>
+        </div>
+      </div>
+
+      <!-- TAB: 컷 설계 -->
+      <div id="tab-cut" class="tab-content" style="display:none">
+        <div class="phase-badge pb-1"><span class="idx">P3</span>Phase 3 — 컷 설계 · <span id="cut-phase-num">C01</span> 진행 중</div>
+
+        <div class="g g2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h"><span class="idx">09</span>🎭 감정 선택</div>
+            <div class="kw-wrap" id="pills-cut-emotion"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span class="idx">10</span>🎞️ 파이프라인</div>
+            <div class="kw-wrap" id="pills-cut-pipeline" style="margin-bottom:8px"></div>
+            <div class="field-label">G단계 흐름</div>
+            <div id="cut-pipeline-flow" style="margin-bottom:8px"></div>
+            <div class="field-label">캐릭터 룩(LOOK_ID)</div>
+            <div class="kw-wrap" id="pills-cut-look"></div>
+          </div>
+        </div>
+
+        <div class="g g2" style="margin-bottom:16px">
+          <div class="card">
+            <div class="card-h"><span class="idx">11</span>🗺️ C군 공간 설정</div>
+            <div class="field-label">실내 · 실외</div>
+            <div class="kw-wrap" id="pills-cut-indoor" style="margin-bottom:8px"></div>
+            <div class="field-label">장소</div>
+            <div class="kw-wrap" id="pills-cut-location" style="margin-bottom:8px"></div>
+            <div class="field-label">지역</div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <select class="input" id="cut-region-select" onchange="setCutRegion(this.value)"></select>
+              <input class="input" id="cut-region-custom" placeholder="지역 직접입력" style="display:none" oninput="setCutField('regionCustom', this.value)">
+            </div>
+            <div class="field-label">시간대</div>
+            <div class="kw-wrap" id="pills-cut-timezone" style="margin-bottom:8px"></div>
+            <div class="field-label">조명</div>
+            <div class="kw-wrap" id="pills-cut-light"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><span class="idx">12</span>🎬 E군 연출 설계</div>
+            <div class="field-label">컷 길이</div>
+            <div class="kw-wrap" id="pills-cut-length" style="margin-bottom:8px"></div>
+            <div class="field-label">구간</div>
+            <div class="kw-wrap" id="pills-cut-segcount" style="margin-bottom:10px"></div>
+
+            <div id="cut-segment-editor"></div>
+
+            <div class="field-label" style="margin-top:8px">동작</div>
+            <div class="kw-wrap" id="pills-cut-action" style="margin-bottom:8px"></div>
+            <div class="field-label">감정코드</div>
+            <div class="kw-wrap" id="pills-cut-mood" style="margin-bottom:8px"></div>
+
+            <div class="field-label">무드보드 키워드</div>
+            <input class="input" id="cut-moodboard" placeholder="쉼표로 구분(예: 담담한, 창가, 공허한)" oninput="setCutField('moodboard', this.value)">
+
+            <div class="field-label" style="margin-top:8px">감독 코멘트</div>
+            <textarea class="input" id="cut-director-comment" style="min-height:52px;font-family:'Noto Sans KR',sans-serif" placeholder="감독 코멘트를 입력하세요" oninput="setCutField('comment', this.value)"></textarea>
+          </div>
+        </div>
+
+        <div class="card accent">
+          <div class="card-h"><span class="idx">13</span>💻 C컷 코드 프리뷰</div>
+          <div class="code-preview" id="cut-code-preview"></div>
+        </div>
+
+        <div class="card accent" id="cut-generate-result" style="display:none;margin-top:16px"></div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-h"><span class="idx">14</span>🖼️ 러프 스케치 프리비주얼</div>
+          <div style="display:flex;gap:14px;align-items:flex-start">
+            <div id="sketch-preview" style="width:170px;height:226px;flex-shrink:0;background:rgba(0,0,0,0.25);border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <span style="color:var(--text3);font-size:10px;font-family:'Space Mono',monospace">미생성</span>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div class="field-label">자동 생성 프롬프트 (구도·연출 코드 기반)</div>
+              <div class="code-preview" id="sketch-prompt-preview" style="margin-bottom:10px;max-height:90px;overflow-y:auto;font-size:10px"></div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button class="btn-loadpool" id="sketch-gen-btn" onclick="generateSketch()">🎨 스케치 생성</button>
+                <span id="sketch-status" style="font-size:10px;color:var(--text3)"></span>
+              </div>
+              <div class="auto-note" style="margin-top:8px">생성(Pollinations) → 선화 변환(informative-drawings, 브라우저 내 실행) 2단계 — 첫 실행 시 변환 모델(약 17MB) 다운로드로 다소 걸릴 수 있음. 인물 얼굴은 컷마다 달라질 수 있음(구도·톤 확인용, 캐릭터 확정용 아님).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: 코드 확인 -->
+      <div id="tab-code" class="tab-content" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><span class="idx">15</span>🔍 전체 컷 코드 현황</div>
+          <div style="overflow-x:auto">
+            <table id="code-check-table" style="width:100%;border-collapse:collapse;font-size:11px"></table>
+          </div>
+        </div>
+        <div class="card accent">
+          <div class="card-h"><span class="idx">16</span>⚡ 활성 컷 프롬프트 미리보기</div>
+          <div id="code-check-preview"></div>
+        </div>
+      </div>
+
+      <!-- TAB: 워크플로우 — 컷(가로, 직렬 진행) × 코드 군(세로, 병렬 트랙) 통합 전개도.
+           표시 행 토글은 code_generator_interactive_dashboard_v2.html 기획을 그대로 따름.
+           모든 셀은 실제 cutDesignState/codebook/lastGeneratedResult 값만 사용(가짜 상태 없음) -->
+      <div id="tab-workflow" class="tab-content" style="display:none">
+        <div class="wf-legend">
+          <div class="wf-leg"><div class="wf-leg-dot" style="background:var(--teal)"></div>생성됨</div>
+          <div class="wf-leg"><div class="wf-leg-dot" style="background:rgba(29,158,117,0.4)"></div>활성 컷</div>
+          <div class="wf-leg"><div class="wf-leg-dot" style="background:var(--border2)"></div>미생성</div>
+          <span style="font-size:9px;color:var(--text3);margin-left:auto">← 가로: 컷 진행(직렬) · 세로: 코드 군(병렬) →</span>
+        </div>
+
+        <div class="wf-row-controls" id="wf-row-controls"></div>
+
+        <div class="wf-canvas-outer">
+          <div class="wf-canvas-inner" id="wf-canvas"></div>
+        </div>
+
+        <div class="wf-summary-bar" id="wf-summary"></div>
+      </div>
+
+      <!-- TAB: 패키지 -->
+      <div id="tab-pkg" class="tab-content" style="display:none">
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><span class="idx">17</span>💻 전체 마스터 코드</div>
+          <div class="code-preview" id="pkg-master-code"></div>
+        </div>
+        <div class="card accent" id="pkg-generate-result"></div>
+      </div>
+
+      <!-- TAB: CA_BANK — LOOK_BANK(codebook.json) 참고용 뷰. F군/캐릭터 서브코드(HR_/MK_/AC_ 등)는
+           codebook.json에 아직 없어 이번 범위에서는 다루지 않음(사용자 확인, 축소판) -->
+      <div id="tab-bank" class="tab-content" style="display:none">
+        <div class="card-h" style="margin-bottom:10px"><span class="idx">19</span>🗄 LOOK_BANK — codebook.json 등록 캐릭터 룩</div>
+        <div id="ca-bank-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 하단바 -->
+  <div class="bottombar">
+    <div class="bb-info" id="bb-info">C01 · 에피소드 설정 진행 중</div>
+    <div class="bb-right">
+      <div class="bb-btn bb-ghost" onclick="moveCut(-1)">← 이전 컷</div>
+      <div class="bb-btn bb-ghost" onclick="moveCut(1)">다음 컷 →</div>
+      <div class="bb-btn bb-primary" onclick="generatePackage()">패키지 생성 ↗</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast">✓ 저장됐어요</div>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.10.0/dist/ort.js"></script>
+<script>
+const YEORI_SERVER = 'http://localhost:3001';
+// content_matrix_v3.html과 공유하는 localStorage 키 -- 둘 다 file://로 열리므로
+// (같은 스킴) Chrome에서는 이 값이 두 파일 사이에 실제로 공유된다.
+const CODI_GEN_STORAGE_KEY = 'codi_gen_candidate';
+
+// ── 데이터 ─────────────────────────────────────────────────────
+const PLATFORM_OPTIONS = [
+  { code: 'SF',   label: 'SF 숏폼' },
+  { code: 'LF',   label: 'LF 롱폼' },
+  { code: 'IG_R', label: 'IG_R 릴스' },
+  { code: 'IG_P', label: 'IG_P 피드' },
+  { code: 'IG_S', label: 'IG_S 스토리' },
+  { code: 'TK',   label: 'TK 틱톡' },
+];
+const TOPIC_OPTIONS = [
+  { code: 'PSY', label: 'PSY 심리' },
+  { code: 'SOC', label: 'SOC 사회' },
+  { code: 'LIF', label: 'LIF 일상' },
+  { code: 'REL', label: 'REL 관계' },
+  { code: 'TRD', label: 'TRD 트렌드' },
+];
+const SCENARIO_OPTIONS = [
+  { code: 'MYS', label: 'MYS 미스터리' },
+  { code: 'DOC', label: 'DOC 다큐' },
+  { code: 'EDU', label: 'EDU 교육' },
+  { code: 'ENT', label: 'ENT 엔터' },
+];
+const LOOK_OPTIONS = [
+  { code: 'LK_CS', label: 'LK_CS 캐주얼' },
+  { code: 'LK_FM', label: 'LK_FM 포멀' },
+  { code: 'LK_AT', label: 'LK_AT 운동' },
+  { code: 'LK_HM', label: 'LK_HM 홈' },
+];
+const TOP_OPTIONS = [
+  { code: 'TOP_KNT', label: 'TOP_KNT 니트' },
+  { code: 'TOP_TSH', label: 'TOP_TSH 티셔츠' },
+  { code: 'TOP_SHT', label: 'TOP_SHT 셔츠' },
+  { code: 'TOP_HOD', label: 'TOP_HOD 후드' },
+];
+const BOTTOM_OPTIONS = [
+  { code: 'BTM_DNM', label: 'BTM_DNM 데님' },
+  { code: 'BTM_SLK', label: 'BTM_SLK 슬랙스' },
+  { code: 'BTM_SKT', label: 'BTM_SKT 스커트' },
+  { code: 'BTM_LGG', label: 'BTM_LGG 레깅스' },
+];
+const SEASON_OPTIONS = [
+  { code: 'SS', label: 'SS 봄/여름' },
+  { code: 'FW', label: 'FW 가을/겨울' },
+];
+// 의상 룩 → 헤어/메이크업/액세서리 자동 연동 매핑(초안 기본값)
+const LOOK_AUTO_LINK = {
+  LK_CS: { hr: 'HR_DN 다운스타일', mk: 'MK_WN 웜톤 메이크업', ac: 'AC_SC 목도리' },
+  LK_FM: { hr: 'HR_UP 업스타일',   mk: 'MK_CL 클래식 메이크업', ac: 'AC_EL 이어링' },
+  LK_AT: { hr: 'HR_PO 포니테일',   mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
+  LK_HM: { hr: 'HR_DN 다운스타일', mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
+};
+
+// ── 컷 설계(Phase 3) 옵션 ─────────────────────────────────────────────────────
+const CUT_EMOTION_OPTIONS = [
+  { code: 'EMO_SUR', icon: '😲', label: '충격·각성' },
+  { code: 'EMO_CUR', icon: '🤔', label: '호기심·의문' },
+  { code: 'EMO_CLM', icon: '😌', label: '편안·여유' },
+  { code: 'EMO_EMP', icon: '😶', label: '공허·번아웃' },
+  { code: 'EMO_STR', icon: '💪', label: '강함·자신감' },
+  { code: 'EMO_DRM', icon: '🌙', label: '몽환·감성' },
+];
+// PL/SP/SH/CA/MD/AT/LOOK 필드는 script_generator.py가 실제로 읽는 codebook.json
+// (server/../scripts/codebook.json)에서 그대로 가져와야 마스터 코드가 유효하다.
+// 아래 배열들은 페이지 로드 시 loadCodebook()이 채우기 전까지는 빈 상태이며,
+// 채워지기 전 값(예: CA_ZO/MD_CUR/AT_AC_05 등)은 실제 codebook에 없는 코드라
+// 예전엔 겉보기만 그럴듯한 더미 데이터였다 — 전부 실제 codebook 로드로 대체한다.
+let codebook = null;
+let PL_OPTIONS = [];
+let SP_LOCATION_OPTIONS = [];
+let SP_TIMEZONE_OPTIONS = [];
+let SP_LIGHT_OPTIONS = [];
+let SHOT_OPTIONS = [];
+let CAMERA_OPTIONS = [];
+let ACTION_OPTIONS = [];
+let MOOD_OPTIONS = [];
+let LOOK_OPTIONS_CB = [];
+// IN/OT는 codebook 데이터가 아니라 마스터 코드 문법 자체에 고정된 값("_grammar":
+// "IN/OT . [LOCATION] . TZ_[TIME] . LT_[LIGHT]") 이라 codebook 로드와 무관하게 고정.
+const SP_INDOOR_OPTIONS = [
+  { code: 'IN', label: 'IN 실내' },
+  { code: 'OT', label: 'OT 실외' },
+];
+const REGION_OPTIONS = ['성수동', '이태원', '한강', '홍대', '직접입력'];
+const LENGTH_OPTIONS = [
+  { code: '8s',  label: '8s' },
+  { code: '16s', label: '16s' },
+  { code: '24s', label: '24s' },
+];
+const SEGCOUNT_OPTIONS = [
+  { code: '2', label: '2구간' },
+  { code: '3', label: '3구간' },
+];
+const SEGMENT_KEYS = ['CL_A', 'CL_B', 'CL_C'];
+const SEGMENT_LABELS = { CL_A: '구간 A', CL_B: '구간 B', CL_C: '구간 C' };
+
+async function loadCodebook() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/codebook`);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '코드북 로드 실패');
+    codebook = data.codebook;
+    buildCodebookOptions();
+    showToast('✓ 코드북 연동 완료 (SP/SH/CA/MD/AT/LOOK)');
+  } catch (e) {
+    console.warn('[codi_gen] codebook 로드 실패:', e.message);
+    showToast('⚠️ 코드북 서버 연결 실패 — proxy.js(localhost:3001) 실행 중인지 확인하세요');
+  }
+  renderAll();
+}
+
+function buildCodebookOptions() {
+  if (!codebook) return;
+  const entries = (obj) => Object.entries(obj || {});
+  PL_OPTIONS       = entries(codebook.PL).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  SHOT_OPTIONS      = entries(codebook.SH).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  CAMERA_OPTIONS    = entries(codebook.CA).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  MOOD_OPTIONS      = entries(codebook.MD).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  ACTION_OPTIONS    = entries(codebook.AT).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  LOOK_OPTIONS_CB   = entries(codebook.LOOK_BANK).filter(([k]) => !k.startsWith('_')).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  const sp = codebook.SP || {};
+  SP_LOCATION_OPTIONS = entries(sp._location_codes).map(([code, label]) => ({ code, label: `${code} ${String(label).split(' (')[0]}` }));
+  SP_TIMEZONE_OPTIONS = entries(sp._time_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  SP_LIGHT_OPTIONS    = entries(sp._light_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+}
+
+// ── 러프 스케치 프롬프트용 코드→영문 매핑 (2026-08-07 실측 기준, 상황별_스케치_구현기준.md 참고) ──
+const LOCATION_EN = { CF: 'cafe interior', RE: 'restaurant interior', HM: 'home living room', ST: 'city street', GY: 'gym', KC: 'Korean sauna jjimjilbang', SW: 'subway station', RT: 'rooftop' };
+const TIMEZONE_EN = { TZ_GH: 'golden hour warm light', TZ_NT: 'night time', TZ_AM: 'morning light' };
+const LIGHT_EN = { LT_WM: 'warm lighting', LT_CL: 'cool toned lighting', LT_NT: 'natural daylight' };
+const SHOT_EN = { SH_CU: 'close-up shot', SH_MCU: 'medium close-up shot', SH_ECU: 'extreme close-up shot', SH_MS: 'medium shot', SH_WS: 'wide shot' };
+const ACTION_EN = { AT_AC_05: 'looking directly at camera', AT_SI_01: 'sitting', AT_MW_01: 'walking' };
+const MOOD_EN = { MD_SUR: 'shocked expression', MD_INT: 'focused expression', MD_CUR: 'curious expression', MD_DRM: 'dreamy atmosphere' };
+
+const DEMO_CANDIDATES = [
+  { icon: '🧠', title: '회의가 끝나면 기억이 안 나는 이유', type: 'LF', keywords: 'PSY · 트렌드레이더 수집', story: '', script: '' },
+  { icon: '😴', title: '한국인이 번아웃을 모르는 이유', type: 'SF', keywords: 'PSY · SOC · 직접 기획', story: '', script: '' },
+  { icon: '📱', title: '숏폼을 보고 나면 왜 공허할까', type: 'SF', keywords: 'PSY · LIF · 트렌드레이더 수집', story: '', script: '' },
+];
+
+const DEMO_CUTS = [
+  { num: 'C01', type: 'YR_VD', typeClass: 't-yr', status: 'done' },
+  { num: 'C02', type: 'BR_',   typeClass: 't-br', status: 'done' },
+  { num: 'C03', type: 'YR_VD', typeClass: 't-yr', status: 'wip' },
+  { num: 'C04', type: 'GR_',   typeClass: 't-gr', status: 'tbd' },
+  { num: 'C05', type: 'YR_VD', typeClass: 't-yr', status: 'tbd' },
+];
+
+// ── 상태 ─────────────────────────────────────────────────────
+let candidatePool = [...DEMO_CANDIDATES];
+let currentCutIndex = 2; // C03 활성(데모 기본값)
+const cutDesignState = {}; // 컷 번호(C01 등)별 컷 설계(Phase 3) 상태
+
+const state = {
+  selectedCandidateIdx: 0,
+  platform: 'SF',
+  topic: 'PSY',
+  scenario: 'MYS',
+  epId: '',
+  look: 'LK_CS',
+  top: 'TOP_KNT',
+  bottom: 'BTM_DNM',
+  season: 'FW',
+};
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[m]));
+}
+
+function showToast(msg='✓ 저장됐어요') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── 탭 ─────────────────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).style.display = 'block';
+  btn.classList.add('active');
+}
+
+// ── 후보 풀 ─────────────────────────────────────────────────────
+// 주제 요약/키워드 텍스트에서 TOPIC_OPTIONS 코드를 추측(간단한 키워드 매칭 -- 정교한
+// 분류가 아니라 Phase1 주제 필 기본 선택값을 대충이라도 맞혀주기 위한 용도)
+const TOPIC_KEYWORD_MAP = [
+  { code: 'PSY', words: ['심리', '정신', '마음'] },
+  { code: 'SOC', words: ['사회'] },
+  { code: 'LIF', words: ['일상', '라이프'] },
+  { code: 'REL', words: ['관계', '연애'] },
+  { code: 'TRD', words: ['트렌드', '유행'] },
+];
+function guessTopicCode(text) {
+  const t = String(text || '');
+  const hit = TOPIC_KEYWORD_MAP.find(e => e.words.some(w => t.includes(w)));
+  return hit ? hit.code : null;
+}
+
+function updateLinkedStatus(linked) {
+  const el = document.getElementById('ticker-linked-state');
+  if (!el) return;
+  el.textContent = linked ? 'LINKED' : 'UNLINKED';
+  el.style.color = linked ? 'var(--teal)' : 'var(--text3)';
+}
+
+async function loadFromCandidatePool() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/candidates`);
+    const data = await res.json();
+    if (data.success && Array.isArray(data.candidates) && data.candidates.length) {
+      candidatePool = data.candidates.map(c => ({
+        icon: '📦',
+        id: c.id || null,
+        title: c.title || '(제목 없음)',
+        type: c.type || 'SF',
+        keywords: c.keywords || '',
+        topic: c.topic || '',
+        story: c.story || '',
+        script: c.script || '',
+        checklist: c.checklist || {},
+      }));
+      state.selectedCandidateIdx = 0;
+      updateLinkedStatus(true);
+      showToast('✓ 후보 풀에서 불러왔어요 (' + candidatePool.length + '건)');
+    } else {
+      updateLinkedStatus(false);
+      showToast('⚠️ 후보 풀에 데이터가 없어요 — 데모 데이터를 유지합니다');
+    }
+  } catch (e) {
+    updateLinkedStatus(false);
+    showToast('⚠️ 후보 풀 연결 실패 — 데모 데이터를 유지합니다');
+  }
+  renderAll();
+}
+
+// content_matrix_v3.html의 "G1 투입" 버튼이 localStorage에 저장해둔 후보를 반영
+function applyIncomingCandidate(data) {
+  const cand = {
+    icon: '🔗',
+    id: data.id || null,
+    title: data.title || '(제목 없음)',
+    type: data.type || 'SF',
+    keywords: data.keyword || '',
+    topic: data.topic || '',
+    story: data.story || '',
+    script: data.script || '',
+    checklist: data.checklist || {},
+    linked: true,
+  };
+  candidatePool = [cand, ...candidatePool.filter(c => !c.linked)];
+  updateLinkedStatus(true);
+  showToast('📥 후보 풀에서 전달받았어요: ' + cand.title);
+  selectCandidate(0);
+}
+
+function loadCandidateFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem(CODI_GEN_STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !data.title) return false;
+    applyIncomingCandidate(data);
+    localStorage.removeItem(CODI_GEN_STORAGE_KEY);
+    return true;
+  } catch (e) {
+    console.warn('[codi_gen] localStorage 후보 데이터 파싱 실패:', e.message);
+    return false;
+  }
+}
+
+function selectCandidate(idx) {
+  state.selectedCandidateIdx = idx;
+  const cand = candidatePool[idx];
+  if (cand) {
+    if (PLATFORM_OPTIONS.some(p => p.code === cand.type)) state.platform = cand.type;
+    const topicCode = guessTopicCode((cand.topic || '') + ' ' + (cand.keywords || ''));
+    if (topicCode) state.topic = topicCode;
+  }
+  autoGenEpId();
+}
+
+function renderStoryCards() {
+  const el = document.getElementById('story-card-list');
+  if (!candidatePool.length) {
+    el.innerHTML = '<div class="story-empty">표시할 후보가 없어요. "후보 풀에서 불러오기"를 눌러보세요.</div>';
+    return;
+  }
+  el.innerHTML = candidatePool.map((c, i) => {
+    const on = i === state.selectedCandidateIdx;
+    const summary = [c.keywords, c.story ? c.story.slice(0, 40) + (c.story.length > 40 ? '…' : '') : '', c.script ? '대본 있음' : '']
+      .filter(Boolean).join(' · ');
+    return `
+    <div class="story-card ${on ? 'on' : ''}" onclick="selectCandidate(${i})">
+      <div class="story-icon">${c.icon || '📦'}</div>
+      <div>
+        <div class="story-title">${escapeHtml(c.title)}</div>
+        <div class="story-tag">${escapeHtml(c.type)}${summary ? ' · ' + escapeHtml(summary) : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 필 그룹 렌더링 ─────────────────────────────────────────────────────
+function renderPillGroup(containerId, options, stateKey, className) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(o => {
+    const on = state[stateKey] === o.code;
+    return `<div class="pill ${on ? (className || 'on') : ''}" onclick="setState('${stateKey}','${o.code}')">${escapeHtml(o.label)}</div>`;
+  }).join('');
+}
+
+function setState(key, value) {
+  state[key] = value;
+  renderAll();
+}
+
+// ── 에피소드 ID 자동생성 ─────────────────────────────────────────────────────
+function autoGenEpId() {
+  const num = String(state.selectedCandidateIdx + 1).padStart(2, '0');
+  state.epId = `${state.platform}_E${num}_${state.topic}`;
+  renderAll();
+}
+
+// ── 컷 목록 ─────────────────────────────────────────────────────
+function renderCutList() {
+  const el = document.getElementById('cut-list');
+  el.innerHTML = DEMO_CUTS.map((c, i) => `
+    <div class="cut-item ${i === currentCutIndex ? 'active' : ''}" onclick="currentCutIndex=${i}; renderAll()">
+      <span class="cut-num">${c.num}</span>
+      <span class="cut-type ${c.typeClass}">${c.type}</span>
+      <span class="cut-dot d-${c.status}"></span>
+    </div>`).join('');
+  document.getElementById('tb-cut-pos').textContent = `${DEMO_CUTS[currentCutIndex].num}/${String(DEMO_CUTS.length).padStart(2,'0')}`;
+  document.getElementById('bb-info').textContent = `${DEMO_CUTS[currentCutIndex].num} · 에피소드 설정 진행 중`;
+}
+
+function moveCut(dir) {
+  currentCutIndex = Math.min(DEMO_CUTS.length - 1, Math.max(0, currentCutIndex + dir));
+  renderAll();
+}
+
+function currentCut() {
+  return DEMO_CUTS[currentCutIndex];
+}
+
+// ── 컷 설계(Phase 3) ─────────────────────────────────────────────────────
+function getCutDesign(cut) {
+  if (!cutDesignState[cut.num]) {
+    cutDesignState[cut.num] = {
+      emotion: 'EMO_SUR',
+      pipeline: PL_OPTIONS.some(p => p.code === cut.type) ? cut.type : 'YR_VD',
+      look: 'LOOK_CS',
+      indoor: 'IN',
+      location: 'CF',
+      region: '성수동',
+      regionCustom: '',
+      timezone: 'TZ_GH',
+      light: 'LT_WM',
+      length: '8s',
+      segCount: '2',
+      segments: {
+        CL_A: { shot: 'SH_CU', cam: 'CA_ST' },
+        CL_B: { shot: 'SH_MS', cam: 'CA_ZI' },
+        CL_C: { shot: 'SH_WS', cam: 'CA_TR' },
+      },
+      action: 'AT_MW_01',
+      mood: 'MD_JOY',
+      moodboard: '',
+      comment: '',
+      sketchUrl: null,
+      sketchPrompt: '',
+    };
+  }
+  return cutDesignState[cut.num];
+}
+
+function setCutField(key, value) {
+  getCutDesign(currentCut())[key] = value;
+  renderCutDesignTab();
+}
+
+function setCutRegion(value) {
+  const d = getCutDesign(currentCut());
+  d.region = value;
+  if (value !== '직접입력') d.regionCustom = '';
+  renderCutDesignTab();
+}
+
+function setCutSegmentField(segKey, field, value) {
+  getCutDesign(currentCut()).segments[segKey][field] = value;
+  renderCutDesignTab();
+}
+
+// 코드가 아닌 값(예: 세그먼트 키)도 안전하게 다루기 위해 값은 항상 이 목록에 정의된
+// 코드 중 하나로 고정되어 있어 onclick 문자열에 그대로 꽂아 넣어도 안전하다.
+function pillsHtml(options, currentValue, onclickTemplate, cls) {
+  return options.map(o => {
+    const label = o.icon ? `${o.icon} ${o.label}` : o.label;
+    const on = currentValue === o.code;
+    const onclick = onclickTemplate.replace('{v}', o.code);
+    return `<div class="pill ${on ? (cls || 'on') : ''}" onclick="${onclick}">${escapeHtml(label)}</div>`;
+  }).join('');
+}
+
+function setPills(containerId, options, currentValue, onclickTemplate, cls) {
+  const el = document.getElementById(containerId);
+  if (el) el.innerHTML = pillsHtml(options, currentValue, onclickTemplate, cls);
+}
+
+function renderPipelineFlow(d) {
+  const el = document.getElementById('cut-pipeline-flow');
+  if (!el || !codebook) return;
+  // codebook.PL엔 순서가 있는 flow 배열이 아니라 run_g2/run_g3/run_g4 불리언만 있음
+  // (G1/G5는 PL 무관하게 항상 실행되는 공통 단계라 codebook에 플래그 자체가 없음).
+  const plInfo = codebook.PL?.[d.pipeline] || {};
+  const flow = ['G1'];
+  if (plInfo.run_g2) flow.push('G2');
+  if (plInfo.run_g3) flow.push('G3');
+  if (plInfo.run_g4) flow.push('G4');
+  flow.push('G5');
+  el.innerHTML = flow.map(g => `<span class="idx">${g}</span>`).join(' <span class="cp-m">→</span> ');
+}
+
+function renderCutSegmentEditor(d) {
+  const el = document.getElementById('cut-segment-editor');
+  if (!el) return;
+  const segCount = Number(d.segCount);
+  el.innerHTML = SEGMENT_KEYS.slice(0, segCount).map(segKey => {
+    const seg = d.segments[segKey];
+    return `
+    <div class="seg-box">
+      <div class="seg-label">${SEGMENT_LABELS[segKey]} <span class="idx">${segKey}</span></div>
+      <div class="field-label">샷타입</div>
+      <div class="kw-wrap" style="margin-bottom:6px">${pillsHtml(SHOT_OPTIONS, seg.shot, `setCutSegmentField('${segKey}','shot','{v}')`)}</div>
+      <div class="field-label">카메라</div>
+      <div class="kw-wrap">${pillsHtml(CAMERA_OPTIONS, seg.cam, `setCutSegmentField('${segKey}','cam','{v}')`)}</div>
+    </div>`;
+  }).join('');
+}
+
+// script_generator.py의 마스터 코드 문법 그대로:
+// {에피소드코드} :: {PL} :: {SP 프리셋키} :: {LOOK_ID} :: {SH.CA.MD.AT...} :: DU_{n}
+// (parse_master_code_line은 "::" 5개 이상만 요구하고 4번째 이후는 전부 하나의 토큰
+// 풀로 재분류하므로, DU를 별도 "::" 구간으로 둬도 SH/CA/MD/AT와 동일하게 인식된다)
+function buildMasterCodeLine(d, cut) {
+  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const spKey = `${d.indoor}.${d.location}.${d.timezone}.${d.light}`;
+  const segCount = Number(d.segCount);
+  const segKeys = SEGMENT_KEYS.slice(0, segCount);
+  const shPart = segKeys.map(k => d.segments[k].shot).join('→');
+  const caPart = segKeys.map(k => d.segments[k].cam).join('+');
+  const duNum = String(d.length).replace(/[^0-9]/g, '') || '8';
+  return `${epId} :: ${d.pipeline} :: ${spKey} :: ${d.look} :: ${shPart}.${caPart}.${d.mood}.${d.action} :: DU_${duNum}`;
+}
+
+function renderCutCodePreview(d, cut) {
+  const el = document.getElementById('cut-code-preview');
+  if (!el) return;
+  const line = buildMasterCodeLine(d, cut);
+  const locLabel = (SP_LOCATION_OPTIONS.find(o => o.code === d.location) || {}).label || d.location;
+  const region = d.region === '직접입력' ? (d.regionCustom || '미입력') : d.region;
+
+  el.innerHTML = `<span class="cp-m">## ${escapeHtml(cut.num)} 마스터 코드</span>
+<span class="cp-a">${escapeHtml(line)}</span>
+<span class="cp-m">## 메모</span>
+<span class="cp-m">${escapeHtml(d.indoor === 'IN' ? '실내' : '실외')} · ${escapeHtml(locLabel)} · 지역 ${escapeHtml(region)}(참고용, 코드 미포함) · 구간 ${Number(d.segCount)}개 · 감독 코멘트: ${escapeHtml(d.comment || '(미입력)')}</span>`;
+}
+
+// ── 러프 스케치: ①Pollinations 장면 생성 → ②informative-drawings 선화 변환(브라우저 내 ONNX) ──
+// 실측 근거(상황별_스케치_구현기준.md): BR_/GR_(사물·B롤)은 얼굴이 없어 캐릭터 비일관성 문제가
+// 아예 없는 가장 안정적인 구간이라 우선 활용. 와이드샷은 배경에 군중 단어를 절대 넣지 않고
+// "simple background, minimal detail"로 단순화 — 안 그러면 선화 변환 단계에서 원형 아티팩트 발생(실측 확인).
+function buildSketchPrompt(d) {
+  const seg = d.segments[SEGMENT_KEYS[0]] || { shot: 'SH_MS' };
+  const shot = SHOT_EN[seg.shot] || 'medium shot';
+  const isWide = seg.shot === 'SH_WS';
+  const loc = LOCATION_EN[d.location] || 'indoor space';
+  const light = [TIMEZONE_EN[d.timezone], LIGHT_EN[d.light]].filter(Boolean).join(', ');
+
+  let subject;
+  if (d.pipeline === 'BR_' || d.pipeline === 'GR_') {
+    subject = `still life detail shot inside a ${loc}, relevant props and objects, no people`;
+  } else {
+    const action = ACTION_EN[d.action] || 'standing';
+    const mood = MOOD_EN[d.mood] || '';
+    subject = [`young Korean woman`, action, mood, loc].filter(Boolean).join(', ');
+  }
+
+  return [shot, subject, light, isWide ? 'simple background, minimal detail' : ''].filter(Boolean).join(', ').replace(/,\s*,/g, ',').trim();
+}
+
+let onnxSessionPromise = null;
+function getOnnxSession() {
+  if (!onnxSessionPromise) {
+    onnxSessionPromise = (async () => {
+      ort.env.wasm.proxy = true;
+      return await ort.InferenceSession.create(
+        'https://huggingface.co/rocca/informative-drawings-line-art-onnx/resolve/main/model.onnx',
+        { executionProviders: ['wasm'] }
+      );
+    })();
+  }
+  return onnxSessionPromise;
+}
+
+async function blobToLinearRGBArray(blob) {
+  const img = await createImageBitmap(blob);
+  const canvas = new OffscreenCanvas(img.width, img.height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const rgbData = [[], [], []];
+  const d = imageData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const x = (i / 4) % canvas.width;
+    const y = Math.floor((i / 4) / canvas.width);
+    if (!rgbData[0][y]) rgbData[0][y] = [];
+    if (!rgbData[1][y]) rgbData[1][y] = [];
+    if (!rgbData[2][y]) rgbData[2][y] = [];
+    rgbData[0][y][x] = d[i + 0] / 255;
+    rgbData[1][y][x] = d[i + 1] / 255;
+    rgbData[2][y][x] = d[i + 2] / 255;
+  }
+  return { data: Float32Array.from(rgbData.flat().flat()), width: img.width, height: img.height };
+}
+
+async function linearGreyscaleArrayToBlob(linearArr, dims) {
+  const dataArray = [];
+  for (let i = 0; i < linearArr.length; i++) {
+    const v = linearArr[i] * 255;
+    dataArray.push(v, v, v, 255);
+  }
+  const imageData = new ImageData(new Uint8ClampedArray(dataArray), dims.width, dims.height);
+  const canvas = new OffscreenCanvas(dims.width, dims.height);
+  canvas.getContext('2d').putImageData(imageData, 0, 0);
+  return canvas.convertToBlob({ type: 'image/jpeg' });
+}
+
+async function generateSketch() {
+  const cut = currentCut();
+  const d = getCutDesign(cut);
+  const prompt = buildSketchPrompt(d);
+  d.sketchPrompt = prompt;
+  renderCutDesignTab();
+
+  const btn = document.getElementById('sketch-gen-btn');
+  const status = document.getElementById('sketch-status');
+  btn.disabled = true;
+
+  try {
+    status.textContent = '모델 로딩 중… (최초 1회, ~17MB)';
+    const sessionPromise = getOnnxSession();
+
+    status.textContent = '장면 생성 중…';
+    // Pollinations를 브라우저에서 직접 fetch()하면 Origin 헤더 때문에 403 차단됨(실측 확인)
+    // → yeori-studio Vercel 프록시(서버 간 요청이라 Origin 헤더 없음) 경유
+    const proxyUrl = 'https://yeori-studio.vercel.app/api/pollinations-proxy?prompt=' + encodeURIComponent(prompt) +
+      '&width=640&height=832&seed=' + Math.floor(Math.random() * 1e6);
+    const res = await fetch(proxyUrl);
+    if (!res.ok) throw new Error(`이미지 생성 실패 (HTTP ${res.status})`);
+    const sceneBlob = await res.blob();
+
+    status.textContent = '선화 변환 중…';
+    const session = await sessionPromise;
+    const { data, width, height } = await blobToLinearRGBArray(sceneBlob);
+    const results = await session.run({ input: new ort.Tensor('float32', data, [1, 3, height, width]) });
+    const out = results['output'];
+    const sketchBlob = await linearGreyscaleArrayToBlob(out.data, { width: out.dims[3], height: out.dims[2] });
+
+    if (d.sketchUrl) URL.revokeObjectURL(d.sketchUrl);
+    d.sketchUrl = URL.createObjectURL(sketchBlob);
+    status.textContent = '';
+    showToast('✓ 스케치 생성 완료');
+  } catch (e) {
+    status.textContent = '';
+    showToast('⚠️ 스케치 생성 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    renderCutDesignTab();
+  }
+}
+
+function renderSketchPanel(d) {
+  const preview = document.getElementById('sketch-preview');
+  if (preview) {
+    preview.innerHTML = d.sketchUrl
+      ? `<img src="${d.sketchUrl}" style="width:100%;height:100%;object-fit:cover">`
+      : '<span style="color:var(--text3);font-size:10px;font-family:\'Space Mono\',monospace">미생성</span>';
+  }
+  const promptEl = document.getElementById('sketch-prompt-preview');
+  if (promptEl) promptEl.textContent = d.sketchPrompt || buildSketchPrompt(d);
+}
+
+function renderCutDesignTab() {
+  const cut = currentCut();
+  const d = getCutDesign(cut);
+
+  const phaseNumEl = document.getElementById('cut-phase-num');
+  if (phaseNumEl) phaseNumEl.textContent = cut.num;
+
+  setPills('pills-cut-emotion', CUT_EMOTION_OPTIONS, d.emotion, "setCutField('emotion','{v}')", 'on-o');
+  setPills('pills-cut-pipeline', PL_OPTIONS, d.pipeline, "setCutField('pipeline','{v}')");
+  renderPipelineFlow(d);
+  setPills('pills-cut-look', LOOK_OPTIONS_CB, d.look, "setCutField('look','{v}')");
+
+  setPills('pills-cut-indoor', SP_INDOOR_OPTIONS, d.indoor, "setCutField('indoor','{v}')");
+  setPills('pills-cut-location', SP_LOCATION_OPTIONS, d.location, "setCutField('location','{v}')");
+  setPills('pills-cut-timezone', SP_TIMEZONE_OPTIONS, d.timezone, "setCutField('timezone','{v}')");
+  setPills('pills-cut-light', SP_LIGHT_OPTIONS, d.light, "setCutField('light','{v}')");
+
+  const regionSelect = document.getElementById('cut-region-select');
+  if (regionSelect) {
+    regionSelect.innerHTML = REGION_OPTIONS.map(r => `<option value="${escapeHtml(r)}" ${d.region === r ? 'selected' : ''}>${escapeHtml(r)}</option>`).join('');
+  }
+  const customInput = document.getElementById('cut-region-custom');
+  if (customInput) {
+    customInput.style.display = d.region === '직접입력' ? 'block' : 'none';
+    if (document.activeElement !== customInput) customInput.value = d.regionCustom;
+  }
+
+  setPills('pills-cut-length', LENGTH_OPTIONS, d.length, "setCutField('length','{v}')");
+  setPills('pills-cut-segcount', SEGCOUNT_OPTIONS, d.segCount, "setCutField('segCount','{v}')");
+
+  renderCutSegmentEditor(d);
+
+  setPills('pills-cut-action', ACTION_OPTIONS, d.action, "setCutField('action','{v}')");
+  setPills('pills-cut-mood', MOOD_OPTIONS, d.mood, "setCutField('mood','{v}')", 'on-o');
+
+  const moodboardEl = document.getElementById('cut-moodboard');
+  if (moodboardEl && document.activeElement !== moodboardEl) moodboardEl.value = d.moodboard;
+
+  const commentEl = document.getElementById('cut-director-comment');
+  if (commentEl && document.activeElement !== commentEl) commentEl.value = d.comment;
+
+  renderCutCodePreview(d, cut);
+  renderSketchPanel(d);
+}
+
+// ── 코드 프리뷰 / 자동연동 / 완성도 ─────────────────────────────────────────────────────
+function renderCodePreview() {
+  const cand = candidatePool[state.selectedCandidateIdx];
+  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
+  const title = cand ? cand.title : '(후보 미선택)';
+
+  const html = `<span class="cp-m">## A군 식별</span>
+<span class="cp-a">${escapeHtml(epId)}</span> <span class="cp-m">← ${escapeHtml(title)}</span>
+<span class="cp-m">## A군 기획</span>
+<span class="cp-b">TOPIC.${state.topic}</span> :: <span class="cp-b">SCN.${state.scenario}</span>
+<span class="cp-m">## D군 캐릭터 기본값</span>
+<span class="cp-d">${state.look}.${state.top}.${state.bottom}.${state.season}</span>
+<span class="cp-d">${link.hr.split(' ')[0]} + ${link.mk.split(' ')[0]} + ${link.ac.split(' ')[0]}</span> <span class="cp-m">← 자동연동</span>`;
+
+  document.getElementById('code-preview').innerHTML = html;
+  document.getElementById('tb-ep-id').textContent = epId;
+  document.getElementById('sb-ep-current').textContent = epId;
+  document.getElementById('ref-fs-code').textContent = `FS_${epId.split('_').slice(0,2).join('_')}`;
+}
+
+function renderAutoLink() {
+  const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
+  document.getElementById('auto-link-box').innerHTML = `
+    <span class="auto-check">✓</span> ${escapeHtml(link.hr)}<br>
+    <span class="auto-check">✓</span> ${escapeHtml(link.mk)}<br>
+    <span class="auto-check">✓</span> ${escapeHtml(link.ac)}<br>
+    <span class="auto-note">${state.season} 시즌 자동 연동</span>`;
+}
+
+function computeProgress() {
+  const fields = [state.platform, state.topic, state.scenario, state.epId, state.look, state.top, state.bottom, state.season];
+  const filled = fields.filter(Boolean).length;
+  const candBonus = candidatePool[state.selectedCandidateIdx] ? 1 : 0;
+  return Math.round(((filled + candBonus) / (fields.length + 1)) * 100);
+}
+
+function renderProgress() {
+  const pct = computeProgress();
+  const el = document.getElementById('tb-progress');
+  el.textContent = pct + '%';
+  el.style.color = pct >= 80 ? 'var(--teal)' : pct >= 40 ? 'var(--scarlet-light)' : 'var(--text3)';
+}
+
+// ── 대본/프롬프트 생성 (/api/generate-script -> script_generator.py -> script_to_prompts.py) ──
+let lastGeneratedResult = null;
+
+// ── 워크플로우 탭 표시 행 토글 상태 ────────────────────────────────────
+const WF_ROWS = [
+  { key: 'b',   icon: '⚙',  label: 'B군 파이프',   defaultOn: true },
+  { key: 'c',   icon: '📍', label: 'C군 공간',     defaultOn: true },
+  { key: 'd',   icon: '👤', label: 'D군 캐릭터',   defaultOn: true },
+  { key: 'e',   icon: '🎬', label: 'E군 연출',     defaultOn: true },
+  { key: 'pz',  icon: '⚡', label: '퍼즐 프롬프트', defaultOn: true },
+  { key: 'g',   icon: '✅', label: 'G포인트',      defaultOn: true },
+  { key: 'md',  icon: '🎨', label: '무드보드',     defaultOn: false },
+  { key: 'dir', icon: '💬', label: '감독 코멘트',   defaultOn: false },
+];
+const wfRowState = Object.fromEntries(WF_ROWS.map(r => [r.key, r.defaultOn]));
+
+function toggleWfRow(key) {
+  wfRowState[key] = !wfRowState[key];
+  renderWorkflowTab();
+}
+function toggleWfRowAll(show) {
+  WF_ROWS.forEach(r => { wfRowState[r.key] = show; });
+  renderWorkflowTab();
+}
+
+async function generatePackage() {
+  if (!codebook) { showToast('⚠️ 코드북이 아직 로드되지 않았어요 — 잠시 후 다시 시도하세요'); return; }
+  const code = DEMO_CUTS.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+
+  showToast('⏳ 대본 생성 중... (script_generator.py 실행)');
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/generate-script`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`);
+    lastGeneratedResult = { prompts: data.prompts, meta: data.meta };
+    renderAll(); // 코드 확인/패키지 탭의 "생성 상태"·프롬프트 미리보기도 같이 갱신
+    showToast(`✓ ${data.meta?.cuts ?? DEMO_CUTS.length}컷 생성 완료 — 아래 결과 확인`);
+  } catch (e) {
+    showToast('⚠️ 생성 실패: ' + e.message);
+    console.error('[generatePackage]', e);
+  }
+}
+
+function renderGenerateResult(result) {
+  const el = document.getElementById('cut-generate-result');
+  if (!el) return;
+  if (!result) { el.style.display = 'none'; return; }
+  const cutCount = result.prompts?.cuts?.length ?? 0;
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="card-h"><span class="idx">14</span>✅ 생성 결과</div>
+    <div class="cp-m">에피소드: ${escapeHtml(result.meta?.episode || result.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(result.meta?.version || '?')} · ${cutCount}컷</div>
+    <div style="margin-top:10px">
+      ${studioBadgeHtml()}
+      <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
+    </div>
+  `;
+}
+
+// ── 스튜디오 활성 에피소드 배지 ──────────────────────────────────────────
+// "스튜디오로 전달"은 새 에피소드를 만드는 게 아니라 지금 스튜디오에서 활성화된
+// 에피소드의 cuts를 그대로 덮어쓰는 구조인데, 정작 코디젠 화면엔 그 대상이 뭔지
+// 표시가 없어서 다른 에피소드가 활성인 줄 모르고 전달했다가 잘못 덮어쓸 위험이 있었음
+// (2026-08-17 발견). 페이지 로드 시 한 번 조회해 배지로 보여주고, 실제 전달 클릭
+// 시점엔(그 사이 스튜디오에서 에피소드를 바꿨을 수 있으니) 다시 한번 최신값으로 확인한다.
+let studioActiveInfo = { status: 'loading' }; // 'loading' | 'ok' | 'no-episode' | 'disconnected'
+
+async function fetchStudioActiveInfo() {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/studio-status-public`);
+    if (res.status === 404) return { status: 'no-episode' };
+    if (!res.ok) return { status: 'disconnected' };
+    const data = await res.json();
+    if (!data.episodeId) return { status: 'no-episode' };
+    return {
+      status: 'ok',
+      code: data.episode?.code || data.episodeId,
+      title: data.episode?.title || '(제목 없음)',
+      cutCount: data.cutCount ?? data.episode?.cutCount ?? 0,
+    };
+  } catch (e) {
+    return { status: 'disconnected' };
+  }
+}
+
+async function loadStudioActiveEpisode() {
+  studioActiveInfo = await fetchStudioActiveInfo();
+  document.querySelectorAll('.studio-active-badge').forEach(el => { el.outerHTML = studioBadgeHtml(); });
+}
+
+function studioBadgeHtml() {
+  const s = studioActiveInfo;
+  if (s.status === 'ok') {
+    return `<div class="studio-active-badge" style="font-size:11px;color:#1D9E75;margin-bottom:6px">→ ${escapeHtml(s.code)} ${escapeHtml(s.title)} (${s.cutCount}컷)</div>`;
+  }
+  if (s.status === 'no-episode') {
+    return `<div class="studio-active-badge" style="font-size:11px;color:#C99A2E;margin-bottom:6px">⚠ 활성 에피소드 없음</div>`;
+  }
+  if (s.status === 'disconnected') {
+    return `<div class="studio-active-badge" style="font-size:11px;color:var(--text3)">서버 연결 안 됨</div>`;
+  }
+  return `<div class="studio-active-badge" style="font-size:11px;color:var(--text3)">확인 중...</div>`;
+}
+
+// ── 스튜디오(ScriptGenTab.jsx)로 전달 ──────────────────────────────────────
+// Codi_GEN(file://)과 React 스튜디오 앱(http://localhost:5173)은 origin이 달라
+// localStorage를 공유할 수 없어서(content_matrix_v3.html<->code_generator_v1.html
+// 사이의 기존 codi_gen_candidate 핸드오프는 둘 다 file://라 가능했던 것) 서버
+// (/api/codi-gen-handoff)를 경유한다. ScriptGenTab.jsx가 마운트 시 이 값을 가져가
+// "마스터 코드로 대본 생성"의 미리보기 상태로 반영한다.
+async function sendToStudio() {
+  if (!lastGeneratedResult) return;
+
+  // 클릭 시점 재확인 — 배지는 페이지 로드 시점 스냅샷이라 그 사이 스튜디오에서 다른
+  // 에피소드로 전환했을 수 있음.
+  const info = await fetchStudioActiveInfo();
+  const target = info.status === 'ok' ? `${info.code} ${info.title}`
+    : info.status === 'no-episode' ? '(활성 에피소드 없음)'
+    : '(스튜디오 서버 연결 확인 불가)';
+  if (!confirm(`${target}에 덮어씁니다. 계속하시겠습니까?`)) return;
+
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/codi-gen-handoff`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompts: lastGeneratedResult.prompts, meta: lastGeneratedResult.meta }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || '전달 실패');
+    showToast('📤 스튜디오 "대본생성" 탭에서 받아갈 수 있게 전달했어요');
+  } catch (e) {
+    showToast('⚠️ 전달 실패: ' + e.message);
+  }
+}
+
+// script_to_prompts.py의 prompts.json cut.kr은 문자열이 아니라
+// {sp,ch,sh,ca,at,md,dl,nr,cp} 구조화 객체 — script_generator.py의 build_kr()과
+// 동일한 라벨로 사람이 읽을 수 있게 조립한다.
+function formatKrSummary(kr) {
+  if (!kr || typeof kr !== 'object') return '(없음)';
+  const line = (label, val) => `${label}: ${val || '(작성 필요)'}`;
+  return [
+    line('SP(장소)', kr.sp), line('CH(캐릭터)', kr.ch), line('SH(샷)', kr.sh),
+    line('CA(카메라)', kr.ca), line('AT(동작)', kr.at), line('MD(감정)', kr.md),
+    line('DL(대사)', kr.dl), line('NR(나레이션)', kr.nr), line('CP(자막)', kr.cp),
+  ].join('\n');
+}
+
+// ── 코드 확인 탭 ─────────────────────────────────────────────────────
+// 전부 실제 데이터만 사용: 컷 코드 표는 cutDesignState에서, 프롬프트 미리보기는
+// 실제 /api/generate-script 응답(lastGeneratedResult)에서만 가져온다(가짜 프리뷰 없음).
+function renderCodeCheckTab() {
+  const table = document.getElementById('code-check-table');
+  const previewEl = document.getElementById('code-check-preview');
+  if (!table || !previewEl) return;
+
+  const active = currentCut();
+  const rows = DEMO_CUTS.map((cut, i) => {
+    const d = getCutDesign(cut);
+    const spSummary = `${d.indoor}.${d.location}.${d.timezone}`;
+    const segCount = Number(d.segCount);
+    const dirSummary = SEGMENT_KEYS.slice(0, segCount).map(k => `${d.segments[k].shot}+${d.segments[k].cam}`).join(' → ');
+    const mdLabel = (MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood;
+    const wasGenerated = lastGeneratedResult?.prompts?.cuts?.some(c => String(c.no) === String(i + 1));
+    const genBadge = wasGenerated
+      ? '<span style="color:var(--teal)">✓ 생성됨</span>'
+      : '<span style="color:var(--text3)">미생성</span>';
+    const isActive = cut === active;
+    return `<tr style="border-bottom:1px solid var(--border)${isActive ? ';background:rgba(29,158,117,0.07)' : ''}">
+      <td style="padding:7px 10px;font-family:'Space Mono',monospace;color:${isActive ? 'var(--teal)' : 'var(--text2)'}">${cut.num}${isActive ? ' ←' : ''}</td>
+      <td style="padding:7px 10px;font-family:'Space Mono',monospace;color:var(--text2)">${escapeHtml(d.pipeline)}</td>
+      <td style="padding:7px 10px;color:var(--text2)">${escapeHtml(spSummary)}</td>
+      <td style="padding:7px 10px;color:var(--text2)">${escapeHtml(dirSummary)}</td>
+      <td style="padding:7px 10px;color:var(--text2)">${escapeHtml(mdLabel)}</td>
+      <td style="padding:7px 10px">${genBadge}</td>
+    </tr>`;
+  }).join('');
+
+  table.innerHTML = `<thead><tr style="border-bottom:1px solid var(--border2)">
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">CUT</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">파이프라인</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">공간</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">연출</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">감정</th>
+    <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">생성 상태</th>
+  </tr></thead><tbody>${rows}</tbody>`;
+
+  const activeIdx = DEMO_CUTS.indexOf(active);
+  const activeGenerated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(activeIdx + 1));
+  if (!activeGenerated) {
+    previewEl.innerHTML = `<div style="font-size:11px;color:var(--text3)">아직 이 컷의 생성 결과가 없어요 — 컷 설계 탭에서 "패키지 생성"을 먼저 눌러주세요.</div>`;
+    return;
+  }
+  previewEl.innerHTML = `
+    <div class="g g2" style="gap:10px;margin-bottom:10px">
+      <div class="card"><div class="card-h" style="font-size:10px;color:#4A9EDE">G2 이미지 프롬프트</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(activeGenerated.imagePrompt || '(없음)')}</div></div>
+      <div class="card"><div class="card-h" style="font-size:10px;color:var(--scarlet-light)">G4 영상 프롬프트</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(activeGenerated.videoPrompt || '(없음)')}</div></div>
+    </div>
+    <div class="card"><div class="card-h" style="font-size:10px;color:var(--teal)">KR 컨펌본</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(formatKrSummary(activeGenerated.kr))}</div></div>
+  `;
+}
+
+// ── 패키지 탭 (축소판) ────────────────────────────────────────────────
+// mockup의 F군(BGM_/HK_/RT_/PB_/Q_SF/Q_FM) 피커와 [EP]/[CHAR]/[REF] 등 확장
+// 패키지 포맷은 codebook.json에 해당 코드가 없어 이번 범위에서 제외(사용자 확인).
+// 여기서는 실제로 동작하는 것만 보여준다: 전체 컷의 마스터 코드 원문 + 마지막
+// 생성 결과 + 스튜디오 전달(패키지 생성 자체는 하단바의 기존 버튼을 그대로 씀).
+function renderPackageTab() {
+  const codeEl = document.getElementById('pkg-master-code');
+  const resultEl = document.getElementById('pkg-generate-result');
+  if (!codeEl || !resultEl) return;
+
+  codeEl.textContent = DEMO_CUTS.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+
+  if (!lastGeneratedResult) {
+    resultEl.innerHTML = `<div class="card-h"><span class="idx">18</span>📦 생성 결과</div><div style="font-size:11px;color:var(--text3)">아직 생성된 패키지가 없어요 — 위 마스터 코드를 확인한 뒤 하단 "패키지 생성" 버튼을 눌러주세요.</div>`;
+    return;
+  }
+  const cutCount = lastGeneratedResult.prompts?.cuts?.length ?? 0;
+  resultEl.innerHTML = `
+    <div class="card-h"><span class="idx">18</span>📦 생성 결과</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:10px">에피소드: ${escapeHtml(lastGeneratedResult.meta?.episode || lastGeneratedResult.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(lastGeneratedResult.meta?.version || '?')} · ${cutCount}컷</div>
+    ${studioBadgeHtml()}
+    <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
+  `;
+}
+
+// ── CA_BANK 탭 (축소판) ───────────────────────────────────────────────
+// mockup의 "캐릭터 아카데미"(HR_/MK_/AC_ 조합 검증 상태 관리)는 그 서브코드들이
+// codebook.json에 없어 이번 범위에서 제외(사용자 확인). 대신 실제 codebook의
+// LOOK_BANK를 그대로 참고용으로 보여준다 — 컷 설계할 때 어떤 LOOK_ID가 있는지 찾아보는 용도.
+function renderCaBankTab() {
+  const el = document.getElementById('ca-bank-list');
+  if (!el) return;
+  if (!codebook) {
+    el.innerHTML = `<div style="font-size:11px;color:var(--text3)">코드북 로딩 중...</div>`;
+    return;
+  }
+  el.innerHTML = LOOK_OPTIONS_CB.map(o => {
+    const info = codebook.LOOK_BANK?.[o.code] || {};
+    return `<div class="card">
+      <div class="card-h" style="font-size:11px">${escapeHtml(o.code)}</div>
+      <div style="font-size:10px;color:var(--text2);margin-bottom:6px">${escapeHtml(info.label || '')}</div>
+      <div style="font-size:9px;color:var(--text3);line-height:1.6;font-family:'Space Mono',monospace">${escapeHtml(info.ip_outfit || '')}</div>
+      <div style="margin-top:6px;font-size:9px;color:var(--teal)">참조: ${escapeHtml(info.ep || '-')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 워크플로우 탭 — 컷(가로, 직렬) × 코드 군(세로, 병렬) 통합 전개도 ──────────
+// 모든 셀은 실제 데이터만 사용: G1은 lastGeneratedResult로 확인된 생성여부,
+// G2~G5는 codebook.PL 플래그로 "이 컷에 적용되는 단계인지"만 표시(실제 완료
+// 여부는 Codi_GEN에서 알 수 없음 — 스튜디오 앱이 진짜 출처라 그 쪽을 안내).
+function renderWorkflowTab() {
+  const controlsEl = document.getElementById('wf-row-controls');
+  const canvasEl = document.getElementById('wf-canvas');
+  const summaryEl = document.getElementById('wf-summary');
+  if (!controlsEl || !canvasEl || !summaryEl) return;
+
+  const active = currentCut();
+  const cutMeta = DEMO_CUTS.map((cut, i) => {
+    const d = getCutDesign(cut);
+    const generated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(i + 1));
+    const isActive = cut === active;
+    const status = isActive ? 'active' : (generated ? 'done' : 'tbd');
+    return { cut, i, d, generated, status };
+  });
+
+  const missingCount = cutMeta.filter(m => !m.generated).length;
+  controlsEl.innerHTML = `
+    <span class="wf-rc-label">표시 행:</span>
+    ${WF_ROWS.map(r => `<div class="wf-rc-btn ${wfRowState[r.key] ? 'on' : ''}" onclick="toggleWfRow('${r.key}')">${r.icon} ${escapeHtml(r.label)}</div>`).join('')}
+    <div class="wf-rc-sep"></div>
+    <div class="wf-rc-btn" onclick="toggleWfRowAll(true)">전체 펼침</div>
+    <div class="wf-rc-btn" onclick="toggleWfRowAll(false)">접기</div>
+    ${missingCount > 0 ? `<div class="wf-missing-badge">⚠ 미생성 ${missingCount}곳</div>` : ''}
+  `;
+
+  const headerCells = cutMeta.map(({ cut, d, generated, status }) => {
+    const sceneText = generated?.sc || `${d.pipeline} · ${(MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood}`;
+    const statusIcon = status === 'done' ? '✅' : status === 'active' ? '🔄' : '⬜';
+    return `<div class="wf-cut-header-cell wf-col-${status}">
+      <div class="wf-chc-top"><span class="wf-chc-num">${escapeHtml(cut.num)}</span><span class="wf-chc-status">${statusIcon}</span></div>
+      <div class="wf-chc-scene">${escapeHtml(sceneText)}</div>
+    </div>`;
+  }).join('');
+  const headerRow = `<div class="wf-header-row"><div class="wf-row-label-cell">CUT →</div>${headerCells}</div>`;
+
+  function dataRow(rowKey, icon, label, cellFn) {
+    const hidden = wfRowState[rowKey] ? '' : ' wf-hidden';
+    const cells = cutMeta.map(m => `<div class="wf-data-cell wf-col-${m.status}">${cellFn(m)}</div>`).join('');
+    return `<div class="wf-data-row${hidden}">
+      <div class="wf-row-label" onclick="toggleWfRow('${rowKey}')"><span>${icon}</span><span>${escapeHtml(label)}</span><span class="wf-rl-toggle">${wfRowState[rowKey] ? '▲' : '▼'}</span></div>
+      ${cells}
+    </div>`;
+  }
+
+  const rowB = dataRow('b', '⚙', 'B군 파이프', ({ d }) => {
+    const plInfo = codebook?.PL?.[d.pipeline] || {};
+    const flow = ['G1'];
+    if (plInfo.run_g2) flow.push('G2');
+    if (plInfo.run_g3) flow.push('G3');
+    if (plInfo.run_g4) flow.push('G4');
+    flow.push('G5');
+    return `<div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.pipeline)}</span><span class="wf-ctag">${flow.join('→')}</span></div>`;
+  });
+
+  const rowC = dataRow('c', '📍', 'C군 공간', ({ d }) => `<div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.indoor)}.${escapeHtml(d.location)}</span><span class="wf-ctag">${escapeHtml(d.timezone)}</span><span class="wf-ctag">${escapeHtml(d.light)}</span></div>`);
+
+  const rowD = dataRow('d', '👤', 'D군 캐릭터', ({ d }) => {
+    const lookLabel = (LOOK_OPTIONS_CB.find(o => o.code === d.look) || {}).label || d.look;
+    return `<div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.look)}</span></div><div style="font-size:8px;color:var(--text3);margin-top:3px">${escapeHtml(lookLabel)}</div>`;
+  });
+
+  const rowE = dataRow('e', '🎬', 'E군 연출', ({ d }) => {
+    const segCount = Number(d.segCount);
+    const segTags = SEGMENT_KEYS.slice(0, segCount).map(k => `<span class="wf-ctag">${escapeHtml(d.segments[k].shot)}+${escapeHtml(d.segments[k].cam)}</span>`).join('');
+    const mdLabel = (MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood;
+    return `<div class="wf-ctags" style="margin-bottom:3px">${segTags}</div><div class="wf-ctags"><span class="wf-ctag">${escapeHtml(d.action)}</span><span class="wf-ctag">${escapeHtml(mdLabel)}</span></div>`;
+  });
+
+  const rowPz = dataRow('pz', '⚡', '퍼즐 프롬프트', ({ generated }) => {
+    if (!generated) return `<div class="wf-empty">미생성</div>`;
+    const img = (generated.imagePrompt || '').split('\n').slice(0, 2).join(' ');
+    const vid = (generated.videoPrompt || '').split('\n').slice(0, 2).join(' ');
+    return `<div class="wf-ptext"><span style="color:#4A9EDE">G2</span> ${escapeHtml(img)}</div><div class="wf-ptext" style="margin-top:3px"><span style="color:var(--scarlet-light)">G4</span> ${escapeHtml(vid)}</div>`;
+  });
+
+  const rowG = dataRow('g', '✅', 'G포인트', ({ d, generated }) => {
+    const plInfo = codebook?.PL?.[d.pipeline] || {};
+    const stages = [
+      { k: '1', on: !!generated, na: false },
+      { k: '2', on: false, na: !plInfo.run_g2 },
+      { k: '3', on: false, na: !plInfo.run_g3 },
+      { k: '4', on: false, na: !plInfo.run_g4 },
+      { k: '5', on: false, na: false },
+    ];
+    const dots = stages.map(s => `<div class="wf-gp ${s.on ? 'wf-done' : ''} ${s.na ? 'wf-na' : ''}">${s.k}</div>`).join('');
+    return `<div class="wf-gp-row">${dots}</div><div style="font-size:8px;color:var(--text3);margin-top:4px">G2~G5 실제 진행은 스튜디오 앱에서 확인</div>`;
+  });
+
+  const rowMd = dataRow('md', '🎨', '무드보드', ({ d }) => {
+    const tags = (d.moodboard || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!tags.length) return `<div class="wf-empty">(미입력)</div>`;
+    return `<div class="wf-mood-tags">${tags.map(t => `<span class="wf-mood-tag">${escapeHtml(t)}</span>`).join('')}</div>`;
+  });
+
+  const rowDir = dataRow('dir', '💬', '감독 코멘트', ({ d }) => d.comment ? `<div class="wf-dir-text">"${escapeHtml(d.comment)}"</div>` : `<div class="wf-empty">(미입력)</div>`);
+
+  const masterCells = cutMeta.map(({ cut, d }) => `<div class="wf-master-cell">${escapeHtml(buildMasterCodeLine(d, cut))}</div>`).join('');
+  const masterRow = `<div class="wf-master-row"><div class="wf-master-label">마스터 코드</div>${masterCells}</div>`;
+
+  const arcCells = cutMeta.map(({ d }, idx) => {
+    const mdLabel = (MOOD_OPTIONS.find(o => o.code === d.mood) || {}).label || d.mood;
+    const arrow = idx < cutMeta.length - 1 ? '<span style="font-size:8px;color:var(--text3)">→</span>' : '';
+    return `<div class="wf-arc-cell"><div class="wf-arc-bar"></div><div style="display:flex;justify-content:space-between;align-items:center"><span class="wf-arc-code">${escapeHtml(d.mood)}</span>${arrow}</div><div style="font-size:8px;color:var(--text3)">${escapeHtml(mdLabel)}</div></div>`;
+  }).join('');
+  const arcRow = `<div class="wf-arc-row"><div class="wf-arc-label">감정 아크</div>${arcCells}</div>`;
+
+  canvasEl.innerHTML = headerRow + rowB + rowC + rowD + rowE + rowPz + rowG + rowMd + rowDir + masterRow + arcRow;
+
+  const doneCount = cutMeta.filter(m => m.status === 'done').length;
+  const activeCount = cutMeta.filter(m => m.status === 'active').length;
+  const tbdCount = cutMeta.filter(m => m.status === 'tbd').length;
+  summaryEl.innerHTML = `
+    <span>✅ 생성됨 ${doneCount}컷</span>
+    <span>🔄 활성 ${activeCount}컷</span>
+    <span>⬜ 미생성 ${tbdCount}컷</span>
+    <span style="margin-left:auto;color:var(--text3)">전체 ${cutMeta.length}컷 중 ${cutMeta.length - tbdCount}컷 생성 완료</span>
+  `;
+}
+
+// ── 전체 렌더 ─────────────────────────────────────────────────────
+function renderAll() {
+  renderStoryCards();
+  renderPillGroup('pills-platform', PLATFORM_OPTIONS, 'platform', 'on');
+  renderPillGroup('pills-topic', TOPIC_OPTIONS, 'topic', 'on');
+  renderPillGroup('pills-scenario', SCENARIO_OPTIONS, 'scenario', 'on-o');
+  renderPillGroup('pills-look', LOOK_OPTIONS, 'look', 'on');
+  renderPillGroup('pills-top', TOP_OPTIONS, 'top', 'on');
+  renderPillGroup('pills-bottom', BOTTOM_OPTIONS, 'bottom', 'on');
+  renderPillGroup('pills-season', SEASON_OPTIONS, 'season', 'on');
+  renderAutoLink();
+  renderCodePreview();
+  renderCutList();
+  renderCutDesignTab();
+  renderGenerateResult(lastGeneratedResult);
+  renderCodeCheckTab();
+  renderWorkflowTab();
+  renderPackageTab();
+  renderCaBankTab();
+  renderProgress();
+
+  const epIdInput = document.getElementById('ep-id-input');
+  if (document.activeElement !== epIdInput) {
+    const num = String(state.selectedCandidateIdx + 1).padStart(2, '0');
+    epIdInput.value = state.epId || `${state.platform}_E${num}_${state.topic}`;
+  }
+}
+
+loadCandidateFromLocalStorage();
+renderAll();
+loadCodebook(); // 비동기 -- codebook.json 도착 시 buildCodebookOptions() + renderAll() 재실행
+loadStudioActiveEpisode(); // 비동기 -- 스튜디오 활성 에피소드 배지(결과 카드가 아직 없으면 표시할 곳도 없어 조용히 끝남)
+</script>
+
+</body>
+</html>

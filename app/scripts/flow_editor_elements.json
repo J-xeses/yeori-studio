@@ -1,0 +1,272 @@
+[
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "동의함",
+    "class": "glue-cookie-notification-bar__accept",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "나중에",
+    "class": "glue-cookie-notification-bar__reject",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "arrow_back\n돌아가기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-5431c229-2 ewGlDn famhRe gUzNyA",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "INPUT",
+    "type": "text",
+    "placeholder": "",
+    "text": "",
+    "class": "sc-e98e0e95-2 dwTWkV",
+    "id": "",
+    "ariaLabel": "수정 가능한 텍스트",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "more_vert\n옵션 더보기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-26aa1721-3 ewGlDn famhRe dUDRen",
+    "id": "radix-:r1l:",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "search\n검색",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-55822125-2 ewGlDn famhRe XtyjO",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "INPUT",
+    "type": "text",
+    "placeholder": "",
+    "text": "",
+    "class": "sc-55822125-3 elpEQU",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "filter_list\n정렬 및 필터링",
+    "class": "sc-16c4830a-1 dnFqQq sc-e7a64add-0 sc-e7a64add-2 fPutAP blvbdy sc-b8eb33e3-8 bWUKjc",
+    "id": "radix-:r1n:",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "add\n미디어 추가",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-8c1219a7-1 ewGlDn famhRe hRoUYU",
+    "id": "radix-:r1p:",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "help\n제품 도움말",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-7e11f006-2 ewGlDn famhRe gBGwpL",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "settings_2\n설정 보기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-a4925f7f-6 ewGlDn famhRe gdBgFb",
+    "id": "radix-:r1t:",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "more_vert\n더 생성하기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-362690a9-1 ewGlDn famhRe fHpFkO",
+    "id": "radix-:r20:",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "",
+    "class": "sc-4168b1d1-0 bhZsAG",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "dashboard\n모든 미디어",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 sc-81581212-0 ewGlDn lnCuH fqbaql kqe",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "accessibility_new\n캐릭터",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "movie\n장면 보기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "apps_spark_2\n도구",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "delete\n휴지통 보기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "left_panel_close\n접기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-5 sc-3ce961f7-0 ewGlDn hGbzYr fqbaql",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "DIV",
+    "type": "",
+    "placeholder": "",
+    "text": "무엇을 만들고 싶으신가요?\n﻿\n",
+    "class": "sc-a8ba1f43-0 djaQmW sc-26b30722-6 jwWpiy",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": "true"
+  },
+  {
+    "tag": "SPAN",
+    "type": "",
+    "placeholder": "",
+    "text": "무엇을 만들고 싶으신가요?",
+    "class": "",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": "false"
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "add_2\n만들기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-6a6f693d-0 ewGlDn famhRe cDfYRX",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "에이전트",
+    "class": "sc-59223abb-3 dmZGYv",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "button",
+    "placeholder": "",
+    "text": "🍌 Nano Banana 2\ncrop_16_9\nx2",
+    "class": "sc-16c4830a-1 dnFqQq sc-e7a64add-0 sc-e7a64add-1 fPutAP jmLZrS sc-93abd9dc-1 ldbhld",
+    "id": "radix-:r29:",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "BUTTON",
+    "type": "submit",
+    "placeholder": "",
+    "text": "arrow_forward\n만들기",
+    "class": "sc-e8425ea6-0 hOBPaw sc-d3791a4f-0 sc-d3791a4f-4 sc-26b30722-5 ewGlDn famhRe jDvIwb",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "INPUT",
+    "type": "file",
+    "placeholder": "",
+    "text": "",
+    "class": "sc-dcc7b7da-0 fhJvUC",
+    "id": "",
+    "ariaLabel": "",
+    "contenteditable": ""
+  },
+  {
+    "tag": "TEXTAREA",
+    "type": "textarea",
+    "placeholder": "",
+    "text": "",
+    "class": "g-recaptcha-response",
+    "id": "g-recaptcha-response-100000",
+    "ariaLabel": "",
+    "contenteditable": ""
+  }
+]

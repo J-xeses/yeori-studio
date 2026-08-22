@@ -1,0 +1,48 @@
+{
+  "output_size": [1080, 1920],
+  "duration": 5,
+  "bubbles": [
+    {
+      "text": "완전 애정함\nㅋㅋ",
+      "x": 0.86, "y": 0.05,
+      "font_size": 42,
+      "color": "white",
+      "bubble": "cloud",
+      "deco": ["♡"]
+    },
+    {
+      "text": "젤 비싼\n애",
+      "x": 0.88, "y": 0.73,
+      "font_size": 42,
+      "color": "lavender",
+      "bubble": "arrow_box",
+      "deco": [],
+      "arrow": true,
+      "arrow_direction": "down"
+    },
+    {
+      "text": "아침 6시\n루틴 시작",
+      "x": 0.14, "y": 0.05,
+      "font_size": 42,
+      "color": "white",
+      "bubble": "none",
+      "deco": ["✨"]
+    },
+    {
+      "text": "내 무기들",
+      "x": 0.12, "y": 0.66,
+      "font_size": 42,
+      "color": "pink",
+      "bubble": "oval",
+      "deco": []
+    },
+    {
+      "text": "다들\n알지...",
+      "x": 0.14, "y": 0.36,
+      "font_size": 42,
+      "color": "white",
+      "bubble": "none",
+      "deco": ["♡"]
+    }
+  ]
+}

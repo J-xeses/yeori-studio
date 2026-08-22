@@ -1,0 +1,45 @@
+{
+  "output_size": [1080, 1920],
+  "scenes": [
+    {
+      "text": "저 사실 원장 될 생각\n전혀 없었어요",
+      "position": "bottom_center",
+      "color": "white",
+      "bubble": "none",
+      "deco": ["♡"],
+      "time": "0~5s"
+    },
+    {
+      "text": "사업 세 번 말아먹었거든요\n그냥 직원이 편했어요\n책임 안 져도 되니까",
+      "position": "bottom_center",
+      "color": "white",
+      "bubble": "none",
+      "deco": [],
+      "time": "5~13s"
+    },
+    {
+      "text": "근데 아빠가 많이 아프시다는\n연락을 받았어요",
+      "position": "bottom_center",
+      "color": "white",
+      "bubble": "none",
+      "deco": [],
+      "time": "13~21s"
+    },
+    {
+      "text": "더 많이 벌어야 했어요\n무서워도 해야 했어요\n그래서 차렸어요 제 샵",
+      "position": "bottom_center",
+      "color": "white",
+      "bubble": "none",
+      "deco": ["✨"],
+      "time": "21~31s"
+    },
+    {
+      "text": "무서워서 못 한 게 아니라\n무서워도 했어요\n아직도 떨리지만 괜찮아요",
+      "position": "bottom_center",
+      "color": "white",
+      "bubble": "none",
+      "deco": ["♡", "✨"],
+      "time": "31~38s"
+    }
+  ]
+}

@@ -1,0 +1,292 @@
+/* 앱 전체 통일 상단바(TabToolbar) 적용 — .page(세로) 안에 툴바 + .root(가로: 사이드바+에디터) */
+.page { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.root { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+.sidebar {
+  width: 30vh; min-width: 30vh; height: 100%;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+
+.sideTitle { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .8px; text-transform: uppercase; }
+
+/* 에피소드 설정 접기/펼치기 — 열렸을 때만 남는 공간을 차지하며 자체 스크롤 */
+.epSection { flex-shrink: 0; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+.epSectionOpen { flex: 1; }
+.epToggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: none; border: none; cursor: pointer; transition: background .12s;
+  flex-shrink: 0;
+}
+.epToggle:hover { background: var(--bg-hover); }
+.toggleIcon { font-size: 10px; color: var(--text-3); }
+.epBody { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; min-height: 0; }
+
+.fieldRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* 마스터 코드 대본 생성 — 항상 노출되는 고정 영역 */
+.masterCodeFixed { flex-shrink: 0; border-bottom: 1px solid var(--border); padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* 컷 목록 — 남는 공간 차지하며 자체 스크롤 */
+.cutSection { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+.cutSectionTitle { font-size: 11px; font-weight: 700; color: var(--text-3); letter-spacing: .8px; text-transform: uppercase; padding: 10px 14px 6px; flex-shrink: 0; }
+
+/* 하단 버튼 고정 */
+.sideBottom { flex-shrink: 0; border-top: 1px solid var(--border); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field label { font-size: 12px; color: var(--text-2); }
+.field input, .field select, .field textarea {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 13px;
+  padding: 7px 9px; outline: none; transition: border-color .15s; resize: vertical;
+  width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+.field select { appearance: none; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  padding: 4px 10px; border-radius: 20px;
+  background: var(--bg-input); border: 1px solid var(--border);
+  color: var(--text-2); font-size: 12px; transition: all .15s;
+}
+.chip:hover { border-color: var(--accent-light); color: var(--accent-light); }
+.chipActive { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
+
+.genBtn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--accent); border: none; color: #fff;
+  padding: 10px; border-radius: 8px; font-size: 13.5px; font-weight: 600;
+  transition: background .15s;
+}
+.genBtn:hover:not(:disabled) { background: #6d28d9; }
+.genBtn:disabled { opacity: .6; cursor: default; }
+
+.spinner {
+  width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progressMsg { font-size: 12px; color: var(--green); text-align: center; }
+
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+.cutList { flex: 1; display: flex; flex-direction: column; gap: 3px; overflow-y: auto; padding: 0 6px 6px; }
+.cutItem {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px; border-radius: 7px;
+  background: none; border: 1px solid transparent;
+  text-align: left; transition: all .12s;
+}
+.cutItem:hover { background: var(--bg-hover); }
+.cutActive { background: var(--accent-glow) !important; border-color: var(--accent-border) !important; }
+.cutNo { font-size: 11px; font-weight: 700; color: var(--accent-light); }
+.cutPreview { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Editor */
+.editor { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 28px; gap: 16px; }
+
+.editorHeader { display: flex; align-items: center; justify-content: space-between; }
+.editorHeader h2 { font-size: 20px; font-weight: 700; color: var(--accent-light); }
+.editorNav { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
+.editorNav button {
+  background: var(--bg-input); border: 1px solid var(--border); color: var(--text-2);
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; transition: all .15s;
+}
+.editorNav button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); }
+.editorNav button:disabled { opacity: .4; cursor: default; }
+
+.flowLog {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  max-height: 150px; overflow-y: auto;
+  font-size: 11px; font-family: var(--mono);
+}
+.flowLogLine { color: var(--text-2); line-height: 1.6; }
+.flowLog_ok       { color: var(--green); }
+.flowLog_done     { color: var(--green); }
+.flowLog_error    { color: #ef4444; }
+.flowComplete {
+  color: var(--green); font-weight: 700; font-size: 12px;
+  text-align: center; margin-top: 4px; padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* 컷 타입 선택 */
+.cutTypeBtns { display: flex; gap: 8px; }
+.cutTypeBtn {
+  padding: 6px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--bg-input); color: var(--text-3);
+  transition: all .15s;
+}
+.cutTypeBtn:hover { border-color: var(--text-2); color: var(--text-2); }
+.cutTypeBtnNormal { border-color: var(--accent-border); color: var(--accent-light); background: var(--accent-glow); }
+.cutTypeBtnSig { border-color: #ca8a04; color: #fbbf24; background: rgba(234,179,8,.12); }
+
+/* 컷 목록 SIGNATURE 배지 */
+.sigBadge {
+  display: inline-block; margin-left: 6px;
+  font-size: 10px; font-weight: 700; color: #fbbf24;
+  background: rgba(234,179,8,.15); border: 1px solid #ca8a04;
+  border-radius: 4px; padding: 1px 5px; vertical-align: middle; line-height: 1.4;
+}
+
+.rawSection { margin-top: 8px; }
+.rawSection summary { font-size: 12px; color: var(--text-3); cursor: pointer; padding: 6px 0; }
+.rawText {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 7px; padding: 12px; font-size: 12px; font-family: var(--mono);
+  color: var(--text-2); white-space: pre-wrap; overflow-x: auto;
+  max-height: 300px; overflow-y: auto; margin-top: 6px; line-height: 1.7;
+}
+
+/* 에피소드 번호 + 코드 배지 */
+.epNumRow { display: flex; align-items: center; gap: 8px; }
+.epNumRow input { width: 70px; flex-shrink: 0; }
+.epCodeBadge {
+  font-size: 11px; font-weight: 800; letter-spacing: .5px;
+  color: var(--accent-light); background: var(--accent-glow);
+  border: 1px solid var(--accent-border); border-radius: 5px;
+  padding: 3px 8px; font-family: var(--mono); white-space: nowrap;
+}
+
+/* 컷 목록 G1 배지 */
+.g1Badge { display: inline-block; margin-left: 4px; font-size: 9px; font-weight: 800; color: #4ade80; background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3); border-radius: 3px; padding: 1px 4px; vertical-align: middle; }
+
+/* 대본 다운로드 / 수정본 업로드 */
+.scriptFileRow { display: flex; gap: 6px; padding: 0 0 6px; }
+.scriptDownBtn { flex: 1; padding: 7px 8px; border-radius: 7px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.scriptDownBtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent-light); }
+.scriptDownBtn:disabled { opacity: .4; cursor: not-allowed; }
+.scriptUpBtn { flex: 1; padding: 7px 8px; border-radius: 7px; border: 1px solid rgba(139,92,246,.3); background: rgba(139,92,246,.1); color: var(--accent-light); font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; text-align: center; display: block; box-sizing: border-box; }
+.scriptUpBtn:hover { background: rgba(139,92,246,.2); }
+
+/* Claude 수정 요청 패널 */
+.revisionPanel { margin-top: 16px; padding: 14px; background: rgba(139,92,246,.06); border: 1px solid rgba(139,92,246,.2); border-radius: 10px; display: flex; flex-direction: column; gap: 10px; }
+.revisionTitle { font-size: 13px; font-weight: 700; color: var(--accent-light); }
+.revisionInput { width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-size: 12.5px; line-height: 1.6; resize: vertical; box-sizing: border-box; }
+.revisionInput:focus { outline: none; border-color: var(--accent); }
+.revisionActions { display: flex; gap: 8px; align-items: center; }
+.fileUploadBtn { font-size: 11.5px; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-2); cursor: pointer; white-space: nowrap; }
+.fileUploadBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+.revisionSendBtn { flex: 1; padding: 7px 14px; border-radius: 7px; background: rgba(139,92,246,.2); border: 1px solid rgba(139,92,246,.4); color: var(--accent-light); font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.revisionSendBtn:hover:not(:disabled) { background: rgba(139,92,246,.35); }
+.revisionSendBtn:disabled { opacity: .45; cursor: not-allowed; }
+.revisionHistory { border-top: 1px solid rgba(139,92,246,.15); padding-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+.revisionHistTitle { font-size: 11px; color: var(--text-3); font-weight: 600; margin-bottom: 2px; }
+.revisionHistItem { display: flex; align-items: center; gap: 6px; font-size: 11.5px; }
+.revisionHistNum { color: var(--text-3); font-size: 10.5px; min-width: 20px; }
+.revisionHistReq { color: var(--text-2); flex: 1; }
+.revisionHistStatus { color: #4ade80; font-size: 11px; }
+
+/* ── 뷰 토글 바 ─────────────────────────────────── */
+.viewToggleBar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.viewToggleBtn {
+  padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text-2); cursor: pointer; transition: all .15s;
+}
+.viewToggleBtn:hover { border-color: var(--accent); color: var(--accent-light); }
+.viewToggleBtnActive {
+  background: rgba(139,92,246,.18); border-color: rgba(139,92,246,.5);
+  color: var(--accent-light);
+}
+
+/* ── v3 컷 상세 카드 (씬 설명 / KR 컨펌본 / IP / VP) ─────────── */
+.cutTitleHint { font-size: 14px; font-weight: 500; color: var(--text-2); }
+
+.v3Grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+@media (max-width: 980px) { .v3Grid { grid-template-columns: 1fr; } }
+
+.v3Col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+.v3Card {
+  background: var(--bg-input); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.v3CardTitle {
+  font-size: 12.5px; font-weight: 700; color: var(--accent-light);
+  letter-spacing: .3px; display: flex; align-items: baseline; gap: 6px;
+}
+.v3CardHint { font-size: 10px; font-weight: 500; color: var(--text-3); }
+
+.v3SubGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.v3SubGrid .full { grid-column: 1 / -1; }
+
+.v3MiniField { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.v3MiniField label {
+  font-size: 10px; color: var(--text-3); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .3px;
+}
+.v3MiniField input, .v3MiniField textarea {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-size: 12.5px;
+  padding: 6px 8px; outline: none; resize: vertical; width: 100%;
+  transition: border-color .15s;
+}
+.v3MiniField input:focus, .v3MiniField textarea:focus { border-color: var(--accent); }
+
+.v3Divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+.v3KrRow { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }
+.v3KrRow b { color: var(--text-3); min-width: 78px; flex-shrink: 0; font-size: 10.5px; font-weight: 700; }
+.v3KrMirror { color: var(--text-2); font-style: italic; overflow-wrap: anywhere; }
+
+/* ── 전체 목록 뷰 ────────────────────────────────── */
+.cutListView {
+  flex: 1; overflow-y: auto; padding: 8px 0;
+  display: flex; flex-direction: column;
+}
+.cutListHeader {
+  display: grid;
+  grid-template-columns: 56px 72px 150px 1fr 1fr 60px;
+  gap: 0 8px; padding: 6px 14px;
+  font-size: 10px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 1px solid var(--border);
+}
+.cutListRow {
+  display: grid;
+  grid-template-columns: 56px 72px 150px 1fr 1fr 60px;
+  gap: 4px 8px; padding: 10px 14px;
+  align-items: start; cursor: pointer;
+  min-height: 44px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .1s;
+}
+.cutListRow:hover { background: var(--bg-hover); }
+.cutListRowActive { background: rgba(139,92,246,.1); }
+.cutListNo {
+  font-size: 11px; font-weight: 700; color: var(--accent-light);
+  white-space: nowrap; padding-top: 1px;
+}
+.cutListScene {
+  font-size: 11.5px; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-top: 1px;
+}
+.cutListDialogue {
+  font-size: 11.5px; color: var(--text-2); line-height: 1.5;
+  white-space: normal; overflow-wrap: anywhere;
+  min-width: 0;
+}
+.cutListVo {
+  font-size: 11px; color: var(--text-3); line-height: 1.5;
+  white-space: normal; overflow-wrap: anywhere;
+  font-style: italic; min-width: 0;
+}
+.cutListBadges {
+  display: flex; gap: 4px; justify-content: flex-end; align-items: center;
+  padding-top: 1px;
+}

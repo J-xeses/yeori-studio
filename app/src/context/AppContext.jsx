@@ -1,0 +1,570 @@
+import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
+
+const SERVER = 'http://localhost:3001'
+
+const AppContext = createContext(null)
+const STORAGE_KEY = 'yeori-studio-v2'
+
+const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
+  id: `cut-${i + 1}`, no: i + 1,
+  scene: '', action: '', character: '서여리',
+  dialogue: '', narration: '', imagePrompt: '',
+  duration: 5, cutType: 'YEORI', cutMark: 'NORMAL',
+}))
+
+// 새 에피소드 기본값 생성. opts.code가 있으면(3차부터 신규 생성 시 필수) episode.code로 저장 —
+// 레거시 호출(기본 상태 초기화 등)은 opts 생략 시 code 없이 만들어지고, gpoints/MCP 쪽에서
+// resolveEpisodeCode()가 number 기반으로 대체 처리한다.
+const makeEpisode = (id, number, opts = {}) => ({
+  id,
+  episode: {
+    number,
+    title: '',
+    location: '카페',
+    mood: '감성',
+    cutCount: 7,
+    contentType: opts.contentType || 'LF',
+    topicCode: 'PSY',
+    scnCode: 'DOC',
+    instaNum: '', // 인스타그램(IG_*) 에피소드 전용 — downloads/insta/{content}/{instaNum}/ 경로에 씀. 자동 추론 규칙이 없어 직접 입력.
+    character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
+    ...(opts.code ? { code: opts.code } : {}),
+  },
+  cuts: makeCuts(7),
+  scriptRaw: '',
+  createdAt: new Date().toISOString(),
+})
+
+const defaultEpisodeId = 'ep_1'
+
+const defaultState = {
+  activeTab: 'script',
+  apiKeys: { claude: '', elevenLabs: '', gemini: '' },
+  vertexAI: false,
+  elevenLabsStatus: { connected: false, remainingChars: 0 },
+
+  // ── 멀티 에피소드 구조 ──────────────────────────────────
+  activeEpisodeId: defaultEpisodeId,
+  openTabIds: [defaultEpisodeId],   // 탭 바에 표시할 에피소드 ID 목록
+  episodes: {
+    [defaultEpisodeId]: makeEpisode(defaultEpisodeId, 1),
+  },
+
+  // 하위 호환: 현재 에피소드 직접 접근용 (기존 탭들 그대로 작동)
+  episode: { number: 1, title: '', location: '카페', mood: '감성', cutCount: 7, contentType: 'LF', topicCode: 'PSY', scnCode: 'DOC', instaNum: '', character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터' },
+  cuts: makeCuts(7),
+  scriptRaw: '',
+
+  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0,
+    trackDefaults: {
+      dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
+      narration: { speed: 0.85, stability: 55, similarity: 75 },
+    }
+  },
+  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000' },
+  renderProgress: { current: 0, total: 0, isRendering: false },
+  thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '' },
+  publishing: {
+    youtube:   { title: '', description: '', tags: '' },
+    instagram: { title: '', description: '', tags: '' },
+    tiktok:    { title: '', description: '', tags: '' },
+  },
+  dashboard: { monthBudget: 50000, spent: 0 },
+  creditTracker: {
+    main: {
+      flow: { remaining: 50, dailyTotal: 50, costPerCut: 12 },
+      qwen: { countToday: 0, targetMin: 5, targetMax: 6 },
+    },
+    sub: {
+      flow:     { remaining: 50, dailyTotal: 50, costPerCut: 12 },
+      pixverse: { remaining: 60, dailyTotal: 60 },
+    },
+    lastCheckedAt: null,
+  },
+  projectName: '새 프로젝트',
+  savedAt: null,
+  videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
+  ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {} },
+  voiceInsertState: { tracks: {} },
+}
+
+function reducer(state, action) {
+  switch (action.type) {
+
+    // ── 에피소드 전환 (탭 자동 추가) ────────────────────────────
+    case 'SWITCH_EPISODE': {
+      const ep = state.episodes[action.id]
+      if (!ep) return state
+      const openTabIds = (state.openTabIds || []).includes(action.id)
+        ? state.openTabIds
+        : [...(state.openTabIds || []), action.id]
+      return {
+        ...state,
+        activeEpisodeId: action.id,
+        openTabIds,
+        episode: ep.episode,
+        cuts: ep.cuts,
+        scriptRaw: ep.scriptRaw || '',
+      }
+    }
+
+    // ── 새 에피소드 추가 (사이드바에서만 호출 — 탭 자동 추가 없음) ─────
+    // action.contentType/action.code: 사이드바 생성 폼에서 검증까지 마친 값을 그대로 전달받음.
+    // 번호는 전역 유일 계산(App.jsx의 nextNumber 계산과 반드시 동일하게 유지) — 이유는
+    // App.jsx의 nextNumber 계산부 주석 참고(2026-08-15, 유형별 독립 번호 되돌림).
+    case 'ADD_EPISODE': {
+      const maxNum = Math.max(0, ...Object.values(state.episodes)
+        .map(e => e.episode.number))
+      const newId = `ep_${Date.now()}`
+      const newEp = makeEpisode(newId, maxNum + 1, { contentType: action.contentType, code: action.code })
+      // openTabIds에 자동 추가하지 않음 — 사이드바에서 클릭해야 탭 열림
+      return {
+        ...state,
+        episodes: { ...state.episodes, [newId]: newEp },
+      }
+    }
+
+    // ── 탭 닫기 (데이터는 유지) ──────────────────────────────
+    case 'CLOSE_TAB': {
+      const tabs = (state.openTabIds || []).filter(id => id !== action.id)
+      if (!tabs.length) return state   // 마지막 탭은 닫을 수 없음
+      const newActiveId = state.activeEpisodeId === action.id
+        ? tabs[tabs.length - 1]
+        : state.activeEpisodeId
+      const ep = state.episodes[newActiveId]
+      return {
+        ...state,
+        openTabIds: tabs,
+        activeEpisodeId: newActiveId,
+        episode: ep.episode,
+        cuts: ep.cuts,
+        scriptRaw: ep.scriptRaw || '',
+      }
+    }
+
+    // ── 에피소드 삭제 ────────────────────────────────────────
+    case 'DELETE_EPISODE': {
+      if (Object.keys(state.episodes).length <= 1) return state
+      const newEpisodes = { ...state.episodes }
+      delete newEpisodes[action.id]
+      const openTabIds = (state.openTabIds || []).filter(id => id !== action.id)
+      const fallbackId = openTabIds.length
+        ? (state.activeEpisodeId === action.id ? openTabIds[openTabIds.length - 1] : state.activeEpisodeId)
+        : Object.keys(newEpisodes)[0]
+      const firstEp = newEpisodes[fallbackId]
+      return {
+        ...state,
+        episodes: newEpisodes,
+        openTabIds: openTabIds.length ? openTabIds : [fallbackId],
+        activeEpisodeId: fallbackId,
+        episode: firstEp.episode,
+        cuts: firstEp.cuts,
+        scriptRaw: firstEp.scriptRaw || '',
+      }
+    }
+
+    // ── 에피소드 번호 변경 (중복 시 차단) ───────────────────
+    // episode.number는 downloads/{flow,video,audio}/ep{number}/ 파일 경로에 그대로 쓰이므로
+    // 유형에 상관없이 전역으로 유일해야 함(2026-08-15) — 예전엔 코드 문자열({type}_E{번호})
+    // 중복만 검사해서, 서로 다른 유형끼리 번호가 겹쳐도(코드 문자열은 다르므로) 안 걸러지는
+    // 구멍이 있었다. episode.code(생성 시 고정된 정식 식별자)는 번호를 바꿔도 그대로 유지됨.
+    case 'RENUMBER_EPISODE': {
+      const ep = state.episodes[action.id]
+      if (!ep) return state
+      const isDup = Object.values(state.episodes).some(
+        e => e.id !== action.id && e.episode.number === action.number
+      )
+      if (isDup) return state   // 다른 에피소드와 번호가 겹치면 변경하지 않음 (UI에서 에러 표시)
+      const updated = { ...ep, episode: { ...ep.episode, number: action.number } }
+      return {
+        ...state,
+        episodes: { ...state.episodes, [action.id]: updated },
+        ...(state.activeEpisodeId === action.id ? { episode: updated.episode } : {}),
+      }
+    }
+
+    // ── 에피소드 이름 변경 ───────────────────────────────────
+    case 'RENAME_EPISODE': {
+      const ep = state.episodes[action.id]
+      if (!ep) return state
+      const updated = { ...ep, episode: { ...ep.episode, title: action.title } }
+      const newEpisodes = { ...state.episodes, [action.id]: updated }
+      return {
+        ...state,
+        episodes: newEpisodes,
+        ...(state.activeEpisodeId === action.id ? { episode: updated.episode } : {}),
+      }
+    }
+
+    // ── 기존 액션들 (현재 에피소드에 반영 + episodes 동기화) ──
+    case 'SET_TAB': return { ...state, activeTab: action.p }
+    case 'SET_API_KEY': return { ...state, apiKeys: { ...state.apiKeys, [action.key]: action.val } }
+    case 'TOGGLE_VERTEX': return { ...state, vertexAI: !state.vertexAI }
+    case 'SET_EL_STATUS': return { ...state, elevenLabsStatus: action.p }
+
+    case 'SET_EPISODE': {
+      const newEpisode = { ...state.episode, ...action.p }
+      const curEp = state.episodes[state.activeEpisodeId]
+      const updatedEp = { ...curEp, episode: newEpisode }
+      return {
+        ...state,
+        episode: newEpisode,
+        episodes: { ...state.episodes, [state.activeEpisodeId]: updatedEp },
+      }
+    }
+
+    case 'SET_CUTS': {
+      const curEp = state.episodes[state.activeEpisodeId]
+      const updatedEp = { ...curEp, cuts: action.p }
+      return {
+        ...state,
+        cuts: action.p,
+        episodes: { ...state.episodes, [state.activeEpisodeId]: updatedEp },
+      }
+    }
+
+    case 'UPDATE_CUT': {
+      const newCuts = state.cuts.map(c => c.id === action.id ? { ...c, ...action.p } : c)
+      const curEp = state.episodes[state.activeEpisodeId]
+      const updatedEp = { ...curEp, cuts: newCuts }
+      return {
+        ...state,
+        cuts: newCuts,
+        episodes: { ...state.episodes, [state.activeEpisodeId]: updatedEp },
+      }
+    }
+
+    case 'SET_SCRIPT_RAW': {
+      const curEp = state.episodes[state.activeEpisodeId]
+      const updatedEp = { ...curEp, scriptRaw: action.p }
+      return {
+        ...state,
+        scriptRaw: action.p,
+        episodes: { ...state.episodes, [state.activeEpisodeId]: updatedEp },
+      }
+    }
+
+    case 'SET_TTS': return { ...state, ttsSettings: { ...state.ttsSettings, ...action.p } }
+    case 'SET_VIDEO': return { ...state, videoSettings: { ...state.videoSettings, ...action.p } }
+    case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
+    case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
+    case 'SET_VOICE_INSERT_STATE': return { ...state, voiceInsertState: { ...state.voiceInsertState, ...action.p } }
+    case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
+    case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
+    case 'SET_PUBLISHING': return {
+      ...state,
+      publishing: {
+        ...state.publishing,
+        [action.platform]: { ...(state.publishing?.[action.platform] || {}), ...action.p },
+      },
+    }
+    case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }
+
+    case 'SET_CREDIT_TOOL': {
+      const { account, tool, patch } = action.p
+      return {
+        ...state,
+        creditTracker: {
+          ...state.creditTracker,
+          [account]: {
+            ...state.creditTracker[account],
+            [tool]: { ...state.creditTracker[account][tool], ...patch },
+          },
+        },
+      }
+    }
+    case 'RESET_CREDITS_DAILY': return {
+      ...state,
+      creditTracker: {
+        ...state.creditTracker,
+        main: {
+          flow: { ...state.creditTracker.main.flow, remaining: state.creditTracker.main.flow.dailyTotal },
+          qwen: { ...state.creditTracker.main.qwen, countToday: 0 },
+        },
+        sub: {
+          flow:     { ...state.creditTracker.sub.flow, remaining: state.creditTracker.sub.flow.dailyTotal },
+          pixverse: { ...state.creditTracker.sub.pixverse, remaining: state.creditTracker.sub.pixverse.dailyTotal },
+        },
+        lastCheckedAt: new Date().toISOString(),
+      },
+    }
+    case 'SET_PROJECT': return { ...state, projectName: action.p }
+    case 'MARK_SAVED': return { ...state, savedAt: new Date().toISOString() }
+
+    case 'RESET_CUTS': {
+      const newCuts = makeCuts(action.n)
+      const newEpisode = { ...state.episode, cutCount: action.n }
+      const curEp = state.episodes[state.activeEpisodeId]
+      const updatedEp = { ...curEp, cuts: newCuts, episode: newEpisode }
+      return {
+        ...state,
+        cuts: newCuts,
+        episode: newEpisode,
+        episodes: { ...state.episodes, [state.activeEpisodeId]: updatedEp },
+      }
+    }
+
+    // ── 빈 에피소드 정리 (scriptRaw 없고 컷 내용 없는 것 삭제) ──
+    case 'CLEANUP_EMPTY_EPISODES': {
+      const isEmpty = (ep) =>
+        !ep.scriptRaw &&
+        ep.cuts.every(c => !c.scene && !c.action && !c.dialogue && !c.narration && !c.imagePrompt)
+
+      const kept = Object.entries(state.episodes).filter(
+        ([id, ep]) => id === state.activeEpisodeId || !isEmpty(ep)
+      )
+      if (kept.length === Object.keys(state.episodes).length) return state // 변화 없음
+
+      const newEpisodes = Object.fromEntries(kept)
+      const openTabIds = (state.openTabIds || []).filter(id => newEpisodes[id])
+      const newActiveId = newEpisodes[state.activeEpisodeId]
+        ? state.activeEpisodeId
+        : Object.keys(newEpisodes)[0]
+      const ep = newEpisodes[newActiveId]
+      return {
+        ...state,
+        episodes: newEpisodes,
+        openTabIds: openTabIds.length ? openTabIds : [newActiveId],
+        activeEpisodeId: newActiveId,
+        episode: ep.episode,
+        cuts: ep.cuts,
+        scriptRaw: ep.scriptRaw || '',
+      }
+    }
+
+    case 'LOAD': return {
+      ...defaultState,
+      ...action.p,
+      ttsSettings:  { ...defaultState.ttsSettings,  ...(action.p.ttsSettings  || {}) },
+      videoSettings: { ...defaultState.videoSettings, ...(action.p.videoSettings || {}) },
+      ttsTabState:  { ...defaultState.ttsTabState,  ...(action.p.ttsTabState  || {}) },
+      voiceInsertState: { ...defaultState.voiceInsertState, ...(action.p.voiceInsertState || {}) },
+      videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
+      publishing:   { ...defaultState.publishing,   ...(action.p.publishing   || {}) },
+      creditTracker: {
+        ...defaultState.creditTracker,
+        ...(action.p.creditTracker || {}),
+        main: {
+          ...defaultState.creditTracker.main,
+          ...(action.p.creditTracker?.main || {}),
+          flow: { ...defaultState.creditTracker.main.flow, ...(action.p.creditTracker?.main?.flow || {}) },
+          qwen: { ...defaultState.creditTracker.main.qwen, ...(action.p.creditTracker?.main?.qwen || {}) },
+        },
+        sub: {
+          ...defaultState.creditTracker.sub,
+          ...(action.p.creditTracker?.sub || {}),
+          flow:     { ...defaultState.creditTracker.sub.flow,     ...(action.p.creditTracker?.sub?.flow     || {}) },
+          pixverse: { ...defaultState.creditTracker.sub.pixverse, ...(action.p.creditTracker?.sub?.pixverse || {}) },
+        },
+      },
+      savedAt: new Date().toISOString(),
+    }
+    default: return state
+  }
+}
+
+const LEGACY_CHARACTER = '서여리 - 20대 중반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, AI 크리에이터'
+const CURRENT_CHARACTER = '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터'
+
+function upgradeCharacter(val) {
+  return val === LEGACY_CHARACTER ? CURRENT_CHARACTER : val
+}
+
+function migrateState(saved, init) {
+  if (!saved.episodes) {
+    const epId = defaultEpisodeId
+    saved.episodes = {
+      [epId]: {
+        id: epId,
+        episode: saved.episode || init.episode,
+        cuts: saved.cuts || init.cuts,
+        scriptRaw: saved.scriptRaw || '',
+        createdAt: new Date().toISOString(),
+      }
+    }
+    saved.activeEpisodeId = epId
+  }
+  // 캐릭터 기본값 구버전 → 현재버전 자동 업데이트
+  if (saved.episode?.character)
+    saved.episode = { ...saved.episode, character: upgradeCharacter(saved.episode.character) }
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.episode?.character)
+        ep.episode = { ...ep.episode, character: upgradeCharacter(ep.episode.character) }
+    })
+  }
+  // contentType 마이그레이션 (기존 에피소드 하위 호환)
+  if (saved.episode && !saved.episode.contentType)
+    saved.episode = { ...saved.episode, contentType: 'LF' }
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.episode && !ep.episode.contentType)
+        ep.episode = { ...ep.episode, contentType: 'LF' }
+    })
+  }
+  // topicCode/scnCode 마이그레이션 (기존 에피소드 하위 호환)
+  if (saved.episode && (!saved.episode.topicCode || !saved.episode.scnCode))
+    saved.episode = { ...saved.episode, topicCode: saved.episode.topicCode || 'PSY', scnCode: saved.episode.scnCode || 'DOC' }
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.episode && (!ep.episode.topicCode || !ep.episode.scnCode))
+        ep.episode = { ...ep.episode, topicCode: ep.episode.topicCode || 'PSY', scnCode: ep.episode.scnCode || 'DOC' }
+    })
+  }
+  // cutType NORMAL|SIGNATURE → cutMark 마이그레이션
+  const migrateCuts = (cuts) => {
+    if (!Array.isArray(cuts)) return cuts
+    return cuts.map(c => {
+      if (c.cutType === 'NORMAL' || c.cutType === 'SIGNATURE')
+        return { ...c, cutMark: c.cutType, cutType: 'YEORI' }
+      if (!c.cutMark) return { ...c, cutMark: 'NORMAL' }
+      return c
+    })
+  }
+  if (saved.cuts) saved.cuts = migrateCuts(saved.cuts)
+  if (saved.episodes) {
+    Object.values(saved.episodes).forEach(ep => {
+      if (ep.cuts) ep.cuts = migrateCuts(ep.cuts)
+    })
+  }
+
+  if (!saved.openTabIds || !saved.openTabIds.length)
+    saved.openTabIds = saved.activeEpisodeId ? [saved.activeEpisodeId] : [defaultEpisodeId]
+  saved.openTabIds = saved.openTabIds.filter(id => saved.episodes[id])
+  if (!saved.openTabIds.length) saved.openTabIds = [saved.activeEpisodeId || defaultEpisodeId]
+  saved.videoTabState = {
+    videoClips: {},
+    g4Approved: {},
+    selectedCutId: null,
+    subtitles: {},
+    ...(saved.videoTabState || {}),
+  }
+  saved.ttsTabState = {
+    audioUrls: {},
+    audioTexts: {},
+    g3Confirmed: {},
+    ...(saved.ttsTabState || {}),
+  }
+  saved.voiceInsertState = {
+    tracks: {},
+    ...(saved.voiceInsertState || {}),
+  }
+  saved.publishing = {
+    youtube:   { title: '', description: '', tags: '' },
+    instagram: { title: '', description: '', tags: '' },
+    tiktok:    { title: '', description: '', tags: '' },
+    ...(saved.publishing || {}),
+  }
+  return { ...init, ...saved }
+}
+
+export function AppProvider({ children }) {
+  const [state, dispatch] = useReducer(reducer, defaultState, (init) => {
+    try {
+      const s = localStorage.getItem(STORAGE_KEY)
+      if (s) return migrateState(JSON.parse(s), init)
+    } catch {}
+    return init
+  })
+
+  const [syncStatus, setSyncStatus] = useState('idle')
+  const serverChecked = useRef(false)
+  const skipNextSync  = useRef(false)
+  const syncTimer     = useRef(null)
+  const skipNextFileSync = useRef(false)
+  const fileSyncTimer    = useRef(null)
+
+  // 앱 시작 시 서버 데이터 로드 (studio-state.json 우선, 없으면 studio-data.json)
+  useEffect(() => {
+    ;(async () => {
+      setSyncStatus('syncing')
+      try {
+        const controller = new AbortController()
+        const tid = setTimeout(() => controller.abort(), 4000)
+        const stateRes = await fetch(`${SERVER}/api/studio-state`, { signal: controller.signal })
+        clearTimeout(tid)
+        if (stateRes.ok) {
+          const stateData = await stateRes.json()
+          if (stateData && Object.keys(stateData).length > 0) {
+            skipNextSync.current = true
+            skipNextFileSync.current = true
+            dispatch({ type: 'LOAD', p: migrateState(stateData, defaultState) })
+            setSyncStatus('synced')
+            return
+          }
+        }
+
+        const controller2 = new AbortController()
+        const tid2 = setTimeout(() => controller2.abort(), 4000)
+        const res = await fetch(`${SERVER}/api/studio-data`, { signal: controller2.signal })
+        clearTimeout(tid2)
+        if (!res.ok) throw new Error()
+        const data = await res.json()
+        if (data && Object.keys(data).length > 0) {
+          skipNextSync.current = true
+          skipNextFileSync.current = true
+          dispatch({ type: 'LOAD', p: migrateState(data, defaultState) })
+        }
+        setSyncStatus('synced')
+      } catch {
+        setSyncStatus('offline')
+      } finally {
+        serverChecked.current = true
+      }
+    })()
+  }, [])
+
+  // 상태 변경 시 localStorage 저장 + 서버 동기화 (디바운스 1.2초)
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch (err) {
+      // 썸네일 배경 이미지(데이터 URL) 등으로 용량 초과 시에도 서버 동기화는 계속 진행
+      console.error('[localStorage] 저장 실패 (용량 초과 가능성):', err)
+    }
+
+    if (!serverChecked.current) return   // 서버 확인 전엔 동기화 보류
+    if (skipNextSync.current) { skipNextSync.current = false; return }
+
+    clearTimeout(syncTimer.current)
+    setSyncStatus('syncing')
+    syncTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`${SERVER}/api/studio-data`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state),
+        })
+        if (!res.ok) throw new Error()
+        setSyncStatus('synced')
+      } catch {
+        setSyncStatus('offline')
+      }
+    }, 1200)
+  }, [state])
+
+  // 상태 변경 시 studio-state.json 저장 (디바운스 3초, 회사/집 PC 간 동기화용)
+  useEffect(() => {
+    if (!serverChecked.current) return
+    if (skipNextFileSync.current) { skipNextFileSync.current = false; return }
+
+    clearTimeout(fileSyncTimer.current)
+    fileSyncTimer.current = setTimeout(async () => {
+      try {
+        await fetch(`${SERVER}/api/studio-state`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state),
+        })
+      } catch {}
+    }, 3000)
+  }, [state])
+
+  return (
+    <AppContext.Provider value={{ state, dispatch, syncStatus }}>
+      {children}
+    </AppContext.Provider>
+  )
+}
+export const useApp = () => useContext(AppContext)
+

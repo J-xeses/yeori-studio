@@ -1,0 +1,43 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# 환경 변수 / API 키
+.env
+.env.*
+!.env.example
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.vercel
+.env*
+
+# 런타임 생성 파일
+downloads/
+data/*
+!data/codebook.json
+.chrome-profile-flow/
+scripts_output/
+
+.env.local
+
+# API 키 등 시크릿 (studio-state.json과 분리, PC간 동기화는 OneDrive로만)
+studio-secrets.json

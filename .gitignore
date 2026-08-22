@@ -1,35 +1,31 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
-
-# 환경 변수 / API 키
-.env
-.env.*
-!.env.example
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-.vercel
-.env*
-
-# 런타임 생성 파일
 downloads/
-data/
+data/*
+!app/data/codebook.json
+logs/
+.chrome-debug/
+.chrome-profile/
+.chrome-profile-cutter/
+.chrome-profile-flow/
+.rl03-chrome-profile/
+*.py
+!app/scripts/script_generator.py
+!app/scripts/script_to_prompts.py
+!app/scripts/bridge_converter.py
+!app/scripts/handwriting_overlay.py
+!app/scripts/yeori_signature.py
+debug_log.txt
+sync-log.txt
+*.log
+node_modules/
+dist/
+.cache/
+__pycache__/
+*.pyc
+.env.local
+.env
+app/studio-state.json
+.vercel
+app/.tunnel-state.json
+# 개인 백업/브라우저 저장 부산물 -- 프로젝트 소스 아님
+_backup_desktop_tilde_movies_20260704/
+app/TREND RADAR v7_files/

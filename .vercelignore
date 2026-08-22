@@ -1,0 +1,10 @@
+app/.chrome-profile-flow/
+app/.chrome-profile-cutter/
+app/downloads/
+app/data/
+app/logs/
+app/scripts_output/
+app/node_modules/
+downloads/
+data/
+logs/

@@ -1,0 +1,479 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "character_id": "yeori",
+    "domain": "video_production",
+    "ruleset": "yeori_ruleset_v1.3.1",
+    "updated": "2026-08-01",
+    "note": "SF_E01~E06 47컷 역설계 기반 / AC→AT 통일 / CP(자막) 신규추가"
+  },
+  "YEORI_BASE": {
+    "ip_lines": [
+      "Young Korean woman early-20s,",
+      "long wavy dark brown hair NOT short hair,",
+      "a very subtle natural skin texture on her right cheek (subtle, never exaggerated),",
+      "delicate gold necklace,",
+      "effortlessly photogenic not posing just existing beautifully,",
+      "1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,",
+      "K-model proportions, small face, long legs, slender figure,",
+      "natural makeup, warm skin tone, appearing no older than 22-23,"
+    ],
+    "ip_footer": [
+      "vertical 9:16,",
+      "Photorealistic 8K cinematic natural Korean beauty,",
+      "background people must not interact with or interfere with the main character"
+    ],
+    "note": "BR_VD(PL) 컷은 YEORI_BASE 제외"
+  },
+  "PL": {
+    "YR_VD": {
+      "label": "서여리 영상컷",
+      "yeori_base": true,
+      "run_g2": true,
+      "run_g3": true,
+      "run_g4": true,
+      "lipsync": "check_dl"
+    },
+    "BR_VD": {
+      "label": "B-roll 영상컷",
+      "yeori_base": false,
+      "run_g2": true,
+      "run_g3": false,
+      "run_g4": true,
+      "note": "서여리 미등장 또는 하체/소품만"
+    },
+    "CC_ED": {
+      "label": "CapCut 편집컷",
+      "yeori_base": true,
+      "run_g2": false,
+      "run_g3": true,
+      "run_g4": false,
+      "note": "복합 편집 컷"
+    },
+    "GR_ED": {
+      "label": "그래픽/자막 편집컷",
+      "yeori_base": false,
+      "run_g2": false,
+      "run_g3": false,
+      "run_g4": false
+    },
+    "PIP_VD": {
+      "label": "PIP 합성컷",
+      "yeori_base": true,
+      "run_g2": true,
+      "run_g3": true,
+      "run_g4": true,
+      "pip": true,
+      "note": "YEORI 컷 위에 BROLL 컷을 PIP로 합성. pipTarget으로 대상 컷 번호 지정"
+    },
+    "making_record": {
+      "G2-R": {
+        "YR_VD": { "source": "Flow", "target": "이미지/영상 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "BR_VD": { "source": "Flow", "target": "B-roll 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "PIP_VD": { "source": "Flow", "target": "이미지 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "CC_ED": null,
+        "GR_ED": null
+      },
+      "G3-R": {
+        "YR_VD": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "BR_VD": null,
+        "PIP_VD": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "CC_ED": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "GR_ED": null
+      },
+      "G4-R": {
+        "YR_VD": { "source": "Flow", "target": "영상 생성 화면", "output": "g4r_cut{N}.mp4" },
+        "BR_VD": { "source": "Flow", "target": "영상 생성 화면", "output": "g4r_cut{N}.mp4" },
+        "PIP_VD": { "source": "CapCut", "target": "PIP 합성 과정", "output": "g4r_cut{N}.mp4" },
+        "CC_ED": { "source": "CapCut", "target": "편집 화면", "output": "g4r_cut{N}.mp4" },
+        "GR_ED": { "source": "CapCut", "target": "그래픽 제작 화면", "output": "g4r_cut{N}.mp4" }
+      },
+      "G5-M": {
+        "label": "메이킹 필름 조립",
+        "input": "G2-R + G3-R + G4-R 녹화본",
+        "output": "ep{N}_making.mp4"
+      }
+    }
+  },
+  "SP": {
+    "_grammar": "IN/OT . [LOCATION] . TZ_[TIME] . LT_[LIGHT]",
+    "_location_codes": {
+      "ST": "street (도심 거리)",
+      "CF": "cafe (카페)",
+      "HM": "home (집 실내)",
+      "RS": "restaurant (레스토랑)",
+      "JJ": "jjimjilbang (찜질방)",
+      "RF": "rooftop (루프탑)",
+      "TX": "taxi (택시)",
+      "STD": "studio (스튜디오)"
+    },
+    "_time_codes": {
+      "TZ_AF": {
+        "label": "afternoon",
+        "ip": "warm golden afternoon sunlight"
+      },
+      "TZ_GH": {
+        "label": "golden hour",
+        "ip": "warm golden hour light low angle sun"
+      },
+      "TZ_NT": {
+        "label": "night/evening",
+        "ip": "evening warm indoor lighting"
+      },
+      "TZ_DW": {
+        "label": "dawn",
+        "ip": "soft early morning light"
+      }
+    },
+    "_light_codes": {
+      "LT_WM": {
+        "label": "warm",
+        "ip": "warm golden light"
+      },
+      "LT_DK": {
+        "label": "dark",
+        "ip": "dim moody lighting"
+      },
+      "LT_WD": {
+        "label": "window",
+        "ip": "natural light from nearby window"
+      },
+      "LT_STD": {
+        "label": "studio",
+        "ip": "bright clean studio lighting"
+      }
+    },
+    "presets": {
+      "OT.ST.TZ_AF.LT_WM": {
+        "label": "서울 거리 오후",
+        "ip_bg": "Seoul street warm golden afternoon sunlight modern buildings softly blurred in background",
+        "usage": 10
+      },
+      "OT.ST.TZ_GH.LT_WM": {
+        "label": "서울 거리 황금노을",
+        "ip_bg": "Seoul street warm golden hour light low angle sun buildings glowing",
+        "usage": 2
+      },
+      "OT.CF.TZ_AF.LT_WM": {
+        "label": "카페 테라스 오후",
+        "ip_bg": "outdoor cafe wooden deck terrace canvas awning overhead warm golden afternoon sunlight city buildings softly visible",
+        "usage": 3
+      },
+      "OT.RF.TZ_GH.LT_DK": {
+        "label": "루프탑 황혼",
+        "ip_bg": "rooftop terrace Seoul skyline golden dusk light city lights beginning to glow",
+        "usage": 1
+      },
+      "IN.HM.TZ_NT.LT_WM": {
+        "label": "집 거실 저녁",
+        "ip_bg": "cozy home interior soft warm lamps glowing evening atmosphere gentle bokeh",
+        "usage": 9
+      },
+      "IN.HM.TZ_GH.LT_WD": {
+        "label": "집 현관 노을창",
+        "ip_bg": "home entrance warm natural light from nearby window golden hour glow wooden floor",
+        "usage": 1
+      },
+      "IN.HM.TZ_NT.LT_DK": {
+        "label": "집 야간 어두운",
+        "ip_bg": "home interior dim lighting late night quiet atmosphere",
+        "usage": 1
+      },
+      "IN.CF.TZ_AF.LT_WM": {
+        "label": "카페 실내 오후",
+        "ip_bg": "cozy cafe interior warm afternoon light window bokeh",
+        "usage": 1
+      },
+      "IN.RS.TZ_NT.LT_WM": {
+        "label": "레스토랑 저녁",
+        "ip_bg": "Korean restaurant warm intimate lighting table setting soft bokeh",
+        "usage": 8
+      },
+      "IN.JJ.TZ_AF.LT_WM": {
+        "label": "찜질방",
+        "ip_bg": "Korean jjimjilbang rest area warm overhead lighting wooden mat floor relaxed atmosphere",
+        "usage": 5
+      },
+      "IN.ST.TZ_AF.LT_STD": {
+        "label": "스튜디오 실내",
+        "ip_bg": "bright modern studio clean lighting",
+        "usage": 3
+      },
+      "IN.TX.TZ_NT.LT_DK": {
+        "label": "택시 야간",
+        "ip_bg": "inside taxi at night city lights passing through window dim interior lighting",
+        "usage": 1
+      }
+    }
+  },
+  "SH": {
+    "SH_ECU": {
+      "label": "익스트림 클로즈업",
+      "ip_prefix": "EXTREME CLOSEUP SHOT —",
+      "ip_suffix": "extreme close-up, eye level, vertical 9:16,",
+      "usage": 7
+    },
+    "SH_CU": {
+      "label": "클로즈업",
+      "ip_prefix": "CLOSEUP SHOT —",
+      "ip_suffix": "close-up, eye level, vertical 9:16,",
+      "usage": 8
+    },
+    "SH_MCU": {
+      "label": "미디엄 클로즈업",
+      "ip_prefix": "CLOSEUP SHOT —",
+      "ip_suffix": "medium close-up, eye level, vertical 9:16,",
+      "usage": 18
+    },
+    "SH_MS": {
+      "label": "미디엄샷",
+      "ip_prefix": "MEDIUM SHOT —",
+      "ip_suffix": "medium shot, eye level, vertical 9:16,",
+      "usage": 5
+    },
+    "SH_FS": {
+      "label": "풀샷(전신)",
+      "ip_prefix": "FULLBODY SHOT —",
+      "ip_suffix": "full body shot, eye level, vertical 9:16,",
+      "usage": 7
+    },
+    "SH_WS": {
+      "label": "와이드샷",
+      "ip_prefix": "WIDE SHOT —",
+      "ip_suffix": "wide shot, eye level, vertical 9:16,",
+      "usage": 1
+    },
+    "SH_TLD": {
+      "label": "틸트다운",
+      "ip_prefix": "MEDIUM SHOT —",
+      "ip_suffix": "medium shot, vertical 9:16,",
+      "note": "CA_TLD와 세트"
+    }
+  },
+  "CA": {
+    "CA_ST": {
+      "label": "고정(Static)",
+      "vp_phrase": "camera holds steady",
+      "usage": 36
+    },
+    "CA_PS": {
+      "label": "푸시인(Push-in)",
+      "vp_phrase": "camera slowly pushes in",
+      "usage": 2
+    },
+    "CA_TR": {
+      "label": "트래킹(Tracking)",
+      "vp_phrase": "camera tracks alongside her movement",
+      "usage": 5
+    },
+    "CA_ZI": {
+      "label": "줌인(Zoom-in)",
+      "vp_phrase": "camera gently zooms in",
+      "usage": 3
+    },
+    "CA_PAN": {
+      "label": "패닝(Pan)",
+      "vp_phrase": "camera pans smoothly",
+      "usage": 1
+    },
+    "CA_TLD": {
+      "label": "틸트다운(Tilt-down)",
+      "vp_phrase": "camera tilts down slowly",
+      "note": "SH_TLD와 세트"
+    }
+  },
+  "MD": {
+    "MD_JOY": {
+      "label": "밝은 기쁨",
+      "ip_phrase": "bright genuine smile warm energetic expression",
+      "vp_phrase": "bright warm smile, energetic expression",
+      "usage": 18
+    },
+    "MD_REL": {
+      "label": "편안한 해방",
+      "ip_phrase": "expression quietly relaxed and at ease candid unguarded moment",
+      "vp_phrase": "expression softening to quiet relief, completely at ease",
+      "usage": 16
+    },
+    "MD_DRM": {
+      "label": "몽환/꿈결",
+      "ip_phrase": "dreamy soft gaze warm intimate expression",
+      "vp_phrase": "gaze soft and dreamy, warm intimate expression",
+      "usage": 15
+    },
+    "MD_SAD": {
+      "label": "슬픔/지침",
+      "ip_phrase": "expression quietly tired and melancholy vulnerable unguarded",
+      "vp_phrase": "expression quietly sad, shoulders heavy",
+      "usage": 5
+    },
+    "MD_COM": {
+      "label": "코믹/장난",
+      "ip_phrase": "playful surprised comic expression",
+      "vp_phrase": "playful expression, slight comedic reaction",
+      "usage": 4
+    },
+    "MD_INT": {
+      "label": "진지/내면",
+      "ip_phrase": "sincere direct gaze thoughtful introspective expression",
+      "vp_phrase": "thoughtful sincere gaze, quiet introspective expression",
+      "usage": 3
+    }
+  },
+  "AT": {
+    "AT_MW_01": {
+      "label": "자연스럽게 걷기",
+      "ip_phrase": "walking naturally along street unhurried pace shoulders relaxed",
+      "vp_phrase": "walks naturally, unhurried pace, shoulders relaxed",
+      "usage": 10
+    },
+    "AT_SI_01": {
+      "label": "앉아서 시선 맞춤",
+      "ip_phrase": "sitting leaning slightly forward sincere eye contact",
+      "vp_phrase": "sitting leaning slightly forward, direct sincere gaze",
+      "usage": 7
+    },
+    "AT_SD_01": {
+      "label": "손 흔들기",
+      "ip_phrase": "right hand raised in cheerful wave",
+      "vp_phrase": "right hand raises in cheerful wave",
+      "usage": 4
+    },
+    "AT_EM_01": {
+      "label": "밝은 웃음/에너지",
+      "ip_phrase": "bright genuine smile eyes full of warm energy",
+      "vp_phrase": "bright genuine smile, eyes full of warm energy",
+      "usage": 12
+    },
+    "AT_EM_02": {
+      "label": "멍하게/지친 표정",
+      "ip_phrase": "expression blank quietly exhausted staring distantly",
+      "vp_phrase": "expression blank, staring distantly, shoulders heavy",
+      "usage": 3
+    },
+    "AT_EM_03": {
+      "label": "당황/코믹 리액션",
+      "ip_phrase": "surprised off-balance expression comic reaction",
+      "vp_phrase": "surprised expression, off-balance comic reaction",
+      "usage": 2
+    },
+    "AT_EM_04": {
+      "label": "몽환적 응시",
+      "ip_phrase": "gaze lifting slightly dreamy soft expression looking into distance",
+      "vp_phrase": "gaze lifting slightly dreamy, soft unfocused look",
+      "usage": 9
+    },
+    "AT_EM_05": {
+      "label": "손 뻗기(카메라 향해)",
+      "ip_phrase": "one hand gently extended toward camera lens fingers softly reaching",
+      "vp_phrase": "one hand reaches gently toward camera, fingers softly extended",
+      "usage": 2
+    },
+    "AT_AC_01": {
+      "label": "냉장고 문 열기",
+      "ip_phrase": "hand reaching to open refrigerator door",
+      "vp_phrase": "hand reaches to open refrigerator door slowly",
+      "usage": 2
+    },
+    "AT_AC_02": {
+      "label": "커피 마시기",
+      "ip_phrase": "holding coffee cup gently raised to lips",
+      "vp_phrase": "holds cup gently, raises to lips slowly",
+      "usage": 1
+    },
+    "AT_AC_03": {
+      "label": "컵 들고 홀짝이기",
+      "ip_phrase": "holding glass sipping slowly eyes closing with quiet satisfaction",
+      "vp_phrase": "holds glass up to lips, takes a slow savoring sip, eyes closing slightly",
+      "usage": 2
+    },
+    "AT_AC_04": {
+      "label": "손동작(소품/포즈)",
+      "ip_phrase": "hands naturally gesturing or holding object",
+      "vp_phrase": "hands move naturally, slight gestural action",
+      "usage": 8
+    }
+  },
+  "LOOK_BANK": {
+    "_note": "LOOK_ID → IP 의상 문장 매핑 (character_id=yeori 전용)",
+    "LOOK_CS": {
+      "label": "크롭탑+데님숏츠+힐",
+      "ip_outfit": "white square-neck crop top, light blue denim shorts, white stiletto high heels,",
+      "ep": "E01"
+    },
+    "LOOK_HM": {
+      "label": "크롭탑+데님숏츠+맨발",
+      "ip_outfit": "white square-neck crop top, light blue denim shorts, bare feet,",
+      "ep": "E01"
+    },
+    "LOOK02": {
+      "label": "성수동 체크스커트",
+      "ip_outfit": "white square-neck crop top, navy check pleated mini skirt, white strap sandals, black crossbody bag,",
+      "ep": "E02"
+    },
+    "LOOK_YOGA": {
+      "label": "파스텔 요가셋",
+      "ip_outfit": "pastel lavender yoga set, hair tied back neatly,",
+      "ep": "E03"
+    },
+    "LOOK_JJM": {
+      "label": "찜질방 세트",
+      "ip_outfit": "sage green jjimjilbang set, white towel hat,",
+      "ep": "E03"
+    },
+    "LOOK_PB": {
+      "label": "공공장소 캐주얼",
+      "ip_outfit": "white heart-pattern crop top, pink scarf, green running shorts, pink flip-flop sandals,",
+      "ep": "E04"
+    },
+    "LOOK_RS": {
+      "label": "레스토랑 캐주얼",
+      "ip_outfit": "white APC graphic tee, dark wash bootcut rolled jeans, red strappy heels, black baseball cap, beige mini shoulder bag,",
+      "ep": "E05"
+    },
+    "LOOK_ST": {
+      "label": "거리 캐주얼",
+      "ip_outfit": "beige baseball cap, white APC graphic tee, bootcut rolled jeans, red sandals, gold necklace, gold bracelet,",
+      "ep": "E06"
+    }
+  },
+  "BG_RULE": {
+    "default": "background people must not interact with or interfere with the main character",
+    "BR_VD": "no main character in frame",
+    "street": "real people naturally present in background soft bokeh",
+    "home": "background must not interfere with main character"
+  },
+  "QUALITY": {
+    "Q_SH": {
+      "label": "숏폼 품질",
+      "ip_quality": "Cinematic, photorealistic, 8K",
+      "rt": "RT_916",
+      "pb": "PB_YT"
+    }
+  },
+  "CP": {
+    "_note": "자막(Caption) — 신규 추가 2026-08-01",
+    "field": "CP",
+    "script_to_prompts_key": "subtitle",
+    "usage": "화면 표시용 텍스트 (DL 대사와 별도)",
+    "example": "CP: 신발을 벗는다는 건...",
+    "default": null
+  },
+  "VP_RULES": {
+    "lipsync_header": "First 0-{n}s: [동작/표정], she says \"{DL}\" naturally.",
+    "no_dialogue_header": "NO dialogue — narration added in post",
+    "time_segments": {
+      "8s": [
+        3,
+        6,
+        8
+      ],
+      "10s": [
+        3,
+        8,
+        10
+      ]
+    },
+    "nr_note": "NR 있을 경우 Final 구간에 narration timing 명시"
+  }
+}

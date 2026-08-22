@@ -1,0 +1,630 @@
+import { useState, useEffect } from 'react'
+import { useApp } from '../context/AppContext'
+import { elTTS, elVoices } from '../lib/api'
+import { setGPoint, loadGPoints } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
+import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
+import s from './TTSTab.module.css'
+
+const DEFAULT_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
+const FALLBACK_DEFAULTS = {
+  dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
+  narration: { speed: 0.85, stability: 55, similarity: 75 },
+}
+
+function makeTrack(type, text = '', trackDefaults) {
+  const defs = trackDefaults || FALLBACK_DEFAULTS
+  return {
+    id: `track_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    type,
+    text,
+    url: null,
+    voiceId: '', // 비어있으면 목소리 탭의 기본값을 사용 — 트랙별로 다른 목소리를 지정해 한 컷에 여러 목소리를 조합할 수 있음
+    settings: { ...(defs[type] || FALLBACK_DEFAULTS[type]) },
+  }
+}
+
+function initTracksForCut(cut, trackDefaults) {
+  const tracks = []
+  if (cut.dialogue?.trim())  tracks.push(makeTrack('dialogue',  cut.dialogue,  trackDefaults))
+  if (cut.narration?.trim()) tracks.push(makeTrack('narration', cut.narration, trackDefaults))
+  if (!tracks.length)        tracks.push(makeTrack('dialogue',  '',            trackDefaults))
+  return tracks
+}
+
+function makeVoiceTab(idx, voiceId) {
+  return { id: `v${Date.now()}_${Math.random().toString(36).slice(2, 5)}`, label: `목소리 ${idx}`, voiceId }
+}
+
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels
+  const sampleRate  = buffer.sampleRate
+  const length      = buffer.length
+  const ab   = new ArrayBuffer(44 + length * numChannels * 2)
+  const view = new DataView(ab)
+  const wr   = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)) }
+  wr(0, 'RIFF'); view.setUint32(4, 36 + length * numChannels * 2, true)
+  wr(8, 'WAVE'); wr(12, 'fmt ')
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true)
+  view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * numChannels * 2, true)
+  view.setUint16(32, numChannels * 2, true); view.setUint16(34, 16, true)
+  wr(36, 'data'); view.setUint32(40, length * numChannels * 2, true)
+  let off = 44
+  for (let i = 0; i < length; i++) {
+    for (let ch = 0; ch < numChannels; ch++) {
+      const s = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]))
+      view.setInt16(off, s * 0x7FFF, true); off += 2
+    }
+  }
+  return ab
+}
+
+export default function TTSTab() {
+  const { state, dispatch } = useApp()
+  const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(state.episode)
+  const {
+    tracks = {}, mergedUrls = {}, g3Confirmed = {},
+    voiceTabs = {}, activeVoiceTab = {},
+  } = state.ttsTabState || {}
+  const trackDefaults = ttsSettings.trackDefaults || FALLBACK_DEFAULTS
+
+  const [activeCutIdx, setActiveCutIdx]   = useState(0)
+  const [voiceInput,   setVoiceInput]     = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
+  const [myVoices,     setMyVoices]       = useState([])
+  const [voicesLoading, setVoicesLoading] = useState(false)
+  const [trackLoading,  setTrackLoading]  = useState({})
+  const [merging,       setMerging]       = useState({})
+  const [batchRunning,  setBatchRunning]  = useState(false)
+  const [saving,        setSaving]        = useState({})
+  const [saved,         setSaved]         = useState({})
+  const [gData, setGData] = useState(() => loadGPoints())
+
+  useEffect(() => {
+    const id = setInterval(() => setGData(loadGPoints()), 2000)
+    return () => clearInterval(id)
+  }, [])
+
+  const setTTS = (p) => dispatch({ type: 'SET_TTS_TAB_STATE', p })
+
+  // ── 목소리 탭 (컷당 여러 목소리 버전) ──────────────────────
+  const getVoiceTabsForCut = (cutId) =>
+    voiceTabs[cutId] || [{ id: 'v1', label: '목소리 1', voiceId: ttsSettings.voiceId || DEFAULT_VOICE_ID }]
+
+  const getActiveVoiceIdx = (cutId) => activeVoiceTab[cutId] ?? 0
+
+  const trackKey = (cutId, voiceTabId) => `${cutId}__${voiceTabId}`
+
+  const getTracksForKey = (key, cutForInit) => {
+    if (tracks[key]) return tracks[key]
+    return cutForInit ? initTracksForCut(cutForInit, trackDefaults) : []
+  }
+
+  const setTracksForKey = (key, updater, cutForInit) => {
+    const cur  = getTracksForKey(key, cutForInit)
+    const next = typeof updater === 'function' ? updater(cur) : updater
+    setTTS({ tracks: { ...tracks, [key]: next } })
+  }
+
+  const hasCutMergedAny = (cutId) =>
+    Object.keys(mergedUrls).some(k => k.startsWith(`${cutId}__`))
+
+  const setActiveVoiceIdxFor = (cutId, idx) => {
+    setTTS({ activeVoiceTab: { ...activeVoiceTab, [cutId]: idx } })
+  }
+
+  const addVoiceTab = (cutId) => {
+    const c = cuts.find(c => c.id === cutId)
+    const existing = getVoiceTabsForCut(cutId)
+    const newTab = makeVoiceTab(existing.length + 1, ttsSettings.voiceId || DEFAULT_VOICE_ID)
+    const nextTabs = [...existing, newTab]
+    const key = trackKey(cutId, newTab.id)
+    setTTS({
+      voiceTabs: { ...voiceTabs, [cutId]: nextTabs },
+      activeVoiceTab: { ...activeVoiceTab, [cutId]: nextTabs.length - 1 },
+      tracks: { ...tracks, [key]: c ? initTracksForCut(c, trackDefaults) : [] },
+    })
+  }
+
+  const removeVoiceTab = (cutId, voiceTabId) => {
+    const existing = getVoiceTabsForCut(cutId)
+    if (existing.length <= 1) return
+    if (!confirm('이 목소리 탭의 트랙과 결과가 삭제됩니다. 계속할까요?')) return
+    const removedIdx = existing.findIndex(v => v.id === voiceTabId)
+    const nextTabs = existing.filter(v => v.id !== voiceTabId)
+    const key = trackKey(cutId, voiceTabId)
+    const nextTracks = { ...tracks }; delete nextTracks[key]
+    const nextMerged = { ...mergedUrls }; delete nextMerged[key]
+    const curActive = getActiveVoiceIdx(cutId)
+    const nextActive = Math.max(0, curActive >= nextTabs.length ? nextTabs.length - 1 : (removedIdx < curActive ? curActive - 1 : curActive))
+    setTTS({
+      voiceTabs: { ...voiceTabs, [cutId]: nextTabs },
+      activeVoiceTab: { ...activeVoiceTab, [cutId]: nextActive },
+      tracks: nextTracks,
+      mergedUrls: nextMerged,
+    })
+  }
+
+  const updateVariantVoiceId = (cutId, voiceTabId, voiceId) => {
+    const existing = getVoiceTabsForCut(cutId)
+    const nextTabs = existing.map(v => v.id === voiceTabId ? { ...v, voiceId } : v)
+    setTTS({ voiceTabs: { ...voiceTabs, [cutId]: nextTabs } })
+  }
+
+  const handleCutSelect = (idx) => {
+    setActiveCutIdx(idx)
+    const c = cuts[idx]
+    if (!c) return
+    const vts = getVoiceTabsForCut(c.id)
+    if (!voiceTabs[c.id]) setTTS({ voiceTabs: { ...voiceTabs, [c.id]: vts } })
+    const activeVt = vts[getActiveVoiceIdx(c.id)] || vts[0]
+    const key = trackKey(c.id, activeVt.id)
+    if (!tracks[key]) setTTS({ tracks: { ...tracks, [key]: initTracksForCut(c, trackDefaults) } })
+  }
+
+  const remaining = elevenLabsStatus.remainingChars
+  const cut = cuts[activeCutIdx]
+  const cutVoiceTabs  = cut ? getVoiceTabsForCut(cut.id) : []
+  const activeVIdx    = cut ? getActiveVoiceIdx(cut.id) : 0
+  const activeVariant = cutVoiceTabs[activeVIdx] || cutVoiceTabs[0]
+  const activeKey     = cut && activeVariant ? trackKey(cut.id, activeVariant.id) : null
+  const cutTracks     = activeKey ? getTracksForKey(activeKey, cut) : []
+
+  // ── 목소리 설정 (기본값 · .env 저장용) ────────────────────
+  const saveVoiceId = async () => {
+    const id = voiceInput.trim()
+    if (!id) { alert('Voice ID를 입력하세요'); return }
+    dispatch({ type: 'SET_TTS', p: { voiceId: id } })
+    try {
+      const res = await fetch('http://localhost:3001/api/update-env', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'ELEVENLABS_VOICE_ID', value: id }),
+      })
+      if (!res.ok) throw new Error()
+      alert(`저장 완료: ${id}`)
+    } catch { alert('.env.local 저장 실패 — 프록시 서버가 실행 중인지 확인하세요') }
+  }
+
+  const restoreYeoriVoice = async () => {
+    setVoiceInput(DEFAULT_VOICE_ID)
+    dispatch({ type: 'SET_TTS', p: { voiceId: DEFAULT_VOICE_ID } })
+    try {
+      const res = await fetch('http://localhost:3001/api/update-env', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'ELEVENLABS_VOICE_ID', value: DEFAULT_VOICE_ID }),
+      })
+      if (!res.ok) throw new Error()
+      alert(`서여리 목소리로 복원 완료`)
+    } catch { alert('.env.local 저장 실패') }
+  }
+
+  const loadMyVoices = async () => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 먼저 연동하세요'); return }
+    setVoicesLoading(true)
+    try {
+      const res = await elVoices(apiKeys.elevenLabs)
+      if (!res.ok) throw new Error('API 오류')
+      const data = await res.json()
+      const clones = (data.voices || []).filter(v => v.category !== 'premade')
+      setMyVoices(clones)
+      if (!clones.length) alert('클론 목소리가 없어요. ElevenLabs에서 Voice Clone을 먼저 만들어주세요.')
+    } catch (err) {
+      alert('목소리 불러오기 실패: ' + err.message)
+    } finally { setVoicesLoading(false) }
+  }
+
+  // ── 트랙 개별 TTS 생성 ───────────────────────────────────
+  const generateTrackById = async (cutId, voiceTabId, trackId, trackList) => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return null }
+    const key   = trackKey(cutId, voiceTabId)
+    const list  = trackList || getTracksForKey(key, cuts.find(c => c.id === cutId))
+    const track = list.find(t => t.id === trackId)
+    if (!track || !track.text.trim()) { alert('텍스트를 입력하세요'); return null }
+    const variant = getVoiceTabsForCut(cutId).find(v => v.id === voiceTabId)
+    const voiceId = track.voiceId?.trim() || variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+
+    setTrackLoading(p => ({ ...p, [trackId]: true }))
+    try {
+      const res = await elTTS(
+        apiKeys.elevenLabs,
+        voiceId,
+        {
+          text: track.text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability:       track.settings.stability / 100,
+            similarity_boost: track.settings.similarity / 100,
+            speed:           track.settings.speed,
+          },
+        }
+      )
+      if (!res.ok) { const e = await res.json(); throw new Error(e.detail?.message || 'API 오류') }
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      setTracksForKey(key, prev => prev.map(t => t.id === trackId ? { ...t, url } : t))
+      return url
+    } catch (err) {
+      alert('TTS 오류: ' + err.message)
+      return null
+    } finally {
+      setTrackLoading(p => ({ ...p, [trackId]: false }))
+    }
+  }
+
+  // ── 합치기 (Web Audio API) ───────────────────────────────
+  const mergeTracksForKey = async (cutId, voiceTabId, localTracks) => {
+    const key  = trackKey(cutId, voiceTabId)
+    const list = localTracks || getTracksForKey(key, cuts.find(c => c.id === cutId))
+    const toMerge = list.filter(t => t.url)
+    if (!toMerge.length) { alert('생성된 오디오가 없습니다'); return }
+
+    setMerging(p => ({ ...p, [key]: true }))
+    try {
+      const audioCtx = new AudioContext()
+      const buffers  = await Promise.all(
+        toMerge.map(async t => {
+          const res = await fetch(t.url)
+          const ab  = await res.arrayBuffer()
+          return audioCtx.decodeAudioData(ab)
+        })
+      )
+      const totalLen   = buffers.reduce((s, b) => s + b.length, 0)
+      const numCh      = Math.max(...buffers.map(b => b.numberOfChannels))
+      const sampleRate = audioCtx.sampleRate
+      const merged     = audioCtx.createBuffer(numCh, totalLen, sampleRate)
+      let offset = 0
+      for (const buf of buffers) {
+        for (let ch = 0; ch < numCh; ch++) {
+          const src = ch < buf.numberOfChannels ? buf.getChannelData(ch) : new Float32Array(buf.length)
+          merged.getChannelData(ch).set(src, offset)
+        }
+        offset += buf.length
+      }
+      const wav  = audioBufferToWav(merged)
+      const blob = new Blob([wav], { type: 'audio/wav' })
+      const url  = URL.createObjectURL(blob)
+      setTTS({ mergedUrls: { ...mergedUrls, [key]: url } })
+
+      // 서버에 MP3로 저장 (컷당 1개 파일 — 마지막으로 합친 목소리 탭 결과가 저장됨)
+      const c2 = cuts.find(c => c.id === cutId)
+      if (c2) {
+        const epNo = state.episode?.number ?? ''
+        setSaving(p => ({ ...p, [key]: true }))
+        try {
+          const wavRes  = await fetch(url)
+          const wavBlob = await wavRes.blob()
+          const saveRes = await fetch(
+            `http://localhost:3001/api/save-audio?ep=${epNo}&cutNo=${String(c2.no).padStart(2,'0')}`,
+            { method: 'POST', headers: { 'Content-Type': 'audio/wav' }, body: wavBlob }
+          )
+          if (!saveRes.ok) throw new Error('저장 실패')
+          setSaved(p => ({ ...p, [key]: true }))
+        } catch (err) {
+          alert('MP3 저장 오류: ' + err.message)
+        } finally {
+          setSaving(p => ({ ...p, [key]: false }))
+        }
+      }
+
+      // videoTab subtitles 동기화
+      const allText = list.map(t => t.text).filter(Boolean).join('\n')
+      dispatch({ type: 'SET_VIDEO_TAB_STATE',
+        p: { subtitles: { ...(state.videoTabState?.subtitles || {}), [cutId]: allText } } })
+
+      const c = cuts.find(c => c.id === cutId)
+      if (c) setGPoint(episodeCode, c.no, 'g2', true)
+      await audioCtx.close()
+    } catch (err) {
+      alert('합치기 실패: ' + err.message)
+    } finally {
+      setMerging(p => ({ ...p, [key]: false }))
+    }
+  }
+
+  // ── 다운로드 ─────────────────────────────────────────────
+  const downloadMerged = async (cutId, voiceTabId, cutNo) => {
+    const key = trackKey(cutId, voiceTabId)
+    const url = mergedUrls[key]; if (!url) return
+    const res  = await fetch(url)
+    const blob = await res.blob()
+    const a    = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `cut_${String(cutNo).padStart(2, '0')}.wav`
+    a.click()
+  }
+
+  // ── G3 승인 ──────────────────────────────────────────────
+  const approveG3 = (cutId, cutNo) => {
+    const next = { ...g3Confirmed, [cutId]: true }
+    setTTS({ g3Confirmed: next })
+    setGPoint(episodeCode, cutNo, 'g3', true)
+    if (cuts.every(c => next[c.id])) dispatch({ type: 'SET_TAB', p: 'video' })
+  }
+
+  // ── 전체 일괄 생성 (컷당 첫 번째 목소리 탭 기준) ───────────
+  const runBatch = async () => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return }
+    setBatchRunning(true)
+    try {
+      for (const c of cuts) {
+        const vts     = getVoiceTabsForCut(c.id)
+        const primary = vts[0]
+        const key     = trackKey(c.id, primary.id)
+        let cutTrks = tracks[key] || initTracksForCut(c, trackDefaults)
+        // 각 트랙 생성 (트랙별 목소리 지정이 있으면 우선 사용 — 한 컷에 여러 목소리 조합 가능)
+        const updated = []
+        for (const t of cutTrks) {
+          if (!t.text.trim()) { updated.push(t); continue }
+          const voiceId = t.voiceId?.trim() || primary.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+          setTrackLoading(p => ({ ...p, [t.id]: true }))
+          try {
+            const res = await elTTS(
+              apiKeys.elevenLabs,
+              voiceId,
+              {
+                text: t.text, model_id: 'eleven_multilingual_v2',
+                voice_settings: {
+                  stability:       t.settings.stability / 100,
+                  similarity_boost: t.settings.similarity / 100,
+                  speed:           t.settings.speed,
+                },
+              }
+            )
+            if (res.ok) {
+              const blob = await res.blob()
+              updated.push({ ...t, url: URL.createObjectURL(blob) })
+            } else { updated.push(t) }
+          } catch { updated.push(t) } finally {
+            setTrackLoading(p => ({ ...p, [t.id]: false }))
+          }
+        }
+        // 트랙 상태 저장 후 합치기
+        setTTS({ tracks: { ...tracks, [key]: updated }, voiceTabs: { ...voiceTabs, [c.id]: vts } })
+        await mergeTracksForKey(c.id, primary.id, updated)
+      }
+    } finally { setBatchRunning(false) }
+  }
+
+  // ── 렌더 ─────────────────────────────────────────────────
+  return (
+    <div className={s.page}>
+      <TabToolbar />
+    <div className={s.root}>
+      {/* 왼쪽 사이드바 */}
+      <div className={s.sidebar}>
+        <EpisodeOverviewBlock />
+        <div className={s.sideHead}>
+          <span className={s.sideTitle}>컷 목록</span>
+          <div className={`${s.elBadge} ${elevenLabsStatus.connected ? s.connected : ''}`}>
+            {elevenLabsStatus.connected ? `${remaining.toLocaleString()}자 남음` : 'EL 미연결'}
+          </div>
+        </div>
+        <CutList
+          cuts={cuts} gData={gData} episodeCode={episodeCode} maxStage={3}
+          activeCutId={cuts[activeCutIdx]?.id}
+          onCutClick={c => handleCutSelect(cuts.findIndex(x => x.id === c.id))}
+          renderExtra={c => (
+            // 실제 G3 승인 여부는 CutList의 공유 배지가 보여주므로, 여기선 그걸로는
+            // 안 드러나는 "합쳐진 오디오는 있는데 아직 확정 전" 상태만 별도 표시
+            !g3Confirmed[c.id] && hasCutMergedAny(c.id) ? <span className={s.doneTag}>🎵완성</span> : null
+          )}
+        />
+      </div>
+
+      {/* 오른쪽 메인 */}
+      <div className={s.main}>
+        {/* 1. 목소리 설정 (기본값) — ElevenLabs 연동 등록/사양 표시 겸 상단바 고정 */}
+        <div className={`${s.panel} ${s.topBar}`}>
+          <h3 className={s.panelTitle}>목소리 선택 (기본값)</h3>
+          {ttsSettings.voiceId === DEFAULT_VOICE_ID ? (
+            <div className={`${s.voiceBanner} ${s.voiceBannerOk}`}>✅ 서여리 목소리 적용 중</div>
+          ) : (
+            <div className={`${s.voiceBanner} ${s.voiceBannerWarn}`}>
+              <span>⚠️ 서여리 목소리가 아닙니다</span>
+              <button className={s.restoreBtn} onClick={restoreYeoriVoice}>서여리로 복원</button>
+            </div>
+          )}
+          <div className={s.voiceInputRow}>
+            <input className={s.voiceInput} type="text" placeholder="ElevenLabs Voice ID 입력"
+              value={voiceInput} onChange={e => setVoiceInput(e.target.value)} />
+            <button className={s.voiceLoadBtn} onClick={saveVoiceId}>저장</button>
+          </div>
+          {myVoices.length > 0 && (
+            <select className={s.voiceSelect} value=""
+              onChange={e => { if (e.target.value) setVoiceInput(e.target.value) }}>
+              <option value="">— 목소리 선택 —</option>
+              {myVoices.map(v => <option key={v.voice_id} value={v.voice_id}>{v.name}</option>)}
+            </select>
+          )}
+          <button className={s.voiceFetchBtn} onClick={loadMyVoices} disabled={voicesLoading}>
+            {voicesLoading ? '불러오는 중...' : '🎤 내 목소리 목록 불러오기'}
+          </button>
+          {ttsSettings.voiceId && (
+            <div className={s.voiceApplied}>적용됨: <code>{ttsSettings.voiceId}</code></div>
+          )}
+        </div>
+
+        <div className={s.scrollBody}>
+        {/* 2. 트랙 구성 패널 */}
+        {cut && activeVariant && (
+          <div className={s.panel}>
+            <h3 className={s.panelTitle}>CUT {cut.no} 트랙 구성</h3>
+
+            {/* 목소리 탭 — 컷당 여러 목소리 버전 비교 */}
+            <div className={s.voiceTabRow}>
+              {cutVoiceTabs.map((vt, i) => (
+                <div key={vt.id} className={`${s.voiceTabItem} ${activeVIdx === i ? s.voiceTabActive : ''}`}>
+                  <button className={s.voiceTabBtn} onClick={() => setActiveVoiceIdxFor(cut.id, i)}>
+                    {vt.label}
+                    {hasMergedForVariant(mergedUrls, cut.id, vt.id) && <span className={s.voiceTabDone}>●</span>}
+                  </button>
+                  {cutVoiceTabs.length > 1 && (
+                    <span className={s.voiceTabClose} title="이 목소리 탭 삭제"
+                      onClick={() => removeVoiceTab(cut.id, vt.id)}>✕</span>
+                  )}
+                </div>
+              ))}
+              <button className={s.voiceTabAddBtn} onClick={() => addVoiceTab(cut.id)}>+ 목소리 추가</button>
+            </div>
+
+            {/* 이 탭 전용 목소리 ID */}
+            <div className={s.trackVoiceRow}>
+              <span className={s.trackVoiceLabel}>이 탭 목소리 ID</span>
+              <input className={s.trackVoiceInput}
+                value={activeVariant.voiceId}
+                onChange={e => updateVariantVoiceId(cut.id, activeVariant.id, e.target.value)} />
+            </div>
+
+            {cutTracks.map((track, idx) => (
+              <div key={track.id} className={s.trackCard}>
+                {/* 헤더 */}
+                <div className={s.trackHeader}>
+                  <span className={`${s.trackLabel} ${track.type === 'narration' ? s.trackLabelNarr : ''}`}>
+                    {track.type === 'dialogue' ? '💬 대사' : '🎙 나레이션'}
+                  </span>
+                  <input className={s.trackVoiceOverride}
+                    placeholder={`탭 기본값 (${activeVariant.voiceId.slice(0, 8)}…)`}
+                    title="이 트랙만 다른 목소리로 생성 — 한 컷에 여러 목소리를 조합할 때 사용"
+                    value={track.voiceId}
+                    onChange={e => setTracksForKey(activeKey, prev =>
+                      prev.map(t => t.id === track.id ? { ...t, voiceId: e.target.value } : t)
+                    )} />
+                  <div className={s.trackHeaderBtns}>
+                    <button className={s.trackResetBtn} title="기본값 복원"
+                      onClick={() => setTracksForKey(activeKey, prev =>
+                        prev.map(t => t.id === track.id
+                          ? { ...t, settings: { ...(trackDefaults[t.type] || FALLBACK_DEFAULTS[t.type]) } }
+                          : t
+                        )
+                      )}>🔄</button>
+                    <button className={s.trackMoveBtn} disabled={idx === 0}
+                      onClick={() => setTracksForKey(activeKey, prev => {
+                        const a = [...prev]; [a[idx-1], a[idx]] = [a[idx], a[idx-1]]; return a
+                      })}>↑</button>
+                    <button className={s.trackMoveBtn} disabled={idx === cutTracks.length - 1}
+                      onClick={() => setTracksForKey(activeKey, prev => {
+                        const a = [...prev]; [a[idx], a[idx+1]] = [a[idx+1], a[idx]]; return a
+                      })}>↓</button>
+                    <button className={s.trackDelBtn}
+                      onClick={() => setTracksForKey(activeKey, prev => prev.filter(t => t.id !== track.id))}>
+                      ✕
+                    </button>
+                  </div>
+                </div>
+
+                {/* 텍스트 */}
+                <textarea className={s.trackText} rows={3}
+                  placeholder={track.type === 'dialogue' ? '대사 입력...' : '나레이션 입력...'}
+                  value={track.text}
+                  onChange={e => setTracksForKey(activeKey, prev =>
+                    prev.map(t => t.id === track.id ? { ...t, text: e.target.value } : t)
+                  )} />
+
+                {/* 슬라이더 */}
+                <div className={s.trackSettings}>
+                  {[
+                    { key: 'speed',      label: '속도',   min: 0.5, max: 2.0, step: 0.05, unit: 'x' },
+                    { key: 'stability',  label: '안정성', min: 0,   max: 100, step: 1,    unit: '%' },
+                    { key: 'similarity', label: '유사도', min: 0,   max: 100, step: 1,    unit: '%' },
+                  ].map(({ key, label, min, max, step, unit }) => {
+                    const val = track.settings[key]
+                    const pct = ((val - min) / (max - min)) * 100
+                    return (
+                      <div key={key} className={s.sliderRow}>
+                        <span className={s.sliderLabel}>{label}</span>
+                        <input type="range" min={min} max={max} step={step}
+                          value={val}
+                          style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
+                          onChange={e => setTracksForKey(activeKey, prev =>
+                            prev.map(t => t.id === track.id
+                              ? { ...t, settings: { ...t.settings, [key]: parseFloat(e.target.value) } }
+                              : t
+                            )
+                          )} />
+                        <span className={s.sliderVal}>{val}{unit}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* 생성 버튼 + 개별 오디오 */}
+                <div className={s.trackGenRow}>
+                  <button className={s.trackGenBtn} disabled={trackLoading[track.id]}
+                    onClick={() => generateTrackById(cut.id, activeVariant.id, track.id)}>
+                    {trackLoading[track.id]
+                      ? <><span className={s.spinner} />생성 중…</>
+                      : '🔊 생성'}
+                  </button>
+                  {track.url && <audio controls src={track.url} className={s.trackAudio} />}
+                </div>
+              </div>
+            ))}
+
+            {/* 트랙 추가 */}
+            <div className={s.addTrackRow}>
+              <button className={s.addTrackBtn}
+                onClick={() => setTracksForKey(activeKey, prev => [...prev, makeTrack('dialogue', '', trackDefaults)])}>
+                + 대사 추가
+              </button>
+              <button className={s.addTrackBtn}
+                onClick={() => setTracksForKey(activeKey, prev => [...prev, makeTrack('narration', '', trackDefaults)])}>
+                + 나레이션 추가
+              </button>
+            </div>
+
+            {/* 전체 합치기 버튼 */}
+            <button className={s.mergeBtn}
+              disabled={merging[activeKey] || !cutTracks.some(t => t.url)}
+              onClick={() => mergeTracksForKey(cut.id, activeVariant.id)}>
+              {merging[activeKey]
+                ? <><span className={s.spinner} />합치는 중…</>
+                : `🎵 ${activeVariant.label} 트랙 합치기`}
+            </button>
+
+            {/* 합친 결과 */}
+            {mergedUrls[activeKey] && (
+              <div className={s.mergedResult}>
+                <div className={s.mergedLabel}>{activeVariant.label} · 합친 결과</div>
+                <audio controls src={mergedUrls[activeKey]} className={s.audioPlayer} />
+                <div className={s.mergedActions}>
+                  <button className={s.dlBtn} onClick={() => downloadMerged(cut.id, activeVariant.id, cut.no)}>
+                    ⬇ 다운로드
+                  </button>
+                  {saving[activeKey] && <span className={s.savingBadge}>💾 저장 중…</span>}
+                  {saved[activeKey]  && <span className={s.savedBadge}>✅ MP3 저장됨</span>}
+                  {!g3Confirmed[cut.id] ? (
+                    <button className={s.g3Btn} onClick={() => approveG3(cut.id, cut.no)}>
+                      ✅ G3 승인
+                    </button>
+                  ) : (
+                    <span className={s.g3Tag}>G3 완료</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 3. 전체 일괄 생성 */}
+        <div className={s.panel}>
+          <h3 className={s.panelTitle}>전체 일괄 생성</h3>
+          <p className={s.batchDesc}>모든 컷의 첫 번째 목소리 탭을 순서대로 생성 후 합치기까지 자동 실행합니다.</p>
+          <button className={s.batchBtn} disabled={batchRunning} onClick={runBatch}>
+            {batchRunning
+              ? <><span className={s.spinner} />실행 중…</>
+              : '🎙️ 전체 컷 일괄 생성 + 합치기'}
+          </button>
+        </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  )
+}
+
+function hasMergedForVariant(mergedUrls, cutId, voiceTabId) {
+  return !!mergedUrls[`${cutId}__${voiceTabId}`]
+}

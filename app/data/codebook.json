@@ -1,0 +1,584 @@
+{
+  "version": "1.0",
+  "description": "여리 스튜디오 텍스트 뱅크 — 코드 → 영어 프롬프트 텍스트 자동 조합",
+  "updatedAt": "2026-07-19",
+
+  "entries": {
+
+    "BASE": {
+      "YEORI_CORE": {
+        "text": "Young Korean woman early-20s, long wavy dark brown hair NOT short hair, a very subtle natural skin texture on her right cheek, delicate gold necklace, effortlessly photogenic not posing just existing beautifully, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions small face long legs, appearing no older than 22-23,",
+        "source": "manual",
+        "verified": true,
+        "note": "서여리 공통 베이스 — 모든 YR_VD/YR_IM 컷에 필수"
+      },
+      "SAFETY": {
+        "text": "background people must not interact with or interfere with the main character.",
+        "source": "manual",
+        "verified": true,
+        "note": "배경 인물 개입 금지 — 모든 컷 마지막에 추가"
+      },
+      "SILENT": {
+        "text": "THIS IS A SILENT FILM. NO talking, NO speaking, NO lip movement. NO dialogue, NO subtitles, NO audio.",
+        "source": "manual",
+        "verified": true,
+        "note": "무음 영상 전용 — YR_VD 무음 버전에 추가"
+      }
+    },
+
+    "SH": {
+      "SH_ECU": {
+        "text": "extreme close-up shot,",
+        "ip_prefix": "EXTREME CLOSEUP SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_CU": {
+        "text": "close-up shot,",
+        "ip_prefix": "CLOSEUP SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_MCU": {
+        "text": "medium close-up shot,",
+        "ip_prefix": "CLOSEUP SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_MS": {
+        "text": "medium shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_MLS": {
+        "text": "medium long shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_FS": {
+        "text": "full body shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_WS": {
+        "text": "wide shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_POV": {
+        "text": "point of view shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_BIRD": {
+        "text": "bird's eye view shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_LOW": {
+        "text": "low angle shot,",
+        "ip_prefix": "FULLBODY SHOT —",
+        "source": "manual",
+        "verified": true
+      }
+    },
+
+    "CA": {
+      "CA_ST": {
+        "text": "camera holds steady,",
+        "vp_text": "the camera holds the frame,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_PS": {
+        "text": "slow push in,",
+        "vp_text": "camera gently pushes in,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_PL": {
+        "text": "slow pull out,",
+        "vp_text": "camera slowly pulls back,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_ZI": {
+        "text": "gentle zoom in,",
+        "vp_text": "camera gently zooms in,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_ZO": {
+        "text": "gentle zoom out,",
+        "vp_text": "camera gently zooms out,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_PN_L": {
+        "text": "slow pan left,",
+        "vp_text": "camera slowly pans left,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_PN_R": {
+        "text": "slow pan right,",
+        "vp_text": "camera slowly pans right,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_TL_U": {
+        "text": "slow tilt up,",
+        "vp_text": "camera slowly tilts up,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_TL_D": {
+        "text": "slow tilt down,",
+        "vp_text": "camera slowly tilts down,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_TK": {
+        "text": "tracking shot,",
+        "vp_text": "camera tracks alongside,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_HH": {
+        "text": "handheld shot,",
+        "vp_text": "handheld camera, slight natural movement,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_OB": {
+        "text": "orbit shot,",
+        "vp_text": "camera orbits slowly around subject,",
+        "source": "manual",
+        "verified": true
+      },
+      "CA_MOD_LOW": {
+        "text": "slightly low angle, sofa-level perspective,",
+        "vp_text": "slightly low angle camera, sofa-level view,",
+        "source": "manual",
+        "verified": true
+      }
+    },
+
+    "SP": {
+      "IN.CF.TZ_GH.LT_WM": {
+        "text": "inside a cozy Korean cafe, warm golden hour light streaming through window,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["SF_E01", "LF_E01"]
+      },
+      "IN.CF.TZ_AF.LT_WM": {
+        "text": "inside a modern Korean cafe, warm afternoon sunlight filtering through window,",
+        "source": "manual",
+        "verified": true
+      },
+      "IN.CF.TZ_NT.LT_NE": {
+        "text": "inside a cafe at night, neon city lights glowing through the window,",
+        "source": "manual",
+        "verified": true
+      },
+      "IN.CF.TZ_AM.LT_WD": {
+        "text": "inside a quiet Korean cafe, soft morning light through the window,",
+        "source": "manual",
+        "verified": true
+      },
+      "OT.CF.TZ_GH.LT_WM": {
+        "text": "outdoor cafe terrace, warm golden hour sunlight,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["SF_E01_SHOE"]
+      },
+      "OT.CF.TZ_AF.LT_WM": {
+        "text": "outdoor cafe terrace, warm golden afternoon sunlight,",
+        "source": "manual",
+        "verified": true
+      },
+      "IN.HM.TZ_AF.LT_WM": {
+        "text": "cozy home interior, warm afternoon sunlight through sheer curtains,",
+        "source": "manual",
+        "verified": true
+      },
+      "IN.HM.TZ_NT.LT_WM": {
+        "text": "cozy home interior at night, soft warm lamp light,",
+        "source": "manual",
+        "verified": true
+      },
+      "IN.HM.TZ_AM.LT_WD": {
+        "text": "cozy home interior, soft morning light streaming in,",
+        "source": "manual",
+        "verified": true
+      },
+      "OT.ST.TZ_GH.LT_WM": {
+        "text": "Seoul city street, warm golden hour sunlight,",
+        "source": "manual",
+        "verified": true
+      },
+      "OT.ST.TZ_NT.LT_NE": {
+        "text": "Seoul city street at night, neon lights glowing,",
+        "source": "manual",
+        "verified": true
+      },
+      "OT.PK.TZ_GH.LT_WM": {
+        "text": "outdoor park, warm golden hour sunlight through the trees,",
+        "source": "manual",
+        "verified": true
+      },
+      "OT.BE.TZ_GH.LT_WM": {
+        "text": "on a sandy beach, warm golden hour sunlight glowing across the shore,",
+        "source": "generated",
+        "verified": false,
+        "pendingApproval": true
+      },
+      "IN.GY.TZ_AM.LT_SL": {
+        "text": "inside a modern gym, clean studio lighting,",
+        "source": "generated",
+        "verified": false,
+        "pendingApproval": true
+      },
+      "IN.SD.TZ_AF.LT_SL": {
+        "text": "inside a photography studio, professional soft studio lighting,",
+        "source": "generated",
+        "verified": false,
+        "pendingApproval": true
+      }
+    },
+
+    "LK": {
+      "TOP_CRP_WHITE": {
+        "text": "white square-neck crop top,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["SF_E01_SHOE"]
+      },
+      "TOP_CRP_BLACK": {
+        "text": "black sleeveless crop top,",
+        "source": "manual",
+        "verified": true
+      },
+      "TOP_KNT_IVORY": {
+        "text": "oversized ivory knit sweater,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["LF_E03"]
+      },
+      "TOP_KNT_CREAM": {
+        "text": "soft cream-colored knit top,",
+        "source": "manual",
+        "verified": true
+      },
+      "TOP_TNK_BLACK": {
+        "text": "fitted black turtleneck,",
+        "source": "manual",
+        "verified": true
+      },
+      "TOP_OFS_BLUE": {
+        "text": "light blue off-shoulder top,",
+        "source": "manual",
+        "verified": true
+      },
+      "BTM_DNM_LIGHT": {
+        "text": "light blue denim shorts,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["SF_E01_SHOE"]
+      },
+      "BTM_DNM_BLUE": {
+        "text": "classic blue denim jeans,",
+        "source": "manual",
+        "verified": true
+      },
+      "BTM_SHT_WHITE": {
+        "text": "white casual shorts,",
+        "source": "manual",
+        "verified": true
+      },
+      "BTM_SKT_MIDI": {
+        "text": "flowing midi skirt,",
+        "source": "manual",
+        "verified": true
+      },
+      "DRS_WRAP_LAV": {
+        "text": "lavender wrap dress,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["CA_NT_SS_01"]
+      },
+      "DRS_SLIT_BROWN": {
+        "text": "brown ribbed slit maxi dress,",
+        "source": "manual",
+        "verified": true
+      },
+      "DRS_BACK_WHITE": {
+        "text": "white backless long dress,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["CA_SH_SS_01"]
+      },
+      "SH_HHL_WHITE": {
+        "text": "white stiletto high heels,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["SF_E01_SHOE"]
+      },
+      "SH_SNK_WHITE": {
+        "text": "white sneakers,",
+        "source": "manual",
+        "verified": true
+      },
+      "SH_FLT_BEIGE": {
+        "text": "beige flat shoes,",
+        "source": "manual",
+        "verified": true
+      },
+      "BARE_FEET": {
+        "text": "bare feet, natural and relaxed,",
+        "source": "manual",
+        "verified": true
+      }
+    },
+
+    "HR": {
+      "HR_CORE": {
+        "text": "long wavy dark brown hair,",
+        "source": "manual",
+        "verified": true,
+        "note": "서여리 시그니처 헤어 — 기본값"
+      },
+      "HR_BN": {
+        "text": "hair loosely tied in a messy bun,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["CA_HM_FW_01"]
+      },
+      "HR_PO": {
+        "text": "hair in a high ponytail,",
+        "source": "manual",
+        "verified": true
+      },
+      "HR_ST": {
+        "text": "straight dark brown hair,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["CA_NT_NT_01"]
+      },
+      "HR_LW_FL": {
+        "text": "long wavy dark brown hair with small flower pins,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["CA_SH_SS_01"]
+      }
+    },
+
+    "MD": {
+      "MD_JOY": {
+        "text": "bright warm smile, eyes full of energy,",
+        "vp_text": "bright joyful expression, eyes crinkle warmly,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_REL": {
+        "text": "relaxed soft expression, calm and at ease,",
+        "vp_text": "relaxed natural expression, peaceful and unhurried,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_SUR": {
+        "text": "surprised expression, eyes slightly wide,",
+        "vp_text": "surprised awakened expression, subtle tension,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_INT": {
+        "text": "focused thoughtful expression, quietly absorbed,",
+        "vp_text": "deeply focused expression, eyes steady and still,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_CUR": {
+        "text": "curious expression, head slightly tilted,",
+        "vp_text": "curious wondering expression, gentle head tilt,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_SAD": {
+        "text": "quietly melancholic expression, distant gaze,",
+        "vp_text": "soft melancholy, eyes slightly downcast,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_DRM": {
+        "text": "dreamy faraway expression, lost in thought,",
+        "vp_text": "dreamy unfocused gaze, soft and ethereal,",
+        "source": "manual",
+        "verified": true
+      },
+      "MD_STR": {
+        "text": "confident composed expression, quiet strength,",
+        "vp_text": "calm confident presence, steady and grounded,",
+        "source": "manual",
+        "verified": true
+      }
+    },
+
+    "AT": {
+      "AT_SD_01": {
+        "text": "standing naturally, looking forward,",
+        "vp_text": "she stands naturally, looking forward,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_SD_02": {
+        "text": "standing with slight side profile,",
+        "vp_text": "she turns slightly to the side,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_SI_01": {
+        "text": "sitting naturally at a table,",
+        "vp_text": "she sits naturally, relaxed at the table,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_SI_02": {
+        "text": "sitting by the window, looking outside,",
+        "vp_text": "she sits by the window, gazing outside softly,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_MW_01": {
+        "text": "walking naturally forward,",
+        "vp_text": "she walks naturally forward, unhurried,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_AC_05": {
+        "text": "looking directly at the camera,",
+        "vp_text": "she looks directly at the camera,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_EM_01": {
+        "text": "a warm smile spreading naturally,",
+        "vp_text": "a warm smile spreads naturally across her face,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_EM_02": {
+        "text": "subtle surprised reaction,",
+        "vp_text": "a subtle surprised reaction crosses her face,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_EM_03": {
+        "text": "quietly lost in thought,",
+        "vp_text": "she looks quietly lost in thought,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_AC_WAVE": {
+        "text": "right hand raises in a cheerful wave,",
+        "vp_text": "her right hand raises in a cheerful wave,",
+        "source": "manual",
+        "verified": true,
+        "usedIn": ["SF_E01_SHOE_C01-2"]
+      },
+      "AT_SI_SOFA": {
+        "text": "sitting naturally on a cozy sofa, turned slightly toward camera,",
+        "vp_text": "she sits on the sofa, turns naturally toward camera,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_HAIR_PUSH": {
+        "text": "pushes hair back casually with one hand,",
+        "vp_text": "she pushes her hair back casually with one hand,",
+        "source": "manual",
+        "verified": true
+      },
+      "AT_LEAN_FWD": {
+        "text": "leaning slightly forward with genuine warmth,",
+        "vp_text": "she leans slightly forward, warm and sincere,",
+        "source": "manual",
+        "verified": true
+      }
+    },
+
+    "Q": {
+      "Q_SH": {
+        "text": "photorealistic 8K cinematic, sharp detail,",
+        "source": "manual",
+        "verified": true
+      },
+      "Q_SF": {
+        "text": "soft cinematic look, gentle natural tones,",
+        "source": "manual",
+        "verified": true
+      },
+      "Q_FM": {
+        "text": "film grain cinematic, warm analog tones,",
+        "source": "manual",
+        "verified": true
+      },
+      "Q_BOKEH": {
+        "text": "gentle bokeh background,",
+        "source": "manual",
+        "verified": true
+      }
+    },
+
+    "PL": {
+      "YR_VD": {
+        "pipeline": "G2→G3→G4→G5",
+        "note": "서여리 립싱크 영상",
+        "source": "manual",
+        "verified": true
+      },
+      "YR_IM": {
+        "pipeline": "G2→G3→G5",
+        "note": "서여리 이미지 + 나레이션",
+        "source": "manual",
+        "verified": true
+      },
+      "BR_": {
+        "pipeline": "G2→G4→G5",
+        "note": "서여리 없는 B-Roll",
+        "source": "manual",
+        "verified": true
+      },
+      "GR_": {
+        "pipeline": "G3→G5",
+        "note": "그래픽 전용",
+        "source": "manual",
+        "verified": true
+      },
+      "CC_": {
+        "pipeline": "G5",
+        "note": "CapCut 전용",
+        "source": "manual",
+        "verified": true
+      }
+    }
+  },
+
+  "pending": {
+    "description": "AI 생성 후 승인 대기 중인 항목",
+    "entries": {}
+  },
+
+  "generationRules": {
+    "description": "뱅크에 없는 코드 조합 시 Claude API 생성 규칙",
+    "model": "claude-sonnet-4-6",
+    "basePrompt": "You are a prompt engineer for Korean AI influencer 'Seo Yeori'. Generate English image/video prompt text for the given code. Follow ruleset v1.3 standards. Output only the prompt text, no explanation.",
+    "autoRegister": true,
+    "requireApproval": true
+  }
+}

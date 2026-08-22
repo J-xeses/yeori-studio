@@ -1,0 +1,813 @@
+import { useState, useRef, useEffect } from 'react'
+import { useApp } from '../context/AppContext'
+import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
+import { resolveEpisodeCode } from '../lib/episodeCode'
+import { instaUrl } from '../lib/mediaPaths'
+import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
+import TabToolbar from '../components/TabToolbar'
+import s from './StudioTab.module.css'
+
+const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
+
+// PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
+// 하위로 라우팅할지 반환. server/lib/scriptParserV3.js·ScriptGenTab.jsx에 있는 것과 동일 로직
+// (이 코드베이스의 기존 관례대로 작은 순수함수라 탭마다 그대로 복제해서 씀).
+function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
+
+// G2 승인 전 체크리스트 항목
+const CHECKLIST_ITEMS = [
+  { key: 'face',       label: '얼굴 자연스럽게 고정됨' },
+  { key: 'hair',       label: '헤어 웨이브/다크브라운 유지' },
+  { key: 'outfit',     label: '의상 프롬프트와 일치' },
+  { key: 'proportion', label: '신체비율 정상 (슬림/모델 비율)' },
+  { key: 'background', label: '배경 씬과 적합' },
+]
+
+// G2 승인 시 선택된 이미지의 실제 서버 파일명 추출 (gpoints.json selectedImage용).
+// blob:/data: URL(업로드/Gemini 생성 직후, 아직 디스크에 저장 안 됨)은 실제 파일이
+// 아니므로 video-automation.js가 참조할 수 없어 null 반환 — /api/scan-media로 스캔된
+// Flow 생성 이미지(cut_NN_a.jpg 등)만 파일명을 얻을 수 있다.
+function extractImageFilename(url) {
+  if (!url || url.startsWith('blob:') || url.startsWith('data:')) return null
+  try {
+    const clean = url.split('?')[0]
+    return clean.split('/').pop() || null
+  } catch {
+    return null
+  }
+}
+
+// ── Gemini 이미지 생성 (Vercel 프록시 경유) ───────────────────
+// 한국 네트워크 차단 우회: 브라우저 → Vercel(미국) → Google API
+async function generateImageWithGemini(prompt, apiKey) {
+  const response = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, apiKey }),
+  })
+
+  if (!response.ok) {
+    const err = await response.json()
+    throw new Error(err.error || `프록시 오류 ${response.status}`)
+  }
+
+  const data = await response.json()
+  if (!data.success) throw new Error(data.error || '이미지 생성 실패')
+
+  return `data:${data.mimeType};base64,${data.imageData}`
+}
+
+export default function StudioTab() {
+  const { state, dispatch } = useApp()
+  const { cuts, apiKeys } = state
+  // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
+  const episodeCode = resolveEpisodeCode(state.episode)
+  const [images, setImages] = useState({})      // cut.id → [url, url, ...]
+  const [selectedImage, setSelectedImage] = useState({}) // cut.id → index
+  const [selected, setSelected] = useState(TOOLS[0])
+  const [copiedId, setCopiedId] = useState(null)
+  const [generating, setGenerating] = useState({})
+  const [confirmed, setConfirmed] = useState({})
+  const [g2Approved, setG2Approved] = useState({})
+  const [checklist, setChecklist] = useState({})       // cut.id → { face, hair, outfit, proportion, background }
+  const [checklistCutId, setChecklistCutId] = useState(null) // 체크리스트 팝업이 열려있는 컷 id
+  const [imageRatio, setImageRatio] = useState({})     // `${cut.id}_${idx}` → '9:16' | '16:9' (파일 실제 비율과 무관하게 사용자가 직접 지정)
+  const [flowRunning, setFlowRunning] = useState(false)
+  const [flowLogs, setFlowLogs] = useState([])
+  const [flowDone, setFlowDone] = useState(false)
+  const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
+  const [gData, setGData] = useState(() => loadGPoints())
+  const [activeCutId, setActiveCutId] = useState(null)
+  const fileRefs = useRef({})
+  const cardRefs = useRef({})
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), 3000)
+        await fetch('http://localhost:3001/api/health', { signal: controller.signal })
+        clearTimeout(timer)
+        setProxyOk(true)
+      } catch {
+        setProxyOk(false)
+      }
+    }
+    check()
+  }, [])
+
+  // ── 에피소드 변경 시 미디어 자동 스캔 ──────────────────────────────
+  // 컷 id는 항상 "cut-N"(N=컷 번호)라 에피소드가 달라도 그대로 재사용됨 — 그래서 아래
+  // images/selectedImage/checklist 등 "cut.id 기준" 로컬 state는 에피소드를 전환해도 자동으론
+  // 안 비워짐. 예전엔 재조회 트리거가 episode.number였는데, 리팩터 과도기 데이터라 ep_1/
+  // IG_R_E01_AI/SF_E01처럼 서로 다른 에피소드가 전부 number:1로 겹치는 경우가 있어(2026-08-15
+  // 실측 확인) 이 셋 사이를 전환하면 재조회 자체가 아예 안 일어나서 "목록은 새 에피소드인데
+  // 화면(이미지·체크리스트)은 이전 에피소드 그대로"인 불일치가 발생했음. episodeCode(항상
+  // 고유)로 트리거를 바꾸고, 전환 시 로컬 state를 통째로 비워서(머지가 아니라 리셋) 컷 id가
+  // 겹치더라도 이전 에피소드 데이터가 새 에피소드 화면에 절대 안 남게 한다.
+  useEffect(() => {
+    setImages({})
+    setSelectedImage({})
+    setChecklist({})
+    setConfirmed({})
+    setG2Approved({})
+    setActiveCutId(null)
+  }, [episodeCode])
+
+  useEffect(() => {
+    const epNum = state.episode?.number
+    if (!epNum) return
+    fetch('http://localhost:3001/api/scan-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        const toUrl = (absPath) =>
+          `http://localhost:3001/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}?t=${Date.now()}`
+
+        Object.entries(data.images || {}).forEach(([key, absPath]) => {
+          const cutNo = parseInt(key.replace('cut_', ''), 10)
+          const cut = state.cuts.find(c => c.no === cutNo)
+          if (!cut) return
+          const url = toUrl(absPath)
+          const fname = absPath.split(/[\\/]/).pop()
+          setImages(p => {
+            const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+            if (existing.some(u => u.includes(fname))) return p
+            return { ...p, [cut.id]: [...existing, url] }
+          })
+          setGPoint(episodeCode, cutNo, 'g3', true)
+        })
+        setGData(loadGPoints())
+      })
+      .catch(() => {})
+  }, [episodeCode])
+
+  const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
+
+  const handleImageUpload = (cutId, file) => {
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setImages(prev => {
+      const existing = Array.isArray(prev[cutId]) ? prev[cutId] : (prev[cutId] ? [prev[cutId]] : [])
+      return { ...prev, [cutId]: [...existing, url] }
+    })
+    setSelectedImage(prev => ({ ...prev, [cutId]: (Array.isArray(images[cutId]) ? images[cutId].length : 0) }))
+    // G3 포인트 자동 저장
+    const cut = cuts.find(c => c.id === cutId)
+    if (cut) setGPoint(episodeCode, cut.no, 'g3', true)
+  }
+
+  const copyPrompt = (text, cutId) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedId(cutId)
+      setTimeout(() => setCopiedId(null), 2000)
+    })
+  }
+
+  // ── 단일 컷 이미지 자동 생성 ──────────────────────────────────
+  const generateSingleImage = async (cut) => {
+    if (!apiKeys.gemini) { alert('GEMINI API 키를 입력하세요!'); return }
+    if (!cut.imagePrompt) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
+    setGenerating(prev => ({ ...prev, [cut.id]: true }))
+    try {
+      const imgUrl = await generateImageWithGemini(cut.imagePrompt, apiKeys.gemini)
+      setImages(prev => {
+        const existing = Array.isArray(prev[cut.id]) ? prev[cut.id] : (prev[cut.id] ? [prev[cut.id]] : [])
+        return { ...prev, [cut.id]: [...existing, imgUrl] }
+      })
+      setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+      setGPoint(episodeCode, cut.no, 'g3', true)
+    } catch(e) {
+      alert(`CUT ${cut.no} 생성 실패: ${e.message}`)
+    } finally {
+      setGenerating(prev => ({ ...prev, [cut.id]: false }))
+    }
+  }
+
+  // ── 단일 컷 Flow 재생성 ────────────────────────────────────────
+  const runFlowForCut = async (cut) => {
+    const { episode } = state
+    if (!cut.imagePrompt?.trim()) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
+
+    // PL이 IG_FD/IG_RL/IG_PT/IG_ST면 downloads/insta/{content}/{instaNum}/으로 라우팅.
+    // 그 외(YR_VD/BR_VD 등)는 기존 downloads/flow/ep{N}/ 그대로 — 회귀 없음.
+    const instaContent = pipelineCodeToInstaContent(cut.masterCode?.pl)
+    if (instaContent && !episode.instaNum?.trim()) {
+      alert(`이 컷의 PL(${cut.masterCode?.pl})은 인스타 콘텐츠(${instaContent})인데, 에피소드에 "인스타 번호"가 입력되어 있지 않아요.\n대본 생성 탭 → 에피소드 설정에서 먼저 입력해주세요.`)
+      return
+    }
+
+    const prompts = {
+      episode: episode.number,
+      title: episode.title || '',
+      cuts: [{
+        no: cut.no,
+        imagePrompt: cut.imagePrompt,
+        ...(cut.narration?.trim() ? { narration: cut.narration.trim() } : {}),
+        ...(cut.dialogue?.trim() && !/^없음$/i.test(cut.dialogue) ? { dialogue: cut.dialogue.trim() } : {}),
+        duration: cut.duration || 5,
+      }],
+    }
+
+    setGenerating(prev => ({ ...prev, [cut.id]: true }))
+    setFlowLogs(prev => [...prev, { type: 'info', message: `🔄 CUT ${cut.no} Flow 재생성 중…` }])
+
+    try {
+      const res = await fetch('http://localhost:3001/api/run-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(instaContent
+          ? { type: 'insta', content: instaContent, num: episode.instaNum.trim(), prompts }
+          : { ep: episode.number, prompts }),
+      })
+      if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'cut_done') {
+              const padded = String(ev.cutNo).padStart(2, '0')
+              for (const suffix of ['_a', '_b', '']) {
+                for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
+                  const url = (instaContent
+                    ? instaUrl(instaContent, episode.instaNum.trim(), ev.cutNo, ext, suffix)
+                    : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}${suffix}.${ext}`) + `?t=${Date.now()}`
+                  try {
+                    const r = await fetch(url, { method: 'HEAD' })
+                    if (r.ok) {
+                      setImages(p => {
+                        const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                        if (existing.some(u => u.includes(`cut_${padded}${suffix}.${ext}`))) return p
+                        return { ...p, [cut.id]: [...existing, url] }
+                      })
+                      setGPoint(episodeCode, cut.no, 'g3', true)
+                      setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
+                    }
+                  } catch {}
+                }
+              }
+            } else if (ev.type === 'cut_image') {
+              const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              setImages(p => {
+                const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                if (existing.some(u => u.includes(ev.url))) return p
+                return { ...p, [cut.id]: [...existing, imgUrl] }
+              })
+              setGPoint(episodeCode, cut.no, 'g3', true)
+              setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
+            } else if (ev.type === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no} Flow 실패: ${ev.message}` }])
+            } else if (ev.type === 'log' && ev.level === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `⚠️ ${ev.message}` }])
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no}: ${err.message}` }])
+    } finally {
+      setGenerating(prev => ({ ...prev, [cut.id]: false }))
+    }
+  }
+
+  // ── 기존 생성 이미지 재조회 ─────────────────────────────────────
+  const reloadExistingImages = async () => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/scan-images?ep=${state.episode.number}`)
+      const data = await res.json()
+      if (!data.images?.length) { alert('저장된 이미지가 없습니다.'); return }
+      data.images.forEach(img => {
+        const cut = state.cuts.find(c => c.no === img.cutNo)
+        if (!cut) return
+        const imgUrl = `http://localhost:3001${img.url}?t=${Date.now()}`
+        setImages(p => {
+          const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+          if (existing.some(u => u.includes(img.url))) return p
+          return { ...p, [cut.id]: [...existing, imgUrl] }
+        })
+        setGPoint(episodeCode, img.cutNo, 'g3', true)
+      })
+      setGData(loadGPoints())
+      alert(`✅ ${data.images.length}개 이미지 불러오기 완료`)
+    } catch (err) {
+      alert('불러오기 실패: ' + err.message)
+    }
+  }
+
+  // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
+  const runFlow = async () => {
+    const { episode, cuts: allCuts } = state
+    // GRAPHIC/CAPCUT 컷(CapCut에서 직접 제작, 텍스트 훅/DM 목업 등)은 IP에 "이미지 생성
+    // 불필요" 안내문이 들어있어도 imagePrompt 자체는 비어있지 않게 파싱되므로 cutType으로도
+    // 걸러야 함 — 안 그러면 "전체 이미지 자동 생성" 한 번에 이런 컷까지 Flow 생성 대상에 잡혀서
+    // 크레딧이 낭비됨(server/proxy.js의 studio-run-g2와 동일한 문제, 2026-08-15 실측 발견).
+    const promptCuts = allCuts.filter(c => c.imagePrompt?.trim() && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
+    const prompts = {
+      episode: episode.number,
+      title: episode.title || '',
+      cuts: promptCuts.map(c => ({
+        no: c.no,
+        imagePrompt: c.imagePrompt,
+        ...(c.narration?.trim() ? { narration: c.narration.trim() } : {}),
+        ...(c.dialogue?.trim() && !/^없음$/i.test(c.dialogue) ? { dialogue: c.dialogue.trim() } : {}),
+        duration: c.duration || 5,
+      })),
+    }
+    if (!prompts.cuts.length) { alert('이미지 프롬프트가 있는 컷이 없어요!'); return }
+
+    // 이 에피소드의 컷들이 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST)면 그 경로로 일괄 라우팅.
+    // 한 에피소드 안에서 PL이 섞여 있어도 첫 인스타 매칭 컷의 유형을 그 에피소드의 콘텐츠 유형으로 본다.
+    const instaContent = promptCuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean) || null
+    if (instaContent && !episode.instaNum?.trim()) {
+      alert(`이 에피소드의 컷들이 인스타 콘텐츠(${instaContent})인데, "인스타 번호"가 입력되어 있지 않아요.\n에피소드 설정에서 먼저 입력해주세요.`)
+      return
+    }
+
+    setFlowRunning(true)
+    setFlowDone(false)
+    setFlowLogs([{ type: 'info', message: 'prompts.json 저장 중…' }])
+
+    try {
+      const res = await fetch('http://localhost:3001/api/run-flow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(instaContent
+          ? { type: 'insta', content: instaContent, num: episode.instaNum.trim(), prompts }
+          : { ep: episode.number, prompts }),
+      })
+      if (!res.ok) throw new Error(`서버 오류 ${res.status} — npm run proxy 실행 중인지 확인`)
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const lines = buf.split('\n')
+        buf = lines.pop()
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue
+          try {
+            const ev = JSON.parse(line.slice(6))
+            if (ev.type === 'saved') {
+              setFlowLogs(prev => [...prev, { type: 'ok', message: '✅ prompts.json 저장 완료' }])
+            } else if (ev.type === 'progress') {
+              setFlowLogs(prev => [...prev, {
+                type: 'progress', cutNo: ev.cutNo,
+                message: `🔄 C${String(ev.cutNo).padStart(2,'0')} 생성 중… (${ev.current}/${ev.total})`,
+              }])
+            } else if (ev.type === 'cut_done') {
+              setFlowLogs(prev => {
+                const next = [...prev]
+                for (let j = next.length - 1; j >= 0; j--) {
+                  if (next[j].cutNo === ev.cutNo && next[j].type === 'progress') {
+                    next[j] = { type: 'done', cutNo: ev.cutNo, message: `✅ C${String(ev.cutNo).padStart(2,'0')} 완료 (${ev.current}/${ev.total})` }
+                    break
+                  }
+                }
+                return next
+              })
+              // fallback: cut_image 이벤트가 없을 경우 HEAD 탐색
+              const padded = String(ev.cutNo).padStart(2, '0')
+              const cut = allCuts.find(c => c.no === ev.cutNo)
+              if (cut) {
+                for (const ext of ['jpg', 'jpeg', 'png']) {
+                  const url = (instaContent
+                    ? instaUrl(instaContent, episode.instaNum.trim(), ev.cutNo, ext)
+                    : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}`) + `?t=${Date.now()}`
+                  try {
+                    const r = await fetch(url, { method: 'HEAD' })
+                    if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(episodeCode, cut.no, 'g3', true); break }
+                  } catch {}
+                }
+              }
+            } else if (ev.type === 'cut_image') {
+              // 서버에서 직접 전달한 이미지 URL → 컷카드 자동 표시
+              const imgUrl = `http://localhost:3001${ev.url}?t=${Date.now()}`
+              const cut = allCuts.find(c => c.no === ev.cutNo)
+              if (cut) {
+                setImages(p => {
+                  const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                  const base = ev.url
+                  if (existing.some(u => u.includes(base))) return p
+                  return { ...p, [cut.id]: [...existing, imgUrl] }
+                })
+                setGPoint(episodeCode, cut.no, 'g3', true)
+              }
+            } else if (ev.type === 'cut_error') {
+              setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
+            } else if (ev.type === 'log' && ev.level === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `⚠️ ${ev.message}` }])
+            } else if (ev.type === 'error') {
+              setFlowLogs(prev => [...prev, { type: 'error', message: `❌ ${ev.message}${ev.detail ? ` (${ev.detail})` : ''}` }])
+            } else if (ev.type === 'complete') {
+              setFlowRunning(false)
+              setFlowDone(ev.success)
+              if (!ev.success) {
+                const reason = ev.reason ? ` — ${ev.reason}` : ''
+                setFlowLogs(prev => [...prev, { type: 'error', message: `파이프라인 실패${reason} (code: ${ev.code ?? 'null'})` }])
+              }
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      setFlowLogs(prev => [...prev, { type: 'error', message: `❌ ${err.message}` }])
+      setFlowRunning(false)
+    }
+  }
+
+  // ── 룰셋 체크 ─────────────────────────────────────────────────
+  const rulesetCheck = (prompt) => {
+    const issues = []
+    if (!prompt.includes('NOT short')) issues.push('헤어 이중강조')
+    if (!prompt.includes('skin texture') && !prompt.includes('beauty mark')) issues.push('매력점')
+    if (!prompt.includes('DO NOT change')) issues.push('캐릭터 고정')
+    if (!prompt.includes('K-model') && !prompt.includes('proportions')) issues.push('K모델 비율')
+    return issues
+  }
+
+  // ── 서여리 베이스 프롬프트 ────────────────────────────────────
+  const YEORI_BASE = `Young Korean woman early 20s (22-23 years old), long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, effortlessly photogenic not posing just existing beautifully, K-model proportions very small face long slim legs slender figure tall fashion model body, small head-to-body ratio DO NOT make average body proportions, appearing no older than 22-23, DO NOT change character appearance, Photorealistic 8K cinematic, natural Korean beauty`
+
+  // 툴별 접미사
+  const TOOL_SUFFIX = {
+    'Flow':             'Photorealistic 8K cinematic 9:16, background people must not interact with main character, consistent character face',
+    'Imagen':           'Photorealistic 8K cinematic, semi-realistic Korean style',
+    'Midjourney':       'photorealistic, 8K, cinematic lighting, --ar 9:16 --v 6',
+    'DALL-E 3':         'photorealistic, cinematic, high quality, 9:16 aspect ratio',
+    'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
+  }
+
+  const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id]?.length > 0)
+  const g1Count = cuts.filter(c => gData[episodeCode]?.[`cut_${c.no}`]?.g1).length
+  const g3Count = cuts.filter(c => images[c.id]?.length > 0).length
+  const g2Count = cuts.filter(c => confirmed[c.id]).length
+
+  const exportPromptsJson = () => runFlow()
+
+  const generateAllPrompts = () => {
+    let failCount = 0
+    cuts.forEach(c => {
+      const scene = c.scene || ''
+      const action = c.action || ''
+      const isCloseup = action.toLowerCase().includes('close') ||
+        action.includes('클로즈') || action.includes('표정') || action.includes('얼굴')
+      const beautyMark = 'natural skin texture on right cheek (subtle, not a prominent mark)'
+      const actionPrompt = action
+        ? `First 3 seconds: ${action.split('.')[0] || action}`
+        : ''
+      const prompt = [
+        YEORI_BASE.replace('natural skin texture on right cheek (subtle, not a prominent mark)', beautyMark),
+        c.imagePrompt || '',
+        scene,
+        actionPrompt,
+        TOOL_SUFFIX[selected] || TOOL_SUFFIX['Flow']
+      ].filter(Boolean).join(', ').replace(/,\s*,/g, ',').trim()
+
+      const issues = rulesetCheck(prompt)
+      if (issues.length > 0) failCount++
+      updateCut(c.id, { imagePrompt: prompt })
+    })
+    if (failCount > 0) {
+      alert(`⚠️ ${failCount}컷에서 룰셋 미달 항목이 있어요.\n각 컷 프롬프트를 확인해주세요.`)
+    } else {
+      alert(`✅ ${cuts.length}컷 프롬프트 생성 완료!\n서여리 베이스 + K모델 비율 + 룰셋 통과`)
+    }
+  }
+
+  return (
+    <div className={s.page}>
+      <TabToolbar
+        toolLabel="이미지 생성 도구"
+        tools={TOOLS}
+        activeTool={selected}
+        onToolChange={setSelected}
+        actions={[
+          {
+            key: 'flow-json', variant: 'green', disabled: flowRunning,
+            title: 'prompts.json 저장 후 Google Flow 자동 실행',
+            label: flowRunning ? '⏳ Flow 실행 중…' : '📤 Flow용 JSON 내보내기',
+            onClick: exportPromptsJson,
+          },
+          {
+            key: 'flow-auto', variant: 'purple', disabled: flowRunning,
+            label: flowRunning ? '🔄 Flow 실행 중…' : '🤖 전체 이미지 자동 생성',
+            onClick: runFlow,
+          },
+          {
+            key: 'reload-img', variant: 'green',
+            label: '🔄 기존 이미지 다시 불러오기',
+            onClick: reloadExistingImages,
+          },
+        ]}
+      />
+      <div className={s.root}>
+      <EpisodeInfoSidebar
+        activeCutId={activeCutId}
+        maxStage={2}
+        onCutClick={(cut) => {
+          setActiveCutId(cut.id)
+          cardRefs.current[cut.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }}
+      />
+      <div className={s.main}>
+      <div className={s.scrollBody}>
+      {/* 프록시 서버 연결 경고 */}
+      {proxyOk === false && (
+        <div style={{
+          background:'rgba(239,68,68,.12)', border:'1px solid rgba(239,68,68,.35)',
+          borderRadius:8, padding:'10px 16px', margin:'8px 16px 0',
+          fontSize:12.5, color:'#fca5a5', fontWeight:600, flexShrink:0,
+          display:'flex', alignItems:'center', gap:8,
+        }}>
+          ⚠️ 프록시 서버가 실행되지 않았습니다. 터미널에서 <code style={{background:'rgba(0,0,0,.3)',padding:'1px 6px',borderRadius:4,fontFamily:'monospace'}}>npm run studio</code>를 실행해주세요.
+        </div>
+      )}
+
+      {/* Flow 실행 로그 */}
+      {flowLogs.length > 0 && (
+        <div style={{
+          background:'var(--surface2)', border:'1px solid var(--border)',
+          borderRadius:8, padding:'12px 16px', margin:'0 0 12px',
+          fontSize:11, fontFamily:'Space Mono, monospace',
+        }}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <div style={{fontWeight:700,color:'var(--purple)'}}>🤖 Google Flow 이미지 생성</div>
+            {!flowRunning && (
+              <button onClick={() => { setFlowLogs([]); setFlowDone(false) }}
+                style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
+            )}
+          </div>
+          <div style={{maxHeight:100,overflowY:'auto',color:'var(--text2)',display:'flex',flexDirection:'column',gap:2}}>
+            {flowLogs.map((l,i) => (
+              <div key={i} style={{
+                color: l.type==='done'||l.type==='ok' ? 'var(--teal)'
+                     : l.type==='error' ? 'var(--red)'
+                     : l.type==='progress' ? 'var(--purple)'
+                     : 'var(--text3)'
+              }}>{l.message}</div>
+            ))}
+          </div>
+          {flowDone && (
+            <div style={{marginTop:8,color:'var(--teal)',fontWeight:700,borderTop:'1px solid var(--border)',paddingTop:8}}>
+              🎉 전체 완료!
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className={s.grid}>
+        {cuts.map((cut) => (
+          <div key={cut.id} ref={el => cardRefs.current[cut.id] = el} className={s.card}>
+            {/* 왼쪽: a/b 이미지 비교 영역 — 프레임(전체 영역) 크기는 컷마다 항상 동일하게
+                고정하고, 그 안에서 9:16이면 좌우 분할, 16:9가 하나라도 있으면 상하 분할 */}
+            <div className={s.cardLeft}>
+              {(() => {
+                const cutImages = images[cut.id] || []
+                const isStacked = cutImages.some((_, i) => (imageRatio[`${cut.id}_${i}`] || '9:16') === '16:9')
+                const slotStyle = isStacked
+                  ? { maxWidth: '100%', maxHeight: 'calc(50% - 4px)' }
+                  : { maxWidth: 'calc(50% - 4px)', maxHeight: '100%' }
+                return (
+              <div className={s.imageCompareRow} style={{ flexDirection: isStacked ? 'column' : 'row' }}>
+                {cutImages.map((url, idx) => {
+                  const isSelected = (selectedImage[cut.id] ?? 0) === idx
+                  const ratioKey = `${cut.id}_${idx}`
+                  const ratio = imageRatio[ratioKey] || '9:16'
+                  return (
+                    <div key={idx}
+                      className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
+                      style={{ aspectRatio: ratio === '16:9' ? '16/9' : '9/16', ...slotStyle }}
+                      onClick={() => setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))}
+                    >
+                      <img src={url} alt="" />
+                      <span className={s.compareLetter}>{String.fromCharCode(97 + idx).toUpperCase()}</span>
+                      <div className={s.ratioToggle} onClick={e => e.stopPropagation()}>
+                        {['9:16', '16:9'].map(r => (
+                          <button key={r}
+                            className={ratio === r ? s.ratioToggleActive : ''}
+                            onClick={() => setImageRatio(p => ({ ...p, [ratioKey]: r }))}
+                          >{r}</button>
+                        ))}
+                      </div>
+                      {isSelected && <div className={s.selectedBadge}>✓ G2 승인용 선택됨</div>}
+                      <button className={s.compareRemove} onClick={e => {
+                        e.stopPropagation()
+                        setImages(p => {
+                          const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
+                          const newArr = arr.filter((_, i) => i !== idx)
+                          const n = { ...p }
+                          if (newArr.length) n[cut.id] = newArr
+                          else delete n[cut.id]
+                          return n
+                        })
+                        setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                      }}>✕</button>
+                    </div>
+                  )
+                })}
+                {cutImages.length < 2 && (
+                  <div className={s.compareEmpty} style={{ ...slotStyle, aspectRatio: isStacked ? '16/9' : '9/16' }}
+                    onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}>
+                    {generating[cut.id] ? (
+                      <>
+                        <span style={{ fontSize: 24, animation: 'spin 1s linear infinite' }}>⟳</span>
+                        <span style={{ fontSize: 11, color: 'var(--purple)' }}>{selected === 'Flow' ? 'Flow 생성 중...' : 'Gemini 생성 중...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className={s.uploadIcon}>{cutImages.length ? '➕' : '🖼️'}</span>
+                        <span>{cutImages.length ? '이미지 추가' : '이미지 업로드'}</span>
+                        <span className={s.uploadSub}>클릭하여 선택</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                <input ref={el => fileRefs.current[cut.id] = el} type="file" accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={e => handleImageUpload(cut.id, e.target.files[0])} />
+              </div>
+                )
+              })()}
+              {(images[cut.id]?.length || 0) >= 2 && (
+                <div className={s.addMoreRow} onClick={() => fileRefs.current[cut.id]?.click()}>
+                  + 이미지 추가
+                </div>
+              )}
+              {apiKeys.gemini && cut.imagePrompt && !images[cut.id]?.length && (
+                <button
+                  onClick={() => generateSingleImage(cut)}
+                  disabled={generating[cut.id]}
+                  className={s.autoGenBtn}
+                >
+                  {generating[cut.id] ? '⟳ 생성 중...' : '🤖 자동 생성'}
+                </button>
+              )}
+            </div>
+
+            {/* 오른쪽: 정보·컨트롤 영역 */}
+            <div className={s.cardRight}>
+              <div className={s.cardHeader}>
+                <span className={s.cutBadge}>CUT {cut.no}</span>
+                <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {gData[episodeCode]?.[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
+                  {g2Approved[cut.id] && <span className={`${s.gBadge} ${s.g2Badge}`}>G2</span>}
+                  <button
+                    onClick={() => {
+                      setImages(p => ({ ...p, [cut.id]: [] }))
+                      setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                      setConfirmed(p => ({ ...p, [cut.id]: false }))
+                      setChecklist(p => ({ ...p, [cut.id]: {} }))
+                    }}
+                    style={{
+                      fontSize: 10, padding: '2px 7px', borderRadius: 4,
+                      background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.3)',
+                      color: '#fca5a5', cursor: 'pointer',
+                    }}
+                  >이미지 초기화</button>
+                </div>
+              </div>
+
+              <div className={s.promptSection}>
+                <div className={s.promptHeader}>
+                  <span className={s.promptLabel}>{selected} 프롬프트</span>
+                  <button className={s.copyBtn} onClick={() => copyPrompt(cut.imagePrompt)}
+                    title="복사">📋 복사</button>
+                </div>
+                <textarea
+                  className={s.promptInput}
+                  rows={4}
+                  placeholder={`${selected}용 이미지 프롬프트를 입력하세요...`}
+                  value={cut.imagePrompt || ''}
+                  onChange={e => updateCut(cut.id, { imagePrompt: e.target.value })}
+                />
+              </div>
+
+              <div className={s.dialoguePreview}>
+                {cut.dialogue && <div className={s.dial}><span className={s.dialLabel}>대사</span>{cut.dialogue}</div>}
+                {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
+              </div>
+
+              <div className={s.confirmRow} style={{marginTop:'auto'}}>
+                <button className={s.confirmBtn}
+                  disabled={!images[cut.id]?.length || confirmed[cut.id]}
+                  onClick={() => setChecklistCutId(cut.id)}>
+                  {confirmed[cut.id] ? '✓ 컨펌' : '컨펌'}
+                </button>
+                <button className={s.regenBtn}
+                  onClick={() => {
+                    if (selected === 'Flow' && !proxyOk) {
+                      alert('프록시 서버를 먼저 실행해주세요 (npm run studio)')
+                      return
+                    }
+                    setConfirmed(p => ({ ...p, [cut.id]: false }))
+                    setChecklist(p => ({ ...p, [cut.id]: {} }))
+                    setImages(p => { const n = {...p}; delete n[cut.id]; return n })
+                    if (selected === 'Flow') {
+                      runFlowForCut(cut)
+                    } else if (apiKeys.gemini && cut.imagePrompt) {
+                      generateSingleImage(cut)
+                    }
+                  }}>
+                  🔄 재생성
+                </button>
+                <button className={s.g2Btn}
+                  disabled={!confirmed[cut.id] || g2Approved[cut.id]}
+                  onClick={() => {
+                    setG2Approved(p => ({ ...p, [cut.id]: true }))
+                    const idx = selectedImage[cut.id] ?? 0
+                    const filename = extractImageFilename((images[cut.id] || [])[idx])
+                    setGPoints(episodeCode, cut.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
+                  }}>
+                  {g2Approved[cut.id] ? '✓ G2 완료' : 'G2 승인'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* G2 전체 승인 바 */}
+      {cuts.length > 0 && (
+        <div className={s.g2AllBar}>
+          <span className={s.g2AllCount}>
+            G2 완료 {Object.values(g2Approved).filter(Boolean).length} / {cuts.length}
+          </span>
+          <button
+            className={s.g2AllBtn}
+            disabled={!cuts.every(c => g2Approved[c.id])}
+            onClick={() => {
+              cuts.forEach(c => {
+                const idx = selectedImage[c.id] ?? 0
+                const filename = extractImageFilename((images[c.id] || [])[idx])
+                setGPoints(episodeCode, c.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
+              })
+              dispatch({ type: 'SET_TAB', p: 'tts' })
+            }}>
+            {cuts.every(c => g2Approved[c.id]) ? '🎉 G2 전체 승인 → TTS 탭' : 'G2 전체 승인'}
+          </button>
+        </div>
+      )}
+      </div>
+
+      {/* G2 승인 전 체크리스트 팝업 */}
+      {checklistCutId && (() => {
+        const checklistCut = cuts.find(c => c.id === checklistCutId)
+        const cl = checklist[checklistCutId] || {}
+        const doneCount = CHECKLIST_ITEMS.filter(item => cl[item.key]).length
+        const allDone = doneCount === CHECKLIST_ITEMS.length
+        return (
+          <div className={s.checklistOverlay} onClick={() => setChecklistCutId(null)}>
+            <div className={s.checklistModal} onClick={e => e.stopPropagation()}>
+              <div className={s.checklistTitle}>CUT {checklistCut?.no} · G2 승인 전 체크리스트</div>
+              <div className={s.checklistSub}>{doneCount}/{CHECKLIST_ITEMS.length}개 확인됨</div>
+              {CHECKLIST_ITEMS.map(item => (
+                <label key={item.key} className={s.checklistItem}>
+                  <input type="checkbox" checked={!!cl[item.key]}
+                    onChange={e => setChecklist(p => ({
+                      ...p,
+                      [checklistCutId]: { ...p[checklistCutId], [item.key]: e.target.checked },
+                    }))} />
+                  <span>{item.label}</span>
+                </label>
+              ))}
+              <div className={s.checklistActions}>
+                <button className={s.checklistClose} onClick={() => setChecklistCutId(null)}>닫기</button>
+                <button className={s.checklistDone} disabled={!allDone}
+                  onClick={() => {
+                    setConfirmed(p => ({ ...p, [checklistCutId]: true }))
+                    setChecklistCutId(null)
+                  }}>
+                  {allDone ? '✓ 컨펌 완료' : `${CHECKLIST_ITEMS.length - doneCount}개 더 체크하세요`}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
+      </div>
+    </div>
+    </div>
+  )
+}
