@@ -1709,6 +1709,14 @@ async function dragToPrompt(page, fromPos, toPos) {
 // ── 컷 생성: hover로 레퍼런스 탐색 → 드래그앤드롭 → 프롬프트 텍스트 → 생성 ──
 
 async function processCut(page, cut, defaultEpisode, type = 'shorts') {
+  // 대기열이 이미 꽉 찬 걸 아는 상태로 생성 버튼을 클릭하러 가면(실측 2026-08-23),
+  // 그 클릭 자체는 성공해도 이후 page.screenshot()이 protocolTimeout(5분)을 다
+  // 채우고 ProtocolError로 죽는 경우를 실제로 확인함(정확한 인과관계는 미확정 —
+  // 원인 규명은 다음 세션 과제로 남김, 아래 memory 참고). 이미 알고 있는 나쁜
+  // 상태에서 굳이 진행하지 않도록 컷 처리 시작 전에 먼저 걸러낸다.
+  const preflightRejection = await detectFlowRejection(page)
+  if (preflightRejection) throw new FlowRejectionError(`Flow 요청 거부(사전 확인): ${preflightRejection}`)
+
   const ep = cut.episode ?? defaultEpisode ?? 'x'
 
   // episode_style_guide.json이 있으면 promptPrefix를 프롬프트 앞에 삽입
