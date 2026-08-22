@@ -70,7 +70,10 @@ const CONFIG = {
   downloadDir:     path.join(MEDIA_ROOT, 'downloads', 'flow'),
   flowUrl:         'https://labs.google/flow',
   delayMs:         4000,   // 생성 요청 사이 대기 (레이트 리밋 방지)
-  timeoutMs:       120000, // 이미지 생성 최대 대기 시간
+  timeoutMs:       120000, // 이미지 생성 최대 대기 시간(1장 기준)
+  twoImageTimeoutMs: 300000, // 2장(x2 생성 모드) 대기 최대 시간 — timeoutMs와 공유하면
+                              // 1장 기준 예산으로 2장이 다 뜨길 기다리게 돼 실제로 아직
+                              // 생성 중인데 타임아웃으로 강제 저장되는 문제가 있었음(2026-08-22)
   retryCount:      2,      // 실패 시 재시도 횟수
 
   // ── 레퍼런스 이미지 분석 ────────────────────────────────────────────
@@ -2209,7 +2212,7 @@ async function waitForTwoNewImages(page, beforeItems) {
         }
         return collect(document).filter(src => !before.includes(src)).length >= 2
       },
-      { timeout: CONFIG.timeoutMs },
+      { timeout: CONFIG.twoImageTimeoutMs },
       beforeSrcs
     )
   } catch {
