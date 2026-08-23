@@ -68,6 +68,20 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`
 }
 
+// PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
+// 하위로 라우팅할지 반환. StudioTab.jsx에 있는 것과 동일 로직(이 코드베이스의 기존 관례대로
+// 작은 순수함수라 탭마다 그대로 복제해서 씀).
+function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
+
+// 컷마다 masterCode.pl이 없는 경우를 위한 폴백 — episode.contentType 기준 유추.
+function episodeContentTypeToInsta(contentType) {
+  const map = { IG_R: 'RL', IG_F: 'FD', IG_P: 'PT', IG_S: 'ST' }
+  return map[(contentType || '').toUpperCase()] || null
+}
+
 export default function VideoTab() {
   const { state, dispatch } = useApp()
   const { cuts, videoSettings, renderProgress, episode } = state
@@ -337,7 +351,15 @@ export default function VideoTab() {
 
   const ensureStandardImage = async (cut) => {
     const ep = episode?.number ?? ''
-    const scanRes = await fetch(`http://localhost:3001/api/scan-images?ep=${ep}`)
+    // 인스타 콘텐츠 에피소드는 G2 승인 이미지가 downloads/flow/ep{N}/이 아니라
+    // downloads/insta/{content}/{num}/에 있다(StudioTab.jsx의 스캔 요청과 동일 규칙) —
+    // 안 보내면 CUT4처럼 실제 이미지가 있어도 "G2 이미지가 없습니다" 오류가 난다
+    // (2026-08-23 실측: /api/scan-images가 ep{N} 폴더만 봐서 IG_R02 CUT4를 못 찾던 버그).
+    const instaContent = cuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+      || episodeContentTypeToInsta(episode?.contentType)
+    const instaNum = instaContent ? (episode?.instaNum?.trim() || '') : ''
+    const qs = new URLSearchParams({ ep, instaContent: instaContent || '', instaNum, episodeCode })
+    const scanRes = await fetch(`http://localhost:3001/api/scan-images?${qs}`)
     const data = await scanRes.json()
     const match = data.images?.find(img => img.cutNo === cut.no)
     if (!match) throw new Error(`CUT ${cut.no}의 G2 이미지가 없습니다. 스튜디오 탭에서 먼저 이미지를 생성/승인하세요.`)

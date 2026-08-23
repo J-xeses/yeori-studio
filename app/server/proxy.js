@@ -1040,15 +1040,49 @@ app.post('/api/confirm-image', (req, res) => {
 })
 
 // ── GET /api/scan-images — 기존 생성 이미지 재조회 ──────────────
+// /api/scan-media와 동일한 이유로 instaContent/instaNum이 오면 downloads/insta/{content}/{num}/을
+// 스캔한다 — 안 보내면 예전처럼 downloads/flow/ep{N}/ 그대로(레거시 에피소드 회귀 없음).
 app.get('/api/scan-images', (req, res) => {
-  const { ep } = req.query
+  const { ep, instaContent, instaNum, episodeCode } = req.query
   if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
-  const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
+  const useInsta = instaContent && instaNum
+  const epDir = useInsta
+    ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent])
+    : path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
+  const urlPrefix = useInsta
+    ? `/downloads/insta/${instaContent}/${instaNum}${INSTA_SUBDIR[instaContent] ? '/' + INSTA_SUBDIR[instaContent] : ''}`
+    : `/downloads/flow/ep${ep}`
   if (!fs.existsSync(epDir)) return res.json({ images: [] })
-  const images = []
+
+  // 사람이 스튜디오 탭에서 실제로 고른 이미지(gpoints.json의 selectedImage)가 있으면
+  // 그 파일을 cut별 목록 맨 앞으로 — VideoTab.jsx가 images.find(cutNo===...)로 첫 매치를
+  // 그대로 쓰기 때문에, 이게 없으면 알파벳순 첫 파일(_a)이 사람의 실제 선택(_b 등)을
+  // 무시하고 영상 생성에 쓰이는 사고로 이어진다(2026-08-23 실측: cut_04_b.jpeg를 G2
+  // 승인했는데 cut_04_a.jpg로 생성될 뻔함).
+  let selectedByCut = {}
+  if (episodeCode) {
+    const gpEpData = loadGpointsFile()[episodeCode] || {}
+    Object.entries(gpEpData).forEach(([cutKey, v]) => {
+      const m = cutKey.match(/^cut_(\d+)$/)
+      if (m && v?.selectedImage) selectedByCut[parseInt(m[1], 10)] = v.selectedImage
+    })
+  }
+
+  const filesByCut = {}
   fs.readdirSync(epDir).sort().forEach(file => {
     const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
-    if (m) images.push({ cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${ep}/${file}` })
+    if (m) {
+      const cutNo = parseInt(m[1], 10)
+      ;(filesByCut[cutNo] ??= []).push(file)
+    }
+  })
+  const images = []
+  Object.entries(filesByCut).forEach(([cutNo, files]) => {
+    const preferred = selectedByCut[cutNo]
+    const ordered = (preferred && files.includes(preferred))
+      ? [preferred, ...files.filter(f => f !== preferred)]
+      : files
+    ordered.forEach(file => images.push({ cutNo: parseInt(cutNo, 10), url: `${urlPrefix}/${file}` }))
   })
   res.json({ images })
 })

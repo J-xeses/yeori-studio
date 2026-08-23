@@ -635,7 +635,17 @@ export default function StudioTab() {
                     <div key={idx}
                       className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
                       style={{ aspectRatio: ratio === '16:9' ? '16/9' : '9/16', ...slotStyle }}
-                      onClick={() => setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))}
+                      onClick={() => {
+                        setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))
+                        // 이미 G2 승인된 컷이면 버튼을 다시 안 눌러도(재승인 없이) 바뀐 선택이
+                        // 바로 gpoints.json에 반영되게 한다 — 안 그러면 화면엔 B가 "선택됨"으로
+                        // 보여도 실제 selectedImage는 예전 A 그대로 남아, 영상 만들기 탭이 엉뚱한
+                        // 파일로 영상을 생성하는 사고로 이어진다(2026-08-23 실측).
+                        if (g2Approved[cut.id]) {
+                          const filename = extractImageFilename(url)
+                          if (filename) setGPoints(episodeCode, cut.no, { g2: true, selectedImage: filename })
+                        }
+                      }}
                     >
                       <img src={url} alt="" />
                       <span className={s.compareLetter}>{String.fromCharCode(97 + idx).toUpperCase()}</span>
