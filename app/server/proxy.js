@@ -1941,6 +1941,37 @@ app.post('/api/source-download', async (req, res) => {
   }
 })
 
+// GET /api/list-episode-html — 에피소드 소스 폴더의 .html 파일 목록 (CAPCUT 컷을
+// HTML 캡처로 만들 때 쓸 커스텀 목업 파일 — 예: RL02_DM_mockup_v3.html — 을 찾기 위함).
+// instaContent/instaNum이 오면 downloads/insta/{content}/{num}/, 아니면 scriptDir(대본
+// 원문 위치, server/lib/mediaPaths.js의 scriptDir())를 스캔한다.
+app.get('/api/list-episode-html', (req, res) => {
+  const { instaContent, instaNum, episodeCode } = req.query
+  const dir = (instaContent && instaNum)
+    ? instaDir(instaContent, instaNum)
+    : (episodeCode ? scriptDir(episodeCode) : null)
+  if (!dir) return res.json({ files: [] })
+  if (!fs.existsSync(dir)) return res.json({ files: [] })
+  const files = fs.readdirSync(dir).filter(f => /\.html?$/i.test(f))
+  res.json({ files })
+})
+
+// GET /api/read-episode-html — 위 목록에서 고른 파일 하나의 내용을 읽어온다.
+// 파일명만 받고(path.basename) list-episode-html과 동일한 폴더 안에서만 찾아서
+// 경로 탈출(디렉터리 트래버설)을 막는다.
+app.get('/api/read-episode-html', (req, res) => {
+  const { file, instaContent, instaNum, episodeCode } = req.query
+  if (!file) return res.status(400).json({ error: 'file 필요' })
+  const dir = (instaContent && instaNum)
+    ? instaDir(instaContent, instaNum)
+    : (episodeCode ? scriptDir(episodeCode) : null)
+  if (!dir) return res.status(400).json({ error: 'instaContent/instaNum 또는 episodeCode 필요' })
+  const safeName = path.basename(file)
+  const filePath = path.join(dir, safeName)
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: '파일을 찾을 수 없습니다' })
+  res.json({ html: fs.readFileSync(filePath, 'utf-8') })
+})
+
 // POST /api/graphic-capture — GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해
 // 스크린샷 → ffmpeg로 정지화면 mp4 변환. 라이브 자동화용 전용 Chrome(9222, Flow/CapCut
 // 로그인 세션)과 완전히 분리된 독립 headless 인스턴스를 매번 새로 띄워서 그 세션에는

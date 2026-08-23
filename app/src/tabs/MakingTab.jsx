@@ -1,10 +1,25 @@
 import { useState } from 'react'
 import { useApp } from '../context/AppContext'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './MakingTab.module.css'
 
 const YEORI_SERVER = 'http://localhost:3001'
+
+// PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
+// 하위로 라우팅할지 반환. StudioTab.jsx/VideoTab.jsx에 있는 것과 동일 로직(이 코드베이스의
+// 기존 관례대로 작은 순수함수라 탭마다 그대로 복제해서 씀).
+function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
+
+// 컷마다 masterCode.pl이 없는 경우를 위한 폴백 — episode.contentType 기준 유추.
+function episodeContentTypeToInsta(contentType) {
+  const map = { IG_R: 'RL', IG_F: 'FD', IG_P: 'PT', IG_S: 'ST' }
+  return map[(contentType || '').toUpperCase()] || null
+}
 
 const GRAPHIC_TEMPLATE = `<!DOCTYPE html>
 <html>
@@ -42,15 +57,28 @@ function escapeHtml(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
+// 대본의 "CP(자막)" 필드가 아직 scriptParserV3.js에서 별도 컷 필드로 파싱되지 않아서
+// (2026-08-23 실측 확인 — 별도 개선 과제로 남김), CAPCUT 텍스트 컷의 실제 화면 문구를
+// narration/dialogue만으론 못 찾는 경우가 있다. videoPrompt 안에 "따옴표로 감싼 문구"가
+// 있으면(실제 대본 관례 — 예: `타이핑 애니메이션으로 텍스트 등장\n"AI한테 DM..."`) 그걸
+// 우선 추출한다. 그래도 못 찾으면 비워두고 사람이 캡처 전에 직접 채우도록 한다(기존
+// GRAPHIC 워크플로우와 동일 — 자동 채우기는 시작점일 뿐 항상 편집 가능).
+function extractQuotedLine(text) {
+  const m = String(text || '').match(/"([^"]+)"/)
+  return m ? m[1] : ''
+}
+
 function fillTemplate(cut) {
+  const mainText = extractQuotedLine(cut.videoPrompt) || cut.narration || cut.dialogue || ''
   return GRAPHIC_TEMPLATE
-    .replace('{narration}', escapeHtml(cut.narration || cut.dialogue || ''))
+    .replace('{narration}', escapeHtml(mainText))
     .replace('{scene}', escapeHtml(cut.scene || ''))
 }
 
 export default function MakingTab() {
   const { state } = useApp()
   const { episode, cuts } = state
+  const episodeCode = resolveEpisodeCode(episode)
   const graphicCuts = (cuts || []).filter(c => c.cutType === 'GRAPHIC')
   const brollCuts = (cuts || []).filter(c => c.cutType === 'BROLL')
 
@@ -204,9 +232,19 @@ export default function MakingTab() {
     }
   }
 
-  // ── CAPCUT: CapCut 데스크톱 창을 자동 감지해 그 영역만 녹화 → BROLL과 동일한
-  // editBrollRaw() 편집 파이프라인(트림+1080x1920 스케일)을 그대로 재사용.
+  // ── CAPCUT: 두 가지 제작 방식을 지원한다.
+  // 1) "HTML 캡처"(기본) — CUT1/CUT5처럼 검정배경+텍스트뿐이거나 CUT2/CUT3처럼 이미 만들어둔
+  //    커스텀 목업 HTML(예: RL02_DM_mockup_v3.html)이 있는 경우, GRAPHIC 컷과 완전히 동일한
+  //    HTML→헤드리스캡처→mp4 파이프라인(selectCut/htmlSource/captureGraphic, 아래 GRAPHIC
+  //    섹션과 상태 공유)을 그대로 탄다 — CAPCUT 타입이라는 이유만으로 이 경로를 못 쓸 이유가
+  //    없다는 걸 실제 대본(RL02)으로 확인(2026-08-23).
+  // 2) "CapCut 데스크톱 녹화"(기존) — 정말 사람이 CapCut 안에서 직접 편집해야 하는 컷 대비로
+  //    그대로 남겨둠. cutType/g5_tool 등 파이프라인 라우팅 값은 전혀 안 건드림 — 메이킹 탭
+  //    안에서 "어떻게 만들지"만 컷별로 고를 수 있게 한 것뿐.
   const capcutCuts = (cuts || []).filter(c => c.cutType === 'CAPCUT')
+  const [capcutMode, setCapcutMode] = useState({}) // { [cutNo]: 'html' | 'record' }, 기본 'html'
+  const getCapcutMode = (cutNo) => capcutMode[cutNo] || 'html'
+
   const [selectedCapcutCutNo, setSelectedCapcutCutNo] = useState(null)
   const [capcutStatus, setCapcutStatus] = useState(null)
   const [capcutChecking, setCapcutChecking] = useState(false)
@@ -215,6 +253,57 @@ export default function MakingTab() {
   const [capcutRecording, setCapcutRecording] = useState(false)
   const [capcutBusy, setCapcutBusy] = useState(false)
   const [capcutResult, setCapcutResult] = useState(null)
+
+  // HTML 소스 후보 목록(에피소드 폴더에 이미 있는 .html 파일들) — CUT2/CUT3의
+  // RL02_DM_mockup_v3.html 같은 커스텀 목업을 찾기 위함.
+  const [episodeHtmlFiles, setEpisodeHtmlFiles] = useState([])
+  const [htmlFilesLoading, setHtmlFilesLoading] = useState(false)
+  const [selectedHtmlFile, setSelectedHtmlFile] = useState('__auto__')
+
+  const instaRouteParams = () => {
+    const instaContent = (cuts || []).map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+      || episodeContentTypeToInsta(episode?.contentType)
+    const instaNum = instaContent ? (episode?.instaNum?.trim() || '') : ''
+    return { instaContent: instaContent || '', instaNum }
+  }
+
+  const fetchEpisodeHtmlFiles = async () => {
+    setHtmlFilesLoading(true)
+    try {
+      const { instaContent, instaNum } = instaRouteParams()
+      const qs = new URLSearchParams({ instaContent, instaNum, episodeCode: episodeCode || '' })
+      const res = await fetch(`${YEORI_SERVER}/api/list-episode-html?${qs}`)
+      const data = await res.json()
+      setEpisodeHtmlFiles(data.files || [])
+    } catch {
+      setEpisodeHtmlFiles([])
+    } finally {
+      setHtmlFilesLoading(false)
+    }
+  }
+
+  const applyHtmlFileChoice = async (fileName, cut) => {
+    setSelectedHtmlFile(fileName)
+    if (fileName === '__auto__') {
+      setHtmlSource(fillTemplate(cut))
+      return
+    }
+    try {
+      const { instaContent, instaNum } = instaRouteParams()
+      const qs = new URLSearchParams({ file: fileName, instaContent, instaNum, episodeCode: episodeCode || '' })
+      const res = await fetch(`${YEORI_SERVER}/api/read-episode-html?${qs}`)
+      const data = await res.json()
+      if (res.ok) setHtmlSource(data.html)
+    } catch {}
+  }
+
+  // CAPCUT 컷을 "HTML 캡처" 모드로 선택 — GRAPHIC과 동일한 selectCut()으로 htmlSource/
+  // selectedCutNo를 그대로 채우고, 이 컷의 폴더에 있는 .html 후보 목록을 같이 불러온다.
+  const selectCapcutCutForHtml = (cut) => {
+    selectCut(cut)
+    setSelectedHtmlFile('__auto__')
+    fetchEpisodeHtmlFiles()
+  }
 
   const selectCapcutCut = (cut) => {
     setSelectedCapcutCutNo(cut.no)
@@ -553,7 +642,10 @@ export default function MakingTab() {
                     {capcutCuts.map(cut => (
                       <button key={cut.id}
                         className={`${s.cutListItem} ${selectedCapcutCutNo === cut.no ? s.cutListItemActive : ''}`}
-                        onClick={() => selectCapcutCut(cut)}>
+                        onClick={() => {
+                          selectCapcutCut(cut)
+                          if (getCapcutMode(cut.no) === 'html') selectCapcutCutForHtml(cut)
+                        }}>
                         <span className={s.cutNo}>#{cut.no}</span>
                         <span className={s.cutSummary}>{cut.scene || '(내용 없음)'}</span>
                       </button>
@@ -562,75 +654,112 @@ export default function MakingTab() {
                 )}
               </div>
 
-              {selectedCapcutCutNo != null && (
+              {selectedCapcutCutNo != null && (() => {
+                const activeCapcutCut = capcutCuts.find(c => c.no === selectedCapcutCutNo)
+                const mode = getCapcutMode(selectedCapcutCutNo)
+                return (
                 <div className={s.card}>
-                  <div className={s.cardTitle}>#{selectedCapcutCutNo} CapCut 녹화 설정</div>
-
-                  <div className={s.editorActions}>
-                    <button className={s.previewBtn} disabled={capcutChecking} onClick={checkCapcutWindow}>
-                      {capcutChecking ? '⏳ 확인 중…' : 'CapCut 상태 확인'}
-                    </button>
+                  <div className={s.cardTitle}>#{selectedCapcutCutNo} 제작 방식</div>
+                  <div className={s.radioRow}>
+                    <label className={s.radioLabel}>
+                      <input type="radio" name="capcut-mode" checked={mode === 'html'}
+                        onChange={() => {
+                          setCapcutMode(p => ({ ...p, [selectedCapcutCutNo]: 'html' }))
+                          if (activeCapcutCut) selectCapcutCutForHtml(activeCapcutCut)
+                        }} />
+                      HTML 캡처로 제작
+                    </label>
+                    <label className={s.radioLabel}>
+                      <input type="radio" name="capcut-mode" checked={mode === 'record'}
+                        onChange={() => setCapcutMode(p => ({ ...p, [selectedCapcutCutNo]: 'record' }))} />
+                      CapCut 데스크톱 녹화
+                    </label>
                   </div>
 
-                  {capcutStatus && (
-                    capcutStatus.running ? (
-                      <div className={s.resultOk}>
-                        ✅ 실행 중 — {capcutStatus.windowTitle || 'CapCut'} (PID {capcutStatus.pid}, 창 {capcutStatus.region?.w}×{capcutStatus.region?.h})
-                      </div>
-                    ) : (
-                      <div className={s.resultError}>⚠️ CapCut을 먼저 실행해주세요.</div>
-                    )
-                  )}
-
-                  {capcutStatus?.running && (
-                    <>
-                      <div className={s.settingRow}>
-                        <div className={s.settingGroup}>
-                          <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
-                          <div className={s.radioRow}>
-                            <input type="number" min="1" value={capcutTargetDuration} disabled={capcutRecording}
-                              onChange={e => setCapcutTargetDuration(parseInt(e.target.value) || 1)}
-                              className={s.durationInput} />
-                            <label className={s.radioLabel}>
-                              <input type="radio" name="capcut-trim" value="end"
-                                checked={capcutTrimMode === 'end'} onChange={() => setCapcutTrimMode('end')} disabled={capcutRecording} />
-                              끝에서부터
-                            </label>
-                            <label className={s.radioLabel}>
-                              <input type="radio" name="capcut-trim" value="start"
-                                checked={capcutTrimMode === 'start'} onChange={() => setCapcutTrimMode('start')} disabled={capcutRecording} />
-                              처음부터
-                            </label>
-                          </div>
+                  {mode === 'html' ? (
+                    <div className={s.settingRow}>
+                      <div className={s.settingGroup}>
+                        <div className={s.settingLabel}>HTML 소스 선택</div>
+                        <select value={selectedHtmlFile} disabled={htmlFilesLoading}
+                          onChange={e => activeCapcutCut && applyHtmlFileChoice(e.target.value, activeCapcutCut)}>
+                          <option value="__auto__">자동 템플릿 (텍스트 채우기)</option>
+                          {episodeHtmlFiles.map(f => <option key={f} value={f}>{f}</option>)}
+                        </select>
+                        <div className={s.emptyHint}>
+                          {htmlFilesLoading ? 'HTML 파일 목록 불러오는 중…' : '아래 "HTML 소스" 편집기에서 내용을 확인/수정한 뒤 캡처하세요.'}
                         </div>
                       </div>
-
+                    </div>
+                  ) : (
+                    <>
                       <div className={s.editorActions}>
-                        {!capcutRecording ? (
-                          <button className={s.captureBtn} disabled={capcutBusy} onClick={startCapcutRecording}>
-                            {capcutBusy ? '⏳' : '녹화 시작'}
-                          </button>
-                        ) : (
-                          <button className={s.stopBtn} disabled={capcutBusy} onClick={stopCapcutRecording}>
-                            🔴 녹화 중... 중지
-                          </button>
-                        )}
+                        <button className={s.previewBtn} disabled={capcutChecking} onClick={checkCapcutWindow}>
+                          {capcutChecking ? '⏳ 확인 중…' : 'CapCut 상태 확인'}
+                        </button>
                       </div>
+
+                      {capcutStatus && (
+                        capcutStatus.running ? (
+                          <div className={s.resultOk}>
+                            ✅ 실행 중 — {capcutStatus.windowTitle || 'CapCut'} (PID {capcutStatus.pid}, 창 {capcutStatus.region?.w}×{capcutStatus.region?.h})
+                          </div>
+                        ) : (
+                          <div className={s.resultError}>⚠️ CapCut을 먼저 실행해주세요.</div>
+                        )
+                      )}
+
+                      {capcutStatus?.running && (
+                        <>
+                          <div className={s.settingRow}>
+                            <div className={s.settingGroup}>
+                              <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
+                              <div className={s.radioRow}>
+                                <input type="number" min="1" value={capcutTargetDuration} disabled={capcutRecording}
+                                  onChange={e => setCapcutTargetDuration(parseInt(e.target.value) || 1)}
+                                  className={s.durationInput} />
+                                <label className={s.radioLabel}>
+                                  <input type="radio" name="capcut-trim" value="end"
+                                    checked={capcutTrimMode === 'end'} onChange={() => setCapcutTrimMode('end')} disabled={capcutRecording} />
+                                  끝에서부터
+                                </label>
+                                <label className={s.radioLabel}>
+                                  <input type="radio" name="capcut-trim" value="start"
+                                    checked={capcutTrimMode === 'start'} onChange={() => setCapcutTrimMode('start')} disabled={capcutRecording} />
+                                  처음부터
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className={s.editorActions}>
+                            {!capcutRecording ? (
+                              <button className={s.captureBtn} disabled={capcutBusy} onClick={startCapcutRecording}>
+                                {capcutBusy ? '⏳' : '녹화 시작'}
+                              </button>
+                            ) : (
+                              <button className={s.stopBtn} disabled={capcutBusy} onClick={stopCapcutRecording}>
+                                🔴 녹화 중... 중지
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      {capcutResult && (
+                        capcutResult.error ? (
+                          <div className={s.resultError}>❌ {capcutResult.error}</div>
+                        ) : (
+                          <div className={s.resultOk}>
+                            ✅ 편집 완료 — 최종: {capcutResult.finalPath} ({(capcutResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.finalDuration?.toFixed?.(1) ?? capcutResult.finalDuration}초)
+                            <br />원본(raw, 보관됨): {capcutResult.rawPath} ({(capcutResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.rawDuration?.toFixed(1)}초)
+                          </div>
+                        )
+                      )}
                     </>
                   )}
-
-                  {capcutResult && (
-                    capcutResult.error ? (
-                      <div className={s.resultError}>❌ {capcutResult.error}</div>
-                    ) : (
-                      <div className={s.resultOk}>
-                        ✅ 편집 완료 — 최종: {capcutResult.finalPath} ({(capcutResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.finalDuration?.toFixed?.(1) ?? capcutResult.finalDuration}초)
-                        <br />원본(raw, 보관됨): {capcutResult.rawPath} ({(capcutResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.rawDuration?.toFixed(1)}초)
-                      </div>
-                    )
-                  )}
                 </div>
-              )}
+                )
+              })()}
 
               <div className={s.card}>
                 <div className={s.cardTitle}>GRAPHIC 컷 목록</div>
