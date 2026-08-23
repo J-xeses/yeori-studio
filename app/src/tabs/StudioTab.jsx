@@ -24,6 +24,13 @@ function episodeContentTypeToInsta(contentType) {
   return map[(contentType || '').toUpperCase()] || null
 }
 
+// ScriptGenTab.jsx의 needsImage 판정과 반드시 동일하게 유지할 것 — GRAPHIC/CAPCUT은
+// 화면 녹화·HTML 캡처로 메이킹 탭에서 직접 제작하는 컷이라 이 탭의 Flow 이미지 생성/G2
+// 승인 대상이 애초에 아니다.
+function needsFlowImage(cutType) {
+  return !['GRAPHIC', 'CAPCUT'].includes(cutType || 'YEORI')
+}
+
 // G2 승인 전 체크리스트 항목
 const CHECKLIST_ITEMS = [
   { key: 'face',       label: '얼굴 자연스럽게 고정됨' },
@@ -786,16 +793,18 @@ export default function StudioTab() {
           </span>
           <button
             className={s.g2AllBtn}
-            disabled={!cuts.every(c => g2Approved[c.id])}
+            disabled={!cuts.every(c => !needsFlowImage(c.cutType) || g2Approved[c.id])}
             onClick={() => {
-              cuts.forEach(c => {
+              // CAPCUT/GRAPHIC 컷은 애초에 이 탭에서 이미지를 만들지 않으므로(메이킹 탭에서
+              // 직접 제작) g2를 강제로 찍지 않고 건너뛴다 — 실제로 이미지가 필요했던 컷만 기록.
+              cuts.filter(c => needsFlowImage(c.cutType)).forEach(c => {
                 const idx = selectedImage[c.id] ?? 0
                 const filename = extractImageFilename((images[c.id] || [])[idx])
                 setGPoints(episodeCode, c.no, filename ? { g2: true, selectedImage: filename } : { g2: true })
               })
               dispatch({ type: 'SET_TAB', p: 'tts' })
             }}>
-            {cuts.every(c => g2Approved[c.id]) ? '🎉 G2 전체 승인 → TTS 탭' : 'G2 전체 승인'}
+            {cuts.every(c => !needsFlowImage(c.cutType) || g2Approved[c.id]) ? '🎉 G2 전체 승인 → TTS 탭' : 'G2 전체 승인'}
           </button>
         </div>
       )}
