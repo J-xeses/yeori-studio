@@ -1728,7 +1728,17 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
     ? `${promptPrefix}. ${cut.imagePrompt.trim()}`
     : cut.imagePrompt.trim()
 
-  const finalPrompt = [CONFIG.bodyPrefix, baseImagePrompt, CONFIG.bgSuffix, CONFIG.subtitleSuppression].join(' ')
+  // 프롬프트 안에 실제 줄바꿈(\n)이 섞여 있으면 page.keyboard.type()이 Enter로
+  // 그대로 보내는데, Flow 입력창은 Enter=제출(Shift+Enter만 줄바꿈)이라 프롬프트가
+  // 한 줄씩 끊겨서 제출당 하나씩 수십 개의 조각 생성 요청이 나가버림(2026-08-23
+  // 실측 — cut.imagePrompt에 \n이 들어있는 채로 타이핑했더니 대기열이 순식간에
+  // 25개로 꽉 차고 완전히 엉뚱한 이미지가 저장됨). 타이핑 직전에 줄바꿈을 공백으로
+  // 눌러 반드시 한 줄로 만든다.
+  const finalPrompt = [CONFIG.bodyPrefix, baseImagePrompt, CONFIG.bgSuffix, CONFIG.subtitleSuppression]
+    .join(' ')
+    .replace(/\s*[\r\n]+\s*/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
 
   log('step', `컷 생성 중… (${type === 'longform' ? '16:9' : '9:16'})`)
 
