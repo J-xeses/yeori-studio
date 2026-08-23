@@ -119,8 +119,25 @@ export default function StudioTab() {
     setImages({})
     setSelectedImage({})
     setChecklist({})
-    setConfirmed({})
-    setG2Approved({})
+    // confirmed/g2Approved는 로컬(휘발성) 상태라, 탭을 나갔다 돌아오면(App.jsx가 activeTab
+    // 하나만 렌더링해서 StudioTab이 통째로 언마운트/재마운트됨) 매번 여기서 빈 값으로
+    // 리셋됐었다 — gpoints.json엔 g2:true가 멀쩡히 남아있는데 화면상 G2 뱃지/버튼만
+    // "미승인"으로 되돌아가 보이는 버그였음(2026-08-23 실측: G1 뱃지는 gData를 매번 라이브로
+    // 읽어서 정상인데 G2만 이 리셋의 영향을 받고 있었음). 리셋 대신 저장된 gpoints에서
+    // 다시 읽어와 그 상태 그대로 복원한다.
+    const fresh = loadGPoints()
+    const epData = fresh[episodeCode] || {}
+    const hydratedConfirmed = {}
+    const hydratedG2 = {}
+    state.cuts.forEach(c => {
+      if (epData[`cut_${c.no}`]?.g2) {
+        hydratedConfirmed[c.id] = true
+        hydratedG2[c.id] = true
+      }
+    })
+    setConfirmed(hydratedConfirmed)
+    setG2Approved(hydratedG2)
+    setGData(fresh)
     setActiveCutId(null)
   }, [episodeCode])
 
