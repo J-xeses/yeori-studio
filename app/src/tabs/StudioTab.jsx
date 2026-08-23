@@ -17,6 +17,13 @@ function pipelineCodeToInstaContent(plCode) {
   return map[(plCode || '').toUpperCase()] || null
 }
 
+// 컷마다 masterCode.pl이 없는 경우(구/미완성 데이터)를 위한 폴백 — episode.contentType
+// (IG_R/IG_F/IG_P/IG_S, App.jsx의 에피소드 유형 선택값) 기준으로도 같은 콘텐츠 코드를 유추한다.
+function episodeContentTypeToInsta(contentType) {
+  const map = { IG_R: 'RL', IG_F: 'FD', IG_P: 'PT', IG_S: 'ST' }
+  return map[(contentType || '').toUpperCase()] || null
+}
+
 // G2 승인 전 체크리스트 항목
 const CHECKLIST_ITEMS = [
   { key: 'face',       label: '얼굴 자연스럽게 고정됨' },
@@ -120,10 +127,16 @@ export default function StudioTab() {
   useEffect(() => {
     const epNum = state.episode?.number
     if (!epNum) return
+    // 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST) 에피소드는 이미지가 downloads/flow/ep{N}/이 아니라
+    // downloads/insta/{content}/{num}/에 저장돼 있으므로 서버가 그쪽을 스캔하도록 같이 알려준다
+    // (안 보내면 예전처럼 ep{N} 스캔 — LF/SF 등 레거시 에피소드는 그대로 동작).
+    const instaContent = state.cuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+      || episodeContentTypeToInsta(state.episode?.contentType)
+    const instaNum = instaContent ? (state.episode?.instaNum?.trim() || null) : null
     fetch('http://localhost:3001/api/scan-media', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ epNum }),
+      body: JSON.stringify({ epNum, instaContent, instaNum }),
     })
       .then(r => r.json())
       .then(data => {

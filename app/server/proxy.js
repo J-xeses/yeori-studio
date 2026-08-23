@@ -1054,11 +1054,20 @@ app.get('/api/scan-images', (req, res) => {
 })
 
 // ── POST /api/scan-media — ep 전체 미디어 스캔 ─────────────────────
+// 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST) 에피소드는 이미지 생성물이 downloads/flow/ep{N}/이
+// 아니라 downloads/insta/{content}/{num}/에 저장된다(flow-automation.js의 resolveContentDir()
+// 과 /api/run-flow의 라우팅 규칙을 그대로 따름). 클라이언트가 instaContent+instaNum을 같이
+// 보내면 그쪽을 스캔한다 — 안 보내면(레거시 LF/SF 에피소드) 예전처럼 ep{N} 그대로 스캔.
+// (2026-08-23 실측: 이걸 안 하면 episode.number가 예전에 다른 에피소드가 쓰던 번호와 겹칠 때
+// 완전히 무관한 옛 에피소드의 이미지가 스튜디오 화면에 잘못 표시되는 사고가 남. 비디오/오디오는
+// video-automation.js가 아직 인스타 라우팅이 없어 그대로 ep{N} 기준 유지.)
 app.post('/api/scan-media', (req, res) => {
-  const { epNum } = req.body
+  const { epNum, instaContent, instaNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
-  const flowDir  = path.join(MEDIA_ROOT, 'downloads', 'flow',  `ep${epNum}`)
+  const imageDir = (instaContent && instaNum)
+    ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent])
+    : path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`)
   const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
   const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
   const styleGuidePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, 'episode_style_guide.json')
@@ -1067,12 +1076,12 @@ app.post('/api/scan-media', (req, res) => {
   const videos = {}
   const audios = {}
 
-  if (fs.existsSync(flowDir)) {
-    fs.readdirSync(flowDir).sort().forEach(file => {
+  if (fs.existsSync(imageDir)) {
+    fs.readdirSync(imageDir).sort().forEach(file => {
       const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
       if (m) {
         const key = `cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`
-        if (!images[key]) images[key] = path.join(flowDir, file)
+        if (!images[key]) images[key] = path.join(imageDir, file)
       }
     })
   }
