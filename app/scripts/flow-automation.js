@@ -99,6 +99,7 @@ const CONFIG = {
   characterName:   '서여리',
   characterDir:    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character'),
   characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
+  closeupImage:    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-closeup.jpg'),
   // 클로즈업 얼굴 생성 프롬프트 (--gen-face 사용 시)
   facePrompt: 'Young Korean woman early 20s, extreme close-up portrait, long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, natural effortless expression, K-model proportions very small face, appearing no older than 22-23, bright natural eyes, soft lips, flawless skin, soft studio lighting, neutral background, Photorealistic 8K cinematic headshot 1:1',
 }
@@ -672,7 +673,25 @@ async function createNewFlowProject(page, nameSuffix) {
   })
   if (!newBtn) throw new Error('"새 프로젝트" 버튼을 찾지 못했습니다.')
   await page.mouse.click(newBtn.x, newBtn.y)
-  await page.waitForFunction(() => location.href.includes('/project/'), { timeout: 15000 })
+  try {
+    await page.waitForFunction(() => location.href.includes('/project/'), { timeout: 15000 })
+  } catch {
+    // 2026-08-23 실측: 클릭이 씹히는 것처럼 15초 안에 이동이 없는 경우가 가끔
+    // 있었음(같은 좌표로 다시 시도하면 바로 됐음) — 좌표 다시 찾아서 한 번 더 클릭.
+    log('warn', '"새 프로젝트" 클릭 후 이동 없음 → 좌표 재탐색 후 재시도')
+    const retryBtn = await page.evaluate(() => {
+      for (const el of document.querySelectorAll('button, [role="button"]')) {
+        const txt = (el.textContent || '').trim()
+        if (/새 프로젝트/.test(txt)) {
+          const r = el.getBoundingClientRect()
+          if (r.width > 0 && r.height > 0) return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+        }
+      }
+      return null
+    })
+    if (retryBtn) await page.mouse.click(retryBtn.x, retryBtn.y)
+    await page.waitForFunction(() => location.href.includes('/project/'), { timeout: 15000 })
+  }
   await sleep(1500)
 
   const currentTitle = await page.$eval('input', el => el.value).catch(() => '')
@@ -713,7 +732,51 @@ async function createNewFlowProject(page, nameSuffix) {
   await sleep(1500)
 
   log('ok', `새 프로젝트 생성 + 이름 변경: "${newTitle}"`)
+
+  // 새 프로젝트는 레퍼런스 이미지가 하나도 없는 빈 프로젝트라, findReferenceThumbs가
+  // 항상 실패해 캐릭터 일관성 없이 생성이 진행되는 문제가 있었음(2026-08-23 실측 —
+  // 레퍼런스 없이 진행하다 새 이미지 감지도 실패해서 엉뚱하게 구글 계정 프로필
+  // 사진을 저장한 사고 발생). 새 프로젝트를 만들 때마다 로컬 레퍼런스 2장을
+  // 자동으로 업로드해서, findReferenceThumbs가 기존 방식(호버 툴팁의 파일명)
+  // 그대로 찾을 수 있게 한다.
+  await uploadReferenceImages(page)
+
   return page.url()
+}
+
+// CONFIG.characterImage(yeori-face.jpg)/CONFIG.closeupImage(yeori-closeup.jpg)를
+// 현재 프로젝트에 업로드. registerCharacter 쪽의 uploadCharacterImage()와 달리
+// "캐릭터" 계정 라이브러리가 아니라 이 프로젝트의 미디어 풀(좌측 "업로드" 탭)에
+// 넣는 것이 목적 — 파일 input을 직접 찾아 두 번 순서대로 업로드한다.
+async function uploadReferenceImages(page) {
+  const files = [CONFIG.characterImage, CONFIG.closeupImage].filter(f => fs.existsSync(f))
+  if (!files.length) {
+    log('warn', `레퍼런스 이미지 없음(${CONFIG.characterImage}, ${CONFIG.closeupImage}) — 업로드 건너뜀`)
+    return
+  }
+  for (const filePath of files) {
+    const inputHandle = await page.evaluateHandle(() => {
+      function search(root) {
+        for (const el of root.querySelectorAll('input[type="file"]')) return el
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) { const f = search(el.shadowRoot); if (f) return f }
+        }
+        return null
+      }
+      return search(document)
+    })
+    const inputEl = inputHandle.asElement()
+    if (!inputEl) {
+      log('warn', `파일 input을 찾지 못해 업로드 건너뜀: ${path.basename(filePath)}`)
+      continue
+    }
+    await inputEl.uploadFile(filePath)
+    log('ok', `레퍼런스 업로드: ${path.basename(filePath)}`)
+    await sleep(2500) // 업로드/처리 완료 대기 — 다음 파일 input 재탐색 전 여유
+  }
+  // 두 번째 업로드까지 서버 처리(썸네일 생성)가 끝날 시간을 넉넉히 준다 —
+  // findReferenceThumbs가 곧바로 호출되면 아직 처리 중이라 못 찾을 수 있음.
+  await sleep(4000)
 }
 
 
