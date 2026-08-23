@@ -447,8 +447,19 @@ export default function VideoTab() {
             } else if (ev.type === 'cut_error' && ev.cutNo === cut.no) {
               setVideoGenStatus(p => ({ ...p, [cut.id]: 'error' }))
               setVideoGenLog(p => ({ ...p, [cut.id]: '❌ 생성 실패' }))
-            } else if (ev.type === 'complete' && !ev.success) {
-              setVideoGenStatus(p => p[cut.id] === 'running' ? { ...p, [cut.id]: 'error' } : p)
+            } else if (ev.type === 'complete') {
+              // cut_video/cut_error 이벤트로 이 컷의 상태가 이미 정해졌으면 그대로 둔다.
+              // 문제는 success:true인데도 이 컷에 대한 cut_video가 한 번도 안 온 경우
+              // (예: video-automation.js가 "이미 완료됨"으로 보고 아무것도 안 하고 끝난
+              // 경우) — 이때 상태를 안 풀어주면 "생성 중…"에 영구히 멈춰서 버튼을 다시
+              // 누를 수도 없게 된다(2026-08-23 실측으로 발견).
+              setVideoGenStatus(p => {
+                if (p[cut.id] !== 'running') return p
+                return { ...p, [cut.id]: ev.success ? undefined : 'error' }
+              })
+              if (ev.success) {
+                setVideoGenLog(p => ({ ...p, [cut.id]: '⚠️ 완료 신호는 왔지만 이 컷의 새 영상은 확인 안 됨 — 스캔 다시 불러오거나 재시도해주세요' }))
+              }
             } else if (ev.type === 'error') {
               setVideoGenStatus(p => ({ ...p, [cut.id]: 'error' }))
               setVideoGenLog(p => ({ ...p, [cut.id]: `❌ ${ev.message}` }))

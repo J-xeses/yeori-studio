@@ -517,13 +517,18 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
 
   // ── 1. "동영상" 탭 ────────────────────────────────────────────────────
   // textContent가 'play_circle동영상' 형태 → .includes('동영상') 로 매칭
+  // ⚠️ el.click()(page.evaluate 안에서 합성 클릭)은 이 Radix 스타일 탭 컴포넌트에
+  // 반응하지 않는다 — pointerdown/mousedown 등 실제 이벤트 시퀀스가 없으면 내부 상태가
+  // 안 바뀜(2026-08-23 실측: 팝업이 "이미지" 탭에 계속 머물러 있는데도 클릭 로그는
+  // 정상 출력됨 → 이미지 모드로 동영상 생성이 잘못 제출되는 사고로 이어짐). flow-
+  // automation.js의 비율 버그를 고칠 때와 동일하게 page.mouse.click(중심좌표)로 바꾼다.
   const videoTabInfo = await page.evaluate(() => {
     const tabs = [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
     for (const el of tabs) {
       const txt = (el.textContent || '').trim()
       if (txt.includes('동영상')) {
         const r = el.getBoundingClientRect()
-        return { txt, cls: el.className.slice(0, 80), x: Math.round(r.left), y: Math.round(r.top) }
+        return { txt, x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
       }
     }
     return null
@@ -531,11 +536,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
 
   if (videoTabInfo) {
     log('info', `[videoMode] 동영상 탭 클릭 — txt="${videoTabInfo.txt}" x=${videoTabInfo.x} y=${videoTabInfo.y}`)
-    await page.evaluate(() => {
-      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-        if ((el.textContent || '').trim().includes('동영상')) { el.click(); return }
-      }
-    })
+    await page.mouse.click(videoTabInfo.x, videoTabInfo.y)
   } else {
     log('warn', '[videoMode] 동영상 탭 못 찾음')
   }
@@ -552,14 +553,15 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
   await selectVideoModel(page, modelName)
 
   // ── 2. 비율 버튼 ─────────────────────────────────────────────────────
-  // textContent가 'crop_9_169:16' 형태 → .endsWith(ratio) 로 매칭
+  // textContent가 'crop_9_169:16' 형태 → .endsWith(ratio) 로 매칭 (문자열 끝을 앵커링해서
+  // 아이콘 리거처 텍스트와의 오매칭은 없음 — 클릭 방식만 실제 마우스 클릭으로 교체)
   const ratioInfo = await page.evaluate((ratio) => {
     const tabs = [...document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')]
     for (const el of tabs) {
       const txt = (el.textContent || '').trim()
       if (txt.endsWith(ratio)) {
         const r = el.getBoundingClientRect()
-        return { txt, cls: el.className.slice(0, 80), x: Math.round(r.left), y: Math.round(r.top) }
+        return { txt, x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
       }
     }
     return null
@@ -567,11 +569,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
 
   if (ratioInfo) {
     log('info', `[videoMode] ${ratio} 비율 클릭 — txt="${ratioInfo.txt}" x=${ratioInfo.x} y=${ratioInfo.y}`)
-    await page.evaluate((ratio) => {
-      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-        if ((el.textContent || '').trim().endsWith(ratio)) { el.click(); return }
-      }
-    }, ratio)
+    await page.mouse.click(ratioInfo.x, ratioInfo.y)
   } else {
     log('warn', `[videoMode] ${ratio} 비율 탭 못 찾음`)
   }
@@ -587,7 +585,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
       const txt = (el.textContent || '').trim()
       if (txt === up) {
         const r = el.getBoundingClientRect()
-        return { txt, cls: el.className.slice(0, 80), x: Math.round(r.left), y: Math.round(r.top) }
+        return { txt, x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
       }
     }
     return null
@@ -595,11 +593,7 @@ async function switchToVideoMode(page, ratio = RATIO, modelName = CONFIG.preferr
 
   if (upscaleInfo) {
     log('info', `[videoMode] 업스케일 ${upscale} 클릭 — txt="${upscaleInfo.txt}" x=${upscaleInfo.x} y=${upscaleInfo.y}`)
-    await page.evaluate((up) => {
-      for (const el of document.querySelectorAll('[role="tab"].flow_tab_slider_trigger')) {
-        if ((el.textContent || '').trim() === up) { el.click(); return }
-      }
-    }, upscale)
+    await page.mouse.click(upscaleInfo.x, upscaleInfo.y)
   } else {
     log('warn', `[videoMode] 업스케일 ${upscale} 못 찾음`)
   }
@@ -681,28 +675,30 @@ async function selectVideoModel(page, modelName = CONFIG.preferredModel) {
   }
 
   // 1단계: 드롭다운 트리거 버튼 클릭 (텍스트에 "arrow_drop_down" 아이콘 리거처 포함)
-  const triggerClicked = await page.evaluate(() => {
+  // el.click() 대신 실제 마우스 클릭 사용(switchToVideoMode와 동일한 이유 — 2026-08-23).
+  const triggerInfo = await page.evaluate(() => {
     for (const el of document.querySelectorAll('button')) {
       const txt = (el.textContent || '').trim()
       if (txt.includes('arrow_drop_down')) {
         const r = el.getBoundingClientRect()
-        if (r.width > 0) { el.click(); return `${el.tagName}:"${txt.slice(0, 40)}"` }
+        if (r.width > 0) return { label: `${el.tagName}:"${txt.slice(0, 40)}"`, x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
       }
     }
     return null
   })
 
-  if (!triggerClicked) {
+  if (!triggerInfo) {
     log('warn', '[model] 드롭다운 트리거 버튼 못 찾음 — debug_dump_model.png 확인')
     await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_after.png') })
     return
   }
-  log('info', `[model] 드롭다운 열기: ${triggerClicked}`)
+  log('info', `[model] 드롭다운 열기: ${triggerInfo.label}`)
+  await page.mouse.click(triggerInfo.x, triggerInfo.y)
   await sleep(800)
   await page.screenshot({ path: path.join(CONFIG.videoDir, 'debug_model_dropdown_open.png') })
 
   // 2단계: 열린 드롭다운에서 목표 모델명과 정확히 일치하는 가장 작은 leaf 요소 클릭
-  const optionClicked = await page.evaluate((name) => {
+  const optionInfo = await page.evaluate((name) => {
     let best = null
     for (const el of document.querySelectorAll('*')) {
       const r = el.getBoundingClientRect()
@@ -712,9 +708,11 @@ async function selectVideoModel(page, modelName = CONFIG.preferredModel) {
       if (txt === name) { best = el; break }
     }
     if (!best) return null
-    best.click()
-    return `${best.tagName}:"${(best.textContent || '').trim().slice(0, 40)}"`
+    const r = best.getBoundingClientRect()
+    return { label: `${best.tagName}:"${(best.textContent || '').trim().slice(0, 40)}"`, x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
   }, modelName)
+  const optionClicked = optionInfo?.label
+  if (optionInfo) await page.mouse.click(optionInfo.x, optionInfo.y)
 
   if (optionClicked) {
     log('ok', `[model] 선택: ${optionClicked}`)
@@ -1021,6 +1019,14 @@ async function waitAndSaveVideo(page, outPath) {
       ? fs.readdirSync(CONFIG.videoDir).filter(f => /\.(mp4|webm|mov)$/i.test(f))
       : []
   )
+  // 에피소드 폴더(outPath가 속한 downloads/video/ep{N}/)에도 다른 컷의 결과물이나
+  // (episode.number 재사용으로 인한) 완전히 무관한 옛 영상이 이미 있을 수 있다 —
+  // "방법 C" 폴백에서 이 폴더를 훑을 때 진짜 새로 생긴 파일인지 구분하기 위한 스냅샷.
+  const beforeEpFiles = new Set(
+    fs.existsSync(path.dirname(outPath))
+      ? fs.readdirSync(path.dirname(outPath)).filter(f => /\.(mp4|webm|mov)$/i.test(f))
+      : []
+  )
 
   log('step', `영상 생성 대기 중… (최대 ${Math.round(CONFIG.timeoutMs / 60000)}분)`)
 
@@ -1150,7 +1156,12 @@ async function waitAndSaveVideo(page, outPath) {
           document.body.removeChild(a)
         }, videoSrc)
         await sleep(5000)
-        const epFiles = fs.readdirSync(path.dirname(outPath)).filter(f => /\.(mp4|webm|mov)$/i.test(f))
+        // epFiles가 beforeEpFiles로 안 걸러지면, 이 에피소드 폴더에 이미 있던(다른 컷의
+        // 결과물이거나 episode.number 재사용으로 남은 완전히 무관한 옛 영상) 파일까지
+        // "새로 받은 영상"으로 오인해서 저장해버린다 — 실제로 cut_01.mp4(6월 27일, 무관한
+        // 옛 에피소드)가 cut_04.mp4로 그대로 복사돼버린 사고가 있었다(2026-08-23 실측,
+        // MD5 완전 일치로 확인). rootFiles와 동일하게 beforeEpFiles로 신규 여부를 검증한다.
+        const epFiles = fs.readdirSync(path.dirname(outPath)).filter(f => /\.(mp4|webm|mov)$/i.test(f) && !beforeEpFiles.has(f))
         const rootFiles = fs.readdirSync(CONFIG.videoDir).filter(f => /\.(mp4|webm|mov)$/i.test(f) && !beforeFiles.has(f))
         const allNew = [...epFiles.map(f => path.join(path.dirname(outPath), f)), ...rootFiles.map(f => path.join(CONFIG.videoDir, f))]
         if (allNew.length) {
@@ -1521,4 +1532,11 @@ async function main() {
 
   printSummary(ok, fail, results)
   saveReport(episode, RATIO, results)
+
+  // flow-automation.js에서 이미 겪은 것과 같은 좀비 프로세스 버그 — puppeteer의 CDP
+  // WebSocket이 이벤트루프를 붙잡아서, disconnect()/exit() 없이 그냥 끝나면 프로세스가
+  // 완료 후에도 계속 살아있는다(2026-08-23 아침 flow-automation.js에서 수정, 이 스크립트엔
+  // 안 옮겨져 있었음).
+  await browser.disconnect()
+  process.exit(0)
 }
