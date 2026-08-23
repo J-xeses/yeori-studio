@@ -2053,24 +2053,31 @@ async function switchToImageMode(page, ratio = '9:16') {
   log('info', `[imageMode] 팝업 요소 목록: ${JSON.stringify(allTabTexts)}`)
 
   // 범용 탭/버튼 클릭 — eval() 미사용, 클래스명 의존 없음
-  async function clickTab(textPattern, label, excludePattern) {
-    const coords = await page.evaluate((pattern, exclusion) => {
+  // directTextOnly: true면 <i>아이콘 리거처</i> 자식 텍스트("crop_9_16" 등)를 제외하고
+  // 해당 요소의 직계 텍스트 노드만 이어붙여 매칭한다.
+  // (실사례: 16:9 버튼 textContent가 "crop_16_9"+"16:9"="crop_16_916:9"가 되어
+  //  9:16을 찾는 느슨한 정규식이 "..._9"+"16"에 우연히 매칭돼 16:9를 잘못 클릭하는 버그가 있었음 — 2026-08-23 라이브 확인)
+  async function clickTab(textPattern, label, excludePattern, opts) {
+    const directTextOnly = !!(opts && opts.directTextOnly)
+    const coords = await page.evaluate((pattern, exclusion, directTextOnly) => {
       const re = new RegExp(pattern, 'i')
       const excl = exclusion ? new RegExp(exclusion, 'i') : null
       // role="tab" 우선, 없으면 role="option"/button으로 폴백
       const selectors = ['[role="tab"]', '[role="option"]', '[role="menuitem"]', 'button', '[role="button"]']
       for (const sel of selectors) {
         for (const el of document.querySelectorAll(sel)) {
-          const txt = (el.textContent || '').trim()
+          const txt = directTextOnly
+            ? [...el.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim()
+            : (el.textContent || '').trim()
           const r = el.getBoundingClientRect()
           if (r.width < 1 || r.height < 1) continue
-          if (!re.test(txt)) continue
+          if (!txt || !re.test(txt)) continue
           if (excl && excl.test(txt)) continue
           return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), txt: txt.slice(0, 30) }
         }
       }
       return null
-    }, textPattern, excludePattern || null)
+    }, textPattern, excludePattern || null, directTextOnly)
 
     if (coords) {
       await page.mouse.click(coords.x, coords.y)
@@ -2156,8 +2163,10 @@ async function switchToImageMode(page, ratio = '9:16') {
 
   // 2. 비율 탭 (예: "9:16" → "9:16", "9/16", "916" 등 구분자 다양성까지 매칭)
   //    예전엔 여기가 9:16으로 하드코딩돼 있어서 longform(16:9)도 항상 9:16으로 나가던 버그가 있었음.
+  //    directTextOnly + 앵커(^...$): 아이콘 리거처 텍스트를 제외한 순수 라벨만 비교해서
+  //    9:16 ↔ 16:9 상호 오매칭을 방지한다 (2026-08-23 실사용 중 발견/수정).
   const [_ratioA, _ratioB] = ratio.split(':')
-  await clickTab(`${_ratioA}.{0,2}${_ratioB}`, `${ratio} 비율`)
+  await clickTab(`^${_ratioA}.{0,2}${_ratioB}$`, `${ratio} 비율`, null, { directTextOnly: true })
   await sleep(400)
 
   // 3. 'x2' 생성 개수 (x2, 2x, ×2, 2 등) — 모드/비율 텍스트는 제외
@@ -2658,14 +2667,14 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
   const padded = String(cutNo).padStart(2, '0')
 
   if (!newItems.length) {
-    log('warn', '새 이미지 src를 찾지 못함 — saveImage fallback')
-    await saveImage(page, cutNo, episode)
-    const legacyPath = path.join(epDir, `${prefix}_${padded}.jpg`)
-    const fallbackPath = path.join(epDir, `${prefix}_${padded}_a.jpg`)
-    if (fs.existsSync(legacyPath) && !fs.existsSync(fallbackPath)) {
-      fs.renameSync(legacyPath, fallbackPath)
-    }
-    return [fallbackPath]
+    // 예전엔 여기서 saveImage()(= DOM에 있는 "마지막" img를 무조건 저장)로 폴백했는데,
+    // saveImage()는 beforeItems와 무관하게 그 시점 DOM의 마지막 큰 이미지를 그냥 가져가는
+    // 함수라서, 진짜 생성이 실패한 경우 방금 업로드해둔 레퍼런스 썸네일 등 기존 이미지를
+    // "생성 결과"로 잘못 저장해버리는 사고가 반복됐다(2026-08-22, 2026-08-23 실측 — 매번
+    // 똑같은 127497바이트 레퍼런스성 클로즈업 사진이 컷4 결과로 저장됨). 새 이미지가 정말
+    // 하나도 없으면 조용히 잘못된 파일을 만드는 대신 실패시켜서 바깥 재시도 루프가 다시
+    // 시도하게 한다.
+    throw new Error('2장 대기 타임아웃 후에도 새 이미지가 0개 — 생성 실패로 처리')
   }
 
   // 마지막 2개 (가장 최근 생성)
