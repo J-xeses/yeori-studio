@@ -369,6 +369,9 @@ async function main() {
   const rawPrompts = JSON.parse(fs.readFileSync(_epPromptFile, 'utf-8'))
   const epTitle    = (rawPrompts.title || '').replace(/\s+/g, '')
   const contentLabel = args.type === 'insta' ? `${args.content}${args.num}` : `EP${episode}`
+  // --code=IG_R02 처럼 정식 에피소드 코드를 넘기면 그걸 새 프로젝트 이름에 우선 사용 —
+  // 안 넘기면 기존처럼 contentLabel(예: RLRL02)로 폴백(하위호환).
+  const projectNameSuffix = args.code || contentLabel
   const projectTitle = epTitle ? `${contentLabel}_${epTitle}` : contentLabel
 
   const epDir       = resolveContentDir(episode)
@@ -409,18 +412,12 @@ async function main() {
     await navigateToFlow(page)
 
     // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
-    //    project_url.txt 있으면 재사용 / 없으면 "EP{N}_{제목}" 신규 생성
+    //    project_url.txt 있으면 재사용 / 없으면 새 프로젝트를 자동 생성해서
+    //    "{날짜} {에피소드코드}"로 이름 붙임(2026-08-23, 기존 "낡은 프로젝트 계속
+    //    재사용" 방식이 세션 열화·미디어 그리드 오염의 원인 중 하나였음 — 에피소드당
+    //    새 프로젝트를 쓰면 이 문제를 구조적으로 줄일 수 있음).
     if (!fs.existsSync(projectMarker)) {
-      const projectId = await promptInput(
-        `\nFlow 프로젝트 ID를 입력하세요 (URL의 마지막 부분):\n예) 77a33d02-f7d7-40d7-9a1f-b9983d92fc79\n> `
-      )
-      // 사람이 ID 대신 전체 URL을 붙여넣는 경우가 실제로 있었음(2026-08-22, RL02에서
-      // project_url.txt에 프리픽스가 두 번 붙는 사고 발견) — URL이면 마지막 경로
-      // 세그먼트만 뽑아 쓴다.
-      const rawInput = projectId.trim()
-      if (!rawInput) throw new Error('프로젝트 ID를 입력하지 않았습니다.')
-      const trimmedId = rawInput.replace(/^https?:\/\/.*\//, '').split(/[?#]/)[0]
-      const projectUrl = `https://labs.google/fx/ko/tools/flow/project/${trimmedId}`
+      const projectUrl = await createNewFlowProject(page, projectNameSuffix)
       ensureDir(path.dirname(projectMarker))
       fs.writeFileSync(projectMarker, projectUrl, 'utf-8')
       log('ok', `project_url.txt 저장: ${projectUrl}`)
@@ -443,7 +440,21 @@ async function main() {
     // 비율: --type=insta면 콘텐츠 유형별(FD/PT=1:1, RL/ST=9:16), 아니면 기존 longform/shorts 기준.
     // (예전엔 switchToImageMode가 9:16을 하드코딩해서 longform도 항상 9:16으로 나가던 버그가 있었음 — 같이 수정)
     const ratio = args.type === 'insta' ? (instaRatio(args.content) || '9:16') : (type === 'longform' ? '16:9' : '9:16')
-    await switchToImageMode(page, ratio)
+    try {
+      await switchToImageMode(page, ratio)
+    } catch (err) {
+      // 2026-08-23 실측: 같은 탭을 오래/반복해서 쓰면 page.screenshot()이
+      // protocolTimeout(5분)을 다 채우고 ProtocolError로 죽는 현상이 재현됨 —
+      // 같은 페이지를 새 탭에서 열면 즉시 정상 응답했으므로, 탭 자체를 버리고
+      // 새로 열어 한 번 더 시도한다(사람 개입 없이 자동 복구).
+      log('warn', `switchToImageMode 실패(${err.message}) → 새 탭으로 재연결 후 재시도`)
+      page = await openFreshPage(browser, page)
+      await page.goto(savedUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+      await sleep(2500)
+      await waitForImagesStable(page)
+      await preFlightCheck(page)
+      await switchToImageMode(page, ratio)
+    }
     log('info', `모드 설정 완료: 이미지 / ${ratio} / x2`)
 
     // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
@@ -565,6 +576,28 @@ async function setupPage(browser) {
   return page
 }
 
+// 기존 탭이 CDP 레벨에서 응답 불능(예: page.screenshot()이 protocolTimeout을 다
+// 채우고 죽는 경우, 2026-08-23 실측 — 새 탭에서는 같은 페이지를 즉시 스크린샷할
+// 수 있었음, 즉 탭/세션 단위 열화이지 Chrome 전체가 멈춘 게 아니었음)일 때, 그
+// 탭은 버리고 완전히 새 탭을 만들어 이어가기 위한 용도. setupPage()와 달리
+// "기존 탭 재사용" 없이 항상 새로 만든다.
+async function openFreshPage(browser, closeStale) {
+  if (closeStale) {
+    try { await closeStale.close() } catch { /* 이미 응답불능일 수 있음 — 무시 */ }
+  }
+  const page = await browser.newPage()
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined })
+  })
+  const client = await page.createCDPSession()
+  await client.send('Page.setDownloadBehavior', {
+    behavior:     'allow',
+    downloadPath: CONFIG.downloadDir,
+  })
+  page._cdpClient = client
+  return page
+}
+
 // 로그인 + 쿠키 처리 + 대시보드 이동 (프로젝트 이동은 별도)
 async function navigateToFlow(page) {
   const currentUrl = page.url()
@@ -609,6 +642,78 @@ async function navigateToFlow(page) {
   }
 
   log('ok', `Flow 대시보드 준비 완료`)
+}
+
+// 새 Flow 프로젝트를 만들고 "{날짜} {nameSuffix}"로 이름을 바꾼다(예: "8월 23일 IG_R02").
+// Flow가 새 프로젝트 생성 시 자동으로 붙이는 이름이 "{날짜} {시간}" 형식이라(예: "8월 23일
+// 오후 01:41"), 날짜 부분만 남기고 시간 대신 에피소드 코드로 바꿔치기하는 방식.
+// 2026-08-23 라이브로 직접 클릭해보며 확정한 절차:
+//   1) 대시보드의 "새 프로젝트" 클릭 → 즉시 새 프로젝트로 이동, 제목이 입력창(input)에 자동 채워짐
+//   2) 제목 입력창 클릭 → 전체선택 → 새 이름 타이핑
+//   3) 옆에 나타나는 "완료" 버튼 클릭(텍스트 길이에 따라 버튼 x좌표가 바뀌므로 매번 다시 탐색)
+//   4) 저장이 비동기라 클릭 직후엔 대시보드 카드 목록에 반영 안 될 수 있음(실측 확인) —
+//      개별 프로젝트 페이지 자체의 제목은 즉시 반영되고 새로고침해도 유지됨, 그걸로 충분함.
+async function createNewFlowProject(page, nameSuffix) {
+  const dashboardUrl = 'https://labs.google/fx/ko/tools/flow'
+  if (!page.url().startsWith(dashboardUrl) || page.url().includes('/project/')) {
+    await page.goto(dashboardUrl, { waitUntil: 'networkidle2', timeout: 30000 })
+    await sleep(1500)
+  }
+
+  const newBtn = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('button, [role="button"]')) {
+      const txt = (el.textContent || '').trim()
+      if (/새 프로젝트/.test(txt)) {
+        const r = el.getBoundingClientRect()
+        if (r.width > 0 && r.height > 0) return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+      }
+    }
+    return null
+  })
+  if (!newBtn) throw new Error('"새 프로젝트" 버튼을 찾지 못했습니다.')
+  await page.mouse.click(newBtn.x, newBtn.y)
+  await page.waitForFunction(() => location.href.includes('/project/'), { timeout: 15000 })
+  await sleep(1500)
+
+  const currentTitle = await page.$eval('input', el => el.value).catch(() => '')
+  const dateOnly = currentTitle.replace(/\s*(오전|오후).*$/, '').trim()
+  const newTitle = dateOnly ? `${dateOnly} ${nameSuffix}` : nameSuffix
+
+  const titlePos = await page.evaluate(() => {
+    const el = document.querySelector('input')
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+  })
+  if (!titlePos) throw new Error('프로젝트 제목 입력창을 찾지 못했습니다.')
+
+  await page.mouse.click(titlePos.x, titlePos.y)
+  await sleep(300)
+  await page.keyboard.down('Control')
+  await page.keyboard.press('KeyA')
+  await page.keyboard.up('Control')
+  await page.keyboard.type(newTitle, { delay: 20 })
+  await sleep(300)
+
+  const doneBtn = await page.evaluate(() => {
+    for (const el of document.querySelectorAll('button')) {
+      if ((el.textContent || '').includes('완료')) {
+        const r = el.getBoundingClientRect()
+        return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+      }
+    }
+    return null
+  })
+  if (doneBtn) {
+    await page.mouse.click(doneBtn.x, doneBtn.y)
+  } else {
+    // 완료 버튼을 못 찾으면 Enter로 대체 시도(완전 실패보다 낫다).
+    await page.keyboard.press('Enter')
+  }
+  await sleep(1500)
+
+  log('ok', `새 프로젝트 생성 + 이름 변경: "${newTitle}"`)
+  return page.url()
 }
 
 
