@@ -132,10 +132,13 @@ function ThumbnailSection({ epNum }) {
         body: JSON.stringify({ epNum }),
       })
       const data = await res.json()
-      const urls = Object.entries(data.images || {}).map(([key, absPath]) => ({
-        key,
-        url: `${SERVER}/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}`,
-      }))
+      // 컷당 이미지가 여러 개(A/B 등) 올 수 있어 배열로 온다 — 전부 펼쳐서 갤러리에 보여준다.
+      const urls = Object.entries(data.images || {}).flatMap(([key, absPaths]) =>
+        (Array.isArray(absPaths) ? absPaths : [absPaths]).map((absPath, i) => ({
+          key: `${key}_${i}`,
+          url: `${SERVER}/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}`,
+        }))
+      )
       setStudioImages(urls)
     } catch {
       setStudioImages([])
@@ -152,10 +155,12 @@ function ThumbnailSection({ epNum }) {
     })
       .then(r => r.json())
       .then(data => {
-        const urls = Object.entries(data.images || {}).map(([key, absPath]) => ({
-          key,
-          url: `${SERVER}/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}`,
-        }))
+        const urls = Object.entries(data.images || {}).flatMap(([key, absPaths]) =>
+          (Array.isArray(absPaths) ? absPaths : [absPaths]).map((absPath, i) => ({
+            key: `${key}_${i}`,
+            url: `${SERVER}/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}`,
+          }))
+        )
         setStudioImages(urls)
       })
       .catch(() => setStudioImages([]))

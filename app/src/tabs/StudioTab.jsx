@@ -160,23 +160,29 @@ export default function StudioTab() {
     fetch('http://localhost:3001/api/scan-media', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ epNum, instaContent, instaNum }),
+      body: JSON.stringify({ epNum, instaContent, instaNum, episodeCode }),
     })
       .then(r => r.json())
       .then(data => {
         const toUrl = (absPath) =>
           `http://localhost:3001/downloads/${absPath.replace(/.*downloads[\\/]/i, '').replace(/\\/g, '/')}?t=${Date.now()}`
 
-        Object.entries(data.images || {}).forEach(([key, absPath]) => {
+        // 컷당 이미지가 여러 개(A/B 등) 올 수 있다 — 서버가 gpoints.json의 selectedImage를
+        // 배열 맨 앞에 두고 보내주므로, 순서 그대로 밀어 넣으면 실제 승인했던 쪽이 자연히
+        // selectedImage[cut.id](기본값 0번)로 화면에 유지된다.
+        Object.entries(data.images || {}).forEach(([key, absPaths]) => {
           const cutNo = parseInt(key.replace('cut_', ''), 10)
           const cut = state.cuts.find(c => c.no === cutNo)
           if (!cut) return
-          const url = toUrl(absPath)
-          const fname = absPath.split(/[\\/]/).pop()
-          setImages(p => {
-            const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
-            if (existing.some(u => u.includes(fname))) return p
-            return { ...p, [cut.id]: [...existing, url] }
+          const list = Array.isArray(absPaths) ? absPaths : [absPaths]
+          list.forEach(absPath => {
+            const url = toUrl(absPath)
+            const fname = absPath.split(/[\\/]/).pop()
+            setImages(p => {
+              const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+              if (existing.some(u => u.includes(fname))) return p
+              return { ...p, [cut.id]: [...existing, url] }
+            })
           })
           setGPoint(episodeCode, cutNo, 'g3', true)
         })

@@ -1096,7 +1096,7 @@ app.get('/api/scan-images', (req, res) => {
 // 완전히 무관한 옛 에피소드의 이미지가 스튜디오 화면에 잘못 표시되는 사고가 남. 비디오/오디오는
 // video-automation.js가 아직 인스타 라우팅이 없어 그대로 ep{N} 기준 유지.)
 app.post('/api/scan-media', (req, res) => {
-  const { epNum, instaContent, instaNum } = req.body
+  const { epNum, instaContent, instaNum, episodeCode } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
   const imageDir = (instaContent && instaNum)
@@ -1110,13 +1110,40 @@ app.post('/api/scan-media', (req, res) => {
   const videos = {}
   const audios = {}
 
+  // /api/scan-images와 동일한 이유로, gpoints.json에 사람이 실제로 고른 selectedImage가
+  // 있으면 그 파일을 배열 맨 앞(=화면의 기본 선택)으로 둔다 — 안 그러면 알파벳순 첫 파일(_a)이
+  // 항상 기본 선택으로 보여서, B를 골라뒀어도 탭을 나갔다 돌아오면 다시 A가 선택된 것처럼
+  // 보이는 혼동이 생긴다.
+  // gpoints.json은 "cut_4"(패딩 없음), 이 스캔의 images 키는 "cut_04"(2자리 패딩)라 형식이
+  // 다르다 — 컷 번호만 뽑아 동일한 패딩 형식으로 다시 만들어야 실제로 매칭된다.
+  let selectedByCut = {}
+  if (episodeCode) {
+    const gpEpData = loadGpointsFile()[episodeCode] || {}
+    Object.entries(gpEpData).forEach(([cutKey, v]) => {
+      const m = cutKey.match(/^cut_(\d+)$/)
+      if (m && v?.selectedImage) selectedByCut[`cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`] = v.selectedImage
+    })
+  }
+
+  // 컷당 이미지를 1개만 반환하면(예전 방식) A/B 두 후보 중 알파벳순 첫 번째(_a)만 스캔에
+  // 잡히고, 사람이 실제로 화면에서 비교하며 고를 두 번째 후보(_b)는 새로고침/탭 재방문 시
+  // 아예 안 보이게 된다 — 그러면 G2 승인 화면에서 A/B 비교 자체가 무의미해짐(2026-08-23
+  // 실측). 컷당 파일을 전부 배열로 모아 반환한다.
   if (fs.existsSync(imageDir)) {
+    const filesByKey = {}
     fs.readdirSync(imageDir).sort().forEach(file => {
       const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
       if (m) {
         const key = `cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`
-        if (!images[key]) images[key] = path.join(imageDir, file)
+        ;(filesByKey[key] ??= []).push(file)
       }
+    })
+    Object.entries(filesByKey).forEach(([key, files]) => {
+      const preferred = selectedByCut[key]
+      const ordered = (preferred && files.includes(preferred))
+        ? [preferred, ...files.filter(f => f !== preferred)]
+        : files
+      images[key] = ordered.map(file => path.join(imageDir, file))
     })
   }
 
