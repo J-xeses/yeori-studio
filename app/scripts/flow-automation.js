@@ -332,9 +332,15 @@ async function main() {
 
       await registerCharacter(page)
     } finally {
-      // 브라우저 유지
+      // Chrome 창은 유지하되(사람이 계속 쓸 수 있게), puppeteer 연결만 끊어서
+      // 이 Node 프로세스는 종료되게 한다. disconnect() 없이 그냥 return하면
+      // CDP WebSocket이 이벤트루프를 계속 붙잡아 프로세스가 좀비로 남았음
+      // (2026-08-23 실측 — 하루 사이 이 스크립트를 여러 번 돌렸더니 완료된
+      // 프로세스가 전부 안 죽고 쌓여서, 같은 Flow 계정에 여러 프로세스가
+      // 동시에 요청을 보내는 상태가 됐고 그게 레이트리밋의 실제 원인이었음).
+      await browser.disconnect()
     }
-    return
+    process.exit(0)
   }
 
   // ── 크레딧 표시 탐색 모드 (디스커버리 전용 — 자동 파싱 아님) ────────
@@ -488,11 +494,14 @@ async function main() {
       }
     }
   } finally {
-    // 브라우저 유지
+    // Chrome 창은 유지, puppeteer 연결만 끊어서 이 프로세스가 좀비로 안 남게 함
+    // (위 register-character 분기의 동일한 수정 참고 — 2026-08-23).
+    await browser.disconnect()
   }
 
   printSummary(ok, fail, results)
   saveReport(episode, results)
+  process.exit(0)
 }
 
 // ── 브라우저 설정 ─────────────────────────────────────────────────────
