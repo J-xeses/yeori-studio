@@ -642,14 +642,16 @@ export default function StudioTab() {
                       className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
                       style={{ aspectRatio: ratio === '16:9' ? '16/9' : '9/16', ...slotStyle }}
                       onClick={() => {
+                        // 컨펌/G2는 "이 컷"이 아니라 "이 컷에서 지금 선택된 특정 이미지"를
+                        // 검증했다는 뜻이어야 한다. 선택이 실제로 바뀌면(A→B 등) 예전 이미지에
+                        // 대해 받았던 컨펌/G2 완료를 그대로 들고 있으면 안 됨 — 체크리스트를
+                        // 한 번도 안 거친 새 이미지가 바로 "G2 승인 가능" 상태가 돼버리는
+                        // 사고로 이어진다(2026-08-23, 사용자 실측 지적으로 발견).
+                        const wasSelected = (selectedImage[cut.id] ?? 0) === idx
                         setSelectedImage(prev => ({ ...prev, [cut.id]: idx }))
-                        // 이미 G2 승인된 컷이면 버튼을 다시 안 눌러도(재승인 없이) 바뀐 선택이
-                        // 바로 gpoints.json에 반영되게 한다 — 안 그러면 화면엔 B가 "선택됨"으로
-                        // 보여도 실제 selectedImage는 예전 A 그대로 남아, 영상 만들기 탭이 엉뚱한
-                        // 파일로 영상을 생성하는 사고로 이어진다(2026-08-23 실측).
-                        if (g2Approved[cut.id]) {
-                          const filename = extractImageFilename(url)
-                          if (filename) setGPoints(episodeCode, cut.no, { g2: true, selectedImage: filename })
+                        if (!wasSelected) {
+                          setConfirmed(p => ({ ...p, [cut.id]: false }))
+                          setG2Approved(p => ({ ...p, [cut.id]: false }))
                         }
                       }}
                     >
@@ -666,6 +668,7 @@ export default function StudioTab() {
                       {isSelected && <div className={s.selectedBadge}>✓ G2 승인용 선택됨</div>}
                       <button className={s.compareRemove} onClick={e => {
                         e.stopPropagation()
+                        const wasSelected = (selectedImage[cut.id] ?? 0) === idx
                         setImages(p => {
                           const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
                           const newArr = arr.filter((_, i) => i !== idx)
@@ -675,6 +678,12 @@ export default function StudioTab() {
                           return n
                         })
                         setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
+                        // 지금까지 선택돼 있던(=컨펌/G2 대상이었던) 이미지가 삭제되면 남은
+                        // 0번 이미지는 전혀 다른 파일일 수 있으니 컨펌/G2도 같이 초기화한다.
+                        if (wasSelected) {
+                          setConfirmed(p => ({ ...p, [cut.id]: false }))
+                          setG2Approved(p => ({ ...p, [cut.id]: false }))
+                        }
                       }}>✕</button>
                     </div>
                   )
