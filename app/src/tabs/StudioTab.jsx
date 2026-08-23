@@ -31,6 +31,21 @@ function needsFlowImage(cutType) {
   return !['GRAPHIC', 'CAPCUT'].includes(cutType || 'YEORI')
 }
 
+// ScriptGenTab.jsx의 getRunFlags()와 반드시 동일하게 유지 — 컷 타입별로 이미지(G2)/영상(G4)이
+// 실제 어떤 도구를 거치는지 텍스트로 미리 보여준다. G2 승인 전에 이걸 사람이 직접 확인해두면
+// G3(TTS)/G4(영상)에서 같은 컷을 서로 다르게 취급하는 불일치(오늘 발견한 CAPCUT 전체실행
+// 오염 같은 사고)를 승인 시점에 미리 눈으로 걸러낼 수 있다.
+const CUT_TYPE_INFO = {
+  YEORI:   { label: 'YEORI',   image: 'Flow 생성 필요',           video: 'Flow+Veo3(립싱크) 필요' },
+  BROLL:   { label: 'B-ROLL',  image: 'Flow 생성 필요',           video: 'Flow+Veo3 필요' },
+  PIP:     { label: 'PIP',     image: 'Flow 생성 필요',           video: 'Flow+Veo3(PIP) 필요' },
+  GRAPHIC: { label: 'GRAPHIC', image: '불필요 (HTML 캡처)',        video: '불필요 — 메이킹 탭에서 캡처' },
+  CAPCUT:  { label: 'CAPCUT',  image: '불필요 (CapCut 직접 제작)', video: '불필요 — 메이킹 탭에서 녹화' },
+}
+function cutTypeInfo(cutType) {
+  return CUT_TYPE_INFO[cutType || 'YEORI'] || CUT_TYPE_INFO.YEORI
+}
+
 // G2 승인 전 체크리스트 항목
 const CHECKLIST_ITEMS = [
   { key: 'face',       label: '얼굴 자연스럽게 고정됨' },
@@ -750,6 +765,16 @@ export default function StudioTab() {
                   >이미지 초기화</button>
                 </div>
               </div>
+              {(() => {
+                const info = cutTypeInfo(cut.cutType)
+                return (
+                  <div style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', gap: 12, margin: '-4px 0 8px' }}>
+                    <span>🏷 {info.label}</span>
+                    <span>🖼 이미지: {info.image}</span>
+                    <span>🎬 G4 영상: {info.video}</span>
+                  </div>
+                )
+              })()}
 
               <div className={s.promptSection}>
                 <div className={s.promptHeader}>
