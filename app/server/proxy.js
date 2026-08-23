@@ -1024,7 +1024,7 @@ app.post('/api/save-edit-meta', (req, res) => {
 
 // ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
 app.post('/api/confirm-image', (req, res) => {
-  const { ep, cutNo, imageUrl } = req.body
+  const { ep, cutNo, imageUrl, instaContent, instaNum } = req.body
   if (!ep || !cutNo || !imageUrl) return res.status(400).json({ error: 'ep, cutNo, imageUrl 필요' })
   const padded  = String(cutNo).padStart(2, '0')
   const flowDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
@@ -1033,6 +1033,19 @@ app.post('/api/confirm-image', (req, res) => {
     const srcPath  = path.join(MEDIA_ROOT, imageUrl.replace(/^\//, ''))
     const destPath = path.join(flowDir, `cut_${padded}.jpg`)
     if (srcPath !== destPath) fs.copyFileSync(srcPath, destPath)
+
+    // video-automation.js(G4)는 인스타 라우팅을 모르고 항상 downloads/flow/ep{N}/project_url.txt만
+    // 본다 — G2 이미지가 실제로 만들어진 downloads/insta/{content}/{num}/의 Flow 프로젝트와
+    // 전혀 다른(예전/무관한) 프로젝트로 G4가 연결돼버리는 사고가 있었다(2026-08-23 실측:
+    // 레퍼런스 이미지도 없는 예전 프로젝트로 영상 생성을 시도할 뻔함). G2가 실제로 쓴 프로젝트를
+    // 표준 위치로도 복사해서 G4가 항상 같은 프로젝트를 쓰게 한다.
+    if (instaContent && instaNum) {
+      const instaMarker = path.join(instaDir(instaContent, instaNum), 'project_url.txt')
+      if (fs.existsSync(instaMarker)) {
+        fs.copyFileSync(instaMarker, path.join(flowDir, 'project_url.txt'))
+      }
+    }
+
     res.json({ ok: true, saved: `cut_${padded}.jpg` })
   } catch (err) {
     res.status(500).json({ error: err.message })

@@ -82,6 +82,14 @@ function episodeContentTypeToInsta(contentType) {
   return map[(contentType || '').toUpperCase()] || null
 }
 
+// ScriptGenTab.jsx의 getRunFlags()에서 run_g4:false인 타입(GRAPHIC/CAPCUT)과 반드시 동일하게
+// 유지할 것 — 이 두 타입은 CapCut/HTML 캡처로 메이킹 탭에서 직접 제작하는 컷이라 Flow+Veo3
+// 영상 생성 대상이 애초에 아니다. 이걸 안 가려내면 "전체 AI 생성"/"G4 전체"가 이 컷들까지
+// 건드려서 "G2 이미지가 없습니다" 오류를 내거나 의미 없는 g4:true를 찍어버린다.
+function needsFlowVideo(cutType) {
+  return !['GRAPHIC', 'CAPCUT'].includes(cutType || 'YEORI')
+}
+
 export default function VideoTab() {
   const { state, dispatch } = useApp()
   const { cuts, videoSettings, renderProgress, episode } = state
@@ -166,7 +174,7 @@ export default function VideoTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCutId])
 
-  const allG4Done = cuts.length > 0 && cuts.every(c => g4Approved[c.id])
+  const allG4Done = cuts.length > 0 && cuts.every(c => !needsFlowVideo(c.cutType) || g4Approved[c.id])
 
   const drawPreview = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
@@ -366,7 +374,10 @@ export default function VideoTab() {
     const confirmRes = await fetch('http://localhost:3001/api/confirm-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ep, cutNo: cut.no, imageUrl: match.url }),
+      // instaContent/instaNum을 같이 보내면, G2 이미지를 실제로 만든 Flow 프로젝트(project_url.txt)를
+      // G4가 보는 표준 위치(downloads/flow/ep{N}/)에도 맞춰준다 — 안 그러면 G4가 레퍼런스
+      // 이미지도 없는 무관한 예전 프로젝트로 연결될 수 있다(2026-08-23 실측).
+      body: JSON.stringify({ ep, cutNo: cut.no, imageUrl: match.url, instaContent, instaNum }),
     })
     if (!confirmRes.ok) {
       const err = await confirmRes.json().catch(() => ({}))
@@ -617,7 +628,10 @@ export default function VideoTab() {
             disabled: cuts.some(c => videoGenStatus[c.id] === 'running'),
             label: cuts.some(c => videoGenStatus[c.id] === 'running') ? '⏳ 생성 중…' : '✨ 전체 AI 생성',
             onClick: async () => {
-              for (const c of cuts) {
+              // CAPCUT/GRAPHIC 컷은 Flow+Veo3 생성 대상이 아니라(메이킹 탭에서 직접 제작)
+              // G2 이미지 자체가 없다 — 그냥 돌리면 매번 "G2 이미지가 없습니다" 오류만 남기고
+              // 아무 의미 없이 실패 처리됨(2026-08-23 실측). 애초에 대상에서 제외한다.
+              for (const c of cuts.filter(c => needsFlowVideo(c.cutType))) {
                 if (videoGenStatus[c.id] === 'running') continue
                 await generateVideoForCut(c)
               }
@@ -628,7 +642,9 @@ export default function VideoTab() {
             label: allG4Done ? '전체 취소' : 'G4 전체',
             onClick: () => {
               const next = !allG4Done
-              cuts.forEach(c => {
+              // 마찬가지로 이미지 자체가 없는 CAPCUT/GRAPHIC 컷엔 의미 없는 g4 플래그를
+              // 찍지 않는다.
+              cuts.filter(c => needsFlowVideo(c.cutType)).forEach(c => {
                 setG4Approved(p => ({ ...p, [c.id]: next }))
                 setGPoint(episodeCode, c.no, 'g4', next)
               })
