@@ -5,3 +5,4 @@ data/
 logs/
 scripts_output/
 node_modules/
+*.log
