@@ -1,0 +1,6 @@
+# .vercelignore/.gitignore는 CRLF로 저장되면 각 패턴 끝에 보이지 않는 \r가 붙어
+# 무시 규칙 전체가 무력화된다(2026-08-28 실제 발생: .chrome-profile-flow 1GB+가
+# 그대로 업로드되어 Vercel 업로드 한도 초과). core.autocrlf 설정과 무관하게
+# 항상 LF로 유지되도록 강제한다.
+.vercelignore text eol=lf
+.gitignore text eol=lf
