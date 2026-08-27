@@ -232,3 +232,8 @@ pipeline-leader.js — MCP G1→G5 체이닝
 
 ## 🔄 이 파일 업데이트 방법
 세션 끝날 때 "STATUS 업데이트해줘" → 완료된 것 이동 + 새 작업 추가
+
+
+---
+### 2026-08-27 (MCP 자동 기록)
+proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md, restart_proxy, vercel_redeploy(유비 디렉터 대상), read_file(downloads/·app/ 하위 제한). 전부 실제 호출로 검증 완료.

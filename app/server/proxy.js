@@ -3297,6 +3297,20 @@ async function readFirstSSEEvent(pathAndQuery, opts) {
   return { type: 'error', message: '응답 스트림에서 이벤트를 읽지 못함' }
 }
 
+// 배열 인자로 spawn하여 셸 문자열 결합을 거치지 않는다(명령 인젝션 방지) —
+// git commit -m 등 사용자 입력이 인자로 들어가는 도구는 반드시 이 헬퍼를 통해서만 실행한다.
+function runCmdCapture(cmd, args, opts = {}) {
+  return new Promise((resolve) => {
+    const proc = spawn(cmd, args, opts)
+    let stdout = ''
+    let stderr = ''
+    proc.stdout?.on('data', d => { stdout += d.toString() })
+    proc.stderr?.on('data', d => { stderr += d.toString() })
+    proc.on('error', (err) => resolve({ code: 1, stdout, stderr: stderr + err.message }))
+    proc.on('close', (code) => resolve({ code, stdout, stderr }))
+  })
+}
+
 const mcpRouter = express.Router()
 mcpRouter.use(requireMcpAuth)
 
@@ -4133,6 +4147,137 @@ mcpRouter.get('/studio-status', (req, res) => {
     res.json(buildStudioStatusPayload(req.query.episodeId))
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/mcp/git-commit-push — git add -A && commit && push origin master ──
+// 실행 전 git status --porcelain으로 변경분을 먼저 확인해서, .env류/키파일이
+// 섞여 있으면 자동 커밋을 막고 사람이 직접 확인하게 한다(민감정보 실수 커밋 방지).
+// GIT_ROOT는 MEDIA_ROOT(C:\yeori-studio) — STATUS.md에 명시된 실제 git 루트.
+const GIT_ROOT = MEDIA_ROOT
+const SENSITIVE_FILE_RE = /(^|[\\/])\.env(\.[^\\/]*)?$|\.pem$|id_rsa|secrets?\.json$/i
+const SENSITIVE_EXCLUDE_RE = /\.env.*\.example$/i
+
+mcpRouter.post('/git-commit-push', async (req, res) => {
+  const { message } = req.body || {}
+  if (!message || typeof message !== 'string') {
+    return res.status(400).json({ success: false, error: 'message가 필요합니다' })
+  }
+  try {
+    const statusOut = execFileSync('git', ['status', '--porcelain'], { cwd: GIT_ROOT, encoding: 'utf-8' })
+    const suspicious = statusOut.split('\n')
+      .map(l => l.slice(3))
+      .filter(f => f && SENSITIVE_FILE_RE.test(f) && !SENSITIVE_EXCLUDE_RE.test(f))
+    if (suspicious.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error: `민감해 보이는 파일이 변경사항에 포함되어 있어 자동 커밋을 중단했습니다 — 직접 확인 후 커밋하세요: ${suspicious.join(', ')}`,
+      })
+    }
+
+    await runCmdCapture('git', ['add', '-A'], { cwd: GIT_ROOT })
+    const commitResult = await runCmdCapture('git', ['commit', '-m', message], { cwd: GIT_ROOT })
+    if (commitResult.code !== 0) {
+      return res.json({ success: false, error: (commitResult.stdout + commitResult.stderr).trim() || '커밋할 변경사항이 없습니다' })
+    }
+    const pushResult = await runCmdCapture('git', ['push', 'origin', 'master'], { cwd: GIT_ROOT })
+    if (pushResult.code !== 0) {
+      return res.status(500).json({ success: false, error: (pushResult.stdout + pushResult.stderr).trim() })
+    }
+    const commitHash = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: GIT_ROOT, encoding: 'utf-8' }).trim()
+    res.json({ success: true, commitHash, message })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/mcp/update-status-md — STATUS.md 끝에 날짜+내용 append ──
+mcpRouter.post('/update-status-md', (req, res) => {
+  const { content } = req.body || {}
+  if (!content || typeof content !== 'string') {
+    return res.status(400).json({ success: false, error: 'content가 필요합니다' })
+  }
+  const statusPath = path.join(CODE_ROOT, 'STATUS.md')
+  try {
+    const today = new Date().toISOString().slice(0, 10)
+    fs.appendFileSync(statusPath, `\n\n---\n### ${today} (MCP 자동 기록)\n${content}\n`, 'utf-8')
+    res.json({ success: true, path: statusPath })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/mcp/restart-proxy — 새 프로세스를 먼저 detached로 띄운 뒤
+// (포트 경합은 startServer()의 기존 EADDRINUSE 재시도 로직이 흡수) 응답 후 자기 자신 종료 ──
+mcpRouter.post('/restart-proxy', (req, res) => {
+  try {
+    const logFd = fs.openSync(LOG_PATH, 'a')
+    const child = spawn(process.execPath, [path.join(__dirname, 'proxy.js')], {
+      cwd: CODE_ROOT,
+      env: process.env,
+      detached: true,
+      stdio: ['ignore', logFd, logFd],
+    })
+    child.unref()
+    logToFile(`[restart_proxy] 새 프로세스 PID ${child.pid} 기동, 기존 PID ${process.pid} 종료 예정`)
+    res.json({ success: true, pid: child.pid })
+    setTimeout(() => process.exit(0), 300)
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/mcp/vercel-redeploy — 유비 디렉터(C:\yubi-director) 프로덕션 재배포 ──
+// 이 proxy.js가 속한 여리 스튜디오 앱은 Vercel 배포 대상이 아니라서(별도 프로젝트),
+// 대상 경로를 유비 디렉터로 고정한다. 인자가 전부 고정 리터럴이라 shell:true 사용해도
+// 인젝션 경로가 없다(Windows에서 vercel.cmd 셸 셔임을 spawn으로 직접 못 찾는 문제 회피).
+const YUBI_DIRECTOR_ROOT = 'C:\\yubi-director'
+
+mcpRouter.post('/vercel-redeploy', async (req, res) => {
+  try {
+    const result = await runCmdCapture(
+      'vercel',
+      ['deploy', '--prod', '--yes', '--scope', 'won566800-7736s-projects'],
+      { cwd: YUBI_DIRECTOR_ROOT, shell: true }
+    )
+    if (result.code !== 0) {
+      return res.status(500).json({ success: false, error: (result.stdout + result.stderr).trim() })
+    }
+    const urls = (result.stdout + result.stderr).match(/https:\/\/\S+\.vercel\.app/g) || []
+    res.json({ success: true, deployUrl: urls.pop() || null })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/mcp/read-file — downloads/ 또는 app/ 하위 파일만 읽기 허용 ──
+const READ_FILE_ALLOWED_ROOTS = [
+  path.join(MEDIA_ROOT, 'downloads'),
+  CODE_ROOT,
+]
+const READ_FILE_MAX_BYTES = 2 * 1024 * 1024
+
+mcpRouter.post('/read-file', (req, res) => {
+  const { path: relPath } = req.body || {}
+  if (!relPath || typeof relPath !== 'string') {
+    return res.status(400).json({ success: false, error: 'path가 필요합니다' })
+  }
+  const resolved = path.resolve(MEDIA_ROOT, relPath)
+  const allowed = READ_FILE_ALLOWED_ROOTS.some(root => resolved === root || resolved.startsWith(root + path.sep))
+  if (!allowed) {
+    return res.status(403).json({ success: false, error: 'downloads/ 또는 app/ 하위 경로만 읽을 수 있습니다' })
+  }
+  try {
+    if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+      return res.status(404).json({ success: false, error: '파일을 찾을 수 없습니다' })
+    }
+    if (fs.statSync(resolved).size > READ_FILE_MAX_BYTES) {
+      return res.status(413).json({ success: false, error: `파일이 너무 큽니다(최대 ${READ_FILE_MAX_BYTES / 1024 / 1024}MB)` })
+    }
+    const content = fs.readFileSync(resolved, 'utf-8')
+    res.json({ success: true, content })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
   }
 })
 
