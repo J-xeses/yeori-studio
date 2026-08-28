@@ -322,6 +322,11 @@ async function executeTool(name, args) {
       return `녹화 종료 및 편집 완료\n최종 영상: ${data.finalPath || data.path}\n길이: ${data.finalDuration ?? data.duration ?? '?'}초`
     }
 
+    case 'launch_capcut': {
+      const data = await api('POST', '/api/mcp/launch-capcut', {})
+      return data.success ? data.message : `오류: ${data.message}`
+    }
+
     default:
       return `알 수 없는 도구: ${name}`
   }

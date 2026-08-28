@@ -334,6 +334,14 @@ export const TOOLS = [
     },
   },
   {
+    name: 'launch_capcut',
+    description: 'CapCut 데스크톱 앱을 실행합니다. 이미 실행 중이면 중복 실행하지 않고 그대로 성공 처리합니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
     name: 'stop_capcut_recording',
     description: '진행 중인 CapCut 녹화를 종료하고, start_capcut_recording에서 지정한 목표 길이로 자동 트림+1080x1920 스케일해 최종 컷 영상을 만듭니다.',
     inputSchema: {

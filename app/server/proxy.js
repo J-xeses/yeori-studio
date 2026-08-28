@@ -2390,6 +2390,20 @@ app.post('/api/concat-video', async (req, res) => {
 })
 
 // ── POST /api/restart-capcut — CapCut 종료 후 재실행 ─────────────────
+// CapCut.exe 설치 경로 탐색 — /api/restart-capcut, /api/launch-capcut(MCP launch_capcut)이
+// 공유. 흔한 설치 위치를 순서대로 찾고, capcut_exe_path.txt에 사용자가 저장해둔
+// 커스텀 경로가 있으면 그것도 후보에 포함한다.
+function findCapCutExe() {
+  const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
+  const candidates = [
+    'C:\\Program Files\\CapCut\\CapCut.exe',
+    path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
+    path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'CapCut.exe'),
+  ]
+  if (fs.existsSync(exePathTxt)) candidates.push(fs.readFileSync(exePathTxt, 'utf-8').trim())
+  return candidates.find(p => fs.existsSync(p)) || null
+}
+
 app.post('/api/restart-capcut', (req, res) => {
   if (process.platform !== 'win32') {
     return res.status(400).json({ error: 'Windows 전용 기능입니다' })
@@ -2399,15 +2413,7 @@ app.post('/api/restart-capcut', (req, res) => {
     .on('error', () => {})
 
   setTimeout(() => {
-    const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
-    const candidates = [
-      'C:\\Program Files\\CapCut\\CapCut.exe',
-      path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
-      path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'CapCut.exe'),
-    ]
-    if (fs.existsSync(exePathTxt)) candidates.push(fs.readFileSync(exePathTxt, 'utf-8').trim())
-
-    const capCutExe = candidates.find(p => fs.existsSync(p))
+    const capCutExe = findCapCutExe()
     if (!capCutExe) {
       return res.json({ success: false, message: 'CapCut.exe 경로를 찾을 수 없습니다. capcut_exe_path.txt에 경로를 저장하세요.' })
     }
@@ -2416,6 +2422,33 @@ app.post('/api/restart-capcut', (req, res) => {
     proc.unref()
     res.json({ success: true, message: 'CapCut 재시작 완료. 프로젝트 로딩 대기 중...' })
   }, 1000)
+})
+
+// CapCut 데스크톱 앱을 실행만 한다(재시작 아님, 기존 프로세스를 안 죽임). 이미 떠
+// 있으면 중복 실행하지 않고 그대로 성공 처리한다. /api/launch-capcut(브라우저)과
+// MCP 도구 launch_capcut(mcpRouter POST /launch-capcut)이 공유.
+function launchCapCut() {
+  if (process.platform !== 'win32') {
+    return { success: false, message: 'Windows 전용 기능입니다' }
+  }
+  if (getCapCutWindow().running) {
+    return { success: true, message: 'CapCut이 이미 실행 중입니다.' }
+  }
+  const capCutExe = findCapCutExe()
+  if (!capCutExe) {
+    return { success: false, message: 'CapCut.exe 경로를 찾을 수 없습니다. capcut_exe_path.txt에 경로를 저장하세요.' }
+  }
+  const proc = spawn(capCutExe, [], { detached: true, stdio: 'ignore' })
+  proc.unref()
+  return { success: true, message: 'CapCut 실행 요청 완료.' }
+}
+
+app.post('/api/launch-capcut', (req, res) => {
+  try {
+    res.json(launchCapCut())
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
+  }
 })
 
 // ── POST /api/run-script — scripts/{name}.js 실행 ─────────────────────
@@ -4606,6 +4639,14 @@ mcpRouter.get('/capcut-window-status', (req, res) => {
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ success: false, error: err.message })
+  }
+})
+
+mcpRouter.post('/launch-capcut', (req, res) => {
+  try {
+    res.json(launchCapCut())
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message })
   }
 })
 
