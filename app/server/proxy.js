@@ -1825,20 +1825,49 @@ async function assembleMakingFilm(epNum) {
 
   const makingDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
   fs.mkdirSync(makingDir, { recursive: true })
-  const concatTxt = path.join(makingDir, 'making_concat_list.txt')
   const outFile = path.join(makingDir, `ep${epNum}_making.mp4`)
 
-  const listContent = files.map(f => `file '${f.replace(/\\/g, '/')}'`).join('\n')
-  fs.writeFileSync(concatTxt, listContent, 'utf-8')
+  // 컷마다 해상도/픽셀포맷/프레임레이트/오디오 유무가 다를 수 있어(IG_R02 실측:
+  // GRAPHIC/CAPCUT 캡처는 1080x1920/yuv444p/25fps/무음, G4 생성 영상은
+  // 720x1280/yuv420p/24fps/오디오 있음 — 2026-08-28 확인) 예전처럼 concat 데뮤서 +
+  // -c copy(스트림 복사)로 이어붙이면 내부 스트림 속성이 뒤섞여 재생 불가능하거나
+  // 오디오가 통째로 사라진 파일이 나온다(실측 확인). 매 컷을 공통 규격
+  // (1080x1920/yuv420p/30fps, 오디오 없으면 무음 채움)으로 맞춘 뒤 필터 concat으로
+  // 재인코딩해서 합친다.
+  const MK_W = 1080, MK_H = 1920, MK_FPS = 30
+  const inputArgs = []
+  const filterParts = []
+  const concatLabels = []
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i]
+    inputArgs.push('-i', f)
+    filterParts.push(
+      `[${i}:v]scale=${MK_W}:${MK_H}:force_original_aspect_ratio=decrease,pad=${MK_W}:${MK_H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${MK_FPS}[v${i}]`
+    )
+    if (await hasAudioStream(f)) {
+      filterParts.push(`[${i}:a]aformat=sample_rates=44100:channel_layouts=stereo[a${i}]`)
+    } else {
+      const dur = await getMediaDuration(f)
+      filterParts.push(`anullsrc=r=44100:cl=stereo,atrim=0:${dur || 1}[a${i}]`)
+    }
+    concatLabels.push(`[v${i}][a${i}]`)
+  }
+  filterParts.push(`${concatLabels.join('')}concat=n=${files.length}:v=1:a=1[vout][aout]`)
 
   const code = await new Promise((resolve) => {
     let errBuf = ''
-    const proc = spawn('ffmpeg', ['-y', '-f', 'concat', '-safe', '0', '-i', concatTxt, '-c', 'copy', outFile])
+    const proc = spawn('ffmpeg', [
+      '-y', ...inputArgs,
+      '-filter_complex', filterParts.join(';'),
+      '-map', '[vout]', '-map', '[aout]',
+      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast',
+      '-c:a', 'aac', '-b:a', '128k',
+      outFile,
+    ])
     proc.stderr.on('data', d => { errBuf += d.toString() })
     proc.on('close', c => { if (c !== 0) console.error('[making-assemble]', errBuf.slice(-300)); resolve(c) })
     proc.on('error', () => resolve(1))
   })
-  try { fs.unlinkSync(concatTxt) } catch {}
 
   if (code !== 0) {
     const e = new Error('FFmpeg concat 실패')
@@ -2215,6 +2244,22 @@ function getMediaDuration(filePath) {
     proc.stdout.on('data', d => { out += d.toString() })
     proc.on('close', () => resolve(parseFloat(out.trim()) || 0))
     proc.on('error', () => resolve(0))
+  })
+}
+
+// 컷마다 오디오 트랙 유무가 다를 수 있어(GRAPHIC/CAPCUT 캡처는 무음) concat 전에
+// 확인이 필요하다 — assembleMakingFilm()에서 사용.
+function hasAudioStream(filePath) {
+  return new Promise((resolve) => {
+    const proc = spawn(FFPROBE, [
+      '-v', 'error', '-select_streams', 'a',
+      '-show_entries', 'stream=index',
+      '-of', 'csv=p=0', filePath,
+    ])
+    let out = ''
+    proc.stdout.on('data', d => { out += d.toString() })
+    proc.on('close', () => resolve(out.trim().length > 0))
+    proc.on('error', () => resolve(false))
   })
 }
 
