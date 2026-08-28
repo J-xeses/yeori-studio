@@ -49,7 +49,9 @@ function writeState(url) {
 
 // vercel CLI는 Windows에서 .cmd 셔임이라 shell:true 필요.
 // 배너/진행 메시지는 stderr로, 데이터(JSON 등)는 stdout으로 나오는 것을 확인했음 -- stdout만 캡처.
-const CMD_TIMEOUT_MS = 60_000
+// redeploy는 빌드를 기다려야 해서 실측 40~50초대가 흔함 -- 60초는 여유가 없어
+// 2026-08-28에 두 차례 연속 타임아웃으로 강제 종료되어 수동 개입이 필요했음.
+const CMD_TIMEOUT_MS = 150_000
 
 function run(cmd, args) {
   const commandLine = [cmd, ...args].join(' ')
