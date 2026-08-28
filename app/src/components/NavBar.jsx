@@ -16,6 +16,7 @@ const TABS = [
   { id: 'dashboard',     label: '대시보드',           icon: '📊' },
   { id: 'credits',       label: '일일 크레딧',        icon: '🎟️' },
   { id: 'storyarchive',  label: '스토리 아카이브',    icon: '📚' },
+  { id: 'taskqueue',     label: '코드 작업 승인',      icon: '🤖' },
 ]
 
 export default function NavBar() {

@@ -334,6 +334,17 @@ export const TOOLS = [
     },
   },
   {
+    name: 'queue_code_task',
+    description: 'Claude Code(터미널 세션)가 처리해야 하는 코드 작업을 큐에 등록합니다. 즉시 실행되지 않고, 사람이 스튜디오 UI에서 승인해야 처리됩니다.',
+    inputSchema: {
+      type: 'object',
+      required: ['description'],
+      properties: {
+        description: { type: 'string', description: '수행할 작업에 대한 구체적인 설명 — Claude Code가 이 설명만 보고 작업을 판단합니다' },
+      },
+    },
+  },
+  {
     name: 'launch_capcut',
     description: 'CapCut 데스크톱 앱을 실행합니다. 이미 실행 중이면 중복 실행하지 않고 그대로 성공 처리합니다.',
     inputSchema: {

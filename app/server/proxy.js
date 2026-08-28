@@ -3602,6 +3602,53 @@ function saveGpointsFile(data) {
   fs.mkdirSync(path.dirname(GPOINTS_PATH), { recursive: true })
   fs.writeFileSync(GPOINTS_PATH, JSON.stringify(data, null, 2), 'utf-8')
 }
+
+// ── 코드 작업 큐 — claude.ai가 queue_code_task로 등록 → 스튜디오 UI(TaskQueueTab)에서
+// 사람이 승인/거절 → 승인된 항목은 Claude Code 세션이 주기적으로 큐 파일을 직접
+// 읽고 처리한다(같은 PC 안이라 HTTP 왕복 불필요). status: pending/approved/rejected/
+// done/failed.
+const TASK_QUEUE_PATH = path.join(MEDIA_ROOT, 'downloads', 'code-task-queue.json')
+function loadTaskQueue() {
+  if (!fs.existsSync(TASK_QUEUE_PATH)) return []
+  try {
+    const raw = JSON.parse(fs.readFileSync(TASK_QUEUE_PATH, 'utf-8'))
+    return Array.isArray(raw) ? raw : []
+  } catch {
+    return []
+  }
+}
+function saveTaskQueue(tasks) {
+  fs.mkdirSync(path.dirname(TASK_QUEUE_PATH), { recursive: true })
+  fs.writeFileSync(TASK_QUEUE_PATH, JSON.stringify(tasks, null, 2), 'utf-8')
+}
+
+app.get('/api/code-task-queue', (req, res) => {
+  res.json({ tasks: loadTaskQueue() })
+})
+
+app.post('/api/code-task-queue/approve', (req, res) => {
+  const { id } = req.body || {}
+  if (!id) return res.status(400).json({ error: 'id 필요' })
+  const tasks = loadTaskQueue()
+  const task = tasks.find(t => t.id === id)
+  if (!task) return res.status(404).json({ error: '작업을 찾을 수 없습니다' })
+  task.status = 'approved'
+  task.resolvedAt = new Date().toISOString()
+  saveTaskQueue(tasks)
+  res.json({ success: true, task })
+})
+
+app.post('/api/code-task-queue/reject', (req, res) => {
+  const { id } = req.body || {}
+  if (!id) return res.status(400).json({ error: 'id 필요' })
+  const tasks = loadTaskQueue()
+  const task = tasks.find(t => t.id === id)
+  if (!task) return res.status(404).json({ error: '작업을 찾을 수 없습니다' })
+  task.status = 'rejected'
+  task.resolvedAt = new Date().toISOString()
+  saveTaskQueue(tasks)
+  res.json({ success: true, task })
+})
 function getEpisodeOrThrow(state, episodeId) {
   const ep = state.episodes?.[episodeId]
   if (!ep) { const e = new Error(`에피소드 ID ${episodeId} 없음`); e.statusCode = 404; throw e }
@@ -4648,6 +4695,28 @@ mcpRouter.post('/launch-capcut', (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: err.message })
   }
+})
+
+// claude.ai가 "Claude Code를 거쳐야 하는 코드 작업"을 큐에 등록 — 즉시 실행되지
+// 않고 사람이 스튜디오 UI(TaskQueueTab)에서 승인해야 Claude Code 세션이 처리한다.
+mcpRouter.post('/queue-code-task', (req, res) => {
+  const { description } = req.body || {}
+  if (!description || typeof description !== 'string') {
+    return res.status(400).json({ success: false, error: 'description이 필요합니다' })
+  }
+  const tasks = loadTaskQueue()
+  const task = {
+    id: `task_${Date.now()}`,
+    description,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+    resolvedAt: null,
+    completedAt: null,
+    result: null,
+  }
+  tasks.push(task)
+  saveTaskQueue(tasks)
+  res.json({ success: true, id: task.id })
 })
 
 mcpRouter.get('/capcut-screenshot', async (req, res) => {

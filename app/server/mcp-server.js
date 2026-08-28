@@ -327,6 +327,12 @@ async function executeTool(name, args) {
       return data.success ? data.message : `오류: ${data.message}`
     }
 
+    case 'queue_code_task': {
+      const data = await api('POST', '/api/mcp/queue-code-task', { description: args.description })
+      if (!data.success) return `오류: ${data.error}`
+      return `작업 큐에 등록됨 (id: ${data.id}) — 스튜디오 UI에서 승인 대기 중`
+    }
+
     default:
       return `알 수 없는 도구: ${name}`
   }
