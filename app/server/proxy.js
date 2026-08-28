@@ -3,6 +3,7 @@ import cors from 'cors'
 import { spawn, execSync, execFileSync } from 'child_process'
 import { createWriteStream } from 'fs'
 import fs from 'fs'
+import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
@@ -1714,12 +1715,14 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
   return { finalPath, finalSizeBytes: finalStat.size, finalDuration: target, rawDuration }
 }
 
-app.post('/api/recording/stop', async (req, res) => {
+// /api/recording/stop(브라우저)과 MCP 도구 stop_capcut_recording이 공유하는 핵심 로직.
+async function stopRecording() {
   let rawResult
   try {
     rawResult = await screenRecorder.stop()
   } catch (err) {
-    return res.status(400).json({ error: err.message })
+    err.statusCode = 400
+    throw err
   }
   const duration = recordingStartedAt ? (Date.now() - recordingStartedAt) / 1000 : null
   recordingStartedAt = null
@@ -1727,22 +1730,32 @@ app.post('/api/recording/stop', async (req, res) => {
   const edit = pendingBrollEdit
   pendingBrollEdit = null
   if (!edit) {
-    return res.json({ ...rawResult, duration })
+    return { ...rawResult, duration }
   }
   if (!rawResult.success) {
-    return res.status(500).json({ error: '원본 녹화 실패(파일 생성 안 됨)', raw: rawResult })
+    const e = new Error('원본 녹화 실패(파일 생성 안 됨)')
+    e.statusCode = 500
+    e.extra = { raw: rawResult }
+    throw e
   }
 
   try {
     const editResult = await editBrollRaw(edit)
-    res.json({
-      success: true,
-      rawPath: rawResult.path,
-      rawSizeBytes: rawResult.sizeBytes,
-      ...editResult,
-    })
+    return { rawPath: rawResult.path, rawSizeBytes: rawResult.sizeBytes, ...editResult }
   } catch (err) {
-    res.status(500).json({ error: `자동 편집 실패: ${err.message}`, rawPath: rawResult.path })
+    const e = new Error(`자동 편집 실패: ${err.message}`)
+    e.statusCode = 500
+    e.extra = { rawPath: rawResult.path }
+    throw e
+  }
+}
+
+app.post('/api/recording/stop', async (req, res) => {
+  try {
+    const result = await stopRecording()
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
   }
 })
 
@@ -1763,29 +1776,31 @@ app.get('/api/making-files', (req, res) => {
   }
 })
 
-// POST /api/making-assemble — G5-M: 컷 번호 순서대로 확정된 downloads/video/ep{N}/
-// cut_{NN}.mp4(YEORI든 BROLL/CAPCUT/GRAPHIC이든 이제 전부 이 위치·네이밍으로 모임 —
-// 컷타입별로 분기할 필요 없이 "이 컷 번호 파일이 있는지"만 보면 됨)를 이어붙여
+// G5-M: 컷 번호 순서대로 확정된 downloads/video/ep{N}/cut_{NN}.mp4(YEORI든
+// BROLL/CAPCUT/GRAPHIC이든 이제 전부 이 위치·네이밍으로 모임 — 컷타입별로 분기할
+// 필요 없이 "이 컷 번호 파일이 있는지"만 보면 됨)를 이어붙여
 // downloads/making/ep{N}/ep{N}_making.mp4로 조립. /api/concat-video(G5, "_final" 우선)와
 // 같은 ffmpeg concat 패턴이되 대상 폴더·의미가 다름(그쪽은 발행용, 여긴 메이킹 필름).
-app.post('/api/making-assemble', async (req, res) => {
+// /api/making-assemble(브라우저)과 MCP 도구 assemble_making_film이 공유하는 핵심 로직 —
+// mcpRouter 쪽은 예전에 selfFetch로 이 라우트를 다시 호출했다가 터널 왕복 지연으로
+// 실패한 적이 있어(위 mcpRouter 선언부 주석 참고) 함수 직접 호출로 공유한다.
+async function assembleMakingFilm(epNum) {
   const state = loadStudioState()
-  let epNum = req.body?.epNum
 
   let epId, ep
   if (epNum) {
     const entry = Object.entries(state.episodes || {}).find(([, e]) => e.episode?.number === Number(epNum))
-    if (!entry) return res.status(404).json({ error: `에피소드 번호 ${epNum} 없음` })
+    if (!entry) { const e = new Error(`에피소드 번호 ${epNum} 없음`); e.statusCode = 404; throw e }
     ;[epId, ep] = entry
   } else {
     epId = state.activeEpisodeId
     ep = state.episodes?.[epId]
-    if (!ep) return res.status(400).json({ error: '활성 에피소드가 없습니다' })
+    if (!ep) { const e = new Error('활성 에피소드가 없습니다'); e.statusCode = 400; throw e }
     epNum = ep.episode?.number
   }
   const episodeCode = resolveEpisodeCode(ep.episode, epId)
   const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
-  if (!cuts.length) return res.status(400).json({ error: '컷이 없습니다' })
+  if (!cuts.length) { const e = new Error('컷이 없습니다'); e.statusCode = 400; throw e }
 
   const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
   const includedCuts = []
@@ -1802,7 +1817,10 @@ app.post('/api/making-assemble', async (req, res) => {
     }
   }
   if (!files.length) {
-    return res.status(404).json({ error: '합칠 영상이 하나도 없습니다(모든 컷의 cut_NN.mp4 없음)', skippedCuts })
+    const e = new Error('합칠 영상이 하나도 없습니다(모든 컷의 cut_NN.mp4 없음)')
+    e.statusCode = 404
+    e.extra = { skippedCuts }
+    throw e
   }
 
   const makingDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
@@ -1823,7 +1841,10 @@ app.post('/api/making-assemble', async (req, res) => {
   try { fs.unlinkSync(concatTxt) } catch {}
 
   if (code !== 0) {
-    return res.status(500).json({ error: 'FFmpeg concat 실패', includedCuts, skippedCuts })
+    const e = new Error('FFmpeg concat 실패')
+    e.statusCode = 500
+    e.extra = { includedCuts, skippedCuts }
+    throw e
   }
 
   const duration = await getMediaDuration(outFile)
@@ -1835,7 +1856,16 @@ app.post('/api/making-assemble', async (req, res) => {
   gData[episodeCode] = epData
   saveGpointsFile(gData)
 
-  res.json({ success: true, outputPath: outFile, includedCuts, skippedCuts, duration })
+  return { outputPath: outFile, includedCuts, skippedCuts, duration }
+}
+
+app.post('/api/making-assemble', async (req, res) => {
+  try {
+    const result = await assembleMakingFilm(req.body?.epNum)
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
+  }
 })
 
 // orientation 요청을 Pexels 자체 orientation 파라미터로 1차 필터링한 뒤, 응답 항목의
@@ -1941,46 +1971,56 @@ app.post('/api/source-download', async (req, res) => {
   }
 })
 
-// GET /api/list-episode-html — 에피소드 소스 폴더의 .html 파일 목록 (CAPCUT 컷을
-// HTML 캡처로 만들 때 쓸 커스텀 목업 파일 — 예: RL02_DM_mockup_v3.html — 을 찾기 위함).
-// instaContent/instaNum이 오면 downloads/insta/{content}/{num}/, 아니면 scriptDir(대본
-// 원문 위치, server/lib/mediaPaths.js의 scriptDir())를 스캔한다.
-app.get('/api/list-episode-html', (req, res) => {
-  const { instaContent, instaNum, episodeCode } = req.query
-  const dir = (instaContent && instaNum)
+// 에피소드 소스 폴더의 .html 파일 목록/내용 조회 — 아래 3개 함수는 /api/list-episode-html,
+// /api/read-episode-html(브라우저)과 MCP 도구(list_episode_html_sources, make_graphic_cut)가
+// 공유하는 핵심 로직. instaContent/instaNum이 오면 downloads/insta/{content}/{num}/, 아니면
+// scriptDir(대본 원문 위치, server/lib/mediaPaths.js의 scriptDir())를 스캔한다.
+function resolveEpisodeHtmlDir({ instaContent, instaNum, episodeCode }) {
+  return (instaContent && instaNum)
     ? instaDir(instaContent, instaNum)
     : (episodeCode ? scriptDir(episodeCode) : null)
-  if (!dir) return res.json({ files: [] })
-  if (!fs.existsSync(dir)) return res.json({ files: [] })
-  const files = fs.readdirSync(dir).filter(f => /\.html?$/i.test(f))
-  res.json({ files })
-})
+}
 
-// GET /api/read-episode-html — 위 목록에서 고른 파일 하나의 내용을 읽어온다.
-// 파일명만 받고(path.basename) list-episode-html과 동일한 폴더 안에서만 찾아서
+// CAPCUT 컷을 HTML 캡처로 만들 때 쓸 커스텀 목업 파일(예: RL02_DM_mockup_v3.html)을
+// 찾기 위함.
+function listEpisodeHtmlFiles(params) {
+  const dir = resolveEpisodeHtmlDir(params)
+  if (!dir || !fs.existsSync(dir)) return { files: [] }
+  return { files: fs.readdirSync(dir).filter(f => /\.html?$/i.test(f)) }
+}
+
+// 파일명만 받고(path.basename) listEpisodeHtmlFiles와 동일한 폴더 안에서만 찾아서
 // 경로 탈출(디렉터리 트래버설)을 막는다.
-app.get('/api/read-episode-html', (req, res) => {
-  const { file, instaContent, instaNum, episodeCode } = req.query
-  if (!file) return res.status(400).json({ error: 'file 필요' })
-  const dir = (instaContent && instaNum)
-    ? instaDir(instaContent, instaNum)
-    : (episodeCode ? scriptDir(episodeCode) : null)
-  if (!dir) return res.status(400).json({ error: 'instaContent/instaNum 또는 episodeCode 필요' })
+function readEpisodeHtmlFile({ file, ...dirParams }) {
+  const dir = resolveEpisodeHtmlDir(dirParams)
+  if (!dir) { const e = new Error('instaContent/instaNum 또는 episodeCode 필요'); e.statusCode = 400; throw e }
   const safeName = path.basename(file)
   const filePath = path.join(dir, safeName)
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: '파일을 찾을 수 없습니다' })
-  res.json({ html: fs.readFileSync(filePath, 'utf-8') })
+  if (!fs.existsSync(filePath)) { const e = new Error('파일을 찾을 수 없습니다'); e.statusCode = 404; throw e }
+  return { html: fs.readFileSync(filePath, 'utf-8') }
+}
+
+app.get('/api/list-episode-html', (req, res) => {
+  res.json(listEpisodeHtmlFiles(req.query))
 })
 
-// POST /api/graphic-capture — GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해
-// 스크린샷 → ffmpeg로 정지화면 mp4 변환. 라이브 자동화용 전용 Chrome(9222, Flow/CapCut
-// 로그인 세션)과 완전히 분리된 독립 headless 인스턴스를 매번 새로 띄워서 그 세션에는
-// 전혀 영향을 주지 않는다. 결과 파일명(cut_{패딩2자리}.mp4)은 buildStudioStatusPayload의
-// hasVideo 정규식(^cut_(\d{2})(_final)?\.mp4$)과 동일 규칙 — G4를 건너뛴 GRAPHIC 컷의
-// "영상"으로 그대로 인식되게 하기 위함.
-app.post('/api/graphic-capture', async (req, res) => {
-  const { html, cutNo, epNum, duration } = req.body || {}
-  if (!html || cutNo == null || !epNum) return res.status(400).json({ error: 'html, cutNo, epNum 필요' })
+app.get('/api/read-episode-html', (req, res) => {
+  if (!req.query.file) return res.status(400).json({ error: 'file 필요' })
+  try {
+    res.json(readEpisodeHtmlFile(req.query))
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해 스크린샷 → ffmpeg로 정지화면
+// mp4 변환. 라이브 자동화용 전용 Chrome(9222, Flow/CapCut 로그인 세션)과 완전히 분리된
+// 독립 headless 인스턴스를 매번 새로 띄워서 그 세션에는 전혀 영향을 주지 않는다. 결과
+// 파일명(cut_{패딩2자리}.mp4)은 buildStudioStatusPayload의 hasVideo 정규식
+// (^cut_(\d{2})(_final)?\.mp4$)과 동일 규칙 — G4를 건너뛴 GRAPHIC 컷의 "영상"으로
+// 그대로 인식되게 하기 위함. /api/graphic-capture(브라우저)와 MCP 도구
+// make_graphic_cut이 공유하는 핵심 로직.
+async function runGraphicCapture({ html, cutNo, epNum, duration }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
 
@@ -2000,7 +2040,9 @@ app.post('/api/graphic-capture', async (req, res) => {
     await page.setContent(html, { waitUntil: 'networkidle0' })
     await page.screenshot({ path: imagePath })
   } catch (err) {
-    return res.status(500).json({ error: `HTML 렌더링/캡처 실패: ${err.message}` })
+    const e = new Error(`HTML 렌더링/캡처 실패: ${err.message}`)
+    e.statusCode = 500
+    throw e
   } finally {
     if (browser) await browser.close()
   }
@@ -2018,10 +2060,24 @@ app.post('/api/graphic-capture', async (req, res) => {
       proc.on('error', reject)
     })
   } catch (err) {
-    return res.status(500).json({ error: `mp4 변환 실패: ${err.message}`, imagePath })
+    const e = new Error(`mp4 변환 실패: ${err.message}`)
+    e.statusCode = 500
+    e.extra = { imagePath }
+    throw e
   }
 
-  res.json({ success: true, imagePath, videoPath })
+  return { imagePath, videoPath }
+}
+
+app.post('/api/graphic-capture', async (req, res) => {
+  const { html, cutNo, epNum, duration } = req.body || {}
+  if (!html || cutNo == null || !epNum) return res.status(400).json({ error: 'html, cutNo, epNum 필요' })
+  try {
+    const result = await runGraphicCapture({ html, cutNo, epNum, duration })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
+  }
 })
 
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
@@ -4278,6 +4334,262 @@ mcpRouter.post('/read-file', (req, res) => {
     res.json({ success: true, content })
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── 메이킹 탭 GRAPHIC/CAPCUT 자동화 MCP 도구 7개 ──────────────────────────────
+// GRAPHIC_TEMPLATE/fillTemplate은 src/tabs/MakingTab.jsx:24-76의 서버사이드 사본이다.
+// 클라이언트 쪽은 "캡처 전 사람이 항상 수정 가능한 시작점"이라는 기존 관례를 위해
+// 그대로 두고, 이 사본은 MCP가 htmlFile 없이 자동 호출할 때 쓰는 fallback 전용이다.
+const GRAPHIC_TEMPLATE_MCP = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1080px; height:1920px;
+  background:#0a0a0a;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  font-family:'Noto Sans KR', sans-serif;
+  color:white;
+}
+.main-text {
+  font-size:72px; font-weight:700;
+  text-align:center; line-height:1.4;
+  padding:0 80px;
+}
+.sub-text {
+  font-size:42px; color:rgba(255,255,255,0.6);
+  margin-top:40px; text-align:center;
+  padding:0 80px;
+}
+</style>
+</head>
+<body>
+<div class="main-text">{narration}</div>
+<div class="sub-text">{scene}</div>
+</body>
+</html>`
+
+function escapeHtmlForMcp(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// 대본의 "CP(자막)" 필드가 아직 별도 컷 필드로 파싱되지 않아서, videoPrompt 안에
+// 따옴표로 감싼 문구가 있으면(실제 대본 관례) 그걸 우선 추출한다 — MakingTab.jsx의
+// extractQuotedLine과 동일 로직.
+function extractQuotedLineForMcp(text) {
+  const m = String(text || '').match(/"([^"]+)"/)
+  return m ? m[1] : ''
+}
+
+function fillTemplateForMcp(cut) {
+  const mainText = extractQuotedLineForMcp(cut.videoPrompt) || cut.narration || cut.dialogue || ''
+  return GRAPHIC_TEMPLATE_MCP
+    .replace('{narration}', escapeHtmlForMcp(mainText))
+    .replace('{scene}', escapeHtmlForMcp(cut.scene || ''))
+}
+
+// masterCode.pl → insta 콘텐츠 폴더 매핑은 scriptParserV3.js의 pipelineCodeToInstaContent를
+// 그대로 재사용(위 import 참고). contentType 폴백만 MakingTab.jsx의
+// episodeContentTypeToInsta를 이식.
+function episodeContentTypeToInstaForMcp(contentType) {
+  const map = { IG_R: 'RL', IG_F: 'FD', IG_P: 'PT', IG_S: 'ST' }
+  return map[(contentType || '').toUpperCase()] || null
+}
+
+// MakingTab.jsx의 instaRouteParams()를 서버로 이식 — cuts의 masterCode.pl을 우선 보고,
+// 없으면 episode.contentType으로 폴백해 insta 폴더 라우팅 파라미터를 도출한다.
+function resolveInstaRouteParamsForMcp(ep) {
+  const instaContent = (ep.cuts || []).map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+    || episodeContentTypeToInstaForMcp(ep.episode?.contentType)
+  const instaNum = instaContent ? (ep.episode?.instaNum?.trim() || '') : ''
+  return { instaContent: instaContent || '', instaNum }
+}
+
+function findEpisodeByNumOrThrow(epNum) {
+  const state = loadStudioState()
+  const entry = Object.entries(state.episodes || {}).find(([, e]) => e.episode?.number === Number(epNum))
+  if (!entry) { const e = new Error(`에피소드 번호 ${epNum} 없음`); e.statusCode = 404; throw e }
+  return { epId: entry[0], ep: entry[1] }
+}
+
+async function getEpisodeHtmlSources(epNum) {
+  const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+  const episodeCode = resolveEpisodeCode(ep.episode, epId)
+  const { instaContent, instaNum } = resolveInstaRouteParamsForMcp(ep)
+  const { files } = listEpisodeHtmlFiles({ instaContent, instaNum, episodeCode })
+
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const cuts = (ep.cuts || [])
+    .filter(c => c.cutType === 'GRAPHIC' || c.cutType === 'CAPCUT')
+    .sort((a, b) => a.no - b.no)
+    .map(c => ({
+      cutNo: c.no,
+      cutType: c.cutType,
+      outputExists: fs.existsSync(path.join(videoDir, `cut_${String(c.no).padStart(2, '0')}.mp4`)),
+    }))
+
+  return { cuts, availableHtmlFiles: files }
+}
+
+async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile }) {
+  const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+  const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
+  if (!cut) { const e = new Error(`컷 번호 ${cutNo} 없음`); e.statusCode = 404; throw e }
+
+  let html
+  if (htmlFile) {
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    const { instaContent, instaNum } = resolveInstaRouteParamsForMcp(ep)
+    html = readEpisodeHtmlFile({ file: htmlFile, instaContent, instaNum, episodeCode }).html
+  } else {
+    html = fillTemplateForMcp(cut)
+  }
+
+  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration })
+}
+
+// 컷과 무관한 전역 CapCut 데스크톱 앱 상태(getCapCutWindow) + 서버 메모리상의 "지금
+// 녹화 중인지"(screenRecorder.isRecording/pendingBrollEdit) + (cutNo가 오면) 최종
+// 컷 영상 산출 여부를 한번에 반환. studio-state.json에는 컷별 recording 상태가
+// 저장되지 않으므로(순간 상태만 서버 메모리에 존재) 이 셋을 합쳐서 보여주는 게 전부다.
+function getCapcutWindowStatusForMcp({ epNum, cutNo }) {
+  const win = getCapCutWindow()
+  const result = {
+    capcutRunning: win.running,
+    windowTitle: win.windowTitle || null,
+    region: win.region || null,
+    isRecording: screenRecorder.isRecording(),
+    recordingFor: pendingBrollEdit ? { epNum: pendingBrollEdit.epNum, cutNo: pendingBrollEdit.cutNo } : null,
+  }
+  if (epNum != null && cutNo != null) {
+    const outputPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `cut_${String(cutNo).padStart(2, '0')}.mp4`)
+    result.outputPath = outputPath
+    result.outputExists = fs.existsSync(outputPath)
+  }
+  return result
+}
+
+// CapCut 창의 현재 화면을 단발 스크린샷으로 캡처 — 연속 녹화(screen-recorder.js)와
+// 동일한 gdigrab 좌표계(getCapCutWindow가 이미 가상 데스크톱 원점 보정까지 끝낸 값을
+// 반환)를 쓰되 -frames:v 1로 프레임 하나만 뽑는다. 사람이 CapCut 데스크톱 녹화 진행
+// 상황을 실시간으로 화면 앞에 있지 않아도 확인하고 필요시 직접 개입할 수 있게 하기
+// 위한 용도(1차: 시각화만, 클릭/타이핑 대행은 범위 밖).
+async function captureCapcutScreenshot() {
+  const win = getCapCutWindow()
+  if (!win.running) {
+    const e = new Error('CapCut 앱이 실행 중이 아닙니다')
+    e.statusCode = 404
+    throw e
+  }
+  const tmpPath = path.join(os.tmpdir(), `capcut-shot-${Date.now()}.png`)
+  const args = ['-f', 'gdigrab', '-framerate', '1', '-i', 'desktop']
+  if (win.region) {
+    args.push('-vf', `crop=${win.region.w}:${win.region.h}:${win.region.x}:${win.region.y}`)
+  }
+  args.push('-frames:v', '1', '-y', tmpPath)
+
+  const result = await runCmdCapture('ffmpeg', args)
+  if (result.code !== 0 || !fs.existsSync(tmpPath)) {
+    const e = new Error(`스크린샷 캡처 실패: ${result.stderr.slice(-300)}`)
+    e.statusCode = 500
+    throw e
+  }
+  const data = fs.readFileSync(tmpPath).toString('base64')
+  fs.unlinkSync(tmpPath)
+  return { data, mimeType: 'image/png', windowTitle: win.windowTitle, region: win.region }
+}
+
+// /api/recording/start의 capcut 분기(코드북 stage/pl 스킵 로직 등 무관한 관심사가
+// 섞여 있어 그대로 재사용하지 않고 필요한 부분만 독립시킴)와 동일한 동작 —
+// CapCut 창을 못 찾으면 region만 null로 남겨 전체화면으로 폴백한다.
+function startCapcutRecordingForMcp({ epNum, cutNo, targetDuration, trimMode }) {
+  const win = getCapCutWindow()
+  const outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `capcut_cut${cutNo}_raw.mp4`)
+  const result = screenRecorder.start(outputPath, {
+    fps: 30,
+    quality: 'medium',
+    region: win.running ? win.region : null,
+  })
+  recordingStartedAt = Date.now()
+  pendingBrollEdit = {
+    epNum,
+    cutNo,
+    targetDuration: parseFloat(targetDuration) || null,
+    trimMode: trimMode === 'start' ? 'start' : 'end',
+    rawPath: outputPath,
+  }
+  return { ...result, capcutWindowFound: win.running }
+}
+
+mcpRouter.post('/make-graphic-cut', async (req, res) => {
+  const { epNum, cutNo, htmlFile } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ success: false, error: 'epNum, cutNo가 필요합니다' })
+  try {
+    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message })
+  }
+})
+
+mcpRouter.get('/episode-html-sources', async (req, res) => {
+  if (req.query.epNum == null) return res.status(400).json({ success: false, error: 'epNum이 필요합니다' })
+  try {
+    const result = await getEpisodeHtmlSources(req.query.epNum)
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message })
+  }
+})
+
+mcpRouter.post('/assemble-making-film', async (req, res) => {
+  try {
+    const result = await assembleMakingFilm(req.body?.epNum)
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message, ...(err.extra || {}) })
+  }
+})
+
+mcpRouter.get('/capcut-window-status', (req, res) => {
+  try {
+    const result = getCapcutWindowStatusForMcp({ epNum: req.query.epNum, cutNo: req.query.cutNo })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message })
+  }
+})
+
+mcpRouter.get('/capcut-screenshot', async (req, res) => {
+  try {
+    const result = await captureCapcutScreenshot()
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message })
+  }
+})
+
+mcpRouter.post('/start-capcut-recording', (req, res) => {
+  const { epNum, cutNo, targetDuration, trimMode } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ success: false, error: 'epNum, cutNo가 필요합니다' })
+  try {
+    const result = startCapcutRecordingForMcp({ epNum, cutNo, targetDuration, trimMode })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(409).json({ success: false, error: err.message })
+  }
+})
+
+mcpRouter.post('/stop-capcut-recording', async (_req, res) => {
+  try {
+    const result = await stopRecording()
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message, ...(err.extra || {}) })
   }
 })
 

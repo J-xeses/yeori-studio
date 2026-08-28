@@ -266,4 +266,79 @@ export const TOOLS = [
       },
     },
   },
+  {
+    name: 'make_graphic_cut',
+    description: 'GRAPHIC 컷 또는 CAPCUT 컷(html 모드)을 HTML→헤드리스 캡처→mp4 방식으로 자동 제작합니다. htmlFile 생략 시 컷의 나레이션/장면으로 기본 검정배경+텍스트 템플릿을 자동 채웁니다.',
+    inputSchema: {
+      type: 'object',
+      required: ['epNum', 'cutNo'],
+      properties: {
+        epNum: { type: 'number', description: '에피소드 번호' },
+        cutNo: { type: 'number', description: '컷 번호' },
+        htmlFile: { type: 'string', description: '(선택) list_episode_html_sources로 찾은 커스텀 목업 HTML 파일명. 생략하면 자동 템플릿 사용' },
+      },
+    },
+  },
+  {
+    name: 'list_episode_html_sources',
+    description: '에피소드의 GRAPHIC/CAPCUT 컷 목록(컷 번호·산출물 존재 여부)과, 그 에피소드 폴더에 있는 커스텀 목업 HTML 후보 파일 목록을 함께 반환합니다.',
+    inputSchema: {
+      type: 'object',
+      required: ['epNum'],
+      properties: {
+        epNum: { type: 'number', description: '에피소드 번호' },
+      },
+    },
+  },
+  {
+    name: 'assemble_making_film',
+    description: '확정된 downloads/video/ep{N}/cut_{NN}.mp4를 컷 번호 순으로 이어붙여 메이킹 필름(ep{N}_making.mp4)을 만듭니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        epNum: { type: 'number', description: '에피소드 번호(생략 시 현재 활성 에피소드)' },
+      },
+    },
+  },
+  {
+    name: 'get_capcut_window_status',
+    description: 'CapCut 데스크톱 앱 실행 여부(전역), 현재 녹화 진행 중인지, (epNum+cutNo 지정 시) 해당 컷의 최종 영상 산출 여부를 반환합니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        epNum: { type: 'number', description: '(선택) 에피소드 번호 — cutNo와 함께 줘야 산출물 확인이 됩니다' },
+        cutNo: { type: 'number', description: '(선택) 컷 번호' },
+      },
+    },
+  },
+  {
+    name: 'get_capcut_screenshot',
+    description: 'CapCut 창의 현재 화면을 단발 스크린샷(PNG)으로 캡처해 반환합니다. 사람이 화면 앞에 없어도 녹화 진행 상황을 보고 필요시 직접 개입할 수 있게 하기 위한 용도입니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'start_capcut_recording',
+    description: 'CapCut 창을 자동 감지해 화면 녹화를 시작합니다. 녹화 종료(stop_capcut_recording) 시 목표 길이로 자동 트림+세로 스케일까지 처리됩니다.',
+    inputSchema: {
+      type: 'object',
+      required: ['epNum', 'cutNo'],
+      properties: {
+        epNum: { type: 'number', description: '에피소드 번호' },
+        cutNo: { type: 'number', description: '컷 번호' },
+        targetDuration: { type: 'number', description: '(선택) 최종 컷 목표 길이(초)' },
+        trimMode: { type: 'string', enum: ['start', 'end'], description: '(선택) 목표 길이보다 길 때 앞/뒤 중 어디를 자를지, 기본 end' },
+      },
+    },
+  },
+  {
+    name: 'stop_capcut_recording',
+    description: '진행 중인 CapCut 녹화를 종료하고, start_capcut_recording에서 지정한 목표 길이로 자동 트림+1080x1920 스케일해 최종 컷 영상을 만듭니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
 ]

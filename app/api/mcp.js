@@ -209,6 +209,60 @@ async function executeTool(name, args) {
       return data.content
     }
 
+    // ── 메이킹 탭 GRAPHIC/CAPCUT 자동화 (2026-08-28 추가) ──────────────
+    case 'make_graphic_cut': {
+      const data = await bridge('POST', '/make-graphic-cut', { epNum: args.epNum, cutNo: args.cutNo, htmlFile: args.htmlFile })
+      if (!data.success) return `오류: ${data.error}`
+      return `컷 ${args.cutNo} 제작 완료\n영상: ${data.videoPath}`
+    }
+
+    case 'list_episode_html_sources': {
+      const data = await bridge('GET', `/episode-html-sources?epNum=${encodeURIComponent(args.epNum)}`)
+      if (!data.success) return `오류: ${data.error}`
+      const cuts = (data.cuts || []).map(c => `CUT ${c.cutNo} [${c.cutType}] ${c.outputExists ? '✅ 산출물 있음' : '⬜ 미제작'}`).join('\n')
+      const files = (data.availableHtmlFiles || []).length ? data.availableHtmlFiles.join(', ') : '(없음)'
+      return `GRAPHIC/CAPCUT 컷:\n${cuts || '(없음)'}\n\n사용 가능한 커스텀 HTML: ${files}`
+    }
+
+    case 'assemble_making_film': {
+      const data = await bridge('POST', '/assemble-making-film', { epNum: args.epNum })
+      if (!data.success) return `오류: ${data.error}`
+      return `메이킹 필름 조립 완료: ${data.outputPath}\n포함된 컷: ${data.includedCuts?.join(', ')}\n제외된 컷: ${data.skippedCuts?.join(', ') || '없음'}\n길이: ${data.duration?.toFixed(1)}초`
+    }
+
+    case 'get_capcut_window_status': {
+      const qs = new URLSearchParams()
+      if (args.epNum != null) qs.set('epNum', args.epNum)
+      if (args.cutNo != null) qs.set('cutNo', args.cutNo)
+      const data = await bridge('GET', `/capcut-window-status?${qs}`)
+      if (!data.success) return `오류: ${data.error}`
+      return [
+        `CapCut 실행 중: ${data.capcutRunning ? `예 (${data.windowTitle})` : '아니오'}`,
+        `현재 녹화 중: ${data.isRecording ? `예 (ep${data.recordingFor?.epNum} 컷${data.recordingFor?.cutNo})` : '아니오'}`,
+        data.outputPath ? `컷 산출물: ${data.outputExists ? '있음' : '없음'} (${data.outputPath})` : null,
+      ].filter(Boolean).join('\n')
+    }
+
+    case 'get_capcut_screenshot': {
+      const data = await bridge('GET', '/capcut-screenshot')
+      if (!data.success) return `오류: ${data.error}`
+      return { __image: true, data: data.data, mimeType: data.mimeType }
+    }
+
+    case 'start_capcut_recording': {
+      const data = await bridge('POST', '/start-capcut-recording', {
+        epNum: args.epNum, cutNo: args.cutNo, targetDuration: args.targetDuration, trimMode: args.trimMode,
+      })
+      if (!data.success) return `오류: ${data.error}`
+      return `녹화 시작됨 (PID ${data.pid})${data.capcutWindowFound ? '' : ' — CapCut 창을 찾지 못해 전체화면으로 녹화합니다'}`
+    }
+
+    case 'stop_capcut_recording': {
+      const data = await bridge('POST', '/stop-capcut-recording', {})
+      if (!data.success) return `오류: ${data.error}`
+      return `녹화 종료 및 편집 완료\n최종 영상: ${data.finalPath || data.path}\n길이: ${data.finalDuration ?? data.duration ?? '?'}초`
+    }
+
     default:
       return `알 수 없는 도구: ${name}`
   }
@@ -224,6 +278,9 @@ function buildServer() {
     const { name, arguments: args } = request.params
     try {
       const result = await executeTool(name, args || {})
+      if (result && typeof result === 'object' && result.__image) {
+        return { content: [{ type: 'image', data: result.data, mimeType: result.mimeType }] }
+      }
       return { content: [{ type: 'text', text: String(result) }] }
     } catch (err) {
       return {
