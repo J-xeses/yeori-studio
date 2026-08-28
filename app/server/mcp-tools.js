@@ -215,4 +215,55 @@ export const TOOLS = [
       },
     },
   },
+
+  // ── 인프라 운영 도구 (2026-08-28 추가) ────────────────────────────
+  {
+    name: 'git_commit_push',
+    description: '여리 스튜디오 저장소(git 루트)에서 git add -A && commit && push origin master를 실행합니다. .env/키/시크릿 파일 등 민감해 보이는 변경사항이 포함되어 있으면 자동으로 중단합니다.',
+    inputSchema: {
+      type: 'object',
+      required: ['message'],
+      properties: {
+        message: { type: 'string', description: '커밋 메시지' },
+      },
+    },
+  },
+  {
+    name: 'update_status_md',
+    description: 'STATUS.md 파일 끝에 오늘 날짜와 함께 내용을 추가합니다(append).',
+    inputSchema: {
+      type: 'object',
+      required: ['content'],
+      properties: {
+        content: { type: 'string', description: '추가할 내용' },
+      },
+    },
+  },
+  {
+    name: 'restart_proxy',
+    description: '로컬 proxy.js 서버를 재시작합니다. 새 프로세스를 먼저 detached로 띄운 뒤(포트 경합은 자동 재시도로 흡수) 기존 프로세스를 종료합니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'vercel_redeploy',
+    description: '유비 디렉터(C:\\yubi-director) 프로젝트를 Vercel 프로덕션에 재배포합니다. 여리 스튜디오 자체는 이 도구의 대상이 아닙니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'read_file',
+    description: 'downloads/ 또는 app/ 하위의 텍스트 파일 내용을 읽습니다(최대 2MB, 경로 탈출 차단).',
+    inputSchema: {
+      type: 'object',
+      required: ['path'],
+      properties: {
+        path: { type: 'string', description: 'C:\\yeori-studio 기준 상대경로, 예: downloads/foo.txt 또는 app/package.json' },
+      },
+    },
+  },
 ]

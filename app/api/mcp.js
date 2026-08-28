@@ -178,6 +178,37 @@ async function executeTool(name, args) {
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
     }
 
+    // ── 인프라 운영 도구 (2026-08-28 추가) ────────────────────────────
+    case 'git_commit_push': {
+      const data = await bridge('POST', '/git-commit-push', { message: args.message })
+      if (!data.success) return `오류: ${data.error}`
+      return `커밋+푸시 완료\n해시: ${data.commitHash}\n메시지: ${data.message}`
+    }
+
+    case 'update_status_md': {
+      const data = await bridge('POST', '/update-status-md', { content: args.content })
+      if (!data.success) return `오류: ${data.error}`
+      return `STATUS.md 갱신 완료: ${data.path}`
+    }
+
+    case 'restart_proxy': {
+      const data = await bridge('POST', '/restart-proxy', {})
+      if (!data.success) return `오류: ${data.error}`
+      return `proxy.js 재시작됨 (새 PID: ${data.pid})`
+    }
+
+    case 'vercel_redeploy': {
+      const data = await bridge('POST', '/vercel-redeploy', {})
+      if (!data.success) return `오류: ${data.error}`
+      return `유비 디렉터 재배포 완료: ${data.deployUrl}`
+    }
+
+    case 'read_file': {
+      const data = await bridge('POST', '/read-file', { path: args.path })
+      if (!data.success) return `오류: ${data.error}`
+      return data.content
+    }
+
     default:
       return `알 수 없는 도구: ${name}`
   }
