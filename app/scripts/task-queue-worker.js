@@ -92,7 +92,7 @@ function runClaudeHeadless(promptText) {
     ]
     const child = spawn(CLAUDE_EXE, args, {
       cwd: MEDIA_ROOT,
-      shell: true,
+      shell: false,
       env: process.env,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
