@@ -4534,8 +4534,23 @@ function extractQuotedLineForMcp(text) {
 // (실측 확인: imagePrompt엔 에피소드 전체 캡션/체크리스트만 있고 CUT5 고유 문구
 // 없음) scriptRaw도 비어 있어 재파싱으로 복구할 수 없는 경우, 완전히 빈 화면보다
 // 장면 설명이라도 보이는 게 낫다.
+// CAPCUT 텍스트 컷은 대본 작성자가 실제 화면 문구를 imagePrompt 안 "[캡션 + 해시태그]"
+// 섹션에 자유 텍스트로 적어두는 관례가 있다(실측 확인: IG_R02 CUT5의 "다음화에서
+// 제가 어떻게 만들어졌는지 공개해요 👀"가 정확히 이 섹션의 마지막 줄에 있었음 —
+// 2026-08-29, studio-state.json cuts[4].imagePrompt 직접 확인). 그 섹션에서 다음
+// "[...]" 헤더가 나오기 전까지의 텍스트 중 마지막 비어있지 않은 줄을 뽑는다.
+function extractCaptionSectionLastLineForMcp(text) {
+  const m = String(text || '').match(/\[캡션[^\]]*\]([\s\S]*?)(?=\n\s*\[|$)/)
+  if (!m) return ''
+  const lines = m[1].split('\n').map(l => l.trim()).filter(Boolean)
+  return lines.length ? lines[lines.length - 1] : ''
+}
+
 function fillTemplateForMcp(cut) {
-  const mainText = cut.subtitle || extractQuotedLineForMcp(cut.videoPrompt) || cut.dialogue || cut.narration || cut.scene || ''
+  const mainText = cut.subtitle
+    || extractQuotedLineForMcp(cut.videoPrompt)
+    || extractCaptionSectionLastLineForMcp(cut.imagePrompt)
+    || cut.dialogue || cut.narration || cut.scene || ''
   return GRAPHIC_TEMPLATE_MCP.replace('{narration}', escapeHtmlForMcp(mainText))
 }
 
