@@ -4711,6 +4711,59 @@ function startCapcutRecordingForMcp({ epNum, cutNo, targetDuration, trimMode }) 
   return { ...result, capcutWindowFound: win.running }
 }
 
+// Pexels 영상 직접 다운로드 URL을 받아 mp4를 받고 → (duration 지정 시) 앞부분만
+// 남기도록 trim → 1080x1920 스케일+패딩(assemble_making_film과 동일 규격: 짧은 변을
+// 화면 안에 맞추고 여백은 검정 패딩) → downloads/video/ep{N}/cut_{NN}.mp4로 확정.
+// BROLL 컷을 CapCut/화면녹화 없이 소스 영상만으로 바로 컷 산출물로 만들기 위한 용도.
+// 결과 파일명(cut_{패딩2자리}.mp4)은 assemble_making_film / buildStudioStatusPayload가
+// 그대로 "이 컷의 영상"으로 인식한다. 소스 오디오는 버린다(BROLL은 G3 나레이션을 별도로 얹음).
+async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
+  if (epNum == null || cutNo == null || !videoUrl) {
+    const e = new Error('epNum, cutNo, videoUrl이 필요합니다'); e.statusCode = 400; throw e
+  }
+  const wantTrim = Number(duration) > 0
+
+  const finalDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  fs.mkdirSync(finalDir, { recursive: true })
+  const padded = String(cutNo).padStart(2, '0')
+  const finalPath = path.join(finalDir, `cut_${padded}.mp4`)
+
+  const tmpPath = path.join(os.tmpdir(), `broll-ep${epNum}-cut${padded}-${Date.now()}.mp4`)
+  try {
+    // 1) 원본 mp4 다운로드 — Pexels CDN 파일은 인증 없이 받을 수 있다(API 키는 검색에만 필요).
+    const r = await fetch(videoUrl)
+    if (!r.ok) { const e = new Error(`영상 다운로드 실패: HTTP ${r.status}`); e.statusCode = 502; throw e }
+    fs.writeFileSync(tmpPath, Buffer.from(await r.arrayBuffer()))
+
+    const srcDuration = await ffprobeDuration(tmpPath)
+    const target = wantTrim ? Math.min(Number(duration), srcDuration) : srcDuration
+
+    // 2~3) 앞부분 trim(-t) + 1080x1920 스케일+패딩(assemble_making_film과 동일 필터)
+    await new Promise((resolve, reject) => {
+      const args = ['-y', '-i', tmpPath]
+      if (wantTrim) args.push('-t', String(target))
+      args.push(
+        '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30',
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast',
+        '-an',
+        finalPath,
+      )
+      let errBuf = ''
+      const proc = spawn('ffmpeg', args)
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', code => code === 0
+        ? resolve()
+        : reject(new Error(`ffmpeg 변환 실패 (code ${code}): ${errBuf.slice(-300)}`)))
+      proc.on('error', reject)
+    })
+  } finally {
+    if (fs.existsSync(tmpPath)) { try { fs.unlinkSync(tmpPath) } catch {} }
+  }
+
+  const outDuration = await ffprobeDuration(finalPath)
+  return { outputPath: finalPath, duration: outDuration }
+}
+
 mcpRouter.post('/make-graphic-cut', async (req, res) => {
   const { epNum, cutNo, htmlFile } = req.body || {}
   if (epNum == null || cutNo == null) return res.status(400).json({ success: false, error: 'epNum, cutNo가 필요합니다' })
@@ -4738,6 +4791,19 @@ mcpRouter.post('/assemble-making-film', async (req, res) => {
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ success: false, error: err.message, ...(err.extra || {}) })
+  }
+})
+
+mcpRouter.post('/download-broll-cut', async (req, res) => {
+  const { epNum, cutNo, videoUrl, duration } = req.body || {}
+  if (epNum == null || cutNo == null || !videoUrl) {
+    return res.status(400).json({ success: false, error: 'epNum, cutNo, videoUrl이 필요합니다' })
+  }
+  try {
+    const result = await downloadBrollCut({ epNum, cutNo, videoUrl, duration })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message })
   }
 })
 

@@ -291,6 +291,20 @@ export const TOOLS = [
     },
   },
   {
+    name: 'download_broll_cut',
+    description: 'Pexels 영상 직접 다운로드 URL에서 mp4를 받아 BROLL 컷 산출물로 만듭니다. duration 지정 시 앞부분만 남기고 trim한 뒤, 1080x1920 스케일+패딩(assemble_making_film과 동일 규격)으로 변환해 downloads/video/ep{N}/cut_{NN}.mp4로 저장합니다. 소스 오디오는 버립니다(BROLL 나레이션은 G3에서 별도로 얹음).',
+    inputSchema: {
+      type: 'object',
+      required: ['epNum', 'cutNo', 'videoUrl'],
+      properties: {
+        epNum:    { type: 'number', description: '에피소드 번호' },
+        cutNo:    { type: 'number', description: '컷 번호' },
+        videoUrl: { type: 'string', description: 'Pexels 영상 직접 다운로드 URL(mp4)' },
+        duration: { type: 'number', description: '(선택) 원하는 클립 길이(초). 생략 시 원본 전체 길이 사용' },
+      },
+    },
+  },
+  {
     name: 'assemble_making_film',
     description: '확정된 downloads/video/ep{N}/cut_{NN}.mp4를 컷 번호 순으로 이어붙여 메이킹 필름(ep{N}_making.mp4)을 만듭니다.',
     inputSchema: {

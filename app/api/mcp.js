@@ -224,6 +224,14 @@ async function executeTool(name, args) {
       return `GRAPHIC/CAPCUT 컷:\n${cuts || '(없음)'}\n\n사용 가능한 커스텀 HTML: ${files}`
     }
 
+    case 'download_broll_cut': {
+      const data = await bridge('POST', '/download-broll-cut', {
+        epNum: args.epNum, cutNo: args.cutNo, videoUrl: args.videoUrl, duration: args.duration,
+      })
+      if (!data.success) return `오류: ${data.error}`
+      return `BROLL 컷 ${args.cutNo} 다운로드 완료\n영상: ${data.outputPath}\n길이: ${data.duration?.toFixed(1)}초`
+    }
+
     case 'assemble_making_film': {
       const data = await bridge('POST', '/assemble-making-film', { epNum: args.epNum })
       if (!data.success) return `오류: ${data.error}`
