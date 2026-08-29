@@ -20,7 +20,6 @@
  */
 
 import fs from 'fs'
-import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
@@ -77,13 +76,10 @@ ${description}
 function runClaudeHeadless(promptText) {
   return new Promise((resolve) => {
     // 프롬프트를 인자로 직접 넘기면(shell: true) 여러 줄·공백·괄호가 cmd.exe에서
-    // 재파싱돼 첫 토큰만 전달되는 문제가 있어(2026-08-29 실측), 임시 파일에 써두고
-    // claude의 @파일참조(-p "@경로")로 넘긴다.
-    const tmpFile = path.join(os.tmpdir(), `task_prompt_${Date.now()}.txt`)
-    fs.writeFileSync(tmpFile, promptText, 'utf-8')
-
+    // 재파싱돼 첫 토큰만 전달되는 문제가 있어(2026-08-29 실측), 프롬프트는 stdin으로
+    // 흘려보낸다. -p(플래그만, 값 없음)로 print 모드를 켜면 claude가 stdin을 프롬프트로 읽는다.
     const args = [
-      '-p', `@${tmpFile}`,
+      '-p',
       '--permission-mode', 'dontAsk',
       '--allowedTools', 'Bash,Read,Edit,Write,Glob,Grep',
       '--disallowedTools', 'Bash(git push *)',
@@ -93,14 +89,16 @@ function runClaudeHeadless(promptText) {
       cwd: MEDIA_ROOT,
       shell: true,
       env: process.env,
+      stdio: ['pipe', 'pipe', 'pipe'],
     })
+    child.stdin.write(promptText, 'utf-8')
+    child.stdin.end()
     let stdout = ''
     let stderr = ''
     child.stdout.on('data', d => { stdout += d.toString() })
     child.stderr.on('data', d => { stderr += d.toString() })
     child.on('error', err => resolve({ ok: false, error: err.message }))
     child.on('close', code => {
-      try { fs.unlinkSync(tmpFile) } catch {}
       if (code !== 0) {
         resolve({ ok: false, error: `claude 종료 코드 ${code}: ${stderr.slice(-1000) || stdout.slice(-1000)}` })
         return
