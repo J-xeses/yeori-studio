@@ -3622,6 +3622,24 @@ function saveTaskQueue(tasks) {
   fs.writeFileSync(TASK_QUEUE_PATH, JSON.stringify(tasks, null, 2), 'utf-8')
 }
 
+// GET /api/episode-video-status — 에피소드의 컷별 cut_NN.mp4 존재 여부(제작완료 뱃지용).
+// buildStudioStatusPayload()가 이미 계산하는 hasVideo(파일 존재 여부 실시간 확인, 별도
+// 플래그 저장 없음)를 그대로 재사용 — MakingTab.jsx/EpisodeInfoSidebar.jsx가 브라우저에서
+// 인증 없이 부르는 용도라 mcpRouter(Bearer 인증) 대신 일반 라우트로 둔다.
+app.get('/api/episode-video-status', (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const { epId } = findEpisodeByNumOrThrow(epNum)
+    const payload = buildStudioStatusPayload(epId)
+    const videoByCut = {}
+    payload.cuts.forEach(c => { videoByCut[c.no] = c.hasVideo })
+    res.json({ videoByCut })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })

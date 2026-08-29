@@ -104,7 +104,7 @@ export function EpisodeOverviewBlock() {
 // 넘기면 카드가 세로 쌓기 대신 가로 배치(썸네일 | 정보 | 액션)로 바뀐다.
 // previewText: 가운데 텍스트 줄을 대사/나레이션/씬 대신 탭 전용 문구(예: 영상 탭의 "영상 2개")로 교체.
 // renderExtra: 카드 오른쪽 끝에 탭 전용 액션(예: 영상 탭의 "✨생성" 버튼)을 추가.
-export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra }) {
+export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra, videoStatus }) {
   const stages = ['g1', 'g2', 'g3', 'g4', 'g5'].slice(0, maxStage)
   const isRow = !!(renderPreview || renderExtra)
   return (
@@ -112,6 +112,7 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
       {(cuts || []).map(c => {
         const g = gData?.[episodeCode]?.[`cut_${c.no}`] || {}
         const badges = stages.filter(key => g[key])
+        const madeVideo = !!videoStatus?.[c.no]
         return (
           <div key={c.id}
             className={`${s.cutItem} ${isRow ? s.cutItemRow : ''} ${activeCutId === c.id ? s.cutItemActive : ''}`}
@@ -120,9 +121,10 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
             <div className={s.cutInfo}>
               <span className={s.cutNo}>CUT {c.no}</span>
               <span className={s.cutPreview}>{previewText ? previewText(c) : (c.dialogue || c.narration || c.scene || '(내용 없음)')}</span>
-              {badges.length > 0 && (
+              {(badges.length > 0 || madeVideo) && (
                 <span className={s.cutBadges}>
                   {badges.map(key => <span key={key} className={`${s.gBadge} ${s[key]}`}>{key.toUpperCase()}</span>)}
+                  {madeVideo && <span className={s.doneBadge}>✅ 제작완료</span>}
                 </span>
               )}
             </div>
@@ -141,11 +143,28 @@ export default function EpisodeInfoSidebar({ onCutClick, activeCutId, maxStage =
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
   const episodeCode = resolveEpisodeCode(episode)
   const [gData, setGData] = useState(() => loadGPoints())
+  // 컷별 cut_NN.mp4 제작완료 여부(파일 존재 기반) — MakingTab.jsx와 동일 출처
+  // (/api/episode-video-status)를 이 공용 사이드바에서도 폴링해 어느 탭에서든
+  // "✅ 제작완료" 뱃지가 보이게 한다.
+  const [videoStatus, setVideoStatus] = useState({})
 
   useEffect(() => {
     const id = setInterval(() => setGData(loadGPoints()), 2000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    if (!episode?.number) return
+    const load = () => {
+      fetch(`http://localhost:3001/api/episode-video-status?epNum=${episode.number}`)
+        .then(r => r.json())
+        .then(data => setVideoStatus(data.videoByCut || {}))
+        .catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 2000)
+    return () => clearInterval(id)
+  }, [episode?.number])
 
   return (
     <div className={s.sidebar}>
@@ -156,6 +175,7 @@ export default function EpisodeInfoSidebar({ onCutClick, activeCutId, maxStage =
         <CutList
           cuts={cuts} gData={gData} episodeCode={episodeCode}
           activeCutId={activeCutId} onCutClick={onCutClick} maxStage={maxStage}
+          videoStatus={videoStatus}
         />
       </div>
     </div>

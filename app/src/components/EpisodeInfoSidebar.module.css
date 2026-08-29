@@ -76,3 +76,10 @@
 .g3 { background: rgba(167,139,250,.15); color: #a78bfa; border: 1px solid rgba(167,139,250,.3); }
 .g4 { background: rgba(251,146,60,.15); color: #fb923c; border: 1px solid rgba(251,146,60,.3); }
 .g5 { background: rgba(244,114,182,.15); color: #f472b6; border: 1px solid rgba(244,114,182,.3); }
+
+/* G1~G5 승인 뱃지와는 별개 지표 — cut_NN.mp4 파일 존재 여부(제작완료)를 시각적으로
+   구분되게 청록 계열로 표시 */
+.doneBadge {
+  font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 3px;
+  background: rgba(34, 211, 238, .15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, .35);
+}

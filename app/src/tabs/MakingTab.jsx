@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
@@ -81,6 +81,22 @@ export default function MakingTab() {
   const episodeCode = resolveEpisodeCode(episode)
   const graphicCuts = (cuts || []).filter(c => c.cutType === 'GRAPHIC')
   const brollCuts = (cuts || []).filter(c => c.cutType === 'BROLL')
+
+  // 컷별 cut_NN.mp4 제작완료 여부(파일 존재 기반, 별도 플래그 저장 없음) — 2초마다
+  // 다시 불러와서 캡처/녹화 직후에도 뱃지가 자동으로 갱신되게 한다.
+  const [videoStatus, setVideoStatus] = useState({})
+  useEffect(() => {
+    if (!episode?.number) return
+    const load = () => {
+      fetch(`${YEORI_SERVER}/api/episode-video-status?epNum=${episode.number}`)
+        .then(r => r.json())
+        .then(data => setVideoStatus(data.videoByCut || {}))
+        .catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 2000)
+    return () => clearInterval(id)
+  }, [episode?.number])
 
   // ── 소스 검색(Pexels): BROLL/CAPCUT 컷에 쓸 영상/이미지 소재를 검색해 바로 다운로드.
   // 특정 컷타입에 종속되지 않는 범용 유틸이라 대상 컷은 자체 드롭다운으로 선택.
@@ -648,6 +664,7 @@ export default function MakingTab() {
                         }}>
                         <span className={s.cutNo}>#{cut.no}</span>
                         <span className={s.cutSummary}>{cut.scene || '(내용 없음)'}</span>
+                        {videoStatus[cut.no] && <span className={s.doneBadge}>✅ 제작완료</span>}
                       </button>
                     ))}
                   </div>
