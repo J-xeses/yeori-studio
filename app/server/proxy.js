@@ -4499,20 +4499,14 @@ body {
   color:white;
 }
 .main-text {
-  font-size:72px; font-weight:700;
+  font-size:108px; font-weight:700;
   text-align:center; line-height:1.4;
-  padding:0 80px;
-}
-.sub-text {
-  font-size:42px; color:rgba(255,255,255,0.6);
-  margin-top:40px; text-align:center;
   padding:0 80px;
 }
 </style>
 </head>
 <body>
 <div class="main-text">{narration}</div>
-<div class="sub-text">{scene}</div>
 </body>
 </html>`
 
@@ -4520,19 +4514,20 @@ function escapeHtmlForMcp(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// 대본의 "CP(자막)" 필드가 아직 별도 컷 필드로 파싱되지 않아서, videoPrompt 안에
-// 따옴표로 감싼 문구가 있으면(실제 대본 관례) 그걸 우선 추출한다 — MakingTab.jsx의
-// extractQuotedLine과 동일 로직.
+// 대본의 "CP(자막)" 필드는 studio-state.json 컷 객체에 존재하지 않는다(scriptParserV3.js가
+// 파싱하지 않음 — 2026-08-29 실측: IG_R02 실제 컷 객체를 직접 확인해도 cp/script.cp
+// 필드 없음). 대신 videoPrompt 안에 따옴표로 감싼 문구가 있으면(실제 대본 관례 — CAPCUT
+// 컷의 실제 화면 문구를 여기 적어두는 경우가 많음) 그게 CP의 가장 가까운 대용이라 우선
+// 추출한다 — MakingTab.jsx의 extractQuotedLine과 동일 로직. 그 문구도 없으면 CP→DL→NR
+// 순서 요청에 따라 dialogue를 narration보다 먼저 본다.
 function extractQuotedLineForMcp(text) {
   const m = String(text || '').match(/"([^"]+)"/)
   return m ? m[1] : ''
 }
 
 function fillTemplateForMcp(cut) {
-  const mainText = extractQuotedLineForMcp(cut.videoPrompt) || cut.narration || cut.dialogue || ''
-  return GRAPHIC_TEMPLATE_MCP
-    .replace('{narration}', escapeHtmlForMcp(mainText))
-    .replace('{scene}', escapeHtmlForMcp(cut.scene || ''))
+  const mainText = extractQuotedLineForMcp(cut.videoPrompt) || cut.dialogue || cut.narration || ''
+  return GRAPHIC_TEMPLATE_MCP.replace('{narration}', escapeHtmlForMcp(mainText))
 }
 
 // masterCode.pl → insta 콘텐츠 폴더 매핑은 scriptParserV3.js의 pipelineCodeToInstaContent를
