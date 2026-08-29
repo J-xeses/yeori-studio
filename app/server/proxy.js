@@ -4499,9 +4499,11 @@ body {
   color:white;
 }
 .main-text {
-  font-size:108px; font-weight:700;
+  font-size:80px; font-weight:700;
   text-align:center; line-height:1.4;
   padding:0 80px;
+  white-space:pre-line;
+  word-break:keep-all;
 }
 </style>
 </head>
