@@ -75,12 +75,15 @@ function fillTemplate(cut) {
     .replace('{scene}', escapeHtml(cut.scene || ''))
 }
 
+// 이 탭에서 컷별 [제작 실행] 버튼이 붙는 타입. 그 외(YEORI/PIP 등)는 G2~G5 파이프라인이
+// 자동 처리하므로 목록에는 나오되 액션 버튼 없이 "(파이프라인 자동처리)"만 표시한다.
+const MANUAL_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
+
 export default function MakingTab() {
   const { state } = useApp()
   const { episode, cuts } = state
   const episodeCode = resolveEpisodeCode(episode)
-  const graphicCuts = (cuts || []).filter(c => c.cutType === 'GRAPHIC')
-  const brollCuts = (cuts || []).filter(c => c.cutType === 'BROLL')
+  const allCuts = [...(cuts || [])].sort((a, b) => a.no - b.no)
 
   // 컷별 cut_NN.mp4 제작완료 여부(파일 존재 기반, 별도 플래그 저장 없음) — 2초마다
   // 다시 불러와서 캡처/녹화 직후에도 뱃지가 자동으로 갱신되게 한다.
@@ -98,8 +101,25 @@ export default function MakingTab() {
     return () => clearInterval(id)
   }, [episode?.number])
 
-  // ── 소스 검색(Pexels): BROLL/CAPCUT 컷에 쓸 영상/이미지 소재를 검색해 바로 다운로드.
-  // 특정 컷타입에 종속되지 않는 범용 유틸이라 대상 컷은 자체 드롭다운으로 선택.
+  // ── 어느 컷을 펼쳐 놓았는지(한 번에 하나만). 펼치면서 타입에 맞는 기존 select 함수를
+  // 호출해 htmlSource/selectedBrollCutNo/selectedCapcutCutNo 등 기존 상태를 그대로 채운다.
+  const [expandedCutNo, setExpandedCutNo] = useState(null)
+  const toggleCut = (cut) => {
+    const willOpen = expandedCutNo !== cut.no
+    setExpandedCutNo(willOpen ? cut.no : null)
+    if (!willOpen) return
+    if (cut.cutType === 'GRAPHIC') selectCut(cut)
+    else if (cut.cutType === 'BROLL') selectBrollCut(cut)
+    else if (cut.cutType === 'CAPCUT') {
+      selectCapcutCut(cut)
+      if (getCapcutMode(cut.no) === 'html') selectCapcutCutForHtml(cut)
+    }
+  }
+
+  const copyPath = (p) => { try { navigator.clipboard?.writeText(p) } catch { /* noop */ } }
+
+  // ── 소스 검색(Pexels): BROLL 컷 인라인 패널과, 맨 아래 "직접 다운로드" 접이식
+  // 카드가 공유한다. 한 번에 컷 하나만 펼쳐지므로 검색 상태를 공유해도 충돌 없음.
   const [sourceQuery, setSourceQuery] = useState('')
   const [sourceType, setSourceType] = useState('all')
   const [sourceOrientation, setSourceOrientation] = useState('portrait')
@@ -109,6 +129,7 @@ export default function MakingTab() {
   const [sourceResults, setSourceResults] = useState([])
   const [sourceDownloading, setSourceDownloading] = useState({})
   const [sourceDownloaded, setSourceDownloaded] = useState({})
+  const [legacySourceOpen, setLegacySourceOpen] = useState(false)
 
   const searchSources = async () => {
     if (!sourceQuery.trim()) return
@@ -131,6 +152,7 @@ export default function MakingTab() {
     }
   }
 
+  // 맨 아래 접이식 카드 전용 — 검색 결과를 making/source/에 원본 그대로 저장(기존 동작 유지).
   const downloadSource = async (item) => {
     if (sourceTargetCutNo == null || !episode.number) return
     setSourceDownloading(prev => ({ ...prev, [item.id]: true }))
@@ -152,6 +174,7 @@ export default function MakingTab() {
     }
   }
 
+  // ── GRAPHIC(및 CAPCUT의 HTML 캡처 모드) 공용 상태 ─────────────────────────
   const [selectedCutNo, setSelectedCutNo] = useState(null)
   const [htmlSource, setHtmlSource] = useState('')
   const [previewHtml, setPreviewHtml] = useState('')
@@ -167,9 +190,30 @@ export default function MakingTab() {
     setDuration(cut.duration || 5)
   }
 
-  // ── BROLL: 특정 화면을 녹화 → 녹화 중지 즉시 자동으로 목표 길이 트림 + 1080x1920
-  // 스케일/크롭해서 최종 컷 영상으로 확정(사용자 확정: "편집 과정도 사전 설정으로
-  // 수동 없이 자동 진행"). raw 원본은 downloads/making/에 그대로 보관.
+  const captureGraphic = async () => {
+    if (selectedCutNo == null || !episode.number) return
+    setCapturing(true)
+    setCaptureResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setCaptureResult({ error: data.error || '캡처 실패' }); return }
+      setCaptureResult(data)
+    } catch (e) {
+      setCaptureResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setCapturing(false)
+    }
+  }
+
+  // ── BROLL: 소스 = "Pexels 검색"(다운로드→FFmpeg 규격화) 또는 "화면 녹화" ─────────
+  const [brollSourceMode, setBrollSourceMode] = useState({}) // { [cutNo]: 'pexels' | 'record' }, 기본 'pexels'
+  const getBrollSourceMode = (n) => brollSourceMode[n] || 'pexels'
+
   const [selectedBrollCutNo, setSelectedBrollCutNo] = useState(null)
   const [brollUrl, setBrollUrl] = useState('')
   const [brollQuality, setBrollQuality] = useState('medium')
@@ -181,6 +225,11 @@ export default function MakingTab() {
   const [brollBusy, setBrollBusy] = useState(false)
   const [brollResult, setBrollResult] = useState(null)
   const [brollCountdown, setBrollCountdown] = useState(null)
+
+  // Pexels 소스로 BROLL 컷 제작
+  const [brollPexelsPick, setBrollPexelsPick] = useState({})       // { [cutNo]: item }
+  const [brollDownloading, setBrollDownloading] = useState({})     // { [cutNo]: bool }
+  const [brollDownloadResult, setBrollDownloadResult] = useState({}) // { [cutNo]: data | { error } }
 
   const selectBrollCut = (cut) => {
     setSelectedBrollCutNo(cut.no)
@@ -248,16 +297,37 @@ export default function MakingTab() {
     }
   }
 
-  // ── CAPCUT: 두 가지 제작 방식을 지원한다.
-  // 1) "HTML 캡처"(기본) — CUT1/CUT5처럼 검정배경+텍스트뿐이거나 CUT2/CUT3처럼 이미 만들어둔
-  //    커스텀 목업 HTML(예: RL02_DM_mockup_v3.html)이 있는 경우, GRAPHIC 컷과 완전히 동일한
-  //    HTML→헤드리스캡처→mp4 파이프라인(selectCut/htmlSource/captureGraphic, 아래 GRAPHIC
-  //    섹션과 상태 공유)을 그대로 탄다 — CAPCUT 타입이라는 이유만으로 이 경로를 못 쓸 이유가
-  //    없다는 걸 실제 대본(RL02)으로 확인(2026-08-23).
-  // 2) "CapCut 데스크톱 녹화"(기존) — 정말 사람이 CapCut 안에서 직접 편집해야 하는 컷 대비로
-  //    그대로 남겨둠. cutType/g5_tool 등 파이프라인 라우팅 값은 전혀 안 건드림 — 메이킹 탭
-  //    안에서 "어떻게 만들지"만 컷별로 고를 수 있게 한 것뿐.
-  const capcutCuts = (cuts || []).filter(c => c.cutType === 'CAPCUT')
+  // Pexels 검색 결과 하나를 골라 그 URL로 BROLL 컷을 만든다 —
+  // POST /api/download-broll-cut(다운로드 → 앞부분 trim → 1080x1920 스케일+패딩 →
+  // downloads/video/ep{N}/cut_{NN}.mp4). /api/mcp/download-broll-cut(원격 브리지, Bearer
+  // 인증)과 동일 로직을 공유하는 무인증 로컬용 라우트.
+  const runBrollDownload = async (cut) => {
+    const pick = brollPexelsPick[cut.no]
+    if (!pick || !episode.number) return
+    setBrollDownloading(p => ({ ...p, [cut.no]: true }))
+    setBrollDownloadResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/download-broll-cut`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number,
+          cutNo: cut.no,
+          videoUrl: pick.downloadUrl,
+          duration: brollTargetDuration || cut.duration || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setBrollDownloadResult(p => ({ ...p, [cut.no]: { error: data.error || '다운로드 실패' } })); return }
+      setBrollDownloadResult(p => ({ ...p, [cut.no]: data }))
+    } catch (e) {
+      setBrollDownloadResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+    } finally {
+      setBrollDownloading(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+
+  // ── CAPCUT: 두 가지 제작 방식(HTML 캡처 / CapCut 데스크톱 녹화) ──────────────
   const [capcutMode, setCapcutMode] = useState({}) // { [cutNo]: 'html' | 'record' }, 기본 'html'
   const getCapcutMode = (cutNo) => capcutMode[cutNo] || 'html'
 
@@ -310,7 +380,7 @@ export default function MakingTab() {
       const res = await fetch(`${YEORI_SERVER}/api/read-episode-html?${qs}`)
       const data = await res.json()
       if (res.ok) setHtmlSource(data.html)
-    } catch {}
+    } catch { /* noop */ }
   }
 
   // CAPCUT 컷을 "HTML 캡처" 모드로 선택 — GRAPHIC과 동일한 selectCut()으로 htmlSource/
@@ -380,35 +450,17 @@ export default function MakingTab() {
     }
   }
 
-  const captureGraphic = async () => {
-    if (selectedCutNo == null || !episode.number) return
-    setCapturing(true)
-    setCaptureResult(null)
-    try {
-      const res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setCaptureResult({ error: data.error || '캡처 실패' }); return }
-      setCaptureResult(data)
-    } catch (e) {
-      setCaptureResult({ error: `서버 연결 실패: ${e.message}` })
-    } finally {
-      setCapturing(false)
-    }
-  }
-
   // ── G5-M: 컷 번호 순서대로 확정된 cut_{NN}.mp4(컷타입 무관, BROLL/CAPCUT/GRAPHIC이
   // 자동편집으로 만든 것이든 YEORI의 기존 파일이든 전부 downloads/video/ep{N}/에
   // 모여 있어 그대로 이어붙이면 됨)를 메이킹 필름 하나로 조립.
   const [assembling, setAssembling] = useState(false)
   const [assembleResult, setAssembleResult] = useState(null)
+  const [makingPreview, setMakingPreview] = useState(false)
 
   const assembleMaking = async () => {
     setAssembling(true)
     setAssembleResult(null)
+    setMakingPreview(false)
     try {
       const res = await fetch(`${YEORI_SERVER}/api/making-assemble`, {
         method: 'POST',
@@ -425,6 +477,396 @@ export default function MakingTab() {
     }
   }
 
+  // ────────────────────────────────────────────────────────────────────────
+  // 인라인 패널 렌더러 (컷 타입별)
+  // ────────────────────────────────────────────────────────────────────────
+  const renderGraphicPanel = () => (
+    <div className={s.subPanel}>
+      <div className={s.settingLabel}>HTML 소스</div>
+      <textarea
+        className={s.htmlEditor}
+        value={htmlSource}
+        onChange={e => setHtmlSource(e.target.value)}
+        spellCheck={false}
+      />
+      <div className={s.editorActions}>
+        <label className={s.durationField}>
+          길이(초)
+          <input type="number" min="1" value={duration}
+            onChange={e => setDuration(parseInt(e.target.value) || 1)} />
+        </label>
+        <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
+        <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
+          {capturing ? '⏳ 제작 중…' : '제작 실행'}
+        </button>
+      </div>
+      {previewHtml && (
+        <div className={s.previewWrap}>
+          <div className={s.previewBox}>
+            <iframe title="graphic-preview" srcDoc={previewHtml} className={s.previewFrame} />
+          </div>
+        </div>
+      )}
+      {captureResult && (
+        captureResult.error ? (
+          <div className={s.resultError}>❌ {captureResult.error}</div>
+        ) : (
+          <div className={s.resultOk}>
+            ✅ 저장됨 — 이미지: {captureResult.imagePath} · 영상: {captureResult.videoPath}
+          </div>
+        )
+      )}
+    </div>
+  )
+
+  const renderBrollPanel = (cut) => {
+    const mode = getBrollSourceMode(cut.no)
+    const pick = brollPexelsPick[cut.no]
+    const dlResult = brollDownloadResult[cut.no]
+    return (
+      <div className={s.subPanel}>
+        <div className={s.settingLabel}>소스 선택</div>
+        <div className={s.radioRow}>
+          <button
+            className={mode === 'pexels' ? s.captureBtn : s.previewBtn}
+            onClick={() => setBrollSourceMode(p => ({ ...p, [cut.no]: 'pexels' }))}>
+            Pexels 검색
+          </button>
+          <button
+            className={mode === 'record' ? s.captureBtn : s.previewBtn}
+            onClick={() => setBrollSourceMode(p => ({ ...p, [cut.no]: 'record' }))}>
+            화면 녹화
+          </button>
+        </div>
+
+        {mode === 'pexels' ? (
+          <>
+            <div className={s.urlRow}>
+              <input className={s.urlInput} value={sourceQuery} placeholder="예: slot machine lever"
+                onChange={e => setSourceQuery(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && searchSources()} />
+              <button className={s.previewBtn} disabled={sourceSearching || !sourceQuery.trim()} onClick={searchSources}>
+                {sourceSearching ? '⏳' : '검색'}
+              </button>
+              <div className={s.radioRow}>
+                {[['portrait', '세로우선'], ['landscape', '가로'], ['all', '전체']].map(([v, l]) => (
+                  <label key={v} className={s.radioLabel}>
+                    <input type="radio" name={`broll-orient-${cut.no}`} value={v}
+                      checked={sourceOrientation === v} onChange={() => setSourceOrientation(v)} />
+                    {l}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {sourceError && <div className={s.resultError}>❌ {sourceError}</div>}
+
+            {sourceResults.filter(r => r.type === 'video').length > 0 && (
+              <div className={s.sourceGrid}>
+                {sourceResults.filter(r => r.type === 'video').map(item => (
+                  <div key={item.id}
+                    className={`${s.sourceCard} ${pick?.id === item.id ? s.sourceCardActive : ''}`}
+                    onClick={() => setBrollPexelsPick(p => ({ ...p, [cut.no]: item }))}>
+                    <img src={item.thumbnail} alt={item.title} className={s.sourceThumb} loading="lazy" />
+                    <div className={s.sourceMeta}>
+                      <span className={s.sourcePhotographer}>{item.photographer || '작자 미상'}</span>
+                      <span className={s.sourceDuration}>{item.duration}초</span>
+                    </div>
+                    <div className={s.radioLabel}>
+                      <input type="radio" name={`broll-pick-${cut.no}`} readOnly checked={pick?.id === item.id} />
+                      {pick?.id === item.id ? '선택됨' : '선택'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className={s.editorActions}>
+              <label className={s.durationField}>
+                길이(초)
+                <input type="number" min="1" value={brollTargetDuration}
+                  onChange={e => setBrollTargetDuration(parseInt(e.target.value) || 1)} />
+              </label>
+              <button className={s.captureBtn}
+                disabled={!pick || brollDownloading[cut.no] || !episode.number}
+                onClick={() => runBrollDownload(cut)}>
+                {brollDownloading[cut.no] ? '⏳ 제작 중…' : '제작 실행'}
+              </button>
+              {!pick && <span className={s.emptyHint}>검색 결과에서 영상을 하나 선택하세요.</span>}
+            </div>
+
+            {dlResult && (
+              dlResult.error ? (
+                <div className={s.resultError}>❌ {dlResult.error}</div>
+              ) : (
+                <div className={s.resultOk}>
+                  ✅ 저장됨 — {dlResult.outputPath}
+                  {dlResult.duration != null && <> ({dlResult.duration?.toFixed?.(1) ?? dlResult.duration}초)</>}
+                </div>
+              )
+            )}
+
+            <div className={s.pexelsCredit}>
+              Videos provided by <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={s.settingRow}>
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>URL(선택)</div>
+                <div className={s.urlRow}>
+                  <input className={s.urlInput} value={brollUrl} placeholder="https://..."
+                    onChange={e => setBrollUrl(e.target.value)} />
+                  <button className={s.previewBtn} disabled={!brollUrl}
+                    onClick={() => window.open(brollUrl, '_blank', 'noopener,noreferrer')}>열기</button>
+                </div>
+              </div>
+
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>녹화 품질</div>
+                <div className={s.radioRow}>
+                  {['low', 'medium', 'high'].map(q => (
+                    <label key={q} className={s.radioLabel}>
+                      <input type="radio" name={`broll-quality-${cut.no}`} value={q}
+                        checked={brollQuality === q} onChange={() => setBrollQuality(q)} disabled={brollRecording} />
+                      {q}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className={s.settingRow}>
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>녹화 영역</div>
+                <div className={s.radioRow}>
+                  <label className={s.radioLabel}>
+                    <input type="radio" name={`broll-region-${cut.no}`} value="full"
+                      checked={brollRegionMode === 'full'} onChange={() => setBrollRegionMode('full')} disabled={brollRecording} />
+                    전체화면
+                  </label>
+                  <label className={s.radioLabel}>
+                    <input type="radio" name={`broll-region-${cut.no}`} value="custom"
+                      checked={brollRegionMode === 'custom'} onChange={() => setBrollRegionMode('custom')} disabled={brollRecording} />
+                    특정영역
+                  </label>
+                  {brollRegionMode === 'custom' && (
+                    <div className={s.regionInputs}>
+                      {['x', 'y', 'w', 'h'].map(k => (
+                        <label key={k} className={s.regionField}>
+                          {k}
+                          <input type="number" value={brollRegion[k]} disabled={brollRecording}
+                            onChange={e => setBrollRegion(prev => ({ ...prev, [k]: parseInt(e.target.value) || 0 }))} />
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {brollRegionMode === 'full' && (
+                  <div className={s.emptyHint}>
+                    녹화 시작을 누르면 3초 뒤에 실제로 녹화가 시작됩니다 — 그 사이 대상 화면으로 전환하세요.
+                  </div>
+                )}
+              </div>
+
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
+                <div className={s.radioRow}>
+                  <input type="number" min="1" value={brollTargetDuration} disabled={brollRecording}
+                    onChange={e => setBrollTargetDuration(parseInt(e.target.value) || 1)}
+                    className={s.durationInput} />
+                  <label className={s.radioLabel}>
+                    <input type="radio" name={`broll-trim-${cut.no}`} value="end"
+                      checked={brollTrimMode === 'end'} onChange={() => setBrollTrimMode('end')} disabled={brollRecording} />
+                    끝에서부터
+                  </label>
+                  <label className={s.radioLabel}>
+                    <input type="radio" name={`broll-trim-${cut.no}`} value="start"
+                      checked={brollTrimMode === 'start'} onChange={() => setBrollTrimMode('start')} disabled={brollRecording} />
+                    처음부터
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className={s.editorActions}>
+              {!brollRecording ? (
+                <button className={s.captureBtn} disabled={brollBusy || brollCountdown != null} onClick={startBrollRecording}>
+                  {brollCountdown != null ? `${brollCountdown}초 후 시작…` : brollBusy ? '⏳' : '제작 실행 (녹화 시작)'}
+                </button>
+              ) : (
+                <button className={s.stopBtn} disabled={brollBusy} onClick={stopBrollRecording}>
+                  🔴 녹화 중... 중지
+                </button>
+              )}
+            </div>
+
+            {brollResult && (
+              brollResult.error ? (
+                <div className={s.resultError}>❌ {brollResult.error}</div>
+              ) : (
+                <div className={s.resultOk}>
+                  ✅ 편집 완료 — 최종: {brollResult.finalPath} ({(brollResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.finalDuration?.toFixed?.(1) ?? brollResult.finalDuration}초)
+                  <br />원본(raw, 보관됨): {brollResult.rawPath} ({(brollResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.rawDuration?.toFixed(1)}초)
+                </div>
+              )
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  const renderCapcutPanel = (cut) => {
+    const mode = getCapcutMode(cut.no)
+    return (
+      <div className={s.subPanel}>
+        <div className={s.settingLabel}>제작 방식</div>
+        <div className={s.radioRow}>
+          <label className={s.radioLabel}>
+            <input type="radio" name={`capcut-mode-${cut.no}`} checked={mode === 'html'}
+              onChange={() => {
+                setCapcutMode(p => ({ ...p, [cut.no]: 'html' }))
+                selectCapcutCutForHtml(cut)
+              }} />
+            HTML 캡처로 제작
+          </label>
+          <label className={s.radioLabel}>
+            <input type="radio" name={`capcut-mode-${cut.no}`} checked={mode === 'record'}
+              onChange={() => setCapcutMode(p => ({ ...p, [cut.no]: 'record' }))} />
+            CapCut 데스크톱 녹화
+          </label>
+        </div>
+
+        {mode === 'html' ? (
+          <>
+            <div className={s.settingGroup}>
+              <div className={s.settingLabel}>HTML 소스 선택</div>
+              <select value={selectedHtmlFile} disabled={htmlFilesLoading}
+                onChange={e => applyHtmlFileChoice(e.target.value, cut)}>
+                <option value="__auto__">자동 템플릿 (텍스트 채우기)</option>
+                {episodeHtmlFiles.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+              <div className={s.emptyHint}>
+                {htmlFilesLoading ? 'HTML 파일 목록 불러오는 중…' : '아래 편집기에서 내용을 확인/수정한 뒤 제작 실행하세요.'}
+              </div>
+            </div>
+
+            <textarea
+              className={s.htmlEditor}
+              value={htmlSource}
+              onChange={e => setHtmlSource(e.target.value)}
+              spellCheck={false}
+            />
+            <div className={s.editorActions}>
+              <label className={s.durationField}>
+                길이(초)
+                <input type="number" min="1" value={duration}
+                  onChange={e => setDuration(parseInt(e.target.value) || 1)} />
+              </label>
+              <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
+              <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
+                {capturing ? '⏳ 제작 중…' : '제작 실행'}
+              </button>
+            </div>
+            {previewHtml && (
+              <div className={s.previewWrap}>
+                <div className={s.previewBox}>
+                  <iframe title="capcut-preview" srcDoc={previewHtml} className={s.previewFrame} />
+                </div>
+              </div>
+            )}
+            {captureResult && (
+              captureResult.error ? (
+                <div className={s.resultError}>❌ {captureResult.error}</div>
+              ) : (
+                <div className={s.resultOk}>
+                  ✅ 저장됨 — 이미지: {captureResult.imagePath} · 영상: {captureResult.videoPath}
+                </div>
+              )
+            )}
+          </>
+        ) : (
+          <>
+            <div className={s.editorActions}>
+              <button className={s.previewBtn} disabled={capcutChecking} onClick={checkCapcutWindow}>
+                {capcutChecking ? '⏳ 확인 중…' : 'CapCut 상태 확인'}
+              </button>
+            </div>
+
+            {capcutStatus && (
+              capcutStatus.running ? (
+                <div className={s.resultOk}>
+                  ✅ 실행 중 — {capcutStatus.windowTitle || 'CapCut'} (PID {capcutStatus.pid}, 창 {capcutStatus.region?.w}×{capcutStatus.region?.h})
+                </div>
+              ) : (
+                <div className={s.resultError}>⚠️ CapCut을 먼저 실행해주세요.</div>
+              )
+            )}
+
+            {capcutStatus?.running && (
+              <>
+                <div className={s.settingGroup}>
+                  <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
+                  <div className={s.radioRow}>
+                    <input type="number" min="1" value={capcutTargetDuration} disabled={capcutRecording}
+                      onChange={e => setCapcutTargetDuration(parseInt(e.target.value) || 1)}
+                      className={s.durationInput} />
+                    <label className={s.radioLabel}>
+                      <input type="radio" name={`capcut-trim-${cut.no}`} value="end"
+                        checked={capcutTrimMode === 'end'} onChange={() => setCapcutTrimMode('end')} disabled={capcutRecording} />
+                      끝에서부터
+                    </label>
+                    <label className={s.radioLabel}>
+                      <input type="radio" name={`capcut-trim-${cut.no}`} value="start"
+                        checked={capcutTrimMode === 'start'} onChange={() => setCapcutTrimMode('start')} disabled={capcutRecording} />
+                      처음부터
+                    </label>
+                  </div>
+                </div>
+
+                <div className={s.editorActions}>
+                  {!capcutRecording ? (
+                    <button className={s.captureBtn} disabled={capcutBusy} onClick={startCapcutRecording}>
+                      {capcutBusy ? '⏳' : '제작 실행 (녹화 시작)'}
+                    </button>
+                  ) : (
+                    <button className={s.stopBtn} disabled={capcutBusy} onClick={stopCapcutRecording}>
+                      🔴 녹화 중... 중지
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+
+            {capcutResult && (
+              capcutResult.error ? (
+                <div className={s.resultError}>❌ {capcutResult.error}</div>
+              ) : (
+                <div className={s.resultOk}>
+                  ✅ 편집 완료 — 최종: {capcutResult.finalPath} ({(capcutResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.finalDuration?.toFixed?.(1) ?? capcutResult.finalDuration}초)
+                  <br />원본(raw, 보관됨): {capcutResult.rawPath} ({(capcutResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.rawDuration?.toFixed(1)}초)
+                </div>
+              )
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  const renderPanel = (cut) => {
+    if (cut.cutType === 'GRAPHIC') return renderGraphicPanel()
+    if (cut.cutType === 'BROLL') return renderBrollPanel(cut)
+    if (cut.cutType === 'CAPCUT') return renderCapcutPanel(cut)
+    return null
+  }
+
+  const makingUrl = episode?.number
+    ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making.mp4`
+    : null
+
   return (
     <div className={s.page}>
       <TabToolbar />
@@ -438,405 +880,61 @@ export default function MakingTab() {
                 <div>
                   <div className={s.title}>메이킹</div>
                   <div className={s.subtitle}>
-                    G2~G5 파이프라인이 자동 생성하지 않는 컷타입(BROLL/GRAPHIC 등)의 실제 영상을 여기서 제작합니다.
+                    에피소드의 전체 컷 목록입니다. 각 컷을 열어 타입에 맞는 방식으로 영상을 제작한 뒤,
+                    맨 아래에서 메이킹 필름으로 조립합니다. YEORI 등 파이프라인 자동 처리 컷은 표시만 됩니다.
                   </div>
                 </div>
               </div>
 
               <div className={s.card}>
-                <div className={s.cardTitle}>소스 검색 (Pexels)</div>
-                <div className={s.settingRow}>
-                  <div className={s.settingGroup}>
-                    <div className={s.settingLabel}>검색어</div>
-                    <div className={s.urlRow}>
-                      <input className={s.urlInput} value={sourceQuery} placeholder="예: slot machine lever"
-                        onChange={e => setSourceQuery(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && searchSources()} />
-                      <button className={s.previewBtn} disabled={sourceSearching || !sourceQuery.trim()} onClick={searchSources}>
-                        {sourceSearching ? '⏳' : '검색'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className={s.settingGroup}>
-                    <div className={s.settingLabel}>유형</div>
-                    <div className={s.radioRow}>
-                      {[['all', '전체'], ['video', '영상'], ['image', '이미지']].map(([v, l]) => (
-                        <label key={v} className={s.radioLabel}>
-                          <input type="radio" name="source-type" value={v}
-                            checked={sourceType === v} onChange={() => setSourceType(v)} />
-                          {l}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={s.settingGroup}>
-                    <div className={s.settingLabel}>방향</div>
-                    <div className={s.radioRow}>
-                      {[['portrait', '세로우선'], ['landscape', '가로'], ['all', '전체']].map(([v, l]) => (
-                        <label key={v} className={s.radioLabel}>
-                          <input type="radio" name="source-orientation" value={v}
-                            checked={sourceOrientation === v} onChange={() => setSourceOrientation(v)} />
-                          {l}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className={s.settingGroup}>
-                    <div className={s.settingLabel}>대상 컷</div>
-                    <select className={s.stageSelect} value={sourceTargetCutNo ?? ''}
-                      onChange={e => setSourceTargetCutNo(e.target.value ? parseInt(e.target.value) : null)}>
-                      <option value="">선택 안 함</option>
-                      {(cuts || []).map(c => <option key={c.id} value={c.no}>#{c.no}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                {sourceError && <div className={s.resultError}>❌ {sourceError}</div>}
-
-                {sourceResults.length > 0 && (
-                  <div className={s.sourceGrid}>
-                    {sourceResults.map(item => {
-                      const dl = sourceDownloaded[item.id]
-                      const downloading = sourceDownloading[item.id]
+                <div className={s.cardTitle}>전체 컷 목록</div>
+                {!allCuts.length ? (
+                  <div className={s.emptyHint}>활성 에피소드에 컷이 없습니다.</div>
+                ) : (
+                  <div className={s.cutList}>
+                    {allCuts.map(cut => {
+                      const type = cut.cutType || 'YEORI'
+                      const manual = MANUAL_TYPES.includes(type)
+                      const expanded = expandedCutNo === cut.no
+                      const done = !!videoStatus[cut.no]
                       return (
-                        <div key={item.id} className={s.sourceCard}>
-                          <img src={item.thumbnail} alt={item.title} className={s.sourceThumb} loading="lazy" />
-                          <div className={s.sourceMeta}>
-                            <span className={s.sourcePhotographer}>{item.photographer || '작자 미상'}</span>
-                            {item.type === 'video' && <span className={s.sourceDuration}>{item.duration}초</span>}
-                          </div>
-                          <button className={s.previewBtn} disabled={downloading || sourceTargetCutNo == null}
-                            onClick={() => downloadSource(item)}>
-                            {downloading ? '⏳' : dl?.success ? '저장됨 ✅' : '다운로드'}
+                        <div key={cut.id} className={`${s.cutRow} ${expanded ? s.cutRowActive : ''}`}>
+                          <button
+                            className={s.cutRowHead}
+                            onClick={() => manual ? toggleCut(cut) : setExpandedCutNo(expanded ? null : cut.no)}>
+                            <span className={s.cutNo}>#{cut.no}</span>
+                            <span className={`${s.typeBadge} ${s['type' + type] || ''}`}>{type}</span>
+                            <span className={s.cutSummary}>
+                              {cut.narration || cut.dialogue || cut.scene || '(내용 없음)'}
+                            </span>
+                            {done && <span className={s.doneBadge}>완료 ✅</span>}
+                            {manual && <span className={s.chevron}>{expanded ? '▲' : '▼'}</span>}
                           </button>
-                          {dl?.error && <div className={s.resultError}>❌ {dl.error}</div>}
+
+                          {expanded && manual && renderPanel(cut)}
+
+                          {expanded && !manual && (
+                            <div className={s.subPanel}>
+                              <div className={s.autoNote}>
+                                {type === 'YEORI'
+                                  ? '(파이프라인 자동처리 — G2~G5에서 이미지·음성·영상이 생성됩니다)'
+                                  : '(파이프라인 자동처리 컷)'}
+                              </div>
+                              {done && makingUrl && (
+                                <video
+                                  className={s.makingVideo}
+                                  src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/cut_${String(cut.no).padStart(2, '0')}.mp4`}
+                                  controls
+                                />
+                              )}
+                            </div>
+                          )}
                         </div>
                       )
                     })}
                   </div>
                 )}
-
-                <div className={s.pexelsCredit}>
-                  Photos provided by <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
-                </div>
               </div>
-
-              <div className={s.card}>
-                <div className={s.cardTitle}>BROLL 컷 목록</div>
-                {!brollCuts.length ? (
-                  <div className={s.emptyHint}>활성 에피소드에 BROLL 타입 컷이 없습니다.</div>
-                ) : (
-                  <div className={s.cutList}>
-                    {brollCuts.map(cut => (
-                      <button key={cut.id}
-                        className={`${s.cutListItem} ${selectedBrollCutNo === cut.no ? s.cutListItemActive : ''}`}
-                        onClick={() => selectBrollCut(cut)}>
-                        <span className={s.cutNo}>#{cut.no}</span>
-                        <span className={s.cutSummary}>{cut.scene || '(내용 없음)'}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {selectedBrollCutNo != null && (
-                <div className={s.card}>
-                  <div className={s.cardTitle}>#{selectedBrollCutNo} 녹화 설정</div>
-
-                  <div className={s.settingRow}>
-                    <div className={s.settingGroup}>
-                      <div className={s.settingLabel}>URL(선택)</div>
-                      <div className={s.urlRow}>
-                        <input className={s.urlInput} value={brollUrl} placeholder="https://..."
-                          onChange={e => setBrollUrl(e.target.value)} />
-                        <button className={s.previewBtn} disabled={!brollUrl}
-                          onClick={() => window.open(brollUrl, '_blank', 'noopener,noreferrer')}>열기</button>
-                      </div>
-                    </div>
-
-                    <div className={s.settingGroup}>
-                      <div className={s.settingLabel}>녹화 품질</div>
-                      <div className={s.radioRow}>
-                        {['low', 'medium', 'high'].map(q => (
-                          <label key={q} className={s.radioLabel}>
-                            <input type="radio" name="broll-quality" value={q}
-                              checked={brollQuality === q} onChange={() => setBrollQuality(q)} disabled={brollRecording} />
-                            {q}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={s.settingRow}>
-                    <div className={s.settingGroup}>
-                      <div className={s.settingLabel}>녹화 영역</div>
-                      <div className={s.radioRow}>
-                        <label className={s.radioLabel}>
-                          <input type="radio" name="broll-region" value="full"
-                            checked={brollRegionMode === 'full'} onChange={() => setBrollRegionMode('full')} disabled={brollRecording} />
-                          전체화면
-                        </label>
-                        <label className={s.radioLabel}>
-                          <input type="radio" name="broll-region" value="custom"
-                            checked={brollRegionMode === 'custom'} onChange={() => setBrollRegionMode('custom')} disabled={brollRecording} />
-                          특정영역
-                        </label>
-                        {brollRegionMode === 'custom' && (
-                          <div className={s.regionInputs}>
-                            {['x', 'y', 'w', 'h'].map(k => (
-                              <label key={k} className={s.regionField}>
-                                {k}
-                                <input type="number" value={brollRegion[k]} disabled={brollRecording}
-                                  onChange={e => setBrollRegion(prev => ({ ...prev, [k]: parseInt(e.target.value) || 0 }))} />
-                              </label>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {brollRegionMode === 'full' && (
-                        <div className={s.emptyHint}>
-                          녹화 시작을 누르면 3초 뒤에 실제로 녹화가 시작됩니다 — 그 사이 대상 화면으로 전환하세요.
-                        </div>
-                      )}
-                    </div>
-
-                    <div className={s.settingGroup}>
-                      <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
-                      <div className={s.radioRow}>
-                        <input type="number" min="1" value={brollTargetDuration} disabled={brollRecording}
-                          onChange={e => setBrollTargetDuration(parseInt(e.target.value) || 1)}
-                          className={s.durationInput} />
-                        <label className={s.radioLabel}>
-                          <input type="radio" name="broll-trim" value="end"
-                            checked={brollTrimMode === 'end'} onChange={() => setBrollTrimMode('end')} disabled={brollRecording} />
-                          끝에서부터
-                        </label>
-                        <label className={s.radioLabel}>
-                          <input type="radio" name="broll-trim" value="start"
-                            checked={brollTrimMode === 'start'} onChange={() => setBrollTrimMode('start')} disabled={brollRecording} />
-                          처음부터
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className={s.editorActions}>
-                    {!brollRecording ? (
-                      <button className={s.captureBtn} disabled={brollBusy || brollCountdown != null} onClick={startBrollRecording}>
-                        {brollCountdown != null ? `${brollCountdown}초 후 시작…` : brollBusy ? '⏳' : '녹화 시작'}
-                      </button>
-                    ) : (
-                      <button className={s.stopBtn} disabled={brollBusy} onClick={stopBrollRecording}>
-                        🔴 녹화 중... 중지
-                      </button>
-                    )}
-                  </div>
-
-                  {brollResult && (
-                    brollResult.error ? (
-                      <div className={s.resultError}>❌ {brollResult.error}</div>
-                    ) : (
-                      <div className={s.resultOk}>
-                        ✅ 편집 완료 — 최종: {brollResult.finalPath} ({(brollResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.finalDuration?.toFixed?.(1) ?? brollResult.finalDuration}초)
-                        <br />원본(raw, 보관됨): {brollResult.rawPath} ({(brollResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.rawDuration?.toFixed(1)}초)
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-
-              <div className={s.card}>
-                <div className={s.cardTitle}>CAPCUT 컷 목록</div>
-                {!capcutCuts.length ? (
-                  <div className={s.emptyHint}>활성 에피소드에 CAPCUT 타입 컷이 없습니다.</div>
-                ) : (
-                  <div className={s.cutList}>
-                    {capcutCuts.map(cut => (
-                      <button key={cut.id}
-                        className={`${s.cutListItem} ${selectedCapcutCutNo === cut.no ? s.cutListItemActive : ''}`}
-                        onClick={() => {
-                          selectCapcutCut(cut)
-                          if (getCapcutMode(cut.no) === 'html') selectCapcutCutForHtml(cut)
-                        }}>
-                        <span className={s.cutNo}>#{cut.no}</span>
-                        <span className={s.cutSummary}>{cut.scene || '(내용 없음)'}</span>
-                        {videoStatus[cut.no] && <span className={s.doneBadge}>✅ 제작완료</span>}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {selectedCapcutCutNo != null && (() => {
-                const activeCapcutCut = capcutCuts.find(c => c.no === selectedCapcutCutNo)
-                const mode = getCapcutMode(selectedCapcutCutNo)
-                return (
-                <div className={s.card}>
-                  <div className={s.cardTitle}>#{selectedCapcutCutNo} 제작 방식</div>
-                  <div className={s.radioRow}>
-                    <label className={s.radioLabel}>
-                      <input type="radio" name="capcut-mode" checked={mode === 'html'}
-                        onChange={() => {
-                          setCapcutMode(p => ({ ...p, [selectedCapcutCutNo]: 'html' }))
-                          if (activeCapcutCut) selectCapcutCutForHtml(activeCapcutCut)
-                        }} />
-                      HTML 캡처로 제작
-                    </label>
-                    <label className={s.radioLabel}>
-                      <input type="radio" name="capcut-mode" checked={mode === 'record'}
-                        onChange={() => setCapcutMode(p => ({ ...p, [selectedCapcutCutNo]: 'record' }))} />
-                      CapCut 데스크톱 녹화
-                    </label>
-                  </div>
-
-                  {mode === 'html' ? (
-                    <div className={s.settingRow}>
-                      <div className={s.settingGroup}>
-                        <div className={s.settingLabel}>HTML 소스 선택</div>
-                        <select value={selectedHtmlFile} disabled={htmlFilesLoading}
-                          onChange={e => activeCapcutCut && applyHtmlFileChoice(e.target.value, activeCapcutCut)}>
-                          <option value="__auto__">자동 템플릿 (텍스트 채우기)</option>
-                          {episodeHtmlFiles.map(f => <option key={f} value={f}>{f}</option>)}
-                        </select>
-                        <div className={s.emptyHint}>
-                          {htmlFilesLoading ? 'HTML 파일 목록 불러오는 중…' : '아래 "HTML 소스" 편집기에서 내용을 확인/수정한 뒤 캡처하세요.'}
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className={s.editorActions}>
-                        <button className={s.previewBtn} disabled={capcutChecking} onClick={checkCapcutWindow}>
-                          {capcutChecking ? '⏳ 확인 중…' : 'CapCut 상태 확인'}
-                        </button>
-                      </div>
-
-                      {capcutStatus && (
-                        capcutStatus.running ? (
-                          <div className={s.resultOk}>
-                            ✅ 실행 중 — {capcutStatus.windowTitle || 'CapCut'} (PID {capcutStatus.pid}, 창 {capcutStatus.region?.w}×{capcutStatus.region?.h})
-                          </div>
-                        ) : (
-                          <div className={s.resultError}>⚠️ CapCut을 먼저 실행해주세요.</div>
-                        )
-                      )}
-
-                      {capcutStatus?.running && (
-                        <>
-                          <div className={s.settingRow}>
-                            <div className={s.settingGroup}>
-                              <div className={s.settingLabel}>목표 길이(초) / 트림 위치</div>
-                              <div className={s.radioRow}>
-                                <input type="number" min="1" value={capcutTargetDuration} disabled={capcutRecording}
-                                  onChange={e => setCapcutTargetDuration(parseInt(e.target.value) || 1)}
-                                  className={s.durationInput} />
-                                <label className={s.radioLabel}>
-                                  <input type="radio" name="capcut-trim" value="end"
-                                    checked={capcutTrimMode === 'end'} onChange={() => setCapcutTrimMode('end')} disabled={capcutRecording} />
-                                  끝에서부터
-                                </label>
-                                <label className={s.radioLabel}>
-                                  <input type="radio" name="capcut-trim" value="start"
-                                    checked={capcutTrimMode === 'start'} onChange={() => setCapcutTrimMode('start')} disabled={capcutRecording} />
-                                  처음부터
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className={s.editorActions}>
-                            {!capcutRecording ? (
-                              <button className={s.captureBtn} disabled={capcutBusy} onClick={startCapcutRecording}>
-                                {capcutBusy ? '⏳' : '녹화 시작'}
-                              </button>
-                            ) : (
-                              <button className={s.stopBtn} disabled={capcutBusy} onClick={stopCapcutRecording}>
-                                🔴 녹화 중... 중지
-                              </button>
-                            )}
-                          </div>
-                        </>
-                      )}
-
-                      {capcutResult && (
-                        capcutResult.error ? (
-                          <div className={s.resultError}>❌ {capcutResult.error}</div>
-                        ) : (
-                          <div className={s.resultOk}>
-                            ✅ 편집 완료 — 최종: {capcutResult.finalPath} ({(capcutResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.finalDuration?.toFixed?.(1) ?? capcutResult.finalDuration}초)
-                            <br />원본(raw, 보관됨): {capcutResult.rawPath} ({(capcutResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.rawDuration?.toFixed(1)}초)
-                          </div>
-                        )
-                      )}
-                    </>
-                  )}
-                </div>
-                )
-              })()}
-
-              <div className={s.card}>
-                <div className={s.cardTitle}>GRAPHIC 컷 목록</div>
-                {!graphicCuts.length ? (
-                  <div className={s.emptyHint}>활성 에피소드에 GRAPHIC 타입 컷이 없습니다.</div>
-                ) : (
-                  <div className={s.cutList}>
-                    {graphicCuts.map(cut => (
-                      <button key={cut.id}
-                        className={`${s.cutListItem} ${selectedCutNo === cut.no ? s.cutListItemActive : ''}`}
-                        onClick={() => selectCut(cut)}>
-                        <span className={s.cutNo}>#{cut.no}</span>
-                        <span className={s.cutSummary}>{cut.narration || cut.dialogue || cut.scene || '(내용 없음)'}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {selectedCutNo != null && (
-                <div className={s.card}>
-                  <div className={s.cardTitle}>#{selectedCutNo} HTML 소스</div>
-                  <textarea
-                    className={s.htmlEditor}
-                    value={htmlSource}
-                    onChange={e => setHtmlSource(e.target.value)}
-                    spellCheck={false}
-                  />
-
-                  <div className={s.editorActions}>
-                    <label className={s.durationField}>
-                      길이(초)
-                      <input type="number" min="1" value={duration}
-                        onChange={e => setDuration(parseInt(e.target.value) || 1)} />
-                    </label>
-                    <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
-                    <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
-                      {capturing ? '⏳ 캡처 중…' : '캡처 & 저장'}
-                    </button>
-                  </div>
-
-                  {previewHtml && (
-                    <div className={s.previewWrap}>
-                      <div className={s.previewBox}>
-                        <iframe title="graphic-preview" srcDoc={previewHtml} className={s.previewFrame} />
-                      </div>
-                    </div>
-                  )}
-
-                  {captureResult && (
-                    captureResult.error ? (
-                      <div className={s.resultError}>❌ {captureResult.error}</div>
-                    ) : (
-                      <div className={s.resultOk}>
-                        ✅ 저장됨 — 이미지: {captureResult.imagePath} · 영상: {captureResult.videoPath}
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
 
               <div className={s.card}>
                 <div className={s.cardTitle}>메이킹 필름 조립 (G5-M)</div>
@@ -845,9 +943,21 @@ export default function MakingTab() {
                 </div>
                 <div className={s.editorActions}>
                   <button className={s.captureBtn} disabled={assembling} onClick={assembleMaking}>
-                    {assembling ? '⏳ 조립 중…' : '🎬 메이킹 필름 조립'}
+                    {assembling ? '⏳ 조립 중…' : '🎬 전체 조립 실행'}
+                  </button>
+                  <button className={s.previewBtn}
+                    disabled={!makingUrl}
+                    onClick={() => setMakingPreview(v => !v)}>
+                    {makingPreview ? '미리보기 닫기' : '메이킹 미리보기'}
                   </button>
                 </div>
+
+                {makingPreview && makingUrl && (
+                  <div className={s.previewWrap}>
+                    <video className={s.makingVideo} src={makingUrl} controls autoPlay />
+                  </div>
+                )}
+
                 {assembleResult && (
                   assembleResult.error ? (
                     <div className={s.resultError}>❌ {assembleResult.error}</div>
@@ -856,9 +966,100 @@ export default function MakingTab() {
                       ✅ 조립 완료 — 포함 {assembleResult.includedCuts.length}컷(#{assembleResult.includedCuts.join(', #')})
                       {assembleResult.skippedCuts.length > 0 && <> · 스킵 {assembleResult.skippedCuts.length}컷(#{assembleResult.skippedCuts.join(', #')})</>}
                       {' '}· 총 {assembleResult.duration?.toFixed?.(1) ?? assembleResult.duration}초
-                      <br />출력: {assembleResult.outputPath}
+                      <br />
+                      <button className={s.pathCopy} onClick={() => copyPath(assembleResult.outputPath)}>
+                        {assembleResult.outputPath} (클릭하여 경로 복사)
+                      </button>
                     </div>
                   )
+                )}
+              </div>
+
+              <div className={s.card}>
+                <button className={s.collapseToggle} onClick={() => setLegacySourceOpen(v => !v)}>
+                  {legacySourceOpen ? '▼' : '▶'} 소스 검색 (직접 다운로드 · making/source/ 원본 저장)
+                </button>
+
+                {legacySourceOpen && (
+                  <>
+                    <div className={s.settingRow}>
+                      <div className={s.settingGroup}>
+                        <div className={s.settingLabel}>검색어</div>
+                        <div className={s.urlRow}>
+                          <input className={s.urlInput} value={sourceQuery} placeholder="예: slot machine lever"
+                            onChange={e => setSourceQuery(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && searchSources()} />
+                          <button className={s.previewBtn} disabled={sourceSearching || !sourceQuery.trim()} onClick={searchSources}>
+                            {sourceSearching ? '⏳' : '검색'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className={s.settingGroup}>
+                        <div className={s.settingLabel}>유형</div>
+                        <div className={s.radioRow}>
+                          {[['all', '전체'], ['video', '영상'], ['image', '이미지']].map(([v, l]) => (
+                            <label key={v} className={s.radioLabel}>
+                              <input type="radio" name="source-type" value={v}
+                                checked={sourceType === v} onChange={() => setSourceType(v)} />
+                              {l}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className={s.settingGroup}>
+                        <div className={s.settingLabel}>방향</div>
+                        <div className={s.radioRow}>
+                          {[['portrait', '세로우선'], ['landscape', '가로'], ['all', '전체']].map(([v, l]) => (
+                            <label key={v} className={s.radioLabel}>
+                              <input type="radio" name="source-orientation" value={v}
+                                checked={sourceOrientation === v} onChange={() => setSourceOrientation(v)} />
+                              {l}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className={s.settingGroup}>
+                        <div className={s.settingLabel}>대상 컷</div>
+                        <select className={s.stageSelect} value={sourceTargetCutNo ?? ''}
+                          onChange={e => setSourceTargetCutNo(e.target.value ? parseInt(e.target.value) : null)}>
+                          <option value="">선택 안 함</option>
+                          {allCuts.map(c => <option key={c.id} value={c.no}>#{c.no}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {sourceError && <div className={s.resultError}>❌ {sourceError}</div>}
+
+                    {sourceResults.length > 0 && (
+                      <div className={s.sourceGrid}>
+                        {sourceResults.map(item => {
+                          const dl = sourceDownloaded[item.id]
+                          const downloading = sourceDownloading[item.id]
+                          return (
+                            <div key={item.id} className={s.sourceCard}>
+                              <img src={item.thumbnail} alt={item.title} className={s.sourceThumb} loading="lazy" />
+                              <div className={s.sourceMeta}>
+                                <span className={s.sourcePhotographer}>{item.photographer || '작자 미상'}</span>
+                                {item.type === 'video' && <span className={s.sourceDuration}>{item.duration}초</span>}
+                              </div>
+                              <button className={s.previewBtn} disabled={downloading || sourceTargetCutNo == null}
+                                onClick={() => downloadSource(item)}>
+                                {downloading ? '⏳' : dl?.success ? '저장됨 ✅' : '다운로드'}
+                              </button>
+                              {dl?.error && <div className={s.resultError}>❌ {dl.error}</div>}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    <div className={s.pexelsCredit}>
+                      Media provided by <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer">Pexels</a>
+                    </div>
+                  </>
                 )}
               </div>
 

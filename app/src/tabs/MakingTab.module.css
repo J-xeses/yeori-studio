@@ -119,3 +119,50 @@
 
 .pexelsCredit { font-size: 11px; color: var(--text-3); }
 .pexelsCredit a { color: var(--accent-light); }
+
+/* ── 컷 목록 중심 재구성 ─────────────────────────────────────────── */
+.cutRow {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.cutRowActive { border-color: var(--accent); }
+.cutRowHead {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 9px 12px; background: transparent; border: none; cursor: pointer;
+  font-size: 12.5px; color: var(--text-2); transition: background .15s;
+}
+.cutRowHead:hover { background: var(--accent-glow); }
+.chevron { flex-shrink: 0; font-size: 10px; color: var(--text-3); }
+
+.typeBadge {
+  flex-shrink: 0; font-size: 10px; font-weight: 700; letter-spacing: .3px;
+  padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border);
+  color: var(--text-3); background: var(--bg-panel);
+}
+.typeGRAPHIC { color: #a855f7; border-color: rgba(168, 85, 247, .4); background: rgba(168, 85, 247, .1); }
+.typeBROLL { color: #0ea5e9; border-color: rgba(14, 165, 233, .4); background: rgba(14, 165, 233, .1); }
+.typeCAPCUT { color: #f59e0b; border-color: rgba(245, 158, 11, .4); background: rgba(245, 158, 11, .1); }
+.typeYEORI { color: #22c55e; border-color: rgba(34, 197, 94, .4); background: rgba(34, 197, 94, .1); }
+.typePIP { color: #ec4899; border-color: rgba(236, 72, 153, .4); background: rgba(236, 72, 153, .1); }
+
+.subPanel {
+  padding: 14px 12px; border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 12px; background: var(--bg-panel);
+}
+.autoNote { font-size: 12px; color: var(--text-3); font-style: italic; }
+
+.pathCopy {
+  font-size: 12px; color: var(--accent-light); cursor: pointer; word-break: break-all;
+  text-decoration: underline; background: none; border: none; padding: 0; text-align: left;
+}
+.makingVideo {
+  width: 240px; max-width: 100%; border-radius: 10px; border: 1px solid var(--border);
+  background: #000; align-self: flex-start;
+}
+.sourceCardActive { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); cursor: pointer; }
+.sourceCard { cursor: pointer; }
+
+.collapseToggle {
+  font-size: 12.5px; font-weight: 700; color: var(--text-2); cursor: pointer;
+  background: none; border: none; padding: 0; text-align: left;
+  text-transform: uppercase; letter-spacing: .5px;
+}

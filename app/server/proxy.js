@@ -2000,6 +2000,24 @@ app.post('/api/source-download', async (req, res) => {
   }
 })
 
+// POST /api/download-broll-cut — Pexels 영상 직접 URL을 받아 BROLL 컷 산출물
+// (downloads/video/ep{N}/cut_{NN}.mp4)로 확정. downloadBrollCut()을 그대로 공유하는
+// 무인증 로컬 프론트엔드용 라우트 — 원격 브리지용 /api/mcp/download-broll-cut(Bearer
+// 인증)과 /api/making-assemble ↔ /api/mcp/assemble-making-film과 똑같은 이원 구성.
+// MakingTab.jsx의 BROLL 컷 [제작 실행](Pexels 소스)이 이 라우트를 호출한다.
+app.post('/api/download-broll-cut', async (req, res) => {
+  const { epNum, cutNo, videoUrl, duration } = req.body || {}
+  if (epNum == null || cutNo == null || !videoUrl) {
+    return res.status(400).json({ error: 'epNum, cutNo, videoUrl이 필요합니다' })
+  }
+  try {
+    const result = await downloadBrollCut({ epNum, cutNo, videoUrl, duration })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // 에피소드 소스 폴더의 .html 파일 목록/내용 조회 — 아래 3개 함수는 /api/list-episode-html,
 // /api/read-episode-html(브라우저)과 MCP 도구(list_episode_html_sources, make_graphic_cut)가
 // 공유하는 핵심 로직. instaContent/instaNum이 오면 downloads/insta/{content}/{num}/, 아니면
