@@ -4525,9 +4525,40 @@ function extractQuotedLineForMcp(text) {
   return m ? m[1] : ''
 }
 
+// cut.subtitle: codebook.json의 CP 필드 정의(script_to_prompts_key: "subtitle",
+// "자막(Caption) — DL 대사와 별도", 2026-08-01 신규 추가)를 대비한 자리 — 아직
+// scriptParserV3.js가 "CP: ..." 줄을 파싱해서 이 필드를 채우는 코드가 없어(실측
+// 확인, 2026-08-29) 지금은 항상 undefined지만, 나중에 파서가 지원하게 되면 별도
+// 수정 없이 최우선으로 쓰이게 자리를 미리 잡아둔다.
+// 최후 수단으로 cut.scene을 쓴다 — IG_R02 CUT5처럼 quote/DL/NR이 전부 비어 있고
+// (실측 확인: imagePrompt엔 에피소드 전체 캡션/체크리스트만 있고 CUT5 고유 문구
+// 없음) scriptRaw도 비어 있어 재파싱으로 복구할 수 없는 경우, 완전히 빈 화면보다
+// 장면 설명이라도 보이는 게 낫다.
 function fillTemplateForMcp(cut) {
-  const mainText = extractQuotedLineForMcp(cut.videoPrompt) || cut.dialogue || cut.narration || ''
+  const mainText = cut.subtitle || extractQuotedLineForMcp(cut.videoPrompt) || cut.dialogue || cut.narration || cut.scene || ''
   return GRAPHIC_TEMPLATE_MCP.replace('{narration}', escapeHtmlForMcp(mainText))
+}
+
+// RL02_DM_mockup_v3.html처럼 컷 여러 개(.phone-wrap, 각각 .label에 "CUT N — ..." 텍스트)를
+// 한 파일에 나란히 담아둔 참고용 시트가 있다 — page.setContent()로 그대로 캡처하면
+// 전부 다 찍혀 나온다(실측 확인: CUT2/CUT3가 같은 파일을 써서 둘 다 한 화면에 나옴).
+// 순수 정적 HTML이라 자체적으로 컷을 가릴 방법이 없으므로, 캡처 직전에 대상 컷이
+// 아닌 .phone-wrap을 숨기는 스크립트를 주입한다 — 원본 파일은 건드리지 않고
+// 메모리상에서만 변형. .phone-wrap 구조가 없는 일반 HTML(단일 그래픽 카드 등)에는
+// 영향 없음.
+function isolateCutInHtml(html, cutNo) {
+  if (!/class="phone-wrap"/.test(html)) return html
+  const script = `<script>
+(function(){
+  var re = new RegExp('^CUT\\\\s*${cutNo}\\\\b');
+  document.querySelectorAll('.phone-wrap').forEach(function(el){
+    var label = el.querySelector('.label');
+    var text = label ? label.textContent : '';
+    if (!re.test(text.trim())) el.style.display = 'none';
+  });
+})();
+</script>`
+  return html.includes('</body>') ? html.replace('</body>', `${script}</body>`) : html + script
 }
 
 // masterCode.pl → insta 콘텐츠 폴더 매핑은 scriptParserV3.js의 pipelineCodeToInstaContent를
@@ -4582,7 +4613,7 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile }) {
   if (htmlFile) {
     const episodeCode = resolveEpisodeCode(ep.episode, epId)
     const { instaContent, instaNum } = resolveInstaRouteParamsForMcp(ep)
-    html = readEpisodeHtmlFile({ file: htmlFile, instaContent, instaNum, episodeCode }).html
+    html = isolateCutInHtml(readEpisodeHtmlFile({ file: htmlFile, instaContent, instaNum, episodeCode }).html, cut.no)
   } else {
     html = fillTemplateForMcp(cut)
   }
