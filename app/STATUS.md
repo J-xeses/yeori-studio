@@ -336,3 +336,25 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - 메이킹 필름 전체 조립 실행 검증
 - IG_R02 손글씨 오버레이 컷별 씬 설정 (CUT 1~5)
 
+
+
+---
+### 2026-08-30 (MCP 자동 기록)
+
+## 고도화-15 세션 완료 (2026-08-30)
+
+### 확인된 것
+- Worker 완전 정상 (a5097d5 이후, 마지막 EINVAL 06:14, 이후 clean)
+- VideoTab AI 영상 UI / FFmpeg 합성 — STATUS.md와 달리 이미 구현되어 있었음 (코드 피드백 확인)
+- TEST_OVERLAY 에피소드 생성 완료 (G1:3컷 승인, 이미지/영상 파일 존재)
+
+### 구조 변경
+- Project Instructions 3개 프로젝트(AI 고도화 / 서여리 채널 / AI 유튜브)에 세션 시작/종료 루프 강제화
+- 세션 시작: Notion 마스터 허브 + 에피소드 DB + studio_get_status 먼저 읽기
+- 세션 종료: Notion + STATUS.md 업데이트 완료 후 종료
+
+### 다음 세션 즉시 할 것
+1. TEST_OVERLAY — CP 필드 포함 v3 표준 대본으로 GRAPHIC/CAPCUT 실제 제작 검증
+2. 손글씨 오버레이 (/api/handwriting-overlay) 구현
+3. ScriptGenTab.jsx pc.ac → pc.at 마이그레이션
+
