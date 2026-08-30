@@ -428,7 +428,7 @@ def process_video(input_path, output_path, scenes, canvas_size, work_dir):
         "-map", "[vout]", "-map", "0:a?",
         # yuv420p 강제 — 입력 컷이 yuv444p(그래픽 캡처)여도 일반 플레이어에서 열리게 한다.
         "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", "-pix_fmt", "yuv420p",
-        "-movflags", "+faststart", "-c:a", "aac", "-shortest",
+        "-g", "60", "-movflags", "+faststart", "-c:a", "aac", "-shortest",
     ]
     if dur:
         cmd += ["-t", f"{dur:.3f}"]

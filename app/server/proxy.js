@@ -1703,7 +1703,7 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
       '-i', rawPath,
       '-t', String(target),
       '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p',
-      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-g', '60', '-movflags', '+faststart',
       finalPath,
     )
     const proc = spawn('ffmpeg', args)
@@ -2104,7 +2104,10 @@ async function runGraphicCapture({ html, cutNo, epNum, duration }) {
         '-vf', 'scale=1080:1920,format=yuv420p',
         // PNG 입력이면 libx264가 yuv444p로 인코딩해서 일반 플레이어(WMP/브라우저/HW 디코더)가
         // 재생을 못 한다 — yuv420p 강제 + faststart로 어디서든 열리게 한다.
-        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-movflags', '+faststart',
+        // -g 30: 정지 이미지 루프라 키프레임이 1개만 생겨서 플레이어가 탐색/미리보기 시
+        // "앞부분만" 재생하는 문제 → 1초마다 키프레임을 박는다.
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-g', '30',
+        '-movflags', '+faststart',
         videoPath,
       ])
       proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 종료 코드 ${code}`)))
