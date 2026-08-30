@@ -307,3 +307,32 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - BROLL CUT 4 (YEORI 타입) 확인
 - 메이킹 필름 전체 조립 실행 검증
 
+
+
+---
+### 2026-08-30 (MCP 자동 기록)
+### 2026-08-30 (고도화-14 손글씨 오버레이 + Worker 완전 정상화)
+
+**Worker spawn EINVAL 수정 (a5097d5, push 완료):**
+- 원인: TASK_QUEUE_CLAUDE_PATH=claude.cmd + shell:false → Windows CVE-2024-27980 제약
+- 수정: override 경로 옆 claude.exe 우선 시도, .cmd/.bat/.ps1이면 shell:true 경유
+- 검증: 06:39 사이클에 실제 작업 처리 완료 ✅
+
+**손글씨 오버레이 기능 완성 (55c5f7f, push 완료):**
+- proxy.js: POST /api/handwriting-overlay (scenes → config JSON → handwriting_overlay.py → cut_NN_overlay.mp4)
+- MakingTab.jsx: 씬별 텍스트/위치/말풍선/색상/데코/화살표+방향/시간 설정 UI + [오버레이 적용]
+- handwriting_overlay.py: ffprobe 베이스 길이 측정 + -t 명시 + veryfast preset (4초 클립 1.8초 처리)
+- Pillow 12.3.0 설치 완료
+- 검증: cut_02_overlay.mp4 63KB 생성, 구름 말풍선+화살표+✨+서여리 시그니처 확인 ✅
+
+**유형별 기본 제작 스타일 (localStorage making_type_styles_v1):**
+- GRAPHIC: 자동 템플릿 스타일 설정
+- CAPCUT: HTML 캡처 기본, RL02_DM_mockup_v3.html 등록
+- BROLL: Pexels 검색 기본
+
+**다음 작업:**
+- CAPCUT 기본 HTML을 컷별로 다르게 설정하는 방법 필요 (CUT 1은 자동템플릿, CUT 2/3은 DM 목업)
+- CUT 3, 5 제작 검증
+- 메이킹 필름 전체 조립 실행 검증
+- IG_R02 손글씨 오버레이 컷별 씬 설정 (CUT 1~5)
+
