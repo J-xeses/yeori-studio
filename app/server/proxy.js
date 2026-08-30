@@ -1702,8 +1702,8 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
     args.push(
       '-i', rawPath,
       '-t', String(target),
-      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920',
-      '-c:v', 'libx264',
+      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p',
+      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
       finalPath,
     )
     const proc = spawn('ffmpeg', args)
@@ -2101,8 +2101,10 @@ async function runGraphicCapture({ html, cutNo, epNum, duration }) {
       const proc = spawn('ffmpeg', [
         '-y', '-loop', '1', '-i', imagePath,
         '-t', String(dur),
-        '-vf', 'scale=1080:1920',
-        '-c:v', 'libx264',
+        '-vf', 'scale=1080:1920,format=yuv420p',
+        // PNG 입력이면 libx264가 yuv444p로 인코딩해서 일반 플레이어(WMP/브라우저/HW 디코더)가
+        // 재생을 못 한다 — yuv420p 강제 + faststart로 어디서든 열리게 한다.
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-movflags', '+faststart',
         videoPath,
       ])
       proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 종료 코드 ${code}`)))
