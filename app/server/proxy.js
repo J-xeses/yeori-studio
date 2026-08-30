@@ -5005,25 +5005,69 @@ app.get('/api/studio-status-public', (req, res) => {
 // 오버레이(scripts/handwriting_overlay.py)를 합성해 cut_NN{suffix}.mp4로 저장한다.
 // GRAPHIC/CAPCUT 컷 제작 후 "필요할 때만" 선택적으로 적용(파이프라인 자동 아님).
 // body: { epNum, cutNo, scenes:[{text,position,bubble,color,deco,arrow,arrow_direction,time}], outputSuffix?='_overlay' }
-app.post('/api/handwriting-overlay', async (req, res) => {
-  const { epNum, cutNo, scenes, outputSuffix = '_overlay' } = req.body || {}
-  if (epNum == null || cutNo == null || !Array.isArray(scenes) || !scenes.length) {
-    return res.status(400).json({ error: 'epNum, cutNo, scenes(1개 이상) 필요' })
-  }
-  const padded = String(cutNo).padStart(2, '0')
-  const suffix = String(outputSuffix).replace(/[^\w-]/g, '') || '_overlay'
-  const dir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-  const inputPath  = path.join(dir, `cut_${padded}.mp4`)
-  const outputPath = path.join(dir, `cut_${padded}${suffix}.mp4`)
-  const configPath = path.join(dir, `cut_${padded}_overlay_config.json`)
-  const scriptPath = path.join(CODE_ROOT, 'scripts', 'handwriting_overlay.py')
+const HW_IMG_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.bmp'])
+const HW_VID_EXTS = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm'])
 
-  if (!fs.existsSync(inputPath)) return res.status(404).json({ error: '입력 영상 없음 — 먼저 이 컷을 제작하세요', path: inputPath })
+app.post('/api/handwriting-overlay', async (req, res) => {
+  const { epNum, cutNo, scenes, outputSuffix = '_overlay', inputPath: inputRel } = req.body || {}
+  if (!Array.isArray(scenes) || !scenes.length) {
+    return res.status(400).json({ error: 'scenes(1개 이상) 필요' })
+  }
+  const suffix = String(outputSuffix).replace(/[^\w-]/g, '') || '_overlay'
+  const scriptPath = path.join(CODE_ROOT, 'scripts', 'handwriting_overlay.py')
   if (!fs.existsSync(scriptPath)) return res.status(500).json({ error: 'handwriting_overlay.py 없음', path: scriptPath })
 
+  // 입력: inputPath(임의 이미지/영상 — 썸네일·스틸용) 우선, 없으면 컷 영상(cut_NN.mp4).
+  let inputPath, isImage, workDir, outStem, configPath
+  if (inputRel) {
+    const rel = String(inputRel).replace(/\\/g, '/').replace(/\.\.+/g, '')
+    inputPath = path.isAbsolute(rel)
+      ? rel
+      : path.join(MEDIA_ROOT, rel.startsWith('downloads/') ? rel : `downloads/${rel}`)
+    if (!path.resolve(inputPath).startsWith(path.resolve(MEDIA_ROOT))) {
+      return res.status(400).json({ error: '경로 범위 밖' })
+    }
+    if (!fs.existsSync(inputPath)) return res.status(404).json({ error: '입력 파일 없음', path: inputPath })
+    const ext = path.extname(inputPath).toLowerCase()
+    isImage = HW_IMG_EXTS.has(ext)
+    if (!isImage && !HW_VID_EXTS.has(ext)) {
+      return res.status(400).json({ error: `지원하지 않는 입력 형식: ${ext}` })
+    }
+    workDir = path.join(MEDIA_ROOT, 'downloads', 'making', 'hw_stills')
+    fs.mkdirSync(workDir, { recursive: true })
+    const stem = path.basename(inputPath, ext).replace(/[^\w.-]/g, '_')
+    outStem = path.join(workDir, `${stem}${suffix}`)
+    configPath = path.join(workDir, `${stem}_overlay_config.json`)
+  } else {
+    if (epNum == null || cutNo == null) {
+      return res.status(400).json({ error: 'inputPath 또는 (epNum, cutNo) 필요' })
+    }
+    const padded = String(cutNo).padStart(2, '0')
+    workDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    inputPath = path.join(workDir, `cut_${padded}.mp4`)
+    isImage = false
+    outStem = path.join(workDir, `cut_${padded}${suffix}`)
+    configPath = path.join(workDir, `cut_${padded}_overlay_config.json`)
+    if (!fs.existsSync(inputPath)) {
+      return res.status(404).json({ error: '입력 영상 없음 — 먼저 이 컷을 제작하세요', path: inputPath })
+    }
+  }
+
+  const outputPath = isImage ? `${outStem}.png` : `${outStem}.mp4`
+  const toUrl = (abs) =>
+    '/downloads/' + path.relative(path.join(MEDIA_ROOT, 'downloads'), abs).replace(/\\/g, '/')
+
   try {
-    fs.mkdirSync(dir, { recursive: true })
+    fs.mkdirSync(workDir, { recursive: true })
     fs.writeFileSync(configPath, JSON.stringify({ output_size: [1080, 1920], scenes }, null, 2), 'utf-8')
+
+    // 이미지 모드: 씬 수가 줄었을 때 잔여 _sceneNN 파일이 남지 않게 먼저 정리
+    const base = path.basename(outStem)
+    if (isImage) {
+      for (const f of fs.readdirSync(workDir)) {
+        if (f.startsWith(`${base}_scene`)) { try { fs.unlinkSync(path.join(workDir, f)) } catch { /* noop */ } }
+      }
+    }
 
     const result = await new Promise((resolve) => {
       const proc = spawn('python', [scriptPath, '--config', configPath, '--input', inputPath, '--output', outputPath],
@@ -5036,14 +5080,58 @@ app.post('/api/handwriting-overlay', async (req, res) => {
       proc.on('close', code => { clearTimeout(killer); resolve({ code, out, err }) })
     })
 
+    if (isImage) {
+      // process_image는 {base}_scene01.png ~ _sceneNN.png 로 씬마다 저장한다.
+      const reEsc = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const outs = fs.readdirSync(workDir)
+        .filter(f => new RegExp(`^${reEsc}_scene\\d+\\.(png|jpe?g)$`, 'i').test(f))
+        .sort()
+        .map(f => {
+          const abs = path.join(workDir, f)
+          return { path: abs, url: toUrl(abs), sizeKB: Math.round(fs.statSync(abs).size / 1024) }
+        })
+      if (result.code !== 0 || !outs.length) {
+        return res.status(500).json({ error: `오버레이 합성 실패: ${(result.err || result.out || '').slice(-800)}` })
+      }
+      return res.json({ success: true, mode: 'image', count: outs.length, outputs: outs })
+    }
+
     if (result.code !== 0 || !fs.existsSync(outputPath)) {
       return res.status(500).json({ error: `오버레이 합성 실패: ${(result.err || result.out || '').slice(-800)}` })
     }
     const stat = fs.statSync(outputPath)
-    res.json({ success: true, outputPath, sizeKB: Math.round(stat.size / 1024) })
+    res.json({ success: true, mode: 'video', outputPath, url: toUrl(outputPath), sizeKB: Math.round(stat.size / 1024) })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// ── GET /api/hw-source-images — 손글씨 스틸에 쓸 이미지 후보(캐릭터 레퍼런스 + 최근 flow 생성물) ──
+app.get('/api/hw-source-images', (_req, res) => {
+  const roots = [
+    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character'),
+    path.join(MEDIA_ROOT, 'downloads', 'flow'),
+  ]
+  const seen = new Set()
+  const images = []
+  for (const root of roots) {
+    if (!fs.existsSync(root)) continue
+    let files
+    try { files = fs.readdirSync(root, { withFileTypes: true }) } catch { continue }
+    for (const d of files) {
+      if (!d.isFile()) continue
+      const ext = path.extname(d.name).toLowerCase()
+      if (!HW_IMG_EXTS.has(ext)) continue
+      if (/^debug_|^download\./i.test(d.name)) continue // Flow 자동화 디버그 스크린샷 제외
+      const rel = path.relative(path.join(MEDIA_ROOT, 'downloads'), path.join(root, d.name)).replace(/\\/g, '/')
+      if (seen.has(rel)) continue
+      seen.add(rel)
+      images.push(rel)
+      if (images.length >= 60) break
+    }
+    if (images.length >= 60) break
+  }
+  res.json({ images })
 })
 
 // start_yeori.bat가 [0] 단계에서 기존 프로세스를 taskkill한 직후(1초 대기) 바로 이

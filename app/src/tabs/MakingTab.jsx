@@ -676,6 +676,48 @@ export default function MakingTab() {
   const [overlayBusy, setOverlayBusy] = useState({})     // { [cutNo]: bool }
   const [overlayResult, setOverlayResult] = useState({}) // { [cutNo]: data | { error } }
 
+  // ── 이미지에 손글씨 (썸네일·스틸용) — 임의 이미지 + 씬별 손글씨 → 씬마다 PNG ──
+  const newHwScene = () => ({
+    text: '', position: 'top_center', bubble: 'cloud', color: 'white',
+    deco: '', arrow: false, arrow_direction: 'down', time: '0s~3s',
+  })
+  const [hwOpen, setHwOpen] = useState(false)
+  const [hwImgList, setHwImgList] = useState([])
+  const [hwImgPath, setHwImgPath] = useState('')
+  const [hwScenes, setHwScenes] = useState([newHwScene()])
+  const [hwBusy, setHwBusy] = useState(false)
+  const [hwResult, setHwResult] = useState(null)
+
+  useEffect(() => {
+    fetch(`${YEORI_SERVER}/api/hw-source-images`).then(r => r.json())
+      .then(d => setHwImgList(d.images || [])).catch(() => {})
+  }, [])
+
+  const patchHwScene = (i, patch) => setHwScenes(a => a.map((s, j) => j === i ? { ...s, ...patch } : s))
+
+  const runHwImage = async () => {
+    if (!hwImgPath.trim() || !hwScenes.some(s => s.text.trim())) return
+    setHwBusy(true); setHwResult(null)
+    try {
+      const scenes = hwScenes.filter(s => s.text.trim()).map(s => ({
+        text: s.text, position: s.position, bubble: s.bubble, color: s.color,
+        deco: String(s.deco || '').split(',').map(x => x.trim()).filter(Boolean),
+        arrow: !!s.arrow, arrow_direction: s.arrow_direction, time: s.time,
+      }))
+      const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inputPath: hwImgPath.trim(), scenes }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setHwResult({ error: data.error || '합성 실패' }); return }
+      setHwResult(data)
+    } catch (e) {
+      setHwResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setHwBusy(false)
+    }
+  }
+
   // 대본 CP + 유형별 오버레이 스타일 → 씬 1개를 조립해 /api/handwriting-overlay 호출.
   const runOverlay = async (cut) => {
     const ov = typeStyles[cut.cutType]?.overlay
@@ -1277,6 +1319,103 @@ export default function MakingTab() {
     ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making_bgm.mp4`
     : null
 
+  const renderHwImageCard = () => (
+    <div className={s.card}>
+      <button className={s.collapseToggle} onClick={() => setHwOpen(v => !v)}>
+        {hwOpen ? '▼' : '▶'} 이미지에 손글씨 (썸네일·스틸)
+      </button>
+      {hwOpen && (
+        <>
+          <div className={s.emptyHint}>
+            서여리 얼굴 이미지 등 임의 이미지 위에 손글씨 주석을 얹습니다. 씬마다 별도 PNG로 저장됩니다
+            (1080×1920, 서여리 시그니처 프레임 포함). downloads/making/hw_stills/ 에 생성.
+          </div>
+          <label className={s.styleField}>이미지 경로 (downloads/ 기준)
+            <input list="hw-source-images" value={hwImgPath} placeholder="flow/character/yeori-closeup.jpg"
+              onChange={e => setHwImgPath(e.target.value)} />
+          </label>
+          <datalist id="hw-source-images">
+            {hwImgList.map(p => <option key={p} value={p} />)}
+          </datalist>
+
+          {hwScenes.map((sc, i) => (
+            <div key={i} className={s.overlayScene}>
+              <div className={s.overlaySceneHead}>
+                씬 {i + 1}
+                {hwScenes.length > 1 && (
+                  <button className={s.linkBtn} onClick={() => setHwScenes(a => a.filter((_, j) => j !== i))}>제거</button>
+                )}
+              </div>
+              <input className={s.urlInput} style={{ width: '100%' }} value={sc.text} placeholder="손글씨 텍스트 (줄바꿈 가능)"
+                onChange={e => patchHwScene(i, { text: e.target.value })} />
+              <div className={s.styleRow}>
+                <label className={s.styleField}>위치
+                  <select value={sc.position} onChange={e => patchHwScene(i, { position: e.target.value })}>
+                    {OVERLAY_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </label>
+                <label className={s.styleField}>말풍선
+                  <select value={sc.bubble} onChange={e => patchHwScene(i, { bubble: e.target.value })}>
+                    {OVERLAY_BUBBLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </label>
+                <label className={s.styleField}>색상
+                  <select value={sc.color} onChange={e => patchHwScene(i, { color: e.target.value })}>
+                    {OVERLAY_COLORS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </label>
+              </div>
+              <div className={s.styleRow}>
+                <label className={s.styleField}>데코 (쉼표 구분)
+                  <input value={sc.deco} onChange={e => patchHwScene(i, { deco: e.target.value })} />
+                </label>
+                <label className={s.styleField}>시간 (예: 0s~3s)
+                  <input value={sc.time} onChange={e => patchHwScene(i, { time: e.target.value })} />
+                </label>
+              </div>
+              <div className={s.radioRow}>
+                <label className={s.radioLabel}>
+                  <input type="checkbox" checked={sc.arrow} onChange={e => patchHwScene(i, { arrow: e.target.checked })} />
+                  화살표
+                </label>
+                {sc.arrow && (
+                  <label className={s.styleField}>방향
+                    <select value={sc.arrow_direction} onChange={e => patchHwScene(i, { arrow_direction: e.target.value })}>
+                      {OVERLAY_ARROW_DIRS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </label>
+                )}
+              </div>
+            </div>
+          ))}
+          <div className={s.editorActions}>
+            <button className={s.previewBtn} onClick={() => setHwScenes(a => [...a, newHwScene()])}>씬 추가 +</button>
+            <button className={s.captureBtn} disabled={hwBusy || !hwImgPath.trim()} onClick={runHwImage}>
+              {hwBusy ? '⏳ 합성 중…' : '손글씨 적용'}
+            </button>
+          </div>
+          {hwResult && (
+            hwResult.error ? (
+              <div className={s.resultError}>❌ {hwResult.error}</div>
+            ) : (
+              <div className={s.resultOk}>
+                ✅ {hwResult.count}개 씬 저장됨
+                <div className={s.sourceGrid}>
+                  {(hwResult.outputs || []).map((o, i) => (
+                    <div key={i} className={s.sourceCard}>
+                      <img src={`${YEORI_SERVER}${o.url}?t=${Date.now()}`} alt={`scene ${i + 1}`} className={s.sourceThumb} />
+                      <button className={s.pathCopy} onClick={() => copyPath(o.path)}>{o.path.split(/[/\\]/).pop()}</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+        </>
+      )}
+    </div>
+  )
+
   const renderBgmCard = () => (
     <div className={s.card}>
       <button className={s.collapseToggle} onClick={() => setBgmOpen(v => !v)}>
@@ -1480,6 +1619,8 @@ export default function MakingTab() {
               </div>
 
               {renderBgmCard()}
+
+              {renderHwImageCard()}
 
               <div className={s.card}>
                 <button className={s.collapseToggle} onClick={() => setLegacySourceOpen(v => !v)}>
