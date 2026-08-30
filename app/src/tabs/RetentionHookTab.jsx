@@ -94,7 +94,7 @@ ${hookSummary}
     <div className={styles.outer}>
       <TabToolbar />
     <div className={styles.page}>
-      <EpisodeInfoSidebar />
+      <EpisodeInfoSidebar maxStage={0} />
       <div className={styles.wrap}>
       <div className={`${styles.header} ${styles.topBar}`}>
         <h2 className={styles.title}>리텐션 훅 설계</h2>

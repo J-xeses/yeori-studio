@@ -190,7 +190,32 @@ export default function MakingTab() {
     setDuration(cut.duration || 5)
   }
 
-  const captureGraphic = async () => {
+  // [제작 실행] — 서버(makeGraphicCutForMcp)가 처리한다. htmlFile 지정 시 그 목업에서
+  // 이 컷만 isolate, 생략 시 서버 자동 템플릿(fillTemplateForMcp — 캡션/자막 섹션 추출
+  // 등 클라이언트 fillTemplate보다 강력). MCP make_graphic_cut과 완전히 동일 경로.
+  const captureGraphic = async ({ htmlFile } = {}) => {
+    if (selectedCutNo == null || !episode.number) return
+    setCapturing(true)
+    setCaptureResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/make-graphic-cut`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo: selectedCutNo, ...(htmlFile ? { htmlFile } : {}) }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
+      setCaptureResult(data)
+    } catch (e) {
+      setCaptureResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setCapturing(false)
+    }
+  }
+
+  // [편집본으로 캡처] — 아래 편집기에서 직접 손본 HTML을 그대로 캡처(자동 템플릿
+  // 미세조정용). 서버가 .phone-wrap 다중 컷이면 이 컷만 isolate 처리한다.
+  const captureEditedHtml = async () => {
     if (selectedCutNo == null || !episode.number) return
     setCapturing(true)
     setCaptureResult(null)
@@ -482,7 +507,17 @@ export default function MakingTab() {
   // ────────────────────────────────────────────────────────────────────────
   const renderGraphicPanel = () => (
     <div className={s.subPanel}>
-      <div className={s.settingLabel}>HTML 소스</div>
+      <div className={s.editorActions}>
+        <label className={s.durationField}>
+          길이(초)
+          <input type="number" min="1" value={duration}
+            onChange={e => setDuration(parseInt(e.target.value) || 1)} />
+        </label>
+        <button className={s.captureBtn} disabled={capturing} onClick={() => captureGraphic()}>
+          {capturing ? '⏳ 제작 중…' : '제작 실행'}
+        </button>
+      </div>
+      <div className={s.settingLabel}>HTML 소스 (미세조정용)</div>
       <textarea
         className={s.htmlEditor}
         value={htmlSource}
@@ -490,14 +525,9 @@ export default function MakingTab() {
         spellCheck={false}
       />
       <div className={s.editorActions}>
-        <label className={s.durationField}>
-          길이(초)
-          <input type="number" min="1" value={duration}
-            onChange={e => setDuration(parseInt(e.target.value) || 1)} />
-        </label>
         <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
-        <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
-          {capturing ? '⏳ 제작 중…' : '제작 실행'}
+        <button className={s.previewBtn} disabled={capturing} onClick={captureEditedHtml}>
+          {capturing ? '⏳ 캡처 중…' : '편집본으로 캡처'}
         </button>
       </div>
       {previewHtml && (
@@ -749,10 +779,27 @@ export default function MakingTab() {
                 {episodeHtmlFiles.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
               <div className={s.emptyHint}>
-                {htmlFilesLoading ? 'HTML 파일 목록 불러오는 중…' : '아래 편집기에서 내용을 확인/수정한 뒤 제작 실행하세요.'}
+                {htmlFilesLoading
+                  ? 'HTML 파일 목록 불러오는 중…'
+                  : selectedHtmlFile === '__auto__'
+                    ? '제작 실행 시 서버 자동 템플릿으로 이 컷 문구를 채웁니다.'
+                    : `제작 실행 시 ${selectedHtmlFile}에서 CUT ${cut.no} 부분만 잘라 캡처합니다.`}
               </div>
             </div>
 
+            <div className={s.editorActions}>
+              <label className={s.durationField}>
+                길이(초)
+                <input type="number" min="1" value={duration}
+                  onChange={e => setDuration(parseInt(e.target.value) || 1)} />
+              </label>
+              <button className={s.captureBtn} disabled={capturing}
+                onClick={() => captureGraphic({ htmlFile: selectedHtmlFile !== '__auto__' ? selectedHtmlFile : undefined })}>
+                {capturing ? '⏳ 제작 중…' : '제작 실행'}
+              </button>
+            </div>
+
+            <div className={s.settingLabel}>HTML 소스 (미세조정용)</div>
             <textarea
               className={s.htmlEditor}
               value={htmlSource}
@@ -760,14 +807,9 @@ export default function MakingTab() {
               spellCheck={false}
             />
             <div className={s.editorActions}>
-              <label className={s.durationField}>
-                길이(초)
-                <input type="number" min="1" value={duration}
-                  onChange={e => setDuration(parseInt(e.target.value) || 1)} />
-              </label>
               <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
-              <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
-                {capturing ? '⏳ 제작 중…' : '제작 실행'}
+              <button className={s.previewBtn} disabled={capturing} onClick={captureEditedHtml}>
+                {capturing ? '⏳ 캡처 중…' : '편집본으로 캡처'}
               </button>
             </div>
             {previewHtml && (
@@ -871,7 +913,7 @@ export default function MakingTab() {
     <div className={s.page}>
       <TabToolbar />
       <div className={s.root}>
-        <EpisodeInfoSidebar />
+        <EpisodeInfoSidebar maxStage={5} />
         <div className={s.main}>
           <div className={s.scrollBody}>
             <div className={s.content}>

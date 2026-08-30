@@ -523,7 +523,7 @@ export default function PublishingTab() {
     <div className={s.appOuter}>
       <TabToolbar />
     <div className={s.pageOuter}>
-      <EpisodeInfoSidebar />
+      <EpisodeInfoSidebar maxStage={0} />
       <div className={s.page}>
         <div className={s.sectionTabs}>
           {SECTIONS.map(sec => (

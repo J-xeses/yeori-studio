@@ -99,7 +99,10 @@ export function EpisodeOverviewBlock() {
 }
 
 // 컷 목록 (배지 + 미리보기) — 여러 탭이 공유하는 카드 골격.
-// maxStage: 그 탭이 실제로 다루는 단계까지만 배지를 보여줌(예: 스튜디오=2, TTS=3).
+// maxStage: 그 탭이 실제로 다루는 단계까지만 G배지를 보여줌(스튜디오=2, TTS/음성=3,
+//   영상=4, 메이킹=5). 0이면 파이프라인 단계 배지를 아예 숨김(리텐션훅·퍼블리싱·추출·
+//   대시보드 등 비-파이프라인 탭). "✅ 제작완료"(최종 컷 영상 존재) 배지도 영상·메이킹
+//   단계(maxStage>=4)에서만 의미가 있으므로 그 아래 탭에선 함께 숨긴다.
 // renderPreview: 기본 텍스트 미리보기 대신 커스텀 콘텐츠(예: 영상 탭의 썸네일)를 앞에 붙임 —
 // 넘기면 카드가 세로 쌓기 대신 가로 배치(썸네일 | 정보 | 액션)로 바뀐다.
 // previewText: 가운데 텍스트 줄을 대사/나레이션/씬 대신 탭 전용 문구(예: 영상 탭의 "영상 2개")로 교체.
@@ -112,7 +115,7 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
       {(cuts || []).map(c => {
         const g = gData?.[episodeCode]?.[`cut_${c.no}`] || {}
         const badges = stages.filter(key => g[key])
-        const madeVideo = !!videoStatus?.[c.no]
+        const madeVideo = maxStage >= 4 && !!videoStatus?.[c.no]
         return (
           <div key={c.id}
             className={`${s.cutItem} ${isRow ? s.cutItemRow : ''} ${activeCutId === c.id ? s.cutItemActive : ''}`}

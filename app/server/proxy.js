@@ -2120,7 +2120,26 @@ app.post('/api/graphic-capture', async (req, res) => {
   const { html, cutNo, epNum, duration } = req.body || {}
   if (!html || cutNo == null || !epNum) return res.status(400).json({ error: 'html, cutNo, epNum 필요' })
   try {
-    const result = await runGraphicCapture({ html, cutNo, epNum, duration })
+    // 커스텀 목업 HTML(.phone-wrap 여러 컷 포함, 예: RL02_DM_mockup_v3.html)이면 이 컷만
+    // 남기고 나머지 .phone-wrap은 숨긴다 — MCP make_graphic_cut 경로와 동일 처리.
+    // 자동 템플릿엔 .phone-wrap이 없어 isolateCutInHtml이 무영향(원본 그대로 반환).
+    const result = await runGraphicCapture({ html: isolateCutInHtml(html, cutNo), cutNo, epNum, duration })
+    res.json({ success: true, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
+  }
+})
+
+// POST /api/make-graphic-cut — GRAPHIC/CAPCUT 컷을 makeGraphicCutForMcp()로 제작.
+// htmlFile 지정 시 그 목업에서 해당 컷만 isolate, 생략 시 서버 자동 템플릿
+// (fillTemplateForMcp — 자막/캡션 섹션 추출 등 클라이언트 fillTemplate보다 강력).
+// /api/mcp/make-graphic-cut(Bearer 인증, 원격 브리지)과 로직 공유하는 무인증 로컬용 —
+// /api/making-assemble ↔ /api/mcp/assemble-making-film과 같은 이원 구성.
+app.post('/api/make-graphic-cut', async (req, res) => {
+  const { epNum, cutNo, htmlFile } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile })
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })

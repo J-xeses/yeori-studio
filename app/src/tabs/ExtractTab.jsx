@@ -102,7 +102,7 @@ export default function ExtractTab() {
     <div className={s.outer}>
       <TabToolbar />
     <div className={s.page}>
-      <EpisodeInfoSidebar />
+      <EpisodeInfoSidebar maxStage={0} />
       <div className={s.root}>
       <div className={`${s.header} ${s.topBar}`}>
         <h2>추출 및 내보내기</h2>

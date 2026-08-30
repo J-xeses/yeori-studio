@@ -119,7 +119,7 @@ export default function CreditsTab() {
         ]}
       />
       <div className={s.root}>
-        <EpisodeInfoSidebar />
+        <EpisodeInfoSidebar maxStage={0} />
         <div className={s.main}>
         <div className={s.scrollBody}>
         <div className={s.content}>

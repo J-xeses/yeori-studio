@@ -64,7 +64,7 @@ export default function DashboardTab() {
     <div className={s.page}>
       <TabToolbar />
       <div className={s.root}>
-        <EpisodeInfoSidebar />
+        <EpisodeInfoSidebar maxStage={0} />
         <div className={s.main}>
         <div className={s.scrollBody}>
         <div className={s.content}>
