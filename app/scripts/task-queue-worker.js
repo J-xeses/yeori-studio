@@ -32,9 +32,24 @@ const QUEUE_PATH = path.join(MEDIA_ROOT, 'downloads', 'code-task-queue.json')
 const LOG_PATH = path.join(MEDIA_ROOT, 'downloads', 'task-queue-worker.log')
 
 const DRY_RUN = process.argv.includes('--dry-run')
-// Task Scheduler 환경에서 PATH에 claude가 없을 수 있어 override 가능하게 —
-// 필요하면 이 환경변수를 작업 스케줄러 작업의 "환경 변수" 설정에 추가한다.
-const CLAUDE_EXE = process.env.TASK_QUEUE_CLAUDE_PATH || 'claude'
+
+// claude 실행 경로 해석. spawn을 shell:false로 쓰려면 PATH의 claude.cmd/claude.ps1
+// 래퍼가 아니라 실제 실행 파일(claude.exe)을 직접 가리켜야 한다 — Windows는
+// CVE-2024-27980 이후 셸 없이 .cmd/.bat 실행을 막아서 'claude'만 주면 ENOENT가 난다.
+// 우선순위: 환경변수 override → npm 전역 설치 위치의 claude.exe → PATH의 'claude'(shell 필요).
+function resolveClaudeExe() {
+  if (process.env.TASK_QUEUE_CLAUDE_PATH) {
+    return { cmd: process.env.TASK_QUEUE_CLAUDE_PATH, needsShell: false }
+  }
+  if (process.platform === 'win32' && process.env.APPDATA) {
+    const exe = path.join(process.env.APPDATA, 'npm', 'node_modules',
+      '@anthropic-ai', 'claude-code', 'bin', 'claude.exe')
+    if (fs.existsSync(exe)) return { cmd: exe, needsShell: false }
+  }
+  // 폴백: PATH의 claude(.cmd) — 이 경우엔 셸을 거쳐야 실행된다.
+  return { cmd: 'claude', needsShell: true }
+}
+const { cmd: CLAUDE_EXE, needsShell: CLAUDE_NEEDS_SHELL } = resolveClaudeExe()
 
 function log(msg) {
   const line = `[${new Date().toISOString()}] ${msg}\n`
@@ -92,7 +107,7 @@ function runClaudeHeadless(promptText) {
     ]
     const child = spawn(CLAUDE_EXE, args, {
       cwd: MEDIA_ROOT,
-      shell: false,
+      shell: CLAUDE_NEEDS_SHELL,
       env: process.env,
       stdio: ['pipe', 'pipe', 'pipe'],
     })
