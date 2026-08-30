@@ -166,3 +166,29 @@
   background: none; border: none; padding: 0; text-align: left;
   text-transform: uppercase; letter-spacing: .5px;
 }
+
+/* ── 유형별 기본 제작 스타일 카드 ─────────────────────────────────── */
+.styleGrid { display: flex; gap: 14px; flex-wrap: wrap; }
+.styleCol {
+  flex: 1; min-width: 210px; display: flex; flex-direction: column; gap: 8px;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+}
+.styleField { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-3); }
+.styleField select,
+.styleField input {
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 5px;
+  color: var(--text); font-size: 12px; padding: 4px 6px; outline: none; width: 100%;
+}
+.styleField select:focus,
+.styleField input:focus { border-color: var(--accent); }
+.styleField input[type="color"] { padding: 2px; height: 28px; cursor: pointer; }
+.styleRow { display: flex; gap: 8px; }
+.styleRow .styleField { flex: 1; }
+.stylePreviewBox {
+  width: 120px; height: 213px; overflow: hidden; border-radius: 8px;
+  border: 1px solid var(--border); background: #000; align-self: flex-start;
+}
+.stylePreviewFrame {
+  width: 1080px; height: 1920px; border: none;
+  transform: scale(0.1111); transform-origin: top left; pointer-events: none;
+}

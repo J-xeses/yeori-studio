@@ -21,7 +21,30 @@ function episodeContentTypeToInsta(contentType) {
   return map[(contentType || '').toUpperCase()] || null
 }
 
-const GRAPHIC_TEMPLATE = `<!DOCTYPE html>
+function escapeHtml(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// ── 자동 그래픽 템플릿 ──────────────────────────────────────────────
+// 서버 proxy.js의 GRAPHIC_TEMPLATE_MCP / fillTemplateForMcp와 동일한 기본 스타일·텍스트
+// 선택 규칙을 유지한다(반드시 동기화). 유형별 "기본 제작 스타일"에서 배경/글자색/폰트/
+// 크기/굵기/정렬을 바꾸면 그 값으로 렌더한다.
+const DEFAULT_GRAPHIC_STYLE = {
+  bg: '#0a0a0a',
+  color: '#ffffff',
+  fontFamily: "'Noto Sans KR', sans-serif",
+  fontSize: 80,
+  fontWeight: 700,
+  align: 'center',   // 가로: left | center | right
+  vAlign: 'center',  // 세로: top | center | bottom
+}
+
+const H_MAP = { left: 'flex-start', center: 'center', right: 'flex-end' }
+const V_MAP = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
+
+function buildGraphicHtml(style, mainText) {
+  const st = { ...DEFAULT_GRAPHIC_STYLE, ...(style || {}) }
+  return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -29,50 +52,78 @@ const GRAPHIC_TEMPLATE = `<!DOCTYPE html>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   width:1080px; height:1920px;
-  background:#0a0a0a;
+  background:${st.bg};
   display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  font-family:'Noto Sans KR', sans-serif;
-  color:white;
+  align-items:${H_MAP[st.align] || 'center'};
+  justify-content:${V_MAP[st.vAlign] || 'center'};
+  font-family:${st.fontFamily};
+  color:${st.color};
 }
 .main-text {
-  font-size:72px; font-weight:700;
-  text-align:center; line-height:1.4;
+  font-size:${st.fontSize}px; font-weight:${st.fontWeight};
+  text-align:${st.align}; line-height:1.4;
   padding:0 80px;
-}
-.sub-text {
-  font-size:42px; color:rgba(255,255,255,0.6);
-  margin-top:40px; text-align:center;
-  padding:0 80px;
+  white-space:pre-line;
+  word-break:keep-all;
 }
 </style>
 </head>
 <body>
-<div class="main-text">{narration}</div>
-<div class="sub-text">{scene}</div>
+<div class="main-text">${escapeHtml(mainText)}</div>
 </body>
 </html>`
-
-function escapeHtml(str) {
-  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-// 대본의 "CP(자막)" 필드가 아직 scriptParserV3.js에서 별도 컷 필드로 파싱되지 않아서
-// (2026-08-23 실측 확인 — 별도 개선 과제로 남김), CAPCUT 텍스트 컷의 실제 화면 문구를
-// narration/dialogue만으론 못 찾는 경우가 있다. videoPrompt 안에 "따옴표로 감싼 문구"가
-// 있으면(실제 대본 관례 — 예: `타이핑 애니메이션으로 텍스트 등장\n"AI한테 DM..."`) 그걸
-// 우선 추출한다. 그래도 못 찾으면 비워두고 사람이 캡처 전에 직접 채우도록 한다(기존
-// GRAPHIC 워크플로우와 동일 — 자동 채우기는 시작점일 뿐 항상 편집 가능).
+// 서버 extractQuotedLineForMcp와 동일.
 function extractQuotedLine(text) {
   const m = String(text || '').match(/"([^"]+)"/)
   return m ? m[1] : ''
 }
 
-function fillTemplate(cut) {
-  const mainText = extractQuotedLine(cut.videoPrompt) || cut.narration || cut.dialogue || ''
-  return GRAPHIC_TEMPLATE
-    .replace('{narration}', escapeHtml(mainText))
-    .replace('{scene}', escapeHtml(cut.scene || ''))
+// 서버 extractCaptionSectionLastLineForMcp와 동일 — CAPCUT 텍스트 컷은 실제 화면
+// 문구를 imagePrompt의 "[캡션 ...]" 섹션에 자유 텍스트로 적어두는 관례가 있다.
+function extractCaptionSectionLastLine(text) {
+  const m = String(text || '').match(/\[캡션[^\]]*\]([\s\S]*?)(?=\n\s*\[|$)/)
+  if (!m) return ''
+  const lines = m[1].split('\n').map(l => l.trim()).filter(Boolean)
+  return lines.length ? lines[lines.length - 1] : ''
+}
+
+// 서버 fillTemplateForMcp와 동일한 우선순위로 화면 문구를 고른다:
+// subtitle → videoPrompt 따옴표 → imagePrompt "[캡션]" 마지막 줄 → dialogue → narration → scene
+function pickCutText(cut) {
+  return cut.subtitle
+    || extractQuotedLine(cut.videoPrompt)
+    || extractCaptionSectionLastLine(cut.imagePrompt)
+    || cut.dialogue || cut.narration || cut.scene || ''
+}
+
+function fillTemplate(cut, style) {
+  return buildGraphicHtml(style, pickCutText(cut))
+}
+
+// ── 유형별 기본 제작 스타일 (브라우저 localStorage) ─────────────────────
+const TYPE_STYLE_KEY = 'making_type_styles_v1'
+const DEFAULT_TYPE_STYLES = {
+  GRAPHIC: { mode: 'auto',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE } },
+  CAPCUT:  { mode: 'html',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE } },
+  BROLL:   { mode: 'pexels', htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE } },
+}
+
+function loadTypeStyles() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TYPE_STYLE_KEY) || '{}')
+    const out = {}
+    for (const t of Object.keys(DEFAULT_TYPE_STYLES)) {
+      out[t] = {
+        ...DEFAULT_TYPE_STYLES[t], ...(raw[t] || {}),
+        style: { ...DEFAULT_TYPE_STYLES[t].style, ...((raw[t] || {}).style || {}) },
+      }
+    }
+    return out
+  } catch {
+    return JSON.parse(JSON.stringify(DEFAULT_TYPE_STYLES))
+  }
 }
 
 // 이 탭에서 컷별 [제작 실행] 버튼이 붙는 타입. 그 외(YEORI/PIP 등)는 G2~G5 파이프라인이
@@ -84,6 +135,24 @@ export default function MakingTab() {
   const { episode, cuts } = state
   const episodeCode = resolveEpisodeCode(episode)
   const allCuts = [...(cuts || [])].sort((a, b) => a.no - b.no)
+
+  // ── 유형별 기본 제작 스타일(모드 + 기본 HTML 파일 + 자동 템플릿 시각 스타일) ──
+  const [typeStyles, setTypeStyles] = useState(loadTypeStyles)
+  const [typeStyleOpen, setTypeStyleOpen] = useState(false)
+  const updateTypeStyle = (type, patch) => {
+    setTypeStyles(prev => {
+      const next = {
+        ...prev,
+        [type]: {
+          ...prev[type], ...patch,
+          style: { ...prev[type].style, ...(patch.style || {}) },
+        },
+      }
+      try { localStorage.setItem(TYPE_STYLE_KEY, JSON.stringify(next)) } catch { /* noop */ }
+      return next
+    })
+  }
+  const styleFor = (type) => typeStyles[type]?.style
 
   // 컷별 cut_NN.mp4 제작완료 여부(파일 존재 기반, 별도 플래그 저장 없음) — 2초마다
   // 다시 불러와서 캡처/녹화 직후에도 뱃지가 자동으로 갱신되게 한다.
@@ -108,11 +177,11 @@ export default function MakingTab() {
     const willOpen = expandedCutNo !== cut.no
     setExpandedCutNo(willOpen ? cut.no : null)
     if (!willOpen) return
-    if (cut.cutType === 'GRAPHIC') selectCut(cut)
+    if (cut.cutType === 'GRAPHIC') selectHtmlCut(cut)
     else if (cut.cutType === 'BROLL') selectBrollCut(cut)
     else if (cut.cutType === 'CAPCUT') {
       selectCapcutCut(cut)
-      if (getCapcutMode(cut.no) === 'html') selectCapcutCutForHtml(cut)
+      if (getCapcutMode(cut.no) === 'html') selectHtmlCut(cut)
     }
   }
 
@@ -184,24 +253,26 @@ export default function MakingTab() {
 
   const selectCut = (cut) => {
     setSelectedCutNo(cut.no)
-    setHtmlSource(fillTemplate(cut))
+    setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
     setPreviewHtml('')
     setCaptureResult(null)
     setDuration(cut.duration || 5)
   }
 
-  // [제작 실행] — 서버(makeGraphicCutForMcp)가 처리한다. htmlFile 지정 시 그 목업에서
-  // 이 컷만 isolate, 생략 시 서버 자동 템플릿(fillTemplateForMcp — 캡션/자막 섹션 추출
-  // 등 클라이언트 fillTemplate보다 강력). MCP make_graphic_cut과 완전히 동일 경로.
-  const captureGraphic = async ({ htmlFile } = {}) => {
+  // [제작 실행] — 편집기의 현재 HTML을 그대로 캡처한다(/api/graphic-capture).
+  // 자동 템플릿이면 fillTemplate(서버 fillTemplateForMcp와 동일 로직 + 유형별 스타일)
+  // 결과가, 목업 파일을 골랐으면 그 파일 전체가 htmlSource에 들어 있고, 서버가
+  // .phone-wrap 다중 컷이면 이 컷만 isolate한 뒤 캡처한다. MCP make_graphic_cut은
+  // /api/make-graphic-cut(별도)로 남는다.
+  const captureGraphic = async () => {
     if (selectedCutNo == null || !episode.number) return
     setCapturing(true)
     setCaptureResult(null)
     try {
-      const res = await fetch(`${YEORI_SERVER}/api/make-graphic-cut`, {
+      const res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ epNum: episode.number, cutNo: selectedCutNo, ...(htmlFile ? { htmlFile } : {}) }),
+        body: JSON.stringify({ html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration }),
       })
       const data = await res.json()
       if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
@@ -213,31 +284,9 @@ export default function MakingTab() {
     }
   }
 
-  // [편집본으로 캡처] — 아래 편집기에서 직접 손본 HTML을 그대로 캡처(자동 템플릿
-  // 미세조정용). 서버가 .phone-wrap 다중 컷이면 이 컷만 isolate 처리한다.
-  const captureEditedHtml = async () => {
-    if (selectedCutNo == null || !episode.number) return
-    setCapturing(true)
-    setCaptureResult(null)
-    try {
-      const res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setCaptureResult({ error: data.error || '캡처 실패' }); return }
-      setCaptureResult(data)
-    } catch (e) {
-      setCaptureResult({ error: `서버 연결 실패: ${e.message}` })
-    } finally {
-      setCapturing(false)
-    }
-  }
-
   // ── BROLL: 소스 = "Pexels 검색"(다운로드→FFmpeg 규격화) 또는 "화면 녹화" ─────────
-  const [brollSourceMode, setBrollSourceMode] = useState({}) // { [cutNo]: 'pexels' | 'record' }, 기본 'pexels'
-  const getBrollSourceMode = (n) => brollSourceMode[n] || 'pexels'
+  const [brollSourceMode, setBrollSourceMode] = useState({}) // { [cutNo]: 'pexels' | 'record' }
+  const getBrollSourceMode = (n) => brollSourceMode[n] || typeStyles.BROLL.mode
 
   const [selectedBrollCutNo, setSelectedBrollCutNo] = useState(null)
   const [brollUrl, setBrollUrl] = useState('')
@@ -353,8 +402,8 @@ export default function MakingTab() {
   }
 
   // ── CAPCUT: 두 가지 제작 방식(HTML 캡처 / CapCut 데스크톱 녹화) ──────────────
-  const [capcutMode, setCapcutMode] = useState({}) // { [cutNo]: 'html' | 'record' }, 기본 'html'
-  const getCapcutMode = (cutNo) => capcutMode[cutNo] || 'html'
+  const [capcutMode, setCapcutMode] = useState({}) // { [cutNo]: 'html' | 'record' }
+  const getCapcutMode = (cutNo) => capcutMode[cutNo] || typeStyles.CAPCUT.mode
 
   const [selectedCapcutCutNo, setSelectedCapcutCutNo] = useState(null)
   const [capcutStatus, setCapcutStatus] = useState(null)
@@ -371,6 +420,17 @@ export default function MakingTab() {
   const [htmlFilesLoading, setHtmlFilesLoading] = useState(false)
   const [selectedHtmlFile, setSelectedHtmlFile] = useState('__auto__')
 
+  // 유형별 자동 템플릿 시각 스타일을 바꾸면, 자동 템플릿으로 열려 있는 GRAPHIC/CAPCUT
+  // 컷의 편집기 내용을 새 스타일로 다시 채운다(목업 파일을 고른 상태면 건드리지 않음).
+  useEffect(() => {
+    if (selectedCutNo == null || selectedHtmlFile !== '__auto__') return
+    const cut = (cuts || []).find(c => c.no === selectedCutNo)
+    if (cut && (cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT')) {
+      setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeStyles])
+
   const instaRouteParams = () => {
     const instaContent = (cuts || []).map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
       || episodeContentTypeToInsta(episode?.contentType)
@@ -385,9 +445,12 @@ export default function MakingTab() {
       const qs = new URLSearchParams({ instaContent, instaNum, episodeCode: episodeCode || '' })
       const res = await fetch(`${YEORI_SERVER}/api/list-episode-html?${qs}`)
       const data = await res.json()
-      setEpisodeHtmlFiles(data.files || [])
+      const files = data.files || []
+      setEpisodeHtmlFiles(files)
+      return files
     } catch {
       setEpisodeHtmlFiles([])
+      return []
     } finally {
       setHtmlFilesLoading(false)
     }
@@ -396,7 +459,7 @@ export default function MakingTab() {
   const applyHtmlFileChoice = async (fileName, cut) => {
     setSelectedHtmlFile(fileName)
     if (fileName === '__auto__') {
-      setHtmlSource(fillTemplate(cut))
+      setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
       return
     }
     try {
@@ -408,13 +471,23 @@ export default function MakingTab() {
     } catch { /* noop */ }
   }
 
-  // CAPCUT 컷을 "HTML 캡처" 모드로 선택 — GRAPHIC과 동일한 selectCut()으로 htmlSource/
-  // selectedCutNo를 그대로 채우고, 이 컷의 폴더에 있는 .html 후보 목록을 같이 불러온다.
-  const selectCapcutCutForHtml = (cut) => {
+  // GRAPHIC / CAPCUT(html 모드) 컷을 HTML 캡처용으로 선택 — selectCut()으로 htmlSource/
+  // selectedCutNo를 채우고, 이 컷 폴더의 .html 후보 목록을 불러온다. 해당 유형의 기본
+  // HTML 파일이 지정돼 있고 그 목록에 있으면 자동 선택한다.
+  const selectHtmlCut = async (cut) => {
     selectCut(cut)
     setSelectedHtmlFile('__auto__')
-    fetchEpisodeHtmlFiles()
+    const def = typeStyles[cut.cutType]?.htmlFile
+    const files = await fetchEpisodeHtmlFiles()
+    if (def && files.includes(def)) applyHtmlFileChoice(def, cut)
   }
+
+  // "유형별 기본 제작 스타일" 카드의 기본 HTML 파일 자동완성 목록용 — 컷을 펼치지
+  // 않아도 목록이 채워지도록 에피소드가 바뀔 때 한 번 불러온다.
+  useEffect(() => {
+    fetchEpisodeHtmlFiles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [episodeCode, episode?.instaNum])
 
   const selectCapcutCut = (cut) => {
     setSelectedCapcutCutNo(cut.no)
@@ -505,31 +578,45 @@ export default function MakingTab() {
   // ────────────────────────────────────────────────────────────────────────
   // 인라인 패널 렌더러 (컷 타입별)
   // ────────────────────────────────────────────────────────────────────────
-  const renderGraphicPanel = () => (
-    <div className={s.subPanel}>
+  // GRAPHIC / CAPCUT(html 모드) 공용 — HTML 소스 선택 + 편집기 + 제작.
+  const renderHtmlCapturePanel = (cut) => (
+    <>
+      <div className={s.settingGroup}>
+        <div className={s.settingLabel}>HTML 소스</div>
+        <select value={selectedHtmlFile} disabled={htmlFilesLoading}
+          onChange={e => applyHtmlFileChoice(e.target.value, cut)}>
+          <option value="__auto__">자동 템플릿 (유형별 스타일로 채우기)</option>
+          {episodeHtmlFiles.map(f => <option key={f} value={f}>{f}</option>)}
+        </select>
+        <div className={s.emptyHint}>
+          {htmlFilesLoading
+            ? 'HTML 파일 목록 불러오는 중…'
+            : selectedHtmlFile === '__auto__'
+              ? `자동 템플릿: ${cut.cutType} 유형 기본 스타일로 이 컷 문구를 채웁니다.`
+              : `${selectedHtmlFile}에서 CUT ${cut.no} 부분만 잘라 캡처합니다.`}
+        </div>
+      </div>
+
       <div className={s.editorActions}>
         <label className={s.durationField}>
           길이(초)
           <input type="number" min="1" value={duration}
             onChange={e => setDuration(parseInt(e.target.value) || 1)} />
         </label>
-        <button className={s.captureBtn} disabled={capturing} onClick={() => captureGraphic()}>
+        <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
+        <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
           {capturing ? '⏳ 제작 중…' : '제작 실행'}
         </button>
       </div>
-      <div className={s.settingLabel}>HTML 소스 (미세조정용)</div>
+
+      <div className={s.settingLabel}>HTML 소스 (미세조정용 — 이 내용 그대로 캡처됩니다)</div>
       <textarea
         className={s.htmlEditor}
         value={htmlSource}
         onChange={e => setHtmlSource(e.target.value)}
         spellCheck={false}
       />
-      <div className={s.editorActions}>
-        <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
-        <button className={s.previewBtn} disabled={capturing} onClick={captureEditedHtml}>
-          {capturing ? '⏳ 캡처 중…' : '편집본으로 캡처'}
-        </button>
-      </div>
+
       {previewHtml && (
         <div className={s.previewWrap}>
           <div className={s.previewBox}>
@@ -546,7 +633,11 @@ export default function MakingTab() {
           </div>
         )
       )}
-    </div>
+    </>
+  )
+
+  const renderGraphicPanel = (cut) => (
+    <div className={s.subPanel}>{renderHtmlCapturePanel(cut)}</div>
   )
 
   const renderBrollPanel = (cut) => {
@@ -758,7 +849,7 @@ export default function MakingTab() {
             <input type="radio" name={`capcut-mode-${cut.no}`} checked={mode === 'html'}
               onChange={() => {
                 setCapcutMode(p => ({ ...p, [cut.no]: 'html' }))
-                selectCapcutCutForHtml(cut)
+                selectHtmlCut(cut)
               }} />
             HTML 캡처로 제작
           </label>
@@ -770,65 +861,7 @@ export default function MakingTab() {
         </div>
 
         {mode === 'html' ? (
-          <>
-            <div className={s.settingGroup}>
-              <div className={s.settingLabel}>HTML 소스 선택</div>
-              <select value={selectedHtmlFile} disabled={htmlFilesLoading}
-                onChange={e => applyHtmlFileChoice(e.target.value, cut)}>
-                <option value="__auto__">자동 템플릿 (텍스트 채우기)</option>
-                {episodeHtmlFiles.map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-              <div className={s.emptyHint}>
-                {htmlFilesLoading
-                  ? 'HTML 파일 목록 불러오는 중…'
-                  : selectedHtmlFile === '__auto__'
-                    ? '제작 실행 시 서버 자동 템플릿으로 이 컷 문구를 채웁니다.'
-                    : `제작 실행 시 ${selectedHtmlFile}에서 CUT ${cut.no} 부분만 잘라 캡처합니다.`}
-              </div>
-            </div>
-
-            <div className={s.editorActions}>
-              <label className={s.durationField}>
-                길이(초)
-                <input type="number" min="1" value={duration}
-                  onChange={e => setDuration(parseInt(e.target.value) || 1)} />
-              </label>
-              <button className={s.captureBtn} disabled={capturing}
-                onClick={() => captureGraphic({ htmlFile: selectedHtmlFile !== '__auto__' ? selectedHtmlFile : undefined })}>
-                {capturing ? '⏳ 제작 중…' : '제작 실행'}
-              </button>
-            </div>
-
-            <div className={s.settingLabel}>HTML 소스 (미세조정용)</div>
-            <textarea
-              className={s.htmlEditor}
-              value={htmlSource}
-              onChange={e => setHtmlSource(e.target.value)}
-              spellCheck={false}
-            />
-            <div className={s.editorActions}>
-              <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
-              <button className={s.previewBtn} disabled={capturing} onClick={captureEditedHtml}>
-                {capturing ? '⏳ 캡처 중…' : '편집본으로 캡처'}
-              </button>
-            </div>
-            {previewHtml && (
-              <div className={s.previewWrap}>
-                <div className={s.previewBox}>
-                  <iframe title="capcut-preview" srcDoc={previewHtml} className={s.previewFrame} />
-                </div>
-              </div>
-            )}
-            {captureResult && (
-              captureResult.error ? (
-                <div className={s.resultError}>❌ {captureResult.error}</div>
-              ) : (
-                <div className={s.resultOk}>
-                  ✅ 저장됨 — 이미지: {captureResult.imagePath} · 영상: {captureResult.videoPath}
-                </div>
-              )
-            )}
-          </>
+          renderHtmlCapturePanel(cut)
         ) : (
           <>
             <div className={s.editorActions}>
@@ -899,11 +932,104 @@ export default function MakingTab() {
   }
 
   const renderPanel = (cut) => {
-    if (cut.cutType === 'GRAPHIC') return renderGraphicPanel()
+    if (cut.cutType === 'GRAPHIC') return renderGraphicPanel(cut)
     if (cut.cutType === 'BROLL') return renderBrollPanel(cut)
     if (cut.cutType === 'CAPCUT') return renderCapcutPanel(cut)
     return null
   }
+
+  // ── 유형별 기본 제작 스타일 카드 ────────────────────────────────────────
+  const STYLE_TYPES = [
+    { key: 'GRAPHIC', modes: null, hasTemplate: true },
+    { key: 'CAPCUT', modes: [['html', 'HTML 캡처'], ['record', 'CapCut 녹화']], hasTemplate: true },
+    { key: 'BROLL', modes: [['pexels', 'Pexels 검색'], ['record', '화면 녹화']], hasTemplate: false },
+  ]
+
+  const renderTypeStyleCard = () => (
+    <div className={s.card}>
+      <button className={s.collapseToggle} onClick={() => setTypeStyleOpen(v => !v)}>
+        {typeStyleOpen ? '▼' : '▶'} 유형별 기본 제작 스타일 (이 브라우저에 저장)
+      </button>
+      {typeStyleOpen && (
+        <>
+          <div className={s.emptyHint}>
+            컷을 펼칠 때 유형별 기본 제작 방식·HTML 파일이 자동 선택되고, 자동 템플릿은 여기 스타일로 렌더됩니다.
+          </div>
+          <div className={s.styleGrid}>
+            {STYLE_TYPES.map(t => {
+              const cfg = typeStyles[t.key]
+              const st = cfg.style
+              const setStyle = patch => updateTypeStyle(t.key, { style: patch })
+              return (
+                <div key={t.key} className={s.styleCol}>
+                  <span className={`${s.typeBadge} ${s['type' + t.key] || ''}`}>{t.key}</span>
+
+                  {t.modes && (
+                    <label className={s.styleField}>기본 제작 방식
+                      <select value={cfg.mode} onChange={e => updateTypeStyle(t.key, { mode: e.target.value })}>
+                        {t.modes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                      </select>
+                    </label>
+                  )}
+
+                  {t.hasTemplate && (
+                    <>
+                      <label className={s.styleField}>기본 HTML 파일
+                        <input list="making-html-files" value={cfg.htmlFile} placeholder="(자동 템플릿)"
+                          onChange={e => updateTypeStyle(t.key, { htmlFile: e.target.value.trim() })} />
+                      </label>
+                      <div className={s.styleRow}>
+                        <label className={s.styleField}>배경
+                          <input type="color" value={st.bg} onChange={e => setStyle({ bg: e.target.value })} />
+                        </label>
+                        <label className={s.styleField}>글자색
+                          <input type="color" value={st.color} onChange={e => setStyle({ color: e.target.value })} />
+                        </label>
+                      </div>
+                      <div className={s.styleRow}>
+                        <label className={s.styleField}>크기(px)
+                          <input type="number" min="20" max="200" value={st.fontSize}
+                            onChange={e => setStyle({ fontSize: parseInt(e.target.value) || 80 })} />
+                        </label>
+                        <label className={s.styleField}>굵기
+                          <select value={st.fontWeight} onChange={e => setStyle({ fontWeight: parseInt(e.target.value) })}>
+                            <option value={400}>400</option><option value={700}>700</option><option value={900}>900</option>
+                          </select>
+                        </label>
+                      </div>
+                      <div className={s.styleRow}>
+                        <label className={s.styleField}>가로 정렬
+                          <select value={st.align} onChange={e => setStyle({ align: e.target.value })}>
+                            <option value="left">왼쪽</option><option value="center">가운데</option><option value="right">오른쪽</option>
+                          </select>
+                        </label>
+                        <label className={s.styleField}>세로 정렬
+                          <select value={st.vAlign} onChange={e => setStyle({ vAlign: e.target.value })}>
+                            <option value="top">위</option><option value="center">가운데</option><option value="bottom">아래</option>
+                          </select>
+                        </label>
+                      </div>
+                      <div className={s.stylePreviewBox}>
+                        <iframe title={`style-preview-${t.key}`} className={s.stylePreviewFrame}
+                          srcDoc={buildGraphicHtml(st, '서여리\nMAKING')} />
+                      </div>
+                      <button className={s.previewBtn}
+                        onClick={() => updateTypeStyle(t.key, { style: { ...DEFAULT_GRAPHIC_STYLE } })}>
+                        스타일 기본값으로
+                      </button>
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          <datalist id="making-html-files">
+            {episodeHtmlFiles.map(f => <option key={f} value={f} />)}
+          </datalist>
+        </>
+      )}
+    </div>
+  )
 
   const makingUrl = episode?.number
     ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making.mp4`
@@ -927,6 +1053,8 @@ export default function MakingTab() {
                   </div>
                 </div>
               </div>
+
+              {renderTypeStyleCard()}
 
               <div className={s.card}>
                 <div className={s.cardTitle}>전체 컷 목록</div>
