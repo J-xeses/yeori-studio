@@ -406,16 +406,32 @@ def process_video(input_path, output_path, scenes, canvas_size, work_dir):
     filter_parts.append(f"[{prev}][{len(scenes) + 1}:v]overlay=0:0[vout]")
     filter_complex = ";".join(filter_parts)
 
+    # 입력 영상 길이를 명시적으로 걸어 둔다 — 루프(-loop 1) 이미지 입력 + 복합
+    # 필터그래프에서 -shortest가 제때 종료를 못 잡아 인코딩이 몇 분씩 늘어지는 경우가
+    # 있어서(실측), 베이스 길이로 -t를 직접 준다.
+    dur = None
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", str(input_path)],
+            capture_output=True, text=True,
+        )
+        dur = float(probe.stdout.strip())
+    except Exception:
+        dur = None
+
     cmd = ["ffmpeg", "-y", "-i", str(input_path)]
     for p in overlay_paths:
         cmd += ["-loop", "1", "-i", str(p)]
     cmd += [
         "-filter_complex", filter_complex,
         "-map", "[vout]", "-map", "0:a?",
-        "-c:v", "libx264", "-crf", "18", "-preset", "medium",
+        "-c:v", "libx264", "-crf", "20", "-preset", "veryfast",
         "-c:a", "aac", "-shortest",
-        str(output_path),
     ]
+    if dur:
+        cmd += ["-t", f"{dur:.3f}"]
+    cmd += [str(output_path)]
     run_cmd(cmd)
 
 

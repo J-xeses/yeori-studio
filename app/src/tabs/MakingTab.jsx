@@ -575,6 +575,150 @@ export default function MakingTab() {
     }
   }
 
+  // ── 손글씨 오버레이 (GRAPHIC/CAPCUT 컷 제작 후 선택적으로 적용) ────────────
+  // 컷 영상(cut_NN.mp4) 위에 손글씨 주석을 시간대별로 합성 → cut_NN_overlay.mp4.
+  // 무조건 적용이 아니라, 영상이 이미 있는 컷에서 필요할 때만 여는 접이식 섹션.
+  const OVERLAY_POSITIONS = ['top_center', 'top_left', 'top_right', 'center', 'bottom_center', 'bottom_left', 'bottom_right']
+  const OVERLAY_BUBBLES = [['none', '없음'], ['cloud', '구름'], ['oval', '타원'], ['arrow_box', '화살표박스']]
+  const OVERLAY_COLORS = [['white', '흰색'], ['pink', '핑크'], ['lavender', '라벤더']]
+  const OVERLAY_ARROW_DIRS = ['right', 'left', 'up', 'down']
+  const newOverlayScene = () => ({
+    text: '', position: 'top_center', bubble: 'cloud', color: 'white',
+    deco: '', arrow: false, arrow_direction: 'down', time: '0s~3s',
+  })
+
+  const [overlayOpen, setOverlayOpen] = useState({})     // { [cutNo]: bool }
+  const [overlayScenes, setOverlayScenes] = useState({}) // { [cutNo]: Scene[] }
+  const [overlayBusy, setOverlayBusy] = useState({})     // { [cutNo]: bool }
+  const [overlayResult, setOverlayResult] = useState({}) // { [cutNo]: data | { error } }
+
+  const scenesFor = (cutNo) => overlayScenes[cutNo] || [newOverlayScene()]
+  const setScenes = (cutNo, fn) =>
+    setOverlayScenes(p => ({ ...p, [cutNo]: fn(p[cutNo] || [newOverlayScene()]) }))
+  const patchScene = (cutNo, idx, patch) =>
+    setScenes(cutNo, arr => arr.map((sc, i) => i === idx ? { ...sc, ...patch } : sc))
+
+  const runOverlay = async (cut) => {
+    if (!episode.number) return
+    const scenes = scenesFor(cut.no).map(sc => ({
+      text: sc.text,
+      position: sc.position,
+      bubble: sc.bubble,
+      color: sc.color,
+      deco: String(sc.deco || '').split(',').map(s => s.trim()).filter(Boolean),
+      arrow: !!sc.arrow,
+      arrow_direction: sc.arrow_direction,
+      time: sc.time,
+    }))
+    setOverlayBusy(p => ({ ...p, [cut.no]: true }))
+    setOverlayResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, scenes }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setOverlayResult(p => ({ ...p, [cut.no]: { error: data.error || '오버레이 실패' } })); return }
+      setOverlayResult(p => ({ ...p, [cut.no]: data }))
+    } catch (e) {
+      setOverlayResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+    } finally {
+      setOverlayBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+
+  const renderOverlaySection = (cut) => {
+    if (!videoStatus[cut.no]) return null
+    const open = !!overlayOpen[cut.no]
+    const scenes = scenesFor(cut.no)
+    const r = overlayResult[cut.no]
+    return (
+      <div className={s.subPanel}>
+        <button className={s.collapseToggle} onClick={() => setOverlayOpen(p => ({ ...p, [cut.no]: !open }))}>
+          {open ? '▼' : '▶'} 손글씨 오버레이 (선택)
+        </button>
+        {open && (
+          <>
+            <div className={s.emptyHint}>
+              완성된 컷 영상 위에 손글씨 주석을 시간대별로 얹어 cut_{String(cut.no).padStart(2, '0')}_overlay.mp4로 저장합니다. 원본은 그대로 둡니다.
+            </div>
+            {scenes.map((sc, i) => (
+              <div key={i} className={s.overlayScene}>
+                <div className={s.overlaySceneHead}>
+                  씬 {i + 1}
+                  {scenes.length > 1 && (
+                    <button className={s.linkBtn}
+                      onClick={() => setScenes(cut.no, arr => arr.filter((_, j) => j !== i))}>제거</button>
+                  )}
+                </div>
+                <input className={s.urlInput} style={{ width: '100%' }} value={sc.text} placeholder="손글씨 텍스트 (줄바꿈 가능)"
+                  onChange={e => patchScene(cut.no, i, { text: e.target.value })} />
+                <div className={s.styleRow}>
+                  <label className={s.styleField}>위치
+                    <select value={sc.position} onChange={e => patchScene(cut.no, i, { position: e.target.value })}>
+                      {OVERLAY_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                    </select>
+                  </label>
+                  <label className={s.styleField}>말풍선
+                    <select value={sc.bubble} onChange={e => patchScene(cut.no, i, { bubble: e.target.value })}>
+                      {OVERLAY_BUBBLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </label>
+                  <label className={s.styleField}>색상
+                    <select value={sc.color} onChange={e => patchScene(cut.no, i, { color: e.target.value })}>
+                      {OVERLAY_COLORS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <div className={s.styleRow}>
+                  <label className={s.styleField}>데코 (쉼표 구분, 예: ✨,♡)
+                    <input value={sc.deco} onChange={e => patchScene(cut.no, i, { deco: e.target.value })} />
+                  </label>
+                  <label className={s.styleField}>시간 (예: 0s~3s)
+                    <input value={sc.time} onChange={e => patchScene(cut.no, i, { time: e.target.value })} />
+                  </label>
+                </div>
+                <div className={s.radioRow}>
+                  <label className={s.radioLabel}>
+                    <input type="checkbox" checked={sc.arrow} onChange={e => patchScene(cut.no, i, { arrow: e.target.checked })} />
+                    화살표
+                  </label>
+                  {sc.arrow && (
+                    <label className={s.styleField}>방향
+                      <select value={sc.arrow_direction} onChange={e => patchScene(cut.no, i, { arrow_direction: e.target.value })}>
+                        {OVERLAY_ARROW_DIRS.map(d => <option key={d} value={d}>{d}</option>)}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div className={s.editorActions}>
+              <button className={s.previewBtn} onClick={() => setScenes(cut.no, arr => [...arr, newOverlayScene()])}>씬 추가 +</button>
+              <button className={s.captureBtn} disabled={overlayBusy[cut.no]} onClick={() => runOverlay(cut)}>
+                {overlayBusy[cut.no] ? '⏳ 합성 중…' : '오버레이 적용'}
+              </button>
+            </div>
+            {r && (
+              r.error ? (
+                <div className={s.resultError}>❌ {r.error}</div>
+              ) : (
+                <div className={s.resultOk}>
+                  ✅ 저장됨 — {r.outputPath} ({r.sizeKB}KB)
+                  <br />
+                  <video className={s.makingVideo}
+                    src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/${r.outputPath.split(/[/\\]/).pop()}`}
+                    controls />
+                </div>
+              )
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
   // ────────────────────────────────────────────────────────────────────────
   // 인라인 패널 렌더러 (컷 타입별)
   // ────────────────────────────────────────────────────────────────────────
@@ -932,10 +1076,16 @@ export default function MakingTab() {
   }
 
   const renderPanel = (cut) => {
-    if (cut.cutType === 'GRAPHIC') return renderGraphicPanel(cut)
-    if (cut.cutType === 'BROLL') return renderBrollPanel(cut)
-    if (cut.cutType === 'CAPCUT') return renderCapcutPanel(cut)
-    return null
+    let panel = null
+    if (cut.cutType === 'GRAPHIC') panel = renderGraphicPanel(cut)
+    else if (cut.cutType === 'BROLL') panel = renderBrollPanel(cut)
+    else if (cut.cutType === 'CAPCUT') panel = renderCapcutPanel(cut)
+    return (
+      <>
+        {panel}
+        {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlaySection(cut)}
+      </>
+    )
   }
 
   // ── 유형별 기본 제작 스타일 카드 ────────────────────────────────────────

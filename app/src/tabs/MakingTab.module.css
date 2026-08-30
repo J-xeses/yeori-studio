@@ -192,3 +192,17 @@
   width: 1080px; height: 1920px; border: none;
   transform: scale(0.1111); transform-origin: top left; pointer-events: none;
 }
+
+/* ── 손글씨 오버레이 씬 ─────────────────────────────────────────── */
+.overlayScene {
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+}
+.overlaySceneHead {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px;
+}
+.linkBtn {
+  font-size: 11px; color: var(--accent-light); cursor: pointer;
+  background: none; border: none; padding: 0; text-decoration: underline;
+}

@@ -4926,6 +4926,51 @@ app.get('/api/studio-status-public', (req, res) => {
   }
 })
 
+// POST /api/handwriting-overlay — 확정된 컷 영상(cut_NN.mp4) 위에 손글씨 주석
+// 오버레이(scripts/handwriting_overlay.py)를 합성해 cut_NN{suffix}.mp4로 저장한다.
+// GRAPHIC/CAPCUT 컷 제작 후 "필요할 때만" 선택적으로 적용(파이프라인 자동 아님).
+// body: { epNum, cutNo, scenes:[{text,position,bubble,color,deco,arrow,arrow_direction,time}], outputSuffix?='_overlay' }
+app.post('/api/handwriting-overlay', async (req, res) => {
+  const { epNum, cutNo, scenes, outputSuffix = '_overlay' } = req.body || {}
+  if (epNum == null || cutNo == null || !Array.isArray(scenes) || !scenes.length) {
+    return res.status(400).json({ error: 'epNum, cutNo, scenes(1개 이상) 필요' })
+  }
+  const padded = String(cutNo).padStart(2, '0')
+  const suffix = String(outputSuffix).replace(/[^\w-]/g, '') || '_overlay'
+  const dir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const inputPath  = path.join(dir, `cut_${padded}.mp4`)
+  const outputPath = path.join(dir, `cut_${padded}${suffix}.mp4`)
+  const configPath = path.join(dir, `cut_${padded}_overlay_config.json`)
+  const scriptPath = path.join(CODE_ROOT, 'scripts', 'handwriting_overlay.py')
+
+  if (!fs.existsSync(inputPath)) return res.status(404).json({ error: '입력 영상 없음 — 먼저 이 컷을 제작하세요', path: inputPath })
+  if (!fs.existsSync(scriptPath)) return res.status(500).json({ error: 'handwriting_overlay.py 없음', path: scriptPath })
+
+  try {
+    fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(configPath, JSON.stringify({ output_size: [1080, 1920], scenes }, null, 2), 'utf-8')
+
+    const result = await new Promise((resolve) => {
+      const proc = spawn('python', [scriptPath, '--config', configPath, '--input', inputPath, '--output', outputPath],
+        { cwd: path.join(CODE_ROOT, 'scripts') })
+      let out = '', err = ''
+      const killer = setTimeout(() => { try { proc.kill('SIGKILL') } catch { /* noop */ } }, 180000)
+      proc.stdout.on('data', d => { out += d.toString() })
+      proc.stderr.on('data', d => { err += d.toString() })
+      proc.on('error', e => { clearTimeout(killer); resolve({ code: 1, out, err: err + e.message }) })
+      proc.on('close', code => { clearTimeout(killer); resolve({ code, out, err }) })
+    })
+
+    if (result.code !== 0 || !fs.existsSync(outputPath)) {
+      return res.status(500).json({ error: `오버레이 합성 실패: ${(result.err || result.out || '').slice(-800)}` })
+    }
+    const stat = fs.statSync(outputPath)
+    res.json({ success: true, outputPath, sizeKB: Math.round(stat.size / 1024) })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // start_yeori.bat가 [0] 단계에서 기존 프로세스를 taskkill한 직후(1초 대기) 바로 이
 // 프록시를 재기동하는데, OS가 소켓을 즉시 회수하지 못하면 EADDRINUSE가 날 수 있다.
 // 즉시 죽는 대신 잠깐 재시도해서 이런 타이밍 경합을 흡수한다.
