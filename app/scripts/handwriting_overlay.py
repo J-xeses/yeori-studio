@@ -236,17 +236,35 @@ def draw_wobbly_roundrect(draw, box, color, width=4, radius=30):
 
 
 def draw_cloud(draw, box, color, width=4):
+    # 스캘럽(구름) 외곽선 — 박스 둘레를 도는 닫힌 곡선으로, 3점마다 바깥으로만
+    # 튀어나오게 한다. 항상 박스보다 크게 그려져 텍스트 위로 선이 지나가지 않는다.
     x0, y0, x1, y1 = box
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    w, h = x1 - x0, y1 - y0
-    lobes = [
-        (x0 + w * 0.22, cy + h * 0.05, w * 0.20, h * 0.30),
-        (x0 + w * 0.45, cy - h * 0.14, w * 0.26, h * 0.36),
-        (x0 + w * 0.70, cy + h * 0.02, w * 0.22, h * 0.32),
-        (cx, cy + h * 0.24, w * 0.40, h * 0.22),
-    ]
-    for lx, ly, lrx, lry in lobes:
-        draw_wobbly_ellipse(draw, lx, ly, lrx, lry, color, width=width, n=26)
+    rx, ry = (x1 - x0) / 2, (y1 - y0) / 2
+    bumps = 9
+    steps = bumps * 5
+    amt = min(rx, ry) * 0.025 + 1.5
+    pts = []
+    for i in range(steps + 1):
+        a = 2 * math.pi * i / steps
+        bulge = 1.12 + 0.16 * (math.sin(bumps * a) * 0.5 + 0.5)  # 부드러운 스캘럽
+        pts.append(jitter(cx + rx * bulge * math.cos(a), cy + ry * bulge * math.sin(a), amt))
+    pts.append(pts[0])
+    draw.line(pts, fill=color, width=width, joint="curve")
+
+
+def _inflate(box, dx, dy):
+    return (box[0] - dx, box[1] - dy, box[2] + dx, box[3] + dy)
+
+
+def draw_soft_backing(base_img, box, radius=40, alpha=115):
+    """텍스트 뒤에 반투명 어두운 판을 깔아 흰 손글씨가 어떤 배경 위에서도 읽히게 한다."""
+    layer = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
+    ld = ImageDraw.Draw(layer)
+    x0, y0, x1, y1 = (int(v) for v in box)
+    r = int(max(4, min(radius, (x1 - x0) / 2, (y1 - y0) / 2)))
+    ld.rounded_rectangle((x0, y0, x1, y1), radius=r, fill=(0, 0, 0, alpha))
+    return Image.alpha_composite(base_img, layer)
 
 
 ARROW_DIR_VECTORS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
@@ -304,7 +322,7 @@ def render_scene(canvas_size, scene, font_size=64):
     ax, ay = POSITION_ANCHORS.get(scene.get("position", "center"), (0.5, 0.5))
     cx, cy = W * ax, H * ay
 
-    pad_x, pad_y = 46, 34
+    pad_x, pad_y = 52, 38
     box_w, box_h = block_w + pad_x * 2, block_h + pad_y * 2
 
     left = cx - box_w / 2
@@ -317,18 +335,31 @@ def render_scene(canvas_size, scene, font_size=64):
         top = cy
     elif ay > 0.7:
         top = cy - box_h
-    left = max(24, min(left, W - box_w - 24))
-    top = max(24, min(top, H - box_h - 24))
-    box = (left, top, left + box_w, top + box_h)
 
     bubble = scene.get("bubble", "none")
-    if bubble == "cloud":
-        draw_cloud(draw, box, color)
-    elif bubble == "oval":
-        draw_wobbly_ellipse(draw, (box[0] + box[2]) / 2, (box[1] + box[3]) / 2, box_w / 2, box_h / 2, color)
-    elif bubble == "arrow_box":
-        draw_wobbly_roundrect(draw, box, color)
+    # 말풍선 외곽선이 텍스트를 가로지르지 않도록 텍스트 박스보다 크게 그린다(유형별).
+    infl = {"cloud": (box_w * 0.10 + 20, box_h * 0.42 + 24),
+            "oval": (box_w * 0.16 + 16, box_h * 0.30 + 18),
+            "arrow_box": (26, 20)}.get(bubble, (0, 0))
+    margin = 24 + max(infl)
+    left = max(margin, min(left, W - box_w - margin))
+    top = max(margin, min(top, H - box_h - margin))
+    text_box = (left, top, left + box_w, top + box_h)
+    bubble_box = _inflate(text_box, *infl)
 
+    # 텍스트 뒤 반투명 판(가독성) — 말풍선 종류와 무관하게 항상.
+    img = draw_soft_backing(img, _inflate(text_box, 10, 6), radius=int(min(box_w, box_h) * 0.35))
+    draw = ImageDraw.Draw(img)
+
+    if bubble == "cloud":
+        draw_cloud(draw, bubble_box, color)
+    elif bubble == "oval":
+        draw_wobbly_ellipse(draw, (bubble_box[0] + bubble_box[2]) / 2, (bubble_box[1] + bubble_box[3]) / 2,
+                            (bubble_box[2] - bubble_box[0]) / 2, (bubble_box[3] - bubble_box[1]) / 2, color)
+    elif bubble == "arrow_box":
+        draw_wobbly_roundrect(draw, bubble_box, color)
+
+    box = bubble_box  # deco/화살표 배치 기준
     ty = top + pad_y
     for line in lines:
         lw = measure_line(draw, line, font_size)
