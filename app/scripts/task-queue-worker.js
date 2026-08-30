@@ -33,20 +33,35 @@ const LOG_PATH = path.join(MEDIA_ROOT, 'downloads', 'task-queue-worker.log')
 
 const DRY_RUN = process.argv.includes('--dry-run')
 
-// claude 실행 경로 해석. spawn을 shell:false로 쓰려면 PATH의 claude.cmd/claude.ps1
-// 래퍼가 아니라 실제 실행 파일(claude.exe)을 직접 가리켜야 한다 — Windows는
-// CVE-2024-27980 이후 셸 없이 .cmd/.bat 실행을 막아서 'claude'만 주면 ENOENT가 난다.
-// 우선순위: 환경변수 override → npm 전역 설치 위치의 claude.exe → PATH의 'claude'(shell 필요).
+// claude 실행 경로 해석.
+// Windows는 CVE-2024-27980 완화로 spawn(..., { shell:false })에 .cmd/.bat/.ps1 래퍼를
+// 넘기면 동기적으로 `spawn EINVAL`을 던진다(Node 18.20.2+/20.12.2+/21.7.3+/22+).
+// 그래서 실제 실행 파일(claude.exe)을 찾으면 shell 없이(needsShell:false), 래퍼만 있으면
+// 셸을 거쳐서(needsShell:true) 실행한다. TASK_QUEUE_CLAUDE_PATH가 래퍼(.cmd 등)를
+// 가리켜도 같은 폴더의 node_modules/.../bin/claude.exe를 우선 후보로 시도한다.
+const WRAPPER_RE = /\.(cmd|bat|ps1)$/i
 function resolveClaudeExe() {
-  if (process.env.TASK_QUEUE_CLAUDE_PATH) {
-    return { cmd: process.env.TASK_QUEUE_CLAUDE_PATH, needsShell: false }
+  const candidates = []
+  const override = process.env.TASK_QUEUE_CLAUDE_PATH
+  if (override) {
+    candidates.push(override)
+    candidates.push(path.join(path.dirname(override),
+      'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe'))
   }
-  if (process.platform === 'win32' && process.env.APPDATA) {
-    const exe = path.join(process.env.APPDATA, 'npm', 'node_modules',
-      '@anthropic-ai', 'claude-code', 'bin', 'claude.exe')
-    if (fs.existsSync(exe)) return { cmd: exe, needsShell: false }
+  if (process.platform === 'win32') {
+    for (const base of [process.env.APPDATA, process.env.ProgramFiles, process.env.LOCALAPPDATA].filter(Boolean)) {
+      candidates.push(path.join(base, 'npm', 'node_modules', '@anthropic-ai', 'claude-code', 'bin', 'claude.exe'))
+    }
   }
-  // 폴백: PATH의 claude(.cmd) — 이 경우엔 셸을 거쳐야 실행된다.
+  // 1) 실제 실행 파일(래퍼가 아닌 것) 우선 — shell 불필요
+  for (const c of candidates) {
+    if (c && !WRAPPER_RE.test(c) && fs.existsSync(c)) return { cmd: c, needsShell: false }
+  }
+  // 2) 래퍼(.cmd 등)라도 존재하면 셸 경유로 실행
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return { cmd: c, needsShell: true }
+  }
+  // 3) 최후: PATH의 claude — 셸 경유
   return { cmd: 'claude', needsShell: true }
 }
 const { cmd: CLAUDE_EXE, needsShell: CLAUDE_NEEDS_SHELL } = resolveClaudeExe()
