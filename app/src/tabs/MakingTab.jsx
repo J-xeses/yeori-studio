@@ -555,6 +555,71 @@ export default function MakingTab() {
   const [assembleResult, setAssembleResult] = useState(null)
   const [makingPreview, setMakingPreview] = useState(false)
 
+  // ── BGM: TrendRadar "BGM 레이더"로 검색·다운로드한 트랙을 메이킹 필름 밑에 깐다 ──
+  const BGM_MOODS = [['BGM_EMO', '감성'], ['BGM_INFO', '정보전달'], ['BGM_HOOK', '훅'], ['BGM_CALM', '차분']]
+  const [bgmOpen, setBgmOpen] = useState(false)
+  const [bgmLibrary, setBgmLibrary] = useState([])
+  const [bgmMood, setBgmMood] = useState('BGM_EMO')
+  const [bgmKeyword, setBgmKeyword] = useState('')
+  const [bgmSearching, setBgmSearching] = useState(false)
+  const [bgmSearchResults, setBgmSearchResults] = useState([])
+  const [bgmDownloading, setBgmDownloading] = useState({})
+  const [bgmPick, setBgmPick] = useState('')       // 선택한 라이브러리 트랙의 file 경로
+  const [bgmVolume, setBgmVolume] = useState(0.22)
+  const [bgmDuck, setBgmDuck] = useState(true)
+  const [bgmBusy, setBgmBusy] = useState(false)
+  const [bgmResult, setBgmResult] = useState(null)
+
+  const loadBgmLibrary = () => {
+    fetch(`${YEORI_SERVER}/api/bgm-library`).then(r => r.json())
+      .then(d => setBgmLibrary(d.tracks || [])).catch(() => {})
+  }
+  useEffect(() => { loadBgmLibrary() }, [])
+
+  const searchBgm = async () => {
+    setBgmSearching(true); setBgmSearchResults([])
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/bgm-search`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood: bgmMood, keywords: bgmKeyword.split(',').map(s => s.trim()).filter(Boolean) }),
+      })
+      const data = await res.json()
+      setBgmSearchResults(res.ok ? (data.results || []) : [])
+    } catch { setBgmSearchResults([]) }
+    finally { setBgmSearching(false) }
+  }
+
+  const downloadBgm = async (item) => {
+    setBgmDownloading(p => ({ ...p, [item.id ?? item.title]: true }))
+    try {
+      const filename = (item.title || 'bgm').replace(/[\\/:*?"<>|]/g, '').trim() + '.mp3'
+      await fetch(`${YEORI_SERVER}/api/bgm-download`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: item.downloadUrl || item.url || item.detailUrl, mood: bgmMood, filename }),
+      })
+      loadBgmLibrary()
+    } catch { /* noop */ }
+    finally { setBgmDownloading(p => ({ ...p, [item.id ?? item.title]: false })) }
+  }
+
+  const applyBgm = async () => {
+    if (!bgmPick || !episode.number) return
+    setBgmBusy(true); setBgmResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/making-bgm`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, bgmFile: bgmPick, volume: bgmVolume, duck: bgmDuck }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setBgmResult({ error: data.error || 'BGM 합성 실패' }); return }
+      setBgmResult(data)
+    } catch (e) {
+      setBgmResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setBgmBusy(false)
+    }
+  }
+
   const assembleMaking = async () => {
     setAssembling(true)
     setAssembleResult(null)
@@ -582,8 +647,8 @@ export default function MakingTab() {
   const OVERLAY_BUBBLES = [['none', '없음'], ['cloud', '구름'], ['oval', '타원'], ['arrow_box', '화살표박스']]
   const OVERLAY_COLORS = [['white', '흰색'], ['pink', '핑크'], ['lavender', '라벤더']]
   const OVERLAY_ARROW_DIRS = ['right', 'left', 'up', 'down']
-  const newOverlayScene = () => ({
-    text: '', position: 'top_center', bubble: 'cloud', color: 'white',
+  const newOverlayScene = (text = '') => ({
+    text, position: 'top_center', bubble: 'cloud', color: 'white',
     deco: '', arrow: false, arrow_direction: 'down', time: '0s~3s',
   })
 
@@ -592,15 +657,17 @@ export default function MakingTab() {
   const [overlayBusy, setOverlayBusy] = useState({})     // { [cutNo]: bool }
   const [overlayResult, setOverlayResult] = useState({}) // { [cutNo]: data | { error } }
 
-  const scenesFor = (cutNo) => overlayScenes[cutNo] || [newOverlayScene()]
-  const setScenes = (cutNo, fn) =>
-    setOverlayScenes(p => ({ ...p, [cutNo]: fn(p[cutNo] || [newOverlayScene()]) }))
-  const patchScene = (cutNo, idx, patch) =>
-    setScenes(cutNo, arr => arr.map((sc, i) => i === idx ? { ...sc, ...patch } : sc))
+  // 첫 씬 텍스트는 대본 CP(cut.subtitle)에서 시드 — 메이킹에서는 위치/말풍선/타이밍
+  // 등 시각 상세만 형성한다(대본 단계에서 "이 컷에 자막을 얹는다"가 정의됨).
+  const scenesFor = (cut) => overlayScenes[cut.no] || [newOverlayScene(cut.subtitle || '')]
+  const setScenes = (cut, fn) =>
+    setOverlayScenes(p => ({ ...p, [cut.no]: fn(p[cut.no] || [newOverlayScene(cut.subtitle || '')]) }))
+  const patchScene = (cut, idx, patch) =>
+    setScenes(cut, arr => arr.map((sc, i) => i === idx ? { ...sc, ...patch } : sc))
 
   const runOverlay = async (cut) => {
     if (!episode.number) return
-    const scenes = scenesFor(cut.no).map(sc => ({
+    const scenes = scenesFor(cut).map(sc => ({
       text: sc.text,
       position: sc.position,
       bubble: sc.bubble,
@@ -630,18 +697,32 @@ export default function MakingTab() {
 
   const renderOverlaySection = (cut) => {
     if (!videoStatus[cut.no]) return null
+
+    // 손글씨 오버레이는 컷 대본 단계에서 CP(자막)로 "이 컷에 자막을 얹는다"가 정의된
+    // 컷에만 형성한다. CP가 없으면 안내만 하고 편집 컨트롤은 노출하지 않는다.
+    if (!cut.subtitle) {
+      return (
+        <div className={s.subPanel}>
+          <div className={s.autoNote}>
+            손글씨 오버레이: 대본에 CP(자막)가 정의돼 있지 않습니다. 대본생성 탭에서 이 컷의 CP를 채우면
+            여기서 위치·말풍선·타이밍 등 시각 상세를 형성할 수 있습니다.
+          </div>
+        </div>
+      )
+    }
+
     const open = !!overlayOpen[cut.no]
-    const scenes = scenesFor(cut.no)
+    const scenes = scenesFor(cut)
     const r = overlayResult[cut.no]
     return (
       <div className={s.subPanel}>
         <button className={s.collapseToggle} onClick={() => setOverlayOpen(p => ({ ...p, [cut.no]: !open }))}>
-          {open ? '▼' : '▶'} 손글씨 오버레이 (선택)
+          {open ? '▼' : '▶'} 손글씨 오버레이 (대본 CP 정의됨)
         </button>
         {open && (
           <>
             <div className={s.emptyHint}>
-              완성된 컷 영상 위에 손글씨 주석을 시간대별로 얹어 cut_{String(cut.no).padStart(2, '0')}_overlay.mp4로 저장합니다. 원본은 그대로 둡니다.
+              대본 CP: “{cut.subtitle}” — 완성 컷 영상 위에 손글씨로 얹어 cut_{String(cut.no).padStart(2, '0')}_overlay.mp4로 저장합니다(원본 보존).
             </div>
             {scenes.map((sc, i) => (
               <div key={i} className={s.overlayScene}>
@@ -649,44 +730,44 @@ export default function MakingTab() {
                   씬 {i + 1}
                   {scenes.length > 1 && (
                     <button className={s.linkBtn}
-                      onClick={() => setScenes(cut.no, arr => arr.filter((_, j) => j !== i))}>제거</button>
+                      onClick={() => setScenes(cut, arr => arr.filter((_, j) => j !== i))}>제거</button>
                   )}
                 </div>
                 <input className={s.urlInput} style={{ width: '100%' }} value={sc.text} placeholder="손글씨 텍스트 (줄바꿈 가능)"
-                  onChange={e => patchScene(cut.no, i, { text: e.target.value })} />
+                  onChange={e => patchScene(cut, i, { text: e.target.value })} />
                 <div className={s.styleRow}>
                   <label className={s.styleField}>위치
-                    <select value={sc.position} onChange={e => patchScene(cut.no, i, { position: e.target.value })}>
+                    <select value={sc.position} onChange={e => patchScene(cut, i, { position: e.target.value })}>
                       {OVERLAY_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
                   </label>
                   <label className={s.styleField}>말풍선
-                    <select value={sc.bubble} onChange={e => patchScene(cut.no, i, { bubble: e.target.value })}>
+                    <select value={sc.bubble} onChange={e => patchScene(cut, i, { bubble: e.target.value })}>
                       {OVERLAY_BUBBLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                   </label>
                   <label className={s.styleField}>색상
-                    <select value={sc.color} onChange={e => patchScene(cut.no, i, { color: e.target.value })}>
+                    <select value={sc.color} onChange={e => patchScene(cut, i, { color: e.target.value })}>
                       {OVERLAY_COLORS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                   </label>
                 </div>
                 <div className={s.styleRow}>
                   <label className={s.styleField}>데코 (쉼표 구분, 예: ✨,♡)
-                    <input value={sc.deco} onChange={e => patchScene(cut.no, i, { deco: e.target.value })} />
+                    <input value={sc.deco} onChange={e => patchScene(cut, i, { deco: e.target.value })} />
                   </label>
                   <label className={s.styleField}>시간 (예: 0s~3s)
-                    <input value={sc.time} onChange={e => patchScene(cut.no, i, { time: e.target.value })} />
+                    <input value={sc.time} onChange={e => patchScene(cut, i, { time: e.target.value })} />
                   </label>
                 </div>
                 <div className={s.radioRow}>
                   <label className={s.radioLabel}>
-                    <input type="checkbox" checked={sc.arrow} onChange={e => patchScene(cut.no, i, { arrow: e.target.checked })} />
+                    <input type="checkbox" checked={sc.arrow} onChange={e => patchScene(cut, i, { arrow: e.target.checked })} />
                     화살표
                   </label>
                   {sc.arrow && (
                     <label className={s.styleField}>방향
-                      <select value={sc.arrow_direction} onChange={e => patchScene(cut.no, i, { arrow_direction: e.target.value })}>
+                      <select value={sc.arrow_direction} onChange={e => patchScene(cut, i, { arrow_direction: e.target.value })}>
                         {OVERLAY_ARROW_DIRS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </label>
@@ -695,7 +776,7 @@ export default function MakingTab() {
               </div>
             ))}
             <div className={s.editorActions}>
-              <button className={s.previewBtn} onClick={() => setScenes(cut.no, arr => [...arr, newOverlayScene()])}>씬 추가 +</button>
+              <button className={s.previewBtn} onClick={() => setScenes(cut, arr => [...arr, newOverlayScene()])}>씬 추가 +</button>
               <button className={s.captureBtn} disabled={overlayBusy[cut.no]} onClick={() => runOverlay(cut)}>
                 {overlayBusy[cut.no] ? '⏳ 합성 중…' : '오버레이 적용'}
               </button>
@@ -1184,6 +1265,101 @@ export default function MakingTab() {
   const makingUrl = episode?.number
     ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making.mp4`
     : null
+  const makingBgmUrl = episode?.number
+    ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making_bgm.mp4`
+    : null
+
+  const renderBgmCard = () => (
+    <div className={s.card}>
+      <button className={s.collapseToggle} onClick={() => setBgmOpen(v => !v)}>
+        {bgmOpen ? '▼' : '▶'} BGM (배경음악) — TrendRadar 검색 · 메이킹 필름에 합성
+      </button>
+      {bgmOpen && (
+        <>
+          <div className={s.emptyHint}>
+            TrendRadar “BGM 레이더”와 같은 Chosic 검색입니다. 다운로드한 트랙을 골라 조립된 메이킹 필름
+            밑에 깔면 ep{episode?.number}_making_bgm.mp4가 만들어집니다(원본 보존). 덕킹 ON이면 대사·나레이션 구간에서 BGM이 자동으로 눌립니다.
+          </div>
+
+          <div className={s.urlRow}>
+            <select value={bgmMood} onChange={e => setBgmMood(e.target.value)} className={s.stageSelect}>
+              {BGM_MOODS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+            <input className={s.urlInput} value={bgmKeyword} placeholder="키워드 (쉼표 구분, 선택)"
+              onChange={e => setBgmKeyword(e.target.value)} onKeyDown={e => e.key === 'Enter' && searchBgm()} />
+            <button className={s.previewBtn} disabled={bgmSearching} onClick={searchBgm}>
+              {bgmSearching ? '⏳' : '검색'}
+            </button>
+          </div>
+
+          {bgmSearchResults.length > 0 && (
+            <div className={s.cutList}>
+              {bgmSearchResults.map((it, i) => (
+                <div key={i} className={s.overlayScene}>
+                  <div className={s.overlaySceneHead}>{it.title || `트랙 ${i + 1}`} · {it.artist || it.license || ''}</div>
+                  {(it.previewUrl || it.mp3) && <audio controls src={it.previewUrl || it.mp3} style={{ width: '100%' }} />}
+                  <button className={s.previewBtn}
+                    disabled={bgmDownloading[it.id ?? it.title]}
+                    onClick={() => downloadBgm(it)}>
+                    {bgmDownloading[it.id ?? it.title] ? '⏳ 다운로드 중…' : '⬇ 라이브러리에 추가'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className={s.settingLabel}>다운로드된 BGM ({bgmLibrary.length})</div>
+          {!bgmLibrary.length ? (
+            <div className={s.emptyHint}>아직 없습니다. 위에서 검색해 라이브러리에 추가하세요.</div>
+          ) : (
+            <div className={s.cutList}>
+              {bgmLibrary.map(t => (
+                <div key={t.id} className={`${s.overlayScene} ${bgmPick === t.file ? s.sourceCardActive : ''}`}
+                  onClick={() => setBgmPick(t.file)}>
+                  <div className={s.overlaySceneHead}>
+                    <input type="radio" readOnly checked={bgmPick === t.file} />
+                    {t.title} · {t.mood}
+                  </div>
+                  <audio controls src={`${YEORI_SERVER}/downloads/${t.file}`} style={{ width: '100%' }} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className={s.styleRow}>
+            <label className={s.styleField}>BGM 볼륨 ({bgmVolume.toFixed(2)})
+              <input type="range" min="0" max="0.6" step="0.02" value={bgmVolume}
+                onChange={e => setBgmVolume(parseFloat(e.target.value))} />
+            </label>
+            <label className={s.radioLabel}>
+              <input type="checkbox" checked={bgmDuck} onChange={e => setBgmDuck(e.target.checked)} />
+              대사 구간 자동 덕킹
+            </label>
+          </div>
+
+          <div className={s.editorActions}>
+            <button className={s.captureBtn} disabled={bgmBusy || !bgmPick || !makingUrl} onClick={applyBgm}>
+              {bgmBusy ? '⏳ 합성 중…' : 'BGM 적용'}
+            </button>
+            {!makingUrl && <span className={s.emptyHint}>먼저 전체 조립을 실행하세요.</span>}
+            {!bgmPick && makingUrl && <span className={s.emptyHint}>적용할 BGM을 선택하세요.</span>}
+          </div>
+
+          {bgmResult && (
+            bgmResult.error ? (
+              <div className={s.resultError}>❌ {bgmResult.error}</div>
+            ) : (
+              <div className={s.resultOk}>
+                ✅ 저장됨 — {bgmResult.outputPath} ({bgmResult.sizeKB}KB)
+                <br />
+                {makingBgmUrl && <video className={s.makingVideo} src={`${makingBgmUrl}?t=${Date.now()}`} controls />}
+              </div>
+            )
+          )}
+        </>
+      )}
+    </div>
+  )
 
   return (
     <div className={s.page}>
@@ -1294,6 +1470,8 @@ export default function MakingTab() {
                   )
                 )}
               </div>
+
+              {renderBgmCard()}
 
               <div className={s.card}>
                 <button className={s.collapseToggle} onClick={() => setLegacySourceOpen(v => !v)}>

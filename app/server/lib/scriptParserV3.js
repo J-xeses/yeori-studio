@@ -5,7 +5,7 @@
 const MASTER_CLOSEUP_SHOTS = new Set(['SH_ECU', 'SH_CU', 'SH_MCU'])
 const V3_SEP_LINE_RE = /^━{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -134,6 +134,10 @@ export function parseCutsV3(raw) {
     const firstSh = shCode.split(/[→>]/)[0].trim()
     const dl = fields.DL && fields.DL !== '없음' ? fields.DL : ''
     const nr = fields.NR && fields.NR !== '없음' ? fields.NR : ''
+    // CP(자막): 컷 대본 단계에서 정의하는 손글씨 오버레이 텍스트(순수 텍스트).
+    // "없음"/"(작성 필요)" 플레이스홀더는 빈 값으로. 메이킹 탭이 이 값이 있는 컷에만
+    // 손글씨 오버레이 섹션을 노출하고, 위치/말풍선/타이밍 등 시각 상세를 형성한다.
+    const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip)
 
     return {
@@ -145,6 +149,7 @@ export function parseCutsV3(raw) {
       action: kr.AC || '',
       character: '서여리',
       dialogue: dl,
+      subtitle: cp,
       narration: nr,
       imagePrompt: ip,
       videoPrompt: vp,

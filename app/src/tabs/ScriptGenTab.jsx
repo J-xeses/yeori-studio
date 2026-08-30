@@ -101,7 +101,7 @@ function parseCuts(raw, n) {
         id: `cut-${block.trim()}`,
         no: parseInt(block.trim()),
         scene: '', action: '', character: '서여리',
-        dialogue: '', narration: '', imagePrompt: '', duration: 5
+        dialogue: '', narration: '', subtitle: '', imagePrompt: '', duration: 5
       }
     } else if (cur) {
       // 멀티라인 파싱 (다음 필드 키워드가 나올 때까지 수집)
@@ -111,7 +111,7 @@ function parseCuts(raw, n) {
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
         // 다음 필드 키워드 전까지 (샷 타입, 컷 길이, 컷 타입, PIP_TARGET, 그래픽 도구 포함)
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|샷\s*타입|이미지 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/)
+        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|자막|샷\s*타입|이미지 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -121,6 +121,7 @@ function parseCuts(raw, n) {
       cur.character  = getField(/캐릭터[:：]\s*/) || '서여리'
       cur.dialogue   = stripShotDirective(getField(/대사[:：]\s*/))
       cur.narration  = stripShotDirective(getField(/나레이션[:：](?:\s*\(VO\))?\s*/) || getField(/나레이션[:：]\s*/))
+      cur.subtitle   = getField(/자막[:：]\s*/) || getField(/CP[:：]\s*/)
       const rawShot = (getField(/샷 타입[:：]\s*/) || '').trim().toUpperCase()
       cur.shotType = rawShot.includes('CLOSE') ? 'CLOSEUP' : 'FULLBODY'
       // cutType: "컷 타입:" 필드 우선, 없으면 "샷 타입:" 값이 파이프라인 타입인지 체크
@@ -151,7 +152,7 @@ function parseCuts(raw, n) {
   if (cuts.length === 0) {
     return Array.from({ length: n }, (_, i) => ({
       id: `cut-${i+1}`, no: i+1, scene: '', action: '', character: '서여리',
-      dialogue: '', narration: '', imagePrompt: '', duration: 5,
+      dialogue: '', narration: '', subtitle: '', imagePrompt: '', duration: 5,
     }))
   }
   return cuts
@@ -171,6 +172,7 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
       character: '서여리',
       dialogue: pc.dl || '',
       narration: pc.nr || '',
+      subtitle: pc.cp || pc.subtitle || '',
       imagePrompt: pc.imagePrompt || '',
       videoPrompt: pc.videoPrompt || '',
       duration: pc.du || 8,
@@ -197,7 +199,7 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
 // 전환하는 방식이라 구분선 스타일이 조금 달라져도 안전하게 파싱된다.
 const V3_SEP_LINE_RE = /^━{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -325,6 +327,9 @@ function parseCutsV3(raw) {
     const firstSh = shCode.split(/[→>]/)[0].trim()
     const dl = fields.DL && fields.DL !== '없음' ? fields.DL : ''
     const nr = fields.NR && fields.NR !== '없음' ? fields.NR : ''
+    // CP(자막): 컷 대본 단계에서 정의하는 손글씨 오버레이 텍스트(순수 텍스트).
+    // server/lib/scriptParserV3.js와 동일 규칙 — 반드시 함께 유지.
+    const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip)
 
     return {
@@ -337,6 +342,7 @@ function parseCutsV3(raw) {
       character: '서여리',
       dialogue: dl,
       narration: nr,
+      subtitle: cp,
       imagePrompt: ip,
       videoPrompt: vp,
       duration: parseInt(fields.DU, 10) || 8,
@@ -389,6 +395,7 @@ function buildV3ScriptText(cuts, episode) {
       `CH: ${mc.ch || ''}`,
       `DL: ${c.dialogue || '없음'}`,
       `NR: ${c.narration || '없음'}`,
+      `CP: ${c.subtitle || '없음'}`,
       `SH: ${mc.sh || ''}`,
       `CA: ${mc.ca || ''}`,
       `MD: ${mc.md || ''}`,
@@ -412,6 +419,7 @@ function buildV3ScriptText(cuts, episode) {
       `MD(감정):     ${kr.md || ''}`,
       `DL(대사):     ${c.dialogue || ''}`,
       `NR(나레이션): ${c.narration || ''}`,
+      `CP(자막):     ${c.subtitle || ''}`,
       '',
       sep,
       'IP (이미지 프롬프트)',
@@ -866,7 +874,7 @@ ${YEORI_RULESET}
     setRevisionLoading(true)
 
     const currentScript = cuts.map(c =>
-      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n캐릭터: 서여리\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n샷 타입: ${c.shotType || 'FULLBODY'}\n이미지 프롬프트: ${c.imagePrompt || ''}\n컷 길이: ${c.duration || 5}`
+      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n캐릭터: 서여리\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n자막: ${c.subtitle || '없음'}\n샷 타입: ${c.shotType || 'FULLBODY'}\n이미지 프롬프트: ${c.imagePrompt || ''}\n컷 길이: ${c.duration || 5}`
     ).join('\n\n')
 
     const prompt = `당신은 한국 유튜브 숏폼 대본 편집 전문가입니다.
@@ -989,6 +997,7 @@ ${currentScript}
           character:   revised.character   || original.character,
           dialogue:    revised.dialogue    !== '' ? revised.dialogue : original.dialogue,
           narration:   revised.narration   || original.narration,
+          subtitle:    revised.subtitle    !== undefined ? revised.subtitle : (original.subtitle || ''),
           shotType:    revised.shotType    || original.shotType,
           cutType:     revised.cutType     || original.cutType || 'YEORI',
           pipTarget:   revised.pipTarget   !== undefined ? revised.pipTarget : (original.pipTarget || ''),
@@ -1553,6 +1562,11 @@ ${currentScript}
                       <label>NR (나레이션)</label>
                       <textarea rows={2} placeholder="없음" value={cut?.narration || ''} onChange={e => updateCut(cut.id, 'narration', e.target.value)} />
                     </div>
+                    <div className={s.v3MiniField}>
+                      <label>CP (자막·손글씨 오버레이)</label>
+                      <textarea rows={2} placeholder="없음 — 이 컷에 손글씨 자막을 얹을 텍스트(순수 텍스트). 메이킹 탭에서 위치·말풍선·타이밍을 형성."
+                        value={cut?.subtitle || ''} onChange={e => updateCut(cut.id, 'subtitle', e.target.value)} />
+                    </div>
 
                     <div className={s.v3Divider} />
 
@@ -1699,7 +1713,11 @@ ${currentScript}
                       <b>NR(나레이션)</b>
                       <span className={s.v3KrMirror}>{cut?.narration || '없음'}</span>
                     </div>
-                    <div className={s.v3CardHint}>※ DL/NR은 좌측 "씬 설명"의 DL/NR과 자동으로 같은 값을 사용해요.</div>
+                    <div className={s.v3KrRow}>
+                      <b>CP(자막)</b>
+                      <span className={s.v3KrMirror}>{cut?.subtitle || '없음'}</span>
+                    </div>
+                    <div className={s.v3CardHint}>※ DL/NR/CP는 좌측 "씬 설명"과 자동으로 같은 값을 사용해요.</div>
                   </div>
 
                 </div>

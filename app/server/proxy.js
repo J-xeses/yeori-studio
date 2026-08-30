@@ -3422,6 +3422,79 @@ app.post('/api/bgm-download', async (req, res) => {
   }
 })
 
+// ── GET /api/bgm-library — 다운로드된 BGM 목록(downloads/bgm/index.json) ──
+// TrendRadar "BGM 레이더"로 검색·다운로드한 트랙을 메이킹 탭 BGM 패널이 고를 수 있게 노출.
+app.get('/api/bgm-library', (_req, res) => {
+  const indexPath = path.join(MEDIA_ROOT, 'downloads', 'bgm', 'index.json')
+  try {
+    if (!fs.existsSync(indexPath)) return res.json({ tracks: [] })
+    const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'))
+    const tracks = (Array.isArray(index) ? index : [])
+      .filter(t => t.file && fs.existsSync(path.join(MEDIA_ROOT, 'downloads', t.file)))
+    res.json({ tracks })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──
+// body: { epNum, bgmFile('bgm/<mood>/<name>.mp3'), volume?=0.22, fadeOut?=2, duck?=true }
+// duck=true면 sidechaincompress로 컷 자체 오디오(대사/나레이션)가 있을 때 BGM을 자동으로
+// 눌러준다("컷별 볼륨 연출"의 1차 자동 버전). 결과: ep{N}_making_bgm.mp4 (원본 보존).
+app.post('/api/making-bgm', async (req, res) => {
+  const { epNum, bgmFile, volume = 0.22, fadeOut = 2, duck = true } = req.body || {}
+  if (epNum == null || !bgmFile) return res.status(400).json({ error: 'epNum, bgmFile 필요' })
+
+  const safeRel = String(bgmFile).replace(/\\/g, '/').replace(/\.\.+/g, '')
+  const bgmPath = path.join(MEDIA_ROOT, 'downloads', safeRel.startsWith('bgm/') ? safeRel : `bgm/${safeRel}`)
+  const makingDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
+  const inputPath  = path.join(makingDir, `ep${epNum}_making.mp4`)
+  const outputPath = path.join(makingDir, `ep${epNum}_making_bgm.mp4`)
+
+  if (!fs.existsSync(inputPath)) return res.status(404).json({ error: '메이킹 필름 없음 — 먼저 전체 조립을 실행하세요', path: inputPath })
+  if (!fs.existsSync(bgmPath)) return res.status(404).json({ error: 'BGM 파일 없음', path: bgmPath })
+
+  const vol = Math.max(0, Math.min(1, Number(volume) || 0.22))
+  try {
+    const dur = await getMediaDuration(inputPath)
+    const fadeStart = Math.max(0, (dur || 0) - (Number(fadeOut) || 0))
+    const bgChain = [
+      `[1:a]volume=${vol}`,
+      Number(fadeOut) > 0 ? `afade=t=out:st=${fadeStart.toFixed(2)}:d=${Number(fadeOut)}` : null,
+      'aformat=sample_rates=44100:channel_layouts=stereo[bg]',
+    ].filter(Boolean).join(',')
+
+    const filter = duck
+      ? `${bgChain};[0:a]aformat=sample_rates=44100:channel_layouts=stereo,asplit=2[v0][sc];` +
+        `[bg][sc]sidechaincompress=threshold=0.02:ratio=8:attack=5:release=350[bgd];` +
+        `[v0][bgd]amix=inputs=2:duration=first:dropout_transition=0[a]`
+      : `${bgChain};[0:a]aformat=sample_rates=44100:channel_layouts=stereo[v0];` +
+        `[v0][bg]amix=inputs=2:duration=first:dropout_transition=0[a]`
+
+    const code = await new Promise((resolve) => {
+      let errBuf = ''
+      const proc = spawn('ffmpeg', [
+        '-y', '-i', inputPath, '-stream_loop', '-1', '-i', bgmPath,
+        '-filter_complex', filter,
+        '-map', '0:v', '-map', '[a]',
+        '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
+        '-t', `${(dur || 0).toFixed(3)}`,
+        outputPath,
+      ])
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', c => { if (c !== 0) console.error('[making-bgm]', errBuf.slice(-500)); resolve(c) })
+      proc.on('error', () => resolve(1))
+    })
+    if (code !== 0 || !fs.existsSync(outputPath)) {
+      return res.status(500).json({ error: 'BGM 합성 실패 (ffmpeg)' })
+    }
+    const stat = fs.statSync(outputPath)
+    res.json({ success: true, outputPath, sizeKB: Math.round(stat.size / 1024), duration: dur })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── /api/mcp/* — 원격 MCP 브리지 전용 (Cloudflare Tunnel 경유, Bearer 토큰 필요) ──
 // Vercel(api/mcp.js)의 Streamable HTTP MCP 서버가 이 라우터를 호출한다.
 // 로컬 프론트엔드(VideoTab 등)가 쓰는 /api/* 원본 엔드포인트는 그대로 무인증 유지.
