@@ -277,3 +277,33 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - "shell:false 커밋 push 필요" → 이미 완료 (9ed4169)
 - "shell:false 수정 커밋 push 누락" → 수정됨
 
+
+
+---
+### 2026-08-30 (MCP 자동 기록)
+### 2026-08-30 (고도화-14 MakingTab 완성)
+
+**MakingTab 유형별 제작 기능 완성 (성준님 직접 구현, 478f697 / a90a9b3, push 완료):**
+
+| 항목 | 내용 |
+|------|------|
+| fillTemplate 서버 통일 | 문구 선택 순서: subtitle → videoPrompt 따옴표 → imagePrompt [캡션] → dialogue → narration → scene. white-space:pre-line, word-break:keep-all, 80px, sub-text 제거 |
+| 유형별 기본 제작 스타일 등록 | localStorage making_type_styles_v1. 기본 제작 방식(CAPCUT: HTML캡처/CapCut녹화, BROLL: Pexels/녹화), 기본 HTML 파일 지정, 자동 템플릿 시각 스타일(배경색·글자색·크기·굵기·정렬) + 라이브 미리보기 |
+| renderHtmlCapturePanel 통합 | GRAPHIC/CAPCUT(html) 패널 단일화. [제작 실행]은 항상 /api/graphic-capture로 단일화 |
+| CAPCUT 기본 HTML 등록 | RL02_DM_mockup_v3.html 등록 → 새로고침 후에도 유지. CUT 2 제작 실행 → DM 목업 isolate 캡처 성공 ✅ |
+
+**검증 완료:**
+- CUT 1 GRAPHIC 자동 템플릿 제작 실행 ✅
+- CUT 2 CAPCUT + RL02_DM_mockup_v3.html 커스텀 HTML 제작 실행 ✅ (DM 목업 isolate 캡처)
+- npm run build 통과 ✅
+
+**큐 미처리 작업 (성준님 직접 해결로 불필요):**
+- task_1788063011854 (file-info/extract-frame) — 취소
+- task_1788064486191 (HTML 드롭다운 연동) — 성준님 방식으로 대체
+- task_1788065164779 (instaNum 폴백) — 성준님 방식으로 대체
+
+**다음 작업:**
+- CUT 3, 5 CAPCUT 제작 검증
+- BROLL CUT 4 (YEORI 타입) 확인
+- 메이킹 필름 전체 조립 실행 검증
+
