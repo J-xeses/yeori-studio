@@ -103,11 +103,20 @@ function fillTemplate(cut, style) {
 }
 
 // ── 유형별 기본 제작 스타일 (브라우저 localStorage) ─────────────────────
+// 손글씨 오버레이는 "이 컷에 자막을 얹는다"를 대본 CP(cut.subtitle)로 정의하고,
+// 그 효과의 시각 스타일(위치/말풍선/색상/데코/화살표/표시 구간)은 유형별로 여기서 한 번만
+// 정의한다. 컷마다 따로 편집하지 않는다 — CP 있는 컷은 제작 실행 시 이 스타일로 자동 적용.
+const DEFAULT_OVERLAY = {
+  enabled: false,
+  position: 'top_center', bubble: 'cloud', color: 'white',
+  deco: '', arrow: false, arrow_direction: 'down',
+  timing: 'full', // 'full' | 'first2' | 'first3' | 'first5'
+}
 const TYPE_STYLE_KEY = 'making_type_styles_v1'
 const DEFAULT_TYPE_STYLES = {
-  GRAPHIC: { mode: 'auto',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE } },
-  CAPCUT:  { mode: 'html',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE } },
-  BROLL:   { mode: 'pexels', htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE } },
+  GRAPHIC: { mode: 'auto',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
+  CAPCUT:  { mode: 'html',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
+  BROLL:   { mode: 'pexels', htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
 }
 
 function loadTypeStyles() {
@@ -118,12 +127,22 @@ function loadTypeStyles() {
       out[t] = {
         ...DEFAULT_TYPE_STYLES[t], ...(raw[t] || {}),
         style: { ...DEFAULT_TYPE_STYLES[t].style, ...((raw[t] || {}).style || {}) },
+        overlay: { ...DEFAULT_TYPE_STYLES[t].overlay, ...((raw[t] || {}).overlay || {}) },
       }
     }
     return out
   } catch {
     return JSON.parse(JSON.stringify(DEFAULT_TYPE_STYLES))
   }
+}
+
+const OVERLAY_TIMINGS = [['full', '전체'], ['first2', '앞 2초'], ['first3', '앞 3초'], ['first5', '앞 5초']]
+function overlayTimeRange(timing, duration) {
+  const d = duration || 5
+  if (timing === 'first2') return '0s~2s'
+  if (timing === 'first3') return '0s~3s'
+  if (timing === 'first5') return `0s~${Math.min(5, d)}s`
+  return `0s~${d}s`
 }
 
 // 이 탭에서 컷별 [제작 실행] 버튼이 붙는 타입. 그 외(YEORI/PIP 등)는 G2~G5 파이프라인이
@@ -266,6 +285,7 @@ export default function MakingTab() {
   // /api/make-graphic-cut(별도)로 남는다.
   const captureGraphic = async () => {
     if (selectedCutNo == null || !episode.number) return
+    const cut = allCuts.find(c => c.no === selectedCutNo)
     setCapturing(true)
     setCaptureResult(null)
     try {
@@ -277,6 +297,10 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
       setCaptureResult(data)
+      // 대본 CP가 있고 유형별 손글씨 오버레이가 켜져 있으면 이어서 자동 합성.
+      if (cut && cut.subtitle && typeStyles[cut.cutType]?.overlay?.enabled) {
+        await runOverlay(cut)
+      }
     } catch (e) {
       setCaptureResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -640,50 +664,39 @@ export default function MakingTab() {
     }
   }
 
-  // ── 손글씨 오버레이 (GRAPHIC/CAPCUT 컷 제작 후 선택적으로 적용) ────────────
-  // 컷 영상(cut_NN.mp4) 위에 손글씨 주석을 시간대별로 합성 → cut_NN_overlay.mp4.
-  // 무조건 적용이 아니라, 영상이 이미 있는 컷에서 필요할 때만 여는 접이식 섹션.
+  // ── 손글씨 오버레이 ─────────────────────────────────────────────────
+  // "이 컷에 자막을 얹는다"는 대본 CP(cut.subtitle)로 정의됨. 효과의 시각 스타일은
+  // 유형별 기본 제작 스타일 카드에서 한 번만 설정. 컷 카드에는 편집 UI를 두지 않고,
+  // CP 있는 컷의 제작 실행 시 그 스타일로 자동 합성한다(+ 재적용 버튼만 노출).
   const OVERLAY_POSITIONS = ['top_center', 'top_left', 'top_right', 'center', 'bottom_center', 'bottom_left', 'bottom_right']
   const OVERLAY_BUBBLES = [['none', '없음'], ['cloud', '구름'], ['oval', '타원'], ['arrow_box', '화살표박스']]
   const OVERLAY_COLORS = [['white', '흰색'], ['pink', '핑크'], ['lavender', '라벤더']]
   const OVERLAY_ARROW_DIRS = ['right', 'left', 'up', 'down']
-  const newOverlayScene = (text = '') => ({
-    text, position: 'top_center', bubble: 'cloud', color: 'white',
-    deco: '', arrow: false, arrow_direction: 'down', time: '0s~3s',
-  })
 
-  const [overlayOpen, setOverlayOpen] = useState({})     // { [cutNo]: bool }
-  const [overlayScenes, setOverlayScenes] = useState({}) // { [cutNo]: Scene[] }
   const [overlayBusy, setOverlayBusy] = useState({})     // { [cutNo]: bool }
   const [overlayResult, setOverlayResult] = useState({}) // { [cutNo]: data | { error } }
 
-  // 첫 씬 텍스트는 대본 CP(cut.subtitle)에서 시드 — 메이킹에서는 위치/말풍선/타이밍
-  // 등 시각 상세만 형성한다(대본 단계에서 "이 컷에 자막을 얹는다"가 정의됨).
-  const scenesFor = (cut) => overlayScenes[cut.no] || [newOverlayScene(cut.subtitle || '')]
-  const setScenes = (cut, fn) =>
-    setOverlayScenes(p => ({ ...p, [cut.no]: fn(p[cut.no] || [newOverlayScene(cut.subtitle || '')]) }))
-  const patchScene = (cut, idx, patch) =>
-    setScenes(cut, arr => arr.map((sc, i) => i === idx ? { ...sc, ...patch } : sc))
-
+  // 대본 CP + 유형별 오버레이 스타일 → 씬 1개를 조립해 /api/handwriting-overlay 호출.
   const runOverlay = async (cut) => {
-    if (!episode.number) return
-    const scenes = scenesFor(cut).map(sc => ({
-      text: sc.text,
-      position: sc.position,
-      bubble: sc.bubble,
-      color: sc.color,
-      deco: String(sc.deco || '').split(',').map(s => s.trim()).filter(Boolean),
-      arrow: !!sc.arrow,
-      arrow_direction: sc.arrow_direction,
-      time: sc.time,
-    }))
+    const ov = typeStyles[cut.cutType]?.overlay
+    if (!cut.subtitle || !ov?.enabled || !episode.number) return
+    const scene = {
+      text: cut.subtitle,
+      position: ov.position,
+      bubble: ov.bubble,
+      color: ov.color,
+      deco: String(ov.deco || '').split(',').map(s => s.trim()).filter(Boolean),
+      arrow: !!ov.arrow,
+      arrow_direction: ov.arrow_direction,
+      time: overlayTimeRange(ov.timing, cut.duration),
+    }
     setOverlayBusy(p => ({ ...p, [cut.no]: true }))
     setOverlayResult(p => ({ ...p, [cut.no]: null }))
     try {
       const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, scenes }),
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, scenes: [scene] }),
       })
       const data = await res.json()
       if (!res.ok) { setOverlayResult(p => ({ ...p, [cut.no]: { error: data.error || '오버레이 실패' } })); return }
@@ -695,90 +708,27 @@ export default function MakingTab() {
     }
   }
 
-  const renderOverlaySection = (cut) => {
-    if (!videoStatus[cut.no]) return null
-
-    // 손글씨 오버레이는 컷 대본 단계에서 CP(자막)로 "이 컷에 자막을 얹는다"가 정의된
-    // 컷에만 형성한다. CP가 없으면 안내만 하고 편집 컨트롤은 노출하지 않는다.
-    if (!cut.subtitle) {
-      return (
-        <div className={s.subPanel}>
-          <div className={s.autoNote}>
-            손글씨 오버레이: 대본에 CP(자막)가 정의돼 있지 않습니다. 대본생성 탭에서 이 컷의 CP를 채우면
-            여기서 위치·말풍선·타이밍 등 시각 상세를 형성할 수 있습니다.
-          </div>
-        </div>
-      )
-    }
-
-    const open = !!overlayOpen[cut.no]
-    const scenes = scenesFor(cut)
+  // 컷 카드 하단 — CP 있는 GRAPHIC/CAPCUT 컷의 오버레이 상태/재적용만.
+  const renderOverlayStatus = (cut) => {
+    if (!cut.subtitle) return null
+    const ov = typeStyles[cut.cutType]?.overlay
     const r = overlayResult[cut.no]
     return (
       <div className={s.subPanel}>
-        <button className={s.collapseToggle} onClick={() => setOverlayOpen(p => ({ ...p, [cut.no]: !open }))}>
-          {open ? '▼' : '▶'} 손글씨 오버레이 (대본 CP 정의됨)
-        </button>
-        {open && (
+        {!ov?.enabled ? (
+          <div className={s.autoNote}>
+            손글씨 오버레이: 대본 CP “{cut.subtitle}” 감지됨. “유형별 기본 제작 스타일 → {cut.cutType} → 손글씨 오버레이”를 켜면
+            제작 실행 시 그 스타일로 자동 합성됩니다.
+          </div>
+        ) : (
           <>
             <div className={s.emptyHint}>
-              대본 CP: “{cut.subtitle}” — 완성 컷 영상 위에 손글씨로 얹어 cut_{String(cut.no).padStart(2, '0')}_overlay.mp4로 저장합니다(원본 보존).
+              손글씨 오버레이 ON — CP “{cut.subtitle}” + {cut.cutType} 스타일({ov.bubble}/{ov.position}/{OVERLAY_TIMINGS.find(([v]) => v === ov.timing)?.[1]}).
+              제작 실행 시 자동 적용되며, 스타일을 바꿨으면 아래로 재적용하세요.
             </div>
-            {scenes.map((sc, i) => (
-              <div key={i} className={s.overlayScene}>
-                <div className={s.overlaySceneHead}>
-                  씬 {i + 1}
-                  {scenes.length > 1 && (
-                    <button className={s.linkBtn}
-                      onClick={() => setScenes(cut, arr => arr.filter((_, j) => j !== i))}>제거</button>
-                  )}
-                </div>
-                <input className={s.urlInput} style={{ width: '100%' }} value={sc.text} placeholder="손글씨 텍스트 (줄바꿈 가능)"
-                  onChange={e => patchScene(cut, i, { text: e.target.value })} />
-                <div className={s.styleRow}>
-                  <label className={s.styleField}>위치
-                    <select value={sc.position} onChange={e => patchScene(cut, i, { position: e.target.value })}>
-                      {OVERLAY_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
-                    </select>
-                  </label>
-                  <label className={s.styleField}>말풍선
-                    <select value={sc.bubble} onChange={e => patchScene(cut, i, { bubble: e.target.value })}>
-                      {OVERLAY_BUBBLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                  </label>
-                  <label className={s.styleField}>색상
-                    <select value={sc.color} onChange={e => patchScene(cut, i, { color: e.target.value })}>
-                      {OVERLAY_COLORS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
-                  </label>
-                </div>
-                <div className={s.styleRow}>
-                  <label className={s.styleField}>데코 (쉼표 구분, 예: ✨,♡)
-                    <input value={sc.deco} onChange={e => patchScene(cut, i, { deco: e.target.value })} />
-                  </label>
-                  <label className={s.styleField}>시간 (예: 0s~3s)
-                    <input value={sc.time} onChange={e => patchScene(cut, i, { time: e.target.value })} />
-                  </label>
-                </div>
-                <div className={s.radioRow}>
-                  <label className={s.radioLabel}>
-                    <input type="checkbox" checked={sc.arrow} onChange={e => patchScene(cut, i, { arrow: e.target.checked })} />
-                    화살표
-                  </label>
-                  {sc.arrow && (
-                    <label className={s.styleField}>방향
-                      <select value={sc.arrow_direction} onChange={e => patchScene(cut, i, { arrow_direction: e.target.value })}>
-                        {OVERLAY_ARROW_DIRS.map(d => <option key={d} value={d}>{d}</option>)}
-                      </select>
-                    </label>
-                  )}
-                </div>
-              </div>
-            ))}
             <div className={s.editorActions}>
-              <button className={s.previewBtn} onClick={() => setScenes(cut, arr => [...arr, newOverlayScene()])}>씬 추가 +</button>
-              <button className={s.captureBtn} disabled={overlayBusy[cut.no]} onClick={() => runOverlay(cut)}>
-                {overlayBusy[cut.no] ? '⏳ 합성 중…' : '오버레이 적용'}
+              <button className={s.previewBtn} disabled={overlayBusy[cut.no] || !videoStatus[cut.no]} onClick={() => runOverlay(cut)}>
+                {overlayBusy[cut.no] ? '⏳ 합성 중…' : '오버레이 재적용'}
               </button>
             </div>
             {r && (
@@ -786,10 +736,10 @@ export default function MakingTab() {
                 <div className={s.resultError}>❌ {r.error}</div>
               ) : (
                 <div className={s.resultOk}>
-                  ✅ 저장됨 — {r.outputPath} ({r.sizeKB}KB)
+                  ✅ 오버레이 적용됨 — {r.outputPath?.split(/[/\\]/).pop()} ({r.sizeKB}KB)
                   <br />
                   <video className={s.makingVideo}
-                    src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/${r.outputPath.split(/[/\\]/).pop()}`}
+                    src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/${r.outputPath?.split(/[/\\]/).pop()}?t=${Date.now()}`}
                     controls />
                 </div>
               )
@@ -1164,16 +1114,16 @@ export default function MakingTab() {
     return (
       <>
         {panel}
-        {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlaySection(cut)}
+        {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
       </>
     )
   }
 
   // ── 유형별 기본 제작 스타일 카드 ────────────────────────────────────────
   const STYLE_TYPES = [
-    { key: 'GRAPHIC', modes: null, hasTemplate: true },
-    { key: 'CAPCUT', modes: [['html', 'HTML 캡처'], ['record', 'CapCut 녹화']], hasTemplate: true },
-    { key: 'BROLL', modes: [['pexels', 'Pexels 검색'], ['record', '화면 녹화']], hasTemplate: false },
+    { key: 'GRAPHIC', modes: null, hasTemplate: true, hasOverlay: true },
+    { key: 'CAPCUT', modes: [['html', 'HTML 캡처'], ['record', 'CapCut 녹화']], hasTemplate: true, hasOverlay: true },
+    { key: 'BROLL', modes: [['pexels', 'Pexels 검색'], ['record', '화면 녹화']], hasTemplate: false, hasOverlay: false },
   ]
 
   const renderTypeStyleCard = () => (
@@ -1190,7 +1140,9 @@ export default function MakingTab() {
             {STYLE_TYPES.map(t => {
               const cfg = typeStyles[t.key]
               const st = cfg.style
+              const ov = cfg.overlay
               const setStyle = patch => updateTypeStyle(t.key, { style: patch })
+              const setOv = patch => updateTypeStyle(t.key, { overlay: patch })
               return (
                 <div key={t.key} className={s.styleCol}>
                   <span className={`${s.typeBadge} ${s['type' + t.key] || ''}`}>{t.key}</span>
@@ -1248,6 +1200,62 @@ export default function MakingTab() {
                         onClick={() => updateTypeStyle(t.key, { style: { ...DEFAULT_GRAPHIC_STYLE } })}>
                         스타일 기본값으로
                       </button>
+                    </>
+                  )}
+
+                  {t.hasOverlay && (
+                    <>
+                      <div className={s.settingLabel} style={{ marginTop: 6, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+                        손글씨 오버레이
+                      </div>
+                      <label className={s.radioLabel}>
+                        <input type="checkbox" checked={ov.enabled} onChange={e => setOv({ enabled: e.target.checked })} />
+                        사용 (대본 CP 있는 컷에 제작 실행 시 자동)
+                      </label>
+                      {ov.enabled && (
+                        <>
+                          <div className={s.styleRow}>
+                            <label className={s.styleField}>위치
+                              <select value={ov.position} onChange={e => setOv({ position: e.target.value })}>
+                                {OVERLAY_POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+                              </select>
+                            </label>
+                            <label className={s.styleField}>말풍선
+                              <select value={ov.bubble} onChange={e => setOv({ bubble: e.target.value })}>
+                                {OVERLAY_BUBBLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                              </select>
+                            </label>
+                          </div>
+                          <div className={s.styleRow}>
+                            <label className={s.styleField}>색상
+                              <select value={ov.color} onChange={e => setOv({ color: e.target.value })}>
+                                {OVERLAY_COLORS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                              </select>
+                            </label>
+                            <label className={s.styleField}>표시 구간
+                              <select value={ov.timing} onChange={e => setOv({ timing: e.target.value })}>
+                                {OVERLAY_TIMINGS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                              </select>
+                            </label>
+                          </div>
+                          <label className={s.styleField}>데코 (쉼표 구분, 예: ✨,♡)
+                            <input value={ov.deco} onChange={e => setOv({ deco: e.target.value })} />
+                          </label>
+                          <div className={s.radioRow}>
+                            <label className={s.radioLabel}>
+                              <input type="checkbox" checked={ov.arrow} onChange={e => setOv({ arrow: e.target.checked })} />
+                              화살표
+                            </label>
+                            {ov.arrow && (
+                              <label className={s.styleField}>방향
+                                <select value={ov.arrow_direction} onChange={e => setOv({ arrow_direction: e.target.value })}>
+                                  {OVERLAY_ARROW_DIRS.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                              </label>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </div>

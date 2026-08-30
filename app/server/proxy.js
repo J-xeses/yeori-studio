@@ -1808,7 +1808,9 @@ async function assembleMakingFilm(epNum) {
   const files = []
   for (const c of cuts) {
     const padded = String(c.no).padStart(2, '0')
-    const p = path.join(videoDir, `cut_${padded}.mp4`)
+    // 손글씨 오버레이가 적용된 컷은 cut_NN_overlay.mp4를 우선 사용(원본 cut_NN.mp4는 보존).
+    const overlayP = path.join(videoDir, `cut_${padded}_overlay.mp4`)
+    const p = fs.existsSync(overlayP) ? overlayP : path.join(videoDir, `cut_${padded}.mp4`)
     if (fs.existsSync(p)) {
       files.push(p)
       includedCuts.push(c.no)
