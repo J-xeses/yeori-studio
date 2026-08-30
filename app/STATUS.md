@@ -237,3 +237,43 @@ pipeline-leader.js — MCP G1→G5 체이닝
 ---
 ### 2026-08-27 (MCP 자동 기록)
 proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md, restart_proxy, vercel_redeploy(유비 디렉터 대상), read_file(downloads/·app/ 하위 제한). 전부 실제 호출로 검증 완료.
+
+
+---
+### 2026-08-30 (MCP 자동 기록)
+### 2026-08-30 (고도화-13 완료 기록)
+
+**Worker 버그 수정 및 MakingTab 재구성:**
+
+| 항목 | 커밋 |
+|------|------|
+| MakingTab.jsx 컷 목록 중심 UI 재구성 — 타입별(GRAPHIC/BROLL/CAPCUT/YEORI) 제작 버튼 + proxy.js `/api/download-broll-cut` 추가 | d87e72a |
+| task-queue-worker.js stdin 방식으로 수정 (shell:true + argv → stdin pipe) — Windows 공백 파싱 버그 수정 | 1d08e74 |
+| task-queue-worker.js shell:false로 변경 — DEP0190 경고 제거 | 011e198 (push 필요) |
+
+**Worker 정상 작동 확인**: worker-test.txt 생성 성공 (2026-08-29 07:20)
+
+**미완료:**
+- shell:false 커밋 git push 누락 → push 필요
+- MakingTab 브라우저 실제 동작 검증 미완료
+- GRAPHIC/BROLL 타입 실제 제작 검증 미완료
+- /api/file-info + /api/extract-frame 엔드포인트 추가 필요 (Claude AI가 직접 영상 내용 확인용)
+
+
+
+---
+### 2026-08-30 (MCP 자동 기록)
+### 2026-08-30 (Worker 버그 추가 수정)
+
+**Worker ENOENT 버그 수정 (9ed4169, push 완료):**
+- shell:false + claude.cmd 조합 → ENOENT 확정 (CVE-2024-27980 이후 Windows 제약)
+- resolveClaudeExe() 추가: (a) TASK_QUEUE_CLAUDE_PATH 환경변수 → (b) claude.exe 직접 경로 → (c) 폴백 shell:true
+- @임시파일 방식 실측 검증 완료 (claude.exe + shell:false + -p @tmpfile → 정상 동작 확인)
+- Worker 실제 e2e 테스트 통과 (close code:0, parsed result 정상)
+
+**현재 Worker 상태: 정상 작동 확인 ✅**
+
+**STATUS.md 정정:**
+- "shell:false 커밋 push 필요" → 이미 완료 (9ed4169)
+- "shell:false 수정 커밋 push 누락" → 수정됨
+
