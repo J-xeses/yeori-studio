@@ -5009,7 +5009,7 @@ app.get('/api/studio-status-public', (req, res) => {
 // POST /api/handwriting-overlay — 확정된 컷 영상(cut_NN.mp4) 위에 손글씨 주석
 // 오버레이(scripts/handwriting_overlay.py)를 합성해 cut_NN{suffix}.mp4로 저장한다.
 // GRAPHIC/CAPCUT 컷 제작 후 "필요할 때만" 선택적으로 적용(파이프라인 자동 아님).
-// body: { epNum, cutNo, scenes:[{text,position,bubble,color,deco,arrow,arrow_direction,time}], outputSuffix?='_overlay' }
+// body: { epNum, cutNo, scenes:[{text,position|x|y,bubble,color,deco,arrow,arrow_direction,arrow_target,underline,backing,font_size,time}], outputSuffix?='_overlay' }
 const HW_IMG_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.bmp'])
 const HW_VID_EXTS = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm'])
 

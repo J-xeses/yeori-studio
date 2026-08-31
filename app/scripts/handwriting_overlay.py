@@ -38,7 +38,7 @@ from pathlib import Path
 
 from yeori_signature import apply_yeori_signature
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 # Windows 콘솔 기본 코드페이지(cp949)에서 이모지/특수기호 출력 시 깨지는 것 방지
 try:
@@ -57,9 +57,9 @@ FONT_DIRS = [
     Path.home() / "AppData/Local/Microsoft/Windows/Fonts",
 ]
 
-# 번들 폰트 → 시스템 빙그레체/나눔손글씨 → 맑은고딕 순으로 시도
+# Gaegu Bold(둥글고 도톰 — 영상 오버레이 가독성 좋음) 우선 → 나눔손글씨펜 → 시스템 손글씨 → 맑은고딕
 HANDWRITING_FONT_CANDIDATES = [
-    "NanumPenScript-Regular.ttf", "Gaegu-Bold.ttf",
+    "Gaegu-Bold.ttf", "NanumPenScript-Regular.ttf",
     "BinggraeTaomB.ttf", "BinggraeTaom.ttf", "Binggrae.ttf",
     "NanumPen.ttf", "NanumBrush.ttf", "NanumBrushScript.ttf",
 ]
@@ -114,8 +114,8 @@ def load_font(path, size):
 # ── 색상 ──────────────────────────────────────────────────────────────
 COLORS = {
     "white": (255, 255, 255, 255),
-    "pink": (0xF4, 0x72, 0xB6, 255),
-    "lavender": (0xC4, 0xB5, 0xFD, 255),
+    "pink": (0xF9, 0xA8, 0xD0, 255),
+    "lavender": (0xC3, 0xB3, 0xF5, 255),
 }
 
 
@@ -296,35 +296,74 @@ def draw_wobbly_roundrect(draw, box, color, width=4, radius=30):
 
 
 def draw_cloud(draw, box, color, width=4):
-    # 스캘럽(구름) 외곽선 — 박스 둘레를 도는 닫힌 곡선으로, 3점마다 바깥으로만
-    # 튀어나오게 한다. 항상 박스보다 크게 그려져 텍스트 위로 선이 지나가지 않는다.
+    # 균일한 스캘롭 생각풍선 — 타원 둘레를 따라 일정 간격의 부드러운 물결(그림1 레퍼런스).
     x0, y0, x1, y1 = box
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     rx, ry = (x1 - x0) / 2, (y1 - y0) / 2
-    bumps = 9
-    steps = bumps * 5
-    amt = min(rx, ry) * 0.025 + 1.5
+    per = math.pi * (3 * (rx + ry) - math.sqrt((3 * rx + ry) * (rx + 3 * ry)))
+    scallops = max(9, round(per / (min(rx, ry) * 0.62)))
+    steps = scallops * 6
+    depth = min(rx, ry) * 0.11
+    phase = random.uniform(0, 2 * math.pi)
     pts = []
     for i in range(steps + 1):
         a = 2 * math.pi * i / steps
-        bulge = 1.03 + 0.12 * (math.sin(bumps * a) * 0.5 + 0.5)  # 부드러운 스캘럽
-        pts.append(jitter(cx + rx * bulge * math.cos(a), cy + ry * bulge * math.sin(a), amt))
+        wob = 0.5 - 0.5 * math.cos(scallops * a + phase)  # 0..1 균일
+        r = 1 - (depth / min(rx, ry)) * wob + random.uniform(-0.012, 0.012)
+        pts.append((cx + rx * r * math.cos(a) + random.uniform(-1.5, 1.5),
+                    cy + ry * r * math.sin(a) + random.uniform(-1.5, 1.5)))
     pts.append(pts[0])
     draw.line(pts, fill=color, width=width, joint="curve")
+
+
+def draw_cloud_tail(draw, box, color, width=4, direction=1):
+    """말풍선 아래로 이어지는 꼬리 점 3개 (그림1)."""
+    x0, y0, x1, y1 = box
+    px = x0 + (x1 - x0) * (0.3 if direction > 0 else 0.7)
+    py = y1 - (y1 - y0) * 0.03
+    r = max(5.0, (y1 - y0) * 0.05)
+    for _ in range(3):
+        px += direction * r * 1.7
+        py += r * 2.2
+        draw.ellipse((px - r, py - r, px + r, py + r), outline=color, width=max(2, int(width * 0.85)))
+        r *= 0.6
+
+
+def draw_wavy_underline(draw, x0, x1, y, color, width=4):
+    """물결 밑줄 (연속 사인)."""
+    span = x1 - x0
+    periods = max(2, round(span / 130))
+    amp = width * 1.8
+    phase = random.uniform(0, math.pi)
+    n = periods * 18
+    pts = [(x0 + span * (i / n), y + math.sin((i / n) * periods * 2 * math.pi + phase) * amp)
+           for i in range(n + 1)]
+    draw.line(pts, fill=color, width=width, joint="curve")
+
+
+def draw_ticks(draw, cx, y, size, color, width=4):
+    """타이틀 위 틱 마크 ´´´."""
+    for k in (-1, 0, 1):
+        x = cx + k * size * 0.5
+        a = k * 0.2 + random.uniform(-0.1, 0.1)
+        draw.line([(x - math.sin(a) * size * 0.5, y - math.cos(a) * size * 0.5),
+                   (x + math.sin(a) * size * 0.5, y + math.cos(a) * size * 0.5)],
+                  fill=color, width=width)
 
 
 def _inflate(box, dx, dy):
     return (box[0] - dx, box[1] - dy, box[2] + dx, box[3] + dy)
 
 
-def draw_soft_backing(base_img, box, radius=40, alpha=115):
-    """텍스트 뒤에 반투명 어두운 판을 깔아 흰 손글씨가 어떤 배경 위에서도 읽히게 한다."""
-    layer = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
-    ld = ImageDraw.Draw(layer)
-    x0, y0, x1, y1 = (int(v) for v in box)
-    r = int(max(4, min(radius, (x1 - x0) / 2, (y1 - y0) / 2)))
-    ld.rounded_rectangle((x0, y0, x1, y1), radius=r, fill=(0, 0, 0, alpha))
-    return Image.alpha_composite(base_img, layer)
+def apply_soft_vignette(img, cx, cy, r, max_alpha=66):
+    """글자 영역에 가장자리 없는 부드러운 어둠(비네트) — 밝은 배경에서도 얇은 흰 획이 뜨게."""
+    size = max(2, int(r * 2))
+    g = Image.radial_gradient("L").resize((size, size))  # 0(중앙)→255(가장자리)
+    a = ImageOps.invert(g).point(lambda v: int(v * max_alpha / 255))
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    black = Image.new("RGBA", (size, size), (0, 0, 0, 255))
+    layer.paste(black, (int(cx - r), int(cy - r)), a)
+    return Image.alpha_composite(img, layer)
 
 
 ARROW_DIR_VECTORS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
@@ -333,9 +372,9 @@ ARROW_DIR_VECTORS = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1
 def draw_dotted_arrow(draw, start, end, color, width=4):
     x0, y0 = start
     x1, y1 = end
-    mx = (x0 + x1) / 2 + random.uniform(-20, 20)
-    my = (y0 + y1) / 2 + random.uniform(-20, 20)
-    n = 24
+    mx = (x0 + x1) / 2 + random.uniform(-45, 45)
+    my = (y0 + y1) / 2 + random.uniform(-30, 30)
+    n = 30
     pts = []
     for i in range(n + 1):
         t = i / n
@@ -345,11 +384,11 @@ def draw_dotted_arrow(draw, start, end, color, width=4):
     for i in range(0, len(pts) - 1, 2):
         draw.line([pts[i], pts[min(i + 1, len(pts) - 1)]], fill=color, width=width)
     ax, ay = pts[-1]
-    bx, by = pts[-3] if len(pts) >= 3 else pts[0]
+    bx, by = pts[-4] if len(pts) >= 4 else pts[0]
     ang = math.atan2(ay - by, ax - bx)
-    for da in (0.5, -0.5):
-        hx = ax - 22 * math.cos(ang + da)
-        hy = ay - 22 * math.sin(ang + da)
+    for da in (0.42, -0.42):
+        hx = ax - 24 * math.cos(ang + da)
+        hy = ay - 24 * math.sin(ang + da)
         draw.line([(ax, ay), (hx, hy)], fill=color, width=width)
 
 
@@ -371,33 +410,35 @@ def measure_block(draw, lines, size):
 
 
 def render_scene(canvas_size, scene, font_size=64):
+    """레퍼런스 그림1 방향: 검은 외곽선/판 금지. 가독성 = 어두운 헤일로(블러) +
+    글자영역 소프트 비네트 + 얇은 컬러 획. 다크/컬러 2패스가 같은 좌표를 쓰도록
+    각 패스 직전에 random 시드를 동일하게 재설정한다."""
     W, H = canvas_size
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
+    measure = ImageDraw.Draw(img)
     color = COLORS.get(scene.get("color", "white"), COLORS["white"])
     lines = scene.get("text", "").split("\n")
-
-    # 씬별 글자 크기 오버라이드 (bubbles 포맷 등)
     font_size = int(scene.get("font_size", font_size))
+    pen_w = max(3, int(font_size * 0.05))
 
-    block_w, block_h = measure_block(draw, lines, font_size)
+    try:
+        seed_val = hash(json.dumps(scene, sort_keys=True, ensure_ascii=False)) & 0x7FFFFFFF
+    except Exception:
+        seed_val = hash(scene.get("text", "")) & 0x7FFFFFFF
+
+    block_w, block_h = measure_block(measure, lines, font_size)
     line_h = font_size * 1.32
-
-    # 짧은 문구가 거대한 말풍선을 얻지 않도록 패딩을 타이트하게
-    pad_x, pad_y = 34, 22
+    pad_x, pad_y = 28, 18
     box_w, box_h = block_w + pad_x * 2, block_h + pad_y * 2
 
-    # 위치: x/y(0~1 비율)가 있으면 그 지점을 박스 중심으로, 없으면 앵커(position).
     if "x" in scene or "y" in scene:
         cx = W * float(scene.get("x", 0.5))
         cy = H * float(scene.get("y", 0.5))
-        left = cx - box_w / 2
-        top = cy - box_h / 2
+        left, top = cx - box_w / 2, cy - box_h / 2
     else:
         ax, ay = POSITION_ANCHORS.get(scene.get("position", "center"), (0.5, 0.5))
         cx, cy = W * ax, H * ay
-        left = cx - box_w / 2
-        top = cy - box_h / 2
+        left, top = cx - box_w / 2, cy - box_h / 2
         if ax < 0.3:
             left = cx
         elif ax > 0.7:
@@ -408,84 +449,105 @@ def render_scene(canvas_size, scene, font_size=64):
             top = cy - box_h
 
     bubble = scene.get("bubble", "none")
-    # 말풍선 모양이 텍스트를 감싸는 최소 여유 (타원은 사각을 담으려면 좀 더).
-    infl = {"cloud": (box_w * 0.05 + 10, box_h * 0.12 + 10),
-            "oval": (box_w * 0.17 + 10, box_h * 0.22 + 10),
-            "arrow_box": (16, 10)}.get(bubble, (0, 0))
+    infl = {"cloud": (box_w * 0.10 + 24, box_h * 0.16 + 18),
+            "oval": (box_w * 0.16 + 14, box_h * 0.22 + 12),
+            "arrow_box": (22, 16)}.get(bubble, (0, 0))
     ix, iy = infl
-    margin_x = 28 + ix
-    arrow_pad = H * 0.1 if scene.get("arrow") else 0
-    cap_safe_top = H * 0.75 - box_h - iy - arrow_pad  # 자막 영역(하단) 침범 방지
+    margin_x = 24 + ix
+    arrow_pad = H * 0.09 if scene.get("arrow") else 0
+    tail_pad = H * 0.05 if bubble == "cloud" else 0
+    cap_safe_top = H * 0.72 - box_h - iy - arrow_pad - tail_pad
     left = max(margin_x, min(left, W - box_w - margin_x))
-    top = max(40 + iy, min(top, min(H - box_h - 40 - iy, cap_safe_top)))
+    top = max(52 + iy, min(top, min(H - box_h - 52 - iy, cap_safe_top)))
     text_box = (left, top, left + box_w, top + box_h)
     bubble_box = _inflate(text_box, *infl)
 
-    # 가독성 처리:
-    #  - 말풍선 없음 + backing: 글자 뒤 반투명 판
-    #  - 말풍선 있음: 판을 깔면 버블 안에 박스처럼 이중으로 보임 → 판 대신 글자 외곽선만
-    #  - backing=False: 항상 글자 외곽선만
     backing = scene.get("backing", True)
-    show_plate = (bubble == "none") and backing
-    if show_plate:
-        img = draw_soft_backing(img, _inflate(text_box, 10, 6), radius=int(min(box_w, box_h) * 0.35))
-        draw = ImageDraw.Draw(img)
-    stroke_w = 0 if show_plate else max(4, int(font_size * 0.09))
+    underline = bool(scene.get("underline")) and bubble == "none"
+    box = bubble_box  # deco 배치 기준
+    tail_dir = -1 if (left + box_w / 2) > W / 2 else 1
+    deco_list = scene.get("deco", [])
+    if isinstance(deco_list, str):
+        deco_list = [d.strip() for d in deco_list.split(",") if d.strip()]
+    deco_list = deco_list[:3]
 
-    if bubble == "cloud":
-        draw_cloud(draw, bubble_box, color)
-    elif bubble == "oval":
-        draw_wobbly_ellipse(draw, (bubble_box[0] + bubble_box[2]) / 2, (bubble_box[1] + bubble_box[3]) / 2,
-                            (bubble_box[2] - bubble_box[0]) / 2, (bubble_box[3] - bubble_box[1]) / 2, color)
-    elif bubble == "arrow_box":
-        draw_wobbly_roundrect(draw, bubble_box, color)
+    def paint(target, col):
+        """한 패스: 같은 시드에서 버블·텍스트·밑줄·틱·장식·화살표를 col 색으로 그린다."""
+        random.seed(seed_val)
+        d = ImageDraw.Draw(target)
 
-    box = bubble_box  # deco/화살표 배치 기준
-    # 텍스트 블록을 박스 세로 중앙에. 줄 i의 중심 = top + pad_y + line_h*(i+0.5)
-    for i, line in enumerate(lines):
-        lw = measure_line(draw, line, font_size)
-        tx = left + (box_w - lw) / 2
-        angle = random.uniform(-2.2, 2.2)
-        pad = 10 + stroke_w
-        img_w = max(1, int(lw + 40 + stroke_w * 2))
-        img_h = int(font_size * 1.6 + stroke_w * 2)
-        line_img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
-        line_draw = ImageDraw.Draw(line_img)
-        # 텍스트를 line_img 세로 중앙에
-        ty_in = (img_h - font_size) / 2
-        draw_mixed_text(line_draw, (pad, ty_in), line, font_size, color, stroke_width=stroke_w)
-        rotated = line_img.rotate(angle, resample=Image.BICUBIC, expand=True)
-        line_center_y = top + pad_y + line_h * (i + 0.5)
-        img.paste(rotated, (int(tx - pad), int(line_center_y - rotated.height / 2)), rotated)
+        if bubble == "cloud":
+            draw_cloud(d, bubble_box, col, pen_w)
+            draw_cloud_tail(d, bubble_box, col, pen_w, tail_dir)
+        elif bubble == "oval":
+            draw_wobbly_ellipse(d, (bubble_box[0] + bubble_box[2]) / 2, (bubble_box[1] + bubble_box[3]) / 2,
+                                (bubble_box[2] - bubble_box[0]) / 2, (bubble_box[3] - bubble_box[1]) / 2, col, pen_w)
+        elif bubble == "arrow_box":
+            draw_wobbly_roundrect(d, bubble_box, col, pen_w)
 
-    deco_size = int(font_size * 0.5)
-    bh = box[3] - box[1]
-    deco_positions = [
-        (box[0] + deco_size * 0.3, box[1] + bh * 0.12),
-        (box[2] - deco_size * 0.3, box[1] + bh * 0.06),
-    ]
-    for i, d in enumerate(scene.get("deco", [])[:2]):
-        dx, dy = deco_positions[i % len(deco_positions)]
-        draw_deco_glyph(draw, (dx, dy), d, deco_size, color)
+        for i, line in enumerate(lines):
+            lw = measure_line(d, line, font_size)
+            angle = random.uniform(-1.8, 1.8)
+            dx = random.uniform(-4, 4)
+            pad = 12
+            img_w = max(1, int(lw + 48))
+            img_h = int(font_size * 1.7)
+            line_img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
+            draw_mixed_text(ImageDraw.Draw(line_img), (pad, (img_h - font_size) / 2), line, font_size, col)
+            rotated = line_img.rotate(angle, resample=Image.BICUBIC, expand=True)
+            tx = left + (box_w - lw) / 2 + dx
+            line_center_y = top + pad_y + line_h * (i + 0.5)
+            target.paste(rotated, (int(tx - pad), int(line_center_y - rotated.height / 2)), rotated)
 
-    if scene.get("arrow"):
-        cxb, cyb = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
-        tgt = scene.get("arrow_target")
-        if tgt and len(tgt) == 2:
-            # 화면 특정 지점(0~1 비율)을 겨냥
-            ex, ey = W * float(tgt[0]), H * float(tgt[1])
-            dx, dy = ex - cxb, ey - cyb
-            d = max(1.0, math.hypot(dx, dy))
-            ux, uy = dx / d, dy / d
-            start = (cxb + ux * (box_w / 2 + 20), cyb + uy * (box_h / 2 + 20))
-            end = (ex, ey)
-        else:
-            direction = scene.get("arrow_direction", "right")
-            vx, vy = ARROW_DIR_VECTORS.get(direction, (1, 0))
-            start = (cxb + vx * (box_w / 2 + 20), cyb + vy * (box_h / 2 + 20))
-            end = (start[0] + vx * 140, start[1] + vy * 140)
-        draw_dotted_arrow(draw, start, end, color)
+        if underline:
+            uy = top + pad_y + line_h * (len(lines) - 0.5) + font_size * 0.46
+            draw_wavy_underline(d, left + pad_x * 0.3, left + box_w - pad_x * 0.3, uy, col, max(2, int(pen_w * 0.8)))
+            draw_ticks(d, left + box_w * 0.28, top + pad_y - font_size * 0.32, font_size * 0.42, col, pen_w)
 
+        deco_size = int(font_size * 0.5)
+        dx0, dy0, dx1, dy1 = box
+        dw, dh = dx1 - dx0, dy1 - dy0
+        spots = [
+            (dx1 + random.uniform(4, 16), dy0 + dh * random.uniform(0.1, 0.4)),
+            (dx0 - random.uniform(4, 16), dy0 + dh * random.uniform(0.3, 0.7)),
+            (dx1 - dw * random.uniform(0.05, 0.22), dy1 + random.uniform(4, 16)),
+        ]
+        for i, dch in enumerate(deco_list):
+            gx, gy = spots[i % len(spots)]
+            draw_deco_glyph(d, (gx - deco_size * 0.4, gy - deco_size * 0.55), dch, deco_size, col)
+
+        if scene.get("arrow"):
+            cxb, cyb = (bubble_box[0] + bubble_box[2]) / 2, (bubble_box[1] + bubble_box[3]) / 2
+            tgt = scene.get("arrow_target")
+            if tgt and len(tgt) == 2:
+                ex, ey = W * float(tgt[0]), H * float(tgt[1])
+                ddx, ddy = ex - cxb, ey - cyb
+                dd = max(1.0, math.hypot(ddx, ddy))
+                ux, uy2 = ddx / dd, ddy / dd
+                start = (cxb + ux * (box_w / 2 + 16), cyb + uy2 * (box_h / 2 + 16))
+                end = (ex, ey)
+            else:
+                vx, vy = ARROW_DIR_VECTORS.get(scene.get("arrow_direction", "down"), (0, 1))
+                start = (cxb + vx * (box_w / 2 + 16), cyb + vy * (box_h / 2 + 16))
+                end = (start[0] + vx * 150, start[1] + vy * 150)
+            draw_dotted_arrow(d, start, end, col, max(2, int(pen_w * 0.95)))
+
+    # 1) 소프트 비네트 (backing일 때만) — 가장자리 없는 어둠
+    if backing:
+        vr = math.hypot(box_w, box_h) * 0.62
+        img = apply_soft_vignette(img, left + box_w / 2, top + box_h / 2, vr)
+
+    # 2) 다크 헤일로 — 투명 레이어에 검게 그린 뒤 블러해서 여러 겹 합성
+    dark = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    paint(dark, (0, 0, 0, 235))
+    layers = ((font_size * 0.30, 2), (font_size * 0.15, 2)) if backing else ((font_size * 0.22, 1), (font_size * 0.11, 1))
+    for radius, reps in layers:
+        blurred = dark.filter(ImageFilter.GaussianBlur(radius))
+        for _ in range(reps):
+            img = Image.alpha_composite(img, blurred)
+
+    # 3) 깨끗한 컬러 패스
+    paint(img, color)
     return img
 
 

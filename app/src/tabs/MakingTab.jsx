@@ -109,7 +109,7 @@ function fillTemplate(cut, style) {
 const DEFAULT_OVERLAY = {
   enabled: false,
   position: 'top_center', bubble: 'cloud', color: 'white',
-  deco: '', arrow: false, arrow_direction: 'down',
+  deco: '', arrow: false, arrow_direction: 'down', underline: false,
   timing: 'full', // 'full' | 'first2' | 'first3' | 'first5'
 }
 const TYPE_STYLE_KEY = 'making_type_styles_v1'
@@ -679,7 +679,7 @@ export default function MakingTab() {
   // ── 이미지에 손글씨 (썸네일·스틸용) — 임의 이미지 + 씬별 손글씨 → 씬마다 PNG ──
   const newHwScene = () => ({
     text: '', position: 'top_center', bubble: 'cloud', color: 'white',
-    deco: '', arrow: false, arrow_direction: 'down', time: '0s~3s',
+    deco: '', arrow: false, arrow_direction: 'down', underline: false, time: '0s~3s',
   })
   const [hwOpen, setHwOpen] = useState(false)
   const [hwImgList, setHwImgList] = useState([])
@@ -702,7 +702,7 @@ export default function MakingTab() {
       const scenes = hwScenes.filter(s => s.text.trim()).map(s => ({
         text: s.text, position: s.position, bubble: s.bubble, color: s.color,
         deco: String(s.deco || '').split(',').map(x => x.trim()).filter(Boolean),
-        arrow: !!s.arrow, arrow_direction: s.arrow_direction, time: s.time,
+        arrow: !!s.arrow, arrow_direction: s.arrow_direction, underline: !!s.underline, time: s.time,
       }))
       const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -730,6 +730,7 @@ export default function MakingTab() {
       deco: String(ov.deco || '').split(',').map(s => s.trim()).filter(Boolean),
       arrow: !!ov.arrow,
       arrow_direction: ov.arrow_direction,
+      underline: !!ov.underline,
       time: overlayTimeRange(ov.timing, cut.duration),
     }
     setOverlayBusy(p => ({ ...p, [cut.no]: true }))
@@ -1295,6 +1296,10 @@ export default function MakingTab() {
                                 </select>
                               </label>
                             )}
+                            <label className={s.radioLabel}>
+                              <input type="checkbox" checked={!!ov.underline} onChange={e => setOv({ underline: e.target.checked })} />
+                              밑줄 (타이틀·말풍선 없음)
+                            </label>
                           </div>
                         </>
                       )}
@@ -1385,6 +1390,10 @@ export default function MakingTab() {
                     </select>
                   </label>
                 )}
+                <label className={s.radioLabel}>
+                  <input type="checkbox" checked={!!sc.underline} onChange={e => patchHwScene(i, { underline: e.target.checked })} />
+                  밑줄
+                </label>
               </div>
             </div>
           ))}
