@@ -416,12 +416,16 @@ def render_scene(canvas_size, scene, font_size=64):
     text_box = (left, top, left + box_w, top + box_h)
     bubble_box = _inflate(text_box, *infl)
 
-    # 텍스트 뒤 반투명 판(가독성). backing=False면 판 대신 글자에 어두운 외곽선만.
+    # 가독성 처리:
+    #  - 말풍선 없음 + backing: 글자 뒤 반투명 판
+    #  - 말풍선 있음: 판을 깔면 버블 안에 박스처럼 이중으로 보임 → 판 대신 글자 외곽선만
+    #  - backing=False: 항상 글자 외곽선만
     backing = scene.get("backing", True)
-    if backing:
+    show_plate = (bubble == "none") and backing
+    if show_plate:
         img = draw_soft_backing(img, _inflate(text_box, 10, 6), radius=int(min(box_w, box_h) * 0.35))
         draw = ImageDraw.Draw(img)
-    stroke_w = 0 if backing else max(3, int(font_size * 0.075))
+    stroke_w = 0 if show_plate else max(3, int(font_size * 0.07))
 
     if bubble == "cloud":
         draw_cloud(draw, bubble_box, color)
