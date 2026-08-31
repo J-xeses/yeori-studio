@@ -4,21 +4,26 @@
 handwriting_overlay.py — 서여리 릴스용 손글씨 주석 오버레이
 
 인스타 스토리/릴스풍으로, 사진·영상 위에 손글씨 텍스트(구름/타원/화살표박스 말풍선,
-점선 화살표, 하트·반짝이 장식, -3~+3도 랜덤 기울기)를 시간대별로 합성한다.
+점선 화살표, 하트·반짝이 장식, -3~+3도 랜덤 기울기)를 합성한다.
+
+설정 포맷 2가지:
+  - "scenes": 시간대(time)별 1개씩. 영상은 구간 합성, 이미지는 씬별 파일 저장.
+  - "bubbles": 한 화면에 여러 주석 자유 배치. x/y(0~1 비율), 씬별 font_size 지원.
+               이미지는 파일 1개로 합성(레퍼런스 인스타 스토리처럼).
+각 항목 옵션: backing(false면 판 대신 글자 외곽선), arrow_target([x,y] 비율로 특정 지점 겨냥).
+config 최상위 "subject_outline": true|{width,gap,color,opacity} → 인물 둘레 손그림 흰 테두리
+  (이미지 전용, rembg + onnxruntime 필요 — 없으면 조용히 건너뜀).
 
 사용법:
-  python handwriting_overlay.py --config handwriting_config_rl03.json --input in.mp4 --output out.mp4
-  python handwriting_overlay.py --config handwriting_config_rl03.json --input in.png --output out.png
-    (이미지 입력은 씬 하나당 정지화면이 다르므로, out_scene01.png ~ out_sceneNN.png로 씬별 개별 저장)
+  python handwriting_overlay.py --config config.json --input in.mp4 --output out.mp4
+  python handwriting_overlay.py --config config.json --input in.png --output out.png
 
-폰트 폴백: 빙그레체 → 나눔손글씨 → 맑은고딕(시스템에 없으면 자동으로 다음 순위로 대체,
-콘솔에 실제 사용된 폰트를 출력함). 이모지(🫢✨🎙️😱🙏💜👀🙈 등)는 한글 폰트가 표현 못 하므로
-Segoe UI Emoji(컬러 폰트)로 별도 렌더링해 섞어 그린다.
+폰트: 저장소 번들 나눔손글씨 펜(app/assets/fonts/, OFL) 우선 → 시스템 빙그레체/나눔손글씨
+→ 맑은고딕. 장식 ♡/✦는 폰트에 없어 벡터로 직접 그림. 문장 속 이모지는 Segoe UI Emoji.
 
-씬 오버레이를 다 그린 뒤에는 yeori_signature.py의 apply_yeori_signature()로 서여리 채널
-시그니처(라벤더 프레임 + @yeori.ai.log/AI 생성 콘텐츠 워터마크)를 항상 마지막에 얹는다.
+씬을 다 그린 뒤 yeori_signature.py의 apply_yeori_signature()로 서여리 채널 시그니처를 얹는다.
 
-필요 패키지: Pillow (pip install pillow) — 영상 입력 시 시스템 PATH에 ffmpeg 필요.
+필요 패키지: Pillow. (선택) 인물 테두리용 rembg+onnxruntime. 영상 입력 시 PATH에 ffmpeg.
 """
 
 import argparse
@@ -229,6 +234,19 @@ def draw_mixed_text(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 
     x, y = xy
     for is_e, run in split_runs(text):
         font = _run_font(is_e, size)
+        # 문장 속 ♡/✦ 등은 손글씨 폰트에 없어 tofu — 글자별로 벡터로 직접 그린다
+        if is_e and any(c in _HEART_CHARS or c in _STAR_CHARS for c in run):
+            for c in run:
+                if c in _HEART_CHARS:
+                    _draw_vector_heart(draw, x + size * 0.42, y + size * 0.6, size * 0.9, fill)
+                    x += size * 0.85
+                elif c in _STAR_CHARS:
+                    _draw_vector_star(draw, x + size * 0.42, y + size * 0.55, size * 0.9, fill)
+                    x += size * 0.85
+                elif EMOJI_FONT_PATH:
+                    draw.text((x, y), c, font=font)
+                    x += draw.textlength(c, font=font)
+            continue
         if is_e and EMOJI_FONT_PATH:
             try:
                 draw.text((x, y), run, font=font, embedded_color=True)
@@ -532,18 +550,25 @@ def process_video(input_path, output_path, scenes, canvas_size, work_dir):
     run_cmd(cmd)
 
 
-def _fit_base(input_path, canvas_size):
+def _fit_base(input_path, canvas_size, subject_outline=None):
     W, H = canvas_size
     src = Image.open(input_path).convert("RGBA")
     ratio = min(W / src.width, H / src.height)
     resized = src.resize((max(1, int(src.width * ratio)), max(1, int(src.height * ratio))))
     base = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     base.paste(resized, ((W - resized.width) // 2, (H - resized.height) // 2))
+    if subject_outline:
+        try:
+            from subject_outline import add_subject_outline
+            base = add_subject_outline(base, subject_outline)
+            print("    인물 테두리 적용")
+        except Exception as e:  # noqa: BLE001
+            print(f"⚠ 인물 테두리 실패(무시): {e}")
     return base
 
 
-def process_image(input_path, output_path, scenes, canvas_size):
-    base = _fit_base(input_path, canvas_size)
+def process_image(input_path, output_path, scenes, canvas_size, subject_outline=None):
+    base = _fit_base(input_path, canvas_size, subject_outline)
     stem, suffix = output_path.stem, (output_path.suffix or ".png")
     outputs = []
     for i, sc in enumerate(scenes):
@@ -556,10 +581,10 @@ def process_image(input_path, output_path, scenes, canvas_size):
     return outputs
 
 
-def process_image_composite(input_path, output_path, bubbles, canvas_size):
+def process_image_composite(input_path, output_path, bubbles, canvas_size, subject_outline=None):
     """bubbles 포맷 — 한 장의 정지 이미지에 모든 말풍선을 한꺼번에 얹어 파일 1개로 저장.
     (레퍼런스 인스타 스토리처럼 화면에 주석이 여럿 떠 있는 형태)"""
-    base = _fit_base(input_path, canvas_size)
+    base = _fit_base(input_path, canvas_size, subject_outline)
     composed = base
     for i, b in enumerate(bubbles):
         composed = Image.alpha_composite(composed, render_scene(canvas_size, b))
@@ -644,6 +669,7 @@ def main():
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     canvas_size = tuple(config.get("output_size", [1080, 1920]))
+    subject_outline = config.get("subject_outline")  # true | {width,gap,color,opacity} | None
 
     # 두 가지 포맷 지원:
     #  - "scenes": 시간대(time)별로 하나씩 — 영상은 구간 합성, 이미지는 씬별 파일
@@ -664,6 +690,8 @@ def main():
         if shutil.which("ffmpeg") is None:
             print("⚠ ffmpeg를 찾을 수 없습니다 — PATH에 ffmpeg가 설치돼 있는지 확인하세요.")
             sys.exit(1)
+        if subject_outline:
+            print("ℹ 인물 테두리는 정지 이미지 전용입니다 — 영상에서는 무시됩니다.")
         with tempfile.TemporaryDirectory(prefix="handwriting_") as td:
             if mode == "bubbles":
                 print(f"[1/2] 말풍선 {len(items)}개를 영상에 합성 중…")
@@ -675,11 +703,11 @@ def main():
     elif ext in image_exts:
         if mode == "bubbles":
             print(f"[1/1] 말풍선 {len(items)}개를 한 장에 합성 중…")
-            process_image_composite(input_path, output_path, items, canvas_size)
+            process_image_composite(input_path, output_path, items, canvas_size, subject_outline)
         else:
             print(f"[1/1] 씬 {len(items)}개를 이미지별로 렌더링 중… "
                   f"(정지 이미지라 한 장에 다 못 담아 씬마다 별도 파일로 저장)")
-            process_image(input_path, output_path, items, canvas_size)
+            process_image(input_path, output_path, items, canvas_size, subject_outline)
     else:
         print(f"⚠ 지원하지 않는 입력 형식입니다: {ext}")
         sys.exit(1)
