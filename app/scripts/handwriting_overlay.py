@@ -178,13 +178,42 @@ def _is_missing_glyph(font_path, size, ch):
     return bytes(mask) == _TOFU_CACHE[key]
 
 
+_HEART_CHARS = {"♡", "♥", "❤", "🩷", "🖤", "💜", "💗", "💕"}
+_STAR_CHARS = {"✦", "✧", "✨", "⭐", "★", "☆", "*", "＊"}
+
+
+def _draw_vector_heart(draw, cx, cy, size, fill):
+    s = size / 2.0
+    pts = []
+    for i in range(41):
+        t = math.pi * 2 * i / 40
+        x = 16 * math.sin(t) ** 3
+        y = 13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)
+        pts.append((cx + x * s / 16, cy - y * s / 16))
+    draw.line(pts + [pts[0]], fill=fill, width=max(2, int(size * 0.13)), joint="curve")
+
+
+def _draw_vector_star(draw, cx, cy, size, fill):
+    s = size / 2.0
+    pts = []
+    for k in range(8):
+        a = math.pi / 4 * k - math.pi / 2
+        r = s if k % 2 == 0 else s * 0.32
+        pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    draw.polygon(pts, fill=fill)
+
+
 def draw_deco_glyph(draw, xy, ch, size, fill):
-    """장식(하트·반짝이 등)은 실제 문장 속 이모지와 달리 손글씨 펜 색(흰/핑크/라벤더)을
-    그대로 따라가야 하므로, 우선 텍스트 폰트로 그려 fill 색을 입힌다(컬러 이모지 폰트로
-    그리면 embedded_color가 fill을 무시하고 폰트 고정색을 써버림 — 실측 확인). 다만 텍스트
-    폰트(맑은고딕 등)에 실제 글리프가 없는 기호(예: ✨)는 빈 사각형만 나오므로, 그 경우엔
-    컬러 이모지 폰트로 대체한다(색은 펜 색과 안 맞지만 빈 박스보다는 낫다)."""
-    if not _is_missing_glyph(TEXT_FONT_PATH, size, ch):
+    """장식(하트·반짝이 등)은 손글씨 폰트에 글리프가 없어 tofu(□)로 나오므로 벡터로 직접
+    그린다(하트=파라메트릭 곡선, 별=8각 폴리곤). !·?처럼 손글씨 폰트에 있는 기호는 그대로
+    텍스트로, 그 외 이모지는 컬러 이모지 폰트로."""
+    x, y = xy
+    cx, cy = x + size * 0.4, y + size * 0.55
+    if ch in _HEART_CHARS:
+        _draw_vector_heart(draw, cx, cy, size, fill)
+    elif ch in _STAR_CHARS:
+        _draw_vector_star(draw, cx, cy, size, fill)
+    elif ch in ("!", "?", "·", "‧", "～", "~", "…", ".."):
         draw.text(xy, ch, font=load_font(TEXT_FONT_PATH, size), fill=fill)
     elif EMOJI_FONT_PATH:
         emoji_size = max(8, int(size * 0.92))
@@ -196,7 +225,7 @@ def draw_deco_glyph(draw, xy, ch, size, fill):
         draw.text(xy, ch, font=load_font(TEXT_FONT_PATH, size), fill=fill)
 
 
-def draw_mixed_text(draw, xy, text, size, fill):
+def draw_mixed_text(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 0, 0, 190)):
     x, y = xy
     for is_e, run in split_runs(text):
         font = _run_font(is_e, size)
@@ -206,7 +235,11 @@ def draw_mixed_text(draw, xy, text, size, fill):
             except TypeError:
                 draw.text((x, y), run, font=font, fill=fill)
         else:
-            draw.text((x, y), run, font=font, fill=fill)
+            if stroke_width:
+                draw.text((x, y), run, font=font, fill=fill,
+                          stroke_width=stroke_width, stroke_fill=stroke_fill)
+            else:
+                draw.text((x, y), run, font=font, fill=fill)
         x += draw.textlength(run, font=font)
 
 
@@ -326,39 +359,51 @@ def render_scene(canvas_size, scene, font_size=64):
     color = COLORS.get(scene.get("color", "white"), COLORS["white"])
     lines = scene.get("text", "").split("\n")
 
-    block_w, block_h = measure_block(draw, lines, font_size)
+    # 씬별 글자 크기 오버라이드 (bubbles 포맷 등)
+    font_size = int(scene.get("font_size", font_size))
 
-    ax, ay = POSITION_ANCHORS.get(scene.get("position", "center"), (0.5, 0.5))
-    cx, cy = W * ax, H * ay
+    block_w, block_h = measure_block(draw, lines, font_size)
 
     pad_x, pad_y = 52, 38
     box_w, box_h = block_w + pad_x * 2, block_h + pad_y * 2
 
-    left = cx - box_w / 2
-    top = cy - box_h / 2
-    if ax < 0.3:
-        left = cx
-    elif ax > 0.7:
-        left = cx - box_w
-    if ay < 0.3:
-        top = cy
-    elif ay > 0.7:
-        top = cy - box_h
+    # 위치: x/y(0~1 비율)가 있으면 그 지점을 박스 중심으로, 없으면 앵커(position).
+    if "x" in scene or "y" in scene:
+        cx = W * float(scene.get("x", 0.5))
+        cy = H * float(scene.get("y", 0.5))
+        left = cx - box_w / 2
+        top = cy - box_h / 2
+    else:
+        ax, ay = POSITION_ANCHORS.get(scene.get("position", "center"), (0.5, 0.5))
+        cx, cy = W * ax, H * ay
+        left = cx - box_w / 2
+        top = cy - box_h / 2
+        if ax < 0.3:
+            left = cx
+        elif ax > 0.7:
+            left = cx - box_w
+        if ay < 0.3:
+            top = cy
+        elif ay > 0.7:
+            top = cy - box_h
 
     bubble = scene.get("bubble", "none")
     # 말풍선 외곽선이 텍스트를 가로지르지 않도록 텍스트 박스보다 크게 그린다(유형별).
-    infl = {"cloud": (box_w * 0.10 + 20, box_h * 0.42 + 24),
-            "oval": (box_w * 0.16 + 16, box_h * 0.30 + 18),
-            "arrow_box": (26, 20)}.get(bubble, (0, 0))
+    infl = {"cloud": (box_w * 0.07 + 16, box_h * 0.34 + 18),
+            "oval": (box_w * 0.14 + 14, box_h * 0.26 + 16),
+            "arrow_box": (24, 18)}.get(bubble, (0, 0))
     margin = 24 + max(infl)
     left = max(margin, min(left, W - box_w - margin))
     top = max(margin, min(top, H - box_h - margin))
     text_box = (left, top, left + box_w, top + box_h)
     bubble_box = _inflate(text_box, *infl)
 
-    # 텍스트 뒤 반투명 판(가독성) — 말풍선 종류와 무관하게 항상.
-    img = draw_soft_backing(img, _inflate(text_box, 10, 6), radius=int(min(box_w, box_h) * 0.35))
-    draw = ImageDraw.Draw(img)
+    # 텍스트 뒤 반투명 판(가독성). backing=False면 판 대신 글자에 어두운 외곽선만.
+    backing = scene.get("backing", True)
+    if backing:
+        img = draw_soft_backing(img, _inflate(text_box, 10, 6), radius=int(min(box_w, box_h) * 0.35))
+        draw = ImageDraw.Draw(img)
+    stroke_w = 0 if backing else max(3, int(font_size * 0.075))
 
     if bubble == "cloud":
         draw_cloud(draw, bubble_box, color)
@@ -374,12 +419,13 @@ def render_scene(canvas_size, scene, font_size=64):
         lw = measure_line(draw, line, font_size)
         tx = left + (box_w - lw) / 2
         angle = random.uniform(-3, 3)
-        line_w, line_h = max(1, int(lw + 40)), int(font_size * 1.6)
+        pad = 10 + stroke_w
+        line_w, line_h = max(1, int(lw + 40 + stroke_w * 2)), int(font_size * 1.6 + stroke_w * 2)
         line_img = Image.new("RGBA", (line_w, line_h), (0, 0, 0, 0))
         line_draw = ImageDraw.Draw(line_img)
-        draw_mixed_text(line_draw, (10, 5), line, font_size, color)
+        draw_mixed_text(line_draw, (pad, 5 + stroke_w), line, font_size, color, stroke_width=stroke_w)
         rotated = line_img.rotate(angle, resample=Image.BICUBIC, expand=True)
-        img.paste(rotated, (int(tx - 10), int(ty - 5)), rotated)
+        img.paste(rotated, (int(tx - pad), int(ty - 5 - stroke_w)), rotated)
         ty += font_size * 1.5
 
     deco_size = int(font_size * 0.55)
@@ -392,11 +438,21 @@ def render_scene(canvas_size, scene, font_size=64):
         draw_deco_glyph(draw, (dx, dy), d, deco_size, color)
 
     if scene.get("arrow"):
-        direction = scene.get("arrow_direction", "right")
-        vx, vy = ARROW_DIR_VECTORS.get(direction, (1, 0))
         cxb, cyb = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2
-        start = (cxb + vx * (box_w / 2 + 20), cyb + vy * (box_h / 2 + 20))
-        end = (start[0] + vx * 140, start[1] + vy * 140)
+        tgt = scene.get("arrow_target")
+        if tgt and len(tgt) == 2:
+            # 화면 특정 지점(0~1 비율)을 겨냥
+            ex, ey = W * float(tgt[0]), H * float(tgt[1])
+            dx, dy = ex - cxb, ey - cyb
+            d = max(1.0, math.hypot(dx, dy))
+            ux, uy = dx / d, dy / d
+            start = (cxb + ux * (box_w / 2 + 20), cyb + uy * (box_h / 2 + 20))
+            end = (ex, ey)
+        else:
+            direction = scene.get("arrow_direction", "right")
+            vx, vy = ARROW_DIR_VECTORS.get(direction, (1, 0))
+            start = (cxb + vx * (box_w / 2 + 20), cyb + vy * (box_h / 2 + 20))
+            end = (start[0] + vx * 140, start[1] + vy * 140)
         draw_dotted_arrow(draw, start, end, color)
 
     return img
@@ -476,14 +532,18 @@ def process_video(input_path, output_path, scenes, canvas_size, work_dir):
     run_cmd(cmd)
 
 
-def process_image(input_path, output_path, scenes, canvas_size):
+def _fit_base(input_path, canvas_size):
     W, H = canvas_size
     src = Image.open(input_path).convert("RGBA")
     ratio = min(W / src.width, H / src.height)
     resized = src.resize((max(1, int(src.width * ratio)), max(1, int(src.height * ratio))))
     base = Image.new("RGBA", (W, H), (0, 0, 0, 255))
     base.paste(resized, ((W - resized.width) // 2, (H - resized.height) // 2))
+    return base
 
+
+def process_image(input_path, output_path, scenes, canvas_size):
+    base = _fit_base(input_path, canvas_size)
     stem, suffix = output_path.stem, (output_path.suffix or ".png")
     outputs = []
     for i, sc in enumerate(scenes):
@@ -494,6 +554,75 @@ def process_image(input_path, output_path, scenes, canvas_size):
         outputs.append(out_path)
         print(f"    씬 {i + 1}/{len(scenes)} 저장: {out_path.name}")
     return outputs
+
+
+def process_image_composite(input_path, output_path, bubbles, canvas_size):
+    """bubbles 포맷 — 한 장의 정지 이미지에 모든 말풍선을 한꺼번에 얹어 파일 1개로 저장.
+    (레퍼런스 인스타 스토리처럼 화면에 주석이 여럿 떠 있는 형태)"""
+    base = _fit_base(input_path, canvas_size)
+    composed = base
+    for i, b in enumerate(bubbles):
+        composed = Image.alpha_composite(composed, render_scene(canvas_size, b))
+        print(f"    말풍선 {i + 1}/{len(bubbles)} 합성")
+    composed = apply_yeori_signature(composed)
+    suffix = output_path.suffix or ".png"
+    out_path = output_path.with_suffix(suffix)
+    composed.convert("RGB").save(out_path)
+    print(f"    저장: {out_path.name}")
+    return [out_path]
+
+
+def process_video_composite(input_path, output_path, bubbles, canvas_size, work_dir):
+    """bubbles 포맷 영상 — 각 말풍선은 time이 있으면 그 구간, 없으면 전체 구간 표시."""
+    W, H = canvas_size
+    overlay_paths = []
+    for i, b in enumerate(bubbles):
+        p = work_dir / f"bubble_{i:02d}.png"
+        render_scene(canvas_size, b).save(p)
+        overlay_paths.append(p)
+    signature_path = work_dir / "signature.png"
+    apply_yeori_signature(Image.new("RGBA", (W, H), (0, 0, 0, 0))).save(signature_path)
+    overlay_paths.append(signature_path)
+
+    filter_parts = [
+        f"[0:v]scale={W}:{H}:force_original_aspect_ratio=decrease,"
+        f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2,setsar=1[base]"
+    ]
+    prev = "base"
+    for i, b in enumerate(bubbles):
+        label = f"v{i}"
+        if b.get("time"):
+            s, e = parse_time_range(b["time"])
+            filter_parts.append(f"[{prev}][{i + 1}:v]overlay=0:0:enable='between(t,{s},{e})'[{label}]")
+        else:
+            filter_parts.append(f"[{prev}][{i + 1}:v]overlay=0:0[{label}]")
+        prev = label
+    filter_parts.append(f"[{prev}][{len(bubbles) + 1}:v]overlay=0:0[vout]")
+
+    dur = None
+    try:
+        probe = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=nw=1:nk=1", str(input_path)],
+            capture_output=True, text=True,
+        )
+        dur = float(probe.stdout.strip())
+    except Exception:
+        dur = None
+
+    cmd = ["ffmpeg", "-y", "-i", str(input_path)]
+    for p in overlay_paths:
+        cmd += ["-loop", "1", "-i", str(p)]
+    cmd += [
+        "-filter_complex", ";".join(filter_parts),
+        "-map", "[vout]", "-map", "0:a?",
+        "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+        "-g", "60", "-movflags", "+faststart", "-c:a", "aac", "-shortest",
+    ]
+    if dur:
+        cmd += ["-t", f"{dur:.3f}"]
+    cmd += [str(output_path)]
+    run_cmd(cmd)
 
 
 # ── 진입점 ────────────────────────────────────────────────────────────
@@ -515,10 +644,17 @@ def main():
 
     config = json.loads(config_path.read_text(encoding="utf-8"))
     canvas_size = tuple(config.get("output_size", [1080, 1920]))
+
+    # 두 가지 포맷 지원:
+    #  - "scenes": 시간대(time)별로 하나씩 — 영상은 구간 합성, 이미지는 씬별 파일
+    #  - "bubbles": 한 화면에 여러 주석을 자유 배치(x/y) — 이미지는 파일 1개, 영상은 전체 구간
     scenes = config.get("scenes", [])
-    if not scenes:
-        print("⚠ 설정 파일에 씬(scenes)이 없습니다.")
+    bubbles = config.get("bubbles", [])
+    if not scenes and not bubbles:
+        print("⚠ 설정 파일에 scenes 또는 bubbles가 없습니다.")
         sys.exit(1)
+    mode = "bubbles" if bubbles else "scenes"
+    items = bubbles if bubbles else scenes
 
     video_exts = {".mp4", ".mov", ".mkv", ".avi", ".webm"}
     image_exts = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
@@ -528,19 +664,27 @@ def main():
         if shutil.which("ffmpeg") is None:
             print("⚠ ffmpeg를 찾을 수 없습니다 — PATH에 ffmpeg가 설치돼 있는지 확인하세요.")
             sys.exit(1)
-        print(f"[1/2] 씬 {len(scenes)}개를 렌더링하며 영상에 시간대별로 합성 중…")
         with tempfile.TemporaryDirectory(prefix="handwriting_") as td:
-            process_video(input_path, output_path, scenes, canvas_size, Path(td))
+            if mode == "bubbles":
+                print(f"[1/2] 말풍선 {len(items)}개를 영상에 합성 중…")
+                process_video_composite(input_path, output_path, items, canvas_size, Path(td))
+            else:
+                print(f"[1/2] 씬 {len(items)}개를 렌더링하며 영상에 시간대별로 합성 중…")
+                process_video(input_path, output_path, items, canvas_size, Path(td))
         print(f"[2/2] 출력 완료: {output_path}")
     elif ext in image_exts:
-        print(f"[1/1] 씬 {len(scenes)}개를 이미지별로 렌더링 중… "
-              f"(정지 이미지라 한 장에 다 못 담아 씬마다 별도 파일로 저장)")
-        process_image(input_path, output_path, scenes, canvas_size)
+        if mode == "bubbles":
+            print(f"[1/1] 말풍선 {len(items)}개를 한 장에 합성 중…")
+            process_image_composite(input_path, output_path, items, canvas_size)
+        else:
+            print(f"[1/1] 씬 {len(items)}개를 이미지별로 렌더링 중… "
+                  f"(정지 이미지라 한 장에 다 못 담아 씬마다 별도 파일로 저장)")
+            process_image(input_path, output_path, items, canvas_size)
     else:
         print(f"⚠ 지원하지 않는 입력 형식입니다: {ext}")
         sys.exit(1)
 
-    print(f"✓ 손글씨 오버레이 완료 — {len(scenes)}개 씬 적용")
+    print(f"✓ 손글씨 오버레이 완료 — {mode} {len(items)}개 적용")
 
 
 if __name__ == "__main__":
