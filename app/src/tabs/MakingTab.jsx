@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
@@ -116,7 +116,24 @@ const TYPE_STYLE_KEY = 'making_type_styles_v1'
 const DEFAULT_TYPE_STYLES = {
   GRAPHIC: { mode: 'auto',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
   CAPCUT:  { mode: 'html',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
-  BROLL:   { mode: 'pexels', htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
+  BROLL:   { mode: 'pexels', htmlFile: '', brollQuery: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
+}
+
+// 컷에서 Pexels 검색어를 뽑는다 — 자동실행에서 BROLL(pexels) 컷마다 사용.
+// 우선순위: cut.brollQuery → 컷 프롬프트/장면에서 추출한 영문 키워드. typeDefault는 문맥으로 뒤에 덧붙임.
+function deriveBrollKeyword(cut, typeDefault) {
+  const explicit = String(cut.brollQuery || '').trim()
+  if (explicit) return explicit
+  const src = `${cut.videoPrompt || ''} ${cut.scene || ''} ${cut.imagePrompt || ''} ${cut.narration || ''}`
+  const words = src
+    .replace(/[가-힣]+/g, ' ')
+    .replace(/[^a-zA-Z ]+/g, ' ')
+    .trim().split(/\s+/)
+    .filter(w => w.length > 2 && !['the', 'and', 'for', 'with', 'shot', 'cut', 'scene'].includes(w.toLowerCase()))
+  const derived = words.slice(0, 4).join(' ')
+  const ctx = String(typeDefault || '').trim()
+  if (derived && ctx) return `${derived} ${ctx}`
+  return derived || ctx || ''
 }
 
 function loadTypeStyles() {
@@ -721,7 +738,7 @@ export default function MakingTab() {
   // 대본 CP + 유형별 오버레이 스타일 → 씬 1개를 조립해 /api/handwriting-overlay 호출.
   const runOverlay = async (cut) => {
     const ov = typeStyles[cut.cutType]?.overlay
-    if (!cut.subtitle || !ov?.enabled || !episode.number) return
+    if (!cut.subtitle || !ov?.enabled || !episode.number) return { ok: false, skipped: true }
     const scene = {
       text: cut.subtitle,
       position: ov.position,
@@ -742,13 +759,174 @@ export default function MakingTab() {
         body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, scenes: [scene] }),
       })
       const data = await res.json()
-      if (!res.ok) { setOverlayResult(p => ({ ...p, [cut.no]: { error: data.error || '오버레이 실패' } })); return }
+      if (!res.ok) {
+        setOverlayResult(p => ({ ...p, [cut.no]: { error: data.error || '오버레이 실패' } }))
+        return { ok: false, error: data.error || '오버레이 실패' }
+      }
       setOverlayResult(p => ({ ...p, [cut.no]: data }))
+      return { ok: true, data }
     } catch (e) {
       setOverlayResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+      return { ok: false, error: e.message }
     } finally {
       setOverlayBusy(p => ({ ...p, [cut.no]: false }))
     }
+  }
+
+  // ── 유형별 자동실행 — MANUAL_TYPES 컷을 유형에 맞는 헤드리스 방식으로 일괄 제작 ──
+  //   GRAPHIC / CAPCUT(HTML) → 자동 템플릿(또는 지정 목업) 캡처 + CP 있으면 손글씨 오버레이
+  //   BROLL(Pexels)          → 컷 키워드로 Pexels 영상 검색 → 상위 결과 자동 선택 → 규격화 다운로드
+  //   CAPCUT(녹화) / BROLL(화면 녹화) → 화면 캡처가 필요해 자동 불가 → 건너뜀
+  const [autoOpen, setAutoOpen] = useState(false)
+  const [autoRunning, setAutoRunning] = useState(false)
+  const [autoLog, setAutoLog] = useState([])
+  const [autoSkipDone, setAutoSkipDone] = useState(true)
+  const [autoDoOverlay, setAutoDoOverlay] = useState(true)
+  const autoStopRef = useRef(false)
+
+  const autoPush = (entry) => setAutoLog(prev => [...prev, { t: Date.now(), ...entry }])
+
+  const autoProduceGraphicish = async (cut) => {
+    const type = cut.cutType
+    const cfgFile = String(typeStyles[type]?.htmlFile || '').trim()
+    const dur = cut.duration || 5
+    let res, data
+    if (cfgFile) {
+      res = await fetch(`${YEORI_SERVER}/api/make-graphic-cut`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, htmlFile: cfgFile }),
+      })
+    } else {
+      res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html: fillTemplate(cut, styleFor(type)), cutNo: cut.no, epNum: episode.number, duration: dur }),
+      })
+    }
+    data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || '캡처 실패')
+    return data
+  }
+
+  const autoProduceBroll = async (cut) => {
+    const q = deriveBrollKeyword(cut, typeStyles.BROLL.brollQuery)
+    if (!q) { const e = new Error('검색어를 만들 수 없음 — 컷 프롬프트가 비었거나, BROLL 기본 검색어를 지정하세요'); e.soft = true; throw e }
+    const params = new URLSearchParams({ q, type: 'video', orientation: 'portrait', page: '1', perPage: '12' })
+    const sr = await fetch(`${YEORI_SERVER}/api/source-search?${params}`)
+    const sd = await sr.json().catch(() => ({}))
+    if (!sr.ok) throw new Error(sd.error || 'Pexels 검색 실패')
+    const vids = (sd.results || []).filter(r => r.type === 'video')
+    if (!vids.length) { const e = new Error(`Pexels 결과 없음 (검색어: "${q}")`); e.soft = true; throw e }
+    const target = cut.duration || 5
+    const pick = [...vids].sort((a, b) =>
+      Math.abs((a.duration || 99) - target) - Math.abs((b.duration || 99) - target))[0]
+    const dr = await fetch(`${YEORI_SERVER}/api/download-broll-cut`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, videoUrl: pick.downloadUrl, duration: target }),
+    })
+    const dd = await dr.json().catch(() => ({}))
+    if (!dr.ok) throw new Error(dd.error || '다운로드 실패')
+    return { ...dd, query: q, picked: pick.photographer || pick.id }
+  }
+
+  const runAutoByType = async () => {
+    if (autoRunning || !episode?.number) return
+    autoStopRef.current = false
+    setAutoRunning(true)
+    setAutoLog([])
+    const targets = allCuts.filter(c => MANUAL_TYPES.includes(c.cutType || 'YEORI'))
+    autoPush({ kind: 'info', msg: `대상 ${targets.length}컷 — 자동실행 시작` })
+    let ok = 0, skip = 0, fail = 0
+    for (const cut of targets) {
+      if (autoStopRef.current) { autoPush({ kind: 'info', msg: '사용자 중단' }); break }
+      const type = cut.cutType
+      if (autoSkipDone && videoStatus[cut.no]) {
+        skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: '이미 완료' }); continue
+      }
+      const brMode = getBrollSourceMode(cut.no)
+      const ccMode = getCapcutMode(cut.no)
+      if ((type === 'BROLL' && brMode === 'record') || (type === 'CAPCUT' && ccMode === 'record')) {
+        skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: '화면 녹화 방식 — 수동으로 진행하세요' }); continue
+      }
+      autoPush({ kind: 'run', cutNo: cut.no, type, msg: '제작 중…' })
+      try {
+        if (type === 'GRAPHIC' || type === 'CAPCUT') {
+          await autoProduceGraphicish(cut)
+          let extra = ''
+          if (autoDoOverlay && cut.subtitle && typeStyles[type]?.overlay?.enabled) {
+            const ov = await runOverlay(cut)
+            extra = ov?.ok ? ' + 손글씨' : ov?.error ? ` (손글씨 실패: ${ov.error})` : ''
+          }
+          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료${extra}` })
+        } else if (type === 'BROLL') {
+          const r = await autoProduceBroll(cut)
+          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · "${r.query}"` })
+        }
+      } catch (e) {
+        if (e.soft) { skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: e.message }) }
+        else { fail++; autoPush({ kind: 'error', cutNo: cut.no, type, msg: e.message }) }
+      }
+    }
+    autoPush({ kind: 'info', msg: `끝 — 완료 ${ok} · 건너뜀 ${skip} · 실패 ${fail}` })
+    setAutoRunning(false)
+  }
+
+  const renderAutoRunCard = () => {
+    const targets = allCuts.filter(c => MANUAL_TYPES.includes(c.cutType || 'YEORI'))
+    const byType = targets.reduce((m, c) => ((m[c.cutType] = (m[c.cutType] || 0) + 1), m), {})
+    return (
+      <div className={s.card}>
+        <button className={s.collapseToggle} onClick={() => setAutoOpen(v => !v)}>
+          {autoOpen ? '▼' : '▶'} 유형별 자동실행 — GRAPHIC · CAPCUT(HTML) · BROLL(Pexels) 일괄 제작
+        </button>
+        {autoOpen && (
+          <>
+            <div className={s.emptyHint}>
+              헤드리스로 만들 수 있는 컷만 유형에 맞게 자동 제작합니다.
+              GRAPHIC/CAPCUT은 유형별 스타일(또는 지정 목업)로 캡처하고 CP가 있으면 손글씨까지,
+              BROLL은 컷 프롬프트에서 뽑은 키워드로 Pexels 영상을 자동 선택해 규격화합니다.
+              <b> CapCut 녹화·화면 녹화 방식 컷은 건너뜁니다.</b>
+            </div>
+            <div className={s.autoNote}>
+              대상: 총 {targets.length}컷
+              {Object.entries(byType).map(([k, v]) => ` · ${k} ${v}`).join('')}
+              {' '}(YEORI 등 파이프라인 컷 제외)
+            </div>
+            <div className={s.radioRow}>
+              <label className={s.radioLabel}>
+                <input type="checkbox" checked={autoSkipDone} onChange={e => setAutoSkipDone(e.target.checked)} />
+                이미 완료된 컷 건너뛰기
+              </label>
+              <label className={s.radioLabel}>
+                <input type="checkbox" checked={autoDoOverlay} onChange={e => setAutoDoOverlay(e.target.checked)} />
+                손글씨 오버레이도 자동
+              </label>
+            </div>
+            <div className={s.editorActions}>
+              <button className={s.captureBtn} disabled={autoRunning || !episode?.number || !targets.length}
+                onClick={runAutoByType}>
+                {autoRunning ? '⏳ 자동실행 중…' : '▶ 유형별 자동실행'}
+              </button>
+              {autoRunning && (
+                <button className={s.stopBtn} onClick={() => { autoStopRef.current = true }}>중단</button>
+              )}
+              {!episode?.number && <span className={s.emptyHint}>활성 에피소드가 필요합니다.</span>}
+            </div>
+            {autoLog.length > 0 && (
+              <div className={s.cutList} style={{ marginTop: 8 }}>
+                {autoLog.map((l, i) => (
+                  <div key={i} className={
+                    l.kind === 'error' ? s.resultError : l.kind === 'ok' ? s.resultOk : s.autoNote
+                  }>
+                    {l.kind === 'ok' ? '✅' : l.kind === 'error' ? '❌' : l.kind === 'skip' ? '⏭' : l.kind === 'run' ? '⏳' : 'ℹ'}
+                    {' '}{l.cutNo != null ? `컷 ${l.cutNo} [${l.type}] — ` : ''}{l.msg}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    )
   }
 
   // 컷 카드 하단 — CP 있는 GRAPHIC/CAPCUT 컷의 오버레이 상태/재적용만.
@@ -1198,6 +1376,13 @@ export default function MakingTab() {
                     </label>
                   )}
 
+                  {t.key === 'BROLL' && (
+                    <label className={s.styleField}>자동실행 기본 검색어 (문맥 · 선택)
+                      <input value={cfg.brollQuery || ''} placeholder="예: beauty salon, minimal studio"
+                        onChange={e => updateTypeStyle('BROLL', { brollQuery: e.target.value })} />
+                    </label>
+                  )}
+
                   {t.hasTemplate && (
                     <>
                       <label className={s.styleField}>기본 HTML 파일
@@ -1537,6 +1722,7 @@ export default function MakingTab() {
               </div>
 
               {renderTypeStyleCard()}
+              {renderAutoRunCard()}
 
               <div className={s.card}>
                 <div className={s.cardTitle}>전체 컷 목록</div>
