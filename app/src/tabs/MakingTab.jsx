@@ -868,6 +868,23 @@ export default function MakingTab() {
     }
   }
 
+  // BROLL Pexels 패널 — "AI로 자동 선택 → 제작" (자동실행과 같은 /api/broll-auto)
+  const [brollAutoBusy, setBrollAutoBusy] = useState({})
+  const [brollAutoResult, setBrollAutoResult] = useState({})
+  const runBrollAutoManual = async (cut) => {
+    if (!episode.number) return
+    setBrollAutoBusy(p => ({ ...p, [cut.no]: true }))
+    setBrollAutoResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const data = await autoProduceBroll(cut)
+      setBrollAutoResult(p => ({ ...p, [cut.no]: data }))
+    } catch (e) {
+      setBrollAutoResult(p => ({ ...p, [cut.no]: { error: e.message } }))
+    } finally {
+      setBrollAutoBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+
   const runAutoByType = async () => {
     if (autoRunning || !episode?.number) return
     autoStopRef.current = false
@@ -935,8 +952,8 @@ export default function MakingTab() {
           <>
             <div className={s.emptyHint}>
               헤드리스로 만들 수 있는 컷만 유형에 맞게 자동 제작합니다.
-              GRAPHIC/CAPCUT은 유형별 스타일(또는 지정 목업)로 캡처하고 CP가 있으면 손글씨까지,
-              BROLL은 컷 프롬프트에서 뽑은 키워드로 Pexels 영상을 자동 선택해 규격화합니다.
+              GRAPHIC/CAPCUT은 유형별 스타일·<b>기본 모션</b>(줌/페이드)으로 캡처하고 CP가 있으면 손글씨까지,
+              BROLL은 <b>컷 묘사 → AI 검색어</b>로 Pexels 영상을 자동 선택해 규격화합니다.
               BROLL 화면 녹화 방식이라도 <b>컷에 소스 URL(brollUrl)</b>이 있으면 헤드리스 URL 캡처로 대체합니다.
               <b> CapCut 데스크톱 녹화, 소스 URL 없는 화면 녹화 컷은 건너뜁니다</b>(수동 진행).
             </div>
@@ -1112,6 +1129,23 @@ export default function MakingTab() {
 
         {mode === 'pexels' ? (
           <>
+            <div className={s.editorActions}>
+              <button className={s.captureBtn}
+                disabled={brollAutoBusy[cut.no] || !episode.number}
+                onClick={() => runBrollAutoManual(cut)}>
+                {brollAutoBusy[cut.no] ? '⏳ AI 선택 중…' : '✨ AI로 자동 선택 → 제작'}
+              </button>
+              <span className={s.emptyHint}>컷 묘사로 검색어를 만들어 Pexels 영상을 골라 규격화합니다.</span>
+            </div>
+            {brollAutoResult[cut.no] && (
+              brollAutoResult[cut.no].error ? (
+                <div className={s.resultError}>❌ {brollAutoResult[cut.no].error}</div>
+              ) : (
+                <div className={s.resultOk}>
+                  ✅ {brollAutoResult[cut.no].aiUsed ? 'AI검색어' : '검색어'} “{brollAutoResult[cut.no].query}” — {brollAutoResult[cut.no].outputPath || brollAutoResult[cut.no].finalPath}
+                </div>
+              )
+            )}
             <div className={s.urlRow}>
               <input className={s.urlInput} value={sourceQuery} placeholder="예: slot machine lever"
                 onChange={e => setSourceQuery(e.target.value)}
@@ -1501,6 +1535,11 @@ export default function MakingTab() {
                           </select>
                         </label>
                       </div>
+                      <label className={s.styleField}>기본 모션 (정지 그래픽에 자동 적용)
+                        <select value={st.motion || 'none'} onChange={e => setStyle({ motion: e.target.value })}>
+                          {GRAPHIC_MOTIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                        </select>
+                      </label>
                       <div className={s.stylePreviewBox}>
                         <iframe title={`style-preview-${t.key}`} className={s.stylePreviewFrame}
                           srcDoc={buildGraphicHtml(st, '서여리\nMAKING')} />
