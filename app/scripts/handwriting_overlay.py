@@ -43,15 +43,20 @@ except Exception:
     pass
 
 # ── 폰트 ──────────────────────────────────────────────────────────────
+# 저장소에 손글씨 폰트(나눔손글씨 펜, OFL)를 번들해 둔다 — 시스템에 손글씨 폰트가
+# 없어도 항상 손글씨체로 렌더되도록. app/assets/fonts/ 기준.
+BUNDLED_FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 FONT_DIRS = [
+    BUNDLED_FONT_DIR,
     Path(r"C:\Windows\Fonts"),
     Path.home() / "AppData/Local/Microsoft/Windows/Fonts",
 ]
 
-# 빙그레체/나눔손글씨는 배포 파일명이 제각각이라 흔한 이름 후보를 순서대로 시도
+# 번들 폰트 → 시스템 빙그레체/나눔손글씨 → 맑은고딕 순으로 시도
 HANDWRITING_FONT_CANDIDATES = [
+    "NanumPenScript-Regular.ttf", "Gaegu-Bold.ttf",
     "BinggraeTaomB.ttf", "BinggraeTaom.ttf", "Binggrae.ttf",
-    "NanumPenScript-Regular.ttf", "NanumPen.ttf", "NanumBrush.ttf", "NanumBrushScript.ttf",
+    "NanumPen.ttf", "NanumBrush.ttf", "NanumBrushScript.ttf",
 ]
 FALLBACK_FONT_CANDIDATES = ["malgun.ttf", "malgunbd.ttf"]
 EMOJI_FONT_CANDIDATES = ["seguiemj.ttf"]
@@ -78,8 +83,12 @@ TEXT_FONT_PATH = resolve_text_font_path()
 EMOJI_FONT_PATH = _find_font(EMOJI_FONT_CANDIDATES)
 
 if TEXT_FONT_PATH:
-    is_target = TEXT_FONT_PATH.name.lower().startswith(("binggrae", "nanum"))
-    note = "" if is_target else " (빙그레체/나눔손글씨 미설치 — 맑은고딕으로 대체됨)"
+    _low = TEXT_FONT_PATH.name.lower()
+    is_hand = _low.startswith(("binggrae", "nanum", "gaegu"))
+    is_bundled = BUNDLED_FONT_DIR in TEXT_FONT_PATH.parents
+    note = "" if is_hand else " (손글씨 폰트 미탐지 — 맑은고딕으로 대체됨)"
+    if is_bundled and not note:
+        note = " (저장소 번들)"
     print(f"ℹ 손글씨 폰트: {TEXT_FONT_PATH.name}{note}")
 else:
     print("⚠ 시스템에서 손글씨/맑은고딕 폰트를 못 찾아 PIL 기본 폰트로 대체합니다(한글이 깨질 수 있음).")
