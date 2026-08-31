@@ -37,7 +37,13 @@ const DEFAULT_GRAPHIC_STYLE = {
   fontWeight: 700,
   align: 'center',   // 가로: left | center | right
   vAlign: 'center',  // 세로: top | center | bottom
+  motion: 'none',    // 정지 그래픽 기본 모션: none | zoom-in | zoom-out | fade | zoom-in-fade
 }
+
+const GRAPHIC_MOTIONS = [
+  ['none', '없음(정지)'], ['zoom-in', '천천히 확대'], ['zoom-out', '천천히 축소'],
+  ['fade', '페이드 인'], ['zoom-in-fade', '확대 + 페이드'],
+]
 
 const H_MAP = { left: 'flex-start', center: 'center', right: 'flex-end' }
 const V_MAP = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
@@ -309,7 +315,10 @@ export default function MakingTab() {
       const res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration }),
+        body: JSON.stringify({
+          html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration,
+          motion: styleFor(cut?.cutType)?.motion || 'none',
+        }),
       })
       const data = await res.json()
       if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
@@ -790,16 +799,17 @@ export default function MakingTab() {
     const type = cut.cutType
     const cfgFile = String(typeStyles[type]?.htmlFile || '').trim()
     const dur = cut.duration || 5
+    const motion = styleFor(type)?.motion || 'none'
     let res, data
     if (cfgFile) {
       res = await fetch(`${YEORI_SERVER}/api/make-graphic-cut`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, htmlFile: cfgFile }),
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, htmlFile: cfgFile, motion }),
       })
     } else {
       res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: fillTemplate(cut, styleFor(type)), cutNo: cut.no, epNum: episode.number, duration: dur }),
+        body: JSON.stringify({ html: fillTemplate(cut, styleFor(type)), cutNo: cut.no, epNum: episode.number, duration: dur, motion }),
       })
     }
     data = await res.json().catch(() => ({}))
@@ -808,24 +818,23 @@ export default function MakingTab() {
   }
 
   const autoProduceBroll = async (cut) => {
-    const q = deriveBrollKeyword(cut, typeStyles.BROLL.brollQuery)
-    if (!q) { const e = new Error('검색어를 만들 수 없음 — 컷 프롬프트가 비었거나, BROLL 기본 검색어를 지정하세요'); e.soft = true; throw e }
-    const params = new URLSearchParams({ q, type: 'video', orientation: 'portrait', page: '1', perPage: '12' })
-    const sr = await fetch(`${YEORI_SERVER}/api/source-search?${params}`)
-    const sd = await sr.json().catch(() => ({}))
-    if (!sr.ok) throw new Error(sd.error || 'Pexels 검색 실패')
-    const vids = (sd.results || []).filter(r => r.type === 'video')
-    if (!vids.length) { const e = new Error(`Pexels 결과 없음 (검색어: "${q}")`); e.soft = true; throw e }
-    const target = cut.duration || 5
-    const pick = [...vids].sort((a, b) =>
-      Math.abs((a.duration || 99) - target) - Math.abs((b.duration || 99) - target))[0]
-    const dr = await fetch(`${YEORI_SERVER}/api/download-broll-cut`, {
+    const description = `${cut.scene || ''} ${cut.narration || cut.dialogue || ''} ${cut.videoPrompt || ''}`.trim()
+    const res = await fetch(`${YEORI_SERVER}/api/broll-auto`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, videoUrl: pick.downloadUrl, duration: target }),
+      body: JSON.stringify({
+        epNum: episode.number, cutNo: cut.no,
+        description,
+        duration: cut.duration || 5,
+        hint: typeStyles.BROLL.brollQuery || '',
+        fallbackQuery: deriveBrollKeyword(cut, ''),
+      }),
     })
-    const dd = await dr.json().catch(() => ({}))
-    if (!dr.ok) throw new Error(dd.error || '다운로드 실패')
-    return { ...dd, query: q, picked: pick.photographer || pick.id }
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      if (res.status === 422) { const e = new Error(data.error || 'BROLL 자동 선택 실패'); e.soft = true; throw e }
+      throw new Error(data.error || 'BROLL 자동 선택 실패')
+    }
+    return data
   }
 
   // 화면 녹화 대체 — URL 영상을 헤드리스로 캡처(페이지에서 미디어 URL 추출 → ffmpeg).
@@ -903,7 +912,7 @@ export default function MakingTab() {
           ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료${extra}` })
         } else if (type === 'BROLL') {
           const r = await autoProduceBroll(cut)
-          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · "${r.query}"` })
+          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · ${r.aiUsed ? 'AI검색어' : '검색어'} "${r.query}"` })
         }
       } catch (e) {
         if (e.soft) { skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: e.message }) }

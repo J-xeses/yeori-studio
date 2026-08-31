@@ -2124,6 +2124,53 @@ app.post('/api/download-broll-cut', async (req, res) => {
   }
 })
 
+// 컷 묘사(한글) → Pexels 스톡 영상 검색어(영어). 키 없으면 null 반환(호출부가 폴백).
+async function aiPexelsQuery(desc, hint) {
+  if (!ANTHROPIC_API_KEY || !String(desc || '').trim()) return null
+  try {
+    const raw = await callClaudeText(
+      `세로 인스타 릴스의 한 컷 묘사입니다. 이 장면에 어울리는 Pexels 스톡 영상 검색어를\n`
+      + `영어 2~4단어로 만드세요. 추상적 감정어 금지 — 구체적 피사체·행동·장소 위주.\n`
+      + (hint ? `맥락(참고): ${hint}\n` : '')
+      + `컷 묘사: ${String(desc).slice(0, 500)}\n\n검색어만 한 줄로 출력(따옴표·설명 없이).`,
+      50,
+    )
+    const q = raw.split('\n')[0].replace(/["'`.]/g, '').trim().slice(0, 80)
+    return q || null
+  } catch {
+    return null
+  }
+}
+
+// POST /api/broll-auto — 컷 묘사로 BROLL 컷을 완전 자동 생성.
+// AI 검색어(없으면 fallbackQuery) → Pexels 검색 → 길이 근접 상위 영상 → 규격화 다운로드.
+// MakingTab 자동실행의 BROLL 경로 + "AI로 자동 선택" 버튼이 호출.
+app.post('/api/broll-auto', async (req, res) => {
+  const { epNum, cutNo, description, duration, hint, fallbackQuery } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    let query = await aiPexelsQuery(description, hint)
+    const aiUsed = !!query
+    if (!query) query = String(fallbackQuery || description || '').replace(/[가-힣]+/g, ' ').replace(/[^a-zA-Z ]+/g, ' ').trim().split(/\s+/).slice(0, 4).join(' ')
+    if (query && hint && !query.toLowerCase().includes(String(hint).toLowerCase())) query = `${query} ${hint}`.trim()
+    if (!query) return res.status(422).json({ error: '검색어를 만들 수 없습니다 — 컷 묘사가 비었거나 기본 검색어를 지정하세요' })
+
+    const params = new URLSearchParams({ q: query, type: 'video', orientation: 'portrait', page: '1', perPage: '15' })
+    const { status, body } = await selfFetch(`/api/source-search?${params}`)
+    if (status !== 200) return res.status(502).json({ error: body?.error || 'Pexels 검색 실패', query })
+    const vids = (body.results || []).filter(r => r.type === 'video')
+    if (!vids.length) return res.status(422).json({ error: `Pexels 결과 없음 (검색어: "${query}")`, query, aiUsed })
+
+    const target = parseFloat(duration) || 5
+    const pick = [...vids].sort((a, b) =>
+      Math.abs((a.duration || 99) - target) - Math.abs((b.duration || 99) - target))[0]
+    const result = await downloadBrollCut({ epNum, cutNo, videoUrl: pick.downloadUrl, duration: target })
+    res.json({ success: true, query, aiUsed, picked: pick.photographer || pick.id, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // 에피소드 소스 폴더의 .html 파일 목록/내용 조회 — 아래 3개 함수는 /api/list-episode-html,
 // /api/read-episode-html(브라우저)과 MCP 도구(list_episode_html_sources, make_graphic_cut)가
 // 공유하는 핵심 로직. instaContent/instaNum이 오면 downloads/insta/{content}/{num}/, 아니면
@@ -2173,7 +2220,30 @@ app.get('/api/read-episode-html', (req, res) => {
 // (^cut_(\d{2})(_final)?\.mp4$)과 동일 규칙 — G4를 건너뛴 GRAPHIC 컷의 "영상"으로
 // 그대로 인식되게 하기 위함. /api/graphic-capture(브라우저)와 MCP 도구
 // make_graphic_cut이 공유하는 핵심 로직.
-async function runGraphicCapture({ html, cutNo, epNum, duration }) {
+// 정지 그래픽에 기본 모션을 입힌다(별도 CapCut 없이). motion:
+//   none | zoom-in | zoom-out | fade | zoom-in-fade
+function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
+  const frames = Math.max(2, Math.round(dur * fps))
+  const m = motion || 'none'
+  let vf
+  if (m === 'zoom-in' || m === 'zoom-out' || m === 'zoom-in-fade') {
+    const zin = m.startsWith('zoom-in')
+    const z0 = zin ? 1.0 : 1.12
+    const z1 = zin ? 1.12 : 1.0
+    // 업스케일 후 zoompan — 픽셀 여유가 있어야 확대해도 뭉개지지 않음
+    vf = `scale=${W * 2}:${H * 2},zoompan=z='${z0}+(${z1 - z0})*on/${frames}':d=1`
+      + `:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${W}x${H}:fps=${fps},format=yuv420p`
+  } else {
+    vf = `scale=${W}:${H},format=yuv420p`
+  }
+  if (m === 'fade' || m === 'zoom-in-fade') {
+    const fd = Math.min(0.5, dur / 4)
+    vf += `,fade=t=in:st=0:d=${fd.toFixed(2)}`
+  }
+  return vf
+}
+
+async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
 
@@ -2205,11 +2275,9 @@ async function runGraphicCapture({ html, cutNo, epNum, duration }) {
       const proc = spawn('ffmpeg', [
         '-y', '-loop', '1', '-i', imagePath,
         '-t', String(dur),
-        '-vf', 'scale=1080:1920,format=yuv420p',
-        // PNG 입력이면 libx264가 yuv444p로 인코딩해서 일반 플레이어(WMP/브라우저/HW 디코더)가
-        // 재생을 못 한다 — yuv420p 강제 + faststart로 어디서든 열리게 한다.
-        // -g 30: 정지 이미지 루프라 키프레임이 1개만 생겨서 플레이어가 탐색/미리보기 시
-        // "앞부분만" 재생하는 문제 → 1초마다 키프레임을 박는다.
+        // motion 프리셋(zoompan/fade) 또는 정적 scale. PNG→yuv444p 재생불가 문제는
+        // 항상 format=yuv420p로 마무리. -g 30: 정지/저움직임이라 1초마다 키프레임.
+        '-vf', graphicMotionVf(motion, dur),
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-g', '30',
         '-movflags', '+faststart',
         videoPath,
@@ -2228,13 +2296,13 @@ async function runGraphicCapture({ html, cutNo, epNum, duration }) {
 }
 
 app.post('/api/graphic-capture', async (req, res) => {
-  const { html, cutNo, epNum, duration } = req.body || {}
+  const { html, cutNo, epNum, duration, motion } = req.body || {}
   if (!html || cutNo == null || !epNum) return res.status(400).json({ error: 'html, cutNo, epNum 필요' })
   try {
     // 커스텀 목업 HTML(.phone-wrap 여러 컷 포함, 예: RL02_DM_mockup_v3.html)이면 이 컷만
     // 남기고 나머지 .phone-wrap은 숨긴다 — MCP make_graphic_cut 경로와 동일 처리.
     // 자동 템플릿엔 .phone-wrap이 없어 isolateCutInHtml이 무영향(원본 그대로 반환).
-    const result = await runGraphicCapture({ html: isolateCutInHtml(html, cutNo), cutNo, epNum, duration })
+    const result = await runGraphicCapture({ html: isolateCutInHtml(html, cutNo), cutNo, epNum, duration, motion })
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
@@ -2247,10 +2315,10 @@ app.post('/api/graphic-capture', async (req, res) => {
 // /api/mcp/make-graphic-cut(Bearer 인증, 원격 브리지)과 로직 공유하는 무인증 로컬용 —
 // /api/making-assemble ↔ /api/mcp/assemble-making-film과 같은 이원 구성.
 app.post('/api/make-graphic-cut', async (req, res) => {
-  const { epNum, cutNo, htmlFile } = req.body || {}
+  const { epNum, cutNo, htmlFile, motion } = req.body || {}
   if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
   try {
-    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile })
+    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion })
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
@@ -4842,7 +4910,7 @@ async function getEpisodeHtmlSources(epNum) {
   return { cuts, availableHtmlFiles: files }
 }
 
-async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile }) {
+async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
   const { epId, ep } = findEpisodeByNumOrThrow(epNum)
   const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
   if (!cut) { const e = new Error(`컷 번호 ${cutNo} 없음`); e.statusCode = 404; throw e }
@@ -4856,7 +4924,7 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile }) {
     html = fillTemplateForMcp(cut)
   }
 
-  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration })
+  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion })
 }
 
 // 컷과 무관한 전역 CapCut 데스크톱 앱 상태(getCapCutWindow) + 서버 메모리상의 "지금
