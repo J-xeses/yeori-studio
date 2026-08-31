@@ -828,6 +828,37 @@ export default function MakingTab() {
     return { ...dd, query: q, picked: pick.photographer || pick.id }
   }
 
+  // 화면 녹화 대체 — URL 영상을 헤드리스로 캡처(페이지에서 미디어 URL 추출 → ffmpeg).
+  const runBrollUrlCapture = async (cut, url) => {
+    const dur = cut.duration || brollTargetDuration || 5
+    const res = await fetch(`${YEORI_SERVER}/api/capture-video-url`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, cutNo: cut.no, epNum: episode.number, duration: dur, trimMode: brollTrimMode }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) throw new Error(data.error || 'URL 캡처 실패')
+    return data
+  }
+
+  // 수동 패널용 — BROLL 화면 녹화 섹션의 "URL로 헤드리스 제작"
+  const [brollUrlInput, setBrollUrlInput] = useState({})   // { [cutNo]: string }
+  const [brollUrlBusy, setBrollUrlBusy] = useState({})
+  const [brollUrlResult, setBrollUrlResult] = useState({})
+  const doBrollUrlCapture = async (cut) => {
+    const url = String(brollUrlInput[cut.no] || '').trim()
+    if (!url || !episode.number) return
+    setBrollUrlBusy(p => ({ ...p, [cut.no]: true }))
+    setBrollUrlResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const data = await runBrollUrlCapture(cut, url)
+      setBrollUrlResult(p => ({ ...p, [cut.no]: data }))
+    } catch (e) {
+      setBrollUrlResult(p => ({ ...p, [cut.no]: { error: e.message } }))
+    } finally {
+      setBrollUrlBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+
   const runAutoByType = async () => {
     if (autoRunning || !episode?.number) return
     autoStopRef.current = false
@@ -844,12 +875,25 @@ export default function MakingTab() {
       }
       const brMode = getBrollSourceMode(cut.no)
       const ccMode = getCapcutMode(cut.no)
-      if ((type === 'BROLL' && brMode === 'record') || (type === 'CAPCUT' && ccMode === 'record')) {
-        skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: '화면 녹화 방식 — 수동으로 진행하세요' }); continue
+      const brollUrl = String(cut.brollUrl || cut.sourceUrl || '').trim()
+      // BROLL 화면 녹화 방식이라도 컷에 소스 URL이 있으면 헤드리스 URL 캡처로 대체
+      const brollViaUrl = type === 'BROLL' && brMode === 'record' && brollUrl
+      if (((type === 'BROLL' && brMode === 'record') || (type === 'CAPCUT' && ccMode === 'record')) && !brollViaUrl) {
+        skip++
+        autoPush({
+          kind: 'skip', cutNo: cut.no, type,
+          msg: type === 'BROLL'
+            ? '화면 녹화 — 컷에 소스 URL을 넣으면 자동, 아니면 수동 녹화'
+            : 'CapCut 녹화 — 수동, 또는 몽타주/헤어라인이면 CDP 자동편집 스크립트',
+        })
+        continue
       }
       autoPush({ kind: 'run', cutNo: cut.no, type, msg: '제작 중…' })
       try {
-        if (type === 'GRAPHIC' || type === 'CAPCUT') {
+        if (brollViaUrl) {
+          await runBrollUrlCapture(cut, brollUrl)
+          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · URL 캡처` })
+        } else if (type === 'GRAPHIC' || type === 'CAPCUT') {
           await autoProduceGraphicish(cut)
           let extra = ''
           if (autoDoOverlay && cut.subtitle && typeStyles[type]?.overlay?.enabled) {
@@ -884,7 +928,8 @@ export default function MakingTab() {
               헤드리스로 만들 수 있는 컷만 유형에 맞게 자동 제작합니다.
               GRAPHIC/CAPCUT은 유형별 스타일(또는 지정 목업)로 캡처하고 CP가 있으면 손글씨까지,
               BROLL은 컷 프롬프트에서 뽑은 키워드로 Pexels 영상을 자동 선택해 규격화합니다.
-              <b> CapCut 녹화·화면 녹화 방식 컷은 건너뜁니다.</b>
+              BROLL 화면 녹화 방식이라도 <b>컷에 소스 URL(brollUrl)</b>이 있으면 헤드리스 URL 캡처로 대체합니다.
+              <b> CapCut 데스크톱 녹화, 소스 URL 없는 화면 녹화 컷은 건너뜁니다</b>(수동 진행).
             </div>
             <div className={s.autoNote}>
               대상: 총 {targets.length}컷
@@ -1129,17 +1174,44 @@ export default function MakingTab() {
           </>
         ) : (
           <>
-            <div className={s.settingRow}>
-              <div className={s.settingGroup}>
-                <div className={s.settingLabel}>URL(선택)</div>
-                <div className={s.urlRow}>
-                  <input className={s.urlInput} value={brollUrl} placeholder="https://..."
-                    onChange={e => setBrollUrl(e.target.value)} />
-                  <button className={s.previewBtn} disabled={!brollUrl}
-                    onClick={() => window.open(brollUrl, '_blank', 'noopener,noreferrer')}>열기</button>
-                </div>
+            <div className={s.settingGroup}>
+              <div className={s.settingLabel}>영상 URL — 헤드리스 캡처 (화면 녹화 없이)</div>
+              <div className={s.urlRow}>
+                <input className={s.urlInput}
+                  value={brollUrlInput[cut.no] ?? brollUrl}
+                  placeholder="영상 페이지 또는 mp4/webm/m3u8 URL"
+                  onChange={e => setBrollUrlInput(p => ({ ...p, [cut.no]: e.target.value }))} />
+                <button className={s.previewBtn}
+                  disabled={!(brollUrlInput[cut.no] ?? brollUrl)}
+                  onClick={() => window.open(brollUrlInput[cut.no] ?? brollUrl, '_blank', 'noopener,noreferrer')}>열기</button>
+                <button className={s.captureBtn}
+                  disabled={brollUrlBusy[cut.no] || !(brollUrlInput[cut.no] ?? brollUrl) || !episode.number}
+                  onClick={() => doBrollUrlCapture(cut)}>
+                  {brollUrlBusy[cut.no] ? '⏳ 캡처 중…' : 'URL로 제작'}
+                </button>
               </div>
+              <div className={s.emptyHint}>
+                페이지에서 실제 미디어 URL(mp4·webm·m3u8)을 추출해 ffmpeg로 직접 받아 1080×1920로 규격화합니다.
+                blob/DRM/캔버스 렌더링 영상은 추출 불가 → 아래 데스크톱 녹화를 쓰세요.
+              </div>
+              {brollUrlResult[cut.no] && (
+                brollUrlResult[cut.no].error ? (
+                  <div className={s.resultError}>❌ {brollUrlResult[cut.no].error}</div>
+                ) : (
+                  <div className={s.resultOk}>
+                    ✅ 편집 완료 — {brollUrlResult[cut.no].finalPath}
+                    {brollUrlResult[cut.no].finalDuration != null &&
+                      <> ({(brollUrlResult[cut.no].finalDuration).toFixed?.(1) ?? brollUrlResult[cut.no].finalDuration}초)</>}
+                    <br /><span className={s.emptyHint}>소스: {brollUrlResult[cut.no].mediaUrl}</span>
+                  </div>
+                )
+              )}
+            </div>
 
+            <div className={s.settingLabel} style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+              또는 데스크톱 화면 녹화
+            </div>
+            <div className={s.settingRow}>
               <div className={s.settingGroup}>
                 <div className={s.settingLabel}>녹화 품질</div>
                 <div className={s.radioRow}>

@@ -2007,6 +2007,110 @@ app.post('/api/source-download', async (req, res) => {
 // 무인증 로컬 프론트엔드용 라우트 — 원격 브리지용 /api/mcp/download-broll-cut(Bearer
 // 인증)과 /api/making-assemble ↔ /api/mcp/assemble-making-film과 똑같은 이원 구성.
 // MakingTab.jsx의 BROLL 컷 [제작 실행](Pexels 소스)이 이 라우트를 호출한다.
+// ── 화면 녹화 대체: URL 영상 헤드리스 캡처 ─────────────────────────────
+// "화면 녹화" BROLL의 상당수는 "웹에 있는 영상을 재생시켜 녹화"하는 것이므로,
+// 페이지에서 실제 미디어 URL(mp4/webm/m3u8)을 뽑아 ffmpeg로 직접 받으면
+// 데스크톱 캡처 없이 처리된다. HLS(.m3u8)도 ffmpeg가 바로 받는다.
+// 스트리밍이 blob:/DRM/canvas 렌더면 URL을 못 찾아 422 — 그건 수동 녹화로.
+const MEDIA_EXT_RE = /\.(mp4|webm|mov|m4v|m3u8|mpd)(\?|#|$)/i
+async function resolvePageVideoUrl(pageUrl) {
+  let browser
+  const found = new Set()
+  try {
+    browser = await puppeteer.launch({
+      executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      headless: true,
+      args: ['--autoplay-policy=no-user-gesture-required', '--mute-audio'],
+    })
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1280, height: 720 })
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
+    page.on('response', (resp) => {
+      try {
+        const u = resp.url()
+        const ct = (resp.headers()['content-type'] || '').toLowerCase()
+        if (ct.startsWith('video/') || ct.includes('mpegurl') || ct.includes('dash+xml') || MEDIA_EXT_RE.test(u)) {
+          if (!u.startsWith('blob:')) found.add(u)
+        }
+      } catch { /* noop */ }
+    })
+    await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    await new Promise((r) => setTimeout(r, 2000))
+    // 재생 버튼처럼 보이는 요소를 눌러 지연 로딩 소스를 깨운다
+    await page.evaluate(() => {
+      const clickish = document.querySelector(
+        '[aria-label*="play" i],[class*="play" i] button,button[class*="play" i],.vjs-big-play-button,video')
+      if (clickish && clickish.click) try { clickish.click() } catch { /* noop */ }
+      const v = document.querySelector('video')
+      if (v) { v.muted = true; const p = v.play(); if (p && p.catch) p.catch(() => {}) }
+    }).catch(() => {})
+    await new Promise((r) => setTimeout(r, 5000))
+    const domSrcs = await page.evaluate(() => {
+      const out = []
+      document.querySelectorAll('video').forEach((v) => { if (v.currentSrc) out.push(v.currentSrc); if (v.src) out.push(v.src) })
+      document.querySelectorAll('video source, source').forEach((s) => { if (s.src) out.push(s.src) })
+      return out
+    }).catch(() => [])
+    domSrcs.forEach((u) => { if (u && !u.startsWith('blob:')) found.add(u) })
+  } finally {
+    if (browser) await browser.close()
+  }
+  const score = (u) => /\.mp4/i.test(u) ? 4 : /\.webm/i.test(u) ? 3 : /mpegurl|\.m3u8/i.test(u) ? 2 : /\.mpd|dash/i.test(u) ? 1 : 0
+  return [...found].sort((a, b) => score(b) - score(a))[0] || null
+}
+
+function ffmpegGrabToFile(mediaUrl, outPath, seconds) {
+  fs.mkdirSync(path.dirname(outPath), { recursive: true })
+  const runOnce = (copyCodec) => new Promise((resolve, reject) => {
+    const args = ['-y', '-user_agent', 'Mozilla/5.0', '-i', mediaUrl]
+    if (seconds) args.push('-t', String(seconds))
+    if (copyCodec) args.push('-c', 'copy', '-bsf:a', 'aac_adtstoasc')
+    else args.push('-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-c:a', 'aac')
+    args.push('-movflags', '+faststart', outPath)
+    const proc = spawn('ffmpeg', args)
+    let err = ''
+    proc.stderr.on('data', (d) => { err += d.toString() })
+    proc.on('error', reject)
+    proc.on('close', (code) => code === 0 ? resolve() : reject(new Error(err.slice(-600) || `ffmpeg 종료 ${code}`)))
+  })
+  return runOnce(true).catch(() => runOnce(false))
+}
+
+app.post('/api/capture-video-url', async (req, res) => {
+  const { url, cutNo, epNum, duration, trimMode } = req.body || {}
+  if (!url || cutNo == null || epNum == null) {
+    return res.status(400).json({ error: 'url, cutNo, epNum이 필요합니다' })
+  }
+  const target = parseFloat(duration) || 5
+  try {
+    let mediaUrl = null
+    if (MEDIA_EXT_RE.test(url)) {
+      mediaUrl = url
+    } else {
+      try {
+        const h = await fetch(url, { method: 'HEAD' })
+        if ((h.headers.get('content-type') || '').toLowerCase().startsWith('video/')) mediaUrl = url
+      } catch { /* HEAD 실패는 무시하고 페이지 파싱으로 */ }
+      if (!mediaUrl) mediaUrl = await resolvePageVideoUrl(url)
+    }
+    if (!mediaUrl) {
+      return res.status(422).json({
+        error: '이 페이지에서 영상 소스를 찾지 못했습니다. blob/DRM/캔버스 렌더링이면 URL 캡처가 불가하니 데스크톱 녹화로 진행하세요.',
+      })
+    }
+    const rawPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `urlcap_raw_cut${String(cutNo).padStart(2, '0')}.mp4`)
+    await ffmpegGrabToFile(mediaUrl, rawPath, target + 3)
+    const result = await editBrollRaw({
+      rawPath, cutNo, epNum,
+      targetDuration: target,
+      trimMode: trimMode === 'start' ? 'start' : 'end',
+    })
+    res.json({ success: true, mediaUrl, rawPath, ...result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: `URL 캡처 실패: ${err.message}` })
+  }
+})
+
 app.post('/api/download-broll-cut', async (req, res) => {
   const { epNum, cutNo, videoUrl, duration } = req.body || {}
   if (epNum == null || cutNo == null || !videoUrl) {
