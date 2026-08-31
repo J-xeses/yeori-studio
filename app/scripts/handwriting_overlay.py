@@ -230,7 +230,7 @@ def draw_deco_glyph(draw, xy, ch, size, fill):
         draw.text(xy, ch, font=load_font(TEXT_FONT_PATH, size), fill=fill)
 
 
-def draw_mixed_text(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 0, 0, 190)):
+def draw_mixed_text(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 0, 0, 210)):
     x, y = xy
     for is_e, run in split_runs(text):
         font = _run_font(is_e, size)
@@ -307,7 +307,7 @@ def draw_cloud(draw, box, color, width=4):
     pts = []
     for i in range(steps + 1):
         a = 2 * math.pi * i / steps
-        bulge = 1.12 + 0.16 * (math.sin(bumps * a) * 0.5 + 0.5)  # 부드러운 스캘럽
+        bulge = 1.03 + 0.12 * (math.sin(bumps * a) * 0.5 + 0.5)  # 부드러운 스캘럽
         pts.append(jitter(cx + rx * bulge * math.cos(a), cy + ry * bulge * math.sin(a), amt))
     pts.append(pts[0])
     draw.line(pts, fill=color, width=width, joint="curve")
@@ -367,7 +367,7 @@ POSITION_ANCHORS = {
 
 def measure_block(draw, lines, size):
     widths = [measure_line(draw, ln, size) for ln in lines] or [0]
-    return max(widths), size * 1.5 * len(lines)
+    return max(widths), size * 1.32 * len(lines)
 
 
 def render_scene(canvas_size, scene, font_size=64):
@@ -381,8 +381,10 @@ def render_scene(canvas_size, scene, font_size=64):
     font_size = int(scene.get("font_size", font_size))
 
     block_w, block_h = measure_block(draw, lines, font_size)
+    line_h = font_size * 1.32
 
-    pad_x, pad_y = 52, 38
+    # 짧은 문구가 거대한 말풍선을 얻지 않도록 패딩을 타이트하게
+    pad_x, pad_y = 34, 22
     box_w, box_h = block_w + pad_x * 2, block_h + pad_y * 2
 
     # 위치: x/y(0~1 비율)가 있으면 그 지점을 박스 중심으로, 없으면 앵커(position).
@@ -406,13 +408,16 @@ def render_scene(canvas_size, scene, font_size=64):
             top = cy - box_h
 
     bubble = scene.get("bubble", "none")
-    # 말풍선 외곽선이 텍스트를 가로지르지 않도록 텍스트 박스보다 크게 그린다(유형별).
-    infl = {"cloud": (box_w * 0.07 + 16, box_h * 0.34 + 18),
-            "oval": (box_w * 0.14 + 14, box_h * 0.26 + 16),
-            "arrow_box": (24, 18)}.get(bubble, (0, 0))
-    margin = 24 + max(infl)
-    left = max(margin, min(left, W - box_w - margin))
-    top = max(margin, min(top, H - box_h - margin))
+    # 말풍선 모양이 텍스트를 감싸는 최소 여유 (타원은 사각을 담으려면 좀 더).
+    infl = {"cloud": (box_w * 0.05 + 10, box_h * 0.12 + 10),
+            "oval": (box_w * 0.17 + 10, box_h * 0.22 + 10),
+            "arrow_box": (16, 10)}.get(bubble, (0, 0))
+    ix, iy = infl
+    margin_x = 28 + ix
+    arrow_pad = H * 0.1 if scene.get("arrow") else 0
+    cap_safe_top = H * 0.75 - box_h - iy - arrow_pad  # 자막 영역(하단) 침범 방지
+    left = max(margin_x, min(left, W - box_w - margin_x))
+    top = max(40 + iy, min(top, min(H - box_h - 40 - iy, cap_safe_top)))
     text_box = (left, top, left + box_w, top + box_h)
     bubble_box = _inflate(text_box, *infl)
 
@@ -425,7 +430,7 @@ def render_scene(canvas_size, scene, font_size=64):
     if show_plate:
         img = draw_soft_backing(img, _inflate(text_box, 10, 6), radius=int(min(box_w, box_h) * 0.35))
         draw = ImageDraw.Draw(img)
-    stroke_w = 0 if show_plate else max(3, int(font_size * 0.07))
+    stroke_w = 0 if show_plate else max(4, int(font_size * 0.09))
 
     if bubble == "cloud":
         draw_cloud(draw, bubble_box, color)
@@ -436,26 +441,30 @@ def render_scene(canvas_size, scene, font_size=64):
         draw_wobbly_roundrect(draw, bubble_box, color)
 
     box = bubble_box  # deco/화살표 배치 기준
-    ty = top + pad_y
-    for line in lines:
+    # 텍스트 블록을 박스 세로 중앙에. 줄 i의 중심 = top + pad_y + line_h*(i+0.5)
+    for i, line in enumerate(lines):
         lw = measure_line(draw, line, font_size)
         tx = left + (box_w - lw) / 2
-        angle = random.uniform(-3, 3)
+        angle = random.uniform(-2.2, 2.2)
         pad = 10 + stroke_w
-        line_w, line_h = max(1, int(lw + 40 + stroke_w * 2)), int(font_size * 1.6 + stroke_w * 2)
-        line_img = Image.new("RGBA", (line_w, line_h), (0, 0, 0, 0))
+        img_w = max(1, int(lw + 40 + stroke_w * 2))
+        img_h = int(font_size * 1.6 + stroke_w * 2)
+        line_img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
         line_draw = ImageDraw.Draw(line_img)
-        draw_mixed_text(line_draw, (pad, 5 + stroke_w), line, font_size, color, stroke_width=stroke_w)
+        # 텍스트를 line_img 세로 중앙에
+        ty_in = (img_h - font_size) / 2
+        draw_mixed_text(line_draw, (pad, ty_in), line, font_size, color, stroke_width=stroke_w)
         rotated = line_img.rotate(angle, resample=Image.BICUBIC, expand=True)
-        img.paste(rotated, (int(tx - pad), int(ty - 5 - stroke_w)), rotated)
-        ty += font_size * 1.5
+        line_center_y = top + pad_y + line_h * (i + 0.5)
+        img.paste(rotated, (int(tx - pad), int(line_center_y - rotated.height / 2)), rotated)
 
-    deco_size = int(font_size * 0.55)
+    deco_size = int(font_size * 0.5)
+    bh = box[3] - box[1]
     deco_positions = [
-        (box[0] - 18, box[1] - 14), (box[2] + 4, box[1] - 10),
-        (box[0] - 14, box[3] - 4), (box[2] + 12, box[3] + 6),
+        (box[0] + deco_size * 0.3, box[1] + bh * 0.12),
+        (box[2] - deco_size * 0.3, box[1] + bh * 0.06),
     ]
-    for i, d in enumerate(scene.get("deco", [])[:4]):
+    for i, d in enumerate(scene.get("deco", [])[:2]):
         dx, dy = deco_positions[i % len(deco_positions)]
         draw_deco_glyph(draw, (dx, dy), d, deco_size, color)
 
