@@ -4307,6 +4307,72 @@ app.get('/api/episode-making-status', (req, res) => {
   }
 })
 
+// GET /api/cut-timing — "컷 싱크" 패널용. 컷별 영상/음성 실측 길이(ffprobe)와 차이,
+// 그리고 처방(영상 재생성 / TTS 배속 / 여운 수용)을 계산해 넘긴다.
+//   delta = audioDur - videoDur  (양수 = 음성이 더 김 = 영상이 짧음)
+const SYNC_TOLERANCE = 0.4   // 이 이내면 정합으로 간주(초)
+function serverCutTargetDuration(c) {
+  const explicit = Number(c.sec) || Number(c.duration)
+  if (explicit > 0) return explicit
+  const txt = String(c.script || c.text || c.narration || c.dialogue || '').replace(/\s/g, '')
+  return txt ? Math.max(4, Math.round((txt.length / 300) * 60)) : 5
+}
+app.get('/api/cut-timing', async (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const { ep } = findEpisodeByNumOrThrow(epNum)
+    const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
+    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+
+    const out = []
+    for (const c of cuts) {
+      const p = String(c.no).padStart(2, '0')
+      const overlayMp4 = path.join(videoDir, `cut_${p}_overlay.mp4`)
+      const baseMp4 = path.join(videoDir, `cut_${p}.mp4`)
+      const mp4 = fs.existsSync(overlayMp4) ? overlayMp4 : (fs.existsSync(baseMp4) ? baseMp4 : null)
+      const mp3 = path.join(audioDir, `cut_${p}.mp3`)
+      const hasMp3 = fs.existsSync(mp3)
+
+      const videoDur = mp4 ? await getMediaDuration(mp4) : null
+      const audioDur = hasMp3 ? await getMediaDuration(mp3) : null
+      const targetDur = serverCutTargetDuration(c)
+      const hasText = !!(String(c.dialogue || '').trim() || String(c.narration || '').trim())
+
+      let status, delta = null, suggestSpeed = null, suggestVideoDur = null
+      if (!mp4) status = 'no-video'
+      else if (hasText && !hasMp3) status = 'no-audio'
+      else if (!hasText) status = 'no-text'          // 자막 없는 컷 — 싱크 대상 아님
+      else {
+        delta = +(audioDur - videoDur).toFixed(2)
+        if (Math.abs(delta) <= SYNC_TOLERANCE) status = 'ok'
+        else if (delta > 0) {                        // 음성이 더 김 → 영상 짧음
+          status = delta > 3 ? 'audio-much-longer' : 'audio-longer'
+          suggestSpeed = +(audioDur / videoDur).toFixed(2)        // TTS를 이 배속으로
+          suggestVideoDur = Math.ceil(audioDur * 10) / 10         // 영상을 이 길이로
+        } else {                                     // 영상이 더 김 → 여운/트림
+          status = delta < -3 ? 'video-much-longer' : 'video-longer'
+          suggestVideoDur = Math.ceil(audioDur * 10) / 10
+        }
+      }
+
+      out.push({
+        no: c.no, cutType: c.cutType || 'YEORI', hasText,
+        videoDur: videoDur != null ? +videoDur.toFixed(2) : null,
+        audioDur: audioDur != null ? +audioDur.toFixed(2) : null,
+        targetDur,
+        overlayUsed: mp4 === overlayMp4,
+        delta, status, suggestSpeed, suggestVideoDur,
+      })
+    }
+    const needsWork = out.filter(c => ['audio-longer', 'audio-much-longer', 'video-much-longer', 'no-audio'].includes(c.status)).length
+    res.json({ tolerance: SYNC_TOLERANCE, needsWork, cuts: out })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })

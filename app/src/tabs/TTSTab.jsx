@@ -68,7 +68,7 @@ export default function TTSTab() {
   const episodeCode = resolveEpisodeCode(state.episode)
   const {
     tracks = {}, mergedUrls = {}, g3Confirmed = {},
-    voiceTabs = {}, activeVoiceTab = {},
+    voiceTabs = {}, activeVoiceTab = {}, focusCutId = null,
   } = state.ttsTabState || {}
   const trackDefaults = ttsSettings.trackDefaults || FALLBACK_DEFAULTS
 
@@ -87,6 +87,14 @@ export default function TTSTab() {
     const id = setInterval(() => setGData(loadGPoints()), 2000)
     return () => clearInterval(id)
   }, [])
+
+  // 편집메타 "컷 싱크" 패널에서 특정 컷으로 딥링크해 온 경우 — 그 컷을 펼치고 플래그 해제
+  useEffect(() => {
+    if (!focusCutId) return
+    const idx = cuts.findIndex(c => c.id === focusCutId)
+    if (idx >= 0) setActiveCutIdx(idx)
+    dispatch({ type: 'SET_TTS_TAB_STATE', p: { focusCutId: null } })
+  }, [focusCutId, cuts, dispatch])
 
   const setTTS = (p) => dispatch({ type: 'SET_TTS_TAB_STATE', p })
 

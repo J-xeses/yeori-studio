@@ -58,6 +58,48 @@ export default function EditMetaTab() {
   const [selectedCut, setSelectedCut] = useState(null)
   const [analyzeResult, setAnalyzeResult] = useState(null)
 
+  // 컷 싱크 — 컷별 영상/음성 실측 길이 + 처방
+  const [syncData, setSyncData] = useState(null)
+  const [syncBusy, setSyncBusy] = useState(false)
+  const loadSyncTiming = async () => {
+    const epNum = state.episode?.number
+    if (epNum == null) return
+    setSyncBusy(true)
+    try {
+      const r = await fetch(`http://localhost:3001/api/cut-timing?epNum=${epNum}`)
+      const d = await r.json()
+      setSyncData(r.ok && !d.error ? d : { error: d.error || '조회 실패' })
+    } catch (e) {
+      setSyncData({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setSyncBusy(false)
+    }
+  }
+  useEffect(() => {
+    if (activeTab === 'analyze' && !syncData) loadSyncTiming()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  // 처방 ①: 영상 길이를 targetSec로 확정 → 그 컷을 VideoTab에서 열기
+  const rxVideoTarget = (cutNo, targetSec) => {
+    const cut = (state.cuts || []).find(c => c.no === cutNo)
+    if (cut?.id) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(targetSec * 10) / 10 } })
+    if (cut?.id) dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { selectedCutId: cut.id } })
+    dispatch({ type: 'SET_TAB', p: 'video' })
+  }
+  // 처방 ②: TTS를 그 컷에서 열기(배속 조정은 사람이)
+  const rxTts = (cutNo) => {
+    const cut = (state.cuts || []).find(c => c.no === cutNo)
+    if (cut?.id) dispatch({ type: 'SET_TTS_TAB_STATE', p: { focusCutId: cut.id } })
+    dispatch({ type: 'SET_TAB', p: 'tts' })
+  }
+  // 처방 ③: 여운으로 수용 — 컷 길이를 음성 길이에 맞춤(영상이 더 길면 뒷부분은 여운)
+  const rxAcceptHold = (cutNo, sec) => {
+    const cut = (state.cuts || []).find(c => c.no === cutNo)
+    if (cut?.id) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(sec * 10) / 10 } })
+    loadSyncTiming()
+  }
+
   // SRT 설정
   const [srtOffset, setSrtOffset] = useState(0)
 
@@ -411,6 +453,12 @@ export default function EditMetaTab() {
     setHookIndices(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx])
 
   const totalDur = meta.reduce((a,c) => a + c.duration, 0)
+
+  const rxBtn = {
+    fontSize: '10.5px', fontWeight: 700, color: '#a78bfa',
+    background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.3)',
+    borderRadius: '4px', padding: '2px 7px', cursor: 'pointer', whiteSpace: 'nowrap',
+  }
 
   const tabStyle = (t) => ({
     padding: '8px 16px', border: 'none', borderRadius: '6px',
@@ -795,6 +843,85 @@ export default function EditMetaTab() {
             </div>
           ) : (
             <>
+              {/* ── 컷 싱크 — 영상 vs 음성 실측 길이 + 처방 ── */}
+              <div style={{background:'#141418',border:'1px solid rgba(255,255,255,0.07)',borderRadius:'8px',padding:'14px 16px',marginBottom:'18px'}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'10px'}}>
+                  <div style={{fontSize:'13px',fontWeight:700,color:'#e8e6f0'}}>
+                    컷 싱크
+                    {syncData && !syncData.error && syncData.needsWork > 0 &&
+                      <span style={{marginLeft:'8px',fontSize:'11px',fontWeight:700,color:'#fca5a5'}}>· 보완 필요 {syncData.needsWork}</span>}
+                    {syncData && !syncData.error && syncData.needsWork === 0 &&
+                      <span style={{marginLeft:'8px',fontSize:'11px',fontWeight:700,color:'#4ade80'}}>· 모두 정합</span>}
+                  </div>
+                  <button onClick={loadSyncTiming} disabled={syncBusy}
+                    style={{fontSize:'11px',fontWeight:600,color:'#9490a8',background:'rgba(255,255,255,0.06)',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'6px',padding:'4px 10px',cursor:'pointer'}}>
+                    {syncBusy ? '측정 중…' : '↻ 다시 측정'}
+                  </button>
+                </div>
+
+                {syncData?.error && <div style={{fontSize:'12px',color:'#f87171'}}>{syncData.error}</div>}
+                {!syncData && !syncBusy && <div style={{fontSize:'12px',color:'#5c5870'}}>측정하려면 "다시 측정"을 누르세요</div>}
+
+                {syncData && !syncData.error && (
+                  <div style={{overflowX:'auto'}}>
+                  <table style={{width:'100%',fontSize:'11.5px',borderCollapse:'collapse',minWidth:'520px'}}>
+                    <thead>
+                      <tr style={{color:'#9490a8',textAlign:'left'}}>
+                        <th style={{padding:'5px 8px'}}>컷</th>
+                        <th style={{padding:'5px 8px'}}>영상</th>
+                        <th style={{padding:'5px 8px'}}>음성</th>
+                        <th style={{padding:'5px 8px'}}>Δ</th>
+                        <th style={{padding:'5px 8px'}}>상태</th>
+                        <th style={{padding:'5px 8px'}}>처방</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {syncData.cuts.map(c => {
+                        const S = {
+                          'ok':                { c:'#4ade80', t:'정합' },
+                          'audio-longer':      { c:'#fbbf24', t:'음성이 김' },
+                          'audio-much-longer': { c:'#f87171', t:'음성 과다' },
+                          'video-longer':      { c:'#60a5fa', t:'여운' },
+                          'video-much-longer': { c:'#fb923c', t:'영상 과다' },
+                          'no-audio':          { c:'#9490a8', t:'음성 없음' },
+                          'no-video':          { c:'#9490a8', t:'영상 없음' },
+                          'no-text':           { c:'#5c5870', t:'자막 없음' },
+                        }[c.status] || { c:'#9490a8', t:c.status }
+                        return (
+                          <tr key={c.no} style={{borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+                            <td style={{padding:'5px 8px',color:'#e8e6f0',whiteSpace:'nowrap'}}>CUT {c.no}<span style={{color:'#5c5870',marginLeft:4}}>{c.cutType}</span></td>
+                            <td style={{padding:'5px 8px',color:'#e8e6f0',fontFamily:'monospace'}}>{c.videoDur != null ? `${c.videoDur}s` : '—'}{c.overlayUsed && <span title="손글씨본 기준" style={{color:'#a78bfa'}}> ✍</span>}</td>
+                            <td style={{padding:'5px 8px',color:'#e8e6f0',fontFamily:'monospace'}}>{c.audioDur != null ? `${c.audioDur}s` : '—'}</td>
+                            <td style={{padding:'5px 8px',fontFamily:'monospace',fontWeight:700,color:S.c}}>{c.delta != null ? `${c.delta > 0 ? '+' : ''}${c.delta}s` : '—'}</td>
+                            <td style={{padding:'5px 8px',fontWeight:700,color:S.c}}>{S.t}</td>
+                            <td style={{padding:'5px 8px'}}>
+                              <div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>
+                                {(c.status === 'audio-longer' || c.status === 'audio-much-longer') && <>
+                                  <button onClick={() => rxVideoTarget(c.no, c.suggestVideoDur)} style={rxBtn}>영상 {c.suggestVideoDur}s로</button>
+                                  <button onClick={() => rxTts(c.no)} style={rxBtn} title={`배속 ×${c.suggestSpeed} 권장`}>TTS ×{c.suggestSpeed}</button>
+                                </>}
+                                {c.status === 'video-longer' && <button onClick={() => rxAcceptHold(c.no, c.audioDur)} style={rxBtn}>여운 수용</button>}
+                                {c.status === 'video-much-longer' && <>
+                                  <button onClick={() => rxAcceptHold(c.no, c.audioDur)} style={rxBtn}>여운 수용</button>
+                                  <button onClick={() => rxTts(c.no)} style={rxBtn}>TTS 재생성</button>
+                                </>}
+                                {c.status === 'no-audio' && <button onClick={() => rxTts(c.no)} style={rxBtn}>TTS 생성</button>}
+                                {c.status === 'ok' && <span style={{color:'#5c5870'}}>—</span>}
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                  </div>
+                )}
+                <div style={{fontSize:'10.5px',color:'#5c5870',marginTop:'8px',lineHeight:1.5}}>
+                  Δ = 음성 − 영상. 양수면 영상이 짧음(영상 재생성 / TTS 배속). 음수면 영상이 김(여운 수용 / TTS 재생성).
+                  "영상 …s로" · "여운 수용"은 컷 길이(<code>duration</code>)를 갱신 → 자막·조립에 자동 반영.
+                </div>
+              </div>
+
               <div style={{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'16px'}}>
                 {meta.map((m, i) => (
                   <button key={i} onClick={() => analyzeCut(i)}

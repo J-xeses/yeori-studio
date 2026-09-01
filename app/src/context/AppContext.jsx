@@ -84,7 +84,7 @@ const defaultState = {
   projectName: '새 프로젝트',
   savedAt: null,
   videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
-  ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {} },
+  ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {}, focusCutId: null },
   voiceInsertState: { tracks: {} },
 }
 
