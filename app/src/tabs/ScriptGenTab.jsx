@@ -853,7 +853,9 @@ ${YEORI_RULESET}
     const cutNoStr = String(cutNo)
     const allDone = cuts.length > 0 && cuts.every(c => {
       if (String(c.no) === cutNoStr) return true
-      return !!updated[`cut_${c.no}`]?.g1
+      // gpoints v2 구조: { [episodeCode]: { cut_N: {...} } } — episodeCode 레벨을 거쳐야 함
+      // (fe94711 마이그레이션에서 이 줄만 빠져 다중 컷 에피소드는 자동 이동이 안 됐음)
+      return !!updated[episodeCode]?.[`cut_${c.no}`]?.g1
     })
     console.log('[G1] cutNo:', cutNo, 'allDone:', allDone, 'cuts:', cuts.map(c=>c.no), 'updated:', updated)
     if (allDone) {

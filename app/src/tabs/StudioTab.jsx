@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
-import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
+import { setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { instaUrl } from '../lib/mediaPaths'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
@@ -199,7 +199,8 @@ export default function StudioTab() {
               return { ...p, [cut.id]: [...existing, url] }
             })
           })
-          setGPoint(episodeCode, cutNo, 'g3', true)
+          // 이미지 존재 = 생성 완료 신호는 hasImage(파일 확인)가 담당한다.
+          // 여기서 G포인트를 자동으로 찍지 않는다 — G2는 사람이 승인 버튼을 눌러야 참.
         })
         setGData(loadGPoints())
       })
@@ -216,9 +217,7 @@ export default function StudioTab() {
       return { ...prev, [cutId]: [...existing, url] }
     })
     setSelectedImage(prev => ({ ...prev, [cutId]: (Array.isArray(images[cutId]) ? images[cutId].length : 0) }))
-    // G3 포인트 자동 저장
-    const cut = cuts.find(c => c.id === cutId)
-    if (cut) setGPoint(episodeCode, cut.no, 'g3', true)
+    // 업로드/생성만으로는 G포인트를 찍지 않는다 — G2는 사람이 승인 버튼을 눌러야 참.
   }
 
   const copyPrompt = (text, cutId) => {
@@ -240,7 +239,6 @@ export default function StudioTab() {
         return { ...prev, [cut.id]: [...existing, imgUrl] }
       })
       setSelectedImage(prev => ({ ...prev, [cut.id]: 0 }))
-      setGPoint(episodeCode, cut.no, 'g3', true)
     } catch(e) {
       alert(`CUT ${cut.no} 생성 실패: ${e.message}`)
     } finally {
@@ -315,7 +313,6 @@ export default function StudioTab() {
                         if (existing.some(u => u.includes(`cut_${padded}${suffix}.${ext}`))) return p
                         return { ...p, [cut.id]: [...existing, url] }
                       })
-                      setGPoint(episodeCode, cut.no, 'g3', true)
                       setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
                     }
                   } catch {}
@@ -328,7 +325,6 @@ export default function StudioTab() {
                 if (existing.some(u => u.includes(ev.url))) return p
                 return { ...p, [cut.id]: [...existing, imgUrl] }
               })
-              setGPoint(episodeCode, cut.no, 'g3', true)
               setFlowLogs(prev => [...prev, { type: 'done', message: `✅ CUT ${cut.no} Flow 완료` }])
             } else if (ev.type === 'error') {
               setFlowLogs(prev => [...prev, { type: 'error', message: `❌ CUT ${cut.no} Flow 실패: ${ev.message}` }])
@@ -360,7 +356,6 @@ export default function StudioTab() {
           if (existing.some(u => u.includes(img.url))) return p
           return { ...p, [cut.id]: [...existing, imgUrl] }
         })
-        setGPoint(episodeCode, img.cutNo, 'g3', true)
       })
       setGData(loadGPoints())
       alert(`✅ ${data.images.length}개 이미지 불러오기 완료`)
@@ -454,7 +449,7 @@ export default function StudioTab() {
                     : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}`) + `?t=${Date.now()}`
                   try {
                     const r = await fetch(url, { method: 'HEAD' })
-                    if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); setGPoint(episodeCode, cut.no, 'g3', true); break }
+                    if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); break }
                   } catch {}
                 }
               }
@@ -469,7 +464,6 @@ export default function StudioTab() {
                   if (existing.some(u => u.includes(base))) return p
                   return { ...p, [cut.id]: [...existing, imgUrl] }
                 })
-                setGPoint(episodeCode, cut.no, 'g3', true)
               }
             } else if (ev.type === 'cut_error') {
               setFlowLogs(prev => [...prev, { type: 'error', cutNo: ev.cutNo, message: `❌ C${String(ev.cutNo).padStart(2,'0')} 실패` }])
