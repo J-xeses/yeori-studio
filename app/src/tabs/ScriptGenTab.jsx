@@ -458,6 +458,12 @@ export default function ScriptGenTab() {
   // 동시에 순회하는 곳(아래 epCuts 관련 두 군데)은 반드시 각 ep 자신의 코드를 써야 함 —
   // 안 그러면 다른 에피소드끼리 같은 컷 번호의 G1 상태를 서로 덮어써서 보여주는 버그가 남.
   const episodeCode = resolveEpisodeCode(episode)
+  // 대본 EP.HEADER의 "EP: LF_T01" 값 — 에피소드 코드를 대본 기준으로 맞출 때 쓴다
+  const epHeaderCode = (() => {
+    const m = String(episode?.epHeaderRaw || '').match(/^\s*EP\s*:\s*(\S+)/mi)
+    return m ? m[1].trim().toUpperCase() : ''
+  })()
+  const derivedCode = formatEpisodeCode(episode?.contentType || 'LF', episode?.number)
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
@@ -1183,6 +1189,33 @@ ${currentScript}
                   {numError && (
                     <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
                   )}
+                </div>
+              </div>
+
+              {/* 에피소드 코드 — gpoints/파일경로/배지에 쓰이는 정식 식별자.
+                  비우면 콘텐츠 유형+번호로 자동 조립. 대본 EP.HEADER의 EP: 값과
+                  다르면 "대본 코드로 맞추기" 버튼 노출. */}
+              <div className={s.field}>
+                <label>에피소드 코드</label>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <input
+                    placeholder={derivedCode}
+                    value={episode?.code || ''}
+                    onChange={e => dispatch({ type: 'SET_EPISODE', p: { code: e.target.value.trim().toUpperCase() } })}
+                    style={{ flex: 1 }}
+                  />
+                  {epHeaderCode && epHeaderCode !== (episode?.code || '') && (
+                    <button type="button"
+                      onClick={() => dispatch({ type: 'SET_EPISODE', p: { code: epHeaderCode } })}
+                      style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', padding: '4px 8px', borderRadius: 6,
+                        background: 'rgba(167,139,250,0.14)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd', cursor: 'pointer' }}>
+                      대본 EP: {epHeaderCode}
+                    </button>
+                  )}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, lineHeight: 1.5 }}>
+                  비우면 <code>{derivedCode}</code> 자동. gpoints·파일경로에 쓰이므로
+                  {episode?.code ? ' 바꾸면 이 에피소드의 기존 G승인 상태가 새 코드로 안 옮겨짐(재승인 필요).' : ' 처음 한 번만 정하는 게 안전.'}
                 </div>
               </div>
               <div className={s.field}>
