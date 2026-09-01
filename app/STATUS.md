@@ -480,7 +480,20 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - CapCut 재실행 시 뜨는 팝업은 자동화와 무관 — 편집은 CapCut 닫힌 상태에서 끝남,
   재실행은 사람이 프로젝트 여는 용도.
 
+#### editIntent 컷별 켄번스 자동결정 (커밋 `f0269ff`)
+지시서 `…\04. 편집영상 제작기능 고도화\claude_code_task_edit_intent.md` 기준 + 저장소 실제 조정.
+- `POST /api/build-edit-intent` (무인증, 순수) — 대본 SH/CA/AT/MD → `{kenburns, reason, source}`.
+  우선순위 CA > SH(+MD) > AT_EM. 전환형(`SH_MCU → SH_CU`) 끝값·복수(`AT_x + AT_y`) 리스트 파싱.
+  켄번스명은 run-cutter 내부 효과명으로 통일.
+- `run-cutter.js`: `cutKbMode = motionBaked ? 'none' : (intentKb || kbMode)`.
+  **우선순위: 이중모션가드 > editIntent > 전역 kbMode.**
+- `EditMetaTab`: buildMeta에 editIntent+SH/CA/AT/MD, "🎬 편집 의도 생성" 버튼, 메타표 "연출" 칸.
+- 지시서 대비 수정: 경로(src/tabs), 필드(masterCode.sh 등), dispatch UPDATE_CUT, 코드 파싱, 값 정규화.
+- 검증: ep99 seg1 zoomIn / seg2 leftToRight / seg3(GRAPHIC) keyframe 0.
+
 ### 남은 후보
+- editIntent를 메이킹 탭 모션(graphicMotionVf/s2cImageVf)에도 연동(assemble 경로) — v2
+- editIntent에 transition/filter 추가 → CapCut CDP 세미오토 연동
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
 - 데스크톱 CapCut 자동 내보내기(CLI 부재로 화면자동화뿐, 현실적으로 사람이 Export)
 
