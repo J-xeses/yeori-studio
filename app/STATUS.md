@@ -438,6 +438,27 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
   dirty + 컷별 상세. `DashboardTab`에 "메이킹 컷" 카드(유형색 칩, ✍ 손글씨, ↻ 재조립,
   5초 폴링). 매니페스트 없는 구컷은 hasVideo만으로 완료 표시.
 
+#### 컷 싱크 패널 완료 (커밋 `30a4e65`)
+- `GET /api/cut-timing?epNum` — 컷별 ffprobe 실측(영상/음성/Δ) + status + 처방값
+  (suggestSpeed = audio/video, suggestVideoDur = ceil(audio)). 이전 컷분석의
+  "음성 길이"(글자수÷5 추정) → 실측으로 대체.
+- EditMetaTab 컷분석 탭 상단 "컷 싱크" 표 — 처방 버튼:
+  "영상 Ns로"(cut.duration 갱신 + VideoTab 딥링크) / "TTS ×R"(TTSTab 딥링크) /
+  "여운 수용"(cut.duration = 음성 길이). `cutDuration()` 통해 자막·조립 자동 반영.
+- 딥링크: `ttsTabState.focusCutId` 추가(TTSTab 소비 후 해제), VideoTab은 기존
+  `selectedCutId` 재사용.
+
+### CapCut 연동 — 확인 결과 (미수정, 결정 대기)
+편집메타 "A Creative Cutter" 7단계 중:
+- 1~4(메타·SRT·concat): 동작하나 concat-video가 `_overlay.mp4` 무시 + `-c copy` 위험
+- **5(generate-capcut-spec): 死 산출물** — capcut_spec.json을 소비하는 코드 없음
+- **6(send-to-cutter→run-cutter): 끊김** — `downloads/output/ep{N}/cutter_input.json`을
+  만드는 코드가 저장소에 없음(ep2용 하나만 존재, 2026-06). CapCut 프로젝트 경로도 필요.
+- 데스크톱 CapCut 자동 export 없음(CLI 부재). 웹 자동화(STEP10)는 미연동.
+→ 최소 복구: send-to-cutter가 실행 전 cutter_input.json 자동생성(draft 경로만 외부입력).
+  또는 최종 조립을 assemble_making_film(ffmpeg)로 단일화하고 CapCut은 선택적 다듬기용.
+
 ### 남은 후보
+- CapCut 연동 결정(위) 및 그에 따른 구현
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
 
