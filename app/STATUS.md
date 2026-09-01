@@ -491,6 +491,15 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - 지시서 대비 수정: 경로(src/tabs), 필드(masterCode.sh 등), dispatch UPDATE_CUT, 코드 파싱, 값 정규화.
 - 검증: ep99 seg1 zoomIn / seg2 leftToRight / seg3(GRAPHIC) keyframe 0.
 
+#### 이미지 생성 진행 신호 2건 수정 (커밋 `e4f3e96`)
+- **ScriptGenTab `approveG1`**: 전체 G1 승인 → 스튜디오 탭 자동 이동이 다중 컷에서
+  안 됐음. `fe94711` 마이그레이션이 `gData[cut_N]` → `gData[episodeCode][cut_N]`로
+  여러 곳 고쳤는데 `approveG1`의 `allDone` 체크 한 줄을 놓침. → `updated[episodeCode]?.[...]`로 수정.
+- **StudioTab**: Flow/Gemini 이미지 생성·업로드·재조회 8곳이 `g3`(음성)를 자동
+  마킹하고 있었음(`g2` 아님). Flow 이미지 있는 컷이 대시보드·에이전트에서 "G3 음성 완료"로
+  표시되던 원인. 전부 제거 — "생성됨"은 `hasImage`(파일)가, `g2`는 사람 승인 버튼만.
+- 기존 에피소드의 잘못 찍힌 `g3`는 이 커밋으로 정리 안 됨(재작업 시 자연 해소).
+
 ### 남은 후보
 - editIntent를 메이킹 탭 모션(graphicMotionVf/s2cImageVf)에도 연동(assemble 경로) — v2
 - editIntent에 transition/filter 추가 → CapCut CDP 세미오토 연동
