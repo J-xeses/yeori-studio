@@ -358,3 +358,72 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 2. 손글씨 오버레이 (/api/handwriting-overlay) 구현
 3. ScriptGenTab.jsx pc.ac → pc.at 마이그레이션
 
+
+---
+### 2026-08-31 ~ 09-01 (메이킹 탭 자동 편집 파이프라인 완성 + 유비 디렉터 정비)
+
+#### 손글씨 오버레이 재작업 — "그림1" 수준 (커밋 계열, push 완료)
+- 자막 버블스러운 인위적 표현 → 손으로 쓴 느낌. 다크 헤일로(다층 블러 섀도) +
+  소프트 라디얼 비네트 + 얇은 컬러 스트로크, 검정 아웃라인 제거. 폰트 Gaegu-Bold(OFL,
+  번들) → Nanum Pen 폴백. seeded mulberry32 결정적 2-pass.
+- 3벌 동기화: `yubi-director/lib/handwriting.js` + `lib/handwriting-preview.js` +
+  `yeori-studio/app/scripts/handwriting_overlay.py`. 장면당 손글씨 주석 2~3개(사물
+  자기소개 라벨 포함) 산포.
+
+#### 유비 디렉터
+- 사용 매뉴얼 독립 HTML 3벌 동기화(`~/Desktop/유비 디렉터 매뉴얼.html`,
+  `yubi-director/docs/manual.html`, 아티팩트). "인물 흰 테두리(누끼)" 내용 전부 제외.
+  성준이 유비 의도 받아 "콘텐츠 틀" 잡아주는 5단계 핸드오프 포함.
+- AI 소스 생성 무드 + 디렉터 UI를 유비 실제 인스타(모노톤 어반)로 조정. `app/globals.css`
+  로즈/골드 → 무채색(검정 그라운드·실버 강조). `proposals` 프롬프트 가짜"Swan Beauty" 삭제.
+  AI 이미지 스타일가이드 `…/03. 제작엔진/유비_이미지_스타일가이드.md` 신규.
+
+#### 메이킹 탭 자동실행 — 제작유형별 (커밋 `b2af9d1` → `db5b81c`)
+- **유형별 자동실행 카드**: MANUAL_TYPES(GRAPHIC/BROLL/CAPCUT) 컷 순회 일괄 제작.
+- **정지 그래픽 기본 모션** (`8234859`): `graphicMotionVf` none/zoom-in/-out/fade/zoom-in-fade.
+- **애니메이션 그래픽 캡처** (`d24ee0a`): rise/pop/type-in — CSS 애니 클럭을 프레임마다
+  `a.currentTime=t`로 수동 진행 → 스크린샷 N장 → ffmpeg. CAPCUT 데스크톱 녹화 컷을
+  "HTML+애니 모션"으로 대체 가능.
+- **`POST /api/broll-auto`** (`8234859`): 컷 묘사 → `aiPexelsQuery`(claude-sonnet-4-6)
+  영어 검색어 → Pexels → 길이 근접 클립 자동.
+- **`POST /api/capture-video-url`** (`8fe61ee`): 페이지/미디어 URL → puppeteer 헤드리스
+  미디어 URL 추출 → ffmpeg. 봇차단(Pexels)·blob·canvas는 실패(422) → 수동.
+- **CapCut 세미오토** (`db5b81c`): `/api/capcut-cdp` + `/api/capcut-semiauto` —
+  헤어라인 리셰이프 등 편집만 자동, 내보내기는 수동. 전용 Chrome 9222 + 에디터 탭 전제.
+
+#### 스튜디오 소스 → 메이킹 탭 컷 (커밋 `9d0939f`)
+- RL03 분석: 약간 움직이는 초상 클립은 **스튜디오(영상생성)가 만들고** 메이킹 탭은
+  규격화+손글씨. 편집효과로 동작 흉내내지 않음(사용자 피드백).
+- **`POST /api/source-to-cut {epNum,cutNo,srcPath,duration,trimStart,trimMode,motion,fit}`**:
+  로컬 이미지/영상 → `downloads/video/ep{N}/cut_NN.mp4`(1080×1920). 영상=trim+fit,
+  이미지=fit+모션. `GET /api/source-scan?epNum` 소스 후보 목록. CP 있으면 손글씨 이어짐.
+- 미리보기 "지지직" 플리커 수정: `?t=${Date.now()}` JSX 렌더 → `_ts` result state 저장 +
+  videoStatus 폴링 dedup.
+
+#### downloads 폴더 규약 통일 (커밋 `185349b`)
+- `downloads/making/ep{N}/source/{studio,upload,stock}/` + `raw/` + `hw_stills/`.
+  최종 컷은 `downloads/video/ep{N}/cut_NN.mp4`(불변). 규약 문서
+  `downloads/making/README.md`(downloads/는 gitignore).
+- `source-scan` 재작성(중복 제거·isFile 체크·group 라벨). `scene/ep99` → `source/studio` 이동.
+- 루트 디버그 잔해(`bisect*.log`, `debug_*.png` 38개 등) 정리 (`dc0992d`).
+
+#### 이중 모션 가드 (커밋 `f479cc4`)
+- 메이킹 탭 자동 편집효과(그래픽 모션·s2c 줌·BROLL 실사) 위에 A Creative Cutter가
+  켄번스를 또 얹던 문제.
+- `recordCutMotion()` → `downloads/video/ep{N}/.motion-manifest.json`에 컷별
+  `{method,motion,baked}` 기록. s2c 정지+모션없음만 `baked:false`, 나머지 메이킹 산출물
+  `baked:true`. G4 YEORI는 기록 안 함(켄번스 유지).
+- `run-cutter.js`가 (1)매니페스트 baked (2)editMeta cutType∈{GRAPHIC,BROLL,CAPCUT}로
+  컷별 켄번스 스킵. `EditMetaTab.buildMeta()`에 cutType 추가.
+
+#### 자동 커버리지 현황
+텍스트/그래픽/모션 = 완전자동 ✅ / BROLL = AI자동(검토권장) 🟢 / 화면녹화URL = 자동 🟢 /
+스튜디오 소스 컷 = source-to-cut 🟢 / CapCut 헤어라인 = 세미오토(편집 자동, export 수동) 🟡 /
+순수 수동 색보정만 남음.
+
+### 다음 후보 (이번 세션 범위 밖)
+- 컷별 메이킹 매니페스트 확장(제작방식·producedAt·dirty) → 에이전트/리더 모니터링 리치화
+- 메이킹탭 제작완료 시 G포인트 연동(현재 G4/G5는 스튜디오/편집메타만 씀)
+- 길이 폴백 통일(메이킹탭 `cut.duration||5` vs 편집메타 `estimateDuration`)
+- 편집메타 컷분석 탭 `cut_NN.mp4` 자동 미리보기
+
