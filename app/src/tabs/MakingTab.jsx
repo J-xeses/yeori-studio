@@ -227,7 +227,15 @@ export default function MakingTab() {
     const load = () => {
       fetch(`${YEORI_SERVER}/api/episode-video-status?epNum=${episode.number}`)
         .then(r => r.json())
-        .then(data => setVideoStatus(data.videoByCut || {}))
+        .then(data => {
+          const next = data.videoByCut || {}
+          // 값이 실제로 바뀔 때만 setState — 2초 폴링이 불필요한 리렌더/미리보기 깜빡임을 만들지 않게
+          setVideoStatus(prev => {
+            const pk = Object.keys(prev), nk = Object.keys(next)
+            if (pk.length === nk.length && nk.every(k => prev[k] === next[k])) return prev
+            return next
+          })
+        })
         .catch(() => {})
     }
     load()
@@ -838,7 +846,7 @@ export default function MakingTab() {
       })
       const data = await res.json()
       if (!res.ok) { setBgmResult({ error: data.error || 'BGM 합성 실패' }); return }
-      setBgmResult(data)
+      setBgmResult({ ...data, _ts: Date.now() })
     } catch (e) {
       setBgmResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -912,7 +920,7 @@ export default function MakingTab() {
       })
       const data = await res.json()
       if (!res.ok) { setHwResult({ error: data.error || '합성 실패' }); return }
-      setHwResult(data)
+      setHwResult({ ...data, _ts: Date.now() })
     } catch (e) {
       setHwResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -948,7 +956,7 @@ export default function MakingTab() {
         setOverlayResult(p => ({ ...p, [cut.no]: { error: data.error || '오버레이 실패' } }))
         return { ok: false, error: data.error || '오버레이 실패' }
       }
-      setOverlayResult(p => ({ ...p, [cut.no]: data }))
+      setOverlayResult(p => ({ ...p, [cut.no]: { ...data, _ts: Date.now() } }))
       return { ok: true, data }
     } catch (e) {
       setOverlayResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
@@ -1232,7 +1240,7 @@ export default function MakingTab() {
                   ✅ 오버레이 적용됨 — {r.outputPath?.split(/[/\\]/).pop()} ({r.sizeKB}KB)
                   <br />
                   <video className={s.makingVideo}
-                    src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/${r.outputPath?.split(/[/\\]/).pop()}?t=${Date.now()}`}
+                    src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/${r.outputPath?.split(/[/\\]/).pop()}?t=${r._ts || 0}`}
                     controls />
                 </div>
               )
@@ -1967,7 +1975,7 @@ export default function MakingTab() {
                 <div className={s.sourceGrid}>
                   {(hwResult.outputs || []).map((o, i) => (
                     <div key={i} className={s.sourceCard}>
-                      <img src={`${YEORI_SERVER}${o.url}?t=${Date.now()}`} alt={`scene ${i + 1}`} className={s.sourceThumb} />
+                      <img src={`${YEORI_SERVER}${o.url}?t=${hwResult._ts || 0}`} alt={`scene ${i + 1}`} className={s.sourceThumb} />
                       <button className={s.pathCopy} onClick={() => copyPath(o.path)}>{o.path.split(/[/\\]/).pop()}</button>
                     </div>
                   ))}
@@ -2063,7 +2071,7 @@ export default function MakingTab() {
               <div className={s.resultOk}>
                 ✅ 저장됨 — {bgmResult.outputPath} ({bgmResult.sizeKB}KB)
                 <br />
-                {makingBgmUrl && <video className={s.makingVideo} src={`${makingBgmUrl}?t=${Date.now()}`} controls />}
+                {makingBgmUrl && <video className={s.makingVideo} src={`${makingBgmUrl}?t=${bgmResult?._ts || 0}`} controls />}
               </div>
             )
           )}
