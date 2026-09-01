@@ -196,12 +196,31 @@ function ensureDir(dir) {
 // run-flow가 prompts.json의 cut.characters에 이미 인물 레코드를 실어주지만,
 // 폴백(primary 인물)과 레퍼런스 파일 경로 해석용으로 원본도 읽는다.
 let EPISODE_REF_FILES = null  // 이 에피소드에서 업로드할 얼굴 레퍼런스 절대경로 목록
+let EPISODE_CHAR_IDS = []     // 이 에피소드 컷들에 등장하는 캐릭터 id 목록
+const CHARACTERS_JSON_PATH = () => path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json')
 function loadCharacterRegistry() {
   try {
-    return JSON.parse(fs.readFileSync(path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json'), 'utf-8')) || {}
+    return JSON.parse(fs.readFileSync(CHARACTERS_JSON_PATH(), 'utf-8')) || {}
   } catch {
     return {}
   }
+}
+// 캐릭터를 Flow "캐릭터" 라이브러리에 등록한 뒤 그 사실을 characters.json에 기록
+// (다음 실행에서 재등록하지 않도록). 실패해도 조용히 넘어간다.
+function markCharacterFlowRegistered(id) {
+  try {
+    const reg = loadCharacterRegistry()
+    if (!reg[id]) return
+    reg[id] = { ...reg[id], flowRegistered: true, flowRegisteredAt: new Date().toISOString() }
+    fs.writeFileSync(CHARACTERS_JSON_PATH(), JSON.stringify(reg, null, 2))
+  } catch (e) {
+    log('warn', `characters.json flowRegistered 기록 실패(무시): ${e.message}`)
+  }
+}
+function charRefAbs(rel) {
+  if (!rel) return null
+  const abs = path.isAbsolute(rel) ? rel : path.join(MEDIA_ROOT, rel)
+  return fs.existsSync(abs) ? abs : null
 }
 // IP 프롬프트에 인물별 descriptor를 삽입한다.
 //  · "WOMAN 1 (Yeori):" / "WOMAN 2 (Jia):" 라벨이 있으면 각 라벨 줄 뒤에 매칭 descriptor
@@ -347,26 +366,57 @@ async function main() {
   ensureDir(CONFIG.characterDir)
 
   // ── 캐릭터 등록 모드 ───────────────────────────────────────────────
+  //   --register-character            : characters.json의 flowRegistered 아닌 캐릭터 전부
+  //   --register-character=jia        : 그 캐릭터만 (id/이름/별칭)
+  //   --register-character --force    : 이미 flowRegistered여도 재등록
+  //   --gen-face                      : (서여리 전용, 레거시) 얼굴 먼저 생성 후 등록
   if (args['register-character'] || args['gen-face']) {
     const browser = await connectBrowser()
     const page = await setupPage(browser)
     try {
       await navigateToFlow(page)
 
-      // --gen-face: 클로즈업 얼굴 먼저 생성
+      // --gen-face: 클로즈업 얼굴 먼저 생성 (서여리 레거시 경로)
       if (args['gen-face'] && !fs.existsSync(CONFIG.characterImage)) {
         log('info', '서여리 시그니처 얼굴 이미지 생성 중…')
         await generateFaceImage(page)
       }
 
-      // 캐릭터 이미지 확인
-      if (!fs.existsSync(CONFIG.characterImage)) {
-        log('warn', `캐릭터 이미지 없음: ${CONFIG.characterImage}`)
-        log('info', '해당 경로에 클로즈업 얼굴 이미지를 넣거나 --gen-face 옵션을 사용하세요.')
-        return
+      const reg = loadCharacterRegistry()
+      const arg = typeof args['register-character'] === 'string' ? args['register-character'] : ''
+      let ids
+      if (arg) {
+        const key = arg.toUpperCase()
+        const hit = Object.entries(reg).find(([id, c]) =>
+          id.toUpperCase() === key || String(c.name || '').toUpperCase() === key ||
+          (c.aliases || []).some(a => String(a).toUpperCase() === key))
+        if (!hit) { log('error', `characters.json에 "${arg}" 캐릭터 없음`); return }
+        ids = [hit[0]]
+      } else {
+        ids = args.force ? Object.keys(reg) : Object.keys(reg).filter(id => !reg[id].flowRegistered)
       }
 
-      await registerCharacter(page)
+      if (Object.keys(reg).length === 0) {
+        // characters.json이 아직 없는 구환경 — 기존 서여리 단일 경로로 폴백
+        if (!fs.existsSync(CONFIG.characterImage)) {
+          log('warn', `characters.json 없음 + 캐릭터 이미지 없음: ${CONFIG.characterImage}`)
+          return
+        }
+        await registerCharacterWithImage(page, CONFIG.characterImage, { name: CONFIG.characterName })
+      } else if (!ids.length) {
+        log('ok', '등록할 캐릭터 없음 (전부 flowRegistered — 재등록하려면 --force)')
+      } else {
+        for (const id of ids) {
+          const c = reg[id]
+          const facePath = charRefAbs(c.closeup) || charRefAbs(c.face)
+          if (!facePath) { log('warn', `"${id}" 얼굴 이미지 없음 → 건너뜀`); continue }
+          const name = c.flowCharacterName || c.name || id
+          const okReg = await registerCharacterWithImage(page, facePath, {
+            name, matchNames: [name, c.name, id, ...(c.aliases || [])].filter(Boolean),
+          })
+          if (okReg) { markCharacterFlowRegistered(id); log('ok', `"${name}" 등록 완료`) }
+        }
+      }
     } finally {
       // Chrome 창은 유지하되(사람이 계속 쓸 수 있게), puppeteer 연결만 끊어서
       // 이 Node 프로세스는 종료되게 한다. disconnect() 없이 그냥 return하면
@@ -441,7 +491,8 @@ async function main() {
       if (fs.existsSync(abs) && !EPISODE_REF_FILES.includes(abs)) EPISODE_REF_FILES.push(abs)
     }
   }
-  log('ok', `캐릭터 descriptor 주입: ${cuts.length}컷 · 인물 ${[...epCharIds].join(', ') || '(폴백)'} · 레퍼런스 ${EPISODE_REF_FILES.length}장`)
+  EPISODE_CHAR_IDS = [...epCharIds]
+  log('ok', `캐릭터 descriptor 주입: ${cuts.length}컷 · 인물 ${EPISODE_CHAR_IDS.join(', ') || '(폴백)'} · 레퍼런스 ${EPISODE_REF_FILES.length}장`)
 
   printHeader(episode, type, cuts)
 
@@ -466,6 +517,14 @@ async function main() {
   try {
     // ── ① Google Flow 로그인 + 대시보드 ─────────────────────────────
     await navigateToFlow(page)
+
+    // ── ①-b 이 에피소드 등장 캐릭터를 Flow 캐릭터 라이브러리에 자동 등록 ──
+    //    (대시보드에 있는 지금 타이밍에. 이미 등록됐거나 실패하면 조용히 넘어감)
+    try {
+      await ensureFlowCharactersRegistered(page, EPISODE_CHAR_IDS)
+    } catch (e) {
+      log('warn', `캐릭터 자동 등록 단계 예외(무시): ${e.message}`)
+    }
 
     // ── ② 에피소드 전용 프로젝트 확보 ───────────────────────────────
     //    project_url.txt 있으면 재사용 / 없으면 새 프로젝트를 자동 생성해서
@@ -1057,13 +1116,17 @@ async function registerCharacter(page) {
 
 // ── 캐릭터 등록 래퍼 (imagePath 지정, 성공 여부 반환) ────────────────
 
-async function registerCharacterWithImage(page, imagePath) {
+async function registerCharacterWithImage(page, imagePath, opts = {}) {
+  const charName = opts.name || CONFIG.characterName
+  const CHAR_NAMES = opts.matchNames && opts.matchNames.length
+    ? opts.matchNames
+    : ['서여리', 'Seo Yeori', 'SeoYeori', 'yeori']
   // ── 전제조건 확인 ────────────────────────────────────────────────────
   if (!fs.existsSync(imagePath)) {
     log('error', `[REG-1] 캐릭터 이미지 파일 없음: ${imagePath}`)
     return false
   }
-  log('info', `[REG-1] 캐릭터 이미지 확인: ${path.relative(ROOT, imagePath)}`)
+  log('info', `[REG-1] "${charName}" 캐릭터 이미지 확인: ${path.relative(ROOT, imagePath)}`)
 
   // ── 캐릭터 페이지 이동 ───────────────────────────────────────────────
   const charUrl = 'https://labs.google/fx/ko/tools/flow/characters'
@@ -1090,7 +1153,6 @@ async function registerCharacterWithImage(page, imagePath) {
   log('info', `[REG-2] 페이지 버튼 목록: ${JSON.stringify(allBtns)}`)
 
   // ── 이미 등록 여부 확인 ──────────────────────────────────────────────
-  const CHAR_NAMES = ['서여리', 'Seo Yeori', 'SeoYeori', 'yeori']
   const alreadyExists = await page.evaluate((names) =>
     names.some(n =>
       [...document.querySelectorAll('*')].some(el =>
@@ -1101,10 +1163,10 @@ async function registerCharacterWithImage(page, imagePath) {
   , CHAR_NAMES)
 
   if (alreadyExists) {
-    log('ok', '[REG-2] 서여리 캐릭터 이미 등록됨 → 스킵')
+    log('ok', `[REG-2] "${charName}" 캐릭터 이미 등록됨 → 스킵`)
     return true
   }
-  log('info', '[REG-2] 등록된 캐릭터 없음 → 신규 등록 시작')
+  log('info', `[REG-2] "${charName}" 미등록 → 신규 등록 시작`)
 
   // ── "캐릭터 만들기" 버튼 클릭 ────────────────────────────────────────
   const createResult = await page.evaluate(() => {
@@ -1139,8 +1201,8 @@ async function registerCharacterWithImage(page, imagePath) {
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_03_uploaded.png'), fullPage: true })
 
   // ── 이름 입력 ────────────────────────────────────────────────────────
-  log('info', `[REG-5] 캐릭터 이름 입력: "${CONFIG.characterName}"`)
-  await typeCharacterName(page, CONFIG.characterName)
+  log('info', `[REG-5] 캐릭터 이름 입력: "${charName}"`)
+  await typeCharacterName(page, charName)
   await sleep(800)
   await page.screenshot({ path: path.join(CONFIG.downloadDir, 'debug_reg_04_named.png'), fullPage: true })
 
@@ -1198,6 +1260,42 @@ async function registerCharacterWithImage(page, imagePath) {
   }
 
   return true
+}
+
+// ── 에피소드 등장 캐릭터를 Flow "캐릭터" 라이브러리에 자동 등록 ──────
+// characters.json을 돌면서 이 에피소드에 등장하는(EPISODE_CHAR_IDS) 캐릭터 중
+// flowRegistered가 아닌 것을 registerCharacterWithImage로 등록하고, 성공하면
+// characters.json에 flowRegistered:true를 기록한다. 이미지 생성 흐름의 프로젝트
+// 생성 직전에 1회 호출(대시보드에 있는 타이밍). 실패해도 생성은 계속 —
+// 미디어 풀 레퍼런스(uploadReferenceImages)가 폴백.
+async function ensureFlowCharactersRegistered(page, charIds) {
+  if (args['no-char-register']) { log('info', '캐릭터 자동 등록 건너뜀 (--no-char-register)'); return }
+  const reg = loadCharacterRegistry()
+  const targets = (charIds && charIds.length ? charIds : Object.keys(reg))
+    .filter(id => reg[id] && !reg[id].flowRegistered)
+  if (!targets.length) {
+    log('info', '등록 필요한 신규 캐릭터 없음 (전부 flowRegistered)')
+    return
+  }
+  log('step', `[캐릭터 등록] 대상 ${targets.length}명: ${targets.join(', ')}`)
+  for (const id of targets) {
+    const c = reg[id]
+    const facePath = charRefAbs(c.closeup) || charRefAbs(c.face)
+    if (!facePath) { log('warn', `[캐릭터 등록] "${id}" 얼굴 이미지 없음 → 건너뜀`); continue }
+    const name = c.flowCharacterName || c.name || id
+    const matchNames = [name, c.name, id, ...(c.aliases || [])].filter(Boolean)
+    try {
+      const okReg = await registerCharacterWithImage(page, facePath, { name, matchNames })
+      if (okReg) {
+        markCharacterFlowRegistered(id)
+        log('ok', `[캐릭터 등록] "${name}" 완료`)
+      } else {
+        log('warn', `[캐릭터 등록] "${name}" 실패 — 미디어 풀 레퍼런스로 폴백`)
+      }
+    } catch (e) {
+      log('warn', `[캐릭터 등록] "${name}" 예외(${e.message}) — 폴백`)
+    }
+  }
 }
 
 // ── 캐릭터 등록 후 프로젝트 페이지로 복귀 ──────────────────────────
@@ -1858,8 +1956,9 @@ async function scanReferenceThumbsOnce(page, result) {
   const candidates = imgPositions
   log('info', `[findReferenceThumbs] 레퍼런스 후보: ${candidates.length}개 (전체 탐색)`)
 
+  const wanted = result.wanted  // ['yeori-face','yeori-closeup','jia-face',...]
   for (const pos of candidates) {
-    if (result.face && result.closeup) break
+    if (wanted.every(bn => result.found[bn])) break
 
     // 호버 전 기준 텍스트 스냅샷
     const baseText = await page.evaluate(() => document.body.innerText.toLowerCase())
@@ -1867,43 +1966,56 @@ async function scanReferenceThumbsOnce(page, result) {
     await page.mouse.move(pos.x, pos.y)
     await sleep(600)
 
-    const appeared = await page.evaluate((base) => {
+    const hitBn = await page.evaluate((base, wants) => {
       const text = document.body.innerText.toLowerCase()
-      // 호버 전에 없던 텍스트가 새로 나타난 경우만 감지 (기존 DOM 오탐지 방지)
       const newText = text.replace(base, '')
       const checkText = newText || text
-      return {
-        face: checkText.includes('yeori-face') || checkText.includes('yeori_face'),
-        closeup: checkText.includes('yeori-closeup') || checkText.includes('yeori_closeup')
+      for (const bn of wants) {
+        if (checkText.includes(bn) || checkText.includes(bn.replace(/-/g, '_'))) return bn
       }
-    }, baseText)
+      return null
+    }, baseText, wanted)
 
-    if (appeared.face && !result.face) {
-      result.face = pos
-      log('info', `[findReferenceThumbs] yeori-face 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
-    }
-    if (appeared.closeup && !result.closeup) {
-      result.closeup = pos
-      log('info', `[findReferenceThumbs] yeori-closeup 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
+    if (hitBn && !result.found[hitBn]) {
+      result.found[hitBn] = pos
+      log('info', `[findReferenceThumbs] ${hitBn} 발견: (${pos.x}, ${pos.y}) ${pos.w}×${pos.h}`)
     }
   }
 }
 
+// EPISODE_CHAR_IDS의 각 캐릭터 refBasename → ['<bn>-face','<bn>-closeup'] 목록.
+// 폴백: 서여리(yeori).
+function wantedRefBasenames() {
+  const reg = loadCharacterRegistry()
+  const ids = EPISODE_CHAR_IDS.length ? EPISODE_CHAR_IDS : ['yeori']
+  const out = []
+  for (const id of ids) {
+    const bn = reg[id]?.refBasename || id
+    out.push(`${bn}-face`, `${bn}-closeup`)
+  }
+  return out
+}
+
 async function findReferenceThumbs(page) {
-  const result = { face: null, closeup: null }
+  const wanted = wantedRefBasenames()
+  const result = { found: {}, wanted }
   const maxAttempts = 3
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     if (attempt > 1) {
-      log('warn', `[findReferenceThumbs] 재시도 ${attempt}/${maxAttempts} — 스크롤/스캔 다시 시도`)
+      log('warn', `[findReferenceThumbs] 재시도 ${attempt}/${maxAttempts} — 스캔 다시`)
       await sleep(700)
     }
     await scanReferenceThumbsOnce(page, result)
-    if (result.face && result.closeup) break
+    if (wanted.every(bn => result.found[bn])) break
   }
 
-  if (!result.face) log('warn', '[findReferenceThumbs] yeori-face 썸네일 못 찾음')
-  if (!result.closeup) log('warn', '[findReferenceThumbs] yeori-closeup 썸네일 못 찾음')
+  for (const bn of wanted) if (!result.found[bn]) log('warn', `[findReferenceThumbs] ${bn} 썸네일 못 찾음`)
+
+  // 하위 호환: 첫 캐릭터(보통 서여리)의 face/closeup을 .face/.closeup으로도 노출
+  const primaryBn = (wanted[0] || 'yeori-face').replace(/-face$/, '')
+  result.face = result.found[`${primaryBn}-face`] || null
+  result.closeup = result.found[`${primaryBn}-closeup`] || null
   return result
 }
 
@@ -1912,13 +2024,12 @@ async function findReferenceThumbs(page) {
 async function preFlightCheck(page) {
   log('step', '[체크리스트] 레퍼런스 썸네일 확인 중…')
   const thumbs = await findReferenceThumbs(page)
-  if (!thumbs.face && !thumbs.closeup) {
+  const foundBns = Object.keys(thumbs.found)
+  if (!foundBns.length) {
     log('warn', '[체크리스트] 레퍼런스 이미지 없음 — 레퍼런스 없이 진행 (텍스트 프롬프트만 사용)')
     return
   }
-  if (!thumbs.face) log('warn', '[체크리스트] yeori-face 없음 — 진행 계속')
-  if (!thumbs.closeup) log('warn', '[체크리스트] yeori-closeup 없음 — 진행 계속')
-  log('ok', '[체크리스트] 레퍼런스 썸네일 확인 완료')
+  log('ok', `[체크리스트] 레퍼런스 썸네일 ${foundBns.length}/${thumbs.wanted.length}: ${foundBns.join(', ')}`)
 }
 
 // ── 썸네일 좌표 → 프롬프트 입력창으로 드래그 ────────────────────────────
@@ -1980,19 +2091,15 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const pos = await prepareInput(page)
   log('info', `입력창: (${Math.round(pos.x)}, ${Math.round(pos.y)})`)
 
-  // hover로 레퍼런스 썸네일 탐색 후 프롬프트 입력창으로 드래그
+  // hover로 레퍼런스 썸네일 탐색 후 프롬프트 입력창으로 드래그 (등장 인물 전원)
   const thumbs = await findReferenceThumbs(page)
-  if (thumbs.face) {
-    await dragToPrompt(page, thumbs.face, pos)
-    log('info', '[processCut] yeori-face 드래그 완료')
-  } else {
-    log('warn', '[processCut] yeori-face 썸네일 못 찾음 → 건너뜀')
+  const entries = Object.entries(thumbs.found)
+  if (!entries.length) {
+    log('warn', '[processCut] 레퍼런스 썸네일 없음 → 텍스트 프롬프트만')
   }
-  if (thumbs.closeup) {
-    await dragToPrompt(page, thumbs.closeup, pos)
-    log('info', '[processCut] yeori-closeup 드래그 완료')
-  } else {
-    log('warn', '[processCut] yeori-closeup 썸네일 못 찾음 → 건너뜀')
+  for (const [bn, tpos] of entries) {
+    await dragToPrompt(page, tpos, pos)
+    log('info', `[processCut] ${bn} 드래그 완료`)
   }
 
   await page.mouse.click(pos.x, pos.y)
