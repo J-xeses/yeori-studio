@@ -1626,7 +1626,7 @@ app.post('/api/recording/start', (req, res) => {
       return res.status(400).json({ error: 'broll 모드는 cutNo, broll.epNum이 필요합니다' })
     }
     const padded = String(cutNo).padStart(2, '0')
-    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${broll.epNum}`, `broll_raw_cut${padded}.mp4`)
+    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${broll.epNum}`, 'raw', `broll_cut${padded}.mp4`)
   } else if (capcut) {
     if (cutNo == null || !capcut.epNum) {
       return res.status(400).json({ error: 'capcut 모드는 cutNo, capcut.epNum이 필요합니다' })
@@ -1635,7 +1635,7 @@ app.post('/api/recording/start', (req, res) => {
     // 하드 에러로 막지 않는다(사전 상태 확인은 MakingTab의 "CapCut 상태 확인" 버튼이 담당).
     const win = getCapCutWindow()
     recordOptions = { ...recordOptions, region: win.running ? win.region : null }
-    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${capcut.epNum}`, `capcut_cut${cutNo}_raw.mp4`)
+    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${capcut.epNum}`, 'raw', `capcut_cut${cutNo}.mp4`)
   } else if (outputPath) {
     outputPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
   } else {
@@ -1987,7 +1987,8 @@ app.post('/api/source-download', async (req, res) => {
     return res.status(400).json({ error: 'url, cutNo, epNum, filename 필요' })
   }
   const safeFilename = String(filename).replace(/[/\\:*?"<>|]/g, '_')
-  const dir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'source')
+  // 메이킹 탭 소스 규약: downloads/making/ep{N}/source/{studio|upload|stock}
+  const dir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'source', 'stock')
   fs.mkdirSync(dir, { recursive: true })
   const localPath = path.join(dir, safeFilename)
 
@@ -2098,7 +2099,9 @@ app.post('/api/capture-video-url', async (req, res) => {
         error: '이 페이지에서 영상 소스를 찾지 못했습니다. blob/DRM/캔버스 렌더링이면 URL 캡처가 불가하니 데스크톱 녹화로 진행하세요.',
       })
     }
-    const rawPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `urlcap_raw_cut${String(cutNo).padStart(2, '0')}.mp4`)
+    const rawDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'raw')
+    fs.mkdirSync(rawDir, { recursive: true })
+    const rawPath = path.join(rawDir, `urlcap_cut${String(cutNo).padStart(2, '0')}.mp4`)
     await ffmpegGrabToFile(mediaUrl, rawPath, target + 3)
     const result = await editBrollRaw({
       rawPath, cutNo, epNum,
@@ -2232,27 +2235,36 @@ app.post('/api/source-to-cut', async (req, res) => {
   }
 })
 
-// GET /api/source-scan?epNum=N — 스튜디오 소스 후보 파일 목록
+// GET /api/source-scan?epNum=N — 메이킹 탭 소스 후보 목록
+//   making/ep{N}/source/{studio,upload,stock}  ← 규약상 정식 소스 위치
+//   flow/ep{N}, video/ep{N}                    ← 참고(스튜디오 확정본·이미 만든 컷)
 app.get('/api/source-scan', (req, res) => {
   const epNum = req.query.epNum
   const roots = []
   if (epNum != null) {
+    const srcBase = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'source')
     roots.push(
+      { label: 'source/studio', dir: path.join(srcBase, 'studio') },
+      { label: 'source/upload', dir: path.join(srcBase, 'upload') },
+      { label: 'source/stock', dir: path.join(srcBase, 'stock') },
+      { label: 'source', dir: srcBase },
       { label: 'flow', dir: path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`) },
       { label: 'video', dir: path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`) },
-      { label: 'making', dir: path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`) },
-      { label: 'scene', dir: path.join(MEDIA_ROOT, 'downloads', 'scene', `ep${epNum}`) },
     )
   }
   const items = []
+  const seen = new Set()
   for (const { label, dir } of roots) {
     if (!fs.existsSync(dir)) continue
     for (const f of fs.readdirSync(dir)) {
+      const full = path.join(dir, f)
+      let stat; try { stat = fs.statSync(full) } catch { continue }
+      if (!stat.isFile()) continue            // source/ 스캔에서 하위폴더 제외
       const ext = path.extname(f).toLowerCase()
       if (!S2C_IMAGE_EXT.has(ext) && !S2C_VIDEO_EXT.has(ext)) continue
-      const full = path.join(dir, f)
-      let size = 0; try { size = fs.statSync(full).size } catch { /* noop */ }
-      items.push({ group: label, name: f, path: full, kind: S2C_VIDEO_EXT.has(ext) ? 'video' : 'image', sizeKB: Math.round(size / 1024) })
+      if (seen.has(full)) continue
+      seen.add(full)
+      items.push({ group: label, name: f, path: full, kind: S2C_VIDEO_EXT.has(ext) ? 'video' : 'image', sizeKB: Math.round(stat.size / 1024) })
     }
   }
   res.json({ items })
@@ -5263,7 +5275,7 @@ async function captureCapcutScreenshot() {
 // CapCut 창을 못 찾으면 region만 null로 남겨 전체화면으로 폴백한다.
 function startCapcutRecordingForMcp({ epNum, cutNo, targetDuration, trimMode }) {
   const win = getCapCutWindow()
-  const outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `capcut_cut${cutNo}_raw.mp4`)
+  const outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'raw', `capcut_cut${cutNo}.mp4`)
   const result = screenRecorder.start(outputPath, {
     fps: 30,
     quality: 'medium',
@@ -5490,7 +5502,9 @@ app.post('/api/handwriting-overlay', async (req, res) => {
     if (!isImage && !HW_VID_EXTS.has(ext)) {
       return res.status(400).json({ error: `지원하지 않는 입력 형식: ${ext}` })
     }
-    workDir = path.join(MEDIA_ROOT, 'downloads', 'making', 'hw_stills')
+    workDir = epNum != null
+      ? path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'hw_stills')
+      : path.join(MEDIA_ROOT, 'downloads', 'making', 'hw_stills')
     fs.mkdirSync(workDir, { recursive: true })
     const stem = path.basename(inputPath, ext).replace(/[^\w.-]/g, '_')
     outStem = path.join(workDir, `${stem}${suffix}`)

@@ -575,7 +575,7 @@ export default function MakingTab() {
         </div>
         {s2cScan && (
           s2cScan.length === 0
-            ? <div className={s.emptyHint}>스캔된 소스 없음 (downloads/flow·video·making·scene/ep{episode?.number})</div>
+            ? <div className={s.emptyHint}>스캔된 소스 없음 (downloads/making/ep{episode?.number}/source/&#123;studio·upload·stock&#125;, flow·video/ep{episode?.number})</div>
             : (
               <div className={s.cutList} style={{ maxHeight: 150, overflow: 'auto' }}>
                 {s2cScan.map((it, i) => (
