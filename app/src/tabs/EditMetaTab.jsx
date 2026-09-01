@@ -7,12 +7,8 @@ import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
+import { cutDuration } from '../lib/cutDuration'
 import styles from './EditMetaTab.module.css'
-
-function estimateDuration(text = '') {
-  const chars = text.replace(/\s/g, '').length
-  return Math.max(4, Math.round((chars / 300) * 60))
-}
 
 function toTimecode(sec) {
   const m = Math.floor(sec / 60)
@@ -114,7 +110,7 @@ export default function EditMetaTab() {
   const buildMeta = () => {
     let cursor = 0
     return cuts.map((cut, i) => {
-      const dur = cut.sec || cut.duration || estimateDuration(cut.script || cut.text || '')
+      const dur = cutDuration(cut)
       const start = cursor
       cursor += dur
       const isHook = hookIndices.includes(i)
@@ -200,10 +196,24 @@ export default function EditMetaTab() {
   }
 
   // ── 컷 상세 분석 ──
-  const analyzeCut = (cutIdx) => {
+  const analyzeCut = async (cutIdx) => {
     const m = meta[cutIdx]
     if (!m) return
     setSelectedCut(cutIdx)
+
+    // 메이킹 탭이 확정한 컷 영상을 자동으로 불러온다(손글씨본 우선). 수동 파일선택은
+    // 파일이 없을 때의 폴백으로 남긴다.
+    let autoVideoPath = null
+    const epNum = state.episode?.number
+    if (epNum != null) {
+      const base = `http://localhost:3001/downloads/video/ep${epNum}/cut_${m.cutNo}`
+      for (const url of [`${base}_overlay.mp4`, `${base}.mp4`]) {
+        try {
+          const r = await fetch(url, { method: 'HEAD' })
+          if (r.ok) { autoVideoPath = url; break }
+        } catch { /* 서버 꺼져있으면 폴백 */ }
+      }
+    }
 
     const videoDur = m.duration
     const audioEnd = parseFloat(m.audioEnd) || videoDur
@@ -230,6 +240,7 @@ export default function EditMetaTab() {
       hasDialogue: !!m.dialogue,
       hasNarration: !!m.narration,
       isHook: m.type === '훅',
+      videoPath: autoVideoPath,
     })
   }
 

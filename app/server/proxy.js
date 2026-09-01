@@ -1713,7 +1713,7 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
 
   const finalStat = fs.statSync(finalPath)
   // 화면녹화(BROLL/CapCut/URL 캡처) 결과 — 실사 푸티지라 커터 켄번스 대상 아님.
-  recordCutMotion(epNum, cutNo, { method: 'record', motion: null, baked: true })
+  recordCutMotion(epNum, cutNo, { method: 'record', motion: null, baked: true, duration: target })
   return { finalPath, finalSizeBytes: finalStat.size, finalDuration: target, rawDuration }
 }
 
@@ -2192,25 +2192,44 @@ function resolveS2CPath(srcPath) {
   return abs
 }
 
-// ── 컷별 "모션 매니페스트" ─────────────────────────────────────────
-// 메이킹 탭이 cut_NN.mp4를 만들 때, 그 컷에 이미 모션이 구워졌는지(baked)를
+// ── 컷별 메이킹 매니페스트 ─────────────────────────────────────────
+// 메이킹 탭이 cut_NN.mp4를 만들 때마다 그 컷의 제작 정보를
 // downloads/video/ep{N}/.motion-manifest.json 에 기록한다.
-// run-cutter.js(A Creative Cutter)가 이 파일을 읽어 baked:true 컷에는 켄번스를
-// 얹지 않는다 — 그래픽 기본 모션 / source-to-cut 줌·페이드 / BROLL 실사 푸티지 위에
-// 켄번스가 겹쳐 "이중 모션"이 되는 것을 막기 위함.
-//   { "3": { method, motion, baked, at }, ... }   // 키 = 컷 번호(문자열)
+//   { "3": { method, motion, baked, duration, producedAt, overlay, overlayAt }, ... }
+// 용도:
+//  · run-cutter.js(A Creative Cutter)가 baked:true 컷에는 켄번스를 안 얹는다
+//    (그래픽 모션 / s2c 줌·페이드 / BROLL 실사 위 이중 모션 방지).
+//  · buildStudioStatusPayload()가 읽어서 에이전트·리더 모니터링에 제작방식·시각·
+//    손글씨 적용 여부·조립 대비 stale 여부를 노출한다.
+function manifestPath(epNum) {
+  return path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, '.motion-manifest.json')
+}
+function readCutManifest(epNum) {
+  try { return JSON.parse(fs.readFileSync(manifestPath(epNum), 'utf-8')) || {} }
+  catch { return {} }
+}
+// 컷 제작 성공 시 호출 — 그 컷 항목을 통째로 새로 쓴다(재제작이면 손글씨 등 이전 상태 리셋).
 function recordCutMotion(epNum, cutNo, info) {
   if (epNum == null || cutNo == null) return
   try {
-    const dir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-    fs.mkdirSync(dir, { recursive: true })
-    const p = path.join(dir, '.motion-manifest.json')
-    let m = {}
-    try { m = JSON.parse(fs.readFileSync(p, 'utf-8')) || {} } catch { /* 없거나 깨졌으면 새로 */ }
-    m[String(cutNo)] = { ...info, at: new Date().toISOString() }
-    fs.writeFileSync(p, JSON.stringify(m, null, 2))
+    fs.mkdirSync(path.dirname(manifestPath(epNum)), { recursive: true })
+    const m = readCutManifest(epNum)
+    m[String(cutNo)] = { ...info, producedAt: new Date().toISOString() }
+    fs.writeFileSync(manifestPath(epNum), JSON.stringify(m, null, 2))
   } catch (e) {
     console.warn('[recordCutMotion]', e.message)
+  }
+}
+// 손글씨 오버레이 적용 성공 시 호출 — 기존 항목에 overlay 필드만 병합.
+function recordCutOverlay(epNum, cutNo) {
+  if (epNum == null || cutNo == null) return
+  try {
+    fs.mkdirSync(path.dirname(manifestPath(epNum)), { recursive: true })
+    const m = readCutManifest(epNum)
+    m[String(cutNo)] = { ...(m[String(cutNo)] || {}), overlay: true, overlayAt: new Date().toISOString() }
+    fs.writeFileSync(manifestPath(epNum), JSON.stringify(m, null, 2))
+  } catch (e) {
+    console.warn('[recordCutOverlay]', e.message)
   }
 }
 
@@ -2255,7 +2274,7 @@ app.post('/api/source-to-cut', async (req, res) => {
     // 영상 소스거나(실사 모션) 이미지에 모션을 얹었으면 baked. 모션 없는 정지 이미지만
     // baked:false — 그건 커터가 켄번스를 얹어도 되는 "원래 켄번스 대상"이다.
     const baked = isVideo || (meta.motion && meta.motion !== 'none')
-    recordCutMotion(epNum, cutNo, { method: isVideo ? 's2c-video' : 's2c-image', motion: meta.motion || null, baked })
+    recordCutMotion(epNum, cutNo, { method: isVideo ? 's2c-video' : 's2c-image', motion: meta.motion || null, baked, duration: dur })
     const st = fs.statSync(outPath)
     res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration: dur, fit: fitMode, baked, ...meta })
   } catch (err) {
@@ -2530,7 +2549,7 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   // 그래픽 컷은 전체화면 텍스트/캡션 카드 — 그 위에 커터 켄번스가 얹히면 글씨가
   // 흐르듯 밀려 아마추어처럼 보인다. 모션이 필요하면 "유형별 기본 모션"으로 여기서
   // 굽는다. 따라서 그래픽은 항상 baked 처리.
-  recordCutMotion(epNum, cutNo, { method: 'graphic', motion: motion || 'none', baked: true })
+  recordCutMotion(epNum, cutNo, { method: 'graphic', motion: motion || 'none', baked: true, duration: dur })
 
   return { imagePath, videoPath, animated: !!animated }
 }
@@ -4925,9 +4944,34 @@ function buildStudioStatusPayload(episodeId) {
   const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
   const hasFile = (dir, re) => fs.existsSync(dir) && fs.readdirSync(dir).some(f => re.test(f))
 
+  // 메이킹 매니페스트 + 조립본 mtime — 컷별 제작방식·손글씨·조립 대비 stale 여부용
+  const madeManifest = readCutManifest(epNum)
+  let makingFilmMtime = 0
+  try {
+    makingFilmMtime = fs.statSync(
+      path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `ep${epNum}_making.mp4`)
+    ).mtimeMs
+  } catch { /* 아직 조립 안 함 */ }
+
   const cutStatus = cuts.map(c => {
     const g = gData[`cut_${c.no}`] || {}
     const padded = String(c.no).padStart(2, '0')
+    const mm = madeManifest[String(c.no)] || null
+    let making = null
+    if (mm) {
+      const changedAt = Date.parse(mm.overlayAt || mm.producedAt || 0) || 0
+      making = {
+        method: mm.method || null,
+        motion: mm.motion || null,
+        baked: !!mm.baked,
+        duration: mm.duration ?? null,
+        producedAt: mm.producedAt || null,
+        overlay: !!mm.overlay,
+        overlayAt: mm.overlayAt || null,
+        // 조립본보다 최근에 (재)제작·오버레이됨 → 다시 조립 필요
+        dirtyVsAssemble: makingFilmMtime > 0 && changedAt > makingFilmMtime,
+      }
+    }
     return {
       no: c.no,
       g1: !!g.g1, g2: !!g.g2, g3: !!g.g3, g4: !!g.g4, g5: !!g.g5,
@@ -4935,7 +4979,9 @@ function buildStudioStatusPayload(episodeId) {
       hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
       hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)),
       hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
+      hasOverlayVideo: fs.existsSync(path.join(videoDir, `cut_${padded}_overlay.mp4`)),
       cutType: c.cutType,
+      making,
       hasDialogue: c.dialogue?.trim() ? true : false,
       hasNarration: c.narration?.trim() ? true : false,
     }
@@ -4945,6 +4991,10 @@ function buildStudioStatusPayload(episodeId) {
     acc[k] = cutStatus.filter(c => c[k]).length
     return acc
   }, {})
+  summary.hasVideo = cutStatus.filter(c => c.hasVideo).length
+  summary.made = cutStatus.filter(c => c.making).length
+  summary.overlay = cutStatus.filter(c => c.making?.overlay).length
+  summary.dirtyVsAssemble = cutStatus.filter(c => c.making?.dirtyVsAssemble).length
 
   return {
     episodeId: episodeId || state.activeEpisodeId,
@@ -5376,7 +5426,7 @@ async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
 
   const outDuration = await ffprobeDuration(finalPath)
   // BROLL 실사 푸티지 — 커터 켄번스 대상 아님.
-  recordCutMotion(epNum, cutNo, { method: 'broll', motion: null, baked: true })
+  recordCutMotion(epNum, cutNo, { method: 'broll', motion: null, baked: true, duration: outDuration })
   return { outputPath: finalPath, duration: outDuration }
 }
 
@@ -5606,6 +5656,8 @@ app.post('/api/handwriting-overlay', async (req, res) => {
       return res.status(500).json({ error: `오버레이 합성 실패: ${(result.err || result.out || '').slice(-800)}` })
     }
     const stat = fs.statSync(outputPath)
+    // 컷 영상(cut_NN.mp4) 위에 오버레이한 경우만 매니페스트에 기록(임의 스틸은 제외).
+    if (!inputRel && cutNo != null && suffix === '_overlay') recordCutOverlay(epNum, cutNo)
     res.json({ success: true, mode: 'video', outputPath, url: toUrl(outputPath), sizeKB: Math.round(stat.size / 1024) })
   } catch (err) {
     res.status(500).json({ error: err.message })

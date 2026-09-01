@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { resolveEpisodeCode } from '../lib/episodeCode'
+import { cutDuration } from '../lib/cutDuration'
+import { getGPoint, setGPoint } from '../lib/gpoints'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './MakingTab.module.css'
@@ -243,6 +245,20 @@ export default function MakingTab() {
     return () => clearInterval(id)
   }, [episode?.number])
 
+  // 메이킹 유형(GRAPHIC/BROLL/CAPCUT) 컷은 별도 승인 게이트가 없다 — cut_NN.mp4가
+  // 생기면 그게 곧 "완료"다. 파일이 확인되면 G4(영상)를 자동으로 채워, 리더 대시보드
+  // (getGPointSummary 기반)와 스튜디오 매트릭스가 메이킹 진행을 반영하게 한다.
+  // YEORI 컷은 VideoTab에서 사람이 승인하는 게이트가 따로 있으므로 건드리지 않는다.
+  useEffect(() => {
+    if (!episode?.number) return
+    for (const cut of (cuts || [])) {
+      if (!MANUAL_TYPES.includes(cut.cutType || 'YEORI')) continue
+      if (videoStatus[cut.no] && !getGPoint(episodeCode, cut.no).g4) {
+        setGPoint(episodeCode, cut.no, 'g4', true)
+      }
+    }
+  }, [videoStatus, episode?.number, episodeCode, cuts])
+
   // ── 어느 컷을 펼쳐 놓았는지(한 번에 하나만). 펼치면서 타입에 맞는 기존 select 함수를
   // 호출해 htmlSource/selectedBrollCutNo/selectedCapcutCutNo 등 기존 상태를 그대로 채운다.
   const [expandedCutNo, setExpandedCutNo] = useState(null)
@@ -329,7 +345,7 @@ export default function MakingTab() {
     setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
     setPreviewHtml('')
     setCaptureResult(null)
-    setDuration(cut.duration || 5)
+    setDuration(cutDuration(cut))
   }
 
   // [제작 실행] — 편집기의 현재 HTML을 그대로 캡처한다(/api/graphic-capture).
@@ -389,7 +405,7 @@ export default function MakingTab() {
   const selectBrollCut = (cut) => {
     setSelectedBrollCutNo(cut.no)
     setBrollUrl('')
-    setBrollTargetDuration(cut.duration || 5)
+    setBrollTargetDuration(cutDuration(cut))
     setBrollResult(null)
   }
 
@@ -469,7 +485,7 @@ export default function MakingTab() {
           epNum: episode.number,
           cutNo: cut.no,
           videoUrl: pick.downloadUrl,
-          duration: brollTargetDuration || cut.duration || undefined,
+          duration: brollTargetDuration || cutDuration(cut),
         }),
       })
       const data = await res.json()
@@ -539,7 +555,7 @@ export default function MakingTab() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           epNum: episode.number, cutNo: cut.no, srcPath,
-          duration: cut.duration || 5,
+          duration: cutDuration(cut),
           trimStart: s2cTrimStart[cut.no] || '',
           trimMode: 'start',
           motion: s2cMotion[cut.no] || 'none',
@@ -725,7 +741,7 @@ export default function MakingTab() {
 
   const selectCapcutCut = (cut) => {
     setSelectedCapcutCutNo(cut.no)
-    setCapcutTargetDuration(cut.duration || 5)
+    setCapcutTargetDuration(cutDuration(cut))
     setCapcutResult(null)
     setCapcutStatus(null)
   }
@@ -941,7 +957,7 @@ export default function MakingTab() {
       arrow: !!ov.arrow,
       arrow_direction: ov.arrow_direction,
       underline: !!ov.underline,
-      time: overlayTimeRange(ov.timing, cut.duration),
+      time: overlayTimeRange(ov.timing, cutDuration(cut)),
     }
     setOverlayBusy(p => ({ ...p, [cut.no]: true }))
     setOverlayResult(p => ({ ...p, [cut.no]: null }))
@@ -982,7 +998,7 @@ export default function MakingTab() {
   const autoProduceGraphicish = async (cut) => {
     const type = cut.cutType
     const cfgFile = String(typeStyles[type]?.htmlFile || '').trim()
-    const dur = cut.duration || 5
+    const dur = cutDuration(cut)
     const motion = styleFor(type)?.motion || 'none'
     let res, data
     if (cfgFile) {
@@ -1008,7 +1024,7 @@ export default function MakingTab() {
       body: JSON.stringify({
         epNum: episode.number, cutNo: cut.no,
         description,
-        duration: cut.duration || 5,
+        duration: cutDuration(cut),
         hint: typeStyles.BROLL.brollQuery || '',
         fallbackQuery: deriveBrollKeyword(cut, ''),
       }),
@@ -1023,7 +1039,7 @@ export default function MakingTab() {
 
   // 화면 녹화 대체 — URL 영상을 헤드리스로 캡처(페이지에서 미디어 URL 추출 → ffmpeg).
   const runBrollUrlCapture = async (cut, url) => {
-    const dur = cut.duration || brollTargetDuration || 5
+    const dur = brollTargetDuration || cutDuration(cut)
     const res = await fetch(`${YEORI_SERVER}/api/capture-video-url`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url, cutNo: cut.no, epNum: episode.number, duration: dur, trimMode: brollTrimMode }),
@@ -1092,7 +1108,7 @@ export default function MakingTab() {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               epNum: episode.number, cutNo: cut.no, srcPath: studioSrc,
-              duration: cut.duration || 5, trimStart: cut.trimStart ?? '', trimMode: 'start',
+              duration: cutDuration(cut), trimStart: cut.trimStart ?? '', trimMode: 'start',
               motion: styleFor(type)?.motion || 'none', fit: cut.fit || 'cover',
             }),
           })
