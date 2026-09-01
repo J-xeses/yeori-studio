@@ -1,11 +1,46 @@
 {
-  "episode": 2,
-  "title": "AI인지 모르고 DM 보낸 사람들 실화 😅",
+  "episode": 1,
+  "title": "걸그룹 콜라보 뮤비 ",
   "cuts": [
     {
-      "no": 4,
-      "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
-      "duration": 5
+      "no": 1,
+      "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a couch indoors,\n\nWOMAN 1 (Yeori):\nlong wavy dark brown hair NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nnatural makeup warm skin tone,\n\nWOMAN 2 (Jia):\nshort wavy black hair with soft fringe bangs,\ndark mauve-brown lip color,\nintense deep dark eyes with sharp eyeliner,\ndelicate silver chain necklace,\neffortlessly photogenic,\n\nYeori receiving phone from Jia, eyes wide open\nshocked expression staring at phone screen,\nTV screen in background softly blurred\nshowing colorful music video footage,\nwarm indoor evening lighting,\nMV screen light softly reflecting on both faces,\nPhotorealistic 8K cinematic 9:16",
+      "dialogue": "지아 \"야, 이거 봤어?!\" / 여리 \"세 그룹이 한 뮤비에 나왔다는 게 말이 돼요?\"",
+      "duration": 8,
+      "characters": [
+        {
+          "id": "yeori",
+          "name": "서여리",
+          "face": "downloads/flow/character/yeori-face.jpg",
+          "closeup": "downloads/flow/character/yeori-closeup.jpg",
+          "descriptor": "Consistent character face: Oval face with warm fair skin, almond-shaped hazel-brown eyes, full dark eyebrows, a straight medium nose, full naturally pink lips with a gentle smile, and long wavy dark brown hair NOT short parted loosely; rosy cheeks and a few small facial moles.",
+          "flowCharacterName": "서여리"
+        },
+        {
+          "id": "jia",
+          "name": "한지아",
+          "face": "downloads/flow/character/jia-face.jpg",
+          "closeup": "downloads/flow/character/jia-closeup.jpg",
+          "descriptor": "Consistent character face: oval face shape, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, a straight refined nose, full lips with a defined cupid's bow in deep mauve-brown, fair warm skin tone with a small mole near the nose, short wavy black bob with wispy curtain bangs.",
+          "flowCharacterName": "한지아"
+        }
+      ]
+    },
+    {
+      "no": 2,
+      "imagePrompt": "FULLBODY SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face, long legs,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\n\nmedium long shot walking naturally indoors,\nTV screen softly blurred in background\nwith colorful MV footage,\nwarm evening indoor lighting,\nconfident analytical expression,\nPhotorealistic 8K cinematic 9:16",
+      "dialogue": "여리 \"LE SSERAFIM은 이미 증명된 그룹이잖아요. 카리스마가 압도적인.\"",
+      "duration": 8,
+      "characters": [
+        {
+          "id": "yeori",
+          "name": "서여리",
+          "face": "downloads/flow/character/yeori-face.jpg",
+          "closeup": "downloads/flow/character/yeori-closeup.jpg",
+          "descriptor": "Consistent character face: Oval face with warm fair skin, almond-shaped hazel-brown eyes, full dark eyebrows, a straight medium nose, full naturally pink lips with a gentle smile, and long wavy dark brown hair NOT short parted loosely; rosy cheeks and a few small facial moles.",
+          "flowCharacterName": "서여리"
+        }
+      ]
     }
   ]
 }
