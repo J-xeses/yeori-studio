@@ -167,6 +167,12 @@ function run(epNum) {
     return MOTION_BAKED_TYPES.has((m.cutType || '').toUpperCase())
   }
 
+  // editIntent.kenburns — 대본 기반 컷별 켄번스(/api/build-edit-intent가 채움).
+  //   우선순위: motionBaked → 'none'  >  editIntent.kenburns  >  전역 kbMode
+  const KB_EFFECTS = new Set(['zoomIn', 'zoomOut', 'leftToRight', 'rightToLeft', 'topToBottom', 'bottomToTop', 'none', 'random'])
+  const KB_ALIAS = { pan_right: 'leftToRight', pan_left: 'rightToLeft', pan_up: 'bottomToTop', pan_down: 'topToBottom', zoom_in: 'zoomIn', zoom_out: 'zoomOut' }
+  const normKb = (v) => { const k = KB_ALIAS[v] || v; return KB_EFFECTS.has(k) ? k : null }
+
   const matchResult = cuts.map(m => ({
     cutNo: m.cutNo,
     label: m.label || `CUT ${m.cutNo}`,
@@ -175,9 +181,12 @@ function run(epNum) {
     end: Math.round((m.endSec || 0) * 1000000),
     duration: Math.round(((m.endSec || 0) - (m.startSec || 0)) * 1000000),
     motionBaked: isMotionBaked(m),
+    intentKb: normKb(m.editIntent?.kenburns),
   }))
   const bakedCount = matchResult.filter(r => r.motionBaked).length
   if (bakedCount) console.log(`[cutter] 모션 구워진 컷 ${bakedCount}개 — 켄번스 스킵`)
+  const intentCount = matchResult.filter(r => !r.motionBaked && r.intentKb).length
+  if (intentCount) console.log(`[cutter] 편집 의도(editIntent)로 켄번스 지정된 컷 ${intentCount}개`)
 
   // 전체 모드: 기존 세그먼트/소재 전부 비우고 editMeta 기준으로 재구성
   videoTrack.segments = []
@@ -191,14 +200,15 @@ function run(epNum) {
 
   const cutDetails = []
   for (const r of matchResult) {
-    const cutKbMode = r.motionBaked ? 'none' : kbMode
+    const cutKbMode = r.motionBaked ? 'none' : (r.intentKb || kbMode)
     const { seg, effectType } = makeSegAndMaterials(d, r, tmplSeg, folderPath, cutKbMode)
     videoTrack.segments.push(seg)
     cutDetails.push({
       cutNo: r.cutNo, label: r.label, file: r.file,
       startSec: r.start / 1000000, endSec: r.end / 1000000,
       durationSec: r.duration / 1000000,
-      kenburns: r.motionBaked ? 'none(모션내장)' : effectType,
+      kenburns: r.motionBaked ? 'none(모션내장)'
+        : (r.intentKb ? `${effectType}(intent)` : effectType),
     })
   }
   d.duration = matchResult.reduce((max, r) => Math.max(max, r.end), 0)

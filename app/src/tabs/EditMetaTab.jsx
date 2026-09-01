@@ -11,6 +11,9 @@ import { cutDuration } from '../lib/cutDuration'
 import { resolveFinishMode } from '../lib/finishMode'
 import styles from './EditMetaTab.module.css'
 
+// run-cutter.js와 동일 — 이 유형 컷은 모션이 이미 구워져 켄번스(editIntent 포함) 대상 아님
+const MOTION_BAKED_TYPES = new Set(['GRAPHIC', 'BROLL', 'CAPCUT'])
+
 function toTimecode(sec) {
   const m = Math.floor(sec / 60)
   const s = sec % 60
@@ -193,6 +196,12 @@ export default function EditMetaTab() {
         type: isHook ? '훅' : '일반',
         // 파이프라인 유형 — run-cutter.js의 이중 모션 가드 2순위 신호(매니페스트 없을 때 폴백).
         cutType: cut.cutType || 'YEORI',
+        // 편집 의도 — run-cutter.js가 켄번스 결정에 씀(motionBaked 다음 우선순위).
+        editIntent: cut.editIntent || null,
+        SH: cut.masterCode?.sh || null,
+        CA: cut.masterCode?.ca || null,
+        AT: cut.masterCode?.ac || null,
+        MD: cut.masterCode?.md || null,
         transition: i === 0 ? '페이드 인/아웃' : '컷 편집',
         note: isHook ? '리텐션 훅 구간 — 강조 효과 권장' : '',
         audioFile: audio.audioFile,
@@ -232,6 +241,45 @@ export default function EditMetaTab() {
       setError('AI 주의사항 생성 오류: ' + e.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // ── 편집 의도(editIntent) 자동 생성 — 대본 SH/CA/AT/MD → 컷별 켄번스 ──
+  const [intentBusy, setIntentBusy] = useState(false)
+  const buildEditIntent = async () => {
+    const src = state.cuts || []
+    if (!src.length) return
+    setIntentBusy(true)
+    try {
+      const r = await fetch('http://localhost:3001/api/build-edit-intent', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: state.episode?.number,
+          cuts: src.map(c => ({
+            cutNo: c.no,
+            SH: c.masterCode?.sh || '',
+            CA: c.masterCode?.ca || '',
+            AT: c.masterCode?.ac || '',
+            MD: c.masterCode?.md || '',
+            cutType: c.cutType || 'YEORI',
+          })),
+        }),
+      })
+      const d = await r.json()
+      if (!r.ok || d.error) { setError(`편집 의도 생성 실패: ${d.error || r.status}`); return }
+      for (const it of (d.cuts || [])) {
+        const cut = src.find(c => c.no === it.cutNo)
+        if (cut?.id) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { editIntent: it.editIntent } })
+      }
+      // meta가 이미 렌더돼 있으면 즉시 반영
+      setMeta(prev => prev.map(m => {
+        const it = (d.cuts || []).find(x => String(x.cutNo).padStart(2, '0') === m.cutNo || x.cutNo === parseInt(m.cutNo, 10))
+        return it ? { ...m, editIntent: it.editIntent } : m
+      }))
+    } catch (e) {
+      setError(`편집 의도 생성 실패: ${e.message}`)
+    } finally {
+      setIntentBusy(false)
     }
   }
 
@@ -813,9 +861,16 @@ export default function EditMetaTab() {
             </div>
           </div>
 
-          <button className={styles.genBtn} onClick={generate} disabled={loading}>
-            {loading ? '메타 생성 중...' : '편집 메타 자동 생성'}
-          </button>
+          <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
+            <button className={styles.genBtn} onClick={generate} disabled={loading} style={{flex:1}}>
+              {loading ? '메타 생성 중...' : '편집 메타 자동 생성'}
+            </button>
+            <button className={styles.genBtn} onClick={buildEditIntent} disabled={intentBusy}
+              title="대본 SH/CA/AT/MD → 컷별 켄번스 (정밀 편집 모드에서 적용)"
+              style={{flex:'0 0 auto',background:'rgba(167,139,250,0.14)',borderColor:'rgba(167,139,250,0.35)',color:'#c4b5fd'}}>
+              {intentBusy ? '분석 중...' : '🎬 편집 의도 생성'}
+            </button>
+          </div>
 
           {error && <div className={styles.error}>{error}</div>}
 
@@ -838,7 +893,7 @@ export default function EditMetaTab() {
                 <table className={styles.table}>
                   <thead>
                     <tr>
-                      {['CUT','구간','길이','타입','트랜지션','음성파일','시작','끝','메모'].map(h => (
+                      {['CUT','구간','길이','타입','연출','트랜지션','음성파일','시작','끝','메모'].map(h => (
                         <th key={h} className={styles.th}>{h}</th>
                       ))}
                     </tr>
@@ -851,6 +906,13 @@ export default function EditMetaTab() {
                         <td className={styles.td}>{m.duration}초</td>
                         <td className={styles.td}>
                           <span className={m.type === '훅' ? styles.badgeHook : styles.badge}>{m.type}</span>
+                        </td>
+                        <td className={`${styles.td} ${styles.muted}`} style={{fontSize:'11px'}}>
+                          {MOTION_BAKED_TYPES.has(m.cutType)
+                            ? <span style={{color:'#5c5870'}}>모션내장</span>
+                            : m.editIntent
+                              ? <span title={m.editIntent.reason} style={{color:'#a78bfa'}}>🎬 {m.editIntent.kenburns}</span>
+                              : <span style={{color:'#5c5870'}}>—</span>}
                         </td>
                         <td className={`${styles.td} ${styles.muted}`}>{m.transition}</td>
                         <td className={`${styles.td} ${styles.muted}`}>{m.audioFile || '-'}</td>

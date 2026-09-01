@@ -1012,6 +1012,58 @@ app.post('/api/save-video-prompts', (req, res) => {
   }
 })
 
+// ── POST /api/build-edit-intent — 대본 필드(SH/CA/AT/MD) → 컷별 켄번스 편집 의도 ──
+// 순수 로직(외부 AI 호출 없음). 결과는 editMeta의 각 컷 editIntent에 들어가고,
+// run-cutter.js가 이중 모션 가드(motionBaked) 다음 우선순위로 이걸 읽어 켄번스를 정한다.
+// 켄번스 값은 run-cutter의 내부 효과명으로 통일: zoomIn/zoomOut/leftToRight/
+// rightToLeft/topToBottom/bottomToTop/none/random.
+const EI_KB_ALIAS = { pan_right: 'leftToRight', pan_left: 'rightToLeft', pan_up: 'bottomToTop', pan_down: 'topToBottom', zoom_in: 'zoomIn', zoom_out: 'zoomOut' }
+function resolveKenburns(cut) {
+  // SH/CA는 "SH_MCU → SH_CU"처럼 전환형이면 끝값, AT는 "AT_SD_01 + AT_EM_01"처럼 복수
+  const last = s => String(s || '').split(/\s*(?:→|->|—>|>|~|,)\s*/).map(x => x.trim()).filter(Boolean).pop() || ''
+  const list = s => String(s || '').split(/[+,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean)
+  const SH = last(cut.SH).toUpperCase()
+  const CA = last(cut.CA).toUpperCase()
+  const ATs = list(cut.AT)
+  const MD = last(cut.MD).toUpperCase()
+  const norm = (kb, reason) => ({ kenburns: EI_KB_ALIAS[kb] || kb, reason })
+
+  // 1순위: 카메라 움직임 명시
+  if (CA === 'CA_ZI') return norm('zoomIn', 'CA_ZI')
+  if (CA === 'CA_PS') return norm('zoomIn', 'CA_PS')
+  if (CA === 'CA_PAN') return norm('leftToRight', 'CA_PAN')
+  if (CA === 'CA_TLD') return norm('topToBottom', 'CA_TLD')
+  if (CA === 'CA_TR' && ATs.includes('AT_MW_01')) return norm('pan_right', 'CA_TR+AT_MW_01')
+  if (CA === 'CA_TR') return norm('leftToRight', 'CA_TR')
+
+  // 2순위: 샷 사이즈 + 감정/동작
+  if (SH === 'SH_ECU' || SH === 'SH_CU') return norm('zoomIn', SH)
+  if (SH === 'SH_MCU') {
+    if (MD === 'MD_DRM' || MD === 'MD_SAD') return norm('bottomToTop', `SH_MCU+${MD}`)
+    return norm('zoomIn', `SH_MCU+${MD || 'default'}`)
+  }
+  if (SH === 'SH_MS' || SH === 'SH_FS') {
+    if (ATs.includes('AT_MW_01')) return norm('pan_right', `${SH}+AT_MW_01`)
+    return norm('zoomOut', `${SH}+static`)
+  }
+  if (SH === 'SH_WS') return norm('leftToRight', 'SH_WS')
+
+  // 샷이 안 잡혔을 때 감정 코드로 보정
+  if (ATs.some(a => a.startsWith('AT_EM'))) return norm('zoomIn', 'AT_EM')
+
+  return norm('random', 'fallback')
+}
+app.post('/api/build-edit-intent', (req, res) => {
+  const cuts = Array.isArray(req.body?.cuts) ? req.body.cuts : null
+  if (!cuts) return res.status(400).json({ error: 'cuts 배열 필요' })
+  res.json({
+    cuts: cuts.map(c => ({
+      cutNo: c.cutNo,
+      editIntent: { ...resolveKenburns(c), source: [c.SH, c.CA, c.AT, c.MD].filter(Boolean).join(' ') || null },
+    })),
+  })
+})
+
 // ── POST /api/save-edit-meta — yeori_edit_meta.json 서버 저장 ─────────────
 app.post('/api/save-edit-meta', (req, res) => {
   const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
