@@ -2220,6 +2220,41 @@ app.get('/api/read-episode-html', (req, res) => {
 // (^cut_(\d{2})(_final)?\.mp4$)과 동일 규칙 — G4를 건너뛴 GRAPHIC 컷의 "영상"으로
 // 그대로 인식되게 하기 위함. /api/graphic-capture(브라우저)와 MCP 도구
 // make_graphic_cut이 공유하는 핵심 로직.
+// 애니메이션 모션 — 프레임 캡처 경로. 나머지는 스크린샷 1장 + ffmpeg(zoompan/fade).
+const ANIMATED_MOTIONS = new Set(['type-in', 'rise', 'pop', 'word-rise'])
+
+// 자동 템플릿(.main-text)에 얹을 CSS 애니메이션. 커스텀 목업 파일이면 .main-text가
+// 없어 무영향(그 파일 자체 애니메이션이 프레임 캡처됨).
+function animationCss(motion, dur) {
+  const d = Math.max(0.6, Math.min(dur * 0.7, 2.2))
+  if (motion === 'type-in') {
+    return `
+.main-text{overflow:hidden;white-space:pre;border-right:.08em solid currentColor;
+  width:max-content;max-width:92%;margin:0 auto;
+  animation:hwType ${d}s steps(40,end) forwards, hwCaret .7s step-end infinite}
+@keyframes hwType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes hwCaret{50%{border-color:transparent}}`
+  }
+  if (motion === 'pop') {
+    return `.main-text{animation:hwPop ${Math.min(d, 0.9)}s cubic-bezier(.2,1.3,.4,1) forwards}
+@keyframes hwPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`
+  }
+  if (motion === 'word-rise') {
+    // 줄 단위 stagger — .main-text 안 줄바꿈(white-space:pre-line)이라 줄별 분리는
+    // 못 하지만 블록 전체를 아래에서 올라오며 페이드
+    return `.main-text{animation:hwRise ${d}s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes hwRise{from{opacity:0;transform:translateY(64px)}60%{opacity:1}to{opacity:1;transform:translateY(0)}}`
+  }
+  // rise (기본 애니메이션)
+  return `.main-text{animation:hwRise ${d}s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes hwRise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}`
+}
+
+function injectAnimationCss(html, motion, dur) {
+  const css = `<style>${animationCss(motion, dur)}</style>`
+  return html.includes('</head>') ? html.replace('</head>', `${css}</head>`) : `${css}${html}`
+}
+
 // 정지 그래픽에 기본 모션을 입힌다(별도 CapCut 없이). motion:
 //   none | zoom-in | zoom-out | fade | zoom-in-fade
 function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
@@ -2246,12 +2281,16 @@ function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
 async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
+  const animated = ANIMATED_MOTIONS.has(motion)
 
   const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
   fs.mkdirSync(videoDir, { recursive: true })
   const imagePath = path.join(videoDir, `cut_${padded}_graphic.png`)
   const videoPath = path.join(videoDir, `cut_${padded}.mp4`)
+  const pageHtml = animated ? injectAnimationCss(html, motion, dur) : html
 
+  const FPS = 30
+  let framesDir = null
   let browser
   try {
     browser = await puppeteer.launch({
@@ -2260,8 +2299,26 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
     })
     const page = await browser.newPage()
     await page.setViewport({ width: 1080, height: 1920 })
-    await page.setContent(html, { waitUntil: 'networkidle0' })
-    await page.screenshot({ path: imagePath })
+    await page.setContent(pageHtml, { waitUntil: 'networkidle0' })
+    try { await page.evaluate(() => document.fonts && document.fonts.ready) } catch { /* noop */ }
+
+    if (animated) {
+      // 애니메이션 클럭을 프레임마다 수동 진행 → 헤드리스에서도 매끄럽고 결정적
+      framesDir = fs.mkdtempSync(path.join(os.tmpdir(), `gcut_${padded}_`))
+      await page.evaluate(() => { document.getAnimations().forEach(a => { try { a.pause() } catch (e) { /* noop */ } }) })
+      const total = Math.max(2, Math.round(dur * FPS))
+      for (let i = 0; i < total; i++) {
+        const tMs = (i / FPS) * 1000
+        await page.evaluate((t) => {
+          document.getAnimations().forEach(a => { try { a.currentTime = t } catch (e) { /* noop */ } })
+        }, tMs)
+        await page.screenshot({ path: path.join(framesDir, `f_${String(i).padStart(5, '0')}.png`) })
+      }
+      // 첫 프레임을 대표 스틸로도 남긴다(썸네일 호환)
+      try { fs.copyFileSync(path.join(framesDir, 'f_00000.png'), imagePath) } catch { /* noop */ }
+    } else {
+      await page.screenshot({ path: imagePath })
+    }
   } catch (err) {
     const e = new Error(`HTML 렌더링/캡처 실패: ${err.message}`)
     e.statusCode = 500
@@ -2272,12 +2329,14 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
 
   try {
     await new Promise((resolve, reject) => {
+      const args = animated
+        ? ['-y', '-framerate', String(FPS), '-i', path.join(framesDir, 'f_%05d.png'),
+           '-vf', 'scale=1080:1920,format=yuv420p']
+        : ['-y', '-loop', '1', '-i', imagePath, '-t', String(dur),
+           '-vf', graphicMotionVf(motion, dur)]
       const proc = spawn('ffmpeg', [
-        '-y', '-loop', '1', '-i', imagePath,
-        '-t', String(dur),
-        // motion 프리셋(zoompan/fade) 또는 정적 scale. PNG→yuv444p 재생불가 문제는
-        // 항상 format=yuv420p로 마무리. -g 30: 정지/저움직임이라 1초마다 키프레임.
-        '-vf', graphicMotionVf(motion, dur),
+        ...args,
+        // PNG→yuv444p 재생불가 방지 + -g 30(1초마다 키프레임).
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-g', '30',
         '-movflags', '+faststart',
         videoPath,
@@ -2290,9 +2349,11 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
     e.statusCode = 500
     e.extra = { imagePath }
     throw e
+  } finally {
+    if (framesDir) { try { fs.rmSync(framesDir, { recursive: true, force: true }) } catch { /* noop */ } }
   }
 
-  return { imagePath, videoPath }
+  return { imagePath, videoPath, animated: !!animated }
 }
 
 app.post('/api/graphic-capture', async (req, res) => {

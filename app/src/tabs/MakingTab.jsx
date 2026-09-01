@@ -41,9 +41,13 @@ const DEFAULT_GRAPHIC_STYLE = {
 }
 
 const GRAPHIC_MOTIONS = [
-  ['none', '없음(정지)'], ['zoom-in', '천천히 확대'], ['zoom-out', '천천히 축소'],
+  ['none', '없음(정지)'],
+  ['zoom-in', '천천히 확대'], ['zoom-out', '천천히 축소'],
   ['fade', '페이드 인'], ['zoom-in-fade', '확대 + 페이드'],
+  ['rise', '아래에서 떠오름 (애니)'], ['pop', '팝 인 (애니)'], ['type-in', '타이핑 (애니)'],
 ]
+// 프레임 캡처 경로(서버 ANIMATED_MOTIONS와 동일 유지)
+const ANIMATED_GRAPHIC_MOTIONS = new Set(['rise', 'pop', 'type-in', 'word-rise'])
 
 const H_MAP = { left: 'flex-start', center: 'center', right: 'flex-end' }
 const V_MAP = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
@@ -72,12 +76,31 @@ body {
   white-space:pre-line;
   word-break:keep-all;
 }
+${graphicAnimCss(st.motion)}
 </style>
 </head>
 <body>
 <div class="main-text">${escapeHtml(mainText)}</div>
 </body>
 </html>`
+}
+
+// 미리보기용 애니메이션 CSS (서버 animationCss와 느낌 동일). 정적 모션이면 빈 문자열.
+function graphicAnimCss(motion) {
+  if (motion === 'type-in') {
+    return `.main-text{overflow:hidden;white-space:pre;border-right:.08em solid currentColor;width:max-content;max-width:92%;margin:0 auto;animation:hwType 1.8s steps(40,end) forwards,hwCaret .7s step-end infinite}
+@keyframes hwType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes hwCaret{50%{border-color:transparent}}`
+  }
+  if (motion === 'pop') {
+    return `.main-text{animation:hwPop .8s cubic-bezier(.2,1.3,.4,1) forwards}
+@keyframes hwPop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`
+  }
+  if (motion === 'rise' || motion === 'word-rise') {
+    return `.main-text{animation:hwRise 1.6s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes hwRise{from{opacity:0;transform:translateY(48px)}to{opacity:1;transform:translateY(0)}}`
+  }
+  return ''
 }
 
 // 서버 extractQuotedLineForMcp와 동일.
@@ -910,7 +933,7 @@ export default function MakingTab() {
           kind: 'skip', cutNo: cut.no, type,
           msg: type === 'BROLL'
             ? '화면 녹화 — 컷에 소스 URL을 넣으면 자동, 아니면 수동 녹화'
-            : 'CapCut 녹화 — 수동, 또는 몽타주/헤어라인이면 CDP 자동편집 스크립트',
+            : 'CapCut 녹화 — 텍스트/모션 컷이면 제작방식 HTML + 모션(타이핑·떠오름) 으로 바꾸면 자동. 헤어라인 등은 수동/CDP 스크립트.',
         })
         continue
       }
