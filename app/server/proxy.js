@@ -1712,6 +1712,8 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
   })
 
   const finalStat = fs.statSync(finalPath)
+  // 화면녹화(BROLL/CapCut/URL 캡처) 결과 — 실사 푸티지라 커터 켄번스 대상 아님.
+  recordCutMotion(epNum, cutNo, { method: 'record', motion: null, baked: true })
   return { finalPath, finalSizeBytes: finalStat.size, finalDuration: target, rawDuration }
 }
 
@@ -2190,6 +2192,28 @@ function resolveS2CPath(srcPath) {
   return abs
 }
 
+// ── 컷별 "모션 매니페스트" ─────────────────────────────────────────
+// 메이킹 탭이 cut_NN.mp4를 만들 때, 그 컷에 이미 모션이 구워졌는지(baked)를
+// downloads/video/ep{N}/.motion-manifest.json 에 기록한다.
+// run-cutter.js(A Creative Cutter)가 이 파일을 읽어 baked:true 컷에는 켄번스를
+// 얹지 않는다 — 그래픽 기본 모션 / source-to-cut 줌·페이드 / BROLL 실사 푸티지 위에
+// 켄번스가 겹쳐 "이중 모션"이 되는 것을 막기 위함.
+//   { "3": { method, motion, baked, at }, ... }   // 키 = 컷 번호(문자열)
+function recordCutMotion(epNum, cutNo, info) {
+  if (epNum == null || cutNo == null) return
+  try {
+    const dir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    fs.mkdirSync(dir, { recursive: true })
+    const p = path.join(dir, '.motion-manifest.json')
+    let m = {}
+    try { m = JSON.parse(fs.readFileSync(p, 'utf-8')) || {} } catch { /* 없거나 깨졌으면 새로 */ }
+    m[String(cutNo)] = { ...info, at: new Date().toISOString() }
+    fs.writeFileSync(p, JSON.stringify(m, null, 2))
+  } catch (e) {
+    console.warn('[recordCutMotion]', e.message)
+  }
+}
+
 app.post('/api/source-to-cut', async (req, res) => {
   const { epNum, cutNo, srcPath, duration, trimStart, trimMode, motion, fit } = req.body || {}
   if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
@@ -2228,8 +2252,12 @@ app.post('/api/source-to-cut', async (req, res) => {
         '-movflags', '+faststart', outPath])
       meta = { kind: 'image', motion: motion || 'none' }
     }
+    // 영상 소스거나(실사 모션) 이미지에 모션을 얹었으면 baked. 모션 없는 정지 이미지만
+    // baked:false — 그건 커터가 켄번스를 얹어도 되는 "원래 켄번스 대상"이다.
+    const baked = isVideo || (meta.motion && meta.motion !== 'none')
+    recordCutMotion(epNum, cutNo, { method: isVideo ? 's2c-video' : 's2c-image', motion: meta.motion || null, baked })
     const st = fs.statSync(outPath)
-    res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration: dur, fit: fitMode, ...meta })
+    res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration: dur, fit: fitMode, baked, ...meta })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: `소스→컷 실패: ${err.message}` })
   }
@@ -2498,6 +2526,11 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   } finally {
     if (framesDir) { try { fs.rmSync(framesDir, { recursive: true, force: true }) } catch { /* noop */ } }
   }
+
+  // 그래픽 컷은 전체화면 텍스트/캡션 카드 — 그 위에 커터 켄번스가 얹히면 글씨가
+  // 흐르듯 밀려 아마추어처럼 보인다. 모션이 필요하면 "유형별 기본 모션"으로 여기서
+  // 굽는다. 따라서 그래픽은 항상 baked 처리.
+  recordCutMotion(epNum, cutNo, { method: 'graphic', motion: motion || 'none', baked: true })
 
   return { imagePath, videoPath, animated: !!animated }
 }
@@ -5342,6 +5375,8 @@ async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
   }
 
   const outDuration = await ffprobeDuration(finalPath)
+  // BROLL 실사 푸티지 — 커터 켄번스 대상 아님.
+  recordCutMotion(epNum, cutNo, { method: 'broll', motion: null, baked: true })
   return { outputPath: finalPath, duration: outDuration }
 }
 

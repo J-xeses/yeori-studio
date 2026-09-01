@@ -128,6 +128,8 @@ export default function EditMetaTab() {
         endSec: cursor,
         duration: dur,
         type: isHook ? '훅' : '일반',
+        // 파이프라인 유형 — run-cutter.js의 이중 모션 가드 2순위 신호(매니페스트 없을 때 폴백).
+        cutType: cut.cutType || 'YEORI',
         transition: i === 0 ? '페이드 인/아웃' : '컷 편집',
         note: isHook ? '리텐션 훅 구간 — 강조 효과 권장' : '',
         audioFile: audio.audioFile,

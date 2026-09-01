@@ -147,6 +147,26 @@ function run(epNum) {
   const cuts = Array.isArray(editMeta) ? editMeta : []
   if (cuts.length === 0) throw new Error('editMeta에 컷이 없습니다')
 
+  const folderPath = `C:/yeori-studio/downloads/video/ep${epNum}`
+
+  // 이중 모션 가드: 메이킹 탭에서 자체 모션이 구워진 컷(그래픽 기본 모션 / source-to-cut
+  // 줌·페이드 / BROLL·CapCut 실사 푸티지)에는 켄번스를 얹지 않는다.
+  //  1순위 신호: downloads/video/ep{N}/.motion-manifest.json 의 baked 플래그(proxy.js가 기록)
+  //  2순위 신호: editMeta의 cutType (매니페스트가 없는 구컷·수동 export 컷 대비)
+  const MOTION_BAKED_TYPES = new Set(['GRAPHIC', 'BROLL', 'CAPCUT'])
+  let motionManifest = {}
+  try {
+    const mmPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, '.motion-manifest.json')
+    if (fs.existsSync(mmPath)) motionManifest = JSON.parse(fs.readFileSync(mmPath, 'utf-8')) || {}
+  } catch (e) {
+    console.warn(`[cutter] .motion-manifest.json 읽기 실패(무시): ${e.message}`)
+  }
+  const isMotionBaked = (m) => {
+    const mm = motionManifest[String(m.cutNo)]
+    if (mm && typeof mm.baked === 'boolean') return mm.baked
+    return MOTION_BAKED_TYPES.has((m.cutType || '').toUpperCase())
+  }
+
   const matchResult = cuts.map(m => ({
     cutNo: m.cutNo,
     label: m.label || `CUT ${m.cutNo}`,
@@ -154,9 +174,10 @@ function run(epNum) {
     start: Math.round((m.startSec || 0) * 1000000),
     end: Math.round((m.endSec || 0) * 1000000),
     duration: Math.round(((m.endSec || 0) - (m.startSec || 0)) * 1000000),
+    motionBaked: isMotionBaked(m),
   }))
-
-  const folderPath = `C:/yeori-studio/downloads/video/ep${epNum}`
+  const bakedCount = matchResult.filter(r => r.motionBaked).length
+  if (bakedCount) console.log(`[cutter] 모션 구워진 컷 ${bakedCount}개 — 켄번스 스킵`)
 
   // 전체 모드: 기존 세그먼트/소재 전부 비우고 editMeta 기준으로 재구성
   videoTrack.segments = []
@@ -170,12 +191,14 @@ function run(epNum) {
 
   const cutDetails = []
   for (const r of matchResult) {
-    const { seg, effectType } = makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode)
+    const cutKbMode = r.motionBaked ? 'none' : kbMode
+    const { seg, effectType } = makeSegAndMaterials(d, r, tmplSeg, folderPath, cutKbMode)
     videoTrack.segments.push(seg)
     cutDetails.push({
       cutNo: r.cutNo, label: r.label, file: r.file,
       startSec: r.start / 1000000, endSec: r.end / 1000000,
-      durationSec: r.duration / 1000000, kenburns: effectType,
+      durationSec: r.duration / 1000000,
+      kenburns: r.motionBaked ? 'none(모션내장)' : effectType,
     })
   }
   d.duration = matchResult.reduce((max, r) => Math.max(max, r.end), 0)
