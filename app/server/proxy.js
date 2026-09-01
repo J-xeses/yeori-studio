@@ -3182,7 +3182,18 @@ app.post('/api/send-to-cutter', async (req, res) => {
     return res.status(err.statusCode || 500).json({ error: `CapCut 프로젝트 준비 실패: ${err.message}` })
   }
 
-  // ① run-cutter.js 실행 — draft_content.json에 컷+켄번스 직접 기록
+  // ① CapCut 먼저 종료 — 실행 중이면 draft_content.json을 물고 있어(락/종료 시 덮어쓰기)
+  //    run-cutter의 편집이 씹힐 수 있다. 반드시 커터 실행 전에 닫는다.
+  const username = process.env.USERNAME || process.env.USER || 'user'
+  try {
+    execSync('taskkill /F /IM CapCut.exe /T', { shell: true, stdio: 'ignore' })
+    console.log('[send-to-cutter] 기존 CapCut 종료')
+    await new Promise(r => setTimeout(r, 1500))
+  } catch {
+    // CapCut 실행 중 아님 — 정상
+  }
+
+  // ② run-cutter.js 실행 — draft_content.json에 컷+켄번스 직접 기록 (CapCut 닫힌 상태)
   let cutterOut
   try {
     cutterOut = execSync(`node "${cutterScriptPath}" ${epNum}`, {
@@ -3193,16 +3204,6 @@ app.post('/api/send-to-cutter', async (req, res) => {
     console.log('[send-to-cutter] run-cutter 완료:', cutterOut.trim())
   } catch (err) {
     return res.status(500).json({ error: `커터 실행 실패: ${err.stderr || err.message}` })
-  }
-
-  // ② CapCut 실행 중이면 종료 후 대기
-  const username = process.env.USERNAME || process.env.USER || 'user'
-  try {
-    execSync('taskkill /F /IM CapCut.exe /T', { shell: true, stdio: 'ignore' })
-    console.log('[send-to-cutter] 기존 CapCut 종료')
-    await new Promise(r => setTimeout(r, 1500))
-  } catch {
-    // CapCut 실행 중 아님 — 정상
   }
 
   // ③ CapCut 재실행 (run-cutter.js가 방금 갱신한 프로젝트를 사람이 직접 열어 마무리)
