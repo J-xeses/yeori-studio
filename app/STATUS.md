@@ -421,9 +421,20 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 스튜디오 소스 컷 = source-to-cut 🟢 / CapCut 헤어라인 = 세미오토(편집 자동, export 수동) 🟡 /
 순수 수동 색보정만 남음.
 
-### 다음 후보 (이번 세션 범위 밖)
-- 컷별 메이킹 매니페스트 확장(제작방식·producedAt·dirty) → 에이전트/리더 모니터링 리치화
-- 메이킹탭 제작완료 시 G포인트 연동(현재 G4/G5는 스튜디오/편집메타만 씀)
-- 길이 폴백 통일(메이킹탭 `cut.duration||5` vs 편집메타 `estimateDuration`)
-- 편집메타 컷분석 탭 `cut_NN.mp4` 자동 미리보기
+#### 다음 후보 4건 완료 (커밋 `f0877fd`)
+- **메이킹 매니페스트 확장**: `.motion-manifest.json`에 `duration·producedAt`,
+  손글씨 시 `overlay/overlayAt`. `buildStudioStatusPayload`가 컷별 `making{...}` +
+  `hasOverlayVideo` + `dirtyVsAssemble`(조립본 mtime 대비) 노출. summary에
+  `hasVideo·made·overlay·dirtyVsAssemble` 집계.
+- **G4 자동 연동**: MakingTab useEffect — GRAPHIC/BROLL/CAPCUT 컷은 `cut_NN.mp4`
+  확인되면 G4 자동. 리더 대시보드·매트릭스가 메이킹 진행 반영. YEORI는 제외(사람 승인).
+- **길이 단일 규칙**: `src/lib/cutDuration.js` — `sec→duration→estimateDuration(대본)→5`.
+  MakingTab 8곳 + EditMetaTab buildMeta 공유.
+- **편집메타 컷분석 미리보기**: `analyzeCut`이 `cut_NN_overlay.mp4→cut_NN.mp4` HEAD
+  확인해 자동 로드. 수동 파일선택은 폴백.
+
+### 남은 후보
+- 리더 대시보드에 "메이킹" 위젯(made/overlay/dirty를 studio-status에서 직접) — g4 바로
+  이미 반영은 됨, 별도 시각화는 선택
+- run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
 
