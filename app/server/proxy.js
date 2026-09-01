@@ -2883,6 +2883,91 @@ app.post('/api/send-to-cutter', async (req, res) => {
   })
 })
 
+// ── CapCut 웹 세미오토(CDP 9222) ─────────────────────────────────────────
+// 헤어라인 리셰이프처럼 ffmpeg로 못 하는 CapCut 툴 전용 효과를, 이미 로그인된
+// 전용 프로필 Chrome(9222)의 열린 CapCut 에디터 탭에 CDP로 붙어 자동 편집한다.
+// 편집만 자동 — 내보내기는 사람이 CapCut에서. 결과 mp4를 cut_NN.mp4로 저장하면
+// videoStatus가 자동 인식.
+const CAPCUT_CDP_PORT = 9222
+
+// GET /api/capcut-cdp — CDP 가동 여부 + 열린 CapCut 에디터 탭 목록
+app.get('/api/capcut-cdp', async (req, res) => {
+  try {
+    const r = await fetch(`http://localhost:${CAPCUT_CDP_PORT}/json/list`, { signal: AbortSignal.timeout(3000) })
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const tabs = await r.json()
+    const editors = (tabs || [])
+      .filter(t => t.type === 'page' && /capcut\.com\/editor/.test(t.url || ''))
+      .map(t => ({ url: t.url, title: t.title }))
+    const anyCapcut = (tabs || []).some(t => /capcut\.com/.test(t.url || ''))
+    res.json({ cdpUp: true, port: CAPCUT_CDP_PORT, editors, anyCapcut })
+  } catch (err) {
+    res.json({ cdpUp: false, port: CAPCUT_CDP_PORT, editors: [], error: err.message })
+  }
+})
+
+const CAPCUT_SEMIAUTO_SCRIPTS = {
+  hairline: 'capcut-hairline-reveal.js',
+  reel: 'capcut-reel-automation.js',
+}
+// POST /api/capcut-semiauto { epNum, cutNo, effect, points, editorUrl, transition, clip, spec }
+app.post('/api/capcut-semiauto', (req, res) => {
+  const { epNum, cutNo, effect, points, editorUrl, transition, clip, spec } = req.body || {}
+  const script = CAPCUT_SEMIAUTO_SCRIPTS[effect]
+  if (!script) return res.status(400).json({ error: `effect는 ${Object.keys(CAPCUT_SEMIAUTO_SCRIPTS).join('/')} 중 하나` })
+
+  const scriptPath = path.join(CODE_ROOT, 'scripts', script)
+  if (!fs.existsSync(scriptPath)) return res.status(500).json({ error: `${script} 없음` })
+
+  const args = [scriptPath]
+  if (effect === 'hairline') {
+    if (!points || !/^\s*[\d.]+:\d+(\s*,\s*[\d.]+:\d+)*\s*$/.test(String(points))) {
+      return res.status(400).json({ error: 'points 형식: "0:0,1.7:50,3.3:100" (시간:헤어라인값)' })
+    }
+    args.push(`--points=${String(points).replace(/\s+/g, '')}`)
+    if (editorUrl) args.push(`--editorUrl=${editorUrl}`)
+    if (clip != null && clip !== '') args.push(`--clip=${Number(clip) || 0}`)
+    if (transition) args.push(`--transition=${transition}`)
+  } else if (effect === 'reel') {
+    if (!spec) return res.status(400).json({ error: 'reel은 spec(파일 경로) 필요' })
+    const specPath = path.isAbsolute(spec) ? spec : path.join(MEDIA_ROOT, spec)
+    if (!fs.existsSync(specPath)) return res.status(404).json({ error: `spec 파일 없음: ${specPath}` })
+    args.push(`--spec=${specPath}`)
+  }
+
+  const proc = spawn(process.execPath, args, { cwd: CODE_ROOT, env: process.env })
+  let out = '', err = '', settled = false
+  const timer = setTimeout(() => {
+    if (settled) return
+    settled = true
+    try { proc.kill('SIGKILL') } catch { /* noop */ }
+    res.status(504).json({ error: '4분 안에 끝나지 않아 중단 — CapCut 에디터 상태를 확인하세요', log: out.slice(-2000) })
+  }, 240000)
+  proc.stdout.on('data', c => { out += c.toString() })
+  proc.stderr.on('data', c => { err += c.toString() })
+  proc.on('error', e => {
+    if (settled) return
+    settled = true; clearTimeout(timer)
+    res.status(500).json({ error: `실행 실패: ${e.message}` })
+  })
+  proc.on('close', code => {
+    if (settled) return
+    settled = true; clearTimeout(timer)
+    const padded = String(cutNo ?? 0).padStart(2, '0')
+    if (code === 0) {
+      res.json({
+        success: true,
+        message: `CapCut 자동편집 완료. 이제 CapCut 에디터에서 미리보기 확인 → 내보내기 → `
+          + `downloads/video/ep${epNum}/cut_${padded}.mp4 로 저장하세요.`,
+        expectedOutput: `downloads/video/ep${epNum}/cut_${padded}.mp4`,
+        log: out.slice(-3000),
+      })
+    } else {
+      res.status(500).json({ error: `자동편집 실패 (종료 ${code})`, log: (out + '\n' + err).slice(-3000) })
+    }
+  })
+})
+
 // ── Claude API + Higgsfield MCP 헬퍼 ─────────────────────────────
 async function callClaudeWithMCP(systemPrompt, userContent, maxTokens = 4096) {
   if (!ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY 미설정 (.env.local에 VITE_ANTHROPIC_API_KEY 확인)')

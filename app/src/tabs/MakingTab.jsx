@@ -487,6 +487,46 @@ export default function MakingTab() {
   const [capcutBusy, setCapcutBusy] = useState(false)
   const [capcutResult, setCapcutResult] = useState(null)
 
+  // ── CapCut 웹 세미오토 (CDP 9222 — 편집만 자동, 내보내기는 수동) ──
+  const [cdpStatus, setCdpStatus] = useState(null)      // { cdpUp, editors:[{url,title}] }
+  const [cdpChecking, setCdpChecking] = useState(false)
+  const [semiPoints, setSemiPoints] = useState({})       // { [cutNo]: "0:0,1.7:50,3.3:100" }
+  const [semiTransition, setSemiTransition] = useState({})
+  const [semiBusy, setSemiBusy] = useState({})
+  const [semiResult, setSemiResult] = useState({})
+  const checkCdp = async () => {
+    setCdpChecking(true)
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/capcut-cdp`)
+      setCdpStatus(await r.json())
+    } catch (e) {
+      setCdpStatus({ cdpUp: false, error: e.message })
+    } finally { setCdpChecking(false) }
+  }
+  const runCapcutSemiauto = async (cut) => {
+    const points = String(semiPoints[cut.no] || '').trim()
+    if (!points || !episode.number) return
+    setSemiBusy(p => ({ ...p, [cut.no]: true }))
+    setSemiResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const editorUrl = cdpStatus?.editors?.[0]?.url || ''
+      const r = await fetch(`${YEORI_SERVER}/api/capcut-semiauto`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number, cutNo: cut.no, effect: 'hairline',
+          points, editorUrl,
+          transition: semiTransition[cut.no] || '',
+        }),
+      })
+      const data = await r.json()
+      setSemiResult(p => ({ ...p, [cut.no]: r.ok ? data : { error: data.error || '자동편집 실패', log: data.log } }))
+    } catch (e) {
+      setSemiResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+    } finally {
+      setSemiBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+
   // HTML 소스 후보 목록(에피소드 폴더에 이미 있는 .html 파일들) — CUT2/CUT3의
   // RL02_DM_mockup_v3.html 같은 커스텀 목업을 찾기 위함.
   const [episodeHtmlFiles, setEpisodeHtmlFiles] = useState([])
@@ -1457,6 +1497,54 @@ export default function MakingTab() {
                   ✅ 편집 완료 — 최종: {capcutResult.finalPath} ({(capcutResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.finalDuration?.toFixed?.(1) ?? capcutResult.finalDuration}초)
                   <br />원본(raw, 보관됨): {capcutResult.rawPath} ({(capcutResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {capcutResult.rawDuration?.toFixed(1)}초)
                 </div>
+              )
+            )}
+
+            <div className={s.settingLabel} style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
+              CapCut 자동편집 (세미오토) — 헤어라인 리셰이프
+            </div>
+            <div className={s.emptyHint}>
+              전용 프로필 Chrome(9222)에 <b>CapCut 에디터 탭을 열고 대상 클립을 로드</b>한 상태에서 실행하면,
+              구간 분할 + 헤어라인 값 적용 + 트랜지션까지 자동으로 합니다. <b>미리보기 확인·내보내기는 CapCut에서 직접</b>,
+              내보낸 파일을 <code>cut_{String(cut.no).padStart(2, '0')}.mp4</code>로 저장하세요.
+            </div>
+            <div className={s.editorActions}>
+              <button className={s.previewBtn} disabled={cdpChecking} onClick={checkCdp}>
+                {cdpChecking ? '⏳' : 'CDP·에디터 탭 확인'}
+              </button>
+              {cdpStatus && (
+                cdpStatus.cdpUp
+                  ? <span className={s.emptyHint}>
+                      CDP 정상 · 에디터 탭 {cdpStatus.editors?.length || 0}개
+                      {cdpStatus.editors?.[0] ? ` (${cdpStatus.editors[0].title || cdpStatus.editors[0].url})` : ' — 에디터 탭을 열어주세요'}
+                    </span>
+                  : <span className={s.resultError} style={{ display: 'inline' }}>CDP(9222) 꺼짐 — start_yeori 전용 Chrome을 실행하세요</span>
+              )}
+            </div>
+            <div className={s.styleRow}>
+              <label className={s.styleField} style={{ flex: 2 }}>구간 (시간:헤어라인값, 쉼표)
+                <input value={semiPoints[cut.no] || ''} placeholder="예: 0:0, 1.7:50, 3.3:100"
+                  onChange={e => setSemiPoints(p => ({ ...p, [cut.no]: e.target.value }))} />
+              </label>
+              <label className={s.styleField}>트랜지션(선택)
+                <input value={semiTransition[cut.no] || ''} placeholder="예: Dissolve"
+                  onChange={e => setSemiTransition(p => ({ ...p, [cut.no]: e.target.value }))} />
+              </label>
+            </div>
+            <div className={s.editorActions}>
+              <button className={s.captureBtn}
+                disabled={semiBusy[cut.no] || !(semiPoints[cut.no] || '').trim() || !episode.number}
+                onClick={() => runCapcutSemiauto(cut)}>
+                {semiBusy[cut.no] ? '⏳ 자동편집 중… (최대 4분)' : '자동편집 실행'}
+              </button>
+            </div>
+            {semiResult[cut.no] && (
+              semiResult[cut.no].error ? (
+                <div className={s.resultError}>❌ {semiResult[cut.no].error}
+                  {semiResult[cut.no].log && <pre className={s.emptyHint} style={{ whiteSpace: 'pre-wrap', maxHeight: 160, overflow: 'auto' }}>{semiResult[cut.no].log}</pre>}
+                </div>
+              ) : (
+                <div className={s.resultOk}>✅ {semiResult[cut.no].message}</div>
               )
             )}
           </>
