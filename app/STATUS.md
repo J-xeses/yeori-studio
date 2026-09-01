@@ -511,10 +511,19 @@ Flow 이미지 생성이 서여리 단일 하드코딩 → 2인 이상 등장 �
 - `flow-automation.js`: `injectCharacterDescriptors` — IP의 `WOMAN N (Name):` 라벨 뒤에
   해당 인물 descriptor 삽입(라벨 없으면 맨 앞). `uploadReferenceImages`가 에피소드
   등장 인물 전원 얼굴 레퍼런스 업로드.
-- Phase 2 남음: 새 캐릭터 Flow "캐릭터 라이브러리" 자동 등록, ScriptGen 캐릭터 UI.
+#### 다중 캐릭터 Phase 2 (커밋 `ab9b5c5`)
+- `ensureFlowCharactersRegistered(page, charIds)` — 이미지 생성 흐름 프로젝트 생성 직전,
+  에피소드 등장 캐릭터 중 `flowRegistered` 아닌 것을 Flow "캐릭터" 라이브러리에 순회 등록,
+  성공 시 characters.json에 기록. 실패해도 생성 계속(미디어 풀 폴백). `--no-char-register` 스킵.
+- `registerCharacterWithImage(page, img, {name, matchNames})` 파라미터화(서여리 하드코딩 제거).
+- `--register-character[=id] [--force]` characters.json 순회로 일반화.
+- `findReferenceThumbs`/`processCut` — `yeori-face/closeup` 하드코딩 → `wantedRefBasenames()`
+  (등장 캐릭터 refBasename)로 다중 인물 썸네일 탐색·드래그. `result.found{basename:pos}`.
+- jia 레퍼런스 flatten(`jia-face.jpg` 등, yeori 규칙 통일) + `refBasename` 필드.
+- puppeteer 부분은 실제 Flow 실행 시 검증 필요.
 
 ### 남은 후보
-- 다중 캐릭터 Phase 2 (Flow 라이브러리 자동 등록 + UI)
+- ScriptGen 캐릭터 UI(목록·상태·새 캐릭터 추가), 컷 카드 CH 옆 인물 뱃지
 - editIntent를 메이킹 탭 모션(graphicMotionVf/s2cImageVf)에도 연동(assemble 경로) — v2
 - editIntent에 transition/filter 추가 → CapCut CDP 세미오토 연동
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
