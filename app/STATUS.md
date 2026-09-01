@@ -448,17 +448,20 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - 딥링크: `ttsTabState.focusCutId` 추가(TTSTab 소비 후 해제), VideoTab은 기존
   `selectedCutId` 재사용.
 
-### CapCut 연동 — 확인 결과 (미수정, 결정 대기)
-편집메타 "A Creative Cutter" 7단계 중:
-- 1~4(메타·SRT·concat): 동작하나 concat-video가 `_overlay.mp4` 무시 + `-c copy` 위험
-- **5(generate-capcut-spec): 死 산출물** — capcut_spec.json을 소비하는 코드 없음
-- **6(send-to-cutter→run-cutter): 끊김** — `downloads/output/ep{N}/cutter_input.json`을
-  만드는 코드가 저장소에 없음(ep2용 하나만 존재, 2026-06). CapCut 프로젝트 경로도 필요.
-- 데스크톱 CapCut 자동 export 없음(CLI 부재). 웹 자동화(STEP10)는 미연동.
-→ 최소 복구: send-to-cutter가 실행 전 cutter_input.json 자동생성(draft 경로만 외부입력).
-  또는 최종 조립을 assemble_making_film(ffmpeg)로 단일화하고 CapCut은 선택적 다듬기용.
+#### 콘텐츠별 최종 조립 분기 — 1단계 완료 (커밋 `6dd906e`)
+- **`finishMode`** 에피소드 필드 — `src/lib/finishMode.js` `resolveFinishMode()`:
+  명시값 우선, 없으면 `contentType==='LF' → cutter`, 그 외 `assemble`.
+  ScriptGenTab 에피소드 설정에 "완성 방식" 셀렉트.
+- **EditMetaTab `runACC` 분기**:
+  · `assemble`(인스타·틱톡): 메타→저장→SRT(음성없으면 skip)→`/api/making-assemble`
+    →`/api/promote-making-to-raw`(→`output/ep{N}/ep{N}_raw.mp4`, 발행이 찾는 자리)→G5 자동.
+    이중 모션 가드·손글씨본 우선·규격 재인코딩 다 반영됨. **end-to-end 무인 완성.**
+  · `cutter`(서여리 시리즈): 메타→저장→SRT→concat-video(raw)→send-to-cutter.
+- 죽은 `generate-capcut-spec` 단계 양쪽 다 제거. `POST /api/promote-making-to-raw` 신설.
+- 검증: ep99 assemble — making-assemble(cuts 1~3, 11s)→promote→check-final이 raw 인식.
 
 ### 남은 후보
-- CapCut 연동 결정(위) 및 그에 따른 구현
+- **CapCut 연동 2단계**: `cutter` 경로의 `cutter_input.json` 자동생성 +
+  CapCut 프로젝트 경로 해결(설정파일 or UI 입력). 사용자 답 대기: 프로젝트 매번 새로/고정 재사용?
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
 
