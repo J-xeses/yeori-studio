@@ -772,7 +772,10 @@ async function navigateToFlow(page) {
 //      개별 프로젝트 페이지 자체의 제목은 즉시 반영되고 새로고침해도 유지됨, 그걸로 충분함.
 async function createNewFlowProject(page, nameSuffix) {
   const dashboardUrl = 'https://labs.google/fx/ko/tools/flow'
-  if (!page.url().startsWith(dashboardUrl) || page.url().includes('/project/')) {
+  // 대시보드 "루트"가 아니면(/characters, /project/… 포함) 반드시 대시보드로 이동.
+  // 예전엔 startsWith(dashboardUrl)만 봐서 /characters도 통과시켜 "새 프로젝트" 버튼을 못 찾았음.
+  const onDashboardRoot = /^https:\/\/labs\.google\/fx\/[a-z-]+\/tools\/flow\/?(\?|#|$)/.test(page.url())
+  if (!onDashboardRoot) {
     await page.goto(dashboardUrl, { waitUntil: 'networkidle2', timeout: 30000 })
     await sleep(1500)
   }
@@ -1154,6 +1157,22 @@ async function registerCharacterWithImage(page, imagePath, opts = {}) {
   )
   log('info', `[REG-2] 페이지 버튼 목록: ${JSON.stringify(allBtns)}`)
 
+  // ── 캐릭터 페이지가 실제로 쓸 수 있는지 확인 ─────────────────────────
+  // (labs.google/fx/.../flow/characters 가 "여기에 표시할 정보가 없습니다" 같은
+  //  빈/정책 화면으로 뜨는 경우가 있음 — 이때는 alreadyExists가 오탐될 수 있으므로
+  //  아예 skip. 이미지 생성은 미디어 풀 레퍼런스를 쓰므로 이게 없어도 무방.)
+  const pageUsable = await page.evaluate(() => {
+    const t = document.body.innerText || ''
+    if (/표시할 정보가 없습니다|no results to show|콘텐츠 정책/.test(t)) return false
+    return [...document.querySelectorAll('button, a')].some(el =>
+      /(캐릭터 만들기|create.{0,15}character|새 캐릭터|character 추가|add character|내 캐릭터|my characters)/i
+        .test((el.textContent || '').trim()))
+  })
+  if (!pageUsable) {
+    log('warn', `[REG-2] Flow 캐릭터 페이지를 쓸 수 없음(빈 화면/정책) → "${charName}" 등록 건너뜀. 미디어 풀 레퍼런스로 진행됨`)
+    return false
+  }
+
   // ── 이미 등록 여부 확인 ──────────────────────────────────────────────
   const alreadyExists = await page.evaluate((names) =>
     names.some(n =>
@@ -1285,7 +1304,8 @@ async function ensureFlowCharactersRegistered(page, charIds) {
     const facePath = charRefAbs(c.closeup) || charRefAbs(c.face)
     if (!facePath) { log('warn', `[캐릭터 등록] "${id}" 얼굴 이미지 없음 → 건너뜀`); continue }
     const name = c.flowCharacterName || c.name || id
-    const matchNames = [name, c.name, id, ...(c.aliases || [])].filter(Boolean)
+    // 매칭명은 3글자 이하 짧은 별칭(오탐 위험)을 빼고 이름·flow이름·id만
+    const matchNames = [name, c.flowCharacterName, c.name, id].filter(v => v && String(v).length >= 3)
     try {
       const okReg = await registerCharacterWithImage(page, facePath, { name, matchNames })
       if (okReg) {
@@ -1297,6 +1317,14 @@ async function ensureFlowCharactersRegistered(page, charIds) {
     } catch (e) {
       log('warn', `[캐릭터 등록] "${name}" 예외(${e.message}) — 폴백`)
     }
+  }
+  // 캐릭터 페이지에 남아있으면 이후 createNewFlowProject가 "새 프로젝트" 버튼을 못 찾는다
+  // (dashboardUrl.startsWith 체크가 /characters도 통과시켜 버려서). 반드시 대시보드로 복귀.
+  try {
+    log('info', '[캐릭터 등록] 대시보드로 복귀')
+    await navigateToFlow(page)
+  } catch (e) {
+    log('warn', `[캐릭터 등록] 대시보드 복귀 경고: ${e.message}`)
   }
 }
 
