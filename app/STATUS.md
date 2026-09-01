@@ -460,8 +460,27 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - 죽은 `generate-capcut-spec` 단계 양쪽 다 제거. `POST /api/promote-making-to-raw` 신설.
 - 검증: ep99 assemble — making-assemble(cuts 1~3, 11s)→promote→check-final이 raw 인식.
 
+#### CapCut 연동 2단계 완료 (커밋 `e26550b`)
+사용자 결정: **에피소드별 프로젝트 분리**(혼선 방지).
+- `downloads/video/capcut_config.json` `{ draftRoot?, templateProject }`.
+  draftRoot 생략 시 `%LOCALAPPDATA%\CapCut\...\com.lveditor.draft` 자동.
+- `ensureEpisodeCapcutProject(episodeCode)` — `yeori_{code}` 폴더 없으면 템플릿
+  프로젝트 `fs.cpSync` 복제 + `draft_meta_info.json` 갱신(경로·이름·id·타임스탬프·
+  클라우드 흔적 제거). run-cutter가 세그먼트 템플릿으로 쓸 클립 1개는 템플릿에 있어야 함.
+- `writeCutterInputJson()` → `output/ep{N}/cutter_input.json`.
+  `draft` = `프로젝트/draft_content.json` **파일** 경로(run-cutter가 folder 아닌 file 기대 — 옛 ep2 json이 folder라 원래 안 됐던 것).
+- `send-to-cutter`가 run-cutter 전에 위 둘 실행 + `kenburns` 파라미터, 응답에 `project`.
+- `GET/POST /api/capcut-config`. EditMetaTab "최종 조립" 패널에 cutter 전용 블록
+  (프로젝트명 표시 · 켄번스 셀렉트 · 템플릿 미설정 시 드롭다운+저장).
+- 검증: 템플릿=0614 → ep99 send-to-cutter → `yeori_TEST_OVERLAY` 복제 + cutter_input.json
+  + run-cutter 3세그먼트 정상(이중모션가드로 켄번스 스킵).
+- **전제(사용자 1회 작업):** CapCut에서 클립 1개짜리 빈 프로젝트 만들어 templateProject로 지정.
+- `send-to-cutter` 순서 수정(`26550b` 후속): CapCut 종료 → run-cutter → 재실행.
+  (기존엔 편집 후 종료라 CapCut이 파일 물고 있으면 씹힘.)
+- CapCut 재실행 시 뜨는 팝업은 자동화와 무관 — 편집은 CapCut 닫힌 상태에서 끝남,
+  재실행은 사람이 프로젝트 여는 용도.
+
 ### 남은 후보
-- **CapCut 연동 2단계**: `cutter` 경로의 `cutter_input.json` 자동생성 +
-  CapCut 프로젝트 경로 해결(설정파일 or UI 입력). 사용자 답 대기: 프로젝트 매번 새로/고정 재사용?
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
+- 데스크톱 CapCut 자동 내보내기(CLI 부재로 화면자동화뿐, 현실적으로 사람이 Export)
 
