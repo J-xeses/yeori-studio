@@ -4273,6 +4273,40 @@ app.get('/api/episode-video-status', (req, res) => {
   }
 })
 
+// GET /api/episode-making-status — 리더 대시보드 "메이킹" 위젯용. 메이킹 유형
+// (GRAPHIC/BROLL/CAPCUT) 컷의 제작 현황을 buildStudioStatusPayload에서 뽑아 브라우저에
+// 인증 없이 넘긴다(episode-video-status와 같은 취지).
+const MAKING_CUT_TYPES = new Set(['GRAPHIC', 'BROLL', 'CAPCUT'])
+app.get('/api/episode-making-status', (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const { epId } = findEpisodeByNumOrThrow(epNum)
+    const payload = buildStudioStatusPayload(epId)
+    const cuts = payload.cuts
+      .filter(c => MAKING_CUT_TYPES.has((c.cutType || '').toUpperCase()))
+      .map(c => ({
+        no: c.no,
+        cutType: c.cutType,
+        hasVideo: c.hasVideo,
+        overlay: !!c.making?.overlay,
+        method: c.making?.method || null,
+        motion: c.making?.motion || null,
+        producedAt: c.making?.producedAt || null,
+        dirtyVsAssemble: !!c.making?.dirtyVsAssemble,
+      }))
+    res.json({
+      total: cuts.length,
+      done: cuts.filter(c => c.hasVideo).length,
+      overlay: cuts.filter(c => c.overlay).length,
+      dirty: cuts.filter(c => c.dirtyVsAssemble).length,
+      cuts,
+    })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })

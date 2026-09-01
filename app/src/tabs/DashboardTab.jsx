@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { getGPointSummary } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
@@ -38,10 +38,28 @@ function GStepBar({ label, count, total, color }) {
   )
 }
 
+const CUT_TYPE_COLOR = { GRAPHIC: '#a78bfa', BROLL: '#22c55e', CAPCUT: '#f97316' }
+
 export default function DashboardTab() {
   const { state, dispatch } = useApp()
   const { dashboard, cuts, episode, apiKeys } = state
   const [spent, setSpent] = useState(dashboard.spent || 0)
+
+  // 메이킹(GRAPHIC/BROLL/CAPCUT) 컷 제작 현황 — 5초마다 갱신
+  const [making, setMaking] = useState(null)
+  useEffect(() => {
+    if (!episode?.number) { setMaking(null); return }
+    let alive = true
+    const load = () => {
+      fetch(`http://localhost:3001/api/episode-making-status?epNum=${episode.number}`)
+        .then(r => r.json())
+        .then(d => { if (alive && !d.error) setMaking(d) })
+        .catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 5000)
+    return () => { alive = false; clearInterval(id) }
+  }, [episode?.number])
 
   const go = (tab) => { if (tab) dispatch({ type: 'SET_TAB', p: tab }) }
 
@@ -100,6 +118,52 @@ export default function DashboardTab() {
           </div>
         </div>
       </div>
+
+      {/* Making cut progress */}
+      {making && making.total > 0 && (
+        <div className={s.card}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+            <div className={s.cardTitle}>메이킹 컷 (그래픽·B롤·캡컷)</div>
+            <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
+              완료 <b style={{ color: 'var(--green)' }}>{making.done}</b> / {making.total}
+              {making.overlay > 0 && <span> · 손글씨 {making.overlay}</span>}
+              {making.dirty > 0 && <span style={{ color: 'var(--yellow)' }}> · 재조립 필요 {making.dirty}</span>}
+            </div>
+          </div>
+          <div className={s.creditBar}>
+            <div className={s.creditFill}
+              style={{ width: `${(making.done / making.total) * 100}%`, background: 'var(--green)' }} />
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {making.cuts.map(c => {
+              const col = CUT_TYPE_COLOR[(c.cutType || '').toUpperCase()] || 'var(--text-3)'
+              return (
+                <div key={c.no} title={[
+                  `CUT ${c.no} · ${c.cutType}`,
+                  c.hasVideo ? '제작 완료' : '미제작',
+                  c.method && `방식: ${c.method}`,
+                  c.motion && c.motion !== 'none' && `모션: ${c.motion}`,
+                  c.overlay && '손글씨 적용',
+                  c.dirtyVsAssemble && '조립본보다 최신 — 재조립 필요',
+                ].filter(Boolean).join('\n')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    fontSize: 11.5, padding: '3px 8px', borderRadius: 6,
+                    border: `1px solid ${c.hasVideo ? col : 'var(--border)'}`,
+                    background: c.hasVideo ? `${col}1a` : 'var(--bg-input)',
+                    color: c.hasVideo ? 'var(--text)' : 'var(--text-3)',
+                    opacity: c.hasVideo ? 1 : 0.6,
+                  }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: col, flexShrink: 0 }} />
+                  {c.no}
+                  {c.overlay && <span title="손글씨">✍</span>}
+                  {c.dirtyVsAssemble && <span style={{ color: 'var(--yellow)' }} title="재조립 필요">↻</span>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <div className={s.midRow}>
         {/* Monthly cost */}
