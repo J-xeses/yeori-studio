@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
+import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import s from './ScriptGenTab.module.css'
@@ -1180,6 +1181,19 @@ ${currentScript}
                   {numError && (
                     <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
                   )}
+                </div>
+              </div>
+              <div className={s.field}>
+                <label>완성 방식</label>
+                <select value={resolveFinishMode(episode)}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { finishMode: e.target.value } })}>
+                  {FINISH_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>
+                  {resolveFinishMode(episode) === 'assemble'
+                    ? '컷을 바로 이어붙여 완성 (인스타·틱톡용 빠른 전개).'
+                    : 'CapCut에서 켄번스·트랜지션·색보정 마무리 (서여리 에피소드 시리즈).'}
+                  {!episode.finishMode && ' · 콘텐츠 유형 기준 자동'}
                 </div>
               </div>
               {(episode.contentType || '').startsWith('IG_') && (

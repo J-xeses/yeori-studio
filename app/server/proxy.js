@@ -1901,6 +1901,26 @@ app.post('/api/making-assemble', async (req, res) => {
   }
 })
 
+// ── POST /api/promote-making-to-raw — 메이킹 필름을 발행 파이프라인 최종본 자리로 복사 ──
+// finishMode='assemble' 흐름의 마지막 단계. assemble_making_film은
+// downloads/making/ep{N}/ep{N}_making.mp4를 만드는데, 발행/패키징(check-final,
+// package-final)은 downloads/output/ep{N}/ep{N}_raw.mp4를 찾는다 — 그 갭을 메운다.
+app.post('/api/promote-making-to-raw', (req, res) => {
+  const { epNum } = req.body || {}
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  const src = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `ep${epNum}_making.mp4`)
+  if (!fs.existsSync(src)) return res.status(404).json({ error: `메이킹 필름 없음: ${src}` })
+  try {
+    const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+    fs.mkdirSync(outDir, { recursive: true })
+    const dest = path.join(outDir, `ep${epNum}_raw.mp4`)
+    fs.copyFileSync(src, dest)
+    res.json({ success: true, from: src, to: dest, sizeKB: Math.round(fs.statSync(dest).size / 1024) })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // orientation 요청을 Pexels 자체 orientation 파라미터로 1차 필터링한 뒤, 응답 항목의
 // 실제 width/height도 다시 비교해 걸러낸다 — Pexels 태깅이 항상 정확하진 않아서
 // (세로 요청인데 가로 파일이 섞여 나오는 경우가 있음) 2중으로 확인한다.

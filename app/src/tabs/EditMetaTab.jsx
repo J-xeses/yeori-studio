@@ -8,6 +8,7 @@ import { EpisodeOverviewBlock } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import { cutDuration } from '../lib/cutDuration'
+import { resolveFinishMode } from '../lib/finishMode'
 import styles from './EditMetaTab.module.css'
 
 function toTimecode(sec) {
@@ -367,41 +368,52 @@ export default function EditMetaTab() {
       setMeta(computed)
       await post('http://localhost:3001/api/save-edit-meta', computed)
 
-      // ③ SRT 생성
+      const finishMode = resolveFinishMode(state.episode)
+
+      // ③ SRT 생성 — cutter 흐름은 CapCut 자막에 쓰므로 필수, assemble 흐름은
+      //    영상에 안 태우므로 음성 없으면 건너뛴다.
       setAccStatus('③ SRT 생성 중...')
       const srtRes = await post('http://localhost:3001/api/generate-srt', { epNum })
-      if (!srtRes.success) {
+      if (!srtRes.success && finishMode === 'cutter') {
         setAccStatus(`❌ SRT 생성 실패: ${srtRes.error}`)
         setAccRunning(false); return
       }
 
-      // ④ 영상 합치기
-      setAccStatus('④ 영상 합치는 중...')
+      if (finishMode === 'assemble') {
+        // ── 빠른 조립: 컷을 그대로 이어붙여 완성 (인스타·틱톡) ──
+        setAccStatus('④ 메이킹 필름 조립 중 (손글씨본 우선 · 1080×1920)...')
+        const asm = await post('http://localhost:3001/api/making-assemble', { epNum })
+        if (!asm.success) {
+          setAccStatus(`❌ 조립 실패: ${asm.error}${asm.skippedCuts?.length ? ` (누락 컷: ${asm.skippedCuts.join(', ')})` : ''}`)
+          setAccRunning(false); return
+        }
+        setAccStatus('⑤ 발행 파이프라인으로 전달 중...')
+        const promo = await post('http://localhost:3001/api/promote-making-to-raw', { epNum })
+        const skipNote = asm.skippedCuts?.length ? ` · 누락 컷 ${asm.skippedCuts.join(', ')}(아직 미제작)` : ''
+        setAccStatus(`✅ 완료! 컷 ${asm.includedCuts?.length ?? '?'}개(총 ${Math.round(asm.duration || 0)}초) 이어붙여 완성.${skipNote}${promo.success ? ' 발행 탭에서 바로 패키징 가능.' : ''}`)
+        setCutterResult(null)
+        for (const no of (asm.includedCuts || [])) setGPoint(episodeCode, parseInt(no, 10), 'g5', true)
+        setAccRunning(false)
+        return
+      }
+
+      // ── 정밀 편집: CapCut 데스크톱에서 마무리 (서여리 에피소드 시리즈) ──
+      // ④ raw 영상 (CapCut 업로드/딜리버러블용)
+      setAccStatus('④ raw 영상 합치는 중...')
       const concatRes = await post('http://localhost:3001/api/concat-video', { epNum })
       if (!concatRes.success) {
         setAccStatus(`❌ 영상 합치기 실패: ${concatRes.error}`)
         setAccRunning(false); return
       }
 
-      // ⑤ CapCut 스펙 생성
-      setAccStatus('⑤ CapCut 스펙 생성 중...')
-      const specRes = await post('http://localhost:3001/api/generate-capcut-spec', { epNum })
-      if (!specRes.success) {
-        setAccStatus(`❌ CapCut 스펙 생성 실패: ${specRes.error}`)
-        setAccRunning(false); return
-      }
-
-      // ⑥⑦ 커터(켄번스) 실행 + CapCut 재시작
-      setAccStatus('⑥ 커터 실행 중 (켄번스 적용) + CapCut 실행...')
+      // ⑤ 커터(켄번스) 실행 + CapCut 재시작
+      setAccStatus('⑤ 커터 실행 중 (켄번스 적용) + CapCut 실행...')
       const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum })
       if (!cutterRes.success) {
-        setAccStatus(`⚠️ 커터 연동 실패 (수동 편집 필요): ${cutterRes.error}`)
+        setAccStatus(`⚠️ 커터 연동 실패: ${cutterRes.error}\n(cutter_input.json 자동생성은 2단계 작업 — 그 전까진 수동 필요)`)
         setAccRunning(false); return
       }
 
-      // 완료 — run-cutter.js가 실제로 몇 개 컷을 어느 프로젝트에 썼는지 구체적으로 표시
-      // (문구만 바뀌고 사라지면 "진짜 됐는지" 확인할 방법이 없다는 피드백 반영 —
-      //  자동으로 사라지지 않고, 클릭해서 확인했다는 걸 알 수 있게 유지)
       const r = cutterRes.cutterResult
       setAccStatus(r
         ? `✅ 완료! CapCut 프로젝트 "${r.projectName}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용 완료. CapCut에서 "${r.projectName}"을 열어 확인하세요.`
@@ -558,14 +570,31 @@ export default function EditMetaTab() {
       <div style={{marginBottom:'16px',padding:'14px 16px',background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.3)',borderRadius:'10px'}}>
         <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
           <div style={{flex:1}}>
-            <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-              <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>A Creative Cutter + CapCut 연동</div>
+            <div style={{display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}}>
+              <div style={{fontSize:'13px',fontWeight:700,color:'#fb923c'}}>최종 조립</div>
+              {(() => {
+                const fm = resolveFinishMode(state.episode)
+                return (
+                  <span style={{fontSize:'10.5px',fontWeight:700,color: fm === 'assemble' ? '#4ade80' : '#a78bfa',
+                    background: fm === 'assemble' ? 'rgba(74,222,128,0.12)' : 'rgba(167,139,250,0.12)',
+                    border: `1px solid ${fm === 'assemble' ? 'rgba(74,222,128,0.3)' : 'rgba(167,139,250,0.3)'}`,
+                    borderRadius:'20px',padding:'2px 9px'}}>
+                    {fm === 'assemble' ? '빠른 조립 (ffmpeg)' : '정밀 편집 (CapCut)'}
+                  </span>
+                )
+              })()}
               <span style={{fontSize:'10.5px',fontWeight:700,color:'#4ade80',background:'rgba(74,222,128,0.12)',border:'1px solid rgba(74,222,128,0.3)',borderRadius:'20px',padding:'2px 9px'}}>
                 G5 완료: {getGPointSummary(episodeCode, cuts.length).g5} / {cuts.length}
               </span>
             </div>
-            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>① 메타 생성 → ② 저장 → ③ SRT → ④ 영상 합치기 → ⑤ 스펙 생성 → ⑥ 커터(켄번스) → ⑦ CapCut 실행</div>
-            <div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px'}}>← 실행은 좌측 "자동실행 조건" 패널의 ON 버튼으로 시작하세요</div>
+            <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>
+              {resolveFinishMode(state.episode) === 'assemble'
+                ? '① 메타 → ② 저장 → ③ SRT → ④ 메이킹 필름 조립(ffmpeg) → ⑤ 발행 전달'
+                : '① 메타 → ② 저장 → ③ SRT → ④ raw 합치기 → ⑤ 커터(켄번스) + CapCut'}
+            </div>
+            <div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px'}}>
+              조립 방식은 대본 생성 탭 "완성 방식"에서 · 실행은 좌측 "자동실행 조건" ON 버튼
+            </div>
           </div>
         </div>
         {accStatus && (
