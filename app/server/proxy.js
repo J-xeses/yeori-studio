@@ -2124,6 +2124,140 @@ app.post('/api/download-broll-cut', async (req, res) => {
   }
 })
 
+// ── 스튜디오 소스 → 메이킹 탭 컷 ─────────────────────────────────────────
+// 스튜디오(Flow/Higgsfield/Veo)에서 만든 "약간 움직이는 초상 클립"이나 합성 이미지,
+// 또는 임의의 로컬 영상/이미지를 컷 규격(1080x1920)으로 확정한다 → cut_NN.mp4.
+//   영상: 트림(시작 타임코드 또는 끝/처음 기준) + fit
+//   이미지: 모션(zoompan/fade) + fit
+const S2C_IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.avif'])
+const S2C_VIDEO_EXT = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v'])
+const S2C_W = 1080, S2C_H = 1920
+
+function s2cFitFilter(fit) {
+  if (fit === 'contain') {
+    return `scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=decrease,`
+      + `pad=${S2C_W}:${S2C_H}:(ow-iw)/2:(oh-ih)/2:color=black`
+  }
+  if (fit === 'blur') {
+    return `split=2[bg][fg];`
+      + `[bg]scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=increase,crop=${S2C_W}:${S2C_H},gblur=sigma=36[bgb];`
+      + `[fg]scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=decrease[fgs];`
+      + `[bgb][fgs]overlay=(W-w)/2:(H-h)/2`
+  }
+  // cover (기본)
+  return `scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=increase,crop=${S2C_W}:${S2C_H}`
+}
+
+// 이미지용 vf: fit + 모션(zoom/fade). zoom은 2배 업스케일 후 zoompan.
+function s2cImageVf(fit, motion, dur, fps = 30) {
+  const m = motion || 'none'
+  const frames = Math.max(2, Math.round(dur * fps))
+  let vf
+  if (m === 'zoom-in' || m === 'zoom-out' || m === 'zoom-in-fade') {
+    const zin = m.startsWith('zoom-in')
+    const z0 = zin ? 1.0 : 1.12, z1 = zin ? 1.12 : 1.0
+    vf = `scale=${S2C_W * 2}:${S2C_H * 2}:force_original_aspect_ratio=increase,crop=${S2C_W * 2}:${S2C_H * 2},`
+      + `zoompan=z='${z0}+(${z1 - z0})*on/${frames}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${S2C_W}x${S2C_H}:fps=${fps},format=yuv420p`
+  } else {
+    vf = `${s2cFitFilter(fit)},format=yuv420p`
+  }
+  if (m === 'fade' || m === 'zoom-in-fade') {
+    vf += `,fade=t=in:st=0:d=${Math.min(0.5, dur / 4).toFixed(2)}`
+  }
+  return vf
+}
+
+function runFfmpeg(args) {
+  return new Promise((resolve, reject) => {
+    const proc = spawn('ffmpeg', args)
+    let err = ''
+    proc.stderr.on('data', d => { err += d.toString() })
+    proc.on('error', reject)
+    proc.on('close', code => code === 0 ? resolve() : reject(new Error(err.slice(-700) || `ffmpeg 종료 ${code}`)))
+  })
+}
+
+function resolveS2CPath(srcPath) {
+  const p = String(srcPath || '').trim().replace(/^["']|["']$/g, '')
+  if (!p) { const e = new Error('srcPath 필요'); e.statusCode = 400; throw e }
+  const abs = path.isAbsolute(p) ? p : path.join(MEDIA_ROOT, p.replace(/^[/\\]+/, ''))
+  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+    const e = new Error(`파일 없음: ${abs}`); e.statusCode = 404; throw e
+  }
+  return abs
+}
+
+app.post('/api/source-to-cut', async (req, res) => {
+  const { epNum, cutNo, srcPath, duration, trimStart, trimMode, motion, fit } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const src = resolveS2CPath(srcPath)
+    const ext = path.extname(src).toLowerCase()
+    const isImage = S2C_IMAGE_EXT.has(ext)
+    const isVideo = S2C_VIDEO_EXT.has(ext)
+    if (!isImage && !isVideo) return res.status(400).json({ error: `지원하지 않는 형식: ${ext}` })
+
+    const dur = Math.max(0.5, parseFloat(duration) || 5)
+    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    fs.mkdirSync(videoDir, { recursive: true })
+    const outPath = path.join(videoDir, `cut_${String(cutNo).padStart(2, '0')}.mp4`)
+    const fitMode = ['cover', 'contain', 'blur'].includes(fit) ? fit : 'cover'
+
+    let meta = {}
+    if (isVideo) {
+      let rawDur = null
+      try { rawDur = await ffprobeDuration(src) } catch { /* noop */ }
+      let ss = 0
+      if (trimStart != null && trimStart !== '') ss = Math.max(0, parseFloat(trimStart) || 0)
+      else if (trimMode === 'end' && rawDur && rawDur > dur) ss = rawDur - dur
+      const args = ['-y']
+      if (ss > 0) args.push('-ss', String(ss))
+      args.push('-i', src, '-t', String(dur),
+        '-vf', `${s2cFitFilter(fitMode)},format=yuv420p`,
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60',
+        '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', '-shortest', outPath)
+      await runFfmpeg(args)
+      meta = { kind: 'video', rawDuration: rawDur, trimStart: ss }
+    } else {
+      await runFfmpeg(['-y', '-loop', '1', '-i', src, '-t', String(dur),
+        '-vf', s2cImageVf(fitMode, motion, dur),
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '30',
+        '-movflags', '+faststart', outPath])
+      meta = { kind: 'image', motion: motion || 'none' }
+    }
+    const st = fs.statSync(outPath)
+    res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration: dur, fit: fitMode, ...meta })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: `소스→컷 실패: ${err.message}` })
+  }
+})
+
+// GET /api/source-scan?epNum=N — 스튜디오 소스 후보 파일 목록
+app.get('/api/source-scan', (req, res) => {
+  const epNum = req.query.epNum
+  const roots = []
+  if (epNum != null) {
+    roots.push(
+      { label: 'flow', dir: path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`) },
+      { label: 'video', dir: path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`) },
+      { label: 'making', dir: path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`) },
+      { label: 'scene', dir: path.join(MEDIA_ROOT, 'downloads', 'scene', `ep${epNum}`) },
+    )
+  }
+  const items = []
+  for (const { label, dir } of roots) {
+    if (!fs.existsSync(dir)) continue
+    for (const f of fs.readdirSync(dir)) {
+      const ext = path.extname(f).toLowerCase()
+      if (!S2C_IMAGE_EXT.has(ext) && !S2C_VIDEO_EXT.has(ext)) continue
+      const full = path.join(dir, f)
+      let size = 0; try { size = fs.statSync(full).size } catch { /* noop */ }
+      items.push({ group: label, name: f, path: full, kind: S2C_VIDEO_EXT.has(ext) ? 'video' : 'image', sizeKB: Math.round(size / 1024) })
+    }
+  }
+  res.json({ items })
+})
+
 // 컷 묘사(한글) → Pexels 스톡 영상 검색어(영어). 키 없으면 null 반환(호출부가 폴백).
 async function aiPexelsQuery(desc, hint) {
   if (!ANTHROPIC_API_KEY || !String(desc || '').trim()) return null

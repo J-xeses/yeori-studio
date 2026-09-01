@@ -503,6 +503,119 @@ export default function MakingTab() {
       setCdpStatus({ cdpUp: false, error: e.message })
     } finally { setCdpChecking(false) }
   }
+  // ── 스튜디오 소스 → 컷 (Flow/Higgsfield/Veo 산출물이나 임의 로컬 파일 → cut_NN.mp4) ──
+  const [s2cPath, setS2cPath] = useState({})
+  const [s2cFit, setS2cFit] = useState({})
+  const [s2cMotion, setS2cMotion] = useState({})
+  const [s2cTrimStart, setS2cTrimStart] = useState({})
+  const [s2cBusy, setS2cBusy] = useState({})
+  const [s2cResult, setS2cResult] = useState({})
+  const [s2cScan, setS2cScan] = useState(null)
+  const [s2cScanBusy, setS2cScanBusy] = useState(false)
+  const scanSources = async () => {
+    if (!episode?.number) return
+    setS2cScanBusy(true)
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/source-scan?epNum=${episode.number}`)
+      const d = await r.json()
+      setS2cScan(Array.isArray(d.items) ? d.items : [])
+    } catch { setS2cScan([]) } finally { setS2cScanBusy(false) }
+  }
+  const runSourceToCut = async (cut) => {
+    const srcPath = String(s2cPath[cut.no] || '').trim()
+    if (!srcPath || !episode?.number) return
+    setS2cBusy(p => ({ ...p, [cut.no]: true }))
+    setS2cResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/source-to-cut`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number, cutNo: cut.no, srcPath,
+          duration: cut.duration || 5,
+          trimStart: s2cTrimStart[cut.no] || '',
+          trimMode: 'start',
+          motion: s2cMotion[cut.no] || 'none',
+          fit: s2cFit[cut.no] || 'cover',
+        }),
+      })
+      const data = await r.json()
+      setS2cResult(p => ({ ...p, [cut.no]: r.ok ? data : { error: data.error || '실패' } }))
+      if (r.ok && cut.subtitle && typeStyles[cut.cutType]?.overlay?.enabled) await runOverlay(cut)
+    } catch (e) {
+      setS2cResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+    } finally {
+      setS2cBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+
+  const renderSourceToCutPanel = (cut) => {
+    const isVideoGuess = /\.(mp4|mov|mkv|avi|webm|m4v)$/i.test(s2cPath[cut.no] || '')
+    return (
+      <div className={s.subPanel}>
+        <div className={s.settingLabel}>스튜디오 소스로 컷 만들기 (이미지·영상 → cut_{String(cut.no).padStart(2, '0')}.mp4)</div>
+        <div className={s.emptyHint}>
+          스튜디오에서 만든 “약간 움직이는 초상 클립”·합성 이미지나 임의 로컬 파일을 컷 규격(1080×1920)으로 확정합니다.
+          영상은 트림, 이미지는 모션(줌/페이드)을 얹습니다. CP가 있으면 손글씨까지 이어집니다.
+        </div>
+        <div className={s.urlRow}>
+          <input className={s.urlInput} value={s2cPath[cut.no] || ''}
+            placeholder="파일 경로 (절대경로 또는 downloads/... 상대경로)"
+            onChange={e => setS2cPath(p => ({ ...p, [cut.no]: e.target.value }))} />
+          <button className={s.previewBtn} disabled={s2cScanBusy} onClick={scanSources}>
+            {s2cScanBusy ? '⏳' : '소스 스캔'}
+          </button>
+        </div>
+        {s2cScan && (
+          s2cScan.length === 0
+            ? <div className={s.emptyHint}>스캔된 소스 없음 (downloads/flow·video·making·scene/ep{episode?.number})</div>
+            : (
+              <div className={s.cutList} style={{ maxHeight: 150, overflow: 'auto' }}>
+                {s2cScan.map((it, i) => (
+                  <button key={i} className={s.previewBtn} style={{ textAlign: 'left' }}
+                    onClick={() => setS2cPath(p => ({ ...p, [cut.no]: it.path }))}>
+                    [{it.group}·{it.kind}] {it.name} ({it.sizeKB}KB)
+                  </button>
+                ))}
+              </div>
+            )
+        )}
+        <div className={s.styleRow}>
+          <label className={s.styleField}>화면 맞춤
+            <select value={s2cFit[cut.no] || 'cover'} onChange={e => setS2cFit(p => ({ ...p, [cut.no]: e.target.value }))}>
+              <option value="cover">꽉 채우기(크롭)</option>
+              <option value="contain">여백(레터박스)</option>
+              <option value="blur">블러 배경</option>
+            </select>
+          </label>
+          {isVideoGuess ? (
+            <label className={s.styleField}>시작 초(선택)
+              <input value={s2cTrimStart[cut.no] || ''} placeholder="예: 13"
+                onChange={e => setS2cTrimStart(p => ({ ...p, [cut.no]: e.target.value }))} />
+            </label>
+          ) : (
+            <label className={s.styleField}>이미지 모션
+              <select value={s2cMotion[cut.no] || 'none'} onChange={e => setS2cMotion(p => ({ ...p, [cut.no]: e.target.value }))}>
+                {GRAPHIC_MOTIONS.filter(([v]) => !ANIMATED_GRAPHIC_MOTIONS.has(v)).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className={s.editorActions}>
+          <button className={s.captureBtn}
+            disabled={s2cBusy[cut.no] || !(s2cPath[cut.no] || '').trim() || !episode?.number}
+            onClick={() => runSourceToCut(cut)}>
+            {s2cBusy[cut.no] ? '⏳ 제작 중…' : '이 소스로 컷 제작'}
+          </button>
+        </div>
+        {s2cResult[cut.no] && (
+          s2cResult[cut.no].error
+            ? <div className={s.resultError}>❌ {s2cResult[cut.no].error}</div>
+            : <div className={s.resultOk}>✅ {s2cResult[cut.no].outputPath} ({s2cResult[cut.no].sizeKB}KB · {s2cResult[cut.no].duration}초 · {s2cResult[cut.no].kind})</div>
+        )}
+      </div>
+    )
+  }
+
   const runCapcutSemiauto = async (cut) => {
     const points = String(semiPoints[cut.no] || '').trim()
     if (!points || !episode.number) return
@@ -961,6 +1074,31 @@ export default function MakingTab() {
       const type = cut.cutType
       if (autoSkipDone && videoStatus[cut.no]) {
         skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: '이미 완료' }); continue
+      }
+      // 컷에 스튜디오 소스 파일이 지정돼 있으면 유형 무관하게 소스→컷 경로로
+      const studioSrc = String(cut.sourcePath || cut.studioSource || s2cPath[cut.no] || '').trim()
+      if (studioSrc) {
+        autoPush({ kind: 'run', cutNo: cut.no, type, msg: '스튜디오 소스로 제작 중…' })
+        try {
+          const r = await fetch(`${YEORI_SERVER}/api/source-to-cut`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              epNum: episode.number, cutNo: cut.no, srcPath: studioSrc,
+              duration: cut.duration || 5, trimStart: cut.trimStart ?? '', trimMode: 'start',
+              motion: styleFor(type)?.motion || 'none', fit: cut.fit || 'cover',
+            }),
+          })
+          const d = await r.json().catch(() => ({}))
+          if (!r.ok) throw new Error(d.error || '소스→컷 실패')
+          let extra = ''
+          if (autoDoOverlay && cut.subtitle && typeStyles[type]?.overlay?.enabled) {
+            const ov = await runOverlay(cut); extra = ov?.ok ? ' + 손글씨' : ''
+          }
+          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · 스튜디오 소스(${d.kind})${extra}` })
+        } catch (e) {
+          fail++; autoPush({ kind: 'error', cutNo: cut.no, type, msg: e.message })
+        }
+        continue
       }
       const brMode = getBrollSourceMode(cut.no)
       const ccMode = getCapcutMode(cut.no)
@@ -1561,6 +1699,7 @@ export default function MakingTab() {
     return (
       <>
         {panel}
+        {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
         {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
       </>
     )
