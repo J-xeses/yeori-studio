@@ -6,6 +6,7 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
@@ -3038,11 +3039,148 @@ app.post('/api/generate-capcut-spec', (req, res) => {
 // 데스크톱 CapCut 프로젝트(draft_content.json)에 컷을 배치하고 켄번스 키프레임을
 // 굽는 게 최종 산출물이다. capcut-web-automation.js(웹버전)는 별개 시스템이라
 // 이 흐름에서 제외했다 — 필요하면 직접 실행: node scripts/capcut-web-automation.js --ep=N
+// ── CapCut 프로젝트 관리 (finishMode='cutter' 흐름) ─────────────────
+// 에피소드마다 별도 CapCut 데스크톱 프로젝트를 둔다(혼선 방지). 첫 실행 시
+// 템플릿 프로젝트를 복제해 draft_meta_info.json만 새로 쓰고, run-cutter.js가
+// draft_content.json에 컷+켄번스를 굽는다.
+//
+// 설정: downloads/video/capcut_config.json
+//   { "draftRoot": "<com.lveditor.draft 폴더>", "templateProject": "<빈 프로젝트 폴더명>" }
+//   draftRoot 생략 시 %LOCALAPPDATA%\CapCut\User Data\Projects\com.lveditor.draft 자동.
+//   templateProject: CapCut에서 클립 1개짜리 빈 프로젝트를 한 번 만들어 그 폴더명을 넣는다
+//   (run-cutter가 그 클립을 세그먼트 템플릿으로 복제하므로 최소 1개 필요).
+function capcutConfigPath() {
+  return path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_config.json')
+}
+function readCapcutConfig() {
+  let cfg = {}
+  try { cfg = JSON.parse(fs.readFileSync(capcutConfigPath(), 'utf-8')) || {} } catch { /* 없음 */ }
+  const localAppData = process.env.LOCALAPPDATA
+    || path.join('C:\\Users', process.env.USERNAME || 'user', 'AppData', 'Local')
+  const draftRoot = cfg.draftRoot
+    || path.join(localAppData, 'CapCut', 'User Data', 'Projects', 'com.lveditor.draft')
+  return { draftRoot, templateProject: cfg.templateProject || '' }
+}
+function folderSafe(s) {
+  return String(s || '').replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '') || 'ep'
+}
+// 에피소드 전용 CapCut 프로젝트 폴더를 보장. 없으면 템플릿 복제 + 메타 갱신.
+function ensureEpisodeCapcutProject(episodeCode) {
+  const { draftRoot, templateProject } = readCapcutConfig()
+  if (!fs.existsSync(draftRoot)) {
+    const e = new Error(`CapCut 프로젝트 폴더를 찾을 수 없습니다: ${draftRoot} — capcut_config.json에 draftRoot 지정`)
+    e.statusCode = 400; throw e
+  }
+  const projectName = `yeori_${folderSafe(episodeCode)}`
+  const projectDir = path.join(draftRoot, projectName)
+  if (fs.existsSync(path.join(projectDir, 'draft_content.json'))) {
+    return { projectDir, projectName, created: false }
+  }
+  if (!templateProject) {
+    const e = new Error('capcut_config.json의 templateProject 미설정 — CapCut에서 클립 1개짜리 빈 프로젝트를 만들고 그 폴더명을 넣으세요')
+    e.statusCode = 400; throw e
+  }
+  const tplDir = path.join(draftRoot, templateProject)
+  if (!fs.existsSync(path.join(tplDir, 'draft_content.json'))) {
+    const e = new Error(`템플릿 프로젝트를 찾을 수 없습니다: ${tplDir}`)
+    e.statusCode = 400; throw e
+  }
+  fs.cpSync(tplDir, projectDir, { recursive: true })
+  // draft_meta_info.json — 폴더 경로·이름·id·타임스탬프 갱신, 클라우드 동기화 흔적 제거
+  try {
+    const metaP = path.join(projectDir, 'draft_meta_info.json')
+    const meta = JSON.parse(fs.readFileSync(metaP, 'utf-8'))
+    const nowUs = Date.now() * 1000
+    meta.draft_fold_path = projectDir.replace(/\\/g, '/')
+    meta.draft_name = projectName
+    meta.draft_id = randomUUID().toUpperCase()
+    meta.tm_draft_create = nowUs
+    meta.tm_draft_modified = nowUs
+    meta.tm_draft_removed = 0
+    for (const k of Object.keys(meta)) {
+      if (k.startsWith('tm_draft_cloud') || k === 'draft_cloud_last_action_download') {
+        meta[k] = typeof meta[k] === 'boolean' ? false : (typeof meta[k] === 'number' ? 0 : '')
+      }
+    }
+    meta.cloud_draft_sync = false
+    fs.writeFileSync(metaP, JSON.stringify(meta, null, 2))
+  } catch (e) {
+    console.warn('[capcut] draft_meta_info 갱신 경고:', e.message)
+  }
+  return { projectDir, projectName, created: true }
+}
+// cutter_input.json 생성 — run-cutter.js / a_creative_cutter.html이 읽는다.
+function writeCutterInputJson({ epNum, projectDir, kenburns }) {
+  const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+  const episodeCode = resolveEpisodeCode(ep.episode, epId)
+  const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+  fs.mkdirSync(outDir, { recursive: true })
+  const KB = new Set(['none', 'random', 'zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'pan_up', 'pan_down'])
+  const input = {
+    epNum: Number(epNum),
+    mode: 'yeori',
+    episodeCode,
+    rawVideo: path.join(outDir, `ep${epNum}_raw.mp4`),
+    srt: path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`, `ep${epNum}.srt`),
+    editMeta: path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json'),
+    // run-cutter.js / a_creative_cutter.html은 draft = draft_content.json '파일' 경로를 기대한다.
+    draft: path.join(projectDir, 'draft_content.json'),
+    projectDir,
+    kenburns: KB.has(kenburns) ? kenburns : 'random',
+    timestamp: new Date().toISOString(),
+  }
+  fs.writeFileSync(path.join(outDir, 'cutter_input.json'), JSON.stringify(input, null, 2))
+  return input
+}
+
+app.get('/api/capcut-config', (req, res) => {
+  res.json(capcutConfigStatus())
+})
+function capcutConfigStatus() {
+  const { draftRoot, templateProject } = readCapcutConfig()
+  let projects = []
+  try {
+    projects = fs.readdirSync(draftRoot, { withFileTypes: true })
+      .filter(d => d.isDirectory() && fs.existsSync(path.join(draftRoot, d.name, 'draft_content.json')))
+      .map(d => d.name)
+  } catch { /* 폴더 없음 */ }
+  return {
+    draftRoot, templateProject,
+    draftRootExists: fs.existsSync(draftRoot),
+    templateOk: !!templateProject && projects.includes(templateProject),
+    projects,
+  }
+}
+app.post('/api/capcut-config', (req, res) => {
+  const { draftRoot, templateProject } = req.body || {}
+  const cur = (() => { try { return JSON.parse(fs.readFileSync(capcutConfigPath(), 'utf-8')) } catch { return {} } })()
+  if (draftRoot !== undefined) cur.draftRoot = String(draftRoot || '') || undefined
+  if (templateProject !== undefined) cur.templateProject = String(templateProject || '')
+  fs.mkdirSync(path.dirname(capcutConfigPath()), { recursive: true })
+  fs.writeFileSync(capcutConfigPath(), JSON.stringify(cur, null, 2))
+  res.json({ success: true, ...capcutConfigStatus() })
+})
+
+// 데스크톱 CapCut 프로젝트(draft_content.json)에 컷을 배치하고 켄번스 키프레임을
+// 굽는 게 최종 산출물이다. capcut-web-automation.js(웹버전)는 별개 시스템이라
+// 이 흐름에서 제외했다 — 필요하면 직접 실행: node scripts/capcut-web-automation.js --ep=N
 app.post('/api/send-to-cutter', async (req, res) => {
-  const { epNum } = req.body
+  const { epNum, kenburns } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
   const cutterScriptPath = path.join(CODE_ROOT, 'scripts', 'run-cutter.js')
+
+  // ⓪ 에피소드 전용 CapCut 프로젝트 보장 + cutter_input.json 생성
+  let projectInfo
+  try {
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    projectInfo = ensureEpisodeCapcutProject(episodeCode)
+    writeCutterInputJson({ epNum, projectDir: projectInfo.projectDir, kenburns })
+    console.log(`[send-to-cutter] 프로젝트 ${projectInfo.projectName} (${projectInfo.created ? '신규 복제' : '기존'}) + cutter_input.json`)
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({ error: `CapCut 프로젝트 준비 실패: ${err.message}` })
+  }
 
   // ① run-cutter.js 실행 — draft_content.json에 컷+켄번스 직접 기록
   let cutterOut
@@ -3094,9 +3232,10 @@ app.post('/api/send-to-cutter', async (req, res) => {
 
   res.json({
     success:      true,
-    message:      `커터 실행 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}. 프로젝트를 열어 BGM/색보정/내보내기를 마무리하세요.`,
+    message:      `커터 실행 완료 + CapCut ${capCutExe ? '실행' : '경로 미확인'}. 프로젝트 "${projectInfo.projectName}"을 열어 BGM/색보정/내보내기를 마무리하세요.`,
     cutterLog:    cutterOut.trim(),
     cutterResult, // { segCount, durationSec, draftPath, projectName } | null
+    project:      projectInfo, // { projectName, projectDir, created }
     capCutExe:    capCutExe || null,
   })
 })

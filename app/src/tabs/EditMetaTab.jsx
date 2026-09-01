@@ -101,6 +101,30 @@ export default function EditMetaTab() {
     loadSyncTiming()
   }
 
+  // CapCut 설정 (finishMode='cutter' 전용) — 에피소드별 프로젝트 + 켄번스 모드
+  const finishMode = resolveFinishMode(state.episode)
+  const [kbMode, setKbMode] = useState('random')
+  const [capcutCfg, setCapcutCfg] = useState(null)
+  const [tplInput, setTplInput] = useState('')
+  const loadCapcutCfg = async () => {
+    try {
+      const r = await fetch('http://localhost:3001/api/capcut-config')
+      const d = await r.json()
+      setCapcutCfg(d); setTplInput(d.templateProject || '')
+    } catch { /* 서버 꺼짐 */ }
+  }
+  useEffect(() => {
+    if (finishMode === 'cutter' && !capcutCfg) loadCapcutCfg()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finishMode])
+  const saveTemplate = async () => {
+    await fetch('http://localhost:3001/api/capcut-config', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ templateProject: tplInput }),
+    })
+    loadCapcutCfg()
+  }
+
   // SRT 설정
   const [srtOffset, setSrtOffset] = useState(0)
 
@@ -368,8 +392,6 @@ export default function EditMetaTab() {
       setMeta(computed)
       await post('http://localhost:3001/api/save-edit-meta', computed)
 
-      const finishMode = resolveFinishMode(state.episode)
-
       // ③ SRT 생성 — cutter 흐름은 CapCut 자막에 쓰므로 필수, assemble 흐름은
       //    영상에 안 태우므로 음성 없으면 건너뛴다.
       setAccStatus('③ SRT 생성 중...')
@@ -406,18 +428,20 @@ export default function EditMetaTab() {
         setAccRunning(false); return
       }
 
-      // ⑤ 커터(켄번스) 실행 + CapCut 재시작
-      setAccStatus('⑤ 커터 실행 중 (켄번스 적용) + CapCut 실행...')
-      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum })
+      // ⑤ 에피소드 전용 CapCut 프로젝트 준비 + 커터(켄번스) + CapCut 실행
+      setAccStatus('⑤ CapCut 프로젝트 준비 + 커터 실행 (켄번스 적용)...')
+      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum, kenburns: kbMode })
       if (!cutterRes.success) {
-        setAccStatus(`⚠️ 커터 연동 실패: ${cutterRes.error}\n(cutter_input.json 자동생성은 2단계 작업 — 그 전까진 수동 필요)`)
+        setAccStatus(`⚠️ CapCut 연동 실패: ${cutterRes.error}`)
         setAccRunning(false); return
       }
 
       const r = cutterRes.cutterResult
+      const pname = cutterRes.project?.projectName || r?.projectName
+      const pnew = cutterRes.project?.created ? '(신규 생성) ' : ''
       setAccStatus(r
-        ? `✅ 완료! CapCut 프로젝트 "${r.projectName}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용 완료. CapCut에서 "${r.projectName}"을 열어 확인하세요.`
-        : '✅ 완료! 커터 실행 + CapCut 실행됨. BGM/색보정/내보내기는 CapCut에서 직접 마무리하세요.')
+        ? `✅ 완료! ${pnew}CapCut 프로젝트 "${pname}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용. CapCut에서 "${pname}"을 열어 마무리하세요.`
+        : `✅ 완료! ${pnew}커터 실행 + CapCut 실행됨. "${pname}"에서 BGM/색보정/내보내기를 마무리하세요.`)
       setCutterResult(r)
       // G5(편집/커터) 승인 — 커터가 실제로 draft_content.json에 반영한 컷들만 자동 승인
       // editMeta의 cutNo는 "01","02" 같은 0-패딩 문자열이지만, gpoints.js의
@@ -597,6 +621,42 @@ export default function EditMetaTab() {
             </div>
           </div>
         </div>
+
+        {finishMode === 'cutter' && (
+          <div style={{marginTop:'10px',padding:'10px 12px',background:'rgba(167,139,250,0.06)',border:'1px solid rgba(167,139,250,0.2)',borderRadius:'8px'}}>
+            <div style={{display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap',fontSize:'11.5px'}}>
+              <span style={{fontWeight:700,color:'#c4b5fd'}}>CapCut</span>
+              <span style={{color:'#9490a8'}}>프로젝트: <b style={{color:'#e8e6f0'}}>yeori_{episodeCode || '?'}</b> (에피소드별 자동 생성)</span>
+              <label style={{color:'#9490a8'}}>켄번스
+                <select value={kbMode} onChange={e => setKbMode(e.target.value)}
+                  style={{marginLeft:'4px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px'}}>
+                  {['random','none','zoom_in','zoom_out','pan_left','pan_right','pan_up','pan_down'].map(v =>
+                    <option key={v} value={v}>{v}</option>)}
+                </select>
+              </label>
+            </div>
+            {capcutCfg && !capcutCfg.templateOk && (
+              <div style={{marginTop:'8px',fontSize:'11px',color:'#fca5a5'}}>
+                ⚠ 템플릿 프로젝트 미설정. CapCut에서 <b>클립 1개짜리 빈 프로젝트</b>를 만든 뒤 그 폴더명을 지정하세요.
+                <div style={{display:'flex',gap:'6px',marginTop:'6px',alignItems:'center'}}>
+                  <select value={tplInput} onChange={e => setTplInput(e.target.value)}
+                    style={{background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'3px 6px',fontSize:'11px',flex:1}}>
+                    <option value="">— 프로젝트 선택 —</option>
+                    {(capcutCfg.projects || []).map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <button onClick={saveTemplate} disabled={!tplInput}
+                    style={{fontSize:'11px',fontWeight:700,color:'#a78bfa',background:'rgba(167,139,250,0.12)',border:'1px solid rgba(167,139,250,0.3)',borderRadius:'4px',padding:'3px 10px',cursor:'pointer'}}>
+                    저장
+                  </button>
+                </div>
+                <div style={{fontSize:'10px',color:'#6b7280',marginTop:'4px'}}>탐색 폴더: {capcutCfg.draftRoot}</div>
+              </div>
+            )}
+            {capcutCfg && capcutCfg.templateOk && (
+              <div style={{marginTop:'6px',fontSize:'10.5px',color:'#6ee7b7'}}>✓ 템플릿: {capcutCfg.templateProject}</div>
+            )}
+          </div>
+        )}
         {accStatus && (
           <div style={{marginTop:'8px',fontSize:'12px',fontWeight:600,
             color: accStatus.startsWith('❌') ? '#f87171'
