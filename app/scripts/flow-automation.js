@@ -122,6 +122,11 @@ const PROMPTS_EXAMPLE = {
 // 프로젝트 URL 전역 추적 (캐릭터 등록 후 복귀에 사용)
 let _projectUrl = null
 
+// 다중 캐릭터 — main()이 모듈 로드 중 동기 실행 구간에서 참조하므로 진입점 위에서 선언(TDZ 방지)
+let EPISODE_REF_FILES = null   // 이 에피소드에서 업로드할 얼굴 레퍼런스 절대경로 목록
+let EPISODE_CHAR_IDS = []      // 이 에피소드 컷들에 등장하는 캐릭터 id 목록
+const CHARACTERS_JSON_PATH = () => path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json')
+
 // ── 진입점 ────────────────────────────────────────────────────────────
 const args = parseArgs()
 
@@ -195,9 +200,6 @@ function ensureDir(dir) {
 // ── 캐릭터 레지스트리 (downloads/flow/characters.json) ──────────────
 // run-flow가 prompts.json의 cut.characters에 이미 인물 레코드를 실어주지만,
 // 폴백(primary 인물)과 레퍼런스 파일 경로 해석용으로 원본도 읽는다.
-let EPISODE_REF_FILES = null  // 이 에피소드에서 업로드할 얼굴 레퍼런스 절대경로 목록
-let EPISODE_CHAR_IDS = []     // 이 에피소드 컷들에 등장하는 캐릭터 id 목록
-const CHARACTERS_JSON_PATH = () => path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json')
 function loadCharacterRegistry() {
   try {
     return JSON.parse(fs.readFileSync(CHARACTERS_JSON_PATH(), 'utf-8')) || {}
