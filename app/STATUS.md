@@ -433,8 +433,11 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
 - **편집메타 컷분석 미리보기**: `analyzeCut`이 `cut_NN_overlay.mp4→cut_NN.mp4` HEAD
   확인해 자동 로드. 수동 파일선택은 폴백.
 
+#### 메이킹 컷 진행 위젯 완료 (커밋 `209e797`)
+- `GET /api/episode-making-status`(무인증) — GRAPHIC/BROLL/CAPCUT 컷의 done/overlay/
+  dirty + 컷별 상세. `DashboardTab`에 "메이킹 컷" 카드(유형색 칩, ✍ 손글씨, ↻ 재조립,
+  5초 폴링). 매니페스트 없는 구컷은 hasVideo만으로 완료 표시.
+
 ### 남은 후보
-- 리더 대시보드에 "메이킹" 위젯(made/overlay/dirty를 studio-status에서 직접) — g4 바로
-  이미 반영은 됨, 별도 시각화는 선택
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
 
