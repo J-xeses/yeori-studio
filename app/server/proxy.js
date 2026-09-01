@@ -1239,6 +1239,93 @@ app.post('/api/scan-media', (req, res) => {
   res.json({ images, videos, audios, styleGuide: fs.existsSync(styleGuidePath) })
 })
 
+// ── 캐릭터 레지스트리 (서여리 + 한지아 + …) ────────────────────────
+// downloads/flow/characters.json — Flow 이미지 생성 시 컷의 CH 필드(YR_TX + JIA 등)에
+// 등장하는 각 인물의 얼굴 레퍼런스·descriptor를 관리한다. flow-automation.js가 읽어서
+// 컷 프롬프트에 인물별 descriptor를 주입하고 레퍼런스 이미지를 프로젝트에 업로드한다.
+const CHARACTERS_PATH = path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json')
+function loadCharacters() {
+  try { return JSON.parse(fs.readFileSync(CHARACTERS_PATH, 'utf-8')) || {} }
+  catch { return {} }
+}
+function saveCharacters(data) {
+  fs.mkdirSync(path.dirname(CHARACTERS_PATH), { recursive: true })
+  fs.writeFileSync(CHARACTERS_PATH, JSON.stringify(data, null, 2))
+}
+// CH 필드 토큰(예: "YR_TX", "지아") → 캐릭터 id. 못 찾으면 null.
+function resolveCharacterToken(token, chars = loadCharacters()) {
+  const t = String(token || '').trim().toUpperCase()
+  if (!t) return null
+  for (const [id, c] of Object.entries(chars)) {
+    if (id.toUpperCase() === t) return id
+    if (String(c.name || '').toUpperCase() === t) return id
+    if ((c.aliases || []).some(a => String(a).toUpperCase() === t)) return id
+  }
+  return null
+}
+// "YR_TX + JIA" / "여리, 지아" → ["yeori","jia"]. 못 찾은 토큰은 버리되 하나도
+// 못 찾으면 primary 캐릭터 1명으로 폴백.
+function resolveChToCharacterIds(chRaw) {
+  const chars = loadCharacters()
+  const tokens = String(chRaw || '').split(/[+,/·]|\s{2,}/).map(s => s.trim()).filter(Boolean)
+  const ids = []
+  for (const tok of tokens) {
+    const id = resolveCharacterToken(tok, chars)
+    if (id && !ids.includes(id)) ids.push(id)
+  }
+  if (!ids.length) {
+    const primary = Object.entries(chars).find(([, c]) => c.primary)
+    if (primary) ids.push(primary[0])
+  }
+  return ids
+}
+
+app.get('/api/characters', (req, res) => {
+  res.json({ characters: loadCharacters() })
+})
+app.post('/api/characters', (req, res) => {
+  const { id, ...patch } = req.body || {}
+  if (!id) return res.status(400).json({ error: 'id 필요' })
+  const chars = loadCharacters()
+  chars[id] = { ...(chars[id] || {}), ...patch, id }
+  saveCharacters(chars)
+  res.json({ success: true, character: chars[id] })
+})
+// 얼굴 이미지 → Claude vision → "Consistent character face: …" descriptor 재생성
+app.post('/api/characters/:id/analyze', async (req, res) => {
+  const chars = loadCharacters()
+  const c = chars[req.params.id]
+  if (!c) return res.status(404).json({ error: '캐릭터 없음' })
+  if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY 미설정' })
+  const facePath = path.isAbsolute(c.face) ? c.face : path.join(MEDIA_ROOT, c.face)
+  if (!fs.existsSync(facePath)) return res.status(404).json({ error: `얼굴 이미지 없음: ${facePath}` })
+  try {
+    const ext = path.extname(facePath).toLowerCase()
+    const mediaType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg'
+    const b64 = fs.readFileSync(facePath).toString('base64')
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': ANTHROPIC_API_KEY, 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6', max_tokens: 250,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
+          { type: 'text', text: "Analyze this woman's face and output a single concise descriptor for AI image generation consistency. Start with 'Consistent character face:' then precisely describe: face shape, eye shape and color, eyebrows, nose, lips (shape and color), skin tone, hair (length, color, style, bangs), and any distinctive features (freckles, moles, eyeliner style). 1-2 sentences max. No extra commentary." },
+        ] }],
+      }),
+    })
+    if (!r.ok) return res.status(502).json({ error: `Claude API ${r.status}: ${(await r.text()).slice(0, 200)}` })
+    const data = await r.json()
+    const descriptor = (data.content || []).find(b => b.type === 'text')?.text?.trim()
+    if (!descriptor) return res.status(502).json({ error: 'descriptor 응답 없음' })
+    chars[req.params.id] = { ...c, descriptor, descriptorSource: 'claude-vision', descriptorUpdatedAt: new Date().toISOString() }
+    saveCharacters(chars)
+    res.json({ success: true, descriptor })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
   const { ep, prompts, projectId, type, content, num } = req.body
@@ -1246,6 +1333,32 @@ app.post('/api/run-flow', (req, res) => {
   const isInsta = type === 'insta'
   if (isInsta && (!content || !num)) {
     return res.status(400).json({ error: 'type=insta 사용 시 content(FD/RL/PT/ST)와 num(인스타 번호)이 모두 필요합니다' })
+  }
+
+  // 컷별 등장 인물(CH 필드) → 캐릭터 레코드로 해석해 prompts.json에 실어준다.
+  // flow-automation.js가 인물별 얼굴 descriptor를 프롬프트에 주입하고 레퍼런스를 업로드한다.
+  // 클라이언트가 cut.ch를 안 보내도 studio-state의 masterCode.ch에서 보강.
+  try {
+    const chars = loadCharacters()
+    let stCuts = []
+    try {
+      const st = loadStudioState()
+      const epNo = prompts.episode ?? ep
+      const entry = Object.values(st.episodes || {}).find(e => String(e.episode?.number) === String(epNo))
+      stCuts = entry?.cuts || []
+    } catch { /* studio-state 없거나 매칭 실패 — cut.ch만으로 진행 */ }
+    for (const c of (prompts.cuts || [])) {
+      const chRaw = c.ch || c.chRaw
+        || stCuts.find(sc => String(sc.no) === String(c.no))?.masterCode?.ch
+        || ''
+      const ids = resolveChToCharacterIds(chRaw)
+      c.characters = ids.map(id => {
+        const ch = chars[id] || {}
+        return { id, name: ch.name || id, face: ch.face, closeup: ch.closeup, descriptor: ch.descriptor || '', flowCharacterName: ch.flowCharacterName || ch.name || id }
+      })
+    }
+  } catch (e) {
+    console.warn('[run-flow] 캐릭터 보강 경고:', e.message)
   }
 
   const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')

@@ -192,6 +192,41 @@ function ensureDir(dir) {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
 }
 
+// ── 캐릭터 레지스트리 (downloads/flow/characters.json) ──────────────
+// run-flow가 prompts.json의 cut.characters에 이미 인물 레코드를 실어주지만,
+// 폴백(primary 인물)과 레퍼런스 파일 경로 해석용으로 원본도 읽는다.
+let EPISODE_REF_FILES = null  // 이 에피소드에서 업로드할 얼굴 레퍼런스 절대경로 목록
+function loadCharacterRegistry() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json'), 'utf-8')) || {}
+  } catch {
+    return {}
+  }
+}
+// IP 프롬프트에 인물별 descriptor를 삽입한다.
+//  · "WOMAN 1 (Yeori):" / "WOMAN 2 (Jia):" 라벨이 있으면 각 라벨 줄 뒤에 매칭 descriptor
+//  · 없으면 맨 앞에 등장 인물 descriptor를 순서대로 나열
+function injectCharacterDescriptors(prompt, cutChars) {
+  const chars = (cutChars || []).filter(c => c && c.descriptor)
+  if (!chars.length) return prompt
+  const labelRe = /^(\s*WOMAN\s*\d+\s*\(([^)]+)\)\s*:?.*)$/gim
+  if (labelRe.test(prompt)) {
+    labelRe.lastIndex = 0
+    return prompt.replace(labelRe, (line, full, nameInParen) => {
+      const key = String(nameInParen).trim().toUpperCase()
+      const match = chars.find(c =>
+        String(c.name || '').toUpperCase() === key ||
+        String(c.id || '').toUpperCase() === key ||
+        (c.aliases || []).some(a => String(a).toUpperCase() === key) ||
+        String(c.flowCharacterName || '').toUpperCase() === key
+      )
+      return match ? `${full}\n${match.descriptor}` : line
+    })
+  }
+  const prefix = chars.map(c => c.descriptor).join(' ')
+  return `${prefix} ${prompt}`
+}
+
 // ── 레퍼런스 이미지 분석 (Claude API) ───────────────────────────────
 
 async function analyzeReferenceImage() {
@@ -381,12 +416,32 @@ async function main() {
     : path.join(epDir, 'project_url.txt')
   ensureDir(epDir)
 
-  // 레퍼런스 이미지 → Claude API 얼굴 분석 → 프롬프트 앞에 자동 추가
-  const faceFeatures = await analyzeReferenceImage()
-  if (faceFeatures) {
-    cuts.forEach(c => { c.imagePrompt = `${faceFeatures} ${c.imagePrompt}` })
-    log('ok', `얼굴 특징 ${cuts.length}개 컷 프롬프트에 자동 추가`)
+  // ── 캐릭터 descriptor 주입 (다중 인물 지원) ──────────────────────────
+  //  · prompts.json의 cut.characters(run-flow가 CH 필드에서 해석) 우선
+  //  · 없으면 characters.json의 primary(서여리) 1명으로 폴백
+  //  · IP에 "WOMAN 1 (Yeori):" 라벨이 있으면 각 라벨 뒤에 해당 descriptor 삽입,
+  //    없으면 맨 앞에 등장 인물 descriptor를 순서대로 나열
+  const registry = loadCharacterRegistry()
+  const primaryChar = Object.values(registry).find(c => c.primary) || Object.values(registry)[0] || null
+  const epCharIds = new Set()
+  for (const c of cuts) {
+    let cutChars = Array.isArray(c.characters) && c.characters.length ? c.characters : null
+    if (!cutChars && primaryChar) cutChars = [primaryChar]
+    if (!cutChars) continue
+    cutChars.forEach(cc => cc.id && epCharIds.add(cc.id))
+    c.imagePrompt = injectCharacterDescriptors(c.imagePrompt, cutChars)
   }
+  // 이 에피소드에서 필요한 모든 캐릭터의 얼굴 레퍼런스를 새 프로젝트 생성 시 업로드
+  EPISODE_REF_FILES = []
+  for (const id of epCharIds) {
+    const ch = registry[id]
+    for (const rel of [ch?.face, ch?.closeup]) {
+      if (!rel) continue
+      const abs = path.isAbsolute(rel) ? rel : path.join(MEDIA_ROOT, rel)
+      if (fs.existsSync(abs) && !EPISODE_REF_FILES.includes(abs)) EPISODE_REF_FILES.push(abs)
+    }
+  }
+  log('ok', `캐릭터 descriptor 주입: ${cuts.length}컷 · 인물 ${[...epCharIds].join(', ') || '(폴백)'} · 레퍼런스 ${EPISODE_REF_FILES.length}장`)
 
   printHeader(episode, type, cuts)
 
@@ -749,9 +804,12 @@ async function createNewFlowProject(page, nameSuffix) {
 // "캐릭터" 계정 라이브러리가 아니라 이 프로젝트의 미디어 풀(좌측 "업로드" 탭)에
 // 넣는 것이 목적 — 파일 input을 직접 찾아 두 번 순서대로 업로드한다.
 async function uploadReferenceImages(page) {
-  const files = [CONFIG.characterImage, CONFIG.closeupImage].filter(f => fs.existsSync(f))
+  // 이 에피소드 컷들에 등장하는 모든 인물의 얼굴 레퍼런스(EPISODE_REF_FILES)를 우선 사용.
+  // 없으면 기존 단일(서여리) 레퍼런스로 폴백.
+  const files = (EPISODE_REF_FILES && EPISODE_REF_FILES.length ? EPISODE_REF_FILES : [CONFIG.characterImage, CONFIG.closeupImage])
+    .filter(f => fs.existsSync(f))
   if (!files.length) {
-    log('warn', `레퍼런스 이미지 없음(${CONFIG.characterImage}, ${CONFIG.closeupImage}) — 업로드 건너뜀`)
+    log('warn', `레퍼런스 이미지 없음 — 업로드 건너뜀`)
     return
   }
   for (const filePath of files) {
