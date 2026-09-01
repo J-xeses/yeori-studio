@@ -500,7 +500,21 @@ proxy.js MCP 라우터에 5개 도구 추가: git_commit_push, update_status_md,
   표시되던 원인. 전부 제거 — "생성됨"은 `hasImage`(파일)가, `g2`는 사람 승인 버튼만.
 - 기존 에피소드의 잘못 찍힌 `g3`는 이 커밋으로 정리 안 됨(재작업 시 자연 해소).
 
+#### 다중 캐릭터 시스템 Phase 1 (커밋 `2f05b47`)
+Flow 이미지 생성이 서여리 단일 하드코딩 → 2인 이상 등장 컷(한지아 등) 지원.
+- `downloads/flow/characters.json`(gitignore) — 캐릭터별 name/aliases/face/closeup/
+  descriptor/flowCharacterName. 서여리 마이그레이션 + 한지아 추가(얼굴=시그니처
+  클로즈업, descriptor=Claude vision).
+- `GET/POST /api/characters`, `POST /api/characters/:id/analyze`(vision → descriptor).
+- `run-flow`가 컷 CH 필드(`YR_TX + JIA`)를 캐릭터 레코드로 해석해 prompts.json
+  `cut.characters`에 실음. 못 찾으면 primary 폴백.
+- `flow-automation.js`: `injectCharacterDescriptors` — IP의 `WOMAN N (Name):` 라벨 뒤에
+  해당 인물 descriptor 삽입(라벨 없으면 맨 앞). `uploadReferenceImages`가 에피소드
+  등장 인물 전원 얼굴 레퍼런스 업로드.
+- Phase 2 남음: 새 캐릭터 Flow "캐릭터 라이브러리" 자동 등록, ScriptGen 캐릭터 UI.
+
 ### 남은 후보
+- 다중 캐릭터 Phase 2 (Flow 라이브러리 자동 등록 + UI)
 - editIntent를 메이킹 탭 모션(graphicMotionVf/s2cImageVf)에도 연동(assemble 경로) — v2
 - editIntent에 transition/filter 추가 → CapCut CDP 세미오토 연동
 - run-cutter가 여전히 에피소드 통짜 실행 — 컷 단위 재조립은 별개 과제
