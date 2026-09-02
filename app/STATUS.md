@@ -22,8 +22,10 @@
 + `state/{gpoints,trend_episodes,code-task-queue,credit-usage,capcut_config,yeori_edit_meta}.json`
 + `flow/chrome-profile-*`(런타임, 이동 안 함) + `insta/`(불변). 모든 경로 조립은
 `server/lib/mediaPaths.js` + `src/lib/mediaPaths.js` 헬퍼 경유(`HIER=true`). 폴더 키 =
-`episode.code`(예 LF_T01), 없으면 `ep{N}`. `downloads/` git 추적 완전 해제. 되돌리기:
-`node scripts/migrate-downloads.js --undo` + HIER=false. 상세 = 하단 로그.
+`episode.code`(예 LF_T01), 없으면 `ep{N}`. 코드 중복 입력은 reducer+UI에서 차단(`f8bc545`).
+`downloads/` git 추적 완전 해제. 되돌리기: `node scripts/migrate-downloads.js --undo` + HIER=false.
+커밋: `43f7421`→`56482c2`→`c7961ed`→`5288d13`→`416614b`→`92bfe42`→`686c717`→`b5ee823`→`f8bc545`.
+상세 = 하단 로그.
 
 
 지난 이틀(8/31~9/1) 세션에서 메이킹 탭 자동 편집 파이프라인을 대거 완성함
@@ -598,13 +600,19 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 
 ---
 
-## 2026-09-02 (downloads 폴더 위계 정리 — Phase 1 완료, Phase 2·3 설계)
+## 2026-09-02 (downloads 폴더 위계 정리 — Phase 1·2·3 전부 완료)
 
 **동기**: `C:\yeori-studio\downloads` 최상위에 에피소드 산출물(`flow/audio/video/making/output/
 final/deliverables/script`) + 공유 라이브러리(`sfx/hooks/flow-character`) + 앱 상태 json +
 디버그 잡동사니가 위계 없이 40개 뒤섞여 있었음. 목표 = 스튜디오 관련 단일 위계.
 
-### Phase 1 — 잡동사니 아카이브 (완료, 코드 변경 0)
+**커밋 이력 (시간순)**:
+`43f7421` P1(아카이브+P2·3 설계) → `56482c2` P2 proxy.js → `c7961ed`(auto-sync에 P2 scripts 14개)
+→ `5288d13` P2 scripts+client 마무리 → `416614b` P3 준비(migrate 스크립트) →
+`92bfe42` P3 실행(--go 173건 + HIER=true) → `686c717` startFrame URL 수정 →
+`b5ee823` setup.bat → `3de9e42` STATUS → `f8bc545` 코드 중복 방지 가드 → `419d7f8` STATUS.
+
+### Phase 1 — 잡동사니 아카이브 (완료 `43f7421`, 코드 변경 0)
 `downloads/_archive/2026-09-02/`로 이동(삭제 안 함, 총 238MB):
 - `logs/` — bisect*.log, start_yeori_*.log(6), px*.log(10), temp_capcut_chrome_launch.log
 - `capcut-debug/` — capcut_*.png(7), capcut_spec*.json(3)
@@ -626,7 +634,7 @@ final/deliverables/script`) + 공유 라이브러리(`sfx/hooks/flow-character`)
 ExtractTab). `/api/sfx-catalog`·`/api/bgm-library`가 item.path/t.file을 현재 구조 상대경로로
 재작성. 클라 `epMediaUrl(episode, kind)`.
 
-### Phase 3 — 목표 위계 + 마이그레이션 (완료, 커밋 <이번>, `HIER=true`)
+### Phase 3 — 목표 위계 + 마이그레이션 (완료, 커밋 416614b·92bfe42·686c717·b5ee823, `HIER=true`)
 `node scripts/migrate-downloads.js --go` (173건 이동). 실제 구조:
 ```
 downloads/
@@ -646,9 +654,9 @@ downloads/
   추가 수정 불필요했음.
 - `downloads/` 전체 git 추적 해제(원래 `.gitignore` 대상, 과거 강제 add된 44파일).
 - **되돌리기**: `node scripts/migrate-downloads.js --undo` + 양쪽 mediaPaths.js `HIER=false`.
-- **코드 중복 방지 가드 (구현됨)**: `episode.code`가 폴더 키 → 두 에피소드가 같은 코드면
-  산출물·gpoints 공유. AppContext `SET_EPISODE` reducer가 겹치는 code 드롭 + ScriptGenTab
-  입력칸 빨간 테두리·경고. 빈 값 자동코드(`{type}_E{number}`)는 번호가 전역 유일이라 충돌 불가.
+- **코드 중복 방지 가드 (구현됨 `f8bc545`)**: `episode.code`가 폴더 키 → 두 에피소드가 같은
+  코드면 산출물·gpoints 공유. AppContext `SET_EPISODE` reducer가 겹치는 code 드롭 +
+  ScriptGenTab 입력칸 빨간 테두리·경고. 빈 값 자동코드(`{type}_E{number}`)는 번호가 전역 유일이라 충돌 불가.
 - **스모크 통과**: health/trend/bgm/sfx-catalog/characters/capcut-config/video-checklist/
   cut-timing/scan-media(ep2·ep99)/hw-source-images/studio-status-public/gpoints POST +
   정적파일(episodes/IG_R02/images, library/sfx, library/characters) 200 + `npm run build`.
