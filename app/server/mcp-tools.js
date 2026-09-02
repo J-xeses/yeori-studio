@@ -123,7 +123,7 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g2',
-    description: 'flow-automation.js를 호출해 Google Flow로 컷 이미지(G2)를 자동 생성합니다. 실행 시작 여부만 반환하며 실제 생성은 백그라운드에서 계속 진행됩니다(수 분~20분 이상 소요 가능). episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
+    description: '[DEPRECATED 2026-09-02 — 자동 이미지 생성 중단] Flow 브라우저 자동화가 벤더 UI 변경으로 반복적으로 깨져서 이미지도 수동 제작으로 전환했습니다. 이 도구는 호출하지 마세요. 컷 이미지는 사람이 외부 도구(Flow/Gemini 등)에서 만든 뒤 스튜디오 대본생성/스튜디오 탭에서 업로드합니다. 진행 현황은 studio_get_status를 참고하세요.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],

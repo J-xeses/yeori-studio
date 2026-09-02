@@ -135,24 +135,11 @@ async function shouldAutoApprove(stage, cutStatus) {
 // G2/G4는 Flow/Veo 브라우저 자동화라 Chrome 세션(CDP 디버깅 포트)을 하나만 공유한다.
 // 컷별로 승인 시점이 달라 매 폴링 사이클마다 "방금 승인된 컷"만 골라 개별 호출하면,
 // 이전 컷 처리가 아직 끝나지 않은 상태에서 새 run-g2/g4가 겹쳐서 같은 브라우저에
-// 중복 탭을 열고 서로 조작을 방해하는 사고가 실제로 발생했다(중복 탭 5개 + Google이
-// 봇 행동으로 감지해 reCAPTCHA를 띄우는 사태까지 이어짐, 2026-08-09 실측 테스트에서
-// 확인). 그래서 G2/G4는 "에피소드 단위" 1개 요청만 동시에 허용하고, 그 사이 새로
-// 승인된 컷은 지금 진행 중인 요청이 끝난 뒤 다음 사이클에서 한꺼번에 처리한다
-// (studio-run-g2/g4 자체가 여러 cutIds를 한 번에 배치 처리하도록 이미 설계되어 있음).
-let g2InFlight = false
+// G2(이미지)·G4(영상)는 더 이상 자동 트리거하지 않는다(2026-09-02, 수동 전환).
+// Flow/Veo 브라우저 자동화가 벤더 UI 변경으로 반복적으로 깨져 파이프라인 신뢰성을
+// 못 지켰음. 두 단계 모두 사람이 외부 도구에서 제작 → 스튜디오에서 업로드하고,
+// 리더는 "어느 컷이 아직 이미지/영상 없는지" 보고만 한다.
 let g5Triggered = false
-let g2StartedAt = 0
-// g4InFlight/g4StartedAt 제거 — G4(영상)는 더 이상 자동 트리거 안 함(2026-09-02, 수동 전환)
-
-// G2/G4 락 해제는 "요청 보낸 컷 전부 산출물이 생겼는지"로 판단하는데, Flow/Veo가
-// 정책 거부 등으로 일부 컷 생성에 실패하면 그 컷은 영원히 hasImage/hasVideo=false로
-// 남아 락이 절대 안 풀리는 버그가 있었다(실측: G4가 컷 1에서 "Google 정책 위반" 실패 후
-// pipeline-leader가 에러 로그 한 줄 없이 무한 대기 상태로 멈춤, 2026-08-10). 완료 감지가
-// 실패 케이스를 못 잡는 근본 원인은 안 고치더라도, 타임아웃으로 락을 강제 해제하고
-// 눈에 띄게 경고를 남겨 "조용히 멈춤" 대신 "다음 사이클에 다시 시도 + 사람이 알아챌 수
-// 있게" 만든다.
-const G2_TIMEOUT_MS = 10 * 60 * 1000
 
 // 반환값: 목표 단계(TO_STAGE)까지 전체 컷이 완료됐는지(true/false) — main()이 이걸로
 // 더 이상 폴링할 필요가 없다고 판단해서 스스로 종료한다.
@@ -165,34 +152,17 @@ async function checkAndAdvance() {
   const { episode, cuts, summary } = statusRes.data
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
 
-  // ── 완료 감지: 이전에 요청 보낸 배치가 전부 산출물을 냈으면 에피소드 단위 락 해제 ──
-  if (g2InFlight && cuts.filter(c => c.g1).every(c => c.hasImage)) g2InFlight = false
-
-  // ── 타임아웃 안전장치: 일부 컷이 생성 실패해서 완료 감지가 영원히 안 되는 경우 대비 ──
-  if (g2InFlight && Date.now() - g2StartedAt > G2_TIMEOUT_MS) {
-    log('G2', `⚠️ ${G2_TIMEOUT_MS / 60000}분 경과했는데도 미완료 컷 있음 — 일부 실패했을 가능성, 락 강제 해제 후 다음 사이클에 재시도`)
-    g2InFlight = false
-  }
-
   // ── G1: 트리거할 게 없는 단계(사람이 스튜디오 UI에서 승인) — 완료 여부만 로그로 확인 ──
   if (stageInRange('g1') && isStageComplete(cuts, 'g1')) {
     log('G1', '이미 완료된 단계 — 스킵')
   }
 
-  // ── G2 트리거: G1 승인됐고 이미지가 아직 없는 컷들을 한 번에 요청(에피소드당 동시 1건) ──
-  if (stageInRange('g2')) {
-    if (isStageComplete(cuts, 'g2')) {
-      log('G2', '이미 완료된 단계 — 스킵')
-    } else if (!g2InFlight) {
-      const g2Candidates = cuts.filter(c => c.g1 && !c.hasImage)
-      if (g2Candidates.length) {
-        const cutIds = g2Candidates.map(c => c.no)
-        g2InFlight = true
-        g2StartedAt = Date.now()
-        log('G2', `이미지 생성 요청 → 컷 ${cutIds.join(',')}`)
-        const r = await api('POST', '/api/mcp/studio-run-g2', { episodeId: EPISODE_ID, cutIds })
-        if (!r.ok) { log('G2', `요청 실패 — ${r.data?.error || r.status}`); g2InFlight = false }
-      }
+  // ── G2: 이미지 생성도 자동 트리거하지 않음(수동 전환). 대본생성 탭/외부 도구에서
+  //       제작 → 스튜디오 업로드. 리더는 아직 이미지 없는 컷만 보고. ──
+  if (stageInRange('g2') && !isStageComplete(cuts, 'g2')) {
+    const needImg = cuts.filter(c => c.g1 && !c.hasImage)
+    if (needImg.length) {
+      log('G2', `수동 제작 대기 — 컷 ${needImg.map(c => c.no).join(',')} (이미지 생성 후 스튜디오 탭에 업로드)`)
     }
   }
 

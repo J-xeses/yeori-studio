@@ -5144,6 +5144,9 @@ mcpRouter.post('/studio-approve-g1', (req, res) => {
 })
 
 // ④ studio-run-g2 — flow-automation.js 호출(이미지 생성). 오래 걸리므로 시작 확인만 반환
+// ⚠️ DEPRECATED (2026-09-02): pipeline-leader는 더 이상 이걸 자동 호출하지 않는다(수동 이미지 전환,
+//    G4와 동일). flow-automation.js는 Google Flow UI 변경 시 자주 깨진다. 수동 재시도용으로만 남김 —
+//    이미지는 외부 도구 제작 → 스튜디오 탭 업로드가 정식 경로.
 mcpRouter.post('/studio-run-g2', async (req, res) => {
   const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
