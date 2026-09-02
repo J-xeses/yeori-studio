@@ -1,11 +1,15 @@
 @echo off
-title Yeori Studio
+title Yeori Studio - 제작 코어
 cd /d "%~dp0"
+
+:: ═══════════════════════════════════════════════════════════════
+::  제작 코어 (production) — 트렌드 레이더 · 스튜디오 · 커터 · 에이전트
+::  생성/편집 도구(Flow · CapCut · ElevenLabs)는 start_gen.bat 로 분리.
+::  이미지·영상은 수동 제작 → 스튜디오 업로드 (2026-09-02 전환).
+:: ═══════════════════════════════════════════════════════════════
 
 set ACC_HTML=%~dp0a_creative_cutter.html
 set MATRIX_HTML=%~dp0content_matrix_v3.html
-set CHROME="C:\Program Files\Google\Chrome\Application\chrome.exe"
-set PROFILE=C:\yeori-studio\app\.chrome-profile-flow
 
 :: TREND_RADAR_DIR 탐색 (PC마다 위치가 달라서 우선순위대로 확인)
 set TREND_RADAR_DIR=
@@ -17,7 +21,7 @@ if not defined TREND_RADAR_DIR for /d %%D in ("%USERPROFILE%\OneDrive\*") do if 
 
 echo.
 echo ============================================================
-echo   Yeori Studio -- Full System Start
+echo   Yeori Studio -- 제작 코어 (production)
 echo ============================================================
 echo.
 
@@ -28,10 +32,7 @@ git pull origin master
 cd /d "%~dp0"
 echo.
 
-:: [pre-1.5] Make sure the hourly auto commit+pull+push Task Scheduler job
-::           exists on THIS machine -- self-heals on a fresh PC or if the
-::           task was ever deleted, so there's no manual "set this up once"
-::           step to forget.
+:: [pre-1.5] 시간별 자동 커밋/동기 스케줄 작업 자가 치유
 echo [pre-1.5] Checking hourly auto-sync task...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-auto-sync-task.ps1"
 echo.
@@ -41,7 +42,7 @@ echo [pre-2] Sync on start...
 call "%~dp0sync-content.bat"
 echo.
 
-:: [0] Kill existing proxy on port 3001 + existing Cloudflare Tunnel
+:: [0] 기존 프록시(:3001) + Cloudflare Tunnel 종료
 echo [0] Killing existing proxy on port 3001...
 for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3001 " ^| findstr "LISTENING"') do (
     taskkill /PID %%p /F >nul 2>&1
@@ -49,8 +50,7 @@ for /f "tokens=5" %%p in ('netstat -ano ^| findstr ":3001 " ^| findstr "LISTENIN
 taskkill /IM cloudflared.exe /F >nul 2>&1
 timeout /t 1 /nobreak >nul
 
-:: [1] Start TREND RADAR production server (needs a real server -- /api/youtube, /api/analyze
-::     routes can't work from a static html file)
+:: [1] TREND RADAR 프로덕션 서버 (:3000)
 echo [1] Starting TREND RADAR production server...
 netstat -ano | findstr ":3000 " | findstr "LISTENING" >nul 2>&1
 if %errorlevel% == 0 (
@@ -58,11 +58,6 @@ if %errorlevel% == 0 (
 ) else (
     if defined TREND_RADAR_DIR (
         echo        Found trend-radar at %TREND_RADAR_DIR%
-        REM BUILD_ID marks a real production build -- npm run start only succeeds
-        REM if it exists. A plain .next folder can exist from next dev too (has
-        REM build-manifest etc but no BUILD_ID), so checking folder existence alone
-        REM mistakes that stale state for a real build and start fails silently
-        REM with a production-build-not-found error, leaving port 3000 down.
         if exist "%TREND_RADAR_DIR%\.next\BUILD_ID" (
             start "TREND RADAR Server" /D "%TREND_RADAR_DIR%" cmd /k "npm run start"
         ) else (
@@ -76,85 +71,65 @@ if %errorlevel% == 0 (
 )
 echo.
 
-:: [2] Open Chrome tabs
-echo [2] Opening Chrome tabs...
-netstat -ano | findstr ":9222" >nul 2>&1
-if %errorlevel% == 0 goto :chrome_exists
-
-echo        Chrome not running -- launching new window...
-start "" %CHROME% --remote-debugging-port=9222 --user-data-dir=%PROFILE% --start-maximized "https://labs.google/fx/ko/tools/flow"
-timeout /t 3 /nobreak >nul
-goto :open_remaining_tabs
-
-:chrome_exists
-echo        Chrome already running -- adding tabs...
-start "" %CHROME% --user-data-dir=%PROFILE% "https://labs.google/fx/ko/tools/flow"
-timeout /t 1 /nobreak >nul
-
-:open_remaining_tabs
-if exist "%ACC_HTML%" (
-    start "" %CHROME% --user-data-dir=%PROFILE% "%ACC_HTML%"
-    timeout /t 1 /nobreak >nul
-) else (
-    echo        a_creative_cutter.html not found -- skip
-)
-start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:5173"
-if exist "%MATRIX_HTML%" (
-    start "" %CHROME% --user-data-dir=%PROFILE% "%MATRIX_HTML%"
-    timeout /t 1 /nobreak >nul
-) else (
-    echo        content_matrix_v3.html not found -- skip
-)
-start "" %CHROME% --user-data-dir=%PROFILE% "http://localhost:3000"
-timeout /t 1 /nobreak >nul
-
-:: [2.5] Start Cloudflare Tunnel (yeori-studio MCP 원격 연결용, localhost:3001 -> HTTPS)
-::       scripts/sync-tunnel.js가 cloudflared를 띄우고, URL이 바뀌면
-::       Vercel MCP_BRIDGE_URL을 자동으로 갱신 + redeploy까지 수행한다.
-echo [2.5] Starting Cloudflare Tunnel (auto Vercel sync)...
-:: 설치 방식(winget vs 수동)에 따라 경로가 달라서 후보를 순서대로 확인
+:: [2] Cloudflare Tunnel (yeori-studio MCP 원격 연결용, :3001 -> HTTPS)
+echo [2] Starting Cloudflare Tunnel (auto Vercel sync)...
 set CLOUDFLARED=
 if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" set CLOUDFLARED=C:\Program Files (x86)\cloudflared\cloudflared.exe
 if not defined CLOUDFLARED if exist "%LOCALAPPDATA%\cloudflared\cloudflared.exe" set CLOUDFLARED=%LOCALAPPDATA%\cloudflared\cloudflared.exe
 if not defined CLOUDFLARED if exist "C:\Program Files\cloudflared\cloudflared.exe" set CLOUDFLARED=C:\Program Files\cloudflared\cloudflared.exe
 if defined CLOUDFLARED (
     start "Yeori Cloudflare Tunnel" /D "%~dp0" cmd /k "timeout /t 6 /nobreak >nul && node scripts\sync-tunnel.js"
-    echo        Tunnel window opened -- URL change is detected and synced to Vercel automatically.
+    echo        Tunnel window opened -- URL change is synced to Vercel automatically.
 ) else (
-    echo        cloudflared.exe not found in any known location -- skip tunnel
+    echo        cloudflared.exe not found -- skip tunnel
 )
 echo.
 
-:: [3] Start server in foreground (blocks here until Ctrl+C)
+:: [3] 무인 코드작업 워커 (에이전트) — code-task-queue.json 폴링 -> 헤드리스 claude
+echo [3] Starting task-queue worker...
+tasklist /FI "WINDOWTITLE eq Yeori Task Worker*" 2>nul | find /I "cmd.exe" >nul
+if %errorlevel% == 0 (
+    echo        Task worker already running -- skip
+) else (
+    start "Yeori Task Worker" /D "%~dp0" cmd /k "node scripts\task-queue-worker.js"
+)
+echo.
+
+:: [4] 제작 도구 UI 탭 (기본 브라우저) — 스튜디오 / 커터 / 매트릭스 / 트렌드
+::     Flow 는 여기서 안 엶 (start_gen.bat 담당)
+echo [4] Opening production tabs in default browser...
+start "" "http://localhost:5173"
+if exist "%ACC_HTML%" start "" "%ACC_HTML%"
+if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
+start "" "http://localhost:3000"
+echo.
+
+:: [5] 스튜디오 서버 (프록시 :3001 + Vite :5173) — 포그라운드, Ctrl+C 까지 블록
 echo.
 echo ============================================================
-echo   READY
+echo   READY -- 제작 코어
 echo ============================================================
-echo   Tab 1  Flow        : https://labs.google/fx/ko/tools/flow
-echo   Tab 2  Cutter      : %ACC_HTML%
-echo   Tab 3  Studio      : http://localhost:5173
-echo   Tab 5  Trend Radar : http://localhost:3000
-echo   Health             : http://localhost:3001/api/health
-echo   MCP Tunnel         : see "Yeori Cloudflare Tunnel" window for the current URL
+echo   Studio      : http://localhost:5173
+echo   Cutter      : %ACC_HTML%
+echo   Trend Radar : http://localhost:3000
+echo   Health      : http://localhost:3001/api/health
+echo   MCP Tunnel  : "Yeori Cloudflare Tunnel" 창 참고
 echo.
-echo   ** Stop: Ctrl+C then N (runs shutdown sync automatically)
+echo   생성/편집(Flow/CapCut/ElevenLabs) 은  start_gen.bat  실행
+echo   ** Stop: Ctrl+C then N (종료 시 동기화 자동 실행)
 echo ============================================================
 echo.
 npm run studio
 
-:: [4] Auto-sync on shutdown
+:: [6] 종료 시 동기화
 echo.
 echo ============================================================
 echo   Server stopped -- running shutdown sync...
 echo ============================================================
 echo.
 call "%~dp0sync-content.bat"
-
-:: [5] Git auto commit+push (code changes -- separate from the OneDrive content
-::     sync above, which never touched git). Safety net for the hourly
-::     scheduled task; this makes it happen immediately on a graceful exit too.
 echo.
-echo [5] Git auto-sync (commit + pull + push)...
+echo [7] Git auto-sync (commit + pull + push)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0git-auto-sync.ps1"
 echo.
 echo   Goodbye!
