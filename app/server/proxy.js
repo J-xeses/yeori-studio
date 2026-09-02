@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
+import * as mp from './lib/mediaPaths.js'
 import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
@@ -76,7 +77,7 @@ process.on('exit', (code) => {
 
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'] }))
 app.use(express.json({ limit: '10mb' }))
-app.use('/downloads', express.static(path.join(MEDIA_ROOT, 'downloads')))
+app.use('/downloads', express.static(mp.DOWNLOADS))
 
 // ── 헬스 체크 ──────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
@@ -442,7 +443,7 @@ app.post('/api/generate-script', (req, res) => {
       cwd: scriptsDir, encoding: 'utf-8',
     })
 
-    const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
+    const promptsPath = mp.promptsJsonPath()
     const prompts = JSON.parse(fs.readFileSync(promptsPath, 'utf-8'))
 
     // script.txt 상단 SCRIPT META 헤더를 파싱해 함께 반환 (ScriptGenTab.jsx가 "실제 적용" 시
@@ -482,7 +483,7 @@ app.post('/api/generate-script', (req, res) => {
 // 'codi_gen_candidate' localStorage 패턴은 둘 다 file://라서 가능했던 것) 서버 파일을
 // 경유한다. GET이 읽음과 동시에 파일을 지워 1회성 소비를 보장(localStorage의
 // getItem+removeItem 조합과 동일한 의도).
-const CODI_GEN_HANDOFF_PATH = path.join(MEDIA_ROOT, 'downloads', 'codi_gen_handoff.json')
+const CODI_GEN_HANDOFF_PATH = mp.statePath('codi_gen_handoff.json')
 
 app.post('/api/codi-gen-handoff', (req, res) => {
   const { prompts, meta } = req.body || {}
@@ -871,7 +872,7 @@ ${itemList}
 // lib/gpoints.js는 localStorage('aca_gpoints_v1')에 저장하는데, content_matrix_v3.html
 // 같은 다른 오리진(file://)에서는 localStorage를 절대 읽을 수 없어 이 엔드포인트로 중계한다.
 app.get('/api/gpoints', (req, res) => {
-  const gpPath = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
+  const gpPath = mp.statePath('gpoints.json')
   try {
     if (fs.existsSync(gpPath)) {
       res.json(JSON.parse(fs.readFileSync(gpPath, 'utf-8')))
@@ -908,10 +909,9 @@ function mergeGpointsData(existing, incoming) {
 }
 
 app.post('/api/gpoints', (req, res) => {
-  const gpDir  = path.join(MEDIA_ROOT, 'downloads')
-  const gpPath = path.join(gpDir, 'gpoints.json')
+  const gpPath = mp.statePath('gpoints.json')
   try {
-    fs.mkdirSync(gpDir, { recursive: true })
+    fs.mkdirSync(path.dirname(gpPath), { recursive: true })
     const existing = fs.existsSync(gpPath) ? JSON.parse(fs.readFileSync(gpPath, 'utf-8')) : {}
     const merged = mergeGpointsData(existing, req.body || {})
     fs.writeFileSync(gpPath, JSON.stringify(merged, null, 2), 'utf-8')
@@ -1001,7 +1001,7 @@ app.get('/api/credits-status', (req, res) => {
 app.post('/api/save-video-prompts', (req, res) => {
   const { epNum, prompts } = req.body
   if (!epNum || !Array.isArray(prompts)) return res.status(400).json({ error: 'epNum, prompts[] 필요' })
-  const dir  = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const dir  = mp.videoDir(epNum)
   const dest = path.join(dir, 'video-prompts.json')
   try {
     fs.mkdirSync(dir, { recursive: true })
@@ -1066,7 +1066,7 @@ app.post('/api/build-edit-intent', (req, res) => {
 
 // ── POST /api/save-edit-meta — yeori_edit_meta.json 서버 저장 ─────────────
 app.post('/api/save-edit-meta', (req, res) => {
-  const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+  const metaPath = mp.editMetaPath()
   try {
     fs.mkdirSync(path.dirname(metaPath), { recursive: true })
     fs.writeFileSync(metaPath, JSON.stringify(req.body, null, 2), 'utf-8')
@@ -1081,7 +1081,7 @@ app.post('/api/confirm-image', (req, res) => {
   const { ep, cutNo, imageUrl, instaContent, instaNum } = req.body
   if (!ep || !cutNo || !imageUrl) return res.status(400).json({ error: 'ep, cutNo, imageUrl 필요' })
   const padded  = String(cutNo).padStart(2, '0')
-  const flowDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
+  const flowDir = mp.imagesDir(ep)
   try {
     fs.mkdirSync(flowDir, { recursive: true })
     const srcPath  = path.join(MEDIA_ROOT, imageUrl.replace(/^\//, ''))
@@ -1115,10 +1115,10 @@ app.get('/api/scan-images', (req, res) => {
   const useInsta = instaContent && instaNum
   const epDir = useInsta
     ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent])
-    : path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${ep}`)
+    : mp.imagesDir(ep)
   const urlPrefix = useInsta
     ? `/downloads/insta/${instaContent}/${instaNum}${INSTA_SUBDIR[instaContent] ? '/' + INSTA_SUBDIR[instaContent] : ''}`
-    : `/downloads/flow/ep${ep}`
+    : mp.toMediaUrl(mp.imagesDir(ep))
   if (!fs.existsSync(epDir)) return res.json({ images: [] })
 
   // 사람이 스튜디오 탭에서 실제로 고른 이미지(gpoints.json의 selectedImage)가 있으면
@@ -1168,10 +1168,10 @@ app.post('/api/scan-media', (req, res) => {
 
   const imageDir = (instaContent && instaNum)
     ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent])
-    : path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`)
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
-  const styleGuidePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, 'episode_style_guide.json')
+    : mp.imagesDir(epNum)
+  const videoDir = mp.videoDir(epNum)
+  const audioDir = mp.audioDir(epNum)
+  const styleGuidePath = path.join(mp.videoDir(epNum), 'episode_style_guide.json')
 
   const images = {}
   const videos = {}
@@ -1243,7 +1243,7 @@ app.post('/api/scan-media', (req, res) => {
 // downloads/flow/characters.json — Flow 이미지 생성 시 컷의 CH 필드(YR_TX + JIA 등)에
 // 등장하는 각 인물의 얼굴 레퍼런스·descriptor를 관리한다. flow-automation.js가 읽어서
 // 컷 프롬프트에 인물별 descriptor를 주입하고 레퍼런스 이미지를 프로젝트에 업로드한다.
-const CHARACTERS_PATH = path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json')
+const CHARACTERS_PATH = mp.charactersJsonPath()
 function loadCharacters() {
   try { return JSON.parse(fs.readFileSync(CHARACTERS_PATH, 'utf-8')) || {} }
   catch { return {} }
@@ -1361,7 +1361,7 @@ app.post('/api/run-flow', (req, res) => {
     console.warn('[run-flow] 캐릭터 보강 경고:', e.message)
   }
 
-  const promptsPath = path.join(MEDIA_ROOT, 'downloads', 'flow', 'prompts.json')
+  const promptsPath = mp.promptsJsonPath()
   fs.mkdirSync(path.dirname(promptsPath), { recursive: true })
   fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
 
@@ -1378,7 +1378,7 @@ app.post('/api/run-flow', (req, res) => {
   // 에피소드 번호: prompts.episode 우선 (클라이언트 상태 싱크 문제 방지), ep는 fallback
   // insta 모드에서는 episode 번호가 아니라 content/num이 저장 위치를 결정한다.
   const episode = prompts.episode ?? ep ?? null
-  const epDir = isInsta ? instaDir(content, num, INSTA_SUBDIR[content]) : path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
+  const epDir = isInsta ? instaDir(content, num, INSTA_SUBDIR[content]) : mp.imagesDir(episode)
   // project_url.txt는 항상 콘텐츠 루트에 둔다(insta는 raw 하위가 아니라 {content}/{num}/ 바로 아래)
   const projectMarker = isInsta ? path.join(instaDir(content, num), 'project_url.txt') : path.join(epDir, 'project_url.txt')
 
@@ -1433,7 +1433,7 @@ app.post('/api/run-flow', (req, res) => {
         const padded = String(cutNo).padStart(2, '0')
         const epUrlBase = isInsta
           ? `/downloads/insta/${content}/${num}${INSTA_SUBDIR[content] ? '/' + INSTA_SUBDIR[content] : ''}`
-          : `/downloads/flow/ep${episode}`
+          : mp.toMediaUrl(mp.imagesDir(episode))
         const epDirPath = epDir
         for (const suffix of ['_a', '_b', '']) {
           for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
@@ -1501,11 +1501,11 @@ app.post('/api/run-flow', (req, res) => {
 
     // 완료 후 에피소드 디렉토리 전체 스캔 -> 누락된 cut_image 이벤트 전송
     if (episode != null) {
-      const epDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${episode}`)
+      const epDir = mp.imagesDir(episode)
       if (fs.existsSync(epDir)) {
         fs.readdirSync(epDir).sort().forEach(file => {
           const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
-          if (m) send({ type: 'cut_image', cutNo: parseInt(m[1], 10), url: `/downloads/flow/ep${episode}/${file}` })
+          if (m) send({ type: 'cut_image', cutNo: parseInt(m[1], 10), url: `${mp.toMediaUrl(mp.imagesDir(episode))}/${file}` })
         })
       }
     }
@@ -1550,9 +1550,8 @@ app.post('/api/run-video', (req, res) => {
   const { ep, cut, ratio, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
 
-  const videoDir    = path.join(MEDIA_ROOT, 'downloads', 'video')
-  const promptsPath = path.join(videoDir, 'video-prompts.json')
-  fs.mkdirSync(videoDir, { recursive: true })
+  const promptsPath = mp.videoPromptsPath()
+  fs.mkdirSync(path.dirname(promptsPath), { recursive: true })
   fs.writeFileSync(promptsPath, JSON.stringify(prompts, null, 2), 'utf-8')
 
   res.setHeader('Content-Type', 'text/event-stream')
@@ -1796,7 +1795,7 @@ app.post('/api/recording/start', (req, res) => {
       return res.status(400).json({ error: 'broll 모드는 cutNo, broll.epNum이 필요합니다' })
     }
     const padded = String(cutNo).padStart(2, '0')
-    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${broll.epNum}`, 'raw', `broll_cut${padded}.mp4`)
+    outputPath = path.join(mp.makingDir(broll.epNum), 'raw', `broll_cut${padded}.mp4`)
   } else if (capcut) {
     if (cutNo == null || !capcut.epNum) {
       return res.status(400).json({ error: 'capcut 모드는 cutNo, capcut.epNum이 필요합니다' })
@@ -1805,7 +1804,7 @@ app.post('/api/recording/start', (req, res) => {
     // 하드 에러로 막지 않는다(사전 상태 확인은 MakingTab의 "CapCut 상태 확인" 버튼이 담당).
     const win = getCapCutWindow()
     recordOptions = { ...recordOptions, region: win.running ? win.region : null }
-    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${capcut.epNum}`, 'raw', `capcut_cut${cutNo}.mp4`)
+    outputPath = path.join(mp.makingDir(capcut.epNum), 'raw', `capcut_cut${cutNo}.mp4`)
   } else if (outputPath) {
     outputPath = path.isAbsolute(outputPath) ? outputPath : path.join(MEDIA_ROOT, outputPath)
   } else {
@@ -1815,7 +1814,7 @@ app.post('/api/recording/start', (req, res) => {
     const state = loadStudioState()
     const activeEpNum = state.episode?.number
     if (!activeEpNum) return res.status(400).json({ error: '활성 에피소드가 없습니다' })
-    outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${activeEpNum}`, `g${stageNum}r_cut${cutNo}.mp4`)
+    outputPath = path.join(mp.makingDir(activeEpNum), `g${stageNum}r_cut${cutNo}.mp4`)
   }
   try {
     const result = screenRecorder.start(outputPath, recordOptions)
@@ -1861,7 +1860,7 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
   const target = targetDuration || rawDuration
   const ssOffset = rawDuration > target && trimMode === 'end' ? rawDuration - target : 0
 
-  const finalDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const finalDir = mp.videoDir(epNum)
   fs.mkdirSync(finalDir, { recursive: true })
   const padded = String(cutNo).padStart(2, '0')
   const finalPath = path.join(finalDir, `cut_${padded}.mp4`)
@@ -1935,7 +1934,7 @@ app.post('/api/recording/stop', async (req, res) => {
 app.get('/api/making-files', (req, res) => {
   const epNum = req.query.epNum
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
-  const dir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
+  const dir = mp.makingDir(epNum)
   if (!fs.existsSync(dir)) return res.json({ files: [] })
   try {
     const files = fs.readdirSync(dir)
@@ -1974,7 +1973,7 @@ async function assembleMakingFilm(epNum) {
   const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
   if (!cuts.length) { const e = new Error('컷이 없습니다'); e.statusCode = 400; throw e }
 
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const videoDir = mp.videoDir(epNum)
   const includedCuts = []
   const skippedCuts = []
   const files = []
@@ -1997,7 +1996,7 @@ async function assembleMakingFilm(epNum) {
     throw e
   }
 
-  const makingDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
+  const makingDir = mp.makingDir(epNum)
   fs.mkdirSync(makingDir, { recursive: true })
   const outFile = path.join(makingDir, `ep${epNum}_making.mp4`)
 
@@ -2078,10 +2077,10 @@ app.post('/api/making-assemble', async (req, res) => {
 app.post('/api/promote-making-to-raw', (req, res) => {
   const { epNum } = req.body || {}
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
-  const src = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `ep${epNum}_making.mp4`)
+  const src = path.join(mp.makingDir(epNum), `ep${epNum}_making.mp4`)
   if (!fs.existsSync(src)) return res.status(404).json({ error: `메이킹 필름 없음: ${src}` })
   try {
-    const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+    const outDir = mp.outputDir(epNum)
     fs.mkdirSync(outDir, { recursive: true })
     const dest = path.join(outDir, `ep${epNum}_raw.mp4`)
     fs.copyFileSync(src, dest)
@@ -2180,7 +2179,7 @@ app.post('/api/source-download', async (req, res) => {
   }
   const safeFilename = String(filename).replace(/[/\\:*?"<>|]/g, '_')
   // 메이킹 탭 소스 규약: downloads/making/ep{N}/source/{studio|upload|stock}
-  const dir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'source', 'stock')
+  const dir = path.join(mp.makingDir(epNum), 'source', 'stock')
   fs.mkdirSync(dir, { recursive: true })
   const localPath = path.join(dir, safeFilename)
 
@@ -2291,7 +2290,7 @@ app.post('/api/capture-video-url', async (req, res) => {
         error: '이 페이지에서 영상 소스를 찾지 못했습니다. blob/DRM/캔버스 렌더링이면 URL 캡처가 불가하니 데스크톱 녹화로 진행하세요.',
       })
     }
-    const rawDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'raw')
+    const rawDir = path.join(mp.makingDir(epNum), 'raw')
     fs.mkdirSync(rawDir, { recursive: true })
     const rawPath = path.join(rawDir, `urlcap_cut${String(cutNo).padStart(2, '0')}.mp4`)
     await ffmpegGrabToFile(mediaUrl, rawPath, target + 3)
@@ -2392,7 +2391,7 @@ function resolveS2CPath(srcPath) {
 //  · buildStudioStatusPayload()가 읽어서 에이전트·리더 모니터링에 제작방식·시각·
 //    손글씨 적용 여부·조립 대비 stale 여부를 노출한다.
 function manifestPath(epNum) {
-  return path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, '.motion-manifest.json')
+  return path.join(mp.videoDir(epNum), '.motion-manifest.json')
 }
 function readCutManifest(epNum) {
   try { return JSON.parse(fs.readFileSync(manifestPath(epNum), 'utf-8')) || {} }
@@ -2434,7 +2433,7 @@ app.post('/api/source-to-cut', async (req, res) => {
     if (!isImage && !isVideo) return res.status(400).json({ error: `지원하지 않는 형식: ${ext}` })
 
     const dur = Math.max(0.5, parseFloat(duration) || 5)
-    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    const videoDir = mp.videoDir(epNum)
     fs.mkdirSync(videoDir, { recursive: true })
     const outPath = path.join(videoDir, `cut_${String(cutNo).padStart(2, '0')}.mp4`)
     const fitMode = ['cover', 'contain', 'blur'].includes(fit) ? fit : 'cover'
@@ -2479,14 +2478,14 @@ app.get('/api/source-scan', (req, res) => {
   const epNum = req.query.epNum
   const roots = []
   if (epNum != null) {
-    const srcBase = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'source')
+    const srcBase = path.join(mp.makingDir(epNum), 'source')
     roots.push(
       { label: 'source/studio', dir: path.join(srcBase, 'studio') },
       { label: 'source/upload', dir: path.join(srcBase, 'upload') },
       { label: 'source/stock', dir: path.join(srcBase, 'stock') },
       { label: 'source', dir: srcBase },
-      { label: 'flow', dir: path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`) },
-      { label: 'video', dir: path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`) },
+      { label: 'flow', dir: mp.imagesDir(epNum) },
+      { label: 'video', dir: mp.videoDir(epNum) },
     )
   }
   const items = []
@@ -2666,7 +2665,7 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   const padded = String(cutNo).padStart(2, '0')
   const animated = ANIMATED_MOTIONS.has(motion)
 
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
   const imagePath = path.join(videoDir, `cut_${padded}_graphic.png`)
   const videoPath = path.join(videoDir, `cut_${padded}.mp4`)
@@ -2780,7 +2779,7 @@ app.post('/api/save-audio', async (req, res) => {
   const cutNo = req.query.cutNo
   if (!ep || !cutNo) return res.status(400).json({ error: 'ep, cutNo 필요' })
 
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  const audioDir = mp.audioDir(ep)
   fs.mkdirSync(audioDir, { recursive: true })
 
   const wavPath = path.join(audioDir, `cut_${String(cutNo).padStart(2,'0')}_tmp.wav`)
@@ -2821,7 +2820,7 @@ app.post('/api/save-voice-insert', (req, res) => {
   const ext     = (req.query.ext || 'mp3').replace(/[^a-z0-9]/gi, '') || 'mp3'
   if (!ep || cutNo == null || idx == null) return res.status(400).json({ error: 'ep, cutNo, idx 필요' })
 
-  const dir = path.join(MEDIA_ROOT, 'downloads', 'voice-insert', `ep${ep}`)
+  const dir = mp.voiceInsertDir(ep)
   fs.mkdirSync(dir, { recursive: true })
   const fileName = `cut_${String(cutNo).padStart(2,'0')}_${idx}.${ext}`
   const filePath = path.join(dir, fileName)
@@ -2831,7 +2830,7 @@ app.post('/api/save-voice-insert', (req, res) => {
   req.on('end', () => {
     try {
       fs.writeFileSync(filePath, Buffer.concat(chunks))
-      res.json({ ok: true, url: `/downloads/voice-insert/ep${ep}/${fileName}` })
+      res.json({ ok: true, url: `${mp.toMediaUrl(mp.voiceInsertDir(ep))}/${fileName}` })
     } catch (err) {
       res.status(500).json({ error: err.message })
     }
@@ -2845,9 +2844,9 @@ app.post('/api/run-ffmpeg', (req, res) => {
   const dur = parseFloat(duration) || 8
 
   const padded   = String(cutNo).padStart(2, '0')
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`)
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
-  const outDir   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${ep}`)
+  const videoDir = mp.videoDir(ep)
+  const audioDir = mp.audioDir(ep)
+  const outDir   = mp.outputDir(ep)
   fs.mkdirSync(outDir, { recursive: true })
 
   const videoFile = path.join(videoDir, `cut_${padded}.mp4`)
@@ -2871,7 +2870,7 @@ app.post('/api/run-ffmpeg', (req, res) => {
     videoFile, outFile, dur,
     audioFile: hasVoice ? audioFile : null,
     sfxFile: sfxFile || null, sfxStart,
-    resolvePath: (p) => path.isAbsolute(p) ? p : path.join(MEDIA_ROOT, 'downloads', p),
+    resolvePath: (p) => path.isAbsolute(p) ? p : path.join(mp.DOWNLOADS, p),
   })
 
   const proc = spawn('ffmpeg', args)
@@ -2881,7 +2880,7 @@ app.post('/api/run-ffmpeg', (req, res) => {
 
   proc.on('close', code => {
     if (code === 0) {
-      const url = `/downloads/output/ep${ep}/cut_${padded}_final.mp4`
+      const url = `${mp.toMediaUrl(mp.outputDir(ep))}/cut_${padded}_final.mp4`
       send({ type: 'complete', success: true, url, message: '합성 완료!' })
       console.log(`[run-ffmpeg] 완료: ${outFile}`)
     } else {
@@ -2941,8 +2940,8 @@ app.post('/api/generate-srt', async (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
-  const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+  const audioDir = mp.audioDir(epNum)
+  const metaPath = mp.editMetaPath()
   const srtPath  = path.join(audioDir, `ep${epNum}.srt`)
 
   try {
@@ -3001,8 +3000,8 @@ app.post('/api/concat-video', async (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
-  const videoDir  = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-  const outputDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+  const videoDir  = mp.videoDir(epNum)
+  const outputDir = mp.outputDir(epNum)
   const concatTxt = path.join(videoDir, 'concat_list.txt')
   const outFile   = path.join(outputDir, `ep${epNum}_raw.mp4`)
 
@@ -3059,7 +3058,7 @@ app.post('/api/concat-video', async (req, res) => {
 // 공유. 흔한 설치 위치를 순서대로 찾고, capcut_exe_path.txt에 사용자가 저장해둔
 // 커스텀 경로가 있으면 그것도 후보에 포함한다.
 function findCapCutExe() {
-  const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
+  const exePathTxt = mp.capcutExePath()
   const candidates = [
     'C:\\Program Files\\CapCut\\CapCut.exe',
     path.join('C:\\Users', process.env.USERNAME || '', 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
@@ -3178,7 +3177,7 @@ app.post('/api/generate-capcut-spec', (req, res) => {
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
   const specScriptPath = path.join(CODE_ROOT, 'scripts', 'generate-capcut-spec.js')
-  const specOutputPath = path.join(MEDIA_ROOT, 'downloads', 'capcut_spec.json')
+  const specOutputPath = mp.statePath('capcut_spec.json')
 
   let output = ''
   try {
@@ -3219,7 +3218,7 @@ app.post('/api/generate-capcut-spec', (req, res) => {
 //   templateProject: CapCut에서 클립 1개짜리 빈 프로젝트를 한 번 만들어 그 폴더명을 넣는다
 //   (run-cutter가 그 클립을 세그먼트 템플릿으로 복제하므로 최소 1개 필요).
 function capcutConfigPath() {
-  return path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_config.json')
+  return mp.capcutConfigPath()
 }
 function readCapcutConfig() {
   let cfg = {}
@@ -3282,7 +3281,7 @@ function ensureEpisodeCapcutProject(episodeCode) {
 function writeCutterInputJson({ epNum, projectDir, kenburns }) {
   const { epId, ep } = findEpisodeByNumOrThrow(epNum)
   const episodeCode = resolveEpisodeCode(ep.episode, epId)
-  const outDir = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`)
+  const outDir = mp.outputDir(epNum)
   fs.mkdirSync(outDir, { recursive: true })
   const KB = new Set(['none', 'random', 'zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'pan_up', 'pan_down'])
   const input = {
@@ -3290,8 +3289,8 @@ function writeCutterInputJson({ epNum, projectDir, kenburns }) {
     mode: 'yeori',
     episodeCode,
     rawVideo: path.join(outDir, `ep${epNum}_raw.mp4`),
-    srt: path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`, `ep${epNum}.srt`),
-    editMeta: path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json'),
+    srt: path.join(mp.audioDir(epNum), `ep${epNum}.srt`),
+    editMeta: mp.editMetaPath(),
     // run-cutter.js / a_creative_cutter.html은 draft = draft_content.json '파일' 경로를 기대한다.
     draft: path.join(projectDir, 'draft_content.json'),
     projectDir,
@@ -3376,7 +3375,7 @@ app.post('/api/send-to-cutter', async (req, res) => {
   }
 
   // ③ CapCut 재실행 (run-cutter.js가 방금 갱신한 프로젝트를 사람이 직접 열어 마무리)
-  const exePathTxt = path.join(MEDIA_ROOT, 'downloads', 'video', 'capcut_exe_path.txt')
+  const exePathTxt = mp.capcutExePath()
   const candidates = [
     path.join('C:\\Users', username, 'AppData', 'Local', 'CapCut', 'Apps', 'CapCut.exe'),
     path.join('C:\\Users', username, 'AppData', 'Local', 'CapCut', 'CapCut.exe'),
@@ -3485,8 +3484,8 @@ app.post('/api/capcut-semiauto', (req, res) => {
       res.json({
         success: true,
         message: `CapCut 자동편집 완료. 이제 CapCut 에디터에서 미리보기 확인 → 내보내기 → `
-          + `downloads/video/ep${epNum}/cut_${padded}.mp4 로 저장하세요.`,
-        expectedOutput: `downloads/video/ep${epNum}/cut_${padded}.mp4`,
+          + `${path.join(mp.videoDir(epNum), `cut_${padded}.mp4`)} 로 저장하세요.`,
+        expectedOutput: path.join(mp.videoDir(epNum), `cut_${padded}.mp4`),
         log: out.slice(-3000),
       })
     } else {
@@ -3536,7 +3535,7 @@ app.post('/api/analyze-video', async (req, res) => {
   if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
 
   const padded   = String(cutNo).padStart(2, '0')
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const videoDir = mp.videoDir(epNum)
   const finalP   = path.join(videoDir, `cut_${padded}_final.mp4`)
   const rawP     = path.join(videoDir, `cut_${padded}.mp4`)
   const videoFile = fs.existsSync(finalP) ? finalP : fs.existsSync(rawP) ? rawP : null
@@ -3672,7 +3671,7 @@ Extract all character and cinematography details from scenes.`
       promptPrefix,
     }
 
-    const savePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, 'episode_style_guide.json')
+    const savePath = path.join(mp.videoDir(epNum), 'episode_style_guide.json')
     fs.mkdirSync(path.dirname(savePath), { recursive: true })
     fs.writeFileSync(savePath, JSON.stringify(styleGuide, null, 2), 'utf-8')
 
@@ -3703,7 +3702,7 @@ app.post('/api/save-thumbnail', (req, res) => {
   try {
     const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '')
     const buffer = Buffer.from(base64, 'base64')
-    const dir = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`)
+    const dir = mp.finalDir(epNum)
     fs.mkdirSync(dir, { recursive: true })
     const outPath = path.join(dir, 'thumb.jpg')
     fs.writeFileSync(outPath, buffer)
@@ -3717,8 +3716,8 @@ app.post('/api/save-thumbnail', (req, res) => {
 app.post('/api/check-final-assets', (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
-  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
-  const thumbPath = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`, 'thumb.jpg')
+  const videoPath = path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+  const thumbPath = path.join(mp.finalDir(epNum), 'thumb.jpg')
   res.json({
     videoExists: fs.existsSync(videoPath), videoPath,
     thumbExists: fs.existsSync(thumbPath), thumbPath,
@@ -3733,9 +3732,9 @@ app.post('/api/check-final-assets', (req, res) => {
 app.get('/api/check-final', (req, res) => {
   const epNum = req.query.epNum
   if (!epNum) return res.status(400).json({ error: 'epNum 쿼리 파라미터 필요' })
-  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
-  const rawPath   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`)
-  const thumbPath = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`, 'thumb.jpg')
+  const videoPath = path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+  const rawPath   = path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`)
+  const thumbPath = path.join(mp.finalDir(epNum), 'thumb.jpg')
 
   let video
   if (fs.existsSync(videoPath)) {
@@ -3757,9 +3756,9 @@ app.get('/api/check-final', (req, res) => {
 app.post('/api/package-final', (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
-  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `ep${epNum}_final.mp4`)
-  const rawPath   = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`)
-  const finalDir  = path.join(MEDIA_ROOT, 'downloads', 'final', `ep${epNum}`)
+  const videoPath = path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+  const rawPath   = path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`)
+  const finalDir  = mp.finalDir(epNum)
   const thumbPath = path.join(finalDir, 'thumb.jpg')
 
   const isRaw = !fs.existsSync(videoPath) && fs.existsSync(rawPath)
@@ -3787,7 +3786,7 @@ app.post('/api/package-final', (req, res) => {
 // TREND RADAR(localhost:3000) 파이프라인 탭의 "후보풀로 전송" 버튼이 호출한다.
 // content_matrix_v3.html(file://)과는 origin이 달라 localStorage를 직접 공유할 수
 // 없으므로, 이 엔드포인트(파일 저장)를 거쳐야 두 앱 사이에 실제로 데이터가 전달된다.
-const TREND_CANDIDATES_PATH = path.join(MEDIA_ROOT, 'downloads', 'trend_candidates.json')
+const TREND_CANDIDATES_PATH = mp.statePath('trend_candidates.json')
 
 app.get('/api/trend-candidates', (req, res) => {
   try {
@@ -3833,7 +3832,7 @@ app.post('/api/trend-to-candidate', (req, res) => {
 
 // ── GET /api/trend-episodes — trend_episodes.json 최신 20개 반환 ──────
 app.get('/api/trend-episodes', (req, res) => {
-  const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
+  const savePath = mp.statePath('trend_episodes.json')
   try {
     if (!fs.existsSync(savePath)) return res.json({ entries: [] })
     const all = JSON.parse(fs.readFileSync(savePath, 'utf-8'))
@@ -3897,7 +3896,7 @@ JSON 배열만 출력하고 다른 텍스트는 포함하지 마세요:
     const episodes = JSON.parse(raw)
 
     // downloads/trend_episodes.json에 누적 저장 (최신순)
-    const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
+    const savePath = mp.statePath('trend_episodes.json')
     let existing = []
     if (fs.existsSync(savePath)) {
       try { existing = JSON.parse(fs.readFileSync(savePath, 'utf-8')) } catch {}
@@ -4244,13 +4243,13 @@ app.post('/api/bgm-download', async (req, res) => {
       : path.basename(new URL(mp3Url).pathname)
     const safeName = /\.mp3$/i.test(baseName) ? baseName : `${baseName}.mp3`
 
-    const dir = path.join(MEDIA_ROOT, 'downloads', 'bgm', moodDir)
+    const dir = path.join(mp.bgmDir(), moodDir)
     fs.mkdirSync(dir, { recursive: true })
     const destPath = path.join(dir, safeName)
     fs.writeFileSync(destPath, buffer)
 
     // index.json 갱신 (최신순 배열)
-    const indexPath = path.join(MEDIA_ROOT, 'downloads', 'bgm', 'index.json')
+    const indexPath = path.join(mp.bgmDir(), 'index.json')
     let index = []
     if (fs.existsSync(indexPath)) {
       try { index = JSON.parse(fs.readFileSync(indexPath, 'utf-8')) } catch {}
@@ -4277,12 +4276,12 @@ app.post('/api/bgm-download', async (req, res) => {
 // ── GET /api/bgm-library — 다운로드된 BGM 목록(downloads/bgm/index.json) ──
 // TrendRadar "BGM 레이더"로 검색·다운로드한 트랙을 메이킹 탭 BGM 패널이 고를 수 있게 노출.
 app.get('/api/bgm-library', (_req, res) => {
-  const indexPath = path.join(MEDIA_ROOT, 'downloads', 'bgm', 'index.json')
+  const indexPath = path.join(mp.bgmDir(), 'index.json')
   try {
     if (!fs.existsSync(indexPath)) return res.json({ tracks: [] })
     const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'))
     const tracks = (Array.isArray(index) ? index : [])
-      .filter(t => t.file && fs.existsSync(path.join(MEDIA_ROOT, 'downloads', t.file)))
+      .filter(t => t.file && fs.existsSync(mp.bgmFile(t.file)))
     res.json({ tracks })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -4298,8 +4297,8 @@ app.post('/api/making-bgm', async (req, res) => {
   if (epNum == null || !bgmFile) return res.status(400).json({ error: 'epNum, bgmFile 필요' })
 
   const safeRel = String(bgmFile).replace(/\\/g, '/').replace(/\.\.+/g, '')
-  const bgmPath = path.join(MEDIA_ROOT, 'downloads', safeRel.startsWith('bgm/') ? safeRel : `bgm/${safeRel}`)
-  const makingDir = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`)
+  const bgmPath = mp.bgmFile(safeRel)
+  const makingDir = mp.makingDir(epNum)
   const inputPath  = path.join(makingDir, `ep${epNum}_making.mp4`)
   const outputPath = path.join(makingDir, `ep${epNum}_making_bgm.mp4`)
 
@@ -4415,7 +4414,7 @@ mcpRouter.use(requireMcpAuth)
 // 이 추가 왕복에서 응답이 지연/누락되어 "The connector's server isn't responding"
 // 오류가 발생했다.
 mcpRouter.get('/trend-episodes', (_req, res) => {
-  const savePath = path.join(MEDIA_ROOT, 'downloads', 'trend_episodes.json')
+  const savePath = mp.statePath('trend_episodes.json')
   try {
     if (!fs.existsSync(savePath)) return res.json({ entries: [] })
     const all = JSON.parse(fs.readFileSync(savePath, 'utf-8'))
@@ -4514,7 +4513,7 @@ mcpRouter.post('/export-pipeline', (req, res) => {
     }
 
     const pipeline = approvedCuts.map(c => ({ no: c.no, imagePrompt: c.imagePrompt || '', ...getFlags(c) }))
-    const savePath = path.join(MEDIA_ROOT, 'downloads', 'pipeline_export.json')
+    const savePath = mp.statePath('pipeline_export.json')
     fs.writeFileSync(savePath, JSON.stringify(pipeline, null, 2), 'utf-8')
 
     res.json({ success: true, savePath, pipeline })
@@ -4528,7 +4527,7 @@ mcpRouter.post('/export-pipeline', (req, res) => {
 // 동일한 제약), studio-set-episode로 대상 에피소드를 studio-state.json의 최상위
 // (episode/cuts/activeEpisodeId)로 먼저 옮긴 뒤 이후 단계를 진행하는 것을 전제로 한다.
 const STUDIO_STATE_PATH = path.join(CODE_ROOT, 'studio-state.json')
-const GPOINTS_PATH = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
+const GPOINTS_PATH = mp.statePath('gpoints.json')
 const DEFAULT_YEORI_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 
 function loadStudioState() {
@@ -4569,7 +4568,7 @@ function saveGpointsFile(data) {
 // 사람이 승인/거절 → 승인된 항목은 Claude Code 세션이 주기적으로 큐 파일을 직접
 // 읽고 처리한다(같은 PC 안이라 HTTP 왕복 불필요). status: pending/approved/rejected/
 // done/failed.
-const TASK_QUEUE_PATH = path.join(MEDIA_ROOT, 'downloads', 'code-task-queue.json')
+const TASK_QUEUE_PATH = mp.statePath('code-task-queue.json')
 function loadTaskQueue() {
   if (!fs.existsSync(TASK_QUEUE_PATH)) return []
   try {
@@ -4652,8 +4651,8 @@ app.get('/api/cut-timing', async (req, res) => {
   try {
     const { ep } = findEpisodeByNumOrThrow(epNum)
     const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
-    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+    const videoDir = mp.videoDir(epNum)
+    const audioDir = mp.audioDir(epNum)
 
     const out = []
     for (const c of cuts) {
@@ -4731,9 +4730,9 @@ app.get('/api/episode-video-checklist', (req, res) => {
     const { epId, ep } = findEpisodeByNumOrThrow(epNum)
     const episodeCode = resolveEpisodeCode(ep.episode, epId)
     const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
-    const flowDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`)
-    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+    const flowDir = mp.imagesDir(epNum)
+    const videoDir = mp.videoDir(epNum)
+    const audioDir = mp.audioDir(epNum)
     const gData = loadGpointsFile()[episodeCode] || {}
     const listDir = d => { try { return fs.readdirSync(d) } catch { return [] } }
     const flowFiles = listDir(flowDir)
@@ -4765,7 +4764,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
         hasVideo: !!savedFile,
         savedFile,                              // 실제 저장된 파일명(cut_NN.mp4 / _overlay / _final)
-        savePath: `downloads/video/ep${epNum}/cut_${p}.mp4`,   // 업로드 시 정규화되어 저장되는 위치
+        savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치
         g2: !!g.g2, g4: !!g.g4,
       }
     })
@@ -4792,7 +4791,7 @@ app.post('/api/upload-cut-video', (req, res) => {
   const { epNum, cutNo, trimTo, keepAudio } = req.query
   if (!epNum || !cutNo) return res.status(400).json({ error: 'epNum, cutNo 필요' })
   const padded = String(cutNo).padStart(2, '0')
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
   const tmpPath = path.join(videoDir, `cut_${padded}_upload_tmp.mp4`)
   const outPath = path.join(videoDir, `cut_${padded}.mp4`)
@@ -4871,7 +4870,7 @@ function filterCutsByIds(cuts, cutIds) {
   return cuts.filter(c => idSet.has(String(c.id)) || idSet.has(String(c.no)))
 }
 function scanFlowImagesByCut(epNum) {
-  const dir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`)
+  const dir = mp.imagesDir(epNum)
   const byCut = {}
   if (fs.existsSync(dir)) {
     fs.readdirSync(dir).sort().forEach(file => {
@@ -5202,7 +5201,7 @@ mcpRouter.post('/studio-approve-g2', (req, res) => {
     const epNum = ep.episode?.number
     const byCut = scanFlowImagesByCut(epNum)
     const files = byCut[cut.no] || []
-    if (!files.length) return res.status(404).json({ error: `CUT ${cut.no}의 생성된 이미지가 없습니다 (downloads/flow/ep${epNum})` })
+    if (!files.length) return res.status(404).json({ error: `CUT ${cut.no}의 생성된 이미지가 없습니다 (${mp.imagesDir(epNum)})` })
     const idx = Number.isInteger(imageIndex) && imageIndex >= 0 && imageIndex < files.length ? imageIndex : 0
     const filename = files[idx]
 
@@ -5217,7 +5216,7 @@ mcpRouter.post('/studio-approve-g2', (req, res) => {
     const ext = path.extname(filename) || '.jpg'
     const deliverable = copyToDeliverables(
       episodeCode,
-      path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`, filename),
+      path.join(mp.imagesDir(epNum), filename),
       `cut_${String(cut.no).padStart(2, '0')}_image${ext}`,
     )
     res.json({ success: true, cutNo: cut.no, selectedImage: filename, availableImages: files, deliverable })
@@ -5271,7 +5270,7 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
       }
     } catch { /* 잔여량 조회 자체가 실패해도 생성은 막지 않음 — 사전체크는 보조 수단일 뿐 */ }
 
-    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+    const audioDir = mp.audioDir(epNum)
     fs.mkdirSync(audioDir, { recursive: true })
 
     const results = empties.map(p => ({ cutNo: p.cut.no, status: 'skipped', reason: '괄호 제거 후 텍스트 없음 (제작 메모만 있었음)', removed: p.removed }))
@@ -5320,7 +5319,7 @@ mcpRouter.post('/studio-approve-g3', (req, res) => {
       const padded = String(c.no).padStart(2, '0')
       const result = copyToDeliverables(
         episodeCode,
-        path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`, `cut_${padded}.mp3`),
+        path.join(mp.audioDir(epNum), `cut_${padded}.mp3`),
         `cut_${padded}_audio.mp3`,
       )
       return { cutNo: c.no, ...result }
@@ -5414,7 +5413,7 @@ mcpRouter.post('/studio-approve-g4', (req, res) => {
     const epNum = ep.episode?.number
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
     const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g4')
-    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    const videoDir = mp.videoDir(epNum)
     const deliverables = targetCuts.map(c => {
       const padded = String(c.no).padStart(2, '0')
       // 편집(_final) 버전이 있으면 그걸, 없으면 원본 생성본을 사용 — buildStudioStatusPayload의
@@ -5457,7 +5456,7 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
         narration: c.narration ? stripStageDirections(c.narration).clean : '',
       }
     })
-    const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+    const metaPath = mp.editMetaPath()
     fs.mkdirSync(path.dirname(metaPath), { recursive: true })
     fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8')
 
@@ -5474,7 +5473,7 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const deliverable = copyToDeliverables(
       episodeCode,
-      path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, `ep${epNum}_raw.mp4`),
+      path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`),
       `${episodeCode}_edit_raw.mp4`,
     )
     // G1~G4와 동일한 패턴으로 gpoints에 G5 완료 기록 — 이게 없으면 concat까지 성공해도
@@ -5501,9 +5500,9 @@ function buildStudioStatusPayload(episodeId) {
   const cuts = ep.cuts || []
   const gData = loadGpointsFile()[episodeCode] || {}
 
-  const flowDir  = path.join(MEDIA_ROOT, 'downloads', 'flow',  `ep${epNum}`)
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
-  const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+  const flowDir  = mp.imagesDir(epNum)
+  const videoDir = mp.videoDir(epNum)
+  const audioDir = mp.audioDir(epNum)
   const hasFile = (dir, re) => fs.existsSync(dir) && fs.readdirSync(dir).some(f => re.test(f))
 
   // 메이킹 매니페스트 + 조립본 mtime — 컷별 제작방식·손글씨·조립 대비 stale 여부용
@@ -5511,7 +5510,7 @@ function buildStudioStatusPayload(episodeId) {
   let makingFilmMtime = 0
   try {
     makingFilmMtime = fs.statSync(
-      path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, `ep${epNum}_making.mp4`)
+      path.join(mp.makingDir(epNum), `ep${epNum}_making.mp4`)
     ).mtimeMs
   } catch { /* 아직 조립 안 함 */ }
 
@@ -5677,7 +5676,7 @@ mcpRouter.post('/vercel-redeploy', async (req, res) => {
 
 // ── POST /api/mcp/read-file — downloads/ 또는 app/ 하위 파일만 읽기 허용 ──
 const READ_FILE_ALLOWED_ROOTS = [
-  path.join(MEDIA_ROOT, 'downloads'),
+  mp.DOWNLOADS,
   CODE_ROOT,
 ]
 const READ_FILE_MAX_BYTES = 2 * 1024 * 1024
@@ -5834,7 +5833,7 @@ async function getEpisodeHtmlSources(epNum) {
   const { instaContent, instaNum } = resolveInstaRouteParamsForMcp(ep)
   const { files } = listEpisodeHtmlFiles({ instaContent, instaNum, episodeCode })
 
-  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const videoDir = mp.videoDir(epNum)
   const cuts = (ep.cuts || [])
     .filter(c => c.cutType === 'GRAPHIC' || c.cutType === 'CAPCUT')
     .sort((a, b) => a.no - b.no)
@@ -5878,7 +5877,7 @@ function getCapcutWindowStatusForMcp({ epNum, cutNo }) {
     recordingFor: pendingBrollEdit ? { epNum: pendingBrollEdit.epNum, cutNo: pendingBrollEdit.cutNo } : null,
   }
   if (epNum != null && cutNo != null) {
-    const outputPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, `cut_${String(cutNo).padStart(2, '0')}.mp4`)
+    const outputPath = path.join(mp.videoDir(epNum), `cut_${String(cutNo).padStart(2, '0')}.mp4`)
     result.outputPath = outputPath
     result.outputExists = fs.existsSync(outputPath)
   }
@@ -5920,7 +5919,7 @@ async function captureCapcutScreenshot() {
 // CapCut 창을 못 찾으면 region만 null로 남겨 전체화면으로 폴백한다.
 function startCapcutRecordingForMcp({ epNum, cutNo, targetDuration, trimMode }) {
   const win = getCapCutWindow()
-  const outputPath = path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'raw', `capcut_cut${cutNo}.mp4`)
+  const outputPath = path.join(mp.makingDir(epNum), 'raw', `capcut_cut${cutNo}.mp4`)
   const result = screenRecorder.start(outputPath, {
     fps: 30,
     quality: 'medium',
@@ -5949,7 +5948,7 @@ async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
   }
   const wantTrim = Number(duration) > 0
 
-  const finalDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  const finalDir = mp.videoDir(epNum)
   fs.mkdirSync(finalDir, { recursive: true })
   const padded = String(cutNo).padStart(2, '0')
   const finalPath = path.join(finalDir, `cut_${padded}.mp4`)
@@ -6150,8 +6149,8 @@ app.post('/api/handwriting-overlay', async (req, res) => {
       return res.status(400).json({ error: `지원하지 않는 입력 형식: ${ext}` })
     }
     workDir = epNum != null
-      ? path.join(MEDIA_ROOT, 'downloads', 'making', `ep${epNum}`, 'hw_stills')
-      : path.join(MEDIA_ROOT, 'downloads', 'making', 'hw_stills')
+      ? path.join(mp.makingDir(epNum), 'hw_stills')
+      : mp.hwStillsDir()
     fs.mkdirSync(workDir, { recursive: true })
     const stem = path.basename(inputPath, ext).replace(/[^\w.-]/g, '_')
     outStem = path.join(workDir, `${stem}${suffix}`)
@@ -6161,7 +6160,7 @@ app.post('/api/handwriting-overlay', async (req, res) => {
       return res.status(400).json({ error: 'inputPath 또는 (epNum, cutNo) 필요' })
     }
     const padded = String(cutNo).padStart(2, '0')
-    workDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    workDir = mp.videoDir(epNum)
     inputPath = path.join(workDir, `cut_${padded}.mp4`)
     isImage = false
     outStem = path.join(workDir, `cut_${padded}${suffix}`)
@@ -6173,7 +6172,7 @@ app.post('/api/handwriting-overlay', async (req, res) => {
 
   const outputPath = isImage ? `${outStem}.png` : `${outStem}.mp4`
   const toUrl = (abs) =>
-    '/downloads/' + path.relative(path.join(MEDIA_ROOT, 'downloads'), abs).replace(/\\/g, '/')
+    mp.toMediaUrl(abs)
 
   try {
     fs.mkdirSync(workDir, { recursive: true })
@@ -6229,8 +6228,8 @@ app.post('/api/handwriting-overlay', async (req, res) => {
 // ── GET /api/hw-source-images — 손글씨 스틸에 쓸 이미지 후보(캐릭터 레퍼런스 + 최근 flow 생성물) ──
 app.get('/api/hw-source-images', (_req, res) => {
   const roots = [
-    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character'),
-    path.join(MEDIA_ROOT, 'downloads', 'flow'),
+    mp.charactersDir(),
+    mp.flowLooseRefsDir(),
   ]
   const seen = new Set()
   const images = []
@@ -6243,7 +6242,7 @@ app.get('/api/hw-source-images', (_req, res) => {
       const ext = path.extname(d.name).toLowerCase()
       if (!HW_IMG_EXTS.has(ext)) continue
       if (/^debug_|^download\./i.test(d.name)) continue // Flow 자동화 디버그 스크린샷 제외
-      const rel = path.relative(path.join(MEDIA_ROOT, 'downloads'), path.join(root, d.name)).replace(/\\/g, '/')
+      const rel = mp.toMediaUrl(path.join(root, d.name)).replace(/^\/downloads\//, '')
       if (seen.has(rel)) continue
       seen.add(rel)
       images.push(rel)

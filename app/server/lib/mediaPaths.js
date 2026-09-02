@@ -1,69 +1,157 @@
-// 에피소드 코드 기준 산출물 경로를 한 곳에서만 만드는 헬퍼.
-// proxy.js와 scripts/*.js 전체가 각자 `ep${epNum}` 문자열을 직접 조립하던 것을,
-// 이 모듈을 거치도록 바꾸는 게 목표(4차 범위). 이번 라운드에서는 신규 추가만 하고
-// 기존 호출부는 아직 안 건드린다 — 그래서 지금은 `code` 자리에 임시로 숫자 문자열
-// (예: "4")이 들어와도 그대로 동작한다(에피소드 코드 도입 전까지의 과도기 호환).
+// ── 여리 스튜디오 산출물 경로 단일 소스 ───────────────────────────────
+// proxy.js / scripts/*.js 전체가 각자 `path.join(MEDIA_ROOT, 'downloads', 'flow',
+// `ep${N}`)` 식으로 조립하던 경로를 여기 한 곳으로 모은다.
 //
-// 이 로직은 src/lib/mediaPaths.js(클라이언트)와 반드시 동일하게 유지할 것.
+// 2단계(현재, HIER=false): 함수들이 기존 평면 구조를 그대로 반환 — 동작 불변.
+// 3단계(HIER=true):        downloads/episodes/{code}/{images,audio,video,...} 위계로.
+//                          폴더 키 = episode.code (예: LF_T01), 없으면 ep{number}.
+//
+// 클라이언트 src/lib/mediaPaths.js와 HIER 플래그·키 규칙을 반드시 동기화할 것.
 
+import fs from 'fs'
 import path from 'path'
 
 export const MEDIA_ROOT = 'C:\\yeori-studio'
+export const DOWNLOADS = path.join(MEDIA_ROOT, 'downloads')
 
-export function flowDir(code) {
-  return path.join(MEDIA_ROOT, 'downloads', 'flow', String(code))
+// ⚠️ 3단계 스위치. 폴더 마이그레이션(scripts/migrate-downloads.js) 실행과 함께 true로.
+export const HIER = false
+
+// ── 에피소드 번호 → 코드 매핑 (studio-state.json, mtime 캐시) ──────────
+const STATE_PATH = path.join(MEDIA_ROOT, 'app', 'studio-state.json')
+let _stateCache = { mtime: -1, map: {} }
+function numberToCodeMap() {
+  try {
+    const st = fs.statSync(STATE_PATH)
+    if (st.mtimeMs !== _stateCache.mtime) {
+      const j = JSON.parse(fs.readFileSync(STATE_PATH, 'utf-8'))
+      const map = {}
+      for (const e of Object.values(j.episodes || {})) {
+        const ep = e.episode || {}
+        if (ep.number != null && ep.code) map[String(ep.number)] = ep.code
+      }
+      _stateCache = { mtime: st.mtimeMs, map }
+    }
+  } catch { /* 상태 파일 없거나 파싱 실패 — 이전 캐시 유지 */ }
+  return _stateCache.map
 }
 
-export function videoDir(code) {
-  return path.join(MEDIA_ROOT, 'downloads', 'video', String(code))
+// epRef: 숫자(1) · 번호 문자열("1") · "ep1" · 이미 코드("LF_T01") 무엇이든 폴더 키로 정규화.
+export function epKey(epRef) {
+  const s = String(epRef ?? '').trim()
+  if (!s) return 'ep0'
+  const m = s.match(/^(?:ep)?(\d+)$/i)
+  const digits = m ? m[1] : null
+  if (HIER) {
+    if (digits) return numberToCodeMap()[digits] || `ep${digits}`
+    return s                         // 이미 코드
+  }
+  // 2단계: 기존 규칙 그대로 (숫자 → ep{N}, 코드는 그대로)
+  if (digits) return `ep${digits}`
+  return s
 }
 
-export function audioDir(code) {
-  return path.join(MEDIA_ROOT, 'downloads', 'audio', String(code))
+// ── 에피소드별 산출물 디렉터리 ────────────────────────────────────────
+function epSub(epRef, kind) {
+  if (HIER) {
+    const sub = kind === 'flow' ? 'images' : kind
+    return path.join(DOWNLOADS, 'episodes', epKey(epRef), sub)
+  }
+  return path.join(DOWNLOADS, kind, epKey(epRef))
 }
 
-export function outputDir(code) {
-  return path.join(MEDIA_ROOT, 'downloads', 'output', String(code))
+export function imagesDir(epRef)       { return epSub(epRef, 'flow') }   // 생성 이미지 (구 flow/ep{N})
+export const flowDir = imagesDir                                         // 하위호환 별칭
+export function audioDir(epRef)        { return epSub(epRef, 'audio') }
+export function videoDir(epRef)        { return epSub(epRef, 'video') }
+export function makingDir(epRef)       { return epSub(epRef, 'making') }
+export function outputDir(epRef)       { return epSub(epRef, 'output') }
+export function finalDir(epRef)        { return epSub(epRef, 'final') }
+export function voiceInsertDir(epRef)  { return epSub(epRef, 'voice-insert') }
+
+// 손글씨 스틸 캐시 (에피소드 무관 공유 — 구 downloads/making/hw_stills)
+export function hwStillsDir() {
+  return HIER ? path.join(DOWNLOADS, 'library', 'hw_stills') : path.join(DOWNLOADS, 'making', 'hw_stills')
+}
+// /api/run-video(DEPRECATED)가 쓰는 video-prompts.json (에피소드 무관 임시)
+export function videoPromptsPath() {
+  return HIER ? path.join(DOWNLOADS, 'runtime', 'video-prompts.json') : path.join(DOWNLOADS, 'video', 'video-prompts.json')
 }
 
-// 대본 원문(v3 텍스트) 저장 위치 — 지금까지는 사람이 임의 위치에 .txt로 두고
-// studio_upload_script에 경로를 직접 넘기는 방식뿐이라 "정식 저장 경로"가 없었음.
-// 서버 전용(클라이언트는 대본 파일에 직접 접근할 일이 없어 src/lib/mediaPaths.js엔 안 둠).
-export function scriptDir(code) {
-  return path.join(MEDIA_ROOT, 'downloads', 'script', String(code))
+// deliverables/script는 예전부터 code 키 — HIER 여부와 무관하게 epKey가 코드 그대로 통과
+export function deliverablesDir(epRef) {
+  return HIER ? path.join(DOWNLOADS, 'episodes', epKey(epRef), 'deliverables')
+              : path.join(DOWNLOADS, 'deliverables', epKey(epRef))
+}
+export function scriptDir(epRef) {
+  return HIER ? path.join(DOWNLOADS, 'episodes', epKey(epRef), 'script')
+              : path.join(DOWNLOADS, 'script', epKey(epRef))
+}
+export function episodeDir(epRef) {
+  return HIER ? path.join(DOWNLOADS, 'episodes', epKey(epRef)) : DOWNLOADS
 }
 
-// 컷별로 승인(G2~G4)/완료(G5)된 산출물의 복사본을 한곳에 모으는 위치.
-// downloads/final/ep{N}/(PublishingTab의 "패키지" 기능, CapCut 편집까지 끝난 진짜 최종
-// 발행용 mp4+썸네일)과는 의도적으로 다른 폴더 — 여기는 "이 컷은 이걸로 확정했다"를
-// 단계별로 쌓아두는 중간 모음소(작업 후보 파일은 원래 위치에 그대로 남아있고, 승인 시점에
-// 복사본만 여기 추가됨). 사람이 "지금까지 확정된 게 뭔지" 한곳에서 바로 훑어볼 수 있게 함.
-export function deliverablesDir(code) {
-  return path.join(MEDIA_ROOT, 'downloads', 'deliverables', String(code))
+// ── 공유 라이브러리 (에피소드 무관) ──────────────────────────────────
+export function sfxDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'sfx')   : path.join(DOWNLOADS, 'sfx'),   sub) }
+export function bgmDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'bgm')   : path.join(DOWNLOADS, 'bgm'),   sub) }
+// t.file/bgmFile 값이 "bgm/mood/x.mp3" 또는 "mood/x.mp3" 어느 쪽이든 실제 경로로
+export function bgmFile(rel) { return bgmDir(String(rel).replace(/\\/g, '/').replace(/^bgm\//, '')) }
+export function hooksDir(sub = '') { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'hooks') : path.join(DOWNLOADS, 'hooks'), sub) }
+export function charactersDir(sub = '') {
+  return path.join(HIER ? path.join(DOWNLOADS, 'library', 'characters') : path.join(DOWNLOADS, 'flow', 'character'), sub)
+}
+export function charactersJsonPath() {
+  return HIER ? path.join(DOWNLOADS, 'library', 'characters', 'characters.json')
+              : path.join(DOWNLOADS, 'flow', 'characters.json')
 }
 
-// cut 번호를 2자리로 zero-pad한 파일명 (예: cutFile(3, 'jpg') -> "cut_03.jpg")
-export function cutFile(no, ext) {
-  const padded = String(no).padStart(2, '0')
-  return `cut_${padded}.${ext}`
+// ── 런타임 (Flow 실행·프롬프트·큐) ──────────────────────────────────
+export function runtimeDir(sub = '') { return path.join(HIER ? path.join(DOWNLOADS, 'runtime') : DOWNLOADS, sub) }
+export function promptsJsonPath() {
+  return HIER ? path.join(DOWNLOADS, 'runtime', 'prompts.json') : path.join(DOWNLOADS, 'flow', 'prompts.json')
+}
+export function flowProfileDir(profile) {
+  return HIER ? path.join(DOWNLOADS, 'runtime', `chrome-profile-${profile}`)
+              : path.join(DOWNLOADS, 'flow', `chrome-profile-${profile}`)
+}
+export function flowDownloadDir() {   // puppeteer 다운로드 착지점 (구 downloads/flow 루트)
+  return HIER ? path.join(DOWNLOADS, 'runtime', 'flow-downloads') : path.join(DOWNLOADS, 'flow')
+}
+// 구 downloads/flow 루트에 흩어져 있던 느슨한 캐릭터 레퍼런스 이미지들의 새 자리
+export function flowLooseRefsDir() {
+  return HIER ? charactersDir() : path.join(DOWNLOADS, 'flow')
 }
 
-export function paddedCutNo(no) {
-  return String(no).padStart(2, '0')
+// ── 앱 상태 (전역 JSON) ─────────────────────────────────────────────
+// gpoints.json, trend_episodes.json, trend_candidates.json, code-task-queue.json,
+// credit-usage-today.json, codi_gen_handoff.json, pipeline_export.json,
+// yeori_edit_meta.json, capcut_config.json, capcut_exe_path.txt, task-queue-worker.log
+export function statePath(name) {
+  return HIER ? path.join(DOWNLOADS, 'state', name) : path.join(DOWNLOADS, name)
+}
+// 구조상 downloads/video/ 에 있던 전역 파일들 (에피소드 무관, 매 실행 덮어씀)
+export function editMetaPath()     { return HIER ? statePath('yeori_edit_meta.json') : path.join(DOWNLOADS, 'video', 'yeori_edit_meta.json') }
+export function capcutConfigPath() { return HIER ? statePath('capcut_config.json')   : path.join(DOWNLOADS, 'video', 'capcut_config.json') }
+export function capcutExePath()    { return HIER ? statePath('capcut_exe_path.txt')  : path.join(DOWNLOADS, 'video', 'capcut_exe_path.txt') }
+
+// ── 절대경로 → /downloads/... URL ──────────────────────────────────
+export function toMediaUrl(abs) {
+  return '/downloads/' + path.relative(DOWNLOADS, abs).replace(/\\/g, '/')
 }
 
-// ── 인스타그램 콘텐츠(FD/RL/PT/ST) 경로 — episode.number 기반이 아니라
-// 사용자가 직접 붙이는 "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 하위폴더가
-// 없다(대사 촬영/화면녹화 위주라 Flow 생성 이미지를 따로 raw 폴더에 모을 일이 적음).
+// ── cut 파일명 ─────────────────────────────────────────────────────
+export function paddedCutNo(no) { return String(no).padStart(2, '0') }
+export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }
+
+// ── 인스타그램 콘텐츠(FD/RL/PT/ST) — episode.number가 아니라 사용자가 직접 붙이는
+// "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 raw 하위폴더 없음. HIER 무관(별도 체계).
 export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
 export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
 
-// kind 생략 시 콘텐츠 루트(downloads/insta/{content}/{num}/), 지정 시 그 하위(raw/txt/final)
 export function instaDir(content, num, kind) {
-  const base = path.join(MEDIA_ROOT, 'downloads', 'insta', String(content), String(num))
+  const base = path.join(DOWNLOADS, 'insta', String(content), String(num))
   return kind ? path.join(base, kind) : base
 }
-
 export function instaRatio(content) {
   return INSTA_RATIO[content] || null
 }
