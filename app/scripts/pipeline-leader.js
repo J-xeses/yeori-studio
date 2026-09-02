@@ -103,7 +103,8 @@ function isStageComplete(cuts, stage) {
 // 나레이션이 있는 컷"만 걸러서 그 컷들만 기준으로 완료 여부를 본다. 대상 컷이 아예
 // 없는 에피소드(전부 B-roll 등)도 완료로 취급.
 function isG3Complete(cuts) {
-  const g3Targets = cuts.filter(c => c.dialogue?.trim() || c.narration?.trim())
+  // studio-status 페이로드는 dialogue/narration 원문이 아니라 hasDialogue/hasNarration 불리언을 준다
+  const g3Targets = cuts.filter(c => c.hasDialogue || c.hasNarration)
   return g3Targets.length === 0 || g3Targets.every(c => c.g3 === true)
 }
 
