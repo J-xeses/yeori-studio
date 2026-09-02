@@ -5,7 +5,7 @@
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
 > 세부는 항상 하단 로그 기준. 2026-09-02 현재 마지막 로그 = "2026-09-02
-> (downloads 폴더 위계 정리 — Phase 1·2·3)" 절.
+> (downloads 폴더 위계 개편 v2 — 플랫폼/시리즈/코드/번호폴더)" 절.
 
 ---
 
@@ -16,16 +16,24 @@
 "영상 체크리스트"에서 mp4 업로드. 이미지는 자동 유지 방침이나 Gemini API 브로커는 미착수
 (현재도 실질 Flow 수동). 상세 = 하단 "2026-09-02" 로그.
 
-**2026-09-02: downloads 폴더 위계 정리 — Phase 1·2·3 전부 완료.** 새 구조:
-`downloads/episodes/{code}/{images,audio,video,making,output,final,deliverables,script}`
-+ `library/{characters,sfx,hooks,hw_stills}` + `runtime/{prompts,video-prompts}.json`
-+ `state/{gpoints,trend_episodes,code-task-queue,credit-usage,capcut_config,yeori_edit_meta}.json`
-+ `flow/chrome-profile-*`(런타임, 이동 안 함) + `insta/`(불변). 모든 경로 조립은
-`server/lib/mediaPaths.js` + `src/lib/mediaPaths.js` 헬퍼 경유(`HIER=true`). 폴더 키 =
-`episode.code`(예 LF_T01), 없으면 `ep{N}`. 코드 중복 입력은 reducer+UI에서 차단(`f8bc545`).
-`downloads/` git 추적 완전 해제. 되돌리기: `node scripts/migrate-downloads.js --undo` + HIER=false.
-커밋: `43f7421`→`56482c2`→`c7961ed`→`5288d13`→`416614b`→`92bfe42`→`686c717`→`b5ee823`→`f8bc545`.
-상세 = 하단 로그.
+**2026-09-02: downloads 폴더 위계 전면 개편 완료 (구조 v2).**
+```
+downloads/
+├── YU/{SF_E,LF_E,SF_T,LF_T}/{code}/     유튜브 (SF/LF · 에피소드E/트렌드T)
+├── IG/{IG_P,IG_R,IG_S,IG_T}/{code}/     인스타 (피드P/릴스R/스토리S/트렌드릴스T)
+├── TK/                                   틱톡 (자리만, 규칙 미정)
+├── _etc/{code}/                          패턴 안 맞는 옛/테스트 (ep3·TEST_OVERLAY 등)
+├── library/{characters,sfx,hooks,hw_stills}
+├── runtime/{prompts.json, video-prompts.json}
+├── state/{gpoints,trend_episodes,code-task-queue,credit-usage,capcut_config,yeori_edit_meta}.json
+├── flow/chrome-profile-*  (이동 안 함)   insta/  (구 인스타번호 시스템, 불변)
+```
+각 `{code}/` 안: `01_script 02_images 03_audio 04_making 05_video 06_publishing 07_output`
+(06 = 편집·CapCut·raw·deliverables, 07 = 완성본·썸네일·업로드패키지).
+경로 조립은 전부 `mediaPaths.js`(server+client) `parseCode()` 경유. 코드 중복 입력은
+reducer+UI 차단(`f8bc545`). `downloads/` git 추적 해제. 되돌리기:
+`migrate-downloads-v2.js --undo` (+ mediaPaths.js v1로).
+커밋: `43f7421`→`5288d13`→`92bfe42`(v1) → `f8bc545`(중복가드) → `e3583e5`(v2). 상세 = 하단 로그.
 
 
 지난 이틀(8/31~9/1) 세션에서 메이킹 탭 자동 편집 파이프라인을 대거 완성함
@@ -600,7 +608,7 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 
 ---
 
-## 2026-09-02 (downloads 폴더 위계 정리 — Phase 1·2·3 전부 완료)
+## 2026-09-02 (downloads 폴더 위계 개편 v2 — 플랫폼/시리즈/코드/번호폴더)
 
 **동기**: `C:\yeori-studio\downloads` 최상위에 에피소드 산출물(`flow/audio/video/making/output/
 final/deliverables/script`) + 공유 라이브러리(`sfx/hooks/flow-character`) + 앱 상태 json +
@@ -634,30 +642,45 @@ final/deliverables/script`) + 공유 라이브러리(`sfx/hooks/flow-character`)
 ExtractTab). `/api/sfx-catalog`·`/api/bgm-library`가 item.path/t.file을 현재 구조 상대경로로
 재작성. 클라 `epMediaUrl(episode, kind)`.
 
-### Phase 3 — 목표 위계 + 마이그레이션 (완료, 커밋 416614b·92bfe42·686c717·b5ee823, `HIER=true`)
-`node scripts/migrate-downloads.js --go` (173건 이동). 실제 구조:
+### Phase 3 — episodes/{code}/ 위계 + 마이그레이션 (커밋 416614b·92bfe42·686c717·b5ee823)
+1차 목표였던 `downloads/episodes/{code}/{images,audio,...}` 구조로 173건 이동.
+→ **곧바로 v2로 재개편됨(아래).** epKey() number→code 매핑, downloads/ git 추적 해제,
+코드 중복 방지 가드(`f8bc545`)는 v2에서도 그대로 유효.
+
+### 구조 v2 — 플랫폼/시리즈/코드/번호폴더 (커밋 `e3583e5`, 사용자 리뷰 반영)
+`node scripts/migrate-downloads-v2.js --go` (31건, episodes/{code}/{sub} → 아래). 최종:
 ```
 downloads/
-├── episodes/{code}/{images,audio,video,making,output,final,deliverables,script}
-│     라이브: LF_T01(ep1)·IG_R02(ep2)·TEST_OVERLAY(ep99) / 구 산출물: ep3·ep4·ep98·
-│     ep100·ep998·epT02·SF_E01·IG_RL_E02·test_chat_flow
+├── YU/                     유튜브
+│   ├── SF_E/{SF_E01,..}    (숏폼 에피소드)   LF_E/  (롱폼 에피소드)
+│   └── SF_T/  LF_T/{LF_T01,..}                (트렌드)
+├── IG/                     인스타그램
+│   └── IG_P/ IG_R/{IG_R02,..} IG_S/ IG_T/     (피드/릴스/스토리/트렌드릴스)
+├── TK/                     틱톡 (빈 폴더, 규칙 미정)
+├── _etc/{code}/            패턴 안 맞는 옛/테스트 (ep3·ep4·ep98·ep100·ep998·epT02·
+│                            TEST_OVERLAY·IG_RL_E02·test_chat_flow)
 ├── library/{characters, sfx, hooks, hw_stills}
 ├── runtime/{prompts.json, video-prompts.json}
 ├── state/{gpoints, trend_episodes, code-task-queue, credit-usage-today,
-│          capcut_config, yeori_edit_meta, migrate-manifest, task-queue-worker.log}.json
-├── flow/chrome-profile-main   ← 런타임 캐시, 이동 안 함(실행중 잠김 + 실행 단축키 연동)
-├── insta/{FD,RL,PT,ST}/{num}/ ← 불변(별도 키 체계)
-└── _archive/2026-09-02/migrate-residue/  ← 디버그 png·report json·로그
+│          capcut_config, yeori_edit_meta, migrate-manifest(+v2)}.json
+├── flow/chrome-profile-*   ← 이동 안 함(실행중 잠김 + 실행 단축키 연동)
+├── insta/{FD,RL,PT,ST}/{num}/  ← 구 "인스타 번호" 시스템, 이번 개편에서 안 건드림
+└── _archive/2026-09-02/
 ```
-- `epKey()`: 숫자 → `studio-state.json` number→code 조회(mtime 캐시), 없으면 `ep{N}`.
-  호출부는 `epNum`(쿼리 파라미터) 그대로 넘기고 헬퍼가 code로 해석 — Phase 3에서 호출부
-  추가 수정 불필요했음.
-- `downloads/` 전체 git 추적 해제(원래 `.gitignore` 대상, 과거 강제 add된 44파일).
-- **되돌리기**: `node scripts/migrate-downloads.js --undo` + 양쪽 mediaPaths.js `HIER=false`.
-- **코드 중복 방지 가드 (구현됨 `f8bc545`)**: `episode.code`가 폴더 키 → 두 에피소드가 같은
-  코드면 산출물·gpoints 공유. AppContext `SET_EPISODE` reducer가 겹치는 code 드롭 +
-  ScriptGenTab 입력칸 빨간 테두리·경고. 빈 값 자동코드(`{type}_E{number}`)는 번호가 전역 유일이라 충돌 불가.
-- **스모크 통과**: health/trend/bgm/sfx-catalog/characters/capcut-config/video-checklist/
-  cut-timing/scan-media(ep2·ep99)/hw-source-images/studio-status-public/gpoints POST +
-  정적파일(episodes/IG_R02/images, library/sfx, library/characters) 200 + `npm run build`.
+각 `{code}/` 안 (워크플로 순서, `NN_` 언더스코어 프리픽스):
+```
+01_script  02_images  03_audio  04_making  05_video  06_publishing  07_output
+  06_publishing = 구 output/(cutter_input·CapCut·raw) + deliverables/(하위폴더)
+  07_output     = 구 final/(완성본 mp4·썸네일·업로드 패키지) — "퍼블리싱 단계의 결과물"
+```
+- **코드 → 경로**: `mediaPaths.parseCode()` = `/^(SF|LF|IG|TK)_([A-Z])(\d{2,})/`.
+  `SF|LF→YU, IG→IG, TK→TK` 플랫폼. series = 코드에서 숫자 뗀 것(`LF_T01`→`LF_T`).
+  안 맞으면 `_etc/{code}/`. 서버 `instanceDir(epRef)` / 클라 `instanceUrl(episode)`.
+- 호출부는 여전히 `epNum` 그대로 넘김 — 헬퍼가 number→code→platform/series 해석.
+- **되돌리기**: `migrate-downloads-v2.js --undo` (state/migrate-v2-manifest.json) +
+  mediaPaths.js를 v1(`episodes/{code}/`)로.
+- **스모크 통과**: scan-media(ep2→`IG/IG_R/IG_R02/02_images`, ep99→`_etc/TEST_OVERLAY`) +
+  video-checklist + 정적파일(`IG/IG_R/IG_R02/02_images`, `library/sfx`) 200 + `npm run build`.
+- **미해결**: `insta/`(FD/RL/PT/ST 인스타번호 시스템)를 `IG/`로 합칠지 — 별개 서브시스템이라
+  이번엔 보류. TK 폴더 규칙 미정.
 
