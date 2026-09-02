@@ -1,15 +1,21 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-09-01
+> 마지막 업데이트: 2026-09-02
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 >
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
-> 세부는 항상 하단 로그 기준. 2026-09-01 현재 마지막 로그 = "2026-08-31 ~ 09-01
-> (메이킹 파이프라인 자동 편집 완성 …)" 절.
+> 세부는 항상 하단 로그 기준. 2026-09-02 현재 마지막 로그 = "2026-09-02
+> (영상 = 수동 제작 전환 …)" 절.
 
 ---
 
-## 📌 현재 작업 중 / 다음 (2026-09-01 기준)
+## 📌 현재 작업 중 / 다음 (2026-09-02 기준)
+
+**2026-09-02: 영상 생성 = 수동 전환.** Flow/Veo puppeteer가 벤더 UI 변경으로 계속 깨져서
+파이프라인 자동 영상 생성을 접음. 이제 사람이 Veo/Flow에서 직접 만들고 "영상 만들기" 탭
+"영상 체크리스트"에서 mp4 업로드. 이미지는 자동 유지 방침이나 Gemini API 브로커는 미착수
+(현재도 실질 Flow 수동). 상세 = 하단 "2026-09-02" 로그.
+
 
 지난 이틀(8/31~9/1) 세션에서 메이킹 탭 자동 편집 파이프라인을 대거 완성함
 (손글씨 재작업, 유형별 자동실행, source-to-cut, 이중 모션 가드, finishMode 콘텐츠별
@@ -30,7 +36,7 @@
 - **G6 업로드 자동화** — MCP 도구 없음, 퍼블리싱 탭 패키지·썸네일까지만.
 - **SF_E07 codebook v1.0.0** — 실데이터 검증 미완료.
 - **크레딧 게이트 완전 정합** — `server/lib/creditUsage.js`, 날짜 바뀔 때만 자동 리셋.
-- **VideoTab AI 영상 자동생성 UI 버튼** — `/api/run-video`는 완성, UI 버튼 없음.
+- ~~**VideoTab AI 영상 자동생성 UI 버튼**~~ — 폐기(2026-09-02, 영상 수동 전환). `/api/run-video`는 DEPRECATED.
 - **editIntent → 메이킹 탭 모션(graphic/s2c) 연동** (assemble 경로), run-cutter 컷 단위 재조립.
 
 ---
@@ -40,7 +46,7 @@
 - **SF_E01 CUT2~8 G2~G4 수동 승인 대기** — CUT1은 2026-08-16에 실제로 확인 후 승인 완료(`downloads/deliverables/SF_E01/cut_01_image.jpeg` 생성 확인). 나머지 7컷도 같은 방식으로 스튜디오/TTS/영상 탭에서 눈으로 확인 후 승인만 누르면 됨.
 - **크레딧 게이트 완전 정합 미완** — `downloads/credit-usage-today.json`(오늘 G4 소모량 자체 추적)이 사람이 "자동 확인" 눌러도 즉시 리셋되진 않음, 날짜 바뀔 때만 자동 초기화. 다음에 완전 정합 붙일 것(2026-08-16 설계 노트: `server/lib/creditUsage.js`).
 - **4차(파일경로를 episode.code 기준 전면교체)는 보류** — proxy.js 약 25곳 + scripts/*.js 11개 + 클라이언트 탭 8개로 범위가 너무 커서(2026-08-15 전수조사 완료, 상세는 아래 핵심 메모 참고) 당장은 손 안 댐. 대신 `episode.number`를 전역 유일 카운터로 되돌려 충돌 자체를 막는 우회로 대응. 나중에 필요해지면 이 조사 결과부터 참고할 것.
-- **VideoTab.jsx AI 영상 자동생성 UI 연결** — `/api/run-video` 엔드포인트는 완성, 호출 버튼 없음(MCP 경로로는 크레딧 게이트까지 적용됨 — UI 버튼도 붙이게 되면 크레딧 게이트 로직 재사용할 것)
+- ~~**VideoTab.jsx AI 영상 자동생성 UI 연결**~~ — 폐기(2026-09-02). 영상은 수동 제작 + `/api/upload-cut-video` 업로드로 전환. `/api/run-video`·`studio_run_g4`는 DEPRECATED 주석만 남김.
 - **서여리 의상 프롬프트 카탈로그 고도화** — 15룩, 7카테고리(A~G), 계절별 태그 분류
 - **OneDrive 미디어 동기화** — 집 PC `C:\Users\user\OneDrive\yeori-studio-sync` 폴더 없음, 확인 필요
 
@@ -530,6 +536,49 @@ Flow 이미지 생성이 서여리 단일 하드코딩 → 2인 이상 등장 �
   (등장 캐릭터 refBasename)로 다중 인물 썸네일 탐색·드래그. `result.found{basename:pos}`.
 - jia 레퍼런스 flatten(`jia-face.jpg` 등, yeori 규칙 통일) + `refBasename` 필드.
 - puppeteer 부분은 실제 Flow 실행 시 검증 필요.
+
+## 2026-09-02 (영상 = 수동 제작 전환 · 스튜디오는 추적/업로드만) — 커밋 `4fcbe4e`
+
+**배경**: Flow/Veo puppeteer 자동화(`flow-automation.js` 이미지 · `video-automation.js` 영상)가
+Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `createNewFlowProject`가
+"새 프로젝트" 클릭 후 `/project/` 이동 감지 15초 타임아웃, `/characters` 페이지는 빈 화면)
+파이프라인 신뢰성을 못 지킴. 결정: **이미지는 자동(추후 Gemini API 브로커), 영상은 당분간 수동**.
+사용자가 브라우저에서 직접 Veo/Flow 제작 → 스튜디오는 진행현황 추적 + 완성본 업로드만.
+서여리 차별화 요소가 "대부분 영상으로 움직이는 실사 장면"이라 LF는 영상 비중 높게, IG는 낮게.
+
+- **`src/lib/videoPolicy.js` (신규)** — `finishMode.js`와 같은 패턴.
+  - `resolveVideoPolicy(episode)` → `episode.videoPolicy` 우선, 없으면 contentType:
+    LF→`video-first`, SF→`mixed`, 그 외(IG_R/IG_P/IG_S/TK)→`image-first`.
+  - `resolveCutVideoMode(cut, episode)` → `veo`|`motion`|`still`. 우선순위: `cut.videoMode`
+    명시 > GRAPHIC/CAPCUT/BROLL은 항상 `motion` > 정책 + 대사유무.
+    video-first: 대사있으면 veo/없으면 motion · mixed: veo/still · image-first: motion/still.
+  - `needsManualVideo(cut, episode)` = `resolveCutVideoMode === 'veo'`.
+- **proxy.js**
+  - `GET /api/episode-video-checklist?epNum` — `{policy, contentType, total, veoNeeded,
+    veoDone, cuts:[{no, cutType, videoMode, needsManualVideo, cutMark, dialogue, narration,
+    videoPrompt, duration, startFrame, hasImage/hasAudio/hasVideo, g2, g4}]}`. startFrame =
+    G2 선택 이미지(flowDir) 또는 `cut_NN(_a).jpg`.
+  - `POST /api/upload-cut-video?epNum=&cutNo=&trimTo=&keepAudio=1` — raw body 스트림,
+    ffmpeg로 1080×1920 cover 정규화 + `-t trimTo` 트림 + (keepAudio=1이면 aac 유지/아니면 -an),
+    `cut_NN.mp4` 저장, `recordCutMotion(method:'veo-manual', baked:true)` 기록.
+  - `serverVideoPolicy`/`serverCutVideoMode` — videoPolicy.js 서버 사본(동기 유지).
+  - `/api/run-video`, `mcp /studio-run-g4`, MCP 도구 `studio_run_g4` → **DEPRECATED 주석**.
+    수동 재시도용으로만 남김, 파이프라인 자동 호출 없음.
+- **VideoTab.jsx** — 스크롤 상단에 "영상 체크리스트" 접이식 패널. 정책·veoNeeded/Done 표시,
+  컷별 `videoMode` 셀렉트(→ `UPDATE_CUT {videoMode}`), veo 컷은 "VP 복사" · "시작 프레임 저장"
+  (`<a download>`) · "Veo 오디오 유지(립싱크)" 체크(기본=대사 유무) · "완성본 mp4 업로드".
+- **pipeline-leader.js** — G4 자동 트리거 블록 제거. `stageInRange('g4')`면 "수동 제작 대기 —
+  컷 N,M (Veo/Flow 직접 제작 후 영상 탭에서 업로드)" 로그만. `g4InFlight`/`g4StartedAt`/
+  `G4_TIMEOUT_MS` 죽은 코드 정리. G4 "승인대기" 알림(hasVideo && !g4)은 그대로 유지.
+
+**이월/다음**:
+- **Gemini 이미지 자동 생성 브로커** — 이미지는 자동 유지 방침이나 `api/gemini.js`가 아직
+  레퍼런스 이미지 파트 미지원(text-only). `/api/generate-cut` + Vercel US 릴레이 + StudioTab
+  버튼 재연결 필요. 미착수.
+- **도구 실행 이원화** — `start_yeori.bat`(트렌드/스튜디오/커터/에이전트, 브라우저 없음) /
+  별도 장치(Flow/CapCut/ElevenLabs). 큐 폴더 `downloads/gen-queue/` OneDrive 동기. 제안됨, 미착수.
+- **유료 Veo API**(~$32~80/mo) / Google AI Pro $19.99/mo 구독 결정 — 보류("당분간 수동").
+- LF_T01(서여리+한지아) 실사용 테스트는 이미지 생성 경로 정리 후.
 
 ### 남은 후보
 - ScriptGen 캐릭터 UI(목록·상태·새 캐릭터 추가), 컷 카드 CH 옆 인물 뱃지

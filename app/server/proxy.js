@@ -1542,6 +1542,10 @@ app.get('/api/elevenlabs/voices', async (req, res) => {
 })
 
 // ── POST /api/run-video — video-prompts 저장 후 Veo 자동 실행 (SSE) ──
+// ⚠️ DEPRECATED (2026-09-02): video-automation.js(Flow/Veo puppeteer)는 벤더 UI 변경으로
+//    반복적으로 깨져서 파이프라인에서 자동 호출을 중단했다. pipeline-leader의 G4 자동
+//    트리거도 제거됨. 영상은 사람이 직접 제작 → "영상 만들기" 탭에서 /api/upload-cut-video로
+//    업로드하는 수동 워크플로가 정식 경로. 이 엔드포인트/스크립트는 수동 재시도용으로만 남김.
 app.post('/api/run-video', (req, res) => {
   const { ep, cut, ratio, prompts } = req.body
   if (!prompts) return res.status(400).json({ error: 'prompts 데이터 필요' })
@@ -5323,6 +5327,9 @@ mcpRouter.post('/studio-approve-g3', (req, res) => {
 
 // ⑧ studio-run-g4 — video-automation.js 호출(영상 생성). G2 승인된 컷만 대상으로 함
 // (video-automation.js가 gpoints.json의 selectedImage를 자체적으로 읽어 스타트 프레임으로 사용)
+// ⚠️ DEPRECATED (2026-09-02): pipeline-leader는 더 이상 이걸 자동 호출하지 않는다(수동 영상 전환).
+//    영상 진행 현황은 GET /api/episode-video-checklist, 업로드는 POST /api/upload-cut-video.
+//    수동 재시도 목적으로만 남김 — video-automation.js는 벤더 UI 변경 시 자주 깨진다.
 mcpRouter.post('/studio-run-g4', async (req, res) => {
   const { episodeId, cutIds, ratio } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })

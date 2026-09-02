@@ -172,7 +172,7 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g4',
-    description: 'video-automation.js를 호출해 G2 승인된 이미지를 스타트 프레임으로 컷 영상(G4)을 자동 생성합니다. 실행 시작 여부만 반환하며 실제 생성은 백그라운드에서 계속 진행됩니다. 대사 중 괄호 안 제작 메모는 자동 제거 후 전달합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
+    description: '[DEPRECATED 2026-09-02 — 자동 영상 생성 중단] Flow/Veo 브라우저 자동화가 벤더 UI 변경으로 반복적으로 깨져서 영상은 수동 제작으로 전환했습니다. 이 도구는 호출하지 마세요. 영상 컷은 사람이 Veo/Flow에서 직접 만든 뒤 스튜디오 "영상 만들기" 탭에서 업로드합니다. 진행 현황은 studio_get_status 또는 GET /api/episode-video-checklist를 참고하세요.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
