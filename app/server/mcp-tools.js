@@ -135,7 +135,7 @@ export const TOOLS = [
   },
   {
     name: 'studio_approve_g2',
-    description: '지정한 컷의 생성된 이미지 중 하나를 G2 승인 선택본으로 지정합니다(downloads/flow/ep{N}/에서 스캔). 이후 G4 영상 생성이 이 이미지를 스타트 프레임으로 사용합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
+    description: '지정한 컷의 생성된 이미지 중 하나를 G2 승인 선택본으로 지정합니다(에피소드 images 폴더에서 스캔). 이후 G4 영상 생성이 이 이미지를 스타트 프레임으로 사용합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId', 'cutId'],
@@ -148,7 +148,7 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g3',
-    description: 'ElevenLabs TTS로 각 컷의 대사/나레이션 오디오(G3)를 생성해 downloads/audio/ep{N}/cut_NN.mp3로 저장합니다. studio-secrets.json에 ElevenLabs API 키가 등록되어 있어야 합니다. 대사에 섞인 괄호 안 제작 메모(예: "(음성 오버레이 — Veo3 대사 포함 금지)")는 자동 제거 후 생성하며, ElevenLabs 잔여 글자수가 필요량보다 적으면 시작 전에 오류로 막습니다.',
+    description: 'ElevenLabs TTS로 각 컷의 대사/나레이션 오디오(G3)를 생성해 에피소드 audio 폴더의 cut_NN.mp3로 저장합니다. studio-secrets.json에 ElevenLabs API 키가 등록되어 있어야 합니다. 대사에 섞인 괄호 안 제작 메모(예: "(음성 오버레이 — Veo3 대사 포함 금지)")는 자동 제거 후 생성하며, ElevenLabs 잔여 글자수가 필요량보다 적으면 시작 전에 오류로 막습니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
@@ -292,7 +292,7 @@ export const TOOLS = [
   },
   {
     name: 'download_broll_cut',
-    description: 'Pexels 영상 직접 다운로드 URL에서 mp4를 받아 BROLL 컷 산출물로 만듭니다. duration 지정 시 앞부분만 남기고 trim한 뒤, 1080x1920 스케일+패딩(assemble_making_film과 동일 규격)으로 변환해 downloads/video/ep{N}/cut_{NN}.mp4로 저장합니다. 소스 오디오는 버립니다(BROLL 나레이션은 G3에서 별도로 얹음).',
+    description: 'Pexels 영상 직접 다운로드 URL에서 mp4를 받아 BROLL 컷 산출물로 만듭니다. duration 지정 시 앞부분만 남기고 trim한 뒤, 1080x1920 스케일+패딩(assemble_making_film과 동일 규격)으로 변환해 에피소드 video 폴더의 cut_{NN}.mp4로 저장합니다. 소스 오디오는 버립니다(BROLL 나레이션은 G3에서 별도로 얹음).',
     inputSchema: {
       type: 'object',
       required: ['epNum', 'cutNo', 'videoUrl'],
@@ -306,7 +306,7 @@ export const TOOLS = [
   },
   {
     name: 'assemble_making_film',
-    description: '확정된 downloads/video/ep{N}/cut_{NN}.mp4를 컷 번호 순으로 이어붙여 메이킹 필름(ep{N}_making.mp4)을 만듭니다.',
+    description: '확정된 에피소드 video 폴더의 cut_{NN}.mp4를 컷 번호 순으로 이어붙여 메이킹 필름(ep{N}_making.mp4)을 만듭니다.',
     inputSchema: {
       type: 'object',
       properties: {

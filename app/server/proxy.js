@@ -4767,7 +4767,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         narration: String(c.narration || '').replace(/^없음$/i, '').trim(),
         videoPrompt: c.videoPrompt || '',
         duration: serverCutTargetDuration(c),   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
-        startFrame: startFrame ? `http://localhost:3001/downloads/flow/ep${epNum}/${startFrame}` : null,
+        startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,
         startFrameName: startFrame || null,
         hasImage: !!startFrame,
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
