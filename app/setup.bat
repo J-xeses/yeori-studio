@@ -79,18 +79,16 @@ echo.
 
 :: ── 5. 폴더 구조 생성 ─────────────────────────────────
 echo [5/7] C:\yeori-studio\ 폴더 구조 생성...
-mkdir "C:\yeori-studio\downloads\flow\character" 2>nul
-mkdir "C:\yeori-studio\downloads\flow\ep1"       2>nul
-mkdir "C:\yeori-studio\downloads\video\ep1"      2>nul
-mkdir "C:\yeori-studio\downloads\audio\ep1"      2>nul
-mkdir "C:\yeori-studio\downloads\output\ep1"     2>nul
+mkdir "C:\yeori-studio\downloads\library\characters" 2>nul
+mkdir "C:\yeori-studio\downloads\library\sfx"        2>nul
+mkdir "C:\yeori-studio\downloads\episodes"           2>nul
+mkdir "C:\yeori-studio\downloads\runtime"            2>nul
+mkdir "C:\yeori-studio\downloads\state"              2>nul
 set "DIRS_OK=1"
 echo [OK] 폴더 구조 생성 완료
-echo        downloads\flow\character
-echo        downloads\flow\ep1
-echo        downloads\video\ep1
-echo        downloads\audio\ep1
-echo        downloads\output\ep1
+echo        downloads\episodes\{code}\{images,audio,video,making,output,final}
+echo        downloads\library\{characters,sfx,hooks,hw_stills}
+echo        downloads\runtime  downloads\state
 echo.
 
 :: ── 6. .env.local 템플릿 생성 ─────────────────────────

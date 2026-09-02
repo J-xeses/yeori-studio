@@ -155,5 +155,5 @@ for (const { from, to } of moves) {
 fs.mkdirSync(path.dirname(MANIFEST), { recursive: true })
 fs.writeFileSync(MANIFEST, JSON.stringify({ at: new Date().toISOString(), moves }, null, 2))
 console.log(`\n완료 ${done}/${moves.length}. manifest: ${MANIFEST}`)
-console.log('\n⚠ Chrome 프로필이 이동됐으면 실행 단축키의 --user-data-dir 경로도 바꿀 것:')
-console.log(`   ${path.join(DL, 'runtime', 'chrome-profile-main')}`)
+console.log('\n다음: mediaPaths.js(server+client)의 HIER를 true로 → npm run build → proxy 재시작.')
+console.log('Chrome 프로필(flow/chrome-profile-*)과 flow/research는 이동하지 않았음 — 실행 단축키 변경 불필요.')
