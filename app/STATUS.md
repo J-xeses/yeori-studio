@@ -594,13 +594,27 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
   `*_TIMEOUT_MS` 죽은 코드 정리. "승인대기" 알림(hasImage/hasVideo && !g2/g4)은 유지.
 - `mcp /studio-run-g2`·`studio_run_g2`도 DEPRECATED 표기. 수동 재시도용만.
 
-### 이미지·영상 수동 전환 후 나머지 파이프라인 자동화 상태 (2026-09-02 점검)
+### 이미지·영상 수동 전환 후 나머지 파이프라인 자동화 상태 (2026-09-02 점검 + 실측)
 - **자동으로 도는 것**: G1 대본생성(script_generator.py)+사람승인 · G3 TTS(ElevenLabs API 직접,
   이미지와 독립 — 대사만 있으면 병렬 진행) · 메이킹 탭 GRAPHIC/CAPCUT/BROLL 컷(Flow/Veo 안 씀,
   직접 `cut_NN.mp4`) · editIntent·컷싱크(`cut-timing`, 영상+오디오 있어야 측정) ·
   G5 편집메타→SRT→concat(전 컷 g4 승인 시) · `assemble_making_film`/`run-cutter`.
 - **게이트는 사람 대기로 정상**: G2 승인 없으면 다음 단계 대기, G4 승인 없으면 G5 대기 — 올바른 동작.
 - **의존성**: G3는 G2 불필요(병렬 가능) / G5·컷싱크는 수동 영상 업로드가 선행돼야 함.
+- **버그 발견+수정 (`<G3fix>`)**: `pipeline-leader.isG3Complete`가 `c.dialogue`(원문)를 봤는데
+  MCP 페이로드는 `c.hasDialogue`(불리언)만 줌 → 항상 "G3 완료"로 오판 → 리더가 TTS를 영영
+  자동 트리거 안 했음. `hasDialogue`/`hasNarration`로 수정. LF_T01 실측: 수정 후 리더가
+  TTS 2건 생성 → `seoyeori/YU/LF_T/LF_T01/03_audio/cut_0N.mp3` 정상.
+- **미해결(사소, 기존)**: 멀티스피커 대사(`지아 "..." / 여리 "..."`)를 TTS가 화자명·`/`까지
+  읽음. 화자별 분리 TTS나 라벨 스트립 필요 — 별건.
+
+### 실행 이원화 (커밋 `<batsplit>`)
+- **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
+  **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
+  매트릭스/트렌드)을 기본 브라우저로. **Flow Chrome 안 엶.**
+- **`start_gen.bat`** (생성/편집, 신규): 제작 코어 `:3001` 확인 · Chrome(`.chrome-profile-flow`)로
+  Flow + 스튜디오 + ElevenLabs 탭 · CapCut 데스크톱 실행. 서버·git 없음. 루트 래퍼도 추가.
+- 백업: 구 통합본은 git 히스토리(`fa7508d` 직전).
 
 **이월/다음**:
 - **Gemini 이미지 자동 생성 브로커** — 이미지는 자동 유지 방침이나 `api/gemini.js`가 아직
