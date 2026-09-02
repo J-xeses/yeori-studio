@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
 import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
+import { resolveVideoPolicy, VIDEO_MODES } from '../lib/videoPolicy'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VideoTab.module.css'
@@ -119,6 +120,43 @@ export default function VideoTab() {
     const id = setInterval(() => setGData(loadGPoints()), 2000)
     return () => clearInterval(id)
   }, [])
+
+  // ── 영상 체크리스트 (수동 Veo 제작 대상 컷) ──────────────────────────
+  const [vChk, setVChk] = useState(null)
+  const [vChkOpen, setVChkOpen] = useState(true)
+  const [vUpload, setVUpload] = useState({})   // { [cutNo]: { busy, keepAudio, result } }
+  const loadVChk = useCallback(() => {
+    const epNum = state.episode?.number
+    if (epNum == null) { setVChk(null); return }
+    fetch(`http://localhost:3001/api/episode-video-checklist?epNum=${epNum}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setVChk(d) })
+      .catch(() => {})
+  }, [state.episode?.number])
+  useEffect(() => { loadVChk() }, [loadVChk])
+  const setCutVideoMode = (cutNo, mode) => {
+    const cut = (state.cuts || []).find(c => c.no === cutNo)
+    if (cut?.id) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { videoMode: mode } })
+    setTimeout(loadVChk, 100)
+  }
+  const uploadCutVideo = async (cutNo, file, keepAudio) => {
+    const epNum = state.episode?.number
+    if (!file || epNum == null) return
+    const row = vChk?.cuts?.find(c => c.no === cutNo)
+    const trimTo = row?.duration && row.duration > 0 ? `&trimTo=${row.duration}` : ''
+    setVUpload(p => ({ ...p, [cutNo]: { ...p[cutNo], busy: true, result: null } }))
+    try {
+      const r = await fetch(
+        `http://localhost:3001/api/upload-cut-video?epNum=${epNum}&cutNo=${cutNo}${trimTo}${keepAudio ? '&keepAudio=1' : ''}`,
+        { method: 'POST', headers: { 'Content-Type': 'video/mp4' }, body: file },
+      )
+      const d = await r.json()
+      setVUpload(p => ({ ...p, [cutNo]: { busy: false, result: r.ok ? d : { error: d.error || '실패' } } }))
+      if (r.ok) loadVChk()
+    } catch (e) {
+      setVUpload(p => ({ ...p, [cutNo]: { busy: false, result: { error: e.message } } }))
+    }
+  }
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
   const setVideoClips = (updater) => {
@@ -801,6 +839,88 @@ export default function VideoTab() {
       </div>
 
       <div className={s.scrollBody}>
+
+      {/* ── 영상 체크리스트 — 수동 Veo 제작 대상 컷 ── */}
+      {vChk && (
+        <div style={{ background:'#141418', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:'12px 14px', marginBottom:16 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }} onClick={() => setVChkOpen(o => !o)}>
+            <div style={{ fontSize:13, fontWeight:700, color:'#e8e6f0' }}>
+              영상 체크리스트
+              <span style={{ marginLeft:8, fontSize:11, fontWeight:600, color:'#9490a8' }}>
+                정책: {vChk.policy === 'video-first' ? '영상 중심(LF)' : vChk.policy === 'mixed' ? '혼합(SF)' : '이미지+모션 중심(IG)'}
+                {' · '}Veo 필요 <b style={{ color:'#a78bfa' }}>{vChk.veoNeeded}</b>컷 · 완료 <b style={{ color:'#4ade80' }}>{vChk.veoDone}</b>
+              </span>
+            </div>
+            <button style={{ background:'none', border:'none', color:'#9490a8', cursor:'pointer' }}>{vChkOpen ? '▲' : '▼'}</button>
+          </div>
+
+          {vChkOpen && (
+            <div style={{ marginTop:10, display:'flex', flexDirection:'column', gap:8 }}>
+              {vChk.cuts.map(row => {
+                const up = vUpload[row.no] || {}
+                const keepAudio = up.keepAudio ?? !!row.dialogue   // 대사 있으면 립싱크로 오디오 유지 기본
+                return (
+                  <div key={row.no} style={{ background:'#1c1c22', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'8px 10px' }}>
+                    <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:'#e8e6f0', minWidth:46 }}>CUT {row.no}</span>
+                      <span style={{ fontSize:10, color:'#5c5870' }}>{row.cutType}{row.cutMark === 'SIGNATURE' && ' ✨'}</span>
+                      <select value={row.videoMode} onChange={e => setCutVideoMode(row.no, e.target.value)}
+                        style={{ fontSize:11, background:'#141418', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:4, padding:'2px 4px' }}>
+                        {VIDEO_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                      {row.duration && <span style={{ fontSize:10, color:'#9490a8', fontFamily:'monospace' }}>{row.duration}s</span>}
+                      <span style={{ fontSize:11, fontWeight:700, color: row.hasVideo ? '#4ade80' : row.videoMode === 'veo' ? '#fbbf24' : '#5c5870' }}>
+                        {row.hasVideo ? '✓ 업로드됨' : row.videoMode === 'veo' ? '· 제작 필요' : row.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
+                      </span>
+                    </div>
+
+                    {row.videoMode === 'veo' && (
+                      <div style={{ marginTop:6, display:'flex', flexDirection:'column', gap:5 }}>
+                        {row.videoPrompt && (
+                          <div style={{ display:'flex', gap:6, alignItems:'flex-start' }}>
+                            <button onClick={() => navigator.clipboard.writeText(row.videoPrompt)}
+                              style={{ fontSize:10, fontWeight:700, color:'#c4b5fd', background:'rgba(167,139,250,0.12)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:4, padding:'2px 7px', cursor:'pointer', whiteSpace:'nowrap' }}>
+                              VP 복사
+                            </button>
+                            <span style={{ fontSize:10.5, color:'#9490a8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }} title={row.videoPrompt}>
+                              {row.videoPrompt.replace(/\n/g, ' ')}
+                            </span>
+                          </div>
+                        )}
+                        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', fontSize:10.5, color:'#9490a8' }}>
+                          {row.startFrame
+                            ? <a href={row.startFrame} download={`cut_${String(row.no).padStart(2,'0')}_start.jpg`}
+                                style={{ color:'#60a5fa', fontWeight:700 }}>🖼 시작 프레임 저장</a>
+                            : <span style={{ color:'#f87171' }}>⚠ 시작 프레임 이미지 없음 (G2 먼저)</span>}
+                          <label style={{ display:'flex', alignItems:'center', gap:3 }}>
+                            <input type="checkbox" checked={keepAudio}
+                              onChange={e => setVUpload(p => ({ ...p, [row.no]: { ...p[row.no], keepAudio: e.target.checked } }))} />
+                            Veo 오디오 유지(립싱크)
+                          </label>
+                        </div>
+                        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                          <label style={{ fontSize:10.5, fontWeight:700, color:'#a78bfa', background:'rgba(167,139,250,0.1)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:4, padding:'3px 9px', cursor:'pointer' }}>
+                            {up.busy ? '업로드 중…' : '📤 완성본 mp4 업로드'}
+                            <input type="file" accept="video/mp4,video/*" hidden disabled={up.busy}
+                              onChange={e => { const f = e.target.files[0]; if (f) uploadCutVideo(row.no, f, keepAudio); e.target.value = '' }} />
+                          </label>
+                          {up.result?.error && <span style={{ fontSize:10, color:'#f87171' }}>{up.result.error}</span>}
+                          {up.result?.success && <span style={{ fontSize:10, color:'#4ade80' }}>✓ {up.result.sizeKB}KB{up.result.trimmed ? ` · ${row.duration}s로 트림` : ''}{up.result.keptAudio ? ' · 오디오 유지' : ''}</span>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              <div style={{ fontSize:10, color:'#5c5870', lineHeight:1.5, marginTop:2 }}>
+                Veo/Flow에서 직접 제작 → VP 프롬프트 + 시작 프레임 사용 → 완성본 mp4를 여기 업로드.
+                업로드 시 1080×1920 정규화 + 컷 길이로 트림. 방식 셀렉트로 컷마다 veo/모션/정지 override.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className={s.mainSplit}>
         <div className={s.mainSplitCol}>
         <div className={s.videoWrapper}

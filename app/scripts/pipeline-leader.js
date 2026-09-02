@@ -141,10 +141,9 @@ async function shouldAutoApprove(stage, cutStatus) {
 // 승인된 컷은 지금 진행 중인 요청이 끝난 뒤 다음 사이클에서 한꺼번에 처리한다
 // (studio-run-g2/g4 자체가 여러 cutIds를 한 번에 배치 처리하도록 이미 설계되어 있음).
 let g2InFlight = false
-let g4InFlight = false
 let g5Triggered = false
 let g2StartedAt = 0
-let g4StartedAt = 0
+// g4InFlight/g4StartedAt 제거 — G4(영상)는 더 이상 자동 트리거 안 함(2026-09-02, 수동 전환)
 
 // G2/G4 락 해제는 "요청 보낸 컷 전부 산출물이 생겼는지"로 판단하는데, Flow/Veo가
 // 정책 거부 등으로 일부 컷 생성에 실패하면 그 컷은 영원히 hasImage/hasVideo=false로
@@ -154,7 +153,6 @@ let g4StartedAt = 0
 // 눈에 띄게 경고를 남겨 "조용히 멈춤" 대신 "다음 사이클에 다시 시도 + 사람이 알아챌 수
 // 있게" 만든다.
 const G2_TIMEOUT_MS = 10 * 60 * 1000
-const G4_TIMEOUT_MS = 15 * 60 * 1000
 
 // 반환값: 목표 단계(TO_STAGE)까지 전체 컷이 완료됐는지(true/false) — main()이 이걸로
 // 더 이상 폴링할 필요가 없다고 판단해서 스스로 종료한다.
@@ -169,16 +167,11 @@ async function checkAndAdvance() {
 
   // ── 완료 감지: 이전에 요청 보낸 배치가 전부 산출물을 냈으면 에피소드 단위 락 해제 ──
   if (g2InFlight && cuts.filter(c => c.g1).every(c => c.hasImage)) g2InFlight = false
-  if (g4InFlight && cuts.filter(c => c.g2).every(c => c.hasVideo)) g4InFlight = false
 
   // ── 타임아웃 안전장치: 일부 컷이 생성 실패해서 완료 감지가 영원히 안 되는 경우 대비 ──
   if (g2InFlight && Date.now() - g2StartedAt > G2_TIMEOUT_MS) {
     log('G2', `⚠️ ${G2_TIMEOUT_MS / 60000}분 경과했는데도 미완료 컷 있음 — 일부 실패했을 가능성, 락 강제 해제 후 다음 사이클에 재시도`)
     g2InFlight = false
-  }
-  if (g4InFlight && Date.now() - g4StartedAt > G4_TIMEOUT_MS) {
-    log('G4', `⚠️ ${G4_TIMEOUT_MS / 60000}분 경과했는데도 미완료 컷 있음 — 일부 실패했을 가능성(예: Google 정책 거부), 락 강제 해제 후 다음 사이클에 재시도`)
-    g4InFlight = false
   }
 
   // ── G1: 트리거할 게 없는 단계(사람이 스튜디오 UI에서 승인) — 완료 여부만 로그로 확인 ──
@@ -219,22 +212,15 @@ async function checkAndAdvance() {
     }
   }
 
-  // ── G4 트리거: G2 "승인"된(사람이 이미지 선택 완료) 컷 중 영상이 아직 없는 것들(에피소드당 동시 1건) ──
-  if (stageInRange('g4')) {
-    if (isStageComplete(cuts, 'g4')) {
-      log('G4', '이미 완료된 단계 — 스킵')
-    } else if (!g4InFlight) {
-      const g4Candidates = cuts.filter(c => c.g2 && !c.hasVideo)
-      if (g4Candidates.length) {
-        const cutIds = g4Candidates.map(c => c.no)
-        g4InFlight = true
-        log('G4', `영상 생성 요청 → 컷 ${cutIds.join(',')}`)
-        const r = await api('POST', '/api/mcp/studio-run-g4', { episodeId: EPISODE_ID, cutIds })
-        if (!r.ok) { log('G4', `요청 실패 — ${r.data?.error || r.status}`); g4InFlight = false }
-        else if (r.data?.skippedForCredit?.length) {
-          log('G4', `⚠️ 크레딧 부족 — 컷 ${r.data.skippedForCredit.join(',')}는 이번엔 건너뜀(다음 사이클에 재시도, 크레딧 탭에서 "자동 확인"/리셋으로 보충 가능)`)
-        }
-      }
+  // ── G4: 영상 생성은 이제 자동 트리거하지 않음 ──────────────────────
+  // Flow/Veo 브라우저 자동화(video-automation.js)는 벤더 UI 변경으로 반복적으로 깨져서
+  // 파이프라인 신뢰성을 못 지켰다(2026-09-02 결정). 영상 컷은 사람이 Veo/Flow에서 직접
+  // 제작 → 스튜디오 "영상 만들기" 탭 체크리스트에서 mp4 업로드하는 방식으로 전환.
+  // 리더는 "어느 컷이 영상 필요한데 아직 없는지" 보고만 한다.
+  if (stageInRange('g4') && !isStageComplete(cuts, 'g4')) {
+    const needVideo = cuts.filter(c => c.g2 && !c.hasVideo)
+    if (needVideo.length) {
+      log('G4', `수동 제작 대기 — 컷 ${needVideo.map(c => c.no).join(',')} (Veo/Flow 직접 제작 후 영상 탭에서 업로드)`)
     }
   }
 

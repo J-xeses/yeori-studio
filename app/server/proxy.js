@@ -4698,6 +4698,130 @@ app.get('/api/cut-timing', async (req, res) => {
   }
 })
 
+// ── 영상 정책 (server 사본 — src/lib/videoPolicy.js와 동기 유지) ──────
+function serverVideoPolicy(ep) {
+  if (ep?.videoPolicy) return ep.videoPolicy
+  const ct = String(ep?.contentType || '').toUpperCase()
+  if (ct === 'LF') return 'video-first'
+  if (ct === 'SF') return 'mixed'
+  return 'image-first'
+}
+function serverCutVideoMode(cut, ep) {
+  if (['veo', 'motion', 'still'].includes(cut?.videoMode)) return cut.videoMode
+  const ctype = String(cut?.cutType || 'YEORI').toUpperCase()
+  if (['GRAPHIC', 'CAPCUT', 'BROLL'].includes(ctype)) return 'motion'
+  const policy = serverVideoPolicy(ep)
+  const hasSpeech = !!(String(cut?.dialogue || '').trim() || String(cut?.narration || '').trim())
+  if (policy === 'video-first') return hasSpeech ? 'veo' : 'motion'
+  if (policy === 'mixed') return hasSpeech ? 'veo' : 'still'
+  return hasSpeech ? 'motion' : 'still'
+}
+
+// GET /api/episode-video-checklist?epNum — VideoTab "영상 체크리스트" 데이터.
+// 컷별: 영상 방식(veo/motion/still), 진짜 Veo 필요 여부, VP 프롬프트, 시작 프레임
+// 이미지 URL(G2 승인본), 현재 영상 유무, 대사, 길이. 수동 제작을 위한 정보 묶음.
+app.get('/api/episode-video-checklist', (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
+    const flowDir = path.join(MEDIA_ROOT, 'downloads', 'flow', `ep${epNum}`)
+    const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+    const audioDir = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${epNum}`)
+    const gData = loadGpointsFile()[episodeCode] || {}
+    const listDir = d => { try { return fs.readdirSync(d) } catch { return [] } }
+    const flowFiles = listDir(flowDir)
+
+    const out = cuts.map(c => {
+      const p = String(c.no).padStart(2, '0')
+      const mode = serverCutVideoMode(c, ep.episode)
+      const g = gData[`cut_${c.no}`] || {}
+      // 시작 프레임 = G2에서 사람이 고른 이미지 우선, 없으면 cut_NN(_a).jpg
+      let startFrame = null
+      if (g.selectedImage && flowFiles.includes(g.selectedImage)) startFrame = g.selectedImage
+      if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[ab])?\\.(jpe?g|png|webp)$`, 'i').test(f))
+      const hasVideo = listDir(videoDir).some(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+      return {
+        no: c.no,
+        cutType: c.cutType || 'YEORI',
+        videoMode: mode,
+        needsManualVideo: mode === 'veo',
+        cutMark: c.cutMark || 'NORMAL',
+        dialogue: String(c.dialogue || '').replace(/^없음$/i, '').trim(),
+        narration: String(c.narration || '').replace(/^없음$/i, '').trim(),
+        videoPrompt: c.videoPrompt || '',
+        duration: Number(c.sec) || Number(c.duration) || null,
+        startFrame: startFrame ? `http://localhost:3001/downloads/flow/ep${epNum}/${startFrame}` : null,
+        hasImage: !!startFrame,
+        hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
+        hasVideo,
+        g2: !!g.g2, g4: !!g.g4,
+      }
+    })
+    const veoCuts = out.filter(c => c.needsManualVideo)
+    res.json({
+      policy: serverVideoPolicy(ep.episode),
+      contentType: ep.episode?.contentType || null,
+      total: out.length,
+      veoNeeded: veoCuts.length,
+      veoDone: veoCuts.filter(c => c.hasVideo).length,
+      cuts: out,
+    })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// POST /api/upload-cut-video?epNum=&cutNo=&trimTo=&keepAudio=1 — 수동 제작한 mp4를
+// 컷 규격(1080x1920)으로 정규화 저장. body = 파일 raw stream(save-audio와 동일 방식).
+//   trimTo   : 초 단위. 지정 시 앞부분만 남기고 자름(Veo 8초 → 컷 길이).
+//   keepAudio: '1'이면 원본 오디오 유지(립싱크 컷), 기본은 오디오 제거(-an).
+app.post('/api/upload-cut-video', (req, res) => {
+  const { epNum, cutNo, trimTo, keepAudio } = req.query
+  if (!epNum || !cutNo) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  const padded = String(cutNo).padStart(2, '0')
+  const videoDir = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`)
+  fs.mkdirSync(videoDir, { recursive: true })
+  const tmpPath = path.join(videoDir, `cut_${padded}_upload_tmp.mp4`)
+  const outPath = path.join(videoDir, `cut_${padded}.mp4`)
+
+  const chunks = []
+  req.on('data', c => chunks.push(c))
+  req.on('error', () => res.status(400).json({ error: '업로드 스트림 오류' }))
+  req.on('end', () => {
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+    fs.writeFileSync(tmpPath, buf)
+    const args = ['-y']
+    if (trimTo && parseFloat(trimTo) > 0) args.push('-t', String(parseFloat(trimTo)))
+    args.push('-i', tmpPath,
+      '-vf', `${s2cFitFilter('cover')},format=yuv420p`,
+      '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60', '-movflags', '+faststart')
+    if (keepAudio === '1') args.push('-c:a', 'aac', '-b:a', '192k')
+    else args.push('-an')
+    args.push(outPath)
+    const proc = spawn('ffmpeg', args)
+    let err = ''
+    proc.stderr.on('data', d => { err += d.toString() })
+    proc.on('close', code => {
+      try { fs.unlinkSync(tmpPath) } catch { /* noop */ }
+      if (code !== 0 || !fs.existsSync(outPath)) {
+        return res.status(500).json({ error: `정규화 실패: ${err.slice(-300)}` })
+      }
+      const st = fs.statSync(outPath)
+      // 수동 제작 영상도 매니페스트에 기록(이중 모션 가드 대상 — 켄번스 스킵)
+      recordCutMotion(epNum, cutNo, { method: 'veo-manual', motion: null, baked: true })
+      res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), trimmed: !!(trimTo && parseFloat(trimTo) > 0), keptAudio: keepAudio === '1' })
+    })
+    proc.on('error', e => {
+      try { fs.unlinkSync(tmpPath) } catch { /* noop */ }
+      res.status(500).json({ error: `ffmpeg 실행 오류: ${e.message}` })
+    })
+  })
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })
