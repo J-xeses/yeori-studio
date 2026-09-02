@@ -4737,6 +4737,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
     const gData = loadGpointsFile()[episodeCode] || {}
     const listDir = d => { try { return fs.readdirSync(d) } catch { return [] } }
     const flowFiles = listDir(flowDir)
+    const videoFiles = listDir(videoDir)
 
     const out = cuts.map(c => {
       const p = String(c.no).padStart(2, '0')
@@ -4746,7 +4747,8 @@ app.get('/api/episode-video-checklist', (req, res) => {
       let startFrame = null
       if (g.selectedImage && flowFiles.includes(g.selectedImage)) startFrame = g.selectedImage
       if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[ab])?\\.(jpe?g|png|webp)$`, 'i').test(f))
-      const hasVideo = listDir(videoDir).some(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+      // 다운스트림 소비자(run-cutter / assembleMakingFilm / concat-video)가 전부 이 파일명을 읽는다
+      const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
       return {
         no: c.no,
         cutType: c.cutType || 'YEORI',
@@ -4756,11 +4758,14 @@ app.get('/api/episode-video-checklist', (req, res) => {
         dialogue: String(c.dialogue || '').replace(/^없음$/i, '').trim(),
         narration: String(c.narration || '').replace(/^없음$/i, '').trim(),
         videoPrompt: c.videoPrompt || '',
-        duration: Number(c.sec) || Number(c.duration) || null,
+        duration: serverCutTargetDuration(c),   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
         startFrame: startFrame ? `http://localhost:3001/downloads/flow/ep${epNum}/${startFrame}` : null,
+        startFrameName: startFrame || null,
         hasImage: !!startFrame,
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
-        hasVideo,
+        hasVideo: !!savedFile,
+        savedFile,                              // 실제 저장된 파일명(cut_NN.mp4 / _overlay / _final)
+        savePath: `downloads/video/ep${epNum}/cut_${p}.mp4`,   // 업로드 시 정규화되어 저장되는 위치
         g2: !!g.g2, g4: !!g.g4,
       }
     })
@@ -4771,6 +4776,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
       total: out.length,
       veoNeeded: veoCuts.length,
       veoDone: veoCuts.filter(c => c.hasVideo).length,
+      videoDir,   // 절대 경로 — 업로드본이 여기 cut_NN.mp4로 정규화 저장됨. 조립 단계도 여기서 읽음
       cuts: out,
     })
   } catch (err) {

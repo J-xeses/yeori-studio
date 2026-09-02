@@ -856,6 +856,12 @@ export default function VideoTab() {
 
           {vChkOpen && (
             <div style={{ marginTop:10, display:'flex', flexDirection:'column', gap:8 }}>
+              {vChk.videoDir && (
+                <div style={{ fontSize:10, color:'#7c7890', fontFamily:'monospace', background:'#0f0f13', border:'1px solid rgba(255,255,255,0.05)', borderRadius:4, padding:'5px 8px', wordBreak:'break-all' }}>
+                  📁 저장 폴더: {vChk.videoDir}
+                  <span style={{ color:'#5c5870' }}> — 업로드본이 <b style={{ color:'#9490a8' }}>cut_NN.mp4</b>로 정규화 저장됩니다(조립 단계도 여기서 읽음)</span>
+                </div>
+              )}
               {vChk.cuts.map(row => {
                 const up = vUpload[row.no] || {}
                 const keepAudio = up.keepAudio ?? !!row.dialogue   // 대사 있으면 립싱크로 오디오 유지 기본
@@ -872,6 +878,7 @@ export default function VideoTab() {
                       <span style={{ fontSize:11, fontWeight:700, color: row.hasVideo ? '#4ade80' : row.videoMode === 'veo' ? '#fbbf24' : '#5c5870' }}>
                         {row.hasVideo ? '✓ 업로드됨' : row.videoMode === 'veo' ? '· 제작 필요' : row.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
                       </span>
+                      {row.savedFile && <span style={{ fontSize:9.5, color:'#5c5870', fontFamily:'monospace' }}>{row.savedFile}</span>}
                     </div>
 
                     {row.videoMode === 'veo' && (
