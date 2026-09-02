@@ -36,60 +36,66 @@ function numberToCodeMap() {
   return _stateCache.map
 }
 
-// epRef: 숫자(1) · 번호 문자열("1") · "ep1" · 이미 코드("LF_T01") 무엇이든 폴더 키로 정규화.
-export function epKey(epRef) {
+// ── 코드 → 플랫폼/시리즈 파싱 ────────────────────────────────────────
+// 코드 형식: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리+ 숫자}[_{슬러그}]
+//   SF_E01 → YU/SF_E/SF_E01     LF_T01 → YU/LF_T/LF_T01
+//   IG_R02 → IG/IG_R/IG_R02     IG_P01 → IG/IG_P/IG_P01
+// 안 맞는 코드(ep3, TEST_OVERLAY, IG_RL_E02 …)는 전부 _etc/{code}/.
+const PLATFORM = { SF: 'YU', LF: 'YU', IG: 'IG', TK: 'TK' }
+const CODE_RE = /^(SF|LF|IG|TK)_([A-Z])(\d{2,})(?:_[A-Z0-9]+)?$/
+
+export function parseCode(code) {
+  const m = String(code ?? '').trim().toUpperCase().match(CODE_RE)
+  if (!m) return null
+  return { content: m[1], kind: m[2], platform: PLATFORM[m[1]], series: `${m[1]}_${m[2]}` }
+}
+
+// epRef: 숫자(1) · "1" · "ep1" · 코드("LF_T01") → 실제 코드 문자열
+export function resolveCode(epRef) {
   const s = String(epRef ?? '').trim()
   if (!s) return 'ep0'
   const m = s.match(/^(?:ep)?(\d+)$/i)
-  const digits = m ? m[1] : null
-  if (HIER) {
-    if (digits) return numberToCodeMap()[digits] || `ep${digits}`
-    return s                         // 이미 코드
-  }
-  // 2단계: 기존 규칙 그대로 (숫자 → ep{N}, 코드는 그대로)
-  if (digits) return `ep${digits}`
+  if (m) return numberToCodeMap()[m[1]] || `ep${m[1]}`
   return s
 }
+export const epKey = resolveCode   // 하위호환 별칭
 
-// ── 에피소드별 산출물 디렉터리 ────────────────────────────────────────
+// 인스턴스 폴더 (downloads/{platform}/{series}/{code}/  또는  downloads/_etc/{code}/)
+export function instanceDir(epRef) {
+  const code = resolveCode(epRef)
+  const p = parseCode(code)
+  return p ? path.join(DOWNLOADS, p.platform, p.series, code)
+           : path.join(DOWNLOADS, '_etc', code)
+}
+export const episodeDir = instanceDir
+
+// ── 인스턴스 안 번호 하위폴더 ────────────────────────────────────────
+const SUBDIR = {
+  script: '01_script', flow: '02_images', images: '02_images', audio: '03_audio',
+  making: '04_making', video: '05_video',
+  output: '06_publishing', publishing: '06_publishing', // 편집·CapCut·raw
+  final: '07_output',                                   // 완성본·썸네일·업로드 패키지
+}
 function epSub(epRef, kind) {
-  if (HIER) {
-    const sub = kind === 'flow' ? 'images' : kind
-    return path.join(DOWNLOADS, 'episodes', epKey(epRef), sub)
-  }
-  return path.join(DOWNLOADS, kind, epKey(epRef))
+  return path.join(instanceDir(epRef), SUBDIR[kind] || kind)
 }
 
-export function imagesDir(epRef)       { return epSub(epRef, 'flow') }   // 생성 이미지 (구 flow/ep{N})
-export const flowDir = imagesDir                                         // 하위호환 별칭
+export function imagesDir(epRef)       { return epSub(epRef, 'flow') }
+export const flowDir = imagesDir
 export function audioDir(epRef)        { return epSub(epRef, 'audio') }
 export function videoDir(epRef)        { return epSub(epRef, 'video') }
 export function makingDir(epRef)       { return epSub(epRef, 'making') }
-export function outputDir(epRef)       { return epSub(epRef, 'output') }
-export function finalDir(epRef)        { return epSub(epRef, 'final') }
-export function voiceInsertDir(epRef)  { return epSub(epRef, 'voice-insert') }
+export function outputDir(epRef)       { return epSub(epRef, 'output') }    // 06_publishing
+export function finalDir(epRef)        { return epSub(epRef, 'final') }     // 07_output
+export function voiceInsertDir(epRef)  { return path.join(epSub(epRef, 'audio'), 'voice-insert') }
+// 단계별 승인 확정본 모음 (구 deliverables/) — 06_publishing 아래로
+export function deliverablesDir(epRef) { return path.join(epSub(epRef, 'output'), 'deliverables') }
+export function scriptDir(epRef)       { return epSub(epRef, 'script') }
 
-// 손글씨 스틸 캐시 (에피소드 무관 공유 — 구 downloads/making/hw_stills)
-export function hwStillsDir() {
-  return HIER ? path.join(DOWNLOADS, 'library', 'hw_stills') : path.join(DOWNLOADS, 'making', 'hw_stills')
-}
-// /api/run-video(DEPRECATED)가 쓰는 video-prompts.json (에피소드 무관 임시)
-export function videoPromptsPath() {
-  return HIER ? path.join(DOWNLOADS, 'runtime', 'video-prompts.json') : path.join(DOWNLOADS, 'video', 'video-prompts.json')
-}
-
-// deliverables/script는 예전부터 code 키 — HIER 여부와 무관하게 epKey가 코드 그대로 통과
-export function deliverablesDir(epRef) {
-  return HIER ? path.join(DOWNLOADS, 'episodes', epKey(epRef), 'deliverables')
-              : path.join(DOWNLOADS, 'deliverables', epKey(epRef))
-}
-export function scriptDir(epRef) {
-  return HIER ? path.join(DOWNLOADS, 'episodes', epKey(epRef), 'script')
-              : path.join(DOWNLOADS, 'script', epKey(epRef))
-}
-export function episodeDir(epRef) {
-  return HIER ? path.join(DOWNLOADS, 'episodes', epKey(epRef)) : DOWNLOADS
-}
+// 손글씨 스틸 캐시 (에피소드 무관 공유)
+export function hwStillsDir() { return path.join(DOWNLOADS, 'library', 'hw_stills') }
+// /api/run-video(DEPRECATED)가 쓰는 video-prompts.json
+export function videoPromptsPath() { return path.join(DOWNLOADS, 'runtime', 'video-prompts.json') }
 
 // ── 공유 라이브러리 (에피소드 무관) ──────────────────────────────────
 export function sfxDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'sfx')   : path.join(DOWNLOADS, 'sfx'),   sub) }
