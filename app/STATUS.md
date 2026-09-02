@@ -5,7 +5,7 @@
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
 > 세부는 항상 하단 로그 기준. 2026-09-02 현재 마지막 로그 = "2026-09-02
-> (downloads 폴더 위계 개편 v2 — 플랫폼/시리즈/코드/번호폴더)" 절.
+> (downloads 폴더 위계 개편 v3 — 브랜드/플랫폼/시리즈/코드/번호폴더)" 절.
 
 ---
 
@@ -16,24 +16,27 @@
 "영상 체크리스트"에서 mp4 업로드. 이미지는 자동 유지 방침이나 Gemini API 브로커는 미착수
 (현재도 실질 Flow 수동). 상세 = 하단 "2026-09-02" 로그.
 
-**2026-09-02: downloads 폴더 위계 전면 개편 완료 (구조 v2).**
+**2026-09-02: downloads 폴더 위계 전면 개편 완료 (구조 v3 — 브랜드 래퍼).**
 ```
 downloads/
-├── YU/{SF_E,LF_E,SF_T,LF_T}/{code}/     유튜브 (SF/LF · 에피소드E/트렌드T)
-├── IG/{IG_P,IG_R,IG_S,IG_T}/{code}/     인스타 (피드P/릴스R/스토리S/트렌드릴스T)
-├── TK/                                   틱톡 (자리만, 규칙 미정)
-├── _etc/{code}/                          패턴 안 맞는 옛/테스트 (ep3·TEST_OVERLAY 등)
-├── library/{characters,sfx,hooks,hw_stills}
-├── runtime/{prompts.json, video-prompts.json}
+├── seoyeori/                            브랜드 (미래 멀티브랜드 대비)
+│   ├── {YU,IG,TK}/{series}/{code}/{01_script..07_output}
+│   │     YU: SF_E/LF_E(에피소드) SF_T/LF_T(트렌드)  ·  IG: IG_P/IG_R/IG_S/IG_T
+│   ├── _etc/{code}/                     패턴 안 맞는 옛/테스트 (ep3·TEST_OVERLAY 등)
+│   └── characters/  hw_stills/          브랜드별
+├── _shared/{sfx, hooks}                 브랜드 무관 공용
+├── runtime/{prompts, video-prompts}.json          전역 (Flow 실행)
 ├── state/{gpoints,trend_episodes,code-task-queue,credit-usage,capcut_config,yeori_edit_meta}.json
+│                                         전역 (⚠️ 멀티브랜드 시 분리 필요)
 ├── flow/chrome-profile-*  (이동 안 함)   insta/  (구 인스타번호 시스템, 불변)
 ```
-각 `{code}/` 안: `01_script 02_images 03_audio 04_making 05_video 06_publishing 07_output`
-(06 = 편집·CapCut·raw·deliverables, 07 = 완성본·썸네일·업로드패키지).
-경로 조립은 전부 `mediaPaths.js`(server+client) `parseCode()` 경유. 코드 중복 입력은
-reducer+UI 차단(`f8bc545`). `downloads/` git 추적 해제. 되돌리기:
-`migrate-downloads-v2.js --undo` (+ mediaPaths.js v1로).
-커밋: `43f7421`→`5288d13`→`92bfe42`(v1) → `f8bc545`(중복가드) → `e3583e5`(v2). 상세 = 하단 로그.
+`{code}/` 안: `01_script 02_images 03_audio 04_making 05_video 06_publishing 07_output`
+(06 = 편집·CapCut·raw·deliverables, 07 = 완성본·썸네일·업로드패키지 = 퍼블리싱 결과물).
+경로 조립은 전부 `mediaPaths.js`(server+client): `BRAND='seoyeori'` + `parseCode()`
+(`/^(SF|LF|IG|TK)_([ETPRS])(\d{2,})/`). 에피소드 코드 형식도 이에 맞춤(`EPISODE_CODE_RE`,
+`659a6c9`). 코드 중복 입력 차단(`f8bc545`). `downloads/` git 추적 해제.
+되돌리기: `migrate-downloads-v3.js --undo` → `-v2 --undo` → mediaPaths.js revert.
+커밋: v1 `92bfe42` → 중복가드 `f8bc545` → v2 `e3583e5`·`659a6c9` → v3 `3ebd7f6`. 상세 = 하단 로그.
 
 
 지난 이틀(8/31~9/1) 세션에서 메이킹 탭 자동 편집 파이프라인을 대거 완성함
@@ -608,7 +611,7 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 
 ---
 
-## 2026-09-02 (downloads 폴더 위계 개편 v2 — 플랫폼/시리즈/코드/번호폴더)
+## 2026-09-02 (downloads 폴더 위계 개편 v3 — 브랜드/플랫폼/시리즈/코드/번호폴더)
 
 **동기**: `C:\yeori-studio\downloads` 최상위에 에피소드 산출물(`flow/audio/video/making/output/
 final/deliverables/script`) + 공유 라이브러리(`sfx/hooks/flow-character`) + 앱 상태 json +
@@ -677,10 +680,26 @@ downloads/
   `SF|LF→YU, IG→IG, TK→TK` 플랫폼. series = 코드에서 숫자 뗀 것(`LF_T01`→`LF_T`).
   안 맞으면 `_etc/{code}/`. 서버 `instanceDir(epRef)` / 클라 `instanceUrl(episode)`.
 - 호출부는 여전히 `epNum` 그대로 넘김 — 헬퍼가 number→code→platform/series 해석.
-- **되돌리기**: `migrate-downloads-v2.js --undo` (state/migrate-v2-manifest.json) +
-  mediaPaths.js를 v1(`episodes/{code}/`)로.
-- **스모크 통과**: scan-media(ep2→`IG/IG_R/IG_R02/02_images`, ep99→`_etc/TEST_OVERLAY`) +
-  video-checklist + 정적파일(`IG/IG_R/IG_R02/02_images`, `library/sfx`) 200 + `npm run build`.
-- **미해결**: `insta/`(FD/RL/PT/ST 인스타번호 시스템)를 `IG/`로 합칠지 — 별개 서브시스템이라
-  이번엔 보류. TK 폴더 규칙 미정.
+- 에피소드 코드 형식도 이에 맞춤 — `EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRS])(\d{2,})/`
+  (`659a6c9`, 구 `_E` 형식은 LEGACY 정규식으로 계속 허용). `formatEpisodeCode('IG_R',2)`→`IG_R02`.
+
+### 구조 v3 — 브랜드 래퍼 (커밋 `3ebd7f6`, 미래 멀티브랜드 대비)
+`migrate-downloads-v3.js --go` (8건). v2 구조를 `downloads/seoyeori/` 아래로:
+```
+downloads/
+├── seoyeori/{YU,IG,TK,_etc}/…        콘텐츠 (v2 구조 그대로, 브랜드 하위로)
+│   └── characters/  hw_stills/        브랜드별 (캐릭터 레퍼런스)
+├── _shared/{sfx, hooks}              브랜드 무관 공용 (구 library/)
+├── runtime/  state/  flow/  insta/   전역·불변
+```
+- `mediaPaths.js`: `export const BRAND='seoyeori'`. `instanceDir/instanceUrl`에 브랜드
+  세그먼트. `charactersDir/hwStillsDir`→브랜드 하위, `sfxDir/hooksDir`→`_shared/`.
+  `sfxFile/bgmFile` 접두어 매칭에 `_shared/`·`library/`(레거시)·bare 모두 허용.
+  vestigial HIER 분기 전부 제거.
+- **state는 여전히 전역** — 진짜 멀티브랜드는 studio-state.json/gpoints 상태 계층까지
+  나눠야 함(폴더 정리와 별개, 그때 착수).
+- **되돌리기**: `migrate-downloads-v3.js --undo` → `-v2 --undo` → mediaPaths.js revert.
+- **스모크 통과**: scan-media(ep2→`seoyeori/IG/IG_R/IG_R02/02_images`) + video-checklist +
+  sfx-catalog(→`_shared/sfx/..`) + 정적파일(`seoyeori/characters`, `_shared/sfx`) 200 + build.
+- **미해결**: `insta/`(FD/RL/PT/ST) 서브시스템을 `seoyeori/IG/`로 합칠지. TK 코드 규칙.
 
