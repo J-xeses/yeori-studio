@@ -6,27 +6,29 @@
 //   - 슬러그: 선택, 대문자/숫자만 (예: SHOE)
 // 이 정규식/파싱 로직은 src/lib/episodeCode.js(클라이언트)와 반드시 동일하게 유지할 것.
 
-export const EPISODE_CODE_RE = /^([A-Z0-9_]+)_E(\d{2,})(?:_([A-Z0-9]+))?$/
+// 형식: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리+ 번호}[_{슬러그}]
+//   SF_E01 · LF_T01 · IG_R02 · IG_P01 … — 폴더 경로(downloads/{platform}/{series}/{code}/)와 직결.
+//   src/lib/episodeCode.js·server/lib/mediaPaths.js parseCode 와 동일하게 유지할 것.
+export const EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRS])(\d{2,})(?:_([A-Z0-9]+))?$/
+const EPISODE_CODE_RE_LEGACY = /^([A-Z0-9_]+)_E(\d{2,})(?:_([A-Z0-9]+))?$/
 
 export function validateEpisodeCode(code) {
   if (typeof code !== 'string' || !code.trim()) {
     return { valid: false, error: '에피소드 코드가 비어있습니다' }
   }
-  if (!EPISODE_CODE_RE.test(code)) {
-    return { valid: false, error: `형식이 올바르지 않습니다 (예: SF_E01_SHOE) — 입력값: ${code}` }
+  if (!EPISODE_CODE_RE.test(code) && !EPISODE_CODE_RE_LEGACY.test(code)) {
+    return { valid: false, error: `형식이 올바르지 않습니다 (예: SF_E01 · LF_T01 · IG_R02) — 입력값: ${code}` }
   }
   return { valid: true }
 }
 
-// code에서 { contentType, number, slug } 분해. 형식이 안 맞으면 null.
+// code에서 { contentType, kind, number, slug } 분해. 형식이 안 맞으면 null.
 export function parseEpisodeCode(code) {
-  const m = typeof code === 'string' ? code.match(EPISODE_CODE_RE) : null
-  if (!m) return null
-  return {
-    contentType: m[1],
-    number: parseInt(m[2], 10),
-    slug: m[3] || '',
-  }
+  const m = typeof code === 'string' ? code.toUpperCase().match(EPISODE_CODE_RE) : null
+  if (m) return { contentType: m[1], kind: m[2], number: parseInt(m[3], 10), slug: m[4] || '' }
+  const l = typeof code === 'string' ? code.toUpperCase().match(EPISODE_CODE_RE_LEGACY) : null
+  if (l) return { contentType: l[1], kind: 'E', number: parseInt(l[2], 10), slug: l[3] || '' }
+  return null
 }
 
 // gpoints/MCP에서 실제 키로 쓸 코드를 결정 — episode.code(3차 정식 필드) 우선,
