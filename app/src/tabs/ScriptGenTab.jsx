@@ -464,6 +464,20 @@ export default function ScriptGenTab() {
     return m ? m[1].trim().toUpperCase() : ''
   })()
   const derivedCode = formatEpisodeCode(episode?.contentType || 'LF', episode?.number)
+
+  // 에피소드 코드 입력 — 전역 유일해야 함(downloads/episodes/{code}/ 폴더 키).
+  // 로컬 draft로 들고 있으면서 중복이면 경고 + dispatch는 reducer가 막음(SET_EPISODE).
+  const [codeDraft, setCodeDraft] = useState(episode?.code || '')
+  useEffect(() => { setCodeDraft(episode?.code || '') }, [activeEpisodeId, episode?.code])
+  const codeClashEp = (() => {
+    const c = codeDraft.trim().toUpperCase()
+    if (!c) return null
+    const hit = Object.values(episodes || {}).find(
+      e => e.id !== activeEpisodeId && String(e.episode?.code || '').toUpperCase() === c
+    )
+    return hit ? hit.episode : null
+  })()
+
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState('')
   const [activeCut, setActiveCut] = useState(0)
@@ -1200,22 +1214,34 @@ ${currentScript}
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                   <input
                     placeholder={derivedCode}
-                    value={episode?.code || ''}
-                    onChange={e => dispatch({ type: 'SET_EPISODE', p: { code: e.target.value.trim().toUpperCase() } })}
-                    style={{ flex: 1 }}
+                    value={codeDraft}
+                    onChange={e => {
+                      const v = e.target.value.toUpperCase()
+                      setCodeDraft(v)
+                      dispatch({ type: 'SET_EPISODE', p: { code: v.trim() } })
+                    }}
+                    style={{ flex: 1, ...(codeClashEp ? { borderColor: '#f87171' } : {}) }}
                   />
                   {epHeaderCode && epHeaderCode !== (episode?.code || '') && (
                     <button type="button"
-                      onClick={() => dispatch({ type: 'SET_EPISODE', p: { code: epHeaderCode } })}
+                      onClick={() => { setCodeDraft(epHeaderCode); dispatch({ type: 'SET_EPISODE', p: { code: epHeaderCode } }) }}
                       style={{ fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap', padding: '4px 8px', borderRadius: 6,
                         background: 'rgba(167,139,250,0.14)', border: '1px solid rgba(167,139,250,0.35)', color: '#c4b5fd', cursor: 'pointer' }}>
                       대본 EP: {epHeaderCode}
                     </button>
                   )}
                 </div>
+                {codeClashEp && (
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: '#f87171', marginTop: 4, lineHeight: 1.5 }}>
+                    ⚠ 이미 다른 에피소드가 쓰는 코드입니다: “{codeClashEp.title || codeClashEp.number || '?'}”.
+                    같은 코드면 <code>downloads/episodes/{codeDraft.trim().toUpperCase()}/</code> 폴더와
+                    gpoints를 두 에피소드가 공유하게 됩니다. 이 값은 저장되지 않습니다 — 다른 코드로 바꾸세요.
+                  </div>
+                )}
                 <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, lineHeight: 1.5 }}>
-                  비우면 <code>{derivedCode}</code> 자동. gpoints·파일경로에 쓰이므로
-                  {episode?.code ? ' 바꾸면 이 에피소드의 기존 G승인 상태가 새 코드로 안 옮겨짐(재승인 필요).' : ' 처음 한 번만 정하는 게 안전.'}
+                  비우면 <code>{derivedCode}</code> 자동. gpoints·파일경로(<code>downloads/episodes/{'{code}'}/</code>)에
+                  쓰이므로 전역 유일해야 함.
+                  {episode?.code ? ' 바꾸면 이 에피소드의 기존 G승인 상태·산출물이 새 코드 폴더로 안 옮겨짐(재승인·재생성 필요).' : ' 처음 한 번만 정하는 게 안전.'}
                 </div>
               </div>
               <div className={s.field}>

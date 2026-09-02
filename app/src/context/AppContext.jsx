@@ -203,7 +203,18 @@ function reducer(state, action) {
     case 'SET_EL_STATUS': return { ...state, elevenLabsStatus: action.p }
 
     case 'SET_EPISODE': {
-      const newEpisode = { ...state.episode, ...action.p }
+      const p = { ...action.p }
+      // 에피소드 코드는 전역 유일해야 함 — downloads/episodes/{code}/ 폴더 키라서
+      // 중복되면 두 에피소드가 같은 폴더에 산출물을 쓴다(gpoints도 같은 키). 충돌하는
+      // code 변경은 반영하지 않음(다른 필드는 그대로 적용, UI가 경고 표시).
+      if (p.code) {
+        const c = String(p.code).toUpperCase()
+        const clash = Object.values(state.episodes).some(
+          e => e.id !== state.activeEpisodeId && String(e.episode?.code || '').toUpperCase() === c
+        )
+        if (clash) delete p.code
+      }
+      const newEpisode = { ...state.episode, ...p }
       const curEp = state.episodes[state.activeEpisodeId]
       const updatedEp = { ...curEp, episode: newEpisode }
       return {
