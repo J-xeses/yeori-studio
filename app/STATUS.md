@@ -5,7 +5,7 @@
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
 > 세부는 항상 하단 로그 기준. 2026-09-02 현재 마지막 로그 = "2026-09-02
-> (영상 = 수동 제작 전환 …)" 절.
+> (downloads 폴더 위계 정리 — Phase 1·2·3)" 절.
 
 ---
 
@@ -16,12 +16,14 @@
 "영상 체크리스트"에서 mp4 업로드. 이미지는 자동 유지 방침이나 Gemini API 브로커는 미착수
 (현재도 실질 Flow 수동). 상세 = 하단 "2026-09-02" 로그.
 
-**2026-09-02: downloads 폴더 정리 — Phase 1 완료.** `downloads/` 루트 잡동사니(로그·
-capcut 디버그 png·stale json·`_archive_2026-08-15`·`Creative studio`·`pixverse`·
-`temp_capcut`·`*/OLD`·`flow/ep99_*_backup`)를 `downloads/_archive/2026-09-02/`로 이동
-(삭제 X, 238MB). 루트 40개 → 19개. **다음: Phase 2**(경로 조립 375곳을 `mediaPaths.js`
-헬퍼 경유로 일원화) → **Phase 3**(목표 위계 `downloads/episodes/{code}/{images,audio,
-video,making,output,final}` + 마이그레이션 스크립트, **폴더 키 = episode.code**). 상세 = 하단 로그.
+**2026-09-02: downloads 폴더 위계 정리 — Phase 1·2·3 전부 완료.** 새 구조:
+`downloads/episodes/{code}/{images,audio,video,making,output,final,deliverables,script}`
++ `library/{characters,sfx,hooks,hw_stills}` + `runtime/{prompts,video-prompts}.json`
++ `state/{gpoints,trend_episodes,code-task-queue,credit-usage,capcut_config,yeori_edit_meta}.json`
++ `flow/chrome-profile-*`(런타임, 이동 안 함) + `insta/`(불변). 모든 경로 조립은
+`server/lib/mediaPaths.js` + `src/lib/mediaPaths.js` 헬퍼 경유(`HIER=true`). 폴더 키 =
+`episode.code`(예 LF_T01), 없으면 `ep{N}`. `downloads/` git 추적 완전 해제. 되돌리기:
+`node scripts/migrate-downloads.js --undo` + HIER=false. 상세 = 하단 로그.
 
 
 지난 이틀(8/31~9/1) 세션에서 메이킹 탭 자동 편집 파이프라인을 대거 완성함
@@ -617,31 +619,37 @@ final/deliverables/script`) + 공유 라이브러리(`sfx/hooks/flow-character`)
 실제 에피소드 폴더 전부(SF_E01 포함). git-tracked 44개(`downloads/flow/` 루트 얼굴 레퍼런스 등)
 이동 없음 → `git status` clean. proxy 스모크(health/video-checklist/trend-episodes) 통과.
 
-### Phase 2 — 경로 조립 일원화 (미착수)
-현재 `path.join(MEDIA_ROOT, 'downloads', 'flow', 'ep'+N)` 식 직접 조립이 **375곳 / 44파일**
-(`proxy.js` 154, `scripts/*.js`, 클라이언트 탭). 이미 있는 `server/lib/mediaPaths.js` +
-`src/lib/mediaPaths.js`(현재는 신규 추가만, 기존 호출부 미전환)로 전부 몰아넣기.
-클라이언트 URL(`/downloads/flow/ep1/...`)도 헬퍼 경유로. **물리 구조는 그대로** — Phase 3 발판.
+### Phase 2 — 경로 조립 일원화 (완료, 커밋 56482c2·c7961ed·5288d13)
+`path.join(MEDIA_ROOT,'downloads',...)` 직접 조립 ~375곳을 `server/lib/mediaPaths.js` +
+`src/lib/mediaPaths.js` 헬퍼 경유로 전환(`HIER=false`, 동작 불변). proxy.js 95곳 자동
+치환 + 잔여 수동, scripts/*.js 14개(auto-sync에 휩쓸림), 클라 탭(EditMetaTab/MakingTab/
+ExtractTab). `/api/sfx-catalog`·`/api/bgm-library`가 item.path/t.file을 현재 구조 상대경로로
+재작성. 클라 `epMediaUrl(episode, kind)`.
 
-### Phase 3 — 목표 위계 + 마이그레이션 (미착수, **폴더 키 = episode.code**)
+### Phase 3 — 목표 위계 + 마이그레이션 (완료, 커밋 <이번>, `HIER=true`)
+`node scripts/migrate-downloads.js --go` (173건 이동). 실제 구조:
 ```
 downloads/
-├── episodes/{code}/           ← LF_T01, SF_E01 … (code 없으면 ep{N} fallback)
-│   ├── script.txt / images/ / audio/ / video/ / making/ / output/ / final/
-├── insta/{FD,RL,PT,ST}/{num}/ ← 변경 없음(별도 키)
-├── library/{sfx, characters, hooks}/
-├── runtime/{chrome-profile-flow, prompts.json, gen-queue}/
-├── state/{gpoints, trend_episodes, code-task-queue, credit-usage}.json
-└── _archive/
+├── episodes/{code}/{images,audio,video,making,output,final,deliverables,script}
+│     라이브: LF_T01(ep1)·IG_R02(ep2)·TEST_OVERLAY(ep99) / 구 산출물: ep3·ep4·ep98·
+│     ep100·ep998·epT02·SF_E01·IG_RL_E02·test_chat_flow
+├── library/{characters, sfx, hooks, hw_stills}
+├── runtime/{prompts.json, video-prompts.json}
+├── state/{gpoints, trend_episodes, code-task-queue, credit-usage-today,
+│          capcut_config, yeori_edit_meta, migrate-manifest, task-queue-worker.log}.json
+├── flow/chrome-profile-main   ← 런타임 캐시, 이동 안 함(실행중 잠김 + 실행 단축키 연동)
+├── insta/{FD,RL,PT,ST}/{num}/ ← 불변(별도 키 체계)
+└── _archive/2026-09-02/migrate-residue/  ← 디버그 png·report json·로그
 ```
-- `mediaPaths.js` 본문만 새 경로 반환하도록 수정 + `migrate-downloads.js`(1회) 폴더 실제 이동
-  (`flow/ep{N}` → `episodes/{code}/images`; number→code 매핑은 `studio-state.json` 참조)
-- express `app.use('/downloads', ...)` 마운트·`.gitignore`·git-tracked 44파일 경로 갱신
-- **코드 키 주의점** (Phase 3 착수 시 반드시 반영):
-  - `episode.code`는 사람이 편집 가능 + 과거 재사용 이력(SF_E01을 LF_T01 에피소드에 재사용 →
-    gpoints 옛 키에 갇힘, `e4f3e96` caveat). 코드 재사용 = 새 에피소드가 옛 폴더에 씀 →
-    ScriptGenTab "에피소드 코드" 편집/재사용 시 폴더 충돌 경고 필요. 혹은 `{code}_{number}` 복합키.
-  - `gpoints.json`은 이미 episodeCode 최상위 키 → 폴더도 code로 가면 정합 ↑
-  - `deliverables/{code}`·`script/{code}`는 이미 code 키, 나머지(`flow/audio/video/making/output/
-    final`)만 `ep{N}` → Phase 3에서 통일
+- `epKey()`: 숫자 → `studio-state.json` number→code 조회(mtime 캐시), 없으면 `ep{N}`.
+  호출부는 `epNum`(쿼리 파라미터) 그대로 넘기고 헬퍼가 code로 해석 — Phase 3에서 호출부
+  추가 수정 불필요했음.
+- `downloads/` 전체 git 추적 해제(원래 `.gitignore` 대상, 과거 강제 add된 44파일).
+- **되돌리기**: `node scripts/migrate-downloads.js --undo` + 양쪽 mediaPaths.js `HIER=false`.
+- **코드 키 주의점 (여전히 유효)**: `episode.code`는 사람 편집 가능 + 재사용 이력(SF_E01→
+  LF_T01, `e4f3e96` caveat). 코드 재사용 시 새 에피소드가 옛 폴더에 씀 → ScriptGenTab
+  코드 편집/재사용 시 폴더 충돌 경고 필요(미구현). `gpoints.json`은 이미 episodeCode 키라 정합.
+- **스모크 통과**: health/trend/bgm/sfx-catalog/characters/capcut-config/video-checklist/
+  cut-timing/scan-media(ep2·ep99)/hw-source-images/studio-status-public/gpoints POST +
+  정적파일(episodes/IG_R02/images, library/sfx, library/characters) 200 + `npm run build`.
 
