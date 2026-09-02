@@ -589,9 +589,18 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 - **VideoTab.jsx** — 스크롤 상단에 "영상 체크리스트" 접이식 패널. 정책·veoNeeded/Done 표시,
   컷별 `videoMode` 셀렉트(→ `UPDATE_CUT {videoMode}`), veo 컷은 "VP 복사" · "시작 프레임 저장"
   (`<a download>`) · "Veo 오디오 유지(립싱크)" 체크(기본=대사 유무) · "완성본 mp4 업로드".
-- **pipeline-leader.js** — G4 자동 트리거 블록 제거. `stageInRange('g4')`면 "수동 제작 대기 —
-  컷 N,M (Veo/Flow 직접 제작 후 영상 탭에서 업로드)" 로그만. `g4InFlight`/`g4StartedAt`/
-  `G4_TIMEOUT_MS` 죽은 코드 정리. G4 "승인대기" 알림(hasVideo && !g4)은 그대로 유지.
+- **pipeline-leader.js** — **G2·G4 둘 다** 자동 트리거 블록 제거(G2는 커밋 `<G2fix>`에서).
+  `stageInRange('g2'|'g4')`면 "수동 제작 대기 — 컷 N,M" 로그만. `g2/g4InFlight`·`*StartedAt`·
+  `*_TIMEOUT_MS` 죽은 코드 정리. "승인대기" 알림(hasImage/hasVideo && !g2/g4)은 유지.
+- `mcp /studio-run-g2`·`studio_run_g2`도 DEPRECATED 표기. 수동 재시도용만.
+
+### 이미지·영상 수동 전환 후 나머지 파이프라인 자동화 상태 (2026-09-02 점검)
+- **자동으로 도는 것**: G1 대본생성(script_generator.py)+사람승인 · G3 TTS(ElevenLabs API 직접,
+  이미지와 독립 — 대사만 있으면 병렬 진행) · 메이킹 탭 GRAPHIC/CAPCUT/BROLL 컷(Flow/Veo 안 씀,
+  직접 `cut_NN.mp4`) · editIntent·컷싱크(`cut-timing`, 영상+오디오 있어야 측정) ·
+  G5 편집메타→SRT→concat(전 컷 g4 승인 시) · `assemble_making_film`/`run-cutter`.
+- **게이트는 사람 대기로 정상**: G2 승인 없으면 다음 단계 대기, G4 승인 없으면 G5 대기 — 올바른 동작.
+- **의존성**: G3는 G2 불필요(병렬 가능) / G5·컷싱크는 수동 영상 업로드가 선행돼야 함.
 
 **이월/다음**:
 - **Gemini 이미지 자동 생성 브로커** — 이미지는 자동 유지 방침이나 `api/gemini.js`가 아직
