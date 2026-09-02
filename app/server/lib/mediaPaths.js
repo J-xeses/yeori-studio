@@ -1,21 +1,19 @@
 // ── 여리 스튜디오 산출물 경로 단일 소스 ───────────────────────────────
-// proxy.js / scripts/*.js 전체가 각자 `path.join(MEDIA_ROOT, 'downloads', 'flow',
-// `ep${N}`)` 식으로 조립하던 경로를 여기 한 곳으로 모은다.
+// proxy.js / scripts/*.js 전체의 downloads 경로 조립을 여기 한 곳으로 모은다.
 //
-// 2단계(현재, HIER=false): 함수들이 기존 평면 구조를 그대로 반환 — 동작 불변.
-// 3단계(HIER=true):        downloads/episodes/{code}/{images,audio,video,...} 위계로.
-//                          폴더 키 = episode.code (예: LF_T01), 없으면 ep{number}.
+// 구조: downloads/
+//   {BRAND}/{platform}/{series}/{code}/{01_script..07_output}/   콘텐츠
+//   {BRAND}/characters/  {BRAND}/hw_stills/                       브랜드별
+//   _shared/{sfx,bgm,hooks}/                                      공용
+//   runtime/  state/  flow/chrome-profile-*  insta/               전역
 //
-// 클라이언트 src/lib/mediaPaths.js와 HIER 플래그·키 규칙을 반드시 동기화할 것.
+// 클라이언트 src/lib/mediaPaths.js와 경로 규칙을 반드시 동기화할 것.
 
 import fs from 'fs'
 import path from 'path'
 
 export const MEDIA_ROOT = 'C:\\yeori-studio'
 export const DOWNLOADS = path.join(MEDIA_ROOT, 'downloads')
-
-// ⚠️ 3단계 스위치. 폴더 마이그레이션(scripts/migrate-downloads.js) 실행과 함께 true로.
-export const HIER = true
 
 // ── 에피소드 번호 → 코드 매핑 (studio-state.json, mtime 캐시) ──────────
 const STATE_PATH = path.join(MEDIA_ROOT, 'app', 'studio-state.json')
@@ -37,10 +35,14 @@ function numberToCodeMap() {
 }
 
 // ── 코드 → 플랫폼/시리즈 파싱 ────────────────────────────────────────
+// 브랜드 래퍼 — 지금은 서여리 단일. 두 번째 브랜드가 생기면 여기에 폴더 추가 +
+// (그때) studio-state.json/gpoints 상태 계층도 브랜드로 나눠야 함. 현재 상태는 전역.
+export const BRAND = 'seoyeori'
+
 // 코드 형식: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리+ 숫자}[_{슬러그}]
-//   SF_E01 → YU/SF_E/SF_E01     LF_T01 → YU/LF_T/LF_T01
-//   IG_R02 → IG/IG_R/IG_R02     IG_P01 → IG/IG_P/IG_P01
-// 안 맞는 코드(ep3, TEST_OVERLAY, IG_RL_E02 …)는 전부 _etc/{code}/.
+//   SF_E01 → seoyeori/YU/SF_E/SF_E01     LF_T01 → seoyeori/YU/LF_T/LF_T01
+//   IG_R02 → seoyeori/IG/IG_R/IG_R02
+// 안 맞는 코드(ep3, TEST_OVERLAY, IG_RL_E02 …)는 전부 seoyeori/_etc/{code}/.
 const PLATFORM = { SF: 'YU', LF: 'YU', IG: 'IG', TK: 'TK' }
 const CODE_RE = /^(SF|LF|IG|TK)_([A-Z])(\d{2,})(?:_[A-Z0-9]+)?$/
 
@@ -60,12 +62,15 @@ export function resolveCode(epRef) {
 }
 export const epKey = resolveCode   // 하위호환 별칭
 
-// 인스턴스 폴더 (downloads/{platform}/{series}/{code}/  또는  downloads/_etc/{code}/)
+// 브랜드 콘텐츠 루트
+export function brandDir(sub = '') { return path.join(DOWNLOADS, BRAND, sub) }
+
+// 인스턴스 폴더 (downloads/seoyeori/{platform}/{series}/{code}/  또는  seoyeori/_etc/{code}/)
 export function instanceDir(epRef) {
   const code = resolveCode(epRef)
   const p = parseCode(code)
-  return p ? path.join(DOWNLOADS, p.platform, p.series, code)
-           : path.join(DOWNLOADS, '_etc', code)
+  return p ? path.join(DOWNLOADS, BRAND, p.platform, p.series, code)
+           : path.join(DOWNLOADS, BRAND, '_etc', code)
 }
 export const episodeDir = instanceDir
 
@@ -92,64 +97,48 @@ export function voiceInsertDir(epRef)  { return path.join(epSub(epRef, 'audio'),
 export function deliverablesDir(epRef) { return path.join(epSub(epRef, 'output'), 'deliverables') }
 export function scriptDir(epRef)       { return epSub(epRef, 'script') }
 
-// 손글씨 스틸 캐시 (에피소드 무관 공유)
-export function hwStillsDir() { return path.join(DOWNLOADS, 'library', 'hw_stills') }
+// 손글씨 스틸 캐시 — 브랜드별(캐릭터 이미지에서 파생)
+export function hwStillsDir() { return path.join(DOWNLOADS, BRAND, 'hw_stills') }
 // /api/run-video(DEPRECATED)가 쓰는 video-prompts.json
 export function videoPromptsPath() { return path.join(DOWNLOADS, 'runtime', 'video-prompts.json') }
 
-// ── 공유 라이브러리 (에피소드 무관) ──────────────────────────────────
-export function sfxDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'sfx')   : path.join(DOWNLOADS, 'sfx'),   sub) }
-// "sfx/whoosh/x.wav"(구 카탈로그 값) · "library/sfx/.."(현재 구조 값) · "whoosh/x.wav" 무엇이든 실제 경로로
+// ── 공용 라이브러리 (브랜드 무관) — downloads/_shared/ ────────────────
+export function sfxDir(sub = '')   { return path.join(DOWNLOADS, '_shared', 'sfx', sub) }
+// "sfx/.."(구 카탈로그) · "library/sfx/.."·"_shared/sfx/.."(현재/과거 구조값) · "whoosh/x.wav" 모두 처리
 export function sfxFile(rel) {
   const r = String(rel).replace(/\\/g, '/')
-  if (r.startsWith('library/sfx/')) return path.join(DOWNLOADS, r)   // 이미 현재 구조 상대경로
-  return sfxDir(r.replace(/^sfx\//, ''))                            // "sfx/.." 접두어는 논리 접두어 → 재매핑
+  if (r.startsWith('_shared/sfx/')) return path.join(DOWNLOADS, r)
+  return sfxDir(r.replace(/^(library\/)?sfx\//, ''))
 }
-export function bgmDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'bgm')   : path.join(DOWNLOADS, 'bgm'),   sub) }
-// "bgm/mood/x.mp3"(구 인덱스 값) · "library/bgm/.."(현재 구조 값) · "mood/x.mp3" 무엇이든 실제 경로로
+export function bgmDir(sub = '')   { return path.join(DOWNLOADS, '_shared', 'bgm', sub) }
 export function bgmFile(rel) {
   const r = String(rel).replace(/\\/g, '/')
-  if (r.startsWith('library/bgm/')) return path.join(DOWNLOADS, r)
-  return bgmDir(r.replace(/^bgm\//, ''))
+  if (r.startsWith('_shared/bgm/')) return path.join(DOWNLOADS, r)
+  return bgmDir(r.replace(/^(library\/)?bgm\//, ''))
 }
-export function hooksDir(sub = '') { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'hooks') : path.join(DOWNLOADS, 'hooks'), sub) }
-export function charactersDir(sub = '') {
-  return path.join(HIER ? path.join(DOWNLOADS, 'library', 'characters') : path.join(DOWNLOADS, 'flow', 'character'), sub)
-}
-export function charactersJsonPath() {
-  return HIER ? path.join(DOWNLOADS, 'library', 'characters', 'characters.json')
-              : path.join(DOWNLOADS, 'flow', 'characters.json')
-}
+export function hooksDir(sub = '') { return path.join(DOWNLOADS, '_shared', 'hooks', sub) }
 
-// ── 런타임 (Flow 실행·프롬프트·큐) ──────────────────────────────────
-export function runtimeDir(sub = '') { return path.join(HIER ? path.join(DOWNLOADS, 'runtime') : DOWNLOADS, sub) }
-export function promptsJsonPath() {
-  return HIER ? path.join(DOWNLOADS, 'runtime', 'prompts.json') : path.join(DOWNLOADS, 'flow', 'prompts.json')
-}
-// Chrome 프로필은 HIER와 무관하게 flow/에 유지 — 실행 중 잠겨있어 옮기기 위험하고
-// 사용자 실행 단축키의 --user-data-dir 경로와도 묶여 있음(순수 런타임 캐시).
-export function flowProfileDir(profile) {
-  return path.join(DOWNLOADS, 'flow', `chrome-profile-${profile}`)
-}
-export function flowDownloadDir() {   // puppeteer 다운로드 착지점 (구 downloads/flow 루트)
-  return HIER ? path.join(DOWNLOADS, 'runtime', 'flow-downloads') : path.join(DOWNLOADS, 'flow')
-}
-// 구 downloads/flow 루트에 흩어져 있던 느슨한 캐릭터 레퍼런스 이미지들의 새 자리
-export function flowLooseRefsDir() {
-  return HIER ? charactersDir() : path.join(DOWNLOADS, 'flow')
-}
+// ── 캐릭터 레퍼런스 — 브랜드별 (downloads/seoyeori/characters/) ────────
+export function charactersDir(sub = '') { return path.join(DOWNLOADS, BRAND, 'characters', sub) }
+export function charactersJsonPath()    { return path.join(DOWNLOADS, BRAND, 'characters', 'characters.json') }
 
-// ── 앱 상태 (전역 JSON) ─────────────────────────────────────────────
-// gpoints.json, trend_episodes.json, trend_candidates.json, code-task-queue.json,
-// credit-usage-today.json, codi_gen_handoff.json, pipeline_export.json,
-// yeori_edit_meta.json, capcut_config.json, capcut_exe_path.txt, task-queue-worker.log
-export function statePath(name) {
-  return HIER ? path.join(DOWNLOADS, 'state', name) : path.join(DOWNLOADS, name)
-}
-// 구조상 downloads/video/ 에 있던 전역 파일들 (에피소드 무관, 매 실행 덮어씀)
-export function editMetaPath()     { return HIER ? statePath('yeori_edit_meta.json') : path.join(DOWNLOADS, 'video', 'yeori_edit_meta.json') }
-export function capcutConfigPath() { return HIER ? statePath('capcut_config.json')   : path.join(DOWNLOADS, 'video', 'capcut_config.json') }
-export function capcutExePath()    { return HIER ? statePath('capcut_exe_path.txt')  : path.join(DOWNLOADS, 'video', 'capcut_exe_path.txt') }
+// ── 런타임 (Flow 실행·프롬프트) — downloads/runtime/ (전역, 브랜드 무관) ──
+export function runtimeDir(sub = '') { return path.join(DOWNLOADS, 'runtime', sub) }
+export function promptsJsonPath()   { return path.join(DOWNLOADS, 'runtime', 'prompts.json') }
+// Chrome 프로필은 flow/에 유지 — 실행 중 잠겨있고 사용자 실행 단축키의 --user-data-dir와 묶임.
+export function flowProfileDir(profile) { return path.join(DOWNLOADS, 'flow', `chrome-profile-${profile}`) }
+export function flowDownloadDir()   { return path.join(DOWNLOADS, 'runtime', 'flow-downloads') }
+// 구 flow 루트의 느슨한 레퍼런스 이미지 → 브랜드 characters/
+export function flowLooseRefsDir()  { return charactersDir() }
+
+// ── 앱 상태 (전역 JSON) — downloads/state/ ──────────────────────────
+// gpoints, trend_episodes, trend_candidates, code-task-queue, credit-usage-today,
+// codi_gen_handoff, pipeline_export, yeori_edit_meta, capcut_config, capcut_exe_path.txt
+// ⚠️ 지금은 단일 브랜드라 전역. 멀티브랜드 시 브랜드별로 나눠야 함.
+export function statePath(name)    { return path.join(DOWNLOADS, 'state', name) }
+export function editMetaPath()     { return statePath('yeori_edit_meta.json') }
+export function capcutConfigPath() { return statePath('capcut_config.json') }
+export function capcutExePath()    { return statePath('capcut_exe_path.txt') }
 
 // ── 절대경로 → /downloads/... URL ──────────────────────────────────
 export function toMediaUrl(abs) {
@@ -161,7 +150,7 @@ export function paddedCutNo(no) { return String(no).padStart(2, '0') }
 export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }
 
 // ── 인스타그램 콘텐츠(FD/RL/PT/ST) — episode.number가 아니라 사용자가 직접 붙이는
-// "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 raw 하위폴더 없음. HIER 무관(별도 체계).
+// "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 raw 하위폴더 없음. 이번 개편에서 안 건드림(별도 체계).
 export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
 export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
 

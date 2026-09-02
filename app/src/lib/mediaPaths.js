@@ -1,11 +1,12 @@
 // 여리 스튜디오 산출물 URL 단일 소스 — 클라이언트용.
 // server/lib/mediaPaths.js와 경로 규칙을 반드시 동기화할 것.
 //
-// 구조: /downloads/{platform}/{series}/{code}/{NN_sub}/...
-//   LF_T01 → YU/LF_T/LF_T01,  IG_R02 → IG/IG_R/IG_R02
-//   패턴에 안 맞는 코드(TEST_OVERLAY 등) → _etc/{code}/{NN_sub}/
+// 구조: /downloads/{BRAND}/{platform}/{series}/{code}/{NN_sub}/...
+//   LF_T01 → seoyeori/YU/LF_T/LF_T01,  IG_R02 → seoyeori/IG/IG_R/IG_R02
+//   패턴에 안 맞는 코드(TEST_OVERLAY 등) → seoyeori/_etc/{code}/{NN_sub}/
 
 const YEORI_SERVER = 'http://localhost:3001'
+const BRAND = 'seoyeori'   // server/lib/mediaPaths.js의 BRAND와 동기화
 
 export function paddedCutNo(no) { return String(no).padStart(2, '0') }
 export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }
@@ -39,8 +40,8 @@ export function instanceUrl(episode) {
   const code = resolveCode(episode)
   const p = parseCode(code)
   return p
-    ? `${YEORI_SERVER}/downloads/${p.platform}/${p.series}/${code}`
-    : `${YEORI_SERVER}/downloads/_etc/${code}`
+    ? `${YEORI_SERVER}/downloads/${BRAND}/${p.platform}/${p.series}/${code}`
+    : `${YEORI_SERVER}/downloads/${BRAND}/_etc/${code}`
 }
 
 // 에피소드별 산출물 디렉터리 URL

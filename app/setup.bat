@@ -79,19 +79,19 @@ echo.
 
 :: ── 5. 폴더 구조 생성 ─────────────────────────────────
 echo [5/7] C:\yeori-studio\ 폴더 구조 생성...
-mkdir "C:\yeori-studio\downloads\YU"                 2>nul
-mkdir "C:\yeori-studio\downloads\IG"                 2>nul
-mkdir "C:\yeori-studio\downloads\TK"                 2>nul
-mkdir "C:\yeori-studio\downloads\_etc"              2>nul
-mkdir "C:\yeori-studio\downloads\library\characters" 2>nul
-mkdir "C:\yeori-studio\downloads\library\sfx"        2>nul
-mkdir "C:\yeori-studio\downloads\runtime"            2>nul
-mkdir "C:\yeori-studio\downloads\state"              2>nul
+mkdir "C:\yeori-studio\downloads\seoyeori\YU"         2>nul
+mkdir "C:\yeori-studio\downloads\seoyeori\IG"         2>nul
+mkdir "C:\yeori-studio\downloads\seoyeori\TK"         2>nul
+mkdir "C:\yeori-studio\downloads\seoyeori\_etc"       2>nul
+mkdir "C:\yeori-studio\downloads\seoyeori\characters" 2>nul
+mkdir "C:\yeori-studio\downloads\_shared\sfx"         2>nul
+mkdir "C:\yeori-studio\downloads\runtime"             2>nul
+mkdir "C:\yeori-studio\downloads\state"               2>nul
 set "DIRS_OK=1"
 echo [OK] 폴더 구조 생성 완료
-echo        downloads\{YU,IG,TK}\{series}\{code}\{01_script..07_output}
-echo        downloads\library\{characters,sfx,hooks,hw_stills}
-echo        downloads\runtime  downloads\state  downloads\_etc
+echo        downloads\seoyeori\{YU,IG,TK}\{series}\{code}\{01_script..07_output}
+echo        downloads\seoyeori\{characters,hw_stills}   downloads\_shared\{sfx,hooks}
+echo        downloads\runtime  downloads\state
 echo.
 
 :: ── 6. .env.local 템플릿 생성 ─────────────────────────
