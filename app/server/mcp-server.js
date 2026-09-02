@@ -8,6 +8,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { TOOLS } from './mcp-tools.js'
+import * as mp from './lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BASE_URL  = 'http://localhost:3001'
@@ -120,7 +121,7 @@ async function executeTool(name, args) {
       const pipeline = approvedCuts.map(c => ({
         no: c.no, imagePrompt: c.imagePrompt || '', ...getFlags(c),
       }))
-      const savePath = path.join(MEDIA_ROOT, 'downloads', 'pipeline_export.json')
+      const savePath = mp.statePath('pipeline_export.json')
       fs.writeFileSync(savePath, JSON.stringify(pipeline, null, 2), 'utf-8')
 
       return `파이프라인 ${pipeline.length}개 컷 내보내기 완료\n저장 위치: ${savePath}\n\n` +

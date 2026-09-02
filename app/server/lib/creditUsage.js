@@ -13,9 +13,9 @@
 
 import fs from 'fs'
 import path from 'path'
-import { MEDIA_ROOT } from './mediaPaths.js'
+import { statePath } from './mediaPaths.js'
 
-const USAGE_PATH = path.join(MEDIA_ROOT, 'downloads', 'credit-usage-today.json')
+const USAGE_PATH = statePath('credit-usage-today.json')
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10) // YYYY-MM-DD, 로컬 자정 기준은 아니지만 이 용도엔 충분

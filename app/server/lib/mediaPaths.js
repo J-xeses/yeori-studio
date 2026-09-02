@@ -120,9 +120,10 @@ export function runtimeDir(sub = '') { return path.join(HIER ? path.join(DOWNLOA
 export function promptsJsonPath() {
   return HIER ? path.join(DOWNLOADS, 'runtime', 'prompts.json') : path.join(DOWNLOADS, 'flow', 'prompts.json')
 }
+// Chrome 프로필은 HIER와 무관하게 flow/에 유지 — 실행 중 잠겨있어 옮기기 위험하고
+// 사용자 실행 단축키의 --user-data-dir 경로와도 묶여 있음(순수 런타임 캐시).
 export function flowProfileDir(profile) {
-  return HIER ? path.join(DOWNLOADS, 'runtime', `chrome-profile-${profile}`)
-              : path.join(DOWNLOADS, 'flow', `chrome-profile-${profile}`)
+  return path.join(DOWNLOADS, 'flow', `chrome-profile-${profile}`)
 }
 export function flowDownloadDir() {   // puppeteer 다운로드 착지점 (구 downloads/flow 루트)
   return HIER ? path.join(DOWNLOADS, 'runtime', 'flow-downloads') : path.join(DOWNLOADS, 'flow')
