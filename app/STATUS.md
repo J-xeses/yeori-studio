@@ -28,7 +28,7 @@ downloads/
 ├── runtime/{prompts, video-prompts}.json          전역 (Flow 실행)
 ├── state/{gpoints,trend_episodes,code-task-queue,credit-usage,capcut_config,yeori_edit_meta}.json
 │                                         전역 (⚠️ 멀티브랜드 시 분리 필요)
-├── flow/chrome-profile-*  (이동 안 함)   insta/  (구 인스타번호 시스템, 불변)
+├── flow/chrome-profile-*  (이동 안 함)   ← insta/ 는 seoyeori/IG/로 통합됨(`c1825b0`)
 ```
 `{code}/` 안: `01_script 02_images 03_audio 04_making 05_video 06_publishing 07_output`
 (06 = 편집·CapCut·raw·deliverables, 07 = 완성본·썸네일·업로드패키지 = 퍼블리싱 결과물).
@@ -701,5 +701,12 @@ downloads/
 - **되돌리기**: `migrate-downloads-v3.js --undo` → `-v2 --undo` → mediaPaths.js revert.
 - **스모크 통과**: scan-media(ep2→`seoyeori/IG/IG_R/IG_R02/02_images`) + video-checklist +
   sfx-catalog(→`_shared/sfx/..`) + 정적파일(`seoyeori/characters`, `_shared/sfx`) 200 + build.
-- **미해결**: `insta/`(FD/RL/PT/ST) 서브시스템을 `seoyeori/IG/`로 합칠지. TK 코드 규칙.
+- **insta 서브시스템 통합 (커밋 `c1825b0`)**: 별도 `downloads/insta/{content}/{num}/`
+  폐기 → `seoyeori/IG/{series}/{code}/`. `mediaPaths.instaCode(content,num)` = `IG_{K}{NN}`
+  (FD/PT→P, RL→R, ST→S). `instaDir()`는 시그니처 유지하고 새 위치로 리다이렉트 —
+  proxy의 `isInsta` 분기 ~20곳이 코드 삭제 없이 자동 적용. `migrate-insta.js --go`(14건).
+  RL02(=라이브 IG_R02의 구 아티팩트)의 DM 목업·G1 스크립트가 `IG_R02/01_script/`로 병합.
+  + Phase2 때 놓친 클라 하드코딩 URL 5곳(StudioTab·VideoTab) 정리, `/api/ffmpeg`가
+  `workDir` 대신 `epNum` 받도록.
+- **미해결**: `state` 계층 멀티브랜드화(별도 작업). `TK/` 틱톡 코드 규칙.
 
