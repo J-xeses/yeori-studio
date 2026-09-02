@@ -16,6 +16,7 @@
 import puppeteer from 'puppeteer-core'
 import fs from 'fs'
 import path from 'path'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const MEDIA_ROOT = 'C:\\yeori-studio'
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -28,9 +29,9 @@ const CONFIG = {
   debuggingPort: PROFILE_PORTS[activeProfile],
   // Flow와 동일한 프로필 폴더를 재사용 — 계정당 도구 2개(Flow+Qwen / Flow+PixVerse) 매핑이라
   // 같은 구글 계정으로 로그인된 같은 크롬 창에서 PixVerse도 같이 로그인해두면 됨.
-  userDataDir:  path.join(MEDIA_ROOT, 'downloads', 'flow', `chrome-profile-${activeProfile}`),
+  userDataDir:  mp.flowProfileDir(activeProfile),
   chromeExe:    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  downloadDir:  path.join(MEDIA_ROOT, 'downloads', 'pixverse'),
+  downloadDir:  path.join(mp.runtimeDir(), 'pixverse'),
   pixverseUrl:  'https://app.pixverse.ai',
 }
 

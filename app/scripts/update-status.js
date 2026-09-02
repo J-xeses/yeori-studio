@@ -12,6 +12,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const MEDIA_ROOT = 'C:\\yeori-studio'
 const CODE_ROOT = 'C:\\yeori-studio\\app'
@@ -129,7 +130,7 @@ function main() {
   }
 
   const commits = getRecentCommits(20)
-  const gpoints = readJsonSafe(path.join(MEDIA_ROOT, 'downloads', 'gpoints.json'))
+  const gpoints = readJsonSafe(mp.statePath('gpoints.json'))
   const studioState = readJsonSafe(path.join(CODE_ROOT, 'studio-state.json'))
   const gSummary = summarizeGPoints(gpoints)
   const epSummary = summarizeStudioState(studioState)

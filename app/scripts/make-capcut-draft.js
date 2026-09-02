@@ -12,6 +12,7 @@ import fs   from 'fs'
 import path from 'path'
 import { spawn } from 'child_process'
 import { fileURLToPath } from 'url'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url))
 const MEDIA_ROOT = 'C:\\yeori-studio'
@@ -231,7 +232,7 @@ async function main() {
   }
 
   // 1. ep{N}_raw.mp4 확인
-  const rawVideoPath = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${ep}`, `ep${ep}_raw.mp4`)
+  const rawVideoPath = path.join(mp.outputDir(ep), `ep${ep}_raw.mp4`)
   if (!fs.existsSync(rawVideoPath)) {
     console.error(`❌ ${rawVideoPath} 없음 — /api/concat-video를 먼저 실행하세요`)
     process.exit(1)
@@ -243,7 +244,7 @@ async function main() {
   console.log(`   → ${totalSec.toFixed(2)}초`)
 
   // 3. ep{N}.srt 읽기
-  const srtPath = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`, `ep${ep}.srt`)
+  const srtPath = path.join(mp.audioDir(ep), `ep${ep}.srt`)
   if (!fs.existsSync(srtPath)) {
     console.error(`❌ ${srtPath} 없음 — /api/generate-srt를 먼저 실행하세요`)
     process.exit(1)
@@ -252,7 +253,7 @@ async function main() {
   console.log(`✅ SRT: ${srtEntries.length}개 자막 항목`)
 
   // 4. yeori_edit_meta.json 읽기
-  const metaPath = path.join(MEDIA_ROOT, 'downloads', 'video', 'yeori_edit_meta.json')
+  const metaPath = mp.editMetaPath()
   const editMeta = fs.existsSync(metaPath)
     ? JSON.parse(fs.readFileSync(metaPath, 'utf-8'))
     : []

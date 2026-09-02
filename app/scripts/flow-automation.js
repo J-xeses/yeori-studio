@@ -29,6 +29,7 @@ import path from 'path'
 import readline from 'readline'
 import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
+import * as mp from '../server/lib/mediaPaths.js'
 import { instaDir, instaRatio, INSTA_SUBDIR } from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -65,9 +66,9 @@ const CONFIG = {
   // remote debugging 방식: Chrome을 --remote-debugging-port=9222 로 미리 실행
   // chrome.exe --remote-debugging-port=9222
   debuggingPort:   PROFILE_PORTS[activeProfile],
-  userDataDir:     path.join('C:\\yeori-studio', 'downloads', 'flow', `chrome-profile-${activeProfile}`),
+  userDataDir:     mp.flowProfileDir(activeProfile),
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  downloadDir:     path.join(MEDIA_ROOT, 'downloads', 'flow'),
+  downloadDir:     mp.flowDownloadDir(),
   flowUrl:         'https://labs.google/flow',
   delayMs:         4000,   // 생성 요청 사이 대기 (레이트 리밋 방지)
   timeoutMs:       120000, // 이미지 생성 최대 대기 시간(1장 기준)
@@ -83,7 +84,7 @@ const CONFIG = {
 
   // ── 레퍼런스 이미지 분석 ────────────────────────────────────────────
   referenceImage:  path.join(CODE_ROOT, 'assets', 'yeori-reference.jpg'),
-  faceCacheFile:   path.join(MEDIA_ROOT, 'downloads', 'flow', 'yeori-face-cache.json'),
+  faceCacheFile:   mp.charactersDir('yeori-face-cache.json'),
 
   // ── 클로즈업 얼굴 프롬프트 (에피소드당 1회) ────────────────────────
   closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, natural skin texture, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
@@ -97,9 +98,9 @@ const CONFIG = {
 
   // ── 서여리 캐릭터 설정 ──────────────────────────────────────────────
   characterName:   '서여리',
-  characterDir:    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character'),
-  characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
-  closeupImage:    path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-closeup.jpg'),
+  characterDir:    mp.charactersDir(),
+  characterImage:  mp.charactersDir('yeori-face.jpg'),
+  closeupImage:    mp.charactersDir('yeori-closeup.jpg'),
   // 클로즈업 얼굴 생성 프롬프트 (--gen-face 사용 시)
   facePrompt: 'Young Korean woman early 20s, extreme close-up portrait, long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, natural effortless expression, K-model proportions very small face, appearing no older than 22-23, bright natural eyes, soft lips, flawless skin, soft studio lighting, neutral background, Photorealistic 8K cinematic headshot 1:1',
 }
@@ -125,7 +126,7 @@ let _projectUrl = null
 // 다중 캐릭터 — main()이 모듈 로드 중 동기 실행 구간에서 참조하므로 진입점 위에서 선언(TDZ 방지)
 let EPISODE_REF_FILES = null   // 이 에피소드에서 업로드할 얼굴 레퍼런스 절대경로 목록
 let EPISODE_CHAR_IDS = []      // 이 에피소드 컷들에 등장하는 캐릭터 id 목록
-const CHARACTERS_JSON_PATH = () => path.join(MEDIA_ROOT, 'downloads', 'flow', 'characters.json')
+const CHARACTERS_JSON_PATH = () => mp.charactersJsonPath()
 
 // ── 진입점 ────────────────────────────────────────────────────────────
 const args = parseArgs()
@@ -163,7 +164,7 @@ function resolveContentDir(episode) {
     }
     return instaDir(args.content, args.num, INSTA_SUBDIR[args.content])
   }
-  return path.join(CONFIG.downloadDir, `ep${episode}`)
+  return mp.imagesDir(episode)
 }
 
 function log(level, msg) {
@@ -316,17 +317,17 @@ function loadPrompts() {
   if (args.prompts) {
     file = path.resolve(args.prompts)
   } else if (args.ep) {
-    const epFile = path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json')
+    const epFile = path.join(mp.imagesDir(args.ep), 'prompts.json')
     if (fs.existsSync(epFile)) {
       file = epFile
       usingEpFile = true
       log('info', `ep 전용 파일 사용: ${epFile}`)
     } else {
-      file = path.join(CONFIG.downloadDir, 'prompts.json')
+      file = mp.promptsJsonPath()
       log('info', `ep${args.ep} 전용 파일 없음 → 글로벌 fallback: ${file}`)
     }
   } else {
-    file = path.join(CONFIG.downloadDir, 'prompts.json')
+    file = mp.promptsJsonPath()
   }
 
   if (!fs.existsSync(file)) {
@@ -451,9 +452,9 @@ async function main() {
   }
 
   // prompts.json에서 제목 읽기 → 프로젝트 이름: "EP4_한강라이딩"
-  const _epPromptFile = args.ep && fs.existsSync(path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json'))
-    ? path.join(CONFIG.downloadDir, `ep${args.ep}`, 'prompts.json')
-    : path.join(CONFIG.downloadDir, 'prompts.json')
+  const _epPromptFile = args.ep && fs.existsSync(path.join(mp.imagesDir(args.ep), 'prompts.json'))
+    ? path.join(mp.imagesDir(args.ep), 'prompts.json')
+    : mp.promptsJsonPath()
   const rawPrompts = JSON.parse(fs.readFileSync(_epPromptFile, 'utf-8'))
   const epTitle    = (rawPrompts.title || '').replace(/\s+/g, '')
   const contentLabel = args.type === 'insta' ? `${args.content}${args.num}` : `EP${episode}`
@@ -2096,7 +2097,7 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   const ep = cut.episode ?? defaultEpisode ?? 'x'
 
   // episode_style_guide.json이 있으면 promptPrefix를 프롬프트 앞에 삽입
-  const styleGuidePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`, 'episode_style_guide.json')
+  const styleGuidePath = path.join(mp.videoDir(ep), 'episode_style_guide.json')
   const promptPrefix = fs.existsSync(styleGuidePath)
     ? (() => { try { return JSON.parse(fs.readFileSync(styleGuidePath, 'utf-8')).promptPrefix || '' } catch { return '' } })()
     : ''

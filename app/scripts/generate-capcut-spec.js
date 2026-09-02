@@ -11,9 +11,10 @@
  */
 import fs   from 'node:fs'
 import path from 'node:path'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const MEDIA_ROOT = 'C:\\yeori-studio'
-const DOWNLOADS  = path.join(MEDIA_ROOT, 'downloads')
+const DOWNLOADS  = mp.DOWNLOADS
 const META_PATH  = path.join(DOWNLOADS, 'video', 'yeori_edit_meta.json')
 const OUT_PATH   = path.join(DOWNLOADS, 'capcut_spec.json')
 

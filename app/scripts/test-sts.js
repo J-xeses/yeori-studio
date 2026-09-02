@@ -17,6 +17,7 @@ import fs from 'fs'
 import path from 'path'
 import { spawn } from 'child_process'
 import { fileURLToPath } from 'url'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -90,8 +91,8 @@ async function main() {
   }
 
   const padded      = String(cut).padStart(2, '0')
-  const videoDir    = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`)
-  const audioDir    = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  const videoDir    = mp.videoDir(ep)
+  const audioDir    = mp.audioDir(ep)
   const videoPath   = path.join(videoDir,  `cut_${padded}.mp4`)
   const voicePath   = path.join(audioDir,  `cut_${padded}_voice.mp3`)
   const bgPath      = path.join(audioDir,  `cut_${padded}_background.mp3`)

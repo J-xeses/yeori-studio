@@ -24,12 +24,13 @@ import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = path.join(__dirname, '..')       // C:\yeori-studio\app
 const MEDIA_ROOT = path.join(CODE_ROOT, '..')       // C:\yeori-studio (git root)
-const QUEUE_PATH = path.join(MEDIA_ROOT, 'downloads', 'code-task-queue.json')
-const LOG_PATH = path.join(MEDIA_ROOT, 'downloads', 'task-queue-worker.log')
+const QUEUE_PATH = mp.statePath('code-task-queue.json')
+const LOG_PATH = mp.statePath('task-queue-worker.log')
 
 const DRY_RUN = process.argv.includes('--dry-run')
 

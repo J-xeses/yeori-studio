@@ -25,6 +25,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { execSync, spawnSync } from 'child_process'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -40,7 +41,7 @@ const ROOT = path.resolve(__dirname, '..')
 
 const CONFIG = {
   downloadDir:  path.join(ROOT, 'downloads'),
-  hooksDir:     path.join(ROOT, 'downloads', 'hooks'),
+  hooksDir:     mp.hooksDir(),
   ffmpeg:       process.env.FFMPEG_PATH  ?? 'ffmpeg',
   ffprobe:      process.env.FFPROBE_PATH ?? 'ffprobe',
   videoCodec:   'libx264',
@@ -74,7 +75,7 @@ function ensureDir(dir) {
 function getPromptsMeta() {
   const file = args.prompts
     ? path.resolve(args.prompts)
-    : path.join(CONFIG.downloadDir, 'flow', 'prompts.json')
+    : mp.promptsJsonPath()
   if (!fs.existsSync(file)) {
     log('error', `prompts.json 없음: ${file}`)
     process.exit(1)
@@ -183,9 +184,9 @@ async function main() {
   const { episode, title, hookClip: metaHook } = getPromptsMeta()
   const hookId = args['no-hook'] ? null : (args.hook ?? metaHook ?? null)
 
-  const flowDir   = path.join(CONFIG.downloadDir, 'flow',   `ep${episode}`)
-  const audioDir  = path.join(CONFIG.downloadDir, 'audio',  `ep${episode}`)
-  const outputDir = path.join(CONFIG.downloadDir, 'output', `ep${episode}`)
+  const flowDir   = mp.imagesDir(episode)
+  const audioDir  = mp.audioDir(episode)
+  const outputDir = mp.outputDir(episode)
 
   if (!fs.existsSync(flowDir)) {
     log('error', `이미지 폴더 없음: ${flowDir}`)

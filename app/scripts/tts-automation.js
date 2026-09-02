@@ -21,6 +21,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { execSync } from 'child_process'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -73,7 +74,7 @@ function ensureDir(dir) {
 function loadPrompts() {
   const file = args.prompts
     ? path.resolve(args.prompts)
-    : path.join(CONFIG.downloadDir, 'flow', 'prompts.json')
+    : mp.promptsJsonPath()
 
   if (!fs.existsSync(file)) {
     log('error', `프롬프트 파일 없음: ${file}`)
@@ -196,7 +197,7 @@ async function main() {
   }
 
   const voiceId  = await resolveVoiceId()
-  const audioDir = path.join(CONFIG.downloadDir, 'audio', `ep${episode}`)
+  const audioDir = mp.audioDir(episode)
   ensureDir(audioDir)
 
   const timing = []

@@ -19,6 +19,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import readline from 'readline'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -76,7 +77,7 @@ async function askConfirm(question) {
 }
 
 function checkG1() {
-  const promptsFile = path.join(ROOT, 'downloads', 'flow', 'prompts.json')
+  const promptsFile = mp.promptsJsonPath()
   if (!fs.existsSync(promptsFile)) {
     log('error', 'G1 미완료: downloads/flow/prompts.json가 없습니다.')
     log('info', '여리 스튜디오 앱 → 스크립트 탭에서 대본 생성 후 JSON 내보내기를 실행하세요.')

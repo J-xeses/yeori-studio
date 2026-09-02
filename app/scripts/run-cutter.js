@@ -15,6 +15,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const MEDIA_ROOT = 'C:\\yeori-studio'
 
@@ -120,7 +121,7 @@ function makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode) {
 }
 
 function run(epNum) {
-  const cutterInputPath = path.join(MEDIA_ROOT, 'downloads', 'output', `ep${epNum}`, 'cutter_input.json')
+  const cutterInputPath = path.join(mp.outputDir(epNum), 'cutter_input.json')
   if (!fs.existsSync(cutterInputPath)) {
     throw new Error(`cutter_input.json 없음: ${cutterInputPath}`)
   }
@@ -147,7 +148,7 @@ function run(epNum) {
   const cuts = Array.isArray(editMeta) ? editMeta : []
   if (cuts.length === 0) throw new Error('editMeta에 컷이 없습니다')
 
-  const folderPath = `C:/yeori-studio/downloads/video/ep${epNum}`
+  const folderPath = mp.videoDir(epNum).replace(/\\/g, '/')
 
   // 이중 모션 가드: 메이킹 탭에서 자체 모션이 구워진 컷(그래픽 기본 모션 / source-to-cut
   // 줌·페이드 / BROLL·CapCut 실사 푸티지)에는 켄번스를 얹지 않는다.
@@ -156,7 +157,7 @@ function run(epNum) {
   const MOTION_BAKED_TYPES = new Set(['GRAPHIC', 'BROLL', 'CAPCUT'])
   let motionManifest = {}
   try {
-    const mmPath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${epNum}`, '.motion-manifest.json')
+    const mmPath = path.join(mp.videoDir(epNum), '.motion-manifest.json')
     if (fs.existsSync(mmPath)) motionManifest = JSON.parse(fs.readFileSync(mmPath, 'utf-8')) || {}
   } catch (e) {
     console.warn(`[cutter] .motion-manifest.json 읽기 실패(무시): ${e.message}`)

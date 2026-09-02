@@ -17,6 +17,7 @@ import path from 'path'
 import readline from 'readline'
 import { fileURLToPath } from 'url'
 import { spawn } from 'child_process'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -44,9 +45,9 @@ const ROOT = CODE_ROOT  // 하위 호환 유지
 const CONFIG = {
   debuggingPort:   9222,
   chromeExe:       'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  flowDir:         path.join(MEDIA_ROOT, 'downloads', 'flow'),
-  videoDir:        path.join(MEDIA_ROOT, 'downloads', 'video'),
-  characterImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
+  flowDir:         mp.flowDownloadDir(),
+  videoDir:        mp.DOWNLOADS,
+  characterImage:  mp.charactersDir('yeori-face.jpg'),
   preferredModel:  'Veo 3.1 - Lite',
   defaultDuration: 8,
   delayMs:         6000,
@@ -1206,7 +1207,7 @@ function runFfmpeg(ffmpegPath, args) {
 
 async function runStsPostProcess(cut, ep, padded, videoPath) {
   const ffmpeg     = 'C:\\ffmpeg\\bin\\ffmpeg.exe'
-  const audioDir   = path.join(MEDIA_ROOT, 'downloads', 'audio', `ep${ep}`)
+  const audioDir   = mp.audioDir(ep)
   const voicePath  = path.join(audioDir, `cut_${padded}_voice.mp3`)
   const bgPath     = path.join(audioDir, `cut_${padded}_background.mp3`)
   const yeoriVoice = path.join(audioDir, `cut_${padded}_yeori_voice.mp3`)
@@ -1298,7 +1299,7 @@ async function runStsPostProcess(cut, ep, padded, videoPath) {
 // (2026-08-02: gpoints.json이 에피소드 코드로 중첩되도록 바뀌어서 episodeCode 인자 추가됨 —
 // 지금은 정식 코드가 아직 없어 호출부가 숫자 에피소드 번호를 문자열로 넘긴다.)
 function getSelectedImageFilename(episodeCode, cutNo) {
-  const gpPath = path.join(MEDIA_ROOT, 'downloads', 'gpoints.json')
+  const gpPath = mp.statePath('gpoints.json')
   if (!fs.existsSync(gpPath)) return null
   try {
     const gpoints = JSON.parse(fs.readFileSync(gpPath, 'utf-8'))
@@ -1367,7 +1368,7 @@ async function processCut(page, cut, episode, ratio, episodeCode) {
 
   // ⑧ 영상 프롬프트 입력 (imagePrompt 우선 + 대사 있으면 립싱크 지시문 추가)
   // episode_style_guide.json이 있으면 promptPrefix 앞에 삽입
-  const _styleGuidePath = path.join(MEDIA_ROOT, 'downloads', 'video', `ep${ep}`, 'episode_style_guide.json')
+  const _styleGuidePath = path.join(mp.videoDir(ep), 'episode_style_guide.json')
   const _promptPrefix = fs.existsSync(_styleGuidePath)
     ? (() => { try { return JSON.parse(fs.readFileSync(_styleGuidePath, 'utf-8')).promptPrefix || '' } catch { return '' } })()
     : ''

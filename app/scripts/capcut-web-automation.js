@@ -26,6 +26,7 @@ import puppeteer from 'puppeteer-core'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -847,17 +848,17 @@ async function main() {
   console.log(`\n🎬 CapCut 웹 자동화 시작 — ep${epNum}\n`)
 
   // ── 경로 설정 ─────────────────────────────────────────────────────
-  const videoPath = path.join(MEDIA_ROOT, 'downloads', 'output',  `ep${epNum}`, `ep${epNum}_raw.mp4`)
-  const srtPath   = path.join(MEDIA_ROOT, 'downloads', 'audio',   `ep${epNum}`, `ep${epNum}.srt`)
+  const videoPath = path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`)
+  const srtPath   = path.join(mp.audioDir(epNum), `ep${epNum}.srt`)
   const bgmCandidates = [
-    path.join(MEDIA_ROOT, 'downloads', 'bgm', 'bgm_default.mp3'),
-    path.join(MEDIA_ROOT, 'downloads', 'bgm', 'bgm.mp3'),
+    mp.bgmDir('bgm_default.mp3'),
+    mp.bgmDir('bgm.mp3'),
   ]
   const bgmPath   = bgmCandidates.find(p => fs.existsSync(p)) || null
-  const specPath  = path.join(MEDIA_ROOT, 'downloads', 'capcut_spec.json')
-  const destDir   = path.join(MEDIA_ROOT, 'downloads', 'video',   `ep${epNum}`)
+  const specPath  = mp.statePath('capcut_spec.json')
+  const destDir   = mp.videoDir(epNum)
   const destFile  = path.join(destDir, `ep${epNum}_final.mp4`)
-  const tempDir   = path.join(MEDIA_ROOT, 'downloads', 'temp_capcut')
+  const tempDir   = path.join(mp.runtimeDir(), 'temp_capcut')
   const urlCache  = path.join(MEDIA_ROOT, `capcut_web_ep${epNum}_url.txt`)
 
   fs.mkdirSync(destDir, { recursive: true })

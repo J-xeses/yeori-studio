@@ -15,6 +15,7 @@ import fs        from 'node:fs'
 import path      from 'node:path'
 import readline  from 'node:readline'
 import { fileURLToPath } from 'node:url'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -32,10 +33,10 @@ const CONFIG = {
   debuggingPort: 9222,
   chromeExe:     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   flowDashboard: 'https://labs.google/fx/ko/tools/flow',
-  downloadDir:   path.join(MEDIA_ROOT, 'downloads', 'flow'),
-  characterDir:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character'),
-  faceImage:     path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-face.jpg'),
-  closeupImage:  path.join(MEDIA_ROOT, 'downloads', 'flow', 'character', 'yeori-closeup.jpg'),
+  downloadDir:   mp.flowDownloadDir(),
+  characterDir:  mp.charactersDir(),
+  faceImage:     mp.charactersDir('yeori-face.jpg'),
+  closeupImage:  mp.charactersDir('yeori-closeup.jpg'),
 }
 
 // ── 유틸 ───────────────────────────────────────────────────────────
@@ -411,10 +412,10 @@ async function main() {
   let EP_LABEL, EP_DIR
   if (epArg) {
     EP_LABEL = `ep${epArg}`
-    EP_DIR   = path.join(MEDIA_ROOT, 'downloads', 'flow', EP_LABEL)
+    EP_DIR   = path.join(mp.flowDownloadDir(), EP_LABEL)
   } else {
     EP_LABEL = nameArg
-    EP_DIR   = path.join(MEDIA_ROOT, 'downloads', 'flow', 'research', EP_LABEL)
+    EP_DIR   = path.join(mp.flowDownloadDir(), 'research', EP_LABEL)
   }
   const PROJECT_URL_FILE = path.join(EP_DIR, 'project_url.txt')
 
