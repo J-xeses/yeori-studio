@@ -646,9 +646,9 @@ downloads/
   추가 수정 불필요했음.
 - `downloads/` 전체 git 추적 해제(원래 `.gitignore` 대상, 과거 강제 add된 44파일).
 - **되돌리기**: `node scripts/migrate-downloads.js --undo` + 양쪽 mediaPaths.js `HIER=false`.
-- **코드 키 주의점 (여전히 유효)**: `episode.code`는 사람 편집 가능 + 재사용 이력(SF_E01→
-  LF_T01, `e4f3e96` caveat). 코드 재사용 시 새 에피소드가 옛 폴더에 씀 → ScriptGenTab
-  코드 편집/재사용 시 폴더 충돌 경고 필요(미구현). `gpoints.json`은 이미 episodeCode 키라 정합.
+- **코드 중복 방지 가드 (구현됨)**: `episode.code`가 폴더 키 → 두 에피소드가 같은 코드면
+  산출물·gpoints 공유. AppContext `SET_EPISODE` reducer가 겹치는 code 드롭 + ScriptGenTab
+  입력칸 빨간 테두리·경고. 빈 값 자동코드(`{type}_E{number}`)는 번호가 전역 유일이라 충돌 불가.
 - **스모크 통과**: health/trend/bgm/sfx-catalog/characters/capcut-config/video-checklist/
   cut-timing/scan-media(ep2·ep99)/hw-source-images/studio-status-public/gpoints POST +
   정적파일(episodes/IG_R02/images, library/sfx, library/characters) 200 + `npm run build`.
