@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import * as mp from './lib/mediaPaths.js'
-import { instaDir, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
+import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -216,12 +216,19 @@ function buildAudioMergeArgs({ videoFile, outFile, dur, audioFile, audioStart, a
 
 // ── POST /api/ffmpeg — SSE 스트리밍 자동 편집 ─────────────────────
 app.post('/api/ffmpeg', async (req, res) => {
-  const { meta, workDir } = req.body
+  const { meta, workDir, epNum } = req.body
   if (!Array.isArray(meta) || !meta.length)
     return res.status(400).json({ error: 'meta 배열이 필요합니다' })
 
-  // workDir: 절대 경로 또는 ROOT 기준 상대 경로
-  const dir = path.isAbsolute(workDir ?? '') ? workDir : path.join(ROOT, workDir || '')
+  // epNum 우선(권장) — 없으면 workDir(절대/ROOT 상대) 하위호환
+  const dir = epNum != null ? mp.videoDir(epNum)
+    : (path.isAbsolute(workDir ?? '') ? workDir : path.join(ROOT, workDir || ''))
+  // meta 항목에 audioFile이 없으면 에피소드 audio 폴더에서 자동 해석
+  if (epNum != null) {
+    for (const m of meta) {
+      if (!m.audioFile) m.audioFile = path.join(mp.audioDir(epNum), `cut_${String(m.cutNo).padStart(2, '0')}.mp3`)
+    }
+  }
 
   // SSE 헤더
   res.setHeader('Content-Type', 'text/event-stream')
@@ -1121,12 +1128,8 @@ app.get('/api/scan-images', (req, res) => {
   const { ep, instaContent, instaNum, episodeCode } = req.query
   if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
   const useInsta = instaContent && instaNum
-  const epDir = useInsta
-    ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent])
-    : mp.imagesDir(ep)
-  const urlPrefix = useInsta
-    ? `/downloads/insta/${instaContent}/${instaNum}${INSTA_SUBDIR[instaContent] ? '/' + INSTA_SUBDIR[instaContent] : ''}`
-    : mp.toMediaUrl(mp.imagesDir(ep))
+  const epDir = useInsta ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent]) : mp.imagesDir(ep)
+  const urlPrefix = mp.toMediaUrl(epDir)
   if (!fs.existsSync(epDir)) return res.json({ images: [] })
 
   // 사람이 스튜디오 탭에서 실제로 고른 이미지(gpoints.json의 selectedImage)가 있으면
@@ -1439,9 +1442,7 @@ app.post('/api/run-flow', (req, res) => {
       // cut 완료 시 파일 즉시 확인 후 cut_image 전송
       if (isInsta || episode != null) {
         const padded = String(cutNo).padStart(2, '0')
-        const epUrlBase = isInsta
-          ? `/downloads/insta/${content}/${num}${INSTA_SUBDIR[content] ? '/' + INSTA_SUBDIR[content] : ''}`
-          : mp.toMediaUrl(mp.imagesDir(episode))
+        const epUrlBase = mp.toMediaUrl(epDir)
         const epDirPath = epDir
         for (const suffix of ['_a', '_b', '']) {
           for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
@@ -2561,14 +2562,12 @@ app.post('/api/broll-auto', async (req, res) => {
   }
 })
 
-// 에피소드 소스 폴더의 .html 파일 목록/내용 조회 — 아래 3개 함수는 /api/list-episode-html,
+// 에피소드 소스 폴더의 .html 파일 목록/내용 조회 — /api/list-episode-html,
 // /api/read-episode-html(브라우저)과 MCP 도구(list_episode_html_sources, make_graphic_cut)가
-// 공유하는 핵심 로직. instaContent/instaNum이 오면 downloads/insta/{content}/{num}/, 아니면
-// scriptDir(대본 원문 위치, server/lib/mediaPaths.js의 scriptDir())를 스캔한다.
+// 공유. 커스텀 목업 HTML(예: RL02_DM_mockup_v3.html)은 대본과 함께 01_script/에 둔다.
 function resolveEpisodeHtmlDir({ instaContent, instaNum, episodeCode }) {
-  return (instaContent && instaNum)
-    ? instaDir(instaContent, instaNum)
-    : (episodeCode ? scriptDir(episodeCode) : null)
+  const code = episodeCode || (instaContent && instaNum ? instaCode(instaContent, instaNum) : null)
+  return code ? scriptDir(code) : null
 }
 
 // CAPCUT 컷을 HTML 캡처로 만들 때 쓸 커스텀 목업 파일(예: RL02_DM_mockup_v3.html)을

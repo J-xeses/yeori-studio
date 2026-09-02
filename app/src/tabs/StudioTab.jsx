@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { instaUrl } from '../lib/mediaPaths'
+import { instaUrl, cutMediaUrl } from '../lib/mediaPaths'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './StudioTab.module.css'
@@ -304,7 +304,7 @@ export default function StudioTab() {
                 for (const ext of ['jpg', 'jpeg', 'png', 'webp']) {
                   const url = (instaContent
                     ? instaUrl(instaContent, episode.instaNum.trim(), ev.cutNo, ext, suffix)
-                    : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}${suffix}.${ext}`) + `?t=${Date.now()}`
+                    : cutMediaUrl(episode, 'images', ev.cutNo, ext, suffix)) + `?t=${Date.now()}`
                   try {
                     const r = await fetch(url, { method: 'HEAD' })
                     if (r.ok) {
@@ -446,7 +446,7 @@ export default function StudioTab() {
                 for (const ext of ['jpg', 'jpeg', 'png']) {
                   const url = (instaContent
                     ? instaUrl(instaContent, episode.instaNum.trim(), ev.cutNo, ext)
-                    : `http://localhost:3001/downloads/flow/ep${episode.number}/cut_${padded}.${ext}`) + `?t=${Date.now()}`
+                    : cutMediaUrl(episode, 'images', ev.cutNo, ext)) + `?t=${Date.now()}`
                   try {
                     const r = await fetch(url, { method: 'HEAD' })
                     if (r.ok) { setImages(p => ({ ...p, [cut.id]: url })); break }

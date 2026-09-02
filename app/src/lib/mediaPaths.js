@@ -58,15 +58,21 @@ export function flowUrl(ep, no, ext, suffix = '') { return cutMediaUrl(ep, 'imag
 export function videoUrl(ep, no, ext = 'mp4') { return cutMediaUrl(ep, 'video', no, ext) }
 export function audioUrl(ep, no, ext = 'mp3') { return cutMediaUrl(ep, 'audio', no, ext) }
 
-// 인스타그램 콘텐츠(FD/RL/PT/ST) — 별도 "인스타 번호" 체계, 이번 개편에서 안 건드림.
-export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
+// 인스타그램 콘텐츠(FD/RL/PT/ST + 인스타 번호) — seoyeori/IG/{series}/{code}/ 로 통합.
+export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }   // 하위호환(인자용)
 export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
+const INSTA_SERIES_KIND = { FD: 'P', PT: 'P', RL: 'R', ST: 'S' }
 
+export function instaCode(content, num) {
+  const k = INSTA_SERIES_KIND[content] || 'P'
+  const digits = (String(num).match(/\d+/) || ['1'])[0].padStart(2, '0')
+  return `IG_${k}${digits}`
+}
 export function instaDir(content, num, kind) {
-  const base = `${YEORI_SERVER}/downloads/insta/${content}/${num}`
-  return kind ? `${base}/${kind}` : base
+  const base = instanceUrl({ code: instaCode(content, num) })
+  const sub = kind === 'txt' ? '01_script' : kind === 'final' ? '07_output' : '02_images'
+  return `${base}/${sub}`
 }
 export function instaUrl(content, num, no, ext, suffix = '') {
-  const kind = INSTA_SUBDIR[content]
-  return `${instaDir(content, num, kind)}/cut_${paddedCutNo(no)}${suffix}.${ext}`
+  return `${instaDir(content, num)}/cut_${paddedCutNo(no)}${suffix}.${ext}`
 }

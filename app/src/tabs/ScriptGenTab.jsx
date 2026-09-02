@@ -1263,7 +1263,7 @@ ${currentScript}
                   <input placeholder="예: P01, RL03, PT01, ST01" value={episode.instaNum || ''}
                     onChange={e => dispatch({ type: 'SET_EPISODE', p: { instaNum: e.target.value.trim() } })} />
                   <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>
-                    컷의 PL이 IG_FD/IG_RL/IG_PT/IG_ST일 때 downloads/insta/&#123;유형&#125;/&#123;여기 값&#125;/ 경로로 저장됩니다.
+                    컷의 PL이 IG_FD/IG_RL/IG_PT/IG_ST일 때 이 값으로 IG 코드(IG_R03 등)를 만들어 seoyeori/IG/ 아래 저장됩니다.
                   </div>
                 </div>
               )}

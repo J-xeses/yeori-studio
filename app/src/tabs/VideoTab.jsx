@@ -4,6 +4,7 @@ import JSZip from 'jszip'
 import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { resolveVideoPolicy, VIDEO_MODES } from '../lib/videoPolicy'
+import { epMediaUrl } from '../lib/mediaPaths'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VideoTab.module.css'
@@ -335,7 +336,7 @@ export default function VideoTab() {
     const ep = episode?.number ?? ''
     const padded = String(cut.no).padStart(2, '0')
     for (const ext of ['mp4', 'mov', 'webm']) {
-      const url = `http://localhost:3001/downloads/video/ep${ep}/cut_${padded}.${ext}?t=${Date.now()}`
+      const url = `${epMediaUrl(episode, 'video')}/cut_${padded}.${ext}?t=${Date.now()}`
       try {
         const r = await fetch(url, { method: 'HEAD' })
         if (r.ok) {
@@ -594,12 +595,10 @@ export default function VideoTab() {
       setFfmpegLog(p => ({ ...p, [c.id]: '일괄 합성 대기 중…' }))
     })
 
-    const workDir = `C:\\yeori-studio\\downloads\\video\\ep${ep}`
     const meta = cuts.map(c => ({
       cutNo: c.no,
       label: `CUT ${String(c.no).padStart(2, '0')}`,
       duration: c.duration || 8,
-      audioFile: `C:\\yeori-studio\\downloads\\audio\\ep${ep}\\cut_${String(c.no).padStart(2, '0')}.mp3`,
       sfxOnly: c.sfxOnly || false,
       sfxFile: sfxAbsolutePath(c),
       sfxStart: c.sfxStart,
@@ -609,7 +608,7 @@ export default function VideoTab() {
       const res = await fetch('http://localhost:3001/api/ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workDir, meta }),
+        body: JSON.stringify({ epNum: ep, meta }),
       })
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
@@ -632,7 +631,7 @@ export default function VideoTab() {
               const cut = cuts.find(c => String(c.no).padStart(2, '0') === ev.cutNo)
               if (cut) {
                 const padded = String(cut.no).padStart(2, '0')
-                const url = `http://localhost:3001/downloads/video/ep${ep}/output_final/C${padded}_final.mp4?t=${Date.now()}`
+                const url = `${epMediaUrl(episode, 'video')}/output_final/C${padded}_final.mp4?t=${Date.now()}`
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'done' }))
                 setFfmpegLog(p => ({ ...p, [cut.id]: '✅ 일괄 합성 완료' }))
                 setVideoClips(p => ({

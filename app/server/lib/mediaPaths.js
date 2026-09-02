@@ -149,14 +149,26 @@ export function toMediaUrl(abs) {
 export function paddedCutNo(no) { return String(no).padStart(2, '0') }
 export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }
 
-// ── 인스타그램 콘텐츠(FD/RL/PT/ST) — episode.number가 아니라 사용자가 직접 붙이는
-// "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 raw 하위폴더 없음. 이번 개편에서 안 건드림(별도 체계).
-export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
+// ── 인스타그램 콘텐츠(FD/RL/PT/ST + 인스타 번호 P01/RL03…) ──────────────
+// 이제 별도 downloads/insta/ 체계가 아니라 seoyeori/IG/{series}/{code}/ 로 통합.
+//   FD·PT(피드,1:1) → IG_P   ·   RL(릴스) → IG_R   ·   ST(스토리) → IG_S   (전부 9:16 except IG_P)
+export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }   // 하위호환(호출부 인자용), 새 경로에선 무의미
 export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
+const INSTA_SERIES_KIND = { FD: 'P', PT: 'P', RL: 'R', ST: 'S' }
 
+// content(FD/RL/PT/ST) + num(P01/RL03/ST01…) → 통합 코드 IG_P01 / IG_R03 …
+export function instaCode(content, num) {
+  const k = INSTA_SERIES_KIND[content] || 'P'
+  const digits = (String(num).match(/\d+/) || ['1'])[0].padStart(2, '0')
+  return `IG_${k}${digits}`
+}
+
+// 구 instaDir(content, num, kind) 시그니처 유지 — 새 위치로 리다이렉트.
+//   kind: 'raw'/null → 02_images,  'txt' → 01_script,  'final' → 07_output
 export function instaDir(content, num, kind) {
-  const base = path.join(DOWNLOADS, 'insta', String(content), String(num))
-  return kind ? path.join(base, kind) : base
+  const inst = instanceDir(instaCode(content, num))
+  const sub = kind === 'txt' ? '01_script' : kind === 'final' ? '07_output' : '02_images'
+  return path.join(inst, sub)
 }
 export function instaRatio(content) {
   return INSTA_RATIO[content] || null
