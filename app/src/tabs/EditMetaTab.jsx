@@ -9,6 +9,7 @@ import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import { cutDuration } from '../lib/cutDuration'
 import { resolveFinishMode } from '../lib/finishMode'
+import { epMediaUrl } from '../lib/mediaPaths'
 import styles from './EditMetaTab.module.css'
 
 // run-cutter.js와 동일 — 이 유형 컷은 모션이 이미 구워져 켄번스(editIntent 포함) 대상 아님
@@ -321,7 +322,7 @@ export default function EditMetaTab() {
     let autoVideoPath = null
     const epNum = state.episode?.number
     if (epNum != null) {
-      const base = `http://localhost:3001/downloads/video/ep${epNum}/cut_${m.cutNo}`
+      const base = `${epMediaUrl(state.episode, 'video')}/cut_${m.cutNo}`
       for (const url of [`${base}_overlay.mp4`, `${base}.mp4`]) {
         try {
           const r = await fetch(url, { method: 'HEAD' })

@@ -93,9 +93,19 @@ export function episodeDir(epRef) {
 
 // ── 공유 라이브러리 (에피소드 무관) ──────────────────────────────────
 export function sfxDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'sfx')   : path.join(DOWNLOADS, 'sfx'),   sub) }
+// "sfx/whoosh/x.wav" · "library/sfx/whoosh/x.wav" · "whoosh/x.wav" 무엇이든 실제 경로로
+export function sfxFile(rel) {
+  const r = String(rel).replace(/\\/g, '/')
+  if (r.startsWith('library/sfx/') || r.startsWith('sfx/')) return path.join(DOWNLOADS, r)
+  return sfxDir(r)
+}
 export function bgmDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'bgm')   : path.join(DOWNLOADS, 'bgm'),   sub) }
-// t.file/bgmFile 값이 "bgm/mood/x.mp3" 또는 "mood/x.mp3" 어느 쪽이든 실제 경로로
-export function bgmFile(rel) { return bgmDir(String(rel).replace(/\\/g, '/').replace(/^bgm\//, '')) }
+// "bgm/mood/x.mp3" · "library/bgm/mood/x.mp3" · "mood/x.mp3" 무엇이든 실제 경로로
+export function bgmFile(rel) {
+  const r = String(rel).replace(/\\/g, '/')
+  if (r.startsWith('library/bgm/') || r.startsWith('bgm/')) return path.join(DOWNLOADS, r)
+  return bgmDir(r)
+}
 export function hooksDir(sub = '') { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'hooks') : path.join(DOWNLOADS, 'hooks'), sub) }
 export function charactersDir(sub = '') {
   return path.join(HIER ? path.join(DOWNLOADS, 'library', 'characters') : path.join(DOWNLOADS, 'flow', 'character'), sub)

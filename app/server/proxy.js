@@ -413,6 +413,14 @@ app.get('/api/sfx-catalog', (req, res) => {
   const catalogPath = path.join(CODE_ROOT, 'data', 'sfx-catalog.json')
   try {
     const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf-8'))
+    // 카탈로그의 item.path("sfx/whoosh/x.wav")를 현재 폴더 구조 기준 상대경로로 재작성
+    // (3단계에서 sfx가 library/sfx로 옮겨가도 클라 프리뷰·sfxFile 저장값이 따라오도록)
+    const cats = Array.isArray(catalog?.categories) ? catalog.categories : (Array.isArray(catalog) ? catalog : [])
+    for (const c of cats) {
+      for (const it of (c.items || [])) {
+        if (it.path) it.path = path.relative(mp.DOWNLOADS, mp.sfxFile(it.path)).replace(/\\/g, '/')
+      }
+    }
     res.json({ ok: true, catalog })
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })
@@ -4282,6 +4290,7 @@ app.get('/api/bgm-library', (_req, res) => {
     const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'))
     const tracks = (Array.isArray(index) ? index : [])
       .filter(t => t.file && fs.existsSync(mp.bgmFile(t.file)))
+      .map(t => ({ ...t, file: path.relative(mp.DOWNLOADS, mp.bgmFile(t.file)).replace(/\\/g, '/') }))
     res.json({ tracks })
   } catch (err) {
     res.status(500).json({ error: err.message })

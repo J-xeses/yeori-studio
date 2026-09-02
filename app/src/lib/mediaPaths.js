@@ -1,43 +1,62 @@
-// 에피소드 코드 기준 산출물 URL을 한 곳에서만 만드는 헬퍼 — 클라이언트용.
-// StudioTab.jsx/VideoTab.jsx/ExtractTab.jsx 등이 각자 `ep${episode.number}` 문자열을
-// 직접 조립하던 것을 이 모듈을 거치도록 바꾸는 게 목표(4차 범위). 이번 라운드에서는
-// 신규 추가만 하고 기존 호출부는 아직 안 건드린다 — `code` 자리에 임시로 숫자 문자열이
-// 들어와도 그대로 동작한다(에피소드 코드 도입 전까지의 과도기 호환).
+// 여리 스튜디오 산출물 URL 단일 소스 — 클라이언트용.
+// server/lib/mediaPaths.js와 HIER 플래그·키 규칙을 반드시 동기화할 것.
 //
-// server/lib/mediaPaths.js와 반드시 동일한 로직을 유지할 것.
+// 2단계(HIER=false): /downloads/<kind>/ep<number>/... (기존 평면 구조)
+// 3단계(HIER=true):  /downloads/episodes/<code>/<sub>/...  (폴더 키 = episode.code)
 
 const YEORI_SERVER = 'http://localhost:3001'
 
-export function paddedCutNo(no) {
-  return String(no).padStart(2, '0')
+// ⚠️ 3단계 스위치. server/lib/mediaPaths.js의 HIER과 동시에 바꿀 것.
+export const HIER = false
+
+export function paddedCutNo(no) { return String(no).padStart(2, '0') }
+export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }
+
+// episode 객체(또는 {code,number}) → 폴더 키
+export function epKey(episode) {
+  if (episode == null) return 'ep0'
+  if (typeof episode === 'number' || /^\d+$/.test(String(episode))) {
+    return HIER ? `ep${episode}` : `ep${episode}`   // 클라는 number→code 조회 불가, 아래 객체형 사용 권장
+  }
+  if (typeof episode === 'string') {
+    const m = episode.match(/^ep?(\d+)$/i)
+    return m ? `ep${m[1]}` : episode
+  }
+  const { code, number } = episode
+  if (HIER && code) return code
+  return `ep${number}`
 }
 
-export function cutFile(no, ext) {
-  return `cut_${paddedCutNo(no)}.${ext}`
+const SUB = { flow: 'images', images: 'images', audio: 'audio', video: 'video', making: 'making', output: 'output', final: 'final' }
+
+// 에피소드별 산출물 디렉터리 URL (서버 정적 라우트 기준)
+export function epMediaUrl(episode, kind) {
+  const key = epKey(episode)
+  if (HIER) return `${YEORI_SERVER}/downloads/episodes/${key}/${SUB[kind] || kind}`
+  const flat = kind === 'images' ? 'flow' : kind
+  return `${YEORI_SERVER}/downloads/${flat}/${key}`
 }
 
-export function flowUrl(code, no, ext, suffix = '') {
-  return `${YEORI_SERVER}/downloads/flow/${code}/cut_${paddedCutNo(no)}${suffix}.${ext}`
+export function cutMediaUrl(episode, kind, no, ext, suffix = '') {
+  return `${epMediaUrl(episode, kind)}/cut_${paddedCutNo(no)}${suffix}.${ext}`
 }
 
-export function videoUrl(code, no, ext = 'mp4') {
-  return `${YEORI_SERVER}/downloads/video/${code}/cut_${paddedCutNo(no)}.${ext}`
-}
+// 하위호환: 기존 flowUrl/videoUrl/audioUrl (code 자리에 ep number 문자열이 오던 것)
+export function flowUrl(code, no, ext, suffix = '') { return cutMediaUrl(code, 'images', no, ext, suffix) }
+export function videoUrl(code, no, ext = 'mp4') { return cutMediaUrl(code, 'video', no, ext) }
+export function audioUrl(code, no, ext = 'mp3') { return cutMediaUrl(code, 'audio', no, ext) }
 
-export function audioUrl(code, no, ext = 'mp3') {
-  return `${YEORI_SERVER}/downloads/audio/${code}/cut_${paddedCutNo(no)}.${ext}`
-}
-
-// 인스타그램 콘텐츠(FD/RL/PT/ST) — episode.number가 아니라 사용자가 직접 붙이는
-// "인스타 번호"(P01/RL03/PT01/ST01) 기준. RL만 raw 하위폴더가 없어 콘텐츠 루트를 바로 씀
-// (server/lib/mediaPaths.js의 INSTA_SUBDIR와 반드시 동일하게 유지할 것).
+// 인스타그램 콘텐츠(FD/RL/PT/ST) — HIER 무관(별도 체계). server/lib/mediaPaths.js와 동일 유지.
 export const INSTA_SUBDIR = { FD: 'raw', PT: 'raw', ST: 'raw', RL: null }
 export const INSTA_RATIO  = { FD: '1:1', PT: '1:1', RL: '9:16', ST: '9:16' }
 
+export function instaDir(content, num, kind) {
+  const base = `${YEORI_SERVER}/downloads/insta/${content}/${num}`
+  return kind ? `${base}/${kind}` : base
+}
+
+// cut 파일 URL (StudioTab 등이 쓰던 시그니처 그대로)
 export function instaUrl(content, num, no, ext, suffix = '') {
   const kind = INSTA_SUBDIR[content]
-  const dir = kind
-    ? `${YEORI_SERVER}/downloads/insta/${content}/${num}/${kind}`
-    : `${YEORI_SERVER}/downloads/insta/${content}/${num}`
-  return `${dir}/cut_${paddedCutNo(no)}${suffix}.${ext}`
+  return `${instaDir(content, num, kind)}/cut_${paddedCutNo(no)}${suffix}.${ext}`
 }

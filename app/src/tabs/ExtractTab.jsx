@@ -84,7 +84,7 @@ export default function ExtractTab() {
         body: JSON.stringify({ epNum: episode.number, prompts }),
       }).then(r => r.json())
       if (res.success) {
-        setSaveStatus(`✅ 저장 완료: downloads/video/ep${episode.number}/video-prompts.json`)
+        setSaveStatus(`✅ 저장 완료: ${res.path || 'video-prompts.json'}`)
       } else {
         setSaveStatus(`❌ 저장 실패: ${res.error}`)
       }
@@ -144,7 +144,7 @@ export default function ExtractTab() {
         <div className={s.sectionTitle}>📦 데이터</div>
         <div className={s.cards}>
           <ExportCard icon="{ }" title="JSON 데이터" desc="에피소드 설정 + 전체 컷 데이터 JSON" color="green" onClick={exportJSON} />
-          <ExportCard icon="🎬" title="video-prompts.json" desc="영상 프롬프트 + 대사/나레이션 서버 저장 (downloads/video/ep{N}/)" color="accent" onClick={saveVideoPrompts} />
+          <ExportCard icon="🎬" title="video-prompts.json" desc="영상 프롬프트 + 대사/나레이션 서버 저장 (에피소드 video 폴더)" color="accent" onClick={saveVideoPrompts} />
         </div>
         {saveStatus && (
           <div style={{marginTop:'10px',fontSize:'12px',fontWeight:600,

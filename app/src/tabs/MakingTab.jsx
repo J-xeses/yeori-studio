@@ -6,6 +6,7 @@ import { getGPoint, setGPoint } from '../lib/gpoints'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './MakingTab.module.css'
+import { epMediaUrl } from '../lib/mediaPaths'
 
 const YEORI_SERVER = 'http://localhost:3001'
 
@@ -1256,7 +1257,7 @@ export default function MakingTab() {
                   ✅ 오버레이 적용됨 — {r.outputPath?.split(/[/\\]/).pop()} ({r.sizeKB}KB)
                   <br />
                   <video className={s.makingVideo}
-                    src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/${r.outputPath?.split(/[/\\]/).pop()}?t=${r._ts || 0}`}
+                    src={`${epMediaUrl(episode, 'video')}/${r.outputPath?.split(/[/\\]/).pop()}?t=${r._ts || 0}`}
                     controls />
                 </div>
               )
@@ -1897,10 +1898,10 @@ export default function MakingTab() {
   )
 
   const makingUrl = episode?.number
-    ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making.mp4`
+    ? `${epMediaUrl(episode, 'making')}/ep${episode.number}_making.mp4`
     : null
   const makingBgmUrl = episode?.number
-    ? `${YEORI_SERVER}/downloads/making/ep${episode.number}/ep${episode.number}_making_bgm.mp4`
+    ? `${epMediaUrl(episode, 'making')}/ep${episode.number}_making_bgm.mp4`
     : null
 
   const renderHwImageCard = () => (
@@ -2155,7 +2156,7 @@ export default function MakingTab() {
                               {done && makingUrl && (
                                 <video
                                   className={s.makingVideo}
-                                  src={`${YEORI_SERVER}/downloads/video/ep${episode.number}/cut_${String(cut.no).padStart(2, '0')}.mp4`}
+                                  src={`${epMediaUrl(episode, 'video')}/cut_${String(cut.no).padStart(2, '0')}.mp4`}
                                   controls
                                 />
                               )}
