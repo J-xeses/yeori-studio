@@ -7,7 +7,7 @@
 const YEORI_SERVER = 'http://localhost:3001'
 
 // ⚠️ 3단계 스위치. server/lib/mediaPaths.js의 HIER과 동시에 바꿀 것.
-export const HIER = false
+export const HIER = true
 
 export function paddedCutNo(no) { return String(no).padStart(2, '0') }
 export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }

@@ -15,7 +15,7 @@ export const MEDIA_ROOT = 'C:\\yeori-studio'
 export const DOWNLOADS = path.join(MEDIA_ROOT, 'downloads')
 
 // ⚠️ 3단계 스위치. 폴더 마이그레이션(scripts/migrate-downloads.js) 실행과 함께 true로.
-export const HIER = false
+export const HIER = true
 
 // ── 에피소드 번호 → 코드 매핑 (studio-state.json, mtime 캐시) ──────────
 const STATE_PATH = path.join(MEDIA_ROOT, 'app', 'studio-state.json')
@@ -93,18 +93,18 @@ export function episodeDir(epRef) {
 
 // ── 공유 라이브러리 (에피소드 무관) ──────────────────────────────────
 export function sfxDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'sfx')   : path.join(DOWNLOADS, 'sfx'),   sub) }
-// "sfx/whoosh/x.wav" · "library/sfx/whoosh/x.wav" · "whoosh/x.wav" 무엇이든 실제 경로로
+// "sfx/whoosh/x.wav"(구 카탈로그 값) · "library/sfx/.."(현재 구조 값) · "whoosh/x.wav" 무엇이든 실제 경로로
 export function sfxFile(rel) {
   const r = String(rel).replace(/\\/g, '/')
-  if (r.startsWith('library/sfx/') || r.startsWith('sfx/')) return path.join(DOWNLOADS, r)
-  return sfxDir(r)
+  if (r.startsWith('library/sfx/')) return path.join(DOWNLOADS, r)   // 이미 현재 구조 상대경로
+  return sfxDir(r.replace(/^sfx\//, ''))                            // "sfx/.." 접두어는 논리 접두어 → 재매핑
 }
 export function bgmDir(sub = '')   { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'bgm')   : path.join(DOWNLOADS, 'bgm'),   sub) }
-// "bgm/mood/x.mp3" · "library/bgm/mood/x.mp3" · "mood/x.mp3" 무엇이든 실제 경로로
+// "bgm/mood/x.mp3"(구 인덱스 값) · "library/bgm/.."(현재 구조 값) · "mood/x.mp3" 무엇이든 실제 경로로
 export function bgmFile(rel) {
   const r = String(rel).replace(/\\/g, '/')
-  if (r.startsWith('library/bgm/') || r.startsWith('bgm/')) return path.join(DOWNLOADS, r)
-  return bgmDir(r)
+  if (r.startsWith('library/bgm/')) return path.join(DOWNLOADS, r)
+  return bgmDir(r.replace(/^bgm\//, ''))
 }
 export function hooksDir(sub = '') { return path.join(HIER ? path.join(DOWNLOADS, 'library', 'hooks') : path.join(DOWNLOADS, 'hooks'), sub) }
 export function charactersDir(sub = '') {
