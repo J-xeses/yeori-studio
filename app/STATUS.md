@@ -655,6 +655,19 @@ BROLL=`download_broll_cut`, TTS=`studio_run_g3`, concat=`studio_run_g5` 전부 A
 - **남은 것**: pipeline-leader가 GRAPHIC/CAPCUT 컷에 `make_graphic_cut`을 자동 호출하도록 배선
   (현재는 MakingTab UI 또는 수동 curl). 화면 재현 HTML은 컷마다 손으로 작성(템플릿화 여지).
 
+### 실제 화면조작+녹화 모듈형 아키텍처 (2026-09-03, `<screenarch>`)
+HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scripts/screen-scenario/`:
+- **시나리오 = 도구 무관 액션 JSON** (`scenarios/*.json`): `{action:'type', target:'text_field',
+  text, cps}` 등. `target`은 `selectors` 맵으로 해석(브라우저=CSS/xpath/text,
+  pyautogui=image/coord). 실행엔진만 바꾸면 다른 도구로.
+- **Driver 교체가능** (`registry.js` 한 줄 + `Driver` 상속): `puppeteer` 구현,
+  playwright/pyautogui는 클래스만 추가. `execute(step, selectors)` action별 매핑.
+- **Recorder 교체가능**: `native`(page.screencast, 검증됨) / `gdigrab`(ffmpeg 창·영역) /
+  `gamebar`(Win+Alt+R) / `obs`(WebSocket v5).
+- `node scripts/screen-scenario/run.js <s.json> --ep 98 --cut 3 [--driver x --recorder y]`
+  → `mediaPaths.videoDir(ep)/cut_NN.mp4` 정규화 저장.
+- 검증: `_selftest`(puppeteer+native, 외부 의존 없음) 통과. 실사이트/gdigrab/gamebar/obs는 실기.
+
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
   **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
