@@ -14,6 +14,41 @@ function log(tag, msg) {
   console.log(`[${new Date().toLocaleTimeString('ko-KR', { hour12: false })}] [${tag}] ${msg}`)
 }
 
+function ff(args) {
+  return new Promise((resolve, reject) => {
+    const p = spawn('ffmpeg', args)
+    let err = ''
+    p.stderr.on('data', (d) => { err += d.toString() })
+    p.on('error', reject)
+    p.on('close', (c) => (c === 0 ? resolve(err) : reject(new Error(`ffmpeg ${c}: ${err.slice(-400)}`))))
+  })
+}
+
+// 녹화 결과 mp4의 실제 내용 검증: 프레임 3장 추출(10/50/90%) → JPEG 크기로 "단색/빈 화면" 판별.
+// 단색 프레임 JPEG은 수 KB 이하, 실제 웹 화면은 보통 20KB+. verify.jpg(중간 프레임)를 남긴다.
+async function verifyContent(outPath, duration = 6) {
+  const dir = path.dirname(outPath)
+  const base = path.basename(outPath, path.extname(outPath))
+  const marks = [0.1, 0.5, 0.9].map((r) => Math.max(0.2, +(duration * r).toFixed(2)))
+  const sizes = []
+  let midJpg = null
+  for (let i = 0; i < marks.length; i++) {
+    const jpg = path.join(dir, `${base}_verify${i === 1 ? '' : `_${i}`}.jpg`)
+    try {
+      await ff(['-y', '-ss', String(marks[i]), '-i', outPath, '-frames:v', '1', '-q:v', '3', jpg])
+      const sz = fs.existsSync(jpg) ? fs.statSync(jpg).size : 0
+      sizes.push(sz)
+      if (i === 1) midJpg = jpg
+      else { try { fs.rmSync(jpg) } catch { /* noop */ } }
+    } catch { sizes.push(0) }
+  }
+  // 0B = seek가 영상 끝을 지난 것(길이 추정 오차) → 판정에서 제외. 유효 샘플의 최대치로 단색 판정.
+  const valid = sizes.filter((s) => s > 0)
+  const peak = valid.length ? Math.max(...valid) : 0
+  const avg = valid.length ? Math.round(valid.reduce((a, b) => a + b, 0) / valid.length) : 0
+  return { sizes, avg, peak, solid: peak > 0 && peak < 5000, empty: valid.length === 0, verifyJpg: midJpg }
+}
+
 async function normalize(inPath, outPath, { width = 1080, height = 1920, duration } = {}) {
   const vf = `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},setsar=1,format=yuv420p`
   const args = ['-y']
@@ -58,11 +93,13 @@ export async function runScenario(p) {
   // 레코더 준비
   let recorder
   if (recorderName === 'native') {
-    if (isConnect) log('runner', '⚠ connect 모드 + native 녹화는 불안정(page.screencast). gdigrab/gamebar/obs 권장')
     const impl = driver.nativeRecorder()
     if (!impl) throw new Error(`${driverName} 드라이버는 native 녹화 미지원 — recorder를 gdigrab/gamebar/obs로`)
     recorder = await createRecorder('native', { impl, log: (m) => log('native', m) })
   } else {
+    if (isConnect && recorderName === 'gdigrab') {
+      log('runner', '⚠ gdigrab는 데스크톱 영역 캡처라 다른 창이 겹치면 그게 녹화됨. connect 모드는 recorder:"native"(CDP) 권장')
+    }
     recorder = await createRecorder(recorderName, { log: (m) => log(recorderName, m), ...(p.recorderOpts || {}) })
   }
 
@@ -70,7 +107,7 @@ export async function runScenario(p) {
   const rawPath = path.join(tmpDir, 'raw.mp4')
   const region = recorderName === 'gdigrab' ? await driver.windowBounds() : null
 
-  await recorder.start(rawPath, { fps, region, windowTitle: sc.record?.windowTitle })
+  await recorder.start(rawPath, { fps, region, viewport: vp, windowTitle: sc.record?.windowTitle })
   try {
     for (const [i, step] of (sc.steps || []).entries()) {
       log('step', `${i + 1}/${sc.steps.length} ${step.action}${step.target ? ` → ${step.target}` : ''}`)
@@ -89,6 +126,13 @@ export async function runScenario(p) {
   fs.mkdirSync(path.dirname(p.outPath), { recursive: true })
   await normalize(rawPath, p.outPath, { width: vp.width, height: vp.height, duration: sc.duration })
   try { fs.rmSync(tmpDir, { recursive: true, force: true }) } catch { /* noop */ }
+
+  // 내용 검증 — 파일 크기만으론 불충분(탐색기 창을 녹화해도 파일은 생김). 프레임 샘플로 확인.
+  const v = await verifyContent(p.outPath, sc.duration || 6)
+  log('runner', `검증: 프레임 JPEG ${v.sizes.join('/')}B (peak ${v.peak}) · verify=${v.verifyJpg ? path.basename(v.verifyJpg) : '-'}`)
+  if (v.empty) throw new Error('검증 실패: 프레임 추출 불가(손상된 mp4)')
+  if (v.solid) throw new Error(`검증 실패: 단색/빈 화면으로 보임(peak ${v.peak}B). 탭이 비활성이었거나 잘못된 창을 녹화했을 수 있음`)
+
   log('runner', `완료 → ${p.outPath}`)
-  return { outPath: p.outPath }
+  return { outPath: p.outPath, verify: v }
 }

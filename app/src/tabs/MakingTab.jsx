@@ -518,6 +518,7 @@ export default function MakingTab() {
   const [scenarioRunning, setScenarioRunning] = useState(null)  // 실행 중 cutNo
   const [scenarioLog, setScenarioLog] = useState({})            // { [cutNo]: "..." }
   const [scenarioVideo, setScenarioVideo] = useState({})        // { [cutNo]: url }
+  const [scenarioVerify, setScenarioVerify] = useState({})      // { [cutNo]: {url, peak} } 내용 검증 썸네일
 
   const loadScenarios = async (cutNo) => {
     if (episode?.number == null) return
@@ -536,6 +537,7 @@ export default function MakingTab() {
     setScenarioRunning(cut.no)
     setScenarioLog(p => ({ ...p, [cut.no]: '' }))
     setScenarioVideo(p => ({ ...p, [cut.no]: null }))
+    setScenarioVerify(p => ({ ...p, [cut.no]: null }))
     const append = (line) => setScenarioLog(p => ({ ...p, [cut.no]: ((p[cut.no] || '') + line + '\n').slice(-4000) }))
     try {
       const res = await fetch(`${YEORI_SERVER}/api/screen-scenario`, {
@@ -558,8 +560,11 @@ export default function MakingTab() {
           else if (ev.type === 'log') append(ev.line)
           else if (ev.type === 'result') append(`📄 ${ev.outPath || ''}`)
           else if (ev.type === 'done') {
-            if (ev.ok) { append('✅ 완료'); setScenarioVideo(p => ({ ...p, [cut.no]: ev.videoUrl })) }
-            else append(`❌ ${ev.error}`)
+            if (ev.ok) {
+              append(`✅ 완료 — 내용 검증 통과${ev.verify?.peak ? ` (프레임 ${Math.round(ev.verify.peak / 1024)}KB)` : ''}`)
+              setScenarioVideo(p => ({ ...p, [cut.no]: ev.videoUrl }))
+              if (ev.verifyUrl) setScenarioVerify(p => ({ ...p, [cut.no]: { url: ev.verifyUrl, peak: ev.verify?.peak } }))
+            } else append(`❌ ${ev.error}`)
             // videoStatus 2초 폴링이 cut_NN.mp4를 잡아 g4 자동 마킹(기존 effect)
           }
         }
@@ -1688,6 +1693,12 @@ export default function MakingTab() {
               )}
               {scenarioVideo[cut.no] && (
                 <video src={scenarioVideo[cut.no]} controls style={{ marginTop: 8, width: '100%', maxHeight: 340, borderRadius: 6, background: '#000' }} />
+              )}
+              {scenarioVerify[cut.no]?.url && (
+                <div style={{ marginTop: 6 }}>
+                  <div className={s.emptyHint}>내용 검증 프레임(중간 지점 실제 캡처):</div>
+                  <img src={scenarioVerify[cut.no].url} alt="검증 프레임" style={{ marginTop: 4, width: 120, borderRadius: 4, border: '1px solid var(--border, #333)' }} />
+                </div>
               )}
             </div>
 

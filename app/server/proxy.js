@@ -2672,12 +2672,15 @@ app.post('/api/screen-scenario', (req, res) => {
 
   const proc = spawn(process.execPath, args, { cwd: CODE_ROOT, env: process.env })
   let buf = ''
+  let verify = null
   const onData = (d) => {
     buf += d.toString()
     const lines = buf.split('\n'); buf = lines.pop()
     for (const raw of lines) {
       const t = raw.trim(); if (!t) continue
-      if (t.startsWith('{') && t.includes('outPath')) { try { send({ type: 'result', ...JSON.parse(t) }); continue } catch { /* noop */ } }
+      if (t.startsWith('{') && t.includes('outPath')) {
+        try { const o = JSON.parse(t); verify = o.verify || null; send({ type: 'result', ...o }); continue } catch { /* noop */ }
+      }
       send({ type: 'log', line: t })
     }
   }
@@ -2687,15 +2690,21 @@ app.post('/api/screen-scenario', (req, res) => {
     if (buf.trim()) send({ type: 'log', line: buf.trim() })
     if (code === 0) {
       recordCutMotion(epNum, cutNo, { method: 'screen-scenario', motion: null, baked: true })
-      const url = `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${String(cutNo).padStart(2, '0')}.mp4`))}?t=${Date.now()}`
-      send({ type: 'done', ok: true, videoUrl: url })
+      const pad = `cut_${String(cutNo).padStart(2, '0')}`
+      const url = `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), `${pad}.mp4`))}?t=${Date.now()}`
+      // 내용 검증 썸네일(runner가 프레임 추출로 단색/빈화면 아님을 확인 후 남김)
+      const vjpg = path.join(mp.videoDir(epNum), `${pad}_verify.jpg`)
+      const verifyUrl = fs.existsSync(vjpg) ? `http://localhost:3001${mp.toMediaUrl(vjpg)}?t=${Date.now()}` : null
+      send({ type: 'done', ok: true, videoUrl: url, verifyUrl, verify })
     } else {
-      send({ type: 'done', ok: false, error: `run.js 종료 코드 ${code}` })
+      send({ type: 'done', ok: false, error: `run.js 종료 코드 ${code} (검증 실패 포함 — 로그 확인)` })
     }
     res.end()
   })
   proc.on('error', (err) => { send({ type: 'done', ok: false, error: err.message }); res.end() })
-  req.on('close', () => { try { proc.kill() } catch { /* noop */ } })
+  // 클라이언트 연결이 끊기면 자식 종료. req.on('close')는 Node 최신 버전에서 "요청 본문 수신 완료"
+  // 시점에도 발생 → 스폰 직후 자식을 죽여버림. 응답 스트림 close 를 보고, 정상 완료가 아닐 때만 kill.
+  res.on('close', () => { if (!res.writableEnded) { try { proc.kill() } catch { /* noop */ } } })
 })
 
 // GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해 스크린샷 → ffmpeg로 정지화면

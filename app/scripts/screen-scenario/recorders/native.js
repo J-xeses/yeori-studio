@@ -8,8 +8,8 @@ export class NativeRecorder extends Recorder {
     this.impl = opts.impl   // { start(outPath, {fps}), stop() }
   }
   async start(outPath, spec = {}) {
-    this.log(`native 녹화 시작 → ${outPath}`)
-    await this.impl.start(outPath, { fps: spec.fps || 30 })
+    this.log(`native(CDP screencast) 녹화 시작 → ${outPath}`)
+    await this.impl.start(outPath, { fps: spec.fps || 30, viewport: spec.viewport })
   }
   async stop() {
     await this.impl.stop()

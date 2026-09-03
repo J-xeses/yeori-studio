@@ -1,8 +1,8 @@
 {
   "id": "rl03_cut3_elevenlabs",
-  "_note": "RL03 CUT 3 — ElevenLabs 화면: 텍스트 입력 → 재생. target:'elevenlabs' → 디버깅 Chrome의 ElevenLabs 탭 접속(없으면 새 탭). 남자목소리 반전 연출은 CapCut 자막/효과로. selectors UI 변경 시 갱신.",
+  "_note": "RL03 CUT 3 — ElevenLabs 화면: 텍스트 입력 → 재생. target:'elevenlabs' → 디버깅 Chrome의 ElevenLabs 탭 접속(없으면 새 탭). recorder:'native'=CDP screencast(페이지 픽셀 직접). 남자목소리 반전 연출은 CapCut 자막/효과로. selectors UI 변경 시 갱신.",
   "driver": "puppeteer",
-  "recorder": "gdigrab",
+  "recorder": "native",
   "duration": 14,
   "viewport": {
     "width": 1080,

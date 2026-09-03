@@ -6,9 +6,23 @@
 //       해당 도구 탭을 찾거나 새로 연다. flow-automation.js connectBrowser() 패턴 재사용.
 // 자체 녹화(page.screencast) 레코더도 제공.
 
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { spawn } from 'node:child_process'
 import puppeteer from 'puppeteer-core'
 import { Driver, sleep, humanType } from './base.js'
 import * as mp from '../../../server/lib/mediaPaths.js'
+
+function ffmpegRun(args) {
+  return new Promise((resolve, reject) => {
+    const p = spawn('ffmpeg', args)
+    let err = ''
+    p.stderr.on('data', (d) => { err += d.toString() })
+    p.on('error', reject)
+    p.on('close', (c) => (c === 0 ? resolve() : reject(new Error(`ffmpeg ${c}: ${err.slice(-400)}`))))
+  })
+}
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
 const DEBUG_PORT = 9222            // flow-automation main 프로필과 동일
@@ -193,13 +207,63 @@ export class PuppeteerDriver extends Driver {
     else await this.browser.close().catch(() => {})
   }
 
+  // CDP Page.startScreencast 기반 자체 녹화.
+  // ★ 렌더러가 그리는 "페이지 픽셀"을 직접 받아온다 — OS 창 z-order·포커스·다른 창(탐색기 등)이
+  //   위에 겹쳐도, Chrome 창이 OS 최상위가 아니어도 무관. 탭이 자기 창에서 활성 탭이기만 하면 됨.
+  //   (gdigrab 데스크톱 영역 캡처가 엉뚱한 창을 녹화하던 문제의 근본 해결책.)
   nativeRecorder() {
-    const page = () => this.page
+    const getPage = () => this.page
     return {
-      async start(outPath, { fps = 30 } = {}) {
-        this._rec = await page().screencast({ path: outPath, fps })
+      async start(outPath, { fps = 30, viewport } = {}) {
+        const page = getPage()
+        await page.bringToFront().catch(() => {})          // 탭을 자기 창의 활성 탭으로
+        this._outPath = outPath
+        this._fps = fps
+        this._tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cdpscreencast_'))
+        this._frames = []
+        this._n = 0
+        this._t0 = Date.now()
+        this._session = await page.createCDPSession()
+        this._session.on('Page.screencastFrame', async (e) => {
+          const ts = Date.now() - this._t0
+          try {
+            const file = path.join(this._tmp, `f_${String(++this._n).padStart(6, '0')}.jpg`)
+            fs.writeFileSync(file, Buffer.from(e.data, 'base64'))
+            this._frames.push({ file, ts })
+          } catch { /* noop */ }
+          try { await this._session.send('Page.screencastFrameAck', { sessionId: e.sessionId }) } catch { /* noop */ }
+        })
+        await this._session.send('Page.startScreencast', {
+          format: 'jpeg', quality: 85, everyNthFrame: 1,
+          ...(viewport ? { maxWidth: viewport.width, maxHeight: viewport.height } : {}),
+        })
       },
-      async stop() { if (this._rec) await this._rec.stop() },
+      async stop() {
+        try { await this._session.send('Page.stopScreencast') } catch { /* noop */ }
+        await sleep(400)                                    // 남은 프레임 수신 대기
+        try { await this._session.detach() } catch { /* noop */ }
+        const frames = this._frames || []
+        if (frames.length < 2) {
+          throw new Error(`CDP screencast: 프레임 ${frames.length}개 — 탭이 비활성/discarded 이거나 스크린캐스트 미지원`)
+        }
+        // 실제 수신 타임스탬프로 프레임별 지속시간을 만들어 concat → 고정 fps로 정규화
+        const list = path.join(this._tmp, 'frames.txt')
+        let body = ''
+        for (let i = 0; i < frames.length; i++) {
+          const dur = i + 1 < frames.length
+            ? Math.max(0.016, (frames[i + 1].ts - frames[i].ts) / 1000)
+            : 1 / this._fps
+          const fp = frames[i].file.replace(/\\/g, '/')
+          body += `file '${fp}'\nduration ${dur.toFixed(3)}\n`
+        }
+        body += `file '${frames[frames.length - 1].file.replace(/\\/g, '/')}'\n`
+        fs.writeFileSync(list, body)
+        await ffmpegRun(['-y', '-f', 'concat', '-safe', '0', '-i', list,
+          '-vf', `fps=${this._fps},scale=trunc(iw/2)*2:trunc(ih/2)*2`,
+          '-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p',
+          '-movflags', '+faststart', this._outPath])
+        try { fs.rmSync(this._tmp, { recursive: true, force: true }) } catch { /* noop */ }
+      },
     }
   }
 

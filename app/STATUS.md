@@ -682,11 +682,24 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   record 라디오 선택 시 목록 로드. 완료 후 videoStatus 폴링이 g4 자동 마킹.
 - **시나리오 매핑**: `rl03_cut2_flow.json`→컷2, `rl03_cut3_elevenlabs.json`→컷3
   (`for:{cut,episodeCode:"IG_R03"}`).
-- **gdigrab 레코더 수정**: region(창 좌표) 우선 · **libx264 짝수 픽셀 보정**(홀수 높이 →
-  `Error while opening encoder`로 크래시하던 버그) · 즉시종료 감지 · stop() q→SIGINT→kill
-  다단계(hang 방지). puppeteer `windowBounds()`는 페이지 타깃 기준.
-- 검증: IG_R03 컷2 — connect 모드 Flow 탭 접속 → 프롬프트 입력·생성·스크롤 → gdigrab 녹화
-  → 1080×1920 9s `cut_02.mp4` 생성까지 통과.
+### 녹화 방식 근본 수정 — CDP screencast (2026-09-03, 커밋 `<cdpfix>`)
+- **문제**: 8f15ef8의 gdigrab 검증은 틀렸음. gdigrab은 **데스크톱 좌표 영역**을 캡처 →
+  그 자리에 다른 창(파일 탐색기 등)이 있으면 그게 녹화됨. `cut_02.mp4`가 Flow가 아닌
+  탐색기 화면이었음. "파일 크기만으로 검증"도 오류(엉뚱한 창도 파일은 생성됨).
+- **해결**: `recorder:"native"` 를 **CDP `Page.startScreencast`** 로 재구현(puppeteer 드라이버
+  `nativeRecorder()`). 렌더러가 그리는 **페이지 픽셀을 직접** 수신 → OS 창 z-order·포커스·
+  겹친 창·Chrome이 최상위가 아님 전부 무관(탭이 자기 창의 활성 탭이면 됨). 프레임별 수신
+  타임스탬프로 concat → 고정 fps 정규화. connect 모드 기본 레코더로 채택.
+- **내용 검증 단계 추가**(`runner.verifyContent`): 결과 mp4에서 10/50/90% 지점 프레임 3장
+  추출 → JPEG 크기로 단색/빈 화면 판별(peak <5KB면 실패로 throw). 중간 프레임을
+  `cut_NN_verify.jpg` 로 남김. SSE `done`에 `verifyUrl`·`verify`, MakingTab이 썸네일 표시.
+- **proxy 버그**: `req.on('close')`가 최신 Node에서 "요청 본문 수신 완료"에도 발생 → 스폰
+  직후 자식 kill(그래서 버튼 경로가 애초에 동작 안 했음). `res.on('close')` + `!writableEnded`
+  체크로 수정.
+- gdigrab는 잔존(브라우저 크롬/OS UI 녹화용): region + 짝수 픽셀 보정 + stop() 다단계.
+- **검증(실측)**: IG_R03 컷2 — proxy `POST /api/screen-scenario` → connect 모드 Flow 탭
+  → CDP screencast → 1080×1920 9s `cut_02.mp4`. **추출 프레임 육안 확인 = Google Flow
+  웹 UI**(좌측 네비·서여리 이미지 그리드·프롬프트바). 프레임 JPEG ~230KB(단색 아님).
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
