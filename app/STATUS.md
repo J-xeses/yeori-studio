@@ -701,6 +701,27 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   → CDP screencast → 1080×1920 9s `cut_02.mp4`. **추출 프레임 육안 확인 = Google Flow
   웹 UI**(좌측 네비·서여리 이미지 그리드·프롬프트바). 프레임 JPEG ~230KB(단색 아님).
 
+### connect 8분→1초 — cdp 드라이버 (2026-09-03, 커밋 `eb5f4b2`)
+- **문제**: `puppeteer.connect()` 가 브라우저 전체 attach 하면서 Flow/ElevenLabs 의
+  stripe·recaptcha OOPIF·service_worker 에 붙으려다 **간헐적으로 수 분(실측 8분+) 멈춤**.
+  MakingTab 버튼이 얼어붙은 것처럼 보임.
+- **해결: `drivers/cdp-page.js`** — puppeteer 안 거치고 **대상 탭 하나의 CDP WebSocket**
+  (`ws://…/devtools/page/<id>`)에만 직결. Page/Runtime/Input/DOM 도메인만. Node 전역
+  WebSocket(무의존) + 최소 CDP JSON-RPC 클라이언트 내장. click=요소 중심좌표→
+  `Input.dispatchMouseEvent`, type=`execCommand(selectAll→delete)`+`Input.insertText` 한 글자씩.
+  nativeRecorder=`Page.startScreencast`+하트비트. teardown=소켓만 닫음(탭 유지).
+  `registry`: connect 모드(target:'flow'|'elevenlabs') **기본 드라이버 = cdp**.
+- `runner.normalize`: `fit='contain'` 추가(데스크톱 웹앱은 잘림 없이 흰 배경 레터박스),
+  connect 모드 기본 contain.
+- **검증(실측 IG_R03 cut3)**: connect **1초** · 실제 ElevenLabs 텍스트 음성 변환 페이지 ·
+  서여리 보이스 · 텍스트 정상 입력 · '음성 생성' 클릭 → **실제 생성 트리거**('음성 다시 생성'
+  상태, 플레이어 오디오 로드) · 1080×1920 16s `cut_03.mp4` · 프레임 육안 확인.
+- **CUT 2(Flow)**: Flow 탭이 **프로젝트 안**(`.../flow/project/…`)에 있어야 프롬프트 입력창
+  존재. 랜딩/목록 페이지면 실패. Flow 생산 경로는 결정적 `rl03_screen.html` 유지.
+- **start_gen.bat 재작성**: LF→**CRLF**(LF면 cmd 괄호블록/for 루프 깨져 **클릭 즉시 종료**),
+  ASCII 전용, 프로필 경로 드라이버와 일치(`downloads/flow/chrome-profile-main`),
+  `timeout`→`ping`(stdin 안전). `.gitattributes`에 `*.bat eol=crlf` 강제.
+
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
   **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
