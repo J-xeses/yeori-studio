@@ -40,11 +40,15 @@ const TOOLS = {
   },
 }
 
-// flow-automation.js connectBrowser() 그대로 — 디버깅 포트로 붙기
-async function connectDebugChrome(port, log) {
-  let version
+// flow-automation.js connectBrowser() 기반 — 디버깅 포트로 붙기.
+// ★ /json/list 로 대상 탭을 먼저 찾고, targetFilter 로 puppeteer 가 그 탭 + 브라우저에만
+//   CDP 세션을 붙이게 한다. 안 그러면 Flow/ElevenLabs 같은 무거운 SPA의 수많은
+//   service_worker·iframe·OOPIF 타깃에 전부 attach 하느라 connect 가 수 분씩 걸린다(실측 8분+).
+async function connectDebugChrome(port, tool, log) {
+  let version, list
   try {
     version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()
+    list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
   } catch {
     log('─'.repeat(52))
     log(`Chrome(디버깅 포트 ${port})에 연결 실패. 먼저 아래로 Chrome을 실행하세요:`)
@@ -55,8 +59,38 @@ async function connectDebugChrome(port, log) {
     e.hint = 'launch-debug-chrome'
     throw e
   }
-  log(`Chrome 연결 (${version.Browser})`)
-  return puppeteer.connect({ browserWSEndpoint: version.webSocketDebuggerUrl, defaultViewport: null, protocolTimeout: 300000 })
+  const pageInfo = (list || []).find((t) => t.type === 'page' && tool && tool.match(t.url || ''))
+  log(`Chrome 연결 (${version.Browser})${pageInfo ? ' · 대상 탭 발견' : ' · 대상 탭 없음(새 탭 예정)'}`)
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: version.webSocketDebuggerUrl,
+    defaultViewport: null,
+    protocolTimeout: 60000,
+    // 대상 도구 탭 + 새로 만들 빈 탭 + 브라우저만 attach. 나머지(다른 로그인 탭, 무수한
+    // service_worker·iframe·OOPIF)는 제외 → connect 지연(실측 8분+) 제거. shape 은 버전따라
+    // Target/TargetInfo 둘 다 올 수 있어 함수/속성 모두 대응.
+    targetFilter: (t) => {
+      const type = typeof t.type === 'function' ? t.type() : t.type
+      if (type === 'browser') return true
+      if (type !== 'page') return false
+      const url = (typeof t.url === 'function' ? t.url() : t.url) || ''
+      return !url || url === 'about:blank' || url.startsWith('chrome://') || (tool && tool.match(url))
+    },
+  })
+  return { browser, pageInfo }
+}
+
+// connect 시 targetFilter 로 이미 대상 탭만 붙였으므로 pages()가 안전·빠름.
+async function pickToolPage(browser, tool, pageInfo, log) {
+  try {
+    const pages = await Promise.race([
+      browser.pages(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('pages() 20s 초과')), 20000)),
+    ])
+    return pages.find((x) => tool.match(x.url())) || null
+  } catch (e) {
+    log(`탭 조회 실패(${e.message}) → 새 탭으로`)
+    return null
+  }
 }
 
 export class PuppeteerDriver extends Driver {
@@ -69,10 +103,10 @@ export class PuppeteerDriver extends Driver {
       const tool = TOOLS[key]
       if (!tool) throw new Error(`모르는 target '${key}' (등록: ${Object.keys(TOOLS).join(', ')})`)
       this.connected = true
-      this.browser = await connectDebugChrome(this.opts.debuggingPort || DEBUG_PORT, this.log)
+      const conn = await connectDebugChrome(this.opts.debuggingPort || DEBUG_PORT, tool, this.log)
+      this.browser = conn.browser
 
-      const pages = await this.browser.pages()
-      const existing = pages.find((p) => tool.match(p.url()))
+      const existing = await pickToolPage(this.browser, tool, conn.pageInfo, this.log)
       const wantUrl = target.url || (target.path ? new URL(target.path, tool.url).href : tool.url)
 
       // SPA 도구(Flow·ElevenLabs)는 웹소켓/텔레메트리로 networkidle 에 거의 안 걸림 →
