@@ -670,7 +670,23 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   새 Chrome 대신 **디버깅 Chrome(9222, 로그인된 flow 프로필)에 접속**(connectBrowser 패턴),
   도구 탭 재사용/새 탭. `{url}`/`{html}`이면 격리된 새 Chrome. teardown은 disconnect(안 닫음).
 - 검증: `_selftest`(launch+native) 통과 · connect 모드(9222 Chrome → elevenlabs 탭 접속·생성) 확인.
-  실사이트 셀렉터·gdigrab/gamebar/obs는 실기. connect+native는 불안정 → gdigrab.
+  실사이트 셀렉터·gamebar/obs는 실기. connect+native는 불안정 → gdigrab.
+
+### 메이킹 탭 '자동 녹화' 배선 (2026-09-03, 커밋 `8f15ef8`)
+- **proxy**: `GET /api/screen-scenario/list?epNum&cutNo` — `scenarios/*.json` + 에피소드
+  `01_script/*.json` 스캔, `for:{cut,episodeCode}`로 컷 매칭(`matched`) 표시. `POST
+  /api/screen-scenario` — `run.js` spawn, 진행상황 SSE(`start/log/result/done`), 종료 0이면
+  `recordCutMotion(...,{method:'screen-scenario',baked:true})` + `videoUrl`.
+- **MakingTab**: CAPCUT 컷 record 모드에 "시나리오 자동 녹화" 패널 — 시나리오 select(자동
+  매칭 선택)·↻·**자동 녹화** 버튼, 실시간 로그(`<pre>`), 완료 영상 미리보기(`<video>`).
+  record 라디오 선택 시 목록 로드. 완료 후 videoStatus 폴링이 g4 자동 마킹.
+- **시나리오 매핑**: `rl03_cut2_flow.json`→컷2, `rl03_cut3_elevenlabs.json`→컷3
+  (`for:{cut,episodeCode:"IG_R03"}`).
+- **gdigrab 레코더 수정**: region(창 좌표) 우선 · **libx264 짝수 픽셀 보정**(홀수 높이 →
+  `Error while opening encoder`로 크래시하던 버그) · 즉시종료 감지 · stop() q→SIGINT→kill
+  다단계(hang 방지). puppeteer `windowBounds()`는 페이지 타깃 기준.
+- 검증: IG_R03 컷2 — connect 모드 Flow 탭 접속 → 프롬프트 입력·생성·스크롤 → gdigrab 녹화
+  → 1080×1920 9s `cut_02.mp4` 생성까지 통과.
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
