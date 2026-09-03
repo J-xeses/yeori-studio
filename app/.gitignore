@@ -47,3 +47,9 @@ studio-secrets.json
 out.mp4
 app/out.mp4
 scripts/screen-scenario/**/*.mp4
+
+# esbuild --outfile 이 Windows 에서 NUL/nul 을 파일로 만듦
+nul
+nul.css
+NUL
+NUL.css

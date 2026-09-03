@@ -8,6 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
+import { finalizeReel, enrichCutsFromScript } from './lib/reelFinalize.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
@@ -2097,6 +2098,84 @@ app.post('/api/promote-making-to-raw', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// ── 릴스 최종화 ────────────────────────────────────────────────────
+// 파싱된 컷 + 05_video/cut_NN.mp4 → 컷별 편집 판단(레터박스/자막/SFX) → concat →
+// 자막 번인 → SFX/BGM 믹스 → 07_output/{CODE}_final.mp4. lib/reelFinalize.js 참조.
+// 대본(ep.cuts)이 state 에 없으면 01_script 의 v3 대본 파일을 직접 파싱한다.
+
+// GET — 실행 없이 컷별 판단만 미리보기 (메이킹 탭 테이블용)
+app.get('/api/reel-finalize/plan', async (req, res) => {
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(req.query.epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const cuts = resolveEpisodeCuts(ep, code)
+    if (!cuts.length) return res.status(400).json({ error: '컷/대본이 없습니다 (스크립트 업로드 또는 01_script 확인)' })
+    const { decideCut } = await import('./lib/reelFinalize.js')
+    const vdir = mp.videoDir(req.query.epNum)
+    const plan = cuts.slice().sort((a, b) => a.no - b.no).map((c) => {
+      const d = decideCut(c)
+      const f = path.join(vdir, `cut_${String(c.no).padStart(2, '0')}.mp4`)
+      return { ...d, hasFile: fs.existsSync(f), src: undefined }
+    })
+    res.json({ code, epNum: Number(req.query.epNum), cuts: plan })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// 대본 컷 확보 — state 의 ep.cuts 우선, 없으면 01_script/*.txt 파싱.
+// raw 대본으로 CP(자막)·오디오를 보강한다(scriptParserV3 가 v3.0 포맷에서 놓치는 필드).
+function resolveEpisodeCuts(ep, code) {
+  let cuts = (Array.isArray(ep.cuts) && ep.cuts.length) ? ep.cuts : []
+  let raw = ep.scriptRaw || ''
+  if (!raw || !cuts.length) {
+    try {
+      const dir = scriptDir(code)
+      const files = fs.readdirSync(dir).filter((f) => /\.txt$/i.test(f))
+      for (const f of files) {
+        const r = fs.readFileSync(path.join(dir, f), 'utf-8')
+        if (isV3Format(r)) { raw = raw || r; if (!cuts.length) { const c = parseCutsV3(r); if (c.length) { cuts = c; raw = r } } }
+      }
+    } catch { /* noop */ }
+  }
+  if (cuts.length && raw) {
+    try { return enrichCutsFromScript(cuts, raw) } catch { return cuts }
+  }
+  return cuts
+}
+
+// POST — 실제 생성 (SSE 진행)
+app.post('/api/reel-finalize', async (req, res) => {
+  const { epNum, bgmFile } = req.body || {}
+  let ctx
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const cuts = resolveEpisodeCuts(ep, code)
+    if (!cuts.length) return res.status(400).json({ error: '컷/대본이 없습니다' })
+    ctx = { code, cuts }
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({ error: err.message })
+  }
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+  const send = (o) => { try { res.write(`data: ${JSON.stringify(o)}\n\n`) } catch { /* noop */ } }
+  send({ type: 'start', code: ctx.code, cuts: ctx.cuts.length })
+
+  try {
+    const r = await finalizeReel({ epNum: Number(epNum), cuts: ctx.cuts, bgmFile, onLog: (line) => send({ type: 'log', line }) })
+    const url = `http://localhost:3001${mp.toMediaUrl(r.finalPath)}?t=${Date.now()}`
+    // GRAPHIC/CAPCUT 컷들이 이미 g4 인 상태에서 최종본까지 나오면 조립 완료로 볼 수 있음 (참고용)
+    send({ type: 'done', ok: true, videoUrl: url, manifest: r.manifest })
+  } catch (err) {
+    send({ type: 'done', ok: false, error: err.message })
+  }
+  res.end()
 })
 
 // orientation 요청을 Pexels 자체 orientation 파라미터로 1차 필터링한 뒤, 응답 항목의

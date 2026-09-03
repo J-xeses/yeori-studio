@@ -870,6 +870,52 @@ export default function MakingTab() {
   const [assembleResult, setAssembleResult] = useState(null)
   const [makingPreview, setMakingPreview] = useState(false)
 
+  // ── 릴스 최종본 (자막 번인 + SFX + 컷별 편집 판단) — /api/reel-finalize ──
+  const [reelPlan, setReelPlan] = useState(null)      // [{no,cutType,fit,caption,sfx,hasFile}]
+  const [reelBusy, setReelBusy] = useState(false)
+  const [reelLog, setReelLog] = useState('')
+  const [reelVideo, setReelVideo] = useState(null)
+  const [reelManifest, setReelManifest] = useState(null)
+
+  const loadReelPlan = async () => {
+    if (!episode?.number) return
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/reel-finalize/plan?epNum=${episode.number}`)
+      const d = await r.json()
+      if (r.ok) setReelPlan(d.cuts || [])
+      else setReelPlan({ error: d.error })
+    } catch (e) { setReelPlan({ error: e.message }) }
+  }
+
+  const runReelFinalize = async () => {
+    if (!episode?.number) return
+    setReelBusy(true); setReelLog(''); setReelVideo(null); setReelManifest(null)
+    const append = (l) => setReelLog(p => (p + l + '\n').slice(-6000))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/reel-finalize`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number }),
+      })
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+      for (;;) {
+        const { value, done } = await reader.read(); if (done) break
+        buf += dec.decode(value, { stream: true })
+        const parts = buf.split('\n\n'); buf = parts.pop()
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '').trim(); if (!line) continue
+          let ev; try { ev = JSON.parse(line) } catch { continue }
+          if (ev.type === 'start') append(`▶ ${ev.code} · ${ev.cuts}컷`)
+          else if (ev.type === 'log') append(ev.line)
+          else if (ev.type === 'done') {
+            if (ev.ok) { append('✅ 완료'); setReelVideo(ev.videoUrl); setReelManifest(ev.manifest) }
+            else append(`❌ ${ev.error}`)
+          }
+        }
+      }
+    } catch (e) { append(`❌ ${e.message}`) }
+    finally { setReelBusy(false) }
+  }
+
   // ── BGM: TrendRadar "BGM 레이더"로 검색·다운로드한 트랙을 메이킹 필름 밑에 깐다 ──
   const BGM_MOODS = [['BGM_EMO', '감성'], ['BGM_INFO', '정보전달'], ['BGM_HOOK', '훅'], ['BGM_CALM', '차분']]
   const [bgmOpen, setBgmOpen] = useState(false)
@@ -2306,6 +2352,62 @@ export default function MakingTab() {
                       </button>
                     </div>
                   )
+                )}
+              </div>
+
+              <div className={s.card}>
+                <div className={s.cardTitle}>🎬 릴스 최종본 (컷별 편집 판단 · 자막 번인 · SFX)</div>
+                <div className={s.emptyHint}>
+                  대본(CP 자막 · 효과음 · MD 감정)을 읽어 컷별로 <b>레터박스/채움</b>, <b>자막 번인</b>(반전 컷은 빨강),
+                  <b>포인트 SFX</b>를 자동 판단해 <code>07_output/{'{'}CODE{'}'}_final.mp4</code>를 만듭니다.
+                  손글씨 데코·BGM 트랙은 CapCut에서 추가.
+                </div>
+                <div className={s.editorActions}>
+                  <button className={s.previewBtn} disabled={reelBusy || !episode?.number} onClick={loadReelPlan}>
+                    컷별 판단 미리보기
+                  </button>
+                  <button className={s.captureBtn} disabled={reelBusy || !episode?.number} onClick={runReelFinalize}>
+                    {reelBusy ? '⏳ 생성 중…' : '🎬 릴스 최종본 생성'}
+                  </button>
+                </div>
+
+                {Array.isArray(reelPlan) && (
+                  <table className={s.cutTable} style={{ width: '100%', marginTop: 8, fontSize: 12, borderCollapse: 'collapse' }}>
+                    <thead><tr style={{ textAlign: 'left', opacity: 0.7 }}>
+                      <th>컷</th><th>유형</th><th>화면</th><th>자막</th><th>SFX</th><th>파일</th>
+                    </tr></thead>
+                    <tbody>
+                      {reelPlan.map(c => (
+                        <tr key={c.no} style={{ borderTop: '1px solid var(--border,#333)' }}>
+                          <td>{c.no}</td>
+                          <td>{c.cutType}</td>
+                          <td>{c.fit === 'contain' ? '레터박스' : '채움'}</td>
+                          <td>{!c.caption ? '—' : c.caption.segments.map((sg, i) => (
+                            <span key={i} style={{ color: sg.style === 'Punch' ? '#f04747' : 'inherit', marginRight: 6 }}>
+                              {sg.burn || sg.raw}
+                            </span>
+                          ))}</td>
+                          <td>{c.sfx?.length ? c.sfx.map(x => x.file.split('/').pop()).join(', ') : '—'}</td>
+                          <td>{c.hasFile ? '✓' : <span style={{ color: '#f04747' }}>없음</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+                {reelPlan?.error && <div className={s.resultError}>❌ {reelPlan.error}</div>}
+
+                {reelLog && (
+                  <pre style={{ marginTop: 8, maxHeight: 180, overflow: 'auto', fontSize: 11, background: 'var(--bg2,#111)', padding: 8, borderRadius: 6, whiteSpace: 'pre-wrap' }}>{reelLog}</pre>
+                )}
+                {reelManifest && (
+                  <div className={s.resultOk}>
+                    ✅ {reelManifest.duration}초 · 자막 {reelManifest.captionsBurned}개 · {reelManifest.bgm}
+                  </div>
+                )}
+                {reelVideo && (
+                  <div className={s.previewWrap}>
+                    <video className={s.makingVideo} src={reelVideo} controls style={{ width: '100%', maxHeight: 420, borderRadius: 6, background: '#000' }} />
+                  </div>
                 )}
               </div>
 
