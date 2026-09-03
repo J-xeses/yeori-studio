@@ -61,21 +61,44 @@ async function connectDebugChrome(port, tool, log) {
   }
   const pageInfo = (list || []).find((t) => t.type === 'page' && tool && tool.match(t.url || ''))
   log(`Chrome 연결 (${version.Browser})${pageInfo ? ' · 대상 탭 발견' : ' · 대상 탭 없음(새 탭 예정)'}`)
-  const browser = await puppeteer.connect({
-    browserWSEndpoint: version.webSocketDebuggerUrl,
-    defaultViewport: null,
-    protocolTimeout: 60000,
-    // 대상 도구 탭 + 새로 만들 빈 탭 + 브라우저만 attach. 나머지(다른 로그인 탭, 무수한
-    // service_worker·iframe·OOPIF)는 제외 → connect 지연(실측 8분+) 제거. shape 은 버전따라
-    // Target/TargetInfo 둘 다 올 수 있어 함수/속성 모두 대응.
-    targetFilter: (t) => {
-      const type = typeof t.type === 'function' ? t.type() : t.type
-      if (type === 'browser') return true
-      if (type !== 'page') return false
-      const url = (typeof t.url === 'function' ? t.url() : t.url) || ''
-      return !url || url === 'about:blank' || url.startsWith('chrome://') || (tool && tool.match(url))
-    },
-  })
+
+  // 대상 도구 탭 + 새로 만들 빈 탭 + 브라우저만 attach. 나머지(다른 로그인 탭, 무수한
+  // service_worker·iframe·OOPIF, stripe/recaptcha OOPIF)는 제외. shape 은 버전따라
+  // Target/TargetInfo 둘 다 올 수 있어 함수/속성 모두 대응.
+  const targetFilter = (t) => {
+    const type = typeof t.type === 'function' ? t.type() : t.type
+    if (type === 'browser') return true
+    if (type !== 'page') return false
+    const url = (typeof t.url === 'function' ? t.url() : t.url) || ''
+    return !url || url === 'about:blank' || url.startsWith('chrome://') || (tool && tool.match(url))
+  }
+
+  // puppeteer.connect() 가 자식 프레임(stripe·recaptcha 등) attach 대기로 수 분씩 멈추는
+  // 사례가 있어 하드 타임아웃 + 1회 재시도. 그래도 안 되면 "Chrome 재시작" 안내.
+  const tryConnect = () => Promise.race([
+    puppeteer.connect({
+      browserWSEndpoint: version.webSocketDebuggerUrl,
+      defaultViewport: null,
+      protocolTimeout: 45000,
+      targetFilter,
+    }),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('CONNECT_TIMEOUT')), 40000)),
+  ])
+  let browser
+  try {
+    browser = await tryConnect()
+  } catch (e1) {
+    if (e1.message !== 'CONNECT_TIMEOUT') throw e1
+    log('connect 40s 초과 — 2초 후 1회 재시도')
+    await sleep(2000)
+    try {
+      browser = await tryConnect()
+    } catch (e2) {
+      const e = new Error(`Chrome(${port}) connect 반복 실패. 디버깅 Chrome을 재시작하세요 (start_gen.bat 창 닫고 다시 실행). 오래 켜둔 프로필·멈춘 탭이 원인일 수 있음.`)
+      e.hint = 'restart-debug-chrome'
+      throw e
+    }
+  }
   return { browser, pageInfo }
 }
 
