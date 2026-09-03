@@ -42,3 +42,8 @@ scripts_output/
 
 # API 키 등 시크릿 (studio-state.json과 분리, PC간 동기화는 OneDrive로만)
 studio-secrets.json
+
+# screen-scenario 로컬 테스트 출력
+out.mp4
+app/out.mp4
+scripts/screen-scenario/**/*.mp4
