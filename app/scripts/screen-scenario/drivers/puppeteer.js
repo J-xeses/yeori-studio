@@ -1,19 +1,87 @@
 // ── PuppeteerDriver ─────────────────────────────────────────────────
-// 브라우저(Chrome)를 puppeteer-core로 조작. 실제 화면 녹화를 위해 headful로 띄우고
-// 창 위치/크기를 고정한다. 자체 녹화(page.screencast) 레코더도 제공.
+// 두 가지 모드:
+//   (A) launch  — target 이 {url}|{html} 이면 새 Chrome을 headful로 띄움(격리, 로그인 없음)
+//   (B) connect — target 이 "flow"|"elevenlabs" 문자열이면 이미 떠 있는 디버깅 Chrome
+//       (--remote-debugging-port=9222, 로그인된 flow-automation 프로필)에 붙어서
+//       해당 도구 탭을 찾거나 새로 연다. flow-automation.js connectBrowser() 패턴 재사용.
+// 자체 녹화(page.screencast) 레코더도 제공.
 
 import puppeteer from 'puppeteer-core'
 import { Driver, sleep, humanType } from './base.js'
+import * as mp from '../../../server/lib/mediaPaths.js'
 
 const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+const DEBUG_PORT = 9222            // flow-automation main 프로필과 동일
+const PROFILE_DIR = mp.flowProfileDir('main')
+
+// 도구 별칭 → 접속 URL + 기존 탭 판별
+const TOOLS = {
+  flow: {
+    url: 'https://labs.google/fx/ko/tools/flow',
+    match: (u) => /labs\.google\/(fx|flow)/i.test(u),
+  },
+  elevenlabs: {
+    url: 'https://elevenlabs.io/app/speech-synthesis',
+    match: (u) => /elevenlabs\.io\/(app|sign)/i.test(u),
+  },
+}
+
+// flow-automation.js connectBrowser() 그대로 — 디버깅 포트로 붙기
+async function connectDebugChrome(port, log) {
+  let version
+  try {
+    version = await (await fetch(`http://127.0.0.1:${port}/json/version`)).json()
+  } catch {
+    log('─'.repeat(52))
+    log(`Chrome(디버깅 포트 ${port})에 연결 실패. 먼저 아래로 Chrome을 실행하세요:`)
+    log(`  "${CHROME}" --remote-debugging-port=${port} --user-data-dir="${PROFILE_DIR}"`)
+    log('  (이 프로필에 Google·ElevenLabs 계정 로그인해두면 이후 세션 유지. start_gen.bat도 이 방식)')
+    log('─'.repeat(52))
+    const e = new Error(`Chrome 디버깅 포트 ${port} 연결 실패`)
+    e.hint = 'launch-debug-chrome'
+    throw e
+  }
+  log(`Chrome 연결 (${version.Browser})`)
+  return puppeteer.connect({ browserWSEndpoint: version.webSocketDebuggerUrl, defaultViewport: null, protocolTimeout: 300000 })
+}
 
 export class PuppeteerDriver extends Driver {
   async setup(target = {}) {
     const vp = this.opts.viewport || { width: 1080, height: 1920 }
+
+    // ── 모드 B: 도구 탭 접속 ──────────────────────────────────
+    if (typeof target === 'string' || target.tool) {
+      const key = typeof target === 'string' ? target : target.tool
+      const tool = TOOLS[key]
+      if (!tool) throw new Error(`모르는 target '${key}' (등록: ${Object.keys(TOOLS).join(', ')})`)
+      this.connected = true
+      this.browser = await connectDebugChrome(this.opts.debuggingPort || DEBUG_PORT, this.log)
+
+      const pages = await this.browser.pages()
+      const existing = pages.find((p) => tool.match(p.url()))
+      const wantUrl = target.url || (target.path ? new URL(target.path, tool.url).href : tool.url)
+
+      if (existing) {
+        this.log(`기존 ${key} 탭 재사용: ${existing.url().slice(0, 70)}`)
+        this.page = existing
+        if (target.url || target.path) {
+          await this.page.goto(wantUrl, { waitUntil: target.waitUntil || 'networkidle2', timeout: target.timeout || 60000 }).catch(() => {})
+        }
+      } else {
+        this.log(`${key} 탭 없음 → 새 탭 (${wantUrl})`)
+        this.page = await this.browser.newPage()
+        await this.page.goto(wantUrl, { waitUntil: target.waitUntil || 'networkidle2', timeout: target.timeout || 60000 })
+      }
+      await this.page.bringToFront()
+      await this.page.setViewport({ width: vp.width, height: vp.height }).catch(() => {})
+      return
+    }
+
+    // ── 모드 A: 새 Chrome 띄우기 ──────────────────────────────
     const pos = this.opts.windowPosition || { x: 40, y: 40 }
     this.browser = await puppeteer.launch({
       executablePath: this.opts.chromePath || CHROME,
-      headless: this.opts.headless ?? false,          // 녹화하려면 headful
+      headless: this.opts.headless ?? false,
       defaultViewport: null,
       args: [
         `--window-size=${vp.width},${vp.height}`,
@@ -118,7 +186,12 @@ export class PuppeteerDriver extends Driver {
     }
   }
 
-  async teardown() { if (this.browser) await this.browser.close().catch(() => {}) }
+  async teardown() {
+    if (!this.browser) return
+    // connect 모드는 사용자 Chrome이라 닫지 않고 연결만 해제
+    if (this.connected) await this.browser.disconnect().catch(() => {})
+    else await this.browser.close().catch(() => {})
+  }
 
   nativeRecorder() {
     const page = () => this.page

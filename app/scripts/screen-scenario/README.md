@@ -12,6 +12,24 @@ scenario (JSON, 액션 시퀀스)  ──►  Runner  ──►  Driver   (화�
                                      └────►  ffmpeg 정규화 → cut_NN.mp4
 ```
 
+## 도구 탭 자동 접속 (target 별칭)
+
+`target` 이 문자열이면 **새 Chrome 대신 이미 떠 있는 디버깅 Chrome**(포트 9222,
+로그인된 flow-automation 프로필 `downloads/flow/chrome-profile-main`)에 붙는다 —
+`flow-automation.js connectBrowser()` 패턴 그대로. 해당 도구 탭을 찾으면 재사용, 없으면 새 탭.
+
+| target | 접속 | 탭 판별 |
+|---|---|---|
+| `"flow"` | `labs.google/fx/ko/tools/flow` | `labs.google/(fx\|flow)` |
+| `"elevenlabs"` | `elevenlabs.io/app/speech-synthesis` | `elevenlabs.io/(app\|sign)` |
+| `{ "tool":"elevenlabs", "path":"/app/..." }` | tool + 특정 경로 | 〃 |
+| `{ "url":"..." }` / `{ "html":"..." }` | 새 Chrome(격리, 로그인 없음) | — |
+
+- Chrome이 9222로 안 떠 있으면 실행 명령을 출력하고 종료. `start_gen.bat`이 이 방식으로 띄움.
+- teardown 시 사용자 Chrome은 **닫지 않고** 연결만 해제(`disconnect`).
+- `--debug-port N` 으로 포트 변경(서브 계정 9223 등).
+- ⚠ connect 모드 + `native` 녹화는 불안정 → `gdigrab`/`gamebar`/`obs` 사용.
+
 ## 1. 시나리오 = 도구 무관 액션 (요구사항 2)
 
 `scenarios/*.json` — 어떤 도구로 실행하든 동일:
@@ -69,13 +87,15 @@ scenario (JSON, 액션 시퀀스)  ──►  Runner  ──►  Driver   (화�
 ## 실행
 
 ```bash
-# 자체 검증 (외부 사이트/로그인 없음)
+# 자체 검증 (외부 사이트/로그인 없음, 새 headless Chrome + native)
 node scripts/screen-scenario/run.js _selftest.json --out out.mp4
 
-# 실제 사이트 — 로그인된 Chrome 프로필 필요
-node scripts/screen-scenario/run.js rl03_cut3_elevenlabs.json --ep 98 --cut 3 --recorder gdigrab
+# 실제 사이트 — 먼저 디버깅 Chrome을 로그인된 프로필로 띄워둘 것 (start_gen.bat):
+#   "chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\yeori-studio\downloads\flow\chrome-profile-main"
+node scripts/screen-scenario/run.js rl03_cut3_elevenlabs.json --ep 98 --cut 3
 
 # --ep N --cut N  → mediaPaths.videoDir(ep)/cut_NN.mp4 로 저장(스튜디오 파이프라인 경로)
+# --driver / --recorder / --debug-port / --user-data-dir 로 override
 ```
 
 ## 한계 / TODO

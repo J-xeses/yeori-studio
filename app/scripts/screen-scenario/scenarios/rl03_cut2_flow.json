@@ -1,12 +1,12 @@
 {
   "id": "rl03_cut2_flow",
-  "_note": "RL03 CUT 2 — Google Flow 화면: 프롬프트 입력 → 서여리 이미지들 스크롤. 실제 사이트 대상이라 로그인된 Chrome 프로필 필요 + selectors는 UI 변경 시 갱신. 결정적 버전은 make_graphic_cut + rl03_screen.html.",
+  "_note": "RL03 CUT 2 — Google Flow 화면: 프롬프트 입력 → 서여리 이미지들 스크롤. target:'flow' → 디버깅 Chrome(9222, 로그인된 flow 프로필)의 Flow 탭에 접속. selectors는 UI 변경 시 갱신. 결정적 버전은 make_graphic_cut + rl03_screen.html.",
   "driver": "puppeteer",
-  "recorder": "native",
+  "recorder": "gdigrab",
   "duration": 9,
   "viewport": { "width": 1080, "height": 1920 },
-  "target": { "url": "https://labs.google/fx/ko/tools/flow", "waitUntil": "networkidle2", "timeout": 60000 },
-  "record": { "fps": 30, "windowTitle": "Flow", "windowPosition": { "x": 40, "y": 20 } },
+  "target": "flow",
+  "record": { "fps": 30, "windowTitle": "Flow" },
   "selectors": {
     "prompt_box": "textarea",
     "generate_btn": { "text": "만들기" },

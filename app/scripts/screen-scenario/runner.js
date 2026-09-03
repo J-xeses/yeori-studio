@@ -43,18 +43,22 @@ export async function runScenario(p) {
   const vp = sc.viewport || { width: 1080, height: 1920 }
   const fps = sc.record?.fps || 30
 
+  // connect 모드(target이 문자열/{tool})는 headless 무의미 — 사용자 Chrome에 붙음
+  const isConnect = typeof sc.target === 'string' || !!sc.target?.tool
   const driver = await createDriver(driverName, {
-    viewport: vp, headless: recorderName === 'native' ? true : false,
+    viewport: vp,
+    headless: isConnect ? false : (recorderName === 'native'),
     windowPosition: sc.record?.windowPosition, log: (m) => log(driverName, m),
     ...(p.driverOpts || {}),
   })
 
-  log('runner', `시나리오 '${sc.id}' · driver=${driverName} · recorder=${recorderName}`)
-  await driver.setup(sc.target || {})
+  log('runner', `시나리오 '${sc.id}' · driver=${driverName} · recorder=${recorderName}${isConnect ? ' · connect' : ''}`)
+  await driver.setup(sc.target ?? {})
 
   // 레코더 준비
   let recorder
   if (recorderName === 'native') {
+    if (isConnect) log('runner', '⚠ connect 모드 + native 녹화는 불안정(page.screencast). gdigrab/gamebar/obs 권장')
     const impl = driver.nativeRecorder()
     if (!impl) throw new Error(`${driverName} 드라이버는 native 녹화 미지원 — recorder를 gdigrab/gamebar/obs로`)
     recorder = await createRecorder('native', { impl, log: (m) => log('native', m) })

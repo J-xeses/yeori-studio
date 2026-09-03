@@ -44,6 +44,11 @@ if (flag('obs-url')) recorderOpts.url = flag('obs-url')
 if (flag('obs-pass')) recorderOpts.password = flag('obs-pass')
 if (flag('obs-scene')) recorderOpts.scene = flag('obs-scene')
 
+const driverOpts = {}
+if (has('headful')) driverOpts.headless = false
+if (flag('debug-port')) driverOpts.debuggingPort = Number(flag('debug-port'))
+if (flag('user-data-dir')) driverOpts.userDataDir = flag('user-data-dir')
+
 try {
   const r = await runScenario({
     scenario,
@@ -51,7 +56,7 @@ try {
     recorder: flag('recorder'),
     outPath,
     recorderOpts,
-    driverOpts: has('headful') ? { headless: false } : {},
+    driverOpts,
   })
   console.log(JSON.stringify(r))
 } catch (e) {
