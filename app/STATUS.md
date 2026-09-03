@@ -626,6 +626,17 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 `06_publishing/ep99_raw.mp4`(10s) 생성. 재실행 시 "G5 이미 완료" 스킵(멱등).
 전 단계 새 폴더 체계 정상 (`02_images`·`05_video`·`06_publishing/deliverables` 등).
 
+### RL03 추가 테스트 (2026-09-03) — V3 파서 컷타입 인식
+`RL03_G1_script_v3.txt` → `IG_R03` (`ep_test_r03`). 7컷: GRAPHIC 3(훅/분할/CTA) ·
+CAPCUT 2(화면녹화) · YEORI 2(실물). 컷 1은 GRAPHIC인데 나레이션 있음.
+- **버그**: V3 파서 `inferCutType`이 `[CUT 1]  GRAPHIC — 훅 텍스트` 헤더나 IP의
+  "GRAPHIC 타입 — …" 마커를 안 읽어 7컷 전부 YEORI로 파싱(v3.0 포맷). →
+  우선순위: ① 헤더 타입 토큰(parseCutHeaderMeta.headerType) ② IP "GRAPHIC|CAPCUT|BROLL 타입"
+  / "이미지 생성 불필요" ③ PL 접두사. (`<parserfix>`)
+- 실측: 타입 정확 → G2(컷4,5만) · 메이킹 대기(GRAPHIC 1,6,7 · CAPCUT 2,3) ·
+  G3(컷1, GRAPHIC+나레이션 → cut_01.mp3) · G4(컷4,5) · **G5(SRT 생성 + concat)** →
+  `ep98_raw.mp4`(14s) + `ep98.srt`(컷1 나레이션). 음성 있는 에피소드라 SRT 정상 생성.
+
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
   **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
