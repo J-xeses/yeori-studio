@@ -608,14 +608,14 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 - **미해결(사소, 기존)**: 멀티스피커 대사(`지아 "..." / 여리 "..."`)를 TTS가 화자명·`/`까지
   읽음. 화자별 분리 TTS나 라벨 스트립 필요 — 별건.
 
-### R99/R03 파이프라인 배관 테스트 (2026-09-03)
-⚠️ **이 테스트들은 "오케스트레이션 로직/게이팅/경로 라우팅"만 검증했음.** 이미지·영상은
-Claude가 더미(엉뚱한 이미지 복사본 · ffmpeg 검정 2초 mp4)를 주입해 downstream 단계를
-통과시킨 것 — **완성된 릴스가 나온 게 아님.** R99 폴더는 정리 후 스크립트만, R03은 스크립트 +
-실제 TTS(cut_01.mp3)만 남김. 두 에피소드 gpoints도 g1만으로 초기화.
-검증된 것: V3 파서 컷타입 분류 · pipeline-leader 유형별 게이팅 · G3 TTS 실제 호출 ·
-G5 오케스트레이션 순서(편집메타→SRT→concat→gpoints→deliverable 복사 배관) · 새 폴더 경로.
-검증 안 됨: 실제 이미지 생성 · 실제 영상 생성 · 메이킹 탭 실제 제작.
+### R99/R03 파이프라인 테스트 (2026-09-03)
+**1차(R99, R03)**: 이미지·영상을 더미로 채워 배관/게이팅/파서 로직만 검증 → 보고를
+"성공/생성"으로 과장했다가 정정(R99는 스크립트만, R03은 스크립트+실제 TTS만 남기고 정리).
+**2차(R03)**: `make_graphic_cut` MCP로 GRAPHIC/CAPCUT 컷 실제 자동 생성 + 사용자 Veo 클립 →
+진짜 60초 `ep98_raw.mp4` 완주 (아래 R03 항목 참조).
+→ 스튜디오 자동화는 있고 동작함. GRAPHIC/CAPCUT(html모드)=`make_graphic_cut`,
+BROLL=`download_broll_cut`, TTS=`studio_run_g3`, concat=`studio_run_g5` 전부 API/헤드리스.
+이미지·영상(veo)만 수동.
 
 **R99** (RL02 복제, `ep_test_r99`, 5컷 CAPCUT4+YEORI1, 음성 없음) — 발견·수정한 버그:
 - **pipeline-leader가 모든 컷이 G1~G5 다 거친다고 가정** → GRAPHIC/CAPCUT/BROLL 컷도
@@ -636,9 +636,17 @@ G5 오케스트레이션 순서(편집메타→SRT→concat→gpoints→delivera
   "GRAPHIC 타입 — …" 마커를 안 읽어 7컷 전부 YEORI로 파싱(v3.0 포맷). →
   우선순위: ① 헤더 타입 토큰(parseCutHeaderMeta.headerType) ② IP "GRAPHIC|CAPCUT|BROLL 타입"
   / "이미지 생성 불필요" ③ PL 접두사. (`0183988`)
-- 더미 입력으로 확인: 타입 정확 파싱 → 유형별 게이팅(G2 컷4,5만 · 메이킹 GRAPHIC 1,6,7 ·
-  CAPCUT 2,3) · **G3 TTS 실제 호출**(컷1 → cut_01.mp3, 2.79s, 실제) · G5 오케스트레이션
-  순서(음성 있으니 SRT 생성 단계도 탐 — 단 concat 입력은 더미).
+- **2차: 실제 콘텐츠로 완주 (2026-09-03)** — cut 4,5는 사용자가 8s Veo 클립 제작해서
+  `04_making/`에 넣음 → `/api/upload-cut-video`로 `05_video/cut_0N.mp4` 정규화(1080×1920).
+  cut 1,2,3,6,7은 **`/api/make-graphic-cut`(MCP `make_graphic_cut`)로 자동 생성** —
+  htmlFile 생략 시 CP/나레이션으로 검정배경+텍스트 템플릿 자동 채움 → HTML→헤드리스 캡처→mp4.
+  G3(cut1 TTS)·G4(cut4,5)·메이킹 컷 자동완료 → **G5 concat → `ep98_raw.mp4` 진짜 60초 3.3MB**
+  (스크립트 목표 60s 정확히 일치) + `ep98.srt`.
+- **영상 직접 제작 컷 G2 스킵** (`<g2skip>`): YEORI 컷을 시작프레임 없이 text→video로 만들면
+  스틸이 없어 "G2 이미지 대기"로 남던 것 → `stageApplies(c,'g2') = needsGenImage && !hasVideo`.
+- **한계**: CAPCUT 컷 2,3의 "정식" 버전은 ElevenLabs/Flow 화면 녹화(`rl03_screen_scenario.py`
+  실행 녹화)인데 그 스크립트가 아직 없어서 `make_graphic_cut` 기본 텍스트카드로 대체됨.
+  화면녹화 자동화는 `screen-recorder.js` 있으나 시나리오 스크립트 별도 작성 필요.
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
