@@ -608,10 +608,16 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 - **미해결(사소, 기존)**: 멀티스피커 대사(`지아 "..." / 여리 "..."`)를 TTS가 화자명·`/`까지
   읽음. 화자별 분리 TTS나 라벨 스트립 필요 — 별건.
 
-### R99 자동진행 테스트 (2026-09-03) — pipeline-leader 컷유형 인식 + G5 무음성 대응
-`downloads/seoyeori/IG/IG_R/IG_R02/01_script/RL02_G1_script_v2.txt`를 `IG_R99`로 복제해
-테스트 에피소드(`ep_test_r99`) 만들고 단계별 자동진행 실측. 5컷(CAPCUT 4 + YEORI 1, 음성 없음).
-발견·수정한 버그:
+### R99/R03 파이프라인 배관 테스트 (2026-09-03)
+⚠️ **이 테스트들은 "오케스트레이션 로직/게이팅/경로 라우팅"만 검증했음.** 이미지·영상은
+Claude가 더미(엉뚱한 이미지 복사본 · ffmpeg 검정 2초 mp4)를 주입해 downstream 단계를
+통과시킨 것 — **완성된 릴스가 나온 게 아님.** R99 폴더는 정리 후 스크립트만, R03은 스크립트 +
+실제 TTS(cut_01.mp3)만 남김. 두 에피소드 gpoints도 g1만으로 초기화.
+검증된 것: V3 파서 컷타입 분류 · pipeline-leader 유형별 게이팅 · G3 TTS 실제 호출 ·
+G5 오케스트레이션 순서(편집메타→SRT→concat→gpoints→deliverable 복사 배관) · 새 폴더 경로.
+검증 안 됨: 실제 이미지 생성 · 실제 영상 생성 · 메이킹 탭 실제 제작.
+
+**R99** (RL02 복제, `ep_test_r99`, 5컷 CAPCUT4+YEORI1, 음성 없음) — 발견·수정한 버그:
 - **pipeline-leader가 모든 컷이 G1~G5 다 거친다고 가정** → GRAPHIC/CAPCUT/BROLL 컷도
   "이미지 수동 제작 대기"로 잘못 보고, `isStageComplete`가 영영 false로 매 사이클 재시도.
   → `MAKING_TYPES`(GRAPHIC/CAPCUT/BROLL) · `needsGenImage` · `needsG3` · `stageApplies` ·
@@ -622,20 +628,17 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
   G5 중단. → 음성 있는 컷 0개면 SRT 생략(자막은 CapCut CP 텍스트로 직접).
 - (앞서) `isG3Complete`가 `c.dialogue` vs 페이로드 `c.hasDialogue` 불일치.
 
-실측 결과: 스크립트→G1→G2(컷4 이미지)→G4(컷4 영상)→**G5 자동 트리거**→concat
-`06_publishing/ep99_raw.mp4`(10s) 생성. 재실행 시 "G5 이미 완료" 스킵(멱등).
-전 단계 새 폴더 체계 정상 (`02_images`·`05_video`·`06_publishing/deliverables` 등).
+더미 입력으로 확인: 파서 컷타입 · 유형별 게이팅 로그 · G5 무음성 SRT 스킵 후 concat 배관 ·
+멱등(재실행 "G5 이미 완료"). concat 산출물은 검정 더미 10초 — 내용 무의미.
 
-### RL03 추가 테스트 (2026-09-03) — V3 파서 컷타입 인식
-`RL03_G1_script_v3.txt` → `IG_R03` (`ep_test_r03`). 7컷: GRAPHIC 3(훅/분할/CTA) ·
-CAPCUT 2(화면녹화) · YEORI 2(실물). 컷 1은 GRAPHIC인데 나레이션 있음.
+**R03** (RL03 v3.0, `ep_test_r03`, 7컷 GRAPHIC3+CAPCUT2+YEORI2, 컷1 GRAPHIC+나레이션) —
 - **버그**: V3 파서 `inferCutType`이 `[CUT 1]  GRAPHIC — 훅 텍스트` 헤더나 IP의
   "GRAPHIC 타입 — …" 마커를 안 읽어 7컷 전부 YEORI로 파싱(v3.0 포맷). →
   우선순위: ① 헤더 타입 토큰(parseCutHeaderMeta.headerType) ② IP "GRAPHIC|CAPCUT|BROLL 타입"
-  / "이미지 생성 불필요" ③ PL 접두사. (`<parserfix>`)
-- 실측: 타입 정확 → G2(컷4,5만) · 메이킹 대기(GRAPHIC 1,6,7 · CAPCUT 2,3) ·
-  G3(컷1, GRAPHIC+나레이션 → cut_01.mp3) · G4(컷4,5) · **G5(SRT 생성 + concat)** →
-  `ep98_raw.mp4`(14s) + `ep98.srt`(컷1 나레이션). 음성 있는 에피소드라 SRT 정상 생성.
+  / "이미지 생성 불필요" ③ PL 접두사. (`0183988`)
+- 더미 입력으로 확인: 타입 정확 파싱 → 유형별 게이팅(G2 컷4,5만 · 메이킹 GRAPHIC 1,6,7 ·
+  CAPCUT 2,3) · **G3 TTS 실제 호출**(컷1 → cut_01.mp3, 2.79s, 실제) · G5 오케스트레이션
+  순서(음성 있으니 SRT 생성 단계도 탐 — 단 concat 입력은 더미).
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
