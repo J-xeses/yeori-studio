@@ -664,9 +664,13 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   playwright/pyautogui는 클래스만 추가. `execute(step, selectors)` action별 매핑.
 - **Recorder 교체가능**: `native`(page.screencast, 검증됨) / `gdigrab`(ffmpeg 창·영역) /
   `gamebar`(Win+Alt+R) / `obs`(WebSocket v5).
-- `node scripts/screen-scenario/run.js <s.json> --ep 98 --cut 3 [--driver x --recorder y]`
+- `node scripts/screen-scenario/run.js <s.json> --ep 98 --cut 3 [--driver x --recorder y --debug-port N]`
   → `mediaPaths.videoDir(ep)/cut_NN.mp4` 정규화 저장.
-- 검증: `_selftest`(puppeteer+native, 외부 의존 없음) 통과. 실사이트/gdigrab/gamebar/obs는 실기.
+- **target 자동 접속 (`<connectmode>`)**: 시나리오 `"target":"flow"|"elevenlabs"|{tool,path}` →
+  새 Chrome 대신 **디버깅 Chrome(9222, 로그인된 flow 프로필)에 접속**(connectBrowser 패턴),
+  도구 탭 재사용/새 탭. `{url}`/`{html}`이면 격리된 새 Chrome. teardown은 disconnect(안 닫음).
+- 검증: `_selftest`(launch+native) 통과 · connect 모드(9222 Chrome → elevenlabs 탭 접속·생성) 확인.
+  실사이트 셀렉터·gdigrab/gamebar/obs는 실기. connect+native는 불안정 → gdigrab.
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
