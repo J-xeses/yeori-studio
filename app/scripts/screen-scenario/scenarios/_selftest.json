@@ -1,0 +1,21 @@
+{
+  "id": "_selftest",
+  "_note": "아키텍처 자체 검증용 — 외부 사이트/로그인 없이 인라인 HTML에서 type/click/scroll 실행 + native 녹화.",
+  "driver": "puppeteer",
+  "recorder": "native",
+  "duration": 4,
+  "viewport": { "width": 1080, "height": 1920 },
+  "target": {
+    "html": "<!doctype html><html><head><meta charset=utf-8><style>body{margin:0;background:#111;color:#fff;font:40px/1.4 sans-serif;padding:70px}input{font-size:40px;width:88%;padding:18px;background:#222;color:#fff;border:1px solid #444;border-radius:10px}#log{margin-top:44px;white-space:pre-wrap;color:#7cf}button{margin-top:30px;font-size:38px;padding:14px 40px;background:#3a5;color:#fff;border:0;border-radius:10px}.tall{height:3200px}</style></head><body><input id=box placeholder='type here'><button id=go>GO</button><div id=log>ready</div><div class=tall></div><script>go.onclick=function(){log.textContent+='\\nclicked: '+box.value}</script></body></html>"
+  },
+  "record": { "fps": 30 },
+  "selectors": { "box": "#box", "go": "#go" },
+  "steps": [
+    { "action": "wait", "ms": 500 },
+    { "action": "type", "target": "box", "text": "hello 서여리", "cps": 12 },
+    { "action": "wait", "ms": 400 },
+    { "action": "click", "target": "go" },
+    { "action": "scroll", "by": 800, "duration": 1200 },
+    { "action": "wait", "ms": 400 }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "rl03_cut3_elevenlabs",
+  "_note": "RL03 CUT 3 — ElevenLabs 화면: 텍스트 입력 → 재생 → (연출상 남자목소리 반전은 CapCut 자막/효과로). 실제 사이트 대상이라 로그인 필요 + selectors UI 변경 시 갱신.",
+  "driver": "puppeteer",
+  "recorder": "native",
+  "duration": 14,
+  "viewport": { "width": 1080, "height": 1920 },
+  "target": { "url": "https://elevenlabs.io/app/speech-synthesis/text-to-speech", "waitUntil": "networkidle2", "timeout": 60000 },
+  "record": { "fps": 30, "windowTitle": "ElevenLabs", "windowPosition": { "x": 40, "y": 20 } },
+  "selectors": {
+    "text_field": "textarea",
+    "generate_btn": { "text": "Generate" },
+    "play_btn": "button[aria-label*='play' i]"
+  },
+  "steps": [
+    { "action": "wait", "ms": 2000 },
+    { "action": "type", "target": "text_field", "text": "안녕하세요, AI 크리에이터 서여리입니다.", "cps": 10 },
+    { "action": "wait", "ms": 1000 },
+    { "action": "click", "target": "generate_btn" },
+    { "action": "wait", "ms": 6000 },
+    { "action": "click", "target": "play_btn" },
+    { "action": "wait", "ms": 4000 }
+  ]
+}
