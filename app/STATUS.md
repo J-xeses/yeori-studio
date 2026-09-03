@@ -644,9 +644,16 @@ BROLL=`download_broll_cut`, TTS=`studio_run_g3`, concat=`studio_run_g5` 전부 A
   (스크립트 목표 60s 정확히 일치) + `ep98.srt`.
 - **영상 직접 제작 컷 G2 스킵** (`<g2skip>`): YEORI 컷을 시작프레임 없이 text→video로 만들면
   스틸이 없어 "G2 이미지 대기"로 남던 것 → `stageApplies(c,'g2') = needsGenImage && !hasVideo`.
-- **한계**: CAPCUT 컷 2,3의 "정식" 버전은 ElevenLabs/Flow 화면 녹화(`rl03_screen_scenario.py`
-  실행 녹화)인데 그 스크립트가 아직 없어서 `make_graphic_cut` 기본 텍스트카드로 대체됨.
-  화면녹화 자동화는 `screen-recorder.js` 있으나 시나리오 스크립트 별도 작성 필요.
+- **CAPCUT 컷 2,3 = 화면 녹화 대신 HTML 재현 (커밋 `<screenscenario>`)**: Flow/ElevenLabs
+  화면을 실제 녹화 안 하고 CSS @keyframes 재현 HTML(`01_script/rl03_screen.html`)을
+  `make_graphic_cut`(htmlFile + motion=type-in)이 프레임 단위 캡처 → cut_02(9s, Flow 프롬프트
+  타이핑+이미지 그리드 스크롤) · cut_03(14s, ElevenLabs 타이핑+재생+파형+"⚠Adam(남성)" 반전+💧).
+  벤더 UI 의존 없음, 결정적. 가이드·예시 = `app/assets/screen-scenario/`.
+- **R03 최종**: 7컷 전부 실제 → G5 재concat `ep98_raw.mp4` **정확히 60.0초** (script 목표 일치).
+  cut1(5s auto텍스트)·cut2(9s Flow재현)·cut3(14s ElevenLabs재현)·cut4·5(7·8s 사용자 Veo)·
+  cut6·7(8·9s auto텍스트) + ep98.srt(cut1 나레이션).
+- **남은 것**: pipeline-leader가 GRAPHIC/CAPCUT 컷에 `make_graphic_cut`을 자동 호출하도록 배선
+  (현재는 MakingTab UI 또는 수동 curl). 화면 재현 HTML은 컷마다 손으로 작성(템플릿화 여지).
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
