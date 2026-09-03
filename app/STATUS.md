@@ -722,6 +722,27 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   ASCII 전용, 프로필 경로 드라이버와 일치(`downloads/flow/chrome-profile-main`),
   `timeout`→`ping`(stdin 안전). `.gitattributes`에 `*.bat eol=crlf` 강제.
 
+### 릴스 최종화 모듈 (2026-09-03, 커밋 `d3f8c79`)
+파싱된 컷 + `05_video/cut_NN.mp4` → **컷별 편집 판단 → 자막 번인 → SFX → `07_output/{CODE}_final.mp4`**.
+- **`server/lib/reelFinalize.js`**:
+  - `decideCut(cut)`: **fit**(화면녹화 SP=IN.SC/SH_SCR → 레터박스 contain, 나머지 채움 cover)
+    · **caption**(CP 있고 SH_TEXT 그래픽 아니면 번인; " / " 세그먼트 분할, "N단계:" 제거,
+    화살표에서 줄바꿈; 반전 MD SUR→COM/"잠깐"이면 멀티세그의 **펀치라인 세그만 빨강** Punch)
+    · **sfx**(대본 "효과음:" 키워드 → `_shared/sfx` 매핑: 타이핑/깜짝반전/분할전환/팝업/클릭/
+    whoosh/긴장/글리치; "정적 N초"·"없음" → 없음)
+  - `enrichCutsFromScript(cuts, raw)`: **scriptParserV3 가 v3.0 포맷**(오디오 헤더 콜론 없음,
+    BGM 열0, CP 가 KR 블록에만)에서 **놓치는 CP·오디오를 raw 에서 직접 보강**. 파서 자체는 안 건드림.
+  - 규격화(fit별) → concat → `.ass` 번인 → SFX/BGM `amix`. `{CODE}_finalize.json` 매니페스트
+    (컷별 판단 내역) + `{CODE}_captions.ass`. `06_publishing/ep{N}_raw.mp4` 도 최신 concat 갱신.
+  - BGM: `bgmFile` 파라미터 또는 `_shared/bgm` 자동. 없으면 스킵+매니페스트 기록.
+  - ⚠ `ff()` 헬퍼 `-y` 필수 — 없으면 "Overwrite? [y/N]" 에서 영구 정지(실측 10분 행).
+- **proxy**: `GET /api/reel-finalize/plan?epNum`(판단만) · `POST /api/reel-finalize {epNum,bgmFile?}`(SSE).
+- **MakingTab**: "🎬 릴스 최종본" 카드(메이킹 필름 조립 아래) — "컷별 판단 미리보기"(테이블) +
+  "릴스 최종본 생성"(SSE 로그 + 영상).
+- **검증(IG_R03 실측)**: 63s 1080×1920, 자막 6개 번인, SFX 4개, 26초 소요. cut3 punchline
+  "잠깐, 남자 목소리?!" 빨강 렌더·cut2 레터박스·cut1/7 자막 skip 프레임 육안 확인.
+- 남은 것: BGM 트랙 자산 없음(CapCut) · 손글씨 데코(CapCut) · 컷 소스 자체 품질(cut5 워터마크 등).
+
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
   **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
