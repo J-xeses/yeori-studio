@@ -103,7 +103,9 @@ const needsG3       = (c) => !!(c.hasDialogue || c.hasNarration) // TTS 대상
 
 // 이 단계가 이 컷에 적용되는가
 function stageApplies(c, stage) {
-  if (stage === 'g2') return needsGenImage(c)
+  // G2(이미지 선택)는 생성 이미지가 필요한 컷만. 단 영상을 직접 제작한 컷(text→video,
+  // 시작 프레임 없이)은 이미 hasVideo라 이미지 단계가 무의미 → 제외.
+  if (stage === 'g2') return needsGenImage(c) && !c.hasVideo
   if (stage === 'g3') return needsG3(c)
   return true   // g1, g4, g5 — 전체
 }
@@ -168,7 +170,7 @@ async function checkAndAdvance() {
 
   // ── G2: 이미지 생성 자동 트리거 안 함(수동). 생성 이미지가 필요한 컷(YEORI 등)만 보고. ──
   if (stageInRange('g2') && !isStageComplete(cuts, 'g2')) {
-    const needImg = cuts.filter(c => c.g1 && needsGenImage(c) && !c.hasImage)
+    const needImg = cuts.filter(c => c.g1 && needsGenImage(c) && !c.hasImage && !c.hasVideo)
     if (needImg.length) {
       log('G2', `이미지 수동 제작 대기 — 컷 ${needImg.map(c => c.no).join(',')} (외부 생성 후 스튜디오 탭 업로드)`)
     }
