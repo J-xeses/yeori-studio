@@ -205,9 +205,13 @@ export class PuppeteerDriver extends Driver {
 
   async windowBounds() {
     try {
-      const t = await this.browser.target().createCDPSession()
-      const { windowId } = await t.send('Browser.getWindowForTarget')
+      // 페이지 타깃 기준으로 창을 특정(connect 모드에서 브라우저 타깃은 엉뚱한 창을 줄 수 있음)
+      const t = await this.page.target().createCDPSession()
+      const targetId = this.page.target()._targetId
+      const { windowId } = await t.send('Browser.getWindowForTarget', targetId ? { targetId } : {})
       const { bounds } = await t.send('Browser.getWindowBounds', { windowId })
+      await t.detach().catch(() => {})
+      // 클라이언트 영역만 잡도록 타이틀바/테두리 약간 보정
       return { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height }
     } catch { return null }
   }

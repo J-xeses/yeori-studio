@@ -512,6 +512,65 @@ export default function MakingTab() {
   const [capcutBusy, setCapcutBusy] = useState(false)
   const [capcutResult, setCapcutResult] = useState(null)
 
+  // ── CAPCUT: 시나리오 자동 녹화 (screen-scenario/run.js 연결) ──
+  const [scenarioList, setScenarioList] = useState([])          // [{file,id,note,matched,...}]
+  const [scenarioSel, setScenarioSel] = useState({})            // { [cutNo]: file }
+  const [scenarioRunning, setScenarioRunning] = useState(null)  // 실행 중 cutNo
+  const [scenarioLog, setScenarioLog] = useState({})            // { [cutNo]: "..." }
+  const [scenarioVideo, setScenarioVideo] = useState({})        // { [cutNo]: url }
+
+  const loadScenarios = async (cutNo) => {
+    if (episode?.number == null) return
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/screen-scenario/list?epNum=${episode.number}&cutNo=${cutNo}`)
+      const d = await r.json()
+      setScenarioList(d.scenarios || [])
+      const m = (d.scenarios || []).find(s => s.matched)
+      if (m && !scenarioSel[cutNo]) setScenarioSel(p => ({ ...p, [cutNo]: m.file }))
+    } catch { /* noop */ }
+  }
+
+  const runScreenScenario = async (cut) => {
+    const file = scenarioSel[cut.no] || scenarioList.find(s => s.matched)?.file
+    if (!file || episode?.number == null) return
+    setScenarioRunning(cut.no)
+    setScenarioLog(p => ({ ...p, [cut.no]: '' }))
+    setScenarioVideo(p => ({ ...p, [cut.no]: null }))
+    const append = (line) => setScenarioLog(p => ({ ...p, [cut.no]: ((p[cut.no] || '') + line + '\n').slice(-4000) }))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/screen-scenario`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, scenarioFile: file }),
+      })
+      const reader = res.body.getReader()
+      const dec = new TextDecoder()
+      let buf = ''
+      for (;;) {
+        const { value, done } = await reader.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        const parts = buf.split('\n\n'); buf = parts.pop()
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '').trim()
+          if (!line) continue
+          let ev; try { ev = JSON.parse(line) } catch { continue }
+          if (ev.type === 'start') append(`▶ ${ev.cmd}`)
+          else if (ev.type === 'log') append(ev.line)
+          else if (ev.type === 'result') append(`📄 ${ev.outPath || ''}`)
+          else if (ev.type === 'done') {
+            if (ev.ok) { append('✅ 완료'); setScenarioVideo(p => ({ ...p, [cut.no]: ev.videoUrl })) }
+            else append(`❌ ${ev.error}`)
+            // videoStatus 2초 폴링이 cut_NN.mp4를 잡아 g4 자동 마킹(기존 effect)
+          }
+        }
+      }
+    } catch (e) {
+      append(`❌ ${e.message}`)
+    } finally {
+      setScenarioRunning(null)
+    }
+  }
+
   // ── CapCut 웹 세미오토 (CDP 9222 — 편집만 자동, 내보내기는 수동) ──
   const [cdpStatus, setCdpStatus] = useState(null)      // { cdpUp, editors:[{url,title}] }
   const [cdpChecking, setCdpChecking] = useState(false)
@@ -1592,7 +1651,7 @@ export default function MakingTab() {
           </label>
           <label className={s.radioLabel}>
             <input type="radio" name={`capcut-mode-${cut.no}`} checked={mode === 'record'}
-              onChange={() => setCapcutMode(p => ({ ...p, [cut.no]: 'record' }))} />
+              onChange={() => { setCapcutMode(p => ({ ...p, [cut.no]: 'record' })); loadScenarios(cut.no) }} />
             CapCut 데스크톱 녹화
           </label>
         </div>
@@ -1601,6 +1660,37 @@ export default function MakingTab() {
           renderHtmlCapturePanel(cut)
         ) : (
           <>
+            {/* ── 시나리오 자동 녹화 (screen-scenario) ── */}
+            <div className={s.settingGroup} style={{ borderBottom: '1px solid var(--border)', paddingBottom: 12, marginBottom: 12 }}>
+              <div className={s.settingLabel}>시나리오 자동 녹화 — 생성도구(Flow/ElevenLabs) 화면을 스크립트로 조작·녹화</div>
+              <div className={s.styleRow}>
+                <select value={scenarioSel[cut.no] || ''} disabled={scenarioRunning != null}
+                  onChange={e => setScenarioSel(p => ({ ...p, [cut.no]: e.target.value }))}
+                  className={s.durationInput} style={{ flex: 2, minWidth: 200 }}>
+                  <option value="">시나리오 선택…</option>
+                  {scenarioList.map(sc => (
+                    <option key={sc.file} value={sc.file}>
+                      {sc.id}{sc.matched ? '  ← 이 컷' : ''}{sc.origin === 'episode' ? '  (에피소드)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <button className={s.previewBtn} disabled={scenarioRunning != null} onClick={() => loadScenarios(cut.no)}>↻</button>
+                <button className={s.captureBtn}
+                  disabled={scenarioRunning != null || episode?.number == null || !(scenarioSel[cut.no] || scenarioList.some(s => s.matched))}
+                  onClick={() => runScreenScenario(cut)}>
+                  {scenarioRunning === cut.no ? '🔴 녹화 중…' : '자동 녹화'}
+                </button>
+              </div>
+              {(() => { const sc = scenarioList.find(s => s.file === (scenarioSel[cut.no] || scenarioList.find(x => x.matched)?.file)); return sc?.note ? <div className={s.emptyHint} style={{ marginTop: 4 }}>{sc.note}</div> : null })()}
+              {scenarioList.length === 0 && <div className={s.emptyHint} style={{ marginTop: 4 }}>매핑된 시나리오 없음 — <code>scripts/screen-scenario/scenarios/</code> 또는 <code>01_script/*.json</code>에 <code>{'{"for":{"cut":N}}'}</code>로 추가.</div>}
+              {scenarioLog[cut.no] && (
+                <pre style={{ marginTop: 8, maxHeight: 160, overflow: 'auto', fontSize: 11, background: 'var(--bg2, #111)', padding: 8, borderRadius: 6, whiteSpace: 'pre-wrap' }}>{scenarioLog[cut.no]}</pre>
+              )}
+              {scenarioVideo[cut.no] && (
+                <video src={scenarioVideo[cut.no]} controls style={{ marginTop: 8, width: '100%', maxHeight: 340, borderRadius: 6, background: '#000' }} />
+              )}
+            </div>
+
             <div className={s.editorActions}>
               <button className={s.previewBtn} disabled={capcutChecking} onClick={checkCapcutWindow}>
                 {capcutChecking ? '⏳ 확인 중…' : 'CapCut 상태 확인'}

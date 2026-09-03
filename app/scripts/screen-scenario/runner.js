@@ -81,7 +81,9 @@ export async function runScenario(p) {
     await driver.teardown()
   }
 
-  if (!fs.existsSync(rawPath)) throw new Error('녹화 결과 파일이 없습니다')
+  if (!fs.existsSync(rawPath) || fs.statSync(rawPath).size < 1024) {
+    throw new Error(`녹화 결과가 비어있습니다 (${recorderName}). 창이 가려졌거나 레코더 파라미터 문제일 수 있습니다.`)
+  }
 
   if (!p.outPath) { log('runner', `raw: ${rawPath}`); return { rawPath } }
   fs.mkdirSync(path.dirname(p.outPath), { recursive: true })

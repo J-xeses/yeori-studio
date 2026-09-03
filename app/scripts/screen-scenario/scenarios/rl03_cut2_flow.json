@@ -4,21 +4,58 @@
   "driver": "puppeteer",
   "recorder": "gdigrab",
   "duration": 9,
-  "viewport": { "width": 1080, "height": 1920 },
+  "viewport": {
+    "width": 1080,
+    "height": 1920
+  },
   "target": "flow",
-  "record": { "fps": 30, "windowTitle": "Flow" },
+  "record": {
+    "fps": 30,
+    "windowTitle": "Flow"
+  },
   "selectors": {
     "prompt_box": "textarea",
-    "generate_btn": { "text": "만들기" },
+    "generate_btn": {
+      "text": "만들기"
+    },
     "results_grid": "[class*='grid'], [class*='result']"
   },
   "steps": [
-    { "action": "wait", "ms": 2000 },
-    { "action": "type", "target": "prompt_box", "text": "young korean woman, 서여리, cinematic portrait", "cps": 14 },
-    { "action": "wait", "ms": 800 },
-    { "action": "click", "target": "generate_btn" },
-    { "action": "wait", "ms": 4000 },
-    { "action": "scroll", "target": "results_grid", "by": 500, "duration": 2500 },
-    { "action": "wait", "ms": 400 }
-  ]
+    {
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "action": "type",
+      "target": "prompt_box",
+      "text": "young korean woman, 서여리, cinematic portrait",
+      "cps": 14
+    },
+    {
+      "action": "wait",
+      "ms": 800
+    },
+    {
+      "action": "click",
+      "target": "generate_btn"
+    },
+    {
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "action": "scroll",
+      "target": "results_grid",
+      "by": 500,
+      "duration": 2500
+    },
+    {
+      "action": "wait",
+      "ms": 400
+    }
+  ],
+  "for": {
+    "cut": 2,
+    "episodeCode": "IG_R03"
+  }
 }

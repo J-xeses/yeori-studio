@@ -4,21 +4,59 @@
   "driver": "puppeteer",
   "recorder": "gdigrab",
   "duration": 14,
-  "viewport": { "width": 1080, "height": 1920 },
-  "target": { "tool": "elevenlabs", "path": "/app/speech-synthesis/text-to-speech" },
-  "record": { "fps": 30, "windowTitle": "ElevenLabs" },
+  "viewport": {
+    "width": 1080,
+    "height": 1920
+  },
+  "target": {
+    "tool": "elevenlabs",
+    "path": "/app/speech-synthesis/text-to-speech"
+  },
+  "record": {
+    "fps": 30,
+    "windowTitle": "ElevenLabs"
+  },
   "selectors": {
     "text_field": "textarea",
-    "generate_btn": { "text": "Generate" },
+    "generate_btn": {
+      "text": "Generate"
+    },
     "play_btn": "button[aria-label*='play' i]"
   },
   "steps": [
-    { "action": "wait", "ms": 2000 },
-    { "action": "type", "target": "text_field", "text": "안녕하세요, AI 크리에이터 서여리입니다.", "cps": 10 },
-    { "action": "wait", "ms": 1000 },
-    { "action": "click", "target": "generate_btn" },
-    { "action": "wait", "ms": 6000 },
-    { "action": "click", "target": "play_btn" },
-    { "action": "wait", "ms": 4000 }
-  ]
+    {
+      "action": "wait",
+      "ms": 2000
+    },
+    {
+      "action": "type",
+      "target": "text_field",
+      "text": "안녕하세요, AI 크리에이터 서여리입니다.",
+      "cps": 10
+    },
+    {
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "action": "click",
+      "target": "generate_btn"
+    },
+    {
+      "action": "wait",
+      "ms": 6000
+    },
+    {
+      "action": "click",
+      "target": "play_btn"
+    },
+    {
+      "action": "wait",
+      "ms": 4000
+    }
+  ],
+  "for": {
+    "cut": 3,
+    "episodeCode": "IG_R03"
+  }
 }

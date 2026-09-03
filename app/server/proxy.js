@@ -2602,6 +2602,102 @@ app.get('/api/read-episode-html', (req, res) => {
   }
 })
 
+// ── screen-scenario: 생성도구 화면을 스크립트로 조작·녹화 → 컷 mp4 ──────
+// scripts/screen-scenario/run.js를 spawn하고 진행상황을 SSE로. 시나리오 파일은
+// 명시(scenarioFile)하거나 컷 번호로 자동 매핑(scenario.for.cut). 에피소드별 커스텀
+// 시나리오는 01_script/*.json에 두면 공유(scenarios/)보다 우선.
+const SCENARIO_DIR = path.join(CODE_ROOT, 'scripts', 'screen-scenario', 'scenarios')
+
+function listScenarios(epNum, cutNo) {
+  const out = []
+  let epCode = null
+  if (epNum != null) { try { const { ep, epId } = findEpisodeByNumOrThrow(epNum); epCode = resolveEpisodeCode(ep.episode, epId) } catch { /* noop */ } }
+  const scan = (dir, origin) => {
+    let files
+    try { files = fs.readdirSync(dir) } catch { return }
+    for (const f of files) {
+      if (!f.endsWith('.json') || f.startsWith('_')) continue
+      try {
+        const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf-8'))
+        const forCut = j.for?.cut
+        const forCode = j.for?.episodeCode
+        const codeOk = !forCode || !epCode || String(forCode).toUpperCase() === String(epCode).toUpperCase()
+        out.push({
+          file: f, id: j.id || f, note: j._note || '', origin,
+          driver: j.driver || 'puppeteer', recorder: j.recorder || 'native',
+          for: j.for || null,
+          matched: cutNo != null && forCut != null && String(forCut) === String(cutNo) && codeOk,
+        })
+      } catch { /* 잘못된 json 스킵 */ }
+    }
+  }
+  scan(SCENARIO_DIR, 'shared')
+  if (epCode) scan(scriptDir(epCode), 'episode')
+  return out
+}
+
+app.get('/api/screen-scenario/list', (req, res) => {
+  res.json({ scenarios: listScenarios(req.query.epNum, req.query.cutNo) })
+})
+
+app.post('/api/screen-scenario', (req, res) => {
+  const { epNum, cutNo, scenarioFile, driver, recorder } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+
+  let file = scenarioFile
+  if (!file) {
+    const cand = listScenarios(epNum, cutNo).find(s => s.matched)
+    if (!cand) return res.status(404).json({ error: `컷 ${cutNo}에 매핑되는 시나리오가 없습니다 (scenario.for.cut). scenarioFile을 지정하세요.` })
+    file = cand.file
+  }
+  file = path.basename(file)
+  let scPath = null
+  let epCode = null
+  try { const { ep, epId } = findEpisodeByNumOrThrow(epNum); epCode = resolveEpisodeCode(ep.episode, epId) } catch { /* noop */ }
+  if (epCode) { const p1 = path.join(scriptDir(epCode), file); if (fs.existsSync(p1)) scPath = p1 }
+  if (!scPath) scPath = path.join(SCENARIO_DIR, file)
+  if (!fs.existsSync(scPath)) return res.status(404).json({ error: `시나리오 파일 없음: ${file}` })
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
+  const send = (o) => { try { res.write(`data: ${JSON.stringify(o)}\n\n`) } catch { /* noop */ } }
+
+  const runJs = path.join(CODE_ROOT, 'scripts', 'screen-scenario', 'run.js')
+  const args = [runJs, scPath, '--ep', String(epNum), '--cut', String(cutNo)]
+  if (driver) args.push('--driver', driver)
+  if (recorder) args.push('--recorder', recorder)
+  send({ type: 'start', scenario: file, cmd: `node run.js ${file} --ep ${epNum} --cut ${cutNo}${driver ? ` --driver ${driver}` : ''}${recorder ? ` --recorder ${recorder}` : ''}` })
+
+  const proc = spawn(process.execPath, args, { cwd: CODE_ROOT, env: process.env })
+  let buf = ''
+  const onData = (d) => {
+    buf += d.toString()
+    const lines = buf.split('\n'); buf = lines.pop()
+    for (const raw of lines) {
+      const t = raw.trim(); if (!t) continue
+      if (t.startsWith('{') && t.includes('outPath')) { try { send({ type: 'result', ...JSON.parse(t) }); continue } catch { /* noop */ } }
+      send({ type: 'log', line: t })
+    }
+  }
+  proc.stdout.on('data', onData)
+  proc.stderr.on('data', onData)
+  proc.on('close', (code) => {
+    if (buf.trim()) send({ type: 'log', line: buf.trim() })
+    if (code === 0) {
+      recordCutMotion(epNum, cutNo, { method: 'screen-scenario', motion: null, baked: true })
+      const url = `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${String(cutNo).padStart(2, '0')}.mp4`))}?t=${Date.now()}`
+      send({ type: 'done', ok: true, videoUrl: url })
+    } else {
+      send({ type: 'done', ok: false, error: `run.js 종료 코드 ${code}` })
+    }
+    res.end()
+  })
+  proc.on('error', (err) => { send({ type: 'done', ok: false, error: err.message }); res.end() })
+  req.on('close', () => { try { proc.kill() } catch { /* noop */ } })
+})
+
 // GRAPHIC 컷의 HTML 소스를 헤드리스 Chrome으로 렌더링해 스크린샷 → ffmpeg로 정지화면
 // mp4 변환. 라이브 자동화용 전용 Chrome(9222, Flow/CapCut 로그인 세션)과 완전히 분리된
 // 독립 headless 인스턴스를 매번 새로 띄워서 그 세션에는 전혀 영향을 주지 않는다. 결과
