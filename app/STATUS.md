@@ -608,6 +608,24 @@ Google `labs.google/fx` UI 변경 때마다 깨져서(2026-09-01 테스트: `cre
 - **미해결(사소, 기존)**: 멀티스피커 대사(`지아 "..." / 여리 "..."`)를 TTS가 화자명·`/`까지
   읽음. 화자별 분리 TTS나 라벨 스트립 필요 — 별건.
 
+### R99 자동진행 테스트 (2026-09-03) — pipeline-leader 컷유형 인식 + G5 무음성 대응
+`downloads/seoyeori/IG/IG_R/IG_R02/01_script/RL02_G1_script_v2.txt`를 `IG_R99`로 복제해
+테스트 에피소드(`ep_test_r99`) 만들고 단계별 자동진행 실측. 5컷(CAPCUT 4 + YEORI 1, 음성 없음).
+발견·수정한 버그:
+- **pipeline-leader가 모든 컷이 G1~G5 다 거친다고 가정** → GRAPHIC/CAPCUT/BROLL 컷도
+  "이미지 수동 제작 대기"로 잘못 보고, `isStageComplete`가 영영 false로 매 사이클 재시도.
+  → `MAKING_TYPES`(GRAPHIC/CAPCUT/BROLL) · `needsGenImage` · `needsG3` · `stageApplies` ·
+  `cutStageDone`(메이킹 컷 g4는 mp4 존재로 완료 취급) 도입.
+  · G2 대기 = 생성 이미지 필요 컷만 · "제작" 로그 신규(메이킹 탭 대기, 유형별) ·
+    G4 대기 = Veo 필요 컷만 · G5 게이트/승인대기도 메이킹 컷 반영.
+- **`studio-run-g5`가 음성 없는 에피소드에서 전체 실패** — SRT 생성이 `audioDir` 없어 404 →
+  G5 중단. → 음성 있는 컷 0개면 SRT 생략(자막은 CapCut CP 텍스트로 직접).
+- (앞서) `isG3Complete`가 `c.dialogue` vs 페이로드 `c.hasDialogue` 불일치.
+
+실측 결과: 스크립트→G1→G2(컷4 이미지)→G4(컷4 영상)→**G5 자동 트리거**→concat
+`06_publishing/ep99_raw.mp4`(10s) 생성. 재실행 시 "G5 이미 완료" 스킵(멱등).
+전 단계 새 폴더 체계 정상 (`02_images`·`05_video`·`06_publishing/deliverables` 등).
+
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
   **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
