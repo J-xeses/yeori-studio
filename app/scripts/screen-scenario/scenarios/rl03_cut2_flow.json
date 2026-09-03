@@ -1,7 +1,7 @@
 {
   "id": "rl03_cut2_flow",
   "_note": "RL03 CUT 2 — Google Flow 화면: 프롬프트 입력 → 서여리 이미지들 스크롤. target:'flow' → 디버깅 Chrome(9222, 로그인된 flow 프로필)의 Flow 탭에 접속. recorder:'native'=CDP Page.startScreencast(페이지 픽셀 직접 캡처, 다른 창 겹쳐도 무관). selectors는 UI 변경 시 갱신. 결정적 버전은 make_graphic_cut + rl03_screen.html.",
-  "driver": "puppeteer",
+  "driver": "cdp",
   "recorder": "native",
   "duration": 9,
   "viewport": {

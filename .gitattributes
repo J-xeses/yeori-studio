@@ -4,3 +4,8 @@
 # 항상 LF로 유지되도록 강제한다.
 .vercelignore text eol=lf
 .gitignore text eol=lf
+
+# .bat 파일은 Windows cmd 가 실행 — CRLF 필수. LF면 괄호 블록/for 루프가 깨져
+# 클릭 즉시 종료된다(2026-09-03 start_gen.bat 실제 발생).
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -49,8 +49,12 @@ async function verifyContent(outPath, duration = 6) {
   return { sizes, avg, peak, solid: peak > 0 && peak < 5000, empty: valid.length === 0, verifyJpg: midJpg }
 }
 
-async function normalize(inPath, outPath, { width = 1080, height = 1920, duration } = {}) {
-  const vf = `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},setsar=1,format=yuv420p`
+async function normalize(inPath, outPath, { width = 1080, height = 1920, duration, fit = 'crop' } = {}) {
+  // fit=crop  : 화면을 꽉 채우고 넘치는 부분 잘라냄(세로 컷 위주 콘텐츠)
+  // fit=contain: 화면 전체를 담고 남는 곳 흰 배경(가로형 데스크톱 웹앱 녹화 — 잘림 없음)
+  const vf = fit === 'contain'
+    ? `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:color=white,setsar=1,format=yuv420p`
+    : `scale=${width}:${height}:force_original_aspect_ratio=increase,crop=${width}:${height},setsar=1,format=yuv420p`
   const args = ['-y']
   if (duration) args.push('-t', String(duration))
   args.push('-i', inPath, '-vf', vf, '-c:v', 'libx264', '-preset', 'veryfast', '-r', '30', '-an',
@@ -73,13 +77,13 @@ async function normalize(inPath, outPath, { width = 1080, height = 1920, duratio
  */
 export async function runScenario(p) {
   const sc = p.scenario
-  const driverName = p.driver || sc.driver || 'puppeteer'
+  // connect 모드(target이 문자열/{tool})는 사용자 Chrome에 붙음 → 기본 드라이버 = cdp
+  // (puppeteer.connect 의 OOPIF attach 멈춤 회피). launch 모드는 puppeteer.
+  const isConnect = typeof sc.target === 'string' || !!sc.target?.tool
+  const driverName = p.driver || sc.driver || (isConnect ? 'cdp' : 'puppeteer')
   const recorderName = p.recorder || sc.recorder || 'native'
   const vp = sc.viewport || { width: 1080, height: 1920 }
   const fps = sc.record?.fps || 30
-
-  // connect 모드(target이 문자열/{tool})는 headless 무의미 — 사용자 Chrome에 붙음
-  const isConnect = typeof sc.target === 'string' || !!sc.target?.tool
   const driver = await createDriver(driverName, {
     viewport: vp,
     headless: isConnect ? false : (recorderName === 'native'),
@@ -129,7 +133,9 @@ export async function runScenario(p) {
 
   if (!p.outPath) { log('runner', `raw: ${rawPath}`); return { rawPath } }
   fs.mkdirSync(path.dirname(p.outPath), { recursive: true })
-  await normalize(rawPath, p.outPath, { width: vp.width, height: vp.height, duration: sc.duration })
+  // connect 모드(데스크톱 웹앱 녹화)는 잘림 없이 전체를 담는 contain 이 기본
+  const fit = sc.fit || (isConnect ? 'contain' : 'crop')
+  await normalize(rawPath, p.outPath, { width: vp.width, height: vp.height, duration: sc.duration, fit })
   try { fs.rmSync(tmpDir, { recursive: true, force: true }) } catch { /* noop */ }
 
   // 내용 검증 — 파일 크기만으론 불충분(탐색기 창을 녹화해도 파일은 생김). 프레임 샘플로 확인.
