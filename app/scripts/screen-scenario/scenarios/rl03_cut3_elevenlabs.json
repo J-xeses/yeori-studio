@@ -1,9 +1,9 @@
 {
   "id": "rl03_cut3_elevenlabs",
-  "_note": "RL03 CUT 3 — ElevenLabs 화면: 텍스트 입력 → 재생. target:'elevenlabs' → 디버깅 Chrome의 ElevenLabs 탭 접속(없으면 새 탭). recorder:'native'=CDP screencast(페이지 픽셀 직접). 남자목소리 반전 연출은 CapCut 자막/효과로. selectors UI 변경 시 갱신.",
+  "_note": "RL03 CUT 3 — ElevenLabs 텍스트 음성 변환 화면(한국어 UI): 텍스트 입력 → '음성 만들기' → 생성 대기 → 재생. target:'elevenlabs' → 디버깅 Chrome(9222)의 ElevenLabs 탭 접속(로그인 필요). recorder:'native'=CDP screencast(페이지 픽셀 직접). 남자목소리 반전 연출은 CapCut 자막/효과로. selectors는 UI 변경 시 갱신.",
   "driver": "puppeteer",
   "recorder": "native",
-  "duration": 14,
+  "duration": 16,
   "viewport": {
     "width": 1080,
     "height": 1920
@@ -17,43 +17,18 @@
     "windowTitle": "ElevenLabs"
   },
   "selectors": {
-    "text_field": "textarea",
-    "generate_btn": {
-      "text": "Generate"
-    },
-    "play_btn": "button[aria-label*='play' i]"
+    "text_field": "textarea[aria-label='주요 텍스트 영역'], textarea",
+    "generate_btn": { "text": "음성 생성" },
+    "play_btn": "button[aria-label*='재생'], button[aria-label*='play' i], button[aria-label*='미리 듣기']"
   },
   "steps": [
-    {
-      "action": "wait",
-      "ms": 2000
-    },
-    {
-      "action": "type",
-      "target": "text_field",
-      "text": "안녕하세요, AI 크리에이터 서여리입니다.",
-      "cps": 10
-    },
-    {
-      "action": "wait",
-      "ms": 1000
-    },
-    {
-      "action": "click",
-      "target": "generate_btn"
-    },
-    {
-      "action": "wait",
-      "ms": 6000
-    },
-    {
-      "action": "click",
-      "target": "play_btn"
-    },
-    {
-      "action": "wait",
-      "ms": 4000
-    }
+    { "action": "wait", "ms": 2500 },
+    { "action": "type", "target": "text_field", "text": "안녕하세요, AI 크리에이터 서여리입니다.", "cps": 9 },
+    { "action": "wait", "ms": 1200 },
+    { "action": "click", "target": "generate_btn" },
+    { "action": "wait", "ms": 9000 },
+    { "action": "click", "target": "play_btn", "optional": true },
+    { "action": "wait", "ms": 4000 }
   ],
   "for": {
     "cut": 3,

@@ -75,16 +75,19 @@ export class PuppeteerDriver extends Driver {
       const existing = pages.find((p) => tool.match(p.url()))
       const wantUrl = target.url || (target.path ? new URL(target.path, tool.url).href : tool.url)
 
+      // SPA 도구(Flow·ElevenLabs)는 웹소켓/텔레메트리로 networkidle 에 거의 안 걸림 →
+      // 기본 domcontentloaded. steps 앞머리의 wait/ waitFor 가 실제 준비를 보장.
+      const wu = target.waitUntil || 'domcontentloaded'
       if (existing) {
         this.log(`기존 ${key} 탭 재사용: ${existing.url().slice(0, 70)}`)
         this.page = existing
         if (target.url || target.path) {
-          await this.page.goto(wantUrl, { waitUntil: target.waitUntil || 'networkidle2', timeout: target.timeout || 60000 }).catch(() => {})
+          await this.page.goto(wantUrl, { waitUntil: wu, timeout: target.timeout || 45000 }).catch((e) => this.log(`goto 경고: ${e.message.split('\n')[0]}`))
         }
       } else {
         this.log(`${key} 탭 없음 → 새 탭 (${wantUrl})`)
         this.page = await this.browser.newPage()
-        await this.page.goto(wantUrl, { waitUntil: target.waitUntil || 'networkidle2', timeout: target.timeout || 60000 })
+        await this.page.goto(wantUrl, { waitUntil: wu, timeout: target.timeout || 45000 }).catch((e) => this.log(`goto 경고: ${e.message.split('\n')[0]}`))
       }
       await this.page.bringToFront()
       await this.page.setViewport({ width: vp.width, height: vp.height }).catch(() => {})
@@ -223,22 +226,38 @@ export class PuppeteerDriver extends Driver {
         this._frames = []
         this._n = 0
         this._t0 = Date.now()
+        this._lastAt = 0
         this._session = await page.createCDPSession()
-        this._session.on('Page.screencastFrame', async (e) => {
+        const writeFrame = (b64) => {
           const ts = Date.now() - this._t0
           try {
             const file = path.join(this._tmp, `f_${String(++this._n).padStart(6, '0')}.jpg`)
-            fs.writeFileSync(file, Buffer.from(e.data, 'base64'))
+            fs.writeFileSync(file, Buffer.from(b64, 'base64'))
             this._frames.push({ file, ts })
+            this._lastAt = ts
           } catch { /* noop */ }
+        }
+        this._session.on('Page.screencastFrame', async (e) => {
+          writeFrame(e.data)
           try { await this._session.send('Page.screencastFrameAck', { sessionId: e.sessionId }) } catch { /* noop */ }
         })
         await this._session.send('Page.startScreencast', {
           format: 'jpeg', quality: 85, everyNthFrame: 1,
           ...(viewport ? { maxWidth: viewport.width, maxHeight: viewport.height } : {}),
         })
+        // 하트비트 — screencastFrame 은 화면이 바뀔 때만 온다. 정적인 wait 구간에도 최소
+        // ~8fps 를 유지하도록 갭이 생기면 캡처를 강제(안 그러면 결과 영상이 실제보다 짧아짐).
+        const gapMs = 130
+        this._hb = setInterval(async () => {
+          if (Date.now() - this._t0 - this._lastAt < gapMs) return
+          try {
+            const { data } = await this._session.send('Page.captureScreenshot', { format: 'jpeg', quality: 80, optimizeForSpeed: true })
+            writeFrame(data)
+          } catch { /* noop */ }
+        }, gapMs)
       },
       async stop() {
+        if (this._hb) { clearInterval(this._hb); this._hb = null }
         try { await this._session.send('Page.stopScreencast') } catch { /* noop */ }
         await sleep(400)                                    // 남은 프레임 수신 대기
         try { await this._session.detach() } catch { /* noop */ }

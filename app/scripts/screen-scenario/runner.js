@@ -110,8 +110,13 @@ export async function runScenario(p) {
   await recorder.start(rawPath, { fps, region, viewport: vp, windowTitle: sc.record?.windowTitle })
   try {
     for (const [i, step] of (sc.steps || []).entries()) {
-      log('step', `${i + 1}/${sc.steps.length} ${step.action}${step.target ? ` → ${step.target}` : ''}`)
-      await driver.execute(step, sc.selectors || {})
+      log('step', `${i + 1}/${sc.steps.length} ${step.action}${step.target ? ` → ${step.target}` : ''}${step.optional ? ' (선택)' : ''}`)
+      try {
+        await driver.execute(step, sc.selectors || {})
+      } catch (e) {
+        if (!step.optional) throw e
+        log('step', `  선택 스텝 실패 → 계속: ${e.message.split('\n')[0].slice(0, 120)}`)
+      }
     }
   } finally {
     await recorder.stop()
