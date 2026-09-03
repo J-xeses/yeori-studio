@@ -89,24 +89,35 @@ function stageInRange(stage) {
   return i >= STAGE_ORDER.indexOf(FROM_STAGE) && i <= STAGE_ORDER.indexOf(TO_STAGE)
 }
 
-// 해당 단계가 전체 컷에 대해 이미 gpoints 기준으로 완료됐는지 — /api/mcp/studio-status가
-// 내려주는 cuts[].g1~g5는 서버가 gpoints.json을 그대로 병합해 넣어주는 값이라, 이 스크립트
-// 안에서 gpoints.json을 따로 읽을 필요 없이 이 필드만 보면 된다. 프로세스를 재시작하면
-// g5Triggered 같은 메모리 플래그는 초기화되지만 이 값은 항상 서버의 실제 기록을 반영한다.
-function isStageComplete(cuts, stage) {
-  return cuts.length > 0 && cuts.every(c => c[stage])
-}
+// ── 컷 유형별 파이프라인 적용 규칙 ─────────────────────────────────
+// 모든 컷이 G1~G5를 다 거치는 게 아니다:
+//   GRAPHIC/CAPCUT/BROLL = 메이킹 탭에서 mp4를 직접 제작 → Flow 이미지(G2)·Veo 영상(G4) 안 씀.
+//   대사/나레이션 없는 컷 = TTS(G3) 대상 아님.
+// 이걸 반영 안 하면 "그런 컷이 하나라도 있는 에피소드"는 해당 단계 완료 판정이 영영 안 나서
+// 매 사이클 재시도하거나(2026-08-17 G3에서 실측) 잘못된 "수동 제작 대기" 보고가 뜬다.
+const MAKING_TYPES = ['GRAPHIC', 'CAPCUT', 'BROLL']
+const cutTypeOf     = (c) => String(c.cutType || 'YEORI').toUpperCase()
+const isMakingType  = (c) => MAKING_TYPES.includes(cutTypeOf(c))
+const needsGenImage = (c) => !isMakingType(c)                    // YEORI 등 — 생성 이미지 필요
+const needsG3       = (c) => !!(c.hasDialogue || c.hasNarration) // TTS 대상
 
-// G3(TTS)만 예외 — 대사/나레이션이 없는 컷(B-roll 등)은 애초에 TTS 대상이 아니라서
-// g3가 영원히 false로 남는다. isStageComplete(cuts,'g3')로는 그런 컷이 하나라도 있으면
-// 절대 완료 판정이 안 나서 매 사이클 재시도하던 문제(2026-08-17 실측 발견) — "대사/
-// 나레이션이 있는 컷"만 걸러서 그 컷들만 기준으로 완료 여부를 본다. 대상 컷이 아예
-// 없는 에피소드(전부 B-roll 등)도 완료로 취급.
-function isG3Complete(cuts) {
-  // studio-status 페이로드는 dialogue/narration 원문이 아니라 hasDialogue/hasNarration 불리언을 준다
-  const g3Targets = cuts.filter(c => c.hasDialogue || c.hasNarration)
-  return g3Targets.length === 0 || g3Targets.every(c => c.g3 === true)
+// 이 단계가 이 컷에 적용되는가
+function stageApplies(c, stage) {
+  if (stage === 'g2') return needsGenImage(c)
+  if (stage === 'g3') return needsG3(c)
+  return true   // g1, g4, g5 — 전체
 }
+// 이 컷에서 이 단계가 실질적으로 끝났는가 (메이킹 컷의 g4는 승인버튼 없이 mp4 존재로 판단)
+function cutStageDone(c, stage) {
+  if (stage === 'g4' && isMakingType(c)) return !!c.hasVideo
+  return !!c[stage]
+}
+// studio-status가 내려주는 cuts[].g1~g5는 서버가 gpoints.json을 병합해 넣은 값이라 그대로 신뢰.
+function isStageComplete(cuts, stage) {
+  const targets = cuts.filter(c => stageApplies(c, stage))
+  return cuts.length > 0 && (targets.length === 0 || targets.every(c => cutStageDone(c, stage)))
+}
+const isG3Complete = (cuts) => isStageComplete(cuts, 'g3')   // 하위호환 별칭
 
 async function api(method, endpoint, body) {
   const opts = {
@@ -133,9 +144,6 @@ async function shouldAutoApprove(stage, cutStatus) {
   return false
 }
 
-// G2/G4는 Flow/Veo 브라우저 자동화라 Chrome 세션(CDP 디버깅 포트)을 하나만 공유한다.
-// 컷별로 승인 시점이 달라 매 폴링 사이클마다 "방금 승인된 컷"만 골라 개별 호출하면,
-// 이전 컷 처리가 아직 끝나지 않은 상태에서 새 run-g2/g4가 겹쳐서 같은 브라우저에
 // G2(이미지)·G4(영상)는 더 이상 자동 트리거하지 않는다(2026-09-02, 수동 전환).
 // Flow/Veo 브라우저 자동화가 벤더 UI 변경으로 반복적으로 깨져 파이프라인 신뢰성을
 // 못 지켰음. 두 단계 모두 사람이 외부 도구에서 제작 → 스튜디오에서 업로드하고,
@@ -158,12 +166,21 @@ async function checkAndAdvance() {
     log('G1', '이미 완료된 단계 — 스킵')
   }
 
-  // ── G2: 이미지 생성도 자동 트리거하지 않음(수동 전환). 대본생성 탭/외부 도구에서
-  //       제작 → 스튜디오 업로드. 리더는 아직 이미지 없는 컷만 보고. ──
+  // ── G2: 이미지 생성 자동 트리거 안 함(수동). 생성 이미지가 필요한 컷(YEORI 등)만 보고. ──
   if (stageInRange('g2') && !isStageComplete(cuts, 'g2')) {
-    const needImg = cuts.filter(c => c.g1 && !c.hasImage)
+    const needImg = cuts.filter(c => c.g1 && needsGenImage(c) && !c.hasImage)
     if (needImg.length) {
-      log('G2', `수동 제작 대기 — 컷 ${needImg.map(c => c.no).join(',')} (이미지 생성 후 스튜디오 탭에 업로드)`)
+      log('G2', `이미지 수동 제작 대기 — 컷 ${needImg.map(c => c.no).join(',')} (외부 생성 후 스튜디오 탭 업로드)`)
+    }
+  }
+
+  // ── 메이킹 탭 제작 대기: GRAPHIC/CAPCUT/BROLL 컷은 Flow/Veo 안 쓰고 mp4를 직접 만든다 ──
+  if (stageInRange('g4')) {
+    const needMaking = cuts.filter(c => c.g1 && isMakingType(c) && !c.hasVideo)
+    if (needMaking.length) {
+      const byType = {}
+      needMaking.forEach(c => { (byType[cutTypeOf(c)] ||= []).push(c.no) })
+      log('제작', `메이킹 탭 제작 대기 — ${Object.entries(byType).map(([t, ns]) => `${t} 컷 ${ns.join(',')}`).join(' · ')}`)
     }
   }
 
@@ -189,9 +206,9 @@ async function checkAndAdvance() {
   // 제작 → 스튜디오 "영상 만들기" 탭 체크리스트에서 mp4 업로드하는 방식으로 전환.
   // 리더는 "어느 컷이 영상 필요한데 아직 없는지" 보고만 한다.
   if (stageInRange('g4') && !isStageComplete(cuts, 'g4')) {
-    const needVideo = cuts.filter(c => c.g2 && !c.hasVideo)
-    if (needVideo.length) {
-      log('G4', `수동 제작 대기 — 컷 ${needVideo.map(c => c.no).join(',')} (Veo/Flow 직접 제작 후 영상 탭에서 업로드)`)
+    const needVeo = cuts.filter(c => needsGenImage(c) && c.g2 && !c.hasVideo)
+    if (needVeo.length) {
+      log('G4', `Veo 수동 제작 대기 — 컷 ${needVeo.map(c => c.no).join(',')} (Veo/Flow 제작 후 영상 탭 업로드)`)
     }
   }
 
@@ -199,7 +216,8 @@ async function checkAndAdvance() {
   const waitingG1 = cuts.length && !cuts.some(c => c.g1) ? 'G1 승인된 컷이 아직 없음' : null
   const waitingG2 = cuts.filter(c => c.hasImage && !c.g2).map(c => c.no)
   const waitingG3 = cuts.filter(c => c.hasAudio && !c.g3).map(c => c.no)
-  const waitingG4 = cuts.filter(c => c.hasVideo && !c.g4).map(c => c.no)
+  // 메이킹 유형 컷(GRAPHIC/CAPCUT/BROLL)은 g4 승인 버튼이 없다 — mp4 있으면 완료로 취급하므로 제외
+  const waitingG4 = cuts.filter(c => c.hasVideo && !c.g4 && !isMakingType(c)).map(c => c.no)
   if (waitingG1) log('승인대기', waitingG1)
   if (waitingG2.length) log('승인대기', `G2(이미지 선택) — 컷 ${waitingG2.join(',')}`)
   if (waitingG3.length) log('승인대기', `G3(음성) — 컷 ${waitingG3.join(',')}`)
@@ -213,7 +231,7 @@ async function checkAndAdvance() {
     if (isStageComplete(cuts, 'g5')) {
       log('G5', '이미 완료된 단계 — 스킵')
     } else {
-      const allG4Approved = cuts.length > 0 && cuts.every(c => c.g4)
+      const allG4Approved = cuts.length > 0 && cuts.every(c => cutStageDone(c, 'g4'))
       if (allG4Approved && !g5Triggered) {
         g5Triggered = true
         log('G5', '전체 컷 G4 승인 완료 — 편집메타/SRT/합성 실행')

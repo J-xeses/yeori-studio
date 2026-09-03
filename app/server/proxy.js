@@ -5471,10 +5471,17 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     fs.mkdirSync(path.dirname(metaPath), { recursive: true })
     fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8')
 
-    const srtRes = await selfFetch('/api/generate-srt', {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
-    })
-    if (srtRes.status !== 200) return res.status(srtRes.status).json({ step: 'generate-srt', ...srtRes.body })
+    // 음성이 있는 컷이 하나도 없으면(전 컷 텍스트/DM목업/BGM만) SRT 생략 —
+    // 자막은 CapCut에서 CP 텍스트로 직접 넣는 유형. audioDir 자체가 없어 generate-srt가 404.
+    const hasVoice = cuts.some(c => String(c.dialogue || '').trim() || String(c.narration || '').trim())
+    let srtBody = { skipped: '음성 없는 에피소드 — SRT 생략' }
+    if (hasVoice) {
+      const srtRes = await selfFetch('/api/generate-srt', {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
+      })
+      if (srtRes.status !== 200) return res.status(srtRes.status).json({ step: 'generate-srt', ...srtRes.body })
+      srtBody = srtRes.body
+    }
 
     const concatRes = await selfFetch('/api/concat-video', {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
@@ -5490,7 +5497,7 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     // G1~G4와 동일한 패턴으로 gpoints에 G5 완료 기록 — 이게 없으면 concat까지 성공해도
     // summary.g5가 계속 0으로 남아 "G5 미완료"로 잘못 보고됨(2026-08-17 발견).
     const approvedCount = approveGForCuts(episodeCode, cuts, 'g5')
-    res.json({ success: true, srt: srtRes.body, concat: concatRes.body, deliverable, approvedCount })
+    res.json({ success: true, srt: srtBody, concat: concatRes.body, deliverable, approvedCount })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
