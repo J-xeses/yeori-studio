@@ -17,11 +17,14 @@ export function isV3Format(raw) {
 function parseCutHeaderMeta(headerRest) {
   const lipsync = /★\s*립싱크/.test(headerRest)
   let rest = headerRest.replace(/★\s*립싱크/g, '').trim()
+  // [CUT N]  GRAPHIC — 훅 텍스트 / 5초  →  헤더에 컷 타입이 명시된 경우(v3.0 포맷)
+  const typeM = rest.match(/^\s*(GRAPHIC|CAPCUT|BROLL|YEORI|PIP)\b/i)
+  const headerType = typeM ? typeM[1].toUpperCase() : ''
   const emDashIdx = rest.search(/[—-]/)
   if (emDashIdx > -1) rest = rest.slice(emDashIdx + 1).trim()
   const slashIdx = rest.lastIndexOf('/')
   const cutTitle = (slashIdx > -1 ? rest.slice(0, slashIdx) : rest).trim()
-  return { cutTitle, lipsync }
+  return { cutTitle, lipsync, headerType }
 }
 
 function splitV3Cuts(raw) {
@@ -38,8 +41,8 @@ function splitV3Cuts(raw) {
     const headerM = line.match(V3_CUT_HEADER_RE)
     if (headerM) {
       flush()
-      const { cutTitle, lipsync } = parseCutHeaderMeta(headerM[2] || '')
-      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
+      const { cutTitle, lipsync, headerType } = parseCutHeaderMeta(headerM[2] || '')
+      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, headerType, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
       section = 'main'
       continue
     }
@@ -107,8 +110,14 @@ function pipelineCodeToCutType(plCode) {
 // 구분할 수 없다 — 그 결과 studio_run_g2가 imagePrompt가 비어있지 않다는 이유만으로 이런 컷까지
 // Flow 생성 대상에 넣어버리는 문제를 2026-08-15 실측(IG_RL_E02)으로 확인함. IP 섹션에 "이미지
 // 생성 불필요"라고 명시된 경우는 PL 코드보다 이 마커를 우선해 CAPCUT으로 분류한다.
-function inferCutType(plCode, ip) {
+function inferCutType(plCode, ip, headerType) {
+  // 1순위: 컷 헤더에 타입 명시 ([CUT N]  GRAPHIC — …, v3.0 포맷)
+  if (['GRAPHIC', 'CAPCUT', 'BROLL', 'YEORI', 'PIP'].includes(headerType)) return headerType
+  // 2순위: IP 섹션 마커 — "GRAPHIC 타입 — …" / "CAPCUT 타입 — …" / "이미지 생성 불필요"
+  const ipM = String(ip || '').match(/\b(GRAPHIC|CAPCUT|BROLL)\s*타입\b/i)
+  if (ipM) return ipM[1].toUpperCase()
   if (/이미지\s*생성\s*불필요/.test(ip || '')) return 'CAPCUT'
+  // 3순위: PL 코드 접두사 (BR_/GR_/CC_/PIP_), 그 외 YEORI
   return pipelineCodeToCutType(plCode)
 }
 
@@ -138,7 +147,7 @@ export function parseCutsV3(raw) {
     // "없음"/"(작성 필요)" 플레이스홀더는 빈 값으로. 메이킹 탭이 이 값이 있는 컷에만
     // 손글씨 오버레이 섹션을 노출하고, 위치/말풍선/타이밍 등 시각 상세를 형성한다.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
-    const cutType = inferCutType(fields.PL, ip)
+    const cutType = inferCutType(fields.PL, ip, rc.headerType)
 
     return {
       id: `cut-${rc.no}`,

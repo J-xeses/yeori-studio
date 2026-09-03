@@ -189,7 +189,7 @@ async function checkAndAdvance() {
     if (isG3Complete(cuts)) {
       log('G3', '이미 완료된 단계 — 스킵')
     } else {
-      const g3Candidates = cuts.filter(c => c.g1 && !c.hasAudio)
+      const g3Candidates = cuts.filter(c => c.g1 && needsG3(c) && !c.hasAudio)
       if (g3Candidates.length) {
         const cutIds = g3Candidates.map(c => c.no)
         log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
