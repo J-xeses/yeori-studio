@@ -1,15 +1,31 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-09-02
+> 마지막 업데이트: 2026-09-04
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 >
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
-> 세부는 항상 하단 로그 기준. 2026-09-02 현재 마지막 로그 = "2026-09-02
-> (downloads 폴더 위계 개편 v3 — 브랜드/플랫폼/시리즈/코드/번호폴더)" 절.
+> 세부는 항상 하단 로그 기준. 최신 로그(2026-09-03~04) = "## 2026-09-02 (영상 =
+> 수동 제작 전환)" 절 아래 `### 릴스 최종화 모듈` ~ `### 실행 이원화` 소절.
 
 ---
 
-## 📌 현재 작업 중 / 다음 (2026-09-02 기준)
+## 📌 현재 작업 중 / 다음 (2026-09-04 기준)
+
+**2026-09-03~04: 화면녹화 + 릴스 최종화 파이프라인 구축.**
+- **screen-scenario** — 생성도구(Flow/ElevenLabs) 화면을 스크립트로 조작·녹화. 메이킹 탭
+  CAPCUT 컷 "자막 자동 녹화" 버튼(`8f15ef8`) → `POST /api/screen-scenario`(SSE).
+  녹화는 **CDP `Page.startScreencast`**(페이지 픽셀 직접, 창 겹침 무관, `3016d13`), 접속은
+  **`cdp` 드라이버**(대상 탭 CDP WS 직결 — `puppeteer.connect` OOPIF 행 8분→1초, `eb5f4b2`).
+- **릴스 최종화 모듈** (`server/lib/reelFinalize.js`, `d3f8c79`) — 파싱된 컷 + `05_video/cut_NN.mp4`
+  → 컷별 편집 판단(레터박스/자막/SFX) → concat → **손글씨 오버레이 자막(컬러 이모지·데코, `dc3fa71`)**
+  + SFX(효과음 모음집 가이드 60개+ 규칙) → `07_output/{CODE}_final.mp4`. 메이킹 탭 "🎬 릴스 최종본" 버튼.
+- **start_gen.bat 재작성** (`eb5f4b2`) — LF→CRLF(클릭 즉시 종료 버그), 프로필 경로를 cdp 드라이버와 일치.
+- 레퍼런스 = `0808.mp4`(8월 손제작 R03). 검증 = IG_R03(ep98).
+- **남은 것**: BGM 트랙 자산 · 웹툰 GRAPHIC 컷 소스 · Flow 실사이트 셀렉터 실기 · 말풍선/데코 배치.
+
+---
+
+### (이전) 2026-09-02 기준
 
 **2026-09-02: 영상 생성 = 수동 전환.** Flow/Veo puppeteer가 벤더 UI 변경으로 계속 깨져서
 파이프라인 자동 영상 생성을 접음. 이제 사람이 Veo/Flow에서 직접 만들고 "영상 만들기" 탭
@@ -642,9 +658,9 @@ BROLL=`download_broll_cut`, TTS=`studio_run_g3`, concat=`studio_run_g5` 전부 A
   htmlFile 생략 시 CP/나레이션으로 검정배경+텍스트 템플릿 자동 채움 → HTML→헤드리스 캡처→mp4.
   G3(cut1 TTS)·G4(cut4,5)·메이킹 컷 자동완료 → **G5 concat → `ep98_raw.mp4` 진짜 60초 3.3MB**
   (스크립트 목표 60s 정확히 일치) + `ep98.srt`.
-- **영상 직접 제작 컷 G2 스킵** (`<g2skip>`): YEORI 컷을 시작프레임 없이 text→video로 만들면
+- **영상 직접 제작 컷 G2 스킵** (`b24f839`): YEORI 컷을 시작프레임 없이 text→video로 만들면
   스틸이 없어 "G2 이미지 대기"로 남던 것 → `stageApplies(c,'g2') = needsGenImage && !hasVideo`.
-- **CAPCUT 컷 2,3 = 화면 녹화 대신 HTML 재현 (커밋 `<screenscenario>`)**: Flow/ElevenLabs
+- **CAPCUT 컷 2,3 = 화면 녹화 대신 HTML 재현 (커밋 `98b612d`)**: Flow/ElevenLabs
   화면을 실제 녹화 안 하고 CSS @keyframes 재현 HTML(`01_script/rl03_screen.html`)을
   `make_graphic_cut`(htmlFile + motion=type-in)이 프레임 단위 캡처 → cut_02(9s, Flow 프롬프트
   타이핑+이미지 그리드 스크롤) · cut_03(14s, ElevenLabs 타이핑+재생+파형+"⚠Adam(남성)" 반전+💧).
@@ -655,7 +671,7 @@ BROLL=`download_broll_cut`, TTS=`studio_run_g3`, concat=`studio_run_g5` 전부 A
 - **남은 것**: pipeline-leader가 GRAPHIC/CAPCUT 컷에 `make_graphic_cut`을 자동 호출하도록 배선
   (현재는 MakingTab UI 또는 수동 curl). 화면 재현 HTML은 컷마다 손으로 작성(템플릿화 여지).
 
-### 실제 화면조작+녹화 모듈형 아키텍처 (2026-09-03, `<screenarch>`)
+### 실제 화면조작+녹화 모듈형 아키텍처 (2026-09-03, `8916822`)
 HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scripts/screen-scenario/`:
 - **시나리오 = 도구 무관 액션 JSON** (`scenarios/*.json`): `{action:'type', target:'text_field',
   text, cps}` 등. `target`은 `selectors` 맵으로 해석(브라우저=CSS/xpath/text,
@@ -666,7 +682,7 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   `gamebar`(Win+Alt+R) / `obs`(WebSocket v5).
 - `node scripts/screen-scenario/run.js <s.json> --ep 98 --cut 3 [--driver x --recorder y --debug-port N]`
   → `mediaPaths.videoDir(ep)/cut_NN.mp4` 정규화 저장.
-- **target 자동 접속 (`<connectmode>`)**: 시나리오 `"target":"flow"|"elevenlabs"|{tool,path}` →
+- **target 자동 접속 (`2504cff`)**: 시나리오 `"target":"flow"|"elevenlabs"|{tool,path}` →
   새 Chrome 대신 **디버깅 Chrome(9222, 로그인된 flow 프로필)에 접속**(connectBrowser 패턴),
   도구 탭 재사용/새 탭. `{url}`/`{html}`이면 격리된 새 Chrome. teardown은 disconnect(안 닫음).
 - 검증: `_selftest`(launch+native) 통과 · connect 모드(9222 Chrome → elevenlabs 탭 접속·생성) 확인.
@@ -682,7 +698,7 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   record 라디오 선택 시 목록 로드. 완료 후 videoStatus 폴링이 g4 자동 마킹.
 - **시나리오 매핑**: `rl03_cut2_flow.json`→컷2, `rl03_cut3_elevenlabs.json`→컷3
   (`for:{cut,episodeCode:"IG_R03"}`).
-### 녹화 방식 근본 수정 — CDP screencast (2026-09-03, 커밋 `<cdpfix>`)
+### 녹화 방식 근본 수정 — CDP screencast (2026-09-03, 커밋 `3016d13`)
 - **문제**: 8f15ef8의 gdigrab 검증은 틀렸음. gdigrab은 **데스크톱 좌표 영역**을 캡처 →
   그 자리에 다른 창(파일 탐색기 등)이 있으면 그게 녹화됨. `cut_02.mp4`가 Flow가 아닌
   탐색기 화면이었음. "파일 크기만으로 검증"도 오류(엉뚱한 창도 파일은 생성됨).
@@ -700,6 +716,13 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
 - **검증(실측)**: IG_R03 컷2 — proxy `POST /api/screen-scenario` → connect 모드 Flow 탭
   → CDP screencast → 1080×1920 9s `cut_02.mp4`. **추출 프레임 육안 확인 = Google Flow
   웹 UI**(좌측 네비·서여리 이미지 그리드·프롬프트바). 프레임 JPEG ~230KB(단색 아님).
+
+### screen-scenario 안정화 (2026-09-03~04, 커밋 `ec7f892`)
+- `puppeteer.connect()` 하드 타임아웃 40s + 1회 재시도 → 실패 시 "디버깅 Chrome 재시작" 안내(hint).
+- **프레임 하트비트**: `Page.startScreencast` 는 화면 변화 시에만 프레임을 줌 → 정적 wait 구간에
+  결과 영상이 짧아짐. 130ms 갭이면 `Page.captureScreenshot` 강제(최소 ~8fps). duration 정확.
+- **선택 스텝**: `step.optional=true` 면 실패해도 계속(재생 버튼처럼 생성 여부에 따라 없을 수 있는 것).
+- `rl03_cut3_elevenlabs`: 한국어 UI 셀렉터('주요 텍스트 영역' / '음성 생성'), 로그인 필요.
 
 ### connect 8분→1초 — cdp 드라이버 (2026-09-03, 커밋 `eb5f4b2`)
 - **문제**: `puppeteer.connect()` 가 브라우저 전체 attach 하면서 Flow/ElevenLabs 의
@@ -722,7 +745,7 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   ASCII 전용, 프로필 경로 드라이버와 일치(`downloads/flow/chrome-profile-main`),
   `timeout`→`ping`(stdin 안전). `.gitattributes`에 `*.bat eol=crlf` 강제.
 
-### 릴스 최종화 모듈 (2026-09-03, 커밋 `d3f8c79`)
+### 릴스 최종화 모듈 (2026-09-03~04, 커밋 `d3f8c79` → `dc3fa71`)
 파싱된 컷 + `05_video/cut_NN.mp4` → **컷별 편집 판단 → 자막 번인 → SFX → `07_output/{CODE}_final.mp4`**.
 - **`server/lib/reelFinalize.js`**:
   - `decideCut(cut)`: **fit**(화면녹화 SP=IN.SC/SH_SCR → 레터박스 contain, 나머지 채움 cover)
@@ -755,22 +778,32 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
 - 남은 것: BGM 트랙 자산(CapCut) · 웹툰 GRAPHIC 소스(cut6/7) · 말풍선/데코 배치 미세조정 ·
   회상 진입/종료 SFX 페어링·빌드업 시퀀스(가이드 팁, 미구현).
 
-### 실행 이원화 (커밋 `<batsplit>`)
+### 실행 이원화 (커밋 `8bf37b1`, 재작성 `eb5f4b2`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
   **task-queue-worker**(에이전트, 신규) · `npm run studio`(:3001+:5173) · 제작 탭(스튜디오/커터/
   매트릭스/트렌드)을 기본 브라우저로. **Flow Chrome 안 엶.**
-- **`start_gen.bat`** (생성/편집, 신규): 제작 코어 `:3001` 확인 · Chrome(`.chrome-profile-flow`)로
-  Flow + 스튜디오 + ElevenLabs 탭 · CapCut 데스크톱 실행. 서버·git 없음. 루트 래퍼도 추가.
+- **`start_gen.bat`** (생성/편집): 제작 코어 `:3001` 확인 · Chrome 디버깅 세션(9222,
+  `--user-data-dir=downloads/flow/chrome-profile-main` — **cdp 드라이버가 접속하는 그 프로필**)로
+  Flow + ElevenLabs + 스튜디오 탭 · CapCut. 서버·git 없음. 루트 래퍼도 추가.
+- ⚠ **CRLF 필수**(`eb5f4b2`): LF 줄바꿈이면 cmd 가 `if()` 괄호블록·`for` 루프를 못 파싱해
+  **더블클릭 즉시 종료**. `.gitattributes` `*.bat *.cmd eol=crlf` 로 강제. ASCII 전용,
+  `timeout`→`ping`(stdin 안전). `app/start_yeori.bat`·`sync-content.bat` 도 CRLF 로 정규화.
 - 백업: 구 통합본은 git 히스토리(`fa7508d` 직전).
 
 **이월/다음**:
 - **Gemini 이미지 자동 생성 브로커** — 이미지는 자동 유지 방침이나 `api/gemini.js`가 아직
   레퍼런스 이미지 파트 미지원(text-only). `/api/generate-cut` + Vercel US 릴레이 + StudioTab
   버튼 재연결 필요. 미착수.
-- **도구 실행 이원화** — `start_yeori.bat`(트렌드/스튜디오/커터/에이전트, 브라우저 없음) /
-  별도 장치(Flow/CapCut/ElevenLabs). 큐 폴더 `downloads/gen-queue/` OneDrive 동기. 제안됨, 미착수.
+- **도구 실행 이원화** — ✅ 완료(`8bf37b1`/`eb5f4b2`). 큐 폴더 OneDrive 동기 방식은 미채택
+  (대신 화면 자동화 = screen-scenario + cdp 드라이버).
 - **유료 Veo API**(~$32~80/mo) / Google AI Pro $19.99/mo 구독 결정 — 보류("당분간 수동").
 - LF_T01(서여리+한지아) 실사용 테스트는 이미지 생성 경로 정리 후.
+- **BGM 트랙 자산** — `_shared/bgm/` 비어있음. 로파이 트랙 몇 개 넣으면 릴스 최종화가 자동 믹싱
+  (`bgmFile` 파라미터·자동탐색 배선됨, -18dB 루프+페이드).
+- **릴스 최종화 다음** — 말풍선/데코 배치 미세조정 · 회상 진입/종료 SFX 페어링 · drum roll→impact
+  빌드업 시퀀스(효과음 가이드 심화 팁) · 웹툰 GRAPHIC 컷 소스 품질(`make_graphic_cut`).
+- **screen-scenario 다음** — Flow 실사이트 셀렉터는 프로젝트 페이지 기준으로 실기 검증 필요
+  (Flow 생산은 결정적 `rl03_screen.html` 유지) · gamebar/obs 레코더 실기 미검증.
 
 ### 남은 후보
 - ScriptGen 캐릭터 UI(목록·상태·새 캐릭터 추가), 컷 카드 CH 옆 인물 뱃지
