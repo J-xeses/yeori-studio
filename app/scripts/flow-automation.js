@@ -226,12 +226,15 @@ function charRefAbs(rel) {
   return fs.existsSync(abs) ? abs : null
 }
 // IP 프롬프트에 인물별 descriptor를 삽입한다.
-//  · "WOMAN 1 (Yeori):" / "WOMAN 2 (Jia):" 라벨이 있으면 각 라벨 줄 뒤에 매칭 descriptor
-//  · 없으면 맨 앞에 등장 인물 descriptor를 순서대로 나열
+//  · "WOMAN 1 (Yeori):" / "WOMAN LEFT (Jia):" / "WOMAN (Yeori):" 처럼 번호·위치·아무것도
+//    없는 라벨이 있으면 각 라벨 줄 뒤에 매칭 descriptor 삽입 (2026-09-04: 숫자만 받던 걸
+//    LEFT/RIGHT 등 임의의 위치어까지 받도록 확장 — 안 넓혔을 때 라벨 매칭이 통째로 실패해
+//    두 인물 descriptor가 프롬프트 맨 앞에 뭉쳐 붙는 버그가 있었음)
+//  · 그래도 라벨이 하나도 없으면 맨 앞에 등장 인물 descriptor를 순서대로 나열
 function injectCharacterDescriptors(prompt, cutChars) {
   const chars = (cutChars || []).filter(c => c && c.descriptor)
   if (!chars.length) return prompt
-  const labelRe = /^(\s*WOMAN\s*\d+\s*\(([^)]+)\)\s*:?.*)$/gim
+  const labelRe = /^(\s*WOMAN\s*[\w-]*\s*\(([^)]+)\)\s*:?.*)$/gim
   if (labelRe.test(prompt)) {
     labelRe.lastIndex = 0
     return prompt.replace(labelRe, (line, full, nameInParen) => {
@@ -472,7 +475,7 @@ async function main() {
   // ── 캐릭터 descriptor 주입 (다중 인물 지원) ──────────────────────────
   //  · prompts.json의 cut.characters(run-flow가 CH 필드에서 해석) 우선
   //  · 없으면 characters.json의 primary(서여리) 1명으로 폴백
-  //  · IP에 "WOMAN 1 (Yeori):" 라벨이 있으면 각 라벨 뒤에 해당 descriptor 삽입,
+  //  · IP에 "WOMAN 1 (Yeori):"/"WOMAN LEFT (Yeori):" 같은 라벨이 있으면 각 라벨 뒤에 해당 descriptor 삽입,
   //    없으면 맨 앞에 등장 인물 descriptor를 순서대로 나열
   const registry = loadCharacterRegistry()
   const primaryChar = Object.values(registry).find(c => c.primary) || Object.values(registry)[0] || null
