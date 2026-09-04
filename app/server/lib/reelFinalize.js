@@ -10,10 +10,15 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import * as mp from './mediaPaths.js'
 
-const FONT = 'Malgun Gothic'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// 손글씨체 — 레퍼런스(0808.mp4) 스타일. app/assets/fonts 번들.
+const FONT = 'Gaegu'
+const FONTS_SRC = path.join(__dirname, '..', '..', 'assets', 'fonts')          // Gaegu-Bold.ttf 등
+const EMOJI_FONT_WIN = 'C:\\Windows\\Fonts\\seguiemj.ttf'                       // 컬러 이모지 폴백(COLR/CPAL)
 
 // ── 효과음 규칙: 대본 "효과음:" 텍스트의 키워드 → _shared/sfx 파일 ──────
 // at: 'start' | 'mid' | 'end'  (컷 구간 내 배치 지점)
@@ -80,8 +85,8 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Cap,${FONT},60,&H00FFFFFF,&H00FFFFFF,&H00202020,&H90000000,-1,0,0,0,100,100,0,0,1,5,3,2,70,70,300,1
-Style: Punch,${FONT},66,&H003C3CF5,&H00FFFFFF,&H00FFFFFF,&H90000000,-1,0,0,0,100,100,0,0,1,6,3,2,70,70,300,1
+Style: Cap,${FONT},66,&H00FFFFFF,&H00FFFFFF,&H00303030,&H80000000,-1,0,0,0,100,100,0,0,1,5,3,2,80,80,220,1
+Style: Punch,${FONT},72,&H003C3CF5,&H00FFFFFF,&H00FFFFFF,&H80000000,-1,0,0,0,100,100,0,0,1,6,3,2,80,80,220,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -96,13 +101,10 @@ function assTime(sec) {
   return `${h}:${String(m).padStart(2, '0')}:${ss.toFixed(2).padStart(5, '0')}`
 }
 
-// 이모지 제거 — libass 는 컬러 이모지를 렌더 못해 두부(□)가 됨. 자막용만 정제.
-// 화살표(→ ← ↑ ↓, U+2190–21FF)는 의미가 있어 남긴다.
-function stripEmoji(s) {
-  return String(s)
-    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim()
+// 이모지는 유지한다(레퍼런스 스타일). seguiemj.ttf 폴백으로 컬러 렌더.
+// variation selector(FE0F)·ZWJ(200D)만 정리 — libass 에서 폭 계산이 어긋날 수 있어서.
+function cleanCaption(s) {
+  return String(s).replace(/[\u{FE0F}\u{FE0E}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
 
 // ── 컷별 편집 판단 ──────────────────────────────────────────────────
@@ -133,8 +135,9 @@ export function decideCut(cut) {
       segments: segs.map((t, i) => {
         // 멀티세그 + 반전이면 마지막(펀치라인)만 빨강, 앞은 흰색
         const segStyle = isPunch ? (segs.length === 1 || i === segs.length - 1 ? 'Punch' : 'Cap') : 'Cap'
-        let burn = stripEmoji(t).replace(/\s+/g, ' ')
-        if (/\s→\s/.test(burn) && burn.length > 14) burn = burn.replace(/\s→\s/, '\\N→ ') // 화살표에서 줄바꿈
+        let burn = cleanCaption(t)
+        if (/\s→\s/.test(burn) && burn.length > 16) burn = burn.replace(/\s→\s/, ' →\\N') // 화살표 뒤 줄바꿈
+        burn = `"${burn}"`   // 레퍼런스 스타일 — 따옴표로 감싸기
         return { raw: t, burn, style: segStyle }
       }),
     }
@@ -246,7 +249,7 @@ export async function finalizeReel(p) {
   await ff(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', concat])
   log(`concat: ${decisions.length}컷 · ${totalDur.toFixed(1)}s`)
 
-  // 3) 자막 .ass
+  // 3) 자막 .ass — 멀티세그는 누적 스택(레퍼런스처럼 줄이 쌓임). 각 구간은 겹치지 않게.
   let ass = assHeader()
   let capCount = 0
   for (const d of decisions) {
@@ -255,10 +258,14 @@ export async function finalizeReel(p) {
     const per = d.durSec / segs.length
     segs.forEach((seg, i) => {
       const st = d.startSec + i * per + 0.3
-      const en = d.startSec + (i + 1) * per - 0.05
-      const text = String(seg.burn).replace(/\n/g, '\\N')
-      const style = seg.style || d.caption.style || 'Cap'
-      ass += `Dialogue: 0,${assTime(st)},${assTime(en)},${style},,0,0,0,,${text}\n`
+      const en = d.startSec + (segs.length === 1 || i === segs.length - 1 ? d.durSec : (i + 1) * per) - 0.05
+      // 지금까지의 세그를 위→아래로 쌓아 하나의 Dialogue 로 (스타일이 섞이면 마지막 줄만 색상 태그)
+      const lines = segs.slice(0, i + 1).map((s, j) => {
+        const body = String(s.burn).replace(/\n/g, '\\N')
+        return (s.style === 'Punch' && (segs[j].style === 'Punch')) ? `{\\c&H3C3CF5&}${body}{\\c}` : body
+      })
+      const style = segs.some((s) => s.style === 'Punch') ? 'Cap' : (seg.style || 'Cap')
+      ass += `Dialogue: 0,${assTime(st)},${assTime(en)},${style},,0,0,0,,${lines.join('\\N')}\n`
       capCount++
     })
   }
@@ -266,6 +273,16 @@ export async function finalizeReel(p) {
   fs.writeFileSync(assPath, ass, 'utf-8')
   const assTmp = path.join(tmp, 'subs.ass')
   fs.writeFileSync(assTmp, ass, 'utf-8')
+  // 폰트: 번들 손글씨체 + 컬러 이모지 폴백을 tmp/fonts/ 로 모아 fontsdir 로 지정
+  const fontsTmp = path.join(tmp, 'fonts')
+  fs.mkdirSync(fontsTmp, { recursive: true })
+  try {
+    for (const f of fs.readdirSync(FONTS_SRC)) {
+      if (/\.(ttf|otf|ttc)$/i.test(f)) fs.copyFileSync(path.join(FONTS_SRC, f), path.join(fontsTmp, f))
+    }
+  } catch { /* noop */ }
+  if (fs.existsSync(EMOJI_FONT_WIN)) { try { fs.copyFileSync(EMOJI_FONT_WIN, path.join(fontsTmp, 'seguiemj.ttf')) } catch { /* noop */ } }
+  const SUBS_VF = 'subtitles=subs.ass:fontsdir=fonts'
 
   // 4) 효과음 + BGM 믹스
   const sfxInputs = []      // ffmpeg -i 인자
@@ -328,11 +345,11 @@ export async function finalizeReel(p) {
       '-map', '0:v', '-map', '[aout]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k', withSfx,
     ])
     // 자막 번인 (cwd=tmp 로 상대경로 → Windows 드라이브 콜론 회피)
-    await ff(['-i', withSfx, '-vf', 'subtitles=subs.ass',
+    await ff(['-i', withSfx, '-vf', SUBS_VF,
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-c:a', 'copy',
       '-movflags', '+faststart', finalOut], { cwd: tmp })
   } else {
-    await ff(['-i', concat, '-vf', 'subtitles=subs.ass',
+    await ff(['-i', concat, '-vf', SUBS_VF,
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-c:a', 'copy',
       '-movflags', '+faststart', finalOut], { cwd: tmp })
   }
