@@ -58,7 +58,8 @@ downloads/
 지난 이틀(8/31~9/1) 세션에서 메이킹 탭 자동 편집 파이프라인을 대거 완성함
 (손글씨 재작업, 유형별 자동실행, source-to-cut, 이중 모션 가드, finishMode 콘텐츠별
 분기, editIntent 컷별 켄번스, 다중 캐릭터 시스템 등 — 아래 해당 날짜 로그 참조).
-관련 작업 로그 아티팩트: https://claude.ai/code/artifact/f9dc4b8e-b70c-4aa5-bd38-ed0284e09abb
+**메이킹 탭 가이드 아티팩트**(사용법 + 화면 지도 + 릴스 최종본 판단 규칙 + 9/3~4 작업 로그 +
+문제해결): https://claude.ai/code/artifact/f9dc4b8e-b70c-4aa5-bd38-ed0284e09abb
 
 ### 지금 이어할 것
 - **다중 캐릭터 puppeteer 검증** — Phase 1·2 로직/API는 검증됨, Flow 캐릭터 페이지
