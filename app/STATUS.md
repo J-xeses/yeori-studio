@@ -742,10 +742,18 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
 - **검증(IG_R03 실측)**: 63s 1080×1920, 자막 6개 번인, SFX 4개, 26초 소요. cut3 punchline
   "잠깐, 남자 목소리?!" 빨강 렌더·cut2 레터박스·cut1/7 자막 skip 프레임 육안 확인.
 - **레퍼런스 스타일 반영**(2026-09-04, 커밋 `0752a62`): 손제작 R03 `0808.mp4` 대조 →
-  자막 폰트 `Gaegu` 손글씨체(`app/assets/fonts`, fontsdir) · `"..."` 래핑 · 멀티세그 누적 스택 ·
-  반전 펀치라인 줄만 빨강 · MarginV 220 하단중앙. 이모지는 모노크롬(libass 한계 — 완전 컬러는
-  HTML→PNG 오버레이 전환 필요).
-- 남은 것: BGM 트랙 자산 없음(CapCut) · 컬러 이모지 · 웹툰 GRAPHIC 소스(cut6/7) · 손글씨 데코.
+  자막 폰트 `Gaegu` 손글씨체 · `"..."` 래핑 · 멀티세그 누적 스택.
+- **SFX 전면 확장 + 자막 컬러 이모지**(2026-09-04, 커밋 `dc3fa71`):
+  · `SFX_RULES` 8→60개+ ("AI연구소 효과음 모음집" 가이드 = `_shared/sfx/SFX_GUIDE.md`,
+    10개 카테고리 전 파일 매핑). `decideCut` 이 "효과음:" 필드 + SC/MD 추론. 같은 파일 3회+
+    금지(SFX_ALTS 변주), 자연소리 layer(-18dB, 컷 길이 페이드).
+  · **자막 = handwriting_overlay.py 경로**(captionMode 'overlay', 기본). libass 대신 PIL 로
+    렌더 → **컬러 이모지·손글씨체·데코 스티커(♡✨💧)**. 실패 시 ass 폴백. `enrichCutsFromScript`
+    가 대본 "손글씨 오버레이" 섹션에서 말풍선/색/데코 힌트 추출. `backing:false`(판/비네트 없이
+    흰 손글씨 + 외곽선). `handwriting_overlay.py` 에 `"signature":false`(채널 프레임 생략) 옵션.
+  · 검증(IG_R03): cut2 ✨ · cut3 😱🎙️💧 컬러 렌더, 배경 워시아웃 없음.
+- 남은 것: BGM 트랙 자산(CapCut) · 웹툰 GRAPHIC 소스(cut6/7) · 말풍선/데코 배치 미세조정 ·
+  회상 진입/종료 SFX 페어링·빌드업 시퀀스(가이드 팁, 미구현).
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
