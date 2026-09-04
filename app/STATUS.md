@@ -741,7 +741,11 @@ HTML 재현(위) 말고 **실제 사이트를 조작·녹화**할 때. `app/scri
   "릴스 최종본 생성"(SSE 로그 + 영상).
 - **검증(IG_R03 실측)**: 63s 1080×1920, 자막 6개 번인, SFX 4개, 26초 소요. cut3 punchline
   "잠깐, 남자 목소리?!" 빨강 렌더·cut2 레터박스·cut1/7 자막 skip 프레임 육안 확인.
-- 남은 것: BGM 트랙 자산 없음(CapCut) · 손글씨 데코(CapCut) · 컷 소스 자체 품질(cut5 워터마크 등).
+- **레퍼런스 스타일 반영**(2026-09-04, 커밋 `0752a62`): 손제작 R03 `0808.mp4` 대조 →
+  자막 폰트 `Gaegu` 손글씨체(`app/assets/fonts`, fontsdir) · `"..."` 래핑 · 멀티세그 누적 스택 ·
+  반전 펀치라인 줄만 빨강 · MarginV 220 하단중앙. 이모지는 모노크롬(libass 한계 — 완전 컬러는
+  HTML→PNG 오버레이 전환 필요).
+- 남은 것: BGM 트랙 자산 없음(CapCut) · 컬러 이모지 · 웹툰 GRAPHIC 소스(cut6/7) · 손글씨 데코.
 
 ### 실행 이원화 (커밋 `<batsplit>`)
 - **`start_yeori.bat`** (제작 코어): git sync · TREND RADAR(:3000) · Cloudflare Tunnel ·
