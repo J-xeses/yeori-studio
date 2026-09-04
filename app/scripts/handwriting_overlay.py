@@ -565,7 +565,7 @@ def run_cmd(cmd):
     return proc
 
 
-def process_video(input_path, output_path, scenes, canvas_size, work_dir):
+def process_video(input_path, output_path, scenes, canvas_size, work_dir, signature=True):
     W, H = canvas_size
     overlay_paths = []
     for i, sc in enumerate(scenes):
@@ -575,11 +575,12 @@ def process_video(input_path, output_path, scenes, canvas_size, work_dir):
         print(f"    씬 {i + 1}/{len(scenes)} 렌더링 완료 ({sc.get('time')})")
 
     # 서여리 시그니처(프레임+워터마크)는 씬 타이밍과 무관하게 영상 내내 표시되는
-    # 별도 레이어 — 투명 캔버스에 적용해서 테두리·워터마크만 남은 오버레이를 만든다.
-    signature_path = work_dir / "signature.png"
-    apply_yeori_signature(Image.new("RGBA", (W, H), (0, 0, 0, 0))).save(signature_path)
-    print("    서여리 시그니처(프레임+워터마크) 렌더링 완료")
-    overlay_paths.append(signature_path)
+    # 별도 레이어. config의 "signature": false 면 생략(릴스 최종화처럼 프레임 없이 자막만 얹을 때).
+    if signature:
+        signature_path = work_dir / "signature.png"
+        apply_yeori_signature(Image.new("RGBA", (W, H), (0, 0, 0, 0))).save(signature_path)
+        print("    서여리 시그니처(프레임+워터마크) 렌더링 완료")
+        overlay_paths.append(signature_path)
 
     filter_parts = [
         f"[0:v]scale={W}:{H}:force_original_aspect_ratio=decrease,"
@@ -591,8 +592,11 @@ def process_video(input_path, output_path, scenes, canvas_size, work_dir):
         label = f"v{i}"
         filter_parts.append(f"[{prev}][{i + 1}:v]overlay=0:0:enable='between(t,{start},{end})'[{label}]")
         prev = label
-    # 시그니처는 항상 표시(enable 조건 없음), 마지막 입력이므로 인덱스는 len(scenes)+1
-    filter_parts.append(f"[{prev}][{len(scenes) + 1}:v]overlay=0:0[vout]")
+    # 시그니처(있으면) — 씬 다음 마지막 입력. enable 조건 없이 항상 표시.
+    if signature:
+        filter_parts.append(f"[{prev}][{len(scenes) + 1}:v]overlay=0:0[vout]")
+    else:
+        filter_parts.append(f"[{prev}]null[vout]")
     filter_complex = ";".join(filter_parts)
 
     # 입력 영상 길이를 명시적으로 걸어 둔다 — 루프(-loop 1) 이미지 입력 + 복합
@@ -773,7 +777,8 @@ def main():
                 process_video_composite(input_path, output_path, items, canvas_size, Path(td))
             else:
                 print(f"[1/2] 씬 {len(items)}개를 렌더링하며 영상에 시간대별로 합성 중…")
-                process_video(input_path, output_path, items, canvas_size, Path(td))
+                process_video(input_path, output_path, items, canvas_size, Path(td),
+                              signature=bool(config.get("signature", True)))
         print(f"[2/2] 출력 완료: {output_path}")
     elif ext in image_exts:
         if mode == "bubbles":
