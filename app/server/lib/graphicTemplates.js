@@ -227,6 +227,84 @@ body {
   </div>`:''}
 </div>
 </body></html>`
+  },
+
+  // 실존 그룹/인물에 대한 "사실 정보 전달" 목적 카드 — AI 재현·합성 없이 텍스트만으로
+  // 구성한다. 출처·인용 목적 고지는 fields가 아니라 템플릿에 고정으로 박아 넣어서
+  // (fillable로 두면 매번 깜빡하고 빼먹을 수 있음) 항상 화면에 나오게 강제한다.
+  'info-source': {
+    label: '출처 표기 정보 카드',
+    styles: {
+      'news-light': {
+        label: '뉴스 라이트',
+        colors: { bg: '#f4f6fb', main: '#0f1729', sub: '#5b6472', accent: '#2563eb' }
+      },
+      'news-dark': {
+        label: '뉴스 다크',
+        colors: { bg: '#0f1729', main: '#ffffff', sub: '#8892b0', accent: '#64ffda' }
+      }
+    },
+    fields: ['title', 'fact1', 'fact2', 'fact3', 'source'],
+    generate: (fields, colors, duration) => `
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1920px; height:1080px;
+  background:${colors.bg};
+  display:flex; flex-direction:column;
+  justify-content:center;
+  font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+  position:relative;
+}
+.badge {
+  position:absolute; top:64px; left:120px;
+  display:inline-flex; align-items:center; gap:10px;
+  background:${colors.accent}; color:${colors.bg};
+  font-size:24px; font-weight:800; letter-spacing:3px;
+  padding:10px 22px; border-radius:8px;
+  animation:fadeIn 0.6s ease forwards;
+}
+.title {
+  margin:0 120px 48px; font-size:76px; font-weight:900;
+  color:${colors.main}; letter-spacing:-1px; line-height:1.2;
+  animation:fadeIn 0.6s ease forwards; animation-delay:0.15s; opacity:0;
+}
+.facts { margin:0 120px; display:flex; flex-direction:column; gap:28px; }
+.fact {
+  display:flex; align-items:flex-start; gap:20px;
+  font-size:38px; color:${colors.main}; line-height:1.5;
+  animation:fadeIn 0.6s ease forwards; opacity:0;
+}
+.fact .dot {
+  flex-shrink:0; width:14px; height:14px; border-radius:50%;
+  background:${colors.accent}; margin-top:14px;
+}
+.footer {
+  position:absolute; bottom:0; left:0; right:0;
+  background:rgba(0,0,0,${colors.bg === '#0f1729' ? '0.25' : '0.05'});
+  border-top:2px solid ${colors.accent};
+  padding:26px 120px; display:flex; align-items:center; gap:14px;
+  font-size:24px; color:${colors.sub};
+  animation:fadeIn 0.6s ease forwards; animation-delay:0.8s; opacity:0;
+}
+.footer b { color:${colors.main}; font-weight:700; }
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(16px); }
+  to { opacity:1; transform:translateY(0); }
+}
+</style></head><body>
+<div class="badge">ℹ️ INFO</div>
+<div class="title">${fields.title||''}</div>
+<div class="facts">
+  ${[fields.fact1, fields.fact2, fields.fact3].filter(Boolean).map((f, i) =>
+    `<div class="fact" style="animation-delay:${0.3 + i * 0.15}s"><span class="dot"></span><span>${f}</span></div>`
+  ).join('\n  ')}
+</div>
+<div class="footer">
+  <b>ℹ️ 정보 제공 목적의 인용</b> · 출처: ${fields.source || '(출처 입력 필요)'}
+</div>
+</body></html>`
   }
 };
 
