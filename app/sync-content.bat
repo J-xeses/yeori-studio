@@ -20,9 +20,11 @@ echo [1/3] studio-data.json / studio-secrets.json smart sync...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0smart-sync-state.ps1"
 
 :: [2/3] downloads/ media sync
+:: chrome-profile-* 는 살아있는 브라우저 런타임 프로필(잠금 파일 포함)이라 동기화 대상에서 제외.
+:: 켜진 채로 robocopy가 CrashpadMetrics.pma 등을 잡으려다 Access denied 무한 재시도에 빠지는 문제 있었음(2026-09-05).
 echo [2/3] downloads/ media sync...
-robocopy "%CLOUD%" "%LOCAL%" /E /XO /XD ".git" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
-robocopy "%LOCAL%" "%CLOUD%" /E /XO /XD ".git" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
+robocopy "%CLOUD%" "%LOCAL%" /E /XO /XD ".git" "chrome-profile-main" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
+robocopy "%LOCAL%" "%CLOUD%" /E /XO /XD ".git" "chrome-profile-main" /NP /TEE /LOG+:"%LOCAL%\..\sync-log.txt"
 
 :: [3/3] app/data/ sync (excluding studio-data.json handled above)
 echo [3/3] app/data/ sync...
