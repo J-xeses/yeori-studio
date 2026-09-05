@@ -2526,6 +2526,7 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
   const [fields, setFields] = useState({})
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
+  const [recommendedMd, setRecommendedMd] = useState('')
 
   // 이 컷의 대사/장면 텍스트 — 이 코드베이스엔 별도 caption 필드가 없어
   // 다른 곳(예: 2288행)과 동일한 우선순위로 narration/dialogue/scene에서 뽑는다.
@@ -2538,14 +2539,16 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
       .then(r => r.json())
       .then(data => {
         setTemplates(data)
-        // 참고: 현재 cut 객체엔 md(무드 코드) 필드가 없어 이 분기는 그 필드가
-        // 생기기 전까진 항상 스킵된다 — 생기면 바로 동작하도록 남겨둠.
-        if (cut.md) {
-          fetch(`${YEORI_SERVER}/api/graphic-recommend?md=${encodeURIComponent(cut.md)}`)
+        // 무드 코드(MD_JOY 등)는 대본 원문 "MD:" 필드에서 와서 cut.masterCode.md에
+        // 담긴다(750행 c.masterCode?.pl과 같은 자리) — 대본 단계에서 안 채웠으면 없을 수 있음.
+        const md = cut.masterCode?.md
+        if (md) {
+          fetch(`${YEORI_SERVER}/api/graphic-recommend?md=${encodeURIComponent(md)}`)
             .then(r => r.json())
             .then(rec => {
               setSelectedType(rec.type)
               setSelectedStyle(rec.style)
+              setRecommendedMd(md)
             })
             .catch(() => {})
         }
@@ -2627,6 +2630,11 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
 
             {/* 템플릿 선택 */}
             <label style={{ fontSize: 13, color: 'var(--accent-light)' }}>템플릿 카테고리</label>
+            {recommendedMd && (
+              <div style={{ fontSize: 12, color: 'var(--accent-light)', marginTop: 4 }}>
+                이 컷의 무드 <b>{recommendedMd}</b> 기준으로 자동 추천됨 — 마음에 안 들면 아래에서 바꾸세요
+              </div>
+            )}
             <div style={{ display: 'flex', gap: 8, marginTop: 6, marginBottom: 16, flexWrap: 'wrap' }}>
               {templates.map(t => (
                 <button

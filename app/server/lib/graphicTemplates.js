@@ -231,17 +231,19 @@ body {
 };
 
 // MD 코드 → 추천 템플릿+스타일
-// 주의: 2026-09-05 현재 스튜디오의 cut 객체엔 이 MD 코드에 대응하는 필드가 없다
-// (narration/dialogue/scene은 있지만 mood 코드 필드는 아직 없음). 그 필드가
-// 생기기 전까지 /api/graphic-recommend는 md 쿼리를 넘겨줄 호출자가 있을 때만 의미있고,
-// 없으면 항상 fallback(text-card/minimal)을 반환한다.
+// MD 코드 8종은 app/data/codebook.json의 "MD" 표가 원본(진짜 존재하는 값만 — 예전에
+// 여기 있던 MD_COM/MD_EMO는 codebook에 없는 코드라 지웠음, 2026-09-05).
+// cut.masterCode.md에 담겨 대본(스크립트) 원문의 "MD:" 필드에서 옴 — MakingTab.jsx의
+// GraphicCardGenerator가 그 값으로 이 API를 호출한다.
 const MD_RECOMMEND = {
-  'MD_INT': { type: 'stat-card', style: 'infographic' },
-  'MD_JOY': { type: 'mv-intro', style: 'pastel-dream' },
-  'MD_DRM': { type: 'text-card', style: 'gradient' },
-  'MD_COM': { type: 'mv-intro', style: 'bold-impact' },
-  'MD_SUR': { type: 'mv-intro', style: 'neon-dark' },
-  'MD_EMO': { type: 'text-card', style: 'dark-minimal' },
+  'MD_JOY': { type: 'mv-intro', style: 'pastel-dream' },   // 밝은 미소·에너지
+  'MD_SUR': { type: 'mv-intro', style: 'bold-impact' },    // 놀람·충격 — 임팩트 있게
+  'MD_STR': { type: 'mv-intro', style: 'neon-dark' },      // 자신감·단단함 — 힘있게
+  'MD_REL': { type: 'text-card', style: 'minimal' },       // 편안함·여유 — 담백하게
+  'MD_CUR': { type: 'text-card', style: 'gradient' },      // 호기심 — 궁금증 유발 톤
+  'MD_DRM': { type: 'text-card', style: 'gradient' },      // 몽환적 — 이름 그대로 "드림" 톤과도 맞음
+  'MD_SAD': { type: 'text-card', style: 'dark-minimal' },  // 잔잔한 우울 — 차분하고 어둡게
+  'MD_INT': { type: 'stat-card', style: 'infographic' },   // 몰입·진지함 — 분석적으로
 };
 
 export function generateHTML(type, style, fields, duration = 10) {
