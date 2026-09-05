@@ -46,6 +46,12 @@
   robocopy가 돌면 crashpad_handler.exe가 `CrashpadMetrics.pma`를 잡고 있어 30초 재시도가
   무한 반복 → `start_yeori.bat`이 `[pre-2]` 단계에서 계속 멈춤. 좀비 프로세스 정리 +
   동기화 대상에서 해당 폴더 `/XD` 제외.
+- **범용 화면 녹화 패널 추가** (`ScreenRecorderPanel`, `fd67536`) — 컷·에피소드에 안 묶인
+  화면 녹화 UI. 기존 `screenRecorder.js`(ffmpeg gdigrab) + `/api/recording/start`의
+  `outputPath` 직접 지정 분기를 그대로 재사용(백엔드 변경 없음). 메이킹 탭 상단에 카드로
+  배치, 저장 위치 고정 `downloads/seoyeori/YU/sources/`. LF_T01 배경 클립 작업 중
+  "화면에 보이는 걸 녹화해 sources/에 저장"이 반복될 일이라 판단해 만듦 — 유튜브 전용이
+  아니라 범용(무엇을 녹화할지는 항상 사용자가 판단).
 
 ### 지금 이어할 것
 - **LF_T01 배경장면 재생성** — KATSEYE/ILLIT/르세라핌 배경 3개를 실명·로고 없는 일반
