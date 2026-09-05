@@ -2267,6 +2267,7 @@ export default function MakingTab() {
 
               {renderTypeStyleCard()}
               {renderAutoRunCard()}
+              <ScreenRecorderPanel />
 
               <div className={s.card}>
                 <div className={s.cardTitle}>전체 컷 목록</div>
@@ -2709,5 +2710,91 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
         </div>
       )}
     </>
+  )
+}
+
+// ── ScreenRecorderPanel — 컷·에피소드와 무관한 범용 화면 녹화 ──────────────────
+// screenRecorder.js(ffmpeg gdigrab)는 이미 화면 아무거나 지정 경로로 녹화하는 범용
+// 엔진이고, /api/recording/start도 outputPath만 넘기면 CapCut/BROLL 같은 특수 모드
+// 없이 그대로 동작한다(1819행 `else if (outputPath)` 분기) — 새 백엔드 로직 없이
+// 이 패널만 얹은 이유. "필요한 창을 미리 띄워두고 시작" 방식이라 CapCut 녹화 패널과
+// 사용법이 같다. 기본 저장 위치는 downloads/seoyeori/YU/sources/(임시 소스 폴더).
+function ScreenRecorderPanel() {
+  const [filename, setFilename] = useState('')
+  const [recording, setRecording] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+
+  const defaultName = () => `rec_${new Date().toISOString().replace(/[:.]/g, '-')}.mp4`
+
+  const start = async () => {
+    setBusy(true); setError(''); setResult(null)
+    const raw = (filename.trim() || defaultName()).replace(/[^\w.\-가-힣]/g, '_')
+    const name = raw.toLowerCase().endsWith('.mp4') ? raw : `${raw}.mp4`
+    const outputPath = `downloads/seoyeori/YU/sources/${name}`
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/recording/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outputPath })
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '녹화 시작 실패')
+      setRecording(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const stop = async () => {
+    setBusy(true); setError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/recording/stop`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '녹화 종료 실패')
+      setResult(data)
+      setRecording(false)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className={s.card}>
+      <div className={s.cardTitle}>🎥 화면 녹화</div>
+      <div className={s.emptyHint} style={{ marginBottom: 10 }}>
+        전체화면을 그대로 녹화합니다 — 녹화할 창(유튜브 탭 등)을 미리 띄워두고 시작하세요.
+        컷·에피소드와 무관하게 <code>downloads/seoyeori/YU/sources/</code>에 저장됩니다.
+      </div>
+      <div className={s.styleRow}>
+        <input
+          type="text" placeholder={defaultName()}
+          value={filename} disabled={recording}
+          onChange={e => setFilename(e.target.value)}
+          className={s.durationInput} style={{ flex: 2, minWidth: 200 }}
+        />
+        {!recording ? (
+          <button className={s.captureBtn} disabled={busy} onClick={start}>
+            {busy ? '⏳' : '🔴 녹화 시작'}
+          </button>
+        ) : (
+          <button className={s.stopBtn} disabled={busy} onClick={stop}>
+            {busy ? '⏳' : '⏹ 녹화 종료'}
+          </button>
+        )}
+      </div>
+      {error && <div className={s.resultError} style={{ marginTop: 8 }}>❌ {error}</div>}
+      {result && !error && (
+        <div className={s.resultOk} style={{ marginTop: 8 }}>
+          ✅ 저장됨 — {result.outputPath || result.rawPath || '(경로 확인 필요)'}
+          {result.sizeBytes ? ` · ${(result.sizeBytes / 1024 / 1024).toFixed(1)}MB` : ''}
+        </div>
+      )}
+    </div>
   )
 }
