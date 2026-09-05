@@ -1707,6 +1707,8 @@ export default function MakingTab() {
           </label>
         </div>
 
+        <GraphicCardGenerator cut={cut} epNum={episode?.number} />
+
         {mode === 'html' ? (
           renderHtmlCapturePanel(cut)
         ) : (
@@ -2508,5 +2510,196 @@ export default function MakingTab() {
         </div>
       </div>
     </div>
+  )
+}
+
+// ── GraphicCardGenerator — CAPCUT 컷 카드에 얹는 그래픽 카드 생성기 ──────────
+// 서버: /api/graphic-templates, /api/generate-graphic-html, /api/graphic-recommend
+// (app/server/lib/graphicTemplates.js + proxy.js). 생성한 HTML은 01_script/에
+// cut_NN_graphic.html로 저장되고, htmlFile로 넘기면 기존 /api/make-graphic-cut·
+// list-episode-html이 그대로 찾아 읽는다(커스텀 목업과 동일한 폴더 규칙).
+function GraphicCardGenerator({ cut, epNum, onGenerated }) {
+  const [open, setOpen] = useState(false)
+  const [templates, setTemplates] = useState([])
+  const [selectedType, setSelectedType] = useState('')
+  const [selectedStyle, setSelectedStyle] = useState('')
+  const [fields, setFields] = useState({})
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState('')
+
+  // 이 컷의 대사/장면 텍스트 — 이 코드베이스엔 별도 caption 필드가 없어
+  // 다른 곳(예: 2288행)과 동일한 우선순위로 narration/dialogue/scene에서 뽑는다.
+  const cutText = cut.narration || cut.dialogue || cut.scene || ''
+
+  // 템플릿 목록 로드 (+ MD 코드가 있으면 추천값으로 초기 선택)
+  useEffect(() => {
+    if (!open || templates.length > 0) return
+    fetch(`${YEORI_SERVER}/api/graphic-templates`)
+      .then(r => r.json())
+      .then(data => {
+        setTemplates(data)
+        // 참고: 현재 cut 객체엔 md(무드 코드) 필드가 없어 이 분기는 그 필드가
+        // 생기기 전까진 항상 스킵된다 — 생기면 바로 동작하도록 남겨둠.
+        if (cut.md) {
+          fetch(`${YEORI_SERVER}/api/graphic-recommend?md=${encodeURIComponent(cut.md)}`)
+            .then(r => r.json())
+            .then(rec => {
+              setSelectedType(rec.type)
+              setSelectedStyle(rec.style)
+            })
+            .catch(() => {})
+        }
+      })
+      .catch(err => setError(err.message))
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleGenerate = async () => {
+    setGenerating(true)
+    setError('')
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/generate-graphic-html`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum, cutNo: cut.no,
+          type: selectedType, style: selectedStyle,
+          fields, duration: cutDuration(cut),
+          autoGenerate: true
+        })
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || '생성 실패')
+      setOpen(false)
+      onGenerated?.(data)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const currentTemplate = templates.find(t => t.type === selectedType)
+
+  return (
+    <>
+      <button
+        className={s.previewBtn}
+        onClick={() => setOpen(true)}
+        style={{ marginTop: 8 }}
+      >
+        🎨 그래픽 카드 생성
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--bg-panel)', border: '1px solid var(--border)',
+            borderRadius: 16, padding: 32, width: 640,
+            maxHeight: '80vh', overflowY: 'auto',
+            color: 'var(--text)'
+          }}>
+            <h3 style={{ marginBottom: 20 }}>
+              🎨 그래픽 카드 생성 — CUT {cut.no}
+            </h3>
+
+            {/* 대사/장면 자동 채움 힌트 */}
+            {cutText && (
+              <div style={{
+                background: 'var(--bg-input)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '8px 12px', marginBottom: 16,
+                fontSize: 13, color: 'var(--accent-light)'
+              }}>
+                💡 이 컷: "{cutText}" — 자동 입력 가능
+                <button
+                  onClick={() => setFields(f => ({ ...f, title: cutText }))}
+                  className={s.previewBtn}
+                  style={{ marginLeft: 10, padding: '2px 8px', fontSize: 12 }}
+                >적용</button>
+              </div>
+            )}
+
+            {error && <div className={s.resultError} style={{ marginBottom: 16 }}>❌ {error}</div>}
+
+            {/* 템플릿 선택 */}
+            <label style={{ fontSize: 13, color: 'var(--accent-light)' }}>템플릿 카테고리</label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+              {templates.map(t => (
+                <button
+                  key={t.type}
+                  onClick={() => { setSelectedType(t.type); setSelectedStyle('') }}
+                  style={{
+                    padding: '6px 14px', borderRadius: 8,
+                    border: '2px solid',
+                    borderColor: selectedType === t.type ? 'var(--accent)' : 'var(--border)',
+                    background: selectedType === t.type ? 'var(--accent-glow)' : 'transparent',
+                    color: 'var(--text)', cursor: 'pointer', fontSize: 13
+                  }}
+                >{t.label}</button>
+              ))}
+            </div>
+
+            {/* 스타일 선택 */}
+            {currentTemplate && (
+              <>
+                <label style={{ fontSize: 13, color: 'var(--accent-light)' }}>스타일</label>
+                <div style={{ display: 'flex', gap: 8, marginTop: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+                  {currentTemplate.styles.map(st => (
+                    <button
+                      key={st.style}
+                      onClick={() => setSelectedStyle(st.style)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 8,
+                        border: '2px solid',
+                        borderColor: selectedStyle === st.style ? 'var(--blue)' : 'var(--border)',
+                        background: selectedStyle === st.style ? 'rgba(59,130,246,.18)' : 'transparent',
+                        color: 'var(--text)', cursor: 'pointer', fontSize: 13
+                      }}
+                    >{st.label}</button>
+                  ))}
+                </div>
+
+                {/* 필드 입력 */}
+                <label style={{ fontSize: 13, color: 'var(--accent-light)' }}>내용 입력</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6, marginBottom: 20 }}>
+                  {currentTemplate.fields.map(f => (
+                    <input
+                      key={f}
+                      placeholder={f}
+                      value={fields[f] || ''}
+                      onChange={e => setFields(prev => ({ ...prev, [f]: e.target.value }))}
+                      style={{
+                        background: 'var(--bg-input)', border: '1px solid var(--border)',
+                        borderRadius: 8, padding: '8px 12px',
+                        color: 'var(--text)', fontSize: 14
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* 버튼 */}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setOpen(false)}
+                className={s.previewBtn}
+              >취소</button>
+              <button
+                onClick={handleGenerate}
+                disabled={!selectedType || !selectedStyle || generating}
+                className={s.captureBtn}
+              >
+                {generating ? '생성 중...' : '✨ 생성 + 영상 변환'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

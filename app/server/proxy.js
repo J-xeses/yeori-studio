@@ -13,6 +13,7 @@ import { resolveEpisodeCode } from './lib/episodeCode.js'
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
+import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
 
@@ -2962,6 +2963,46 @@ app.post('/api/make-graphic-cut', async (req, res) => {
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
   }
+})
+
+// ── 그래픽 카드 생성기 (MakingTab GraphicCardGenerator) ──────────────────
+// 템플릿 카테고리×스타일로 HTML을 만들어 01_script/(scriptDir)에 저장 —
+// 그래야 htmlFile로 넘기면 위 /api/make-graphic-cut·readEpisodeHtmlFile이
+// 그대로 찾아 읽는다(list-episode-html과 같은 폴더 규칙).
+app.get('/api/graphic-templates', (req, res) => {
+  res.json(getTemplateList())
+})
+
+app.post('/api/generate-graphic-html', async (req, res) => {
+  try {
+    const { epNum, cutNo, type, style, fields, duration, autoGenerate } = req.body || {}
+    if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+
+    const html = generateHTML(type, style, fields, duration)
+
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    const dir = scriptDir(episodeCode)
+    fs.mkdirSync(dir, { recursive: true })
+    const fileName = `cut_${String(cutNo).padStart(2, '0')}_graphic.html`
+    const filePath = path.join(dir, fileName)
+    fs.writeFileSync(filePath, html, 'utf-8')
+
+    if (autoGenerate) {
+      // /api/make-graphic-cut과 같은 makeGraphicCutForMcp를 직접 호출 — 자기 자신에게
+      // HTTP 왕복하지 않고, 저장한 htmlFile만 넘겨 바로 GRAPHIC/CAPCUT 컷으로 만든다.
+      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'fade-in' })
+      return res.json({ success: true, filePath, fileName, makeResult })
+    }
+
+    res.json({ success: true, filePath, fileName })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+app.get('/api/graphic-recommend', (req, res) => {
+  res.json(getRecommendation(req.query.md))
 })
 
 // ── POST /api/save-audio — WAV blob → MP3 변환 후 저장 ──
