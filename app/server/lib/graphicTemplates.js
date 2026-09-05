@@ -305,6 +305,78 @@ body {
   <b>ℹ️ 정보 제공 목적의 인용</b> · 출처: ${fields.source || '(출처 입력 필요)'}
 </div>
 </body></html>`
+  },
+
+  // 가상/허구 설정 에피소드의 오프닝에 까는 고지 카드. 면책 문구는 info-source의
+  // 출처 문구와 같은 이유로 fields가 아니라 템플릿에 고정 — "이건 허구다"를 명시하는
+  // 게 이 템플릿의 유일한 존재 이유라서, 빼먹으면 안 되는 문구를 채워야 하는 값으로
+  // 두지 않는다. title/subtitle은 그 에피소드의 가상 설정을 짧게 설명하는 용도.
+  'fiction-disclaimer': {
+    label: '가상 설정 고지 카드',
+    styles: {
+      'notice-dark': {
+        label: '노티스 다크',
+        colors: { bg: '#0b0c10', main: '#f5f4f0', sub: '#9a9890', accent: '#c9a96e' }
+      },
+      'notice-light': {
+        label: '노티스 라이트',
+        colors: { bg: '#faf9f6', main: '#14140f', sub: '#5c5a52', accent: '#8a6d3b' }
+      }
+    },
+    fields: ['title', 'subtitle'],
+    generate: (fields, colors, duration) => `
+<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  width:1920px; height:1080px;
+  background:${colors.bg};
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+}
+.frame {
+  width:1500px; padding:80px 100px;
+  border:1.5px solid ${colors.accent};
+  border-radius:4px;
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  animation:fadeIn 0.8s ease forwards;
+}
+.eyebrow {
+  font-size:24px; font-weight:700; letter-spacing:8px;
+  color:${colors.accent}; margin-bottom:36px;
+}
+.title {
+  font-size:58px; font-weight:800; color:${colors.main};
+  letter-spacing:-.5px; line-height:1.35; margin-bottom:20px;
+  animation:fadeIn 0.8s ease forwards; animation-delay:0.2s; opacity:0;
+}
+.subtitle {
+  font-size:30px; color:${colors.sub}; line-height:1.6; margin-bottom:44px;
+  animation:fadeIn 0.8s ease forwards; animation-delay:0.35s; opacity:0;
+}
+.divider { width:64px; height:2px; background:${colors.accent}; margin-bottom:44px; opacity:.6; }
+.disclaimer {
+  font-size:26px; color:${colors.sub}; line-height:1.9; max-width:1100px;
+  animation:fadeIn 0.8s ease forwards; animation-delay:0.5s; opacity:0;
+}
+.disclaimer b { color:${colors.main}; font-weight:700; }
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(14px); }
+  to { opacity:1; transform:translateY(0); }
+}
+</style></head><body>
+<div class="frame">
+  <div class="eyebrow">NOTICE</div>
+  <div class="title">${fields.title||''}</div>
+  ${fields.subtitle ? `<div class="subtitle">${fields.subtitle}</div>` : ''}
+  <div class="divider"></div>
+  <div class="disclaimer">
+    <b>이 영상은 AI로 제작된 가상의 이야기입니다.</b><br>
+    실제 사건이 아니며, 언급되는 인물·그룹명이 있다면<br>
+    이는 창작 설정 안에서만 쓰인 것입니다.
+  </div>
+</div>
+</body></html>`
   }
 };
 
