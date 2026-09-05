@@ -1,27 +1,66 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-09-04
+> 마지막 업데이트: 2026-09-05
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 >
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
-> 세부는 항상 하단 로그 기준. 최신 로그(2026-09-03~04) = "## 2026-09-02 (영상 =
-> 수동 제작 전환)" 절 아래 `### 릴스 최종화 모듈` ~ `### 실행 이원화` 소절.
+> 세부는 항상 하단 로그 기준. 최신 로그(2026-09-05) = 맨 끝 "## 2026-09-05
+> (그래픽 카드 생성기 + LF_T01 초상권 리스크 정리)" 절.
 
 ---
 
-## 📌 현재 작업 중 / 다음 (2026-09-04 기준)
+## 📌 현재 작업 중 / 다음 (2026-09-05 기준)
 
-**2026-09-03~04: 화면녹화 + 릴스 최종화 파이프라인 구축.**
-- **screen-scenario** — 생성도구(Flow/ElevenLabs) 화면을 스크립트로 조작·녹화. 메이킹 탭
-  CAPCUT 컷 "자막 자동 녹화" 버튼(`8f15ef8`) → `POST /api/screen-scenario`(SSE).
-  녹화는 **CDP `Page.startScreencast`**(페이지 픽셀 직접, 창 겹침 무관, `3016d13`), 접속은
-  **`cdp` 드라이버**(대상 탭 CDP WS 직결 — `puppeteer.connect` OOPIF 행 8분→1초, `eb5f4b2`).
-- **릴스 최종화 모듈** (`server/lib/reelFinalize.js`, `d3f8c79`) — 파싱된 컷 + `05_video/cut_NN.mp4`
-  → 컷별 편집 판단(레터박스/자막/SFX) → concat → **손글씨 오버레이 자막(컬러 이모지·데코, `dc3fa71`)**
-  + SFX(효과음 모음집 가이드 60개+ 규칙) → `07_output/{CODE}_final.mp4`. 메이킹 탭 "🎬 릴스 최종본" 버튼.
-- **start_gen.bat 재작성** (`eb5f4b2`) — LF→CRLF(클릭 즉시 종료 버그), 프로필 경로를 cdp 드라이버와 일치.
-- 레퍼런스 = `0808.mp4`(8월 손제작 R03). 검증 = IG_R03(ep98).
-- **남은 것**: BGM 트랙 자산 · 웹툰 GRAPHIC 컷 소스 · Flow 실사이트 셀렉터 실기 · 말풍선/데코 배치.
+**2026-09-05: 그래픽 카드 생성기 구축 + LF_T01 배경장면 초상권/부정경쟁방지법 리스크 정리.**
+- **그래픽 카드 생성기 신규** (`server/lib/graphicTemplates.js`, `d39b442`) — 템플릿×스타일
+  조합으로 HTML 카드 자동 생성. `mv-intro`/`text-card`/`stat-card`/`info-source`/
+  `fiction-disclaimer` 5종 + `/api/graphic-templates`·`/api/generate-graphic-html`·
+  `/api/graphic-recommend`(proxy.js) + MakingTab CAPCUT 컷 카드 안 `GraphicCardGenerator`.
+  설계 원칙은 `graphicTemplates.md`(신규) — 실존 인물 재현 금지, 컴플라이언스 문구는
+  fields 아닌 템플릿에 고정, MD 코드는 codebook.json 8종만 사용.
+- **MD 무드 자동추천 버그 수정** (`fa85cfa`) — `cut.md`가 아니라 `cut.masterCode.md`가
+  실제 위치였음(750행 `c.masterCode?.pl`과 동일 자리). `MD_RECOMMEND`도 codebook.json
+  실제 8종(JOY/SUR/STR/REL/CUR/DRM/SAD/INT)으로 재정비(전에 있던 MD_COM/MD_EMO는
+  존재하지 않는 코드였음).
+- **LF_T01 배경장면 초상권/부정경쟁방지법 리스크 발견·정리** — 실존 걸그룹(KATSEYE·ILLIT·
+  르세라핌) AI 재현 배경장면 3개가 무대 화면에 실제 그룹명·곡명을 노출한 걸 확인
+  (2025 판례 판단기준 5개 중 5개 전부 고위험 해당). 결론: **비주얼은 실명·로고 없이
+  장르로 프롬프트**(가상 걸그룹 — 재생성 샘플 확인 완료), **대사의 실명 언급은 유지**
+  (명예훼손은 별개 법리, 사실 서술이면 안전). 원 배경장면 3개 교체는 아직 안 함.
+- **flow-automation 캐릭터 라벨 정규식 버그 수정** (`0944980`) — `WOMAN\s*\d+`가 숫자만
+  받아 "WOMAN LEFT/RIGHT" 라벨 매칭에 실패 → 두 인물 descriptor가 프롬프트 맨 앞에
+  뭉쳐 붙으면서 여리 얼굴이 안 나오던 원인이었음. `WOMAN\s*[\w-]*`로 확장, 기존
+  "WOMAN 1/2" 포맷도 회귀 없이 통과.
+- **sync-content.bat 무한 재시도 수정** (`3bfcd05`) — `chrome-profile-main`이 켜진 채로
+  robocopy가 돌면 crashpad_handler.exe가 `CrashpadMetrics.pma`를 잡고 있어 30초 재시도가
+  무한 반복 → `start_yeori.bat`이 `[pre-2]` 단계에서 계속 멈춤. 좀비 프로세스 정리 +
+  동기화 대상에서 해당 폴더 `/XD` 제외.
+
+### 지금 이어할 것
+- **LF_T01 배경장면 재생성** — KATSEYE/ILLIT/르세라핌 배경 3개를 실명·로고 없는 가상
+  버전으로 교체(방향은 확정, 실행만 남음).
+- **다중 캐릭터 puppeteer 검증** — Phase 1·2 로직/API는 검증됨, Flow 캐릭터 페이지
+  클릭·업로드 자동화(`ensureFlowCharactersRegistered`)는 실제 Flow 실행 시 확인 필요.
+  라벨 매칭 버그(위)는 고쳐졌으니 다음 실제 생성 때 함께 검증.
+- **ScriptGen 캐릭터 UI** — 레지스트리 목록·상태·새 캐릭터 추가 (지금은 API/JSON만).
+- **손글씨 애니메이션 회사 PC 다듬기** — grim1 리워크는 완료, 남은 미세조정은 회사 PC.
+
+### 이월 (여전히 유효)
+- **G6 업로드 자동화** — MCP 도구 없음, 퍼블리싱 탭 패키지·썸네일까지만.
+- **SF_E07 codebook v1.0.0** — 실데이터 검증 미완료.
+- **크레딧 게이트 완전 정합** — `server/lib/creditUsage.js`, 날짜 바뀔 때만 자동 리셋.
+- ~~**VideoTab AI 영상 자동생성 UI 버튼**~~ — 폐기(2026-09-02, 영상 수동 전환). `/api/run-video`는 DEPRECATED.
+- **editIntent → 메이킹 탭 모션(graphic/s2c) 연동** (assemble 경로), run-cutter 컷 단위 재조립.
+
+---
+
+### (이전) 2026-09-04 기준
+
+**2026-09-03~04: 화면녹화 + 릴스 최종화 파이프라인 구축.** screen-scenario(생성도구
+화면을 스크립트로 조작·녹화, CDP `Page.startScreencast` + `cdp` 드라이버) + 릴스
+최종화 모듈(`server/lib/reelFinalize.js` — 컷별 편집 판단 + concat + 손글씨 오버레이
+자막 + SFX → `07_output/{CODE}_final.mp4`). 레퍼런스 `0808.mp4`, 검증 IG_R03(ep98).
+상세 = 하단 "2026-09-02(영상=수동전환)" 로그의 `### 릴스 최종화 모듈`~`### 실행 이원화` 소절.
 
 ---
 
@@ -913,4 +952,71 @@ downloads/
   + Phase2 때 놓친 클라 하드코딩 URL 5곳(StudioTab·VideoTab) 정리, `/api/ffmpeg`가
   `workDir` 대신 `epNum` 받도록.
 - **미해결**: `state` 계층 멀티브랜드화(별도 작업). `TK/` 틱톡 코드 규칙.
+
+---
+
+## 2026-09-05 (그래픽 카드 생성기 + LF_T01 초상권 리스크 정리)
+
+### 그래픽 카드 생성기 (신규)
+- **`server/lib/graphicTemplates.js`**(`d39b442`) — 템플릿(카테고리) × 스타일 조합으로
+  1920×1080 HTML 카드를 생성하는 순수 함수 모듈. `generateHTML(type, style, fields, duration)` /
+  `getRecommendation(mdCode)` / `getTemplateList()`.
+  - `mv-intro`(neon-dark/pastel-dream/bold-impact) — 무드 인트로, beam+particle 애니메이션.
+  - `text-card`(minimal/gradient/dark-minimal) — 일반 텍스트 카드.
+  - `stat-card`(infographic/versus) — 통계·비교.
+  - `info-source`(`12b2df6`, news-light/news-dark) — **실존 그룹 사실 정보 카드**. "ℹ️ 정보
+    제공 목적의 인용" 문구를 fields가 아니라 템플릿에 고정 — 사람이 빼먹을 수 있는 자리에
+    안 둠. 채우는 건 title/fact1~3/source뿐.
+  - `fiction-disclaimer`(`1477dd2`, notice-dark/notice-light) — **가상 설정 고지 카드**.
+    "이 영상은 AI로 제작된 가상의 이야기입니다…" 면책 문구를 통째로 템플릿에 고정.
+    title/subtitle(에피소드 설정 설명)만 채움.
+- **proxy.js 라우트 3개**(`d39b442`) — `GET /api/graphic-templates`(목록),
+  `POST /api/generate-graphic-html`(HTML 생성 → `01_script/cut_NN_graphic.html` 저장,
+  `autoGenerate:true`면 `makeGraphicCutForMcp()` 직접 호출해 컷까지 완성 — 기존
+  `/api/make-graphic-cut`과 같은 내부 함수 재사용, 자기 자신에 HTTP 왕복 안 함),
+  `GET /api/graphic-recommend?md=`(추천).
+- **MakingTab.jsx `GraphicCardGenerator`**(`d39b442`) — CAPCUT 컷 카드(`renderCapcutPanel`)
+  안에 렌더링. 템플릿·스타일 선택 → 필드 입력 → 미리보기 없이 바로 "생성 + 영상 변환".
+  `YEORI_SERVER` 절대경로 fetch, `cutDuration(cut)` 헬퍼 재사용, CSS는 `index.css` 실제
+  토큰(`--accent`/`--bg-panel` 등) 사용 — 이 파일 스타일 관례와 일치시킴.
+- **MD 무드 자동추천 버그 수정**(`fa85cfa`) — 처음엔 `cut.md`를 봤는데 실제로는
+  `cut.masterCode.md`에 있었음(대본 원문 "MD:" 필드 → `ScriptGenTab.jsx:359` 파싱 →
+  `masterCode.md`, `MakingTab.jsx:750`의 `c.masterCode?.pl`과 같은 자리). `MD_RECOMMEND`도
+  `app/data/codebook.json`의 실제 8종(JOY/SUR/STR/REL/CUR/DRM/SAD/INT)으로 재정비 —
+  이전에 있던 `MD_COM`/`MD_EMO`는 codebook에 없는, 지어낸 코드였음.
+- **설계 원칙 문서**(`app/server/lib/graphicTemplates.md`, `1477dd2`) — 템플릿을 계속
+  늘려갈 예정이라 기준을 코드 옆에 문서화: 실존 인물 재현 금지, 컴플라이언스 문구는
+  fields 아닌 템플릿 고정, MD 코드는 codebook.json 8종만, 공통 구조(캔버스/폰트/애니메이션),
+  추가 전 체크리스트.
+
+### LF_T01 배경장면 — 초상권/부정경쟁방지법 리스크 검토
+`downloads/seoyeori/YU/LF_T/LF_T01/배경장면/`에 있던 AI 생성 배경 영상 3개
+(Katseye_performing…, ILLIT_concert_performance…, Group_performing_with_blurred_figures…)를
+프레임 캡처해서 검토:
+- **문제**: 실제 무대 스크린에 "KATSEYE", "ILLIT · IT'S ME"(실제 곡명까지)가 그대로 노출.
+  얼굴 블러는 있었지만 브랜드 텍스트가 그대로라 식별 가능성 자체가 안 없어짐.
+- **법적 근거**: 부정경쟁방지법 2조(식별 표지 무단 상업적 이용) + 2025년 실제 판례 분석
+  — 식별 가능성은 얼굴이 아니라 "헤어스타일+의상+배경+맥락" 결합으로 판단, 프롬프트에
+  실명이 있으면 의도성 증거, 민사 위자료 최대 2천만원 사례 있음. 대사 속 실명 언급은
+  별개 법리(명예훼손 — 사실 서술이면 안전)라 그대로 유지 가능.
+- **해결 방향**: 배경장면 프롬프트에서 실존 그룹명을 빼고 "한국 유명 걸그룹" 같은 **장르
+  단위**로 서술. 실제 재생성 결과(대형 라인업 실루엣, 로고 없는 추상 LED 패턴) 확인함 —
+  브랜드 노출 없이도 "여러 그룹이 합동 무대에 섰다"는 설정을 인원 규모로 시각화해 오히려
+  스토리텔링이 명확해짐.
+- **남은 일**: 원래 KATSEYE/ILLIT 배경 영상 2개를 이 방향으로 교체.
+
+### flow-automation / sync 버그 2건
+- **캐릭터 라벨 정규식**(`app/scripts/flow-automation.js`, `0944980`) — `injectCharacterDescriptors()`의
+  `labelRe`가 `WOMAN\s*\d+\s*\(...)`  라 숫자 라벨("WOMAN 1")만 받았음. "WOMAN LEFT (Jia):" /
+  "WOMAN RIGHT (Yeori):"는 매칭 실패 → 전체 폴백 모드로 빠져 두 인물 descriptor가 각자
+  라벨 옆이 아니라 프롬프트 맨 앞에 뭉쳐 붙음. 여리는 본문에 얼굴 묘사가 없고 이 주입
+  descriptor에만 의존해서, 사실상 얼굴 정보가 사라지는 결과로 이어졌음(LF_T01 2인 장면
+  생성 시 발견). `WOMAN\s*[\w-]*\s*\(...)` 로 확장 — 숫자/LEFT·RIGHT/빈값 모두 받음,
+  기존 포맷 회귀 없음(실제 characters.json 데이터로 재현 테스트 완료).
+- **sync-content.bat 무한 대기**(`3bfcd05`) — Flow 자동화 크롬(`chrome-profile-main`,
+  `--remote-debugging-port=9222`)이 종료 안 된 채 `downloads/` robocopy가 돌면,
+  `crashpad_handler.exe`가 `CrashpadMetrics.pma`를 계속 잡고 있어 "Access denied → 30초
+  대기 → 재시도"가 무한 반복 → `start_yeori.bat`의 `[pre-2] Sync on start` 단계에서
+  영구 정지. 해당 프로필에 묶인 프로세스 15개 종료 + robocopy에 `chrome-profile-main`
+  `/XD` 제외(살아있는 브라우저 세션이라 애초에 동기화 대상이 아님).
 
