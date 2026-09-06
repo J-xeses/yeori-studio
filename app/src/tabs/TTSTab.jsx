@@ -76,6 +76,9 @@ export default function TTSTab() {
   const [voiceInput,   setVoiceInput]     = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
   const [myVoices,     setMyVoices]       = useState([])
   const [voicesLoading, setVoicesLoading] = useState(false)
+  const [voiceSearchQuery, setVoiceSearchQuery] = useState('')
+  const [voicePreviewUrl,  setVoicePreviewUrl]  = useState(null)
+  const [showVoicePicker,  setShowVoicePicker]  = useState(false)
   const [trackLoading,  setTrackLoading]  = useState({})
   const [merging,       setMerging]       = useState({})
   const [batchRunning,  setBatchRunning]  = useState(false)
@@ -216,13 +219,50 @@ export default function TTSTab() {
       const res = await elVoices(apiKeys.elevenLabs)
       if (!res.ok) throw new Error('API 오류')
       const data = await res.json()
-      const clones = (data.voices || []).filter(v => v.category !== 'premade')
-      setMyVoices(clones)
-      if (!clones.length) alert('클론 목소리가 없어요. ElevenLabs에서 Voice Clone을 먼저 만들어주세요.')
+      // 전체 보이스 (클론 + 무료 프리셋 모두) — 한지아 등 추가 캐릭터는 무료 프리셋에서 고를 수 있음
+      const voices = data.voices || []
+      setMyVoices(voices)
+      if (!voices.length) alert('사용 가능한 목소리가 없습니다.')
     } catch (err) {
       alert('목소리 불러오기 실패: ' + err.message)
     } finally { setVoicesLoading(false) }
   }
+
+  // ElevenLabs 보이스에 preview_url이 있으면 그걸로 샘플 미리듣기
+  const previewVoice = (voice) => {
+    setVoicePreviewUrl(voice?.preview_url || null)
+  }
+
+  // 검색어로 거른 보이스 (기본값 패널 · 목소리 탭 피커 공용)
+  const voiceQ = voiceSearchQuery.trim().toLowerCase()
+  const filteredVoices = voiceQ
+    ? myVoices.filter(v => v.name?.toLowerCase().includes(voiceQ))
+    : myVoices
+  const clonedVoices  = filteredVoices.filter(v => v.category !== 'premade')
+  const premadeVoices = filteredVoices.filter(v => v.category === 'premade')
+
+  const voiceOptionLabel = (v) =>
+    `${v.name} (${v.labels?.accent || v.labels?.language || '-'} / ${v.labels?.gender || '-'})`
+
+  // 그룹 구분된 보이스 선택 select — onPick(voice) 콜백으로 재사용
+  const renderVoiceSelect = (onPick) => (
+    <select className={s.voiceSelect} size={6} value=""
+      onChange={e => {
+        const v = myVoices.find(x => x.voice_id === e.target.value)
+        if (v) { onPick(v); previewVoice(v) }
+      }}>
+      <optgroup label="내 목소리 (클론)">
+        {clonedVoices.map(v => (
+          <option key={v.voice_id} value={v.voice_id}>{v.name}</option>
+        ))}
+      </optgroup>
+      <optgroup label="무료 프리셋">
+        {premadeVoices.map(v => (
+          <option key={v.voice_id} value={v.voice_id}>{voiceOptionLabel(v)}</option>
+        ))}
+      </optgroup>
+    </select>
+  )
 
   // ── 트랙 개별 TTS 생성 ───────────────────────────────────
   const generateTrackById = async (cutId, voiceTabId, trackId, trackList) => {
@@ -441,14 +481,22 @@ export default function TTSTab() {
             <button className={s.voiceLoadBtn} onClick={saveVoiceId}>저장</button>
           </div>
           {myVoices.length > 0 && (
-            <select className={s.voiceSelect} value=""
-              onChange={e => { if (e.target.value) setVoiceInput(e.target.value) }}>
-              <option value="">— 목소리 선택 —</option>
-              {myVoices.map(v => <option key={v.voice_id} value={v.voice_id}>{v.name}</option>)}
-            </select>
+            <div className={s.voiceLibrary}>
+              <input
+                className={s.voiceSearch}
+                type="text"
+                placeholder="보이스 이름 검색..."
+                value={voiceSearchQuery}
+                onChange={e => setVoiceSearchQuery(e.target.value)}
+              />
+              {renderVoiceSelect(v => setVoiceInput(v.voice_id))}
+              {voicePreviewUrl && (
+                <audio controls src={voicePreviewUrl} className={s.previewAudio} autoPlay />
+              )}
+            </div>
           )}
           <button className={s.voiceFetchBtn} onClick={loadMyVoices} disabled={voicesLoading}>
-            {voicesLoading ? '불러오는 중...' : '🎤 내 목소리 목록 불러오기'}
+            {voicesLoading ? '불러오는 중...' : '🎤 보이스 목록 불러오기 (클론 + 무료 프리셋)'}
           </button>
           {ttsSettings.voiceId && (
             <div className={s.voiceApplied}>적용됨: <code>{ttsSettings.voiceId}</code></div>
@@ -484,7 +532,36 @@ export default function TTSTab() {
               <input className={s.trackVoiceInput}
                 value={activeVariant.voiceId}
                 onChange={e => updateVariantVoiceId(cut.id, activeVariant.id, e.target.value)} />
+              <button className={s.voicePickerBtn}
+                onClick={() => {
+                  setShowVoicePicker(v => !v)
+                  if (!myVoices.length && !voicesLoading) loadMyVoices()
+                }}>
+                🔍 보이스 선택
+              </button>
             </div>
+
+            {/* 목소리 탭용 보이스 피커 — 클론 + 무료 프리셋에서 골라 이 탭에 지정 */}
+            {showVoicePicker && (
+              <div className={s.voicePickerDropdown}>
+                {voicesLoading && <div className={s.trackVoiceLabel}>불러오는 중...</div>}
+                {!voicesLoading && myVoices.length > 0 && (
+                  <>
+                    <input
+                      className={s.voiceSearch}
+                      type="text"
+                      placeholder="보이스 이름 검색..."
+                      value={voiceSearchQuery}
+                      onChange={e => setVoiceSearchQuery(e.target.value)}
+                    />
+                    {renderVoiceSelect(v => updateVariantVoiceId(cut.id, activeVariant.id, v.voice_id))}
+                    {voicePreviewUrl && (
+                      <audio controls src={voicePreviewUrl} className={s.previewAudio} autoPlay />
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {cutTracks.map((track, idx) => (
               <div key={track.id} className={s.trackCard}>
