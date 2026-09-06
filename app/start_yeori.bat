@@ -36,14 +36,9 @@ if defined CORE_UP (
     echo [pre-0] Ensuring Cloudflare Tunnel...
     powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-tunnel.ps1"
     echo.
-    echo [pre-0] Ensuring task-queue worker...
-    tasklist /FI "WINDOWTITLE eq Yeori Task Worker*" 2>nul | find /I "cmd.exe" >nul
-    if errorlevel 1 (
-        start "Yeori Task Worker" /D "%~dp0" cmd /k "node scripts\task-queue-worker.js"
-        echo        Worker window started.
-    ) else (
-        echo        Worker already running -- skip.
-    )
+    echo [pre-0] Ensuring task-queue worker schedule + one run now...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-worker-task.ps1"
+    start "Yeori Task Worker (once)" /D "%~dp0" cmd /c "node scripts\task-queue-worker.js & echo. & echo === worker finished === & timeout /t 5 >nul"
     echo.
     echo ============================================================
     echo   복구 완료 -- 기존 코어는 그대로 둡니다.
@@ -105,14 +100,12 @@ echo [2] Ensuring Cloudflare Tunnel (auto Vercel sync)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-tunnel.ps1"
 echo.
 
-:: [3] 무인 코드작업 워커 (에이전트) — code-task-queue.json 폴링 -> 헤드리스 claude
-echo [3] Starting task-queue worker...
-tasklist /FI "WINDOWTITLE eq Yeori Task Worker*" 2>nul | find /I "cmd.exe" >nul
-if %errorlevel% == 0 (
-    echo        Task worker already running -- skip
-) else (
-    start "Yeori Task Worker" /D "%~dp0" cmd /k "node scripts\task-queue-worker.js"
-)
+:: [3] 무인 코드작업 워커 (에이전트) — status:"approved" 작업을 헤드리스 claude 로 처리.
+::   워커는 1회 실행형. 25분 간격 재실행은 Task Scheduler(YeoriTaskQueueWorker)가 담당하고
+::   ensure-worker-task.ps1 이 그 스케줄을 자가치유. 여기서는 스케줄 확인 + 즉시 1회 실행만.
+echo [3] Task-queue worker (schedule self-heal + one run now)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-worker-task.ps1"
+start "Yeori Task Worker (once)" /D "%~dp0" cmd /c "node scripts\task-queue-worker.js & echo. & echo === worker finished === & timeout /t 5 >nul"
 echo.
 
 :: [4] 제작 도구 UI 탭 (기본 브라우저) — 스튜디오 / 커터 / 매트릭스 / 트렌드
