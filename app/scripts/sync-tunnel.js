@@ -24,7 +24,9 @@ const TUNNEL_TARGET = 'http://localhost:3001'
 const STATE_PATH = path.join(APP_ROOT, '.tunnel-state.json')
 const VERCEL_SCOPE = 'won566800-7736s-projects'
 const VERCEL_ENV_VAR = 'MCP_BRIDGE_URL'          // 폴백 경로용 (Edge Config 실패 시)
-const EDGE_CONFIG_SLUG = 'yeori-mcp-bridge'      // 기본 경로: 재배포 없이 URL 갱신
+// 기본 경로: Edge Config 항목만 REST API 로 갈아끼운다 (재배포 없음).
+const EDGE_CONFIG_ID = 'ecfg_gihelk4e1zhfrhpvqlsef2zo1xeh'
+const VERCEL_TEAM_ID = 'team_IU3S3PuemDCIj1NN8gGHC8EM'
 const EDGE_CONFIG_KEY = 'mcpBridgeUrl'
 const URL_RE = /https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/
 
@@ -115,13 +117,22 @@ async function latestReadyProductionUrl() {
   return `https://${dep.url}`
 }
 
-// 기본 경로: Edge Config 항목만 갈아끼운다. 재배포 없음(~2초). api/mcp.js 가
-// 요청 시점에 이 값을 읽으므로 즉시 반영된다.
+// 기본 경로: Edge Config 항목만 REST API 로 갈아끼운다. 재배포 없음(~1초).
+// api/mcp.js 가 요청 시점에 이 값을 읽으므로 즉시 반영된다.
+// (vercel CLI --patch 는 shell:true 로 JSON 이 깨져서 REST 로 직접 호출한다.)
 async function updateEdgeConfig(newUrl) {
-  const patch = JSON.stringify({
-    items: [{ operation: 'upsert', key: EDGE_CONFIG_KEY, value: newUrl }],
-  })
-  await run('vercel', ['edge-config', 'update', EDGE_CONFIG_SLUG, '--patch', patch, '--scope', VERCEL_SCOPE])
+  const token = process.env.VERCEL_TOKEN
+  if (!token) throw new Error('VERCEL_TOKEN 없음 -- Edge Config REST 호출 불가')
+  const r = await fetch(
+    `https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/items?teamId=${VERCEL_TEAM_ID}`,
+    {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: [{ operation: 'upsert', key: EDGE_CONFIG_KEY, value: newUrl }] }),
+      signal: AbortSignal.timeout(15_000),
+    },
+  )
+  if (!r.ok) throw new Error(`Edge Config PATCH ${r.status}: ${(await r.text()).slice(0, 200)}`)
   console.log('[tunnel] Edge Config 갱신 완료 (재배포 불필요)\n')
 }
 
