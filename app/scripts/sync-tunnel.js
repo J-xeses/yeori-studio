@@ -23,8 +23,20 @@ const CLOUDFLARED = CLOUDFLARED_CANDIDATES.find((p) => p && fs.existsSync(p)) ||
 const TUNNEL_TARGET = 'http://localhost:3001'
 const STATE_PATH = path.join(APP_ROOT, '.tunnel-state.json')
 const VERCEL_SCOPE = 'won566800-7736s-projects'
-const VERCEL_ENV_VAR = 'MCP_BRIDGE_URL'
+const VERCEL_ENV_VAR = 'MCP_BRIDGE_URL'          // 폴백 경로용 (Edge Config 실패 시)
+const EDGE_CONFIG_SLUG = 'yeori-mcp-bridge'      // 기본 경로: 재배포 없이 URL 갱신
+const EDGE_CONFIG_KEY = 'mcpBridgeUrl'
 const URL_RE = /https:\/\/[a-zA-Z0-9-]+\.trycloudflare\.com/
+
+// Quick Tunnel 은 몇 초 만에 끊겼다 붙으며 그때마다 URL 이 바뀔 수 있다.
+// 매 변화를 즉시 반영하면 갱신 폭주가 나므로, URL 이 이만큼 조용하면(안정되면) 반영한다.
+// 단 계속 요동쳐도 MAX 까지는 기다렸다가 마지막 값으로 강제 반영한다(무한 대기 방지).
+const DEBOUNCE_MS = 10_000
+const DEBOUNCE_MAX_MS = 45_000
+
+// VERCEL_TOKEN 환경변수가 있으면 vercel CLI 가 자동으로 사용한다(대화형 로그인 만료 대비).
+// setx VERCEL_TOKEN "..." 로 사용자 환경변수에 넣어두면 이 스크립트가 상속받는다.
+if (process.env.VERCEL_TOKEN) console.log('[tunnel] VERCEL_TOKEN 감지 -- 토큰 인증 사용')
 
 // proxy.js와 동일한 이유(콘솔 창이 닫히면 사후 확인 불가)로 파일 로그를 남긴다.
 const LOG_PATH = path.join('C:\\yeori-studio', 'logs', 'sync-tunnel.log')
@@ -103,22 +115,97 @@ async function latestReadyProductionUrl() {
   return `https://${dep.url}`
 }
 
-async function updateVercel(newUrl) {
-  console.log(`\n[tunnel] URL 변경 감지 -- Vercel ${VERCEL_ENV_VAR} 갱신: ${newUrl}`)
+// 기본 경로: Edge Config 항목만 갈아끼운다. 재배포 없음(~2초). api/mcp.js 가
+// 요청 시점에 이 값을 읽으므로 즉시 반영된다.
+async function updateEdgeConfig(newUrl) {
+  const patch = JSON.stringify({
+    items: [{ operation: 'upsert', key: EDGE_CONFIG_KEY, value: newUrl }],
+  })
+  await run('vercel', ['edge-config', 'update', EDGE_CONFIG_SLUG, '--patch', patch, '--scope', VERCEL_SCOPE])
+  console.log('[tunnel] Edge Config 갱신 완료 (재배포 불필요)\n')
+}
 
+// 폴백 경로: Edge Config 가 아직 없거나 실패할 때. env 교체 + 재배포(~40초).
+async function updateVercelEnvAndRedeploy(newUrl) {
+  console.log(`\n[tunnel] 폴백 -- Vercel ${VERCEL_ENV_VAR} env 갱신 + 재배포: ${newUrl}`)
   try {
     await run('vercel', ['env', 'rm', VERCEL_ENV_VAR, 'production', '--yes', '--scope', VERCEL_SCOPE])
   } catch {
     console.log(`[tunnel] 기존 ${VERCEL_ENV_VAR} 없음(최초 설정으로 간주) -- 계속 진행`)
   }
-
   await run('vercel', ['env', 'add', VERCEL_ENV_VAR, 'production', '--value', newUrl, '--yes', '--scope', VERCEL_SCOPE])
-
   const deployUrl = await latestReadyProductionUrl()
   console.log(`[tunnel] 재배포 대상: ${deployUrl}`)
   await run('vercel', ['redeploy', deployUrl, '--target', 'production', '--scope', VERCEL_SCOPE])
+  console.log('[tunnel] Vercel env 갱신 + 재배포 완료\n')
+}
 
-  console.log('[tunnel] Vercel 갱신 + 재배포 완료\n')
+async function pushBridgeUrl(newUrl) {
+  try {
+    await updateEdgeConfig(newUrl)
+  } catch (err) {
+    console.error(`[tunnel] Edge Config 갱신 실패 (${err.message}) -- env+재배포로 폴백`)
+    logToFile(`Edge Config 갱신 실패 -- 폴백: ${err.message}`)
+    await updateVercelEnvAndRedeploy(newUrl)
+  }
+}
+
+// ── URL 변경 디바운스 (모듈 스코프: cloudflared 재시작과 무관하게 유지) ──
+let pendingUrl = null
+let pendingSince = 0
+let debounceTimer = null
+let committing = false
+
+function noteUrl(newUrl) {
+  const prev = readState()
+  if (prev?.url === newUrl && pendingUrl === null) {
+    console.log('[tunnel] 이전 URL과 동일 -- 갱신 생략')
+    logToFile('이전 URL과 동일 -- 갱신 생략')
+    return
+  }
+  if (newUrl === pendingUrl) return // 이미 이 값으로 예약됨
+
+  const now = Date.now()
+  if (pendingUrl === null) pendingSince = now
+  pendingUrl = newUrl
+  console.log(`[tunnel] URL 후보: ${newUrl} -- ${DEBOUNCE_MS / 1000}초 안정되면 반영`)
+  logToFile(`URL 후보: ${newUrl} (이전 반영: ${prev?.url || '없음'})`)
+
+  if (debounceTimer) clearTimeout(debounceTimer)
+  const waited = now - pendingSince
+  const delay = waited >= DEBOUNCE_MAX_MS ? 0 : Math.min(DEBOUNCE_MS, DEBOUNCE_MAX_MS - waited)
+  debounceTimer = setTimeout(commitUrl, delay)
+}
+
+function commitUrl() {
+  if (committing || pendingUrl === null) return
+  const url = pendingUrl
+  const prev = readState()
+  if (prev?.url === url) { pendingUrl = null; return }
+
+  committing = true
+  console.log(`\n[tunnel] URL 반영 시작: ${url}`)
+  pushBridgeUrl(url)
+    .then(() => {
+      writeState(url)
+      logToFile(`반영 완료: ${url}`)
+    })
+    .catch((err) => {
+      console.error(`[tunnel] URL 반영 실패: ${err.message}`)
+      console.error('[tunnel] 수동 갱신:')
+      console.error(`  vercel edge-config update ${EDGE_CONFIG_SLUG} --patch '{"items":[{"operation":"upsert","key":"${EDGE_CONFIG_KEY}","value":"${url}"}]}' --scope ${VERCEL_SCOPE}`)
+      logToFile(`FATAL URL 반영 실패 (url=${url}): ${err.stack || err.message}`)
+    })
+    .finally(() => {
+      committing = false
+      // 반영 도중 더 새로운 URL 이 들어왔다면 이어서 처리
+      if (pendingUrl && pendingUrl !== url) {
+        pendingSince = Date.now()
+        debounceTimer = setTimeout(commitUrl, DEBOUNCE_MS)
+      } else {
+        pendingUrl = null
+      }
+    })
 }
 
 // ── 자동 재연결 (Quick Tunnel은 가동시간 보장이 없어 언제든 끊길 수 있음) ──
@@ -177,29 +264,8 @@ function startTunnel() {
     handled = true
 
     const newUrl = match[0]
-    const prev = readState()
     console.log(`\n[tunnel] 감지된 터널 URL: ${newUrl}`)
-    logToFile(`감지된 터널 URL: ${newUrl} (이전: ${prev?.url || '없음'})`)
-
-    if (prev?.url === newUrl) {
-      console.log('[tunnel] 이전 URL과 동일 -- Vercel 갱신 생략\n')
-      logToFile('이전 URL과 동일 -- Vercel 갱신 생략')
-      return
-    }
-
-    updateVercel(newUrl)
-      .then(() => {
-        writeState(newUrl)
-        logToFile(`Vercel 갱신 + 재배포 완료: ${newUrl}`)
-      })
-      .catch((err) => {
-        console.error(`[tunnel] Vercel 갱신 실패: ${err.message}`)
-        console.error('[tunnel] 수동 갱신 필요:')
-        console.error(`  vercel env rm ${VERCEL_ENV_VAR} production --yes --scope ${VERCEL_SCOPE}`)
-        console.error(`  vercel env add ${VERCEL_ENV_VAR} production --value ${newUrl} --yes --scope ${VERCEL_SCOPE}`)
-        console.error(`  vercel redeploy <최신 production 배포 URL> --target production --scope ${VERCEL_SCOPE}`)
-        logToFile(`FATAL Vercel 갱신 실패 (url=${newUrl}): ${err.stack || err.message}`)
-      })
+    noteUrl(newUrl)
   }
 
   child.stdout.on('data', onData)

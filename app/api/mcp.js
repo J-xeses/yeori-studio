@@ -7,12 +7,41 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import { TOOLS } from '../server/mcp-tools.js'
 
-const BRIDGE_URL    = process.env.MCP_BRIDGE_URL || ''
-const BRIDGE_SECRET = process.env.MCP_BRIDGE_SECRET || ''
-const PUBLIC_SECRET = process.env.MCP_PUBLIC_SECRET || ''
+const EDGE_CONFIG    = process.env.EDGE_CONFIG || ''
+const ENV_BRIDGE_URL = process.env.MCP_BRIDGE_URL || ''
+const BRIDGE_SECRET  = process.env.MCP_BRIDGE_SECRET || ''
+const PUBLIC_SECRET  = process.env.MCP_PUBLIC_SECRET || ''
+
+// Cloudflare Quick Tunnel URL 은 재접속마다 바뀐다. 예전에는 그때마다
+// MCP_BRIDGE_URL env 를 갈아끼우고 Vercel 을 재배포(~40초, 로그인 만료 시 실패)했다.
+// 이제 sync-tunnel.js 가 Edge Config(`mcpBridgeUrl`)만 갱신하고(재배포 없음),
+// 이 함수가 요청 시점에 Edge Config 를 읽는다. Edge Config 가 없거나 실패하면
+// 기존 MCP_BRIDGE_URL env 로 폴백하므로 두 방식이 동시에 유효하다.
+let _bridgeCache = { url: '', at: 0 }
+async function resolveBridgeUrl() {
+  const now = Date.now()
+  if (_bridgeCache.url && now - _bridgeCache.at < 5000) return _bridgeCache.url
+  if (EDGE_CONFIG) {
+    try {
+      const u = new URL(EDGE_CONFIG)
+      const r = await fetch(`${u.origin}${u.pathname}/item/mcpBridgeUrl${u.search}`, {
+        signal: AbortSignal.timeout(3000),
+      })
+      if (r.ok) {
+        const val = await r.json()
+        if (typeof val === 'string' && val) {
+          _bridgeCache = { url: val, at: now }
+          return val
+        }
+      }
+    } catch { /* Edge Config 실패 → env 폴백 */ }
+  }
+  return ENV_BRIDGE_URL
+}
 
 async function bridge(method, subpath, body) {
-  if (!BRIDGE_URL) throw new Error('MCP_BRIDGE_URL 환경변수 미설정 (Cloudflare Tunnel URL 필요)')
+  const BRIDGE_URL = await resolveBridgeUrl()
+  if (!BRIDGE_URL) throw new Error('MCP bridge URL 미설정 (Edge Config mcpBridgeUrl / MCP_BRIDGE_URL 둘 다 없음)')
   const r = await fetch(`${BRIDGE_URL}/api/mcp${subpath}`, {
     method,
     headers: {
