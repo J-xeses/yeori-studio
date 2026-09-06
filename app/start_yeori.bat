@@ -31,6 +31,7 @@ echo.
 
 :: [1] 백그라운드 서비스 스케줄 자가치유 + 없으면 지금 시작
 ::     (YeoriStudio=proxy+vite, YeoriMcpTunnel, YeoriTaskQueueWorker, YeoriStudio_AutoSync)
+::     최초 1회는 install-services.bat (관리자) 로 등록해야 함 -- 여기선 확인/시작만.
 echo [1] Ensuring background services (scheduled tasks)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-yeori-tasks.ps1"
 echo.

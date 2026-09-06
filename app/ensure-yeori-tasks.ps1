@@ -45,15 +45,25 @@ function Get-RegisterReason($name, $wantExecute, $wantArgMatch) {
     return $null
 }
 
+# 이 PC 는 루트 폴더에 새 작업 등록 시 관리자 권한을 요구한다(표준 사용자 Access denied).
+# → install-services.bat 이 UAC 승격 후 이 스크립트를 부른다. 승격 없이 실행하면
+#   신규 등록만 실패하고, 이미 있는 작업 확인/시작은 그대로 동작한다.
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+$principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
+
 function Ensure-Task($name, $action, $trigger, $settings, $desc, $wantExecute, $wantArgMatch) {
     $why = Get-RegisterReason $name $wantExecute $wantArgMatch
     if (-not $why) {
         Write-Output "        [ensure-yeori-tasks] $name OK."
         return
     }
+    if (-not $isAdmin) {
+        Write-Output "        [ensure-yeori-tasks] $name 등록 필요($why) -- 관리자 권한 없음. install-services.bat 를 실행하세요."
+        return
+    }
     try {
         Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Settings $settings `
-            -Description $desc -Force -ErrorAction Stop | Out-Null
+            -Principal $principal -Description $desc -Force -ErrorAction Stop | Out-Null
         Write-Output "        [ensure-yeori-tasks] $name (re)registered -- $why"
     } catch {
         Write-Output "        [ensure-yeori-tasks] $name register FAILED: $($_.Exception.Message)"
