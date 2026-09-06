@@ -25,6 +25,34 @@ echo   Yeori Studio -- 제작 코어 (production)
 echo ============================================================
 echo.
 
+:: [pre-0] 이미 제작 코어가 떠 있으면(3001 LISTENING) -> 복구 모드
+::   프록시/Vite/트렌드/워커는 그대로 두고, 끊긴 터널만 되살린 뒤 종료.
+::   전체 재기동을 원하면 기존 "제작 코어" 창에서 Ctrl+C -> N 먼저.
+set CORE_UP=
+netstat -ano | findstr ":3001 " | findstr "LISTENING" >nul 2>&1 && set CORE_UP=1
+if defined CORE_UP (
+    echo [pre-0] 제작 코어가 이미 실행 중입니다 -- 복구 모드.
+    echo.
+    echo [pre-0] Ensuring Cloudflare Tunnel...
+    powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-tunnel.ps1"
+    echo.
+    echo [pre-0] Ensuring task-queue worker...
+    tasklist /FI "WINDOWTITLE eq Yeori Task Worker*" 2>nul | find /I "cmd.exe" >nul
+    if errorlevel 1 (
+        start "Yeori Task Worker" /D "%~dp0" cmd /k "node scripts\task-queue-worker.js"
+        echo        Worker window started.
+    ) else (
+        echo        Worker already running -- skip.
+    )
+    echo.
+    echo ============================================================
+    echo   복구 완료 -- 기존 코어는 그대로 둡니다.
+    echo   전체 재기동하려면 기존 "제작 코어" 창에서 Ctrl+C 후 다시 실행.
+    echo ============================================================
+    timeout /t 10
+    exit /b 0
+)
+
 :: [pre-1] Git pull
 echo [pre-1] Git pull...
 cd /d C:\yeori-studio
@@ -72,17 +100,9 @@ if %errorlevel% == 0 (
 echo.
 
 :: [2] Cloudflare Tunnel (yeori-studio MCP 원격 연결용, :3001 -> HTTPS)
-echo [2] Starting Cloudflare Tunnel (auto Vercel sync)...
-set CLOUDFLARED=
-if exist "C:\Program Files (x86)\cloudflared\cloudflared.exe" set CLOUDFLARED=C:\Program Files (x86)\cloudflared\cloudflared.exe
-if not defined CLOUDFLARED if exist "%LOCALAPPDATA%\cloudflared\cloudflared.exe" set CLOUDFLARED=%LOCALAPPDATA%\cloudflared\cloudflared.exe
-if not defined CLOUDFLARED if exist "C:\Program Files\cloudflared\cloudflared.exe" set CLOUDFLARED=C:\Program Files\cloudflared\cloudflared.exe
-if defined CLOUDFLARED (
-    start "Yeori Cloudflare Tunnel" /D "%~dp0" cmd /k "timeout /t 6 /nobreak >nul && node scripts\sync-tunnel.js"
-    echo        Tunnel window opened -- URL change is synced to Vercel automatically.
-) else (
-    echo        cloudflared.exe not found -- skip tunnel
-)
+::   ensure-tunnel.ps1 이 상태 점검 후 필요할 때만 재기동 (재실행 안전).
+echo [2] Ensuring Cloudflare Tunnel (auto Vercel sync)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-tunnel.ps1"
 echo.
 
 :: [3] 무인 코드작업 워커 (에이전트) — code-task-queue.json 폴링 -> 헤드리스 claude
