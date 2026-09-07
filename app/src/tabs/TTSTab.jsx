@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { elTTS, elVoices } from '../lib/api'
 import { setGPoint, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
+import { cleanForTTS } from '../lib/ttsText'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './TTSTab.module.css'
@@ -13,22 +14,29 @@ const FALLBACK_DEFAULTS = {
   narration: { speed: 0.85, stability: 55, similarity: 75 },
 }
 
-function makeTrack(type, text = '', trackDefaults) {
+function makeTrack(type, text = '', trackDefaults, removedNotes = []) {
   const defs = trackDefaults || FALLBACK_DEFAULTS
   return {
     id: `track_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     type,
     text,
+    removedNotes, // 대본에서 TTS 정제로 빠진 지문/메모 목록 (표시용)
     url: null,
     voiceId: '', // 비어있으면 목소리 탭의 기본값을 사용 — 트랙별로 다른 목소리를 지정해 한 컷에 여러 목소리를 조합할 수 있음
     settings: { ...(defs[type] || FALLBACK_DEFAULTS[type]) },
   }
 }
 
+// 대본 필드를 TTS용으로 정제한 텍스트로 트랙을 만든다 (지문/메모 괄호 제거).
+function makeTrackFromScript(type, scriptText, trackDefaults) {
+  const { clean, removed } = cleanForTTS(scriptText)
+  return makeTrack(type, clean, trackDefaults, removed)
+}
+
 function initTracksForCut(cut, trackDefaults) {
   const tracks = []
-  if (cut.dialogue?.trim())  tracks.push(makeTrack('dialogue',  cut.dialogue,  trackDefaults))
-  if (cut.narration?.trim()) tracks.push(makeTrack('narration', cut.narration, trackDefaults))
+  if (cut.dialogue?.trim())  tracks.push(makeTrackFromScript('dialogue',  cut.dialogue,  trackDefaults))
+  if (cut.narration?.trim()) tracks.push(makeTrackFromScript('narration', cut.narration, trackDefaults))
   if (!tracks.length)        tracks.push(makeTrack('dialogue',  '',            trackDefaults))
   return tracks
 }
@@ -273,6 +281,9 @@ export default function TTSTab() {
     if (!track || !track.text.trim()) { alert('텍스트를 입력하세요'); return null }
     const variant = getVoiceTabsForCut(cutId).find(v => v.id === voiceTabId)
     const voiceId = track.voiceId?.trim() || variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+    // 안전망: textarea에 지문 섞인 원문이 다시 들어와도 괄호/메모는 읽지 않는다
+    const speakText = cleanForTTS(track.text).clean
+    if (!speakText) { alert('정제 후 읽을 텍스트가 없습니다 (전부 지문/메모)'); return null }
 
     setTrackLoading(p => ({ ...p, [trackId]: true }))
     try {
@@ -280,7 +291,7 @@ export default function TTSTab() {
         apiKeys.elevenLabs,
         voiceId,
         {
-          text: track.text,
+          text: speakText,
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
             stability:       track.settings.stability / 100,
@@ -405,7 +416,8 @@ export default function TTSTab() {
         // 각 트랙 생성 (트랙별 목소리 지정이 있으면 우선 사용 — 한 컷에 여러 목소리 조합 가능)
         const updated = []
         for (const t of cutTrks) {
-          if (!t.text.trim()) { updated.push(t); continue }
+          const speakText = cleanForTTS(t.text).clean
+          if (!speakText) { updated.push(t); continue }
           const voiceId = t.voiceId?.trim() || primary.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
           setTrackLoading(p => ({ ...p, [t.id]: true }))
           try {
@@ -413,7 +425,7 @@ export default function TTSTab() {
               apiKeys.elevenLabs,
               voiceId,
               {
-                text: t.text, model_id: 'eleven_multilingual_v2',
+                text: speakText, model_id: 'eleven_multilingual_v2',
                 voice_settings: {
                   stability:       t.settings.stability / 100,
                   similarity_boost: t.settings.similarity / 100,
@@ -604,9 +616,18 @@ export default function TTSTab() {
                 <textarea className={s.trackText} rows={3}
                   placeholder={track.type === 'dialogue' ? '대사 입력...' : '나레이션 입력...'}
                   value={track.text}
-                  onChange={e => setTracksForKey(activeKey, prev =>
-                    prev.map(t => t.id === track.id ? { ...t, text: e.target.value } : t)
-                  )} />
+                  onChange={e => {
+                    const v = e.target.value
+                    const { removed } = cleanForTTS(v)
+                    setTracksForKey(activeKey, prev =>
+                      prev.map(t => t.id === track.id ? { ...t, text: v, removedNotes: removed } : t)
+                    )
+                  }} />
+                {track.removedNotes?.length > 0 && (
+                  <div className={s.removedHint}>
+                    🧹 TTS에서 제외됨(지문·메모): {track.removedNotes.join('  ')}
+                  </div>
+                )}
 
                 {/* 슬라이더 */}
                 <div className={s.trackSettings}>
