@@ -185,6 +185,29 @@ function loadTypeStyles() {
   }
 }
 
+// ── 모션 자막(effect) — 손글씨 오버레이와 별개, B-컷 위주 CapCut식 강조 자막 ──
+// scripts/yeori_subtitle.py + POST /api/subtitle/render 와 짝. IMPLEMENTED만 활성.
+const SUBTITLE_EFFECT_GROUPS = [
+  ['기본형', [['fade', 'FADE'], ['slide', 'SLIDE'], ['typer', 'TYPER'], ['pop', 'POP']]],
+  ['강조형', [['slam', 'SLAM'], ['glow', 'GLOW'], ['highlight', 'HIGHLIGHT'], ['split', 'SPLIT']]],
+]
+const SUBTITLE_EFFECT_IMPLEMENTED = new Set(['fade', 'slide', 'pop', 'slam', 'glow'])
+const SUBTITLE_POSITIONS = [['bottom', '하단'], ['center', '중앙'], ['top', '상단']]
+const DEFAULT_SUBTITLE = {
+  effect: 'slam',
+  style: { font_size: 72, color: '#FFFFFF', position: 'bottom', outline: true },
+  entries: [{ text: '', start: 0.3, end: 2.0 }],
+}
+function loadSubtitleCfg(cut) {
+  return {
+    ...DEFAULT_SUBTITLE,
+    style: { ...DEFAULT_SUBTITLE.style },
+    entries: (cut.subtitle
+      ? [{ text: cut.subtitle, start: 0.3, end: Math.min(3, cutDuration(cut)) }]
+      : [{ ...DEFAULT_SUBTITLE.entries[0], end: Math.min(2, cutDuration(cut)) }]),
+  }
+}
+
 const OVERLAY_TIMINGS = [['full', '전체'], ['first2', '앞 2초'], ['first3', '앞 3초'], ['first5', '앞 5초']]
 function overlayTimeRange(timing, duration) {
   const d = duration || 5
@@ -1012,6 +1035,48 @@ export default function MakingTab() {
 
   const [overlayBusy, setOverlayBusy] = useState({})     // { [cutNo]: bool }
   const [overlayResult, setOverlayResult] = useState({}) // { [cutNo]: data | { error } }
+
+  // ── 모션 자막(effect) — B-컷 자막 패널 ──
+  const [subtitleCfg, setSubtitleCfg] = useState({})       // { [cutNo]: { effect, style, entries[] } }
+  const [subtitleBusy, setSubtitleBusy] = useState({})     // { [cutNo]: 'render' | 'preview' | false }
+  const [subtitleResult, setSubtitleResult] = useState({}) // { [cutNo]: data | { error } }
+  const getSubCfg = (cut) => subtitleCfg[cut.no] || loadSubtitleCfg(cut)
+  const patchSubCfg = (cutNo, patch) =>
+    setSubtitleCfg(p => ({ ...p, [cutNo]: { ...(p[cutNo] || loadSubtitleCfg(allCuts.find(c => c.no === cutNo) || { no: cutNo })), ...patch } }))
+
+  const runSubtitle = async (cut, { preview = false } = {}) => {
+    if (!episode.number || !videoStatus[cut.no]) return { ok: false }
+    const cfg = getSubCfg(cut)
+    const entries = (cfg.entries || []).filter(e => String(e.text || '').trim())
+    if (!entries.length) {
+      setSubtitleResult(p => ({ ...p, [cut.no]: { error: '자막 문구를 하나 이상 입력하세요' } }))
+      return { ok: false }
+    }
+    setSubtitleBusy(p => ({ ...p, [cut.no]: preview ? 'preview' : 'render' }))
+    setSubtitleResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/subtitle/render`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number, cutNo: cut.no,
+          effect: cfg.effect, style: cfg.style, entries, preview,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSubtitleResult(p => ({ ...p, [cut.no]: { error: data.error || '자막 합성 실패' } }))
+        return { ok: false, error: data.error }
+      }
+      setSubtitleResult(p => ({ ...p, [cut.no]: { ...data, _ts: Date.now() } }))
+      return { ok: true, data }
+    } catch (e) {
+      setSubtitleResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+      return { ok: false, error: e.message }
+    } finally {
+      setSubtitleBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
 
   // ── 이미지에 손글씨 (썸네일·스틸용) — 임의 이미지 + 씬별 손글씨 → 씬마다 PNG ──
   const newHwScene = () => ({
@@ -1865,6 +1930,113 @@ export default function MakingTab() {
     )
   }
 
+  // ── 자막 패널 — B-컷(cut_NN.mp4 확정됨) 위에 모션 자막(effect) 합성 ──
+  const renderSubtitlePanel = (cut) => {
+    const cfg = getSubCfg(cut)
+    const busy = subtitleBusy[cut.no]
+    const r = subtitleResult[cut.no]
+    const ready = !!videoStatus[cut.no]
+    const setEntry = (i, patch) => {
+      const entries = cfg.entries.map((e, k) => (k === i ? { ...e, ...patch } : e))
+      patchSubCfg(cut.no, { entries })
+    }
+    const outName = r?.outputPath?.split(/[/\\]/).pop()
+    return (
+      <div className={s.subPanel}>
+        <div className={s.settingLabel}>🎬 모션 자막 — cut_{String(cut.no).padStart(2, '0')}.mp4</div>
+        {!ready && (
+          <div className={s.emptyHint}>이 컷의 영상을 먼저 제작하면(cut_{String(cut.no).padStart(2, '0')}.mp4) 자막을 얹을 수 있습니다.</div>
+        )}
+
+        <div className={s.settingLabel}>효과 타입</div>
+        {SUBTITLE_EFFECT_GROUPS.map(([groupName, effs]) => (
+          <div key={groupName} className={s.effectRow}>
+            <span className={s.effectGroupTag}>{groupName}</span>
+            {effs.map(([val, label]) => {
+              const impl = SUBTITLE_EFFECT_IMPLEMENTED.has(val)
+              return (
+                <button key={val}
+                  className={`${s.effectBtn} ${cfg.effect === val ? s.effectBtnActive : ''}`}
+                  disabled={!impl}
+                  title={impl ? '' : '준비중'}
+                  onClick={() => patchSubCfg(cut.no, { effect: val })}>
+                  {label}{impl ? '' : ' ·준비중'}
+                </button>
+              )
+            })}
+          </div>
+        ))}
+
+        <div className={s.settingLabel}>자막 목록</div>
+        {cfg.entries.map((e, i) => (
+          <div key={i} className={s.subEntryRow}>
+            <input className={s.subTextInput} value={e.text} placeholder="자막 문구"
+              onChange={ev => setEntry(i, { text: ev.target.value })} />
+            <input className={s.subTimeInput} type="number" step="0.1" min="0" value={e.start}
+              onChange={ev => setEntry(i, { start: parseFloat(ev.target.value) || 0 })} title="시작(초)" />
+            <span className={s.subTimeSep}>~</span>
+            <input className={s.subTimeInput} type="number" step="0.1" min="0" value={e.end}
+              onChange={ev => setEntry(i, { end: parseFloat(ev.target.value) || 0 })} title="끝(초)" />
+            <button className={s.subDelBtn} disabled={cfg.entries.length <= 1}
+              onClick={() => patchSubCfg(cut.no, { entries: cfg.entries.filter((_, k) => k !== i) })}>✕</button>
+          </div>
+        ))}
+        <button className={s.previewBtn}
+          onClick={() => {
+            const last = cfg.entries[cfg.entries.length - 1]
+            patchSubCfg(cut.no, { entries: [...cfg.entries, { text: '', start: +(last.end).toFixed(1), end: +(last.end + 1.8).toFixed(1) }] })
+          }}>+ 자막 추가</button>
+
+        <div className={s.editorActions}>
+          <label className={s.durationField}>폰트
+            <input type="number" min="24" max="160" value={cfg.style.font_size}
+              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, font_size: parseInt(e.target.value) || 72 } })} />
+          </label>
+          <label className={s.durationField}>색상
+            <input type="color" value={cfg.style.color}
+              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, color: e.target.value } })} />
+          </label>
+          <label className={s.durationField}>위치
+            <select value={cfg.style.position}
+              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, position: e.target.value } })}>
+              {SUBTITLE_POSITIONS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </label>
+          <label className={s.radioLabel}>
+            <input type="checkbox" checked={cfg.style.outline !== false}
+              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, outline: e.target.checked } })} />
+            외곽선
+          </label>
+        </div>
+
+        <div className={s.editorActions}>
+          <button className={s.previewBtn} disabled={!ready || !!busy}
+            onClick={() => runSubtitle(cut, { preview: true })}>
+            {busy === 'preview' ? '⏳ 미리보기…' : '▶ 미리보기 (앞 2.5초)'}
+          </button>
+          <button className={s.captureBtn} disabled={!ready || !!busy}
+            onClick={() => runSubtitle(cut)}>
+            {busy === 'render' ? '⏳ 합성 중…' : '✅ 합성 시작'}
+          </button>
+        </div>
+
+        {r && (
+          r.error ? (
+            <div className={s.resultError}>❌ {r.error}</div>
+          ) : (
+            <div className={s.resultOk}>
+              {r.preview ? '👀 미리보기' : '✅ 자막 합성됨'} — {outName} ({r.sizeKB}KB){r.effect ? ` · ${r.effect}` : ''}
+              {!r.preview && <><br />조립 시 이 컷은 <b>{outName}</b>로 포함됩니다.</>}
+              <br />
+              <video className={s.makingVideo} controls
+                src={`${epMediaUrl(episode, 'video')}/${outName}?t=${r._ts || 0}`} />
+            </div>
+          )
+        )}
+      </div>
+    )
+  }
+
   const renderPanel = (cut) => {
     let panel = null
     if (cut.cutType === 'GRAPHIC') panel = renderGraphicPanel(cut)
@@ -1875,6 +2047,7 @@ export default function MakingTab() {
         {panel}
         {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
         {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
+        {cut.cutType === 'BROLL' && renderSubtitlePanel(cut)}
       </>
     )
   }
