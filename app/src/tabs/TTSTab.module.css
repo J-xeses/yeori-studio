@@ -204,11 +204,19 @@ input[type=range]::-moz-range-thumb:hover { transform: scale(1.12); }
 .trackVoiceOverrideLabel { font-size: 11px; color: var(--text-3); white-space: nowrap; padding-top: 6px; }
 
 .removedHint {
-  margin-top: 5px; font-size: 11.5px; line-height: 1.5;
-  color: var(--text-dim, #9aa); background: var(--accent-glow);
-  border: 1px dashed var(--accent-border); border-radius: 5px; padding: 4px 8px;
-  word-break: break-all;
+  margin-top: 5px; font-size: 11.5px; line-height: 1.55;
+  color: var(--text-2, var(--text)); background: var(--accent-glow);
+  border: 1px dashed var(--accent-border); border-radius: 5px; padding: 6px 9px;
+  word-break: break-word; display: flex; flex-direction: column; gap: 3px;
 }
+.removedHint b { color: var(--accent-light); font-weight: 600; }
+.removedList { color: var(--text-dim, #9aa); font-size: 11px; }
+.applyCleanBtn {
+  align-self: flex-start; margin-top: 2px;
+  background: var(--accent); border: none; color: #fff;
+  font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 5px; cursor: pointer;
+}
+.applyCleanBtn:hover { background: var(--accent-glow); color: var(--accent-light); }
 
 .trackSettings { display: flex; flex-direction: column; gap: 8px; }
 

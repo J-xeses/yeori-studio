@@ -16,23 +16,21 @@ const FALLBACK_DEFAULTS = {
   narration: { speed: 0.85, stability: 55, similarity: 75 },
 }
 
-function makeTrack(type, text = '', trackDefaults, removedNotes = []) {
+function makeTrack(type, text = '', trackDefaults) {
   const defs = trackDefaults || FALLBACK_DEFAULTS
   return {
     id: `track_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     type,
     text,
-    removedNotes, // 대본에서 TTS 정제로 빠진 지문/메모 목록 (표시용)
     url: null,
     voiceId: '', // 비어있으면 목소리 탭의 기본값을 사용 — 트랙별로 다른 목소리를 지정해 한 컷에 여러 목소리를 조합할 수 있음
     settings: { ...(defs[type] || FALLBACK_DEFAULTS[type]) },
   }
 }
 
-// 대본 필드를 TTS용으로 정제한 텍스트로 트랙을 만든다 (지문/메모 괄호 제거).
+// 대본 필드를 TTS용으로 정제한 텍스트로 트랙을 만든다 (지문/화자명/따옴표 제거).
 function makeTrackFromScript(type, scriptText, trackDefaults) {
-  const { clean, removed } = cleanForTTS(scriptText)
-  return makeTrack(type, clean, trackDefaults, removed)
+  return makeTrack(type, cleanForTTS(scriptText).clean, trackDefaults)
 }
 
 function initTracksForCut(cut, trackDefaults) {
@@ -547,18 +545,27 @@ export default function TTSTab() {
                 <textarea className={s.trackText} rows={3}
                   placeholder={track.type === 'dialogue' ? '대사 입력...' : '나레이션 입력...'}
                   value={track.text}
-                  onChange={e => {
-                    const v = e.target.value
-                    const { removed } = cleanForTTS(v)
-                    setTracksForKey(activeKey, prev =>
-                      prev.map(t => t.id === track.id ? { ...t, text: v, removedNotes: removed } : t)
-                    )
-                  }} />
-                {track.removedNotes?.length > 0 && (
-                  <div className={s.removedHint}>
-                    🧹 TTS에서 제외됨(지문·메모): {track.removedNotes.join('  ')}
-                  </div>
-                )}
+                  onChange={e => setTracksForKey(activeKey, prev =>
+                    prev.map(t => t.id === track.id ? { ...t, text: e.target.value } : t)
+                  )} />
+                {(() => {
+                  const { clean, removed } = cleanForTTS(track.text)
+                  if (clean === track.text.trim()) return null   // 이미 정제됨 — 안내 불필요
+                  return (
+                    <div className={s.removedHint}>
+                      <div>🔊 실제 읽을 내용: <b>{clean || '(비어있음 — 전부 지문/메모)'}</b></div>
+                      {removed.length > 0 && <div className={s.removedList}>제외: {removed.join('  ')}</div>}
+                      {clean && (
+                        <button type="button" className={s.applyCleanBtn}
+                          onClick={() => setTracksForKey(activeKey, prev =>
+                            prev.map(t => t.id === track.id ? { ...t, text: clean } : t)
+                          )}>
+                          정제본으로 교체
+                        </button>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* 슬라이더 */}
                 <div className={s.trackSettings}>
