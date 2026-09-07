@@ -74,3 +74,42 @@ export function cleanForTTS(input) {
 export function isEmptyAfterClean(input) {
   return !cleanForTTS(input).clean
 }
+
+// ── 다중 화자 대사 분리 ──────────────────────────────────────────
+// `지아 "야, 봤어?" / 여리 "세 그룹이…"` 처럼 한 필드에 여러 화자 대사가 있으면
+// [{speaker, text}] 로 쪼갠다. 화자별로 다른 목소리로 TTS 생성 → 합쳐 하나의 컷 오디오.
+// 화자 마커가 전혀 없으면 [{speaker: null, text: <정제본>}] 하나.
+//   `이름 "대사"`  ·  `이름: 대사`  ·  구분자 `/`  ·  인라인 `"대사" 이름 "대사"`
+
+// 세그먼트: (이름) (콜론?) (따옴표대사)  |  (이름) 콜론 (따옴표없는 대사, /·줄끝까지)
+const SEG_RE = new RegExp(
+  `([가-힣]{1,6})[ \\t]*[:：]?[ \\t]*[${QOPEN}]([^${QCLOSE}]*)[${QCLOSE}]` +
+  `|([가-힣]{1,6})[ \\t]*[:：][ \\t]*([^/／\\n${QOPEN}]+)`,
+  'g',
+)
+
+export function splitSpeakerSegments(input) {
+  const raw = String(input || '')
+  const segs = []
+  let m
+  SEG_RE.lastIndex = 0
+  while ((m = SEG_RE.exec(raw)) !== null) {
+    const speaker = (m[1] || m[3] || '').trim() || null
+    const body    = (m[2] ?? m[4] ?? '').trim()
+    const clean   = cleanForTTS(body).clean
+    if (clean) segs.push({ speaker, text: clean })
+  }
+  // 화자 마커가 하나도 안 잡혔으면 통짜 정제본 하나
+  if (!segs.length) {
+    const clean = cleanForTTS(raw).clean
+    return clean ? [{ speaker: null, text: clean }] : []
+  }
+  // 같은 화자 연속 세그먼트는 병합(한 사람이 여러 문장 말한 경우)
+  const merged = []
+  for (const s of segs) {
+    const prev = merged[merged.length - 1]
+    if (prev && prev.speaker === s.speaker) prev.text += ' ' + s.text
+    else merged.push({ ...s })
+  }
+  return merged
+}

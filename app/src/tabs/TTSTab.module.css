@@ -199,6 +199,21 @@ input[type=range]::-moz-range-thumb:hover { transform: scale(1.12); }
 }
 .trackText:focus { border-color: var(--accent); }
 
+.speakerVoicePanel {
+  background: var(--accent-glow); border: 1px solid var(--accent-border);
+  border-radius: 8px; padding: 9px 11px; margin-bottom: 10px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.speakerVoiceTitle { font-size: 12px; font-weight: 700; color: var(--accent-light); }
+.speakerVoiceTitle span { font-weight: 400; color: var(--text-dim, #9aa); font-size: 11px; }
+.speakerVoiceRow { display: flex; align-items: flex-start; gap: 8px; }
+.speakerVoiceRow > :last-child { flex: 1; min-width: 0; }
+.speakerVoiceName {
+  font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap;
+  padding: 6px 8px; background: var(--bg-panel); border-radius: 5px; min-width: 46px; text-align: center;
+}
+.trackVoiceTag { margin-left: 5px; font-size: 11px; }
+
 .trackVoiceOverrideRow { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0 2px; }
 .trackVoiceOverrideRow > :last-child { flex: 1; min-width: 0; }
 .trackVoiceOverrideLabel { font-size: 11px; color: var(--text-3); white-space: nowrap; padding-top: 6px; }

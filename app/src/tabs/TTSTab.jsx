@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import { elTTS, elVoices, freeTTS } from '../lib/api'
 import { setGPoint, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { cleanForTTS } from '../lib/ttsText'
+import { cleanForTTS, splitSpeakerSegments } from '../lib/ttsText'
 import { isFreeVoice, freeVoiceName, speedToRate } from '../lib/freeTts'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
@@ -16,28 +16,31 @@ const FALLBACK_DEFAULTS = {
   narration: { speed: 0.85, stability: 55, similarity: 75 },
 }
 
-function makeTrack(type, text = '', trackDefaults) {
+function makeTrack(type, text = '', trackDefaults, speaker = null) {
   const defs = trackDefaults || FALLBACK_DEFAULTS
   return {
     id: `track_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     type,
     text,
+    speaker,     // 다중 화자 대사에서 이 트랙을 말하는 화자 이름 (없으면 null)
     url: null,
-    voiceId: '', // 비어있으면 목소리 탭의 기본값을 사용 — 트랙별로 다른 목소리를 지정해 한 컷에 여러 목소리를 조합할 수 있음
+    voiceId: '', // 비어있으면 화자별 목소리 → 탭 기본값 순으로 상속
     settings: { ...(defs[type] || FALLBACK_DEFAULTS[type]) },
   }
 }
 
-// 대본 필드를 TTS용으로 정제한 텍스트로 트랙을 만든다 (지문/화자명/따옴표 제거).
-function makeTrackFromScript(type, scriptText, trackDefaults) {
-  return makeTrack(type, cleanForTTS(scriptText).clean, trackDefaults)
-}
-
 function initTracksForCut(cut, trackDefaults) {
   const tracks = []
-  if (cut.dialogue?.trim())  tracks.push(makeTrackFromScript('dialogue',  cut.dialogue,  trackDefaults))
-  if (cut.narration?.trim()) tracks.push(makeTrackFromScript('narration', cut.narration, trackDefaults))
-  if (!tracks.length)        tracks.push(makeTrack('dialogue',  '',            trackDefaults))
+  if (cut.dialogue?.trim()) {
+    // 다중 화자면 화자별 트랙으로 분리 (지아 트랙 / 여리 트랙 … 각각 다른 목소리 지정)
+    for (const seg of splitSpeakerSegments(cut.dialogue)) {
+      tracks.push(makeTrack('dialogue', seg.text, trackDefaults, seg.speaker))
+    }
+  }
+  if (cut.narration?.trim()) {
+    tracks.push(makeTrack('narration', cleanForTTS(cut.narration).clean, trackDefaults))
+  }
+  if (!tracks.length) tracks.push(makeTrack('dialogue', '', trackDefaults))
   return tracks
 }
 
@@ -79,6 +82,16 @@ export default function TTSTab() {
     voiceTabs = {}, activeVoiceTab = {}, focusCutId = null,
   } = state.ttsTabState || {}
   const trackDefaults = ttsSettings.trackDefaults || FALLBACK_DEFAULTS
+  const speakerVoices = ttsSettings.speakerVoices || {}
+
+  // 트랙 목소리 상속: 트랙 직접지정 → 화자별 목소리 → 목소리 탭 기본값 → 전역 기본값
+  const resolveVoiceId = (track, variant) =>
+    track.voiceId?.trim()
+    || (track.speaker && speakerVoices[track.speaker])
+    || variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+
+  const setSpeakerVoice = (name, id) =>
+    dispatch({ type: 'SET_TTS', p: { speakerVoices: { ...speakerVoices, [name]: id } } })
 
   const [activeCutIdx, setActiveCutIdx]   = useState(0)
   const [voiceInput,   setVoiceInput]     = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -258,7 +271,7 @@ export default function TTSTab() {
     const track = list.find(t => t.id === trackId)
     if (!track || !track.text.trim()) { alert('텍스트를 입력하세요'); return null }
     const variant = getVoiceTabsForCut(cutId).find(v => v.id === voiceTabId)
-    const voiceId = track.voiceId?.trim() || variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+    const voiceId = resolveVoiceId(track, variant)
     // 안전망: textarea에 지문 섞인 원문이 다시 들어와도 괄호/메모는 읽지 않는다
     const speakText = cleanForTTS(track.text).clean
     if (!speakText) { alert('정제 후 읽을 텍스트가 없습니다 (전부 지문/메모)'); return null }
@@ -387,7 +400,7 @@ export default function TTSTab() {
         for (const t of cutTrks) {
           const speakText = cleanForTTS(t.text).clean
           if (!speakText) { updated.push(t); continue }
-          const voiceId = t.voiceId?.trim() || primary.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
+          const voiceId = resolveVoiceId(t, primary)
           setTrackLoading(p => ({ ...p, [t.id]: true }))
           try {
             const res = await ttsRequest(voiceId, speakText, t.settings)
@@ -495,12 +508,42 @@ export default function TTSTab() {
               />
             </div>
 
+            {/* 화자별 목소리 — 다중 화자 대사가 있으면 화자마다 목소리 지정 (전 컷 공용) */}
+            {(() => {
+              const names = [...new Set(cutTracks.map(t => t.speaker).filter(Boolean))]
+              if (!names.length) return null
+              return (
+                <div className={s.speakerVoicePanel}>
+                  <div className={s.speakerVoiceTitle}>🎭 화자별 목소리 <span>(모든 컷 공통)</span></div>
+                  {names.map(name => (
+                    <div key={name} className={s.speakerVoiceRow}>
+                      <span className={s.speakerVoiceName}>{name}</span>
+                      <VoicePicker
+                        compact
+                        value={speakerVoices[name] || ''}
+                        onChange={id => setSpeakerVoice(name, id)}
+                        myVoices={myVoices}
+                        onLoadVoices={loadMyVoices}
+                        voicesLoading={voicesLoading}
+                        inheritLabel={`탭 기본값 ${activeVariant.voiceId.slice(0, 10)}…`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+
             {cutTracks.map((track, idx) => (
               <div key={track.id} className={s.trackCard}>
                 {/* 헤더 */}
                 <div className={s.trackHeader}>
                   <span className={`${s.trackLabel} ${track.type === 'narration' ? s.trackLabelNarr : ''}`}>
-                    {track.type === 'dialogue' ? '💬 대사' : '🎙 나레이션'}
+                    {track.type === 'narration'
+                      ? '🎙 나레이션'
+                      : (track.speaker ? `💬 ${track.speaker}` : '💬 대사')}
+                    {track.speaker && speakerVoices[track.speaker] && (
+                      <span className={s.trackVoiceTag} title="화자별 목소리 적용 중">🎭</span>
+                    )}
                   </span>
                   <div className={s.trackHeaderBtns}>
                     <button className={s.trackResetBtn} title="기본값 복원"
@@ -549,19 +592,40 @@ export default function TTSTab() {
                     prev.map(t => t.id === track.id ? { ...t, text: e.target.value } : t)
                   )} />
                 {(() => {
+                  const segs = track.type === 'dialogue' ? splitSpeakerSegments(track.text) : []
+                  const multi = segs.filter(x => x.speaker).length > 1 && !track.speaker
                   const { clean, removed } = cleanForTTS(track.text)
-                  if (clean === track.text.trim()) return null   // 이미 정제됨 — 안내 불필요
+                  const needClean = clean !== track.text.trim() && !multi
+                  if (!multi && !needClean) return null
                   return (
                     <div className={s.removedHint}>
-                      <div>🔊 실제 읽을 내용: <b>{clean || '(비어있음 — 전부 지문/메모)'}</b></div>
-                      {removed.length > 0 && <div className={s.removedList}>제외: {removed.join('  ')}</div>}
-                      {clean && (
-                        <button type="button" className={s.applyCleanBtn}
-                          onClick={() => setTracksForKey(activeKey, prev =>
-                            prev.map(t => t.id === track.id ? { ...t, text: clean } : t)
-                          )}>
-                          정제본으로 교체
-                        </button>
+                      {multi ? (
+                        <>
+                          <div>🎭 화자 {segs.filter(x => x.speaker).length}명 감지: <b>{segs.filter(x => x.speaker).map(x => x.speaker).join(', ')}</b> — 각자 다른 목소리로 생성하려면 분리하세요</div>
+                          <button type="button" className={s.applyCleanBtn}
+                            onClick={() => setTracksForKey(activeKey, prev => {
+                              const i = prev.findIndex(t => t.id === track.id)
+                              if (i < 0) return prev
+                              const newTracks = segs.map(seg =>
+                                makeTrack('dialogue', seg.text, trackDefaults, seg.speaker))
+                              return [...prev.slice(0, i), ...newTracks, ...prev.slice(i + 1)]
+                            })}>
+                            화자별 트랙으로 분리
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <div>🔊 실제 읽을 내용: <b>{clean || '(비어있음 — 전부 지문/메모)'}</b></div>
+                          {removed.length > 0 && <div className={s.removedList}>제외: {removed.join('  ')}</div>}
+                          {clean && (
+                            <button type="button" className={s.applyCleanBtn}
+                              onClick={() => setTracksForKey(activeKey, prev =>
+                                prev.map(t => t.id === track.id ? { ...t, text: clean } : t)
+                              )}>
+                              정제본으로 교체
+                            </button>
+                          )}
+                        </>
                       )}
                     </div>
                   )

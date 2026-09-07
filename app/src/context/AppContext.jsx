@@ -59,7 +59,8 @@ const defaultState = {
     trackDefaults: {
       dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
       narration: { speed: 0.85, stability: 55, similarity: 75 },
-    }
+    },
+    speakerVoices: {},   // { '지아': voiceId, '여리': voiceId } — 다중 화자 대사 트랙이 화자별로 다른 목소리
   },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000' },
   renderProgress: { current: 0, total: 0, isRendering: false },
