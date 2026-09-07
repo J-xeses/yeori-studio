@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
-import { elTTS, elVoices } from '../lib/api'
+import { elTTS, elVoices, freeTTS } from '../lib/api'
 import { setGPoint, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { cleanForTTS } from '../lib/ttsText'
+import { isFreeVoice, freeVoiceName, speedToRate } from '../lib/freeTts'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import VoicePicker from '../components/VoicePicker'
@@ -234,9 +235,26 @@ export default function TTSTab() {
     } finally { setVoicesLoading(false) }
   }
 
+  // ── 한 트랙 텍스트 → 오디오 Response (provider 분기) ──────
+  // voiceId 가 'free:' 로 시작하면 무료 TTS(Edge), 아니면 ElevenLabs.
+  const ttsRequest = (voiceId, speakText, settings) => {
+    if (isFreeVoice(voiceId)) {
+      return freeTTS(freeVoiceName(voiceId), speakText, speedToRate(settings.speed))
+    }
+    if (!apiKeys.elevenLabs) throw new Error('ElevenLabs API 키를 입력하고 연동하세요 (무료 목소리는 키 불필요)')
+    return elTTS(apiKeys.elevenLabs, voiceId, {
+      text: speakText,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability:        settings.stability / 100,
+        similarity_boost: settings.similarity / 100,
+        speed:            settings.speed,
+      },
+    })
+  }
+
   // ── 트랙 개별 TTS 생성 ───────────────────────────────────
   const generateTrackById = async (cutId, voiceTabId, trackId, trackList) => {
-    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return null }
     const key   = trackKey(cutId, voiceTabId)
     const list  = trackList || getTracksForKey(key, cuts.find(c => c.id === cutId))
     const track = list.find(t => t.id === trackId)
@@ -249,20 +267,12 @@ export default function TTSTab() {
 
     setTrackLoading(p => ({ ...p, [trackId]: true }))
     try {
-      const res = await elTTS(
-        apiKeys.elevenLabs,
-        voiceId,
-        {
-          text: speakText,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability:       track.settings.stability / 100,
-            similarity_boost: track.settings.similarity / 100,
-            speed:           track.settings.speed,
-          },
-        }
-      )
-      if (!res.ok) { const e = await res.json(); throw new Error(e.detail?.message || 'API 오류') }
+      const res = await ttsRequest(voiceId, speakText, track.settings)
+      if (!res.ok) {
+        let msg = 'API 오류'
+        try { const e = await res.json(); msg = e.detail?.message || e.error || msg } catch { /* non-json */ }
+        throw new Error(msg)
+      }
       const blob = await res.blob()
       const url  = URL.createObjectURL(blob)
       setTracksForKey(key, prev => prev.map(t => t.id === trackId ? { ...t, url } : t))
@@ -367,7 +377,6 @@ export default function TTSTab() {
 
   // ── 전체 일괄 생성 (컷당 첫 번째 목소리 탭 기준) ───────────
   const runBatch = async () => {
-    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하고 연동하세요'); return }
     setBatchRunning(true)
     try {
       for (const c of cuts) {
@@ -383,18 +392,7 @@ export default function TTSTab() {
           const voiceId = t.voiceId?.trim() || primary.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
           setTrackLoading(p => ({ ...p, [t.id]: true }))
           try {
-            const res = await elTTS(
-              apiKeys.elevenLabs,
-              voiceId,
-              {
-                text: speakText, model_id: 'eleven_multilingual_v2',
-                voice_settings: {
-                  stability:       t.settings.stability / 100,
-                  similarity_boost: t.settings.similarity / 100,
-                  speed:           t.settings.speed,
-                },
-              }
-            )
+            const res = await ttsRequest(voiceId, speakText, t.settings)
             if (res.ok) {
               const blob = await res.blob()
               updated.push({ ...t, url: URL.createObjectURL(blob) })

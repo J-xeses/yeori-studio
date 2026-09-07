@@ -162,6 +162,33 @@ app.post('/api/elevenlabs/text-to-speech/:voiceId', async (req, res) => {
   }
 })
 
+// ── POST /api/free-tts — 무료 TTS (Microsoft Edge read-aloud, 크레딧 0) ──
+// 평범한 조연/엑스트라 대사 대량 생성용. ElevenLabs 와 동일하게 audio/mpeg 를 돌려주므로
+// 클라이언트(TTSTab)는 결과 blob 을 기존과 똑같이 합치기/저장에 쓴다.
+// 한국어 보이스: ko-KR-SunHiNeural(여) / ko-KR-InJoonNeural(남) / ko-KR-HyunsuMultilingualNeural(남)
+app.post('/api/free-tts', async (req, res) => {
+  const { text, voiceId = 'ko-KR-SunHiNeural', rate } = req.body || {}
+  if (!text || !String(text).trim()) return res.status(400).json({ error: 'text 필요' })
+  try {
+    const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts')
+    const tts = new MsEdgeTTS()
+    await tts.setMetadata(voiceId, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3)
+    // rate: 숫자 %(예: -10, +20). 0/미지정이면 옵션 없이(기본 속도).
+    const opts = {}
+    const r = Number(rate)
+    if (Number.isFinite(r) && r !== 0) opts.rate = `${r > 0 ? '+' : ''}${Math.round(r)}%`
+    const { audioStream } = tts.toStream(String(text), opts)
+    const chunks = []
+    for await (const c of audioStream) chunks.push(c)
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) throw new Error('빈 오디오 (보이스 ID 확인)')
+    res.set('content-type', 'audio/mpeg')
+    res.send(buf)
+  } catch (err) {
+    res.status(502).json({ error: `무료 TTS 실패: ${err.message || err}` })
+  }
+})
+
 // ── FFmpeg 실행 헬퍼 ──────────────────────────────────────────────
 function runFFmpegCmd(args, logPath) {
   return new Promise(resolve => {

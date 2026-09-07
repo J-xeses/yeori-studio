@@ -29,3 +29,12 @@ export const elTTS = (apiKey, voiceId, body) =>
     headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
     body: JSON.stringify(body),
   })
+
+// 무료 TTS (MS Edge read-aloud). voiceId 는 'ko-KR-SunHiNeural' 형태(접두사 없이).
+// ElevenLabs 와 동일하게 audio/mpeg Response 를 돌려준다.
+export const freeTTS = (voiceId, text, rate = 0) =>
+  fetch('http://localhost:3001/api/free-tts', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ voiceId, text, rate }),
+  })
