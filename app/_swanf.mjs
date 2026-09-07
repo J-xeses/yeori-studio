@@ -1,0 +1,11 @@
+import puppeteer from 'puppeteer-core';
+import { pathToFileURL } from 'url';
+const HTML='C:/Users/user/AppData/Local/Temp/claude/C--yubi-director-app-api-claude/5843a2bf-7e08-4aa3-acac-46ce951dde7c/scratchpad/swan_final.html';
+const OUT='C:/Users/user/AppData/Local/Temp/claude/C--yubi-director-app-api-claude/5843a2bf-7e08-4aa3-acac-46ce951dde7c/scratchpad/_swan_final.png';
+const CH='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const b=await puppeteer.launch({executablePath:CH,headless:'new',args:['--no-sandbox','--force-color-profile=srgb']});
+const p=await b.newPage(); await p.setViewport({width:1600,height:900,deviceScaleFactor:1});
+await p.goto(pathToFileURL(HTML).href,{waitUntil:'networkidle0'});
+await p.waitForFunction('window.__ready===true',{timeout:8000}).catch(()=>{});
+const el=await p.$('#sheet'); await el.screenshot({path:OUT});
+await b.close(); console.log('done');
