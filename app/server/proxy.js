@@ -2017,9 +2017,13 @@ async function assembleMakingFilm(epNum) {
   const files = []
   for (const c of cuts) {
     const padded = String(c.no).padStart(2, '0')
-    // 손글씨 오버레이가 적용된 컷은 cut_NN_overlay.mp4를 우선 사용(원본 cut_NN.mp4는 보존).
+    // 파생본 우선순위: 모션 자막(_subtitle) > 손글씨 오버레이(_overlay) > 원본 cut_NN.mp4.
+    // (원본은 항상 보존 — 파생본은 그 위에 얹은 결과)
+    const subtitleP = path.join(videoDir, `cut_${padded}_subtitle.mp4`)
     const overlayP = path.join(videoDir, `cut_${padded}_overlay.mp4`)
-    const p = fs.existsSync(overlayP) ? overlayP : path.join(videoDir, `cut_${padded}.mp4`)
+    const p = fs.existsSync(subtitleP) ? subtitleP
+      : fs.existsSync(overlayP) ? overlayP
+        : path.join(videoDir, `cut_${padded}.mp4`)
     if (fs.existsSync(p)) {
       files.push(p)
       includedCuts.push(c.no)
@@ -2535,6 +2539,21 @@ function recordCutOverlay(epNum, cutNo) {
     fs.writeFileSync(manifestPath(epNum), JSON.stringify(m, null, 2))
   } catch (e) {
     console.warn('[recordCutOverlay]', e.message)
+  }
+}
+// 모션 자막(yeori_subtitle.py) 적용 성공 시 호출 — 기존 항목에 subtitle 필드만 병합.
+function recordCutSubtitle(epNum, cutNo, effect) {
+  if (epNum == null || cutNo == null) return
+  try {
+    fs.mkdirSync(path.dirname(manifestPath(epNum)), { recursive: true })
+    const m = readCutManifest(epNum)
+    m[String(cutNo)] = {
+      ...(m[String(cutNo)] || {}),
+      subtitle: true, subtitleEffect: effect || null, subtitleAt: new Date().toISOString(),
+    }
+    fs.writeFileSync(manifestPath(epNum), JSON.stringify(m, null, 2))
+  } catch (e) {
+    console.warn('[recordCutSubtitle]', e.message)
   }
 }
 

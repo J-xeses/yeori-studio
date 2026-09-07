@@ -72,8 +72,29 @@
 .restoreBtn { font-size: 11.5px; padding: 3px 10px; border-radius: 5px; border: 1px solid #f59e0b; background: rgba(245,158,11,.15); color: #f59e0b; cursor: pointer; white-space: nowrap; }
 
 .sliders { display: flex; flex-direction: column; gap: 12px; }
-.sliderRow { display: flex; align-items: center; gap: 10px; }
+.sliderRow { display: grid; grid-template-columns: 55px 1fr 46px; align-items: center; gap: 10px 10px; }
 .sliderLabel { font-size: 12.5px; font-weight: 600; color: var(--text-2); min-width: 55px; }
+.sliderHint {
+  grid-column: 1 / -1; font-size: 10.5px; line-height: 1.45;
+  color: var(--text-dim, #9aa); margin-top: -2px;
+}
+.sliderRowOff { opacity: 0.5; }
+.sliderRowOff .sliderHint { color: var(--accent-light); }
+
+.sliderGuide {
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 8px; margin-bottom: 10px; font-size: 12px;
+}
+.sliderGuide > summary {
+  cursor: pointer; padding: 9px 12px; font-weight: 600; color: var(--accent-light);
+  list-style: none; user-select: none;
+}
+.sliderGuide > summary::-webkit-details-marker { display: none; }
+.sliderGuide[open] > summary { border-bottom: 1px solid var(--border); }
+.sliderGuideBody { padding: 10px 13px; display: flex; flex-direction: column; gap: 8px; line-height: 1.6; color: var(--text-2, var(--text)); }
+.sliderGuideBody b { color: var(--accent-light); }
+.sliderGuideBody i { font-style: normal; color: var(--text); font-weight: 600; }
+.sliderGuideNote { color: var(--text-dim, #9aa); font-size: 11px; }
 input[type=range] {
   flex: 1; height: 8px; border-radius: 4px;
   appearance: none; -webkit-appearance: none; -moz-appearance: none;

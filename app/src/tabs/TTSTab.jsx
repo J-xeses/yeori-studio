@@ -574,6 +574,17 @@ export default function TTSTab() {
               )
             })()}
 
+            <details className={s.sliderGuide}>
+              <summary>🎚 목소리 제어 가이드 (속도 · 안정성 · 유사도)</summary>
+              <div className={s.sliderGuideBody}>
+                <p><b>속도</b> — 말하는 빠르기. 1.0이 기본. 대사 0.9~1.0, 나레이션 0.85. 0.7 미만·1.3 초과는 어색해집니다.</p>
+                <p><b>안정성</b> — <i>낮을수록</i> 억양·감정 기복이 크고 연기력이 살지만 가끔 튀거나 발음이 뭉갭니다. <i>높을수록</i> 차분하고 일관되지만 단조로워집니다.<br />
+                  · 감정/리액션 씬: <b>20~35</b> &nbsp; · 정보 전달·차분한 나레이션: <b>45~60</b> &nbsp; · 70 이상은 로봇처럼 들릴 수 있음</p>
+                <p><b>유사도</b> — 원본(클론) 목소리에 얼마나 가깝게 붙일지. <i>높을수록</i> 음색은 똑같아지지만 원본 녹음의 <b>잡음·숨소리·울림까지 따라옵니다</b>. 보통 <b>70~85</b>. 원본이 깨끗하면 높게, 지저분하면 낮춰서 모델이 정리하게 두세요.</p>
+                <p className={s.sliderGuideNote}>※ 무료(Edge) 목소리는 안정성·유사도가 없고 속도만 적용됩니다. &nbsp; 모델: eleven_multilingual_v2</p>
+              </div>
+            </details>
+
             {cutTracks.map((track, idx) => (
               <div key={track.id} className={s.trackCard}>
                 {/* 헤더 */}
@@ -673,19 +684,28 @@ export default function TTSTab() {
                 })()}
 
                 {/* 슬라이더 */}
+                {(() => {
+                  const isFree = isFreeVoice(resolveVoiceId(track, activeVariant))
+                  return (
                 <div className={s.trackSettings}>
                   {[
-                    { key: 'speed',      label: '속도',   min: 0.5, max: 2.0, step: 0.05, unit: 'x' },
-                    { key: 'stability',  label: '안정성', min: 0,   max: 100, step: 1,    unit: '%' },
-                    { key: 'similarity', label: '유사도', min: 0,   max: 100, step: 1,    unit: '%' },
-                  ].map(({ key, label, min, max, step, unit }) => {
+                    { key: 'speed', label: '속도', min: 0.5, max: 2.0, step: 0.05, unit: 'x',
+                      hint: '말하는 빠르기. 1.0=기본. 대사는 0.9~1.0, 나레이션은 0.85 정도. 0.7 미만/1.3 초과는 부자연스러워짐.' },
+                    { key: 'stability', label: '안정성', min: 0, max: 100, step: 1, unit: '%',
+                      hint: '낮을수록 감정·억양 변화가 크고 연기력↑ 대신 불안정(가끔 튐). 높을수록 차분·일관·단조. 감정 씬 20~35 / 정보 전달·나레이션 45~60.',
+                      free: true },
+                    { key: 'similarity', label: '유사도', min: 0, max: 100, step: 1, unit: '%',
+                      hint: '원본 목소리에 얼마나 붙일지. 높으면 음색은 비슷하지만 원본의 잡음·숨소리까지 따라옴. 보통 70~85. 원본이 깨끗하면 높게, 지저분하면 낮게.',
+                      free: true },
+                  ].map(({ key, label, min, max, step, unit, hint, free }) => {
                     const val = track.settings[key]
                     const pct = ((val - min) / (max - min)) * 100
+                    const disabled = isFree && free
                     return (
-                      <div key={key} className={s.sliderRow}>
+                      <div key={key} className={`${s.sliderRow} ${disabled ? s.sliderRowOff : ''}`} title={hint}>
                         <span className={s.sliderLabel}>{label}</span>
                         <input type="range" min={min} max={max} step={step}
-                          value={val}
+                          value={val} disabled={disabled}
                           style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
                           onChange={e => setTracksForKey(activeKey, prev =>
                             prev.map(t => t.id === track.id
@@ -694,10 +714,13 @@ export default function TTSTab() {
                             )
                           )} />
                         <span className={s.sliderVal}>{val}{unit}</span>
+                        {disabled && <span className={s.sliderHint}>무료(Edge) 목소리는 속도만 적용됩니다</span>}
                       </div>
                     )
                   })}
                 </div>
+                  )
+                })()}
 
                 {/* 생성 버튼 + 개별 오디오 */}
                 <div className={s.trackGenRow}>
