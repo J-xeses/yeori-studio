@@ -166,27 +166,37 @@ app.post('/api/elevenlabs/text-to-speech/:voiceId', async (req, res) => {
 // 평범한 조연/엑스트라 대사 대량 생성용. ElevenLabs 와 동일하게 audio/mpeg 를 돌려주므로
 // 클라이언트(TTSTab)는 결과 blob 을 기존과 똑같이 합치기/저장에 쓴다.
 // 한국어 보이스: ko-KR-SunHiNeural(여) / ko-KR-InJoonNeural(남) / ko-KR-HyunsuMultilingualNeural(남)
+async function synthEdgeTTS(text, voiceId, rate) {
+  const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts')
+  const tts = new MsEdgeTTS()
+  await tts.setMetadata(voiceId, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3)
+  const opts = {}
+  const r = Number(rate)
+  if (Number.isFinite(r) && r !== 0) opts.rate = `${r > 0 ? '+' : ''}${Math.round(r)}%`
+  const { audioStream } = tts.toStream(String(text), opts)
+  const chunks = []
+  for await (const c of audioStream) chunks.push(c)
+  const buf = Buffer.concat(chunks)
+  if (!buf.length) throw new Error('빈 오디오')
+  return buf
+}
+
 app.post('/api/free-tts', async (req, res) => {
   const { text, voiceId = 'ko-KR-SunHiNeural', rate } = req.body || {}
   if (!text || !String(text).trim()) return res.status(400).json({ error: 'text 필요' })
-  try {
-    const { MsEdgeTTS, OUTPUT_FORMAT } = await import('msedge-tts')
-    const tts = new MsEdgeTTS()
-    await tts.setMetadata(voiceId, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3)
-    // rate: 숫자 %(예: -10, +20). 0/미지정이면 옵션 없이(기본 속도).
-    const opts = {}
-    const r = Number(rate)
-    if (Number.isFinite(r) && r !== 0) opts.rate = `${r > 0 ? '+' : ''}${Math.round(r)}%`
-    const { audioStream } = tts.toStream(String(text), opts)
-    const chunks = []
-    for await (const c of audioStream) chunks.push(c)
-    const buf = Buffer.concat(chunks)
-    if (!buf.length) throw new Error('빈 오디오 (보이스 ID 확인)')
-    res.set('content-type', 'audio/mpeg')
-    res.send(buf)
-  } catch (err) {
-    res.status(502).json({ error: `무료 TTS 실패: ${err.message || err}` })
+  // msedge-tts 는 WebSocket 이 조기 종료되는 일이 잦아(~30~50%) 재시도로 흡수한다.
+  let lastErr
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const buf = await synthEdgeTTS(text, voiceId, rate)
+      res.set('content-type', 'audio/mpeg')
+      return res.send(buf)
+    } catch (err) {
+      lastErr = err
+      await new Promise(r => setTimeout(r, 400 * attempt))
+    }
   }
+  res.status(502).json({ error: `무료 TTS 실패 (4회 시도): ${lastErr?.message || lastErr}` })
 })
 
 // ── FFmpeg 실행 헬퍼 ──────────────────────────────────────────────
@@ -6509,6 +6519,99 @@ app.post('/api/handwriting-overlay', async (req, res) => {
     // 컷 영상(cut_NN.mp4) 위에 오버레이한 경우만 매니페스트에 기록(임의 스틸은 제외).
     if (!inputRel && cutNo != null && suffix === '_overlay') recordCutOverlay(epNum, cutNo)
     res.json({ success: true, mode: 'video', outputPath, url: toUrl(outputPath), sizeKB: Math.round(stat.size / 1024) })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/subtitle/render — 확정된 컷 영상 위에 CapCut식 모션 자막(effect)을
+// 합성(scripts/yeori_subtitle.py)해 cut_NN_subtitle.mp4로 저장한다. 손글씨(_overlay)와 별개.
+// body: {
+//   epNum, cutNo, mode?='longform', effect?='slam',
+//   style?: { font_size, color, position, outline, glow, glow_color, glow_radius },
+//   entries: [{ text, start, end, effect?, position?, color?, font_size? }],
+//   inputPath?  — 임의 입력(없으면 cut_NN.mp4; _overlay.mp4 있으면 그 위에 얹음)
+//   stackOnOverlay?=true, preview?=false
+// }
+const SUB_VID_EXTS = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm'])
+
+app.post('/api/subtitle/render', async (req, res) => {
+  const {
+    epNum, cutNo, mode = 'longform', effect = 'slam', style = {}, entries,
+    inputPath: inputRel, stackOnOverlay = true, preview = false,
+  } = req.body || {}
+  if (!Array.isArray(entries) || !entries.length) {
+    return res.status(400).json({ error: 'entries(1개 이상) 필요' })
+  }
+  const scriptPath = path.join(CODE_ROOT, 'scripts', 'yeori_subtitle.py')
+  if (!fs.existsSync(scriptPath)) return res.status(500).json({ error: 'yeori_subtitle.py 없음', path: scriptPath })
+
+  let inputPath, workDir, outStem, configPath
+  if (inputRel) {
+    const rel = String(inputRel).replace(/\\/g, '/').replace(/\.\.+/g, '')
+    inputPath = path.isAbsolute(rel)
+      ? rel
+      : path.join(MEDIA_ROOT, rel.startsWith('downloads/') ? rel : `downloads/${rel}`)
+    if (!path.resolve(inputPath).startsWith(path.resolve(MEDIA_ROOT))) {
+      return res.status(400).json({ error: '경로 범위 밖' })
+    }
+    if (!fs.existsSync(inputPath)) return res.status(404).json({ error: '입력 파일 없음', path: inputPath })
+    if (!SUB_VID_EXTS.has(path.extname(inputPath).toLowerCase())) {
+      return res.status(400).json({ error: `영상 파일만 지원: ${path.extname(inputPath)}` })
+    }
+    workDir = epNum != null ? mp.makingDir(epNum) : mp.hwStillsDir()
+    const stem = path.basename(inputPath, path.extname(inputPath)).replace(/[^\w.-]/g, '_')
+    outStem = path.join(workDir, `${stem}_subtitle`)
+    configPath = path.join(workDir, `${stem}_subtitle_config.json`)
+  } else {
+    if (epNum == null || cutNo == null) {
+      return res.status(400).json({ error: 'inputPath 또는 (epNum, cutNo) 필요' })
+    }
+    const padded = String(cutNo).padStart(2, '0')
+    workDir = mp.videoDir(epNum)
+    const overlayP = path.join(workDir, `cut_${padded}_overlay.mp4`)
+    const baseP = path.join(workDir, `cut_${padded}.mp4`)
+    inputPath = (stackOnOverlay && fs.existsSync(overlayP)) ? overlayP : baseP
+    outStem = path.join(workDir, `cut_${padded}_subtitle`)
+    configPath = path.join(workDir, `cut_${padded}_subtitle_config.json`)
+    if (!fs.existsSync(inputPath)) {
+      return res.status(404).json({ error: '입력 영상 없음 — 먼저 이 컷을 제작하세요', path: inputPath })
+    }
+  }
+
+  const previewSec = preview ? 2.5 : 0
+  const outputPath = previewSec ? `${outStem}_preview.mp4` : `${outStem}.mp4`
+
+  try {
+    fs.mkdirSync(workDir, { recursive: true })
+    fs.writeFileSync(configPath, JSON.stringify({
+      output_size: [1080, 1920], fps: 30, mode, effect,
+      style: { font_size: 72, color: '#FFFFFF', position: 'bottom', outline: true, ...style },
+      entries,
+    }, null, 2), 'utf-8')
+
+    const pyArgs = [scriptPath, '--config', configPath, '--input', inputPath, '--output', outputPath]
+    if (previewSec) pyArgs.push('--preview', String(previewSec))
+
+    const result = await new Promise((resolve) => {
+      const proc = spawn('python', pyArgs, { cwd: path.join(CODE_ROOT, 'scripts') })
+      let out = '', err = ''
+      const killer = setTimeout(() => { try { proc.kill('SIGKILL') } catch { /* noop */ } }, 240000)
+      proc.stdout.on('data', d => { out += d.toString() })
+      proc.stderr.on('data', d => { err += d.toString() })
+      proc.on('error', e => { clearTimeout(killer); resolve({ code: 1, out, err: err + e.message }) })
+      proc.on('close', code => { clearTimeout(killer); resolve({ code, out, err }) })
+    })
+
+    if (result.code !== 0 || !fs.existsSync(outputPath)) {
+      return res.status(500).json({ error: `자막 합성 실패: ${(result.err || result.out || '').slice(-900)}` })
+    }
+    const stat = fs.statSync(outputPath)
+    if (!inputRel && !previewSec && cutNo != null) recordCutSubtitle(epNum, cutNo, effect)
+    res.json({
+      success: true, preview: !!previewSec, effect,
+      outputPath, url: mp.toMediaUrl(outputPath), sizeKB: Math.round(stat.size / 1024),
+    })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
