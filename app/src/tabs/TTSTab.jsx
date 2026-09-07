@@ -183,6 +183,35 @@ export default function TTSTab() {
     setTTS({ voiceTabs: { ...voiceTabs, [cutId]: nextTabs } })
   }
 
+  // 대본(대사/나레이션)에서 트랙을 다시 만든다 — 다중 화자면 화자별로 분리.
+  // 현재 트랙/오디오는 버려짐(persisted ttsTabState 가 stale 할 때 복구용).
+  const reloadTracksFromScript = (cutId, voiceTabId) => {
+    const c = cuts.find(x => x.id === cutId)
+    if (!c) return
+    const hasScript = !!(c.dialogue?.trim() || c.narration?.trim())
+    const msg = hasScript
+      ? `CUT ${c.no} 트랙을 대본에서 다시 만듭니다. 현재 트랙과 생성된 오디오가 사라집니다. 계속할까요?`
+      : `CUT ${c.no} 대본에 대사/나레이션이 없습니다. 빈 트랙으로 초기화됩니다. 계속할까요?`
+    if (!confirm(msg)) return
+    const key = trackKey(cutId, voiceTabId)
+    const nextMerged = { ...mergedUrls }; delete nextMerged[key]
+    setTTS({ tracks: { ...tracks, [key]: initTracksForCut(c, trackDefaults) }, mergedUrls: nextMerged })
+  }
+
+  const reloadAllFromScript = () => {
+    if (!confirm('모든 컷의 트랙을 대본에서 다시 만듭니다. 생성된 오디오와 합친 결과가 전부 사라집니다. 계속할까요?')) return
+    const nextTracks = { ...tracks }
+    const nextMerged = { ...mergedUrls }
+    for (const c of cuts) {
+      for (const vt of getVoiceTabsForCut(c.id)) {
+        const key = trackKey(c.id, vt.id)
+        nextTracks[key] = initTracksForCut(c, trackDefaults)
+        delete nextMerged[key]
+      }
+    }
+    setTTS({ tracks: nextTracks, mergedUrls: nextMerged })
+  }
+
   const handleCutSelect = (idx) => {
     setActiveCutIdx(idx)
     const c = cuts[idx]
@@ -477,7 +506,19 @@ export default function TTSTab() {
         {/* 2. 트랙 구성 패널 */}
         {cut && activeVariant && (
           <div className={s.panel}>
-            <h3 className={s.panelTitle}>CUT {cut.no} 트랙 구성</h3>
+            <div className={s.panelTitleRow}>
+              <h3 className={s.panelTitle}>CUT {cut.no} 트랙 구성</h3>
+              <button className={s.reloadBtn}
+                title="이 컷 대본(대사/나레이션)에서 트랙을 다시 만듭니다 — 다중 화자면 화자별로 분리"
+                onClick={() => reloadTracksFromScript(cut.id, activeVariant.id)}>
+                🔄 대본에서 다시 불러오기
+              </button>
+            </div>
+            {cut.dialogue?.trim() && (
+              <div className={s.scriptSrc}>
+                <span className={s.scriptSrcLabel}>대본 대사</span> {cut.dialogue}
+              </div>
+            )}
 
             {/* 목소리 탭 — 컷당 여러 목소리 버전 비교 */}
             <div className={s.voiceTabRow}>
@@ -719,12 +760,20 @@ export default function TTSTab() {
         {/* 3. 전체 일괄 생성 */}
         <div className={s.panel}>
           <h3 className={s.panelTitle}>전체 일괄 생성</h3>
-          <p className={s.batchDesc}>모든 컷의 첫 번째 목소리 탭을 순서대로 생성 후 합치기까지 자동 실행합니다.</p>
-          <button className={s.batchBtn} disabled={batchRunning} onClick={runBatch}>
-            {batchRunning
-              ? <><span className={s.spinner} />실행 중…</>
-              : '🎙️ 전체 컷 일괄 생성 + 합치기'}
-          </button>
+          <p className={s.batchDesc}>
+            모든 컷의 첫 번째 목소리 탭을 순서대로 생성 후 합치기까지 자동 실행합니다.<br />
+            트랙이 대본과 안 맞으면(빈 트랙 / 화자 미분리) 먼저 아래로 다시 불러오세요.
+          </p>
+          <div className={s.batchBtnRow}>
+            <button className={s.reloadBtn} onClick={reloadAllFromScript}>
+              🔄 모든 컷 대본에서 다시 불러오기
+            </button>
+            <button className={s.batchBtn} disabled={batchRunning} onClick={runBatch}>
+              {batchRunning
+                ? <><span className={s.spinner} />실행 중…</>
+                : '🎙️ 전체 컷 일괄 생성 + 합치기'}
+            </button>
+          </div>
         </div>
         </div>
       </div>
