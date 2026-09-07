@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { finalizeReel, enrichCutsFromScript } from './lib/reelFinalize.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
+import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
@@ -3240,6 +3241,19 @@ app.post('/api/generate-srt', async (req, res) => {
       .sort()
     if (!mp3Files.length) return res.status(404).json({ error: `cut_NN.mp3 파일 없음` })
 
+    // 자막 텍스트는 studio-state.json의 현재 컷(진실)에서 정제해서 쓴다.
+    // editMeta 는 다른 에피소드/이전 버전 내용으로 stale 해질 수 있어(2026-09-08 실측: 편집메타
+    // CUT1 에 이전 IG_R98 훅이 남아 SRT 1번이 엉뚱하게 나옴) 폴백으로만 사용.
+    let stateCutText = {}
+    try {
+      const st = loadStudioState()
+      const ep = Object.values(st.episodes || {}).find(e => String(e.episode?.number) === String(epNum))
+      for (const c of (ep?.cuts || [])) {
+        const raw = c.dialogue?.trim() || c.narration?.trim() || ''
+        if (raw) stateCutText[String(c.no).padStart(2, "0")] = dialogueToSubtitle(raw)
+      }
+    } catch { /* studio-state 못 읽으면 editMeta 폴백 */ }
+
     const editMeta = fs.existsSync(metaPath)
       ? JSON.parse(fs.readFileSync(metaPath, 'utf-8'))
       : []
@@ -3260,7 +3274,7 @@ app.post('/api/generate-srt', async (req, res) => {
       const dur = await getMediaDuration(filePath) || 8
 
       const m = metaMap[padded]
-      const text = (m?.narration?.trim() || m?.dialogue?.trim() || '').replace(/\n/g, ' ')
+      const text = (stateCutText[padded] || m?.narration?.trim() || m?.dialogue?.trim() || '').replace(/\n/g, ' ')
 
       if (text) {
         lines.push(`${srtIdx}`)
@@ -5517,7 +5531,33 @@ mcpRouter.post('/studio-approve-g2', (req, res) => {
   }
 })
 
+// ElevenLabs TTS 한 세그먼트 → Buffer
+async function elevenLabsTTS(apiKey, voiceId, text) {
+  const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
+    body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2' }),
+  })
+  if (!upstream.ok) {
+    const errBody = await upstream.json().catch(() => ({}))
+    throw new Error(errBody.detail?.message || `ElevenLabs HTTP ${upstream.status}`)
+  }
+  return Buffer.from(await upstream.arrayBuffer())
+}
+
+// mp3 여러 개 → 하나로 이어붙이기 (다중 화자 대사: 화자별 세그먼트를 순서대로)
+async function concatMp3Files(files, dest) {
+  if (files.length === 1) { fs.copyFileSync(files[0], dest); return }
+  const inputs = files.flatMap(f => ['-i', f])
+  const filter = files.map((_, i) => `[${i}:a]`).join('') + `concat=n=${files.length}:v=0:a=1[out]`
+  const code = await runFFmpegCmd([...inputs, '-filter_complex', filter, '-map', '[out]', '-y', dest])
+  if (code !== 0 || !fs.existsSync(dest)) throw new Error(`mp3 concat 실패 (ffmpeg code ${code})`)
+}
+
 // ⑥ studio-run-g3 — ElevenLabs TTS로 대사/나레이션 오디오 생성 (컷당 1개 파일)
+//    다중 화자 대사(`지아 "…" / 여리 "…"`)는 화자별로 쪼개 각자 목소리로 생성 후 이어붙임.
+//    화자별 목소리: state.ttsSettings.speakerVoices[화자] → 없으면 기본 voiceId.
+//    지문·화자명·따옴표·슬래시는 server/lib/ttsText.js(cleanForTTS)로 정제 — 클라 TTS 탭과 동일.
 mcpRouter.post('/studio-run-g3', async (req, res) => {
   const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
@@ -5530,61 +5570,72 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
     const apiKey = secrets.apiKeys?.elevenLabs
     if (!apiKey) return res.status(400).json({ error: 'ElevenLabs API 키가 studio-secrets.json에 없습니다 (스튜디오 앱에서 먼저 연동하세요)' })
 
-    const voiceId = state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID
+    const defaultVoice = state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID
+    const speakerVoices = state.ttsSettings?.speakerVoices || {}
+    const voiceFor = (speaker) => {
+      if (!speaker) return defaultVoice
+      if (speakerVoices[speaker]) return speakerVoices[speaker]
+      // 별칭 느슨 매칭: 스크립트의 '지아' ↔ 탭에 등록된 '한지아' 등
+      const k = Object.keys(speakerVoices).find(key => key.includes(speaker) || speaker.includes(key))
+      return (k && speakerVoices[k]) || defaultVoice
+    }
     const epNum = ep.episode?.number
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.dialogue?.trim() || c.narration?.trim())
     if (!targetCuts.length) return res.status(400).json({ error: '대사/나레이션이 있는 컷이 없습니다' })
 
-    // 괄호로 섞여 들어온 제작 메모 제거 후 실제로 읽을 텍스트만 남김
+    // 화자별 세그먼트로 분리 (+ 지문/화자명/따옴표 정제). 세그먼트 text 는 이미 정제본.
     const prepared = targetCuts.map(c => {
       const raw = c.dialogue?.trim() || c.narration?.trim() || ''
-      const { clean, removed } = stripStageDirections(raw)
-      return { cut: c, text: clean, removed }
+      const segs = splitSpeakerSegments(raw)
+      const removed = cleanForTTS(raw).removed
+      return { cut: c, segs, removed }
     })
-    const empties = prepared.filter(p => !p.text)
-    const toGenerate = prepared.filter(p => p.text)
-    if (!toGenerate.length) return res.status(400).json({ error: '괄호 제거 후 남는 텍스트가 없습니다 (대사가 전부 제작 메모였음)' })
+    const empties = prepared.filter(p => !p.segs.length)
+    const toGenerate = prepared.filter(p => p.segs.length)
+    if (!toGenerate.length) return res.status(400).json({ error: '정제 후 남는 텍스트가 없습니다 (대사가 전부 지문/메모였음)' })
 
-    // ── ElevenLabs 잔여 글자수 사전 체크 — 부족하면 중간에 끊기지 않도록 아예 시작을 막는다 ──
-    const totalChars = toGenerate.reduce((sum, p) => sum + p.text.length, 0)
+    // ── ElevenLabs 잔여 글자수 사전 체크 ──
+    const totalChars = toGenerate.reduce((sum, p) => sum + p.segs.reduce((s, seg) => s + seg.text.length, 0), 0)
     try {
       const userRes = await fetch('https://api.elevenlabs.io/v1/user', { headers: { 'xi-api-key': apiKey } })
       if (userRes.ok) {
         const userData = await userRes.json()
         const limit = userData.subscription?.character_limit
         const used = userData.subscription?.character_count
-        if (Number.isFinite(limit) && Number.isFinite(used)) {
-          const remaining = limit - used
-          if (remaining < totalChars) {
-            return res.status(400).json({ error: `ElevenLabs 잔여 글자수 부족 (필요: ${totalChars}자, 잔여: ${remaining}자)`, remaining, needed: totalChars })
-          }
+        if (Number.isFinite(limit) && Number.isFinite(used) && (limit - used) < totalChars) {
+          return res.status(400).json({ error: `ElevenLabs 잔여 글자수 부족 (필요: ${totalChars}자, 잔여: ${limit - used}자)`, remaining: limit - used, needed: totalChars })
         }
       }
-    } catch { /* 잔여량 조회 자체가 실패해도 생성은 막지 않음 — 사전체크는 보조 수단일 뿐 */ }
+    } catch { /* 잔여량 조회 실패해도 생성은 막지 않음 */ }
 
     const audioDir = mp.audioDir(epNum)
     fs.mkdirSync(audioDir, { recursive: true })
 
-    const results = empties.map(p => ({ cutNo: p.cut.no, status: 'skipped', reason: '괄호 제거 후 텍스트 없음 (제작 메모만 있었음)', removed: p.removed }))
+    const results = empties.map(p => ({ cutNo: p.cut.no, status: 'skipped', reason: '정제 후 텍스트 없음 (지문/메모만 있었음)', removed: p.removed }))
     for (const p of toGenerate) {
       const c = p.cut
+      const padded = String(c.no).padStart(2, '0')
+      const dest = path.join(audioDir, `cut_${padded}.mp3`)
+      const parts = []
       try {
-        const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-          method: 'POST',
-          headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
-          body: JSON.stringify({ text: p.text, model_id: 'eleven_multilingual_v2' }),
-        })
-        if (!upstream.ok) {
-          const errBody = await upstream.json().catch(() => ({}))
-          results.push({ cutNo: c.no, status: 'error', error: errBody.detail?.message || `HTTP ${upstream.status}` })
-          continue
+        for (let i = 0; i < p.segs.length; i++) {
+          const seg = p.segs[i]
+          const buf = await elevenLabsTTS(apiKey, voiceFor(seg.speaker), seg.text)
+          const pf = path.join(audioDir, `.cut_${padded}_p${i}.mp3`)
+          fs.writeFileSync(pf, buf)
+          parts.push(pf)
         }
-        const buf = Buffer.from(await upstream.arrayBuffer())
-        const dest = path.join(audioDir, `cut_${String(c.no).padStart(2, '0')}.mp3`)
-        fs.writeFileSync(dest, buf)
-        results.push({ cutNo: c.no, status: 'ok', path: dest, ...(p.removed.length ? { removedNotes: p.removed } : {}) })
+        await concatMp3Files(parts, dest)
+        const speakers = [...new Set(p.segs.map(s => s.speaker).filter(Boolean))]
+        results.push({
+          cutNo: c.no, status: 'ok', path: dest,
+          ...(speakers.length ? { speakers, voices: speakers.map(voiceFor) } : {}),
+          ...(p.removed.length ? { removedNotes: p.removed } : {}),
+        })
       } catch (err) {
         results.push({ cutNo: c.no, status: 'error', error: err.message })
+      } finally {
+        parts.forEach(f => { try { fs.unlinkSync(f) } catch { /* 임시파일 정리 실패 무시 */ } })
       }
     }
     const failCount = results.filter(r => r.status === 'error').length
@@ -5671,7 +5722,7 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
       // (2026-08-09 실측 테스트에서 발견 — 이 필드가 빠져있던 게 원인).
       cuts: targetCuts.map(c => {
         const dl = c.dialogue?.trim()
-        const cleanDl = dl && !/^없음$/i.test(dl) ? stripStageDirections(dl).clean : ''
+        const cleanDl = dl && !/^없음$/i.test(dl) ? cleanForTTS(dl).clean : ''
         return {
           no: c.no,
           imagePrompt: c.imagePrompt || '',
@@ -5703,9 +5754,21 @@ mcpRouter.post('/studio-approve-g4', (req, res) => {
     requireActiveEpisode(state, episodeId)
     const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
     const epNum = ep.episode?.number
-    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
-    const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g4')
+    const requested = filterCutsByIds(ep.cuts || [], cutIds)
     const videoDir = mp.videoDir(epNum)
+    const hasVideo = (c) => {
+      const padded = String(c.no).padStart(2, '0')
+      return fs.existsSync(path.join(videoDir, `cut_${padded}_final.mp4`)) ||
+             fs.existsSync(path.join(videoDir, `cut_${padded}.mp4`))
+    }
+    // 영상 파일이 없는 컷은 승인하지 않는다 (approve_g2 는 이미지 스캔하는데 g4 는
+    // 검증이 없어서, 영상 없는 컷도 G4 통과 → G5 concat 에서 깨지던 문제. 2026-09-08)
+    const targetCuts = requested.filter(hasVideo)
+    const missing = requested.filter(c => !hasVideo(c)).map(c => c.no)
+    if (!targetCuts.length) {
+      return res.status(400).json({ error: `영상 파일(cut_NN.mp4)이 있는 컷이 없습니다`, missing })
+    }
+    const approvedCount = approveGForCuts(episodeCode, targetCuts, 'g4')
     const deliverables = targetCuts.map(c => {
       const padded = String(c.no).padStart(2, '0')
       // 편집(_final) 버전이 있으면 그걸, 없으면 원본 생성본을 사용 — buildStudioStatusPayload의
@@ -5716,7 +5779,7 @@ mcpRouter.post('/studio-approve-g4', (req, res) => {
       const result = copyToDeliverables(episodeCode, srcPath, `cut_${padded}_video.mp4`)
       return { cutNo: c.no, ...result }
     })
-    res.json({ success: true, approvedCount, deliverables })
+    res.json({ success: true, approvedCount, deliverables, ...(missing.length ? { skippedMissingVideo: missing } : {}) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -5738,14 +5801,14 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
       const dur = c.duration || 5
       const start = cursor
       cursor += dur
-      // SRT 자막에 괄호 안 제작 메모가 그대로 노출되지 않도록 G3와 동일하게 정리
+      // SRT 자막에 지문·화자명·따옴표가 그대로 노출되지 않도록 G3와 동일하게 정제
       return {
         cutNo: String(c.no).padStart(2, '0'),
         label: `CUT ${String(c.no).padStart(2, '0')}`,
         start, end: cursor, duration: dur,
         audioFile: `cut_${String(c.no).padStart(2, '0')}.mp3`,
-        dialogue: c.dialogue ? stripStageDirections(c.dialogue).clean : '',
-        narration: c.narration ? stripStageDirections(c.narration).clean : '',
+        dialogue: c.dialogue ? dialogueToSubtitle(c.dialogue) : '',
+        narration: c.narration ? cleanForTTS(c.narration).clean : '',
       }
     })
     const metaPath = mp.editMetaPath()

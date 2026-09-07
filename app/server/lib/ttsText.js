@@ -2,8 +2,8 @@
 // 그대로 읽히면 안 되는 것들: (지문)·[제작메모]·마크다운, 화자명 어트리뷰션,
 // 따옴표, 대사 구분 슬래시.
 //
-// ⚠️ server/lib/ttsText.js 와 내용을 동일하게 유지할 것 (episodeCode.js 와 같은 병행 구조).
-//    서버는 studio-run-g3(음성)·studio-run-g5(편집메타→SRT)·generate-srt 에서 이걸 쓴다.
+// ⚠️ src/lib/ttsText.js 와 내용을 동일하게 유지할 것 (episodeCode.js 와 같은 병행 구조).
+//    한쪽만 고치면 스튜디오 UI(클라)와 MCP 파이프라인(서버 studio-run-g3/g5)이 어긋난다.
 
 const PAREN_RE   = /\s*[（(][^（()]*[)）]/g          // (지문) / （지문）
 const BRACKET_RE = /\s*\[[^\]]*\]/g                 // [제작 메모] / [SFX ...]
