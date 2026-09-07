@@ -12,6 +12,20 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const APP_ROOT = 'C:\\yeori-studio\\app'
+
+// .env.local 에서 VERCEL_TOKEN 등을 읽어들인다 (setx 환경변수 전파가 스케줄 작업까지
+// 확실히 안 되는 경우가 있어서 -- .env.local 이 단일 신뢰 소스). 이미 env 에 있으면 유지.
+try {
+  const envFile = path.join(APP_ROOT, '.env.local')
+  if (fs.existsSync(envFile)) {
+    for (const line of fs.readFileSync(envFile, 'utf-8').split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/i)
+      if (m && !process.env[m[1]]) {
+        process.env[m[1]] = m[2].replace(/^["']|["']$/g, '')
+      }
+    }
+  }
+} catch { /* .env.local 없거나 읽기 실패 -- 무시 */ }
 // 설치 방식(winget vs 수동 설치)에 따라 경로가 달라서 후보를 순서대로 확인한다.
 // start_yeori.bat도 동일한 winget 경로를 우선 사용하도록 맞춰져 있음.
 const CLOUDFLARED_CANDIDATES = [
@@ -203,8 +217,8 @@ function commitUrl() {
     })
     .catch((err) => {
       console.error(`[tunnel] URL 반영 실패: ${err.message}`)
-      console.error('[tunnel] 수동 갱신:')
-      console.error(`  vercel edge-config update ${EDGE_CONFIG_SLUG} --patch '{"items":[{"operation":"upsert","key":"${EDGE_CONFIG_KEY}","value":"${url}"}]}' --scope ${VERCEL_SCOPE}`)
+      console.error('[tunnel] 수동 갱신: .env.local 에 VERCEL_TOKEN 설정 후 이 프로세스 재시작')
+      console.error(`  (Edge Config ${EDGE_CONFIG_ID} 의 ${EDGE_CONFIG_KEY} 를 ${url} 로)`)
       logToFile(`FATAL URL 반영 실패 (url=${url}): ${err.stack || err.message}`)
     })
     .finally(() => {
