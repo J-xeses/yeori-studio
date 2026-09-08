@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import { setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
+import { contentRatio } from '../lib/videoPolicy'
 import { instaUrl, cutMediaUrl } from '../lib/mediaPaths'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
@@ -103,7 +104,12 @@ export default function StudioTab() {
   const [g2Approved, setG2Approved] = useState({})
   const [checklist, setChecklist] = useState({})       // cut.id → { face, hair, outfit, proportion, background }
   const [checklistCutId, setChecklistCutId] = useState(null) // 체크리스트 팝업이 열려있는 컷 id
-  const [imageRatio, setImageRatio] = useState({})     // `${cut.id}_${idx}` → '9:16' | '16:9' (파일 실제 비율과 무관하게 사용자가 직접 지정)
+  // 비교뷰 화면비율 — 에피소드 유형 기본값(LF/SF=16:9, 그 외=9:16), 사용자 선택은 AppContext 에 영속.
+  const epRatio = contentRatio(state.episode)
+  const imageRatio = state.studioTabState?.imageRatio || {}
+  const ratioOf = (key) => imageRatio[key] || epRatio
+  const setImageRatio = (key, r) =>
+    dispatch({ type: 'SET_STUDIO_TAB_STATE', p: { imageRatio: { ...imageRatio, [key]: r } } })
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
@@ -523,12 +529,12 @@ export default function StudioTab() {
   // ── 서여리 베이스 프롬프트 ────────────────────────────────────
   const YEORI_BASE = `Young Korean woman early 20s (22-23 years old), long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, effortlessly photogenic not posing just existing beautifully, K-model proportions very small face long slim legs slender figure tall fashion model body, small head-to-body ratio DO NOT make average body proportions, appearing no older than 22-23, DO NOT change character appearance, Photorealistic 8K cinematic, natural Korean beauty`
 
-  // 툴별 접미사
+  // 툴별 접미사 — 화면비율은 에피소드 유형 기본값(LF/SF=16:9, 그 외=9:16)
   const TOOL_SUFFIX = {
-    'Flow':             'Photorealistic 8K cinematic 9:16, background people must not interact with main character, consistent character face',
+    'Flow':             `Photorealistic 8K cinematic ${epRatio}, background people must not interact with main character, consistent character face`,
     'Imagen':           'Photorealistic 8K cinematic, semi-realistic Korean style',
-    'Midjourney':       'photorealistic, 8K, cinematic lighting, --ar 9:16 --v 6',
-    'DALL-E 3':         'photorealistic, cinematic, high quality, 9:16 aspect ratio',
+    'Midjourney':       `photorealistic, 8K, cinematic lighting, --ar ${epRatio} --v 6`,
+    'DALL-E 3':         `photorealistic, cinematic, high quality, ${epRatio} aspect ratio`,
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
   }
 
@@ -663,7 +669,7 @@ export default function StudioTab() {
             <div className={s.cardLeft}>
               {(() => {
                 const cutImages = images[cut.id] || []
-                const isStacked = cutImages.some((_, i) => (imageRatio[`${cut.id}_${i}`] || '9:16') === '16:9')
+                const isStacked = cutImages.some((_, i) => ratioOf(`${cut.id}_${i}`) === '16:9')
                 const slotStyle = isStacked
                   ? { maxWidth: '100%', maxHeight: 'calc(50% - 4px)' }
                   : { maxWidth: 'calc(50% - 4px)', maxHeight: '100%' }
@@ -672,7 +678,7 @@ export default function StudioTab() {
                 {cutImages.map((url, idx) => {
                   const isSelected = (selectedImage[cut.id] ?? 0) === idx
                   const ratioKey = `${cut.id}_${idx}`
-                  const ratio = imageRatio[ratioKey] || '9:16'
+                  const ratio = ratioOf(ratioKey)
                   return (
                     <div key={idx}
                       className={`${s.compareImg} ${isSelected ? s.compareImgSelected : ''}`}
@@ -697,7 +703,7 @@ export default function StudioTab() {
                         {['9:16', '16:9'].map(r => (
                           <button key={r}
                             className={ratio === r ? s.ratioToggleActive : ''}
-                            onClick={() => setImageRatio(p => ({ ...p, [ratioKey]: r }))}
+                            onClick={() => setImageRatio(ratioKey, r)}
                           >{r}</button>
                         ))}
                       </div>

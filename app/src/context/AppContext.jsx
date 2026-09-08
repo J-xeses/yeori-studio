@@ -87,6 +87,7 @@ const defaultState = {
   videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
   ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {}, focusCutId: null },
   voiceInsertState: { tracks: {} },
+  studioTabState: { imageRatio: {} },   // `${cutId}_${idx}` → '9:16' | '16:9' (비교뷰 레이아웃, 에피소드 유형 기본값)
 }
 
 function reducer(state, action) {
@@ -261,6 +262,7 @@ function reducer(state, action) {
     case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
     case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
     case 'SET_VOICE_INSERT_STATE': return { ...state, voiceInsertState: { ...state.voiceInsertState, ...action.p } }
+    case 'SET_STUDIO_TAB_STATE': return { ...state, studioTabState: { ...state.studioTabState, ...action.p } }
     case 'SET_RENDER': return { ...state, renderProgress: { ...state.renderProgress, ...action.p } }
     case 'SET_THUMB': return { ...state, thumbnail: { ...state.thumbnail, ...action.p } }
     case 'SET_PUBLISHING': return {
@@ -352,6 +354,7 @@ function reducer(state, action) {
       ttsTabState:  { ...defaultState.ttsTabState,  ...(action.p.ttsTabState  || {}) },
       voiceInsertState: { ...defaultState.voiceInsertState, ...(action.p.voiceInsertState || {}) },
       videoTabState: { ...defaultState.videoTabState, ...(action.p.videoTabState || {}) },
+      studioTabState: { ...defaultState.studioTabState, ...(action.p.studioTabState || {}) },
       publishing:   { ...defaultState.publishing,   ...(action.p.publishing   || {}) },
       creditTracker: {
         ...defaultState.creditTracker,

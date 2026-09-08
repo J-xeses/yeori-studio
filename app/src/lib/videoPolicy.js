@@ -25,6 +25,14 @@ export function resolveVideoPolicy(episode = {}) {
   return 'image-first'   // IG_R, IG_P, IG_S, TK …
 }
 
+// 에피소드 콘텐츠 유형 기본 화면비율 — LF/SF = 유튜브 가로(16:9), 나머지 = 세로(9:16).
+// episode.aspectRatio 로 명시 override 가능.
+export function contentRatio(episode = {}) {
+  if (episode.aspectRatio === '16:9' || episode.aspectRatio === '9:16') return episode.aspectRatio
+  const ct = (episode.contentType || '').toUpperCase()
+  return (ct === 'LF' || ct === 'SF') ? '16:9' : '9:16'
+}
+
 // 컷의 최종 영상 방식. 우선순위: 컷 명시(cut.videoMode) > 유형(그래픽/캡컷은 항상 motion/still) > 정책
 export function resolveCutVideoMode(cut = {}, episode = {}) {
   if (cut.videoMode === 'veo' || cut.videoMode === 'motion' || cut.videoMode === 'still') {
