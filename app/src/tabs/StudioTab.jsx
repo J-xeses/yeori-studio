@@ -341,6 +341,28 @@ export default function StudioTab() {
     }
   }
 
+  // ── 폴더 파일명 일괄 정리 (Flow/외부 이미지 → cut_NN_x 규격) + 재조회 ──────
+  const importAndReload = async () => {
+    try {
+      const r = await fetch('http://localhost:3001/api/import-cut-images', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep: state.episode.number }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '정리 실패')
+      const msg = [
+        `📁 파일명 정리: ${d.renamed?.length || 0}개`,
+        ...(d.renamed || []).map(x => `  ${x.from} → ${x.to}`),
+        ...(d.skipped?.length ? ['', `⚠️ 스킵 ${d.skipped.length}개 (파일명에서 컷번호 못 찾음):`, ...d.skipped.map(x => `  ${x.file}`)] : []),
+      ].join('\n')
+      if ((d.renamed?.length || 0) + (d.skipped?.length || 0) > 0) alert(msg)
+    } catch (err) {
+      alert('파일명 정리 실패: ' + err.message)
+      return
+    }
+    await reloadExistingImages()
+  }
+
   // ── 기존 생성 이미지 재조회 ─────────────────────────────────────
   const reloadExistingImages = async () => {
     try {
@@ -567,8 +589,13 @@ export default function StudioTab() {
             onClick: runFlow,
           },
           {
+            key: 'import-img', variant: 'green',
+            label: '📁 폴더에서 일괄 가져오기 (파일명 정리 + 불러오기)',
+            onClick: importAndReload,
+          },
+          {
             key: 'reload-img', variant: 'green',
-            label: '🔄 기존 이미지 다시 불러오기',
+            label: '🔄 다시 불러오기 (정리 없이)',
             onClick: reloadExistingImages,
           },
         ]}

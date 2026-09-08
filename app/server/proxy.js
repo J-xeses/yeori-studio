@@ -1188,7 +1188,8 @@ app.get('/api/scan-images', (req, res) => {
 
   const filesByCut = {}
   fs.readdirSync(epDir).sort().forEach(file => {
-    const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+    // cut_NN.jpg / cut_NN_a.jpg / cut_NN_b2.png … 슬롯 이름은 [a-z0-9] 1~2자 허용
+    const m = file.match(/^cut_(\d+)(?:_[a-z0-9]{1,2})?\.(jpg|jpeg|png|webp)$/i)
     if (m) {
       const cutNo = parseInt(m[1], 10)
       ;(filesByCut[cutNo] ??= []).push(file)
@@ -1203,6 +1204,61 @@ app.get('/api/scan-images', (req, res) => {
     ordered.forEach(file => images.push({ cutNo: parseInt(cutNo, 10), url: `${urlPrefix}/${file}` }))
   })
   res.json({ images })
+})
+
+// ── 02_images 폴더 파일명 일괄 정리 ──────────────────────────────
+// Flow/외부 도구가 만든 제각각인 파일명을 cut_NN_<슬롯>.<ext> 규격으로 rename.
+// 파일명에서 컷 번호 추출: "cut2" / "cut_02" / "02_v2" / "2-b" / "[002]" / 앞쪽 첫 숫자.
+// 슬롯 = 해당 컷에 이미 있는 것 다음 문자(a,b,c...). 규격에 이미 맞는 파일은 건드리지 않음.
+function normalizeCutImages(epNum, { validCutNos = null } = {}) {
+  const dir = mp.imagesDir(epNum)
+  if (!fs.existsSync(dir)) return { renamed: [], skipped: [], dir }
+  const IMG = /\.(jpe?g|png|webp)$/i
+  const CONFORMING = /^cut_\d+(?:_[a-z0-9]{1,2})?\.(jpe?g|png|webp)$/i
+  const files = fs.readdirSync(dir)
+
+  const usedSlots = {}
+  for (const f of files) {
+    let m = f.match(/^cut_(\d+)_([a-z])[0-9]?\./i)
+    if (m) { (usedSlots[+m[1]] ??= new Set()).add(m[2].toLowerCase()); continue }
+    m = f.match(/^cut_(\d+)\./i)
+    if (m) (usedSlots[+m[1]] ??= new Set()).add('a')
+  }
+  const nextSlot = (cutNo) => {
+    const s = (usedSlots[cutNo] ??= new Set())
+    for (const c of 'abcdefghijklmnopqrstuvwxyz') if (!s.has(c)) { s.add(c); return c }
+    return 'z' + Date.now().toString(36).slice(-2)
+  }
+  const cutNoFrom = (name) => {
+    const base = name.replace(IMG, '')
+    const m = base.match(/cut[ _-]?0*(\d+)/i)
+      || base.match(/^0*(\d+)(?:[ _.\-]|$)/)
+      || base.match(/[[(]0*(\d+)[\])]/)
+      || base.match(/(\d{1,3})/)
+    return m ? parseInt(m[1], 10) : null
+  }
+
+  const renamed = [], skipped = []
+  for (const f of files) {
+    if (!IMG.test(f) || CONFORMING.test(f)) continue
+    const cutNo = cutNoFrom(f)
+    if (cutNo == null) { skipped.push({ file: f, reason: '파일명에서 컷 번호를 못 찾음' }); continue }
+    if (validCutNos && !validCutNos.includes(cutNo)) { skipped.push({ file: f, reason: `CUT ${cutNo}가 이 에피소드에 없음` }); continue }
+    const ext = f.match(IMG)[1].toLowerCase().replace('jpeg', 'jpg')
+    const dest = `cut_${String(cutNo).padStart(2, '0')}_${nextSlot(cutNo)}.${ext}`
+    try { fs.renameSync(path.join(dir, f), path.join(dir, dest)); renamed.push({ from: f, to: dest, cutNo }) }
+    catch (e) { skipped.push({ file: f, reason: e.message }) }
+  }
+  return { renamed, skipped, dir }
+}
+
+// 브라우저(스튜디오 탭)용 — 인증 없음, episode.number 기준
+// (MCP 버전 mcpRouter.post('/import-cut-images') 는 mcpRouter 정의 이후에 있음)
+app.post('/api/import-cut-images', (req, res) => {
+  const { ep } = req.body || {}
+  if (!ep) return res.status(400).json({ error: 'ep 필요' })
+  try { res.json({ success: true, ...normalizeCutImages(ep) }) }
+  catch (e) { res.status(500).json({ error: e.message }) }
 })
 
 // ── POST /api/scan-media — ep 전체 미디어 스캔 ─────────────────────
@@ -4913,6 +4969,18 @@ mcpRouter.get('/video-checklist', (req, res) => {
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
+})
+
+// MCP(에이전트)용 이미지 파일명 일괄 정리 — 활성 에피소드 기준, 에피소드에 없는 컷 번호는 스킵
+mcpRouter.post('/import-cut-images', (req, res) => {
+  const { episodeId } = req.body || {}
+  try {
+    const state = loadStudioState()
+    const ep = episodeId ? getEpisodeOrThrow(state, episodeId) : state.episodes?.[state.activeEpisodeId]
+    if (!ep) return res.status(404).json({ error: '에피소드를 찾을 수 없습니다' })
+    const r = normalizeCutImages(ep.episode?.number, { validCutNos: (ep.cuts || []).map(c => c.no) })
+    res.json({ success: true, episode: resolveEpisodeCode(ep.episode, ep.id), ...r })
+  } catch (e) { res.status(e.statusCode || 500).json({ error: e.message }) }
 })
 
 mcpRouter.post('/export-pipeline', (req, res) => {

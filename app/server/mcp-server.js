@@ -241,6 +241,15 @@ async function executeTool(name, args) {
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
     }
 
+    case 'import_cut_images': {
+      const data = await api('POST', '/api/mcp/import-cut-images', args)
+      if (data.error) return `오류: ${data.error}`
+      const rn = (data.renamed || []).map(r => `  ${r.from} → ${r.to}`).join('\n')
+      const sk = (data.skipped || []).map(r => `  ${r.file} — ${r.reason}`).join('\n')
+      return `이미지 파일명 정리: ${data.renamed?.length || 0} rename / ${data.skipped?.length || 0} 스킵\n`
+        + (rn ? `[정리]\n${rn}\n` : '') + (sk ? `[스킵]\n${sk}` : '')
+    }
+
     case 'get_video_checklist': {
       const data = await api('GET', `/api/mcp/video-checklist${args.episodeId ? `?episodeId=${encodeURIComponent(args.episodeId)}` : ''}`)
       if (data.error) return `오류: ${data.error}`

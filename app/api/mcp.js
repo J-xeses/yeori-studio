@@ -236,6 +236,17 @@ async function executeTool(name, args) {
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
     }
 
+    case 'import_cut_images': {
+      const data = await bridge('POST', '/import-cut-images', { episodeId: args.episodeId })
+      if (data.error) return `오류: ${data.error}`
+      const rn = (data.renamed || []).map(r => `  ${r.from} → ${r.to}`).join('\n')
+      const sk = (data.skipped || []).map(r => `  ${r.file} — ${r.reason}`).join('\n')
+      return `이미지 파일명 정리: ${data.renamed?.length || 0}개 rename, ${data.skipped?.length || 0}개 스킵\n`
+        + `폴더: ${data.dir}\n`
+        + (rn ? `\n[정리됨]\n${rn}` : '')
+        + (sk ? `\n\n[스킵]\n${sk}` : '')
+    }
+
     case 'get_video_checklist': {
       const data = await bridge('GET', `/video-checklist${args.episodeId ? `?episodeId=${encodeURIComponent(args.episodeId)}` : ''}`)
       if (data.error) return `오류: ${data.error}`

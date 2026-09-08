@@ -217,6 +217,16 @@ export const TOOLS = [
     },
   },
   {
+    name: 'import_cut_images',
+    description: '에피소드 02_images 폴더에서 규격 밖 이름의 이미지 파일을 cut_NN_<슬롯>.<ext> 로 일괄 rename. Flow/외부 도구가 만든 제각각인 파일명(예: Gemini_Generated_xxx.png, 2.jpg, cut2-v2.png, [002].webp)에서 컷 번호를 추출해 정리. 규격에 이미 맞는 파일은 안 건드림. 정리 후 스튜디오 탭 "불러오기"나 studio_get_status 에 반영됨. 사람이 수동 제작한 이미지를 폴더에 넣고 이 도구를 부르면 됨.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        episodeId: { type: 'string', description: '에피소드 ID (생략 시 현재 활성 에피소드)' },
+      },
+    },
+  },
+  {
     name: 'get_video_checklist',
     description: '에피소드의 G4(영상) 진행 현황을 반환합니다. 영상이 필요한 컷(veo 모드), 각 컷의 영상 프롬프트·목표길이·시작프레임(이미지) 준비 여부·업로드된 영상 유무·제작방식(manual/veo-api)을 포함. 영상은 현재 사람이 Veo에서 직접 제작 후 업로드(POST /api/upload-cut-video)하는 방식 — 에이전트 리더가 "무엇을 만들어야 하고 무엇이 올라왔는지" 매일 확인하는 용도. 나중에 유료 자동화가 붙으면 videoSource가 섞입니다.',
     inputSchema: {
