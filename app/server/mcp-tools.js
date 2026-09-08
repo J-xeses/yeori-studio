@@ -123,7 +123,7 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g2',
-    description: '(2026-09-08 재활성) 각 컷의 이미지(G2)를 Nano Banana(Gemini image) API 로 생성해 02_images/cut_NN_a.jpg 로 저장. 무료(500장/일), 크레딧 소모 없음. 컷별 imagePrompt 전체를 그대로 사용(가공 금지), 프롬프트에 명시된 비율(16:9/9:16)을 API 에도 전달. CH 필드로 등장 캐릭터 해석 → characters.json 얼굴 이미지를 참조로 첨부(서여리/한지아 일관성). GRAPHIC/CAPCUT/프롬프트 없는 인서트(201~206 등) 제외. studio-secrets.json 에 gemini 키 필요. ⚠️ 구글 제재 방지로 컷 사이 20초 대기 — 한 호출에 5~6컷씩만 요청(14컷이면 7분+). 생성만 하고 승인은 studio_approve_g2 별도.',
+    description: '[대기 — 호출 금지] 이미지(G2) API 자동화 코드는 완성됐으나 Gemini 이미지 모델 무료 티어가 0 이라(결제 활성 필요) G4 영상 유료 자동화 결정 시점에 함께 전환하기로 보류(2026-09-08). 지금 호출하면 429. 그때까지 이미지는 사람이 외부 도구 제작 → 스튜디오 탭 업로드. 진행 현황은 studio_get_status / get_video_checklist. (전환 시 동작: Nano Banana API 로 컷별 imagePrompt 전체 사용, CH→characters.json 얼굴 참조, 비율 전달, 이미 있는 컷 제외, 컷 사이 20초. model 파라미터 flash|nb2|pro.)',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
