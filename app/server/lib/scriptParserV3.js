@@ -26,8 +26,19 @@ function parseCutHeaderMeta(headerRest) {
   const typeAfter = rest.match(CUT_TYPE_RE)
   const typeM = typeBefore || typeAfter
   const headerType = typeM ? typeM[1].toUpperCase() : ''
-  const slashIdx = rest.lastIndexOf('/')
-  const cutTitle = (slashIdx > -1 ? rest.slice(0, slashIdx) : rest).trim()
+
+  let cutTitle
+  if (rest.includes('|')) {
+    // v7/v8 헤더: "<타입|라벨> | <설명> | <길이>[ | <샷노트>]"
+    // 타입 키워드·순수 길이(3s, 5초) 세그먼트는 버리고 남은 것 중 가장 긴 세그먼트를 제목으로.
+    const isType = (s) => /^(GRAPHIC|CAPCUT|BROLL|YEORI|PIP)$/i.test(s)
+    const isDur = (s) => /^\d+\s*(s|sec|초)$/i.test(s)
+    const segs = rest.split('|').map((s) => s.trim()).filter((s) => s && !isType(s) && !isDur(s))
+    cutTitle = segs.slice().sort((a, b) => b.length - a.length)[0] || rest.trim()
+  } else {
+    const slashIdx = rest.lastIndexOf('/')
+    cutTitle = (slashIdx > -1 ? rest.slice(0, slashIdx) : rest).trim()
+  }
   return { cutTitle, lipsync, headerType }
 }
 
