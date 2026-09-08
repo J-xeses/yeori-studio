@@ -6868,7 +6868,7 @@ const _makingRunLocks = new Set()
 // POST /api/mcp/run-making — 대기 중인 메이킹 컷(g1 승인 · 영상 없음)을 순차 헤드리스 제작.
 // pipeline-leader / claude.ai 에이전트가 호출. 제작만 함(승인 게이트는 studio-approve-g4 별도).
 mcpRouter.post('/run-making', async (req, res) => {
-  const { episodeId, cutIds } = req.body || {}
+  const { episodeId, cutIds, force } = req.body || {}   // force: 이미 영상 있어도 재제작
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
     const state = loadStudioState()
@@ -6885,7 +6885,7 @@ mcpRouter.post('/run-making', async (req, res) => {
     const targets = filterCutsByIds(ep.cuts || [], cutIds).filter(c =>
       MAKING_AUTO_TYPES.has(String(c.cutType || 'YEORI').toUpperCase())
       && gData[`cut_${c.no}`]?.g1
-      && !hasVideo(c.no))
+      && (force === true || !hasVideo(c.no)))
 
     if (!targets.length) return res.json({ success: true, produced: [], message: '대기 중인 메이킹 컷 없음' })
     if (_makingRunLocks.has(episodeCode)) return res.json({ success: true, produced: [], skipped: 'already-running' })

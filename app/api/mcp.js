@@ -225,7 +225,7 @@ async function executeTool(name, args) {
     }
 
     case 'run_making': {
-      const data = await bridge('POST', '/run-making', { episodeId: args.episodeId, cutIds: args.cutIds })
+      const data = await bridge('POST', '/run-making', { episodeId: args.episodeId, cutIds: args.cutIds, force: args.force === true })
       if (data.error) return `오류: ${data.error}`
       if (data.skipped) return `이미 실행 중 — 건너뜀`
       if (!data.results?.length) return data.message || '대기 중인 메이킹 컷 없음'

@@ -204,6 +204,7 @@ export const TOOLS = [
       properties: {
         episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
         cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 대기 중인 메이킹 컷 전체)' },
+        force: { type: 'boolean', description: '이미 영상이 있는 컷도 재제작 (규격 바뀜·타임코드 조정 시)' },
       },
     },
   },
