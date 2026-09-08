@@ -198,9 +198,10 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
 // "[CUT N]  제목 / N초" 헤더 + ━ 구분선 + SC~DU/오디오 + KR/IP/VP 3개
 // 섹션으로 구성된다. 구분선 개수에 의존하지 않고 섹션 제목 줄로 상태를
 // 전환하는 방식이라 구분선 스타일이 조금 달라져도 안전하게 파싱된다.
-const V3_SEP_LINE_RE = /^━{6,}$/
+const V3_SEP_LINE_RE = /^[━=]{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+// HTML/SRC/BQ/URL/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|MOTION):\s?(.*)$/
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -254,21 +255,28 @@ function splitV3Cuts(raw) {
     if (headerM) {
       flush()
       const { cutTitle, lipsync, headerType } = parseCutHeaderMeta(headerM[2] || '')
-      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, headerType, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
+      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, headerType, mainLines: [], krLines: [], ipLines: [], vpLines: [], ipvpLines: [] }
       section = 'main'
       continue
     }
     if (!cur) continue // [CUT N] 등장 전(마스터 코드/EP.HEADER 영역)은 별도 파서에서 처리
 
     const trimmed = line.trim()
-    if (trimmed === 'KR (한글 컨펌본)') { section = 'kr'; continue }
-    if (trimmed === 'IP (이미지 프롬프트)') { section = 'ip'; continue }
-    if (trimmed === 'VP (영상 프롬프트)') { section = 'vp'; continue }
+    // [CUT N] 이 아닌 대괄호 표제([제작 체크리스트] 등 에피소드 말미 블록)는 컷 본문 종료로 본다.
+    // [캡션 …]은 CAPCUT 컷 imagePrompt 안의 관용 표기라 예외.
+    if (/^\[/.test(trimmed) && !V3_CUT_HEADER_RE.test(trimmed) && !/^\[캡션/.test(trimmed)) { section = null; continue }
+    // 섹션 헤더: "KR (한글 컨펌본)" / "IP (이미지 프롬프트)" / "VP (영상 프롬프트)" /
+    // "IP / VP" (BROLL·GRAPHIC 컷은 IP·VP 를 한 섹션으로 합쳐 쓴다) 모두 인식
+    if (/^KR\s*\(/.test(trimmed)) { section = 'kr'; continue }
+    if (/^IP\s*\/\s*VP\b/.test(trimmed)) { section = 'ipvp'; continue }
+    if (/^IP\s*\(/.test(trimmed)) { section = 'ip'; continue }
+    if (/^VP\s*\(/.test(trimmed)) { section = 'vp'; continue }
 
     if (section === 'main') cur.mainLines.push(line)
     else if (section === 'kr') cur.krLines.push(line)
     else if (section === 'ip') cur.ipLines.push(line)
     else if (section === 'vp') cur.vpLines.push(line)
+    else if (section === 'ipvp') cur.ipvpLines.push(line)
   }
   flush()
   return cuts
@@ -350,8 +358,21 @@ function parseCutsV3(raw) {
   return rawCuts.map(rc => {
     const { fields, audio } = parseV3MainBlock(rc.mainLines)
     const kr = parseV3KrBlock(rc.krLines)
-    const ip = joinTrimmedLines(rc.ipLines)
-    const vp = joinTrimmedLines(rc.vpLines)
+    // BROLL·GRAPHIC 컷은 "IP / VP" 한 섹션에 소스 안내를 적는다 — 별도 IP/VP 가 비면 이걸 쓴다.
+    const ipvp = joinTrimmedLines(rc.ipvpLines || [])
+    const ip = joinTrimmedLines(rc.ipLines) || ipvp
+    const vp = joinTrimmedLines(rc.vpLines) || ipvp
+
+    // ── 메이킹 탭 자동실행용 컷별 소스 지정 (server/lib/scriptParserV3.js와 동일 유지) ──
+    // 명시 필드(HTML:/SRC:/BQ:/URL:/MOTION:) 우선, 없으면 IP/VP 자유텍스트 관용 표기에서 유추
+    const _ipvpText = `${ip}\n${vp}\n${ipvp}`
+    const htmlFile = String(fields.HTML || '').trim()
+      || (_ipvpText.match(/(?:파일|file)\s*[:：]\s*(\S+\.html?)/i)?.[1] || '')
+    const sourcePath = String(fields.SRC || '').trim()
+      || (_ipvpText.match(/저장\s*경로\s*[:：]\s*(\S.*?\.(?:mp4|mov|mkv|webm|m4v|png|jpg|jpeg))/i)?.[1]?.trim() || '')
+    const brollQuery = String(fields.BQ || '').trim()
+    const brollUrl = String(fields.URL || '').trim()
+    const cutMotion = String(fields.MOTION || '').trim()
 
     const shCode = fields.SH || ''
     const firstSh = shCode.split(/[→>]/)[0].trim()
@@ -383,6 +404,12 @@ function parseCutsV3(raw) {
       // pipTarget은 이 파일의 기존 PIP 메커니즘(수동 입력 필드, cutType === 'PIP' 케이스)과
       // 같은 필드명 — 별개로 두지 않고 그대로 재사용.
       ...(cutType === 'PIP' ? { pipTarget: '', pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
+      // 메이킹 탭 자동실행이 읽는 컷별 소스 필드 — 값이 있을 때만 실음
+      ...(htmlFile ? { htmlFile } : {}),
+      ...(sourcePath ? { sourcePath } : {}),
+      ...(brollQuery ? { brollQuery } : {}),
+      ...(brollUrl ? { brollUrl } : {}),
+      ...(cutMotion ? { motion: cutMotion } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
         sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',
@@ -432,6 +459,11 @@ function buildV3ScriptText(cuts, episode) {
       `AC: ${mc.ac || ''}`,
       `LOOK_ID: ${mc.lookId || ''}`,
       `DU: ${c.duration || 8}`,
+      ...(c.htmlFile ? [`HTML: ${c.htmlFile}`] : []),
+      ...(c.sourcePath ? [`SRC: ${c.sourcePath}`] : []),
+      ...(c.brollQuery ? [`BQ: ${c.brollQuery}`] : []),
+      ...(c.brollUrl ? [`URL: ${c.brollUrl}`] : []),
+      ...(c.motion ? [`MOTION: ${c.motion}`] : []),
       '오디오:',
       `  BGM: ${audio.bgm || ''}`,
       `  음성: ${audio.voice || ''}`,

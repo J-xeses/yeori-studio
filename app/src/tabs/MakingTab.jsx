@@ -634,7 +634,7 @@ export default function MakingTab() {
     } catch { setS2cScan([]) } finally { setS2cScanBusy(false) }
   }
   const runSourceToCut = async (cut) => {
-    const srcPath = String(s2cPath[cut.no] || '').trim()
+    const srcPath = String(s2cPath[cut.no] ?? cut.sourcePath ?? '').trim()
     if (!srcPath || !episode?.number) return
     setS2cBusy(p => ({ ...p, [cut.no]: true }))
     setS2cResult(p => ({ ...p, [cut.no]: null }))
@@ -646,7 +646,7 @@ export default function MakingTab() {
           duration: cutDuration(cut),
           trimStart: s2cTrimStart[cut.no] || '',
           trimMode: 'start',
-          motion: s2cMotion[cut.no] || 'none',
+          motion: s2cMotion[cut.no] || cut.motion || 'none',
           fit: s2cFit[cut.no] || 'cover',
         }),
       })
@@ -661,7 +661,8 @@ export default function MakingTab() {
   }
 
   const renderSourceToCutPanel = (cut) => {
-    const isVideoGuess = /\.(mp4|mov|mkv|avi|webm|m4v)$/i.test(s2cPath[cut.no] || '')
+    const s2cVal = s2cPath[cut.no] ?? cut.sourcePath ?? ''
+    const isVideoGuess = /\.(mp4|mov|mkv|avi|webm|m4v)$/i.test(s2cVal)
     return (
       <div className={s.subPanel}>
         <div className={s.settingLabel}>스튜디오 소스로 컷 만들기 (이미지·영상 → cut_{String(cut.no).padStart(2, '0')}.mp4)</div>
@@ -670,7 +671,7 @@ export default function MakingTab() {
           영상은 트림, 이미지는 모션(줌/페이드)을 얹습니다. CP가 있으면 손글씨까지 이어집니다.
         </div>
         <div className={s.urlRow}>
-          <input className={s.urlInput} value={s2cPath[cut.no] || ''}
+          <input className={s.urlInput} value={s2cVal}
             placeholder="파일 경로 (절대경로 또는 downloads/... 상대경로)"
             onChange={e => setS2cPath(p => ({ ...p, [cut.no]: e.target.value }))} />
           <button className={s.previewBtn} disabled={s2cScanBusy} onClick={scanSources}>
@@ -714,7 +715,7 @@ export default function MakingTab() {
         </div>
         <div className={s.editorActions}>
           <button className={s.captureBtn}
-            disabled={s2cBusy[cut.no] || !(s2cPath[cut.no] || '').trim() || !episode?.number}
+            disabled={s2cBusy[cut.no] || !String(s2cVal).trim() || !episode?.number}
             onClick={() => runSourceToCut(cut)}>
             {s2cBusy[cut.no] ? '⏳ 제작 중…' : '이 소스로 컷 제작'}
           </button>
@@ -815,7 +816,8 @@ export default function MakingTab() {
   const selectHtmlCut = async (cut) => {
     selectCut(cut)
     setSelectedHtmlFile('__auto__')
-    const def = typeStyles[cut.cutType]?.htmlFile
+    // 컷별 HTML 지정(대본 HTML: 필드)이 있으면 유형 전역 기본 파일보다 우선
+    const def = cut.htmlFile || typeStyles[cut.cutType]?.htmlFile
     const files = await fetchEpisodeHtmlFiles()
     if (def && files.includes(def)) applyHtmlFileChoice(def, cut)
   }
@@ -1173,9 +1175,10 @@ export default function MakingTab() {
 
   const autoProduceGraphicish = async (cut) => {
     const type = cut.cutType
-    const cfgFile = String(typeStyles[type]?.htmlFile || '').trim()
+    // 컷별 HTML 지정(대본 HTML: 필드)이 있으면 유형 전역 기본 파일보다 우선
+    const cfgFile = String(cut.htmlFile || typeStyles[type]?.htmlFile || '').trim()
     const dur = cutDuration(cut)
-    const motion = styleFor(type)?.motion || 'none'
+    const motion = cut.motion || styleFor(type)?.motion || 'none'
     let res, data
     if (cfgFile) {
       res = await fetch(`${YEORI_SERVER}/api/make-graphic-cut`, {
@@ -1195,6 +1198,8 @@ export default function MakingTab() {
 
   const autoProduceBroll = async (cut) => {
     const description = `${cut.scene || ''} ${cut.narration || cut.dialogue || ''} ${cut.videoPrompt || ''}`.trim()
+    // 대본 BQ: 필드가 있으면 그 검색어를 그대로 쓴다(AI 번역·SC 추출 건너뜀)
+    const explicitQuery = String(cut.brollQuery || '').trim()
     const res = await fetch(`${YEORI_SERVER}/api/broll-auto`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1202,7 +1207,8 @@ export default function MakingTab() {
         description,
         duration: cutDuration(cut),
         hint: typeStyles.BROLL.brollQuery || '',
-        fallbackQuery: deriveBrollKeyword(cut, ''),
+        query: explicitQuery || undefined,
+        fallbackQuery: explicitQuery || deriveBrollKeyword(cut, ''),
       }),
     })
     const data = await res.json().catch(() => ({}))
@@ -1285,7 +1291,7 @@ export default function MakingTab() {
             body: JSON.stringify({
               epNum: episode.number, cutNo: cut.no, srcPath: studioSrc,
               duration: cutDuration(cut), trimStart: cut.trimStart ?? '', trimMode: 'start',
-              motion: styleFor(type)?.motion || 'none', fit: cut.fit || 'cover',
+              motion: cut.motion || styleFor(type)?.motion || 'none', fit: cut.fit || 'cover',
             }),
           })
           const d = await r.json().catch(() => ({}))
@@ -1303,8 +1309,8 @@ export default function MakingTab() {
       const brMode = getBrollSourceMode(cut.no)
       const ccMode = getCapcutMode(cut.no)
       const brollUrl = String(cut.brollUrl || cut.sourceUrl || '').trim()
-      // BROLL 화면 녹화 방식이라도 컷에 소스 URL이 있으면 헤드리스 URL 캡처로 대체
-      const brollViaUrl = type === 'BROLL' && brMode === 'record' && brollUrl
+      // 컷에 소스 URL(대본 URL: 필드)이 있으면 소스 모드와 무관하게 헤드리스 URL 캡처로 처리
+      const brollViaUrl = type === 'BROLL' && !!brollUrl
       if (((type === 'BROLL' && brMode === 'record') || (type === 'CAPCUT' && ccMode === 'record')) && !brollViaUrl) {
         skip++
         autoPush({
@@ -1352,11 +1358,13 @@ export default function MakingTab() {
         {autoOpen && (
           <>
             <div className={s.emptyHint}>
-              헤드리스로 만들 수 있는 컷만 유형에 맞게 자동 제작합니다.
-              GRAPHIC/CAPCUT은 유형별 스타일·<b>기본 모션</b>(줌/페이드)으로 캡처하고 CP가 있으면 손글씨까지,
-              BROLL은 <b>컷 묘사 → AI 검색어</b>로 Pexels 영상을 자동 선택해 규격화합니다.
-              BROLL 화면 녹화 방식이라도 <b>컷에 소스 URL(brollUrl)</b>이 있으면 헤드리스 URL 캡처로 대체합니다.
-              <b> CapCut 데스크톱 녹화, 소스 URL 없는 화면 녹화 컷은 건너뜁니다</b>(수동 진행).
+              헤드리스로 만들 수 있는 컷만 유형에 맞게 자동 제작합니다. 대본 컷 필드가 소스를 결정합니다:
+              <br />• <b>SRC:</b> 로컬 파일 → 규격화(source-to-cut) · <b>URL:</b> 영상 페이지 → 헤드리스 캡처
+              &nbsp;— 둘 중 하나가 있으면 유형·소스모드 무관하게 우선 적용
+              <br />• <b>GRAPHIC/CAPCUT</b>: <b>HTML:</b> 있으면 그 목업 캡처, 없으면 유형 스타일·기본 모션으로 자동 템플릿. CP 있으면 손글씨까지
+              <br />• <b>BROLL</b>: <b>BQ:</b> 있으면 그 검색어, 없으면 컷 묘사(SC/VP) → AI 검색어로 Pexels 자동 선택 → 규격화
+              <br />• <b>MOTION:</b> 있으면 그 모션을 캡처/이미지에 얹음
+              <br /><b>CapCut 데스크톱 녹화, SRC/URL 없는 화면 녹화 컷은 건너뜁니다</b>(수동 진행).
             </div>
             <div className={s.autoNote}>
               대상: 총 {targets.length}컷

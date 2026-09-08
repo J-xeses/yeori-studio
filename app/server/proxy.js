@@ -2793,13 +2793,18 @@ async function aiPexelsQuery(desc, hint) {
 // AI 검색어(없으면 fallbackQuery) → Pexels 검색 → 길이 근접 상위 영상 → 규격화 다운로드.
 // MakingTab 자동실행의 BROLL 경로 + "AI로 자동 선택" 버튼이 호출.
 app.post('/api/broll-auto', async (req, res) => {
-  const { epNum, cutNo, description, duration, hint, fallbackQuery } = req.body || {}
+  const { epNum, cutNo, description, duration, hint, fallbackQuery, query: explicitQuery } = req.body || {}
   if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
   try {
-    let query = await aiPexelsQuery(description, hint)
-    const aiUsed = !!query
+    // 대본 BQ: 필드로 검색어를 명시했으면 AI 번역·SC 추출·hint 덧붙이기 전부 건너뛰고 그대로 쓴다
+    let query = String(explicitQuery || '').trim()
+    let aiUsed = false
+    if (!query) {
+      query = await aiPexelsQuery(description, hint)
+      aiUsed = !!query
+    }
     if (!query) query = String(fallbackQuery || description || '').replace(/[가-힣]+/g, ' ').replace(/[^a-zA-Z ]+/g, ' ').trim().split(/\s+/).slice(0, 4).join(' ')
-    if (query && hint && !query.toLowerCase().includes(String(hint).toLowerCase())) query = `${query} ${hint}`.trim()
+    if (!explicitQuery && query && hint && !query.toLowerCase().includes(String(hint).toLowerCase())) query = `${query} ${hint}`.trim()
     if (!query) return res.status(422).json({ error: '검색어를 만들 수 없습니다 — 컷 묘사가 비었거나 기본 검색어를 지정하세요' })
 
     const params = new URLSearchParams({ q: query, type: 'video', orientation: 'portrait', page: '1', perPage: '15' })
@@ -6591,11 +6596,13 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
   const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
   if (!cut) { const e = new Error(`컷 번호 ${cutNo} 없음`); e.statusCode = 404; throw e }
 
+  // htmlFile 인자가 없으면 컷 자체에 지정된 HTML 목업(대본 HTML: 필드 → cut.htmlFile)을 쓴다
+  const effectiveHtmlFile = htmlFile || cut.htmlFile
   let html
-  if (htmlFile) {
+  if (effectiveHtmlFile) {
     const episodeCode = resolveEpisodeCode(ep.episode, epId)
     const { instaContent, instaNum } = resolveInstaRouteParamsForMcp(ep)
-    html = isolateCutInHtml(readEpisodeHtmlFile({ file: htmlFile, instaContent, instaNum, episodeCode }).html, cut.no)
+    html = isolateCutInHtml(readEpisodeHtmlFile({ file: effectiveHtmlFile, instaContent, instaNum, episodeCode }).html, cut.no)
   } else {
     html = fillTemplateForMcp(cut)
   }

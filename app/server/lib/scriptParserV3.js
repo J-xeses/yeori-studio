@@ -3,9 +3,10 @@
 // 정규식/필드명을 절대 임의로 바꾸지 말 것 — 수정 시 ScriptGenTab.jsx도 함께 갱신해야 함.
 
 const MASTER_CLOSEUP_SHOTS = new Set(['SH_ECU', 'SH_CU', 'SH_MCU'])
-const V3_SEP_LINE_RE = /^━{6,}$/
+const V3_SEP_LINE_RE = /^[━=]{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+// HTML/SRC/BQ/URL/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|MOTION):\s?(.*)$/
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -57,21 +58,28 @@ function splitV3Cuts(raw) {
     if (headerM) {
       flush()
       const { cutTitle, lipsync, headerType } = parseCutHeaderMeta(headerM[2] || '')
-      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, headerType, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
+      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, headerType, mainLines: [], krLines: [], ipLines: [], vpLines: [], ipvpLines: [] }
       section = 'main'
       continue
     }
     if (!cur) continue
 
     const trimmed = line.trim()
-    if (trimmed === 'KR (한글 컨펌본)') { section = 'kr'; continue }
-    if (trimmed === 'IP (이미지 프롬프트)') { section = 'ip'; continue }
-    if (trimmed === 'VP (영상 프롬프트)') { section = 'vp'; continue }
+    // [CUT N] 이 아닌 대괄호 표제([제작 체크리스트] 등 에피소드 말미 블록)는 컷 본문 종료로 본다.
+    // [캡션 …]은 CAPCUT 컷 imagePrompt 안의 관용 표기라 예외.
+    if (/^\[/.test(trimmed) && !V3_CUT_HEADER_RE.test(trimmed) && !/^\[캡션/.test(trimmed)) { section = null; continue }
+    // 섹션 헤더: "KR (한글 컨펌본)" / "IP (이미지 프롬프트)" / "VP (영상 프롬프트)" /
+    // "IP / VP" (BROLL·GRAPHIC 컷은 IP·VP 를 한 섹션으로 합쳐 쓴다) 모두 인식
+    if (/^KR\s*\(/.test(trimmed)) { section = 'kr'; continue }
+    if (/^IP\s*\/\s*VP\b/.test(trimmed)) { section = 'ipvp'; continue }
+    if (/^IP\s*\(/.test(trimmed)) { section = 'ip'; continue }
+    if (/^VP\s*\(/.test(trimmed)) { section = 'vp'; continue }
 
     if (section === 'main') cur.mainLines.push(line)
     else if (section === 'kr') cur.krLines.push(line)
     else if (section === 'ip') cur.ipLines.push(line)
     else if (section === 'vp') cur.vpLines.push(line)
+    else if (section === 'ipvp') cur.ipvpLines.push(line)
   }
   flush()
   return cuts
@@ -155,8 +163,26 @@ export function parseCutsV3(raw) {
   return rawCuts.map(rc => {
     const { fields, audio } = parseV3MainBlock(rc.mainLines)
     const kr = parseV3KrBlock(rc.krLines)
-    const ip = joinTrimmedLines(rc.ipLines)
-    const vp = joinTrimmedLines(rc.vpLines)
+    // BROLL·GRAPHIC 컷은 "IP / VP" 한 섹션에 소스 안내를 적는다 — 별도 IP/VP 가 비면 이걸 쓴다.
+    const ipvp = joinTrimmedLines(rc.ipvpLines || [])
+    const ip = joinTrimmedLines(rc.ipLines) || ipvp
+    const vp = joinTrimmedLines(rc.vpLines) || ipvp
+
+    // ── 메이킹 탭 자동실행용 컷별 소스 지정 ──
+    // 명시 필드(HTML:/SRC:/BQ:/URL:/MOTION:) 우선, 없으면 IP/VP 자유텍스트의 관용 표기에서 유추
+    //   HTML: <파일>.html          GRAPHIC/CAPCUT — 이 컷 전용 HTML 목업
+    //   SRC:  <경로>.mp4|...        BROLL — 로컬 소스 파일 → source-to-cut 규격화
+    //   BQ:   <영문 검색어>          BROLL — Pexels 검색어 직접 지정(AI/SC 안 씀)
+    //   URL:  <영상 페이지 URL>      BROLL — 헤드리스 URL 캡처
+    //   MOTION: zoom-in|fade|...    캡처/이미지 소스에 얹을 모션
+    const _ipvpText = `${ip}\n${vp}\n${ipvp}`
+    const htmlFile = String(fields.HTML || '').trim()
+      || (_ipvpText.match(/(?:파일|file)\s*[:：]\s*(\S+\.html?)/i)?.[1] || '')
+    const sourcePath = String(fields.SRC || '').trim()
+      || (_ipvpText.match(/저장\s*경로\s*[:：]\s*(\S.*?\.(?:mp4|mov|mkv|webm|m4v|png|jpg|jpeg))/i)?.[1]?.trim() || '')
+    const brollQuery = String(fields.BQ || '').trim()
+    const brollUrl = String(fields.URL || '').trim()
+    const cutMotion = String(fields.MOTION || '').trim()
 
     const shCode = fields.SH || ''
     const firstSh = shCode.split(/[→>]/)[0].trim()
@@ -190,6 +216,12 @@ export function parseCutsV3(raw) {
       // c.pipTarget을 읽어 pip_target으로 씀)과 이름을 맞춘 것 — 대본 텍스트만으로는 알 수
       // 없어(사람이 지정) 빈 문자열로 시작, 나머지는 codebook 기본값(bottom_right / 0.35).
       ...(cutType === 'PIP' ? { pipTarget: '', pipLayout: 'bottom_right', pipScale: 0.35 } : {}),
+      // 메이킹 탭 자동실행이 읽는 컷별 소스 필드 — 값이 있을 때만 실음
+      ...(htmlFile ? { htmlFile } : {}),
+      ...(sourcePath ? { sourcePath } : {}),
+      ...(brollQuery ? { brollQuery } : {}),
+      ...(brollUrl ? { brollUrl } : {}),
+      ...(cutMotion ? { motion: cutMotion } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
         sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',
