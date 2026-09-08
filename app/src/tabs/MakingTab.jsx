@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { cutDuration } from '../lib/cutDuration'
 import { getGPoint, setGPoint } from '../lib/gpoints'
+import { cutDims } from '../lib/videoPolicy'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './MakingTab.module.css'
@@ -55,8 +56,9 @@ const ANIMATED_GRAPHIC_MOTIONS = new Set(['rise', 'pop', 'type-in', 'word-rise']
 const H_MAP = { left: 'flex-start', center: 'center', right: 'flex-end' }
 const V_MAP = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
 
-function buildGraphicHtml(style, mainText) {
+function buildGraphicHtml(style, mainText, dims) {
   const st = { ...DEFAULT_GRAPHIC_STYLE, ...(style || {}) }
+  const w = dims?.w || 1080, h = dims?.h || 1920
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -64,7 +66,7 @@ function buildGraphicHtml(style, mainText) {
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1080px; height:1920px;
+  width:${w}px; height:${h}px;
   background:${st.bg};
   display:flex; flex-direction:column;
   align-items:${H_MAP[st.align] || 'center'};
@@ -130,8 +132,8 @@ function pickCutText(cut) {
     || cut.dialogue || cut.narration || cut.scene || ''
 }
 
-function fillTemplate(cut, style) {
-  return buildGraphicHtml(style, pickCutText(cut))
+function fillTemplate(cut, style, dims) {
+  return buildGraphicHtml(style, pickCutText(cut), dims)
 }
 
 // ── 유형별 기본 제작 스타일 (브라우저 localStorage) ─────────────────────
@@ -224,6 +226,7 @@ const MANUAL_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
 export default function MakingTab() {
   const { state } = useApp()
   const { episode, cuts } = state
+  const epDims = cutDims(episode || {})   // 이 에피소드 컷 규격 (LF/SF=1920x1080)
   const episodeCode = resolveEpisodeCode(episode)
   const allCuts = [...(cuts || [])].sort((a, b) => a.no - b.no)
 
@@ -360,7 +363,7 @@ export default function MakingTab() {
 
   const selectCut = (cut) => {
     setSelectedCutNo(cut.no)
-    setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
+    setHtmlSource(fillTemplate(cut, styleFor(cut.cutType), epDims))
     setPreviewHtml('')
     setCaptureResult(null)
     setDuration(cutDuration(cut))
@@ -759,7 +762,7 @@ export default function MakingTab() {
     if (selectedCutNo == null || selectedHtmlFile !== '__auto__') return
     const cut = (cuts || []).find(c => c.no === selectedCutNo)
     if (cut && (cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT')) {
-      setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
+      setHtmlSource(fillTemplate(cut, styleFor(cut.cutType), epDims))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeStyles])
@@ -792,7 +795,7 @@ export default function MakingTab() {
   const applyHtmlFileChoice = async (fileName, cut) => {
     setSelectedHtmlFile(fileName)
     if (fileName === '__auto__') {
-      setHtmlSource(fillTemplate(cut, styleFor(cut.cutType)))
+      setHtmlSource(fillTemplate(cut, styleFor(cut.cutType), epDims))
       return
     }
     try {
@@ -1185,7 +1188,7 @@ export default function MakingTab() {
     } else {
       res = await fetch(`${YEORI_SERVER}/api/graphic-capture`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: fillTemplate(cut, styleFor(type)), cutNo: cut.no, epNum: episode.number, duration: dur, motion }),
+        body: JSON.stringify({ html: fillTemplate(cut, styleFor(type), epDims), cutNo: cut.no, epNum: episode.number, duration: dur, motion }),
       })
     }
     data = await res.json().catch(() => ({}))
@@ -1547,13 +1550,18 @@ export default function MakingTab() {
         spellCheck={false}
       />
 
-      {previewHtml && (
-        <div className={s.previewWrap}>
-          <div className={s.previewBox}>
-            <iframe title="graphic-preview" srcDoc={previewHtml} className={s.previewFrame} />
+      {previewHtml && (() => {
+        // 에피소드 화면비율대로 미리보기 — 긴 변을 250px 로 축소
+        const scale = 250 / Math.max(epDims.w, epDims.h)
+        return (
+          <div className={s.previewWrap}>
+            <div style={{ width: epDims.w * scale, height: epDims.h * scale, overflow: 'hidden', borderRadius: 10, border: '1px solid var(--border)', background: '#000' }}>
+              <iframe title="graphic-preview" srcDoc={previewHtml}
+                style={{ width: epDims.w, height: epDims.h, border: 'none', transform: `scale(${scale})`, transformOrigin: 'top left' }} />
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
       {captureResult && (
         captureResult.error ? (
           <div className={s.resultError}>❌ {captureResult.error}</div>

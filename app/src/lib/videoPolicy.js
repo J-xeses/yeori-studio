@@ -33,6 +33,13 @@ export function contentRatio(episode = {}) {
   return (ct === 'LF' || ct === 'SF') ? '16:9' : '9:16'
 }
 
+// 컷 산출물 픽셀 규격 — contentRatio 기준. 메이킹 파이프라인 전체가 이걸로 스케일/크롭한다.
+export function cutDims(episode = {}) {
+  return contentRatio(episode) === '16:9'
+    ? { w: 1920, h: 1080 }
+    : { w: 1080, h: 1920 }
+}
+
 // 컷의 최종 영상 방식. 우선순위: 컷 명시(cut.videoMode) > 유형(그래픽/캡컷은 항상 motion/still) > 정책
 export function resolveCutVideoMode(cut = {}, episode = {}) {
   if (cut.videoMode === 'veo' || cut.videoMode === 'motion' || cut.videoMode === 'still') {

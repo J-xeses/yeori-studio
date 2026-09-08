@@ -15,6 +15,7 @@ import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
+import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
 
@@ -2022,14 +2023,14 @@ function ffprobeDuration(filePath) {
   })
 }
 
-// raw 녹화본을 목표 길이로 트림 + 1080x1920 스케일/크롭해서 최종 컷 영상으로 확정.
-// force_original_aspect_ratio=increase(짧은 변을 목표 이상으로 키움) 후 중앙 crop —
-// 데스크톱 해상도로 찍힌 raw를 세로 숏폼 화면비로 맞추는 표준 처리.
+// raw 녹화본을 목표 길이로 트림 + 컷 규격(에피소드 화면비율) 스케일/크롭해서 최종 컷 영상으로 확정.
+// force_original_aspect_ratio=increase(짧은 변을 목표 이상으로 키움) 후 중앙 crop.
 async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode }) {
   const rawDuration = await ffprobeDuration(rawPath)
   const target = targetDuration || rawDuration
   const ssOffset = rawDuration > target && trimMode === 'end' ? rawDuration - target : 0
 
+  const { w: CW, h: CH } = episodeCutDims(epNum)
   const finalDir = mp.videoDir(epNum)
   fs.mkdirSync(finalDir, { recursive: true })
   const padded = String(cutNo).padStart(2, '0')
@@ -2041,7 +2042,7 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
     args.push(
       '-i', rawPath,
       '-t', String(target),
-      '-vf', 'scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,format=yuv420p',
+      '-vf', `scale=${CW}:${CH}:force_original_aspect_ratio=increase,crop=${CW}:${CH},format=yuv420p`,
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-g', '60', '-movflags', '+faststart',
       finalPath,
     )
@@ -2180,8 +2181,9 @@ async function assembleMakingFilm(epNum) {
   // -c copy(스트림 복사)로 이어붙이면 내부 스트림 속성이 뒤섞여 재생 불가능하거나
   // 오디오가 통째로 사라진 파일이 나온다(실측 확인). 매 컷을 공통 규격
   // (1080x1920/yuv420p/30fps, 오디오 없으면 무음 채움)으로 맞춘 뒤 필터 concat으로
-  // 재인코딩해서 합친다.
-  const MK_W = 1080, MK_H = 1920, MK_FPS = 30
+  // 재인코딩해서 합친다. 규격은 에피소드 화면비율(LF/SF=1920x1080).
+  const { w: MK_W, h: MK_H } = episodeCutDims(epNum)
+  const MK_FPS = 30
   const inputArgs = []
   const filterParts = []
   const concatLabels = []
@@ -2572,40 +2574,49 @@ app.post('/api/download-broll-cut', async (req, res) => {
 
 // ── 스튜디오 소스 → 메이킹 탭 컷 ─────────────────────────────────────────
 // 스튜디오(Flow/Higgsfield/Veo)에서 만든 "약간 움직이는 초상 클립"이나 합성 이미지,
-// 또는 임의의 로컬 영상/이미지를 컷 규격(1080x1920)으로 확정한다 → cut_NN.mp4.
+// 또는 임의의 로컬 영상/이미지를 컷 규격으로 확정한다 → cut_NN.mp4.
+// 규격 = 에피소드 화면비율(LF/SF=1920x1080, 그 외=1080x1920). episodeCutDims()로 해석.
 //   영상: 트림(시작 타임코드 또는 끝/처음 기준) + fit
 //   이미지: 모션(zoompan/fade) + fit
 const S2C_IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.avif'])
 const S2C_VIDEO_EXT = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm', '.m4v'])
-const S2C_W = 1080, S2C_H = 1920
+const S2C_W = 1080, S2C_H = 1920   // 세로 기본(인스타/쇼츠). 16:9 는 아래 헬퍼가 override.
 
-function s2cFitFilter(fit) {
+// 에피소드 번호 → 컷 픽셀 규격. 못 찾으면 세로 폴백.
+function episodeCutDims(epNum) {
+  try {
+    const { ep } = findEpisodeByNumOrThrow(epNum)
+    return cutDims(ep.episode || {})
+  } catch { return { w: S2C_W, h: S2C_H } }
+}
+
+function s2cFitFilter(fit, w = S2C_W, h = S2C_H) {
   if (fit === 'contain') {
-    return `scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=decrease,`
-      + `pad=${S2C_W}:${S2C_H}:(ow-iw)/2:(oh-ih)/2:color=black`
+    return `scale=${w}:${h}:force_original_aspect_ratio=decrease,`
+      + `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=black`
   }
   if (fit === 'blur') {
     return `split=2[bg][fg];`
-      + `[bg]scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=increase,crop=${S2C_W}:${S2C_H},gblur=sigma=36[bgb];`
-      + `[fg]scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=decrease[fgs];`
+      + `[bg]scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h},gblur=sigma=36[bgb];`
+      + `[fg]scale=${w}:${h}:force_original_aspect_ratio=decrease[fgs];`
       + `[bgb][fgs]overlay=(W-w)/2:(H-h)/2`
   }
   // cover (기본)
-  return `scale=${S2C_W}:${S2C_H}:force_original_aspect_ratio=increase,crop=${S2C_W}:${S2C_H}`
+  return `scale=${w}:${h}:force_original_aspect_ratio=increase,crop=${w}:${h}`
 }
 
 // 이미지용 vf: fit + 모션(zoom/fade). zoom은 2배 업스케일 후 zoompan.
-function s2cImageVf(fit, motion, dur, fps = 30) {
+function s2cImageVf(fit, motion, dur, fps = 30, w = S2C_W, h = S2C_H) {
   const m = motion || 'none'
   const frames = Math.max(2, Math.round(dur * fps))
   let vf
   if (m === 'zoom-in' || m === 'zoom-out' || m === 'zoom-in-fade') {
     const zin = m.startsWith('zoom-in')
     const z0 = zin ? 1.0 : 1.12, z1 = zin ? 1.12 : 1.0
-    vf = `scale=${S2C_W * 2}:${S2C_H * 2}:force_original_aspect_ratio=increase,crop=${S2C_W * 2}:${S2C_H * 2},`
-      + `zoompan=z='${z0}+(${z1 - z0})*on/${frames}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${S2C_W}x${S2C_H}:fps=${fps},format=yuv420p`
+    vf = `scale=${w * 2}:${h * 2}:force_original_aspect_ratio=increase,crop=${w * 2}:${h * 2},`
+      + `zoompan=z='${z0}+(${z1 - z0})*on/${frames}':d=1:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${w}x${h}:fps=${fps},format=yuv420p`
   } else {
-    vf = `${s2cFitFilter(fit)},format=yuv420p`
+    vf = `${s2cFitFilter(fit, w, h)},format=yuv420p`
   }
   if (m === 'fade' || m === 'zoom-in-fade') {
     vf += `,fade=t=in:st=0:d=${Math.min(0.5, dur / 4).toFixed(2)}`
@@ -2709,6 +2720,7 @@ app.post('/api/source-to-cut', async (req, res) => {
     if (!isImage && !isVideo) return res.status(400).json({ error: `지원하지 않는 형식: ${ext}` })
 
     const dur = Math.max(0.5, parseFloat(duration) || 5)
+    const { w: CW, h: CH } = episodeCutDims(epNum)   // 에피소드 화면비율 규격
     const videoDir = mp.videoDir(epNum)
     fs.mkdirSync(videoDir, { recursive: true })
     const outPath = path.join(videoDir, `cut_${String(cutNo).padStart(2, '0')}.mp4`)
@@ -2724,14 +2736,14 @@ app.post('/api/source-to-cut', async (req, res) => {
       const args = ['-y']
       if (ss > 0) args.push('-ss', String(ss))
       args.push('-i', src, '-t', String(dur),
-        '-vf', `${s2cFitFilter(fitMode)},format=yuv420p`,
+        '-vf', `${s2cFitFilter(fitMode, CW, CH)},format=yuv420p`,
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60',
         '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', '-shortest', outPath)
       await runFfmpeg(args)
       meta = { kind: 'video', rawDuration: rawDur, trimStart: ss }
     } else {
       await runFfmpeg(['-y', '-loop', '1', '-i', src, '-t', String(dur),
-        '-vf', s2cImageVf(fitMode, motion, dur),
+        '-vf', s2cImageVf(fitMode, motion, dur, 30, CW, CH),
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '30',
         '-movflags', '+faststart', outPath])
       meta = { kind: 'image', motion: motion || 'none' }
@@ -3051,6 +3063,7 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
   const animated = ANIMATED_MOTIONS.has(motion)
+  const { w: CW, h: CH } = episodeCutDims(epNum)   // 에피소드 화면비율
 
   const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
@@ -3067,7 +3080,7 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
       headless: true,
     })
     const page = await browser.newPage()
-    await page.setViewport({ width: 1080, height: 1920 })
+    await page.setViewport({ width: CW, height: CH })
     await page.setContent(pageHtml, { waitUntil: 'networkidle0' })
     try { await page.evaluate(() => document.fonts && document.fonts.ready) } catch { /* noop */ }
 
@@ -3100,9 +3113,9 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
     await new Promise((resolve, reject) => {
       const args = animated
         ? ['-y', '-framerate', String(FPS), '-i', path.join(framesDir, 'f_%05d.png'),
-           '-vf', 'scale=1080:1920,format=yuv420p']
+           '-vf', `scale=${CW}:${CH},format=yuv420p`]
         : ['-y', '-loop', '1', '-i', imagePath, '-t', String(dur),
-           '-vf', graphicMotionVf(motion, dur)]
+           '-vf', graphicMotionVf(motion, dur, CW, CH)]
       const proc = spawn('ffmpeg', [
         ...args,
         // PNG→yuv444p 재생불가 방지 + -g 30(1초마다 키프레임).
@@ -6468,14 +6481,15 @@ mcpRouter.post('/read-file', (req, res) => {
 // GRAPHIC_TEMPLATE/fillTemplate은 src/tabs/MakingTab.jsx:24-76의 서버사이드 사본이다.
 // 클라이언트 쪽은 "캡처 전 사람이 항상 수정 가능한 시작점"이라는 기존 관례를 위해
 // 그대로 두고, 이 사본은 MCP가 htmlFile 없이 자동 호출할 때 쓰는 fallback 전용이다.
-const GRAPHIC_TEMPLATE_MCP = `<!DOCTYPE html>
+function graphicTemplateMcp({ w = 1080, h = 1920 } = {}) {
+  return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  width:1080px; height:1920px;
+  width:${w}px; height:${h}px;
   background:#0a0a0a;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
@@ -6483,9 +6497,9 @@ body {
   color:white;
 }
 .main-text {
-  font-size:80px; font-weight:700;
+  font-size:${w >= h ? 72 : 80}px; font-weight:700;
   text-align:center; line-height:1.4;
-  padding:0 80px;
+  padding:0 ${Math.round(w * 0.08)}px;
   white-space:pre-line;
   word-break:keep-all;
 }
@@ -6495,6 +6509,7 @@ body {
 <div class="main-text">{narration}</div>
 </body>
 </html>`
+}
 
 function escapeHtmlForMcp(str) {
   return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -6532,12 +6547,12 @@ function extractCaptionSectionLastLineForMcp(text) {
   return lines.length ? lines[lines.length - 1] : ''
 }
 
-function fillTemplateForMcp(cut) {
+function fillTemplateForMcp(cut, dims) {
   const mainText = cut.subtitle
     || extractQuotedLineForMcp(cut.videoPrompt)
     || extractCaptionSectionLastLineForMcp(cut.imagePrompt)
     || cut.dialogue || cut.narration || cut.scene || ''
-  return GRAPHIC_TEMPLATE_MCP.replace('{narration}', escapeHtmlForMcp(mainText))
+  return graphicTemplateMcp(dims).replace('{narration}', escapeHtmlForMcp(mainText))
 }
 
 // RL02_DM_mockup_v3.html처럼 컷 여러 개(.phone-wrap, 각각 .label에 "CUT N — ..." 텍스트)를
@@ -6620,7 +6635,7 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
     const { instaContent, instaNum } = resolveInstaRouteParamsForMcp(ep)
     html = isolateCutInHtml(readEpisodeHtmlFile({ file: effectiveHtmlFile, instaContent, instaNum, episodeCode }).html, cut.no)
   } else {
-    html = fillTemplateForMcp(cut)
+    html = fillTemplateForMcp(cut, cutDims(ep.episode || {}))
   }
 
   return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion })
@@ -6632,16 +6647,18 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
 //    원본 대체가 아니라 논평 대상이어야 하고, 출처 표기를 권장한다. 자동화는
 //    "사람이 대본 CLIP: 필드에 URL을 명시적으로 넣은" 컷에서만 동작하며(전면 크롤링
 //    아님), 사용 판단·책임은 대본 작성자에게 있다. 상업적/재배포 목적이면 라이선스 확인.
-function buildBrollClipScenario({ cut, durationSec }) {
+function buildBrollClipScenario({ cut, durationSec, dims }) {
   const dur = Math.max(2, Math.min(30, Number(cut.clipDuration) || Number(durationSec) || 8))
   const seek = Math.max(0, Number(cut.clipSeek) || 0)
   const u = new URL(cut.clipUrl)   // 형식 오류면 throw
   const isYt = /(?:^|\.)youtube\.com$|(?:^|\.)youtu\.be$/i.test(u.hostname)
   if (isYt && seek > 0 && !u.searchParams.has('t')) u.searchParams.set('t', String(Math.floor(seek)))
+  const { w: CW, h: CH } = dims && dims.w ? dims : { w: 1080, h: 1920 }
   return {
     id: `clip_${cut.id || cut.no}`,
     _note: '자동생성(BROLL CLIP) — 웹 영상 구간 화면녹화. ⚠️ 리뷰·비평 목적 짧은 인용(공정이용) 전제.',
     driver: 'cdp', recorder: 'native', duration: dur, fit: 'crop',
+    viewport: { width: CW, height: CH },   // runner.normalize 규격 = 에피소드 화면비율
     record: { fps: 30 },
     target: { url: u.href, timeout: 45000 },
     // preSteps: 녹화 시작 전 — 광고 스킵/시크가 결과물에 안 담기게
@@ -6687,7 +6704,7 @@ function buildBrollClipScenario({ cut, durationSec }) {
 
 async function runBrollClipScenario({ epNum, cut, durationSec }) {
   let scenario
-  try { scenario = buildBrollClipScenario({ cut, durationSec }) }
+  try { scenario = buildBrollClipScenario({ cut, durationSec, dims: episodeCutDims(epNum) }) }
   catch { return { ok: false, error: `CLIP URL 형식 오류: ${cut.clipUrl}` } }
 
   const tmp = path.join(os.tmpdir(), `broll_clip_${epNum}_${cut.no}_${Date.now()}.json`)
@@ -6722,7 +6739,7 @@ app.post('/api/broll-clip', (req, res) => {
   const { epNum, cutNo, clipUrl, clipSeek, clipDuration } = req.body || {}
   if (epNum == null || cutNo == null || !clipUrl) return res.status(400).json({ error: 'epNum, cutNo, clipUrl 필요' })
   let scenario
-  try { scenario = buildBrollClipScenario({ cut: { no: cutNo, id: `cut-${cutNo}`, clipUrl, clipSeek, clipDuration }, durationSec: clipDuration }) }
+  try { scenario = buildBrollClipScenario({ cut: { no: cutNo, id: `cut-${cutNo}`, clipUrl, clipSeek, clipDuration }, durationSec: clipDuration, dims: episodeCutDims(epNum) }) }
   catch { return res.status(400).json({ error: `CLIP URL 형식 오류: ${clipUrl}` }) }
 
   res.setHeader('Content-Type', 'text/event-stream')
@@ -6974,6 +6991,7 @@ async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
     const e = new Error('epNum, cutNo, videoUrl이 필요합니다'); e.statusCode = 400; throw e
   }
   const wantTrim = Number(duration) > 0
+  const { w: CW, h: CH } = episodeCutDims(epNum)
 
   const finalDir = mp.videoDir(epNum)
   fs.mkdirSync(finalDir, { recursive: true })
@@ -6990,12 +7008,12 @@ async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
     const srcDuration = await ffprobeDuration(tmpPath)
     const target = wantTrim ? Math.min(Number(duration), srcDuration) : srcDuration
 
-    // 2~3) 앞부분 trim(-t) + 1080x1920 스케일+패딩(assemble_making_film과 동일 필터)
+    // 2~3) 앞부분 trim(-t) + 컷 규격 스케일+패딩(assemble_making_film과 동일 필터)
     await new Promise((resolve, reject) => {
       const args = ['-y', '-i', tmpPath]
       if (wantTrim) args.push('-t', String(target))
       args.push(
-        '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30',
+        '-vf', `scale=${CW}:${CH}:force_original_aspect_ratio=decrease,pad=${CW}:${CH}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30`,
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast',
         '-an',
         finalPath,
