@@ -50,7 +50,7 @@ echo.
 
 echo [3] Making pipeline (auto-produce GRAPHIC/BROLL/CAPCUT, then wait at G4 gate)
 netstat -ano | findstr /r /c:":3001 .*LISTENING" >nul 2>&1
-if not %errorlevel%==0 (
+if errorlevel 1 (
   echo     [!] proxy :3001 down -- skipped. Run start_yeori.bat first, then re-run this.
   goto :pipe_done
 )
