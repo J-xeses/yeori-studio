@@ -217,6 +217,17 @@ export const TOOLS = [
     },
   },
   {
+    name: 'renumber_cuts',
+    description: '에피소드 컷 번호를 배열 순서대로 1..N 순차 재부여. cuts[].no/id 뿐 아니라 연동된 것 전부 이동: 생성 파일(02_images/03_audio/05_video/deliverables 의 cut_NN*), gpoints 키, ttsTabState/videoTabState/studioTabState 의 cut-id 키, scene/action 텍스트의 "CUT N" 참조. 컷을 추가/삭제/재배치한 뒤 이 도구로 정리하면 파일·승인 상태가 같이 따라온다. apply 생략/false 면 매핑표만(dry-run), apply:true 여야 실제 적용(활성 에피소드만).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        episodeId: { type: 'string', description: '에피소드 ID (생략 시 현재 활성 에피소드)' },
+        apply: { type: 'boolean', description: 'true 여야 실제 변경. 기본은 dry-run(매핑표만)' },
+      },
+    },
+  },
+  {
     name: 'import_cut_images',
     description: '에피소드 02_images 폴더에서 규격 밖 이름의 이미지 파일을 cut_NN_<슬롯>.<ext> 로 일괄 rename. Flow/외부 도구가 만든 제각각인 파일명(예: Gemini_Generated_xxx.png, 2.jpg, cut2-v2.png, [002].webp)에서 컷 번호를 추출해 정리. 규격에 이미 맞는 파일은 안 건드림. 정리 후 스튜디오 탭 "불러오기"나 studio_get_status 에 반영됨. 사람이 수동 제작한 이미지를 폴더에 넣고 이 도구를 부르면 됨.',
     inputSchema: {

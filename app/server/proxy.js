@@ -4983,6 +4983,150 @@ mcpRouter.post('/import-cut-images', (req, res) => {
   } catch (e) { res.status(e.statusCode || 500).json({ error: e.message }) }
 })
 
+// ── 컷 번호 재정렬 (1..N 순차) ──────────────────────────────────
+// cuts 배열 순서 = 시퀀스. no/id 를 배열순서 1..N 로 재부여하고, 연동된 것 전부 이동:
+//   생성 파일(02_images/03_audio/05_video/deliverables 의 cut_NN*), gpoints 키,
+//   ttsTabState/videoTabState/studioTabState 의 cut-id 키, scene/action 텍스트의 "CUT N" 참조.
+// dryRun(기본): 매핑표만. apply:true 여야 실제 변경.
+function renumberEpisodeCuts(state, ep, { apply = false } = {}) {
+  const epNum = ep.episode?.number
+  const episodeCode = resolveEpisodeCode(ep.episode, ep.id)
+  const cuts = ep.cuts || []
+
+  // 매핑: 배열 index → { old, new }
+  const map = {}          // oldNo(str) → newNo(int)
+  const plan = cuts.map((c, i) => {
+    const oldNo = c.no
+    const newNo = i + 1
+    map[String(oldNo)] = newNo
+    return { index: i, oldNo, newNo, changed: String(oldNo) !== String(newNo) }
+  })
+  const anyChange = plan.some(p => p.changed)
+
+  const pad = (n) => String(n).padStart(2, '0')
+  const dirs = [mp.imagesDir(epNum), mp.audioDir(epNum), mp.videoDir(epNum), mp.deliverablesDir(epNum)]
+  const FILE_RE = /^cut_(\d+)(.*)$/i
+
+  // 파일 rename 계획
+  const fileOps = []
+  for (const dir of dirs) {
+    let files = []
+    try { files = fs.readdirSync(dir) } catch { continue }
+    for (const f of files) {
+      const m = f.match(FILE_RE)
+      if (!m) continue
+      const newNo = map[String(parseInt(m[1], 10))]
+      if (newNo == null) continue
+      const to = `cut_${pad(newNo)}${m[2]}`
+      if (to !== f) fileOps.push({ dir, from: f, to })
+    }
+  }
+
+  // 텍스트 "CUT N" 참조 치환기
+  const fixText = (s) => typeof s === 'string'
+    ? s.replace(/CUT\s*(\d+)/gi, (mm, n) => (map[n] != null ? `CUT ${map[n]}` : mm))
+    : s
+
+  const keyRemapCount = { gpoints: 0, tts: 0, video: 0, studio: 0 }
+  const remapObjKeys = (obj, keyFn) => {
+    if (!obj || typeof obj !== 'object') return obj
+    const out = {}
+    for (const [k, v] of Object.entries(obj)) out[keyFn(k)] = v
+    return out
+  }
+  const idKeyFn = (k) => k.replace(/^cut-(\d+)(.*)$/, (mm, n, rest) => (map[n] != null ? `cut-${map[n]}${rest}` : mm))
+  const gpKeyFn = (k) => k.replace(/^cut_(\d+)$/, (mm, n) => (map[n] != null ? `cut_${map[n]}` : mm))
+
+  if (!apply) {
+    return {
+      applied: false, anyChange, episodeCode,
+      mapping: plan,
+      fileRenames: fileOps.map(o => `${path.basename(o.dir)}/${o.from} → ${o.to}`),
+      note: anyChange ? 'apply:true 로 실제 적용' : '이미 1..N 순차 — 변경 없음',
+    }
+  }
+
+  // ── 실제 적용 ──
+  // 1) 파일: 2단계(temp) rename 으로 충돌 방지
+  const renamed = []
+  for (const o of fileOps) {
+    const tmp = path.join(o.dir, `__RENUM__${o.to}`)
+    fs.renameSync(path.join(o.dir, o.from), tmp)
+    o._tmp = tmp
+  }
+  for (const o of fileOps) {
+    fs.renameSync(o._tmp, path.join(o.dir, o.to))
+    renamed.push(`${path.basename(o.dir)}/${o.from} → ${o.to}`)
+  }
+
+  // 2) cuts: no / id / 텍스트
+  cuts.forEach((c, i) => {
+    c.no = i + 1
+    if (typeof c.id === 'string' && /^cut-\d+$/.test(c.id)) c.id = `cut-${i + 1}`
+    if (c.scene) c.scene = fixText(c.scene)
+    if (c.action) c.action = fixText(c.action)
+    if (c.cutTitle) c.cutTitle = fixText(c.cutTitle)
+  })
+
+  // 3) tab state 키
+  if (state.ttsTabState) {
+    for (const f of ['voiceTabs', 'tracks', 'audioUrls', 'audioTexts', 'g3Confirmed', 'mergedUrls']) {
+      if (state.ttsTabState[f]) { state.ttsTabState[f] = remapObjKeys(state.ttsTabState[f], idKeyFn); keyRemapCount.tts++ }
+    }
+    if (state.ttsTabState.activeVoiceTab) state.ttsTabState.activeVoiceTab = remapObjKeys(state.ttsTabState.activeVoiceTab, idKeyFn)
+    if (typeof state.ttsTabState.activeVoiceTab === 'string') state.ttsTabState.activeVoiceTab = idKeyFn(state.ttsTabState.activeVoiceTab)
+  }
+  if (state.videoTabState) {
+    for (const f of ['videoClips', 'g4Approved', 'subtitles']) {
+      if (state.videoTabState[f]) { state.videoTabState[f] = remapObjKeys(state.videoTabState[f], idKeyFn); keyRemapCount.video++ }
+    }
+    if (typeof state.videoTabState.selectedCutId === 'string') state.videoTabState.selectedCutId = idKeyFn(state.videoTabState.selectedCutId)
+  }
+  if (state.studioTabState?.imageRatio) {
+    state.studioTabState.imageRatio = remapObjKeys(state.studioTabState.imageRatio, idKeyFn)
+    keyRemapCount.studio++
+  }
+
+  // 4) gpoints.json
+  try {
+    const gpPath = mp.statePath('gpoints.json')
+    const gp = JSON.parse(fs.readFileSync(gpPath, 'utf-8'))
+    if (gp[episodeCode]) {
+      gp[episodeCode] = remapObjKeys(gp[episodeCode], gpKeyFn)
+      // selectedImage 파일명도 새 번호로
+      for (const [, v] of Object.entries(gp[episodeCode])) {
+        if (v?.selectedImage) v.selectedImage = v.selectedImage.replace(FILE_RE, (mm, n, rest) => {
+          const nn = map[String(parseInt(n, 10))]; return nn != null ? `cut_${pad(nn)}${rest}` : mm
+        })
+      }
+      fs.writeFileSync(gpPath, JSON.stringify(gp, null, 2), 'utf-8')
+      keyRemapCount.gpoints = Object.keys(gp[episodeCode]).length
+    }
+  } catch (e) { /* gpoints 없으면 스킵 */ }
+
+  // 5) studio-state 저장
+  saveStudioState(state)
+
+  return {
+    applied: true, anyChange, episodeCode,
+    mapping: plan.filter(p => p.changed),
+    filesRenamed: renamed,
+    keyRemapCount,
+    note: 'edit_meta 는 다음 studio_run_g5 에서 재생성됨. 브라우저 열려있으면 새로고침 필요.',
+  }
+}
+
+mcpRouter.post('/renumber-cuts', (req, res) => {
+  const { episodeId, apply } = req.body || {}
+  try {
+    const state = loadStudioState()
+    const ep = episodeId ? getEpisodeOrThrow(state, episodeId) : state.episodes?.[state.activeEpisodeId]
+    if (!ep) return res.status(404).json({ error: '에피소드를 찾을 수 없습니다' })
+    if (apply === true) requireActiveEpisode(state, ep.id)
+    res.json({ success: true, ...renumberEpisodeCuts(state, ep, { apply: apply === true }) })
+  } catch (e) { res.status(e.statusCode || 500).json({ error: e.message }) }
+})
+
 mcpRouter.post('/export-pipeline', (req, res) => {
   const { episodeId } = req.body || {}
   const statePath = path.join(CODE_ROOT, 'studio-state.json')

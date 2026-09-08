@@ -241,6 +241,16 @@ async function executeTool(name, args) {
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
     }
 
+    case 'renumber_cuts': {
+      const data = await api('POST', '/api/mcp/renumber-cuts', { episodeId: args.episodeId, apply: args.apply === true })
+      if (data.error) return `오류: ${data.error}`
+      if (!data.anyChange) return `${data.episodeCode}: 이미 1..N 순차 — 변경 없음`
+      const rows = (data.mapping || []).map(m => `  CUT ${m.oldNo} → ${m.newNo}`).join('\n')
+      return data.applied
+        ? `${data.episodeCode} 재번호 완료:\n${rows}\n파일 ${data.filesRenamed?.length || 0} rename\n${data.note || ''}`
+        : `${data.episodeCode} 재번호 계획(dry-run):\n${rows}\n파일 rename ${data.fileRenames?.length || 0}건\napply:true 로 적용`
+    }
+
     case 'import_cut_images': {
       const data = await api('POST', '/api/mcp/import-cut-images', args)
       if (data.error) return `오류: ${data.error}`

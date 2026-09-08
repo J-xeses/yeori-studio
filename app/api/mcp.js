@@ -236,6 +236,21 @@ async function executeTool(name, args) {
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
     }
 
+    case 'renumber_cuts': {
+      const data = await bridge('POST', '/renumber-cuts', { episodeId: args.episodeId, apply: args.apply === true })
+      if (data.error) return `오류: ${data.error}`
+      if (!data.anyChange) return `${data.episodeCode}: 이미 1..N 순차 — 변경 없음`
+      const rows = (data.mapping || []).filter(m => m.changed !== false)
+        .map(m => `  CUT ${m.oldNo} → ${m.newNo}`).join('\n')
+      if (!data.applied) {
+        return `${data.episodeCode} 재번호 계획 (dry-run):\n${rows}\n\n`
+          + `파일 rename ${data.fileRenames?.length || 0}건:\n` + (data.fileRenames || []).map(x => '  ' + x).join('\n')
+          + `\n\n실제 적용하려면 apply:true`
+      }
+      return `${data.episodeCode} 재번호 완료:\n${rows}\n\n`
+        + `파일 ${data.filesRenamed?.length || 0}개 rename, gpoints ${data.keyRemapCount?.gpoints || 0}키 이동\n${data.note || ''}`
+    }
+
     case 'import_cut_images': {
       const data = await bridge('POST', '/import-cut-images', { episodeId: args.episodeId })
       if (data.error) return `오류: ${data.error}`
