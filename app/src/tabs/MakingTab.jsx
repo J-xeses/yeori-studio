@@ -1707,6 +1707,15 @@ export default function MakingTab() {
                   value={clipInput[cut.no] ?? (cut.clipUrl ? `${cut.clipUrl}${cut.clipSeek ? ` @ ${cut.clipSeek}` : ''}${cut.clipDuration ? ` +${cut.clipDuration}` : ''}` : '')}
                   placeholder="https://youtube.com/watch?v=… @ 0:45 +10   (@ 시크, + 길이(초))"
                   onChange={e => setClipInput(p => ({ ...p, [cut.no]: e.target.value }))} />
+                <button className={s.previewBtn}
+                  disabled={!parseClipExpr(clipInput[cut.no] ?? cut.clipUrl ?? '')}
+                  onClick={() => {
+                    const p = parseClipExpr(clipInput[cut.no] ?? (cut.clipUrl ? `${cut.clipUrl}${cut.clipSeek ? ` @ ${cut.clipSeek}` : ''}` : ''))
+                    if (!p) return
+                    const u = new URL(p.clipUrl)
+                    if (p.clipSeek > 0) u.searchParams.set('t', String(Math.floor(p.clipSeek)))
+                    window.open(u.href, '_blank', 'noopener,noreferrer')
+                  }}>▶ 타임코드 확인</button>
                 <button className={s.captureBtn}
                   disabled={clipBusy[cut.no] || !episode.number || !parseClipExpr(clipInput[cut.no] ?? cut.clipUrl ?? '')}
                   onClick={() => runBrollClip(cut)}>
