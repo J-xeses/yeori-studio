@@ -316,6 +316,36 @@ function startTunnel() {
 process.on('SIGINT', () => { shuttingDown = true; currentChild?.kill() })
 process.on('SIGTERM', () => { shuttingDown = true; currentChild?.kill() })
 
+// ── 워치독 ──────────────────────────────────────────────────────────
+// Quick Tunnel 은 cloudflared 프로세스가 살아있는데도 Cloudflare 엣지 쪽에서
+// 라우트만 죽는 일이 잦다(2026-09-07~08 실측: 14시간 무응답인데 프로세스는 running).
+// child.on('exit') 만으로는 재연결이 안 걸리므로, 주기적으로 자기 URL 을 직접
+// 확인하고 연속 실패하면 cloudflared 를 죽여 재연결을 강제한다.
+const WATCHDOG_INTERVAL_MS = 90_000
+const WATCHDOG_FAIL_LIMIT = 3
+let watchdogFails = 0
+async function watchdogTick() {
+  if (shuttingDown || committing) return
+  const url = readState()?.url
+  if (!url || Date.now() - lastStartedAt < 120_000) { watchdogFails = 0; return } // 방금 시작이면 스킵
+  let ok = false
+  try {
+    const r = await fetch(`${url}/api/health`, { signal: AbortSignal.timeout(8000) })
+    ok = r.ok
+  } catch { ok = false }
+  if (ok) { watchdogFails = 0; return }
+  watchdogFails += 1
+  console.log(`[tunnel] 워치독: 터널 무응답 ${watchdogFails}/${WATCHDOG_FAIL_LIMIT}`)
+  logToFile(`워치독: ${url} 무응답 (${watchdogFails}/${WATCHDOG_FAIL_LIMIT})`)
+  if (watchdogFails >= WATCHDOG_FAIL_LIMIT) {
+    watchdogFails = 0
+    console.log('[tunnel] 워치독: cloudflared 종료 → 재연결')
+    logToFile('워치독: cloudflared 강제 종료 → 재연결')
+    currentChild?.kill() // exit 핸들러가 scheduleRestart() 호출
+  }
+}
+setInterval(() => { watchdogTick().catch(() => {}) }, WATCHDOG_INTERVAL_MS)
+
 // 이 스크립트도 장시간 떠있어야 하므로 proxy.js와 동일하게 예기치 못한 예외로
 // 조용히 죽지 않도록 방지(로그만 남기고 계속 진행).
 process.on('uncaughtException', (err) => {

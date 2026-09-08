@@ -39,18 +39,44 @@ async function resolveBridgeUrl() {
   return ENV_BRIDGE_URL
 }
 
+// 터널이 재연결 중이면 이 메시지가 도구 결과로 나온다. 에이전트가 "연결 안 됨"으로
+// 단정하고 기억으로 추측하지 않도록, 무엇을 해야 하는지 명확히 적는다.
+const TUNNEL_DOWN_MSG = [
+  '여리 스튜디오 로컬 서버에 연결하지 못했습니다 (Cloudflare 터널이 재연결 중일 수 있음).',
+  '⚠️ "연결 안 됨"으로 단정하거나 기억/추측으로 답하지 마세요.',
+  '조치: (1) 30~60초 뒤 같은 도구를 다시 호출 — 터널은 워치독이 자동 재연결합니다.',
+  '(2) 2~3회 재시도해도 계속 실패하면 사용자에게 [PC에서 YeoriMcpTunnel 작업 상태 확인, 또는 start_yeori.bat 실행] 을 요청하세요.',
+  '(3) 그때까지는 스튜디오 상태를 모른다고 답하세요.',
+].join(' ')
+
 async function bridge(method, subpath, body) {
   const BRIDGE_URL = await resolveBridgeUrl()
-  if (!BRIDGE_URL) throw new Error('MCP bridge URL 미설정 (Edge Config mcpBridgeUrl / MCP_BRIDGE_URL 둘 다 없음)')
-  const r = await fetch(`${BRIDGE_URL}/api/mcp${subpath}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${BRIDGE_SECRET}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  return r.json()
+  if (!BRIDGE_URL) throw new Error(TUNNEL_DOWN_MSG + ' (bridge URL 미설정)')
+  let r
+  try {
+    r = await fetch(`${BRIDGE_URL}/api/mcp${subpath}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${BRIDGE_SECRET}`,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(20000),
+    })
+  } catch (e) {
+    throw new Error(`${TUNNEL_DOWN_MSG} (원인: ${e.name === 'TimeoutError' ? '응답 시간 초과' : e.message})`)
+  }
+  // Cloudflare: 530(원본 불가) / 502·503·504(게이트웨이) = 터널/프록시 다운
+  if ([502, 503, 504, 530].includes(r.status)) {
+    throw new Error(`${TUNNEL_DOWN_MSG} (터널 응답 ${r.status})`)
+  }
+  const text = await r.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    // 프록시 대신 Cloudflare HTML 에러페이지가 온 경우
+    throw new Error(`${TUNNEL_DOWN_MSG} (HTTP ${r.status}, 비정상 응답)`)
+  }
 }
 
 async function executeTool(name, args) {
