@@ -6626,11 +6626,121 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
   return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion })
 }
 
+// ── BROLL "CLIP:" — 웹 영상의 한 구간을 screen-scenario 화면녹화로 컷 만들기 ──────
+// ⚠️ 저작권 주의: 이 경로는 타인의 영상을 화면녹화한다. **리뷰·비평·해설 목적의
+//    짧은 인용(공정이용/인용 항변)** 전제로만 사용할 것 — 클립 길이는 필요 최소한,
+//    원본 대체가 아니라 논평 대상이어야 하고, 출처 표기를 권장한다. 자동화는
+//    "사람이 대본 CLIP: 필드에 URL을 명시적으로 넣은" 컷에서만 동작하며(전면 크롤링
+//    아님), 사용 판단·책임은 대본 작성자에게 있다. 상업적/재배포 목적이면 라이선스 확인.
+function buildBrollClipScenario({ cut, durationSec }) {
+  const dur = Math.max(2, Math.min(30, Number(cut.clipDuration) || Number(durationSec) || 8))
+  const seek = Math.max(0, Number(cut.clipSeek) || 0)
+  const u = new URL(cut.clipUrl)   // 형식 오류면 throw
+  const isYt = /(?:^|\.)youtube\.com$|(?:^|\.)youtu\.be$/i.test(u.hostname)
+  if (isYt && seek > 0 && !u.searchParams.has('t')) u.searchParams.set('t', String(Math.floor(seek)))
+  return {
+    id: `clip_${cut.id || cut.no}`,
+    _note: '자동생성(BROLL CLIP) — 웹 영상 구간 화면녹화. ⚠️ 리뷰·비평 목적 짧은 인용(공정이용) 전제.',
+    driver: 'cdp', recorder: 'native', duration: dur, fit: 'crop',
+    record: { fps: 30 },
+    target: { url: u.href, timeout: 45000 },
+    steps: [
+      { action: 'wait', ms: 4000 },
+      { action: 'eval', name: 'skip-ad', optional: true,
+        fn: "() => { const b=document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button'); if(b){b.click(); return 'skipped';} return 'no-ad'; }" },
+      { action: 'eval', name: 'seek-play',
+        fn: `() => { const v=document.querySelector('video'); if(!v) return 'no-video'; v.muted=true; ${seek > 0 ? `try{v.currentTime=${seek};}catch(e){}` : ''}; const p=v.play&&v.play(); if(p&&p.catch)p.catch(()=>{}); return {rs:v.readyState,t:v.currentTime}; }` },
+      { action: 'wait', ms: 1200 },
+      { action: 'eval', name: 'fullbleed', optional: true,
+        fn: "() => { document.querySelectorAll('.ytp-chrome-top,.ytp-chrome-bottom,.ytp-gradient-top,.ytp-gradient-bottom,.ytp-ce-element,.ytp-pause-overlay,#related,ytd-watch-metadata').forEach(e=>e.style.setProperty('display','none','important')); const v=document.querySelector('video'); if(v){v.style.cssText='position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:2147483647!important;background:#000'} document.body.style.overflow='hidden'; }" },
+      { action: 'wait', ms: 500 },
+    ],
+    for: { cut: cut.no },
+    _duration: dur,
+  }
+}
+
+async function runBrollClipScenario({ epNum, cut, durationSec }) {
+  let scenario
+  try { scenario = buildBrollClipScenario({ cut, durationSec }) }
+  catch { return { ok: false, error: `CLIP URL 형식 오류: ${cut.clipUrl}` } }
+
+  const tmp = path.join(os.tmpdir(), `broll_clip_${epNum}_${cut.no}_${Date.now()}.json`)
+  fs.writeFileSync(tmp, JSON.stringify(scenario, null, 2), 'utf-8')
+  const runJs = path.join(CODE_ROOT, 'scripts', 'screen-scenario', 'run.js')
+
+  return await new Promise((resolve) => {
+    const proc = spawn(process.execPath, [runJs, tmp, '--ep', String(epNum), '--cut', String(cut.no), '--driver', 'cdp', '--recorder', 'native'], { cwd: CODE_ROOT, env: process.env })
+    let out = ''
+    proc.stdout.on('data', d => { out += d.toString() })
+    proc.stderr.on('data', d => { out += d.toString() })
+    const killer = setTimeout(() => { try { proc.kill('SIGKILL') } catch { /* noop */ } }, 150000)
+    proc.on('close', (code) => {
+      clearTimeout(killer)
+      try { fs.rmSync(tmp) } catch { /* noop */ }
+      if (code === 0) {
+        recordCutMotion(epNum, cut.no, { method: 'clip-record', motion: null, baked: true, duration: scenario._duration })
+        resolve({ ok: true, outputPath: path.join(mp.videoDir(epNum), `cut_${String(cut.no).padStart(2, '0')}.mp4`) })
+      } else {
+        const last = out.trim().split('\n').slice(-3).join(' | ').slice(0, 300)
+        resolve({ ok: false, error: `clip-record 실패 (code ${code}) — ${last || '로그 없음'}` })
+      }
+    })
+    proc.on('error', (e) => { clearTimeout(killer); try { fs.rmSync(tmp) } catch { /* noop */ } ; resolve({ ok: false, error: e.message }) })
+  })
+}
+
+// POST /api/broll-clip (SSE) — MakingTab BROLL 패널의 "웹 영상 구간 녹화" 수동 실행.
+// body: { epNum, cutNo, clipUrl, clipSeek?, clipDuration? }.
+// ⚠️ 공정이용(리뷰·비평 인용) 전제 — runBrollClipScenario 주석 참고.
+app.post('/api/broll-clip', (req, res) => {
+  const { epNum, cutNo, clipUrl, clipSeek, clipDuration } = req.body || {}
+  if (epNum == null || cutNo == null || !clipUrl) return res.status(400).json({ error: 'epNum, cutNo, clipUrl 필요' })
+  let scenario
+  try { scenario = buildBrollClipScenario({ cut: { no: cutNo, id: `cut-${cutNo}`, clipUrl, clipSeek, clipDuration }, durationSec: clipDuration }) }
+  catch { return res.status(400).json({ error: `CLIP URL 형식 오류: ${clipUrl}` }) }
+
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.flushHeaders?.()
+  const send = (o) => { try { res.write(`data: ${JSON.stringify(o)}\n\n`) } catch { /* noop */ } }
+
+  const tmp = path.join(os.tmpdir(), `broll_clip_${epNum}_${cutNo}_${Date.now()}.json`)
+  fs.writeFileSync(tmp, JSON.stringify(scenario, null, 2), 'utf-8')
+  const runJs = path.join(CODE_ROOT, 'scripts', 'screen-scenario', 'run.js')
+  send({ type: 'start', target: scenario.target.url, duration: scenario._duration })
+
+  const proc = spawn(process.execPath, [runJs, tmp, '--ep', String(epNum), '--cut', String(cutNo), '--driver', 'cdp', '--recorder', 'native'], { cwd: CODE_ROOT, env: process.env })
+  let buf = ''
+  const onData = (d) => {
+    buf += d.toString()
+    const lines = buf.split('\n'); buf = lines.pop()
+    for (const raw of lines) { const t = raw.trim(); if (t) send({ type: 'log', line: t }) }
+  }
+  proc.stdout.on('data', onData)
+  proc.stderr.on('data', onData)
+  const killer = setTimeout(() => { try { proc.kill('SIGKILL') } catch { /* noop */ } }, 150000)
+  proc.on('close', (code) => {
+    clearTimeout(killer)
+    if (buf.trim()) send({ type: 'log', line: buf.trim() })
+    try { fs.rmSync(tmp) } catch { /* noop */ }
+    if (code === 0) {
+      recordCutMotion(epNum, cutNo, { method: 'clip-record', motion: null, baked: true, duration: scenario._duration })
+      const pad = `cut_${String(cutNo).padStart(2, '0')}`
+      send({ type: 'done', ok: true, videoUrl: `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), `${pad}.mp4`))}?t=${Date.now()}` })
+    } else {
+      send({ type: 'done', ok: false, error: `run.js 종료 코드 ${code} — 로그 확인 (검증 실패·Chrome 미기동 포함)` })
+    }
+    res.end()
+  })
+  proc.on('error', (e) => { clearTimeout(killer); send({ type: 'done', ok: false, error: e.message }); res.end() })
+})
+
 // ── 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 헤드리스 제작 ──────────────────────
 // MakingTab "유형별 자동실행"(runAutoByType)의 컷별 판단을 서버로 이식한 축약판.
 // scripts/pipeline-leader.js 와 MCP 도구(run_making) 가 공유한다. 브라우저 전용 상태
 // (소스모드 토글·typeStyles localStorage)는 못 쓰므로 소스는 대본 컷 필드
-// (htmlFile / sourcePath / brollUrl / brollQuery, scriptParserV3 가 채움) + 자동 유추만.
+// (htmlFile / sourcePath / brollUrl / brollQuery / clipUrl, scriptParserV3 가 채움) + 자동 유추만.
 const MAKING_AUTO_TYPES = new Set(['GRAPHIC', 'CAPCUT', 'BROLL'])
 
 async function produceMakingCut({ epNum, cut }) {
@@ -6655,8 +6765,15 @@ async function produceMakingCut({ epNum, cut }) {
     return { cutNo, type, status: 'produced', method: 'source-to-cut', outputPath: r.body?.outputPath }
   }
 
-  // 2) BROLL: URL(헤드리스 캡처) → 검색어/AI(Pexels)
+  // 2) BROLL: CLIP(웹 영상 구간 화면녹화) → URL(직접 미디어 캡처) → 검색어/AI(Pexels)
   if (type === 'BROLL') {
+    // CLIP: 사람이 대본에 명시한 영상 URL 의 한 구간을 screen-scenario 로 녹화.
+    // ⚠️ 리뷰·비평 목적의 짧은 인용(공정이용) 전제 — runBrollClipScenario 주석 참고.
+    if (cut.clipUrl) {
+      const r = await runBrollClipScenario({ epNum, cut, durationSec: dur })
+      if (!r.ok) return { cutNo, type, status: 'error', method: 'clip-record', reason: r.error }
+      return { cutNo, type, status: 'produced', method: 'clip-record', outputPath: r.outputPath, note: '공정이용 전제(리뷰·비평 인용)' }
+    }
     const url = String(cut.brollUrl || cut.sourceUrl || '').trim()
     if (url) {
       const r = await selfFetch('/api/capture-video-url', {

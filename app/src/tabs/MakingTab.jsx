@@ -1228,6 +1228,48 @@ export default function MakingTab() {
     return data
   }
 
+  // BROLL "웹 영상 구간 녹화"(screen-scenario) — 대본 CLIP: 필드와 같은 경로.
+  // ⚠️ 리뷰·비평 목적의 짧은 인용(공정이용) 전제. 클립은 필요 최소 길이로.
+  const [clipInput, setClipInput] = useState({})   // { [cutNo]: "<url> @ 45 +10" }
+  const [clipBusy, setClipBusy] = useState({})
+  const [clipLog, setClipLog] = useState({})
+  const parseClipExpr = (raw) => {
+    let rest = String(raw || '').trim(); if (!rest) return null
+    let clipDuration = 0, clipSeek = 0
+    const dm = rest.match(/\s\+\s*(\d+(?:\.\d+)?)\s*$/); if (dm) { clipDuration = Number(dm[1]); rest = rest.slice(0, dm.index).trim() }
+    const sm = rest.match(/\s@\s*(\d{1,2}(?::\d{2}){1,2}|\d+(?:\.\d+)?)\s*$/)
+    if (sm) { const t = sm[1]; clipSeek = t.includes(':') ? t.split(':').map(Number).reduce((a, n) => a * 60 + n, 0) : Number(t); rest = rest.slice(0, sm.index).trim() }
+    return /^https?:\/\//i.test(rest) ? { clipUrl: rest, clipSeek, clipDuration } : null
+  }
+  const runBrollClip = async (cut) => {
+    const expr = clipInput[cut.no] ?? (cut.clipUrl ? `${cut.clipUrl}${cut.clipSeek ? ` @ ${cut.clipSeek}` : ''}${cut.clipDuration ? ` +${cut.clipDuration}` : ''}` : '')
+    const parsed = parseClipExpr(expr)
+    if (!parsed || episode?.number == null) return
+    setClipBusy(p => ({ ...p, [cut.no]: true }))
+    setClipLog(p => ({ ...p, [cut.no]: '' }))
+    const append = (l) => setClipLog(p => ({ ...p, [cut.no]: ((p[cut.no] || '') + l + '\n').slice(-4000) }))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/broll-clip`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no, ...parsed, clipDuration: parsed.clipDuration || cutDuration(cut) }),
+      })
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+      for (;;) {
+        const { value, done } = await reader.read(); if (done) break
+        buf += dec.decode(value, { stream: true })
+        const parts = buf.split('\n\n'); buf = parts.pop()
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '').trim(); if (!line) continue
+          let ev; try { ev = JSON.parse(line) } catch { continue }
+          if (ev.type === 'start') append(`▶ 녹화 시작 — ${ev.target} (${ev.duration}초)`)
+          else if (ev.type === 'log') append(ev.line)
+          else if (ev.type === 'done') append(ev.ok ? '✅ 완료 — cut_' + String(cut.no).padStart(2, '0') + '.mp4 (검토 후 G4 승인)' : `❌ ${ev.error}`)
+        }
+      }
+    } catch (e) { append(`❌ ${e.message}`) }
+    finally { setClipBusy(p => ({ ...p, [cut.no]: false })) }
+  }
+
   // 수동 패널용 — BROLL 화면 녹화 섹션의 "URL로 헤드리스 제작"
   const [brollUrlInput, setBrollUrlInput] = useState({})   // { [cutNo]: string }
   const [brollUrlBusy, setBrollUrlBusy] = useState({})
@@ -1356,12 +1398,13 @@ export default function MakingTab() {
           <>
             <div className={s.emptyHint}>
               헤드리스로 만들 수 있는 컷만 유형에 맞게 자동 제작합니다. 대본 컷 필드가 소스를 결정합니다:
-              <br />• <b>SRC:</b> 로컬 파일 → 규격화(source-to-cut) · <b>URL:</b> 영상 페이지 → 헤드리스 캡처
-              &nbsp;— 둘 중 하나가 있으면 유형·소스모드 무관하게 우선 적용
-              <br />• <b>GRAPHIC/CAPCUT</b>: <b>HTML:</b> 있으면 그 목업 캡처, 없으면 유형 스타일·기본 모션으로 자동 템플릿. CP 있으면 손글씨까지
+              <br />• <b>SRC:</b> 로컬 파일 → 규격화(source-to-cut, <code>sources/X</code>=녹화 폴더) · <b>CLIP:</b> 웹 영상 구간 화면녹화 · <b>URL:</b> 영상 페이지 미디어 직접 캡처
+              &nbsp;— 있으면 유형·소스모드 무관하게 우선 적용
+              <br />• <b>GRAPHIC/CAPCUT</b>: <b>HTML:</b> (.html) 있으면 그 목업 캡처, 없으면 유형 스타일·기본 모션 자동 템플릿. CP 있으면 손글씨까지. (<code>HTML: AE_제작대상_수동</code> = 스킵)
               <br />• <b>BROLL</b>: <b>BQ:</b> 있으면 그 검색어, 없으면 컷 묘사(SC/VP) → AI 검색어로 Pexels 자동 선택 → 규격화
               <br />• <b>MOTION:</b> 있으면 그 모션을 캡처/이미지에 얹음
-              <br /><b>CapCut 데스크톱 녹화, SRC/URL 없는 화면 녹화 컷은 건너뜁니다</b>(수동 진행).
+              <br /><b>⚠️ CLIP</b>은 타인 영상 화면녹화 — 리뷰·비평 목적의 짧은 인용(공정이용) 전제, 사용 책임은 제작자에게.
+              <br /><b>CapCut 데스크톱 녹화, 소스 지정(SRC/CLIP/URL) 없는 화면 녹화 컷은 건너뜁니다</b>(수동 진행).
             </div>
             <div className={s.autoNote}>
               대상: 총 {targets.length}컷
@@ -1654,6 +1697,30 @@ export default function MakingTab() {
                     <br /><span className={s.emptyHint}>소스: {brollUrlResult[cut.no].mediaUrl}</span>
                   </div>
                 )
+              )}
+            </div>
+
+            <div className={s.settingGroup} style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+              <div className={s.settingLabel}>웹 영상 구간 녹화 (screen-scenario · 대본 <code>CLIP:</code> 와 동일)</div>
+              <div className={s.urlRow}>
+                <input className={s.urlInput}
+                  value={clipInput[cut.no] ?? (cut.clipUrl ? `${cut.clipUrl}${cut.clipSeek ? ` @ ${cut.clipSeek}` : ''}${cut.clipDuration ? ` +${cut.clipDuration}` : ''}` : '')}
+                  placeholder="https://youtube.com/watch?v=… @ 0:45 +10   (@ 시크, + 길이(초))"
+                  onChange={e => setClipInput(p => ({ ...p, [cut.no]: e.target.value }))} />
+                <button className={s.captureBtn}
+                  disabled={clipBusy[cut.no] || !episode.number || !parseClipExpr(clipInput[cut.no] ?? cut.clipUrl ?? '')}
+                  onClick={() => runBrollClip(cut)}>
+                  {clipBusy[cut.no] ? '⏳ 녹화 중…' : '구간 녹화'}
+                </button>
+              </div>
+              <div className={s.emptyHint}>
+                디버깅 Chrome(9222, <code>start_gen.bat</code>)의 새 탭에서 영상을 열어 지정 구간을 CDP 화면녹화 →
+                1080×1920 규격화 → <b>cut_{String(cut.no).padStart(2, '0')}.mp4</b>. 오디오는 버립니다(G3 나레이션 별도).
+                <br /><b>⚠️ 저작권</b>: 타인 영상의 화면녹화입니다. <b>리뷰·비평·해설 목적의 짧은 인용(공정이용)</b> 전제로만 —
+                필요 최소 길이, 원본 대체가 아닌 논평 대상, 출처 표기 권장. 사용 판단·책임은 제작자에게 있습니다.
+              </div>
+              {clipLog[cut.no] && (
+                <pre style={{ marginTop: 8, maxHeight: 160, overflow: 'auto', fontSize: 11, background: 'var(--bg2, #111)', padding: 8, borderRadius: 6, whiteSpace: 'pre-wrap' }}>{clipLog[cut.no]}</pre>
               )}
             </div>
 

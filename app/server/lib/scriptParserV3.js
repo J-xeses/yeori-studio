@@ -5,8 +5,27 @@
 const MASTER_CLOSEUP_SHOTS = new Set(['SH_ECU', 'SH_CU', 'SH_MCU'])
 const V3_SEP_LINE_RE = /^[━=]{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-// HTML/SRC/BQ/URL/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|MOTION):\s?(.*)$/
+// HTML/SRC/BQ/URL/CLIP/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION):\s?(.*)$/
+
+// "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
+export function parseClipField(raw) {
+  let rest = String(raw || '').trim()
+  if (!rest) return null
+  let durationSec = 0, seekSec = 0
+  const dm = rest.match(/\s\+\s*(\d+(?:\.\d+)?)\s*$/)
+  if (dm) { durationSec = Number(dm[1]); rest = rest.slice(0, dm.index).trim() }
+  const sm = rest.match(/\s@\s*(\d{1,2}(?::\d{2}){1,2}|\d+(?:\.\d+)?)\s*$/)
+  if (sm) {
+    const t = sm[1]
+    seekSec = t.includes(':')
+      ? t.split(':').map(Number).reduce((a, n) => a * 60 + n, 0)
+      : Number(t)
+    rest = rest.slice(0, sm.index).trim()
+  }
+  const url = rest.trim()
+  return /^https?:\/\//i.test(url) ? { url, seekSec, durationSec } : null
+}
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -183,6 +202,9 @@ export function parseCutsV3(raw) {
     const brollQuery = String(fields.BQ || '').trim()
     const brollUrl = String(fields.URL || '').trim()
     const cutMotion = String(fields.MOTION || '').trim()
+    // CLIP: <영상 페이지 URL> [@ 시크] [+ 길이] — 웹 영상의 한 구간을 화면녹화(screen-scenario)로.
+    // ⚠️ 저작권: 리뷰·비평·해설 목적의 짧은 인용(공정이용) 전제. 사용 책임은 대본 작성자.
+    const clip = parseClipField(fields.CLIP)
 
     const shCode = fields.SH || ''
     const firstSh = shCode.split(/[→>]/)[0].trim()
@@ -222,6 +244,7 @@ export function parseCutsV3(raw) {
       ...(brollQuery ? { brollQuery } : {}),
       ...(brollUrl ? { brollUrl } : {}),
       ...(cutMotion ? { motion: cutMotion } : {}),
+      ...(clip ? { clipUrl: clip.url, clipSeek: clip.seekSec, clipDuration: clip.durationSec } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
         sh: shCode, ca: fields.CA || '', md: fields.MD || '', ac: fields.AC || '',

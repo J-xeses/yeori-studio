@@ -197,7 +197,7 @@ export const TOOLS = [
   },
   {
     name: 'run_making',
-    description: '대기 중인 메이킹 컷(GRAPHIC/CAPCUT/BROLL, G1 승인 · 영상 없음)을 헤드리스로 일괄 제작합니다. 소스는 대본 컷 필드로 결정: HTML(그래픽 목업) / SRC(로컬 파일→규격화) / URL(영상 페이지 헤드리스 캡처) / BQ(Pexels 검색어), 없으면 컷 묘사→AI 검색어로 Pexels. 제작만 하고 승인(G4)은 별도(studio_approve_g4). 소스를 못 찾는 컷은 스킵 사유를 반환합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
+    description: '대기 중인 메이킹 컷(GRAPHIC/CAPCUT/BROLL, G1 승인 · 영상 없음)을 헤드리스로 일괄 제작합니다. 소스는 대본 컷 필드로 결정: HTML(그래픽 목업 .html) / SRC(로컬 파일→규격화, "sources/X"=녹화 폴더) / CLIP(웹 영상 한 구간 화면녹화, screen-scenario) / URL(영상 페이지 미디어 직접 캡처) / BQ(Pexels 검색어), 없으면 컷 묘사→AI 검색어로 Pexels. ⚠️ CLIP은 타인 영상 화면녹화 — 리뷰·비평 목적의 짧은 인용(공정이용) 전제이며 사용 책임은 대본 작성자에게. 제작만 하고 승인(G4)은 별도(studio_approve_g4). 소스 못 찾는 컷은 스킵 사유 반환. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],

@@ -21,6 +21,9 @@ const TOOLS = {
   flow: { url: 'https://labs.google/fx/ko/tools/flow', match: (u) => /labs\.google\/(fx|flow)/i.test(u) },
   elevenlabs: { url: 'https://elevenlabs.io/app/speech-synthesis', match: (u) => /elevenlabs\.io\/(app|sign)/i.test(u) },
 }
+// target 이 { url: 'https://...' } 처럼 임의 URL 이면 매번 새 전용 탭을 띄운다
+// (사용자 탭을 가로채지 않도록 match:false → 항상 새 탭, teardown 에서 닫음).
+const GENERIC_TOOL = { url: '', match: () => false, generic: true }
 
 function ffmpegRun(args) {
   return new Promise((resolve, reject) => {
@@ -89,8 +92,9 @@ export class CdpPageDriver extends Driver {
   async setup(target = {}) {
     const port = this.opts.debuggingPort || DEBUG_PORT
     const key = typeof target === 'string' ? target : target.tool
-    const tool = TOOLS[key]
-    if (!tool) throw new Error(`CdpPageDriver: 모르는 target '${key}' (등록: ${Object.keys(TOOLS).join(', ')})`)
+    const genericUrl = (!key && typeof target?.url === 'string' && /^https?:\/\//i.test(target.url)) ? target.url : null
+    const tool = genericUrl ? { ...GENERIC_TOOL, url: genericUrl } : TOOLS[key]
+    if (!tool) throw new Error(`CdpPageDriver: 모르는 target '${key}' (등록: ${Object.keys(TOOLS).join(', ')} · 또는 { url: 'https://...' })`)
 
     // 디버깅 Chrome 확인
     let list
@@ -103,6 +107,7 @@ export class CdpPageDriver extends Driver {
       throw e
     }
 
+    this._port = port
     const wantUrl = target.url || (target.path ? new URL(target.path, tool.url).href : tool.url)
     let pageInfo = (list || []).find((t) => t.type === 'page' && tool.match(t.url || ''))
 
@@ -110,13 +115,14 @@ export class CdpPageDriver extends Driver {
       this.log(`기존 ${key} 탭에 CDP 직결: ${(pageInfo.url || '').slice(0, 70)}`)
     } else {
       // 새 탭 생성 (HTTP /json/new — PUT)
-      this.log(`${key} 탭 없음 → 새 탭 생성 (${wantUrl})`)
+      this.log(`${tool.generic ? 'URL' : key} 탭 없음 → 새 탭 생성 (${wantUrl})`)
       try {
         pageInfo = await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(wantUrl)}`, { method: 'PUT' })).json()
       } catch {
         pageInfo = await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(wantUrl)}`)).json()
       }
       await sleep(1500)
+      if (tool.generic) this._createdTab = pageInfo?.id   // teardown 에서 닫음
     }
     if (!pageInfo?.webSocketDebuggerUrl) throw new Error('대상 탭의 webSocketDebuggerUrl 을 못 얻음')
 
@@ -316,13 +322,24 @@ export class CdpPageDriver extends Driver {
         fs.writeFileSync(step.path || `scenario_${step.name || Date.now()}.jpg`, Buffer.from(r.data, 'base64'))
         return
       }
+      case 'eval': {
+        // 페이지 컨텍스트에서 임의 JS 실행. step.fn = 함수 소스("() => { ... }" 또는 "function(){...}").
+        // YouTube 등: video 요소 seek/재생/음소거, 플레이어 UI 제거에 유용.
+        const val = await this.#eval(step.fn || step.js)
+        if (step.name) this.log(`eval ${step.name} → ${String(JSON.stringify(val) ?? '').slice(0, 80)}`)
+        return
+      }
       default:
         throw new Error(`CdpPageDriver: 모르는 action '${a}'`)
     }
   }
 
   async teardown() {
-    this.cdp?.close()   // 탭은 닫지 않음
+    // 임의 URL로 띄운 전용 탭은 닫는다 (도구 탭은 그대로 둠 — 기존 동작)
+    if (this._createdTab && this._port) {
+      try { await fetch(`http://127.0.0.1:${this._port}/json/close/${this._createdTab}`) } catch { /* noop */ }
+    }
+    this.cdp?.close()
   }
 
   // Page.startScreencast 기반 — 렌더러 픽셀 직접. 하트비트로 정적 구간도 프레임 유지.
