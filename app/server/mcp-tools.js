@@ -123,13 +123,14 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g2',
-    description: '(2026-09-08 재활성) 각 컷의 이미지(G2)를 Nano Banana(Gemini image) API 로 생성해 에피소드 02_images 폴더의 cut_NN_a.jpg 로 저장. 무료(500장/일), 크레딧 소모 없음. 컷의 CH 필드로 등장 캐릭터를 해석해 characters.json 의 얼굴 이미지를 참조로 첨부(서여리/한지아 일관성). GRAPHIC/CAPCUT/이미지프롬프트 없는 인서트 컷은 대상 아님. studio-secrets.json 에 gemini 키 필요. 생성만 하고 G2 승인은 studio_approve_g2 로 별도. 예전 Flow 브라우저 자동화(puppeteer)는 폐기.',
+    description: '(2026-09-08 재활성) 각 컷의 이미지(G2)를 Nano Banana(Gemini image) API 로 생성해 02_images/cut_NN_a.jpg 로 저장. 무료(500장/일), 크레딧 소모 없음. 컷별 imagePrompt 전체를 그대로 사용(가공 금지), 프롬프트에 명시된 비율(16:9/9:16)을 API 에도 전달. CH 필드로 등장 캐릭터 해석 → characters.json 얼굴 이미지를 참조로 첨부(서여리/한지아 일관성). GRAPHIC/CAPCUT/프롬프트 없는 인서트(201~206 등) 제외. studio-secrets.json 에 gemini 키 필요. ⚠️ 구글 제재 방지로 컷 사이 20초 대기 — 한 호출에 5~6컷씩만 요청(14컷이면 7분+). 생성만 하고 승인은 studio_approve_g2 별도.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
       properties: {
         episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
-        cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 이미지 프롬프트가 있는 전체 컷)' },
+        cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 이미지 프롬프트가 있는 전체 컷). 이미 이미지가 등록된 컷은 자동 제외됨' },
+        force: { type: 'boolean', description: 'true 면 이미 이미지가 있는 컷도 재생성 (기본 false — 없는 것만)' },
       },
     },
   },

@@ -148,9 +148,10 @@ async function executeTool(name, args) {
       const data = await bridge('POST', '/studio-run-g2', args)
       if (data.error) return `오류: ${data.error}`
       const lines = (data.results || []).map(r => r.status === 'ok'
-        ? `  CUT ${r.cutNo}: ✅ ${r.file} (${r.model}${r.characters?.length ? `, 캐릭터 ${r.characters.join('+')}` : ''}${r.refCount ? `, 참조 ${r.refCount}장` : ''})`
+        ? `  CUT ${r.cutNo}: ✅ ${r.file} (${r.model}, ${r.aspectRatio}${r.characters?.length ? `, ${r.characters.join('+')}` : ''}${r.refCount ? `, 참조 ${r.refCount}장` : ''}, ${r.promptChars}자)`
         : `  CUT ${r.cutNo}: ❌ ${r.error}`)
-      return `G2 Nano Banana 이미지 생성: 성공 ${data.generatedCount}개 / 실패 ${data.failCount}개\n${lines.join('\n')}\n\n${data.note || ''}`
+      const skip = data.skippedExisting?.length ? `\n이미 이미지 있어 제외: CUT ${data.skippedExisting.join(', ')}` : ''
+      return `G2 Nano Banana 이미지: 성공 ${data.generatedCount} / 실패 ${data.failCount} (컷 간격 ${(data.gapMs||0)/1000}s)${skip}\n${lines.join('\n')}\n\n${data.note || ''}`
     }
 
     case 'studio_approve_g2': {

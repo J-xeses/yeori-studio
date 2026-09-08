@@ -179,9 +179,10 @@ async function executeTool(name, args) {
       const data = await api('POST', '/api/mcp/studio-run-g2', args)
       if (data.error) return `오류: ${data.error}`
       const lines = (data.results || []).map(r => r.status === 'ok'
-        ? `  CUT ${r.cutNo}: ✅ ${r.file} (${r.model}${r.characters?.length ? `, ${r.characters.join('+')}` : ''})`
+        ? `  CUT ${r.cutNo}: ✅ ${r.file} (${r.model}, ${r.aspectRatio}${r.characters?.length ? `, ${r.characters.join('+')}` : ''})`
         : `  CUT ${r.cutNo}: ❌ ${r.error}`)
-      return `G2 Nano Banana 이미지: 성공 ${data.generatedCount} / 실패 ${data.failCount}\n${lines.join('\n')}`
+      const skip = data.skippedExisting?.length ? `\n이미 이미지 있어 제외: CUT ${data.skippedExisting.join(', ')}` : ''
+      return `G2 Nano Banana 이미지: 성공 ${data.generatedCount} / 실패 ${data.failCount}${skip}\n${lines.join('\n')}`
     }
 
     case 'studio_approve_g2': {

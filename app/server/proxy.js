@@ -1339,12 +1339,15 @@ const NANO_BANANA_MODELS = [
   'gemini-3.1-flash-image-preview',  // Nano Banana 2
   'gemini-3-pro-image-preview',      // Nano Banana Pro
 ]
-async function generateNanoBananaImage(apiKey, prompt, refImages = []) {
+async function generateNanoBananaImage(apiKey, prompt, refImages = [], aspectRatio = null) {
   const parts = [
     ...refImages.filter(r => r?.data && r?.mimeType)
       .map(r => ({ inlineData: { mimeType: r.mimeType, data: r.data } })),
     { text: prompt },
   ]
+  const generationConfig = { responseModalities: ['IMAGE', 'TEXT'] }
+  // Nano Banana 2/Pro 는 imageConfig.aspectRatio 지원(구 모델은 무시하고 프롬프트로 추론).
+  if (aspectRatio) generationConfig.imageConfig = { aspectRatio }
   let lastErr = null
   for (const model of NANO_BANANA_MODELS) {
     try {
@@ -1353,13 +1356,17 @@ async function generateNanoBananaImage(apiKey, prompt, refImages = []) {
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ['IMAGE', 'TEXT'] } }),
+          body: JSON.stringify({ contents: [{ parts }], generationConfig }),
         },
       )
       if (!r.ok) { lastErr = `${model} HTTP ${r.status}: ${(await r.text()).slice(0, 150)}`; continue }
       const d = await r.json()
       const img = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.mimeType?.startsWith('image/'))
-      if (!img) { lastErr = `${model}: 응답에 이미지 없음`; continue }
+      if (!img) {
+        const fin = d.candidates?.[0]?.finishReason
+        lastErr = `${model}: 응답에 이미지 없음${fin ? ` (finishReason: ${fin})` : ''}`
+        continue
+      }
       return { model, buffer: Buffer.from(img.inlineData.data, 'base64') }
     } catch (e) { lastErr = `${model}: ${e.message}` }
   }
@@ -5561,7 +5568,7 @@ mcpRouter.post('/studio-approve-g1', (req, res) => {
 //    각 컷의 CH(masterCode.ch)로 등장 캐릭터를 해석 → characters.json 의 얼굴 이미지를 참조로 첨부해
 //    서여리/한지아 일관성 유지. GRAPHIC/CAPCUT/인서트(ip 없음) 컷은 대상 아님.
 mcpRouter.post('/studio-run-g2', async (req, res) => {
-  const { episodeId, cutIds } = req.body || {}
+  const { episodeId, cutIds, force } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
     const state = loadStudioState()
@@ -5573,39 +5580,75 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
     const apiKey = secrets.apiKeys?.gemini
     if (!apiKey) return res.status(400).json({ error: 'Gemini API 키가 studio-secrets.json 에 없습니다 (스튜디오 앱 상단 GEMINI 칸에 입력 후 확인)' })
 
-    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
-      .filter(c => (c.ip?.trim() || c.imagePrompt?.trim()) && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
-    if (!targetCuts.length) return res.status(400).json({ error: '이미지 생성 대상 컷이 없습니다 (ip 없음 또는 GRAPHIC/CAPCUT)' })
-
     const epNum = ep.episode?.number
     const imgDir = mp.imagesDir(epNum)
     fs.mkdirSync(imgDir, { recursive: true })
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const gData = loadGpointsFile()[episodeCode] || {}
+    const imgFiles = (() => { try { return fs.readdirSync(imgDir) } catch { return [] } })()
+    const hasImageAlready = (c) => {
+      const p = String(c.no).padStart(2, '0')
+      const g = gData[`cut_${c.no}`] || {}
+      if (g.selectedImage && imgFiles.includes(g.selectedImage)) return true
+      return imgFiles.some(f => new RegExp(`^cut_${p}(_[a-z0-9]+)?\\.(jpe?g|png|webp)$`, 'i').test(f))
+    }
+
+    // imagePrompt(우선) 또는 ip. GRAPHIC/CAPCUT 및 프롬프트 없는 인서트(201~206 등) 제외.
+    const promptOf = (c) => (c.imagePrompt?.trim() || c.ip?.trim() || '')
+    const eligible = filterCutsByIds(ep.cuts || [], cutIds)
+      .filter(c => promptOf(c) && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
+    if (!eligible.length) return res.status(400).json({ error: '이미지 생성 대상 컷이 없습니다 (imagePrompt 없음 또는 GRAPHIC/CAPCUT)' })
+
+    // 이미 이미지가 등록된 컷은 제외 (force:true 면 전부 재생성)
+    const skippedExisting = force ? [] : eligible.filter(hasImageAlready).map(c => c.no)
+    const targetCuts = force ? eligible : eligible.filter(c => !hasImageAlready(c))
+    if (!targetCuts.length) {
+      return res.json({ success: true, generatedCount: 0, failCount: 0, results: [], skippedExisting,
+        note: `대상 컷 ${eligible.length}개 전부 이미 이미지가 있습니다 — 재생성하려면 force:true` })
+    }
+
+    // 구글 rate-limit/제재 방지 — 앞 컷 완료 후 다음 컷 시작까지 최소 간격.
+    const GAP_MS = 20_000
 
     const results = []
-    for (const c of targetCuts) {
+    for (let i = 0; i < targetCuts.length; i++) {
+      const c = targetCuts[i]
       const padded = String(c.no).padStart(2, '0')
       try {
+        const fullPrompt = promptOf(c)   // ← 컷별 프롬프트 전체를 그대로 사용 (가공·자르기 금지)
+        // 프롬프트가 명시한 비율(16:9 / 9:16)을 그대로 API 에도 전달 — 없으면 프롬프트가 알아서.
+        const ratioMatch = fullPrompt.match(/\b(16:9|9:16|1:1|4:5|3:4|4:3)\b/)
+        const aspectRatio = ratioMatch ? ratioMatch[1] : null
+
         const charIds = resolveChToCharacterIds(c.masterCode?.ch)
         const { refImages, descriptorText } = characterRefsAndDescriptors(charIds)
-        const prompt = [
-          c.ip?.trim() || c.imagePrompt?.trim(),
-          descriptorText ? `\nCharacter reference (keep faces consistent with the attached images):\n${descriptorText}` : '',
-          '\nVertical 9:16 composition, photorealistic, cinematic lighting. No text, no watermark, no border.',
-        ].filter(Boolean).join('\n')
+        // 프롬프트 뒤에 캐릭터 일관성 지시만 덧붙임 (스타일/비율은 원본 프롬프트 존중)
+        const prompt = descriptorText
+          ? `${fullPrompt}\n\n[Character consistency — the attached image(s) are reference faces. Keep each face identical to its reference:]\n${descriptorText}`
+          : fullPrompt
 
-        const { model, buffer } = await generateNanoBananaImage(apiKey, prompt, refImages)
+        const { model, buffer } = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio)
         const dest = path.join(imgDir, `cut_${padded}_a.jpg`)
         fs.writeFileSync(dest, buffer)
-        results.push({ cutNo: c.no, status: 'ok', file: `cut_${padded}_a.jpg`, model, characters: charIds, refCount: refImages.length })
+        results.push({
+          cutNo: c.no, status: 'ok', file: `cut_${padded}_a.jpg`, model,
+          aspectRatio: aspectRatio || '(프롬프트 추론)',
+          promptChars: prompt.length,
+          characters: charIds, refCount: refImages.length,
+        })
       } catch (err) {
         results.push({ cutNo: c.no, status: 'error', error: err.message })
       }
+      // 마지막 컷이 아니면 다음 시작 전 대기
+      if (i < targetCuts.length - 1) await new Promise(r => setTimeout(r, GAP_MS))
     }
     const failCount = results.filter(r => r.status === 'error').length
     res.json({
       success: failCount === 0,
       generatedCount: results.filter(r => r.status === 'ok').length,
       failCount,
+      gapMs: GAP_MS,
+      ...(skippedExisting.length ? { skippedExisting } : {}),
       results,
       note: 'G2 승인은 별도 — studio_approve_g2 로 컷별 선택본 지정',
     })
