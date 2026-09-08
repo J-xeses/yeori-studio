@@ -3002,7 +3002,8 @@ app.post('/api/screen-scenario', (req, res) => {
 // 그대로 인식되게 하기 위함. /api/graphic-capture(브라우저)와 MCP 도구
 // make_graphic_cut이 공유하는 핵심 로직.
 // 애니메이션 모션 — 프레임 캡처 경로. 나머지는 스크린샷 1장 + ffmpeg(zoompan/fade).
-const ANIMATED_MOTIONS = new Set(['type-in', 'rise', 'pop', 'word-rise'])
+// self = "HTML 자체 CSS @keyframes 로 애니메이션함" — 템플릿 CSS 주입 없이 프레임 캡처만.
+const ANIMATED_MOTIONS = new Set(['type-in', 'rise', 'pop', 'word-rise', 'self'])
 
 // 자동 템플릿(.main-text)에 얹을 CSS 애니메이션. 커스텀 목업 파일이면 .main-text가
 // 없어 무영향(그 파일 자체 애니메이션이 프레임 캡처됨).
@@ -3069,7 +3070,8 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   fs.mkdirSync(videoDir, { recursive: true })
   const imagePath = path.join(videoDir, `cut_${padded}_graphic.png`)
   const videoPath = path.join(videoDir, `cut_${padded}.mp4`)
-  const pageHtml = animated ? injectAnimationCss(html, motion, dur) : html
+  // motion:'self' 는 HTML 이 스스로 애니메이션하므로 템플릿 CSS 를 주입하지 않는다.
+  const pageHtml = (animated && motion !== 'self') ? injectAnimationCss(html, motion, dur) : html
 
   const FPS = 30
   let framesDir = null
