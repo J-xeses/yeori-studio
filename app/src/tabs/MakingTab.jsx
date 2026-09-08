@@ -810,8 +810,9 @@ export default function MakingTab() {
   const selectHtmlCut = async (cut) => {
     selectCut(cut)
     setSelectedHtmlFile('__auto__')
-    // 컷별 HTML 지정(대본 HTML: 필드)이 있으면 유형 전역 기본 파일보다 우선
-    const def = cut.htmlFile || typeStyles[cut.cutType]?.htmlFile
+    // 컷별 HTML 지정(대본 HTML: 필드, .html 만)이 있으면 유형 전역 기본 파일보다 우선
+    const perCut = /\.html?$/i.test(String(cut.htmlFile || '')) ? cut.htmlFile.trim() : ''
+    const def = perCut || typeStyles[cut.cutType]?.htmlFile
     const files = await fetchEpisodeHtmlFiles()
     if (def && files.includes(def)) applyHtmlFileChoice(def, cut)
   }
@@ -1169,8 +1170,10 @@ export default function MakingTab() {
 
   const autoProduceGraphicish = async (cut) => {
     const type = cut.cutType
-    // 컷별 HTML 지정(대본 HTML: 필드)이 있으면 유형 전역 기본 파일보다 우선
-    const cfgFile = String(cut.htmlFile || typeStyles[type]?.htmlFile || '').trim()
+    // 컷별 HTML 지정(대본 HTML: 필드)이 있으면 유형 전역 기본 파일보다 우선.
+    // .html 이 아닌 값("AE_제작대상_수동" 등 수동 마커)은 무시하고 자동 템플릿으로.
+    const perCut = /\.html?$/i.test(String(cut.htmlFile || '')) ? cut.htmlFile.trim() : ''
+    const cfgFile = String(perCut || typeStyles[type]?.htmlFile || '').trim()
     const dur = cutDuration(cut)
     const motion = cut.motion || styleFor(type)?.motion || 'none'
     let res, data

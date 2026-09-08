@@ -118,6 +118,10 @@ export function bgmFile(rel) {
 }
 export function hooksDir(sub = '') { return path.join(DOWNLOADS, '_shared', 'hooks', sub) }
 
+// ── BROLL/화면녹화 임시 소스 (ScreenRecorderPanel 저장 위치, 에피소드 무관) ──
+// 대본 SRC 필드 관례 "sources/<파일>" 이 가리키는 실제 폴더.
+export function sourcesDir(sub = '') { return path.join(DOWNLOADS, BRAND, 'YU', 'sources', sub) }
+
 // ── 캐릭터 레퍼런스 — 브랜드별 (downloads/seoyeori/characters/) ────────
 export function charactersDir(sub = '') { return path.join(DOWNLOADS, BRAND, 'characters', sub) }
 export function charactersJsonPath()    { return path.join(DOWNLOADS, BRAND, 'characters', 'characters.json') }

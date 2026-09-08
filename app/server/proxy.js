@@ -2626,7 +2626,16 @@ function runFfmpeg(args) {
 function resolveS2CPath(srcPath) {
   const p = String(srcPath || '').trim().replace(/^["']|["']$/g, '')
   if (!p) { const e = new Error('srcPath 필요'); e.statusCode = 400; throw e }
-  const abs = path.isAbsolute(p) ? p : path.join(MEDIA_ROOT, p.replace(/^[/\\]+/, ''))
+  let abs
+  if (path.isAbsolute(p)) {
+    abs = p
+  } else {
+    const rel = p.replace(/^[/\\]+/, '')
+    // 대본 SRC 필드 관례: "sources/<파일>" = ScreenRecorderPanel 저장 폴더
+    // (downloads/seoyeori/YU/sources). 그 외 상대경로는 미디어 루트(C:\yeori-studio) 기준.
+    const m = rel.match(/^sources[/\\](.+)$/i)
+    abs = m ? mp.sourcesDir(m[1]) : path.join(MEDIA_ROOT, rel)
+  }
   if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
     const e = new Error(`파일 없음: ${abs}`); e.statusCode = 404; throw e
   }
@@ -2739,11 +2748,14 @@ app.post('/api/source-to-cut', async (req, res) => {
 })
 
 // GET /api/source-scan?epNum=N — 메이킹 탭 소스 후보 목록
+//   sources/                                   ← 대본 SRC 필드 관례 폴더(ScreenRecorderPanel 저장)
 //   making/ep{N}/source/{studio,upload,stock}  ← 규약상 정식 소스 위치
 //   flow/ep{N}, video/ep{N}                    ← 참고(스튜디오 확정본·이미 만든 컷)
 app.get('/api/source-scan', (req, res) => {
   const epNum = req.query.epNum
-  const roots = []
+  const roots = [
+    { label: 'sources', dir: mp.sourcesDir() },   // 에피소드 무관 — 대본 "SRC: sources/<파일>"
+  ]
   if (epNum != null) {
     const srcBase = path.join(mp.makingDir(epNum), 'source')
     roots.push(
@@ -6598,8 +6610,10 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
   const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
   if (!cut) { const e = new Error(`컷 번호 ${cutNo} 없음`); e.statusCode = 404; throw e }
 
-  // htmlFile 인자가 없으면 컷 자체에 지정된 HTML 목업(대본 HTML: 필드 → cut.htmlFile)을 쓴다
-  const effectiveHtmlFile = htmlFile || cut.htmlFile
+  // htmlFile 인자가 없으면 컷 자체에 지정된 HTML 목업(대본 HTML: 필드 → cut.htmlFile)을 쓴다.
+  // .html 파일이 아닌 값(예: "AE_제작대상_수동" 수동 마커)은 무시하고 자동 템플릿으로.
+  const cand = htmlFile || cut.htmlFile
+  const effectiveHtmlFile = /\.html?$/i.test(String(cand || '')) ? cand : null
   let html
   if (effectiveHtmlFile) {
     const episodeCode = resolveEpisodeCode(ep.episode, epId)
@@ -6627,16 +6641,16 @@ async function produceMakingCut({ epNum, cut }) {
 
   if (!MAKING_AUTO_TYPES.has(type)) return { cutNo, type, status: 'skipped', reason: '메이킹 유형 아님' }
 
-  // 1) 로컬 소스 파일 지정(SRC:) → 유형 무관 source-to-cut 규격화
+  // 1) 로컬 소스 파일 지정(SRC:) → 유형 무관 source-to-cut 규격화.
+  //    경로 해석·존재 검증은 resolveS2CPath(=/api/source-to-cut)에 위임한다
+  //    ("sources/<파일>" → downloads/seoyeori/YU/sources/<파일> 매핑 포함).
   const srcPath = String(cut.sourcePath || cut.studioSource || '').trim()
   if (srcPath) {
-    let resolved
-    try { resolved = resolveS2CPath(srcPath) } catch { resolved = srcPath }
-    if (!fs.existsSync(resolved)) return { cutNo, type, status: 'skipped', reason: `소스 파일 없음: ${srcPath}` }
     const r = await selfFetch('/api/source-to-cut', {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ epNum, cutNo, srcPath, duration: dur, trimMode: 'start', motion, fit: cut.fit || 'cover' }),
     })
+    if (r.status === 404) return { cutNo, type, status: 'skipped', method: 'source-to-cut', reason: r.body?.error || `소스 파일 없음: ${srcPath}` }
     if (r.status !== 200) return { cutNo, type, status: 'error', method: 'source-to-cut', reason: r.body?.error || `HTTP ${r.status}` }
     return { cutNo, type, status: 'produced', method: 'source-to-cut', outputPath: r.body?.outputPath }
   }
@@ -6663,9 +6677,14 @@ async function produceMakingCut({ epNum, cut }) {
     return { cutNo, type, status: 'produced', method: r.body?.aiUsed ? 'pexels-ai' : 'pexels', outputPath: r.body?.outputPath || r.body?.finalPath, query: r.body?.query }
   }
 
-  // 3) GRAPHIC / CAPCUT: HTML 목업(HTML:) 또는 자동 템플릿.
+  // 3) GRAPHIC / CAPCUT: HTML 목업(HTML: <파일>.html) 또는 자동 템플릿.
+  //    HTML: 값이 .html 이 아니면(예: "AE_제작대상_수동") = 수동 제작 마커 → 스킵.
   //    CAPCUT 은 목업 없으면 대개 데스크톱 녹화(수동)라 스킵.
-  const htmlFile = String(cut.htmlFile || '').trim()
+  const htmlRaw = String(cut.htmlFile || '').trim()
+  const htmlFile = /\.html?$/i.test(htmlRaw) ? htmlRaw : ''
+  if (htmlRaw && !htmlFile) {
+    return { cutNo, type, status: 'skipped', reason: `HTML: ${htmlRaw} — 수동 제작 대상(자동 캡처 안 함)` }
+  }
   if (type === 'CAPCUT' && !htmlFile) {
     return { cutNo, type, status: 'skipped', reason: 'CAPCUT — HTML 목업(HTML:) 없음, 데스크톱 녹화는 수동' }
   }
