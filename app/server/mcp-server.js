@@ -229,6 +229,18 @@ async function executeTool(name, args) {
       return `G5 합성 완료\nSRT: ${data.srt?.srtPath}\n최종 영상: ${data.concat?.outputPath} (${data.concat?.totalDuration})`
     }
 
+    case 'run_making': {
+      const data = await api('POST', '/api/mcp/run-making', { episodeId: args.episodeId, cutIds: args.cutIds })
+      if (data.error) return `오류: ${data.error}`
+      if (data.skipped) return `이미 실행 중 — 건너뜀`
+      if (!data.results?.length) return data.message || '대기 중인 메이킹 컷 없음'
+      const rows = data.results.map(r => {
+        const tag = r.status === 'produced' ? '✅' : r.status === 'skipped' ? '⏭️' : '❌'
+        return `${tag} CUT ${r.cutNo} (${r.type}) ${r.method || ''}${r.reason ? ` — ${r.reason}` : r.query ? ` — "${r.query}"` : ''}`.trimEnd()
+      }).join('\n')
+      return `메이킹 제작 — 완료 ${data.producedCount} · 스킵 ${data.skippedCount} · 실패 ${data.errorCount}\n${rows}\n(승인은 studio_approve_g4 로 별도)`
+    }
+
     case 'studio_get_status': {
       const data = await api('GET', `/api/mcp/studio-status${args.episodeId ? `?episodeId=${encodeURIComponent(args.episodeId)}` : ''}`)
       if (data.error) return `오류: ${data.error}`

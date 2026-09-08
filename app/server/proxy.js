@@ -1840,7 +1840,7 @@ function pushPipelineLog(line) {
 
 // ① POST /api/pipeline/start
 app.post('/api/pipeline/start', (req, res) => {
-  const { episodeId, startStage, endStage } = req.body || {}
+  const { episodeId, startStage, endStage, autoMaking } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   if (pipelineProc) {
     return res.status(409).json({ error: '이미 실행 중인 파이프라인이 있습니다', meta: pipelineMeta })
@@ -1850,6 +1850,8 @@ app.post('/api/pipeline/start', (req, res) => {
   const to = endStage || 'g5'
   const scriptPath = path.join(ROOT, 'scripts', 'pipeline-leader.js')
   const nodeArgs = [scriptPath, `--episode=${episodeId}`, `--from=${from}`, `--to=${to}`]
+  // 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 자동 제작 — 기본 ON, 명시적으로 끌 때만 --making=off
+  if (autoMaking === false) nodeArgs.push('--making=off')
 
   console.log(`[pipeline] spawn: ${process.execPath} ${nodeArgs.join(' ')}`)
   const proc = spawn(process.execPath, nodeArgs, { cwd: ROOT, env: process.env })
@@ -6609,6 +6611,117 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
 
   return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion })
 }
+
+// ── 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 헤드리스 제작 ──────────────────────
+// MakingTab "유형별 자동실행"(runAutoByType)의 컷별 판단을 서버로 이식한 축약판.
+// scripts/pipeline-leader.js 와 MCP 도구(run_making) 가 공유한다. 브라우저 전용 상태
+// (소스모드 토글·typeStyles localStorage)는 못 쓰므로 소스는 대본 컷 필드
+// (htmlFile / sourcePath / brollUrl / brollQuery, scriptParserV3 가 채움) + 자동 유추만.
+const MAKING_AUTO_TYPES = new Set(['GRAPHIC', 'CAPCUT', 'BROLL'])
+
+async function produceMakingCut({ epNum, cut }) {
+  const type = String(cut.cutType || 'YEORI').toUpperCase()
+  const cutNo = cut.no
+  const dur = serverCutTargetDuration(cut)
+  const motion = String(cut.motion || '').trim() || undefined
+
+  if (!MAKING_AUTO_TYPES.has(type)) return { cutNo, type, status: 'skipped', reason: '메이킹 유형 아님' }
+
+  // 1) 로컬 소스 파일 지정(SRC:) → 유형 무관 source-to-cut 규격화
+  const srcPath = String(cut.sourcePath || cut.studioSource || '').trim()
+  if (srcPath) {
+    let resolved
+    try { resolved = resolveS2CPath(srcPath) } catch { resolved = srcPath }
+    if (!fs.existsSync(resolved)) return { cutNo, type, status: 'skipped', reason: `소스 파일 없음: ${srcPath}` }
+    const r = await selfFetch('/api/source-to-cut', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo, srcPath, duration: dur, trimMode: 'start', motion, fit: cut.fit || 'cover' }),
+    })
+    if (r.status !== 200) return { cutNo, type, status: 'error', method: 'source-to-cut', reason: r.body?.error || `HTTP ${r.status}` }
+    return { cutNo, type, status: 'produced', method: 'source-to-cut', outputPath: r.body?.outputPath }
+  }
+
+  // 2) BROLL: URL(헤드리스 캡처) → 검색어/AI(Pexels)
+  if (type === 'BROLL') {
+    const url = String(cut.brollUrl || cut.sourceUrl || '').trim()
+    if (url) {
+      const r = await selfFetch('/api/capture-video-url', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url, cutNo, epNum, duration: dur, trimMode: 'end' }),
+      })
+      if (r.status !== 200) return { cutNo, type, status: 'error', method: 'url-capture', reason: r.body?.error || `HTTP ${r.status}` }
+      return { cutNo, type, status: 'produced', method: 'url-capture', outputPath: r.body?.finalPath }
+    }
+    const description = `${cut.scene || ''} ${cut.narration || cut.dialogue || ''} ${cut.videoPrompt || ''}`.trim()
+    const explicitQuery = String(cut.brollQuery || '').trim()
+    const r = await selfFetch('/api/broll-auto', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo, description, duration: dur, query: explicitQuery || undefined, fallbackQuery: explicitQuery }),
+    })
+    if (r.status === 422) return { cutNo, type, status: 'skipped', method: 'pexels', reason: r.body?.error || 'Pexels 검색어/결과 없음' }
+    if (r.status !== 200) return { cutNo, type, status: 'error', method: 'pexels', reason: r.body?.error || `HTTP ${r.status}` }
+    return { cutNo, type, status: 'produced', method: r.body?.aiUsed ? 'pexels-ai' : 'pexels', outputPath: r.body?.outputPath || r.body?.finalPath, query: r.body?.query }
+  }
+
+  // 3) GRAPHIC / CAPCUT: HTML 목업(HTML:) 또는 자동 템플릿.
+  //    CAPCUT 은 목업 없으면 대개 데스크톱 녹화(수동)라 스킵.
+  const htmlFile = String(cut.htmlFile || '').trim()
+  if (type === 'CAPCUT' && !htmlFile) {
+    return { cutNo, type, status: 'skipped', reason: 'CAPCUT — HTML 목업(HTML:) 없음, 데스크톱 녹화는 수동' }
+  }
+  try {
+    const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: htmlFile || undefined, motion })
+    return { cutNo, type, status: 'produced', method: htmlFile ? 'html-capture' : 'template-capture', outputPath: result?.outputPath }
+  } catch (e) {
+    return { cutNo, type, status: 'error', method: 'graphic-capture', reason: e.message }
+  }
+}
+
+// 에피소드당 메이킹 일괄 제작 재진입 방지 락(폴링 간격보다 오래 걸릴 때 중복 실행 → 같은
+// cut_NN.mp4 에 ffmpeg 2개가 쓰는 사고 방지). 키 = episodeCode.
+const _makingRunLocks = new Set()
+
+// POST /api/mcp/run-making — 대기 중인 메이킹 컷(g1 승인 · 영상 없음)을 순차 헤드리스 제작.
+// pipeline-leader / claude.ai 에이전트가 호출. 제작만 함(승인 게이트는 studio-approve-g4 별도).
+mcpRouter.post('/run-making', async (req, res) => {
+  const { episodeId, cutIds } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const epNum = ep.episode?.number
+    const gData = loadGpointsFile()[episodeCode] || {}
+    const videoDir = mp.videoDir(epNum)
+    const hasVideo = (no) => {
+      const p = String(no).padStart(2, '0')
+      return fs.existsSync(path.join(videoDir, `cut_${p}_final.mp4`)) || fs.existsSync(path.join(videoDir, `cut_${p}.mp4`))
+    }
+    const targets = filterCutsByIds(ep.cuts || [], cutIds).filter(c =>
+      MAKING_AUTO_TYPES.has(String(c.cutType || 'YEORI').toUpperCase())
+      && gData[`cut_${c.no}`]?.g1
+      && !hasVideo(c.no))
+
+    if (!targets.length) return res.json({ success: true, produced: [], message: '대기 중인 메이킹 컷 없음' })
+    if (_makingRunLocks.has(episodeCode)) return res.json({ success: true, produced: [], skipped: 'already-running' })
+
+    _makingRunLocks.add(episodeCode)
+    const results = []
+    try {
+      for (const cut of targets.sort((a, b) => a.no - b.no)) {
+        results.push(await produceMakingCut({ epNum, cut }))
+      }
+    } finally { _makingRunLocks.delete(episodeCode) }
+
+    const produced = results.filter(r => r.status === 'produced')
+    const skipped = results.filter(r => r.status === 'skipped')
+    const errored = results.filter(r => r.status === 'error')
+    res.json({ success: true, results, producedCount: produced.length, skippedCount: skipped.length, errorCount: errored.length, produced, skipped, errored })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
 
 // 컷과 무관한 전역 CapCut 데스크톱 앱 상태(getCapCutWindow) + 서버 메모리상의 "지금
 // 녹화 중인지"(screenRecorder.isRecording/pendingBrollEdit) + (cutNo가 오면) 최종

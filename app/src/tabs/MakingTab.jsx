@@ -269,19 +269,13 @@ export default function MakingTab() {
     return () => clearInterval(id)
   }, [episode?.number])
 
-  // 메이킹 유형(GRAPHIC/BROLL/CAPCUT) 컷은 별도 승인 게이트가 없다 — cut_NN.mp4가
-  // 생기면 그게 곧 "완료"다. 파일이 확인되면 G4(영상)를 자동으로 채워, 리더 대시보드
-  // (getGPointSummary 기반)와 스튜디오 매트릭스가 메이킹 진행을 반영하게 한다.
-  // YEORI 컷은 VideoTab에서 사람이 승인하는 게이트가 따로 있으므로 건드리지 않는다.
-  useEffect(() => {
-    if (!episode?.number) return
-    for (const cut of (cuts || [])) {
-      if (!MANUAL_TYPES.includes(cut.cutType || 'YEORI')) continue
-      if (videoStatus[cut.no] && !getGPoint(episodeCode, cut.no).g4) {
-        setGPoint(episodeCode, cut.no, 'g4', true)
-      }
-    }
-  }, [videoStatus, episode?.number, episodeCode, cuts])
+  // 메이킹 유형(GRAPHIC/BROLL/CAPCUT) 컷도 이제 G4 승인 게이트를 거친다 (2026-09-08).
+  // cut_NN.mp4 가 생겨도 자동으로 g4 를 채우지 않는다 — "제작 완료 ≠ 확정".
+  // 승인 경로: (사람) 아래 "✅ G4 승인" 버튼 / (에이전트) pipeline-leader.shouldAutoApprove.
+  // YEORI 컷은 VideoTab 승인 게이트가 따로 있으므로 여기서 안 건드린다.
+  const [gpVer, setGpVer] = useState(0)
+  const approveMakingG4 = (cut) => { setGPoint(episodeCode, cut.no, 'g4', true); setGpVer(v => v + 1) }
+  const revokeMakingG4 = (cut) => { setGPoint(episodeCode, cut.no, 'g4', false); setGpVer(v => v + 1) }
 
   // ── 어느 컷을 펼쳐 놓았는지(한 번에 하나만). 펼치면서 타입에 맞는 기존 select 함수를
   // 호출해 htmlSource/selectedBrollCutNo/selectedCapcutCutNo 등 기존 상태를 그대로 채운다.
@@ -588,7 +582,7 @@ export default function MakingTab() {
               setScenarioVideo(p => ({ ...p, [cut.no]: ev.videoUrl }))
               if (ev.verifyUrl) setScenarioVerify(p => ({ ...p, [cut.no]: { url: ev.verifyUrl, peak: ev.verify?.peak } }))
             } else append(`❌ ${ev.error}`)
-            // videoStatus 2초 폴링이 cut_NN.mp4를 잡아 g4 자동 마킹(기존 effect)
+            // cut_NN.mp4 는 videoStatus 2초 폴링이 "제작됨"으로 잡는다. G4 승인은 별도(승인 버튼).
           }
         }
       }
@@ -2455,12 +2449,13 @@ export default function MakingTab() {
                 {!allCuts.length ? (
                   <div className={s.emptyHint}>활성 에피소드에 컷이 없습니다.</div>
                 ) : (
-                  <div className={s.cutList}>
+                  <div className={s.cutList} data-gpver={gpVer}>
                     {allCuts.map(cut => {
                       const type = cut.cutType || 'YEORI'
                       const manual = MANUAL_TYPES.includes(type)
                       const expanded = expandedCutNo === cut.no
                       const done = !!videoStatus[cut.no]
+                      const g4 = manual && !!getGPoint(episodeCode, cut.no).g4
                       return (
                         <div key={cut.id} className={`${s.cutRow} ${expanded ? s.cutRowActive : ''}`}>
                           <button
@@ -2471,9 +2466,26 @@ export default function MakingTab() {
                             <span className={s.cutSummary}>
                               {cut.narration || cut.dialogue || cut.scene || '(내용 없음)'}
                             </span>
-                            {done && <span className={s.doneBadge}>완료 ✅</span>}
+                            {!manual && done && <span className={s.doneBadge}>완료 ✅</span>}
+                            {manual && done && g4 && <span className={s.doneBadge}>G4 승인 ✅</span>}
+                            {manual && done && !g4 && (
+                              <span className={s.doneBadge} style={{ background: '#b45309' }}>제작됨 · 승인대기</span>
+                            )}
                             {manual && <span className={s.chevron}>{expanded ? '▲' : '▼'}</span>}
                           </button>
+
+                          {manual && done && (
+                            <div style={{ display: 'flex', gap: 8, padding: '6px 12px', alignItems: 'center' }}>
+                              {g4 ? (
+                                <button className={s.previewBtn} onClick={() => revokeMakingG4(cut)}>G4 승인됨 — 취소</button>
+                              ) : (
+                                <button className={s.captureBtn} onClick={() => approveMakingG4(cut)}>✅ G4 승인 (이 컷 확정)</button>
+                              )}
+                              <span className={s.emptyHint} style={{ margin: 0 }}>
+                                제작된 <b>cut_{String(cut.no).padStart(2, '0')}.mp4</b>를 확인 후 승인하면 다음 단계(G5)로 넘어갑니다.
+                              </span>
+                            </div>
+                          )}
 
                           {expanded && manual && renderPanel(cut)}
 

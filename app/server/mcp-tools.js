@@ -196,6 +196,18 @@ export const TOOLS = [
     },
   },
   {
+    name: 'run_making',
+    description: '대기 중인 메이킹 컷(GRAPHIC/CAPCUT/BROLL, G1 승인 · 영상 없음)을 헤드리스로 일괄 제작합니다. 소스는 대본 컷 필드로 결정: HTML(그래픽 목업) / SRC(로컬 파일→규격화) / URL(영상 페이지 헤드리스 캡처) / BQ(Pexels 검색어), 없으면 컷 묘사→AI 검색어로 Pexels. 제작만 하고 승인(G4)은 별도(studio_approve_g4). 소스를 못 찾는 컷은 스킵 사유를 반환합니다. episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
+    inputSchema: {
+      type: 'object',
+      required: ['episodeId'],
+      properties: {
+        episodeId: { type: 'string', description: '에피소드 ID (활성 에피소드와 일치해야 함)' },
+        cutIds: { type: 'array', items: { type: 'string' }, description: '대상 컷 id 또는 번호 목록 (생략 시 대기 중인 메이킹 컷 전체)' },
+      },
+    },
+  },
+  {
     name: 'studio_run_g5',
     description: '편집 메타 생성 → SRT 자막 생성 → 컷 영상들을 순서대로 FFmpeg concat하여 ep{N}_raw.mp4를 만듭니다(G5 합성). episodeId는 반드시 현재 활성 에피소드와 같아야 합니다.',
     inputSchema: {

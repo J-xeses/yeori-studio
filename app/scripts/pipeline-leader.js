@@ -72,6 +72,8 @@ if (!args.episode) {
 const EPISODE_ID = args.episode
 const INTERVAL_MS = (parseInt(args.interval, 10) || 30) * 1000
 const RUN_ONCE = !!args.once
+// 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 자동 제작 — 기본 ON, --making=off 로 비활성(로그만)
+const MAKING_AUTORUN = args.making !== 'off'
 
 // ── 스테이지 범위(--from/--to) — 웹 UI(에이전트 리더 탭)가 "이 구간만 실행"을
 // 지정할 수 있도록 지원. 기본은 g1~g5 전체. G1은 사람이 스튜디오 UI에서 승인하는
@@ -109,9 +111,9 @@ function stageApplies(c, stage) {
   if (stage === 'g3') return needsG3(c)
   return true   // g1, g4, g5 — 전체
 }
-// 이 컷에서 이 단계가 실질적으로 끝났는가 (메이킹 컷의 g4는 승인버튼 없이 mp4 존재로 판단)
+// 이 컷에서 이 단계가 실질적으로 끝났는가. 메이킹 컷도 이제 g4 승인 게이트를 거친다
+// (2026-09-08 — 제작 완료 ≠ 확정. mp4 존재만으로 다음 단계로 넘어가지 않음).
 function cutStageDone(c, stage) {
-  if (stage === 'g4' && isMakingType(c)) return !!c.hasVideo
   return !!c[stage]
 }
 // studio-status가 내려주는 cuts[].g1~g5는 서버가 gpoints.json을 병합해 넣은 값이라 그대로 신뢰.
@@ -137,12 +139,14 @@ function log(stage, msg) {
   console.log(`[${ts}] [${stage}] ${msg}`)
 }
 
-// ── 승인 정책 — 지금은 항상 사람(스튜디오 UI) 대기, 자동 승인 안 함. 나중에
+// ── 승인 정책 — 지금은 항상 사람(스튜디오/메이킹 UI) 대기, 자동 승인 안 함.
 // "에이전트 리더"가 실제 산출물(이미지/영상)을 평가해서 자동 승인하게 하려면
-// 이 함수의 반환값만 실제 판단 로직으로 바꾸면 된다. 지금은 호출부가 없고
-// 정책 자리만 표시해두는 용도.
+// 이 함수만 실제 판단 로직으로 바꾸면 된다(예: 메이킹 컷은 mp4 프레임 검수, 검정/빈
+// 화면이면 반려). 아래 메이킹 컷 g4 게이트가 이 함수의 첫 호출부다.
+//   stage: 'making' | 'g2' | 'g3' | 'g4'
+//   cut:   studio-status 의 컷 항목({no, cutType, hasVideo, ...})
 // eslint-disable-next-line no-unused-vars
-async function shouldAutoApprove(stage, cutStatus) {
+async function shouldAutoApprove(stage, cut) {
   return false
 }
 
@@ -176,14 +180,45 @@ async function checkAndAdvance() {
     }
   }
 
-  // ── 메이킹 탭 제작 대기: GRAPHIC/CAPCUT/BROLL 컷은 Flow/Veo 안 쓰고 mp4를 직접 만든다 ──
+  // ── 메이킹 컷(GRAPHIC/CAPCUT/BROLL): Flow/Veo 안 쓰고 mp4를 직접 만든다 ──
+  //   1) 제작: g1 승인 · 영상 없음 컷을 /api/mcp/run-making 으로 헤드리스 일괄 제작
+  //      (대본 컷 필드 HTML:/SRC:/BQ:/URL: 로 소스 결정. 소스 못 찾는 컷은 스킵 로그)
+  //   2) 승인 게이트: 제작됐지만 g4 미승인 컷은 shouldAutoApprove 정책에 따라
+  //      자동 승인하거나(에이전트 리더) 사람 승인 대기 로그
   if (stageInRange('g4')) {
     const needMaking = cuts.filter(c => c.g1 && isMakingType(c) && !c.hasVideo)
     if (needMaking.length) {
       const byType = {}
       needMaking.forEach(c => { (byType[cutTypeOf(c)] ||= []).push(c.no) })
-      log('제작', `메이킹 탭 제작 대기 — ${Object.entries(byType).map(([t, ns]) => `${t} 컷 ${ns.join(',')}`).join(' · ')}`)
+      const label = Object.entries(byType).map(([t, ns]) => `${t} 컷 ${ns.join(',')}`).join(' · ')
+      if (MAKING_AUTORUN) {
+        log('제작', `메이킹 컷 자동 제작 시작 — ${label}`)
+        const r = await api('POST', '/api/mcp/run-making', { episodeId: EPISODE_ID, cutIds: needMaking.map(c => c.no) })
+        if (!r.ok) log('제작', `run-making 실패 — ${r.data?.error || r.status}`)
+        else {
+          for (const x of (r.data.results || [])) {
+            const tag = x.status === 'produced' ? '✅' : x.status === 'skipped' ? '⏭️' : '❌'
+            log('제작', `${tag} CUT ${x.cutNo} (${x.type}) ${x.method || ''} ${x.reason ? `— ${x.reason}` : x.query ? `— "${x.query}"` : ''}`.trimEnd())
+          }
+          log('제작', `제작 ${r.data.producedCount} · 스킵 ${r.data.skippedCount} · 실패 ${r.data.errorCount}`)
+        }
+      } else {
+        log('제작', `메이킹 탭 제작 대기 — ${label} (--making=off, 자동 제작 꺼짐)`)
+      }
     }
+
+    // 제작 완료(mp4 있음)됐지만 g4 미승인인 메이킹 컷 → 승인 게이트
+    const madeUnapproved = cuts.filter(c => isMakingType(c) && c.hasVideo && !c.g4)
+    const autoApproved = []
+    for (const c of madeUnapproved) {
+      if (await shouldAutoApprove('making', c)) {
+        const r = await api('POST', '/api/mcp/studio-approve-g4', { episodeId: EPISODE_ID, cutIds: [c.no] })
+        if (r.ok) { autoApproved.push(c.no); log('제작', `CUT ${c.no} 자동 승인(에이전트 리더)`) }
+        else log('제작', `CUT ${c.no} 자동 승인 실패 — ${r.data?.error || r.status}`)
+      }
+    }
+    const stillWaiting = madeUnapproved.filter(c => !autoApproved.includes(c.no)).map(c => c.no)
+    if (stillWaiting.length) log('승인대기', `메이킹 컷 제작됨 — 승인 대기: 컷 ${stillWaiting.join(',')} (메이킹 탭에서 확인)`)
   }
 
   // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (동기 완료라 배치 겹칠 일 없음) ──
