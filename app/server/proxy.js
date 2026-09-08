@@ -1334,43 +1334,44 @@ function resolveChToCharacterIds(chRaw) {
 // ── Nano Banana(Gemini image) 이미지 생성 — 캐릭터 얼굴 참조 지원 ──────
 // 한국망에서 generativelanguage.googleapis.com 직접 접근 가능(2026-09-08 실측).
 // Flow 웹 UI puppeteer(자주 깨짐) 대체. 무료 500장/일.
-const NANO_BANANA_MODELS = [
-  'gemini-2.5-flash-image-preview',  // Nano Banana (무료)
-  'gemini-3.1-flash-image-preview',  // Nano Banana 2
-  'gemini-3-pro-image-preview',      // Nano Banana Pro
-]
-async function generateNanoBananaImage(apiKey, prompt, refImages = [], aspectRatio = null) {
+// 2026-09-08: 이미지 모델 무료 티어가 limit:0 으로 바뀜 — 결제 활성 필요(pay-per-use).
+// 대략 gemini-2.5-flash-image ~$0.04/장, 3.1(Nano Banana 2)·3-pro 는 더 비쌈.
+// -preview 접미사 모델은 404(폐기) — 정식 이름 사용. 캐릭터 일관성은 3.1 이상이 확연히 좋음.
+const NANO_BANANA_MODELS = {
+  'flash':   'gemini-2.5-flash-image',   // 가장 쌈
+  'nb2':     'gemini-3.1-flash-image',   // Nano Banana 2 — 참조 얼굴 일관성 좋음 (권장)
+  'pro':     'gemini-3-pro-image',       // Nano Banana Pro — 최고 품질/최고가
+}
+const NANO_BANANA_DEFAULT = 'nb2'
+async function generateNanoBananaImage(apiKey, prompt, refImages = [], aspectRatio = null, modelKey = NANO_BANANA_DEFAULT) {
+  const model = NANO_BANANA_MODELS[modelKey] || NANO_BANANA_MODELS[NANO_BANANA_DEFAULT]
   const parts = [
     ...refImages.filter(r => r?.data && r?.mimeType)
       .map(r => ({ inlineData: { mimeType: r.mimeType, data: r.data } })),
     { text: prompt },
   ]
   const generationConfig = { responseModalities: ['IMAGE', 'TEXT'] }
-  // Nano Banana 2/Pro 는 imageConfig.aspectRatio 지원(구 모델은 무시하고 프롬프트로 추론).
   if (aspectRatio) generationConfig.imageConfig = { aspectRatio }
-  let lastErr = null
-  for (const model of NANO_BANANA_MODELS) {
-    try {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts }], generationConfig }),
-        },
-      )
-      if (!r.ok) { lastErr = `${model} HTTP ${r.status}: ${(await r.text()).slice(0, 150)}`; continue }
-      const d = await r.json()
-      const img = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.mimeType?.startsWith('image/'))
-      if (!img) {
-        const fin = d.candidates?.[0]?.finishReason
-        lastErr = `${model}: 응답에 이미지 없음${fin ? ` (finishReason: ${fin})` : ''}`
-        continue
-      }
-      return { model, buffer: Buffer.from(img.inlineData.data, 'base64') }
-    } catch (e) { lastErr = `${model}: ${e.message}` }
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts }], generationConfig }),
+    },
+  )
+  if (!r.ok) {
+    const body = (await r.text()).slice(0, 250)
+    if (r.status === 429) throw new Error(`${model} 쿼터 초과(429) — 이미지 모델은 무료 티어 없음. Google Cloud 프로젝트에 결제 활성화 필요. ${body}`)
+    throw new Error(`${model} HTTP ${r.status}: ${body}`)
   }
-  throw new Error(lastErr || 'Nano Banana 전 모델 실패')
+  const d = await r.json()
+  const img = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.mimeType?.startsWith('image/'))
+  if (!img) {
+    const fin = d.candidates?.[0]?.finishReason
+    throw new Error(`${model}: 응답에 이미지 없음${fin ? ` (finishReason: ${fin})` : ''}`)
+  }
+  return { model, buffer: Buffer.from(img.inlineData.data, 'base64') }
 }
 
 // 캐릭터 id 목록 → 참조 이미지(base64) + descriptor 문자열
@@ -5568,7 +5569,8 @@ mcpRouter.post('/studio-approve-g1', (req, res) => {
 //    각 컷의 CH(masterCode.ch)로 등장 캐릭터를 해석 → characters.json 의 얼굴 이미지를 참조로 첨부해
 //    서여리/한지아 일관성 유지. GRAPHIC/CAPCUT/인서트(ip 없음) 컷은 대상 아님.
 mcpRouter.post('/studio-run-g2', async (req, res) => {
-  const { episodeId, cutIds, force } = req.body || {}
+  const { episodeId, cutIds, force, model } = req.body || {}
+  const modelKey = ['flash', 'nb2', 'pro'].includes(model) ? model : NANO_BANANA_DEFAULT
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
     const state = loadStudioState()
@@ -5627,11 +5629,11 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
           ? `${fullPrompt}\n\n[Character consistency — the attached image(s) are reference faces. Keep each face identical to its reference:]\n${descriptorText}`
           : fullPrompt
 
-        const { model, buffer } = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio)
+        const gen = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio, modelKey)
         const dest = path.join(imgDir, `cut_${padded}_a.jpg`)
-        fs.writeFileSync(dest, buffer)
+        fs.writeFileSync(dest, gen.buffer)
         results.push({
-          cutNo: c.no, status: 'ok', file: `cut_${padded}_a.jpg`, model,
+          cutNo: c.no, status: 'ok', file: `cut_${padded}_a.jpg`, model: gen.model,
           aspectRatio: aspectRatio || '(프롬프트 추론)',
           promptChars: prompt.length,
           characters: charIds, refCount: refImages.length,
