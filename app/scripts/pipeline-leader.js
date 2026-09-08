@@ -65,13 +65,50 @@ function parseArgs() {
   )
 }
 const args = parseArgs()
-if (!args.episode) {
-  console.error('[pipeline-leader] --episode=<episodeId> 필요 (studio_set_episode로 미리 활성화해둘 것)')
+// --episode 생략 시 studio-state.json 의 활성 에피소드를 쓴다 (start_gen.bat 단일 진입점용).
+function activeEpisodeFromState() {
+  for (const p of [path.join(CODE_ROOT, 'studio-state.json'), path.join(CODE_ROOT, 'downloads', 'studio-state.json')]) {
+    try {
+      const s = JSON.parse(fs.readFileSync(p, 'utf-8'))
+      if (s.activeEpisodeId) return s.activeEpisodeId
+    } catch { /* 다음 경로 */ }
+  }
+  return null
+}
+const EPISODE_ID = args.episode === true || !args.episode ? activeEpisodeFromState() : args.episode
+if (!EPISODE_ID) {
+  console.error('[pipeline-leader] 에피소드를 못 찾음 — --episode=<episodeId> 를 주거나 스튜디오에서 에피소드를 활성화하세요.')
   process.exit(1)
 }
-const EPISODE_ID = args.episode
 const INTERVAL_MS = (parseInt(args.interval, 10) || 30) * 1000
 const RUN_ONCE = !!args.once
+
+// ── 중복 실행 방지 락파일 (start_gen.bat 을 여러 번 눌러도 안전) ──
+// 락의 PID 가 실제 살아있고 5분 내 갱신됐으면 중복으로 보고 종료, 아니면 뺏는다.
+const LOCK_PATH = path.join(CODE_ROOT, 'downloads', 'state', `.pipeline-leader-${EPISODE_ID}.lock`)
+;(() => {
+  try {
+    if (fs.existsSync(LOCK_PATH)) {
+      const fresh = Date.now() - fs.statSync(LOCK_PATH).mtimeMs < 5 * 60 * 1000
+      let alive = false
+      try {
+        const oldPid = parseInt(String(fs.readFileSync(LOCK_PATH, 'utf-8')).trim(), 10)
+        if (oldPid && oldPid !== process.pid) { process.kill(oldPid, 0); alive = true }
+      } catch { alive = false }
+      if (alive && fresh) {
+        console.error(`[pipeline-leader] 이미 실행 중 (PID 살아있음, 락: ${LOCK_PATH}) — 종료.`)
+        process.exit(0)
+      }
+    }
+    fs.mkdirSync(path.dirname(LOCK_PATH), { recursive: true })
+    fs.writeFileSync(LOCK_PATH, String(process.pid))
+  } catch { /* 락 실패해도 진행 */ }
+})()
+const touchLock = () => { try { fs.utimesSync(LOCK_PATH, new Date(), new Date()) } catch { /* noop */ } }
+const releaseLock = () => { try { fs.rmSync(LOCK_PATH) } catch { /* noop */ } }
+process.on('exit', releaseLock)
+process.on('SIGINT', () => { releaseLock(); process.exit(0) })
+process.on('SIGTERM', () => { releaseLock(); process.exit(0) })
 // 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 자동 제작 — 기본 ON, --making=off 로 비활성(로그만)
 const MAKING_AUTORUN = args.making !== 'off'
 
@@ -300,6 +337,7 @@ async function main() {
   }
   const timer = setInterval(async () => {
     try {
+      touchLock()
       const done = await checkAndAdvance()
       if (done) {
         log('완료', `목표 단계(${TO_STAGE}) 전체 컷 완료 감지 — 자동 종료`)

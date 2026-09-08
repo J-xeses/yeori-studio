@@ -48,15 +48,40 @@ if not defined CAPCUT if exist "%PROGRAMFILES%\CapCut\CapCut.exe" set "CAPCUT=%P
 if defined CAPCUT (start "" "%CAPCUT%" & echo     %CAPCUT%) else (echo     CapCut.exe not found -- launch manually)
 echo.
 
+echo [3] Making pipeline (auto-produce GRAPHIC/BROLL/CAPCUT, then wait at G4 gate)
+netstat -ano | findstr /r /c:":3001 .*LISTENING" >nul 2>&1
+if not %errorlevel%==0 (
+  echo     [!] proxy :3001 down -- skipped. Run start_yeori.bat first, then re-run this.
+  goto :pipe_done
+)
+echo     waiting for Chrome debug port %DEBUGPORT% (CLIP cuts need it) ...
+set /a _tries=0
+:wait_dbg
+netstat -ano | findstr /r /c:":%DEBUGPORT% .*LISTENING" >nul 2>&1 && goto :dbg_ok
+set /a _tries+=1
+if %_tries% geq 12 (echo     [!] Chrome %DEBUGPORT% not up yet -- starting anyway ^(CLIP cuts retry next cycle^) & goto :dbg_ok)
+ping -n 3 127.0.0.1 >nul
+goto :wait_dbg
+:dbg_ok
+start "Yeori Pipeline Leader" /d "%~dp0" cmd /k node scripts\pipeline-leader.js
+echo     pipeline leader started in a separate window (active episode).
+echo       - auto-produces the making cuts, G3 TTS, then G5 once every cut's G4 is approved
+echo       - it does NOT auto-approve: review verify thumbnails and press "G4 approve" in the Studio
+echo       - close that window to stop the pipeline
+:pipe_done
+echo.
+
 echo ============================================================
 echo   READY
 echo     Flow       : https://labs.google/fx/ko/tools/flow
 echo     ElevenLabs : https://elevenlabs.io/app/speech-synthesis/text-to-speech
 echo     Studio     : http://localhost:5173
-echo     debug port : %DEBUGPORT%  (screen-scenario auto-record uses this)
+echo     debug port : %DEBUGPORT%  (screen-scenario / CLIP auto-record uses this)
+echo     pipeline   : "Yeori Pipeline Leader" window (auto making -^> G4 gate -^> G5)
 echo ============================================================
 echo.
 echo   Log in to Flow and ElevenLabs once in this Chrome; the session persists.
+echo   Your only manual step for the making line: review + G4 approve in the Studio.
 echo.
 goto :end
 
