@@ -111,6 +111,17 @@ export async function runScenario(p) {
   const rawPath = path.join(tmpDir, 'raw.mp4')
   const region = recorderName === 'gdigrab' ? await driver.windowBounds() : null
 
+  // preSteps: 녹화 시작 전에 실행 (광고 스킵·시크 등 — 결과물에 안 담기게)
+  for (const [i, step] of (sc.preSteps || []).entries()) {
+    log('pre', `${i + 1}/${sc.preSteps.length} ${step.action}${step.target ? ` → ${step.target}` : ''}${step.optional ? ' (선택)' : ''}`)
+    try {
+      await driver.execute(step, sc.selectors || {})
+    } catch (e) {
+      if (!step.optional) throw e
+      log('pre', `  선택 스텝 실패 → 계속: ${e.message.split('\n')[0].slice(0, 120)}`)
+    }
+  }
+
   await recorder.start(rawPath, { fps, region, viewport: vp, windowTitle: sc.record?.windowTitle })
   try {
     for (const [i, step] of (sc.steps || []).entries()) {

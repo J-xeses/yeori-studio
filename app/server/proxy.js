@@ -6644,16 +6644,41 @@ function buildBrollClipScenario({ cut, durationSec }) {
     driver: 'cdp', recorder: 'native', duration: dur, fit: 'crop',
     record: { fps: 30 },
     target: { url: u.href, timeout: 45000 },
-    steps: [
-      { action: 'wait', ms: 4000 },
-      { action: 'eval', name: 'skip-ad', optional: true,
-        fn: "() => { const b=document.querySelector('.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button'); if(b){b.click(); return 'skipped';} return 'no-ad'; }" },
-      { action: 'eval', name: 'seek-play',
-        fn: `() => { const v=document.querySelector('video'); if(!v) return 'no-video'; v.muted=true; ${seek > 0 ? `try{v.currentTime=${seek};}catch(e){}` : ''}; const p=v.play&&v.play(); if(p&&p.catch)p.catch(()=>{}); return {rs:v.readyState,t:v.currentTime}; }` },
-      { action: 'wait', ms: 1200 },
+    // preSteps: 녹화 시작 전 — 광고 스킵/시크가 결과물에 안 담기게
+    preSteps: [
+      { action: 'wait', ms: 3000 },
+      { action: 'eval', name: 'skip-ads',
+        fn: `async () => {
+          const player = document.querySelector('.html5-video-player');
+          const t0 = Date.now();
+          while (Date.now() - t0 < 40000) {
+            const adOn = player && player.classList.contains('ad-showing');
+            if (!adOn) break;
+            const sk = document.querySelector('.ytp-ad-skip-button-modern,.ytp-ad-skip-button,.ytp-skip-ad-button,button.ytp-ad-skip-button-modern');
+            if (sk) { try { sk.click(); } catch(e){} }
+            const av = document.querySelector('video');
+            if (av && isFinite(av.duration) && av.duration > 0) { try { av.currentTime = av.duration; } catch(e){} }
+            await new Promise(r => setTimeout(r, 700));
+          }
+          return player ? (player.classList.contains('ad-showing') ? 'ad-timeout' : 'ads-done') : 'no-player';
+        }` },
+      { action: 'eval', name: 'seek-buffer',
+        fn: `async () => {
+          const v = document.querySelector('video'); if (!v) return 'no-video';
+          v.muted = true;
+          ${seek > 0 ? `try { v.currentTime = ${seek}; } catch(e){}` : ''}
+          const p = v.play && v.play(); if (p && p.catch) p.catch(()=>{});
+          const t0 = Date.now();
+          while (v.readyState < 3 && Date.now() - t0 < 12000) await new Promise(r => setTimeout(r, 300));
+          ${seek > 0 ? `if (Math.abs(v.currentTime - ${seek}) > 2) { try { v.currentTime = ${seek}; } catch(e){} }` : ''}
+          await new Promise(r => setTimeout(r, 700));
+          return { rs: v.readyState, t: +v.currentTime.toFixed(1), dur: +(v.duration||0).toFixed(0) };
+        }` },
       { action: 'eval', name: 'fullbleed', optional: true,
-        fn: "() => { document.querySelectorAll('.ytp-chrome-top,.ytp-chrome-bottom,.ytp-gradient-top,.ytp-gradient-bottom,.ytp-ce-element,.ytp-pause-overlay,#related,ytd-watch-metadata').forEach(e=>e.style.setProperty('display','none','important')); const v=document.querySelector('video'); if(v){v.style.cssText='position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:2147483647!important;background:#000'} document.body.style.overflow='hidden'; }" },
-      { action: 'wait', ms: 500 },
+        fn: "() => { document.querySelectorAll('.ytp-chrome-top,.ytp-chrome-bottom,.ytp-gradient-top,.ytp-gradient-bottom,.ytp-ce-element,.ytp-pause-overlay,.ytp-popup,#related,ytd-watch-metadata,tp-yt-iron-overlay-backdrop').forEach(e=>e.style.setProperty('display','none','important')); const v=document.querySelector('video'); if(v){v.style.cssText='position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;object-fit:cover!important;z-index:2147483647!important;background:#000'} document.body.style.overflow='hidden'; const p=document.querySelector('video'); if(p&&p.paused)p.play&&p.play().catch(()=>{}); }" },
+    ],
+    steps: [
+      { action: 'wait', ms: (Number(dur) * 1000) + 700 },
     ],
     for: { cut: cut.no },
     _duration: dur,
