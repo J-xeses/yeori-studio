@@ -1334,6 +1334,13 @@ export default function MakingTab() {
             }),
           })
           const d = await r.json().catch(() => ({}))
+          if (r.status === 404 && cut.clipUrl) {
+            // SRC 파일 아직 없음 + CLIP 있음 → 웹 영상 구간 녹화로 폴백
+            autoPush({ kind: 'run', cutNo: cut.no, type, msg: 'SRC 파일 없음 → CLIP 웹 영상 구간 녹화' })
+            await runBrollClip(cut)
+            ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: '완료 · CLIP 녹화 (검토 후 G4 승인)' })
+            continue
+          }
           if (!r.ok) throw new Error(d.error || '소스→컷 실패')
           let extra = ''
           if (autoDoOverlay && cut.subtitle && typeStyles[type]?.overlay?.enabled) {
@@ -1343,6 +1350,13 @@ export default function MakingTab() {
         } catch (e) {
           fail++; autoPush({ kind: 'error', cutNo: cut.no, type, msg: e.message })
         }
+        continue
+      }
+      // SRC 없고 CLIP 만 있는 BROLL 컷
+      if (type === 'BROLL' && cut.clipUrl && !studioSrc) {
+        autoPush({ kind: 'run', cutNo: cut.no, type, msg: 'CLIP 웹 영상 구간 녹화 중…' })
+        try { await runBrollClip(cut); ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: '완료 · CLIP 녹화 (검토 후 G4 승인)' }) }
+        catch (e) { fail++; autoPush({ kind: 'error', cutNo: cut.no, type, msg: e.message }) }
         continue
       }
       const brMode = getBrollSourceMode(cut.no)

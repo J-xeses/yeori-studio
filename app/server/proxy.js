@@ -6760,9 +6760,15 @@ async function produceMakingCut({ epNum, cut }) {
       method: 'POST', headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ epNum, cutNo, srcPath, duration: dur, trimMode: 'start', motion, fit: cut.fit || 'cover' }),
     })
-    if (r.status === 404) return { cutNo, type, status: 'skipped', method: 'source-to-cut', reason: r.body?.error || `소스 파일 없음: ${srcPath}` }
-    if (r.status !== 200) return { cutNo, type, status: 'error', method: 'source-to-cut', reason: r.body?.error || `HTTP ${r.status}` }
-    return { cutNo, type, status: 'produced', method: 'source-to-cut', outputPath: r.body?.outputPath }
+    // SRC 파일이 없으면(아직 녹화 전) — CLIP 이 지정돼 있으면 아래 CLIP 경로로 폴백, 없으면 스킵
+    if (r.status === 404) {
+      if (!cut.clipUrl) return { cutNo, type, status: 'skipped', method: 'source-to-cut', reason: r.body?.error || `소스 파일 없음: ${srcPath}` }
+      // fall through
+    } else if (r.status !== 200) {
+      return { cutNo, type, status: 'error', method: 'source-to-cut', reason: r.body?.error || `HTTP ${r.status}` }
+    } else {
+      return { cutNo, type, status: 'produced', method: 'source-to-cut', outputPath: r.body?.outputPath }
+    }
   }
 
   // 2) BROLL: CLIP(웹 영상 구간 화면녹화) → URL(직접 미디어 캡처) → 검색어/AI(Pexels)
