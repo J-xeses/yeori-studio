@@ -123,7 +123,7 @@ export const TOOLS = [
   },
   {
     name: 'studio_run_g2',
-    description: '[DEPRECATED 2026-09-02 — 자동 이미지 생성 중단] Flow 브라우저 자동화가 벤더 UI 변경으로 반복적으로 깨져서 이미지도 수동 제작으로 전환했습니다. 이 도구는 호출하지 마세요. 컷 이미지는 사람이 외부 도구(Flow/Gemini 등)에서 만든 뒤 스튜디오 대본생성/스튜디오 탭에서 업로드합니다. 진행 현황은 studio_get_status를 참고하세요.',
+    description: '(2026-09-08 재활성) 각 컷의 이미지(G2)를 Nano Banana(Gemini image) API 로 생성해 에피소드 02_images 폴더의 cut_NN_a.jpg 로 저장. 무료(500장/일), 크레딧 소모 없음. 컷의 CH 필드로 등장 캐릭터를 해석해 characters.json 의 얼굴 이미지를 참조로 첨부(서여리/한지아 일관성). GRAPHIC/CAPCUT/이미지프롬프트 없는 인서트 컷은 대상 아님. studio-secrets.json 에 gemini 키 필요. 생성만 하고 G2 승인은 studio_approve_g2 로 별도. 예전 Flow 브라우저 자동화(puppeteer)는 폐기.',
     inputSchema: {
       type: 'object',
       required: ['episodeId'],
@@ -208,6 +208,16 @@ export const TOOLS = [
   {
     name: 'studio_get_status',
     description: '지정한(또는 현재 활성) 에피소드의 컷별 G1~G5 진행 상태와 이미지/오디오/영상 산출물 존재 여부를 반환합니다.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        episodeId: { type: 'string', description: '에피소드 ID (생략 시 현재 활성 에피소드)' },
+      },
+    },
+  },
+  {
+    name: 'get_video_checklist',
+    description: '에피소드의 G4(영상) 진행 현황을 반환합니다. 영상이 필요한 컷(veo 모드), 각 컷의 영상 프롬프트·목표길이·시작프레임(이미지) 준비 여부·업로드된 영상 유무·제작방식(manual/veo-api)을 포함. 영상은 현재 사람이 Veo에서 직접 제작 후 업로드(POST /api/upload-cut-video)하는 방식 — 에이전트 리더가 "무엇을 만들어야 하고 무엇이 올라왔는지" 매일 확인하는 용도. 나중에 유료 자동화가 붙으면 videoSource가 섞입니다.',
     inputSchema: {
       type: 'object',
       properties: {

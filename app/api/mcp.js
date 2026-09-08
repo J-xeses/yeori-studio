@@ -147,8 +147,10 @@ async function executeTool(name, args) {
     case 'studio_run_g2': {
       const data = await bridge('POST', '/studio-run-g2', args)
       if (data.error) return `오류: ${data.error}`
-      if (data.type === 'error') return `오류: ${data.message}`
-      return `G2 이미지 생성 시작됨 (컷 ${data.requestedCuts?.join(', ')})\n상태: ${data.message || data.type || '진행 중'}`
+      const lines = (data.results || []).map(r => r.status === 'ok'
+        ? `  CUT ${r.cutNo}: ✅ ${r.file} (${r.model}${r.characters?.length ? `, 캐릭터 ${r.characters.join('+')}` : ''}${r.refCount ? `, 참조 ${r.refCount}장` : ''})`
+        : `  CUT ${r.cutNo}: ❌ ${r.error}`)
+      return `G2 Nano Banana 이미지 생성: 성공 ${data.generatedCount}개 / 실패 ${data.failCount}개\n${lines.join('\n')}\n\n${data.note || ''}`
     }
 
     case 'studio_approve_g2': {
@@ -205,6 +207,20 @@ async function executeTool(name, args) {
       ).join('\n')
       return `${data.episode?.title || '(제목 없음)'} (컷 ${data.cutCount}개)\n` +
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
+    }
+
+    case 'get_video_checklist': {
+      const data = await bridge('GET', `/video-checklist${args.episodeId ? `?episodeId=${encodeURIComponent(args.episodeId)}` : ''}`)
+      if (data.error) return `오류: ${data.error}`
+      const s = data.summary || {}
+      const rows = (data.cuts || []).filter(c => c.needsVideo).map(c => {
+        const st = c.hasVideo ? `✅ ${c.savedFile} (${c.videoSource})` : (c.hasImage ? '🎬 제작 대기 (시작프레임 있음)' : '⛔ 이미지 없음')
+        return `CUT ${c.no} [${c.durationTarget}s] ${st}\n    VP: ${(c.videoPrompt || '(없음)').slice(0, 90)}`
+      }).join('\n')
+      return `${data.episode?.title} — 영상(G4) 현황\n`
+        + `정책: ${data.policy} | 영상 필요 ${s.needVideo}컷 · 완료 ${s.videoDone} · 제작대기 ${s.readyToShoot}`
+        + (s.blockedNoImage?.length ? ` · 이미지없음 ${s.blockedNoImage.join(',')}` : '')
+        + `\n업로드: ${data.uploadEndpoint}\n저장위치: ${data.videoDir}\n\n${rows}`
     }
 
     // ── 인프라 운영 도구 (2026-08-28 추가) ────────────────────────────

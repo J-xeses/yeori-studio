@@ -178,8 +178,10 @@ async function executeTool(name, args) {
     case 'studio_run_g2': {
       const data = await api('POST', '/api/mcp/studio-run-g2', args)
       if (data.error) return `오류: ${data.error}`
-      if (data.type === 'error') return `오류: ${data.message}`
-      return `G2 이미지 생성 시작됨 (컷 ${data.requestedCuts?.join(', ')})\n상태: ${data.message || data.type || '진행 중'}`
+      const lines = (data.results || []).map(r => r.status === 'ok'
+        ? `  CUT ${r.cutNo}: ✅ ${r.file} (${r.model}${r.characters?.length ? `, ${r.characters.join('+')}` : ''})`
+        : `  CUT ${r.cutNo}: ❌ ${r.error}`)
+      return `G2 Nano Banana 이미지: 성공 ${data.generatedCount} / 실패 ${data.failCount}\n${lines.join('\n')}`
     }
 
     case 'studio_approve_g2': {
@@ -236,6 +238,16 @@ async function executeTool(name, args) {
       ).join('\n')
       return `${data.episode?.title || '(제목 없음)'} (컷 ${data.cutCount}개)\n` +
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
+    }
+
+    case 'get_video_checklist': {
+      const data = await api('GET', `/api/mcp/video-checklist${args.episodeId ? `?episodeId=${encodeURIComponent(args.episodeId)}` : ''}`)
+      if (data.error) return `오류: ${data.error}`
+      const s = data.summary || {}
+      const rows = (data.cuts || []).filter(c => c.needsVideo).map(c =>
+        `CUT ${c.no} [${c.durationTarget}s] ${c.hasVideo ? `✅ ${c.savedFile} (${c.videoSource})` : (c.hasImage ? '🎬 제작 대기' : '⛔ 이미지 없음')}`
+      ).join('\n')
+      return `${data.episode?.title} — 영상(G4)\n영상 필요 ${s.needVideo} · 완료 ${s.videoDone} · 제작대기 ${s.readyToShoot}\n업로드: ${data.uploadEndpoint}\n\n${rows}`
     }
 
     // ── 인프라 운영 도구 (2026-08-28 추가) ────────────────────────────

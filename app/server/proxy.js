@@ -1331,6 +1331,61 @@ function resolveChToCharacterIds(chRaw) {
   return ids
 }
 
+// ── Nano Banana(Gemini image) 이미지 생성 — 캐릭터 얼굴 참조 지원 ──────
+// 한국망에서 generativelanguage.googleapis.com 직접 접근 가능(2026-09-08 실측).
+// Flow 웹 UI puppeteer(자주 깨짐) 대체. 무료 500장/일.
+const NANO_BANANA_MODELS = [
+  'gemini-2.5-flash-image-preview',  // Nano Banana (무료)
+  'gemini-3.1-flash-image-preview',  // Nano Banana 2
+  'gemini-3-pro-image-preview',      // Nano Banana Pro
+]
+async function generateNanoBananaImage(apiKey, prompt, refImages = []) {
+  const parts = [
+    ...refImages.filter(r => r?.data && r?.mimeType)
+      .map(r => ({ inlineData: { mimeType: r.mimeType, data: r.data } })),
+    { text: prompt },
+  ]
+  let lastErr = null
+  for (const model of NANO_BANANA_MODELS) {
+    try {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ['IMAGE', 'TEXT'] } }),
+        },
+      )
+      if (!r.ok) { lastErr = `${model} HTTP ${r.status}: ${(await r.text()).slice(0, 150)}`; continue }
+      const d = await r.json()
+      const img = (d.candidates?.[0]?.content?.parts || []).find(p => p.inlineData?.mimeType?.startsWith('image/'))
+      if (!img) { lastErr = `${model}: 응답에 이미지 없음`; continue }
+      return { model, buffer: Buffer.from(img.inlineData.data, 'base64') }
+    } catch (e) { lastErr = `${model}: ${e.message}` }
+  }
+  throw new Error(lastErr || 'Nano Banana 전 모델 실패')
+}
+
+// 캐릭터 id 목록 → 참조 이미지(base64) + descriptor 문자열
+function characterRefsAndDescriptors(charIds) {
+  const chars = loadCharacters()
+  const refImages = []
+  const descriptors = []
+  for (const id of charIds) {
+    const c = chars[id]
+    if (!c) continue
+    for (const rel of [c.closeup, c.face].filter(Boolean)) {
+      const abs = path.join(MEDIA_ROOT, rel)
+      if (fs.existsSync(abs)) {
+        refImages.push({ mimeType: 'image/jpeg', data: fs.readFileSync(abs).toString('base64') })
+        break
+      }
+    }
+    if (c.descriptor) descriptors.push(`${c.name || id}: ${c.descriptor}`)
+  }
+  return { refImages, descriptorText: descriptors.join('\n') }
+}
+
 app.get('/api/characters', (req, res) => {
   res.json({ characters: loadCharacters() })
 })
@@ -4789,6 +4844,69 @@ mcpRouter.get('/list-episodes', (_req, res) => {
   }
 })
 
+// GET /api/mcp/video-checklist?episodeId= — G4(영상) 진행 현황 (에이전트 리더 모니터링용).
+// 지금은 영상이 수동 제작(a안)이라 "무엇을 만들어야 하는지 + 무엇이 올라왔는지"를 보여준다.
+// videoSource 는 현재 전부 'manual' — 나중에 Veo API 자동화가 붙으면 'veo-api' 등이 섞인다.
+mcpRouter.get('/video-checklist', (req, res) => {
+  const { episodeId } = req.query
+  try {
+    const state = loadStudioState()
+    const ep = episodeId ? getEpisodeOrThrow(state, episodeId) : state.episodes?.[state.activeEpisodeId]
+    if (!ep) return res.status(404).json({ error: '에피소드를 찾을 수 없습니다' })
+    const epId = ep.id
+    const epNum = ep.episode?.number
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    const gData = loadGpointsFile()[episodeCode] || {}
+    const videoDir = mp.videoDir(epNum)
+    const imgDir = mp.imagesDir(epNum)
+    const audioDir = mp.audioDir(epNum)
+    const ls = d => { try { return fs.readdirSync(d) } catch { return [] } }
+    const vFiles = ls(videoDir), iFiles = ls(imgDir)
+    let manifest = {}
+    try { manifest = JSON.parse(fs.readFileSync(path.join(videoDir, '.motion-manifest.json'), 'utf-8')) || {} } catch { /* 없음 */ }
+
+    const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no).map(c => {
+      const p = String(c.no).padStart(2, '0')
+      const g = gData[`cut_${c.no}`] || {}
+      const mode = serverCutVideoMode(c, ep.episode)
+      const savedFile = vFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
+      const hasImage = !!(g.selectedImage || iFiles.find(f => new RegExp(`^cut_${p}(_[ab])?\\.(jpe?g|png|webp)$`, 'i').test(f)))
+      return {
+        no: c.no,
+        cutType: c.cutType || 'YEORI',
+        videoMode: mode,                       // veo | motion | still
+        needsVideo: mode === 'veo' && !['GRAPHIC', 'CAPCUT'].includes(c.cutType),
+        videoPrompt: c.vp?.trim() || c.videoPrompt?.trim() || '',
+        durationTarget: serverCutTargetDuration(c),
+        hasImage,                              // 시작 프레임 준비됨
+        hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
+        hasVideo: !!savedFile,
+        savedFile,
+        videoSource: savedFile ? (manifest[String(c.no)]?.method || 'manual') : null,
+        g2: !!g.g2, g4: !!g.g4,
+      }
+    })
+    const need = cuts.filter(c => c.needsVideo)
+    res.json({
+      episode: { code: episodeCode, title: ep.episode?.title, number: epNum },
+      policy: serverVideoPolicy(ep.episode),
+      videoDir,
+      uploadEndpoint: 'POST /api/upload-cut-video?epNum&cutNo&trimTo&keepAudio=1',
+      summary: {
+        total: cuts.length,
+        needVideo: need.length,
+        videoDone: need.filter(c => c.hasVideo).length,
+        readyToShoot: need.filter(c => !c.hasVideo && c.hasImage).length,   // 이미지 있어 바로 제작 가능
+        blockedNoImage: need.filter(c => !c.hasVideo && !c.hasImage).map(c => c.no),
+        g4Approved: cuts.filter(c => c.g4).length,
+      },
+      cuts,
+    })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 mcpRouter.post('/export-pipeline', (req, res) => {
   const { episodeId } = req.body || {}
   const statePath = path.join(CODE_ROOT, 'studio-state.json')
@@ -5438,10 +5556,10 @@ mcpRouter.post('/studio-approve-g1', (req, res) => {
   }
 })
 
-// ④ studio-run-g2 — flow-automation.js 호출(이미지 생성). 오래 걸리므로 시작 확인만 반환
-// ⚠️ DEPRECATED (2026-09-02): pipeline-leader는 더 이상 이걸 자동 호출하지 않는다(수동 이미지 전환,
-//    G4와 동일). flow-automation.js는 Google Flow UI 변경 시 자주 깨진다. 수동 재시도용으로만 남김 —
-//    이미지는 외부 도구 제작 → 스튜디오 탭 업로드가 정식 경로.
+// ④ studio-run-g2 — Nano Banana(Gemini image) API 로 컷별 이미지 생성.
+//    (2026-09-08 재구현) Flow 웹 puppeteer 폐기 → API 직접 호출. 무료 500장/일, 크레딧 게이트 없음.
+//    각 컷의 CH(masterCode.ch)로 등장 캐릭터를 해석 → characters.json 의 얼굴 이미지를 참조로 첨부해
+//    서여리/한지아 일관성 유지. GRAPHIC/CAPCUT/인서트(ip 없음) 컷은 대상 아님.
 mcpRouter.post('/studio-run-g2', async (req, res) => {
   const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
@@ -5449,45 +5567,48 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
     requireActiveEpisode(state, episodeId)
-    // GRAPHIC/CAPCUT 컷(CapCut에서 직접 제작, 텍스트 훅/DM 목업 등)은 IP에 안내문이 들어있어도
-    // imagePrompt가 비어있지 않게 파싱되므로 반드시 cutType으로도 걸러야 함(2026-08-15 실측
-    // IG_RL_E02에서 발견 — CAPCUT 컷까지 Flow 생성 대상에 잡혀 크레딧이 낭비될 뻔함).
+
+    const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
+    const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    const apiKey = secrets.apiKeys?.gemini
+    if (!apiKey) return res.status(400).json({ error: 'Gemini API 키가 studio-secrets.json 에 없습니다 (스튜디오 앱 상단 GEMINI 칸에 입력 후 확인)' })
+
     const targetCuts = filterCutsByIds(ep.cuts || [], cutIds)
-      .filter(c => c.imagePrompt?.trim() && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
-    if (!targetCuts.length) return res.status(400).json({ error: '이미지 생성이 필요한 컷이 없습니다(전부 이미지 프롬프트가 없거나 GRAPHIC/CAPCUT 타입)' })
+      .filter(c => (c.ip?.trim() || c.imagePrompt?.trim()) && !['GRAPHIC', 'CAPCUT'].includes(c.cutType))
+    if (!targetCuts.length) return res.status(400).json({ error: '이미지 생성 대상 컷이 없습니다 (ip 없음 또는 GRAPHIC/CAPCUT)' })
 
     const epNum = ep.episode?.number
-    const prompts = {
-      episode: epNum,
-      title: ep.episode?.title || '',
-      cuts: targetCuts.map(c => ({
-        no: c.no,
-        imagePrompt: c.imagePrompt || '',
-        ...(c.narration?.trim() ? { narration: c.narration.trim() } : {}),
-        ...(c.dialogue?.trim() && !/^없음$/i.test(c.dialogue) ? { dialogue: c.dialogue.trim() } : {}),
-        duration: c.duration || 5,
-      })),
-    }
+    const imgDir = mp.imagesDir(epNum)
+    fs.mkdirSync(imgDir, { recursive: true })
 
-    // 이 에피소드의 컷이 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST)면 downloads/insta/{content}/{num}/
-    // 로 라우팅해야 함 — StudioTab.jsx의 runFlow()는 이미 이렇게 하는데 이 MCP 경로는 안 하고 있어서
-    // { ep, prompts }만 보내면 존재하지도 않는 숫자 폴더(downloads/flow/ep{episode.number}/)로
-    // 잘못 저장됐음(2026-08-15, 에이전트 리더로 G2 실행 준비 중 실측 발견 — 클라이언트 버튼과
-    // MCP/파이프라인 리더 경로가 서로 다른 동작을 하고 있었음).
-    const instaContent = targetCuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean) || null
-    if (instaContent && !ep.episode?.instaNum?.trim()) {
-      const e = new Error(`이 에피소드의 컷들이 인스타 콘텐츠(${instaContent})인데 episode.instaNum이 없습니다 — 먼저 설정해야 합니다`)
-      e.statusCode = 400
-      throw e
-    }
+    const results = []
+    for (const c of targetCuts) {
+      const padded = String(c.no).padStart(2, '0')
+      try {
+        const charIds = resolveChToCharacterIds(c.masterCode?.ch)
+        const { refImages, descriptorText } = characterRefsAndDescriptors(charIds)
+        const prompt = [
+          c.ip?.trim() || c.imagePrompt?.trim(),
+          descriptorText ? `\nCharacter reference (keep faces consistent with the attached images):\n${descriptorText}` : '',
+          '\nVertical 9:16 composition, photorealistic, cinematic lighting. No text, no watermark, no border.',
+        ].filter(Boolean).join('\n')
 
-    const ev = await readFirstSSEEvent('/api/run-flow', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(instaContent
-        ? { type: 'insta', content: instaContent, num: ep.episode.instaNum.trim(), prompts }
-        : { ep: epNum, prompts }),
+        const { model, buffer } = await generateNanoBananaImage(apiKey, prompt, refImages)
+        const dest = path.join(imgDir, `cut_${padded}_a.jpg`)
+        fs.writeFileSync(dest, buffer)
+        results.push({ cutNo: c.no, status: 'ok', file: `cut_${padded}_a.jpg`, model, characters: charIds, refCount: refImages.length })
+      } catch (err) {
+        results.push({ cutNo: c.no, status: 'error', error: err.message })
+      }
+    }
+    const failCount = results.filter(r => r.status === 'error').length
+    res.json({
+      success: failCount === 0,
+      generatedCount: results.filter(r => r.status === 'ok').length,
+      failCount,
+      results,
+      note: 'G2 승인은 별도 — studio_approve_g2 로 컷별 선택본 지정',
     })
-    res.json({ ...ev, requestedCuts: targetCuts.map(c => c.no) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }

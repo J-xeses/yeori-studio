@@ -16,11 +16,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { prompt, apiKey } = req.body
+  const { prompt, apiKey, referenceImages } = req.body
 
   if (!prompt || !apiKey) {
     return res.status(400).json({ error: 'prompt와 apiKey가 필요합니다' })
   }
+
+  // referenceImages: [{ mimeType, data(base64) }] — 캐릭터 얼굴 등 참조 이미지.
+  // Nano Banana 2/Pro 는 참조 이미지를 받아 캐릭터 일관성을 유지한다.
+  const refParts = Array.isArray(referenceImages)
+    ? referenceImages
+        .filter(r => r && r.data && r.mimeType)
+        .map(r => ({ inlineData: { mimeType: r.mimeType, data: r.data } }))
+    : []
+  const parts = [...refParts, { text: prompt }]
 
   // 모델 순서대로 시도
   // gemini-2.5-flash-image(프리뷰 아닌 정식판)는 2026-10-02 종료 예정이라 무료 할당량이
@@ -41,7 +50,7 @@ export default async function handler(req, res) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
+            contents: [{ parts }],
             generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
           }),
         }
