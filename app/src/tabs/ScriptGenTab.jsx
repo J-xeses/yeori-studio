@@ -200,7 +200,7 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
 // 전환하는 방식이라 구분선 스타일이 조금 달라져도 안전하게 파싱된다.
 const V3_SEP_LINE_RE = /^━{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -212,11 +212,19 @@ function isV3Format(raw) {
 function parseCutHeaderMeta(headerRest) {
   const lipsync = /★\s*립싱크/.test(headerRest)
   let rest = headerRest.replace(/★\s*립싱크/g, '').trim()
-  const emDashIdx = rest.search(/[—-]/)
+  // 컷 타입 키워드는 구분자 앞([CUT N]  GRAPHIC — 훅 / 5초, v3.0 포맷) 또는
+  // 뒤([CUT N] — GRAPHIC | 인트로 | 3s, v7 포맷) 어느 쪽에도 올 수 있다. 둘 다 지원한다.
+  // server/lib/scriptParserV3.js의 parseCutHeaderMeta()와 반드시 동일하게 유지.
+  const CUT_TYPE_RE = /^(GRAPHIC|CAPCUT|BROLL|YEORI|PIP)\b/i
+  const typeBefore = rest.match(CUT_TYPE_RE)
+  const emDashIdx = rest.search(/[—–-]/)
   if (emDashIdx > -1) rest = rest.slice(emDashIdx + 1).trim()
+  const typeAfter = rest.match(CUT_TYPE_RE)
+  const typeM = typeBefore || typeAfter
+  const headerType = typeM ? typeM[1].toUpperCase() : ''
   const slashIdx = rest.lastIndexOf('/')
   const cutTitle = (slashIdx > -1 ? rest.slice(0, slashIdx) : rest).trim()
-  return { cutTitle, lipsync }
+  return { cutTitle, lipsync, headerType }
 }
 
 // 원본 텍스트를 컷 단위로 쪼개 { no, cutTitle, lipsync, mainLines, krLines, ipLines, vpLines } 배열로 반환
@@ -234,8 +242,8 @@ function splitV3Cuts(raw) {
     const headerM = line.match(V3_CUT_HEADER_RE)
     if (headerM) {
       flush()
-      const { cutTitle, lipsync } = parseCutHeaderMeta(headerM[2] || '')
-      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
+      const { cutTitle, lipsync, headerType } = parseCutHeaderMeta(headerM[2] || '')
+      cur = { no: parseInt(headerM[1], 10), cutTitle, lipsync, headerType, mainLines: [], krLines: [], ipLines: [], vpLines: [] }
       section = 'main'
       continue
     }
@@ -301,8 +309,18 @@ function pipelineCodeToCutType(plCode) {
 // server/lib/scriptParserV3.js의 inferCutType()과 반드시 동일하게 유지할 것.
 // IG_RL 등 인스타 콘텐츠는 PL이 항상 "IG_RL" 하나뿐이라 PL만으로는 CapCut 직접제작 컷(텍스트
 // 훅/DM 목업 등)을 구분 못 함 — IP에 "이미지 생성 불필요"가 명시되면 PL보다 우선해 CAPCUT으로 분류.
-function inferCutType(plCode, ip) {
+function inferCutType(plCode, ip, headerType, ctField) {
+  const TYPES = ['GRAPHIC', 'CAPCUT', 'BROLL', 'YEORI', 'PIP']
+  // 1순위: 컷 헤더에 타입 명시 ([CUT N] — GRAPHIC | …  또는  [CUT N]  GRAPHIC — …)
+  if (TYPES.includes(headerType)) return headerType
+  // 2순위: CT: 필드 명시 (v7 포맷은 컷마다 CT: 로 타입을 박아준다)
+  const ct = String(ctField || '').trim().toUpperCase()
+  if (TYPES.includes(ct)) return ct
+  // 3순위: IP 섹션 마커 — "GRAPHIC 타입 — …" / "이미지 생성 불필요"
+  const ipM = String(ip || '').match(/\b(GRAPHIC|CAPCUT|BROLL)\s*타입\b/i)
+  if (ipM) return ipM[1].toUpperCase()
   if (/이미지\s*생성\s*불필요/.test(ip || '')) return 'CAPCUT'
+  // 4순위: PL 코드 접두사
   return pipelineCodeToCutType(plCode)
 }
 
@@ -331,7 +349,7 @@ function parseCutsV3(raw) {
     // CP(자막): 컷 대본 단계에서 정의하는 손글씨 오버레이 텍스트(순수 텍스트).
     // server/lib/scriptParserV3.js와 동일 규칙 — 반드시 함께 유지.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
-    const cutType = inferCutType(fields.PL, ip)
+    const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
 
     return {
       id: `cut-${rc.no}`,

@@ -5,7 +5,7 @@
 const MASTER_CLOSEUP_SHOTS = new Set(['SH_ECU', 'SH_CU', 'SH_MCU'])
 const V3_SEP_LINE_RE = /^━{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU):\s?(.*)$/
 const V3_KR_FIELD_RE = /^([A-Z]+)\(([^)]*)\):\s*(.*)$/
 const V3_AUDIO_SUBFIELD_RE = /^\s+(BGM|음성|효과음|앰비언스):\s*(.*)$/
 const V3_AUDIO_KEY_MAP = { BGM: 'bgm', 음성: 'voice', 효과음: 'sfx', 앰비언스: 'ambience' }
@@ -17,11 +17,15 @@ export function isV3Format(raw) {
 function parseCutHeaderMeta(headerRest) {
   const lipsync = /★\s*립싱크/.test(headerRest)
   let rest = headerRest.replace(/★\s*립싱크/g, '').trim()
-  // [CUT N]  GRAPHIC — 훅 텍스트 / 5초  →  헤더에 컷 타입이 명시된 경우(v3.0 포맷)
-  const typeM = rest.match(/^\s*(GRAPHIC|CAPCUT|BROLL|YEORI|PIP)\b/i)
-  const headerType = typeM ? typeM[1].toUpperCase() : ''
-  const emDashIdx = rest.search(/[—-]/)
+  // 컷 타입 키워드는 구분자 앞([CUT N]  GRAPHIC — 훅 / 5초, v3.0 포맷) 또는
+  // 뒤([CUT N] — GRAPHIC | 인트로 | 3s, v7 포맷) 어느 쪽에도 올 수 있다. 둘 다 지원한다.
+  const CUT_TYPE_RE = /^(GRAPHIC|CAPCUT|BROLL|YEORI|PIP)\b/i
+  const typeBefore = rest.match(CUT_TYPE_RE)
+  const emDashIdx = rest.search(/[—–-]/)
   if (emDashIdx > -1) rest = rest.slice(emDashIdx + 1).trim()
+  const typeAfter = rest.match(CUT_TYPE_RE)
+  const typeM = typeBefore || typeAfter
+  const headerType = typeM ? typeM[1].toUpperCase() : ''
   const slashIdx = rest.lastIndexOf('/')
   const cutTitle = (slashIdx > -1 ? rest.slice(0, slashIdx) : rest).trim()
   return { cutTitle, lipsync, headerType }
@@ -110,14 +114,18 @@ function pipelineCodeToCutType(plCode) {
 // 구분할 수 없다 — 그 결과 studio_run_g2가 imagePrompt가 비어있지 않다는 이유만으로 이런 컷까지
 // Flow 생성 대상에 넣어버리는 문제를 2026-08-15 실측(IG_RL_E02)으로 확인함. IP 섹션에 "이미지
 // 생성 불필요"라고 명시된 경우는 PL 코드보다 이 마커를 우선해 CAPCUT으로 분류한다.
-function inferCutType(plCode, ip, headerType) {
-  // 1순위: 컷 헤더에 타입 명시 ([CUT N]  GRAPHIC — …, v3.0 포맷)
-  if (['GRAPHIC', 'CAPCUT', 'BROLL', 'YEORI', 'PIP'].includes(headerType)) return headerType
-  // 2순위: IP 섹션 마커 — "GRAPHIC 타입 — …" / "CAPCUT 타입 — …" / "이미지 생성 불필요"
+function inferCutType(plCode, ip, headerType, ctField) {
+  const TYPES = ['GRAPHIC', 'CAPCUT', 'BROLL', 'YEORI', 'PIP']
+  // 1순위: 컷 헤더에 타입 명시 ([CUT N] — GRAPHIC | …  또는  [CUT N]  GRAPHIC — …)
+  if (TYPES.includes(headerType)) return headerType
+  // 2순위: CT: 필드 명시 (v7 포맷은 컷마다 CT: 로 타입을 박아준다)
+  const ct = String(ctField || '').trim().toUpperCase()
+  if (TYPES.includes(ct)) return ct
+  // 3순위: IP 섹션 마커 — "GRAPHIC 타입 — …" / "CAPCUT 타입 — …" / "이미지 생성 불필요"
   const ipM = String(ip || '').match(/\b(GRAPHIC|CAPCUT|BROLL)\s*타입\b/i)
   if (ipM) return ipM[1].toUpperCase()
   if (/이미지\s*생성\s*불필요/.test(ip || '')) return 'CAPCUT'
-  // 3순위: PL 코드 접두사 (BR_/GR_/CC_/PIP_), 그 외 YEORI
+  // 4순위: PL 코드 접두사 (BR_/GR_/CC_/PIP_), 그 외 YEORI
   return pipelineCodeToCutType(plCode)
 }
 
@@ -147,7 +155,7 @@ export function parseCutsV3(raw) {
     // "없음"/"(작성 필요)" 플레이스홀더는 빈 값으로. 메이킹 탭이 이 값이 있는 컷에만
     // 손글씨 오버레이 섹션을 노출하고, 위치/말풍선/타이밍 등 시각 상세를 형성한다.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
-    const cutType = inferCutType(fields.PL, ip, rc.headerType)
+    const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
 
     return {
       id: `cut-${rc.no}`,
