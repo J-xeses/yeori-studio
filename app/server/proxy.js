@@ -18,6 +18,7 @@ import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicT
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
+import { syncEpisodeState } from './lib/leaderState.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -6513,6 +6514,15 @@ mcpRouter.post('/leader-log', async (req, res) => {
   if (!e.summary) return res.status(400).json({ success: false, error: 'summary가 필요합니다' })
   const r = await postLeaderLog(e)
   res.json({ success: r.ok, ...(r.ok ? {} : { error: r.body || r.error || r.skipped || r.status }) })
+})
+
+// ── POST /api/mcp/leader-episode-sync — 에피소드 파이프라인 DB 행 갱신 (P2) ──
+// { episodeCode, episodeTitle, currentGate, agentState, nextAction, blocker, cutCount, isLong }
+mcpRouter.post('/leader-episode-sync', async (req, res) => {
+  const p = req.body || {}
+  if (!p.episodeCode) return res.status(400).json({ success: false, error: 'episodeCode가 필요합니다' })
+  const r = await syncEpisodeState(p)
+  res.json({ success: r.ok, mode: r.mode, ...(r.ok ? {} : { error: r.body || r.error || r.skipped || r.status }) })
 })
 
 // ── POST /api/mcp/restart-proxy — 새 프로세스를 먼저 detached로 띄운 뒤

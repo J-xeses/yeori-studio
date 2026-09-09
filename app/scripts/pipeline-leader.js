@@ -140,6 +140,16 @@ const isMakingType  = (c) => MAKING_TYPES.includes(cutTypeOf(c))
 const needsGenImage = (c) => !isMakingType(c)                    // YEORI 등 — 생성 이미지 필요
 const needsG3       = (c) => !!(c.hasDialogue || c.hasNarration) // TTS 대상
 
+// 에피소드가 현재 걸린 게이트 — 가장 앞선 미완료 단계. 파이프라인 DB "현재 게이트" 값.
+function deriveGate(cuts, summary) {
+  if (!cuts.length || summary.g1 < cuts.length) return 'G1 대본'
+  if (cuts.some(c => needsGenImage(c) && !c.g2 && !c.hasVideo)) return 'G2 이미지'
+  if (cuts.some(c => needsG3(c) && !c.g3)) return 'G3 TTS'
+  if (cuts.some(c => !c.g4)) return 'G4 영상'
+  if (summary.g5 < cuts.length) return 'G5 편집'
+  return '완료'
+}
+
 // 이 단계가 이 컷에 적용되는가
 function stageApplies(c, stage) {
   // G2(이미지 선택)는 생성 이미지가 필요한 컷만. 단 영상을 직접 제작한 컷(text→video,
@@ -184,6 +194,12 @@ async function leaderLog(entry) {
     await api('POST', '/api/mcp/leader-log', { episode: EP_LABEL, source: 'pipeline-leader', ...entry })
   } catch { /* noop */ }
 }
+// P2: 에피소드 파이프라인 DB 행 갱신 (현재 게이트·에이전트 상태·다음 액션·블로커·마지막 사이클)
+async function leaderEpisodeSync(payload) {
+  try {
+    await api('POST', '/api/mcp/leader-episode-sync', payload)
+  } catch { /* noop */ }
+}
 
 // ── 승인 정책 — 지금은 항상 사람(스튜디오/메이킹 UI) 대기, 자동 승인 안 함.
 // "에이전트 리더"가 실제 산출물(이미지/영상)을 평가해서 자동 승인하게 하려면
@@ -216,6 +232,11 @@ async function checkAndAdvance() {
   EP_LABEL = episode?.code || episode?.title || EPISODE_ID
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
 
+  // 이 사이클 상태 — 끝에서 에피소드 파이프라인 DB(P2)에 동기화
+  let cycleBlocker = ''
+  let didTrigger = false
+  let makingWaiting = []
+
   // ── G1: 트리거할 게 없는 단계(사람이 스튜디오 UI에서 승인) — 완료 여부만 로그로 확인 ──
   if (stageInRange('g1') && isStageComplete(cuts, 'g1')) {
     log('G1', '이미 완료된 단계 — 스킵')
@@ -241,10 +262,12 @@ async function checkAndAdvance() {
       needMaking.forEach(c => { (byType[cutTypeOf(c)] ||= []).push(c.no) })
       const label = Object.entries(byType).map(([t, ns]) => `${t} 컷 ${ns.join(',')}`).join(' · ')
       if (MAKING_AUTORUN) {
+        didTrigger = true
         log('제작', `메이킹 컷 자동 제작 시작 — ${label}`)
         const r = await api('POST', '/api/mcp/run-making', { episodeId: EPISODE_ID, cutIds: needMaking.map(c => c.no) })
         if (!r.ok) {
           log('제작', `run-making 실패 — ${r.data?.error || r.status}`)
+          cycleBlocker = `run-making 실패: ${r.data?.error || r.status}`
           await leaderLog({ stage: 'making', kind: '블로커', summary: 'run-making 실패', rationale: label,
             result: String(r.data?.error || r.status), humanInvolved: true })
         } else {
@@ -256,6 +279,7 @@ async function checkAndAdvance() {
           log('제작', `제작 ${P} · 스킵 ${S} · 실패 ${E}`)
           const skips = (r.data.results || []).filter(x => x.status !== 'produced')
             .map(x => `CUT ${x.cutNo} ${x.status}${x.reason ? ` (${x.reason})` : ''}`).join(' · ')
+          if (E > 0) cycleBlocker = `메이킹 제작 실패 ${E}컷 — ${skips}`
           await leaderLog({
             stage: 'making', kind: E > 0 ? '블로커' : '자동실행',
             summary: `메이킹 컷 자동 제작 — 제작 ${P} · 스킵 ${S} · 실패 ${E}`,
@@ -295,6 +319,7 @@ async function checkAndAdvance() {
       }
     }
     const stillWaiting = madeUnapproved.filter(c => !autoApproved.includes(c.no)).map(c => c.no)
+    makingWaiting = stillWaiting
     if (stillWaiting.length) log('승인대기', `메이킹 컷 제작됨 — 검수 대기: 컷 ${stillWaiting.join(',')} (메이킹 탭 컷 리뷰)`)
   }
 
@@ -306,10 +331,12 @@ async function checkAndAdvance() {
       const g3Candidates = cuts.filter(c => c.g1 && needsG3(c) && !c.hasAudio)
       if (g3Candidates.length) {
         const cutIds = g3Candidates.map(c => c.no)
+        didTrigger = true
         log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
         const r = await api('POST', '/api/mcp/studio-run-g3', { episodeId: EPISODE_ID, cutIds })
         if (!r.ok) {
           log('G3', `요청 실패 — ${r.data?.error || r.status}`)
+          cycleBlocker = `G3 TTS 실패: ${r.data?.error || r.status}`
           await leaderLog({ stage: 'G3', kind: '블로커', summary: 'G3 TTS 생성 요청 실패',
             result: String(r.data?.error || r.status), humanInvolved: true })
         } else {
@@ -356,11 +383,12 @@ async function checkAndAdvance() {
     } else {
       const allG4Approved = cuts.length > 0 && cuts.every(c => cutStageDone(c, 'g4'))
       if (allG4Approved && !g5Triggered) {
-        g5Triggered = true
+        g5Triggered = true; didTrigger = true
         log('G5', '전체 컷 G4 승인 완료 — 편집메타/SRT/합성 실행')
         const r = await api('POST', '/api/mcp/studio-run-g5', { episodeId: EPISODE_ID })
         if (!r.ok) {
           log('G5', `실패 — ${r.data?.error || r.status}`); g5Triggered = false
+          cycleBlocker = `G5 합성 실패: ${r.data?.error || r.status}`
           await leaderLog({ stage: 'G5', kind: '블로커', summary: 'G5 합성 실행 실패',
             result: String(r.data?.error || r.status), humanInvolved: true })
         } else {
@@ -379,6 +407,34 @@ async function checkAndAdvance() {
   // TO_STAGE가 g3면 위의 스킵 판정(isG3Complete)과 동일하게 대사/나레이션 있는 컷만
   // 기준으로 봐야 함 — 안 그러면 B-roll 컷 있는 에피소드는 --to=g3로 걸어도 summary.g3가
   // 절대 전체 컷 수와 같아질 수 없어서 자동 종료가 영원히 안 됨(2026-08-17 발견).
+  // ── P2: 에피소드 파이프라인 DB 행 동기화 ──────────────────────────
+  const gate = deriveGate(cuts, summary)
+  const waiting = [
+    waitingG1 && 'G1',
+    waitingG2.length && `G2 이미지(${waitingG2.join(',')})`,
+    waitingG3.length && `G3 음성(${waitingG3.join(',')})`,
+    waitingG4.length && `G4 영상(${waitingG4.join(',')})`,
+    makingWaiting.length && `메이킹 검수(${makingWaiting.join(',')})`,
+  ].filter(Boolean)
+  const needImgManual = cuts.filter(c => c.g1 && needsGenImage(c) && !c.hasImage && !c.hasVideo).map(c => c.no)
+  const needVeoManual = cuts.filter(c => needsGenImage(c) && c.g2 && !c.hasVideo).map(c => c.no)
+
+  let agentState, nextAction
+  if (cycleBlocker) { agentState = '블로커'; nextAction = cycleBlocker }
+  else if (gate === '완료') { agentState = '완료'; nextAction = '완료 — 다음 단계 없음' }
+  else if (waiting.length) { agentState = '사람 승인 대기'; nextAction = `승인 대기: ${waiting.join(' · ')}` }
+  else if (needImgManual.length) { agentState = '사람 승인 대기'; nextAction = `CUT ${needImgManual.join(',')} 이미지 외부 생성 → 스튜디오 업로드 (genline)` }
+  else if (needVeoManual.length) { agentState = '사람 승인 대기'; nextAction = `CUT ${needVeoManual.join(',')} 영상 외부 제작 → 영상 탭 업로드` }
+  else if (didTrigger) { agentState = '돌아가는중'; nextAction = `${gate} 진행 중 — 완료 대기` }
+  else { agentState = '유휴'; nextAction = `${gate} — 자동 트리거 조건 대기` }
+
+  await leaderEpisodeSync({
+    episodeCode: episode?.code || EP_LABEL, episodeTitle: episode?.title,
+    currentGate: gate, agentState, nextAction, blocker: cycleBlocker,
+    cutCount: cuts.length,
+    isLong: /^LF/i.test(String(episode?.code || '')) ? true : /^SF/i.test(String(episode?.code || '')) ? false : undefined,
+  })
+
   if (TO_STAGE === 'g3') return isG3Complete(cuts)
   return cuts.length > 0 && summary[TO_STAGE] === cuts.length
 }
