@@ -244,8 +244,14 @@ async function checkAndAdvance() {
       }
     }
 
-    // 제작 완료(mp4 있음)됐지만 g4 미승인인 메이킹 컷 → 승인 게이트
-    const madeUnapproved = cuts.filter(c => isMakingType(c) && c.hasVideo && !c.g4)
+    // 사람이 반려한 메이킹 컷 — 재제작 대기(파라미터 조정 후 메이킹 탭에서 재실행)
+    const rejected = cuts.filter(c => isMakingType(c) && c.review?.status === 'rejected')
+    if (rejected.length) {
+      log('반려', `재제작 대기 — 컷 ${rejected.map(c => `${c.no}${c.review?.note ? `(${String(c.review.note).slice(0, 30)})` : ''}`).join(', ')}`)
+    }
+
+    // 제작 완료(mp4 있음)·미반려·g4 미승인인 메이킹 컷 → 승인 게이트
+    const madeUnapproved = cuts.filter(c => isMakingType(c) && c.hasVideo && !c.g4 && c.review?.status !== 'rejected')
     const autoApproved = []
     for (const c of madeUnapproved) {
       if (await shouldAutoApprove('making', c)) {
@@ -255,7 +261,7 @@ async function checkAndAdvance() {
       }
     }
     const stillWaiting = madeUnapproved.filter(c => !autoApproved.includes(c.no)).map(c => c.no)
-    if (stillWaiting.length) log('승인대기', `메이킹 컷 제작됨 — 승인 대기: 컷 ${stillWaiting.join(',')} (메이킹 탭에서 확인)`)
+    if (stillWaiting.length) log('승인대기', `메이킹 컷 제작됨 — 검수 대기: 컷 ${stillWaiting.join(',')} (메이킹 탭 컷 리뷰)`)
   }
 
   // ── G3 트리거: G1 승인됐고 오디오가 아직 없는 컷들 (동기 완료라 배치 겹칠 일 없음) ──

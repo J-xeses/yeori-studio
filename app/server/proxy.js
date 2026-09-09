@@ -2669,6 +2669,47 @@ function readCutManifest(epNum) {
   try { return JSON.parse(fs.readFileSync(manifestPath(epNum), 'utf-8')) || {} }
   catch { return {} }
 }
+
+// ── 메이킹 컷 리뷰 상태 (.making-review.json) ──────────────────────
+// 사람이 제작된 컷을 검수한 결과. { "<컷번호>": { status, note, at } }
+//   status: 'approved' | 'rejected' | 'pending'  (없으면 미검토)
+// buildStudioStatusPayload / pipeline-leader 가 읽어 "반려된 컷은 재제작 대상"으로 취급.
+function reviewPath(epNum) {
+  return path.join(mp.videoDir(epNum), '.making-review.json')
+}
+function readMakingReview(epNum) {
+  try { return JSON.parse(fs.readFileSync(reviewPath(epNum), 'utf-8')) || {} }
+  catch { return {} }
+}
+function writeMakingReviewEntry(epNum, cutNo, patch) {
+  const p = reviewPath(epNum)
+  const m = readMakingReview(epNum)
+  m[String(cutNo)] = { ...(m[String(cutNo)] || {}), ...patch, at: new Date().toISOString() }
+  fs.mkdirSync(path.dirname(p), { recursive: true })
+  fs.writeFileSync(p, JSON.stringify(m, null, 2), 'utf-8')
+  return m[String(cutNo)]
+}
+
+app.get('/api/episode-making-review', (req, res) => {
+  const { epNum } = req.query
+  if (epNum == null) return res.status(400).json({ error: 'epNum 필요' })
+  res.json({ review: readMakingReview(epNum) })
+})
+
+app.post('/api/episode-making-review', (req, res) => {
+  const { epNum, cutNo, status, note } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  const patch = {}
+  if (status !== undefined) {
+    if (!['approved', 'rejected', 'pending'].includes(status)) return res.status(400).json({ error: 'status 는 approved|rejected|pending' })
+    patch.status = status
+  }
+  if (note !== undefined) patch.note = String(note || '')
+  try {
+    const entry = writeMakingReviewEntry(epNum, cutNo, patch)
+    res.json({ success: true, cutNo, ...entry })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
 // 컷 제작 성공 시 호출 — 그 컷 항목을 통째로 새로 쓴다(재제작이면 손글씨 등 이전 상태 리셋).
 function recordCutMotion(epNum, cutNo, info) {
   if (epNum == null || cutNo == null) return
@@ -5292,6 +5333,8 @@ app.get('/api/episode-making-status', (req, res) => {
         no: c.no,
         cutType: c.cutType,
         hasVideo: c.hasVideo,
+        g4: !!c.g4,
+        review: c.review?.status || null,   // approved | rejected | pending | null
         overlay: !!c.making?.overlay,
         method: c.making?.method || null,
         motion: c.making?.motion || null,
@@ -5301,6 +5344,8 @@ app.get('/api/episode-making-status', (req, res) => {
     res.json({
       total: cuts.length,
       done: cuts.filter(c => c.hasVideo).length,
+      approved: cuts.filter(c => c.g4).length,
+      rejected: cuts.filter(c => c.review === 'rejected').length,
       overlay: cuts.filter(c => c.overlay).length,
       dirty: cuts.filter(c => c.dirtyVsAssemble).length,
       cuts,
@@ -6279,8 +6324,9 @@ function buildStudioStatusPayload(episodeId) {
   const audioDir = mp.audioDir(epNum)
   const hasFile = (dir, re) => fs.existsSync(dir) && fs.readdirSync(dir).some(f => re.test(f))
 
-  // 메이킹 매니페스트 + 조립본 mtime — 컷별 제작방식·손글씨·조립 대비 stale 여부용
+  // 메이킹 매니페스트 + 리뷰 + 조립본 mtime — 컷별 제작방식·손글씨·검수상태·조립 대비 stale 여부용
   const madeManifest = readCutManifest(epNum)
+  const madeReview = readMakingReview(epNum)
   let makingFilmMtime = 0
   try {
     makingFilmMtime = fs.statSync(
@@ -6317,6 +6363,7 @@ function buildStudioStatusPayload(episodeId) {
       hasOverlayVideo: fs.existsSync(path.join(videoDir, `cut_${padded}_overlay.mp4`)),
       cutType: c.cutType,
       making,
+      review: madeReview[String(c.no)] || null,   // { status, note, at } | null(미검토)
       hasDialogue: c.dialogue?.trim() ? true : false,
       hasNarration: c.narration?.trim() ? true : false,
     }

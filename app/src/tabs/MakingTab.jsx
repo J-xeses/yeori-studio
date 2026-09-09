@@ -277,8 +277,55 @@ export default function MakingTab() {
   // 승인 경로: (사람) 아래 "✅ G4 승인" 버튼 / (에이전트) pipeline-leader.shouldAutoApprove.
   // YEORI 컷은 VideoTab 승인 게이트가 따로 있으므로 여기서 안 건드린다.
   const [gpVer, setGpVer] = useState(0)
-  const approveMakingG4 = (cut) => { setGPoint(episodeCode, cut.no, 'g4', true); setGpVer(v => v + 1) }
-  const revokeMakingG4 = (cut) => { setGPoint(episodeCode, cut.no, 'g4', false); setGpVer(v => v + 1) }
+
+  // ── 컷 리뷰 상태 (.making-review.json) — 검수 결과: approved | rejected | pending + 메모 ──
+  const [review, setReview] = useState({})          // { [cutNo]: { status, note } }
+  const [redoMode, setRedoMode] = useState({})      // { [cutNo]: true } — 재제작 모드 시각 강조
+  const [noteDraft, setNoteDraft] = useState({})    // { [cutNo]: string }
+  const [makingInfo, setMakingInfo] = useState({})   // { [cutNo]: {method, motion, producedAt} }
+  useEffect(() => {
+    if (!episode?.number) return
+    const load = () => {
+      fetch(`${YEORI_SERVER}/api/episode-making-review?epNum=${episode.number}`)
+        .then(r => r.json()).then(d => setReview(d.review || {})).catch(() => {})
+      fetch(`${YEORI_SERVER}/api/episode-making-status?epNum=${episode.number}`)
+        .then(r => r.json()).then(d => {
+          const m = {}; (d.cuts || []).forEach(c => { m[c.no] = c }); setMakingInfo(m)
+        }).catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 4000)
+    return () => clearInterval(id)
+  }, [episode?.number])
+
+  const saveReview = async (cutNo, patch) => {
+    setReview(p => ({ ...p, [cutNo]: { ...(p[cutNo] || {}), ...patch } }))
+    try {
+      await fetch(`${YEORI_SERVER}/api/episode-making-review`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo, ...patch }),
+      })
+    } catch { /* 로컬 상태는 이미 반영됨 */ }
+  }
+
+  const approveMakingG4 = (cut) => {
+    setGPoint(episodeCode, cut.no, 'g4', true); setGpVer(v => v + 1)
+    setRedoMode(p => ({ ...p, [cut.no]: false }))
+    saveReview(cut.no, { status: 'approved' })
+  }
+  const revokeMakingG4 = (cut) => {
+    setGPoint(episodeCode, cut.no, 'g4', false); setGpVer(v => v + 1)
+    saveReview(cut.no, { status: 'pending' })
+  }
+  // 반려 → 재제작: G4 해제 + review=rejected + 컷 펼치고 재제작 모드 강조
+  const rejectAndRedo = (cut) => {
+    setGPoint(episodeCode, cut.no, 'g4', false); setGpVer(v => v + 1)
+    saveReview(cut.no, { status: 'rejected', note: noteDraft[cut.no] ?? (review[cut.no]?.note || '') })
+    setExpandedCutNo(cut.no)
+    setRedoMode(p => ({ ...p, [cut.no]: true }))
+    if (cut.cutType === 'BROLL') selectBrollCut(cut)
+    else if (cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') selectHtmlCut(cut)
+  }
 
   // ── 어느 컷을 펼쳐 놓았는지(한 번에 하나만). 펼치면서 타입에 맞는 기존 select 함수를
   // 호출해 htmlSource/selectedBrollCutNo/selectedCapcutCutNo 등 기존 상태를 그대로 채운다.
@@ -2140,6 +2187,78 @@ export default function MakingTab() {
     )
   }
 
+  // ── 컷 리뷰 패널 — 연출 의도 ↔ 제작 결과 대조 + 승인/재제작/메모 ──
+  const REDO_HINT = {
+    BROLL: '아래 "웹 영상 구간 녹화"(CLIP) 또는 "스튜디오 소스로 컷 만들기"(SRC)에서 파라미터를 바꿔 다시 실행하세요.',
+    GRAPHIC: '아래 "HTML 소스" 편집기에서 고친 뒤 "제작 실행", 또는 유형 스타일/모션을 바꿔 다시.',
+    CAPCUT: '아래 HTML 캡처 / 시나리오 자동 녹화에서 다시 실행하세요.',
+  }
+  const renderReviewPanel = (cut) => {
+    const g4 = !!getGPoint(episodeCode, cut.no).g4
+    const rv = review[cut.no] || {}
+    const done = !!videoStatus[cut.no]
+    const info = makingInfo[cut.no] || {}
+    const pad = String(cut.no).padStart(2, '0')
+    const vurl = `${epMediaUrl(episode, 'video')}`
+    const frameSrc = cut.cutType === 'BROLL'
+      ? `${vurl}/cut_${pad}_verify.jpg`
+      : `${vurl}/cut_${pad}_graphic.png`
+    const mc = cut.masterCode || {}
+    return (
+      <div className={s.subPanel} style={redoMode[cut.no] ? { boxShadow: 'inset 0 0 0 2px #b45309' } : undefined}>
+        <div className={s.settingLabel}>컷 리뷰 — 연출 의도 ↔ 제작 결과</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+          <div style={{ fontSize: 13, lineHeight: 1.7 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>연출 의도</div>
+            <div><b>제목</b> {cut.cutTitle || '—'}</div>
+            <div><b>씬</b> {cut.scene || '—'}</div>
+            {(mc.kr?.ac || mc.ac || cut.action) && <div><b>동작</b> {mc.kr?.ac || cut.action || mc.ac}</div>}
+            {(mc.kr?.md || mc.md) && <div><b>감정</b> {mc.kr?.md || mc.md}</div>}
+            {(cut.narration || cut.dialogue) && <div><b>{cut.narration ? 'NR' : 'DL'}</b> {cut.narration || cut.dialogue}</div>}
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>제작 결과</div>
+            {done ? (
+              <>
+                <video className={s.makingVideo} controls src={`${vurl}/cut_${pad}.mp4?t=${info.producedAt || 0}`} />
+                <div className={s.emptyHint} style={{ margin: '4px 0 0' }}>
+                  {info.method || '—'}{info.motion && info.motion !== 'none' ? ` · ${info.motion}` : ''}
+                  {info.producedAt ? ` · ${new Date(info.producedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
+                  {info.dirtyVsAssemble ? ' · ↻조립필요' : ''}
+                </div>
+              </>
+            ) : <div className={s.emptyHint} style={{ margin: 0 }}>아직 제작 안 됨</div>}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
+          {g4
+            ? <button className={s.previewBtn} onClick={() => revokeMakingG4(cut)}>G4 승인됨 — 취소</button>
+            : <button className={s.captureBtn} disabled={!done} onClick={() => approveMakingG4(cut)}>✅ G4 승인 (확정)</button>}
+          <button className={s.previewBtn} disabled={!done}
+            style={rv.status === 'rejected' ? { borderColor: '#b45309', color: '#f59e0b' } : undefined}
+            onClick={() => rejectAndRedo(cut)}>🔁 재제작 (반려)</button>
+          <span className={s.emptyHint} style={{ margin: 0 }}>
+            {rv.status === 'approved' ? '승인됨 ✅' : rv.status === 'rejected' ? '반려 — 재제작 대기 🔁' : done ? '검토 대기' : ''}
+          </span>
+        </div>
+
+        <div style={{ marginTop: 8 }}>
+          <input className={s.urlInput} placeholder="✍️ 수정요청 메모 (연출 방향, 바꿀 부분…)"
+            value={noteDraft[cut.no] ?? rv.note ?? ''}
+            onChange={e => setNoteDraft(p => ({ ...p, [cut.no]: e.target.value }))}
+            onBlur={() => { const n = noteDraft[cut.no]; if (n !== undefined && n !== rv.note) saveReview(cut.no, { note: n }) }} />
+        </div>
+
+        {redoMode[cut.no] && (
+          <div className={s.emptyHint} style={{ marginTop: 6, color: '#f59e0b' }}>
+            재제작 모드 — {REDO_HINT[cut.cutType] || '아래 패널에서 다시 실행하세요.'} 완료되면 다시 검토·승인.
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const renderPanel = (cut) => {
     let panel = null
     if (cut.cutType === 'GRAPHIC') panel = renderGraphicPanel(cut)
@@ -2147,6 +2266,7 @@ export default function MakingTab() {
     else if (cut.cutType === 'CAPCUT') panel = renderCapcutPanel(cut)
     return (
       <>
+        {MANUAL_TYPES.includes(cut.cutType) && renderReviewPanel(cut)}
         {panel}
         {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
         {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
@@ -2557,6 +2677,7 @@ export default function MakingTab() {
                       const expanded = expandedCutNo === cut.no
                       const done = !!videoStatus[cut.no]
                       const g4 = manual && !!getGPoint(episodeCode, cut.no).g4
+                      const rvStatus = manual ? review[cut.no]?.status : null
                       return (
                         <div key={cut.id} className={`${s.cutRow} ${expanded ? s.cutRowActive : ''}`}>
                           <button
@@ -2568,25 +2689,12 @@ export default function MakingTab() {
                               {cut.narration || cut.dialogue || cut.scene || '(내용 없음)'}
                             </span>
                             {!manual && done && <span className={s.doneBadge}>완료 ✅</span>}
-                            {manual && done && g4 && <span className={s.doneBadge}>G4 승인 ✅</span>}
-                            {manual && done && !g4 && (
-                              <span className={s.doneBadge} style={{ background: '#b45309' }}>제작됨 · 승인대기</span>
-                            )}
+                            {manual && rvStatus === 'rejected' && <span className={s.doneBadge} style={{ background: '#b45309' }}>반려 · 재제작 대기 🔁</span>}
+                            {manual && rvStatus !== 'rejected' && done && g4 && <span className={s.doneBadge}>G4 승인 ✅</span>}
+                            {manual && rvStatus !== 'rejected' && done && !g4 && <span className={s.doneBadge} style={{ background: '#0e7490' }}>제작됨 · 검토 대기</span>}
+                            {manual && !done && <span className={s.doneBadge} style={{ background: '#3f3f46' }}>미제작</span>}
                             {manual && <span className={s.chevron}>{expanded ? '▲' : '▼'}</span>}
                           </button>
-
-                          {manual && done && (
-                            <div style={{ display: 'flex', gap: 8, padding: '6px 12px', alignItems: 'center' }}>
-                              {g4 ? (
-                                <button className={s.previewBtn} onClick={() => revokeMakingG4(cut)}>G4 승인됨 — 취소</button>
-                              ) : (
-                                <button className={s.captureBtn} onClick={() => approveMakingG4(cut)}>✅ G4 승인 (이 컷 확정)</button>
-                              )}
-                              <span className={s.emptyHint} style={{ margin: 0 }}>
-                                제작된 <b>cut_{String(cut.no).padStart(2, '0')}.mp4</b>를 확인 후 승인하면 다음 단계(G5)로 넘어갑니다.
-                              </span>
-                            </div>
-                          )}
 
                           {expanded && manual && renderPanel(cut)}
 
