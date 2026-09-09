@@ -2023,6 +2023,24 @@ function ffprobeDuration(filePath) {
   })
 }
 
+// 입력 영상의 실제 픽셀 크기 [w, h] 조회 (자막 합성 등 "입력과 동일 규격 출력" 용도).
+function ffprobeVideoSize(filePath) {
+  return new Promise((resolve) => {
+    const proc = spawn('ffprobe', [
+      '-v', 'error', '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height',
+      '-of', 'csv=s=x:p=0', filePath,
+    ])
+    let out = ''
+    proc.stdout.on('data', chunk => { out += chunk.toString() })
+    proc.on('close', () => {
+      const m = out.trim().match(/^(\d+)x(\d+)/)
+      resolve(m ? [parseInt(m[1], 10), parseInt(m[2], 10)] : null)
+    })
+    proc.on('error', () => resolve(null))
+  })
+}
+
 // raw 녹화본을 목표 길이로 트림 + 컷 규격(에피소드 화면비율) 스케일/크롭해서 최종 컷 영상으로 확정.
 // force_original_aspect_ratio=increase(짧은 변을 목표 이상으로 키움) 후 중앙 crop.
 async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode }) {
@@ -7377,10 +7395,18 @@ app.post('/api/subtitle/render', async (req, res) => {
   const previewSec = preview ? 2.5 : 0
   const outputPath = previewSec ? `${outStem}_preview.mp4` : `${outStem}.mp4`
 
+  // 출력 규격 = 입력 영상 실측 크기(자막은 항상 원본과 동일 비율로). 실패 시 에피소드
+  // 화면비율 → 최후 세로 기본값. (예전엔 [1080,1920] 고정이라 16:9 컷이 레터박스됨)
+  let outSize = await ffprobeVideoSize(inputPath)
+  if (!outSize && epNum != null) {
+    const d = episodeCutDims(epNum); outSize = [d.w, d.h]
+  }
+  if (!outSize) outSize = [1080, 1920]
+
   try {
     fs.mkdirSync(workDir, { recursive: true })
     fs.writeFileSync(configPath, JSON.stringify({
-      output_size: [1080, 1920], fps: 30, mode, effect,
+      output_size: outSize, fps: 30, mode, effect,
       style: { font_size: 72, color: '#FFFFFF', position: 'bottom', outline: true, ...style },
       entries,
     }, null, 2), 'utf-8')
