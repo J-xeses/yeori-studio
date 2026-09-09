@@ -457,6 +457,73 @@ function parseV3GlobalHeader(raw) {
   return { masterCode, epHeaderRaw }
 }
 
+// ── Claude 수정 요청(handleRevision)용 — v3 필드 어휘로 컷 직렬화 / 응답 병합 ──
+// 옛 "씬:/액션:/샷 타입:" 포맷 대신 v3 코드 필드(SP/PL/SH/CA/MD/AC)와 메이킹 소스
+// 필드(CT/HTML/GTPL/SRC/URL/BQ/CLIP/MOTION)를 그대로 주고받아, 코드·자동화 필드까지
+// 수정 요청으로 편집 가능하게 한다. 응답 파싱은 v3 파서(splitV3Cuts+parseV3MainBlock) 재사용.
+function serializeCutForRevision(c) {
+  const m = c.masterCode || {}
+  const L = [`[CUT ${c.no}]${c.cutTitle ? `  ${c.cutTitle}` : ''}`]
+  L.push(`SC: ${c.scene || ''}`)
+  L.push(`SP: ${m.sp || ''}`)
+  L.push(`PL: ${m.pl || ''}`)
+  L.push(`CH: ${m.ch || c.character || '서여리'}`)
+  L.push(`DL: ${c.dialogue || '없음'}`)
+  L.push(`NR: ${c.narration || '없음'}`)
+  L.push(`CP: ${c.subtitle || '없음'}`)
+  L.push(`SH: ${m.sh || ''}`)
+  L.push(`CA: ${m.ca || ''}`)
+  L.push(`MD: ${m.md || ''}`)
+  L.push(`AC: ${m.ac || ''}`)
+  L.push(`DU: ${c.duration || 8}`)
+  L.push(`CT: ${c.cutType || 'YEORI'}`)
+  if (c.htmlFile) L.push(`HTML: ${c.htmlFile}`)
+  if (c.graphicTemplate) L.push(`GTPL: ${c.graphicTemplate}`)
+  if (c.sourcePath) L.push(`SRC: ${c.sourcePath}`)
+  if (c.brollUrl) L.push(`URL: ${c.brollUrl}`)
+  if (c.brollQuery) L.push(`BQ: ${c.brollQuery}`)
+  if (c.clipUrl) L.push(`CLIP: ${c.clipUrl}${c.clipSeek ? ` @ ${c.clipSeek}` : ''}${c.clipDuration ? ` +${c.clipDuration}` : ''}`)
+  if (c.motion) L.push(`MOTION: ${c.motion}`)
+  return L.join('\n')
+}
+
+// v3 메인블록 파싱 결과(fields) → dispatch UPDATE_CUT 용 patch. original 은 masterCode 병합용.
+function v3RevisionPatch(fields, original) {
+  const p = {}
+  const mc = { ...(original.masterCode || {}) }
+  let mcTouched = false
+  const isBlank = (v) => v == null || String(v).trim() === ''
+  const clr = (v) => /^(없음|\(작성 필요\))$/.test(String(v).trim())
+  const setMc = (k, v) => { if (!isBlank(v)) { mc[k] = String(v).trim(); mcTouched = true } }
+
+  if (fields.SC != null) p.scene = fields.SC
+  if (fields.DL != null) p.dialogue = clr(fields.DL) ? '' : fields.DL
+  if (fields.NR != null) p.narration = clr(fields.NR) ? '' : fields.NR
+  if (fields.CP != null) p.subtitle = clr(fields.CP) ? '' : fields.CP
+  if (fields.DU != null) { const d = parseInt(fields.DU, 10); if (d) p.duration = d }
+  if (fields.CT != null) { const t = fields.CT.trim().toUpperCase(); if (['YEORI', 'BROLL', 'GRAPHIC', 'CAPCUT', 'PIP'].includes(t)) p.cutType = t }
+  if (!isBlank(fields.SH)) {
+    setMc('sh', fields.SH)
+    p.shotType = MASTER_CLOSEUP_SHOTS.has(fields.SH.split(/[→>]/)[0].trim()) ? 'CLOSEUP' : 'FULLBODY'
+  }
+  setMc('sp', fields.SP); setMc('pl', fields.PL); setMc('ch', fields.CH)
+  setMc('ca', fields.CA); setMc('md', fields.MD); setMc('ac', fields.AC); setMc('lookId', fields.LOOK_ID)
+  if (!isBlank(fields.CH)) p.character = fields.CH.trim()
+
+  if (fields.HTML != null) p.htmlFile = fields.HTML.trim()
+  if (fields.GTPL != null) p.graphicTemplate = fields.GTPL.trim()
+  if (fields.SRC != null) p.sourcePath = fields.SRC.trim()
+  if (fields.URL != null) p.brollUrl = fields.URL.trim()
+  if (fields.BQ != null) p.brollQuery = fields.BQ.trim()
+  if (fields.MOTION != null) p.motion = fields.MOTION.trim()
+  if (fields.CLIP != null) {
+    const clip = parseClipField(fields.CLIP)
+    if (clip) { p.clipUrl = clip.url; p.clipSeek = clip.seekSec; p.clipDuration = clip.durationSec }
+  }
+  if (mcTouched) p.masterCode = mc
+  return p
+}
+
 // cuts 배열 -> v3 표준 포맷 텍스트 (다운로드용, parseCutsV3로 다시 읽을 수 있게 대칭 유지)
 function buildV3ScriptText(cuts, episode) {
   const sep = '━'.repeat(24)
@@ -983,38 +1050,40 @@ ${YEORI_RULESET}
     if (!apiKeys.claude || !revisionInput.trim() || !cuts.length) return
     setRevisionLoading(true)
 
-    const currentScript = cuts.map(c =>
-      `[CUT ${c.no}]\n씬: ${c.scene}\n액션: ${c.action}\n캐릭터: 서여리\n대사: ${c.dialogue || '없음'}\n나레이션: ${c.narration || ''}\n자막: ${c.subtitle || '없음'}\n샷 타입: ${c.shotType || 'FULLBODY'}\n이미지 프롬프트: ${c.imagePrompt || ''}\n컷 길이: ${c.duration || 5}`
-    ).join('\n\n')
+    const currentScript = cuts.map(serializeCutForRevision).join('\n\n')
 
-    const prompt = `당신은 한국 유튜브 숏폼 대본 편집 전문가입니다.
-아래는 현재 작성된 대본 전체입니다.
+    const prompt = `당신은 한국 유튜브 영상 대본 편집 전문가입니다. v3 표준 코드 포맷을 다룹니다.
 
 ${YEORI_RULESET}
 
-=== 현재 대본 ===
+=== 현재 대본 (v3 필드) ===
 ${currentScript}
 === 대본 끝 ===
 
-아래 수정 요청을 처리해주세요:
+수정 요청:
 "${revisionInput}"
 
-수정 규칙:
-1. 요청한 컷만 수정, 나머지는 그대로 유지
-2. 수정된 컷은 반드시 아래 형식으로 출력 (그대로 파싱에 사용됨):
-[CUT N]
-씬: ...
-액션: ...
-캐릭터: 서여리
-대사: ...
-나레이션: ...
-샷 타입: CLOSEUP 또는 FULLBODY
-이미지 프롬프트: ...
+[필드 설명]
+SC 씬(한국어) · SP 공간코드 · PL 파이프라인코드 · CH 캐릭터 · DL 대사 · NR 나레이션 ·
+CP 자막(손글씨 오버레이) · SH 샷타입 · CA 카메라 · MD 감정 · AC 동작 · DU 길이(초) ·
+CT 컷유형(YEORI|BROLL|GRAPHIC|CAPCUT|PIP)
+메이킹 소스: HTML(그래픽 목업 .html) · GTPL(HTML 자동생성: "ai" | "<템플릿>/<스타일>" | "ai:<템플릿>/<스타일>") ·
+SRC(로컬 파일 "sources/x.mp4") · URL(영상 페이지) · BQ(Pexels 영어 검색어) ·
+CLIP("<url> @ 0:30 +10") · MOTION(self|zoom-in|fade|type-in|rise|none)
 
-3. 수정 안 된 컷은 출력하지 말 것
-4. 마크다운 ** ## --- 절대 금지
-5. 수정 완료 후 마지막에 한 줄: "=== 수정 완료 ===" 추가
-6. 컷 길이를 수정하는 요청이 있으면 반드시 해당 컷의 "컷 길이: N" 필드 값을 변경해서 출력할 것`
+[코드 값]
+SH: SH_ECU SH_CU SH_MCU SH_MS SH_MLS SH_FS SH_WS SH_POV SH_BIRD SH_LOW
+MD: MD_JOY MD_REL MD_SUR MD_INT MD_CUR MD_SAD MD_DRM MD_STR
+GTPL 템플릿: text-card mv-intro stat-card info-source cards-3col relation / 스타일: minimal gradient dark-minimal yeori neon-dark bold-impact
+SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 것.
+
+[출력 규칙]
+1. 요청과 관련된 컷만 출력. 나머지 컷은 출력하지 말 것.
+2. 각 컷은 [CUT N] 다음 줄부터 "약자: 값" 형식. 바뀐 필드 + 판단에 필요한 필드만.
+3. 값을 지우려면 DL/NR/CP 는 "없음", 나머지는 필드 자체를 생략(빈 값 출력 금지 = 원본 유지로 처리됨).
+4. 마크다운(** ## ---) 금지. KR/IP/VP/오디오 블록 출력하지 말 것.
+5. CT 를 GRAPHIC/CAPCUT 으로 바꾸면 HTML 이나 GTPL 중 하나를 함께 제시. BROLL 이면 CLIP/SRC/URL/BQ 중 하나.
+6. 마지막 줄에 "=== 수정 완료 ===" 추가.`
 
     try {
       const res = await claudeMessages(apiKeys.claude, {
@@ -1026,25 +1095,23 @@ ${currentScript}
       const data = await res.json()
       const raw = data.content[0].text
 
-      const revisedCuts = parseCuts(raw, cuts.length)
-      revisedCuts.forEach(revised => {
-        const original = cuts.find(c => c.no === revised.no)
-        if (original) {
-          dispatch({ type: 'UPDATE_CUT', id: original.id, p: {
-            scene:       revised.scene       || original.scene,
-            action:      revised.action      || original.action,
-            dialogue:    revised.dialogue    !== undefined ? revised.dialogue : original.dialogue,
-            narration:   revised.narration   || original.narration,
-            imagePrompt: revised.imagePrompt || original.imagePrompt,
-            shotType:    revised.shotType    || original.shotType,
-            duration:    revised.duration    || original.duration,
-          }})
-        }
+      // v3 파서 재사용 — 응답은 [CUT N] + 메인블록만이라 섹션 없이 mainLines 로 들어온다
+      const revised = splitV3Cuts(raw)
+      if (!revised.length) throw new Error('수정 결과에서 [CUT N] 블록을 찾지 못했습니다')
+      const changed = []
+      revised.forEach(rc => {
+        const original = cuts.find(c => c.no === rc.no)
+        if (!original) return
+        const { fields } = parseV3MainBlock(rc.mainLines)
+        const patch = v3RevisionPatch(fields, original)
+        if (Object.keys(patch).length) { dispatch({ type: 'UPDATE_CUT', id: original.id, p: patch }); changed.push(rc.no) }
       })
+      if (!changed.length) throw new Error('수정할 컷을 매칭하지 못했습니다 (컷 번호 확인)')
 
       setRevisionHistory(prev => [...prev, {
         id: Date.now(),
         request: revisionInput.slice(0, 40) + (revisionInput.length > 40 ? '…' : ''),
+        result: `CUT ${changed.join(', ')} 수정`,
         ts: new Date().toLocaleTimeString('ko-KR'),
       }])
       setRevisionInput('')
@@ -1914,7 +1981,7 @@ ${currentScript}
           <textarea
             className={s.revisionInput}
             rows={3}
-            placeholder={"예) CUT 2 대사 더 가볍고 재미있게 수정해줘\n예) 전체 이미지 프롬프트에 골드 목걸이 디테일 추가해줘\n예) CUT 3 나레이션 감성적으로 다시 써줘"}
+            placeholder={"예) CUT 2 대사 더 가볍고 재미있게\n예) CUT 3 샷을 클로즈업(SH_MCU)으로, 감정 MD_JOY 로\n예) CUT 10 을 GRAPHIC 으로 바꾸고 GTPL: ai 붙여줘\n예) CUT 5 나레이션 감성적으로 다시 써줘"}
             value={revisionInput}
             onChange={e => setRevisionInput(e.target.value)}
           />
@@ -1942,7 +2009,7 @@ ${currentScript}
                 <div key={h.id} className={s.revisionHistItem}>
                   <span className={s.revisionHistNum}>#{i+1}</span>
                   <span className={s.revisionHistReq}>{h.request}</span>
-                  <span className={s.revisionHistStatus}>✅</span>
+                  <span className={s.revisionHistStatus}>{h.result ? `✅ ${h.result}` : '✅'}</span>
                 </div>
               ))}
             </div>
