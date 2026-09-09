@@ -200,11 +200,23 @@ const DEFAULT_SUBTITLE = {
   style: { font_size: 72, color: '#FFFFFF', position: 'bottom', outline: true },
   entries: [{ text: '', start: 0.3, end: 2.0 }],
 }
-// 자막 시드 — 대본에서 자막/대사/나레이션을 끌어와 미리보기가 빈칸이 아니게 한다.
+// 자막 시드 — 대본에서 화면 자막 후보를 끌어와 미리보기가 빈칸이 아니게 한다.
 // (사용자가 바로 지우고 실제 문구로 교체 가능. 미리보기 버튼이 "문구 입력하세요"로
 //  막히지 않도록 하는 편의 기능.)
+// 우선순위: subtitle → IP/VP "자막 오버레이: ..." 따옴표/줄 → 따옴표 인용 →
+//           [캡션] 섹션 → 대사 → 나레이션.  "자막 없음" 명시면 시드 안 함.
 function subtitleSeed(cut) {
-  const raw = String(cut.subtitle || cut.dialogue || cut.narration || '').trim()
+  const ipvp = `${cut.videoPrompt || ''}\n${cut.imagePrompt || ''}`
+  if (/자막\s*없음/.test(ipvp) && !cut.subtitle) return ''
+  const overlay = ipvp.match(/자막\s*오버레이\s*[:：]\s*"?([^"\n]+?)"?\s*(?:\n|$)/)
+  const raw = String(
+    cut.subtitle
+    || (overlay && overlay[1])
+    || extractQuotedLine(cut.videoPrompt)
+    || extractQuotedLine(cut.imagePrompt)
+    || extractCaptionSectionLastLine(cut.imagePrompt)
+    || cut.dialogue || cut.narration || ''
+  ).trim()
   if (!raw) return ''
   // 첫 문장 / 최대 32자 — 자막 한 줄 분량
   const first = raw.split(/(?<=[.!?…。])\s|\n/)[0].trim() || raw
