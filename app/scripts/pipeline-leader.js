@@ -176,6 +176,15 @@ function log(stage, msg) {
   console.log(`[${ts}] [${stage}] ${msg}`)
 }
 
+// 에이전트 리더 로그 (Notion "에이전트 리더 로그" DB) — 의미있는 자율 판단만 한 행씩.
+// 프록시가 Notion 토큰 보유. 실패해도 사이클 절대 안 막음. (설계: "에이전트 리더 백본" §04)
+let EP_LABEL = EPISODE_ID
+async function leaderLog(entry) {
+  try {
+    await api('POST', '/api/mcp/leader-log', { episode: EP_LABEL, source: 'pipeline-leader', ...entry })
+  } catch { /* noop */ }
+}
+
 // ── 승인 정책 — 지금은 항상 사람(스튜디오/메이킹 UI) 대기, 자동 승인 안 함.
 // "에이전트 리더"가 실제 산출물(이미지/영상)을 평가해서 자동 승인하게 하려면
 // 이 함수만 실제 판단 로직으로 바꾸면 된다(예: 메이킹 컷은 mp4 프레임 검수, 검정/빈
@@ -199,9 +208,12 @@ async function checkAndAdvance() {
   const statusRes = await api('GET', `/api/mcp/studio-status?episodeId=${encodeURIComponent(EPISODE_ID)}`)
   if (!statusRes.ok) {
     log('상태조회', `실패 — ${statusRes.data?.error || statusRes.status}`)
+    await leaderLog({ stage: '사이클', kind: '블로커', summary: '스튜디오 상태 조회 실패',
+      result: String(statusRes.data?.error || statusRes.status), humanInvolved: true })
     return false
   }
   const { episode, cuts, summary } = statusRes.data
+  EP_LABEL = episode?.code || episode?.title || EPISODE_ID
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
 
   // ── G1: 트리거할 게 없는 단계(사람이 스튜디오 UI에서 승인) — 완료 여부만 로그로 확인 ──
@@ -231,13 +243,25 @@ async function checkAndAdvance() {
       if (MAKING_AUTORUN) {
         log('제작', `메이킹 컷 자동 제작 시작 — ${label}`)
         const r = await api('POST', '/api/mcp/run-making', { episodeId: EPISODE_ID, cutIds: needMaking.map(c => c.no) })
-        if (!r.ok) log('제작', `run-making 실패 — ${r.data?.error || r.status}`)
-        else {
+        if (!r.ok) {
+          log('제작', `run-making 실패 — ${r.data?.error || r.status}`)
+          await leaderLog({ stage: 'making', kind: '블로커', summary: 'run-making 실패', rationale: label,
+            result: String(r.data?.error || r.status), humanInvolved: true })
+        } else {
           for (const x of (r.data.results || [])) {
             const tag = x.status === 'produced' ? '✅' : x.status === 'skipped' ? '⏭️' : '❌'
             log('제작', `${tag} CUT ${x.cutNo} (${x.type}) ${x.method || ''} ${x.reason ? `— ${x.reason}` : x.query ? `— "${x.query}"` : ''}`.trimEnd())
           }
-          log('제작', `제작 ${r.data.producedCount} · 스킵 ${r.data.skippedCount} · 실패 ${r.data.errorCount}`)
+          const P = r.data.producedCount, S = r.data.skippedCount, E = r.data.errorCount
+          log('제작', `제작 ${P} · 스킵 ${S} · 실패 ${E}`)
+          const skips = (r.data.results || []).filter(x => x.status !== 'produced')
+            .map(x => `CUT ${x.cutNo} ${x.status}${x.reason ? ` (${x.reason})` : ''}`).join(' · ')
+          await leaderLog({
+            stage: 'making', kind: E > 0 ? '블로커' : '자동실행',
+            summary: `메이킹 컷 자동 제작 — 제작 ${P} · 스킵 ${S} · 실패 ${E}`,
+            rationale: `g1 승인 + 영상 없음: ${label}`,
+            result: skips || `${P}컷 제작 완료`, humanInvolved: E > 0 || S > 0,
+          })
         }
       } else {
         log('제작', `메이킹 탭 제작 대기 — ${label} (--making=off, 자동 제작 꺼짐)`)
@@ -247,7 +271,10 @@ async function checkAndAdvance() {
     // 사람이 반려한 메이킹 컷 — 재제작 대기(파라미터 조정 후 메이킹 탭에서 재실행)
     const rejected = cuts.filter(c => isMakingType(c) && c.review?.status === 'rejected')
     if (rejected.length) {
-      log('반려', `재제작 대기 — 컷 ${rejected.map(c => `${c.no}${c.review?.note ? `(${String(c.review.note).slice(0, 30)})` : ''}`).join(', ')}`)
+      const rlist = rejected.map(c => `${c.no}${c.review?.note ? `(${String(c.review.note).slice(0, 30)})` : ''}`).join(', ')
+      log('반려', `재제작 대기 — 컷 ${rlist}`)
+      await leaderLog({ stage: 'making', kind: '반려감지', summary: `메이킹 컷 반려 — 재제작 대기 (${rejected.length}컷)`,
+        result: rlist, humanInvolved: true })
     }
 
     // 제작 완료(mp4 있음)·미반려·g4 미승인인 메이킹 컷 → 승인 게이트
@@ -256,8 +283,15 @@ async function checkAndAdvance() {
     for (const c of madeUnapproved) {
       if (await shouldAutoApprove('making', c)) {
         const r = await api('POST', '/api/mcp/studio-approve-g4', { episodeId: EPISODE_ID, cutIds: [c.no] })
-        if (r.ok) { autoApproved.push(c.no); log('제작', `CUT ${c.no} 자동 승인(에이전트 리더)`) }
-        else log('제작', `CUT ${c.no} 자동 승인 실패 — ${r.data?.error || r.status}`)
+        if (r.ok) {
+          autoApproved.push(c.no); log('제작', `CUT ${c.no} 자동 승인(에이전트 리더)`)
+          await leaderLog({ stage: 'G4', kind: '자동승인', summary: `CUT ${c.no} (${cutTypeOf(c)}) 자동 승인`,
+            rationale: 'shouldAutoApprove 정책 통과 (에이전트 자동승인 스테이지)', humanInvolved: false })
+        } else {
+          log('제작', `CUT ${c.no} 자동 승인 실패 — ${r.data?.error || r.status}`)
+          await leaderLog({ stage: 'G4', kind: '블로커', summary: `CUT ${c.no} 자동 승인 실패`,
+            result: String(r.data?.error || r.status), humanInvolved: true })
+        }
       }
     }
     const stillWaiting = madeUnapproved.filter(c => !autoApproved.includes(c.no)).map(c => c.no)
@@ -274,8 +308,17 @@ async function checkAndAdvance() {
         const cutIds = g3Candidates.map(c => c.no)
         log('G3', `TTS 생성 요청 → 컷 ${cutIds.join(',')}`)
         const r = await api('POST', '/api/mcp/studio-run-g3', { episodeId: EPISODE_ID, cutIds })
-        if (!r.ok) log('G3', `요청 실패 — ${r.data?.error || r.status}`)
-        else log('G3', `완료 — 생성 ${r.data.generatedCount ?? '?'}건 · 실패 ${r.data.failCount ?? '?'}건 · 스킵 ${r.data.skippedCount ?? '?'}건`)
+        if (!r.ok) {
+          log('G3', `요청 실패 — ${r.data?.error || r.status}`)
+          await leaderLog({ stage: 'G3', kind: '블로커', summary: 'G3 TTS 생성 요청 실패',
+            result: String(r.data?.error || r.status), humanInvolved: true })
+        } else {
+          log('G3', `완료 — 생성 ${r.data.generatedCount ?? '?'}건 · 실패 ${r.data.failCount ?? '?'}건 · 스킵 ${r.data.skippedCount ?? '?'}건`)
+          await leaderLog({ stage: 'G3', kind: '자동실행', summary: `G3 TTS 자동 생성 — ${cutIds.length}컷`,
+            rationale: `g1 승인 + 대사/나레이션 있음 + 오디오 없음: 컷 ${cutIds.join(',')}`,
+            result: `생성 ${r.data.generatedCount ?? '?'} · 실패 ${r.data.failCount ?? '?'} · 스킵 ${r.data.skippedCount ?? '?'}`,
+            humanInvolved: (r.data.failCount || 0) > 0 })
+        }
       }
     }
   }
@@ -316,8 +359,15 @@ async function checkAndAdvance() {
         g5Triggered = true
         log('G5', '전체 컷 G4 승인 완료 — 편집메타/SRT/합성 실행')
         const r = await api('POST', '/api/mcp/studio-run-g5', { episodeId: EPISODE_ID })
-        if (!r.ok) { log('G5', `실패 — ${r.data?.error || r.status}`); g5Triggered = false }
-        else log('G5', `완료 — ${r.data.concat?.outputPath || '(출력 경로 확인 필요)'}`)
+        if (!r.ok) {
+          log('G5', `실패 — ${r.data?.error || r.status}`); g5Triggered = false
+          await leaderLog({ stage: 'G5', kind: '블로커', summary: 'G5 합성 실행 실패',
+            result: String(r.data?.error || r.status), humanInvolved: true })
+        } else {
+          log('G5', `완료 — ${r.data.concat?.outputPath || '(출력 경로 확인 필요)'}`)
+          await leaderLog({ stage: 'G5', kind: '자동실행', summary: 'G5 편집메타/SRT/합성 자동 실행',
+            rationale: '전체 컷 G4 승인 완료', result: r.data.concat?.outputPath || '완료', humanInvolved: false })
+        }
       }
     }
   }

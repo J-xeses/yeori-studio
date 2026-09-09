@@ -17,6 +17,7 @@ import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
+import { postLeaderLog } from './lib/leaderLog.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -6502,6 +6503,16 @@ mcpRouter.post('/update-status-md', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
   }
+})
+
+// ── POST /api/mcp/leader-log — 에이전트 리더 로그 DB 에 한 행 (P1) ──
+// pipeline-leader / genline 이 자율 판단을 할 때마다 호출. 설계: "에이전트 리더 백본" §04.
+// { episode, stage, kind, source, summary, rationale, result, humanInvolved }
+mcpRouter.post('/leader-log', async (req, res) => {
+  const e = req.body || {}
+  if (!e.summary) return res.status(400).json({ success: false, error: 'summary가 필요합니다' })
+  const r = await postLeaderLog(e)
+  res.json({ success: r.ok, ...(r.ok ? {} : { error: r.body || r.error || r.skipped || r.status }) })
 })
 
 // ── POST /api/mcp/restart-proxy — 새 프로세스를 먼저 detached로 띄운 뒤
