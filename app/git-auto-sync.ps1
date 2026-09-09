@@ -61,6 +61,15 @@ try {
     } else {
         Log "Nothing to push"
     }
+
+    # STATUS.md latest section -> Notion mirror (skips if already mirrored by the
+    # update_status_md MCP path). Never fails the sync cycle.
+    try {
+        $m = node "$RepoRoot\app\scripts\mirror-status-notion.js" 2>&1
+        if ($m) { Log "status-mirror: $m" }
+    } catch {
+        Log "status-mirror skipped: $($_.Exception.Message)"
+    }
 } catch {
     Log "ERROR: $($_.Exception.Message)"
     exit 1
