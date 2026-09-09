@@ -576,6 +576,9 @@ app.get('/api/codi-gen-handoff', (req, res) => {
 const NOTION_EPISODE_DB_ID = '2d093c5f-69c4-4e91-9d2d-0b997ddbe299'
 const NOTION_VERSION = '2022-06-28'
 const SCRIPT_HISTORY_HEADING = '📝 스크립트 이력'
+// STATUS.md 자동 미러 페이지 (여리 스튜디오 마스터 허브 하위). update_status_md 가 여기에도 append.
+// 서여리 Claude 프로젝트를 이 Notion 페이지에 연결하면 프로젝트 지식이 자동으로 최신 유지됨.
+const NOTION_STATUS_PAGE_ID = '3d660cf6-afd9-81b2-8eea-c2ab6ffb5f2e'
 
 app.post('/api/update-script-history', async (req, res) => {
   const { episodeCode, version, date, status, changes, cuts, cutDetail } = req.body
@@ -733,6 +736,32 @@ function notionHeadersFor(token) {
 function richText(v) {
   const s = (v ?? '').toString()
   return s ? [{ type: 'text', text: { content: s } }] : []
+}
+
+// STATUS.md 로그 절 하나를 Notion 미러 페이지에 append. 실패해도 조용히 넘어감(로그만).
+async function mirrorStatusToNotion(date, content) {
+  const token = getNotionToken()
+  if (!token || !NOTION_STATUS_PAGE_ID) return { ok: false, skipped: 'no-token' }
+  // Notion rich_text 는 요소당 2000자 제한 → 1800자 단위로 나눠 문단 블록으로
+  const chunks = []
+  let rest = String(content || '')
+  while (rest.length) { chunks.push(rest.slice(0, 1800)); rest = rest.slice(1800) }
+  const children = [
+    { object: 'block', type: 'divider', divider: {} },
+    { object: 'block', type: 'heading_3', heading_3: { rich_text: richText(`${date} (자동 미러)`) } },
+    ...chunks.map(c => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: richText(c) } })),
+  ]
+  try {
+    const r = await fetch(`https://api.notion.com/v1/blocks/${NOTION_STATUS_PAGE_ID}/children`, {
+      method: 'PATCH', headers: notionHeadersFor(token),
+      body: JSON.stringify({ children }),
+    })
+    if (!r.ok) { logToFile(`[status-mirror] Notion ${r.status}: ${(await r.text()).slice(0, 200)}`); return { ok: false } }
+    return { ok: true }
+  } catch (e) {
+    logToFile(`[status-mirror] ${e.message}`)
+    return { ok: false, error: e.message }
+  }
 }
 function plainText(richTextArr) {
   return (richTextArr || []).map(t => t.plain_text).join('')
@@ -6485,7 +6514,7 @@ mcpRouter.post('/git-commit-push', async (req, res) => {
 })
 
 // ── POST /api/mcp/update-status-md — STATUS.md 끝에 날짜+내용 append ──
-mcpRouter.post('/update-status-md', (req, res) => {
+mcpRouter.post('/update-status-md', async (req, res) => {
   const { content } = req.body || {}
   if (!content || typeof content !== 'string') {
     return res.status(400).json({ success: false, error: 'content가 필요합니다' })
@@ -6494,7 +6523,8 @@ mcpRouter.post('/update-status-md', (req, res) => {
   try {
     const today = new Date().toISOString().slice(0, 10)
     fs.appendFileSync(statusPath, `\n\n---\n### ${today} (MCP 자동 기록)\n${content}\n`, 'utf-8')
-    res.json({ success: true, path: statusPath })
+    const notion = await mirrorStatusToNotion(today, content)   // 실시간 Notion 미러 (실패 무시)
+    res.json({ success: true, path: statusPath, notionMirror: notion.ok })
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
   }
