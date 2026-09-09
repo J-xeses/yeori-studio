@@ -201,7 +201,8 @@ function mapPromptsCutsToAppCuts(promptsCuts) {
 const V3_SEP_LINE_RE = /^[━=]{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // HTML/SRC/BQ/URL/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION):\s?(.*)$/
+// GTPL: GRAPHIC/CAPCUT 컷 HTML 자동 생성 지시 — 서버 scriptParserV3.js 와 반드시 동일 (2026-09-09)
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
 // server/lib/scriptParserV3.js 의 parseClipField 와 동일하게 유지.
@@ -391,6 +392,7 @@ function parseCutsV3(raw) {
     const brollQuery = String(fields.BQ || '').trim()
     const brollUrl = String(fields.URL || '').trim()
     const cutMotion = String(fields.MOTION || '').trim()
+    const graphicTemplate = String(fields.GTPL || '').trim()   // 서브라인 3-1
     // CLIP: 웹 영상 한 구간을 screen-scenario 화면녹화로 (⚠️ 공정이용 전제)
     const clip = parseClipField(fields.CLIP)
 
@@ -430,6 +432,7 @@ function parseCutsV3(raw) {
       ...(brollQuery ? { brollQuery } : {}),
       ...(brollUrl ? { brollUrl } : {}),
       ...(cutMotion ? { motion: cutMotion } : {}),
+      ...(graphicTemplate ? { graphicTemplate } : {}),
       ...(clip ? { clipUrl: clip.url, clipSeek: clip.seekSec, clipDuration: clip.durationSec } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',
@@ -486,6 +489,7 @@ function buildV3ScriptText(cuts, episode) {
       ...(c.brollUrl ? [`URL: ${c.brollUrl}`] : []),
       ...(c.clipUrl ? [`CLIP: ${c.clipUrl}${c.clipSeek ? ` @ ${c.clipSeek}` : ''}${c.clipDuration ? ` +${c.clipDuration}` : ''}`] : []),
       ...(c.motion ? [`MOTION: ${c.motion}`] : []),
+      ...(c.graphicTemplate ? [`GTPL: ${c.graphicTemplate}`] : []),
       '오디오:',
       `  BGM: ${audio.bgm || ''}`,
       `  음성: ${audio.voice || ''}`,

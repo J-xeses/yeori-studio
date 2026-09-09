@@ -15,6 +15,7 @@ import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
+import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml } from './lib/graphicGen.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -3244,10 +3245,8 @@ app.get('/api/graphic-templates', (req, res) => {
 
 app.post('/api/generate-graphic-html', async (req, res) => {
   try {
-    const { epNum, cutNo, type, style, fields, duration, autoGenerate } = req.body || {}
+    const { epNum, cutNo, type, style, fields, duration, autoGenerate, gtpl, retryNote } = req.body || {}
     if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
-
-    const html = generateHTML(type, style, fields, duration)
 
     const { epId, ep } = findEpisodeByNumOrThrow(epNum)
     const episodeCode = resolveEpisodeCode(ep.episode, epId)
@@ -3255,16 +3254,44 @@ app.post('/api/generate-graphic-html', async (req, res) => {
     fs.mkdirSync(dir, { recursive: true })
     const fileName = `cut_${String(cutNo).padStart(2, '0')}_graphic.html`
     const filePath = path.join(dir, fileName)
-    fs.writeFileSync(filePath, html, 'utf-8')
 
-    if (autoGenerate) {
-      // /api/make-graphic-cut과 같은 makeGraphicCutForMcp를 직접 호출 — 자기 자신에게
-      // HTTP 왕복하지 않고, 저장한 htmlFile만 넘겨 바로 GRAPHIC/CAPCUT 컷으로 만든다.
-      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'fade-in' })
-      return res.json({ success: true, filePath, fileName, makeResult })
+    let genMethod = ''
+    if (gtpl) {
+      // 통합 경로 — 대본 GTPL: 과 동일 로직(템플릿/ai/ai-template). 저장까지 여기서.
+      const cut = { ...(ep.cuts || []).find(c => c.no === Number(cutNo)), no: Number(cutNo), graphicTemplate: gtpl }
+      const g = await resolveGraphicFromGtpl({ epNum, cut, retryNote })
+      genMethod = g.method
+    } else {
+      // 레거시 템플릿 경로 — 클라 fields 가 컷 자동채움 위에 덮어씀
+      const cut = (ep.cuts || []).find(c => c.no === Number(cutNo)) || {}
+      const merged = { ...fieldsFromCut(cut, type), ...(fields || {}) }
+      const html = generateHTML(type, style, merged, duration, cutDims(ep.episode || {}))
+      fs.writeFileSync(filePath, html, 'utf-8')
+      genMethod = `template:${type}${style ? '/' + style : ''}`
     }
 
-    res.json({ success: true, filePath, fileName })
+    if (autoGenerate) {
+      const makeResult = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: fileName, motion: 'self' })
+      return res.json({ success: true, filePath, fileName, method: genMethod, makeResult })
+    }
+    res.json({ success: true, filePath, fileName, method: genMethod })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
+  }
+})
+
+// 서브라인 3-1 — 대본에 GTPL 없이 UI 에서 AI 생성만 미리 돌려보고 싶을 때(파일 저장 X, 미리보기용).
+app.post('/api/graphic-ai-preview', async (req, res) => {
+  try {
+    const { epNum, cutNo, retryNote } = req.body || {}
+    if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+    if (!ANTHROPIC_API_KEY) return res.status(503).json({ error: 'ANTHROPIC_API_KEY 미설정' })
+    const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+    const cut = (ep.cuts || []).find(c => c.no === Number(cutNo)) || { no: Number(cutNo) }
+    const dims = cutDims(ep.episode || {})
+    const raw = await callClaudeText(buildGraphicPrompt(cut, dims, { retryNote }), 8000)
+    const v = validateGraphicHtml(raw, dims)
+    res.json({ ok: v.ok, html: v.html, issues: v.issues })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -6690,6 +6717,51 @@ async function getEpisodeHtmlSources(epNum) {
   return { cuts, availableHtmlFiles: files }
 }
 
+// ── 서브라인 3-1: 대본 GTPL: 필드 → 01_script/cut_NN_graphic.html 생성 ──────────
+// GRAPHIC/CAPCUT 컷이 HTML: 파일 없이 GTPL: 만 있을 때, 템플릿 또는 Claude 로 HTML 을
+// 만들어 파일로 저장하고 파일명을 돌려준다. 그 다음은 기존 makeGraphicCutForMcp 가
+// htmlFile 로 그대로 캡처한다. 결과물은 항상 G4 리뷰 패널을 거친다(자동 승인 아님).
+async function resolveGraphicFromGtpl({ epNum, cut, retryNote }) {
+  const gtpl = parseGtpl(cut.graphicTemplate)
+  if (!isGtplValid(gtpl)) {
+    const e = new Error(`GTPL 해석 불가: "${cut.graphicTemplate}"`); e.statusCode = 400; throw e
+  }
+  const { epId, ep } = findEpisodeByNumOrThrow(epNum)
+  const episodeCode = resolveEpisodeCode(ep.episode, epId)
+  const dims = cutDims(ep.episode || {})
+  const dur = serverCutTargetDuration(cut)
+  let html, method
+
+  if (gtpl.mode === 'template') {
+    html = generateHTML(gtpl.type, gtpl.style, fieldsFromCut(cut, gtpl.type), dur, dims)
+    method = `template:${gtpl.type}${gtpl.style ? '/' + gtpl.style : ''}`
+  } else {
+    // ai | ai-template — Claude 로 생성 후 검증
+    if (!ANTHROPIC_API_KEY) { const e = new Error('AI 생성 불가 — ANTHROPIC_API_KEY 미설정'); e.statusCode = 503; throw e }
+    const skeleton = gtpl.mode === 'ai-template' && gtpl.type
+      ? generateHTML(gtpl.type, gtpl.style, {}, dur, dims) : null
+    const prompt = buildGraphicPrompt(cut, dims, { skeleton, retryNote })
+    let raw
+    try { raw = await callClaudeText(prompt, 8000) }
+    catch (e) { const err = new Error(`Claude 생성 실패: ${e.message}`); err.statusCode = 502; throw err }
+    const v = validateGraphicHtml(raw, dims)
+    if (!v.ok) {
+      try { fs.writeFileSync(path.join(scriptDir(episodeCode), `cut_${String(cut.no).padStart(2, '0')}_graphic.ai-reject.txt`), String(raw), 'utf-8') } catch { /* noop */ }
+      const e = new Error(`AI HTML 검증 실패: ${v.issues.join(' · ')}`); e.statusCode = 422; e.extra = { issues: v.issues }; throw e
+    }
+    html = v.html
+    method = gtpl.mode === 'ai-template' ? `ai-template:${gtpl.type}` : 'ai'
+    if (v.issues.length) method += ` (정리: ${v.issues.join(', ')})`
+  }
+
+  const dir = scriptDir(episodeCode)
+  fs.mkdirSync(dir, { recursive: true })
+  const fileName = `cut_${String(cut.no).padStart(2, '0')}_graphic.html`
+  fs.writeFileSync(path.join(dir, fileName), html, 'utf-8')
+  logToFile(`[gtpl] CUT ${cut.no} → ${fileName} (${method})`)
+  return { fileName, method }
+}
+
 async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
   const { epId, ep } = findEpisodeByNumOrThrow(epNum)
   const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
@@ -6859,7 +6931,7 @@ async function produceMakingCut({ epNum, cut }) {
   const type = String(cut.cutType || 'YEORI').toUpperCase()
   const cutNo = cut.no
   const dur = serverCutTargetDuration(cut)
-  const motion = String(cut.motion || '').trim() || undefined
+  let motion = String(cut.motion || '').trim() || undefined
 
   if (!MAKING_AUTO_TYPES.has(type)) return { cutNo, type, status: 'skipped', reason: '메이킹 유형 아님' }
 
@@ -6916,16 +6988,28 @@ async function produceMakingCut({ epNum, cut }) {
   //    HTML: 값이 .html 이 아니면(예: "AE_제작대상_수동") = 수동 제작 마커 → 스킵.
   //    CAPCUT 은 목업 없으면 대개 데스크톱 녹화(수동)라 스킵.
   const htmlRaw = String(cut.htmlFile || '').trim()
-  const htmlFile = /\.html?$/i.test(htmlRaw) ? htmlRaw : ''
+  let htmlFile = /\.html?$/i.test(htmlRaw) ? htmlRaw : ''
   if (htmlRaw && !htmlFile) {
     return { cutNo, type, status: 'skipped', reason: `HTML: ${htmlRaw} — 수동 제작 대상(자동 캡처 안 함)` }
   }
+  // 3-1) HTML: 파일이 없고 GTPL: 지시가 있으면 여기서 HTML 을 생성해 파일로 만든다.
+  let gtplMethod = ''
+  if (!htmlFile && cut.graphicTemplate) {
+    try {
+      const g = await resolveGraphicFromGtpl({ epNum, cut })
+      htmlFile = g.fileName
+      gtplMethod = ` · ${g.method}`
+      if (!motion) motion = 'self'   // GTPL 생성물은 CSS @keyframes 자체 애니 → 프레임 스텝 캡처
+    } catch (e) {
+      return { cutNo, type, status: e.statusCode === 422 || e.statusCode === 400 ? 'skipped' : 'error', method: 'gtpl', reason: e.message }
+    }
+  }
   if (type === 'CAPCUT' && !htmlFile) {
-    return { cutNo, type, status: 'skipped', reason: 'CAPCUT — HTML 목업(HTML:) 없음, 데스크톱 녹화는 수동' }
+    return { cutNo, type, status: 'skipped', reason: 'CAPCUT — HTML 목업(HTML:/GTPL:) 없음, 데스크톱 녹화는 수동' }
   }
   try {
     const result = await makeGraphicCutForMcp({ epNum, cutNo, htmlFile: htmlFile || undefined, motion })
-    return { cutNo, type, status: 'produced', method: htmlFile ? 'html-capture' : 'template-capture', outputPath: result?.outputPath }
+    return { cutNo, type, status: 'produced', method: (htmlFile ? 'html-capture' : 'template-capture') + gtplMethod, outputPath: result?.outputPath }
   } catch (e) {
     return { cutNo, type, status: 'error', method: 'graphic-capture', reason: e.message }
   }

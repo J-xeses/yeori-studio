@@ -18,6 +18,11 @@ const TEMPLATES = {
       'bold-impact': {
         label: '볼드 임팩트',
         colors: { bg: '#000000', main: '#ff2d2d', sub: '#ffffff', accent: '#ff2d2d' }
+      },
+      // 여리 스튜디오 브랜드 팔레트(인트로/엔드카드/B04·B05와 동일 색계)
+      'yeori': {
+        label: '여리 브랜드',
+        colors: { bg: '#0C0A10', main: '#F5F1EC', sub: '#5BB8FF', accent: '#C87FFF' }
       }
     },
     fields: ['title', 'subtitle', 'info'],
@@ -102,6 +107,10 @@ ${[10,22,34,46,58,70,82,94].map((l,i)=>`
       'dark-minimal': {
         label: '다크 미니멀',
         colors: { bg: '#111111', main: '#ffffff', sub: '#aaaaaa', accent: '#FF2D78' }
+      },
+      'yeori': {
+        label: '여리 브랜드',
+        colors: { bg: '#0C0A10', main: '#F5F1EC', sub: '#8b8494', accent: '#5BB8FF' }
       }
     },
     fields: ['title', 'subtitle', 'info'],
@@ -377,6 +386,82 @@ body {
   </div>
 </div>
 </body></html>`
+  },
+
+  // 3분할 카드 — "세 대상을 나란히 비교/소개" (LF_T01 B04 계열). 카드별 등장.
+  'cards-3col': {
+    label: '3분할 카드',
+    styles: {
+      'yeori':   { label: '여리 브랜드', colors: { bg: '#0C0A10', main: '#F5F1EC', sub: 'rgba(245,241,236,.55)', accent: '#5BB8FF', c1: '#5BB8FF', c2: '#FF6B8A', c3: '#C87FFF' } },
+      'light':   { label: '라이트',     colors: { bg: '#F5F1EC', main: '#14121A', sub: 'rgba(20,18,26,.55)', accent: '#5B34E0', c1: '#2563eb', c2: '#e11d48', c3: '#7c3aed' } }
+    },
+    fields: ['title', 'card1_name', 'card1_desc', 'card2_name', 'card2_desc', 'card3_name', 'card3_desc'],
+    generate: (f, c, dur, dims = { w: 1920, h: 1080 }) => {
+      const cards = [1, 2, 3].map(i => ({ n: f[`card${i}_name`] || '', d: f[`card${i}_desc`] || '', col: c[`c${i}`] }))
+        .filter(x => x.n)
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:${dims.w}px;height:${dims.h}px;overflow:hidden;background:${c.bg};
+  font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,sans-serif;color:${c.main}}
+.stage{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:64px;padding:7%}
+.headline{font-size:76px;font-weight:900;letter-spacing:-.02em;text-align:center;opacity:0;
+  animation:rise .7s cubic-bezier(.16,1,.3,1) .1s forwards}
+.cards{display:flex;gap:28px;width:100%;justify-content:center}
+.card{flex:1;max-width:440px;border-radius:20px;padding:40px 36px;
+  border:1.5px solid;background:rgba(127,127,140,.06);opacity:0;transform:translateY(40px) scale(.96);
+  animation:pop .7s cubic-bezier(.22,1.4,.36,1) forwards}
+.card:nth-child(1){animation-delay:.7s}.card:nth-child(2){animation-delay:.87s}.card:nth-child(3){animation-delay:1.04s}
+.card .nm{font-size:40px;font-weight:800;margin-bottom:18px}
+.card .ds{font-size:26px;line-height:1.55;color:${c.sub}}
+@keyframes rise{to{opacity:1;transform:none}}
+@keyframes pop{to{opacity:1;transform:none}}
+</style></head><body><div class="stage">
+<div class="headline">${f.title || ''}</div>
+<div class="cards">${cards.map(x => `<div class="card" style="border-color:${x.col}66;box-shadow:0 0 32px ${x.col}22">
+<div class="nm" style="color:${x.col}">${x.n}</div><div class="ds">${x.d}</div></div>`).join('')}</div>
+</div></body></html>`
+    }
+  },
+
+  // 관계도 — "가운데 핵심 + 사방 노드" (LF_T01 B05 계열). 연결선이 그려지고 노드가 팝인.
+  'relation': {
+    label: '관계도',
+    styles: {
+      'yeori': { label: '여리 브랜드', colors: { bg: '#0C0A10', main: '#F5F1EC', sub: 'rgba(245,241,236,.6)', accent: '#FFB877' } },
+      'light': { label: '라이트',     colors: { bg: '#F5F1EC', main: '#14121A', sub: 'rgba(20,18,26,.6)', accent: '#5B34E0' } }
+    },
+    fields: ['title', 'center', 'node1', 'node2', 'node3', 'node4'],
+    generate: (f, c, dur, dims = { w: 1920, h: 1080 }) => {
+      const nodes = [f.node1, f.node2, f.node3, f.node4].filter(Boolean)
+      const pos = [{ x: 16, y: 26 }, { x: 84, y: 26 }, { x: 16, y: 74 }, { x: 84, y: 74 }]
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:${dims.w}px;height:${dims.h}px;overflow:hidden;background:${c.bg};
+  font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,sans-serif;color:${c.main}}
+.t{position:absolute;top:8%;left:0;right:0;text-align:center;font-size:60px;font-weight:900;letter-spacing:-.02em;
+  opacity:0;animation:fade .6s ease .1s forwards}
+svg{position:absolute;inset:0;width:100%;height:100%}
+.ln{stroke:${c.accent};stroke-width:2;fill:none;stroke-dasharray:1200;stroke-dashoffset:1200;
+  animation:draw 1s ease 1s forwards}
+.node{position:absolute;transform:translate(-50%,-50%) scale(.7);opacity:0;
+  padding:22px 34px;border-radius:16px;border:1.5px solid ${c.sub};background:rgba(127,127,140,.08);
+  font-size:32px;font-weight:700;white-space:nowrap;animation:pop .6s cubic-bezier(.22,1.5,.36,1) forwards}
+.center{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%) scale(.6);opacity:0;
+  width:230px;height:230px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:2px solid ${c.accent};box-shadow:0 0 60px ${c.accent}55;font-size:38px;font-weight:900;text-align:center;
+  animation:pop .7s cubic-bezier(.22,1.6,.36,1) .5s forwards}
+@keyframes fade{to{opacity:1}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes pop{to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+</style></head><body>
+<div class="t">${f.title || ''}</div>
+<svg viewBox="0 0 100 100" preserveAspectRatio="none">
+${nodes.map((_, i) => `<path class="ln" style="animation-delay:${1 + i * .15}s" d="M50 52 L${pos[i].x} ${pos[i].y}"/>`).join('')}
+</svg>
+<div class="center">${f.center || ''}</div>
+${nodes.map((n, i) => `<div class="node" style="left:${pos[i].x}%;top:${pos[i].y}%;animation-delay:${.8 + i * .18}s">${n}</div>`).join('')}
+</body></html>`
+    }
   }
 };
 
@@ -396,12 +481,14 @@ const MD_RECOMMEND = {
   'MD_INT': { type: 'stat-card', style: 'infographic' },   // 몰입·진지함 — 분석적으로
 };
 
-export function generateHTML(type, style, fields, duration = 10) {
+export function generateHTML(type, style, fields, duration = 10, dims = { w: 1920, h: 1080 }) {
   const tmpl = TEMPLATES[type];
   if (!tmpl) throw new Error(`Unknown template: ${type}`);
-  const styleConf = tmpl.styles[style];
+  // 스타일 생략 시 그 템플릿의 첫 스타일로 (GTPL: "relation" 처럼 스타일 안 적어도 됨)
+  const styleKey = style && tmpl.styles[style] ? style : Object.keys(tmpl.styles)[0];
+  const styleConf = tmpl.styles[styleKey];
   if (!styleConf) throw new Error(`Unknown style: ${style}`);
-  return tmpl.generate(fields || {}, styleConf.colors, duration);
+  return tmpl.generate(fields || {}, styleConf.colors, duration, dims);
 }
 
 export function getRecommendation(mdCode) {

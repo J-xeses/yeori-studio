@@ -6,7 +6,9 @@ const MASTER_CLOSEUP_SHOTS = new Set(['SH_ECU', 'SH_CU', 'SH_MCU'])
 const V3_SEP_LINE_RE = /^[━=]{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // HTML/SRC/BQ/URL/CLIP/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION):\s?(.*)$/
+// GTPL 은 GRAPHIC/CAPCUT 컷의 HTML 자동 생성 지시(서브라인 3-1, 2026-09-09 추가):
+//   GTPL: text-card/minimal  |  GTPL: cards-3col/yeori  |  GTPL: ai  |  GTPL: ai:relation/yeori
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
 export function parseClipField(raw) {
@@ -202,6 +204,7 @@ export function parseCutsV3(raw) {
     const brollQuery = String(fields.BQ || '').trim()
     const brollUrl = String(fields.URL || '').trim()
     const cutMotion = String(fields.MOTION || '').trim()
+    const graphicTemplate = String(fields.GTPL || '').trim()   // 서브라인 3-1: HTML 자동 생성 지시
     // CLIP: <영상 페이지 URL> [@ 시크] [+ 길이] — 웹 영상의 한 구간을 화면녹화(screen-scenario)로.
     // ⚠️ 저작권: 리뷰·비평·해설 목적의 짧은 인용(공정이용) 전제. 사용 책임은 대본 작성자.
     const clip = parseClipField(fields.CLIP)
@@ -244,6 +247,7 @@ export function parseCutsV3(raw) {
       ...(brollQuery ? { brollQuery } : {}),
       ...(brollUrl ? { brollUrl } : {}),
       ...(cutMotion ? { motion: cutMotion } : {}),
+      ...(graphicTemplate ? { graphicTemplate } : {}),
       ...(clip ? { clipUrl: clip.url, clipSeek: clip.seekSec, clipDuration: clip.durationSec } : {}),
       masterCode: {
         sp: fields.SP || '', pl: fields.PL || '', ch: fields.CH || '',

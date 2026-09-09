@@ -2969,10 +2969,15 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
   const [recommendedMd, setRecommendedMd] = useState('')
+  const [aiMode, setAiMode] = useState(false)   // 서브라인 3-1: Claude 로 맞춤 HTML
+  const [retryNote, setRetryNote] = useState('')
 
   // 이 컷의 대사/장면 텍스트 — 이 코드베이스엔 별도 caption 필드가 없어
   // 다른 곳(예: 2288행)과 동일한 우선순위로 narration/dialogue/scene에서 뽑는다.
-  const cutText = cut.narration || cut.dialogue || cut.scene || ''
+  const cutText = cut.cutTitle || cut.subtitle || cut.narration || cut.dialogue || cut.scene || ''
+
+  // 대본 GTPL: 필드가 이미 있으면 그대로 노출 (대본에서 자동화 지정한 컷)
+  const scriptGtpl = String(cut.graphicTemplate || '').trim()
 
   // 템플릿 목록 로드 (+ MD 코드가 있으면 추천값으로 초기 선택)
   useEffect(() => {
@@ -2998,19 +3003,27 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
       .catch(err => setError(err.message))
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 모달 열 때 제목/자막을 대본에서 자동 채움 (사람이 다시 타이핑 안 하도록)
+  useEffect(() => {
+    if (!open) return
+    setFields(f => ({
+      title: f.title || cut.cutTitle || cutText || '',
+      subtitle: f.subtitle || cut.subtitle || '',
+      ...f,
+    }))
+    if (scriptGtpl && /^ai\b/i.test(scriptGtpl)) setAiMode(true)
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleGenerate = async () => {
     setGenerating(true)
     setError('')
     try {
+      const body = aiMode
+        ? { epNum, cutNo: cut.no, gtpl: scriptGtpl && /^ai/i.test(scriptGtpl) ? scriptGtpl : 'ai', retryNote: retryNote.trim() || undefined, autoGenerate: true }
+        : { epNum, cutNo: cut.no, type: selectedType, style: selectedStyle, fields, duration: cutDuration(cut), autoGenerate: true }
       const res = await fetch(`${YEORI_SERVER}/api/generate-graphic-html`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          epNum, cutNo: cut.no,
-          type: selectedType, style: selectedStyle,
-          fields, duration: cutDuration(cut),
-          autoGenerate: true
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error || '생성 실패')
@@ -3048,12 +3061,42 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
             maxHeight: '80vh', overflowY: 'auto',
             color: 'var(--text)'
           }}>
-            <h3 style={{ marginBottom: 20 }}>
-              🎨 그래픽 카드 생성 — CUT {cut.no}
+            <h3 style={{ marginBottom: 16 }}>
+              🎨 그래픽 HTML 생성 — CUT {cut.no}
             </h3>
 
+            {/* 모드 전환 — 템플릿(결정형) / AI(맞춤) */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <button onClick={() => setAiMode(false)} className={s.previewBtn}
+                style={{ flex: 1, borderColor: !aiMode ? 'var(--accent)' : 'var(--border)', background: !aiMode ? 'var(--accent-glow)' : 'transparent' }}>
+                🧩 템플릿 (결정형)
+              </button>
+              <button onClick={() => setAiMode(true)} className={s.previewBtn}
+                style={{ flex: 1, borderColor: aiMode ? 'var(--accent)' : 'var(--border)', background: aiMode ? 'var(--accent-glow)' : 'transparent' }}>
+                ✨ AI 맞춤 (Claude)
+              </button>
+            </div>
+            {scriptGtpl && (
+              <div style={{ fontSize: 12, color: 'var(--accent-light)', marginBottom: 12 }}>
+                대본 지정: <code>GTPL: {scriptGtpl}</code>
+              </div>
+            )}
+
+            {aiMode && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.6, marginBottom: 10 }}>
+                  이 컷의 제목·장면(SC)·동작(AC)·자막을 Claude 에 넘겨 1920×1080 CSS 모션그래픽을 만듭니다.
+                  <br/>canvas·JS·외부 리소스 금지 · 여리 팔레트 · 결과는 G4 리뷰에서 확인/재생성.
+                </div>
+                <label style={{ fontSize: 12, color: 'var(--accent-light)' }}>재생성 지시 (선택 — 직전 결과가 별로였을 때)</label>
+                <input value={retryNote} onChange={e => setRetryNote(e.target.value)}
+                  placeholder="예: 배경을 밝게, 노드 4개로, 폰트 더 크게"
+                  style={{ width: '100%', marginTop: 4, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', color: 'var(--text)', fontSize: 13 }} />
+              </div>
+            )}
+
             {/* 대사/장면 자동 채움 힌트 */}
-            {cutText && (
+            {!aiMode && cutText && (
               <div style={{
                 background: 'var(--bg-input)', border: '1px solid var(--border)',
                 borderRadius: 8, padding: '8px 12px', marginBottom: 16,
@@ -3070,6 +3113,7 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
 
             {error && <div className={s.resultError} style={{ marginBottom: 16 }}>❌ {error}</div>}
 
+            {!aiMode && <>
             {/* 템플릿 선택 */}
             <label style={{ fontSize: 13, color: 'var(--accent-light)' }}>템플릿 카테고리</label>
             {recommendedMd && (
@@ -3132,6 +3176,7 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
                 </div>
               </>
             )}
+            </>}
 
             {/* 버튼 */}
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -3141,10 +3186,10 @@ function GraphicCardGenerator({ cut, epNum, onGenerated }) {
               >취소</button>
               <button
                 onClick={handleGenerate}
-                disabled={!selectedType || !selectedStyle || generating}
+                disabled={generating || (!aiMode && (!selectedType || !selectedStyle))}
                 className={s.captureBtn}
               >
-                {generating ? '생성 중...' : '✨ 생성 + 영상 변환'}
+                {generating ? (aiMode ? 'Claude 생성 중… (~20초)' : '생성 중...') : '✨ 생성 + 영상 변환'}
               </button>
             </div>
           </div>
