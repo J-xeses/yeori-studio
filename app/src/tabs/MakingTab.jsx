@@ -200,12 +200,23 @@ const DEFAULT_SUBTITLE = {
   style: { font_size: 72, color: '#FFFFFF', position: 'bottom', outline: true },
   entries: [{ text: '', start: 0.3, end: 2.0 }],
 }
+// 자막 시드 — 대본에서 자막/대사/나레이션을 끌어와 미리보기가 빈칸이 아니게 한다.
+// (사용자가 바로 지우고 실제 문구로 교체 가능. 미리보기 버튼이 "문구 입력하세요"로
+//  막히지 않도록 하는 편의 기능.)
+function subtitleSeed(cut) {
+  const raw = String(cut.subtitle || cut.dialogue || cut.narration || '').trim()
+  if (!raw) return ''
+  // 첫 문장 / 최대 32자 — 자막 한 줄 분량
+  const first = raw.split(/(?<=[.!?…。])\s|\n/)[0].trim() || raw
+  return first.length > 32 ? `${first.slice(0, 32)}…` : first
+}
 function loadSubtitleCfg(cut) {
+  const seed = subtitleSeed(cut)
   return {
     ...DEFAULT_SUBTITLE,
     style: { ...DEFAULT_SUBTITLE.style },
-    entries: (cut.subtitle
-      ? [{ text: cut.subtitle, start: 0.3, end: Math.min(3, cutDuration(cut)) }]
+    entries: (seed
+      ? [{ text: seed, start: 0.3, end: Math.min(3, cutDuration(cut)) }]
       : [{ ...DEFAULT_SUBTITLE.entries[0], end: Math.min(2, cutDuration(cut)) }]),
   }
 }
@@ -2118,6 +2129,7 @@ export default function MakingTab() {
         ))}
 
         <div className={s.settingLabel}>자막 목록</div>
+        <div className={s.emptyHint}>대본의 자막/대사/나레이션에서 자동으로 초안이 채워집니다 — 그대로 미리보기하거나 실제 문구로 수정하세요.</div>
         {cfg.entries.map((e, i) => (
           <div key={i} className={s.subEntryRow}>
             <input className={s.subTextInput} value={e.text} placeholder="자막 문구"
