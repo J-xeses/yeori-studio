@@ -1,4 +1,4 @@
-# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4
+# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.1
 
 > 출처: 성준님 직접 정리 (AI 유튜브 채널 운영 시작하기 1\~7)
 > 용도: 프롬프트 생성 후 자동 품질 체크 기준
@@ -11,7 +11,8 @@
 |-|-|-|
 |스타트 프레임|반드시 서여리 얼굴 있는 이미지 사용|즉시 재생성|
 |헤어|long wavy hair / NOT short 이중 강조 필수|프롬프트 수정 후 재생성|
-|시그니처 디테일|❗"a very subtle natural skin texture on her right cheek (subtle, never exaggerated)" 클로즈업 컷마다 필수|프롬프트 추가|
+|피부|`clear healthy skin, smooth even complexion, soft natural finish` + `avoid: acne, blemishes, ...` 상시 포함. ⚠️ "skin texture on (right) cheek" 류 표현 **금지** — 모델이 여드름·잡티로 증폭 (2026-09-09 v1.4.1 실측)|해당 문구 제거 후 재생성|
+|시그니처 디테일|`delicate gold necklace` 필수|프롬프트 추가|
 |의상|색상·소재·스타일 구체적으로 명시 (⚠️ "DO NOT change clothing" 등 강한 명령형 사용 금지 — 정책위반 오인 유발, 2026-06-14 확정)|프롬프트 수정|
 |소품|가방·신발·골드 목걸이·브레이슬렛 디테일 명시|프롬프트 추가|
 |공간|같은 에피소드 내 배경 일치 필수|스타트 프레임 재활용|
@@ -20,7 +21,7 @@
 ✅ 통과 체크리스트:
 □ 스타트 프레임 = 서여리 얼굴 이미지
 □ 헤어 길이 이중 강조 포함
-□ 자연스러운 피부 텍스처 (very subtle, never exaggerated) 클로즈업 컷에 포함
+□ 피부: 깨끗·균일한 톤 · 여드름/잡티/붉은기 없음 · avoid: 줄 포함
 □ 의상 색상·소재·스타일 구체적 명시 (명령형 문구 없이)
 □ 배경 일관성 확인
 ```
@@ -121,12 +122,15 @@
 ```
 Young Korean woman early-20s,
 long wavy dark brown hair, NOT short hair,
-❗a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+clear healthy skin, smooth even complexion with a soft natural finish,
 delicate gold necklace,
 effortlessly photogenic not posing just existing beautifully,
 K-model proportions small face long legs,
-appearing no older than 22-23
+appearing no older than 22-23,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine
 ```
+
+⚠️ **2026-09-09 확정 (v1.4.1)**: 이전 베이스의 `❗a very subtle natural skin texture on her right cheek (subtle, never exaggerated)` 삭제. Flow·힉스필드·Krea 등이 이 문구를 **여드름·잡티·붉은기로 증폭**해 서여리 우뺨 피부를 심하게 망침(2026-09-09 실측 이미지). 원인: ① `skin texture on cheek` = 뺨에 뭔가 올리라는 지시로 읽힘 ② `(subtle, never exaggerated)` 괄호 부정 수식어는 대부분 무시됨 ③ `❗` 가 오히려 증폭. "AI 플라스틱 방지"는 `soft natural finish` + `avoid:` 목록으로 대체(긍정형 + 명시적 회피 목록이 훨씬 안정적).
 
 ⚠️ **2026-06-14 확정**: 위 베이스에 과거 포함되어 있던 "DO NOT change character appearance" 같은 강한 명령형 문구는 제거한다. 신체비율/외형 묘사 자체(K-model proportions 등)는 캐릭터 정체성의 핵심이므로 그대로 유지하되, "DO NOT", "absolutely mandatory", "strictly required" 같은 명령조 어휘가 누적되면 Flow 정책 모델이 "특정 실존 인물을 정밀 재현하려는 시도"로 오인해 정책위반 플래그가 발생한다(유명인 오인 플래그 회피 원칙). 명령형만 빼고 묘사는 유지하는 것이 핵심.
 
@@ -147,7 +151,7 @@ appearing no older than 22-23
 ✅ 통과 체크리스트:
 □ 서여리 베이스 포함됨
 □ NOT short hair 이중강조 포함
-□ 자연스러운 피부 텍스처 (very subtle, never exaggerated) 클로즈업 컷에 포함
+□ 피부: 깨끗·균일한 톤 · 여드름/잡티/붉은기 없음 · avoid: 줄 포함
 □ 명령형 어휘(DO NOT, absolutely, strictly 등) 미포함 확인
 □ 의상 설명 구체적 (색상·소재·스타일)
 □ 한국어 텍스트는 CapCut 후처리 계획
@@ -159,6 +163,7 @@ appearing no older than 22-23
 
 ```
 ❌ 얼굴 없는 스타트 프레임
+❌ 피부에 여드름·잡티·붉은기·거친 텍스처 (v1.4.1)
 ❌ 헤어가 숏컷으로 변형
 ❌ 의상 변경됨
 ❌ 배경이 에피소드 내 다른 컷과 불일치
@@ -171,7 +176,7 @@ appearing no older than 22-23
 
 ```
 ✅ 얼굴 일관성 유지됨
-✅ 자연스러운 피부 텍스처 보임
+✅ 피부가 깨끗하고 균일 (잡티·여드름·붉은기 없음)
 ✅ 의상·소품 일치
 ✅ 감정 표현이 살아있음
 ✅ K감성 디테일 반영됨
@@ -583,7 +588,7 @@ https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
 
 \---
 
-> 버전: v1.4 / 2026-09-09
+> 버전: v1.4.1 / 2026-09-09
 > 업데이트: 새로운 피드백 발생 시 즉시 추가
 
 ### 버전 이력
@@ -600,4 +605,8 @@ v1.3.1 (2026-07-18) — ⑥-1 삭제, ⑬에 흡수
 v1.4 (2026-09-09) — ⑬-1 메이킹 라인 컷 필드 신설
                      (CT 유형 / HTML·GTPL·SRC·URL·BQ·CLIP·MOTION 소스 필드 /
                       GTPL HTML 자동 생성 / 화면 비율 / run-making 자동 흐름 / 생성 서브라인)
+v1.4.1 (2026-09-09) — ① 피부 항목 전면 개정. 베이스의 "skin texture on right cheek
+                     (subtle, never exaggerated)" 삭제 → 여드름·잡티 증폭 원인(실측).
+                     "clear healthy skin, soft natural finish" + avoid: 목록으로 교체.
+                     ①/⑥ 체크리스트·즉시재생성·OK기준 동반 수정.
 ```

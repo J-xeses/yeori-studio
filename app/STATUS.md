@@ -1,11 +1,11 @@
 # 서여리 채널 — 현재 상태 스냅샷
-> 마지막 업데이트: 2026-09-05
+> 마지막 업데이트: 2026-09-09
 > 다음 채팅 시작 시: "STATUS.md 읽고 이어서" 한 마디면 OK
 >
 > ⚠️ 이 파일은 **append-only 로그**. 최신 상황은 이 상단 요약이 아니라 아래
 > 날짜순 로그의 **맨 끝(가장 최근 날짜 절)**을 봐야 함. 상단 요약도 갱신하지만
-> 세부는 항상 하단 로그 기준. 최신 로그(2026-09-05) = 맨 끝 "## 2026-09-05
-> (그래픽 카드 생성기 + LF_T01 초상권 리스크 정리)" 절.
+> 세부는 항상 하단 로그 기준. 최신 로그(2026-09-09) = 맨 끝 "### 2026-09-09 —
+> 룰셋 v1.4.1 피부 개정 + 생성 라인 착수 + 명세 코드화" 절.
 
 ---
 
@@ -1094,3 +1094,45 @@ downloads/
 - B-04, B-05 GRAPHIC HTML 완성
 - 다음: MV 화면녹화(B-컷 201~206) → G2 이미지 생성 진입
 
+
+
+---
+### 2026-09-09 — 룰셋 v1.4.1 피부 개정 + 생성 라인 착수 + 명세 코드화
+
+**① 룰셋 v1.4.1 — 피부 항목 전면 개정 (긴급).**
+- 실측 이미지에서 서여리 우뺨이 여드름·잡티·붉은기로 심하게 망가진 것 확인.
+- 원인: 베이스 프롬프트 `❗a very subtle natural skin texture on her right cheek
+  (subtle, never exaggerated)`. ① "skin texture on cheek" = 뺨에 뭔가 올리라는 지시로
+  읽힘 ② 괄호 부정 수식어 무시됨 ③ `❗`가 오히려 증폭.
+- 수정: `clear healthy skin, smooth even complexion with a soft natural finish` +
+  베이스 끝에 `avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin,
+  uneven skin tone, redness, oily shine`. ①/⑥ 체크리스트·즉시재생성·OK기준 동반 수정.
+  `yeori_ruleset_v1.3.md` → `yeori_ruleset_v1.4.md` 로 파일명도 정리(내용 버전 일치).
+
+**② 메이킹 라인 자동화 마무리 (커밋 7dac190 등).**
+- GTPL 필드 — GRAPHIC/CAPCUT HTML 자동 생성: `GTPL: text-card/minimal`(결정형) ·
+  `GTPL: ai`(Claude 맞춤) · `GTPL: ai:relation/yeori`(템플릿 골격+AI). `server/lib/graphicGen.js` 신규.
+  신규 템플릿 `cards-3col`·`relation` + `yeori` 브랜드 스타일.
+- B04/B05 를 `MOTION: self` 로 전환 재제작(등장 애니 캡처). 자막 시드가 IP/VP "자막 오버레이:" 읽도록.
+- `/api/subtitle/render` · `/api/upload-cut-video` 도 에피소드 화면비율 인식(16:9 레터박스 수정).
+- 서여리 로고 오프닝 영상 3비율본(16:9/9:16/4:3) → `downloads/seoyeori/YU/sources/`.
+
+**③ 대본생성 탭 Claude 수정요청(handleRevision) v3 전환 (커밋 1a72dde).**
+- 옛 "씬:/액션:" 포맷 → v3 코드 필드. 이제 수정 요청으로 SP/PL/SH/CA/MD/AC 코드 +
+  CT/HTML/GTPL/SRC/CLIP/MOTION 메이킹 필드까지 편집 가능. `generateScript` 는 1차 완료 후.
+
+**④ 코드화된 명세를 버전관리 대상으로 (커밋 6dc2028).**
+- `.gitignore`: `downloads/` 전면 무시 → 미디어만 무시. `**/01_script/**`(대본·그래픽 목업),
+  `state/*.json`, `.motion-manifest.json`, `app/studio-state.json` 추적 시작. "AI 소통 배제" 대응.
+- `yeori_ruleset_v1.4` §⑬-1 메이킹 라인 컷 필드 신설 (CT/HTML/GTPL/SRC/URL/BQ/CLIP/MOTION + run-making 흐름).
+
+**⑤ yeori-genline (G2/G4 생성 라인) 설계 착수.**
+- 별도 독립 앱 `C:\yeori-genline\` (유비 디렉터 패턴). 스튜디오와 downloads/ 경로로만 결합.
+- 방향: 후보보드 아님 → **"현장 창구"** — 생성 결과를 옆에서 같이 보며 대본↔결과 대조,
+  즉시 반영 3방향(IP 프롬프트 / 대본 CUT N / 재생성 프롬프트). 대본 피드백 경로가 핵심.
+- 설계 스펙 + P1 화면 시안 아티팩트 완료. 시안 확정 후 repo 생성 → 구현.
+
+**Codi_Gen 방향**: 제작 과정·대본·프롬프트 전부 코드화. AI 사용 원칙 = "파일로 떨궈주고
+빠지는 도구는 수용, 실행 부품이면 배제". 명세 원본 = git 추적 대본/HTML/state + ruleset §⑬.
+
+**다음**: genline 현장창구 시안 확정 → repo 착수. LF_T01 이미지 v1.4.1 프롬프트로 재생성.
