@@ -8,6 +8,9 @@ downloads/**
 !downloads/state/*.json
 !downloads/**/.motion-manifest.json
 !downloads/**/.making-review.json
+!downloads/**/.g2-review.json
+!downloads/**/.g4-review.json
+!downloads/seoyeori/characters/characters.json
 # state 하위 임시/스크랩/대용량은 다시 제외
 downloads/state/_*/
 downloads/state/*.log

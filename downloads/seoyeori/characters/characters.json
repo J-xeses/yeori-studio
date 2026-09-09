@@ -1,0 +1,42 @@
+{
+ "yeori": {
+  "id": "yeori",
+  "name": "서여리",
+  "aliases": [
+   "여리",
+   "YEORI",
+   "YR_TX",
+   "YR_VD",
+   "YR_IM",
+   "YR"
+  ],
+  "face": "downloads/flow/character/yeori-face.jpg",
+  "closeup": "downloads/flow/character/yeori-closeup.jpg",
+  "flowCharacterName": "서여리",
+  "primary": true,
+  "descriptor": "Consistent character face: Oval face with warm fair skin, almond-shaped hazel-brown eyes, full dark eyebrows, a straight medium nose, full naturally pink lips with a gentle smile, and long wavy dark brown hair NOT short parted loosely; clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin.",
+  "descriptorSource": "ruleset-v1.4.1-skin-fix",
+  "descriptorUpdatedAt": "2026-09-09T00:00:00.000Z",
+  "refBasename": "yeori"
+ },
+ "jia": {
+  "id": "jia",
+  "name": "한지아",
+  "aliases": [
+   "지아",
+   "JIA",
+   "HAN_JIA",
+   "HANJIA",
+   "HJA"
+  ],
+  "face": "downloads/flow/character/jia-face.jpg",
+  "closeup": "downloads/flow/character/jia-closeup.jpg",
+  "flowCharacterName": "한지아",
+  "primary": false,
+  "descriptor": "Consistent character face: oval face shape, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, a straight refined nose, full lips with a defined cupid's bow in deep mauve-brown, fair warm skin tone with a small mole near the nose, short wavy black bob with wispy curtain bangs.",
+  "descriptorSource": "claude-vision",
+  "descriptorUpdatedAt": "2026-09-01T11:47:42.504Z",
+  "notes": "서여리 절친 · 즉흥/리액션형 · 다크 마룬 립 시그니처 · 첫 등장 LF_T01",
+  "refBasename": "jia"
+ }
+}

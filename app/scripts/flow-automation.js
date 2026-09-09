@@ -87,7 +87,7 @@ const CONFIG = {
   faceCacheFile:   mp.charactersDir('yeori-face-cache.json'),
 
   // ── 클로즈업 얼굴 프롬프트 (에피소드당 1회) ────────────────────────
-  closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, natural skin texture, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
+  closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, clear even skin with a soft natural finish, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
 
   // ── 전신샷 자동 추가 프리픽스/서픽스 ──────────────────────────────
   // yeori_ruleset_v1.3 반영: "DO NOT change ~" 류 강한 명령형은 정책위반 오인 유발 가능성으로 제거,
@@ -102,7 +102,7 @@ const CONFIG = {
   characterImage:  mp.charactersDir('yeori-face.jpg'),
   closeupImage:    mp.charactersDir('yeori-closeup.jpg'),
   // 클로즈업 얼굴 생성 프롬프트 (--gen-face 사용 시)
-  facePrompt: 'Young Korean woman early 20s, extreme close-up portrait, long wavy dark brown hair NOT short, natural skin texture on right cheek (subtle, not a prominent mark), delicate gold necklace, natural effortless expression, K-model proportions very small face, appearing no older than 22-23, bright natural eyes, soft lips, flawless skin, soft studio lighting, neutral background, Photorealistic 8K cinematic headshot 1:1',
+  facePrompt: 'Young Korean woman early 20s, extreme close-up portrait, long wavy dark brown hair NOT short, clear even skin, a single small beauty mark near the right cheekbone, delicate gold necklace, natural effortless expression, K-model proportions very small face, appearing no older than 22-23, bright natural eyes, soft lips, flawless skin, soft studio lighting, neutral background, Photorealistic 8K cinematic headshot 1:1',
 }
 
 // ── 예시 prompts.json 포맷 ────────────────────────────────────────────
@@ -115,7 +115,7 @@ const PROMPTS_EXAMPLE = {
       no: 1,
       episode: 1,
       scene: '카페 창가',
-      imagePrompt: 'Young Korean woman early 20s, long wavy dark brown hair, natural skin texture on right cheek, gold necklace, sitting by cafe window, morning light, Photorealistic 8K cinematic 9:16',
+      imagePrompt: 'Young Korean woman early 20s, long wavy dark brown hair, clear even skin, gold necklace, sitting by cafe window, morning light, Photorealistic 8K cinematic 9:16',
     },
   ],
 }
