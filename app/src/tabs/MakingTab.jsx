@@ -2204,10 +2204,15 @@ export default function MakingTab() {
       ? `${vurl}/cut_${pad}_verify.jpg`
       : `${vurl}/cut_${pad}_graphic.png`
     const mc = cut.masterCode || {}
+    const landscape = epDims.w >= epDims.h
+    // 검토용 크게 — 가로 에피소드는 넓게(≈680px), 세로는 높이 기준(≈480px)
+    const vidStyle = landscape
+      ? { width: '100%', maxWidth: 680, borderRadius: 10, border: '1px solid var(--border)', background: '#000', display: 'block' }
+      : { height: 480, maxWidth: '100%', borderRadius: 10, border: '1px solid var(--border)', background: '#000', display: 'block' }
     return (
       <div className={s.subPanel} style={redoMode[cut.no] ? { boxShadow: 'inset 0 0 0 2px #b45309' } : undefined}>
         <div className={s.settingLabel}>컷 리뷰 — 연출 의도 ↔ 제작 결과</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'start' }}>
           <div style={{ fontSize: 13, lineHeight: 1.7 }}>
             <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>연출 의도</div>
             <div><b>제목</b> {cut.cutTitle || '—'}</div>
@@ -2216,20 +2221,30 @@ export default function MakingTab() {
             {(mc.kr?.md || mc.md) && <div><b>감정</b> {mc.kr?.md || mc.md}</div>}
             {(cut.narration || cut.dialogue) && <div><b>{cut.narration ? 'NR' : 'DL'}</b> {cut.narration || cut.dialogue}</div>}
           </div>
-          <div>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>제작 결과</div>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+            <div style={{ textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>제작 정보</div>
             {done ? (
               <>
-                <video className={s.makingVideo} controls src={`${vurl}/cut_${pad}.mp4?t=${info.producedAt || 0}`} />
-                <div className={s.emptyHint} style={{ margin: '4px 0 0' }}>
-                  {info.method || '—'}{info.motion && info.motion !== 'none' ? ` · ${info.motion}` : ''}
-                  {info.producedAt ? ` · ${new Date(info.producedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : ''}
-                  {info.dirtyVsAssemble ? ' · ↻조립필요' : ''}
-                </div>
+                <div>{info.method || '—'}{info.motion && info.motion !== 'none' ? ` · ${info.motion}` : ''}</div>
+                {info.producedAt && <div>{new Date(info.producedAt).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>}
+                <div>{epDims.w}×{epDims.h}{info.dirtyVsAssemble ? ' · ↻조립필요' : ''}</div>
               </>
-            ) : <div className={s.emptyHint} style={{ margin: 0 }}>아직 제작 안 됨</div>}
+            ) : <div>아직 제작 안 됨</div>}
           </div>
         </div>
+
+        {done && (
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 6 }}>제작 결과 (cut_{pad}.mp4)</div>
+            <video style={vidStyle} controls preload="metadata"
+              src={`${vurl}/cut_${pad}.mp4?t=${info.producedAt || 0}`}
+              poster={`${frameSrc}?t=${info.producedAt || 0}`} />
+            <div style={{ marginTop: 6 }}>
+              <a href={`${vurl}/cut_${pad}.mp4?t=${Date.now()}`} target="_blank" rel="noopener noreferrer"
+                className={s.emptyHint} style={{ margin: 0 }}>새 창에서 원본 크기로 ↗</a>
+            </div>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
           {g4
