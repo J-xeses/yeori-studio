@@ -5521,16 +5521,19 @@ app.get('/api/episode-video-checklist', (req, res) => {
   }
 })
 
-// POST /api/upload-cut-video?epNum=&cutNo=&trimTo=&keepAudio=1 — 수동 제작한 mp4를
-// 컷 규격(1080x1920)으로 정규화 저장. body = 파일 raw stream(save-audio와 동일 방식).
+// POST /api/upload-cut-video?epNum=&cutNo=&trimTo=&keepAudio=1&fit=cover — 수동 제작한 mp4를
+// 컷 규격(에피소드 화면비율)으로 정규화 저장. body = 파일 raw stream(save-audio와 동일 방식).
 //   trimTo   : 초 단위. 지정 시 앞부분만 남기고 자름(Veo 8초 → 컷 길이).
 //   keepAudio: '1'이면 원본 오디오 유지(립싱크 컷), 기본은 오디오 제거(-an).
+//   fit      : cover(기본, 채우고 크롭) | contain(레터박스, 로고 등 잘리면 안 되는 경우) | blur
 app.post('/api/upload-cut-video', (req, res) => {
-  const { epNum, cutNo, trimTo, keepAudio } = req.query
+  const { epNum, cutNo, trimTo, keepAudio, fit } = req.query
   if (!epNum || !cutNo) return res.status(400).json({ error: 'epNum, cutNo 필요' })
   const padded = String(cutNo).padStart(2, '0')
   const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
+  const { w: CW, h: CH } = episodeCutDims(epNum)   // 에피소드 화면비율(LF/SF=16:9)
+  const fitMode = ['cover', 'contain', 'blur'].includes(fit) ? fit : 'cover'
   const tmpPath = path.join(videoDir, `cut_${padded}_upload_tmp.mp4`)
   const outPath = path.join(videoDir, `cut_${padded}.mp4`)
 
@@ -5544,7 +5547,7 @@ app.post('/api/upload-cut-video', (req, res) => {
     const args = ['-y']
     if (trimTo && parseFloat(trimTo) > 0) args.push('-t', String(parseFloat(trimTo)))
     args.push('-i', tmpPath,
-      '-vf', `${s2cFitFilter('cover')},format=yuv420p`,
+      '-vf', `${s2cFitFilter(fitMode, CW, CH)},format=yuv420p`,
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60', '-movflags', '+faststart')
     if (keepAudio === '1') args.push('-c:a', 'aac', '-b:a', '192k')
     else args.push('-an')
