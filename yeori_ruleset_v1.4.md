@@ -130,7 +130,7 @@ appearing no older than 22-23,
 avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine
 ```
 
-⚠️ **2026-09-09 확정 (v1.4.1)**: 이전 베이스의 `❗a very subtle natural skin texture on her right cheek (subtle, never exaggerated)` 삭제. Flow·힉스필드·Krea 등이 이 문구를 **여드름·잡티·붉은기로 증폭**해 서여리 우뺨 피부를 심하게 망침(2026-09-09 실측 이미지). 원인: ① `skin texture on cheek` = 뺨에 뭔가 올리라는 지시로 읽힘 ② `(subtle, never exaggerated)` 괄호 부정 수식어는 대부분 무시됨 ③ `❗` 가 오히려 증폭. "AI 플라스틱 방지"는 `soft natural finish` + `avoid:` 목록으로 대체(긍정형 + 명시적 회피 목록이 훨씬 안정적).
+⚠️ **2026-09-09 확정 (v1.4.1)**: 이전 베이스의 `❗a very subtle natural skin texture on her right cheek (subtle, never exaggerated)` 삭제. 같은 이유로 `downloads/seoyeori/characters/characters.json` 여리 descriptor 의 `rosy cheeks and a few small facial moles` 도 `clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin` 로 교체(다인물 장면 `injectCharacterDescriptors` 가 주입하는 실제 데이터라 여기도 고쳐야 함). Flow·힉스필드·Krea 등이 이 문구를 **여드름·잡티·붉은기로 증폭**해 서여리 우뺨 피부를 심하게 망침(2026-09-09 실측 이미지). 원인: ① `skin texture on cheek` = 뺨에 뭔가 올리라는 지시로 읽힘 ② `(subtle, never exaggerated)` 괄호 부정 수식어는 대부분 무시됨 ③ `❗` 가 오히려 증폭. "AI 플라스틱 방지"는 `soft natural finish` + `avoid:` 목록으로 대체(긍정형 + 명시적 회피 목록이 훨씬 안정적).
 
 ⚠️ **2026-06-14 확정**: 위 베이스에 과거 포함되어 있던 "DO NOT change character appearance" 같은 강한 명령형 문구는 제거한다. 신체비율/외형 묘사 자체(K-model proportions 등)는 캐릭터 정체성의 핵심이므로 그대로 유지하되, "DO NOT", "absolutely mandatory", "strictly required" 같은 명령조 어휘가 누적되면 Flow 정책 모델이 "특정 실존 인물을 정밀 재현하려는 시도"로 오인해 정책위반 플래그가 발생한다(유명인 오인 플래그 회피 원칙). 명령형만 빼고 묘사는 유지하는 것이 핵심.
 
