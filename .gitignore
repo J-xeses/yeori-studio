@@ -1,4 +1,21 @@
-downloads/
+# ── downloads/ : 미디어 산출물은 제외, 코드화된 명세는 추적 ──────────────
+#   Codi_Gen 코드화 체계의 원본 보존 — 대본(.txt)·그래픽 목업(.html)·파이프라인
+#   상태(.json)는 버전관리하고, 영상/오디오/이미지 산출물만 무시한다.
+#   (git 은 부모가 무시되면 하위를 다시 살릴 수 없어 `downloads/**` + `!.../` 형태 사용)
+downloads/**
+!downloads/**/
+!downloads/**/01_script/**
+!downloads/state/*.json
+!downloads/**/.motion-manifest.json
+!downloads/**/.making-review.json
+# state 하위 임시/스크랩/대용량은 다시 제외
+downloads/state/_*/
+downloads/state/*.log
+downloads/state/trend_episodes.json
+downloads/state/credit-usage-today.json
+downloads/state/code-task-queue.json
+downloads/state/migrate-*.json
+
 data/*
 !app/data/codebook.json
 !app/data/sfx-catalog.json
@@ -25,7 +42,8 @@ __pycache__/
 *.pyc
 .env.local
 .env
-app/studio-state.json
+# app/studio-state.json — 이제 추적함(컷 유형/모션/htmlFile 등 라이브 명세 보존).
+#   스튜디오 앱이 자주 덮어써서 auto-sync 커밋에 잡음이 늘지만, 유실보다 낫다.
 .vercel
 app/.tunnel-state.json
 # 개인 백업/브라우저 저장 부산물 -- 프로젝트 소스 아님

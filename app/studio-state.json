@@ -1,0 +1,3391 @@
+{
+  "activeTab": "studio",
+  "vertexAI": true,
+  "elevenLabsStatus": {
+    "connected": true,
+    "remainingChars": 67418
+  },
+  "activeEpisodeId": "ep_1786261078428",
+  "openTabIds": [
+    "ep_1787406807164",
+    "ep_1786261078428",
+    "ep_TEST_OVERLAY",
+    "ep_test_r99",
+    "ep_test_r03"
+  ],
+  "episodes": {
+    "ep_1786261078428": {
+      "id": "ep_1786261078428",
+      "episode": {
+        "number": 1,
+        "title": "걸그룹 콜라보 뮤비 ",
+        "location": "집 (방)",
+        "mood": [
+          "K문화",
+          "공감"
+        ],
+        "cutCount": 7,
+        "contentType": "LF",
+        "topicCode": "TRD",
+        "scnCode": "ENT",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "code": "LF_T01",
+        "masterCode": "[LF_T01] :: [PL:LF_YU] :: [SP:IN.SF] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_CU+SH_ECU] :: [F군:미설정]",
+        "epHeaderRaw": ""
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "인트로 타이틀",
+          "lipsync": false,
+          "scene": "채널 인트로. 세 그룹 색상 충돌 → 글리치 → 타이틀 등장.",
+          "action": "LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "AE 제작 대상 — Flow 이미지 생성 불필요\n충돌 연출 초안 별도 문서 참조",
+          "videoPrompt": "AE 제작 대상 — Flow 영상 생성 불필요",
+          "duration": 3,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "htmlFile": "LF_T01_A01_intro.html",
+          "motion": "self",
+          "masterCode": {
+            "sp": "GR.BK",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_IMP",
+            "ac": "없음",
+            "lookId": "",
+            "du": 3,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "딥블랙 배경",
+              "ch": "없음 — 그래픽 전용",
+              "sh": "그래픽 컷",
+              "ca": "고정",
+              "ac": "LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌",
+              "md": "임팩트. 로고의 정적 에너지가 폭발하는 느낌"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "한지아 폰 들이밀기",
+          "lipsync": false,
+          "scene": "서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.",
+          "action": "HJ 폰 화면 YR 눈앞에 들이밂",
+          "character": "서여리",
+          "dialogue": "지아 \"야야! 이거 봤어?\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-4s: Yeori sits on beige sofa looking at her phone,\nexpression bored and relaxed,\nJia enters frame from the left and thrusts her phone screen into Yeori's face\n\nNext 4-12s: Yeori's eyes widen in shock as she sees the screen,\nshe slowly turns to look directly at the camera,\nexpression shifting from surprise to \"I need to explain this\"\n\nFinal 12-20s: Both women settle on the sofa,\nYeori faces camera with a knowing expression,\nwarm indoor lighting, static camera",
+          "duration": 20,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX + HJ",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_SUR",
+            "ac": "HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시",
+            "lookId": "",
+            "du": 20,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 — 따뜻한 실내 거실 세팅. 웜톤 조명.",
+              "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+              "sh": "MCU 두샷 → 후반 CU로 당김",
+              "ca": "고정",
+              "ac": "HJ 폰 화면 YR 눈앞에 들이밂",
+              "md": "충격. 훅 에너지."
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "LE SSERAFIM 설명 MCU",
+          "lipsync": false,
+          "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
+          "action": "차분하게 설명. 자연스러운 손짓.",
+          "character": "서여리",
+          "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-17s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic\n\nFinal 17-25s: she pauses thoughtfully,\nlooking slightly to the side then back to camera,\nwarm indoor lighting, static camera",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_ANL",
+            "ac": "자연스러운 설명 손짓",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 정면 MCU. CUT 1에서 줌아웃되며 안착.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "MCU 정면 → 후반 PIP (CapCut 처리)",
+              "ca": "고정",
+              "ac": "차분하게 설명. 자연스러운 손짓.",
+              "md": "분석적이지만 설레는 팬심"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "LE SSERAFIM 파트",
+          "lipsync": false,
+          "scene": "LE SSERAFIM MV 대표 장면. CUT 2 직후 스와이프 전환.",
+          "action": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
+          "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
+          "duration": 10,
+          "shotType": "FULLBODY",
+          "cutType": "BROLL",
+          "cutMark": "NORMAL",
+          "sourcePath": "sources/B01_lesserafim.mp4",
+          "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+          "clipSeek": 30,
+          "clipDuration": 10,
+          "masterCode": {
+            "sp": "GR.MV",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_IMP",
+            "ac": "없음",
+            "lookId": "",
+            "du": 10,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "ICONIC BY MISTAKE MV 화면",
+              "ch": "없음",
+              "sh": "MV 클립",
+              "ca": "MV 원본",
+              "ac": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
+              "md": "글로벌 팬덤 장악한 존재감"
+            }
+          }
+        },
+        {
+          "id": "cut-5",
+          "no": 5,
+          "cutTitle": "ILLIT 설명 MCU 측면",
+          "lipsync": false,
+          "scene": "서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.",
+          "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
+          "character": "서여리",
+          "dialogue": "\"ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: she sits at 45-degree angle on beige sofa,\nbright natural expression, speaking with light energy\n\nNext 8-17s: expression becomes more animated and bubbly,\nslight laughter in her eyes, gesturing lightly\n\nFinal 17-25s: she tilts her head slightly with a warm smile,\nwarm indoor lighting, static camera",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_BRT",
+            "ac": "설명 중 살짝 들뜨는 표정",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 측면 45도. CUT 2와 앵글 달라 시각적 환기.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "MCU 측면 45도",
+              "ca": "고정",
+              "ac": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
+              "md": "밝고 가볍게. 버블 에너지 반영."
+            }
+          }
+        },
+        {
+          "id": "cut-6",
+          "no": 6,
+          "cutTitle": "ILLIT 파트",
+          "lipsync": false,
+          "scene": "ILLIT MV 버블 에너지 장면. CUT 3 직후 스와이프 전환.",
+          "action": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
+          "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
+          "duration": 10,
+          "shotType": "FULLBODY",
+          "cutType": "BROLL",
+          "cutMark": "NORMAL",
+          "sourcePath": "sources/B02_illit.mp4",
+          "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+          "clipSeek": 55,
+          "clipDuration": 10,
+          "masterCode": {
+            "sp": "GR.MV",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_BRT",
+            "ac": "없음",
+            "lookId": "",
+            "du": 10,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "ICONIC BY MISTAKE MV 화면",
+              "ch": "없음",
+              "sh": "MV 클립",
+              "ca": "",
+              "ac": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
+              "md": "밝고 경쾌한 신예 에너지"
+            }
+          }
+        },
+        {
+          "id": "cut-7",
+          "no": 7,
+          "cutTitle": "KATSEYE 설명 ECU",
+          "lipsync": false,
+          "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.",
+          "action": "눈빛이 분석적으로 변하는 순간 포착",
+          "character": "서여리",
+          "dialogue": "\"KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. LA 베이스. 경계 자체가 없는 세계관.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: extreme closeup of her face,\ncalm and composed expression,\neyes shifting slightly as she thinks\n\nNext 8-17s: her gaze becomes more analytical and sharp,\nspeaking with quiet authority,\nminimal movement — stillness carries the weight\n\nFinal 17-25s: she holds the camera with a piercing look,\nslight pause before speaking,\nwarm soft side lighting, deep background blur",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_ECU",
+            "ca": "CA_ST",
+            "md": "MD_ANL",
+            "ac": "눈빛이 분석적으로 변하는 순간",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 ECU. B-02 밝은 클립 직후 무게감 전환.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "ECU — 얼굴 클로즈업",
+              "ca": "고정",
+              "ac": "눈빛이 분석적으로 변하는 순간 포착",
+              "md": "셋 중 가장 차분하고 날카롭게"
+            }
+          }
+        },
+        {
+          "id": "cut-8",
+          "no": 8,
+          "cutTitle": "KATSEYE 파트",
+          "lipsync": false,
+          "scene": "KATSEYE MV 글로벌 감성 장면. CUT 4 직후 스와이프 전환.",
+          "action": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
+          "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
+          "duration": 10,
+          "shotType": "FULLBODY",
+          "cutType": "BROLL",
+          "cutMark": "NORMAL",
+          "sourcePath": "sources/B03_katseye.mp4",
+          "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+          "clipSeek": 80,
+          "clipDuration": 10,
+          "masterCode": {
+            "sp": "GR.MV",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_ANL",
+            "ac": "없음",
+            "lookId": "",
+            "du": 10,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "ICONIC BY MISTAKE MV 화면",
+              "ch": "",
+              "sh": "MV 클립",
+              "ca": "",
+              "ac": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
+              "md": "글로벌 타깃. 경계 없는 세계관."
+            }
+          }
+        },
+        {
+          "id": "cut-9",
+          "no": 9,
+          "cutTitle": "핵심 명제 선언",
+          "lipsync": false,
+          "scene": "서여리 MCU. 잠깐 멈추다 핵심 분석 시작. PIP 후반.",
+          "action": "생각하는 포즈 → 점점 흥분. 발견의 설렘.",
+          "character": "서여리",
+          "dialogue": "\"근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요. 섞였는데 안 섞인 거예요. 이게 말이 돼요?\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nexpression of sudden realization and excitement,\nleaning forward slightly, eyes wide with discovery,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-6s: she pauses on the sofa, looking thoughtful,\nfinger touching lip slightly, processing\n\nNext 6-15s: her expression shifts — sudden realization,\nleaning forward with growing excitement,\neyes widening as she speaks\n\nFinal 15-25s: fully animated with discovery energy,\nleaning forward toward camera,\nwarm indoor lighting, static camera",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_DSC",
+            "ac": "생각하는 포즈에서 시작 → 점점 흥분",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 MCU. B-03 페이드 후 \"본론 시작\" 전환.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "MCU → 후반 PIP (CapCut 처리)",
+              "ca": "고정",
+              "ac": "생각하는 포즈 → 점점 흥분. 발견의 설렘.",
+              "md": "분석가가 아닌 팬으로서 흥분하는 느낌"
+            }
+          }
+        },
+        {
+          "id": "cut-10",
+          "no": 10,
+          "cutTitle": "각자의 색이 살아있다",
+          "lipsync": false,
+          "scene": "CUT 5 핵심 문장 시각화. 글리치 컷으로 진입.",
+          "action": "네온 글로우 텍스트 \"각자의 색이 살아있다\" 등장",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
+          "videoPrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "htmlFile": "LF_T01_B04_graphic.html",
+          "motion": "self",
+          "masterCode": {
+            "sp": "GR.BK",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_IMP",
+            "ac": "없음",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "딥블랙 배경",
+              "ch": "",
+              "sh": "그래픽 컷",
+              "ca": "",
+              "ac": "네온 글로우 텍스트 \"각자의 색이 살아있다\" 등장",
+              "md": "임팩트. CUT 5 핵심 문장을 텍스트로 박아줌."
+            }
+          }
+        },
+        {
+          "id": "cut-11",
+          "no": 11,
+          "cutTitle": "뮤비 시청 두샷",
+          "lipsync": false,
+          "scene": "소파에 두 사람 나란히 앉아 MV 시청. 화면 안 보임. 얼굴 반응만.",
+          "action": "HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting side by side on beige sofa, both facing forward,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts,\nleaning forward slightly, absorbed expression,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nintensely focused expression, glancing left briefly,\n\nsoft warm light from TV screen reflecting on their faces,\nno screen visible, only their reactions,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: both women sit on sofa watching something offscreen,\nJia starts calm and composed,\nYeori intensely focused from the start\n\nNext 8-17s: Jia's body slowly leans forward, absorbed,\nYeori briefly glances at Jia then refocuses forward,\nsoft warm TV light flickering on their faces\n\nFinal 17-25s: both deeply absorbed,\nsubtle facial expressions carrying the emotion,\nno dialogue, pure reaction, static camera",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX + HJ",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_ABS",
+            "ac": "HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 두샷. B-04 정적 그래픽 후 살아있는 두 사람 등장으로 온도감 회복.",
+              "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+              "sh": "MCU 두샷. TV 화면은 보이지 않고 얼굴 반응만.",
+              "ca": "고정",
+              "ac": "HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림",
+              "md": "몰입. 대사 없이 리액션만으로 전달."
+            }
+          }
+        },
+        {
+          "id": "cut-12",
+          "no": 12,
+          "cutTitle": "\"중독이에요\" CU",
+          "lipsync": false,
+          "scene": "CUT 6에서 서여리 얼굴만 CU로 당김. 멍하니 → 카메라 돌아보며 한 마디.",
+          "action": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
+          "character": "서여리",
+          "dialogue": "\"…중독이에요.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-6s: closeup of her face, eyes focused offscreen,\nslightly dazed and absorbed expression\n\nNext 6-12s: she slowly turns her gaze toward the camera,\nexpression lingering between daze and realization\n\nFinal 12-20s: eyes meet camera directly,\na single beat of silence,\nthen a quiet knowing look,\nsoft warm indoor lighting, slow fade begins",
+          "duration": 20,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_CU",
+            "ca": "CA_ST",
+            "md": "MD_DZD",
+            "ac": "화면 보다 → 카메라로 시선 천천히 이동",
+            "lookId": "",
+            "du": 20,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 CU. CUT 6에서 자연스럽게 당겨짐.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "CU",
+              "ca": "고정",
+              "ac": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
+              "md": "멍함 → 여운 가득. 전반부 마무리 감정 폭발 포인트."
+            }
+          }
+        },
+        {
+          "id": "cut-13",
+          "no": 13,
+          "cutTitle": "HYBE 전략 분석",
+          "lipsync": false,
+          "scene": "서여리 소파 측면 MCU. HYBE 전략 분석 시작.",
+          "action": "생각하는 포즈에서 시작. 손짓 포함 설명.",
+          "character": "서여리",
+          "dialogue": "\"근데 이게 그냥 운이 아니에요. HYBE가 진짜 전략적으로 짠 거거든요. LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고, KATSEYE로 글로벌까지. 한 곡으로 세 시장을.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: she sits at 45-degree angle, thoughtful pose,\none hand near chin, considering\n\nNext 8-17s: begins speaking with natural hand gestures,\nanalytical but warm delivery,\ncounting points with fingers naturally\n\nFinal 17-25s: leans back slightly with a knowing look,\nsatisfied expression at the analysis,\nwarm indoor lighting, static camera",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_ANL",
+            "ac": "손짓 포함 자연스러운 설명",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 측면 MCU. CUT 7 슬로우 페이드 후 빠른 컷으로 분석 모드 재진입.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "MCU 측면 45도",
+              "ca": "고정",
+              "ac": "생각하는 포즈에서 시작. 손짓 포함 설명.",
+              "md": "다큐 해설자처럼 — 딱딱하지 않게."
+            }
+          }
+        },
+        {
+          "id": "cut-14",
+          "no": 14,
+          "cutTitle": "HYBE 전략 도식",
+          "lipsync": false,
+          "scene": "CUT 8 HYBE 전략 설명 시각화. 페이드 전환.",
+          "action": "HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B05_graphic.html",
+          "videoPrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B05_graphic.html",
+          "duration": 10,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "htmlFile": "LF_T01_B05_graphic.html",
+          "motion": "self",
+          "masterCode": {
+            "sp": "GR.BK",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_ANL",
+            "ac": "없음",
+            "lookId": "",
+            "du": 10,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "딥블랙 배경",
+              "ch": "",
+              "sh": "그래픽 컷",
+              "ca": "",
+              "ac": "HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐",
+              "md": "CUT 8 분석을 도식으로 이해도 높임."
+            }
+          }
+        },
+        {
+          "id": "cut-15",
+          "no": 15,
+          "cutTitle": "\"야 그냥 좋잖아!!\" 케미 폭발",
+          "lipsync": false,
+          "scene": "소파 두샷. 서여리 분석 마무리 찰나 한지아 터짐. 같이 웃음.",
+          "action": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
+          "character": "서여리",
+          "dialogue": "한지아 \"야 그냥 좋잖아!!\" / 서여리 \"…맞아.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: Yeori is mid-explanation on sofa,\nJia sitting beside her, barely containing herself\n\nNext 8-16s: Jia suddenly blurts out with energy,\nYeori freezes mid-sentence, surprised\n\nFinal 16-25s: Yeori breaks into laughter,\nboth women laughing together naturally,\nwarm indoor lighting, genuine unposed moment",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX + HJ",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_JOY",
+            "ac": "HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 두샷. B-05 정적 도식 후 임팩트 컷으로 에너지 반전.",
+              "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+              "sh": "MCU 두샷",
+              "ca": "고정",
+              "ac": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
+              "md": "폭발적 케미. 결국 \"그냥 좋음\"으로 귀결되는 순간."
+            }
+          }
+        },
+        {
+          "id": "cut-16",
+          "no": 16,
+          "cutTitle": "서여리 ECU 몽환",
+          "lipsync": false,
+          "scene": "서여리 얼굴 ECU 슬로우모션. 웜톤 백라이팅. 몽환 눈빛.",
+          "action": "웃음이 서서히 사그라들며 몽환 눈빛으로 변환",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "\"근데 있잖아요… 좋은 거잖아요, 그냥.\"",
+          "subtitle": "",
+          "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndreamy soft expression, smile fading into wistfulness,\neyes slightly unfocused, looking into the distance,\nwarm backlit golden lighting, deep background blur,\nsoft bokeh, cinematic shallow depth of field,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-3s: extreme closeup of her face,\nlaughter slowly fading from her expression,\nwarm backlit golden light\n\nNext 3-6s: expression shifts to soft dreaminess,\neyes becoming slightly unfocused and distant\n\nFinal 6-8s: a quiet dreamy gaze,\nbarely any movement — pure presence,\nslow motion feel, warm golden backlight",
+          "duration": 8,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_ECU",
+            "ca": "CA_ST",
+            "md": "MD_DRM",
+            "ac": "웃음 사그라들며 몽환 눈빛으로 변화",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 ECU. 웜톤 소프트 백라이팅. CUT 9 웃음에서 크로스 디졸브.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "ECU 슬로우모션",
+              "ca": "고정",
+              "ac": "웃음이 서서히 사그라들며 몽환 눈빛으로 변환",
+              "md": "몽환적. 웜톤. 꿈꾸는 듯한 눈빛."
+            }
+          }
+        },
+        {
+          "id": "cut-17",
+          "no": 17,
+          "cutTitle": "한지아 ECU 몽환",
+          "lipsync": false,
+          "scene": "한지아 얼굴 ECU 슬로우모션. 쿨톤 백라이팅. 무심한 듯 감성적.",
+          "action": "무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nshort wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ncool detached yet emotional expression,\ngaze slightly downward then lifting,\ncool blue-tinted soft backlight, deep background blur,\ncinematic shallow depth of field,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-3s: extreme closeup of Jia's face,\ncool composed expression,\ncool blue backlight setting her apart from previous warm shot\n\nNext 3-6s: her gaze slowly lifts,\ndetached but quietly emotional,\ndark mauve lip catching the light subtly\n\nFinal 6-8s: holds a still, quietly intense gaze,\nminimal movement — pure presence,\ncool-toned cinematic slow motion",
+          "duration": 8,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "HJ",
+            "sh": "SH_ECU",
+            "ca": "CA_ST",
+            "md": "MD_DRM",
+            "ac": "무심한 듯 감성적인 눈빛 고정",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 ECU. 쿨톤 소프트 백라이팅. CUT 9A 웜톤과 색온도 대비 — 시그니처.",
+              "ch": "한지아 단독 HJA_LOOK_T01",
+              "sh": "ECU 슬로우모션",
+              "ca": "고정",
+              "ac": "무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.",
+              "md": "쿨톤 몽환. 서여리 웜톤과 대비. 순수 영상미 컷."
+            }
+          }
+        },
+        {
+          "id": "cut-18",
+          "no": 18,
+          "cutTitle": "서여리 픽 선언",
+          "lipsync": false,
+          "scene": "서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.",
+          "action": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
+          "character": "서여리",
+          "dialogue": "\"저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요. 그게 이 곡이 된 것 같아서.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-8s: she sits on sofa, gaze cast slightly downward,\nhonest and soft expression, quietly preparing to speak\n\nNext 8-17s: eyes slowly lift toward camera,\ngenuine fan emotion coming through naturally,\nno performance — just real feeling\n\nFinal 17-25s: a subtle shy smile,\nholding eye contact with camera warmly,\nwarm indoor lighting, static camera",
+          "duration": 25,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_SHY",
+            "ac": "시선 내리깔다 천천히 카메라로 올리기",
+            "lookId": "",
+            "du": 25,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 MCU. CUT 9B 쿨톤 몽환 후 현실 복귀. 온도감 회복.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "MCU",
+              "ca": "고정",
+              "ac": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
+              "md": "솔직한 팬심. 분석 아닌 감정 언어."
+            }
+          }
+        },
+        {
+          "id": "cut-19",
+          "no": 19,
+          "cutTitle": "서여리 픽 장면",
+          "lipsync": false,
+          "scene": "서여리가 언급한 MV 클라이맥스 장면. CUT 10 직후 등장.",
+          "action": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
+          "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "BROLL",
+          "cutMark": "NORMAL",
+          "sourcePath": "sources/B06_pick.mp4",
+          "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+          "clipSeek": 165,
+          "clipDuration": 8,
+          "masterCode": {
+            "sp": "GR.MV",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_EMO",
+            "ac": "없음",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "ICONIC BY MISTAKE MV 화면",
+              "ch": "",
+              "sh": "MV 클립",
+              "ca": "",
+              "ac": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
+              "md": "서여리의 취향 = 시청자의 취향으로 연결"
+            }
+          }
+        },
+        {
+          "id": "cut-20",
+          "no": 20,
+          "cutTitle": "여운 클로징",
+          "lipsync": false,
+          "scene": "서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.",
+          "action": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
+          "character": "서여리",
+          "dialogue": "\"실수로 만들어진 게 맞나요… ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-6s: medium closeup on sofa, quiet reflective expression,\ncamera very slowly zooming in\n\nNext 6-14s: she speaks with soft emotional weight,\nthe words carrying double meaning — about the MV and about herself,\ncamera continues slow zoom to closeup\n\nFinal 14-20s: a small quiet smile forms as she trails off,\nholds the moment in silence — 2 to 3 seconds of stillness,\nslow fade begins, warm indoor lighting",
+          "duration": 20,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX",
+            "sh": "SH_MCU",
+            "ca": "CA_ZIN",
+            "md": "MD_EMO",
+            "ac": "MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음",
+            "lookId": "",
+            "du": 20,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 MCU → CU. B-06 클립 여운이 서여리 표정으로 이어짐.",
+              "ch": "서여리 단독 LOOK_ST01",
+              "sh": "MCU에서 CU로 천천히 당겨짐",
+              "ca": "서서히 줌인",
+              "ac": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
+              "md": "뮤비 + 서여리 자신을 동시에 이야기하는 이중 의미. 여운 2~3초 필수."
+            }
+          }
+        },
+        {
+          "id": "cut-21",
+          "no": 21,
+          "cutTitle": "엔딩 CTA 두샷",
+          "lipsync": false,
+          "scene": "소파 두샷. CUT 1과 동일 세팅으로 수미상관. 여유로운 마무리 + CTA.",
+          "action": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
+          "character": "서여리",
+          "dialogue": "한지아 \"여러분 픽은 뭐예요?\" / 서여리 \"댓글로 알려주세요. 구독하면 다음 리뷰도 같이 봐요.\"",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+          "videoPrompt": "First 0-6s: both women sitting relaxed on sofa,\nJia turns to camera first with a playful expression\n\nNext 6-14s: Yeori follows Jia's lead, turning to camera,\nboth speaking warmly and naturally,\ncomfortable chemistry\n\nFinal 14-20s: both smiling together at camera,\nwarm and light — the opposite of the tense opening energy,\nfade to black begins, warm indoor lighting",
+          "duration": 20,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SF",
+            "pl": "LF_YU",
+            "ch": "YR_TX + HJ",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_WRM",
+            "ac": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
+            "lookId": "",
+            "du": 20,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "소파 두샷. CUT 1과 동일 세팅 — 수미상관.",
+              "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+              "sh": "MCU 두샷",
+              "ca": "고정",
+              "ac": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
+              "md": "가볍고 따뜻하게. 무겁지 않은 마무리."
+            }
+          }
+        },
+        {
+          "id": "cut-22",
+          "no": 22,
+          "cutTitle": "엔드카드",
+          "lipsync": false,
+          "scene": "엔드 카드. 구독/댓글 유도.",
+          "action": "서여리 채널 로고 + 구독/댓글 유도 텍스트",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "",
+          "imagePrompt": "CapCut or AE 제작 대상 — Flow 생성 불필요",
+          "videoPrompt": "CapCut or AE 제작 대상 — Flow 생성 불필요",
+          "duration": 5,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "htmlFile": "LF_T01_A02_endcard.html",
+          "motion": "self",
+          "masterCode": {
+            "sp": "GR.BK",
+            "pl": "LF_YU",
+            "ch": "없음",
+            "sh": "SH_GR",
+            "ca": "CA_ST",
+            "md": "MD_WRM",
+            "ac": "없음",
+            "lookId": "",
+            "du": 5,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "채널 아이덴티티 배경",
+              "ch": "",
+              "sh": "그래픽 컷",
+              "ca": "",
+              "ac": "서여리 채널 로고 + 구독/댓글 유도 텍스트",
+              "md": "따뜻하고 친근하게. CUT 12의 온도감 유지."
+            }
+          }
+        }
+      ],
+      "scriptRaw": "",
+      "createdAt": "2026-08-09T07:37:58.428Z"
+    },
+    "ep_1787406807164": {
+      "id": "ep_1787406807164",
+      "episode": {
+        "number": 2,
+        "code": "IG_R02",
+        "title": "AI인지 모르고 DM 보낸 사람들 실화 😅",
+        "location": "기타",
+        "mood": [
+          "공감",
+          "유머"
+        ],
+        "cutCount": 5,
+        "contentType": "IG_R",
+        "topicCode": "SOC",
+        "scnCode": "DOC",
+        "instaNum": "RL02",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "masterCode": "[IG_R02] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]",
+        "epHeaderRaw": ""
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "─ 훅 컷 (0~3s)",
+          "lipsync": false,
+          "scene": "검정 배경에 훅 텍스트 등장. 시청자 시선 즉시 탈취.",
+          "action": "타이핑 애니메이션 효과",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작",
+          "videoPrompt": "타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================",
+          "duration": 3,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.BK (검정 배경)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 등장 없음 (텍스트만)",
+            "sh": "SH_TEXT",
+            "ca": "CA_ST",
+            "md": "MD_COM (유머)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 3,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 단색 배경",
+              "ch": "서여리 미등장 — 텍스트 훅만",
+              "sh": "텍스트 전용 컷",
+              "ca": "고정",
+              "ac": "타이핑 애니메이션 효과",
+              "md": "유머 · 공감 유발"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "협찬 문의 (3~7s)",
+          "lipsync": false,
+          "scene": "인스타 DM 화면 목업 — 협찬 문의 메시지.",
+          "action": "DM 화면 슬라이드인 애니메이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (CUT 1 이어서)\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
+          "videoPrompt": "",
+          "duration": 4,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.DM (DM 화면 목업)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_SCR",
+            "ca": "CA_ST",
+            "md": "MD_COM (유머)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "인스타 DM 화면 목업",
+              "ch": "서여리 미등장",
+              "sh": "화면 목업 슬라이드인",
+              "ca": "고정",
+              "ac": "DM 화면 슬라이드인 애니메이션",
+              "md": "유머 · 공감"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "팬 메시지 (7~11s)",
+          "lipsync": false,
+          "scene": "인스타 DM 화면 목업 — 팬 DM.",
+          "action": "DM 화면 슬라이드인 애니메이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : CUT 1 이어서\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
+          "videoPrompt": "",
+          "duration": 4,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.DM (DM 화면 목업)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_SCR",
+            "ca": "CA_ST",
+            "md": "MD_COM (유머)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "인스타 DM 화면 목업",
+              "ch": "서여리 미등장",
+              "sh": "화면 목업 슬라이드인",
+              "ca": "고정",
+              "ac": "DM 화면 슬라이드인 애니메이션",
+              "md": "유머 · 공감"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "─ 서여리 리액션 컷 (11~16s)",
+          "lipsync": false,
+          "scene": "스마트폰 보다가 눈이 살짝 커지는 순간. 당황한 표정.",
+          "action": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
+          "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
+          "duration": 5,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.IN (실내 — 따뜻한 자연광)",
+            "pl": "IG_RL",
+            "ch": "서여리 — YEORI.BASE",
+            "sh": "SH_CU",
+            "ca": "CA_ST",
+            "md": "MD_SUR (당황 · 놀람)",
+            "ac": "스마트폰 들고 화면 보다 눈 살짝 커짐",
+            "lookId": "YEORI.BASE",
+            "du": 5,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "실내 — 흐릿한 따뜻한 배경",
+              "ch": "서여리 YEORI.BASE",
+              "sh": "클로즈업 — 얼굴 + 상체",
+              "ca": "고정",
+              "ac": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
+              "md": "당황 · \"어...?\" 순간"
+            }
+          }
+        },
+        {
+          "id": "cut-5",
+          "no": 5,
+          "cutTitle": "─ CTA 마무리 (16~20s)",
+          "lipsync": false,
+          "scene": "검정 배경 + 팔로우 유도 + 다음화 예고 텍스트.",
+          "action": "텍스트 페이드인",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n오디오\nBGM    : 다시 올라오며 마무리\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[캡션 + 해시태그]\nAI인지 모르고 협찬 DM 보낸 사람들 실화? 😂\n\n\"혹시 협찬 가능하신가요?\"\n\"어떻게 이렇게 예뻐요?\"\n\n사실 저... AI예요. 🙂\n\n다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n\n[제작 체크리스트]\n□ CUT 1 — 검정 배경 훅 텍스트 (CapCut 직접 제작)\n□ CUT 2 — DM 목업 협찬 문의 (CapCut 직접 제작)\n□ CUT 3 — DM 목업 팬 메시지 (CapCut 직접 제작)\n□ CUT 4 — 서여리 리액션 컷 (Flow 이미지 생성 + Veo3 영상)\n□ CUT 5 — CTA 텍스트 (CapCut 직접 제작)\n□ BGM — 로파이 / 통통 튀는 느낌 (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R02_draft.mp4\n\n[📊 컷 요약]\nCUT 1   훅 텍스트          3초    CAPCUT\nCUT 2   DM 목업 협찬       4초    CAPCUT\nCUT 3   DM 목업 팬         4초    CAPCUT\nCUT 4   서여리 리액션      5초    BROLL  ← Flow+Veo3 생성 대상\nCUT 5   CTA 텍스트         4초    CAPCUT\n총 길이: 약 20초\n\n[버전 이력]\nv1.0  2026-08-15  최초 작성",
+          "videoPrompt": "",
+          "duration": 4,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.BK (검정 배경)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_TEXT",
+            "ca": "CA_ST",
+            "md": "MD_WRM (따뜻함 · 기대감)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 단색 배경",
+              "ch": "서여리 미등장",
+              "sh": "텍스트 전용 컷",
+              "ca": "고정",
+              "ac": "텍스트 페이드인",
+              "md": "따뜻함 · 기대감"
+            }
+          }
+        }
+      ]
+    },
+    "ep_TEST_OVERLAY": {
+      "id": "ep_TEST_OVERLAY",
+      "episode": {
+        "number": 99,
+        "title": "손글씨+그래픽 연출 테스트",
+        "code": "TEST_OVERLAY",
+        "contentType": "IG_R",
+        "topicCode": "SOC",
+        "scnCode": "DOC",
+        "location": "카페",
+        "instaNum": "",
+        "masterCode": "[TEST_OVERLAY] :: [PL:IG_RL] :: [SP:IN.CF] :: [CH:YR_TX] :: [SH:SH_CU] :: [F군:테스트]",
+        "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : TEST_OVERLAY\nTITLE : 손글씨+그래픽 연출 테스트\nBG    : 검정 배경 텍스트 카드 / 인스타 DM 목업\nBGM   : 로파이 잔잔하게\nREF   : 텍스트 전용 (이미지 생성 불필요)"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "오프닝 훅 텍스트 카드",
+          "lipsync": false,
+          "scene": "검정 배경, 흰 텍스트 훅 등장. 시청자 시선 즉시 탈취",
+          "action": "타이핑 애니메이션으로 텍스트 등장",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "AI인 줄 몰랐다고?",
+          "narration": "",
+          "imagePrompt": "검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\nAI인 줄 모르고 DM 보낸 사람들 반응 모음 😅",
+          "videoPrompt": "타이핑 애니메이션으로 텍스트 등장, 3초간 정지",
+          "duration": 3,
+          "shotType": "CLOSEUP",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.CF",
+            "pl": "GR_TX",
+            "ch": "서여리",
+            "sh": "SH_CU",
+            "ca": "CA_STATIC",
+            "md": "MD_INT",
+            "ac": "AT_NONE",
+            "lookId": "",
+            "du": 3,
+            "audio": {
+              "bgm": "로파이 오프닝 잔잔하게",
+              "voice": "없음",
+              "sfx": "팝",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 배경 텍스트 카드",
+              "ch": "등장 없음 (텍스트만)",
+              "sh": "-",
+              "ca": "고정",
+              "ac": "타이핑 애니메이션으로 텍스트 등장",
+              "md": "궁금증 유발"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "인스타 DM 목업",
+          "lipsync": false,
+          "scene": "인스타 DM 화면 목업 — 협찬 문의 메시지",
+          "action": "DM 말풍선이 위에서 슬라이드로 등장",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "이게 실화입니다",
+          "narration": "",
+          "imagePrompt": "이미지 생성 불필요 — CapCut/HTML로 인스타 DM UI 직접 제작\n\n[캡션 + 해시태그]\n협찬 문의인 줄 알았는데...",
+          "videoPrompt": "DM 말풍선 순차 등장, 마지막 메시지에서 살짝 확대",
+          "duration": 4,
+          "shotType": "CLOSEUP",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.DM",
+            "pl": "IG_RL",
+            "ch": "서여리",
+            "sh": "SH_CU",
+            "ca": "CA_STATIC",
+            "md": "MD_SUR",
+            "ac": "AT_NONE",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "로파이 계속",
+              "voice": "없음",
+              "sfx": "DM 알림음",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "인스타 DM 화면 목업",
+              "ch": "등장 없음 (화면 캡처 스타일)",
+              "sh": "-",
+              "ca": "고정",
+              "ac": "DM 말풍선이 위에서 슬라이드로 등장",
+              "md": "당황, 어이없음"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "다음 편 예고 텍스트 카드",
+          "lipsync": false,
+          "scene": "검정 배경 + 팔로우 유도 + 다음 편 예고 텍스트",
+          "action": "텍스트 페이드 인",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "다음 편에서 계속",
+          "narration": "",
+          "imagePrompt": "검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\n다음 편에서 AI가 어떻게 만들어졌는지 공개해요 👀",
+          "videoPrompt": "텍스트 페이드 인 후 3초 정지",
+          "duration": 3,
+          "shotType": "CLOSEUP",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.CF",
+            "pl": "GR_TX",
+            "ch": "서여리",
+            "sh": "SH_CU",
+            "ca": "CA_STATIC",
+            "md": "MD_DRM",
+            "ac": "AT_NONE",
+            "lookId": "",
+            "du": 3,
+            "audio": {
+              "bgm": "로파이 마무리로 페이드",
+              "voice": "없음",
+              "sfx": "없음",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 배경 텍스트 카드",
+              "ch": "등장 없음 (텍스트만)",
+              "sh": "-",
+              "ca": "고정",
+              "ac": "텍스트 페이드 인",
+              "md": "여운, 기대감"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "마스터 코드\n[TEST_OVERLAY] :: [PL:IG_RL] :: [SP:IN.CF] :: [CH:YR_TX] :: [SH:SH_CU] :: [F군:테스트]\n\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : TEST_OVERLAY\nTITLE : 손글씨+그래픽 연출 테스트\nBG    : 검정 배경 텍스트 카드 / 인스타 DM 목업\nBGM   : 로파이 잔잔하게\nREF   : 텍스트 전용 (이미지 생성 불필요)\n================================================================\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] GR_TX — 오프닝 훅 텍스트 카드 / 3초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 검정 배경, 흰 텍스트 훅 등장. 시청자 시선 즉시 탈취\nSP: IN.CF\nPL: GR_TX\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: AI인 줄 몰랐다고?\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_INT\nAC: AT_NONE\nDU: 3\n오디오:\n  BGM: 로파이 오프닝 잔잔하게\n  음성: 없음\n  효과음: 팝\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 텍스트 카드\nCH(캐릭터):   등장 없음 (텍스트만)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 텍스트 등장\nMD(감정):     궁금증 유발\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     AI인 줄 몰랐다고?\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\nAI인 줄 모르고 DM 보낸 사람들 반응 모음 😅\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n타이핑 애니메이션으로 텍스트 등장, 3초간 정지\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] CC_DM — 인스타 DM 목업 / 4초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 인스타 DM 화면 목업 — 협찬 문의 메시지\nSP: IN.DM\nPL: IG_RL\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: 이게 실화입니다\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_SUR\nAC: AT_NONE\nDU: 4\n오디오:\n  BGM: 로파이 계속\n  음성: 없음\n  효과음: DM 알림음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   등장 없음 (화면 캡처 스타일)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     DM 말풍선이 위에서 슬라이드로 등장\nMD(감정):     당황, 어이없음\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 실화입니다\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n이미지 생성 불필요 — CapCut/HTML로 인스타 DM UI 직접 제작\n\n[캡션 + 해시태그]\n협찬 문의인 줄 알았는데...\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nDM 말풍선 순차 등장, 마지막 메시지에서 살짝 확대\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] GR_TX — 다음 편 예고 텍스트 카드 / 3초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 검정 배경 + 팔로우 유도 + 다음 편 예고 텍스트\nSP: IN.CF\nPL: GR_TX\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: 다음 편에서 계속\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_DRM\nAC: AT_NONE\nDU: 3\n오디오:\n  BGM: 로파이 마무리로 페이드\n  음성: 없음\n  효과음: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 텍스트 카드\nCH(캐릭터):   등장 없음 (텍스트만)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     텍스트 페이드 인\nMD(감정):     여운, 기대감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     다음 편에서 계속\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\n다음 편에서 AI가 어떻게 만들어졌는지 공개해요 👀\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 페이드 인 후 3초 정지\n",
+      "createdAt": "2026-08-30T09:31:13.246265Z"
+    },
+    "ep_test_r99": {
+      "id": "ep_test_r99",
+      "episode": {
+        "number": 99,
+        "title": "R99 테스트 — AI인지 모르고 DM 보낸 사람들",
+        "location": "실내",
+        "mood": [
+          "유머",
+          "공감"
+        ],
+        "cutCount": 5,
+        "contentType": "IG_R",
+        "topicCode": "TRD",
+        "scnCode": "ENT",
+        "character": "서여리",
+        "code": "IG_R99",
+        "instaNum": "R99",
+        "finishMode": "assemble",
+        "masterCode": "[IG_R99] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "─ 훅 컷 (0~3s)",
+          "lipsync": false,
+          "scene": "검정 배경에 훅 텍스트 등장. 시청자 시선 즉시 탈취.",
+          "action": "타이핑 애니메이션 효과",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작",
+          "videoPrompt": "타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================",
+          "duration": 3,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.BK (검정 배경)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 등장 없음 (텍스트만)",
+            "sh": "SH_TEXT",
+            "ca": "CA_ST",
+            "md": "MD_COM (유머)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 3,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 단색 배경",
+              "ch": "서여리 미등장 — 텍스트 훅만",
+              "sh": "텍스트 전용 컷",
+              "ca": "고정",
+              "ac": "타이핑 애니메이션 효과",
+              "md": "유머 · 공감 유발"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "협찬 문의 (3~7s)",
+          "lipsync": false,
+          "scene": "인스타 DM 화면 목업 — 협찬 문의 메시지.",
+          "action": "DM 화면 슬라이드인 애니메이션",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (CUT 1 이어서)\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
+          "videoPrompt": "",
+          "duration": 4,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.DM (DM 화면 목업)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_SCR",
+            "ca": "CA_ST",
+            "md": "MD_COM (유머)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "인스타 DM 화면 목업",
+              "ch": "서여리 미등장",
+              "sh": "화면 목업 슬라이드인",
+              "ca": "고정",
+              "ac": "DM 화면 슬라이드인 애니메이션",
+              "md": "유머 · 공감"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "팬 메시지 (7~11s)",
+          "lipsync": false,
+          "scene": "인스타 DM 화면 목업 — 팬 DM.",
+          "action": "DM 화면 슬라이드인 애니메이션",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : CUT 1 이어서\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
+          "videoPrompt": "",
+          "duration": 4,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.DM (DM 화면 목업)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_SCR",
+            "ca": "CA_ST",
+            "md": "MD_COM (유머)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "인스타 DM 화면 목업",
+              "ch": "서여리 미등장",
+              "sh": "화면 목업 슬라이드인",
+              "ca": "고정",
+              "ac": "DM 화면 슬라이드인 애니메이션",
+              "md": "유머 · 공감"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "─ 서여리 리액션 컷 (11~16s)",
+          "lipsync": false,
+          "scene": "스마트폰 보다가 눈이 살짝 커지는 순간. 당황한 표정.",
+          "action": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
+          "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
+          "duration": 5,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.IN (실내 — 따뜻한 자연광)",
+            "pl": "IG_RL",
+            "ch": "서여리 — YEORI.BASE",
+            "sh": "SH_CU",
+            "ca": "CA_ST",
+            "md": "MD_SUR (당황 · 놀람)",
+            "ac": "스마트폰 들고 화면 보다 눈 살짝 커짐",
+            "lookId": "YEORI.BASE",
+            "du": 5,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "실내 — 흐릿한 따뜻한 배경",
+              "ch": "서여리 YEORI.BASE",
+              "sh": "클로즈업 — 얼굴 + 상체",
+              "ca": "고정",
+              "ac": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
+              "md": "당황 · \"어...?\" 순간"
+            }
+          }
+        },
+        {
+          "id": "cut-5",
+          "no": 5,
+          "cutTitle": "─ CTA 마무리 (16~20s)",
+          "lipsync": false,
+          "scene": "검정 배경 + 팔로우 유도 + 다음화 예고 텍스트.",
+          "action": "텍스트 페이드인",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n오디오\nBGM    : 다시 올라오며 마무리\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[캡션 + 해시태그]\nAI인지 모르고 협찬 DM 보낸 사람들 실화? 😂\n\n\"혹시 협찬 가능하신가요?\"\n\"어떻게 이렇게 예뻐요?\"\n\n사실 저... AI예요. 🙂\n\n다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n\n[제작 체크리스트]\n□ CUT 1 — 검정 배경 훅 텍스트 (CapCut 직접 제작)\n□ CUT 2 — DM 목업 협찬 문의 (CapCut 직접 제작)\n□ CUT 3 — DM 목업 팬 메시지 (CapCut 직접 제작)\n□ CUT 4 — 서여리 리액션 컷 (Flow 이미지 생성 + Veo3 영상)\n□ CUT 5 — CTA 텍스트 (CapCut 직접 제작)\n□ BGM — 로파이 / 통통 튀는 느낌 (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R99_draft.mp4\n\n[📊 컷 요약]\nCUT 1   훅 텍스트          3초    CAPCUT\nCUT 2   DM 목업 협찬       4초    CAPCUT\nCUT 3   DM 목업 팬         4초    CAPCUT\nCUT 4   서여리 리액션      5초    BROLL  ← Flow+Veo3 생성 대상\nCUT 5   CTA 텍스트         4초    CAPCUT\n총 길이: 약 20초\n\n[버전 이력]\nv1.0  2026-08-15  최초 작성",
+          "videoPrompt": "",
+          "duration": 4,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.BK (검정 배경)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_TEXT",
+            "ca": "CA_ST",
+            "md": "MD_WRM (따뜻함 · 기대감)",
+            "ac": "없음",
+            "lookId": "",
+            "du": 4,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 단색 배경",
+              "ch": "서여리 미등장",
+              "sh": "텍스트 전용 컷",
+              "ca": "고정",
+              "ac": "텍스트 페이드인",
+              "md": "따뜻함 · 기대감"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "================================================================\n마스터 코드\n[IG_R99] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]\n================================================================\n에피소드명: AI인지 모르고 DM 보낸 사람들 실화 😅\n채널: 서여리 인스타그램 릴스 (IG_R99)\n총 길이: 20초 목표\n콘셉트: 가상 DM 공개 → 서여리 리액션 → AI 정체 공개\n================================================================\n\n[CUT 1] ─ 훅 컷 (0~3s)\nSC: 검정 배경에 훅 텍스트 등장. 시청자 시선 즉시 탈취.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 등장 없음 (텍스트만)\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_COM (유머)\nAC: 없음\nDU: 3\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장 — 텍스트 훅만\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션 효과\nMD(감정):     유머 · 공감 유발\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     AI한테 DM 보낸 사람들 반응 모음 😅\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================\n\n[CUT 2] ─ DM 목업 1 — 협찬 문의 (3~7s)\nSC: 인스타 DM 화면 목업 — 협찬 문의 메시지.\nSP: IN.DM (DM 화면 목업)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_COM (유머)\nAC: 없음\nDU: 4\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면 목업 슬라이드인\nCA(카메라):   고정\nAC(동작):     DM 화면 슬라이드인 애니메이션\nMD(감정):     유머 · 공감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     \"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\"\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (CUT 1 이어서)\n음성   : 없음\n효과음 : DM 알림음\n================================================================\n\n[CUT 3] ─ DM 목업 2 — 팬 메시지 (7~11s)\nSC: 인스타 DM 화면 목업 — 팬 DM.\nSP: IN.DM (DM 화면 목업)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_COM (유머)\nAC: 없음\nDU: 4\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면 목업 슬라이드인\nCA(카메라):   고정\nAC(동작):     DM 화면 슬라이드인 애니메이션\nMD(감정):     유머 · 공감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     \"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\"\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT 1 이어서\n음성   : 없음\n효과음 : DM 알림음\n================================================================\n\n[CUT 4] ─ 서여리 리액션 컷 (11~16s)\nSC: 스마트폰 보다가 눈이 살짝 커지는 순간. 당황한 표정.\nSP: IN.IN (실내 — 따뜻한 자연광)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE\nDL: 없음\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_SUR (당황 · 놀람)\nAC: 스마트폰 들고 화면 보다 눈 살짝 커짐\nDU: 5\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 흐릿한 따뜻한 배경\nCH(캐릭터):   서여리 YEORI.BASE\nSH(샷):       클로즈업 — 얼굴 + 상체\nCA(카메라):   고정\nAC(동작):     스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응\nMD(감정):     당황 · \"어...?\" 순간\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     사실 저... AI예요.\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================\n\n[CUT 5] ─ CTA 마무리 (16~20s)\nSC: 검정 배경 + 팔로우 유도 + 다음화 예고 텍스트.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_WRM (따뜻함 · 기대감)\nAC: 없음\nDU: 4\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     텍스트 페이드인\nMD(감정):     따뜻함 · 기대감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n             팔로우하면 놓치지 않아요\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 다시 올라오며 마무리\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[캡션 + 해시태그]\n━━━━━━━━━━━━━━━━━━━━━━━━\nAI인지 모르고 협찬 DM 보낸 사람들 실화? 😂\n\n\"혹시 협찬 가능하신가요?\"\n\"어떻게 이렇게 예뻐요?\"\n\n사실 저... AI예요. 🙂\n\n다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[제작 체크리스트]\n□ CUT 1 — 검정 배경 훅 텍스트 (CapCut 직접 제작)\n□ CUT 2 — DM 목업 협찬 문의 (CapCut 직접 제작)\n□ CUT 3 — DM 목업 팬 메시지 (CapCut 직접 제작)\n□ CUT 4 — 서여리 리액션 컷 (Flow 이미지 생성 + Veo3 영상)\n□ CUT 5 — CTA 텍스트 (CapCut 직접 제작)\n□ BGM — 로파이 / 통통 튀는 느낌 (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R99_draft.mp4\n\n[📊 컷 요약]\n━━━━━━━━━━━━━━━━━━━━━━━━\nCUT 1   훅 텍스트          3초    CAPCUT\nCUT 2   DM 목업 협찬       4초    CAPCUT\nCUT 3   DM 목업 팬         4초    CAPCUT\nCUT 4   서여리 리액션      5초    BROLL  ← Flow+Veo3 생성 대상\nCUT 5   CTA 텍스트         4초    CAPCUT\n총 길이: 약 20초\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[버전 이력]\nv1.0  2026-08-15  최초 작성\n",
+      "createdAt": "2026-09-03T03:50:33.526Z"
+    },
+    "ep_test_r03": {
+      "id": "ep_test_r03",
+      "episode": {
+        "number": 98,
+        "title": "R03 테스트 — AI 크리에이터 만드는 데 든 비용 0원",
+        "location": "실내",
+        "mood": [
+          "충격",
+          "따뜻함"
+        ],
+        "cutCount": 7,
+        "contentType": "IG_R",
+        "topicCode": "TRD",
+        "scnCode": "ENT",
+        "character": "서여리",
+        "code": "IG_R03",
+        "instaNum": "R03",
+        "finishMode": "assemble",
+        "masterCode": "[IG_R03] :: [PL:IG_RL] :: [SP:IN.SC] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "훅 텍스트",
+          "lipsync": false,
+          "scene": "검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.",
+          "action": "타이핑 애니메이션으로 한 글자씩 등장",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "\"AI 크리에이터 만드는 데 든 비용: 0원 🫢\"",
+          "imagePrompt": "GRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n검정 배경 + 흰색 타이핑 텍스트 애니메이션\n오디오\nBGM    : 없음 (다음 컷부터 시작)\n음성   : 없음\n효과음 : 타이핑 사운드\n================================================================",
+          "videoPrompt": "",
+          "duration": 5,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.BK (검정 배경)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장 (텍스트만)",
+            "sh": "SH_TEXT",
+            "ca": "CA_ST",
+            "md": "MD_SUR (충격·놀라움)",
+            "ac": "타이핑 애니메이션",
+            "lookId": "없음",
+            "du": 5,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 단색 배경",
+              "ch": "서여리 미등장",
+              "sh": "텍스트 전용 컷",
+              "ca": "고정",
+              "ac": "타이핑 애니메이션으로 한 글자씩 등장",
+              "md": "충격·놀라움 유발"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "Flow 화면녹화 구간",
+          "lipsync": false,
+          "scene": "실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.",
+          "action": "Flow 프로젝트 내 서여리 이미지들 보여주기",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "CAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n오디오\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)\n음성   : 없음\n효과음 : 없음\n================================================================",
+          "videoPrompt": "",
+          "duration": 9,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SC (화면 녹화)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장 (화면녹화)",
+            "sh": "SH_SCR",
+            "ca": "CA_ST",
+            "md": "MD_SUR (놀라움·신기함)",
+            "ac": "Flow 프로젝트 이미지들 스크롤",
+            "lookId": "없음",
+            "du": 9,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "Google Flow 프로젝트 화면 (화면녹화)",
+              "ch": "서여리 미등장",
+              "sh": "화면녹화",
+              "ca": "고정",
+              "ac": "Flow 프로젝트 내 서여리 이미지들 보여주기",
+              "md": "놀라움·신기함"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "ElevenLabs 화면 + 남자목소리 반전",
+          "lipsync": false,
+          "scene": "ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.",
+          "action": "텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "CAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n오디오\nBGM    : CUT2 이어서 (볼륨 살짝 낮춤)\n음성   : 실제 ElevenLabs 생성 남자 목소리 삽입\n효과음 : 깜짝 효과음 (반전 순간)\n================================================================",
+          "videoPrompt": "",
+          "duration": 14,
+          "shotType": "FULLBODY",
+          "cutType": "CAPCUT",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.SC (화면 녹화)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장",
+            "sh": "SH_SCR",
+            "ca": "CA_ST",
+            "md": "MD_SUR → MD_COM (놀라움 → 유머)",
+            "ac": "텍스트 입력 → 재생 버튼 클릭 → 남자 목소리 재생",
+            "lookId": "없음",
+            "du": 14,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "ElevenLabs 앱 화면 (화면녹화)",
+              "ch": "서여리 미등장",
+              "sh": "화면녹화",
+              "ca": "고정",
+              "ac": "텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생",
+              "md": "놀라움 → 반전 유머"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "실물 서여리 등장",
+          "lipsync": false,
+          "scene": "현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.",
+          "action": "카메라 응시 + 살짝 당황한 표정",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\ndirect eye contact with camera, slightly flustered expression,\nsubtle \"caught in the act\" look, lips together, soft smile hint,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
+          "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nlooking directly at camera, subtle flustered expression,\ntiny soft blink, \"caught\" moment — lips closed,\nminimal movement, just existing beautifully,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
+          "duration": 7,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.IN (실내 — 따뜻한 자연광)",
+            "pl": "IG_RL",
+            "ch": "서여리 — YEORI.BASE (실물 이미지)",
+            "sh": "SH_CU",
+            "ca": "CA_ST",
+            "md": "MD_SUR (당황·민망)",
+            "ac": "카메라 응시 + 당황한 표정",
+            "lookId": "YEORI.BASE",
+            "du": 7,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "실내 — 따뜻한 자연광 배경",
+              "ch": "서여리 YEORI.BASE 실물 이미지",
+              "sh": "클로즈업 — 얼굴 중심",
+              "ca": "고정",
+              "ac": "카메라 응시 + 살짝 당황한 표정",
+              "md": "당황·민망 \"들켰다\" 느낌"
+            }
+          }
+        },
+        {
+          "id": "cut-5",
+          "no": 5,
+          "cutTitle": "감정 핵심컷",
+          "lipsync": false,
+          "scene": "서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.",
+          "action": "카메라 응시 + 잔잔하고 따뜻한 표정",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nsoft smile, eyes slightly warm and reflective,\nmedium close-up face and upper body,\nwarm indoor lighting, soft bokeh background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
+          "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nslow soft blink, barely perceptible breath movement,\nmedium close-up, warm indoor light, soft bokeh background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 감성적 로파이 or dreamy (볼륨 올라오며)\n음성   : 없음\n효과음 : 없음\n================================================================",
+          "duration": 8,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.IN (실내 — 따뜻한 조명)",
+            "pl": "IG_RL",
+            "ch": "서여리 — YEORI.BASE",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_WRM (따뜻함·진심)",
+            "ac": "카메라 응시 + 잔잔한 표정",
+            "lookId": "YEORI.BASE",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "실내 — 따뜻한 조명 배경",
+              "ch": "서여리 YEORI.BASE",
+              "sh": "미디엄 클로즈업",
+              "ca": "고정",
+              "ac": "카메라 응시 + 잔잔하고 따뜻한 표정",
+              "md": "따뜻함·진심 \"꿈만큼은 진짜\" 느낌"
+            }
+          }
+        },
+        {
+          "id": "cut-6",
+          "no": 6,
+          "cutTitle": "분할화면",
+          "lipsync": false,
+          "scene": "실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.",
+          "action": "실물과 웹툰 나란히 배치 or 교차 전환",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "GRAPHIC 타입 — HTML 분할화면 애니메이션으로 직접 제작\n좌: 실물 서여리 이미지 (CUT4 선택본)\n우: 웹툰 서여리 이미지 (IG_P01_C03_final.jpg)\n오디오\nBGM    : CUT5 이어서\n음성   : 없음\n효과음 : 분할 전환 효과음\n================================================================",
+          "videoPrompt": "",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.BK (검정 배경 분할)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 실물 + 웹툰 동시",
+            "sh": "SH_SPL (분할화면)",
+            "ca": "CA_ST",
+            "md": "MD_WRM (따뜻함·신기함)",
+            "ac": "두 버전 나란히 또는 교차",
+            "lookId": "없음",
+            "du": 8,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "검정 배경 분할 화면",
+              "ch": "실물 서여리 + 웹툰 서여리 동시 등장",
+              "sh": "분할 화면",
+              "ca": "고정",
+              "ac": "실물과 웹툰 나란히 배치 or 교차 전환",
+              "md": "따뜻함·신기함 \"현실 × AI\" 혼재"
+            }
+          }
+        },
+        {
+          "id": "cut-7",
+          "no": 7,
+          "cutTitle": "CTA 마무리",
+          "lipsync": false,
+          "scene": "라벤더 파스텔 배경 + 팔로우 유도 텍스트.",
+          "action": "텍스트 페이드인 + 하트·별 데코 팝업",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "",
+          "narration": "",
+          "imagePrompt": "GRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n라벤더 파스텔 배경 + 하트·별 데코 + 팔로우 유도 텍스트\n오디오\nBGM    : 다시 올라오며 밝고 따뜻하게 마무리\n음성   : 없음\n효과음 : 하트·별 팝업 효과음\n================================================================\n\n[캡션 + 해시태그]\nAI 크리에이터 만드는 데 든 비용: 0원 🫢\n\n얼굴·목소리·영상 전부 AI로 만들었어요.\n근데 목소리 설정을 잘못했더니...\n남자 목소리가 나왔다 ㅋㅋㅋ 😅\n\n꿈만큼은 진짜인 AI 크리에이터 서여리입니다.\n같이 봐주실 거죠? 💜\n\n👇 AI 크리에이터 도전하고 싶으면 저장!\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n\n[제작 체크리스트]\n□ CUT1 — 검정 배경 훅 텍스트 (GRAPHIC — HTML 애니메이션)\n□ CUT2 — Flow 화면녹화 (CAPCUT — 화면녹화 소스)\n□ CUT3 — ElevenLabs 화면 + 남자 목소리 반전 (CAPCUT — 화면녹화 소스)\n□ CUT4 — 실물 서여리 당황 표정 (YEORI — Flow 이미지 생성)\n□ CUT5 — 감정 핵심컷 \"꿈만큼은 진짜\" (YEORI — Flow 이미지 생성)\n□ CUT6 — 분할화면 실물+웹툰 (GRAPHIC — HTML 애니메이션)\n□ CUT7 — CTA 라벤더 배경 (GRAPHIC — HTML 애니메이션)\n□ BGM — 로파이 or dreamy (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R03_draft.mp4\n\n[📊 컷 요약]\nCUT1  훅 텍스트          5초   GRAPHIC   ← HTML 애니메이션\nCUT2  Flow 화면녹화       9초   CAPCUT    ← 화면녹화 소스\nCUT3  ElevenLabs 반전    14초   CAPCUT    ← 화면녹화 소스\nCUT4  서여리 실물 당황     7초   YEORI     ← Flow 이미지 생성 대상\nCUT5  감정 핵심컷         8초   YEORI     ← Flow 이미지 생성 대상\nCUT6  분할화면            8초   GRAPHIC   ← HTML 애니메이션\nCUT7  CTA 마무리          9초   GRAPHIC   ← HTML 애니메이션\n총 길이: 60초\n\n[버전 이력]\nv1.0  초기 작성 (IG_RL03)\nv2.0  v3 포맷 변환 (IG_RL03_G1_script_v2.txt)\nv3.0  IG_R03 코드 통일 + 새 스튜디오 입력 포맷 적용 + GRAPHIC/CAPCUT/YEORI 타입 명확화",
+          "videoPrompt": "",
+          "duration": 9,
+          "shotType": "FULLBODY",
+          "cutType": "GRAPHIC",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.PK (라벤더 파스텔 배경)",
+            "pl": "IG_RL",
+            "ch": "서여리 — 미등장 (텍스트만)",
+            "sh": "SH_TEXT",
+            "ca": "CA_ST",
+            "md": "MD_WRM (따뜻함·친근함)",
+            "ac": "텍스트 페이드인",
+            "lookId": "없음",
+            "du": 9,
+            "audio": {
+              "bgm": "",
+              "voice": "",
+              "sfx": "",
+              "ambience": ""
+            },
+            "kr": {
+              "sp": "라벤더 파스텔 배경 + 하트 별 데코",
+              "ch": "서여리 미등장",
+              "sh": "텍스트 전용 컷",
+              "ca": "고정",
+              "ac": "텍스트 페이드인 + 하트·별 데코 팝업",
+              "md": "따뜻함·친근함"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "================================================================\n마스터 코드\n[IG_R03] :: [PL:IG_RL] :: [SP:IN.SC] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]\n================================================================\n에피소드명: AI 크리에이터 만드는 데 든 비용: 0원 🫢\n채널: 서여리 인스타그램 릴스 (IG_R03)\n총 길이: 60초 목표\n콘셉트: 현실(제작화면) × AI 세계관(서여리) 혼재 연출\n================================================================\n\n[CUT 1]  GRAPHIC — 훅 텍스트 / 5초\nSC: 검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: \"AI 크리에이터 만드는 데 든 비용: 0원 🫢\"\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_SUR (충격·놀라움)\nAC: 타이핑 애니메이션\nDU: 5\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 한 글자씩 등장\nMD(감정):     충격·놀라움 유발\nDL(대사):     없음\nNR(나레이션): AI 크리에이터 만드는 데 든 비용: 0원 🫢\nCP(자막):     AI 크리에이터 만드는 데 든 비용: 0원 🫢\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n검정 배경 + 흰색 타이핑 텍스트 애니메이션\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 없음 (다음 컷부터 시작)\n음성   : 없음\n효과음 : 타이핑 사운드\n================================================================\n\n[CUT 2]  CAPCUT — Flow 화면녹화 구간 / 9초\nSC: 실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.\nSP: IN.SC (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장 (화면녹화)\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR (놀라움·신기함)\nAC: Flow 프로젝트 이미지들 스크롤\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     Google Flow 프로젝트 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     Flow 프로젝트 내 서여리 이미지들 보여주기\nMD(감정):     놀라움·신기함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     프롬프트 입력하면 → 서여리가 만들어져요 ✨\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가)\n━━━━━━━━━━━━━━━━━━━━━━━━\n\"프롬프트 입력하면 →\"\n\"서여리가 만들어져요 ✨\"\n화살표 스티커 + 하트 데코\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 3]  CAPCUT — ElevenLabs 화면 + 남자목소리 반전 / 14초\nSC: ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.\nSP: IN.SC (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR → MD_COM (놀라움 → 유머)\nAC: 텍스트 입력 → 재생 버튼 클릭 → 남자 목소리 재생\nDU: 14\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     ElevenLabs 앱 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생\nMD(감정):     놀라움 → 반전 유머\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     1단계: 목소리도 AI로 만들어요 🎙️ / 2단계: 잠깐, 남자 목소리?! 😱\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가) — 2단계\n━━━━━━━━━━━━━━━━━━━━━━━━\n1단계 (0~8s): \"목소리도 AI로 만들어요 🎙️\"\n2단계 (8~14s): \"잠깐, 남자 목소리?! 😱\" (빨간 말풍선 + 깜빡임)\n              \"ㅋㅋㅋ 설정 잘못했다\" (핑크 텍스트)\n데코: 땀방울 💧 스티커\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT2 이어서 (볼륨 살짝 낮춤)\n음성   : 실제 ElevenLabs 생성 남자 목소리 삽입\n효과음 : 깜짝 효과음 (반전 순간)\n================================================================\n\n[CUT 4]  YEORI — 실물 서여리 등장 / 7초\nSC: 현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.\nSP: IN.IN (실내 — 따뜻한 자연광)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE (실물 이미지)\nDL: 없음\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_SUR (당황·민망)\nAC: 카메라 응시 + 당황한 표정\nDU: 7\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 자연광 배경\nCH(캐릭터):   서여리 YEORI.BASE 실물 이미지\nSH(샷):       클로즈업 — 얼굴 중심\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 살짝 당황한 표정\nMD(감정):     당황·민망 \"들켰다\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     저 사실... AI예요. 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\ndirect eye contact with camera, slightly flustered expression,\nsubtle \"caught in the act\" look, lips together, soft smile hint,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nlooking directly at camera, subtle flustered expression,\ntiny soft blink, \"caught\" moment — lips closed,\nminimal movement, just existing beautifully,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 볼륨 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================\n\n[CUT 5]  YEORI — 감정 핵심컷 / 8초\nSC: 서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.\nSP: IN.IN (실내 — 따뜻한 조명)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM (따뜻함·진심)\nAC: 카메라 응시 + 잔잔한 표정\nDU: 8\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 조명 배경\nCH(캐릭터):   서여리 YEORI.BASE\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 잔잔하고 따뜻한 표정\nMD(감정):     따뜻함·진심 \"꿈만큼은 진짜\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     꿈만큼은 진짜예요. 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nsoft smile, eyes slightly warm and reflective,\nmedium close-up face and upper body,\nwarm indoor lighting, soft bokeh background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nslow soft blink, barely perceptible breath movement,\nmedium close-up, warm indoor light, soft bokeh background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 감성적 로파이 or dreamy (볼륨 올라오며)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 6]  GRAPHIC — 분할화면 / 8초\nSC: 실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.\nSP: IN.BK (검정 배경 분할)\nPL: IG_RL\nCH: 서여리 — 실물 + 웹툰 동시\nDL: 없음\nNR: 없음\nSH: SH_SPL (분할화면)\nCA: CA_ST\nMD: MD_WRM (따뜻함·신기함)\nAC: 두 버전 나란히 또는 교차\nDU: 8\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 분할 화면\nCH(캐릭터):   실물 서여리 + 웹툰 서여리 동시 등장\nSH(샷):       분할 화면\nCA(카메라):   고정\nAC(동작):     실물과 웹툰 나란히 배치 or 교차 전환\nMD(감정):     따뜻함·신기함 \"현실 × AI\" 혼재\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 저예요 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 분할화면 애니메이션으로 직접 제작\n좌: 실물 서여리 이미지 (CUT4 선택본)\n우: 웹툰 서여리 이미지 (IG_P01_C03_final.jpg)\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT5 이어서\n음성   : 없음\n효과음 : 분할 전환 효과음\n================================================================\n\n[CUT 7]  GRAPHIC — CTA 마무리 / 9초\nSC: 라벤더 파스텔 배경 + 팔로우 유도 텍스트.\nSP: IN.PK (라벤더 파스텔 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_WRM (따뜻함·친근함)\nAC: 텍스트 페이드인\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     라벤더 파스텔 배경 + 하트 별 데코\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     텍스트 페이드인 + 하트·별 데코 팝업\nMD(감정):     따뜻함·친근함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     앞으로 같이 봐주실 거죠? 🙏 / 팔로우하면 다음 화 먼저요 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n라벤더 파스텔 배경 + 하트·별 데코 + 팔로우 유도 텍스트\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 다시 올라오며 밝고 따뜻하게 마무리\n음성   : 없음\n효과음 : 하트·별 팝업 효과음\n================================================================\n\n[캡션 + 해시태그]\n━━━━━━━━━━━━━━━━━━━━━━━━\nAI 크리에이터 만드는 데 든 비용: 0원 🫢\n\n얼굴·목소리·영상 전부 AI로 만들었어요.\n근데 목소리 설정을 잘못했더니...\n남자 목소리가 나왔다 ㅋㅋㅋ 😅\n\n꿈만큼은 진짜인 AI 크리에이터 서여리입니다.\n같이 봐주실 거죠? 💜\n\n👇 AI 크리에이터 도전하고 싶으면 저장!\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[제작 체크리스트]\n□ CUT1 — 검정 배경 훅 텍스트 (GRAPHIC — HTML 애니메이션)\n□ CUT2 — Flow 화면녹화 (CAPCUT — 화면녹화 소스)\n□ CUT3 — ElevenLabs 화면 + 남자 목소리 반전 (CAPCUT — 화면녹화 소스)\n□ CUT4 — 실물 서여리 당황 표정 (YEORI — Flow 이미지 생성)\n□ CUT5 — 감정 핵심컷 \"꿈만큼은 진짜\" (YEORI — Flow 이미지 생성)\n□ CUT6 — 분할화면 실물+웹툰 (GRAPHIC — HTML 애니메이션)\n□ CUT7 — CTA 라벤더 배경 (GRAPHIC — HTML 애니메이션)\n□ BGM — 로파이 or dreamy (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R03_draft.mp4\n\n[📊 컷 요약]\n━━━━━━━━━━━━━━━━━━━━━━━━\nCUT1  훅 텍스트          5초   GRAPHIC   ← HTML 애니메이션\nCUT2  Flow 화면녹화       9초   CAPCUT    ← 화면녹화 소스\nCUT3  ElevenLabs 반전    14초   CAPCUT    ← 화면녹화 소스\nCUT4  서여리 실물 당황     7초   YEORI     ← Flow 이미지 생성 대상\nCUT5  감정 핵심컷         8초   YEORI     ← Flow 이미지 생성 대상\nCUT6  분할화면            8초   GRAPHIC   ← HTML 애니메이션\nCUT7  CTA 마무리          9초   GRAPHIC   ← HTML 애니메이션\n총 길이: 60초\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[버전 이력]\nv1.0  초기 작성 (IG_RL03)\nv2.0  v3 포맷 변환 (IG_RL03_G1_script_v2.txt)\nv3.0  IG_R03 코드 통일 + 새 스튜디오 입력 포맷 적용 + GRAPHIC/CAPCUT/YEORI 타입 명확화\n",
+      "createdAt": "2026-09-03T05:12:01.076Z"
+    }
+  },
+  "episode": {
+    "number": 1,
+    "title": "걸그룹 콜라보 뮤비 ",
+    "location": "집 (방)",
+    "mood": [
+      "K문화",
+      "공감"
+    ],
+    "cutCount": 7,
+    "contentType": "LF",
+    "topicCode": "TRD",
+    "scnCode": "ENT",
+    "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+    "code": "LF_T01",
+    "masterCode": "[LF_T01] :: [PL:LF_YU] :: [SP:IN.SF] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_CU+SH_ECU] :: [F군:미설정]",
+    "epHeaderRaw": ""
+  },
+  "cuts": [
+    {
+      "id": "cut-1",
+      "no": 1,
+      "cutTitle": "인트로 타이틀",
+      "lipsync": false,
+      "scene": "채널 인트로. 세 그룹 색상 충돌 → 글리치 → 타이틀 등장.",
+      "action": "LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "AE 제작 대상 — Flow 이미지 생성 불필요\n충돌 연출 초안 별도 문서 참조",
+      "videoPrompt": "AE 제작 대상 — Flow 영상 생성 불필요",
+      "duration": 3,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
+      "cutMark": "NORMAL",
+      "htmlFile": "AE_제작대상_수동",
+      "motion": "none",
+      "masterCode": {
+        "sp": "GR.BK",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_IMP",
+        "ac": "없음",
+        "lookId": "",
+        "du": 3,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "딥블랙 배경",
+          "ch": "없음 — 그래픽 전용",
+          "sh": "그래픽 컷",
+          "ca": "고정",
+          "ac": "LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌",
+          "md": "임팩트. 로고의 정적 에너지가 폭발하는 느낌"
+        }
+      }
+    },
+    {
+      "id": "cut-2",
+      "no": 2,
+      "cutTitle": "한지아 폰 들이밀기",
+      "lipsync": false,
+      "scene": "서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.",
+      "action": "HJ 폰 화면 YR 눈앞에 들이밂",
+      "character": "서여리",
+      "dialogue": "지아 \"야야! 이거 봤어?\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-4s: Yeori sits on beige sofa looking at her phone,\nexpression bored and relaxed,\nJia enters frame from the left and thrusts her phone screen into Yeori's face\n\nNext 4-12s: Yeori's eyes widen in shock as she sees the screen,\nshe slowly turns to look directly at the camera,\nexpression shifting from surprise to \"I need to explain this\"\n\nFinal 12-20s: Both women settle on the sofa,\nYeori faces camera with a knowing expression,\nwarm indoor lighting, static camera",
+      "duration": 20,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX + HJ",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_SUR",
+        "ac": "HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시",
+        "lookId": "",
+        "du": 20,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 — 따뜻한 실내 거실 세팅. 웜톤 조명.",
+          "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+          "sh": "MCU 두샷 → 후반 CU로 당김",
+          "ca": "고정",
+          "ac": "HJ 폰 화면 YR 눈앞에 들이밂",
+          "md": "충격. 훅 에너지."
+        }
+      }
+    },
+    {
+      "id": "cut-3",
+      "no": 3,
+      "cutTitle": "LE SSERAFIM 설명 MCU",
+      "lipsync": false,
+      "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
+      "action": "차분하게 설명. 자연스러운 손짓.",
+      "character": "서여리",
+      "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-17s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic\n\nFinal 17-25s: she pauses thoughtfully,\nlooking slightly to the side then back to camera,\nwarm indoor lighting, static camera",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_ANL",
+        "ac": "자연스러운 설명 손짓",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 정면 MCU. CUT 1에서 줌아웃되며 안착.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "MCU 정면 → 후반 PIP (CapCut 처리)",
+          "ca": "고정",
+          "ac": "차분하게 설명. 자연스러운 손짓.",
+          "md": "분석적이지만 설레는 팬심"
+        }
+      }
+    },
+    {
+      "id": "cut-4",
+      "no": 4,
+      "cutTitle": "LE SSERAFIM 파트",
+      "lipsync": false,
+      "scene": "LE SSERAFIM MV 대표 장면. CUT 2 직후 스와이프 전환.",
+      "action": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
+      "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
+      "duration": 10,
+      "shotType": "FULLBODY",
+      "cutType": "BROLL",
+      "cutMark": "NORMAL",
+      "sourcePath": "sources/B01_lesserafim.mp4",
+      "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+      "clipSeek": 30,
+      "clipDuration": 10,
+      "masterCode": {
+        "sp": "GR.MV",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_IMP",
+        "ac": "없음",
+        "lookId": "",
+        "du": 10,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "ICONIC BY MISTAKE MV 화면",
+          "ch": "없음",
+          "sh": "MV 클립",
+          "ca": "MV 원본",
+          "ac": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
+          "md": "글로벌 팬덤 장악한 존재감"
+        }
+      }
+    },
+    {
+      "id": "cut-5",
+      "no": 5,
+      "cutTitle": "ILLIT 설명 MCU 측면",
+      "lipsync": false,
+      "scene": "서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.",
+      "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
+      "character": "서여리",
+      "dialogue": "\"ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: she sits at 45-degree angle on beige sofa,\nbright natural expression, speaking with light energy\n\nNext 8-17s: expression becomes more animated and bubbly,\nslight laughter in her eyes, gesturing lightly\n\nFinal 17-25s: she tilts her head slightly with a warm smile,\nwarm indoor lighting, static camera",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_BRT",
+        "ac": "설명 중 살짝 들뜨는 표정",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 측면 45도. CUT 2와 앵글 달라 시각적 환기.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "MCU 측면 45도",
+          "ca": "고정",
+          "ac": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
+          "md": "밝고 가볍게. 버블 에너지 반영."
+        }
+      }
+    },
+    {
+      "id": "cut-6",
+      "no": 6,
+      "cutTitle": "ILLIT 파트",
+      "lipsync": false,
+      "scene": "ILLIT MV 버블 에너지 장면. CUT 3 직후 스와이프 전환.",
+      "action": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
+      "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
+      "duration": 10,
+      "shotType": "FULLBODY",
+      "cutType": "BROLL",
+      "cutMark": "NORMAL",
+      "sourcePath": "sources/B02_illit.mp4",
+      "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+      "clipSeek": 55,
+      "clipDuration": 10,
+      "masterCode": {
+        "sp": "GR.MV",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_BRT",
+        "ac": "없음",
+        "lookId": "",
+        "du": 10,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "ICONIC BY MISTAKE MV 화면",
+          "ch": "없음",
+          "sh": "MV 클립",
+          "ca": "",
+          "ac": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
+          "md": "밝고 경쾌한 신예 에너지"
+        }
+      }
+    },
+    {
+      "id": "cut-7",
+      "no": 7,
+      "cutTitle": "KATSEYE 설명 ECU",
+      "lipsync": false,
+      "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.",
+      "action": "눈빛이 분석적으로 변하는 순간 포착",
+      "character": "서여리",
+      "dialogue": "\"KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. LA 베이스. 경계 자체가 없는 세계관.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: extreme closeup of her face,\ncalm and composed expression,\neyes shifting slightly as she thinks\n\nNext 8-17s: her gaze becomes more analytical and sharp,\nspeaking with quiet authority,\nminimal movement — stillness carries the weight\n\nFinal 17-25s: she holds the camera with a piercing look,\nslight pause before speaking,\nwarm soft side lighting, deep background blur",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_ECU",
+        "ca": "CA_ST",
+        "md": "MD_ANL",
+        "ac": "눈빛이 분석적으로 변하는 순간",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 ECU. B-02 밝은 클립 직후 무게감 전환.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "ECU — 얼굴 클로즈업",
+          "ca": "고정",
+          "ac": "눈빛이 분석적으로 변하는 순간 포착",
+          "md": "셋 중 가장 차분하고 날카롭게"
+        }
+      }
+    },
+    {
+      "id": "cut-8",
+      "no": 8,
+      "cutTitle": "KATSEYE 파트",
+      "lipsync": false,
+      "scene": "KATSEYE MV 글로벌 감성 장면. CUT 4 직후 스와이프 전환.",
+      "action": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
+      "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
+      "duration": 10,
+      "shotType": "FULLBODY",
+      "cutType": "BROLL",
+      "cutMark": "NORMAL",
+      "sourcePath": "sources/B03_katseye.mp4",
+      "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+      "clipSeek": 80,
+      "clipDuration": 10,
+      "masterCode": {
+        "sp": "GR.MV",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_ANL",
+        "ac": "없음",
+        "lookId": "",
+        "du": 10,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "ICONIC BY MISTAKE MV 화면",
+          "ch": "",
+          "sh": "MV 클립",
+          "ca": "",
+          "ac": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
+          "md": "글로벌 타깃. 경계 없는 세계관."
+        }
+      }
+    },
+    {
+      "id": "cut-9",
+      "no": 9,
+      "cutTitle": "핵심 명제 선언",
+      "lipsync": false,
+      "scene": "서여리 MCU. 잠깐 멈추다 핵심 분석 시작. PIP 후반.",
+      "action": "생각하는 포즈 → 점점 흥분. 발견의 설렘.",
+      "character": "서여리",
+      "dialogue": "\"근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요. 섞였는데 안 섞인 거예요. 이게 말이 돼요?\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nexpression of sudden realization and excitement,\nleaning forward slightly, eyes wide with discovery,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-6s: she pauses on the sofa, looking thoughtful,\nfinger touching lip slightly, processing\n\nNext 6-15s: her expression shifts — sudden realization,\nleaning forward with growing excitement,\neyes widening as she speaks\n\nFinal 15-25s: fully animated with discovery energy,\nleaning forward toward camera,\nwarm indoor lighting, static camera",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_DSC",
+        "ac": "생각하는 포즈에서 시작 → 점점 흥분",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 MCU. B-03 페이드 후 \"본론 시작\" 전환.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "MCU → 후반 PIP (CapCut 처리)",
+          "ca": "고정",
+          "ac": "생각하는 포즈 → 점점 흥분. 발견의 설렘.",
+          "md": "분석가가 아닌 팬으로서 흥분하는 느낌"
+        }
+      }
+    },
+    {
+      "id": "cut-10",
+      "no": 10,
+      "cutTitle": "각자의 색이 살아있다",
+      "lipsync": false,
+      "scene": "CUT 5 핵심 문장 시각화. 글리치 컷으로 진입.",
+      "action": "네온 글로우 텍스트 \"각자의 색이 살아있다\" 등장",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
+      "videoPrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
+      "cutMark": "NORMAL",
+      "htmlFile": "LF_T01_B04_graphic.html",
+      "motion": "self",
+      "masterCode": {
+        "sp": "GR.BK",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_IMP",
+        "ac": "없음",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "딥블랙 배경",
+          "ch": "",
+          "sh": "그래픽 컷",
+          "ca": "",
+          "ac": "네온 글로우 텍스트 \"각자의 색이 살아있다\" 등장",
+          "md": "임팩트. CUT 5 핵심 문장을 텍스트로 박아줌."
+        }
+      }
+    },
+    {
+      "id": "cut-11",
+      "no": 11,
+      "cutTitle": "뮤비 시청 두샷",
+      "lipsync": false,
+      "scene": "소파에 두 사람 나란히 앉아 MV 시청. 화면 안 보임. 얼굴 반응만.",
+      "action": "HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting side by side on beige sofa, both facing forward,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts,\nleaning forward slightly, absorbed expression,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nintensely focused expression, glancing left briefly,\n\nsoft warm light from TV screen reflecting on their faces,\nno screen visible, only their reactions,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: both women sit on sofa watching something offscreen,\nJia starts calm and composed,\nYeori intensely focused from the start\n\nNext 8-17s: Jia's body slowly leans forward, absorbed,\nYeori briefly glances at Jia then refocuses forward,\nsoft warm TV light flickering on their faces\n\nFinal 17-25s: both deeply absorbed,\nsubtle facial expressions carrying the emotion,\nno dialogue, pure reaction, static camera",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX + HJ",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_ABS",
+        "ac": "HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 두샷. B-04 정적 그래픽 후 살아있는 두 사람 등장으로 온도감 회복.",
+          "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+          "sh": "MCU 두샷. TV 화면은 보이지 않고 얼굴 반응만.",
+          "ca": "고정",
+          "ac": "HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림",
+          "md": "몰입. 대사 없이 리액션만으로 전달."
+        }
+      }
+    },
+    {
+      "id": "cut-12",
+      "no": 12,
+      "cutTitle": "\"중독이에요\" CU",
+      "lipsync": false,
+      "scene": "CUT 6에서 서여리 얼굴만 CU로 당김. 멍하니 → 카메라 돌아보며 한 마디.",
+      "action": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
+      "character": "서여리",
+      "dialogue": "\"…중독이에요.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-6s: closeup of her face, eyes focused offscreen,\nslightly dazed and absorbed expression\n\nNext 6-12s: she slowly turns her gaze toward the camera,\nexpression lingering between daze and realization\n\nFinal 12-20s: eyes meet camera directly,\na single beat of silence,\nthen a quiet knowing look,\nsoft warm indoor lighting, slow fade begins",
+      "duration": 20,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_CU",
+        "ca": "CA_ST",
+        "md": "MD_DZD",
+        "ac": "화면 보다 → 카메라로 시선 천천히 이동",
+        "lookId": "",
+        "du": 20,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 CU. CUT 6에서 자연스럽게 당겨짐.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "CU",
+          "ca": "고정",
+          "ac": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
+          "md": "멍함 → 여운 가득. 전반부 마무리 감정 폭발 포인트."
+        }
+      }
+    },
+    {
+      "id": "cut-13",
+      "no": 13,
+      "cutTitle": "HYBE 전략 분석",
+      "lipsync": false,
+      "scene": "서여리 소파 측면 MCU. HYBE 전략 분석 시작.",
+      "action": "생각하는 포즈에서 시작. 손짓 포함 설명.",
+      "character": "서여리",
+      "dialogue": "\"근데 이게 그냥 운이 아니에요. HYBE가 진짜 전략적으로 짠 거거든요. LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고, KATSEYE로 글로벌까지. 한 곡으로 세 시장을.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: she sits at 45-degree angle, thoughtful pose,\none hand near chin, considering\n\nNext 8-17s: begins speaking with natural hand gestures,\nanalytical but warm delivery,\ncounting points with fingers naturally\n\nFinal 17-25s: leans back slightly with a knowing look,\nsatisfied expression at the analysis,\nwarm indoor lighting, static camera",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_ANL",
+        "ac": "손짓 포함 자연스러운 설명",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 측면 MCU. CUT 7 슬로우 페이드 후 빠른 컷으로 분석 모드 재진입.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "MCU 측면 45도",
+          "ca": "고정",
+          "ac": "생각하는 포즈에서 시작. 손짓 포함 설명.",
+          "md": "다큐 해설자처럼 — 딱딱하지 않게."
+        }
+      }
+    },
+    {
+      "id": "cut-14",
+      "no": 14,
+      "cutTitle": "HYBE 전략 도식",
+      "lipsync": false,
+      "scene": "CUT 8 HYBE 전략 설명 시각화. 페이드 전환.",
+      "action": "HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B05_graphic.html",
+      "videoPrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B05_graphic.html",
+      "duration": 10,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
+      "cutMark": "NORMAL",
+      "htmlFile": "LF_T01_B05_graphic.html",
+      "motion": "self",
+      "masterCode": {
+        "sp": "GR.BK",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_ANL",
+        "ac": "없음",
+        "lookId": "",
+        "du": 10,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "딥블랙 배경",
+          "ch": "",
+          "sh": "그래픽 컷",
+          "ca": "",
+          "ac": "HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐",
+          "md": "CUT 8 분석을 도식으로 이해도 높임."
+        }
+      }
+    },
+    {
+      "id": "cut-15",
+      "no": 15,
+      "cutTitle": "\"야 그냥 좋잖아!!\" 케미 폭발",
+      "lipsync": false,
+      "scene": "소파 두샷. 서여리 분석 마무리 찰나 한지아 터짐. 같이 웃음.",
+      "action": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
+      "character": "서여리",
+      "dialogue": "한지아 \"야 그냥 좋잖아!!\" / 서여리 \"…맞아.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: Yeori is mid-explanation on sofa,\nJia sitting beside her, barely containing herself\n\nNext 8-16s: Jia suddenly blurts out with energy,\nYeori freezes mid-sentence, surprised\n\nFinal 16-25s: Yeori breaks into laughter,\nboth women laughing together naturally,\nwarm indoor lighting, genuine unposed moment",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX + HJ",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_JOY",
+        "ac": "HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 두샷. B-05 정적 도식 후 임팩트 컷으로 에너지 반전.",
+          "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+          "sh": "MCU 두샷",
+          "ca": "고정",
+          "ac": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
+          "md": "폭발적 케미. 결국 \"그냥 좋음\"으로 귀결되는 순간."
+        }
+      }
+    },
+    {
+      "id": "cut-16",
+      "no": 16,
+      "cutTitle": "서여리 ECU 몽환",
+      "lipsync": false,
+      "scene": "서여리 얼굴 ECU 슬로우모션. 웜톤 백라이팅. 몽환 눈빛.",
+      "action": "웃음이 서서히 사그라들며 몽환 눈빛으로 변환",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "\"근데 있잖아요… 좋은 거잖아요, 그냥.\"",
+      "subtitle": "",
+      "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndreamy soft expression, smile fading into wistfulness,\neyes slightly unfocused, looking into the distance,\nwarm backlit golden lighting, deep background blur,\nsoft bokeh, cinematic shallow depth of field,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-3s: extreme closeup of her face,\nlaughter slowly fading from her expression,\nwarm backlit golden light\n\nNext 3-6s: expression shifts to soft dreaminess,\neyes becoming slightly unfocused and distant\n\nFinal 6-8s: a quiet dreamy gaze,\nbarely any movement — pure presence,\nslow motion feel, warm golden backlight",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_ECU",
+        "ca": "CA_ST",
+        "md": "MD_DRM",
+        "ac": "웃음 사그라들며 몽환 눈빛으로 변화",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 ECU. 웜톤 소프트 백라이팅. CUT 9 웃음에서 크로스 디졸브.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "ECU 슬로우모션",
+          "ca": "고정",
+          "ac": "웃음이 서서히 사그라들며 몽환 눈빛으로 변환",
+          "md": "몽환적. 웜톤. 꿈꾸는 듯한 눈빛."
+        }
+      }
+    },
+    {
+      "id": "cut-17",
+      "no": 17,
+      "cutTitle": "한지아 ECU 몽환",
+      "lipsync": false,
+      "scene": "한지아 얼굴 ECU 슬로우모션. 쿨톤 백라이팅. 무심한 듯 감성적.",
+      "action": "무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nshort wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ncool detached yet emotional expression,\ngaze slightly downward then lifting,\ncool blue-tinted soft backlight, deep background blur,\ncinematic shallow depth of field,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-3s: extreme closeup of Jia's face,\ncool composed expression,\ncool blue backlight setting her apart from previous warm shot\n\nNext 3-6s: her gaze slowly lifts,\ndetached but quietly emotional,\ndark mauve lip catching the light subtly\n\nFinal 6-8s: holds a still, quietly intense gaze,\nminimal movement — pure presence,\ncool-toned cinematic slow motion",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "HJ",
+        "sh": "SH_ECU",
+        "ca": "CA_ST",
+        "md": "MD_DRM",
+        "ac": "무심한 듯 감성적인 눈빛 고정",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 ECU. 쿨톤 소프트 백라이팅. CUT 9A 웜톤과 색온도 대비 — 시그니처.",
+          "ch": "한지아 단독 HJA_LOOK_T01",
+          "sh": "ECU 슬로우모션",
+          "ca": "고정",
+          "ac": "무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.",
+          "md": "쿨톤 몽환. 서여리 웜톤과 대비. 순수 영상미 컷."
+        }
+      }
+    },
+    {
+      "id": "cut-18",
+      "no": 18,
+      "cutTitle": "서여리 픽 선언",
+      "lipsync": false,
+      "scene": "서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.",
+      "action": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
+      "character": "서여리",
+      "dialogue": "\"저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요. 그게 이 곡이 된 것 같아서.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-8s: she sits on sofa, gaze cast slightly downward,\nhonest and soft expression, quietly preparing to speak\n\nNext 8-17s: eyes slowly lift toward camera,\ngenuine fan emotion coming through naturally,\nno performance — just real feeling\n\nFinal 17-25s: a subtle shy smile,\nholding eye contact with camera warmly,\nwarm indoor lighting, static camera",
+      "duration": 25,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_SHY",
+        "ac": "시선 내리깔다 천천히 카메라로 올리기",
+        "lookId": "",
+        "du": 25,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 MCU. CUT 9B 쿨톤 몽환 후 현실 복귀. 온도감 회복.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "MCU",
+          "ca": "고정",
+          "ac": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
+          "md": "솔직한 팬심. 분석 아닌 감정 언어."
+        }
+      }
+    },
+    {
+      "id": "cut-19",
+      "no": 19,
+      "cutTitle": "서여리 픽 장면",
+      "lipsync": false,
+      "scene": "서여리가 언급한 MV 클라이맥스 장면. CUT 10 직후 등장.",
+      "action": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
+      "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "BROLL",
+      "cutMark": "NORMAL",
+      "sourcePath": "sources/B06_pick.mp4",
+      "clipUrl": "https://www.youtube.com/watch?v=27C4pfRsf9g",
+      "clipSeek": 165,
+      "clipDuration": 8,
+      "masterCode": {
+        "sp": "GR.MV",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_EMO",
+        "ac": "없음",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "ICONIC BY MISTAKE MV 화면",
+          "ch": "",
+          "sh": "MV 클립",
+          "ca": "",
+          "ac": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
+          "md": "서여리의 취향 = 시청자의 취향으로 연결"
+        }
+      }
+    },
+    {
+      "id": "cut-20",
+      "no": 20,
+      "cutTitle": "여운 클로징",
+      "lipsync": false,
+      "scene": "서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.",
+      "action": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
+      "character": "서여리",
+      "dialogue": "\"실수로 만들어진 게 맞나요… ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-6s: medium closeup on sofa, quiet reflective expression,\ncamera very slowly zooming in\n\nNext 6-14s: she speaks with soft emotional weight,\nthe words carrying double meaning — about the MV and about herself,\ncamera continues slow zoom to closeup\n\nFinal 14-20s: a small quiet smile forms as she trails off,\nholds the moment in silence — 2 to 3 seconds of stillness,\nslow fade begins, warm indoor lighting",
+      "duration": 20,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX",
+        "sh": "SH_MCU",
+        "ca": "CA_ZIN",
+        "md": "MD_EMO",
+        "ac": "MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음",
+        "lookId": "",
+        "du": 20,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 MCU → CU. B-06 클립 여운이 서여리 표정으로 이어짐.",
+          "ch": "서여리 단독 LOOK_ST01",
+          "sh": "MCU에서 CU로 천천히 당겨짐",
+          "ca": "서서히 줌인",
+          "ac": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
+          "md": "뮤비 + 서여리 자신을 동시에 이야기하는 이중 의미. 여운 2~3초 필수."
+        }
+      }
+    },
+    {
+      "id": "cut-21",
+      "no": 21,
+      "cutTitle": "엔딩 CTA 두샷",
+      "lipsync": false,
+      "scene": "소파 두샷. CUT 1과 동일 세팅으로 수미상관. 여유로운 마무리 + CTA.",
+      "action": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
+      "character": "서여리",
+      "dialogue": "한지아 \"여러분 픽은 뭐예요?\" / 서여리 \"댓글로 알려주세요. 구독하면 다음 리뷰도 같이 봐요.\"",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
+      "videoPrompt": "First 0-6s: both women sitting relaxed on sofa,\nJia turns to camera first with a playful expression\n\nNext 6-14s: Yeori follows Jia's lead, turning to camera,\nboth speaking warmly and naturally,\ncomfortable chemistry\n\nFinal 14-20s: both smiling together at camera,\nwarm and light — the opposite of the tense opening energy,\nfade to black begins, warm indoor lighting",
+      "duration": 20,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SF",
+        "pl": "LF_YU",
+        "ch": "YR_TX + HJ",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_WRM",
+        "ac": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
+        "lookId": "",
+        "du": 20,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "소파 두샷. CUT 1과 동일 세팅 — 수미상관.",
+          "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01",
+          "sh": "MCU 두샷",
+          "ca": "고정",
+          "ac": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
+          "md": "가볍고 따뜻하게. 무겁지 않은 마무리."
+        }
+      }
+    },
+    {
+      "id": "cut-22",
+      "no": 22,
+      "cutTitle": "엔드카드",
+      "lipsync": false,
+      "scene": "엔드 카드. 구독/댓글 유도.",
+      "action": "서여리 채널 로고 + 구독/댓글 유도 텍스트",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "",
+      "imagePrompt": "CapCut or AE 제작 대상 — Flow 생성 불필요",
+      "videoPrompt": "CapCut or AE 제작 대상 — Flow 생성 불필요",
+      "duration": 5,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
+      "cutMark": "NORMAL",
+      "htmlFile": "AE_제작대상_수동",
+      "motion": "none",
+      "masterCode": {
+        "sp": "GR.BK",
+        "pl": "LF_YU",
+        "ch": "없음",
+        "sh": "SH_GR",
+        "ca": "CA_ST",
+        "md": "MD_WRM",
+        "ac": "없음",
+        "lookId": "",
+        "du": 5,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "채널 아이덴티티 배경",
+          "ch": "",
+          "sh": "그래픽 컷",
+          "ca": "",
+          "ac": "서여리 채널 로고 + 구독/댓글 유도 텍스트",
+          "md": "따뜻하고 친근하게. CUT 12의 온도감 유지."
+        }
+      }
+    }
+  ],
+  "scriptRaw": "",
+  "ttsSettings": {
+    "voiceId": "RmYuvmCbqOMBJxDLW4k8",
+    "emotion": 35,
+    "tone": 75,
+    "speed": 1,
+    "trackDefaults": {
+      "dialogue": {
+        "speed": 0.9,
+        "stability": 30,
+        "similarity": 75
+      },
+      "narration": {
+        "speed": 0.85,
+        "stability": 55,
+        "similarity": 75
+      }
+    },
+    "speakerVoices": {
+      "한지아": "0oqpliV6dVSr9XomngOW"
+    }
+  },
+  "videoSettings": {
+    "subtitleEnabled": true,
+    "font": "Apple SD Gothic Neo",
+    "fontSize": 32,
+    "color": "#ffffff",
+    "bgStyle": "semi",
+    "boxColor": "#000000"
+  },
+  "renderProgress": {
+    "current": 0,
+    "total": 0,
+    "isRendering": false
+  },
+  "thumbnail": {
+    "text": "",
+    "fontSize": 48,
+    "color": "#ffffff",
+    "shadowColor": "#000000",
+    "bold": true,
+    "textY": 70,
+    "ratio": "9:16",
+    "bgImageUrl": "http://localhost:3001/downloads/flow/ep99/cut_09_b.jpg"
+  },
+  "publishing": {
+    "youtube": {
+      "title": "",
+      "description": "",
+      "tags": ""
+    },
+    "instagram": {
+      "title": "",
+      "description": "",
+      "tags": ""
+    },
+    "tiktok": {
+      "title": "",
+      "description": "",
+      "tags": ""
+    }
+  },
+  "dashboard": {
+    "flowCredits": 100,
+    "klingCredits": 50,
+    "elevenlabsChars": 10000,
+    "monthBudget": 50000,
+    "spent": 0
+  },
+  "creditTracker": {
+    "main": {
+      "flow": {
+        "remaining": 50,
+        "dailyTotal": 50,
+        "costPerCut": 12
+      },
+      "qwen": {
+        "countToday": 0,
+        "targetMin": 5,
+        "targetMax": 6
+      }
+    },
+    "sub": {
+      "flow": {
+        "remaining": 50,
+        "dailyTotal": 50,
+        "costPerCut": 12
+      },
+      "pixverse": {
+        "remaining": 60,
+        "dailyTotal": 60
+      }
+    },
+    "lastCheckedAt": null
+  },
+  "projectName": "새 프로젝트",
+  "savedAt": "2026-09-09T09:17:35.011Z",
+  "videoTabState": {
+    "videoClips": {
+      "cut-3": [
+        {
+          "url": "http://localhost:3001/downloads/output/ep1/cut_02_final.mp4?t=1787402132711",
+          "name": "FFmpeg 합성 (cut_02_final.mp4)",
+          "duration": 6,
+          "trimStart": 0,
+          "trimEnd": 6,
+          "useFullDuration": true,
+          "ratio": "9:16"
+        }
+      ],
+      "cut-7": [
+        {
+          "url": "http://localhost:3001/../downloads/video/ep2/cut_04.mp4?t=1787479377061",
+          "name": "AI 생성 (cut_04.mp4)",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16"
+        }
+      ]
+    },
+    "g4Approved": {},
+    "selectedCutId": "cut-2",
+    "subtitles": {}
+  },
+  "ttsTabState": {
+    "audioUrls": {},
+    "audioTexts": {},
+    "g3Confirmed": {},
+    "focusCutId": null,
+    "voiceTabs": {
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        },
+        {
+          "id": "v1788599750449_ldu",
+          "label": "목소리 2",
+          "voiceId": "0oqpliV6dVSr9XomngOW"
+        }
+      ],
+      "cut-5": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-7": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-9": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-11": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-12": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-20": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-21": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-15": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "tracks": {
+      "cut-3__v1": [
+        {
+          "id": "track_1788773497928_sfop",
+          "type": "dialogue",
+          "text": "LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-2__v1": [
+        {
+          "id": "track_1788773497928_2kxm",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-5__v1": [
+        {
+          "id": "track_1788773497928_u8u4",
+          "type": "dialogue",
+          "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-7__v1": [
+        {
+          "id": "track_1788773497928_40vm",
+          "type": "dialogue",
+          "text": "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. LA 베이스. 경계 자체가 없는 세계관.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-9__v1": [
+        {
+          "id": "track_1788773497928_1xye",
+          "type": "dialogue",
+          "text": "근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요. 섞였는데 안 섞인 거예요. 이게 말이 돼요?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-11__v1": [
+        {
+          "id": "track_1788773497928_eyai",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-12__v1": [
+        {
+          "id": "track_1788773497928_uy9l",
+          "type": "dialogue",
+          "text": "…중독이에요.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-2__v1788599750449_ldu": [
+        {
+          "id": "track_1788773497928_i6ar",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-13__v1": [
+        {
+          "id": "track_1788773497928_5t08",
+          "type": "dialogue",
+          "text": "근데 이게 그냥 운이 아니에요. HYBE가 진짜 전략적으로 짠 거거든요. LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고, KATSEYE로 글로벌까지. 한 곡으로 세 시장을.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-15__v1": [
+        {
+          "id": "track_1788773497928_9t1v",
+          "type": "dialogue",
+          "text": "야 그냥 좋잖아!!",
+          "speaker": "한지아",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 1.1,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1788773497928_i3is",
+          "type": "dialogue",
+          "text": "…맞아.",
+          "speaker": "서여리",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-18__v1": [
+        {
+          "id": "track_1788773497928_ci4m",
+          "type": "dialogue",
+          "text": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요. 그게 이 곡이 된 것 같아서.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-20__v1": [
+        {
+          "id": "track_1788773497928_33zu",
+          "type": "dialogue",
+          "text": "실수로 만들어진 게 맞나요… ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-21__v1": [
+        {
+          "id": "track_1788773497928_37bk",
+          "type": "dialogue",
+          "text": "여러분 픽은 뭐예요?",
+          "speaker": "한지아",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1788773497928_9b0l",
+          "type": "dialogue",
+          "text": "댓글로 알려주세요. 구독하면 다음 리뷰도 같이 봐요.",
+          "speaker": "서여리",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ]
+    },
+    "activeVoiceTab": {
+      "cut-2": 1
+    },
+    "mergedUrls": {}
+  },
+  "voiceInsertState": {
+    "tracks": {},
+    "activeCutId": "cut-2"
+  },
+  "studioTabState": {
+    "imageRatio": {}
+  }
+}

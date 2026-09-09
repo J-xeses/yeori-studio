@@ -1,4 +1,4 @@
-# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.3.1
+# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4
 
 > 출처: 성준님 직접 정리 (AI 유튜브 채널 운영 시작하기 1\~7)
 > 용도: 프롬프트 생성 후 자동 품질 체크 기준
@@ -515,6 +515,59 @@ Final X-Xs: [동작 묘사]
 □ flow-automation.js는 SH_ 코드로 처리 방식 분기
 ```
 
+### ⑬-1 메이킹 라인 컷 필드 [v1.4 신설 — 2026-09-09]
+
+메인 필드 블록(SC/SP/PL... DU) 안에 함께 적는다. 파서: `server/lib/scriptParserV3.js`
++ `src/tabs/ScriptGenTab.jsx` (이중 파일, 반드시 동일 유지).
+
+**CT — 컷 유형** (없으면 헤더/IP마커/PL 접두사로 추론)
+
+|값|의미|제작 방식|
+|-|-|-|
+|`YEORI`|인물 연기 컷|이미지 생성(G2) → 영상(G4). 메이킹 탭 아님|
+|`GRAPHIC`|HTML → 헤드리스 캡처 영상|`HTML:` 또는 `GTPL:` 필요|
+|`CAPCUT`|텍스트·자막 카드|`HTML:`/`GTPL:` 있으면 자동, 없으면 데스크톱 녹화(수동)|
+|`BROLL`|참고 영상 클립|`CLIP:`>`SRC:`>`URL:`>`BQ:` 중 하나|
+|`PIP`|YEORI 위에 BROLL 합성|`pipTarget` 등 수동 지정|
+
+우선순위: 컷 헤더(`[CUT N] — GRAPHIC | …`) > `CT:` > IP섹션 `GRAPHIC 타입` 마커 > PL 코드 접두사(BR_/GR_/CC_)
+
+**소스 지정 필드** (해당 CT 에서만 의미)
+
+|필드|CT|예시값|동작|
+|-|-|-|-|
+|`HTML:`|GRAPHIC·CAPCUT|`LF_T01_B05_graphic.html`|`01_script/` 의 목업 파일을 캡처. `.html` 아닌 값(`AE_제작대상_수동`)=수동 마커→스킵|
+|`GTPL:`|GRAPHIC·CAPCUT|`ai` / `cards-3col/yeori` / `ai:relation/yeori`|HTML 자동 생성 후 `cut_NN_graphic.html` 저장→캡처. `HTML:` 파일 없을 때만|
+|`CLIP:`|BROLL|`<url> @ 0:30 +10`|웹 영상 구간 화면녹화(screen-scenario). ⚠️ 공정이용 전제, 책임=대본 작성자|
+|`SRC:`|BROLL(무관 가능)|`sources/B01_lesserafim.mp4`|로컬 파일 규격화(source-to-cut). `sources/`=`downloads/seoyeori/YU/sources/`. 없으면 CLIP 폴백|
+|`URL:`|BROLL|`https://…/video-page`|페이지에서 미디어 URL 추출→헤드리스 캡처|
+|`BQ:`|BROLL|`neon city night rain`|Pexels 검색어 직접 지정(AI 번역 안 함)|
+|`MOTION:`|캡처·이미지 소스|`self` / `zoom-in` / `fade` / `type-in` / `rise` / `none`|`self`=HTML 자체 CSS @keyframes 프레임 캡처(canvas rAF 는 안 됨). GTPL 생성물 기본 `self`|
+
+**GTPL 문법**: `<템플릿>/<스타일>` 결정형 · `ai` Claude 맞춤 · `ai:<템플릿>/<스타일>` 골격+AI.
+템플릿: text-card, mv-intro, stat-card, info-source, fiction-disclaimer, cards-3col, relation.
+브랜드 스타일 `yeori` (인트로/엔드카드 팔레트). 정의: `server/lib/graphicTemplates.js` + `graphicGen.js`.
+
+**화면 비율**: 대본에 안 씀 — 에피소드 코드가 결정. `LF`·`SF` = 16:9(1920×1080), 그 외 9:16(1080×1920). `src/lib/videoPolicy.js` `cutDims()`.
+
+**자동 실행 흐름**: `start_gen.bat` → `pipeline-leader`(상시) → g1 승인된 메이킹 컷 감지 →
+`POST /api/mcp/run-making`(헤드리스 순차 제작) → 메이킹 탭 리뷰 패널 → **G4 승인은 사람**
+(`shouldAutoApprove` 현재 무조건 false). 반려는 파라미터/HTML 수정 후 재실행.
+
+**"생성 서브라인"**: 수동 자산 제작(HTML 목업·모션그래픽·소스 수급·G5 편집)을 모듈로
+분리 — 대본 필드로 메인라인에 접속, 도구 성숙 시 흡수. 체크리스트 아티팩트:
+https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
+
+**체크리스트 추가**
+```
+□ 메이킹 컷(GRAPHIC/CAPCUT/BROLL)에 CT: 명시
+□ GRAPHIC/CAPCUT: HTML: 파일(01_script/) 또는 GTPL: 지시 중 하나
+□ BROLL: CLIP:/SRC:/URL:/BQ: 중 하나 (없으면 AI 추론 — 비권장)
+□ CLIP: 은 공정이용 범위(리뷰·비평 인용, 최소 길이)
+□ 모션 필요하면 MOTION: (GTPL 생성물은 self 자동)
+□ 파서 수정 시 scriptParserV3.js ↔ ScriptGenTab.jsx 동시 반영
+```
+
 \---
 
 ## 제작 철학 요약 (핵심 원칙)
@@ -530,7 +583,7 @@ Final X-Xs: [동작 묘사]
 
 \---
 
-> 버전: v1.3.1 / 2026-07-18
+> 버전: v1.4 / 2026-09-09
 > 업데이트: 새로운 피드백 발생 시 즉시 추가
 
 ### 버전 이력
@@ -544,4 +597,7 @@ v1.2 (2026-06-21) — ① 의상/⑥ 베이스 프롬프트 명령형 어휘 제
 v1.3 (2026-07-18) — ⑬ 대본 포맷 코드화 규칙 신설
                      (컷 필드 코드 약자 체계 / 샷타입 표준화 / KR 한글 컨펌본 / 컷 길이 원칙)
 v1.3.1 (2026-07-18) — ⑥-1 삭제, ⑬에 흡수
+v1.4 (2026-09-09) — ⑬-1 메이킹 라인 컷 필드 신설
+                     (CT 유형 / HTML·GTPL·SRC·URL·BQ·CLIP·MOTION 소스 필드 /
+                      GTPL HTML 자동 생성 / 화면 비율 / run-making 자동 흐름 / 생성 서브라인)
 ```

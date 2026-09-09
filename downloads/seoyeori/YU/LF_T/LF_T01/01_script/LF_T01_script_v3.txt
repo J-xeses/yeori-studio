@@ -1,0 +1,179 @@
+================================================================
+마스터 코드
+LF_T01 :: YR_VD :: 트렌드 반응 :: 걸그룹 콜라보 뮤비 화제 분석
+
+================================================================
+EP.HEADER
+================================================================
+CHAR   : YEORI.BASE + JIA
+EP     : LF_T01
+TITLE  : 세 그룹이 한 뮤비에? 걸그룹 콜라보 대참사 분석
+CONTENT: LF (YouTube 롱폼)
+BG     : 실내 거실, 저녁. 뒤편 TV에 컬러풀한 뮤직비디오가 흐릿하게 재생
+BGM    : 잔잔한 배경
+REF    : 트렌드 반응 콘텐츠 (LE SSERAFIM 외 콜라보 화제)
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  YR_VD — 한지아 첫 등장 (훅 오프닝) / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 실내 거실 소파. 저녁. 뒤편 TV에 컬러풀한 뮤직비디오가 흐릿하게 재생 중. 지아가 여리에게 폰을 내밀고, 여리가 화면을 보며 충격
+SP: IN.LR
+PL: YR_VD
+CH: YR_TX + JIA
+DL: 지아 "야, 이거 봤어?!" / 여리 "세 그룹이 한 뮤비에 나왔다는 게 말이 돼요?"
+NR: 없음
+CP: 없음
+SH: SH_MS
+CA: CA_ST
+MD: MD_SUR
+AC: AT_EM_01
+LOOK_ID:
+DU: 8
+오디오:
+  BGM: 잔잔한 배경
+  음성: ★대사 (지아 + 여리)
+  효과음:
+  앰비언스: TV 뮤비 소리 흐릿하게
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     실내 거실, 소파. 저녁. 따뜻한 실내 조명
+CH(캐릭터):   여리(긴 웨이비 다크브라운 헤어, 골드 목걸이, 네이비 카디건) + 지아(짧은 웨이비 블랙 헤어 + 프린지 뱅, 다크 모브브라운 립, 샤프한 아이라이너, 실버 체인 목걸이)
+SH(샷):       미디엄 샷 — 소파에 나란히 앉은 두 여성. 두 사람 모두 프레임에 고정
+CA(카메라):   고정. 두 사람의 표정과 리액션을 그대로 담음
+AC(동작):     지아가 프레임으로 들어와 폰을 내밀고 → 여리가 폰을 받아 화면을 보며 눈이 커지고 충격 → 여리가 폰을 천천히 카메라 쪽으로 내림
+MD(감정):     여리: 놀람/충격. 지아: 신난 눈으로 여리의 반응을 지켜봄
+DL(대사):     지아 "야, 이거 봤어?!" / 여리 "세 그룹이 한 뮤비에 나왔다는 게 말이 돼요?"
+NR(나레이션):
+CP(자막):
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Two young Korean women early-20s,
+sitting together on a couch indoors,
+
+WOMAN 1 (Yeori):
+long wavy dark brown hair NOT short,
+soft natural skin texture on right cheek,
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+black leather belt with silver chain detail,
+natural makeup warm skin tone,
+
+WOMAN 2 (Jia):
+short wavy black hair with soft fringe bangs,
+dark mauve-brown lip color,
+intense deep dark eyes with sharp eyeliner,
+delicate silver chain necklace,
+effortlessly photogenic,
+
+Yeori receiving phone from Jia, eyes wide open
+shocked expression staring at phone screen,
+TV screen in background softly blurred
+showing colorful music video footage,
+warm indoor evening lighting,
+MV screen light softly reflecting on both faces,
+Photorealistic 8K cinematic 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: Jia enters frame energetically
+holding out her phone toward Yeori,
+blurred MV playing on TV in background,
+colorful screen light flickering on both faces
+
+Next 2-5s: Yeori takes the phone and looks at it,
+expression shifts from neutral to wide-eyed shock,
+camera stays fixed on both women,
+Jia watching Yeori's reaction with excited eyes
+
+Final 5-8s: Yeori slowly lowers phone toward camera,
+Jia says "야, 이거 봤어?!"
+Yeori says "세 그룹이 한 뮤비에 나왔다는 게 말이 돼요?"
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — LE SSERAFIM 소개 (배경 설명) / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 실내. 여리가 방 안을 자연스럽게 걸으며 설명. 뒤편 TV에 뮤비가 블러로 재생. 저녁 실내 조명
+SP: IN.LR
+PL: YR_VD
+CH: YR_VD
+DL: 여리 "LE SSERAFIM은 이미 증명된 그룹이잖아요. 카리스마가 압도적인."
+NR: 없음
+CP: 없음
+SH: SH_FS
+CA: CA_TR
+MD: MD_CLM
+AC: AT_MW_01
+LOOK_ID:
+DU: 8
+오디오:
+  BGM: 잔잔한 배경
+  음성: ★대사 (여리)
+  효과음:
+  앰비언스: TV 뮤비 소리 흐릿하게
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     실내 거실. 저녁 실내 조명. 뒤편 TV에 컬러풀한 뮤비 블러
+CH(캐릭터):   여리 — 긴 웨이비 다크브라운 헤어(NOT short), 오른뺨 자연스러운 피부결, 골드 목걸이, 1:8 두신 비율, 슈퍼모델 체형, 작은 얼굴, 22~23세로 보임. 화이트 리브드 크롭 이너티 + 네이비 카디건 오픈 + 아이보리 와이드 슬랙스 + 블랙 벨트(실버 체인) + 컨버스 척테일러
+SH(샷):       풀바디 샷 → 미디엄 롱 샷. 실내에서 자연스럽게 걸음
+CA(카메라):   트래킹 — 여리의 움직임을 따라감
+AC(동작):     방 안을 자연스럽게 걸으며 → 살짝 속도를 늦추고 한 손으로 자연스럽게 제스처하며 말함
+MD(감정):     자신감 있고 분석적인 표정
+DL(대사):     여리 "LE SSERAFIM은 이미 증명된 그룹이잖아요. 카리스마가 압도적인."
+NR(나레이션):
+CP(자막):
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT — Young Korean woman early-20s,
+long wavy dark brown hair NOT short,
+soft natural skin texture on right cheek,
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions,
+model-like slim waist, small face, long legs,
+natural makeup, warm skin tone,
+appearing no older than 22-23,
+
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+black leather belt with silver chain detail,
+black and white Converse Chuck Taylor sneakers,
+
+medium long shot walking naturally indoors,
+TV screen softly blurred in background
+with colorful MV footage,
+warm evening indoor lighting,
+confident analytical expression,
+Photorealistic 8K cinematic 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she walks naturally through the room,
+camera tracks her movement,
+blurred MV screen visible in background
+casting soft colorful light
+
+Next 2-5s: she slows down slightly gesturing
+with one hand naturally as she speaks,
+confident analytical expression
+
+Final 5-8s: she says
+"LE SSERAFIM은 이미 증명된 그룹이잖아요.
+카리스마가 압도적인."
+━━━━━━━━━━━━━━━━━━━━━━━━

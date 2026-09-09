@@ -1,0 +1,48 @@
+{
+  "1": {
+    "method": "graphic",
+    "motion": "none",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-09-03T06:32:49.459Z"
+  },
+  "2": {
+    "method": "screen-scenario",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-03T11:27:32.662Z"
+  },
+  "3": {
+    "method": "graphic",
+    "motion": "type-in",
+    "baked": true,
+    "duration": 14,
+    "producedAt": "2026-09-03T06:49:14.888Z"
+  },
+  "4": {
+    "method": "veo-manual",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-03T06:32:27.109Z"
+  },
+  "5": {
+    "method": "veo-manual",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-03T06:32:28.284Z"
+  },
+  "6": {
+    "method": "graphic",
+    "motion": "none",
+    "baked": true,
+    "duration": 8,
+    "producedAt": "2026-09-03T06:32:59.628Z"
+  },
+  "7": {
+    "method": "graphic",
+    "motion": "none",
+    "baked": true,
+    "duration": 9,
+    "producedAt": "2026-09-03T06:33:02.872Z"
+  }
+}

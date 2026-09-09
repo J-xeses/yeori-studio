@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>A-01 | 인트로 타이틀</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  :root {
+    --black:#060608; --ls:#5BB8FF; --il:#FF6B8A; --kat:#C87FFF; --white:#F2F0FF;
+  }
+  html, body { width:1920px; height:1080px; overflow:hidden; background:var(--black);
+    font-family:'Noto Sans KR', sans-serif; }
+
+  .stage { position:relative; width:1920px; height:1080px; }
+
+  /* ── 세 그룹 색 덩어리 — 가장자리에서 중앙으로 충돌 ── */
+  .blob {
+    position:absolute; top:50%; left:50%;
+    width:520px; height:520px; border-radius:50%;
+    filter:blur(70px); mix-blend-mode:screen; opacity:0;
+    transform:translate(-50%,-50%) scale(.3);
+  }
+  .blob.ls  { background:radial-gradient(circle, var(--ls) 0%, transparent 70%);
+              animation:blobLS 3s cubic-bezier(.5,0,.4,1) forwards; }
+  .blob.il  { background:radial-gradient(circle, var(--il) 0%, transparent 70%);
+              animation:blobIL 3s cubic-bezier(.5,0,.4,1) forwards; }
+  .blob.kat { background:radial-gradient(circle, var(--kat) 0%, transparent 70%);
+              animation:blobKAT 3s cubic-bezier(.5,0,.4,1) forwards; }
+  @keyframes blobLS {
+    0%   { opacity:0;   transform:translate(calc(-50% - 760px), calc(-50% - 200px)) scale(.4); }
+    30%  { opacity:.95; }
+    37%  { opacity:1;   transform:translate(-50%,-50%) scale(1); }   /* 충돌 */
+    45%  { opacity:.5;  transform:translate(-50%,-50%) scale(1.9); } /* 폭발 */
+    70%  { opacity:.14; transform:translate(-50%,-50%) scale(2.4); }
+    100% { opacity:.10; transform:translate(calc(-50% - 520px),-50%) scale(2.2); }
+  }
+  @keyframes blobIL {
+    0%   { opacity:0;   transform:translate(calc(-50% + 780px), calc(-50% - 40px)) scale(.4); }
+    30%  { opacity:.95; }
+    37%  { opacity:1;   transform:translate(-50%,-50%) scale(1); }
+    45%  { opacity:.5;  transform:translate(-50%,-50%) scale(1.9); }
+    70%  { opacity:.14; transform:translate(-50%,-50%) scale(2.4); }
+    100% { opacity:.10; transform:translate(calc(-50% + 40px),calc(-50% + 300px)) scale(2.2); }
+  }
+  @keyframes blobKAT {
+    0%   { opacity:0;   transform:translate(calc(-50% - 120px), calc(-50% + 640px)) scale(.4); }
+    30%  { opacity:.95; }
+    37%  { opacity:1;   transform:translate(-50%,-50%) scale(1); }
+    45%  { opacity:.5;  transform:translate(-50%,-50%) scale(1.9); }
+    70%  { opacity:.14; transform:translate(-50%,-50%) scale(2.4); }
+    100% { opacity:.10; transform:translate(calc(-50% + 480px),calc(-50% - 240px)) scale(2.2); }
+  }
+
+  /* ── 충돌 순간 화이트 플래시 ── */
+  .flash {
+    position:absolute; inset:0; background:var(--white); opacity:0;
+    animation:flash 3s linear forwards;
+  }
+  @keyframes flash {
+    0%,34% { opacity:0; }
+    37%    { opacity:.92; }
+    40%    { opacity:.15; }
+    43%    { opacity:.55; }   /* 잔상 깜빡 */
+    47%    { opacity:0; }
+    100%   { opacity:0; }
+  }
+
+  /* ── 타이틀 ── */
+  .title-wrap {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px;
+  }
+  .title {
+    font-family:'Bebas Neue', 'Noto Sans KR', sans-serif;
+    font-size:186px; letter-spacing:.06em; line-height:.92;
+    color:var(--white); text-align:center; white-space:nowrap;
+    opacity:0;
+    animation:titleIn 3s steps(1,end) forwards, titleGlitch 3s linear forwards;
+  }
+  .review {
+    font-size:40px; font-weight:700; letter-spacing:.55em; text-indent:.55em;
+    color:rgba(242,240,255,.62); opacity:0;
+    animation:reviewIn 3s ease forwards;
+  }
+  @keyframes titleIn {
+    0%,37%  { opacity:0; }
+    38%     { opacity:1; }
+    100%    { opacity:1; }
+  }
+  /* RGB 스플릿 + 지터 글리치 — 충돌 직후 강하게, 이후 잦아듦 */
+  @keyframes titleGlitch {
+    38% { transform:translate(0,0); text-shadow:none; }
+    39% { transform:translate(-14px,3px) skewX(-6deg);
+          text-shadow:10px 0 var(--il), -10px 0 var(--ls); }
+    41% { transform:translate(12px,-4px) skewX(4deg);
+          text-shadow:-8px 0 var(--kat), 8px 0 var(--ls); }
+    43% { transform:translate(-6px,2px);
+          text-shadow:6px 0 var(--il), -6px 0 var(--kat); }
+    46% { transform:translate(4px,0);
+          text-shadow:3px 0 var(--ls), -3px 0 var(--il); }
+    52% { transform:translate(-2px,0);
+          text-shadow:2px 0 var(--kat), -2px 0 var(--ls); }
+    60% { transform:translate(0,0); text-shadow:0 0 40px rgba(200,127,255,.35); }
+    100%{ transform:translate(0,0); text-shadow:0 0 40px rgba(200,127,255,.25); }
+  }
+  @keyframes reviewIn {
+    0%,58% { opacity:0; transform:translateY(14px); }
+    72%    { opacity:1; transform:translateY(0); }
+    100%   { opacity:1; transform:translateY(0); }
+  }
+  /* 타이틀 위를 지나가는 스캔라인 글리치 바 */
+  .scanbar {
+    position:absolute; left:0; width:100%; height:4px;
+    background:rgba(242,240,255,.5); mix-blend-mode:overlay; opacity:0;
+    animation:scan 3s linear forwards;
+  }
+  @keyframes scan {
+    0%,38% { opacity:0; top:38%; }
+    39%    { opacity:.9; top:42%; }
+    44%    { opacity:.7; top:56%; }
+    49%    { opacity:0; top:64%; }
+    100%   { opacity:0; }
+  }
+
+  /* ── 서여리 채널 로고 (우하단) ──
+     실제 로고 파일이 있으면 .brand-mark 를 <img> 로 교체하거나
+     background:url(data:image/png;base64,...) 로 바꾸면 됨 */
+  .brand {
+    position:absolute; right:80px; bottom:64px;
+    display:flex; align-items:center; gap:16px;
+    opacity:0; animation:brandIn 3s ease forwards;
+  }
+  .brand-mark {
+    width:46px; height:46px; border-radius:13px;
+    background:conic-gradient(from 210deg, var(--ls), var(--kat), var(--il), var(--ls));
+    box-shadow:0 0 22px rgba(200,127,255,.5);
+  }
+  .brand-name {
+    font-size:34px; font-weight:900; letter-spacing:.12em; color:var(--white);
+  }
+  @keyframes brandIn {
+    0%,74% { opacity:0; transform:translateX(20px); }
+    88%    { opacity:1; transform:translateX(0); }
+    100%   { opacity:1; transform:translateX(0); }
+  }
+
+  /* 미세 비네트 */
+  .vignette { position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse 75% 75% at 50% 50%, transparent 55%, rgba(0,0,0,.55) 100%); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="blob ls"></div>
+    <div class="blob il"></div>
+    <div class="blob kat"></div>
+    <div class="scanbar"></div>
+    <div class="title-wrap">
+      <div class="title">ICONIC BY MISTAKE</div>
+      <div class="review">R E V I E W</div>
+    </div>
+    <div class="flash"></div>
+    <div class="vignette"></div>
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">서여리</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,1150 @@
+================================================================
+마스터 코드
+[LF_T01] :: [PL:LF_YU] :: [SP:IN.SF] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_CU+SH_ECU] :: [F군:미설정]
+================================================================
+에피소드명: ICONIC BY MISTAKE 리뷰 — 세 그룹이 섞였는데 왜 다 살아있지?
+채널: 서여리 유튜브 롱폼 (LF_T01)
+총 길이: 6분 20초 목표
+콘셉트: K-팝 뮤비 리뷰 — 분석 × 팬심 × 케미 연출
+출연: 서여리(YR) + 한지아(HJ)
+================================================================
+
+[CUT 1] — GRAPHIC | 인트로 타이틀 | 3s
+SC: 채널 인트로. 세 그룹 색상 충돌 → 글리치 → 타이틀 등장.
+SP: GR.BK
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_IMP
+AC: 없음
+DU: 3
+CT: GRAPHIC
+HTML: LF_T01_A01_intro.html
+MOTION: self
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     딥블랙 배경
+CH(캐릭터):   없음 — 그래픽 전용
+SH(샷):       그래픽 컷
+CA(카메라):   고정
+AC(동작):     LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌
+              화이트 플래시 + 글리치 → "ICONIC BY MISTAKE 리뷰" 타이틀 등장
+              서여리 채널 로고 우하단 페이드인 → 안착
+MD(감정):     임팩트. 로고의 정적 에너지가 폭발하는 느낌
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+AE 제작 대상 — Flow 이미지 생성 불필요
+충돌 연출 초안 별도 문서 참조
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+AE 제작 대상 — Flow 영상 생성 불필요
+================================================================
+
+[CUT 2] — HOOK | 한지아 폰 들이밀기 | 20s | 두샷
+SC: 서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX + HJ
+DL: 지아 "야야! 이거 봤어?"
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SUR
+AC: HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시
+DU: 20
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 — 따뜻한 실내 거실 세팅. 웜톤 조명.
+CH(캐릭터):   서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01
+SH(샷):       MCU 두샷 → 후반 CU로 당김
+CA(카메라):   고정
+AC(동작):     HJ 폰 화면 YR 눈앞에 들이밂
+              YR 귀찮음 → 화면 보자마자 눈 커짐 → 카메라 직시
+              마지막 프레임: "이거 설명해야겠다"는 표정
+MD(감정):     충격. 훅 에너지.
+DL(대사):     지아 "야야! 이거 봤어?" / 여리 대사 없음 (표정으로만 반응)
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Two young Korean women early-20s,
+sitting together on a beige sofa indoors,
+
+On the left: short wavy black hair with fringe bangs,
+dark mauve-brown lip, sharp eyeliner, intense dark eyes,
+delicate silver chain necklace,
+white fitted short-sleeve tee,
+blue distressed denim cutoff shorts with frayed hem,
+white low-top sneakers,
+holding a phone screen toward the other woman,
+
+On the right: long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+black leather belt with silver chain detail,
+black and white Converse Chuck Taylor sneakers,
+eyes widening in shock, looking directly at camera,
+
+warm indoor lighting, shallow depth of field,
+background people must not interact with or interfere with the main characters,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-4s: Yeori sits on beige sofa looking at her phone,
+expression bored and relaxed,
+Jia enters frame from the left and thrusts her phone screen into Yeori's face
+
+Next 4-12s: Yeori's eyes widen in shock as she sees the screen,
+she slowly turns to look directly at the camera,
+expression shifting from surprise to "I need to explain this"
+
+Final 12-20s: Both women settle on the sofa,
+Yeori faces camera with a knowing expression,
+warm indoor lighting, static camera
+================================================================
+
+[CUT 3] — LE SSERAFIM 설명 MCU | 25s | 서여리 단독
+SC: 서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…"
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_ANL
+AC: 자연스러운 설명 손짓
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 정면 MCU. CUT 1에서 줌아웃되며 안착.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       MCU 정면 → 후반 PIP (CapCut 처리)
+CA(카메라):   고정
+AC(동작):     차분하게 설명. 자연스러운 손짓.
+MD(감정):     분석적이지만 설레는 팬심
+DL(대사):     "LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…"
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,
+sitting on beige sofa facing camera directly,
+long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+effortlessly photogenic not posing just existing beautifully,
+K-model proportions small face long legs,
+appearing no older than 22-23,
+
+calm analytical expression, slight excitement in eyes,
+warm indoor lighting, soft background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: she sits facing camera on beige sofa,
+calm analytical expression,
+gestures naturally with one hand as she speaks
+
+Next 8-17s: expression shifts with slight excitement,
+leaning forward slightly, engaged and enthusiastic
+
+Final 17-25s: she pauses thoughtfully,
+looking slightly to the side then back to camera,
+warm indoor lighting, static camera
+================================================================
+
+[CUT 4] — MV클립 | LE SSERAFIM 파트 | 10s
+SC: LE SSERAFIM MV 대표 장면. CUT 2 직후 스와이프 전환.
+SP: GR.MV
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_IMP
+AC: 없음
+DU: 10
+CT: BROLL
+SRC: sources/B01_lesserafim.mp4
+CLIP: https://www.youtube.com/watch?v=27C4pfRsf9g @ 0:30 +10
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     ICONIC BY MISTAKE MV 화면
+CH(캐릭터):   없음
+SH(샷):       MV 클립
+CA(카메라):   MV 원본
+AC(동작):     LE SSERAFIM 파트 + "Easy" 오마주 씬
+MD(감정):     글로벌 팬덤 장악한 존재감
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+화면녹화 소스 — Flow 생성 불필요
+ScreenRecorderPanel로 녹화 후 블러 처리
+자막 오버레이: "데뷔 3년차 / 글로벌 팬덤 보유"
+저장경로: C:\yeori-studio\downloads\seoyeori\YU\sources\B01_lesserafim.mp4
+================================================================
+
+[CUT 5] — ILLIT 설명 MCU 측면 | 25s | 서여리 단독
+SC: 서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?"
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_BRT
+AC: 설명 중 살짝 들뜨는 표정
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 측면 45도. CUT 2와 앵글 달라 시각적 환기.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       MCU 측면 45도
+CA(카메라):   고정
+AC(동작):     설명 중 살짝 들뜨는 표정. 가벼운 손짓.
+MD(감정):     밝고 가볍게. 버블 에너지 반영.
+DL(대사):     "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?"
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,
+sitting on beige sofa at 45-degree angle to camera,
+long wavy dark brown hair NOT short,
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+effortlessly photogenic not posing just existing beautifully,
+K-model proportions small face long legs,
+appearing no older than 22-23,
+
+bright expression, slight excitement, eyes lit up,
+warm indoor lighting, soft background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: she sits at 45-degree angle on beige sofa,
+bright natural expression, speaking with light energy
+
+Next 8-17s: expression becomes more animated and bubbly,
+slight laughter in her eyes, gesturing lightly
+
+Final 17-25s: she tilts her head slightly with a warm smile,
+warm indoor lighting, static camera
+================================================================
+
+[CUT 6] — MV클립 | ILLIT 파트 | 10s
+SC: ILLIT MV 버블 에너지 장면. CUT 3 직후 스와이프 전환.
+SP: GR.MV
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_BRT
+AC: 없음
+DU: 10
+CT: BROLL
+SRC: sources/B02_illit.mp4
+CLIP: https://www.youtube.com/watch?v=27C4pfRsf9g @ 0:55 +10
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     ICONIC BY MISTAKE MV 화면
+CH(캐릭터):   없음
+SH(샷):       MV 클립
+AC(동작):     ILLIT 파트 + "Cherish" 오마주 씬. 버블 에너지 강한 장면.
+MD(감정):     밝고 경쾌한 신예 에너지
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+화면녹화 소스 — Flow 생성 불필요
+자막 오버레이: "데뷔 1년차 / 버블 에너지"
+저장경로: C:\yeori-studio\downloads\seoyeori\YU\sources\B02_illit.mp4
+================================================================
+
+[CUT 7] — KATSEYE 설명 ECU | 25s | 서여리 단독
+SC: 서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. LA 베이스. 경계 자체가 없는 세계관."
+NR: 없음
+SH: SH_ECU
+CA: CA_ST
+MD: MD_ANL
+AC: 눈빛이 분석적으로 변하는 순간
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 ECU. B-02 밝은 클립 직후 무게감 전환.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       ECU — 얼굴 클로즈업
+CA(카메라):   고정
+AC(동작):     눈빛이 분석적으로 변하는 순간 포착
+MD(감정):     셋 중 가장 차분하고 날카롭게
+DL(대사):     "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. LA 베이스. 경계 자체가 없는 세계관."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT — Young Korean woman early-20s,
+long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+navy blue fitted cardigan open-front visible at neckline,
+effortlessly photogenic not posing just existing beautifully,
+appearing no older than 22-23,
+
+sharp analytical gaze, calm intense expression,
+eyes focused and piercing,
+warm indoor soft side lighting, deep background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: extreme closeup of her face,
+calm and composed expression,
+eyes shifting slightly as she thinks
+
+Next 8-17s: her gaze becomes more analytical and sharp,
+speaking with quiet authority,
+minimal movement — stillness carries the weight
+
+Final 17-25s: she holds the camera with a piercing look,
+slight pause before speaking,
+warm soft side lighting, deep background blur
+================================================================
+
+[CUT 8] — MV클립 | KATSEYE 파트 | 10s
+SC: KATSEYE MV 글로벌 감성 장면. CUT 4 직후 스와이프 전환.
+SP: GR.MV
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_ANL
+AC: 없음
+DU: 10
+CT: BROLL
+SRC: sources/B03_katseye.mp4
+CLIP: https://www.youtube.com/watch?v=27C4pfRsf9g @ 1:20 +10
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     ICONIC BY MISTAKE MV 화면
+SH(샷):       MV 클립
+AC(동작):     KATSEYE 파트 + "Touch" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.
+MD(감정):     글로벌 타깃. 경계 없는 세계관.
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+화면녹화 소스 — Flow 생성 불필요
+자막 오버레이: "처음부터 글로벌 타깃"
+저장경로: C:\yeori-studio\downloads\seoyeori\YU\sources\B03_katseye.mp4
+================================================================
+
+[CUT 9] — 핵심 명제 선언 | 25s | 서여리 단독
+SC: 서여리 MCU. 잠깐 멈추다 핵심 분석 시작. PIP 후반.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요. 섞였는데 안 섞인 거예요. 이게 말이 돼요?"
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_DSC
+AC: 생각하는 포즈에서 시작 → 점점 흥분
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 MCU. B-03 페이드 후 "본론 시작" 전환.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       MCU → 후반 PIP (CapCut 처리)
+CA(카메라):   고정
+AC(동작):     생각하는 포즈 → 점점 흥분. 발견의 설렘.
+MD(감정):     분석가가 아닌 팬으로서 흥분하는 느낌
+DL(대사):     "근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요. 섞였는데 안 섞인 거예요. 이게 말이 돼요?"
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,
+sitting on beige sofa facing camera,
+long wavy dark brown hair NOT short,
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+effortlessly photogenic not posing just existing beautifully,
+K-model proportions small face long legs,
+appearing no older than 22-23,
+
+expression of sudden realization and excitement,
+leaning forward slightly, eyes wide with discovery,
+warm indoor lighting, soft background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-6s: she pauses on the sofa, looking thoughtful,
+finger touching lip slightly, processing
+
+Next 6-15s: her expression shifts — sudden realization,
+leaning forward with growing excitement,
+eyes widening as she speaks
+
+Final 15-25s: fully animated with discovery energy,
+leaning forward toward camera,
+warm indoor lighting, static camera
+================================================================
+
+[CUT 10] — GRAPHIC | 각자의 색이 살아있다 | 8s
+SC: CUT 5 핵심 문장 시각화. 글리치 컷으로 진입.
+SP: GR.BK
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_IMP
+AC: 없음
+DU: 8
+CT: GRAPHIC
+HTML: LF_T01_B04_graphic.html
+MOTION: self
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     딥블랙 배경
+SH(샷):       그래픽 컷
+AC(동작):     네온 글로우 텍스트 "각자의 색이 살아있다" 등장
+              LE SSERAFIM(블루) / ILLIT(핑크) / KATSEYE(퍼플) 카드 순차 등장
+              파티클 배경 + 색상 pulse
+MD(감정):     임팩트. CUT 5 핵심 문장을 텍스트로 박아줌.
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+HTML 완성 — make_graphic_cut으로 캡처
+파일: LF_T01_B04_graphic.html
+━━━━━━━━━━━━━━━━━━━━━━━━
+================================================================
+
+[CUT 11] — 뮤비 시청 두샷 | 25s | 두샷
+SC: 소파에 두 사람 나란히 앉아 MV 시청. 화면 안 보임. 얼굴 반응만.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX + HJ
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_ABS
+AC: HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 두샷. B-04 정적 그래픽 후 살아있는 두 사람 등장으로 온도감 회복.
+CH(캐릭터):   서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01
+SH(샷):       MCU 두샷. TV 화면은 보이지 않고 얼굴 반응만.
+CA(카메라):   고정
+AC(동작):     HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림
+              YR 처음부터 집중 → 한지아 힐끔 → 다시 화면 집중
+              TV 빛이 두 사람 얼굴에 은은하게 반사
+MD(감정):     몰입. 대사 없이 리액션만으로 전달.
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Two young Korean women early-20s,
+sitting side by side on beige sofa, both facing forward,
+
+On the left: short wavy black hair with fringe bangs,
+dark mauve-brown lip, sharp eyeliner, intense dark eyes,
+delicate silver chain necklace,
+white fitted short-sleeve tee,
+blue distressed denim cutoff shorts,
+leaning forward slightly, absorbed expression,
+
+On the right: long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+white slim ribbed crop inner tee, navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+intensely focused expression, glancing left briefly,
+
+soft warm light from TV screen reflecting on their faces,
+no screen visible, only their reactions,
+background people must not interact with or interfere with the main characters,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: both women sit on sofa watching something offscreen,
+Jia starts calm and composed,
+Yeori intensely focused from the start
+
+Next 8-17s: Jia's body slowly leans forward, absorbed,
+Yeori briefly glances at Jia then refocuses forward,
+soft warm TV light flickering on their faces
+
+Final 17-25s: both deeply absorbed,
+subtle facial expressions carrying the emotion,
+no dialogue, pure reaction, static camera
+================================================================
+
+[CUT 12] — "중독이에요" CU | 20s | 서여리 단독
+SC: CUT 6에서 서여리 얼굴만 CU로 당김. 멍하니 → 카메라 돌아보며 한 마디.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "…중독이에요."
+NR: 없음
+SH: SH_CU
+CA: CA_ST
+MD: MD_DZD
+AC: 화면 보다 → 카메라로 시선 천천히 이동
+DU: 20
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 CU. CUT 6에서 자연스럽게 당겨짐.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       CU
+CA(카메라):   고정
+AC(동작):     MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.
+MD(감정):     멍함 → 여운 가득. 전반부 마무리 감정 폭발 포인트.
+DL(대사):     "…중독이에요."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT — Young Korean woman early-20s,
+long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+navy blue fitted cardigan open-front visible at neckline,
+effortlessly photogenic not posing just existing beautifully,
+appearing no older than 22-23,
+
+dazed, slightly dreamy expression,
+eyes slowly turning toward camera from offscreen,
+soft warm indoor lighting, deep background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-6s: closeup of her face, eyes focused offscreen,
+slightly dazed and absorbed expression
+
+Next 6-12s: she slowly turns her gaze toward the camera,
+expression lingering between daze and realization
+
+Final 12-20s: eyes meet camera directly,
+a single beat of silence,
+then a quiet knowing look,
+soft warm indoor lighting, slow fade begins
+================================================================
+
+[CUT 13] — HYBE 전략 분석 | 25s | 서여리 단독
+SC: 서여리 소파 측면 MCU. HYBE 전략 분석 시작.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "근데 이게 그냥 운이 아니에요. HYBE가 진짜 전략적으로 짠 거거든요. LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고, KATSEYE로 글로벌까지. 한 곡으로 세 시장을."
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_ANL
+AC: 손짓 포함 자연스러운 설명
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 측면 MCU. CUT 7 슬로우 페이드 후 빠른 컷으로 분석 모드 재진입.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       MCU 측면 45도
+CA(카메라):   고정
+AC(동작):     생각하는 포즈에서 시작. 손짓 포함 설명.
+MD(감정):     다큐 해설자처럼 — 딱딱하지 않게.
+DL(대사):     "근데 이게 그냥 운이 아니에요. HYBE가 진짜 전략적으로 짠 거거든요. LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고, KATSEYE로 글로벌까지. 한 곡으로 세 시장을."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,
+sitting on beige sofa at 45-degree angle to camera,
+long wavy dark brown hair NOT short,
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+effortlessly photogenic not posing just existing beautifully,
+K-model proportions small face long legs,
+appearing no older than 22-23,
+
+thoughtful analytical expression, one hand gesturing naturally,
+documentary-style composure with warmth,
+warm indoor lighting, soft background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: she sits at 45-degree angle, thoughtful pose,
+one hand near chin, considering
+
+Next 8-17s: begins speaking with natural hand gestures,
+analytical but warm delivery,
+counting points with fingers naturally
+
+Final 17-25s: leans back slightly with a knowing look,
+satisfied expression at the analysis,
+warm indoor lighting, static camera
+================================================================
+
+[CUT 14] — GRAPHIC | HYBE 전략 도식 | 10s
+SC: CUT 8 HYBE 전략 설명 시각화. 페이드 전환.
+SP: GR.BK
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_ANL
+AC: 없음
+DU: 10
+CT: GRAPHIC
+HTML: LF_T01_B05_graphic.html
+MOTION: self
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     딥블랙 배경
+SH(샷):       그래픽 컷
+AC(동작):     HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐
+              국내 팬덤(LE SSERAFIM+ILLIT) ↔ 글로벌(KATSEYE) 도식
+              하단 키 메시지 순차 등장
+MD(감정):     CUT 8 분석을 도식으로 이해도 높임.
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+HTML 완성 — make_graphic_cut으로 캡처
+파일: LF_T01_B05_graphic.html
+================================================================
+
+[CUT 15] — "야 그냥 좋잖아!!" 케미 폭발 | 25s | 두샷
+SC: 소파 두샷. 서여리 분석 마무리 찰나 한지아 터짐. 같이 웃음.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX + HJ
+DL: 한지아 "야 그냥 좋잖아!!" / 서여리 "…맞아."
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_JOY
+AC: HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 두샷. B-05 정적 도식 후 임팩트 컷으로 에너지 반전.
+CH(캐릭터):   서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01
+SH(샷):       MCU 두샷
+CA(카메라):   고정
+AC(동작):     HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음
+              과분석 무너지는 순간. 케미 처음으로 완전 폭발.
+MD(감정):     폭발적 케미. 결국 "그냥 좋음"으로 귀결되는 순간.
+DL(대사):     한지아 "야 그냥 좋잖아!!" / 서여리 "…맞아."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Two young Korean women early-20s,
+sitting together on beige sofa, both laughing naturally,
+
+On the left: short wavy black hair with fringe bangs,
+dark mauve-brown lip, sharp eyeliner, intense dark eyes,
+delicate silver chain necklace,
+white fitted short-sleeve tee, blue distressed denim cutoff shorts,
+laughing openly, head tilted back slightly,
+
+On the right: long wavy dark brown hair NOT short,
+delicate gold necklace,
+white slim ribbed crop inner tee, navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+caught mid-laugh, surprised and amused expression,
+
+warm indoor lighting, natural and unposed chemistry,
+background people must not interact with or interfere with the main characters,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: Yeori is mid-explanation on sofa,
+Jia sitting beside her, barely containing herself
+
+Next 8-16s: Jia suddenly blurts out with energy,
+Yeori freezes mid-sentence, surprised
+
+Final 16-25s: Yeori breaks into laughter,
+both women laughing together naturally,
+warm indoor lighting, genuine unposed moment
+================================================================
+
+[CUT 16] — 서여리 ECU 몽환 | 8s | 서여리 단독
+SC: 서여리 얼굴 ECU 슬로우모션. 웜톤 백라이팅. 몽환 눈빛.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: 없음
+NR: "근데 있잖아요… 좋은 거잖아요, 그냥."
+SH: SH_ECU
+CA: CA_ST
+MD: MD_DRM
+AC: 웃음 사그라들며 몽환 눈빛으로 변화
+DU: 8
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 ECU. 웜톤 소프트 백라이팅. CUT 9 웃음에서 크로스 디졸브.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       ECU 슬로우모션
+CA(카메라):   고정
+AC(동작):     웃음이 서서히 사그라들며 몽환 눈빛으로 변환
+MD(감정):     몽환적. 웜톤. 꿈꾸는 듯한 눈빛.
+DL(대사):     없음
+NR(나레이션): "근데 있잖아요… 좋은 거잖아요, 그냥."
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT — Young Korean woman early-20s,
+long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+appearing no older than 22-23,
+
+dreamy soft expression, smile fading into wistfulness,
+eyes slightly unfocused, looking into the distance,
+warm backlit golden lighting, deep background blur,
+soft bokeh, cinematic shallow depth of field,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: extreme closeup of her face,
+laughter slowly fading from her expression,
+warm backlit golden light
+
+Next 3-6s: expression shifts to soft dreaminess,
+eyes becoming slightly unfocused and distant
+
+Final 6-8s: a quiet dreamy gaze,
+barely any movement — pure presence,
+slow motion feel, warm golden backlight
+================================================================
+
+[CUT 17] — 한지아 ECU 몽환 | 8s | 한지아 단독
+SC: 한지아 얼굴 ECU 슬로우모션. 쿨톤 백라이팅. 무심한 듯 감성적.
+SP: IN.SF
+PL: LF_YU
+CH: HJ
+DL: 없음
+NR: 없음
+SH: SH_ECU
+CA: CA_ST
+MD: MD_DRM
+AC: 무심한 듯 감성적인 눈빛 고정
+DU: 8
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 ECU. 쿨톤 소프트 백라이팅. CUT 9A 웜톤과 색온도 대비 — 시그니처.
+CH(캐릭터):   한지아 단독 HJA_LOOK_T01
+SH(샷):       ECU 슬로우모션
+CA(카메라):   고정
+AC(동작):     무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.
+MD(감정):     쿨톤 몽환. 서여리 웜톤과 대비. 순수 영상미 컷.
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT — Young Korean woman early-20s,
+short wavy black hair with fringe bangs,
+dark mauve-brown lip, sharp eyeliner, intense dark eyes,
+delicate silver chain necklace,
+effortlessly photogenic not posing just existing beautifully,
+appearing no older than 22-23,
+
+cool detached yet emotional expression,
+gaze slightly downward then lifting,
+cool blue-tinted soft backlight, deep background blur,
+cinematic shallow depth of field,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: extreme closeup of Jia's face,
+cool composed expression,
+cool blue backlight setting her apart from previous warm shot
+
+Next 3-6s: her gaze slowly lifts,
+detached but quietly emotional,
+dark mauve lip catching the light subtly
+
+Final 6-8s: holds a still, quietly intense gaze,
+minimal movement — pure presence,
+cool-toned cinematic slow motion
+================================================================
+
+[CUT 18] — 서여리 픽 선언 | 25s | 서여리 단독
+SC: 서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요. 그게 이 곡이 된 것 같아서."
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SHY
+AC: 시선 내리깔다 천천히 카메라로 올리기
+DU: 25
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 MCU. CUT 9B 쿨톤 몽환 후 현실 복귀. 온도감 회복.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       MCU
+CA(카메라):   고정
+AC(동작):     시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.
+MD(감정):     솔직한 팬심. 분석 아닌 감정 언어.
+DL(대사):     "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요. 그게 이 곡이 된 것 같아서."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,
+sitting on beige sofa facing camera,
+long wavy dark brown hair NOT short,
+delicate gold necklace,
+white slim ribbed crop inner tee,
+navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+effortlessly photogenic not posing just existing beautifully,
+K-model proportions small face long legs,
+appearing no older than 22-23,
+
+eyes slightly downcast, honest and vulnerable expression,
+a shy smile forming naturally,
+warm indoor lighting, soft background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s: she sits on sofa, gaze cast slightly downward,
+honest and soft expression, quietly preparing to speak
+
+Next 8-17s: eyes slowly lift toward camera,
+genuine fan emotion coming through naturally,
+no performance — just real feeling
+
+Final 17-25s: a subtle shy smile,
+holding eye contact with camera warmly,
+warm indoor lighting, static camera
+================================================================
+
+[CUT 19] — MV클립 | 서여리 픽 장면 | 8s
+SC: 서여리가 언급한 MV 클라이맥스 장면. CUT 10 직후 등장.
+SP: GR.MV
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_EMO
+AC: 없음
+DU: 8
+CT: BROLL
+SRC: sources/B06_pick.mp4
+CLIP: https://www.youtube.com/watch?v=27C4pfRsf9g @ 2:45 +8
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     ICONIC BY MISTAKE MV 화면
+SH(샷):       MV 클립
+AC(동작):     세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬
+              서여리가 언급한 "다 같이 나오는 장면" 직접 보여줌
+MD(감정):     서여리의 취향 = 시청자의 취향으로 연결
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+화면녹화 소스 — Flow 생성 불필요
+자막 없음 (서여리 나레이션이 설명)
+저장경로: C:\yeori-studio\downloads\seoyeori\YU\sources\B06_pick.mp4
+================================================================
+
+[CUT 20] — 여운 클로징 | 20s | 서여리 단독
+SC: 서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX
+DL: "실수로 만들어진 게 맞나요… ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지."
+NR: 없음
+SH: SH_MCU
+CA: CA_ZIN
+MD: MD_EMO
+AC: MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음
+DU: 20
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 MCU → CU. B-06 클립 여운이 서여리 표정으로 이어짐.
+CH(캐릭터):   서여리 단독 LOOK_ST01
+SH(샷):       MCU에서 CU로 천천히 당겨짐
+CA(카메라):   서서히 줌인
+AC(동작):     말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.
+MD(감정):     뮤비 + 서여리 자신을 동시에 이야기하는 이중 의미. 여운 2~3초 필수.
+DL(대사):     "실수로 만들어진 게 맞나요… ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,
+sitting on beige sofa facing camera,
+long wavy dark brown hair NOT short,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+navy blue fitted cardigan open-front visible at neckline,
+effortlessly photogenic not posing just existing beautifully,
+appearing no older than 22-23,
+
+wistful lingering expression, quiet emotion,
+a barely-there smile forming at the end,
+warm indoor lighting, soft background blur,
+background people must not interact with or interfere with the main character,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-6s: medium closeup on sofa, quiet reflective expression,
+camera very slowly zooming in
+
+Next 6-14s: she speaks with soft emotional weight,
+the words carrying double meaning — about the MV and about herself,
+camera continues slow zoom to closeup
+
+Final 14-20s: a small quiet smile forms as she trails off,
+holds the moment in silence — 2 to 3 seconds of stillness,
+slow fade begins, warm indoor lighting
+================================================================
+
+[CUT 21] — 엔딩 CTA 두샷 | 20s | 두샷
+SC: 소파 두샷. CUT 1과 동일 세팅으로 수미상관. 여유로운 마무리 + CTA.
+SP: IN.SF
+PL: LF_YU
+CH: YR_TX + HJ
+DL: 한지아 "여러분 픽은 뭐예요?" / 서여리 "댓글로 알려주세요. 구독하면 다음 리뷰도 같이 봐요."
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_WRM
+AC: HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.
+DU: 20
+CT: YEORI
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     소파 두샷. CUT 1과 동일 세팅 — 수미상관.
+              CUT 1: 한지아 폰 들이밀며 시작 → CUT 12: 같이 보고 난 후 여유로운 마무리.
+CH(캐릭터):   서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽) HJA_LOOK_T01
+SH(샷):       MCU 두샷
+CA(카메라):   고정
+AC(동작):     HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.
+MD(감정):     가볍고 따뜻하게. 무겁지 않은 마무리.
+DL(대사):     한지아 "여러분 픽은 뭐예요?" / 서여리 "댓글로 알려주세요. 구독하면 다음 리뷰도 같이 봐요."
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Two young Korean women early-20s,
+sitting relaxed together on beige sofa,
+both looking directly at camera with warm natural smiles,
+
+On the left: short wavy black hair with fringe bangs,
+dark mauve-brown lip, sharp eyeliner, intense dark eyes,
+delicate silver chain necklace,
+white fitted short-sleeve tee, blue distressed denim cutoff shorts,
+relaxed and playful expression,
+
+On the right: long wavy dark brown hair NOT short,
+delicate gold necklace,
+white slim ribbed crop inner tee, navy blue fitted cardigan open-front,
+ivory wide-leg tailored trousers,
+warm friendly smile following Jia's lead,
+
+warm indoor lighting, comfortable and unposed chemistry,
+same setting as the opening shot — mirroring CUT 1,
+background people must not interact with or interfere with the main characters,
+Photorealistic 8K cinematic 16:9
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-6s: both women sitting relaxed on sofa,
+Jia turns to camera first with a playful expression
+
+Next 6-14s: Yeori follows Jia's lead, turning to camera,
+both speaking warmly and naturally,
+comfortable chemistry
+
+Final 14-20s: both smiling together at camera,
+warm and light — the opposite of the tense opening energy,
+fade to black begins, warm indoor lighting
+================================================================
+
+[CUT 22] — GRAPHIC | 엔드카드 | 5s
+SC: 엔드 카드. 구독/댓글 유도.
+SP: GR.BK
+PL: LF_YU
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_GR
+CA: CA_ST
+MD: MD_WRM
+AC: 없음
+DU: 5
+CT: GRAPHIC
+HTML: LF_T01_A02_endcard.html
+MOTION: self
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     채널 아이덴티티 배경
+SH(샷):       그래픽 컷
+AC(동작):     서여리 채널 로고 + 구독/댓글 유도 텍스트
+              다음 영상 링크 카드
+MD(감정):     따뜻하고 친근하게. CUT 12의 온도감 유지.
+DL(대사):     없음
+NR(나레이션): 없음
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+CapCut or AE 제작 대상 — Flow 생성 불필요
+================================================================
+
+[제작 체크리스트]
+□ A-01  — GRAPHIC 충돌 인트로 (AE 제작)
+□ CUT 1 — 두샷 훅 (IP/VP ✅)
+□ B-01  — LE SSERAFIM MV 클립 (화면녹화)
+□ CUT 2 — 서여리 단독 MCU (IP/VP ✅)
+□ B-02  — ILLIT MV 클립 (화면녹화)
+□ CUT 3 — 서여리 단독 MCU 측면 (IP/VP ✅)
+□ B-03  — KATSEYE MV 클립 (화면녹화)
+□ CUT 4 — 서여리 단독 ECU (IP/VP ✅)
+□ CUT 5 — 서여리 단독 MCU+PIP (IP/VP ✅)
+□ B-04  — GRAPHIC "각자의 색이 살아있다" (HTML ✅)
+□ CUT 6 — 두샷 MV 시청 (IP/VP ✅)
+□ CUT 7 — 서여리 CU "중독이에요" (IP/VP ✅)
+□ CUT 8 — 서여리 MCU 측면 HYBE 분석 (IP/VP ✅)
+□ B-05  — GRAPHIC HYBE 도식 (HTML ✅)
+□ CUT 9 — 두샷 케미 폭발 (IP/VP ✅)
+□ CUT 9A — 서여리 ECU 몽환 웜톤 (IP/VP ✅)
+□ CUT 9B — 한지아 ECU 몽환 쿨톤 (IP/VP ✅)
+□ CUT 10 — 서여리 단독 픽 선언 (IP/VP ✅)
+□ B-06  — MV 클립 서여리 픽 (화면녹화)
+□ CUT 11 — 서여리 클로징 (IP/VP ✅)
+□ CUT 12 — 두샷 엔딩 CTA (IP/VP ✅)
+□ A-02  — GRAPHIC 엔드카드 (CapCut/AE 제작)
+================================================================

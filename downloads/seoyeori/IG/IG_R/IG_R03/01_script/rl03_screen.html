@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>RL03 생성도구 액션 재현 — CUT 2 (Flow) / CUT 3 (ElevenLabs)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-font-smoothing:antialiased; }
+
+  /* 1080x1920 캡처. 각 .phone-wrap 하나만 isolateCutInHtml이 남기고 나머지는 숨김. */
+  body {
+    width:1080px; height:1920px; overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 0%, #17171d 0%, #0a0a0c 60%);
+    font-family:-apple-system,'Noto Sans KR','Helvetica Neue',sans-serif;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .phone-wrap { width:1080px; height:1920px; position:relative; display:flex; align-items:center; justify-content:center; }
+  .label { position:absolute; left:-9999px; }  /* isolateCutInHtml 마커(숨김) */
+
+  /* ── 공통: 도구 창(브라우저 목업) ─────────────────────────── */
+  .win { width:940px; border-radius:22px; overflow:hidden;
+    background:#1b1b20; box-shadow:0 40px 120px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06); }
+  .win-bar { height:52px; display:flex; align-items:center; gap:9px; padding:0 20px;
+    background:#26262c; border-bottom:1px solid rgba(255,255,255,.05); }
+  .dot { width:13px; height:13px; border-radius:50%; }
+  .dot.r{background:#ff5f57} .dot.y{background:#febc2e} .dot.g{background:#28c840}
+  .win-url { margin-left:16px; flex:1; height:30px; border-radius:8px; background:#1b1b20;
+    color:#8a8a93; font-size:15px; display:flex; align-items:center; padding:0 14px; }
+  .win-body { padding:34px 34px 40px; }
+
+  /* 가짜 커서 */
+  .cursor { position:absolute; width:26px; height:26px; z-index:9;
+    background:#fff; clip-path:polygon(0 0,0 72%,26% 52%,44% 88%,58% 80%,40% 44%,72% 44%);
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); }
+
+  /* 자막(손글씨 오버레이 자리 — CapCut에서 최종 스타일링, 여기선 위치/타이밍만) */
+  .cap { position:absolute; bottom:150px; left:50%; transform:translateX(-50%);
+    text-align:center; font-weight:800; color:#fff; font-size:52px; line-height:1.4;
+    text-shadow:0 4px 24px rgba(0,0,0,.7); width:900px; }
+  .cap .em { color:#ffd54a; }
+  .cap.two { color:#ff5a5a; }
+
+  /* ═══════════ CUT 2 — Google Flow 화면 재현 (9s) ═══════════ */
+  #c2 .win-body { min-height:1160px; }
+  #c2 .prompt { height:66px; border-radius:14px; background:#101014; border:1px solid rgba(255,255,255,.08);
+    display:flex; align-items:center; padding:0 22px; color:#e8e8ee; font-size:22px; overflow:hidden; white-space:nowrap; }
+  #c2 .prompt .typed { display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom;
+    animation:type2 3.2s steps(30,end) .4s both; width:0; }
+  @keyframes type2 { to { width:26ch; } }
+  #c2 .prompt .caret { width:2px; height:26px; background:#7c8cff; margin-left:2px; display:inline-block;
+    animation:blink 1s step-end infinite; }
+  @keyframes blink { 50%{opacity:0;} }
+  #c2 .gen-pill { margin:22px auto 8px; width:170px; height:44px; border-radius:22px; background:#3b3f7a;
+    color:#c9cdff; font-size:17px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    opacity:0; animation:pop2 .3s ease-out 3.8s both; }
+  @keyframes pop2 { from{opacity:0;transform:scale(.8);} to{opacity:1;transform:scale(1);} }
+  #c2 .grid-clip { margin-top:20px; height:760px; overflow:hidden; border-radius:12px; }
+  #c2 .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    animation:scroll2 4.4s ease-in-out 4.4s both; }
+  @keyframes scroll2 { from{transform:translateY(0);} to{transform:translateY(-420px);} }
+  #c2 .thumb { aspect-ratio:9/16; border-radius:10px; position:relative; overflow:hidden;
+    background:linear-gradient(160deg,#3a3550,#242233); opacity:0; animation:fadein2 .45s ease-out both; }
+  #c2 .thumb::after { content:''; position:absolute; left:22%; right:22%; top:16%; height:42%; border-radius:50%;
+    background:radial-gradient(60% 60% at 50% 40%, #d9c3b0 0%, #b99c86 70%, transparent 72%); opacity:.9; }
+  #c2 .thumb::before { content:''; position:absolute; left:14%; right:14%; bottom:6%; height:40%; border-radius:16px 16px 0 0;
+    background:linear-gradient(180deg,#6d6f9c,#4a4c73); }
+  #c2 .thumb:nth-child(1){animation-delay:3.9s}  #c2 .thumb:nth-child(2){animation-delay:4.0s}
+  #c2 .thumb:nth-child(3){animation-delay:4.1s}  #c2 .thumb:nth-child(4){animation-delay:4.25s}
+  #c2 .thumb:nth-child(5){animation-delay:4.4s}  #c2 .thumb:nth-child(6){animation-delay:4.55s}
+  #c2 .thumb:nth-child(7){animation-delay:4.7s}  #c2 .thumb:nth-child(8){animation-delay:4.85s}
+  #c2 .thumb:nth-child(n+9){animation-delay:5s}
+  @keyframes fadein2 { from{opacity:0;transform:translateY(16px) scale(.96);} to{opacity:1;transform:none;} }
+  #c2 .cursor { animation:cur2 9s ease-in-out both; }
+  @keyframes cur2 {
+    0%{left:120px;top:1600px;} 6%{left:300px;top:250px;} 40%{left:300px;top:250px;}
+    46%{left:540px;top:360px;} 52%{left:540px;top:360px;} 70%{left:700px;top:900px;} 100%{left:700px;top:900px;}
+  }
+  #c2 .cap { opacity:0; animation:capin 5.4s ease-out 3.3s both; }
+  @keyframes capin { 0%{opacity:0;transform:translateX(-50%) translateY(20px);} 12%,100%{opacity:1;transform:translateX(-50%);} }
+
+  /* ═══════════ CUT 3 — ElevenLabs 화면 + 남자목소리 반전 (14s) ═══════════ */
+  #c3 .win-body { min-height:1000px; }
+  #c3 .field-label { color:#8a8a93; font-size:16px; margin-bottom:10px; }
+  #c3 .field { min-height:150px; border-radius:14px; background:#101014; border:1px solid rgba(255,255,255,.08);
+    padding:18px 20px; color:#e8e8ee; font-size:23px; line-height:1.5; }
+  #c3 .field .typed { display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom;
+    animation:type3 4s steps(34,end) .5s both; width:0; max-width:100%; }
+  @keyframes type3 { to { width:34ch; } }
+  #c3 .voicebar { margin-top:26px; display:flex; align-items:center; gap:18px; position:relative; height:30px; }
+  #c3 .voice-name { color:#cfcfe0; font-size:19px; font-weight:600; position:absolute; left:0; }
+  #c3 .voice-name .orig { animation:orig3 14s step-end both; }
+  #c3 .voice-name .swap { color:#ff5a5a; position:absolute; left:52px; white-space:nowrap; opacity:0; animation:swap3 14s step-end both; }
+  @keyframes orig3 { 0%{opacity:1;} 64%{opacity:1;} 64.01%{opacity:0;} 100%{opacity:0;} }
+  @keyframes swap3 { 0%{opacity:0;} 64%{opacity:0;} 64.01%{opacity:1;} 100%{opacity:1;} }
+  #c3 .play { margin:34px auto 0; width:118px; height:118px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 20px 60px rgba(90,100,220,.4);
+    animation:play3 14s ease-in-out both; }
+  @keyframes play3 {
+    0%{background:linear-gradient(160deg,#7c8cff,#5560d8);transform:scale(1);}
+    36%{transform:scale(1);} 40%{transform:scale(.9);} 44%{transform:scale(1.05);}
+    50%{transform:scale(1);} 63.9%{background:linear-gradient(160deg,#7c8cff,#5560d8);}
+    64%{background:linear-gradient(160deg,#ff7a7a,#d84a4a);} 100%{background:linear-gradient(160deg,#ff7a7a,#d84a4a);transform:scale(1);}
+  }
+  #c3 .play::after { content:''; border-style:solid; border-width:22px 0 22px 36px; border-color:transparent transparent transparent #fff; margin-left:8px; }
+  #c3 .wave { margin:40px auto 0; width:640px; height:150px; display:flex; align-items:flex-end; justify-content:center; gap:9px; }
+  #c3 .wave i { width:12px; border-radius:6px; height:20px;
+    animation:eq 0.9s ease-in-out infinite, wcolor 14s step-end both; }
+  #c3 .wave i:nth-child(2n){animation-delay:.15s,0s} #c3 .wave i:nth-child(3n){animation-delay:.3s,0s}
+  #c3 .wave i:nth-child(4n){animation-delay:.45s,0s} #c3 .wave i:nth-child(5n){animation-delay:.6s,0s}
+  @keyframes eq { 0%,100%{height:24px;} 50%{height:118px;} }
+  @keyframes wcolor { 0%{background:#8f9bff;opacity:0;} 40%{opacity:0;} 40.01%{opacity:1;} 63.9%{background:#8f9bff;} 64%{background:#ff7a7a;} 100%{background:#ff7a7a;opacity:1;} }
+  #c3 .cursor { animation:cur3 14s ease-in-out both; }
+  @keyframes cur3 {
+    0%{left:120px;top:1700px;} 4%{left:360px;top:280px;} 34%{left:360px;top:280px;}
+    40%{left:540px;top:620px;} 44%{left:540px;top:620px;} 100%{left:540px;top:620px;}
+  }
+  #c3 .cap.one { opacity:0; animation:cap3a 14s step-end both; }
+  @keyframes cap3a { 0%{opacity:0;} 4%{opacity:1;} 56%{opacity:1;} 57%{opacity:0;} 100%{opacity:0;} }
+  #c3 .cap.two { opacity:0; animation:cap3b 14s step-end both; }
+  @keyframes cap3b { 0%{opacity:0;} 57%{opacity:0;} 58%{opacity:1;} 100%{opacity:1;} }
+  #c3 .sweat { position:absolute; right:230px; top:640px; font-size:64px; opacity:0; animation:sweat 5s ease-out 9s both; }
+  @keyframes sweat { 0%{opacity:0;transform:translateY(-10px);} 20%{opacity:1;} 100%{opacity:1;transform:translateY(6px);} }
+</style>
+</head>
+<body>
+
+<!-- ═══ CUT 2 ═══ -->
+<div class="phone-wrap" id="c2">
+  <span class="label">CUT 2 — Flow 화면녹화</span>
+  <div class="win">
+    <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="win-url">labs.google/fx/tools/flow — 서여리 프로젝트</span></div>
+    <div class="win-body">
+      <div class="prompt"><span class="typed">young korean woman, 서여리, cinematic</span><span class="caret"></span></div>
+      <div class="gen-pill">✨ 생성 중…</div>
+      <div class="grid-clip"><div class="grid">
+        <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+        <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+        <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+        <div class="thumb"></div><div class="thumb"></div><div class="thumb"></div>
+      </div></div>
+    </div>
+  </div>
+  <div class="cursor"></div>
+  <div class="cap">프롬프트 입력하면 <span class="em">→</span> 서여리가 만들어져요 ✨</div>
+</div>
+
+<!-- ═══ CUT 3 ═══ -->
+<div class="phone-wrap" id="c3">
+  <span class="label">CUT 3 — ElevenLabs 화면</span>
+  <div class="win">
+    <div class="win-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="win-url">elevenlabs.io — Text to Speech</span></div>
+    <div class="win-body">
+      <div class="field-label">Text</div>
+      <div class="field"><span class="typed">안녕하세요, AI 크리에이터 서여리입니다.</span></div>
+      <div class="voicebar"><span class="voice-name">Voice:&nbsp;<span class="orig">Rachel (여성)</span><span class="swap">⚠ Adam (남성)</span></span></div>
+      <div class="play"></div>
+      <div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <div class="cursor"></div>
+  <div class="sweat">💧</div>
+  <div class="cap one">목소리도 AI로 만들어요 🎙️</div>
+  <div class="cap two">잠깐, 남자 목소리?! 😱</div>
+</div>
+
+</body>
+</html>

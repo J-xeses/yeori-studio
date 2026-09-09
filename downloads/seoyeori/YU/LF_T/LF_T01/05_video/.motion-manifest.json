@@ -1,0 +1,58 @@
+{
+  "1": {
+    "method": "graphic",
+    "motion": "self",
+    "baked": true,
+    "duration": 3,
+    "producedAt": "2026-09-08T14:25:23.959Z"
+  },
+  "4": {
+    "method": "clip-record",
+    "motion": null,
+    "baked": true,
+    "duration": 10,
+    "producedAt": "2026-09-08T14:09:50.355Z"
+  },
+  "6": {
+    "method": "clip-record",
+    "motion": null,
+    "baked": true,
+    "duration": 10,
+    "producedAt": "2026-09-08T14:10:14.142Z"
+  },
+  "8": {
+    "method": "clip-record",
+    "motion": null,
+    "baked": true,
+    "duration": 10,
+    "producedAt": "2026-09-08T14:10:37.376Z"
+  },
+  "10": {
+    "method": "graphic",
+    "motion": "self",
+    "baked": true,
+    "duration": 8,
+    "producedAt": "2026-09-09T03:16:57.040Z"
+  },
+  "14": {
+    "method": "graphic",
+    "motion": "self",
+    "baked": true,
+    "duration": 10,
+    "producedAt": "2026-09-09T09:09:54.779Z"
+  },
+  "19": {
+    "method": "clip-record",
+    "motion": null,
+    "baked": true,
+    "duration": 8,
+    "producedAt": "2026-09-08T14:11:07.491Z"
+  },
+  "22": {
+    "method": "graphic",
+    "motion": "self",
+    "baked": true,
+    "duration": 5,
+    "producedAt": "2026-09-08T14:25:56.507Z"
+  }
+}
