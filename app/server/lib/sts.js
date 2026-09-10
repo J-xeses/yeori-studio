@@ -28,26 +28,29 @@ function run(cmd, args, onLog) {
   })
 }
 
-// characters.json + ttsSettings 로 캐릭터명 → { id, name, voiceId } 해석.
-// characters = loadCharacters() 결과, speakerVoices = state.ttsSettings.speakerVoices
+// 캐릭터명 → { id, name, voiceId, source }.
+// 우선순위: 명시 voiceId → ttsSettings.speakerVoices (TTS 탭에서 실제로 고르는 곳, 살아있는 값) →
+//           characters.json voiceId (기본/시드) → primary → 전역 기본.
+// speakerVoices 를 characters.json 보다 먼저 보는 이유: 사용자가 TTS 탭 "화자별 목소리" 에서
+// 미리듣기하며 바꾸는 값이 여기 저장되므로 그게 최신. characters.json 은 git 시드값.
 export function resolveVoice({ character, voiceId, characters = {}, speakerVoices = {}, defaultVoiceId }) {
   if (voiceId) return { voiceId, source: 'explicit' }
   const key = String(character || '').trim()
+  const findChar = (K) => Object.entries(characters).find(([id, c]) =>
+    id.toUpperCase() === K || String(c.name || '').toUpperCase() === K ||
+    (c.aliases || []).some((a) => String(a).toUpperCase() === K))
   if (key) {
-    // characters.json 직접 매칭 (id / name / aliases)
     const K = key.toUpperCase()
-    for (const [id, c] of Object.entries(characters)) {
-      if (id.toUpperCase() === K || String(c.name || '').toUpperCase() === K ||
-          (c.aliases || []).some((a) => String(a).toUpperCase() === K)) {
-        if (c.voiceId) return { voiceId: c.voiceId, id, name: c.name || id, source: 'characters.json' }
-      }
-    }
-    // ttsSettings.speakerVoices 느슨 매칭 (지아 ↔ 한지아)
-    if (speakerVoices[key]) return { voiceId: speakerVoices[key], name: key, source: 'speakerVoices' }
-    const sk = Object.keys(speakerVoices).find((k) => k.includes(key) || key.includes(k))
-    if (sk) return { voiceId: speakerVoices[sk], name: sk, source: 'speakerVoices~' }
+    const ch = findChar(K)
+    // ① speakerVoices 정확·느슨 매칭 (지아 ↔ 한지아). 캐릭터명·별칭도 시도.
+    const svKeys = [key, ch?.[1]?.name, ...(ch?.[1]?.aliases || [])].filter(Boolean)
+    for (const sk of svKeys) if (speakerVoices[sk]) return { voiceId: speakerVoices[sk], id: ch?.[0], name: ch?.[1]?.name || sk, source: 'speakerVoices' }
+    const loose = Object.keys(speakerVoices).find((k) => k.includes(key) || key.includes(k))
+    if (loose) return { voiceId: speakerVoices[loose], id: ch?.[0], name: ch?.[1]?.name || loose, source: 'speakerVoices~' }
+    // ② characters.json voiceId
+    if (ch?.[1]?.voiceId) return { voiceId: ch[1].voiceId, id: ch[0], name: ch[1].name || ch[0], source: 'characters.json' }
   }
-  // primary 캐릭터 → 없으면 기본
+  // ③ primary → ④ 기본
   const primary = Object.entries(characters).find(([, c]) => c.primary && c.voiceId)
   if (primary) return { voiceId: primary[1].voiceId, id: primary[0], name: primary[1].name || primary[0], source: 'primary' }
   return { voiceId: defaultVoiceId, name: '기본', source: 'default' }

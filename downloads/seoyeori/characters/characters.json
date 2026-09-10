@@ -49,5 +49,5 @@
     "voiceId": "0oqpliV6dVSr9XomngOW",
     "voiceName": "한지아 voice"
   },
-  "_voiceNote": "voiceId = ElevenLabs voice, STS(speech-to-speech) 변환·TTS 공용. ttsSettings.speakerVoices 와 동기 권장."
+  "_voiceNote": "voiceId = ElevenLabs 목소리(클론/프리셋). STS·TTS 공용. ⚠️ 실제 우선순위: ttsSettings.speakerVoices(TTS탭 화자별 목소리) > 여기(시드). TTS탭에서 바꾸면 그게 최신."
 }

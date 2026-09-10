@@ -1658,11 +1658,17 @@ app.get('/api/genline/characters', (req, res) => {
     const speakerVoices = state.ttsSettings?.speakerVoices || {}
     const defaultVoiceId = state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID
     const out = Object.entries(chars).filter(([id]) => !id.startsWith('_')).map(([id, c]) => {
-      const v = c.voiceId || (() => {
-        const k = Object.keys(speakerVoices).find(k => k === c.name || (c.aliases || []).includes(k) || k.includes(id))
-        return k ? speakerVoices[k] : null
-      })()
-      return { id, name: c.name || id, aliases: c.aliases || [], primary: !!c.primary, voiceId: v || null, voiceName: c.voiceName || null, hasVoice: !!v }
+      // TTS 탭에서 고른 값(speakerVoices) 이 최신 → 그게 우선, 없으면 characters.json 시드
+      const svKey = [c.name, ...(c.aliases || [])].find(k => speakerVoices[k]) ||
+        Object.keys(speakerVoices).find(k => (c.name && (k.includes(c.name) || c.name.includes(k))))
+      const sv = svKey ? speakerVoices[svKey] : null
+      const v = sv || c.voiceId || null
+      return {
+        id, name: c.name || id, aliases: c.aliases || [], primary: !!c.primary,
+        voiceId: v, voiceName: c.voiceName || null, hasVoice: !!v,
+        voiceSource: sv ? 'TTS탭(화자별 목소리)' : c.voiceId ? 'characters.json' : null,
+        seedVoiceId: c.voiceId || null,
+      }
     })
     res.json({ ok: true, defaultVoiceId, characters: out })
   } catch (err) {
