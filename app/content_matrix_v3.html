@@ -100,8 +100,27 @@
   .ep-type-midform { background: var(--pink-bg); color: var(--pink); }
   .ep-type-longform { background: var(--purple-bg); color: var(--purple); }
   .ep-type-series { background: var(--amber-bg); color: var(--amber); }
-  .ep-name { font-size: 11px; color: var(--text2); flex: 1; }
+  .ep-name { font-size: 11px; color: var(--text2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ep-item.active .ep-name { color: var(--purple); }
+  .ep-item.is-test { opacity: 0.45; }
+  .ep-active-dot { color: var(--teal); font-size: 9px; flex-shrink: 0; }
+  .ep-set-active { color: var(--text3); opacity: 0; cursor: pointer; transition: opacity 0.15s; }
+  .ep-item:hover .ep-set-active { opacity: 0.55; }
+  .ep-set-active:hover { opacity: 1 !important; color: var(--teal); }
+
+  /* 서여리 하위: 일상 / 트렌드 / 인스타 그룹 */
+  .channel-children { margin: 2px 0 6px; padding-left: 4px; border-left: 1px solid var(--border); }
+  .ep-group { margin-bottom: 6px; }
+  .ep-group-label {
+    font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 0.4px;
+    padding: 5px 10px 3px; display: flex; align-items: center; gap: 6px;
+  }
+  .ep-group-count { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text3); background: var(--surface3); border-radius: 8px; padding: 0 5px; }
+  .ep-group-empty { font-size: 10px; color: var(--text3); padding: 3px 12px; font-style: italic; }
+  .ep-group-link { font-size: 10px; color: var(--text3); padding: 4px 12px; cursor: pointer; }
+  .ep-group-link:hover { color: var(--pink); }
+  .ep-item .ep-type-badge { font-size: 8px; }
+  .ep-type-insta { background: var(--pink-bg); color: var(--pink); }
 
   .sidebar-add {
     display: flex; align-items: center; gap: 8px;
@@ -453,21 +472,13 @@
   <!-- 사이드바 -->
   <aside class="sidebar">
     <div class="sidebar-section">
-      <div class="sidebar-label">채널</div>
+      <div class="sidebar-label">채널 · 에피소드 <span id="sidebar-sync-tag" style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">· 스튜디오 연동</span></div>
       <div id="channel-list"></div>
-      <!-- 인스타 채널 고정 -->
-      <div class="channel-item ${currentChannel==='ch_insta_yeori'?'active':''}" id="insta-sidebar-item" onclick="switchToInsta()">
-        <div class="channel-dot" style="background:#f472b6"></div>
-        <div class="channel-name">📱 서여리 인스타</div>
-        <div class="channel-count" id="insta-post-count">0</div>
-      </div>
       <div class="sidebar-add" onclick="openChannelModal()">+ 채널 추가</div>
     </div>
-    <div class="sidebar-section" id="ep-section">
-      <div class="sidebar-label">에피소드</div>
-      <div id="ep-list"></div>
-      <div class="sidebar-add" onclick="openEpModal()">+ 에피소드 추가</div>
-    </div>
+    <!-- switchToInsta/switchChannel 이 참조하는 레거시 앵커 (숨김) -->
+    <div id="ep-section" style="display:none"></div>
+    <span id="insta-post-count" style="display:none">0</span>
     <div class="sidebar-section">
       <div class="candidate-side-title" style="margin-bottom:6px">🔥 트렌드 분석</div>
       <div class="candidate-trend-list" id="candidate-trend-list"></div>
@@ -1648,23 +1659,162 @@ function switchTab(tab, btn) {
 }
 
 // ── 사이드바 렌더 ──────────────────────────────────────────────
+// 서여리 채널의 에피소드 목록은 스튜디오(studioState.episodes)에서 실시간으로 가져와
+// 일상 / 트렌드 / 인스타 3그룹으로 분류한다. AI 자기계발 등 다른 채널은 로컬 appData 유지.
+const EP_CAT = [
+  { key:'daily', label:'📺 일상 에피소드', test:(code,ct)=> !/^IG/i.test(code) && !/^IG/i.test(ct||'') && !/^(LF|SF)_T/i.test(code) },
+  { key:'trend', label:'🔥 트렌드 에피소드', test:(code)=> /^(LF|SF)_T/i.test(code) },
+  { key:'insta', label:'📱 인스타', test:(code,ct)=> /^IG/i.test(code) || /^IG/i.test(ct||'') },
+];
+function classifyStudioEp(ep) {
+  const code = ep.episode?.code || '';
+  const ct = ep.episode?.contentType || '';
+  for (const c of EP_CAT) if (c.test(code, ct)) return c.key;
+  return 'daily';
+}
+function isTestStudioEp(ep) {
+  const code = ep.episode?.code || '';
+  const title = ep.episode?.title || '';
+  return /test/i.test(code) || /테스트/.test(title) || (ep.episode?.number || 0) >= 90;
+}
+function epCodeBadgeClass(ct) {
+  if (/^IG/i.test(ct||'')) return 'ep-type-insta';
+  if (/^LF/i.test(ct||'')) return 'ep-type-longform';
+  if (/^SF/i.test(ct||'')) return 'ep-type-shorts';
+  return 'ep-type-series';
+}
+function epMatrixType(ct) {
+  if (/^LF/i.test(ct||'')) return 'longform';
+  if (/^SF/i.test(ct||'')) return 'shorts';
+  if (/^IG/i.test(ct||'')) return 'midform';
+  return 'series';
+}
+
 function renderSidebar() {
-  const ch = getProject()?.channels || {};
-  document.getElementById('channel-list').innerHTML = Object.values(ch).map(c => `
-    <div class="channel-item ${c.id===currentChannel?'active':''}" onclick="switchChannel('${c.id}')">
+  const studioEps = studioState.episodes || {};
+  const activeId = studioState.activeEpisodeId;
+  const buckets = { daily:[], trend:[], insta:[] };
+  Object.entries(studioEps).forEach(([id, ep]) => {
+    buckets[classifyStudioEp(ep)].push({ id, ep, test: isTestStudioEp(ep) });
+  });
+  Object.values(buckets).forEach(arr => arr.sort((a, b) => {
+    if (a.test !== b.test) return a.test ? 1 : -1;
+    return (b.ep.episode?.number || 0) - (a.ep.episode?.number || 0);
+  }));
+
+  const epRow = (b) => {
+    const e = b.ep.episode || {};
+    return `
+    <div class="ep-item ${b.id===currentEpisode && !isInstaMode ? 'active':''} ${b.test?'is-test':''}"
+         onclick="selectStudioEpisode('${b.id}')" title="${escapeHtml(e.title||'')}">
+      <span class="ep-type-badge ${epCodeBadgeClass(e.contentType)}">${escapeHtml(e.code || ('EP'+(e.number||'')))}</span>
+      <div class="ep-name">${escapeHtml(e.title || '제목 없음')}</div>
+      ${b.id===activeId ? '<span class="ep-active-dot" title="스튜디오 활성 에피소드">●</span>'
+        : `<span class="ep-active-dot ep-set-active" onclick="event.stopPropagation();setStudioActive('${b.id}')" title="스튜디오 활성으로 지정">○</span>`}
+    </div>`;
+  };
+  const groupBlock = (cat) => `
+    <div class="ep-group">
+      <div class="ep-group-label">${cat.label}<span class="ep-group-count">${buckets[cat.key].length}</span></div>
+      ${buckets[cat.key].length ? buckets[cat.key].map(epRow).join('') : '<div class="ep-group-empty">없음</div>'}
+      ${cat.key==='insta' ? '<div class="ep-group-link" onclick="switchToInsta()">📊 인스타 채널 대시보드 →</div>' : ''}
+    </div>`;
+
+  const yeoriTotal = Object.keys(studioEps).length;
+  const yeoriActive = currentChannel==='ch_yeori' && !isInstaMode;
+  let html = `
+    <div class="channel-item ${yeoriActive?'active':''}" onclick="switchChannel('ch_yeori')">
+      <div class="channel-dot" style="background:#a78bfa"></div>
+      <div class="channel-name">서여리</div>
+      <div class="channel-count">${yeoriTotal}</div>
+    </div>
+    <div class="channel-children">
+      ${yeoriTotal ? EP_CAT.map(groupBlock).join('')
+        : '<div class="ep-group-empty" style="padding:8px 12px">스튜디오 로딩 중… (proxy.js 실행 확인)</div>'}
+    </div>`;
+
+  // 다른 채널 (AI 자기계발 등) — 로컬 appData 그대로
+  Object.values(getProject()?.channels || {}).filter(c => c.id !== 'ch_yeori').forEach(c => {
+    html += `
+    <div class="channel-item ${c.id===currentChannel && !isInstaMode ? 'active':''}" onclick="switchChannel('${c.id}')">
       <div class="channel-dot" style="background:${c.color}"></div>
       <div class="channel-name">${c.title}</div>
       <div class="channel-count">${Object.keys(c.episodes).length}</div>
-    </div>`).join('');
+    </div>`;
+  });
 
-  const eps = getChannel()?.episodes || {};
-  document.getElementById('ep-list').innerHTML = Object.values(eps)
-    .sort((a,b)=>a.title.localeCompare(b.title))
-    .map(ep => `
-    <div class="ep-item ${ep.id===currentEpisode?'active':''}" onclick="switchEpisode('${ep.id}')">
-      <span class="ep-type-badge ${EP_TYPE_CLASS[ep.type]||'ep-type-shorts'}">${EP_TYPE_LABEL[ep.type]||ep.type}</span>
-      <div class="ep-name">${ep.title}</div>
-    </div>`).join('');
+  document.getElementById('channel-list').innerHTML = html;
+}
+
+// 스튜디오 에피소드를 골라 매트릭스/대시보드에서 보기 — studioState + studio-status-public 을
+// 합쳐 로컬 appData(ch_yeori)로 임포트한다. 스튜디오 활성 에피소드는 바꾸지 않는다(별도 ○ 버튼).
+async function selectStudioEpisode(id) {
+  const rawEp = studioState.episodes?.[id];
+  if (!rawEp) { showToast('⚠️ 스튜디오 에피소드를 찾을 수 없습니다'); return; }
+  isInstaMode = false;
+  document.getElementById('tab-insta').style.display = 'none';
+  currentChannel = 'ch_yeori';
+  currentEpisode = id;
+
+  let statusCuts = [];
+  try {
+    const r = await fetch(`${YEORI_SERVER}/api/studio-status-public?episodeId=${encodeURIComponent(id)}`);
+    statusCuts = (await r.json()).cuts || [];
+  } catch { /* g포인트 없이 진행 */ }
+  const gByNo = {};
+  statusCuts.forEach(c => { gByNo[String(c.no)] = c; });
+
+  const MAKING = new Set(['GRAPHIC','CAPCUT','BROLL']);
+  const cuts = (rawEp.cuts || []).map(c => {
+    const st = gByNo[String(c.no)] || {};
+    const isMk = MAKING.has(String(c.cutType||'').toUpperCase());
+    return {
+      id: c.id || `sc_${id}_${c.no}`,
+      no: String(c.no).padStart(2, '0'),
+      scene: c.scene || c.cutTitle || `CUT ${c.no}`,
+      sec: Number(c.duration) || 0,
+      type: c.cutType || 'YEORI',
+      platform: isMk ? '메이킹' : 'Veo/Flow',
+      hard: '',
+      status: st.g5 ? '완료' : (st.hasVideo || st.g4) ? '생성중' : '대기',
+      flag: /hook/i.test(c.cutMark || '') ? 'hook' : '',
+      note: c.cutTitle || '',
+      g1: !!st.g1, g2: !!st.g2, g3: !!st.g3, g4: !!st.g4, g5: !!st.g5,
+    };
+  });
+
+  // 시드 더미(ep_y_s01/s05 등) + 스튜디오에서 사라진 에피소드는 ch_yeori 에서 정리
+  const chEps = appData.projects[currentProject].channels.ch_yeori.episodes;
+  Object.keys(chEps).forEach(k => { if (!studioState.episodes?.[k]) delete chEps[k]; });
+
+  const e = rawEp.episode || {};
+  appData.projects[currentProject].channels.ch_yeori.episodes[id] = {
+    id,
+    title: `${e.code ? e.code + ' · ' : ''}${e.title || '제목 없음'}`,
+    type: epMatrixType(e.contentType),
+    status: cuts.length && cuts.every(c => c.g5) ? '완료' : '제작중',
+    code: e.code || '',
+    cuts,
+  };
+  saveData();
+  switchTab(currentTab, document.querySelector(`.tab-btn[data-tab="${currentTab}"]`) || document.querySelector('.tab-btn'));
+}
+
+// ○ 버튼 전용 — 스튜디오의 활성 에피소드 자체를 이 에피소드로 전환 (studio-state.json 갱신)
+async function setStudioActive(id) {
+  try {
+    const r = await fetch(`${YEORI_SERVER}/api/set-active-episode`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ episodeId: id }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.error || `HTTP ${r.status}`);
+    showToast(`✅ 스튜디오 활성 에피소드 → ${d.title || id}`);
+    await loadStudioState();
+    await selectStudioEpisode(id);
+  } catch (e) {
+    showToast('⚠️ 활성 지정 실패: ' + e.message);
+  }
 }
 
 function switchEpisode(id) {
@@ -2508,17 +2658,22 @@ function switchToInsta() {
   renderInsta();
 }
 
-// 유튜브 채널로 복귀
+// 채널 전환
 function switchChannel(id) {
   isInstaMode = false;
   currentChannel = id;
-  document.getElementById('insta-sidebar-item')?.classList.remove('active');
-  document.getElementById('ep-section').style.display = 'block';
-  const eps = getChannel()?.episodes || {};
-  const firstEp = Object.keys(eps)[0];
-  if(firstEp) currentEpisode = firstEp;
-  // 인스타 탭 숨기고 대시보드로 복귀
   document.getElementById('tab-insta').style.display = 'none';
+
+  if (id === 'ch_yeori') {
+    // 서여리 = 스튜디오 연동. 활성 에피소드(없으면 첫 에피소드)를 임포트해서 연다.
+    const studioEps = studioState.episodes || {};
+    const target = (currentEpisode && studioEps[currentEpisode]) ? currentEpisode
+      : (studioEps[studioState.activeEpisodeId] ? studioState.activeEpisodeId : Object.keys(studioEps)[0]);
+    if (target) { selectStudioEpisode(target); return; }
+  } else {
+    const firstEp = Object.keys(getChannel()?.episodes || {})[0];
+    if (firstEp) currentEpisode = firstEp;
+  }
   switchTab(currentTab, document.querySelector(`.tab-btn[data-tab="${currentTab}"]`) || document.querySelector('.tab-btn'));
   renderAll();
 }
@@ -2930,6 +3085,7 @@ async function loadStudioState() {
     studioState = {};
   }
   renderStudioStateBanner();
+  renderSidebar();   // 에피소드 목록이 스튜디오에서 오므로 로드 후 다시 그림
 }
 
 function renderStudioStateBanner() {
@@ -4231,13 +4387,19 @@ async function autoAnalyzeCandidate(cand) {
 
 loadData();
 renderAll();
-loadStudioState();
+// 스튜디오 상태 로드 후 활성 에피소드를 매트릭스에 임포트해서 첫 화면부터 실데이터로.
+loadStudioState().then(() => {
+  const act = studioState.activeEpisodeId;
+  if (act && studioState.episodes?.[act]) selectStudioEpisode(act);
+});
 pollPipelineStatus(); // 이미 실행 중인 파이프라인이 있으면(새로고침 등) UI 복원
 syncGPointsFromStudio();
 // 실시간 push가 불가능한 구조(오리진이 달라 storage/커스텀 이벤트 전파 안 됨)라
 // 20초 주기로 폴링해 G포인트를 서버 경유로 갱신한다. 급하면 스튜디오 연동 탭의
 // "🔄 G포인트 동기화" 버튼으로 즉시 갱신 가능.
 setInterval(syncGPointsFromStudio, 20000);
+// 스튜디오 에피소드 목록(사이드바) 주기적 갱신 — 새 에피소드/활성 전환 반영
+setInterval(loadStudioState, 30000);
 </script>
 </body>
 </html>

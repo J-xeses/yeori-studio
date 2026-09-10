@@ -5826,6 +5826,26 @@ app.post('/api/episodes', (req, res) => {
   }
 })
 
+// ── POST /api/set-active-episode — content_matrix_v3.html(file://) 사이드바에서 스튜디오
+// 활성 에피소드를 전환. /api/mcp/studio-set-episode 와 동일 로직이나 인증 없음
+// (/api/episodes·/api/script-upload 와 같은 패턴 — file:// 페이지가 직접 호출).
+app.post('/api/set-active-episode', (req, res) => {
+  const { episodeId } = req.body || {}
+  if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    state.activeEpisodeId = episodeId
+    state.episode = ep.episode
+    state.cuts = ep.cuts
+    state.scriptRaw = ep.scriptRaw || ''
+    saveStudioState(state)
+    res.json({ success: true, episodeId, title: ep.episode?.title, cutCount: (state.cuts || []).length })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // ② studio-upload-script — v3 표준 포맷 대본 파일을 읽어 해당 에피소드의 cuts로 반영
 mcpRouter.post('/studio-upload-script', (req, res) => {
   const { episodeId, scriptPath } = req.body || {}
