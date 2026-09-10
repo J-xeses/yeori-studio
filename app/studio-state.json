@@ -1991,8 +1991,8 @@
       "shotType": "FULLBODY",
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "htmlFile": "AE_제작대상_수동",
-      "motion": "none",
+      "htmlFile": "LF_T01_A01_intro.html",
+      "motion": "self",
       "masterCode": {
         "sp": "GR.BK",
         "pl": "LF_YU",
@@ -2916,8 +2916,8 @@
       "shotType": "FULLBODY",
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
-      "htmlFile": "AE_제작대상_수동",
-      "motion": "none",
+      "htmlFile": "LF_T01_A02_endcard.html",
+      "motion": "self",
       "masterCode": {
         "sp": "GR.BK",
         "pl": "LF_YU",
@@ -3041,7 +3041,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-09T13:37:08.844Z",
+  "savedAt": "2026-09-10T06:50:03.409Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
