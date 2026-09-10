@@ -2953,7 +2953,7 @@
     "speed": 1,
     "trackDefaults": {
       "dialogue": {
-        "speed": 0.9,
+        "speed": 0.95,
         "stability": 30,
         "similarity": 75
       },
@@ -2964,9 +2964,21 @@
       }
     },
     "speakerVoices": {
-      "한지아": "0oqpliV6dVSr9XomngOW"
+      "한지아": "5n5gqmaQi9Ewevrz7bOS"
     },
-    "speakerSettings": {}
+    "speakerSettings": {
+      "한지아": {
+        "speed": 1.1,
+        "stability": 14,
+        "similarity": 75
+      },
+      "서여리": {
+        "speed": 0.95,
+        "stability": 30,
+        "similarity": 75
+      }
+    },
+    "readingMap": {}
   },
   "videoSettings": {
     "subtitleEnabled": true,
@@ -3042,7 +3054,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-10T13:28:31.208Z",
+  "savedAt": "2026-09-10T14:30:21.008Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3159,6 +3171,48 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-1": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-4": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-6": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-19": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-18": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-10": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
@@ -3168,7 +3222,7 @@
           "type": "dialogue",
           "text": "LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…",
           "speaker": null,
-          "url": null,
+          "url": "blob:http://localhost:5173/57a34ab5-270f-448e-a32a-789f98e5d5d6",
           "voiceId": "",
           "settings": {
             "speed": 0.9,
@@ -3183,12 +3237,12 @@
           "type": "dialogue",
           "text": "야, 야~  이거 봤어?",
           "speaker": null,
-          "url": "blob:http://localhost:5173/c3ecc5e7-f95a-4bba-96a3-0075d74d48af",
+          "url": "blob:http://localhost:5173/b88319fb-acd5-486a-b2c6-49ea3c31ca97",
           "voiceId": "",
           "settings": {
             "speed": 1.05,
-            "stability": 26,
-            "similarity": 78
+            "stability": 31,
+            "similarity": 83
           }
         }
       ],
@@ -3198,7 +3252,7 @@
           "type": "dialogue",
           "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
           "speaker": null,
-          "url": null,
+          "url": "blob:http://localhost:5173/974085cc-1f0a-4fa4-a803-9dbc8ff7446c",
           "voiceId": "",
           "settings": {
             "speed": 0.9,
@@ -3372,6 +3426,81 @@
       "cut-17__v1": [
         {
           "id": "track_1789045363575_fbq4",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-1__v1": [
+        {
+          "id": "track_1789047728792_fz7u",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-4__v1": [
+        {
+          "id": "track_1789048431586_b68c",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-6__v1": [
+        {
+          "id": "track_1789048989879_rdzc",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-19__v1": [
+        {
+          "id": "track_1789049517230_c6yf",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-10__v1": [
+        {
+          "id": "track_1789049919939_mo9p",
           "type": "dialogue",
           "text": "",
           "speaker": null,

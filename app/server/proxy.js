@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { finalizeReel, enrichCutsFromScript } from './lib/reelFinalize.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
-import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle } from './lib/ttsText.js'
+import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
@@ -6457,6 +6457,7 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
 
     const defaultVoice = state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID
     const speakerVoices = state.ttsSettings?.speakerVoices || {}
+    const readingMap = state.ttsSettings?.readingMap || {}   // 읽기 교정 (TTS 탭과 동일 사전)
     const voiceFor = (speaker) => {
       if (!speaker) return defaultVoice
       if (speakerVoices[speaker]) return speakerVoices[speaker]
@@ -6505,7 +6506,7 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
       try {
         for (let i = 0; i < p.segs.length; i++) {
           const seg = p.segs[i]
-          const buf = await elevenLabsTTS(apiKey, voiceFor(seg.speaker), seg.text)
+          const buf = await elevenLabsTTS(apiKey, voiceFor(seg.speaker), applyReadings(seg.text, readingMap))
           const pf = path.join(audioDir, `.cut_${padded}_p${i}.mp3`)
           fs.writeFileSync(pf, buf)
           parts.push(pf)

@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import { elTTS, elVoices, freeTTS } from '../lib/api'
 import { setGPoint, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { cleanForTTS, splitSpeakerSegments } from '../lib/ttsText'
+import { cleanForTTS, splitSpeakerSegments, applyReadings, DEFAULT_READINGS } from '../lib/ttsText'
 import { isFreeVoice, freeVoiceName, speedToRate } from '../lib/freeTts'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
@@ -83,6 +83,8 @@ export default function TTSTab() {
   } = state.ttsTabState || {}
   const trackDefaults = ttsSettings.trackDefaults || FALLBACK_DEFAULTS
   const speakerVoices = ttsSettings.speakerVoices || {}
+  const readingMap = ttsSettings.readingMap || {}   // 사용자 추가 읽기교정 (기본 사전 위에 덮어씀)
+  const speakClean = (raw) => applyReadings(cleanForTTS(raw).clean, readingMap)
 
   // 캐릭터 레지스트리 — 화자명 별칭(지아↔한지아, 여리↔서여리)을 정식 이름으로 통일하기 위함.
   // 대본마다 화자 표기가 달라도 "화자별 목소리" 는 컷과 무관하게 한 인물 = 한 항목이 되도록.
@@ -92,7 +94,8 @@ export default function TTSTab() {
       .then(r => r.json())
       .then(d => setCharList(Object.entries(d.characters || {})
         .filter(([id]) => !id.startsWith('_'))
-        .map(([, c]) => ({ name: c.name, aliases: c.aliases || [] }))))
+        .map(([, c]) => ({ name: c.name, aliases: c.aliases || [], primary: !!c.primary }))
+        .sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0))))
       .catch(() => {})
   }, [])
   const canonSpeaker = (name) => {
@@ -132,8 +135,8 @@ export default function TTSTab() {
   const setSpeakerVoice = (name, id) =>
     dispatch({ type: 'SET_TTS', p: { speakerVoices: { ...speakerVoices, [canonSpeaker(name)]: id } } })
 
-  // 화자별 미세조정 — 같은 클론 목소리라도 안정성·유사도·속도로 인물 톤을 구분(전 컷 공통).
-  // 설정이 있으면 그 화자의 모든 트랙에 우선 적용, 없으면 트랙 개별값(대사/나레이션 기본치) 사용.
+  // 화자별 미세조정 — 이름이 명시된 화자 트랙(CUT 15/21 두샷 등)에만 적용. 전 컷 공통.
+  // 이름 없는 대사(대부분의 서여리 대사)는 트랙 개별값(= trackDefaults) 을 그대로 쓴다.
   const resolveSettings = (track) =>
     (track.speaker && speakerSettingFor(track.speaker)) || track.settings
   const setSpeakerSetting = (name, key, value) => {
@@ -146,6 +149,18 @@ export default function TTSTab() {
     const next = { ...speakerSettings }; delete next[canon]
     dispatch({ type: 'SET_TTS', p: { speakerSettings: next } })
   }
+
+  // 읽기 교정 — 기본 사전(DEFAULT_READINGS) 위에 사용자 항목(readingMap) 을 덮어씀
+  const setReading = (from, to) => {
+    const f = String(from || '').trim()
+    if (!f) return
+    dispatch({ type: 'SET_TTS', p: { readingMap: { ...readingMap, [f]: String(to || '').trim() } } })
+  }
+  const removeReading = (from) => {
+    const next = { ...readingMap }; delete next[from]
+    dispatch({ type: 'SET_TTS', p: { readingMap: next } })
+  }
+  const [newRead, setNewRead] = useState({ from: '', to: '' })
 
   const [activeCutIdx, setActiveCutIdx]   = useState(0)
   const [voiceInput,   setVoiceInput]     = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -254,13 +269,14 @@ export default function TTSTab() {
 
   const reloadAllFromScript = () => {
     if (!confirm('모든 컷의 트랙을 대본에서 다시 만듭니다. 생성된 오디오와 합친 결과가 전부 사라집니다. 계속할까요?')) return
-    const nextTracks = { ...tracks }
-    const nextMerged = { ...mergedUrls }
+    // 현재 컷·목소리탭 조합만 남기고 재생성 (renumber·대본 교체로 생긴 orphan 키 제거)
+    const nextTracks = {}
+    const nextMerged = {}
     for (const c of cuts) {
       for (const vt of getVoiceTabsForCut(c.id)) {
         const key = trackKey(c.id, vt.id)
         nextTracks[key] = initTracksForCut(c, trackDefaults)
-        delete nextMerged[key]
+        if (mergedUrls[key]) delete nextMerged[key]   // 병합 결과는 버림
       }
     }
     setTTS({ tracks: nextTracks, mergedUrls: nextMerged })
@@ -286,6 +302,20 @@ export default function TTSTab() {
   const cutTracks     = activeKey ? getTracksForKey(activeKey, cut) : []
 
   // ── 목소리 설정 (기본값 · .env 저장용) ────────────────────
+  // 캐릭터 목소리/미세조정 즉시 저장 (평소엔 3초 자동저장이지만, 명시적으로 눌러 확인용)
+  const [charVoiceSaved, setCharVoiceSaved] = useState(false)
+  const saveCharacterVoices = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/studio-state', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      })
+      if (!res.ok) throw new Error()
+      setCharVoiceSaved(true)
+      setTimeout(() => setCharVoiceSaved(false), 2500)
+    } catch { alert('저장 실패 — 프록시 서버 연결을 확인하세요') }
+  }
+
   const saveVoiceId = async () => {
     const id = voiceInput.trim()
     if (!id) { alert('Voice ID를 입력하세요'); return }
@@ -353,6 +383,43 @@ export default function TTSTab() {
     })
   }
 
+  // ── 캐릭터 목소리 미리듣기 ───────────────────────────────
+  // 정한 목소리 + 미세조정을 그대로 적용해 대본의 실제 대사(없으면 샘플)로 한 문장 생성.
+  const [charPreview, setCharPreview] = useState({})   // { [name]: { url, loading } }
+  // 톤 확인용 고정 예문 (특정 컷 대사 아님). "대본 대사로" 버튼으로 실제 대사도 넣을 수 있음.
+  const sampleLineFor = (name) =>
+    `안녕하세요, ${name}예요. 이 톤이 괜찮은지 한 번 들어볼게요. 오늘 준비한 이야기 시작해 볼까요?`
+  const scriptLineFor = (name) => {
+    for (const c of cuts) {
+      if (!c.dialogue?.trim()) continue
+      for (const seg of splitSpeakerSegments(c.dialogue)) {
+        if (seg.speaker && canonSpeaker(seg.speaker) === canonSpeaker(name) && seg.text.trim())
+          return seg.text.trim()
+      }
+    }
+    return null
+  }
+  const previewText = (name) => charPreview[name]?.text ?? sampleLineFor(name)
+  const previewCharacter = async (name) => {
+    const voiceId  = speakerVoiceFor(name) || ttsSettings.voiceId || DEFAULT_VOICE_ID
+    const settings = speakerSettingFor(name) || FALLBACK_DEFAULTS.dialogue
+    const text = applyReadings(cleanForTTS(previewText(name)).clean || sampleLineFor(name), readingMap)
+    setCharPreview(p => ({ ...p, [name]: { ...p[name], loading: true } }))
+    try {
+      const res = await ttsRequest(voiceId, text, settings)
+      if (!res.ok) {
+        let msg = 'API 오류'
+        try { const e = await res.json(); msg = e.detail?.message || e.error || msg } catch { /* */ }
+        throw new Error(msg)
+      }
+      const url = URL.createObjectURL(await res.blob())
+      setCharPreview(p => ({ ...p, [name]: { ...p[name], loading: false, url, prevUrl: p[name]?.url } }))
+    } catch (err) {
+      setCharPreview(p => ({ ...p, [name]: { ...p[name], loading: false } }))
+      alert('미리듣기 실패: ' + err.message)
+    }
+  }
+
   // ── 트랙 개별 TTS 생성 ───────────────────────────────────
   const generateTrackById = async (cutId, voiceTabId, trackId, trackList) => {
     const key   = trackKey(cutId, voiceTabId)
@@ -361,8 +428,8 @@ export default function TTSTab() {
     if (!track || !track.text.trim()) { alert('텍스트를 입력하세요'); return null }
     const variant = getVoiceTabsForCut(cutId).find(v => v.id === voiceTabId)
     const voiceId = resolveVoiceId(track, variant)
-    // 안전망: textarea에 지문 섞인 원문이 다시 들어와도 괄호/메모는 읽지 않는다
-    const speakText = cleanForTTS(track.text).clean
+    // 안전망: textarea에 지문 섞인 원문이 다시 들어와도 괄호/메모는 읽지 않는다 + 읽기교정
+    const speakText = speakClean(track.text)
     if (!speakText) { alert('정제 후 읽을 텍스트가 없습니다 (전부 지문/메모)'); return null }
 
     setTrackLoading(p => ({ ...p, [trackId]: true }))
@@ -487,7 +554,7 @@ export default function TTSTab() {
         // 각 트랙 생성 (트랙별 목소리 지정이 있으면 우선 사용 — 한 컷에 여러 목소리 조합 가능)
         const updated = []
         for (const t of cutTrks) {
-          const speakText = cleanForTTS(t.text).clean
+          const speakText = speakClean(t.text)
           if (!speakText) { updated.push(t); continue }
           const voiceId = resolveVoiceId(t, primary)
           setTrackLoading(p => ({ ...p, [t.id]: true }))
@@ -563,6 +630,144 @@ export default function TTSTab() {
         </div>
 
         <div className={s.scrollBody}>
+        {/* 1-b. 캐릭터 목소리 — 특정 컷 아님. 전 회차·전 컷 공통. 화자 이름 붙은 트랙에 자동 적용 */}
+        <details className={s.panel} open>
+          <summary className={s.panelTitle}>
+            🎭 캐릭터 목소리 설정 · 미리듣기 <span className={s.sliderGuideNote}>(특정 컷 아님 — 인물별로 전 컷 공통 적용)</span>
+          </summary>
+          <div className={s.panelTitleRow}>
+            <span className={s.sliderGuideNote}>변경 시 3초 뒤 자동 저장. 바로 확정하려면 💾</span>
+            <button className={s.voiceLoadBtn} onClick={saveCharacterVoices}>
+              {charVoiceSaved ? '✅ 저장됨' : '💾 저장'}
+            </button>
+          </div>
+          {!charList.length && (
+            <div className={s.sliderGuideNote}>캐릭터 레지스트리를 불러오지 못했습니다 (프록시 연결 확인).</div>
+          )}
+          {charList.map(c => {
+            const tuned = !!speakerSettingFor(c.name)
+            const sv = speakerSettingFor(c.name) || FALLBACK_DEFAULTS.dialogue
+            return (
+              <div key={c.name} className={s.speakerVoiceRow} style={{ flexWrap: 'wrap' }}>
+                <span className={s.speakerVoiceName}>{c.name}{c.primary ? ' (기본)' : ''}</span>
+                <VoicePicker
+                  compact
+                  value={speakerVoiceFor(c.name) || ''}
+                  onChange={id => setSpeakerVoice(c.name, id)}
+                  myVoices={myVoices}
+                  onLoadVoices={loadMyVoices}
+                  voicesLoading={voicesLoading}
+                  inheritLabel={c.primary ? `상단 기본값 ${(ttsSettings.voiceId || '').slice(0, 10)}…` : '상단 기본값'}
+                />
+                {/* 미세조정 — 항상 펼쳐서 바로 조절 가능 */}
+                <div className={s.trackSettings} style={{ flexBasis: '100%' }}>
+                  <div className={s.sliderGuideNote}>
+                    🎚 미세조정 {tuned ? '(적용 중 · 전 컷)' : '(기본치 — 움직이면 이 화자 전용으로 저장)'}
+                  </div>
+                  {[
+                    { key: 'speed', label: '속도', min: 0.5, max: 2.0, step: 0.05, unit: 'x' },
+                    { key: 'stability', label: '안정성', min: 0, max: 100, step: 1, unit: '%' },
+                    { key: 'similarity', label: '유사도', min: 0, max: 100, step: 1, unit: '%' },
+                  ].map(({ key, label, min, max, step, unit }) => {
+                    const val = sv[key]
+                    const pct = ((val - min) / (max - min)) * 100
+                    return (
+                      <div key={key} className={s.sliderRow}>
+                        <span className={s.sliderLabel}>{label}</span>
+                        <input type="range" min={min} max={max} step={step} value={val}
+                          style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
+                          onChange={e => setSpeakerSetting(c.name, key, parseFloat(e.target.value))} />
+                        <span className={s.sliderVal}>{val}{unit}</span>
+                      </div>
+                    )
+                  })}
+                  {tuned && (
+                    <button type="button" className={s.applyCleanBtn} onClick={() => clearSpeakerSetting(c.name)}>
+                      미세조정 해제 (트랙 기본치로)
+                    </button>
+                  )}
+                </div>
+
+                {/* 미리듣기 예문 — 톤 확인용. 특정 컷 대사가 아님 (자유 입력 or 대본에서 가져오기). */}
+                <div className={s.sliderGuideNote} style={{ flexBasis: '100%', display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <span>🎧 미리듣기 예문 (특정 컷 대사 아님)</span>
+                  {scriptLineFor(c.name) && (
+                    <button type="button" className={s.applyCleanBtn}
+                      onClick={() => setCharPreview(p => ({ ...p, [c.name]: { ...p[c.name], text: scriptLineFor(c.name) } }))}>
+                      대본 대사로
+                    </button>
+                  )}
+                  <button type="button" className={s.applyCleanBtn}
+                    onClick={() => setCharPreview(p => ({ ...p, [c.name]: { ...p[c.name], text: sampleLineFor(c.name) } }))}>
+                    기본 예문
+                  </button>
+                </div>
+                <textarea className={s.trackText} rows={2} style={{ flexBasis: '100%' }}
+                  value={previewText(c.name)}
+                  onChange={e => setCharPreview(p => ({ ...p, [c.name]: { ...p[c.name], text: e.target.value } }))} />
+
+                {/* 미리듣기 · 다시 듣기 · A/B */}
+                <div className={s.trackGenRow} style={{ flexBasis: '100%', flexWrap: 'wrap' }}>
+                  <button type="button" className={s.trackGenBtn}
+                    disabled={charPreview[c.name]?.loading}
+                    onClick={() => previewCharacter(c.name)}>
+                    {charPreview[c.name]?.loading
+                      ? <><span className={s.spinner} />생성 중…</>
+                      : (charPreview[c.name]?.url ? '🔁 다시 듣기 (현재 설정)' : '🔊 이 목소리로 미리듣기')}
+                  </button>
+                  {charPreview[c.name]?.url && (
+                    <span className={s.sliderVal}>NEW</span>
+                  )}
+                  {charPreview[c.name]?.url && (
+                    <audio controls autoPlay src={charPreview[c.name].url} className={s.trackAudio} />
+                  )}
+                  {charPreview[c.name]?.prevUrl && (
+                    <>
+                      <span className={s.sliderGuideNote}>이전:</span>
+                      <audio controls src={charPreview[c.name].prevUrl} className={s.trackAudio} />
+                    </>
+                  )}
+                </div>
+                <div className={s.sliderGuideNote} style={{ flexBasis: '100%' }}>
+                  안 맞으면 → 위 슬라이더 조정 → <b>🔁 다시 듣기</b> 반복. NEW/이전 비교 가능. 확정되면 상단 <b>💾 저장</b>.
+                </div>
+              </div>
+            )
+          })}
+        </details>
+
+        {/* 1-c. 읽기 교정 — 영문 고유명사 등을 한글 발음으로. TTS 에만 적용(자막엔 원문 유지) */}
+        <details className={s.panel}>
+          <summary className={s.panelTitle}>
+            읽기 교정 <span className={s.sliderGuideNote}>(예: LE SSERAFIM → 르세라핌 · TTS 에만 적용)</span>
+          </summary>
+          <div className={s.trackSettings}>
+            {Object.entries(readingMap).map(([from, to]) => (
+              <div key={from} className={s.sliderRow}>
+                <input className={s.trackText} style={{ flex: 1 }} value={from} readOnly />
+                <span>→</span>
+                <input className={s.trackText} style={{ flex: 1 }} value={to}
+                  onChange={e => setReading(from, e.target.value)} />
+                <button type="button" className={s.trackDelBtn} onClick={() => removeReading(from)}>✕</button>
+              </div>
+            ))}
+            <div className={s.sliderRow}>
+              <input className={s.trackText} style={{ flex: 1 }} placeholder="원문 (예: KATSEYE)"
+                value={newRead.from} onChange={e => setNewRead(r => ({ ...r, from: e.target.value }))} />
+              <span>→</span>
+              <input className={s.trackText} style={{ flex: 1 }} placeholder="읽기 (예: 캣아이)"
+                value={newRead.to} onChange={e => setNewRead(r => ({ ...r, to: e.target.value }))} />
+              <button type="button" className={s.applyCleanBtn}
+                onClick={() => { setReading(newRead.from, newRead.to); setNewRead({ from: '', to: '' }) }}>
+                추가
+              </button>
+            </div>
+            <div className={s.sliderGuideNote}>
+              기본 내장: {Object.keys(DEFAULT_READINGS).slice(0, 8).join(', ')} … (같은 원문을 위에 추가하면 덮어씁니다)
+            </div>
+          </div>
+        </details>
+
         {/* 2. 트랙 구성 패널 */}
         {cut && activeVariant && (
           <div className={s.panel}>
@@ -779,13 +984,12 @@ export default function TTSTab() {
                 {/* 슬라이더 */}
                 {(() => {
                   const isFree = isFreeVoice(resolveVoiceId(track, activeVariant))
-                  const canon = canonSpeaker(track.speaker)
                   const bySpeaker = !!(track.speaker && speakerSettingFor(track.speaker))
                   const eff = resolveSettings(track)
                   return (
                 <div className={s.trackSettings}>
                   {bySpeaker && (
-                    <div className={s.sliderHint}>🎭 {canon} 화자별 미세조정 적용 중 — 위 🎭 패널에서 조정 (이 값은 표시용)</div>
+                    <div className={s.sliderHint}>🎭 {canonSpeaker(track.speaker)} 캐릭터 미세조정 적용 중 — 상단 "캐릭터 목소리" 패널에서 조정</div>
                   )}
                   {[
                     { key: 'speed', label: '속도', min: 0.5, max: 2.0, step: 0.05, unit: 'x',

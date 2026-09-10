@@ -76,6 +76,49 @@ export function isEmptyAfterClean(input) {
   return !cleanForTTS(input).clean
 }
 
+// ── 읽기 교정 (TTS 전용) ─────────────────────────────────────────
+// ElevenLabs 가 영문 고유명사를 철자로 읽는 문제("LE SSERAFIM"→"엘 이 에스에스…").
+// TTS 로 넘기기 직전에만 한글 발음으로 치환. 자막(dialogueToSubtitle)에는 적용하지 않는다.
+export const DEFAULT_READINGS = {
+  'LE SSERAFIM': '르세라핌',
+  'SSERAFIM': '세라핌',
+  'ILLIT': '아일릿',
+  'KATSEYE': '캣아이',
+  'NewJeans': '뉴진스',
+  'HYBE': '하이브',
+  'SM': '에스엠',
+  'JYP': '제이와이피',
+  'YG': '와이지',
+  'MV': '뮤비',
+  'M/V': '뮤비',
+  'ICONIC BY MISTAKE': '아이코닉 바이 미스테이크',
+  'BY MISTAKE': '바이 미스테이크',
+  'Z세대': '제트세대',
+  'MZ세대': '엠지세대',
+  'K-POP': '케이팝',
+  'K-pop': '케이팝',
+  'KPOP': '케이팝',
+  'LA': '엘에이',
+  'IU': '아이유',
+}
+
+export function applyReadings(input, customMap = {}) {
+  const map = { ...DEFAULT_READINGS, ...(customMap || {}) }
+  let out = String(input || '')
+  // 긴 키 먼저 (LE SSERAFIM 을 SSERAFIM 보다 먼저)
+  for (const k of Object.keys(map).sort((a, b) => b.length - a.length)) {
+    if (!k.trim() || !map[k]) continue
+    const esc = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    out = out.replace(new RegExp(esc, 'gi'), map[k])
+  }
+  return out
+}
+
+// cleanForTTS + 읽기 교정 을 한 번에 (TTS 생성부에서 이걸 쓰면 됨)
+export function ttsSpeakText(input, customMap) {
+  return applyReadings(cleanForTTS(input).clean, customMap)
+}
+
 // SRT/편집메타용 자막 텍스트 — 다중 화자는 화자별 정제본을 두 칸 공백으로 이어붙임
 // (화자명·따옴표 없이, 화자 전환만 시각적으로 구분). 단일이면 그냥 정제본.
 export function dialogueToSubtitle(input) {
