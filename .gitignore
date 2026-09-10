@@ -11,6 +11,8 @@ downloads/**
 !downloads/**/.g2-review.json
 !downloads/**/.g4-review.json
 !downloads/seoyeori/characters/characters.json
+# genline(Field Gate) 현장 판단 로그 — v0.1 은 localStorage 미러라 작업파일로 취급(추후 승격 검토)
+downloads/**/.genline-review.json
 # state 하위 임시/스크랩/대용량은 다시 제외
 downloads/state/_*/
 downloads/state/*.log
