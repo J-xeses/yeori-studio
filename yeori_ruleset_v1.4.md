@@ -573,6 +573,41 @@ https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
 □ 파서 수정 시 scriptParserV3.js ↔ ScriptGenTab.jsx 동시 반영
 ```
 
+### ⑬-2 발화 컷 규칙 (VP 대사 명시 + 세그먼트) [v1.4.2 신설 — 2026-09-10]
+
+전체 명세: `app/docs/vp-dialogue-seg-spec.md`. 근거: LF_T01 v10 검토 —
+발화 컷 VP 가 "무엇을 말하는지"와 "8초씩 어떻게 쪼개지는지"를 담지 못함.
+
+**규칙 (1단계 — 적용됨)**
+
+- 모든 발화 컷(DL 또는 NR 보유)의 VP 하단에 `발화 (한국어)` 블록을 자동 삽입한다.
+  - `유형: 대사 — 립싱크 필요` (DL) / `유형: 나레이션 — 보이스오버, 립싱크 없음` (NR)
+  - `대사:` / `나레이션(VO):` 에 verbatim 텍스트
+  - `DU > 8` 이면 `※ Ns — Veo 클립 N개 이어붙이기` 안내 자동 부기
+  - 립싱크 컷은 `SILENT — Veo 는 입모양만, 최종 음성은 ElevenLabs` 명시
+- 구현: `app/src/lib/vpDialogue.js` `ensureDialogueInVP()` (멱등). server(`/api/episode-video-checklist`,
+  `/api/mcp/video-checklist`) + client(`buildV3ScriptText`) 가 이걸 통과.
+- 립싱크 오디오 소스 = **ElevenLabs** (서여리 고정 보이스). Veo 는 무음 립싱크.
+  - DL 컷: 사람이 Veo 제작 시 대사 텍스트를 프롬프트에 넣되 오디오는 버리고 `cut_NN.mp3` 로 교체
+  - NR 컷: 인물이 말하지 않음 — 립싱크 금지, VO 만
+
+**규칙 (2단계 — 예정, SEG 필드)**
+
+- `SEG_MAX_SEC = 8`. `DU > 8` YEORI 발화 컷은 `SEG:` 필드 필수.
+  - `SEG: 9 / 9 / 7` (세그별 초, 합 ≈ DU) 또는 `SEG: auto`
+- `DL` / `NR` 에 ` || ` 로 세그 경계 표시 (개수 = SEG−1, 문장·호흡 단위)
+- VP 를 세그먼트별로 재구성: `SEG k/N · A–Bs` + `CONTINUE FROM SEG (k-1) FINAL FRAME` +
+  세그별 `LIP-SYNC (KO): "…"`
+- 파서 이중 파일에 `SEG` 파싱 추가, TTS/조립 세그 인지 (`cut_NN_s{k}.mp3` / `.mp4`)
+
+**체크리스트 추가**
+```
+□ 발화 컷: VP 에 발화(한국어) 블록 — 유형(대사/나레이션) + verbatim 텍스트
+□ DL 컷: Veo 프롬프트에 대사 넣되 최종 음성은 ElevenLabs(cut_NN.mp3), Veo 오디오 폐기
+□ NR 컷: 립싱크 금지 (인물 입 안 움직임)
+□ DU > 8 YEORI 발화 컷: 클립 N개 이어붙이기 (2단계: SEG 필드 + DL || 마커)
+```
+
 \---
 
 ## 제작 철학 요약 (핵심 원칙)
@@ -588,7 +623,7 @@ https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
 
 \---
 
-> 버전: v1.4.1 / 2026-09-09
+> 버전: v1.4.2 / 2026-09-10
 > 업데이트: 새로운 피드백 발생 시 즉시 추가
 
 ### 버전 이력
@@ -609,4 +644,7 @@ v1.4.1 (2026-09-09) — ① 피부 항목 전면 개정. 베이스의 "skin text
                      (subtle, never exaggerated)" 삭제 → 여드름·잡티 증폭 원인(실측).
                      "clear healthy skin, soft natural finish" + avoid: 목록으로 교체.
                      ①/⑥ 체크리스트·즉시재생성·OK기준 동반 수정.
+v1.4.2 (2026-09-10) — ⑬-2 발화 컷 규칙 신설 (VP 대사 명시 + 세그먼트).
+                     1단계: ensureDialogueInVP() — 발화 컷 VP 에 verbatim 대사/나레이션 블록
+                     자동 삽입(멱등), DU>8 클립 분할 안내. 전체 명세 app/docs/vp-dialogue-seg-spec.md
 ```

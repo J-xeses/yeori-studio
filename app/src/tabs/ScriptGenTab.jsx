@@ -4,6 +4,7 @@ import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
+import { ensureDialogueInVP } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import s from './ScriptGenTab.module.css'
@@ -584,7 +585,8 @@ function buildV3ScriptText(cuts, episode) {
       sep,
       'VP (영상 프롬프트)',
       sep,
-      c.videoPrompt || '',
+      // 발화 컷은 VP 에 실제 대사/나레이션 텍스트를 명시(멱등) — vp-dialogue-seg-spec.md 1단계
+      ensureDialogueInVP(c) || '',
       sep,
     ]
     return lines.join('\n')

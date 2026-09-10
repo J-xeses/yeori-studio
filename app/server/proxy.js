@@ -21,6 +21,7 @@ import { postLeaderLog } from './lib/leaderLog.js'
 import { syncEpisodeState } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
+import { ensureDialogueInVP } from '../src/lib/vpDialogue.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
 
@@ -5066,7 +5067,10 @@ mcpRouter.get('/video-checklist', (req, res) => {
         cutType: c.cutType || 'YEORI',
         videoMode: mode,                       // veo | motion | still
         needsVideo: mode === 'veo' && !['GRAPHIC', 'CAPCUT'].includes(c.cutType),
-        videoPrompt: c.vp?.trim() || c.videoPrompt?.trim() || '',
+        videoPrompt: ensureDialogueInVP({
+          videoPrompt: c.vp?.trim() || c.videoPrompt?.trim() || '',
+          dialogue: c.dialogue, narration: c.narration, duration: c.duration || c.sec, cutType: c.cutType,
+        }),
         durationTarget: serverCutTargetDuration(c),
         hasImage,                              // 시작 프레임 준비됨
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
@@ -5527,7 +5531,10 @@ app.get('/api/episode-video-checklist', (req, res) => {
         cutMark: c.cutMark || 'NORMAL',
         dialogue: String(c.dialogue || '').replace(/^없음$/i, '').trim(),
         narration: String(c.narration || '').replace(/^없음$/i, '').trim(),
-        videoPrompt: c.videoPrompt || '',
+        videoPrompt: ensureDialogueInVP({
+          videoPrompt: c.videoPrompt || '',
+          dialogue: c.dialogue, narration: c.narration, duration: c.duration || c.sec, cutType: c.cutType,
+        }),
         duration: serverCutTargetDuration(c),   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
         startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,
         startFrameName: startFrame || null,
