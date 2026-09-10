@@ -1649,6 +1649,99 @@ app.get('/api/genline/job/:jobId', (req, res) => {
   res.json({ ok: true, ...job })
 })
 
+// GET /api/genline/cut-files?episodeId=&cutNo= — 이 컷의 이미지/영상 후보 파일 목록.
+// 폴더(02_images = flow dir, 05_video = video dir) 를 매개로 왔다갔다 하기 위한 조회.
+app.get('/api/genline/cut-files', (req, res) => {
+  const { episodeId, cutNo } = req.query
+  if (!episodeId || cutNo == null) return res.status(400).json({ ok: false, error: 'episodeId, cutNo 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const epNum = ep.episode?.number
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const p = String(cutNo).padStart(2, '0')
+    const imgDir = mp.imagesDir(epNum), vidDir = mp.videoDir(epNum)
+    const gsel = loadGpointsFile()[episodeCode]?.[`cut_${cutNo}`]?.selectedImage || null
+    const list = (dir, re) => {
+      try {
+        return fs.readdirSync(dir).filter(f => re.test(f)).map(f => {
+          const st = fs.statSync(path.join(dir, f))
+          return { file: f, url: `http://localhost:3001${mp.toMediaUrl(path.join(dir, f))}`, kb: Math.round(st.size / 1024), mtime: st.mtimeMs }
+        }).sort((a, b) => b.mtime - a.mtime)
+      } catch { return [] }
+    }
+    res.json({
+      ok: true, imgDir, vidDir, selectedImage: gsel,
+      images: list(imgDir, new RegExp(`^cut_${p}(_[a-z0-9]+)?\\.(jpe?g|png|webp)$`, 'i')),
+      videos: list(vidDir, new RegExp(`^cut_${p}(_[a-z0-9]+)?(_final|_overlay)?\\.mp4$`, 'i')),
+    })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
+// POST /api/genline/save-shot — { episodeId, cutNo, dataUrl } — 붙여넣은/드롭한 결과 이미지를
+// 02_images/cut_NN_<빈슬롯>.jpg 로 저장 (후보로 편입). dataUrl = "data:image/png;base64,..."
+app.post('/api/genline/save-shot', (req, res) => {
+  const { episodeId, cutNo, dataUrl } = req.body || {}
+  if (!episodeId || cutNo == null || !dataUrl) return res.status(400).json({ ok: false, error: 'episodeId, cutNo, dataUrl 필요' })
+  const m = String(dataUrl).match(/^data:image\/(png|jpe?g|webp);base64,(.+)$/)
+  if (!m) return res.status(400).json({ ok: false, error: '이미지 dataUrl 형식 아님' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const epNum = ep.episode?.number
+    const imgDir = mp.imagesDir(epNum)
+    fs.mkdirSync(imgDir, { recursive: true })
+    const p = String(cutNo).padStart(2, '0')
+    const existing = fs.readdirSync(imgDir)
+    let slot = 'a'
+    for (const s of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+      if (!existing.some(f => new RegExp(`^cut_${p}_${s}\\.`, 'i').test(f))) { slot = s; break }
+    }
+    const ext = m[1] === 'jpeg' ? 'jpg' : m[1]
+    const file = `cut_${p}_${slot}.${ext}`
+    fs.writeFileSync(path.join(imgDir, file), Buffer.from(m[2], 'base64'))
+    res.json({ ok: true, file, url: `http://localhost:3001${mp.toMediaUrl(path.join(imgDir, file))}` })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
+// POST /api/genline/delete-file — { episodeId, cutNo, file, kind:'image'|'video' } — 후보 파일 삭제.
+// cut_NN 패턴·해당 폴더 안 파일만 허용. 선택본이면 gpoints 에서도 해제.
+app.post('/api/genline/delete-file', (req, res) => {
+  const { episodeId, cutNo, file, kind = 'image' } = req.body || {}
+  if (!episodeId || cutNo == null || !file) return res.status(400).json({ ok: false, error: 'episodeId, cutNo, file 필요' })
+  const p = String(cutNo).padStart(2, '0')
+  if (!new RegExp(`^cut_${p}(_[a-z0-9]+)?(_final|_overlay)?\\.(jpe?g|png|webp|mp4)$`, 'i').test(file) || file.includes('/') || file.includes('\\')) {
+    return res.status(400).json({ ok: false, error: `이 컷(CUT ${cutNo})의 파일명이 아닙니다: ${file}` })
+  }
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const epNum = ep.episode?.number
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const dir = kind === 'video' ? mp.videoDir(epNum) : mp.imagesDir(epNum)
+    const abs = path.join(dir, file)
+    if (!fs.existsSync(abs)) return res.status(404).json({ ok: false, error: '파일 없음' })
+    fs.unlinkSync(abs)
+    // 선택본이었으면 해제
+    const gData = loadGpointsFile()
+    const cd = gData[episodeCode]?.[`cut_${cutNo}`]
+    if (cd?.selectedImage === file) {
+      cd.selectedImage = null; cd.g2 = false; saveGpointsFile(gData)
+    }
+    postLeaderLog({
+      episode: episodeCode, source: 'genline', stage: kind === 'video' ? 'G4' : 'G2', kind: '사람선택',
+      summary: `CUT ${cutNo} 후보 삭제: ${file}`, humanInvolved: true,
+    }).catch(() => {})
+    res.json({ ok: true, deleted: file })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
 // POST /api/genline/select — { episodeId, cutNo, file } — Field Gate 에서 고른 이미지를 G2 선택본으로.
 // studio-approve-g2 와 같은 결과(gpoints selectedImage + g2:true + deliverables 복사), 인증 없음.
 app.post('/api/genline/select', (req, res) => {
