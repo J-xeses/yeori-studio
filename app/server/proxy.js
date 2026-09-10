@@ -133,15 +133,23 @@ app.post('/api/claude/*path', async (req, res) => {
 app.get('/api/elevenlabs/user', async (req, res) => {
   const apiKey = req.headers['xi-api-key']
   if (!apiKey) return res.status(401).json({ error: 'API 키 없음' })
+  const H = { 'xi-api-key': apiKey }
   try {
-    const upstream = await fetch('https://api.elevenlabs.io/v1/user', {
-      headers: { 'xi-api-key': apiKey },
+    // 1) /v1/user — "사용자" 권한 필요. 되면 그대로.
+    const u = await fetch('https://api.elevenlabs.io/v1/user', { headers: H })
+    if (u.ok) return res.json(await u.json())
+    // 2) 폴백: /v1/user/subscription — "구독" 권한. 클라가 기대하는 { subscription } 형태로 래핑.
+    const s = await fetch('https://api.elevenlabs.io/v1/user/subscription', { headers: H })
+    if (s.ok) return res.json({ subscription: await s.json(), _via: 'subscription' })
+    // 3) 폴백: /v1/voices — "음성" 읽기 권한. 키는 유효하나 잔여량은 못 봄.
+    const v = await fetch('https://api.elevenlabs.io/v1/voices', { headers: H })
+    if (v.ok) return res.json({
+      subscription: { character_limit: 0, character_count: 0 }, _via: 'voices',
+      _note: '키는 유효하지만 "사용자/구독" 권한이 없어 잔여 글자수를 표시할 수 없습니다',
     })
-    const body = await upstream.json()
-    if (!upstream.ok) {
-      console.error('[proxy] ElevenLabs /v1/user 오류:', upstream.status, JSON.stringify(body))
-    }
-    res.status(upstream.status).json(body)
+    const body = await u.json().catch(() => ({}))
+    console.error('[proxy] ElevenLabs 연동 실패 (user/subscription/voices 모두):', u.status, JSON.stringify(body))
+    return res.status(u.status).json(body)
   } catch (err) {
     console.error('[proxy] ElevenLabs fetch 실패:', err.message)
     res.status(502).json({ error: err.message })
