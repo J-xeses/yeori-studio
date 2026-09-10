@@ -230,6 +230,16 @@ export const TOOLS = [
     },
   },
   {
+    name: 'leader_status',
+    description: '에이전트 리더의 현재 상황을 Notion 에서 읽어옵니다 — 활성(또는 지정) 에피소드가 지금 어느 게이트에서 · 에이전트 상태(돌아가는중/사람 승인 대기/블로커/유휴) · 다음 액션 · 블로커 · 보류/자동승인 설정, 그리고 최근 리더 판단 로그와 "사람 개입 대기" 항목. pipeline-leader 가 매 사이클 기록한 것을 그대로 조회. 파이프라인 상황을 물으면 studio_get_status(컷별 로컬 상태) 보다 이걸 먼저 본다.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        episode: { type: 'string', description: '에피소드 코드 (예: LF_T01). 생략 시 현재 활성 에피소드' },
+      },
+    },
+  },
+  {
     name: 'renumber_cuts',
     description: '에피소드 컷 번호를 배열 순서대로 1..N 순차 재부여. cuts[].no/id 뿐 아니라 연동된 것 전부 이동: 생성 파일(02_images/03_audio/05_video/deliverables 의 cut_NN*), gpoints 키, ttsTabState/videoTabState/studioTabState 의 cut-id 키, scene/action 텍스트의 "CUT N" 참조. 컷을 추가/삭제/재배치한 뒤 이 도구로 정리하면 파일·승인 상태가 같이 따라온다. apply 생략/false 면 매핑표만(dry-run), apply:true 여야 실제 적용(활성 에피소드만).',
     inputSchema: {

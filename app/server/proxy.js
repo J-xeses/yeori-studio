@@ -19,6 +19,7 @@ import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGrap
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
 import { syncEpisodeState } from './lib/leaderState.js'
+import { getLeaderStatus } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -6523,6 +6524,24 @@ mcpRouter.post('/leader-episode-sync', async (req, res) => {
   if (!p.episodeCode) return res.status(400).json({ success: false, error: 'episodeCode가 필요합니다' })
   const r = await syncEpisodeState(p)
   res.json({ success: r.ok, mode: r.mode, ...(r.ok ? {} : { error: r.body || r.error || r.skipped || r.status }) })
+})
+
+// ── GET /api/mcp/leader-status?episode=LF_T01 — 에이전트가 상황을 읽는다 (모니터링) ──
+// 에피소드 파이프라인 행(현재 게이트·에이전트 상태·다음 액션·블로커·보류·자동승인) +
+// 최근 리더 로그 + 사람 개입 대기 항목. episode 생략 시 활성 에피소드.
+mcpRouter.get('/leader-status', async (req, res) => {
+  try {
+    let code = String(req.query.episode || '').trim()
+    if (!code) {
+      const state = loadStudioState()
+      const ep = state.episodes?.[state.activeEpisodeId]
+      if (ep) code = resolveEpisodeCode(ep.episode, state.activeEpisodeId)
+    }
+    const r = await getLeaderStatus(code)
+    res.json(r)
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
 })
 
 // ── POST /api/mcp/restart-proxy — 새 프로세스를 먼저 detached로 띄운 뒤

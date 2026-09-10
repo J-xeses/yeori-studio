@@ -6,6 +6,7 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import { TOOLS } from '../server/mcp-tools.js'
+import { formatLeaderStatus } from '../server/lib/leaderRead.js'
 
 const EDGE_CONFIG    = process.env.EDGE_CONFIG || ''
 const ENV_BRIDGE_URL = process.env.MCP_BRIDGE_URL || ''
@@ -246,6 +247,12 @@ async function executeTool(name, args) {
       ).join('\n')
       return `${data.episode?.title || '(제목 없음)'} (컷 ${data.cutCount}개)\n` +
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
+    }
+
+    case 'leader_status': {
+      const d = await bridge('GET', `/leader-status${args.episode ? `?episode=${encodeURIComponent(args.episode)}` : ''}`)
+      if (!d.ok) return `오류: ${d.error || '조회 실패'}`
+      return formatLeaderStatus(d)
     }
 
     case 'renumber_cuts': {

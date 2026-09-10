@@ -8,6 +8,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { TOOLS } from './mcp-tools.js'
+import { formatLeaderStatus } from './lib/leaderRead.js'
 import * as mp from './lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -251,6 +252,12 @@ async function executeTool(name, args) {
       ).join('\n')
       return `${data.episode?.title || '(제목 없음)'} (컷 ${data.cutCount}개)\n` +
         `요약 — G1:${s.g1} G2:${s.g2} G3:${s.g3} G4:${s.g4} G5:${s.g5}\n\n${rows}`
+    }
+
+    case 'leader_status': {
+      const d = await api('GET', `/api/mcp/leader-status${args.episode ? `?episode=${encodeURIComponent(args.episode)}` : ''}`)
+      if (!d.ok) return `오류: ${d.error || '조회 실패'}`
+      return formatLeaderStatus(d)
     }
 
     case 'renumber_cuts': {
