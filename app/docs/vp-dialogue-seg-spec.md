@@ -77,15 +77,18 @@ DL: "LE SSERAFIM은요, 데뷔 3년 차인데 || 이미 글로벌 팬덤을 완�
 **단일 세그먼트 (SEG 없음 / DU ≤ 8):**
 ```
 ━━━ 발화 (한국어) ━━━
-유형: 대사 — 립싱크 필요
-텍스트: "…중독이에요."
+유형: 대사 — 인물이 화면에서 이 대사를 말함 (립싱크)
+대사: "…중독이에요."
+생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크·음성 함께.
+후처리: 생성된 음성만 추출 → 서여리 음성으로 변환(speech-to-speech, 타이밍 유지) → 재합성.
 ```
 
 **나레이션:**
 ```
 ━━━ 발화 (한국어) ━━━
-유형: 나레이션 — 보이스오버, 립싱크 없음 (입 움직이지 않음)
-텍스트: "근데 있잖아요… 좋은 거잖아요, 그냥."
+유형: 나레이션 — 보이스오버, 인물은 입을 움직이지 않음 (립싱크 금지)
+나레이션(VO): "근데 있잖아요… 좋은 거잖아요, 그냥."
+생성: 나레이션 음성은 ElevenLabs 서여리 나레이션(cut_NN.mp3) 을 영상에 얹음.
 ```
 
 **다중 세그먼트 (SEG 있음):** VP 를 세그먼트별로 재구성.
@@ -93,31 +96,40 @@ DL: "LE SSERAFIM은요, 데뷔 3년 차인데 || 이미 글로벌 팬덤을 완�
 ━━━ SEG 1 / 3 · 0–9s ━━━
 [시작 프레임: G2 승인 이미지]
 Medium closeup, calm analytical expression, one hand gesturing naturally.
-LIP-SYNC (KO): "LE SSERAFIM은요, 데뷔 3년 차인데"
-SILENT — lip movement only, no audio.
+SPEAKS (KO): "LE SSERAFIM은요, 데뷔 3년 차인데"  ← Veo 가 이 부분을 말하도록. 립싱크·음성 함께.
 
 ━━━ SEG 2 / 3 · 9–18s ━━━
 CONTINUE FROM SEG 1 FINAL FRAME (동일 인물·의상·헤어·조명 유지).
 Expression shifts with slight excitement, leaning forward.
-LIP-SYNC (KO): "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요."
-SILENT — lip movement only, no audio.
+SPEAKS (KO): "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요."
 
 ━━━ SEG 3 / 3 · 18–25s ━━━
 CONTINUE FROM SEG 2 FINAL FRAME.
 She pauses thoughtfully, glancing to the side then back to camera.
-LIP-SYNC (KO): "이번 콜라보에서 얘네 역할이 진짜 중요한 게…"
-SILENT — lip movement only, no audio.
+SPEAKS (KO): "이번 콜라보에서 얘네 역할이 진짜 중요한 게…"
 ```
 
 세그먼트별 동작 비트는 기존 VP 의 `First / Next / Final` 문장을 세그 수에 맞춰 매핑.
 
-### 2-4. 립싱크 오디오 소스 — ElevenLabs 우선
+### 2-4. 음성 처리 — Veo 가 말하게 생성 → 서여리 음성으로 변환 (사용자 확정 2026-09-10)
 
-Veo 네이티브 발화는 서여리 고정 보이스가 아님 → 목소리 일관성 깨짐.
+DL 컷은 **Veo 가 립싱크와 음성을 함께 생성해야** 입모양이 맞는다. 무음 영상 + 별도 TTS
+덮기는 립싱크가 안 맞음. 대신:
 
-1. `studio-run-g3` 이 세그별 TTS 생성 (`cut_NN_s1.mp3` …)
-2. Veo VP 에 `SILENT — lip movement only` 명시 → 무음 영상 클립 생성
-3. G5 편집에서 세그 영상 N ↔ 세그 오디오 N 페어로 이어붙임 + 오디오 덮기
+1. **Veo 생성** — 인물이 대사를 한국어로 말하는 영상 (네이티브 오디오 포함). 목소리 음색은
+   서여리가 아니지만 상관없음 — 타이밍·입모양만 맞으면 됨.
+2. **음성 추출** — 영상에서 오디오 트랙만 분리.
+3. **음성 변환 (speech-to-speech)** — 추출 음성을 서여리(또는 해당 캐릭터) 음성으로 변환.
+   타이밍·억양·호흡은 그대로 두고 **음색만 교체** → 립싱크가 그대로 유지됨.
+   (후보: ElevenLabs speech-to-speech / Higgsfield voice_change / RVC 계열)
+4. **재합성** — 변환 음성을 영상에 다시 얹어 `cut_NN.mp4` (+ `cut_NN.mp3` = 변환된 서여리 음성).
+
+NR 컷은 인물이 말하지 않으므로 ElevenLabs 서여리 나레이션을 직접 얹으면 됨(변환 불필요).
+
+**세그먼트가 있으면**: 각 세그 영상의 음성을 각각 변환 → 세그별 페어로 이어붙임.
+
+**⚠️ 현재 상태**: 3번(음성 변환)의 자동화는 아직 미구현. `/api/upload-cut-video?keepAudio=1`
+로 Veo 음성을 임시 유지하거나 수동 변환. 자동 파이프라인(G4 후처리 or G4.5)은 3단계.
 
 ---
 
@@ -169,7 +181,8 @@ Veo 네이티브 발화는 서여리 고정 보이스가 아님 → 목소리 �
 - 모든 발화 컷 VP 에 `발화 (한국어)` 블록 (유형: 대사/나레이션 + verbatim)
 - `DU > 8` YEORI 발화 컷은 `SEG` 필수, `DL` 에 `||` 로 세그 경계
 - `SEG_MAX_SEC = 8`, 세그 경계는 문장·호흡 단위
-- 립싱크 오디오 = ElevenLabs (Veo 는 `SILENT` 무음 립싱크)
+- DL 컷: Veo 가 대사를 말하도록 생성(립싱크+음성) → 음성 추출 → 서여리 음성으로 변환(§2-4)
+- NR 컷: 인물 입 안 움직임 + ElevenLabs 서여리 나레이션 직접
 - 체크리스트 항목 추가
 
 ---
@@ -194,9 +207,13 @@ Veo 네이티브 발화는 서여리 고정 보이스가 아님 → 목소리 �
 - 대본 생성/수정(`generateScript`/`handleRevision`) 프롬프트에 SEG 규칙
 - LF_T01 → v11 재생성 (SEG 부여)
 
-### 3단계 — TTS 세그 분할 + 조립 자동 concat
+### 3단계 — 음성 변환 파이프라인 + TTS/조립 세그 분할
 
-- `studio-run-g3` 세그별 생성 (3-2)
+- **음성 변환 (§2-4)** — G4 후처리(또는 G4.5): 업로드된 Veo 영상에서 오디오 추출 →
+  speech-to-speech 로 서여리 음성 변환 → 재합성. `cut_NN.mp3` = 변환 음성.
+  후보 API: ElevenLabs speech-to-speech, Higgsfield voice_change.
+  현재는 `keepAudio=1` 로 Veo 음성 임시 유지 or 수동.
+- `studio-run-g3` 세그별 생성 (3-2) — NR 컷용 나레이션
 - `upload-cut-video?seg=` + G5 조립 concat (3-3, 3-4)
 - `/api/cut-timing` 세그 검사
 
