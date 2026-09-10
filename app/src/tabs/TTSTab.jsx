@@ -84,14 +84,68 @@ export default function TTSTab() {
   const trackDefaults = ttsSettings.trackDefaults || FALLBACK_DEFAULTS
   const speakerVoices = ttsSettings.speakerVoices || {}
 
-  // 트랙 목소리 상속: 트랙 직접지정 → 화자별 목소리 → 목소리 탭 기본값 → 전역 기본값
+  // 캐릭터 레지스트리 — 화자명 별칭(지아↔한지아, 여리↔서여리)을 정식 이름으로 통일하기 위함.
+  // 대본마다 화자 표기가 달라도 "화자별 목소리" 는 컷과 무관하게 한 인물 = 한 항목이 되도록.
+  const [charList, setCharList] = useState([])
+  useEffect(() => {
+    fetch('http://localhost:3001/api/characters')
+      .then(r => r.json())
+      .then(d => setCharList(Object.entries(d.characters || {})
+        .filter(([id]) => !id.startsWith('_'))
+        .map(([, c]) => ({ name: c.name, aliases: c.aliases || [] }))))
+      .catch(() => {})
+  }, [])
+  const canonSpeaker = (name) => {
+    const n = String(name || '').trim()
+    if (!n) return n
+    const nl = n.toLowerCase()
+    const hit = charList.find(c =>
+      c.name?.toLowerCase() === nl || c.aliases.some(a => String(a).toLowerCase() === nl))
+    return hit?.name || n
+  }
+
+  const speakerSettings = ttsSettings.speakerSettings || {}
+
+  // 별칭 키를 정식 이름으로 접은 조회 맵 — 과거에 "지아" 키로 저장됐어도 "한지아" 로 찾게.
+  // (뒤 항목이 이기므로 정식 이름 키가 별칭 키보다 우선)
+  const foldByCanon = (obj) => {
+    const out = {}
+    for (const [k, v] of Object.entries(obj || {})) {
+      const c = canonSpeaker(k)
+      if (c === k) out[c] = v            // 정식 이름 키 — 항상 우선
+      else if (!(c in out)) out[c] = v   // 별칭 키 — 정식 키 없을 때만
+    }
+    return out
+  }
+  const speakerVoicesByCanon   = foldByCanon(speakerVoices)
+  const speakerSettingsByCanon = foldByCanon(speakerSettings)
+  const speakerVoiceFor   = (name) => speakerVoicesByCanon[canonSpeaker(name)]
+  const speakerSettingFor = (name) => speakerSettingsByCanon[canonSpeaker(name)]
+
+  // 트랙 목소리 상속: 트랙 직접지정 → 화자별 목소리(정식이름 기준) → 목소리 탭 기본값 → 전역 기본값
   const resolveVoiceId = (track, variant) =>
     track.voiceId?.trim()
-    || (track.speaker && speakerVoices[track.speaker])
+    || (track.speaker && speakerVoiceFor(track.speaker))
     || variant?.voiceId || ttsSettings.voiceId || DEFAULT_VOICE_ID
 
+  // 화자별 목소리는 항상 정식 이름 키로 저장 → 대본 표기가 "지아"든 "한지아"든 한 곳으로 모임
   const setSpeakerVoice = (name, id) =>
-    dispatch({ type: 'SET_TTS', p: { speakerVoices: { ...speakerVoices, [name]: id } } })
+    dispatch({ type: 'SET_TTS', p: { speakerVoices: { ...speakerVoices, [canonSpeaker(name)]: id } } })
+
+  // 화자별 미세조정 — 같은 클론 목소리라도 안정성·유사도·속도로 인물 톤을 구분(전 컷 공통).
+  // 설정이 있으면 그 화자의 모든 트랙에 우선 적용, 없으면 트랙 개별값(대사/나레이션 기본치) 사용.
+  const resolveSettings = (track) =>
+    (track.speaker && speakerSettingFor(track.speaker)) || track.settings
+  const setSpeakerSetting = (name, key, value) => {
+    const canon = canonSpeaker(name)
+    const cur = speakerSettings[canon] || { ...FALLBACK_DEFAULTS.dialogue }
+    dispatch({ type: 'SET_TTS', p: { speakerSettings: { ...speakerSettings, [canon]: { ...cur, [key]: value } } } })
+  }
+  const clearSpeakerSetting = (name) => {
+    const canon = canonSpeaker(name)
+    const next = { ...speakerSettings }; delete next[canon]
+    dispatch({ type: 'SET_TTS', p: { speakerSettings: next } })
+  }
 
   const [activeCutIdx, setActiveCutIdx]   = useState(0)
   const [voiceInput,   setVoiceInput]     = useState(ttsSettings.voiceId || DEFAULT_VOICE_ID)
@@ -259,8 +313,8 @@ export default function TTSTab() {
     } catch { alert('.env.local 저장 실패') }
   }
 
-  const loadMyVoices = async () => {
-    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 먼저 연동하세요'); return }
+  const loadMyVoices = async (silent = false) => {
+    if (!apiKeys.elevenLabs) { if (!silent) alert('ElevenLabs API 키를 먼저 연동하세요'); return }
     setVoicesLoading(true)
     try {
       const res = await elVoices(apiKeys.elevenLabs)
@@ -269,11 +323,17 @@ export default function TTSTab() {
       // 전체 보이스 (클론 + 무료 프리셋 모두) — 한지아 등 추가 캐릭터는 무료 프리셋에서 고를 수 있음
       const voices = data.voices || []
       setMyVoices(voices)
-      if (!voices.length) alert('사용 가능한 목소리가 없습니다.')
+      if (!voices.length && !silent) alert('사용 가능한 목소리가 없습니다.')
     } catch (err) {
-      alert('목소리 불러오기 실패: ' + err.message)
+      if (!silent) alert('목소리 불러오기 실패: ' + err.message)
     } finally { setVoicesLoading(false) }
   }
+
+  // 탭 진입 시 목소리 목록 자동 로드 — 화자별/트랙 목소리가 ID 대신 이름으로 보이게 (조용히)
+  useEffect(() => {
+    if (apiKeys.elevenLabs && !myVoices.length && !voicesLoading) loadMyVoices(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiKeys.elevenLabs])
 
   // ── 한 트랙 텍스트 → 오디오 Response (provider 분기) ──────
   // voiceId 가 'free:' 로 시작하면 무료 TTS(Edge), 아니면 ElevenLabs.
@@ -307,7 +367,7 @@ export default function TTSTab() {
 
     setTrackLoading(p => ({ ...p, [trackId]: true }))
     try {
-      const res = await ttsRequest(voiceId, speakText, track.settings)
+      const res = await ttsRequest(voiceId, speakText, resolveSettings(track))
       if (!res.ok) {
         let msg = 'API 오류'
         try { const e = await res.json(); msg = e.detail?.message || e.error || msg } catch { /* non-json */ }
@@ -432,7 +492,7 @@ export default function TTSTab() {
           const voiceId = resolveVoiceId(t, primary)
           setTrackLoading(p => ({ ...p, [t.id]: true }))
           try {
-            const res = await ttsRequest(voiceId, speakText, t.settings)
+            const res = await ttsRequest(voiceId, speakText, resolveSettings(t))
             if (res.ok) {
               const blob = await res.blob()
               updated.push({ ...t, url: URL.createObjectURL(blob) })
@@ -549,27 +609,60 @@ export default function TTSTab() {
               />
             </div>
 
-            {/* 화자별 목소리 — 다중 화자 대사가 있으면 화자마다 목소리 지정 (전 컷 공용) */}
+            {/* 화자별 목소리 — 다중 화자 대사가 있으면 화자마다 목소리 지정 (전 컷 공용).
+                대본 표기(지아/한지아 등)가 달라도 정식 이름 1개로 합쳐서 보여준다. */}
             {(() => {
-              const names = [...new Set(cutTracks.map(t => t.speaker).filter(Boolean))]
+              const names = [...new Set(cutTracks.map(t => canonSpeaker(t.speaker)).filter(Boolean))]
               if (!names.length) return null
               return (
                 <div className={s.speakerVoicePanel}>
                   <div className={s.speakerVoiceTitle}>🎭 화자별 목소리 <span>(모든 컷 공통)</span></div>
-                  {names.map(name => (
-                    <div key={name} className={s.speakerVoiceRow}>
+                  {names.map(name => {
+                    const tuned = !!speakerSettingFor(name)
+                    const sv = speakerSettingFor(name) || FALLBACK_DEFAULTS.dialogue
+                    return (
+                    <div key={name} className={s.speakerVoiceRow} style={{ flexWrap: 'wrap' }}>
                       <span className={s.speakerVoiceName}>{name}</span>
                       <VoicePicker
                         compact
-                        value={speakerVoices[name] || ''}
+                        value={speakerVoiceFor(name) || ''}
                         onChange={id => setSpeakerVoice(name, id)}
                         myVoices={myVoices}
                         onLoadVoices={loadMyVoices}
                         voicesLoading={voicesLoading}
                         inheritLabel={`탭 기본값 ${activeVariant.voiceId.slice(0, 10)}…`}
                       />
+                      <details className={s.sliderGuide} style={{ flexBasis: '100%' }} open={tuned}>
+                        <summary>🎚 {name} 미세조정 {tuned ? '(적용 중 — 이 화자 전 컷)' : '(기본치 사용 중)'}</summary>
+                        <div className={s.trackSettings}>
+                          {[
+                            { key: 'speed', label: '속도', min: 0.5, max: 2.0, step: 0.05, unit: 'x' },
+                            { key: 'stability', label: '안정성', min: 0, max: 100, step: 1, unit: '%' },
+                            { key: 'similarity', label: '유사도', min: 0, max: 100, step: 1, unit: '%' },
+                          ].map(({ key, label, min, max, step, unit }) => {
+                            const val = sv[key]
+                            const pct = ((val - min) / (max - min)) * 100
+                            return (
+                              <div key={key} className={s.sliderRow}>
+                                <span className={s.sliderLabel}>{label}</span>
+                                <input type="range" min={min} max={max} step={step} value={val}
+                                  style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
+                                  onChange={e => setSpeakerSetting(name, key, parseFloat(e.target.value))} />
+                                <span className={s.sliderVal}>{val}{unit}</span>
+                              </div>
+                            )
+                          })}
+                          {tuned && (
+                            <button type="button" className={s.applyCleanBtn}
+                              onClick={() => clearSpeakerSetting(name)}>
+                              화자 미세조정 해제 (트랙 기본치로)
+                            </button>
+                          )}
+                        </div>
+                      </details>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )
             })()}
@@ -593,7 +686,7 @@ export default function TTSTab() {
                     {track.type === 'narration'
                       ? '🎙 나레이션'
                       : (track.speaker ? `💬 ${track.speaker}` : '💬 대사')}
-                    {track.speaker && speakerVoices[track.speaker] && (
+                    {track.speaker && speakerVoiceFor(track.speaker) && (
                       <span className={s.trackVoiceTag} title="화자별 목소리 적용 중">🎭</span>
                     )}
                   </span>
@@ -686,8 +779,14 @@ export default function TTSTab() {
                 {/* 슬라이더 */}
                 {(() => {
                   const isFree = isFreeVoice(resolveVoiceId(track, activeVariant))
+                  const canon = canonSpeaker(track.speaker)
+                  const bySpeaker = !!(track.speaker && speakerSettingFor(track.speaker))
+                  const eff = resolveSettings(track)
                   return (
                 <div className={s.trackSettings}>
+                  {bySpeaker && (
+                    <div className={s.sliderHint}>🎭 {canon} 화자별 미세조정 적용 중 — 위 🎭 패널에서 조정 (이 값은 표시용)</div>
+                  )}
                   {[
                     { key: 'speed', label: '속도', min: 0.5, max: 2.0, step: 0.05, unit: 'x',
                       hint: '말하는 빠르기. 1.0=기본. 대사는 0.9~1.0, 나레이션은 0.85 정도. 0.7 미만/1.3 초과는 부자연스러워짐.' },
@@ -698,9 +797,9 @@ export default function TTSTab() {
                       hint: '원본 목소리에 얼마나 붙일지. 높으면 음색은 비슷하지만 원본의 잡음·숨소리까지 따라옴. 보통 70~85. 원본이 깨끗하면 높게, 지저분하면 낮게.',
                       free: true },
                   ].map(({ key, label, min, max, step, unit, hint, free }) => {
-                    const val = track.settings[key]
+                    const val = eff[key]
                     const pct = ((val - min) / (max - min)) * 100
-                    const disabled = isFree && free
+                    const disabled = (isFree && free) || bySpeaker
                     return (
                       <div key={key} className={`${s.sliderRow} ${disabled ? s.sliderRowOff : ''}`} title={hint}>
                         <span className={s.sliderLabel}>{label}</span>
@@ -714,7 +813,7 @@ export default function TTSTab() {
                             )
                           )} />
                         <span className={s.sliderVal}>{val}{unit}</span>
-                        {disabled && <span className={s.sliderHint}>무료(Edge) 목소리는 속도만 적용됩니다</span>}
+                        {disabled && !bySpeaker && <span className={s.sliderHint}>무료(Edge) 목소리는 속도만 적용됩니다</span>}
                       </div>
                     )
                   })}

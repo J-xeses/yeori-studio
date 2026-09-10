@@ -2965,7 +2965,8 @@
     },
     "speakerVoices": {
       "한지아": "0oqpliV6dVSr9XomngOW"
-    }
+    },
+    "speakerSettings": {}
   },
   "videoSettings": {
     "subtitleEnabled": true,
@@ -3041,7 +3042,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-10T12:33:57.661Z",
+  "savedAt": "2026-09-10T13:28:31.208Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3151,6 +3152,13 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-17": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
@@ -3175,12 +3183,12 @@
           "type": "dialogue",
           "text": "야, 야~  이거 봤어?",
           "speaker": null,
-          "url": "blob:http://localhost:5173/fa0bf1e0-8f8c-4d81-9e69-edecde5fbb0e",
+          "url": "blob:http://localhost:5173/c3ecc5e7-f95a-4bba-96a3-0075d74d48af",
           "voiceId": "",
           "settings": {
-            "speed": 1,
-            "stability": 20,
-            "similarity": 75
+            "speed": 1.05,
+            "stability": 26,
+            "similarity": 78
           }
         }
       ],
@@ -3352,6 +3360,21 @@
           "type": "dialogue",
           "text": "댓글로 알려주세요. 구독하면 다음 리뷰도 같이 봐요.",
           "speaker": "서여리",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-17__v1": [
+        {
+          "id": "track_1789045363575_fbq4",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
           "url": null,
           "voiceId": "",
           "settings": {

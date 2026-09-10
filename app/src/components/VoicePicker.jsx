@@ -55,9 +55,13 @@ export default function VoicePicker({
         </button>
       </div>
 
-      {!open && (isFreeVoice(value)
+      {!open && value && (isFreeVoice(value)
         ? <div className={s.selName}>▸ 무료 · {freeVoiceLabel(value)}</div>
-        : selected && <div className={s.selName}>▸ {selected.name}</div>
+        : selected
+          ? <div className={s.selName}>▸ {selected.name}</div>
+          : voicesLoading
+            ? <div className={s.selName}>▸ 이름 확인 중…</div>
+            : <div className={s.selName}>▸ 지정됨 (목록 밖 ID)</div>
       )}
 
       {open && (
@@ -92,7 +96,7 @@ export default function VoicePicker({
               />
               {voicesLoading && <div className={s.dim}>불러오는 중…</div>}
               {!voicesLoading && !myVoices.length && (
-                <button type="button" className={s.loadBtn} onClick={onLoadVoices}>
+                <button type="button" className={s.loadBtn} onClick={() => onLoadVoices?.()}>
                   🎤 보이스 목록 불러오기 (클론 + 프리셋)
                 </button>
               )}
