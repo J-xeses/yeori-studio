@@ -5,9 +5,10 @@
 //
 // 음성 처리 방침 (사용자 확정, 2026-09-10):
 //   DL(대사) — Veo 가 이 대사를 "말하도록" 생성. 립싱크와 음성을 함께 만들어야 입모양이 맞는다.
-//              → 이후 생성된 음성 트랙만 추출해 서여리(또는 해당 캐릭터) 음성으로 변환
-//              (speech-to-speech: 타이밍·억양 유지, 음색만 교체) → 영상에 재합성.
-//              cut_NN.mp3 = 그 "변환된 서여리 음성".
+//              이후 STS 파이프라인(이미 구현·테스트됨, 2026-06-23):
+//                demucs 대사/배경 분리 → ElevenLabs /v1/speech-to-speech (eleven_multilingual_sts_v2)
+//                → 서여리 음성 → FFmpeg 3트랙 합성(영상+서여리음성+배경음) → cut_NN_final.mp4.
+//              실행: node scripts/test-sts.js --ep=<N> --cut=<N>  (video-automation.js runStsPostProcess 에도 있음)
 //   NR(나레이션) — 보이스오버. 인물은 입을 움직이지 않음(립싱크 금지). 음성은 ElevenLabs 서여리 나레이션 직접.
 //
 // 1단계 스코프: VP 텍스트 끝에 "발화 (한국어)" 블록을 append (멱등). 파서 변경 없음.
@@ -62,8 +63,9 @@ export function ensureDialogueInVP(cut = {}) {
       '생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크와 음성을 함께 생성 (입모양이 대사와 맞아야 함).'
     )
     lines.push(
-      '후처리: 생성된 음성 트랙만 추출 → 서여리(캐릭터) 음성으로 변환(speech-to-speech, 타이밍·억양 유지) ' +
-      '→ 영상에 재합성. cut_NN.mp3 = 변환된 서여리 음성.'
+      '후처리(STS): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) ' +
+      '로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. ' +
+      '실행: node scripts/test-sts.js --ep=<N> --cut=<N>'
     )
   }
   if (nr && !dl) {

@@ -589,11 +589,18 @@ https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
 - 구현: `app/src/lib/vpDialogue.js` `ensureDialogueInVP()` (멱등). server(`/api/episode-video-checklist`,
   `/api/mcp/video-checklist`) + client(`buildV3ScriptText`) 가 이걸 통과.
 - **음성 처리 (사용자 확정 2026-09-10)** — DL 컷은 Veo 가 립싱크·음성을 함께 생성해야 입모양이 맞음.
-  무음영상+별도TTS 덮기는 립싱크 안 맞음. → ① Veo 가 말하는 영상 생성(목소리 음색은 무관)
-  → ② 음성 트랙 추출 → ③ speech-to-speech 로 서여리 음성 변환(타이밍·억양 유지, 음색만 교체)
-  → ④ 재합성. `cut_NN.mp3` = 변환된 서여리 음성.
-  NR 컷은 인물이 말 안 하므로 ElevenLabs 서여리 나레이션 직접.
-  ⚠️ ③ 자동화 미구현 — 현재 `keepAudio=1` 로 Veo 음성 임시 유지 or 수동. 자동 파이프라인 = 3단계.
+  무음영상+별도TTS 덮기는 립싱크 안 맞음.
+- **STS 파이프라인 = 이미 구현·테스트됨** (2026-06-23, 커밋 `cb46a20`):
+  ① `demucs --two-stems=vocals` 로 Veo 영상 오디오를 대사(`cut_NN_voice.mp3`) + 배경음
+     (`cut_NN_background.mp3`) 분리
+  ② ElevenLabs `/v1/speech-to-speech/{voiceId}` `model=eleven_multilingual_sts_v2`
+     (stability 0.30, similarity_boost 0.75) → `cut_NN_yeori_voice.mp3` (서여리 목소리, 타이밍·립싱크 보존)
+  ③ FFmpeg `[1:a][2:a]amix` → 영상 + 서여리음성 + 배경음 3트랙 합성 → `cut_NN_final.mp4`
+  - 실행: `node scripts/test-sts.js --ep=<N> --cut=<N>` (사전: `pip install demucs`, `C:\ffmpeg`, ELEVENLABS_API_KEY).
+    `video-automation.js` `runStsPostProcess()` 에도 동일 로직(퍼펫티어 경로라 현재 미사용).
+  - ⚠️ **갭**: 프록시 엔드포인트 없음 → Field Gate / pipeline-leader 가 못 부름(수동 CLI).
+    현재 G4→G5 자동 체인(upload-cut-video → assemble)엔 안 엮임.
+  NR 컷은 인물 무발화 + ElevenLabs 서여리 나레이션 직접.
 
 **규칙 (2단계 — 예정, SEG 필드)**
 
@@ -652,8 +659,10 @@ v1.4.2 (2026-09-10) — ⑬-2 발화 컷 규칙 신설 (VP 대사 명시 + 세�
                      1단계: ensureDialogueInVP() — 발화 컷 VP 에 verbatim 대사/나레이션 블록
                      자동 삽입(멱등), DU>8 클립 분할 안내. 전체 명세 app/docs/vp-dialogue-seg-spec.md
 v1.4.3 (2026-09-10) — ⑬-2 음성 처리 방침 정정 (사용자 확정). DL 컷 = Veo 가 대사를
-                     말하도록 생성(립싱크·음성 함께) → 음성 추출 → 서여리 음성 변환
-                     (speech-to-speech). 무음영상+TTS덮기(구안) 폐기. ② "대사 금지"·⑨
-                     "무음 반환 고정" 은 Flow 퍼펫티어 시절 규칙 → ⑬-2 로 대체 명시.
-                     ③ 음성 변환 자동화 미구현(현재 keepAudio=1 임시).
+                     말하도록 생성(립싱크·음성 함께) → demucs 분리 → ElevenLabs STS
+                     (eleven_multilingual_sts_v2) 로 서여리 음성 변환 → 3트랙 합성.
+                     무음영상+TTS덮기(구안) 폐기. ② "대사 금지"·⑨ "무음 반환 고정" 은
+                     Flow 퍼펫티어 시절 규칙 → ⑬-2 로 대체 명시.
+                     STS 파이프라인은 2026-06-23 구현·테스트됨(scripts/test-sts.js,
+                     runStsPostProcess) — 갭은 프록시 엔드포인트·자동체인 연결뿐.
 ```

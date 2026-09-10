@@ -118,18 +118,20 @@ DL 컷은 **Veo 가 립싱크와 음성을 함께 생성해야** 입모양이 �
 
 1. **Veo 생성** — 인물이 대사를 한국어로 말하는 영상 (네이티브 오디오 포함). 목소리 음색은
    서여리가 아니지만 상관없음 — 타이밍·입모양만 맞으면 됨.
-2. **음성 추출** — 영상에서 오디오 트랙만 분리.
-3. **음성 변환 (speech-to-speech)** — 추출 음성을 서여리(또는 해당 캐릭터) 음성으로 변환.
-   타이밍·억양·호흡은 그대로 두고 **음색만 교체** → 립싱크가 그대로 유지됨.
-   (후보: ElevenLabs speech-to-speech / Higgsfield voice_change / RVC 계열)
-4. **재합성** — 변환 음성을 영상에 다시 얹어 `cut_NN.mp4` (+ `cut_NN.mp3` = 변환된 서여리 음성).
+2. **demucs 분리** — 영상 오디오를 대사(`cut_NN_voice.mp3`) + 배경음(`cut_NN_background.mp3`) 로 분리.
+3. **ElevenLabs STS** — `/v1/speech-to-speech/{voiceId}` `model=eleven_multilingual_sts_v2`
+   (stability 0.30, similarity_boost 0.75) → `cut_NN_yeori_voice.mp3`. 타이밍·억양·호흡 그대로,
+   **음색만 서여리로** → 립싱크 유지.
+4. **FFmpeg 3트랙 합성** — 영상 + 서여리음성 + 배경음 `amix` → `cut_NN_final.mp4`.
 
 NR 컷은 인물이 말하지 않으므로 ElevenLabs 서여리 나레이션을 직접 얹으면 됨(변환 불필요).
 
 **세그먼트가 있으면**: 각 세그 영상의 음성을 각각 변환 → 세그별 페어로 이어붙임.
 
-**⚠️ 현재 상태**: 3번(음성 변환)의 자동화는 아직 미구현. `/api/upload-cut-video?keepAudio=1`
-로 Veo 음성을 임시 유지하거나 수동 변환. 자동 파이프라인(G4 후처리 or G4.5)은 3단계.
+**✅ 구현 상태**: STS 파이프라인은 **2026-06-23 구현·테스트됨** — 실행 `node scripts/test-sts.js
+--ep=<N> --cut=<N>` (사전 `pip install demucs`), 로직은 `video-automation.js` `runStsPostProcess()` 에도.
+**갭**: 프록시 엔드포인트가 없어 Field Gate/pipeline-leader/MCP 에서 못 부름 → CLI 수동.
+현재 G4→G5 자동 체인(upload-cut-video → assemble)엔 안 엮임.
 
 ---
 
@@ -207,12 +209,11 @@ NR 컷은 인물이 말하지 않으므로 ElevenLabs 서여리 나레이션을 
 - 대본 생성/수정(`generateScript`/`handleRevision`) 프롬프트에 SEG 규칙
 - LF_T01 → v11 재생성 (SEG 부여)
 
-### 3단계 — 음성 변환 파이프라인 + TTS/조립 세그 분할
+### 3단계 — STS 파이프라인 배선 + TTS/조립 세그 분할
 
-- **음성 변환 (§2-4)** — G4 후처리(또는 G4.5): 업로드된 Veo 영상에서 오디오 추출 →
-  speech-to-speech 로 서여리 음성 변환 → 재합성. `cut_NN.mp3` = 변환 음성.
-  후보 API: ElevenLabs speech-to-speech, Higgsfield voice_change.
-  현재는 `keepAudio=1` 로 Veo 음성 임시 유지 or 수동.
+- **STS 배선 (§2-4)** — 파이프라인은 이미 있음(`scripts/test-sts.js` / `runStsPostProcess`).
+  필요: `POST /api/genline/sts`(또는 `/api/mcp/run-sts`) 엔드포인트 + Field Gate 버튼 +
+  pipeline-leader 가 G4 승인 후 자동 호출(또는 G4.5). `pip install demucs` 필요.
 - `studio-run-g3` 세그별 생성 (3-2) — NR 컷용 나레이션
 - `upload-cut-video?seg=` + G5 조립 concat (3-3, 3-4)
 - `/api/cut-timing` 세그 검사
