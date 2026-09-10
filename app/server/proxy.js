@@ -1546,6 +1546,142 @@ app.post('/api/characters/:id/analyze', async (req, res) => {
   }
 })
 
+// ── 컷 1개 이미지 생성 (Nano Banana) — studio-run-g2 루프와 genline 생성 잡이 공유하는 코어 ──
+// ep: 스튜디오 상태의 에피소드 객체, cut: 그 컷. apiKey=gemini. promptOverride 있으면 그걸 씀
+// (genline 현장 재생성: 조정된 IP 프롬프트). 파일은 cut_NN_a.jpg 로 저장(기존 있으면 _b, _c...).
+async function genImageForCut(ep, cut, { apiKey, modelKey = NANO_BANANA_DEFAULT, promptOverride = '', keepExisting = false } = {}) {
+  const epNum = ep.episode?.number
+  const imgDir = mp.imagesDir(epNum)
+  fs.mkdirSync(imgDir, { recursive: true })
+  const padded = String(cut.no).padStart(2, '0')
+  const basePrompt = (promptOverride || cut.imagePrompt?.trim() || cut.ip?.trim() || '')
+  if (!basePrompt) return { cutNo: cut.no, status: 'skipped', reason: 'imagePrompt 없음' }
+  if (['GRAPHIC', 'CAPCUT'].includes(cut.cutType)) return { cutNo: cut.no, status: 'skipped', reason: `${cut.cutType} 컷` }
+
+  const ratioMatch = basePrompt.match(/\b(16:9|9:16|1:1|4:5|3:4|4:3)\b/)
+  const aspectRatio = ratioMatch ? ratioMatch[1] : null
+  const charIds = resolveChToCharacterIds(cut.masterCode?.ch)
+  const { refImages, descriptorText } = characterRefsAndDescriptors(charIds)
+  const prompt = descriptorText
+    ? `${basePrompt}\n\n[Character consistency — the attached image(s) are reference faces. Keep each face identical to its reference:]\n${descriptorText}`
+    : basePrompt
+
+  const gen = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio, modelKey)
+  // 기존 파일 유지 옵션(genline 재생성): _a 가 있으면 다음 빈 슬롯에
+  let slot = 'a'
+  if (keepExisting) {
+    const existing = (() => { try { return fs.readdirSync(imgDir) } catch { return [] } })()
+    for (const s of ['a', 'b', 'c', 'd', 'e', 'f']) {
+      if (!existing.includes(`cut_${padded}_${s}.jpg`)) { slot = s; break }
+    }
+  }
+  const file = `cut_${padded}_${slot}.jpg`
+  fs.writeFileSync(path.join(imgDir, file), gen.buffer)
+  return {
+    cutNo: cut.no, status: 'ok', file, model: gen.model,
+    aspectRatio: aspectRatio || '(프롬프트 추론)', promptChars: prompt.length,
+    characters: charIds, refCount: refImages.length,
+  }
+}
+
+// ── genline(Field Gate) 생성 잡 — 이미지 배치 생성을 백그라운드로 돌리고 폴링으로 진행 조회 ──
+const genlineJobs = new Map()   // jobId -> { id, kind, epNum, total, done, running, results, startedAt, error }
+const GENLINE_JOB_TTL = 30 * 60 * 1000
+function newGenlineJob(kind, epNum, cutNos) {
+  const id = 'gj_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)
+  const job = { id, kind, epNum, total: cutNos.length, done: 0, running: true, results: [], startedAt: Date.now(), error: null }
+  genlineJobs.set(id, job)
+  // 오래된 잡 청소
+  for (const [k, j] of genlineJobs) if (Date.now() - j.startedAt > GENLINE_JOB_TTL) genlineJobs.delete(k)
+  return job
+}
+
+// POST /api/genline/generate — { episodeId, cutNos:[..], kind:'image', model?, promptOverride?, keepExisting? }
+// 인증 없음(file:// Field Gate 전용, /api/genline-* 와 같은 패턴). 잡 생성 후 { jobId } 반환.
+app.post('/api/genline/generate', async (req, res) => {
+  const { episodeId, cutNos, kind = 'image', model, promptOverride = '', keepExisting = true } = req.body || {}
+  if (!episodeId || !Array.isArray(cutNos) || !cutNos.length) return res.status(400).json({ ok: false, error: 'episodeId, cutNos[] 필요' })
+  if (kind !== 'image') return res.status(400).json({ ok: false, error: '현재 kind=image 만 지원 (영상은 외부 도구 — v0.3)' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const secrets = JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'studio-secrets.json'), 'utf-8'))
+    const apiKey = secrets.apiKeys?.gemini
+    if (!apiKey) return res.status(400).json({ ok: false, error: 'Gemini API 키 없음 (studio-secrets.json)' })
+    const modelKey = ['flash', 'nb2', 'pro'].includes(model) ? model : NANO_BANANA_DEFAULT
+    const cuts = (ep.cuts || []).filter(c => cutNos.includes(c.no))
+    if (!cuts.length) return res.status(400).json({ ok: false, error: '해당 컷 없음' })
+
+    const job = newGenlineJob('image', ep.episode?.number, cuts.map(c => c.no))
+    res.json({ ok: true, jobId: job.id, total: job.total })
+
+    // 백그라운드 순차 실행 (Google rate-limit 방지 간격)
+    ;(async () => {
+      const GAP = 18_000
+      for (let i = 0; i < cuts.length; i++) {
+        try {
+          const r = await genImageForCut(ep, cuts[i], { apiKey, modelKey, promptOverride: cutNos.length === 1 ? promptOverride : '', keepExisting })
+          job.results.push(r)
+        } catch (e) {
+          job.results.push({ cutNo: cuts[i].no, status: 'error', error: e.message })
+        }
+        job.done++
+        if (i < cuts.length - 1) await new Promise(r => setTimeout(r, GAP))
+      }
+      job.running = false
+      // 결정 원장에 한 줄
+      const ok = job.results.filter(r => r.status === 'ok').length
+      postLeaderLog({
+        episode: resolveEpisodeCode(ep.episode, episodeId), source: 'genline', stage: 'G2', kind: promptOverride ? '재생성' : '생성시도',
+        summary: `이미지 ${ok}/${job.total}장 생성 (Field Gate)`, result: job.results.map(r => `CUT ${r.cutNo}:${r.status}`).join(' '),
+        humanInvolved: false,
+      }).catch(() => {})
+    })().catch(e => { job.running = false; job.error = e.message })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
+// GET /api/genline/job/:jobId — 진행 조회
+app.get('/api/genline/job/:jobId', (req, res) => {
+  const job = genlineJobs.get(req.params.jobId)
+  if (!job) return res.status(404).json({ ok: false, error: '잡 없음 (만료됐거나 잘못된 id)' })
+  res.json({ ok: true, ...job })
+})
+
+// POST /api/genline/select — { episodeId, cutNo, file } — Field Gate 에서 고른 이미지를 G2 선택본으로.
+// studio-approve-g2 와 같은 결과(gpoints selectedImage + g2:true + deliverables 복사), 인증 없음.
+app.post('/api/genline/select', (req, res) => {
+  const { episodeId, cutNo, file } = req.body || {}
+  if (!episodeId || cutNo == null || !file) return res.status(400).json({ ok: false, error: 'episodeId, cutNo, file 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const cut = (ep.cuts || []).find(c => c.no === cutNo)
+    if (!cut) return res.status(404).json({ ok: false, error: `CUT ${cutNo} 없음` })
+    const epNum = ep.episode?.number
+    const imgDir = mp.imagesDir(epNum)
+    if (!fs.existsSync(path.join(imgDir, file))) return res.status(404).json({ ok: false, error: `파일 없음: ${file}` })
+
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const gData = loadGpointsFile()
+    const epData = { ...(gData[episodeCode] || {}) }
+    epData[`cut_${cutNo}`] = { ...epData[`cut_${cutNo}`], g2: true, selectedImage: file, updatedAt: new Date().toISOString() }
+    gData[episodeCode] = epData
+    saveGpointsFile(gData)
+
+    const ext = path.extname(file) || '.jpg'
+    const deliverable = copyToDeliverables(episodeCode, path.join(imgDir, file), `cut_${String(cutNo).padStart(2, '0')}_image${ext}`)
+    postLeaderLog({
+      episode: episodeCode, source: 'genline', stage: 'G2', kind: '사람선택',
+      summary: `CUT ${cutNo} G2 이미지 선택·승인 (Field Gate)`, result: file, humanInvolved: true,
+    }).catch(() => {})
+    res.json({ ok: true, cutNo, selectedImage: file, deliverable })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
 // ── POST /api/run-flow — prompts 저장 후 Flow 자동 실행 (SSE) ──
 app.post('/api/run-flow', (req, res) => {
   const { ep, prompts, projectId, type, content, num } = req.body
@@ -6028,29 +6164,9 @@ mcpRouter.post('/studio-run-g2', async (req, res) => {
     const results = []
     for (let i = 0; i < targetCuts.length; i++) {
       const c = targetCuts[i]
-      const padded = String(c.no).padStart(2, '0')
       try {
-        const fullPrompt = promptOf(c)   // ← 컷별 프롬프트 전체를 그대로 사용 (가공·자르기 금지)
-        // 프롬프트가 명시한 비율(16:9 / 9:16)을 그대로 API 에도 전달 — 없으면 프롬프트가 알아서.
-        const ratioMatch = fullPrompt.match(/\b(16:9|9:16|1:1|4:5|3:4|4:3)\b/)
-        const aspectRatio = ratioMatch ? ratioMatch[1] : null
-
-        const charIds = resolveChToCharacterIds(c.masterCode?.ch)
-        const { refImages, descriptorText } = characterRefsAndDescriptors(charIds)
-        // 프롬프트 뒤에 캐릭터 일관성 지시만 덧붙임 (스타일/비율은 원본 프롬프트 존중)
-        const prompt = descriptorText
-          ? `${fullPrompt}\n\n[Character consistency — the attached image(s) are reference faces. Keep each face identical to its reference:]\n${descriptorText}`
-          : fullPrompt
-
-        const gen = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio, modelKey)
-        const dest = path.join(imgDir, `cut_${padded}_a.jpg`)
-        fs.writeFileSync(dest, gen.buffer)
-        results.push({
-          cutNo: c.no, status: 'ok', file: `cut_${padded}_a.jpg`, model: gen.model,
-          aspectRatio: aspectRatio || '(프롬프트 추론)',
-          promptChars: prompt.length,
-          characters: charIds, refCount: refImages.length,
-        })
+        // 재생성이 아니라 최초 생성이므로 항상 cut_NN_a.jpg 에 (keepExisting=false)
+        results.push(await genImageForCut(ep, c, { apiKey, modelKey, keepExisting: false }))
       } catch (err) {
         results.push({ cutNo: c.no, status: 'error', error: err.message })
       }
