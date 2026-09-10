@@ -17,7 +17,9 @@
     "descriptor": "Consistent character face: Oval face with warm fair skin, almond-shaped hazel-brown eyes, full dark eyebrows, a straight medium nose, full naturally pink lips with a gentle smile, and long wavy dark brown hair NOT short parted loosely; clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin.",
     "descriptorSource": "ruleset-v1.4.1-skin-fix",
     "descriptorUpdatedAt": "2026-09-09T00:00:00.000Z",
-    "refBasename": "yeori"
+    "refBasename": "yeori",
+    "voiceId": "RmYuvmCbqOMBJxDLW4k8",
+    "voiceName": "Sian (Tender, Calm & Clear)"
   },
   "jia": {
     "id": "jia",
@@ -43,6 +45,9 @@
     "notes": "서여리 절친 · 즉흥/리액션형 · 다크 마룬 립 시그니처 · 첫 등장 LF_T01",
     "refBasename": "jia",
     "aliasesUpdatedAt": "2026-09-10",
-    "aliasesNote": "HJ/HJ_VD 추가 — LF_T01 대본이 CH: YR_TX + HJ 로 표기 (YEORI 의 YR_* 와 대칭)"
-  }
+    "aliasesNote": "HJ/HJ_VD 추가 — LF_T01 대본이 CH: YR_TX + HJ 로 표기 (YEORI 의 YR_* 와 대칭)",
+    "voiceId": "0oqpliV6dVSr9XomngOW",
+    "voiceName": "한지아 voice"
+  },
+  "_voiceNote": "voiceId = ElevenLabs voice, STS(speech-to-speech) 변환·TTS 공용. ttsSettings.speakerVoices 와 동기 권장."
 }

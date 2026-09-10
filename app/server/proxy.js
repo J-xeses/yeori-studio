@@ -22,6 +22,7 @@ import { syncEpisodeState } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP } from '../src/lib/vpDialogue.js'
+import { runSts, resolveVoice } from './lib/sts.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
 
@@ -1647,6 +1648,88 @@ app.get('/api/genline/job/:jobId', (req, res) => {
   const job = genlineJobs.get(req.params.jobId)
   if (!job) return res.status(404).json({ ok: false, error: '잡 없음 (만료됐거나 잘못된 id)' })
   res.json({ ok: true, ...job })
+})
+
+// GET /api/genline/characters — 등록 캐릭터 + 음성 정보 (Field Gate 음성 변환 캐릭터 선택용)
+app.get('/api/genline/characters', (req, res) => {
+  try {
+    const chars = loadCharacters()
+    const state = loadStudioState()
+    const speakerVoices = state.ttsSettings?.speakerVoices || {}
+    const defaultVoiceId = state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID
+    const out = Object.entries(chars).filter(([id]) => !id.startsWith('_')).map(([id, c]) => {
+      const v = c.voiceId || (() => {
+        const k = Object.keys(speakerVoices).find(k => k === c.name || (c.aliases || []).includes(k) || k.includes(id))
+        return k ? speakerVoices[k] : null
+      })()
+      return { id, name: c.name || id, aliases: c.aliases || [], primary: !!c.primary, voiceId: v || null, voiceName: c.voiceName || null, hasVoice: !!v }
+    })
+    res.json({ ok: true, defaultVoiceId, characters: out })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+// POST /api/genline/sts — { episodeId, cutNo, character?, voiceId? }
+// Veo 대사 영상(cut_NN.mp4)의 목소리를 캐릭터 음성으로 변환 → cut_NN_final.mp4. 백그라운드 잡.
+// character 없으면: 컷 DL 의 첫 화자 → primary(서여리). voiceId 명시 시 그대로.
+app.post('/api/genline/sts', async (req, res) => {
+  const { episodeId, cutNo, character, voiceId } = req.body || {}
+  if (!episodeId || cutNo == null) return res.status(400).json({ ok: false, error: 'episodeId, cutNo 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const epNum = ep.episode?.number
+    const cut = (ep.cuts || []).find(c => c.no === cutNo)
+    if (!cut) return res.status(404).json({ ok: false, error: `CUT ${cutNo} 없음` })
+
+    const apiKey = process.env.ELEVENLABS_API_KEY ||
+      (JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'studio-secrets.json'), 'utf-8')).apiKeys?.elevenLabs)
+    if (!apiKey) return res.status(400).json({ ok: false, error: 'ElevenLabs API 키 없음' })
+
+    // 캐릭터 미지정 시 컷 대사의 첫 화자 추론 ("지아 …" / "서여리 …")
+    let charName = character
+    if (!charName && cut.dialogue) {
+      const m = String(cut.dialogue).match(/^\s*([가-힣]{2,4})\s*["'“]/)
+      if (m) charName = m[1]
+    }
+    const chars = loadCharacters()
+    const rv = resolveVoice({
+      character: charName, voiceId, characters: chars,
+      speakerVoices: state.ttsSettings?.speakerVoices || {},
+      defaultVoiceId: state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID,
+    })
+    if (!rv.voiceId) return res.status(400).json({ ok: false, error: `음성을 못 정함 (character=${charName || '?'}). 캐릭터에 voiceId 등록 필요` })
+
+    const charTag = (rv.id || rv.name || 'conv').toString().replace(/[^a-z0-9가-힣]/gi, '').slice(0, 12) || 'conv'
+    const job = newGenlineJob('sts', epNum, [cutNo])
+    job.voice = { ...rv, charName: charName || rv.name }
+    res.json({ ok: true, jobId: job.id, voice: job.voice })
+
+    ;(async () => {
+      job.logs = []
+      try {
+        const r = await runSts({
+          epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag,
+          onLog: (m) => { if (m) { job.logs.push(m); if (job.logs.length > 40) job.logs.shift() } },
+        })
+        job.results.push({ cutNo, status: 'ok', ...r.files, voiceSource: rv.source })
+      } catch (e) {
+        job.results.push({ cutNo, status: 'error', error: e.message })
+      }
+      job.done = 1; job.running = false
+      const ok = job.results[0]?.status === 'ok'
+      postLeaderLog({
+        episode: resolveEpisodeCode(ep.episode, episodeId), source: 'genline', stage: 'G4',
+        kind: ok ? '재생성' : '블로커',
+        summary: `CUT ${cutNo} 음성 변환 — ${job.voice.charName || '기본'} (${ok ? 'OK' : '실패'})`,
+        rationale: `voiceId=${rv.voiceId} (${rv.source})`,
+        result: ok ? job.results[0].final : job.results[0].error, humanInvolved: false,
+      }).catch(() => {})
+    })().catch(e => { job.running = false; job.error = e.message })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
 })
 
 // GET /api/genline/cut-files?episodeId=&cutNo= — 이 컷의 이미지/영상 후보 파일 목록.
@@ -6781,6 +6864,38 @@ mcpRouter.post('/update-status-md', async (req, res) => {
     res.json({ success: true, path: statusPath, notionMirror: notion.ok })
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
+  }
+})
+
+// ── POST /api/mcp/run-sts — pipeline-leader 용 (인증). Veo 대사 영상 목소리 → 캐릭터 음성 변환. 동기. ──
+mcpRouter.post('/run-sts', async (req, res) => {
+  const { episodeId, cutNo, character, voiceId } = req.body || {}
+  if (!episodeId || cutNo == null) return res.status(400).json({ error: 'episodeId, cutNo 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    requireActiveEpisode(state, episodeId)
+    const epNum = ep.episode?.number
+    const cut = (ep.cuts || []).find(c => c.no === cutNo)
+    if (!cut) return res.status(404).json({ error: `CUT ${cutNo} 없음` })
+    const apiKey = process.env.ELEVENLABS_API_KEY ||
+      (JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'studio-secrets.json'), 'utf-8')).apiKeys?.elevenLabs)
+    let charName = character
+    if (!charName && cut.dialogue) {
+      const m = String(cut.dialogue).match(/^\s*([가-힣]{2,4})\s*["'“]/)
+      if (m) charName = m[1]
+    }
+    const rv = resolveVoice({
+      character: charName, voiceId, characters: loadCharacters(),
+      speakerVoices: state.ttsSettings?.speakerVoices || {},
+      defaultVoiceId: state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID,
+    })
+    if (!rv.voiceId) return res.status(400).json({ error: `음성 미정 (character=${charName || '?'})` })
+    const charTag = (rv.id || rv.name || 'conv').toString().replace(/[^a-z0-9가-힣]/gi, '').slice(0, 12) || 'conv'
+    const r = await runSts({ epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag })
+    res.json({ success: true, cutNo, voice: rv, files: r.files })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
   }
 })
 
