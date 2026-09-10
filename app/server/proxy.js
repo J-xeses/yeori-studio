@@ -19,7 +19,7 @@ import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGrap
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
 import { syncEpisodeState } from './lib/leaderState.js'
-import { getLeaderStatus } from './lib/leaderRead.js'
+import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -6538,6 +6538,24 @@ mcpRouter.get('/leader-status', async (req, res) => {
       if (ep) code = resolveEpisodeCode(ep.episode, state.activeEpisodeId)
     }
     const r = await getLeaderStatus(code)
+    res.json(r)
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+// ── GET /api/mcp/leader-context?episode=LF_T01 — 리더가 매 사이클 읽는 정책 (P3) ──
+// 에피소드 파이프라인 행의 사람이 토글하는 값: 보류(checkbox) · 에이전트 자동승인(multi).
+// pipeline-leader 가 사이클 시작 시 호출 → 보류면 스킵, 자동승인 스테이지는 shouldAutoApprove 통과.
+mcpRouter.get('/leader-context', async (req, res) => {
+  try {
+    let code = String(req.query.episode || '').trim()
+    if (!code) {
+      const state = loadStudioState()
+      const ep = state.episodes?.[state.activeEpisodeId]
+      if (ep) code = resolveEpisodeCode(ep.episode, state.activeEpisodeId)
+    }
+    const r = await getLeaderContext(code)
     res.json(r)
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })

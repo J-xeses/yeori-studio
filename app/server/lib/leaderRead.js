@@ -91,6 +91,32 @@ export async function getLeaderStatus(episodeCode = '', { logLimit = 12 } = {}) 
   return { ok: true, episodeCode, episode, recentLog, pendingHuman }
 }
 
+// P3 — 리더가 매 사이클 읽는 정책. "에피소드 파이프라인" 행의 사람이 토글하는 두 값만.
+//   보류(checkbox)         → true 면 리더가 이 에피소드를 이번 사이클 건드리지 않음
+//   에이전트 자동승인(multi) → 여기 든 스테이지는 shouldAutoApprove 가 산출물 검수 후 자동 승인
+// 실패/행없음 → { ok:false } (리더는 fail-open: 보류 아님·자동승인 없음 = 전부 사람, 안전).
+export async function getLeaderContext(episodeCode = '') {
+  const token = notionToken()
+  if (!token) return { ok: false, error: 'Notion 토큰 없음' }
+  const code = String(episodeCode || '').trim()
+  if (!code) return { ok: false, error: 'episodeCode 없음' }
+
+  const q = await nQuery(token, EPISODE_DB_ID, {
+    filter: { property: 'title', title: { contains: code } }, page_size: 1,
+  })
+  const p = q.results[0]
+  if (!p) return { ok: false, found: false, hold: false, autoApprove: [] }
+  return {
+    ok: true,
+    found: true,
+    episodeCode: code,
+    hold: !!p.properties['보류']?.checkbox,
+    autoApprove: msel(p.properties['에이전트 자동승인']),   // ['making','G3',...]
+    currentGate: sel(p.properties['현재 게이트']),
+    url: p.url,
+  }
+}
+
 // getLeaderStatus 결과 → MCP 도구 응답용 사람이 읽는 텍스트.
 export function formatLeaderStatus(d) {
   const L = []

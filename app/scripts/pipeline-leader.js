@@ -201,14 +201,47 @@ async function leaderEpisodeSync(payload) {
   } catch { /* noop */ }
 }
 
-// ── 승인 정책 — 지금은 항상 사람(스튜디오/메이킹 UI) 대기, 자동 승인 안 함.
-// "에이전트 리더"가 실제 산출물(이미지/영상)을 평가해서 자동 승인하게 하려면
-// 이 함수만 실제 판단 로직으로 바꾸면 된다(예: 메이킹 컷은 mp4 프레임 검수, 검정/빈
-// 화면이면 반려). 아래 메이킹 컷 g4 게이트가 이 함수의 첫 호출부다.
-//   stage: 'making' | 'g2' | 'g3' | 'g4'
-//   cut:   studio-status 의 컷 항목({no, cutType, hasVideo, ...})
-// eslint-disable-next-line no-unused-vars
+// ── P3: 사람이 Notion 에서 토글하는 정책을 매 사이클 읽는다 ──────────────
+//   보류(checkbox)          → 이번 사이클 이 에피소드 전부 스킵 (생성·승인 아무것도 안 함)
+//   에이전트 자동승인(multi) → 여기 든 스테이지는 shouldAutoApprove 가 산출물 검수 후 자동 승인
+// 조회 실패/행 없음 → fail-open: 보류 아님·자동승인 없음(전부 사람) 으로 간주 — 안전한 기본값.
+let AUTO_APPROVE = []          // ['making', 'G3', ...] — 이번 사이클 정책
+let heldLoggedAt = 0          // 보류 로그 중복 방지 (해제되면 0 으로 리셋)
+async function leaderContext() {
+  try {
+    const r = await api('GET', `/api/mcp/leader-context?episode=${encodeURIComponent(EP_LABEL)}`)
+    if (r.ok && r.data?.ok) return { hold: !!r.data.hold, autoApprove: r.data.autoApprove || [] }
+  } catch { /* noop */ }
+  return { hold: false, autoApprove: [] }
+}
+
+// ── 승인 정책 — 기본은 사람(스튜디오/메이킹 UI) 대기. 단 사람이 Notion "에이전트 자동승인"
+// 에 해당 스테이지를 넣어두면, 리더가 산출물을 기본 검수한 뒤 통과 시 자동 승인한다
+// (사용자 확인: "최초 적용은 인간이 승인하고, 곧 에이전트 리더가 판단할 수 있는 조건을 만든다").
+//   stage: 'making' | 'g2' | 'g3' | 'g4'  ← 호출부 인자
+//   cut:   studio-status 의 컷 항목({no, cutType, hasVideo, making:{duration,method}, review, ...})
+// 현재 검수 = 제작 매니페스트 유효성(길이>0)·mp4 존재·미반려. 프레임 레벨 QC(검정/빈 화면
+// 감지)는 후속(P4) — 그때도 이 함수만 손대면 된다.
 async function shouldAutoApprove(stage, cut) {
+  // Notion "에이전트 자동승인" 은 G 게이트를 대문자로 저장(G2/G3/G4/G5), 메이킹은 'making'.
+  const key = stage === 'making' ? 'making' : String(stage).toUpperCase()
+  if (!AUTO_APPROVE.includes(key)) return false
+
+  if (stage === 'making') {
+    const bad = []
+    if (!cut.hasVideo) bad.push('mp4 없음')
+    if (!(cut.making && Number(cut.making.duration) > 0)) bad.push('제작 매니페스트 무효')
+    if (cut.review?.status === 'rejected') bad.push('사람 반려됨')
+    if (bad.length) {
+      await leaderLog({
+        stage: 'G4', kind: '블로커', summary: `CUT ${cut.no} 자동 승인 보류 — 기본 검수 실패`,
+        rationale: `에이전트 자동승인=making 인데 검수 미통과`, result: bad.join(' · '), humanInvolved: true,
+      })
+      return false
+    }
+    return true
+  }
+  // 그 외 스테이지(g2/g3/g4)는 아직 자동승인 검수 로직 없음 — 안전하게 사람 대기.
   return false
 }
 
@@ -231,6 +264,30 @@ async function checkAndAdvance() {
   const { episode, cuts, summary } = statusRes.data
   EP_LABEL = episode?.code || episode?.title || EPISODE_ID
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
+
+  // ── P3: 사람이 Notion 에서 건 정책 읽기 (보류 / 에이전트 자동승인) ──
+  const ctx = await leaderContext()
+  AUTO_APPROVE = ctx.autoApprove
+  if (AUTO_APPROVE.length) log('정책', `에이전트 자동승인 위임: ${AUTO_APPROVE.join(', ')}`)
+  if (ctx.hold) {
+    log('보류', '이 에피소드는 Notion 에서 보류됨 — 이번 사이클 아무것도 실행/승인 안 함')
+    if (Date.now() - heldLoggedAt > 30 * 60 * 1000) {   // 30분에 한 번만 로그
+      heldLoggedAt = Date.now()
+      await leaderLog({
+        stage: '사이클', kind: '사이클요약', summary: '에피소드 보류 중 — 리더 대기',
+        rationale: '에피소드 파이프라인 DB "보류" 체크됨', result: '사람이 보류 해제 대기', humanInvolved: true,
+      })
+    }
+    await leaderEpisodeSync({
+      episodeCode: episode?.code || EP_LABEL, episodeTitle: episode?.title,
+      currentGate: deriveGate(cuts, summary), agentState: '보류',
+      nextAction: '사람이 Notion 에서 보류 해제 대기', blocker: '',
+      cutCount: cuts.length,
+      isLong: /^LF/i.test(String(episode?.code || '')) ? true : /^SF/i.test(String(episode?.code || '')) ? false : undefined,
+    })
+    return false
+  }
+  heldLoggedAt = 0   // 보류 해제됨 — 다음에 다시 보류되면 즉시 로그
 
   // 이 사이클 상태 — 끝에서 에피소드 파이프라인 DB(P2)에 동기화
   let cycleBlocker = ''
