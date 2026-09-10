@@ -574,6 +574,47 @@ app.get('/api/codi-gen-handoff', (req, res) => {
   }
 })
 
+// ── POST /api/genline-log — yeori-genline(file:// 앱)이 이미지·영상 생성 현장 판단을
+// 에이전트 리더 로그 DB 에 기록. postLeaderLog(source='genline') 로 위임. 인증 없음
+// (/api/codi-gen-handoff 와 같은 패턴 — file:// 페이지가 직접 호출).
+//   { episode, stage('G2'|'G4'), kind('생성시도'|'재생성'|'사람선택'|'반려감지'|...),
+//     summary, rationale, result, humanInvolved }
+app.post('/api/genline-log', async (req, res) => {
+  const e = req.body || {}
+  if (!e.summary) return res.status(400).json({ ok: false, error: 'summary 필요' })
+  try {
+    const r = await postLeaderLog({ ...e, source: 'genline' })
+    res.json({ ok: !!r.ok, ...(r.ok ? {} : { error: r.body || r.error || r.skipped }) })
+  } catch (err) {
+    res.json({ ok: false, error: err.message })   // 실패해도 200 — genline 흐름 안 막음
+  }
+})
+
+// ── POST /api/genline-review — 컷별 현장 판단·반영을 파일로 떨군다 (도구는 결과만 남기고 빠짐).
+// downloads/…/{code}/01_script/.genline-review.json 에 append. IP 초안·대본 수정안·재생성 노트.
+//   { episodeId, cutNo, kind('ip'|'script'|'note'|'verdict'), value, meta }
+app.post('/api/genline-review', (req, res) => {
+  const { episodeId, cutNo, kind, value, meta } = req.body || {}
+  if (!episodeId || cutNo == null || !kind) return res.status(400).json({ ok: false, error: 'episodeId, cutNo, kind 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
+    const dir = mp.scriptDir(episodeCode)
+    fs.mkdirSync(dir, { recursive: true })
+    const file = path.join(dir, '.genline-review.json')
+    let store = {}
+    try { store = JSON.parse(fs.readFileSync(file, 'utf-8')) || {} } catch { /* 새 파일 */ }
+    const key = `cut_${cutNo}`
+    if (!Array.isArray(store[key])) store[key] = []
+    store[key].push({ kind, value: value ?? '', meta: meta ?? null, at: new Date().toISOString() })
+    fs.writeFileSync(file, JSON.stringify(store, null, 2), 'utf-8')
+    res.json({ ok: true, file, count: store[key].length })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
 // ── POST /api/update-script-history — Notion 에피소드 DB에 스크립트 이력 행 추가 ──
 // 주의: Notion 호출이 실패해도(토큰 없음/페이지 없음/네트워크 오류) 항상 200으로
 // { success:false, error } 반환 — 호출부(script_generator.py, ScriptGenTab.jsx)가
