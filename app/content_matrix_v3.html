@@ -329,6 +329,12 @@
   .candidate-count-badge { font-family: 'Space Mono', monospace; color: var(--purple); background: var(--purple-bg); border-radius: 10px; padding: 1px 8px; font-size: 10px; }
 
   .candidate-stat-mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex-shrink: 0; }
+  /* 재고 현황 — 콘텐츠 유형 / 진행 단계를 성격별로 묶고 세로 1열 + 자체 스크롤 */
+  .candidate-inventory { flex: 0 1 auto; max-height: 42%; overflow-y: auto; margin-bottom: 12px; padding-right: 4px; display: flex; flex-direction: column; gap: 10px; }
+  .candidate-inventory-group { display: flex; flex-direction: column; gap: 4px; }
+  .candidate-inventory-label { font-size: 9px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 2px; }
+  .candidate-stat-col { display: flex; flex-direction: column; gap: 4px; }
+  .candidate-stat-col .candidate-stat-chip { width: 100%; }
   .candidate-stat-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; gap: 4px; cursor: pointer; font-size: 11px; transition: border-color 0.15s, background 0.15s; }
   .candidate-stat-chip:hover { border-color: var(--purple); }
   .candidate-stat-chip.active { border-color: var(--purple); background: var(--purple-bg); }
@@ -362,7 +368,16 @@
   .b-tk { background: var(--amber-bg); color: var(--amber); }
 
   .candidate-main-panel { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; overflow: hidden; display: flex; flex-direction: column; }
-  .candidate-detail-empty { height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: var(--text3); font-size: 12px; padding: 40px; }
+  .candidate-detail-empty { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+  .candidate-empty-hint { flex-shrink: 0; text-align: center; color: var(--text2); font-size: 12px; padding: 14px; background: var(--surface2); border: 1px dashed var(--border2); border-radius: var(--radius-sm); margin-bottom: 14px; }
+  .candidate-empty-skeleton { flex: 1; min-height: 0; display: flex; gap: 16px; opacity: 0.45; pointer-events: none; }
+  .candidate-empty-skeleton .sk-col { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .candidate-empty-skeleton .sk-col.left { flex: 0 0 35%; }
+  .candidate-empty-skeleton .sk-col.right { flex: 1; }
+  .candidate-empty-skeleton .sk-line { height: 10px; border-radius: 3px; background: var(--surface3); }
+  .candidate-empty-skeleton .sk-line.title { height: 16px; width: 60%; }
+  .candidate-empty-skeleton .sk-line.short { width: 40%; }
+  .candidate-empty-skeleton .sk-line.box { flex: 1; min-height: 40px; }
   #candidate-detail-form { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .candidate-detail-topbar { display: flex; align-items: center; gap: 14px; flex-shrink: 0; padding-bottom: 10px; border-bottom: 1px solid var(--border2); }
   .candidate-detail-topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
@@ -478,38 +493,57 @@
       <div id="dash-pipeline" style="margin-bottom:20px"></div>
 
       <div class="section-title">에이전트 가동 현황</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
-        <div class="dash-card" style="text-align:center">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px" id="dash-agent-cards">
+        <div class="dash-card" style="text-align:center" data-agent="trend">
           <div style="font-size:22px;margin-bottom:4px">📡</div>
           <div class="dash-card-label">트렌드 레이더</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">소재 발굴 · 후보 풀</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
         </div>
-        <div class="dash-card" style="text-align:center">
+        <div class="dash-card" style="text-align:center" data-agent="script">
           <div style="font-size:22px;margin-bottom:4px">✍️</div>
           <div class="dash-card-label">대본 에이전트</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G1 · Claude 자동생성</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
         </div>
-        <div class="dash-card" style="text-align:center">
+        <div class="dash-card" style="text-align:center" data-agent="image">
           <div style="font-size:22px;margin-bottom:4px">🎨</div>
           <div class="dash-card-label">이미지 에이전트</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G2 · 외부 생성(genline)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
         </div>
-        <div class="dash-card" style="text-align:center">
+        <div class="dash-card" style="text-align:center" data-agent="voice">
           <div style="font-size:22px;margin-bottom:4px">🎙️</div>
           <div class="dash-card-label">음성 에이전트</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G3 · ElevenLabs TTS</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
         </div>
-        <div class="dash-card" style="text-align:center">
+        <div class="dash-card" style="text-align:center" data-agent="making">
+          <div style="font-size:22px;margin-bottom:4px">🧩</div>
+          <div class="dash-card-label">메이킹 에이전트</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G4a · GRAPHIC/CAPCUT/BROLL 자동</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
+        </div>
+        <div class="dash-card" style="text-align:center" data-agent="video">
           <div style="font-size:22px;margin-bottom:4px">🎬</div>
           <div class="dash-card-label">영상 에이전트</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G4b · YEORI 외부 제작(Veo/Flow)</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
         </div>
-        <div class="dash-card" style="text-align:center">
+        <div class="dash-card" style="text-align:center" data-agent="edit">
           <div style="font-size:22px;margin-bottom:4px">✂️</div>
-          <div class="dash-card-label">편집 에이전트</div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">대기중</div>
+          <div class="dash-card-label">편집메타 에이전트</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G5 · 편집메타/SRT/합성 자동</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
+        </div>
+        <div class="dash-card" style="text-align:center" data-agent="publish">
+          <div style="font-size:22px;margin-bottom:4px">🚀</div>
+          <div class="dash-card-label">퍼블리싱 에이전트</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">G6 · 패키징·업로드</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3)" data-agent-state>대기중</div>
         </div>
       </div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:20px">💡 G4는 컷 유형에 따라 갈립니다 — GRAPHIC/CAPCUT/BROLL 컷은 <strong style="color:var(--text2)">메이킹 에이전트가 헤드리스로 자동 제작</strong>, YEORI 인물 컷은 <strong style="color:var(--text2)">영상 에이전트가 외부(Veo/Flow) 제작분을 업로드</strong>. 실제 상태는 에이전트 리더 탭에서 확인.</div>
       <div class="section-title">다음 작업 우선순위</div>
       <div id="dash-todo" style="margin-bottom:20px"></div>
       <div class="section-title">채널별 현황</div>
@@ -521,8 +555,16 @@
       <div class="candidate-layout">
         <div class="candidate-side-panel">
           <div class="candidate-side-title">📦 재고 현황</div>
-          <div class="candidate-stat-mini-grid" id="candidate-type-stats"></div>
-          <div class="candidate-stat-mini-grid" id="candidate-stage-stats" style="margin-bottom:12px"></div>
+          <div class="candidate-inventory">
+            <div class="candidate-inventory-group">
+              <div class="candidate-inventory-label">콘텐츠 유형</div>
+              <div class="candidate-stat-col" id="candidate-type-stats"></div>
+            </div>
+            <div class="candidate-inventory-group">
+              <div class="candidate-inventory-label">진행 단계</div>
+              <div class="candidate-stat-col" id="candidate-stage-stats"></div>
+            </div>
+          </div>
 
           <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:8px" onclick="addCandidateCard()">+ 후보 추가</button>
           <button class="btn-cancel" style="width:100%;justify-content:center;margin-bottom:10px" onclick="openCandidateFlowModal()">🤖 자동 플로우 실행</button>
@@ -532,7 +574,22 @@
         </div>
 
         <div class="candidate-main-panel">
-          <div class="candidate-detail-empty" id="candidate-detail-empty">← 왼쪽에서 후보를 선택하거나 "+ 후보 추가"로 새 후보를 만들어보세요</div>
+          <div class="candidate-detail-empty" id="candidate-detail-empty">
+            <div class="candidate-empty-hint">← 왼쪽에서 후보를 선택하거나 "+ 후보 추가"로 새 후보를 만들어보세요<br><span style="font-size:10px;color:var(--text3)">재고 기획은 Notion "에피소드 후보 풀"에서 조율 → 유형별 선택적 자동 기획</span></div>
+            <div class="candidate-empty-skeleton" aria-hidden="true">
+              <div class="sk-col left">
+                <div class="sk-line title"></div>
+                <div class="sk-line"></div><div class="sk-line"></div><div class="sk-line short"></div>
+                <div class="sk-line"></div><div class="sk-line short"></div>
+              </div>
+              <div class="sk-col right">
+                <div class="sk-line title"></div>
+                <div class="sk-line short"></div>
+                <div class="sk-line box"></div>
+                <div class="sk-line box"></div>
+              </div>
+            </div>
+          </div>
 
           <div id="candidate-detail-form" style="display:none">
             <div class="candidate-detail-topbar">
@@ -647,7 +704,7 @@
           <span style="font-size:16px">⚙️</span>
           <div>
             <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.8px">축 3 · 제작 진행 + 에이전트 책임</div>
-            <div style="font-size:10px;color:var(--text3)">G1~G5 개런티 포인트 · 담당 에이전트</div>
+            <div style="font-size:10px;color:var(--text3)">G1~G6 개런티 포인트 · 담당 에이전트</div>
           </div>
         </div>
       </div>
@@ -657,9 +714,10 @@
         <span class="gp-label">개런티 포인트:</span>
         <span class="gp-badge" id="gp-g1">G1 대본</span>
         <span class="gp-badge" id="gp-g2">G2 이미지</span>
-        <span class="gp-badge" id="gp-g3">G3 음성</span>
+        <span class="gp-badge" id="gp-g3">G3 TTS</span>
         <span class="gp-badge" id="gp-g4">G4 영상</span>
         <span class="gp-badge" id="gp-g5">G5 편집</span>
+        <span class="gp-badge" id="gp-g6" title="G6 업로드는 아직 이 매트릭스에서 추적하지 않음 — 표시만">G6 업로드</span>
       </div>
 
       <!-- 타임라인 -->
@@ -775,53 +833,107 @@
         <span style="font-size:11px;color:var(--text3);font-family:'Space Mono',monospace" id="pipeline-status-badge">● 대기</span>
       </div>
 
-      <!-- 에이전트 가동 현황 -->
-      <div class="section-title">에이전트 가동 현황</div>
-      <div class="agent-status" style="margin-bottom:20px">
-        <div class="agent-card" id="ag-card-trend">
-          <div class="agent-icon">📡</div>
-          <div class="agent-name">트렌드 레이더</div>
-          <div class="agent-state idle" id="ag-trend">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">소재 발굴</div>
+      <!-- 게이트별 현황 · 담당 에이전트 · 개런티 기준 (통합) -->
+      <div class="section-title">게이트별 현황 · 담당 에이전트 · 개런티 기준</div>
+      <div class="gate-board" style="display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:8px;margin-bottom:8px;overflow-x:auto;padding-bottom:6px">
+
+        <!-- 소재 (트렌드) -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2)">📡 소재</div>
+          <div class="agent-card" id="ag-card-trend" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">📡</div>
+            <div class="agent-name">트렌드 레이더</div>
+            <div class="agent-state idle" id="ag-trend">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>트렌드 점수·연관도</li><li>후보 풀 적재</li><li>유형별 선택적 기획</li>
+          </ul>
         </div>
-        <div class="agent-card clickable" id="ag-card-script" onclick="runScriptAgent()" title="클릭하여 실행 (Claude API)">
-          <div class="agent-icon">✍️</div>
-          <div class="agent-name">대본 에이전트</div>
-          <div class="agent-state idle" id="ag-script">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">G1 담당</div>
+
+        <!-- G1 대본 -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid rgba(167,139,250,0.25);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--purple)">✍️ G1 대본</div>
+          <div class="agent-card clickable" id="ag-card-script" onclick="runScriptAgent()" title="클릭 시 Claude API 실행" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">✍️</div>
+            <div class="agent-name">대본 에이전트 · 실행</div>
+            <div class="agent-state idle" id="ag-script">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>컷 헤더·유형 판정</li><li>대사·나레이션</li><li>컷 소스 필드(HTML/SRC/BQ/URL/GTPL)</li><li>자막 시드</li>
+          </ul>
         </div>
-        <div class="agent-card clickable" id="ag-card-image" onclick="runImageAgent()" title="클릭하여 현황 확인 (모니터링 전용 — 생성은 스튜디오 탭에서)">
-          <div class="agent-icon">🎨</div>
-          <div class="agent-name">이미지 에이전트</div>
-          <div class="agent-state idle" id="ag-image">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">G2 담당</div>
+
+        <!-- G2 이미지 -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid rgba(96,165,250,0.25);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--blue)">🎨 G2 이미지</div>
+          <div class="agent-card clickable" id="ag-card-image" onclick="runImageAgent()" title="모니터링 전용 — 생성은 genline/스튜디오" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">🎨</div>
+            <div class="agent-name">이미지 에이전트 · 모니터링</div>
+            <div class="agent-state idle" id="ag-image">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>컷별 이미지 프롬프트</li><li>외부 생성(genline) → 업로드</li><li>캐릭터 일관성(룰셋 v1.4.1)</li><li>메이킹 컷은 G2 불필요</li>
+          </ul>
         </div>
-        <div class="agent-card clickable" id="ag-card-voice" onclick="runVoiceAgent()" title="클릭하여 실행 (/api/elevenlabs)">
-          <div class="agent-icon">🎙️</div>
-          <div class="agent-name">음성 에이전트</div>
-          <div class="agent-state idle" id="ag-voice">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">G3 담당</div>
+
+        <!-- G3 TTS -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid rgba(251,191,36,0.25);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--amber)">🎙️ G3 TTS</div>
+          <div class="agent-card clickable" id="ag-card-voice" onclick="runVoiceAgent()" title="클릭 시 ElevenLabs 실행" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">🎙️</div>
+            <div class="agent-name">음성 에이전트 · 실행</div>
+            <div class="agent-state idle" id="ag-voice">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>대본 정제(ttsText)</li><li>Sian v3 · Stability 35%</li><li>길이 ±1초</li><li>무음·발음 확인</li>
+          </ul>
         </div>
-        <div class="agent-card clickable" id="ag-card-video" onclick="runVideoAgent()" title="클릭하여 컷 선택 후 영상 생성 실행 (/api/run-video)">
-          <div class="agent-icon">🎬</div>
-          <div class="agent-name">영상 에이전트</div>
-          <div class="agent-state idle" id="ag-video">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">G4 담당</div>
+
+        <!-- G4 영상 (2 레인) -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--teal)">🎬 G4 영상</div>
+          <div class="agent-card clickable" id="ag-card-making" onclick="runMakingAgent()" title="4a — GRAPHIC/CAPCUT/BROLL 헤드리스 자동 (모니터링)" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">🧩</div>
+            <div class="agent-name">메이킹 · 4a 자동</div>
+            <div class="agent-state idle" id="ag-making">대기중</div>
+          </div>
+          <div class="agent-card clickable" id="ag-card-video" onclick="runVideoAgent()" title="4b — YEORI 인물 컷 외부(Veo/Flow) 제작분 업로드 (모니터링)" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">🎬</div>
+            <div class="agent-name">영상 · 4b YEORI 외부</div>
+            <div class="agent-state idle" id="ag-video">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>타깃 비율(LF·SF 16:9 / 그 외 9:16)</li><li>4a 헤드리스 제작 · 4b 외부 업로드</li><li>컷 리뷰(검정·빈화면 반려)</li><li>목표 길이 ±2초</li>
+          </ul>
         </div>
-        <div class="agent-card clickable" id="ag-card-edit" onclick="runEditAgent()" title="클릭하여 현황 확인 (모니터링 전용 — 실행은 편집 메타 탭에서)">
-          <div class="agent-icon">✂️</div>
-          <div class="agent-name">편집 에이전트</div>
-          <div class="agent-state idle" id="ag-edit">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">G5 담당</div>
+
+        <!-- G5 편집 -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid rgba(244,114,182,0.25);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:var(--pink)">✂️ G5 편집</div>
+          <div class="agent-card clickable" id="ag-card-edit" onclick="runEditAgent()" title="모니터링 전용 — 실행은 편집 메타 탭" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">✂️</div>
+            <div class="agent-name">편집메타 에이전트 · 모니터링</div>
+            <div class="agent-state idle" id="ag-edit">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>편집메타/SRT 생성</li><li>컷 합성 · BGM 믹스</li><li>자막 싱크·순서</li><li>최종본 비율 확인</li>
+          </ul>
         </div>
-        <div class="agent-card clickable" id="ag-card-publish" onclick="runPublishAgent()" title="클릭하여 실행 (/api/package-final)">
-          <div class="agent-icon">🚀</div>
-          <div class="agent-name">퍼블리싱 에이전트</div>
-          <div class="agent-state idle" id="ag-publish">대기중</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:4px">패키징 담당</div>
+
+        <!-- G6 업로드 -->
+        <div class="gate-col" style="background:var(--surface);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font-size:11px;font-weight:700;color:#f59e0b">🚀 G6 업로드</div>
+          <div class="agent-card clickable" id="ag-card-publish" onclick="runPublishAgent()" title="클릭 시 /api/package-final 실행" style="padding:8px">
+            <div class="agent-icon" style="font-size:16px">🚀</div>
+            <div class="agent-name">퍼블리싱 에이전트 · 실행</div>
+            <div class="agent-state idle" id="ag-publish">대기중</div>
+          </div>
+          <ul style="font-size:10px;color:var(--text3);line-height:1.7;margin:0;padding-left:14px">
+            <li>패키징(package-final)</li><li>썸네일·제목·설명</li><li>예약/업로드</li><li>채널 게시 확인</li>
+          </ul>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--text3);margin:-12px 0 20px">💡 대본·음성·퍼블리싱은 클릭 시 실제 API가 실행됩니다. 이미지·영상·편집은 스튜디오와 브라우저/앱을 공유해 충돌 위험이 있어 <strong style="color:var(--text2)">현황 확인(모니터링)만</strong> 수행합니다 — 실제 생성/실행은 yeori-studio에서 직접 하세요.</div>
+      <div style="font-size:10px;color:var(--text3);margin:0 0 20px">💡 대본·음성·퍼블리싱은 클릭 시 실제 API 실행. 이미지·메이킹·영상·편집은 스튜디오와 브라우저/앱을 공유해 <strong style="color:var(--text2)">현황 확인(모니터링)만</strong> — 실제 생성은 yeori-studio / genline 에서. 자율 실행·승인 정책은 Notion "에피소드 파이프라인" 행의 <strong style="color:var(--text2)">보류 · 에이전트 자동승인</strong> 으로 pipeline-leader 가 제어.</div>
 
       <!-- 에이전트 실행 로그 -->
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
@@ -855,30 +967,34 @@
             <div class="dot" style="background:var(--amber)"></div>
             규칙 기반 자동 배분
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-bottom:10px">조건이 명확한 케이스는 즉시 자동 배분해요.</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px">pipeline-leader 가 매 사이클 자동 판단 — 조건이 명확한 케이스.</div>
           <div class="rule-item">
-            <span class="rule-if">인물 클로즈업 + 높음</span>
-            <span class="rule-then">→ Veo3.1 우선</span>
+            <span class="rule-if">컷 유형 GRAPHIC/CAPCUT/BROLL</span>
+            <span class="rule-then">→ 메이킹 자동 제작(G4a)</span>
           </div>
           <div class="rule-item">
-            <span class="rule-if">디테일 컷 + 한국어 텍스트</span>
-            <span class="rule-then">→ Kling + CapCut</span>
+            <span class="rule-if">컷 유형 YEORI (인물)</span>
+            <span class="rule-then">→ 외부 Veo/Flow 대기(G4b)</span>
           </div>
           <div class="rule-item">
-            <span class="rule-if">배경/B-roll + 낮음</span>
-            <span class="rule-then">→ Kling 효율 우선</span>
+            <span class="rule-if">G1 승인 + 대사/나레이션</span>
+            <span class="rule-then">→ G3 TTS 자동 실행</span>
           </div>
           <div class="rule-item">
-            <span class="rule-if">훅 CUT (flag=hook)</span>
-            <span class="rule-then">→ 최우선 처리</span>
+            <span class="rule-if">전체 컷 G4 승인</span>
+            <span class="rule-then">→ G5 편집/합성 자동 실행</span>
           </div>
           <div class="rule-item">
-            <span class="rule-if">품질 미달 3회 이상</span>
-            <span class="rule-then">→ 전략 재수립</span>
+            <span class="rule-if">메이킹 컷 사람 반려</span>
+            <span class="rule-then">→ 재제작 대기 로그</span>
           </div>
           <div class="rule-item">
-            <span class="rule-if">G4 통과 완료</span>
-            <span class="rule-then">→ 성준님 검토 요청</span>
+            <span class="rule-if">Notion 보류 체크</span>
+            <span class="rule-then">→ 이 에피소드 전면 정지</span>
+          </div>
+          <div class="rule-item">
+            <span class="rule-if">에이전트 자동승인 위임 스테이지</span>
+            <span class="rule-then">→ 기본 검수 후 자동 승인</span>
           </div>
         </div>
 
@@ -912,55 +1028,7 @@
         </div>
       </div>
 
-      <!-- 개런티 포인트 기준 -->
-      <div class="section-title">개런티 포인트 기준</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
-        <div style="background:var(--surface);border:1px solid rgba(167,139,250,0.25);border-radius:var(--radius);padding:14px">
-          <div style="font-size:12px;font-weight:700;color:var(--purple);margin-bottom:8px">G1 · 대본 ✍️</div>
-          <div style="font-size:11px;color:var(--text3);line-height:1.8">
-            ✓ 감정 태그 포함<br>
-            ✓ 대사 길이 적정<br>
-            ✓ CUT 번호 매칭<br>
-            ✓ VO 나레이션 포함
-          </div>
-        </div>
-        <div style="background:var(--surface);border:1px solid rgba(96,165,250,0.25);border-radius:var(--radius);padding:14px">
-          <div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px">G2 · 이미지 🎨</div>
-          <div style="font-size:11px;color:var(--text3);line-height:1.8">
-            ✓ 컷별 이미지 프롬프트 작성<br>
-            ✓ 이미지 생성/업로드 완료<br>
-            ✓ 캐릭터 일관성 확인<br>
-            ✓ 컷당 1장 이상 확보
-          </div>
-        </div>
-        <div style="background:var(--surface);border:1px solid rgba(251,191,36,0.25);border-radius:var(--radius);padding:14px">
-          <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:8px">G3 · 음성 🎙️</div>
-          <div style="font-size:11px;color:var(--text3);line-height:1.8">
-            ✓ Sian v3 생성<br>
-            ✓ Stability 35%<br>
-            ✓ 길이 ±1초 이내<br>
-            ✓ 감정 기준 통과
-          </div>
-        </div>
-        <div style="background:var(--surface);border:1px solid rgba(52,211,153,0.25);border-radius:var(--radius);padding:14px">
-          <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:8px">G4 · 영상 🎬</div>
-          <div style="font-size:11px;color:var(--text3);line-height:1.8">
-            ✓ 1080×1920 세로<br>
-            ✓ 목표 길이 ±2초<br>
-            ✓ 립싱크 확인<br>
-            ✓ Veo/Kling 기준
-          </div>
-        </div>
-        <div style="background:var(--surface);border:1px solid rgba(244,114,182,0.25);border-radius:var(--radius);padding:14px">
-          <div style="font-size:12px;font-weight:700;color:var(--pink);margin-bottom:8px">G5 · 편집 ✂️</div>
-          <div style="font-size:11px;color:var(--text3);line-height:1.8">
-            ✓ CapCut Desktop 반영 확인<br>
-            ✓ Cutter 켄번스 효과 적용<br>
-            ✓ 컷 순서·타이밍 정합성<br>
-            ✓ 성준님 검토 준비
-          </div>
-        </div>
-      </div>
+      <!-- 개런티 기준은 위 "게이트별 현황" 카드에 통합됨 -->
 
       <!-- CUT별 리더 임무 현황 -->
       <div class="section-title">CUT별 리더 임무 현황</div>
@@ -1094,66 +1162,78 @@
       </div>
 
       <!-- 연동 구조 안내 -->
-      <div class="section-title">연동 구조</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
+      <div class="section-title">연동 구조 (G1~G6 현재 기준)</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px">
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <span style="font-size:16px">✍️</span>
-            <span style="font-size:12px;font-weight:700;color:var(--purple)">G1 · 대본 생성</span>
+            <span style="font-size:12px;font-weight:700;color:var(--purple)">G1 · 대본</span>
           </div>
           <div style="font-size:11px;color:var(--text3);line-height:1.6">
             스튜디오 <strong style="color:var(--text)">대본 생성 탭</strong><br>
-            씬 헤딩 / 액션 / 대사<br>
-            나레이션(VO) / 이미지 프롬프트<br>
-            <span style="color:var(--purple)">→ Claude API 자동 생성</span>
+            v3 포맷 · 컷 유형 판정<br>
+            컷 소스 필드(HTML/SRC/BQ/URL/GTPL)<br>
+            <span style="color:var(--purple)">→ Claude 자동 생성 · 사람 승인</span>
           </div>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <span style="font-size:16px">🎨</span>
-            <span style="font-size:12px;font-weight:700;color:var(--blue)">G2 · 이미지 생성</span>
+            <span style="font-size:12px;font-weight:700;color:var(--blue)">G2 · 이미지</span>
           </div>
           <div style="font-size:11px;color:var(--text3);line-height:1.6">
-            스튜디오 <strong style="color:var(--text)">스튜디오 탭</strong><br>
-            이미지 프롬프트 작성/생성<br>
-            캐릭터 일관성 확인<br>
-            <span style="color:var(--blue)">→ 컷당 1장 이상 확보 확인</span>
+            <strong style="color:var(--text)">외부 생성(genline)</strong> → 스튜디오 탭 업로드<br>
+            캐릭터 일관성(룰셋 v1.4.1)<br>
+            메이킹 컷(GRAPHIC/CAPCUT/BROLL)은 불필요<br>
+            <span style="color:var(--blue)">→ 컷당 1장 이상 · 사람 승인</span>
           </div>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <span style="font-size:16px">🎙️</span>
-            <span style="font-size:12px;font-weight:700;color:var(--amber)">G3 · 음성 생성</span>
+            <span style="font-size:12px;font-weight:700;color:var(--amber)">G3 · TTS</span>
           </div>
           <div style="font-size:11px;color:var(--text3);line-height:1.6">
-            스튜디오 <strong style="color:var(--text)">ElevenLabs TTS 탭</strong><br>
+            스튜디오 <strong style="color:var(--text)">TTS 탭</strong><br>
             Sian v3 · Stability 35%<br>
-            감정 태그 자동 삽입<br>
-            <span style="color:var(--amber)">→ 길이 ±1초 기준 확인</span>
+            대본 정제(ttsText) 자동<br>
+            <span style="color:var(--amber)">→ 길이 ±1초 · 사람 승인</span>
           </div>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <span style="font-size:16px">🎬</span>
-            <span style="font-size:12px;font-weight:700;color:var(--teal)">G4 · 영상 생성</span>
+            <span style="font-size:12px;font-weight:700;color:var(--teal)">G4 · 영상</span>
           </div>
           <div style="font-size:11px;color:var(--text3);line-height:1.6">
-            스튜디오 <strong style="color:var(--text)">영상 만들기 탭</strong><br>
-            Veo3.1 / Kling 선택<br>
-            1080×1920 세로형<br>
-            <span style="color:var(--teal)">→ 목표 길이 ±2초 확인</span>
+            <strong style="color:var(--text)">4a</strong> 메이킹 탭 — GRAPHIC/CAPCUT/BROLL 자동 제작<br>
+            <strong style="color:var(--text)">4b</strong> YEORI 컷 — 외부 Veo/Flow → 영상 탭 업로드<br>
+            타깃 비율(LF·SF 16:9 / 그 외 9:16)<br>
+            <span style="color:var(--teal)">→ 컷 리뷰 · 목표 길이 ±2초</span>
           </div>
         </div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
             <span style="font-size:16px">✂️</span>
-            <span style="font-size:12px;font-weight:700;color:var(--pink)">G5 · 편집 완성</span>
+            <span style="font-size:12px;font-weight:700;color:var(--pink)">G5 · 편집</span>
           </div>
           <div style="font-size:11px;color:var(--text3);line-height:1.6">
             스튜디오 <strong style="color:var(--text)">편집 메타 탭</strong><br>
-            CapCut Desktop + Cutter(켄번스)<br>
-            draft_content.json 반영 확인<br>
-            <span style="color:var(--pink)">→ 최종 싱크/순서 확인</span>
+            편집메타/SRT 생성 · 컷 합성 · BGM 믹스<br>
+            (studio-run-g5 자동)<br>
+            <span style="color:var(--pink)">→ 자막 싱크·순서 · 비율 확인</span>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+            <span style="font-size:16px">🚀</span>
+            <span style="font-size:12px;font-weight:700;color:#f59e0b">G6 · 업로드</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);line-height:1.6">
+            <strong style="color:var(--text)">package-final</strong> 패키징<br>
+            썸네일 · 제목 · 설명<br>
+            채널 예약/업로드<br>
+            <span style="color:#f59e0b">→ 게시 확인</span>
           </div>
         </div>
       </div>
@@ -1217,7 +1297,7 @@
               <span style="color:var(--teal);font-weight:700">STEP 4</span> · CapCut 자막 추가 후 내보내기
             </div>
             <div style="padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);font-size:11px;color:var(--text3)">
-              <span style="color:var(--red);font-weight:700">기준</span> · 1080×1920 · 30fps · MP4
+              <span style="color:var(--red);font-weight:700">기준</span> · LF·SF 1920×1080 (16:9) / 릴스·숏폼 1080×1920 (9:16) · 30fps · MP4
             </div>
           </div>
         </div>
@@ -1629,31 +1709,39 @@ function calcStats(channels) {
 }
 
 // ── 파이프라인 모니터링 ────────────────────────────────────────
+// 현재 파이프라인 기준(2026-09): G1 대본 → G2 이미지 → G3 TTS → G4 영상(4a 메이킹 자동 · 4b YEORI 외부)
+//   → G5 편집(편집메타/합성) → G6 업로드(퍼블리싱). 각 게이트 실행 후 승인은 사람(에이전트 자동승인 위임 시 리더).
+// ⚠️ 이 파일 JS 엔진은 아직 g1~g5 5플래그 데이터모델 — GP_INFO 는 표시 문자열만 현행화, g6 는 표시상 "완료" 뒤 단계.
 const GP_INFO = {
   g1: {
     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',
     label: 'G1 대본', icon: '✍️',
-    steps: ['씬 설정', '대사 작성', '감정 태그', '완료']
+    steps: ['씬 설정', '대사·나레이션', '컷 필드', '승인']
   },
   g2: {
     color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', border: 'rgba(96,165,250,0.3)',
     label: 'G2 이미지', icon: '🎨',
-    steps: ['프롬프트 작성', '이미지 생성', '일관성 확인', '완료']
+    steps: ['프롬프트', '외부 생성(genline)', '업로드', '승인']
   },
   g3: {
     color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', border: 'rgba(251,191,36,0.3)',
-    label: 'G3 음성', icon: '🎙️',
-    steps: ['파라미터 설정', '음성 생성', '길이 확인', '완료']
+    label: 'G3 TTS', icon: '🎙️',
+    steps: ['대본 정제', 'ElevenLabs 생성', '길이 확인', '승인']
   },
   g4: {
     color: '#34d399', bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.3)',
     label: 'G4 영상', icon: '🎬',
-    steps: ['프롬프트 작성', '영상 생성', '품질 확인', '완료']
+    steps: ['소스 결정', '4a 메이킹 자동 / 4b 외부', '컷 리뷰', '승인']
   },
   g5: {
     color: '#f472b6', bg: 'rgba(244,114,182,0.12)', border: 'rgba(244,114,182,0.3)',
     label: 'G5 편집', icon: '✂️',
-    steps: ['CapCut 반영', '켄번스 적용', '싱크 확인', '완료']
+    steps: ['편집메타/SRT', '합성', '싱크 확인', '승인']
+  },
+  g6: {
+    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.3)',
+    label: 'G6 업로드', icon: '🚀',
+    steps: ['패키징', '썸네일·메타', '업로드', '완료']
   },
 };
 
@@ -2308,21 +2396,22 @@ function renderStudio() {
           <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">씬 설명</th>
           <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G1 대본</th>
           <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G2 이미지</th>
-          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G3 음성</th>
+          <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--amber);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G3 TTS</th>
           <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G4 영상</th>
           <th style="padding:10px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--pink);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">G5 편집</th>
           <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">다음 작업</th>
-          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">플랫폼</th>
+          <th style="padding:10px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:0.8px;text-transform:uppercase;border-bottom:1px solid var(--border)">영상 소스</th>
         </tr>
       </thead>
       <tbody>
         ${cuts.map(c => {
+          const isMaking = ['GRAPHIC','CAPCUT','BROLL'].includes(String(c.type||'').toUpperCase());
           const nextTask = !c.g1 ? { label:'대본 생성', color:'var(--purple)', icon:'✍️', tab:'대본 생성' }
-            : !c.g2 ? { label:'이미지 생성', color:'var(--blue)', icon:'🎨', tab:'스튜디오' }
-            : !c.g3 ? { label:'음성 생성', color:'var(--amber)', icon:'🎙️', tab:'ElevenLabs TTS' }
-            : !c.g4 ? { label:'영상 생성', color:'var(--teal)', icon:'🎬', tab:'영상 만들기' }
+            : !c.g2 ? (isMaking ? { label:'이미지 단계 불필요', color:'var(--text3)', icon:'—', tab:'' } : { label:'이미지 확보', color:'var(--blue)', icon:'🎨', tab:'genline / 스튜디오' })
+            : !c.g3 ? { label:'음성 생성', color:'var(--amber)', icon:'🎙️', tab:'TTS' }
+            : !c.g4 ? (isMaking ? { label:'메이킹 자동 제작', color:'var(--teal)', icon:'🧩', tab:'메이킹' } : { label:'외부 영상 업로드', color:'var(--teal)', icon:'🎬', tab:'영상 만들기' })
             : !c.g5 ? { label:'편집 완성', color:'var(--pink)', icon:'✂️', tab:'편집 메타 (Cutter)' }
-            : { label:'완료 ✓', color:'var(--teal)', icon:'✅', tab:'' };
+            : { label:'완료 → G6 업로드', color:'#f59e0b', icon:'🚀', tab:'퍼블리싱' };
 
           const gpDot = (pass, color) => `
             <div style="width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;
@@ -2377,7 +2466,9 @@ function renderStudio() {
               ${nextTask.tab?`<div style="font-size:10px;color:var(--text3);margin-top:2px">→ 스튜디오 ${nextTask.tab} 탭</div>`:''}
             </td>
             <td style="padding:10px 12px">
-              <span class="badge ${c.platform==='Veo3.1'?'b-veo':'b-kling'}">${c.platform}</span>
+              ${isMaking
+                ? `<span class="badge b-detail">🧩 메이킹 자동</span>`
+                : `<span class="badge b-veo">🎬 외부 ${c.platform || 'Veo/Flow'}</span>`}
               <div style="font-size:10px;color:var(--text3);margin-top:3px">${HARD_CLASS[c.hard]?c.hard:''}</div>
             </td>
           </tr>`;
@@ -2386,7 +2477,7 @@ function renderStudio() {
     </table>
     <div style="padding:8px 14px;font-size:11px;color:var(--text3);background:var(--surface2);border-top:1px solid var(--border);display:flex;justify-content:space-between">
       <span>총 ${cuts.length}컷 · G포인트 클릭으로 상태 업데이트</span>
-      <span style="color:var(--teal)">${cuts.filter(c=>c.g5).length}컷 완전 완료</span>
+      <span style="color:var(--teal)">${cuts.filter(c=>c.g5).length}컷 G5 완료 · G6 업로드는 퍼블리싱 탭</span>
     </div>
   </div>`;
 }
@@ -2880,7 +2971,7 @@ function clearAgentLog() {
 
 // 로컬 매트릭스(getCuts())의 g1~g4 플래그 기준으로 에이전트 카드 상태 반영 (10초 폴링)
 // G1→대본, G2→이미지, G3→음성, G4→영상 (카드에 표시된 라벨과 동일)
-const AGENT_G_MAP = { script:'g1', image:'g2', voice:'g3', video:'g4' };
+const AGENT_G_MAP = { script:'g1', image:'g2', voice:'g3', making:'g4', video:'g4', edit:'g5' };
 function updateAgentCardsFromLocalMatrix() {
   const cuts = getCuts();
   if(!cuts.length) return;
@@ -3329,6 +3420,33 @@ async function runImageAgent() {
   }
 }
 
+// ── ③.5 메이킹 에이전트 (G4a) — GRAPHIC/CAPCUT/BROLL 컷 헤드리스 자동 제작 현황 (모니터링 전용) ──
+// 실제 제작은 pipeline-leader 가 /api/mcp/run-making 으로 돌리거나 스튜디오 메이킹 탭에서.
+async function runMakingAgent() {
+  setAgentState('making','running','확인중');
+  await loadStudioState();
+  const ep = studioState.episode;
+  if(!ep) { logAgent('메이킹','error','활성 에피소드 정보를 찾을 수 없습니다'); setAgentState('making','idle','대기중'); return; }
+  logAgent('메이킹','info', `EP${ep.number} 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 제작 현황 확인 중...`);
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/studio-status-public?episodeId=${encodeURIComponent(studioState.activeEpisodeId||'')}`);
+    const data = await res.json();
+    const cuts = data.cuts || [];
+    const MAKING = new Set(['GRAPHIC','CAPCUT','BROLL']);
+    const makingCuts = cuts.filter(c => MAKING.has(String(c.cutType||'').toUpperCase()));
+    const made = makingCuts.filter(c => c.hasVideo).length;
+    const rejected = makingCuts.filter(c => c.review?.status === 'rejected').length;
+    const allDone = makingCuts.length>0 && made>=makingCuts.length && rejected===0;
+    logAgent('메이킹', rejected ? 'error' : 'done',
+      `메이킹 컷 ${makingCuts.length}개 · 제작됨 ${made} · 반려 ${rejected}${rejected?' — 메이킹 탭에서 재제작 필요':''}`);
+    setAgentState('making', allDone?'done':'idle', allDone?'완료':'대기중');
+    showToast('✅ 메이킹 현황 확인 완료');
+  } catch(e) {
+    logAgent('메이킹','error', e.message);
+    setAgentState('making','idle','대기중'); showToast('⚠️ 확인 실패: '+e.message);
+  }
+}
+
 // ── ③ 음성 에이전트 — POST /api/elevenlabs/text-to-speech/:voiceId (오디오 바이너리 응답) ──
 // ElevenLabs 키는 GET /api/elevenlabs-key로 조회 (studio-secrets.json은 gitignore 대상이라
 // content_matrix_v3.html에서 직접 읽을 수 없고, localStorage도 오리진이 달라 공유 불가)
@@ -3677,12 +3795,11 @@ function renderCandidateTypeStats() {
     const active = candidateFilterType === t;
     return `
     <div class="candidate-stat-chip ${active?'active':''}" onclick="toggleCandidateTypeFilter('${t}')">
-      <span class="candidate-stat-chip-label">${t}</span><span class="candidate-stat-chip-value">${n}</span>
+      <span class="candidate-stat-chip-label">${CANDIDATE_TYPE_LABEL[t] || t}</span><span class="candidate-stat-chip-value">${n}</span>
     </div>`;
   }).join('');
 }
 
-const CANDIDATE_STAGE_SHORT_LABEL = {step1:'S1', step2:'S2', step3:'S3', step4:'S4', approval:'승인', g1:'G1'};
 function renderCandidateStageStats() {
   const el = document.getElementById('candidate-stage-stats'); if (!el) return;
   el.innerHTML = CANDIDATE_STAGES.map(s => {
@@ -3690,7 +3807,7 @@ function renderCandidateStageStats() {
     const active = candidateFilterStage === s.key;
     return `
     <div class="candidate-stat-chip ${active?'active':''}" onclick="toggleCandidateStageFilter('${s.key}')">
-      <span class="candidate-stat-chip-label">${CANDIDATE_STAGE_SHORT_LABEL[s.key]||s.key}</span><span class="candidate-stat-chip-value">${n}</span>
+      <span class="candidate-stat-chip-label">${s.label || s.key}</span><span class="candidate-stat-chip-value">${n}</span>
     </div>`;
   }).join('');
 }
