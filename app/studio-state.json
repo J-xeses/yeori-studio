@@ -1,9 +1,9 @@
 {
-  "activeTab": "making",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 67418
+    "remainingChars": 89429
   },
   "activeEpisodeId": "ep_1786261078428",
   "openTabIds": [
@@ -3041,7 +3041,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-10T11:26:52.992Z",
+  "savedAt": "2026-09-10T12:33:57.661Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3088,7 +3088,7 @@
         {
           "id": "v1",
           "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+          "voiceId": "5n5gqmaQi9Ewevrz7bOS"
         },
         {
           "id": "v1788599750449_ldu",
@@ -3173,13 +3173,13 @@
         {
           "id": "track_1788773497928_2kxm",
           "type": "dialogue",
-          "text": "",
+          "text": "야, 야~  이거 봤어?",
           "speaker": null,
-          "url": null,
+          "url": "blob:http://localhost:5173/fa0bf1e0-8f8c-4d81-9e69-edecde5fbb0e",
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
-            "stability": 30,
+            "speed": 1,
+            "stability": 20,
             "similarity": 75
           }
         }
@@ -3259,21 +3259,7 @@
           }
         }
       ],
-      "cut-2__v1788599750449_ldu": [
-        {
-          "id": "track_1788773497928_i6ar",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
+      "cut-2__v1788599750449_ldu": [],
       "cut-13__v1": [
         {
           "id": "track_1788773497928_5t08",
@@ -3377,7 +3363,7 @@
       ]
     },
     "activeVoiceTab": {
-      "cut-2": 1
+      "cut-2": 0
     },
     "mergedUrls": {}
   },
