@@ -88,7 +88,14 @@ export function splitDialogueBySeg(text, segCount, opts = {}) {
     if (manual.length === n) return manual
   }
 
-  const chunks = (t.match(/[^,.!?…]+[,.!?…]*/g) || [t]).map(s => s.trim()).filter(Boolean)
+  const rawChunks = (t.match(/[^,.!?…]+[,.!?…]*/g) || [t]).map(s => s.trim()).filter(Boolean)
+  // 따옴표만 남은 조각(문장 끝 " 가 다음 매치로 떨어져 나온 경우 등)은 앞 청크에 붙인다 —
+  // 안 그러면 짧은 대사가 세그 수보다 적을 때 "청크"로 잘못 취급돼 SPEAKS 에 따옴표만 남는다.
+  const chunks = []
+  for (const c of rawChunks) {
+    if (!/[가-힣a-zA-Z0-9]/.test(c) && chunks.length) chunks[chunks.length - 1] += c
+    else chunks.push(c)
+  }
   const weights = Array.isArray(opts.segSecs) && opts.segSecs.length === n ? opts.segSecs : Array(n).fill(1)
   const totalW = weights.reduce((a, b) => a + b, 0) || 1
   const totalLen = chunks.reduce((a, c) => a + c.length, 0)
@@ -166,6 +173,12 @@ function buildSegmentedSpokenBlock(cut, combo, dl, nr) {
       lines.push(dl
         ? `SPEAKS (KO): ${dq(parts[i])}  ← Veo 가 이 부분을 말하도록. 립싱크·음성 함께.`
         : `SPEAKS (KO, VO): ${dq(parts[i])}  ← 인물 입은 움직이지 않음, 나레이션만.`)
+    } else {
+      // 대사가 짧아 세그 수보다 문장이 적을 때 — 빈 SPEAKS 대신 명확히 표시(다음 컷 방향
+      // 정하는 사람이 "말 없이 표정/동작만" 인지 즉시 알 수 있게).
+      lines.push(dl
+        ? '(이 세그엔 대사 없음 — 대사 없이 표정·동작 연기로 채움. 세그 수가 대사량보다 많음 — 조합 재검토 권장)'
+        : '(이 세그엔 나레이션 없음 — 무음 구간, 동작/표정만)')
     }
     if (isFirst && trimStart) lines.push(`※ 앞 ${trimStart}초는 편집에서 잘려나감 — 대사는 여유 있게, 핵심 발화는 ${trimStart}초 이후에.`)
     if (isLast && trimEnd) lines.push(`※ 끝 ${trimEnd}초는 편집에서 잘려나감 — 대사는 ${sec - trimEnd}초 지점 전에 끝내고, 남는 시간은 표정 여운으로.`)

@@ -8,7 +8,15 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // HTML/SRC/BQ/URL/CLIP/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
 // GTPL 은 GRAPHIC/CAPCUT 컷의 HTML 자동 생성 지시(서브라인 3-1, 2026-09-09 추가):
 //   GTPL: text-card/minimal  |  GTPL: cards-3col/yeori  |  GTPL: ai  |  GTPL: ai:relation/yeori
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// SEG: 발화 컷 세그먼트 조합("8+8+10", Veo 고정 생성단위) — app/docs/vp-dialogue-seg-spec.md §2-1
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+
+// "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
+// src/tabs/ScriptGenTab.jsx 의 동일 함수와 반드시 함께 유지.
+function parseSegCombo(raw) {
+  const combo = String(raw || '').split('+').map(v => parseInt(v.trim(), 10)).filter(n => n === 8 || n === 10)
+  return combo.length > 1 ? combo : null
+}
 
 // "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
 export function parseClipField(raw) {
@@ -236,6 +244,7 @@ export function parseCutsV3(raw) {
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
       cutMark: 'NORMAL',
+      ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       // PIP_VD(codebook PL) 컷 전용 필드 — YEORI 컷 위에 합성할 BROLL 컷 번호/레이아웃/크기.
       // pipTarget은 ScriptGenTab.jsx의 기존 PIP 메커니즘(수동 입력 필드, proxy.js가 이미
       // c.pipTarget을 읽어 pip_target으로 씀)과 이름을 맞춘 것 — 대본 텍스트만으로는 알 수

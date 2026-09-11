@@ -203,7 +203,15 @@ const V3_SEP_LINE_RE = /^[━=]{6,}$/
 const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // HTML/SRC/BQ/URL/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
 // GTPL: GRAPHIC/CAPCUT 컷 HTML 자동 생성 지시 — 서버 scriptParserV3.js 와 반드시 동일 (2026-09-09)
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// SEG: 발화 컷 세그먼트 조합("8+8+10", Veo 고정 생성단위) — app/docs/vp-dialogue-seg-spec.md §2-1
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+
+// "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
+// server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
+function parseSegCombo(raw) {
+  const combo = String(raw || '').split('+').map(v => parseInt(v.trim(), 10)).filter(n => n === 8 || n === 10)
+  return combo.length > 1 ? combo : null
+}
 
 // "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
 // server/lib/scriptParserV3.js 의 parseClipField 와 동일하게 유지.
@@ -423,6 +431,7 @@ function parseCutsV3(raw) {
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
       cutMark: 'NORMAL',
+      ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       // server/lib/scriptParserV3.js와 반드시 동일하게 유지 — PIP_VD 컷 전용 필드.
       // pipTarget은 이 파일의 기존 PIP 메커니즘(수동 입력 필드, cutType === 'PIP' 케이스)과
       // 같은 필드명 — 별개로 두지 않고 그대로 재사용.
@@ -477,6 +486,7 @@ function serializeCutForRevision(c) {
   L.push(`MD: ${m.md || ''}`)
   L.push(`AC: ${m.ac || ''}`)
   L.push(`DU: ${c.duration || 8}`)
+  if (Array.isArray(c.segments) && c.segments.length > 1) L.push(`SEG: ${c.segments.join('+')}`)
   L.push(`CT: ${c.cutType || 'YEORI'}`)
   if (c.htmlFile) L.push(`HTML: ${c.htmlFile}`)
   if (c.graphicTemplate) L.push(`GTPL: ${c.graphicTemplate}`)
@@ -502,6 +512,9 @@ function v3RevisionPatch(fields, original) {
   if (fields.NR != null) p.narration = clr(fields.NR) ? '' : fields.NR
   if (fields.CP != null) p.subtitle = clr(fields.CP) ? '' : fields.CP
   if (fields.DU != null) { const d = parseInt(fields.DU, 10); if (d) p.duration = d }
+  // SEG: "8+8+10" → segments 배열. 없거나 "auto"/형식불량이면 그동안 있던 세그 지정을 지운다
+  // (필드가 아예 없던 컷이면 fields.SEG 도 undefined 라 이 분기 자체를 안 탐 — 기존 값 유지).
+  if (fields.SEG != null) p.segments = parseSegCombo(fields.SEG) || undefined
   if (fields.CT != null) { const t = fields.CT.trim().toUpperCase(); if (['YEORI', 'BROLL', 'GRAPHIC', 'CAPCUT', 'PIP'].includes(t)) p.cutType = t }
   if (!isBlank(fields.SH)) {
     setMc('sh', fields.SH)
@@ -551,6 +564,7 @@ function buildV3ScriptText(cuts, episode) {
       `AC: ${mc.ac || ''}`,
       `LOOK_ID: ${mc.lookId || ''}`,
       `DU: ${c.duration || 8}`,
+      ...(Array.isArray(c.segments) && c.segments.length > 1 ? [`SEG: ${c.segments.join('+')}`] : []),
       ...(c.htmlFile ? [`HTML: ${c.htmlFile}`] : []),
       ...(c.sourcePath ? [`SRC: ${c.sourcePath}`] : []),
       ...(c.brollQuery ? [`BQ: ${c.brollQuery}`] : []),
@@ -721,7 +735,7 @@ export default function ScriptGenTab() {
     const p = {}
     if (genlinePatch.fields.DL) p.dialogue = genlinePatch.fields.DL
     if (genlinePatch.fields.NR) p.narration = genlinePatch.fields.NR
-    if (genlinePatch.fields.SEG) p.segments = genlinePatch.fields.SEG.split('+').map(v => parseInt(v.trim(), 10)).filter(Boolean)
+    if (genlinePatch.fields.SEG) p.segments = parseSegCombo(genlinePatch.fields.SEG) || undefined
     dispatch({ type: 'UPDATE_CUT', id: target.id, p })
     setGenlinePatch(null)
   }

@@ -5445,6 +5445,7 @@ mcpRouter.get('/video-checklist', (req, res) => {
         videoPrompt: ensureDialogueInVP({
           videoPrompt: c.vp?.trim() || c.videoPrompt?.trim() || '',
           dialogue: c.dialogue, narration: c.narration, duration: c.duration || c.sec, cutType: c.cutType,
+          segments: c.segments,
         }),
         durationTarget: serverCutTargetDuration(c),
         hasImage,                              // 시작 프레임 준비됨
@@ -5909,6 +5910,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         videoPrompt: ensureDialogueInVP({
           videoPrompt: c.videoPrompt || '',
           dialogue: c.dialogue, narration: c.narration, duration: c.duration || c.sec, cutType: c.cutType,
+          segments: c.segments,
         }),
         duration: serverCutTargetDuration(c),   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
         startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,

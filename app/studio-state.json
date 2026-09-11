@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -120,12 +120,7 @@
               "ac": "HJ 폰 화면 YR 눈앞에 들이밂",
               "md": "충격. 훅 에너지."
             }
-          },
-          "segments": [
-            8,
-            8,
-            10
-          ]
+          }
         },
         {
           "id": "cut-3",
@@ -3065,7 +3060,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-11T13:26:22.775Z",
+  "savedAt": "2026-09-11T14:28:47.545Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
