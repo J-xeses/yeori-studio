@@ -1,5 +1,5 @@
 {
-  "activeTab": "editmeta",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -87,7 +87,7 @@
           "scene": "서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.",
           "action": "HJ 폰 화면 YR 눈앞에 들이밂",
           "character": "서여리",
-          "dialogue": "지아 \"야, 야! 이거 봤어?\"",
+          "dialogue": "지아 \"야야! 이거 봤어?\"",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
@@ -120,7 +120,12 @@
               "ac": "HJ 폰 화면 YR 눈앞에 들이밂",
               "md": "충격. 훅 에너지."
             }
-          }
+          },
+          "segments": [
+            8,
+            8,
+            10
+          ]
         },
         {
           "id": "cut-3",
@@ -2028,7 +2033,7 @@
       "scene": "서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.",
       "action": "HJ 폰 화면 YR 눈앞에 들이밂",
       "character": "서여리",
-      "dialogue": "지아 \"야, 야! 이거 봤어?\"",
+      "dialogue": "지아 \"야야! 이거 봤어?\"",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
@@ -2061,7 +2066,12 @@
           "ac": "HJ 폰 화면 YR 눈앞에 들이밂",
           "md": "충격. 훅 에너지."
         }
-      }
+      },
+      "segments": [
+        8,
+        8,
+        10
+      ]
     },
     {
       "id": "cut-3",
@@ -3055,7 +3065,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-11T11:34:18.115Z",
+  "savedAt": "2026-09-11T13:26:22.775Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [

@@ -676,17 +676,55 @@ export default function ScriptGenTab() {
   // 읽음과 동시에 서버 파일을 지워 1회성 소비를 보장). 위 마스터 코드 입력 흐름과
   // 동일하게 mcPreview/mcMeta에만 반영하고 "실제 적용" 버튼을 눌러야 cuts에 반영되는
   // 안전장치는 그대로 유지 — Codi_GEN에서 왔다고 자동으로 덮어쓰지 않는다.
+  //
+  // ⚠️ 2026-09-11 수정 — Field Gate(yeori-genline)도 같은 큐를 씀(source:'genline',
+  // {episodeCode, cutNo, revision}). 이건 "컷 하나 필드만 patch"하는 모양이라 위 mcPreview
+  // (통짜 { episode, cuts:[...] } 기대)와 안 맞음 — 그대로 두면 mcPreview.cuts 가 undefined 라
+  // 미리보기 렌더가 깨지고, "실제 적용"을 누르면 SET_CUTS([]) 로 전체 컷이 날아갈 뻔했다.
+  // → source==='genline' 이면 별도 genlinePatch 로 갈라서, 그 컷 하나만 UPDATE_CUT 으로 병합한다.
+  const [genlinePatch, setGenlinePatch] = useState(null) // { cutNo, fields:{SEG,DL,NR}, meta, raw }
+  const parseGenlineRevision = (raw) => {
+    const fields = {}
+    for (const line of String(raw || '').split('\n')) {
+      const m = line.match(/^(SEG|DL|NR)\s*:\s*(.*)$/)
+      if (m) fields[m[1]] = m[2].trim()
+    }
+    return fields
+  }
   useEffect(() => {
     fetch('http://localhost:3001/api/codi-gen-handoff')
       .then(res => res.json())
       .then(data => {
         if (!data?.ok || !data.pending) return
+        if (data.prompts?.source === 'genline') {
+          setGenlinePatch({
+            cutNo: data.prompts.cutNo, episodeCode: data.prompts.episodeCode,
+            fields: parseGenlineRevision(data.prompts.revision), meta: data.meta || null,
+          })
+          return
+        }
         setMcPreview(data.prompts)
         setMcMeta(data.meta || null)
         setMasterCode('(Codi_GEN에서 전달받음 — 코드 확인은 생략)')
       })
       .catch(err => console.warn('[codi_gen handoff] 조회 실패(proxy.js 실행 중인지 확인):', err.message))
   }, [])
+
+  // Field Gate 세그 분할 등 "컷 하나짜리" 패치 적용 — 해당 컷만 UPDATE_CUT 으로 병합.
+  // SEG 는 파서가 아직 텍스트 왕복을 모르므로(2단계 2a 남은 작업) 우선 cut.segments 배열로
+  // 얹어둔다 — VP 재구성이 되면 이걸 읽어서 다중 세그 블록을 만들게 될 자리.
+  const applyGenlinePatch = () => {
+    if (!genlinePatch) return
+    const cutNo = parseInt(genlinePatch.cutNo, 10)
+    const target = cuts.find(c => c.no === cutNo)
+    if (!target) { setMcError(`CUT ${cutNo} 을 찾을 수 없습니다(현재 에피소드가 다를 수 있음)`); setGenlinePatch(null); return }
+    const p = {}
+    if (genlinePatch.fields.DL) p.dialogue = genlinePatch.fields.DL
+    if (genlinePatch.fields.NR) p.narration = genlinePatch.fields.NR
+    if (genlinePatch.fields.SEG) p.segments = genlinePatch.fields.SEG.split('+').map(v => parseInt(v.trim(), 10)).filter(Boolean)
+    dispatch({ type: 'UPDATE_CUT', id: target.id, p })
+    setGenlinePatch(null)
+  }
 
   // ── 서여리 연출 원칙 룰셋 v1.1 ─────────────────────────────
   const YEORI_RULESET = `
@@ -1490,6 +1528,34 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
           </button>
           {mcError && (
             <div style={{ fontSize: 11, color: '#ef4444', marginTop: 6 }}>⚠️ {mcError}</div>
+          )}
+
+          {/* Field Gate(genline) 컷 단위 패치 대기 — 세그 분할 등. 이것도 "적용" 눌러야 반영 */}
+          {genlinePatch && (
+            <div style={{
+              marginTop: 12, padding: 10, borderRadius: 8,
+              background: 'rgba(167,139,250,.08)', border: '1px solid rgba(167,139,250,.35)',
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent-light)', marginBottom: 6 }}>
+                🎯 Field Gate 에서 CUT {genlinePatch.cutNo} 수정 제안 도착
+                {genlinePatch.meta?.title ? ` — ${genlinePatch.meta.title}` : ''}
+              </div>
+              <div style={{ fontSize: 11, lineHeight: 1.7, color: 'var(--text2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
+                {genlinePatch.fields.SEG && <div>SEG: {genlinePatch.fields.SEG}</div>}
+                {genlinePatch.fields.DL && <div>DL: {genlinePatch.fields.DL}</div>}
+                {genlinePatch.fields.NR && <div>NR: {genlinePatch.fields.NR}</div>}
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={applyGenlinePatch} style={{
+                  fontSize: 11, fontWeight: 700, color: '#fff', background: 'var(--accent)',
+                  border: 0, borderRadius: 6, padding: '4px 12px', cursor: 'pointer',
+                }}>CUT {genlinePatch.cutNo} 에 적용</button>
+                <button onClick={() => setGenlinePatch(null)} style={{
+                  fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'rgba(255,255,255,.06)',
+                  border: '1px solid rgba(255,255,255,.12)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer',
+                }}>무시</button>
+              </div>
+            </div>
           )}
 
           {/* ③ KR 컨펌본 미리보기 — 테스트 모드: "실제 적용" 전까지 AppContext/저장에 반영 안 됨 */}
