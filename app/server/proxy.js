@@ -4193,12 +4193,14 @@ function ensureEpisodeCapcutProject(episodeCode) {
   return { projectDir, projectName, created: true }
 }
 // cutter_input.json 생성 — run-cutter.js / a_creative_cutter.html이 읽는다.
-function writeCutterInputJson({ epNum, projectDir, kenburns }) {
+function writeCutterInputJson({ epNum, projectDir, kenburns, gapSec, bgm, bgmVolume }) {
   const { epId, ep } = findEpisodeByNumOrThrow(epNum)
   const episodeCode = resolveEpisodeCode(ep.episode, epId)
   const outDir = mp.outputDir(epNum)
   fs.mkdirSync(outDir, { recursive: true })
   const KB = new Set(['none', 'random', 'zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'pan_up', 'pan_down'])
+  const gapNum = Number(gapSec)
+  const volNum = Number(bgmVolume)
   const input = {
     epNum: Number(epNum),
     mode: 'yeori',
@@ -4206,6 +4208,12 @@ function writeCutterInputJson({ epNum, projectDir, kenburns }) {
     rawVideo: path.join(outDir, `ep${epNum}_raw.mp4`),
     srt: path.join(mp.audioDir(epNum), `ep${epNum}.srt`),
     editMeta: mp.editMetaPath(),
+    // 컷 사이 공백(초) — 0/미지정이면 기존처럼 바로 이어붙임
+    gapSec: Number.isFinite(gapNum) && gapNum > 0 ? gapNum : 0,
+    // BGM — downloads/_shared/bgm/ 기준 상대경로(GET /api/bgm-library 의 file 필드 그대로).
+    // 없으면 원래 템플릿 오디오를 유지한다(run-cutter.js 쪽에서 처리).
+    bgm: bgm || null,
+    bgmVolume: Number.isFinite(volNum) ? volNum : 0.22,
     // run-cutter.js / a_creative_cutter.html은 draft = draft_content.json '파일' 경로를 기대한다.
     draft: path.join(projectDir, 'draft_content.json'),
     projectDir,
@@ -4248,7 +4256,7 @@ app.post('/api/capcut-config', (req, res) => {
 // 굽는 게 최종 산출물이다. capcut-web-automation.js(웹버전)는 별개 시스템이라
 // 이 흐름에서 제외했다 — 필요하면 직접 실행: node scripts/capcut-web-automation.js --ep=N
 app.post('/api/send-to-cutter', async (req, res) => {
-  const { epNum, kenburns } = req.body
+  const { epNum, kenburns, gapSec, bgm, bgmVolume } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
 
   const cutterScriptPath = path.join(CODE_ROOT, 'scripts', 'run-cutter.js')
@@ -4259,7 +4267,7 @@ app.post('/api/send-to-cutter', async (req, res) => {
     const { epId, ep } = findEpisodeByNumOrThrow(epNum)
     const episodeCode = resolveEpisodeCode(ep.episode, epId)
     projectInfo = ensureEpisodeCapcutProject(episodeCode)
-    writeCutterInputJson({ epNum, projectDir: projectInfo.projectDir, kenburns })
+    writeCutterInputJson({ epNum, projectDir: projectInfo.projectDir, kenburns, gapSec, bgm, bgmVolume })
     console.log(`[send-to-cutter] 프로젝트 ${projectInfo.projectName} (${projectInfo.created ? '신규 복제' : '기존'}) + cutter_input.json`)
   } catch (err) {
     return res.status(err.statusCode || 500).json({ error: `CapCut 프로젝트 준비 실패: ${err.message}` })

@@ -105,9 +105,13 @@ export default function EditMetaTab() {
     loadSyncTiming()
   }
 
-  // CapCut 설정 (finishMode='cutter' 전용) — 에피소드별 프로젝트 + 켄번스 모드
+  // CapCut 설정 (finishMode='cutter' 전용) — 에피소드별 프로젝트 + 켄번스 모드 + 공백·BGM(2026-09-11)
   const finishMode = resolveFinishMode(state.episode)
   const [kbMode, setKbMode] = useState('random')
+  const [gapSec, setGapSec] = useState(0)
+  const [bgmFile, setBgmFile] = useState('')
+  const [bgmVolume, setBgmVolume] = useState(0.22)
+  const [bgmLibrary, setBgmLibrary] = useState([])
   const [capcutCfg, setCapcutCfg] = useState(null)
   const [tplInput, setTplInput] = useState('')
   const loadCapcutCfg = async () => {
@@ -117,8 +121,16 @@ export default function EditMetaTab() {
       setCapcutCfg(d); setTplInput(d.templateProject || '')
     } catch { /* 서버 꺼짐 */ }
   }
+  const loadBgmLibrary = async () => {
+    try {
+      const r = await fetch('http://localhost:3001/api/bgm-library')
+      const d = await r.json()
+      setBgmLibrary(d.tracks || [])
+    } catch { /* 서버 꺼짐 */ }
+  }
   useEffect(() => {
     if (finishMode === 'cutter' && !capcutCfg) loadCapcutCfg()
+    if (finishMode === 'cutter' && !bgmLibrary.length) loadBgmLibrary()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [finishMode])
   const saveTemplate = async () => {
@@ -479,7 +491,9 @@ export default function EditMetaTab() {
 
       // ⑤ 에피소드 전용 CapCut 프로젝트 준비 + 커터(켄번스) + CapCut 실행
       setAccStatus('⑤ CapCut 프로젝트 준비 + 커터 실행 (켄번스 적용)...')
-      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', { epNum, kenburns: kbMode })
+      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', {
+        epNum, kenburns: kbMode, gapSec, bgm: bgmFile || null, bgmVolume,
+      })
       if (!cutterRes.success) {
         setAccStatus(`⚠️ CapCut 연동 실패: ${cutterRes.error}`)
         setAccRunning(false); return
@@ -683,7 +697,31 @@ export default function EditMetaTab() {
                     <option key={v} value={v}>{v}</option>)}
                 </select>
               </label>
+              <label style={{color:'#9490a8'}} title="컷과 컷 사이에 타임라인 공백을 끼워 숨 쉴 틈을 준다 (0=바로 이어붙임)">공백(초)
+                <input type="number" min="0" max="3" step="0.1" value={gapSec}
+                  onChange={e => setGapSec(Math.max(0, parseFloat(e.target.value) || 0))}
+                  style={{marginLeft:'4px',width:'52px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px'}} />
+              </label>
+              <label style={{color:'#9490a8'}}>BGM
+                <select value={bgmFile} onChange={e => setBgmFile(e.target.value)}
+                  style={{marginLeft:'4px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px',maxWidth:'160px'}}>
+                  <option value="">— 없음(원곡 유지) —</option>
+                  {bgmLibrary.map(t => <option key={t.file} value={t.file}>{t.title || t.file}{t.mood ? ` (${t.mood})` : ''}</option>)}
+                </select>
+              </label>
+              {bgmFile && (
+                <label style={{color:'#9490a8'}} title="BGM 볼륨 (0~1, 기본 0.22)">볼륨
+                  <input type="number" min="0" max="1" step="0.02" value={bgmVolume}
+                    onChange={e => setBgmVolume(Math.min(1, Math.max(0, parseFloat(e.target.value) || 0)))}
+                    style={{marginLeft:'4px',width:'46px',background:'#1c1c22',color:'#e8e6f0',border:'1px solid rgba(255,255,255,0.12)',borderRadius:'4px',padding:'2px 4px',fontSize:'11px'}} />
+                </label>
+              )}
             </div>
+            {!bgmLibrary.length && (
+              <div style={{marginTop:'6px',fontSize:'10.5px',color:'#6b7280'}}>
+                BGM 없음 — "트렌드 레이더" BGM 검색·다운로드 후 여기서 고를 수 있습니다.
+              </div>
+            )}
             {capcutCfg && !capcutCfg.templateOk && (
               <div style={{marginTop:'8px',fontSize:'11px',color:'#fca5a5'}}>
                 ⚠ 템플릿 프로젝트 미설정. CapCut에서 <b>클립 1개짜리 빈 프로젝트</b>를 만든 뒤 그 폴더명을 지정하세요.

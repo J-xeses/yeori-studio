@@ -120,6 +120,35 @@ function makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode) {
   return { seg, effectType }
 }
 
+// 화자 앞뒤 여백(초) — 컷과 컷 사이에 타임라인 공백을 끼워 숨 쉴 틈을 준다.
+// (원본 소스는 그대로 두고, 다음 컷의 target_timerange.start 를 뒤로 미루는 방식.
+//  0이면 기존과 동일하게 컷이 바로 이어붙는다.)
+function computeGapUs(cutterInput) {
+  const sec = Number(cutterInput.gapSec)
+  return Number.isFinite(sec) && sec > 0 ? Math.round(sec * 1000000) : 0
+}
+
+// BGM 세그먼트+소재 생성 — 템플릿의 audio 트랙 세그먼트/소재를 복제해 필드 누락 없이
+// 새 오디오(볼륨만 교체)로 바꿔치기한다. 비디오 쪽 makeSegAndMaterials 와 같은 전략.
+function makeAudioSeg(d, tmplSeg, tmplMat, filePath, fileName, duration, volume) {
+  const matId = uuid(), spdId = uuid(), phId = uuid(), scmId = uuid(), vsId = uuid()
+  d.materials.audios = d.materials.audios || []
+  d.materials.audios.push({ ...tmplMat, id: matId, path: filePath, name: fileName, duration })
+  d.materials.speeds.push({ id: spdId, type: 'speed', mode: 0, speed: 1.0, curve_speed: null })
+  d.materials.placeholder_infos.push({ id: phId, type: 'placeholder_info', meta_type: 'none', res_path: '', res_text: '', error_path: '', error_text: '' })
+  d.materials.sound_channel_mappings.push({ id: scmId, type: '', audio_channel_mapping: 0, is_config_open: false })
+  d.materials.vocal_separations.push({ id: vsId, type: 'vocal_separation', choice: 0, removed_sounds: [], time_range: null, production_path: '', final_algorithm: '', enter_from: '' })
+
+  const seg = JSON.parse(JSON.stringify(tmplSeg))
+  seg.id = uuid()
+  seg.material_id = matId
+  seg.source_timerange = { start: 0, duration }
+  seg.target_timerange = { start: 0, duration }
+  seg.extra_material_refs = [spdId, phId, scmId, vsId]
+  seg.volume = volume
+  return seg
+}
+
 function run(epNum) {
   const cutterInputPath = path.join(mp.outputDir(epNum), 'cutter_input.json')
   if (!fs.existsSync(cutterInputPath)) {
@@ -129,6 +158,8 @@ function run(epNum) {
 
   const kbMode = kbMap[cutterInput.kenburns] || 'random'
   console.log(`[cutter] 켄번스 모드: ${cutterInput.kenburns} → ${kbMode}`)
+  const gapUs = computeGapUs(cutterInput)
+  if (gapUs) console.log(`[cutter] 컷 간 공백: ${(gapUs / 1000000).toFixed(2)}초`)
 
   if (!cutterInput.draft || !fs.existsSync(cutterInput.draft)) {
     throw new Error(`draft_content.json 없음: ${cutterInput.draft}`)
@@ -140,6 +171,16 @@ function run(epNum) {
     throw new Error('video 트랙에 기존 클립이 없습니다. CapCut에서 이 프로젝트를 열어 클립을 1개 추가한 뒤 다시 시도하세요.')
   }
   const tmplSeg = JSON.parse(JSON.stringify(videoTrack.segments[0]))
+
+  // audio 트랙 템플릿 세그먼트/소재 — 아래 video 소재풀 와이프가 audio 세그먼트가 참조하는
+  // 공용 소재(speeds/placeholder_infos/sound_channel_mappings/vocal_separations)까지 같이
+  // 지워버리므로, 미리 복제해두고 나중에 새 참조로 다시 만들어 붙인다(BGM 유무와 무관하게).
+  const audioTrack = d.tracks.find(t => t.type === 'audio')
+  let tmplASeg = null, tmplAMat = null
+  if (audioTrack && audioTrack.segments[0]) {
+    tmplASeg = JSON.parse(JSON.stringify(audioTrack.segments[0]))
+    tmplAMat = JSON.parse(JSON.stringify((d.materials.audios || []).find(a => a.id === tmplASeg.material_id) || {}))
+  }
 
   if (!cutterInput.editMeta || !fs.existsSync(cutterInput.editMeta)) {
     throw new Error(`editMeta 없음: ${cutterInput.editMeta}`)
@@ -200,19 +241,44 @@ function run(epNum) {
   d.materials.vocal_separations = []
 
   const cutDetails = []
+  let placeCursor = 0   // gapUs 만큼씩 밀리는 실제 타임라인 배치 위치 (editMeta의 절대 start/end 와는 별개)
+  let lastEnd = 0
   for (const r of matchResult) {
     const cutKbMode = r.motionBaked ? 'none' : (r.intentKb || kbMode)
-    const { seg, effectType } = makeSegAndMaterials(d, r, tmplSeg, folderPath, cutKbMode)
+    const placedR = { ...r, start: placeCursor, end: placeCursor + r.duration }
+    const { seg, effectType } = makeSegAndMaterials(d, placedR, tmplSeg, folderPath, cutKbMode)
     videoTrack.segments.push(seg)
+    lastEnd = placeCursor + r.duration
     cutDetails.push({
       cutNo: r.cutNo, label: r.label, file: r.file,
-      startSec: r.start / 1000000, endSec: r.end / 1000000,
+      startSec: placeCursor / 1000000, endSec: lastEnd / 1000000,
       durationSec: r.duration / 1000000,
       kenburns: r.motionBaked ? 'none(모션내장)'
         : (r.intentKb ? `${effectType}(intent)` : effectType),
     })
+    placeCursor = lastEnd + gapUs
   }
-  d.duration = matchResult.reduce((max, r) => Math.max(max, r.end), 0)
+  d.duration = lastEnd
+
+  // audio 트랙 — BGM 이 지정됐으면 새 곡으로, 아니면 원래 오디오를 새 참조로 복원.
+  // (video 소재풀 와이프가 audio 세그먼트의 공용 소재도 같이 비웠으므로 항상 다시 만들어야 함.)
+  if (audioTrack && tmplASeg) {
+    let bgmAbsPath = null
+    if (cutterInput.bgm) {
+      try { bgmAbsPath = mp.bgmFile(cutterInput.bgm) } catch { /* 잘못된 경로 */ }
+    }
+    if (bgmAbsPath && fs.existsSync(bgmAbsPath)) {
+      const volume = Number.isFinite(Number(cutterInput.bgmVolume)) ? Number(cutterInput.bgmVolume) : 0.22
+      const seg = makeAudioSeg(d, tmplASeg, tmplAMat, bgmAbsPath, path.basename(bgmAbsPath), d.duration, volume)
+      audioTrack.segments = [seg]
+      console.log(`[cutter] BGM 배치: ${path.basename(bgmAbsPath)} (볼륨 ${volume}, ${(d.duration / 1000000).toFixed(1)}초)`)
+    } else {
+      if (cutterInput.bgm) console.warn(`[cutter] BGM 파일 없음(스킵, 원래 오디오 유지): ${cutterInput.bgm}`)
+      const dur = tmplASeg.target_timerange?.duration || d.duration
+      const seg = makeAudioSeg(d, tmplASeg, tmplAMat, tmplAMat.path, tmplAMat.name, dur, tmplASeg.volume ?? 1.0)
+      audioTrack.segments = [seg]
+    }
+  }
 
   fs.writeFileSync(cutterInput.draft, JSON.stringify(d), 'utf-8')
   const projectName = path.basename(path.dirname(cutterInput.draft))
