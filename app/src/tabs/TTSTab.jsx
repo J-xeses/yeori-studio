@@ -282,6 +282,28 @@ export default function TTSTab() {
     setTTS({ tracks: nextTracks, mergedUrls: nextMerged })
   }
 
+  // TTS 탭에서 쉼표·물결표 등으로 다듬은 최종 문구를 대본(cut.dialogue/narration)에 반영.
+  // 화자 표기·따옴표를 복원해 원래 대본 포맷으로 재조립(다시 불러와도 splitSpeakerSegments 로 동일하게 파싱됨).
+  // state.cuts 는 ScriptGenTab 과 공유하는 전역 상태라 반영 즉시 그쪽에도 보이고, 3초 후 studio-state.json 저장.
+  const pushTracksToScript = (cutId, voiceTabId) => {
+    const c = cuts.find(x => x.id === cutId)
+    if (!c) return
+    const list = getTracksForKey(trackKey(cutId, voiceTabId), c)
+    const hasDialogueTracks  = list.some(t => t.type === 'dialogue')
+    const hasNarrationTracks = list.some(t => t.type === 'narration')
+    const dialogueText  = list.filter(t => t.type === 'dialogue' && t.text.trim())
+      .map(t => t.speaker ? `${t.speaker} "${t.text.trim()}"` : `"${t.text.trim()}"`).join(' / ')
+    const narrationText = list.filter(t => t.type === 'narration' && t.text.trim())
+      .map(t => t.text.trim()).join(' ')
+    if (!hasDialogueTracks && !hasNarrationTracks) { alert('반영할 트랙이 없습니다'); return }
+    const preview = [dialogueText, narrationText].filter(Boolean).join('\n') || '(비어있음)'
+    if (!confirm(`대본의 CUT ${c.no} 대사/나레이션을 지금 트랙 문구로 덮어씁니다.\n\n${preview}\n\n계속할까요?`)) return
+    const patch = {}
+    if (hasDialogueTracks)  patch.dialogue  = dialogueText
+    if (hasNarrationTracks) patch.narration = narrationText
+    dispatch({ type: 'UPDATE_CUT', id: cutId, p: patch })
+  }
+
   const handleCutSelect = (idx) => {
     setActiveCutIdx(idx)
     const c = cuts[idx]
@@ -773,11 +795,18 @@ export default function TTSTab() {
           <div className={s.panel}>
             <div className={s.panelTitleRow}>
               <h3 className={s.panelTitle}>CUT {cut.no} 트랙 구성</h3>
-              <button className={s.reloadBtn}
-                title="이 컷 대본(대사/나레이션)에서 트랙을 다시 만듭니다 — 다중 화자면 화자별로 분리"
-                onClick={() => reloadTracksFromScript(cut.id, activeVariant.id)}>
-                🔄 대본에서 다시 불러오기
-              </button>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button className={s.reloadBtn}
+                  title="TTS 로 다듬은 지금 트랙 문구(쉼표·물결표 등)를 대본 대사/나레이션에 반영합니다"
+                  onClick={() => pushTracksToScript(cut.id, activeVariant.id)}>
+                  📝 대본에 반영
+                </button>
+                <button className={s.reloadBtn}
+                  title="이 컷 대본(대사/나레이션)에서 트랙을 다시 만듭니다 — 다중 화자면 화자별로 분리"
+                  onClick={() => reloadTracksFromScript(cut.id, activeVariant.id)}>
+                  🔄 대본에서 다시 불러오기
+                </button>
+              </div>
             </div>
             {cut.dialogue?.trim() && (
               <div className={s.scriptSrc}>
