@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3000,7 +3000,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "9:16",
+    "ratio": "16:9",
     "bgImageUrl": "http://localhost:3001/downloads/flow/ep99/cut_09_b.jpg"
   },
   "publishing": {
@@ -3054,7 +3054,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-11T05:11:50.714Z",
+  "savedAt": "2026-09-11T07:22:41.280Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3081,7 +3081,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-7",
     "subtitles": {}
   },
   "ttsTabState": {

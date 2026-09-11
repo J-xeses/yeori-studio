@@ -20,11 +20,40 @@ const SCN_LABELS = {
   EDU: 'EDU — 교육', ENT: 'ENT — 엔터테인먼트',
 }
 
+// 사이드바 섹션 접기/펼치기 상태 — localStorage 에 기억(모든 탭 공통, 컷 목록 볼 공간 확보용).
+function useSectionOpen(key, defaultOpen) {
+  const storageKey = `yeori_sidebar_open_${key}`
+  const [open, setOpen] = useState(() => {
+    try { const v = localStorage.getItem(storageKey); return v === null ? defaultOpen : v === '1' } catch { return defaultOpen }
+  })
+  const toggle = () => setOpen(o => {
+    const next = !o
+    try { localStorage.setItem(storageKey, next ? '1' : '0') } catch { /* 프라이빗 모드 등 무시 */ }
+    return next
+  })
+  return [open, toggle]
+}
+
+// 접기/펼치기 가능한 사이드바 섹션 — 제목 클릭으로 토글, 화살표로 상태 표시.
+function CollapsibleSection({ titleKey, title, defaultOpen = true, children }) {
+  const [open, toggle] = useSectionOpen(titleKey, defaultOpen)
+  return (
+    <div className={s.section}>
+      <button type="button" className={s.titleBtn} onClick={toggle}>
+        <span className={s.title}>{title}</span>
+        <span className={s.chevron}>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && children}
+    </div>
+  )
+}
+
 // 대본생성 탭에서만 수정 가능한 에피소드 개요/마스터코드/EP.HEADER를 다른 탭에서
 // 참고용으로 표시하는 읽기 전용 블록. 이미 자체 컷 목록 사이드바가 있는 탭
 // (TTS/내음성삽입/편집메타 등)은 이 블록만 그 사이드바 상단에 끼워 넣고,
 // 자체 사이드바가 없는 탭(스튜디오/퍼블리싱/추출/영상/리텐션훅 등)은
 // 아래 EpisodeInfoSidebar(컷 목록 포함 풀 사이드바)를 통째로 쓴다.
+// 개요/마스터코드는 접어서 컷 목록 볼 공간을 늘릴 수 있음(2026-09-11, 사용자 요청).
 export function EpisodeOverviewBlock() {
   const { state } = useApp()
   const { episode } = state
@@ -33,8 +62,7 @@ export function EpisodeOverviewBlock() {
 
   return (
     <>
-      <div className={s.section}>
-        <div className={s.title}>에피소드 개요</div>
+      <CollapsibleSection titleKey="overview" title="에피소드 개요" defaultOpen={true}>
         <div className={s.row}>
           <span className={s.label}>코드</span>
           <span className={s.codeBadge}>{code}</span>
@@ -64,11 +92,10 @@ export function EpisodeOverviewBlock() {
             {moods.map(m => <span key={m} className={s.chip}>{m}</span>)}
           </div>
         )}
-      </div>
+      </CollapsibleSection>
 
       {episode?.masterCode && (
-        <div className={s.section}>
-          <div className={s.title}>마스터 코드</div>
+        <CollapsibleSection titleKey="masterCode" title="마스터 코드" defaultOpen={false}>
           {episode.masterCode.includes('::') ? (
             <div className={s.codeRows}>
               {episode.masterCode.split('::').map((seg, i) => (
@@ -85,14 +112,13 @@ export function EpisodeOverviewBlock() {
               ⚠️ 에피소드 코드({episode.code})와 다릅니다
             </div>
           )}
-        </div>
+        </CollapsibleSection>
       )}
 
       {episode?.epHeaderRaw && (
-        <div className={s.section}>
-          <div className={s.title}>EP.HEADER</div>
+        <CollapsibleSection titleKey="epHeader" title="EP.HEADER" defaultOpen={false}>
           <pre className={s.code}>{episode.epHeaderRaw}</pre>
-        </div>
+        </CollapsibleSection>
       )}
     </>
   )

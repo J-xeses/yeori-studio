@@ -697,7 +697,7 @@ export default function TTSTab() {
                       <div key={key} className={s.sliderRow}>
                         <span className={s.sliderLabel}>{label}</span>
                         <input type="range" min={min} max={max} step={step} value={val}
-                          style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
+                          style={{ background: `linear-gradient(to right, var(--slider-fill) ${pct}%, var(--bg-input) ${pct}%)` }}
                           onChange={e => setSpeakerSetting(c.name, key, parseFloat(e.target.value))} />
                         <span className={s.sliderVal}>{val}{unit}</span>
                       </div>
@@ -880,7 +880,7 @@ export default function TTSTab() {
                               <div key={key} className={s.sliderRow}>
                                 <span className={s.sliderLabel}>{label}</span>
                                 <input type="range" min={min} max={max} step={step} value={val}
-                                  style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
+                                  style={{ background: `linear-gradient(to right, var(--slider-fill) ${pct}%, var(--bg-input) ${pct}%)` }}
                                   onChange={e => setSpeakerSetting(name, key, parseFloat(e.target.value))} />
                                 <span className={s.sliderVal}>{val}{unit}</span>
                               </div>
@@ -1044,7 +1044,7 @@ export default function TTSTab() {
                         <span className={s.sliderLabel}>{label}</span>
                         <input type="range" min={min} max={max} step={step}
                           value={val} disabled={disabled}
-                          style={{ background: `linear-gradient(to right, var(--accent) ${pct}%, var(--bg-input) ${pct}%)` }}
+                          style={{ background: `linear-gradient(to right, var(--slider-fill) ${pct}%, var(--bg-input) ${pct}%)` }}
                           onChange={e => setTracksForKey(activeKey, prev =>
                             prev.map(t => t.id === track.id
                               ? { ...t, settings: { ...t.settings, [key]: parseFloat(e.target.value) } }
