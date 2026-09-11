@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -87,7 +87,7 @@
           "scene": "서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.",
           "action": "HJ 폰 화면 YR 눈앞에 들이밂",
           "character": "서여리",
-          "dialogue": "지아 \"야야! 이거 봤어?\"",
+          "dialogue": "지아 \"야, 야! 이거 봤어?\"",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
@@ -130,7 +130,7 @@
           "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
           "action": "차분하게 설명. 자연스러운 손짓.",
           "character": "서여리",
-          "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…\"",
+          "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~ 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…\"",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -220,7 +220,7 @@
           "scene": "서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.",
           "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
           "character": "서여리",
-          "dialogue": "\"ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?\"",
+          "dialogue": "\"ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?\"",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2027,7 +2027,7 @@
       "scene": "서여리 소파에서 폰 보는 중. 한지아가 갑자기 폰 화면 들이밈. 서여리 충격 표정 → 카메라 직시.",
       "action": "HJ 폰 화면 YR 눈앞에 들이밂",
       "character": "서여리",
-      "dialogue": "지아 \"야야! 이거 봤어?\"",
+      "dialogue": "지아 \"야, 야! 이거 봤어?\"",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
@@ -2070,7 +2070,7 @@
       "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
       "action": "차분하게 설명. 자연스러운 손짓.",
       "character": "서여리",
-      "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…\"",
+      "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~ 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…\"",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2160,7 +2160,7 @@
       "scene": "서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.",
       "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
       "character": "서여리",
-      "dialogue": "\"ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?\"",
+      "dialogue": "\"ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?\"",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2968,9 +2968,9 @@
     },
     "speakerSettings": {
       "한지아": {
-        "speed": 1.1,
-        "stability": 14,
-        "similarity": 75
+        "speed": 1.15,
+        "stability": 20,
+        "similarity": 80
       },
       "서여리": {
         "speed": 0.95,
@@ -3054,7 +3054,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-10T14:30:21.008Z",
+  "savedAt": "2026-09-11T03:39:08.073Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3213,6 +3213,13 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-8": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
@@ -3225,7 +3232,7 @@
           "url": "blob:http://localhost:5173/57a34ab5-270f-448e-a32a-789f98e5d5d6",
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
@@ -3252,7 +3259,7 @@
           "type": "dialogue",
           "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지. 버블 같아요, 버블. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
           "speaker": null,
-          "url": "blob:http://localhost:5173/974085cc-1f0a-4fa4-a803-9dbc8ff7446c",
+          "url": "blob:http://localhost:5173/ca579978-747f-422f-8c2b-83b9051d3d42",
           "voiceId": "",
           "settings": {
             "speed": 0.9,
@@ -3267,10 +3274,10 @@
           "type": "dialogue",
           "text": "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. LA 베이스. 경계 자체가 없는 세계관.",
           "speaker": null,
-          "url": null,
+          "url": "blob:http://localhost:5173/66c0c218-c0f2-492e-8405-5c07359dc764",
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
@@ -3282,10 +3289,10 @@
           "type": "dialogue",
           "text": "근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요. 섞였는데 안 섞인 거예요. 이게 말이 돼요?",
           "speaker": null,
-          "url": null,
+          "url": "blob:http://localhost:5173/3178c3d4-1ed5-46cb-8f6e-546bcf123964",
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
@@ -3508,6 +3515,21 @@
           "voiceId": "",
           "settings": {
             "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-8__v1": [
+        {
+          "id": "track_1789098510661_0v5k",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
