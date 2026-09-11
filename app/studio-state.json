@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -2968,9 +2968,9 @@
     },
     "speakerSettings": {
       "한지아": {
-        "speed": 1.15,
+        "speed": 1.1,
         "stability": 20,
-        "similarity": 80
+        "similarity": 70
       },
       "서여리": {
         "speed": 0.95,
