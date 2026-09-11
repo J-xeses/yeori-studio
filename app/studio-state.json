@@ -1,5 +1,5 @@
 {
-  "activeTab": "editmeta",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -1026,7 +1026,8 @@
         "instaNum": "RL02",
         "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
         "masterCode": "[IG_R02] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]",
-        "epHeaderRaw": ""
+        "epHeaderRaw": "",
+        "finishMode": "cutter"
       },
       "cuts": [
         {
@@ -3054,7 +3055,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-11T07:22:41.280Z",
+  "savedAt": "2026-09-11T11:34:18.115Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
