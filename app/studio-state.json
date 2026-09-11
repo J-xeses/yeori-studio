@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "editmeta",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3241,9 +3241,9 @@
         {
           "id": "track_1788773497928_sfop",
           "type": "dialogue",
-          "text": "LE SSERAFIM은요, 데뷔 3년 차인데 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요. 이번 콜라보에서 얘네 역할이 진짜 중요한 게…",
+          "text": "LE SSERAFIM은요, 데뷔 3년 차인데~. 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…",
           "speaker": null,
-          "url": "blob:http://localhost:5173/57a34ab5-270f-448e-a32a-789f98e5d5d6",
+          "url": "blob:http://localhost:5173/0ec631f4-87b3-4a38-9f74-38a61164ae40",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
