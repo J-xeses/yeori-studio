@@ -2096,6 +2096,22 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                       value={cut?.videoPrompt || ''}
                       onChange={e => updateCut(cut.id, 'videoPrompt', e.target.value)}
                       style={{ fontFamily: 'var(--mono)', fontSize: 12, lineHeight: 1.6 }} />
+                    {/* Field Gate 세그 빌더가 채운 cut.segPrompts가 있으면, 위 원본 VP는 그대로 두고
+                        실제로 Field Gate/생성기가 쓰는 "합쳐진 최종본"만 읽기 전용으로 미리보기 —
+                        위 textarea를 고쳐도 이게 안 바뀐다고 오해하지 않도록(2026-09-12 실사용 혼선 발견). */}
+                    {Array.isArray(cut?.segPrompts) && cut.segPrompts.length > 0 && (
+                      <div style={{ marginTop: 8, width: '100%' }}>
+                        <div className={s.v3CardHint} style={{ fontSize: 12.5, marginBottom: 2 }}>▾ 실제 생성용 최종본(세그별 비주얼+발화 합침, 읽기 전용 — Field Gate 세그 빌더에서 수정)</div>
+                        <textarea rows={10} readOnly
+                          value={ensureDialogueInVP(cut) || ''}
+                          style={{
+                            width: '100%', boxSizing: 'border-box', fontFamily: 'var(--mono)',
+                            fontSize: 13.5, lineHeight: 1.7, cursor: 'default',
+                            background: 'var(--bg3)', color: 'var(--text)', border: '1px dashed var(--border)',
+                            borderRadius: 6, padding: '8px 10px',
+                          }} />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
