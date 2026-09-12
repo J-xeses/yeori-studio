@@ -22,12 +22,11 @@
     animation:breathe 5s ease-in-out infinite alternate; }
   @keyframes breathe { from{opacity:.7; transform:scale(1);} to{opacity:1; transform:scale(1.03);} }
 
-  /* 로고 */
+  /* 로고 — Field Gate 헤더에 쓰는 실제 로고 마크 적용 */
   .brand { display:flex; align-items:center; gap:24px;
     opacity:0; animation:up 5s ease forwards; }
-  .brand-mark { width:96px; height:96px; border-radius:26px;
-    background:conic-gradient(from 210deg, var(--ls), var(--kat), var(--il), var(--warm), var(--ls));
-    box-shadow:0 0 44px rgba(255,184,119,.4); }
+  .brand-mark { width:96px; height:96px; display:block;
+    filter:drop-shadow(0 0 44px rgba(255,184,119,.4)); }
   .brand-name { font-size:76px; font-weight:900; letter-spacing:.1em; }
   @keyframes up {
     0%,6%  { opacity:0; transform:translateY(26px); }
@@ -87,7 +86,7 @@
   <div class="stage">
     <div class="glow"></div>
     <div class="brand">
-      <div class="brand-mark"></div>
+      <img class="brand-mark" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAACXBIWXMAAAAAAAAAAQCEeRdzAAAHE0lEQVR4nO2dWahVVRjHf2e4FvkQBEUvCQ1QRBNWD71YXauHJujBBqIsGyjLkiJIG7DBEqFASWwwI+khG6WS6sGshyIqejEkjUCpaJTywQa9Z+9Y8f9gcTt6z7l3r73XXuf84bDv2aB3re+/1jes71vfbeR5TiA09UkJOZDpWQjahEFTA3WfFNEoioR2QOEfAywDDtKA64xcc9gIPON9z2MjoAV0gBOAL4DppIVLgJOB27XQ3FyjIaDhDeglCX+fSAlmaEpEpjleJAKiU0G2IlYAp+vnEdJBQ3N8zvseDQHu/xkDLgDu0GpxKz8V5BL+Z8BjepfFQkBDwm9rddhWTQmZdvTccbYuCgJM9bwLzEiQgEwCvwr42tvtxEDAiAztLcB5IiIl1dPRfF7Vp1Wk8KdKQFPCP07+vunJVJBrPjuAW713xECAH4S8AxyqrdpMUPVcAewqWvVMlQCnevYCy4HjPSOcCsY0n+XyfEzVFo72JP/NXkWFd2qlpCT8TPP5ELhX7wpf+YZ+BdfUYJzKWQNMSyTK9eHmsxu4Tj8X5nIWQUBLK2Q1cESCXs+YZHIfsFMLzO12YiDABnOPfOLUhN+RPNYCqzS3oMLvhwAbjDvlXOJtzVSQaz47dJRi74iBAP+U052FH5JotJsDC4A9Ib2eyRBgLqfT+7MSdjkfVEwTXO/7aPco/FHgpgSFn2k+XwKPeNF9aTiQMG0wztt5NqHEisHSir8C1+hdo+w89kQEZPL3j03Q68k0H+fVbS1b9UxEgA1mriLeFFVPSzr/RU/Vlo72AY4aZsofTu2owXb3L8D1/30LGOlOhPZ+slvmck5PsLano9X/NvBbmS5nLwRYdssFW2ckqPfxHIk/iQDtLsJ3dS/3J5hYN1jOwhWOUXVA2e5y0Daqn/8uqaykUXIix7y7C4Ezgc81zxAudj6RffEJMN3vvIJrZYRTRUOf1Tr7+aSqgbS75ED/UIL9/MBpxjHgMOBy/a4yYWrHFZB9DGwGfgqwE9YDr/djhE3gvwOvUA7WqKriqQrUkUXD5wb6/+cAV4qIromdbv69nXSWZYBbwNPKLS8s2fOynVBozb+3w0cUzK7fn7HfX4CVh8yDdvldaJALKqqsCPE7TaWv9L7/DzFEuJmeW0W6u0+QSnZtEfDegfLKMRDQ8gp7pyVQX2Tx00cqWLN3xEpAR88Hirz6UxFs8bjdfM64uCNKAkZ0DuMM1SmJrP6/gBv0fcJquioJaEv4M5XwSUH4bk6XAp/2eshXFQH+qevaBAq8LF+yUmX6triIlQA7+FsKnFrz1W8rf4tKNfvKL1RBgG3Ni4HFNc+2WdD6DTC7F6M7HmVP3BL9BwPPJ1Lg5Qi4Wcn9vpM7ZRLgVxysV7VFVmPVYzt3riqpJ5VZK5MAM0wL5Cl0arz6LdJ9GVjXj9GtioCWBjhDlx7qLPxMY39fRcp+6WaUBNgAnarZJP1fV5cz18fp+xv1rhk7AXbW86Qu9NVZ79t83Bn/90VUVLRLEv6odH+dVU9HY3cVIx9MRe+XRYBtTZd2fEvf85oL/03goSLvC4ckwDJAL3gFXs0aG92vvCLe6Dtm2SngQrmcdRW+IVPeek9srQq6wbbnicATNb9B39F8LlP1ROFljEUT4PvE67xzkUaNhb8W2FCU0Q1NgBneNaq5qavq6Uj4G5RcKaQ9WVkds04D5tVY+LmE/4PXpCPYzZmiCXCDPEoD3huwK2ODsPgHOFvVckGadBiKFJCtkO0a+JGEr2gLpXruBr4t4+5A0QS41bkNOEndBYsSVEOCOFxZp6MDkOA3Z1oVyuiOR9EqwkjYJS8oBFaocd6iAu2MBVubdcJZ2rWlEDo6ZG1pQ6tysepuziqIhKbKSa72dkJtCQhdWzpNBn5TQQRkuoziKvN+DG10x6OOyfBMT5dXYIp2wNKKjyvSLf2ucB0JaIw7EMunmFZ0RvfRqu4K15EACjS627xgq5K7woNKQFPGfHbIjoi9YBAJGNNzno4borqoXSfkkzDCZnSXqMV+pcKvOwHtPo2wGd2NSitaB8hKUUcCcj3dddped4CdcO7yavdL7w2UCgGZnm8AD/cYceeKdN111J+rNLopEDCVnnBbqmrMNKgEZJrjMuWnrRdSNEiZgMz7syPu5LTSxkyDSEBT6se1XKPME85+kCoBHamaOWpNFo3RHQQCxjSvpfL5Kw+2BomAjub0mgiwewnRIiUCcgn8O2C+9y5qpEJA7gVbs3SBIlq9nwoBLT33yeNx3+9SC/qo9X4qBOxWAZW1t7lNvU5LKScZZAIyHaTtVIOP+ep+vq4uaqfuBOAVZW3XHQRC/JW7MlBXAvDuHdjVp+ii3NQJIIW/W193AmqPIQEVY0hAxRgSUDGGBFSMIQEVY0hAxRgSUDGGBFSMIQFUi38BTPPScsso96kAAAAASUVORK5CYII=">
       <div class="brand-name">서여리</div>
     </div>
     <div class="cta"><b>구독</b>하면 다음 리뷰도 같이 봐요</div>

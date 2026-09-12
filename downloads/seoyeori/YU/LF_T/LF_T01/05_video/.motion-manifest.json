@@ -4,7 +4,7 @@
     "motion": "self",
     "baked": true,
     "duration": 3,
-    "producedAt": "2026-09-08T14:25:23.959Z"
+    "producedAt": "2026-09-12T10:08:41.775Z"
   },
   "4": {
     "method": "clip-record",
@@ -53,6 +53,6 @@
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-09-08T14:25:56.507Z"
+    "producedAt": "2026-09-12T10:09:18.138Z"
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
@@ -750,23 +750,38 @@ export default function ScriptGenTab() {
     }
     return fields
   }
+  // ⚠️ 2026-09-12 수정 — 마운트 시 딱 1번만 조회해서, Field Gate에서 이 탭이 이미 열려있는
+  // 동안 "적용"을 누르면 큐에 도착한 패치를 이 탭이 영영 못 보고(페이지를 새로고침해야만
+  // 보임) 조용히 묻히는 문제가 있었음(실사용 중 발견 — "대사 설정이 스튜디오에 적용 안 됨"
+  // 이 실은 카드 자체가 안 떴던 것). 6초 주기로 재조회하되, 이미 대기 중인 패치를 사용자가
+  // 처리하기 전까지는 덮어쓰지 않도록 ref로 가드.
+  const genlinePatchRef = useRef(null)
+  const mcPreviewRef = useRef(null)
+  useEffect(() => { genlinePatchRef.current = genlinePatch }, [genlinePatch])
+  useEffect(() => { mcPreviewRef.current = mcPreview }, [mcPreview])
   useEffect(() => {
-    fetch('http://localhost:3001/api/codi-gen-handoff')
-      .then(res => res.json())
-      .then(data => {
-        if (!data?.ok || !data.pending) return
-        if (data.prompts?.source === 'genline') {
-          setGenlinePatch({
-            cutNo: data.prompts.cutNo, episodeCode: data.prompts.episodeCode,
-            fields: parseGenlineRevision(data.prompts.revision), meta: data.meta || null,
-          })
-          return
-        }
-        setMcPreview(data.prompts)
-        setMcMeta(data.meta || null)
-        setMasterCode('(Codi_GEN에서 전달받음 — 코드 확인은 생략)')
-      })
-      .catch(err => console.warn('[codi_gen handoff] 조회 실패(proxy.js 실행 중인지 확인):', err.message))
+    const poll = () => {
+      if (genlinePatchRef.current || mcPreviewRef.current) return // 이미 대기 중 — 사용자가 처리할 때까지 보류
+      fetch('http://localhost:3001/api/codi-gen-handoff')
+        .then(res => res.json())
+        .then(data => {
+          if (!data?.ok || !data.pending) return
+          if (data.prompts?.source === 'genline') {
+            setGenlinePatch({
+              cutNo: data.prompts.cutNo, episodeCode: data.prompts.episodeCode,
+              fields: parseGenlineRevision(data.prompts.revision), meta: data.meta || null,
+            })
+            return
+          }
+          setMcPreview(data.prompts)
+          setMcMeta(data.meta || null)
+          setMasterCode('(Codi_GEN에서 전달받음 — 코드 확인은 생략)')
+        })
+        .catch(err => console.warn('[codi_gen handoff] 조회 실패(proxy.js 실행 중인지 확인):', err.message))
+    }
+    poll()
+    const id = setInterval(poll, 6000)
+    return () => clearInterval(id)
   }, [])
 
   // Field Gate 컷 단위 패치 적용 — 해당 컷만 UPDATE_CUT 으로 병합.
