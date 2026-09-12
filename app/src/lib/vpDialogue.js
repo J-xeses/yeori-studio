@@ -16,6 +16,7 @@
 //
 // server(proxy.js) 와 client(ScriptGenTab.jsx) 양쪽에서 import 하는 순수 함수
 // (src/lib/videoPolicy.js 와 같은 병행 구조).
+import { applyReadings } from './ttsText.js'
 
 export const SEG_MAX_SEC = 8
 
@@ -162,33 +163,38 @@ export function parseSegTiming(raw, segCount) {
 // (buildSegmentedSpokenBlock)와 단일 세그 추출(buildSegClipPrompt) 양쪽이 공유하는 핵심 로직.
 // segPrompts[i](세그별 영문 비주얼 프롬프트, cut.segPrompts)가 있으면 맨 앞에 그 비주얼 텍스트를
 // 붙인다 — "이 세그만 복사"가 비주얼+발화를 한 덩어리로 내보낼 수 있게 하는 자리.
+// ⚠️ 2026-09-12 전면 영문화 — 이 함수의 출력이 그대로 "SEG N만 복사"로 생성 도구에
+// 붙여넣어지는데, 예전엔 "← Veo 가 이 부분을 말하도록... 립싱크·음성 함께." 같은 한국어
+// 해설이 프롬프트 본문에 그대로 섞여 나가서, 실제로 어디서부터 어디까지가 "진짜 프롬프트"고
+// 어디부터가 "사람이 읽으라고 붙인 메모"인지 구분이 안 됐음(사용자 실사용 중 혼란 발견).
+// 이제 인용된 한국어 대사 원문만 빼고 전부 영문 — Veo 프롬프트 관례(지시문은 영문,
+// 실제 발화 대사만 원어)와 일치시킴. 트림/연속성 안내도 그대로 프롬프트에 넣어도 되는
+// 영문 지시로 통일(별도 "복사용/표시용" 분기 없이 이 출력 자체가 바로 붙여넣기 가능).
 function buildOneSegLines(combo, dl, nr, parts, timing, segPrompts, trimStart, trimEnd, i) {
   const isFirst = i === 0, isLast = i === combo.length - 1
   const sec = combo[i]
   const lines = []
   const visual = Array.isArray(segPrompts) && segPrompts[i] ? String(segPrompts[i]).trim() : ''
   if (visual) lines.push(visual, '')
-  const trimTag = (isFirst && trimStart) ? ` (앞 ${trimStart}초 트림 예정)`
-    : (isLast && trimEnd) ? ` (끝 ${trimEnd}초 트림 예정)` : ' (트림 없음)'
-  lines.push(`━━━ SEG ${i + 1}/${combo.length} · 생성 ${sec}초${trimTag} ━━━`)
+  lines.push(`[Clip ${i + 1}/${combo.length} — ${sec}s]`)
   lines.push(isFirst
-    ? '[시작 프레임: G2 승인 이미지]'
-    : `CONTINUE FROM SEG ${i} FINAL FRAME (동일 인물·의상·헤어·조명 유지).`)
+    ? 'Starting frame: use the approved reference image.'
+    : `Continue directly from the previous clip's final frame — same person, outfit, hair, and lighting.`)
   if (parts[i]) {
     const t = Array.isArray(timing) ? timing[i] : null
-    const tTag = t ? `[${t[0]}-${t[1]}s 구간] ` : ''
+    const window = t ? ` within ${t[0]}-${t[1]}s of this clip` : ''
     lines.push(dl
-      ? `${tTag}SPEAKS (KO): ${dq(parts[i])}  ← Veo 가 이 부분을 말하도록${t ? `(이 세그 안에서 정확히 ${t[0]}-${t[1]}초 사이에)` : ''}. 립싱크·음성 함께.`
-      : `${tTag}SPEAKS (KO, VO): ${dq(parts[i])}  ← 인물 입은 움직이지 않음, 나레이션만.`)
+      ? `She speaks this line in Korean, lips synced to it${window}: ${dq(parts[i])}.`
+      : `Voiceover narration only (she does not speak on camera)${window}: ${dq(parts[i])}.`)
   } else {
     // 대사가 짧아 세그 수보다 문장이 적을 때 — 빈 SPEAKS 대신 명확히 표시(다음 컷 방향
     // 정하는 사람이 "말 없이 표정/동작만" 인지 즉시 알 수 있게).
     lines.push(dl
-      ? '(이 세그엔 대사 없음 — 대사 없이 표정·동작 연기로 채움. 세그 수가 대사량보다 많음 — 조합 재검토 권장)'
-      : '(이 세그엔 나레이션 없음 — 무음 구간, 동작/표정만)')
+      ? 'No dialogue in this clip — convey it through expression and action only.'
+      : 'No narration in this clip — silent, expression and action only.')
   }
-  if (isFirst && trimStart) lines.push(`※ 앞 ${trimStart}초는 편집에서 잘려나감 — 대사는 여유 있게, 핵심 발화는 ${trimStart}초 이후에.`)
-  if (isLast && trimEnd) lines.push(`※ 끝 ${trimEnd}초는 편집에서 잘려나감 — 대사는 ${sec - trimEnd}초 지점 전에 끝내고, 남는 시간은 표정 여운으로.`)
+  if (isFirst && trimStart) lines.push(`Note: the first ${trimStart}s of this clip will be trimmed in editing — let the key line land after that point.`)
+  if (isLast && trimEnd) lines.push(`Note: the last ${trimEnd}s of this clip will be trimmed in editing — finish the key line before ${sec - trimEnd}s and hold on expression for the remainder.`)
   return lines
 }
 
@@ -236,8 +242,12 @@ function buildSegmentedSpokenBlock(cut, combo, dl, nr, timing, segPrompts) {
 export function buildSegClipPrompt(cut = {}, i) {
   const combo = Array.isArray(cut.segments) ? cut.segments.filter(n => SEG_UNITS.includes(n)) : null
   if (!combo || !combo[i]) return ''
-  const dl = isNone(cut.dialogue) ? '' : strip(cut.dialogue)
-  const nr = isNone(cut.narration) ? '' : strip(cut.narration)
+  // applyReadings — Veo가 영문 고유명사를 철자로 읽는 문제(예: "LE SSERAFIM"을 "르세라핌"이
+  // 아니라 "엘이 쎄라핌"으로 발화, 2026-09-12 실사용 중 발견) 대응. ElevenLabs TTS(G3)에서
+  // 이미 쓰던 DEFAULT_READINGS를 Veo 립싱크 대사에도 동일 적용 — 대사 원문(자막·화면 표시용)은
+  // 안 바꾸고 SPEAKS 줄에 들어가는 발화용 텍스트만 치환.
+  const dl = isNone(cut.dialogue) ? '' : applyReadings(strip(cut.dialogue))
+  const nr = isNone(cut.narration) ? '' : applyReadings(strip(cut.narration))
   const text = dl || nr
   const { trimStart, trimEnd } = deriveTrim(combo, cut.duration)
   const segSecs = combo.map((sec, k) => sec - (k === 0 ? trimStart : 0) - (k === combo.length - 1 ? trimEnd : 0))
@@ -253,8 +263,10 @@ export function buildSegClipPrompt(cut = {}, i) {
 // 없으면 1단계 그대로 단일 발화 블록으로 append.
 export function ensureDialogueInVP(cut = {}) {
   const vp = String(cut.videoPrompt || '')
-  const dl = isNone(cut.dialogue) ? '' : strip(cut.dialogue)
-  const nr = isNone(cut.narration) ? '' : strip(cut.narration)
+  // applyReadings — Veo 립싱크 발화용 텍스트에도 ElevenLabs TTS와 동일한 외래어 발음 교정 적용
+  // (예: "LE SSERAFIM" → "르세라핌") — 2026-09-12, Veo가 영문 그대로 철자를 읽어버리는 문제 발견.
+  const dl = isNone(cut.dialogue) ? '' : applyReadings(strip(cut.dialogue))
+  const nr = isNone(cut.narration) ? '' : applyReadings(strip(cut.narration))
   if ((!dl && !nr) || VP_SPOKEN_MARKER.test(vp)) return vp
 
   const combo = Array.isArray(cut.segments) ? cut.segments.filter(n => SEG_UNITS.includes(n)) : null

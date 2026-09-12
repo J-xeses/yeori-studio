@@ -56,8 +56,13 @@ export function resolveVoice({ character, voiceId, characters = {}, speakerVoice
   return { voiceId: defaultVoiceId, name: '기본', source: 'default' }
 }
 
-// { epNum, cutNo, voiceId, apiKey, onLog, charTag } → { ok, finalPath, files } / throw
-export async function runSts({ epNum, cutNo, voiceId, apiKey, onLog, charTag = 'conv' }) {
+// { epNum, cutNo, voiceId, apiKey, onLog, charTag, voiceSettings } → { ok, finalPath, files } / throw
+// voiceSettings: { stability, similarity_boost } — 0~1 스케일. 안 넘기면 기존 고정값(0.30/0.75)
+// 그대로 사용. ⚠️ speed는 여기서 받지 않음 — STS는 원본 영상의 립싱크 타이밍을 그대로
+// 보존해야 하므로(그게 STS를 쓰는 이유), TTS 탭의 "속도" 슬라이드는 여기 적용하면 안 됨
+// (2026-09-12, 사용자 지적: "TTS 속도·안정성·유사도 설정이 STS 후처리에 묻히는 것 아니냐"
+// — 안정성·유사도는 이제 캐릭터별 설정을 반영하지만, 속도만은 원래도 항상 1.0 고정이 맞음).
+export async function runSts({ epNum, cutNo, voiceId, apiKey, onLog, charTag = 'conv', voiceSettings }) {
   const log = (m) => onLog?.(m)
   const padded = String(cutNo).padStart(2, '0')
   const videoDir = mp.videoDir(epNum)
@@ -105,7 +110,11 @@ export async function runSts({ epNum, cutNo, voiceId, apiKey, onLog, charTag = '
   const fd = new FormData()
   fd.append('audio', new Blob([buf], { type: 'audio/mpeg' }), 'voice.mp3')
   fd.append('model_id', STS_MODEL)
-  fd.append('voice_settings', JSON.stringify({ stability: 0.30, similarity_boost: 0.75, speed: 1.0 }))
+  fd.append('voice_settings', JSON.stringify({
+    stability: voiceSettings?.stability ?? 0.30,
+    similarity_boost: voiceSettings?.similarity_boost ?? 0.75,
+    speed: 1.0, // 항상 1.0 고정 — 원본 립싱크 타이밍 보존 (TTS 탭 속도 설정과 무관)
+  }))
   const r = await fetch(`https://api.elevenlabs.io/v1/speech-to-speech/${voiceId}`, {
     method: 'POST', headers: { 'xi-api-key': apiKey }, body: fd,
   })

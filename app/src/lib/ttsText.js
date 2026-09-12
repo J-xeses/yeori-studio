@@ -47,6 +47,10 @@ export function cleanForTTS(input) {
 
   // 남은 대사 구분 슬래시(공백/슬래시/공백)도 마커로
   text = text.replace(/[ \t]+[/／][ \t]+/g, SEP)
+  // Field Gate 세그 분할이 cut.dialogue에 남기는 "||" 구분자(세그별 대사, vpDialogue.js와
+  // 동일 관례)도 마커로 — 안 그러면 SEG 분할된 컷을 TTS 탭에서 열었을 때 "||" 글자가
+  // 그대로 남아 ElevenLabs가 잘못 읽거나 정제 미리보기에 이상하게 보임(2026-09-12 발견).
+  text = text.replace(/\s*\|\|\s*/g, SEP)
 
   // 따옴표 제거
   text = text.replace(QUOTE_RE, '')

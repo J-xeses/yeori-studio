@@ -23,6 +23,20 @@ import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
 import { runSts, resolveVoice } from './lib/sts.js'
+
+// TTS 탭 "캐릭터 목소리 미세조정"(state.ttsSettings.speakerSettings)에서 이 캐릭터의 안정성·
+// 유사도 튜닝을 찾는다 — resolveVoice()의 speakerVoices 느슨 매칭(별칭 포함)과 같은 방식.
+// 못 찾으면 null(호출부가 STS 고정 기본값으로 폴백). 2026-09-12 — STS가 이 설정을 아예
+// 안 읽던 문제 수정.
+function resolveSpeakerSetting(speakerSettings, ...names) {
+  for (const n of names) if (n && speakerSettings[n]) return speakerSettings[n]
+  for (const n of names) {
+    if (!n) continue
+    const loose = Object.keys(speakerSettings).find((k) => k.includes(n) || n.includes(k))
+    if (loose) return speakerSettings[loose]
+  }
+  return null
+}
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
 
@@ -1716,6 +1730,10 @@ app.post('/api/genline/sts', async (req, res) => {
     if (!rv.voiceId) return res.status(400).json({ ok: false, error: `음성을 못 정함 (character=${charName || '?'}). 캐릭터에 voiceId 등록 필요` })
 
     const charTag = (rv.id || rv.name || 'conv').toString().replace(/[^a-z0-9가-힣]/gi, '').slice(0, 12) || 'conv'
+    // TTS 탭 "캐릭터 목소리 미세조정"의 안정성·유사도를 STS에도 반영(0~100 → 0~1) — 2026-09-12.
+    const speakerSettings = state.ttsSettings?.speakerSettings || {}
+    const tuned = resolveSpeakerSetting(speakerSettings, charName, rv.name)
+    const voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
     const job = newGenlineJob('sts', epNum, [cutNo])
     job.voice = { ...rv, charName: charName || rv.name }
     res.json({ ok: true, jobId: job.id, voice: job.voice })
@@ -1724,7 +1742,7 @@ app.post('/api/genline/sts', async (req, res) => {
       job.logs = []
       try {
         const r = await runSts({
-          epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag,
+          epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag, voiceSettings,
           onLog: (m) => { if (m) { job.logs.push(m); if (job.logs.length > 40) job.logs.shift() } },
         })
         job.results.push({ cutNo, status: 'ok', ...r.files, voiceSource: rv.source })
@@ -6949,7 +6967,12 @@ mcpRouter.post('/run-sts', async (req, res) => {
     })
     if (!rv.voiceId) return res.status(400).json({ error: `음성 미정 (character=${charName || '?'})` })
     const charTag = (rv.id || rv.name || 'conv').toString().replace(/[^a-z0-9가-힣]/gi, '').slice(0, 12) || 'conv'
-    const r = await runSts({ epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag })
+    // TTS 탭 "캐릭터 목소리 미세조정"에서 저장한 안정성·유사도를 STS에도 반영(0~100 → 0~1).
+    // 예전엔 STS가 이 설정을 아예 안 읽고 고정값만 썼음(사용자 지적, 2026-09-12).
+    const speakerSettings = state.ttsSettings?.speakerSettings || {}
+    const tuned = resolveSpeakerSetting(speakerSettings, charName, rv.name)
+    const voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
+    const r = await runSts({ epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag, voiceSettings })
     res.json({ success: true, cutNo, voice: rv, files: r.files })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
