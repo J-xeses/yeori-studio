@@ -12,6 +12,7 @@ const TABS = [
   { id: 'video',         label: '영상 만들기',        icon: '🎞️' },
   { id: 'retention',     label: '리텐션 훅',          icon: '🎯' },
   { id: 'editmeta',      label: '편집 메타',          icon: '🗂️' },
+  { id: 'checkup',       label: '체크업',             icon: '✅' },
   { id: 'publishing',    label: '퍼블리싱',          icon: '🚀' },
   { id: 'dashboard',     label: '대시보드',           icon: '📊' },
   { id: 'credits',       label: '일일 크레딧',        icon: '🎟️' },

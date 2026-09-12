@@ -5950,6 +5950,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
         hasVideo: !!savedFile,
         savedFile,                              // 실제 저장된 파일명(cut_NN.mp4 / _overlay / _final)
+        videoUrl: savedFile ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), savedFile))}` : null,
         savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치
         g2: !!g.g2, g4: !!g.g4,
       }

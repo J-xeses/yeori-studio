@@ -12,6 +12,7 @@ import TTSTab from './tabs/TTSTab'
 import VoiceTab from './tabs/VoiceTab'
 import ExtractTab from './tabs/ExtractTab'
 import VideoTab from './tabs/VideoTab'
+import CheckupTab from './tabs/CheckupTab'
 import PublishingTab from './tabs/PublishingTab'
 import DashboardTab from './tabs/DashboardTab'
 import CreditsTab from './tabs/CreditsTab'
@@ -29,6 +30,7 @@ const TAB_MAP = {
     voice: VoiceTab,
     extract: ExtractTab,
     video: VideoTab,
+    checkup: CheckupTab,
     publishing: PublishingTab,
     dashboard: DashboardTab,
     credits: CreditsTab,
