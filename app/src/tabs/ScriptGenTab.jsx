@@ -696,11 +696,15 @@ export default function ScriptGenTab() {
   // (통짜 { episode, cuts:[...] } 기대)와 안 맞음 — 그대로 두면 mcPreview.cuts 가 undefined 라
   // 미리보기 렌더가 깨지고, "실제 적용"을 누르면 SET_CUTS([]) 로 전체 컷이 날아갈 뻔했다.
   // → source==='genline' 이면 별도 genlinePatch 로 갈라서, 그 컷 하나만 UPDATE_CUT 으로 병합한다.
-  const [genlinePatch, setGenlinePatch] = useState(null) // { cutNo, fields:{SEG,DL,NR}, meta, raw }
+  const [genlinePatch, setGenlinePatch] = useState(null) // { cutNo, fields:{...v3 필드}, meta, raw }
+  // ⚠️ 2026-09-12 수정 — 예전엔 SEG|DL|NR 세 필드만 인식해서, genline의 diagnose()가 만드는
+  // "SC:/SH:/DU:" 같은 일반 대본 수정안은 파싱 자체가 안 되고(fields가 사실상 빈 객체) 조용히
+  // 버려졌음(CUT 2 사례로 실사용 중 발견 — "적용"을 눌러도 실제로 아무것도 안 바뀌는 상태였음).
+  // v3RevisionPatch가 이미 아는 전체 필드 어휘(V3_MAIN_FIELD_RE)를 그대로 재사용해 파싱한다.
   const parseGenlineRevision = (raw) => {
     const fields = {}
     for (const line of String(raw || '').split('\n')) {
-      const m = line.match(/^(SEG|DL|NR)\s*:\s*(.*)$/)
+      const m = line.match(V3_MAIN_FIELD_RE)
       if (m) fields[m[1]] = m[2].trim()
     }
     return fields
@@ -724,18 +728,16 @@ export default function ScriptGenTab() {
       .catch(err => console.warn('[codi_gen handoff] 조회 실패(proxy.js 실행 중인지 확인):', err.message))
   }, [])
 
-  // Field Gate 세그 분할 등 "컷 하나짜리" 패치 적용 — 해당 컷만 UPDATE_CUT 으로 병합.
-  // SEG 는 파서가 아직 텍스트 왕복을 모르므로(2단계 2a 남은 작업) 우선 cut.segments 배열로
-  // 얹어둔다 — VP 재구성이 되면 이걸 읽어서 다중 세그 블록을 만들게 될 자리.
+  // Field Gate 컷 단위 패치 적용 — 해당 컷만 UPDATE_CUT 으로 병합.
+  // v3RevisionPatch(기존 Codi_GEN 수정요청 경로가 쓰는, 전체 v3 필드를 아는 검증된 매퍼)를
+  // 그대로 재사용 — 예전엔 여기서 DL/NR/SEG 세 필드만 직접 골라 썼어서 SC/SH/DU 등은
+  // 파싱은 됐어도(위 parseGenlineRevision) 적용 단계에서 그냥 버려졌다.
   const applyGenlinePatch = () => {
     if (!genlinePatch) return
     const cutNo = parseInt(genlinePatch.cutNo, 10)
     const target = cuts.find(c => c.no === cutNo)
     if (!target) { setMcError(`CUT ${cutNo} 을 찾을 수 없습니다(현재 에피소드가 다를 수 있음)`); setGenlinePatch(null); return }
-    const p = {}
-    if (genlinePatch.fields.DL) p.dialogue = genlinePatch.fields.DL
-    if (genlinePatch.fields.NR) p.narration = genlinePatch.fields.NR
-    if (genlinePatch.fields.SEG) p.segments = parseSegCombo(genlinePatch.fields.SEG) || undefined
+    const p = v3RevisionPatch(genlinePatch.fields, target)
     dispatch({ type: 'UPDATE_CUT', id: target.id, p })
     setGenlinePatch(null)
   }
@@ -1555,9 +1557,12 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                 {genlinePatch.meta?.title ? ` — ${genlinePatch.meta.title}` : ''}
               </div>
               <div style={{ fontSize: 11, lineHeight: 1.7, color: 'var(--text2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
-                {genlinePatch.fields.SEG && <div>SEG: {genlinePatch.fields.SEG}</div>}
-                {genlinePatch.fields.DL && <div>DL: {genlinePatch.fields.DL}</div>}
-                {genlinePatch.fields.NR && <div>NR: {genlinePatch.fields.NR}</div>}
+                {Object.entries(genlinePatch.fields).map(([k, v]) => (
+                  <div key={k}>{k}: {v}</div>
+                ))}
+                {Object.keys(genlinePatch.fields).length === 0 && (
+                  <div style={{ color: '#ef4444' }}>⚠️ 이 수정안에서 알아본 필드가 없습니다 — 원문을 확인하세요.</div>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={applyGenlinePatch} style={{

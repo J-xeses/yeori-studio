@@ -91,8 +91,8 @@
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
-          "videoPrompt": "First 0-4s: Yeori sits on beige sofa looking at her phone,\nexpression bored and relaxed,\nJia enters frame from the left and thrusts her phone screen into Yeori's face\n\nNext 4-12s: Yeori's eyes widen in shock as she sees the screen,\nshe slowly turns to look directly at the camera,\nexpression shifting from surprise to \"I need to explain this\"\n\nFinal 12-20s: Both women settle on the sofa,\nYeori faces camera with a knowing expression,\nwarm indoor lighting, static camera",
-          "duration": 20,
+          "videoPrompt": "[CLIP A · 10s · DL: 지아 대사]\nMEDIUM CLOSE-UP — Two young Korean women early-20s sitting on a beige sofa indoors.\nLeft woman (한지아): thrusts phone screen directly toward the right woman, leaning in urgently, mouth open saying \"야야! 이거 봤어?\", sharp eyeliner, dark mauve-brown lip, short wavy black hair with fringe bangs, white fitted tee, blue distressed denim shorts, silver chain necklace.\nRight woman (서여리): long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers, at this moment neutral expression — reaction begins at end of clip.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.\n\n[CLIP B · 8s · NR — 인물 발화 없음, 클립A 마지막 프레임에서 연속]\nMEDIUM CLOSE-UP — Right woman (서여리): eyes widening sharply in shock, mouth slightly open, then slowly turns gaze DIRECTLY INTO CAMERA, holding that stare — this gaze-to-camera is the key action, sustain for majority of clip. Long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan, ivory wide-leg trousers.\nLeft woman (한지아) remains in frame holding phone, no longer speaking.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.",
+          "duration": 18,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -105,7 +105,7 @@
             "md": "MD_SUR",
             "ac": "HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시",
             "lookId": "",
-            "du": 20,
+            "du": 18,
             "audio": {
               "bgm": "",
               "voice": "",
@@ -120,7 +120,8 @@
               "ac": "HJ 폰 화면 YR 눈앞에 들이밂",
               "md": "충격. 훅 에너지."
             }
-          }
+          },
+          "segments": [10, 8]
         },
         {
           "id": "cut-3",
@@ -2032,8 +2033,8 @@
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
-      "videoPrompt": "First 0-4s: Yeori sits on beige sofa looking at her phone,\nexpression bored and relaxed,\nJia enters frame from the left and thrusts her phone screen into Yeori's face\n\nNext 4-12s: Yeori's eyes widen in shock as she sees the screen,\nshe slowly turns to look directly at the camera,\nexpression shifting from surprise to \"I need to explain this\"\n\nFinal 12-20s: Both women settle on the sofa,\nYeori faces camera with a knowing expression,\nwarm indoor lighting, static camera",
-      "duration": 20,
+      "videoPrompt": "[CLIP A · 10s · DL: 지아 대사]\nMEDIUM CLOSE-UP — Two young Korean women early-20s sitting on a beige sofa indoors.\nLeft woman (한지아): thrusts phone screen directly toward the right woman, leaning in urgently, mouth open saying \"야야! 이거 봤어?\", sharp eyeliner, dark mauve-brown lip, short wavy black hair with fringe bangs, white fitted tee, blue distressed denim shorts, silver chain necklace.\nRight woman (서여리): long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers, at this moment neutral expression — reaction begins at end of clip.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.\n\n[CLIP B · 8s · NR — 인물 발화 없음, 클립A 마지막 프레임에서 연속]\nMEDIUM CLOSE-UP — Right woman (서여리): eyes widening sharply in shock, mouth slightly open, then slowly turns gaze DIRECTLY INTO CAMERA, holding that stare — this gaze-to-camera is the key action, sustain for majority of clip. Long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan, ivory wide-leg trousers.\nLeft woman (한지아) remains in frame holding phone, no longer speaking.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.",
+      "duration": 18,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -2046,7 +2047,7 @@
         "md": "MD_SUR",
         "ac": "HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시",
         "lookId": "",
-        "du": 20,
+        "du": 18,
         "audio": {
           "bgm": "",
           "voice": "",
@@ -2062,11 +2063,7 @@
           "md": "충격. 훅 에너지."
         }
       },
-      "segments": [
-        8,
-        8,
-        10
-      ]
+      "segments": [10, 8]
     },
     {
       "id": "cut-3",
