@@ -1153,3 +1153,16 @@ downloads/
 - 사용자 실사용 검증: "탭과 앱간 연동 관계 확인 — 중복·누락 없이 상호 맞물려 반영됨", "굉장히 핵심적인 연출기능이 될 것".
 
 커밋: yeori-genline `640c7ad`, yeori-studio `2da71b7`.
+
+
+---
+### 2026-09-12 (MCP 자동 기록)
+## Field Gate 세그 빌더 후속 수정 + segPrompts 구조화 (같은 날 이어서)
+
+- `cut.segPrompts`(세그별 영문 비주얼 프롬프트) 신규 필드 도입, `SEGP:` v3 필드로 입출력 왕복 지원(ScriptGenTab.jsx + scriptParserV3.js). `ensureDialogueInVP`가 segPrompts 있으면 세그별 비주얼+한국어 발화(SEGT 구간 포함)를 인터리브해서 재구성, 없으면 기존 방식 유지(하위호환).
+- `buildSegClipPrompt(cut, i)` 신설 — "그 세그 하나만"의 완성 프롬프트 추출, 체크리스트 응답에 `segClipPrompts[]`로 노출. Field Gate 세그 빌더에 슬롯별 비주얼 입력창 + "SEG N만 복사" 버튼 추가.
+- 버그 수정 2건: (1) `ensureSegState()`가 재오픈 시 `cut.segments`/`segTiming`을 무시하고 매번 기본값 재계산 — 적용된 조합·발화구간이 화면에서 사라지는 문제였음, 이제 저장값 우선. (2) `/api/codi-gen-handoff`가 GET 시 큐를 삭제하는 1회성 구조라, 디버깅 중 조회만 해도 대기 중이던 패치가 유실될 수 있음 확인(재발 방지 위해 인지해둠).
+- 스튜디오 앱의 **3초 디바운스 자동저장**이 열린 브라우저 탭의 예전 상태로 direct-patch를 덮어쓰는 위험을 확인 — CUT2 videoPrompt(지아 등장 비트)가 이 때문에 두 번 유실됐다가 복구됨. 앞으로 studio-state.json 직접 patch 전엔 브라우저 탭 상태 확인 필수.
+- 대본생성 탭 VP 카드에 "실제 생성용 최종본" 읽기 전용 미리보기 추가(폭/다크배경·밝은텍스트/폰트크기 보완 포함) — segPrompts 사용 컷에서 원본 텍스트박스와 헷갈리지 않도록.
+
+커밋: yeori-genline `9f42bee`, yeori-studio `3f9fdd2` (+ `bff7f08` auto-sync가 vpDialogue.js/scriptParserV3.js/proxy.js 선반영).

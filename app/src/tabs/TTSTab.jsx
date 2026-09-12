@@ -167,6 +167,7 @@ export default function TTSTab() {
   const [myVoices,     setMyVoices]       = useState([])
   const [voicesLoading, setVoicesLoading] = useState(false)
   const [trackLoading,  setTrackLoading]  = useState({})
+  const [trackConfirming, setTrackConfirming] = useState({})
   const [merging,       setMerging]       = useState({})
   const [batchRunning,  setBatchRunning]  = useState(false)
   const [saving,        setSaving]        = useState({})
@@ -471,6 +472,32 @@ export default function TTSTab() {
       return null
     } finally {
       setTrackLoading(p => ({ ...p, [trackId]: false }))
+    }
+  }
+
+  // ── 트랙 미리듣기 "확정" — blob URL(브라우저 메모리 전용, 새로고침하면 사라짐)을
+  // 서버 mp3 파일로 영구 저장하고 track.url을 그 경로로 교체. 2026-09-12 사용자 요청:
+  // "미리듣기 후 만족한 순간 저장해야 그 느낌이 보존된다" — 병합(mergeTracksForKey)까지
+  // 안 가도 트랙 단위로 그 자리에서 확정 가능하게.
+  const confirmTrackAudio = async (cutId, voiceTabId, trackId, url) => {
+    const c = cuts.find(x => x.id === cutId)
+    if (!c || !url) return
+    const key = trackKey(cutId, voiceTabId)
+    const epNo = state.episode?.number ?? ''
+    setTrackConfirming(p => ({ ...p, [trackId]: true }))
+    try {
+      const blob = await (await fetch(url)).blob()
+      const saveRes = await fetch(
+        `http://localhost:3001/api/save-tts-track?ep=${epNo}&cutNo=${String(c.no).padStart(2, '0')}&trackId=${trackId}`,
+        { method: 'POST', headers: { 'Content-Type': blob.type || 'audio/mpeg' }, body: blob }
+      )
+      const data = await saveRes.json().catch(() => ({}))
+      if (!saveRes.ok || !data.url) throw new Error(data.error || '저장 실패')
+      setTracksForKey(key, prev => prev.map(t => t.id === trackId ? { ...t, url: data.url } : t))
+    } catch (err) {
+      alert('오디오 확정 저장 오류: ' + err.message)
+    } finally {
+      setTrackConfirming(p => ({ ...p, [trackId]: false }))
     }
   }
 
@@ -1069,6 +1096,15 @@ export default function TTSTab() {
                       : '🔊 생성'}
                   </button>
                   {track.url && <audio controls src={track.url} className={s.trackAudio} />}
+                  {track.url && track.url.startsWith('blob:') && (
+                    <button type="button" className={s.trackGenBtn} disabled={trackConfirming[track.id]}
+                      title="지금 이 소리를 서버 파일로 영구 저장 — 안 해두면 새로고침 시 사라짐(브라우저 임시 메모리)"
+                      onClick={() => confirmTrackAudio(cut.id, activeVariant.id, track.id, track.url)}>
+                      {trackConfirming[track.id]
+                        ? <><span className={s.spinner} />저장 중…</>
+                        : '✅ 이 소리로 확정'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}

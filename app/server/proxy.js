@@ -3739,6 +3739,35 @@ app.post('/api/save-voice-insert', (req, res) => {
   })
 })
 
+// ── POST /api/save-tts-track — TTS 트랙 미리듣기 "확정" 저장 (2026-09-12) ──
+// TTSTab의 개별 트랙 미리듣기는 blob:URL(브라우저 메모리 전용, 새로고침하면 사라짐)이라
+// 마음에 든 순간 이 파일로 영구 저장해두지 않으면 그 느낌이 유실됨(사용자 요청).
+// ElevenLabs/무료TTS 응답이 이미 mp3 바이트라 변환 없이 그대로 받아 쓴다.
+// { ep, cutNo, trackId } 쿼리 + 바디는 raw 오디오 바이트.
+app.post('/api/save-tts-track', (req, res) => {
+  const ep      = req.query.ep
+  const cutNo   = req.query.cutNo
+  const trackId = req.query.trackId
+  if (!ep || cutNo == null || !trackId) return res.status(400).json({ error: 'ep, cutNo, trackId 필요' })
+  const safeTrackId = String(trackId).replace(/[^a-zA-Z0-9_-]/g, '')
+
+  const dir = path.join(mp.audioDir(ep), 'tts-previews')
+  fs.mkdirSync(dir, { recursive: true })
+  const fileName = `cut_${String(cutNo).padStart(2, '0')}_${safeTrackId}.mp3`
+  const filePath = path.join(dir, fileName)
+
+  const chunks = []
+  req.on('data', chunk => chunks.push(chunk))
+  req.on('end', () => {
+    try {
+      fs.writeFileSync(filePath, Buffer.concat(chunks))
+      res.json({ ok: true, url: `http://localhost:3001${mp.toMediaUrl(dir)}/${fileName}?t=${Date.now()}` })
+    } catch (err) {
+      res.status(500).json({ error: err.message })
+    }
+  })
+})
+
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
 app.post('/api/run-ffmpeg', (req, res) => {
   const { ep, cutNo, duration, sfxFile, sfxStart } = req.body

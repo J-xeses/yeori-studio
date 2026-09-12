@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3274,7 +3274,7 @@
           "type": "dialogue",
           "text": "LE SSERAFIM은요, 데뷔 3년 차인데~. 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…",
           "speaker": null,
-          "url": "blob:http://localhost:5173/0ec631f4-87b3-4a38-9f74-38a61164ae40",
+          "url": "blob:http://localhost:5173/f0edc02b-8578-4974-ab39-f187e126d7a3",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
