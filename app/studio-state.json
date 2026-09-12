@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -87,11 +87,11 @@
           "scene": "서여리 소파에서 폰 보는 중. 지아 등장·착석 후 폰 들이밀며 대사. 서여리 놀람 표정 → CU 전환 → 서로 마주보며 놀라움 공감.",
           "action": "HJ 폰 화면 YR 눈앞에 들이밂",
           "character": "서여리",
-          "dialogue": "지아 \"야, 야~ 이거 봤어?\" ||",
+          "dialogue": "지아 \"야, 야~ 이거 봤어?\" || ",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
-          "videoPrompt": "[CLIP A · 10s · DL: 지아 대사]\nMEDIUM CLOSE-UP — Two young Korean women early-20s sitting on a beige sofa indoors.\nLeft woman (한지아): thrusts phone screen directly toward the right woman, leaning in urgently, mouth open saying \"야야! 이거 봤어?\", sharp eyeliner, dark mauve-brown lip, short wavy black hair with fringe bangs, white fitted tee, blue distressed denim shorts, silver chain necklace.\nRight woman (서여리): long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers, at this moment neutral expression — reaction begins at end of clip.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.\n\n[CLIP B · 8s · NR — 인물 발화 없음, 클립A 마지막 프레임에서 연속]\nMEDIUM CLOSE-UP — Right woman (서여리): eyes widening sharply in shock, mouth slightly open, then slowly turns gaze DIRECTLY INTO CAMERA, holding that stare — this gaze-to-camera is the key action, sustain for majority of clip. Long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan, ivory wide-leg trousers.\nLeft woman (한지아) remains in frame holding phone, no longer speaking.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.",
+          "videoPrompt": "MEDIUM SHOT, dynamic scene progression over 10 seconds — Two young Korean women early-20s, indoors on a beige sofa, warm indoor lighting, shallow depth of field, photorealistic 8K cinematic 16:9.\n\n[0-4s] Seo Yeori alone on the sofa, scrolling her phone, relaxed expression, slightly leaning forward.\n[4-10s] Han Jia enters frame from the left, quickly sits beside Yeori, thrusts her phone screen toward Yeori's face, says out loud: \"야야! 이거 봤어?\" — lip-sync Korean dialogue, urgent excited tone.\n\nSeo Yeori (right): long wavy dark brown hair NOT short, subtle natural skin texture on right cheek (never exaggerated), delicate gold necklace, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, black and white Converse Chuck Taylor sneakers.\n\nHan Jia (left, entering): short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, intense dark eyes, delicate silver chain necklace, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, white low-top sneakers, holding phone screen toward Yeori.\n\nBackground figures must not interact with main characters.\n\nCLOSE-UP, dynamic scene progression over 8 seconds, continuing directly from previous clip — Same two Korean women on beige sofa, warm indoor lighting, photorealistic 8K cinematic 16:9.\n\n[0-3s] Camera pushes in to CLOSE-UP on Seo Yeori's face: eyes widen in shock staring at Jia's phone screen, mouth slightly open, jaw drops — intense surprise expression.\n[3-8s] Both women turn to face each other in close-up two-shot, exchanging wide-eyed disbelief — Yeori brings hand to mouth, Jia raises eyebrows and leans in slightly, shared look of stunned amazement.\n\nSeo Yeori: long wavy dark brown hair, subtle skin texture right cheek (never exaggerated), gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers.\nHan Jia: short wavy black hair fringe bangs, dark mauve-brown lip, sharp eyeliner, silver chain necklace, white fitted tee, denim cutoff shorts.\n\nNo background interference. Expressions must be naturalistic, not theatrical.",
           "duration": 18,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
@@ -124,6 +124,17 @@
           "segments": [
             10,
             8
+          ],
+          "segTiming": [
+            [
+              5,
+              9
+            ],
+            null
+          ],
+          "segPrompts": [
+            "MEDIUM SHOT, dynamic scene progression over 10 seconds — Two young Korean women early-20s, indoors on a beige sofa, warm indoor lighting, shallow depth of field, photorealistic 8K cinematic 16:9.\n\n[0-4s] Seo Yeori alone on the sofa, scrolling her phone, relaxed expression, slightly leaning forward.\n[4-10s] Han Jia enters frame from the left, quickly sits beside Yeori, thrusts her phone screen toward Yeori's face, says out loud: \"야야! 이거 봤어?\" — lip-sync Korean dialogue, urgent excited tone.\n\nSeo Yeori (right): long wavy dark brown hair NOT short, subtle natural skin texture on right cheek (never exaggerated), delicate gold necklace, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, black and white Converse Chuck Taylor sneakers.\n\nHan Jia (left, entering): short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, intense dark eyes, delicate silver chain necklace, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, white low-top sneakers, holding phone screen toward Yeori.\n\nBackground figures must not interact with main characters.",
+            "CLOSE-UP, dynamic scene progression over 8 seconds, continuing directly from previous clip — Same two Korean women on beige sofa, warm indoor lighting, photorealistic 8K cinematic 16:9.\n\n[0-3s] Camera pushes in to CLOSE-UP on Seo Yeori's face: eyes widen in shock staring at Jia's phone screen, mouth slightly open, jaw drops — intense surprise expression.\n[3-8s] Both women turn to face each other in close-up two-shot, exchanging wide-eyed disbelief — Yeori brings hand to mouth, Jia raises eyebrows and leans in slightly, shared look of stunned amazement.\n\nSeo Yeori: long wavy dark brown hair, subtle skin texture right cheek (never exaggerated), gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers.\nHan Jia: short wavy black hair fringe bangs, dark mauve-brown lip, sharp eyeliner, silver chain necklace, white fitted tee, denim cutoff shorts.\n\nNo background interference. Expressions must be naturalistic, not theatrical."
           ]
         },
         {
@@ -2032,11 +2043,11 @@
       "scene": "서여리 소파에서 폰 보는 중. 지아 등장·착석 후 폰 들이밀며 대사. 서여리 놀람 표정 → CU 전환 → 서로 마주보며 놀라움 공감.",
       "action": "HJ 폰 화면 YR 눈앞에 들이밂",
       "character": "서여리",
-      "dialogue": "지아 \"야, 야~ 이거 봤어?\" ||",
+      "dialogue": "지아 \"야, 야~ 이거 봤어?\" || ",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
-      "videoPrompt": "[CLIP A · 10s · DL: 지아 대사]\nMEDIUM CLOSE-UP — Two young Korean women early-20s sitting on a beige sofa indoors.\nLeft woman (한지아): thrusts phone screen directly toward the right woman, leaning in urgently, mouth open saying \"야야! 이거 봤어?\", sharp eyeliner, dark mauve-brown lip, short wavy black hair with fringe bangs, white fitted tee, blue distressed denim shorts, silver chain necklace.\nRight woman (서여리): long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers, at this moment neutral expression — reaction begins at end of clip.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.\n\n[CLIP B · 8s · NR — 인물 발화 없음, 클립A 마지막 프레임에서 연속]\nMEDIUM CLOSE-UP — Right woman (서여리): eyes widening sharply in shock, mouth slightly open, then slowly turns gaze DIRECTLY INTO CAMERA, holding that stare — this gaze-to-camera is the key action, sustain for majority of clip. Long wavy dark brown hair, subtle natural skin texture on right cheek, gold necklace, white ribbed crop tee, navy cardigan, ivory wide-leg trousers.\nLeft woman (한지아) remains in frame holding phone, no longer speaking.\nWarm indoor lighting, shallow depth of field. Photorealistic 8K cinematic 16:9.",
+      "videoPrompt": "MEDIUM SHOT, dynamic scene progression over 10 seconds — Two young Korean women early-20s, indoors on a beige sofa, warm indoor lighting, shallow depth of field, photorealistic 8K cinematic 16:9.\n\n[0-4s] Seo Yeori alone on the sofa, scrolling her phone, relaxed expression, slightly leaning forward.\n[4-10s] Han Jia enters frame from the left, quickly sits beside Yeori, thrusts her phone screen toward Yeori's face, says out loud: \"야야! 이거 봤어?\" — lip-sync Korean dialogue, urgent excited tone.\n\nSeo Yeori (right): long wavy dark brown hair NOT short, subtle natural skin texture on right cheek (never exaggerated), delicate gold necklace, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, black and white Converse Chuck Taylor sneakers.\n\nHan Jia (left, entering): short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, intense dark eyes, delicate silver chain necklace, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, white low-top sneakers, holding phone screen toward Yeori.\n\nBackground figures must not interact with main characters.\n\nCLOSE-UP, dynamic scene progression over 8 seconds, continuing directly from previous clip — Same two Korean women on beige sofa, warm indoor lighting, photorealistic 8K cinematic 16:9.\n\n[0-3s] Camera pushes in to CLOSE-UP on Seo Yeori's face: eyes widen in shock staring at Jia's phone screen, mouth slightly open, jaw drops — intense surprise expression.\n[3-8s] Both women turn to face each other in close-up two-shot, exchanging wide-eyed disbelief — Yeori brings hand to mouth, Jia raises eyebrows and leans in slightly, shared look of stunned amazement.\n\nSeo Yeori: long wavy dark brown hair, subtle skin texture right cheek (never exaggerated), gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers.\nHan Jia: short wavy black hair fringe bangs, dark mauve-brown lip, sharp eyeliner, silver chain necklace, white fitted tee, denim cutoff shorts.\n\nNo background interference. Expressions must be naturalistic, not theatrical.",
       "duration": 18,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
@@ -2069,6 +2080,17 @@
       "segments": [
         10,
         8
+      ],
+      "segTiming": [
+        [
+          5,
+          9
+        ],
+        null
+      ],
+      "segPrompts": [
+        "MEDIUM SHOT, dynamic scene progression over 10 seconds — Two young Korean women early-20s, indoors on a beige sofa, warm indoor lighting, shallow depth of field, photorealistic 8K cinematic 16:9.\n\n[0-4s] Seo Yeori alone on the sofa, scrolling her phone, relaxed expression, slightly leaning forward.\n[4-10s] Han Jia enters frame from the left, quickly sits beside Yeori, thrusts her phone screen toward Yeori's face, says out loud: \"야야! 이거 봤어?\" — lip-sync Korean dialogue, urgent excited tone.\n\nSeo Yeori (right): long wavy dark brown hair NOT short, subtle natural skin texture on right cheek (never exaggerated), delicate gold necklace, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, black and white Converse Chuck Taylor sneakers.\n\nHan Jia (left, entering): short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, intense dark eyes, delicate silver chain necklace, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, white low-top sneakers, holding phone screen toward Yeori.\n\nBackground figures must not interact with main characters.",
+        "CLOSE-UP, dynamic scene progression over 8 seconds, continuing directly from previous clip — Same two Korean women on beige sofa, warm indoor lighting, photorealistic 8K cinematic 16:9.\n\n[0-3s] Camera pushes in to CLOSE-UP on Seo Yeori's face: eyes widen in shock staring at Jia's phone screen, mouth slightly open, jaw drops — intense surprise expression.\n[3-8s] Both women turn to face each other in close-up two-shot, exchanging wide-eyed disbelief — Yeori brings hand to mouth, Jia raises eyebrows and leans in slightly, shared look of stunned amazement.\n\nSeo Yeori: long wavy dark brown hair, subtle skin texture right cheek (never exaggerated), gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers.\nHan Jia: short wavy black hair fringe bangs, dark mauve-brown lip, sharp eyeliner, silver chain necklace, white fitted tee, denim cutoff shorts.\n\nNo background interference. Expressions must be naturalistic, not theatrical."
       ]
     },
     {
@@ -3063,7 +3085,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-12T05:54:09.482Z",
+  "savedAt": "2026-09-12T06:54:04.030Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3090,7 +3112,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-7",
+    "selectedCutId": "cut-2",
     "subtitles": {}
   },
   "ttsTabState": {

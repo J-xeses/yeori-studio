@@ -9,13 +9,37 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // GTPL 은 GRAPHIC/CAPCUT 컷의 HTML 자동 생성 지시(서브라인 3-1, 2026-09-09 추가):
 //   GTPL: text-card/minimal  |  GTPL: cards-3col/yeori  |  GTPL: ai  |  GTPL: ai:relation/yeori
 // SEG: 발화 컷 세그먼트 조합("8+8+10", Veo 고정 생성단위) — app/docs/vp-dialogue-seg-spec.md §2-1
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// SEGT: 세그별 발화 구간("2-8,0-3") — 2026-09-12 추가, src/lib/vpDialogue.js 의 동일 함수와 함께 유지
+// SEGP: 세그별 영문 비주얼 프롬프트("p1 ||| p2", 줄바꿈은 ⏎) — 2026-09-12 추가, src/tabs/ScriptGenTab.jsx 와 함께 유지
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // src/tabs/ScriptGenTab.jsx 의 동일 함수와 반드시 함께 유지.
 function parseSegCombo(raw) {
   const combo = String(raw || '').split('+').map(v => parseInt(v.trim(), 10)).filter(n => n === 8 || n === 10)
   return combo.length > 1 ? combo : null
+}
+
+// "2-8,0-3" → [[2,8],[0,3]] (세그 개수와 맞아야 유효). src/lib/vpDialogue.js 의 동일 함수와 함께 유지.
+function parseSegTiming(raw, segCount) {
+  if (!raw) return null
+  const out = String(raw).split(',').map(s => s.trim()).map(p => {
+    const m = p.match(/^(\d+)\s*-\s*(\d+)$/)
+    if (!m) return null
+    const a = parseInt(m[1], 10), b = parseInt(m[2], 10)
+    return (Number.isFinite(a) && Number.isFinite(b) && b > a) ? [a, b] : null
+  })
+  if (segCount != null && out.length !== segCount) return null
+  return out.some(x => x) ? out : null
+}
+
+// "p1 ||| p2"(줄바꿈은 ⏎로 치환됨) → 세그별 영문 비주얼 프롬프트 배열. src/tabs/ScriptGenTab.jsx 의
+// 동일 함수와 반드시 함께 유지.
+function parseSegPrompts(raw, segCount) {
+  if (!raw) return null
+  const parts = String(raw).split('|||').map(s => s.trim().replace(/⏎/g, '\n'))
+  if (segCount != null && parts.length !== segCount) return null
+  return parts.some(p => p) ? parts : null
 }
 
 // "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
@@ -245,6 +269,8 @@ export function parseCutsV3(raw) {
       cutType,
       cutMark: 'NORMAL',
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
+      ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
       // PIP_VD(codebook PL) 컷 전용 필드 — YEORI 컷 위에 합성할 BROLL 컷 번호/레이아웃/크기.
       // pipTarget은 ScriptGenTab.jsx의 기존 PIP 메커니즘(수동 입력 필드, proxy.js가 이미
       // c.pipTarget을 읽어 pip_target으로 씀)과 이름을 맞춘 것 — 대본 텍스트만으로는 알 수

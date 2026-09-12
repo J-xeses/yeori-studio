@@ -4,7 +4,7 @@ import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
-import { ensureDialogueInVP } from '../lib/vpDialogue'
+import { ensureDialogueInVP, parseSegTiming } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import s from './ScriptGenTab.module.css'
@@ -204,13 +204,29 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // HTML/SRC/BQ/URL/MOTION 는 메이킹 탭 자동실행용 컷별 소스 지정 필드(2026-09-08 추가)
 // GTPL: GRAPHIC/CAPCUT 컷 HTML 자동 생성 지시 — 서버 scriptParserV3.js 와 반드시 동일 (2026-09-09)
 // SEG: 발화 컷 세그먼트 조합("8+8+10", Veo 고정 생성단위) — app/docs/vp-dialogue-seg-spec.md §2-1
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// SEGT: 세그별 발화 구간("2-8,0-3", 세그 안에서 몇 초부터 몇 초까지 말하는지) — 2026-09-12 추가,
+// buildSegmentedSpokenBlock(vpDialogue.js)이 SPEAKS 줄에 "[Xs-Ys]" 구간으로 반영
+// SEGP: 세그별 영문 비주얼 프롬프트("prompt1 ||| prompt2", 줄바꿈은 ⏎로 치환해 한 줄 유지) —
+// 2026-09-12 추가. 있으면 ensureDialogueInVP이 세그별로 비주얼+발화를 인터리브해서 재구성.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
 function parseSegCombo(raw) {
   const combo = String(raw || '').split('+').map(v => parseInt(v.trim(), 10)).filter(n => n === 8 || n === 10)
   return combo.length > 1 ? combo : null
+}
+
+// "prompt1 ||| prompt2"(줄바꿈은 ⏎로 치환됨) → 세그별 영문 비주얼 프롬프트 배열. 세그 개수와
+// 안 맞으면 null. server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
+function parseSegPrompts(raw, segCount) {
+  if (!raw) return null
+  const parts = String(raw).split('|||').map(s => s.trim().replace(/⏎/g, '\n'))
+  if (segCount != null && parts.length !== segCount) return null
+  return parts.some(p => p) ? parts : null
+}
+function formatSegPrompts(arr) {
+  return arr.map(p => String(p || '').replace(/\n/g, '⏎')).join(' ||| ')
 }
 
 // "CLIP: <url> [@ <mm:ss|초>] [+<초>]" → { url, seekSec, durationSec }
@@ -432,6 +448,8 @@ function parseCutsV3(raw) {
       cutType,
       cutMark: 'NORMAL',
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
+      ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
       // server/lib/scriptParserV3.js와 반드시 동일하게 유지 — PIP_VD 컷 전용 필드.
       // pipTarget은 이 파일의 기존 PIP 메커니즘(수동 입력 필드, cutType === 'PIP' 케이스)과
       // 같은 필드명 — 별개로 두지 않고 그대로 재사용.
@@ -486,7 +504,15 @@ function serializeCutForRevision(c) {
   L.push(`MD: ${m.md || ''}`)
   L.push(`AC: ${m.ac || ''}`)
   L.push(`DU: ${c.duration || 8}`)
-  if (Array.isArray(c.segments) && c.segments.length > 1) L.push(`SEG: ${c.segments.join('+')}`)
+  if (Array.isArray(c.segments) && c.segments.length > 1) {
+    L.push(`SEG: ${c.segments.join('+')}`)
+    if (Array.isArray(c.segTiming) && c.segTiming.length === c.segments.length) {
+      L.push(`SEGT: ${c.segTiming.map(t => Array.isArray(t) ? `${t[0]}-${t[1]}` : '').join(',')}`)
+    }
+    if (Array.isArray(c.segPrompts) && c.segPrompts.length === c.segments.length) {
+      L.push(`SEGP: ${formatSegPrompts(c.segPrompts)}`)
+    }
+  }
   L.push(`CT: ${c.cutType || 'YEORI'}`)
   if (c.htmlFile) L.push(`HTML: ${c.htmlFile}`)
   if (c.graphicTemplate) L.push(`GTPL: ${c.graphicTemplate}`)
@@ -515,6 +541,17 @@ function v3RevisionPatch(fields, original) {
   // SEG: "8+8+10" → segments 배열. 없거나 "auto"/형식불량이면 그동안 있던 세그 지정을 지운다
   // (필드가 아예 없던 컷이면 fields.SEG 도 undefined 라 이 분기 자체를 안 탐 — 기존 값 유지).
   if (fields.SEG != null) p.segments = parseSegCombo(fields.SEG) || undefined
+  // SEGT: "2-8,0-3" → segTiming([[시작,끝]|null,...]). 세그 개수(방금 위에서 갱신됐거나 기존값)와
+  // 맞아야 유효 — 안 맞으면 무시(구간 미지정 기본 동작으로 폴백).
+  if (fields.SEGT != null) {
+    const segCount = (p.segments || original.segments || []).length
+    p.segTiming = parseSegTiming(fields.SEGT, segCount) || undefined
+  }
+  // SEGP: "prompt1 ||| prompt2" → segPrompts(세그별 영문 비주얼 프롬프트 배열).
+  if (fields.SEGP != null) {
+    const segCount = (p.segments || original.segments || []).length
+    p.segPrompts = parseSegPrompts(fields.SEGP, segCount) || undefined
+  }
   if (fields.CT != null) { const t = fields.CT.trim().toUpperCase(); if (['YEORI', 'BROLL', 'GRAPHIC', 'CAPCUT', 'PIP'].includes(t)) p.cutType = t }
   if (!isBlank(fields.SH)) {
     setMc('sh', fields.SH)
@@ -565,6 +602,10 @@ function buildV3ScriptText(cuts, episode) {
       `LOOK_ID: ${mc.lookId || ''}`,
       `DU: ${c.duration || 8}`,
       ...(Array.isArray(c.segments) && c.segments.length > 1 ? [`SEG: ${c.segments.join('+')}`] : []),
+      ...(Array.isArray(c.segments) && c.segments.length > 1 && Array.isArray(c.segTiming) && c.segTiming.length === c.segments.length
+        ? [`SEGT: ${c.segTiming.map(t => Array.isArray(t) ? `${t[0]}-${t[1]}` : '').join(',')}`] : []),
+      ...(Array.isArray(c.segments) && c.segments.length > 1 && Array.isArray(c.segPrompts) && c.segPrompts.length === c.segments.length
+        ? [`SEGP: ${formatSegPrompts(c.segPrompts)}`] : []),
       ...(c.htmlFile ? [`HTML: ${c.htmlFile}`] : []),
       ...(c.sourcePath ? [`SRC: ${c.sourcePath}`] : []),
       ...(c.brollQuery ? [`BQ: ${c.brollQuery}`] : []),

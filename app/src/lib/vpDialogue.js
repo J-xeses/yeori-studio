@@ -143,9 +143,61 @@ function deriveTrim(combo, duration) {
   return { genTotal, trimTotal, trimStart: Math.floor(trimTotal / 2), trimEnd: Math.ceil(trimTotal / 2) }
 }
 
+// SEGT 필드 원문("2-8,0-3" 등, 세그별 "시작초-끝초", 빈 항목은 미지정) → [[a,b]|null, ...].
+// 세그 개수와 안 맞거나 값 전부 미지정이면 null(호출부가 "구간 미지정" 기본 동작으로 처리).
+export function parseSegTiming(raw, segCount) {
+  if (!raw) return null
+  const parts = String(raw).split(',').map(s => s.trim())
+  const out = parts.map(p => {
+    const m = p.match(/^(\d+)\s*-\s*(\d+)$/)
+    if (!m) return null
+    const a = parseInt(m[1], 10), b = parseInt(m[2], 10)
+    return (Number.isFinite(a) && Number.isFinite(b) && b > a) ? [a, b] : null
+  })
+  if (segCount != null && out.length !== segCount) return null
+  return out.some(x => x) ? out : null
+}
+
+// 세그먼트 하나(i번째)의 "연속 지시 + SPEAKS 줄 + 트림 안내"만 만든다 — 다중 세그 블록 전체
+// (buildSegmentedSpokenBlock)와 단일 세그 추출(buildSegClipPrompt) 양쪽이 공유하는 핵심 로직.
+// segPrompts[i](세그별 영문 비주얼 프롬프트, cut.segPrompts)가 있으면 맨 앞에 그 비주얼 텍스트를
+// 붙인다 — "이 세그만 복사"가 비주얼+발화를 한 덩어리로 내보낼 수 있게 하는 자리.
+function buildOneSegLines(combo, dl, nr, parts, timing, segPrompts, trimStart, trimEnd, i) {
+  const isFirst = i === 0, isLast = i === combo.length - 1
+  const sec = combo[i]
+  const lines = []
+  const visual = Array.isArray(segPrompts) && segPrompts[i] ? String(segPrompts[i]).trim() : ''
+  if (visual) lines.push(visual, '')
+  const trimTag = (isFirst && trimStart) ? ` (앞 ${trimStart}초 트림 예정)`
+    : (isLast && trimEnd) ? ` (끝 ${trimEnd}초 트림 예정)` : ' (트림 없음)'
+  lines.push(`━━━ SEG ${i + 1}/${combo.length} · 생성 ${sec}초${trimTag} ━━━`)
+  lines.push(isFirst
+    ? '[시작 프레임: G2 승인 이미지]'
+    : `CONTINUE FROM SEG ${i} FINAL FRAME (동일 인물·의상·헤어·조명 유지).`)
+  if (parts[i]) {
+    const t = Array.isArray(timing) ? timing[i] : null
+    const tTag = t ? `[${t[0]}-${t[1]}s 구간] ` : ''
+    lines.push(dl
+      ? `${tTag}SPEAKS (KO): ${dq(parts[i])}  ← Veo 가 이 부분을 말하도록${t ? `(이 세그 안에서 정확히 ${t[0]}-${t[1]}초 사이에)` : ''}. 립싱크·음성 함께.`
+      : `${tTag}SPEAKS (KO, VO): ${dq(parts[i])}  ← 인물 입은 움직이지 않음, 나레이션만.`)
+  } else {
+    // 대사가 짧아 세그 수보다 문장이 적을 때 — 빈 SPEAKS 대신 명확히 표시(다음 컷 방향
+    // 정하는 사람이 "말 없이 표정/동작만" 인지 즉시 알 수 있게).
+    lines.push(dl
+      ? '(이 세그엔 대사 없음 — 대사 없이 표정·동작 연기로 채움. 세그 수가 대사량보다 많음 — 조합 재검토 권장)'
+      : '(이 세그엔 나레이션 없음 — 무음 구간, 동작/표정만)')
+  }
+  if (isFirst && trimStart) lines.push(`※ 앞 ${trimStart}초는 편집에서 잘려나감 — 대사는 여유 있게, 핵심 발화는 ${trimStart}초 이후에.`)
+  if (isLast && trimEnd) lines.push(`※ 끝 ${trimEnd}초는 편집에서 잘려나감 — 대사는 ${sec - trimEnd}초 지점 전에 끝내고, 남는 시간은 표정 여운으로.`)
+  return lines
+}
+
 // 다중 세그먼트 발화 블록 — app/docs/vp-dialogue-seg-spec.md §2-3 "다중 세그먼트" 형식.
 // cut.segments(예 [8,8,10])가 있을 때만 호출됨. 순수 계산 — AI 호출 없음.
-function buildSegmentedSpokenBlock(cut, combo, dl, nr) {
+// timing(예 [[2,8],null,...] — cut.segTiming, 세그별 "몇 초부터 몇 초까지 말하는지")이 있으면
+// 각 SEG의 SPEAKS 줄 앞에 "[Xs-Ys]" 구간을 명시 — 없으면 예전처럼 구간 표시 없이 세그 전체로.
+// segPrompts(cut.segPrompts, 세그별 영문 비주얼 프롬프트)가 있으면 각 SEG 블록 안에 비주얼도 인터리브.
+function buildSegmentedSpokenBlock(cut, combo, dl, nr, timing, segPrompts) {
   const text = dl || nr
   const field = dl ? 'DL' : 'NR'
   const { trimStart, trimEnd } = deriveTrim(combo, cut.duration)
@@ -162,27 +214,7 @@ function buildSegmentedSpokenBlock(cut, combo, dl, nr) {
     '',
   ]
   combo.forEach((sec, i) => {
-    const isFirst = i === 0, isLast = i === combo.length - 1
-    const trimTag = (isFirst && trimStart) ? ` (앞 ${trimStart}초 트림 예정)`
-      : (isLast && trimEnd) ? ` (끝 ${trimEnd}초 트림 예정)` : ' (트림 없음)'
-    lines.push(`━━━ SEG ${i + 1}/${combo.length} · 생성 ${sec}초${trimTag} ━━━`)
-    lines.push(isFirst
-      ? '[시작 프레임: G2 승인 이미지]'
-      : `CONTINUE FROM SEG ${i} FINAL FRAME (동일 인물·의상·헤어·조명 유지).`)
-    if (parts[i]) {
-      lines.push(dl
-        ? `SPEAKS (KO): ${dq(parts[i])}  ← Veo 가 이 부분을 말하도록. 립싱크·음성 함께.`
-        : `SPEAKS (KO, VO): ${dq(parts[i])}  ← 인물 입은 움직이지 않음, 나레이션만.`)
-    } else {
-      // 대사가 짧아 세그 수보다 문장이 적을 때 — 빈 SPEAKS 대신 명확히 표시(다음 컷 방향
-      // 정하는 사람이 "말 없이 표정/동작만" 인지 즉시 알 수 있게).
-      lines.push(dl
-        ? '(이 세그엔 대사 없음 — 대사 없이 표정·동작 연기로 채움. 세그 수가 대사량보다 많음 — 조합 재검토 권장)'
-        : '(이 세그엔 나레이션 없음 — 무음 구간, 동작/표정만)')
-    }
-    if (isFirst && trimStart) lines.push(`※ 앞 ${trimStart}초는 편집에서 잘려나감 — 대사는 여유 있게, 핵심 발화는 ${trimStart}초 이후에.`)
-    if (isLast && trimEnd) lines.push(`※ 끝 ${trimEnd}초는 편집에서 잘려나감 — 대사는 ${sec - trimEnd}초 지점 전에 끝내고, 남는 시간은 표정 여운으로.`)
-    lines.push('')
+    lines.push(...buildOneSegLines(combo, dl, nr, parts, timing, segPrompts, trimStart, trimEnd, i), '')
   })
   if (dl) {
     lines.push(
@@ -197,6 +229,24 @@ function buildSegmentedSpokenBlock(cut, combo, dl, nr) {
   return lines.join('\n')
 }
 
+// "SEG N만 복사" — 그 세그의 영문 비주얼(cut.segPrompts[i]) + 한국어 발화 정보(구간·SPEAKS)를
+// 한 덩어리로 반환. Veo는 한 번에 클립 하나만 생성하므로, 실제 생성 도구에 붙여넣을 땐 이렇게
+// "그 클립 하나짜리" 완성된 프롬프트가 필요하다 — 컷 전체가 합쳐진 videoPrompt에서 매번 손으로
+// 잘라내지 않아도 되게 하는 게 목적. cut.segments 가 없거나 i가 범위 밖이면 빈 문자열.
+export function buildSegClipPrompt(cut = {}, i) {
+  const combo = Array.isArray(cut.segments) ? cut.segments.filter(n => SEG_UNITS.includes(n)) : null
+  if (!combo || !combo[i]) return ''
+  const dl = isNone(cut.dialogue) ? '' : strip(cut.dialogue)
+  const nr = isNone(cut.narration) ? '' : strip(cut.narration)
+  const text = dl || nr
+  const { trimStart, trimEnd } = deriveTrim(combo, cut.duration)
+  const segSecs = combo.map((sec, k) => sec - (k === 0 ? trimStart : 0) - (k === combo.length - 1 ? trimEnd : 0))
+  const parts = text ? splitDialogueBySeg(text, combo.length, { segSecs }) : combo.map(() => '')
+  const timing = Array.isArray(cut.segTiming) && cut.segTiming.length === combo.length ? cut.segTiming : null
+  const segPrompts = Array.isArray(cut.segPrompts) && cut.segPrompts.length === combo.length ? cut.segPrompts : null
+  return buildOneSegLines(combo, dl, nr, parts, timing, segPrompts, trimStart, trimEnd, i).join('\n')
+}
+
 // { videoPrompt, dialogue, narration, duration, cutType, segments } → 증강된 VP 문자열 (멱등).
 // 발화가 없거나 이미 블록이 있으면 원본 그대로 반환.
 // segments(예 [8,8,10] — Field Gate 세그 분할 탭에서 고른 조합)가 있으면 다중 세그 블록으로,
@@ -209,8 +259,14 @@ export function ensureDialogueInVP(cut = {}) {
 
   const combo = Array.isArray(cut.segments) ? cut.segments.filter(n => SEG_UNITS.includes(n)) : null
   if (combo && combo.length > 1) {
-    const block = buildSegmentedSpokenBlock(cut, combo, dl, nr)
-    return `${vp.replace(/\s+$/, '')}\n\n${block}\n`
+    // cut.segTiming — [[시작,끝]|null, ...] (세그 개수와 맞을 때만 유효, 아니면 무시).
+    const timing = Array.isArray(cut.segTiming) && cut.segTiming.length === combo.length ? cut.segTiming : null
+    const segPrompts = Array.isArray(cut.segPrompts) && cut.segPrompts.length === combo.length ? cut.segPrompts : null
+    const block = buildSegmentedSpokenBlock(cut, combo, dl, nr, timing, segPrompts)
+    // segPrompts(세그별 정식 비주얼 프롬프트)가 있으면 그게 이미 block 안에 세그별로 인터리브돼
+    // 있으므로 예전 방식의 통짜 vp(예: 자유 텍스트 [CLIP A]/[CLIP B] 마커)는 중복이라 생략.
+    // 없는 컷(아직 segPrompts로 안 넘어온 기존 컷들)은 기존처럼 vp + 부록 블록 방식 유지.
+    return segPrompts ? `${block}\n` : `${vp.replace(/\s+$/, '')}\n\n${block}\n`
   }
 
   const kind = dl && nr

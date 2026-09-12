@@ -21,7 +21,7 @@ import { postLeaderLog } from './lib/leaderLog.js'
 import { syncEpisodeState } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
-import { ensureDialogueInVP } from '../src/lib/vpDialogue.js'
+import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import * as screenRecorder from '../scripts/screen-recorder.js'
 import puppeteer from 'puppeteer-core'
@@ -5445,8 +5445,9 @@ mcpRouter.get('/video-checklist', (req, res) => {
         videoPrompt: ensureDialogueInVP({
           videoPrompt: c.vp?.trim() || c.videoPrompt?.trim() || '',
           dialogue: c.dialogue, narration: c.narration, duration: c.duration || c.sec, cutType: c.cutType,
-          segments: c.segments,
+          segments: c.segments, segTiming: c.segTiming, segPrompts: c.segPrompts,
         }),
+        segClipPrompts: Array.isArray(c.segments) ? c.segments.map((_, i) => buildSegClipPrompt(c, i)) : null,
         durationTarget: serverCutTargetDuration(c),
         hasImage,                              // 시작 프레임 준비됨
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
@@ -5910,8 +5911,9 @@ app.get('/api/episode-video-checklist', (req, res) => {
         videoPrompt: ensureDialogueInVP({
           videoPrompt: c.videoPrompt || '',
           dialogue: c.dialogue, narration: c.narration, duration: c.duration || c.sec, cutType: c.cutType,
-          segments: c.segments,
+          segments: c.segments, segTiming: c.segTiming, segPrompts: c.segPrompts,
         }),
+        segClipPrompts: Array.isArray(c.segments) ? c.segments.map((_, i) => buildSegClipPrompt(c, i)) : null,
         duration: serverCutTargetDuration(c),   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
         startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,
         startFrameName: startFrame || null,
