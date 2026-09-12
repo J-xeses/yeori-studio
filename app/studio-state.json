@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "editmeta",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3055,8 +3055,8 @@
   },
   "videoSettings": {
     "subtitleEnabled": true,
-    "font": "Apple SD Gothic Neo",
-    "fontSize": 32,
+    "font": "Noto Sans KR",
+    "fontSize": 58,
     "color": "#ffffff",
     "bgStyle": "semi",
     "boxColor": "#000000"
@@ -3127,7 +3127,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-12T11:51:40.300Z",
+  "savedAt": "2026-09-12T13:27:33.553Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3151,11 +3151,25 @@
           "useFullDuration": true,
           "ratio": "9:16"
         }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/e9665848-b55e-421e-8253-6b7830a4a3ae",
+          "name": "cut_02.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9"
+        }
       ]
     },
     "g4Approved": {},
     "selectedCutId": "cut-2",
-    "subtitles": {}
+    "subtitles": {
+      "cut-1": "",
+      "cut-2": "지아 \"야, 야~ 이거 봤어?\" "
+    }
   },
   "ttsTabState": {
     "audioUrls": {},

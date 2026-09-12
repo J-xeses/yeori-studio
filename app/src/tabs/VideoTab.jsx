@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext'
 import JSZip from 'jszip'
 import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { resolveVideoPolicy, VIDEO_MODES } from '../lib/videoPolicy'
+import { resolveVideoPolicy, VIDEO_MODES, contentRatio } from '../lib/videoPolicy'
 import { epMediaUrl } from '../lib/mediaPaths'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
@@ -102,7 +102,9 @@ export default function VideoTab() {
   const textareaRef = useRef(null)
   const [renderLog, setRenderLog] = useState([])
 
-  const [aspectRatio, setAspectRatio] = useState('9:16')
+  // 하드코딩된 '9:16' 기본값이 아니라 에피소드 콘텐츠 유형 기준 실제 비율로 시작
+  // (LF_YU 같은 16:9 유튜브 롱폼 에피소드에서도 항상 9:16으로 뜨던 문제, 2026-09-12 발견).
+  const [aspectRatio, setAspectRatio] = useState(() => contentRatio(episode))
   const [subtitleOpen, setSubtitleOpen] = useState(false)
   const { videoClips = {}, g4Approved = {}, selectedCutId = null, subtitles = {} } = state.videoTabState || {}
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
@@ -125,6 +127,9 @@ export default function VideoTab() {
   // ── 영상 체크리스트 (수동 Veo 제작 대상 컷) ──────────────────────────
   const [vChk, setVChk] = useState(null)
   const [vChkOpen, setVChkOpen] = useState(true)
+  // VP 프롬프트 한 줄 생략(ellipsis) 미리보기 — 복붙하지 않고는 전체를 읽을 방법이 없어서
+  // "프롬프트를 어디서 제대로 보나" 혼란이 있었음(2026-09-12). 클릭하면 그 컷만 전체 펼침.
+  const [expandedVP, setExpandedVP] = useState({})
   const [vUpload, setVUpload] = useState({})   // { [cutNo]: { busy, keepAudio, result } }
   const loadVChk = useCallback(() => {
     const epNum = state.episode?.number
@@ -198,7 +203,9 @@ export default function VideoTab() {
   useEffect(() => {
     const clips = videoClips[selectedCutId] || []
     const first = clips[0]
-    if (!first) return
+    // 이 컷엔 아직 올라온 영상이 없음 — 이전 컷에서 남은 비율 대신 이 에피소드의
+    // 실제 콘텐츠 비율(예: LF_YU=16:9)로 되돌린다(하드코딩 '9:16' 기본값 문제 대응).
+    if (!first) { setAspectRatio(contentRatio(episode)); return }
     if (first.ratio) { setAspectRatio(first.ratio); return }
     // 이 fix 이전에 올라온 클립처럼 ratio가 저장돼 있지 않으면 즉석에서 감지
     let cancelled = false
@@ -888,9 +895,19 @@ export default function VideoTab() {
                               style={{ fontSize:10, fontWeight:700, color:'#c4b5fd', background:'rgba(167,139,250,0.12)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:4, padding:'2px 7px', cursor:'pointer', whiteSpace:'nowrap' }}>
                               VP 복사
                             </button>
-                            <span style={{ fontSize:10.5, color:'#9490a8', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flex:1 }} title={row.videoPrompt}>
-                              {row.videoPrompt.replace(/\n/g, ' ')}
-                            </span>
+                            <button
+                              onClick={() => setExpandedVP(p => ({ ...p, [row.no]: !p[row.no] }))}
+                              title="클릭해서 전체 프롬프트 펼치기/접기"
+                              style={{
+                                fontSize:10.5, color:'#9490a8', background:'none', border:'none', cursor:'pointer',
+                                textAlign:'left', flex:1, padding:0,
+                                ...(expandedVP[row.no]
+                                  ? { whiteSpace:'pre-wrap', wordBreak:'break-word' }
+                                  : { overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }),
+                              }}>
+                              {expandedVP[row.no] ? row.videoPrompt : row.videoPrompt.replace(/\n/g, ' ')}
+                              {!expandedVP[row.no] && <span style={{ color:'#a78bfa', fontWeight:700 }}> ▸ 전체보기</span>}
+                            </button>
                           </div>
                         )}
                         <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', fontSize:10.5, color:'#9490a8' }}>
