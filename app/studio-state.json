@@ -145,7 +145,7 @@
           "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
           "action": "차분하게 설명. 자연스러운 손짓.",
           "character": "서여리",
-          "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…\"",
+          "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -178,7 +178,28 @@
               "ac": "차분하게 설명. 자연스러운 손짓.",
               "md": "분석적이지만 설레는 팬심"
             }
-          }
+          },
+          "segments": [
+            8,
+            8,
+            8
+          ],
+          "segTiming": [
+            [
+              2,
+              6
+            ],
+            null,
+            [
+              1,
+              6
+            ]
+          ],
+          "segPrompts": [
+            "calm analytical expression with slight excitement building in eyes — young Korean woman early-20s, sitting upright on beige sofa facing camera directly, long wavy dark brown hair, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, small face K-model proportions, very subtle natural skin texture on right cheek never exaggerated, effortlessly photogenic not posing just existing beautifully — at seconds 2-6 she begins speaking, lips parting naturally, slight lean forward, right hand lifts gently as if introducing a topic with casual enthusiasm, eyebrows raise softly mid-sentence, mouth forms Korean vowels naturally — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
+            "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
+            "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9"
+          ]
         },
         {
           "id": "cut-4",
@@ -2101,7 +2122,7 @@
       "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
       "action": "차분하게 설명. 자연스러운 손짓.",
       "character": "서여리",
-      "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…\"",
+      "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2134,7 +2155,28 @@
           "ac": "차분하게 설명. 자연스러운 손짓.",
           "md": "분석적이지만 설레는 팬심"
         }
-      }
+      },
+      "segments": [
+        8,
+        8,
+        8
+      ],
+      "segTiming": [
+        [
+          2,
+          6
+        ],
+        null,
+        [
+          1,
+          6
+        ]
+      ],
+      "segPrompts": [
+        "calm analytical expression with slight excitement building in eyes — young Korean woman early-20s, sitting upright on beige sofa facing camera directly, long wavy dark brown hair, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, small face K-model proportions, very subtle natural skin texture on right cheek never exaggerated, effortlessly photogenic not posing just existing beautifully — at seconds 2-6 she begins speaking, lips parting naturally, slight lean forward, right hand lifts gently as if introducing a topic with casual enthusiasm, eyebrows raise softly mid-sentence, mouth forms Korean vowels naturally — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
+        "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
+        "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9"
+      ]
     },
     {
       "id": "cut-4",
@@ -3085,7 +3127,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-12T10:09:57.826Z",
+  "savedAt": "2026-09-12T10:59:35.206Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
