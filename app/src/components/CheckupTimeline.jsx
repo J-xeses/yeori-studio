@@ -5,14 +5,49 @@ const SERVER = 'http://localhost:3001'
 const MIN_CLIP_SEC = 0.2
 const DEFAULT_PX_PER_SEC = 50
 const PX_PER_SEC_RANGE = [10, 300]
+const RULER_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600]
+const RULER_MIN_LABEL_PX = 60
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v))
 const cloneClips = (clips) => clips.map(c => ({ ...c }))
+const fmtTime = (sec) => {
+  const m = Math.floor(sec / 60), ss = Math.floor(sec % 60)
+  return `${m}:${String(ss).padStart(2, '0')}`
+}
 
-// 체크업 탭 "🎬 타임라인 편집"(Tier3, 2026-09-13) — 분할/트림/드래그 재배치/줌/실행취소를 지원하는
-// 미리보기 전용 편집 타임라인. run-cutter.js/editMeta.json(cutNo 1:1, 실제 CapCut 배치용)은
-// 전혀 건드리지 않고, 완전히 분리된 yeori_checkup_timeline.json(서버 /api/checkup-timeline)에만
-// 저장한다 — 분할된 두 조각도 같은 sourceCutNo를 공유해서 cutNo 1:1 가정을 깨지 않는다.
+// 클립 하단에 겹쳐 그리는 오디오 파형 — CapCut처럼 별도 트랙이 아니라 같은 클립 블록 안에 표시.
+// peaks는 sourceCutNo(원본 파일) 전체 기준 배열이라, trimIn/trimOut 비율로 슬라이스해서 그린다.
+function WaveformCanvas({ peaks, trimInSec, trimOutSec, sourceDurationSec, widthPx, heightPx }) {
+  const canvasRef = useRef(null)
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas || !peaks?.length || widthPx <= 0) return
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = Math.max(1, widthPx * dpr)
+    canvas.height = Math.max(1, heightPx * dpr)
+    const ctx = canvas.getContext('2d')
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, widthPx, heightPx)
+    const total = sourceDurationSec || (trimOutSec - trimInSec) || 1
+    const startIdx = Math.max(0, Math.floor((trimInSec / total) * peaks.length))
+    const endIdx = Math.min(peaks.length, Math.ceil((trimOutSec / total) * peaks.length))
+    const slice = peaks.slice(startIdx, endIdx)
+    if (!slice.length) return
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    const barW = widthPx / slice.length
+    slice.forEach((v, i) => {
+      const h = Math.max(1, v * heightPx)
+      ctx.fillRect(i * barW, (heightPx - h) / 2, Math.max(1, barW - 0.4), h)
+    })
+  }, [peaks, trimInSec, trimOutSec, sourceDurationSec, widthPx, heightPx])
+  return <canvas ref={canvasRef} className={s.waveCanvas} style={{ width: widthPx, height: heightPx }} />
+}
+
+// 체크업 탭 "🎬 타임라인 편집"(Tier3~4, 2026-09-13) — 분할/트림/드래그 재배치/삭제/줌/실행취소·
+// 재실행 + 실시간 눈금자 + 오디오 파형을 지원하는 미리보기 전용 편집 타임라인.
+// run-cutter.js/editMeta.json(cutNo 1:1, 실제 CapCut 배치용)은 전혀 건드리지 않고, 완전히
+// 분리된 yeori_checkup_timeline.json(서버 /api/checkup-timeline)에만 저장한다 — 분할된 두
+// 조각도 같은 sourceCutNo를 공유해서 cutNo 1:1 가정을 깨지 않는다.
 //
 // props:
 //   epNum          — 대상 에피소드 번호
@@ -27,7 +62,9 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
   const [saving, setSaving] = useState(false)
   const [selectedClipId, setSelectedClipId] = useState(null)
   const [pxPerSec, setPxPerSec] = useState(DEFAULT_PX_PER_SEC)
-  const [undoStack, setUndoStack] = useState([])   // 로컬 실행취소 이력 — AppContext/저장소에 절대 안 들어감
+  const [undoStack, setUndoStack] = useState([])   // 로컬 실행취소/재실행 이력 — AppContext/저장소에 절대 안 들어감
+  const [redoStack, setRedoStack] = useState([])
+  const [waveforms, setWaveforms] = useState({})   // { [sourceCutNo]: number[] } — 컷당 1번만 fetch
   const latestClipsRef = useRef([])
   const stripRef = useRef(null)
   const saveTimerRef = useRef(null)
@@ -43,6 +80,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
       const d = await r.json()
       setClips((d.clips || []).slice().sort((a, b) => a.order - b.order))
       setUndoStack([])
+      setRedoStack([])
     } catch {
       // 조용히 무시 — 참고용 미리보기 레이어
     } finally {
@@ -51,8 +89,25 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
   }, [epNum])
   useEffect(() => { load() }, [load])
 
+  // 클립이 참조하는 소스 컷의 파형을 컷당 1번만 lazy fetch(트림은 같은 배열을 슬라이스해서 재사용)
+  useEffect(() => {
+    if (epNum == null) return
+    const need = [...new Set(clips.map(c => c.sourceCutNo))].filter(no => !(no in waveforms))
+    need.forEach(async (no) => {
+      try {
+        const r = await fetch(`${SERVER}/api/checkup-waveform?epNum=${epNum}&cutNo=${no}`)
+        const d = await r.json()
+        setWaveforms(prev => ({ ...prev, [no]: d.peaks || [] }))
+      } catch {
+        setWaveforms(prev => ({ ...prev, [no]: [] }))
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clips, epNum])
+
   const pushUndo = useCallback((snapshot) => {
     setUndoStack(prev => [...prev.slice(-29), snapshot])
+    setRedoStack([])   // 새 편집이 생기면 재실행 이력은 무효
   }, [])
 
   const scheduleSave = useCallback((nextClips) => {
@@ -86,9 +141,19 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
     if (!undoStack.length) return
     const snapshot = undoStack[undoStack.length - 1]
     setUndoStack(prev => prev.slice(0, -1))
+    setRedoStack(prev => [...prev.slice(-29), latestClipsRef.current])
     setClips(snapshot)
     scheduleSave(snapshot)
   }, [undoStack, scheduleSave])
+
+  const redo = useCallback(() => {
+    if (!redoStack.length) return
+    const snapshot = redoStack[redoStack.length - 1]
+    setRedoStack(prev => prev.slice(0, -1))
+    setUndoStack(prev => [...prev.slice(-29), latestClipsRef.current])
+    setClips(snapshot)
+    scheduleSave(snapshot)
+  }, [redoStack, scheduleSave])
 
   // 타임라인 배치(순서 기준 누적 오프셋) — 갭 없이 바로 이어붙임(갭은 Tier2 CapCut 배치 전용 기능)
   const positioned = useMemo(() => {
@@ -101,6 +166,15 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
     })
   }, [clips])
   const totalSec = useMemo(() => Math.max(1, positioned.reduce((sum, it) => sum + it.dur, 0)), [positioned])
+
+  const rulerStep = useMemo(() => (
+    RULER_STEPS.find(st => st * pxPerSec >= RULER_MIN_LABEL_PX) || RULER_STEPS[RULER_STEPS.length - 1]
+  ), [pxPerSec])
+  const rulerTicks = useMemo(() => {
+    const ticks = []
+    for (let t = 0; t <= totalSec; t += rulerStep) ticks.push(t)
+    return ticks
+  }, [rulerStep, totalSec])
 
   const playheadSec = useMemo(() => {
     const hit = positioned.find(it => it.sourceCutNo === activeCutNo &&
@@ -224,31 +298,56 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
     })
   }, [selectedClip, activeCutNo, elapsedInActive, commit])
 
+  // ── 삭제(선택 클립 제거) ──────────────────────────────────────────
+  const deleteSelected = useCallback(() => {
+    if (!selectedClip) return
+    const targetId = selectedClip.clipId
+    commit(prev => prev.filter(c => c.clipId !== targetId).map((c, i) => ({ ...c, order: i })))
+    setSelectedClipId(null)
+    onSelectCut?.(null)
+  }, [selectedClip, commit, onSelectCut])
+
   useEffect(() => {
     const onKey = (e) => {
       const tag = document.activeElement?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo() }
-      else if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) { splitAtPlayhead() }
+      const k = e.key.toLowerCase()
+      if ((e.ctrlKey || e.metaKey) && k === 'z' && e.shiftKey) { e.preventDefault(); redo() }
+      else if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo() }
+      else if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); undo() }
+      else if (k === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) { splitAtPlayhead() }
+      else if ((k === 'delete' || k === 'backspace') && selectedClip) { e.preventDefault(); deleteSelected() }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [undo, splitAtPlayhead])
+  }, [undo, redo, splitAtPlayhead, deleteSelected, selectedClip])
 
   const zoomIn = () => setPxPerSec(p => clamp(p * 1.25, PX_PER_SEC_RANGE[0], PX_PER_SEC_RANGE[1]))
   const zoomOut = () => setPxPerSec(p => clamp(p / 1.25, PX_PER_SEC_RANGE[0], PX_PER_SEC_RANGE[1]))
+  const zoomToFit = () => {
+    const w = stripRef.current?.clientWidth || 800
+    setPxPerSec(clamp(w / totalSec, PX_PER_SEC_RANGE[0], PX_PER_SEC_RANGE[1]))
+  }
 
   return (
     <div className={s.wrap}>
       <div className={s.toolbar}>
-        <button className={s.toolbarBtn} onClick={zoomOut} disabled={pxPerSec <= PX_PER_SEC_RANGE[0]} title="축소">🔍−</button>
-        <span className={s.zoomLabel}>{pxPerSec.toFixed(0)}px/s</span>
-        <button className={s.toolbarBtn} onClick={zoomIn} disabled={pxPerSec >= PX_PER_SEC_RANGE[1]} title="확대">🔍+</button>
-        <button className={s.toolbarBtn} onClick={splitAtPlayhead} disabled={!canSplit} title="선택한 클립을 재생헤드 위치에서 분할 (단축키 S)">✂ 분할</button>
-        <button className={s.toolbarBtn} onClick={undo} disabled={!undoStack.length} title="실행취소 (Ctrl+Z)">↩ 실행취소</button>
+        <div className={s.toolbarGroup}>
+          <button className={s.iconBtn} onClick={undo} disabled={!undoStack.length} title="실행취소 (Ctrl+Z)">↩</button>
+          <button className={s.iconBtn} onClick={redo} disabled={!redoStack.length} title="재실행 (Ctrl+Shift+Z)">↪</button>
+          <span className={s.divider} />
+          <button className={s.iconBtn} onClick={splitAtPlayhead} disabled={!canSplit} title="선택한 클립을 재생헤드 위치에서 분할 (단축키 S)">✂</button>
+          <button className={s.iconBtn} onClick={deleteSelected} disabled={!selectedClip} title="선택한 클립 삭제 (Delete)">🗑</button>
+        </div>
         <span className={s.spacer} />
         {saving && <span className={s.savingDot}>저장 중…</span>}
-        <span className={s.hint}>클립 본체 드래그: 순서 변경 · 좌우 끝 드래그: 자르기</span>
+        <div className={s.toolbarGroup}>
+          <button className={s.iconBtn} onClick={zoomOut} disabled={pxPerSec <= PX_PER_SEC_RANGE[0]} title="축소">🔍−</button>
+          <input type="range" className={s.zoomSlider} min={PX_PER_SEC_RANGE[0]} max={PX_PER_SEC_RANGE[1]}
+            value={pxPerSec} onChange={e => setPxPerSec(Number(e.target.value))} title="줌" />
+          <button className={s.iconBtn} onClick={zoomIn} disabled={pxPerSec >= PX_PER_SEC_RANGE[1]} title="확대">🔍+</button>
+          <button className={s.iconBtn} onClick={zoomToFit} title="화면에 맞춤">⛶</button>
+        </div>
       </div>
 
       {!clips.length && !loading && <div className={s.emptyMsg}>완성된 컷이 없어 편집할 클립이 없습니다.</div>}
@@ -256,22 +355,34 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
       {!!clips.length && (
         <div className={s.stripOuter} ref={stripRef} onClick={handleStripClick}>
           <div className={s.stripInner} style={{ width: `${totalSec * pxPerSec}px` }}>
-            {positioned.map(it => {
-              const info = cutsByNo?.[it.sourceCutNo] || {}
-              const isActive = activeCutNo === it.sourceCutNo && elapsedInActive >= it.trimInSec && elapsedInActive < it.trimOutSec + 0.05
-              return (
-                <div key={it.clipId}
-                  className={`${s.clip} ${it.clipId === selectedClipId ? s.selected : ''} ${isActive ? s.activeClip : ''}`}
-                  style={{ left: `${it.start * pxPerSec}px`, width: `${it.dur * pxPerSec}px`, backgroundImage: info.startFrame ? `url(${info.startFrame})` : undefined }}
-                  onMouseDown={(e) => { selectClip(it); startMove(e, it.clipId) }}
-                  title={`CUT ${it.sourceCutNo} · ${it.trimInSec.toFixed(1)}s~${it.trimOutSec.toFixed(1)}s`}>
-                  <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
-                  <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')} />
-                  <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')} />
+            <div className={s.ruler}>
+              {rulerTicks.map(t => (
+                <div key={t} className={s.rulerTick} style={{ left: `${t * pxPerSec}px` }}>
+                  <span className={s.rulerLabel}>{fmtTime(t)}</span>
                 </div>
-              )
-            })}
-            {playheadSec != null && <div className={s.playhead} style={{ left: `${playheadSec * pxPerSec}px` }} />}
+              ))}
+            </div>
+            <div className={s.clipsRow}>
+              {positioned.map(it => {
+                const info = cutsByNo?.[it.sourceCutNo] || {}
+                const isActive = activeCutNo === it.sourceCutNo && elapsedInActive >= it.trimInSec && elapsedInActive < it.trimOutSec + 0.05
+                const widthPx = it.dur * pxPerSec
+                return (
+                  <div key={it.clipId}
+                    className={`${s.clip} ${it.clipId === selectedClipId ? s.selected : ''} ${isActive ? s.activeClip : ''}`}
+                    style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px`, backgroundImage: info.startFrame ? `url(${info.startFrame})` : undefined }}
+                    onMouseDown={(e) => { selectClip(it); startMove(e, it.clipId) }}
+                    title={`CUT ${it.sourceCutNo} · ${it.trimInSec.toFixed(1)}s~${it.trimOutSec.toFixed(1)}s`}>
+                    <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
+                    <WaveformCanvas peaks={waveforms[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
+                      sourceDurationSec={info.actualDurationSec} widthPx={widthPx} heightPx={18} />
+                    <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')} />
+                    <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')} />
+                  </div>
+                )
+              })}
+              {playheadSec != null && <div className={s.playhead} style={{ left: `${playheadSec * pxPerSec}px` }} />}
+            </div>
           </div>
         </div>
       )}

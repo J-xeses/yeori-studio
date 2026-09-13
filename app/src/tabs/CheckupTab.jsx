@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
-import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
-import AspectGuideOverlay from '../components/AspectGuideOverlay'
 import CheckupTimeline from '../components/CheckupTimeline'
-import CheckupEffectsSidebar from '../components/CheckupEffectsSidebar'
+import CheckupSidebar from '../components/CheckupSidebar'
 import { contentRatio } from '../lib/videoPolicy'
 import s from './CheckupTab.module.css'
 
@@ -20,7 +18,7 @@ const FALLBACK_DUR = 8 // duration 필드가 없는 컷의 타임라인 폭 계�
 // 재생헤드(현재 위치 표시, 클릭/드래그로 탐색). 여러 컷이 각각 별개 mp4 파일이라
 // "진짜 하나의 타임라인"은 아니고, 폭·재생헤드 위치는 duration 추정치 기반 근사치.
 export default function CheckupTab() {
-  const { state, dispatch } = useApp()
+  const { state } = useApp()
   const epNum = state.episode?.number
   const [cuts, setCuts] = useState([])
   const [loading, setLoading] = useState(false)
@@ -34,7 +32,6 @@ export default function CheckupTab() {
   const stripRef = useRef(null)
   const pendingSeekRef = useRef(null) // src 교체 후 loadedmetadata에서 적용할 목표 초
   const ratio = contentRatio(state.episode)
-  const show916Guide = !!state.checkupTabState?.show916Guide
 
   const load = useCallback(async () => {
     if (epNum == null) return
@@ -168,49 +165,34 @@ export default function CheckupTab() {
 
   return (
     <div className={s.appOuter}>
-      <TabToolbar />
-      <div className={s.pageOuter}>
-        <EpisodeInfoSidebar maxStage={0} />
-        <div className={s.page}>
-          <div className={s.header}>
-            <div className={s.headerTitle}>
-              ✅ 체크업
-              <span className={s.hint}>메이킹·영상 탭에서 완성된 컷을 순서대로 이어서 검토 — 업로드 전까지 수시로</span>
-            </div>
-            <div className={s.headerActions}>
-              <span className={s.progress}>{playable.length}/{cuts.length}컷 완성</span>
-              {mismatchCount > 0 && (
-                <span className={s.warnBadge} title="대본 목표 길이보다 실제 렌더 파일이 짧은 컷 — 캡컷 배치 시 자동으로 길이가 잘립니다">
-                  ⚠️ 길이 보정 {mismatchCount}개
-                </span>
-              )}
-              <button className={s.refreshBtn} onClick={load} disabled={loading}>
-                {loading ? '불러오는 중…' : '🔄 새로고침'}
-              </button>
-              <button className={`${s.editBtn} ${editMode ? s.editBtnOn : ''}`} onClick={() => setEditMode(v => !v)}>
-                🔧 배치 순서/간격 {editMode ? '편집 중' : '편집'}
-              </button>
-              {ratio === '16:9' && (
-                <button className={`${s.editBtn} ${show916Guide ? s.editBtnOn : ''}`}
-                  onClick={() => dispatch({ type: 'SET_CHECKUP_TAB_STATE', p: { show916Guide: !show916Guide } })}>
-                  📐 9:16 가이드
-                </button>
-              )}
-              <button className={`${s.editBtn} ${timelineEditMode ? s.editBtnOn : ''}`} onClick={() => setTimelineEditMode(v => !v)}>
-                🎬 타임라인 {timelineEditMode ? '편집 중' : '편집'}
-              </button>
-              <button className={s.playAllBtn} onClick={playAll} disabled={!playable.length}>
-                ▶ 전체 이어보기
-              </button>
-            </div>
+      <TabToolbar
+        right={
+          <div className={s.toolbarInfo}>
+            <span className={s.toolbarTitle}>✅ 체크업</span>
+            <span className={s.progress}>{playable.length}/{cuts.length}컷 완성</span>
+            {mismatchCount > 0 && (
+              <span className={s.warnBadge} title="대본 목표 길이보다 실제 렌더 파일이 짧은 컷 — 캡컷 배치 시 자동으로 길이가 잘립니다">
+                ⚠️ 길이 보정 {mismatchCount}개
+              </span>
+            )}
           </div>
-
+        }
+        actions={[
+          { key: 'refresh', label: loading ? '불러오는 중…' : '🔄 새로고침', onClick: load, disabled: loading },
+          { key: 'layout-edit', label: `🔧 배치 순서/간격 ${editMode ? '편집 중' : '편집'}`, onClick: () => setEditMode(v => !v), done: editMode },
+          { key: 'timeline-edit', label: `🎬 타임라인 ${timelineEditMode ? '편집 중' : '편집'}`, onClick: () => setTimelineEditMode(v => !v), done: timelineEditMode },
+          { key: 'play-all', label: '▶ 전체 이어보기', onClick: playAll, disabled: !playable.length, variant: 'accent' },
+        ]}
+      />
+      <div className={s.pageOuter}>
+        <CheckupSidebar cuts={state.cuts} cutsByNo={cutsByNo} selectedCutNo={selectedCutNo}
+          onSelectCut={setSelectedCutNo} onSeek={seekTo} onApplied={load} />
+        <div className={s.page}>
           <div className={s.playerWrap}>
             <div className={s.videoWrapper} style={{ aspectRatio: ratio === '9:16' ? '9/16' : '16/9' }}>
               <div className={s.videoInner}>
                 <video ref={videoRef} controls className={s.player}
                   onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} />
-                {ratio === '16:9' && show916Guide && <AspectGuideOverlay />}
               </div>
             </div>
             {activeCutNo != null && <div className={s.nowPlaying}>재생 중: CUT {activeCutNo}</div>}
@@ -282,7 +264,6 @@ export default function CheckupTab() {
               <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo}
                 activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
                 onSeek={seekTo} onSelectCut={setSelectedCutNo} />
-              <CheckupEffectsSidebar selectedCutNo={selectedCutNo} cutsByNo={cutsByNo} onApplied={load} />
             </div>
           )}
         </div>

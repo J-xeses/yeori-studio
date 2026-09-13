@@ -1,33 +1,46 @@
-.wrap { display: flex; flex-direction: column; gap: 8px; }
-.toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.toolbarBtn {
+.wrap { display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.toolbarGroup { display: flex; align-items: center; gap: 4px; }
+.divider { width: 1px; height: 18px; background: var(--border); margin: 0 2px; }
+.iconBtn {
   background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
-  font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; font-weight: 600; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; line-height: 1;
 }
-.toolbarBtn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
-.toolbarBtn:disabled { opacity: .35; cursor: default; }
-.zoomLabel { font-size: 10.5px; color: var(--text-3); font-family: var(--mono, monospace); min-width: 42px; text-align: center; }
+.iconBtn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+.iconBtn:disabled { opacity: .3; cursor: default; }
+.zoomSlider { width: 90px; accent-color: var(--accent); }
 .savingDot { font-size: 11px; color: var(--accent-light); font-weight: 700; }
 .spacer { flex: 1; }
-.hint { font-size: 10.5px; color: var(--text-3); }
 
 .stripOuter {
-  position: relative; overflow-x: auto; overflow-y: hidden;
-  height: 76px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);
+  position: relative; overflow-x: auto; overflow-y: hidden; flex: 1; min-height: 0;
+  border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);
 }
-.stripInner { position: relative; height: 100%; }
+.stripInner { position: relative; height: 100%; min-height: 100px; }
+
+.ruler { position: relative; height: 22px; border-bottom: 1px solid var(--border); }
+.rulerTick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.08); }
+.rulerLabel {
+  position: absolute; top: 3px; left: 4px; font-size: 9.5px; color: var(--text-3);
+  font-family: var(--mono, monospace); white-space: nowrap;
+}
+
+.clipsRow { position: absolute; top: 22px; left: 0; right: 0; bottom: 0; }
 .clip {
   position: absolute; top: 0; bottom: 0; box-sizing: border-box;
   background-size: cover; background-position: center; background-color: rgba(255,255,255,0.04);
   border: 1px solid rgba(0,0,0,0.5); border-radius: 4px; cursor: grab; user-select: none;
-  display: flex; align-items: flex-end; padding: 3px 5px;
+  overflow: hidden;
 }
 .clip.selected { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 2; }
 .clip.activeClip { outline: 2px solid #22c55e; outline-offset: -2px; z-index: 2; }
 .clipLabel {
-  font-size: 9.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9);
-  font-family: var(--mono, monospace); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  position: absolute; top: 3px; left: 5px; font-size: 9.5px; font-weight: 800; color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-family: var(--mono, monospace);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1;
 }
+.waveCanvas { position: absolute; left: 0; bottom: 0; pointer-events: none; }
 .trimHandle {
   position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 3;
   background: rgba(255,255,255,0.15);

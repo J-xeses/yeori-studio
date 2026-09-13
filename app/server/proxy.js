@@ -23,6 +23,7 @@ import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
 import { runSts, resolveVoice } from './lib/sts.js'
+import { getWaveformPeaks } from './lib/waveform.js'
 
 // TTS 탭 "캐릭터 목소리 미세조정"(state.ttsSettings.speakerSettings)에서 이 캐릭터의 안정성·
 // 유사도 튜닝을 찾는다 — resolveVoice()의 speakerVoices 느슨 매칭(별칭 포함)과 같은 방식.
@@ -1312,6 +1313,25 @@ app.post('/api/checkup-timeline', (req, res) => {
     fs.mkdirSync(path.dirname(tlPath), { recursive: true })
     fs.writeFileSync(tlPath, JSON.stringify(all, null, 2), 'utf-8')
     res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/checkup-waveform — 체크업 타임라인 클립 오디오 파형(Tier4) ──
+// cutNo 소스 파일(cut_NN.mp4) 기준 파형 — 트림된 조각들은 프론트에서 같은 배열을
+// trimIn/trimOut 비율로 슬라이스해서 재사용(서버는 컷당 1번만 계산).
+app.get('/api/checkup-waveform', (req, res) => {
+  const { epNum, cutNo } = req.query
+  if (!epNum || !cutNo) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const videoDir = mp.videoDir(epNum)
+    const files = fs.readdirSync(videoDir)
+    const p = String(cutNo).padStart(2, '0')
+    const savedFile = files.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+    if (!savedFile) return res.status(404).json({ error: `cut_${p}.mp4 없음` })
+    const { peaks, ok } = getWaveformPeaks(path.join(videoDir, savedFile))
+    res.json({ peaks, ok })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
