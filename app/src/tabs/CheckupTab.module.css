@@ -34,6 +34,30 @@
 .videoInner { width: 100%; height: 100%; position: relative; }
 .player { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .player:not([src]) { display: none; }
+
+/* 자막 오버레이 — VideoTab에서 입력한 텍스트/스타일을 그대로 재사용해 표시만 함
+   (2026-09-13). pointer-events:none이라 아래 컨트롤바 클릭을 절대 방해 안 함. */
+.captionOverlay {
+  position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
+  max-width: 86%; text-align: center; white-space: pre-wrap; line-height: 1.4;
+  padding: 6px 14px; border-radius: 4px; pointer-events: none; font-weight: 700;
+}
+.captionShadow { text-shadow: 0 2px 5px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,0.9); }
+
+/* 네이티브 video controls 대신 화면 아래로 분리한 커스텀 컨트롤바(2026-09-13, 사용자 지적:
+   자막이 들어가면 네이티브 컨트롤바와 겹칠 수 있어 아예 프레임 밖으로 분리) */
+.customControls {
+  width: 100%; max-width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 6px 4px; box-sizing: border-box;
+}
+.ctrlBtn {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
+  font-size: 13px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ctrlBtn:hover { background: rgba(255,255,255,0.12); }
+.ctrlTime { font-size: 11px; color: var(--text-3); font-family: var(--mono, monospace); white-space: nowrap; flex-shrink: 0; }
+.ctrlSeek { flex: 1; accent-color: var(--accent); }
 /* 타임라인 편집기 — 예전 읽기전용 필름스트립("타임라인 위 영상 라인")과 "배치 순서/간격"
    카드 UI는 여기 안에서 다 할 수 있는 기능과 중복이라 삭제(2026-09-13, 사용자 지적) —
    이제 이 컴포넌트 하나만 상시 표시. 상단 행보다 비중을 더 줘서 아래로 내려 배치. */
