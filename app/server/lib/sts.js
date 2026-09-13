@@ -19,7 +19,7 @@ const STS_MODEL = 'eleven_multilingual_sts_v2'
 
 function run(cmd, args, onLog) {
   return new Promise((resolve, reject) => {
-    const p = spawn(cmd, args)
+    const p = spawn(cmd, args, { windowsHide: true })
     let err = ''
     p.stdout.on('data', (c) => onLog?.(c.toString().trim()))
     p.stderr.on('data', (c) => { const s = c.toString(); err += s; onLog?.(s.trim()) })
@@ -84,7 +84,7 @@ export async function runSts({ epNum, cutNo, voiceId, apiKey, onLog, charTag = '
     let out = ''
     const pp = spawn(FFMPEG.replace(/ffmpeg(\.exe)?$/i, 'ffprobe$1'), [
       '-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', videoPath,
-    ])
+    ], { windowsHide: true })
     pp.stdout.on('data', (c) => { out += c })
     pp.on('close', () => resolve(out.trim()))
     pp.on('error', () => resolve('?'))

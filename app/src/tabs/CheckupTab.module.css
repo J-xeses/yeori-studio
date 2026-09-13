@@ -15,7 +15,7 @@
 /* 상단 행 — 목업 배치 고정(2026-09-13): 좌측은 추후반영 빈 영역, 플레이어는 우측 고정.
    플레이어가 화면 전체 폭을 안 쓰니 세로로는 오히려 더 키울 수 있고, 그만큼 아래
    타임라인에 높이를 더 배분한다(사용자: "화면비율 확대 + 좌측 영역 확보가 가능"). */
-.mainRow { display: flex; flex: 7; min-height: 0; }
+.mainRow { display: flex; flex: 8; min-height: 0; }
 .futureArea {
   flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
   border-right: 1px dashed var(--border); padding: 20px; box-sizing: border-box;
@@ -29,7 +29,7 @@
 .videoWrapper {
   position: relative; background: #000; border-radius: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  max-height: 72vh; max-width: 100%;
+  max-height: 84vh; max-width: 100%;
 }
 .videoInner { width: 100%; height: 100%; position: relative; }
 .player { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
@@ -62,8 +62,8 @@
    카드 UI는 여기 안에서 다 할 수 있는 기능과 중복이라 삭제(2026-09-13, 사용자 지적) —
    이제 이 컴포넌트 하나만 상시 표시. 상단 행보다 비중을 더 줘서 아래로 내려 배치. */
 .timelineEditorWrap {
-  flex: 3; min-height: 230px; border-top: 1px solid var(--border);
-  padding: 12px 16px; box-sizing: border-box; overflow: hidden;
+  flex: 3; min-height: 208px; border-top: 1px solid var(--border);
+  padding: 10px 16px; box-sizing: border-box; overflow: hidden;
 }
 .nowPlaying { font-size: 12px; font-weight: 700; color: var(--accent-light); }
 .playerEmpty { font-size: 13px; color: var(--text-3); text-align: center; max-width: 360px; }

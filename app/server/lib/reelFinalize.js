@@ -299,7 +299,7 @@ export function decideCut(cut) {
 function ff(args, opts = {}) {
   return new Promise((resolve, reject) => {
     // -y 필수 — 없으면 출력 파일이 이미 있을 때 "Overwrite? [y/N]" 프롬프트에서 영구 정지한다.
-    const p = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: ['ignore', 'ignore', 'pipe'], ...opts })
+    const p = spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', ...args], { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true, ...opts })
     let err = ''
     p.stderr.on('data', (d) => { err += d.toString() })
     p.on('error', reject)
@@ -308,7 +308,7 @@ function ff(args, opts = {}) {
 }
 function ffprobeDuration(file) {
   return new Promise((resolve) => {
-    const p = spawn('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file])
+    const p = spawn('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file], { windowsHide: true })
     let out = ''
     p.stdout.on('data', (d) => { out += d.toString() })
     p.on('close', () => resolve(parseFloat(out.trim()) || 0))
@@ -319,7 +319,7 @@ function ffprobeDuration(file) {
 const HW_OVERLAY_PY = path.join(__dirname, '..', '..', 'scripts', 'handwriting_overlay.py')
 function runPy(args, opts = {}) {
   return new Promise((resolve) => {
-    const p = spawn('python', args, { cwd: path.dirname(HW_OVERLAY_PY), stdio: ['ignore', 'pipe', 'pipe'], ...opts })
+    const p = spawn('python', args, { cwd: path.dirname(HW_OVERLAY_PY), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true, ...opts })
     let out = '', err = ''
     p.stdout.on('data', (d) => { out += d.toString() })
     p.stderr.on('data', (d) => { err += d.toString() })

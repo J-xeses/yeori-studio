@@ -197,7 +197,7 @@ export function probeMedia(filePath, isVideo = true) {
       '-v', 'error', '-select_streams', 'v:0',
       '-show_entries', 'stream=width,height:format=duration',
       '-of', 'json', filePath,
-    ], { encoding: 'utf-8' })
+    ], { encoding: 'utf-8', windowsHide: true })
     const info = JSON.parse(out)
     const stream = info.streams?.[0] || {}
     const durationSec = Number(info.format?.duration)

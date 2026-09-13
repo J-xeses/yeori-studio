@@ -19,7 +19,7 @@ function extractPeaks(filePath) {
   const buf = execFileSync(FFMPEG, [
     '-v', 'error', '-i', filePath,
     '-ac', '1', '-ar', String(SAMPLE_RATE), '-f', 's16le', '-acodec', 'pcm_s16le', '-',
-  ], { maxBuffer: 1024 * 1024 * 100 })
+  ], { maxBuffer: 1024 * 1024 * 100, windowsHide: true })
   const samples = buf.length / 2
   if (samples === 0) return new Array(PEAK_COUNT).fill(0)
   const bucketSize = Math.max(1, Math.floor(samples / PEAK_COUNT))

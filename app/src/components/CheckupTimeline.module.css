@@ -17,7 +17,7 @@
   position: relative; overflow-x: auto; overflow-y: hidden; flex: 1; min-height: 0;
   border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);
 }
-.stripInner { position: relative; display: flex; flex-direction: column; min-height: 116px; }
+.stripInner { position: relative; display: flex; flex-direction: column; min-height: 122px; }
 
 .ruler { position: relative; height: 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .rulerTick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.08); }
@@ -48,7 +48,7 @@
 
 /* 오디오 파형 전용 라인 — 클립 썸네일과 겹쳐서 안 보이던 문제 수정(2026-09-13).
    컷 경계마다 배경을 교차(보라/청록 틴트)시켜 어느 구간이 어느 컷인지 구분되게 함. */
-.waveRow { position: relative; height: 32px; flex-shrink: 0; border-top: 1px solid var(--border); background: rgba(12, 10, 24, 0.6); overflow: hidden; }
+.waveRow { position: relative; height: 42px; flex-shrink: 0; border-top: 1px solid var(--border); background: rgba(12, 10, 24, 0.6); overflow: hidden; }
 .waveBlock {
   position: absolute; top: 0; bottom: 0; box-sizing: border-box;
   background: rgba(139, 92, 246, 0.16); border-right: 1px solid rgba(0,0,0,0.4);

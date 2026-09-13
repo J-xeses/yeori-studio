@@ -435,7 +435,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
                     className={`${s.waveBlock} ${idx % 2 ? s.waveBlockOdd : ''} ${it.clipId === selectedClipId ? s.waveBlockSelected : ''}`}
                     style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px` }}>
                     <WaveformCanvas peaks={waveforms[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
-                      sourceDurationSec={info.actualDurationSec} widthPx={widthPx} heightPx={26} />
+                      sourceDurationSec={info.actualDurationSec} widthPx={widthPx} heightPx={34} />
                   </div>
                 )
               })}

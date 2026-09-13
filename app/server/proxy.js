@@ -235,7 +235,7 @@ app.post('/api/free-tts', async (req, res) => {
 // ── FFmpeg 실행 헬퍼 ──────────────────────────────────────────────
 function runFFmpegCmd(args, logPath) {
   return new Promise(resolve => {
-    const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] })
+    const proc = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true })
     const logStream = logPath ? createWriteStream(logPath) : null
     proc.stderr.on('data', d => logStream?.write(d))
     proc.on('close', code => { logStream?.end(); resolve(code) })
@@ -2611,7 +2611,7 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-g', '60', '-movflags', '+faststart',
       finalPath,
     )
-    const proc = spawn('ffmpeg', args)
+    const proc = spawn('ffmpeg', args, { windowsHide: true })
     proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 편집 종료 코드 ${code}`)))
     proc.on('error', reject)
   })
@@ -2777,7 +2777,7 @@ async function assembleMakingFilm(epNum) {
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast',
       '-c:a', 'aac', '-b:a', '128k',
       outFile,
-    ])
+    ], { windowsHide: true })
     proc.stderr.on('data', d => { errBuf += d.toString() })
     proc.on('close', c => { if (c !== 0) console.error('[making-assemble]', errBuf.slice(-300)); resolve(c) })
     proc.on('error', () => resolve(1))
@@ -3078,7 +3078,7 @@ function ffmpegGrabToFile(mediaUrl, outPath, seconds) {
     if (copyCodec) args.push('-c', 'copy', '-bsf:a', 'aac_adtstoasc')
     else args.push('-c:v', 'libx264', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-c:a', 'aac')
     args.push('-movflags', '+faststart', outPath)
-    const proc = spawn('ffmpeg', args)
+    const proc = spawn('ffmpeg', args, { windowsHide: true })
     let err = ''
     proc.stderr.on('data', (d) => { err += d.toString() })
     proc.on('error', reject)
@@ -3191,7 +3191,7 @@ function s2cImageVf(fit, motion, dur, fps = 30, w = S2C_W, h = S2C_H) {
 
 function runFfmpeg(args) {
   return new Promise((resolve, reject) => {
-    const proc = spawn('ffmpeg', args)
+    const proc = spawn('ffmpeg', args, { windowsHide: true })
     let err = ''
     proc.stderr.on('data', d => { err += d.toString() })
     proc.on('error', reject)
@@ -3730,7 +3730,7 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
         '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '30', '-g', '30',
         '-movflags', '+faststart',
         videoPath,
-      ])
+      ], { windowsHide: true })
       proc.on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg 종료 코드 ${code}`)))
       proc.on('error', reject)
     })
@@ -3976,7 +3976,7 @@ app.post('/api/run-ffmpeg', (req, res) => {
     resolvePath: (p) => path.isAbsolute(p) ? p : path.join(mp.DOWNLOADS, p),
   })
 
-  const proc = spawn('ffmpeg', args)
+  const proc = spawn('ffmpeg', args, { windowsHide: true })
   let errBuf = ''
 
   proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
@@ -5456,7 +5456,7 @@ app.post('/api/making-bgm', async (req, res) => {
         '-c:v', 'copy', '-c:a', 'aac', '-b:a', '160k',
         '-t', `${(dur || 0).toFixed(3)}`,
         outputPath,
-      ])
+      ], { windowsHide: true })
       proc.stderr.on('data', d => { errBuf += d.toString() })
       proc.on('close', c => { if (c !== 0) console.error('[making-bgm]', errBuf.slice(-500)); resolve(c) })
       proc.on('error', () => resolve(1))
@@ -6207,7 +6207,7 @@ app.post('/api/upload-cut-video', (req, res) => {
     if (keepAudio === '1') args.push('-c:a', 'aac', '-b:a', '192k')
     else args.push('-an')
     args.push(outPath)
-    const proc = spawn('ffmpeg', args)
+    const proc = spawn('ffmpeg', args, { windowsHide: true })
     let err = ''
     proc.stderr.on('data', d => { err += d.toString() })
     proc.on('close', code => {
@@ -7895,7 +7895,7 @@ async function downloadBrollCut({ epNum, cutNo, videoUrl, duration }) {
         finalPath,
       )
       let errBuf = ''
-      const proc = spawn('ffmpeg', args)
+      const proc = spawn('ffmpeg', args, { windowsHide: true })
       proc.stderr.on('data', d => { errBuf += d.toString() })
       proc.on('close', code => code === 0
         ? resolve()

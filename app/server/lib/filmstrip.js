@@ -41,7 +41,7 @@ export function getFilmstripFrames(filePath) {
       '-v', 'error', '-i', filePath,
       '-vf', 'fps=1,scale=240:-1',
       '-q:v', '5', path.join(dir, 'frame_%03d.jpg'),
-    ], { maxBuffer: 1024 * 1024 * 50 })
+    ], { maxBuffer: 1024 * 1024 * 50, windowsHide: true })
     const frameNames = fs.readdirSync(dir).filter(f => /^frame_\d+\.jpg$/.test(f)).sort()
     fs.writeFileSync(metaPath, JSON.stringify({ srcMtimeMs, frames: frameNames }), 'utf-8')
     return { frames: frameNames.map(f => path.join(dir, f)), ok: frameNames.length > 0 }
