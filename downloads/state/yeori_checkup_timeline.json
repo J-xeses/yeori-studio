@@ -1,0 +1,97 @@
+{
+  "1": {
+    "updatedAt": "2026-09-13T06:46:56.798Z",
+    "clips": [
+      {
+        "clipId": "c-1-01-a",
+        "sourceCutNo": 1,
+        "sourceFile": "cut_01.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 3,
+        "effect": null,
+        "order": 0
+      },
+      {
+        "clipId": "c-1-02-a",
+        "sourceCutNo": 2,
+        "sourceFile": "cut_02.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 10.005,
+        "effect": null,
+        "order": 1
+      },
+      {
+        "clipId": "c-1-03-a",
+        "sourceCutNo": 3,
+        "sourceFile": "cut_03.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 8,
+        "effect": null,
+        "order": 2
+      },
+      {
+        "clipId": "c-1-04-a",
+        "sourceCutNo": 4,
+        "sourceFile": "cut_04.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 10,
+        "effect": null,
+        "order": 3
+      },
+      {
+        "clipId": "c-1-06-a",
+        "sourceCutNo": 6,
+        "sourceFile": "cut_06.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 10,
+        "effect": null,
+        "order": 4
+      },
+      {
+        "clipId": "c-1-08-a",
+        "sourceCutNo": 8,
+        "sourceFile": "cut_08.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 10,
+        "effect": null,
+        "order": 5
+      },
+      {
+        "clipId": "c-1-10-a",
+        "sourceCutNo": 10,
+        "sourceFile": "cut_10.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 8,
+        "effect": null,
+        "order": 6
+      },
+      {
+        "clipId": "c-1-14-a",
+        "sourceCutNo": 14,
+        "sourceFile": "cut_14.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 10,
+        "effect": null,
+        "order": 7
+      },
+      {
+        "clipId": "c-1-19-a",
+        "sourceCutNo": 19,
+        "sourceFile": "cut_19.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 8,
+        "effect": null,
+        "order": 8
+      },
+      {
+        "clipId": "c-1-22-a",
+        "sourceCutNo": 22,
+        "sourceFile": "cut_22.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 5,
+        "effect": null,
+        "order": 9
+      }
+    ]
+  }
+}

@@ -106,7 +106,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
     const hit = positioned.find(it => it.sourceCutNo === activeCutNo &&
       elapsedInActive >= it.trimInSec && elapsedInActive < it.trimOutSec + 0.05)
     if (!hit) return null
-    return hit.start + Math.max(0, elapsedInActive - it.trimInSec)
+    return hit.start + Math.max(0, elapsedInActive - hit.trimInSec)
   }, [positioned, activeCutNo, elapsedInActive])
 
   const selectedClip = clips.find(c => c.clipId === selectedClipId) || null
