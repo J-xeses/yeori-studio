@@ -26,7 +26,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 0
+    "order": 0,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "02",
@@ -54,7 +55,8 @@
     "script": "",
     "dialogue": "지아 \"야, 야~ 이거 봤어?\" ||",
     "narration": "",
-    "order": 1
+    "order": 1,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "03",
@@ -66,7 +68,10 @@
     "duration": 25,
     "type": "일반",
     "cutType": "YEORI",
-    "editIntent": null,
+    "editIntent": {
+      "kenburns": "leftToRight",
+      "source": "checkup-manual"
+    },
     "SH": "SH_MCU",
     "CA": "CA_ST",
     "AT": "자연스러운 설명 손짓",
@@ -113,7 +118,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 3
+    "order": 3,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "05",
@@ -142,7 +148,8 @@
     "script": "",
     "dialogue": "”ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지?...... 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?“",
     "narration": "",
-    "order": 4
+    "order": 4,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "06",
@@ -171,7 +178,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 5
+    "order": 5,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "07",
@@ -200,7 +208,8 @@
     "script": "",
     "dialogue": "\"KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~  LA 베이스. 경계 자체가 없는 세계관!\"",
     "narration": "",
-    "order": 6
+    "order": 6,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "08",
@@ -229,7 +238,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 7
+    "order": 7,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "09",
@@ -258,7 +268,8 @@
     "script": "",
     "dialogue": "\"근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?\"",
     "narration": "",
-    "order": 8
+    "order": 8,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "10",
@@ -287,7 +298,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 9
+    "order": 9,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "11",
@@ -316,7 +328,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 10
+    "order": 10,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "12",
@@ -345,7 +358,8 @@
     "script": "",
     "dialogue": "\"…중독이에요…\"",
     "narration": "",
-    "order": 11
+    "order": 11,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "13",
@@ -374,7 +388,8 @@
     "script": "",
     "dialogue": "\"근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...\"",
     "narration": "",
-    "order": 12
+    "order": 12,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "14",
@@ -403,7 +418,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 13
+    "order": 13,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "15",
@@ -432,7 +448,8 @@
     "script": "",
     "dialogue": "한지아 \"야 그냥 좋잖아!!\" / 서여리 \"…맞아...\"",
     "narration": "",
-    "order": 14
+    "order": 14,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "16",
@@ -461,7 +478,8 @@
     "script": "",
     "dialogue": "",
     "narration": "\"근데 있잖아요… 좋은 거잖아요, 그냥!\"",
-    "order": 15
+    "order": 15,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "17",
@@ -490,7 +508,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 16
+    "order": 16,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "18",
@@ -519,7 +538,8 @@
     "script": "",
     "dialogue": "\"저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
     "narration": "",
-    "order": 17
+    "order": 17,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "19",
@@ -548,7 +568,8 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 18
+    "order": 18,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "20",
@@ -577,7 +598,8 @@
     "script": "",
     "dialogue": "\"실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...\"",
     "narration": "",
-    "order": 19
+    "order": 19,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "21",
@@ -606,7 +628,8 @@
     "script": "",
     "dialogue": "한지아 \"여러분 픽은 뭐예요?\" / 서여리 \"댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!\"",
     "narration": "",
-    "order": 20
+    "order": 20,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "22",
@@ -635,6 +658,7 @@
     "script": "",
     "dialogue": "",
     "narration": "",
-    "order": 21
+    "order": 21,
+    "gapAfterSec": 0
   }
 ]

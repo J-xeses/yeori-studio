@@ -3127,7 +3127,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-13T06:43:00.394Z",
+  "savedAt": "2026-09-13T08:04:53.973Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3665,7 +3665,7 @@
     "imageRatio": {}
   },
   "checkupTabState": {
-    "show916Guide": true,
+    "show916Guide": false,
     "timelinePxPerSec": null,
     "selectedClipId": null
   }
