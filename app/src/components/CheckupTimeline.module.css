@@ -17,16 +17,16 @@
   position: relative; overflow-x: auto; overflow-y: hidden; flex: 1; min-height: 0;
   border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);
 }
-.stripInner { position: relative; height: 100%; min-height: 100px; }
+.stripInner { position: relative; display: flex; flex-direction: column; min-height: 116px; }
 
-.ruler { position: relative; height: 22px; border-bottom: 1px solid var(--border); }
+.ruler { position: relative; height: 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .rulerTick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.08); }
 .rulerLabel {
   position: absolute; top: 3px; left: 4px; font-size: 9.5px; color: var(--text-3);
   font-family: var(--mono, monospace); white-space: nowrap;
 }
 
-.clipsRow { position: absolute; top: 22px; left: 0; right: 0; bottom: 0; }
+.clipsRow { position: relative; height: 58px; flex-shrink: 0; }
 .clip {
   position: absolute; top: 0; bottom: 0; box-sizing: border-box;
   background-size: cover; background-position: center; background-color: rgba(255,255,255,0.04);
@@ -40,7 +40,23 @@
   text-shadow: 0 1px 3px rgba(0,0,0,0.9); font-family: var(--mono, monospace);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; z-index: 1;
 }
-.waveCanvas { position: absolute; left: 0; bottom: 0; pointer-events: none; }
+/* 실제 영상 1초 간격 스틸컷 나열(2026-09-13) — 이미지 1장을 늘려 쓰면 넓은 클립에서
+   장면 구별이 안 된다는 피드백으로 교체. 프레임을 균등폭 flex로 나열. */
+.filmstrip { position: absolute; inset: 0; display: flex; }
+.filmstripImg { height: 100%; flex: 1 1 0; min-width: 0; object-fit: cover; display: block; }
+.filmstripFallback { position: absolute; inset: 0; background-size: cover; background-position: center; }
+
+/* 오디오 파형 전용 라인 — 클립 썸네일과 겹쳐서 안 보이던 문제 수정(2026-09-13).
+   컷 경계마다 배경을 교차(보라/청록 틴트)시켜 어느 구간이 어느 컷인지 구분되게 함. */
+.waveRow { position: relative; height: 32px; flex-shrink: 0; border-top: 1px solid var(--border); background: rgba(12, 10, 24, 0.6); overflow: hidden; }
+.waveBlock {
+  position: absolute; top: 0; bottom: 0; box-sizing: border-box;
+  background: rgba(139, 92, 246, 0.16); border-right: 1px solid rgba(0,0,0,0.4);
+}
+.waveBlockOdd { background: rgba(56, 189, 248, 0.12); }
+.waveBlockSelected { background: rgba(167, 139, 250, 0.32); }
+.waveCanvas { position: absolute; left: 0; top: 50%; transform: translateY(-50%); pointer-events: none; }
+
 .trimHandle {
   position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 3;
   background: rgba(255,255,255,0.15);

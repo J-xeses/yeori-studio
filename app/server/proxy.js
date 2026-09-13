@@ -24,6 +24,7 @@ import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import { getWaveformPeaks } from './lib/waveform.js'
+import { getFilmstripFrames } from './lib/filmstrip.js'
 
 // TTS 탭 "캐릭터 목소리 미세조정"(state.ttsSettings.speakerSettings)에서 이 캐릭터의 안정성·
 // 유사도 튜닝을 찾는다 — resolveVoice()의 speakerVoices 느슨 매칭(별칭 포함)과 같은 방식.
@@ -1332,6 +1333,26 @@ app.get('/api/checkup-waveform', (req, res) => {
     if (!savedFile) return res.status(404).json({ error: `cut_${p}.mp4 없음` })
     const { peaks, ok } = getWaveformPeaks(path.join(videoDir, savedFile))
     res.json({ peaks, ok })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/checkup-filmstrip — 체크업 타임라인 클립 실제 프레임 스냅샷(Tier5) ──
+// startFrame(G2 승인 이미지 1장)을 늘려서 배경으로 쓰면 클립이 넓어질수록 장면 변화를
+// 구별할 수 없다는 피드백(2026-09-13) — cutNo 소스 파일에서 1초 간격 프레임을 실제로 뽑아
+// URL 배열로 반환. 트림된 조각은 프론트에서 같은 배열을 trimIn/trimOut 비율로 슬라이스.
+app.get('/api/checkup-filmstrip', (req, res) => {
+  const { epNum, cutNo } = req.query
+  if (!epNum || !cutNo) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const videoDir = mp.videoDir(epNum)
+    const files = fs.readdirSync(videoDir)
+    const p = String(cutNo).padStart(2, '0')
+    const savedFile = files.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+    if (!savedFile) return res.status(404).json({ error: `cut_${p}.mp4 없음` })
+    const { frames, ok } = getFilmstripFrames(path.join(videoDir, savedFile))
+    res.json({ frames: frames.map(f => `http://localhost:3001${mp.toMediaUrl(f)}`), ok })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

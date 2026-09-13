@@ -15,32 +15,57 @@ const fmtTime = (sec) => {
   return `${m}:${String(ss).padStart(2, '0')}`
 }
 
-// 클립 하단에 겹쳐 그리는 오디오 파형 — CapCut처럼 별도 트랙이 아니라 같은 클립 블록 안에 표시.
-// peaks는 sourceCutNo(원본 파일) 전체 기준 배열이라, trimIn/trimOut 비율로 슬라이스해서 그린다.
+// 파형 전용 행(waveRow)에 그리는 오디오 파형 — 클립 썸네일과 겹치면 거의 안 보인다는
+// 피드백(2026-09-13)으로 클립 블록과 분리된 독립 라인으로 옮김. 배경/막대 색을 뚜렷한
+// 대비색으로 줘서 한눈에 구분되게 한다. peaks는 sourceCutNo(원본 파일) 전체 기준 배열이라,
+// trimIn/trimOut 비율로 슬라이스해서 그린다.
 function WaveformCanvas({ peaks, trimInSec, trimOutSec, sourceDurationSec, widthPx, heightPx }) {
   const canvasRef = useRef(null)
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas || !peaks?.length || widthPx <= 0) return
+    if (!canvas || widthPx <= 0) return
     const dpr = window.devicePixelRatio || 1
     canvas.width = Math.max(1, widthPx * dpr)
     canvas.height = Math.max(1, heightPx * dpr)
     const ctx = canvas.getContext('2d')
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, widthPx, heightPx)
+    if (!peaks?.length) return
     const total = sourceDurationSec || (trimOutSec - trimInSec) || 1
     const startIdx = Math.max(0, Math.floor((trimInSec / total) * peaks.length))
     const endIdx = Math.min(peaks.length, Math.ceil((trimOutSec / total) * peaks.length))
     const slice = peaks.slice(startIdx, endIdx)
     if (!slice.length) return
-    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.fillStyle = '#22d3ee'   // 밝은 청록 — 어두운 파형 라인 배경 위에서 뚜렷이 대비
+    const mid = heightPx / 2
     const barW = widthPx / slice.length
     slice.forEach((v, i) => {
-      const h = Math.max(1, v * heightPx)
-      ctx.fillRect(i * barW, (heightPx - h) / 2, Math.max(1, barW - 0.4), h)
+      const h = Math.max(1.5, v * heightPx)
+      ctx.fillRect(i * barW, mid - h / 2, Math.max(1, barW - 0.4), h)
     })
   }, [peaks, trimInSec, trimOutSec, sourceDurationSec, widthPx, heightPx])
   return <canvas ref={canvasRef} className={s.waveCanvas} style={{ width: widthPx, height: heightPx }} />
+}
+
+// 클립 안에 실제 영상 스틸컷을 1초 간격으로 나열 — startFrame(이미지 1장)을 늘려서 배경으로
+// 쓰면 클립이 넓을수록 장면 변화를 구별할 수 없다는 피드백(2026-09-13)으로 추가. frames는
+// sourceCutNo 전체 기준 1초 간격 프레임 URL 배열이라, trimIn/trimOut 비율로 슬라이스해서
+// 그 구간에 해당하는 프레임만 균등폭으로 나열한다.
+function FilmstripThumbs({ frames, trimInSec, trimOutSec, sourceDurationSec, fallbackImage }) {
+  if (!frames?.length) {
+    return fallbackImage ? <div className={s.filmstripFallback} style={{ backgroundImage: `url(${fallbackImage})` }} /> : null
+  }
+  const total = sourceDurationSec || trimOutSec || frames.length
+  const frameDur = total / frames.length
+  const startIdx = clamp(Math.floor(trimInSec / frameDur), 0, frames.length - 1)
+  const endIdx = clamp(Math.ceil(trimOutSec / frameDur), startIdx + 1, frames.length)
+  const slice = frames.slice(startIdx, endIdx)
+  if (!slice.length) return null
+  return (
+    <div className={s.filmstrip}>
+      {slice.map((url, i) => <img key={i} src={url} className={s.filmstripImg} draggable={false} alt="" />)}
+    </div>
+  )
 }
 
 // 체크업 탭 "🎬 타임라인 편집"(Tier3~4, 2026-09-13) — 분할/트림/드래그 재배치/삭제/줌/실행취소·
@@ -65,6 +90,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
   const [undoStack, setUndoStack] = useState([])   // 로컬 실행취소/재실행 이력 — AppContext/저장소에 절대 안 들어감
   const [redoStack, setRedoStack] = useState([])
   const [waveforms, setWaveforms] = useState({})   // { [sourceCutNo]: number[] } — 컷당 1번만 fetch
+  const [filmstrips, setFilmstrips] = useState({}) // { [sourceCutNo]: string[] } — 1초 간격 프레임 URL, 컷당 1번만 fetch
   const latestClipsRef = useRef([])
   const stripRef = useRef(null)
   const saveTimerRef = useRef(null)
@@ -100,6 +126,22 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
         setWaveforms(prev => ({ ...prev, [no]: d.peaks || [] }))
       } catch {
         setWaveforms(prev => ({ ...prev, [no]: [] }))
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clips, epNum])
+
+  // 클립이 참조하는 소스 컷의 1초 간격 스틸컷도 컷당 1번만 lazy fetch
+  useEffect(() => {
+    if (epNum == null) return
+    const need = [...new Set(clips.map(c => c.sourceCutNo))].filter(no => !(no in filmstrips))
+    need.forEach(async (no) => {
+      try {
+        const r = await fetch(`${SERVER}/api/checkup-filmstrip?epNum=${epNum}&cutNo=${no}`)
+        const d = await r.json()
+        setFilmstrips(prev => ({ ...prev, [no]: d.frames || [] }))
+      } catch {
+        setFilmstrips(prev => ({ ...prev, [no]: [] }))
       }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -370,19 +412,35 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
                 return (
                   <div key={it.clipId}
                     className={`${s.clip} ${it.clipId === selectedClipId ? s.selected : ''} ${isActive ? s.activeClip : ''}`}
-                    style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px`, backgroundImage: info.startFrame ? `url(${info.startFrame})` : undefined }}
+                    style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px` }}
                     onMouseDown={(e) => { selectClip(it); startMove(e, it.clipId) }}
                     title={`CUT ${it.sourceCutNo} · ${it.trimInSec.toFixed(1)}s~${it.trimOutSec.toFixed(1)}s`}>
+                    <FilmstripThumbs frames={filmstrips[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
+                      sourceDurationSec={info.actualDurationSec} fallbackImage={info.startFrame} />
                     <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
-                    <WaveformCanvas peaks={waveforms[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
-                      sourceDurationSec={info.actualDurationSec} widthPx={widthPx} heightPx={18} />
                     <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')} />
                     <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')} />
                   </div>
                 )
               })}
-              {playheadSec != null && <div className={s.playhead} style={{ left: `${playheadSec * pxPerSec}px` }} />}
             </div>
+            {/* 오디오 파형 — 클립 썸네일과 겹치면 안 보인다는 피드백으로 별도 라인으로 분리,
+                컷 경계마다 배경을 교차시켜(보라/청록 틴트) 구분되게 함(2026-09-13) */}
+            <div className={s.waveRow}>
+              {positioned.map((it, idx) => {
+                const info = cutsByNo?.[it.sourceCutNo] || {}
+                const widthPx = it.dur * pxPerSec
+                return (
+                  <div key={it.clipId}
+                    className={`${s.waveBlock} ${idx % 2 ? s.waveBlockOdd : ''} ${it.clipId === selectedClipId ? s.waveBlockSelected : ''}`}
+                    style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px` }}>
+                    <WaveformCanvas peaks={waveforms[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
+                      sourceDurationSec={info.actualDurationSec} widthPx={widthPx} heightPx={26} />
+                  </div>
+                )
+              })}
+            </div>
+            {playheadSec != null && <div className={s.playhead} style={{ left: `${playheadSec * pxPerSec}px` }} />}
           </div>
         </div>
       )}
