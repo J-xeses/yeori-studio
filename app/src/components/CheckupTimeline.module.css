@@ -1,0 +1,42 @@
+.wrap { display: flex; flex-direction: column; gap: 8px; }
+.toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.toolbarBtn {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
+  font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+}
+.toolbarBtn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+.toolbarBtn:disabled { opacity: .35; cursor: default; }
+.zoomLabel { font-size: 10.5px; color: var(--text-3); font-family: var(--mono, monospace); min-width: 42px; text-align: center; }
+.savingDot { font-size: 11px; color: var(--accent-light); font-weight: 700; }
+.spacer { flex: 1; }
+.hint { font-size: 10.5px; color: var(--text-3); }
+
+.stripOuter {
+  position: relative; overflow-x: auto; overflow-y: hidden;
+  height: 76px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-panel);
+}
+.stripInner { position: relative; height: 100%; }
+.clip {
+  position: absolute; top: 0; bottom: 0; box-sizing: border-box;
+  background-size: cover; background-position: center; background-color: rgba(255,255,255,0.04);
+  border: 1px solid rgba(0,0,0,0.5); border-radius: 4px; cursor: grab; user-select: none;
+  display: flex; align-items: flex-end; padding: 3px 5px;
+}
+.clip.selected { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 2; }
+.clip.activeClip { outline: 2px solid #22c55e; outline-offset: -2px; z-index: 2; }
+.clipLabel {
+  font-size: 9.5px; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  font-family: var(--mono, monospace); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.trimHandle {
+  position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; z-index: 3;
+  background: rgba(255,255,255,0.15);
+}
+.trimHandle:hover { background: rgba(255,255,255,0.35); }
+.trimHandleL { left: 0; border-radius: 4px 0 0 4px; }
+.trimHandleR { right: 0; border-radius: 0 4px 4px 0; }
+.playhead {
+  position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
+  box-shadow: 0 0 4px rgba(255,255,255,0.8); pointer-events: none; z-index: 4;
+}
+.emptyMsg { font-size: 12px; color: var(--text-3); padding: 20px; text-align: center; }

@@ -1,0 +1,26 @@
+.guide {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  aspect-ratio: 9 / 16;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  outline: 1.5px dashed rgba(255, 255, 255, 0.85);
+  outline-offset: -1.5px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  z-index: 2;
+}
+.label {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 3px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+}

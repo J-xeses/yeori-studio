@@ -144,6 +144,10 @@ export function statePath(name)    { return path.join(DOWNLOADS, 'state', name) 
 export function editMetaPath()     { return statePath('yeori_edit_meta.json') }
 export function capcutConfigPath() { return statePath('capcut_config.json') }
 export function capcutExePath()    { return statePath('capcut_exe_path.txt') }
+// 체크업 탭 "타임라인 편집"(Tier3, 미리보기 전용) 클립 분할/트림 상태 — editMeta.json(cutNo 1:1,
+// 실제 CapCut 배치용)과 완전히 분리. 에피소드별 여러 개를 오갈 수 있어 전역 단일 파일이 아니라
+// epNum으로 키를 나눈 구조로 저장(2026-09-13).
+export function checkupTimelinePath() { return statePath('yeori_checkup_timeline.json') }
 
 // ── 절대경로 → /downloads/... URL ──────────────────────────────────
 export function toMediaUrl(abs) {

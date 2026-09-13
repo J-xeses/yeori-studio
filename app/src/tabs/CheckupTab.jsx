@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
+import AspectGuideOverlay from '../components/AspectGuideOverlay'
+import CheckupTimeline from '../components/CheckupTimeline'
+import CheckupEffectsSidebar from '../components/CheckupEffectsSidebar'
+import { contentRatio } from '../lib/videoPolicy'
 import s from './CheckupTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -16,7 +20,7 @@ const FALLBACK_DUR = 8 // duration 필드가 없는 컷의 타임라인 폭 계�
 // 재생헤드(현재 위치 표시, 클릭/드래그로 탐색). 여러 컷이 각각 별개 mp4 파일이라
 // "진짜 하나의 타임라인"은 아니고, 폭·재생헤드 위치는 duration 추정치 기반 근사치.
 export default function CheckupTab() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const epNum = state.episode?.number
   const [cuts, setCuts] = useState([])
   const [loading, setLoading] = useState(false)
@@ -24,9 +28,13 @@ export default function CheckupTab() {
   const [elapsedInActive, setElapsedInActive] = useState(0)
   const [editMode, setEditMode] = useState(false)
   const [savingLayout, setSavingLayout] = useState(false)
+  const [timelineEditMode, setTimelineEditMode] = useState(false)   // Tier3 "🎬 타임라인 편집"(분할/트림/줌/실행취소) — Tier2 editMode와 별개, 공존 가능
+  const [selectedCutNo, setSelectedCutNo] = useState(null)          // 타임라인에서 선택된 클립의 원본 컷 번호(효과 사이드바용)
   const videoRef = useRef(null)
   const stripRef = useRef(null)
   const pendingSeekRef = useRef(null) // src 교체 후 loadedmetadata에서 적용할 목표 초
+  const ratio = contentRatio(state.episode)
+  const show916Guide = !!state.checkupTabState?.show916Guide
 
   const load = useCallback(async () => {
     if (epNum == null) return
@@ -83,6 +91,7 @@ export default function CheckupTab() {
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
   const mismatchCount = cuts.filter(c => c.lengthMismatch).length
+  const cutsByNo = useMemo(() => Object.fromEntries(cuts.map(c => [c.no, c])), [cuts])
 
   // 타임라인 배치 — duration 추정치 + 컷별 갭(gapAfterSec)으로 각 컷의 시작 오프셋·폭(비율)을 계산.
   // gapAfterSec 만큼은 다음 컷 앞에 빈 구간으로 남겨서(간격만큼 폭 확보) 캡컷 배치와 비슷하게 보여준다.
@@ -181,6 +190,15 @@ export default function CheckupTab() {
               <button className={`${s.editBtn} ${editMode ? s.editBtnOn : ''}`} onClick={() => setEditMode(v => !v)}>
                 🔧 배치 순서/간격 {editMode ? '편집 중' : '편집'}
               </button>
+              {ratio === '16:9' && (
+                <button className={`${s.editBtn} ${show916Guide ? s.editBtnOn : ''}`}
+                  onClick={() => dispatch({ type: 'SET_CHECKUP_TAB_STATE', p: { show916Guide: !show916Guide } })}>
+                  📐 9:16 가이드
+                </button>
+              )}
+              <button className={`${s.editBtn} ${timelineEditMode ? s.editBtnOn : ''}`} onClick={() => setTimelineEditMode(v => !v)}>
+                🎬 타임라인 {timelineEditMode ? '편집 중' : '편집'}
+              </button>
               <button className={s.playAllBtn} onClick={playAll} disabled={!playable.length}>
                 ▶ 전체 이어보기
               </button>
@@ -188,8 +206,13 @@ export default function CheckupTab() {
           </div>
 
           <div className={s.playerWrap}>
-            <video ref={videoRef} controls className={s.player}
-              onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} />
+            <div className={s.videoWrapper} style={{ aspectRatio: ratio === '9:16' ? '9/16' : '16/9' }}>
+              <div className={s.videoInner}>
+                <video ref={videoRef} controls className={s.player}
+                  onEnded={handleEnded} onTimeUpdate={handleTimeUpdate} />
+                {ratio === '16:9' && show916Guide && <AspectGuideOverlay />}
+              </div>
+            </div>
             {activeCutNo != null && <div className={s.nowPlaying}>재생 중: CUT {activeCutNo}</div>}
             {!playable.length && <div className={s.playerEmpty}>아직 완성된 컷이 없습니다 — 메이킹/영상 탭에서 컷을 만들면 여기 누적됩니다.</div>}
           </div>
@@ -253,6 +276,15 @@ export default function CheckupTab() {
               </div>
             )}
           </div>
+
+          {timelineEditMode && (
+            <div className={s.timelineEditorWrap}>
+              <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo}
+                activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
+                onSeek={seekTo} onSelectCut={setSelectedCutNo} />
+              <CheckupEffectsSidebar selectedCutNo={selectedCutNo} cutsByNo={cutsByNo} onApplied={load} />
+            </div>
+          )}
         </div>
       </div>
     </div>

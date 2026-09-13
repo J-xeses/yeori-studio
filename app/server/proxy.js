@@ -1242,6 +1242,81 @@ app.post('/api/checkup-layout', (req, res) => {
   }
 })
 
+// ── POST /api/checkup-effect — 체크업 효과 사이드바 켄번스 적용 ────────────
+// /api/checkup-layout과 동일한 byCutNo upsert 패턴 — editMeta.json의 editIntent만 patch.
+// run-cutter.js가 이미 editIntent.kenburns를 motionBaked 다음 우선순위로 읽으므로, 이 patch
+// 하나만으로 다음 CapCut 배치부터 바로 반영된다(2026-09-13, Tier3).
+app.post('/api/checkup-effect', (req, res) => {
+  const { cutNo, kenburns } = req.body || {}
+  if (cutNo == null) return res.status(400).json({ error: 'cutNo 필요' })
+  const metaPath = mp.editMetaPath()
+  try {
+    const em = fs.existsSync(metaPath) ? JSON.parse(fs.readFileSync(metaPath, 'utf-8')) : []
+    const list = Array.isArray(em) ? em : []
+    const key = String(Number(cutNo))
+    let m = list.find(x => String(Number(x.cutNo)) === key)
+    if (!m) { m = { cutNo: String(cutNo).padStart(2, '0') }; list.push(m) }
+    m.editIntent = { kenburns: kenburns || 'none', source: 'checkup-manual' }
+
+    fs.mkdirSync(path.dirname(metaPath), { recursive: true })
+    fs.writeFileSync(metaPath, JSON.stringify(list, null, 2), 'utf-8')
+    res.json({ ok: true, editIntent: m.editIntent })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET/POST /api/checkup-timeline — 체크업 "타임라인 편집"(Tier3) 클립 상태 ──
+// editMeta.json(cutNo 1:1, 실제 CapCut 배치용)과 완전히 분리된 미리보기 전용 레이어.
+// 분할된 클립도 같은 sourceCutNo를 공유할 수 있어 cutNo 1:1 가정을 깨지 않고 저장 가능하다.
+// epNum으로 키를 나눠 여러 에피소드를 오가도 서로 안 섞인다(editMeta.json은 전역 단일이라 다름).
+app.get('/api/checkup-timeline', (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  const tlPath = mp.checkupTimelinePath()
+  try {
+    const all = fs.existsSync(tlPath) ? JSON.parse(fs.readFileSync(tlPath, 'utf-8')) : {}
+    const saved = all[String(epNum)]
+    if (saved?.clips?.length) return res.json({ clips: saved.clips, updatedAt: saved.updatedAt })
+
+    // 저장된 게 없으면 지금 필름스트립과 동일하게 "재생 가능한 컷당 1클립"으로 기본 생성.
+    const { ep } = findEpisodeByNumOrThrow(epNum)
+    const videoDir = mp.videoDir(epNum)
+    const videoFiles = (() => { try { return fs.readdirSync(videoDir) } catch { return [] } })()
+    const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
+    const clips = []
+    let order = 0
+    for (const c of cuts) {
+      const p = String(c.no).padStart(2, '0')
+      const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+      if (!savedFile) continue
+      const probed = mp.probeMedia(path.join(videoDir, savedFile), true)
+      clips.push({
+        clipId: `c-${epNum}-${p}-a`, sourceCutNo: c.no, sourceFile: savedFile,
+        trimInSec: 0, trimOutSec: probed.durationUs / 1000000, effect: null, order: order++,
+      })
+    }
+    res.json({ clips, updatedAt: null })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+app.post('/api/checkup-timeline', (req, res) => {
+  const { epNum, clips } = req.body || {}
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  if (!Array.isArray(clips)) return res.status(400).json({ error: 'clips 배열 필요' })
+  const tlPath = mp.checkupTimelinePath()
+  try {
+    const all = fs.existsSync(tlPath) ? JSON.parse(fs.readFileSync(tlPath, 'utf-8')) : {}
+    all[String(epNum)] = { updatedAt: new Date().toISOString(), clips }
+    fs.mkdirSync(path.dirname(tlPath), { recursive: true })
+    fs.writeFileSync(tlPath, JSON.stringify(all, null, 2), 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
 app.post('/api/confirm-image', (req, res) => {
   const { ep, cutNo, imageUrl, instaContent, instaNum } = req.body
@@ -6042,6 +6117,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         lengthMismatch: actualDurationSec != null && actualDurationSec < targetSec - 0.05,
         order: Number.isFinite(editMetaByCutNo[String(c.no)]?.order) ? editMetaByCutNo[String(c.no)].order : c.no,
         gapAfterSec: Number.isFinite(editMetaByCutNo[String(c.no)]?.gapAfterSec) ? editMetaByCutNo[String(c.no)].gapAfterSec : 0,
+        editIntent: editMetaByCutNo[String(c.no)]?.editIntent || null,   // 체크업 효과 사이드바가 "현재 적용된 켄번스" 표시에 씀
       }
     })
     const veoCuts = out.filter(c => c.needsManualVideo)
