@@ -30,6 +30,8 @@ BG.A  : {배경 설명}
 BG.B  : {배경 설명} ← 멀티배경 없으면 삭제
 LIGHT : {LT_코드} ({조명 설명})
 REF   : face / closeup / fs-masked
+        ← 캐릭터 일관성 "입력" 전용. 이 레퍼런스 이미지 자체를 그 컷의 최종 산출물로
+          저장/업로드하지 말 것 — 배경 인물·의상이 실제 컷 설정과 다르면 흡수된 것(룰셋 ② 참고)
 BGM   : {전체 BGM 방향}
 ================================================================
 
@@ -84,13 +86,17 @@ natural makeup, warm skin tone, appearing no older than 22-23,
 {표정/감정/동작 묘사},
 {샷타입}, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
-background people must not interact with or interfere with the main character
+background people must not interact with or interfere with the main character,
+if indoor casual home scene: barefoot or socks only, no shoes worn indoors
+(shoes only when the scene intentionally signals "persona/formal" — see 룰셋 ④ 상징 연결)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트 — 무음 버전)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 THIS IS A SILENT FILM. NO talking, NO speaking, NO lip movement.
-NO dialogue, NO subtitles, NO audio.
+NO dialogue, NO subtitles, NO audio, NO on-screen text or captions of any kind.
+Any phone/TV/laptop screen visible in frame must show only a blurred or abstract
+glow — never legible text or UI.
 
 First 0-{N}s: {동작1}
 Next {N}-{N}s: {동작2}

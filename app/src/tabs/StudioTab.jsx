@@ -531,7 +531,9 @@ export default function StudioTab() {
 
   // 툴별 접미사 — 화면비율은 에피소드 유형 기본값(LF/SF=16:9, 그 외=9:16)
   const TOOL_SUFFIX = {
-    'Flow':             `Photorealistic 8K cinematic ${epRatio}, background people must not interact with main character, consistent character face`,
+    // 2026-09-13: 실내 캐주얼 컷에 신발 신은 채 생성되고, 화면(폰/TV)에 깨진 텍스트가
+    // 나타나는 문제가 실측으로 반복 확인돼 접미사에 명시적으로 추가함(yeori_ruleset_v1.md 참고).
+    'Flow':             `Photorealistic 8K cinematic ${epRatio}, background people must not interact with main character, consistent character face, barefoot or socks indoors unless shoes are intentional, no legible on-screen text or UI`,
     'Imagen':           'Photorealistic 8K cinematic, semi-realistic Korean style',
     'Midjourney':       `photorealistic, 8K, cinematic lighting, --ar ${epRatio} --v 6`,
     'DALL-E 3':         `photorealistic, cinematic, high quality, ${epRatio} aspect ratio`,

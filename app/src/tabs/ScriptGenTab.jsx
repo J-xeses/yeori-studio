@@ -877,6 +877,14 @@ export default function ScriptGenTab() {
 - CLOSEUP과 FULLBODY를 스토리 흐름에 맞게 교차 편집
 - 배경 인물은 허용하되 서여리 연출에 개입·간섭 금지
   → "background people must not interact with the main character"
+- 실내 캐주얼 장면(집 소파 등)은 기본적으로 맨발/양말 — 신발 착용은 "하이힐=페르소나" 같은
+  의도된 상징 연출일 때만 명시적으로 지시. 명시가 없으면 프롬프트에
+  "barefoot or socks only, no shoes worn indoors" 포함
+  (2026-09-13 실측: 캐주얼 소파 컷에 스니커즈 신은 채 생성돼 지적됨)
+- "NO subtitles, NO audio" 만으로는 화면 내 텍스트 생성을 막지 못할 때가 있음 — 폰/TV/노트북
+  화면이 프레임에 들어가는 컷은 반드시 "screen shows only a blurred/abstract glow, never
+  legible text or UI" 를 프롬프트에 추가로 명시
+  (2026-09-13 실측: 폰 보여주는 컷에 깨진 한글 자막이 화면 안에 나타남)
 
 [K감성 / 리얼리티]
 - "effortlessly photogenic, not posing, just existing beautifully"
@@ -901,6 +909,8 @@ export default function ScriptGenTab() {
 □ 대사 텍스트 없음
 □ 행동이 시간 단위로 분리됨
 □ K감성 디테일 1개 이상 포함
+□ 실내 캐주얼 장면은 맨발/양말 문구 포함(의도된 신발 연출이 아니라면)
+□ 폰/TV 화면 등장 컷은 "blurred/abstract, never legible text" 문구 포함
 === 룰셋 끝 ===`
 
   const generateScript = async () => {
