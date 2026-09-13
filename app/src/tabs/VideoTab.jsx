@@ -31,6 +31,27 @@ function stripMeta(text) {
     .trim()
 }
 
+// 클립별(구간별) 타이밍 자막(2026-09-13) — subtitles[cutId]는 클립이 1개 이하인 컷은
+// 지금처럼 문자열 하나, 클립이 여러 개인 컷은 [{start,end,text}] 배열. 구버전 문자열
+// 데이터도 항상 세그먼트 배열로 통일해서 다루기 위한 헬퍼(체크업 탭에도 동일하게 복제).
+function toSegments(value, fallbackText, totalDur) {
+  if (Array.isArray(value)) return value
+  const text = value ?? fallbackText ?? ''
+  return text ? [{ start: 0, end: totalDur, text }] : []
+}
+
+// 클립 배열의 누적 시작/끝 시각 — clipTrimItem의 usedSec 계산과 같은 기준(전체사용 여부에
+// 따라 duration 또는 trimEnd-trimStart)을 그대로 써서 자막 타이밍과 항상 어긋나지 않게 함.
+function clipTimings(clips) {
+  let acc = 0
+  return clips.map(clip => {
+    const used = clip.useFullDuration ? clip.duration : (clip.trimEnd - clip.trimStart)
+    const start = acc
+    acc += (used || 0)
+    return { start, end: acc }
+  })
+}
+
 function wrapCanvasText(ctx, text, maxWidth) {
   const words = text.split(' ')
   const lines = []
@@ -182,12 +203,28 @@ export default function VideoTab() {
   }
 
   const selCutForText = cuts.find(c => c.id === selectedCutId)
-  const previewText = selCutForText
-    ? (subtitles[selCutForText.id] ?? stripMeta(selCutForText.dialogue || selCutForText.narration || ''))
-    : ''
+  const clipsForText = selCutForText ? (videoClips[selCutForText.id] || []) : []
+  const segsForText = selCutForText
+    ? toSegments(subtitles[selCutForText.id], stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0)
+    : []
+  // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
+  // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다.
+  const previewText = clipsForText.length > 1 ? (segsForText[selectedClipIdx]?.text ?? '') : (segsForText[0]?.text ?? '')
   const setPreviewText = (text) => {
     if (!selCutForText) return
-    setSubtitles(prev => ({ ...prev, [selCutForText.id]: text }))
+    if (clipsForText.length > 1) {
+      const timings = clipTimings(clipsForText)
+      setSubtitles(prev => {
+        const cur = toSegments(prev[selCutForText.id], '', selCutForText.duration || 0)
+        const next = clipsForText.map((_, i) => ({
+          start: timings[i].start, end: timings[i].end,
+          text: i === selectedClipIdx ? text : (cur[i]?.text ?? ''),
+        }))
+        return { ...prev, [selCutForText.id]: next }
+      })
+    } else {
+      setSubtitles(prev => ({ ...prev, [selCutForText.id]: text }))
+    }
   }
 
   useEffect(() => {
@@ -198,27 +235,17 @@ export default function VideoTab() {
 
   useEffect(() => { setSelectedClipIdx(0) }, [selectedCutId])
 
-  // 컷을 바꾸면 그 컷에 이미 올라온 영상의 실제 비율로 미리보기 모드를 자동 전환
-  // (이전 컷에서 선택한 9:16/16:9가 그대로 남아있어 다른 컷 영상이 잘못된 비율로 보이던 문제)
+  // 화면비율은 컷/클립이 아니라 에피소드 콘텐츠 유형이 정하는 값이다(videoPolicy.js:
+  // "LF/SF = 유튜브 가로(16:9), 나머지 = 세로(9:16)"). 예전엔 컷에 올라온 클립의 실제
+  // 감지된 비율로 미리보기를 덮어썼는데, LF/SF 에피소드에 잘못된 비율의 클립이 올라오면
+  // (감지 오류 또는 잘못된 파일 업로드) 미리보기가 그 컷을 볼 때마다 "쇼폼으로 고정"된
+  // 것처럼 계속 잘못 표시되는 버그가 있었다(2026-09-13, 사용자 지적 — LF 작업라인인데
+  // 컷을 옮겨다녀도 9:16에 갇혀 있었음). 컷을 바꿀 때마다 항상 에피소드 기준 비율로
+  // 돌아가고, 클립 하나하나의 비율 불일치는 아래 클립 리스트의 뱃지(clipRatioBadge)로만
+  // 경고한다 — 미리보기 자체를 잘못된 클립이 뒤흔들지 않게.
   useEffect(() => {
-    const clips = videoClips[selectedCutId] || []
-    const first = clips[0]
-    // 이 컷엔 아직 올라온 영상이 없음 — 이전 컷에서 남은 비율 대신 이 에피소드의
-    // 실제 콘텐츠 비율(예: LF_YU=16:9)로 되돌린다(하드코딩 '9:16' 기본값 문제 대응).
-    if (!first) { setAspectRatio(contentRatio(episode)); return }
-    if (first.ratio) { setAspectRatio(first.ratio); return }
-    // 이 fix 이전에 올라온 클립처럼 ratio가 저장돼 있지 않으면 즉석에서 감지
-    let cancelled = false
-    const probe = document.createElement('video')
-    probe.preload = 'metadata'
-    probe.onloadedmetadata = () => {
-      if (cancelled || !probe.videoWidth || !probe.videoHeight) return
-      setAspectRatio(probe.videoWidth >= probe.videoHeight ? '16:9' : '9:16')
-    }
-    probe.src = first.url
-    return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCutId])
+    setAspectRatio(contentRatio(episode))
+  }, [selectedCutId, episode])
 
   const allG4Done = cuts.length > 0 && cuts.every(c => !needsFlowVideo(c.cutType) || g4Approved[c.id])
 
@@ -1016,7 +1043,20 @@ export default function VideoTab() {
         {cuts.map(selCut => {
           const isSelected = selCut.id === selectedCutId
           const clips = videoClips[selCut.id] || []
-          const captionText = subtitles[selCut.id] ?? stripMeta(selCut.dialogue || selCut.narration || '')
+          const cutSegs = toSegments(subtitles[selCut.id], stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
+          const captionText = cutSegs[0]?.text ?? ''
+          const cutClipTimings = clips.length > 1 ? clipTimings(clips) : []
+          const setClipCaption = (idx, text) => {
+            const timings = clipTimings(clips)
+            setSubtitles(prev => {
+              const cur = toSegments(prev[selCut.id], '', selCut.duration || 0)
+              const next = clips.map((_, i) => ({
+                start: timings[i].start, end: timings[i].end,
+                text: i === idx ? text : (cur[i]?.text ?? ''),
+              }))
+              return { ...prev, [selCut.id]: next }
+            })
+          }
           return (
             <div key={selCut.id}
               className={`${s.selectedCutCard} ${isSelected ? s.selectedCutCardActive : ''}`}
@@ -1065,13 +1105,15 @@ export default function VideoTab() {
                   </div>
                 )}
 
-                <div className={s.field} onClick={e => e.stopPropagation()}>
-                  <label>컷 자막</label>
-                  <textarea rows={2} className={s.captionInput}
-                    value={captionText}
-                    placeholder="이 컷의 자막 텍스트..."
-                    onChange={e => setSubtitles(prev => ({ ...prev, [selCut.id]: e.target.value }))} />
-                </div>
+                {clips.length <= 1 && (
+                  <div className={s.field} onClick={e => e.stopPropagation()}>
+                    <label>컷 자막</label>
+                    <textarea rows={2} className={s.captionInput}
+                      value={captionText}
+                      placeholder="이 컷의 자막 텍스트..."
+                      onChange={e => setSubtitles(prev => ({ ...prev, [selCut.id]: e.target.value }))} />
+                  </div>
+                )}
 
                 {clips.length > 0 && (
                   <div className={s.clipList}>
@@ -1099,6 +1141,17 @@ export default function VideoTab() {
                             )}
                             <button className={s.clipDel} onClick={e => { e.stopPropagation(); removeClip(selCut.id, idx) }}>✕</button>
                           </div>
+                          {clips.length > 1 && (
+                            <div className={s.clipCaptionRow} onClick={e => e.stopPropagation()}>
+                              <span className={s.clipCaptionTime}>
+                                {cutClipTimings[idx] ? `${cutClipTimings[idx].start.toFixed(1)}s~${cutClipTimings[idx].end.toFixed(1)}s` : ''}
+                              </span>
+                              <textarea rows={1} className={s.clipCaptionInput}
+                                value={cutSegs[idx]?.text ?? ''}
+                                placeholder="이 구간의 자막..."
+                                onChange={e => setClipCaption(idx, e.target.value)} />
+                            </div>
+                          )}
                           {isClipActive && (
                             <div className={s.clipTrimBody} onClick={e => e.stopPropagation()}>
                               <label className={s.check}>

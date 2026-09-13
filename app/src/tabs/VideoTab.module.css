@@ -175,6 +175,11 @@
 .clipRatioBadge { font-size: 10px; font-weight: 700; color: var(--text-3); background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; flex-shrink: 0; }
 .clipRatioMismatch { color: #f59e0b; border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.1); }
 .clipTrimBody { padding: 6px 10px; display: flex; flex-direction: column; gap: 5px; }
+/* 클립별(구간별) 타이밍 자막(2026-09-13) — 클립이 여러 개인 컷에서 clipTrimItem 안에 항상 표시 */
+.clipCaptionRow { display: flex; align-items: flex-start; gap: 6px; padding: 4px 10px 8px; border-bottom: 1px solid var(--border); cursor: text; }
+.clipCaptionTime { font-size: 10px; color: var(--text-3); font-family: var(--mono); flex-shrink: 0; padding-top: 6px; white-space: nowrap; }
+.clipCaptionInput { flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: 5px; color: var(--text); font-size: 11.5px; padding: 5px 8px; outline: none; resize: vertical; min-height: 26px; }
+.clipCaptionInput:focus { border-color: var(--accent); }
 .trimInputs { display: flex; gap: 12px; }
 .trimField { display: flex; align-items: center; gap: 4px; }
 .trimField label { font-size: 11px; color: var(--text-3); flex-shrink: 0; }

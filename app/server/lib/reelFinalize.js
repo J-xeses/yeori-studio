@@ -209,6 +209,28 @@ function assTime(sec) {
   return `${h}:${String(m).padStart(2, '0')}:${ss.toFixed(2).padStart(5, '0')}`
 }
 
+// 멀티세그 자막 구간 배분 — 예전엔 글자수 무관 균등분할이라 긴 세그먼트가 다 읽기 전에
+// 넘어가는 문제가 있었음(2026-09-13, 사용자 지적). 글자수 비율로 나누되 최소 노출시간은
+// 보장. 상수 3개는 시행착오로 튜닝될 여지가 있어 여기 모아둠.
+const MIN_SEG_EXPOSURE_SEC = 1.2
+const SEG_LEAD_SEC = 0.3
+const SEG_TRAIL_GUARD_SEC = 0.05
+function computeSegmentTimings(segs, durSec) {
+  const n = segs.length
+  if (n <= 1) return [{ start: 0, end: durSec }]
+  const weights = segs.map(s => Math.max(String(s.raw || '').replace(/\s+/g, '').length, 1))
+  const totalWeight = weights.reduce((a, b) => a + b, 0)
+  const floorTotal = MIN_SEG_EXPOSURE_SEC * n
+  // 컷이 너무 짧아 최소 노출시간조차 못 채우면 예전처럼 균등 분할로 폴백
+  const durs = floorTotal >= durSec
+    ? weights.map(() => durSec / n)
+    : weights.map(w => MIN_SEG_EXPOSURE_SEC + (durSec - floorTotal) * (w / totalWeight))
+  const timings = []
+  let acc = 0
+  durs.forEach(d => { timings.push({ start: acc, end: acc + d }); acc += d })
+  return timings
+}
+
 // 이모지는 유지한다(레퍼런스 스타일). seguiemj.ttf 폴백으로 컬러 렌더.
 // variation selector(FE0F)·ZWJ(200D)만 정리 — libass 에서 폭 계산이 어긋날 수 있어서.
 function cleanCaption(s) {
@@ -397,10 +419,10 @@ export async function finalizeReel(p) {
   for (const d of decisions) {
     if (!d.caption) continue
     const segs = d.caption.segments
-    const per = d.durSec / segs.length
+    const timings = computeSegmentTimings(segs, d.durSec)
     segs.forEach((seg, i) => {
-      const st = d.startSec + i * per + 0.3
-      const en = d.startSec + (segs.length === 1 || i === segs.length - 1 ? d.durSec : (i + 1) * per) - 0.05
+      const st = d.startSec + timings[i].start + SEG_LEAD_SEC
+      const en = d.startSec + (i === segs.length - 1 ? d.durSec : timings[i].end) - SEG_TRAIL_GUARD_SEC
       // 지금까지의 세그를 위→아래로 쌓아 하나의 Dialogue 로 (스타일이 섞이면 마지막 줄만 색상 태그)
       const lines = segs.slice(0, i + 1).map((s, j) => {
         const body = String(s.burn).replace(/\n/g, '\\N')
@@ -434,10 +456,10 @@ export async function finalizeReel(p) {
     for (const d of decisions) {
       if (!d.caption) continue
       const segs = d.caption.segments
-      const per = d.durSec / segs.length
+      const timings = computeSegmentTimings(segs, d.durSec)
       segs.forEach((seg, i) => {
-        const st = d.startSec + i * per + 0.3
-        const en = d.startSec + (segs.length === 1 || i === segs.length - 1 ? d.durSec : (i + 1) * per) - 0.05
+        const st = d.startSec + timings[i].start + SEG_LEAD_SEC
+        const en = d.startSec + (i === segs.length - 1 ? d.durSec : timings[i].end) - SEG_TRAIL_GUARD_SEC
         const stacked = segs.slice(0, i + 1).map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
         const o = seg.overlay
         scenes.push({

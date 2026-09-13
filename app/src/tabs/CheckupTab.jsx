@@ -31,6 +31,14 @@ const fmtTime = (sec) => {
   return `${m}:${String(ss).padStart(2, '0')}`
 }
 
+// VideoTab.jsx의 toSegments와 동일(클립별 구간 타이밍 자막, 2026-09-13) — subtitles[cutId]는
+// 클립 1개 이하인 컷은 문자열 하나, 여러 개인 컷은 [{start,end,text}] 배열.
+function toSegments(value, fallbackText, totalDur) {
+  if (Array.isArray(value)) return value
+  const text = value ?? fallbackText ?? ''
+  return text ? [{ start: 0, end: totalDur, text }] : []
+}
+
 // 체크업 탭 — 메이킹/영상 탭을 거쳐 완성된 컷들을 순서대로 이어재생하며 업로드 전까지
 // 수시로 검토·편집하는 상시 도구. 실제 편집(분할/트림/드래그 재배치/실행취소)은 전부
 // CheckupTimeline(하단) 하나로 통합돼 있다 — 예전에 있던 읽기전용 필름스트립과 "배치
@@ -57,7 +65,13 @@ export default function CheckupTab() {
   const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor } = state.videoSettings || {}
   const subtitlesMap = state.videoTabState?.subtitles || {}
   const activeCut = state.cuts?.find(c => c.no === activeCutNo)
-  const captionText = activeCut ? (subtitlesMap[activeCut.id] ?? stripMeta(activeCut.dialogue || activeCut.narration || '')) : ''
+  // 클립이 여러 개인 컷은 세그먼트 배열이므로 지금 재생 위치(elapsedInActive)가 속한 구간의
+  // 텍스트를 골라 보여준다 — 재생 중 자동으로 자막이 전환됨(2026-09-13).
+  const activeCutSegs = activeCut
+    ? toSegments(subtitlesMap[activeCut.id], stripMeta(activeCut.dialogue || activeCut.narration || ''), activeCut.duration || 0)
+    : []
+  const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text
+    ?? activeCutSegs[activeCutSegs.length - 1]?.text ?? ''
 
   const load = useCallback(async () => {
     if (epNum == null) return

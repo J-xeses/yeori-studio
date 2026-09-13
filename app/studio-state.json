@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3127,7 +3127,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-13T09:59:23.025Z",
+  "savedAt": "2026-09-13T13:18:48.046Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3161,14 +3161,45 @@
           "trimEnd": 10.01,
           "useFullDuration": true,
           "ratio": "16:9"
+        },
+        {
+          "url": "blob:http://localhost:5173/fc3a6e52-d652-4345-8e99-5180c285bc7d",
+          "name": "cut_02.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9"
+        }
+      ],
+      "cut-1": [
+        {
+          "url": "blob:http://localhost:5173/ef90cae7-e253-47cf-aaae-b223922320ce",
+          "name": "cut_01.mp4",
+          "duration": 3,
+          "trimStart": 0,
+          "trimEnd": 3,
+          "useFullDuration": true,
+          "ratio": "16:9"
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-4",
     "subtitles": {
       "cut-1": "",
-      "cut-2": "지아 \"야, 야~ 이거 봤어?\" "
+      "cut-2": [
+        {
+          "start": 0,
+          "end": 10.01,
+          "text": "지아 \"아, 아~ 이거 봤어?\""
+        },
+        {
+          "start": 10.01,
+          "end": 20.02,
+          "text": "서여리 놀란 표정으로 화면 전환"
+        }
+      ]
     }
   },
   "ttsTabState": {
