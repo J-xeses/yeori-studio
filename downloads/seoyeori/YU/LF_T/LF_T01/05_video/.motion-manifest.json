@@ -54,5 +54,11 @@
     "baked": true,
     "duration": 5,
     "producedAt": "2026-09-12T10:09:18.138Z"
+  },
+  "90": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-13T13:42:56.682Z"
   }
 }

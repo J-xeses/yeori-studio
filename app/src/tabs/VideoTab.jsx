@@ -135,6 +135,8 @@ export default function VideoTab() {
   const [videoGenLog, setVideoGenLog] = useState({})
   const [ffmpegStatus, setFfmpegStatus] = useState({})
   const [ffmpegLog,    setFfmpegLog]    = useState({})
+  const [composeStatus, setComposeStatus] = useState({})   // 클립 합성(render-cut-clips) 진행상태
+  const [composeLog,    setComposeLog]    = useState({})
   const [batchFfmpegStatus,   setBatchFfmpegStatus]   = useState('idle') // idle | running | done | error
   const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
   const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
@@ -147,7 +149,6 @@ export default function VideoTab() {
 
   // ── 영상 체크리스트 (수동 Veo 제작 대상 컷) ──────────────────────────
   const [vChk, setVChk] = useState(null)
-  const [vChkOpen, setVChkOpen] = useState(true)
   // VP 프롬프트 한 줄 생략(ellipsis) 미리보기 — 복붙하지 않고는 전체를 읽을 방법이 없어서
   // "프롬프트를 어디서 제대로 보나" 혼란이 있었음(2026-09-12). 클릭하면 그 컷만 전체 펼침.
   const [expandedVP, setExpandedVP] = useState({})
@@ -380,7 +381,10 @@ export default function VideoTab() {
           vid.onloadedmetadata = () => {
             const dur = Math.round(vid.duration * 100) / 100
             const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
-            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio }
+            // 프록시로 불러온 클립은 이미 서버 실파일이라 재업로드 없이 stagedPath를 바로 채움
+            // (2026-09-13 — "클립 합성"이 이 경로를 그대로 입력으로 씀).
+            const stagedPath = vChk?.videoDir ? `${vChk.videoDir}\\${name}` : undefined
+            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: !!cut.dialogue }
             setVideoClips(p => {
               const existing = p[cut.id] || []
               if (existing.some(c => c.url === url)) return p
@@ -399,16 +403,113 @@ export default function VideoTab() {
     for (const cut of cuts) await loadFromProxy(cut)
   }
 
+  // 스튜디오 탭의 "폴더에서 일괄 가져오기"(이미지, normalizeCutImages)와 동일한 패턴을
+  // 영상에도 만들어달라는 요청(2026-09-13) — 05_video/ 폴더에 느슨한 이름으로 던져둔 영상을
+  // cut_NN_x.mp4로 일괄 리네임 + 컷별 후보 목록을 스캔해온다. 후보는 이미 서버 파일이라
+  // stagedPath가 바로 채워짐(재업로드 불필요, "프록시"와 같은 성격).
+  const [videoCandidates, setVideoCandidates] = useState({})   // { [cutNo]: [{name,url,path,slot}] }
+  const loadVideoCandidates = useCallback(() => {
+    const epNum = state.episode?.number
+    if (epNum == null) return
+    fetch(`http://localhost:3001/api/scan-cut-videos?epNum=${epNum}`)
+      .then(r => r.json())
+      .then(d => {
+        const byCut = {}
+        for (const c of d.clips || []) (byCut[c.cutNo] ??= []).push(c)
+        setVideoCandidates(byCut)
+      })
+      .catch(() => {})
+  }, [state.episode?.number])
+  useEffect(() => { loadVideoCandidates() }, [loadVideoCandidates])
+
+  const importVideosFromFolder = async () => {
+    const epNum = state.episode?.number
+    if (epNum == null) return
+    try {
+      const r = await fetch('http://localhost:3001/api/import-cut-videos', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep: epNum }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '가져오기 실패')
+      const msg = [
+        `📁 영상 파일명 정리: ${d.renamed?.length || 0}개`,
+        ...(d.renamed || []).map(x => `  ${x.from} → ${x.to}`),
+        ...(d.skipped?.length ? ['', `⚠️ 스킵 ${d.skipped.length}개(파일명에서 컷번호 못 찾음):`, ...d.skipped.map(x => `  ${x.file}`)] : []),
+      ].join('\n')
+      if ((d.renamed?.length || 0) + (d.skipped?.length || 0) > 0) alert(msg)
+      loadVideoCandidates()
+    } catch (e) {
+      alert('영상 폴더 가져오기 실패: ' + e.message)
+    }
+  }
+
+  // 스캔된 후보 클립을 그 컷의 videoClips에 추가 — 이미 서버 파일이라 stagedPath를 바로 채움.
+  const addCandidateClip = (cutId, cutNo, candidate) => {
+    const url = `http://localhost:3001${candidate.url}?t=${Date.now()}`
+    const cut = (state.cuts || []).find(c => c.id === cutId)
+    const vid = document.createElement('video')
+    vid.preload = 'metadata'
+    vid.onloadedmetadata = () => {
+      const dur = Math.round(vid.duration * 100) / 100
+      const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
+      const obj = {
+        url, name: candidate.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true,
+        ratio, stagedPath: candidate.path, keepAudio: !!cut?.dialogue,
+      }
+      setVideoClips(p => {
+        const existing = p[cutId] || []
+        if (existing.some(c => c.stagedPath === candidate.path)) return p
+        return { ...p, [cutId]: [...existing, obj] }
+      })
+    }
+    vid.src = url
+  }
+
+  // 로컬 업로드한 클립을 실제 서버 파일로도 스테이징(2026-09-13) — 예전엔 blob: URL만 만들고
+  // 서버엔 아무것도 안 남겨서 "클립 합성"이 실제 출력을 못 만들었다. 클립을 blob URL로 식별해서
+  // 스테이징 완료 시 그 클립에만 stagedPath를 채워넣는다(다른 클립 추가/삭제와 섞여도 안전).
+  const stageClip = async (cutId, cutNo, idx, file, matchUrl) => {
+    const epNum = state.episode?.number
+    if (epNum == null) return
+    try {
+      const r = await fetch(`http://localhost:3001/api/stage-cut-clip?epNum=${epNum}&cutNo=${cutNo}&idx=${idx}`,
+        { method: 'POST', headers: { 'Content-Type': 'video/mp4' }, body: file })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '스테이징 실패')
+      setVideoClips(p => {
+        const arr = [...(p[cutId] || [])]
+        const i = arr.findIndex(c => c.url === matchUrl)
+        if (i >= 0) arr[i] = { ...arr[i], stagedPath: d.path, staging: false }
+        return { ...p, [cutId]: arr }
+      })
+    } catch (e) {
+      setVideoClips(p => {
+        const arr = [...(p[cutId] || [])]
+        const i = arr.findIndex(c => c.url === matchUrl)
+        if (i >= 0) arr[i] = { ...arr[i], staging: false, stageError: e.message }
+        return { ...p, [cutId]: arr }
+      })
+    }
+  }
+
   const handleVideoUpload = (cutId, files) => {
-    Array.from(files).forEach(f => {
+    const cut = (state.cuts || []).find(c => c.id === cutId)
+    Array.from(files).forEach((f) => {
       const url = URL.createObjectURL(f)
       const vid = document.createElement('video')
       vid.preload = 'metadata'
       vid.onloadedmetadata = () => {
         const dur = Math.round(vid.duration * 100) / 100
         const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
-        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio }
-        setVideoClips(p => ({ ...p, [cutId]: [...(p[cutId] || []), obj] }))
+        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: !!cut?.dialogue }
+        let clipIdx = -1
+        setVideoClips(p => {
+          const existing = p[cutId] || []
+          clipIdx = existing.length
+          return { ...p, [cutId]: [...existing, obj] }
+        })
+        if (cut) stageClip(cutId, cut.no, clipIdx, f, url)
       }
       vid.src = url
     })
@@ -618,6 +719,44 @@ export default function VideoTab() {
     }
   }
 
+  // 컷별 카드의 클립(videoClips)을 실제로 이어붙여 서버의 진짜 cut_NN.mp4를 만든다
+  // (2026-09-13 — 로컬 클립 편집이 지금까지 미리보기용 blob: URL일 뿐이라 실제 출력에
+  // 반영이 안 됐던 문제의 해결책). order 순서(배열 순서) 그대로 보냄, stagedPath 없는
+  // 클립(아직 스테이징 중)이 있으면 막는다.
+  const renderCutClips = async (cut) => {
+    const clips = videoClips[cut.id] || []
+    if (!clips.length) return
+    const notReady = clips.some(c => !c.stagedPath)
+    if (notReady) {
+      setComposeLog(p => ({ ...p, [cut.id]: '⚠️ 아직 서버로 올라가는 중인 클립이 있습니다 — 잠시 후 다시 시도해주세요' }))
+      return
+    }
+    setComposeStatus(p => ({ ...p, [cut.id]: 'running' }))
+    setComposeLog(p => ({ ...p, [cut.id]: '클립 합성 중…' }))
+    try {
+      const epNum = state.episode?.number
+      const r = await fetch('http://localhost:3001/api/render-cut-clips', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum, cutNo: cut.no,
+          clips: clips.map(c => ({
+            file: c.stagedPath, trimStart: c.trimStart, trimEnd: c.trimEnd,
+            useFullDuration: c.useFullDuration, keepAudio: c.keepAudio,
+          })),
+        }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '합성 실패')
+      setComposeStatus(p => ({ ...p, [cut.id]: 'done' }))
+      setComposeLog(p => ({ ...p, [cut.id]: `✅ 합성 완료 (${d.sizeKB}KB, ${d.duration?.toFixed(1)}s)` }))
+      loadVChk()
+    } catch (e) {
+      setComposeStatus(p => ({ ...p, [cut.id]: 'error' }))
+      setComposeLog(p => ({ ...p, [cut.id]: `❌ ${e.message}` }))
+    }
+  }
+
   const runFfmpegBatchAll = async () => {
     if (cuts.length === 0 || batchFfmpegStatus === 'running') return
     const ep = episode?.number ?? ''
@@ -705,6 +844,7 @@ export default function VideoTab() {
         actions={[
           { key: 'srt', label: '📄 SRT', onClick: exportSRT },
           { key: 'load-all', label: '🔄 불러오기', onClick: loadAllFromProxy },
+          { key: 'import-videos', label: '📁 폴더에서 일괄 가져오기', onClick: importVideosFromFolder },
           {
             key: 'ai-all',
             disabled: cuts.some(c => videoGenStatus[c.id] === 'running'),
@@ -873,101 +1013,14 @@ export default function VideoTab() {
 
       <div className={s.scrollBody}>
 
-      {/* ── 영상 체크리스트 — 수동 Veo 제작 대상 컷 ── */}
+      {/* ── "영상 체크리스트"(VP 프롬프트/완성본 업로드)와 "컷별 카드"(로컬 클립 편집)로
+          이원화돼 있던 구조를 하나로 통합(2026-09-13, 사용자 지적) — VP 프롬프트/videoMode/
+          완성본 업로드는 이제 각 컷 카드(mainSplitCol) 안에 들어있다. vChk 요약 배지만 남김. */}
       {vChk && (
-        <div style={{ background:'#141418', border:'1px solid rgba(255,255,255,0.07)', borderRadius:8, padding:'12px 14px', marginBottom:16 }}>
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer' }} onClick={() => setVChkOpen(o => !o)}>
-            <div style={{ fontSize:13, fontWeight:700, color:'#e8e6f0' }}>
-              영상 체크리스트
-              <span style={{ marginLeft:8, fontSize:11, fontWeight:600, color:'#9490a8' }}>
-                정책: {vChk.policy === 'video-first' ? '영상 중심(LF)' : vChk.policy === 'mixed' ? '혼합(SF)' : '이미지+모션 중심(IG)'}
-                {' · '}Veo 필요 <b style={{ color:'#a78bfa' }}>{vChk.veoNeeded}</b>컷 · 완료 <b style={{ color:'#4ade80' }}>{vChk.veoDone}</b>
-              </span>
-            </div>
-            <button style={{ background:'none', border:'none', color:'#9490a8', cursor:'pointer' }}>{vChkOpen ? '▲' : '▼'}</button>
-          </div>
-
-          {vChkOpen && (
-            <div style={{ marginTop:10, display:'flex', flexDirection:'column', gap:8 }}>
-              {vChk.videoDir && (
-                <div style={{ fontSize:10, color:'#7c7890', fontFamily:'monospace', background:'#0f0f13', border:'1px solid rgba(255,255,255,0.05)', borderRadius:4, padding:'5px 8px', wordBreak:'break-all' }}>
-                  📁 저장 폴더: {vChk.videoDir}
-                  <span style={{ color:'#5c5870' }}> — 업로드본이 <b style={{ color:'#9490a8' }}>cut_NN.mp4</b>로 정규화 저장됩니다(조립 단계도 여기서 읽음)</span>
-                </div>
-              )}
-              {vChk.cuts.map(row => {
-                const up = vUpload[row.no] || {}
-                const keepAudio = up.keepAudio ?? !!row.dialogue   // 대사 있으면 립싱크로 오디오 유지 기본
-                return (
-                  <div key={row.no} style={{ background:'#1c1c22', border:'1px solid rgba(255,255,255,0.06)', borderRadius:6, padding:'8px 10px' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-                      <span style={{ fontSize:12, fontWeight:700, color:'#e8e6f0', minWidth:46 }}>CUT {row.no}</span>
-                      <span style={{ fontSize:10, color:'#5c5870' }}>{row.cutType}{row.cutMark === 'SIGNATURE' && ' ✨'}</span>
-                      <select value={row.videoMode} onChange={e => setCutVideoMode(row.no, e.target.value)}
-                        style={{ fontSize:11, background:'#141418', color:'#e8e6f0', border:'1px solid rgba(255,255,255,0.12)', borderRadius:4, padding:'2px 4px' }}>
-                        {VIDEO_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-                      </select>
-                      {row.duration && <span style={{ fontSize:10, color:'#9490a8', fontFamily:'monospace' }}>{row.duration}s</span>}
-                      <span style={{ fontSize:11, fontWeight:700, color: row.hasVideo ? '#4ade80' : row.videoMode === 'veo' ? '#fbbf24' : '#5c5870' }}>
-                        {row.hasVideo ? '✓ 업로드됨' : row.videoMode === 'veo' ? '· 제작 필요' : row.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
-                      </span>
-                      {row.savedFile && <span style={{ fontSize:9.5, color:'#5c5870', fontFamily:'monospace' }}>{row.savedFile}</span>}
-                    </div>
-
-                    {row.videoMode === 'veo' && (
-                      <div style={{ marginTop:6, display:'flex', flexDirection:'column', gap:5 }}>
-                        {row.videoPrompt && (
-                          <div style={{ display:'flex', gap:6, alignItems:'flex-start' }}>
-                            <button onClick={() => navigator.clipboard.writeText(row.videoPrompt)}
-                              style={{ fontSize:10, fontWeight:700, color:'#c4b5fd', background:'rgba(167,139,250,0.12)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:4, padding:'2px 7px', cursor:'pointer', whiteSpace:'nowrap' }}>
-                              VP 복사
-                            </button>
-                            <button
-                              onClick={() => setExpandedVP(p => ({ ...p, [row.no]: !p[row.no] }))}
-                              title="클릭해서 전체 프롬프트 펼치기/접기"
-                              style={{
-                                fontSize:10.5, color:'#9490a8', background:'none', border:'none', cursor:'pointer',
-                                textAlign:'left', flex:1, padding:0,
-                                ...(expandedVP[row.no]
-                                  ? { whiteSpace:'pre-wrap', wordBreak:'break-word' }
-                                  : { overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }),
-                              }}>
-                              {expandedVP[row.no] ? row.videoPrompt : row.videoPrompt.replace(/\n/g, ' ')}
-                              {!expandedVP[row.no] && <span style={{ color:'#a78bfa', fontWeight:700 }}> ▸ 전체보기</span>}
-                            </button>
-                          </div>
-                        )}
-                        <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', fontSize:10.5, color:'#9490a8' }}>
-                          {row.startFrame
-                            ? <a href={row.startFrame} download={`cut_${String(row.no).padStart(2,'0')}_start.jpg`}
-                                style={{ color:'#60a5fa', fontWeight:700 }}>🖼 시작 프레임 저장</a>
-                            : <span style={{ color:'#f87171' }}>⚠ 시작 프레임 이미지 없음 (G2 먼저)</span>}
-                          <label style={{ display:'flex', alignItems:'center', gap:3 }}>
-                            <input type="checkbox" checked={keepAudio}
-                              onChange={e => setVUpload(p => ({ ...p, [row.no]: { ...p[row.no], keepAudio: e.target.checked } }))} />
-                            Veo 오디오 유지(립싱크)
-                          </label>
-                        </div>
-                        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                          <label style={{ fontSize:10.5, fontWeight:700, color:'#a78bfa', background:'rgba(167,139,250,0.1)', border:'1px solid rgba(167,139,250,0.3)', borderRadius:4, padding:'3px 9px', cursor:'pointer' }}>
-                            {up.busy ? '업로드 중…' : '📤 완성본 mp4 업로드'}
-                            <input type="file" accept="video/mp4,video/*" hidden disabled={up.busy}
-                              onChange={e => { const f = e.target.files[0]; if (f) uploadCutVideo(row.no, f, keepAudio); e.target.value = '' }} />
-                          </label>
-                          {up.result?.error && <span style={{ fontSize:10, color:'#f87171' }}>{up.result.error}</span>}
-                          {up.result?.success && <span style={{ fontSize:10, color:'#4ade80' }}>✓ {up.result.sizeKB}KB{up.result.trimmed ? ` · ${row.duration}s로 트림` : ''}{up.result.keptAudio ? ' · 오디오 유지' : ''}</span>}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-              <div style={{ fontSize:10, color:'#5c5870', lineHeight:1.5, marginTop:2 }}>
-                Veo/Flow에서 직접 제작 → VP 프롬프트 + 시작 프레임 사용 → 완성본 mp4를 여기 업로드.
-                업로드 시 1080×1920 정규화 + 컷 길이로 트림. 방식 셀렉트로 컷마다 veo/모션/정지 override.
-              </div>
-            </div>
-          )}
+        <div className={s.vChkSummary}>
+          정책: {vChk.policy === 'video-first' ? '영상 중심(LF)' : vChk.policy === 'mixed' ? '혼합(SF)' : '이미지+모션 중심(IG)'}
+          {' · '}Veo 필요 <b>{vChk.veoNeeded}</b>컷 · 완료 <b>{vChk.veoDone}</b>
+          {vChk.videoDir && <span className={s.vChkDir}> · 📁 {vChk.videoDir}</span>}
         </div>
       )}
 
@@ -1043,6 +1096,10 @@ export default function VideoTab() {
         {cuts.map(selCut => {
           const isSelected = selCut.id === selectedCutId
           const clips = videoClips[selCut.id] || []
+          // 예전엔 이 정보가 위쪽 "영상 체크리스트" 섹션에만 있어서 컷 카드에서 VP 프롬프트가
+          // 아예 안 보였다(2026-09-13, 사용자 지적 — 이원화 구조 통합). vChk는 이미 로드돼 있음.
+          const vRow = vChk?.cuts?.find(r => r.no === selCut.no)
+          const up = vUpload[selCut.no] || {}
           const cutSegs = toSegments(subtitles[selCut.id], stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
           const captionText = cutSegs[0]?.text ?? ''
           const cutClipTimings = clips.length > 1 ? clipTimings(clips) : []
@@ -1064,6 +1121,18 @@ export default function VideoTab() {
               <div className={s.cutCardHeader}>
                 <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} — {selCut.scene || '씬 미입력'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {vRow && (
+                    <select value={vRow.videoMode} onClick={e => e.stopPropagation()}
+                      onChange={e => setCutVideoMode(selCut.no, e.target.value)}
+                      style={{ fontSize:11, background:'var(--bg-input)', color:'var(--text)', border:'1px solid var(--border)', borderRadius:4, padding:'2px 4px' }}>
+                      {VIDEO_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  )}
+                  {vRow && (
+                    <span style={{ fontSize:11, fontWeight:700, color: vRow.hasVideo ? '#4ade80' : vRow.videoMode === 'veo' ? '#fbbf24' : 'var(--text-3)' }}>
+                      {vRow.hasVideo ? '✓ 업로드됨' : vRow.videoMode === 'veo' ? '· 제작 필요' : vRow.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
+                    </span>
+                  )}
                   {clips.length === 0 && (() => {
                     const target = selCut.duration || 5
                     const estCount = estimateClipCount(target)
@@ -1105,6 +1174,27 @@ export default function VideoTab() {
                   </div>
                 )}
 
+                {vRow?.videoMode === 'veo' && vRow.videoPrompt && (
+                  <div className={s.vpRow} onClick={e => e.stopPropagation()}>
+                    <button className={s.vpCopyBtn} onClick={() => navigator.clipboard.writeText(vRow.videoPrompt)}>
+                      VP 복사
+                    </button>
+                    <button className={s.vpToggleBtn}
+                      onClick={() => setExpandedVP(p => ({ ...p, [selCut.no]: !p[selCut.no] }))}
+                      title="클릭해서 전체 프롬프트 펼치기/접기">
+                      <span className={expandedVP[selCut.no] ? s.vpTextFull : s.vpTextClamp}>
+                        {expandedVP[selCut.no] ? vRow.videoPrompt : vRow.videoPrompt.replace(/\n/g, ' ')}
+                      </span>
+                      {!expandedVP[selCut.no] && <span className={s.vpMore}> ▸ 전체보기</span>}
+                    </button>
+                    {vRow.startFrame
+                      ? <a className={s.vpStartFrame} href={vRow.startFrame} download={`cut_${String(selCut.no).padStart(2,'0')}_start.jpg`}>
+                          🖼 시작 프레임 저장
+                        </a>
+                      : <span className={s.vpNoStartFrame}>⚠ 시작 프레임 없음(G2 먼저)</span>}
+                  </div>
+                )}
+
                 {clips.length <= 1 && (
                   <div className={s.field} onClick={e => e.stopPropagation()}>
                     <label>컷 자막</label>
@@ -1133,6 +1223,9 @@ export default function VideoTab() {
                               <span className={s.clipLabel}> ({String.fromCharCode(97 + idx)})</span>
                             </span>
                             <span className={s.clipDurLabel}>{clip.duration != null ? `${clip.duration}s` : '?'}</span>
+                            {clip.staging && <span className={s.clipStagingBadge} title="서버에 올리는 중...">⏳ 업로드 중</span>}
+                            {clip.stageError && <span className={s.clipStageErrorBadge} title={clip.stageError}>⚠ 업로드 실패</span>}
+                            {!clip.staging && !clip.stageError && !clip.stagedPath && <span className={s.clipStageErrorBadge}>⚠ 서버 미반영</span>}
                             {clip.ratio && (
                               <span className={`${s.clipRatioBadge} ${clip.ratio !== aspectRatio ? s.clipRatioMismatch : ''}`}
                                 title={clip.ratio !== aspectRatio ? `현재 미리보기 모드(${aspectRatio})와 다른 비율입니다` : ''}>
@@ -1162,6 +1255,12 @@ export default function VideoTab() {
                                   })} />
                                 <span>전체 사용</span>
                               </label>
+                              <label className={s.check}>
+                                <input type="checkbox"
+                                  checked={clip.keepAudio ?? true}
+                                  onChange={e => updateClipTrim(selCut.id, idx, { keepAudio: e.target.checked })} />
+                                <span>오디오 유지</span>
+                              </label>
                               {!clip.useFullDuration && (
                                 <div className={s.trimInputs}>
                                   <div className={s.trimField}>
@@ -1188,6 +1287,20 @@ export default function VideoTab() {
                     })}
                   </div>
                 )}
+                {videoCandidates[selCut.no]?.length > 0 && (
+                  <div className={s.candidateRow} onClick={e => e.stopPropagation()}>
+                    <span className={s.candidateLabel}>📁 폴더에서 찾음:</span>
+                    {videoCandidates[selCut.no].map(cand => {
+                      const already = clips.some(c => c.stagedPath === cand.path)
+                      return (
+                        <button key={cand.name} className={s.candidateBtn} disabled={already}
+                          onClick={() => addCandidateClip(selCut.id, selCut.no, cand)}>
+                          {already ? `✓ ${cand.name}` : `+ ${cand.name}`}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
                 <div className={s.videoEmptyBtns} onClick={e => e.stopPropagation()}>
                   <label className={s.uploadBtn}>
                     📁 로컬 업로드
@@ -1200,22 +1313,41 @@ export default function VideoTab() {
                   <button
                     className={s.aiGenBtn}
                     disabled={videoGenStatus[selCut.id] === 'running'}
+                    title="Flow/Veo 자동화는 2026-09-02에 폐기됨 — 외부에서 수동 제작 후 업로드 권장"
                     onClick={() => generateVideoForCut(selCut)}>
-                    {videoGenStatus[selCut.id] === 'running' ? '⏳ 생성 중…' : '✨ AI 영상 생성'}
+                    {videoGenStatus[selCut.id] === 'running' ? '⏳ 생성 중…' : '✨ AI 영상 생성 (레거시)'}
+                  </button>
+                  <button
+                    className={s.composeBtn}
+                    disabled={composeStatus[selCut.id] === 'running' || !clips.length}
+                    title="여기 있는 클립들을 순서/트림대로 이어붙여 실제 cut_NN.mp4를 만듭니다"
+                    onClick={() => renderCutClips(selCut)}>
+                    {composeStatus[selCut.id] === 'running' ? '⏳ 합성 중…' : '🎬 클립 합성'}
                   </button>
                   <button
                     className={s.ffmpegBtn}
                     disabled={ffmpegStatus[selCut.id] === 'running'}
+                    title="서버에 이미 있는 cut_NN.mp4 위에 나레이션·효과음만 입힙니다"
                     onClick={() => runFfmpegForCut(selCut)}>
-                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 합성 중…' : '🎬 FFmpeg 합성'}
+                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…' : '🔊 나레이션·효과음 입히기'}
                   </button>
+                  <label className={s.uploadBtn} title="외부(CapCut/Veo 등)에서 이미 완성한 파일 1개를 바로 올립니다">
+                    {up.busy ? '업로드 중…' : '📤 완성본 바로 업로드'}
+                    <input type="file" accept="video/mp4,video/*" hidden disabled={up.busy}
+                      onChange={e => { const f = e.target.files[0]; if (f) uploadCutVideo(selCut.no, f, up.keepAudio ?? !!selCut.dialogue); e.target.value = '' }} />
+                  </label>
                 </div>
                 {ffmpegLog[selCut.id] && (
                   <div className={s.ffmpegLog}>{ffmpegLog[selCut.id]}</div>
                 )}
+                {composeLog[selCut.id] && (
+                  <div className={s.ffmpegLog}>{composeLog[selCut.id]}</div>
+                )}
                 {videoGenLog[selCut.id] && (
                   <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
                 )}
+                {up.result?.error && <div className={s.aiGenLog}>❌ {up.result.error}</div>}
+                {up.result?.success && <div className={s.ffmpegLog}>✓ {up.result.sizeKB}KB{up.result.keptAudio ? ' · 오디오 유지' : ''}</div>}
               </div>
               <div className={s.cutCardFooter} onClick={e => e.stopPropagation()}>
                 <button

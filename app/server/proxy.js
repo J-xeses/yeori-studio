@@ -1488,6 +1488,86 @@ app.post('/api/import-cut-images', (req, res) => {
   catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+// normalizeCutImages와 동일 패턴 — 영상탭에도 "폴더에서 일괄 가져오기"가 없다는 지적
+// (2026-09-13)에 대응. 05_video/ 폴더에 느슨한 이름으로 던져진 영상을 cut_NN_x.mp4
+// 규격으로 리네임한다. 단, cut_NN.mp4(최종 합성본)/cut_NN_final.mp4는 예약된 산출물
+// 이름이라 건드리지 않음(리네임 대상에서도 제외, 슬롯 점유만 인정).
+function normalizeCutVideoClips(epNum) {
+  const dir = mp.videoDir(epNum)
+  if (!fs.existsSync(dir)) return { renamed: [], skipped: [], dir }
+  const VID = /\.(mp4|mov|webm)$/i
+  // 05_video/ 폴더는 02_images/와 달리 최종본·그래픽 스틸·검증샷·자막 프리뷰 등 목적이 다른
+  // 파생 파일이 이미 "cut_NN_<이름>.ext" 컨벤션으로 잔뜩 섞여있다(예: cut_04_subtitle_preview.mp4,
+  // cut_10_graphic.png는 다른 폴더지만 mp4 버전도 이 패턴을 씀) — cutNoFrom()의 느슨한 컷번호
+  // 추측만 믿으면 이런 기존 관리 파일까지 실수로 리네임해버린다(실측 확인, 2026-09-13).
+  // 그래서 "cut_숫자"로 이미 시작하는 파일은 그 이유를 따지지 않고 전부 건드리지 않는다 —
+  // 느슨한 이름 추측은 그 프리픽스가 아예 없는 파일(카메라 파일명 등)에만 적용.
+  const ALREADY_CUT_SCOPED = /^cut_\d+[_.]/i
+  const CONFORMING = /^cut_\d+_[a-z0-9]{1,2}\.(mp4|mov|webm)$/i
+  const files = fs.readdirSync(dir)
+
+  const usedSlots = {}
+  for (const f of files) {
+    let m = f.match(/^cut_(\d+)_([a-z])[0-9]?\./i)
+    if (m) { (usedSlots[+m[1]] ??= new Set()).add(m[2].toLowerCase()); continue }
+    m = f.match(/^cut_(\d+)\./i)
+    if (m) (usedSlots[+m[1]] ??= new Set()).add('a')
+  }
+  const nextSlot = (cutNo) => {
+    const s = (usedSlots[cutNo] ??= new Set())
+    for (const c of 'abcdefghijklmnopqrstuvwxyz') if (!s.has(c)) { s.add(c); return c }
+    return 'z' + Date.now().toString(36).slice(-2)
+  }
+  const cutNoFrom = (name) => {
+    const base = name.replace(VID, '')
+    const m = base.match(/cut[ _-]?0*(\d+)/i)
+      || base.match(/^0*(\d+)(?:[ _.\-]|$)/)
+      || base.match(/[[(]0*(\d+)[\])]/)
+      || base.match(/(\d{1,3})/)
+    return m ? parseInt(m[1], 10) : null
+  }
+
+  const renamed = [], skipped = []
+  for (const f of files) {
+    if (!VID.test(f) || ALREADY_CUT_SCOPED.test(f) || CONFORMING.test(f)) continue
+    const cutNo = cutNoFrom(f)
+    if (cutNo == null) { skipped.push({ file: f, reason: '파일명에서 컷 번호를 못 찾음' }); continue }
+    const ext = f.match(VID)[1].toLowerCase()
+    const dest = `cut_${String(cutNo).padStart(2, '0')}_${nextSlot(cutNo)}.${ext}`
+    try { fs.renameSync(path.join(dir, f), path.join(dir, dest)); renamed.push({ from: f, to: dest, cutNo }) }
+    catch (e) { skipped.push({ file: f, reason: e.message }) }
+  }
+  return { renamed, skipped, dir }
+}
+
+app.post('/api/import-cut-videos', (req, res) => {
+  const { ep } = req.body || {}
+  if (!ep) return res.status(400).json({ error: 'ep 필요' })
+  try { res.json({ success: true, ...normalizeCutVideoClips(ep) }) }
+  catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+// 리네임된(또는 이미 규격에 맞던) 원본 후보 클립들을 컷별로 스캔 — 이미 서버에 있는 파일이라
+// stagedPath로 바로 참조 가능(로컬 업로드처럼 재업로드 필요 없음, "프록시"와 동일한 성격).
+app.get('/api/scan-cut-videos', (req, res) => {
+  const { epNum } = req.query
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  const dir = mp.videoDir(epNum)
+  if (!fs.existsSync(dir)) return res.json({ clips: [] })
+  const urlPrefix = mp.toMediaUrl(dir)
+  const clips = []
+  fs.readdirSync(dir).sort().forEach(file => {
+    const m = file.match(/^cut_(\d+)_([a-z0-9]{1,2})\.(mp4|mov|webm)$/i)
+    if (m) {
+      clips.push({
+        cutNo: parseInt(m[1], 10), slot: m[2], name: file,
+        url: `${urlPrefix}/${file}`, path: path.join(dir, file),
+      })
+    }
+  })
+  res.json({ clips })
+})
+
 // ── POST /api/scan-media — ep 전체 미디어 스캔 ─────────────────────
 // 인스타 콘텐츠(IG_FD/IG_RL/IG_PT/IG_ST) 에피소드는 이미지 생성물이 downloads/flow/ep{N}/이
 // 아니라 downloads/insta/{content}/{num}/에 저장된다(flow-automation.js의 resolveContentDir()
@@ -6225,6 +6305,145 @@ app.post('/api/upload-cut-video', (req, res) => {
       res.status(500).json({ error: `ffmpeg 실행 오류: ${e.message}` })
     })
   })
+})
+
+// ── 컷별 카드의 "로컬 업로드" 클립을 실제 서버 파일로 스테이징 ──────────
+// /api/upload-cut-video와 같은 raw-stream 패턴이되, ffmpeg 정규화 없이 원본 그대로 저장
+// (여러 클립을 합칠 때 한 번만 정규화하기 위해 — /api/render-cut-clips 참고, 2026-09-13).
+app.post('/api/stage-cut-clip', (req, res) => {
+  const { epNum, cutNo, idx } = req.query
+  if (!epNum || !cutNo || idx == null) return res.status(400).json({ error: 'epNum, cutNo, idx 필요' })
+  const padded = String(cutNo).padStart(2, '0')
+  const rawDir = path.join(mp.makingDir(epNum), 'raw')
+  fs.mkdirSync(rawDir, { recursive: true })
+  const outPath = path.join(rawDir, `cut_${padded}_clip_${idx}.mp4`)
+  const chunks = []
+  req.on('data', c => chunks.push(c))
+  req.on('error', () => res.status(400).json({ error: '업로드 스트림 오류' }))
+  req.on('end', () => {
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+    fs.writeFileSync(outPath, buf)
+    res.json({ success: true, path: outPath, sizeBytes: buf.length })
+  })
+})
+
+// ── 컷의 videoClips(여러 클립+트림)를 실제로 이어붙여 cut_NN.mp4를 생성 ──────
+// 예전엔 "완성본 mp4 하나 업로드"만 실제 서버 파일을 만들었고, 컷별 카드의 클립
+// 편집(로컬 업로드/트림)은 브라우저 blob: URL일 뿐 아무것도 서버에 남기지 않았다
+// (2026-09-13, 사용자 지적 — "로컬 클립 편집이 실제 출력을 만들어야 한다"). 이 엔드포인트가
+// 그 갭을 메운다. 정규화+concat 방식은 assembleMakingFilm()(위)과 동일한 근거 —
+// 클립마다 해상도/코덱/오디오 유무가 다를 수 있어 스트림카피 concat은 깨진다.
+app.post('/api/render-cut-clips', async (req, res) => {
+  const { epNum, cutNo, clips } = req.body || {}
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  if (!Array.isArray(clips) || !clips.length) return res.status(400).json({ error: 'clips 배열 필요' })
+  for (const c of clips) {
+    if (!c.file || !fs.existsSync(c.file)) return res.status(400).json({ error: `클립 파일 없음: ${c.file}` })
+  }
+
+  const padded = String(cutNo).padStart(2, '0')
+  const videoDir = mp.videoDir(epNum)
+  fs.mkdirSync(videoDir, { recursive: true })
+  const outPath = path.join(videoDir, `cut_${padded}.mp4`)
+  const { w: CW, h: CH } = episodeCutDims(epNum)
+
+  // 지금 만들려는 출력 파일 자체를 입력으로 참조하는 클립("프록시"로 이미 있는 cut_NN.mp4를
+  // 그대로 다시 넣는 경우)이 있으면, ffmpeg가 읽으면서 동시에 같은 파일에 쓸 수 없으므로
+  // 임시 경로로 먼저 복사해서 입력을 바꿔치기한다.
+  const rawDir = path.join(mp.makingDir(epNum), 'raw')
+  fs.mkdirSync(rawDir, { recursive: true })
+  const resolvedClips = clips.map((c, i) => {
+    if (path.resolve(c.file) === path.resolve(outPath)) {
+      const safeCopy = path.join(rawDir, `cut_${padded}_selfref_${i}.mp4`)
+      fs.copyFileSync(c.file, safeCopy)
+      return { ...c, file: safeCopy, _selfRefCopy: safeCopy }
+    }
+    return c
+  })
+
+  try {
+    let code
+    if (resolvedClips.length === 1 && (resolvedClips[0].useFullDuration ?? true)) {
+      // 클립 1개 + 트림 없음 — 불필요한 트림/필터 없이 정규화만 한 번.
+      const clip = resolvedClips[0]
+      const args = ['-y', '-i', clip.file,
+        '-vf', `${s2cFitFilter('cover', CW, CH)},format=yuv420p`,
+        '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60', '-movflags', '+faststart']
+      if (clip.keepAudio !== false && await hasAudioStream(clip.file)) args.push('-c:a', 'aac', '-b:a', '192k')
+      else args.push('-an')
+      args.push(outPath)
+      code = await new Promise((resolve) => {
+        const proc = spawn('ffmpeg', args, { windowsHide: true })
+        proc.on('close', resolve)
+        proc.on('error', () => resolve(1))
+      })
+    } else {
+      // 클립 여러 개 또는 트림 있음 — assembleMakingFilm과 동일한 정규화 후 concat.
+      const inputArgs = []
+      const filterParts = []
+      const concatLabels = []
+      for (let i = 0; i < resolvedClips.length; i++) {
+        const clip = resolvedClips[i]
+        const trimStart = parseFloat(clip.trimStart) || 0
+        const useFullDuration = clip.useFullDuration ?? true
+        const trimEnd = parseFloat(clip.trimEnd)
+        const usedDur = useFullDuration ? null : Math.max(0.1, trimEnd - trimStart)
+        // -ss/-t는 반드시 -i 앞에 둬야 "이 입력만" 트림된다 — 뒤에 두면 여러 입력이 섞일 때
+        // ffmpeg가 출력 옵션으로 잘못 해석해 엉뚱한 입력이 잘리는 문제가 실측으로 확인됨
+        // (2026-09-13, clip0을 트림했는데 clip1이 대신 잘리는 버그).
+        if (!useFullDuration && trimStart > 0) inputArgs.push('-ss', String(trimStart))
+        if (!useFullDuration) inputArgs.push('-t', String(usedDur))
+        inputArgs.push('-i', clip.file)
+        filterParts.push(
+          `[${i}:v]scale=${CW}:${CH}:force_original_aspect_ratio=decrease,pad=${CW}:${CH}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[v${i}]`
+        )
+        const wantAudio = clip.keepAudio !== false && await hasAudioStream(clip.file)
+        if (wantAudio) {
+          filterParts.push(`[${i}:a]aformat=sample_rates=44100:channel_layouts=stereo[a${i}]`)
+        } else {
+          const dur = usedDur || await getMediaDuration(clip.file) || 1
+          filterParts.push(`anullsrc=r=44100:cl=stereo,atrim=0:${dur}[a${i}]`)
+        }
+        concatLabels.push(`[v${i}][a${i}]`)
+      }
+      filterParts.push(`${concatLabels.join('')}concat=n=${resolvedClips.length}:v=1:a=1[vout][aout]`)
+
+      code = await new Promise((resolve) => {
+        const proc = spawn('ffmpeg', [
+          '-y', ...inputArgs,
+          '-filter_complex', filterParts.join(';'),
+          '-map', '[vout]', '-map', '[aout]',
+          '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast',
+          '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart',
+          outPath,
+        ], { windowsHide: true })
+        let errBuf = ''
+        proc.stderr.on('data', d => { errBuf += d.toString() })
+        proc.on('close', c => { if (c !== 0) console.error('[render-cut-clips]', errBuf.slice(-300)); resolve(c) })
+        proc.on('error', () => resolve(1))
+      })
+    }
+
+    if (code !== 0 || !fs.existsSync(outPath)) {
+      return res.status(500).json({ error: 'FFmpeg 합성 실패' })
+    }
+
+    // 스테이징된 raw 클립(로컬 업로드로 올라온 것)만 정리 — "프록시" 등 기존 서버 파일은 안 지움.
+    // path.resolve로 정규화해서 비교(슬래시 표기가 섞여 들어와도 안전하게 매칭).
+    for (const c of resolvedClips) {
+      const isStaged = path.resolve(c.file).startsWith(path.resolve(rawDir))
+        && /cut_\d+_(clip|selfref)_/.test(path.basename(c.file))
+      if (isStaged) { try { fs.unlinkSync(c.file) } catch { /* noop */ } }
+    }
+
+    const st = fs.statSync(outPath)
+    const duration = await getMediaDuration(outPath)
+    recordCutMotion(epNum, cutNo, { method: 'multi-clip-compose', motion: null, baked: true })
+    res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 app.get('/api/code-task-queue', (req, res) => {
