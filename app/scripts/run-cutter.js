@@ -18,6 +18,7 @@ import path from 'node:path'
 import * as mp from '../server/lib/mediaPaths.js'
 
 const MEDIA_ROOT = 'C:\\yeori-studio'
+const probeMedia = mp.probeMedia
 
 function uuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -66,13 +67,14 @@ function makeSegAndMaterials(d, r, tmplSeg, folderPath, kbMode) {
 
   const matId = uuid(), spdId = uuid(), phId = uuid(), cvId = uuid(), scmId = uuid(), mcId = uuid(), vsId = uuid()
   const isVideo = /\.(mp4|mov|webm)$/i.test(r.file)
+  const probed = r.probed || probeMedia(fullPath, isVideo)
 
   d.materials.videos.push({
-    id: matId, unique_id: '', type: isVideo ? 'video' : 'photo', duration: 10800000000,
+    id: matId, unique_id: '', type: isVideo ? 'video' : 'photo', duration: probed.durationUs,
     path: fullPath, media_path: '', local_id: '', has_audio: isVideo,
     reverse_path: '', intensifies_path: '', reverse_intensifies_path: '',
     intensifies_audio_path: '', cartoon_path: '',
-    width: 2752, height: 1536,
+    width: probed.width, height: probed.height,
     category_id: '', category_name: '', material_id: '',
     material_name: r.file.replace(/^\d+[_\s]*/, ''), material_url: '',
     crop: { upper_left_x: 0, upper_left_y: 0, upper_right_x: 1, upper_right_y: 0, lower_left_x: 0, lower_left_y: 1, lower_right_x: 1, lower_right_y: 1 },
@@ -186,7 +188,13 @@ function run(epNum) {
     throw new Error(`editMeta 없음: ${cutterInput.editMeta}`)
   }
   const editMeta = JSON.parse(fs.readFileSync(cutterInput.editMeta, 'utf-8'))
-  const cuts = Array.isArray(editMeta) ? editMeta : []
+  // order 필드(체크업 탭 "배치 전용 순서" 오버라이드, 2026-09-13 Tier2)가 있으면 그 순서로,
+  // 없는 컷은 원래 cutNo 순서를 유지 — 대본 자체(cutNo)는 절대 바꾸지 않고 배치 순서만 바꾼다.
+  const cuts = (Array.isArray(editMeta) ? editMeta : []).slice().sort((a, b) => {
+    const oa = Number.isFinite(a.order) ? a.order : Number(a.cutNo)
+    const ob = Number.isFinite(b.order) ? b.order : Number(b.cutNo)
+    return oa - ob
+  })
   if (cuts.length === 0) throw new Error('editMeta에 컷이 없습니다')
 
   const folderPath = mp.videoDir(epNum).replace(/\\/g, '/')
@@ -224,11 +232,43 @@ function run(epNum) {
     duration: Math.round(((m.endSec || 0) - (m.startSec || 0)) * 1000000),
     motionBaked: isMotionBaked(m),
     intentKb: normKb(m.editIntent?.kenburns),
+    // 컷별 갭 오버라이드(체크업 탭, 2026-09-13 Tier2) — 없으면 null → 전역 gapUs 사용
+    gapAfterUs: Number.isFinite(m.gapAfterSec) && m.gapAfterSec > 0 ? Math.round(m.gapAfterSec * 1000000) : null,
   }))
   const bakedCount = matchResult.filter(r => r.motionBaked).length
   if (bakedCount) console.log(`[cutter] 모션 구워진 컷 ${bakedCount}개 — 켄번스 스킵`)
   const intentCount = matchResult.filter(r => !r.motionBaked && r.intentKb).length
   if (intentCount) console.log(`[cutter] 편집 의도(editIntent)로 켄번스 지정된 컷 ${intentCount}개`)
+
+  // 아직 영상 파일이 없는 컷은 배치하지 않는다 — 파일 없이 경로만 심으면 CapCut에서
+  // "미디어 분실"로 뜨는 원인이 됨(2026-09-13 실측 확인). 대신 스킵 목록으로 보고해서
+  // 프론트엔드/체크업 탭이 "아직 제작 안 된 컷"으로 표시할 수 있게 함.
+  const skipped = []
+  const trimmed = []
+  const placedResult = matchResult.filter(r => {
+    const fullPath = path.join(folderPath, r.file)
+    if (!fs.existsSync(fullPath)) {
+      skipped.push({ cutNo: r.cutNo, label: r.label, file: r.file })
+      return false
+    }
+    // 실제 소스 길이를 미리 읽어서, 대본(editMeta) 상 구간이 실제 렌더링된 파일보다
+    // 길면(예: Veo 생성이 8/10초 단위라 대본 지정 구간보다 짧게 나온 경우) 잘라낸다.
+    // 안 그러면 source_timerange.duration > material.duration 상태로 CapCut에 심겨
+    // (구 하드코딩 placeholder는 항상 3시간이라 이 문제가 가려져 있었음) 정지화면/오류가 남.
+    r.probed = probeMedia(fullPath, /\.(mp4|mov|webm)$/i.test(r.file))
+    if (r.probed.durationUs > 0 && r.probed.durationUs < r.duration) {
+      trimmed.push({ cutNo: r.cutNo, label: r.label, scriptSec: r.duration / 1000000, actualSec: r.probed.durationUs / 1000000 })
+      r.duration = r.probed.durationUs
+    }
+    return true
+  })
+  if (skipped.length) {
+    console.warn(`[cutter] 영상 파일 없음 — ${skipped.length}개 컷 배치 스킵: ${skipped.map(s => s.cutNo).join(', ')}`)
+  }
+  if (trimmed.length) {
+    console.warn(`[cutter] 대본 구간보다 실제 파일이 짧음 — ${trimmed.length}개 컷 길이 보정: ` +
+      trimmed.map(t => `${t.cutNo}(${t.scriptSec}s→${t.actualSec}s)`).join(', '))
+  }
 
   // 전체 모드: 기존 세그먼트/소재 전부 비우고 editMeta 기준으로 재구성
   videoTrack.segments = []
@@ -243,7 +283,7 @@ function run(epNum) {
   const cutDetails = []
   let placeCursor = 0   // gapUs 만큼씩 밀리는 실제 타임라인 배치 위치 (editMeta의 절대 start/end 와는 별개)
   let lastEnd = 0
-  for (const r of matchResult) {
+  for (const r of placedResult) {
     const cutKbMode = r.motionBaked ? 'none' : (r.intentKb || kbMode)
     const placedR = { ...r, start: placeCursor, end: placeCursor + r.duration }
     const { seg, effectType } = makeSegAndMaterials(d, placedR, tmplSeg, folderPath, cutKbMode)
@@ -256,7 +296,7 @@ function run(epNum) {
       kenburns: r.motionBaked ? 'none(모션내장)'
         : (r.intentKb ? `${effectType}(intent)` : effectType),
     })
-    placeCursor = lastEnd + gapUs
+    placeCursor = lastEnd + (r.gapAfterUs ?? gapUs)
   }
   d.duration = lastEnd
 
@@ -282,10 +322,13 @@ function run(epNum) {
 
   fs.writeFileSync(cutterInput.draft, JSON.stringify(d), 'utf-8')
   const projectName = path.basename(path.dirname(cutterInput.draft))
-  console.log(`✅ 커터 실행 완료: ${matchResult.length}개 컷, duration=${d.duration}`)
+  console.log(`✅ 커터 실행 완료: ${placedResult.length}개 컷 배치, ${skipped.length}개 스킵, duration=${d.duration}`)
   console.log(`   → 프로젝트: ${projectName} (${cutterInput.draft})`)
 
-  const result = { segCount: matchResult.length, durationSec: Math.round(d.duration / 1000000), draftPath: cutterInput.draft, projectName, cuts: cutDetails }
+  const result = {
+    segCount: placedResult.length, durationSec: Math.round(d.duration / 1000000),
+    draftPath: cutterInput.draft, projectName, cuts: cutDetails, skipped, trimmed,
+  }
   // proxy.js가 stdout에서 파싱해 프론트엔드에 결과를 그대로 전달할 수 있도록
   // 마지막 줄에 기계 판독 가능한 요약을 남김
   console.log(`RESULT_JSON:${JSON.stringify(result)}`)

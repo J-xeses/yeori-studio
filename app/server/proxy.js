@@ -1204,6 +1204,44 @@ app.post('/api/save-edit-meta', (req, res) => {
   }
 })
 
+// ── POST /api/checkup-layout — 체크업 탭 "배치 전용" 순서/갭 오버라이드 저장 ──
+// 대본 본문(studio-state cuts)이나 editMeta의 다른 필드는 건드리지 않고, 각 컷의
+// order/gapAfterSec만 patch한다 — run-cutter.js가 이 값으로 캡컷 배치 순서·간격을 정하고,
+// 체크업 탭 자신도 같은 값으로 재생 순서를 정렬한다(2026-09-13, Tier2).
+//   body: { order?: [cutNo,...] 새 순서 전체 배열, gaps?: { [cutNo]: gapAfterSec } }
+app.post('/api/checkup-layout', (req, res) => {
+  const { order, gaps } = req.body || {}
+  const metaPath = mp.editMetaPath()
+  try {
+    const em = fs.existsSync(metaPath) ? JSON.parse(fs.readFileSync(metaPath, 'utf-8')) : []
+    const list = Array.isArray(em) ? em : []
+    const byCutNo = new Map(list.map(m => [String(Number(m.cutNo)), m]))
+
+    if (Array.isArray(order)) {
+      order.forEach((cutNo, idx) => {
+        const key = String(Number(cutNo))
+        let m = byCutNo.get(key)
+        if (!m) { m = { cutNo: String(cutNo).padStart(2, '0') }; list.push(m); byCutNo.set(key, m) }
+        m.order = idx
+      })
+    }
+    if (gaps && typeof gaps === 'object') {
+      for (const [cutNo, gapAfterSec] of Object.entries(gaps)) {
+        const key = String(Number(cutNo))
+        let m = byCutNo.get(key)
+        if (!m) { m = { cutNo: String(cutNo).padStart(2, '0') }; list.push(m); byCutNo.set(key, m) }
+        m.gapAfterSec = Number(gapAfterSec) || 0
+      }
+    }
+
+    fs.mkdirSync(path.dirname(metaPath), { recursive: true })
+    fs.writeFileSync(metaPath, JSON.stringify(list, null, 2), 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/confirm-image — G2 승인 이미지를 표준명(cut_NN.jpg)으로 저장 ──
 app.post('/api/confirm-image', (req, res) => {
   const { ep, cutNo, imageUrl, instaContent, instaNum } = req.body
@@ -5932,10 +5970,33 @@ app.get('/api/episode-video-checklist', (req, res) => {
     const flowDir = mp.imagesDir(epNum)
     const videoDir = mp.videoDir(epNum)
     const audioDir = mp.audioDir(epNum)
+
+    // 체크업 탭 "배치 전용 순서/갭" 오버라이드 — editMeta.json(order/gapAfterSec)에서 읽어와
+    // 병합. 대본 본문(studio-state)은 건드리지 않고 캡컷 배치·체크업 재생 순서에만 영향 준다
+    // (2026-09-13, 사용자 확정 — Tier2 "재배열=배치 전용 오버라이드", "갭=컷별 개별 조정").
+    const editMetaByCutNo = {}
+    try {
+      const em = JSON.parse(fs.readFileSync(mp.editMetaPath(), 'utf-8'))
+      for (const m of (Array.isArray(em) ? em : [])) editMetaByCutNo[String(Number(m.cutNo))] = m
+    } catch { /* editMeta 없음 — order/gap 전부 기본값 */ }
     const gData = loadGpointsFile()[episodeCode] || {}
     const listDir = d => { try { return fs.readdirSync(d) } catch { return [] } }
     const flowFiles = listDir(flowDir)
     const videoFiles = listDir(videoDir)
+
+    // 체크업 탭 "캡컷 배치 가능 여부" 뱃지용 — run-cutter.js와 동일한 이중 모션 가드 기준
+    // (.motion-manifest.json baked 플래그 → 없으면 cutType) 재사용.
+    const MOTION_BAKED_TYPES = new Set(['GRAPHIC', 'BROLL', 'CAPCUT'])
+    let motionManifest = {}
+    try {
+      const mmPath = path.join(videoDir, '.motion-manifest.json')
+      if (fs.existsSync(mmPath)) motionManifest = JSON.parse(fs.readFileSync(mmPath, 'utf-8')) || {}
+    } catch { /* 무시 */ }
+    const isMotionBaked = (c) => {
+      const mm = motionManifest[String(c.no)]
+      if (mm && typeof mm.baked === 'boolean') return mm.baked
+      return MOTION_BAKED_TYPES.has((c.cutType || '').toUpperCase())
+    }
 
     const out = cuts.map(c => {
       const p = String(c.no).padStart(2, '0')
@@ -5947,6 +6008,11 @@ app.get('/api/episode-video-checklist', (req, res) => {
       if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[ab])?\\.(jpe?g|png|webp)$`, 'i').test(f))
       // 다운스트림 소비자(run-cutter / assembleMakingFilm / concat-video)가 전부 이 파일명을 읽는다
       const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
+      const targetSec = serverCutTargetDuration(c)
+      // 체크업 탭 뱃지용 실측 — 대본 목표(targetSec)보다 실제 렌더 파일이 짧으면(Veo 8/10초
+      // 생성단위 제약 등으로) run-cutter가 캡컷 배치 시 자동으로 길이를 잘라낸다 — 사전에 표시.
+      const probed = savedFile ? mp.probeMedia(path.join(videoDir, savedFile), true) : null
+      const actualDurationSec = probed ? probed.durationUs / 1000000 : null
       return {
         no: c.no,
         cutType: c.cutType || 'YEORI',
@@ -5961,7 +6027,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
           segments: c.segments, segTiming: c.segTiming, segPrompts: c.segPrompts,
         }),
         segClipPrompts: Array.isArray(c.segments) ? c.segments.map((_, i) => buildSegClipPrompt(c, i)) : null,
-        duration: serverCutTargetDuration(c),   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
+        duration: targetSec,   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
         startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,
         startFrameName: startFrame || null,
         hasImage: !!startFrame,
@@ -5971,6 +6037,11 @@ app.get('/api/episode-video-checklist', (req, res) => {
         videoUrl: savedFile ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), savedFile))}` : null,
         savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치
         g2: !!g.g2, g4: !!g.g4,
+        motionBaked: isMotionBaked(c),           // true면 캡컷 켄번스 적용 안 됨(메이킹 탭에서 이미 모션 내장)
+        actualDurationSec,                        // 실제 렌더된 파일 길이(초) — hasVideo일 때만
+        lengthMismatch: actualDurationSec != null && actualDurationSec < targetSec - 0.05,
+        order: Number.isFinite(editMetaByCutNo[String(c.no)]?.order) ? editMetaByCutNo[String(c.no)].order : c.no,
+        gapAfterSec: Number.isFinite(editMetaByCutNo[String(c.no)]?.gapAfterSec) ? editMetaByCutNo[String(c.no)].gapAfterSec : 0,
       }
     })
     const veoCuts = out.filter(c => c.needsManualVideo)

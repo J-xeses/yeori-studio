@@ -22,6 +22,8 @@ export default function CheckupTab() {
   const [loading, setLoading] = useState(false)
   const [activeCutNo, setActiveCutNo] = useState(null)
   const [elapsedInActive, setElapsedInActive] = useState(0)
+  const [editMode, setEditMode] = useState(false)
+  const [savingLayout, setSavingLayout] = useState(false)
   const videoRef = useRef(null)
   const stripRef = useRef(null)
   const pendingSeekRef = useRef(null) // src 교체 후 loadedmetadata에서 적용할 목표 초
@@ -32,7 +34,8 @@ export default function CheckupTab() {
     try {
       const r = await fetch(`${SERVER}/api/episode-video-checklist?epNum=${epNum}`)
       const d = await r.json()
-      setCuts((d.cuts || []).slice().sort((a, b) => a.no - b.no))
+      // 정렬 기준: order(체크업 전용 배치 순서 오버라이드) 우선, 없으면 대본 컷번호(no)
+      setCuts((d.cuts || []).slice().sort((a, b) => (a.order ?? a.no) - (b.order ?? b.no)))
     } catch {
       // 조용히 무시 — 새로고침 버튼으로 재시도
     } finally {
@@ -42,17 +45,54 @@ export default function CheckupTab() {
 
   useEffect(() => { load() }, [load])
 
+  // 배치 전용 순서/갭 오버라이드 저장 — 대본(studio-state) 본문은 건드리지 않고
+  // editMeta.json의 order/gapAfterSec만 patch (2026-09-13, Tier2).
+  const saveLayout = useCallback(async (nextCuts) => {
+    setSavingLayout(true)
+    try {
+      await fetch(`${SERVER}/api/checkup-layout`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          order: nextCuts.map(c => c.no),
+          gaps: Object.fromEntries(nextCuts.map(c => [c.no, c.gapAfterSec || 0])),
+        }),
+      })
+    } catch {
+      // 조용히 무시 — 체크업 탭은 참고용, 다음 저장 시도로 회복
+    } finally {
+      setSavingLayout(false)
+    }
+  }, [])
+
+  const moveCut = (idx, dir) => {
+    const j = idx + dir
+    if (j < 0 || j >= cuts.length) return
+    const next = cuts.slice()
+    ;[next[idx], next[j]] = [next[j], next[idx]]
+    setCuts(next)
+    saveLayout(next)
+  }
+
+  const setGapLocal = (idx, val) => {
+    const next = cuts.slice()
+    next[idx] = { ...next[idx], gapAfterSec: val }
+    setCuts(next)
+  }
+  const commitGap = (idx) => saveLayout(cuts)
+
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
+  const mismatchCount = cuts.filter(c => c.lengthMismatch).length
 
-  // 타임라인 배치 — duration 추정치로 각 컷의 시작 오프셋·폭(비율)을 계산
+  // 타임라인 배치 — duration 추정치 + 컷별 갭(gapAfterSec)으로 각 컷의 시작 오프셋·폭(비율)을 계산.
+  // gapAfterSec 만큼은 다음 컷 앞에 빈 구간으로 남겨서(간격만큼 폭 확보) 캡컷 배치와 비슷하게 보여준다.
   const timeline = useMemo(() => {
-    const total = cuts.reduce((sum, c) => sum + (c.duration || FALLBACK_DUR), 0) || 1
+    const total = cuts.reduce((sum, c) => sum + (c.duration || FALLBACK_DUR) + (c.gapAfterSec || 0), 0) || 1
     let offset = 0
     const items = cuts.map(c => {
       const dur = c.duration || FALLBACK_DUR
       const item = { cut: c, start: offset, dur, startPct: (offset / total) * 100, widthPct: (dur / total) * 100 }
-      offset += dur
+      offset += dur + (c.gapAfterSec || 0)
       return item
     })
     return { items, total }
@@ -130,8 +170,16 @@ export default function CheckupTab() {
             </div>
             <div className={s.headerActions}>
               <span className={s.progress}>{playable.length}/{cuts.length}컷 완성</span>
+              {mismatchCount > 0 && (
+                <span className={s.warnBadge} title="대본 목표 길이보다 실제 렌더 파일이 짧은 컷 — 캡컷 배치 시 자동으로 길이가 잘립니다">
+                  ⚠️ 길이 보정 {mismatchCount}개
+                </span>
+              )}
               <button className={s.refreshBtn} onClick={load} disabled={loading}>
                 {loading ? '불러오는 중…' : '🔄 새로고침'}
+              </button>
+              <button className={`${s.editBtn} ${editMode ? s.editBtnOn : ''}`} onClick={() => setEditMode(v => !v)}>
+                🔧 배치 순서/간격 {editMode ? '편집 중' : '편집'}
               </button>
               <button className={s.playAllBtn} onClick={playAll} disabled={!playable.length}>
                 ▶ 전체 이어보기
@@ -148,23 +196,62 @@ export default function CheckupTab() {
 
           <div className={s.timelineWrap}>
             <div className={s.timelineStrip} ref={stripRef} onClick={handleStripClick}>
-              {timeline.items.map(it => (
-                <div key={it.cut.no}
-                  className={`${s.tlSeg} ${it.cut.hasVideo ? s.tlDone : s.tlPending} ${activeCutNo === it.cut.no ? s.tlActive : ''}`}
-                  style={{
-                    left: `${it.startPct}%`, width: `${it.widthPct}%`,
-                    backgroundImage: it.cut.startFrame ? `url(${it.cut.startFrame})` : undefined,
-                  }}
-                  title={it.cut.hasVideo ? `CUT ${it.cut.no} — 클릭해서 재생` : `CUT ${it.cut.no} — 아직 제작 안 됨`}>
-                  <span className={s.tlLabel}>CUT {it.cut.no}</span>
-                  {!it.cut.hasVideo && <span className={s.tlPendingDot}>⬜</span>}
-                </div>
-              ))}
+              {timeline.items.map(it => {
+                const c = it.cut
+                const titleParts = [c.hasVideo ? `CUT ${c.no} — 클릭해서 재생` : `CUT ${c.no} — 아직 제작 안 됨(캡컷 배치 스킵됨)`]
+                if (c.lengthMismatch) titleParts.push(`⚠️ 대본 ${c.duration}초 → 실제 ${c.actualDurationSec?.toFixed(1)}초로 캡컷에서 잘림`)
+                if (c.hasVideo && !c.motionBaked) titleParts.push('🌀 캡컷 켄번스 적용 예정')
+                if (c.hasVideo && c.motionBaked) titleParts.push('🎬 모션 내장(켄번스 스킵)')
+                return (
+                  <div key={c.no}
+                    className={`${s.tlSeg} ${c.hasVideo ? s.tlDone : s.tlPending} ${activeCutNo === c.no ? s.tlActive : ''}`}
+                    style={{
+                      left: `${it.startPct}%`, width: `${it.widthPct}%`,
+                      backgroundImage: c.startFrame ? `url(${c.startFrame})` : undefined,
+                    }}
+                    title={titleParts.join('\n')}>
+                    <span className={s.tlLabel}>CUT {c.no}</span>
+                    <span className={s.tlBadges}>
+                      {!c.hasVideo && <span className={s.tlPendingDot}>⬜</span>}
+                      {c.hasVideo && c.lengthMismatch && <span className={s.tlWarnDot}>⚠️</span>}
+                      {c.hasVideo && !c.motionBaked && <span className={s.tlKbDot}>🌀</span>}
+                    </span>
+                  </div>
+                )
+              })}
               {playheadPct != null && (
                 <div className={s.playhead} style={{ left: `${playheadPct}%` }} />
               )}
             </div>
             {!cuts.length && <div className={s.empty}>컷 정보가 없습니다.</div>}
+
+            {editMode && (
+              <div className={s.layoutEditor}>
+                <div className={s.layoutEditorHint}>
+                  대본 내용은 그대로 두고, 캡컷 배치·체크업 재생 순서와 컷 사이 간격만 바꿉니다.
+                  {savingLayout && <span className={s.savingDot}> · 저장 중…</span>}
+                </div>
+                <div className={s.layoutCards}>
+                  {cuts.map((c, idx) => (
+                    <div key={c.no} className={s.layoutCard}>
+                      <div className={s.layoutCardTop}>
+                        <button className={s.moveBtn} onClick={() => moveCut(idx, -1)} disabled={idx === 0} title="앞으로 이동">◀</button>
+                        <span className={s.layoutCutLabel}>CUT {c.no}</span>
+                        <button className={s.moveBtn} onClick={() => moveCut(idx, 1)} disabled={idx === cuts.length - 1} title="뒤로 이동">▶</button>
+                      </div>
+                      <label className={s.gapLabel}>
+                        간격
+                        <input type="number" min="0" step="0.5" className={s.gapInput}
+                          value={c.gapAfterSec || 0}
+                          onChange={e => setGapLocal(idx, Math.max(0, Number(e.target.value) || 0))}
+                          onBlur={() => commitGap(idx)} />
+                        초
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

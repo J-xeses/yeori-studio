@@ -23,6 +23,16 @@
 }
 .playAllBtn:hover { background: #6d28d9; }
 .playAllBtn:disabled { opacity: .4; cursor: default; }
+.warnBadge {
+  font-size: 11px; font-weight: 700; color: #f59e0b; background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.35); border-radius: 6px; padding: 4px 9px; white-space: nowrap;
+}
+.editBtn {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
+  font-size: 11.5px; font-weight: 600; padding: 6px 11px; border-radius: 6px; cursor: pointer;
+}
+.editBtn:hover { background: rgba(255,255,255,0.1); }
+.editBtnOn { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 .playerWrap {
   flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -57,8 +67,34 @@
   font-family: var(--mono, monospace); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .tlPendingDot { font-size: 11px; }
+.tlBadges { display: flex; gap: 3px; align-items: center; }
+.tlWarnDot, .tlKbDot { font-size: 10px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9)); }
 .playhead {
   position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
   box-shadow: 0 0 4px rgba(255,255,255,0.8); pointer-events: none; z-index: 3;
 }
 .empty { font-size: 12px; color: var(--text-3); padding: 10px; }
+
+/* 배치 순서/간격 편집 패널 — 편집 모드 토글 시에만 노출 */
+.layoutEditor { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.layoutEditorHint { font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+.savingDot { color: var(--accent-light); font-weight: 700; }
+.layoutCards { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.layoutCard {
+  flex: 0 0 auto; display: flex; flex-direction: column; gap: 6px;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  min-width: 108px;
+}
+.layoutCardTop { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.layoutCutLabel { font-size: 11.5px; font-weight: 800; color: var(--text); font-family: var(--mono, monospace); }
+.moveBtn {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
+  font-size: 11px; width: 22px; height: 22px; border-radius: 5px; cursor: pointer; line-height: 1;
+}
+.moveBtn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+.moveBtn:disabled { opacity: .3; cursor: default; }
+.gapLabel { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-3); }
+.gapInput {
+  width: 48px; background: var(--bg, #0a0a0f); border: 1px solid var(--border); color: var(--text);
+  font-size: 11px; border-radius: 5px; padding: 3px 5px; font-family: var(--mono, monospace);
+}

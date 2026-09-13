@@ -25,7 +25,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 0
   },
   {
     "cutNo": "02",
@@ -53,7 +54,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "지아 \"야, 야~ 이거 봤어?\" ||",
-    "narration": ""
+    "narration": "",
+    "order": 1
   },
   {
     "cutNo": "03",
@@ -81,7 +83,9 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
-    "narration": ""
+    "narration": "",
+    "order": 2,
+    "gapAfterSec": 0
   },
   {
     "cutNo": "04",
@@ -109,7 +113,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 3
   },
   {
     "cutNo": "05",
@@ -137,7 +142,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "”ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지?...... 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?“",
-    "narration": ""
+    "narration": "",
+    "order": 4
   },
   {
     "cutNo": "06",
@@ -165,7 +171,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 5
   },
   {
     "cutNo": "07",
@@ -193,7 +200,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~  LA 베이스. 경계 자체가 없는 세계관!\"",
-    "narration": ""
+    "narration": "",
+    "order": 6
   },
   {
     "cutNo": "08",
@@ -221,7 +229,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 7
   },
   {
     "cutNo": "09",
@@ -249,7 +258,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?\"",
-    "narration": ""
+    "narration": "",
+    "order": 8
   },
   {
     "cutNo": "10",
@@ -277,7 +287,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 9
   },
   {
     "cutNo": "11",
@@ -305,7 +316,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 10
   },
   {
     "cutNo": "12",
@@ -333,7 +345,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"…중독이에요…\"",
-    "narration": ""
+    "narration": "",
+    "order": 11
   },
   {
     "cutNo": "13",
@@ -361,7 +374,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...\"",
-    "narration": ""
+    "narration": "",
+    "order": 12
   },
   {
     "cutNo": "14",
@@ -389,7 +403,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 13
   },
   {
     "cutNo": "15",
@@ -417,7 +432,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "한지아 \"야 그냥 좋잖아!!\" / 서여리 \"…맞아...\"",
-    "narration": ""
+    "narration": "",
+    "order": 14
   },
   {
     "cutNo": "16",
@@ -445,7 +461,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": "\"근데 있잖아요… 좋은 거잖아요, 그냥!\""
+    "narration": "\"근데 있잖아요… 좋은 거잖아요, 그냥!\"",
+    "order": 15
   },
   {
     "cutNo": "17",
@@ -473,7 +490,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 16
   },
   {
     "cutNo": "18",
@@ -501,7 +519,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
-    "narration": ""
+    "narration": "",
+    "order": 17
   },
   {
     "cutNo": "19",
@@ -529,7 +548,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 18
   },
   {
     "cutNo": "20",
@@ -557,7 +577,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "\"실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...\"",
-    "narration": ""
+    "narration": "",
+    "order": 19
   },
   {
     "cutNo": "21",
@@ -585,7 +606,8 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "한지아 \"여러분 픽은 뭐예요?\" / 서여리 \"댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!\"",
-    "narration": ""
+    "narration": "",
+    "order": 20
   },
   {
     "cutNo": "22",
@@ -613,6 +635,7 @@
     "hasSubtitle": true,
     "script": "",
     "dialogue": "",
-    "narration": ""
+    "narration": "",
+    "order": 21
   }
 ]

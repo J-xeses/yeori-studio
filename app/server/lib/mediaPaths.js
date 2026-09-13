@@ -11,6 +11,7 @@
 
 import fs from 'fs'
 import path from 'path'
+import { execFileSync } from 'node:child_process'
 
 export const MEDIA_ROOT = 'C:\\yeori-studio'
 export const DOWNLOADS = path.join(MEDIA_ROOT, 'downloads')
@@ -176,4 +177,33 @@ export function instaDir(content, num, kind) {
 }
 export function instaRatio(content) {
   return INSTA_RATIO[content] || null
+}
+
+// ── 미디어 실측 프로브(ffprobe) — run-cutter.js / proxy.js 공용 ────────────
+// 실제 파일의 duration/width/height를 읽는다. 예전엔 CapCut 소재에 3시간짜리
+// 고정 placeholder를 박아넣어 실제 길이/해상도와 무관한 값이 기록됐었음
+// (2026-09-13 CapCut "미디어 분실" 진단 중 확인 — cutter가 존재 여부도 안 따지고
+// 무조건 기록했었음). 이제 존재 확인 + 실측을 여기 한 곳에 모아 공유한다.
+const FFPROBE = (process.env.FFMPEG_PATH || 'ffmpeg').replace(/ffmpeg(\.exe)?$/i, 'ffprobe$1')
+export function probeMedia(filePath, isVideo = true) {
+  const fallback = { width: 2752, height: 1536, durationUs: 10800000000 }
+  if (!fs.existsSync(filePath)) return { ...fallback, exists: false }
+  try {
+    const out = execFileSync(FFPROBE, [
+      '-v', 'error', '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height:format=duration',
+      '-of', 'json', filePath,
+    ], { encoding: 'utf-8' })
+    const info = JSON.parse(out)
+    const stream = info.streams?.[0] || {}
+    const durationSec = Number(info.format?.duration)
+    return {
+      exists: true,
+      width: Number(stream.width) || fallback.width,
+      height: Number(stream.height) || fallback.height,
+      durationUs: isVideo && Number.isFinite(durationSec) ? Math.round(durationSec * 1000000) : fallback.durationUs,
+    }
+  } catch {
+    return { ...fallback, exists: true }
+  }
 }
