@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3347,7 +3347,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-14T07:33:50.630Z",
+  "savedAt": "2026-09-14T08:28:58.265Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3390,6 +3390,18 @@
           "trimEnd": 10.01,
           "useFullDuration": true,
           "ratio": "16:9"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789374099668",
+          "name": "cut_02_a.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
+          "keepAudio": true,
+          "createdAt": 1789219488369.481
         }
       ],
       "cut-1": [
@@ -3401,6 +3413,100 @@
           "trimEnd": 3,
           "useFullDuration": true,
           "ratio": "16:9"
+        }
+      ],
+      "cut-22": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789372996520",
+          "name": "cut_22.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_22.mp4",
+          "keepAudio": false,
+          "createdAt": 1789207757000
+        }
+      ],
+      "cut-19": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789373003231",
+          "name": "cut_19.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
+          "keepAudio": false,
+          "createdAt": 1788876666000
+        }
+      ],
+      "cut-14": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789373015895",
+          "name": "cut_14.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "keepAudio": false,
+          "createdAt": 1788944994000
+        }
+      ],
+      "cut-10": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_10.mp4?t=1789373108070",
+          "name": "cut_10.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "keepAudio": false,
+          "createdAt": 1788923816000
+        }
+      ],
+      "cut-8": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789373471928",
+          "name": "cut_08.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "keepAudio": false,
+          "createdAt": 1788876636000
+        }
+      ],
+      "cut-6": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_06.mp4?t=1789374519112",
+          "name": "cut_06.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_06.mp4",
+          "keepAudio": false,
+          "createdAt": 1788876613000
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_04.mp4?t=1789374559136",
+          "name": "cut_04.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "keepAudio": false,
+          "createdAt": 1788876589000
         }
       ]
     },

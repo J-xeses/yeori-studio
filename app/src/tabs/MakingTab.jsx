@@ -2693,8 +2693,11 @@ export default function MakingTab() {
         {/* 메이킹 탭 자체는 G5(편집메타 에피소드 조립)를 절대 안 다룬다 — maxStage를 5로
             두면 예전 버그로 남은 잔여 g5:true 데이터가 있을 때 "G5" 태그가 떠서 혼선을
             준다(2026-09-14, 사용자 지적: "메이킹 탭에서는 G5 배지도 있을 수가 없잖아").
-            메이킹 탭이 실제로 관여하는 마지막 단계인 G4까지만 보여준다. */}
-        <EpisodeInfoSidebar maxStage={4} />
+            메이킹 탭이 실제로 관여하는 마지막 단계인 G4까지만 보여준다.
+            doneStage="g4" — "제작완료" 배지도 컷 타입 상관없이 G4로 고정. YEORI 컷이 같은
+            목록에 섞여 있어도(G5는 편집메타 탭 소관이라) 이 탭 안에서는 절대 G5를 들여다보지
+            않는다(2026-09-14, 사용자 재지적: "컷2, 컷3... 제작완료 표시가 아직 있다"). */}
+        <EpisodeInfoSidebar maxStage={4} doneStage="g4" />
         <div className={s.main}>
           <div className={s.scrollBody}>
             <div className={s.content}>

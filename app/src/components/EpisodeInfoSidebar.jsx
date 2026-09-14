@@ -133,7 +133,12 @@ export function EpisodeOverviewBlock() {
 // 넘기면 카드가 세로 쌓기 대신 가로 배치(썸네일 | 정보 | 액션)로 바뀐다.
 // previewText: 가운데 텍스트 줄을 대사/나레이션/씬 대신 탭 전용 문구(예: 영상 탭의 "영상 2개")로 교체.
 // renderExtra: 카드 오른쪽 끝에 탭 전용 액션(예: 영상 탭의 "✨생성" 버튼)을 추가.
-export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra, videoStatus }) {
+// doneStage: "제작완료" 배지가 볼 G키를 강제 고정(예: 메이킹 탭은 항상 'g4') — 안 넘기면
+// 컷 타입별로 자동 판단(아래 MAKING_TYPES 로직). 메이킹 탭은 G5를 아예 다루지 않는 탭이라
+// (2026-09-14, 사용자 확정: "메이킹 탭에서는 G5 배지도 있을 수가 없잖아") YEORI 컷이 같은
+// 목록에 섞여 있어도 그 탭 안에서는 G5를 절대 들여다보지 않아야 한다 — 탭 스코프 문제라
+// cutType만으론 못 가리고 호출부가 명시해야 함.
+export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra, videoStatus, doneStage }) {
   const stages = ['g1', 'g2', 'g3', 'g4', 'g5'].slice(0, maxStage)
   const isRow = !!(renderPreview || renderExtra)
   return (
@@ -141,18 +146,20 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
       {(cuts || []).map(c => {
         const g = gData?.[episodeCode]?.[`cut_${c.no}`] || {}
         const badges = stages.filter(key => g[key])
-        // "제작완료" 기준은 컷 타입마다 다르다(2026-09-14, 사용자 확정):
-        // - 메이킹 탭이 직접 만드는 유형(GRAPHIC/BROLL/CAPCUT)은 메이킹 탭 자체 리뷰 게이트인
-        //   G4가 그 컷의 완료 기준 — 편집메타의 에피소드 전체 조립(G5)까지 기다릴 필요 없음.
-        // - 영상탭이 만드는 유형(YEORI/PIP 등, 나머지)은 G4(생성)만으론 부족하고 편집메타
-        //   조립(G5)까지 거쳐야 진짜 완료 — G4만 있고 G5 없는 상태를 완료로 보여주면 안 됨.
-        // 예전엔 둘 다 videoStatus(파일 존재)만 봐서, 메이킹 컷은 리뷰 전에 완료로 보이고
-        // (사용자 지적: "G4를 반드시 거쳐야") 반대로 영상 컷은 G4만 있어도 편집메타 조립 전에
-        // g5가 잘못 찍혀 완료로 보이는(EditMetaTab.jsx 쪽 별도 수정) 문제가 둘 다 있었다.
+        // "제작완료" 기준(2026-09-14, 사용자 확정):
+        // - doneStage가 명시되면 무조건 그 키만 봄(메이킹 탭="g4" 고정 — G5는 그 탭 스코프 밖).
+        // - 안 넘기면(영상 탭 등) 컷 타입별로 자동 판단: 메이킹이 직접 만드는 유형
+        //   (GRAPHIC/BROLL/CAPCUT)은 메이킹 탭 자체 리뷰 게이트인 G4가 완료 기준이고,
+        //   영상탭이 만드는 유형(YEORI/PIP 등)은 "G4가 찍힌 후 G5를 거쳐야" 완료(사용자 명시
+        //   순서) — G5 하나만 보면 G4 승인 없이 조립에 휩쓸려 들어간 컷도 완료로 잘못 보일 수
+        //   있다(2026-09-14 실측: cut_2~21 전부 G4 없이 G5만 찍혀있던 사고 — 데이터도 정리했지만
+        //   같은 사고가 또 나도 화면엔 안 뜨게 g4·g5 둘 다 확인).
         const MAKING_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
-        const completionKey = MAKING_TYPES.includes(c.cutType) ? 'g4' : 'g5'
-        const madeVideo = maxStage >= 4 && !!g[completionKey]
-        const fileReadyOnly = maxStage >= 4 && !g[completionKey] && !!videoStatus?.[c.no]
+        const isMakingType = MAKING_TYPES.includes(c.cutType)
+        const done = doneStage ? !!g[doneStage] : (isMakingType ? !!g.g4 : !!(g.g4 && g.g5))
+        const anyProgress = doneStage ? !!g[doneStage] : (isMakingType ? !!g.g4 : !!(g.g4 || g.g5))
+        const madeVideo = maxStage >= 4 && done
+        const fileReadyOnly = maxStage >= 4 && !done && (!!videoStatus?.[c.no] || anyProgress)
         return (
           <div key={c.id}
             className={`${s.cutItem} ${isRow ? s.cutItemRow : ''} ${activeCutId === c.id ? s.cutItemActive : ''}`}
@@ -178,7 +185,7 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
 }
 
 // 자체 컷 목록 사이드바가 없는 탭에서 쓰는 풀 사이드바 (개요 블록 + 컷 목록)
-export default function EpisodeInfoSidebar({ onCutClick, activeCutId, maxStage = 5 }) {
+export default function EpisodeInfoSidebar({ onCutClick, activeCutId, maxStage = 5, doneStage }) {
   const { state } = useApp()
   const { cuts, episode } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
@@ -216,7 +223,7 @@ export default function EpisodeInfoSidebar({ onCutClick, activeCutId, maxStage =
         <CutList
           cuts={cuts} gData={gData} episodeCode={episodeCode}
           activeCutId={activeCutId} onCutClick={onCutClick} maxStage={maxStage}
-          videoStatus={videoStatus}
+          videoStatus={videoStatus} doneStage={doneStage}
         />
       </div>
     </div>

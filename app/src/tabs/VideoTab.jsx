@@ -169,9 +169,21 @@ export default function VideoTab() {
     if (epNum == null) { setVChk(null); return }
     fetch(`http://localhost:3001/api/episode-video-checklist?epNum=${epNum}`)
       .then(r => r.json())
-      .then(d => { if (!d.error) setVChk(d) })
+      .then(d => {
+        if (d.error) return
+        setVChk(d)
+        // 서버엔 완성본(cut_NN.mp4)이 있는데 로컬 클립칸이 비어있으면 "프록시로 불러오기"를
+        // 사람이 매번 눌러야 했다 — 폴더 후보와 같은 이유로 자동화한다(2026-09-14, 사용자
+        // 재확인: "폴더에 있는 영상도 일부 만들어진 파일이 아직 업로드도 안 되고 있다").
+        const currentClips = state.videoTabState?.videoClips || {}
+        for (const row of d.cuts || []) {
+          if (!row.hasVideo) continue
+          const cut = (state.cuts || []).find(c => c.no === row.no)
+          if (cut && !(currentClips[cut.id]?.length > 0)) loadFromProxy(cut, d.videoDir)
+        }
+      })
       .catch(() => {})
-  }, [state.episode?.number])
+  }, [state.episode?.number, state.cuts?.length])
   useEffect(() => { loadVChk() }, [loadVChk])
   const setCutVideoMode = (cutNo, mode) => {
     const cut = (state.cuts || []).find(c => c.no === cutNo)
@@ -378,7 +390,7 @@ export default function VideoTab() {
     setRenderLog(l => [...l, '✅ Premiere Pro FCPXML 생성 완료'])
   }
 
-  const loadFromProxy = async (cut) => {
+  const loadFromProxy = async (cut, videoDirOverride) => {
     const ep = episode?.number ?? ''
     const padded = String(cut.no).padStart(2, '0')
     for (const ext of ['mp4', 'mov', 'webm']) {
@@ -396,7 +408,8 @@ export default function VideoTab() {
             const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
             // 프록시로 불러온 클립은 이미 서버 실파일이라 재업로드 없이 stagedPath를 바로 채움
             // (2026-09-13 — "클립 합성"이 이 경로를 그대로 입력으로 씀).
-            const stagedPath = vChk?.videoDir ? `${vChk.videoDir}\\${name}` : undefined
+            const dir = videoDirOverride || vChk?.videoDir
+            const stagedPath = dir ? `${dir}\\${name}` : undefined
             const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: !!cut.dialogue, createdAt }
             setVideoClips(p => {
               const existing = p[cut.id] || []
@@ -430,9 +443,18 @@ export default function VideoTab() {
         const byCut = {}
         for (const c of d.clips || []) (byCut[c.cutNo] ??= []).push(c)
         setVideoCandidates(byCut)
+        // 폴더에서 찾은 후보는 "+" 버튼을 눌러야만 클립칸에 들어갔는데, 사람이 매번 눌러줘야
+        // 하는 건 원래 요청("파일명 인식해서 해당 컷에 업로드")과 다르다(2026-09-14, 사용자
+        // 재확인: "그래서 아까 업로드 되도록 요청했던 것"). 이제 스캔되는 즉시 자동으로 클립칸에
+        // 채운다 — addCandidateClip 내부에 이미 stagedPath 중복 방지가 있어 계속 자동
+        // 호출해도 안전(이미 추가된 건 조용히 무시됨).
+        for (const c of d.clips || []) {
+          const cut = (state.cuts || []).find(x => x.no === c.cutNo)
+          if (cut) addCandidateClip(cut.id, cut.no, c)
+        }
       })
       .catch(() => {})
-  }, [state.episode?.number])
+  }, [state.episode?.number, state.cuts?.length])
   useEffect(() => { loadVideoCandidates() }, [loadVideoCandidates])
 
   const importVideosFromFolder = async () => {
@@ -1119,6 +1141,11 @@ export default function VideoTab() {
           // 아예 안 보였다(2026-09-13, 사용자 지적 — 이원화 구조 통합). vChk는 이미 로드돼 있음.
           const vRow = vChk?.cuts?.find(r => r.no === selCut.no)
           const up = vUpload[selCut.no] || {}
+          // 대본 SEG 조합(예: "10+8")이 있으면 실제로 몇 클립이 필요한지 이미 정해져 있다 —
+          // 파일이 아직 없어도 그 개수만큼 빈 슬롯을 보여줘서 "몇 번째가 비어있는지" 바로
+          // 보이게 한다(2026-09-14, 사용자 지적: "컷2는 a,b로 구분되는데 왜 다른 컷은 안 되나").
+          const plannedSegs = Array.isArray(selCut.segments) ? selCut.segments : []
+          const slotCount = Math.max(clips.length, plannedSegs.length)
           const cutSegs = toSegments(subtitles[selCut.id], stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
           const captionText = cutSegs[0]?.text ?? ''
           const cutClipTimings = clips.length > 0 ? clipTimings(clips) : []
@@ -1161,11 +1188,14 @@ export default function VideoTab() {
                     </span>
                   )}
                   {clips.length === 0 && !vRow?.hasVideo && (() => {
-                    const target = selCut.duration || 5
-                    const estCount = estimateClipCount(target)
+                    // 대본에 실제 SEG 조합(예: "10+8")이 있으면 그 진짜 계획을 쓰고, 없을 때만
+                    // 8초 단위 추측으로 폴백(2026-09-14, 사용자 지적: "컷2는 a,b로 구분되는데
+                    // 왜 다른 컷은 안 되나" — 아래 클립 슬롯 렌더링과 같은 근거로 통일).
+                    const plannedCount = Array.isArray(selCut.segments) ? selCut.segments.length : 0
+                    const estCount = plannedCount > 1 ? plannedCount : estimateClipCount(selCut.duration || 5)
                     return estCount > 1 ? (
                       <span className={s.clipEstimateBadge}>
-                        💡 예상 {estCount}개 클립 필요 (8초 기준)
+                        💡 예상 {estCount}개 클립 필요 {plannedCount > 1 ? `(대본 SEG: ${selCut.segments.join('+')}초)` : '(8초 기준)'}
                       </span>
                     ) : null
                   })()}
@@ -1226,7 +1256,7 @@ export default function VideoTab() {
                     따라 서로 다른 입력 UI가 보이던 비일관성을 없앰(2026-09-14, 사용자 지적:
                     "컷2번처럼 클립별 구분설정이 다른 컷들은 누락돼 보인다"). 클립이 아직
                     하나도 없을 때만 이 자유 텍스트 칸을 보여줌. */}
-                {clips.length === 0 && (
+                {slotCount === 0 && (
                   <div className={s.field} onClick={e => e.stopPropagation()}>
                     <label>컷 자막</label>
                     <textarea rows={2} className={s.captionInput}
@@ -1236,9 +1266,28 @@ export default function VideoTab() {
                   </div>
                 )}
 
-                {clips.length > 0 && (
+                {slotCount > 0 && (
                   <div className={s.clipList}>
-                    {clips.map((clip, idx) => {
+                    {Array.from({ length: slotCount }, (_, idx) => {
+                      const clip = clips[idx]
+                      // 대본 SEG 계획은 있는데 아직 파일이 없는 슬롯 — 빈 자리를 그대로 보여준다
+                      // (2026-09-14, 사용자 확정 반영: "컷2처럼 다른 컷도 구분돼야").
+                      if (!clip) {
+                        return (
+                          <div key={idx} className={`${s.clipTrimItem} ${s.clipTrimItemEmpty}`}>
+                            <div className={s.clipTrimHeader}>
+                              <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx + 1}</span>
+                              <span className={s.clipName}>세그먼트 {idx + 1} — 파일 없음</span>
+                              <span className={s.clipDurLabel}>목표 {plannedSegs[idx] != null ? `${plannedSegs[idx]}s` : '?'}</span>
+                              <label className={s.uploadBtnSm}>
+                                📁 업로드
+                                <input type="file" accept="video/*" hidden
+                                  onChange={e => { handleVideoUpload(selCut.id, e.target.files); e.target.value = '' }} />
+                              </label>
+                            </div>
+                          </div>
+                        )
+                      }
                       const usedSec = clip.useFullDuration
                         ? clip.duration
                         : (clip.trimEnd - clip.trimStart)
@@ -1270,17 +1319,15 @@ export default function VideoTab() {
                             )}
                             <button className={s.clipDel} onClick={e => { e.stopPropagation(); removeClip(selCut.id, idx) }}>✕</button>
                           </div>
-                          {clips.length > 0 && (
-                            <div className={s.clipCaptionRow} onClick={e => e.stopPropagation()}>
-                              <span className={s.clipCaptionTime}>
-                                {cutClipTimings[idx] ? `${cutClipTimings[idx].start.toFixed(1)}s~${cutClipTimings[idx].end.toFixed(1)}s` : ''}
-                              </span>
-                              <textarea rows={1} className={s.clipCaptionInput}
-                                value={cutSegs[idx]?.text ?? ''}
-                                placeholder="이 구간의 자막..."
-                                onChange={e => setClipCaption(idx, e.target.value)} />
-                            </div>
-                          )}
+                          <div className={s.clipCaptionRow} onClick={e => e.stopPropagation()}>
+                            <span className={s.clipCaptionTime}>
+                              {cutClipTimings[idx] ? `${cutClipTimings[idx].start.toFixed(1)}s~${cutClipTimings[idx].end.toFixed(1)}s` : ''}
+                            </span>
+                            <textarea rows={1} className={s.clipCaptionInput}
+                              value={cutSegs[idx]?.text ?? ''}
+                              placeholder="이 구간의 자막..."
+                              onChange={e => setClipCaption(idx, e.target.value)} />
+                          </div>
                           {isClipActive && (
                             <div className={s.clipTrimBody} onClick={e => e.stopPropagation()}>
                               <label className={s.check}>
