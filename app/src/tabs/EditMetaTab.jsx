@@ -475,7 +475,22 @@ export default function EditMetaTab() {
         const skipNote = asm.skippedCuts?.length ? ` · 누락 컷 ${asm.skippedCuts.join(', ')}(아직 미제작)` : ''
         setAccStatus(`✅ 완료! 컷 ${asm.includedCuts?.length ?? '?'}개(총 ${Math.round(asm.duration || 0)}초) 이어붙여 완성.${skipNote}${promo.success ? ' 발행 탭에서 바로 패키징 가능.' : ''}`)
         setCutterResult(null)
-        for (const no of (asm.includedCuts || [])) setGPoint(episodeCode, parseInt(no, 10), 'g5', true)
+        // 파일이 있어서 조립에 포함됐다고 무조건 G5를 찍으면, 사람이 G4에서 한 번도 확인
+        // 안 한 컷(예: BROLL "제작됨·검토 대기" 상태)까지 "제작완료"로 잘못 보였다
+        // (2026-09-14, 사용자 지적: "메이킹 탭 G 배지를 봐라" — G4 없이 G5+제작완료만 찍혀있던
+        // 사고). 조립 자체는 그대로 진행하되, G5는 그 컷이 실제로 G4 승인된 경우에만 찍는다.
+        {
+          const freshG = loadGPoints()[episodeCode] || {}
+          const unapproved = []
+          for (const no of (asm.includedCuts || [])) {
+            const cutNo = parseInt(no, 10)
+            if (freshG[`cut_${cutNo}`]?.g4) setGPoint(episodeCode, cutNo, 'g5', true)
+            else unapproved.push(cutNo)
+          }
+          if (unapproved.length) {
+            setAccStatus(s => `${s} ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}`)
+          }
+        }
         setAccRunning(false)
         return
       }
@@ -508,9 +523,14 @@ export default function EditMetaTab() {
       setCutterResult(r)
       // G5(편집/커터) 승인 — 커터가 실제로 draft_content.json에 반영한 컷들만 자동 승인
       // editMeta의 cutNo는 "01","02" 같은 0-패딩 문자열이지만, gpoints.js의
-      // cut_${i} 키는 숫자 그대로(1,2,3...)를 쓰므로 반드시 정수로 변환해야 매칭됨
+      // cut_${i} 키는 숫자 그대로(1,2,3...)를 쓰므로 반드시 정수로 변환해야 매칭됨.
+      // 위 assemble 경로와 동일한 이유로, G4 승인 안 된 컷은 G5를 찍지 않는다(2026-09-14).
       if (r?.cuts?.length) {
-        for (const c of r.cuts) setGPoint(episodeCode, parseInt(c.cutNo, 10), 'g5', true)
+        const freshG = loadGPoints()[episodeCode] || {}
+        for (const c of r.cuts) {
+          const cutNo = parseInt(c.cutNo, 10)
+          if (freshG[`cut_${cutNo}`]?.g4) setGPoint(episodeCode, cutNo, 'g5', true)
+        }
       }
       setAccRunning(false)
     } catch (err) {

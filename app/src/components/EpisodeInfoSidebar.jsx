@@ -141,7 +141,18 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
       {(cuts || []).map(c => {
         const g = gData?.[episodeCode]?.[`cut_${c.no}`] || {}
         const badges = stages.filter(key => g[key])
-        const madeVideo = maxStage >= 4 && !!videoStatus?.[c.no]
+        // "제작완료" 기준은 컷 타입마다 다르다(2026-09-14, 사용자 확정):
+        // - 메이킹 탭이 직접 만드는 유형(GRAPHIC/BROLL/CAPCUT)은 메이킹 탭 자체 리뷰 게이트인
+        //   G4가 그 컷의 완료 기준 — 편집메타의 에피소드 전체 조립(G5)까지 기다릴 필요 없음.
+        // - 영상탭이 만드는 유형(YEORI/PIP 등, 나머지)은 G4(생성)만으론 부족하고 편집메타
+        //   조립(G5)까지 거쳐야 진짜 완료 — G4만 있고 G5 없는 상태를 완료로 보여주면 안 됨.
+        // 예전엔 둘 다 videoStatus(파일 존재)만 봐서, 메이킹 컷은 리뷰 전에 완료로 보이고
+        // (사용자 지적: "G4를 반드시 거쳐야") 반대로 영상 컷은 G4만 있어도 편집메타 조립 전에
+        // g5가 잘못 찍혀 완료로 보이는(EditMetaTab.jsx 쪽 별도 수정) 문제가 둘 다 있었다.
+        const MAKING_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
+        const completionKey = MAKING_TYPES.includes(c.cutType) ? 'g4' : 'g5'
+        const madeVideo = maxStage >= 4 && !!g[completionKey]
+        const fileReadyOnly = maxStage >= 4 && !g[completionKey] && !!videoStatus?.[c.no]
         return (
           <div key={c.id}
             className={`${s.cutItem} ${isRow ? s.cutItemRow : ''} ${activeCutId === c.id ? s.cutItemActive : ''}`}
@@ -150,10 +161,11 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
             <div className={s.cutInfo}>
               <span className={s.cutNo}>CUT {c.no}</span>
               <span className={s.cutPreview}>{previewText ? previewText(c) : (c.dialogue || c.narration || c.scene || '(내용 없음)')}</span>
-              {(badges.length > 0 || madeVideo) && (
+              {(badges.length > 0 || madeVideo || fileReadyOnly) && (
                 <span className={s.cutBadges}>
                   {badges.map(key => <span key={key} className={`${s.gBadge} ${s[key]}`}>{key.toUpperCase()}</span>)}
                   {madeVideo && <span className={s.doneBadge}>✅ 제작완료</span>}
+                  {fileReadyOnly && <span className={s.fileReadyBadge} title="파일은 생성됐지만 아직 편집메타(G5) 승인 전입니다">📦 파일 생성됨</span>}
                 </span>
               )}
             </div>

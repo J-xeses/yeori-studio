@@ -91,3 +91,8 @@
   font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 3px;
   background: rgba(34, 211, 238, .15); color: #22d3ee; border: 1px solid rgba(34, 211, 238, .35);
 }
+/* 파일은 있지만 아직 G5(편집메타) 전 — "제작완료"보다 약한 중간 상태(2026-09-14) */
+.fileReadyBadge {
+  font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 3px;
+  background: rgba(148, 163, 184, .15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, .35);
+}

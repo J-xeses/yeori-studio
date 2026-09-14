@@ -2309,7 +2309,12 @@ export default function MakingTab() {
         {panel}
         {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
         {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
-        {cut.cutType === 'BROLL' && renderSubtitlePanel(cut)}
+        {/* 모션 자막 패널은 원래 BROLL 전용이었는데, GRAPHIC(자체 텍스트 카드라 중복) 빼고는
+            모든 컷 타입이 다 "영상 위에 자막 얹기"가 필요할 수 있다(2026-09-14, 사용자 지적:
+            "메이킹 탭에서 자막까지 넣을 수 있으면 된다" — G4를 안 거치는 CAPCUT/BROLL도
+            자막 붙은 결과를 메이킹 탭에서 바로 확인해야 함). 함수 자체는 이미 컷타입과
+            무관하게 동작(videoStatus만 확인)하므로 조건만 넓힘. */}
+        {cut.cutType !== 'GRAPHIC' && renderSubtitlePanel(cut)}
       </>
     )
   }
@@ -2685,7 +2690,11 @@ export default function MakingTab() {
     <div className={s.page}>
       <TabToolbar />
       <div className={s.root}>
-        <EpisodeInfoSidebar maxStage={5} />
+        {/* 메이킹 탭 자체는 G5(편집메타 에피소드 조립)를 절대 안 다룬다 — maxStage를 5로
+            두면 예전 버그로 남은 잔여 g5:true 데이터가 있을 때 "G5" 태그가 떠서 혼선을
+            준다(2026-09-14, 사용자 지적: "메이킹 탭에서는 G5 배지도 있을 수가 없잖아").
+            메이킹 탭이 실제로 관여하는 마지막 단계인 G4까지만 보여준다. */}
+        <EpisodeInfoSidebar maxStage={4} />
         <div className={s.main}>
           <div className={s.scrollBody}>
             <div className={s.content}>
