@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -77,6 +77,11 @@
               "ac": "LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌",
               "md": "임팩트. 로고의 정적 에너지가 폭발하는 느낌"
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_IMP"
           }
         },
         {
@@ -135,7 +140,12 @@
           "segPrompts": [
             "MEDIUM SHOT, dynamic scene progression over 10 seconds — Two young Korean women early-20s, indoors on a beige sofa, warm indoor lighting, shallow depth of field, photorealistic 8K cinematic 16:9.\n\n[0-4s] Seo Yeori alone on the sofa, scrolling her phone, relaxed expression, slightly leaning forward.\n[4-10s] Han Jia enters frame from the left, quickly sits beside Yeori, thrusts her phone screen toward Yeori's face, says out loud: \"야야! 이거 봤어?\" — lip-sync Korean dialogue, urgent excited tone.\n\nSeo Yeori (right): long wavy dark brown hair NOT short, subtle natural skin texture on right cheek (never exaggerated), delicate gold necklace, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, black and white Converse Chuck Taylor sneakers.\n\nHan Jia (left, entering): short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, intense dark eyes, delicate silver chain necklace, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, white low-top sneakers, holding phone screen toward Yeori.\n\nBackground figures must not interact with main characters.",
             "CLOSE-UP, dynamic scene progression over 8 seconds, continuing directly from previous clip — Same two Korean women on beige sofa, warm indoor lighting, photorealistic 8K cinematic 16:9.\n\n[0-3s] Camera pushes in to CLOSE-UP on Seo Yeori's face: eyes widen in shock staring at Jia's phone screen, mouth slightly open, jaw drops — intense surprise expression.\n[3-8s] Both women turn to face each other in close-up two-shot, exchanging wide-eyed disbelief — Yeori brings hand to mouth, Jia raises eyebrows and leans in slightly, shared look of stunned amazement.\n\nSeo Yeori: long wavy dark brown hair, subtle skin texture right cheek (never exaggerated), gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers.\nHan Jia: short wavy black hair fringe bangs, dark mauve-brown lip, sharp eyeliner, silver chain necklace, white fitted tee, denim cutoff shorts.\n\nNo background interference. Expressions must be naturalistic, not theatrical."
-          ]
+          ],
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_MCU → SH_CU(후반) CA_ST HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시 MD_SUR"
+          }
         },
         {
           "id": "cut-3",
@@ -199,7 +209,12 @@
             "calm analytical expression with slight excitement building in eyes — young Korean woman early-20s, sitting upright on beige sofa facing camera directly, long wavy dark brown hair, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, small face K-model proportions, very subtle natural skin texture on right cheek never exaggerated, effortlessly photogenic not posing just existing beautifully — at seconds 2-6 she begins speaking, lips parting naturally, slight lean forward, right hand lifts gently as if introducing a topic with casual enthusiasm, eyebrows raise softly mid-sentence, mouth forms Korean vowels naturally — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
             "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
             "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9"
-          ]
+          ],
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_ANL",
+            "source": "SH_MCU CA_ST 자연스러운 설명 손짓 MD_ANL"
+          }
         },
         {
           "id": "cut-4",
@@ -246,6 +261,11 @@
               "ac": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
               "md": "글로벌 팬덤 장악한 존재감"
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_IMP"
           }
         },
         {
@@ -289,6 +309,11 @@
               "ac": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
               "md": "밝고 가볍게. 버블 에너지 반영."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_BRT",
+            "source": "SH_MCU CA_ST 설명 중 살짝 들뜨는 표정 MD_BRT"
           }
         },
         {
@@ -336,6 +361,11 @@
               "ac": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
               "md": "밝고 경쾌한 신예 에너지"
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_BRT"
           }
         },
         {
@@ -379,6 +409,11 @@
               "ac": "눈빛이 분석적으로 변하는 순간 포착",
               "md": "셋 중 가장 차분하고 날카롭게"
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_ECU",
+            "source": "SH_ECU CA_ST 눈빛이 분석적으로 변하는 순간 MD_ANL"
           }
         },
         {
@@ -426,6 +461,11 @@
               "ac": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
               "md": "글로벌 타깃. 경계 없는 세계관."
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_ANL"
           }
         },
         {
@@ -469,6 +509,11 @@
               "ac": "생각하는 포즈 → 점점 흥분. 발견의 설렘.",
               "md": "분석가가 아닌 팬으로서 흥분하는 느낌"
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_DSC",
+            "source": "SH_MCU CA_ST 생각하는 포즈에서 시작 → 점점 흥분 MD_DSC"
           }
         },
         {
@@ -514,6 +559,11 @@
               "ac": "네온 글로우 텍스트 \"각자의 색이 살아있다\" 등장",
               "md": "임팩트. CUT 5 핵심 문장을 텍스트로 박아줌."
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_IMP"
           }
         },
         {
@@ -557,6 +607,11 @@
               "ac": "HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림",
               "md": "몰입. 대사 없이 리액션만으로 전달."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_ABS",
+            "source": "SH_MCU CA_ST HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중 MD_ABS"
           }
         },
         {
@@ -600,6 +655,11 @@
               "ac": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
               "md": "멍함 → 여운 가득. 전반부 마무리 감정 폭발 포인트."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_CU",
+            "source": "SH_CU CA_ST 화면 보다 → 카메라로 시선 천천히 이동 MD_DZD"
           }
         },
         {
@@ -643,6 +703,11 @@
               "ac": "생각하는 포즈에서 시작. 손짓 포함 설명.",
               "md": "다큐 해설자처럼 — 딱딱하지 않게."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_ANL",
+            "source": "SH_MCU CA_ST 손짓 포함 자연스러운 설명 MD_ANL"
           }
         },
         {
@@ -688,6 +753,11 @@
               "ac": "HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐",
               "md": "CUT 8 분석을 도식으로 이해도 높임."
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_ANL"
           }
         },
         {
@@ -731,6 +801,11 @@
               "ac": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
               "md": "폭발적 케미. 결국 \"그냥 좋음\"으로 귀결되는 순간."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_JOY",
+            "source": "SH_MCU CA_ST HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음 MD_JOY"
           }
         },
         {
@@ -774,6 +849,11 @@
               "ac": "웃음이 서서히 사그라들며 몽환 눈빛으로 변환",
               "md": "몽환적. 웜톤. 꿈꾸는 듯한 눈빛."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_ECU",
+            "source": "SH_ECU CA_ST 웃음 사그라들며 몽환 눈빛으로 변화 MD_DRM"
           }
         },
         {
@@ -817,6 +897,11 @@
               "ac": "무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.",
               "md": "쿨톤 몽환. 서여리 웜톤과 대비. 순수 영상미 컷."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_ECU",
+            "source": "SH_ECU CA_ST 무심한 듯 감성적인 눈빛 고정 MD_DRM"
           }
         },
         {
@@ -860,6 +945,11 @@
               "ac": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
               "md": "솔직한 팬심. 분석 아닌 감정 언어."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_SHY",
+            "source": "SH_MCU CA_ST 시선 내리깔다 천천히 카메라로 올리기 MD_SHY"
           }
         },
         {
@@ -907,6 +997,11 @@
               "ac": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
               "md": "서여리의 취향 = 시청자의 취향으로 연결"
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_EMO"
           }
         },
         {
@@ -950,6 +1045,11 @@
               "ac": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
               "md": "뮤비 + 서여리 자신을 동시에 이야기하는 이중 의미. 여운 2~3초 필수."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_EMO",
+            "source": "SH_MCU CA_ZIN MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음 MD_EMO"
           }
         },
         {
@@ -993,6 +1093,11 @@
               "ac": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
               "md": "가볍고 따뜻하게. 무겁지 않은 마무리."
             }
+          },
+          "editIntent": {
+            "kenburns": "zoomIn",
+            "reason": "SH_MCU+MD_WRM",
+            "source": "SH_MCU CA_ST HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음. MD_WRM"
           }
         },
         {
@@ -1038,6 +1143,11 @@
               "ac": "서여리 채널 로고 + 구독/댓글 유도 텍스트",
               "md": "따뜻하고 친근하게. CUT 12의 온도감 유지."
             }
+          },
+          "editIntent": {
+            "kenburns": "random",
+            "reason": "fallback",
+            "source": "SH_GR CA_ST 없음 MD_WRM"
           }
         }
       ],
@@ -2054,6 +2164,11 @@
           "ac": "LE SSERAFIM(블루)/ILLIT(핑크)/KATSEYE(퍼플) 세 빛 덩어리 중앙 충돌",
           "md": "임팩트. 로고의 정적 에너지가 폭발하는 느낌"
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_IMP"
       }
     },
     {
@@ -2112,7 +2227,12 @@
       "segPrompts": [
         "MEDIUM SHOT, dynamic scene progression over 10 seconds — Two young Korean women early-20s, indoors on a beige sofa, warm indoor lighting, shallow depth of field, photorealistic 8K cinematic 16:9.\n\n[0-4s] Seo Yeori alone on the sofa, scrolling her phone, relaxed expression, slightly leaning forward.\n[4-10s] Han Jia enters frame from the left, quickly sits beside Yeori, thrusts her phone screen toward Yeori's face, says out loud: \"야야! 이거 봤어?\" — lip-sync Korean dialogue, urgent excited tone.\n\nSeo Yeori (right): long wavy dark brown hair NOT short, subtle natural skin texture on right cheek (never exaggerated), delicate gold necklace, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, black and white Converse Chuck Taylor sneakers.\n\nHan Jia (left, entering): short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, intense dark eyes, delicate silver chain necklace, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, white low-top sneakers, holding phone screen toward Yeori.\n\nBackground figures must not interact with main characters.",
         "CLOSE-UP, dynamic scene progression over 8 seconds, continuing directly from previous clip — Same two Korean women on beige sofa, warm indoor lighting, photorealistic 8K cinematic 16:9.\n\n[0-3s] Camera pushes in to CLOSE-UP on Seo Yeori's face: eyes widen in shock staring at Jia's phone screen, mouth slightly open, jaw drops — intense surprise expression.\n[3-8s] Both women turn to face each other in close-up two-shot, exchanging wide-eyed disbelief — Yeori brings hand to mouth, Jia raises eyebrows and leans in slightly, shared look of stunned amazement.\n\nSeo Yeori: long wavy dark brown hair, subtle skin texture right cheek (never exaggerated), gold necklace, white ribbed crop tee, navy cardigan open-front, ivory wide-leg trousers.\nHan Jia: short wavy black hair fringe bangs, dark mauve-brown lip, sharp eyeliner, silver chain necklace, white fitted tee, denim cutoff shorts.\n\nNo background interference. Expressions must be naturalistic, not theatrical."
-      ]
+      ],
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_MCU → SH_CU(후반) CA_ST HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시 MD_SUR"
+      }
     },
     {
       "id": "cut-3",
@@ -2176,7 +2296,12 @@
         "calm analytical expression with slight excitement building in eyes — young Korean woman early-20s, sitting upright on beige sofa facing camera directly, long wavy dark brown hair, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, small face K-model proportions, very subtle natural skin texture on right cheek never exaggerated, effortlessly photogenic not posing just existing beautifully — at seconds 2-6 she begins speaking, lips parting naturally, slight lean forward, right hand lifts gently as if introducing a topic with casual enthusiasm, eyebrows raise softly mid-sentence, mouth forms Korean vowels naturally — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
         "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9",
         "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9"
-      ]
+      ],
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_ANL",
+        "source": "SH_MCU CA_ST 자연스러운 설명 손짓 MD_ANL"
+      }
     },
     {
       "id": "cut-4",
@@ -2223,6 +2348,11 @@
           "ac": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
           "md": "글로벌 팬덤 장악한 존재감"
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_IMP"
       }
     },
     {
@@ -2266,6 +2396,11 @@
           "ac": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
           "md": "밝고 가볍게. 버블 에너지 반영."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_BRT",
+        "source": "SH_MCU CA_ST 설명 중 살짝 들뜨는 표정 MD_BRT"
       }
     },
     {
@@ -2313,6 +2448,11 @@
           "ac": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
           "md": "밝고 경쾌한 신예 에너지"
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_BRT"
       }
     },
     {
@@ -2356,6 +2496,11 @@
           "ac": "눈빛이 분석적으로 변하는 순간 포착",
           "md": "셋 중 가장 차분하고 날카롭게"
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_ECU",
+        "source": "SH_ECU CA_ST 눈빛이 분석적으로 변하는 순간 MD_ANL"
       }
     },
     {
@@ -2403,6 +2548,11 @@
           "ac": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
           "md": "글로벌 타깃. 경계 없는 세계관."
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_ANL"
       }
     },
     {
@@ -2446,6 +2596,11 @@
           "ac": "생각하는 포즈 → 점점 흥분. 발견의 설렘.",
           "md": "분석가가 아닌 팬으로서 흥분하는 느낌"
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_DSC",
+        "source": "SH_MCU CA_ST 생각하는 포즈에서 시작 → 점점 흥분 MD_DSC"
       }
     },
     {
@@ -2491,6 +2646,11 @@
           "ac": "네온 글로우 텍스트 \"각자의 색이 살아있다\" 등장",
           "md": "임팩트. CUT 5 핵심 문장을 텍스트로 박아줌."
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_IMP"
       }
     },
     {
@@ -2534,6 +2694,11 @@
           "ac": "HJ 처음엔 덤덤 → 점점 몸이 앞으로 쏠림",
           "md": "몰입. 대사 없이 리액션만으로 전달."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_ABS",
+        "source": "SH_MCU CA_ST HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중 MD_ABS"
       }
     },
     {
@@ -2577,6 +2742,11 @@
           "ac": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
           "md": "멍함 → 여운 가득. 전반부 마무리 감정 폭발 포인트."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_CU",
+        "source": "SH_CU CA_ST 화면 보다 → 카메라로 시선 천천히 이동 MD_DZD"
       }
     },
     {
@@ -2620,6 +2790,11 @@
           "ac": "생각하는 포즈에서 시작. 손짓 포함 설명.",
           "md": "다큐 해설자처럼 — 딱딱하지 않게."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_ANL",
+        "source": "SH_MCU CA_ST 손짓 포함 자연스러운 설명 MD_ANL"
       }
     },
     {
@@ -2665,6 +2840,11 @@
           "ac": "HYBE 중앙 노드 → 세 그룹 연결선 순차적으로 그려짐",
           "md": "CUT 8 분석을 도식으로 이해도 높임."
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_ANL"
       }
     },
     {
@@ -2708,6 +2888,11 @@
           "ac": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
           "md": "폭발적 케미. 결국 \"그냥 좋음\"으로 귀결되는 순간."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_JOY",
+        "source": "SH_MCU CA_ST HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음 MD_JOY"
       }
     },
     {
@@ -2751,6 +2936,11 @@
           "ac": "웃음이 서서히 사그라들며 몽환 눈빛으로 변환",
           "md": "몽환적. 웜톤. 꿈꾸는 듯한 눈빛."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_ECU",
+        "source": "SH_ECU CA_ST 웃음 사그라들며 몽환 눈빛으로 변화 MD_DRM"
       }
     },
     {
@@ -2794,6 +2984,11 @@
           "ac": "무심한 듯 감성적인 눈빛 고정. 다크 마룬 립 유지.",
           "md": "쿨톤 몽환. 서여리 웜톤과 대비. 순수 영상미 컷."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_ECU",
+        "source": "SH_ECU CA_ST 무심한 듯 감성적인 눈빛 고정 MD_DRM"
       }
     },
     {
@@ -2837,6 +3032,11 @@
           "ac": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
           "md": "솔직한 팬심. 분석 아닌 감정 언어."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_SHY",
+        "source": "SH_MCU CA_ST 시선 내리깔다 천천히 카메라로 올리기 MD_SHY"
       }
     },
     {
@@ -2884,6 +3084,11 @@
           "ac": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
           "md": "서여리의 취향 = 시청자의 취향으로 연결"
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_EMO"
       }
     },
     {
@@ -2927,6 +3132,11 @@
           "ac": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
           "md": "뮤비 + 서여리 자신을 동시에 이야기하는 이중 의미. 여운 2~3초 필수."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_EMO",
+        "source": "SH_MCU CA_ZIN MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음 MD_EMO"
       }
     },
     {
@@ -2970,6 +3180,11 @@
           "ac": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
           "md": "가볍고 따뜻하게. 무겁지 않은 마무리."
         }
+      },
+      "editIntent": {
+        "kenburns": "zoomIn",
+        "reason": "SH_MCU+MD_WRM",
+        "source": "SH_MCU CA_ST HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음. MD_WRM"
       }
     },
     {
@@ -3015,6 +3230,11 @@
           "ac": "서여리 채널 로고 + 구독/댓글 유도 텍스트",
           "md": "따뜻하고 친근하게. CUT 12의 온도감 유지."
         }
+      },
+      "editIntent": {
+        "kenburns": "random",
+        "reason": "fallback",
+        "source": "SH_GR CA_ST 없음 MD_WRM"
       }
     }
   ],
@@ -3355,13 +3575,13 @@
       ]
     },
     "tracks": {
-      "cut-3__v1": [
+      "cut-1__v1": [
         {
-          "id": "track_1788773497928_sfop",
+          "id": "track_1789346165885_5beu",
           "type": "dialogue",
-          "text": "LE SSERAFIM은요, 데뷔 3년 차인데~. 이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 이번 콜라보에서 얘네 역할이 진~짜 중요한 게…",
+          "text": "",
           "speaker": null,
-          "url": "blob:http://localhost:5173/6c983eb8-3420-443c-b48f-33211fd6f285",
+          "url": null,
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -3372,221 +3592,44 @@
       ],
       "cut-2__v1": [
         {
-          "id": "track_1788773497928_2kxm",
+          "id": "track_1789346165885_z859",
           "type": "dialogue",
-          "text": "야, 야~  이거 봤어?",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_02_track_1788773497928_2kxm.mp3?t=1789345984791",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 25,
-            "similarity": 70
-          }
-        }
-      ],
-      "cut-5__v1": [
-        {
-          "id": "track_1788773497928_u8u4",
-          "type": "dialogue",
-          "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지?...... 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/9b5c6a90-4766-48ea-8395-65c39702426c",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 28,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-7__v1": [
-        {
-          "id": "track_1788773497928_40vm",
-          "type": "dialogue",
-          "text": "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~  LA 베이스. 경계 자체가 없는 세계관!",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/ed868b40-c9db-4923-91c5-f3ae7c6c7291",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 27,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-9__v1": [
-        {
-          "id": "track_1789109440057_wzgv",
-          "type": "dialogue",
-          "text": "근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데, 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/5a0ef841-e77f-402e-9580-31488ab1b5af",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 28,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-11__v1": [
-        {
-          "id": "track_1788773497928_eyai",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
+          "text": "야, 야~ 이거 봤어?",
+          "speaker": "지아",
           "url": null,
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
         }
       ],
-      "cut-12__v1": [
+      "cut-2__v1788599750449_ldu": [
         {
-          "id": "track_1788773497928_uy9l",
+          "id": "track_1789346165885_bmoi",
           "type": "dialogue",
-          "text": "…중독이에요…",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/23821215-569f-4a3d-a7cb-b4b9a657b8c5",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-2__v1788599750449_ldu": [],
-      "cut-13__v1": [
-        {
-          "id": "track_1788773497928_5t08",
-          "type": "dialogue",
-          "text": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지~! 한 곡으로 세 시장을...",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/f26723aa-cabb-490c-a0e3-231c5ed8914c",
+          "text": "야, 야~ 이거 봤어?",
+          "speaker": "지아",
+          "url": null,
           "voiceId": "",
           "settings": {
             "speed": 0.95,
-            "stability": 26,
-            "similarity": 78
-          }
-        }
-      ],
-      "cut-15__v1": [
-        {
-          "id": "track_1788773497928_9t1v",
-          "type": "dialogue",
-          "text": "야 그냥 좋잖아!!",
-          "speaker": "한지아",
-          "url": "blob:http://localhost:5173/4f1b0c5a-5f8e-45af-ba2e-d7b75594f587",
-          "voiceId": "",
-          "settings": {
-            "speed": 1.1,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1788773497928_i3is",
-          "type": "dialogue",
-          "text": "… 맞아…",
-          "speaker": "서여리",
-          "url": "blob:http://localhost:5173/53ae7422-1f67-46af-9d5c-cce91d6594f9",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
             "stability": 30,
             "similarity": 75
           }
         }
       ],
-      "cut-18__v1": [
+      "cut-3__v1": [
         {
-          "id": "track_1788773497928_ci4m",
+          "id": "track_1789346165885_oi1x",
           "type": "dialogue",
-          "text": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
+          "text": "LE SSERAFIM은요, 데뷔 3년 차인데~. 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_03_track_1789346165885_oi1x.mp3?t=1789346238397",
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-20__v1": [
-        {
-          "id": "track_1788773497928_33zu",
-          "type": "dialogue",
-          "text": "실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/45106986-0217-4c72-ad60-c69caa0887c0",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 28,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-21__v1": [
-        {
-          "id": "track_1788773497928_37bk",
-          "type": "dialogue",
-          "text": "여러분 픽은 뭐예요?",
-          "speaker": "한지아",
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1788773497928_9b0l",
-          "type": "dialogue",
-          "text": "댓글로 알려주세요~~ 구독하면 다음 리뷰도 같이 봐요!",
-          "speaker": "서여리",
-          "url": "blob:http://localhost:5173/6bc9dc2b-f609-4798-8a3f-ec2ec57efca9",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-17__v1": [
-        {
-          "id": "track_1789045363575_fbq4",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-1__v1": [
-        {
-          "id": "track_1789047728792_fz7u",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
@@ -3594,14 +3637,29 @@
       ],
       "cut-4__v1": [
         {
-          "id": "track_1789048431586_b68c",
+          "id": "track_1789346165885_bned",
           "type": "dialogue",
           "text": "",
           "speaker": null,
           "url": null,
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-5__v1": [
+        {
+          "id": "track_1789346165885_sp2q",
+          "type": "dialogue",
+          "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지? 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
@@ -3609,44 +3667,29 @@
       ],
       "cut-6__v1": [
         {
-          "id": "track_1789048989879_rdzc",
+          "id": "track_1789346165885_yl5m",
           "type": "dialogue",
           "text": "",
           "speaker": null,
           "url": null,
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
         }
       ],
-      "cut-19__v1": [
+      "cut-7__v1": [
         {
-          "id": "track_1789049517230_c6yf",
+          "id": "track_1789346165885_i74f",
           "type": "dialogue",
-          "text": "",
+          "text": "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~ LA 베이스. 경계 자체가 없는 세계관!",
           "speaker": null,
           "url": null,
           "voiceId": "",
           "settings": {
-            "speed": 0.9,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-10__v1": [
-        {
-          "id": "track_1789049919939_mo9p",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
+            "speed": 0.95,
             "stability": 30,
             "similarity": 75
           }
@@ -3654,10 +3697,128 @@
       ],
       "cut-8__v1": [
         {
-          "id": "track_1789098510661_0v5k",
+          "id": "track_1789346165885_5317",
           "type": "dialogue",
           "text": "",
           "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-9__v1": [
+        {
+          "id": "track_1789346165885_5wzu",
+          "type": "dialogue",
+          "text": "근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-10__v1": [
+        {
+          "id": "track_1789346165885_blwa",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-11__v1": [
+        {
+          "id": "track_1789346165885_km21",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-12__v1": [
+        {
+          "id": "track_1789346165885_6bw3",
+          "type": "dialogue",
+          "text": "…중독이에요…",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-13__v1": [
+        {
+          "id": "track_1789346165885_1ckz",
+          "type": "dialogue",
+          "text": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-14__v1": [
+        {
+          "id": "track_1789346165885_azvw",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-15__v1": [
+        {
+          "id": "track_1789346165885_2nn8",
+          "type": "dialogue",
+          "text": "야 그냥 좋잖아!!",
+          "speaker": "한지아",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1789346165885_sfoq",
+          "type": "dialogue",
+          "text": "…맞아...",
+          "speaker": "서여리",
           "url": null,
           "voiceId": "",
           "settings": {
@@ -3669,7 +3830,7 @@
       ],
       "cut-16__v1": [
         {
-          "id": "track_1789110427354_8sxh",
+          "id": "track_1789346165885_bnik",
           "type": "narration",
           "text": "근데 있잖아요… 좋은 거잖아요, 그냥!",
           "speaker": null,
@@ -3678,6 +3839,109 @@
           "settings": {
             "speed": 0.85,
             "stability": 55,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-17__v1": [
+        {
+          "id": "track_1789346165885_yfc8",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-18__v1": [
+        {
+          "id": "track_1789346165885_8lfq",
+          "type": "dialogue",
+          "text": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-19__v1": [
+        {
+          "id": "track_1789346165885_4etw",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-20__v1": [
+        {
+          "id": "track_1789346165885_fks0",
+          "type": "dialogue",
+          "text": "실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-21__v1": [
+        {
+          "id": "track_1789346165885_o6rk",
+          "type": "dialogue",
+          "text": "여러분 픽은 뭐예요?",
+          "speaker": "한지아",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1789346165885_sl6s",
+          "type": "dialogue",
+          "text": "댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!",
+          "speaker": "서여리",
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-22__v1": [
+        {
+          "id": "track_1789346165885_gpim",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
             "similarity": 75
           }
         }
