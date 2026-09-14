@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3347,7 +3347,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-14T00:17:48.685Z",
+  "savedAt": "2026-09-14T02:03:27.573Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3405,7 +3405,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-13",
     "subtitles": {
       "cut-1": "",
       "cut-2": [

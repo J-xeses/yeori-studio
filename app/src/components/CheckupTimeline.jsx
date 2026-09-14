@@ -225,6 +225,24 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
     return hit.start + Math.max(0, elapsedInActive - hit.trimInSec)
   }, [positioned, activeCutNo, elapsedInActive])
 
+  // 좌측 컷 목록을 클릭하면 activeCutNo가 바뀌는데, 그 컷이 지금 스크롤 뷰포트 밖에 있으면
+  // 재생 위치(playhead)는 이동해도 화면엔 안 보여서 "눌러도 아무 반응 없다"처럼 느껴졌다
+  // (2026-09-13, 사용자 지적: "체크업 탭 이동 경로 수정 필요"). 클릭한 컷의 타임라인 위치로
+  // 가로 스크롤을 자동으로 맞춰준다.
+  useEffect(() => {
+    if (activeCutNo == null) return
+    const hit = positioned.find(it => it.sourceCutNo === activeCutNo)
+    const strip = stripRef.current
+    if (!hit || !strip) return
+    const clipStartPx = hit.start * pxPerSec
+    const clipEndPx = (hit.start + hit.dur) * pxPerSec
+    const viewLeft = strip.scrollLeft
+    const viewRight = viewLeft + strip.clientWidth
+    // 이미 보이는 범위 안이면 스크롤을 건드리지 않음(불필요한 점프 방지)
+    if (clipStartPx >= viewLeft && clipEndPx <= viewRight) return
+    strip.scrollTo({ left: Math.max(0, clipStartPx - strip.clientWidth * 0.2), behavior: 'smooth' })
+  }, [activeCutNo, positioned, pxPerSec])
+
   const selectedClip = clips.find(c => c.clipId === selectedClipId) || null
   const canSplit = !!(selectedClip && activeCutNo === selectedClip.sourceCutNo &&
     elapsedInActive > selectedClip.trimInSec + MIN_CLIP_SEC &&

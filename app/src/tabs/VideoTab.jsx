@@ -952,7 +952,12 @@ export default function VideoTab() {
           <CutList
             cuts={cuts} gData={gData} episodeCode={episodeCode} maxStage={4}
             activeCutId={selectedCutId}
-            onCutClick={c => setSelectedCutId(c.id)}
+            onCutClick={c => {
+              setSelectedCutId(c.id)
+              // 컷 목록 클릭 시 해당 컷 카드로 스크롤 이동(2026-09-13, 사용자 지적: "컷목록과
+              // 해당화면 연동 문제 — 목록 클릭하면 해당 컷화면 영역으로 스크롤 이동기능 필요")
+              document.getElementById(`video-cutcard-${c.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }}
             renderPreview={c => {
               const clips = videoClips[c.id] || []
               return clips[0]
@@ -1115,7 +1120,7 @@ export default function VideoTab() {
             })
           }
           return (
-            <div key={selCut.id}
+            <div key={selCut.id} id={`video-cutcard-${selCut.id}`}
               className={`${s.selectedCutCard} ${isSelected ? s.selectedCutCardActive : ''}`}
               onClick={() => setSelectedCutId(selCut.id)}>
               <div className={s.cutCardHeader}>
