@@ -40,6 +40,17 @@ function toSegments(value, fallbackText, totalDur) {
   return text ? [{ start: 0, end: totalDur, text }] : []
 }
 
+// 클립의 실제 생성/수정 시각(2026-09-14) — "M/D HH:MM" 형식, 오늘이면 시간만.
+function formatClipTimestamp(ms) {
+  if (!ms) return ''
+  const d = new Date(ms)
+  const now = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  if (d.toDateString() === now.toDateString()) return time
+  return `${d.getMonth() + 1}/${d.getDate()} ${time}`
+}
+
 // 클립 배열의 누적 시작/끝 시각 — clipTrimItem의 usedSec 계산과 같은 기준(전체사용 여부에
 // 따라 duration 또는 trimEnd-trimStart)을 그대로 써서 자막 타이밍과 항상 어긋나지 않게 함.
 function clipTimings(clips) {
@@ -376,6 +387,8 @@ export default function VideoTab() {
         const r = await fetch(url, { method: 'HEAD' })
         if (r.ok) {
           const name = `cut_${padded}.${ext}`
+          const lastModifiedHeader = r.headers.get('Last-Modified')
+          const createdAt = lastModifiedHeader ? new Date(lastModifiedHeader).getTime() : Date.now()
           const vid = document.createElement('video')
           vid.preload = 'metadata'
           vid.onloadedmetadata = () => {
@@ -384,7 +397,7 @@ export default function VideoTab() {
             // 프록시로 불러온 클립은 이미 서버 실파일이라 재업로드 없이 stagedPath를 바로 채움
             // (2026-09-13 — "클립 합성"이 이 경로를 그대로 입력으로 씀).
             const stagedPath = vChk?.videoDir ? `${vChk.videoDir}\\${name}` : undefined
-            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: !!cut.dialogue }
+            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: !!cut.dialogue, createdAt }
             setVideoClips(p => {
               const existing = p[cut.id] || []
               if (existing.some(c => c.url === url)) return p
@@ -456,6 +469,7 @@ export default function VideoTab() {
       const obj = {
         url, name: candidate.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true,
         ratio, stagedPath: candidate.path, keepAudio: !!cut?.dialogue,
+        createdAt: candidate.mtime || Date.now(),
       }
       setVideoClips(p => {
         const existing = p[cutId] || []
@@ -502,7 +516,7 @@ export default function VideoTab() {
       vid.onloadedmetadata = () => {
         const dur = Math.round(vid.duration * 100) / 100
         const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
-        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: !!cut?.dialogue }
+        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: !!cut?.dialogue, createdAt: f.lastModified || Date.now() }
         let clipIdx = -1
         setVideoClips(p => {
           const existing = p[cutId] || []
@@ -612,7 +626,7 @@ export default function VideoTab() {
                   [cut.id]: [...existing, {
                     url,
                     name: `AI 생성 (cut_${String(cut.no).padStart(2, '0')}.mp4)`,
-                    duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio,
+                    duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, createdAt: Date.now(),
                   }],
                 }
               })
@@ -699,7 +713,7 @@ export default function VideoTab() {
                   ...p,
                   [cut.id]: [...(p[cut.id] || []), {
                     url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
-                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio,
+                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio, createdAt: Date.now(),
                   }],
                 }))
               } else {
@@ -1107,7 +1121,7 @@ export default function VideoTab() {
           const up = vUpload[selCut.no] || {}
           const cutSegs = toSegments(subtitles[selCut.id], stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
           const captionText = cutSegs[0]?.text ?? ''
-          const cutClipTimings = clips.length > 1 ? clipTimings(clips) : []
+          const cutClipTimings = clips.length > 0 ? clipTimings(clips) : []
           const setClipCaption = (idx, text) => {
             const timings = clipTimings(clips)
             setSubtitles(prev => {
@@ -1138,7 +1152,15 @@ export default function VideoTab() {
                       {vRow.hasVideo ? '✓ 업로드됨' : vRow.videoMode === 'veo' ? '· 제작 필요' : vRow.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
                     </span>
                   )}
-                  {clips.length === 0 && (() => {
+                  {/* 서버엔 이미 완성본(vRow.hasVideo)이 있는데 로컬 클립 에디터만 비어있는 경우까지
+                      "예상 N개 클립 필요"를 띄우면 "업로드됨"과 "필요"가 동시에 보여 모순돼 보인다
+                      (2026-09-14, 사용자 지적 — 카드 표시 통일화). 실제로 아무것도 없을 때만 표시. */}
+                  {clips.length === 0 && vRow?.hasVideo && (
+                    <span className={s.clipEstimateBadge} title="서버에 완성본이 있지만 아직 클립 편집기에 안 불러왔습니다">
+                      📥 완성본 있음 — 프록시로 불러오기
+                    </span>
+                  )}
+                  {clips.length === 0 && !vRow?.hasVideo && (() => {
                     const target = selCut.duration || 5
                     const estCount = estimateClipCount(target)
                     return estCount > 1 ? (
@@ -1200,7 +1222,11 @@ export default function VideoTab() {
                   </div>
                 )}
 
-                {clips.length <= 1 && (
+                {/* 클립이 하나라도 있으면 아래 클립별 자막칸으로 통일 — 클립 개수(1개/여러개)에
+                    따라 서로 다른 입력 UI가 보이던 비일관성을 없앰(2026-09-14, 사용자 지적:
+                    "컷2번처럼 클립별 구분설정이 다른 컷들은 누락돼 보인다"). 클립이 아직
+                    하나도 없을 때만 이 자유 텍스트 칸을 보여줌. */}
+                {clips.length === 0 && (
                   <div className={s.field} onClick={e => e.stopPropagation()}>
                     <label>컷 자막</label>
                     <textarea rows={2} className={s.captionInput}
@@ -1228,6 +1254,11 @@ export default function VideoTab() {
                               <span className={s.clipLabel}> ({String.fromCharCode(97 + idx)})</span>
                             </span>
                             <span className={s.clipDurLabel}>{clip.duration != null ? `${clip.duration}s` : '?'}</span>
+                            {clip.createdAt && (
+                              <span className={s.clipCreatedAt} title="이 파일의 실제 생성/수정 시각">
+                                {formatClipTimestamp(clip.createdAt)}
+                              </span>
+                            )}
                             {clip.staging && <span className={s.clipStagingBadge} title="서버에 올리는 중...">⏳ 업로드 중</span>}
                             {clip.stageError && <span className={s.clipStageErrorBadge} title={clip.stageError}>⚠ 업로드 실패</span>}
                             {!clip.staging && !clip.stageError && !clip.stagedPath && <span className={s.clipStageErrorBadge}>⚠ 서버 미반영</span>}
@@ -1239,7 +1270,7 @@ export default function VideoTab() {
                             )}
                             <button className={s.clipDel} onClick={e => { e.stopPropagation(); removeClip(selCut.id, idx) }}>✕</button>
                           </div>
-                          {clips.length > 1 && (
+                          {clips.length > 0 && (
                             <div className={s.clipCaptionRow} onClick={e => e.stopPropagation()}>
                               <span className={s.clipCaptionTime}>
                                 {cutClipTimings[idx] ? `${cutClipTimings[idx].start.toFixed(1)}s~${cutClipTimings[idx].end.toFixed(1)}s` : ''}

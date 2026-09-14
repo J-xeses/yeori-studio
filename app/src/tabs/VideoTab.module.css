@@ -292,6 +292,7 @@
 .vChkDir { font-family: var(--mono); color: var(--text-3); }
 
 /* 클립 스테이징 상태 뱃지(로컬 업로드 → 서버 파일화, 2026-09-13) */
+.clipCreatedAt { font-size: 10px; color: var(--text-3); font-family: var(--mono); white-space: nowrap; }
 .clipStagingBadge { font-size: 10px; font-weight: 700; color: #fbbf24; white-space: nowrap; }
 .clipStageErrorBadge { font-size: 10px; font-weight: 700; color: #f87171; white-space: nowrap; }
 

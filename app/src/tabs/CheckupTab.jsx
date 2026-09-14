@@ -73,21 +73,30 @@ export default function CheckupTab() {
   const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text
     ?? activeCutSegs[activeCutSegs.length - 1]?.text ?? ''
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     if (epNum == null) return
-    setLoading(true)
+    if (!silent) setLoading(true)
     try {
       const r = await fetch(`${SERVER}/api/episode-video-checklist?epNum=${epNum}`)
       const d = await r.json()
       setCuts((d.cuts || []).slice().sort((a, b) => (a.order ?? a.no) - (b.order ?? b.no)))
     } catch {
-      // 조용히 무시 — 새로고침 버튼으로 재시도
+      // 조용히 무시 — 새로고침 버튼(또는 다음 폴링)으로 재시도
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [epNum])
 
   useEffect(() => { load() }, [load])
+
+  // 컷이 생성되는 대로 자동으로 반영되도록 백그라운드 폴링(2026-09-14, 사용자 확정 —
+  // 컷타입마다 완료 시점이 서로 다른 G단계에 걸쳐있어 특정 이벤트에 훅을 거는 대신,
+  // 다른 탭(스튜디오/메이킹)이 이미 쓰는 단순 폴링 방식을 그대로 적용). silent=true라
+  // "불러오는 중…" 표시가 매번 깜빡이지 않음 — 수동 새로고침 버튼만 로딩 표시를 씀.
+  useEffect(() => {
+    const id = setInterval(() => load(true), 5000)
+    return () => clearInterval(id)
+  }, [load])
 
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
@@ -171,7 +180,7 @@ export default function CheckupTab() {
           </div>
         }
         actions={[
-          { key: 'refresh', label: loading ? '불러오는 중…' : '🔄 새로고침', onClick: load, disabled: loading },
+          { key: 'refresh', label: loading ? '불러오는 중…' : '🔄 새로고침', onClick: () => load(false), disabled: loading },
           { key: 'play-all', label: '▶ 전체 이어보기', onClick: playAll, disabled: !playable.length, variant: 'accent' },
         ]}
       />

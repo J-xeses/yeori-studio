@@ -795,6 +795,11 @@ export default function ScriptGenTab() {
     if (!target) { setMcError(`CUT ${cutNo} 을 찾을 수 없습니다(현재 에피소드가 다를 수 있음)`); setGenlinePatch(null); return }
     const p = v3RevisionPatch(genlinePatch.fields, target)
     dispatch({ type: 'UPDATE_CUT', id: target.id, p })
+    // 필드게이트 "세그 분할" 탭에서 조합을 반영한 패치(SEG 필드 포함)가 대본에 적용되는
+    // 시점 = 그 컷의 대사가 세그 단위로 검토·확정돼 스튜디오/TTS 탭에 최신 상태로 넘어온
+    // 시점이므로, 이때 G3(대사 준비 완료)를 자동 승인한다(2026-09-14, 사용자 확정 — STS
+    // 음성변환은 G3 이후 별도 단계로 취급, 트리거로 안 씀).
+    if ('SEG' in genlinePatch.fields) setGPoint(episodeCode, cutNo, 'g3', true)
     setGenlinePatch(null)
   }
 

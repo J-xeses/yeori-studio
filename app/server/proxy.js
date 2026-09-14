@@ -1559,9 +1559,11 @@ app.get('/api/scan-cut-videos', (req, res) => {
   fs.readdirSync(dir).sort().forEach(file => {
     const m = file.match(/^cut_(\d+)_([a-z0-9]{1,2})\.(mp4|mov|webm)$/i)
     if (m) {
+      let mtime
+      try { mtime = fs.statSync(path.join(dir, file)).mtimeMs } catch { /* noop */ }
       clips.push({
         cutNo: parseInt(m[1], 10), slot: m[2], name: file,
-        url: `${urlPrefix}/${file}`, path: path.join(dir, file),
+        url: `${urlPrefix}/${file}`, path: path.join(dir, file), mtime,
       })
     }
   })
