@@ -102,6 +102,9 @@
    클립·생성 컨트롤 패널을 StudioTab의 cardLeft/cardRight와 같은 flex:1 반반으로 */
 .mainSplit { display: flex; gap: 14px; align-items: flex-start; }
 .mainSplitCol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+/* 오른쪽 컷카드 목록을 스크롤해도 왼쪽 미리보기가 같이 흘러가버리면 "지금 어느 컷을 보고
+   있는지"와 영상이 따로 논다(2026-09-14, 사용자 지적) — 왼쪽만 고정해서 항상 보이게 함. */
+.mainSplitColSticky { position: sticky; top: 0; align-self: flex-start; }
 
 .mainControls { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-shrink: 0; flex-wrap: wrap; }
 .ratioToggle { display: flex; gap: 4px; }
@@ -127,6 +130,19 @@
 /* Selected cut card */
 .selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; cursor: pointer; transition: border-color .12s; }
 .selectedCutCardActive { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent-border); }
+/* 컷카드 외곽 프레임을 왼쪽 영상칸까지 넓혀서 영상+카드가 스크롤할 때 세트로 같이 움직이게 함
+   (2026-09-14, 사용자 확정: "컷카드 외곽 프레임을 왼쪽까지 확장하여 그안에 영상을 넣으면
+   세트로 움직이지 않을까?" — 사이드 sticky 방식 대신 이 방식 채택). */
+/* 컷마다 세로높이가 제각각이면 영상칸도 컷별로 작아졌다 커졌다 해서 어색하다(2026-09-14,
+   사용자 지적) — 클립이 가장 많은 CUT2 기준(실측 526px)으로 전 컷 높이를 통일하고, 영상칸
+   폭은 기존의 1.5배로 넓혀서 16:9 프레임이 레터박스 없이 넉넉히 들어가게 함. 에피소드가
+   달라져도 이 CSS 비율이 그대로 적용됨(컷별 로직 아님). */
+.cutCardRow { display: flex; align-items: stretch; min-height: 530px; }
+.cutCardVideoCol { width: 57%; max-width: 630px; min-width: 390px; flex-shrink: 0; background: #000; position: relative; cursor: default; border-right: 1px solid var(--border); }
+.cutCardVideoInner { position: relative; width: 100%; height: 100%; }
+.cutCardVideoPlayer { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
+.cutCardVideoEmpty { width: 100%; height: 100%; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-3); font-size: 12px; padding: 20px 10px; text-align: center; }
+.cutCardMainCol { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cutCardHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
 .cutCardTitle { font-size: 13px; font-weight: 700; color: var(--text); }
 .cutCardDur { font-size: 12px; color: var(--accent-light); font-weight: 600; }

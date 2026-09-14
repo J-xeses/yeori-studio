@@ -164,6 +164,9 @@ export default function VideoTab() {
   // "프롬프트를 어디서 제대로 보나" 혼란이 있었음(2026-09-12). 클릭하면 그 컷만 전체 펼침.
   const [expandedVP, setExpandedVP] = useState({})
   const [vUpload, setVUpload] = useState({})   // { [cutNo]: { busy, keepAudio, result } }
+  // loadVChk가 (StrictMode 이중 렌더 등으로) 겹쳐서 두 번 돌면 같은 컷을 동시에
+  // 프록시로 불러오다가 로컬 서버가 간헐적 503을 뱉는 게 확인됨(2026-09-14) — 단일 실행 가드.
+  const proxyAutoLoadInFlight = useRef(false)
   const loadVChk = useCallback(() => {
     const epNum = state.episode?.number
     if (epNum == null) { setVChk(null); return }
@@ -176,10 +179,26 @@ export default function VideoTab() {
         // 사람이 매번 눌러야 했다 — 폴더 후보와 같은 이유로 자동화한다(2026-09-14, 사용자
         // 재확인: "폴더에 있는 영상도 일부 만들어진 파일이 아직 업로드도 안 되고 있다").
         const currentClips = state.videoTabState?.videoClips || {}
+        const toLoad = []
         for (const row of d.cuts || []) {
           if (!row.hasVideo) continue
           const cut = (state.cuts || []).find(c => c.no === row.no)
-          if (cut && !(currentClips[cut.id]?.length > 0)) loadFromProxy(cut, d.videoDir)
+          if (cut && !(currentClips[cut.id]?.length > 0)) toLoad.push(cut)
+        }
+        // 여러 컷을 동시에 프록시로 불러오면(HEAD 요청 병렬 폭주) 로컬 프록시 서버가
+        // 간헐적으로 503을 뱉는 게 확인됨(2026-09-14) — 순차 + 약간의 텀 + 단일 실행 가드로 완화.
+        if (toLoad.length > 0 && !proxyAutoLoadInFlight.current) {
+          proxyAutoLoadInFlight.current = true
+          ;(async () => {
+            try {
+              for (const cut of toLoad) {
+                await loadFromProxy(cut, d.videoDir)
+                await new Promise(r => setTimeout(r, 250))
+              }
+            } finally {
+              proxyAutoLoadInFlight.current = false
+            }
+          })()
         }
       })
       .catch(() => {})
@@ -396,7 +415,13 @@ export default function VideoTab() {
     for (const ext of ['mp4', 'mov', 'webm']) {
       const url = `${epMediaUrl(episode, 'video')}/cut_${padded}.${ext}?t=${Date.now()}`
       try {
-        const r = await fetch(url, { method: 'HEAD' })
+        let r = await fetch(url, { method: 'HEAD' })
+        // 페이지 로딩 직후엔 다른 요청(파형/필름스트립 등)이 몰려서 로컬 프록시가 간헐적으로
+        // 5xx를 뱉는 게 확인됨(2026-09-14) — 존재하는 파일을 놓치지 않도록 한 번만 재시도.
+        if (!r.ok && r.status >= 500) {
+          await new Promise(res => setTimeout(res, 800))
+          r = await fetch(url, { method: 'HEAD' })
+        }
         if (r.ok) {
           const name = `cut_${padded}.${ext}`
           const lastModifiedHeader = r.headers.get('Last-Modified')
@@ -1067,73 +1092,6 @@ export default function VideoTab() {
 
       <div className={s.mainSplit}>
         <div className={s.mainSplitCol}>
-        <div className={s.videoWrapper}
-          style={{
-            aspectRatio: aspectRatio === '9:16' ? '9/16' : '16/9',
-            maxHeight: aspectRatio === '9:16' ? '78vh' : '60vh',
-            maxWidth: '100%',
-            margin: '0 auto',
-          }}>
-          <div className={s.videoInner}>
-            {(() => {
-              const selCut = cuts.find(c => c.id === selectedCutId)
-              const clips = selCut ? (videoClips[selCut.id] || []) : []
-              const activeClip = clips[selectedClipIdx] || clips[0]
-              return activeClip
-                ? <video key={activeClip.url} src={activeClip.url} controls className={s.mainVideo} />
-                : (
-                  <div className={s.mainVideoEmpty}>
-                    <span className={s.mainVideoEmptyIcon}>🎬</span>
-                    <span>{selCut ? `CUT ${selCut.no} 영상 없음` : '좌측에서 컷 선택'}</span>
-                  </div>
-                )
-            })()}
-
-            {subtitleEnabled && !subtitleEditMode && (
-              <div
-                className={`${s.subtitleDisplay} ${s[`pos_${subtitlePosition}`]}`}
-                onClick={() => setSubtitleEditMode(true)}
-                title="클릭하여 자막 수정"
-              >
-                <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
-              </div>
-            )}
-
-            {subtitleEnabled && subtitleEditMode && (
-              <div
-                className={`${s.subtitleEditBox} ${s[`pos_${subtitlePosition}`]}`}
-                onClick={(e) => e.stopPropagation()}>
-                <textarea
-                  ref={textareaRef}
-                  className={s.subtitleEditInput}
-                  rows={1}
-                  value={previewText}
-                  onChange={e => setPreviewText(e.target.value)}
-                  autoFocus
-                  placeholder="자막 텍스트 입력... (Enter로 줄바꿈 가능)"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <div className={s.subtitleEditControls}>
-                  <div className={s.posSelector}>
-                    {['top','middle','bottom'].map(pos => (
-                      <button key={pos}
-                        className={`${s.posBtn} ${subtitlePosition === pos ? s.posBtnActive : ''}`}
-                        onClick={(e) => { e.stopPropagation(); setSubtitlePosition(pos) }}>
-                        {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
-                      </button>
-                    ))}
-                  </div>
-                  <button className={s.subtitleDoneBtn} onClick={(e) => { e.stopPropagation(); setSubtitleEditMode(false) }}>
-                    완료
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-        </div>
-
-        <div className={s.mainSplitCol}>
         {cuts.map(selCut => {
           const isSelected = selCut.id === selectedCutId
           const clips = videoClips[selCut.id] || []
@@ -1160,10 +1118,68 @@ export default function VideoTab() {
               return { ...prev, [selCut.id]: next }
             })
           }
+          const previewClip = clips[isSelected ? selectedClipIdx : 0] || clips[0]
           return (
             <div key={selCut.id} id={`video-cutcard-${selCut.id}`}
               className={`${s.selectedCutCard} ${isSelected ? s.selectedCutCardActive : ''}`}
               onClick={() => setSelectedCutId(selCut.id)}>
+              <div className={s.cutCardRow}>
+              {/* 컷카드 외곽 프레임 자체를 왼쪽까지 넓혀서 그 안에 영상을 넣음 — 컷카드와 영상이
+                  "세트"로 같이 스크롤되게(2026-09-14, 사용자 확정: "차라리 컷카드 외곽 프레임을
+                  왼쪽까지 확장하여 그안에 영상을 넣으면 세트로 움직이지 않을까?"). 자막 오버레이
+                  편집(canvas/textarea ref)은 단일 ref라 선택된 컷 카드에서만 렌더링. */}
+              <div className={s.cutCardVideoCol} onClick={e => e.stopPropagation()}>
+                {previewClip ? (
+                  <div className={s.cutCardVideoInner}>
+                    <video key={previewClip.url} src={previewClip.url} controls className={s.cutCardVideoPlayer} />
+                    {isSelected && subtitleEnabled && !subtitleEditMode && (
+                      <div
+                        className={`${s.subtitleDisplay} ${s[`pos_${subtitlePosition}`]}`}
+                        onClick={() => setSubtitleEditMode(true)}
+                        title="클릭하여 자막 수정"
+                      >
+                        <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
+                      </div>
+                    )}
+                    {isSelected && subtitleEnabled && subtitleEditMode && (
+                      <div
+                        className={`${s.subtitleEditBox} ${s[`pos_${subtitlePosition}`]}`}
+                        onClick={(e) => e.stopPropagation()}>
+                        <textarea
+                          ref={textareaRef}
+                          className={s.subtitleEditInput}
+                          rows={1}
+                          value={previewText}
+                          onChange={e => setPreviewText(e.target.value)}
+                          autoFocus
+                          placeholder="자막 텍스트 입력... (Enter로 줄바꿈 가능)"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <div className={s.subtitleEditControls}>
+                          <div className={s.posSelector}>
+                            {['top','middle','bottom'].map(pos => (
+                              <button key={pos}
+                                className={`${s.posBtn} ${subtitlePosition === pos ? s.posBtnActive : ''}`}
+                                onClick={(e) => { e.stopPropagation(); setSubtitlePosition(pos) }}>
+                                {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
+                              </button>
+                            ))}
+                          </div>
+                          <button className={s.subtitleDoneBtn} onClick={(e) => { e.stopPropagation(); setSubtitleEditMode(false) }}>
+                            완료
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className={s.cutCardVideoEmpty}>
+                    <span className={s.mainVideoEmptyIcon}>🎬</span>
+                    <span>CUT {selCut.no} 영상 없음</span>
+                  </div>
+                )}
+              </div>
+              <div className={s.cutCardMainCol}>
               <div className={s.cutCardHeader}>
                 <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} — {selCut.scene || '씬 미입력'}</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1442,6 +1458,8 @@ export default function VideoTab() {
                   }}>
                   {g4Approved[selCut.id] ? '✓ G4 취소' : 'G4 승인'}
                 </button>
+              </div>
+              </div>
               </div>
             </div>
           )

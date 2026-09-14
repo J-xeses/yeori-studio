@@ -3347,7 +3347,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-14T08:28:58.265Z",
+  "savedAt": "2026-09-14T10:50:46.402Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3361,17 +3361,7 @@
           "ratio": "9:16"
         }
       ],
-      "cut-7": [
-        {
-          "url": "http://localhost:3001/../downloads/video/ep2/cut_04.mp4?t=1787479377061",
-          "name": "AI 생성 (cut_04.mp4)",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16"
-        }
-      ],
+      "cut-7": [],
       "cut-2": [
         {
           "url": "blob:http://localhost:5173/e9665848-b55e-421e-8253-6b7830a4a3ae",
@@ -3445,41 +3435,44 @@
       ],
       "cut-14": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789373015895",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789375769775",
           "name": "cut_14.mp4",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_14.mp4",
           "keepAudio": false,
           "createdAt": 1788944994000
         }
       ],
       "cut-10": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_10.mp4?t=1789373108070",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_10.mp4?t=1789375775114",
           "name": "cut_10.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_10.mp4",
           "keepAudio": false,
           "createdAt": 1788923816000
         }
       ],
       "cut-8": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789373471928",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789376128910",
           "name": "cut_08.mp4",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_08.mp4",
           "keepAudio": false,
-          "createdAt": 1788876636000
+          "createdAt": 1789376128910
         }
       ],
       "cut-6": [
@@ -3498,15 +3491,16 @@
       ],
       "cut-4": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_04.mp4?t=1789374559136",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_04.mp4?t=1789376354714",
           "name": "cut_04.mp4",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_04.mp4",
           "keepAudio": false,
-          "createdAt": 1788876589000
+          "createdAt": 1789376354714
         }
       ]
     },
@@ -3525,7 +3519,8 @@
           "end": 20.02,
           "text": "서여리 놀란 표정으로 화면 전환"
         }
-      ]
+      ],
+      "cut-4": "테스트 자막입니다"
     }
   },
   "ttsTabState": {
