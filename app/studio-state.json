@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -226,7 +226,7 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "",
+          "subtitle": "데뷔 3년차 / 글로벌 팬덤 보유",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
           "duration": 10,
@@ -326,7 +326,7 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "",
+          "subtitle": "데뷔 1년차 / 버블 에너지",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
           "duration": 10,
@@ -426,7 +426,7 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "",
+          "subtitle": "처음부터 글로벌 타깃",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
           "duration": 10,
@@ -961,7 +961,7 @@
           "action": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
           "character": "서여리",
           "dialogue": "",
-          "narration": "",
+          "narration": "봐봐요, 이 순간! 세 그룹이 딱 한 프레임에 겹치는 거~ 이거 볼 때마다 소름이에요.",
           "subtitle": "",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
@@ -2313,7 +2313,7 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
+      "subtitle": "데뷔 3년차 / 글로벌 팬덤 보유",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
       "duration": 10,
@@ -2413,7 +2413,7 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
+      "subtitle": "데뷔 1년차 / 버블 에너지",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
       "duration": 10,
@@ -2513,7 +2513,7 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "",
+      "subtitle": "처음부터 글로벌 타깃",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
       "duration": 10,
@@ -3048,7 +3048,7 @@
       "action": "세 그룹 합류 클라이맥스 장면 or 고속도로 트럭 충돌 임팩트 씬",
       "character": "서여리",
       "dialogue": "",
-      "narration": "",
+      "narration": "봐봐요, 이 순간! 세 그룹이 딱 한 프레임에 겹치는 거~ 이거 볼 때마다 소름이에요.",
       "subtitle": "",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
@@ -3347,7 +3347,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-14T10:54:46.121Z",
+  "savedAt": "2026-09-14T13:54:25.059Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3493,7 +3493,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-18",
+    "selectedCutId": "cut-19",
     "subtitles": {
       "cut-1": "",
       "cut-2": [
@@ -3508,7 +3508,34 @@
           "text": "서여리 놀란 표정으로 화면 전환"
         }
       ],
-      "cut-4": "테스트 자막입니다"
+      "cut-4": [
+        {
+          "start": 0,
+          "end": 10,
+          "text": "데뷔 3년차 / 글로벌 팬덤 보유"
+        }
+      ],
+      "cut-6": [
+        {
+          "start": 0,
+          "end": 10,
+          "text": "데뷔 1년차 / 버블 에너지"
+        }
+      ],
+      "cut-8": [
+        {
+          "start": 0,
+          "end": 10,
+          "text": "처음부터 글로벌 타깃"
+        }
+      ],
+      "cut-19": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": ""
+        }
+      ]
     }
   },
   "ttsTabState": {
