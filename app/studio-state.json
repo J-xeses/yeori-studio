@@ -285,7 +285,7 @@
           "scene": "서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.",
           "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
           "character": "서여리",
-          "dialogue": "”ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지?...... 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?“",
+          "dialogue": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... || 어떻게 설명하지?...... 버블 같아요, 버블... || 터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -323,7 +323,33 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_BRT",
             "source": "SH_MCU CA_ST 설명 중 살짝 들뜨는 표정 MD_BRT"
-          }
+          },
+          "segments": [
+            8,
+            8,
+            8
+          ],
+          "segTiming": [
+            [
+              2,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            null
+          ],
+          "segPrompts": [
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜",
+            "어떻게 설명하지? 버블 같아요, 버블",
+            "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+          ]
         },
         {
           "id": "cut-6",
@@ -385,7 +411,7 @@
           "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.",
           "action": "눈빛이 분석적으로 변하는 순간 포착",
           "character": "서여리",
-          "dialogue": "KATSEYE는 좀 달라요.  || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스. 경계 자체가 없는 세계관!",
+          "dialogue": "KATSEYE는 좀 달라요...  미국을 중심으로 활동하지만~~ || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스에... 경계 자체가 없는 세계관!",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -431,7 +457,10 @@
           ],
           "segTiming": [
             null,
-            null,
+            [
+              1,
+              7
+            ],
             [
               1,
               6
@@ -443,7 +472,7 @@
             "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9"
           ],
           "subtitleSegments": [
-            "KATSEYE는 좀 달라요.",
+            "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만",
             "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
             "LA 베이스. 경계 자체가 없는 세계관!"
           ]
@@ -2404,7 +2433,7 @@
       "scene": "서여리 소파 측면 45도. ILLIT 설명. 톤 살짝 밝게.",
       "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
       "character": "서여리",
-      "dialogue": "”ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지?...... 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?“",
+      "dialogue": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... || 어떻게 설명하지?...... 버블 같아요, 버블... || 터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2442,7 +2471,33 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_BRT",
         "source": "SH_MCU CA_ST 설명 중 살짝 들뜨는 표정 MD_BRT"
-      }
+      },
+      "segments": [
+        8,
+        8,
+        8
+      ],
+      "segTiming": [
+        [
+          2,
+          7
+        ],
+        [
+          1,
+          6
+        ],
+        null
+      ],
+      "segPrompts": [
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜",
+        "어떻게 설명하지? 버블 같아요, 버블",
+        "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+      ]
     },
     {
       "id": "cut-6",
@@ -2504,7 +2559,7 @@
       "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.",
       "action": "눈빛이 분석적으로 변하는 순간 포착",
       "character": "서여리",
-      "dialogue": "KATSEYE는 좀 달라요.  || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스. 경계 자체가 없는 세계관!",
+      "dialogue": "KATSEYE는 좀 달라요...  미국을 중심으로 활동하지만~~ || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스에... 경계 자체가 없는 세계관!",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2550,7 +2605,10 @@
       ],
       "segTiming": [
         null,
-        null,
+        [
+          1,
+          7
+        ],
         [
           1,
           6
@@ -2562,7 +2620,7 @@
         "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9"
       ],
       "subtitleSegments": [
-        "KATSEYE는 좀 달라요.",
+        "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만",
         "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
         "LA 베이스. 경계 자체가 없는 세계관!"
       ]

@@ -87,7 +87,7 @@ export const DEFAULT_READINGS = {
   'LE SSERAFIM': '르세라핌',
   'SSERAFIM': '세라핌',
   'ILLIT': '아일릿',
-  'KATSEYE': '캣아이',
+  'KATSEYE': '캣츠아이',
   'NewJeans': '뉴진스',
   'HYBE': '하이브',
   'SM': '에스엠',
