@@ -397,6 +397,48 @@ export function pipelineCodeToInstaContent(plCode) {
   return map[(plCode || '').toUpperCase()] || null
 }
 
+// ── 실내 거주공간 신발 자동 배제 "장치" (2026-09-15) ────────────────────
+// 룰셋 문구(YEORI_RULESET)만으로는 Claude가 매번 지키리라는 보장이 없다 — 실측: 이 지시가
+// 룰셋에 없던 시절 생성된 컷은 영문 프롬프트에 "white low-top sneakers" 같은 신발이 직접
+// 명시돼 있었음(서구권 스톡사진 관성 기본값). 캐릭터 LOOK 프롬프트 자체를 고치는 건 다른
+// 컷의 일관성을 깨뜨릴 위험이 있어(사용자 판단) 그건 건드리지 않고, 대신 대본 파싱 직후
+// 결정적으로 검사·보정한다: 한글 장면/액션 텍스트가 "실내 거주공간 캐주얼"을 가리키고
+// 신발이 의도된 연출(하이힐=페르소나 등)이라는 신호가 없으면 영문 프롬프트에서 신발 관련
+// 절을 제거하고 맨발/양말 지시문을 덧붙인다. server/lib/scriptParserV3.js와 동일하게 유지.
+const INDOOR_HOME_RE = /집|소파|거실|침실|침대|원룸|자취방|욕실|화장실|주방|부엌/
+const INTENTIONAL_SHOE_RE = /신발|하이힐|구두|부츠|슬리퍼|운동화|스니커즈|페르소나/
+const SHOE_KEYWORD_EN_RE = /\b(sneakers?|shoes?|heels?|boots?|loafers?|sandals?|flats?|Converse|Chuck Taylor|stilettos?)\b/i
+const BAREFOOT_ADDENDUM = 'Barefoot or socks only, no shoes worn (indoor home setting).'
+
+// videoPrompt는 인물 묘사가 한 줄짜리 문단("Seo Yeori (right): ..., sneakers.")이라 줄 전체를
+// 지우면 다른 의상 묘사까지 다 날아간다 — 줄 안에서 쉼표 단위 절(clause)만 걸러내고 나머지는
+// 그대로 이어붙인다("(left, entering):" 같은 괄호 안 쉼표도 걸러지지 않은 절이라 자동으로 보존됨).
+function stripShoeClausesFromLine(line) {
+  const endsWithPeriod = /\.\s*$/.test(line)
+  const core = line.replace(/\.\s*$/, '')
+  const parts = core.split(/,\s*/).filter(part => !SHOE_KEYWORD_EN_RE.test(part))
+  if (!parts.length || (parts.length === 1 && !parts[0].trim())) return ''
+  return parts.join(', ') + (endsWithPeriod ? '.' : '')
+}
+
+function applyIndoorBarefootGuard(sceneKr, actionKr, ip, vp) {
+  const koreanText = `${sceneKr || ''} ${actionKr || ''}`
+  if (!INDOOR_HOME_RE.test(koreanText) || INTENTIONAL_SHOE_RE.test(koreanText)) return { ip, vp }
+  const finish = (text) => {
+    if (!text) return text
+    // 멱등성 가드 — BAREFOOT_ADDENDUM 자체에 "shoes"가 들어있어서, 이미 적용된 텍스트를
+    // 다시 검사하면 그 문구가 신발 키워드로 오탐돼 절이 제거되고 addendum이 중복 추가되는
+    // 버그가 있었음(2026-09-15 실측: "Barefoot or socks only. Barefoot or socks only,
+    // no shoes worn..." 처럼 중복됨). 이미 붙어있으면 그대로 반환.
+    if (text.includes(BAREFOOT_ADDENDUM)) return text
+    const stripped = text.split('\n').map(stripShoeClausesFromLine).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+    if (SHOE_KEYWORD_EN_RE.test(stripped)) return text // 못 지운 잔여 표현 있으면 과잉수정 방지로 원본 유지
+    const sep = /[.!?]$/.test(stripped) ? ' ' : ', '
+    return `${stripped}${sep}${BAREFOOT_ADDENDUM}`
+  }
+  return { ip: finish(ip), vp: finish(vp) }
+}
+
 function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -431,6 +473,7 @@ function parseCutsV3(raw) {
     // server/lib/scriptParserV3.js와 동일 규칙 — 반드시 함께 유지.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
+    const barefootGuarded = applyIndoorBarefootGuard(fields.SC, kr.AC, ip, vp)
 
     return {
       id: `cut-${rc.no}`,
@@ -443,8 +486,8 @@ function parseCutsV3(raw) {
       dialogue: dl,
       narration: nr,
       subtitle: cp,
-      imagePrompt: ip,
-      videoPrompt: vp,
+      imagePrompt: barefootGuarded.ip,
+      videoPrompt: barefootGuarded.vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,

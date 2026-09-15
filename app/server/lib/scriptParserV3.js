@@ -211,6 +211,45 @@ export function pipelineCodeToInstaContent(plCode) {
   return map[(plCode || '').toUpperCase()] || null
 }
 
+// ── 실내 거주공간 신발 자동 배제 "장치" (2026-09-15) ────────────────────
+// src/tabs/ScriptGenTab.jsx와 동일하게 유지. 룰셋 문구만으로는 Claude가 매번 지키리라는
+// 보장이 없어(실측: 룰셋에 지시 없던 시절 생성된 컷에 "white low-top sneakers"가 직접
+// 명시됨) 대본 파싱 직후 결정적으로 검사·보정한다. 캐릭터 LOOK 프롬프트 자체는 다른 컷
+// 일관성을 깨뜨릴 위험이 있어 건드리지 않음(사용자 판단, 2026-09-15).
+const INDOOR_HOME_RE = /집|소파|거실|침실|침대|원룸|자취방|욕실|화장실|주방|부엌/
+const INTENTIONAL_SHOE_RE = /신발|하이힐|구두|부츠|슬리퍼|운동화|스니커즈|페르소나/
+const SHOE_KEYWORD_EN_RE = /\b(sneakers?|shoes?|heels?|boots?|loafers?|sandals?|flats?|Converse|Chuck Taylor|stilettos?)\b/i
+const BAREFOOT_ADDENDUM = 'Barefoot or socks only, no shoes worn (indoor home setting).'
+
+// videoPrompt는 인물 묘사가 한 줄짜리 문단("Seo Yeori (right): ..., sneakers.")이라 줄 전체를
+// 지우면 다른 의상 묘사까지 다 날아간다 — 줄 안에서 쉼표 단위 절(clause)만 걸러내고 나머지는
+// 그대로 이어붙인다("(left, entering):" 같은 괄호 안 쉼표도 걸러지지 않은 절이라 자동으로 보존됨).
+function stripShoeClausesFromLine(line) {
+  const endsWithPeriod = /\.\s*$/.test(line)
+  const core = line.replace(/\.\s*$/, '')
+  const parts = core.split(/,\s*/).filter(part => !SHOE_KEYWORD_EN_RE.test(part))
+  if (!parts.length || (parts.length === 1 && !parts[0].trim())) return ''
+  return parts.join(', ') + (endsWithPeriod ? '.' : '')
+}
+
+function applyIndoorBarefootGuard(sceneKr, actionKr, ip, vp) {
+  const koreanText = `${sceneKr || ''} ${actionKr || ''}`
+  if (!INDOOR_HOME_RE.test(koreanText) || INTENTIONAL_SHOE_RE.test(koreanText)) return { ip, vp }
+  const finish = (text) => {
+    if (!text) return text
+    // 멱등성 가드 — BAREFOOT_ADDENDUM 자체에 "shoes"가 들어있어서, 이미 적용된 텍스트를
+    // 다시 검사하면 그 문구가 신발 키워드로 오탐돼 절이 제거되고 addendum이 중복 추가되는
+    // 버그가 있었음(2026-09-15 실측: "Barefoot or socks only. Barefoot or socks only,
+    // no shoes worn..." 처럼 중복됨). 이미 붙어있으면 그대로 반환.
+    if (text.includes(BAREFOOT_ADDENDUM)) return text
+    const stripped = text.split('\n').map(stripShoeClausesFromLine).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+    if (SHOE_KEYWORD_EN_RE.test(stripped)) return text // 못 지운 잔여 표현 있으면 과잉수정 방지로 원본 유지
+    const sep = /[.!?]$/.test(stripped) ? ' ' : ', '
+    return `${stripped}${sep}${BAREFOOT_ADDENDUM}`
+  }
+  return { ip: finish(ip), vp: finish(vp) }
+}
+
 export function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -252,6 +291,7 @@ export function parseCutsV3(raw) {
     // 손글씨 오버레이 섹션을 노출하고, 위치/말풍선/타이밍 등 시각 상세를 형성한다.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
+    const barefootGuarded = applyIndoorBarefootGuard(fields.SC, kr.AC, ip, vp)
 
     return {
       id: `cut-${rc.no}`,
@@ -264,8 +304,8 @@ export function parseCutsV3(raw) {
       dialogue: dl,
       subtitle: cp,
       narration: nr,
-      imagePrompt: ip,
-      videoPrompt: vp,
+      imagePrompt: barefootGuarded.ip,
+      videoPrompt: barefootGuarded.vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
