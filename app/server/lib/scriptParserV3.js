@@ -250,6 +250,29 @@ function applyIndoorBarefootGuard(sceneKr, actionKr, ip, vp) {
   return { ip: finish(ip), vp: finish(vp) }
 }
 
+// ── 실내 사적 공간 "배경 인물 허용" 문구 자동 무력화 (2026-09-15) ──────────────
+// src/tabs/ScriptGenTab.jsx와 동일하게 유지. 룰셋의 "배경 인물은 허용하되 개입만 금지"
+// boilerplate는 카페·거리 같은 공용 공간용인데 모든 컷에 무차별로 붙어, 서여리 집 소파 같은
+// "지정된 인물만 있어야 하는 사적 공간"에도 그대로 붙어 모델이 불필요한 배경 인물을 만들어냄
+// (사용자 실측 지적, 2026-09-15). CH 필드가 지정 캐릭터만으로 구성되고 BG/CROWD/EXTRA 같은
+// 엑스트라 마커가 없는 컷이면 "배경 인물 허용" 문구를 "지정 인물만, 빈 배경" 문구로 바꿔친다.
+const EXTRAS_MARKER_RE = /\bBG\b|CROWD|EXTRA|PASSERBY|행인|엑스트라|군중/i
+// 뒤쪽 \s* 를 그룹으로 따로 잡아둔다 — 세그먼트 문단 사이 빈 줄("\n\n")까지 통째로 삼켜서
+// 치환문구+공백 하나로 뭉개버리면 문단 구분이 사라지는 버그가 있었음(2026-09-15 실측: CUT2
+// videoPrompt의 세그1/세그2 경계 빈 줄이 사라짐). 원래 있던 공백/줄바꿈 그대로 보존한다.
+const BG_PEOPLE_CLAUSE_RE = /background (?:people|figures) must not (?:interact|interfere)[^,.\n]*[,.]?(\s*)/i
+const NO_BG_PEOPLE_REPLACEMENT = 'No other people in background — only the named characters in frame, plain empty background.'
+
+function applyPrivateCastGuard(sceneKr, chField, ip, vp) {
+  if (!INDOOR_HOME_RE.test(sceneKr || '') || EXTRAS_MARKER_RE.test(chField || '')) return { ip, vp }
+  const finish = (text) => {
+    if (!text || text.includes(NO_BG_PEOPLE_REPLACEMENT)) return text // 멱등성
+    if (!BG_PEOPLE_CLAUSE_RE.test(text)) return text
+    return text.replace(BG_PEOPLE_CLAUSE_RE, (_m, trailingWs) => `${NO_BG_PEOPLE_REPLACEMENT}${trailingWs || ' '}`)
+  }
+  return { ip: finish(ip), vp: finish(vp) }
+}
+
 export function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -292,6 +315,7 @@ export function parseCutsV3(raw) {
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
     const barefootGuarded = applyIndoorBarefootGuard(fields.SC, kr.AC, ip, vp)
+    const castGuarded = applyPrivateCastGuard(fields.SC, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
 
     return {
       id: `cut-${rc.no}`,
@@ -304,8 +328,8 @@ export function parseCutsV3(raw) {
       dialogue: dl,
       subtitle: cp,
       narration: nr,
-      imagePrompt: barefootGuarded.ip,
-      videoPrompt: barefootGuarded.vp,
+      imagePrompt: castGuarded.ip,
+      videoPrompt: castGuarded.vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,

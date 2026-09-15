@@ -439,6 +439,30 @@ function applyIndoorBarefootGuard(sceneKr, actionKr, ip, vp) {
   return { ip: finish(ip), vp: finish(vp) }
 }
 
+// ── 실내 사적 공간 "배경 인물 허용" 문구 자동 무력화 (2026-09-15) ──────────────
+// 룰셋의 "배경 인물은 허용하되 개입만 금지" boilerplate는 카페·거리 같은 공용 공간용인데,
+// 대본 생성이 모든 컷에 무차별로 붙이다 보니 서여리 집 소파 같은 "지정된 인물만 있어야 하는
+// 사적 공간"에도 그대로 붙어 모델이 불필요한 배경 인물을 만들어냄(사용자 실측 지적: "소파 뒤에
+// 배경인물들이 사적인 공간에 있다는 것도 이상하다... 서여리와 한지아만 있어야 할 설정인데").
+// CH 필드가 지정 캐릭터(YR_*/HJ_* 등)만으로 구성되고 BG/CROWD/EXTRA 같은 엑스트라 마커가 없는
+// 컷이면 "배경 인물 허용" 문구를 "지정 인물만, 빈 배경" 문구로 바꿔친다.
+const EXTRAS_MARKER_RE = /\bBG\b|CROWD|EXTRA|PASSERBY|행인|엑스트라|군중/i
+// 뒤쪽 \s* 를 그룹으로 따로 잡아둔다 — 세그먼트 문단 사이 빈 줄("\n\n")까지 통째로 삼켜서
+// 치환문구+공백 하나로 뭉개버리면 문단 구분이 사라지는 버그가 있었음(2026-09-15 실측: CUT2
+// videoPrompt의 세그1/세그2 경계 빈 줄이 사라짐). 원래 있던 공백/줄바꿈 그대로 보존한다.
+const BG_PEOPLE_CLAUSE_RE = /background (?:people|figures) must not (?:interact|interfere)[^,.\n]*[,.]?(\s*)/i
+const NO_BG_PEOPLE_REPLACEMENT = 'No other people in background — only the named characters in frame, plain empty background.'
+
+function applyPrivateCastGuard(sceneKr, chField, ip, vp) {
+  if (!INDOOR_HOME_RE.test(sceneKr || '') || EXTRAS_MARKER_RE.test(chField || '')) return { ip, vp }
+  const finish = (text) => {
+    if (!text || text.includes(NO_BG_PEOPLE_REPLACEMENT)) return text // 멱등성
+    if (!BG_PEOPLE_CLAUSE_RE.test(text)) return text
+    return text.replace(BG_PEOPLE_CLAUSE_RE, (_m, trailingWs) => `${NO_BG_PEOPLE_REPLACEMENT}${trailingWs || ' '}`)
+  }
+  return { ip: finish(ip), vp: finish(vp) }
+}
+
 function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -474,6 +498,7 @@ function parseCutsV3(raw) {
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
     const barefootGuarded = applyIndoorBarefootGuard(fields.SC, kr.AC, ip, vp)
+    const castGuarded = applyPrivateCastGuard(fields.SC, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
 
     return {
       id: `cut-${rc.no}`,
@@ -486,8 +511,8 @@ function parseCutsV3(raw) {
       dialogue: dl,
       narration: nr,
       subtitle: cp,
-      imagePrompt: barefootGuarded.ip,
-      videoPrompt: barefootGuarded.vp,
+      imagePrompt: castGuarded.ip,
+      videoPrompt: castGuarded.vp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
@@ -961,6 +986,15 @@ export default function ScriptGenTab() {
   화면이 프레임에 들어가는 컷은 반드시 "screen shows only a blurred/abstract glow, never
   legible text or UI" 를 프롬프트에 추가로 명시
   (2026-09-13 실측: 폰 보여주는 컷에 깨진 한글 자막이 화면 안에 나타남)
+- 뮤비/영상 화면 자체를 실제로 보여줘야 하는 컷(예: TV로 MV를 같이 보는 장면)은, 인물을
+  화면 정면이 아니라 화면 앞에 **뒷모습**으로 배치하고, 뒷모습(화면 보임) → 정면 MCU 반응
+  (화면 안 보임)으로 전개할 것 — 뒷모습에서 정면으로는 카메라가 물리적으로 캐릭터를
+  빙 돌아야 하는 앵글 전환이라 한 클립 안에서 자연스럽게 잇기 어렵다. 하나의 연속 샷(단일
+  videoPrompt의 시간 구간 [0-Ns]/[Ns-Ms])으로 억지로 이으려 하지 말고, **SEG로 컷을 분할**
+  (예: SEG: 4+6)해서 세그1(뒷모습 와이드, TV 화면 보임)과 세그2(MCU 정면 반응, 화면 안 보임)를
+  별도 생성 클립으로 하드컷 전환할 것 — 세그별로 segPrompts를 독립적으로 완결된 프롬프트로
+  작성(2026-09-15, 사용자 제안. CUT11에 실제 적용 — 세그1 WIDE 뒷모습 4s + 세그2 기존 MCU
+  반응 6s로 분할, 실측 검증 완료).
 
 [K감성 / 리얼리티]
 - "effortlessly photogenic, not posing, just existing beautifully"

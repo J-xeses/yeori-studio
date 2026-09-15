@@ -87,6 +87,8 @@ natural makeup, warm skin tone, appearing no older than 22-23,
 {샷타입}, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character,
+(단, 집 소파 등 지정 인물만 있어야 하는 사적 공간이면 이 문구 대신
+"no other people in background, only the named characters in frame" 사용)
 if indoor casual home scene: barefoot or socks only, no shoes worn indoors
 (shoes only when the scene intentionally signals "persona/formal" — see 룰셋 ④ 상징 연결)
 
@@ -97,6 +99,13 @@ THIS IS A SILENT FILM. NO talking, NO speaking, NO lip movement.
 NO dialogue, NO subtitles, NO audio, NO on-screen text or captions of any kind.
 Any phone/TV/laptop screen visible in frame must show only a blurred or abstract
 glow — never legible text or UI.
+
+뮤비/영상 화면 자체를 보여줘야 하는 컷(예: TV로 MV 같이 보기)은 인물을 화면 앞에 뒷모습으로
+배치. 뒷모습(화면 보임)→정면 MCU 반응(화면 안 보임)은 카메라가 캐릭터를 물리적으로 돌아야
+하는 전환이라 한 연속 샷으로 잇기 어려움 — 단일 videoPrompt 시간 구간이 아니라 SEG로 컷을
+분할해 세그별 독립 클립으로 하드컷할 것(예: SEG: 4+6):
+  세그1(뒷모습, 화면 보임): WIDE SHOT — 인물 뒷모습 + TV 화면(흐릿한 빛만, 텍스트 없음)
+  세그2(정면, 화면 안 보임): MCU 두샷 — 얼굴 반응, TV 빛이 얼굴에 반사되는 정도만 묘사
 
 First 0-{N}s: {동작1}
 Next {N}-{N}s: {동작2}
