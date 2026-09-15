@@ -1024,6 +1024,45 @@ export default function MakingTab() {
   const [bgmBusy, setBgmBusy] = useState(false)
   const [bgmResult, setBgmResult] = useState(null)
 
+  // ── BGM 리믹스: 라이브러리 트랙 두 개를 크로스페이드로 이어붙여 새 트랙으로 저장 ──
+  // 가장 기본적인 형태만 — 트랙별 시작초/길이 + 크로스페이드 길이(2026-09-15, 사용자 요청:
+  // "이 정도 느낌의 리믹스 기술이 메이킹 탭에도 몇 가지만 들어갈 수 있겠나, 가장 기본적인
+  // 기술로"). 결과는 bgm/remix/ 에 저장돼 아래 라이브러리 목록에 그대로 나타남.
+  const [remixOpen, setRemixOpen] = useState(false)
+  const [remixA, setRemixA] = useState('')
+  const [remixStartA, setRemixStartA] = useState(0)
+  const [remixDurA, setRemixDurA] = useState(10)
+  const [remixB, setRemixB] = useState('')
+  const [remixStartB, setRemixStartB] = useState(0)
+  const [remixDurB, setRemixDurB] = useState(9)
+  const [remixCrossfade, setRemixCrossfade] = useState(1.5)
+  const [remixName, setRemixName] = useState('')
+  const [remixBusy, setRemixBusy] = useState(false)
+  const [remixResult, setRemixResult] = useState(null)
+
+  const runRemix = async () => {
+    if (!remixA || !remixB) return
+    setRemixBusy(true); setRemixResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/bgm-remix`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trackA: remixA, startA: remixStartA, durA: remixDurA,
+          trackB: remixB, startB: remixStartB, durB: remixDurB,
+          crossfade: remixCrossfade, filename: remixName || undefined,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setRemixResult({ error: data.error || '리믹스 실패' }); return }
+      setRemixResult(data)
+      loadBgmLibrary()
+    } catch (e) {
+      setRemixResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setRemixBusy(false)
+    }
+  }
+
   const loadBgmLibrary = () => {
     fetch(`${YEORI_SERVER}/api/bgm-library`).then(r => r.json())
       .then(d => setBgmLibrary(d.tracks || [])).catch(() => {})
@@ -2649,6 +2688,82 @@ export default function MakingTab() {
                 </div>
               ))}
             </div>
+          )}
+
+          <button className={s.collapseToggle} onClick={() => setRemixOpen(v => !v)}>
+            {remixOpen ? '▼' : '▶'} 🎚 리믹스 — 라이브러리 트랙 두 개를 크로스페이드로 이어붙이기
+          </button>
+          {remixOpen && (
+            <>
+              <div className={s.emptyHint}>
+                A트랙 일부 구간 → 크로스페이드 → B트랙 일부 구간, 순서로 이어붙여 새 트랙을 만듭니다.
+                결과는 라이브러리("remix" 무드)에 추가돼 위 목록과 BGM 적용에 그대로 쓸 수 있습니다.
+              </div>
+              {bgmLibrary.length < 2 ? (
+                <div className={s.emptyHint}>리믹스하려면 라이브러리에 트랙이 2개 이상 있어야 합니다.</div>
+              ) : (
+                <>
+                  <div className={s.styleRow}>
+                    <label className={s.styleField}>A트랙
+                      <select value={remixA} onChange={e => setRemixA(e.target.value)}>
+                        <option value="">선택</option>
+                        {bgmLibrary.map(t => <option key={t.id} value={t.file}>{t.title} · {t.mood}</option>)}
+                      </select>
+                    </label>
+                    <label className={s.styleField}>시작(초)
+                      <input type="number" min="0" step="0.5" value={remixStartA}
+                        onChange={e => setRemixStartA(parseFloat(e.target.value) || 0)} />
+                    </label>
+                    <label className={s.styleField}>길이(초)
+                      <input type="number" min="1" step="0.5" value={remixDurA}
+                        onChange={e => setRemixDurA(parseFloat(e.target.value) || 1)} />
+                    </label>
+                  </div>
+                  <div className={s.styleRow}>
+                    <label className={s.styleField}>B트랙
+                      <select value={remixB} onChange={e => setRemixB(e.target.value)}>
+                        <option value="">선택</option>
+                        {bgmLibrary.map(t => <option key={t.id} value={t.file}>{t.title} · {t.mood}</option>)}
+                      </select>
+                    </label>
+                    <label className={s.styleField}>시작(초)
+                      <input type="number" min="0" step="0.5" value={remixStartB}
+                        onChange={e => setRemixStartB(parseFloat(e.target.value) || 0)} />
+                    </label>
+                    <label className={s.styleField}>길이(초)
+                      <input type="number" min="1" step="0.5" value={remixDurB}
+                        onChange={e => setRemixDurB(parseFloat(e.target.value) || 1)} />
+                    </label>
+                  </div>
+                  <div className={s.styleRow}>
+                    <label className={s.styleField}>크로스페이드(초)
+                      <input type="number" min="0.2" max="5" step="0.1" value={remixCrossfade}
+                        onChange={e => setRemixCrossfade(parseFloat(e.target.value) || 1.5)} />
+                    </label>
+                    <label className={s.styleField}>결과 이름(선택)
+                      <input value={remixName} placeholder="비우면 자동 이름"
+                        onChange={e => setRemixName(e.target.value)} />
+                    </label>
+                  </div>
+                  <div className={s.editorActions}>
+                    <button className={s.captureBtn} disabled={remixBusy || !remixA || !remixB} onClick={runRemix}>
+                      {remixBusy ? '⏳ 리믹스 중…' : '🎚 리믹스 만들기'}
+                    </button>
+                  </div>
+                  {remixResult && (
+                    remixResult.error ? (
+                      <div className={s.resultError}>❌ {remixResult.error}</div>
+                    ) : (
+                      <div className={s.resultOk}>
+                        ✅ 리믹스 생성됨 ({remixResult.duration ? `${remixResult.duration.toFixed(1)}초` : ''}) — 아래 라이브러리 목록에 추가됐습니다.
+                        <br />
+                        <audio controls src={`${YEORI_SERVER}/downloads/${remixResult.file}`} style={{ width: '100%' }} />
+                      </div>
+                    )
+                  )}
+                </>
+              )}
+            </>
           )}
 
           <div className={s.styleRow}>

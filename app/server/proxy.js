@@ -5495,6 +5495,76 @@ app.get('/api/bgm-library', (_req, res) => {
   }
 })
 
+// ── POST /api/bgm-remix — 라이브러리에 있는 두 BGM 트랙을 크로스페이드로 이어붙여
+// 새 트랙 하나로 저장(가장 기본적인 형태 — 트랙별 시작초/길이 + 크로스페이드 길이만 지정).
+// 2026-09-15, 사용자 요청: "CUT11/12용으로 만든 리믹스 같은 기술을 메이킹 탭에도 넣어달라".
+// 결과물은 bgm/remix/ 아래 저장되고 index.json에 등록돼, 라이브러리 목록·making-bgm 적용에
+// 다른 트랙과 똑같이 골라 쓸 수 있다.
+// body: { trackA, startA?=0, durA, trackB, startB?=0, durB, crossfade?=1.5, filename }
+//   trackA/trackB: bgm-library GET이 돌려주는 file 값("bgm/<mood>/<name>.mp3")
+app.post('/api/bgm-remix', async (req, res) => {
+  const { trackA, startA = 0, durA, trackB, startB = 0, durB, crossfade = 1.5, filename } = req.body || {}
+  if (!trackA || !trackB || !durA || !durB) {
+    return res.status(400).json({ error: 'trackA, durA, trackB, durB 필요' })
+  }
+  const pathA = mp.bgmFile(String(trackA).replace(/\\/g, '/').replace(/\.\.+/g, ''))
+  const pathB = mp.bgmFile(String(trackB).replace(/\\/g, '/').replace(/\.\.+/g, ''))
+  if (!fs.existsSync(pathA)) return res.status(404).json({ error: 'trackA 파일 없음', path: pathA })
+  if (!fs.existsSync(pathB)) return res.status(404).json({ error: 'trackB 파일 없음', path: pathB })
+
+  const cf = Math.max(0.2, Math.min(5, Number(crossfade) || 1.5))
+  const dA = Math.max(cf + 0.5, Number(durA))
+  const dB = Math.max(cf + 0.5, Number(durB))
+  const safeName = path.basename(sanitizePathSegment(filename) || `remix_${Date.now()}`)
+  const outName = /\.mp3$/i.test(safeName) ? safeName : `${safeName}.mp3`
+  const dir = path.join(mp.bgmDir(), 'remix')
+  fs.mkdirSync(dir, { recursive: true })
+  const destPath = path.join(dir, outName)
+
+  const filter = `[0:a]afade=t=out:st=${(dA - cf).toFixed(2)}:d=${cf}[a0];` +
+    `[1:a]afade=t=in:st=0:d=${cf}[a1];` +
+    `[a0][a1]acrossfade=d=${cf}:c1=tri:c2=tri[aout]`
+
+  try {
+    const code = await new Promise((resolve) => {
+      let errBuf = ''
+      const proc = spawn('ffmpeg', [
+        '-y',
+        '-ss', String(Math.max(0, Number(startA) || 0)), '-t', String(dA), '-i', pathA,
+        '-ss', String(Math.max(0, Number(startB) || 0)), '-t', String(dB), '-i', pathB,
+        '-filter_complex', filter,
+        '-map', '[aout]', '-c:a', 'libmp3lame', '-b:a', '192k',
+        destPath,
+      ], { windowsHide: true })
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', c => { if (c !== 0) console.error('[bgm-remix] ffmpeg:', errBuf.slice(-800)); resolve(c) })
+    })
+    if (code !== 0 || !fs.existsSync(destPath)) return res.status(500).json({ error: 'ffmpeg 리믹스 실패' })
+
+    const outDur = await getMediaDuration(destPath).catch(() => null)
+    const indexPath = path.join(mp.bgmDir(), 'index.json')
+    let index = []
+    if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf-8')) } catch {} }
+    index.unshift({
+      id: Date.now(),
+      title: outName.replace(/\.mp3$/i, ''),
+      mood: 'remix',
+      sourceUrl: null,
+      mp3Url: null,
+      file: path.join('bgm', 'remix', outName).replace(/\\/g, '/'),
+      downloadedAt: new Date().toISOString(),
+      remixOf: [trackA, trackB],
+    })
+    fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf-8')
+
+    console.log(`[bgm-remix] ${trackA} + ${trackB} → ${destPath} (${outDur?.toFixed?.(1)}s)`)
+    res.json({ success: true, path: destPath, file: path.join('bgm', 'remix', outName).replace(/\\/g, '/'), duration: outDur })
+  } catch (err) {
+    console.error('[bgm-remix]', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──
 // body: { epNum, bgmFile('bgm/<mood>/<name>.mp3'), volume?=0.22, fadeOut?=2, duck?=true }
 // duck=true면 sidechaincompress로 컷 자체 오디오(대사/나레이션)가 있을 때 BGM을 자동으로
