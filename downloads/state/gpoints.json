@@ -460,14 +460,12 @@
   },
   "LF_T01": {
     "cut_2": {
-      "g1": true,
-      "updatedAt": "2026-09-15T05:12:19.236Z",
-      "g5": false,
-      "g3": true
+      "g3": true,
+      "updatedAt": "2026-09-15T09:09:12.287Z"
     },
     "cut_3": {
       "g3": true,
-      "updatedAt": "2026-09-15T07:48:30.520Z"
+      "updatedAt": "2026-09-15T08:36:30.582Z"
     },
     "cut_5": {
       "g1": true,

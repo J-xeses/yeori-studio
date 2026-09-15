@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -92,7 +92,7 @@
           "scene": "서여리 소파에서 폰 보는 중. 지아 등장·착석 후 폰 들이밀며 대사. 서여리 놀람 표정 → CU 전환 → 서로 마주보며 놀라움 공감.",
           "action": "HJ 폰 화면 YR 눈앞에 들이밂",
           "character": "서여리",
-          "dialogue": "지아 \"야, 야~ 이거 봤어?\" ||",
+          "dialogue": "야, 야~ 이거 봤어?  이거 봤어? ||",
           "narration": "",
           "subtitle": "야, 야~ 이거 봤어?",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
@@ -141,7 +141,15 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_MCU → SH_CU(후반) CA_ST HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시 MD_SUR"
-          }
+          },
+          "segments": [
+            8,
+            10
+          ],
+          "subtitleSegments": [
+            "야, 야~ 이거 봤어?",
+            ""
+          ]
         },
         {
           "id": "cut-3",
@@ -214,7 +222,7 @@
           "subtitleSegments": [
             "LE SSERAFIM은요, 데뷔 3년 차인데",
             "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
-            "이번 콜라보에서 얘네 역할이 진짜 중요한 게,  그 클래스"
+            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
           ]
         },
         {
@@ -2203,7 +2211,7 @@
       "scene": "서여리 소파에서 폰 보는 중. 지아 등장·착석 후 폰 들이밀며 대사. 서여리 놀람 표정 → CU 전환 → 서로 마주보며 놀라움 공감.",
       "action": "HJ 폰 화면 YR 눈앞에 들이밂",
       "character": "서여리",
-      "dialogue": "지아 \"야, 야~ 이거 봤어?\" ||",
+      "dialogue": "야, 야~ 이거 봤어?  이거 봤어? ||",
       "narration": "",
       "subtitle": "야, 야~ 이거 봤어?",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on a beige sofa indoors,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts with frayed hem,\nwhite low-top sneakers,\nholding a phone screen toward the other woman,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nblack leather belt with silver chain detail,\nblack and white Converse Chuck Taylor sneakers,\neyes widening in shock, looking directly at camera,\n\nwarm indoor lighting, shallow depth of field,\nbackground people must not interact with or interfere with the main characters,\nPhotorealistic 8K cinematic 16:9",
@@ -2252,7 +2260,15 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_MCU → SH_CU(후반) CA_ST HJ 폰 들이밀기 / YR 귀찮음 → 눈 커짐 → 카메라 직시 MD_SUR"
-      }
+      },
+      "segments": [
+        8,
+        10
+      ],
+      "subtitleSegments": [
+        "야, 야~ 이거 봤어?",
+        ""
+      ]
     },
     {
       "id": "cut-3",
@@ -2325,7 +2341,7 @@
       "subtitleSegments": [
         "LE SSERAFIM은요, 데뷔 3년 차인데",
         "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
-        "이번 콜라보에서 얘네 역할이 진짜 중요한 게,  그 클래스"
+        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
       ]
     },
     {
