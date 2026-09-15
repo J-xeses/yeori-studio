@@ -25,6 +25,14 @@ function hexToRgba(hex, alpha) {
   const b = parseInt(h.substring(4, 6), 16)
   return `rgba(${r},${g},${b},${alpha})`
 }
+// VideoTab.jsx의 isLightColor와 동일 — 자막 외곽선 색을 글자색과 자동으로 반대로 두기 위함.
+function isLightColor(hex) {
+  const h = (hex || '#ffffff').replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16) || 0
+  const g = parseInt(h.substring(2, 4), 16) || 0
+  const b = parseInt(h.substring(4, 6), 16) || 0
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 150
+}
 const fmtTime = (sec) => {
   if (!Number.isFinite(sec)) return '0:00'
   const m = Math.floor(sec / 60), ss = Math.floor(sec % 60)
@@ -205,8 +213,16 @@ export default function CheckupTab() {
                     <div className={`${s.captionOverlay} ${bgStyle === '그림자' ? s.captionShadow : ''}`}
                       style={{
                         color: color || '#fff', fontFamily: font ? `"${font}",sans-serif` : undefined,
-                        fontSize: fontSize ? `${fontSize * 0.6}px` : '18px',
+                        // VideoTab 캔버스 미리보기와 같은 비율(fontSize/720, 640x360 기준 캔버스를
+                        // object-fit:contain으로 스케일하는 것과 동일한 효과)로 맞추기 위해 고정
+                        // px 대신 컨테이너 높이 기준(cqh)을 씀 — 2026-09-15, 사용자 지적: "영상
+                        // 만들기 화면과 체크업 화면의 글자크기가 서로 다르다".
+                        fontSize: fontSize ? `${(fontSize / 720) * 100}cqh` : `${(18 / 720) * 100}cqh`,
                         background: bgStyle === '반투명 직각 박스' ? hexToRgba(boxColor || '#000000', 0.68) : 'transparent',
+                        // 배경 스타일과 별개로 항상 외곽선을 깔아 어떤 화면 위에서도 읽히게 함
+                        // (2026-09-15, 사용자 지적: "색상 외에 글씨 외곽 테두리 효과 정도는 있어야").
+                        WebkitTextStroke: `${Math.max(1, (fontSize || 18) * 0.045)}px ${isLightColor(color || '#fff') ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'}`,
+                        paintOrder: 'stroke fill',
                       }}>
                       {captionText}
                     </div>

@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -214,7 +214,7 @@
           "subtitleSegments": [
             "LE SSERAFIM은요, 데뷔 3년 차인데",
             "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
-            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+            "이번 콜라보에서 얘네 역할이 진짜 중요한 게,  그 클래스"
           ]
         },
         {
@@ -2325,7 +2325,7 @@
       "subtitleSegments": [
         "LE SSERAFIM은요, 데뷔 3년 차인데",
         "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
-        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+        "이번 콜라보에서 얘네 역할이 진짜 중요한 게,  그 클래스"
       ]
     },
     {
@@ -3324,7 +3324,7 @@
   "videoSettings": {
     "subtitleEnabled": true,
     "font": "Noto Sans KR",
-    "fontSize": 58,
+    "fontSize": 56,
     "color": "#ffffff",
     "bgStyle": "semi",
     "boxColor": "#000000"
@@ -3541,7 +3541,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-19",
+    "selectedCutId": "cut-2",
     "subtitles": {
       "cut-1": "",
       "cut-2": [

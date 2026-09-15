@@ -30,6 +30,10 @@
   position: relative; background: #000; border-radius: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
   max-height: 84vh; max-width: 100%;
+  /* 자막 글자크기를 실제 렌더된 플레이어 크기에 비례(cqh)시키려면 컨테이너 쿼리 기준이 필요함
+     (2026-09-15) — VideoTab의 캔버스 자막(항상 프레임에 baked돼 같이 스케일됨)과 동일한
+     상대 크기가 나오게 하기 위함. */
+  container-type: size;
 }
 .videoInner { width: 100%; height: 100%; position: relative; }
 .player { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }

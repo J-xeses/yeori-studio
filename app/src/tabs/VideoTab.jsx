@@ -40,6 +40,29 @@ function toSegments(value, fallbackText, totalDur) {
   return text ? [{ start: 0, end: totalDur, text }] : []
 }
 
+// 로컬 오버라이드(subtitles[cutId], VideoTab에서 직접 고친 값)가 없으면 대본에 반영된 값을
+// 기본값으로 쓴다 — 2026-09-15, 사용자 확정: "필드게이트 자막 설정이 영상 만들기에도 반영이
+// 되어야겠다". 우선순위: 로컬 오버라이드 > CPP(세그별 자막) > CP(단일 자막) > 대사/나레이션
+// 기반 기존 기본값(toSegments의 fallbackText로 처리됨, 여기선 undefined 반환).
+function effectiveCaptionValue(subtitlesState, cut, clips) {
+  if (!cut) return undefined
+  if (subtitlesState[cut.id] !== undefined) return subtitlesState[cut.id]
+  const plannedSegs = Array.isArray(cut.segments) ? cut.segments : []
+  const slotCount = Math.max(clips.length, plannedSegs.length)
+  if (slotCount > 0 && Array.isArray(cut.subtitleSegments) && cut.subtitleSegments.length === slotCount) {
+    let acc = 0
+    return cut.subtitleSegments.map((text, i) => {
+      const clip = clips[i]
+      const segDur = clip ? (clip.useFullDuration ? clip.duration : (clip.trimEnd - clip.trimStart)) : (plannedSegs[i] ?? ((cut.duration || 0) / slotCount))
+      const start = acc
+      acc += (segDur || 0)
+      return { start, end: acc, text: text || '' }
+    })
+  }
+  if (cut.subtitle && !/^없음$/.test(cut.subtitle)) return cut.subtitle
+  return undefined
+}
+
 // 클립의 실제 생성/수정 시각(2026-09-14) — "M/D HH:MM" 형식, 오늘이면 시간만.
 function formatClipTimestamp(ms) {
   if (!ms) return ''
@@ -100,6 +123,15 @@ function hexToRgba(hex, alpha) {
   const g = parseInt(h.substring(2, 4), 16)
   const b = parseInt(h.substring(4, 6), 16)
   return `rgba(${r},${g},${b},${alpha})`
+}
+
+// 자막 외곽선 색을 글자색과 자동으로 반대로 두기 위한 밝기 판정(표준 상대 휘도 근사).
+function isLightColor(hex) {
+  const h = (hex || '#ffffff').replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16) || 0
+  const g = parseInt(h.substring(2, 4), 16) || 0
+  const b = parseInt(h.substring(4, 6), 16) || 0
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 150
 }
 
 // PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
@@ -248,7 +280,7 @@ export default function VideoTab() {
   const selCutForText = cuts.find(c => c.id === selectedCutId)
   const clipsForText = selCutForText ? (videoClips[selCutForText.id] || []) : []
   const segsForText = selCutForText
-    ? toSegments(subtitles[selCutForText.id], stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0)
+    ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0)
     : []
   // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
   // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다.
@@ -258,7 +290,7 @@ export default function VideoTab() {
     if (clipsForText.length > 1) {
       const timings = clipTimings(clipsForText)
       setSubtitles(prev => {
-        const cur = toSegments(prev[selCutForText.id], '', selCutForText.duration || 0)
+        const cur = toSegments(effectiveCaptionValue(prev, selCutForText, clipsForText), '', selCutForText.duration || 0)
         const next = clipsForText.map((_, i) => ({
           start: timings[i].start, end: timings[i].end,
           text: i === selectedClipIdx ? text : (cur[i]?.text ?? ''),
@@ -334,9 +366,16 @@ export default function VideoTab() {
       ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1
     }
 
+    // 배경이 밝거나 복잡한 화면에서도 글자가 읽히도록, 배경 스타일(박스/그림자)과 별개로
+    // 항상 외곽선을 한 겹 깐다(2026-09-15, 사용자 지적: "색상 외에 글씨 외곽 테두리 효과
+    // 정도는 있어야 할 것 같다"). 글자색이 밝으면 검은 테두리, 어두우면 흰 테두리로 자동 반전.
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = Math.max(2, Math.round(fSize * 0.09))
+    ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
     ctx.fillStyle = color
     lines.forEach((l, i) => {
       const lineY = boxTop + padY + lineHeight * (i + 1) - (lineHeight - fSize) / 2
+      ctx.strokeText(l, subX, lineY)
       ctx.fillText(l, subX, lineY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
@@ -1104,13 +1143,13 @@ export default function VideoTab() {
           // 보이게 한다(2026-09-14, 사용자 지적: "컷2는 a,b로 구분되는데 왜 다른 컷은 안 되나").
           const plannedSegs = Array.isArray(selCut.segments) ? selCut.segments : []
           const slotCount = Math.max(clips.length, plannedSegs.length)
-          const cutSegs = toSegments(subtitles[selCut.id], stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
+          const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
           const captionText = cutSegs[0]?.text ?? ''
           const cutClipTimings = clips.length > 0 ? clipTimings(clips) : []
           const setClipCaption = (idx, text) => {
             const timings = clipTimings(clips)
             setSubtitles(prev => {
-              const cur = toSegments(prev[selCut.id], '', selCut.duration || 0)
+              const cur = toSegments(effectiveCaptionValue(prev, selCut, clips), '', selCut.duration || 0)
               const next = clips.map((_, i) => ({
                 start: timings[i].start, end: timings[i].end,
                 text: i === idx ? text : (cur[i]?.text ?? ''),
