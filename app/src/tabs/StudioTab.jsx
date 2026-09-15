@@ -392,6 +392,66 @@ export default function StudioTab() {
     }
   }
 
+  // ── 드래그 배정: 파일명 대신 사람이 직접 보고 컷에 배정 ──────────────
+  // "폴더에서 일괄 가져오기"는 파일명에서 컷 번호를 정규식으로 추측하는데, Flow가 다운로드
+  // 해주는 실제 파일명은 컷 순서와 무관한 해시/타임스탬프라 애초에 못 맞는다. 게다가 한 컷에
+  // 후보가 2개(A/B) 있을 수 있어 "가장 최근 컷 다음 순번" 같은 순서 추정도 못 미덥다. 그래서
+  // 사람이 파일 썸네일을 보고 어느 컷 프롬프트에 맞는지 직접 판단해서 배정하게 한다(2026-09-15).
+  const [matchOpen, setMatchOpen] = useState(false)
+  const [matchTray, setMatchTray] = useState([]) // [{id, file, url, ext, uploading, error}]
+  const [matchSelectedId, setMatchSelectedId] = useState(null)
+  const matchFileInputRef = useRef(null)
+
+  const addMatchFiles = (fileList) => {
+    const files = Array.from(fileList || []).filter(f => f.type.startsWith('image/'))
+    const items = files.map(f => ({
+      id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      file: f,
+      url: URL.createObjectURL(f),
+      ext: (f.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg'),
+      uploading: false,
+      error: null,
+    }))
+    setMatchTray(prev => [...prev, ...items])
+  }
+
+  const assignMatchFile = async (item, cut) => {
+    if (item.uploading) return
+    setMatchTray(prev => prev.map(x => x.id === item.id ? { ...x, uploading: true, error: null } : x))
+    try {
+      const instaContent = state.cuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+        || episodeContentTypeToInsta(state.episode?.contentType)
+      const instaNum = instaContent ? (state.episode?.instaNum?.trim() || null) : null
+      const qs = new URLSearchParams({ ep: state.episode.number, cutNo: cut.no, ext: item.ext })
+      if (instaContent && instaNum) { qs.set('instaContent', instaContent); qs.set('instaNum', instaNum) }
+      const res = await fetch(`http://localhost:3001/api/upload-cut-image?${qs}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: item.file,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '업로드 실패')
+      setImages(prev => {
+        const existing = Array.isArray(prev[cut.id]) ? prev[cut.id] : []
+        return { ...prev, [cut.id]: [...existing, `http://localhost:3001${data.url}?t=${Date.now()}`] }
+      })
+      setMatchTray(prev => {
+        const target = prev.find(x => x.id === item.id)
+        if (target) URL.revokeObjectURL(target.url)
+        return prev.filter(x => x.id !== item.id)
+      })
+      setMatchSelectedId(prev => (prev === item.id ? null : prev))
+    } catch (e) {
+      setMatchTray(prev => prev.map(x => x.id === item.id ? { ...x, uploading: false, error: e.message } : x))
+    }
+  }
+
+  const removeMatchItem = (item) => {
+    URL.revokeObjectURL(item.url)
+    setMatchTray(prev => prev.filter(x => x.id !== item.id))
+    setMatchSelectedId(prev => (prev === item.id ? null : prev))
+  }
+
   // ── Flow 파이프라인 실행 (prompts 저장 → npm run flow → 이미지 자동 로드) ──
   const runFlow = async () => {
     const { episode, cuts: allCuts } = state
@@ -602,6 +662,11 @@ export default function StudioTab() {
             onClick: importAndReload,
           },
           {
+            key: 'match-img', variant: 'purple',
+            label: matchOpen ? '🎯 드래그 배정 닫기' : '🎯 드래그 배정',
+            onClick: () => setMatchOpen(o => !o),
+          },
+          {
             key: 'reload-img', variant: 'green',
             label: '🔄 다시 불러오기 (정리 없이)',
             onClick: reloadExistingImages,
@@ -660,6 +725,93 @@ export default function StudioTab() {
               🎉 전체 완료!
             </div>
           )}
+        </div>
+      )}
+
+      {/* 🎯 드래그 배정 — 파일명 대신 사람이 보고 컷에 직접 배정 */}
+      {matchOpen && (
+        <div style={{
+          background:'var(--surface2)', border:'1px solid var(--border)',
+          borderRadius:8, padding:'12px 16px', margin:'0 0 12px',
+        }}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <div style={{fontWeight:700,color:'var(--purple)',fontSize:13}}>🎯 드래그 배정</div>
+            <button onClick={() => setMatchOpen(false)}
+              style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
+          </div>
+          <div style={{fontSize:11.5,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
+            Flow 등에서 받은 이미지 파일(파일명 무관)을 아래에 추가한 뒤, 썸네일을 원하는 컷 카드로 <b>드래그</b>하거나,
+            썸네일을 클릭해 선택한 다음 컷 카드를 <b>클릭</b>해서 배정하세요(터치 화면 대응). 컷 하나에 A/B 최대 2개까지 배정됩니다.
+          </div>
+          <input ref={matchFileInputRef} type="file" accept="image/*" multiple style={{display:'none'}}
+            onChange={e => { addMatchFiles(e.target.files); e.target.value = '' }} />
+          <button onClick={() => matchFileInputRef.current?.click()}
+            style={{background:'var(--purple)',color:'#fff',border:'none',borderRadius:6,padding:'6px 12px',fontSize:12,fontWeight:600,cursor:'pointer',marginBottom:10}}>
+            + 파일 추가
+          </button>
+          {matchTray.length === 0 ? (
+            <div style={{fontSize:11.5,color:'var(--text3)',padding:'8px 0'}}>추가된 파일이 없습니다.</div>
+          ) : (
+            <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:4}}>
+              {matchTray.map(item => (
+                <div key={item.id}
+                  draggable={!item.uploading}
+                  onDragStart={e => e.dataTransfer.setData('text/plain', item.id)}
+                  onClick={() => !item.uploading && setMatchSelectedId(prev => prev === item.id ? null : item.id)}
+                  title={item.file.name}
+                  style={{
+                    position:'relative', width:84, cursor: item.uploading ? 'wait' : 'grab',
+                    border: matchSelectedId === item.id ? '2px solid var(--purple)' : '2px solid var(--border)',
+                    borderRadius:8, overflow:'hidden', opacity: item.uploading ? 0.6 : 1,
+                    background:'#000',
+                  }}>
+                  <img src={item.url} alt="" style={{width:'100%',height:84,objectFit:'cover',display:'block'}} />
+                  <button onClick={e => { e.stopPropagation(); removeMatchItem(item) }}
+                    style={{
+                      position:'absolute', top:2, right:2, width:18, height:18, lineHeight:'18px',
+                      background:'rgba(0,0,0,.6)', color:'#fff', border:'none', borderRadius:4,
+                      fontSize:11, cursor:'pointer', padding:0,
+                    }}>✕</button>
+                  {item.uploading && (
+                    <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#fff',background:'rgba(0,0,0,.4)'}}>업로드중…</div>
+                  )}
+                  {item.error && (
+                    <div style={{position:'absolute',bottom:0,left:0,right:0,background:'rgba(239,68,68,.85)',color:'#fff',fontSize:9,padding:'2px 4px'}}>{item.error}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)'}}>
+            {cuts.map(cut => {
+              const abCount = Array.isArray(images[cut.id]) ? images[cut.id].length : 0
+              const promptPreview = (cut.imagePrompt || cut.scene || '').slice(0, 28)
+              return (
+                <div key={cut.id}
+                  onDragOver={e => { if (matchTray.length) e.preventDefault() }}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const id = e.dataTransfer.getData('text/plain')
+                    const item = matchTray.find(x => x.id === id)
+                    if (item) assignMatchFile(item, cut)
+                  }}
+                  onClick={() => {
+                    if (!matchSelectedId) return
+                    const item = matchTray.find(x => x.id === matchSelectedId)
+                    if (item) assignMatchFile(item, cut)
+                  }}
+                  style={{
+                    width:120, minHeight:56, padding:'6px 8px', borderRadius:6,
+                    border: matchSelectedId ? '1px dashed var(--purple)' : '1px solid var(--border)',
+                    background:'var(--surface1)', cursor: matchSelectedId ? 'pointer' : 'default',
+                    fontSize:10.5,
+                  }}>
+                  <div style={{fontWeight:700,color:'var(--text1)'}}>CUT {cut.no} {abCount >= 2 ? '(A/B 완료)' : abCount === 1 ? '(1개)' : ''}</div>
+                  <div style={{color:'var(--text3)',marginTop:2,lineHeight:1.3}}>{promptPreview || '(프롬프트 없음)'}</div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

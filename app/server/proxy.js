@@ -1433,6 +1433,46 @@ app.get('/api/scan-images', (req, res) => {
   res.json({ images })
 })
 
+// ── POST /api/upload-cut-image — "드래그 배정" 화면에서 파일 1개를 특정 컷의 후보(A/B)로 저장 ──
+// Flow가 만드는 A/B 후보와 같은 자리(cut_NN_a/_b)에 저장한다. /api/scan-media(스튜디오 탭이
+// 실제 첫 렌더에서 쓰는 스캔)는 _a/_b 슬롯만 인식하므로(위 1585행 근처) 그 이상은 새로고침 후
+// 화면에서 사라져버린다 — 그래서 슬롯을 a/b 두 개로만 제한하고, 둘 다 차있으면 에러로 알린다.
+app.post('/api/upload-cut-image', (req, res) => {
+  const { ep, cutNo, ext, instaContent, instaNum } = req.query
+  if (!ep || !cutNo) return res.status(400).json({ error: 'ep, cutNo 필요' })
+  const useInsta = instaContent && instaNum
+  const dir = useInsta ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent]) : mp.imagesDir(ep)
+  fs.mkdirSync(dir, { recursive: true })
+  const padded = String(cutNo).padStart(2, '0')
+  const safeExt = (String(ext || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').replace('jpeg', 'jpg')) || 'jpg'
+
+  const used = new Set()
+  let existing = []
+  try { existing = fs.readdirSync(dir) } catch { /* noop */ }
+  for (const f of existing) {
+    const m = f.match(new RegExp(`^cut_${padded}(?:_([ab]))?\\.[a-z0-9]+$`, 'i'))
+    if (m) used.add((m[1] || 'a').toLowerCase())
+  }
+  const slot = !used.has('a') ? 'a' : (!used.has('b') ? 'b' : null)
+  if (!slot) return res.status(409).json({ error: `CUT ${cutNo}에 이미 A/B 이미지가 모두 있습니다. 기존 이미지를 먼저 정리해주세요.` })
+
+  const destPath = path.join(dir, `cut_${padded}_${slot}.${safeExt}`)
+  const chunks = []
+  req.on('data', c => chunks.push(c))
+  req.on('error', () => res.status(400).json({ error: '업로드 스트림 오류' }))
+  req.on('end', () => {
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+    try {
+      fs.writeFileSync(destPath, buf)
+      const urlPrefix = mp.toMediaUrl(dir)
+      res.json({ success: true, file: path.basename(destPath), slot, url: `${urlPrefix}/${path.basename(destPath)}` })
+    } catch (e) {
+      res.status(500).json({ error: e.message })
+    }
+  })
+})
+
 // ── 02_images 폴더 파일명 일괄 정리 ──────────────────────────────
 // Flow/외부 도구가 만든 제각각인 파일명을 cut_NN_<슬롯>.<ext> 규격으로 rename.
 // 파일명에서 컷 번호 추출: "cut2" / "cut_02" / "02_v2" / "2-b" / "[002]" / 앞쪽 첫 숫자.

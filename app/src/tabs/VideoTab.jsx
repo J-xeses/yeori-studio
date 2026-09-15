@@ -184,6 +184,14 @@ export default function VideoTab() {
   const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
   const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
   const [gData, setGData] = useState(() => loadGPoints())
+  // ── 드래그 배정(2026-09-15) — 스튜디오 탭 이미지 드래그 배정과 동일한 이유: Flow/Veo가
+  // 다운로드해주는 실제 파일명은 컷 순서와 무관해서 "폴더 일괄 가져오기"(파일명 정규식 추측)가
+  // 못 맞는 경우가 많다. 사람이 썸네일을 보고 직접 컷에 배정. 영상은 이미지와 달리 컷당
+  // 후보 개수 제한이 없으므로(videoClips는 이미 여러 클립 이어붙이기를 지원) A/B 캡 없음.
+  const [matchOpen, setMatchOpen] = useState(false)
+  const [matchTray, setMatchTray] = useState([])
+  const [matchSelectedId, setMatchSelectedId] = useState(null)
+  const matchFileInputRef = useRef(null)
 
   useEffect(() => {
     const id = setInterval(() => setGData(loadGPoints()), 2000)
@@ -615,6 +623,51 @@ export default function VideoTab() {
     })
   }
 
+  // ── 드래그 배정: 트레이에 추가된 파일을 사람이 컷에 직접 배정 ─────────────
+  const addMatchClips = (fileList) => {
+    const files = Array.from(fileList || []).filter(f => f.type.startsWith('video/'))
+    files.forEach((f) => {
+      const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      const url = URL.createObjectURL(f)
+      setMatchTray(prev => [...prev, { id, file: f, url, duration: null, ratio: '16:9', ready: false, error: null }])
+      const vid = document.createElement('video')
+      vid.preload = 'metadata'
+      vid.onloadedmetadata = () => {
+        const dur = Math.round(vid.duration * 100) / 100
+        const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
+        setMatchTray(prev => prev.map(x => x.id === id ? { ...x, duration: dur, ratio, ready: true } : x))
+      }
+      vid.onerror = () => setMatchTray(prev => prev.map(x => x.id === id ? { ...x, error: '메타데이터를 읽지 못했습니다' } : x))
+      vid.src = url
+    })
+  }
+
+  // 배정 즉시 videoClips에 추가하고 stageClip으로 실제 서버 파일도 만든다(로컬 업로드와 동일
+  // 경로) — 스테이징 진행/실패는 그 컷 카드의 기존 클립칸 배지(⚠ 서버 미반영 등)로 보인다.
+  const assignMatchClip = (item, cut) => {
+    if (!item.ready) return
+    const obj = {
+      url: item.url, name: item.file.name, duration: item.duration, trimStart: 0, trimEnd: item.duration,
+      useFullDuration: true, ratio: item.ratio, staging: true, keepAudio: !!cut.dialogue,
+      createdAt: item.file.lastModified || Date.now(),
+    }
+    let clipIdx = -1
+    setVideoClips(p => {
+      const existing = p[cut.id] || []
+      clipIdx = existing.length
+      return { ...p, [cut.id]: [...existing, obj] }
+    })
+    stageClip(cut.id, cut.no, clipIdx, item.file, item.url)
+    setMatchTray(prev => prev.filter(x => x.id !== item.id))
+    setMatchSelectedId(prev => (prev === item.id ? null : prev))
+  }
+
+  const removeMatchItem = (item) => {
+    URL.revokeObjectURL(item.url)
+    setMatchTray(prev => prev.filter(x => x.id !== item.id))
+    setMatchSelectedId(prev => (prev === item.id ? null : prev))
+  }
+
   const removeClip = (cutId, idx) => {
     setVideoClips(p => {
       const arr = [...(p[cutId] || [])]
@@ -946,6 +999,11 @@ export default function VideoTab() {
           { key: 'load-all', label: '🔄 불러오기', onClick: loadAllFromProxy },
           { key: 'import-videos', label: '📁 폴더에서 일괄 가져오기', onClick: importVideosFromFolder },
           {
+            key: 'match-videos', variant: 'purple',
+            label: matchOpen ? '🎯 드래그 배정 닫기' : '🎯 드래그 배정',
+            onClick: () => setMatchOpen(o => !o),
+          },
+          {
             key: 'ai-all',
             disabled: cuts.some(c => videoGenStatus[c.id] === 'running'),
             label: cuts.some(c => videoGenStatus[c.id] === 'running') ? '⏳ 생성 중…' : '✨ 전체 AI 생성',
@@ -1126,6 +1184,96 @@ export default function VideoTab() {
           정책: {vChk.policy === 'video-first' ? '영상 중심(LF)' : vChk.policy === 'mixed' ? '혼합(SF)' : '이미지+모션 중심(IG)'}
           {' · '}Veo 필요 <b>{vChk.veoNeeded}</b>컷 · 완료 <b>{vChk.veoDone}</b>
           {vChk.videoDir && <span className={s.vChkDir}> · 📁 {vChk.videoDir}</span>}
+        </div>
+      )}
+
+      {/* 🎯 드래그 배정 — 파일명 대신 사람이 보고 컷에 직접 배정(이미지 탭과 동일 패턴) */}
+      {matchOpen && (
+        <div style={{
+          background:'var(--surface2)', border:'1px solid var(--border)',
+          borderRadius:8, padding:'12px 16px', margin:'0 0 12px',
+        }}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+            <div style={{fontWeight:700,color:'var(--purple)',fontSize:13}}>🎯 드래그 배정</div>
+            <button onClick={() => setMatchOpen(false)}
+              style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
+          </div>
+          <div style={{fontSize:11.5,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
+            Flow/Veo 등에서 받은 영상 파일(파일명 무관)을 아래에 추가한 뒤, 썸네일을 원하는 컷 카드로 <b>드래그</b>하거나,
+            썸네일을 클릭해 선택한 다음 컷 카드를 <b>클릭</b>해서 배정하세요(터치 화면 대응). 컷당 클립 개수 제한은 없습니다.
+          </div>
+          <input ref={matchFileInputRef} type="file" accept="video/*" multiple style={{display:'none'}}
+            onChange={e => { addMatchClips(e.target.files); e.target.value = '' }} />
+          <button onClick={() => matchFileInputRef.current?.click()}
+            style={{background:'var(--purple)',color:'#fff',border:'none',borderRadius:6,padding:'6px 12px',fontSize:12,fontWeight:600,cursor:'pointer',marginBottom:10}}>
+            + 파일 추가
+          </button>
+          {matchTray.length === 0 ? (
+            <div style={{fontSize:11.5,color:'var(--text3)',padding:'8px 0'}}>추가된 파일이 없습니다.</div>
+          ) : (
+            <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:4}}>
+              {matchTray.map(item => (
+                <div key={item.id}
+                  draggable={item.ready}
+                  onDragStart={e => e.dataTransfer.setData('text/plain', item.id)}
+                  onClick={() => item.ready && setMatchSelectedId(prev => prev === item.id ? null : item.id)}
+                  title={item.file.name}
+                  style={{
+                    position:'relative', width:110, cursor: item.ready ? 'grab' : 'wait',
+                    border: matchSelectedId === item.id ? '2px solid var(--purple)' : '2px solid var(--border)',
+                    borderRadius:8, overflow:'hidden', opacity: item.ready ? 1 : 0.6,
+                    background:'#000',
+                  }}>
+                  <video src={item.url} muted style={{width:'100%',height:66,objectFit:'cover',display:'block'}} />
+                  <div style={{fontSize:9,color:'var(--text3)',padding:'2px 4px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                    {item.file.name}{item.duration != null ? ` · ${item.duration}s` : ''}
+                  </div>
+                  <button onClick={e => { e.stopPropagation(); removeMatchItem(item) }}
+                    style={{
+                      position:'absolute', top:2, right:2, width:18, height:18, lineHeight:'18px',
+                      background:'rgba(0,0,0,.6)', color:'#fff', border:'none', borderRadius:4,
+                      fontSize:11, cursor:'pointer', padding:0,
+                    }}>✕</button>
+                  {!item.ready && !item.error && (
+                    <div style={{position:'absolute',inset:0,bottom:18,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,color:'#fff',background:'rgba(0,0,0,.4)'}}>불러오는 중…</div>
+                  )}
+                  {item.error && (
+                    <div style={{position:'absolute',bottom:18,left:0,right:0,background:'rgba(239,68,68,.85)',color:'#fff',fontSize:9,padding:'2px 4px'}}>{item.error}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)'}}>
+            {cuts.map(cut => {
+              const clipCount = (videoClips[cut.id] || []).length
+              const promptPreview = (cut.videoPrompt || cut.scene || '').slice(0, 28)
+              return (
+                <div key={cut.id}
+                  onDragOver={e => { if (matchTray.length) e.preventDefault() }}
+                  onDrop={e => {
+                    e.preventDefault()
+                    const id = e.dataTransfer.getData('text/plain')
+                    const item = matchTray.find(x => x.id === id)
+                    if (item) assignMatchClip(item, cut)
+                  }}
+                  onClick={() => {
+                    if (!matchSelectedId) return
+                    const item = matchTray.find(x => x.id === matchSelectedId)
+                    if (item) assignMatchClip(item, cut)
+                  }}
+                  style={{
+                    width:120, minHeight:56, padding:'6px 8px', borderRadius:6,
+                    border: matchSelectedId ? '1px dashed var(--purple)' : '1px solid var(--border)',
+                    background:'var(--surface1)', cursor: matchSelectedId ? 'pointer' : 'default',
+                    fontSize:10.5,
+                  }}>
+                  <div style={{fontWeight:700,color:'var(--text1)'}}>CUT {cut.no} {clipCount > 0 ? `(${clipCount}개)` : ''}</div>
+                  <div style={{color:'var(--text3)',marginTop:2,lineHeight:1.3}}>{promptPreview || '(프롬프트 없음)'}</div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
