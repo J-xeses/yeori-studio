@@ -31,12 +31,14 @@ ping -n 5 127.0.0.1 >nul
 start "" "%CHROME%" --user-data-dir="%PROFILE%" "https://elevenlabs.io/app/speech-synthesis/text-to-speech"
 ping -n 2 127.0.0.1 >nul
 start "" "%CHROME%" --user-data-dir="%PROFILE%" "http://localhost:5173"
+if exist "C:\yeori-genline\index.html" start "" "%CHROME%" --user-data-dir="%PROFILE%" "C:\yeori-genline\index.html"
 goto :chrome_done
 
 :chrome_running
 echo     Chrome already on %DEBUGPORT% -- opening tool tabs in same profile
 start "" "%CHROME%" --user-data-dir="%PROFILE%" "https://labs.google/fx/ko/tools/flow"
 start "" "%CHROME%" --user-data-dir="%PROFILE%" "https://elevenlabs.io/app/speech-synthesis/text-to-speech"
+if exist "C:\yeori-genline\index.html" start "" "%CHROME%" --user-data-dir="%PROFILE%" "C:\yeori-genline\index.html"
 
 :chrome_done
 echo.
@@ -76,6 +78,7 @@ echo   READY
 echo     Flow       : https://labs.google/fx/ko/tools/flow
 echo     ElevenLabs : https://elevenlabs.io/app/speech-synthesis/text-to-speech
 echo     Studio     : http://localhost:5173
+echo     Field Gate : C:\yeori-genline\index.html
 echo     debug port : %DEBUGPORT%  (screen-scenario / CLIP auto-record uses this)
 echo     pipeline   : "Yeori Pipeline Leader" window (auto making -^> G4 gate -^> G5)
 echo ============================================================

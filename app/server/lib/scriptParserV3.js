@@ -11,7 +11,9 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // SEG: 발화 컷 세그먼트 조합("8+8+10", Veo 고정 생성단위) — app/docs/vp-dialogue-seg-spec.md §2-1
 // SEGT: 세그별 발화 구간("2-8,0-3") — 2026-09-12 추가, src/lib/vpDialogue.js 의 동일 함수와 함께 유지
 // SEGP: 세그별 영문 비주얼 프롬프트("p1 ||| p2", 줄바꿈은 ⏎) — 2026-09-12 추가, src/tabs/ScriptGenTab.jsx 와 함께 유지
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// CPP: 세그별 화면 자막("자막1 ||| 자막2", 줄바꿈은 ⏎) — 2026-09-15 추가, 필드게이트 세그 분할 탭에서
+// 세그(=클립) 슬롯마다 다른 자막을 지정할 때 씀. src/tabs/ScriptGenTab.jsx 와 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // src/tabs/ScriptGenTab.jsx 의 동일 함수와 반드시 함께 유지.
@@ -271,6 +273,7 @@ export function parseCutsV3(raw) {
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      ...(fields.CPP && parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) ? { subtitleSegments: parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) } : {}),
       // PIP_VD(codebook PL) 컷 전용 필드 — YEORI 컷 위에 합성할 BROLL 컷 번호/레이아웃/크기.
       // pipTarget은 ScriptGenTab.jsx의 기존 PIP 메커니즘(수동 입력 필드, proxy.js가 이미
       // c.pipTarget을 읽어 pip_target으로 씀)과 이름을 맞춘 것 — 대본 텍스트만으로는 알 수

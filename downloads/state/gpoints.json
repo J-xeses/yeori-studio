@@ -461,8 +461,9 @@
   "LF_T01": {
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-09-14T07:48:08.332Z",
-      "g5": false
+      "updatedAt": "2026-09-15T05:12:19.236Z",
+      "g5": false,
+      "g3": true
     },
     "cut_3": {
       "g1": true,

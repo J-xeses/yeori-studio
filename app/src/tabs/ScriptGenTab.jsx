@@ -208,7 +208,9 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // buildSegmentedSpokenBlock(vpDialogue.js)이 SPEAKS 줄에 "[Xs-Ys]" 구간으로 반영
 // SEGP: 세그별 영문 비주얼 프롬프트("prompt1 ||| prompt2", 줄바꿈은 ⏎로 치환해 한 줄 유지) —
 // 2026-09-12 추가. 있으면 ensureDialogueInVP이 세그별로 비주얼+발화를 인터리브해서 재구성.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// CPP: 세그별 화면 자막("자막1 ||| 자막2", 줄바꿈은 ⏎) — 2026-09-15 추가, 필드게이트 세그 분할
+// 탭에서 세그(=클립) 슬롯마다 다른 자막을 지정. server/lib/scriptParserV3.js 와 반드시 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
@@ -450,6 +452,7 @@ function parseCutsV3(raw) {
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      ...(fields.CPP && parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) ? { subtitleSegments: parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) } : {}),
       // server/lib/scriptParserV3.js와 반드시 동일하게 유지 — PIP_VD 컷 전용 필드.
       // pipTarget은 이 파일의 기존 PIP 메커니즘(수동 입력 필드, cutType === 'PIP' 케이스)과
       // 같은 필드명 — 별개로 두지 않고 그대로 재사용.
@@ -512,6 +515,9 @@ function serializeCutForRevision(c) {
     if (Array.isArray(c.segPrompts) && c.segPrompts.length === c.segments.length) {
       L.push(`SEGP: ${formatSegPrompts(c.segPrompts)}`)
     }
+    if (Array.isArray(c.subtitleSegments) && c.subtitleSegments.length === c.segments.length) {
+      L.push(`CPP: ${formatSegPrompts(c.subtitleSegments)}`)
+    }
   }
   L.push(`CT: ${c.cutType || 'YEORI'}`)
   if (c.htmlFile) L.push(`HTML: ${c.htmlFile}`)
@@ -551,6 +557,12 @@ function v3RevisionPatch(fields, original) {
   if (fields.SEGP != null) {
     const segCount = (p.segments || original.segments || []).length
     p.segPrompts = parseSegPrompts(fields.SEGP, segCount) || undefined
+  }
+  // CPP: "자막1 ||| 자막2" → subtitleSegments(세그별 화면 자막 배열). VideoTab이 클립 개수와
+  // 이 배열 길이를 맞춰 클립별 자막칸을 자동으로 채우는 데 씀.
+  if (fields.CPP != null) {
+    const segCount = (p.segments || original.segments || []).length
+    p.subtitleSegments = parseSegPrompts(fields.CPP, segCount) || undefined
   }
   if (fields.CT != null) { const t = fields.CT.trim().toUpperCase(); if (['YEORI', 'BROLL', 'GRAPHIC', 'CAPCUT', 'PIP'].includes(t)) p.cutType = t }
   if (!isBlank(fields.SH)) {
@@ -606,6 +618,8 @@ function buildV3ScriptText(cuts, episode) {
         ? [`SEGT: ${c.segTiming.map(t => Array.isArray(t) ? `${t[0]}-${t[1]}` : '').join(',')}`] : []),
       ...(Array.isArray(c.segments) && c.segments.length > 1 && Array.isArray(c.segPrompts) && c.segPrompts.length === c.segments.length
         ? [`SEGP: ${formatSegPrompts(c.segPrompts)}`] : []),
+      ...(Array.isArray(c.segments) && c.segments.length > 1 && Array.isArray(c.subtitleSegments) && c.subtitleSegments.length === c.segments.length
+        ? [`CPP: ${formatSegPrompts(c.subtitleSegments)}`] : []),
       ...(c.htmlFile ? [`HTML: ${c.htmlFile}`] : []),
       ...(c.sourcePath ? [`SRC: ${c.sourcePath}`] : []),
       ...(c.brollQuery ? [`BQ: ${c.brollQuery}`] : []),
@@ -1969,6 +1983,20 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                       <label>CP (자막·손글씨 오버레이)</label>
                       <textarea rows={2} placeholder="없음 — 이 컷에 손글씨 자막을 얹을 텍스트(순수 텍스트). 메이킹 탭에서 위치·말풍선·타이밍을 형성."
                         value={cut?.subtitle || ''} onChange={e => updateCut(cut.id, 'subtitle', e.target.value)} />
+                      {/* 세그(클립)별로 다른 자막이 Field Gate 세그 분할 탭에서 지정된 경우 — 위 CP는
+                          "세그 없을 때"의 단일 자막이라 그대로 두고, 세그별 값은 읽기 전용으로 보여줌
+                          (2026-09-15, 사용자 확정: "자막을 세그 슬롯에 종속" — VideoTab이 클립 개수에
+                          맞춰 이 배열로 클립별 자막칸을 자동으로 채움). */}
+                      {Array.isArray(cut?.subtitleSegments) && cut.subtitleSegments.length > 0 && (
+                        <div style={{ marginTop: 6 }}>
+                          <div className={s.v3CardHint} style={{ fontSize: 11.5, marginBottom: 2 }}>▾ 세그별 자막(읽기 전용 — Field Gate 세그 분할 탭에서 수정)</div>
+                          {cut.subtitleSegments.map((t, i) => (
+                            <div key={i} style={{ fontSize: 12, color: 'var(--text-2)', padding: '2px 0' }}>
+                              {(['①','②','③','④','⑤','⑥','⑦','⑧','⑨'][i] || `세그${i+1}`)}: {t || <em style={{ color: 'var(--text-3)' }}>(없음)</em>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     <div className={s.v3Divider} />
