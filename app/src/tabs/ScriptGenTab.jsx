@@ -1657,7 +1657,11 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                 🎯 Field Gate 에서 CUT {genlinePatch.cutNo} 수정 제안 도착
                 {genlinePatch.meta?.title ? ` — ${genlinePatch.meta.title}` : ''}
               </div>
-              <div style={{ fontSize: 11, lineHeight: 1.7, color: 'var(--text2)', whiteSpace: 'pre-wrap', marginBottom: 8 }}>
+              {/* 필드가 많거나(SEGP/CPP처럼 세그별로 긴 텍스트) 내용이 길면 카드가 사이드바
+                  높이를 넘어서 "적용" 버튼이 화면 밖으로 밀려나 안 눌리는 문제가 있었다(2026-09-15,
+                  사용자 지적) — mcPreview 목록과 같은 패턴으로 내부 스크롤을 둬서 버튼은 항상
+                  카드 안(화면에 보이는 위치)에 고정되게 함. */}
+              <div style={{ fontSize: 11, lineHeight: 1.7, color: 'var(--text2)', whiteSpace: 'pre-wrap', marginBottom: 8, maxHeight: 220, overflowY: 'auto' }}>
                 {Object.entries(genlinePatch.fields).map(([k, v]) => (
                   <div key={k}>{k}: {v}</div>
                 ))}

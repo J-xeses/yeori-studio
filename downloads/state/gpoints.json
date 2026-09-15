@@ -466,11 +466,8 @@
       "g3": true
     },
     "cut_3": {
-      "g1": true,
-      "updatedAt": "2026-09-14T07:48:08.332Z",
-      "g5": false,
-      "g2": true,
-      "selectedImage": "cut_03_a.jpg"
+      "g3": true,
+      "updatedAt": "2026-09-15T07:32:39.906Z"
     },
     "cut_5": {
       "g1": true,
@@ -480,9 +477,8 @@
       "selectedImage": "cut_05_a.jpg"
     },
     "cut_7": {
-      "g1": true,
-      "updatedAt": "2026-09-14T07:48:08.332Z",
-      "g5": false
+      "g3": true,
+      "updatedAt": "2026-09-15T07:30:48.221Z"
     },
     "cut_9": {
       "g1": true,

@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -151,7 +151,7 @@
           "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
           "action": "차분하게 설명. 자연스러운 손짓.",
           "character": "서여리",
-          "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
+          "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -210,7 +210,12 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_ANL",
             "source": "SH_MCU CA_ST 자연스러운 설명 손짓 MD_ANL"
-          }
+          },
+          "subtitleSegments": [
+            "LE SSERAFIM은요, 데뷔 3년 차인데",
+            "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
+            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+          ]
         },
         {
           "id": "cut-4",
@@ -372,7 +377,7 @@
           "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.",
           "action": "눈빛이 분석적으로 변하는 순간 포착",
           "character": "서여리",
-          "dialogue": "\"KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~  LA 베이스. 경계 자체가 없는 세계관!\"",
+          "dialogue": "KATSEYE는 좀 달라요.  || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스. 경계 자체가 없는 세계관!",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -410,7 +415,30 @@
             "kenburns": "zoomIn",
             "reason": "SH_ECU",
             "source": "SH_ECU CA_ST 눈빛이 분석적으로 변하는 순간 MD_ANL"
-          }
+          },
+          "segments": [
+            8,
+            8,
+            8
+          ],
+          "segTiming": [
+            null,
+            null,
+            [
+              1,
+              6
+            ]
+          ],
+          "segPrompts": [
+            "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+            "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+            "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "KATSEYE는 좀 달라요.",
+            "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
+            "LA 베이스. 경계 자체가 없는 세계관!"
+          ]
         },
         {
           "id": "cut-8",
@@ -2234,7 +2262,7 @@
       "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
       "action": "차분하게 설명. 자연스러운 손짓.",
       "character": "서여리",
-      "dialogue": "\"LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
+      "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2293,7 +2321,12 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_ANL",
         "source": "SH_MCU CA_ST 자연스러운 설명 손짓 MD_ANL"
-      }
+      },
+      "subtitleSegments": [
+        "LE SSERAFIM은요, 데뷔 3년 차인데",
+        "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
+        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+      ]
     },
     {
       "id": "cut-4",
@@ -2455,7 +2488,7 @@
       "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게.",
       "action": "눈빛이 분석적으로 변하는 순간 포착",
       "character": "서여리",
-      "dialogue": "\"KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~  LA 베이스. 경계 자체가 없는 세계관!\"",
+      "dialogue": "KATSEYE는 좀 달라요.  || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스. 경계 자체가 없는 세계관!",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
@@ -2493,7 +2526,30 @@
         "kenburns": "zoomIn",
         "reason": "SH_ECU",
         "source": "SH_ECU CA_ST 눈빛이 분석적으로 변하는 순간 MD_ANL"
-      }
+      },
+      "segments": [
+        8,
+        8,
+        8
+      ],
+      "segTiming": [
+        null,
+        null,
+        [
+          1,
+          6
+        ]
+      ],
+      "segPrompts": [
+        "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+        "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9",
+        "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nbackground people must not interact with or interfere with the main character,\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "KATSEYE는 좀 달라요.",
+        "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
+        "LA 베이스. 경계 자체가 없는 세계관!"
+      ]
     },
     {
       "id": "cut-8",
