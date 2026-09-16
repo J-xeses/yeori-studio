@@ -99,10 +99,21 @@ Ensure-Task 'YeoriStudio_AutoSync' `
     'powershell' 'git-auto-sync.ps1'
 
 # ---- start the always-on services now if nothing is serving them ------
+# 2026-09-17: concurrently 의 두 자식(proxy:3001, vite:5173)은 서로 독립적으로 죽을 수 있다
+# (concurrently 기본값은 한 자식이 죽어도 다른 자식을 안 죽임) -- 3001만 보고 "정상"이라
+# 판단하면 vite만 죽은 경우를 영영 못 잡는다(실측: proxy 는 떠있는데 vite 가 죽어서
+# localhost:5173 접속 불가였던 사고). 반드시 둘 다 확인해야 함. YeoriStudio 를 다시
+# Start-ScheduledTask 해도 안전 -- 이미 떠있는 쪽(예: proxy)은 포트 바인딩만 실패하고
+# 조용히 죽을 뿐, 죽어있던 쪽(vite)은 정상적으로 새로 뜬다.
 $port3001 = @(Get-NetTCPConnection -State Listen -LocalPort 3001 -ErrorAction SilentlyContinue).Count -gt 0
-if ($port3001) {
-    Write-Output "        [ensure-yeori-tasks] :3001 already served -- YeoriStudio start skipped."
+$port5173 = @(Get-NetTCPConnection -State Listen -LocalPort 5173 -ErrorAction SilentlyContinue).Count -gt 0
+if ($port3001 -and $port5173) {
+    Write-Output "        [ensure-yeori-tasks] :3001 and :5173 both served -- YeoriStudio start skipped."
 } else {
+    $missing = @()
+    if (-not $port3001) { $missing += ':3001(proxy)' }
+    if (-not $port5173) { $missing += ':5173(vite)' }
+    Write-Output "        [ensure-yeori-tasks] missing: $($missing -join ', ') -- restarting YeoriStudio."
     try { Start-ScheduledTask -TaskName 'YeoriStudio' -ErrorAction Stop; Write-Output "        [ensure-yeori-tasks] YeoriStudio started." }
     catch { Write-Output "        [ensure-yeori-tasks] YeoriStudio start failed: $($_.Exception.Message)" }
 }

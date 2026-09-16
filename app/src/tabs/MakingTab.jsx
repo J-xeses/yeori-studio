@@ -354,10 +354,8 @@ export default function MakingTab() {
   // ── 어느 컷을 펼쳐 놓았는지(한 번에 하나만). 펼치면서 타입에 맞는 기존 select 함수를
   // 호출해 htmlSource/selectedBrollCutNo/selectedCapcutCutNo 등 기존 상태를 그대로 채운다.
   const [expandedCutNo, setExpandedCutNo] = useState(null)
-  const toggleCut = (cut) => {
-    const willOpen = expandedCutNo !== cut.no
-    setExpandedCutNo(willOpen ? cut.no : null)
-    if (!willOpen) return
+  const openCut = (cut) => {
+    setExpandedCutNo(cut.no)
     if (cut.cutType === 'GRAPHIC') selectHtmlCut(cut)
     else if (cut.cutType === 'BROLL') selectBrollCut(cut)
     else if (cut.cutType === 'CAPCUT') {
@@ -365,6 +363,22 @@ export default function MakingTab() {
       if (getCapcutMode(cut.no) === 'html') selectHtmlCut(cut)
     }
   }
+  const toggleCut = (cut) => {
+    const willOpen = expandedCutNo !== cut.no
+    if (!willOpen) { setExpandedCutNo(null); return }
+    openCut(cut)
+  }
+  // 탭 진입 시 전부 닫혀있으면 폐쇄적으로 느껴진다는 지적(2026-09-17) — 첫 제작 대상 컷을
+  // 자동으로 펼쳐서 클릭 없이 바로 보이게 함. 한 번만(사람이 다른 컷을 직접 골랐으면 존중).
+  const autoExpandedRef = useRef(false)
+  useEffect(() => {
+    if (autoExpandedRef.current) return
+    const firstManual = allCuts.find(c => MANUAL_TYPES.includes(c.cutType || 'YEORI'))
+    if (!firstManual) return
+    autoExpandedRef.current = true
+    openCut(firstManual)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allCuts.length])
 
   const copyPath = (p) => { try { navigator.clipboard?.writeText(p) } catch { /* noop */ } }
 
