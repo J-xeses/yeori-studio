@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -156,13 +156,13 @@
           "no": 3,
           "cutTitle": "LE SSERAFIM 설명 MCU",
           "lipsync": false,
-          "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
+          "scene": "소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리 아웃포커스로 잔존. LE SSERAFIM 설명. 후반 PIP.",
           "action": "차분하게 설명. 자연스러운 손짓.",
           "character": "서여리",
-          "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
+          "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — camera focused on right side of beige sofa — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (Hanjia) visible on the LEFT edge of frame, slightly out of focus — same sofa, continuous space from previous cut,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nfocus pulled to right-side subject, left-side figure softly blurred but present\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-17s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic\n\nFinal 17-25s: she pauses thoughtfully,\nlooking slightly to the side then back to camera,\nwarm indoor lighting, static camera",
           "duration": 25,
           "shotType": "CLOSEUP",
@@ -173,7 +173,7 @@
             "pl": "LF_YU",
             "ch": "YR_TX",
             "sh": "SH_MCU",
-            "ca": "CA_ST",
+            "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아 왼쪽 프레임 끝에 블러 처리로 유지.",
             "md": "MD_ANL",
             "ac": "자연스러운 설명 손짓",
             "lookId": "",
@@ -185,10 +185,10 @@
               "ambience": ""
             },
             "kr": {
-              "sp": "소파 정면 MCU. CUT 1에서 줌아웃되며 안착.",
-              "ch": "서여리 단독 LOOK_ST01",
-              "sh": "MCU 정면 → 후반 PIP (CapCut 처리)",
-              "ca": "고정",
+              "sp": "컷2와 같은 소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리에 아웃포커스로 잔존.",
+              "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽, 잔존) HJA_LOOK_T01",
+              "sh": "MCU — 포커스 서여리(오른쪽) → 후반 PIP (CapCut 처리)",
+              "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아는 왼쪽 프레임 끝에 블러 처리로 유지.",
               "ac": "차분하게 설명. 자연스러운 손짓.",
               "md": "분석적이지만 설레는 팬심"
             }
@@ -2379,13 +2379,13 @@
       "no": 3,
       "cutTitle": "LE SSERAFIM 설명 MCU",
       "lipsync": false,
-      "scene": "서여리 소파 정면 MCU. LE SSERAFIM 설명. 후반 PIP.",
+      "scene": "소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리 아웃포커스로 잔존. LE SSERAFIM 설명. 후반 PIP.",
       "action": "차분하게 설명. 자연스러운 손짓.",
       "character": "서여리",
-      "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게,  그 클래스...",
+      "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
       "narration": "",
       "subtitle": "",
-      "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera directly,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+      "imagePrompt": "MEDIUM CLOSEUP SHOT — camera focused on right side of beige sofa — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (Hanjia) visible on the LEFT edge of frame, slightly out of focus — same sofa, continuous space from previous cut,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nfocus pulled to right-side subject, left-side figure softly blurred but present\nPhotorealistic 8K cinematic 16:9",
       "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-17s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic\n\nFinal 17-25s: she pauses thoughtfully,\nlooking slightly to the side then back to camera,\nwarm indoor lighting, static camera",
       "duration": 25,
       "shotType": "CLOSEUP",
@@ -2396,7 +2396,7 @@
         "pl": "LF_YU",
         "ch": "YR_TX",
         "sh": "SH_MCU",
-        "ca": "CA_ST",
+        "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아 왼쪽 프레임 끝에 블러 처리로 유지.",
         "md": "MD_ANL",
         "ac": "자연스러운 설명 손짓",
         "lookId": "",
@@ -2408,10 +2408,10 @@
           "ambience": ""
         },
         "kr": {
-          "sp": "소파 정면 MCU. CUT 1에서 줌아웃되며 안착.",
-          "ch": "서여리 단독 LOOK_ST01",
-          "sh": "MCU 정면 → 후반 PIP (CapCut 처리)",
-          "ca": "고정",
+          "sp": "컷2와 같은 소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리에 아웃포커스로 잔존.",
+          "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽, 잔존) HJA_LOOK_T01",
+          "sh": "MCU — 포커스 서여리(오른쪽) → 후반 PIP (CapCut 처리)",
+          "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아는 왼쪽 프레임 끝에 블러 처리로 유지.",
           "ac": "차분하게 설명. 자연스러운 손짓.",
           "md": "분석적이지만 설레는 팬심"
         }
@@ -3619,7 +3619,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-16T04:18:50.060Z",
+  "savedAt": "2026-09-16T06:24:36.836Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -3761,6 +3761,34 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_04.mp4",
           "keepAudio": false,
           "createdAt": 1789376354714
+        }
+      ],
+      "cut-22": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_23.mp4?t=1789537476521",
+          "name": "cut_23.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_23.mp4",
+          "keepAudio": false,
+          "createdAt": 1789207757000
+        }
+      ],
+      "cut-19": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_20.mp4?t=1789540173256",
+          "name": "cut_20.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_20.mp4",
+          "keepAudio": false,
+          "createdAt": 1789537637000
         }
       ]
     },

@@ -573,6 +573,11 @@ app.post('/api/studio-state', (req, res) => {
   const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
   try {
     const { apiKeys, ...state } = req.body
+    // saveStudioState()(MCP 경로)와 동일한 안전망 — 브라우저가 보낸 payload도 top-level cuts와
+    // episodes[activeId].cuts가 어긋난 채로 저장될 수 있어(2026-09-16 반복 발견) 저장 직전 맞춤.
+    if (state.activeEpisodeId && state.episodes?.[state.activeEpisodeId] && Array.isArray(state.cuts)) {
+      state.episodes[state.activeEpisodeId].cuts = state.cuts
+    }
     fs.writeFileSync(statePath, JSON.stringify(state, null, 2), 'utf-8')
     if (apiKeys) {
       fs.writeFileSync(secretsPath, JSON.stringify({ apiKeys }, null, 2), 'utf-8')
@@ -2289,6 +2294,34 @@ app.post('/api/genline/select', (req, res) => {
       summary: `CUT ${cutNo} G2 이미지 선택·승인 (Field Gate)`, result: file, humanInvolved: true,
     }).catch(() => {})
     res.json({ ok: true, cutNo, selectedImage: file, deliverable })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
+// ── POST /api/genline/apply-ip-prompt — Field Gate "IP 프롬프트에 반영" 즉시 적용 (2026-09-16) ──
+// 예전엔 이 버튼이 클립보드 복사 + .genline-review.json 로그만 남기고 실제 컷 데이터는
+// 전혀 안 건드렸음(codi-gen-handoff 큐로도 안 보냄) — "반영됨" 표시만 보고 사용자는 실제
+// 반영된 줄 알았는데 스튜디오 어디에도 안 남아있던 버그(실측 발견, CUT3 IP 프롬프트).
+// IP 프롬프트는 자유 줄바꿈 텍스트라 V3_MAIN_FIELD_RE(줄 단위 필드 파서)에 태우기보다
+// imagePrompt 하나만 곧바로 패치하는 전용 엔드포인트가 더 안전 — /api/genline/select와
+// 동일한 getEpisodeOrThrow 패턴. episode 이중저장(최상위 cuts / episodes[id].cuts) 둘 다
+// 갱신 — 최상위는 "지금 활성 에피소드"일 때만(다른 에피소드를 실수로 덮어쓰지 않도록).
+app.post('/api/genline/apply-ip-prompt', (req, res) => {
+  const { episodeId, cutNo, imagePrompt } = req.body || {}
+  if (!episodeId || cutNo == null || !imagePrompt) return res.status(400).json({ ok: false, error: 'episodeId, cutNo, imagePrompt 필요' })
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, episodeId)
+    const nestedCut = (ep.cuts || []).find(c => c.no === cutNo)
+    if (!nestedCut) return res.status(404).json({ ok: false, error: `CUT ${cutNo} 없음` })
+    nestedCut.imagePrompt = imagePrompt
+    if (state.activeEpisodeId === episodeId && Array.isArray(state.cuts)) {
+      const topCut = state.cuts.find(c => c.no === cutNo)
+      if (topCut) topCut.imagePrompt = imagePrompt
+    }
+    saveStudioState(state)
+    res.json({ ok: true, cutNo, imagePromptLen: imagePrompt.length })
   } catch (err) {
     res.status(err.statusCode || 500).json({ ok: false, error: err.message })
   }
@@ -6210,6 +6243,12 @@ function saveStudioState(state) {
   // (2026-08-15 발견). 브라우저 저장 경로(POST /api/studio-state)는 이 함수를 안 거치고 클라이언트가
   // 보낸 savedAt을 그대로 쓰므로 여기서 건드리지 않는다.
   state.savedAt = new Date().toISOString()
+  // 최상위 cuts(작업 중인 배열)를 activeEpisodeId의 nested 스냅샷(episodes[id].cuts)에도
+  // 동기화 — 이 함수(MCP/서버 경로)로 top-level만 고치고 nested를 안 건드리면 Field Gate가
+  // 계속 옛 데이터를 보여주는 문제가 반복 발견됨(2026-09-16). 안전망으로 항상 맞춰둔다.
+  if (state.activeEpisodeId && state.episodes?.[state.activeEpisodeId] && Array.isArray(state.cuts)) {
+    state.episodes[state.activeEpisodeId].cuts = state.cuts
+  }
   fs.writeFileSync(STUDIO_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8')
 }
 // v2(2026-08-02): { cut_N: {...} } 평면 구조 -> { [episodeCode]: { cut_N: {...} } } 중첩

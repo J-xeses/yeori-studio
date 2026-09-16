@@ -11,21 +11,21 @@
     "motion": null,
     "baked": true,
     "duration": 10,
-    "producedAt": "2026-09-08T14:09:50.355Z"
+    "producedAt": "2026-09-16T06:32:35.829Z"
   },
   "6": {
     "method": "clip-record",
     "motion": null,
     "baked": true,
     "duration": 10,
-    "producedAt": "2026-09-08T14:10:14.142Z"
+    "producedAt": "2026-09-16T05:48:33.250Z"
   },
   "8": {
     "method": "clip-record",
     "motion": null,
     "baked": true,
     "duration": 10,
-    "producedAt": "2026-09-08T14:10:37.376Z"
+    "producedAt": "2026-09-16T05:46:57.337Z"
   },
   "10": {
     "method": "graphic",
@@ -47,6 +47,13 @@
     "baked": true,
     "duration": 8,
     "producedAt": "2026-09-08T14:11:07.491Z"
+  },
+  "20": {
+    "method": "clip-record",
+    "motion": null,
+    "baked": true,
+    "duration": 8,
+    "producedAt": "2026-09-16T06:31:50.330Z"
   },
   "22": {
     "method": "graphic",
