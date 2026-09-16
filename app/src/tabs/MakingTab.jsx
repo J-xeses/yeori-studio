@@ -8,6 +8,7 @@ import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './MakingTab.module.css'
 import { epMediaUrl } from '../lib/mediaPaths'
+import { elSoundEffect, saveGeneratedSfx } from '../lib/api'
 
 const YEORI_SERVER = 'http://localhost:3001'
 
@@ -248,7 +249,7 @@ const MANUAL_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
 
 export default function MakingTab() {
   const { state } = useApp()
-  const { episode, cuts } = state
+  const { episode, cuts, apiKeys } = state
   const epDims = cutDims(episode || {})   // 이 에피소드 컷 규격 (LF/SF=1920x1080)
   const episodeCode = resolveEpisodeCode(episode)
   const allCuts = [...(cuts || [])].sort((a, b) => a.no - b.no)
@@ -1023,6 +1024,17 @@ export default function MakingTab() {
   const [bgmDuck, setBgmDuck] = useState(true)
   const [bgmBusy, setBgmBusy] = useState(false)
   const [bgmResult, setBgmResult] = useState(null)
+
+  // ── 효과음(SFX) AI 생성 (2026-09-16, ElevenLabs Sound Effects) — 텍스트 설명 → 오디오,
+  // 라이브러리(_shared/sfx/_generated/)에 저장. 컷에 적용은 기존 masterCode.audio.sfx 텍스트
+  // 필드 그대로(이 패널은 생성·저장까지만 — [[project_yeori_studio]] SFX 방향 참고).
+  const [sfxOpen, setSfxOpen] = useState(false)
+  const [sfxText, setSfxText] = useState('')
+  const [sfxDuration, setSfxDuration] = useState('')
+  const [sfxBusy, setSfxBusy] = useState(false)
+  const [sfxPreview, setSfxPreview] = useState(null)   // { blob, url }
+  const [sfxSaving, setSfxSaving] = useState(false)
+  const [sfxSaveResult, setSfxSaveResult] = useState(null)
 
   // ── BGM 리믹스: 라이브러리 트랙 두 개를 크로스페이드로 이어붙여 새 트랙으로 저장 ──
   // 가장 기본적인 형태만 — 트랙별 시작초/길이 + 크로스페이드 길이(2026-09-15, 사용자 요청:
@@ -2633,6 +2645,78 @@ export default function MakingTab() {
     </div>
   )
 
+  const generateSfx = async () => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하세요'); return }
+    if (!sfxText.trim()) { alert('효과음 설명을 입력하세요'); return }
+    setSfxBusy(true); setSfxPreview(null); setSfxSaveResult(null)
+    try {
+      const res = await elSoundEffect(apiKeys.elevenLabs, {
+        text: sfxText.trim(),
+        ...(sfxDuration ? { duration_seconds: parseFloat(sfxDuration) } : {}),
+      })
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}))
+        throw new Error(e.detail?.message || e.error || '생성 실패')
+      }
+      const blob = await res.blob()
+      setSfxPreview({ blob, url: URL.createObjectURL(blob) })
+    } catch (err) {
+      alert('효과음 생성 실패: ' + err.message)
+    } finally {
+      setSfxBusy(false)
+    }
+  }
+
+  const saveSfxToLibrary = async () => {
+    if (!sfxPreview?.blob) return
+    setSfxSaving(true)
+    try {
+      const name = sfxText.trim().slice(0, 30).replace(/[^\w가-힣 ]/g, '').trim().replace(/\s+/g, '_') || `sfx_${Date.now()}`
+      const res = await saveGeneratedSfx(sfxPreview.blob, name)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '저장 실패')
+      setSfxSaveResult(data)
+    } catch (err) {
+      alert('라이브러리 저장 실패: ' + err.message)
+    } finally {
+      setSfxSaving(false)
+    }
+  }
+
+  const renderSfxCard = () => (
+    <div className={s.card}>
+      <button className={s.collapseToggle} onClick={() => setSfxOpen(v => !v)}>
+        {sfxOpen ? '▼' : '▶'} 🔊 효과음(SFX) AI 생성 — 텍스트 설명으로 바로 만들기
+      </button>
+      {sfxOpen && (
+        <>
+          <div className={s.emptyHint}>
+            예: "문 두드리는 소리", "휴대폰 알림음, 짧고 경쾌하게", "긴장감 있는 저음 웅웅거림".
+            생성 후 미리듣고 라이브러리에 저장하면, 컷의 효과음 필드에 참고해 적용할 수 있습니다.
+          </div>
+          <div className={s.urlRow}>
+            <input className={s.urlInput} value={sfxText} placeholder="효과음 설명 (영어/한국어 모두 가능)"
+              onChange={e => setSfxText(e.target.value)} onKeyDown={e => e.key === 'Enter' && generateSfx()} />
+            <input type="number" min="0.5" max="30" step="0.5" value={sfxDuration} placeholder="초(선택)"
+              onChange={e => setSfxDuration(e.target.value)} style={{ width: 80 }} />
+            <button className={s.previewBtn} disabled={sfxBusy} onClick={generateSfx}>
+              {sfxBusy ? '⏳ 생성 중…' : '🔊 생성'}
+            </button>
+          </div>
+          {sfxPreview && (
+            <div className={s.overlayScene}>
+              <audio controls autoPlay src={sfxPreview.url} style={{ width: '100%' }} />
+              <button className={s.previewBtn} disabled={sfxSaving} onClick={saveSfxToLibrary}>
+                {sfxSaving ? '⏳ 저장 중…' : '💾 라이브러리에 저장'}
+              </button>
+              {sfxSaveResult && <div className={s.emptyHint}>✅ 저장됨: {sfxSaveResult.file}</div>}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
   const renderBgmCard = () => (
     <div className={s.card}>
       <button className={s.collapseToggle} onClick={() => setBgmOpen(v => !v)}>
@@ -2982,6 +3066,7 @@ export default function MakingTab() {
                 )}
               </div>
 
+              {renderSfxCard()}
               {renderBgmCard()}
 
               {renderHwImageCard()}

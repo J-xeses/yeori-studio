@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
-import { elTTS, elVoices, freeTTS } from '../lib/api'
+import { elTTS, elVoices, freeTTS, elCloneVoice } from '../lib/api'
 import { setGPoint, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { cleanForTTS, splitSpeakerSegments, applyReadings, DEFAULT_READINGS } from '../lib/ttsText'
@@ -443,6 +443,29 @@ export default function TTSTab() {
     }
   }
 
+  // ── Instant Voice Cloning (2026-09-16) — 캐릭터별 오디오 샘플로 전용 목소리 생성 ──
+  // 성공하면 바로 speakerVoices[캐릭터]에 반영 + myVoices 캐시에 즉시 추가(다시 불러오기 없이
+  // VoicePicker에서 바로 선택된 상태로 보이게).
+  const [cloneBusy, setCloneBusy] = useState({})   // { [name]: true }
+  const cloneVoiceFor = async (name, file) => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하세요'); return }
+    if (!file) return
+    setCloneBusy(p => ({ ...p, [name]: true }))
+    try {
+      const res = await elCloneVoice(apiKeys.elevenLabs, `${name} (서여리스튜디오)`, file)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.detail?.message || data.error || '클론 생성 실패')
+      const voiceId = data.voice_id
+      setSpeakerVoice(name, voiceId)
+      setMyVoices(prev => [{ voice_id: voiceId, name: `${name} (클론)`, category: 'cloned' }, ...prev])
+      alert(`✅ "${name}" 목소리 클론 생성 완료 — 바로 적용됐습니다.`)
+    } catch (err) {
+      alert('클론 생성 실패: ' + err.message)
+    } finally {
+      setCloneBusy(p => ({ ...p, [name]: false }))
+    }
+  }
+
   // ── 트랙 개별 TTS 생성 ───────────────────────────────────
   const generateTrackById = async (cutId, voiceTabId, trackId, trackList) => {
     const key   = trackKey(cutId, voiceTabId)
@@ -708,6 +731,15 @@ export default function TTSTab() {
                   voicesLoading={voicesLoading}
                   inheritLabel={c.primary ? `상단 기본값 ${(ttsSettings.voiceId || '').slice(0, 10)}…` : '상단 기본값'}
                 />
+                <input type="file" accept="audio/*" style={{ display: 'none' }}
+                  id={`clone-input-${c.name}`}
+                  onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) cloneVoiceFor(c.name, f) }} />
+                <button type="button" className={s.applyCleanBtn}
+                  disabled={cloneBusy[c.name]}
+                  title="오디오 샘플(수 초~수십 초)을 올리면 이 캐릭터 전용 목소리를 새로 만듭니다"
+                  onClick={() => document.getElementById(`clone-input-${c.name}`).click()}>
+                  {cloneBusy[c.name] ? <><span className={s.spinner} />클론 생성 중…</> : '🧬 이 목소리로 클론 만들기'}
+                </button>
                 {/* 미세조정 — 항상 펼쳐서 바로 조절 가능 */}
                 <div className={s.trackSettings} style={{ flexBasis: '100%' }}>
                   <div className={s.sliderGuideNote}>

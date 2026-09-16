@@ -5,6 +5,7 @@ import { resolveEpisodeCode } from '../lib/episodeCode'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './VoiceTab.module.css'
+import { elIsolateVoice, elSpeechToText } from '../lib/api'
 
 function makeVoiceTrack() {
   return {
@@ -15,7 +16,7 @@ function makeVoiceTrack() {
 
 export default function VoiceTab() {
   const { state, dispatch } = useApp()
-  const { cuts } = state
+  const { cuts, apiKeys } = state
   const { tracks = {} } = state.voiceInsertState || {}
   const fileRefs = useRef({})
   const episodeCode = resolveEpisodeCode(state.episode)
@@ -69,6 +70,61 @@ export default function VoiceTab() {
       setTracksForCut(cutId, prev => prev.map(t => t.id === trackId ? { ...t, uploading: false } : t))
       alert('서버 저장 실패 — 새로고침하면 이 음성이 사라질 수 있습니다: ' + err.message)
     }
+  }
+
+  // ── ElevenLabs 후처리 (2026-09-16) — 업로드된 트랙에 노이즈 제거 / 자동 스크립트 추출.
+  // 화면녹화 컷(CUT4/6/8류)처럼 원본 음향이 지저분하거나 대사를 다시 타이핑하기 귀찮을 때 씀.
+  const [isolateBusy, setIsolateBusy] = useState({})   // trackId -> true
+  const [isolateResult, setIsolateResult] = useState({}) // trackId -> { url, blob }
+  const [sttBusy, setSttBusy] = useState({})
+  const [sttResult, setSttResult] = useState({})       // trackId -> text
+
+  const isolateTrack = async (track) => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하세요 (상단 API 바)'); return }
+    setIsolateBusy(p => ({ ...p, [track.id]: true }))
+    try {
+      const srcBlob = await (await fetch(track.url)).blob()
+      const res = await elIsolateVoice(apiKeys.elevenLabs, srcBlob)
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}))
+        throw new Error(e.detail?.message || e.error || '노이즈 제거 실패')
+      }
+      const cleanBlob = await res.blob()
+      setIsolateResult(p => ({ ...p, [track.id]: { url: URL.createObjectURL(cleanBlob), blob: cleanBlob } }))
+    } catch (err) {
+      alert('노이즈 제거 실패: ' + err.message)
+    } finally {
+      setIsolateBusy(p => ({ ...p, [track.id]: false }))
+    }
+  }
+
+  const applyIsolated = async (cutId, track, idx) => {
+    const result = isolateResult[track.id]
+    if (!result) return
+    const file = new File([result.blob], track.name || 'isolated.mp3', { type: 'audio/mpeg' })
+    await handleUpload(cutId, track.id, idx, file)
+    setIsolateResult(p => { const n = { ...p }; delete n[track.id]; return n })
+  }
+
+  const transcribeTrack = async (track) => {
+    if (!apiKeys.elevenLabs) { alert('ElevenLabs API 키를 입력하세요 (상단 API 바)'); return }
+    setSttBusy(p => ({ ...p, [track.id]: true }))
+    try {
+      const srcBlob = await (await fetch(track.url)).blob()
+      const res = await elSpeechToText(apiKeys.elevenLabs, srcBlob)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.detail?.message || data.error || '스크립트 추출 실패')
+      setSttResult(p => ({ ...p, [track.id]: data.text || '(인식된 텍스트 없음)' }))
+    } catch (err) {
+      alert('스크립트 추출 실패: ' + err.message)
+    } finally {
+      setSttBusy(p => ({ ...p, [track.id]: false }))
+    }
+  }
+
+  const applyTranscript = (cutId, text, field) => {
+    dispatch({ type: 'UPDATE_CUT', id: cutId, p: { [field]: text } })
+    alert(`✅ ${field === 'dialogue' ? '대사' : '나레이션'}에 반영했습니다.`)
   }
 
   const hasCutAny = (cutId) => getTracksForCut(cutId).some(t => t.url)
@@ -143,6 +199,52 @@ export default function VoiceTab() {
                         <input type="file" accept="audio/*" hidden
                           onChange={e => handleUpload(cut.id, track.id, idx, e.target.files[0])} />
                       </label>
+
+                      {/* ElevenLabs 후처리 — 노이즈 제거 / 자동 스크립트 추출 */}
+                      <div className={s.replaceBtn} style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button type="button" style={{ flex: 1 }} disabled={isolateBusy[track.id]}
+                          onClick={() => isolateTrack(track)}>
+                          {isolateBusy[track.id] ? '⏳ 정리 중…' : '🧼 노이즈 제거'}
+                        </button>
+                        <button type="button" style={{ flex: 1 }} disabled={sttBusy[track.id]}
+                          onClick={() => transcribeTrack(track)}>
+                          {sttBusy[track.id] ? '⏳ 추출 중…' : '📝 스크립트 추출'}
+                        </button>
+                      </div>
+
+                      {isolateResult[track.id] && (
+                        <div className={s.audioBlock}>
+                          <div className={s.audioName}>🧼 정리된 결과 (아직 저장 안 됨)</div>
+                          <audio controls src={isolateResult[track.id].url} className={s.player} />
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button type="button" style={{ flex: 1 }} onClick={() => applyIsolated(cut.id, track, idx)}>
+                              ✅ 이걸로 교체
+                            </button>
+                            <button type="button" style={{ flex: 1 }}
+                              onClick={() => setIsolateResult(p => { const n = { ...p }; delete n[track.id]; return n })}>
+                              취소
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {sttResult[track.id] && (
+                        <div className={s.audioBlock}>
+                          <div className={s.audioName}>📝 추출된 텍스트</div>
+                          <textarea rows={3} style={{ width: '100%' }} value={sttResult[track.id]}
+                            onChange={e => setSttResult(p => ({ ...p, [track.id]: e.target.value }))} />
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button type="button" style={{ flex: 1 }}
+                              onClick={() => applyTranscript(cut.id, sttResult[track.id], 'dialogue')}>
+                              대사에 반영
+                            </button>
+                            <button type="button" style={{ flex: 1 }}
+                              onClick={() => applyTranscript(cut.id, sttResult[track.id], 'narration')}>
+                              나레이션에 반영
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className={s.uploadArea} onClick={() => fileRefs.current[track.id]?.click()}>

@@ -195,6 +195,134 @@ app.post('/api/elevenlabs/text-to-speech/:voiceId', async (req, res) => {
   }
 })
 
+// ── ElevenLabs 부가기능 5종 (2026-09-16) — Instant Voice Cloning · Sound Effects ·
+// Voice Isolator · Speech-to-Text. 기존 TTS 릴레이(/api/elevenlabs/text-to-speech)와 동일한
+// "클라는 EL을 직접 안 부르고 항상 이 프록시를 거친다" 원칙 유지. 클라→서버는 raw 오디오
+// 바이트(기존 /api/stage-cut-clip 패턴, 새 멀티파트 파서 의존성 없이), 서버→EL만 실제
+// multipart/form-data로 포장해서 보낸다(Node 내장 FormData/Blob, undici 전역 fetch 사용).
+async function readRawBody(req) {
+  const chunks = []
+  for await (const c of req) chunks.push(c)
+  return Buffer.concat(chunks)
+}
+
+// Voice Isolator/STT/Voice Cloning 공용 — 파일 하나 + 부가 필드를 멀티파트로 감싸 EL에 전달.
+async function forwardMultipartToElevenLabs(apiKey, path, fields, fileFieldName, fileBuffer, fileName, fileMime) {
+  const form = new FormData()
+  for (const [k, v] of Object.entries(fields)) if (v != null) form.append(k, String(v))
+  form.append(fileFieldName, new Blob([fileBuffer], { type: fileMime || 'audio/mpeg' }), fileName)
+  return fetch(`https://api.elevenlabs.io${path}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey },
+    body: form,
+  })
+}
+
+// 1) Instant Voice Cloning — 오디오 샘플로 새 목소리 생성, voice_id 반환.
+app.post('/api/elevenlabs/voices/add', async (req, res) => {
+  const apiKey = req.headers['xi-api-key']
+  if (!apiKey) return res.status(401).json({ error: 'API 키 없음' })
+  const name = String(req.query.name || '').trim()
+  if (!name) return res.status(400).json({ error: 'name 필요' })
+  try {
+    const buf = await readRawBody(req)
+    if (!buf.length) return res.status(400).json({ error: '빈 오디오 파일' })
+    const upstream = await forwardMultipartToElevenLabs(
+      apiKey, '/v1/voices/add', { name }, 'files', buf, 'sample.mp3', req.headers['content-type'] || 'audio/mpeg'
+    )
+    const data = await upstream.json().catch(() => ({}))
+    if (!upstream.ok) return res.status(upstream.status).json(data)
+    res.json(data) // { voice_id, requires_verification }
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
+// 2) Sound Effects 생성 — 텍스트 설명 → 오디오. JSON 릴레이(기존 TTS 엔드포인트와 동일 모양).
+app.post('/api/elevenlabs/sound-effects', async (req, res) => {
+  const apiKey = req.headers['xi-api-key']
+  if (!apiKey) return res.status(401).json({ error: 'API 키 없음' })
+  const { text, duration_seconds, loop, prompt_influence } = req.body || {}
+  if (!text?.trim()) return res.status(400).json({ error: 'text 필요' })
+  try {
+    const upstream = await fetch('https://api.elevenlabs.io/v1/sound-generation', {
+      method: 'POST',
+      headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        ...(duration_seconds ? { duration_seconds: Number(duration_seconds) } : {}),
+        ...(loop != null ? { loop: !!loop } : {}),
+        ...(prompt_influence != null ? { prompt_influence: Number(prompt_influence) } : {}),
+      }),
+    })
+    if (!upstream.ok) return res.status(upstream.status).json(await upstream.json().catch(() => ({})))
+    res.set('content-type', 'audio/mpeg')
+    res.send(Buffer.from(await upstream.arrayBuffer()))
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
+// 미리듣기 후 "저장" — 생성된 SFX를 라이브러리(_shared/sfx/_generated/)에 등록.
+// BGM index.json(다운로드/리믹스 라이브러리)과 동일한 패턴 — mood 대신 태그 문자열만 저장.
+app.post('/api/save-generated-sfx', async (req, res) => {
+  const { filename } = req.query
+  try {
+    const buf = await readRawBody(req)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+    const dir = mp.sfxDir('_generated')
+    fs.mkdirSync(dir, { recursive: true })
+    const safeName = path.basename(sanitizePathSegment(filename) || `sfx_${Date.now()}`)
+    const outName = /\.mp3$/i.test(safeName) ? safeName : `${safeName}.mp3`
+    const destPath = path.join(dir, outName)
+    fs.writeFileSync(destPath, buf)
+    const idxPath = path.join(dir, 'index.json')
+    let idx = []
+    try { idx = JSON.parse(fs.readFileSync(idxPath, 'utf-8')) } catch { /* noop */ }
+    idx.unshift({ id: outName.replace(/\.mp3$/i, ''), file: `_shared/sfx/_generated/${outName}`, createdAt: new Date().toISOString() })
+    fs.writeFileSync(idxPath, JSON.stringify(idx, null, 2))
+    res.json({ success: true, file: outName, url: mp.toMediaUrl(destPath) })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// 3) Voice Isolator — 업로드된 오디오에서 잡음/배경음 제거.
+app.post('/api/elevenlabs/audio-isolation', async (req, res) => {
+  const apiKey = req.headers['xi-api-key']
+  if (!apiKey) return res.status(401).json({ error: 'API 키 없음' })
+  try {
+    const buf = await readRawBody(req)
+    if (!buf.length) return res.status(400).json({ error: '빈 오디오 파일' })
+    const upstream = await forwardMultipartToElevenLabs(
+      apiKey, '/v1/audio-isolation', {}, 'audio', buf, 'input.mp3', req.headers['content-type'] || 'audio/mpeg'
+    )
+    if (!upstream.ok) return res.status(upstream.status).json(await upstream.json().catch(() => ({})))
+    res.set('content-type', 'audio/mpeg')
+    res.send(Buffer.from(await upstream.arrayBuffer()))
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
+// 4) Speech-to-Text — 업로드된 오디오 → 텍스트(+ 단어별 타임스탬프).
+app.post('/api/elevenlabs/speech-to-text', async (req, res) => {
+  const apiKey = req.headers['xi-api-key']
+  if (!apiKey) return res.status(401).json({ error: 'API 키 없음' })
+  try {
+    const buf = await readRawBody(req)
+    if (!buf.length) return res.status(400).json({ error: '빈 오디오 파일' })
+    const upstream = await forwardMultipartToElevenLabs(
+      apiKey, '/v1/speech-to-text', { model_id: 'scribe_v2' }, 'file', buf, 'input.mp3', req.headers['content-type'] || 'audio/mpeg'
+    )
+    const data = await upstream.json().catch(() => ({}))
+    if (!upstream.ok) return res.status(upstream.status).json(data)
+    res.json(data) // { text, words[], language_code, ... }
+  } catch (err) {
+    res.status(502).json({ error: err.message })
+  }
+})
+
 // ── POST /api/free-tts — 무료 TTS (Microsoft Edge read-aloud, 크레딧 0) ──
 // 평범한 조연/엑스트라 대사 대량 생성용. ElevenLabs 와 동일하게 audio/mpeg 를 돌려주므로
 // 클라이언트(TTSTab)는 결과 blob 을 기존과 똑같이 합치기/저장에 쓴다.

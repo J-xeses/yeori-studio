@@ -38,3 +38,44 @@ export const freeTTS = (voiceId, text, rate = 0) =>
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ voiceId, text, rate }),
   })
+
+// ── ElevenLabs 부가기능 5종 (2026-09-16) ──────────────────────────────
+// Instant Voice Cloning — audioFile(오디오 샘플) → { voice_id, requires_verification }
+export const elCloneVoice = (apiKey, name, audioFile) =>
+  fetch(`http://localhost:3001/api/elevenlabs/voices/add?name=${encodeURIComponent(name)}`, {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey, 'content-type': audioFile.type || 'audio/mpeg' },
+    body: audioFile,
+  })
+
+// Sound Effects 생성 — 텍스트 설명 → audio/mpeg Response
+export const elSoundEffect = (apiKey, { text, duration_seconds, loop, prompt_influence }) =>
+  fetch('http://localhost:3001/api/elevenlabs/sound-effects', {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey, 'content-type': 'application/json' },
+    body: JSON.stringify({ text, duration_seconds, loop, prompt_influence }),
+  })
+
+// 생성된 SFX blob을 라이브러리(_shared/sfx/_generated/)에 저장
+export const saveGeneratedSfx = (blob, filename) =>
+  fetch(`http://localhost:3001/api/save-generated-sfx?filename=${encodeURIComponent(filename)}`, {
+    method: 'POST',
+    headers: { 'content-type': blob.type || 'audio/mpeg' },
+    body: blob,
+  })
+
+// Voice Isolator — audioFile/blob(잡음 섞인 원본) → audio/mpeg Response(정리된 오디오)
+export const elIsolateVoice = (apiKey, audioFile) =>
+  fetch('http://localhost:3001/api/elevenlabs/audio-isolation', {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey, 'content-type': audioFile.type || 'audio/mpeg' },
+    body: audioFile,
+  })
+
+// Speech-to-Text — audioFile/blob → { text, words[], language_code, ... }
+export const elSpeechToText = (apiKey, audioFile) =>
+  fetch('http://localhost:3001/api/elevenlabs/speech-to-text', {
+    method: 'POST',
+    headers: { 'xi-api-key': apiKey, 'content-type': audioFile.type || 'audio/mpeg' },
+    body: audioFile,
+  })
