@@ -311,13 +311,21 @@ export default function VideoTab() {
   const setPreviewText = (text) => {
     if (!selCutForText) return
     if (clipsForText.length > 1) {
-      const timings = clipTimings(clipsForText)
+      // 세그2처럼 아직 안 채운 자리는 clips에 null/구멍으로 남아있을 수 있음(2026-09-16,
+      // 세그별 슬롯 지정 업로드 도입) — clipTimings가 그 자리를 undefined로 주므로 반드시
+      // 폴백을 거쳐야 함. 이 폴백 없이 timings[i].start를 바로 읽으면 저장→새로고침 이후
+      // null이 배열 구멍이 아니라 실제 값이 되면서 크래시로 이어짐(실측 확인).
+      const plannedSegsForText = Array.isArray(selCutForText.segments) ? selCutForText.segments : []
+      const timings = clipTimings(clipsForText, plannedSegsForText)
       setSubtitles(prev => {
         const cur = toSegments(effectiveCaptionValue(prev, selCutForText, clipsForText), '', selCutForText.duration || 0)
-        const next = clipsForText.map((_, i) => ({
-          start: timings[i].start, end: timings[i].end,
-          text: i === selectedClipIdx ? text : (cur[i]?.text ?? ''),
-        }))
+        const next = clipsForText.map((_, i) => {
+          const t = timings[i] || { start: 0, end: 0 }
+          return {
+            start: t.start, end: t.end,
+            text: i === selectedClipIdx ? text : (cur[i]?.text ?? ''),
+          }
+        })
         return { ...prev, [selCutForText.id]: next }
       })
     } else {
@@ -500,7 +508,7 @@ export default function VideoTab() {
             const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: !!cut.dialogue, createdAt }
             setVideoClips(p => {
               const existing = p[cut.id] || []
-              if (existing.some(c => c.url === url)) return p
+              if (existing.some(c => c && c.url === url)) return p
               return { ...p, [cut.id]: [...existing, obj] }
             })
           }
@@ -582,7 +590,7 @@ export default function VideoTab() {
       }
       setVideoClips(p => {
         const existing = p[cutId] || []
-        if (existing.some(c => c.stagedPath === candidate.path)) return p
+        if (existing.some(c => c && c.stagedPath === candidate.path)) return p
         return { ...p, [cutId]: [...existing, obj] }
       })
     }
@@ -602,14 +610,18 @@ export default function VideoTab() {
       if (!r.ok) throw new Error(d.error || '스테이징 실패')
       setVideoClips(p => {
         const arr = [...(p[cutId] || [])]
-        const i = arr.findIndex(c => c.url === matchUrl)
+        // ⚠️ arr에 세그2처럼 빈 슬롯(null)이 섞여있을 수 있음 — 가드 없이 c.url을 읽으면
+        // null 원소에서 크래시(2026-09-16 실측: "클립 업로드 순간 화면이 하얗게 죽는다"의
+        // 진짜 원인 — handleVideoUpload의 targetIdx 낙관적 갱신 자체가 아니라 이 완료
+        // 콜백에서 터졌음).
+        const i = arr.findIndex(c => c && c.url === matchUrl)
         if (i >= 0) arr[i] = { ...arr[i], stagedPath: d.path, staging: false }
         return { ...p, [cutId]: arr }
       })
     } catch (e) {
       setVideoClips(p => {
         const arr = [...(p[cutId] || [])]
-        const i = arr.findIndex(c => c.url === matchUrl)
+        const i = arr.findIndex(c => c && c.url === matchUrl)
         if (i >= 0) arr[i] = { ...arr[i], staging: false, stageError: e.message }
         return { ...p, [cutId]: arr }
       })
@@ -784,7 +796,7 @@ export default function VideoTab() {
                 : undefined
               setVideoClips(p => {
                 const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
-                if (existing.some(c => c.url === url)) return p
+                if (existing.some(c => c && c.url === url)) return p
                 return {
                   ...p,
                   [cut.id]: [...existing, {
@@ -1335,13 +1347,17 @@ export default function VideoTab() {
           const captionText = cutSegs[0]?.text ?? ''
           const cutClipTimings = clips.length > 0 ? clipTimings(clips, plannedSegs) : []
           const setClipCaption = (idx, text) => {
-            const timings = clipTimings(clips)
+            // setPreviewText와 동일 이유로 plannedSegs 폴백 + timings[i] undefined 가드 필요.
+            const timings = clipTimings(clips, plannedSegs)
             setSubtitles(prev => {
               const cur = toSegments(effectiveCaptionValue(prev, selCut, clips), '', selCut.duration || 0)
-              const next = clips.map((_, i) => ({
-                start: timings[i].start, end: timings[i].end,
-                text: i === idx ? text : (cur[i]?.text ?? ''),
-              }))
+              const next = clips.map((_, i) => {
+                const t = timings[i] || { start: 0, end: 0 }
+                return {
+                  start: t.start, end: t.end,
+                  text: i === idx ? text : (cur[i]?.text ?? ''),
+                }
+              })
               return { ...prev, [selCut.id]: next }
             })
           }
@@ -1459,6 +1475,7 @@ export default function VideoTab() {
                   {clips.length > 0 && (() => {
                     const target = selCut.duration || 5
                     const totalUsed = clips.reduce((sum, clip) => {
+                      if (!clip) return sum
                       const used = clip.useFullDuration ? clip.duration : (clip.trimEnd - clip.trimStart)
                       return sum + (used || 0)
                     }, 0)
@@ -1631,7 +1648,7 @@ export default function VideoTab() {
                   <div className={s.candidateRow} onClick={e => e.stopPropagation()}>
                     <span className={s.candidateLabel}>📁 폴더에서 찾음:</span>
                     {videoCandidates[selCut.no].map(cand => {
-                      const already = clips.some(c => c.stagedPath === cand.path)
+                      const already = clips.some(c => c && c.stagedPath === cand.path)
                       return (
                         <button key={cand.name} className={s.candidateBtn} disabled={already}
                           onClick={() => addCandidateClip(selCut.id, selCut.no, cand)}>

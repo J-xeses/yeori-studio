@@ -3619,36 +3619,65 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-16T06:24:36.836Z",
+  "savedAt": "2026-09-16T08:19:53.176Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_03.mp4?t=1789383235369",
-          "name": "cut_03.mp4",
+          "url": "blob:http://localhost:5173/ed732fdb-0780-4017-af04-e987ac531a99",
+          "name": "Woman_speaking_on_sofa_20260916152609.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_03.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1789219267000
+          "createdAt": 1789539969637,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_-1.mp4"
+        },
+        null,
+        {
+          "url": "blob:http://localhost:5173/7f56bd69-44d4-461c-a05e-75df3d8347b8",
+          "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789540114752,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_-1.mp4"
         }
       ],
       "cut-7": [],
       "cut-2": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789374099668",
-          "name": "cut_02_a.mp4",
+          "url": "blob:http://localhost:5173/8a7caf6d-4082-43ab-bd2e-6d8b581c9f26",
+          "name": "Two_women_sharing_phone_screen_20260916132802.mp4",
           "duration": 10.01,
           "trimStart": 0,
           "trimEnd": 10.01,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1789219488369.481
+          "createdAt": 1789536581631,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_-1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/0dda2921-599e-4669-a558-91f3b81467ba",
+          "name": "Two_women_expressing_shock_20260916142302.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789536182397,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_-1.mp4"
         }
       ],
       "cut-1": [
@@ -3807,7 +3836,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-5",
     "subtitles": {
       "cut-1": "",
       "cut-2": [
