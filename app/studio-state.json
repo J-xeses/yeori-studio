@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -200,8 +200,8 @@
           ],
           "segTiming": [
             [
-              2,
-              6
+              3,
+              7
             ],
             null,
             [
@@ -2423,8 +2423,8 @@
       ],
       "segTiming": [
         [
-          2,
-          6
+          3,
+          7
         ],
         null,
         [
@@ -3619,7 +3619,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-16T04:27:01.976Z",
+  "savedAt": "2026-09-16T04:18:50.060Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -4341,9 +4341,7 @@
     "mergedUrls": {}
   },
   "voiceInsertState": {
-    "tracks": {
-      "cut-2": []
-    },
+    "tracks": {},
     "activeCutId": "cut-2"
   },
   "studioTabState": {
