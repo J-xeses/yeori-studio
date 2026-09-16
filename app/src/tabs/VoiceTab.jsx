@@ -30,10 +30,12 @@ export default function VoiceTab() {
   const setVoiceState = (p) => dispatch({ type: 'SET_VOICE_INSERT_STATE', p })
 
   const getTracksForCut = (cutId) => tracks[cutId] || []
+  // ⚠️ 클로저(tracks)에 대고 updater를 미리 계산하지 않고 리듀서에서 최신 state로 계산 —
+  // handleUpload처럼 비동기 완료가 늦게 돌아오는 콜백이 그 사이 다른 트랙 추가를 덮어쓰는
+  // stale-closure 레이스 방지(VideoTab.jsx의 동일 버그를 2026-09-16 발견 후 동일 패턴 적용).
   const setTracksForCut = (cutId, updater) => {
-    const cur  = getTracksForCut(cutId)
-    const next = typeof updater === 'function' ? updater(cur) : updater
-    setVoiceState({ tracks: { ...tracks, [cutId]: next } })
+    if (typeof updater === 'function') dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'voiceInsertState', field: 'tracks', key: cutId, updater })
+    else setVoiceState({ tracks: { ...tracks, [cutId]: updater } })
   }
 
   const addTrack = (cutId) => {

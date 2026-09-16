@@ -262,6 +262,18 @@ function reducer(state, action) {
     case 'SET_TTS': return { ...state, ttsSettings: { ...state.ttsSettings, ...action.p } }
     case 'SET_VIDEO': return { ...state, videoSettings: { ...state.videoSettings, ...action.p } }
     case 'SET_VIDEO_TAB_STATE': return { ...state, videoTabState: { ...state.videoTabState, ...action.p } }
+    // 함수형 updater를 "디스패치 시점의 최신 state"에 대해 리듀서 안에서 직접 계산 —
+    // 컴포넌트 쪽 클로저(videoClips 등)에 대고 계산하면, stageClip 같은 비동기 완료 콜백이
+    // 늦게 돌아왔을 때 그 사이에 쌓인 다른 갱신을 통째로 덮어써버리는 stale-closure 버그가 생김
+    // (2026-09-16, VideoTab 드래그 배정 클립이 통째로 사라지는 문제의 근본 원인으로 확인).
+    case 'UPDATE_TAB_FIELD': {
+      const cur = state[action.slice] || {}
+      if (action.key != null) {
+        const dict = cur[action.field] || {}
+        return { ...state, [action.slice]: { ...cur, [action.field]: { ...dict, [action.key]: action.updater(dict[action.key]) } } }
+      }
+      return { ...state, [action.slice]: { ...cur, [action.field]: action.updater(cur[action.field]) } }
+    }
     case 'SET_TTS_TAB_STATE': return { ...state, ttsTabState: { ...state.ttsTabState, ...action.p } }
     case 'SET_VOICE_INSERT_STATE': return { ...state, voiceInsertState: { ...state.voiceInsertState, ...action.p } }
     case 'SET_STUDIO_TAB_STATE': return { ...state, studioTabState: { ...state.studioTabState, ...action.p } }

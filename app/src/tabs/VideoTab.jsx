@@ -76,14 +76,20 @@ function formatClipTimestamp(ms) {
 
 // 클립 배열의 누적 시작/끝 시각 — clipTrimItem의 usedSec 계산과 같은 기준(전체사용 여부에
 // 따라 duration 또는 trimEnd-trimStart)을 그대로 써서 자막 타이밍과 항상 어긋나지 않게 함.
-function clipTimings(clips) {
+// 세그1/3만 만들고 세그2는 비어있는 등 배열에 구멍(hole)이 있을 수 있음(2026-09-16, 세그별
+// 슬롯 지정 업로드 도입) — Array.map은 구멍을 건너뛰므로 plannedSegs로 그 구간의 계획 길이를
+// 채워 넣어야 뒤 세그먼트들의 시작 시각이 밀리지 않는다(effectiveCaptionValue와 동일 원칙).
+function clipTimings(clips, plannedSegs = []) {
   let acc = 0
-  return clips.map(clip => {
-    const used = clip.useFullDuration ? clip.duration : (clip.trimEnd - clip.trimStart)
+  const out = []
+  for (let i = 0; i < clips.length; i++) {
+    const clip = clips[i]
+    const used = clip ? (clip.useFullDuration ? clip.duration : (clip.trimEnd - clip.trimStart)) : plannedSegs[i]
     const start = acc
     acc += (used || 0)
-    return { start, end: acc }
-  })
+    out.push(clip ? { start, end: acc } : undefined)
+  }
+  return out
 }
 
 function wrapCanvasText(ctx, text, maxWidth) {
@@ -191,6 +197,11 @@ export default function VideoTab() {
   const [matchOpen, setMatchOpen] = useState(false)
   const [matchTray, setMatchTray] = useState([])
   const [matchSelectedId, setMatchSelectedId] = useState(null)
+  // 클립 URL이 가리키는 서버 파일이 (탐색기 등으로) 옮겨지거나 지워지면 <video>가 아무 안내
+  // 없이 그냥 빈 화면으로만 뜬다 — "재생될 수 없는 빈 바탕"으로 보이는 문제(2026-09-16 실측:
+  // 사용자가 05_video의 기존 파일을 before/로 옮긴 뒤 예전 클립칸이 빈 화면으로 보임).
+  // url별로 로드 실패 여부만 기록해 명확한 안내 문구로 대체.
+  const [videoLoadErrors, setVideoLoadErrors] = useState({})   // { [url]: true }
   const matchFileInputRef = useRef(null)
 
   useEffect(() => {
@@ -269,20 +280,24 @@ export default function VideoTab() {
   }
 
   const set = (p) => dispatch({ type: 'SET_VIDEO', p })
+  // ⚠️ videoClips/g4Approved/subtitles는 항상 UPDATE_TAB_FIELD로 — 클로저(videoClips 등)에 대고
+  // updater를 미리 계산해서 dispatch하면, stageClip처럼 비동기로 늦게 완료되는 콜백이 그 사이에
+  // 쌓인 다른 컷/클립 갱신을 통째로 덮어써버림(2026-09-16 실측, 드래그 배정한 클립이 통째로
+  // 사라지는 버그의 근본 원인). 리듀서 안에서 매번 최신 state를 보고 계산해야 이 레이스가 없다.
   const setVideoClips = (updater) => {
-    const next = typeof updater === 'function' ? updater(videoClips) : updater
-    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { videoClips: next } })
+    if (typeof updater === 'function') dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'videoTabState', field: 'videoClips', updater })
+    else dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { videoClips: updater } })
   }
   const setG4Approved = (updater) => {
-    const next = typeof updater === 'function' ? updater(g4Approved) : updater
-    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { g4Approved: next } })
+    if (typeof updater === 'function') dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'videoTabState', field: 'g4Approved', updater })
+    else dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { g4Approved: updater } })
   }
   const setSelectedCutId = (id) => {
     dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { selectedCutId: id } })
   }
   const setSubtitles = (updater) => {
-    const next = typeof updater === 'function' ? updater(subtitles) : updater
-    dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { subtitles: next } })
+    if (typeof updater === 'function') dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'videoTabState', field: 'subtitles', updater })
+    else dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { subtitles: updater } })
   }
 
   const selCutForText = cuts.find(c => c.id === selectedCutId)
@@ -601,7 +616,11 @@ export default function VideoTab() {
     }
   }
 
-  const handleVideoUpload = (cutId, files) => {
+  // targetIdx가 주어지면(세그먼트별 빈 슬롯 업로드 버튼) 배열 끝에 append하지 않고 그 자리에
+  // 바로 꽂는다 — 세그1/3만 만들고 세그2는 나중에 채울 때, append 방식으로는 세그3 파일이
+  // 세그2 자리로 밀려 들어가버리는 문제가 있었음(2026-09-16, 사용자 지적). 중간이 비면 배열이
+  // sparse해지는데, 렌더 쪽은 어차피 clips[idx]로 읽어서 빈 자리는 그대로 "파일 없음"으로 보임.
+  const handleVideoUpload = (cutId, files, targetIdx = null) => {
     const cut = (state.cuts || []).find(c => c.id === cutId)
     Array.from(files).forEach((f) => {
       const url = URL.createObjectURL(f)
@@ -614,6 +633,12 @@ export default function VideoTab() {
         let clipIdx = -1
         setVideoClips(p => {
           const existing = p[cutId] || []
+          if (targetIdx != null) {
+            clipIdx = targetIdx
+            const arr = [...existing]
+            arr[targetIdx] = obj
+            return { ...p, [cutId]: arr }
+          }
           clipIdx = existing.length
           return { ...p, [cutId]: [...existing, obj] }
         })
@@ -645,7 +670,7 @@ export default function VideoTab() {
   // 배정 즉시 videoClips에 추가하고 stageClip으로 실제 서버 파일도 만든다(로컬 업로드와 동일
   // 경로) — 스테이징 진행/실패는 그 컷 카드의 기존 클립칸 배지(⚠ 서버 미반영 등)로 보인다.
   const assignMatchClip = (item, cut) => {
-    if (!item.ready) return
+    if (!item.ready) { alert('아직 이 파일의 정보를 불러오는 중입니다 — 잠시 후 다시 시도해주세요.'); return }
     const obj = {
       url: item.url, name: item.file.name, duration: item.duration, trimStart: 0, trimEnd: item.duration,
       useFullDuration: true, ratio: item.ratio, staging: true, keepAudio: !!cut.dialogue,
@@ -879,6 +904,17 @@ export default function VideoTab() {
   const renderCutClips = async (cut) => {
     const clips = videoClips[cut.id] || []
     if (!clips.length) return
+    // ⚠️ clips 배열에 구멍이 있을 수 있음(세그1/3만 채우고 세그2는 비워둔 경우, 2026-09-16
+    // 세그별 슬롯 지정 업로드 도입) — some/map은 구멍을 그냥 건너뛰어서 이 체크 없이는 세그2가
+    // 통째로 빠진 채(1+3만 이어붙여서) 조용히 렌더되어버린다. 렌더 전에 반드시 빈 슬롯부터 막는다.
+    const plannedSegs = Array.isArray(cut.segments) ? cut.segments : []
+    const slotCount = Math.max(clips.length, plannedSegs.length)
+    const missingIdx = []
+    for (let i = 0; i < slotCount; i++) { if (!clips[i]) missingIdx.push(i + 1) }
+    if (missingIdx.length) {
+      setComposeLog(p => ({ ...p, [cut.id]: `⚠️ 세그먼트 ${missingIdx.join(', ')}번이 비어있습니다 — 먼저 채워주세요` }))
+      return
+    }
     const notReady = clips.some(c => !c.stagedPath)
     if (notReady) {
       setComposeLog(p => ({ ...p, [cut.id]: '⚠️ 아직 서버로 올라가는 중인 클립이 있습니다 — 잠시 후 다시 시도해주세요' }))
@@ -1224,7 +1260,7 @@ export default function VideoTab() {
                     borderRadius:8, overflow:'hidden', opacity: item.ready ? 1 : 0.6,
                     background:'#000',
                   }}>
-                  <video src={item.url} muted style={{width:'100%',height:66,objectFit:'cover',display:'block'}} />
+                  <video src={item.url} muted draggable={false} style={{width:'100%',height:66,objectFit:'cover',display:'block',pointerEvents:'none'}} />
                   <div style={{fontSize:9,color:'var(--text3)',padding:'2px 4px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                     {item.file.name}{item.duration != null ? ` · ${item.duration}s` : ''}
                   </div>
@@ -1255,7 +1291,11 @@ export default function VideoTab() {
                     e.preventDefault()
                     const id = e.dataTransfer.getData('text/plain')
                     const item = matchTray.find(x => x.id === id)
+                    // 예전엔 못 찾으면 그냥 조용히 아무 일도 안 일어났음 — "드래그는 되는데
+                    // 배정이 안 된다"는 신고의 원인 후보 중 하나(2026-09-16). 원인을 바로
+                    // 알 수 있게 명확한 안내로 바꿈.
                     if (item) assignMatchClip(item, cut)
+                    else if (id) alert('배정 실패 — 이 파일을 트레이에서 찾을 수 없습니다. 다시 시도해주세요.')
                   }}
                   onClick={() => {
                     if (!matchSelectedId) return
@@ -1293,7 +1333,7 @@ export default function VideoTab() {
           const slotCount = Math.max(clips.length, plannedSegs.length)
           const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
           const captionText = cutSegs[0]?.text ?? ''
-          const cutClipTimings = clips.length > 0 ? clipTimings(clips) : []
+          const cutClipTimings = clips.length > 0 ? clipTimings(clips, plannedSegs) : []
           const setClipCaption = (idx, text) => {
             const timings = clipTimings(clips)
             setSubtitles(prev => {
@@ -1318,7 +1358,21 @@ export default function VideoTab() {
               <div className={s.cutCardVideoCol} onClick={e => e.stopPropagation()}>
                 {previewClip ? (
                   <div className={s.cutCardVideoInner}>
-                    <video key={previewClip.url} src={previewClip.url} controls className={s.cutCardVideoPlayer} />
+                    <video key={previewClip.url} src={previewClip.url} controls className={s.cutCardVideoPlayer}
+                      onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
+                      onLoadedData={() => setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n })} />
+                    {videoLoadErrors[previewClip.url] && (
+                      <div style={{
+                        position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
+                        flexDirection:'column', gap:6, padding:16, textAlign:'center',
+                        background:'rgba(0,0,0,.75)', color:'#fca5a5', fontSize:12, fontWeight:600, pointerEvents:'none',
+                      }}>
+                        ⚠ 이 파일을 재생할 수 없습니다
+                        <span style={{fontWeight:400, color:'var(--text3)', fontSize:11}}>
+                          서버에서 파일이 옮겨졌거나 삭제됐을 수 있습니다 — "프록시" 또는 "폴더에서 일괄 가져오기"로 다시 불러오거나, 클립을 삭제하고 다시 배정하세요.
+                        </span>
+                      </div>
+                    )}
                     {isSelected && subtitleEnabled && !subtitleEditMode && (
                       <div
                         className={`${s.subtitleDisplay} ${s[`pos_${subtitlePosition}`]}`}
@@ -1485,7 +1539,7 @@ export default function VideoTab() {
                               <label className={s.uploadBtnSm}>
                                 📁 업로드
                                 <input type="file" accept="video/*" hidden
-                                  onChange={e => { handleVideoUpload(selCut.id, e.target.files); e.target.value = '' }} />
+                                  onChange={e => { handleVideoUpload(selCut.id, e.target.files, idx); e.target.value = '' }} />
                               </label>
                             </div>
                           </div>

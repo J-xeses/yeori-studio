@@ -765,7 +765,7 @@ export default function StudioTab() {
                     borderRadius:8, overflow:'hidden', opacity: item.uploading ? 0.6 : 1,
                     background:'#000',
                   }}>
-                  <img src={item.url} alt="" style={{width:'100%',height:84,objectFit:'cover',display:'block'}} />
+                  <img src={item.url} alt="" draggable={false} style={{width:'100%',height:84,objectFit:'cover',display:'block',pointerEvents:'none'}} />
                   <button onClick={e => { e.stopPropagation(); removeMatchItem(item) }}
                     style={{
                       position:'absolute', top:2, right:2, width:18, height:18, lineHeight:'18px',
