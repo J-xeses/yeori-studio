@@ -6753,7 +6753,7 @@ const PIP_LAYOUTS = {
   top_right:    (CW, CH, pw, ph) => ({ x: CW - pw - Math.round(CW * 0.025), y: Math.round(CH * 0.04) }),
   top_left:     (CW, CH, pw, ph) => ({ x: Math.round(CW * 0.025),           y: Math.round(CH * 0.04) }),
 }
-async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW, CH, bgVolume }) {
+async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW, CH, bgVolume, delay }) {
   const pw = Math.round(CW * (scale || 0.3) / 2) * 2   // even 픽셀(H.264 요구)
   const ph = Math.round(CH * (scale || 0.3) / 2) * 2
   const { x, y } = (PIP_LAYOUTS[layout] || PIP_LAYOUTS.bottom_right)(CW, CH, pw, ph)
@@ -6762,13 +6762,19 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
   // 이 기본값. UI 슬라이더가 이 값을 cut.pipSegments[idx].bgVolume로 저장해뒀다가 재사용.
   const bgVol = (typeof bgVolume === 'number' && bgVolume >= 0 && bgVolume <= 1) ? bgVolume : 0.42
   const pipDur = await getMediaDuration(pipFile) || 8
+  const bgDur = await getMediaDuration(bgFile) || pipDur
+  // 배경(화면녹화) 길이가 최종 컷 길이의 기준 — 예전엔 PIP(리액션) 길이에 전체를 맞춰 잘라서
+  // 배경의 나머지 구간이 통째로 버려졌음(2026-09-17, 사용자 지적: "원래 화면녹화 시간으로
+  // 필요한 구간을 정했다"). delay를 안 넘기면 "PIP가 배경 끝과 동시에 끝나도록" 자동 계산
+  // (예: 배경 10s + 리액션 8s → 2초 뒤에 PIP 등장, 배경 끝까지 유지).
+  const pipDelay = (typeof delay === 'number' && delay >= 0) ? delay : Math.max(0, bgDur - pipDur)
   const bgHasAudio = await hasAudioStream(bgFile)
   const pipHasAudio = await hasAudioStream(pipFile)
 
   const filters = [
     `[0:v]scale=${CW}:${CH}:force_original_aspect_ratio=increase,crop=${CW}:${CH},setsar=1,fps=30[bg]`,
     `[1:v]scale=${pw}:${ph}:force_original_aspect_ratio=increase,crop=${pw}:${ph},setsar=1,fps=30[pipv]`,
-    `[bg][pipv]overlay=x=${x}:y=${y}:shortest=0[vout]`,
+    `[bg][pipv]overlay=x=${x}:y=${y}:enable='gte(t,${pipDelay})':shortest=0[vout]`,
   ]
   let aInputs = 0
   if (bgHasAudio) { filters.push(`[0:a]volume=${bgVol}[bga]`); aInputs++ }
@@ -6779,9 +6785,13 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
   else filters.push(`anullsrc=r=44100:cl=stereo[aout]`)
 
   const args = [
-    '-y', '-stream_loop', '-1', '-i', bgFile, '-i', pipFile,
+    '-y', '-i', bgFile,
+    // -itsoffset로 PIP 입력 자체를 pipDelay만큼 뒤로 밀어서, 화면에 등장하는 순간 PIP
+    // 클립의 0초(처음)부터 재생되게 한다 — overlay의 enable만으로는 시작 시점만 가려질 뿐,
+    // 내부적으로는 같은 타임라인을 공유해서 이미 pipDelay초만큼 지난 프레임이 나온다.
+    '-itsoffset', String(pipDelay), '-i', pipFile,
     '-filter_complex', filters.join(';'),
-    '-map', '[vout]', '-map', '[aout]', '-t', String(pipDur),
+    '-map', '[vout]', '-map', '[aout]', '-t', String(bgDur),
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60',
     '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart',
     outPath,
@@ -6794,11 +6804,11 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
     proc.on('error', () => resolve(1))
   })
   if (code !== 0 || !fs.existsSync(outPath)) throw new Error('PIP 합성 ffmpeg 실패')
-  return outPath
+  return { outPath, pipDelay, bgDur }
 }
 
 app.post('/api/render-pip-composite', async (req, res) => {
-  const { epNum, cutNo, segIdx, targetCutNo, targetSegIdx, layout, scale, bgVolume } = req.body || {}
+  const { epNum, cutNo, segIdx, targetCutNo, targetSegIdx, layout, scale, bgVolume, delay } = req.body || {}
   if (!epNum || cutNo == null || segIdx == null || (!targetCutNo && targetSegIdx == null)) {
     return res.status(400).json({ error: 'epNum, cutNo, segIdx, (targetCutNo 또는 targetSegIdx) 필요' })
   }
@@ -6855,9 +6865,9 @@ app.post('/api/render-pip-composite', async (req, res) => {
     }
     const outPath = path.join(rawDir, `cut_${padded}_pip_seg${Number(segIdx) + 1}.mp4`)
     const { w: CW, h: CH } = episodeCutDims(epNum)
-    await renderPipComposite({ bgFile, pipFile: pipClip.stagedPath, outPath, layout: layout || 'bottom_right', scale: scale || 0.3, CW, CH, bgVolume })
+    const { pipDelay } = await renderPipComposite({ bgFile, pipFile: pipClip.stagedPath, outPath, layout: layout || 'bottom_right', scale: scale || 0.3, CW, CH, bgVolume, delay: (typeof delay === 'number' ? delay : undefined) })
     const duration = await getMediaDuration(outPath)
-    res.json({ success: true, outputPath: outPath, duration, bgVolume: (typeof bgVolume === 'number' ? bgVolume : 0.42) })
+    res.json({ success: true, outputPath: outPath, duration, delay: pipDelay, bgVolume: (typeof bgVolume === 'number' ? bgVolume : 0.42) })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

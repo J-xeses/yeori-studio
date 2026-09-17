@@ -1009,6 +1009,9 @@ export default function VideoTab() {
             epNum, cutNo: cut.no, segIdx: idx,
             targetSegIdx: spec.targetSegIdx, targetCutNo: spec.targetSegIdx != null ? undefined : spec.target,
             layout: spec.layout, scale: spec.scale, bgVolume: spec.bgVolume,
+            // 지정 안 하면 서버가 "배경 길이 - PIP 길이"로 자동 계산(=PIP가 배경 끝과 동시에
+            // 끝남). 사용자가 다른 타이밍을 원하면 pipSegments[idx].pipDelay(초)로 수동 지정.
+            delay: typeof spec.pipDelay === 'number' ? spec.pipDelay : undefined,
           }),
         })
         const pd = await pr.json()
@@ -1026,6 +1029,25 @@ export default function VideoTab() {
       if (!r.ok) throw new Error(d.error || '합성 실패')
       setComposeStatus(p => ({ ...p, [cut.id]: 'done' }))
       setComposeLog(p => ({ ...p, [cut.id]: `✅ 합성 완료 (${d.sizeKB}KB, ${d.duration?.toFixed(1)}s)` }))
+      // 배경 세그(pipBgSegIndices)의 실제 파일은 방금 render-cut-clips 결과로 디스크에서
+      // 덮어써졌는데, 그 세그의 클립 url은 예전 캐시버스팅(?t=...) 그대로라 브라우저가 계속
+      // 옛 프레임(PIP 합성 전 화면)을 보여주는 문제가 있었음(2026-09-17, 사용자 지적: "PIP
+      // 화면에 같은 화면이 들어간다" — 서버 파일 자체는 ffprobe로 확인해보니 정상 합성돼
+      // 있었고, 브라우저 미리보기만 캐시된 옛 파일을 보여주고 있었음). 그 세그들의 url을
+      // 새 타임스탬프로 강제 갱신해 즉시 재요청되게 한다.
+      if (pipBgSegIndices.size > 0) {
+        setVideoClips(p => {
+          const arr = [...(p[cut.id] || [])]
+          for (const idx of pipBgSegIndices) {
+            const c = arr[idx]
+            if (!c) continue
+            const fresh = resolveClipSrc({ ...c, url: '' })
+            if (!fresh) continue
+            arr[idx] = { ...c, url: `${fresh}${fresh.includes('?') ? '&' : '?'}t=${Date.now()}` }
+          }
+          return { ...p, [cut.id]: arr }
+        })
+      }
       loadVChk()
     } catch (e) {
       setComposeStatus(p => ({ ...p, [cut.id]: 'error' }))
