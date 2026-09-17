@@ -171,7 +171,7 @@
           "masterCode": {
             "sp": "IN.SF",
             "pl": "LF_YU",
-            "ch": "YR_TX",
+            "ch": "YR_TX + HJ",
             "sh": "SH_MCU",
             "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아 왼쪽 프레임 끝에 블러 처리로 유지.",
             "md": "MD_ANL",
@@ -307,7 +307,11 @@
                 "end": 3
               }
             ]
-          }
+          },
+          "subtitleSegments": [
+            "",
+            "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?"
+          ]
         },
         {
           "id": "cut-5",
@@ -370,7 +374,10 @@
               1,
               6
             ],
-            null
+            [
+              2,
+              6
+            ]
           ],
           "segPrompts": [
             "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -469,7 +476,11 @@
                 "end": 3
               }
             ]
-          }
+          },
+          "subtitleSegments": [
+            "",
+            "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+          ]
         },
         {
           "id": "cut-7",
@@ -631,7 +642,11 @@
                 "end": 3
               }
             ]
-          }
+          },
+          "subtitleSegments": [
+            "",
+            "LA 베이스. 경계 자체가 없는 세계관!"
+          ]
         },
         {
           "id": "cut-9",
@@ -2498,7 +2513,7 @@
       "masterCode": {
         "sp": "IN.SF",
         "pl": "LF_YU",
-        "ch": "YR_TX",
+        "ch": "YR_TX + HJ",
         "sh": "SH_MCU",
         "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아 왼쪽 프레임 끝에 블러 처리로 유지.",
         "md": "MD_ANL",
@@ -2634,7 +2649,11 @@
             "end": 3
           }
         ]
-      }
+      },
+      "subtitleSegments": [
+        "",
+        "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?"
+      ]
     },
     {
       "id": "cut-5",
@@ -2697,7 +2716,10 @@
           1,
           6
         ],
-        null
+        [
+          2,
+          6
+        ]
       ],
       "segPrompts": [
         "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -2796,7 +2818,11 @@
             "end": 3
           }
         ]
-      }
+      },
+      "subtitleSegments": [
+        "",
+        "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+      ]
     },
     {
       "id": "cut-7",
@@ -2958,7 +2984,11 @@
             "end": 3
           }
         ]
-      }
+      },
+      "subtitleSegments": [
+        "",
+        "LA 베이스. 경계 자체가 없는 세계관!"
+      ]
     },
     {
       "id": "cut-9",
@@ -3827,7 +3857,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-17T11:26:58.599Z",
+  "savedAt": "2026-09-17T11:58:44.787Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [],
@@ -4026,11 +4056,24 @@
           "keepAudio": true,
           "createdAt": 1789539969637,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/dc2e4c98-2489-4551-a0e3-a338ff2e4249",
+          "name": "Young_woman_speaking_Korean_gesture_20260917203846.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789645127174,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
         }
       ],
       "cut-6": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_06.mp4?t=1789644442496",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_06.mp4?t=1789647888478",
           "name": "cut_06.mp4",
           "duration": 10,
           "trimStart": 0,
@@ -4040,6 +4083,19 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_06.mp4",
           "keepAudio": false,
           "createdAt": 1789618889000
+        },
+        {
+          "url": "blob:http://localhost:5173/e3d4080a-0e03-48f8-871f-339672f9ea14",
+          "name": "Woman_speaking_on_sofa_20260917205119.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789645879595,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_06_clip_1.mp4"
         }
       ],
       "cut-8": [
@@ -4114,7 +4170,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-5",
+    "selectedCutId": "cut-6",
     "subtitles": {
       "cut-1": "",
       "cut-20": [

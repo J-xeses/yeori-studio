@@ -202,6 +202,13 @@ export default function VideoTab() {
   const [ffmpegLog,    setFfmpegLog]    = useState({})
   const [composeStatus, setComposeStatus] = useState({})   // 클립 합성(render-cut-clips) 진행상태
   const [composeLog,    setComposeLog]    = useState({})
+  // 합성 성공 시각(cut.id → ms) — "최종 합성본" 미리보기의 캐시버스팅 키.
+  // 세그 카드 미리보기(위 클립 목록)는 항상 "지금 선택된 세그 원본"만 보여줘서, 합성 후에도
+  // 사용자가 최종 결과 대신 세그 원본을 최종본으로 착각하는 혼란이 반복됐다(2026-09-17,
+  // "PIP에 같은 화면이 보인다"/"자막이 없다" 두 신고 모두 실제로는 이 UI 혼동이었음 — 실제
+  // 서버 파일은 직접 프레임 추출로 매번 정상 확인됨). 이 state가 있는 컷은 세그 목록과는
+  // 별도로, 실제 05_video/cut_NN.mp4를 명확히 라벨링해 보여준다.
+  const [finalPreviewTs, setFinalPreviewTs] = useState({})
   const [batchFfmpegStatus,   setBatchFfmpegStatus]   = useState('idle') // idle | running | done | error
   const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
   const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
@@ -246,6 +253,18 @@ export default function VideoTab() {
       .then(d => {
         if (d.error) return
         setVChk(d)
+        // 이전 세션에서 이미 합성된 컷도(방금 이 브라우저에서 합성 안 해도) "최종 합성본"
+        // 미리보기가 바로 보이게 — hasVideo인 컷마다 최초 1회 타임스탬프를 채워둔다.
+        setFinalPreviewTs(p => {
+          let changed = false
+          const next = { ...p }
+          const now = Date.now()
+          for (const row of d.cuts || []) {
+            const cut = (state.cuts || []).find(c => c.no === row.no)
+            if (row.hasVideo && cut && next[cut.id] == null) { next[cut.id] = now; changed = true }
+          }
+          return changed ? next : p
+        })
         // 서버엔 완성본(cut_NN.mp4)이 있는데 로컬 클립칸이 비어있으면 "프록시로 불러오기"를
         // 사람이 매번 눌러야 했다 — 폴더 후보와 같은 이유로 자동화한다(2026-09-14, 사용자
         // 재확인: "폴더에 있는 영상도 일부 만들어진 파일이 아직 업로드도 안 되고 있다").
@@ -1029,6 +1048,7 @@ export default function VideoTab() {
       if (!r.ok) throw new Error(d.error || '합성 실패')
       setComposeStatus(p => ({ ...p, [cut.id]: 'done' }))
       setComposeLog(p => ({ ...p, [cut.id]: `✅ 합성 완료 (${d.sizeKB}KB, ${d.duration?.toFixed(1)}s)` }))
+      setFinalPreviewTs(p => ({ ...p, [cut.id]: Date.now() }))
       // 배경 세그(pipBgSegIndices)의 실제 파일은 방금 render-cut-clips 결과로 디스크에서
       // 덮어써졌는데, 그 세그의 클립 url은 예전 캐시버스팅(?t=...) 그대로라 브라우저가 계속
       // 옛 프레임(PIP 합성 전 화면)을 보여주는 문제가 있었음(2026-09-17, 사용자 지적: "PIP
@@ -1818,6 +1838,16 @@ export default function VideoTab() {
                 {composeLog[selCut.id] && (
                   <div className={s.ffmpegLog}>{composeLog[selCut.id]}</div>
                 )}
+                {finalPreviewTs[selCut.id] != null && (() => {
+                  const padded = String(selCut.no).padStart(2, '0')
+                  const finalUrl = `${epMediaUrl(episode, 'video')}/cut_${padded}.mp4?t=${finalPreviewTs[selCut.id]}`
+                  return (
+                    <div className={s.field} style={{ marginTop: 8 }}>
+                      <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다</label>
+                      <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6 }} />
+                    </div>
+                  )
+                })()}
                 {videoGenLog[selCut.id] && (
                   <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
                 )}
