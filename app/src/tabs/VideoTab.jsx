@@ -63,6 +63,22 @@ function effectiveCaptionValue(subtitlesState, cut, clips) {
   return undefined
 }
 
+// blob: 미리보기 URL은 그 브라우저 세션에서만 유효 — 새로고침하면 무조건 끊겨서 "재생할 수
+// 없습니다" 경고가 뜸(2026-09-17 실측 피드백). stagedPath(서버에 실제 저장된 경로)가 있으면
+// 죽은 blob: 대신 그 서버 URL을 바로 쓰게 해서 새로고침해도 계속 재생되게 한다.
+function resolveClipSrc(clip) {
+  if (!clip) return ''
+  if (clip.url && !clip.url.startsWith('blob:')) return clip.url
+  if (clip.stagedPath) {
+    const idx = clip.stagedPath.toLowerCase().indexOf('\\downloads\\')
+    if (idx >= 0) {
+      const rel = clip.stagedPath.slice(idx + '\\downloads\\'.length).replace(/\\/g, '/')
+      return `http://localhost:3001/downloads/${rel}`
+    }
+  }
+  return clip.url || ''
+}
+
 // 클립의 실제 생성/수정 시각(2026-09-14) — "M/D HH:MM" 형식, 오늘이면 시간만.
 function formatClipTimestamp(ms) {
   if (!ms) return ''
@@ -202,6 +218,10 @@ export default function VideoTab() {
   // 사용자가 05_video의 기존 파일을 before/로 옮긴 뒤 예전 클립칸이 빈 화면으로 보임).
   // url별로 로드 실패 여부만 기록해 명확한 안내 문구로 대체.
   const [videoLoadErrors, setVideoLoadErrors] = useState({})   // { [url]: true }
+  // PIP 컷(CUT4류) 미리보기를 "배경 원본" ↔ "PIP 세그" 전환 — 별도 작은 <video>를 새로 만들면
+  // 로딩이 불안정하고 깜빡인다는 실측 피드백(2026-09-17) — 기존에 이미 잘 동작하는 메인
+  // 미리보기 <video>(에러처리·onLoadedData 다 갖춘)를 그대로 재사용하는 쪽으로 변경.
+  const [pipPreviewMode, setPipPreviewMode] = useState({})     // { [cutId]: 'bg' | 'clip' }
   const matchFileInputRef = useRef(null)
 
   useEffect(() => {
@@ -949,23 +969,43 @@ export default function VideoTab() {
       // 전에 먼저 그 세그만 배경 컷 위에 PIP로 합성해서 결과 파일로 바꿔치기한다
       // ([[project_script_prompt_qc_guards]] "PIP" 설계를 실제로 구현, 2026-09-17).
       const pipSegs = cut.pipSegments || {}
-      const clipsForRender = clips.map(c => ({
-        file: c.stagedPath, trimStart: c.trimStart, trimEnd: c.trimEnd,
-        useFullDuration: c.useFullDuration, keepAudio: c.keepAudio,
-      }))
+      // targetSegIdx로 배경 소스로만 쓰이는 세그(예: 세그1=화면녹화)는 최종 이어붙이기에서
+      // 제외 — 안 그러면 [배경 단독][배경+리액션 PIP]가 순서대로 붙어서 배경이 두 번 나온다
+      // (2026-09-17, CUT3처럼 클립1/2 업로드하는 구조로 바꾸면서 새로 생긴 위험).
+      const pipBgSegIndices = new Set(
+        Object.values(pipSegs).filter(spec => spec.targetSegIdx != null).map(spec => Number(spec.targetSegIdx))
+      )
+      const clipsForRender = clips
+        .map((c, i) => ({ i, c }))
+        .filter(({ i }) => !pipBgSegIndices.has(i))
+        .map(({ c }) => ({
+          file: c.stagedPath, trimStart: c.trimStart, trimEnd: c.trimEnd,
+          useFullDuration: c.useFullDuration, keepAudio: c.keepAudio,
+        }))
+      // 위에서 배경 세그를 걸러냈으니, 이후 pip 루프의 idx(원본 clips 인덱스)를
+      // clipsForRender 인덱스로 재매핑해야 한다.
+      const origToRenderIdx = {}
+      { let r = 0; clips.forEach((c, i) => { if (!pipBgSegIndices.has(i)) { origToRenderIdx[i] = r; r++ } }) }
       for (const [segNoStr, spec] of Object.entries(pipSegs)) {
         const idx = Number(segNoStr) - 1
-        if (idx < 0 || idx >= clipsForRender.length) continue
-        setComposeLog(p => ({ ...p, [cut.id]: `세그${segNoStr} PIP 합성 중 (CUT${spec.target} 위에)…` }))
+        if (idx < 0 || idx >= clips.length || origToRenderIdx[idx] == null) continue
+        // 2026-09-17 재설계 — targetSegIdx(같은 컷의 다른 세그, 예: 세그1=화면녹화 배경)
+        // 우선, 없으면 예전 targetCutNo(다른 컷 번호) 방식 폴백.
+        const bgLabel = spec.targetSegIdx != null ? `세그${Number(spec.targetSegIdx) + 1}` : `CUT${spec.target}`
+        setComposeLog(p => ({ ...p, [cut.id]: `세그${segNoStr} PIP 합성 중 (${bgLabel} 위에)…` }))
         const pr = await fetch('http://localhost:3001/api/render-pip-composite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ epNum, cutNo: cut.no, segIdx: idx, targetCutNo: spec.target, layout: spec.layout, scale: spec.scale, bgVolume: spec.bgVolume }),
+          body: JSON.stringify({
+            epNum, cutNo: cut.no, segIdx: idx,
+            targetSegIdx: spec.targetSegIdx, targetCutNo: spec.targetSegIdx != null ? undefined : spec.target,
+            layout: spec.layout, scale: spec.scale, bgVolume: spec.bgVolume,
+          }),
         })
         const pd = await pr.json()
         if (!pr.ok) throw new Error(`세그${segNoStr} PIP 합성 실패: ${pd.error || pr.status}`)
         // 합성 결과는 이미 PIP 클립 길이로 -t 트림돼 있으므로 그대로 전체 사용.
-        clipsForRender[idx] = { file: pd.outputPath, useFullDuration: true, keepAudio: true }
+        clipsForRender[origToRenderIdx[idx]] = { file: pd.outputPath, useFullDuration: true, keepAudio: true }
       }
       setComposeLog(p => ({ ...p, [cut.id]: '클립 이어붙이는 중…' }))
       const r = await fetch('http://localhost:3001/api/render-cut-clips', {
@@ -1400,7 +1440,7 @@ export default function VideoTab() {
               <div className={s.cutCardVideoCol} onClick={e => e.stopPropagation()}>
                 {previewClip ? (
                   <div className={s.cutCardVideoInner}>
-                    <video key={previewClip.url} src={previewClip.url} controls className={s.cutCardVideoPlayer}
+                    <video key={resolveClipSrc(previewClip)} src={resolveClipSrc(previewClip)} controls className={s.cutCardVideoPlayer}
                       onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
                       onLoadedData={() => setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n })} />
                     {videoLoadErrors[previewClip.url] && (
@@ -1682,25 +1722,6 @@ export default function VideoTab() {
                         </button>
                       )
                     })}
-                  </div>
-                )}
-                {selCut.pipSegments && (
-                  <div onClick={e => e.stopPropagation()} style={{ margin: '4px 0 8px' }}>
-                    <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 4 }}>📼 화면녹화 원본(PIP 배경) — 참고용, 세그 슬롯과 무관</div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                      {[...new Set(Object.values(selCut.pipSegments).map(s => s.target))].map(targetNo => {
-                        const padded = String(targetNo).padStart(2, '0')
-                        const base = epMediaUrl(state.episode, 'video')
-                        const srcSource = `${base}/cut_${padded}_pip_bg_source.mp4?t=${Date.now()}`
-                        const srcPlain = `${base}/cut_${padded}.mp4?t=${Date.now()}`
-                        return (
-                          <video key={targetNo} controls muted
-                            style={{ width: 220, height: 124, background: '#000', borderRadius: 6 }}
-                            src={srcSource}
-                            onError={e => { if (e.target.src !== srcPlain) e.target.src = srcPlain }} />
-                        )
-                      })}
-                    </div>
                   </div>
                 )}
                 {selCut.pipSegments && (

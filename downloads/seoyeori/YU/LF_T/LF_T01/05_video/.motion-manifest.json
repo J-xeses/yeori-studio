@@ -7,24 +7,34 @@
     "producedAt": "2026-09-17T04:20:29.315Z"
   },
   "4": {
-    "method": "multi-clip-compose",
+    "method": "s2c-video",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-09-17T08:30:56.825Z"
+    "duration": 10,
+    "producedAt": "2026-09-17T09:09:02.172Z",
+    "subtitle": true,
+    "subtitleEffect": "slam",
+    "subtitleAt": "2026-09-17T09:09:19.231Z"
   },
   "6": {
-    "method": "clip-record",
+    "method": "s2c-video",
     "motion": null,
     "baked": true,
     "duration": 10,
-    "producedAt": "2026-09-17T04:21:29.423Z"
+    "producedAt": "2026-09-17T09:19:12.702Z",
+    "subtitle": true,
+    "subtitleEffect": "slam",
+    "subtitleAt": "2026-09-17T09:19:20.854Z"
   },
   "8": {
-    "method": "clip-record",
+    "method": "s2c-video",
     "motion": null,
     "baked": true,
     "duration": 10,
-    "producedAt": "2026-09-17T04:21:50.439Z"
+    "producedAt": "2026-09-17T09:22:03.373Z",
+    "subtitle": true,
+    "subtitleEffect": "slam",
+    "subtitleAt": "2026-09-17T09:22:12.674Z"
   },
   "10": {
     "method": "graphic",
@@ -55,11 +65,11 @@
     "producedAt": "2026-09-08T14:11:07.491Z"
   },
   "20": {
-    "method": "clip-record",
+    "method": "s2c-video",
     "motion": null,
     "baked": true,
-    "duration": 8,
-    "producedAt": "2026-09-17T04:24:55.279Z"
+    "duration": 10,
+    "producedAt": "2026-09-17T09:31:55.695Z"
   },
   "22": {
     "method": "graphic",

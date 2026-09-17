@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -1134,7 +1134,7 @@
           "subtitle": "",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
-          "duration": 8,
+          "duration": 10,
           "shotType": "FULLBODY",
           "cutType": "BROLL",
           "cutMark": "NORMAL",
@@ -3390,7 +3390,7 @@
       "subtitle": "",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 없음 (서여리 나레이션이 설명)\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B06_pick.mp4",
-      "duration": 8,
+      "duration": 10,
       "shotType": "FULLBODY",
       "cutType": "BROLL",
       "cutMark": "NORMAL",
@@ -3685,25 +3685,26 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-17T08:20:46.837Z",
+  "savedAt": "2026-09-17T08:53:39.445Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [],
       "cut-2": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789626553597",
-          "name": "cut_02_a.mp4",
+          "url": "blob:http://localhost:5173/71b6ce88-fc97-497e-8b9a-8ff9fbf935e6",
+          "name": "Two_women_sharing_phone_screen_20260916132802.mp4",
           "duration": 10.01,
           "trimStart": 0,
           "trimEnd": 10.01,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1789219488369.481
+          "createdAt": 1789536581631,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_0.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/edc5b4f9-b06f-417e-aed7-0a7b0e5d8d14",
+          "url": "blob:http://localhost:5173/41d3573b-6693-4e55-919c-e7ec6dfaf190",
           "name": "Two_women_expressing_shock_20260916142302.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -3713,7 +3714,19 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789536182397,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_-1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_1.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789634672251",
+          "name": "cut_02_a.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
+          "keepAudio": true,
+          "createdAt": 1789219488369.481
         }
       ],
       "cut-1": [
@@ -3872,16 +3885,17 @@
       ],
       "cut-3": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_03.mp4?t=1789631506452",
-          "name": "cut_03.mp4",
+          "url": "blob:http://localhost:5173/39a60045-ea27-47cc-aac9-4bbafda8526c",
+          "name": "Woman_speaking_on_sofa_20260916152609.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_03.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1789219267000
+          "createdAt": 1789539969637,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
         }
       ],
       "cut-6": [
@@ -3914,7 +3928,7 @@
       ],
       "cut-4": [
         {
-          "url": "blob:http://localhost:5173/3467ba9f-eb8f-4345-9a60-e9acf9bc9586",
+          "url": "blob:http://localhost:5173/3f54e851-1f25-461b-b94f-80575295ce12",
           "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -3929,42 +3943,9 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-6",
     "subtitles": {
       "cut-1": "",
-      "cut-2": [
-        {
-          "start": 0,
-          "end": 10.01,
-          "text": "지아 \"아, 아~ 이거 봤어?\""
-        },
-        {
-          "start": 10.01,
-          "end": 20.02,
-          "text": "서여리 놀란 표정으로 화면 전환"
-        }
-      ],
-      "cut-4": [
-        {
-          "start": 0,
-          "end": 10,
-          "text": "데뷔 3년차 / 글로벌 팬덤 보유"
-        }
-      ],
-      "cut-6": [
-        {
-          "start": 0,
-          "end": 10,
-          "text": "데뷔 1년차 / 버블 에너지"
-        }
-      ],
-      "cut-8": [
-        {
-          "start": 0,
-          "end": 10,
-          "text": "처음부터 글로벌 타깃"
-        }
-      ],
       "cut-20": [
         {
           "start": 0,

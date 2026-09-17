@@ -6777,9 +6777,9 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
 }
 
 app.post('/api/render-pip-composite', async (req, res) => {
-  const { epNum, cutNo, segIdx, targetCutNo, layout, scale, bgVolume } = req.body || {}
-  if (!epNum || cutNo == null || segIdx == null || !targetCutNo) {
-    return res.status(400).json({ error: 'epNum, cutNo, segIdx, targetCutNo 필요' })
+  const { epNum, cutNo, segIdx, targetCutNo, targetSegIdx, layout, scale, bgVolume } = req.body || {}
+  if (!epNum || cutNo == null || segIdx == null || (!targetCutNo && targetSegIdx == null)) {
+    return res.status(400).json({ error: 'epNum, cutNo, segIdx, (targetCutNo 또는 targetSegIdx) 필요' })
   }
   try {
     const state = loadStudioState()
@@ -6790,26 +6790,36 @@ app.post('/api/render-pip-composite', async (req, res) => {
     if (!pipClip?.stagedPath || !fs.existsSync(pipClip.stagedPath)) {
       return res.status(400).json({ error: `세그먼트 ${Number(segIdx) + 1}의 스테이징된 클립 파일이 없습니다 — 먼저 업로드/스테이징하세요.` })
     }
-    const targetPadded = String(targetCutNo).padStart(2, '0')
     const padded = String(cutNo).padStart(2, '0')
     const rawDir = path.join(mp.makingDir(epNum), 'raw')
     fs.mkdirSync(rawDir, { recursive: true })
-    let bgFile = path.join(mp.videoDir(epNum), `cut_${targetPadded}.mp4`)
-    // 자기 자신 위에 합성하는 경우(예: CUT4가 자기 MV 배경 위에 자기 리액션 세그를 PIP로 얹음,
-    // 2026-09-17) — bgFile과 최종 render-cut-clips 출력이 같은 cut_NN.mp4라서, 합성을 두 번
-    // 돌리면 두 번째부터는 "이미 PIP 합성된 화면" 위에 또 PIP를 얹어버리는 문제가 생긴다.
-    // 최초 1회 순수 배경을 cut_NN_pip_bg_source.mp4로 보존해두고, 이후엔 항상 그걸 배경으로 씀.
-    if (Number(targetCutNo) === Number(cutNo)) {
-      const pristineBg = path.join(mp.videoDir(epNum), `cut_${targetPadded}_pip_bg_source.mp4`)
-      if (!fs.existsSync(pristineBg)) {
-        if (!fs.existsSync(bgFile)) {
-          return res.status(400).json({ error: `배경으로 쓸 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷 자체를 제작하세요.` })
-        }
-        fs.copyFileSync(bgFile, pristineBg)
+    let bgFile
+    if (targetSegIdx != null) {
+      // 2026-09-17 재설계 — 배경(화면녹화)과 리액션을 CUT3처럼 같은 컷의 클립1/클립2로 각각
+      // 업로드받아서, 서로 다른 파일이라 self-ref 걱정이 없다(예전 targetCutNo 자기참조 방식은
+      // cut_NN.mp4를 배경이자 출력으로 같이 써서 pristine 백업이 필요했는데 이제 불필요).
+      const bgClip = clips[Number(targetSegIdx)]
+      if (!bgClip?.stagedPath || !fs.existsSync(bgClip.stagedPath)) {
+        return res.status(400).json({ error: `배경 세그먼트 ${Number(targetSegIdx) + 1}의 스테이징된 클립 파일이 없습니다 — 먼저 업로드/스테이징하세요.` })
       }
-      bgFile = pristineBg
-    } else if (!fs.existsSync(bgFile)) {
-      return res.status(400).json({ error: `배경 컷 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷을 제작/합성하세요.` })
+      bgFile = bgClip.stagedPath
+    } else {
+      const targetPadded = String(targetCutNo).padStart(2, '0')
+      bgFile = path.join(mp.videoDir(epNum), `cut_${targetPadded}.mp4`)
+      // 자기 자신 위에 합성하는 구식 경로(다른 컷 번호를 배경으로 삼되 그 컷 번호가 곧 이 컷
+      // 자신인 경우) — bgFile과 최종 출력이 같은 파일이 될 수 있어 pristine 백업 필요.
+      if (Number(targetCutNo) === Number(cutNo)) {
+        const pristineBg = path.join(mp.videoDir(epNum), `cut_${targetPadded}_pip_bg_source.mp4`)
+        if (!fs.existsSync(pristineBg)) {
+          if (!fs.existsSync(bgFile)) {
+            return res.status(400).json({ error: `배경으로 쓸 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷 자체를 제작하세요.` })
+          }
+          fs.copyFileSync(bgFile, pristineBg)
+        }
+        bgFile = pristineBg
+      } else if (!fs.existsSync(bgFile)) {
+        return res.status(400).json({ error: `배경 컷 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷을 제작/합성하세요.` })
+      }
     }
     const outPath = path.join(rawDir, `cut_${padded}_pip_seg${Number(segIdx) + 1}.mp4`)
     const { w: CW, h: CH } = episodeCutDims(epNum)
