@@ -2965,13 +2965,23 @@ async function editBrollRaw({ rawPath, cutNo, epNum, targetDuration, trimMode })
   const padded = String(cutNo).padStart(2, '0')
   const finalPath = path.join(finalDir, `cut_${padded}.mp4`)
 
+  // 화면 녹화 당시 시스템/탭 볼륨이 낮으면 스테레오 믹스가 그대로 작게 잡아버림(2026-09-17
+  // 실측: 평균 -52dB, 최대 -38dB — 재생하면 거의 무음처럼 들림). 매번 사람이 녹화 전 볼륨을
+  // 최대로 맞추게 강제하는 대신, 최종 편집 단계에서 dynaudnorm으로 자동 보정 — 조용한 구간은
+  // 키우고 원래 크던 구간은 클리핑 없이 유지(고정 dB 부스트보다 안전).
+  const rawHasAudio = await hasAudioStream(rawPath)
+
   await new Promise((resolve, reject) => {
     const args = ['-y']
     if (ssOffset > 0) args.push('-ss', String(ssOffset))
+    args.push('-i', rawPath, '-t', String(target))
+    args.push('-vf', `scale=${CW}:${CH}:force_original_aspect_ratio=increase,crop=${CW}:${CH},format=yuv420p`)
+    // 스테레오 믹스로 잡히는 실제 녹음이 워낙 작아서(실측 최대 -38dB) dynaudnorm 기본
+    // 게인상한(약 +20dB, m=10)으로는 -19dB까지밖에 안 올라와 여전히 작게 들림(2026-09-17
+    // 사용자 재확인) — m=50(약 +34dB 상한)으로 올려서 실측 최대 -4dB까지 확인, 이 정도면
+    // 확실히 들리는 수준.
+    if (rawHasAudio) args.push('-af', 'dynaudnorm=f=200:g=15:m=50:p=0.95', '-c:a', 'aac', '-b:a', '192k')
     args.push(
-      '-i', rawPath,
-      '-t', String(target),
-      '-vf', `scale=${CW}:${CH}:force_original_aspect_ratio=increase,crop=${CW}:${CH},format=yuv420p`,
       '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-g', '60', '-movflags', '+faststart',
       finalPath,
     )
@@ -3074,10 +3084,19 @@ async function assembleMakingFilm(epNum) {
   if (!cuts.length) { const e = new Error('컷이 없습니다'); e.statusCode = 400; throw e }
 
   const videoDir = mp.videoDir(epNum)
+  // concat-video와 동일 이유 — 다른 컷의 PIP 배경 소스로만 쓰이는 컷은 독립된 컷으로 또
+  // 나오면 안 됨(2026-09-17). 파일은 남겨두고 이 조립에서만 제외.
+  const pipTargets = new Set()
+  for (const c of cuts) {
+    for (const spec of Object.values(c.pipSegments || {})) {
+      if (spec?.target != null) pipTargets.add(Number(spec.target))
+    }
+  }
   const includedCuts = []
   const skippedCuts = []
   const files = []
   for (const c of cuts) {
+    if (pipTargets.has(c.no)) continue
     const padded = String(c.no).padStart(2, '0')
     // 파생본 우선순위: 모션 자막(_subtitle) > 손글씨 오버레이(_overlay) > 원본 cut_NN.mp4.
     // (원본은 항상 보존 — 파생본은 그 위에 얹은 결과)
@@ -4496,6 +4515,19 @@ app.post('/api/concat-video', async (req, res) => {
       const m = f.match(/^cut_(\d+)(?:_final)?\.mp4$/)
       if (m) cutNums.add(parseInt(m[1], 10))
     }
+    // 다른 컷의 PIP 배경 소스로만 쓰이는 컷(예: CUT4가 CUT3 세그3의 PIP 배경)은 최종
+    // 타임라인에 독립된 컷으로 또 나오면 같은 내용이 두 번 보인다 — 최종 조립에서 제외.
+    // 파일은 그대로 둠(PIP 합성이 계속 그 파일을 배경으로 읽어야 함), 이어붙이기에서만 스킵.
+    try {
+      const st = loadStudioState()
+      const pipTargets = new Set()
+      for (const c of st.cuts || []) {
+        for (const spec of Object.values(c.pipSegments || {})) {
+          if (spec?.target != null) pipTargets.add(Number(spec.target))
+        }
+      }
+      for (const n of pipTargets) cutNums.delete(n)
+    } catch { /* studio-state 못 읽으면 필터 없이 기존 동작 */ }
     const sortedNums = [...cutNums].sort((a, b) => a - b)
     if (!sortedNums.length) return res.status(404).json({ error: `cut_NN.mp4 파일 없음` })
 

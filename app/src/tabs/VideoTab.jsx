@@ -642,16 +642,21 @@ export default function VideoTab() {
         const dur = Math.round(vid.duration * 100) / 100
         const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
         const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: !!cut?.dialogue, createdAt: f.lastModified || Date.now() }
-        let clipIdx = -1
+        // ⚠️ setVideoClips는 이제 UPDATE_TAB_FIELD로 리듀서 안에서 나중에 계산되므로(스테일
+        // 클로저 버그 수정, 2026-09-16), updater 콜백 안에서 바깥 clipIdx 변수를 대입해도
+        // 그 대입은 "언젠가 리듀서가 처리할 때" 일어나지, 바로 아래 stageClip 호출 시점엔
+        // 아직 실행 전이라 clipIdx가 항상 초기값(-1)인 채로 넘어가버림 — 실측 확인(2026-09-17,
+        // 세그1·세그3이 둘 다 cut_NN_clip_-1.mp4로 스테이징되어 서로 덮어씀). targetIdx가
+        // 있는 경우는 애초에 updater 안 거치고 바로 쓰면 되고, append(끝에 추가) 경우는
+        // "existing.length"를 동기적으로 알 방법이 없으니 충돌 걱정 없는 고유값(타임스탬프)을 씀.
+        const clipIdx = targetIdx != null ? targetIdx : `new${Date.now()}`
         setVideoClips(p => {
           const existing = p[cutId] || []
           if (targetIdx != null) {
-            clipIdx = targetIdx
             const arr = [...existing]
             arr[targetIdx] = obj
             return { ...p, [cutId]: arr }
           }
-          clipIdx = existing.length
           return { ...p, [cutId]: [...existing, obj] }
         })
         if (cut) stageClip(cutId, cut.no, clipIdx, f, url)
@@ -688,10 +693,11 @@ export default function VideoTab() {
       useFullDuration: true, ratio: item.ratio, staging: true, keepAudio: !!cut.dialogue,
       createdAt: item.file.lastModified || Date.now(),
     }
-    let clipIdx = -1
+    // handleVideoUpload과 동일 이유 — updater 안에서의 clipIdx 대입은 리듀서가 처리할 때까지
+    // 미뤄지므로 여기서 곧장 못 읽는다. 충돌 걱정 없는 고유값(타임스탬프)을 대신 씀.
+    const clipIdx = `new${Date.now()}`
     setVideoClips(p => {
       const existing = p[cut.id] || []
-      clipIdx = existing.length
       return { ...p, [cut.id]: [...existing, obj] }
     })
     stageClip(cut.id, cut.no, clipIdx, item.file, item.url)

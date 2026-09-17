@@ -7,11 +7,11 @@
     "producedAt": "2026-09-17T04:20:29.315Z"
   },
   "4": {
-    "method": "record",
+    "method": "s2c-video",
     "motion": null,
     "baked": true,
     "duration": 10,
-    "producedAt": "2026-09-17T06:24:53.975Z"
+    "producedAt": "2026-09-17T07:13:53.652Z"
   },
   "6": {
     "method": "clip-record",
