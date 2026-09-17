@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -226,7 +226,7 @@
           "scene": "LE SSERAFIM MV 대표 장면. CUT 2 직후 스와이프 전환.",
           "action": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
           "character": "서여리",
-          "dialogue": "",
+          "dialogue": "이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸?",
           "narration": "",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
@@ -321,7 +321,7 @@
           "scene": "서여리 소파 오른쪽 MCU 포커스(45도 측면), 한지아 왼쪽 가장자리 아웃포커스 잔존. ILLIT 설명. 톤 살짝 밝게 세그3은 CUT6(ILLIT MV) 위에 우하단 PIP(30%)로 합성.",
           "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
           "character": "서여리(오른쪽·포커스), 한지아(왼쪽 가장자리·아웃포커스)",
-          "dialogue": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... || 어떻게 설명하지?...... 버블 같아요, 버블... || 터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
+          "dialogue": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... || 어떻게 설명하지?...... 버블 같아요, 버블...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera — another woman (Hanjia) visible on the left edge of frame, slightly out of focus, same sofa continuous space from previous cuts,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -362,7 +362,6 @@
           },
           "segments": [
             10,
-            8,
             8
           ],
           "segTiming": [
@@ -386,8 +385,7 @@
           ],
           "subtitleSegments": [
             "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜",
-            "어떻게 설명하지? 버블 같아요, 버블",
-            "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+            "어떻게 설명하지? 버블 같아요, 버블"
           ],
           "pipSegments": {
             "3": {
@@ -406,7 +404,7 @@
           "scene": "ILLIT MV 버블 에너지 장면. CUT 3 직후 스와이프 전환.",
           "action": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
           "character": "서여리",
-          "dialogue": "",
+          "dialogue": "터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
           "narration": "",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
@@ -490,7 +488,7 @@
           "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게 세그3은 CUT8(KATSEYE MV) 위에 우하단 PIP(30%)로 합성.",
           "action": "눈빛이 분석적으로 변하는 순간 포착",
           "character": "서여리",
-          "dialogue": "KATSEYE는 좀 달라요...  미국을 중심으로 활동하지만~~ || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스에... 경계 자체가 없는 세계관!",
+          "dialogue": "KATSEYE는 좀 달라요...  미국을 중심으로 활동하지만~~ || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -531,11 +529,13 @@
           },
           "segments": [
             8,
-            8,
             8
           ],
           "segTiming": [
-            null,
+            [
+              1,
+              6
+            ],
             [
               1,
               7
@@ -552,8 +552,7 @@
           ],
           "subtitleSegments": [
             "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만",
-            "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
-            "LA 베이스. 경계 자체가 없는 세계관!"
+            "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?"
           ],
           "pipSegments": {
             "3": {
@@ -572,7 +571,7 @@
           "scene": "KATSEYE MV 글로벌 감성 장면. CUT 4 직후 스와이프 전환.",
           "action": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
           "character": "서여리",
-          "dialogue": "",
+          "dialogue": "LA 베이스에... 경계 자체가 없는 세계관!",
           "narration": "",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
@@ -776,7 +775,7 @@
           "dialogue": "",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind,\nsitting side by side on a beige sofa, facing a TV across the room, watching together,\n\nOn the left: short wavy black hair with fringe bangs, back of head and shoulders visible,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short, back of head and shoulders visible,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front, ivory wide-leg tailored trousers,\n\nTV screen visible across the room showing only a blurred/abstract colorful glow, never legible text or UI,\nwarm cozy evening lighting, soft TV light flickering on the back of the sofa and their hair,\nNo other people in background — only the named characters in frame, plain empty background,\nBarefoot or socks only, no shoes worn (indoor home setting),\nPhotorealistic 8K cinematic 16:9",
+          "imagePrompt": "Character design anchors (apply to ALL shots):\nG2 — short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, delicate silver chain necklace.\nG4 — long wavy dark brown hair (NOT short), subtle natural skin texture on right cheek, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, delicate gold necklace.",
           "videoPrompt": "First 0-4s: WIDE SHOT from behind — both women seated on the sofa, backs to camera, facing a TV across the room showing only a blurred/abstract colorful glow (never legible text or UI). Jia (left) sits upright and composed; Yeori (right) leans slightly forward, intensely focused, watching the screen. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut to MCU two-shot, facing them]\nNext 4-10s: both women sit facing forward, camera beginning a slow push-in,\nJia starts calm and composed, Yeori intensely focused from the start.\nJia's body slowly leans forward, absorbed, expression softening,\nYeori glances briefly at Jia then refocuses forward,\nsoft warm TV light flickering on their faces, screen itself not visible from this angle,\nno dialogue, pure reaction",
           "duration": 10,
           "shotType": "CLOSEUP",
@@ -2568,7 +2567,7 @@
       "scene": "LE SSERAFIM MV 대표 장면. CUT 2 직후 스와이프 전환.",
       "action": "LE SSERAFIM 파트 + \"Easy\" 오마주 씬",
       "character": "서여리",
-      "dialogue": "",
+      "dialogue": "이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸?",
       "narration": "",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
@@ -2663,7 +2662,7 @@
       "scene": "서여리 소파 오른쪽 MCU 포커스(45도 측면), 한지아 왼쪽 가장자리 아웃포커스 잔존. ILLIT 설명. 톤 살짝 밝게 세그3은 CUT6(ILLIT MV) 위에 우하단 PIP(30%)로 합성.",
       "action": "설명 중 살짝 들뜨는 표정. 가벼운 손짓.",
       "character": "서여리(오른쪽·포커스), 한지아(왼쪽 가장자리·아웃포커스)",
-      "dialogue": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... || 어떻게 설명하지?...... 버블 같아요, 버블... || 터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
+      "dialogue": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... || 어떻게 설명하지?...... 버블 같아요, 버블...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera — another woman (Hanjia) visible on the left edge of frame, slightly out of focus, same sofa continuous space from previous cuts,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -2704,7 +2703,6 @@
       },
       "segments": [
         10,
-        8,
         8
       ],
       "segTiming": [
@@ -2728,8 +2726,7 @@
       ],
       "subtitleSegments": [
         "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜",
-        "어떻게 설명하지? 버블 같아요, 버블",
-        "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+        "어떻게 설명하지? 버블 같아요, 버블"
       ],
       "pipSegments": {
         "3": {
@@ -2748,7 +2745,7 @@
       "scene": "ILLIT MV 버블 에너지 장면. CUT 3 직후 스와이프 전환.",
       "action": "ILLIT 파트 + \"Cherish\" 오마주 씬. 버블 에너지 강한 장면.",
       "character": "서여리",
-      "dialogue": "",
+      "dialogue": "터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
       "narration": "",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
@@ -2832,7 +2829,7 @@
       "scene": "서여리 ECU. KATSEYE 설명. 진지하고 날카롭게 세그3은 CUT8(KATSEYE MV) 위에 우하단 PIP(30%)로 합성.",
       "action": "눈빛이 분석적으로 변하는 순간 포착",
       "character": "서여리",
-      "dialogue": "KATSEYE는 좀 달라요...  미국을 중심으로 활동하지만~~ || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요? || LA 베이스에... 경계 자체가 없는 세계관!",
+      "dialogue": "KATSEYE는 좀 달라요...  미국을 중심으로 활동하지만~~ || 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -2873,11 +2870,13 @@
       },
       "segments": [
         8,
-        8,
         8
       ],
       "segTiming": [
-        null,
+        [
+          1,
+          6
+        ],
         [
           1,
           7
@@ -2894,8 +2893,7 @@
       ],
       "subtitleSegments": [
         "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만",
-        "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
-        "LA 베이스. 경계 자체가 없는 세계관!"
+        "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?"
       ],
       "pipSegments": {
         "3": {
@@ -2914,7 +2912,7 @@
       "scene": "KATSEYE MV 글로벌 감성 장면. CUT 4 직후 스와이프 전환.",
       "action": "KATSEYE 파트 + \"Touch\" 오마주 씬. LA 촬영 유닛 — 시각적으로 다른 분위기.",
       "character": "서여리",
-      "dialogue": "",
+      "dialogue": "LA 베이스에... 경계 자체가 없는 세계관!",
       "narration": "",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
@@ -3118,7 +3116,7 @@
       "dialogue": "",
       "narration": "",
       "subtitle": "",
-      "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind,\nsitting side by side on a beige sofa, facing a TV across the room, watching together,\n\nOn the left: short wavy black hair with fringe bangs, back of head and shoulders visible,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short, back of head and shoulders visible,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front, ivory wide-leg tailored trousers,\n\nTV screen visible across the room showing only a blurred/abstract colorful glow, never legible text or UI,\nwarm cozy evening lighting, soft TV light flickering on the back of the sofa and their hair,\nNo other people in background — only the named characters in frame, plain empty background,\nBarefoot or socks only, no shoes worn (indoor home setting),\nPhotorealistic 8K cinematic 16:9",
+      "imagePrompt": "Character design anchors (apply to ALL shots):\nG2 — short wavy black hair with fringe bangs, dark mauve-brown lip, sharp eyeliner, white fitted short-sleeve tee, blue distressed denim cutoff shorts with frayed hem, delicate silver chain necklace.\nG4 — long wavy dark brown hair (NOT short), subtle natural skin texture on right cheek, white slim ribbed crop inner tee, navy blue fitted open-front cardigan, ivory wide-leg tailored trousers, black leather belt with silver chain detail, delicate gold necklace.",
       "videoPrompt": "First 0-4s: WIDE SHOT from behind — both women seated on the sofa, backs to camera, facing a TV across the room showing only a blurred/abstract colorful glow (never legible text or UI). Jia (left) sits upright and composed; Yeori (right) leans slightly forward, intensely focused, watching the screen. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut to MCU two-shot, facing them]\nNext 4-10s: both women sit facing forward, camera beginning a slow push-in,\nJia starts calm and composed, Yeori intensely focused from the start.\nJia's body slowly leans forward, absorbed, expression softening,\nYeori glances briefly at Jia then refocuses forward,\nsoft warm TV light flickering on their faces, screen itself not visible from this angle,\nno dialogue, pure reaction",
       "duration": 10,
       "shotType": "CLOSEUP",
@@ -3857,7 +3855,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-17T11:58:44.787Z",
+  "savedAt": "2026-09-17T13:32:17.507Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [],
@@ -4382,92 +4380,44 @@
       ],
       "cut-3__v1": [
         {
-          "id": "track_1789346165885_oi1x",
           "type": "dialogue",
-          "text": "LE SSERAFIM은요, 데뷔 3년 차인데~. 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_03_track_1789346165885_oi1x.mp3?t=1789346238397",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
+          "text": "LE SSERAFIM은요, 데뷔 3년 차인데~. 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸?",
+          "speaker": null
         }
       ],
       "cut-4__v1": [
         {
-          "id": "track_1789346165885_bned",
           "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
+          "text": "이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸?",
+          "speaker": null
         }
       ],
       "cut-5__v1": [
         {
-          "id": "track_1789346165885_sp2q",
           "type": "dialogue",
-          "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지? 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
+          "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜... 어떻게 설명하지? 버블 같아요, 버블...",
+          "speaker": null
         }
       ],
       "cut-6__v1": [
         {
-          "id": "track_1789346165885_yl5m",
           "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
+          "text": "터질 것 같은데~ 터지면 또 귀여운 그 느낌?~",
+          "speaker": null
         }
       ],
       "cut-7__v1": [
         {
-          "id": "track_1789346165885_i74f",
           "type": "dialogue",
-          "text": "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~ LA 베이스. 경계 자체가 없는 세계관!",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
+          "text": "KATSEYE는 좀 달라요... 미국을 중심으로 활동하지만~~. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
+          "speaker": null
         }
       ],
       "cut-8__v1": [
         {
-          "id": "track_1789346165885_5317",
           "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
+          "text": "LA 베이스에... 경계 자체가 없는 세계관!",
+          "speaker": null
         }
       ],
       "cut-9__v1": [
