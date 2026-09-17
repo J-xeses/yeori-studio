@@ -566,9 +566,18 @@ export default function VideoTab() {
         // 재확인: "그래서 아까 업로드 되도록 요청했던 것"). 이제 스캔되는 즉시 자동으로 클립칸에
         // 채운다 — addCandidateClip 내부에 이미 stagedPath 중복 방지가 있어 계속 자동
         // 호출해도 안전(이미 추가된 건 조용히 무시됨).
+        // ⚠️ 컷이 이미 계획된 세그 개수(cut.segments.length)만큼 다 채워져 있으면 더 이상
+        // 자동으로 안 채운다 — 안 그러면 05_video에 남아있는 옛날 단독 파일(예: cut_02_a.mp4)이
+        // 스캔될 때마다 계속 "세그3"으로 끼어들어서 무한히 다시 나타나는 버그가 있었음
+        // (2026-09-17 실측: "컷2는 세그3번 파일이 계속 생성된다").
+        const currentClips = state.videoTabState?.videoClips || {}
         for (const c of d.clips || []) {
           const cut = (state.cuts || []).find(x => x.no === c.cutNo)
-          if (cut) addCandidateClip(cut.id, cut.no, c)
+          if (!cut) continue
+          const plannedLen = Array.isArray(cut.segments) ? cut.segments.length : Infinity
+          const haveLen = (currentClips[cut.id] || []).filter(Boolean).length
+          if (haveLen >= plannedLen) continue
+          addCandidateClip(cut.id, cut.no, c)
         }
       })
       .catch(() => {})

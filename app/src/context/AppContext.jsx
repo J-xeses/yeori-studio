@@ -502,6 +502,7 @@ export function AppProvider({ children }) {
   const syncTimer     = useRef(null)
   const skipNextFileSync = useRef(false)
   const fileSyncTimer    = useRef(null)
+  const stateMtimeRef    = useRef(null) // 마지막으로 GET한 studio-state.json의 mtime — 외부(스크립트/MCP) 편집 충돌 감지용
 
   // 앱 시작 시 서버 데이터 로드 (studio-state.json 우선, 없으면 studio-data.json)
   useEffect(() => {
@@ -513,6 +514,7 @@ export function AppProvider({ children }) {
         const stateRes = await fetch(`${SERVER}/api/studio-state`, { signal: controller.signal })
         clearTimeout(tid)
         if (stateRes.ok) {
+          stateMtimeRef.current = stateRes.headers.get('X-State-Mtime')
           const stateData = await stateRes.json()
           if (stateData && Object.keys(stateData).length > 0) {
             skipNextSync.current = true
@@ -580,11 +582,26 @@ export function AppProvider({ children }) {
     clearTimeout(fileSyncTimer.current)
     fileSyncTimer.current = setTimeout(async () => {
       try {
-        await fetch(`${SERVER}/api/studio-state`, {
+        const res = await fetch(`${SERVER}/api/studio-state`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(stateMtimeRef.current != null ? { 'X-State-Base-Mtime': stateMtimeRef.current } : {}),
+          },
           body: JSON.stringify(state),
         })
+        // 409 = 이 탭이 마지막으로 읽은 뒤 다른 경로(직접 파일 편집/MCP)가 studio-state.json을
+        // 바꿨다는 뜻 — 이 탭의 구버전 state로 덮어쓰지 않고, 서버가 돌려준 최신 내용을 그대로
+        // 반영한다(2026-09-17, 반복되던 "고쳤는데 새로고침하면 도로 사라짐" 버그의 구조적 수정).
+        if (res.status === 409) {
+          const fresh = await res.json()
+          stateMtimeRef.current = res.headers.get('X-State-Mtime')
+          skipNextSync.current = true
+          skipNextFileSync.current = true
+          dispatch({ type: 'LOAD', p: migrateState(fresh, defaultState) })
+          return
+        }
+        stateMtimeRef.current = res.headers.get('X-State-Mtime') ?? stateMtimeRef.current
       } catch {}
     }, 3000)
   }, [state])

@@ -102,7 +102,7 @@ process.on('exit', (code) => {
   logToFile(`--- proxy 종료 (code ${code}) ---`)
 })
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'] }))
+app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'], exposedHeaders: ['X-State-Mtime'] }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/downloads', express.static(mp.DOWNLOADS))
 
@@ -563,6 +563,12 @@ app.get('/api/studio-state', (req, res) => {
   try {
     const state   = fs.existsSync(statePath)   ? JSON.parse(fs.readFileSync(statePath, 'utf-8'))   : {}
     const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+    // 브라우저 탭이 들고 있는 구버전 state가 3초 디바운스 자동저장으로 이 파일을 직접
+    // 수정한(스크립트/MCP 경유) 최신 내용을 덮어쓰는 사고가 반복됨(2026-09-17) — 클라이언트가
+    // 저장 시 "내가 마지막으로 읽은 시점의 mtime"을 같이 보내면 POST 핸들러가 충돌을 감지할
+    // 수 있도록, 조회 시점의 파일 mtime을 헤더로 같이 내려준다.
+    const mtime = fs.existsSync(statePath) ? fs.statSync(statePath).mtimeMs : 0
+    res.set('X-State-Mtime', String(mtime))
     res.json({ ...state, ...secrets })
   } catch {
     res.json({})
@@ -597,6 +603,20 @@ app.post('/api/studio-state', (req, res) => {
   const statePath   = path.join(CODE_ROOT, 'studio-state.json')
   const secretsPath = path.join(CODE_ROOT, 'studio-secrets.json')
   try {
+    // 충돌 감지: 클라이언트가 마지막으로 GET한 시점의 mtime(X-State-Base-Mtime)과 지금 디스크의
+    // 실제 mtime이 다르면, 그 사이 다른 경로(직접 스크립트/MCP 편집 등)가 파일을 바꾼 것 —
+    // 브라우저의 구버전 state로 덮어쓰지 않고 409로 거부, 최신 내용을 그대로 돌려줘서 클라이언트가
+    // 그걸 반영(LOAD)하도록 한다. 헤더가 없으면(구버전 클라이언트) 기존처럼 무조건 덮어씀.
+    const baseMtime = req.get('X-State-Base-Mtime')
+    if (baseMtime != null && fs.existsSync(statePath)) {
+      const curMtime = fs.statSync(statePath).mtimeMs
+      if (String(curMtime) !== String(baseMtime)) {
+        const state   = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
+        const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
+        res.set('X-State-Mtime', String(curMtime))
+        return res.status(409).json({ conflict: true, ...state, ...secrets })
+      }
+    }
     const { apiKeys, ...state } = req.body
     // saveStudioState()(MCP 경로)와 동일한 안전망 — 브라우저가 보낸 payload도 top-level cuts와
     // episodes[activeId].cuts가 어긋난 채로 저장될 수 있어(2026-09-16 반복 발견) 저장 직전 맞춤.
@@ -607,6 +627,7 @@ app.post('/api/studio-state', (req, res) => {
     if (apiKeys) {
       fs.writeFileSync(secretsPath, JSON.stringify({ apiKeys }, null, 2), 'utf-8')
     }
+    res.set('X-State-Mtime', String(fs.statSync(statePath).mtimeMs))
     res.json({ ok: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -3740,9 +3761,9 @@ app.post('/api/source-to-cut', async (req, res) => {
     // 영상 소스거나(실사 모션) 이미지에 모션을 얹었으면 baked. 모션 없는 정지 이미지만
     // baked:false — 그건 커터가 켄번스를 얹어도 되는 "원래 켄번스 대상"이다.
     const baked = isVideo || (meta.motion && meta.motion !== 'none')
-    recordCutMotion(epNum, cutNo, { method: isVideo ? 's2c-video' : 's2c-image', motion: meta.motion || null, baked, duration: dur })
+    recordCutMotion(epNum, cutNo, { method: isVideo ? 's2c-video' : 's2c-image', motion: meta.motion || null, baked, duration: dur, srcPath })
     const st = fs.statSync(outPath)
-    res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration: dur, fit: fitMode, baked, ...meta })
+    res.json({ success: true, outputPath: outPath, sizeKB: Math.round(st.size / 1024), duration: dur, fit: fitMode, baked, srcPath, ...meta })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: `소스→컷 실패: ${err.message}` })
   }
@@ -6799,10 +6820,21 @@ app.post('/api/render-pip-composite', async (req, res) => {
       // 업로드받아서, 서로 다른 파일이라 self-ref 걱정이 없다(예전 targetCutNo 자기참조 방식은
       // cut_NN.mp4를 배경이자 출력으로 같이 써서 pristine 백업이 필요했는데 이제 불필요).
       const bgClip = clips[Number(targetSegIdx)]
-      if (!bgClip?.stagedPath || !fs.existsSync(bgClip.stagedPath)) {
-        return res.status(400).json({ error: `배경 세그먼트 ${Number(targetSegIdx) + 1}의 스테이징된 클립 파일이 없습니다 — 먼저 업로드/스테이징하세요.` })
+      if (bgClip?.stagedPath && fs.existsSync(bgClip.stagedPath)) {
+        bgFile = bgClip.stagedPath
+      } else {
+        // 메이킹 탭의 "스튜디오 소스로 컷 제작"(source-to-cut)은 이 컷의 videoClips 세그가
+        // 아니라 05_video/cut_NN.mp4를 곧장 만든다 — 두 경로가 서로 연결이 안 돼서 세그
+        // 슬롯이 비어 보이던 문제(2026-09-17, 사용자 실측 "새로고침하면 계속 날아간다"의
+        // 진짜 원인). 세그에 스테이징된 게 없으면 이미 완성된 cut_NN.mp4를 배경으로 폴백.
+        const padded2 = String(cutNo).padStart(2, '0')
+        const alreadyProduced = path.join(mp.videoDir(epNum), `cut_${padded2}.mp4`)
+        if (fs.existsSync(alreadyProduced)) {
+          bgFile = alreadyProduced
+        } else {
+          return res.status(400).json({ error: `배경 세그먼트 ${Number(targetSegIdx) + 1}이 비어있습니다 — 세그1에 업로드하거나, 메이킹 탭에서 이 컷(cut_${padded2}.mp4)을 먼저 제작하세요.` })
+        }
       }
-      bgFile = bgClip.stagedPath
     } else {
       const targetPadded = String(targetCutNo).padStart(2, '0')
       bgFile = path.join(mp.videoDir(epNum), `cut_${targetPadded}.mp4`)

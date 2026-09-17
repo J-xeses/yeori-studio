@@ -7,14 +7,13 @@
     "producedAt": "2026-09-17T04:20:29.315Z"
   },
   "4": {
-    "method": "s2c-video",
+    "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "duration": 10,
-    "producedAt": "2026-09-17T09:09:02.172Z",
+    "producedAt": "2026-09-17T10:17:30.146Z",
     "subtitle": true,
     "subtitleEffect": "slam",
-    "subtitleAt": "2026-09-17T09:09:19.231Z"
+    "subtitleAt": "2026-09-17T10:34:36.285Z"
   },
   "6": {
     "method": "s2c-video",
@@ -24,7 +23,7 @@
     "producedAt": "2026-09-17T09:19:12.702Z",
     "subtitle": true,
     "subtitleEffect": "slam",
-    "subtitleAt": "2026-09-17T09:19:20.854Z"
+    "subtitleAt": "2026-09-17T10:34:52.805Z"
   },
   "8": {
     "method": "s2c-video",
@@ -34,7 +33,7 @@
     "producedAt": "2026-09-17T09:22:03.373Z",
     "subtitle": true,
     "subtitleEffect": "slam",
-    "subtitleAt": "2026-09-17T09:22:12.674Z"
+    "subtitleAt": "2026-09-17T10:35:07.435Z"
   },
   "10": {
     "method": "graphic",

@@ -225,13 +225,19 @@ function subtitleSeed(cut) {
 }
 function loadSubtitleCfg(cut) {
   const seed = subtitleSeed(cut)
-  return {
+  const base = {
     ...DEFAULT_SUBTITLE,
     style: { ...DEFAULT_SUBTITLE.style },
     entries: (seed
       ? [{ text: seed, start: 0.3, end: Math.min(3, cutDuration(cut)) }]
       : [{ ...DEFAULT_SUBTITLE.entries[0], end: Math.min(2, cutDuration(cut)) }]),
   }
+  // 컷에 저장된 값(cut.subtitleCfgSaved)이 있으면 그걸 기본값 위에 덮어씀 — 이전엔 이 함수가
+  // 항상 새 기본값(position:'bottom')만 반환해서, 탭 전환/새로고침으로 subtitleCfg(로컬 state)가
+  // 초기화될 때마다 "상단으로 바꿨는데 하단으로 되돌아간다"는 문제가 있었음(2026-09-17).
+  const saved = cut.subtitleCfgSaved
+  if (saved) return { ...base, ...saved, style: { ...base.style, ...(saved.style || {}) } }
+  return base
 }
 
 const OVERLAY_TIMINGS = [['full', '전체'], ['first2', '앞 2초'], ['first3', '앞 3초'], ['first5', '앞 5초']]
@@ -248,7 +254,7 @@ function overlayTimeRange(timing, duration) {
 const MANUAL_TYPES = ['GRAPHIC', 'BROLL', 'CAPCUT']
 
 export default function MakingTab() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const { episode, cuts, apiKeys } = state
   const epDims = cutDims(episode || {})   // 이 에피소드 컷 규격 (LF/SF=1920x1080)
   const episodeCode = resolveEpisodeCode(episode)
@@ -758,6 +764,9 @@ export default function MakingTab() {
       })
       const data = await r.json()
       setS2cResult(p => ({ ...p, [cut.no]: r.ok ? data : { error: data.error || '실패' } }))
+      // 제작 성공 시 원본 소스 경로를 컷에 영구 저장 — 이전엔 s2cPath(로컬 state)뿐이라
+      // 새로고침하면 "원본 경로"가 사라져 보였음(2026-09-17 사용자 지적).
+      if (r.ok) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { sourcePath: srcPath } })
       if (r.ok && cut.subtitle && typeStyles[cut.cutType]?.overlay?.enabled) await runOverlay(cut)
     } catch (e) {
       setS2cResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
@@ -830,6 +839,9 @@ export default function MakingTab() {
           s2cResult[cut.no].error
             ? <div className={s.resultError}>❌ {s2cResult[cut.no].error}</div>
             : <div className={s.resultOk}>✅ {s2cResult[cut.no].outputPath} ({s2cResult[cut.no].sizeKB}KB · {s2cResult[cut.no].duration}초 · {s2cResult[cut.no].kind})</div>
+        )}
+        {cut.sourcePath && (
+          <div className={s.emptyHint}>📌 제작된 원본 경로: {cut.sourcePath}</div>
         )}
       </div>
     )
@@ -1200,8 +1212,14 @@ export default function MakingTab() {
   const [subtitleBusy, setSubtitleBusy] = useState({})     // { [cutNo]: 'render' | 'preview' | false }
   const [subtitleResult, setSubtitleResult] = useState({}) // { [cutNo]: data | { error } }
   const getSubCfg = (cut) => subtitleCfg[cut.no] || loadSubtitleCfg(cut)
-  const patchSubCfg = (cutNo, patch) =>
-    setSubtitleCfg(p => ({ ...p, [cutNo]: { ...(p[cutNo] || loadSubtitleCfg(allCuts.find(c => c.no === cutNo) || { no: cutNo })), ...patch } }))
+  const patchSubCfg = (cutNo, patch) => {
+    const targetCut = allCuts.find(c => c.no === cutNo) || { no: cutNo }
+    const next = { ...(subtitleCfg[cutNo] || loadSubtitleCfg(targetCut)), ...patch }
+    setSubtitleCfg(p => ({ ...p, [cutNo]: next }))
+    // 로컬 state뿐 아니라 컷에도 영구 저장 — 탭 전환/새로고침으로 날아가던 위치/폰트/효과
+    // 설정을 살아남게 함(cut.id가 있는 실제 컷일 때만; 임시 { no } 객체는 저장 대상 아님).
+    if (targetCut.id) dispatch({ type: 'UPDATE_CUT', id: targetCut.id, p: { subtitleCfgSaved: next } })
+  }
 
   const runSubtitle = async (cut, { preview = false } = {}) => {
     if (!episode.number || !videoStatus[cut.no]) return { ok: false }

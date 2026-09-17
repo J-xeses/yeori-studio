@@ -270,9 +270,11 @@
             "source": "SH_GR CA_ST 없음 MD_IMP"
           },
           "segments": [
+            10,
             8
           ],
           "segTiming": [
+            null,
             [
               1,
               6
@@ -286,12 +288,29 @@
           ],
           "pipOverlayDialogue": "이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
           "pipSegments": {
-            "1": {
-              "target": 4,
+            "2": {
+              "targetSegIdx": 0,
               "layout": "bottom_right",
               "scale": 0.3,
-              "note": "자기 자신(CUT4, 이미 만들어진 MV 배경) 위에 세그1(옛 CUT3 세그3 리액션)을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄. MV 원음은 낮은 볼륨으로 리액션 대사 아래 깔림."
+              "bgVolume": 0.42,
+              "note": "세그1(화면녹화 배경) 위에 세그2(리액션)를 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "top",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "데뷔 3년차 / 글로벌 팬덤 보유",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
           }
         },
         {
@@ -426,6 +445,35 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_GR CA_ST 없음 MD_BRT"
+          },
+          "segments": [
+            10,
+            8
+          ],
+          "pipSegments": {
+            "2": {
+              "targetSegIdx": 0,
+              "layout": "bottom_right",
+              "scale": 0.3,
+              "bgVolume": 0.42,
+              "note": "세그1(화면녹화 배경) 위에 세그2(리액션)를 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
+            }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "top",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "데뷔 1년차 / 버블 에너지",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
           }
         },
         {
@@ -560,6 +608,35 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_GR CA_ST 없음 MD_ANL"
+          },
+          "segments": [
+            10,
+            8
+          ],
+          "pipSegments": {
+            "2": {
+              "targetSegIdx": 0,
+              "layout": "bottom_right",
+              "scale": 0.3,
+              "bgVolume": 0.42,
+              "note": "세그1(화면녹화 배경) 위에 세그2(리액션)를 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
+            }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "top",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "처음부터 글로벌 타깃",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
           }
         },
         {
@@ -2526,9 +2603,11 @@
         "source": "SH_GR CA_ST 없음 MD_IMP"
       },
       "segments": [
+        10,
         8
       ],
       "segTiming": [
+        null,
         [
           1,
           6
@@ -2542,12 +2621,29 @@
       ],
       "pipOverlayDialogue": "이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
       "pipSegments": {
-        "1": {
-          "target": 4,
+        "2": {
+          "targetSegIdx": 0,
           "layout": "bottom_right",
           "scale": 0.3,
-          "note": "자기 자신(CUT4, 이미 만들어진 MV 배경) 위에 세그1(옛 CUT3 세그3 리액션)을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄. MV 원음은 낮은 볼륨으로 리액션 대사 아래 깔림."
+          "bgVolume": 0.42,
+          "note": "세그1(화면녹화 배경) 위에 세그2(리액션)를 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
+      },
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "top",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "데뷔 3년차 / 글로벌 팬덤 보유",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
       }
     },
     {
@@ -2682,6 +2778,35 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_GR CA_ST 없음 MD_BRT"
+      },
+      "segments": [
+        10,
+        8
+      ],
+      "pipSegments": {
+        "2": {
+          "targetSegIdx": 0,
+          "layout": "bottom_right",
+          "scale": 0.3,
+          "bgVolume": 0.42,
+          "note": "세그1(화면녹화 배경) 위에 세그2(리액션)를 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
+        }
+      },
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "top",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "데뷔 1년차 / 버블 에너지",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
       }
     },
     {
@@ -2816,6 +2941,35 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_GR CA_ST 없음 MD_ANL"
+      },
+      "segments": [
+        10,
+        8
+      ],
+      "pipSegments": {
+        "2": {
+          "targetSegIdx": 0,
+          "layout": "bottom_right",
+          "scale": 0.3,
+          "bgVolume": 0.42,
+          "note": "세그1(화면녹화 배경) 위에 세그2(리액션)를 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
+        }
+      },
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "top",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "처음부터 글로벌 타깃",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
       }
     },
     {
@@ -3685,7 +3839,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-17T08:53:39.445Z",
+  "savedAt": "2026-09-17T10:33:56.198Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [],
@@ -3715,18 +3869,6 @@
           "keepAudio": true,
           "createdAt": 1789536182397,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_1.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789634672251",
-          "name": "cut_02_a.mp4",
-          "duration": 10.01,
-          "trimStart": 0,
-          "trimEnd": 10.01,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
-          "keepAudio": true,
-          "createdAt": 1789219488369.481
         }
       ],
       "cut-1": [
@@ -3927,6 +4069,19 @@
         }
       ],
       "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/c8e97828-bb0d-4be9-a6da-38aaf4602176",
+          "name": "cut_04.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789636142128,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_0.mp4"
+        },
         {
           "url": "blob:http://localhost:5173/3f54e851-1f25-461b-b94f-80575295ce12",
           "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
