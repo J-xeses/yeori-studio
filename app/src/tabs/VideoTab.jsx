@@ -936,16 +936,33 @@ export default function VideoTab() {
     setComposeLog(p => ({ ...p, [cut.id]: '클립 합성 중…' }))
     try {
       const epNum = state.episode?.number
+      // pipSegments(1-인덱스 세그번호 → {target,layout,scale}) 지정된 세그가 있으면, 이어붙이기
+      // 전에 먼저 그 세그만 배경 컷 위에 PIP로 합성해서 결과 파일로 바꿔치기한다
+      // ([[project_script_prompt_qc_guards]] "PIP" 설계를 실제로 구현, 2026-09-17).
+      const pipSegs = cut.pipSegments || {}
+      const clipsForRender = clips.map(c => ({
+        file: c.stagedPath, trimStart: c.trimStart, trimEnd: c.trimEnd,
+        useFullDuration: c.useFullDuration, keepAudio: c.keepAudio,
+      }))
+      for (const [segNoStr, spec] of Object.entries(pipSegs)) {
+        const idx = Number(segNoStr) - 1
+        if (idx < 0 || idx >= clipsForRender.length) continue
+        setComposeLog(p => ({ ...p, [cut.id]: `세그${segNoStr} PIP 합성 중 (CUT${spec.target} 위에)…` }))
+        const pr = await fetch('http://localhost:3001/api/render-pip-composite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ epNum, cutNo: cut.no, segIdx: idx, targetCutNo: spec.target, layout: spec.layout, scale: spec.scale }),
+        })
+        const pd = await pr.json()
+        if (!pr.ok) throw new Error(`세그${segNoStr} PIP 합성 실패: ${pd.error || pr.status}`)
+        // 합성 결과는 이미 PIP 클립 길이로 -t 트림돼 있으므로 그대로 전체 사용.
+        clipsForRender[idx] = { file: pd.outputPath, useFullDuration: true, keepAudio: true }
+      }
+      setComposeLog(p => ({ ...p, [cut.id]: '클립 이어붙이는 중…' }))
       const r = await fetch('http://localhost:3001/api/render-cut-clips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          epNum, cutNo: cut.no,
-          clips: clips.map(c => ({
-            file: c.stagedPath, trimStart: c.trimStart, trimEnd: c.trimEnd,
-            useFullDuration: c.useFullDuration, keepAudio: c.keepAudio,
-          })),
-        }),
+        body: JSON.stringify({ epNum, cutNo: cut.no, clips: clipsForRender }),
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || '합성 실패')

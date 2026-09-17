@@ -314,8 +314,11 @@ export function parseCutsV3(raw) {
     // 손글씨 오버레이 섹션을 노출하고, 위치/말풍선/타이밍 등 시각 상세를 형성한다.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
-    const barefootGuarded = applyIndoorBarefootGuard(fields.SC, kr.AC, ip, vp)
-    const castGuarded = applyPrivateCastGuard(fields.SC, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
+    // src/tabs/ScriptGenTab.jsx와 동일 유지 — SC(장면)만 보면 ECU/MCU 컷(SC="서여리 ECU...")이
+    // 실내 공간 키워드를 놓친다. kr.SP(공간 확인 필드)까지 합쳐서 검사(2026-09-17, CUT7/9 실측).
+    const spaceDetectionText = `${fields.SC || ''} ${kr.SP || ''}`
+    const barefootGuarded = applyIndoorBarefootGuard(spaceDetectionText, kr.AC, ip, vp)
+    const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
 
     return {
       id: `cut-${rc.no}`,

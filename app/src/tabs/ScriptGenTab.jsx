@@ -497,8 +497,14 @@ function parseCutsV3(raw) {
     // server/lib/scriptParserV3.js와 동일 규칙 — 반드시 함께 유지.
     const cp = fields.CP && !['없음', '(작성 필요)'].includes(fields.CP.trim()) ? fields.CP.trim() : ''
     const cutType = inferCutType(fields.PL, ip, rc.headerType, fields.CT)
-    const barefootGuarded = applyIndoorBarefootGuard(fields.SC, kr.AC, ip, vp)
-    const castGuarded = applyPrivateCastGuard(fields.SC, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
+    // 실내 가드 감지용 텍스트 — SC(장면) 필드엔 '소파'/'거실' 같은 공간 키워드가 없어도 KR
+    // 확인 SP(공간) 필드엔 있을 수 있어(CUT7/9에서 실측 발견, 2026-09-17 — ECU/MCU 샷이라
+    // SC엔 "서여리 ECU. ..."처럼 앵글만 적고, 공간 설명은 kr.SP에만 있었음) 둘 다 합쳐서
+    // 검사해야 놓치지 않는다. sceneKr은 정규식 검사에만 쓰이고 출력 텍스트엔 안 들어가므로
+    // 이렇게 합쳐도 안전함.
+    const spaceDetectionText = `${fields.SC || ''} ${kr.SP || ''}`
+    const barefootGuarded = applyIndoorBarefootGuard(spaceDetectionText, kr.AC, ip, vp)
+    const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
 
     return {
       id: `cut-${rc.no}`,

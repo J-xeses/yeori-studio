@@ -6632,6 +6632,90 @@ app.post('/api/stage-cut-clip', (req, res) => {
   })
 })
 
+// ── PIP 합성 (2026-09-17) — YEORI 컷의 한 세그먼트를 다른(보통 BROLL MV) 컷 영상 위에
+// 작은 창으로 얹는다. [[project_script_prompt_qc_guards]]에서 설계만 되고 안 지어졌던
+// "PIP" 개념(pipTarget/pipLayout/pipScale)의 실제 구현. 배경(뮤비) 원음은 BGM처럼 낮은
+// 볼륨으로 깔고, 서여리 대사(PIP 클립 자체 오디오, Veo lipsync 결과라 이미 대사가 담겨있음)를
+// 주 음성으로 믹스 — reelFinalize.js의 BGM 덕킹 패턴과 동일 원리(대사=풀볼륨, 배경=낮은볼륨,
+// amix normalize=0으로 추가 감쇠 없이 그대로 합산).
+const PIP_LAYOUTS = {
+  bottom_right: (CW, CH, pw, ph) => ({ x: CW - pw - Math.round(CW * 0.025), y: CH - ph - Math.round(CH * 0.04) }),
+  bottom_left:  (CW, CH, pw, ph) => ({ x: Math.round(CW * 0.025),           y: CH - ph - Math.round(CH * 0.04) }),
+  top_right:    (CW, CH, pw, ph) => ({ x: CW - pw - Math.round(CW * 0.025), y: Math.round(CH * 0.04) }),
+  top_left:     (CW, CH, pw, ph) => ({ x: Math.round(CW * 0.025),           y: Math.round(CH * 0.04) }),
+}
+async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW, CH }) {
+  const pw = Math.round(CW * (scale || 0.3) / 2) * 2   // even 픽셀(H.264 요구)
+  const ph = Math.round(CH * (scale || 0.3) / 2) * 2
+  const { x, y } = (PIP_LAYOUTS[layout] || PIP_LAYOUTS.bottom_right)(CW, CH, pw, ph)
+  const pipDur = await getMediaDuration(pipFile) || 8
+  const bgHasAudio = await hasAudioStream(bgFile)
+  const pipHasAudio = await hasAudioStream(pipFile)
+
+  const filters = [
+    `[0:v]scale=${CW}:${CH}:force_original_aspect_ratio=increase,crop=${CW}:${CH},setsar=1,fps=30[bg]`,
+    `[1:v]scale=${pw}:${ph}:force_original_aspect_ratio=increase,crop=${pw}:${ph},setsar=1,fps=30[pipv]`,
+    `[bg][pipv]overlay=x=${x}:y=${y}:shortest=0[vout]`,
+  ]
+  let aInputs = 0
+  if (bgHasAudio) { filters.push(`[0:a]volume=0.18[bga]`); aInputs++ }
+  if (pipHasAudio) { filters.push(`[1:a]volume=1.0[pipa]`); aInputs++ }
+  const aLabels = [bgHasAudio ? '[bga]' : null, pipHasAudio ? '[pipa]' : null].filter(Boolean)
+  if (aInputs > 1) filters.push(`${aLabels.join('')}amix=inputs=${aInputs}:duration=longest:normalize=0[aout]`)
+  else if (aInputs === 1) filters.push(`${aLabels[0]}anull[aout]`)
+  else filters.push(`anullsrc=r=44100:cl=stereo[aout]`)
+
+  const args = [
+    '-y', '-stream_loop', '-1', '-i', bgFile, '-i', pipFile,
+    '-filter_complex', filters.join(';'),
+    '-map', '[vout]', '-map', '[aout]', '-t', String(pipDur),
+    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-r', '30', '-g', '60',
+    '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart',
+    outPath,
+  ]
+  const code = await new Promise((resolve) => {
+    const proc = spawn('ffmpeg', args, { windowsHide: true })
+    let errBuf = ''
+    proc.stderr.on('data', d => { errBuf += d.toString() })
+    proc.on('close', c => { if (c !== 0) console.error('[render-pip-composite]', errBuf.slice(-400)); resolve(c) })
+    proc.on('error', () => resolve(1))
+  })
+  if (code !== 0 || !fs.existsSync(outPath)) throw new Error('PIP 합성 ffmpeg 실패')
+  return outPath
+}
+
+app.post('/api/render-pip-composite', async (req, res) => {
+  const { epNum, cutNo, segIdx, targetCutNo, layout, scale } = req.body || {}
+  if (!epNum || cutNo == null || segIdx == null || !targetCutNo) {
+    return res.status(400).json({ error: 'epNum, cutNo, segIdx, targetCutNo 필요' })
+  }
+  try {
+    const state = loadStudioState()
+    const cut = (state.cuts || []).find(c => c.no === Number(cutNo))
+    if (!cut) return res.status(404).json({ error: `CUT ${cutNo} 없음` })
+    const clips = (state.videoTabState?.videoClips || {})[cut.id] || []
+    const pipClip = clips[Number(segIdx)]
+    if (!pipClip?.stagedPath || !fs.existsSync(pipClip.stagedPath)) {
+      return res.status(400).json({ error: `세그먼트 ${Number(segIdx) + 1}의 스테이징된 클립 파일이 없습니다 — 먼저 업로드/스테이징하세요.` })
+    }
+    const targetPadded = String(targetCutNo).padStart(2, '0')
+    const bgFile = path.join(mp.videoDir(epNum), `cut_${targetPadded}.mp4`)
+    if (!fs.existsSync(bgFile)) {
+      return res.status(400).json({ error: `배경 컷 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷을 제작/합성하세요.` })
+    }
+    const padded = String(cutNo).padStart(2, '0')
+    const rawDir = path.join(mp.makingDir(epNum), 'raw')
+    fs.mkdirSync(rawDir, { recursive: true })
+    const outPath = path.join(rawDir, `cut_${padded}_pip_seg${Number(segIdx) + 1}.mp4`)
+    const { w: CW, h: CH } = episodeCutDims(epNum)
+    await renderPipComposite({ bgFile, pipFile: pipClip.stagedPath, outPath, layout: layout || 'bottom_right', scale: scale || 0.3, CW, CH })
+    const duration = await getMediaDuration(outPath)
+    res.json({ success: true, outputPath: outPath, duration })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── 컷의 videoClips(여러 클립+트림)를 실제로 이어붙여 cut_NN.mp4를 생성 ──────
 // 예전엔 "완성본 mp4 하나 업로드"만 실제 서버 파일을 만들었고, 컷별 카드의 클립
 // 편집(로컬 업로드/트림)은 브라우저 blob: URL일 뿐 아무것도 서버에 남기지 않았다
