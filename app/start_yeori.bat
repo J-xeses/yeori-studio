@@ -36,12 +36,15 @@ echo [1] Ensuring background services (scheduled tasks)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-yeori-tasks.ps1"
 echo.
 
-:: [2] Git pull + 클라우드 콘텐츠 동기화
-echo [2] Git pull + content sync...
+:: [2] Git pull (+ OneDrive 콘텐츠 동기화는 2026-09-17부로 중단 — 회사 PC를 더 이상 안 써서
+::     양방향 동기화 자체가 불필요해짐. sync-content.bat는 그대로 남겨뒀으니 필요해지면
+::     아래 call 줄만 되살리면 됨. 중단 이유: robocopy가 /PURGE 없이 양방향으로 돌아서
+::     로컬에서 지운 파일이 며칠 뒤 OneDrive 사본으로부터 되살아나는 버그가 있었음
+::     ([[reference_onedrive_sync_no_delete_propagation]] 참고).
+echo [2] Git pull...
 cd /d C:\yeori-studio
 git pull origin master
 cd /d "%~dp0"
-call "%~dp0sync-content.bat"
 echo.
 
 :: [3] proxy(:3001) 가 뜰 때까지 대기 (YeoriStudio 작업이 기동 중)

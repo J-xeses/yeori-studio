@@ -111,6 +111,31 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// ── 파이프라인 리더 실행 여부 확인 (2026-09-17) ──────────────────────
+// "Yeori Pipeline Leader" 창이 떠 있는 채로 컷 영상을 지우면 자동으로 다시 채워 넣는다는 걸
+// 모르고 있다가 겪은 사고([[project_agent_leader_backbone]] 참고) — 파일 정리 전에 빠르게
+// 확인할 수 있게 pipeline-leader.js 자신의 중복실행 락파일(downloads/state/.pipeline-leader-
+// {episodeId}.lock, PID 내용)을 그대로 읽어서 판단한다(스크립트 자체 로직과 동일 기준:
+// PID 살아있음 + mtime 5분 이내 = 실행 중).
+app.get('/api/pipeline-leader-status', (_req, res) => {
+  const stateDir = path.join(__dirname, '..', 'downloads', 'state')
+  let files = []
+  try { files = fs.readdirSync(stateDir).filter(f => /^\.pipeline-leader-.*\.lock$/.test(f)) } catch { /* no state dir yet */ }
+  const now = Date.now()
+  const leaders = files.map(f => {
+    const full = path.join(stateDir, f)
+    const episodeId = f.replace(/^\.pipeline-leader-/, '').replace(/\.lock$/, '')
+    let pid = null, alive = false, fresh = false
+    try {
+      pid = parseInt(fs.readFileSync(full, 'utf-8').trim(), 10) || null
+      fresh = (now - fs.statSync(full).mtimeMs) < 5 * 60 * 1000
+      if (pid) { try { process.kill(pid, 0); alive = true } catch { alive = false } }
+    } catch { /* unreadable lock -- treat as not running */ }
+    return { episodeId, pid, running: alive && fresh }
+  })
+  res.json({ running: leaders.some(l => l.running), leaders })
+})
+
 // ── Claude API 프록시 ───────────────────────────────────────
 // Express 5: 와일드카드는 *path 형태로 명명해야 함
 app.post('/api/claude/*path', async (req, res) => {

@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3619,7 +3619,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-16T16:01:07.839Z",
+  "savedAt": "2026-09-17T03:38:52.159Z",
   "videoTabState": {
     "videoClips": {
       "cut-3": [
@@ -4455,7 +4455,7 @@
   },
   "voiceInsertState": {
     "tracks": {},
-    "activeCutId": "cut-2"
+    "activeCutId": "cut-1"
   },
   "studioTabState": {
     "imageRatio": {}

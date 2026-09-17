@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 import styles from './NavBar.module.css'
 
@@ -43,6 +43,23 @@ export default function NavBar() {
       setStatusUpdating(false)
     }
   }
+
+  // "Yeori Pipeline Leader"가 떠 있는 채로 컷 파일을 지우면 자동으로 다시 채워 넣는 걸 모르고
+  // 있다가 겪은 사고(2026-09-17) — 어디서든 한눈에 확인할 수 있게 전역 네브바에 상태 표시.
+  // pipeline-leader.js 자신의 중복실행 락파일(PID+mtime)을 그대로 읽는 엔드포인트를 폴링.
+  const [leaderRunning, setLeaderRunning] = useState(null) // null=확인 불가, true/false=실행 여부
+  useEffect(() => {
+    let stopped = false
+    const check = () => {
+      fetch('http://localhost:3001/api/pipeline-leader-status')
+        .then(r => r.json())
+        .then(d => { if (!stopped) setLeaderRunning(!!d.running) })
+        .catch(() => { if (!stopped) setLeaderRunning(null) })
+    }
+    check()
+    const id = setInterval(check, 10000)
+    return () => { stopped = true; clearInterval(id) }
+  }, [])
 
   const syncLabel = {
     synced:  { icon: '🟢', text: '동기화됨' },
@@ -103,6 +120,15 @@ export default function NavBar() {
           style={{ marginLeft: 4, opacity: syncStatus === 'idle' ? 0.4 : 1 }}>
           <span style={{ fontSize: 11 }}>{syncLabel.icon}</span>
           <span style={{ fontSize: 11 }}>{syncLabel.text}</span>
+        </div>
+        <div className={styles.status} style={{ marginLeft: 4 }}
+          title={leaderRunning == null
+            ? '파이프라인 리더 상태를 확인할 수 없습니다'
+            : leaderRunning
+              ? '파이프라인 리더 실행 중 — 컷 영상/이미지를 지워도 자동으로 다시 채워질 수 있습니다. 작업 전 "Yeori Pipeline Leader" 창을 닫아주세요.'
+              : '파이프라인 리더 꺼짐 — 컷 파일을 지우거나 재작업해도 자동으로 다시 채워지지 않습니다'}>
+          <span style={{ fontSize: 11 }}>{leaderRunning == null ? '⚪' : leaderRunning ? '🤖🟢' : '🤖⚪'}</span>
+          <span style={{ fontSize: 11 }}>{leaderRunning == null ? '리더 확인불가' : leaderRunning ? '리더 실행중' : '리더 꺼짐'}</span>
         </div>
         <button className={styles.btn} onClick={handleUpdateStatus} disabled={statusUpdating}>
           {statusUpdating ? '⏳ 갱신 중…' : '📋 STATUS 업데이트'}
