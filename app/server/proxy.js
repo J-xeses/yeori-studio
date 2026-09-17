@@ -6732,10 +6732,14 @@ const PIP_LAYOUTS = {
   top_right:    (CW, CH, pw, ph) => ({ x: CW - pw - Math.round(CW * 0.025), y: Math.round(CH * 0.04) }),
   top_left:     (CW, CH, pw, ph) => ({ x: Math.round(CW * 0.025),           y: Math.round(CH * 0.04) }),
 }
-async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW, CH }) {
+async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW, CH, bgVolume }) {
   const pw = Math.round(CW * (scale || 0.3) / 2) * 2   // even 픽셀(H.264 요구)
   const ph = Math.round(CH * (scale || 0.3) / 2) * 2
   const { x, y } = (PIP_LAYOUTS[layout] || PIP_LAYOUTS.bottom_right)(CW, CH, pw, ph)
+  // 배경(뮤비) 볼륨 — 기본 0.42(2026-09-17, "너무 작게 들린다" 피드백으로 0.18→0.42 상향).
+  // 사람마다/컷마다 원하는 밸런스가 다를 수 있어 클라에서 넘겨받은 값을 우선 사용, 없으면
+  // 이 기본값. UI 슬라이더가 이 값을 cut.pipSegments[idx].bgVolume로 저장해뒀다가 재사용.
+  const bgVol = (typeof bgVolume === 'number' && bgVolume >= 0 && bgVolume <= 1) ? bgVolume : 0.42
   const pipDur = await getMediaDuration(pipFile) || 8
   const bgHasAudio = await hasAudioStream(bgFile)
   const pipHasAudio = await hasAudioStream(pipFile)
@@ -6746,7 +6750,7 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
     `[bg][pipv]overlay=x=${x}:y=${y}:shortest=0[vout]`,
   ]
   let aInputs = 0
-  if (bgHasAudio) { filters.push(`[0:a]volume=0.18[bga]`); aInputs++ }
+  if (bgHasAudio) { filters.push(`[0:a]volume=${bgVol}[bga]`); aInputs++ }
   if (pipHasAudio) { filters.push(`[1:a]volume=1.0[pipa]`); aInputs++ }
   const aLabels = [bgHasAudio ? '[bga]' : null, pipHasAudio ? '[pipa]' : null].filter(Boolean)
   if (aInputs > 1) filters.push(`${aLabels.join('')}amix=inputs=${aInputs}:duration=longest:normalize=0[aout]`)
@@ -6773,7 +6777,7 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
 }
 
 app.post('/api/render-pip-composite', async (req, res) => {
-  const { epNum, cutNo, segIdx, targetCutNo, layout, scale } = req.body || {}
+  const { epNum, cutNo, segIdx, targetCutNo, layout, scale, bgVolume } = req.body || {}
   if (!epNum || cutNo == null || segIdx == null || !targetCutNo) {
     return res.status(400).json({ error: 'epNum, cutNo, segIdx, targetCutNo 필요' })
   }
@@ -6787,18 +6791,31 @@ app.post('/api/render-pip-composite', async (req, res) => {
       return res.status(400).json({ error: `세그먼트 ${Number(segIdx) + 1}의 스테이징된 클립 파일이 없습니다 — 먼저 업로드/스테이징하세요.` })
     }
     const targetPadded = String(targetCutNo).padStart(2, '0')
-    const bgFile = path.join(mp.videoDir(epNum), `cut_${targetPadded}.mp4`)
-    if (!fs.existsSync(bgFile)) {
-      return res.status(400).json({ error: `배경 컷 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷을 제작/합성하세요.` })
-    }
     const padded = String(cutNo).padStart(2, '0')
     const rawDir = path.join(mp.makingDir(epNum), 'raw')
     fs.mkdirSync(rawDir, { recursive: true })
+    let bgFile = path.join(mp.videoDir(epNum), `cut_${targetPadded}.mp4`)
+    // 자기 자신 위에 합성하는 경우(예: CUT4가 자기 MV 배경 위에 자기 리액션 세그를 PIP로 얹음,
+    // 2026-09-17) — bgFile과 최종 render-cut-clips 출력이 같은 cut_NN.mp4라서, 합성을 두 번
+    // 돌리면 두 번째부터는 "이미 PIP 합성된 화면" 위에 또 PIP를 얹어버리는 문제가 생긴다.
+    // 최초 1회 순수 배경을 cut_NN_pip_bg_source.mp4로 보존해두고, 이후엔 항상 그걸 배경으로 씀.
+    if (Number(targetCutNo) === Number(cutNo)) {
+      const pristineBg = path.join(mp.videoDir(epNum), `cut_${targetPadded}_pip_bg_source.mp4`)
+      if (!fs.existsSync(pristineBg)) {
+        if (!fs.existsSync(bgFile)) {
+          return res.status(400).json({ error: `배경으로 쓸 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷 자체를 제작하세요.` })
+        }
+        fs.copyFileSync(bgFile, pristineBg)
+      }
+      bgFile = pristineBg
+    } else if (!fs.existsSync(bgFile)) {
+      return res.status(400).json({ error: `배경 컷 CUT${targetCutNo}(${bgFile})이 아직 없습니다 — 먼저 그 컷을 제작/합성하세요.` })
+    }
     const outPath = path.join(rawDir, `cut_${padded}_pip_seg${Number(segIdx) + 1}.mp4`)
     const { w: CW, h: CH } = episodeCutDims(epNum)
-    await renderPipComposite({ bgFile, pipFile: pipClip.stagedPath, outPath, layout: layout || 'bottom_right', scale: scale || 0.3, CW, CH })
+    await renderPipComposite({ bgFile, pipFile: pipClip.stagedPath, outPath, layout: layout || 'bottom_right', scale: scale || 0.3, CW, CH, bgVolume })
     const duration = await getMediaDuration(outPath)
-    res.json({ success: true, outputPath: outPath, duration })
+    res.json({ success: true, outputPath: outPath, duration, bgVolume: (typeof bgVolume === 'number' ? bgVolume : 0.42) })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

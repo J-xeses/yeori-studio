@@ -156,15 +156,15 @@
           "no": 3,
           "cutTitle": "LE SSERAFIM 설명 MCU",
           "lipsync": false,
-          "scene": "소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리 아웃포커스로 잔존. LE SSERAFIM 설명. 후반 PIP.",
+          "scene": "소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리 아웃포커스로 잔존. LE SSERAFIM 설명(2세그) — 후속 리액션은 CUT4에 PIP로 편입.",
           "action": "차분하게 설명. 자연스러운 손짓.",
           "character": "서여리",
-          "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
+          "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸?",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — camera focused on right side of beige sofa — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (Hanjia) visible on the LEFT edge of frame, slightly out of focus — same sofa, continuous space from previous cut,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nfocus pulled to right-side subject, left-side figure softly blurred but present\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
-          "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-17s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic\n\nFinal 17-25s: she pauses thoughtfully,\nlooking slightly to the side then back to camera,\nwarm indoor lighting, static camera\n\n(no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame))",
-          "duration": 25,
+          "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nFinal 8-16s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic,\nwarm indoor lighting, static camera",
+          "duration": 16,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -177,7 +177,7 @@
             "md": "MD_ANL",
             "ac": "자연스러운 설명 손짓",
             "lookId": "",
-            "du": 25,
+            "du": 16,
             "audio": {
               "bgm": "",
               "voice": "",
@@ -187,7 +187,7 @@
             "kr": {
               "sp": "컷2와 같은 소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리에 아웃포커스로 잔존.",
               "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽, 잔존) HJA_LOOK_T01",
-              "sh": "MCU — 포커스 서여리(오른쪽) → 후반 PIP (CapCut 처리)",
+              "sh": "MCU — 포커스 서여리(오른쪽), 2세그(8+8s) 설명만. 후속 리액션(옛 세그3)은 CUT4로 편입됨.",
               "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아는 왼쪽 프레임 끝에 블러 처리로 유지.",
               "ac": "차분하게 설명. 자연스러운 손짓.",
               "md": "분석적이지만 설레는 팬심"
@@ -195,24 +195,18 @@
           },
           "segments": [
             8,
-            8,
             8
           ],
           "segTiming": [
             [
-              3,
-              7
-            ],
-            null,
-            [
-              1,
+              2,
               6
-            ]
+            ],
+            null
           ],
           "segPrompts": [
             "calm analytical expression with slight excitement building in eyes — young Korean woman early-20s, sitting upright on beige sofa facing camera directly, long wavy dark brown hair, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, small face K-model proportions, very subtle natural skin texture on right cheek never exaggerated, effortlessly photogenic not posing just existing beautifully — at seconds 2-6 she begins speaking, lips parting naturally, slight lean forward, right hand lifts gently as if introducing a topic with casual enthusiasm, eyebrows raise softly mid-sentence, mouth forms Korean vowels naturally — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
-            "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
-            "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
+            "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
           ],
           "editIntent": {
             "kenburns": "zoomIn",
@@ -221,17 +215,8 @@
           },
           "subtitleSegments": [
             "LE SSERAFIM은요, 데뷔 3년 차인데",
-            "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
-            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-          ],
-          "pipSegments": {
-            "3": {
-              "target": 4,
-              "layout": "bottom_right",
-              "scale": 0.3,
-              "note": "CUT4 MV 풀프레임 배경 위에 세그3을 우하단 30% 창으로 합성. 자막은 배경(CUT4) 하단 좌~중앙 1~2줄. 뮤비 원음은 BGM처럼 낮은 볼륨(약 15~20%)으로 서여리 대사 아래 깔림. 합성 기능 미구현 — 다음 단계에서 구현 필요."
-            }
-          }
+            "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?"
+          ]
         },
         {
           "id": "cut-4",
@@ -283,6 +268,30 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_GR CA_ST 없음 MD_IMP"
+          },
+          "segments": [
+            8
+          ],
+          "segTiming": [
+            [
+              1,
+              6
+            ]
+          ],
+          "segPrompts": [
+            "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
+          ],
+          "subtitleSegments": [
+            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+          ],
+          "pipOverlayDialogue": "이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
+          "pipSegments": {
+            "1": {
+              "target": 4,
+              "layout": "bottom_right",
+              "scale": 0.3,
+              "note": "자기 자신(CUT4, 이미 만들어진 MV 배경) 위에 세그1(옛 CUT3 세그3 리액션)을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄. MV 원음은 낮은 볼륨으로 리액션 대사 아래 깔림."
+            }
           }
         },
         {
@@ -2403,15 +2412,15 @@
       "no": 3,
       "cutTitle": "LE SSERAFIM 설명 MCU",
       "lipsync": false,
-      "scene": "소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리 아웃포커스로 잔존. LE SSERAFIM 설명. 후반 PIP.",
+      "scene": "소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리 아웃포커스로 잔존. LE SSERAFIM 설명(2세그) — 후속 리액션은 CUT4에 PIP로 편입.",
       "action": "차분하게 설명. 자연스러운 손짓.",
       "character": "서여리",
-      "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸? || 이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
+      "dialogue": "LE SSERAFIM은요, 데뷔 3년 차인데~. || 이미~ 글로벌 팬덤을 완전히 장악한... 그룹이잖아요? 그쵸?",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — camera focused on right side of beige sofa — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (Hanjia) visible on the LEFT edge of frame, slightly out of focus — same sofa, continuous space from previous cut,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nfocus pulled to right-side subject, left-side figure softly blurred but present\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
-      "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-17s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic\n\nFinal 17-25s: she pauses thoughtfully,\nlooking slightly to the side then back to camera,\nwarm indoor lighting, static camera\n\n(no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame))",
-      "duration": 25,
+      "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nFinal 8-16s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic,\nwarm indoor lighting, static camera",
+      "duration": 16,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -2424,7 +2433,7 @@
         "md": "MD_ANL",
         "ac": "자연스러운 설명 손짓",
         "lookId": "",
-        "du": 25,
+        "du": 16,
         "audio": {
           "bgm": "",
           "voice": "",
@@ -2434,7 +2443,7 @@
         "kr": {
           "sp": "컷2와 같은 소파 연속 공간. 서여리 오른쪽 착석·포커스, 한지아 왼쪽 가장자리에 아웃포커스로 잔존.",
           "ch": "서여리(오른쪽) LOOK_ST01 / 한지아(왼쪽, 잔존) HJA_LOOK_T01",
-          "sh": "MCU — 포커스 서여리(오른쪽) → 후반 PIP (CapCut 처리)",
+          "sh": "MCU — 포커스 서여리(오른쪽), 2세그(8+8s) 설명만. 후속 리액션(옛 세그3)은 CUT4로 편입됨.",
           "ca": "컷2와 같은 소파·같은 방 — 카메라 포커스만 서여리(오른쪽)로 이동. 한지아는 왼쪽 프레임 끝에 블러 처리로 유지.",
           "ac": "차분하게 설명. 자연스러운 손짓.",
           "md": "분석적이지만 설레는 팬심"
@@ -2442,24 +2451,18 @@
       },
       "segments": [
         8,
-        8,
         8
       ],
       "segTiming": [
         [
-          3,
-          7
-        ],
-        null,
-        [
-          1,
+          2,
           6
-        ]
+        ],
+        null
       ],
       "segPrompts": [
         "calm analytical expression with slight excitement building in eyes — young Korean woman early-20s, sitting upright on beige sofa facing camera directly, long wavy dark brown hair, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, small face K-model proportions, very subtle natural skin texture on right cheek never exaggerated, effortlessly photogenic not posing just existing beautifully — at seconds 2-6 she begins speaking, lips parting naturally, slight lean forward, right hand lifts gently as if introducing a topic with casual enthusiasm, eyebrows raise softly mid-sentence, mouth forms Korean vowels naturally — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
-        "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
-        "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
+        "continuing from previous clip — lips moving fluidly mid-sentence, slight excitement now visible in widened eyes and a soft knowing smile forming — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — she gestures with both hands opening outward at chest level emphasizing scale and reach, head tilts slightly left with a rhetorical confident expression as she finishes the sentence, eyes briefly glance toward camera inviting agreement, slight eyebrow raise on the final rising intonation — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
       ],
       "editIntent": {
         "kenburns": "zoomIn",
@@ -2468,17 +2471,8 @@
       },
       "subtitleSegments": [
         "LE SSERAFIM은요, 데뷔 3년 차인데",
-        "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
-        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-      ],
-      "pipSegments": {
-        "3": {
-          "target": 4,
-          "layout": "bottom_right",
-          "scale": 0.3,
-          "note": "CUT4 MV 풀프레임 배경 위에 세그3을 우하단 30% 창으로 합성. 자막은 배경(CUT4) 하단 좌~중앙 1~2줄. 뮤비 원음은 BGM처럼 낮은 볼륨(약 15~20%)으로 서여리 대사 아래 깔림. 합성 기능 미구현 — 다음 단계에서 구현 필요."
-        }
-      }
+        "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?"
+      ]
     },
     {
       "id": "cut-4",
@@ -2530,6 +2524,30 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_GR CA_ST 없음 MD_IMP"
+      },
+      "segments": [
+        8
+      ],
+      "segTiming": [
+        [
+          1,
+          6
+        ]
+      ],
+      "segPrompts": [
+        "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
+      ],
+      "subtitleSegments": [
+        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+      ],
+      "pipOverlayDialogue": "이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
+      "pipSegments": {
+        "1": {
+          "target": 4,
+          "layout": "bottom_right",
+          "scale": 0.3,
+          "note": "자기 자신(CUT4, 이미 만들어진 MV 배경) 위에 세그1(옛 CUT3 세그3 리액션)을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄. MV 원음은 낮은 볼륨으로 리액션 대사 아래 깔림."
+        }
       }
     },
     {
@@ -3667,7 +3685,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-17T07:28:19.377Z",
+  "savedAt": "2026-09-17T08:20:46.837Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [],
@@ -3768,48 +3786,6 @@
           "createdAt": 1788923816000
         }
       ],
-      "cut-8": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789376128910",
-          "name": "cut_08.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_08.mp4",
-          "keepAudio": false,
-          "createdAt": 1789376128910
-        }
-      ],
-      "cut-6": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_06.mp4?t=1789374519112",
-          "name": "cut_06.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_06.mp4",
-          "keepAudio": false,
-          "createdAt": 1788876613000
-        }
-      ],
-      "cut-4": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_04.mp4?t=1789629401329",
-          "name": "cut_04.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_04.mp4",
-          "keepAudio": false,
-          "createdAt": 1789629233000
-        }
-      ],
       "cut-22": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_23.mp4?t=1789537476521",
@@ -3896,21 +3872,49 @@
       ],
       "cut-3": [
         {
-          "url": "blob:http://localhost:5173/cffbcb93-81a2-426d-bcf8-68545dafa258",
-          "name": "Woman_speaking_on_sofa_20260916152609.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_03.mp4?t=1789631506452",
+          "name": "cut_03.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "staging": false,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_03.mp4",
           "keepAudio": true,
-          "createdAt": 1789539969637,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
-        },
-        null,
+          "createdAt": 1789219267000
+        }
+      ],
+      "cut-6": [
         {
-          "url": "blob:http://localhost:5173/d5f79fa4-59b0-4837-8ecb-39a941217e73",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_06.mp4?t=1789631507655",
+          "name": "cut_06.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_06.mp4",
+          "keepAudio": false,
+          "createdAt": 1789618889000
+        }
+      ],
+      "cut-8": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789631507915",
+          "name": "cut_08.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_08.mp4",
+          "keepAudio": false,
+          "createdAt": 1789618909000
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/3467ba9f-eb8f-4345-9a60-e9acf9bc9586",
           "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -3918,9 +3922,9 @@
           "useFullDuration": true,
           "ratio": "16:9",
           "staging": false,
-          "keepAudio": true,
+          "keepAudio": false,
           "createdAt": 1789540114752,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_0.mp4"
         }
       ]
     },

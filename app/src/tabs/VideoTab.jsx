@@ -234,7 +234,10 @@ export default function VideoTab() {
         for (const row of d.cuts || []) {
           if (!row.hasVideo) continue
           const cut = (state.cuts || []).find(c => c.no === row.no)
-          if (cut && !(currentClips[cut.id]?.length > 0)) toLoad.push(cut)
+          // pipSegments가 있는 컷은 기존 cut_NN.mp4가 "세그 내용"이 아니라 PIP 배경 소스
+          // 자체다(2026-09-17, CUT4류 self-composite 구조) — 자동으로 세그1 슬롯에 불러와버리면
+          // 리액션 클립을 올릴 자리를 그 배경 파일이 차지해버려서 자동 로드를 건너뛴다.
+          if (cut && !cut.pipSegments && !(currentClips[cut.id]?.length > 0)) toLoad.push(cut)
         }
         // 여러 컷을 동시에 프록시로 불러오면(HEAD 요청 병렬 폭주) 로컬 프록시 서버가
         // 간헐적으로 503을 뱉는 게 확인됨(2026-09-14) — 순차 + 약간의 텀 + 단일 실행 가드로 완화.
@@ -957,7 +960,7 @@ export default function VideoTab() {
         const pr = await fetch('http://localhost:3001/api/render-pip-composite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ epNum, cutNo: cut.no, segIdx: idx, targetCutNo: spec.target, layout: spec.layout, scale: spec.scale }),
+          body: JSON.stringify({ epNum, cutNo: cut.no, segIdx: idx, targetCutNo: spec.target, layout: spec.layout, scale: spec.scale, bgVolume: spec.bgVolume }),
         })
         const pd = await pr.json()
         if (!pr.ok) throw new Error(`세그${segNoStr} PIP 합성 실패: ${pd.error || pr.status}`)
@@ -1677,6 +1680,46 @@ export default function VideoTab() {
                           onClick={() => addCandidateClip(selCut.id, selCut.no, cand)}>
                           {already ? `✓ ${cand.name}` : `+ ${cand.name}`}
                         </button>
+                      )
+                    })}
+                  </div>
+                )}
+                {selCut.pipSegments && (
+                  <div onClick={e => e.stopPropagation()} style={{ margin: '4px 0 8px' }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--text3)', marginBottom: 4 }}>📼 화면녹화 원본(PIP 배경) — 참고용, 세그 슬롯과 무관</div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                      {[...new Set(Object.values(selCut.pipSegments).map(s => s.target))].map(targetNo => {
+                        const padded = String(targetNo).padStart(2, '0')
+                        const base = epMediaUrl(state.episode, 'video')
+                        const srcSource = `${base}/cut_${padded}_pip_bg_source.mp4?t=${Date.now()}`
+                        const srcPlain = `${base}/cut_${padded}.mp4?t=${Date.now()}`
+                        return (
+                          <video key={targetNo} controls muted
+                            style={{ width: 220, height: 124, background: '#000', borderRadius: 6 }}
+                            src={srcSource}
+                            onError={e => { if (e.target.src !== srcPlain) e.target.src = srcPlain }} />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+                {selCut.pipSegments && (
+                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', margin: '4px 0 8px', fontSize: 11.5, color: 'var(--text3)' }}>
+                    {Object.entries(selCut.pipSegments).map(([segNoStr, spec]) => {
+                      const pct = Math.round((spec.bgVolume ?? 0.42) * 100)
+                      return (
+                        <label key={segNoStr} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          🎚 PIP 배경(CUT{spec.target}) 음량
+                          <input type="range" min={0} max={100} step={1} value={pct}
+                            onChange={e => {
+                              const v = parseInt(e.target.value, 10) / 100
+                              dispatch({
+                                type: 'UPDATE_CUT', id: selCut.id,
+                                p: { pipSegments: { ...selCut.pipSegments, [segNoStr]: { ...spec, bgVolume: v } } },
+                              })
+                            }} />
+                          <span style={{ minWidth: 30 }}>{pct}%</span>
+                        </label>
                       )
                     })}
                   </div>
