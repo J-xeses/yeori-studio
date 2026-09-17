@@ -2790,7 +2790,54 @@ app.get('/api/capcut-window', (req, res) => {
   res.json(getCapCutWindow())
 })
 
-app.post('/api/recording/start', (req, res) => {
+// 현재 포커스된(맨 앞) 창의 화면 좌표 — BROLL "화면 녹화"가 "전체화면" 모드로 데스크톱
+// 전체(여러 모니터+겹친 창까지)를 그대로 찍어버리던 문제 수정용(2026-09-17, 사용자가
+// 녹화해보니 스튜디오 창+유튜브 창이 다 같이 찍혀 있던 걸 발견). "대상 화면으로 전환하세요"
+// 카운트다운이 끝나는 시점 = 클라이언트가 이 요청을 보내는 시점이므로, 그때 맨 앞 창을
+// 그대로 크롭 영역으로 쓰면 사람이 좌표를 몰라도 항상 "지금 전환한 그 창만" 녹화된다.
+function getForegroundWindow() {
+  try {
+    const helperPath = path.join(CODE_ROOT, 'scripts', 'foreground-window.ps1')
+    const out = execFileSync('powershell.exe', [
+      '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', helperPath,
+    ], { encoding: 'utf-8' }).trim()
+    const data = JSON.parse(out)
+    if (!data.found) return null
+    return {
+      processName: data.processName,
+      windowTitle: data.titleB64 ? Buffer.from(data.titleB64, 'base64').toString('utf-8') : '',
+      region: { x: data.x, y: data.y, w: data.width, h: data.height },
+    }
+  } catch {
+    return null
+  }
+}
+
+// 검색어로 유튜브 검색 결과(또는 빈 검색어면 유튜브 첫 화면)를 새 Chrome 창으로 띄운다 —
+// 이 창은 자동화 대상이 아니라 사람이 직접 검색·재생·스크럽하는 용도(2026-09-17, "윈도우
+// 녹화 구조" 요청). 디버그 포트(9222, start_gen.bat의 Flow용 프로필)와는 별개의 평범한
+// Chrome 창을 새 프로필 없이 띄운다 — 자동화 대상이 아니므로 CDP 연결이 필요 없음.
+app.post('/api/open-recording-browser', (req, res) => {
+  const { query } = req.body || {}
+  const url = query && String(query).trim()
+    ? `https://www.youtube.com/results?search_query=${encodeURIComponent(String(query).trim())}`
+    : 'https://www.youtube.com'
+  const candidates = [
+    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  ]
+  const chromePath = candidates.find(p => fs.existsSync(p))
+  if (!chromePath) return res.status(404).json({ error: 'Chrome 실행 파일을 찾을 수 없습니다' })
+  try {
+    const child = spawn(chromePath, ['--new-window', url], { detached: true, stdio: 'ignore', windowsHide: false })
+    child.unref()
+    res.json({ success: true, url })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/api/recording/start', async (req, res) => {
   const { outputPath: bodyOutputPath, stage, cutNo, pl, options, broll, capcut } = req.body || {}
   const stageNum = stage != null ? String(stage).replace(/[^0-9]/g, '') : ''
 
@@ -2822,6 +2869,15 @@ app.post('/api/recording/start', (req, res) => {
     }
     const padded = String(cutNo).padStart(2, '0')
     outputPath = path.join(mp.makingDir(broll.epNum), 'raw', `broll_cut${padded}.mp4`)
+    // 사람이 "전체화면" 모드를 고르면(region 명시 안 함) 진짜 데스크톱 전체(여러 모니터+겹친
+    // 창까지)를 그대로 찍어서, 녹화 결과가 대상 영상이 아니라 스튜디오 창까지 같이 찍힌 화면이
+    // 돼버리는 문제가 실측 확인됨(2026-09-17). "3초 후 대상 화면으로 전환하세요" 카운트다운이
+    // 끝나는 시점 = 이 요청이 오는 시점이므로, 그때 맨 앞 창을 자동으로 크롭 영역으로 써서
+    // "방금 전환한 그 창만" 찍히게 한다. 감지 실패 시에만 기존 전체화면으로 안전하게 폴백.
+    if (!recordOptions.region) {
+      const fg = getForegroundWindow()
+      if (fg?.region?.w > 0 && fg?.region?.h > 0) recordOptions = { ...recordOptions, region: fg.region }
+    }
   } else if (capcut) {
     if (cutNo == null || !capcut.epNum) {
       return res.status(400).json({ error: 'capcut 모드는 cutNo, capcut.epNum이 필요합니다' })
@@ -2843,7 +2899,7 @@ app.post('/api/recording/start', (req, res) => {
     outputPath = path.join(mp.makingDir(activeEpNum), `g${stageNum}r_cut${cutNo}.mp4`)
   }
   try {
-    const result = screenRecorder.start(outputPath, recordOptions)
+    const result = await screenRecorder.start(outputPath, recordOptions)
     recordingStartedAt = Date.now()
     const editSpec = broll || capcut
     pendingBrollEdit = editSpec ? {
@@ -2956,7 +3012,7 @@ async function stopRecording() {
 
   try {
     const editResult = await editBrollRaw(edit)
-    return { rawPath: rawResult.path, rawSizeBytes: rawResult.sizeBytes, ...editResult }
+    return { rawPath: rawResult.path, rawSizeBytes: rawResult.sizeBytes, hasAudio: rawResult.hasAudio, ...editResult }
   } catch (err) {
     const e = new Error(`자동 편집 실패: ${err.message}`)
     e.statusCode = 500

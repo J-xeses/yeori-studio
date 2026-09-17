@@ -503,6 +503,30 @@ export default function MakingTab() {
   const [brollResult, setBrollResult] = useState(null)
   const [brollCountdown, setBrollCountdown] = useState(null)
 
+  // ── "윈도우 녹화 구조" — 검색 메타(카테고리/주제어/제목) + 검색용 브라우저 창 (2026-09-17) ──
+  // 자동화로 영상을 찾는 게 아니라, 사람이 직접 브라우저에서 검색·재생하며 화면 녹화할 대상을
+  // 고르는 용도. 검색 메타는 다음 검색창을 채우는 용도 + 나중에 참고용으로 보존.
+  const [brollSearchCategory, setBrollSearchCategory] = useState('')
+  const [brollSearchKeyword, setBrollSearchKeyword] = useState('')
+  const [brollSearchTitle, setBrollSearchTitle] = useState('')
+  const [brollBrowserOpening, setBrollBrowserOpening] = useState(false)
+  const openRecordingBrowser = async () => {
+    const q = [brollSearchCategory, brollSearchKeyword, brollSearchTitle].filter(Boolean).join(' ').trim()
+    setBrollBrowserOpening(true)
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/open-recording-browser`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q }),
+      })
+      const d = await r.json()
+      if (!r.ok) setBrollResult({ error: d.error || '브라우저 열기 실패' })
+    } catch (e) {
+      setBrollResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setBrollBrowserOpening(false)
+    }
+  }
+
   // Pexels 소스로 BROLL 컷 제작
   const [brollPexelsPick, setBrollPexelsPick] = useState({})       // { [cutNo]: item }
   const [brollDownloading, setBrollDownloading] = useState({})     // { [cutNo]: bool }
@@ -1893,6 +1917,36 @@ export default function MakingTab() {
             <div className={s.settingLabel} style={{ marginTop: 10, borderTop: '1px solid var(--border)', paddingTop: 8 }}>
               또는 데스크톱 화면 녹화
             </div>
+            <div className={s.emptyHint}>
+              녹화 자체는 자동화하지 않습니다 — 검색 메타를 채우고 브라우저를 연 뒤, 원하는 영상을
+              직접 찾아 재생하면서 아래 녹화 버튼으로 캡처하세요. 이 PC는 시스템 오디오(스테레오 믹스)도
+              같이 잡혀서 소리 있는 영상으로 녹화됩니다.
+            </div>
+            <div className={s.settingRow}>
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>검색 카테고리</div>
+                <input className={s.urlInput} value={brollSearchCategory}
+                  placeholder="예: 뮤직비디오, 무대 직캠, 인터뷰"
+                  onChange={e => setBrollSearchCategory(e.target.value)} />
+              </div>
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>검색 주제어</div>
+                <input className={s.urlInput} value={brollSearchKeyword}
+                  placeholder="예: LE SSERAFIM Easy"
+                  onChange={e => setBrollSearchKeyword(e.target.value)} />
+              </div>
+              <div className={s.settingGroup}>
+                <div className={s.settingLabel}>제목(선택)</div>
+                <input className={s.urlInput} value={brollSearchTitle}
+                  placeholder="예: 공식 M/V"
+                  onChange={e => setBrollSearchTitle(e.target.value)} />
+              </div>
+            </div>
+            <div className={s.editorActions}>
+              <button className={s.previewBtn} disabled={brollBrowserOpening} onClick={openRecordingBrowser}>
+                {brollBrowserOpening ? '⏳ 여는 중…' : '🔍 브라우저 열기 (유튜브 검색)'}
+              </button>
+            </div>
             <div className={s.settingRow}>
               <div className={s.settingGroup}>
                 <div className={s.settingLabel}>녹화 품질</div>
@@ -1980,6 +2034,7 @@ export default function MakingTab() {
                 <div className={s.resultOk}>
                   ✅ 편집 완료 — 최종: {brollResult.finalPath} ({(brollResult.finalSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.finalDuration?.toFixed?.(1) ?? brollResult.finalDuration}초)
                   <br />원본(raw, 보관됨): {brollResult.rawPath} ({(brollResult.rawSizeBytes / 1024 / 1024).toFixed(1)}MB, {brollResult.rawDuration?.toFixed(1)}초)
+                  <br />{brollResult.hasAudio ? '🔊 오디오 포함됨' : '🔇 오디오 없음 (이 PC에서 시스템 오디오 장치를 못 찾음)'}
                 </div>
               )
             )}
