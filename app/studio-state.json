@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -848,7 +848,8 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_ABS",
             "source": "SH_MCU CA_ST HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중 MD_ABS"
-          }
+          },
+          "videoMode": "veo"
         },
         {
           "id": "cut-12",
@@ -3179,7 +3180,8 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_ABS",
         "source": "SH_MCU CA_ST HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중 MD_ABS"
-      }
+      },
+      "videoMode": "veo"
     },
     {
       "id": "cut-12",
@@ -4148,10 +4150,68 @@
           "createdAt": 1789710271143,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_09_clip_1.mp4"
         }
+      ],
+      "cut-16": [
+        {
+          "url": "blob:http://localhost:5173/0766235f-6a8e-427a-a277-7059465b36b1",
+          "name": "kling_20260918_VIDEO_First_0_3s_3796_0.mp4",
+          "duration": 8.04,
+          "trimStart": 0,
+          "trimEnd": 8.04,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789714868435,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_17_clip_new1789715798146.mp4"
+        }
+      ],
+      "cut-17": [
+        {
+          "url": "blob:http://localhost:5173/bfdc0b30-f384-4d58-8a68-a66dcb89e0eb",
+          "name": "b67e4071-b173-44f6-a873-521c3cfd186c.mp4",
+          "duration": 5.04,
+          "trimStart": 0,
+          "trimEnd": 5.04,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789715844707,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_18_clip_new1789715903273.mp4"
+        }
+      ],
+      "cut-11": [
+        {
+          "url": "blob:http://localhost:5173/961ddb94-f33a-456b-8edf-693809046782",
+          "name": "Two_women_watching_television_20260918154145.mp4",
+          "duration": 4.01,
+          "trimStart": 0,
+          "trimEnd": 4.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789713706151,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_11_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/d8b00147-e507-41ef-b9b6-ff48b53e820b",
+          "name": "Two_people_watching_television_20260918154042.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789713643258,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_11_clip_1.mp4"
+        }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-11",
+    "selectedCutId": "cut-11b",
     "subtitles": {
       "cut-1": "",
       "cut-20": [
@@ -4162,7 +4222,8 @@
         }
       ],
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
-      "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스"
+      "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
+      "cut-16": "근데 있잖아요. 좋은 거잖아요, 그냥!"
     }
   },
   "ttsTabState": {

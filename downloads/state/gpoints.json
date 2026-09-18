@@ -573,18 +573,14 @@
       "g5": false
     },
     "cut_17": {
-      "g1": true,
-      "updatedAt": "2026-09-18T05:23:51.845Z",
-      "g5": false,
       "g2": true,
-      "selectedImage": "cut_17_a.jpg"
+      "selectedImage": "cut_17_a.jpg",
+      "updatedAt": "2026-09-18T07:14:19.273Z"
     },
     "cut_18": {
-      "g1": true,
-      "updatedAt": "2026-09-18T05:23:57.841Z",
-      "g5": false,
       "g2": true,
-      "selectedImage": "cut_18_a.jpg"
+      "selectedImage": "cut_18_a.jpg",
+      "updatedAt": "2026-09-18T07:14:27.440Z"
     },
     "cut_12": {
       "g1": true,
