@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -756,8 +756,8 @@
           "dialogue": "",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind,\nsitting side by side on a beige sofa, facing a TV across the room, watching together,\n\nOn the left: short wavy black hair with fringe bangs, back of head and shoulders visible,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short, back of head and shoulders visible,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front, ivory wide-leg tailored trousers,\n\nTV screen visible across the room showing only a blurred/abstract colorful glow, never legible text or UI,\nwarm cozy evening lighting, soft TV light flickering on the back of the sofa and their hair,\nNo other people in background — only the named characters in frame, plain empty background,\nBarefoot or socks only, no shoes worn (indoor home setting),\nPhotorealistic 8K cinematic 16:9",
-          "videoPrompt": "First 0-4s: WIDE SHOT from behind — both women seated on the sofa, backs to camera, facing a TV across the room showing only a blurred/abstract colorful glow (never legible text or UI). Jia (screen-LEFT) sits upright and composed; Yeori (screen-RIGHT) leans slightly forward, intensely focused, watching the screen. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut to MCU two-shot, now facing them from the front — since the camera moved to the opposite side, their screen positions MIRROR/SWAP from the previous shot]\nNext 4-10s: both women sit facing forward, camera beginning a slow push-in, Jia (now screen-RIGHT — swapped from the rear-view shot) starts calm and composed, Yeori (now screen-LEFT — swapped from the rear-view shot) intensely focused from the start.\nJia's body slowly leans forward, absorbed, expression softening,\nYeori glances briefly at Jia then refocuses forward,\nsoft warm TV light flickering on their faces, screen itself not visible from this angle,\nno dialogue, pure reaction",
+          "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind, sitting side by side on a beige sofa, facing a TV across the room, watching together.\n\nOn the LEFT: Yeori — long wavy dark brown hair past the shoulders, back of head and shoulders visible, navy blue fitted cardigan, ivory wide-leg tailored trousers with black belt.\n\nOn the RIGHT: Jia — short wavy black bob with fringe bangs (visibly shorter than Yeori's hair), back of head and shoulders visible, white fitted short-sleeve tee, blue distressed denim cutoff shorts, silver chain necklace.\n\nTV screen visible across the room showing only a blurred/abstract colorful glow (never legible text, logos, or UI). Warm cozy evening lighting, wooden bookshelf on the left side of the room, wooden low TV console. No other people in background. Barefoot or socks only, no shoes worn (indoor home setting). Photorealistic 8K cinematic 16:9.",
+          "videoPrompt": "[Clip 1/2 — 4s] Starting frame: use the approved rear-view reference image (Yeori on screen-LEFT with long dark hair and navy cardigan; Jia on screen-RIGHT with short black bob and white tee). Both women stay seated on the sofa watching the TV from behind — Jia sits upright and composed, Yeori leans slightly forward, intensely focused. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut — camera moves around to the opposite side of the room, now facing them from the front. Same room, same sofa. Their screen positions mirror/swap from Clip 1 since the camera flipped sides.]\n[Clip 2/2 — 6s] Starting frame: use the separate approved front-view reference image (Jia now on screen-LEFT — short black bob, white tee, distinct sharp-featured face with winged eyeliner and mauve-brown lips; Yeori now on screen-RIGHT — long dark hair, navy cardigan, distinct softer face with gentle pink lips). Camera does a slow push-in. Jia's body slowly leans forward, absorbed, expression softening. Yeori glances briefly at Jia then refocuses forward. Soft warm TV light flickers on their faces; the screen itself is not visible from this angle. No dialogue, pure reaction.",
           "duration": 10,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
@@ -799,7 +799,8 @@
           "segPrompts": [
             "WIDE SHOT — Two young Korean women early-20s, seen from behind,\nsitting side by side on a beige sofa, facing a TV across the room, watching together,\n\nOn the left: short wavy black hair with fringe bangs, back of head and shoulders visible,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short, back of head and shoulders visible,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front, ivory wide-leg tailored trousers,\n\nTV screen visible across the room showing only a blurred/abstract colorful glow, never legible text or UI,\nwarm cozy evening lighting, soft TV light flickering on the back of the sofa and their hair,\nNo other people in background — only the named characters in frame, plain empty background,\nBarefoot or socks only, no shoes worn (indoor home setting),\nPhotorealistic 8K cinematic 16:9",
             "MEDIUM SHOT — Two young Korean women early-20s,\nsitting side by side on beige sofa, both facing forward, camera beginning a slow push-in,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nleaning forward slightly, absorbed expression (left), intensely focused expression, glancing left briefly (right),\n\nsoft warm light from TV screen reflecting on their faces,\nno screen visible, only their reactions,\nNo other people in background — only the named characters in frame, plain empty background.\nBarefoot or socks only, no shoes worn (indoor home setting).\nPhotorealistic 8K cinematic 16:9"
-          ]
+          ],
+          "videoMode": "veo"
         },
         {
           "id": "cut-11b",
@@ -3086,8 +3087,8 @@
       "dialogue": "",
       "narration": "",
       "subtitle": "",
-      "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind,\nsitting side by side on a beige sofa, facing a TV across the room, watching together,\n\nOn the left: short wavy black hair with fringe bangs, back of head and shoulders visible,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short, back of head and shoulders visible,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front, ivory wide-leg tailored trousers,\n\nTV screen visible across the room showing only a blurred/abstract colorful glow, never legible text or UI,\nwarm cozy evening lighting, soft TV light flickering on the back of the sofa and their hair,\nNo other people in background — only the named characters in frame, plain empty background,\nBarefoot or socks only, no shoes worn (indoor home setting),\nPhotorealistic 8K cinematic 16:9",
-      "videoPrompt": "First 0-4s: WIDE SHOT from behind — both women seated on the sofa, backs to camera, facing a TV across the room showing only a blurred/abstract colorful glow (never legible text or UI). Jia (screen-LEFT) sits upright and composed; Yeori (screen-RIGHT) leans slightly forward, intensely focused, watching the screen. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut to MCU two-shot, now facing them from the front — since the camera moved to the opposite side, their screen positions MIRROR/SWAP from the previous shot]\nNext 4-10s: both women sit facing forward, camera beginning a slow push-in, Jia (now screen-RIGHT — swapped from the rear-view shot) starts calm and composed, Yeori (now screen-LEFT — swapped from the rear-view shot) intensely focused from the start.\nJia's body slowly leans forward, absorbed, expression softening,\nYeori glances briefly at Jia then refocuses forward,\nsoft warm TV light flickering on their faces, screen itself not visible from this angle,\nno dialogue, pure reaction",
+      "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind, sitting side by side on a beige sofa, facing a TV across the room, watching together.\n\nOn the LEFT: Yeori — long wavy dark brown hair past the shoulders, back of head and shoulders visible, navy blue fitted cardigan, ivory wide-leg tailored trousers with black belt.\n\nOn the RIGHT: Jia — short wavy black bob with fringe bangs (visibly shorter than Yeori's hair), back of head and shoulders visible, white fitted short-sleeve tee, blue distressed denim cutoff shorts, silver chain necklace.\n\nTV screen visible across the room showing only a blurred/abstract colorful glow (never legible text, logos, or UI). Warm cozy evening lighting, wooden bookshelf on the left side of the room, wooden low TV console. No other people in background. Barefoot or socks only, no shoes worn (indoor home setting). Photorealistic 8K cinematic 16:9.",
+      "videoPrompt": "[Clip 1/2 — 4s] Starting frame: use the approved rear-view reference image (Yeori on screen-LEFT with long dark hair and navy cardigan; Jia on screen-RIGHT with short black bob and white tee). Both women stay seated on the sofa watching the TV from behind — Jia sits upright and composed, Yeori leans slightly forward, intensely focused. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut — camera moves around to the opposite side of the room, now facing them from the front. Same room, same sofa. Their screen positions mirror/swap from Clip 1 since the camera flipped sides.]\n[Clip 2/2 — 6s] Starting frame: use the separate approved front-view reference image (Jia now on screen-LEFT — short black bob, white tee, distinct sharp-featured face with winged eyeliner and mauve-brown lips; Yeori now on screen-RIGHT — long dark hair, navy cardigan, distinct softer face with gentle pink lips). Camera does a slow push-in. Jia's body slowly leans forward, absorbed, expression softening. Yeori glances briefly at Jia then refocuses forward. Soft warm TV light flickers on their faces; the screen itself is not visible from this angle. No dialogue, pure reaction.",
       "duration": 10,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
@@ -3129,7 +3130,8 @@
       "segPrompts": [
         "WIDE SHOT — Two young Korean women early-20s, seen from behind,\nsitting side by side on a beige sofa, facing a TV across the room, watching together,\n\nOn the left: short wavy black hair with fringe bangs, back of head and shoulders visible,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short, back of head and shoulders visible,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front, ivory wide-leg tailored trousers,\n\nTV screen visible across the room showing only a blurred/abstract colorful glow, never legible text or UI,\nwarm cozy evening lighting, soft TV light flickering on the back of the sofa and their hair,\nNo other people in background — only the named characters in frame, plain empty background,\nBarefoot or socks only, no shoes worn (indoor home setting),\nPhotorealistic 8K cinematic 16:9",
         "MEDIUM SHOT — Two young Korean women early-20s,\nsitting side by side on beige sofa, both facing forward, camera beginning a slow push-in,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nleaning forward slightly, absorbed expression (left), intensely focused expression, glancing left briefly (right),\n\nsoft warm light from TV screen reflecting on their faces,\nno screen visible, only their reactions,\nNo other people in background — only the named characters in frame, plain empty background.\nBarefoot or socks only, no shoes worn (indoor home setting).\nPhotorealistic 8K cinematic 16:9"
-      ]
+      ],
+      "videoMode": "veo"
     },
     {
       "id": "cut-11b",
@@ -3833,7 +3835,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T05:30:06.091Z",
+  "savedAt": "2026-09-18T06:27:29.705Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -4118,10 +4120,38 @@
           "createdAt": 1789645879595,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
         }
+      ],
+      "cut-9": [
+        {
+          "url": "blob:http://localhost:5173/211a765e-c210-4dbb-83c1-c0b9da879f53",
+          "name": "Woman_speaking_with_sudden_reali…_20260918145234.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789710754904,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_09_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/4c74688a-ee14-45c5-88ea-8da7d7edb621",
+          "name": "Woman_speaking_in_room_20260918144430.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789710271143,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_09_clip_1.mp4"
+        }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-8",
+    "selectedCutId": "cut-11",
     "subtitles": {
       "cut-1": "",
       "cut-20": [

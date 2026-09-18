@@ -6778,7 +6778,12 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
   ]
   let aInputs = 0
   if (bgHasAudio) { filters.push(`[0:a]volume=${bgVol}[bga]`); aInputs++ }
-  if (pipHasAudio) { filters.push(`[1:a]volume=1.0[pipa]`); aInputs++ }
+  // -itsoffset로 PIP 입력을 밀어두면 화면(overlay)은 enable 게이트 덕에 정확히 delay초부터
+  // 나오는데, 오디오는 amix가 각 입력을 PTS 정렬 없이 그냥 처음부터 섞어버려서 목소리가
+  // 화면보다 먼저(0초부터) 들리는 어긋남이 있었다(2026-09-18, 사용자 실측: "PIP 대사 시작이
+  // 2초 후인데 시작부터 대사가 나온다" — volumedetect로 합성본 0~2구간이 리액션 단독
+  // 0~2구간과 거의 동일 dB인 걸로 확인). adelay로 오디오도 화면과 같은 시점에 시작하게 명시.
+  if (pipHasAudio) { filters.push(`[1:a]adelay=${Math.round(pipDelay * 1000)}|${Math.round(pipDelay * 1000)},volume=1.0[pipa]`); aInputs++ }
   const aLabels = [bgHasAudio ? '[bga]' : null, pipHasAudio ? '[pipa]' : null].filter(Boolean)
   if (aInputs > 1) filters.push(`${aLabels.join('')}amix=inputs=${aInputs}:duration=longest:normalize=0[aout]`)
   else if (aInputs === 1) filters.push(`${aLabels[0]}anull[aout]`)

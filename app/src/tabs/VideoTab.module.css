@@ -168,7 +168,10 @@
 .proxyBtn:hover { border-color: var(--accent); color: var(--accent-light); }
 
 /* 자막 수정 모드 */
-.subtitleEditBox { position: absolute; left: 5%; right: 5%; z-index: 20; background: rgba(0,0,0,.85); border: 1px solid rgba(139,92,246,.5); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,.5); }
+/* left를 5%→22%로 넓혀서 영상 좌하단(네이티브 재생 버튼 자리)을 안 가리게 함 — 자막
+   위치를 "하단"으로 두면 편집창이 재생 버튼과 겹쳐서 클릭이 안 먹히던 문제(2026-09-18,
+   사용자 실측: "버튼이 안 눌리고 입력창이 뜬다"). 오른쪽(전체화면 등 다른 버튼)은 유지. */
+.subtitleEditBox { position: absolute; left: 22%; right: 5%; z-index: 20; background: rgba(0,0,0,.85); border: 1px solid rgba(139,92,246,.5); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,.5); }
 .subtitleEditBox.pos_top { bottom: 24%; }
 .subtitleEditBox.pos_middle { bottom: 14%; }
 .subtitleEditBox.pos_bottom { bottom: 6%; }
