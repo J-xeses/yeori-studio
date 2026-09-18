@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3612,7 +3612,7 @@
       "서여리": {
         "speed": 0.9,
         "stability": 30,
-        "similarity": 75
+        "similarity": 78
       }
     },
     "readingMap": {}
@@ -3691,7 +3691,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-17T14:26:44.264Z",
+  "savedAt": "2026-09-18T01:04:39.535Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [],
@@ -3751,34 +3751,8 @@
           "createdAt": 1789207757000
         }
       ],
-      "cut-20": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789373003231",
-          "name": "cut_19.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
-          "keepAudio": false,
-          "createdAt": 1788876666000
-        }
-      ],
-      "cut-15": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789375769775",
-          "name": "cut_14.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_14.mp4",
-          "keepAudio": false,
-          "createdAt": 1788944994000
-        }
-      ],
+      "cut-20": [],
+      "cut-15": [],
       "cut-10": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_10.mp4?t=1789375775114",
@@ -3835,48 +3809,9 @@
           "createdAt": 1788944994000
         }
       ],
-      "cut-13": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789573090470",
-          "name": "cut_14.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_14.mp4",
-          "keepAudio": true,
-          "createdAt": 1788944994000
-        }
-      ],
-      "cut-18": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789573091732",
-          "name": "cut_19.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
-          "keepAudio": true,
-          "createdAt": 1788876666000
-        }
-      ],
-      "cut-21": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789573092020",
-          "name": "cut_22.mp4",
-          "duration": 5,
-          "trimStart": 0,
-          "trimEnd": 5,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_22.mp4",
-          "keepAudio": true,
-          "createdAt": 1789207757000
-        }
-      ],
+      "cut-13": [],
+      "cut-18": [],
+      "cut-21": [],
       "cut-3": [
         {
           "url": "blob:http://localhost:5173/39a60045-ea27-47cc-aac9-4bbafda8526c",
@@ -3890,6 +3825,19 @@
           "keepAudio": true,
           "createdAt": 1789539969637,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/b827eb9e-d6b0-4d12-8837-90e0ba705612",
+          "name": "Young_woman_speaking_Korean_gesture_20260917203846.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789645127174,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
         }
       ],
       "cut-6": [
@@ -3950,7 +3898,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-6",
+    "selectedCutId": "cut-4",
     "subtitles": {
       "cut-1": "",
       "cut-20": [
@@ -4024,8 +3972,8 @@
       ],
       "cut-21": [
         {
-          "id": "v1",
-          "label": "목소리 1",
+          "id": "v1789694806321_3ik",
+          "label": "목소리 2",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
       ],
@@ -4112,6 +4060,27 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-11b": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-12": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-15": [
+        {
+          "id": "v1789693978566_a5u",
+          "label": "목소리 2",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
@@ -4134,9 +4103,9 @@
         {
           "id": "track_1789346165885_z859",
           "type": "dialogue",
-          "text": "야, 야~ 이거 봤어?",
+          "text": "야야! 이거 봤어?..  이거 봤어??",
           "speaker": "지아",
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_02_track_1789346165885_z859.mp3?t=1789695061305",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -4196,7 +4165,7 @@
           "type": "dialogue",
           "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜… 어떻게 설명하지? 버블 같아요, 버블.. 터질 것 같은데 터지면 또 귀여운 그 느낌?",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_05_track_1789346165885_sp2q.mp3?t=1789692769518",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -4226,7 +4195,7 @@
           "type": "dialogue",
           "text": "KATSEYE는 좀 달라요. 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?~ LA 베이스. 경계 자체가 없는 세계관!",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_07_track_1789346165885_i74f.mp3?t=1789692785801",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -4256,11 +4225,11 @@
           "type": "dialogue",
           "text": "근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_09_track_1789346165885_5wzu.mp3?t=1789692860179",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
-            "stability": 30,
+            "stability": 28,
             "similarity": 75
           }
         }
@@ -4299,13 +4268,13 @@
         {
           "id": "track_1789346165885_6bw3",
           "type": "dialogue",
-          "text": "…중독이에요…",
+          "text": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_14_track_1789346165885_6bw3.mp3?t=1789693221596",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
-            "stability": 30,
+            "stability": 28,
             "similarity": 75
           }
         }
@@ -4325,45 +4294,17 @@
           }
         }
       ],
-      "cut-15__v1": [
-        {
-          "id": "track_1789346165885_azvw",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
       "cut-16__v1": [
         {
-          "id": "track_1789346165885_2nn8",
-          "type": "dialogue",
-          "text": "야 그냥 좋잖아!!",
-          "speaker": "한지아",
-          "url": null,
+          "id": "track_1789694383614_01e2",
+          "type": "narration",
+          "text": "근데 있잖아요… 좋은 거잖아요, 그냥!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_17_track_1789694383614_01e2.mp3?t=1789694438291",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1789346165885_sfoq",
-          "type": "dialogue",
-          "text": "…맞아...",
-          "speaker": "서여리",
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
+            "stability": 35,
             "similarity": 75
           }
         }
@@ -4387,9 +4328,9 @@
         {
           "id": "track_1789346165885_yfc8",
           "type": "dialogue",
-          "text": "",
+          "text": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_19_track_1789346165885_yfc8.mp3?t=1789694504452",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -4400,15 +4341,15 @@
       ],
       "cut-19__v1": [
         {
-          "id": "track_1789346165885_8lfq",
-          "type": "dialogue",
-          "text": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
+          "id": "track_1789694518335_ho9o",
+          "type": "narration",
+          "text": "봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다 소름이에요!!!",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_20_track_1789694518335_ho9o.mp3?t=1789694632135",
           "voiceId": "",
           "settings": {
-            "speed": 0.95,
-            "stability": 30,
+            "speed": 1,
+            "stability": 23,
             "similarity": 75
           }
         }
@@ -4417,24 +4358,9 @@
         {
           "id": "track_1789346165885_4etw",
           "type": "dialogue",
-          "text": "",
+          "text": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
           "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-21__v1": [
-        {
-          "id": "track_1789346165885_fks0",
-          "type": "dialogue",
-          "text": "실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
-          "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_21_track_1789346165885_4etw.mp3?t=1789694772851",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -4485,10 +4411,98 @@
             "similarity": 75
           }
         }
+      ],
+      "cut-11b__v1": [
+        {
+          "id": "track_1789692866200_cpbx",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-12__v1": [
+        {
+          "id": "track_1789692867500_1i72",
+          "type": "dialogue",
+          "text": "… 중독이에요…",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_13_track_1789692867500_1i72.mp3?t=1789692882082",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-15__v1789693978566_a5u": [
+        {
+          "id": "track_1789693978566_emb9",
+          "type": "dialogue",
+          "text": "야~ 그냥 좋잖아!!",
+          "speaker": "한지아",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_16_track_1789693978566_emb9.mp3?t=1789694298060",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1789693978566_qy8u",
+          "type": "dialogue",
+          "text": ".... 맞아~",
+          "speaker": "서여리",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_16_track_1789693978566_qy8u.mp3?t=1789694257169",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-21__v1789694806321_3ik": [
+        {
+          "id": "track_1789694806321_nojr",
+          "type": "dialogue",
+          "text": "여러분 픽은 뭐예요?",
+          "speaker": "한지아",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_22_track_1789694806321_nojr.mp3?t=1789694833128",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1789694806321_3wzk",
+          "type": "dialogue",
+          "text": "댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!",
+          "speaker": "서여리",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_22_track_1789694806321_3wzk.mp3?t=1789694847660",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
       ]
     },
     "activeVoiceTab": {
-      "cut-2": 0
+      "cut-2": 0,
+      "cut-15": 0,
+      "cut-21": 0
     },
     "mergedUrls": {}
   },
