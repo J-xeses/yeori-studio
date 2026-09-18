@@ -6808,22 +6808,52 @@ async function renderPipComposite({ bgFile, pipFile, outPath, layout, scale, CW,
 }
 
 app.post('/api/render-pip-composite', async (req, res) => {
-  const { epNum, cutNo, segIdx, targetCutNo, targetSegIdx, layout, scale, bgVolume, delay } = req.body || {}
-  if (!epNum || cutNo == null || segIdx == null || (!targetCutNo && targetSegIdx == null)) {
-    return res.status(400).json({ error: 'epNum, cutNo, segIdx, (targetCutNo 또는 targetSegIdx) 필요' })
+  const { epNum, cutNo, segIdx, targetCutNo, targetSegIdx, pipSourceCutNo, pipSourceClipIdx, layout, scale, bgVolume, delay } = req.body || {}
+  const usingPipSource = pipSourceCutNo != null && pipSourceClipIdx != null
+  if (!epNum || cutNo == null || segIdx == null || (!usingPipSource && !targetCutNo && targetSegIdx == null)) {
+    return res.status(400).json({ error: 'epNum, cutNo, segIdx, (pipSourceCutNo+pipSourceClipIdx 또는 targetCutNo 또는 targetSegIdx) 필요' })
   }
   try {
     const state = loadStudioState()
     const cut = (state.cuts || []).find(c => c.no === Number(cutNo))
     if (!cut) return res.status(404).json({ error: `CUT ${cutNo} 없음` })
     const clips = (state.videoTabState?.videoClips || {})[cut.id] || []
+    const padded = String(cutNo).padStart(2, '0')
+    const rawDir = path.join(mp.makingDir(epNum), 'raw')
+    fs.mkdirSync(rawDir, { recursive: true })
+
+    // 2026-09-18 재설계 — PIP 리액션은 이제 컷3/5/7(발화 컷)의 클립을 "그대로 재사용"한다.
+    // 필드게이트가 요구하는 3클립 세트(대사·자막 완결성)는 컷3/5/7에 그대로 유지되고,
+    // 컷4/6/8은 배경 하나만 자기 세그로 올리고, 어느 클립을 PIP로 쓸지만 가리킨다
+    // (중복 업로드 제거, 사용자 확정: "재사용하면 된다" — 아래는 이 새 경로 전용).
+    if (usingPipSource) {
+      const bgClip = clips[Number(segIdx)]
+      let bgFile
+      if (bgClip?.stagedPath && fs.existsSync(bgClip.stagedPath)) {
+        bgFile = bgClip.stagedPath
+      } else {
+        const alreadyProduced = path.join(mp.videoDir(epNum), `cut_${padded}.mp4`)
+        if (fs.existsSync(alreadyProduced)) bgFile = alreadyProduced
+        else return res.status(400).json({ error: `배경 세그먼트 ${Number(segIdx) + 1}이 비어있습니다 — 세그1에 업로드하거나, 메이킹 탭에서 이 컷(cut_${padded}.mp4)을 먼저 제작하세요.` })
+      }
+      const srcCut = (state.cuts || []).find(c => c.no === Number(pipSourceCutNo))
+      if (!srcCut) return res.status(404).json({ error: `CUT ${pipSourceCutNo} 없음(PIP 소스)` })
+      const srcClips = (state.videoTabState?.videoClips || {})[srcCut.id] || []
+      const srcClip = srcClips[Number(pipSourceClipIdx)]
+      if (!srcClip?.stagedPath || !fs.existsSync(srcClip.stagedPath)) {
+        return res.status(400).json({ error: `CUT${pipSourceCutNo}의 클립${Number(pipSourceClipIdx) + 1}이 아직 없습니다 — 먼저 그 컷에 업로드하세요.` })
+      }
+      const outPath2 = path.join(rawDir, `cut_${padded}_pip_seg${Number(segIdx) + 1}.mp4`)
+      const { w: CW2, h: CH2 } = episodeCutDims(epNum)
+      const { pipDelay: pipDelay2 } = await renderPipComposite({ bgFile, pipFile: srcClip.stagedPath, outPath: outPath2, layout: layout || 'bottom_right', scale: scale || 0.3, CW: CW2, CH: CH2, bgVolume, delay: (typeof delay === 'number' ? delay : undefined) })
+      const duration2 = await getMediaDuration(outPath2)
+      return res.json({ success: true, outputPath: outPath2, duration: duration2, delay: pipDelay2, bgVolume: (typeof bgVolume === 'number' ? bgVolume : 0.42) })
+    }
+
     const pipClip = clips[Number(segIdx)]
     if (!pipClip?.stagedPath || !fs.existsSync(pipClip.stagedPath)) {
       return res.status(400).json({ error: `세그먼트 ${Number(segIdx) + 1}의 스테이징된 클립 파일이 없습니다 — 먼저 업로드/스테이징하세요.` })
     }
-    const padded = String(cutNo).padStart(2, '0')
-    const rawDir = path.join(mp.makingDir(epNum), 'raw')
-    fs.mkdirSync(rawDir, { recursive: true })
     let bgFile
     if (targetSegIdx != null) {
       // 2026-09-17 재설계 — 배경(화면녹화)과 리액션을 CUT3처럼 같은 컷의 클립1/클립2로 각각

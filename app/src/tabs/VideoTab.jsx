@@ -1017,16 +1017,21 @@ export default function VideoTab() {
       for (const [segNoStr, spec] of Object.entries(pipSegs)) {
         const idx = Number(segNoStr) - 1
         if (idx < 0 || idx >= clips.length || origToRenderIdx[idx] == null) continue
-        // 2026-09-17 재설계 — targetSegIdx(같은 컷의 다른 세그, 예: 세그1=화면녹화 배경)
-        // 우선, 없으면 예전 targetCutNo(다른 컷 번호) 방식 폴백.
-        const bgLabel = spec.targetSegIdx != null ? `세그${Number(spec.targetSegIdx) + 1}` : `CUT${spec.target}`
-        setComposeLog(p => ({ ...p, [cut.id]: `세그${segNoStr} PIP 합성 중 (${bgLabel} 위에)…` }))
+        // 2026-09-18 재설계 — 리액션은 이제 컷3/5/7(발화 컷) 쪽 클립을 그대로 재사용한다
+        // (pipSourceCutNo+pipSourceClipIdx). targetSegIdx(같은 컷 내 세그)·targetCutNo(예전
+        // 자기참조 방식)는 이 컷에 남은 레거시 데이터가 있을 때만 폴백으로 지원.
+        const usingPipSource = spec.pipSourceCutNo != null && spec.pipSourceClipIdx != null
+        const bgLabel = usingPipSource ? `CUT${spec.pipSourceCutNo} 클립${Number(spec.pipSourceClipIdx) + 1}`
+          : spec.targetSegIdx != null ? `세그${Number(spec.targetSegIdx) + 1}` : `CUT${spec.target}`
+        setComposeLog(p => ({ ...p, [cut.id]: `세그${segNoStr} PIP 합성 중 (${bgLabel} 재사용)…` }))
         const pr = await fetch('http://localhost:3001/api/render-pip-composite', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             epNum, cutNo: cut.no, segIdx: idx,
-            targetSegIdx: spec.targetSegIdx, targetCutNo: spec.targetSegIdx != null ? undefined : spec.target,
+            pipSourceCutNo: spec.pipSourceCutNo, pipSourceClipIdx: spec.pipSourceClipIdx,
+            targetSegIdx: usingPipSource ? undefined : spec.targetSegIdx,
+            targetCutNo: (usingPipSource || spec.targetSegIdx != null) ? undefined : spec.target,
             layout: spec.layout, scale: spec.scale, bgVolume: spec.bgVolume,
             // 지정 안 하면 서버가 "배경 길이 - PIP 길이"로 자동 계산(=PIP가 배경 끝과 동시에
             // 끝남). 사용자가 다른 타이밍을 원하면 pipSegments[idx].pipDelay(초)로 수동 지정.
@@ -1776,22 +1781,48 @@ export default function VideoTab() {
                   </div>
                 )}
                 {selCut.pipSegments && (
-                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', margin: '4px 0 8px', fontSize: 11.5, color: 'var(--text3)' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '4px 0 8px', fontSize: 11.5, color: 'var(--text3)' }}>
                     {Object.entries(selCut.pipSegments).map(([segNoStr, spec]) => {
                       const pct = Math.round((spec.bgVolume ?? 0.42) * 100)
+                      // 2026-09-18 — PIP 리액션은 이제 컷3/5/7 쪽 클립을 그대로 재사용(재업로드 없음).
+                      // 어느 클립을 쓸지 여기서 직접 고른다 — 소스 컷의 클립이 늘어나도(대사 추가 등)
+                      // 항상 최신 목록에서 선택 가능.
+                      const srcCutNo = spec.pipSourceCutNo ?? spec.target
+                      const srcCut = cuts.find(c => c.no === srcCutNo)
+                      const srcClips = srcCut ? (videoClips[srcCut.id] || []) : []
                       return (
-                        <label key={segNoStr} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          🎚 PIP 배경(CUT{spec.target}) 음량
-                          <input type="range" min={0} max={100} step={1} value={pct}
-                            onChange={e => {
-                              const v = parseInt(e.target.value, 10) / 100
-                              dispatch({
-                                type: 'UPDATE_CUT', id: selCut.id,
-                                p: { pipSegments: { ...selCut.pipSegments, [segNoStr]: { ...spec, bgVolume: v } } },
-                              })
-                            }} />
-                          <span style={{ minWidth: 30 }}>{pct}%</span>
-                        </label>
+                        <div key={segNoStr} style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            🎬 PIP 소스 (CUT{srcCutNo})
+                            <select value={spec.pipSourceClipIdx ?? ''}
+                              onChange={e => {
+                                const v = e.target.value === '' ? undefined : parseInt(e.target.value, 10)
+                                dispatch({
+                                  type: 'UPDATE_CUT', id: selCut.id,
+                                  p: { pipSegments: { ...selCut.pipSegments, [segNoStr]: { ...spec, pipSourceCutNo: srcCutNo, pipSourceClipIdx: v, target: undefined, targetSegIdx: undefined } } },
+                                })
+                              }}>
+                              <option value="" disabled>클립 선택…</option>
+                              {srcClips.map((c, i) => (
+                                <option key={i} value={i} disabled={!c}>
+                                  {c ? `클립${i + 1} — ${c.name}` : `클립${i + 1} — 파일 없음`}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            🎚 배경 음량
+                            <input type="range" min={0} max={100} step={1} value={pct}
+                              onChange={e => {
+                                const v = parseInt(e.target.value, 10) / 100
+                                dispatch({
+                                  type: 'UPDATE_CUT', id: selCut.id,
+                                  p: { pipSegments: { ...selCut.pipSegments, [segNoStr]: { ...spec, bgVolume: v } } },
+                                })
+                              }} />
+                            <span style={{ minWidth: 30 }}>{pct}%</span>
+                          </label>
+                        </div>
                       )
                     })}
                   </div>
