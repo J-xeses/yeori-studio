@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -849,7 +849,8 @@
             "reason": "SH_MCU+MD_ABS",
             "source": "SH_MCU CA_ST HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중 MD_ABS"
           },
-          "videoMode": "veo"
+          "videoMode": "veo",
+          "sfxVolume": 1
         },
         {
           "id": "cut-12",
@@ -1099,7 +1100,11 @@
             "kenburns": "zoomIn",
             "reason": "SH_ECU",
             "source": "SH_ECU CA_ST 웃음 사그라들며 몽환 눈빛으로 변화 MD_DRM"
-          }
+          },
+          "sfxVolume": 1,
+          "sfxStart": 0,
+          "narrationVolume": 0.55,
+          "narrationStart": 1.5
         },
         {
           "id": "cut-17",
@@ -1247,7 +1252,9 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_GR CA_ST 없음 MD_EMO"
-          }
+          },
+          "narrationStart": 1,
+          "narrationVolume": 0.4
         },
         {
           "id": "cut-20",
@@ -3181,7 +3188,8 @@
         "reason": "SH_MCU+MD_ABS",
         "source": "SH_MCU CA_ST HJ 몸 앞으로 쏠림 / YR 힐끔 → 다시 화면 집중 MD_ABS"
       },
-      "videoMode": "veo"
+      "videoMode": "veo",
+      "sfxVolume": 1
     },
     {
       "id": "cut-12",
@@ -3431,7 +3439,11 @@
         "kenburns": "zoomIn",
         "reason": "SH_ECU",
         "source": "SH_ECU CA_ST 웃음 사그라들며 몽환 눈빛으로 변화 MD_DRM"
-      }
+      },
+      "sfxVolume": 1,
+      "sfxStart": 0,
+      "narrationVolume": 0.55,
+      "narrationStart": 1.5
     },
     {
       "id": "cut-17",
@@ -3579,7 +3591,9 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_GR CA_ST 없음 MD_EMO"
-      }
+      },
+      "narrationStart": 1,
+      "narrationVolume": 0.4
     },
     {
       "id": "cut-20",
@@ -3837,7 +3851,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T09:06:04.154Z",
+  "savedAt": "2026-09-18T11:25:07.821Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3969,14 +3983,14 @@
       ],
       "cut-19": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_20_final.mp4?t=1789721818822",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_20_final.mp4?t=1789730921994",
           "name": "FFmpeg 합성 (cut_20_final.mp4)",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
-          "createdAt": 1789721818854,
+          "createdAt": 1789730922032,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\06_publishing\\cut_20_final.mp4"
         }
       ],
@@ -4152,14 +4166,14 @@
       ],
       "cut-16": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_17_final.mp4?t=1789721132984",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_17_final.mp4?t=1789730981197",
           "name": "FFmpeg 합성 (cut_17_final.mp4)",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "createdAt": 1789721133014,
+          "createdAt": 1789730981226,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\06_publishing\\cut_17_final.mp4"
         }
       ],
@@ -4208,7 +4222,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-19",
+    "selectedCutId": "cut-16",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
