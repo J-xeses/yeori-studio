@@ -857,7 +857,7 @@
           "scene": "CUT 6에서 서여리 얼굴만 CU로 당김. 멍하니 → 카메라 돌아보며 한 마디.",
           "action": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
           "character": "서여리",
-          "dialogue": "\"…중독이에요…\"",
+          "dialogue": "|| ... 중독이에요...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -895,7 +895,15 @@
             "kenburns": "zoomIn",
             "reason": "SH_CU",
             "source": "SH_CU CA_ST 화면 보다 → 카메라로 시선 천천히 이동 MD_DZD"
-          }
+          },
+          "segments": [
+            10,
+            10
+          ],
+          "segPrompts": [
+            "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+            "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+          ]
         },
         {
           "id": "cut-13",
@@ -3179,7 +3187,7 @@
       "scene": "CUT 6에서 서여리 얼굴만 CU로 당김. 멍하니 → 카메라 돌아보며 한 마디.",
       "action": "MV 보다가 카메라로 시선 천천히 이동. 한 마디 후 표정으로 여운 유지.",
       "character": "서여리",
-      "dialogue": "\"…중독이에요…\"",
+      "dialogue": "|| ... 중독이에요...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -3217,7 +3225,15 @@
         "kenburns": "zoomIn",
         "reason": "SH_CU",
         "source": "SH_CU CA_ST 화면 보다 → 카메라로 시선 천천히 이동 MD_DZD"
-      }
+      },
+      "segments": [
+        10,
+        10
+      ],
+      "segPrompts": [
+        "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+        "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+      ]
     },
     {
       "id": "cut-13",
@@ -3817,7 +3833,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T04:34:17.089Z",
+  "savedAt": "2026-09-18T05:30:06.091Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -4016,7 +4032,7 @@
           "staging": false,
           "keepAudio": false,
           "createdAt": 1789540114752,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
         }
       ],
       "cut-6": [
@@ -4100,12 +4116,12 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789645879595,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-6",
+    "selectedCutId": "cut-8",
     "subtitles": {
       "cut-1": "",
       "cut-20": [
@@ -4114,7 +4130,9 @@
           "end": 8,
           "text": ""
         }
-      ]
+      ],
+      "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
+      "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스"
     }
   },
   "ttsTabState": {

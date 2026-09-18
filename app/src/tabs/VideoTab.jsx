@@ -108,34 +108,42 @@ function clipTimings(clips, plannedSegs = []) {
   return out
 }
 
+// 자막 편집창은 "Enter로 줄바꿈 가능"이라고 안내하는데, 이 함수가 공백 기준 폭 자동
+// 줄바꿈만 하고 텍스트 안의 실제 개행(\n)은 그냥 무시해버려서(한 단어처럼 폭 측정에
+// 섞여 들어감) 사용자가 직접 넣은 줄바꿈이 화면에 반영 안 되는 문제가 있었다(2026-09-18,
+// 사용자 지적: "줄바꿈 설정대로 자막이 나타나는 기능이 안 된다"). 먼저 \n으로 문단을
+// 나누고, 각 문단을 기존처럼 폭 기준 자동 줄바꿈 — 수동 개행은 항상 줄 경계로 유지되고,
+// 자동 줄바꿈은 그 안에서만 동작.
 function wrapCanvasText(ctx, text, maxWidth) {
-  const words = text.split(' ')
   const lines = []
-  let line = ''
-  for (const word of words) {
-    const test = line ? line + ' ' + word : word
-    if (ctx.measureText(test).width > maxWidth && line) {
-      if (ctx.measureText(word).width > maxWidth) {
-        let charLine = line
-        for (const ch of word) {
-          const t2 = charLine + ch
-          if (ctx.measureText(t2).width > maxWidth && charLine) {
-            lines.push(charLine)
-            charLine = ch
-          } else {
-            charLine = t2
+  for (const para of String(text ?? '').split('\n')) {
+    const words = para.split(' ')
+    let line = ''
+    for (const word of words) {
+      const test = line ? line + ' ' + word : word
+      if (ctx.measureText(test).width > maxWidth && line) {
+        if (ctx.measureText(word).width > maxWidth) {
+          let charLine = line
+          for (const ch of word) {
+            const t2 = charLine + ch
+            if (ctx.measureText(t2).width > maxWidth && charLine) {
+              lines.push(charLine)
+              charLine = ch
+            } else {
+              charLine = t2
+            }
           }
+          line = charLine
+        } else {
+          lines.push(line)
+          line = word
         }
-        line = charLine
       } else {
-        lines.push(line)
-        line = word
+        line = test
       }
-    } else {
-      line = test
     }
+    lines.push(line)
   }
-  if (line) lines.push(line)
   return lines
 }
 
@@ -1288,8 +1296,13 @@ export default function VideoTab() {
             }}
             renderPreview={c => {
               const clips = videoClips[c.id] || []
-              return clips[0]
-                ? <video src={clips[0]?.url} className={s.cutSideThumb} muted />
+              // clips[0].url을 그대로 쓰면 새로고침 후 죽은 blob: URL이라 검은 칸만 보였음
+              // (컷6·8만 멀쩡했던 건 그 둘만 서버 다운로드 URL을 갖고 있었기 때문 —
+              // 2026-09-18, 사용자 지적: "썸네일도 언제부터인지 누락"). 본문 미리보기와
+              // 동일하게 stagedPath 기반 폴백을 쓴다.
+              const thumbSrc = resolveClipSrc(clips[0])
+              return thumbSrc
+                ? <video src={thumbSrc} className={s.cutSideThumb} muted />
                 : <div className={s.cutSideThumbEmpty}>🎬</div>
             }}
             previewText={c => {
@@ -1495,7 +1508,16 @@ export default function VideoTab() {
                   편집(canvas/textarea ref)은 단일 ref라 선택된 컷 카드에서만 렌더링. */}
               <div className={s.cutCardVideoCol} onClick={e => e.stopPropagation()}>
                 {previewClip ? (
-                  <div className={s.cutCardVideoInner}>
+                  // 진짜 원인 찾음(2026-09-18, 브라우저에서 실측) — .cutCardRow가
+                  // align-items:stretch라 이 영상 박스가 옆 정보 패널 높이만큼 늘어나는데,
+                  // 영상 자체는 object-fit:contain이라 그 늘어난 박스 안에서 위아래로
+                  // 레터박스(빈 검은 여백)가 생긴다. 자막 오버레이는 "박스" 기준으로 %를
+                  // 계산해서, 정보 패널이 유난히 긴 컷(컷4: VP 전체보기+PIP소스+최종합성본
+                  // 등)에서 레터박스 여백까지 밀려나 "화면 밖"처럼 보였다(컷2/3은 옆 패널이
+                  // 짧아서 우연히 안 튀었을 뿐, 근본 원인은 동일). aspect-ratio로 박스 자체를
+                  // 영상 비율에 고정해 레터박스가 생길 여지를 없앤다 — stretch 늘어남과 무관하게
+                  // 항상 실제 영상 프레임과 박스가 일치.
+                  <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto' }}>
                     <video key={resolveClipSrc(previewClip)} src={resolveClipSrc(previewClip)} controls className={s.cutCardVideoPlayer}
                       onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
                       onLoadedData={() => setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n })} />
@@ -1513,16 +1535,24 @@ export default function VideoTab() {
                     )}
                     {isSelected && subtitleEnabled && !subtitleEditMode && (
                       <div
-                        className={`${s.subtitleDisplay} ${s[`pos_${subtitlePosition}`]}`}
+                        className={s.subtitleDisplay}
                         onClick={() => setSubtitleEditMode(true)}
                         title="클릭하여 자막 수정"
+                        // s[`pos_${subtitlePosition}`] 문자열 조합 클래스가 이 컷카드 목록
+                        // (.map 안에서 매번 다시 렌더되는 위치)에서 비어버리는 경우가 실측
+                        // 확인됨 — position:absolute인데 bottom이 하나도 안 붙어서 자막 박스가
+                        // 문서 흐름상 원래 자리(영상 아래, 컨트롤바 위 틈)로 빠져 화면 밖처럼
+                        // 보였다(2026-09-18, 사용자 스크린샷: 컷2/3은 정상, 컷4부터 틀어짐).
+                        // CSS 모듈 클래스 대신 bottom%를 직접 계산해 인라인으로 고정.
+                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%` }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>
                     )}
                     {isSelected && subtitleEnabled && subtitleEditMode && (
                       <div
-                        className={`${s.subtitleEditBox} ${s[`pos_${subtitlePosition}`]}`}
+                        className={s.subtitleEditBox}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%` }}
                         onClick={(e) => e.stopPropagation()}>
                         <textarea
                           ref={textareaRef}
@@ -1872,52 +1902,14 @@ export default function VideoTab() {
                 {finalPreviewTs[selCut.id] != null && (() => {
                   const padded = String(selCut.no).padStart(2, '0')
                   const finalUrl = `${epMediaUrl(episode, 'video')}/cut_${padded}.mp4?t=${finalPreviewTs[selCut.id]}`
-                  // 최종 합성본엔 자막을 굽지 않으므로(요청: "굽고 싶은 게 아니라 배치된 상태를
-                  // 보려는 것") — 여기서만 예외적으로 라이브 오버레이를 얹어 위치/문구를 바로
-                  // 확인할 수 있게 한다. 실제 파일엔 없고 이 미리보기에만 보이는 것.
-                  // 위치·크기·색상은 다른 컷과 동일하게 "자막 디자인 설정"(전역 subtitlePosition/
-                  // font/fontSize/color/bgStyle) 값을 그대로 따르고, 클릭하면 같은 편집 UI가 열림
-                  // (2026-09-18, 사용자 확정: "다른 컷처럼 위치·크기 수정 가능해야").
-                  const capVal = effectiveCaptionValue(subtitles, selCut, clips)
-                  const capText = Array.isArray(capVal) ? (capVal.find(seg => seg.text)?.text || '') : (capVal || '')
-                  const boxOn = bgStyle === '반투명 직각 박스'
-                  const shadowOn = bgStyle === '그림자'
-                  // s[`pos_${subtitlePosition}`] 문자열 조합 클래스는 이 위치(즉시실행 화살표
-                  // 함수 안, 클립 목록과 분리된 별도 블록)에서 값이 안 잡혀 클래스가 비어버리는
-                  // 경우가 있었음 — position:absolute인데 bottom/top이 하나도 안 붙어서 자막이
-                  // 문서 흐름상 원래 있었을 자리(영상 박스 "바깥" 아래)로 빠져버렸다(2026-09-18,
-                  // 사용자 실측: "하단으로 바꾸면 화면 밖 아래로 내려간다"). CSS 모듈 클래스에
-                  // 의존하지 않고 bottom%를 직접 계산해서 항상 영상 박스 안에 고정되게 한다.
-                  const bottomPct = subtitlePosition === 'top' ? 76 : subtitlePosition === 'middle' ? 43 : 6
+                  // 자막 라이브 오버레이는 뺐다(2026-09-18, 사용자 확정: "최종 합성본
+                  // 미리보기에서 자막을 빼자" — 위치/크기 조정이 실제로 반영되는 것처럼
+                  // 안 보여서 오히려 혼란만 줬음). 메인 화면(위 세그 카드 캔버스 오버레이)
+                  // 쪽 자막은 그대로 유지 — 여긴 순수 미리보기 영상만.
                   return (
                     <div className={s.field} style={{ marginTop: 8 }}>
                       <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다</label>
-                      <div style={{ position: 'relative', width: '100%' }}>
-                        <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6, display: 'block' }} />
-                        {capText && subtitleEnabled && (
-                          <div
-                            onClick={() => { setSelectedCutId(selCut.id); setSubtitleEditMode(true) }}
-                            title="클릭하여 자막 위치/문구 수정 (다른 컷과 동일한 설정 사용)"
-                            style={{
-                              position: 'absolute', left: '5%', right: '5%', bottom: `${bottomPct}%`,
-                              textAlign: 'center', cursor: 'pointer',
-                              // 자막 길이에 따라 줄이 조정돼야 함(2026-09-18) — 세그 카드 쪽
-                              // 캔버스 미리보기는 wrapCanvasText로 이미 자동 줄바꿈되는데, 이
-                              // HTML 오버레이는 그 계산을 안 타므로 별도로 CSS 줄바꿈 규칙을
-                              // 명시. word-break:keep-all로 한글 단어 중간이 끊기지 않게 하고,
-                              // 그래도 안 끊기는 긴 토큰(URL 등)만 overflow-wrap로 최후 처리.
-                              whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                              lineHeight: 1.35,
-                              color, fontFamily: font, fontSize: Math.max(12, Math.round(fontSize * 0.32)), fontWeight: 700,
-                              textShadow: shadowOn ? '0 2px 4px rgba(0,0,0,.9)' : 'none',
-                              background: boxOn ? 'rgba(0,0,0,.45)' : 'transparent',
-                              borderRadius: 6, padding: boxOn ? '4px 8px' : 0,
-                            }}>
-                            {capText}
-                            <div style={{ fontSize: 10, fontWeight: 400, opacity: .55, marginTop: 2 }}>(미리보기 전용 · 파일엔 없음)</div>
-                          </div>
-                        )}
-                      </div>
+                      <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6 }} />
                     </div>
                   )
                 })()}
