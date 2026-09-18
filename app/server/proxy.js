@@ -402,39 +402,55 @@ function runFFmpegCmd(args, logPath) {
 // 있을 수도 없을 수도 있음 — 하나만 있으면 그대로 쓰고, 둘 다 있으면
 // amix로 섞고, 둘 다 없으면 무음(-an) 처리. resolvePath는 상대경로를
 // 절대경로로 바꾸는 함수(호출부마다 기준 디렉터리가 다름)를 받는다.
-function buildAudioMergeArgs({ videoFile, outFile, dur, audioFile, audioStart, audioEnd, sfxFile, sfxStart, resolvePath }) {
+function buildAudioMergeArgs({
+  videoFile, outFile, dur, audioFile, audioStart, audioEnd, sfxFile, sfxStart, resolvePath,
+  bgHasAudio, bgVolume, narrationVolume, sfxVolume,
+}) {
   const hasVoice = !!audioFile
   const hasSfx = !!sfxFile
   if (!hasVoice && !hasSfx) {
     return ['-i', videoFile, '-c:v', 'copy', '-an', outFile, '-y']
   }
 
+  // 예전엔 원본 영상(배경음악 등)의 오디오를 아예 안 태우고 나레이션/효과음으로 완전히
+  // 대체해버렸음(2026-09-18, 사용자 실측: "컷20 음악이 아예 안 들리고 나레이션만 크게
+  // 입혀졌다") — 화면녹화 컷은 영상 자체에 배경음악이 깔려있는데 그게 통째로 사라졌었다.
+  // 이제 배경음(있으면)도 같이 믹스하고, 세 트랙(배경/나레이션/효과음) 각각 볼륨을 따로 받는다.
   const inputs = ['-i', videoFile]
   const chains = []
   const labels = []
   let idx = 1
 
+  if (bgHasAudio) {
+    const bgVol = (typeof bgVolume === 'number' && bgVolume >= 0) ? bgVolume : 0.35
+    chains.push(`[0:a]volume=${bgVol}[abg]`)
+    labels.push('[abg]')
+  }
   if (hasVoice) {
     inputs.push('-i', resolvePath(audioFile))
     const delay = parseFloat(audioStart) || 0
     const end = parseFloat(audioEnd) || dur
     const trimDur = Math.max(0.01, end - delay)
     const delayMs = Math.round(delay * 1000)
-    chains.push(`[${idx}:a]atrim=duration=${trimDur},adelay=${delayMs}|${delayMs},apad=whole_dur=${dur}[a${idx}]`)
+    const vol = (typeof narrationVolume === 'number' && narrationVolume >= 0) ? narrationVolume : 1.0
+    chains.push(`[${idx}:a]atrim=duration=${trimDur},adelay=${delayMs}|${delayMs},apad=whole_dur=${dur},volume=${vol}[a${idx}]`)
     labels.push(`[a${idx}]`)
     idx++
   }
   if (hasSfx) {
     inputs.push('-i', resolvePath(sfxFile))
     const delayMs = Math.round((parseFloat(sfxStart) || 0) * 1000)
-    chains.push(`[${idx}:a]adelay=${delayMs}|${delayMs},apad=whole_dur=${dur}[a${idx}]`)
+    const vol = (typeof sfxVolume === 'number' && sfxVolume >= 0) ? sfxVolume : 1.0
+    chains.push(`[${idx}:a]adelay=${delayMs}|${delayMs},apad=whole_dur=${dur},volume=${vol}[a${idx}]`)
     labels.push(`[a${idx}]`)
     idx++
   }
 
+  // normalize=0 — PIP 합성(renderPipComposite)과 동일 근거: amix 기본 자동감쇠(1/트랙수)를
+  // 끄고, 각 트랙 volume은 위에서 이미 명시적으로 맞췄으니 그대로 합산.
   const filter = labels.length > 1
-    ? `${chains.join(';')};${labels.join('')}amix=inputs=${labels.length}:duration=longest:dropout_transition=0[a]`
-    : chains[0].replace(/\[a\d+\]$/, '[a]')
+    ? `${chains.join(';')};${labels.join('')}amix=inputs=${labels.length}:duration=longest:dropout_transition=0:normalize=0[a]`
+    : chains[0].replace(/\[a\w*\]$/, '[a]')
 
   return [...inputs, '-filter_complex', filter, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-t', String(dur), outFile, '-y']
 }
@@ -4345,8 +4361,8 @@ app.post('/api/save-tts-track', (req, res) => {
 })
 
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
-app.post('/api/run-ffmpeg', (req, res) => {
-  const { ep, cutNo, duration, sfxFile, sfxStart } = req.body
+app.post('/api/run-ffmpeg', async (req, res) => {
+  const { ep, cutNo, duration, sfxFile, sfxStart, audioStart, audioEnd, bgVolume, narrationVolume, sfxVolume } = req.body
   if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
   const dur = parseFloat(duration) || 8
 
@@ -4373,11 +4389,13 @@ app.post('/api/run-ffmpeg', (req, res) => {
 
   send({ type: 'progress', message: 'FFmpeg 합성 시작…' })
 
+  const bgHasAudio = await hasAudioStream(videoFile)
   const args = buildAudioMergeArgs({
     videoFile, outFile, dur,
-    audioFile: hasVoice ? audioFile : null,
+    audioFile: hasVoice ? audioFile : null, audioStart, audioEnd,
     sfxFile: sfxFile || null, sfxStart,
     resolvePath: (p) => path.isAbsolute(p) ? p : path.join(mp.DOWNLOADS, p),
+    bgHasAudio, bgVolume, narrationVolume, sfxVolume,
   })
 
   const proc = spawn('ffmpeg', args, { windowsHide: true })

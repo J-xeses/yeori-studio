@@ -3837,7 +3837,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T08:26:03.517Z",
+  "savedAt": "2026-09-18T09:06:04.154Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3969,26 +3969,15 @@
       ],
       "cut-19": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_20.mp4?t=1789540173256",
-          "name": "cut_20.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_20.mp4",
-          "keepAudio": false,
-          "createdAt": 1789537637000
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_20_final.mp4?t=1789720422804",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_20_final.mp4?t=1789721818822",
           "name": "FFmpeg 합성 (cut_20_final.mp4)",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
-          "createdAt": 1789720422826
+          "createdAt": 1789721818854,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\06_publishing\\cut_20_final.mp4"
         }
       ],
       "cut-14": [
@@ -4163,17 +4152,15 @@
       ],
       "cut-16": [
         {
-          "url": "blob:http://localhost:5173/0766235f-6a8e-427a-a277-7059465b36b1",
-          "name": "kling_20260918_VIDEO_First_0_3s_3796_0.mp4",
-          "duration": 8.04,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_17_final.mp4?t=1789721132984",
+          "name": "FFmpeg 합성 (cut_17_final.mp4)",
+          "duration": 8,
           "trimStart": 0,
-          "trimEnd": 8.04,
+          "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1789714868435,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_17_clip_new1789715798146.mp4"
+          "createdAt": 1789721133014,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\06_publishing\\cut_17_final.mp4"
         }
       ],
       "cut-17": [
@@ -4227,11 +4214,22 @@
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
       "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
-      "cut-16": "근데 있잖아요… 좋은 거잖아요, 그냥!",
+      "cut-16": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": ""
+        }
+      ],
       "cut-19": [
         {
           "start": 0,
           "end": 8,
+          "text": ""
+        },
+        {
+          "start": 8,
+          "end": 18,
           "text": ""
         }
       ],
@@ -4606,13 +4604,13 @@
         {
           "id": "track_1789694518335_ho9o",
           "type": "narration",
-          "text": "봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다 소름이에요!!!",
+          "text": "... 봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다~ 소~름이에요!!",
           "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_20_track_1789694518335_ho9o.mp3?t=1789694632135",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_20_track_1789694518335_ho9o.mp3?t=1789721736757",
           "voiceId": "",
           "settings": {
             "speed": 1,
-            "stability": 23,
+            "stability": 25,
             "similarity": 75
           }
         }
@@ -4774,7 +4772,7 @@
       "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/3b75de71-7f30-4d09-ac01-3cacfd1da62e",
       "cut-16__v1": "blob:http://localhost:5173/d14ab1dc-35db-4963-bc2d-48748b3a2525",
       "cut-18__v1": "blob:http://localhost:5173/d751d482-f99c-4fc7-9ae4-1005bdb9d7b5",
-      "cut-19__v1": "blob:http://localhost:5173/49873e8e-95b3-49f5-b268-5a2a8bf152dc",
+      "cut-19__v1": "blob:http://localhost:5173/ef528606-ab04-4be8-bc4a-6365b052d283",
       "cut-20__v1": "blob:http://localhost:5173/c5d402d0-1424-4e2a-8344-a59707f1763c",
       "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/f35c2cb9-8787-4192-b636-cf16dd64751e"
     }

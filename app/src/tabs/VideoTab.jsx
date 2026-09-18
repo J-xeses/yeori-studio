@@ -916,9 +916,22 @@ export default function VideoTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ep, cutNo: cut.no, duration: cut.duration || 8,
-          sfxFile: sfxAbsolutePath(cut), sfxStart: cut.sfxStart,
+          sfxFile: sfxAbsolutePath(cut), sfxStart: cut.sfxStart, sfxVolume: cut.sfxVolume,
+          audioStart: cut.narrationStart, narrationVolume: cut.narrationVolume,
+          bgVolume: cut.narrBgVolume,
         }),
       })
+      // 서버가 이벤트스트림 대신 일반 에러(예: 시작 영상이 아직 없어 404)를 돌려주면
+      // 아래 stream 파싱 루프가 그걸 못 읽고 "처리중"에 멈춰있던 문제(2026-09-18, 사용자
+      // 실측: 컷17 — 05_video/cut_17.mp4가 아직 없는 상태로 눌러서 서버가 404를 줬는데
+      // 화면은 계속 처리중으로만 표시). 스트림이 아닌 응답은 여기서 바로 에러 처리.
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`
+        try { msg = (await res.json())?.error || msg } catch {}
+        setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
+        setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${msg}` }))
+        return
+      }
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let buf = ''
@@ -955,6 +968,9 @@ export default function VideoTab() {
                   [cut.id]: [...(p[cut.id] || []), {
                     url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
                     duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio, createdAt: Date.now(),
+                    // stagedPath가 없으면 파일이 실제로 만들어졌어도 "⚠ 서버 미반영"으로 잘못
+                    // 표시됨(2026-09-18, 사용자 실측 — 컷20) — 서버가 내려준 절대경로를 그대로 채움.
+                    stagedPath: ev.outputPath,
                   }],
                 }))
               } else {
@@ -1857,6 +1873,43 @@ export default function VideoTab() {
                     })}
                   </div>
                 )}
+                {/* 나레이션/효과음 배치시간·볼륨 설정 — 예전엔 이 값들을 조절할 UI가 전혀
+                    없었고, 서버도 원본 영상의 배경음을 통째로 버리고 나레이션으로 대체해버려서
+                    "음악이 아예 안 들리고 나레이션만 크게 입혀졌다"는 신고가 있었다
+                    (2026-09-18, 컷20 실측). 세 트랙(배경/나레이션/효과음) 시작시간·음량을
+                    각자 따로 조절 가능하게 노출. */}
+                {/* 5개 항목이 창을 줄이면 2줄로 접혀서 복잡해 보이던 것 — 각 요소 폭을 줄이고
+                    nowrap+가로스크롤로 항상 한 줄에 들어가게 함(2026-09-18 사용자 요청). */}
+                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 12, alignItems: 'center', margin: '4px 0 8px', fontSize: 11, color: 'var(--text3)', paddingBottom: 2 }}>
+                  <label title="배경음량" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    🎵
+                    <input type="range" min={0} max={100} step={1} value={Math.round((selCut.narrBgVolume ?? 0.35) * 100)} style={{ width: 64 }}
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { narrBgVolume: parseInt(e.target.value, 10) / 100 } })} />
+                    <span style={{ minWidth: 22 }}>{Math.round((selCut.narrBgVolume ?? 0.35) * 100)}%</span>
+                  </label>
+                  <label title="나레이션 시작(초)" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    🎙⏱
+                    <input type="number" min={0} step={0.1} value={selCut.narrationStart ?? 0} style={{ width: 32 }}
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { narrationStart: parseFloat(e.target.value) || 0 } })} />
+                  </label>
+                  <label title="나레이션 음량" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    🎙
+                    <input type="range" min={0} max={150} step={5} value={Math.round((selCut.narrationVolume ?? 1) * 100)} style={{ width: 64 }}
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { narrationVolume: parseInt(e.target.value, 10) / 100 } })} />
+                    <span style={{ minWidth: 26 }}>{Math.round((selCut.narrationVolume ?? 1) * 100)}%</span>
+                  </label>
+                  <label title="효과음 시작(초)" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    🔊⏱
+                    <input type="number" min={0} step={0.1} value={selCut.sfxStart ?? 0} style={{ width: 32 }}
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { sfxStart: parseFloat(e.target.value) || 0 } })} />
+                  </label>
+                  <label title="효과음 음량" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+                    🔊
+                    <input type="range" min={0} max={150} step={5} value={Math.round((selCut.sfxVolume ?? 1) * 100)} style={{ width: 64 }}
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { sfxVolume: parseInt(e.target.value, 10) / 100 } })} />
+                    <span style={{ minWidth: 26 }}>{Math.round((selCut.sfxVolume ?? 1) * 100)}%</span>
+                  </label>
+                </div>
                 <div className={s.videoEmptyBtns} onClick={e => e.stopPropagation()}>
                   <label className={s.uploadBtn}>
                     📁 로컬 업로드
