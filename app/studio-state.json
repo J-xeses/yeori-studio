@@ -230,7 +230,6 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "데뷔 3년차 / 글로벌 팬덤 보유",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
           "duration": 10,
@@ -284,9 +283,6 @@
           "segPrompts": [
             "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
           ],
-          "subtitleSegments": [
-            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-          ],
           "pipOverlayDialogue": "이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
           "pipSegments": {
             "1": {
@@ -297,7 +293,26 @@
               "bgVolume": 0.42,
               "note": "배경(CUT4 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
-          }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "top",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "데뷔 3년차 / 글로벌 팬덤 보유",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
+          },
+          "subtitleSegments": [
+            "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+          ]
         },
         {
           "id": "cut-5",
@@ -383,7 +398,6 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "데뷔 1년차 / 버블 에너지",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
           "duration": 10,
@@ -436,7 +450,26 @@
               "bgVolume": 0.42,
               "note": "배경(CUT6 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
-          }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "top",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "데뷔 1년차 / 버블 에너지",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
+          },
+          "subtitleSegments": [
+            "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+          ]
         },
         {
           "id": "cut-7",
@@ -522,7 +555,6 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "subtitle": "처음부터 글로벌 타깃",
           "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
           "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
           "duration": 10,
@@ -575,7 +607,26 @@
               "bgVolume": 0.42,
               "note": "배경(CUT8 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
-          }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "top",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "처음부터 글로벌 타깃",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
+          },
+          "subtitleSegments": [
+            "LA 베이스. 경계 자체가 없는 세계관!"
+          ]
         },
         {
           "id": "cut-9",
@@ -2501,7 +2552,6 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "데뷔 3년차 / 글로벌 팬덤 보유",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\nScreenRecorderPanel로 녹화 후 블러 처리\n자막 오버레이: \"데뷔 3년차 / 글로벌 팬덤 보유\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B01_lesserafim.mp4",
       "duration": 10,
@@ -2555,9 +2605,6 @@
       "segPrompts": [
         "continuing from previous clip — leaning in slightly closer with intensified focused expression, lips parting immediately at second 1 into deliberate emphatic speech — young Korean woman early-20s, same beige sofa facing camera directly, long wavy dark brown hair unchanged, delicate gold necklace, white slim ribbed crop tee under open-front navy blue fitted cardigan, ivory wide-leg tailored trousers, subtle natural skin texture on right cheek, K-model proportions small face — from seconds 1-6 she speaks with growing conviction, right index finger points lightly downward for emphasis on a key word, chin dips briefly then rises as she stresses the elongated syllable, eyes sharpen with analytical excitement, slight pause before the final word 'class' lands with a composed confident half-smile — warm indoor lighting, soft background blur, background figures do not interact, photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame)."
       ],
-      "subtitleSegments": [
-        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-      ],
       "pipOverlayDialogue": "이번 콜라보에서 얘네 역할이 진~~ 짜 중요한 게, 그 클래스...",
       "pipSegments": {
         "1": {
@@ -2568,7 +2615,26 @@
           "bgVolume": 0.42,
           "note": "배경(CUT4 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
-      }
+      },
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "top",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "데뷔 3년차 / 글로벌 팬덤 보유",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
+      },
+      "subtitleSegments": [
+        "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
+      ]
     },
     {
       "id": "cut-5",
@@ -2654,7 +2720,6 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "데뷔 1년차 / 버블 에너지",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"데뷔 1년차 / 버블 에너지\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B02_illit.mp4",
       "duration": 10,
@@ -2707,7 +2772,26 @@
           "bgVolume": 0.42,
           "note": "배경(CUT6 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
-      }
+      },
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "top",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "데뷔 1년차 / 버블 에너지",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
+      },
+      "subtitleSegments": [
+        "터질 것 같은데 터지면 또 귀여운 그 느낌?"
+      ]
     },
     {
       "id": "cut-7",
@@ -2793,7 +2877,6 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "subtitle": "처음부터 글로벌 타깃",
       "imagePrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
       "videoPrompt": "화면녹화 소스 — Flow 생성 불필요\n자막 오버레이: \"처음부터 글로벌 타깃\"\n저장경로: C:\\yeori-studio\\downloads\\seoyeori\\YU\\sources\\B03_katseye.mp4",
       "duration": 10,
@@ -2846,7 +2929,26 @@
           "bgVolume": 0.42,
           "note": "배경(CUT8 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
-      }
+      },
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "top",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "처음부터 글로벌 타깃",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
+      },
+      "subtitleSegments": [
+        "LA 베이스. 경계 자체가 없는 세계관!"
+      ]
     },
     {
       "id": "cut-9",
@@ -3715,7 +3817,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T03:35:36.699Z",
+  "savedAt": "2026-09-18T04:34:17.089Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3731,6 +3833,32 @@
           "keepAudio": true,
           "createdAt": 1789648680245,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/3830b882-004c-468f-a4a2-22546912c760",
+          "name": "Woman_speaking_in_Korean_20260918131727.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789705047450,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/0150104b-e4d9-4201-99e7-eeca347406e3",
+          "name": "Woman_speaking_Korean_line_20260918132146.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789705306415,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_2.mp4"
         }
       ],
       "cut-2": [
@@ -3894,13 +4022,13 @@
       "cut-6": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_06.mp4?t=1789631507655",
-          "name": "cut_06.mp4",
+          "name": "cut_06_clean_bg_subtitle.mp4",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_06.mp4",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_06_clean_bg_subtitle.mp4",
           "keepAudio": false,
           "createdAt": 1789618889000
         }
@@ -3908,13 +4036,13 @@
       "cut-8": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789631507915",
-          "name": "cut_08.mp4",
+          "name": "cut_08_clean_bg_subtitle.mp4",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_08.mp4",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_08_clean_bg_subtitle.mp4",
           "keepAudio": false,
           "createdAt": 1789618909000
         }
@@ -3922,7 +4050,7 @@
       "cut-4": [
         {
           "url": "blob:http://localhost:5173/c8e97828-bb0d-4be9-a6da-38aaf4602176",
-          "name": "cut_04.mp4",
+          "name": "cut_04_clip_0_subtitle.mp4",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
@@ -3931,7 +4059,7 @@
           "staging": false,
           "keepAudio": false,
           "createdAt": 1789636142128,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_0.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_04_clip_0_subtitle.mp4"
         }
       ],
       "cut-5": [
@@ -3948,7 +4076,19 @@
           "createdAt": 1789644145497,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_0.mp4"
         },
-        null,
+        {
+          "url": "blob:http://localhost:5173/745fd940-a859-4850-8309-7f56077e59bc",
+          "name": "Woman_speaking_on_sofa_20260917203241.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789644761590,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
+        },
         {
           "url": "blob:http://localhost:5173/9ffac8c4-492c-48fb-9966-cbb358bc7510",
           "name": "Woman_speaking_on_sofa_20260917205119.mp4",
@@ -3965,7 +4105,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-6",
     "subtitles": {
       "cut-1": "",
       "cut-20": [

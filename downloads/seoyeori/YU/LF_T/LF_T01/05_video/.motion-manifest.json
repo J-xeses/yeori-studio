@@ -10,23 +10,19 @@
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-09-17T11:05:12.158Z"
+    "producedAt": "2026-09-18T04:07:13.503Z"
   },
   "6": {
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-09-17T12:24:48.470Z"
+    "producedAt": "2026-09-18T04:07:16.472Z"
   },
   "8": {
-    "method": "s2c-video",
+    "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "duration": 10,
-    "producedAt": "2026-09-17T09:22:03.373Z",
-    "subtitle": true,
-    "subtitleEffect": "slam",
-    "subtitleAt": "2026-09-17T10:35:07.435Z"
+    "producedAt": "2026-09-18T04:23:28.086Z"
   },
   "10": {
     "method": "graphic",

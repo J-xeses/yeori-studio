@@ -1872,10 +1872,52 @@ export default function VideoTab() {
                 {finalPreviewTs[selCut.id] != null && (() => {
                   const padded = String(selCut.no).padStart(2, '0')
                   const finalUrl = `${epMediaUrl(episode, 'video')}/cut_${padded}.mp4?t=${finalPreviewTs[selCut.id]}`
+                  // 최종 합성본엔 자막을 굽지 않으므로(요청: "굽고 싶은 게 아니라 배치된 상태를
+                  // 보려는 것") — 여기서만 예외적으로 라이브 오버레이를 얹어 위치/문구를 바로
+                  // 확인할 수 있게 한다. 실제 파일엔 없고 이 미리보기에만 보이는 것.
+                  // 위치·크기·색상은 다른 컷과 동일하게 "자막 디자인 설정"(전역 subtitlePosition/
+                  // font/fontSize/color/bgStyle) 값을 그대로 따르고, 클릭하면 같은 편집 UI가 열림
+                  // (2026-09-18, 사용자 확정: "다른 컷처럼 위치·크기 수정 가능해야").
+                  const capVal = effectiveCaptionValue(subtitles, selCut, clips)
+                  const capText = Array.isArray(capVal) ? (capVal.find(seg => seg.text)?.text || '') : (capVal || '')
+                  const boxOn = bgStyle === '반투명 직각 박스'
+                  const shadowOn = bgStyle === '그림자'
+                  // s[`pos_${subtitlePosition}`] 문자열 조합 클래스는 이 위치(즉시실행 화살표
+                  // 함수 안, 클립 목록과 분리된 별도 블록)에서 값이 안 잡혀 클래스가 비어버리는
+                  // 경우가 있었음 — position:absolute인데 bottom/top이 하나도 안 붙어서 자막이
+                  // 문서 흐름상 원래 있었을 자리(영상 박스 "바깥" 아래)로 빠져버렸다(2026-09-18,
+                  // 사용자 실측: "하단으로 바꾸면 화면 밖 아래로 내려간다"). CSS 모듈 클래스에
+                  // 의존하지 않고 bottom%를 직접 계산해서 항상 영상 박스 안에 고정되게 한다.
+                  const bottomPct = subtitlePosition === 'top' ? 76 : subtitlePosition === 'middle' ? 43 : 6
                   return (
                     <div className={s.field} style={{ marginTop: 8 }}>
                       <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다</label>
-                      <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6 }} />
+                      <div style={{ position: 'relative', width: '100%' }}>
+                        <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6, display: 'block' }} />
+                        {capText && subtitleEnabled && (
+                          <div
+                            onClick={() => { setSelectedCutId(selCut.id); setSubtitleEditMode(true) }}
+                            title="클릭하여 자막 위치/문구 수정 (다른 컷과 동일한 설정 사용)"
+                            style={{
+                              position: 'absolute', left: '5%', right: '5%', bottom: `${bottomPct}%`,
+                              textAlign: 'center', cursor: 'pointer',
+                              // 자막 길이에 따라 줄이 조정돼야 함(2026-09-18) — 세그 카드 쪽
+                              // 캔버스 미리보기는 wrapCanvasText로 이미 자동 줄바꿈되는데, 이
+                              // HTML 오버레이는 그 계산을 안 타므로 별도로 CSS 줄바꿈 규칙을
+                              // 명시. word-break:keep-all로 한글 단어 중간이 끊기지 않게 하고,
+                              // 그래도 안 끊기는 긴 토큰(URL 등)만 overflow-wrap로 최후 처리.
+                              whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                              lineHeight: 1.35,
+                              color, fontFamily: font, fontSize: Math.max(12, Math.round(fontSize * 0.32)), fontWeight: 700,
+                              textShadow: shadowOn ? '0 2px 4px rgba(0,0,0,.9)' : 'none',
+                              background: boxOn ? 'rgba(0,0,0,.45)' : 'transparent',
+                              borderRadius: 6, padding: boxOn ? '4px 8px' : 0,
+                            }}>
+                            {capText}
+                            <div style={{ fontSize: 10, fontWeight: 400, opacity: .55, marginTop: 2 }}>(미리보기 전용 · 파일엔 없음)</div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )
                 })()}
