@@ -3837,7 +3837,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T06:27:29.705Z",
+  "savedAt": "2026-09-18T08:26:03.517Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3979,6 +3979,16 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_20.mp4",
           "keepAudio": false,
           "createdAt": 1789537637000
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_20_final.mp4?t=1789720422804",
+          "name": "FFmpeg 합성 (cut_20_final.mp4)",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "createdAt": 1789720422826
         }
       ],
       "cut-14": [
@@ -4211,25 +4221,42 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-11b",
+    "selectedCutId": "cut-19",
     "subtitles": {
       "cut-1": "",
-      "cut-20": [
+      "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
+      "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
+      "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
+      "cut-16": "근데 있잖아요… 좋은 거잖아요, 그냥!",
+      "cut-19": [
         {
           "start": 0,
           "end": 8,
           "text": ""
         }
       ],
-      "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
-      "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
-      "cut-16": "근데 있잖아요. 좋은 거잖아요, 그냥!"
+      "cut-2": "야야! 이거 봤어?..  이거 봤어??",
+      "cut-12": "… 중독이에요…",
+      "cut-13": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
+      "cut-15": "야~ 그냥 좋잖아!!\n.... 맞아~",
+      "cut-18": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
+      "cut-21": "여러분 픽은 뭐예요?\n댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!"
     }
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
+    "g3Confirmed": {
+      "cut-2": true,
+      "cut-12": true,
+      "cut-13": true,
+      "cut-15": true,
+      "cut-16": true,
+      "cut-18": true,
+      "cut-19": true,
+      "cut-20": true,
+      "cut-21": true
+    },
     "focusCutId": null,
     "voiceTabs": {
       "cut-3": [
@@ -4559,21 +4586,7 @@
           }
         }
       ],
-      "cut-17__v1": [
-        {
-          "id": "track_1789346165885_bnik",
-          "type": "narration",
-          "text": "근데 있잖아요… 좋은 거잖아요, 그냥!",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ],
+      "cut-17__v1": [],
       "cut-18__v1": [
         {
           "id": "track_1789346165885_yfc8",
@@ -4754,7 +4767,17 @@
       "cut-15": 0,
       "cut-21": 0
     },
-    "mergedUrls": {}
+    "mergedUrls": {
+      "cut-2__v1": "blob:http://localhost:5173/e3f027f7-4351-43e1-b4df-fc0d8684fdc5",
+      "cut-12__v1": "blob:http://localhost:5173/567d5a12-782f-409b-bdab-c484c0c77e2d",
+      "cut-13__v1": "blob:http://localhost:5173/5ef12699-c3e4-4b57-af04-ba76f88e1d6e",
+      "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/3b75de71-7f30-4d09-ac01-3cacfd1da62e",
+      "cut-16__v1": "blob:http://localhost:5173/d14ab1dc-35db-4963-bc2d-48748b3a2525",
+      "cut-18__v1": "blob:http://localhost:5173/d751d482-f99c-4fc7-9ae4-1005bdb9d7b5",
+      "cut-19__v1": "blob:http://localhost:5173/49873e8e-95b3-49f5-b268-5a2a8bf152dc",
+      "cut-20__v1": "blob:http://localhost:5173/c5d402d0-1424-4e2a-8344-a59707f1763c",
+      "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/f35c2cb9-8787-4192-b636-cf16dd64751e"
+    }
   },
   "voiceInsertState": {
     "tracks": {},

@@ -4388,7 +4388,10 @@ app.post('/api/run-ffmpeg', (req, res) => {
   proc.on('close', code => {
     if (code === 0) {
       const url = `${mp.toMediaUrl(mp.outputDir(ep))}/cut_${padded}_final.mp4`
-      send({ type: 'complete', success: true, url, message: '합성 완료!' })
+      // outputPath(절대경로)도 같이 내려줌 — 클라이언트가 이 클립의 stagedPath를 못 채워서
+      // 파일이 멀쩡히 만들어졌는데도 "⚠ 서버 미반영" 경고가 뜨던 문제(2026-09-18, 사용자
+      // 실측: 컷20 성공 뒤에도 경고 표시)의 원인.
+      send({ type: 'complete', success: true, url, outputPath: outFile, message: '합성 완료!' })
       console.log(`[run-ffmpeg] 완료: ${outFile}`)
     } else {
       send({ type: 'complete', success: false, message: 'FFmpeg 실패', detail: errBuf.slice(-300) })
