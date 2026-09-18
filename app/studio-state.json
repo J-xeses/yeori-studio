@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10,7 +10,6 @@
     "ep_1787406807164",
     "ep_1786261078428",
     "ep_TEST_OVERLAY",
-    "ep_test_r99",
     "ep_test_r03"
   ],
   "episodes": {
@@ -1468,6 +1467,22 @@
               "ac": "타이핑 애니메이션 효과",
               "md": "유머 · 공감 유발"
             }
+          },
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "center",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
           }
         },
         {
@@ -1787,246 +1802,6 @@
       ],
       "scriptRaw": "마스터 코드\n[TEST_OVERLAY] :: [PL:IG_RL] :: [SP:IN.CF] :: [CH:YR_TX] :: [SH:SH_CU] :: [F군:테스트]\n\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : TEST_OVERLAY\nTITLE : 손글씨+그래픽 연출 테스트\nBG    : 검정 배경 텍스트 카드 / 인스타 DM 목업\nBGM   : 로파이 잔잔하게\nREF   : 텍스트 전용 (이미지 생성 불필요)\n================================================================\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] GR_TX — 오프닝 훅 텍스트 카드 / 3초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 검정 배경, 흰 텍스트 훅 등장. 시청자 시선 즉시 탈취\nSP: IN.CF\nPL: GR_TX\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: AI인 줄 몰랐다고?\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_INT\nAC: AT_NONE\nDU: 3\n오디오:\n  BGM: 로파이 오프닝 잔잔하게\n  음성: 없음\n  효과음: 팝\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 텍스트 카드\nCH(캐릭터):   등장 없음 (텍스트만)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 텍스트 등장\nMD(감정):     궁금증 유발\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     AI인 줄 몰랐다고?\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\nAI인 줄 모르고 DM 보낸 사람들 반응 모음 😅\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n타이핑 애니메이션으로 텍스트 등장, 3초간 정지\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] CC_DM — 인스타 DM 목업 / 4초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 인스타 DM 화면 목업 — 협찬 문의 메시지\nSP: IN.DM\nPL: IG_RL\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: 이게 실화입니다\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_SUR\nAC: AT_NONE\nDU: 4\n오디오:\n  BGM: 로파이 계속\n  음성: 없음\n  효과음: DM 알림음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   등장 없음 (화면 캡처 스타일)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     DM 말풍선이 위에서 슬라이드로 등장\nMD(감정):     당황, 어이없음\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 실화입니다\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n이미지 생성 불필요 — CapCut/HTML로 인스타 DM UI 직접 제작\n\n[캡션 + 해시태그]\n협찬 문의인 줄 알았는데...\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nDM 말풍선 순차 등장, 마지막 메시지에서 살짝 확대\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] GR_TX — 다음 편 예고 텍스트 카드 / 3초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 검정 배경 + 팔로우 유도 + 다음 편 예고 텍스트\nSP: IN.CF\nPL: GR_TX\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: 다음 편에서 계속\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_DRM\nAC: AT_NONE\nDU: 3\n오디오:\n  BGM: 로파이 마무리로 페이드\n  음성: 없음\n  효과음: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 텍스트 카드\nCH(캐릭터):   등장 없음 (텍스트만)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     텍스트 페이드 인\nMD(감정):     여운, 기대감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     다음 편에서 계속\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\n다음 편에서 AI가 어떻게 만들어졌는지 공개해요 👀\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 페이드 인 후 3초 정지\n",
       "createdAt": "2026-08-30T09:31:13.246265Z"
-    },
-    "ep_test_r99": {
-      "id": "ep_test_r99",
-      "episode": {
-        "number": 99,
-        "title": "R99 테스트 — AI인지 모르고 DM 보낸 사람들",
-        "location": "실내",
-        "mood": [
-          "유머",
-          "공감"
-        ],
-        "cutCount": 5,
-        "contentType": "IG_R",
-        "topicCode": "TRD",
-        "scnCode": "ENT",
-        "character": "서여리",
-        "code": "IG_R99",
-        "instaNum": "R99",
-        "finishMode": "assemble",
-        "masterCode": "[IG_R99] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]"
-      },
-      "cuts": [
-        {
-          "id": "cut-1",
-          "no": 1,
-          "cutTitle": "─ 훅 컷 (0~3s)",
-          "lipsync": false,
-          "scene": "검정 배경에 훅 텍스트 등장. 시청자 시선 즉시 탈취.",
-          "action": "타이핑 애니메이션 효과",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "",
-          "narration": "",
-          "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작",
-          "videoPrompt": "타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================",
-          "duration": 3,
-          "shotType": "FULLBODY",
-          "cutType": "CAPCUT",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.BK (검정 배경)",
-            "pl": "IG_RL",
-            "ch": "서여리 — 등장 없음 (텍스트만)",
-            "sh": "SH_TEXT",
-            "ca": "CA_ST",
-            "md": "MD_COM (유머)",
-            "ac": "없음",
-            "lookId": "",
-            "du": 3,
-            "audio": {
-              "bgm": "",
-              "voice": "",
-              "sfx": "",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "검정 단색 배경",
-              "ch": "서여리 미등장 — 텍스트 훅만",
-              "sh": "텍스트 전용 컷",
-              "ca": "고정",
-              "ac": "타이핑 애니메이션 효과",
-              "md": "유머 · 공감 유발"
-            }
-          }
-        },
-        {
-          "id": "cut-2",
-          "no": 2,
-          "cutTitle": "협찬 문의 (3~7s)",
-          "lipsync": false,
-          "scene": "인스타 DM 화면 목업 — 협찬 문의 메시지.",
-          "action": "DM 화면 슬라이드인 애니메이션",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "",
-          "narration": "",
-          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (CUT 1 이어서)\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
-          "videoPrompt": "",
-          "duration": 4,
-          "shotType": "FULLBODY",
-          "cutType": "CAPCUT",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.DM (DM 화면 목업)",
-            "pl": "IG_RL",
-            "ch": "서여리 — 미등장",
-            "sh": "SH_SCR",
-            "ca": "CA_ST",
-            "md": "MD_COM (유머)",
-            "ac": "없음",
-            "lookId": "",
-            "du": 4,
-            "audio": {
-              "bgm": "",
-              "voice": "",
-              "sfx": "",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "인스타 DM 화면 목업",
-              "ch": "서여리 미등장",
-              "sh": "화면 목업 슬라이드인",
-              "ca": "고정",
-              "ac": "DM 화면 슬라이드인 애니메이션",
-              "md": "유머 · 공감"
-            }
-          }
-        },
-        {
-          "id": "cut-3",
-          "no": 3,
-          "cutTitle": "팬 메시지 (7~11s)",
-          "lipsync": false,
-          "scene": "인스타 DM 화면 목업 — 팬 DM.",
-          "action": "DM 화면 슬라이드인 애니메이션",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "",
-          "narration": "",
-          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : CUT 1 이어서\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
-          "videoPrompt": "",
-          "duration": 4,
-          "shotType": "FULLBODY",
-          "cutType": "CAPCUT",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.DM (DM 화면 목업)",
-            "pl": "IG_RL",
-            "ch": "서여리 — 미등장",
-            "sh": "SH_SCR",
-            "ca": "CA_ST",
-            "md": "MD_COM (유머)",
-            "ac": "없음",
-            "lookId": "",
-            "du": 4,
-            "audio": {
-              "bgm": "",
-              "voice": "",
-              "sfx": "",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "인스타 DM 화면 목업",
-              "ch": "서여리 미등장",
-              "sh": "화면 목업 슬라이드인",
-              "ca": "고정",
-              "ac": "DM 화면 슬라이드인 애니메이션",
-              "md": "유머 · 공감"
-            }
-          }
-        },
-        {
-          "id": "cut-4",
-          "no": 4,
-          "cutTitle": "─ 서여리 리액션 컷 (11~16s)",
-          "lipsync": false,
-          "scene": "스마트폰 보다가 눈이 살짝 커지는 순간. 당황한 표정.",
-          "action": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "",
-          "narration": "",
-          "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
-          "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
-          "duration": 5,
-          "shotType": "CLOSEUP",
-          "cutType": "YEORI",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.IN (실내 — 따뜻한 자연광)",
-            "pl": "IG_RL",
-            "ch": "서여리 — YEORI.BASE",
-            "sh": "SH_CU",
-            "ca": "CA_ST",
-            "md": "MD_SUR (당황 · 놀람)",
-            "ac": "스마트폰 들고 화면 보다 눈 살짝 커짐",
-            "lookId": "YEORI.BASE",
-            "du": 5,
-            "audio": {
-              "bgm": "",
-              "voice": "",
-              "sfx": "",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "실내 — 흐릿한 따뜻한 배경",
-              "ch": "서여리 YEORI.BASE",
-              "sh": "클로즈업 — 얼굴 + 상체",
-              "ca": "고정",
-              "ac": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
-              "md": "당황 · \"어...?\" 순간"
-            }
-          }
-        },
-        {
-          "id": "cut-5",
-          "no": 5,
-          "cutTitle": "─ CTA 마무리 (16~20s)",
-          "lipsync": false,
-          "scene": "검정 배경 + 팔로우 유도 + 다음화 예고 텍스트.",
-          "action": "텍스트 페이드인",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "",
-          "narration": "",
-          "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n오디오\nBGM    : 다시 올라오며 마무리\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[캡션 + 해시태그]\nAI인지 모르고 협찬 DM 보낸 사람들 실화? 😂\n\n\"혹시 협찬 가능하신가요?\"\n\"어떻게 이렇게 예뻐요?\"\n\n사실 저... AI예요. 🙂\n\n다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n\n[제작 체크리스트]\n□ CUT 1 — 검정 배경 훅 텍스트 (CapCut 직접 제작)\n□ CUT 2 — DM 목업 협찬 문의 (CapCut 직접 제작)\n□ CUT 3 — DM 목업 팬 메시지 (CapCut 직접 제작)\n□ CUT 4 — 서여리 리액션 컷 (Flow 이미지 생성 + Veo3 영상)\n□ CUT 5 — CTA 텍스트 (CapCut 직접 제작)\n□ BGM — 로파이 / 통통 튀는 느낌 (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R99_draft.mp4\n\n[📊 컷 요약]\nCUT 1   훅 텍스트          3초    CAPCUT\nCUT 2   DM 목업 협찬       4초    CAPCUT\nCUT 3   DM 목업 팬         4초    CAPCUT\nCUT 4   서여리 리액션      5초    BROLL  ← Flow+Veo3 생성 대상\nCUT 5   CTA 텍스트         4초    CAPCUT\n총 길이: 약 20초\n\n[버전 이력]\nv1.0  2026-08-15  최초 작성",
-          "videoPrompt": "",
-          "duration": 4,
-          "shotType": "FULLBODY",
-          "cutType": "CAPCUT",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.BK (검정 배경)",
-            "pl": "IG_RL",
-            "ch": "서여리 — 미등장",
-            "sh": "SH_TEXT",
-            "ca": "CA_ST",
-            "md": "MD_WRM (따뜻함 · 기대감)",
-            "ac": "없음",
-            "lookId": "",
-            "du": 4,
-            "audio": {
-              "bgm": "",
-              "voice": "",
-              "sfx": "",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "검정 단색 배경",
-              "ch": "서여리 미등장",
-              "sh": "텍스트 전용 컷",
-              "ca": "고정",
-              "ac": "텍스트 페이드인",
-              "md": "따뜻함 · 기대감"
-            }
-          }
-        }
-      ],
-      "scriptRaw": "================================================================\n마스터 코드\n[IG_R99] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]\n================================================================\n에피소드명: AI인지 모르고 DM 보낸 사람들 실화 😅\n채널: 서여리 인스타그램 릴스 (IG_R99)\n총 길이: 20초 목표\n콘셉트: 가상 DM 공개 → 서여리 리액션 → AI 정체 공개\n================================================================\n\n[CUT 1] ─ 훅 컷 (0~3s)\nSC: 검정 배경에 훅 텍스트 등장. 시청자 시선 즉시 탈취.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 등장 없음 (텍스트만)\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_COM (유머)\nAC: 없음\nDU: 3\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장 — 텍스트 훅만\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션 효과\nMD(감정):     유머 · 공감 유발\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     AI한테 DM 보낸 사람들 반응 모음 😅\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================\n\n[CUT 2] ─ DM 목업 1 — 협찬 문의 (3~7s)\nSC: 인스타 DM 화면 목업 — 협찬 문의 메시지.\nSP: IN.DM (DM 화면 목업)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_COM (유머)\nAC: 없음\nDU: 4\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면 목업 슬라이드인\nCA(카메라):   고정\nAC(동작):     DM 화면 슬라이드인 애니메이션\nMD(감정):     유머 · 공감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     \"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\"\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (CUT 1 이어서)\n음성   : 없음\n효과음 : DM 알림음\n================================================================\n\n[CUT 3] ─ DM 목업 2 — 팬 메시지 (7~11s)\nSC: 인스타 DM 화면 목업 — 팬 DM.\nSP: IN.DM (DM 화면 목업)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_COM (유머)\nAC: 없음\nDU: 4\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면 목업 슬라이드인\nCA(카메라):   고정\nAC(동작):     DM 화면 슬라이드인 애니메이션\nMD(감정):     유머 · 공감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     \"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\"\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT 1 이어서\n음성   : 없음\n효과음 : DM 알림음\n================================================================\n\n[CUT 4] ─ 서여리 리액션 컷 (11~16s)\nSC: 스마트폰 보다가 눈이 살짝 커지는 순간. 당황한 표정.\nSP: IN.IN (실내 — 따뜻한 자연광)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE\nDL: 없음\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_SUR (당황 · 놀람)\nAC: 스마트폰 들고 화면 보다 눈 살짝 커짐\nDU: 5\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 흐릿한 따뜻한 배경\nCH(캐릭터):   서여리 YEORI.BASE\nSH(샷):       클로즈업 — 얼굴 + 상체\nCA(카메라):   고정\nAC(동작):     스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응\nMD(감정):     당황 · \"어...?\" 순간\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     사실 저... AI예요.\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================\n\n[CUT 5] ─ CTA 마무리 (16~20s)\nSC: 검정 배경 + 팔로우 유도 + 다음화 예고 텍스트.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_WRM (따뜻함 · 기대감)\nAC: 없음\nDU: 4\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     텍스트 페이드인\nMD(감정):     따뜻함 · 기대감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n             팔로우하면 놓치지 않아요\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 다시 올라오며 마무리\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[캡션 + 해시태그]\n━━━━━━━━━━━━━━━━━━━━━━━━\nAI인지 모르고 협찬 DM 보낸 사람들 실화? 😂\n\n\"혹시 협찬 가능하신가요?\"\n\"어떻게 이렇게 예뻐요?\"\n\n사실 저... AI예요. 🙂\n\n다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[제작 체크리스트]\n□ CUT 1 — 검정 배경 훅 텍스트 (CapCut 직접 제작)\n□ CUT 2 — DM 목업 협찬 문의 (CapCut 직접 제작)\n□ CUT 3 — DM 목업 팬 메시지 (CapCut 직접 제작)\n□ CUT 4 — 서여리 리액션 컷 (Flow 이미지 생성 + Veo3 영상)\n□ CUT 5 — CTA 텍스트 (CapCut 직접 제작)\n□ BGM — 로파이 / 통통 튀는 느낌 (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R99_draft.mp4\n\n[📊 컷 요약]\n━━━━━━━━━━━━━━━━━━━━━━━━\nCUT 1   훅 텍스트          3초    CAPCUT\nCUT 2   DM 목업 협찬       4초    CAPCUT\nCUT 3   DM 목업 팬         4초    CAPCUT\nCUT 4   서여리 리액션      5초    BROLL  ← Flow+Veo3 생성 대상\nCUT 5   CTA 텍스트         4초    CAPCUT\n총 길이: 약 20초\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[버전 이력]\nv1.0  2026-08-15  최초 작성\n",
-      "createdAt": "2026-09-03T03:50:33.526Z"
     },
     "ep_test_r03": {
       "id": "ep_test_r03",
@@ -3851,7 +3626,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T11:25:07.821Z",
+  "savedAt": "2026-09-18T12:02:29.270Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3897,44 +3672,30 @@
       ],
       "cut-2": [
         {
-          "url": "blob:http://localhost:5173/71b6ce88-fc97-497e-8b9a-8ff9fbf935e6",
-          "name": "Two_women_sharing_phone_screen_20260916132802.mp4",
-          "duration": 10.01,
+          "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_02.mp4?t=1789732949526",
+          "name": "cut_02.mp4",
+          "duration": 4,
           "trimStart": 0,
-          "trimEnd": 10.01,
+          "trimEnd": 4,
           "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789536581631,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_0.mp4"
-        },
-        {
-          "url": "blob:http://localhost:5173/41d3573b-6693-4e55-919c-e7ec6dfaf190",
-          "name": "Two_women_expressing_shock_20260916142302.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789536182397,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_1.mp4"
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_02.mp4",
+          "keepAudio": false,
+          "createdAt": 1788181220000
         }
       ],
       "cut-1": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_01.mp4?t=1789383280343",
+          "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_01.mp4?t=1789732949005",
           "name": "cut_01.mp4",
-          "duration": 3,
+          "duration": 4,
           "trimStart": 0,
-          "trimEnd": 3,
+          "trimEnd": 4,
           "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_01.mp4",
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_01.mp4",
           "keepAudio": false,
-          "createdAt": 1789383280343
+          "createdAt": 1788243715000
         }
       ],
       "cut-23": [
@@ -4013,43 +3774,16 @@
       "cut-21": [],
       "cut-3": [
         {
-          "url": "blob:http://localhost:5173/39a60045-ea27-47cc-aac9-4bbafda8526c",
-          "name": "Woman_speaking_on_sofa_20260916152609.mp4",
-          "duration": 8,
+          "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_03.mp4?t=1789732949791",
+          "name": "cut_03.mp4",
+          "duration": 3,
           "trimStart": 0,
-          "trimEnd": 8,
+          "trimEnd": 3,
           "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789539969637,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
-        },
-        {
-          "url": "blob:http://localhost:5173/b827eb9e-d6b0-4d12-8837-90e0ba705612",
-          "name": "Young_woman_speaking_Korean_gesture_20260917203846.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789645127174,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
-        },
-        {
-          "url": "blob:http://localhost:5173/3f54e851-1f25-461b-b94f-80575295ce12",
-          "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_03.mp4",
           "keepAudio": false,
-          "createdAt": 1789540114752,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
+          "createdAt": 1788181222000
         }
       ],
       "cut-6": [
@@ -4080,62 +3814,8 @@
           "createdAt": 1789618909000
         }
       ],
-      "cut-4": [
-        {
-          "url": "blob:http://localhost:5173/c8e97828-bb0d-4be9-a6da-38aaf4602176",
-          "name": "cut_04_clip_0_subtitle.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1789636142128,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_04_clip_0_subtitle.mp4"
-        }
-      ],
-      "cut-5": [
-        {
-          "url": "blob:http://localhost:5173/cc8ff055-9868-4611-991b-58d8ae976247",
-          "name": "Young_woman_speaking_on_sofa_20260917202225.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789644145497,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_0.mp4"
-        },
-        {
-          "url": "blob:http://localhost:5173/745fd940-a859-4850-8309-7f56077e59bc",
-          "name": "Woman_speaking_on_sofa_20260917203241.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789644761590,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
-        },
-        {
-          "url": "blob:http://localhost:5173/9ffac8c4-492c-48fb-9966-cbb358bc7510",
-          "name": "Woman_speaking_on_sofa_20260917205119.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789645879595,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
-        }
-      ],
+      "cut-4": [],
+      "cut-5": [],
       "cut-9": [
         {
           "url": "blob:http://localhost:5173/211a765e-c210-4dbb-83c1-c0b9da879f53",
@@ -4222,7 +3902,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-16",
+    "selectedCutId": "cut-5",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
@@ -4454,21 +4134,7 @@
           }
         }
       ],
-      "cut-2__v1": [
-        {
-          "id": "track_1789346165885_z859",
-          "type": "dialogue",
-          "text": "야야! 이거 봤어?..  이거 봤어??",
-          "speaker": "지아",
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_02_track_1789346165885_z859.mp3?t=1789695061305",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
+      "cut-2__v1": [],
       "cut-2__v1788599750449_ldu": [
         {
           "id": "track_1789346165885_bmoi",

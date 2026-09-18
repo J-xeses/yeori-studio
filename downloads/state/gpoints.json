@@ -414,27 +414,25 @@
   "IG_R02": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-08-23T06:09:25.699Z",
-      "g3": true
+      "updatedAt": "2026-09-18T11:58:33.089Z"
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-08-23T06:03:14.658Z"
+      "updatedAt": "2026-09-18T11:58:33.090Z"
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-08-23T06:03:14.658Z"
+      "updatedAt": "2026-09-18T11:58:33.090Z"
     },
     "cut_4": {
-      "g1": true,
-      "updatedAt": "2026-09-01T04:14:26.191Z",
-      "g3": true,
       "g2": true,
-      "selectedImage": "cut_04_b.jpeg"
+      "selectedImage": "cut_04_a.jpg",
+      "updatedAt": "2026-09-18T11:58:33.090Z",
+      "g1": true
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-08-23T06:03:14.659Z"
+      "updatedAt": "2026-09-18T11:58:33.090Z"
     },
     "g5m": true,
     "g5mUpdatedAt": "2026-08-30T08:27:24.727Z"
