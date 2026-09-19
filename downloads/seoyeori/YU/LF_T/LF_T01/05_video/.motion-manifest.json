@@ -6,6 +6,12 @@
     "duration": 3,
     "producedAt": "2026-09-17T04:20:29.315Z"
   },
+  "2": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T05:47:52.762Z"
+  },
   "3": {
     "method": "multi-clip-compose",
     "motion": null,
@@ -18,17 +24,35 @@
     "baked": true,
     "producedAt": "2026-09-19T05:30:11.541Z"
   },
+  "5": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T05:38:34.828Z"
+  },
   "6": {
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
     "producedAt": "2026-09-19T05:35:22.333Z"
   },
+  "7": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T05:46:28.361Z"
+  },
   "8": {
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-09-18T05:38:39.708Z"
+    "producedAt": "2026-09-19T05:46:14.783Z"
+  },
+  "9": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T05:46:58.046Z"
   },
   "10": {
     "method": "graphic",
@@ -36,6 +60,18 @@
     "baked": true,
     "duration": 8,
     "producedAt": "2026-09-17T04:23:09.485Z"
+  },
+  "11": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T05:54:41.828Z"
+  },
+  "12": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T06:25:53.557Z"
   },
   "14": {
     "method": "graphic",

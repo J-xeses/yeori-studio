@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -81,7 +81,8 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_GR CA_ST 없음 MD_IMP"
-          }
+          },
+          "narrBgVolume": 1
         },
         {
           "id": "cut-2",
@@ -289,7 +290,7 @@
               "pipSourceClipIdx": 2,
               "layout": "bottom_right",
               "scale": 0.3,
-              "bgVolume": 0.42,
+              "bgVolume": 0.45,
               "note": "배경(CUT4 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
           },
@@ -447,7 +448,7 @@
               "pipSourceClipIdx": 2,
               "layout": "bottom_right",
               "scale": 0.3,
-              "bgVolume": 0.42,
+              "bgVolume": 0.45,
               "note": "배경(CUT6 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
           },
@@ -470,7 +471,8 @@
           "subtitleSegments": [
             "터질 것 같은데 터지면 또 귀여운 그 느낌?"
           ],
-          "narrationVolume": 0.75
+          "narrationVolume": 0.75,
+          "narrBgVolume": 0.51
         },
         {
           "id": "cut-7",
@@ -605,7 +607,7 @@
               "pipSourceClipIdx": 2,
               "layout": "bottom_right",
               "scale": 0.3,
-              "bgVolume": 0.42,
+              "bgVolume": 0.45,
               "note": "배경(CUT8 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
           },
@@ -744,7 +746,8 @@
             "kenburns": "random",
             "reason": "fallback",
             "source": "SH_GR CA_ST 없음 MD_IMP"
-          }
+          },
+          "narrBgVolume": 1
         },
         {
           "id": "cut-11",
@@ -2198,7 +2201,8 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_GR CA_ST 없음 MD_IMP"
-      }
+      },
+      "narrBgVolume": 1
     },
     {
       "id": "cut-2",
@@ -2406,7 +2410,7 @@
           "pipSourceClipIdx": 2,
           "layout": "bottom_right",
           "scale": 0.3,
-          "bgVolume": 0.42,
+          "bgVolume": 0.45,
           "note": "배경(CUT4 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
       },
@@ -2564,7 +2568,7 @@
           "pipSourceClipIdx": 2,
           "layout": "bottom_right",
           "scale": 0.3,
-          "bgVolume": 0.42,
+          "bgVolume": 0.45,
           "note": "배경(CUT6 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
       },
@@ -2587,7 +2591,8 @@
       "subtitleSegments": [
         "터질 것 같은데 터지면 또 귀여운 그 느낌?"
       ],
-      "narrationVolume": 0.75
+      "narrationVolume": 0.75,
+      "narrBgVolume": 0.51
     },
     {
       "id": "cut-7",
@@ -2722,7 +2727,7 @@
           "pipSourceClipIdx": 2,
           "layout": "bottom_right",
           "scale": 0.3,
-          "bgVolume": 0.42,
+          "bgVolume": 0.45,
           "note": "배경(CUT8 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
       },
@@ -2861,7 +2866,8 @@
         "kenburns": "random",
         "reason": "fallback",
         "source": "SH_GR CA_ST 없음 MD_IMP"
-      }
+      },
+      "narrBgVolume": 1
     },
     {
       "id": "cut-11",
@@ -3802,20 +3808,7 @@
           "createdAt": 1788944994000
         }
       ],
-      "cut-18": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789785553611",
-          "name": "cut_19.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
-          "keepAudio": true,
-          "createdAt": 1788876666000
-        }
-      ],
+      "cut-18": [],
       "cut-21": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789785553877",
@@ -3887,16 +3880,17 @@
       ],
       "cut-8": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_08.mp4?t=1789631507915",
-          "name": "cut_08_clean_bg_subtitle.mp4",
-          "duration": 10,
+          "url": "blob:http://localhost:5173/fdc0c095-f69b-4668-9e24-cd1d14436a0f",
+          "name": "cut_08.mp4",
+          "duration": 10.01,
           "trimStart": 0,
-          "trimEnd": 10,
+          "trimEnd": 10.01,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_08_clean_bg_subtitle.mp4",
+          "staging": false,
           "keepAudio": false,
-          "createdAt": 1789618909000
+          "createdAt": 1789796673557,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_08_clip_0.mp4"
         }
       ],
       "cut-4": [
@@ -3953,6 +3947,18 @@
           "keepAudio": true,
           "createdAt": 1789645879595,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_05.mp4?t=1789797283173",
+          "name": "cut_05.mp4",
+          "duration": 24,
+          "trimStart": 0,
+          "trimEnd": 24,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_05.mp4",
+          "keepAudio": true,
+          "createdAt": 1789796314000
         }
       ],
       "cut-9": [
@@ -4050,10 +4056,37 @@
           "createdAt": 1789713643258,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_11_clip_1.mp4"
         }
+      ],
+      "cut-11b": [
+        {
+          "url": "blob:http://localhost:5173/7f9c86b5-6290-4539-a115-7e72b0cf9b4c",
+          "name": "Two_women_reacting_together_20260919152326.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789799006746,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_12_clip_new1789799123028.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_12.mp4?t=1789799155622",
+          "name": "cut_12.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_12.mp4",
+          "keepAudio": false,
+          "createdAt": 1789799153000
+        }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-6",
+    "selectedCutId": "cut-11b",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
