@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -311,7 +311,8 @@
           },
           "subtitleSegments": [
             "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-          ]
+          ],
+          "narrBgVolume": 0.5
         },
         {
           "id": "cut-5",
@@ -468,7 +469,8 @@
           },
           "subtitleSegments": [
             "터질 것 같은데 터지면 또 귀여운 그 느낌?"
-          ]
+          ],
+          "narrationVolume": 0.75
         },
         {
           "id": "cut-7",
@@ -2426,7 +2428,8 @@
       },
       "subtitleSegments": [
         "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-      ]
+      ],
+      "narrBgVolume": 0.5
     },
     {
       "id": "cut-5",
@@ -2583,7 +2586,8 @@
       },
       "subtitleSegments": [
         "터질 것 같은데 터지면 또 귀여운 그 느낌?"
-      ]
+      ],
+      "narrationVolume": 0.75
     },
     {
       "id": "cut-7",
@@ -3672,42 +3676,45 @@
       ],
       "cut-2": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_02.mp4?t=1789732949526",
-          "name": "cut_02.mp4",
-          "duration": 4,
-          "trimStart": 0,
-          "trimEnd": 4,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_02.mp4",
-          "keepAudio": false,
-          "createdAt": 1788181220000
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789785610800",
-          "name": "cut_02_a.mp4",
+          "url": "blob:http://localhost:5173/a3d6e828-2db7-4125-b24b-6e21e26a11d0",
+          "name": "Two_women_sharing_phone_screen_20260916132802.mp4",
           "duration": 10.01,
           "trimStart": 0,
           "trimEnd": 10.01,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1789219488369.481
+          "createdAt": 1789536581631,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/24ac3935-d7da-47be-bbe0-ad1832982c8e",
+          "name": "Two_women_expressing_shock_20260916142302.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789536182397,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_1.mp4"
         }
       ],
       "cut-1": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_01.mp4?t=1789732949005",
+          "url": "blob:http://localhost:5173/c8718fb9-d65f-4308-b9ee-ad75615d0661",
           "name": "cut_01.mp4",
-          "duration": 4,
+          "duration": 3,
           "trimStart": 0,
-          "trimEnd": 4,
+          "trimEnd": 3,
           "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_01.mp4",
+          "ratio": "16:9",
+          "staging": false,
           "keepAudio": false,
-          "createdAt": 1788243715000
+          "createdAt": 1789618829229,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_01_clip_new1789794979654.mp4"
         }
       ],
       "cut-23": [
@@ -3825,16 +3832,43 @@
       ],
       "cut-3": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_03.mp4?t=1789732949791",
-          "name": "cut_03.mp4",
-          "duration": 3,
+          "url": "blob:http://localhost:5173/820cbbac-bb22-482c-aded-674f302a5252",
+          "name": "Woman_speaking_on_sofa_20260916152609.mp4",
+          "duration": 8,
           "trimStart": 0,
-          "trimEnd": 3,
+          "trimEnd": 8,
           "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_03.mp4",
-          "keepAudio": false,
-          "createdAt": 1788181222000
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789539969637,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/87b491ff-496b-469d-989d-39fd3dbb3052",
+          "name": "Young_woman_speaking_Korean_gesture_20260917203846.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789645127174,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/3c6bd104-5bbe-42dc-a2c3-3c6bcdf6b380",
+          "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789540114752,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
         }
       ],
       "cut-6": [
@@ -3865,8 +3899,62 @@
           "createdAt": 1789618909000
         }
       ],
-      "cut-4": [],
-      "cut-5": [],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/04dd114a-8545-47b8-b864-b91cae5da7ef",
+          "name": "cut_04.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1789709935605,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_0.mp4"
+        }
+      ],
+      "cut-5": [
+        {
+          "url": "blob:http://localhost:5173/9ac16594-aa96-4363-bd8f-c224514b5a6f",
+          "name": "Young_woman_speaking_on_sofa_20260917202225.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789644145497,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_0.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/bfef58ff-888d-49f0-bdb8-194bb8aae395",
+          "name": "Woman_speaking_on_sofa_20260917203241.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789644761590,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/0a3da33c-395b-4feb-b57a-fec9a80133ac",
+          "name": "Woman_speaking_on_sofa_20260917205119.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789645879595,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
+        }
+      ],
       "cut-9": [
         {
           "url": "blob:http://localhost:5173/211a765e-c210-4dbb-83c1-c0b9da879f53",
