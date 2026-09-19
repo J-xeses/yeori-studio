@@ -502,7 +502,7 @@
     },
     "cut_13": {
       "g1": true,
-      "updatedAt": "2026-09-19T02:47:30.700Z",
+      "updatedAt": "2026-09-19T07:34:12.583Z",
       "g5": false,
       "g3": true,
       "g2": true,
@@ -517,17 +517,19 @@
     },
     "cut_16": {
       "g1": true,
-      "updatedAt": "2026-09-19T02:51:41.064Z",
+      "updatedAt": "2026-09-19T06:45:13.190Z",
       "g5": false,
       "g2": true,
-      "selectedImage": "cut_16_a.jpg"
+      "selectedImage": "cut_16_a.jpg",
+      "g3": true
     },
     "cut_19": {
       "g1": true,
-      "updatedAt": "2026-09-19T02:52:01.150Z",
+      "updatedAt": "2026-09-19T06:49:33.160Z",
       "g5": false,
       "g2": true,
-      "selectedImage": "cut_19_b.jpg"
+      "selectedImage": "cut_19_b.jpg",
+      "g3": true
     },
     "cut_21": {
       "g1": true,

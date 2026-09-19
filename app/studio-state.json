@@ -904,12 +904,19 @@
             "source": "SH_CU CA_ST 화면 보다 → 카메라로 시선 천천히 이동 MD_DZD"
           },
           "segments": [
-            10,
+            8,
             10
           ],
           "segPrompts": [
             "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
             "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "segTiming": [
+            null,
+            [
+              3,
+              5
+            ]
           ]
         },
         {
@@ -1018,12 +1025,12 @@
           "scene": "소파 두샷. 서여리 분석 마무리 찰나 한지아 터짐. 같이 웃음.",
           "action": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
           "character": "서여리",
-          "dialogue": "한지아 \"야 그냥 좋잖아!!\" / 서여리 \"…맞아...\"",
+          "dialogue": "야~~. 그냥 좋잖아!! || 응~~  맞아~",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-8s: Yeori is mid-explanation on sofa,\nJia sitting beside her, barely containing herself\n\nNext 8-16s: Jia suddenly blurts out with energy,\nYeori freezes mid-sentence, surprised\n\nFinal 16-25s: Yeori breaks into laughter,\nboth women laughing together naturally,\nwarm indoor lighting, genuine unposed moment",
-          "duration": 25,
+          "duration": 16,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -1056,7 +1063,26 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_JOY",
             "source": "SH_MCU CA_ST HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음 MD_JOY"
-          }
+          },
+          "segments": [
+            8,
+            8
+          ],
+          "segTiming": [
+            [
+              3,
+              6
+            ],
+            null
+          ],
+          "segPrompts": [
+            "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "야~ 그냥 좋잖아~",
+            "응~  맞아~"
+          ]
         },
         {
           "id": "cut-16",
@@ -1156,7 +1182,9 @@
             "kenburns": "zoomIn",
             "reason": "SH_ECU",
             "source": "SH_ECU CA_ST 무심한 듯 감성적인 눈빛 고정 MD_DRM"
-          }
+          },
+          "sfxVolume": 1.05,
+          "narrBgVolume": 1
         },
         {
           "id": "cut-18",
@@ -1166,12 +1194,12 @@
           "scene": "서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.",
           "action": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
           "character": "서여리",
-          "dialogue": "\"저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
+          "dialogue": "\"저는요… 솔직히 말하면, || 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. || 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-8s: she sits on sofa, gaze cast slightly downward,\nhonest and soft expression, quietly preparing to speak\n\nNext 8-17s: eyes slowly lift toward camera,\ngenuine fan emotion coming through naturally,\nno performance — just real feeling\n\nFinal 17-25s: a subtle shy smile,\nholding eye contact with camera warmly,\nwarm indoor lighting, static camera",
-          "duration": 25,
+          "duration": 24,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -1204,7 +1232,17 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_SHY",
             "source": "SH_MCU CA_ST 시선 내리깔다 천천히 카메라로 올리기 MD_SHY"
-          }
+          },
+          "segments": [
+            8,
+            8,
+            8
+          ],
+          "segPrompts": [
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+          ]
         },
         {
           "id": "cut-19",
@@ -3024,12 +3062,19 @@
         "source": "SH_CU CA_ST 화면 보다 → 카메라로 시선 천천히 이동 MD_DZD"
       },
       "segments": [
-        10,
+        8,
         10
       ],
       "segPrompts": [
         "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
         "CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ndazed, slightly dreamy expression,\neyes slowly turning toward camera from offscreen,\nsoft warm indoor lighting, deep background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "segTiming": [
+        null,
+        [
+          3,
+          5
+        ]
       ]
     },
     {
@@ -3138,12 +3183,12 @@
       "scene": "소파 두샷. 서여리 분석 마무리 찰나 한지아 터짐. 같이 웃음.",
       "action": "HJ 참다 못해 툭 내뱉음 / YR 잠깐 멈칫 → 같이 웃음",
       "character": "서여리",
-      "dialogue": "한지아 \"야 그냥 좋잖아!!\" / 서여리 \"…맞아...\"",
+      "dialogue": "야~~. 그냥 좋잖아!! || 응~~  맞아~",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
       "videoPrompt": "First 0-8s: Yeori is mid-explanation on sofa,\nJia sitting beside her, barely containing herself\n\nNext 8-16s: Jia suddenly blurts out with energy,\nYeori freezes mid-sentence, surprised\n\nFinal 16-25s: Yeori breaks into laughter,\nboth women laughing together naturally,\nwarm indoor lighting, genuine unposed moment",
-      "duration": 25,
+      "duration": 16,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -3176,7 +3221,26 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_JOY",
         "source": "SH_MCU CA_ST HJ 참다 못해 툭 내뱉음 / YR 멈칫 → 같이 웃음 MD_JOY"
-      }
+      },
+      "segments": [
+        8,
+        8
+      ],
+      "segTiming": [
+        [
+          3,
+          6
+        ],
+        null
+      ],
+      "segPrompts": [
+        "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM SHOT — Two young Korean women early-20s,\nsitting together on beige sofa, both laughing naturally,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nlaughing openly, head tilted back slightly,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\ncaught mid-laugh, surprised and amused expression,\n\nwarm indoor lighting, natural and unposed chemistry,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "야~ 그냥 좋잖아~",
+        "응~  맞아~"
+      ]
     },
     {
       "id": "cut-16",
@@ -3276,7 +3340,9 @@
         "kenburns": "zoomIn",
         "reason": "SH_ECU",
         "source": "SH_ECU CA_ST 무심한 듯 감성적인 눈빛 고정 MD_DRM"
-      }
+      },
+      "sfxVolume": 1.05,
+      "narrBgVolume": 1
     },
     {
       "id": "cut-18",
@@ -3286,12 +3352,12 @@
       "scene": "서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.",
       "action": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
       "character": "서여리",
-      "dialogue": "\"저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
+      "dialogue": "\"저는요… 솔직히 말하면, || 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. || 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
       "videoPrompt": "First 0-8s: she sits on sofa, gaze cast slightly downward,\nhonest and soft expression, quietly preparing to speak\n\nNext 8-17s: eyes slowly lift toward camera,\ngenuine fan emotion coming through naturally,\nno performance — just real feeling\n\nFinal 17-25s: a subtle shy smile,\nholding eye contact with camera warmly,\nwarm indoor lighting, static camera",
-      "duration": 25,
+      "duration": 24,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -3324,7 +3390,17 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_SHY",
         "source": "SH_MCU CA_ST 시선 내리깔다 천천히 카메라로 올리기 MD_SHY"
-      }
+      },
+      "segments": [
+        8,
+        8,
+        8
+      ],
+      "segPrompts": [
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+      ]
     },
     {
       "id": "cut-19",
@@ -3794,21 +3870,33 @@
           "createdAt": 1788944994000
         }
       ],
-      "cut-13": [
+      "cut-13": [],
+      "cut-18": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789785551864",
-          "name": "cut_14.mp4",
-          "duration": 10,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789802833319",
+          "name": "cut_19.mp4",
+          "duration": 8,
           "trimStart": 0,
-          "trimEnd": 10,
+          "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_14.mp4",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
           "keepAudio": true,
-          "createdAt": 1788944994000
+          "createdAt": 1788876666000
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789802910794",
+          "name": "cut_19.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
+          "keepAudio": true,
+          "createdAt": 1788876666000
         }
       ],
-      "cut-18": [],
       "cut-21": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789785553877",
@@ -4016,17 +4104,17 @@
       ],
       "cut-17": [
         {
-          "url": "blob:http://localhost:5173/bfdc0b30-f384-4d58-8a68-a66dcb89e0eb",
-          "name": "b67e4071-b173-44f6-a873-521c3cfd186c.mp4",
-          "duration": 5.04,
+          "url": "blob:http://localhost:5173/f27bae65-72a6-4628-8676-1a4544c3e928",
+          "name": "PixVerse_V6_Image_Text_360P_First_03s_extreme_.mp4",
+          "duration": 8.04,
           "trimStart": 0,
-          "trimEnd": 5.04,
+          "trimEnd": 8.04,
           "useFullDuration": true,
           "ratio": "16:9",
           "staging": false,
           "keepAudio": false,
-          "createdAt": 1789715844707,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_18_clip_new1789715903273.mp4"
+          "createdAt": 1789802757601,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_18_clip_new1789802870728.mp4"
         }
       ],
       "cut-11": [
@@ -4086,7 +4174,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-11b",
+    "selectedCutId": "cut-14",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",

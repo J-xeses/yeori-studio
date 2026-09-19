@@ -93,6 +93,12 @@
     "baked": true,
     "producedAt": "2026-09-18T08:45:28.197Z"
   },
+  "18": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T07:28:28.614Z"
+  },
   "19": {
     "method": "clip-record",
     "motion": null,
