@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -1209,7 +1209,7 @@
           "scene": "서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.",
           "action": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
           "character": "서여리",
-          "dialogue": "\"저는요… 솔직히 말하면, || 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. || 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
+          "dialogue": "저는요~~  솔직히 말하면... 르쎄라핌, 아일릿, 캣츠아이... || 세 그룹 다 좋은데~ 제가 제일 꽂힌 건~~ 다 같이 나오는 장면이에요~. || 각자 잘 하는데,, 같이 있으니까 더 좋은 거 있잖아요!~ 그게 이 곡이 된 것 같아서...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -1257,6 +1257,11 @@
             "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
             "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
             "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "저는요. 솔직히 말하면, 르쎄라핌, 아일릿, 캣츠아이",
+            "세 그룹 다 좋은데, 제가 제일 꽂힌 건 다 같이 나오는 장면이에요.",
+            "각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서,"
           ]
         },
         {
@@ -3382,7 +3387,7 @@
       "scene": "서여리 MCU 단독. 시선 내리깔다 올리기. 개인 감상 파트.",
       "action": "시선 내리깔다 천천히 카메라로 올리기. 마지막 살짝 수줍은 미소.",
       "character": "서여리",
-      "dialogue": "\"저는요… 솔직히 말하면, || 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. || 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.\"",
+      "dialogue": "저는요~~  솔직히 말하면... 르쎄라핌, 아일릿, 캣츠아이... || 세 그룹 다 좋은데~ 제가 제일 꽂힌 건~~ 다 같이 나오는 장면이에요~. || 각자 잘 하는데,, 같이 있으니까 더 좋은 거 있잖아요!~ 그게 이 곡이 된 것 같아서...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -3430,6 +3435,11 @@
         "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
         "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
         "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "저는요. 솔직히 말하면, 르쎄라핌, 아일릿, 캣츠아이",
+        "세 그룹 다 좋은데, 제가 제일 꽂힌 건 다 같이 나오는 장면이에요.",
+        "각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서,"
       ]
     },
     {
