@@ -762,7 +762,7 @@
           "subtitle": "",
           "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind, sitting side by side on a beige sofa, facing a TV across the room, watching together.\n\nOn the LEFT: Yeori — long wavy dark brown hair past the shoulders, back of head and shoulders visible, navy blue fitted cardigan, ivory wide-leg tailored trousers with black belt.\n\nOn the RIGHT: Jia — short wavy black bob with fringe bangs (visibly shorter than Yeori's hair), back of head and shoulders visible, white fitted short-sleeve tee, blue distressed denim cutoff shorts, silver chain necklace.\n\nTV screen visible across the room showing only a blurred/abstract colorful glow (never legible text, logos, or UI). Warm cozy evening lighting, wooden bookshelf on the left side of the room, wooden low TV console. No other people in background. Barefoot or socks only, no shoes worn (indoor home setting). Photorealistic 8K cinematic 16:9.",
           "videoPrompt": "[Clip 1/2 — 4s] Starting frame: use the approved rear-view reference image (Yeori on screen-LEFT with long dark hair and navy cardigan; Jia on screen-RIGHT with short black bob and white tee). Both women stay seated on the sofa watching the TV from behind — Jia sits upright and composed, Yeori leans slightly forward, intensely focused. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut — camera moves around to the opposite side of the room, now facing them from the front. Same room, same sofa. Their screen positions mirror/swap from Clip 1 since the camera flipped sides.]\n[Clip 2/2 — 6s] Starting frame: use the separate approved front-view reference image (Jia now on screen-LEFT — short black bob, white tee, distinct sharp-featured face with winged eyeliner and mauve-brown lips; Yeori now on screen-RIGHT — long dark hair, navy cardigan, distinct softer face with gentle pink lips). Camera does a slow push-in. Jia's body slowly leans forward, absorbed, expression softening. Yeori glances briefly at Jia then refocuses forward. Soft warm TV light flickers on their faces; the screen itself is not visible from this angle. No dialogue, pure reaction.",
-          "duration": 10,
+          "duration": 14,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -2940,7 +2940,7 @@
       "subtitle": "",
       "imagePrompt": "WIDE SHOT — Two young Korean women early-20s, seen from behind, sitting side by side on a beige sofa, facing a TV across the room, watching together.\n\nOn the LEFT: Yeori — long wavy dark brown hair past the shoulders, back of head and shoulders visible, navy blue fitted cardigan, ivory wide-leg tailored trousers with black belt.\n\nOn the RIGHT: Jia — short wavy black bob with fringe bangs (visibly shorter than Yeori's hair), back of head and shoulders visible, white fitted short-sleeve tee, blue distressed denim cutoff shorts, silver chain necklace.\n\nTV screen visible across the room showing only a blurred/abstract colorful glow (never legible text, logos, or UI). Warm cozy evening lighting, wooden bookshelf on the left side of the room, wooden low TV console. No other people in background. Barefoot or socks only, no shoes worn (indoor home setting). Photorealistic 8K cinematic 16:9.",
       "videoPrompt": "[Clip 1/2 — 4s] Starting frame: use the approved rear-view reference image (Yeori on screen-LEFT with long dark hair and navy cardigan; Jia on screen-RIGHT with short black bob and white tee). Both women stay seated on the sofa watching the TV from behind — Jia sits upright and composed, Yeori leans slightly forward, intensely focused. Warm TV glow flickers softly on the back of the sofa and their hair. No dialogue, ambient reaction only.\n\n[Hard cut — camera moves around to the opposite side of the room, now facing them from the front. Same room, same sofa. Their screen positions mirror/swap from Clip 1 since the camera flipped sides.]\n[Clip 2/2 — 6s] Starting frame: use the separate approved front-view reference image (Jia now on screen-LEFT — short black bob, white tee, distinct sharp-featured face with winged eyeliner and mauve-brown lips; Yeori now on screen-RIGHT — long dark hair, navy cardigan, distinct softer face with gentle pink lips). Camera does a slow push-in. Jia's body slowly leans forward, absorbed, expression softening. Yeori glances briefly at Jia then refocuses forward. Soft warm TV light flickers on their faces; the screen itself is not visible from this angle. No dialogue, pure reaction.",
-      "duration": 10,
+      "duration": 14,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -3794,6 +3794,18 @@
           "keepAudio": true,
           "createdAt": 1789705306415,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_2.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_07.mp4?t=1789817254294",
+          "name": "cut_07.mp4",
+          "duration": 24,
+          "trimStart": 0,
+          "trimEnd": 24,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_07.mp4",
+          "keepAudio": true,
+          "createdAt": 1789796787000
         }
       ],
       "cut-2": [
@@ -4156,6 +4168,18 @@
           "keepAudio": true,
           "createdAt": 1789710271143,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_09_clip_1.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_09.mp4?t=1789817556860",
+          "name": "cut_09.mp4",
+          "duration": 18.01,
+          "trimStart": 0,
+          "trimEnd": 18.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_09.mp4",
+          "keepAudio": true,
+          "createdAt": 1789796817000
         }
       ],
       "cut-16": [
@@ -4224,6 +4248,18 @@
           "keepAudio": false,
           "createdAt": 1789713643258,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_11_clip_1.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_11.mp4?t=1789817641102",
+          "name": "cut_11.mp4",
+          "duration": 14.02,
+          "trimStart": 0,
+          "trimEnd": 14.02,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_11.mp4",
+          "keepAudio": false,
+          "createdAt": 1789797281000
         }
       ],
       "cut-11b": [
@@ -4295,7 +4331,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-18",
+    "selectedCutId": "cut-11",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
