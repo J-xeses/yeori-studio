@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -819,7 +819,7 @@
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — Two young Korean women early-20s,\nsitting side by side on beige sofa, camera now noticeably closer than before, tighter two shot,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nmouth slightly parted, fully absorbed (left), leaning in with wide amazed eyes (right),\n\nsoft warm light from TV screen reflecting on their faces,\nno screen visible, only their reactions,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-4s: both women lean in further, fully absorbed, faces closer to camera than the previous shot,\nJia's mouth parts slightly in reaction\n\nNext 4-9s: both turn to face each other simultaneously, sharing a wide-eyed amazed reaction,\nbrief shared gasp/laugh, then settle into a warm lingering look,\nno dialogue, pure reaction, static camera",
-          "duration": 9,
+          "duration": 10,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -1316,7 +1316,8 @@
             "source": "SH_GR CA_ST 없음 MD_EMO"
           },
           "narrationStart": 1,
-          "narrationVolume": 0.4
+          "narrationVolume": 0.3,
+          "narrBgVolume": 0.74
         },
         {
           "id": "cut-20",
@@ -1374,7 +1375,7 @@
           "scene": "소파 두샷. CUT 1과 동일 세팅으로 수미상관. 여유로운 마무리 + CTA.",
           "action": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
           "character": "서여리",
-          "dialogue": "한지아 \"여러분 픽은 뭐예요?\" / 서여리 \"댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!\"",
+          "dialogue": "음~  여러분 픽은 뭐예요? || 댓글로 알려주세요! ~ 구독하면, 다음 리뷰도 같이 봐요!",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
@@ -1412,7 +1413,19 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_WRM",
             "source": "SH_MCU CA_ST HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음. MD_WRM"
-          }
+          },
+          "segments": [
+            10,
+            10
+          ],
+          "segPrompts": [
+            "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "여러분 픽은 뭐예요?",
+            "댓글로 알려주세요! 구독하면 다음 리뷰도 같이 봐요!"
+          ]
         },
         {
           "id": "cut-22",
@@ -2997,7 +3010,7 @@
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — Two young Korean women early-20s,\nsitting side by side on beige sofa, camera now noticeably closer than before, tighter two shot,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee,\nblue distressed denim cutoff shorts,\n\nOn the right: long wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nmouth slightly parted, fully absorbed (left), leaning in with wide amazed eyes (right),\n\nsoft warm light from TV screen reflecting on their faces,\nno screen visible, only their reactions,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
       "videoPrompt": "First 0-4s: both women lean in further, fully absorbed, faces closer to camera than the previous shot,\nJia's mouth parts slightly in reaction\n\nNext 4-9s: both turn to face each other simultaneously, sharing a wide-eyed amazed reaction,\nbrief shared gasp/laugh, then settle into a warm lingering look,\nno dialogue, pure reaction, static camera",
-      "duration": 9,
+      "duration": 10,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -3494,7 +3507,8 @@
         "source": "SH_GR CA_ST 없음 MD_EMO"
       },
       "narrationStart": 1,
-      "narrationVolume": 0.4
+      "narrationVolume": 0.3,
+      "narrBgVolume": 0.74
     },
     {
       "id": "cut-20",
@@ -3552,7 +3566,7 @@
       "scene": "소파 두샷. CUT 1과 동일 세팅으로 수미상관. 여유로운 마무리 + CTA.",
       "action": "HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음.",
       "character": "서여리",
-      "dialogue": "한지아 \"여러분 픽은 뭐예요?\" / 서여리 \"댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!\"",
+      "dialogue": "음~  여러분 픽은 뭐예요? || 댓글로 알려주세요! ~ 구독하면, 다음 리뷰도 같이 봐요!",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
@@ -3590,7 +3604,19 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_WRM",
         "source": "SH_MCU CA_ST HJ 먼저 카메라 봄 / YR 따라서 봄. 같이 웃음. MD_WRM"
-      }
+      },
+      "segments": [
+        10,
+        10
+      ],
+      "segPrompts": [
+        "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM SHOT — Two young Korean women early-20s,\nsitting relaxed together on beige sofa,\nboth looking directly at camera with warm natural smiles,\n\nOn the left: short wavy black hair with fringe bangs,\ndark mauve-brown lip, sharp eyeliner, intense dark eyes,\ndelicate silver chain necklace,\nwhite fitted short-sleeve tee, blue distressed denim cutoff shorts,\nrelaxed and playful expression,\n\nOn the right: long wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee, navy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\nwarm friendly smile following Jia's lead,\n\nwarm indoor lighting, comfortable and unposed chemistry,\nsame setting as the opening shot — mirroring CUT 1,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "여러분 픽은 뭐예요?",
+        "댓글로 알려주세요! 구독하면 다음 리뷰도 같이 봐요!"
+      ]
     },
     {
       "id": "cut-22",
@@ -3990,20 +4016,7 @@
           "createdAt": 1789811939000
         }
       ],
-      "cut-21": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789785553877",
-          "name": "cut_22.mp4",
-          "duration": 5,
-          "trimStart": 0,
-          "trimEnd": 5,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_22.mp4",
-          "keepAudio": true,
-          "createdAt": 1789207757000
-        }
-      ],
+      "cut-21": [],
       "cut-3": [
         {
           "url": "blob:http://localhost:5173/820cbbac-bb22-482c-aded-674f302a5252",
@@ -4043,6 +4056,18 @@
           "keepAudio": true,
           "createdAt": 1789540114752,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_03.mp4?t=1789818092025",
+          "name": "cut_03.mp4",
+          "duration": 24,
+          "trimStart": 0,
+          "trimEnd": 24,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_03.mp4",
+          "keepAudio": true,
+          "createdAt": 1789795813000
         }
       ],
       "cut-6": [
@@ -4152,7 +4177,7 @@
           "useFullDuration": true,
           "ratio": "16:9",
           "staging": false,
-          "keepAudio": true,
+          "keepAudio": false,
           "createdAt": 1789710754904,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_09_clip_0.mp4"
         },
@@ -4220,6 +4245,18 @@
           "keepAudio": false,
           "createdAt": 1789802757601,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_18_clip_new1789802870728.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_18.mp4?t=1789818466638",
+          "name": "cut_18.mp4",
+          "duration": 8.03,
+          "trimStart": 0,
+          "trimEnd": 8.03,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_18.mp4",
+          "keepAudio": false,
+          "createdAt": 1789802908000
         }
       ],
       "cut-11": [
@@ -4331,16 +4368,38 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-11",
+    "selectedCutId": "cut-21",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
       "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
       "cut-16": "근데 있잖아요… 좋은 거잖아요, 그냥!",
-      "cut-19": "... 봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다~ 소~름이에요!!",
+      "cut-19": [
+        {
+          "start": 0,
+          "end": 10,
+          "text": ""
+        }
+      ],
       "cut-2": "야야! 이거 봤어?..  이거 봤어??",
-      "cut-12": "… 중독이에요…",
+      "cut-12": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": ""
+        },
+        {
+          "start": 8,
+          "end": 18.009999999999998,
+          "text": "… 중독이에요…"
+        },
+        {
+          "start": 18.009999999999998,
+          "end": 36.019999999999996,
+          "text": ""
+        }
+      ],
       "cut-13": [
         {
           "start": 0,
@@ -4367,7 +4426,67 @@
         }
       ],
       "cut-21": "여러분 픽은 뭐예요?\n댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!",
-      "cut-9": "근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?"
+      "cut-9": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": "근데… 이상하지 않아요? 세 그룹이 한 곡에 있는데"
+        },
+        {
+          "start": 8,
+          "end": 18.009999999999998,
+          "text": "각자의 색이 다 살아있어요! 섞였는데 안 섞인 거예요~ 이게 말이 돼요?"
+        },
+        {
+          "start": 18.009999999999998,
+          "end": 36.019999999999996,
+          "text": ""
+        }
+      ],
+      "cut-7": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만~"
+        },
+        {
+          "start": 8,
+          "end": 16,
+          "text": " 처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?"
+        },
+        {
+          "start": 16,
+          "end": 24,
+          "text": "LA 베이스에 경계 자체가 없는 세계관!"
+        },
+        {
+          "start": 24,
+          "end": 48,
+          "text": ""
+        }
+      ],
+      "cut-5": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜"
+        },
+        {
+          "start": 8,
+          "end": 16,
+          "text": "어떻게 설명하지? 버블 같아요, 버블"
+        },
+        {
+          "start": 16,
+          "end": 24,
+          "text": "터질 것 같은데~ 터지면 또 귀여운 그 느낌?"
+        },
+        {
+          "start": 24,
+          "end": 48,
+          "text": ""
+        }
+      ]
     }
   },
   "ttsTabState": {
