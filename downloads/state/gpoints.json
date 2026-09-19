@@ -510,10 +510,11 @@
     },
     "cut_14": {
       "g1": true,
-      "updatedAt": "2026-09-19T02:50:04.630Z",
+      "updatedAt": "2026-09-19T08:13:18.024Z",
       "g5": false,
       "g2": true,
-      "selectedImage": "cut_14_a.jpg"
+      "selectedImage": "cut_14_a.jpg",
+      "g3": true
     },
     "cut_16": {
       "g1": true,

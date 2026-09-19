@@ -73,6 +73,12 @@
     "baked": true,
     "producedAt": "2026-09-19T06:25:53.557Z"
   },
+  "13": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-19T07:51:58.049Z"
+  },
   "14": {
     "method": "graphic",
     "motion": "self",

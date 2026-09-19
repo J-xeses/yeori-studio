@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -927,12 +927,12 @@
           "scene": "서여리 소파 측면 MCU. HYBE 전략 분석 시작.",
           "action": "생각하는 포즈에서 시작. 손짓 포함 설명.",
           "character": "서여리",
-          "dialogue": "\"근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...\"",
+          "dialogue": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... || LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. || 그리고... KATSEYE로 글로벌까지!~~ 한 곡으로 세 시장을...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-8s: she sits at 45-degree angle, thoughtful pose,\none hand near chin, considering\n\nNext 8-17s: begins speaking with natural hand gestures,\nanalytical but warm delivery,\ncounting points with fingers naturally\n\nFinal 17-25s: leans back slightly with a knowing look,\nsatisfied expression at the analysis,\nwarm indoor lighting, static camera",
-          "duration": 25,
+          "duration": 24,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -965,7 +965,22 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_ANL",
             "source": "SH_MCU CA_ST 손짓 포함 자연스러운 설명 MD_ANL"
-          }
+          },
+          "segments": [
+            8,
+            8,
+            8
+          ],
+          "segPrompts": [
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "근데 이게 그냥 운이 아니에요~ HYBE가 진짜 전략적으로 짠 거거든요.",
+            "LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~",
+            "KATSEYE로 글로벌까지~ 한 곡으로 세 시장을..."
+          ]
         },
         {
           "id": "cut-14",
@@ -3085,12 +3100,12 @@
       "scene": "서여리 소파 측면 MCU. HYBE 전략 분석 시작.",
       "action": "생각하는 포즈에서 시작. 손짓 포함 설명.",
       "character": "서여리",
-      "dialogue": "\"근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...\"",
+      "dialogue": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... || LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. || 그리고... KATSEYE로 글로벌까지!~~ 한 곡으로 세 시장을...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
       "videoPrompt": "First 0-8s: she sits at 45-degree angle, thoughtful pose,\none hand near chin, considering\n\nNext 8-17s: begins speaking with natural hand gestures,\nanalytical but warm delivery,\ncounting points with fingers naturally\n\nFinal 17-25s: leans back slightly with a knowing look,\nsatisfied expression at the analysis,\nwarm indoor lighting, static camera",
-      "duration": 25,
+      "duration": 24,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -3123,7 +3138,22 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_ANL",
         "source": "SH_MCU CA_ST 손짓 포함 자연스러운 설명 MD_ANL"
-      }
+      },
+      "segments": [
+        8,
+        8,
+        8
+      ],
+      "segPrompts": [
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nthoughtful analytical expression, one hand gesturing naturally,\ndocumentary-style composure with warmth,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "근데 이게 그냥 운이 아니에요~ HYBE가 진짜 전략적으로 짠 거거든요.",
+        "LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~",
+        "KATSEYE로 글로벌까지~ 한 곡으로 세 시장을..."
+      ]
     },
     {
       "id": "cut-14",
@@ -3870,33 +3900,22 @@
           "createdAt": 1788944994000
         }
       ],
-      "cut-13": [],
-      "cut-18": [
+      "cut-13": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789802833319",
-          "name": "cut_19.mp4",
+          "url": "blob:http://localhost:5173/8ba26358-de85-46a3-b9d6-80637251fb43",
+          "name": "컷14 오류_20260919171359.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1788876666000
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789802910794",
-          "name": "cut_19.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
-          "keepAudio": true,
-          "createdAt": 1788876666000
+          "createdAt": 1789805639677,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_0.mp4"
         }
       ],
+      "cut-18": [],
       "cut-21": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789785553877",
@@ -4171,10 +4190,50 @@
           "keepAudio": false,
           "createdAt": 1789799153000
         }
+      ],
+      "cut-12": [
+        {
+          "url": "blob:http://localhost:5173/7e353f75-c7ba-49dd-b579-a233e833bb13",
+          "name": "Young_woman_looking_at_camera_20260919163612.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789803372266,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_13_clip_new1789804272781.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/26682cbe-c1be-4dd1-a106-92e3c6973046",
+          "name": "Woman_speaking_in_Korean_20260919164909.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789804150103,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_13_clip_new1789804274680.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_13.mp4?t=1789804319528",
+          "name": "cut_13.mp4",
+          "duration": 18.01,
+          "trimStart": 0,
+          "trimEnd": 18.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_13.mp4",
+          "keepAudio": true,
+          "createdAt": 1789804317000
+        }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-14",
+    "selectedCutId": "cut-18",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
@@ -4184,7 +4243,13 @@
       "cut-19": "... 봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다~ 소~름이에요!!",
       "cut-2": "야야! 이거 봤어?..  이거 봤어??",
       "cut-12": "… 중독이에요…",
-      "cut-13": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
+      "cut-13": [
+        {
+          "start": 0,
+          "end": 8,
+          "text": "근데 이게 그냥 운이 아니에요~ HYBE가 진짜 전략적으로 짠 거거든요."
+        }
+      ],
       "cut-15": "야~ 그냥 좋잖아!!\n.... 맞아~",
       "cut-18": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
       "cut-21": "여러분 픽은 뭐예요?\n댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!",
