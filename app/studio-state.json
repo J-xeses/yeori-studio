@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3626,7 +3626,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-18T12:02:29.270Z",
+  "savedAt": "2026-09-19T02:49:35.946Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3682,6 +3682,18 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_02.mp4",
           "keepAudio": false,
           "createdAt": 1788181220000
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_02_a.mp4?t=1789785610800",
+          "name": "cut_02_a.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_02_a.mp4",
+          "keepAudio": true,
+          "createdAt": 1789219488369.481
         }
       ],
       "cut-1": [
@@ -3769,9 +3781,48 @@
           "createdAt": 1788944994000
         }
       ],
-      "cut-13": [],
-      "cut-18": [],
-      "cut-21": [],
+      "cut-13": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_14.mp4?t=1789785551864",
+          "name": "cut_14.mp4",
+          "duration": 10,
+          "trimStart": 0,
+          "trimEnd": 10,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_14.mp4",
+          "keepAudio": true,
+          "createdAt": 1788944994000
+        }
+      ],
+      "cut-18": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_19.mp4?t=1789785553611",
+          "name": "cut_19.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_19.mp4",
+          "keepAudio": true,
+          "createdAt": 1788876666000
+        }
+      ],
+      "cut-21": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789785553877",
+          "name": "cut_22.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_22.mp4",
+          "keepAudio": true,
+          "createdAt": 1789207757000
+        }
+      ],
       "cut-3": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_03.mp4?t=1789732949791",
@@ -3855,6 +3906,18 @@
           "ratio": "16:9",
           "createdAt": 1789730981226,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\06_publishing\\cut_17_final.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_17.mp4?t=1789785553356",
+          "name": "cut_17.mp4",
+          "duration": 8.03,
+          "trimStart": 0,
+          "trimEnd": 8.03,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_17.mp4",
+          "keepAudio": false,
+          "createdAt": 1789721127000
         }
       ],
       "cut-17": [
@@ -3902,37 +3965,21 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-5",
+    "selectedCutId": "cut-6",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
       "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
-      "cut-16": [
-        {
-          "start": 0,
-          "end": 8,
-          "text": ""
-        }
-      ],
-      "cut-19": [
-        {
-          "start": 0,
-          "end": 8,
-          "text": ""
-        },
-        {
-          "start": 8,
-          "end": 18,
-          "text": ""
-        }
-      ],
+      "cut-16": "근데 있잖아요… 좋은 거잖아요, 그냥!",
+      "cut-19": "... 봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다~ 소~름이에요!!",
       "cut-2": "야야! 이거 봤어?..  이거 봤어??",
       "cut-12": "… 중독이에요…",
       "cut-13": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
       "cut-15": "야~ 그냥 좋잖아!!\n.... 맞아~",
       "cut-18": "저는요… 솔직히 말하면, 세 그룹 다 좋은데 제가 제일 꽂힌 건 다 같이 나오는 장면이에요~. 각자 잘 하는데 같이 있으니까 더 좋은 거 있잖아요! 그게 이 곡이 된 것 같아서.",
-      "cut-21": "여러분 픽은 뭐예요?\n댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!"
+      "cut-21": "여러분 픽은 뭐예요?\n댓글로 알려주세요!~ 구독하면 다음 리뷰도 같이 봐요!",
+      "cut-9": "근데… 이상하지 않아요?~ 세 그룹이 한 곡에 있는데. 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?"
     }
   },
   "ttsTabState": {
@@ -3947,7 +3994,8 @@
       "cut-18": true,
       "cut-19": true,
       "cut-20": true,
-      "cut-21": true
+      "cut-21": true,
+      "cut-9": true
     },
     "focusCutId": null,
     "voiceTabs": {
@@ -4448,13 +4496,14 @@
     "mergedUrls": {
       "cut-2__v1": "blob:http://localhost:5173/e3f027f7-4351-43e1-b4df-fc0d8684fdc5",
       "cut-12__v1": "blob:http://localhost:5173/567d5a12-782f-409b-bdab-c484c0c77e2d",
-      "cut-13__v1": "blob:http://localhost:5173/5ef12699-c3e4-4b57-af04-ba76f88e1d6e",
-      "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/3b75de71-7f30-4d09-ac01-3cacfd1da62e",
-      "cut-16__v1": "blob:http://localhost:5173/d14ab1dc-35db-4963-bc2d-48748b3a2525",
-      "cut-18__v1": "blob:http://localhost:5173/d751d482-f99c-4fc7-9ae4-1005bdb9d7b5",
-      "cut-19__v1": "blob:http://localhost:5173/ef528606-ab04-4be8-bc4a-6365b052d283",
-      "cut-20__v1": "blob:http://localhost:5173/c5d402d0-1424-4e2a-8344-a59707f1763c",
-      "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/f35c2cb9-8787-4192-b636-cf16dd64751e"
+      "cut-13__v1": "blob:http://localhost:5173/111cf0ab-49f9-4b4e-a5ed-71dbbf33bd7d",
+      "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/5b3a2445-0419-45e2-8673-a79379a63905",
+      "cut-16__v1": "blob:http://localhost:5173/d57a35c4-e187-4bbf-856a-788641dab037",
+      "cut-18__v1": "blob:http://localhost:5173/df1eaa3f-135f-4d4d-a2cc-7b48f635cf3a",
+      "cut-19__v1": "blob:http://localhost:5173/8341ce6c-1cad-431e-95e7-1290ef03cf96",
+      "cut-20__v1": "blob:http://localhost:5173/393a3ae7-18fa-4dfc-a0cd-832e939a0d26",
+      "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/0d24bc21-daab-42e2-812a-cbd70e57b20d",
+      "cut-9__v1": "blob:http://localhost:5173/485ef3d0-5723-468e-bd80-500796acf77c"
     }
   },
   "voiceInsertState": {
