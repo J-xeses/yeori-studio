@@ -106,11 +106,10 @@
     "producedAt": "2026-09-19T07:28:28.614Z"
   },
   "19": {
-    "method": "clip-record",
+    "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "duration": 8,
-    "producedAt": "2026-09-08T14:11:07.491Z"
+    "producedAt": "2026-09-19T09:58:59.624Z"
   },
   "20": {
     "method": "s2c-video",
