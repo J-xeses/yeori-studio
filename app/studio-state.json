@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -4016,7 +4016,21 @@
           "createdAt": 1789811939000
         }
       ],
-      "cut-21": [],
+      "cut-21": [
+        {
+          "url": "blob:http://localhost:5173/83cbd4bb-f0be-43b2-925c-86d9bc135450",
+          "name": "Two_women_speaking_to_camera_20260919213359.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789821240071,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_22_clip_0.mp4"
+        }
+      ],
       "cut-3": [
         {
           "url": "blob:http://localhost:5173/820cbbac-bb22-482c-aded-674f302a5252",
@@ -4368,7 +4382,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-21",
+    "selectedCutId": "cut-17",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
