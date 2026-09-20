@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -4002,7 +4002,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-20T09:23:23.500Z",
+  "savedAt": "2026-09-20T09:43:56.956Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -4162,8 +4162,8 @@
       ],
       "cut-13": [
         {
-          "url": "blob:http://localhost:5173/8ba26358-de85-46a3-b9d6-80637251fb43",
-          "name": "컷14 오류_20260919171359.mp4",
+          "url": "blob:http://localhost:5173/909f4cfb-7e0b-48dd-a1ee-dc02a6072873",
+          "name": "Woman_speaking_Korean_on_sofa_20260920170704.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
@@ -4171,8 +4171,8 @@
           "ratio": "16:9",
           "staging": false,
           "keepAudio": true,
-          "createdAt": 1789805639677,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_0.mp4"
+          "createdAt": 1789891625495,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_1.mp4"
         }
       ],
       "cut-18": [
@@ -4446,18 +4446,6 @@
           "keepAudio": false,
           "createdAt": 1789802757601,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_18_clip_new1789802870728.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_18.mp4?t=1789818466638",
-          "name": "cut_18.mp4",
-          "duration": 8.03,
-          "trimStart": 0,
-          "trimEnd": 8.03,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_18.mp4",
-          "keepAudio": false,
-          "createdAt": 1789802908000
         }
       ],
       "cut-11": [
@@ -4486,18 +4474,6 @@
           "keepAudio": false,
           "createdAt": 1789713643258,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_11_clip_1.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_11.mp4?t=1789817641102",
-          "name": "cut_11.mp4",
-          "duration": 14.02,
-          "trimStart": 0,
-          "trimEnd": 14.02,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_11.mp4",
-          "keepAudio": false,
-          "createdAt": 1789797281000
         }
       ],
       "cut-11b": [
@@ -4513,18 +4489,6 @@
           "keepAudio": false,
           "createdAt": 1789799006746,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_12_clip_new1789799123028.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_12.mp4?t=1789799155622",
-          "name": "cut_12.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_12.mp4",
-          "keepAudio": false,
-          "createdAt": 1789799153000
         }
       ],
       "cut-12": [
@@ -4553,23 +4517,11 @@
           "keepAudio": true,
           "createdAt": 1789804150103,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_13_clip_new1789804274680.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_13.mp4?t=1789804319528",
-          "name": "cut_13.mp4",
-          "duration": 18.01,
-          "trimStart": 0,
-          "trimEnd": 18.01,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_13.mp4",
-          "keepAudio": true,
-          "createdAt": 1789804317000
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-18",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",

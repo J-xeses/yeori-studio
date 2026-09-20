@@ -296,7 +296,16 @@ export function decideCut(cut) {
   const sfxText = String(audio.sfx || '')
   const sfx = []
   const pickRule = (hay) => SFX_RULES.find((r) => r.kw.test(hay))
-  if (!SFX_NONE.test(sfxText)) {
+  // 0순위: 컷에 직접 지정한 파일(masterCode.audio.sfxFile — 메이킹 탭 SFX 열에서 선택) — 키워드 규칙보다 우선.
+  // sfxAt(start|mid|end, 기본 mid) · sfxGain(0~1, 기본 0.7) 은 선택. sfxFile 이 '__none__' 이면 효과음 없음.
+  const manualFile = String(audio.sfxFile || '').replace(/\\/g, '/').replace(/^(_shared\/)?(library\/)?sfx\//, '').trim()
+  if (manualFile === '__none__') {
+    /* 사용자가 명시적으로 효과음 없음 */
+  } else if (manualFile) {
+    const at = ['start', 'mid', 'end'].includes(audio.sfxAt) ? audio.sfxAt : 'mid'
+    const gain = Number.isFinite(Number(audio.sfxGain)) && audio.sfxGain !== '' && audio.sfxGain != null ? Math.min(1, Math.max(0.05, Number(audio.sfxGain))) : 0.7
+    sfx.push({ file: manualFile, at, gain, maxDur: null, layer: false, manual: true, reason: '직접 지정' })
+  } else if (!SFX_NONE.test(sfxText)) {
     let rule = pickRule(sfxText)
     // 필드가 비었거나 "없음"이 아니지만 매칭 실패 → 장면/감정으로 보조 추론
     if (!rule) {

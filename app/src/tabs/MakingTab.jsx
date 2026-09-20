@@ -6,6 +6,7 @@ import { getGPoint, setGPoint } from '../lib/gpoints'
 import { cutDims } from '../lib/videoPolicy'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
+import SfxPicker from '../components/SfxPicker'
 import s from './MakingTab.module.css'
 import { epMediaUrl } from '../lib/mediaPaths'
 import { elSoundEffect, saveGeneratedSfx } from '../lib/api'
@@ -1020,6 +1021,16 @@ export default function MakingTab() {
   const [reelLog, setReelLog] = useState('')
   const [reelVideo, setReelVideo] = useState(null)
   const [reelManifest, setReelManifest] = useState(null)
+
+  // 컷에 효과음 파일을 직접 지정(masterCode.audio.sfxFile/sfxAt) — 서버 reelFinalize 가 키워드 규칙보다
+  // 우선 적용. patch: {sfxFile?, sfxAt?}. 브라우저 상태가 원본이라 저장(3초 디바운스) 뒤에 계획표를 다시 불러온다.
+  const setCutSfx = (cutNo, patch) => {
+    const cut = (state.cuts || []).find(c => c.no === cutNo)
+    if (!cut) { alert(`컷 ${cutNo} 를 상태에서 찾지 못했습니다`); return }
+    const mc = cut.masterCode || {}
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { masterCode: { ...mc, audio: { ...(mc.audio || {}), ...patch } } } })
+    setTimeout(() => loadReelPlan(), 3800)
+  }
 
   const loadReelPlan = async () => {
     if (!episode?.number) return
@@ -3129,7 +3140,21 @@ export default function MakingTab() {
                               {sg.burn || sg.raw}
                             </span>
                           ))}</td>
-                          <td>{c.sfx?.length ? c.sfx.map(x => x.file.split('/').pop()).join(', ') : '—'}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span title={c.sfx?.[0]?.file || ''}>
+                                {c.sfx?.length ? c.sfx.map(x => (x.manual ? '📌 ' : '') + x.file.split('/').pop()).join(', ') : '—'}
+                              </span>
+                              <SfxPicker onSelect={item => setCutSfx(c.no, { sfxFile: item.path, sfxAt: c.sfx?.[0]?.at || 'mid' })} />
+                              {c.sfx?.[0]?.manual && (
+                                <select value={c.sfx[0].at} onChange={e => setCutSfx(c.no, { sfxAt: e.target.value })} title="효과음 넣는 위치">
+                                  <option value="start">시작</option><option value="mid">중간</option><option value="end">끝</option>
+                                </select>
+                              )}
+                              <button type="button" title="이 컷은 효과음 없음" onClick={() => setCutSfx(c.no, { sfxFile: '__none__' })}>없음</button>
+                              <button type="button" title="직접 지정 해제 — 대본 키워드로 자동 판단" onClick={() => setCutSfx(c.no, { sfxFile: '' })}>자동</button>
+                            </div>
+                          </td>
                           <td>{c.hasFile ? '✓' : <span style={{ color: '#f04747' }}>없음</span>}</td>
                         </tr>
                       ))}

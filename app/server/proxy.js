@@ -705,6 +705,19 @@ app.get('/api/sfx-catalog', (req, res) => {
         if (it.path) it.path = path.relative(mp.DOWNLOADS, mp.sfxFile(it.path)).replace(/\\/g, '/')
       }
     }
+    // AI로 생성해 저장한 효과음(_shared/sfx/_generated/)도 같은 카탈로그에 "AI 생성" 카테고리로
+    // 노출 — 대본생성/편집메타/메이킹 탭 어디서든 SfxPicker 로 바로 고를 수 있게(2026-09-20).
+    try {
+      const gdir = mp.sfxDir('_generated')
+      const files = fs.existsSync(gdir) ? fs.readdirSync(gdir).filter(f => /\.(mp3|wav|m4a|ogg)$/i.test(f)) : []
+      if (files.length && Array.isArray(catalog?.categories)) {
+        files.sort((a, b) => fs.statSync(path.join(gdir, b)).mtimeMs - fs.statSync(path.join(gdir, a)).mtimeMs)
+        catalog.categories.unshift({
+          id: '_generated', title: '🆕 AI 생성 (내가 저장한 효과음)',
+          items: files.map(f => ({ id: `gen_${f}`, filename: f, purpose: f.replace(/\.[^.]+$/, '').replace(/_/g, ' '), scene: 'AI 생성', path: `_shared/sfx/_generated/${f}` })),
+        })
+      }
+    } catch { /* 생성 폴더 읽기 실패해도 기본 카탈로그는 그대로 */ }
     res.json({ ok: true, catalog })
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })

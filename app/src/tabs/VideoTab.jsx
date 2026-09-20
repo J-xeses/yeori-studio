@@ -47,10 +47,16 @@ function toSegments(value, fallbackText, totalDur) {
 // 기반 기존 기본값(toSegments의 fallbackText로 처리됨, 여기선 undefined 반환).
 function effectiveCaptionValue(subtitlesState, cut, clips) {
   if (!cut) return undefined
-  if (subtitlesState[cut.id] !== undefined) return subtitlesState[cut.id]
   const plannedSegs = Array.isArray(cut.segments) ? cut.segments : []
   const slotCount = Math.max(clips.length, plannedSegs.length)
-  if (slotCount > 0 && Array.isArray(cut.subtitleSegments) && cut.subtitleSegments.length === slotCount) {
+  const hasPlannedCaptions = slotCount > 0 && Array.isArray(cut.subtitleSegments) && cut.subtitleSegments.length === slotCount
+  // 저장된 "문자열" 오버라이드는 대본에 세그별 자막이 있는 컷에선 무시한다 — TTS 합치기 등이 대사 전체를
+  // 문자열로 심어두면 필드게이트에서 나눈 세그별 자막을 가려버렸음(2026-09-20, CUT 14). 다중 슬롯 컷에서
+  // 사람이 직접 고친 값은 항상 배열([{start,end,text}])로 저장되므로(setPreviewText/setClipCaption), 문자열은
+  // 자동 유입된 값으로 봐도 안전하다.
+  const ov = subtitlesState[cut.id]
+  if (ov !== undefined && !(typeof ov === 'string' && hasPlannedCaptions)) return ov
+  if (hasPlannedCaptions) {
     let acc = 0
     return cut.subtitleSegments.map((text, i) => {
       const clip = clips[i]
@@ -362,7 +368,9 @@ export default function VideoTab() {
   const previewText = clipsForText.length > 1 ? (segsForText[selectedClipIdx]?.text ?? '') : (segsForText[0]?.text ?? '')
   const setPreviewText = (text) => {
     if (!selCutForText) return
-    if (clipsForText.length > 1) {
+    const plannedForText = Array.isArray(selCutForText.segments) ? selCutForText.segments : []
+    const slotsForText = Math.max(clipsForText.length, plannedForText.length)
+    if (clipsForText.length > 1 || slotsForText > 1) {
       // 세그2처럼 아직 안 채운 자리는 clips에 null/구멍으로 남아있을 수 있음(2026-09-16,
       // 세그별 슬롯 지정 업로드 도입) — clipTimings가 그 자리를 undefined로 주므로 반드시
       // 폴백을 거쳐야 함. 이 폴백 없이 timings[i].start를 바로 읽으면 저장→새로고침 이후
@@ -371,8 +379,10 @@ export default function VideoTab() {
       const timings = clipTimings(clipsForText, plannedSegsForText)
       setSubtitles(prev => {
         const cur = toSegments(effectiveCaptionValue(prev, selCutForText, clipsForText), '', selCutForText.duration || 0)
-        const next = clipsForText.map((_, i) => {
-          const t = timings[i] || { start: 0, end: 0 }
+        // 클립이 아직 다 안 채워진 컷(예: 계획 3세그 중 1개만 배정)도 계획된 슬롯 수만큼 배열을 만들어야
+        // 나머지 세그별 자막(cur[i])이 사라지지 않는다.
+        const next = Array.from({ length: slotsForText }, (_, i) => {
+          const t = timings[i] || cur[i] || { start: 0, end: 0 }
           return {
             start: t.start, end: t.end,
             text: i === selectedClipIdx ? text : (cur[i]?.text ?? ''),
@@ -1512,8 +1522,8 @@ export default function VideoTab() {
             const timings = clipTimings(clips, plannedSegs)
             setSubtitles(prev => {
               const cur = toSegments(effectiveCaptionValue(prev, selCut, clips), '', selCut.duration || 0)
-              const next = clips.map((_, i) => {
-                const t = timings[i] || { start: 0, end: 0 }
+              const next = Array.from({ length: Math.max(clips.length, plannedSegs.length) }, (_, i) => {
+                const t = timings[i] || cur[i] || { start: 0, end: 0 }
                 return {
                   start: t.start, end: t.end,
                   text: i === idx ? text : (cur[i]?.text ?? ''),
