@@ -7,6 +7,7 @@ import { resolveVideoPolicy, VIDEO_MODES, contentRatio } from '../lib/videoPolic
 import { epMediaUrl } from '../lib/mediaPaths'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
+import DiagnosisPanel from '../components/DiagnosisPanel'
 import s from './VideoTab.module.css'
 
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
@@ -201,6 +202,7 @@ export default function VideoTab() {
   const [aspectRatio, setAspectRatio] = useState(() => contentRatio(episode))
   const [subtitleOpen, setSubtitleOpen] = useState(false)
   const { videoClips = {}, g4Approved = {}, selectedCutId = null, subtitles = {} } = state.videoTabState || {}
+  const [diagCutId, setDiagCutId] = useState(null) // AI 진단 패널이 열려있는 컷 id
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
   const [selectedClipIdx, setSelectedClipIdx] = useState(0)
@@ -1990,6 +1992,9 @@ export default function VideoTab() {
                   }}>
                   {g4Approved[selCut.id] ? '✓ G4 취소' : 'G4 승인'}
                 </button>
+                <button className={s.g4Btn} onClick={() => setDiagCutId(selCut.id)} title="결과를 대본과 대조해 진단하고 프롬프트/대본 수정안을 받습니다">
+                  🔍 AI 진단
+                </button>
               </div>
               </div>
               </div>
@@ -2001,6 +2006,10 @@ export default function VideoTab() {
       </div>
       </div>
     </div>
+    {diagCutId && (() => {
+      const dc = cuts.find(c => c.id === diagCutId)
+      return dc ? <DiagnosisPanel cut={dc} episodeCode={episodeCode} stage="G4" onClose={() => setDiagCutId(null)} /> : null
+    })()}
     </div>
   )
 }

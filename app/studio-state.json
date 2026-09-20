@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -4002,7 +4002,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-20T08:24:42.842Z",
+  "savedAt": "2026-09-20T09:23:23.500Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -4076,17 +4076,17 @@
       ],
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/c8718fb9-d65f-4308-b9ee-ad75615d0661",
+          "url": "blob:http://localhost:5173/71296ffe-e259-4f70-b157-f6e6e01e4d54",
           "name": "cut_01.mp4",
-          "duration": 3,
+          "duration": 8,
           "trimStart": 0,
-          "trimEnd": 3,
+          "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
           "staging": false,
           "keepAudio": false,
-          "createdAt": 1789618829229,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_01_clip_new1789794979654.mp4"
+          "createdAt": 1789891621757,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_01_clip_new1789896602394.mp4"
         }
       ],
       "cut-23": [
@@ -4569,7 +4569,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-1",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
