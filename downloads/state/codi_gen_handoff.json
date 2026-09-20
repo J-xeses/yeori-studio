@@ -1,0 +1,14 @@
+{
+  "prompts": {
+    "source": "genline",
+    "episodeCode": "LF_T01",
+    "cutNo": 21,
+    "revision": "SEG: 10+10\nDL: ....  실수로 만들어진 게~~  맞나요?~ || ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...\nSEGT: 3-7,1-7\nSEGP: MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,⏎sitting on beige sofa facing camera,⏎long wavy dark brown hair NOT short,⏎a very subtle natural skin texture on her right cheek (subtle, never exaggerated),⏎delicate gold necklace,⏎navy blue fitted cardigan open-front visible at neckline,⏎effortlessly photogenic not posing just existing beautifully,⏎appearing no older than 22-23,⏎⏎[NOTE FOR EDITING: the first ~2s of this clip will be shown upside-down (180-degree flipped frame) then whip back to upright in post — this is a CapCut editing effect, not part of the generated footage itself. The acting below should read naturally right-side-up; the flip is layered on top afterward.]⏎She starts with a sudden startled reaction — eyes going wide, a small sharp intake of breath, as if caught off guard by her own thought,⏎then the wide-eyed shock softens within a beat into a quiet, disarmed half-smile,⏎warm indoor lighting, soft background blur,⏎same beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,⏎Photorealistic 8K cinematic 16:9 ||| MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,⏎sitting on beige sofa facing camera,⏎long wavy dark brown hair NOT short,⏎a very subtle natural skin texture on her right cheek (subtle, never exaggerated),⏎delicate gold necklace,⏎navy blue fitted cardigan open-front visible at neckline,⏎effortlessly photogenic not posing just existing beautifully,⏎appearing no older than 22-23,⏎⏎continuing directly from the previous clip's disarmed half-smile,⏎her expression shifts into a knowing, slightly ironic warmth — she's in on the joke of her own line,⏎a subtle head-tilt as she speaks, camera holds a slow continuous zoom-in,⏎by the end her smile settles into a soft, quiet stillness — a beat of genuine feeling underneath the irony,⏎warm indoor lighting, soft background blur,⏎same beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,⏎Photorealistic 8K cinematic 16:9\nCPP: 실수로 만들어진 게 맞나요? ||| ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지"
+  },
+  "meta": {
+    "via": "field-gate-seg",
+    "title": "CUT 21 SEG 분할 — 10+10",
+    "at": "2026-09-20T19:15:30.782Z"
+  },
+  "sentAt": "2026-09-20T19:15:30.786Z"
+}
