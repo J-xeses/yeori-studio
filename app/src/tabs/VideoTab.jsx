@@ -744,39 +744,61 @@ export default function VideoTab() {
   // 바로 앞 슬롯 영상의 마지막 프레임이 시작 프레임. 진행 상황은 flowRun[`${cutId}:${idx}`]에 담아 슬롯 줄에 보여준다.
   const [flowRun, setFlowRun] = useState({})
   const flowBusy = Object.values(flowRun).some(r => r?.state === 'running')
+  const FLOW_COST = { 8: 12, 10: 15 } // Omni 1.1 Flash 720p 실측(8초 12, 10초 15). 4·6초는 화면 표시값으로 확인
   const submitToFlow = async (cut, idx, clips) => {
     const epNum = state.episode?.number
     if (epNum == null) return
     const key = `${cut.id}:${idx}`
     const prev = idx > 0 ? clips[idx - 1] : null
     if (idx > 0 && !prev?.stagedPath) { alert(`클립 ${idx}(바로 앞 슬롯)의 서버 저장 파일이 필요합니다 — 먼저 앞 슬롯을 채워주세요.`); return }
-    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 모델 Omni 1.1 Flash · 8초 · 720p (예상 12크레딧, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`}\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
+    // 목표 길이: 대본 SEG 조합의 해당 슬롯 값, 없으면 컷 길이로 8/10초 결정(Omni는 4·6·8·10초 지원)
+    const wantSec = Array.isArray(cut.segments) && cut.segments[idx] != null ? Number(cut.segments[idx]) : (Number(cut.duration) > 8 ? 10 : 8)
+    const durationSec = [4, 6, 8, 10].includes(wantSec) ? wantSec : (wantSec >= 10 ? 10 : 8)
+    const costText = FLOW_COST[durationSec] != null ? `예상 ${FLOW_COST[durationSec]}크레딧` : '크레딧은 Flow 화면 표시값으로 확인(최대 16)'
+    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 모델 Omni 1.1 Flash · ${durationSec}초 · 720p (${costText}, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`}\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
     setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '시작 중…' } }))
     try {
-      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null }) })
+      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null, durationSec, maxCredits: 16 }) })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || '제출 실패')
+      setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '진행 중…', jobId: d.jobId } }))
       for (;;) {
         await new Promise(res => setTimeout(res, 3000))
         const j = await (await fetch(`http://localhost:3001/api/flow/job/${d.jobId}`)).json()
         const last = j.steps?.[j.steps.length - 1]?.msg || '진행 중…'
+        const sent = (j.steps || []).some(s => String(s.msg).includes('Flow에 전송했습니다'))
+        const credits = j.result?.gate?.credits
         if (j.state === 'done') {
           const res = j.result || {}
           if (res.path) {
             const rel = res.path.slice(res.path.toLowerCase().indexOf('\\downloads\\') + '\\downloads\\'.length).replace(/\\/g, '/')
-            const dur = res.duration || 8
+            const dur = res.duration || durationSec
             const obj = { url: `http://localhost:3001/downloads/${rel}?t=${Date.now()}`, name: res.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio: '16:9', stagedPath: res.path, keepAudio: !!cut.dialogue, createdAt: Date.now() }
             setVideoClips(p => { const arr = [...(p[cut.id] || [])]; arr[idx] = obj; return { ...p, [cut.id]: arr } })
           }
-          setFlowRun(p => ({ ...p, [key]: { state: 'done', msg: last } }))
+          if (credits > 0) dispatch({ type: 'CONSUME_CREDITS', p: { account: 'main', tool: 'flow', amount: credits } })
+          setFlowRun(p => ({ ...p, [key]: { state: 'done', msg: `${last}${credits ? ` · Flow 크레딧 ${credits} 차감 반영` : ''}` } }))
+          break
+        }
+        if (j.state === 'cancelled') {
+          // 전송 후 취소면 Flow에서는 생성이 계속되고 크레딧도 이미 쓰인 것으로 본다
+          if (sent && credits > 0) dispatch({ type: 'CONSUME_CREDITS', p: { account: 'main', tool: 'flow', amount: credits } })
+          setFlowRun(p => ({ ...p, [key]: { state: 'failed', msg: j.error || '취소됨' } }))
           break
         }
         if (j.state === 'failed') { setFlowRun(p => ({ ...p, [key]: { state: 'failed', msg: j.error || '실패' } })); break }
-        setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: last } }))
+        setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: last, jobId: d.jobId } }))
       }
     } catch (e) {
       setFlowRun(p => ({ ...p, [key]: { state: 'failed', msg: e.message } }))
     }
+  }
+  const cancelFlow = async (key) => {
+    const jobId = flowRun[key]?.jobId
+    if (!jobId) return
+    if (!window.confirm('Flow 작업을 취소할까요?\n\n· 전송 전이면 입력을 정리하고 멈춥니다.\n· 이미 Flow에 전송한 뒤라면 Flow의 생성은 멈출 수 없어서 기다리기만 그만두고, 결과는 Flow 프로젝트에 남습니다(크레딧은 사용된 것으로 처리).')) return
+    try { await fetch('http://localhost:3001/api/flow/cancel', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobId }) }) } catch { /* noop */ }
+    setFlowRun(p => ({ ...p, [key]: { ...p[key], msg: '취소 요청됨 — 다음 확인 지점에서 멈춥니다…' } }))
   }
 
   // 로컬 업로드한 클립을 실제 서버 파일로도 스테이징(2026-09-13) — 예전엔 blob: URL만 만들고
@@ -1861,6 +1883,9 @@ export default function VideoTab() {
                                 onClick={e => { e.stopPropagation(); submitToFlow(selCut, idx, clips) }}>
                                 {flowRun[`${selCut.id}:${idx}`]?.state === 'running' ? '⏳ Flow 진행 중' : '⚡ Flow 제출'}
                               </button>
+                              {flowRun[`${selCut.id}:${idx}`]?.state === 'running' && flowRun[`${selCut.id}:${idx}`]?.jobId && (
+                                <button className={s.uploadBtnSm} onClick={e => { e.stopPropagation(); cancelFlow(`${selCut.id}:${idx}`) }}>✋ 취소</button>
+                              )}
                               <label className={s.uploadBtnSm}>
                                 📁 업로드
                                 <input type="file" accept="video/*" hidden
@@ -2064,6 +2089,23 @@ export default function VideoTab() {
                   <button className={s.proxyBtn} onClick={() => loadFromProxy(selCut)}>
                     🔄 프록시
                   </button>
+                  {selCut.cutType === 'YEORI' && slotCount === 0 && (
+                    <>
+                      <button className={s.proxyBtn} disabled={flowBusy}
+                        title="세그 없는 컷: G2 승인 이미지를 시작 프레임으로 Flow에 자동 입력·생성·다운로드합니다"
+                        onClick={() => submitToFlow(selCut, 0, clips)}>
+                        {flowRun[`${selCut.id}:0`]?.state === 'running' ? '⏳ Flow 진행 중' : '⚡ Flow 제출'}
+                      </button>
+                      {flowRun[`${selCut.id}:0`]?.state === 'running' && flowRun[`${selCut.id}:0`]?.jobId && (
+                        <button className={s.proxyBtn} onClick={() => cancelFlow(`${selCut.id}:0`)}>✋ 취소</button>
+                      )}
+                      {flowRun[`${selCut.id}:0`] && (
+                        <span style={{ fontSize: 11, color: flowRun[`${selCut.id}:0`].state === 'failed' ? '#f87171' : 'var(--text3)' }}>
+                          {flowRun[`${selCut.id}:0`].state === 'failed' ? '❌ ' : flowRun[`${selCut.id}:0`].state === 'done' ? '✅ ' : '⏳ '}{flowRun[`${selCut.id}:0`].msg}
+                        </span>
+                      )}
+                    </>
+                  )}
                   <button
                     className={s.aiGenBtn}
                     disabled={videoGenStatus[selCut.id] === 'running'}

@@ -1340,11 +1340,17 @@ app.post('/api/flow/submit', (req, res) => {
     try {
       const sp = path.join(dir, `${jobId}.status.json`)
       const st = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf-8')) : { jobId, steps: [] }
-      if (st.state !== 'done' && st.state !== 'failed') { st.state = 'failed'; st.error = st.error || `작업 프로세스가 비정상 종료됨(코드 ${code})`; fs.writeFileSync(sp, JSON.stringify(st, null, 2), 'utf-8') }
+      if (st.state !== 'done' && st.state !== 'failed' && st.state !== 'cancelled') { st.state = 'failed'; st.error = st.error || `작업 프로세스가 비정상 종료됨(코드 ${code})`; fs.writeFileSync(sp, JSON.stringify(st, null, 2), 'utf-8') }
     } catch { /* noop */ }
   })
   child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
   res.json({ ok: true, jobId })
+})
+app.post('/api/flow/cancel', (req, res) => {
+  const id = String(req.body?.jobId || '').replace(/[^\w-]/g, '')
+  if (!id || activeFlowJob?.id !== id) return res.status(404).json({ error: '진행 중인 해당 작업이 없습니다' })
+  try { fs.writeFileSync(path.join(FLOW_JOB_DIR(), `${id}.cancel`), '1', 'utf-8'); res.json({ ok: true }) }
+  catch (e) { res.status(500).json({ error: e.message }) }
 })
 app.get('/api/flow/job/:id', (req, res) => {
   const id = String(req.params.id).replace(/[^\w-]/g, '')

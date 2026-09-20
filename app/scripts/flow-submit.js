@@ -28,6 +28,11 @@ const job = JSON.parse(fs.readFileSync(args.job, 'utf-8'))
 const statusPath = path.join(path.dirname(args.job), `${job.jobId}.status.json`)
 const status = { jobId: job.jobId, state: 'running', startedAt: new Date().toISOString(), steps: [], result: null, error: null }
 const save = () => fs.writeFileSync(statusPath, JSON.stringify(status, null, 2), 'utf-8')
+// 취소: 서버가 <jobId>.cancel 파일을 만들면 단계 사이에서 중단한다. 전송 전이면 깔끔히 정리하고 끝나고, 전송 후라면
+// Flow 쪽 생성은 멈출 수 없으므로 기다리기만 그만둔다(결과는 Flow에 남는다).
+const cancelPath = path.join(path.dirname(args.job), `${job.jobId}.cancel`)
+class Cancelled extends Error {}
+const checkCancel = (where) => { if (fs.existsSync(cancelPath)) throw new Cancelled(where) }
 const step = (msg) => { status.steps.push({ at: new Date().toISOString(), msg }); save(); console.log(msg) }
 
 // ── 프롬프트 추출 ───────────────────────────────────────────────────
@@ -101,6 +106,7 @@ async function main() {
     step('G2 승인 이미지를 시작 프레임으로 사용')
   }
 
+  checkCancel('입력 시작 전')
   const { page, release, emulated } = await attachFlow()
   const kit = flowKit(page)
   try {
@@ -118,11 +124,13 @@ async function main() {
     save()
     if (job.dryRun) { step('dryRun — 전송 없이 종료'); return }
 
+    checkCancel('전송 직전')
     const before = await kit.mediaSnapshot()
     await kit.submit()
     step('Flow에 전송했습니다 — 생성 대기')
     await sleep(3000)
-    const res = await kit.waitForResult(before, { timeoutMs: 8 * 60 * 1000, onTick: (s) => { if (s.sec % 20 === 0) step(`생성 중… ${s.sec}초 ${(s.progress || []).join(' ')}`) } })
+    const res = await kit.waitForResult(before, { timeoutMs: 8 * 60 * 1000, shouldStop: () => fs.existsSync(cancelPath), onTick: (s) => { if (s.sec % 20 === 0) step(`생성 중… ${s.sec}초 ${(s.progress || []).join(' ')}`) } })
+    if (res.status === 'cancelled') throw new Cancelled('전송 후 생성 대기 중 — Flow에서는 생성이 계속되니 완료되면 직접 받으세요')
     if (res.status === 'failed') throw new Error(res.reason)
     if (res.status !== 'done') throw new Error('8분 안에 생성이 끝나지 않았습니다')
     step('생성 완료 — 다운로드')
@@ -142,4 +150,4 @@ async function main() {
 
 main()
   .then(() => { status.state = 'done'; status.finishedAt = new Date().toISOString(); save(); process.exit(0) })
-  .catch((e) => { status.state = 'failed'; status.error = e.message; status.finishedAt = new Date().toISOString(); save(); console.error('ERROR:', e.message); process.exit(1) })
+  .catch((e) => { status.state = e instanceof Cancelled ? 'cancelled' : 'failed'; status.error = e instanceof Cancelled ? `취소됨(${e.message})` : e.message; status.finishedAt = new Date().toISOString(); save(); console.error('ERROR:', e.message); process.exit(1) })

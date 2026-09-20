@@ -278,13 +278,14 @@ export function flowKit(page) {
       }))
     },
     // before: 전송 전 mediaSnapshot(). 결과: { status: 'done', thumbSrc } | { status: 'failed', reason } | { status: 'timeout' }
-    async waitForResult(before, { timeoutMs = 6 * 60 * 1000, intervalMs = 4000, onTick } = {}) {
+    async waitForResult(before, { timeoutMs = 6 * 60 * 1000, intervalMs = 4000, onTick, shouldStop } = {}) {
       const seen = new Set(before.thumbs)
       const t0 = Date.now()
       while (Date.now() - t0 < timeoutMs) {
         const snap = await this.mediaSnapshot()
         const fresh = snap.thumbs.filter(s => !seen.has(s))
         if (onTick) onTick({ sec: Math.round((Date.now() - t0) / 1000), thumbs: snap.thumbs.length, newThumbs: fresh.length, fails: snap.fails, progress: snap.progress })
+        if (shouldStop && shouldStop()) return { status: 'cancelled' }
         if (snap.fails > before.fails) return { status: 'failed', reason: '동영상을 생성할 수 없습니다(Flow가 사유를 표시하지 않음, 요금 미청구)' }
         if (fresh.length) return { status: 'done', thumbSrc: fresh[0] }
         await sleep(intervalMs)

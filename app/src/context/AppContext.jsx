@@ -322,6 +322,13 @@ function reducer(state, action) {
         },
       }
     }
+    // 비동기 작업(Flow 제출 완료 등)이 오래 걸린 뒤에도 그 시점의 최신 잔여에서 차감하도록 리듀서 안에서 계산한다.
+    case 'CONSUME_CREDITS': {
+      const { account, tool, amount } = action.p
+      const cur = state.creditTracker?.[account]?.[tool]
+      if (!cur || !(amount > 0)) return state
+      return { ...state, creditTracker: { ...state.creditTracker, [account]: { ...state.creditTracker[account], [tool]: { ...cur, remaining: Math.max(0, (cur.remaining || 0) - amount) } } } }
+    }
     case 'RESET_CREDITS_DAILY': return {
       ...state,
       creditTracker: {

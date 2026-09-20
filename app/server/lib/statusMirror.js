@@ -78,6 +78,9 @@ export async function appendToNotionStatus(token, headingLabel, bodyText) {
 export async function syncLatestStatusToNotion(label = '미러') {
   const token = getNotionToken()
   if (!token) return { ok: false, skipped: 'no-token' }
+  // 마스터 허브 "현재 상태" 블록도 같은 훅에서 갱신(2026-09-21) — 코드만으로 만들고 AI 호출이 없어 토큰이 들지 않는다.
+  // 내용이 직전과 같으면 Notion 에 쓰지 않으며, 실패해도 STATUS 미러는 계속 진행한다. (동적 import: hubSnapshot 이 이 파일을 import 함)
+  try { const { refreshHubSnapshot } = await import('./hubSnapshot.js'); await refreshHubSnapshot(label) } catch { /* noop */ }
   const sec = latestSection(fs.readFileSync(STATUS_PATH, 'utf-8'))
   if (!sec) return { ok: false, skipped: 'no-section' }
   if (readMirrorState().lastKey === sec.key) return { ok: true, skipped: 'already-mirrored' }
