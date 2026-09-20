@@ -6,6 +6,7 @@ import { resolveEpisodeCode } from '../lib/episodeCode'
 import { cleanForTTS, splitSpeakerSegments, applyReadings, DEFAULT_READINGS } from '../lib/ttsText'
 import { isFreeVoice, freeVoiceName, speedToRate } from '../lib/freeTts'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
+import { audioUrl } from '../lib/mediaPaths'
 import TabToolbar from '../components/TabToolbar'
 import VoicePicker from '../components/VoicePicker'
 import s from './TTSTab.module.css'
@@ -594,10 +595,24 @@ export default function TTSTab() {
     }
   }
 
+  // blob: 미리듣기 URL은 그 페이지가 살아있는 동안만 유효 — 새로고침/재접속하면 무조건 죽는다
+  // (VideoTab의 resolveClipSrc와 같은 문제, 2026-09-20 실사용 중 발견: "합친 결과" 패널이 새
+  // 세션에서도 mergedUrls[key]가 studio-state.json에 blob: 문자열로 남아있어서 계속 렌더는
+  // 되는데, <audio>가 그 죽은 blob을 못 열어 소리가 안 남 → G3 버튼/완료 태그도 이 죽은 상태를
+  // 기준으로 보여서 "G3 승인이 작동 안 한다"처럼 보였다. g3Confirmed(승인 이력)가 있으면 이미
+  // /api/save-audio로 서버에 실제 mp3가 저장된 뒤라는 뜻이므로, 그 서버 파일을 직접 가리키게
+  // 폴백한다.
+  const resolveMergedSrc = (key, cutId, cutNo) => {
+    const raw = mergedUrls[key]
+    if (raw && !raw.startsWith('blob:')) return raw
+    if (raw && !g3Confirmed[cutId]) return raw // 같은 세션에서 방금 합친 미리듣기 — 아직 살아있음
+    return g3Confirmed[cutId] ? audioUrl(state.episode, cutNo) : raw
+  }
+
   // ── 다운로드 ─────────────────────────────────────────────
   const downloadMerged = async (cutId, voiceTabId, cutNo) => {
     const key = trackKey(cutId, voiceTabId)
-    const url = mergedUrls[key]; if (!url) return
+    const url = resolveMergedSrc(key, cutId, cutNo); if (!url) return
     const res  = await fetch(url)
     const blob = await res.blob()
     const a    = document.createElement('a')
@@ -1163,10 +1178,10 @@ export default function TTSTab() {
             </button>
 
             {/* 합친 결과 */}
-            {mergedUrls[activeKey] && (
+            {(mergedUrls[activeKey] || g3Confirmed[cut.id]) && (
               <div className={s.mergedResult}>
                 <div className={s.mergedLabel}>{activeVariant.label} · 합친 결과</div>
-                <audio controls src={mergedUrls[activeKey]} className={s.audioPlayer} />
+                <audio controls src={resolveMergedSrc(activeKey, cut.id, cut.no)} className={s.audioPlayer} />
                 <div className={s.mergedActions}>
                   <button className={s.dlBtn} onClick={() => downloadMerged(cut.id, activeVariant.id, cut.no)}>
                     ⬇ 다운로드

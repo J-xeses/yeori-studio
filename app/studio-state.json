@@ -642,7 +642,7 @@
           "dialogue": "근데... 이상하지 않아요? ~  세 그룹이 한 곡에 있는데... || 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?~~",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nexpression of sudden realization and excitement,\nleaning forward slightly, eyes wide with discovery,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (short wavy black bob hair, dark maroon lips) visible on the LEFT edge of frame, her face not shown, slightly out of focus,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nexpression of sudden realization and excitement,\nleaning forward slightly, eyes wide with discovery,\nwarm indoor lighting, soft background blur,\nOnly these two people in frame, plain empty background, Photorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-6s: she pauses on the sofa, looking thoughtful,\nfinger touching lip slightly, processing\n\nNext 6-15s: her expression shifts — sudden realization,\nleaning forward with growing excitement,\neyes widening as she speaks\n\nFinal 15-25s: fully animated with discovery energy,\nleaning forward toward camera,\nwarm indoor lighting, static camera",
           "duration": 18,
           "shotType": "CLOSEUP",
@@ -1212,7 +1212,7 @@
           "dialogue": "저는요~~  솔직히 말하면... 르쎄라핌, 아일릿, 캣츠아이... || 세 그룹 다 좋은데~ 제가 제일 꽂힌 건~~ 다 같이 나오는 장면이에요~. || 각자 잘 하는데,, 같이 있으니까 더 좋은 거 있잖아요!~ 그게 이 곡이 된 것 같아서...",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (short wavy black bob hair, dark maroon lips) visible on the LEFT edge of frame, her face not shown, slightly out of focus,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — only these two people in frame, plain empty background,\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-8s: she sits on sofa, gaze cast slightly downward,\nhonest and soft expression, quietly preparing to speak\n\nNext 8-17s: eyes slowly lift toward camera,\ngenuine fan emotion coming through naturally,\nno performance — just real feeling\n\nFinal 17-25s: a subtle shy smile,\nholding eye contact with camera warmly,\nwarm indoor lighting, static camera",
           "duration": 24,
           "shotType": "CLOSEUP",
@@ -3778,7 +3778,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-19T02:49:35.946Z",
+  "savedAt": "2026-09-20T05:09:38.134Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3820,18 +3820,6 @@
           "keepAudio": true,
           "createdAt": 1789705306415,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_2.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_07.mp4?t=1789817254294",
-          "name": "cut_07.mp4",
-          "duration": 24,
-          "trimStart": 0,
-          "trimEnd": 24,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_07.mp4",
-          "keepAudio": true,
-          "createdAt": 1789796787000
         }
       ],
       "cut-2": [
@@ -4070,18 +4058,6 @@
           "keepAudio": true,
           "createdAt": 1789540114752,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_03.mp4?t=1789818092025",
-          "name": "cut_03.mp4",
-          "duration": 24,
-          "trimStart": 0,
-          "trimEnd": 24,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_03.mp4",
-          "keepAudio": true,
-          "createdAt": 1789795813000
         }
       ],
       "cut-6": [
@@ -4167,18 +4143,6 @@
           "keepAudio": true,
           "createdAt": 1789645879595,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_05.mp4?t=1789797283173",
-          "name": "cut_05.mp4",
-          "duration": 24,
-          "trimStart": 0,
-          "trimEnd": 24,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_05.mp4",
-          "keepAudio": true,
-          "createdAt": 1789796314000
         }
       ],
       "cut-9": [
@@ -4382,7 +4346,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-17",
+    "selectedCutId": "cut-3",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
@@ -4414,13 +4378,7 @@
           "text": ""
         }
       ],
-      "cut-13": [
-        {
-          "start": 0,
-          "end": 8,
-          "text": "근데 이게 그냥 운이 아니에요~ HYBE가 진짜 전략적으로 짠 거거든요."
-        }
-      ],
+      "cut-13": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
       "cut-15": "야~ 그냥 좋잖아!!\n.... 맞아~",
       "cut-18": [
         {
@@ -5017,12 +4975,12 @@
     "mergedUrls": {
       "cut-2__v1": "blob:http://localhost:5173/e3f027f7-4351-43e1-b4df-fc0d8684fdc5",
       "cut-12__v1": "blob:http://localhost:5173/567d5a12-782f-409b-bdab-c484c0c77e2d",
-      "cut-13__v1": "blob:http://localhost:5173/111cf0ab-49f9-4b4e-a5ed-71dbbf33bd7d",
+      "cut-13__v1": "blob:http://localhost:5173/03b327b2-7274-4778-8178-9737d1208748",
       "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/5b3a2445-0419-45e2-8673-a79379a63905",
-      "cut-16__v1": "blob:http://localhost:5173/d57a35c4-e187-4bbf-856a-788641dab037",
+      "cut-16__v1": "blob:http://localhost:5173/58c45094-72f0-49d3-888a-8c0a1d198c12",
       "cut-18__v1": "blob:http://localhost:5173/df1eaa3f-135f-4d4d-a2cc-7b48f635cf3a",
       "cut-19__v1": "blob:http://localhost:5173/8341ce6c-1cad-431e-95e7-1290ef03cf96",
-      "cut-20__v1": "blob:http://localhost:5173/393a3ae7-18fa-4dfc-a0cd-832e939a0d26",
+      "cut-20__v1": "blob:http://localhost:5173/c23a19aa-3c0d-4d1e-86e7-799f4217ae30",
       "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/0d24bc21-daab-42e2-812a-cbd70e57b20d",
       "cut-9__v1": "blob:http://localhost:5173/485ef3d0-5723-468e-bd80-500796acf77c"
     }

@@ -195,6 +195,10 @@ function buildOneSegLines(combo, dl, nr, parts, timing, segPrompts, trimStart, t
   }
   if (isFirst && trimStart) lines.push(`Note: the first ${trimStart}s of this clip will be trimmed in editing — let the key line land after that point.`)
   if (isLast && trimEnd) lines.push(`Note: the last ${trimEnd}s of this clip will be trimmed in editing — finish the key line before ${sec - trimEnd}s and hold on expression for the remainder.`)
+  // "No subtitle!" — Veo가 간헐적으로 화면에 자막/텍스트를 직접 렌더링해서 나중에 편집 캡션과
+  // 겹치는 문제 방지(2026-09-20, 사용자 실사용 중 발견 — Field Gate 별도복사 프롬프트에 이 지시가
+  // 없어 화면에 이상한 자막이 떴다는 보고).
+  lines.push('No on-screen subtitle text or captions — dialogue is spoken audio only.')
   return lines
 }
 
