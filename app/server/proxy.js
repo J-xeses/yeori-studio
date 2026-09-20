@@ -6808,6 +6808,41 @@ app.post('/api/upload-cut-video', (req, res) => {
   })
 })
 
+// ── POST /api/rename-clip-files — 스테이징된 클립 파일명을 cut_NN_clip_<슬롯번호>.mp4 로 표준화 ──
+// body: { epNum, renames: [{ from, to }] } — from/to 는 04_making/raw 안의 절대경로.
+// 안전장치: ① raw 폴더 밖·cut_NN_clip_*.mp4 형식이 아닌 이름은 거부 ② 목적지에 "이 요청과 무관한"
+// 기존 파일이 있으면 덮어쓰지 않고 건너뜀 ③ 서로 이름이 맞물리는 경우(1↔2 교환 등)를 위해 임시 이름을
+// 거치는 2단계 이동. 삭제는 절대 하지 않는다.
+app.post('/api/rename-clip-files', express.json({ limit: '1mb' }), (req, res) => {
+  const { epNum, renames } = req.body || {}
+  if (epNum == null || !Array.isArray(renames)) return res.status(400).json({ error: 'epNum, renames 필요' })
+  const rawDir = path.resolve(path.join(mp.makingDir(epNum), 'raw'))
+  const NAME_RE = /^cut_\d{2}_clip_[\w-]+\.mp4$/i
+  const inRaw = (p) => path.dirname(path.resolve(p)).toLowerCase() === rawDir.toLowerCase()
+  const results = [], plan = []
+  const fromSet = new Set(renames.map(r => path.resolve(String(r?.from || '')).toLowerCase()))
+  for (const r of renames) {
+    const from = path.resolve(String(r?.from || '')), to = path.resolve(String(r?.to || ''))
+    if (!inRaw(from) || !inRaw(to) || !NAME_RE.test(path.basename(from)) || !NAME_RE.test(path.basename(to))) {
+      results.push({ from, to, status: 'rejected', reason: 'raw 폴더 밖이거나 cut_NN_clip_*.mp4 형식이 아님' }); continue
+    }
+    if (from.toLowerCase() === to.toLowerCase()) { results.push({ from, to, status: 'same' }); continue }
+    if (!fs.existsSync(from)) { results.push({ from, to, status: 'missing', reason: '원본 파일 없음' }); continue }
+    if (fs.existsSync(to) && !fromSet.has(to.toLowerCase())) { results.push({ from, to, status: 'blocked', reason: '목적지에 다른 파일이 이미 있음(덮어쓰지 않음)' }); continue }
+    plan.push({ from, to })
+  }
+  try {
+    const stamp = Date.now()
+    plan.forEach((p, i) => { p.tmp = path.join(rawDir, `.__ren_${stamp}_${i}.tmp`); fs.renameSync(p.from, p.tmp) })
+    plan.forEach(p => { fs.renameSync(p.tmp, p.to); results.push({ from: p.from, to: p.to, status: 'renamed', path: p.to }) })
+    res.json({ success: true, results })
+  } catch (err) {
+    // 중간 실패 시 임시 이름으로 남은 파일을 원래 이름으로 되돌린다
+    plan.forEach(p => { try { if (fs.existsSync(p.tmp)) fs.renameSync(p.tmp, p.from) } catch { /* noop */ } })
+    res.status(500).json({ error: err.message, results })
+  }
+})
+
 // ── 컷별 카드의 "로컬 업로드" 클립을 실제 서버 파일로 스테이징 ──────────
 // /api/upload-cut-video와 같은 raw-stream 패턴이되, ffmpeg 정규화 없이 원본 그대로 저장
 // (여러 클립을 합칠 때 한 번만 정규화하기 위해 — /api/render-cut-clips 참고, 2026-09-13).

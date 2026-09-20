@@ -346,6 +346,76 @@ export default function VideoTab() {
     if (typeof updater === 'function') dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'videoTabState', field: 'videoClips', updater })
     else dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { videoClips: updater } })
   }
+  // 클립 파일명 표준화용 — 비동기 콜백(stageClip 완료 등)에서도 항상 최신 videoClips를 읽으려고 ref로 노출.
+  const videoClipsRef = useRef(videoClips)
+  videoClipsRef.current = videoClips
+  const renameBusyRef = useRef(false)
+  const renameAgainRef = useRef(null)
+
+  // 스테이징된 클립 파일(04_making/raw/cut_NN_clip_*.mp4)을 "클립 배열 순서 = 슬롯 번호" 규칙의
+  // cut_NN_clip_<1..>.mp4 로 통일한다(2026-09-20, 사용자 요청). 슬롯 지정 없이 업로드하면 충돌 방지용
+  // cut_NN_clip_new<타임스탬프>.mp4 로 저장되므로, 저장이 끝난 뒤 이 함수가 화면 순서대로 이름을 맞춘다.
+  // pip/broll 등 `_clip_` 형식이 아닌 파일은 건드리지 않고, 목적지에 다른 파일이 있으면 덮어쓰지 않는다(서버 검증).
+  const normalizeClipNames = async ({ cutIds = null, quiet = false } = {}) => {
+    const epNum = state.episode?.number
+    if (epNum == null) return
+    if (renameBusyRef.current) { renameAgainRef.current = { cutIds, quiet }; return }
+    renameBusyRef.current = true
+    try {
+      const pairs = []
+      for (const cut of (state.cuts || [])) {
+        if (cutIds && !cutIds.includes(cut.id)) continue
+        ;(videoClipsRef.current[cut.id] || []).forEach((c, i) => {
+          if (!c?.stagedPath) return
+          const base = c.stagedPath.split(/[\\/]/).pop()
+          if (!/^cut_\d{2}_clip_[\w-]+\.mp4$/i.test(base)) return
+          const want = `cut_${String(cut.no).padStart(2, '0')}_clip_${i + 1}.mp4`
+          if (base === want) return
+          pairs.push({ cutId: cut.id, from: c.stagedPath, to: c.stagedPath.slice(0, c.stagedPath.length - base.length) + want })
+        })
+      }
+      if (!pairs.length) { if (!quiet) alert('표준화할 클립 파일이 없습니다 — 이미 모두 cut_NN_clip_<번호>.mp4 입니다.'); return }
+      const r = await fetch('http://localhost:3001/api/rename-clip-files', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum, renames: pairs.map(p => ({ from: p.from, to: p.to })) }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '이름 변경 실패')
+      const done = (d.results || []).filter(x => x.status === 'renamed')
+      const bad = (d.results || []).filter(x => x.status === 'blocked' || x.status === 'missing' || x.status === 'rejected')
+      const toNew = {}
+      done.forEach(x => { toNew[x.from.toLowerCase()] = x.to })
+      if (done.length) {
+        setVideoClips(p => {
+          const next = { ...p }
+          for (const cutId of new Set(pairs.map(x => x.cutId))) {
+            next[cutId] = (next[cutId] || []).map(c => {
+              const to = c?.stagedPath && toNew[c.stagedPath.toLowerCase()]
+              if (!to) return c
+              const oldBase = c.stagedPath.split(/[\\/]/).pop(), newBase = to.split(/[\\/]/).pop()
+              // 서버 URL로 저장된 클립(프록시/후보 불러오기)은 URL 안의 파일명도 같이 바꿔야 재생이 유지된다
+              const url = (c.url && !c.url.startsWith('blob:')) ? c.url.replace(oldBase, newBase) : c.url
+              return { ...c, stagedPath: to, url }
+            })
+          }
+          return next
+        })
+      }
+      if (!quiet || bad.length) {
+        alert([`🏷 클립 파일명 정리: ${done.length}개 변경`,
+          ...done.map(x => `  ${x.from.split(/[\\/]/).pop()} → ${x.to.split(/[\\/]/).pop()}`),
+          ...(bad.length ? ['', `⚠️ 건너뜀 ${bad.length}개:`, ...bad.map(x => `  ${x.from.split(/[\\/]/).pop()} — ${x.reason}`)] : [])].join('\n'))
+      }
+    } catch (e) {
+      alert('클립 파일명 정리 실패: ' + e.message)
+    } finally {
+      renameBusyRef.current = false
+      const again = renameAgainRef.current
+      renameAgainRef.current = null
+      if (again) setTimeout(() => normalizeClipNames(again), 300)
+    }
+  }
+
   const setG4Approved = (updater) => {
     if (typeof updater === 'function') dispatch({ type: 'UPDATE_TAB_FIELD', slice: 'videoTabState', field: 'g4Approved', updater })
     else dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { g4Approved: updater } })
@@ -689,6 +759,10 @@ export default function VideoTab() {
         if (i >= 0) arr[i] = { ...arr[i], stagedPath: d.path, staging: false }
         return { ...p, [cutId]: arr }
       })
+      // 슬롯 지정 없이 올린 클립(cut_NN_clip_new<타임스탬프>.mp4)은 저장이 끝난 뒤 화면 순서 기준의
+      // 표준 이름(cut_NN_clip_<번호>.mp4)으로 자동 정리한다 — 업로드 순간엔 번호를 확정할 수 없어(동시
+      // 업로드 충돌) 저장 후에 정리하는 방식.
+      if (typeof idx === 'string' && idx.startsWith('new')) setTimeout(() => normalizeClipNames({ cutIds: [cutId], quiet: true }), 900)
     } catch (e) {
       setVideoClips(p => {
         const arr = [...(p[cutId] || [])]
@@ -1212,6 +1286,7 @@ export default function VideoTab() {
           { key: 'srt', label: '📄 SRT', onClick: exportSRT },
           { key: 'load-all', label: '🔄 불러오기', onClick: loadAllFromProxy },
           { key: 'import-videos', label: '📁 폴더에서 일괄 가져오기', onClick: importVideosFromFolder },
+          { key: 'rename-clips', label: '🏷 클립 파일명 정리', onClick: () => normalizeClipNames() },
           {
             key: 'match-videos', variant: 'purple',
             label: matchOpen ? '🎯 드래그 배정 닫기' : '🎯 드래그 배정',
