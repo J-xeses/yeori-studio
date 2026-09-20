@@ -752,9 +752,14 @@ export default function VideoTab() {
       useFullDuration: true, ratio: item.ratio, staging: true, keepAudio: !!cut.dialogue,
       createdAt: item.file.lastModified || Date.now(),
     }
-    // handleVideoUpload과 동일 이유 — updater 안에서의 clipIdx 대입은 리듀서가 처리할 때까지
-    // 미뤄지므로 여기서 곧장 못 읽는다. 충돌 걱정 없는 고유값(타임스탬프)을 대신 씀.
-    const clipIdx = `new${Date.now()}`
+    // 드래그 배정은 handleVideoUpload의 append 분기와 달리 한 번에 파일 하나씩만 처리되므로
+    // (트레이에서 항목 하나를 특정 컷 하나에 떨어뜨리는 단발 동작) 여러 파일이 동시에 같은
+    // 인덱스를 계산해 충돌할 race condition이 없다 — 그래서 여기는 existing.length를 그대로
+    // 써서 04_making/raw에 cut_NN_clip_<슬롯번호>.mp4로 저장되게 한다. 예전엔 항상
+    // new<timestamp> 이름으로 저장돼서, 나중에 클립을 재구성/정리할 때 어떤 파일이 몇 번
+    // 클립인지 파일명만 보고 알 수 없어 원본이 고아 파일로 남거나 잘못 지워지는 사고가
+    // 반복됐다(2026-09-20, 사용자 지적).
+    const clipIdx = videoClips[cut.id]?.length ?? 0
     setVideoClips(p => {
       const existing = p[cut.id] || []
       return { ...p, [cut.id]: [...existing, obj] }

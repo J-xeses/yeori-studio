@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -642,7 +642,7 @@
           "dialogue": "근데... 이상하지 않아요? ~  세 그룹이 한 곡에 있는데... || 각자의 색이 다 살아있어요!! 섞였는데 안 섞인 거예요~. 이게 말이 돼요?~~",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (short wavy black bob hair, dark maroon lips) visible on the LEFT edge of frame, her face not shown, slightly out of focus,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nexpression of sudden realization and excitement,\nleaning forward slightly, eyes wide with discovery,\nwarm indoor lighting, soft background blur,\nOnly these two people in frame, plain empty background, Photorealistic 8K cinematic 16:9",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nexpression of sudden realization and excitement,\nleaning forward slightly, eyes wide with discovery,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-6s: she pauses on the sofa, looking thoughtful,\nfinger touching lip slightly, processing\n\nNext 6-15s: her expression shifts — sudden realization,\nleaning forward with growing excitement,\neyes widening as she speaks\n\nFinal 15-25s: fully animated with discovery energy,\nleaning forward toward camera,\nwarm indoor lighting, static camera",
           "duration": 18,
           "shotType": "CLOSEUP",
@@ -1212,7 +1212,7 @@
           "dialogue": "저는요~~  솔직히 말하면... 르쎄라핌, 아일릿, 캣츠아이... || 세 그룹 다 좋은데~ 제가 제일 꽂힌 건~~ 다 같이 나오는 장면이에요~. || 각자 잘 하는데,, 같이 있으니까 더 좋은 거 있잖아요!~ 그게 이 곡이 된 것 같아서...",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (short wavy black bob hair, dark maroon lips) visible on the LEFT edge of frame, her face not shown, slightly out of focus,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — only these two people in frame, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+          "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\neyes slightly downcast, honest and vulnerable expression,\na shy smile forming naturally,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-8s: she sits on sofa, gaze cast slightly downward,\nhonest and soft expression, quietly preparing to speak\n\nNext 8-17s: eyes slowly lift toward camera,\ngenuine fan emotion coming through naturally,\nno performance — just real feeling\n\nFinal 17-25s: a subtle shy smile,\nholding eye contact with camera warmly,\nwarm indoor lighting, static camera",
           "duration": 24,
           "shotType": "CLOSEUP",
@@ -3778,7 +3778,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-20T05:09:38.134Z",
+  "savedAt": "2026-09-20T06:28:14.168Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3824,8 +3824,8 @@
       ],
       "cut-2": [
         {
-          "url": "blob:http://localhost:5173/a3d6e828-2db7-4125-b24b-6e21e26a11d0",
-          "name": "Two_women_sharing_phone_screen_20260916132802.mp4",
+          "url": "blob:http://localhost:5173/4951b6ba-072f-44fd-b727-929cfd562d56",
+          "name": "cut_03_clip_new1789795174417.mp4",
           "duration": 10.01,
           "trimStart": 0,
           "trimEnd": 10.01,
@@ -3833,12 +3833,12 @@
           "ratio": "16:9",
           "staging": false,
           "keepAudio": true,
-          "createdAt": 1789536581631,
+          "createdAt": 1789795174433,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_0.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/24ac3935-d7da-47be-bbe0-ad1832982c8e",
-          "name": "Two_women_expressing_shock_20260916142302.mp4",
+          "url": "blob:http://localhost:5173/2de53a89-4aa7-4024-a089-880760d6db1a",
+          "name": "cut_03_clip_new1789795176046.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
@@ -3846,7 +3846,7 @@
           "ratio": "16:9",
           "staging": false,
           "keepAudio": true,
-          "createdAt": 1789536182397,
+          "createdAt": 1789795176055,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_1.mp4"
         }
       ],
@@ -4346,20 +4346,14 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-17",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
       "cut-4": "이번 콜라보에서 얘네 역할이 진짜 중요한 게, \n그 클래스",
       "cut-16": "근데 있잖아요… 좋은 거잖아요, 그냥!",
-      "cut-19": [
-        {
-          "start": 0,
-          "end": 10,
-          "text": ""
-        }
-      ],
+      "cut-19": "... 봐봐요, 이 순간!!~~ 세 그룹이 딱 한 프레임에 겹치는 거~~ 이거 볼 때마다~ 소~름이에요!!",
       "cut-2": "야야! 이거 봤어?..  이거 봤어??",
       "cut-12": [
         {
@@ -4977,10 +4971,10 @@
       "cut-12__v1": "blob:http://localhost:5173/567d5a12-782f-409b-bdab-c484c0c77e2d",
       "cut-13__v1": "blob:http://localhost:5173/03b327b2-7274-4778-8178-9737d1208748",
       "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/5b3a2445-0419-45e2-8673-a79379a63905",
-      "cut-16__v1": "blob:http://localhost:5173/58c45094-72f0-49d3-888a-8c0a1d198c12",
+      "cut-16__v1": "blob:http://localhost:5173/417b64cd-bd9f-4e14-9c45-c1ae74115ab2",
       "cut-18__v1": "blob:http://localhost:5173/df1eaa3f-135f-4d4d-a2cc-7b48f635cf3a",
-      "cut-19__v1": "blob:http://localhost:5173/8341ce6c-1cad-431e-95e7-1290ef03cf96",
-      "cut-20__v1": "blob:http://localhost:5173/c23a19aa-3c0d-4d1e-86e7-799f4217ae30",
+      "cut-19__v1": "blob:http://localhost:5173/d0ee66ab-a148-4121-bbc2-438d6e39d2c5",
+      "cut-20__v1": "blob:http://localhost:5173/16f4425b-fdd0-4883-8266-b0c737c66701",
       "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/0d24bc21-daab-42e2-812a-cbd70e57b20d",
       "cut-9__v1": "blob:http://localhost:5173/485ef3d0-5723-468e-bd80-500796acf77c"
     }

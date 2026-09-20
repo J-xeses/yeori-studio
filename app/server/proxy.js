@@ -622,11 +622,20 @@ app.post('/api/studio-state', (req, res) => {
     // 충돌 감지: 클라이언트가 마지막으로 GET한 시점의 mtime(X-State-Base-Mtime)과 지금 디스크의
     // 실제 mtime이 다르면, 그 사이 다른 경로(직접 스크립트/MCP 편집 등)가 파일을 바꾼 것 —
     // 브라우저의 구버전 state로 덮어쓰지 않고 409로 거부, 최신 내용을 그대로 돌려줘서 클라이언트가
-    // 그걸 반영(LOAD)하도록 한다. 헤더가 없으면(구버전 클라이언트) 기존처럼 무조건 덮어씀.
-    const baseMtime = req.get('X-State-Base-Mtime')
-    if (baseMtime != null && fs.existsSync(statePath)) {
+    // 그걸 반영(LOAD)하도록 한다.
+    // ⚠️ 2026-09-20: 예전엔 "헤더가 없으면(구버전 클라이언트) 기존처럼 무조건 덮어씀"이었는데,
+    // 이게 바로 며칠째 반복되던 데이터 유실의 실제 범인이었다 — 이 가드 기능 자체가 생기기
+    // 전부터 열려 있던(또는 새로고침 없이 계속 쓰던) 탭은 헤더를 아예 안 보내서 가드를 완전히
+    // 우회, 자기 메모리 속 옛날 대사/나레이션 텍스트로 서버의 최신 수정을 조용히 덮어썼다
+    // (CUT17/21 인용부호 수정이 같은 세션 안에서 여러 번 되돌아간 사고로 실측 확인). 헤더가
+    // 아예 없는 요청도 이제 "충돌"로 취급해 거부한다 — 그런 구버전 탭은 저장이 그냥 실패할
+    // 뿐이니(조용한 데이터 파괴보다 훨씬 안전), 사용자가 탭을 완전히 닫고 새로 열면 저절로
+    // 해결된다.
+    const statePathExists = fs.existsSync(statePath)
+    if (statePathExists) {
+      const baseMtime = req.get('X-State-Base-Mtime')
       const curMtime = fs.statSync(statePath).mtimeMs
-      if (String(curMtime) !== String(baseMtime)) {
+      if (baseMtime == null || String(curMtime) !== String(baseMtime)) {
         const state   = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
         const secrets = fs.existsSync(secretsPath) ? JSON.parse(fs.readFileSync(secretsPath, 'utf-8')) : {}
         res.set('X-State-Mtime', String(curMtime))
