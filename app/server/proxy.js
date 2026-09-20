@@ -8234,6 +8234,25 @@ mcpRouter.get('/leader-context', async (req, res) => {
   }
 })
 
+// ── GET /api/mcp/gate-eligibility?gate=G4 — 승인 게이트 검수 판정(승인은 하지 않음, 2026-09-21) ──
+// 컷별 verdict: approved / auto_ok / recommend / blocked / not_ready / n/a. 리더가 위임받은 스테이지의 자동 승인 근거로 쓴다.
+// 기준 상세: docs/gate-approval-policy.md · 코드: server/lib/gatePolicy.js. ffmpeg 를 쓰므로 서버를 막지 않게 자식 프로세스로 실행.
+const runGateEval = (gate) => new Promise((resolve, reject) => {
+  const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'gate-eval.js'), String(gate), '--json'], { cwd: ROOT, windowsHide: true })
+  let out = '', err = ''
+  const timer = setTimeout(() => { child.kill(); reject(new Error('검수 시간 초과(120초)')) }, 120000)
+  child.stdout.on('data', d => { out += d }); child.stderr.on('data', d => { err += d })
+  child.on('close', (code) => { clearTimeout(timer); if (code !== 0) return reject(new Error((err || out).trim().slice(0, 300) || `검수 실패(코드 ${code})`)); try { resolve(JSON.parse(out)) } catch { reject(new Error('검수 결과 파싱 실패')) } })
+})
+const gateEligibilityHandler = async (req, res) => {
+  const gate = String(req.query.gate || 'G4').toUpperCase()
+  if (!['G1', 'G2', 'G3', 'G4', 'G5', 'ALL'].includes(gate)) return res.status(400).json({ ok: false, error: 'gate 는 G1~G5 또는 ALL' })
+  try { res.json({ ok: true, ...(gate === 'ALL' ? { results: await runGateEval(gate) } : await runGateEval(gate)) }) }
+  catch (e) { res.status(500).json({ ok: false, error: e.message }) }
+}
+mcpRouter.get('/gate-eligibility', gateEligibilityHandler)
+app.get('/api/gate-eligibility', gateEligibilityHandler)
+
 // ── POST /api/mcp/restart-proxy — 새 프로세스를 먼저 detached로 띄운 뒤
 // (포트 경합은 startServer()의 기존 EADDRINUSE 재시도 로직이 흡수) 응답 후 자기 자신 종료 ──
 mcpRouter.post('/restart-proxy', (req, res) => {

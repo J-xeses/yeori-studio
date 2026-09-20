@@ -7,7 +7,7 @@
 //   node scripts/hub-refresh.js --print            # Notion 에 쓰지 않고 내용만 출력
 //   node scripts/hub-refresh.js --set-block=<블록ID>  # 스냅샷 callout 블록 ID 등록(최초 1회)
 
-import { refreshHubSnapshot, buildSnapshotLines, markRulesReviewed, setSnapshotBlockId } from '../server/lib/hubSnapshot.js'
+import { refreshHubSnapshot, buildSnapshotLines, approvalLine, markRulesReviewed, setSnapshotBlockId } from '../server/lib/hubSnapshot.js'
 
 const args = process.argv.slice(2)
 const has = (k) => args.some(a => a === `--${k}` || a.startsWith(`--${k}=`))
@@ -15,7 +15,7 @@ const val = (k) => (args.find(a => a.startsWith(`--${k}=`)) || '').split('=')[1]
 
 if (has('set-block')) { setSnapshotBlockId(val('set-block')); console.log('[hub-refresh] 블록 ID 등록:', val('set-block')) }
 if (has('mark-reviewed')) console.log('[hub-refresh] 규칙 검토일 기록:', markRulesReviewed())
-if (has('print')) { console.log(buildSnapshotLines().join('\n')) }
+if (has('print')) { console.log(buildSnapshotLines(await approvalLine()).join('\n')) }
 else {
   const r = await refreshHubSnapshot('수동', { force: true })
   console.log('[hub-refresh]', JSON.stringify(r))

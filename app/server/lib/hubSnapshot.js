@@ -13,6 +13,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { spawn } from 'node:child_process'
 import { getNotionToken, latestSection, STATUS_PATH } from './statusMirror.js'
 import { summarizeMonth } from './paidUsage.js'
 
@@ -34,8 +35,31 @@ const kst = (d = new Date()) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'As
 function kstDate(d = new Date()) { return kst(d).slice(0, 10) }
 const daysBetween = (a, b) => Math.floor((Date.parse(b + 'T00:00:00+09:00') - Date.parse(a + 'T00:00:00+09:00')) / 86400000)
 
+// 승인 게이트 현황 한 줄 — scripts/gate-eval.js(결정론적 검수)를 자식 프로세스로 실행(ffmpeg 를 쓰므로 서버를 막지 않게).
+// 결과는 디스크 캐시(.gate-cache.json)를 써서 파일이 안 바뀌면 거의 즉시 끝난다. 실패하면 null(줄 생략).
+export function approvalLine() {
+  return new Promise((resolve) => {
+    let out = ''
+    const child = spawn(process.execPath, [path.join(CODE_ROOT, 'scripts', 'gate-eval.js'), 'all', '--json'], { cwd: CODE_ROOT, windowsHide: true })
+    const timer = setTimeout(() => { try { child.kill() } catch { /* noop */ } resolve(null) }, 120000)
+    child.stdout.on('data', d => { out += d })
+    child.on('error', () => { clearTimeout(timer); resolve(null) })
+    child.on('close', (code) => {
+      clearTimeout(timer)
+      if (code !== 0) return resolve(null)
+      try {
+        const res = JSON.parse(out), by = (g) => res.find(r => r.gate === g)?.tally || {}
+        const wait = (g) => (by(g).auto_ok || 0) + (by(g).recommend || 0)
+        const blocked = (by('G3').blocked || 0) + (by('G4').blocked || 0)
+        const notReady = by('G4').not_ready || 0
+        resolve(`승인 현황(검수 기준): G4 승인 대기 ${wait('G4')}컷 · G3 승인 대기 ${wait('G3')}컷 · 검수 실패(막힘) ${blocked}컷${notReady ? ` · G4 산출물 없음 ${notReady}컷` : ''}`)
+      } catch { resolve(null) }
+    })
+  })
+}
+
 // 스냅샷 본문 줄 생성 — 순수 함수(파일 읽기만, 네트워크 없음)
-export function buildSnapshotLines() {
+export function buildSnapshotLines(approval = null) {
   const st = readJson(path.join(CODE_ROOT, 'studio-state.json'), {})
   const gp = readJson(path.join(DOWNLOADS, 'state', 'gpoints.json'), {})
   const ep = st.episode || {}
@@ -60,6 +84,7 @@ export function buildSnapshotLines() {
     for (let i = 0; i < n; i++) if (arr[i]) filled++
   }
   lines.push(`영상 클립(서여리 컷): ${filled}/${planned} 슬롯 채워짐`)
+  if (approval) lines.push(approval)
 
   const ct = st.creditTracker || {}
   const f = (a) => ct[a]?.flow ? `${ct[a].flow.remaining}/${ct[a].flow.dailyTotal}` : '?'
@@ -106,7 +131,7 @@ export async function refreshHubSnapshot(label = '수동', { force = false } = {
     if (!getNotionToken()) return { ok: false, skipped: 'no-token' }
     const state = readSnapState()
     if (!state.blockId) return { ok: false, skipped: 'no-block-id (허브에 스냅샷 블록을 먼저 만들 것)' }
-    const lines = buildSnapshotLines()
+    const lines = buildSnapshotLines(await approvalLine())
     const hash = crypto.createHash('sha1').update(lines.join('\n')).digest('hex').slice(0, 16)
     if (!force && state.lastHash === hash) return { ok: true, skipped: 'unchanged' }
     const header = '🔄 자동 갱신 — 현재 상태'

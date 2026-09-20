@@ -222,6 +222,40 @@ async function leaderContext() {
 //   cut:   studio-status 의 컷 항목({no, cutType, hasVideo, making:{duration,method}, review, ...})
 // 현재 검수 = 제작 매니페스트 유효성(길이>0)·mp4 존재·미반려. 프레임 레벨 QC(검정/빈 화면
 // 감지)는 후속(P4) — 그때도 이 함수만 손대면 된다.
+// 게이트 검수 판정 조회(사이클 안 캐시 60초). 실패하면 null. 승인은 하지 않고 판정만 가져온다.
+const eligCache = {}
+async function gateEligibility(gate) {
+  const hit = eligCache[gate]
+  if (hit && Date.now() - hit.at < 60000) return hit.cuts
+  try {
+    const r = await api('GET', `/api/mcp/gate-eligibility?gate=${gate}`)
+    if (r.ok && r.data?.ok) { eligCache[gate] = { at: Date.now(), cuts: r.data.cuts }; return r.data.cuts }
+  } catch { /* noop */ }
+  return null
+}
+
+// G3 처럼 "위임 가능" 정책인 스테이지를 검수 통과 컷에 한해 자동 승인한다. Notion "에이전트 자동승인"에 해당 스테이지가
+// 들어 있을 때만 호출된다(호출부에서 확인). blocked 컷은 사람 개입 필요로 로그(같은 컷은 프로세스당 1회만).
+const blockedLogged = new Set()
+async function autoApproveByPolicy(gate, endpoint) {
+  const cutsEv = await gateEligibility(gate)
+  if (!cutsEv) { log('정책', `${gate} 검수 조회 실패 — 자동 승인 안 함`); return [] }
+  const okCuts = cutsEv.filter(c => c.verdict === 'auto_ok').map(c => c.no)
+  for (const c of cutsEv.filter(c => c.verdict === 'blocked')) {
+    const key = `${gate}:${c.no}`
+    if (blockedLogged.has(key)) continue
+    blockedLogged.add(key)
+    log('정책', `${gate} CUT ${c.no} 자동 승인 불가 — ${(c.reasons || []).join(' / ')}`)
+    await leaderLog({ stage: gate, kind: '블로커', summary: `CUT ${c.no} ${gate} 검수 실패 — 사람 확인 필요`, result: (c.reasons || []).join(' · '), humanInvolved: true })
+  }
+  if (!okCuts.length) return []
+  const r = await api('POST', endpoint, { episodeId: EPISODE_ID, cutIds: okCuts })
+  if (!r.ok) { log('정책', `${gate} 자동 승인 실패 — ${r.data?.error || r.status}`); return [] }
+  log('정책', `${gate} 자동 승인(검수 통과) — 컷 ${okCuts.join(',')}`)
+  await leaderLog({ stage: gate, kind: '자동승인', summary: `${gate} 컷 ${okCuts.join(',')} 자동 승인`, rationale: 'gatePolicy 검수 auto_ok + Notion 자동승인 위임', humanInvolved: false })
+  return okCuts
+}
+
 async function shouldAutoApprove(stage, cut) {
   // Notion "에이전트 자동승인" 은 G 게이트를 대문자로 저장(G2/G3/G4/G5), 메이킹은 'making'.
   const key = stage === 'making' ? 'making' : String(stage).toUpperCase()
@@ -232,6 +266,12 @@ async function shouldAutoApprove(stage, cut) {
     if (!cut.hasVideo) bad.push('mp4 없음')
     if (!(cut.making && Number(cut.making.duration) > 0)) bad.push('제작 매니페스트 무효')
     if (cut.review?.status === 'rejected') bad.push('사람 반려됨')
+    // 2026-09-21: 게이트 정책 검수(server/lib/gatePolicy.js, 결정론적·AI 없음) 통과가 추가 조건 — 파일 존재 외에
+    // ffprobe 해상도·길이(DU ±1초)·검정 화면·반려까지 본다. 검수기를 못 부르면 안전하게 승인하지 않는다(fail-closed).
+    const ev = await gateEligibility('G4')
+    const v = ev?.find(c => c.no === cut.no)
+    if (!ev) bad.push('게이트 검수 조회 실패')
+    else if (!v || v.verdict !== 'auto_ok') bad.push(`게이트 검수 ${v?.verdict || '없음'}${v?.reasons?.length ? ': ' + v.reasons.join(' / ') : ''}`)
     if (bad.length) {
       await leaderLog({
         stage: 'G4', kind: '블로커', summary: `CUT ${cut.no} 자동 승인 보류 — 기본 검수 실패`,
@@ -429,6 +469,10 @@ async function checkAndAdvance() {
   if (waitingG2.length) log('승인대기', `G2(이미지 선택) — 컷 ${waitingG2.join(',')}`)
   if (waitingG3.length) log('승인대기', `G3(음성) — 컷 ${waitingG3.join(',')}`)
   if (waitingG4.length) log('승인대기', `G4(영상) — 컷 ${waitingG4.join(',')}`)
+
+  // ── 위임된 승인(G3): Notion "에이전트 자동승인"에 G3 가 있고 검수(길이·무음·대본 최신성)를 통과한 컷만 ──
+  // G1·G2·G5 와 서여리(YEORI) 컷 G4 는 정책상 사람 전용이라 위임해도 자동 승인되지 않는다(docs/gate-approval-policy.md).
+  if (AUTO_APPROVE.includes('G3') && stageInRange('g3')) await autoApproveByPolicy('G3', '/api/mcp/studio-approve-g3')
 
   // ── G5 트리거: 모든 컷이 G4 승인 완료 상태면 한 번만 실행 ──
   // 완료 여부는 이제 gpoints 기준(isStageComplete)으로 판단 — g5Triggered 메모리 플래그만
