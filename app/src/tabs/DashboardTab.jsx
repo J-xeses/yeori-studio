@@ -61,6 +61,24 @@ export default function DashboardTab() {
     return () => { alive = false; clearInterval(id) }
   }, [episode?.number])
 
+  // 유료 영상 API 자동 기록(서버 장부) — 유료 생성이 일어날 때마다 서버가 초 수·금액을 기록한다.
+  // "직접 입력" 지출(구독료 등)과 합산해 월 예산 대비로 보여준다(2026-09-20).
+  const [paid, setPaid] = useState(null)
+  useEffect(() => {
+    let alive = true
+    const load = () => {
+      fetch('http://localhost:3001/api/paid-usage/summary')
+        .then(r => r.json())
+        .then(d => { if (alive && d.ok) setPaid(d) })
+        .catch(() => {})
+    }
+    load()
+    const id = setInterval(load, 10000)
+    return () => { alive = false; clearInterval(id) }
+  }, [])
+  const paidKrw = paid?.totalKrw || 0
+  const totalSpent = spent + paidKrw
+
   const go = (tab) => { if (tab) dispatch({ type: 'SET_TAB', p: tab }) }
 
   const cutsTotal = cuts.length
@@ -170,11 +188,17 @@ export default function DashboardTab() {
         <div className={s.card} style={{ flex: 1 }}>
           <div className={s.cardTitle}>이번 달 비용</div>
           <div className={s.costBig}>
-            <span className={s.costNum}>₩{spent.toLocaleString()}</span>
+            <span className={s.costNum}>₩{totalSpent.toLocaleString()}</span>
             <span className={s.costLabel}>/ ₩{dashboard.monthBudget.toLocaleString()} 예산</span>
           </div>
           <div className={s.costBar}>
-            <div className={s.costFill} style={{ width: `${Math.min(100, (spent / dashboard.monthBudget) * 100)}%` }} />
+            <div className={s.costFill} style={{ width: `${Math.min(100, dashboard.monthBudget > 0 ? (totalSpent / dashboard.monthBudget) * 100 : 0)}%`, ...(totalSpent > dashboard.monthBudget ? { background: '#ef4444' } : {}) }} />
+          </div>
+          <div style={{ fontSize: 11, color: 'var(--text3)', margin: '6px 0 2px', lineHeight: 1.5 }}>
+            직접 입력 ₩{spent.toLocaleString()} + 유료 영상 API 자동기록 ₩{paidKrw.toLocaleString()}
+            {paid && paid.count > 0 && <> ({paid.count}건 · {paid.totalSeconds}초 · ${paid.totalUsd})</>}
+            {paid && paid.count === 0 && <> (이번 달 기록 없음)</>}
+            {totalSpent > dashboard.monthBudget && <div style={{ color: '#ef4444', fontWeight: 600 }}>⚠ 월 예산 초과</div>}
           </div>
           <div className={s.costInputs}>
             <div className={s.editRow}>

@@ -14,6 +14,7 @@ import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } 
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
+import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
@@ -1267,6 +1268,37 @@ app.post('/api/gpoints', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// ── 유료 영상 API 사용 장부 (2026-09-20) — 대시보드 "이번 달 비용"·크레딧 탭 유료 배정이 읽는다 ──
+// GET  /api/paid-usage/summary?month=YYYY-MM  → 월간 합계/공급자별/최근 기록 + 월 예산·잔여(원)
+// POST /api/paid-usage/record   { provider, model, seconds, usd | usdPerSec, epCode?, cutNo?, clipNo?, note? }
+// POST /api/paid-usage/rate     { usdKrw }
+// GET  /api/paid-usage/check?estimateUsd=  → 이번 생성을 하면 월 예산을 넘는지(자동 생성 직전 가드)
+const paidBudgetInfo = () => {
+  try {
+    const d = loadStudioState().dashboard || {}
+    return { budgetKrw: Number(d.monthBudget) || 0, manualSpentKrw: Number(d.spent) || 0 }
+  } catch { return { budgetKrw: 0, manualSpentKrw: 0 } }
+}
+app.get('/api/paid-usage/summary', (req, res) => {
+  try {
+    const sum = summarizeMonth(req.query.month || undefined)
+    const b = paidBudgetInfo()
+    res.json({ ok: true, ...sum, ...b, totalWithManualKrw: sum.totalKrw + b.manualSpentKrw, leftKrw: b.budgetKrw > 0 ? b.budgetKrw - sum.totalKrw - b.manualSpentKrw : null })
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }) }
+})
+app.post('/api/paid-usage/record', (req, res) => {
+  try { res.json({ ok: true, entry: recordPaidUsage({ ...req.body, source: req.body?.source || 'manual' }) }) }
+  catch (e) { res.status(400).json({ ok: false, error: e.message }) }
+})
+app.post('/api/paid-usage/rate', (req, res) => {
+  try { res.json({ ok: true, usdKrw: setUsdKrw(req.body?.usdKrw) }) }
+  catch (e) { res.status(400).json({ ok: false, error: e.message }) }
+})
+app.get('/api/paid-usage/check', (req, res) => {
+  try { res.json({ ok: true, ...checkBudget({ estimateUsd: Number(req.query.estimateUsd) || 0, ...paidBudgetInfo() }) }) }
+  catch (e) { res.status(500).json({ ok: false, error: e.message }) }
 })
 
 // ── POST /api/check-tool-credits — flow/pixverse-automation.js --check-credits 실행 후 파싱된 잔여 크레딧 반환 ──

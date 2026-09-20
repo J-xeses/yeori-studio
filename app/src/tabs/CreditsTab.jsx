@@ -14,9 +14,26 @@ const FLOW_VIDEO_MODELS = [
   { key: 'omni_10s',    label: 'Omni Flash (10s)',  cost: 15 },
 ]
 
+// 유료 영상 API 후보 — 초당 USD 단가(2026-09-20 기준). Veo는 Gemini API 공식 가격표(오디오 포함),
+// Kling은 서드파티 글의 추정치라 실제 결제 전에 공식 가격을 다시 확인할 것. 단가가 바뀌면 여기만 고친다.
+const PAID_VIDEO_MODELS = [
+  { key: 'veo_fast_720',  label: 'Veo 3.1 Fast 720p (공식 $0.10/초)',  usdPerSec: 0.10 },
+  { key: 'veo_fast_1080', label: 'Veo 3.1 Fast 1080p (공식 $0.12/초)', usdPerSec: 0.12 },
+  { key: 'veo_lite_720',  label: 'Veo 3.1 Lite 720p (공식 $0.05/초)',  usdPerSec: 0.05 },
+  { key: 'veo_lite_1080', label: 'Veo 3.1 Lite 1080p (공식 $0.08/초)', usdPerSec: 0.08 },
+  { key: 'veo_std',       label: 'Veo 3.1 Standard (공식 $0.40/초)',   usdPerSec: 0.40 },
+  { key: 'kling_est',     label: 'Kling 3.0 (추정 $0.10/초)',           usdPerSec: 0.10 },
+]
+
 const PLAN_ACCOUNTS = [
   { key: 'main', label: '메인' },
   { key: 'sub',  label: '부' },
+]
+// 표에서 고를 수 있는 배정처: 무료 계정 2개 + 유료 API + 오늘은 미룸(내일 무료 크레딧으로)
+const PLAN_TARGETS = [
+  ...PLAN_ACCOUNTS,
+  { key: 'paid',  label: '유료 API' },
+  { key: 'defer', label: '내일로 미룸' },
 ]
 
 function CreditBar({ label, remaining, total, color }) {
@@ -43,6 +60,15 @@ export default function CreditsTab() {
   const [planRows, setPlanRows] = useState([])
   const [checking, setChecking] = useState({})
   const [checkMsg, setCheckMsg] = useState({})
+
+  // 유료 API 장부(서버) — 이번 달 사용 요약. 대시보드 "이번 달 비용"과 같은 데이터.
+  const [paid, setPaid] = useState(null)
+  const [rateInput, setRateInput] = useState('')
+  const [recForm, setRecForm] = useState({ provider: '', seconds: '', usd: '', note: '' })
+  const [recMsg, setRecMsg] = useState('')
+  const [overflow, setOverflow] = useState('defer') // 오늘 무료로 못 만드는 클립: defer(내일로) | paid(유료로)
+  const loadPaid = () => fetch('http://localhost:3001/api/paid-usage/summary').then(r => r.json()).then(d => { if (d.ok) setPaid(d) }).catch(() => {})
+  useEffect(() => { loadPaid(); const id = setInterval(loadPaid, 10000); return () => clearInterval(id) }, [])
 
   useEffect(() => {
     const id = setInterval(() => setGData(loadGPoints()), 2000)
@@ -96,20 +122,81 @@ export default function CreditsTab() {
     const label = nextPending != null
       ? `C${String(nextPending).padStart(2, '0')}`
       : `C${String(planRows.length + 1).padStart(2, '0')}`
-    setPlanRows([...planRows, { id: Date.now(), label, account: 'main', modelKey: FLOW_VIDEO_MODELS[0].key }])
+    setPlanRows([...planRows, { id: Date.now(), label, account: 'main', modelKey: FLOW_VIDEO_MODELS[0].key, seconds: 8 }])
   }
   const updatePlanRow = (id, field, value) => {
-    setPlanRows(planRows.map(r => r.id === id ? { ...r, [field]: value } : r))
+    setPlanRows(planRows.map(r => {
+      if (r.id !== id) return r
+      const next = { ...r, [field]: value }
+      // 배정처를 바꾸면 그 배정처에서 유효한 모델로 맞춘다(무료↔유료 모델 목록이 다름)
+      if (field === 'account') {
+        if (value === 'paid' && !PAID_VIDEO_MODELS.some(m => m.key === next.modelKey)) next.modelKey = PAID_VIDEO_MODELS[0].key
+        if ((value === 'main' || value === 'sub') && !FLOW_VIDEO_MODELS.some(m => m.key === next.modelKey)) next.modelKey = FLOW_VIDEO_MODELS[0].key
+      }
+      return next
+    }))
   }
   const removePlanRow = (id) => setPlanRows(planRows.filter(r => r.id !== id))
 
+  // 한 행의 비용: 무료 계정은 크레딧, 유료는 USD(초 × 초당 단가). 미룸은 0.
+  const rowFreeCredits = (r) => (r.account === 'main' || r.account === 'sub') ? (FLOW_VIDEO_MODELS.find(m => m.key === r.modelKey)?.cost || 0) : 0
+  const rowPaidUsd = (r) => r.account === 'paid' ? (PAID_VIDEO_MODELS.find(m => m.key === r.modelKey)?.usdPerSec || 0) * (Number(r.seconds) || 0) : 0
+
   const planTotals = PLAN_ACCOUNTS.map(acc => {
-    const used = planRows
-      .filter(r => r.account === acc.key)
-      .reduce((sum, r) => sum + (FLOW_VIDEO_MODELS.find(m => m.key === r.modelKey)?.cost || 0), 0)
+    const used = planRows.filter(r => r.account === acc.key).reduce((sum, r) => sum + rowFreeCredits(r), 0)
     const remaining = creditTracker[acc.key].flow.remaining
     return { ...acc, used, remaining, left: remaining - used }
   })
+  const usdKrw = paid?.usdKrw || 1400
+  const planPaidUsd = planRows.reduce((sum, r) => sum + rowPaidUsd(r), 0)
+  const planPaidKrw = Math.round(planPaidUsd * usdKrw)
+  const planDeferred = planRows.filter(r => r.account === 'defer')
+  const dailyFreeTotal = (creditTracker.main.flow.dailyTotal || 0) + (creditTracker.sub.flow.dailyTotal || 0)
+
+  // 무료 우선 자동 배정 — 이 에피소드에서 G4(영상) 미승인인 YEORI 컷을 클립 단위(대본 SEG 조합, 없으면
+  // 길이로 8/10초 분할)로 풀어서 메인 → 부 무료 크레딧 순으로 채우고, 남는 클립은 overflow 설정에 따라
+  // 유료 API 또는 "내일로 미룸"으로 둔다. 표는 저장되지 않는 시뮬레이션이라 언제든 다시 돌려도 된다.
+  const autoAssign = () => {
+    if (planRows.length > 0 && !window.confirm('현재 표를 지우고 자동 배정으로 다시 채울까요?')) return
+    const clips = []
+    for (const c of (cuts || [])) {
+      if (c.cutType !== 'YEORI') continue
+      if (gData[epCode]?.[`cut_${c.no}`]?.g4) continue
+      let segs = Array.isArray(c.segments) && c.segments.length ? c.segments : null
+      if (!segs) {
+        const d = Number(c.duration) || 8
+        segs = d <= 8 ? [8] : d <= 10 ? [10] : Array.from({ length: Math.ceil(d / 10) }, () => 10)
+      }
+      // 영상 탭에서 이미 클립이 배정된 슬롯은 만들 필요가 없으니 계획에서 뺀다
+      const filled = state.videoTabState?.videoClips?.[c.id] || []
+      segs.forEach((len, i) => { if (!filled[i]) clips.push({ no: c.no, idx: i + 1, len: len >= 10 ? 10 : 8 }) })
+    }
+    let left = { main: creditTracker.main.flow.remaining, sub: creditTracker.sub.flow.remaining }
+    const paidModel = PAID_VIDEO_MODELS[0]
+    const rows = clips.map((cl, k) => {
+      const model = cl.len >= 10 ? FLOW_VIDEO_MODELS.find(m => m.key === 'omni_10s') : FLOW_VIDEO_MODELS.find(m => m.key === 'omni_8s')
+      const label = `C${String(cl.no).padStart(2, '0')}-${cl.idx}`
+      const base = { id: Date.now() + k, label, seconds: cl.len }
+      if (left.main >= model.cost) { left.main -= model.cost; return { ...base, account: 'main', modelKey: model.key } }
+      if (left.sub >= model.cost) { left.sub -= model.cost; return { ...base, account: 'sub', modelKey: model.key } }
+      return overflow === 'paid'
+        ? { ...base, account: 'paid', modelKey: paidModel.key }
+        : { ...base, account: 'defer', modelKey: model.key }
+    })
+    setPlanRows(rows)
+  }
+
+  const saveRate = async () => {
+    const r = await fetch('http://localhost:3001/api/paid-usage/rate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usdKrw: Number(rateInput) }) }).then(x => x.json()).catch(e => ({ ok: false, error: e.message }))
+    setRecMsg(r.ok ? `환율 ${r.usdKrw}원/USD 저장됨(이후 기록부터 적용)` : `❌ ${r.error}`)
+    if (r.ok) { setRateInput(''); loadPaid() }
+  }
+  const addPaidRecord = async () => {
+    const body = { provider: recForm.provider.trim(), seconds: Number(recForm.seconds) || 0, usd: Number(recForm.usd) || undefined, note: recForm.note.trim(), source: 'manual' }
+    const r = await fetch('http://localhost:3001/api/paid-usage/record', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(x => x.json()).catch(e => ({ ok: false, error: e.message }))
+    setRecMsg(r.ok ? `✅ 기록됨: $${r.entry.usd} (₩${r.entry.krw.toLocaleString()})` : `❌ ${r.error}`)
+    if (r.ok) { setRecForm({ provider: '', seconds: '', usd: '', note: '' }); loadPaid() }
+  }
 
   return (
     <div className={s.page}>
@@ -224,25 +311,30 @@ export default function CreditsTab() {
 
         <table className={s.planTable}>
           <thead>
-            <tr><th>컷</th><th>계정</th><th>모델</th><th>크레딧</th><th /></tr>
+            <tr><th>컷/클립</th><th>배정처</th><th>모델</th><th>초</th><th>비용</th><th /></tr>
           </thead>
           <tbody>
             {planRows.map(row => {
-              const model = FLOW_VIDEO_MODELS.find(m => m.key === row.modelKey)
+              const isPaid = row.account === 'paid'
+              const isDefer = row.account === 'defer'
+              const models = isPaid ? PAID_VIDEO_MODELS : FLOW_VIDEO_MODELS
               return (
-                <tr key={row.id}>
+                <tr key={row.id} style={isDefer ? { opacity: 0.6 } : undefined}>
                   <td><input value={row.label} onChange={e => updatePlanRow(row.id, 'label', e.target.value)} /></td>
                   <td>
                     <select value={row.account} onChange={e => updatePlanRow(row.id, 'account', e.target.value)}>
-                      {PLAN_ACCOUNTS.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+                      {PLAN_TARGETS.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
                     </select>
                   </td>
                   <td>
-                    <select value={row.modelKey} onChange={e => updatePlanRow(row.id, 'modelKey', e.target.value)}>
-                      {FLOW_VIDEO_MODELS.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
+                    <select value={row.modelKey} disabled={isDefer} onChange={e => updatePlanRow(row.id, 'modelKey', e.target.value)}>
+                      {models.map(m => <option key={m.key} value={m.key}>{m.label}</option>)}
                     </select>
                   </td>
-                  <td className={s.planCost}>{model?.cost}</td>
+                  <td>{isPaid
+                    ? <input type="number" min="1" max="30" style={{ width: 52 }} value={row.seconds ?? 8} onChange={e => updatePlanRow(row.id, 'seconds', e.target.value)} />
+                    : (row.seconds ?? '')}</td>
+                  <td className={s.planCost}>{isDefer ? '—' : isPaid ? `$${rowPaidUsd(row).toFixed(2)} (₩${Math.round(rowPaidUsd(row) * usdKrw).toLocaleString()})` : `${rowFreeCredits(row)} 크레딧`}</td>
                   <td><button className={s.planRemoveBtn} onClick={() => removePlanRow(row.id)}>✕</button></td>
                 </tr>
               )
@@ -251,6 +343,15 @@ export default function CreditsTab() {
         </table>
 
         <button className={s.addRowBtn} onClick={addPlanRow}>+ 컷 추가</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '8px 0' }}>
+          <button className={s.addRowBtn} onClick={autoAssign} title="G4 미승인 YEORI 컷을 클립 단위로 풀어 메인→부 무료 크레딧 순으로 채웁니다">🧮 무료 우선 자동 배정</button>
+          <label style={{ fontSize: 12, color: 'var(--text3)' }}>무료로 못 만드는 클립은{' '}
+            <select value={overflow} onChange={e => setOverflow(e.target.value)}>
+              <option value="defer">내일로 미룸</option>
+              <option value="paid">유료 API로</option>
+            </select>
+          </label>
+        </div>
 
         <div className={s.planSummary}>
           {planTotals.map(t => (
@@ -259,7 +360,51 @@ export default function CreditsTab() {
               <span>{t.used} / {t.remaining} (잔여 {t.left})</span>
             </div>
           ))}
+          <div className={`${s.planSummaryRow} ${paid && paid.leftKrw != null && paid.leftKrw - planPaidKrw < 0 ? s.over : ''}`}>
+            <span>유료 API 배정</span>
+            <span>${planPaidUsd.toFixed(2)} (₩{planPaidKrw.toLocaleString()}){paid && paid.leftKrw != null && <> · 월 예산 잔여 ₩{(paid.leftKrw - planPaidKrw).toLocaleString()}</>}</span>
+          </div>
+          {planDeferred.length > 0 && (
+            <div className={s.planSummaryRow}>
+              <span>내일로 미룬 클립</span>
+              <span>{planDeferred.length}개 (무료 크레딧 하루 {dailyFreeTotal} 기준 약 {Math.ceil(planDeferred.reduce((sum, r) => sum + ((FLOW_VIDEO_MODELS.find(m => m.key === r.modelKey)?.cost) || 0), 0) / Math.max(1, dailyFreeTotal))}일 더)</span>
+            </div>
+          )}
         </div>
+      </div>
+
+      {/* 유료 영상 API 사용 장부 — 대시보드 "이번 달 비용"과 같은 데이터. 자동 생성이 붙으면 거기서 기록되고, 그 전엔 수동 기록 */}
+      <div className={s.card}>
+        <div className={s.cardTitle}>유료 영상 API 사용 (이번 달)</div>
+        <div className={s.simNote}>
+          {paid
+            ? <>합계 <b>${paid.totalUsd}</b> (₩{paid.totalKrw.toLocaleString()}) · {paid.count}건 · {paid.totalSeconds}초 · 월 예산 ₩{paid.budgetKrw.toLocaleString()} 중 직접 입력 지출 ₩{paid.manualSpentKrw.toLocaleString()} 포함 잔여 ₩{(paid.leftKrw ?? 0).toLocaleString()}</>
+            : '서버 장부를 불러오는 중…'}
+        </div>
+        {paid && Object.keys(paid.byProvider).length > 0 && (
+          <div className={s.estimate}>{Object.entries(paid.byProvider).map(([k, v]) => `${k}: $${v.usd.toFixed(2)} (${v.seconds}초, ${v.count}건)`).join(' · ')}</div>
+        )}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', margin: '8px 0' }}>
+          <input placeholder="공급자(예: Kling)" value={recForm.provider} onChange={e => setRecForm({ ...recForm, provider: e.target.value })} style={{ width: 130 }} />
+          <input type="number" placeholder="초" value={recForm.seconds} onChange={e => setRecForm({ ...recForm, seconds: e.target.value })} style={{ width: 70 }} />
+          <input type="number" step="0.01" placeholder="금액 $" value={recForm.usd} onChange={e => setRecForm({ ...recForm, usd: e.target.value })} style={{ width: 90 }} />
+          <input placeholder="메모(컷/클립)" value={recForm.note} onChange={e => setRecForm({ ...recForm, note: e.target.value })} style={{ width: 160 }} />
+          <button className={s.addRowBtn} onClick={addPaidRecord}>+ 사용 기록</button>
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: 'var(--text3)' }}>환율 {usdKrw}원/USD</span>
+          <input type="number" placeholder="새 환율" value={rateInput} onChange={e => setRateInput(e.target.value)} style={{ width: 90 }} />
+          <button className={s.addRowBtn} onClick={saveRate} disabled={!rateInput}>변경</button>
+        </div>
+        {recMsg && <div className={s.estimate}>{recMsg}</div>}
+        {paid && paid.recent.length > 0 && (
+          <table className={s.planTable} style={{ marginTop: 8 }}>
+            <thead><tr><th>시각</th><th>공급자</th><th>초</th><th>금액</th><th>메모</th></tr></thead>
+            <tbody>{paid.recent.slice(0, 8).map((e, i) => (
+              <tr key={i}><td>{new Date(e.at).toLocaleString('ko-KR')}</td><td>{e.provider}{e.model ? ` · ${e.model}` : ''}</td><td>{e.seconds}</td><td>${e.usd} (₩{e.krw.toLocaleString()})</td><td>{e.note}</td></tr>
+            ))}</tbody>
+          </table>
+        )}
       </div>
 
       <div className={s.estimate}>
