@@ -648,6 +648,7 @@ app.post('/api/studio-state', (req, res) => {
     if (state.activeEpisodeId && state.episodes?.[state.activeEpisodeId] && Array.isArray(state.cuts)) {
       state.episodes[state.activeEpisodeId].cuts = state.cuts
     }
+    enforceManualOverrides(state)
     fs.writeFileSync(statePath, JSON.stringify(state, null, 2), 'utf-8')
     if (apiKeys) {
       fs.writeFileSync(secretsPath, JSON.stringify({ apiKeys }, null, 2), 'utf-8')
@@ -6399,6 +6400,49 @@ const DEFAULT_YEORI_VOICE_ID = 'RmYuvmCbqOMBJxDLW4k8'
 function loadStudioState() {
   return fs.existsSync(STUDIO_STATE_PATH) ? JSON.parse(fs.readFileSync(STUDIO_STATE_PATH, 'utf-8')) : {}
 }
+
+// 수동으로 고정한 필드("overrides")는 자동화(run-making/pipeline-leader)나 옛 브라우저 탭의
+// 통짜 저장이 덮어쓰지 못하게 지켜준다. cut.overrides = { [field]: {value, at, reason} } —
+// 저장 직전에 디스크의 override가 들어오는 값과 같거나 더 최신이면 그 값을 강제로 되살린다.
+// (2026-09-20, 사용자 요청: "수동 조정을 로그로 남겨서 자동화 흐름이 존중하게 하자" — 컷
+// 시간을 손으로 조정할 때마다 run-making/pipeline-leader나 오래된 탭의 자동저장이 며칠째
+// 반복해서 되돌리는 사고가 있었음, 이 가드가 근본 해결책.)
+const OVERRIDABLE_CUT_FIELDS = ['duration', 'segments', 'narration', 'dialogue', 'imagePrompt', 'videoPrompt', 'segPrompts', 'directionNote']
+function enforceManualOverrides(incomingState) {
+  try {
+    if (!fs.existsSync(STUDIO_STATE_PATH)) return incomingState
+    const onDisk = JSON.parse(fs.readFileSync(STUDIO_STATE_PATH, 'utf-8'))
+    for (const epId of Object.keys(incomingState.episodes || {})) {
+      const incomingCuts = incomingState.episodes[epId]?.cuts
+      const onDiskCuts = onDisk.episodes?.[epId]?.cuts
+      if (!Array.isArray(incomingCuts) || !Array.isArray(onDiskCuts)) continue
+      for (const inCut of incomingCuts) {
+        const diskCut = onDiskCuts.find(c => c.no === inCut.no)
+        if (!diskCut?.overrides) continue
+        for (const field of OVERRIDABLE_CUT_FIELDS) {
+          const diskOv = diskCut.overrides[field]
+          if (!diskOv) continue
+          const inOv = inCut.overrides?.[field]
+          const diskAt = Date.parse(diskOv.at || '') || 0
+          const inAt = Date.parse(inOv?.at || '') || 0
+          // 엄격히 "더 최신"일 때만 통과 — 같은 시각이면 들어오는 쪽이 override 객체는 그대로
+          // 베껴왔으면서 실제 필드값만 슬쩍 다르게 보낸(오래된 탭의 낡은 값을 그대로 실어보낸)
+          // 경우이므로 신뢰하지 않는다.
+          const valuesMatch = JSON.stringify(inOv?.value) === JSON.stringify(inCut[field]) // 배열/객체 필드(segPrompts 등) 대비 깊은 비교
+          if (inAt > diskAt && valuesMatch) continue
+          inCut[field] = diskOv.value
+          inCut.overrides = { ...(inCut.overrides || {}), [field]: diskOv }
+        }
+      }
+    }
+    // 최상위 cuts는 episodes[activeId].cuts와 항상 동기화되므로 보정 결과도 그대로 반영
+    if (incomingState.activeEpisodeId && Array.isArray(incomingState.cuts)) {
+      incomingState.cuts = incomingState.episodes?.[incomingState.activeEpisodeId]?.cuts || incomingState.cuts
+    }
+  } catch { /* 보호 로직 자체가 실패해도 저장을 막지는 않음 */ }
+  return incomingState
+}
+
 function saveStudioState(state) {
   // 브라우저(AppContext.jsx의 MARK_SAVED)는 저장할 때마다 savedAt을 직접 찍는데, MCP/에이전트
   // 리더/파이프라인 경로(이 함수)는 그동안 안 찍고 있었음 — smart-sync-state.ps1이 PC간 동기화를
@@ -6413,6 +6457,7 @@ function saveStudioState(state) {
   if (state.activeEpisodeId && state.episodes?.[state.activeEpisodeId] && Array.isArray(state.cuts)) {
     state.episodes[state.activeEpisodeId].cuts = state.cuts
   }
+  enforceManualOverrides(state)
   fs.writeFileSync(STUDIO_STATE_PATH, JSON.stringify(state, null, 2), 'utf-8')
 }
 // v2(2026-08-02): { cut_N: {...} } 평면 구조 -> { [episodeCode]: { cut_N: {...} } } 중첩

@@ -22,11 +22,11 @@
     transform:translate(-50%,-50%) scale(.3);
   }
   .blob.ls  { background:radial-gradient(circle, var(--ls) 0%, transparent 70%);
-              animation:blobLS 3s cubic-bezier(.5,0,.4,1) forwards; }
+              animation:blobLS 8s cubic-bezier(.5,0,.4,1) forwards; }
   .blob.il  { background:radial-gradient(circle, var(--il) 0%, transparent 70%);
-              animation:blobIL 3s cubic-bezier(.5,0,.4,1) forwards; }
+              animation:blobIL 8s cubic-bezier(.5,0,.4,1) forwards; }
   .blob.kat { background:radial-gradient(circle, var(--kat) 0%, transparent 70%);
-              animation:blobKAT 3s cubic-bezier(.5,0,.4,1) forwards; }
+              animation:blobKAT 8s cubic-bezier(.5,0,.4,1) forwards; }
   @keyframes blobLS {
     0%   { opacity:0;   transform:translate(calc(-50% - 760px), calc(-50% - 200px)) scale(.4); }
     30%  { opacity:.95; }
@@ -55,7 +55,7 @@
   /* ── 충돌 순간 화이트 플래시 ── */
   .flash {
     position:absolute; inset:0; background:var(--white); opacity:0;
-    animation:flash 3s linear forwards;
+    animation:flash 8s linear forwards;
   }
   @keyframes flash {
     0%,34% { opacity:0; }
@@ -77,12 +77,12 @@
     font-size:186px; letter-spacing:.06em; line-height:.92;
     color:var(--white); text-align:center; white-space:nowrap;
     opacity:0;
-    animation:titleIn 3s steps(1,end) forwards, titleGlitch 3s linear forwards;
+    animation:titleIn 8s steps(1,end) forwards, titleGlitch 8s linear forwards;
   }
   .review {
     font-size:40px; font-weight:700; letter-spacing:.55em; text-indent:.55em;
     color:rgba(242,240,255,.62); opacity:0;
-    animation:reviewIn 3s ease forwards;
+    animation:reviewIn 8s ease forwards;
   }
   @keyframes titleIn {
     0%,37%  { opacity:0; }
@@ -114,7 +114,7 @@
   .scanbar {
     position:absolute; left:0; width:100%; height:4px;
     background:rgba(242,240,255,.5); mix-blend-mode:overlay; opacity:0;
-    animation:scan 3s linear forwards;
+    animation:scan 8s linear forwards;
   }
   @keyframes scan {
     0%,38% { opacity:0; top:38%; }
@@ -128,7 +128,7 @@
   .brand {
     position:absolute; right:80px; bottom:64px;
     display:flex; align-items:center; gap:16px;
-    opacity:0; animation:brandIn 3s ease forwards;
+    opacity:0; animation:brandIn 8s ease forwards;
   }
   .brand-mark {
     width:46px; height:46px; display:block;

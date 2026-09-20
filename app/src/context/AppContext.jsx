@@ -5,6 +5,10 @@ const SERVER = 'http://localhost:3001'
 const AppContext = createContext(null)
 const STORAGE_KEY = 'yeori-studio-v2'
 
+// server/proxy.js의 OVERRIDABLE_CUT_FIELDS와 반드시 동기화할 것 — 여기 없는 필드는 서버가
+// "수동 조정"으로 보호해주지 않는다(자동화/구탭 자동저장에 되돌아갈 수 있음).
+const OVERRIDABLE_CUT_FIELDS = ['duration', 'segments', 'narration', 'dialogue', 'imagePrompt', 'videoPrompt', 'segPrompts', 'directionNote']
+
 const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,
   scene: '', action: '', character: '서여리',
@@ -239,7 +243,24 @@ function reducer(state, action) {
     }
 
     case 'UPDATE_CUT': {
-      const newCuts = state.cuts.map(c => c.id === action.id ? { ...c, ...action.p } : c)
+      // 보호 대상 필드(duration/segments/narration/... — server/proxy.js와 동일 목록)가
+      // 이 패치에 있으면 override 기록을 자동으로 같이 찍는다. "버튼을 눌러 override를
+      // 갱신"하는 별도 UI 대신 이렇게 한 이유(2026-09-20, 사용자 요청 반영): 앱 어디서든
+      // 컷 필드 수정은 결국 이 UPDATE_CUT 하나로 모이므로, 여기서 자동으로 찍으면 사람이
+      // 깜빡하고 안 누를 일이 없고, 화면에서의 진짜 의도적 수정과 자동화/구탭의 조용한
+      // 되돌리기를 서버가 항상 정확히 구분할 수 있다.
+      const overridePatch = {}
+      for (const k of Object.keys(action.p || {})) {
+        if (OVERRIDABLE_CUT_FIELDS.includes(k)) {
+          overridePatch[k] = { value: action.p[k], at: new Date().toISOString(), reason: action.overrideReason || '스튜디오 화면에서 직접 수정' }
+        }
+      }
+      const newCuts = state.cuts.map(c => {
+        if (c.id !== action.id) return c
+        const next = { ...c, ...action.p }
+        if (Object.keys(overridePatch).length) next.overrides = { ...(c.overrides || {}), ...overridePatch }
+        return next
+      })
       const curEp = state.episodes[state.activeEpisodeId]
       const updatedEp = { ...curEp, cuts: newCuts }
       return {
