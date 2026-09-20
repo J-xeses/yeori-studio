@@ -36,19 +36,14 @@ echo [1] Ensuring background services (scheduled tasks)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-yeori-tasks.ps1"
 echo.
 
-:: [2] Git pull (+ OneDrive 콘텐츠 동기화는 2026-09-17부로 중단 — 회사 PC를 더 이상 안 써서
-::     양방향 동기화 자체가 불필요해짐. sync-content.bat는 그대로 남겨뒀으니 필요해지면
-::     아래 call 줄만 되살리면 됨. 중단 이유: robocopy가 /PURGE 없이 양방향으로 돌아서
-::     로컬에서 지운 파일이 며칠 뒤 OneDrive 사본으로부터 되살아나는 버그가 있었음
-::     ([[reference_onedrive_sync_no_delete_propagation]] 참고).
-echo [2] Git pull...
-cd /d C:\yeori-studio
-git pull origin master
-cd /d "%~dp0"
-echo.
-
-:: [3] proxy(:3001) 가 뜰 때까지 대기 (YeoriStudio 작업이 기동 중)
-echo [3] Waiting for studio proxy on :3001...
+:: [2] proxy(:3001) 가 뜰 때까지 대기 (YeoriStudio 작업이 기동 중)
+::     ⚠️ 2026-09-20: 예전엔 이 대기보다 "Git pull"이 먼저였는데, git pull이 네트워크
+::     문제 등으로 멈추면(사용자 실측: 터널 창만 뜨고 브라우저 탭 자체가 하나도 안 열림)
+::     그 뒤의 모든 단계(프록시 대기·브라우저 탭 열기)가 통째로 막혀버렸다. "코드를
+::     최신으로" 는 "도구 탭을 연다"는 목적과 무관하므로, git pull을 맨 뒤로 옮기고
+::     탭 열기를 먼저 하도록 순서를 바꿨다 — 이제 git이 아무리 오래 걸리거나 실패해도
+::     도구 탭은 반드시 열린다.
+echo [2] Waiting for studio proxy on :3001...
 set /a _tries=0
 :waitproxy
 netstat -ano | findstr ":3001 " | findstr "LISTENING" >nul 2>&1
@@ -65,8 +60,8 @@ echo        proxy up.
 :trend
 echo.
 
-:: [4] TREND RADAR (:3000) — 스케줄에 없는 별도 UI, 여기서만 띄움
-echo [4] TREND RADAR (:3000)...
+:: [3] TREND RADAR (:3000) — 스케줄에 없는 별도 UI, 여기서만 띄움
+echo [3] TREND RADAR (:3000)...
 netstat -ano | findstr ":3000 " | findstr "LISTENING" >nul 2>&1
 if %errorlevel% == 0 (
     echo        already running -- skip
@@ -83,12 +78,26 @@ if %errorlevel% == 0 (
 )
 echo.
 
-:: [5] 브라우저 탭
-echo [5] Opening tabs...
+:: [4] 브라우저 탭 — git/네트워크 상태와 무관하게 항상 이 시점에 연다.
+echo [4] Opening tabs...
 start "" "http://localhost:5173"
 if exist "%ACC_HTML%" start "" "%ACC_HTML%"
 if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
 start "" "http://localhost:3000"
+echo.
+
+:: [5] Git pull (+ OneDrive 콘텐츠 동기화는 2026-09-17부로 중단 — 회사 PC를 더 이상 안 써서
+::     양방향 동기화 자체가 불필요해짐. sync-content.bat는 그대로 남겨뒀으니 필요해지면
+::     아래 call 줄만 되살리면 됨. 중단 이유: robocopy가 /PURGE 없이 양방향으로 돌아서
+::     로컬에서 지운 파일이 며칠 뒤 OneDrive 사본으로부터 되살아나는 버그가 있었음
+::     ([[reference_onedrive_sync_no_delete_propagation]] 참고).
+::     맨 뒤로 옮겼고, 전송이 15초 넘게 1KB/s 밑으로 멈춰있으면 자동으로 포기하도록
+::     타임아웃을 걸어서(2026-09-20) 네트워크 문제로 무한정 멈추는 일이 다시는 없게 했다.
+echo [5] Git pull...
+cd /d C:\yeori-studio
+git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 pull origin master
+if errorlevel 1 echo        WARN: git pull 실패/타임아웃 -- 나중에 수동으로 git pull 하세요.
+cd /d "%~dp0"
 echo.
 
 echo ============================================================

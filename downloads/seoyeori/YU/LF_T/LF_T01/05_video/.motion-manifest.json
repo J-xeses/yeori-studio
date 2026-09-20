@@ -1,10 +1,10 @@
 {
   "1": {
     "method": "graphic",
-    "motion": "self",
+    "motion": "none",
     "baked": true,
-    "duration": 3,
-    "producedAt": "2026-09-17T04:20:29.315Z"
+    "duration": 8,
+    "producedAt": "2026-09-20T07:25:10.094Z"
   },
   "2": {
     "method": "multi-clip-compose",
@@ -123,7 +123,9 @@
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-09-12T10:09:18.138Z"
+    "producedAt": "2026-09-12T10:09:18.138Z",
+    "overlay": true,
+    "overlayAt": "2026-09-20T07:35:09.772Z"
   },
   "23": {
     "method": "graphic",

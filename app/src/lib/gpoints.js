@@ -48,6 +48,31 @@ function syncToServer(data) {
   }).catch(() => {})
 }
 
+// 서버가 지금 들고 있는 그 컷의 g포인트를 한 번 받아와 로컬 캐시에 병합해둔다(비동기,
+// 쓰기를 막지 않음). ⚠️ 2026-09-20: setGPoint/setGPoints가 오직 localStorage(이 탭이 마지막
+// 으로 읽은 스냅샷)만 보고 쓰다 보니, 서버 쪽 병합(/api/gpoints POST, mergeGpointsData)이
+// "컷 하나를 통째로, updatedAt 최신 쪽이 이긴다" 방식이라는 것과 맞물려 실제 데이터 유실이
+// 났다: 이 탭이 g3를 모르는 채로(다른 탭이 방금 그 컷에 g3:true를 써도 이 탭 localStorage는
+// 그걸 모름) 같은 컷의 g1/g2/selectedImage 등 다른 필드를 갱신하면, "더 최신 updatedAt"을
+// 달고 g3 없는 객체를 통째로 보내서 서버의 g3:true를 지워버린다(실측: CUT17/20/21이 정확히
+// 이렇게 G3를 잃었다). 로컬 쓰기 자체는 예전처럼 동기로 즉시 반영(호출부가 setGPoint 직후
+// loadGPoints()로 바로 읽는 곳들이 있어 순서를 깨면 안 됨) — 그 직후에 서버 최신값을 받아와
+// "이 탭이 모르던 필드"만 추가로 채워 넣고 다시 한번 동기화한다.
+async function reconcileFromServer(episodeCode, cutNo) {
+  try {
+    const r = await fetch(`${SERVER}/api/gpoints`)
+    const all = await r.json()
+    const serverCut = all?.[episodeCode]?.[`cut_${cutNo}`]
+    if (!serverCut) return
+    const data = loadGPoints()
+    const cutKey = `cut_${cutNo}`
+    const merged = { ...serverCut, ...(data[episodeCode]?.[cutKey] || {}) } // 이 탭이 방금 바꾼 값이 우선, 나머지는 서버 것으로 보강
+    data[episodeCode] = { ...data[episodeCode], [cutKey]: merged }
+    localStorage.setItem(GP_KEY, JSON.stringify(data))
+    syncToServer(data)
+  } catch { /* 서버 응답 없으면 그냥 로컬 상태 유지 */ }
+}
+
 // CUT의 특정 G포인트 업데이트
 // episodeCode: 에피소드 코드(과도기엔 String(episode.number))
 // cutNo: CUT 번호 (1, 2, 3...)
@@ -66,6 +91,7 @@ export function setGPoint(episodeCode, cutNo, gKey, pass) {
     data[episodeCode] = epData
     localStorage.setItem(GP_KEY, JSON.stringify(data))
     syncToServer(data)
+    reconcileFromServer(episodeCode, cutNo)
     // 매트릭스에 변경 알림 (CustomEvent)
     window.dispatchEvent(new CustomEvent('gpoints_updated', { detail: { episodeCode, cutNo, gKey, pass } }))
   } catch(e) { console.warn('G포인트 저장 실패:', e) }
@@ -85,6 +111,7 @@ export function setGPoints(episodeCode, cutNo, updates) {
     data[episodeCode] = epData
     localStorage.setItem(GP_KEY, JSON.stringify(data))
     syncToServer(data)
+    reconcileFromServer(episodeCode, cutNo)
     window.dispatchEvent(new CustomEvent('gpoints_updated', { detail: { episodeCode, cutNo, updates } }))
   } catch(e) { console.warn('G포인트 저장 실패:', e) }
 }

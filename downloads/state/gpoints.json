@@ -510,7 +510,7 @@
     },
     "cut_14": {
       "g1": true,
-      "updatedAt": "2026-09-20T05:09:04.882Z",
+      "updatedAt": "2026-09-20T07:13:48.249Z",
       "g5": false,
       "g2": true,
       "selectedImage": "cut_14_a.jpg",
@@ -534,10 +534,11 @@
     },
     "cut_21": {
       "g1": true,
-      "updatedAt": "2026-09-20T06:07:24.939Z",
-      "g5": false,
       "g2": true,
-      "selectedImage": "cut_21_a.jpg"
+      "g5": false,
+      "selectedImage": "cut_21_a.jpg",
+      "g3": true,
+      "updatedAt": "2026-09-20T15:40:00.000Z"
     },
     "cut_22": {
       "g1": true,
@@ -580,9 +581,10 @@
     },
     "cut_20": {
       "g1": true,
-      "updatedAt": "2026-09-20T06:06:54.924Z",
+      "g2": true,
       "g5": false,
-      "g2": true
+      "g3": true,
+      "updatedAt": "2026-09-20T15:40:00.000Z"
     },
     "cut_23": {
       "g1": true,
@@ -591,10 +593,11 @@
     },
     "cut_17": {
       "g1": true,
-      "updatedAt": "2026-09-20T06:28:43.992Z",
-      "g5": false,
       "g2": true,
-      "selectedImage": "cut_17_a.jpg"
+      "g5": false,
+      "selectedImage": "cut_17_a.jpg",
+      "g3": true,
+      "updatedAt": "2026-09-20T15:40:00.000Z"
     },
     "cut_18": {
       "g1": true,

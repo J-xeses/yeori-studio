@@ -708,7 +708,10 @@ export default function VideoTab() {
         // 세그1·세그3이 둘 다 cut_NN_clip_-1.mp4로 스테이징되어 서로 덮어씀). targetIdx가
         // 있는 경우는 애초에 updater 안 거치고 바로 쓰면 되고, append(끝에 추가) 경우는
         // "existing.length"를 동기적으로 알 방법이 없으니 충돌 걱정 없는 고유값(타임스탬프)을 씀.
-        const clipIdx = targetIdx != null ? targetIdx : `new${Date.now()}`
+        // 파일명은 화면에 보이는 ①②③(1부터)과 맞춰서 1부터 세도록 +1 — 배열 인덱스 자체는
+        // 여전히 0부터(JS 배열이라 어쩔 수 없음), stage-cut-clip에 보내는 "클립 번호"만 사람이
+        // 보는 번호와 일치시킨다(2026-09-20, 사용자 요청 — 파일명 보고 헷갈리지 않게).
+        const clipIdx = targetIdx != null ? targetIdx + 1 : `new${Date.now()}`
         setVideoClips(p => {
           const existing = p[cutId] || []
           if (targetIdx != null) {
@@ -755,11 +758,11 @@ export default function VideoTab() {
     // 드래그 배정은 handleVideoUpload의 append 분기와 달리 한 번에 파일 하나씩만 처리되므로
     // (트레이에서 항목 하나를 특정 컷 하나에 떨어뜨리는 단발 동작) 여러 파일이 동시에 같은
     // 인덱스를 계산해 충돌할 race condition이 없다 — 그래서 여기는 existing.length를 그대로
-    // 써서 04_making/raw에 cut_NN_clip_<슬롯번호>.mp4로 저장되게 한다. 예전엔 항상
-    // new<timestamp> 이름으로 저장돼서, 나중에 클립을 재구성/정리할 때 어떤 파일이 몇 번
-    // 클립인지 파일명만 보고 알 수 없어 원본이 고아 파일로 남거나 잘못 지워지는 사고가
-    // 반복됐다(2026-09-20, 사용자 지적).
-    const clipIdx = videoClips[cut.id]?.length ?? 0
+    // 써서 04_making/raw에 cut_NN_clip_<슬롯번호>.mp4로 저장되게 한다(화면 표시 ①②③과
+    // 동일하게 1부터 세도록 +1). 예전엔 항상 new<timestamp> 이름으로 저장돼서, 나중에 클립을
+    // 재구성/정리할 때 어떤 파일이 몇 번 클립인지 파일명만 보고 알 수 없어 원본이 고아 파일로
+    // 남거나 잘못 지워지는 사고가 반복됐다(2026-09-20, 사용자 지적).
+    const clipIdx = (videoClips[cut.id]?.length ?? 0) + 1
     setVideoClips(p => {
       const existing = p[cut.id] || []
       return { ...p, [cut.id]: [...existing, obj] }

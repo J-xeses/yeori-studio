@@ -8874,7 +8874,7 @@ const HW_IMG_EXTS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.bmp'])
 const HW_VID_EXTS = new Set(['.mp4', '.mov', '.mkv', '.avi', '.webm'])
 
 app.post('/api/handwriting-overlay', async (req, res) => {
-  const { epNum, cutNo, scenes, outputSuffix = '_overlay', inputPath: inputRel } = req.body || {}
+  const { epNum, cutNo, scenes, outputSuffix = '_overlay', inputPath: inputRel, outputSize, signature } = req.body || {}
   if (!Array.isArray(scenes) || !scenes.length) {
     return res.status(400).json({ error: 'scenes(1개 이상) 필요' })
   }
@@ -8926,7 +8926,18 @@ app.post('/api/handwriting-overlay', async (req, res) => {
 
   try {
     fs.mkdirSync(workDir, { recursive: true })
-    fs.writeFileSync(configPath, JSON.stringify({ output_size: [1080, 1920], scenes }, null, 2), 'utf-8')
+    // output_size — 예전엔 [1080,1920](9:16) 고정이었다. 이 엔드포인트가 지금까지는 세로형
+    // 썸네일/릴스용으로만 쓰여서 문제가 없었지만, 16:9 가로 컷(LF_T01류)에 그대로 쓰면 원본이
+    // 세로 캔버스로 강제 리사이즈되며 찌그러진다(2026-09-20, CUT22 손글씨 연동 중 발견). 요청
+    // 바디에 outputSize가 있으면 그걸 쓰고, 없으면 기존 기본값(9:16)을 그대로 유지 — 기존
+    // 세로형 호출부는 변경 없이 그대로 동작한다.
+    const outSize = Array.isArray(outputSize) && outputSize.length === 2 ? outputSize : [1080, 1920]
+    // signature — 서여리 시그니처(프레임+워터마크)를 영상 내내 얹는 옵션. 릴스/스틸처럼 단독
+    // 콘텐츠엔 기본값(true)이 맞지만, 에피소드 중간 컷(LF_T01류)에 CTA 손글씨만 살짝 얹을 땐
+    // 필요 없다 — false를 명시하면 생략(handwriting_overlay.py가 config.signature를 읽음).
+    const cfgBody = { output_size: outSize, scenes }
+    if (signature === false) cfgBody.signature = false
+    fs.writeFileSync(configPath, JSON.stringify(cfgBody, null, 2), 'utf-8')
 
     // 이미지 모드: 씬 수가 줄었을 때 잔여 _sceneNN 파일이 남지 않게 먼저 정리
     const base = path.basename(outStem)

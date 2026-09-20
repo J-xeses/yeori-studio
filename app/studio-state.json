@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -46,7 +46,7 @@
           "subtitle": "",
           "imagePrompt": "AE 제작 대상 — Flow 이미지 생성 불필요\n충돌 연출 초안 별도 문서 참조",
           "videoPrompt": "AE 제작 대상 — Flow 영상 생성 불필요",
-          "duration": 3,
+          "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
@@ -1327,7 +1327,7 @@
           "scene": "서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.",
           "action": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
           "character": "서여리",
-          "dialogue": "\"실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...\"",
+          "dialogue": "....  실수로 만들어진 게~~  맞나요?~ ||  ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -1365,7 +1365,29 @@
             "kenburns": "zoomIn",
             "reason": "SH_MCU+MD_EMO",
             "source": "SH_MCU CA_ZIN MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음 MD_EMO"
-          }
+          },
+          "segments": [
+            10,
+            10
+          ],
+          "segTiming": [
+            [
+              2,
+              7
+            ],
+            [
+              1,
+              7
+            ]
+          ],
+          "segPrompts": [
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+            "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+          ],
+          "subtitleSegments": [
+            "실수로 만들어진 게 맞나요?",
+            "ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지"
+          ]
         },
         {
           "id": "cut-21",
@@ -2237,7 +2259,7 @@
       "subtitle": "",
       "imagePrompt": "AE 제작 대상 — Flow 이미지 생성 불필요\n충돌 연출 초안 별도 문서 참조",
       "videoPrompt": "AE 제작 대상 — Flow 영상 생성 불필요",
-      "duration": 3,
+      "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
@@ -3518,7 +3540,7 @@
       "scene": "서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.",
       "action": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
       "character": "서여리",
-      "dialogue": "\"실수로 만들어진 게 맞나요?~ ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...\"",
+      "dialogue": "....  실수로 만들어진 게~~  맞나요?~ ||  ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -3556,7 +3578,29 @@
         "kenburns": "zoomIn",
         "reason": "SH_MCU+MD_EMO",
         "source": "SH_MCU CA_ZIN MCU에서 CU로 천천히 당겨지며 살짝 웃으며 끊음 MD_EMO"
-      }
+      },
+      "segments": [
+        10,
+        10
+      ],
+      "segTiming": [
+        [
+          2,
+          7
+        ],
+        [
+          1,
+          7
+        ]
+      ],
+      "segPrompts": [
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
+        "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
+      ],
+      "subtitleSegments": [
+        "실수로 만들어진 게 맞나요?",
+        "ICONIC BY MISTAKE. 실수로 이렇게 좋아도 되는 건지"
+      ]
     },
     {
       "id": "cut-21",
@@ -3778,7 +3822,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-20T06:28:14.168Z",
+  "savedAt": "2026-09-20T07:35:06.935Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -3793,7 +3837,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789648680245,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_0.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_1.mp4"
         },
         {
           "url": "blob:http://localhost:5173/3830b882-004c-468f-a4a2-22546912c760",
@@ -3806,7 +3850,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789705047450,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_2.mp4"
         },
         {
           "url": "blob:http://localhost:5173/0150104b-e4d9-4201-99e7-eeca347406e3",
@@ -3819,7 +3863,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789705306415,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_2.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_3.mp4"
         }
       ],
       "cut-2": [
@@ -4006,17 +4050,16 @@
       ],
       "cut-21": [
         {
-          "url": "blob:http://localhost:5173/83cbd4bb-f0be-43b2-925c-86d9bc135450",
-          "name": "Two_women_speaking_to_camera_20260919213359.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_22.mp4?t=1789889642442",
+          "name": "cut_22_clip_1.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "staging": false,
           "keepAudio": true,
-          "createdAt": 1789821240071,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_22_clip_0.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_22_clip_1.mp4",
+          "createdAt": 1789889642442
         }
       ],
       "cut-3": [
@@ -4031,7 +4074,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789539969637,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_0.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
         },
         {
           "url": "blob:http://localhost:5173/87b491ff-496b-469d-989d-39fd3dbb3052",
@@ -4044,7 +4087,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789645127174,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
         },
         {
           "url": "blob:http://localhost:5173/3c6bd104-5bbe-42dc-a2c3-3c6bcdf6b380",
@@ -4057,7 +4100,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789540114752,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_3.mp4"
         }
       ],
       "cut-6": [
@@ -4116,7 +4159,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789644145497,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_0.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
         },
         {
           "url": "blob:http://localhost:5173/bfef58ff-888d-49f0-bdb8-194bb8aae395",
@@ -4129,7 +4172,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789644761590,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
         },
         {
           "url": "blob:http://localhost:5173/0a3da33c-395b-4feb-b57a-fec9a80133ac",
@@ -4142,7 +4185,7 @@
           "staging": false,
           "keepAudio": true,
           "createdAt": 1789645879595,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_3.mp4"
         }
       ],
       "cut-9": [
@@ -4346,7 +4389,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-17",
+    "selectedCutId": "cut-3",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
@@ -4971,10 +5014,10 @@
       "cut-12__v1": "blob:http://localhost:5173/567d5a12-782f-409b-bdab-c484c0c77e2d",
       "cut-13__v1": "blob:http://localhost:5173/03b327b2-7274-4778-8178-9737d1208748",
       "cut-15__v1789693978566_a5u": "blob:http://localhost:5173/5b3a2445-0419-45e2-8673-a79379a63905",
-      "cut-16__v1": "blob:http://localhost:5173/417b64cd-bd9f-4e14-9c45-c1ae74115ab2",
+      "cut-16__v1": "blob:http://localhost:5173/8e1711ce-0d33-4ffd-9872-07a5ffab74c5",
       "cut-18__v1": "blob:http://localhost:5173/df1eaa3f-135f-4d4d-a2cc-7b48f635cf3a",
-      "cut-19__v1": "blob:http://localhost:5173/d0ee66ab-a148-4121-bbc2-438d6e39d2c5",
-      "cut-20__v1": "blob:http://localhost:5173/16f4425b-fdd0-4883-8266-b0c737c66701",
+      "cut-19__v1": "blob:http://localhost:5173/1b1c6114-733f-4824-8222-f6c8ce3a742e",
+      "cut-20__v1": "blob:http://localhost:5173/b99160e1-9190-4373-89fd-6c92793ff69b",
       "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/0d24bc21-daab-42e2-812a-cbd70e57b20d",
       "cut-9__v1": "blob:http://localhost:5173/485ef3d0-5723-468e-bd80-500796acf77c"
     }
