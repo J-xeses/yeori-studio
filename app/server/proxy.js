@@ -1301,6 +1301,58 @@ app.get('/api/paid-usage/check', (req, res) => {
   catch (e) { res.status(500).json({ ok: false, error: e.message }) }
 })
 
+// ── Flow 클립 제출 (무료 경로 반자동화, 2026-09-21) ─────────────────────────────
+// POST /api/flow/submit { epNum, cutNo, clipNo, prevClipPath?, model?, durationSec?, maxCredits?, dryRun?, overwrite? }
+//   → scripts/flow-submit.js 를 자식 프로세스로 실행(시작 프레임·프롬프트 입력 → 검증 관문 → 생성 → 다운로드 → raw/cut_NN_clip_K.mp4)
+// GET  /api/flow/job/:id  → { state: running|done|failed, steps[], result, error }
+// GET  /api/flow/ready    → 전용 Chrome(9222)에 Flow 프로젝트 탭이 열려 있는지
+// Flow 화면은 하나뿐이라 동시에 한 작업만 허용한다(진행 중이면 409).
+const FLOW_JOB_DIR = () => path.join(mp.runtimeDir(), 'flow-jobs')
+let activeFlowJob = null // { id, child }
+app.get('/api/flow/ready', async (req, res) => {
+  try {
+    const r = await fetch('http://localhost:9222/json/list', { signal: AbortSignal.timeout(2500) })
+    const tabs = await r.json()
+    const flow = tabs.find(t => t.type === 'page' && String(t.url).includes('flow.google.com/project'))
+    res.json({ ok: true, chrome: true, flowTab: !!flow, busy: !!activeFlowJob })
+  } catch { res.json({ ok: true, chrome: false, flowTab: false, busy: !!activeFlowJob }) }
+})
+app.post('/api/flow/submit', (req, res) => {
+  const b = req.body || {}
+  const epNum = Number(b.epNum), cutNo = Number(b.cutNo), clipNo = Number(b.clipNo || 1)
+  if (!Number.isInteger(epNum) || !Number.isInteger(cutNo) || !Number.isInteger(clipNo) || clipNo < 1) return res.status(400).json({ error: 'epNum, cutNo, clipNo(정수) 필요' })
+  if (activeFlowJob) return res.status(409).json({ error: '다른 Flow 작업이 진행 중입니다', jobId: activeFlowJob.id })
+  if (b.prevClipPath) {
+    const abs = path.resolve(String(b.prevClipPath))
+    if (!abs.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase())) return res.status(400).json({ error: 'prevClipPath는 downloads 폴더 안이어야 합니다' })
+  }
+  const jobId = `flow_${Date.now()}`
+  const dir = FLOW_JOB_DIR()
+  fs.mkdirSync(dir, { recursive: true })
+  const jobPath = path.join(dir, `${jobId}.json`)
+  const job = { jobId, epNum, cutNo, clipNo, prevClipPath: b.prevClipPath || null, model: b.model || 'Omni 1.1 Flash', durationSec: Number(b.durationSec) || 8, maxCredits: b.maxCredits != null ? Number(b.maxCredits) : 15, dryRun: !!b.dryRun, overwrite: !!b.overwrite }
+  fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
+  const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-submit.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
+  activeFlowJob = { id: jobId, child }
+  child.on('exit', (code) => {
+    activeFlowJob = null
+    // 스크립트가 상태 파일을 못 남기고 죽은 경우(예: 문법 오류)를 대비해 running 으로 남았으면 failed 로 표시
+    try {
+      const sp = path.join(dir, `${jobId}.status.json`)
+      const st = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf-8')) : { jobId, steps: [] }
+      if (st.state !== 'done' && st.state !== 'failed') { st.state = 'failed'; st.error = st.error || `작업 프로세스가 비정상 종료됨(코드 ${code})`; fs.writeFileSync(sp, JSON.stringify(st, null, 2), 'utf-8') }
+    } catch { /* noop */ }
+  })
+  child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
+  res.json({ ok: true, jobId })
+})
+app.get('/api/flow/job/:id', (req, res) => {
+  const id = String(req.params.id).replace(/[^\w-]/g, '')
+  const sp = path.join(FLOW_JOB_DIR(), `${id}.status.json`)
+  if (!fs.existsSync(sp)) return res.json({ ok: true, state: activeFlowJob?.id === id ? 'running' : 'unknown', steps: [], result: null, error: null })
+  try { res.json({ ok: true, ...JSON.parse(fs.readFileSync(sp, 'utf-8')) }) } catch { res.json({ ok: true, state: 'running', steps: [] }) }
+})
+
 // ── POST /api/check-tool-credits — flow/pixverse-automation.js --check-credits 실행 후 파싱된 잔여 크레딧 반환 ──
 // 이미 로그인돼 있는 전용 프로필 Chrome(9222/9223, --user-data-dir 필요, Chrome 136+ 정책)에
 // CDP로 붙어서 화면을 읽어옴 — Chrome이 안 떠 있으면 실패 응답.

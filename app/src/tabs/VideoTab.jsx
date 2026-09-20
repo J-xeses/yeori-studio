@@ -738,6 +738,47 @@ export default function VideoTab() {
     vid.src = url
   }
 
+  // ── Flow 제출 (무료 경로 반자동, 2026-09-21) ────────────────────────────────
+  // 빈 슬롯의 "⚡ Flow 제출" → 서버가 scripts/flow-submit.js 로 Flow에 시작 프레임·프롬프트를 입력하고 검증 관문을
+  // 통과하면 생성·다운로드까지 진행 → 저장된 파일을 그 슬롯에 바로 배정한다. 슬롯 1은 G2 승인 이미지, 슬롯 2 이상은
+  // 바로 앞 슬롯 영상의 마지막 프레임이 시작 프레임. 진행 상황은 flowRun[`${cutId}:${idx}`]에 담아 슬롯 줄에 보여준다.
+  const [flowRun, setFlowRun] = useState({})
+  const flowBusy = Object.values(flowRun).some(r => r?.state === 'running')
+  const submitToFlow = async (cut, idx, clips) => {
+    const epNum = state.episode?.number
+    if (epNum == null) return
+    const key = `${cut.id}:${idx}`
+    const prev = idx > 0 ? clips[idx - 1] : null
+    if (idx > 0 && !prev?.stagedPath) { alert(`클립 ${idx}(바로 앞 슬롯)의 서버 저장 파일이 필요합니다 — 먼저 앞 슬롯을 채워주세요.`); return }
+    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 모델 Omni 1.1 Flash · 8초 · 720p (예상 12크레딧, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`}\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
+    setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '시작 중…' } }))
+    try {
+      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null }) })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '제출 실패')
+      for (;;) {
+        await new Promise(res => setTimeout(res, 3000))
+        const j = await (await fetch(`http://localhost:3001/api/flow/job/${d.jobId}`)).json()
+        const last = j.steps?.[j.steps.length - 1]?.msg || '진행 중…'
+        if (j.state === 'done') {
+          const res = j.result || {}
+          if (res.path) {
+            const rel = res.path.slice(res.path.toLowerCase().indexOf('\\downloads\\') + '\\downloads\\'.length).replace(/\\/g, '/')
+            const dur = res.duration || 8
+            const obj = { url: `http://localhost:3001/downloads/${rel}?t=${Date.now()}`, name: res.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio: '16:9', stagedPath: res.path, keepAudio: !!cut.dialogue, createdAt: Date.now() }
+            setVideoClips(p => { const arr = [...(p[cut.id] || [])]; arr[idx] = obj; return { ...p, [cut.id]: arr } })
+          }
+          setFlowRun(p => ({ ...p, [key]: { state: 'done', msg: last } }))
+          break
+        }
+        if (j.state === 'failed') { setFlowRun(p => ({ ...p, [key]: { state: 'failed', msg: j.error || '실패' } })); break }
+        setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: last } }))
+      }
+    } catch (e) {
+      setFlowRun(p => ({ ...p, [key]: { state: 'failed', msg: e.message } }))
+    }
+  }
+
   // 로컬 업로드한 클립을 실제 서버 파일로도 스테이징(2026-09-13) — 예전엔 blob: URL만 만들고
   // 서버엔 아무것도 안 남겨서 "클립 합성"이 실제 출력을 못 만들었다. 클립을 blob URL로 식별해서
   // 스테이징 완료 시 그 클립에만 stagedPath를 채워넣는다(다른 클립 추가/삭제와 섞여도 안전).
@@ -1816,12 +1857,21 @@ export default function VideoTab() {
                               <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx + 1}</span>
                               <span className={s.clipName}>세그먼트 {idx + 1} — 파일 없음</span>
                               <span className={s.clipDurLabel}>목표 {plannedSegs[idx] != null ? `${plannedSegs[idx]}s` : '?'}</span>
+                              <button className={s.uploadBtnSm} disabled={flowBusy} title="Flow에 시작 프레임·프롬프트를 자동 입력하고 생성·다운로드까지 진행합니다"
+                                onClick={e => { e.stopPropagation(); submitToFlow(selCut, idx, clips) }}>
+                                {flowRun[`${selCut.id}:${idx}`]?.state === 'running' ? '⏳ Flow 진행 중' : '⚡ Flow 제출'}
+                              </button>
                               <label className={s.uploadBtnSm}>
                                 📁 업로드
                                 <input type="file" accept="video/*" hidden
                                   onChange={e => { handleVideoUpload(selCut.id, e.target.files, idx); e.target.value = '' }} />
                               </label>
                             </div>
+                            {flowRun[`${selCut.id}:${idx}`] && (
+                              <div style={{ fontSize: 11, padding: '2px 8px 6px', color: flowRun[`${selCut.id}:${idx}`].state === 'failed' ? '#f87171' : 'var(--text3)' }}>
+                                {flowRun[`${selCut.id}:${idx}`].state === 'failed' ? '❌ ' : flowRun[`${selCut.id}:${idx}`].state === 'done' ? '✅ ' : '⏳ '}{flowRun[`${selCut.id}:${idx}`].msg}
+                              </div>
+                            )}
                           </div>
                         )
                       }

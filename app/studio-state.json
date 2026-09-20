@@ -1,5 +1,5 @@
 {
-  "activeTab": "dashboard",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -65,7 +65,7 @@
             "audio": {
               "bgm": "",
               "voice": "",
-              "sfx": "",
+              "sfx": "hit woosh sweep.mp3 — 강한 임팩트 전환",
               "ambience": ""
             },
             "kr": {
@@ -1394,7 +1394,7 @@
           "scene": "서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.",
           "action": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
           "character": "서여리",
-          "dialogue": "....  실수로 만들어진 게~~  맞나요?~ ||  ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
+          "dialogue": "....  실수로 만들어진 게~~  맞나요?~ || ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
           "narration": "",
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -1439,7 +1439,7 @@
           ],
           "segTiming": [
             [
-              2,
+              3,
               7
             ],
             [
@@ -1461,8 +1461,21 @@
                 "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\n[NOTE FOR EDITING: the first ~2s of this clip will be shown upside-down (180-degree flipped frame) then whip back to upright in post — this is a CapCut editing effect, not part of the generated footage itself. The acting below should read naturally right-side-up; the flip is layered on top afterward.]\nShe starts with a sudden startled reaction — eyes going wide, a small sharp intake of breath, as if caught off guard by her own thought,\nthen the wide-eyed shock softens within a beat into a quiet, disarmed half-smile,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
                 "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ncontinuing directly from the previous clip's disarmed half-smile,\nher expression shifts into a knowing, slightly ironic warmth — she's in on the joke of her own line,\na subtle head-tilt as she speaks, camera holds a slow continuous zoom-in,\nby the end her smile settles into a soft, quiet stillness — a beat of genuine feeling underneath the irony,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
               ],
-              "at": "2026-09-20T07:55:15.081Z",
-              "reason": "클립1 눈커짐 리액션(180도 반전 편집효과용) → 클립2 아이러니한 따뜻함"
+              "at": "2026-09-20T15:19:57.629Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "dialogue": {
+              "value": "....  실수로 만들어진 게~~  맞나요?~ || ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
+              "at": "2026-09-20T15:19:57.629Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "segments": {
+              "value": [
+                10,
+                10
+              ],
+              "at": "2026-09-20T15:19:57.629Z",
+              "reason": "스튜디오 화면에서 직접 수정"
             }
           }
         },
@@ -2368,7 +2381,7 @@
         "audio": {
           "bgm": "",
           "voice": "",
-          "sfx": "",
+          "sfx": "hit woosh sweep.mp3 — 강한 임팩트 전환",
           "ambience": ""
         },
         "kr": {
@@ -3697,7 +3710,7 @@
       "scene": "서여리 MCU → CU. 제목 다시 꺼냄. 이중 의미 여운.",
       "action": "말하다 살짝 웃으며 끊음. 슬로우 페이드로 마무리.",
       "character": "서여리",
-      "dialogue": "....  실수로 만들어진 게~~  맞나요?~ ||  ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
+      "dialogue": "....  실수로 만들어진 게~~  맞나요?~ || ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
       "narration": "",
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
@@ -3742,7 +3755,7 @@
       ],
       "segTiming": [
         [
-          2,
+          3,
           7
         ],
         [
@@ -3764,8 +3777,21 @@
             "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\n[NOTE FOR EDITING: the first ~2s of this clip will be shown upside-down (180-degree flipped frame) then whip back to upright in post — this is a CapCut editing effect, not part of the generated footage itself. The acting below should read naturally right-side-up; the flip is layered on top afterward.]\nShe starts with a sudden startled reaction — eyes going wide, a small sharp intake of breath, as if caught off guard by her own thought,\nthen the wide-eyed shock softens within a beat into a quiet, disarmed half-smile,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
             "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\ncontinuing directly from the previous clip's disarmed half-smile,\nher expression shifts into a knowing, slightly ironic warmth — she's in on the joke of her own line,\na subtle head-tilt as she speaks, camera holds a slow continuous zoom-in,\nby the end her smile settles into a soft, quiet stillness — a beat of genuine feeling underneath the irony,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9"
           ],
-          "at": "2026-09-20T07:55:15.081Z",
-          "reason": "클립1 눈커짐 리액션(180도 반전 편집효과용) → 클립2 아이러니한 따뜻함"
+          "at": "2026-09-20T15:19:57.629Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "dialogue": {
+          "value": "....  실수로 만들어진 게~~  맞나요?~ || ICONIC BY MISTAKE~~. 실수로 이렇게 좋아도 되는 건지...",
+          "at": "2026-09-20T15:19:57.629Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "segments": {
+          "value": [
+            10,
+            10
+          ],
+          "at": "2026-09-20T15:19:57.629Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
@@ -3978,7 +4004,7 @@
   "creditTracker": {
     "main": {
       "flow": {
-        "remaining": 50,
+        "remaining": 26,
         "dailyTotal": 50,
         "costPerCut": 12
       },
@@ -4002,7 +4028,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-20T13:23:15.057Z",
+  "savedAt": "2026-09-20T15:33:40.207Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -4103,8 +4129,62 @@
           "createdAt": 1789207757000
         }
       ],
-      "cut-20": [],
-      "cut-15": [],
+      "cut-20": [
+        {
+          "url": "blob:http://localhost:5173/c0df38d8-dc2b-4fe2-b31a-977eb881ea5f",
+          "name": "Woman_speaking_on_sofa_20260921002137.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789917698089,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_21_clip_1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/1f2d2853-d0bb-496d-a5df-d7d554332319",
+          "name": "Woman_speaking_on_sofa_20260921003219.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789918339730,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_21_clip_2.mp4"
+        }
+      ],
+      "cut-15": [
+        {
+          "url": "blob:http://localhost:5173/cee508b4-d011-4286-949e-72aea85b3a9e",
+          "name": "Two_women_laughing_on_sofa_20260920231405.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789913645454,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_16_clip_1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/5fcabd33-540f-4796-b6d3-8157f5a840a6",
+          "name": "Two_women_지아 대사설정필요_20260920233135.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789914695383,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_16_clip_2.mp4"
+        }
+      ],
       "cut-10": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_10.mp4?t=1789375775114",
@@ -4173,6 +4253,32 @@
           "keepAudio": true,
           "createdAt": 1789891625495,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_1.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/7214ad41-b63d-42c2-8422-d4b65320b10e",
+          "name": "Woman_speaking_Korean_on_sofa_20260920233002.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789914602313,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_2.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/64c6b1f4-a40b-4431-996b-b56936d9cd80",
+          "name": "Two_women_laughing_on_sofa_20260920235555.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "16:9",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1789916155818,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_3.mp4"
         }
       ],
       "cut-18": [
@@ -4497,7 +4603,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-20",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",

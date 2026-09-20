@@ -291,18 +291,54 @@ export function flowKit(page) {
       }
       return { status: 'timeout' }
     },
-    // 새 결과 타일을 열어 뷰어의 <video> 주소를 얻어 저장하고 목록으로 돌아온다. 반환: 저장 바이트 수
-    async saveResult(thumbSrc, outPath) {
-      const pos = await page.evaluate((src) => { const i = [...document.querySelectorAll('img')].find(i => (i.currentSrc || i.src) === src); if (!i) return null; const r = i.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } }, thumbSrc)
-      if (!pos) throw new Error('결과 타일을 찾지 못했습니다')
-      await page.mouse.click(pos.x, pos.y)
-      let src = null
-      for (let i = 0; i < 20 && !src; i++) { await sleep(1000); src = await page.evaluate(() => { const v = [...document.querySelectorAll('video')].find(v => (v.currentSrc || v.src)); return v ? (v.currentSrc || v.src) : null }) }
-      if (!src) throw new Error('뷰어에서 영상 주소를 찾지 못했습니다')
-      const bytes = await this.saveVideo(src, outPath)
-      const back = await rectOf('arrow_back', 'exact', 'button')
-      if (back) { await page.mouse.click(back.x, back.y); await sleep(1500) }
-      return bytes
+    // 새 결과 타일을 열고 뷰어의 다운로드 버튼으로 "720p 원본 크기"를 받아 outPath에 저장한다(2026-09-20 실측).
+    // 뷰어의 영상은 iframe 안에 있어 <video> 주소를 직접 읽을 수 없다. 다운로드 메뉴: 270p GIF / 720p 원본 크기 /
+    // 1080p·4K 업스케일링(업그레이드 필요) — 항상 무료인 "720p 원본 크기"만 고른다. 임시 폴더로 받도록 다운로드 위치를
+    // 잠깐 바꿨다가 반드시 원복한다. 반환: 저장 바이트 수
+    async saveResult(thumbSrc, outPath, { timeoutMs = 90000 } = {}) {
+      const browser = page.browser()
+      const cdp = await browser.target().createCDPSession()
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'flowdl-'))
+      let behaviorSet = false
+      try {
+        const pos = await page.evaluate((src) => { const i = [...document.querySelectorAll('img')].find(i => (i.currentSrc || i.src) === src); if (!i) return null; const r = i.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } }, thumbSrc)
+        if (!pos) throw new Error('결과 타일을 찾지 못했습니다')
+        await page.mouse.click(pos.x, pos.y)
+        let inViewer = false
+        for (let i = 0; i < 15 && !inViewer; i++) { await sleep(1000); inViewer = await page.evaluate(() => document.body.innerText.includes('현재 시간')) }
+        if (!inViewer) throw new Error('결과 뷰어가 열리지 않았습니다')
+
+        await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: tmpDir })
+        behaviorSet = true
+        const dl = await rectOf('download', 'exact', 'button')
+        if (!dl) throw new Error('다운로드 버튼을 찾지 못했습니다')
+        await page.mouse.click(dl.x, dl.y); await sleep(1500)
+        const item = await rectOf('720p 원본 크기', 'includes', '[role="menuitem"], .mat-mdc-menu-item, button')
+        if (!item) throw new Error('"720p 원본 크기" 메뉴를 찾지 못했습니다(메뉴 구조가 바뀜)')
+        await page.mouse.click(item.x, item.y)
+
+        // 다운로드 완료 대기(.crdownload가 사라지고 mp4가 생김)
+        const t0 = Date.now()
+        let got = null
+        while (Date.now() - t0 < timeoutMs && !got) {
+          await sleep(1000)
+          const files = fs.readdirSync(tmpDir)
+          if (files.some(f => /\.crdownload$|\.tmp$/i.test(f))) continue
+          got = files.find(f => /\.mp4$/i.test(f)) || null
+        }
+        if (!got) throw new Error('다운로드 파일이 생기지 않았습니다')
+        fs.mkdirSync(path.dirname(outPath), { recursive: true })
+        fs.copyFileSync(path.join(tmpDir, got), outPath)
+        return fs.statSync(outPath).size
+      } finally {
+        if (behaviorSet) { try { await cdp.send('Browser.setDownloadBehavior', { behavior: 'default' }) } catch { /* noop */ } }
+        try { await cdp.detach() } catch { /* noop */ }
+        try { fs.rmSync(tmpDir, { recursive: true, force: true }) } catch { /* noop */ }
+        // 메뉴가 열려 있으면 닫고 목록 화면으로 복귀
+        try { await page.keyboard.press('Escape'); await sleep(500) } catch { /* noop */ }
+        const back = await rectOf('arrow_back', 'exact', 'button')
+        if (back) { await page.mouse.click(back.x, back.y); await sleep(1500) }
+      }
     },
     // 브라우저(로그인 쿠키 포함) 안에서 영상 주소를 fetch해 파일로 저장한다. 반환: 저장한 바이트 수
     async saveVideo(src, outPath) {
