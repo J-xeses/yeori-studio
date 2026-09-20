@@ -4002,7 +4002,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-20T09:43:56.956Z",
+  "savedAt": "2026-09-20T11:33:29.688Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -4394,18 +4394,6 @@
           "keepAudio": true,
           "createdAt": 1789710271143,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_09_clip_1.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_09.mp4?t=1789817556860",
-          "name": "cut_09.mp4",
-          "duration": 18.01,
-          "trimStart": 0,
-          "trimEnd": 18.01,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_09.mp4",
-          "keepAudio": true,
-          "createdAt": 1789796817000
         }
       ],
       "cut-16": [
@@ -4521,7 +4509,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-18",
+    "selectedCutId": "cut-9",
     "subtitles": {
       "cut-1": "",
       "cut-20": "실수로 만들어진 게 맞나요?~    ICONIC BY MISTAKE.  아... 실수로 이렇게 좋아도 되는 건지...",
