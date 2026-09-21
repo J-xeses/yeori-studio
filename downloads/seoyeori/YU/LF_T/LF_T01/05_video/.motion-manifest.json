@@ -80,11 +80,10 @@
     "producedAt": "2026-09-19T07:51:58.049Z"
   },
   "14": {
-    "method": "graphic",
-    "motion": "self",
+    "method": "multi-clip-compose",
+    "motion": null,
     "baked": true,
-    "duration": 10,
-    "producedAt": "2026-09-09T09:09:54.779Z"
+    "producedAt": "2026-09-21T06:26:51.060Z"
   },
   "15": {
     "method": "graphic",
@@ -92,6 +91,12 @@
     "baked": true,
     "duration": 10,
     "producedAt": "2026-09-17T04:24:35.067Z"
+  },
+  "16": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-21T06:26:37.289Z"
   },
   "17": {
     "method": "multi-clip-compose",
