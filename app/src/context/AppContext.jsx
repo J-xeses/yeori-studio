@@ -7,7 +7,7 @@ const STORAGE_KEY = 'yeori-studio-v2'
 
 // server/proxy.js의 OVERRIDABLE_CUT_FIELDS와 반드시 동기화할 것 — 여기 없는 필드는 서버가
 // "수동 조정"으로 보호해주지 않는다(자동화/구탭 자동저장에 되돌아갈 수 있음).
-const OVERRIDABLE_CUT_FIELDS = ['duration', 'segments', 'narration', 'dialogue', 'imagePrompt', 'videoPrompt', 'segPrompts', 'directionNote']
+const OVERRIDABLE_CUT_FIELDS = ['duration', 'segments', 'narration', 'dialogue', 'imagePrompt', 'videoPrompt', 'segPrompts', 'directionNote', 'register']
 
 const makeCuts = (n) => Array.from({ length: n }, (_, i) => ({
   id: `cut-${i + 1}`, no: i + 1,

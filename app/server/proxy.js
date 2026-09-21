@@ -24,6 +24,8 @@ import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
 import { runSts, resolveVoice } from './lib/sts.js'
+import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
+import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
 import { getWaveformPeaks } from './lib/waveform.js'
 import { getFilmstripFrames } from './lib/filmstrip.js'
 
@@ -1381,6 +1383,45 @@ app.post('/api/flow/image', (req, res) => {
   child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
   res.json({ ok: true, jobId })
 })
+// ── 음성 검수(발음·애드립) 결과 조회 — scripts/voice-qa.js / flow-submit.js 가 downloads/state/voice-qa.json 에 기록 (2026-09-21) ──
+// GET /api/voice-qa?episodeCode=IG_R04[&cutNo=2] → { ok, results: { [cutNo]: { [클립파일]: { verdict, ratio, heard, expected, flags[] } } } }
+// POST /api/voice-qa/run { episodeCode, cutNo } → 그 컷의 raw 클립(cut_NN_clip_K.mp4)을 검수하고 결과 저장·반환(클립당 음성 인식 1회)
+app.post('/api/voice-qa/run', async (req, res) => {
+  try {
+    const episodeCode = String(req.body?.episodeCode || ''), cutNo = Number(req.body?.cutNo)
+    if (!episodeCode || !Number.isInteger(cutNo)) return res.status(400).json({ ok: false, error: 'episodeCode, cutNo 필요' })
+    const state = loadStudioState()
+    const ep = Object.values(state.episodes || {}).find(e => e.episode?.code === episodeCode)
+    const cut = (ep?.cuts || []).find(c => c.no === cutNo)
+    if (!cut) return res.status(404).json({ ok: false, error: '컷을 찾지 못했습니다' })
+    const apiKey = process.env.ELEVENLABS_API_KEY || JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'studio-secrets.json'), 'utf-8')).apiKeys?.elevenLabs
+    if (!apiKey) return res.status(400).json({ ok: false, error: 'ElevenLabs API 키 없음' })
+    const rawDir = path.join(mp.makingDir(episodeCode), 'raw')
+    const re = new RegExp(`^cut_${String(cutNo).padStart(2, '0')}_clip_(\\d+)\\.mp4$`, 'i')
+    const files = (fs.existsSync(rawDir) ? fs.readdirSync(rawDir) : []).filter(f => re.test(f)).sort()
+    const seen = new Set()
+    const uniq = files.filter(f => { const sz = fs.statSync(path.join(rawDir, f)).size; if (seen.has(sz)) return false; seen.add(sz); return true })
+    if (!uniq.length) return res.status(404).json({ ok: false, error: `raw 폴더에 cut_${String(cutNo).padStart(2, '0')}_clip_*.mp4 가 없습니다` })
+    const qaPath = mp.statePath('voice-qa.json'), all = loadQa(qaPath)
+    const out = {}
+    for (const f of uniq) {
+      const r = await checkClip({ videoPath: path.join(rawDir, f), expected: cut.dialogue || '', apiKey, partial: uniq.length > 1 })
+      ;((all[episodeCode] ||= {})[cutNo] ||= {})[f] = r
+      out[f] = r
+    }
+    saveQa(qaPath, all)
+    res.json({ ok: true, results: out })
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }) }
+})
+app.get('/api/voice-qa', (req, res) => {
+  try {
+    const all = JSON.parse(fs.readFileSync(mp.statePath('voice-qa.json'), 'utf-8'))
+    const ep = String(req.query.episodeCode || '')
+    let r = ep ? (all[ep] || {}) : all
+    if (ep && req.query.cutNo) r = { [req.query.cutNo]: r[req.query.cutNo] || {} }
+    res.json({ ok: true, results: r })
+  } catch { res.json({ ok: true, results: {} }) }
+})
 app.post('/api/flow/cancel', (req, res) => {
   const id = String(req.body?.jobId || '').replace(/[^\w-]/g, '')
   if (!id || activeFlowJob?.id !== id) return res.status(404).json({ error: '진행 중인 해당 작업이 없습니다' })
@@ -2352,7 +2393,9 @@ app.post('/api/genline/sts', async (req, res) => {
     // TTS 탭 "캐릭터 목소리 미세조정"의 안정성·유사도를 STS에도 반영(0~100 → 0~1) — 2026-09-12.
     const speakerSettings = state.ttsSettings?.speakerSettings || {}
     const tuned = resolveSpeakerSetting(speakerSettings, charName, rv.name)
-    const voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
+    let voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
+    // 목소리 결(register): 친한 친구와의 대화 컷은 텐션이 높은 설정으로(server/lib/voiceRegister.js)
+    if (cutRegister(cut) === 'friend' && REGISTERS.friend.sts) voiceSettings = { ...REGISTERS.friend.sts }
     const job = newGenlineJob('sts', epNum, [cutNo])
     job.voice = { ...rv, charName: charName || rv.name }
     res.json({ ok: true, jobId: job.id, voice: job.voice })
@@ -6545,7 +6588,7 @@ function loadStudioState() {
 // (2026-09-20, 사용자 요청: "수동 조정을 로그로 남겨서 자동화 흐름이 존중하게 하자" — 컷
 // 시간을 손으로 조정할 때마다 run-making/pipeline-leader나 오래된 탭의 자동저장이 며칠째
 // 반복해서 되돌리는 사고가 있었음, 이 가드가 근본 해결책.)
-const OVERRIDABLE_CUT_FIELDS = ['duration', 'segments', 'narration', 'dialogue', 'imagePrompt', 'videoPrompt', 'segPrompts', 'directionNote']
+const OVERRIDABLE_CUT_FIELDS = ['duration', 'segments', 'narration', 'dialogue', 'imagePrompt', 'videoPrompt', 'segPrompts', 'directionNote', 'register']
 function enforceManualOverrides(incomingState) {
   try {
     if (!fs.existsSync(STUDIO_STATE_PATH)) return incomingState
@@ -8231,7 +8274,9 @@ mcpRouter.post('/run-sts', async (req, res) => {
     // 예전엔 STS가 이 설정을 아예 안 읽고 고정값만 썼음(사용자 지적, 2026-09-12).
     const speakerSettings = state.ttsSettings?.speakerSettings || {}
     const tuned = resolveSpeakerSetting(speakerSettings, charName, rv.name)
-    const voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
+    let voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
+    // 목소리 결(register): 친한 친구와의 대화 컷은 텐션이 높은 설정으로(server/lib/voiceRegister.js)
+    if (cutRegister(cut) === 'friend' && REGISTERS.friend.sts) voiceSettings = { ...REGISTERS.friend.sts }
     const r = await runSts({ epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag, voiceSettings })
     res.json({ success: true, cutNo, voice: rv, files: r.files })
   } catch (err) {

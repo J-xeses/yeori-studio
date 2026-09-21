@@ -1,0 +1,166 @@
+{
+  "IG_R04": {
+    "1": {
+      "cut_01_clip_1.mp4": {
+        "verdict": "ok",
+        "ratio": 1,
+        "heard": "어, 왔어요?",
+        "expected": "어 왔어요",
+        "words": [
+          {
+            "text": "어,",
+            "start": 2.14,
+            "end": 2.26,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "왔어요?",
+            "start": 2.7,
+            "end": 3.12,
+            "logprob": 0,
+            "speaker": null
+          }
+        ],
+        "flags": [],
+        "checkedAt": "2026-09-21T14:10:33.035Z"
+      }
+    },
+    "2": {
+      "cut_02_clip_1.mp4": {
+        "verdict": "ok",
+        "ratio": 1,
+        "heard": "저 사실 이 채널 AI로 만들어요. 근데 저 꽤 자연스럽죠?",
+        "expected": "저 사실 이 채널 ai로 만들어요 근데 저 꽤 자연스럽죠",
+        "words": [
+          {
+            "text": "저",
+            "start": 1.26,
+            "end": 1.34,
+            "logprob": -0.01,
+            "speaker": null
+          },
+          {
+            "text": "사실",
+            "start": 1.46,
+            "end": 1.7,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "이",
+            "start": 1.78,
+            "end": 1.86,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "채널",
+            "start": 2,
+            "end": 2.42,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "AI로",
+            "start": 3.54,
+            "end": 3.94,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "만들어요.",
+            "start": 4.08,
+            "end": 4.48,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "근데",
+            "start": 4.86,
+            "end": 5.02,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "저",
+            "start": 5.14,
+            "end": 5.24,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "꽤",
+            "start": 5.44,
+            "end": 5.52,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "자연스럽죠?",
+            "start": 5.66,
+            "end": 6.36,
+            "logprob": 0,
+            "speaker": null
+          }
+        ],
+        "flags": [],
+        "checkedAt": "2026-09-21T14:29:47.108Z"
+      }
+    },
+    "3": {
+      "cut_03_clip_1.mp4": {
+        "verdict": "ok",
+        "ratio": 1,
+        "heard": "자주 와요. 저 여기 맨날 있으니까.",
+        "expected": "자주 와요 저 여기 맨날 있으니까",
+        "words": [
+          {
+            "text": "자주",
+            "start": 2.7,
+            "end": 2.9,
+            "logprob": -0.01,
+            "speaker": null
+          },
+          {
+            "text": "와요.",
+            "start": 3,
+            "end": 3.26,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "저",
+            "start": 4.52,
+            "end": 4.6,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "여기",
+            "start": 4.68,
+            "end": 4.84,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "맨날",
+            "start": 5,
+            "end": 5.2,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "있으니까.",
+            "start": 5.3,
+            "end": 5.86,
+            "logprob": -0.01,
+            "speaker": null
+          }
+        ],
+        "flags": [],
+        "checkedAt": "2026-09-21T14:10:35.046Z"
+      }
+    }
+  }
+}

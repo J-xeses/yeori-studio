@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3960,7 +3960,7 @@
           "subtitle": "자주 와요. / 저 여기 맨날 있으니까. / 여기, 라고 했지만 그 의미는 조금 더 넓었다",
           "narration": "",
           "imagePrompt": "MEDIUM SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear,\nwearing oversized cream-toned knit top and straight-cut denim pants DO NOT change clothing, gold necklace and gold bracelet visible,\nK-model proportions, very small face, slender figure, small head-to-body ratio DO NOT make average body proportions,\niced Americano in clear glass on the table, soft afternoon golden hour window light casting warm glow,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character",
-          "videoPrompt": "Vertical 9:16, one continuous 8-second shot in a warm cafe by the window with golden afternoon light. The shot starts from the start frame: the same woman with a dry, slightly serious look, holding an iced Americano glass near her chin. Her serious look slowly softens and a warm smile spreads across her face; she lowers the glass onto the table and relaxes, and she ends in a relaxed warm smile. While her expression changes she speaks the line in a light, relaxed tone. Only this one gentle expression change, no other large movements. Very gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
+          "videoPrompt": "Vertical 9:16, one continuous 8-second shot starting exactly from the start frame: the same woman, the same cream oversized knit top, jeans, window seat and warm golden afternoon light. The tension of the previous moment releases: she exhales, her deadpan look melts, and she turns her head away from the camera toward the window side of the frame while a genuine smile grows; she tucks her hair behind her ear and leans back slightly, then turns her face back toward the camera with a relaxed warm smile and says the line. In the last two seconds she glances toward the window with a soft lingering smile and lifts the iced Americano a little. Natural micro-movements, gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -4165,7 +4165,7 @@
       "subtitle": "자주 와요. / 저 여기 맨날 있으니까. / 여기, 라고 했지만 그 의미는 조금 더 넓었다",
       "narration": "",
       "imagePrompt": "MEDIUM SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear,\nwearing oversized cream-toned knit top and straight-cut denim pants DO NOT change clothing, gold necklace and gold bracelet visible,\nK-model proportions, very small face, slender figure, small head-to-body ratio DO NOT make average body proportions,\niced Americano in clear glass on the table, soft afternoon golden hour window light casting warm glow,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character",
-      "videoPrompt": "Vertical 9:16, one continuous 8-second shot in a warm cafe by the window with golden afternoon light. The shot starts from the start frame: the same woman with a dry, slightly serious look, holding an iced Americano glass near her chin. Her serious look slowly softens and a warm smile spreads across her face; she lowers the glass onto the table and relaxes, and she ends in a relaxed warm smile. While her expression changes she speaks the line in a light, relaxed tone. Only this one gentle expression change, no other large movements. Very gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
+      "videoPrompt": "Vertical 9:16, one continuous 8-second shot starting exactly from the start frame: the same woman, the same cream oversized knit top, jeans, window seat and warm golden afternoon light. The tension of the previous moment releases: she exhales, her deadpan look melts, and she turns her head away from the camera toward the window side of the frame while a genuine smile grows; she tucks her hair behind her ear and leans back slightly, then turns her face back toward the camera with a relaxed warm smile and says the line. In the last two seconds she glances toward the window with a soft lingering smile and lifts the iced Americano a little. Natural micro-movements, gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -4306,7 +4306,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-21T14:30:27.609Z",
+  "savedAt": "2026-09-21T13:24:11.831Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -4364,36 +4364,6 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_16.mp4",
           "keepAudio": true,
           "createdAt": 1789971996000
-        }
-      ],
-      "cut-2": [
-        {
-          "url": "blob:http://localhost:5173/03789072-7734-483a-8db6-32658000a994",
-          "name": "cut_02_clip_1.mp4",
-          "duration": 10.01,
-          "trimStart": 0,
-          "trimEnd": 10.01,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789993061907,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_02_clip_1.mp4"
-        }
-      ],
-      "cut-3": [
-        {
-          "url": "blob:http://localhost:5173/300c8fb0-94e9-4513-8b19-2a61186c6688",
-          "name": "cut_03_clip_1.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789999537893,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_03_clip_1.mp4"
         }
       ]
     },

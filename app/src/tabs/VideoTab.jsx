@@ -211,6 +211,35 @@ export default function VideoTab() {
   const [diagCutId, setDiagCutId] = useState(null) // AI 진단 패널이 열려있는 컷 id
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
   const [previewT, setPreviewT] = useState(0)   // 미리보기 영상 재생 위치(초) — 컷의 자막 시작 지연(captionStartSec) 전에는 자막을 보이지 않게 하려고
+  // 음성 검수(발음·애드립) 결과 — 서버 downloads/state/voice-qa.json. 영상 제출로 저장되면 자동 실행되고, 컷 카드의 버튼으로 다시 돌릴 수 있다.
+  const [voiceQa, setVoiceQa] = useState({})      // { [cutNo]: { [clipFile]: { verdict, ratio, heard, expected, flags[] } } }
+  const [qaBusy, setQaBusy] = useState({})
+  const loadVoiceQa = async () => {
+    try {
+      const r = await fetch(`http://localhost:3001/api/voice-qa?episodeCode=${encodeURIComponent(episodeCode)}`)
+      const d = await r.json()
+      setVoiceQa(d.results || {})
+    } catch { /* 서버가 없으면 배지만 안 보인다 */ }
+  }
+  useEffect(() => { loadVoiceQa() }, [episodeCode]) // eslint-disable-line react-hooks/exhaustive-deps
+  const runVoiceQa = async (cut) => {
+    setQaBusy(p => ({ ...p, [cut.no]: true }))
+    try {
+      const r = await fetch('http://localhost:3001/api/voice-qa/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ episodeCode, cutNo: cut.no }) })
+      const d = await r.json()
+      if (!r.ok || !d.ok) throw new Error(d.error || '검수 실패')
+      await loadVoiceQa()
+    } catch (e) { alert('음성 검수 실패: ' + e.message) }
+    setQaBusy(p => ({ ...p, [cut.no]: false }))
+  }
+  // 컷의 검수 요약(클립이 여러 개면 가장 나쁜 판정) — 없으면 null
+  const qaSummary = (cutNo) => {
+    const rs = Object.values(voiceQa[cutNo] || {})
+    if (!rs.length) return null
+    const rank = { ok: 0, warn: 1, fail: 2 }
+    return rs.reduce((a, b) => (rank[b.verdict] > rank[a.verdict] ? b : a))
+  }
+  const QA_ICON = { ok: '🎙✅', warn: '🎙⚠️', fail: '🎙❌' }
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
   const [selectedClipIdx, setSelectedClipIdx] = useState(0)
   const [videoGenStatus, setVideoGenStatus] = useState({})
@@ -1488,7 +1517,8 @@ export default function VideoTab() {
               const statusText = clips.length > 0
                 ? `영상 ${clips.length}개`
                 : (estCount > 1 ? `영상 없음 · 예상 ${estCount}개 필요` : '영상 없음')
-              return statusText + (g4Approved[c.id] ? ' · ✅' : '')
+              const qa = String(c.dialogue || '').trim() ? qaSummary(c.no) : null
+              return statusText + (qa ? ` · ${QA_ICON[qa.verdict]}` : '') + (g4Approved[c.id] ? ' · ✅' : '')
             }}
             renderExtra={c => (
               <>
@@ -2084,6 +2114,38 @@ export default function VideoTab() {
                       onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { sfxVolume: parseInt(e.target.value, 10) / 100 } })} />
                     <span style={{ minWidth: 26 }}>{Math.round((selCut.sfxVolume ?? 1) * 100)}%</span>
                   </label>
+                </div>
+                {/* 목소리 결(register) 수동 지정 + 음성 검수(발음·애드립) — 결과는 영상 저장 직후 자동 실행, 여기서 다시 돌릴 수 있다 */}
+                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, margin: '0 0 8px', fontSize: 11, color: 'var(--text3)' }}>
+                  <label title="이 컷의 말투: 자동(한지아가 함께 나오면 친구, 아니면 시청자) / 시청자 대상 / 친한 친구" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    🎭 말투
+                    <select value={selCut.register || ''} style={{ fontSize: 11 }}
+                      onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { register: e.target.value || undefined } })}>
+                      <option value="">자동</option>
+                      <option value="viewer">시청자 대상(차분)</option>
+                      <option value="friend">친한 친구(텐션↑)</option>
+                    </select>
+                  </label>
+                  {String(selCut.dialogue || '').trim() && (
+                    <>
+                      <button className={s.uploadBtnSm} disabled={!!qaBusy[selCut.no]} onClick={() => runVoiceQa(selCut)}
+                        title="raw 폴더의 이 컷 클립을 음성 인식으로 받아 적어 대본과 비교합니다(클립당 ElevenLabs 음성 인식 1회)">
+                        {qaBusy[selCut.no] ? '⏳ 검수 중…' : '🎙 음성 검수'}
+                      </button>
+                      {(() => {
+                        const qa = qaSummary(selCut.no)
+                        if (!qa) return <span>검수 결과 없음</span>
+                        const msgs = (qa.flags || []).filter(f => f.severity !== 'note').map(f => f.message)
+                        return (
+                          <span title={`대본: ${qa.expected || '(없음)'}\n들림: ${qa.heard || '(없음)'}`}
+                            style={{ color: qa.verdict === 'ok' ? 'var(--green, #34d399)' : qa.verdict === 'warn' ? '#fbbf24' : '#f87171', fontWeight: 600 }}>
+                            {QA_ICON[qa.verdict]} {qa.verdict === 'ok' ? '통과' : qa.verdict === 'warn' ? '확인 권장' : '재생성 권장'} · 일치율 {Math.round((qa.ratio || 0) * 100)}%
+                            {msgs.length > 0 && <span style={{ fontWeight: 400, color: 'var(--text3)' }}> — {msgs.slice(0, 2).join(' / ')}</span>}
+                          </span>
+                        )
+                      })()}
+                    </>
+                  )}
                 </div>
                 <div className={s.videoEmptyBtns} onClick={e => e.stopPropagation()}>
                   <label className={s.uploadBtn}>

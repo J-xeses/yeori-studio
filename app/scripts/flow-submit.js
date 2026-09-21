@@ -113,6 +113,16 @@ async function main() {
     step('G2 승인 이미지를 시작 프레임으로 사용')
   }
 
+  // 목소리 결(register) 문장: 대사 컷이면 그 컷의 결(시청자 대상 vs 친한 친구와의 대화)에 맞는 "Vocal delivery" 지시를 붙인다.
+  // 프롬프트를 직접 지정했거나 이미 포함돼 있으면 건드리지 않는다. 결 정의는 server/lib/voiceRegister.js.
+  if (!job.promptOverride && String(stCut?.dialogue || chkCut.dialogue || '').trim() && !/Vocal delivery/i.test(prompt)) {
+    const { cutRegister, REGISTERS } = await import('../server/lib/voiceRegister.js')
+    const reg = cutRegister(stCut || {})
+    prompt = `${prompt}
+
+${REGISTERS[reg].delivery}`
+    step(`목소리 결: ${REGISTERS[reg].label}`)
+  }
   // 시작 프레임 직접 지정(예: 앞 컷 영상의 마지막 프레임으로 이어 붙일 때). downloads 폴더 안의 파일만 허용.
   if (job.startFramePath) {
     const sf = path.resolve(String(job.startFramePath))
@@ -198,6 +208,18 @@ async function main() {
     try { dur = Number(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', outPath]).trim()) } catch { /* noop */ }
     status.result = { ...status.result, path: outPath, name: path.basename(outPath), bytes, duration: dur }
     step(`저장 완료: ${path.basename(outPath)} (${Math.round(bytes / 1024)}KB, ${dur?.toFixed?.(1)}초)`)
+    // 음성 검수(발음·애드립) — 저장 직후 자동 실행. 실패해도 클립 저장에는 영향 없다(검수는 보조).
+    try {
+      const { checkClip, loadQa, saveQa } = await import('../server/lib/voiceQa.js')
+      const secrets = JSON.parse(fs.readFileSync(path.join(mp.DOWNLOADS, '..', 'app', 'studio-secrets.json'), 'utf-8'))
+      const partial = Number(clipNo) > 1 || (Array.isArray(stCut?.segPrompts) && stCut.segPrompts.length > 1)
+      const qa = await checkClip({ videoPath: outPath, expected: stCut?.dialogue || chkCut.dialogue || '', apiKey: secrets.apiKeys?.elevenLabs, partial })
+      const qaPath = mp.statePath('voice-qa.json'), all = loadQa(qaPath), code = mp.resolveCode(epNum)
+      ;((all[code] ||= {})[cutNo] ||= {})[path.basename(outPath)] = qa
+      saveQa(qaPath, all)
+      status.result = { ...status.result, voiceQa: { verdict: qa.verdict, ratio: qa.ratio, flags: qa.flags.filter(f => f.severity !== 'note').map(f => f.message) } }
+      step(`음성 검수: ${qa.verdict} (일치율 ${Math.round(qa.ratio * 100)}%)${qa.flags.some(f => f.severity !== 'note') ? ' — ' + qa.flags.filter(f => f.severity !== 'note').map(f => f.message).join(' / ') : ''}`)
+    } catch (e) { step(`음성 검수 건너뜀: ${e.message}`) }
   } finally {
     await kit.clearPrompt().catch(() => {})
     await kit.clearStartFrame().catch(() => {})

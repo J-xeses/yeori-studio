@@ -163,6 +163,20 @@ function checksG4(cut, ctx) {
     const v = volume(f)
     if (p.hasAudio && v) c.push(chk('audible', '대사 컷: 무음 아님(평균 -45dB 이상)', 'hard', v.mean !== null && v.mean > -45, `평균 ${v.mean}dB`))
   }
+  // 음성 검수(발음·애드립, downloads/state/voice-qa.json) — 대사 컷만. 검수 결과가 없으면 알 수 없음(ok:null)으로 남긴다.
+  // 판정은 보조: 통과(ok)가 아니면 soft 경고로 표시해 사람이 귀로 확인하게 한다(fail 은 재생성 권장).
+  if (speaks) {
+    const qaAll = readJson(mp.statePath('voice-qa.json'), {})
+    const byFile = qaAll[mp.resolveCode(ctx.epNum)]?.[cut.no] || {}
+    const rs = Object.values(byFile)
+    if (!rs.length) c.push(chk('voice-qa', '음성 검수(발음·애드립)', 'soft', null, '검수 결과 없음'))
+    else {
+      const rank = { ok: 0, warn: 1, fail: 2 }
+      const worst = rs.reduce((a, b) => (rank[b.verdict] > rank[a.verdict] ? b : a))
+      const msgs = (worst.flags || []).filter(f => f.severity !== 'note').map(f => f.message).slice(0, 3).join(' / ')
+      c.push(chk('voice-qa', '음성 검수(발음·애드립)', 'soft', worst.verdict === 'ok', `${worst.verdict} · 일치율 ${Math.round((worst.ratio || 0) * 100)}%${msgs ? ' · ' + msgs : ''}`))
+    }
+  }
   if (cut.cutType === 'YEORI') c.push(chk('manual-visual', speaks ? '립싱크·연기·얼굴 품질은 사람 확인' : '연기·얼굴 품질은 사람 확인', 'manual', null, ''))
   return { artifact: true, checks: c }
 }
