@@ -138,7 +138,7 @@ export function EpisodeOverviewBlock() {
 // (2026-09-14, 사용자 확정: "메이킹 탭에서는 G5 배지도 있을 수가 없잖아") YEORI 컷이 같은
 // 목록에 섞여 있어도 그 탭 안에서는 G5를 절대 들여다보지 않아야 한다 — 탭 스코프 문제라
 // cutType만으론 못 가리고 호출부가 명시해야 함.
-export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra, videoStatus, doneStage }) {
+export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, maxStage = 5, renderPreview, previewText, renderExtra, videoStatus, doneStage, thumbAspect }) {
   const stages = ['g1', 'g2', 'g3', 'g4', 'g5'].slice(0, maxStage)
   const isRow = !!(renderPreview || renderExtra)
   return (
@@ -163,8 +163,15 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
         return (
           <div key={c.id}
             className={`${s.cutItem} ${isRow ? s.cutItemRow : ''} ${activeCutId === c.id ? s.cutItemActive : ''}`}
+            style={thumbAspect ? { alignItems: 'stretch' } : undefined}
             onClick={() => onCutClick?.(c)}>
-            {renderPreview && <div className={s.cutThumb}>{renderPreview(c)}</div>}
+            {renderPreview && (
+              // thumbAspect(예: '9 / 16')가 있으면 썸네일을 정보 텍스트 3줄(맨위~맨아래) 높이에 맞춰 세로 비율로 세운다
+              <div className={s.cutThumb}
+                style={thumbAspect ? { alignSelf: 'stretch', aspectRatio: thumbAspect, minHeight: 46, position: 'relative', overflow: 'hidden', borderRadius: 4 } : undefined}>
+                {renderPreview(c)}
+              </div>
+            )}
             <div className={s.cutInfo}>
               <span className={s.cutNo}>CUT {c.no}</span>
               <span className={s.cutPreview}>{previewText ? previewText(c) : (c.dialogue || c.narration || c.scene || '(내용 없음)')}</span>

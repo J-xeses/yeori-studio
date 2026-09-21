@@ -210,6 +210,7 @@ export default function VideoTab() {
   const { videoClips = {}, g4Approved = {}, selectedCutId = null, subtitles = {} } = state.videoTabState || {}
   const [diagCutId, setDiagCutId] = useState(null) // AI 진단 패널이 열려있는 컷 id
   const [subtitleEditMode, setSubtitleEditMode] = useState(false)
+  const [previewT, setPreviewT] = useState(0)   // 미리보기 영상 재생 위치(초) — 컷의 자막 시작 지연(captionStartSec) 전에는 자막을 보이지 않게 하려고
   const [subtitlePosition, setSubtitlePosition] = useState('middle')
   const [selectedClipIdx, setSelectedClipIdx] = useState(0)
   const [videoGenStatus, setVideoGenStatus] = useState({})
@@ -1462,6 +1463,7 @@ export default function VideoTab() {
           <CutList
             cuts={cuts} gData={gData} episodeCode={episodeCode} maxStage={4}
             activeCutId={selectedCutId}
+            thumbAspect={aspectRatio === '9:16' ? '9 / 16' : undefined}
             onCutClick={c => {
               setSelectedCutId(c.id)
               // 컷 목록 클릭 시 해당 컷 카드로 스크롤 이동(2026-09-13, 사용자 지적: "컷목록과
@@ -1475,9 +1477,10 @@ export default function VideoTab() {
               // 2026-09-18, 사용자 지적: "썸네일도 언제부터인지 누락"). 본문 미리보기와
               // 동일하게 stagedPath 기반 폴백을 쓴다.
               const thumbSrc = resolveClipSrc(clips[0])
+              const vertical = aspectRatio === '9:16'   // 9:16 모드: 썸네일을 세로 비율로 카드 텍스트 3줄 높이에 맞춤(CutList thumbAspect)
               return thumbSrc
-                ? <video src={thumbSrc} className={s.cutSideThumb} muted />
-                : <div className={s.cutSideThumbEmpty}>🎬</div>
+                ? <video src={thumbSrc} className={vertical ? s.cutSideThumbFill : s.cutSideThumb} muted />
+                : <div className={vertical ? s.cutSideThumbEmptyFill : s.cutSideThumbEmpty}>🎬</div>
             }}
             previewText={c => {
               const clips = videoClips[c.id] || []
@@ -1693,8 +1696,10 @@ export default function VideoTab() {
                   // 항상 실제 영상 프레임과 박스가 일치.
                   <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto', ...(aspectRatio === '9:16' ? { width: '67%' } : {}) }}>
                     <video key={resolveClipSrc(previewClip)} src={resolveClipSrc(previewClip)} controls className={s.cutCardVideoPlayer}
+                      onTimeUpdate={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
+                      onSeeked={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
                       onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
-                      onLoadedData={() => setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n })} />
+                      onLoadedData={() => { setPreviewT(0); setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n }) }} />
                     {videoLoadErrors[previewClip.url] && (
                       <div style={{
                         position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
@@ -1718,7 +1723,7 @@ export default function VideoTab() {
                         // 문서 흐름상 원래 자리(영상 아래, 컨트롤바 위 틈)로 빠져 화면 밖처럼
                         // 보였다(2026-09-18, 사용자 스크린샷: 컷2/3은 정상, 컷4부터 틀어짐).
                         // CSS 모듈 클래스 대신 bottom%를 직접 계산해 인라인으로 고정.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%` }}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: previewT >= (Number(selCut.captionStartSec) || 0) ? 'visible' : 'hidden' }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>

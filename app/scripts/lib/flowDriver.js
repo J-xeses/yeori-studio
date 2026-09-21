@@ -23,10 +23,20 @@ export const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 export const MODELS = ['Omni 1.1 Flash', 'Veo 3.1 - Lite', 'Veo 3.1 - Fast', 'Veo 3.1 - Quality']
 const TARGET_SEL = 'button, [role="tab"], [role="menuitem"], [role="radio"]'
 
-export async function attachFlow({ port = 9222, projectId = null } = {}) {
+export async function attachFlow({ port = 9222, projectId = null, lang = null } = {}) {
   const browser = await puppeteer.connect({ browserURL: `http://localhost:${port}`, defaultViewport: null })
   const page = (await browser.pages()).find(p => p.url().includes('flow.google.com/project') && (!projectId || p.url().includes(projectId)))
   if (!page) { browser.disconnect(); throw new Error('Flow 프로젝트 탭을 찾지 못했습니다(전용 Chrome에서 Flow 프로젝트를 열어두세요)') }
+  // 화면 언어 고정(2026-09-21): 같은 프로젝트라도 탭에 따라 한글/영어로 열린다. 영상 조작은 한글 버튼명, 이미지 조작은 영어 버튼명에
+  // 맞춰져 있어서 주소의 ?hl= 로 맞춘다(다르면 그 언어로 다시 불러온다).
+  if (lang) {
+    const u = new URL(page.url())
+    if (u.searchParams.get('hl') !== lang) {
+      u.searchParams.set('hl', lang)
+      await page.goto(u.toString(), { waitUntil: 'domcontentloaded' })
+      await sleep(5000)
+    }
+  }
 
   // 창이 작으면(실측: 높이 208px에서 설정 팝업이 화면 밖으로 밀려 클릭이 빗나감) 뷰포트를 임시로 키우고, release()에서 원복한다.
   // 창 자체의 크기는 건드리지 않는 CDP 에뮬레이션이라 사용자의 창 배치에는 영향이 없다.
@@ -178,8 +188,8 @@ export function flowKit(page) {
     },
 
     // 슬롯을 열고 이름으로 검색해 그 항목이 있으면 클릭한다. 반환: 선택했으면 true
-    async _searchAndPick(name) {
-      const slot = await rectOf('시작', 'exact', 'button, [role="button"], div')
+    async _searchAndPick(name, label = '시작') {
+      const slot = await rectOf(label, 'exact', 'button, [role="button"], div')
       if (!slot) throw new Error('시작 슬롯을 찾지 못했습니다(프레임 모드가 아니거나 이미 채워짐)')
       await page.mouse.click(slot.x, slot.y); await sleep(1500)
       // 검색창이 열려 포커스를 받았는지 먼저 확인한다(안 받았으면 키를 누르지 않고 닫는다). 검색창은 열릴 때 비어 있으므로
@@ -234,6 +244,29 @@ export function flowKit(page) {
       if (!filled) throw new Error('시작 프레임 지정 검증 실패(슬롯이 채워지지 않음)')
       return uniqueName
     },
+    // 종료 프레임 지정(프레임 모드의 "종료" 슬롯) — 시작 프레임을 지정한 뒤에 호출한다. 같은 방식(업로드 → 패널 검색·선택).
+    async endFrameFilled() { return !(await rectOf('종료', 'exact', 'button, [role="button"], div')) },
+    async attachEndFrame(filePath) {
+      const buf = fs.readFileSync(filePath)
+      const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 8)
+      const ext = path.extname(filePath) || '.jpg'
+      const uniqueName = `${path.basename(filePath, ext)}__${hash}${ext}`
+      const tmp = path.join(os.tmpdir(), uniqueName)
+      if (!fs.existsSync(tmp)) fs.writeFileSync(tmp, buf)
+      let seen = false
+      for (let i = 0; i < 10 && !seen; i++) { seen = !!(await rectOf('종료', 'exact', 'button, [role="button"], div')); if (!seen) await sleep(500) }
+      if (!seen) throw new Error('프레임 모드의 종료 슬롯이 나타나지 않습니다')
+      let picked = await this._searchAndPick(uniqueName, '종료')
+      if (!picked) {
+        await this._uploadToProject(tmp)
+        for (let i = 0; i < 8 && !picked; i++) { await sleep(3000); picked = await this._searchAndPick(uniqueName, '종료') }
+      }
+      if (!picked) throw new Error(`업로드한 이미지(${uniqueName})를 종료 프레임 패널에서 찾지 못했습니다`)
+      let filled = false
+      for (let i = 0; i < 12 && !filled; i++) { filled = await this.endFrameFilled(); if (!filled) await sleep(500) }
+      if (!filled) throw new Error('종료 프레임 지정 검증 실패(슬롯이 채워지지 않음)')
+      return uniqueName
+    },
     async clearStartFrame() {
       const x = await rectOf('close', 'exact', 'button')
       if (x) { await page.mouse.click(x.x, x.y); await sleep(900) }
@@ -271,6 +304,15 @@ export function flowKit(page) {
       await sleep(800)
       if (!(await this.isImageMode())) throw new Error('이미지 모드 전환 실패')
     },
+    // 이미지 모드에서 동영상 모드로 되돌린다(영상 제출 전에 호출). 이미지 팝업에는 프레임 아이콘이 없어 openPopup() 이 열림을 못 알아본다.
+    async setVideoMode() {
+      if (!(await this.isImageMode())) return
+      await this.openImagePopup()
+      await click('videocam', 'startsWith', 'button, [role="tab"]')
+      await sleep(1000)
+      if (await this.isImageMode()) throw new Error('동영상 모드 전환 실패')
+      await page.keyboard.press('Escape'); await sleep(600)
+    },
     async setImageRatio(r) {
       const icon = { '16:9': 'crop_16_9', '9:16': 'crop_9_16', '4:3': 'crop_landscape', '1:1': 'crop_square', '3:4': 'crop_portrait' }[r]
       if (!icon) throw new Error(`이미지 비율 미지원: ${r}`)
@@ -298,7 +340,16 @@ export function flowKit(page) {
     },
     // 프롬프트 창에 붙은 레퍼런스 썸네일 수(창 아래쪽의 작은 이미지)
     async refCount() {
-      return page.evaluate(() => [...document.querySelectorAll('img')].filter((i) => { const r = i.getBoundingClientRect(); return r.width >= 20 && r.width <= 90 && r.top > innerHeight * 0.4 }).length)
+      // 프롬프트 창(입력칸 + 전송 버튼을 함께 담은 가장 가까운 상위 요소) 안의 작은 썸네일만 센다. 화면 전체에서 세면 마우스를 올린
+      // 타일의 툴팁 썸네일(소재 이미지)까지 세어 오검출한다(2026-09-21 실측).
+      return page.evaluate(() => {
+        const box = [...document.querySelectorAll('[role="textbox"], [contenteditable="true"], textarea')].filter(e => { const r = e.getBoundingClientRect(); return r.width > 100 && r.height > 0 && r.top > innerHeight * 0.4 }).sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top)[0]
+        if (!box) return 0
+        let el = box
+        while (el && el.parentElement && !([...el.querySelectorAll('button')].some(b => (b.textContent || '').trim() === 'arrow_forward'))) el = el.parentElement
+        if (!el) return 0
+        return [...el.querySelectorAll('img')].filter(i => { const r = i.getBoundingClientRect(); return r.width >= 20 && r.width <= 90 }).length
+      })
     },
     // 레퍼런스 이미지 1장 첨부: '+' → 자산 패널 → (이미 올려둔 같은 내용이면 검색해서 재사용, 아니면 업로드) → "프롬프트에 추가".
     // 업로드 이름에 내용 지문(sha1 8자)을 붙여 같은 파일명의 옛 이미지가 잘못 선택되는 것을 막는다.
@@ -484,6 +535,8 @@ export function flowKit(page) {
       if (expect.durationSec && pill && !pill.includes(`${expect.durationSec}초`)) problems.push(`길이 불일치: 기대 ${expect.durationSec}초 / ${pill}`)
       if (pill && !/x1$/.test(pill)) problems.push(`생성 개수가 x1이 아님: ${pill}`)
       if (expect.startFrame && !(await this.startFrameFilled())) problems.push('시작 프레임이 지정되지 않음(프레임 모드 슬롯이 비어 있음)')
+      if (expect.endFrame && !(await this.endFrameFilled())) problems.push('종료 프레임이 지정되지 않음(프레임 모드 종료 슬롯이 비어 있음)')
+      if (expect.refs != null) { const n = await this.refCount(); if (n !== expect.refs) problems.push(`참조 이미지 수 불일치: 기대 ${expect.refs} / 현재 ${n}`) }
       if (credits == null) problems.push('예상 크레딧을 읽지 못함')
       else if (expect.maxCredits != null && credits > expect.maxCredits) problems.push(`예상 크레딧 초과: ${credits} > 허용 ${expect.maxCredits}`)
       if (expect.prompt != null) {

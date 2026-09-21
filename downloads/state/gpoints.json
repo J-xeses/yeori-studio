@@ -714,5 +714,22 @@
       "g4": true,
       "updatedAt": "2026-09-05T02:48:44.920Z"
     }
+  },
+  "IG_R04": {
+    "cut_1": {
+      "g2": true,
+      "selectedImage": "cut_01_b.jpg",
+      "updatedAt": "2026-09-21T12:01:10.925Z"
+    },
+    "cut_2": {
+      "g2": true,
+      "selectedImage": "cut_02_d.jpg",
+      "updatedAt": "2026-09-21T12:01:10.983Z"
+    },
+    "cut_3": {
+      "g2": true,
+      "selectedImage": "cut_03_b.jpg",
+      "updatedAt": "2026-09-21T12:01:11.037Z"
+    }
   }
 }

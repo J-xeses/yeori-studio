@@ -78,14 +78,17 @@ async function main() {
   const model = job.model || 'Omni 1.1 Flash'
   const durationSec = job.durationSec || 8
   const maxCredits = job.maxCredits ?? 15
+  // 화면 비율: 지정이 없으면 콘텐츠 유형으로 판단(LF/SF 유튜브 = 16:9, IG/TK 릴스 = 9:16)
+  let ratio = job.ratio || null
 
   step(`컷 ${cutNo} 클립 ${clipNo} 준비`)
   const chk = await (await fetch(`${SERVER}/api/episode-video-checklist?epNum=${epNum}`)).json()
   const chkCut = (chk.cuts || []).find(c => c.no === cutNo)
+  if (!ratio) ratio = /^(LF|SF)/i.test(String(chk.contentType || '')) ? '16:9' : '9:16'
   if (!chkCut) throw new Error(`컷 ${cutNo}을(를) 찾지 못했습니다`)
   const st = await (await fetch(`${SERVER}/api/studio-state`)).json()
   const stCut = ((st.d || st).cuts || []).find(c => c.no === cutNo)
-  const prompt = extractClipPrompt(chkCut.videoPrompt, stCut?.segPrompts, Number(clipNo))
+  let prompt = extractClipPrompt(chkCut.videoPrompt, stCut?.segPrompts, Number(clipNo))
   step(`프롬프트 ${prompt.length}자 추출`)
 
   const outPath = path.join(mp.makingDir(epNum), 'raw', `cut_${pad(cutNo)}_clip_${clipNo}.mp4`)
@@ -106,18 +109,66 @@ async function main() {
     step('G2 승인 이미지를 시작 프레임으로 사용')
   }
 
+  // 시작 프레임 직접 지정(예: 앞 컷 영상의 마지막 프레임으로 이어 붙일 때). downloads 폴더 안의 파일만 허용.
+  if (job.startFramePath) {
+    const sf = path.resolve(String(job.startFramePath))
+    if (!sf.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase()) || !fs.existsSync(sf)) throw new Error('startFramePath 는 downloads 폴더 안의 존재하는 파일이어야 합니다')
+    framePath = sf
+    step(`시작 프레임을 직접 지정: ${path.basename(sf)}`)
+  }
+  // 프롬프트 직접 지정(컷의 VP 대신): 대사 컷이면 "한국어로 말한다" 지시는 그대로 덧붙인다.
+  if (job.promptOverride) {
+    const dlg = String(stCut?.dialogue || chkCut.dialogue || '').trim()
+    prompt = dlg
+      ? `${String(job.promptOverride).trim()}\n\nShe speaks this line in Korean, lips synced to it: "${dlg}". No on-screen subtitle text or captions — dialogue is spoken audio only.`
+      : String(job.promptOverride).trim()
+    step(`프롬프트를 직접 지정(${prompt.length}자)`)
+  }
+
   checkCancel('입력 시작 전')
-  const { page, release, emulated } = await attachFlow()
+  // 영상 제출은 한글 화면 기준으로 만들어져 있다 — 프로젝트 주소에 ?hl=ko 를 붙여 맞춘다(영상 전용 프로젝트는 downloads/state/flow-video-project.json).
+  let projectId = job.projectId
+  if (!projectId) { try { projectId = JSON.parse(fs.readFileSync(mp.statePath('flow-video-project.json'), 'utf-8')).projectId } catch { /* noop */ } }
+  const { page, release, emulated } = await attachFlow({ projectId: projectId || null, lang: 'ko' })
   const kit = flowKit(page)
   try {
     if (emulated) step('Flow 창이 작아 화면 크기를 임시 보정')
+    await kit.setVideoMode()
     await kit.setModel(model)
+    await kit.setRatio(ratio)
+    await kit.setCount(1)        // 영상은 항상 x1 (이미지 작업이 x2로 남겨 둔 값이 넘어오지 않게 명시적으로 지정)
     if (model.startsWith('Omni')) await kit.setDuration(durationSec)
-    step('시작 프레임 업로드·지정')
-    await kit.attachStartFrame(framePath)
-    await kit.fillPrompt(prompt)
+    // 입력 방식: frames(기본) = 시작 프레임 슬롯 / ingredients = "소재" 참조 이미지(컷 이미지 + 서여리 클로즈업 얼굴)
+    const mode = job.mode === 'ingredients' ? 'ingredients' : 'frames'
+    let finalPrompt = prompt
+    let refCount = null
+    if (mode === 'ingredients') {
+      let chars = {}
+      try { chars = JSON.parse(fs.readFileSync(mp.charactersJsonPath(), 'utf-8')) || {} } catch { /* noop */ }
+      const prim = Object.values(chars).find(c => c.primary)
+      const root = path.resolve(mp.DOWNLOADS, '..')
+      const closeup = prim ? [prim.closeup, prim.face].filter(Boolean).map(r => path.join(root, r)).find(f => fs.existsSync(f)) : null
+      const refs = [framePath, ...(closeup ? [closeup] : [])]
+      step(`소재 모드: 참조 이미지 ${refs.length}장(${refs.map(r => path.basename(r)).join(', ')})`)
+      await kit.setSubMode('ingredients'); await kit.closePopup()
+      await kit.resetPromptBar()
+      for (const r of refs) { const a = await kit.attachReference(r); step(`참조 이미지 첨부: ${path.basename(r)} (현재 ${a.refCount}장)`) }
+      refCount = refs.length
+      finalPrompt = `${prompt}\n\nThe first attached image is the exact starting scene, pose and outfit of this shot; the second attached image is the character's face reference — keep the face identical to it.`
+    } else {
+      step('시작 프레임 업로드·지정')
+      await kit.attachStartFrame(framePath)
+      // 종료 프레임(선택): 표정·시선이 바뀌는 컷은 끝 장면 이미지를 함께 지정해 움직임의 도착점을 잡아 준다.
+      if (job.endFrame) {
+        const ef = path.resolve(String(job.endFrame))
+        if (!ef.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase()) || !fs.existsSync(ef)) throw new Error('endFrame 은 downloads 폴더 안의 존재하는 파일이어야 합니다')
+        step(`종료 프레임 업로드·지정: ${path.basename(ef)}`)
+        await kit.attachEndFrame(ef)
+      }
+    }
+    await kit.fillPrompt(finalPrompt)
     step('프롬프트 입력 완료')
-    const gate = await kit.verifyGate({ model, ratio: '16:9', durationSec, maxCredits, prompt, startFrame: true })
+    const gate = await kit.verifyGate({ model, ratio, durationSec, maxCredits, prompt: finalPrompt, startFrame: mode === 'frames', endFrame: mode === 'frames' && !!job.endFrame, refs: refCount })
     step(`검증 관문: ${gate.ok ? '통과' : '실패'} (모델 ${gate.model}, ${gate.credits}크레딧)`)
     if (!gate.ok) throw new Error('검증 관문 실패 — 전송하지 않음: ' + gate.problems.join(' / '))
     status.result = { gate: { model: gate.model, credits: gate.credits }, dryRun: !!job.dryRun }
@@ -142,6 +193,7 @@ async function main() {
   } finally {
     await kit.clearPrompt().catch(() => {})
     await kit.clearStartFrame().catch(() => {})
+    await kit.clearPromptBar().catch(() => {})
     await kit.setSubMode('ingredients').catch(() => {})
     await kit.closePopup().catch(() => {})
     await release()

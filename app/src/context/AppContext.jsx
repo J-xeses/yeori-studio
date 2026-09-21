@@ -102,6 +102,8 @@ const defaultState = {
 // 영상을 올리면 모든 에피소드의 컷1 영상이 그 파일로 바뀌었다. 지금은 "활성 에피소드"의 값만 최상위에 두고(서버와 각 탭이
 // 그대로 읽는다), 비활성 에피소드의 값은 episodes[id].tabState 에 보관했다가 전환할 때 맞바꾼다.
 const TAB_STATE_KEYS = ['videoTabState', 'ttsTabState', 'voiceInsertState', 'studioTabState']
+// ⚠️ 기본값의 중첩 객체(videoClips 등)를 그대로 공유하면 한 에피소드의 변경이 다른 에피소드 기본값으로 번진다 — 항상 새로 복제해서 쓴다.
+const freshTab = (k) => JSON.parse(JSON.stringify(defaultState[k]))
 function swapTabState(state, toId, { dropCurrent = false } = {}) {
   const cur = state.activeEpisodeId
   let episodes = state.episodes
@@ -112,7 +114,7 @@ function swapTabState(state, toId, { dropCurrent = false } = {}) {
   }
   const src = (episodes[toId] && episodes[toId].tabState) || {}
   const loaded = {}
-  for (const k of TAB_STATE_KEYS) loaded[k] = cur === toId && !dropCurrent ? state[k] : { ...defaultState[k], ...(src[k] || {}) }
+  for (const k of TAB_STATE_KEYS) loaded[k] = cur === toId && !dropCurrent ? state[k] : { ...freshTab(k), ...(src[k] || {}) }
   return { episodes, ...loaded }
 }
 
@@ -547,8 +549,8 @@ function migrateState(saved, init) {
     for (const arr of Object.values(clipsAll)) for (const c of (arr || [])) { const id = codeToId[codeOf(c.stagedPath)]; if (id) tally[id] = (tally[id] || 0) + 1 }
     const owner = (Object.entries(tally).sort((a, b) => b[1] - a[1])[0] || [])[0] || saved.activeEpisodeId
     const tabs = {}
-    const tabsOf = (id) => (tabs[id] = tabs[id] || Object.fromEntries(TAB_STATE_KEYS.map(k => [k, { ...init[k] }])))
-    for (const k of TAB_STATE_KEYS) tabsOf(owner)[k] = { ...init[k], ...(saved[k] || {}) }
+    const tabsOf = (id) => (tabs[id] = tabs[id] || Object.fromEntries(TAB_STATE_KEYS.map(k => [k, freshTab(k)])))
+    for (const k of TAB_STATE_KEYS) tabsOf(owner)[k] = { ...freshTab(k), ...(saved[k] || {}) }
     const ownerClips = {}
     for (const [cutId, arr] of Object.entries(clipsAll)) {
       for (const c of (arr || [])) {
@@ -559,7 +561,7 @@ function migrateState(saved, init) {
     }
     tabsOf(owner).videoTabState = { ...tabsOf(owner).videoTabState, videoClips: ownerClips }
     for (const [id, tab] of Object.entries(tabs)) if (eps[id]) eps[id] = { ...eps[id], tabState: tab }
-    const act = tabs[saved.activeEpisodeId] || Object.fromEntries(TAB_STATE_KEYS.map(k => [k, { ...init[k] }]))
+    const act = tabs[saved.activeEpisodeId] || Object.fromEntries(TAB_STATE_KEYS.map(k => [k, freshTab(k)]))
     for (const k of TAB_STATE_KEYS) saved[k] = act[k]
     saved.tabStateScoped = true
   }

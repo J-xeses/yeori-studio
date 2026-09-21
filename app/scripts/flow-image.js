@@ -115,7 +115,7 @@ async function main() {
   if (!plan.length) throw new Error('생성할 컷이 없습니다')
   step(`대상 ${plan.length}컷 · 컷당 ${count}장 · ${model}`)
 
-  const { page, release, emulated } = await attachFlow({ projectId })
+  const { page, release, emulated } = await attachFlow({ projectId, lang: 'en' })
   const kit = flowKit(page)
   try {
     if (emulated) step('Flow 창이 작아 화면 크기를 임시 보정')

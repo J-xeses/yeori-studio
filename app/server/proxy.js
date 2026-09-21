@@ -1330,7 +1330,7 @@ app.post('/api/flow/submit', (req, res) => {
   const dir = FLOW_JOB_DIR()
   fs.mkdirSync(dir, { recursive: true })
   const jobPath = path.join(dir, `${jobId}.json`)
-  const job = { jobId, epNum, cutNo, clipNo, prevClipPath: b.prevClipPath || null, model: b.model || 'Omni 1.1 Flash', durationSec: Number(b.durationSec) || 8, maxCredits: b.maxCredits != null ? Number(b.maxCredits) : 15, dryRun: !!b.dryRun, overwrite: !!b.overwrite }
+  const job = { jobId, epNum, cutNo, clipNo, prevClipPath: b.prevClipPath || null, model: b.model || 'Omni 1.1 Flash', durationSec: Number(b.durationSec) || 8, maxCredits: b.maxCredits != null ? Number(b.maxCredits) : 15, dryRun: !!b.dryRun, overwrite: !!b.overwrite, mode: b.mode === 'ingredients' ? 'ingredients' : 'frames' }
   fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
   const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-submit.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
   activeFlowJob = { id: jobId, child }

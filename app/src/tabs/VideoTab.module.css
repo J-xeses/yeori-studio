@@ -91,6 +91,8 @@
 .cutSideList { flex: 1; overflow: hidden; display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 8px; }
 .cutSideListHeader { padding: 8px 12px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .cutSideThumb { width: 48px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; background: #000; }
+.cutSideThumbFill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+.cutSideThumbEmptyFill { position: absolute; inset: 0; background: var(--bg-input); display: flex; align-items: center; justify-content: center; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; }
 .cutSideThumbEmpty { width: 48px; height: 28px; background: var(--bg-input); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; border: 1px solid var(--border); }
 
 /* Main area */
