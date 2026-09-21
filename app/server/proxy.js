@@ -1366,7 +1366,7 @@ app.post('/api/flow/image', (req, res) => {
   const dir = FLOW_JOB_DIR()
   fs.mkdirSync(dir, { recursive: true })
   const jobPath = path.join(dir, `${jobId}.json`)
-  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '' }
+  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '', extraRefs: Array.isArray(b.extraRefs) ? b.extraRefs.map(String) : [] }
   fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
   const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-image.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
   activeFlowJob = { id: jobId, child }
@@ -7419,6 +7419,7 @@ mcpRouter.post('/studio-set-episode', (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    swapServerTabState(state, episodeId)
     state.activeEpisodeId = episodeId
     state.episode = ep.episode
     state.cuts = ep.cuts
@@ -7429,6 +7430,28 @@ mcpRouter.post('/studio-set-episode', (req, res) => {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
 })
+
+// ── 에피소드별 탭 상태(클라이언트 AppContext.swapTabState 와 같은 규칙, 2026-09-21) ──────────────
+// videoTabState 등은 컷 id("cut-1")로 키를 잡아 에피소드끼리 겹치므로, 활성 에피소드의 값만 최상위에 두고
+// 비활성 에피소드의 값은 episodes[id].tabState 에 보관한다. 활성 에피소드를 바꿀 때 반드시 함께 맞바꿀 것.
+const TAB_STATE_DEFAULTS = () => ({
+  videoTabState: { videoClips: {}, g4Approved: {}, selectedCutId: null, subtitles: {} },
+  ttsTabState: { audioUrls: {}, audioTexts: {}, g3Confirmed: {}, focusCutId: null },
+  voiceInsertState: { tracks: {} },
+  studioTabState: { imageRatio: {} },
+})
+function swapServerTabState(state, toId) {
+  const cur = state.activeEpisodeId
+  if (cur === toId) return
+  const defs = TAB_STATE_DEFAULTS()
+  if (cur && state.episodes?.[cur]) {
+    const stash = {}
+    for (const k of Object.keys(defs)) stash[k] = state[k] ?? defs[k]
+    state.episodes[cur] = { ...state.episodes[cur], tabState: stash }
+  }
+  const src = state.episodes?.[toId]?.tabState || {}
+  for (const k of Object.keys(defs)) state[k] = { ...defs[k], ...(src[k] || {}) }
+}
 
 // ── POST /api/episodes — 신규 에피소드 생성(에이전트 리더 채팅의 create_episode 액션 전용,
 // content_matrix_v3.html의 file:// 페이지가 직접 호출하므로 /api/script-upload·/api/pipeline/*와
@@ -7481,6 +7504,7 @@ app.post('/api/episodes', (req, res) => {
     }
 
     state.episodes[id] = newEp
+    swapServerTabState(state, id)
     state.activeEpisodeId = id
     state.episode = newEp.episode
     state.cuts = newEp.cuts
@@ -7504,6 +7528,7 @@ app.post('/api/set-active-episode', (req, res) => {
   try {
     const state = loadStudioState()
     const ep = getEpisodeOrThrow(state, episodeId)
+    swapServerTabState(state, episodeId)
     state.activeEpisodeId = episodeId
     state.episode = ep.episode
     state.cuts = ep.cuts

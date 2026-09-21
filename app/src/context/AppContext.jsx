@@ -96,6 +96,26 @@ const defaultState = {
   studioTabState: { imageRatio: {} },   // `${cutId}_${idx}` → '9:16' | '16:9' (비교뷰 레이아웃, 에피소드 유형 기본값)
 }
 
+// ── 에피소드별 탭 상태 (2026-09-21) ─────────────────────────────────────────────────────────────
+// videoTabState·ttsTabState·voiceInsertState·studioTabState 는 컷 id("cut-1")로 키를 잡는데, 에피소드마다 컷 id 가
+// 겹친다(LF_T01 의 cut-1 도, IG_R04 의 cut-1 도 "cut-1"). 예전에는 이 상태가 앱 전체에 하나뿐이라, 다른 에피소드 컷1에
+// 영상을 올리면 모든 에피소드의 컷1 영상이 그 파일로 바뀌었다. 지금은 "활성 에피소드"의 값만 최상위에 두고(서버와 각 탭이
+// 그대로 읽는다), 비활성 에피소드의 값은 episodes[id].tabState 에 보관했다가 전환할 때 맞바꾼다.
+const TAB_STATE_KEYS = ['videoTabState', 'ttsTabState', 'voiceInsertState', 'studioTabState']
+function swapTabState(state, toId, { dropCurrent = false } = {}) {
+  const cur = state.activeEpisodeId
+  let episodes = state.episodes
+  if (!dropCurrent && cur && cur !== toId && episodes[cur]) {
+    const stash = {}
+    for (const k of TAB_STATE_KEYS) stash[k] = state[k]
+    episodes = { ...episodes, [cur]: { ...episodes[cur], tabState: stash } }
+  }
+  const src = (episodes[toId] && episodes[toId].tabState) || {}
+  const loaded = {}
+  for (const k of TAB_STATE_KEYS) loaded[k] = cur === toId && !dropCurrent ? state[k] : { ...defaultState[k], ...(src[k] || {}) }
+  return { episodes, ...loaded }
+}
+
 function reducer(state, action) {
   switch (action.type) {
 
@@ -106,8 +126,10 @@ function reducer(state, action) {
       const openTabIds = (state.openTabIds || []).includes(action.id)
         ? state.openTabIds
         : [...(state.openTabIds || []), action.id]
+      const swapped = swapTabState(state, action.id)
       return {
         ...state,
+        ...swapped,
         activeEpisodeId: action.id,
         openTabIds,
         episode: ep.episode,
@@ -140,8 +162,10 @@ function reducer(state, action) {
         ? tabs[tabs.length - 1]
         : state.activeEpisodeId
       const ep = state.episodes[newActiveId]
+      const swapped = swapTabState(state, newActiveId)
       return {
         ...state,
+        ...swapped,
         openTabIds: tabs,
         activeEpisodeId: newActiveId,
         episode: ep.episode,
@@ -160,9 +184,13 @@ function reducer(state, action) {
         ? (state.activeEpisodeId === action.id ? openTabIds[openTabIds.length - 1] : state.activeEpisodeId)
         : Object.keys(newEpisodes)[0]
       const firstEp = newEpisodes[fallbackId]
+      // 삭제되는 에피소드가 활성이면 그 탭 상태는 버리고 대체 에피소드 것을 불러온다(아니면 현재 값 유지)
+      const swapped = state.activeEpisodeId === action.id
+        ? swapTabState({ ...state, episodes: newEpisodes }, fallbackId, { dropCurrent: true })
+        : { episodes: newEpisodes }
       return {
         ...state,
-        episodes: newEpisodes,
+        ...swapped,
         openTabIds: openTabIds.length ? openTabIds : [fallbackId],
         activeEpisodeId: fallbackId,
         episode: firstEp.episode,
@@ -505,6 +533,35 @@ function migrateState(saved, init) {
   saved.voiceInsertState = {
     tracks: {},
     ...(saved.voiceInsertState || {}),
+  }
+  // 에피소드별 탭 상태 1회 마이그레이션(2026-09-21): 예전 저장본은 탭 상태가 앱 전체에 하나뿐이었다.
+  // 소유자 = 클립 stagedPath(…/IG_R04/… 등)의 에피소드 코드로 가장 많이 확인되는 에피소드(없으면 활성 에피소드).
+  // 소유자가 아닌 에피소드 폴더의 클립은 그 에피소드로 옮기고, 최상위에는 활성 에피소드의 값만 남긴다.
+  if (!saved.tabStateScoped && saved.episodes) {
+    const eps = saved.episodes
+    const codeToId = {}
+    for (const [id, e] of Object.entries(eps)) if (e.episode?.code) codeToId[String(e.episode.code).toUpperCase()] = id
+    const codeOf = (p) => { const m = String(p || '').match(/(?:IG|LF|SF|TK)_[A-Z]\d+(?:_[A-Z0-9]+)?|_etc[\\/]+([^\\/]+)/i); return m ? String(m[1] || m[0]).toUpperCase() : null }
+    const clipsAll = (saved.videoTabState && saved.videoTabState.videoClips) || {}
+    const tally = {}
+    for (const arr of Object.values(clipsAll)) for (const c of (arr || [])) { const id = codeToId[codeOf(c.stagedPath)]; if (id) tally[id] = (tally[id] || 0) + 1 }
+    const owner = (Object.entries(tally).sort((a, b) => b[1] - a[1])[0] || [])[0] || saved.activeEpisodeId
+    const tabs = {}
+    const tabsOf = (id) => (tabs[id] = tabs[id] || Object.fromEntries(TAB_STATE_KEYS.map(k => [k, { ...init[k] }])))
+    for (const k of TAB_STATE_KEYS) tabsOf(owner)[k] = { ...init[k], ...(saved[k] || {}) }
+    const ownerClips = {}
+    for (const [cutId, arr] of Object.entries(clipsAll)) {
+      for (const c of (arr || [])) {
+        const id = codeToId[codeOf(c.stagedPath)] || owner
+        if (id === owner) (ownerClips[cutId] = ownerClips[cutId] || []).push(c)
+        else { const v = tabsOf(id).videoTabState; v.videoClips = v.videoClips || {}; (v.videoClips[cutId] = v.videoClips[cutId] || []).push(c) }
+      }
+    }
+    tabsOf(owner).videoTabState = { ...tabsOf(owner).videoTabState, videoClips: ownerClips }
+    for (const [id, tab] of Object.entries(tabs)) if (eps[id]) eps[id] = { ...eps[id], tabState: tab }
+    const act = tabs[saved.activeEpisodeId] || Object.fromEntries(TAB_STATE_KEYS.map(k => [k, { ...init[k] }]))
+    for (const k of TAB_STATE_KEYS) saved[k] = act[k]
+    saved.tabStateScoped = true
   }
   saved.publishing = {
     youtube:   { title: '', description: '', tags: '' },

@@ -103,9 +103,14 @@ async function main() {
     if (!base) { step(`컷 ${no}: 이미지 프롬프트가 없어 건너뜀`); continue }
     const ids = resolveCharIds(cut.masterCode?.ch, chars)
     const { refs, descriptorText } = refsAndDescriptors(ids, chars)
-    const prompt = descriptorText ? `${base}\n\n[Character consistency — the attached image is the reference face. Keep the face identical to it:]\n${descriptorText}` : base
+    // 추가 레퍼런스(의상·분위기 기준 이미지): 캐릭터 얼굴 레퍼런스 뒤에 붙이고, 프롬프트에 역할을 알려 준다.
+    const extra = (job.extraRefs || []).map(r => path.resolve(String(r))).filter(r => r.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase()) && fs.existsSync(r))
+    if ((job.extraRefs || []).length !== extra.length) throw new Error('extraRefs 는 downloads 폴더 안의 존재하는 파일이어야 합니다')
+    const allRefs = [...refs, ...extra]
+    const roleNote = extra.length ? ' The first attached image is the reference face; the other attached image(s) are the outfit and overall look reference — keep the same cream oversized knit top style, jewelry and natural styling, while following the pose and scene described above.' : ''
+    const prompt = descriptorText ? `${base}\n\n[Character consistency — the attached image is the reference face. Keep the face identical to it:]\n${descriptorText}${roleNote}` : base + roleNote
     const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^(LF|SF)_/.test(episodeCode) ? '16:9' : '9:16')
-    plan.push({ no, prompt, refs, ratio, ids })
+    plan.push({ no, prompt, refs: allRefs, ratio, ids })
   }
   if (!plan.length) throw new Error('생성할 컷이 없습니다')
   step(`대상 ${plan.length}컷 · 컷당 ${count}장 · ${model}`)
@@ -121,6 +126,7 @@ async function main() {
       const cutRes = { no: p.no, files: [], refs: p.refs.length }
       status.result.cuts.push(cutRes)
 
+      await kit.backToList()
       await kit.setImageMode()
       await kit.setImageModel(model)
       await kit.setImageRatio(p.ratio)

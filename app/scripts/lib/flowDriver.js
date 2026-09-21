@@ -254,6 +254,15 @@ export function flowKit(page) {
       if (!(await this.imagePopupOpen())) throw new Error('설정 팝업이 열리지 않습니다')
     },
     async closeImagePopup() { if (await this.imagePopupOpen()) { await page.keyboard.press('Escape'); await sleep(600) } },
+    // 결과 뷰어가 열려 있으면(사용자가 직접 보고 있던 경우 등) 목록 화면으로 돌아간다 — 뷰어에는 프롬프트 요약 버튼이 없다.
+    async backToList() {
+      for (let i = 0; i < 2; i++) {
+        const dl = await rectOf('download', 'exact', 'button')
+        const back = await rectOf('arrow_back', 'exact', 'button')
+        if (!dl || !back) return
+        await page.mouse.click(back.x, back.y); await sleep(1500)
+      }
+    },
     async isImageMode() { const p = await this.pill(); return !!p && /Nano Banana/i.test(p) },
     async setImageMode() {
       await this.openImagePopup()

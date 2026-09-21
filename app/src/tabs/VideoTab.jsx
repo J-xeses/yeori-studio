@@ -1691,7 +1691,7 @@ export default function VideoTab() {
                   // 짧아서 우연히 안 튀었을 뿐, 근본 원인은 동일). aspect-ratio로 박스 자체를
                   // 영상 비율에 고정해 레터박스가 생길 여지를 없앤다 — stretch 늘어남과 무관하게
                   // 항상 실제 영상 프레임과 박스가 일치.
-                  <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto' }}>
+                  <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto', ...(aspectRatio === '9:16' ? { width: '67%' } : {}) }}>
                     <video key={resolveClipSrc(previewClip)} src={resolveClipSrc(previewClip)} controls className={s.cutCardVideoPlayer}
                       onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
                       onLoadedData={() => setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n })} />
