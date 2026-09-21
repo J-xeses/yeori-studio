@@ -1346,6 +1346,41 @@ app.post('/api/flow/submit', (req, res) => {
   child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
   res.json({ ok: true, jobId })
 })
+// POST /api/flow/image { episodeCode, cutNos:[..], count?, model?, ratio?, dryRun?, promptOverride? }  (2026-09-21)
+//   → scripts/flow-image.js: Flow(Nano Banana) 이미지 모드로 컷당 N장 생성 → 02_images/cut_NN_<다음 빈 슬롯>.jpg. 진행은 /api/flow/job/:id 로 조회.
+//   하루 장수 카운터·컷 간 20초 간격·프롬프트 일치 검증은 스크립트 안에서 처리. 영상 제출과 같은 Flow 화면을 쓰므로 동시에 한 작업만(409).
+app.get('/api/flow/image-usage', (req, res) => {
+  try { res.json({ ok: true, ...JSON.parse(fs.readFileSync(mp.statePath('flow-image-usage.json'), 'utf-8')) }) }
+  catch { res.json({ ok: true, date: null, count: 0, lastSubmitAt: 0 }) }
+})
+app.post('/api/flow/image', (req, res) => {
+  const b = req.body || {}
+  const episodeCode = String(b.episodeCode || '').trim()
+  const cutNos = Array.isArray(b.cutNos) ? b.cutNos.map(Number).filter(n => Number.isInteger(n) && n > 0) : []
+  const count = Number(b.count || 2)
+  if (!episodeCode || !cutNos.length) return res.status(400).json({ error: 'episodeCode, cutNos[] 필요' })
+  if (!Number.isInteger(count) || count < 1 || count > 4) return res.status(400).json({ error: 'count 는 1~4' })
+  if (b.model && !['Nano Banana Pro', 'Nano Banana 2', 'Nano Banana 2 Lite'].includes(b.model)) return res.status(400).json({ error: '알 수 없는 이미지 모델' })
+  if (activeFlowJob) return res.status(409).json({ error: '다른 Flow 작업이 진행 중입니다', jobId: activeFlowJob.id })
+  const jobId = `flowimg_${Date.now()}`
+  const dir = FLOW_JOB_DIR()
+  fs.mkdirSync(dir, { recursive: true })
+  const jobPath = path.join(dir, `${jobId}.json`)
+  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '' }
+  fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
+  const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-image.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
+  activeFlowJob = { id: jobId, child }
+  child.on('exit', (code) => {
+    activeFlowJob = null
+    try {
+      const sp = path.join(dir, `${jobId}.status.json`)
+      const st = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf-8')) : { jobId, steps: [] }
+      if (st.state !== 'done' && st.state !== 'failed' && st.state !== 'cancelled') { st.state = 'failed'; st.error = st.error || `작업 프로세스가 비정상 종료됨(코드 ${code})`; fs.writeFileSync(sp, JSON.stringify(st, null, 2), 'utf-8') }
+    } catch { /* noop */ }
+  })
+  child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
+  res.json({ ok: true, jobId })
+})
 app.post('/api/flow/cancel', (req, res) => {
   const id = String(req.body?.jobId || '').replace(/[^\w-]/g, '')
   if (!id || activeFlowJob?.id !== id) return res.status(404).json({ error: '진행 중인 해당 작업이 없습니다' })

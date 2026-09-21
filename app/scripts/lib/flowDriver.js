@@ -23,9 +23,9 @@ export const sleep = (ms) => new Promise(r => setTimeout(r, ms))
 export const MODELS = ['Omni 1.1 Flash', 'Veo 3.1 - Lite', 'Veo 3.1 - Fast', 'Veo 3.1 - Quality']
 const TARGET_SEL = 'button, [role="tab"], [role="menuitem"], [role="radio"]'
 
-export async function attachFlow({ port = 9222 } = {}) {
+export async function attachFlow({ port = 9222, projectId = null } = {}) {
   const browser = await puppeteer.connect({ browserURL: `http://localhost:${port}`, defaultViewport: null })
-  const page = (await browser.pages()).find(p => p.url().includes('flow.google.com/project'))
+  const page = (await browser.pages()).find(p => p.url().includes('flow.google.com/project') && (!projectId || p.url().includes(projectId)))
   if (!page) { browser.disconnect(); throw new Error('Flow 프로젝트 탭을 찾지 못했습니다(전용 Chrome에서 Flow 프로젝트를 열어두세요)') }
 
   // 창이 작으면(실측: 높이 208px에서 설정 팝업이 화면 밖으로 밀려 클릭이 빗나감) 뷰포트를 임시로 키우고, release()에서 원복한다.
@@ -237,6 +237,226 @@ export function flowKit(page) {
     async clearStartFrame() {
       const x = await rectOf('close', 'exact', 'button')
       if (x) { await page.mouse.click(x.x, x.y); await sleep(900) }
+    },
+
+    // ── 이미지 모드 (2026-09-21 실측: 새 프로젝트 화면은 영어 — 그래서 아이콘 이름·모델명·숫자로만 찾는다) ─────────
+    // 프롬프트 창 오른쪽 요약 버튼 "🍌 Nano Banana 2 crop_9_16 x2" → 팝업: 이미지/동영상 · 비율 5종 · 모델 드롭다운(Pro/2/2 Lite) · x1~x4.
+    // 이미지 모드는 "생성 시 0 크레딧"(하루 한도 내 무료). 전송하면 프롬프트와 레퍼런스가 함께 비워지므로 매번 다시 붙여야 한다.
+    imageModels: ['Nano Banana Pro', 'Nano Banana 2', 'Nano Banana 2 Lite'],
+    async imagePopupOpen() { return !!(await rectOf('x1', 'exact', 'button')) },
+    async openImagePopup() {
+      for (let i = 0; i < 3; i++) {
+        if (await this.imagePopupOpen()) return
+        const p = await rectOf('', 'pill', 'button')
+        if (!p) throw new Error('설정 요약 버튼을 찾지 못했습니다')
+        await page.mouse.click(p.x, p.y); await sleep(1500)
+      }
+      if (!(await this.imagePopupOpen())) throw new Error('설정 팝업이 열리지 않습니다')
+    },
+    async closeImagePopup() { if (await this.imagePopupOpen()) { await page.keyboard.press('Escape'); await sleep(600) } },
+    async isImageMode() { const p = await this.pill(); return !!p && /Nano Banana/i.test(p) },
+    async setImageMode() {
+      await this.openImagePopup()
+      if (await this.isImageMode()) return
+      await click('image', 'startsWith', 'button, [role="tab"]')
+      await sleep(800)
+      if (!(await this.isImageMode())) throw new Error('이미지 모드 전환 실패')
+    },
+    async setImageRatio(r) {
+      const icon = { '16:9': 'crop_16_9', '9:16': 'crop_9_16', '4:3': 'crop_landscape', '1:1': 'crop_square', '3:4': 'crop_portrait' }[r]
+      if (!icon) throw new Error(`이미지 비율 미지원: ${r}`)
+      await this.openImagePopup(); await click(icon, 'startsWith', 'button')
+    },
+    async setImageCount(n = 1) { await this.openImagePopup(); await click(`x${n}`, 'exact', 'button') },
+    async setImageModel(name) {
+      if (!this.imageModels.includes(name)) throw new Error(`알 수 없는 이미지 모델: ${name}`)
+      await this.openImagePopup()
+      const label = async () => { const p = await rectOf('arrow_drop_down', 'includes', 'button'); return p ? norm(p.t).replace('arrow_drop_down', '').replace(/^[^A-Za-z]+/, '').trim() : null }
+      if ((await label()) === name) return
+      const dd = await rectOf('arrow_drop_down', 'includes', 'button')
+      if (!dd) throw new Error('이미지 모델 드롭다운을 찾지 못했습니다')
+      await clickAt(dd)
+      const item = await page.evaluate((name) => {
+        for (const e of document.querySelectorAll('button, [role="menuitem"], [role="option"], li')) {
+          const r = e.getBoundingClientRect()
+          if (r.width > 0 && r.height > 0 && (e.textContent || '').replace(/\s+/g, ' ').replace(/^[^A-Za-z]+/, '').trim() === name && !(e.textContent || '').includes('arrow_drop_down')) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+        }
+        return null
+      }, name)
+      if (!item) throw new Error(`모델 메뉴에서 ${name} 를 찾지 못했습니다`)
+      await clickAt(item)
+      if ((await label()) !== name) throw new Error(`이미지 모델 선택 실패(현재: ${await label()})`)
+    },
+    // 프롬프트 창에 붙은 레퍼런스 썸네일 수(창 아래쪽의 작은 이미지)
+    async refCount() {
+      return page.evaluate(() => [...document.querySelectorAll('img')].filter((i) => { const r = i.getBoundingClientRect(); return r.width >= 20 && r.width <= 90 && r.top > innerHeight * 0.4 }).length)
+    },
+    // 레퍼런스 이미지 1장 첨부: '+' → 자산 패널 → (이미 올려둔 같은 내용이면 검색해서 재사용, 아니면 업로드) → "프롬프트에 추가".
+    // 업로드 이름에 내용 지문(sha1 8자)을 붙여 같은 파일명의 옛 이미지가 잘못 선택되는 것을 막는다.
+    async attachReference(filePath) {
+      const buf = fs.readFileSync(filePath)
+      const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 8)
+      const ext = path.extname(filePath) || '.jpg'
+      const uniqueName = `${path.basename(filePath, ext)}__${hash}${ext}`
+      const tmp = path.join(os.tmpdir(), uniqueName)
+      if (!fs.existsSync(tmp)) fs.writeFileSync(tmp, buf)
+
+      await this.closeImagePopup()
+      const before = await this.refCount()
+      const plus = await page.evaluate(() => {
+        const c = [...document.querySelectorAll('button')].filter(e => (e.textContent || '').trim() === 'add' && e.getBoundingClientRect().width > 0).map(e => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })
+        return c.sort((a, b) => b.y - a.y)[0] || null
+      })
+      if (!plus) throw new Error('프롬프트 창의 + 버튼을 찾지 못했습니다')
+      await page.mouse.click(plus.x, plus.y); await sleep(1500)
+
+      const findAddBtn = () => page.evaluate(() => {
+        for (const e of document.querySelectorAll('button')) {
+          const t = (e.innerText || '').trim()
+          const r = e.getBoundingClientRect()
+          if (r.width > 0 && (/^Add to prompt$/i.test(t) || t.includes('추가')) && !e.disabled) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+        }
+        return null
+      })
+      // ① 이미 올려둔 자산인지 검색(검색창은 열릴 때 포커스를 받는다 — 포커스가 없으면 키를 누르지 않는다)
+      let picked = false
+      if (await editableFocused()) {
+        await page.keyboard.type(uniqueName, { delay: 20 }); await sleep(1800)
+        const hit = await page.evaluate((name) => {
+          for (const e of document.querySelectorAll('button, [role="option"], mat-list-item')) {
+            const r = e.getBoundingClientRect()
+            if (r.width > 0 && (e.innerText || '').includes(name) && !/Uploading/i.test(e.innerText)) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+          }
+          return null
+        }, uniqueName)
+        if (hit) {
+          // 검색 결과의 첫 항목은 자동 선택되어 "프롬프트에 추가"가 이미 켜져 있다 — 이때 항목을 다시 누르면 선택이 풀리므로 꺼져 있을 때만 누른다.
+          if (!(await findAddBtn())) { await page.mouse.click(hit.x, hit.y); await sleep(900) }
+          picked = true
+        }
+      }
+      // ② 없으면 업로드(업로드가 끝난 항목은 자동 선택되어 "프롬프트에 추가"가 켜진다)
+      if (!picked) {
+        const up = await rectOf('upload', 'startsWith', 'button')
+        if (!up) throw new Error('업로드 버튼을 찾지 못했습니다')
+        let chooser = null
+        const waiter = page.waitForFileChooser({ timeout: 8000 }).then(c => { chooser = c }).catch(() => {})
+        await page.mouse.click(up.x, up.y); await waiter
+        if (!chooser) throw new Error('파일 선택창이 열리지 않았습니다')
+        await chooser.accept([tmp])
+      }
+      let add = null
+      for (let i = 0; i < 45 && !add; i++) { add = await findAddBtn(); if (!add) await sleep(1000) }
+      if (!add) throw new Error('"프롬프트에 추가" 버튼이 켜지지 않았습니다(업로드 지연 또는 화면 언어 차이)')
+      await page.mouse.click(add.x, add.y); await sleep(1800)
+      let n = before
+      for (let i = 0; i < 8 && n <= before; i++) { n = await this.refCount(); if (n <= before) await sleep(500) }
+      if (n <= before) throw new Error('레퍼런스가 프롬프트에 붙지 않았습니다')
+      return { uniqueName, refCount: n }
+    },
+    // 프롬프트 창 오른쪽 위의 X(레퍼런스·입력 비우기) — 정리용
+    async clearPromptBar() {
+      const x = await page.evaluate(() => {
+        const c = [...document.querySelectorAll('button')].filter(e => (e.textContent || '').trim() === 'close' && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().top > innerHeight * 0.25).map(e => { const r = e.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } })
+        return c.sort((p, q) => q.y - p.y)[0] || null
+      })
+      if (x) { await page.mouse.click(x.x, x.y); await sleep(700) }
+    },
+    // 시작 전 정리: 이전 작업이 남긴 레퍼런스·입력을 X로 비우고 0개인지 확인(남아 있으면 다른 컷의 레퍼런스가 섞인다)
+    async resetPromptBar() {
+      for (let i = 0; i < 4 && (await this.refCount()) > 0; i++) await this.clearPromptBar()
+      const n = await this.refCount()
+      if (n > 0) throw new Error(`이전 레퍼런스 ${n}개를 비우지 못했습니다(Flow 프롬프트 창을 직접 비워 주세요)`)
+    },
+    // 생성 직전 검증(이미지): 모드·모델·비율·개수·레퍼런스 수·프롬프트 원문 일치
+    async verifyImageGate(expect) {
+      const problems = []
+      await this.closeImagePopup()
+      const pill = await this.pill()
+      if (!pill || !/Nano Banana/i.test(pill)) problems.push(`이미지 모드가 아님: ${pill}`)
+      else {
+        const want = expect.model.replace(/^[^A-Za-z]+/, '')
+        const cur = norm(pill).replace(/^[^A-Za-z]+/, '').replace(/\s*crop_.*$/, '').trim()
+        if (cur !== want) problems.push(`모델 불일치: 기대 ${want} / 현재 ${cur}`)
+        const icon = { '16:9': 'crop_16_9', '9:16': 'crop_9_16', '4:3': 'crop_landscape', '1:1': 'crop_square', '3:4': 'crop_portrait' }[expect.ratio]
+        if (icon && !pill.includes(icon)) problems.push(`비율 불일치: 기대 ${expect.ratio} / ${pill}`)
+        if (expect.count && !new RegExp(`x${expect.count}$`).test(norm(pill))) problems.push(`개수 불일치: 기대 x${expect.count} / ${pill}`)
+      }
+      if (expect.refs != null) { const n = await this.refCount(); if (n !== expect.refs) problems.push(`레퍼런스 수 불일치: 기대 ${expect.refs} / 현재 ${n}`) }
+      if (expect.prompt != null) {
+        const want = norm(String(expect.prompt).replace(/\s*\n+\s*/g, ' ')), got = norm(await this.promptText())
+        if (got !== want) problems.push('프롬프트가 스튜디오 원문과 다름')
+      }
+      return { ok: problems.length === 0, problems, pill }
+    },
+
+    // ── 이미지 결과 감지·저장 ───────────────────────────────────────
+    async imageSnapshot() {
+      return page.evaluate(() => ({
+        srcs: [...document.querySelectorAll('img')].filter(i => i.getBoundingClientRect().width > 80 && /flow-content\.google\/image\//.test(i.currentSrc || i.src)).map(i => i.currentSrc || i.src),
+        progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).length,
+      }))
+    },
+    // before: 전송 전 imageSnapshot().  결과: { status:'done', srcs:[새 타일…] } | { status:'timeout' }
+    async waitForImages(before, count, { timeoutMs = 4 * 60 * 1000, intervalMs = 3000, onTick } = {}) {
+      const seen = new Set(before.srcs)
+      const t0 = Date.now()
+      let calm = 0
+      while (Date.now() - t0 < timeoutMs) {
+        const s = await this.imageSnapshot()
+        const fresh = s.srcs.filter(x => !seen.has(x))
+        if (onTick) onTick({ sec: Math.round((Date.now() - t0) / 1000), fresh: fresh.length, progress: s.progress })
+        calm = (fresh.length >= count && s.progress === 0) ? calm + 1 : 0
+        if (calm >= 2) return { status: 'done', srcs: fresh.slice(0, count) }
+        await sleep(intervalMs)
+      }
+      return { status: 'timeout' }
+    },
+    // 결과 타일 1개를 열어 다운로드 메뉴의 "1K 원본"을 받아 outPath 로 저장(2K·4K 업스케일은 받지 않음). 반환: 바이트 수
+    async saveImage(src, outPath, { timeoutMs = 60000 } = {}) {
+      const browser = page.browser()
+      const cdp = await browser.target().createCDPSession()
+      const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'flowimg-'))
+      let behaviorSet = false
+      try {
+        const pos = await page.evaluate((src) => { const i = [...document.querySelectorAll('img')].find(i => (i.currentSrc || i.src) === src); if (!i) return null; const r = i.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } }, src)
+        if (!pos) throw new Error('결과 타일을 찾지 못했습니다')
+        await page.mouse.click(pos.x, pos.y)
+        let dl = null
+        for (let i = 0; i < 15 && !dl; i++) { await sleep(1000); dl = await rectOf('download', 'exact', 'button') }
+        if (!dl) throw new Error('결과 뷰어의 다운로드 버튼을 찾지 못했습니다')
+        await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: tmpDir })
+        behaviorSet = true
+        await page.mouse.click(dl.x, dl.y); await sleep(1500)
+        const item = await page.evaluate(() => {
+          for (const e of document.querySelectorAll('button, [role="menuitem"], .mat-mdc-menu-item, div')) {
+            const r = e.getBoundingClientRect()
+            if (r.width > 0 && r.height > 0 && r.height < 90 && /^1K/.test((e.innerText || '').trim())) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+          }
+          return null
+        })
+        if (!item) throw new Error('다운로드 메뉴에서 1K 원본을 찾지 못했습니다(메뉴 구조가 바뀜)')
+        await page.mouse.click(item.x, item.y)
+        const t0 = Date.now()
+        let got = null
+        while (Date.now() - t0 < timeoutMs && !got) {
+          await sleep(1000)
+          const files = fs.readdirSync(tmpDir)
+          if (files.some(f => /\.crdownload$|\.tmp$/i.test(f))) continue
+          got = files.find(f => /\.(jpe?g|png|webp)$/i.test(f)) || null
+        }
+        if (!got) throw new Error('다운로드 파일이 생기지 않았습니다')
+        fs.mkdirSync(path.dirname(outPath), { recursive: true })
+        fs.copyFileSync(path.join(tmpDir, got), outPath)
+        return fs.statSync(outPath).size
+      } finally {
+        if (behaviorSet) { try { await cdp.send('Browser.setDownloadBehavior', { behavior: 'default' }) } catch { /* noop */ } }
+        try { await cdp.detach() } catch { /* noop */ }
+        try { fs.rmSync(tmpDir, { recursive: true, force: true }) } catch { /* noop */ }
+        try { await page.keyboard.press('Escape'); await sleep(500) } catch { /* noop */ }
+        const back = await rectOf('arrow_back', 'exact', 'button')
+        if (back) { await page.mouse.click(back.x, back.y); await sleep(1500) }
+      }
     },
 
     // ── 생성 직전 검증 관문 ─────────────────────────────────────────
