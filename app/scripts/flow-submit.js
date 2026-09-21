@@ -81,6 +81,10 @@ async function main() {
   // 화면 비율: 지정이 없으면 콘텐츠 유형으로 판단(LF/SF 유튜브 = 16:9, IG/TK 릴스 = 9:16)
   let ratio = job.ratio || null
 
+  try {
+    const blk = JSON.parse(fs.readFileSync(mp.statePath('flow-video-blocked.json'), 'utf-8'))
+    if (!job.ignoreBlock) throw new Error(`Flow 자동 제출이 잠겨 있습니다(${blk.at}): ${blk.reason} — 확인 후 downloads/state/flow-video-blocked.json 을 지우면 풀립니다`)
+  } catch (e) { if (String(e.message).startsWith('Flow 자동 제출이 잠겨')) throw e }
   step(`컷 ${cutNo} 클립 ${clipNo} 준비`)
   const chk = await (await fetch(`${SERVER}/api/episode-video-checklist?epNum=${epNum}`)).json()
   const chkCut = (chk.cuts || []).find(c => c.no === cutNo)
@@ -182,7 +186,11 @@ async function main() {
     await sleep(3000)
     const res = await kit.waitForResult(before, { timeoutMs: 8 * 60 * 1000, shouldStop: () => fs.existsSync(cancelPath), onTick: (s) => { if (s.sec % 20 === 0) step(`생성 중… ${s.sec}초 ${(s.progress || []).join(' ')}`) } })
     if (res.status === 'cancelled') throw new Cancelled('전송 후 생성 대기 중 — Flow에서는 생성이 계속되니 완료되면 직접 받으세요')
-    if (res.status === 'failed') throw new Error(res.reason)
+    if (res.status === 'failed') {
+      // Flow 가 "비정상적인 활동" 경고를 띄우면 자동 제출을 잠시 막는다(반복 제출로 계정 제한이 커질 위험) — 사람이 확인한 뒤 파일을 지우면 풀린다.
+      if (res.abuse) { try { fs.writeFileSync(mp.statePath('flow-video-blocked.json'), JSON.stringify({ at: new Date().toISOString(), reason: res.reason, jobId: job.jobId }, null, 2), 'utf-8') } catch { /* noop */ } }
+      throw new Error(res.reason)
+    }
     if (res.status !== 'done') throw new Error('8분 안에 생성이 끝나지 않았습니다')
     step('생성 완료 — 다운로드')
     const bytes = await kit.saveResult(res.thumbSrc, outPath)

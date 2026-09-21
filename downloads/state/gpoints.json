@@ -719,17 +719,17 @@
     "cut_1": {
       "g2": true,
       "selectedImage": "cut_01_b.jpg",
-      "updatedAt": "2026-09-21T12:01:10.925Z"
+      "updatedAt": "2026-09-21T13:16:37.512Z"
     },
     "cut_2": {
       "g2": true,
       "selectedImage": "cut_02_d.jpg",
-      "updatedAt": "2026-09-21T12:01:10.983Z"
+      "updatedAt": "2026-09-21T13:16:44.943Z"
     },
     "cut_3": {
       "g2": true,
-      "selectedImage": "cut_03_b.jpg",
-      "updatedAt": "2026-09-21T12:01:11.037Z"
+      "selectedImage": "cut_03_a.jpg",
+      "updatedAt": "2026-09-21T13:16:52.470Z"
     }
   }
 }

@@ -57,7 +57,7 @@ export function resolveVoice({ character, voiceId, characters = {}, speakerVoice
 }
 
 // { epNum, cutNo, voiceId, apiKey, onLog, charTag, voiceSettings } → { ok, finalPath, files } / throw
-// voiceSettings: { stability, similarity_boost } — 0~1 스케일. 안 넘기면 기존 고정값(0.30/0.75)
+// voiceSettings: { stability, similarity_boost } — 0~1 스케일. 안 넘기면 기본값(0.45/0.75 — 2026-09-21 R04 컷2 비교시험에서 원본 음높이·억양이 가장 잘 보존됨)
 // 그대로 사용. ⚠️ speed는 여기서 받지 않음 — STS는 원본 영상의 립싱크 타이밍을 그대로
 // 보존해야 하므로(그게 STS를 쓰는 이유), TTS 탭의 "속도" 슬라이드는 여기 적용하면 안 됨
 // (2026-09-12, 사용자 지적: "TTS 속도·안정성·유사도 설정이 STS 후처리에 묻히는 것 아니냐"
@@ -111,7 +111,7 @@ export async function runSts({ epNum, cutNo, voiceId, apiKey, onLog, charTag = '
   fd.append('audio', new Blob([buf], { type: 'audio/mpeg' }), 'voice.mp3')
   fd.append('model_id', STS_MODEL)
   fd.append('voice_settings', JSON.stringify({
-    stability: voiceSettings?.stability ?? 0.30,
+    stability: voiceSettings?.stability ?? 0.45,
     similarity_boost: voiceSettings?.similarity_boost ?? 0.75,
     speed: 1.0, // 항상 1.0 고정 — 원본 립싱크 타이밍 보존 (TTS 탭 속도 설정과 무관)
   }))

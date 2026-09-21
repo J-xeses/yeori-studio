@@ -174,7 +174,7 @@ async function main() {
   const fdSts = new FormData()
   fdSts.append('audio', voiceBlob, 'voice.mp3')
   fdSts.append('model_id', 'eleven_multilingual_sts_v2')
-  fdSts.append('voice_settings', JSON.stringify({ stability: 0.30, similarity_boost: 0.75, speed: 1.0 }))
+  fdSts.append('voice_settings', JSON.stringify({ stability: 0.45, similarity_boost: 0.75, speed: 1.0 }))
 
   const stsRes = await fetch(`https://api.elevenlabs.io/v1/speech-to-speech/${voiceId}`, {
     method:  'POST',

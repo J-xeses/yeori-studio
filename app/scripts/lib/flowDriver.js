@@ -555,7 +555,8 @@ export function flowKit(page) {
     async mediaSnapshot() {
       return page.evaluate(() => ({
         thumbs: [...document.querySelectorAll('img')].filter(i => i.alt === '생성된 동영상 썸네일' && i.getBoundingClientRect().width > 0).map(i => i.currentSrc || i.src),
-        fails: (document.body.innerText.match(/동영상을 생성할 수 없습니다/g) || []).length,
+        fails: (document.body.innerText.match(/이 생성에 대한 요금이 청구되지 않았습니다/g) || []).length,
+        abuse: /비정상적인 활동이 감지/.test(document.body.innerText),
         progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).slice(0, 3),
       }))
     },
@@ -568,6 +569,7 @@ export function flowKit(page) {
         const fresh = snap.thumbs.filter(s => !seen.has(s))
         if (onTick) onTick({ sec: Math.round((Date.now() - t0) / 1000), thumbs: snap.thumbs.length, newThumbs: fresh.length, fails: snap.fails, progress: snap.progress })
         if (shouldStop && shouldStop()) return { status: 'cancelled' }
+        if (snap.abuse && !before.abuse) return { status: 'failed', abuse: true, reason: 'Flow가 "비정상적인 활동이 감지되었습니다"라고 표시했습니다 — 자동 제출을 중단합니다(요금 미청구)' }
         if (snap.fails > before.fails) return { status: 'failed', reason: '동영상을 생성할 수 없습니다(Flow가 사유를 표시하지 않음, 요금 미청구)' }
         if (fresh.length) return { status: 'done', thumbSrc: fresh[0] }
         await sleep(intervalMs)

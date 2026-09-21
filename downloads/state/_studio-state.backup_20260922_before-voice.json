@@ -4226,8 +4226,8 @@
       },
       "서여리": {
         "speed": 0.9,
-        "stability": 45,
-        "similarity": 75
+        "stability": 30,
+        "similarity": 78
       }
     },
     "readingMap": {}
@@ -4306,7 +4306,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-21T13:24:11.831Z",
+  "savedAt": "2026-09-21T13:02:41.934Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
