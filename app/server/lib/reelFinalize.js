@@ -321,6 +321,7 @@ export function decideCut(cut) {
     durSec: Number(cut.duration) || 8,
     fit,
     caption,
+    captionStart: Math.max(0, Number(cut.captionStartSec) || 0),   // 자막 시작 지연(초) — 영상에 이미 구워진 글자가 있는 앞 구간을 피할 때
     sfx,
     bgmText: String(audio.bgm || ''),
   }
@@ -428,10 +429,11 @@ export async function finalizeReel(p) {
   for (const d of decisions) {
     if (!d.caption) continue
     const segs = d.caption.segments
-    const timings = computeSegmentTimings(segs, d.durSec)
+    const off = Math.min(d.captionStart || 0, Math.max(d.durSec - 1, 0))
+    const timings = computeSegmentTimings(segs, d.durSec - off)
     segs.forEach((seg, i) => {
-      const st = d.startSec + timings[i].start + SEG_LEAD_SEC
-      const en = d.startSec + (i === segs.length - 1 ? d.durSec : timings[i].end) - SEG_TRAIL_GUARD_SEC
+      const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
+      const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
       // 지금까지의 세그를 위→아래로 쌓아 하나의 Dialogue 로 (스타일이 섞이면 마지막 줄만 색상 태그)
       const lines = segs.slice(0, i + 1).map((s, j) => {
         const body = String(s.burn).replace(/\n/g, '\\N')
@@ -465,10 +467,11 @@ export async function finalizeReel(p) {
     for (const d of decisions) {
       if (!d.caption) continue
       const segs = d.caption.segments
-      const timings = computeSegmentTimings(segs, d.durSec)
+      const off = Math.min(d.captionStart || 0, Math.max(d.durSec - 1, 0))
+    const timings = computeSegmentTimings(segs, d.durSec - off)
       segs.forEach((seg, i) => {
-        const st = d.startSec + timings[i].start + SEG_LEAD_SEC
-        const en = d.startSec + (i === segs.length - 1 ? d.durSec : timings[i].end) - SEG_TRAIL_GUARD_SEC
+        const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
+        const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
         const stacked = segs.slice(0, i + 1).map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
         const o = seg.overlay
         scenes.push({
