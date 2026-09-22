@@ -521,8 +521,20 @@ export default function VideoTab() {
     ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0, selCutForText.captionSegTiming)
     : []
   // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
-  // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다.
-  const previewText = clipsForText.length > 1 ? (segsForText[selectedClipIdx]?.text ?? '') : (segsForText[0]?.text ?? '')
+  // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다. 클립이 1개뿐인데 자막 구간이
+  // 여러 개면(대사→나레이션 순차 전환, 2026-09-22) selectedClipIdx는 항상 0이라 의미가
+  // 없다 — 재생 위치(previewT)가 어느 구간에 들어있는지로 골라야 한다. ⚠️ 2026-09-22:
+  // 이 계산이 없어서 재생이 끝나도 항상 구간①만 계속 보이는 사고가 났음(성준님 실측 지적:
+  // "화면재생이 끝나도 1번 자막만 나온다").
+  const activeSegIdx = clipsForText.length > 1
+    ? selectedClipIdx
+    : (segsForText.length > 1
+      ? (() => {
+          const idx = segsForText.findIndex(s => previewT >= s.start && previewT < s.end)
+          return idx >= 0 ? idx : segsForText.length - 1
+        })()
+      : 0)
+  const previewText = segsForText[activeSegIdx]?.text ?? ''
   const setPreviewText = (text) => {
     if (!selCutForText) return
     const plannedForText = Array.isArray(selCutForText.segments) ? selCutForText.segments : []
@@ -544,7 +556,7 @@ export default function VideoTab() {
           const t = timings[i] || cur[i] || { start: 0, end: 0 }
           return {
             start: t.start, end: t.end,
-            text: i === selectedClipIdx ? text : (cur[i]?.text ?? ''),
+            text: i === activeSegIdx ? text : (cur[i]?.text ?? ''),
           }
         })
         return { ...prev, [selCutForText.id]: next }
