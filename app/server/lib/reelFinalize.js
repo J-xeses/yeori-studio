@@ -267,6 +267,8 @@ export function decideCut(cut) {
     const basePos = /SH_TEXT/i.test(sh) ? 'center' : (fit === 'contain' ? 'bottom_center' : 'bottom_center')
     caption = {
       style: isPunch && segs.length === 1 ? 'Punch' : 'Cap',
+      // 기본은 세그먼트 순차 교체(대사/나레이션이 섞이면 한번에 다 보이면 헷갈림) — cut.captionStack===true 일 때만 레퍼런스 스타일 누적.
+      stack: cut.captionStack === true,
       segments: segs.map((t, i) => {
         const isLast = i === segs.length - 1
         const segPunch = isPunch && (segs.length === 1 || isLast)
@@ -349,6 +351,37 @@ function ffprobeDuration(file) {
     p.on('error', () => resolve(0))
   })
 }
+// 비디오/오디오 스트림 각각의 길이(초) — format duration이 아니라 스트림 자체 길이를 재야
+// -shortest/필터 체인이 만든 두 스트림 간 미세한 어긋남(아래 fixAvDrift 참조)을 잡을 수 있다.
+function ffprobeStreamDuration(file, kind) {
+  return new Promise((resolve) => {
+    const p = spawn('ffprobe', ['-v', 'error', '-select_streams', kind === 'video' ? 'v' : 'a',
+      '-show_entries', 'stream=duration', '-of', 'default=nw=1:nk=1', file], { windowsHide: true })
+    let out = ''
+    p.stdout.on('data', (d) => { out += d.toString() })
+    p.on('close', () => resolve(parseFloat(out.trim()) || 0))
+    p.on('error', () => resolve(0))
+  })
+}
+// 최종본의 비디오·오디오 스트림 길이가 어긋나면(경험상 15~60ms, amix/handwriting_overlay.py
+// 체인을 거치며 반복 발생 — 2026-09-22, R03·R04에서 실측) 오디오를 비디오 고유 길이에 맞춰
+// apad+명시적 -t 로 다시 맞춘다. -shortest는 비디오 쪽을 깎을 위험이 있어 쓰지 않는다
+// (교훈 원본: reference_rl03_reference_reel.md). 매번 사람이 사후 보정하던 걸 파이프라인에
+// 박아넣어 재발을 원천 차단.
+async function fixAvDrift(file, log) {
+  const vDur = await ffprobeStreamDuration(file, 'video')
+  const aDur = await ffprobeStreamDuration(file, 'audio')
+  if (!vDur || !aDur || Math.abs(vDur - aDur) < 0.02) return
+  const tmp = file + '.avfix.mp4'
+  try {
+    await ff(['-i', file, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-af', 'apad', '-t', vDur.toFixed(6), tmp])
+    fs.renameSync(tmp, file)
+    log && log(`⏱ 영상/오디오 길이 보정: video=${vDur.toFixed(3)}s audio=${aDur.toFixed(3)}s → 일치시킴`)
+  } catch (e) {
+    try { fs.rmSync(tmp, { force: true }) } catch { /* noop */ }
+    log && log(`⚠ 길이 보정 실패(무시하고 진행): ${e.message.slice(-200)}`)
+  }
+}
 // handwriting_overlay.py 로 컬러 이모지·말풍선·손그림 데코까지 렌더(libass 우회)
 const HW_OVERLAY_PY = path.join(__dirname, '..', '..', 'scripts', 'handwriting_overlay.py')
 function runPy(args, opts = {}) {
@@ -425,7 +458,7 @@ export async function finalizeReel(p) {
   await ff(['-f', 'concat', '-safe', '0', '-i', listFile, '-c', 'copy', concat])
   log(`concat: ${decisions.length}컷 · ${totalDur.toFixed(1)}s`)
 
-  // 3) 자막 .ass — 멀티세그는 누적 스택(레퍼런스처럼 줄이 쌓임). 각 구간은 겹치지 않게.
+  // 3) 자막 .ass — 멀티세그는 기본 순차 교체(각 구간마다 그 세그먼트만 표시). cut.captionStack===true 인 컷만 레퍼런스처럼 누적 스택.
   let ass = assHeader()
   let capCount = 0
   for (const d of decisions) {
@@ -436,10 +469,11 @@ export async function finalizeReel(p) {
     segs.forEach((seg, i) => {
       const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
       const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
-      // 지금까지의 세그를 위→아래로 쌓아 하나의 Dialogue 로 (스타일이 섞이면 마지막 줄만 색상 태그)
-      const lines = segs.slice(0, i + 1).map((s, j) => {
+      // 기본: 세그먼트 하나만 표시(순차 교체). d.caption.stack===true 일 때만 지금까지의 세그를 위→아래로 누적.
+      const shown = d.caption.stack ? segs.slice(0, i + 1) : [seg]
+      const lines = shown.map((s) => {
         const body = String(s.burn).replace(/\n/g, '\\N')
-        return (s.style === 'Punch' && (segs[j].style === 'Punch')) ? `{\\c&H3C3CF5&}${body}{\\c}` : body
+        return (s.style === 'Punch') ? `{\\c&H3C3CF5&}${body}{\\c}` : body
       })
       const style = segs.some((s) => s.style === 'Punch') ? 'Cap' : (seg.style || 'Cap')
       ass += `Dialogue: 0,${assTime(st)},${assTime(en)},${style},,0,0,0,,${lines.join('\\N')}\n`
@@ -474,7 +508,8 @@ export async function finalizeReel(p) {
       segs.forEach((seg, i) => {
         const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
         const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
-        const stacked = segs.slice(0, i + 1).map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
+        const shown = d.caption.stack ? segs.slice(0, i + 1) : [seg]
+        const stacked = shown.map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
         const o = seg.overlay
         scenes.push({
           time: `${st.toFixed(2)}~${en.toFixed(2)}s`,
@@ -585,6 +620,8 @@ export async function finalizeReel(p) {
     fs.copyFileSync(baseForAudio, finalOut)
   }
 
+  await fixAvDrift(finalOut, log)
+
   // 06_publishing/{ep}_raw.mp4 도 최신 concat 으로 갱신 (자막·SFX 없는 순수 이어붙임)
   try {
     const rawOut = path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`)
@@ -610,10 +647,64 @@ export async function finalizeReel(p) {
       } : null,
       sfx: d.sfx.map((s) => ({ file: s._file || s.file, at: s.at, layer: !!s.layer, reason: s.reason })),
     })),
+    // 이 최종본을 만든 원본 컷 파일들의 지문(mtime+size) — 나중에 05_video/cut_NN.mp4 가
+    // 바뀌었는데 07_output이 갱신 안 된 채 방치되는 사고(2026-09-22, R03에서 실측)를
+    // checkFinalStale()이 감지할 수 있게 남겨둔다.
+    sources: decisions.map((d) => {
+      let st = null
+      try { st = fs.statSync(d.src) } catch { /* noop */ }
+      return { no: d.no, file: path.basename(d.src), mtimeMs: st ? Math.round(st.mtimeMs) : null, size: st ? st.size : null }
+    }),
   }
   fs.writeFileSync(path.join(fdir, `${code}_finalize.json`), JSON.stringify(manifest, null, 2), 'utf-8')
 
   try { fs.rmSync(tmp, { recursive: true, force: true }) } catch { /* noop */ }
   log(`완료 → ${finalOut}`)
   return { finalPath: finalOut, manifest, assPath }
+}
+
+// {code}_finalize.json에 남긴 소스 지문과 지금 05_video/cut_NN.mp4 실제 상태를 비교해서,
+// 최종본(07_output)이 그새 바뀐 컷을 반영 못한 채 방치돼 있는지 알려준다.
+// R03에서 9/13에 만든 최종본을 9/22에 컷을 통째로 다시 만들고도 모르고 지나칠 뻔한 사고를
+// 겪은 뒤 추가(2026-09-22) — "재생성 안 하면 옛날 파일이 조용히 최신인 척 남아있는" 문제의
+// 근본 해결책은 아니지만(그건 항상 재생성이 유일한 해법), 최소한 그 사실을 놓치지 않게 한다.
+export function checkFinalStale(epNum) {
+  const code = mp.resolveCode(epNum)
+  const vdir = mp.videoDir(epNum)
+  const manifestPath = path.join(mp.finalDir(epNum), `${code}_finalize.json`)
+  const finalPath = path.join(mp.finalDir(epNum), `${code}_final.mp4`)
+  if (!fs.existsSync(finalPath)) return { stale: false, reason: 'no-final', code }
+  if (!fs.existsSync(manifestPath)) return { stale: true, reason: 'no-manifest', code, detail: '최종본은 있는데 생성 기록(_finalize.json)이 없어 소스와 일치하는지 확인 불가 — 재생성 권장' }
+  let manifest
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) } catch { return { stale: true, reason: 'bad-manifest', code } }
+  const sources = manifest.sources || []
+  if (!sources.length) return { stale: false, reason: 'no-fingerprint-recorded', code } // 구버전 매니페스트 — 판단 보류
+  const mismatches = []
+  // 현재 05_video 의 cut_NN.mp4 전부를 확인 — 매니페스트에 없던 새 컷, 지워진 컷, mtime/size가
+  // 달라진 컷을 모두 잡는다.
+  let currentFiles = []
+  try { currentFiles = fs.readdirSync(vdir).filter((f) => /^cut_\d+\.mp4$/i.test(f)) } catch { /* noop */ }
+  const bySrcNo = new Map(sources.map((s) => [s.no, s]))
+  const seenNo = new Set()
+  for (const f of currentFiles) {
+    const no = Number((f.match(/^cut_(\d+)\.mp4$/i) || [])[1])
+    seenNo.add(no)
+    const abs = path.join(vdir, f)
+    let st; try { st = fs.statSync(abs) } catch { continue }
+    const rec = bySrcNo.get(no)
+    if (!rec) { mismatches.push(`컷 ${no}: 최종본 생성 이후 새로 추가됨`); continue }
+    const mtimeChanged = rec.mtimeMs != null && Math.abs(Math.round(st.mtimeMs) - rec.mtimeMs) > 1000
+    const sizeChanged = rec.size != null && rec.size !== st.size
+    if (mtimeChanged || sizeChanged) mismatches.push(`컷 ${no}: 최종본 생성 이후 파일이 다시 만들어짐`)
+  }
+  for (const s of sources) {
+    if (!seenNo.has(s.no)) mismatches.push(`컷 ${s.no}: 최종본엔 있지만 지금 05_video엔 없음(삭제/이동됨)`)
+  }
+  return {
+    stale: mismatches.length > 0,
+    reason: mismatches.length ? 'source-changed' : 'ok',
+    code,
+    detail: mismatches.join(' · '),
+    generatedAt: manifest.generatedAt,
+  }
 }

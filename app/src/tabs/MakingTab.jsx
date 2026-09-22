@@ -1021,15 +1021,31 @@ export default function MakingTab() {
   const [reelLog, setReelLog] = useState('')
   const [reelVideo, setReelVideo] = useState(null)
   const [reelManifest, setReelManifest] = useState(null)
+  const [reelStale, setReelStale] = useState(null) // {stale, reason, detail} — 07_output이 05_video 컷들과 어긋난 채 방치됐는지
+
+  const loadReelStaleness = async () => {
+    if (!episode?.number) return
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/reel-finalize/staleness?epNum=${episode.number}`)
+      setReelStale(await r.json())
+    } catch { /* noop */ }
+  }
+  useEffect(() => { loadReelStaleness() }, [episode?.number])
 
   // 컷에 효과음 파일을 직접 지정(masterCode.audio.sfxFile/sfxAt) — 서버 reelFinalize 가 키워드 규칙보다
-  // 우선 적용. patch: {sfxFile?, sfxAt?}. 브라우저 상태가 원본이라 저장(3초 디바운스) 뒤에 계획표를 다시 불러온다.
-  const setCutSfx = (cutNo, patch) => {
-    const cut = (state.cuts || []).find(c => c.no === cutNo)
-    if (!cut) { alert(`컷 ${cutNo} 를 상태에서 찾지 못했습니다`); return }
-    const mc = cut.masterCode || {}
-    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { masterCode: { ...mc, audio: { ...(mc.audio || {}), ...patch } } } })
-    setTimeout(() => loadReelPlan(), 3800)
+  // 우선 적용. patch: {sfxFile?, sfxAt?}. studio-state.json(브라우저 3초 자동저장)과 완전히 분리된
+  // 서버 전용 오버라이드 파일에 바로 저장한다(2026-09-22: state.cuts 경유로 dispatch하던 예전 방식은
+  // 열려있던 다른 탭의 stale snapshot이 3초 뒤 그대로 되저장되며 방금 지정한 값을 지우는 사고가
+  // 반복됐음 — reelOverrides.js 참조).
+  const setCutSfx = async (cutNo, patch) => {
+    if (!episode?.number) { alert('에피소드 정보가 없습니다'); return }
+    try {
+      await fetch(`${YEORI_SERVER}/api/reel-finalize/override`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo, patch }),
+      })
+    } catch (e) { alert(`저장 실패: ${e.message}`); return }
+    loadReelPlan()
   }
 
   const loadReelPlan = async () => {
@@ -1062,7 +1078,7 @@ export default function MakingTab() {
           if (ev.type === 'start') append(`▶ ${ev.code} · ${ev.cuts}컷`)
           else if (ev.type === 'log') append(ev.line)
           else if (ev.type === 'done') {
-            if (ev.ok) { append('✅ 완료'); setReelVideo(ev.videoUrl); setReelManifest(ev.manifest) }
+            if (ev.ok) { append('✅ 완료'); setReelVideo(ev.videoUrl); setReelManifest(ev.manifest); loadReelStaleness() }
             else append(`❌ ${ev.error}`)
           }
         }
@@ -3115,6 +3131,11 @@ export default function MakingTab() {
                   <b>포인트 SFX</b>를 자동 판단해 <code>07_output/{'{'}CODE{'}'}_final.mp4</code>를 만듭니다.
                   손글씨 데코·BGM 트랙은 CapCut에서 추가.
                 </div>
+                {reelStale?.stale && (
+                  <div className={s.resultError} style={{ marginBottom: 8 }}>
+                    ⚠ 최종본이 지금 05_video 컷들과 다릅니다({reelStale.reason === 'no-manifest' ? '생성 기록 없음' : reelStale.detail || '컷이 최종본 생성 이후 바뀜'}) — 아래 "릴스 최종본 생성"으로 다시 만드세요.
+                  </div>
+                )}
                 <div className={s.editorActions}>
                   <button className={s.previewBtn} disabled={reelBusy || !episode?.number} onClick={loadReelPlan}>
                     컷별 판단 미리보기

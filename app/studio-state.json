@@ -1,5 +1,5 @@
 {
-  "activeTab": "voice",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3809,7 +3809,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-4",
+          "selectedCutId": "cut-7",
           "subtitles": {
             "cut-1": [
               {
@@ -3945,11 +3945,7 @@
               "bgm": "잔잔한 어쿠스틱 → 2초 지점에서 완전히 끊김",
               "voice": "덤덤하고 살짝 장난스러운 드라이 톤",
               "sfx": "레코드 스크래치 (BGM 끊김 순간, 2초 지점)",
-              "ambience": "카페 소음이 잠깐 정적으로 줄어듦",
-              "sfxFile": "mood_shift/mixkit-vinyl-forward-and-back-scratch-705.wav",
-              "sfxAt": "mid",
-              "sfxAtSec": 2,
-              "sfxGain": 0.6
+              "ambience": "카페 소음이 잠깐 정적으로 줄어듦"
             },
             "kr": {
               "sp": "감성 카페 창가",
@@ -4012,17 +4008,16 @@
           "videoClips": {
             "cut-1": [
               {
-                "url": "blob:http://localhost:5173/1633254d-897d-4a33-8320-e9c7accd4684",
-                "name": "cut_01_clip_1.mp4",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R04/05_video/cut_01.mp4?t=1790069036928",
+                "name": "cut_01.mp4",
                 "duration": 8,
                 "trimStart": 0,
                 "trimEnd": 8,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "staging": false,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\05_video\\cut_01.mp4",
                 "keepAudio": true,
-                "createdAt": 1789980573297,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_01_clip_2.mp4"
+                "createdAt": 1790063614000
               }
             ],
             "cut-11b": [
@@ -4391,22 +4386,21 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-22T07:53:44.664Z",
+  "savedAt": "2026-09-22T09:26:41.636Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/1633254d-897d-4a33-8320-e9c7accd4684",
-          "name": "cut_01_clip_1.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R04/05_video/cut_01.mp4?t=1790069036928",
+          "name": "cut_01.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "9:16",
-          "staging": false,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\05_video\\cut_01.mp4",
           "keepAudio": true,
-          "createdAt": 1789980573297,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_01_clip_2.mp4"
+          "createdAt": 1790063614000
         }
       ],
       "cut-11b": [
@@ -4483,14 +4477,62 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null
+    "focusCutId": null,
+    "voiceTabs": {
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "tracks": {
+      "cut-2__v1": [
+        {
+          "id": "track_1790069477086_x6qt",
+          "type": "dialogue",
+          "text": "저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-3__v1": [
+        {
+          "id": "track_1790069478510_ouzj",
+          "type": "dialogue",
+          "text": "자주 와요. 저 여기 맨날 있으니까.",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ]
+    }
   },
   "voiceInsertState": {
     "tracks": {}

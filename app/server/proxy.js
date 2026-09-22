@@ -8,7 +8,8 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
-import { finalizeReel, enrichCutsFromScript } from './lib/reelFinalize.js'
+import { finalizeReel, enrichCutsFromScript, checkFinalStale } from './lib/reelFinalize.js'
+import { applyOverrides as applyReelOverrides, setOverride as setReelOverride } from './lib/reelOverrides.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
@@ -3483,10 +3484,37 @@ function resolveEpisodeCuts(ep, code) {
     } catch { /* noop */ }
   }
   if (cuts.length && raw) {
-    try { return enrichCutsFromScript(cuts, raw) } catch { return cuts }
+    try { cuts = enrichCutsFromScript(cuts, raw) } catch { /* noop */ }
   }
+  // 브라우저 state와 완전히 분리된 수동 오버라이드(SFX/BGM 등) — studio-state.json 자동저장이
+  // 덮어쓸 수 없는 별도 파일. reelOverrides.js 참조.
+  try { cuts = applyReelOverrides(cuts, code) } catch { /* noop */ }
   return cuts
 }
+
+// POST — SFX/BGM 등 컷별 수동 오버라이드 저장 (studio-state.json 과 분리된 별도 파일,
+// 브라우저 자동저장이 절대 건드리지 않음 — reelOverrides.js 참조). patch 필드가 ''면 지정 해제.
+app.post('/api/reel-finalize/override', (req, res) => {
+  const { epNum, cutNo, patch } = req.body || {}
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const result = setReelOverride(code, cutNo, patch || {})
+    res.json({ ok: true, code, cutNo, override: result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// GET — 07_output 최종본이 지금 05_video 컷들과 다른(옛날 채로 방치된) 상태인지 확인.
+app.get('/api/reel-finalize/staleness', (req, res) => {
+  try {
+    res.json(checkFinalStale(Number(req.query.epNum)))
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 // POST — 실제 생성 (SSE 진행)
 app.post('/api/reel-finalize', async (req, res) => {
