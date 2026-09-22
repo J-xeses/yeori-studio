@@ -32,13 +32,35 @@ function stripMeta(text) {
     .trim()
 }
 
+// CP(자막) 필드가 "대사1 / 대사2 / 나레이션" 처럼 "/"로 여러 구간을 담고 있을 수 있다
+// (reelFinalize.js의 decideCut과 동일한 소스). 글자수 비례로 컷 전체 길이에 걸쳐 순차
+// 타이밍을 배분한다 — server/lib/reelFinalize.js computeSegmentTimings와 같은 원칙.
+function splitCaptionString(text, totalDur) {
+  const parts = String(text).split(/\s*\/\s*/).map((t) => t.trim()).filter(Boolean)
+  if (!parts.length) return []
+  if (parts.length === 1) return [{ start: 0, end: totalDur, text: parts[0] }]
+  const weights = parts.map((t) => Math.max(t.replace(/\s+/g, '').length, 1))
+  const totalW = weights.reduce((a, b) => a + b, 0)
+  let acc = 0
+  return parts.map((t, i) => {
+    const start = acc
+    acc += (totalDur * weights[i]) / totalW
+    return { start, end: i === parts.length - 1 ? totalDur : acc, text: t }
+  })
+}
+
 // 클립별(구간별) 타이밍 자막(2026-09-13) — subtitles[cutId]는 클립이 1개 이하인 컷은
 // 지금처럼 문자열 하나, 클립이 여러 개인 컷은 [{start,end,text}] 배열. 구버전 문자열
 // 데이터도 항상 세그먼트 배열로 통일해서 다루기 위한 헬퍼(체크업 탭에도 동일하게 복제).
+// ⚠️ 2026-09-22: 예전엔 문자열 값을 그냥 통짜 세그먼트 1개로 감쌌음 — 클립이 1개뿐인
+// 컷에 CP가 "대사 / 대사 / 나레이션"처럼 여러 구간을 담고 있으면(R04 등, 한 클립 안에서
+// 대사→나레이션이 순차 전환되는 연출) 자막 입력칸에 "/"가 그대로 보이는 사고가 났음
+// (성준님 지적: "자막 입력부분에 나레이션만 들어가 있다"). splitCaptionString으로 항상
+// 실제 구간을 나눠서 반환 — 실제 최종본(reelFinalize.js)이 만드는 순차 표시와 일치시킴.
 function toSegments(value, fallbackText, totalDur) {
   if (Array.isArray(value)) return value
   const text = value ?? fallbackText ?? ''
-  return text ? [{ start: 0, end: totalDur, text }] : []
+  return text ? splitCaptionString(text, totalDur) : []
 }
 
 // 로컬 오버라이드(subtitles[cutId], VideoTab에서 직접 고친 값)가 없으면 대본에 반영된 값을
@@ -469,7 +491,9 @@ export default function VideoTab() {
   const setPreviewText = (text) => {
     if (!selCutForText) return
     const plannedForText = Array.isArray(selCutForText.segments) ? selCutForText.segments : []
-    const slotsForText = Math.max(clipsForText.length, plannedForText.length)
+    const slotsForText = Math.max(clipsForText.length, plannedForText.length, segsForText.length)
+    // segsForText.length > 1 도 배열 경로를 타야 한다 — 클립은 1개뿐이어도 자막이 여러 구간(대사→
+    // 나레이션 순차 전환)이면 문자열로 통째 저장 시 나머지 구간이 사라짐(2026-09-22 수정).
     if (clipsForText.length > 1 || slotsForText > 1) {
       // 세그2처럼 아직 안 채운 자리는 clips에 null/구멍으로 남아있을 수 있음(2026-09-16,
       // 세그별 슬롯 지정 업로드 도입) — clipTimings가 그 자리를 undefined로 주므로 반드시
@@ -1686,6 +1710,10 @@ export default function VideoTab() {
           const plannedSegs = Array.isArray(selCut.segments) ? selCut.segments : []
           const slotCount = Math.max(clips.length, plannedSegs.length)
           const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
+          // 클립(영상 조각) 수보다 자막 구간이 더 많은 컷(예: 클립 1개 안에서 대사→나레이션이
+          // 순차 전환되는 R04 스타일) — 남는 구간은 업로드 UI 없는 "자막 전용" 행으로 추가 표시.
+          // 2026-09-22, 성준님 지적: 자막칸에 "/"가 안 나뉜 채 통짜로 들어가 있던 사고 수정.
+          const rowCount = Math.max(slotCount, cutSegs.length)
           const captionText = cutSegs[0]?.text ?? ''
           const cutClipTimings = clips.length > 0 ? clipTimings(clips, plannedSegs) : []
           const setClipCaption = (idx, text) => {
@@ -1693,7 +1721,7 @@ export default function VideoTab() {
             const timings = clipTimings(clips, plannedSegs)
             setSubtitles(prev => {
               const cur = toSegments(effectiveCaptionValue(prev, selCut, clips), '', selCut.duration || 0)
-              const next = Array.from({ length: Math.max(clips.length, plannedSegs.length) }, (_, i) => {
+              const next = Array.from({ length: Math.max(clips.length, plannedSegs.length, cur.length, idx + 1) }, (_, i) => {
                 const t = timings[i] || cur[i] || { start: 0, end: 0 }
                 return {
                   start: t.start, end: t.end,
@@ -1901,10 +1929,33 @@ export default function VideoTab() {
                   </div>
                 )}
 
-                {slotCount > 0 && (
+                {rowCount > 0 && (
                   <div className={s.clipList}>
-                    {Array.from({ length: slotCount }, (_, idx) => {
+                    {Array.from({ length: rowCount }, (_, idx) => {
                       const clip = clips[idx]
+                      // 클립도 계획도 없는데 자막 구간만 있는 자리 — "영상 파일이 없는 빈 슬롯"이
+                      // 아니라 "같은 클립 안에서 순서상 나중에 나오는 자막 구간"이다(2026-09-22).
+                      // 업로드/Flow 제출 UI를 보여주면 안 만든 영상이 있는 것처럼 오해를 준다.
+                      if (idx >= slotCount) {
+                        const seg = cutSegs[idx]
+                        return (
+                          <div key={idx} className={`${s.clipTrimItem}`}>
+                            <div className={s.clipTrimHeader}>
+                              <span className={s.clipIdx}>{['①','②','③','④','⑤'][idx] ?? idx + 1}</span>
+                              <span className={s.clipName}>자막 구간 {idx + 1} — 같은 영상, 나중 구간</span>
+                            </div>
+                            <div className={s.clipCaptionRow} onClick={e => e.stopPropagation()}>
+                              <span className={s.clipCaptionTime}>
+                                {seg ? `${seg.start.toFixed(1)}s~${seg.end.toFixed(1)}s` : ''}
+                              </span>
+                              <textarea rows={1} className={s.clipCaptionInput}
+                                value={seg?.text ?? ''}
+                                placeholder="이 구간의 자막..."
+                                onChange={e => setClipCaption(idx, e.target.value)} />
+                            </div>
+                          </div>
+                        )
+                      }
                       // 대본 SEG 계획은 있는데 아직 파일이 없는 슬롯 — 빈 자리를 그대로 보여준다
                       // (2026-09-14, 사용자 확정 반영: "컷2처럼 다른 컷도 구분돼야").
                       if (!clip) {
