@@ -113,6 +113,50 @@ export default function StudioTab() {
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
+  // ── Flow 이미지 생성(신규, 2026-09-22) — 위 flowRunning/runFlowForCut(옛 puppeteer 자동화, DEPRECATED)와는
+  // 별개. scripts/flow-image.js: Nano Banana 2 "소재" 모드로 서여리 얼굴+의상 레퍼런스를 붙여 컷당 2장 생성,
+  // 02_images/cut_NN_<다음 빈 슬롯>.jpg 저장. 결과는 /api/scan-images 로 다시 읽어와 이 탭의 이미지 목록에 반영.
+  const [flowImgBusy, setFlowImgBusy] = useState({})   // cut.id → true
+  const [flowImgMsg, setFlowImgMsg] = useState({})     // cut.id → 진행 메시지
+  const runFlowImageForCut = async (cut) => {
+    if (!cut.imagePrompt?.trim()) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
+    setFlowImgBusy(p => ({ ...p, [cut.id]: true }))
+    setFlowImgMsg(p => ({ ...p, [cut.id]: '요청 중…' }))
+    try {
+      const r = await fetch('http://localhost:3001/api/flow/image', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ episodeCode, cutNos: [cut.no], count: 2 }),
+      })
+      const d = await r.json()
+      if (!r.ok || !d.ok) throw new Error(d.error || 'Flow 이미지 요청 실패')
+      const jobId = d.jobId
+      let done = false
+      while (!done) {
+        await new Promise(res => setTimeout(res, 3000))
+        const jr = await fetch(`http://localhost:3001/api/flow/job/${jobId}`)
+        const jd = await jr.json()
+        const last = (jd.steps || [])[jd.steps.length - 1]
+        if (last) setFlowImgMsg(p => ({ ...p, [cut.id]: last.msg }))
+        if (jd.state === 'done') { done = true }
+        else if (jd.state === 'failed' || jd.state === 'cancelled') throw new Error(jd.error || 'Flow 작업 실패')
+      }
+      // 새로 저장된 파일만 이 컷에 조용히 반영(전체 알림 없이)
+      const sr = await fetch(`http://localhost:3001/api/scan-images?ep=${state.episode.number}`)
+      const sd = await sr.json()
+      const mine = (sd.images || []).filter(img => img.cutNo === cut.no)
+      setImages(p => {
+        const existing = Array.isArray(p[cut.id]) ? p[cut.id] : []
+        const add = mine.map(img => `http://localhost:3001${img.url}?t=${Date.now()}`).filter(u => !existing.some(e => e.split('?')[0] === u.split('?')[0]))
+        return add.length ? { ...p, [cut.id]: [...existing, ...add] } : p
+      })
+      setFlowImgMsg(p => ({ ...p, [cut.id]: `✅ 완료(${mine.length}장)` }))
+    } catch (e) {
+      setFlowImgMsg(p => ({ ...p, [cut.id]: `❌ ${e.message}` }))
+      alert(`CUT ${cut.no} Flow 이미지 생성 실패: ${e.message}`)
+    } finally {
+      setFlowImgBusy(p => ({ ...p, [cut.id]: false }))
+    }
+  }
   const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
   const [gData, setGData] = useState(() => loadGPoints())
   const [activeCutId, setActiveCutId] = useState(null)
@@ -920,6 +964,20 @@ export default function StudioTab() {
                 >
                   {generating[cut.id] ? '⟳ 생성 중...' : '🤖 자동 생성'}
                 </button>
+              )}
+              {cut.imagePrompt && (
+                <button
+                  onClick={() => runFlowImageForCut(cut)}
+                  disabled={flowImgBusy[cut.id]}
+                  className={s.autoGenBtn}
+                  title="Google Flow(Nano Banana 2)로 서여리 얼굴·의상 레퍼런스를 붙여 2장 생성 — 하루 무료 한도 내"
+                  style={{ marginTop: 6 }}
+                >
+                  {flowImgBusy[cut.id] ? '⏳ Flow 생성 중…' : '⚡ Flow로 생성'}
+                </button>
+              )}
+              {flowImgMsg[cut.id] && (
+                <div style={{ fontSize: 10.5, color: 'var(--text3)', marginTop: 4, wordBreak: 'break-all' }}>{flowImgMsg[cut.id]}</div>
               )}
             </div>
 
