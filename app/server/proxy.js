@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url'
 import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { finalizeReel, enrichCutsFromScript, checkFinalStale } from './lib/reelFinalize.js'
-import { applyOverrides as applyReelOverrides, setOverride as setReelOverride } from './lib/reelOverrides.js'
+import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
@@ -3491,6 +3491,19 @@ function resolveEpisodeCuts(ep, code) {
   try { cuts = applyReelOverrides(cuts, code) } catch { /* noop */ }
   return cuts
 }
+
+// GET — 이 에피소드의 오버라이드 전체(컷번호→patch)를 그대로 반환. VideoTab이 자기 미리보기
+// (자막 입력칸·재생 화면)를 studio-state.json 대신 이 값으로 보정해서, "실제 최종본은 고쳤는데
+// 화면 미리보기는 옛날 걸 보여준다" 불일치를 없앤다(2026-09-22, 성준님 지적).
+app.get('/api/reel-finalize/overrides', (req, res) => {
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(req.query.epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    res.json({ code, overrides: loadReelOverrides(code) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
 
 // POST — SFX/BGM 등 컷별 수동 오버라이드 저장 (studio-state.json 과 분리된 별도 파일,
 // 브라우저 자동저장이 절대 건드리지 않음 — reelOverrides.js 참조). patch 필드가 ''면 지정 해제.

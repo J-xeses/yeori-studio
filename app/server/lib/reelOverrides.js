@@ -37,16 +37,29 @@ export function setOverride(code, cutNo, patch) {
   return all[key] || {}
 }
 
-// cuts 배열에 해당 코드의 오버라이드를 masterCode.audio 위에 덮어써서 반환.
-// (오버라이드 필드가 원본 audio 텍스트 필드보다 항상 우선 — decideCut의 "직접 지정" 우선순위와 일치)
+// masterCode.audio 소속 필드 — 그 외(subtitle/captionStartSec/captionSegTiming/duration/
+// captionStack 등)는 컷 객체 최상위에 바로 병합한다. 2026-09-22: SFX뿐 아니라 자막(CP)·
+// 자막 타이밍도 studio-state.json 직접수정 후 브라우저 탭 자동저장에 반복적으로 되돌려지는
+// 사고가 나서(성준님 실측 지적) 오버라이드 범위를 확장 — "이 파일에 넣은 값은 브라우저가
+// 절대 못 건드린다"를 자막류 전체로 넓힘.
+const AUDIO_FIELDS = new Set(['bgm', 'voice', 'sfx', 'ambience', 'sfxFile', 'sfxAt', 'sfxAtSec', 'sfxGain'])
+
+// cuts 배열에 해당 코드의 오버라이드를 덮어써서 반환 — audio 필드는 masterCode.audio에,
+// 나머지는 컷 최상위 필드에 병합(둘 다 원본 studio-state 값보다 항상 우선).
 export function applyOverrides(cuts, code) {
   const all = loadOverrides(code)
   if (!Object.keys(all).length) return cuts
   return cuts.map((c) => {
     const ov = all[String(c.no)]
     if (!ov || !Object.keys(ov).length) return c
-    const mc = { ...(c.masterCode || {}) }
-    mc.audio = { ...(mc.audio || {}), ...ov }
-    return { ...c, masterCode: mc }
+    const audioPatch = {}, cutPatch = {}
+    for (const [k, v] of Object.entries(ov)) (AUDIO_FIELDS.has(k) ? audioPatch : cutPatch)[k] = v
+    const merged = { ...c, ...cutPatch }
+    if (Object.keys(audioPatch).length) {
+      const mc = { ...(c.masterCode || {}) }
+      mc.audio = { ...(mc.audio || {}), ...audioPatch }
+      merged.masterCode = mc
+    }
+    return merged
   })
 }

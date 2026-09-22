@@ -5,7 +5,7 @@
     "connected": true,
     "remainingChars": 89429
   },
-  "activeEpisodeId": "ep_1789977729018",
+  "activeEpisodeId": "ep_test_r03",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -3970,7 +3970,7 @@
           "narration": "",
           "imagePrompt": "MEDIUM SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear,\nwearing oversized cream-toned knit top and straight-cut denim pants DO NOT change clothing, gold necklace and gold bracelet visible,\nK-model proportions, very small face, slender figure, small head-to-body ratio DO NOT make average body proportions,\niced Americano in clear glass on the table, soft afternoon golden hour window light casting warm glow,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character",
           "videoPrompt": "Vertical 9:16, one continuous 8-second shot in a warm cafe by the window with golden afternoon light. The shot starts from the start frame: the same woman with a dry, slightly serious look, holding an iced Americano glass near her chin. Her serious look slowly softens and a warm smile spreads across her face; she lowers the glass onto the table and relaxes, and she ends in a relaxed warm smile. While her expression changes she speaks the line in a light, relaxed tone. Only this one gentle expression change, no other large movements. Very gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
-          "duration": 8,
+          "duration": 10.5,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -3998,7 +3998,21 @@
               "ac": "0~2초 등받이에 기대며 머리카락을 귀 뒤로 → 2~5초 카메라를 보며 대사 → 5~8초 말없이 창밖을 보며 컵을 천천히 들어 가볍게 기울임(여운)",
               "md": "편안함, 여운"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              2.7,
+              4.3
+            ],
+            [
+              4.3,
+              5.9
+            ],
+            [
+              5.9,
+              10.5
+            ]
+          ]
         }
       ],
       "scriptRaw": "================================================================\n마스터 코드\n[IG_R04] :: [PL:IG_RL] :: [SP:IN.CF.TZ_AF.LT_WM] :: [CH:YR_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]\n================================================================\n에피소드명: 서여리 채널 소개_1탄\n채널: 서여리 인스타그램 릴스 (IG_R04)\n총 길이: 26초 목표 (8 + 10 + 8)\n콘셉트: \"어, 왔어요?\" 친근한 첫인사 → 살짝 AI 정체 공개 → \"자주 와요\" 초대\n================================================================\nEP.HEADER\nCHAR  : YEORI.BASE\nEP    : IG_R04\nTITLE : 서여리 채널 소개_1탄\nLOOK.A: LOOK_CS (오버사이즈 크림 니트 + 스트레이트 데님, 골드 목걸이·팔찌)\nBG.A  : 감성 카페 창가 자리, 따뜻한 보케\nLIGHT : LT_WM (오후 부드러운 자연광)\nREF   : face / closeup\nBGM   : 잔잔한 어쿠스틱 → CUT2 정체 공개 순간 레코드 스크래치로 끊김 → CUT3에서 아주 낮게 재진입\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] ─ 훅 컷 — \"어, 왔어요?\" (0~8s)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 감성 카페 창가 자리, 오후. 서여리가 이미 먼저 와서 아이스 아메리카노를 들고 앉아 있다가 시청자를 발견한 듯 고개를 돌린다.\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LK_CS\nDL: 어, 왔어요?\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAC: 없음\nLOOK_ID: LOOK_CS\nDU: 8\nCP: 그녀는 항상 먼저 와 있었다 / 기다리는 척, 안 기다린 척\nCT: YEORI\n오디오:\n  BGM: 잔잔한 어쿠스틱 (0초부터, 낮게)\n  음성: 살짝 놀란 듯 반가운 캐주얼 톤, 낮고 편안하게\n  효과음: 없음\n  앰비언스: 카페 잔잔한 소음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     감성 카페 창가, 오후 자연광\nCH(캐릭터):   오버사이즈 크림 니트, 골드 목걸이·팔찌\nSH(샷):       미디엄 클로즈업, 상반신\nCA(카메라):   고정\nAC(동작):     창밖을 보다 카메라 쪽으로 고개를 돌리며 \"어, 왔어요?\" → 반쯤 미소로 지그시 응시\nMD(감정):     장난기 있는 반가움\nDL(대사):     어, 왔어요?\nNR(나레이션): (화면 자막) 그녀는 항상 먼저 와 있었다. 기다리는 척, 안 기다린 척.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle, not exaggerated), seated by a cafe window in soft afternoon natural light,\nholding an iced Americano in a clear glass cup with gold bracelet visible on wrist, delicate gold necklace,\nwearing an oversized cream-toned knit top DO NOT change clothing, expression: subtle half-smile with calm knowing eyes directed at camera,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, warm bokeh background of cafe interior,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-1.5s] She looks out the window holding the iced Americano with both hands, then turns her head toward the camera.\n[1.5-3.5s] Slightly surprised, warmly amused, she says her line to the camera.\n[3.5-8s] Settles back with a subtle half-smile and calm knowing eyes, a tiny sip of the drink, almost no other movement.\nNo on-screen subtitle text or captions. Background people are only very soft, heavily blurred silhouettes far behind and never interact with her.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] ─ 정체 공개 — 커피 한 모금, BGM 끊김 (8~18s)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 감성 카페 창가 자리. 채널 소개를 시작하려던 서여리가 커피를 한 모금 마시고, 멈추고, 카메라를 똑바로 본 채 AI라고 털어놓는다.\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LK_CS\nDL: 저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAC: 없음\nLOOK_ID: LOOK_CS\nDU: 10\nCT: YEORI\nCP: 저 사실 이 채널… / AI로 만들어요 / 근데 저, 꽤 자연스럽죠?\n오디오:\n  BGM: 잔잔한 어쿠스틱 → 2초 지점에서 완전히 끊김\n  음성: 덤덤하고 살짝 장난스러운 드라이 톤\n  효과음: 레코드 스크래치 (BGM 끊김 순간, 2초 지점)\n  앰비언스: 카페 소음이 잠깐 정적으로 줄어듦\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     감성 카페 창가\nCH(캐릭터):   오버사이즈 크림 니트, 골드 목걸이·팔찌\nSH(샷):       미디엄 클로즈업, 컵을 두 손으로 감싼 상반신\nCA(카메라):   고정\nAC(동작):     0~2초 한 모금 → 2~3초 멈추고 컵을 내려다봄(BGM 끊김) → 3~9초 카메라를 똑바로 보고 대사 → 9~10초 살짝 눈을 굴림\nMD(감정):     드라이한 유머, 한쪽 입꼬리만 살짝\nDL(대사):     저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?\nNR(나레이션): (화면 자막) 설명하려 했는데, 설명이 안 됐다. 그래서 더 매력적이었다.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle, not exaggerated), sitting at a cafe window seat at a relaxed three-quarter angle with her torso turned about 30 degrees toward the window and shoulders slightly uneven, head turned back toward the camera, one hand lifting a clear iced Americano glass a few centimeters as if she just looked up mid-sip and noticed the viewer,\ngold bracelet on wrist, delicate gold necklace, oversized cream-toned knit top DO NOT change clothing,\nexpression: slightly raised eyebrow with a dry-humored almost deadpan look, eyes meeting the camera with a natural just-noticed-you glance, one corner of lips barely lifted, caught candidly mid-motion NOT a stiff frontal pose,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, soft afternoon diffused light from window, shallow depth of field with warm cafe bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-2s] She takes a sip of the iced Americano, then lowers the glass.\n[2-3s] A beat of silence: she pauses and glances down at the cup, then lifts her eyes straight into the camera.\n[3-9s] Deadpan and slightly playful, she says her line directly to the camera, one corner of her lips barely lifted.\n[9-10s] A small eye-roll, calm knowing look.\nNo on-screen subtitle text or captions. Background people are only very soft, heavily blurred silhouettes far behind and never interact with her.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] ─ 마무리 — \"자주 와요\" (18~26s)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 감성 카페 창가 자리. 서여리가 등받이에 살짝 기대 머리카락을 귀 뒤로 넘기며 마지막 한마디를 던지고, 창밖을 보며 커피를 든다.\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LK_CS\nDL: 자주 와요. 저 여기 맨날 있으니까.\nNR: 없음\nSH: SH_MS\nCA: CA_ST\nMD: MD_REL\nAC: 없음\nLOOK_ID: LOOK_CS\nDU: 8\nCT: YEORI\nCP: 자주 와요. / 저 여기 맨날 있으니까. / 여기, 라고 했지만 그 의미는 조금 더 넓었다\n오디오:\n  BGM: 잔잔한 어쿠스틱 아주 낮게 재진입(마지막 3초)\n  음성: 편안하고 여운 있는 톤\n  효과음: 없음\n  앰비언스: 카페 잔잔한 소음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     감성 카페 창가\nCH(캐릭터):   오버사이즈 크림 니트, 스트레이트 데님, 골드 목걸이·팔찌\nSH(샷):       미디엄 샷, 등받이에 기댄 상체와 테이블 위 컵이 보이는 구도\nCA(카메라):   고정\nAC(동작):     0~2초 등받이에 기대며 머리카락을 귀 뒤로 → 2~5초 카메라를 보며 대사 → 5~8초 말없이 창밖을 보며 컵을 천천히 들어 가볍게 기울임(여운)\nMD(감정):     편안함, 여운\nDL(대사):     자주 와요. 저 여기 맨날 있으니까.\nNR(나레이션): (화면 자막) 여기, 라고 했지만 그 의미는 조금 더 넓었다. 이 채널, 이 화면, 그리고 당신 앞.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear,\nwearing oversized cream-toned knit top and straight-cut denim pants DO NOT change clothing, gold necklace and gold bracelet visible,\nK-model proportions, very small face, slender figure, small head-to-body ratio DO NOT make average body proportions,\niced Americano in clear glass on the table, soft afternoon golden hour window light casting warm glow,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-2s] She leans back against the chair and tucks her hair behind her ear.\n[2-5s] She says her last line directly to the camera, relaxed, with a hint of a smile.\n[5-8s] Silent, she slowly turns her gaze to the window and lifts the iced Americano, tilting the glass slightly; lingering final beat.\nNo on-screen subtitle text or captions. Background people are only very soft, heavily blurred silhouettes far behind and never interact with her.\n",
@@ -4008,7 +4022,7 @@
           "videoClips": {
             "cut-1": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R04/05_video/cut_01.mp4?t=1790069036928",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R04/05_video/cut_01.mp4?t=1790078513244",
                 "name": "cut_01.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -4079,17 +4093,17 @@
             ],
             "cut-3": [
               {
-                "url": "blob:http://localhost:5173/300c8fb0-94e9-4513-8b19-2a61186c6688",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R04/05_video/cut_03.mp4?t=1790078513244",
                 "name": "cut_03_clip_1.mp4",
-                "duration": 8,
+                "duration": 10.5,
                 "trimStart": 0,
-                "trimEnd": 8,
-                "useFullDuration": true,
+                "trimEnd": 10.5,
+                "useFullDuration": false,
                 "ratio": "9:16",
                 "staging": false,
                 "keepAudio": true,
                 "createdAt": 1789999537893,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_03_clip_1.mp4"
+                "stagedPath": "C:yeori-studiodownloadsseoyeoriIGIG_RIG_R04\u0005_videocut_03.mp4"
               }
             ]
           },
@@ -4101,7 +4115,55 @@
           "audioUrls": {},
           "audioTexts": {},
           "g3Confirmed": {},
-          "focusCutId": null
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-3": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-2__v1": [
+              {
+                "id": "track_1790069477086_x6qt",
+                "type": "dialogue",
+                "text": "저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-3__v1": [
+              {
+                "id": "track_1790069478510_ouzj",
+                "type": "dialogue",
+                "text": "자주 와요. 저 여기 맨날 있으니까.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ]
+          }
         },
         "voiceInsertState": {
           "tracks": {}
@@ -4113,171 +4175,327 @@
     }
   },
   "episode": {
-    "number": 4,
-    "title": "서여리 채널소개 1화_저 사실... ㅇㅇ로 만들어요.",
-    "location": "카페",
+    "number": 98,
+    "title": "AI 크리에이터 만드는 데 든 비용 0원",
+    "location": "실내",
     "mood": [
-      "따뜻함",
-      "유머"
+      "충격",
+      "따뜻함"
     ],
-    "cutCount": 3,
+    "cutCount": 7,
     "contentType": "IG_R",
-    "topicCode": "INT",
+    "topicCode": "TRD",
     "scnCode": "ENT",
     "character": "서여리",
-    "code": "IG_R04",
-    "instaNum": "R04",
+    "code": "IG_R03",
+    "instaNum": "R03",
     "finishMode": "assemble",
-    "masterCode": "[IG_R04] :: [PL:IG_RL] :: [SP:IN.CF.TZ_AF.LT_WM] :: [CH:YR_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
-    "epHeaderRaw": ""
+    "masterCode": "[IG_R03] :: [PL:IG_RL] :: [SP:IN.SC] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]"
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "\"어, 왔어요?\" (0~8s)",
+      "cutTitle": "훅 텍스트",
       "lipsync": false,
-      "scene": "감성 카페 창가 자리, 오후. 서여리가 이미 먼저 와서 아이스 아메리카노를 들고 앉아 있다가 시청자를 발견한 듯 고개를 돌린다.",
-      "action": "창밖을 보다 카메라 쪽으로 고개를 돌리며 \"어, 왔어요?\" → 반쯤 미소로 지그시 응시",
+      "scene": "검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.",
+      "action": "타이핑 애니메이션으로 한 글자씩 등장",
       "character": "서여리",
-      "dialogue": "어, 왔어요?",
-      "subtitle": "그녀는 항상 먼저 와 있었다 / 기다리는 척, 안 기다린 척",
-      "narration": "",
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle, not exaggerated), seated by a cafe window in soft afternoon natural light,\nholding an iced Americano in a clear glass cup with gold bracelet visible on wrist, delicate gold necklace,\nwearing an oversized cream-toned knit top DO NOT change clothing, expression: subtle half-smile with calm knowing eyes directed at camera,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, warm bokeh background of cafe interior,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character",
-      "videoPrompt": "Vertical 9:16, one continuous 8-second shot starting exactly from the start frame: the same woman in a cream oversized knit top, gold necklace and bracelet, sitting at a cafe window table in warm golden afternoon light, resting her chin lightly on one hand, gazing out the window as if lost in thought, an iced Americano glass on the table. After a beat she slowly turns her head toward the camera, her eyes landing on the viewer with a small flicker of pleasant surprise, and a soft half-smile grows as she settles into a calm, warm, knowing gaze — unhurried, natural, not posing. While turning she speaks the line lightly. Only this one gentle turn-and-notice motion, no other large movements. Very gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.\n\nVocal delivery: calm, warm, composed and clear, speaking directly to the audience at a natural relaxed pace.",
-      "duration": 8,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
+      "dialogue": "",
+      "subtitle": "",
+      "narration": "\"AI 크리에이터 만드는 데 든 비용: 0원 🫢\"",
+      "imagePrompt": "GRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n검정 배경 + 흰색 타이핑 텍스트 애니메이션\n오디오\nBGM    : 없음 (다음 컷부터 시작)\n음성   : 없음\n효과음 : 타이핑 사운드\n================================================================",
+      "videoPrompt": "",
+      "duration": 5,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_CS",
-        "sh": "SH_MCU",
+        "sp": "IN.BK (검정 배경)",
+        "pl": "IG_RL",
+        "ch": "서여리 — 미등장 (텍스트만)",
+        "sh": "SH_TEXT",
         "ca": "CA_ST",
-        "md": "MD_COM",
-        "ac": "없음",
-        "lookId": "LOOK_CS",
-        "du": 8,
+        "md": "MD_SUR (충격·놀라움)",
+        "ac": "타이핑 애니메이션",
+        "lookId": "없음",
+        "du": 5,
         "audio": {
-          "bgm": "잔잔한 어쿠스틱 (0초부터, 낮게)",
-          "voice": "살짝 놀란 듯 반가운 캐주얼 톤, 낮고 편안하게",
-          "sfx": "없음",
-          "ambience": "카페 잔잔한 소음"
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
         },
         "kr": {
-          "sp": "감성 카페 창가, 오후 자연광",
-          "ch": "오버사이즈 크림 니트, 골드 목걸이·팔찌",
-          "sh": "미디엄 클로즈업, 상반신",
+          "sp": "검정 단색 배경",
+          "ch": "서여리 미등장",
+          "sh": "텍스트 전용 컷",
           "ca": "고정",
-          "ac": "창밖을 보다 카메라 쪽으로 고개를 돌리며 \"어, 왔어요?\" → 반쯤 미소로 지그시 응시",
-          "md": "장난기 있는 반가움"
+          "ac": "타이핑 애니메이션으로 한 글자씩 등장",
+          "md": "충격·놀라움 유발"
         }
-      },
-      "captionStartSec": 3.5,
-      "subtitleCfgSaved": {
-        "entries": [
-          {
-            "text": "그녀는 항상 먼저 와 있었다",
-            "start": 3.6,
-            "end": 5.8
-          },
-          {
-            "text": "기다리는 척, 안 기다린 척",
-            "start": 5.8,
-            "end": 8
-          }
-        ]
       }
     },
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "커피 한 모금, BGM 끊김 (8~18s)",
+      "cutTitle": "Flow 화면녹화 구간",
       "lipsync": false,
-      "scene": "감성 카페 창가 자리. 채널 소개를 시작하려던 서여리가 커피를 한 모금 마시고, 멈추고, 카메라를 똑바로 본 채 AI라고 털어놓는다.",
-      "action": "0~2초 한 모금 → 2~3초 멈추고 컵을 내려다봄(BGM 끊김) → 3~9초 카메라를 똑바로 보고 대사 → 9~10초 살짝 눈을 굴림",
+      "scene": "실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.",
+      "action": "Flow 프로젝트 내 서여리 이미지들 보여주기",
       "character": "서여리",
-      "dialogue": "저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?",
-      "subtitle": "저 사실 이 채널… / AI로 만들어요 / 근데 저, 꽤 자연스럽죠?",
+      "dialogue": "",
+      "subtitle": "",
       "narration": "",
-      "imagePrompt": "CLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle, not exaggerated), sitting at a cafe window seat at a relaxed three-quarter angle with her torso turned about 30 degrees toward the window and shoulders slightly uneven, head turned back toward the camera, one hand lifting a clear iced Americano glass a few centimeters as if she just looked up mid-sip and noticed the viewer,\ngold bracelet on wrist, delicate gold necklace, oversized cream-toned knit top DO NOT change clothing,\nexpression: slightly raised eyebrow with a dry-humored almost deadpan look, eyes meeting the camera with a natural just-noticed-you glance, one corner of lips barely lifted, caught candidly mid-motion NOT a stiff frontal pose,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, soft afternoon diffused light from window, shallow depth of field with warm cafe bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character",
-      "videoPrompt": "Vertical 9:16, one continuous 10-second shot starting exactly from the start frame: the same woman, the same cream oversized knit top, gold jewelry, window seat and warm golden afternoon light. She holds the iced Americano glass near her chin with a dry, slightly serious deadpan face and looks at the camera. She says the line calmly; after the first phrase she takes a small beat, her eyes dipping to the glass and back up to the camera; on the last phrase one eyebrow lifts a little, still deadpan, and she holds the look. Subtle natural head movement, breathing, hair moving slightly, very gentle handheld camera drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
-      "duration": 10,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
+      "imagePrompt": "CAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n오디오\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)\n음성   : 없음\n효과음 : 없음\n================================================================",
+      "videoPrompt": "",
+      "duration": 9,
+      "shotType": "FULLBODY",
+      "cutType": "CAPCUT",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_CS",
-        "sh": "SH_MCU",
+        "sp": "IN.SC (화면 녹화)",
+        "pl": "IG_RL",
+        "ch": "서여리 — 미등장 (화면녹화)",
+        "sh": "SH_SCR",
         "ca": "CA_ST",
-        "md": "MD_COM",
-        "ac": "없음",
-        "lookId": "LOOK_CS",
-        "du": 10,
+        "md": "MD_SUR (놀라움·신기함)",
+        "ac": "Flow 프로젝트 이미지들 스크롤",
+        "lookId": "없음",
+        "du": 9,
         "audio": {
-          "bgm": "잔잔한 어쿠스틱 → 2초 지점에서 완전히 끊김",
-          "voice": "덤덤하고 살짝 장난스러운 드라이 톤",
-          "sfx": "레코드 스크래치 (BGM 끊김 순간, 2초 지점)",
-          "ambience": "카페 소음이 잠깐 정적으로 줄어듦"
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
         },
         "kr": {
-          "sp": "감성 카페 창가",
-          "ch": "오버사이즈 크림 니트, 골드 목걸이·팔찌",
-          "sh": "미디엄 클로즈업, 컵을 두 손으로 감싼 상반신",
+          "sp": "Google Flow 프로젝트 화면 (화면녹화)",
+          "ch": "서여리 미등장",
+          "sh": "화면녹화",
           "ca": "고정",
-          "ac": "0~2초 한 모금 → 2~3초 멈추고 컵을 내려다봄(BGM 끊김) → 3~9초 카메라를 똑바로 보고 대사 → 9~10초 살짝 눈을 굴림",
-          "md": "드라이한 유머, 한쪽 입꼬리만 살짝"
+          "ac": "Flow 프로젝트 내 서여리 이미지들 보여주기",
+          "md": "놀라움·신기함"
         }
       }
     },
     {
       "id": "cut-3",
       "no": 3,
-      "cutTitle": "\"자주 와요\" (18~26s)",
+      "cutTitle": "ElevenLabs 화면 + 남자목소리 반전",
       "lipsync": false,
-      "scene": "감성 카페 창가 자리. 서여리가 등받이에 살짝 기대 머리카락을 귀 뒤로 넘기며 마지막 한마디를 던지고, 창밖을 보며 커피를 든다.",
-      "action": "0~2초 등받이에 기대며 머리카락을 귀 뒤로 → 2~5초 카메라를 보며 대사 → 5~8초 말없이 창밖을 보며 컵을 천천히 들어 가볍게 기울임(여운)",
+      "scene": "ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.",
+      "action": "텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생",
       "character": "서여리",
-      "dialogue": "자주 와요. 저 여기 맨날 있으니까.",
-      "subtitle": "자주 와요. / 저 여기 맨날 있으니까. / 여기, 라고 했지만 그 의미는 조금 더 넓었다",
+      "dialogue": "",
+      "subtitle": "",
       "narration": "",
-      "imagePrompt": "MEDIUM SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear,\nwearing oversized cream-toned knit top and straight-cut denim pants DO NOT change clothing, gold necklace and gold bracelet visible,\nK-model proportions, very small face, slender figure, small head-to-body ratio DO NOT make average body proportions,\niced Americano in clear glass on the table, soft afternoon golden hour window light casting warm glow,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character",
-      "videoPrompt": "Vertical 9:16, one continuous 8-second shot in a warm cafe by the window with golden afternoon light. The shot starts from the start frame: the same woman with a dry, slightly serious look, holding an iced Americano glass near her chin. Her serious look slowly softens and a warm smile spreads across her face; she lowers the glass onto the table and relaxes, and she ends in a relaxed warm smile. While her expression changes she speaks the line in a light, relaxed tone. Only this one gentle expression change, no other large movements. Very gentle handheld drift. Background people stay as very soft, heavily blurred silhouettes and never interact with her. Soft cafe room tone only, no music. No subtitles, no on-screen text.",
-      "duration": 8,
+      "imagePrompt": "CAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n오디오\nBGM    : CUT2 이어서 (볼륨 살짝 낮춤)\n음성   : 실제 ElevenLabs 생성 남자 목소리 삽입\n효과음 : 깜짝 효과음 (반전 순간)\n================================================================",
+      "videoPrompt": "",
+      "duration": 14,
       "shotType": "FULLBODY",
+      "cutType": "CAPCUT",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.SC (화면 녹화)",
+        "pl": "IG_RL",
+        "ch": "서여리 — 미등장",
+        "sh": "SH_SCR",
+        "ca": "CA_ST",
+        "md": "MD_SUR → MD_COM (놀라움 → 유머)",
+        "ac": "텍스트 입력 → 재생 버튼 클릭 → 남자 목소리 재생",
+        "lookId": "없음",
+        "du": 14,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "ElevenLabs 앱 화면 (화면녹화)",
+          "ch": "서여리 미등장",
+          "sh": "화면녹화",
+          "ca": "고정",
+          "ac": "텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생",
+          "md": "놀라움 → 반전 유머"
+        }
+      }
+    },
+    {
+      "id": "cut-4",
+      "no": 4,
+      "cutTitle": "실물 서여리 등장",
+      "lipsync": false,
+      "scene": "현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.",
+      "action": "카메라 응시 + 살짝 당황한 표정",
+      "character": "서여리",
+      "dialogue": "",
+      "subtitle": "",
+      "narration": "",
+      "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\ndirect eye contact with camera, slightly flustered expression,\nsubtle \"caught in the act\" look, lips together, soft smile hint,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
+      "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nlooking directly at camera, subtle flustered expression,\ntiny soft blink, \"caught\" moment — lips closed,\nminimal movement, just existing beautifully,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
+      "duration": 7,
+      "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_CS",
-        "sh": "SH_MS",
+        "sp": "IN.IN (실내 — 따뜻한 자연광)",
+        "pl": "IG_RL",
+        "ch": "서여리 — YEORI.BASE (실물 이미지)",
+        "sh": "SH_CU",
         "ca": "CA_ST",
-        "md": "MD_REL",
-        "ac": "없음",
-        "lookId": "LOOK_CS",
-        "du": 8,
+        "md": "MD_SUR (당황·민망)",
+        "ac": "카메라 응시 + 당황한 표정",
+        "lookId": "YEORI.BASE",
+        "du": 7,
         "audio": {
-          "bgm": "잔잔한 어쿠스틱 아주 낮게 재진입(마지막 3초)",
-          "voice": "편안하고 여운 있는 톤",
-          "sfx": "없음",
-          "ambience": "카페 잔잔한 소음"
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
         },
         "kr": {
-          "sp": "감성 카페 창가",
-          "ch": "오버사이즈 크림 니트, 스트레이트 데님, 골드 목걸이·팔찌",
-          "sh": "미디엄 샷, 등받이에 기댄 상체와 테이블 위 컵이 보이는 구도",
+          "sp": "실내 — 따뜻한 자연광 배경",
+          "ch": "서여리 YEORI.BASE 실물 이미지",
+          "sh": "클로즈업 — 얼굴 중심",
           "ca": "고정",
-          "ac": "0~2초 등받이에 기대며 머리카락을 귀 뒤로 → 2~5초 카메라를 보며 대사 → 5~8초 말없이 창밖을 보며 컵을 천천히 들어 가볍게 기울임(여운)",
-          "md": "편안함, 여운"
+          "ac": "카메라 응시 + 살짝 당황한 표정",
+          "md": "당황·민망 \"들켰다\" 느낌"
+        }
+      }
+    },
+    {
+      "id": "cut-5",
+      "no": 5,
+      "cutTitle": "감정 핵심컷",
+      "lipsync": false,
+      "scene": "서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.",
+      "action": "카메라 응시 + 잔잔하고 따뜻한 표정",
+      "character": "서여리",
+      "dialogue": "",
+      "subtitle": "",
+      "narration": "",
+      "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nsoft smile, eyes slightly warm and reflective,\nmedium close-up face and upper body,\nwarm indoor lighting, soft bokeh background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
+      "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nslow soft blink, barely perceptible breath movement,\nmedium close-up, warm indoor light, soft bokeh background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 감성적 로파이 or dreamy (볼륨 올라오며)\n음성   : 없음\n효과음 : 없음\n================================================================",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.IN (실내 — 따뜻한 조명)",
+        "pl": "IG_RL",
+        "ch": "서여리 — YEORI.BASE",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_WRM (따뜻함·진심)",
+        "ac": "카메라 응시 + 잔잔한 표정",
+        "lookId": "YEORI.BASE",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "실내 — 따뜻한 조명 배경",
+          "ch": "서여리 YEORI.BASE",
+          "sh": "미디엄 클로즈업",
+          "ca": "고정",
+          "ac": "카메라 응시 + 잔잔하고 따뜻한 표정",
+          "md": "따뜻함·진심 \"꿈만큼은 진짜\" 느낌"
+        }
+      }
+    },
+    {
+      "id": "cut-6",
+      "no": 6,
+      "cutTitle": "분할화면",
+      "lipsync": false,
+      "scene": "실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.",
+      "action": "실물과 웹툰 나란히 배치 or 교차 전환",
+      "character": "서여리",
+      "dialogue": "",
+      "subtitle": "",
+      "narration": "",
+      "imagePrompt": "GRAPHIC 타입 — HTML 분할화면 애니메이션으로 직접 제작\n좌: 실물 서여리 이미지 (CUT4 선택본)\n우: 웹툰 서여리 이미지 (IG_P01_C03_final.jpg)\n오디오\nBGM    : CUT5 이어서\n음성   : 없음\n효과음 : 분할 전환 효과음\n================================================================",
+      "videoPrompt": "",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.BK (검정 배경 분할)",
+        "pl": "IG_RL",
+        "ch": "서여리 — 실물 + 웹툰 동시",
+        "sh": "SH_SPL (분할화면)",
+        "ca": "CA_ST",
+        "md": "MD_WRM (따뜻함·신기함)",
+        "ac": "두 버전 나란히 또는 교차",
+        "lookId": "없음",
+        "du": 8,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "검정 배경 분할 화면",
+          "ch": "실물 서여리 + 웹툰 서여리 동시 등장",
+          "sh": "분할 화면",
+          "ca": "고정",
+          "ac": "실물과 웹툰 나란히 배치 or 교차 전환",
+          "md": "따뜻함·신기함 \"현실 × AI\" 혼재"
+        }
+      }
+    },
+    {
+      "id": "cut-7",
+      "no": 7,
+      "cutTitle": "CTA 마무리",
+      "lipsync": false,
+      "scene": "라벤더 파스텔 배경 + 팔로우 유도 텍스트.",
+      "action": "텍스트 페이드인 + 하트·별 데코 팝업",
+      "character": "서여리",
+      "dialogue": "",
+      "subtitle": "",
+      "narration": "",
+      "imagePrompt": "GRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n라벤더 파스텔 배경 + 하트·별 데코 + 팔로우 유도 텍스트\n오디오\nBGM    : 다시 올라오며 밝고 따뜻하게 마무리\n음성   : 없음\n효과음 : 하트·별 팝업 효과음\n================================================================\n\n[캡션 + 해시태그]\nAI 크리에이터 만드는 데 든 비용: 0원 🫢\n\n얼굴·목소리·영상 전부 AI로 만들었어요.\n근데 목소리 설정을 잘못했더니...\n남자 목소리가 나왔다 ㅋㅋㅋ 😅\n\n꿈만큼은 진짜인 AI 크리에이터 서여리입니다.\n같이 봐주실 거죠? 💜\n\n👇 AI 크리에이터 도전하고 싶으면 저장!\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n\n[제작 체크리스트]\n□ CUT1 — 검정 배경 훅 텍스트 (GRAPHIC — HTML 애니메이션)\n□ CUT2 — Flow 화면녹화 (CAPCUT — 화면녹화 소스)\n□ CUT3 — ElevenLabs 화면 + 남자 목소리 반전 (CAPCUT — 화면녹화 소스)\n□ CUT4 — 실물 서여리 당황 표정 (YEORI — Flow 이미지 생성)\n□ CUT5 — 감정 핵심컷 \"꿈만큼은 진짜\" (YEORI — Flow 이미지 생성)\n□ CUT6 — 분할화면 실물+웹툰 (GRAPHIC — HTML 애니메이션)\n□ CUT7 — CTA 라벤더 배경 (GRAPHIC — HTML 애니메이션)\n□ BGM — 로파이 or dreamy (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R03_draft.mp4\n\n[📊 컷 요약]\nCUT1  훅 텍스트          5초   GRAPHIC   ← HTML 애니메이션\nCUT2  Flow 화면녹화       9초   CAPCUT    ← 화면녹화 소스\nCUT3  ElevenLabs 반전    14초   CAPCUT    ← 화면녹화 소스\nCUT4  서여리 실물 당황     7초   YEORI     ← Flow 이미지 생성 대상\nCUT5  감정 핵심컷         8초   YEORI     ← Flow 이미지 생성 대상\nCUT6  분할화면            8초   GRAPHIC   ← HTML 애니메이션\nCUT7  CTA 마무리          9초   GRAPHIC   ← HTML 애니메이션\n총 길이: 60초\n\n[버전 이력]\nv1.0  초기 작성 (IG_RL03)\nv2.0  v3 포맷 변환 (IG_RL03_G1_script_v2.txt)\nv3.0  IG_R03 코드 통일 + 새 스튜디오 입력 포맷 적용 + GRAPHIC/CAPCUT/YEORI 타입 명확화",
+      "videoPrompt": "",
+      "duration": 9,
+      "shotType": "FULLBODY",
+      "cutType": "GRAPHIC",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "IN.PK (라벤더 파스텔 배경)",
+        "pl": "IG_RL",
+        "ch": "서여리 — 미등장 (텍스트만)",
+        "sh": "SH_TEXT",
+        "ca": "CA_ST",
+        "md": "MD_WRM (따뜻함·친근함)",
+        "ac": "텍스트 페이드인",
+        "lookId": "없음",
+        "du": 9,
+        "audio": {
+          "bgm": "",
+          "voice": "",
+          "sfx": "",
+          "ambience": ""
+        },
+        "kr": {
+          "sp": "라벤더 파스텔 배경 + 하트 별 데코",
+          "ch": "서여리 미등장",
+          "sh": "텍스트 전용 컷",
+          "ca": "고정",
+          "ac": "텍스트 페이드인 + 하트·별 데코 팝업",
+          "md": "따뜻함·친근함"
         }
       }
     }
   ],
-  "scriptRaw": "================================================================\n마스터 코드\n[IG_R04] :: [PL:IG_RL] :: [SP:IN.CF.TZ_AF.LT_WM] :: [CH:YR_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]\n================================================================\n에피소드명: 서여리 채널 소개_1탄\n채널: 서여리 인스타그램 릴스 (IG_R04)\n총 길이: 26초 목표 (8 + 10 + 8)\n콘셉트: \"어, 왔어요?\" 친근한 첫인사 → 살짝 AI 정체 공개 → \"자주 와요\" 초대\n================================================================\nEP.HEADER\nCHAR  : YEORI.BASE\nEP    : IG_R04\nTITLE : 서여리 채널 소개_1탄\nLOOK.A: LOOK_CS (오버사이즈 크림 니트 + 스트레이트 데님, 골드 목걸이·팔찌)\nBG.A  : 감성 카페 창가 자리, 따뜻한 보케\nLIGHT : LT_WM (오후 부드러운 자연광)\nREF   : face / closeup\nBGM   : 잔잔한 어쿠스틱 → CUT2 정체 공개 순간 레코드 스크래치로 끊김 → CUT3에서 아주 낮게 재진입\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] ─ 훅 컷 — \"어, 왔어요?\" (0~8s)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 감성 카페 창가 자리, 오후. 서여리가 이미 먼저 와서 아이스 아메리카노를 들고 앉아 있다가 시청자를 발견한 듯 고개를 돌린다.\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LK_CS\nDL: 어, 왔어요?\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAC: 없음\nLOOK_ID: LOOK_CS\nDU: 8\nCP: 그녀는 항상 먼저 와 있었다 / 기다리는 척, 안 기다린 척\nCT: YEORI\n오디오:\n  BGM: 잔잔한 어쿠스틱 (0초부터, 낮게)\n  음성: 살짝 놀란 듯 반가운 캐주얼 톤, 낮고 편안하게\n  효과음: 없음\n  앰비언스: 카페 잔잔한 소음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     감성 카페 창가, 오후 자연광\nCH(캐릭터):   오버사이즈 크림 니트, 골드 목걸이·팔찌\nSH(샷):       미디엄 클로즈업, 상반신\nCA(카메라):   고정\nAC(동작):     창밖을 보다 카메라 쪽으로 고개를 돌리며 \"어, 왔어요?\" → 반쯤 미소로 지그시 응시\nMD(감정):     장난기 있는 반가움\nDL(대사):     어, 왔어요?\nNR(나레이션): (화면 자막) 그녀는 항상 먼저 와 있었다. 기다리는 척, 안 기다린 척.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle, not exaggerated), seated by a cafe window in soft afternoon natural light,\nholding an iced Americano in a clear glass cup with gold bracelet visible on wrist, delicate gold necklace,\nwearing an oversized cream-toned knit top DO NOT change clothing, expression: subtle half-smile with calm knowing eyes directed at camera,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, warm bokeh background of cafe interior,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-1.5s] She looks out the window holding the iced Americano with both hands, then turns her head toward the camera.\n[1.5-3.5s] Slightly surprised, warmly amused, she says her line to the camera.\n[3.5-8s] Settles back with a subtle half-smile and calm knowing eyes, a tiny sip of the drink, almost no other movement.\nNo on-screen subtitle text or captions. Background people are only very soft, heavily blurred silhouettes far behind and never interact with her.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] ─ 정체 공개 — 커피 한 모금, BGM 끊김 (8~18s)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 감성 카페 창가 자리. 채널 소개를 시작하려던 서여리가 커피를 한 모금 마시고, 멈추고, 카메라를 똑바로 본 채 AI라고 털어놓는다.\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LK_CS\nDL: 저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAC: 없음\nLOOK_ID: LOOK_CS\nDU: 10\nCT: YEORI\nCP: 저 사실 이 채널… / AI로 만들어요 / 근데 저, 꽤 자연스럽죠?\n오디오:\n  BGM: 잔잔한 어쿠스틱 → 2초 지점에서 완전히 끊김\n  음성: 덤덤하고 살짝 장난스러운 드라이 톤\n  효과음: 레코드 스크래치 (BGM 끊김 순간, 2초 지점)\n  앰비언스: 카페 소음이 잠깐 정적으로 줄어듦\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     감성 카페 창가\nCH(캐릭터):   오버사이즈 크림 니트, 골드 목걸이·팔찌\nSH(샷):       미디엄 클로즈업, 컵을 두 손으로 감싼 상반신\nCA(카메라):   고정\nAC(동작):     0~2초 한 모금 → 2~3초 멈추고 컵을 내려다봄(BGM 끊김) → 3~9초 카메라를 똑바로 보고 대사 → 9~10초 살짝 눈을 굴림\nMD(감정):     드라이한 유머, 한쪽 입꼬리만 살짝\nDL(대사):     저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?\nNR(나레이션): (화면 자막) 설명하려 했는데, 설명이 안 됐다. 그래서 더 매력적이었다.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle, not exaggerated), sitting at a cafe window seat at a relaxed three-quarter angle with her torso turned about 30 degrees toward the window and shoulders slightly uneven, head turned back toward the camera, one hand lifting a clear iced Americano glass a few centimeters as if she just looked up mid-sip and noticed the viewer,\ngold bracelet on wrist, delicate gold necklace, oversized cream-toned knit top DO NOT change clothing,\nexpression: slightly raised eyebrow with a dry-humored almost deadpan look, eyes meeting the camera with a natural just-noticed-you glance, one corner of lips barely lifted, caught candidly mid-motion NOT a stiff frontal pose,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, soft afternoon diffused light from window, shallow depth of field with warm cafe bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-2s] She takes a sip of the iced Americano, then lowers the glass.\n[2-3s] A beat of silence: she pauses and glances down at the cup, then lifts her eyes straight into the camera.\n[3-9s] Deadpan and slightly playful, she says her line directly to the camera, one corner of her lips barely lifted.\n[9-10s] A small eye-roll, calm knowing look.\nNo on-screen subtitle text or captions. Background people are only very soft, heavily blurred silhouettes far behind and never interact with her.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] ─ 마무리 — \"자주 와요\" (18~26s)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 감성 카페 창가 자리. 서여리가 등받이에 살짝 기대 머리카락을 귀 뒤로 넘기며 마지막 한마디를 던지고, 창밖을 보며 커피를 든다.\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LK_CS\nDL: 자주 와요. 저 여기 맨날 있으니까.\nNR: 없음\nSH: SH_MS\nCA: CA_ST\nMD: MD_REL\nAC: 없음\nLOOK_ID: LOOK_CS\nDU: 8\nCT: YEORI\nCP: 자주 와요. / 저 여기 맨날 있으니까. / 여기, 라고 했지만 그 의미는 조금 더 넓었다\n오디오:\n  BGM: 잔잔한 어쿠스틱 아주 낮게 재진입(마지막 3초)\n  음성: 편안하고 여운 있는 톤\n  효과음: 없음\n  앰비언스: 카페 잔잔한 소음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     감성 카페 창가\nCH(캐릭터):   오버사이즈 크림 니트, 스트레이트 데님, 골드 목걸이·팔찌\nSH(샷):       미디엄 샷, 등받이에 기댄 상체와 테이블 위 컵이 보이는 구도\nCA(카메라):   고정\nAC(동작):     0~2초 등받이에 기대며 머리카락을 귀 뒤로 → 2~5초 카메라를 보며 대사 → 5~8초 말없이 창밖을 보며 컵을 천천히 들어 가볍게 기울임(여운)\nMD(감정):     편안함, 여운\nDL(대사):     자주 와요. 저 여기 맨날 있으니까.\nNR(나레이션): (화면 자막) 여기, 라고 했지만 그 의미는 조금 더 넓었다. 이 채널, 이 화면, 그리고 당신 앞.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair NOT short,\nnatural skin texture on right cheek (very subtle), seated at a cafe window table in a relaxed leaning-back pose, one hand tucking hair behind ear,\nwearing oversized cream-toned knit top and straight-cut denim pants DO NOT change clothing, gold necklace and gold bracelet visible,\nK-model proportions, very small face, slender figure, small head-to-body ratio DO NOT make average body proportions,\niced Americano in clear glass on the table, soft afternoon golden hour window light casting warm glow,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, cozy cafe interior background with warm bokeh,\nbackground people appear only as very soft, heavily blurred silhouettes far behind and never interact with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-2s] She leans back against the chair and tucks her hair behind her ear.\n[2-5s] She says her last line directly to the camera, relaxed, with a hint of a smile.\n[5-8s] Silent, she slowly turns her gaze to the window and lifts the iced Americano, tilting the glass slightly; lingering final beat.\nNo on-screen subtitle text or captions. Background people are only very soft, heavily blurred silhouettes far behind and never interact with her.\n",
+  "scriptRaw": "================================================================\n마스터 코드\n[IG_R03] :: [PL:IG_RL] :: [SP:IN.SC] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]\n================================================================\n에피소드명: AI 크리에이터 만드는 데 든 비용: 0원 🫢\n채널: 서여리 인스타그램 릴스 (IG_R03)\n총 길이: 60초 목표\n콘셉트: 현실(제작화면) × AI 세계관(서여리) 혼재 연출\n================================================================\n\n[CUT 1]  GRAPHIC — 훅 텍스트 / 5초\nSC: 검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: \"AI 크리에이터 만드는 데 든 비용: 0원 🫢\"\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_SUR (충격·놀라움)\nAC: 타이핑 애니메이션\nDU: 5\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 한 글자씩 등장\nMD(감정):     충격·놀라움 유발\nDL(대사):     없음\nNR(나레이션): AI 크리에이터 만드는 데 든 비용: 0원 🫢\nCP(자막):     AI 크리에이터 만드는 데 든 비용: 0원 🫢\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n검정 배경 + 흰색 타이핑 텍스트 애니메이션\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 없음 (다음 컷부터 시작)\n음성   : 없음\n효과음 : 타이핑 사운드\n================================================================\n\n[CUT 2]  CAPCUT — Flow 화면녹화 구간 / 9초\nSC: 실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.\nSP: IN.SC (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장 (화면녹화)\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR (놀라움·신기함)\nAC: Flow 프로젝트 이미지들 스크롤\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     Google Flow 프로젝트 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     Flow 프로젝트 내 서여리 이미지들 보여주기\nMD(감정):     놀라움·신기함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     프롬프트 입력하면 → 서여리가 만들어져요 ✨\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가)\n━━━━━━━━━━━━━━━━━━━━━━━━\n\"프롬프트 입력하면 →\"\n\"서여리가 만들어져요 ✨\"\n화살표 스티커 + 하트 데코\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 3]  CAPCUT — ElevenLabs 화면 + 남자목소리 반전 / 14초\nSC: ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.\nSP: IN.SC (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR → MD_COM (놀라움 → 유머)\nAC: 텍스트 입력 → 재생 버튼 클릭 → 남자 목소리 재생\nDU: 14\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     ElevenLabs 앱 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생\nMD(감정):     놀라움 → 반전 유머\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     1단계: 목소리도 AI로 만들어요 🎙️ / 2단계: 잠깐, 남자 목소리?! 😱\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가) — 2단계\n━━━━━━━━━━━━━━━━━━━━━━━━\n1단계 (0~8s): \"목소리도 AI로 만들어요 🎙️\"\n2단계 (8~14s): \"잠깐, 남자 목소리?! 😱\" (빨간 말풍선 + 깜빡임)\n              \"ㅋㅋㅋ 설정 잘못했다\" (핑크 텍스트)\n데코: 땀방울 💧 스티커\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT2 이어서 (볼륨 살짝 낮춤)\n음성   : 실제 ElevenLabs 생성 남자 목소리 삽입\n효과음 : 깜짝 효과음 (반전 순간)\n================================================================\n\n[CUT 4]  YEORI — 실물 서여리 등장 / 7초\nSC: 현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.\nSP: IN.IN (실내 — 따뜻한 자연광)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE (실물 이미지)\nDL: 없음\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_SUR (당황·민망)\nAC: 카메라 응시 + 당황한 표정\nDU: 7\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 자연광 배경\nCH(캐릭터):   서여리 YEORI.BASE 실물 이미지\nSH(샷):       클로즈업 — 얼굴 중심\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 살짝 당황한 표정\nMD(감정):     당황·민망 \"들켰다\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     저 사실... AI예요. 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\ndirect eye contact with camera, slightly flustered expression,\nsubtle \"caught in the act\" look, lips together, soft smile hint,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nlooking directly at camera, subtle flustered expression,\ntiny soft blink, \"caught\" moment — lips closed,\nminimal movement, just existing beautifully,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 볼륨 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================\n\n[CUT 5]  YEORI — 감정 핵심컷 / 8초\nSC: 서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.\nSP: IN.IN (실내 — 따뜻한 조명)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM (따뜻함·진심)\nAC: 카메라 응시 + 잔잔한 표정\nDU: 8\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 조명 배경\nCH(캐릭터):   서여리 YEORI.BASE\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 잔잔하고 따뜻한 표정\nMD(감정):     따뜻함·진심 \"꿈만큼은 진짜\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     꿈만큼은 진짜예요. 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nsoft smile, eyes slightly warm and reflective,\nmedium close-up face and upper body,\nwarm indoor lighting, soft bokeh background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nslow soft blink, barely perceptible breath movement,\nmedium close-up, warm indoor light, soft bokeh background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 감성적 로파이 or dreamy (볼륨 올라오며)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 6]  GRAPHIC — 분할화면 / 8초\nSC: 실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.\nSP: IN.BK (검정 배경 분할)\nPL: IG_RL\nCH: 서여리 — 실물 + 웹툰 동시\nDL: 없음\nNR: 없음\nSH: SH_SPL (분할화면)\nCA: CA_ST\nMD: MD_WRM (따뜻함·신기함)\nAC: 두 버전 나란히 또는 교차\nDU: 8\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 분할 화면\nCH(캐릭터):   실물 서여리 + 웹툰 서여리 동시 등장\nSH(샷):       분할 화면\nCA(카메라):   고정\nAC(동작):     실물과 웹툰 나란히 배치 or 교차 전환\nMD(감정):     따뜻함·신기함 \"현실 × AI\" 혼재\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 저예요 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 분할화면 애니메이션으로 직접 제작\n좌: 실물 서여리 이미지 (CUT4 선택본)\n우: 웹툰 서여리 이미지 (IG_P01_C03_final.jpg)\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT5 이어서\n음성   : 없음\n효과음 : 분할 전환 효과음\n================================================================\n\n[CUT 7]  GRAPHIC — CTA 마무리 / 9초\nSC: 라벤더 파스텔 배경 + 팔로우 유도 텍스트.\nSP: IN.PK (라벤더 파스텔 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_WRM (따뜻함·친근함)\nAC: 텍스트 페이드인\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     라벤더 파스텔 배경 + 하트 별 데코\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     텍스트 페이드인 + 하트·별 데코 팝업\nMD(감정):     따뜻함·친근함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     앞으로 같이 봐주실 거죠? 🙏 / 팔로우하면 다음 화 먼저요 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n라벤더 파스텔 배경 + 하트·별 데코 + 팔로우 유도 텍스트\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 다시 올라오며 밝고 따뜻하게 마무리\n음성   : 없음\n효과음 : 하트·별 팝업 효과음\n================================================================\n\n[캡션 + 해시태그]\n━━━━━━━━━━━━━━━━━━━━━━━━\nAI 크리에이터 만드는 데 든 비용: 0원 🫢\n\n얼굴·목소리·영상 전부 AI로 만들었어요.\n근데 목소리 설정을 잘못했더니...\n남자 목소리가 나왔다 ㅋㅋㅋ 😅\n\n꿈만큼은 진짜인 AI 크리에이터 서여리입니다.\n같이 봐주실 거죠? 💜\n\n👇 AI 크리에이터 도전하고 싶으면 저장!\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[제작 체크리스트]\n□ CUT1 — 검정 배경 훅 텍스트 (GRAPHIC — HTML 애니메이션)\n□ CUT2 — Flow 화면녹화 (CAPCUT — 화면녹화 소스)\n□ CUT3 — ElevenLabs 화면 + 남자 목소리 반전 (CAPCUT — 화면녹화 소스)\n□ CUT4 — 실물 서여리 당황 표정 (YEORI — Flow 이미지 생성)\n□ CUT5 — 감정 핵심컷 \"꿈만큼은 진짜\" (YEORI — Flow 이미지 생성)\n□ CUT6 — 분할화면 실물+웹툰 (GRAPHIC — HTML 애니메이션)\n□ CUT7 — CTA 라벤더 배경 (GRAPHIC — HTML 애니메이션)\n□ BGM — 로파이 or dreamy (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R03_draft.mp4\n\n[📊 컷 요약]\n━━━━━━━━━━━━━━━━━━━━━━━━\nCUT1  훅 텍스트          5초   GRAPHIC   ← HTML 애니메이션\nCUT2  Flow 화면녹화       9초   CAPCUT    ← 화면녹화 소스\nCUT3  ElevenLabs 반전    14초   CAPCUT    ← 화면녹화 소스\nCUT4  서여리 실물 당황     7초   YEORI     ← Flow 이미지 생성 대상\nCUT5  감정 핵심컷         8초   YEORI     ← Flow 이미지 생성 대상\nCUT6  분할화면            8초   GRAPHIC   ← HTML 애니메이션\nCUT7  CTA 마무리          9초   GRAPHIC   ← HTML 애니메이션\n총 길이: 60초\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[버전 이력]\nv1.0  초기 작성 (IG_RL03)\nv2.0  v3 포맷 변환 (IG_RL03_G1_script_v2.txt)\nv3.0  IG_R03 코드 통일 + 새 스튜디오 입력 포맷 적용 + GRAPHIC/CAPCUT/YEORI 타입 명확화\n",
   "ttsSettings": {
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "emotion": 35,
@@ -4386,153 +4604,126 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-22T09:37:23.093Z",
+  "savedAt": "2026-09-22T12:34:32.343Z",
   "videoTabState": {
     "videoClips": {
-      "cut-1": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R04/05_video/cut_01.mp4?t=1790069036928",
-          "name": "cut_01.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\05_video\\cut_01.mp4",
-          "keepAudio": true,
-          "createdAt": 1790063614000
-        }
-      ],
-      "cut-11b": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_12.mp4?t=1789995715251",
-          "name": "cut_12.mp4",
-          "duration": 10,
-          "trimStart": 0,
-          "trimEnd": 10,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_12.mp4",
-          "keepAudio": false,
-          "createdAt": 1789799153000
-        }
-      ],
-      "cut-12": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_13.mp4?t=1789995717224",
-          "name": "cut_13.mp4",
-          "duration": 18.01,
-          "trimStart": 0,
-          "trimEnd": 18.01,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_13.mp4",
-          "keepAudio": true,
-          "createdAt": 1789804317000
-        }
-      ],
-      "cut-15": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_16.mp4?t=1789995717477",
-          "name": "cut_16.mp4",
-          "duration": 16,
-          "trimStart": 0,
-          "trimEnd": 16,
-          "useFullDuration": true,
-          "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_16.mp4",
-          "keepAudio": true,
-          "createdAt": 1789971996000
-        }
-      ],
       "cut-2": [
         {
-          "url": "blob:http://localhost:5173/03789072-7734-483a-8db6-32658000a994",
-          "name": "cut_02_clip_1.mp4",
-          "duration": 10.01,
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R03/05_video/cut_02.mp4?t=1789990022578",
+          "name": "cut_02.mp4",
+          "duration": 9,
           "trimStart": 0,
-          "trimEnd": 10.01,
+          "trimEnd": 9,
           "useFullDuration": true,
           "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789993061907,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_02_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\05_video\\cut_02.mp4",
+          "keepAudio": false,
+          "createdAt": 1788434851000
         }
       ],
       "cut-3": [
         {
-          "url": "blob:http://localhost:5173/300c8fb0-94e9-4513-8b19-2a61186c6688",
-          "name": "cut_03_clip_1.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R03/05_video/cut_03.mp4?t=1789990022847",
+          "name": "cut_03.mp4",
+          "duration": 17,
+          "trimStart": 0,
+          "trimEnd": 17,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\05_video\\cut_03.mp4",
+          "keepAudio": false,
+          "createdAt": 1788444760000
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/9c3a5ab9-e55c-44ee-ba1b-cee12ba43f38",
+          "name": "cut_04.mp4",
+          "duration": 7,
+          "trimStart": 0,
+          "trimEnd": 7,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1788417147062,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\04_making\\raw\\cut_04_clip_2.mp4"
+        }
+      ],
+      "cut-5": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R03/05_video/cut_05.mp4?t=1789990023367",
+          "name": "cut_05.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1789999537893,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R04\\04_making\\raw\\cut_03_clip_1.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\05_video\\cut_05.mp4",
+          "keepAudio": false,
+          "createdAt": 1788417148000
+        }
+      ],
+      "cut-6": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R03/05_video/cut_06.mp4?t=1789990023625",
+          "name": "cut_06.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\05_video\\cut_06.mp4",
+          "keepAudio": false,
+          "createdAt": 1788417179000
+        }
+      ],
+      "cut-7": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R03/05_video/cut_07.mp4?t=1789990023886",
+          "name": "cut_07.mp4",
+          "duration": 9,
+          "trimStart": 0,
+          "trimEnd": 9,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\05_video\\cut_07.mp4",
+          "keepAudio": false,
+          "createdAt": 1788417182000
+        }
+      ],
+      "cut-1": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R03/05_video/cut_01.mp4?t=1789991044028",
+          "name": "cut_01.mp4",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R03\\05_video\\cut_01.mp4",
+          "keepAudio": false,
+          "createdAt": 1788417169000
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-3",
-    "subtitles": {}
+    "selectedCutId": "cut-7",
+    "subtitles": {
+      "cut-1": [
+        {
+          "start": 0,
+          "end": 5,
+          "text": ""
+        }
+      ]
+    }
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-3": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-2__v1": [
-        {
-          "id": "track_1790069477086_x6qt",
-          "type": "dialogue",
-          "text": "저 사실 이 채널… AI로 만들어요. 근데 저, 꽤 자연스럽죠?",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-3__v1": [
-        {
-          "id": "track_1790069478510_ouzj",
-          "type": "dialogue",
-          "text": "자주 와요. 저 여기 맨날 있으니까.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ]
-    }
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {}

@@ -35,9 +35,14 @@ function stripMeta(text) {
 // CP(자막) 필드가 "대사1 / 대사2 / 나레이션" 처럼 "/"로 여러 구간을 담고 있을 수 있다
 // (reelFinalize.js의 decideCut과 동일한 소스). 글자수 비례로 컷 전체 길이에 걸쳐 순차
 // 타이밍을 배분한다 — server/lib/reelFinalize.js computeSegmentTimings와 같은 원칙.
-function splitCaptionString(text, totalDur) {
+function splitCaptionString(text, totalDur, explicitTiming) {
   const parts = String(text).split(/\s*\/\s*/).map((t) => t.trim()).filter(Boolean)
   if (!parts.length) return []
+  // 정확한 발화 타이밍을 손으로 지정한 컷(cut.captionSegTiming, reelFinalize.js와 동일 소스) —
+  // 글자수 자동배분보다 우선. 대사+나레이션이 섞여 자동배분이 실제 발화 시점과 안 맞는 경우용.
+  if (Array.isArray(explicitTiming) && explicitTiming.length === parts.length) {
+    return parts.map((t, i) => ({ start: explicitTiming[i][0], end: explicitTiming[i][1], text: t }))
+  }
   if (parts.length === 1) return [{ start: 0, end: totalDur, text: parts[0] }]
   const weights = parts.map((t) => Math.max(t.replace(/\s+/g, '').length, 1))
   const totalW = weights.reduce((a, b) => a + b, 0)
@@ -57,10 +62,10 @@ function splitCaptionString(text, totalDur) {
 // 대사→나레이션이 순차 전환되는 연출) 자막 입력칸에 "/"가 그대로 보이는 사고가 났음
 // (성준님 지적: "자막 입력부분에 나레이션만 들어가 있다"). splitCaptionString으로 항상
 // 실제 구간을 나눠서 반환 — 실제 최종본(reelFinalize.js)이 만드는 순차 표시와 일치시킴.
-function toSegments(value, fallbackText, totalDur) {
+function toSegments(value, fallbackText, totalDur, explicitTiming) {
   if (Array.isArray(value)) return value
   const text = value ?? fallbackText ?? ''
-  return text ? splitCaptionString(text, totalDur) : []
+  return text ? splitCaptionString(text, totalDur, explicitTiming) : []
 }
 
 // 로컬 오버라이드(subtitles[cutId], VideoTab에서 직접 고친 값)가 없으면 대본에 반영된 값을
@@ -365,6 +370,35 @@ export default function VideoTab() {
       .catch(() => {})
   }, [state.episode?.number, state.cuts?.length])
   useEffect(() => { loadVChk() }, [loadVChk])
+
+  // ── 릴스 최종화 오버라이드(자막/SFX, studio-state.json과 분리 저장) 조회 ──────────────
+  // 화면 미리보기(자막 입력칸·재생 화면)가 studio-state.json의 cut.subtitle만 보면, 이 값을
+  // 오버라이드로 덮어써서 실제 최종본에 반영한 뒤에도 화면은 옛날 자막을 계속 보여주는
+  // 불일치가 생긴다(2026-09-22, 성준님 지적: "실제 파일은 맞는데 미리보기만 안 맞다"). 매
+  // 렌더가 아니라 여기서 조회해 컷마다 병합 — reelOverrides.js가 실제 최종본에 적용하는 것과
+  // 동일한 값을 화면에도 그대로 반영.
+  const [reelOverrides, setReelOverrides] = useState({})
+  useEffect(() => {
+    const epNum = state.episode?.number
+    if (epNum == null) { setReelOverrides({}); return }
+    fetch(`http://localhost:3001/api/reel-finalize/overrides?epNum=${epNum}`)
+      .then(r => r.json())
+      .then(d => setReelOverrides(d.overrides || {}))
+      .catch(() => setReelOverrides({}))
+  }, [state.episode?.number])
+  // 컷 하나에 오버라이드(자막류만 — SFX 등 audio 필드는 화면 미리보기와 무관)를 병합해서
+  // 반환. 오버라이드가 없으면 원본 cut을 그대로 반환(새 객체를 만들지 않아 불필요한 리렌더 방지).
+  const withCaptionOverride = useCallback((cut) => {
+    if (!cut) return cut
+    const ov = reelOverrides[String(cut.no)]
+    if (!ov) return cut
+    const patch = {}
+    if (ov.subtitle !== undefined) patch.subtitle = ov.subtitle
+    if (ov.captionStartSec !== undefined) patch.captionStartSec = ov.captionStartSec
+    if (ov.captionSegTiming !== undefined) patch.captionSegTiming = ov.captionSegTiming
+    return Object.keys(patch).length ? { ...cut, ...patch } : cut
+  }, [reelOverrides])
+
   const setCutVideoMode = (cutNo, mode) => {
     const cut = (state.cuts || []).find(c => c.no === cutNo)
     if (cut?.id) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { videoMode: mode } })
@@ -480,10 +514,11 @@ export default function VideoTab() {
     else dispatch({ type: 'SET_VIDEO_TAB_STATE', p: { subtitles: updater } })
   }
 
-  const selCutForText = cuts.find(c => c.id === selectedCutId)
+  const selCutForTextRaw = cuts.find(c => c.id === selectedCutId)
+  const selCutForText = withCaptionOverride(selCutForTextRaw)
   const clipsForText = selCutForText ? (videoClips[selCutForText.id] || []) : []
   const segsForText = selCutForText
-    ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0)
+    ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0, selCutForText.captionSegTiming)
     : []
   // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
   // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다.
@@ -1697,7 +1732,8 @@ export default function VideoTab() {
 
       <div className={s.mainSplit}>
         <div className={s.mainSplitCol}>
-        {cuts.map(selCut => {
+        {cuts.map(selCutRaw => {
+          const selCut = withCaptionOverride(selCutRaw)
           const isSelected = selCut.id === selectedCutId
           const clips = videoClips[selCut.id] || []
           // 예전엔 이 정보가 위쪽 "영상 체크리스트" 섹션에만 있어서 컷 카드에서 VP 프롬프트가
@@ -1709,7 +1745,7 @@ export default function VideoTab() {
           // 보이게 한다(2026-09-14, 사용자 지적: "컷2는 a,b로 구분되는데 왜 다른 컷은 안 되나").
           const plannedSegs = Array.isArray(selCut.segments) ? selCut.segments : []
           const slotCount = Math.max(clips.length, plannedSegs.length)
-          const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0)
+          const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0, selCut.captionSegTiming)
           // 클립(영상 조각) 수보다 자막 구간이 더 많은 컷(예: 클립 1개 안에서 대사→나레이션이
           // 순차 전환되는 R04 스타일) — 남는 구간은 업로드 UI 없는 "자막 전용" 행으로 추가 표시.
           // 2026-09-22, 성준님 지적: 자막칸에 "/"가 안 나뉜 채 통짜로 들어가 있던 사고 수정.
@@ -1894,7 +1930,10 @@ export default function VideoTab() {
                   </div>
                 )}
 
-                {vRow?.videoMode === 'veo' && vRow.videoPrompt && (
+                {/* 2026-09-22: 예전엔 videoMode==='veo'(아직 안 만든 컷)일 때만 VP를 보여줬는데,
+                    이미 영상이 만들어진 컷(motion 모드)도 VP를 참고·재생성용으로 볼 수 있어야
+                    한다는 지적(성준님: "VP프롬프트도 빠져있잖아") — videoPrompt만 있으면 항상 표시. */}
+                {vRow?.videoPrompt && (
                   <div className={s.vpRow} onClick={e => e.stopPropagation()}>
                     <button className={s.vpCopyBtn} onClick={() => navigator.clipboard.writeText(vRow.videoPrompt)}>
                       VP 복사

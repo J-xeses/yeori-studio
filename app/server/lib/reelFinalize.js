@@ -326,6 +326,11 @@ export function decideCut(cut) {
     fit,
     caption,
     captionStart: Math.max(0, Number(cut.captionStartSec) || 0),   // 자막 시작 지연(초) — 영상에 이미 구워진 글자가 있는 앞 구간을 피할 때
+    // 세그별 정확한 타이밍 수동 지정([[start,end], ...], 컷 시작 기준 절대초) — 글자수 비례
+    // 자동배분(computeSegmentTimings)이 대사+나레이션이 섞인 컷(예: 대사 2줄은 짧게 말하고
+    // 나레이션 1줄이 한참 뒤에 나오는 R04 cut3)에서 실제 발화 타이밍과 안 맞을 때 사용.
+    // 세그 개수와 정확히 일치할 때만 적용, 아니면 무시하고 자동배분으로 폴백.
+    captionSegTiming: Array.isArray(cut.captionSegTiming) && cut.captionSegTiming.length ? cut.captionSegTiming : null,
     sfx,
     bgmText: String(audio.bgm || ''),
   }
@@ -465,7 +470,9 @@ export async function finalizeReel(p) {
     if (!d.caption) continue
     const segs = d.caption.segments
     const off = Math.min(d.captionStart || 0, Math.max(d.durSec - 1, 0))
-    const timings = computeSegmentTimings(segs, d.durSec - off)
+    const timings = (d.captionSegTiming && d.captionSegTiming.length === segs.length)
+      ? d.captionSegTiming.map(([s, e]) => ({ start: s - off, end: e - off }))
+      : computeSegmentTimings(segs, d.durSec - off)
     segs.forEach((seg, i) => {
       const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
       const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
@@ -504,7 +511,9 @@ export async function finalizeReel(p) {
       if (!d.caption) continue
       const segs = d.caption.segments
       const off = Math.min(d.captionStart || 0, Math.max(d.durSec - 1, 0))
-    const timings = computeSegmentTimings(segs, d.durSec - off)
+      const timings = (d.captionSegTiming && d.captionSegTiming.length === segs.length)
+        ? d.captionSegTiming.map(([s, e]) => ({ start: s - off, end: e - off }))
+        : computeSegmentTimings(segs, d.durSec - off)
       segs.forEach((seg, i) => {
         const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
         const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
