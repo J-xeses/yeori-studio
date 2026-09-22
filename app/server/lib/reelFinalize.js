@@ -304,7 +304,9 @@ export function decideCut(cut) {
   } else if (manualFile) {
     const at = ['start', 'mid', 'end'].includes(audio.sfxAt) ? audio.sfxAt : 'mid'
     const gain = Number.isFinite(Number(audio.sfxGain)) && audio.sfxGain !== '' && audio.sfxGain != null ? Math.min(1, Math.max(0.05, Number(audio.sfxGain))) : 0.7
-    sfx.push({ file: manualFile, at, gain, maxDur: null, layer: false, manual: true, reason: '직접 지정' })
+    // sfxAtSec(컷 시작 기준 초): start/mid/end로는 못 짚는 정확한 지점(예: "2초 지점에서 BGM 끊김")을 직접 지정할 때.
+    const atSec = Number.isFinite(Number(audio.sfxAtSec)) ? Math.max(0, Number(audio.sfxAtSec)) : null
+    sfx.push({ file: manualFile, at, atSec, gain, maxDur: null, layer: false, manual: true, reason: '직접 지정' })
   } else if (!SFX_NONE.test(sfxText)) {
     let rule = pickRule(sfxText)
     // 필드가 비었거나 "없음"이 아니지만 매칭 실패 → 장면/감정으로 보조 추론
@@ -514,7 +516,8 @@ export async function finalizeReel(p) {
       if (!fs.existsSync(abs)) { log(`⚠ SFX 없음: ${file}`); continue }
       useCount[file] = (useCount[file] || 0) + 1
       let atSec = d.startSec
-      if (s.at === 'mid') atSec = d.startSec + d.durSec * 0.55
+      if (Number.isFinite(s.atSec)) atSec = d.startSec + Math.min(s.atSec, Math.max(0, d.durSec - 0.3))
+      else if (s.at === 'mid') atSec = d.startSec + d.durSec * 0.55
       else if (s.at === 'end') atSec = d.startSec + Math.max(0, d.durSec - 1.2)
       atSec += 0.15
       sfxInputs.push('-i', abs)

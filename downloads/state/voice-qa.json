@@ -9,21 +9,21 @@
         "words": [
           {
             "text": "어,",
-            "start": 2.14,
-            "end": 2.26,
+            "start": 2.78,
+            "end": 2.94,
             "logprob": 0,
             "speaker": null
           },
           {
             "text": "왔어요?",
-            "start": 2.7,
-            "end": 3.12,
+            "start": 3.34,
+            "end": 3.72,
             "logprob": 0,
             "speaker": null
           }
         ],
         "flags": [],
-        "checkedAt": "2026-09-21T14:10:33.035Z"
+        "checkedAt": "2026-09-22T07:45:14.935Z"
       }
     },
     "2": {
@@ -37,7 +37,7 @@
             "text": "저",
             "start": 1.26,
             "end": 1.34,
-            "logprob": -0.01,
+            "logprob": -0.02,
             "speaker": null
           },
           {
@@ -105,7 +105,7 @@
           }
         ],
         "flags": [],
-        "checkedAt": "2026-09-21T14:29:47.108Z"
+        "checkedAt": "2026-09-22T07:48:39.224Z"
       }
     },
     "3": {
@@ -154,12 +154,12 @@
             "text": "있으니까.",
             "start": 5.3,
             "end": 5.86,
-            "logprob": -0.01,
+            "logprob": -0.02,
             "speaker": null
           }
         ],
         "flags": [],
-        "checkedAt": "2026-09-21T14:10:35.046Z"
+        "checkedAt": "2026-09-22T07:44:45.119Z"
       }
     }
   }

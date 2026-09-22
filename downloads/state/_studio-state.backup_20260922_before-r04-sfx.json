@@ -3945,11 +3945,7 @@
               "bgm": "잔잔한 어쿠스틱 → 2초 지점에서 완전히 끊김",
               "voice": "덤덤하고 살짝 장난스러운 드라이 톤",
               "sfx": "레코드 스크래치 (BGM 끊김 순간, 2초 지점)",
-              "ambience": "카페 소음이 잠깐 정적으로 줄어듦",
-              "sfxFile": "mood_shift/mixkit-vinyl-forward-and-back-scratch-705.wav",
-              "sfxAt": "mid",
-              "sfxAtSec": 2,
-              "sfxGain": 0.6
+              "ambience": "카페 소음이 잠깐 정적으로 줄어듦"
             },
             "kr": {
               "sp": "감성 카페 창가",
@@ -4391,7 +4387,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-22T07:53:44.664Z",
+  "savedAt": "2026-09-22T07:34:07.302Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
