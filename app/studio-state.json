@@ -4109,7 +4109,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-1",
+          "selectedCutId": "cut-3",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -4464,7 +4464,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-22T23:58:15.263Z",
+  "savedAt": "2026-09-23T03:09:58.979Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
