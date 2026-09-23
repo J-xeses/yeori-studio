@@ -1,0 +1,204 @@
+<!doctype html>
+<!--
+  IG_T01 티저 — "Se ye ri → Seoyeori → 서여리" (1080×1920, 6.5s)  v3 (2026-09-23)
+  - 애니메이션은 전부 CSS @keyframes(딜레이 절대시각) → 메이킹 파이프라인 MOTION:self 프레임 캡처와 호환
+    (document.getAnimations() 의 currentTime 을 프레임마다 지정해 스크럽).
+  - 두 동전 o 는 좌우 대칭: 왼쪽은 반시계·왼쪽으로, 오른쪽은 시계·오른쪽으로 뒤집혀 ㅇ 이 되고,
+    가운데 '여' 의 ㅇ 자리로 모여 하나로 합쳐진다.
+  - JS 는 로드 시 1회만: ?v=(색) ?f=(글꼴) 적용 + 글자 "잉크" 위치를 캔버스로 재서
+    ① 동전 뒷면 ㅇ 을 o 와 같은 위치·크기로 맞추고 ② '여' 안 ㅇ 의 정확한 중심·크기를 착지점으로 넘김.
+    → 글꼴을 바꿔도 착지점이 자동으로 맞는다. 타이밍엔 관여 안 함.
+  - 색(v): black(기본) · navy · wine · gold · ink · dark · glow
+  - 글꼴(f): plex(기본, IBM Plex Sans/KR) · square(Rajdhani/Do Hyeon) · saira(Saira/Gothic A1)
+  - ㅇ 모양(s): 기본=단독 자모 ㅇ(가로로 넓음) · yeo='여' 안의 ㅇ(좁음) — '여' 글자를 넣고 ㅇ 잉크만 clip-path 로 잘라 보여줌
+  - 이전 버전: teaser_seoyeori.v1-single-o.html(ㅇ 하나), .v2-serif-merge.html(세리프·같은 방향), .v3-plex-keep.html(A안 확정 보관)
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>IG_T01 Seoyeori Teaser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500&family=Rajdhani:wght@500;600&family=Do+Hyeon&family=Saira:wght@400;500&family=Gothic+A1:wght@400;500&display=block" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff; --ink: #111111; --coin: #111111; --hangul: #111111;
+    --en: 'IBM Plex Sans', sans-serif; --en-w: 500; --en-size: 176px; --en-ls: .02em;
+    --ko: 'IBM Plex Sans KR', sans-serif; --ko-w: 500; --ko-size: 176px; --ko-ls: .08em;
+    --blur0: 16px;
+  }
+  /* ── 글꼴 ─────────────────────────────────────────── */
+  body.f-square { --en: 'Rajdhani', sans-serif; --en-w: 600; --en-size: 214px; --en-ls: .03em;
+                  --ko: 'Do Hyeon', sans-serif;  --ko-w: 400; --ko-size: 186px; }
+  body.f-saira  { --en: 'Saira', sans-serif; --en-w: 400; --en-size: 176px; --en-ls: .03em;
+                  --ko: 'Gothic A1', sans-serif; --ko-w: 400; --ko-size: 176px; }
+  /* ── 색 ───────────────────────────────────────────── */
+  body.v-navy  { --ink: #1b2a4a; --coin: #1b2a4a; --hangul: #1b2a4a; }
+  body.v-wine  { --ink: #5a1a24; --coin: #5a1a24; --hangul: #5a1a24; }
+  body.v-gold  { --coin: #b8892b; }
+  body.v-ink   { --blur0: 28px; }
+  body.v-dark  { --bg: #0e0e10; --ink: #f4f1ea; --coin: #f4f1ea; --hangul: #f4f1ea; }
+  body.v-glow  { --bg: #0e0e10; --ink: #f4f1ea; --coin: #e9c46a; --hangul: #f4f1ea; }
+  body.v-glow .face, body.v-glow .word, body.v-glow .hangul { text-shadow: 0 0 18px rgba(233,196,106,.45); }
+  body.v-gold .face { background: linear-gradient(135deg,#8a6420 0%,#e8c46a 45%,#fff3c4 52%,#b8892b 70%,#7a5518 100%);
+                      -webkit-background-clip: text; background-clip: text; color: transparent; }
+  body.v-ink .word { filter: url(#bleed); }
+
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+  .stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+  /* ── 영문 ─────────────────────────────────────────── */
+  .word {
+    font-family: var(--en); font-weight: var(--en-w); font-size: var(--en-size);
+    color: var(--ink); letter-spacing: var(--en-ls); line-height: 1; display: flex; align-items: baseline;
+    animation: wordIn 1.4s cubic-bezier(.2,.7,.2,1) 0s both,
+               settle .45s cubic-bezier(.3,1.6,.5,1) 3.1s both;
+  }
+  .word .l { display: inline-block; animation: lettersOut .7s ease-in 3.9s both; }
+  @keyframes wordIn  { from { opacity: .18; filter: blur(var(--blur0)); letter-spacing: .1em; }
+                       to   { opacity: 1;   filter: blur(0);            letter-spacing: var(--en-ls); } }
+  @keyframes settle  { 0% { transform: scale(1); } 40% { transform: scale(1.035); } 100% { transform: scale(1); } }
+  @keyframes lettersOut { to { opacity: 0; filter: blur(14px); } }
+
+  /* ── 동전 o ───────────────────────────────────────── */
+  /* ghost = 보이지 않는 o(폭·베이스라인 확보) → 코인 면들이 같은 줄 위치에 겹쳐 그려짐 */
+  .slot { position: relative; display: inline-block; perspective: 900px; }
+  .ghost { visibility: hidden; }
+  /* 베이스라인 표식(폭·높이 0) — JS 가 rect.top 으로 실제 베이스라인 y 를 읽는다 */
+  i.bl { display: inline-block; width: 0; height: 0; vertical-align: baseline; }
+  .coin { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .face { position: absolute; left: 0; top: 0; width: 100%; text-align: center; color: var(--coin);
+          backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .face.back { transform: rotateY(180deg); }
+  /* ㅇ 면: 위치·크기는 JS 가 o 잉크에 맞춰 --hg-* 로 지정 */
+  .face.hg { font-family: var(--ko); font-weight: var(--ko-w); line-height: 1; color: var(--hangul); letter-spacing: 0;
+             font-size: var(--hg-size, 1em); left: var(--hg-x, 0px); top: var(--hg-y, 0px); width: auto; }
+
+  /* 슬롯: 위에서 떨어짐 → (4.35s~) 가운데 '여' 의 ㅇ 으로 모임
+     코인: 회전(rotate, 좌=반시계/우=시계) → (3.9s~) 바깥쪽으로 떨어지며 반바퀴 뒤집혀 ㅇ */
+  .c1, .c2 { animation: drop .45s cubic-bezier(.3,0,.6,1) var(--d0) both, toYeo .8s cubic-bezier(.5,0,.2,1) 4.35s forwards; }
+  .c1 { --d0: 1.4s; } .c2 { --d0: 1.6s; }
+  .c1 .coin { animation: spinL 1.5s cubic-bezier(.15,.6,.25,1) 1.4s both, flipL .55s cubic-bezier(.4,0,.2,1) 3.9s both; }
+  .c2 .coin { animation: spinR 1.5s cubic-bezier(.15,.6,.25,1) 1.6s both, flipR .55s cubic-bezier(.4,0,.2,1) 3.9s both; }
+  @keyframes drop  { from { opacity: 0; translate: 0 -1.1em; } 60% { opacity: 1; } to { opacity: 1; translate: 0 0; } }
+  @keyframes spinL { from { rotate: y 0deg; } to { rotate: y -1080deg; } }
+  @keyframes spinR { from { rotate: y 0deg; } to { rotate: y 1080deg; } }
+  @keyframes flipL { from { transform: translateX(0) rotateY(0deg); } to { transform: translateX(-.16em) rotateY(-180deg); } }
+  @keyframes flipR { from { transform: translateX(0) rotateY(0deg); } to { transform: translateX(.16em) rotateY(180deg); } }
+  /* 첫 회전 중엔 뒷면도 o, 마지막 뒤집기 직전에 ㅇ 으로 교체(두 동전 동시) */
+  .slot .back.o  { animation: hide 1ms linear 3.95s both; }
+  .slot .back.hg { animation: show 1ms linear 3.95s both; }
+  @keyframes hide { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes show { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes toYeo { 0% { transform: translate(0,0) scale(1); opacity: 1; }
+                     75% { opacity: 1; }
+                     100% { transform: translate(var(--dx,0px), var(--dy,0px)) scale(var(--ds,1)); opacity: 0; } }
+
+  /* ── 한글 ─────────────────────────────────────────── */
+  .hangul {
+    position: absolute; font-family: var(--ko); font-weight: var(--ko-w); font-size: var(--ko-size);
+    color: var(--hangul); letter-spacing: var(--ko-ls); line-height: 1;
+    animation: hangulIn 1.1s cubic-bezier(.2,.7,.2,1) 4.6s both;
+  }
+  @keyframes hangulIn { from { opacity: 0; filter: blur(18px); letter-spacing: .16em; }
+                        to   { opacity: 1; filter: blur(0);    letter-spacing: var(--ko-ls); } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <filter id="bleed"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="3"/></filter>
+</svg>
+<div class="stage">
+  <div class="word" id="word">
+    <span class="l">S</span><span class="l">e</span>
+    <span class="slot c1" id="c1"><span class="ghost">o<i class="bl"></i></span><span class="coin"><span class="face">o</span><span class="face back o">o</span><span class="face back hg" id="hg1">ㅇ<i class="bl"></i></span></span></span>
+    <span class="l">y</span><span class="l">e</span>
+    <span class="slot c2" id="c2"><span class="ghost">o<i class="bl"></i></span><span class="coin"><span class="face">o</span><span class="face back o">o</span><span class="face back hg" id="hg2">ㅇ<i class="bl"></i></span></span></span>
+    <span class="l">r</span><span class="l">i</span>
+  </div>
+  <div class="hangul" id="hangul">서<span id="yeo">여<i class="bl"></i></span>리</div>
+</div>
+<script>
+  const qs = new URLSearchParams(location.search)
+  if (qs.get('v')) document.body.classList.add('v-' + qs.get('v'))
+  if (qs.get('f')) document.body.classList.add('f-' + qs.get('f'))
+  const yeoShape = qs.get('s') === 'yeo'
+
+  // 캔버스로 글자 잉크(실제 칠해진 픽셀) 박스를 잰다. cx 는 글자 시작점 기준, cy 는 베이스라인 기준.
+  // part='first' 면 가장 왼쪽 잉크에서 시작해 이어진 덩어리 하나만(flood fill) — '여' 안의 ㅇ.
+  // (ㅕ 의 가로획이 ㅇ 과 세로 범위가 겹쳐서 "빈 세로줄" 방식으론 못 자른다)
+  function ink(ch, font, px, part) {
+    const W = Math.ceil(px * 2.2), H = Math.ceil(px * 2.2), B = Math.round(px * 1.5)
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H
+    const x = cv.getContext('2d', { willReadFrequently: true })
+    x.font = font; x.fillStyle = '#000'; x.textBaseline = 'alphabetic'; x.fillText(ch, 0, B)
+    const d = x.getImageData(0, 0, W, H).data, on = (i, j) => i >= 0 && j >= 0 && i < W && j < H && d[(j * W + i) * 4 + 3] > 96
+    let x0 = W, x1 = -1, y0 = H, y1 = -1
+    const grow = (i, j) => { if (i < x0) x0 = i; if (i > x1) x1 = i; if (j < y0) y0 = j; if (j > y1) y1 = j }
+    if (part === 'first') {
+      let si = -1, sj = -1
+      for (let i = 0; i < W && si < 0; i++) for (let j = 0; j < H; j++) if (on(i, j)) { si = i; sj = j; break }
+      const seen = new Uint8Array(W * H), st = [[si, sj]]; seen[sj * W + si] = 1
+      while (st.length) {
+        const [i, j] = st.pop(); grow(i, j)
+        for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+          const ni = i + di, nj = j + dj
+          if (on(ni, nj) && !seen[nj * W + ni]) { seen[nj * W + ni] = 1; st.push([ni, nj]) }
+        }
+      }
+    } else {
+      for (let i = 0; i < W; i++) for (let j = 0; j < H; j++) if (on(i, j)) grow(i, j)
+    }
+    return { cx: (x0 + x1 + 1) / 2, cy: (y0 + y1 + 1) / 2 - B, h: y1 - y0 + 1, l: x0, r: x1 + 1, t: y0 - B, b: y1 + 1 - B }
+  }
+  const fontOf = el => { const s = getComputedStyle(el); return `${s.fontWeight} ${s.fontSize} ${s.fontFamily}` }
+  const blY = el => el.querySelector('i.bl').getBoundingClientRect().top   // 실제 베이스라인 y
+
+  function place() {
+    const anims = document.getAnimations()
+    const at = (ms) => anims.forEach(a => { try { a.pause(); a.currentTime = ms } catch (e) {} })
+    const hg = ['hg1', 'hg2'].map(id => document.getElementById(id))
+    // s=yeo: 동전 뒷면 글자를 '여' 로 바꾸고 아래에서 ㅇ 부분만 잘라 보인다
+    const G = yeoShape ? '여' : 'ㅇ', part = yeoShape ? 'first' : undefined
+    if (yeoShape) hg.forEach(e => { e.firstChild.nodeValue = '여' })
+    // ① 동전 뒷면 ㅇ 을 앞면 o 와 같은 잉크 중심·높이로 (코인 변형이 없는 완성 시점 3.5s 에서 측정)
+    at(3500)
+    const ghost = document.querySelector('.ghost'), slot = document.getElementById('c1')
+    const o = ink('o', fontOf(ghost), 0 || parseFloat(getComputedStyle(ghost).fontSize))
+    const hs = getComputedStyle(hg[0])
+    const probe = ink(G, `${hs.fontWeight} 200px ${hs.fontFamily}`, 200, part)
+    const hgPx = 200 * (o.h / probe.h)
+    const ng = ink(G, `${hs.fontWeight} ${hgPx}px ${hs.fontFamily}`, hgPx, part)
+    hg.forEach(e => { e.style.setProperty('--hg-size', hgPx + 'px'); e.style.setProperty('--hg-x', '0px'); e.style.setProperty('--hg-y', '0px') })
+    const sTop = slot.getBoundingClientRect().top
+    const oCy = blY(ghost) - sTop + o.cy              // 슬롯 top 기준 o 잉크 중심 y
+    const gBl = blY(hg[0]) - hg[0].getBoundingClientRect().top          // ㅇ 면 top 기준 베이스라인
+    const gCy = gBl + ng.cy                                              // ㅇ 면 top 기준 ㅇ 잉크 중심 y
+    if (yeoShape) {   // ㅇ 잉크 박스(+1px 여유)만 남기고 ㅕ 는 잘라냄
+      const m = 1, t = gBl + ng.t - m, l = ng.l - m
+      const cp = `inset(${t}px calc(100% - ${ng.r + m}px) calc(100% - ${gBl + ng.b + m}px) ${l}px)`
+      hg.forEach(e => { e.style.clipPath = cp })
+    }
+    hg.forEach(e => { e.style.setProperty('--hg-x', (o.cx - ng.cx) + 'px'); e.style.setProperty('--hg-y', (oCy - gCy) + 'px') })
+    // ② 완성 시점 '여' 안 ㅇ 의 잉크 중심·높이 = 착지점
+    at(6000)
+    const y = document.getElementById('yeo')
+    const yi = ink('여', fontOf(y), parseFloat(getComputedStyle(y).fontSize), 'first')
+    const tx = y.getBoundingClientRect().left + yi.cx, ty = blY(y) + yi.cy
+    // ③ 뒤집기 끝난 직후(4.45s) 각 동전 ㅇ 의 잉크 중심 → 이동량·축소비율, 축소 기준점도 ㅇ 중심
+    at(4450)
+    ;['c1', 'c2'].forEach((c, k) => {
+      const r = hg[k].getBoundingClientRect(), el = document.getElementById(c), sr = el.getBoundingClientRect()
+      const px = r.left + ng.cx, py = blY(hg[k]) + ng.cy
+      el.style.transformOrigin = `${px - sr.left}px ${py - sr.top}px`
+      el.style.setProperty('--dx', (tx - px) + 'px')
+      el.style.setProperty('--dy', (ty - py) + 'px')
+      el.style.setProperty('--ds', (yi.h / ng.h).toFixed(3))
+    })
+    at(0); anims.forEach(a => { try { a.play() } catch (e) {} })
+  }
+  document.fonts.ready.then(place)
+</script>
+</body>
+</html>
