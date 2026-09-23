@@ -3,6 +3,7 @@
 //
 // 사용:
 //   node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force] [--scene=0.2]
+//   node scripts/ref-grab.mjs --rebuild [--cat=teaser]   갤러리 화면만 다시 생성
 //   (또는 C:\yeori-studio\ref-grab.bat 더블클릭 → 링크 붙여넣기)
 // 지원: 핀터레스트 핀(kr./www.pinterest.com/pin/…, pin.it 단축링크), mp4 직링크.
 //   인스타·유튜브는 로그인/차단 때문에 미지원 — 핀터레스트에 저장된 핀 링크를 쓰면 원본 출처도 같이 기록됨.
@@ -26,11 +27,14 @@ const ROOT = path.join(DOWNLOADS, '_shared', 'references', CAT)
 const FONT_DIR = 'C:/Windows/Fonts'   // drawtext 의 fontfile 경로에 드라이브 콜론을 안 쓰려고 cwd 로 지정
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128 Safari/537.36'
 
+fs.mkdirSync(ROOT, { recursive: true })
+if (opt.rebuild) {   // 링크 없이 갤러리(index.html)만 다시 생성 — 화면 레이아웃을 바꿨을 때
+  writeIndex(readIndex()); console.log(`갤러리 재생성: ${path.join(ROOT, 'index.html')}`); process.exit(0)
+}
 if (!links.length) {
-  console.log('사용: node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force]')
+  console.log('사용: node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force] [--scene=0.2]  |  --rebuild')
   process.exit(1)
 }
-fs.mkdirSync(ROOT, { recursive: true })
 
 const run = (cmd, a, o = {}) => spawnSync(cmd, a, { encoding: 'utf-8', windowsHide: true, maxBuffer: 64 << 20, ...o })
 const decode = s => String(s || '').replace(/&quot;/g, '"').replace(/&#x27;|&#39;/g, "'").replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
@@ -118,37 +122,127 @@ function sheet(file, times, dest, width = 240) {
 function readIndex() { try { return JSON.parse(fs.readFileSync(path.join(ROOT, 'index.json'), 'utf-8')) } catch { return [] } }
 function writeIndex(list) {
   fs.writeFileSync(path.join(ROOT, 'index.json'), JSON.stringify(list, null, 2))
-  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
-  const cards = list.map(e => `
-  <article>
-    <video src="${e.dir}/video.mp4" poster="${e.dir}/thumb.jpg" muted loop playsinline preload="none"
-      onmouseenter="this.play()" onmouseleave="this.pause()" onclick="this.muted=!this.muted"></video>
-    <div class="b">
-      <h2 title="${esc(e.title)}">${esc(e.title || e.id)}</h2>
-      <p class="m">${esc(e.author)} · ${e.duration ? e.duration.toFixed(1) + '초' : ''} · 컷 ${e.sceneCount ?? '-'}${e.views != null ? ' · 조회 ' + e.views : ''}</p>
-      ${e.note ? `<p class="n">📝 ${esc(e.note)}</p>` : ''}
-      <p class="l"><a href="${e.dir}/sheet_intro.png" target="_blank">도입 6초</a> <a href="${e.dir}/sheet_scenes.png" target="_blank">컷별</a>
-        <a href="${e.dir}/sheet_overview.png" target="_blank">전체</a> <a href="${e.dir}/README.md" target="_blank">메모</a>
-        <a href="${esc(e.url)}" target="_blank">핀</a>${e.source ? ` <a href="${esc(e.source)}" target="_blank">원본</a>` : ''}</p>
-      <p class="d">${esc(e.id)} · ${esc((e.addedAt || '').slice(0, 10))}</p>
-    </div>
-  </article>`).join('')
+  const cats = fs.readdirSync(path.dirname(ROOT), { withFileTypes: true })
+    .filter(d => d.isDirectory() && fs.existsSync(path.join(path.dirname(ROOT), d.name, 'index.json'))).map(d => d.name)
+  if (!cats.includes(CAT)) cats.push(CAT)
+  const data = JSON.stringify({ cat: CAT, cats, items: list }).replace(/</g, '\\u003c')
   fs.writeFileSync(path.join(ROOT, 'index.html'), `<!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><title>레퍼런스 · ${CAT}</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>레퍼런스 · ${CAT}</title>
 <style>
-  body{margin:0;background:#141416;color:#ddd;font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
-  header{padding:16px 20px;font-weight:700}
-  header small{font-weight:400;color:#888;margin-left:8px}
-  main{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;padding:0 20px 28px}
-  article{background:#1d1d21;border-radius:10px;overflow:hidden}
-  video{width:100%;aspect-ratio:9/16;object-fit:cover;background:#000;display:block;cursor:pointer}
-  .b{padding:10px 12px}
-  h2{font-size:13px;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .m,.d{color:#999;font-size:12px;margin:2px 0}.n{color:#e9c46a;font-size:12px;margin:4px 0}
-  .l a{color:#8ab4ff;font-size:12px;margin-right:8px;text-decoration:none}
+  :root{--bg:#121214;--panel:#1a1a1e;--panel2:#202026;--line:#2c2c33;--tx:#e4e4e7;--tx2:#9a9aa3;--acc:#e9c46a;--link:#8ab4ff}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
+  .app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:300px 1fr;height:100vh}
+  /* 상단 타이틀 바 */
+  .top{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .top b{font-size:15px}.top .cnt{color:var(--tx2);font-size:12px}
+  .top .sp{flex:1}.top .hint{color:var(--tx2);font-size:12px}
+  /* 좌측 사이드바 */
+  .side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--line)}
+  .set{padding:12px;border-bottom:1px solid var(--line);display:grid;gap:8px}
+  .set label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--tx2)}
+  .set select,.set input[type=search]{flex:1;min-width:0;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font:inherit;font-size:13px}
+  .set .row{display:flex;gap:14px}
+  .list{flex:1;overflow-y:auto;min-height:0}
+  .it{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+  .it:hover{background:var(--panel2)}.it.on{background:#2a2a33;box-shadow:inset 3px 0 0 var(--acc)}
+  .it img{width:48px;height:85px;object-fit:cover;border-radius:4px;background:#000;flex:none}
+  .it .t{font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .it .m{font-size:11px;color:var(--tx2);margin-top:3px}
+  .it .n{font-size:11px;color:var(--acc);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .empty{padding:20px;color:var(--tx2);font-size:13px}
+  /* 메인: 재생 화면 + 부가기능 예약 영역 */
+  .main{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:16px;padding:16px;min-height:0;overflow:auto}
+  .player{display:flex;flex-direction:column;gap:10px;min-height:0}
+  .player video{height:min(calc(100vh - 230px),782px);width:auto;max-width:100%;aspect-ratio:9/16;object-fit:contain;background:#000;border-radius:10px;align-self:flex-start}
+  .info h1{font-size:15px;margin:0 0 4px}.info p{margin:2px 0;font-size:12px;color:var(--tx2)}
+  .info .n{color:var(--acc)}.info a{color:var(--link);margin-right:10px;text-decoration:none;font-size:12px}
+  .reserve{border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#55555e;font-size:13px;min-height:240px}
+  @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:48px auto 1fr}.side{max-height:45vh}.main{grid-template-columns:1fr}.reserve{min-height:120px}}
 </style></head><body>
-<header>레퍼런스 · ${CAT}<small>${list.length}개 · 마우스 올리면 재생, 클릭하면 소리 · node scripts/ref-grab.mjs 로 추가</small></header>
-<main>${cards}</main></body></html>`)
+<div class="app">
+  <header class="top"><b>레퍼런스 보드</b><span class="cnt" id="cnt"></span><span class="sp"></span>
+    <span class="hint">↑↓ 이동 · Space 재생/정지 · M 소리 · 추가: ref-grab.bat</span></header>
+  <aside class="side">
+    <div class="set">
+      <label>분류 <select id="cat"></select></label>
+      <label>정렬 <select id="sort"><option value="new">최근 추가순</option><option value="old">오래된순</option><option value="dur">짧은 영상순</option><option value="views">조회수순</option></select></label>
+      <label><input type="search" id="q" placeholder="제목·메모·태그 검색"></label>
+      <div class="row"><label><input type="checkbox" id="auto" checked> 선택하면 바로 재생</label><label><input type="checkbox" id="snd"> 소리</label></div>
+    </div>
+    <div class="list" id="list"></div>
+  </aside>
+  <main class="main">
+    <section class="player">
+      <video id="vid" controls loop playsinline></video>
+      <div class="info" id="info"></div>
+    </section>
+    <section class="reserve" id="reserve">부가기능 영역 (예정)</section>
+  </main>
+</div>
+<script>
+const D = ${data}
+const $ = id => document.getElementById(id)
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
+const store = { get(k, d) { try { const v = localStorage.getItem('refboard.' + k); return v == null ? d : JSON.parse(v) } catch (e) { return d } },
+                set(k, v) { try { localStorage.setItem('refboard.' + k, JSON.stringify(v)) } catch (e) {} } }
+let view = [], cur = store.get('sel.' + D.cat, null)
+
+$('cat').innerHTML = D.cats.map(c => '<option' + (c === D.cat ? ' selected' : '') + '>' + esc(c) + '</option>').join('')
+$('cat').onchange = e => { location.href = '../' + e.target.value + '/index.html' }
+$('sort').value = store.get('sort', 'new'); $('auto').checked = store.get('auto', true); $('snd').checked = store.get('snd', false)
+$('sort').onchange = () => { store.set('sort', $('sort').value); render() }
+$('q').oninput = render
+$('auto').onchange = () => store.set('auto', $('auto').checked)
+$('snd').onchange = () => { store.set('snd', $('snd').checked); $('vid').muted = !$('snd').checked }
+
+function render() {
+  const q = $('q').value.trim().toLowerCase(), s = $('sort').value
+  view = D.items.filter(e => !q || [e.title, e.note, e.author, (e.tags || []).join(' '), e.description].join(' ').toLowerCase().includes(q))
+  const by = { new: (a, b) => (b.addedAt || '').localeCompare(a.addedAt || ''), old: (a, b) => (a.addedAt || '').localeCompare(b.addedAt || ''),
+               dur: (a, b) => (a.duration || 1e9) - (b.duration || 1e9), views: (a, b) => (b.views || 0) - (a.views || 0) }[s]
+  view.sort(by)
+  $('cnt').textContent = D.cat + ' · ' + view.length + (view.length !== D.items.length ? ' / ' + D.items.length : '') + '개'
+  $('list').innerHTML = view.length ? view.map(e => '<div class="it' + (e.id === cur ? ' on' : '') + '" data-id="' + esc(e.id) + '">'
+      + '<img src="' + esc(e.dir) + '/thumb.jpg" loading="lazy" alt="">'
+      + '<div><div class="t">' + esc(e.title || e.id) + '</div>'
+      + '<div class="m">' + (e.duration ? e.duration.toFixed(1) + '초 · ' : '') + '컷 ' + (e.sceneCount ?? '-') + (e.views != null ? ' · 조회 ' + e.views : '') + '</div>'
+      + (e.note ? '<div class="n">📝 ' + esc(e.note) + '</div>' : '') + '</div></div>').join('')
+    : '<div class="empty">' + (D.items.length ? '검색 결과가 없습니다' : '아직 레퍼런스가 없습니다 — ref-grab.bat 으로 링크를 추가하세요') + '</div>'
+  document.querySelectorAll('.it').forEach(el => el.onclick = () => select(el.dataset.id))
+  if (!view.some(e => e.id === cur)) { if (view[0]) select(view[0].id, false) }
+  else if (!$('vid').getAttribute('src')) select(cur, false)
+}
+
+function select(id, play = true) {
+  const e = D.items.find(x => x.id === id); if (!e) return
+  cur = id; store.set('sel.' + D.cat, id)
+  document.querySelectorAll('.it').forEach(el => el.classList.toggle('on', el.dataset.id === id))
+  const on = document.querySelector('.it.on'); if (on) on.scrollIntoView({ block: 'nearest' })
+  const v = $('vid')
+  v.poster = e.dir + '/thumb.jpg'
+  if (e.duration) v.src = e.dir + '/video.mp4'; else v.removeAttribute('src')
+  v.muted = !$('snd').checked
+  if (play && $('auto').checked && e.duration) v.play().catch(() => {})
+  $('info').innerHTML = '<h1>' + esc(e.title || e.id) + '</h1>'
+    + '<p>' + esc(e.author || '') + (e.published ? ' · 게시 ' + esc(e.published.slice(0, 10)) : '') + (e.duration ? ' · ' + e.duration.toFixed(1) + '초' : '') + (e.size ? ' · ' + esc(e.size) : '') + ' · 컷 ' + (e.sceneCount ?? '-') + '</p>'
+    + (e.note ? '<p class="n">📝 ' + esc(e.note) + '</p>' : '')
+    + '<p><a href="' + esc(e.dir) + '/sheet_intro.png" target="_blank">도입 6초</a><a href="' + esc(e.dir) + '/sheet_scenes.png" target="_blank">컷별</a>'
+    + '<a href="' + esc(e.dir) + '/sheet_overview.png" target="_blank">전체</a><a href="' + esc(e.dir) + '/README.md" target="_blank">메모</a>'
+    + '<a href="' + esc(e.url) + '" target="_blank">핀</a>' + (e.source ? '<a href="' + esc(e.source) + '" target="_blank">원본</a>' : '') + '</p>'
+}
+
+document.addEventListener('keydown', ev => {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT') return
+  const i = view.findIndex(e => e.id === cur), v = $('vid')
+  if (ev.key === 'ArrowDown' && view[i + 1]) { ev.preventDefault(); select(view[i + 1].id) }
+  else if (ev.key === 'ArrowUp' && view[i - 1]) { ev.preventDefault(); select(view[i - 1].id) }
+  else if (ev.key === ' ') { ev.preventDefault(); v.paused ? v.play() : v.pause() }
+  else if (ev.key === 'm' || ev.key === 'M') { $('snd').checked = !$('snd').checked; $('snd').onchange() }
+})
+render()
+</script></body></html>`)
 }
 
 async function grab(link) {
