@@ -26,7 +26,7 @@ try {
   for (const { c, f, name: v } of variants) {
     const page = await browser.newPage()
     await page.setViewport({ width: W, height: H })
-    const q = new URLSearchParams(); if (c !== 'black') q.set('v', c); if (f) q.set('f', f)
+    const q = new URLSearchParams(); if (c !== 'black') q.set('v', c); if (f) q.set('f', f); if (opt.s) q.set('s', opt.s)
     const url = pathToFileURL(path.resolve(htmlPath)).href + (q.toString() ? `?${q}` : '')
     await page.goto(url, { waitUntil: 'networkidle0' })
     await page.evaluate(() => document.fonts.ready)
