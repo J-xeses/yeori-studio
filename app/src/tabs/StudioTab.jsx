@@ -259,15 +259,65 @@ export default function StudioTab() {
 
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
 
-  const handleImageUpload = (cutId, file) => {
+  // 이미지 저장 위치 결정용 파라미터 — 인스타 콘텐츠면 서버가 instaDir 로 분기(scan-media 와 동일).
+  const cutImageTarget = () => {
+    const instaContent = state.cuts.map(c => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+      || episodeContentTypeToInsta(state.episode?.contentType)
+    const instaNum = instaContent ? (state.episode?.instaNum?.trim() || null) : null
+    return (instaContent && instaNum) ? { instaContent, instaNum } : {}
+  }
+
+  // 컷 카드의 "이미지 업로드/추가" — 예전엔 blob URL 로 화면에만 붙여서 디스크엔 저장이 안 됐고,
+  // 탭 재진입 시 scan-media 가 디스크의 예전 파일로 되돌려 놓았다(2026-09-23). 드래그 배정과 같은
+  // /api/upload-cut-image 로 실제 cut_NN_<a|b> 에 저장한다.
+  const handleImageUpload = async (cutId, file) => {
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setImages(prev => {
-      const existing = Array.isArray(prev[cutId]) ? prev[cutId] : (prev[cutId] ? [prev[cutId]] : [])
-      return { ...prev, [cutId]: [...existing, url] }
-    })
-    setSelectedImage(prev => ({ ...prev, [cutId]: (Array.isArray(images[cutId]) ? images[cutId].length : 0) }))
+    const cut = state.cuts.find(c => c.id === cutId)
+    if (!cut) return
+    const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
+    const qs = new URLSearchParams({ ep: state.episode.number, cutNo: cut.no, ext, ...cutImageTarget() })
+    try {
+      const res = await fetch(`http://localhost:3001/api/upload-cut-image?${qs}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '업로드 실패')
+      const url = `http://localhost:3001${data.url}?t=${Date.now()}`
+      let newIdx = 0
+      setImages(prev => {
+        const existing = Array.isArray(prev[cutId]) ? prev[cutId] : (prev[cutId] ? [prev[cutId]] : [])
+        newIdx = existing.length
+        return { ...prev, [cutId]: [...existing, url] }
+      })
+      setSelectedImage(prev => ({ ...prev, [cutId]: newIdx }))
+      // 선택이 새 이미지로 바뀌므로, 예전 이미지에 대해 받았던 컨펌/G2 는 무효.
+      setConfirmed(p => ({ ...p, [cutId]: false }))
+      setG2Approved(p => ({ ...p, [cutId]: false }))
+    } catch (e) {
+      alert(`CUT ${cut.no} 이미지 업로드 실패: ${e.message}`)
+    } finally {
+      if (fileRefs.current[cutId]) fileRefs.current[cutId].value = ''
+    }
     // 업로드/생성만으로는 G포인트를 찍지 않는다 — G2는 사람이 승인 버튼을 눌러야 참.
+  }
+
+  // ✕ — 화면에서만 빼면 scan-media 가 디스크 파일을 다시 읽어와 되살아나므로 서버에서도 치운다
+  // (_trash/ 로 이동, 되돌리기 가능). blob:/data: 처럼 디스크에 없는 이미지는 화면에서만 제거.
+  const deleteCutImageFile = async (cut, url) => {
+    const m = String(url || '').split('?')[0].match(/\/downloads\/.*\/(cut_[^/]+\.(?:jpe?g|png|webp))$/i)
+    if (!m) return true
+    try {
+      const res = await fetch('http://localhost:3001/api/delete-cut-image', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ep: state.episode.number, cutNo: cut.no, file: decodeURIComponent(m[1]), episodeCode, ...cutImageTarget() }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error || '삭제 실패')
+      return true
+    } catch (e) {
+      alert(`CUT ${cut.no} 이미지 삭제 실패: ${e.message}`)
+      return false
+    }
   }
 
   const copyPrompt = (text, cutId) => {
@@ -906,12 +956,13 @@ export default function StudioTab() {
                         ))}
                       </div>
                       {isSelected && <div className={s.selectedBadge}>✓ G2 승인용 선택됨</div>}
-                      <button className={s.compareRemove} onClick={e => {
+                      <button className={s.compareRemove} onClick={async e => {
                         e.stopPropagation()
+                        if (!(await deleteCutImageFile(cut, url))) return
                         const wasSelected = (selectedImage[cut.id] ?? 0) === idx
                         setImages(p => {
                           const arr = Array.isArray(p[cut.id]) ? p[cut.id] : []
-                          const newArr = arr.filter((_, i) => i !== idx)
+                          const newArr = arr.filter(u => u !== url)
                           const n = { ...p }
                           if (newArr.length) n[cut.id] = newArr
                           else delete n[cut.id]

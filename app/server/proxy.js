@@ -1858,6 +1858,39 @@ app.post('/api/upload-cut-image', (req, res) => {
   })
 })
 
+// ── POST /api/delete-cut-image — 스튜디오 탭 이미지 카드의 ✕ ─────────────────
+// 예전엔 ✕가 화면 state 에서만 빼고 디스크 파일은 그대로 둬서, 탭 재진입/에피소드 전환 때
+// /api/scan-media 가 그 파일을 다시 읽어와 "지웠는데 되살아나는" 현상이 났다(2026-09-23 IG_R04
+// CUT2 실측). 디렉터리 결정은 upload-cut-image 와 동일(인스타 콘텐츠면 instaDir). 완전 삭제 대신
+// 같은 폴더의 _trash/ 로 옮겨 되돌릴 수 있게 하고, gpoints 선택본이었으면 선택·G2 를 해제한다.
+app.post('/api/delete-cut-image', (req, res) => {
+  const { ep, cutNo, file, instaContent, instaNum, episodeCode } = req.body || {}
+  if (!ep || cutNo == null || !file) return res.status(400).json({ ok: false, error: 'ep, cutNo, file 필요' })
+  const p = String(cutNo).padStart(2, '0')
+  if (!new RegExp(`^cut_${p}(?:_[a-z0-9]{1,2})?\\.(jpe?g|png|webp)$`, 'i').test(file)) {
+    return res.status(400).json({ ok: false, error: `CUT ${cutNo} 이미지 파일명이 아닙니다: ${file}` })
+  }
+  const useInsta = instaContent && instaNum
+  const dir = useInsta ? instaDir(instaContent, instaNum, INSTA_SUBDIR[instaContent]) : mp.imagesDir(ep)
+  const abs = path.join(dir, file)
+  if (!fs.existsSync(abs)) return res.json({ ok: true, deleted: null, note: '디스크에 파일 없음(화면에서만 제거)' })
+  try {
+    const trashDir = path.join(dir, '_trash')
+    fs.mkdirSync(trashDir, { recursive: true })
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '').replace('T', '-')
+    const trashed = file.replace(/(\.[a-z0-9]+)$/i, `.${stamp}$1`)
+    fs.renameSync(abs, path.join(trashDir, trashed))
+    if (episodeCode) {
+      const gData = loadGpointsFile()
+      const cd = gData[episodeCode]?.[`cut_${parseInt(cutNo, 10)}`]
+      if (cd?.selectedImage === file) { cd.selectedImage = null; cd.g2 = false; saveGpointsFile(gData) }
+    }
+    res.json({ ok: true, deleted: file, trashed: `_trash/${trashed}` })
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message })
+  }
+})
+
 // ── 02_images 폴더 파일명 일괄 정리 ──────────────────────────────
 // Flow/외부 도구가 만든 제각각인 파일명을 cut_NN_<슬롯>.<ext> 규격으로 rename.
 // 파일명에서 컷 번호 추출: "cut2" / "cut_02" / "02_v2" / "2-b" / "[002]" / 앞쪽 첫 숫자.
