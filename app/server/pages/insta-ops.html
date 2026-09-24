@@ -91,7 +91,7 @@
     <p class="muted">추가: <code>downloads/seoyeori/IG/_account/profile/</code> 에 넣고 새로고침</p>
     <h2>계정명(핸들)</h2><select id="handle"></select>
     <p class="muted">사용 가능 여부는 인스타에서 직접 확인 — "이 계정명 확인"으로 열었을 때 <b>페이지가 없다고 나오면 비어 있는 이름</b>일 가능성이 큼</p>
-    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="chkHandle">🔎 이 계정명 확인</button><button class="btn" id="signup">🆕 인스타 가입 화면</button></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="chkHandle">🔎 이 계정명 확인</button><button class="btn" id="taken" title="확인해 보니 이미 있는 계정이면 표시(다시 누르면 해제)">🚫 사용 중 표시</button><button class="btn" id="signup">🆕 인스타 가입 화면</button></div>
     <h2>표시 이름</h2><select id="name"></select>
     <h2>Bio</h2><div class="bios" id="bios"></div>
     <p class="muted">크리에이터 계정 → 디지털 크리에이터 · 개설 직후 AI 라벨 + 2단계 인증</p>
@@ -206,7 +206,8 @@ function renderSetup() {
   if (!photos.includes(st.photo) && photos[0]) st.photo = photos[0]
   $('ph').innerHTML = photos.map(f => '<div><button class="' + (f === st.photo ? 'on' : '') + '" data-f="' + esc(f) + '"><img src="' + MEDIA + 'profile/' + encodeURIComponent(f) + '"></button><div class="lb">' + esc(f.replace(/\.[^.]+$/, '')) + '</div></div>').join('')
   document.querySelectorAll('.ph button').forEach(b => b.onclick = () => { st.photo = b.dataset.f; touch(); renderSetup() })
-  $('handle').innerHTML = HANDLES.map(h => '<option' + (h === st.handle ? ' selected' : '') + '>' + h + '</option>').join('')
+  const taken = st.taken || []
+  $('handle').innerHTML = HANDLES.map(h => '<option value="' + h + '"' + (h === st.handle ? ' selected' : '') + '>' + (taken.includes(h) ? '🚫 ' + h + ' (사용 중)' : h) + '</option>').join('')
   $('name').innerHTML = NAMES.map(h => '<option' + (h === st.name ? ' selected' : '') + '>' + esc(h) + '</option>').join('')
   $('handle').onchange = e => { st.handle = e.target.value; touch(); renderSetup() }
   $('name').onchange = e => { st.name = e.target.value; touch(); renderSetup() }
@@ -356,6 +357,10 @@ async function openB(body) {
 $('openIg').onclick = () => openB({ target: 'instagram', query: S?.settings?.handle })
 $('chkHandle').onclick = () => openB({ target: 'instagram', query: S?.settings?.handle })
 $('signup').onclick = () => openB({ target: 'instagram-signup' })
+$('taken').onclick = () => { const st = S.settings, t = st.taken = st.taken || []
+  const i = t.indexOf(st.handle); if (i >= 0) t.splice(i, 1); else t.push(st.handle)
+  if (i < 0) { const next = HANDLES.find(h => !t.includes(h)); if (next) st.handle = next }   // 다음 후보로 자동 이동
+  touch(); renderSetup() }
 
 ;(async () => { showTab(local.get('tab', 'board')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
 </script></body></html>
