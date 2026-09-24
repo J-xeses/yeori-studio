@@ -728,20 +728,23 @@
     "cut_1": {
       "g2": true,
       "selectedImage": "cut_01_b.jpg",
-      "updatedAt": "2026-09-22T14:26:51.445Z",
-      "g1": true
+      "updatedAt": "2026-09-24T08:20:33.790Z",
+      "g1": true,
+      "g3": true
     },
     "cut_2": {
       "g2": true,
       "selectedImage": "cut_02_a.jpg",
-      "updatedAt": "2026-09-23T03:10:21.753Z",
-      "g1": true
+      "updatedAt": "2026-09-24T08:18:27.268Z",
+      "g1": true,
+      "g3": true
     },
     "cut_3": {
       "g2": true,
       "selectedImage": "cut_03_a.jpg",
-      "updatedAt": "2026-09-22T14:26:51.446Z",
-      "g1": true
+      "updatedAt": "2026-09-24T08:20:52.669Z",
+      "g1": true,
+      "g3": true
     }
   }
 }
