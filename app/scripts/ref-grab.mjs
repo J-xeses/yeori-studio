@@ -138,6 +138,7 @@ function writeIndex(list) {
   .top{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
   .top b{font-size:15px}.top .cnt{color:var(--tx2);font-size:12px}
   .top .sp{flex:1}.top .hint{color:var(--tx2);font-size:12px}
+  @media (max-width:1200px){.top .hint{display:none}}
   /* 좌측 사이드바 */
   .side{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-right:1px solid var(--line)}
   .set{padding:12px;border-bottom:1px solid var(--line);display:grid;gap:8px}
@@ -163,6 +164,8 @@ function writeIndex(list) {
 </style></head><body>
 <div class="app">
   <header class="top"><b>레퍼런스 보드</b><span class="cnt" id="cnt"></span><span class="sp"></span>
+    <input type="search" id="pq" placeholder="핀터레스트 검색어 (예: text reveal teaser)" style="width:260px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 8px">
+    <button id="pgo" style="background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer">📌 핀터레스트 열기</button>
     <span class="hint">↑↓ 이동 · Space 재생/정지 · M 소리 · 추가: ref-grab.bat</span></header>
   <aside class="side">
     <div class="set">
@@ -230,8 +233,18 @@ function select(id, play = true) {
     + (e.note ? '<p class="n">📝 ' + esc(e.note) + '</p>' : '')
     + '<p><a href="' + esc(e.dir) + '/sheet_intro.png" target="_blank">도입 6초</a><a href="' + esc(e.dir) + '/sheet_scenes.png" target="_blank">컷별</a>'
     + '<a href="' + esc(e.dir) + '/sheet_overview.png" target="_blank">전체</a><a href="' + esc(e.dir) + '/README.md" target="_blank">메모</a>'
-    + '<a href="' + esc(e.url) + '" target="_blank">핀</a>' + (e.source ? '<a href="' + esc(e.source) + '" target="_blank">원본</a>' : '') + '</p>'
+    + '<a href="#" data-open="' + esc(e.url) + '">핀 새 창</a>' + (e.source ? '<a href="' + esc(e.source) + '" target="_blank">원본</a>' : '') + '</p>'
 }
+
+// 브라우저 열기 — 스튜디오 서버(/api/open-browser)가 별도 Chrome 창으로. 서버가 꺼져 있으면 새 탭.
+function openB(body) {
+  fetch('http://localhost:3001/api/open-browser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(r => { if (!r.ok) throw new Error() })
+    .catch(() => window.open(body.url || ('https://kr.pinterest.com/search/pins/?q=' + encodeURIComponent(body.query || '')), '_blank'))
+}
+$('pgo').onclick = () => openB({ target: 'pinterest', query: $('pq').value })
+$('pq').onkeydown = ev => { if (ev.key === 'Enter') openB({ target: 'pinterest', query: $('pq').value }) }
+$('info').onclick = ev => { const a = ev.target.closest('[data-open]'); if (a) { ev.preventDefault(); openB({ target: 'url', url: a.dataset.open }) } }
 
 document.addEventListener('keydown', ev => {
   if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'SELECT') return

@@ -80,7 +80,7 @@
   <button class="tab" data-t="setup">⚙️ 계정 세팅</button>
   <button class="tab" data-t="board">📅 운영 보드</button>
   <button class="tab" data-t="insight">📊 성과 분석</button>
-  <span class="sp"></span><span class="save" id="save">불러오는 중…</span>
+  <span class="sp"></span><button class="btn" id="openIg" title="선택한 계정명의 인스타 페이지를 새 Chrome 창으로">📷 인스타 열기</button><span class="save" id="save">불러오는 중…</span>
 </header>
 <div class="banner" id="banner"></div>
 
@@ -90,7 +90,8 @@
     <h2>프로필 사진</h2><div class="ph" id="ph"></div>
     <p class="muted">추가: <code>downloads/seoyeori/IG/_account/profile/</code> 에 넣고 새로고침</p>
     <h2>계정명(핸들)</h2><select id="handle"></select>
-    <p class="muted">사용 가능 여부는 인스타 개설 화면에서 직접 확인</p>
+    <p class="muted">사용 가능 여부는 인스타에서 직접 확인 — "이 계정명 확인"으로 열었을 때 <b>페이지가 없다고 나오면 비어 있는 이름</b>일 가능성이 큼</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="chkHandle">🔎 이 계정명 확인</button><button class="btn" id="signup">🆕 인스타 가입 화면</button></div>
     <h2>표시 이름</h2><select id="name"></select>
     <h2>Bio</h2><div class="bios" id="bios"></div>
     <p class="muted">크리에이터 계정 → 디지털 크리에이터 · 개설 직후 AI 라벨 + 2단계 인증</p>
@@ -269,11 +270,12 @@ function renderPosts() {
     '<td><input type="text" data-k="title" value="' + esc(p.title) + '"></td>' +
     '<td><input type="text" data-k="code" value="' + esc(p.code) + '" style="width:80px"></td>' +
     '<td><select data-k="status" style="border-color:' + STC[p.status] + '">' + STATUS.map(s => '<option' + (s === p.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td>' +
-    '<td><input type="text" data-k="link" value="' + esc(p.link) + '" placeholder="게시 URL" style="width:140px"></td>' +
+    '<td style="white-space:nowrap"><input type="text" data-k="link" value="' + esc(p.link) + '" placeholder="게시 URL" style="width:140px">' + (p.link ? ' <button class="x" data-open="1" title="새 창으로 열기">↗</button>' : '') + '</td>' +
     '<td><button class="x" data-del="1" title="삭제">✕</button></td></tr>').join('')
   document.querySelectorAll('#posts tr[data-id]').forEach(tr => {
     const p = S.posts.find(x => x.id === tr.dataset.id)
     tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { p[el.dataset.k] = el.value; touch(); renderSetup(); renderBoard(); renderInsight() })
+    const ob = tr.querySelector('[data-open]'); if (ob) ob.onclick = () => openB({ target: 'url', url: p.link })
     tr.querySelector('[data-del]').onclick = () => { if (confirm('"' + p.title + '" 을(를) 목록에서 삭제할까요?')) { S.posts = S.posts.filter(x => x !== p); touch(); renderAll() } }
   })
 }
@@ -340,6 +342,20 @@ function renderInsight() {
       (i < 2 ? '<b class="hi">적응형 2칸 배정 후보</b>' : i === scored.length - 1 && scored.length > 3 ? '<span class="lo">비중 축소 검토</span>' : '') + (o.n < 2 ? ' <span class="muted">(표본 1개 — 참고만)</span>' : '') + '</td></tr>').join('') + '</table>'
       + '<p class="muted">점수 = 공유율·저장율·방문율·팔로우 전환을 각 항목 최고값 대비로 환산한 평균(0~100). 도달은 알고리즘 운이 커서 제외. 참고용이며 최종 판단은 성준님.</p>' : '')
 }
+
+// 브라우저 열기 — 서버(/api/open-browser)가 별도 Chrome 창으로(허용: 유튜브·핀터레스트·인스타). 실패 시 새 탭.
+async function openB(body) {
+  try {
+    const r = await fetch('/api/open-browser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const j = await r.json(); if (!r.ok) throw new Error(j.error)
+  } catch (e) {
+    const u = body.url || (body.target === 'instagram' ? 'https://www.instagram.com/' + (body.query || '') : 'https://www.instagram.com')
+    window.open(u, '_blank')
+  }
+}
+$('openIg').onclick = () => openB({ target: 'instagram', query: S?.settings?.handle })
+$('chkHandle').onclick = () => openB({ target: 'instagram', query: S?.settings?.handle })
+$('signup').onclick = () => openB({ target: 'instagram-signup' })
 
 ;(async () => { showTab(local.get('tab', 'board')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
 </script></body></html>

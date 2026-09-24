@@ -3085,28 +3085,45 @@ function getForegroundWindow() {
   }
 }
 
-// 검색어로 유튜브 검색 결과(또는 빈 검색어면 유튜브 첫 화면)를 새 Chrome 창으로 띄운다 —
-// 이 창은 자동화 대상이 아니라 사람이 직접 검색·재생·스크럽하는 용도(2026-09-17, "윈도우
-// 녹화 구조" 요청). 디버그 포트(9222, start_gen.bat의 Flow용 프로필)와는 별개의 평범한
-// Chrome 창을 새 프로필 없이 띄운다 — 자동화 대상이 아니므로 CDP 연결이 필요 없음.
-app.post('/api/open-recording-browser', (req, res) => {
-  const { query } = req.body || {}
-  const url = query && String(query).trim()
-    ? `https://www.youtube.com/results?search_query=${encodeURIComponent(String(query).trim())}`
-    : 'https://www.youtube.com'
-  const candidates = [
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  ]
-  const chromePath = candidates.find(p => fs.existsSync(p))
-  if (!chromePath) return res.status(404).json({ error: 'Chrome 실행 파일을 찾을 수 없습니다' })
-  try {
-    const child = spawn(chromePath, ['--new-window', url], { detached: true, stdio: 'ignore', windowsHide: false })
-    child.unref()
-    res.json({ success: true, url })
-  } catch (err) {
-    res.status(500).json({ error: err.message })
+// ── 브라우저 열기(공용) ──────────────────────────────────────────────
+// 사람이 직접 보고·검색·재생하는 평범한 새 Chrome 창(자동화 대상 아님 → CDP/9222 프로필과 별개).
+// 2026-09-17 메이킹 탭 "윈도우 녹화 구조"의 유튜브 검색 창에서 시작 → 2026-09-24 레퍼런스 보드(핀터레스트)·
+// 인스타 운영실에서도 쓰도록 공용화. 서버가 아무 주소나 열지 않게 target 프리셋 + 허용 도메인만.
+const OPEN_BROWSER_HOSTS = /(^|\.)(youtube\.com|pinterest\.com|pinterest\.co\.kr|pin\.it|instagram\.com)$/i
+function openBrowserUrl({ target = 'youtube', query = '', url = '' } = {}) {
+  const q = String(query || '').trim()
+  if (target === 'youtube') return q ? `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` : 'https://www.youtube.com'
+  if (target === 'pinterest') return q ? `https://kr.pinterest.com/search/pins/?q=${encodeURIComponent(q)}` : 'https://kr.pinterest.com'
+  if (target === 'instagram') {
+    const h = q.replace(/^@/, '')
+    return /^[A-Za-z0-9._]{1,30}$/.test(h) ? `https://www.instagram.com/${h}/` : 'https://www.instagram.com'
   }
+  if (target === 'instagram-signup') return 'https://www.instagram.com/accounts/emailsignup/'
+  if (target === 'url') {
+    let u; try { u = new URL(String(url)) } catch { return null }
+    return (u.protocol === 'https:' && OPEN_BROWSER_HOSTS.test(u.hostname)) ? u.href : null
+  }
+  return null
+}
+function openChromeWindow(url) {
+  const chromePath = ['C:/Program Files/Google/Chrome/Application/chrome.exe',
+    'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'].find(p => fs.existsSync(p))
+  if (!chromePath) { const e = new Error('Chrome 실행 파일을 찾을 수 없습니다'); e.statusCode = 404; throw e }
+  const child = spawn(chromePath, ['--new-window', url], { detached: true, stdio: 'ignore', windowsHide: false })
+  child.unref()
+}
+// { target: youtube|pinterest|instagram|instagram-signup|url, query?, url? }
+app.post('/api/open-browser', (req, res) => {
+  const url = openBrowserUrl(req.body || {})
+  if (!url) return res.status(400).json({ error: '열 수 없는 주소입니다(유튜브·핀터레스트·인스타만 허용)' })
+  try { openChromeWindow(url); res.json({ success: true, url }) }
+  catch (err) { res.status(err.statusCode || 500).json({ error: err.message }) }
+})
+// 기존 메이킹 탭 호환 — 유튜브 검색 창
+app.post('/api/open-recording-browser', (req, res) => {
+  const url = openBrowserUrl({ target: 'youtube', query: req.body?.query })
+  try { openChromeWindow(url); res.json({ success: true, url }) }
+  catch (err) { res.status(err.statusCode || 500).json({ error: err.message }) }
 })
 
 app.post('/api/recording/start', async (req, res) => {
