@@ -49,5 +49,28 @@
     "voiceId": "0oqpliV6dVSr9XomngOW",
     "voiceName": "한지아 voice"
   },
+  "jiyu": {
+    "id": "jiyu",
+    "name": "지유",
+    "aliases": [
+      "지유",
+      "JIYU",
+      "JY",
+      "JY_VD",
+      "JY_TX",
+      "JY_IM"
+    ],
+    "face": "downloads/flow/character/jiyu-face.jpg",
+    "closeup": "downloads/flow/character/jiyu-closeup.jpg",
+    "flowCharacterName": "지유",
+    "primary": false,
+    "descriptor": "Consistent character face: youthful early-20s Korean woman, soft rounded face with full rosy cheeks and a small chin, porcelain-fair skin with a natural pink flush, dark brown eyes that curve into crescent shapes when she smiles, light straight see-through bangs over the forehead, straight glossy jet-black hair falling past the shoulders with soft face-framing layers (NOT wavy, NOT bob), glossy coral-red lip tint, bright bubbly open smile.",
+    "descriptorSource": "claude-vision (Flow 테스트 2장 성준님 선택)",
+    "descriptorUpdatedAt": "2026-09-24T12:30:00.000Z",
+    "notes": "서여리 또래 절친 2 · 먼저 웃음을 터뜨리는 발랄한 분위기 메이커 · 코랄 레드 틴트 시그니처 · 흰 피부를 살리는 가벼운 캐주얼(크롭·오프숄더·데님) · 첫 등장 예정 = 후보 #4 흑역사 챌린지 · 기본 머리 = 긴 레이어드(카페 테스트컷), 중단발(방 테스트컷)은 대안",
+    "refBasename": "jiyu",
+    "voiceId": null,
+    "voiceName": null
+  },
   "_voiceNote": "voiceId = ElevenLabs 목소리(클론/프리셋). STS·TTS 공용. ⚠️ 실제 우선순위: ttsSettings.speakerVoices(TTS탭 화자별 목소리) > 여기(시드). TTS탭에서 바꾸면 그게 최신."
 }
