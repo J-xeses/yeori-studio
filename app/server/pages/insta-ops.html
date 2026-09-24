@@ -1,0 +1,345 @@
+<!doctype html>
+<!--
+  서여리 인스타 운영실 — http://localhost:3001/insta-ops (proxy.js 가 제공)
+  탭: ⚙️ 계정 세팅 / 📅 운영 보드 / 📊 성과 분석
+  데이터: GET/PUT /api/insta-ops → downloads/seoyeori/IG/_account/ops.json (rev 확인 저장, server/lib/instaOps.js)
+  이미지: /downloads/seoyeori/IG/_account/{profile,grid}/
+-->
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서여리 인스타 운영실</title>
+<style>
+  :root{--bg:#121214;--panel:#1a1a1e;--panel2:#202026;--line:#2c2c33;--tx:#e4e4e7;--tx2:#9a9aa3;--acc:#e9c46a;--ok:#7bd88f;--warn:#f4a261;--bad:#ef6f6c;--link:#8ab4ff}
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
+  button,input,select{font:inherit;color:inherit}
+  .top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;height:52px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .top b{font-size:15px;margin-right:14px}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 12px;cursor:pointer;color:var(--tx2)}
+  .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+  .sp{flex:1}.save{font-size:12px;color:var(--tx2)}.save.err{color:var(--bad)}
+  .banner{display:none;padding:8px 16px;background:#3a2a12;color:var(--acc);font-size:13px}
+  section[data-tab]{display:none}section[data-tab].on{display:block}
+  .wrap{padding:18px}
+  h2{font-size:14px;margin:22px 0 10px;color:var(--tx2);font-weight:600}h2:first-child{margin-top:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .muted{color:var(--tx2);font-size:12px}
+  /* ── 계정 세팅 ── */
+  .setup{display:grid;grid-template-columns:340px auto 1fr;gap:24px;align-items:start}
+  .ph{display:flex;flex-wrap:wrap;gap:8px}
+  .ph button{border:2px solid transparent;border-radius:50%;padding:0;width:64px;height:64px;overflow:hidden;cursor:pointer;background:#000}
+  .ph button.on{border-color:var(--acc)}.ph img{width:100%;height:100%;object-fit:cover}
+  .ph .lb{font-size:10px;color:var(--tx2);text-align:center;width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  select,input[type=text],input[type=date],input[type=time],input[type=number]{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+  .setup select{width:100%}
+  .bios label{display:block;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;cursor:pointer;white-space:pre-line;font-size:12px}
+  .bios label.on{border-color:var(--acc);background:#24211a}
+  .phone{width:390px;background:#fff;color:#111;border-radius:28px;overflow:hidden;box-shadow:0 10px 40px #0008}
+  .ph-top{padding:14px 16px 4px;font-weight:700;font-size:17px}
+  .hdr{display:flex;align-items:center;gap:18px;padding:8px 16px}
+  .av{width:86px;height:86px;border-radius:50%;overflow:hidden;flex:none;background:#eee}.av img{width:100%;height:100%;object-fit:cover}
+  .stats{display:flex;gap:18px;font-size:13px;text-align:center}.stats b{display:block;font-size:15px}
+  .bio{padding:6px 16px 10px;font-size:13px;white-space:pre-line}.bio .nm{font-weight:700}.bio .cat{color:#777}
+  .ai{display:inline-block;font-size:11px;color:#555;background:#f1f1f1;border-radius:4px;padding:1px 6px;margin:2px 0}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+  .cell{aspect-ratio:3/4;background:#e9e9ee center/cover no-repeat;position:relative}
+  .cell span{position:absolute;left:4px;bottom:4px;right:4px;font-size:10px;color:#fff;background:#0009;border-radius:3px;padding:1px 4px}
+  .small{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+  .small .c{border-radius:50%;overflow:hidden;background:#eee}.small img{width:100%;height:100%;object-fit:cover}
+  /* ── 운영 보드 ── */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .kpi .v{font-size:24px;font-weight:700}.kpi .l{font-size:12px;color:var(--tx2)}
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  .cal .dw{font-size:11px;color:var(--tx2);text-align:center;padding:2px}
+  .day{min-height:84px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px;font-size:11px}
+  .day.out{opacity:.25}.day.today{border-color:var(--acc)}.day.cp{box-shadow:inset 0 0 0 1px var(--warn)}
+  .day .d{color:var(--tx2);margin-bottom:3px}
+  .chip{display:block;border-radius:4px;padding:2px 4px;margin-bottom:3px;color:#111;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .mix .row{display:grid;grid-template-columns:120px 1fr 70px;gap:10px;align-items:center;margin:6px 0;font-size:13px}
+  .bar{height:10px;background:var(--panel2);border-radius:5px;overflow:hidden;position:relative}
+  .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{color:var(--tx2);font-weight:600;font-size:12px;white-space:nowrap}
+  td input[type=text]{width:100%}td input[type=number]{width:74px}
+  tr.sel{background:#24211a}
+  .st{font-size:11px;border-radius:10px;padding:1px 8px}
+  .btn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+  .btn:hover{border-color:var(--tx2)}.x{background:none;border:none;color:var(--tx2);cursor:pointer}
+  .todo li{margin:4px 0}
+  /* ── 성과 분석 ── */
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .hi{color:var(--ok)}.lo{color:var(--bad)}
+  .fn{display:flex;gap:6px;align-items:flex-end;height:120px}
+  .fn div{flex:1;background:var(--link);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+  .fn span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--tx)}
+  .fnl{display:flex;gap:6px}.fnl div{flex:1;text-align:center;font-size:11px;color:var(--tx2)}
+  .scroll{overflow-x:auto}
+  @media (max-width:1100px){.setup{grid-template-columns:1fr}.two{grid-template-columns:1fr}}
+</style></head><body>
+<header class="top"><b>서여리 인스타 운영실</b>
+  <button class="tab" data-t="setup">⚙️ 계정 세팅</button>
+  <button class="tab" data-t="board">📅 운영 보드</button>
+  <button class="tab" data-t="insight">📊 성과 분석</button>
+  <span class="sp"></span><span class="save" id="save">불러오는 중…</span>
+</header>
+<div class="banner" id="banner"></div>
+
+<!-- ⚙️ 계정 세팅 -->
+<section data-tab="setup"><div class="wrap setup">
+  <div>
+    <h2>프로필 사진</h2><div class="ph" id="ph"></div>
+    <p class="muted">추가: <code>downloads/seoyeori/IG/_account/profile/</code> 에 넣고 새로고침</p>
+    <h2>계정명(핸들)</h2><select id="handle"></select>
+    <p class="muted">사용 가능 여부는 인스타 개설 화면에서 직접 확인</p>
+    <h2>표시 이름</h2><select id="name"></select>
+    <h2>Bio</h2><div class="bios" id="bios"></div>
+    <p class="muted">크리에이터 계정 → 디지털 크리에이터 · 개설 직후 AI 라벨 + 2단계 인증</p>
+  </div>
+  <div class="phone">
+    <div class="ph-top" id="h1"></div>
+    <div class="hdr"><div class="av"><img id="av" alt=""></div>
+      <div class="stats"><div><b id="pc">0</b>게시물</div><div><b>0</b>팔로워</div><div><b>0</b>팔로잉</div></div></div>
+    <div class="bio"><div class="nm" id="nm"></div><div class="cat">디지털 크리에이터</div><div class="ai">AI 생성 프로필</div><div id="bio"></div></div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <div class="small"><div class="c" style="width:32px;height:32px"><img id="s1"></div><span class="muted">댓글 크기 32px</span>
+    <div class="c" style="width:56px;height:56px"><img id="s2"></div><span class="muted">스토리 크기 56px</span>
+    <div class="c" style="width:150px;height:150px"><img id="s3"></div><span class="muted">크게</span></div>
+</div></section>
+
+<!-- 📅 운영 보드 -->
+<section data-tab="board"><div class="wrap">
+  <div class="kpis" id="kpis"></div>
+  <h2>30일 캘린더 <span class="muted" id="calr"></span></h2><div class="cal" id="cal"></div>
+  <div class="two" style="margin-top:6px">
+    <div><h2>콘텐츠 구성 (시장조사 목표 대비)</h2><div class="card mix" id="mix"></div></div>
+    <div><h2>임박한 할 일 (3일 이내)</h2><div class="card"><ul class="todo" id="todo"></ul></div></div>
+  </div>
+  <h2>게시물 목록 <button class="btn" id="add" style="margin-left:8px">+ 게시물 추가</button></h2>
+  <div class="card scroll"><table id="posts"></table></div>
+</div></section>
+
+<!-- 📊 성과 분석 -->
+<section data-tab="insight"><div class="wrap">
+  <p class="muted">게시 상태인 게시물만 표시됩니다. 수치는 인스타 앱 → 게시물 → 인사이트 보기에서 확인해 입력하세요(게시 후 48시간 기준 권장).</p>
+  <h2>지표 입력</h2><div class="card scroll"><table id="mt"></table></div>
+  <h2>깔때기 비율 (도달 대비, 게시물 간 공정 비교)</h2><div class="card scroll"><table id="rt"></table></div>
+  <div class="two">
+    <div><h2>유형별 평균</h2><div class="card scroll"><table id="tt"></table></div></div>
+    <div><h2>전체 깔때기 (합계)</h2><div class="card"><div class="fn" id="fn"></div><div class="fnl" id="fnl"></div></div></div>
+  </div>
+  <h2>14일 체크포인트 — 적응형 4칸 배정 제안</h2><div class="card" id="cp"></div>
+</div></section>
+
+<script>
+const API = '/api/insta-ops'
+const MEDIA = '/downloads/seoyeori/IG/_account/'
+const HANDLES = ['seoyeori.ai','seoyeori','itsyeori','seo.yeori','ai.seoyeori','seoyeori_ai','yeori.ai','yeori.seo','hey.yeori','seoyeori.kr','yeori.made.by.ai','yeori.log','yeori.daily','dear.yeori','yeori.in.seoul','yeori_dream','yeori.after6','yeori.diary','offwork.yeori','yeori.worklife']
+const NAMES = ['서여리 | AI 크리에이터','서여리 Seoyeori · AI','서여리 🤍 AI','Seoyeori 서여리']
+const BIOS = [
+  '저 사실… AI예요.\n나만 그런 거 아니었네, 싶은 일상을 그려요\n👇 새 에피소드',
+  'AI로 태어난 서여리 🤍\n20·30·40 누구나 "어, 나도 그래" 하는 일상\n새 에피소드 매주 ↓',
+  '저 사실… AI예요.\n그래도 공감만큼은 진짜입니다\n📩 협업 문의 DM',
+  'AI 크리에이터 서여리 | 웹툰에서 현실로 넘어오는 중 🎬\n우리 모두의 평범한 하루\n유튜브 ↓',
+  '꿈만큼은 진짜인 AI 크리에이터\n당신의 하루를 조금 가볍게\n릴스 매주 업로드 ✨',
+  '사람은 아니지만, 당신 편입니다 🤍\nAI 서여리의 공감 일기\n새 글 알림 설정 ✨',
+  'AI · 서울 · 매일 조금씩 사람이 되는 중\n엉뚱한데 이상하게 공감되는 일상\n👇 유튜브에서 더 길게',
+  '만들어진 얼굴, 진짜 이야기\nAI 크리에이터 서여리\n📩 collab DM · 유튜브 ↓',
+  'AI 서여리 | 공감 한 스푼, 반전 한 스푼\n퇴근길·주말·새벽 3시의 우리 이야기\n다음 화 ↓',
+  "Hi, I'm Yeori — an AI creator from Seoul 🇰🇷\n누구나 공감하는 K-daily\n📩 DM for collab",
+]
+const TYPES = ['패션 Reel','일상 Reel','스토리텔링 Reel','사진 Carousel','AI 제작 과정','캐릭터 세계관','실험 콘텐츠']
+const COLOR = {'패션 Reel':'#f5a3c7','일상 Reel':'#9ad0f5','스토리텔링 Reel':'#c3a6f7','사진 Carousel':'#f7d58b','AI 제작 과정':'#8fe3b4','캐릭터 세계관':'#f7a98b','실험 콘텐츠':'#cfcfd6'}
+const STATUS = ['기획','제작중','완성','예약','게시']
+const STC = {'기획':'#555','제작중':'#8a6420','완성':'#2f6b45','예약':'#2c4f8a','게시':'#7bd88f'}
+const METRICS = [['reach','도달'],['duration','길이(초)'],['avgWatch','평균 시청(초)'],['hold3','3초 유지(%)'],['shares','공유'],['saves','저장'],['visits','프로필 방문'],['follows','팔로우'],['likes','좋아요'],['comments','댓글']]
+
+const $ = id => document.getElementById(id)
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
+let S = null, photos = [], selId = null, saveTimer = null
+const local = { get(k, d) { try { const v = localStorage.getItem('iops.' + k); return v == null ? d : JSON.parse(v) } catch (e) { return d } },
+                set(k, v) { try { localStorage.setItem('iops.' + k, JSON.stringify(v)) } catch (e) {} } }
+
+// ── 날짜 유틸(로컬 날짜 문자열) ──
+const ds = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
+const addD = (s, n) => { const d = pd(s); d.setDate(d.getDate() + n); return ds(d) }
+const diffD = (a, b) => Math.round((pd(b) - pd(a)) / 864e5)
+const today = ds(new Date())
+const md = s => { const d = pd(s); return (d.getMonth() + 1) + '/' + d.getDate() }
+
+// ── 불러오기 / 저장(rev 확인) ──
+async function load(msg) {
+  const r = await fetch(API); const j = await r.json()
+  S = j.ops; photos = j.photos || []
+  if (msg) { $('banner').textContent = msg; $('banner').style.display = 'block'; setTimeout(() => $('banner').style.display = 'none', 6000) }
+  status('저장됨 · rev ' + S.rev); renderAll()
+}
+function touch() { status('저장 대기…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 700) }
+async function save() {
+  status('저장 중…')
+  try {
+    const r = await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(S) })
+    const j = await r.json()
+    if (r.status === 409) return load('⚠️ ' + j.error)
+    if (!r.ok) throw new Error(j.error || r.status)
+    S.rev = j.rev; S.savedAt = j.savedAt; status('저장됨 · rev ' + S.rev)
+  } catch (e) { status('저장 실패: ' + e.message, true) }
+}
+function status(t, err) { $('save').textContent = t; $('save').className = 'save' + (err ? ' err' : '') }
+
+// ── 탭 ──
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.dataset.t))
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t))
+  document.querySelectorAll('section[data-tab]').forEach(s => s.classList.toggle('on', s.dataset.tab === t))
+  local.set('tab', t)
+}
+
+function renderAll() { renderSetup(); renderBoard(); renderInsight() }
+const sorted = () => S.posts.slice().sort((a, b) => ((a.date || '9') + (a.time || '')).localeCompare((b.date || '9') + (b.time || '')))
+
+// ── ⚙️ 계정 세팅 ──
+function renderSetup() {
+  const st = S.settings
+  if (!photos.includes(st.photo) && photos[0]) st.photo = photos[0]
+  $('ph').innerHTML = photos.map(f => '<div><button class="' + (f === st.photo ? 'on' : '') + '" data-f="' + esc(f) + '"><img src="' + MEDIA + 'profile/' + encodeURIComponent(f) + '"></button><div class="lb">' + esc(f.replace(/\.[^.]+$/, '')) + '</div></div>').join('')
+  document.querySelectorAll('.ph button').forEach(b => b.onclick = () => { st.photo = b.dataset.f; touch(); renderSetup() })
+  $('handle').innerHTML = HANDLES.map(h => '<option' + (h === st.handle ? ' selected' : '') + '>' + h + '</option>').join('')
+  $('name').innerHTML = NAMES.map(h => '<option' + (h === st.name ? ' selected' : '') + '>' + esc(h) + '</option>').join('')
+  $('handle').onchange = e => { st.handle = e.target.value; touch(); renderSetup() }
+  $('name').onchange = e => { st.name = e.target.value; touch(); renderSetup() }
+  $('bios').innerHTML = BIOS.map((b, i) => '<label class="' + (i === st.bio ? 'on' : '') + '" data-i="' + i + '">' + (i + 1) + '. ' + esc(b) + '</label>').join('')
+  document.querySelectorAll('.bios label').forEach(l => l.onclick = () => { st.bio = +l.dataset.i; touch(); renderSetup() })
+  $('h1').textContent = st.handle; $('nm').textContent = st.name; $('bio').textContent = BIOS[st.bio] || ''
+  ;['av','s1','s2','s3'].forEach(id => $(id).src = st.photo ? MEDIA + 'profile/' + encodeURIComponent(st.photo) : '')
+  const first9 = sorted().slice(0, 9).reverse()   // 인스타 격자는 최신이 왼쪽 위
+  $('pc').textContent = S.posts.filter(p => p.status === '게시').length
+  $('grid').innerHTML = first9.map(p => '<div class="cell"' + (p.img ? ' style="background-image:url(' + MEDIA + p.img + ')"' : '') + '><span>' + esc(md(p.date || today) + ' ' + p.title) + '</span></div>').join('')
+}
+
+// ── 📅 운영 보드 ──
+function renderBoard() {
+  const L = S.launchDate, end = addD(L, 29), cpDay = addD(L, (S.goals.checkpointDay || 14) - 1)
+  const total = Object.values(S.goals.mix).reduce((a, b) => a + b, 0)
+  const posted = S.posts.filter(p => p.status === '게시').length
+  const dN = diffD(L, today) + 1
+  const wkEnd = addD(today, 6)
+  const thisWeek = S.posts.filter(p => p.date >= today && p.date <= wkEnd).length
+  const urgent = S.posts.filter(p => p.date && p.date >= today && diffD(today, p.date) <= 3 && !['완성','예약','게시'].includes(p.status))
+  const kpi = (v, l) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
+  $('kpis').innerHTML =
+    kpi(dN < 1 ? 'D' + (dN - 1) : 'D+' + dN, '런칭 ' + md(L) + ' 기준') +
+    kpi(posted + ' / ' + (total + (S.goals.flexible || 0)), '게시 완료 (목표 ' + total + ' + 적응형 ' + (S.goals.flexible || 0) + ')') +
+    kpi(thisWeek, '앞으로 7일 예정') +
+    kpi(diffD(today, cpDay) >= 0 ? 'D-' + diffD(today, cpDay) : '지남', '14일 체크포인트 ' + md(cpDay)) +
+    kpi(urgent.length, '3일 내 준비 안 된 게시물')
+  // 캘린더: 런칭 주 월요일 ~ 30일째 주 일요일
+  $('calr').textContent = md(L) + ' ~ ' + md(end)
+  const start = (() => { const d = pd(L); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return ds(d) })()
+  let html = ['월','화','수','목','금','토','일'].map(w => '<div class="dw">' + w + '</div>').join('')
+  const calEnd = (() => { const d = pd(end); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() + 6 - w); return ds(d) })()
+  for (let s = start; s <= calEnd; s = addD(s, 1)) {
+    const items = S.posts.filter(p => p.date === s).sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+    const cls = 'day' + (s < L || s > end ? ' out' : '') + (s === today ? ' today' : '') + (s === cpDay ? ' cp' : '')
+    html += '<div class="' + cls + '"><div class="d">' + md(s) + (s === cpDay ? ' · 체크포인트' : '') + '</div>' +
+      items.map(p => '<span class="chip" data-id="' + esc(p.id) + '" title="' + esc(p.type + ' · ' + p.status + ' · ' + p.title) + '" style="background:' + COLOR[p.type] + (p.status === '게시' ? '' : ';opacity:.75') + '">' + (p.status === '게시' ? '✓ ' : '') + esc(p.time || '') + ' ' + esc(p.title) + '</span>').join('') + '</div>'
+  }
+  $('cal').innerHTML = html
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { selId = c.dataset.id; renderPosts(); document.querySelector('tr.sel')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) })
+  // 콘텐츠 구성
+  $('mix').innerHTML = TYPES.map(t => {
+    const goal = S.goals.mix[t] || 0, asg = S.posts.filter(p => p.type === t).length, done = S.posts.filter(p => p.type === t && p.status === '게시').length
+    return '<div class="row"><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + COLOR[t] + ';margin-right:6px"></i>' + t + '</span>' +
+      '<div class="bar"><i style="width:' + Math.min(100, asg / Math.max(goal, 1) * 100) + '%;background:' + COLOR[t] + '55"></i><i style="width:' + Math.min(100, done / Math.max(goal, 1) * 100) + '%;background:' + COLOR[t] + '"></i></div>' +
+      '<span class="muted">' + done + ' / ' + asg + ' / ' + goal + '</span></div>'
+  }).join('') + '<p class="muted">막대: 진한색 = 게시, 연한색 = 배정 · 숫자 = 게시 / 배정 / 목표 · 적응형 ' + (S.goals.flexible || 0) + '칸은 14일째 성과 분석 탭 제안으로 배정</p>'
+  // 임박한 할 일
+  $('todo').innerHTML = urgent.length ? urgent.map(p => '<li><b>' + md(p.date) + ' ' + esc(p.time || '') + '</b> ' + esc(p.title) + ' — <span class="st" style="background:' + STC[p.status] + '">' + p.status + '</span></li>').join('')
+    : '<li class="muted">3일 안에 준비가 안 된 게시물이 없습니다 👍</li>'
+  renderPosts()
+}
+function renderPosts() {
+  const rows = sorted()
+  $('posts').innerHTML = '<tr><th>날짜</th><th>시간</th><th>유형</th><th>제목</th><th>코드</th><th>상태</th><th>링크</th><th></th></tr>' + rows.map(p =>
+    '<tr data-id="' + esc(p.id) + '"' + (p.id === selId ? ' class="sel"' : '') + '>' +
+    '<td><input type="date" data-k="date" value="' + esc(p.date) + '"></td>' +
+    '<td><input type="time" data-k="time" value="' + esc(p.time) + '"></td>' +
+    '<td><select data-k="type">' + TYPES.map(t => '<option' + (t === p.type ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></td>' +
+    '<td><input type="text" data-k="title" value="' + esc(p.title) + '"></td>' +
+    '<td><input type="text" data-k="code" value="' + esc(p.code) + '" style="width:80px"></td>' +
+    '<td><select data-k="status" style="border-color:' + STC[p.status] + '">' + STATUS.map(s => '<option' + (s === p.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td>' +
+    '<td><input type="text" data-k="link" value="' + esc(p.link) + '" placeholder="게시 URL" style="width:140px"></td>' +
+    '<td><button class="x" data-del="1" title="삭제">✕</button></td></tr>').join('')
+  document.querySelectorAll('#posts tr[data-id]').forEach(tr => {
+    const p = S.posts.find(x => x.id === tr.dataset.id)
+    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { p[el.dataset.k] = el.value; touch(); renderSetup(); renderBoard(); renderInsight() })
+    tr.querySelector('[data-del]').onclick = () => { if (confirm('"' + p.title + '" 을(를) 목록에서 삭제할까요?')) { S.posts = S.posts.filter(x => x !== p); touch(); renderAll() } }
+  })
+}
+$('add').onclick = () => {
+  const id = 'p' + Date.now().toString(36)
+  S.posts.push({ id, date: today, time: '12:00', type: '일상 Reel', title: '새 게시물', code: '', status: '기획', img: '', link: '', note: '', metrics: {} })
+  selId = id; touch(); renderAll()
+}
+
+// ── 📊 성과 분석 ──
+const n = v => (v === '' || v == null || isNaN(+v)) ? null : +v
+const ratio = (a, b) => (n(a) != null && n(b)) ? n(a) / n(b) : null
+const pct = v => v == null ? '–' : (v * 100).toFixed(1) + '%'
+function derived(m) {
+  return {
+    watch: ratio(m.avgWatch, m.duration),       // 평균 시청 비율
+    hold3: n(m.hold3) != null ? n(m.hold3) / 100 : null,
+    share: ratio(m.shares, m.reach), save: ratio(m.saves, m.reach),
+    visit: ratio(m.visits, m.reach), follow: ratio(m.follows, m.visits),
+  }
+}
+const DER = [['hold3','3초 유지'],['watch','시청 비율'],['share','공유율'],['save','저장율'],['visit','방문율'],['follow','팔로우 전환']]
+function renderInsight() {
+  const posted = sorted().filter(p => p.status === '게시')
+  $('mt').innerHTML = '<tr><th>게시물</th>' + METRICS.map(m => '<th class="num">' + m[1] + '</th>').join('') + '</tr>' + (posted.length ? posted.map(p =>
+    '<tr data-id="' + esc(p.id) + '"><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + COLOR[p.type] + ';margin-right:6px"></i>' + md(p.date) + ' ' + esc(p.title) + '</td>' +
+    METRICS.map(m => '<td class="num"><input type="number" min="0" step="any" data-m="' + m[0] + '" value="' + esc(p.metrics?.[m[0]] ?? '') + '"></td>').join('') + '</tr>').join('')
+    : '<tr><td colspan="11" class="muted">아직 "게시" 상태인 게시물이 없습니다 — 운영 보드에서 상태를 "게시"로 바꾸면 여기에 나타납니다.</td></tr>')
+  document.querySelectorAll('#mt tr[data-id]').forEach(tr => {
+    const p = S.posts.find(x => x.id === tr.dataset.id)
+    tr.querySelectorAll('[data-m]').forEach(el => el.onchange = () => { p.metrics = p.metrics || {}; p.metrics[el.dataset.m] = el.value === '' ? '' : +el.value; touch(); renderInsight() })
+  })
+  // 비율 표 (전체 평균보다 높으면 초록, 낮으면 빨강)
+  const rows = posted.map(p => ({ p, d: derived(p.metrics || {}) }))
+  const avg = k => { const v = rows.map(r => r.d[k]).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null }
+  const A = Object.fromEntries(DER.map(([k]) => [k, avg(k)]))
+  $('rt').innerHTML = '<tr><th>게시물</th><th>유형</th>' + DER.map(d => '<th class="num">' + d[1] + '</th>').join('') + '</tr>' + (rows.length ? rows.map(({ p, d }) =>
+    '<tr><td>' + md(p.date) + ' ' + esc(p.title) + '</td><td>' + p.type + '</td>' + DER.map(([k]) => {
+      const v = d[k], a = A[k], c = (v == null || a == null || rows.length < 2) ? '' : v >= a * 1.15 ? 'hi' : v <= a * 0.85 ? 'lo' : ''
+      return '<td class="num ' + c + '">' + pct(v) + '</td>' }).join('') + '</tr>').join('')
+    + '<tr><td><b>평균</b></td><td></td>' + DER.map(([k]) => '<td class="num"><b>' + pct(A[k]) + '</b></td>').join('') + '</tr>'
+    : '<tr><td colspan="8" class="muted">지표를 입력하면 자동 계산됩니다.</td></tr>')
+  // 유형별 평균
+  const byType = TYPES.map(t => { const rs = rows.filter(r => r.p.type === t); const o = { t, n: rs.length }
+    DER.forEach(([k]) => { const v = rs.map(r => r.d[k]).filter(x => x != null); o[k] = v.length ? v.reduce((a, b) => a + b, 0) / v.length : null }); return o })
+  $('tt').innerHTML = '<tr><th>유형</th><th class="num">게시</th>' + DER.map(d => '<th class="num">' + d[1] + '</th>').join('') + '</tr>' +
+    byType.map(o => '<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + COLOR[o.t] + ';margin-right:6px"></i>' + o.t + '</td><td class="num">' + o.n + '</td>' + DER.map(([k]) => '<td class="num">' + pct(o[k]) + '</td>').join('') + '</tr>').join('')
+  // 전체 깔때기(합계)
+  const sum = k => posted.reduce((a, p) => a + (n(p.metrics?.[k]) || 0), 0)
+  const F = [['도달', sum('reach')], ['공유+저장', sum('shares') + sum('saves')], ['프로필 방문', sum('visits')], ['팔로우', sum('follows')]]
+  const mx = Math.max(1, F[0][1])
+  $('fn').innerHTML = F.map(([, v]) => '<div style="height:' + Math.max(2, v / mx * 100) + '%"><span>' + v.toLocaleString() + '</span></div>').join('')
+  $('fnl').innerHTML = F.map(([l]) => '<div>' + l + '</div>').join('')
+  // 14일 체크포인트 제안: 공유율·저장율·방문율·팔로우 전환을 각각 최댓값 대비로 정규화해 평균
+  const K = ['share','save','visit','follow'], scored = byType.filter(o => o.n > 0 && K.some(k => o[k] != null))
+  const maxK = Object.fromEntries(K.map(k => [k, Math.max(0, ...scored.map(o => o[k] || 0))]))
+  scored.forEach(o => { const v = K.filter(k => o[k] != null && maxK[k] > 0).map(k => o[k] / maxK[k]); o.score = v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0 })
+  scored.sort((a, b) => b.score - a.score)
+  const L = S.launchDate, cpDay = addD(L, (S.goals.checkpointDay || 14) - 1), withData = scored.length
+  $('cp').innerHTML = (withData < 3
+    ? '<p class="muted">지표가 입력된 유형이 ' + withData + '개뿐이라 아직 판단하기 이릅니다(최소 3개 유형 권장). 체크포인트: ' + md(cpDay) + '.</p>' : '') +
+    (withData ? '<table><tr><th>순위</th><th>유형</th><th class="num">점수</th><th class="num">표본</th><th>제안</th></tr>' + scored.map((o, i) =>
+      '<tr><td>' + (i + 1) + '</td><td>' + o.t + '</td><td class="num">' + (o.score * 100).toFixed(0) + '</td><td class="num">' + o.n + '</td><td>' +
+      (i < 2 ? '<b class="hi">적응형 2칸 배정 후보</b>' : i === scored.length - 1 && scored.length > 3 ? '<span class="lo">비중 축소 검토</span>' : '') + (o.n < 2 ? ' <span class="muted">(표본 1개 — 참고만)</span>' : '') + '</td></tr>').join('') + '</table>'
+      + '<p class="muted">점수 = 공유율·저장율·방문율·팔로우 전환을 각 항목 최고값 대비로 환산한 평균(0~100). 도달은 알고리즘 운이 커서 제외. 참고용이며 최종 판단은 성준님.</p>' : '')
+}
+
+;(async () => { showTab(local.get('tab', 'board')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
+</script></body></html>

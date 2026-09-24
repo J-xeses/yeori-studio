@@ -14,6 +14,7 @@ import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
+import { loadOps, saveOps, listProfilePhotos } from './lib/instaOps.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
@@ -109,6 +110,15 @@ process.on('exit', (code) => {
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'], exposedHeaders: ['X-State-Mtime'] }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/downloads', express.static(mp.DOWNLOADS))
+
+// ── 인스타 운영실 (/insta-ops) — 계정 세팅·운영 보드·성과 분석 한 페이지 ─────────────
+// 데이터: downloads/seoyeori/IG/_account/ops.json (server/lib/instaOps.js, rev 확인 저장)
+app.get('/insta-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'insta-ops.html')))
+app.get('/api/insta-ops', (_req, res) => res.json({ ops: loadOps(), photos: listProfilePhotos() }))
+app.put('/api/insta-ops', (req, res) => {
+  try { const out = saveOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
+  catch (e) { res.status(e.statusCode || 500).json({ ok: false, error: e.message, rev: e.current?.rev }) }
+})
 
 // ── 헬스 체크 ──────────────────────────────────────────────
 app.get('/api/health', (_req, res) => {
