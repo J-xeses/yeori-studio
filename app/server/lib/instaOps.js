@@ -16,12 +16,33 @@ const MIX = { '패션 Reel': 2, '일상 Reel': 6, '스토리텔링 Reel': 2, '�
 const seedPost = (id, date, time, type, title, code, status, img) =>
   ({ id, date, time, type, title, code, status, img, link: '', note: '', metrics: {} })
 
+// 🌱 관심사 설계 — 새 계정의 관심사 신호(팔로우·시청·저장)를 우리 분야로 의도적으로 채우기 위한 방문 목록.
+// 2026-09-24 웹 검색으로 실존 확인된 계정만. day = 개설일 기준 며칠째에 처음 방문할지(0=개설일).
+const seed = (handle, group, why, use, day) => ({ handle, group, why, use, day, followedAt: '', visits: [], note: '' })
+export const DEFAULT_SEEDS = [
+  seed('rozy.gram', 'AI 인플루언서', '한국 최초 초실사 버추얼 인플루언서, "감성 장인" — 표정 연기가 강점', '한국형 AI 인플루언서 벤치마크 · 표정/감정 컷 구성', 0),
+  seed('lilmiquela', 'AI 인플루언서', '가장 많이 팔로우된 가상 인물(약 250만) — 캐릭터 서사·세계관 운영', '캐릭터 세계관 칸 · 스토리 연재 방식', 0),
+  seed('imma.gram', 'AI 인플루언서', '도쿄 기반, 시그니처 핑크 단발 + 글로벌 브랜드 협업', '시그니처 비주얼 일관성 · 협업 게시물 톤', 0),
+  seed('fit_aitana', 'AI 인플루언서', '생성형 이미지 툴로 만든 실사형 AI(바르셀로나 에이전시) — 우리와 같은 제작 방식', 'AI 제작 과정 칸 · 실사형 일관성 관리', 1),
+  seed('noonoouri', 'AI 인플루언서', '패션·뷰티·여행 중심의 가상 인플루언서', '패션 Reel 칸 참고', 2),
+  seed('shudu.gram', 'AI 인플루언서', '최초의 디지털 슈퍼모델(2017) — 화보형 사진 톤', '사진 Carousel 톤·구도', 2),
+  seed('yoonee3326', '인스타툰', '유니유니 — INFP 내향인 일상툰(약 7만), "나만 그런 게 아니었네" 공감', 'P01·P02 웹툰 캐러셀 · 공감 소재 발굴', 1),
+  seed('i_iary2', '인스타툰', '이아리 — 소소한 일상 공감툰', '일상 Reel 소재 · 짧은 컷 공감 구조', 1),
+  seed('0g_maru', '인스타툰', '영지 — 티격태격 신혼부부 일상툰', '관계 티키타카(메이킹 채널 "투덜" 톤) 참고', 2),
+  seed('nanheemang', '인스타툰', '난희 — 인스타툰 작가', '캐러셀 컷 수·말풍선 밀도 참고', 3),
+  seed('elevenlabsio', 'AI 제작 도구', 'ElevenLabs 공식 — 음성 기능 업데이트·데모', 'AI 제작 과정 칸 · 음성 신기능 빠른 파악', 2),
+  seed('pixverse_official', 'AI 제작 도구', 'PixVerse 공식(약 8.7만) — 생성 영상 사례·템플릿', '영상 생성 트렌드 · 우리 툴 목록과 연계', 2),
+  seed('runwayapp', 'AI 제작 도구', 'Runway 공식(약 47만) — 생성 영상 크리에이터 사례 소개', 'AI 제작 과정 칸 · 연출 레퍼런스', 3),
+]
+
 function defaultOps() {
   return {
     rev: 0,
     launchDate: '2026-09-25',
     settings: { photo: 'profile_A_front.jpg', handle: 'seoyeori.ai', name: '서여리 | AI 크리에이터', bio: 0 },
     goals: { mix: MIX, flexible: 4, checkpointDay: 14 },
+    seeds: DEFAULT_SEEDS,
+    seedRules: { followPerDay: 5, firstWeekFollowMax: 20 },
     posts: [
       seedPost('t1', '2026-09-25', '12:00', '실험 콘텐츠', '티저① Se ye ri → 서여리', 'IG_T01', '완성', 'grid/t1.jpg'),
       seedPost('t2', '2026-09-26', '12:00', '실험 콘텐츠', '티저② 텍스트 소개', 'IG_T02', '기획', ''),
@@ -35,7 +56,12 @@ function defaultOps() {
 }
 
 export function loadOps() {
-  try { return JSON.parse(fs.readFileSync(OPS_PATH, 'utf-8')) } catch { return defaultOps() }
+  let ops
+  try { ops = JSON.parse(fs.readFileSync(OPS_PATH, 'utf-8')) } catch { return defaultOps() }
+  // 기존 ops.json 에 나중에 생긴 필드 채우기(파일은 다음 저장 때 반영)
+  if (!Array.isArray(ops.seeds)) ops.seeds = DEFAULT_SEEDS
+  if (!ops.seedRules) ops.seedRules = { followPerDay: 5, firstWeekFollowMax: 20 }
+  return ops
 }
 
 export function saveOps(next) {

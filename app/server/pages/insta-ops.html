@@ -80,6 +80,7 @@
   <button class="tab" data-t="setup">⚙️ 계정 세팅</button>
   <button class="tab" data-t="board">📅 운영 보드</button>
   <button class="tab" data-t="insight">📊 성과 분석</button>
+  <button class="tab" data-t="seeds">🌱 관심사 설계</button>
   <span class="sp"></span><button class="btn" id="openIg" title="선택한 계정명의 인스타 페이지를 새 Chrome 창으로">📷 인스타 열기</button><span class="save" id="save">불러오는 중…</span>
 </header>
 <div class="banner" id="banner"></div>
@@ -130,6 +131,26 @@
     <div><h2>전체 깔때기 (합계)</h2><div class="card"><div class="fn" id="fn"></div><div class="fnl" id="fnl"></div></div></div>
   </div>
   <h2>14일 체크포인트 — 적응형 4칸 배정 제안</h2><div class="card" id="cp"></div>
+</div></section>
+
+<!-- 🌱 관심사 설계 -->
+<section data-tab="seeds"><div class="wrap">
+  <p class="muted">새 계정의 관심사 신호(팔로우·끝까지 시청·저장)를 우리 분야로 채우는 방문 목록입니다. 탐색 탭·릴스 피드가 이 분야로 채워져 트렌드 조사 도구가 되고, 추천 계정 연결망에서도 비슷한 계정 근처에 놓일 가능성이 커집니다(공식 공개된 공식은 아님). 계정은 2026-09-24 웹 검색으로 실존 확인된 곳만.</p>
+  <div class="kpis" id="skpi"></div>
+  <div class="two">
+    <div><h2>오늘 할 일</h2><div class="card"><ul class="todo" id="stoday"></ul></div></div>
+    <div><h2>규칙</h2><div class="card"><ul class="todo">
+      <li>팔로우는 하루 <b id="rp1"></b>개 이내, 첫 주 합계 <b id="rp2"></b>개 이내</li>
+      <li>좋아요·댓글을 몰아서 누르지 않기 — 릴스는 <b>끝까지 시청</b>, 좋은 건 <b>저장</b>(가장 강한 관심 신호)</li>
+      <li>다른 AI 계정 댓글에 우리 계정 홍보 금지(스팸 판정 위험) — 댓글은 진심 1~2개만</li>
+      <li>업로드 직후 30~60분은 방문보다 <b>내 게시물 댓글 응대</b> 우선</li>
+      <li>하루 10~15분 · 방문하면 "오늘 방문" 기록 → 무엇을 봤는지 한 줄 메모</li>
+    </ul></div></div>
+  </div>
+  <h2>후보 <span class="muted">— 팔로우 직후 인스타가 보여주는 "비슷한 계정" 추천에서 발견한 곳을 담아 두고, 며칠 보고 승격/제외</span></h2>
+  <div class="card scroll"><table id="ctable"></table></div>
+  <h2>계정 목록 <span class="muted">개설일 <input type="date" id="acctDate" style="margin-left:4px"></span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
+  <div class="card scroll"><table id="stable"></table></div>
 </div></section>
 
 <script>
@@ -197,7 +218,7 @@ function showTab(t) {
   local.set('tab', t)
 }
 
-function renderAll() { renderSetup(); renderBoard(); renderInsight() }
+function renderAll() { renderSetup(); renderBoard(); renderInsight(); renderSeeds() }
 const sorted = () => S.posts.slice().sort((a, b) => ((a.date || '9') + (a.time || '')).localeCompare((b.date || '9') + (b.time || '')))
 
 // ── ⚙️ 계정 세팅 ──
@@ -361,6 +382,85 @@ $('taken').onclick = () => { const st = S.settings, t = st.taken = st.taken || [
   const i = t.indexOf(st.handle); if (i >= 0) t.splice(i, 1); else t.push(st.handle)
   if (i < 0) { const next = HANDLES.find(h => !t.includes(h)); if (next) st.handle = next }   // 다음 후보로 자동 이동
   touch(); renderSetup() }
+
+// ── 🌱 관심사 설계 ── (플랫폼별: 인스타·유튜브·틱톡 — 같은 구조로 다른 SNS 벤치마크 계정도 관리)
+const PF = { instagram: { icon: '📷', url: h => 'https://www.instagram.com/' + h + '/' },
+             youtube: { icon: '▶️', url: h => 'https://www.youtube.com/@' + h },
+             tiktok: { icon: '🎵', url: h => 'https://www.tiktok.com/@' + h } }
+const pfOf = x => PF[x.platform] ? x.platform : 'instagram'
+const openSeed = x => openB({ target: 'url', url: PF[pfOf(x)].url(x.handle) })
+function renderSeeds() {
+  const all = S.seeds || [], seeds = all.filter(x => (x.status || 'active') === 'active'), cands = all.filter(x => x.status === 'candidate'), rules = S.seedRules || { followPerDay: 5, firstWeekFollowMax: 20 }
+  const acct = S.settings.accountDate || today
+  $('acctDate').value = acct
+  $('acctDate').onchange = e => { S.settings.accountDate = e.target.value; touch(); renderSeeds() }
+  const dayN = diffD(acct, today)                       // 0 = 개설일
+  const followedToday = seeds.filter(x => x.followedAt === today).length
+  const wkEnd = addD(acct, 6)
+  const followedWeek = seeds.filter(x => x.followedAt && x.followedAt >= acct && x.followedAt <= wkEnd).length
+  const visitedToday = seeds.filter(x => (x.visits || []).includes(today)).length
+  const kpi = (v, l, bad) => '<div class="card kpi"><div class="v"' + (bad ? ' style="color:var(--bad)"' : '') + '>' + v + '</div><div class="l">' + l + '</div></div>'
+  $('skpi').innerHTML = kpi(dayN < 0 ? '개설 전' : dayN + '일째', '개설일 ' + md(acct) + ' 기준') +
+    kpi(followedToday + ' / ' + rules.followPerDay, '오늘 팔로우', followedToday > rules.followPerDay) +
+    kpi(followedWeek + ' / ' + rules.firstWeekFollowMax, '첫 주 팔로우 합계', followedWeek > rules.firstWeekFollowMax) +
+    kpi(visitedToday, '오늘 방문한 계정') +
+    kpi(seeds.filter(x => x.followedAt).length + ' / ' + seeds.length, '팔로우 완료') +
+    (() => { const last = all.map(x => x.addedAt || '').filter(Boolean).sort().pop() || S.settings.accountDate || today, g = diffD(last, today)
+      return kpi(g <= 0 ? '오늘' : g + '일 전', '목록 마지막 확장 · 후보 ' + cands.length + '곳', g > 7) })()
+  $('rp1').textContent = rules.followPerDay; $('rp2').textContent = rules.firstWeekFollowMax
+  // 오늘 할 일: 오늘까지 도래했는데 아직 팔로우 안 한 계정(하루 한도 안에서)
+  const due = seeds.filter(x => !x.followedAt && (x.day ?? 0) <= dayN)
+  const room = Math.max(0, rules.followPerDay - followedToday)
+  $('stoday').innerHTML = (dayN < 0 ? '<li class="muted">계정 개설 후 시작합니다.</li>' : '') +
+    (due.length ? due.slice(0, room).map(x => '<li><b>@' + esc(x.handle) + '</b> <span class="muted">' + esc(x.group) + '</span> — 방문해서 릴스 2~3개 끝까지 보고, 좋은 것 1개 저장 후 팔로우</li>').join('') +
+      (due.length > room ? '<li class="muted">나머지 ' + (due.length - room) + '곳은 내일로(오늘 팔로우 한도)</li>' : '')
+      : (dayN >= 0 ? '<li class="muted">오늘 새로 팔로우할 계정은 없습니다 — 팔로우한 계정 피드를 10분 정도 보고 저장 위주로.</li>' : ''))
+  const groups = [...new Set(seeds.map(x => x.group))]
+  $('stable').innerHTML = '<tr><th>계정</th><th>핵심 요약</th><th>우리에게 적용</th><th class="num">계획</th><th>팔로우</th><th>방문</th><th>메모</th><th></th></tr>' +
+    groups.map(g => '<tr><td colspan="8" style="color:var(--acc);font-weight:600;padding-top:14px">' + esc(g) + '</td></tr>' +
+      all.map((x, i) => [x, i]).filter(([x]) => (x.status || 'active') === 'active' && x.group === g).map(([x, i]) =>
+        '<tr data-i="' + i + '"><td style="white-space:nowrap"><button class="btn" data-go="1" title="새 창으로 열기">↗</button> ' + PF[pfOf(x)].icon + ' @' + esc(x.handle) + '</td>' +
+        '<td style="font-size:12px">' + esc(x.why) + (x.source ? ' <span class="muted">· ' + esc(x.source) + '</span>' : '') + '</td><td style="font-size:12px;color:var(--tx2)">' + esc(x.use) + '</td>' +
+        '<td class="num">' + ((x.day ?? 0) <= dayN ? '' : '<span class="muted">') + (x.day ?? 0) + '일째' + ((x.day ?? 0) <= dayN ? '' : '</span>') + '</td>' +
+        '<td style="white-space:nowrap"><label><input type="checkbox" data-f="1"' + (x.followedAt ? ' checked' : '') + '> ' + (x.followedAt ? md(x.followedAt) : '') + '</label></td>' +
+        '<td style="white-space:nowrap"><button class="btn" data-v="1"' + ((x.visits || []).includes(today) ? ' style="border-color:var(--ok)"' : '') + '>' + ((x.visits || []).includes(today) ? '✓ 오늘' : '오늘 방문') + '</button> <span class="muted">' + (x.visits || []).length + '회</span></td>' +
+        '<td><input type="text" data-n="1" value="' + esc(x.note) + '" placeholder="본 것 한 줄"></td>' +
+        '<td><button class="x" data-del="1" title="목록에서 삭제">✕</button></td></tr>').join('')).join('')
+  // 후보 표
+  $('ctable').innerHTML = cands.length ? '<tr><th>계정</th><th>분류</th><th>핵심 요약</th><th>출처</th><th>담은 날</th><th></th></tr>' +
+    all.map((x, i) => [x, i]).filter(([x]) => x.status === 'candidate').map(([x, i]) =>
+      '<tr data-c="' + i + '"><td style="white-space:nowrap"><button class="btn" data-go="1">↗</button> ' + PF[pfOf(x)].icon + ' @' + esc(x.handle) + '</td><td>' + esc(x.group) + '</td><td style="font-size:12px">' + esc(x.why) + '</td>' +
+      '<td class="muted">' + esc(x.source || '') + '</td><td class="muted">' + (x.addedAt ? md(x.addedAt) : '') + '</td>' +
+      '<td style="white-space:nowrap"><button class="btn" data-up="1">승격</button> <button class="x" data-no="1" title="제외">✕</button></td></tr>').join('')
+    : '<tr><td class="muted">후보가 없습니다. 팔로우 후 뜨는 "비슷한 계정"이나 탐색 탭에서 눈에 띈 곳을 "+ 후보 추가"로 담아 주세요.</td></tr>'
+  document.querySelectorAll('#ctable tr[data-c]').forEach(tr => {
+    const x = all[+tr.dataset.c]
+    tr.querySelector('[data-go]').onclick = () => openSeed(x)
+    tr.querySelector('[data-up]').onclick = () => { x.status = 'active'; x.day = Math.max(0, dayN); touch(); renderSeeds() }
+    tr.querySelector('[data-no]').onclick = () => { if (confirm('@' + x.handle + ' 후보를 제외할까요?')) { all.splice(+tr.dataset.c, 1); touch(); renderSeeds() } }
+  })
+  document.querySelectorAll('#stable tr[data-i]').forEach(tr => {
+    const x = all[+tr.dataset.i]
+    tr.querySelector('[data-go]').onclick = () => { openSeed(x); if (!(x.visits || []).includes(today)) { x.visits = [...(x.visits || []), today]; touch(); renderSeeds() } }
+    tr.querySelector('[data-f]').onchange = e => { x.followedAt = e.target.checked ? today : ''; touch(); renderSeeds() }
+    tr.querySelector('[data-v]').onclick = () => { const v = x.visits || []; x.visits = v.includes(today) ? v.filter(d => d !== today) : [...v, today]; touch(); renderSeeds() }
+    tr.querySelector('[data-n]').onchange = e => { x.note = e.target.value; touch() }
+    tr.querySelector('[data-del]').onclick = () => { if (confirm('@' + x.handle + ' 을(를) 목록에서 뺄까요?')) { S.seeds.splice(+tr.dataset.i, 1); touch(); renderSeeds() } }
+  })
+}
+$('sadd').onclick = () => {
+  const pf = (prompt('플랫폼: instagram / youtube / tiktok', 'instagram') || '').trim().toLowerCase()
+  if (!PF[pf]) return alert('instagram, youtube, tiktok 중 하나로 입력해 주세요.')
+  const h = (prompt('추가할 계정명(@ 없이)') || '').trim().replace(/^@/, '')
+  if (!/^[A-Za-z0-9._-]{1,40}$/.test(h)) return
+  const g = prompt('분류(예: AI 인플루언서 / 인스타툰 / AI 제작 도구 / 공감 릴스)', '공감 릴스') || '기타'
+  const why = prompt('핵심 요약 한 줄', '') || ''
+  const src = prompt('출처(추천에서 발견 / 탐색 탭 / 조사 / 성준님)', '추천에서 발견') || ''
+  S.seeds = S.seeds || []
+  if (S.seeds.some(x => x.handle === h && pfOf(x) === pf)) return alert('@' + h + ' 은(는) 이미 목록에 있습니다.')
+  S.seeds.push({ handle: h, group: g, why, use: '', day: 0, status: 'candidate', platform: pf, source: src, addedAt: today, followedAt: '', visits: [], note: '' })
+  touch(); renderSeeds()
+}
 
 ;(async () => { showTab(local.get('tab', 'board')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
 </script></body></html>

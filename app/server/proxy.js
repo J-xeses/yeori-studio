@@ -3089,7 +3089,7 @@ function getForegroundWindow() {
 // 사람이 직접 보고·검색·재생하는 평범한 새 Chrome 창(자동화 대상 아님 → CDP/9222 프로필과 별개).
 // 2026-09-17 메이킹 탭 "윈도우 녹화 구조"의 유튜브 검색 창에서 시작 → 2026-09-24 레퍼런스 보드(핀터레스트)·
 // 인스타 운영실에서도 쓰도록 공용화. 서버가 아무 주소나 열지 않게 target 프리셋 + 허용 도메인만.
-const OPEN_BROWSER_HOSTS = /(^|\.)(youtube\.com|pinterest\.com|pinterest\.co\.kr|pin\.it|instagram\.com)$/i
+const OPEN_BROWSER_HOSTS = /(^|\.)(youtube\.com|pinterest\.com|pinterest\.co\.kr|pin\.it|instagram\.com|tiktok\.com)$/i
 function openBrowserUrl({ target = 'youtube', query = '', url = '' } = {}) {
   const q = String(query || '').trim()
   if (target === 'youtube') return q ? `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}` : 'https://www.youtube.com'
@@ -3115,7 +3115,7 @@ function openChromeWindow(url) {
 // { target: youtube|pinterest|instagram|instagram-signup|url, query?, url? }
 app.post('/api/open-browser', (req, res) => {
   const url = openBrowserUrl(req.body || {})
-  if (!url) return res.status(400).json({ error: '열 수 없는 주소입니다(유튜브·핀터레스트·인스타만 허용)' })
+  if (!url) return res.status(400).json({ error: '열 수 없는 주소입니다(유튜브·핀터레스트·인스타·틱톡만 허용)' })
   try { openChromeWindow(url); res.json({ success: true, url }) }
   catch (err) { res.status(err.statusCode || 500).json({ error: err.message }) }
 })
