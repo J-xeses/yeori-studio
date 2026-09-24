@@ -66,8 +66,8 @@
     "primary": false,
     "descriptor": "Consistent character face: youthful early-20s Korean woman, soft rounded face with full rosy cheeks and a small chin, porcelain-fair skin with a natural pink flush, dark brown eyes that curve into crescent shapes when she smiles, light straight see-through bangs over the forehead, straight glossy jet-black hair falling past the shoulders with soft face-framing layers (NOT wavy, NOT bob), glossy coral-red lip tint, bright bubbly open smile.",
     "descriptorSource": "claude-vision (Flow 테스트 2장 성준님 선택)",
-    "descriptorUpdatedAt": "2026-09-24T12:30:00.000Z",
-    "notes": "서여리 또래 절친 2 · 먼저 웃음을 터뜨리는 발랄한 분위기 메이커 · 코랄 레드 틴트 시그니처 · 흰 피부를 살리는 가벼운 캐주얼(크롭·오프숄더·데님) · 첫 등장 예정 = 후보 #4 흑역사 챌린지 · 기본 머리 = 긴 레이어드(카페 테스트컷), 중단발(방 테스트컷)은 대안",
+    "descriptorUpdatedAt": "2026-09-24T12:50:00.000Z",
+    "notes": "서여리 또래 절친 2 · 먼저 웃음을 터뜨리는 발랄한 분위기 메이커 · 코랄 레드 틴트 시그니처 · 얼굴 기준 = 방 테스트컷(jiyu-closeup.jpg, 성준님: 얼굴형이 더 지유다움) + 긴 머리 · 기본 룩 = 흰 크롭 베이비티(작은 파란 레터링) + 라이트 데님 쇼츠 · 겨울 룩(11~12월) = 핑크 오프숄더 크롭 니트 · 첫 등장 예정 = 후보 #4 흑역사 챌린지",
     "refBasename": "jiyu",
     "voiceId": null,
     "voiceName": null
