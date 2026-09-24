@@ -1,0 +1,12 @@
+# start_gen.bat tab list - one per line: name|url   (ASCII ONLY, see docs/start_yeori-notes.md)
+# Lines starting with # are ignored. Order = tab order. Local files are opened only if they exist.
+# All tabs open in ONE window of the Flow Chrome profile (chrome-profile-main, logins persist).
+# To add a paid service later: add a line here, nothing else to change.
+Flow|https://labs.google/fx/ko/tools/flow
+ElevenLabs|https://elevenlabs.io/app/speech-synthesis/text-to-speech
+Qwen|https://chat.qwen.ai/c/aecadad4-da63-41aa-96ff-0c7157422e59?resId=d53beec5-1a3c-4f82-af56-103d2a6573f9
+PixVerse|https://app.pixverse.ai/creation/video
+Notion Hub|https://www.notion.so/38560cf6afd981c7ab52f99a245a5fa5
+Notion STATUS|https://www.notion.so/3d660cf6afd981b28eeac2ab6ffb5f2e
+Studio|http://localhost:5173
+Field Gate|C:\yeori-genline\index.html

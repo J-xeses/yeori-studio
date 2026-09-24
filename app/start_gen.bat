@@ -3,9 +3,10 @@ setlocal EnableExtensions
 chcp 65001 >nul
 title Yeori Studio - Generation Tools
 cd /d "%~dp0"
+:: ASCII ONLY (see docs\start_yeori-notes.md). Browser tabs are listed in gen-tabs.txt.
 
 echo ============================================================
-echo   Yeori Studio -- Generation Tools (Flow / ElevenLabs / CapCut)
+echo   Yeori Studio -- Generation Tools (tabs from gen-tabs.txt + CapCut)
 echo ============================================================
 echo.
 
@@ -13,6 +14,7 @@ set "CHROME=C:\Program Files\Google\Chrome\Application\chrome.exe"
 if not exist "%CHROME%" set "CHROME=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
 set "PROFILE=C:\yeori-studio\downloads\flow\chrome-profile-main"
 set "DEBUGPORT=9222"
+set "TABLIST=%~dp0gen-tabs.txt"
 
 if not exist "%CHROME%" goto :no_chrome
 if not exist "%PROFILE%" mkdir "%PROFILE%"
@@ -22,23 +24,24 @@ netstat -ano | findstr /r /c:":3001 .*LISTENING" >nul 2>&1 && (echo     proxy :3
 echo.
 
 echo [1] Chrome debug session on port %DEBUGPORT%  (profile: chrome-profile-main)
+:: Tabs come from gen-tabs.txt (name^|url per line) - add services there, not here.
+:: All tabs open in ONE window: fresh launch = the debug window, already running = one new window.
+set "TABS="
+if not exist "%TABLIST%" (
+  echo     [!] gen-tabs.txt missing -- opening Flow only
+  set "TABS="https://labs.google/fx/ko/tools/flow""
+)
+if exist "%TABLIST%" for /f "usebackq eol=# tokens=1,* delims=|" %%A in ("%TABLIST%") do call :addtab "%%A" "%%B"
 netstat -ano | findstr /r /c:":%DEBUGPORT% .*LISTENING" >nul 2>&1
 if %errorlevel%==0 goto :chrome_running
 
-start "" "%CHROME%" --remote-debugging-port=%DEBUGPORT% --user-data-dir="%PROFILE%" --no-first-run --no-default-browser-check --start-maximized "https://labs.google/fx/ko/tools/flow"
-echo     launching Chrome (new debug session)...
-ping -n 5 127.0.0.1 >nul
-start "" "%CHROME%" --user-data-dir="%PROFILE%" "https://elevenlabs.io/app/speech-synthesis/text-to-speech"
-ping -n 2 127.0.0.1 >nul
-start "" "%CHROME%" --user-data-dir="%PROFILE%" "http://localhost:5173"
-if exist "C:\yeori-genline\index.html" start "" "%CHROME%" --user-data-dir="%PROFILE%" "C:\yeori-genline\index.html"
+start "" "%CHROME%" --remote-debugging-port=%DEBUGPORT% --user-data-dir="%PROFILE%" --no-first-run --no-default-browser-check --start-maximized %TABS%
+echo     launched Chrome (new debug session) with the tool tabs
 goto :chrome_done
 
 :chrome_running
-echo     Chrome already on %DEBUGPORT% -- opening tool tabs in same profile
-start "" "%CHROME%" --user-data-dir="%PROFILE%" "https://labs.google/fx/ko/tools/flow"
-start "" "%CHROME%" --user-data-dir="%PROFILE%" "https://elevenlabs.io/app/speech-synthesis/text-to-speech"
-if exist "C:\yeori-genline\index.html" start "" "%CHROME%" --user-data-dir="%PROFILE%" "C:\yeori-genline\index.html"
+echo     Chrome already on %DEBUGPORT% -- opening the tool tabs in one new window (same profile)
+start "" "%CHROME%" --user-data-dir="%PROFILE%" --new-window %TABS%
 
 :chrome_done
 echo.
@@ -74,19 +77,31 @@ echo       - close that window to stop the pipeline
 echo.
 
 echo ============================================================
-echo   READY
-echo     Flow       : https://labs.google/fx/ko/tools/flow
-echo     ElevenLabs : https://elevenlabs.io/app/speech-synthesis/text-to-speech
-echo     Studio     : http://localhost:5173
-echo     Field Gate : C:\yeori-genline\index.html
+echo   READY - tabs:
+if exist "%TABLIST%" for /f "usebackq eol=# tokens=1,* delims=|" %%A in ("%TABLIST%") do echo     %%A : %%B
 echo     debug port : %DEBUGPORT%  (screen-scenario / CLIP auto-record uses this)
 echo     pipeline   : "Yeori Pipeline Leader" window (auto making -^> G4 gate -^> G5)
 echo ============================================================
 echo.
-echo   Log in to Flow and ElevenLabs once in this Chrome; the session persists.
+echo   Log in to each service once in this Chrome profile; the sessions persist.
 echo   Your only manual step for the making line: review + G4 approve in the Studio.
 echo.
 goto :end
+
+:: ---- add one tab: web urls always, local files only if they exist ----
+:addtab
+set "_U=%~2"
+if "%_U%"=="" goto :eof
+if /i "%_U:~0,4%"=="http" (
+  set "TABS=%TABS% "%_U%""
+  echo     + %~1
+) else if exist "%_U%" (
+  set "TABS=%TABS% "%_U%""
+  echo     + %~1
+) else (
+  echo     - %~1 skipped, not found: %_U%
+)
+goto :eof
 
 :no_chrome
 echo [X] Chrome not found at "%CHROME%"

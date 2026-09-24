@@ -23,3 +23,8 @@ cmd.exe 는 배치 파일을 한 줄씩 실행하면서 "파일의 몇 번째 �
 ## 참고
 - 생성/편집(Flow/CapCut/ElevenLabs)은 `start_gen.bat`.
 - 서비스 완전 정지: `schtasks /end /tn YeoriStudio` (그리고 `YeoriMcpTunnel`).
+
+## start_gen.bat (2026-09-24)
+- 생성 도구 탭 목록을 `app/gen-tabs.txt`(한 줄에 `이름|주소`, ASCII 전용, `#` 주석)로 분리 — **유료 서비스 추가 시 이 파일에 한 줄만 추가**하면 된다.
+- 현재: Flow · ElevenLabs · Qwen · PixVerse · 노션 마스터 허브 · 노션 STATUS 자동 미러 · 스튜디오 · Field Gate(로컬 파일, 있을 때만).
+- 모두 Flow 전용 Chrome 프로필(`downloads/flow/chrome-profile-main`, 로그인 유지) **한 창**에 탭으로 연다: 디버그 포트 9222 가 안 떠 있으면 디버그 세션 창으로, 이미 떠 있으면 같은 프로필의 새 창 하나로. (예전엔 도구마다 start 로 따로 열었음)
