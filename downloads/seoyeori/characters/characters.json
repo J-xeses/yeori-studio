@@ -64,13 +64,25 @@
     "closeup": "downloads/flow/character/jiyu-closeup.jpg",
     "flowCharacterName": "지유",
     "primary": false,
-    "descriptor": "Consistent character face: youthful early-20s Korean woman, soft rounded face with full rosy cheeks and a small chin, porcelain-fair skin with a natural pink flush, dark brown eyes that curve into crescent shapes when she smiles, light straight see-through bangs over the forehead, straight glossy jet-black hair falling past the shoulders with soft face-framing layers (NOT wavy, NOT bob), glossy coral-red lip tint, bright bubbly open smile.",
-    "descriptorSource": "claude-vision (Flow 테스트 2장 성준님 선택)",
-    "descriptorUpdatedAt": "2026-09-24T12:50:00.000Z",
-    "notes": "서여리 또래 절친 2 · 먼저 웃음을 터뜨리는 발랄한 분위기 메이커 · 코랄 레드 틴트 시그니처 · 얼굴 기준 = 방 테스트컷(jiyu-closeup.jpg, 성준님: 얼굴형이 더 지유다움) + 긴 머리 · 기본 룩 = 흰 크롭 베이비티(작은 파란 레터링) + 라이트 데님 쇼츠 · 겨울 룩(11~12월) = 핑크 오프숄더 크롭 니트 · 첫 등장 예정 = 후보 #4 흑역사 챌린지",
+    "descriptor": "Consistent character face: youthful early-20s Korean woman, soft rounded face with full rosy cheeks and a small chin, porcelain-fair skin with a natural pink flush, dark brown eyes that curve gently when she smiles, soft straight full bangs covering the forehead, very long straight glossy jet-black hair falling well past the chest (NOT wavy, NOT bob, NOT shoulder-length), glossy coral-red lip tint, bright friendly smile.",
+    "descriptorSource": "claude-vision (2차 테스트 캐릭터 시트, 성준님 확인)",
+    "descriptorUpdatedAt": "2026-09-24T13:30:00.000Z",
+    "notes": "서여리 또래 절친 2 · 먼저 웃음을 터뜨리는 발랄한 분위기 메이커 · 코랄 레드 틴트 시그니처 · 레퍼런스 v2(2차 테스트): 얼굴=CU 2번, 전신=FS 8번(빈티지 쇼츠) · 풀뱅+아주 긴 생머리 · 앳된 얼굴이라 장면마다 성인(20대 초반) 신호(메이크업·액세서리·카페/자취방 등) 함께 · 이전 레퍼런스 downloads/flow/character/_old/ · 첫 등장 예정 = 후보 #4 흑역사 챌린지",
     "refBasename": "jiyu",
     "voiceId": null,
-    "voiceName": null
+    "voiceName": null,
+    "looks": {
+      "look01": {
+        "file": "downloads/flow/character/jiyu-body-look01.jpg",
+        "desc": "white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering + light-wash distressed vintage denim shorts + white low-top sneakers",
+        "season": "spring-summer-early fall"
+      },
+      "winter01": {
+        "file": null,
+        "desc": "pastel pink off-the-shoulder cropped knit (방 테스트컷)",
+        "season": "Nov-Dec"
+      }
+    }
   },
   "_voiceNote": "voiceId = ElevenLabs 목소리(클론/프리셋). STS·TTS 공용. ⚠️ 실제 우선순위: ttsSettings.speakerVoices(TTS탭 화자별 목소리) > 여기(시드). TTS탭에서 바꾸면 그게 최신."
 }
