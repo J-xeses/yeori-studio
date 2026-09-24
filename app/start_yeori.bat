@@ -1,21 +1,23 @@
 @echo off
-title Yeori Studio - 작업 시작
+title Yeori Studio - start
 cd /d "%~dp0"
 
-:: ═══════════════════════════════════════════════════════════════
-::  이 배치는 더 이상 "서버를 붙잡고 있는" 창이 아니다.
-::  proxy(:3001)+vite(:5173) 와 Cloudflare 터널은 Windows 작업 스케줄러가
-::  로그온 시 자동 시작 + 죽으면 자동 재시작한다 (ensure-yeori-tasks.ps1).
-::  → PC 켜고 로그인만 하면 MCP 커넥터와 워커는 이미 떠 있다. 신경 쓸 것 없음.
+:: ===============================================================
+::  ASCII ONLY. Do not put Korean (or any non-ASCII) text in this file:
+::  cmd.exe loses its read position on UTF-8 multibyte lines and runs
+::  the following commands truncated (git pull was silently broken).
+::  History / reasons for each step: app\docs\start_yeori-notes.md
 ::
-::  이 배치는 그 위에 "작업 환경"만 얹는다: git pull, 트렌드 레이더, 브라우저 탭.
-::  아무 때나 다시 실행해도 안전(이미 떠 있으면 건너뜀). 실행 안 해도 MCP는 동작.
-:: ═══════════════════════════════════════════════════════════════
+::  Background services (proxy :3001 + vite :5173, tunnel, worker,
+::  auto-sync) are kept alive by Task Scheduler (ensure-yeori-tasks.ps1).
+::  This script only adds the work environment on top: trend radar,
+::  browser tabs, git pull. Safe to re-run any time.
+:: ===============================================================
 
 set ACC_HTML=%~dp0a_creative_cutter.html
 set MATRIX_HTML=%~dp0content_matrix_v3.html
 
-:: TREND_RADAR_DIR 탐색 (PC마다 위치가 달라서 우선순위대로 확인)
+:: TREND_RADAR_DIR - location differs per PC, check candidates in order
 set TREND_RADAR_DIR=
 if exist "C:\yeori-studio\app\trend-radar\package.json" set TREND_RADAR_DIR=C:\yeori-studio\app\trend-radar
 if not defined TREND_RADAR_DIR if exist "C:\trend-radar\package.json" set TREND_RADAR_DIR=C:\trend-radar
@@ -25,24 +27,17 @@ if not defined TREND_RADAR_DIR for /d %%D in ("%USERPROFILE%\OneDrive\*") do if 
 
 echo.
 echo ============================================================
-echo   Yeori Studio -- 작업 시작
+echo   Yeori Studio -- start
 echo ============================================================
 echo.
 
-:: [1] 백그라운드 서비스 스케줄 자가치유 + 없으면 지금 시작
-::     (YeoriStudio=proxy+vite, YeoriMcpTunnel, YeoriTaskQueueWorker, YeoriStudio_AutoSync)
-::     최초 1회는 install-services.bat (관리자) 로 등록해야 함 -- 여기선 확인/시작만.
+:: [1] Self-heal scheduled services and start them if not running
+::     (first-time registration: install-services.bat as admin)
 echo [1] Ensuring background services (scheduled tasks)...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-yeori-tasks.ps1"
 echo.
 
-:: [2] proxy(:3001) 가 뜰 때까지 대기 (YeoriStudio 작업이 기동 중)
-::     ⚠️ 2026-09-20: 예전엔 이 대기보다 "Git pull"이 먼저였는데, git pull이 네트워크
-::     문제 등으로 멈추면(사용자 실측: 터널 창만 뜨고 브라우저 탭 자체가 하나도 안 열림)
-::     그 뒤의 모든 단계(프록시 대기·브라우저 탭 열기)가 통째로 막혀버렸다. "코드를
-::     최신으로" 는 "도구 탭을 연다"는 목적과 무관하므로, git pull을 맨 뒤로 옮기고
-::     탭 열기를 먼저 하도록 순서를 바꿨다 — 이제 git이 아무리 오래 걸리거나 실패해도
-::     도구 탭은 반드시 열린다.
+:: [2] Wait for proxy :3001 (before git pull - a stuck pull must never block the tabs)
 echo [2] Waiting for studio proxy on :3001...
 set /a _tries=0
 :waitproxy
@@ -50,7 +45,7 @@ netstat -ano | findstr ":3001 " | findstr "LISTENING" >nul 2>&1
 if %errorlevel% == 0 goto proxyup
 set /a _tries+=1
 if %_tries% geq 30 (
-    echo        WARN: :3001 아직 안 뜸 -- 작업 스케줄러에서 YeoriStudio 상태 확인 필요
+    echo        WARN: :3001 not up yet -- check the YeoriStudio scheduled task
     goto trend
 )
 timeout /t 2 /nobreak >nul
@@ -60,7 +55,7 @@ echo        proxy up.
 :trend
 echo.
 
-:: [3] TREND RADAR (:3000) — 스케줄에 없는 별도 UI, 여기서만 띄움
+:: [3] TREND RADAR (:3000) - separate UI, not a scheduled task
 echo [3] TREND RADAR (:3000)...
 netstat -ano | findstr ":3000 " | findstr "LISTENING" >nul 2>&1
 if %errorlevel% == 0 (
@@ -78,25 +73,36 @@ if %errorlevel% == 0 (
 )
 echo.
 
-:: [4] 브라우저 탭 — git/네트워크 상태와 무관하게 항상 이 시점에 연다.
+:: [4] Browser tabs - all tools as tabs in ONE new Chrome window.
+::     Reference board is opened via the proxy (/downloads) instead of file://.
+::     Without Chrome: fall back to the default browser, one by one.
 echo [4] Opening tabs...
-start "" "http://localhost:5173"
-if exist "%ACC_HTML%" start "" "%ACC_HTML%"
-if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
-start "" "http://localhost:3000"
+set "REF_BOARD=http://localhost:3001/downloads/_shared/references/teaser/index.html"
+set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "%REF_BOARD%""
+if exist "%ACC_HTML%" set "TABS=%TABS% "%ACC_HTML%""
+if exist "%MATRIX_HTML%" set "TABS=%TABS% "%MATRIX_HTML%""
+set "TABS=%TABS% "http://localhost:3000""
+set "CHROME="
+if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" set "CHROME=C:\Program Files\Google\Chrome\Application\chrome.exe"
+if not defined CHROME if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" set "CHROME=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+if defined CHROME (
+    start "" "%CHROME%" --new-window %TABS%
+) else (
+    start "" "http://localhost:5173"
+    start "" "http://localhost:3001/insta-ops"
+    start "" "%REF_BOARD%"
+    if exist "%ACC_HTML%" start "" "%ACC_HTML%"
+    if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
+    start "" "http://localhost:3000"
+)
 echo.
 
-:: [5] Git pull (+ OneDrive 콘텐츠 동기화는 2026-09-17부로 중단 — 회사 PC를 더 이상 안 써서
-::     양방향 동기화 자체가 불필요해짐. sync-content.bat는 그대로 남겨뒀으니 필요해지면
-::     아래 call 줄만 되살리면 됨. 중단 이유: robocopy가 /PURGE 없이 양방향으로 돌아서
-::     로컬에서 지운 파일이 며칠 뒤 OneDrive 사본으로부터 되살아나는 버그가 있었음
-::     ([[reference_onedrive_sync_no_delete_propagation]] 참고).
-::     맨 뒤로 옮겼고, 전송이 15초 넘게 1KB/s 밑으로 멈춰있으면 자동으로 포기하도록
-::     타임아웃을 걸어서(2026-09-20) 네트워크 문제로 무한정 멈추는 일이 다시는 없게 했다.
+:: [5] Git pull - last; gives up if under 1KB/s for 15s.
+::     (OneDrive content sync was stopped 2026-09-17 - see notes; sync-content.bat kept)
 echo [5] Git pull...
 cd /d C:\yeori-studio
 git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 pull origin master
-if errorlevel 1 echo        WARN: git pull 실패/타임아웃 -- 나중에 수동으로 git pull 하세요.
+if errorlevel 1 echo        WARN: git pull failed/timed out -- run git pull manually later.
 cd /d "%~dp0"
 echo.
 
@@ -104,13 +110,15 @@ echo ============================================================
 echo   READY
 echo ============================================================
 echo   Studio      : http://localhost:5173
+echo   Insta Ops   : http://localhost:3001/insta-ops
+echo   Ref Board   : %REF_BOARD%
 echo   Cutter      : %ACC_HTML%
 echo   Trend Radar : http://localhost:3000
 echo   Health      : http://localhost:3001/api/health
 echo.
-echo   proxy/vite/터널은 작업 스케줄러가 계속 살려둔다 -- 이 창은 닫아도 됨.
-echo   생성/편집(Flow/CapCut/ElevenLabs) 은  start_gen.bat
-echo   서비스 완전 정지: schtasks /end /tn YeoriStudio  (그리고 YeoriMcpTunnel)
+echo   proxy/vite/tunnel are kept alive by Task Scheduler -- this window can be closed.
+echo   Generation/editing (Flow/CapCut/ElevenLabs): start_gen.bat
+echo   Stop services: schtasks /end /tn YeoriStudio  (and YeoriMcpTunnel)
 echo ============================================================
 echo.
 timeout /t 15

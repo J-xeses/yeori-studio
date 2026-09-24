@@ -16,12 +16,13 @@
 // 그리고 <cat>/index.html(갤러리) · index.json 을 갱신한다.
 import fs from 'fs'
 import path from 'path'
-import { spawnSync } from 'child_process'
+import { spawnSync, spawn } from 'child_process'
+import readline from 'readline'
 import { DOWNLOADS } from '../server/lib/mediaPaths.js'
 
 const args = process.argv.slice(2)
 const opt = Object.fromEntries(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.slice(2).split('='); return [k, v.length ? v.join('=') : true] }))
-const links = args.filter(a => !a.startsWith('--'))
+let links = args.filter(a => !a.startsWith('--'))
 const CAT = String(opt.cat || 'teaser').replace(/[^\w-]/g, '')
 const ROOT = path.join(DOWNLOADS, '_shared', 'references', CAT)
 const FONT_DIR = 'C:/Windows/Fonts'   // drawtext 의 fontfile 경로에 드라이브 콜론을 안 쓰려고 cwd 로 지정
@@ -31,7 +32,7 @@ fs.mkdirSync(ROOT, { recursive: true })
 if (opt.rebuild) {   // 링크 없이 갤러리(index.html)만 다시 생성 — 화면 레이아웃을 바꿨을 때
   writeIndex(readIndex()); console.log(`갤러리 재생성: ${path.join(ROOT, 'index.html')}`); process.exit(0)
 }
-if (!links.length) {
+if (!links.length && !opt.interactive) {
   console.log('사용: node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force] [--scene=0.2]  |  --rebuild')
   process.exit(1)
 }
@@ -331,6 +332,37 @@ ${segs}
   const rest = index.filter(x => x.id !== entry.id)
   writeIndex([entry, ...rest])
   console.log(`✅ ${dir}\n   ${entry.duration ? entry.duration.toFixed(1) + '초' : '이미지'} · 컷 ${cuts.length}개 · ${entry.author || ''}`)
+}
+
+// --interactive: ref-grab.bat 더블클릭용. 한글 안내·입력을 배치 파일이 아니라 여기서 처리한다 —
+// cmd.exe 는 UTF-8 한글이 섞인 .bat 를 읽다가 줄 위치가 어긋나 명령이 잘린다(2026-09-24 실측, chcp 65001 로도 안 고쳐짐).
+if (opt.interactive) {
+  // 줄 단위 큐 — 입력이 끊기면(창 닫힘·파이프 끝) 빈 줄로 보고 정상 종료(질문이 영원히 안 끝나는 것 방지)
+  const rl = readline.createInterface({ input: process.stdin })
+  const queue = []; let waiter = null, closed = false
+  rl.on('line', l => { if (waiter) { const w = waiter; waiter = null; w(l.trim()) } else queue.push(l.trim()) })
+  rl.on('close', () => { closed = true; if (waiter) { const w = waiter; waiter = null; w('') } })
+  const ask = q => { process.stdout.write(q)
+    if (queue.length) return Promise.resolve(queue.shift())
+    if (closed) return Promise.resolve('')
+    return new Promise(res => { waiter = res }) }
+  console.log('================================================')
+  console.log(' 레퍼런스 자동 정리 — 핀터레스트 핀 링크 / mp4 링크')
+  console.log(' 여러 개는 띄어쓰기로 구분 · 빈 줄에서 Enter = 끝내고 갤러리 열기')
+  console.log('================================================')
+  for (;;) {
+    const line = await ask('\n링크: ')
+    if (!line) break
+    const note = await ask('메모(없으면 Enter): ')
+    if (note) opt.note = note; else delete opt.note
+    for (const l of line.split(/\s+/).filter(Boolean)) {
+      try { await grab(l) } catch (e) { console.log(`❌ ${l}\n   ${e.message}`) }
+    }
+  }
+  rl.close()
+  const gallery = `http://localhost:3001/downloads/_shared/references/${CAT}/index.html`
+  spawn('cmd', ['/c', 'start', '', gallery], { detached: true, stdio: 'ignore' }).unref()
+  process.exit(0)
 }
 
 let failed = 0
