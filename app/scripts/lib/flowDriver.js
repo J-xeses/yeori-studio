@@ -535,6 +535,8 @@ export function flowKit(page) {
       if (!pill || !pill.includes('동영상')) problems.push(`동영상 모드가 아님: ${pill}`)
       if (expect.ratio && pill && !pill.includes(expect.ratio === '9:16' ? 'crop_9_16' : 'crop_16_9')) problems.push(`비율 불일치: 기대 ${expect.ratio} / ${pill}`)
       if (expect.durationSec && pill && !pill.includes(`${expect.durationSec}초`)) problems.push(`길이 불일치: 기대 ${expect.durationSec}초 / ${pill}`)
+      // 해상도: 지정 안 하면 Flow에 남아 있던 값(320p 등)으로 생성됨 — IG_R05 컷1이 320p·6크레딧으로 나온 사고(2026-09-25)
+      if (expect.resolution && pill && !pill.includes(expect.resolution)) problems.push(`해상도 불일치: 기대 ${expect.resolution} / ${pill}`)
       if (pill && !/x1$/.test(pill)) problems.push(`생성 개수가 x1이 아님: ${pill}`)
       if (expect.startFrame && !(await this.startFrameFilled())) problems.push('시작 프레임이 지정되지 않음(프레임 모드 슬롯이 비어 있음)')
       if (expect.endFrame && !(await this.endFrameFilled())) problems.push('종료 프레임이 지정되지 않음(프레임 모드 종료 슬롯이 비어 있음)')
@@ -600,7 +602,16 @@ export function flowKit(page) {
         const dl = await rectOf('download', 'exact', 'button')
         if (!dl) throw new Error('다운로드 버튼을 찾지 못했습니다')
         await page.mouse.click(dl.x, dl.y); await sleep(1500)
-        const item = await rectOf('720p 원본 크기', 'includes', '[role="menuitem"], .mat-mdc-menu-item, button')
+        // 메뉴가 1.5초 안에 안 뜨는 경우가 있어(2026-09-25 IG_R05 컷1, 생성은 끝났는데 다운로드만 실패) 최대 8초 기다린다. 영어 화면 문구도 인식.
+        let item = null
+        for (let i = 0; i < 16 && !item; i++) {
+          item = await rectOf('720p 원본 크기', 'includes', '[role="menuitem"], .mat-mdc-menu-item, flow-menu-item button, button')
+            || await rectOf('720p Original size', 'includes', '[role="menuitem"], .mat-mdc-menu-item, flow-menu-item button, button')
+            // 320p 등으로 생성된 결과는 그 해상도의 "원본 크기"만 무료 — 해상도 무관하게 원본 크기 항목을 받는다
+            || await rectOf('원본 크기', 'includes', 'flow-menu-item button, [role="menuitem"], .mat-mdc-menu-item')
+            || await rectOf('Original size', 'includes', 'flow-menu-item button, [role="menuitem"], .mat-mdc-menu-item')
+          if (!item) await sleep(500)
+        }
         if (!item) throw new Error('"720p 원본 크기" 메뉴를 찾지 못했습니다(메뉴 구조가 바뀜)')
         await page.mouse.click(item.x, item.y)
 

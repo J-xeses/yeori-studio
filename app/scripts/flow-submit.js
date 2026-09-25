@@ -152,6 +152,9 @@ ${REGISTERS[reg].delivery}`
     await kit.setRatio(ratio)
     await kit.setCount(1)        // 영상은 항상 x1 (이미지 작업이 x2로 남겨 둔 값이 넘어오지 않게 명시적으로 지정)
     if (model.startsWith('Omni')) await kit.setDuration(durationSec)
+    // 해상도 명시(안 하면 Flow에 남아 있던 320p 등이 그대로 쓰임 — 2026-09-25 IG_R05 컷1 사고). Omni 만 해상도 줄이 있다.
+    const resolution = model.startsWith('Omni') ? (job.resolution || '720p') : null
+    if (resolution) await kit.setResolution(resolution)
     // 입력 방식: frames(기본) = 시작 프레임 슬롯 / ingredients = "소재" 참조 이미지(컷 이미지 + 서여리 클로즈업 얼굴)
     const mode = job.mode === 'ingredients' ? 'ingredients' : 'frames'
     let finalPrompt = prompt
@@ -182,7 +185,7 @@ ${REGISTERS[reg].delivery}`
     }
     await kit.fillPrompt(finalPrompt)
     step('프롬프트 입력 완료')
-    const gate = await kit.verifyGate({ model, ratio, durationSec, maxCredits, prompt: finalPrompt, startFrame: mode === 'frames', endFrame: mode === 'frames' && !!job.endFrame, refs: refCount })
+    const gate = await kit.verifyGate({ model, ratio, durationSec, resolution, maxCredits, prompt: finalPrompt, startFrame: mode === 'frames', endFrame: mode === 'frames' && !!job.endFrame, refs: refCount })
     step(`검증 관문: ${gate.ok ? '통과' : '실패'} (모델 ${gate.model}, ${gate.credits}크레딧)`)
     if (!gate.ok) throw new Error('검증 관문 실패 — 전송하지 않음: ' + gate.problems.join(' / '))
     status.result = { gate: { model: gate.model, credits: gate.credits }, dryRun: !!job.dryRun }
