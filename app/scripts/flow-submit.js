@@ -93,8 +93,14 @@ async function main() {
   if (!chkCut) throw new Error(`컷 ${cutNo}을(를) 찾지 못했습니다`)
   const st = await (await fetch(`${SERVER}/api/studio-state`)).json()
   const stCut = ((st.d || st).cuts || []).find(c => c.no === cutNo)
-  let prompt = extractClipPrompt(chkCut.videoPrompt, stCut?.segPrompts, Number(clipNo))
-  step(`프롬프트 ${prompt.length}자 추출`)
+  // 클립별 프롬프트 — 이 클립에서 보일 것·말할 것만(server/lib/clipPrompt.js, 2026-09-25). 못 만들면 멈춘다(전체 VP 를 넣지 않음).
+  const { buildClipPrompt } = await import('../server/lib/clipPrompt.js')
+  const promptCut = { ...(stCut || {}), no: cutNo, videoPrompt: chkCut.videoPrompt || stCut?.videoPrompt || '' }
+  const clipCount = Array.isArray(stCut?.segments) && stCut.segments.length > 1 ? stCut.segments.length : 1
+  const built = buildClipPrompt(promptCut, Number(clipNo), clipCount)
+  let prompt = built.prompt
+  const clipLine = built.line
+  step(`프롬프트 ${prompt.length}자 — 클립 ${clipNo}/${clipCount}, 화면 출처: ${built.visualSource}, 이 클립 대사: ${clipLine ? `"${clipLine}"` : '(말 안 함)'}`)
 
   const outPath = path.join(mp.makingDir(epNum), 'raw', `cut_${pad(cutNo)}_clip_${clipNo}.mp4`)
   if (!job.dryRun && fs.existsSync(outPath) && !job.overwrite) throw new Error(`이미 있는 파일입니다(덮어쓰지 않음): ${path.basename(outPath)}`)
@@ -235,8 +241,9 @@ ${REGISTERS[reg].delivery}`
     try {
       const { checkClip, loadQa, saveQa } = await import('../server/lib/voiceQa.js')
       const secrets = JSON.parse(fs.readFileSync(path.join(mp.DOWNLOADS, '..', 'app', 'studio-secrets.json'), 'utf-8'))
-      const partial = Number(clipNo) > 1 || (Array.isArray(stCut?.segPrompts) && stCut.segPrompts.length > 1)
-      const qa = await checkClip({ videoPath: outPath, expected: stCut?.dialogue || chkCut.dialogue || '', apiKey: secrets.apiKeys?.elevenLabs, partial })
+      // 세그 컷은 이 클립의 대사 조각으로 검수(전체 대사와 비교하면 항상 "누락"으로 나왔다)
+      const partial = false
+      const qa = await checkClip({ videoPath: outPath, expected: clipCount > 1 ? clipLine : (stCut?.dialogue || chkCut.dialogue || ''), apiKey: secrets.apiKeys?.elevenLabs, partial })
       const qaPath = mp.statePath('voice-qa.json'), all = loadQa(qaPath), code = mp.resolveCode(epNum)
       ;((all[code] ||= {})[cutNo] ||= {})[path.basename(outPath)] = qa
       saveQa(qaPath, all)

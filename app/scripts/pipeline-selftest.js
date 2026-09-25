@@ -69,6 +69,30 @@ await check('P1', '대본 파서 — 서여리 컷 영상 프롬프트 채워짐
   return { ok: yeoriCuts.length > 0 && !empty.length, evidence: `서여리 컷 ${yeoriCuts.length}개 VP 길이 ${yeoriCuts.map(c => (c.videoPrompt || '').length).join('/')}자${empty.length ? ` · 빈값 컷 ${empty.map(c => c.no)}` : ''}` }
 })
 
+// ── 1b. 롱폼 클립별 프롬프트 분리(고정 시험 롱폼 LF_T01) — 클립마다 자기 대사 조각만, 남의 조각·제작 메모 없음 ──
+await check('P2', '롱폼 클립별 프롬프트 분리(LF_T01)', async () => {
+  const { buildClipPrompt, splitLines } = await import('../server/lib/clipPrompt.js')
+  const st = JSON.parse(fs.readFileSync(path.join(ROOT, 'studio-state.json'), 'utf-8'))
+  const lf = Object.values(st.episodes || {}).find(e => e.episode?.code === (args.lf || 'LF_T01'))
+  if (!lf) return { skip: true, evidence: '롱폼 시험 에피소드 없음' }
+  const nz = (t) => String(t || '').replace(/[^가-힣a-zA-Z0-9]/g, '')
+  let clips = 0; const problems = []
+  for (const c of lf.cuts.filter(x => x.cutType === 'YEORI')) {
+    const n = Array.isArray(c.segments) && c.segments.length > 1 ? c.segments.length : 1
+    const parts = splitLines(c.dialogue, n) || []
+    for (let k = 1; k <= n; k++) {
+      clips++
+      let r
+      try { r = buildClipPrompt(c, k, n) } catch (e) { problems.push(`컷${c.no}-${k} 멈춤`); continue }
+      const p = nz(r.prompt)
+      if (r.line && !p.includes(nz(r.line).slice(0, 12))) problems.push(`컷${c.no}-${k} 자기 대사 없음`)
+      parts.forEach((o, j) => { if (j !== k - 1 && nz(o).length >= 6 && p.includes(nz(o).slice(0, 12))) problems.push(`컷${c.no}-${k} 남의 대사(${j + 1}) 포함`) })
+      if (/^(생성|후처리):|━━━\s*발화/m.test(r.prompt)) problems.push(`컷${c.no}-${k} 제작 메모 포함`)
+    }
+  }
+  return { ok: !problems.length, evidence: `클립 ${clips}개 점검${problems.length ? ' · ' + problems.slice(0, 4).join(' / ') : ' · 전부 자기 대사만, 제작 메모 없음'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))
