@@ -1,0 +1,280 @@
+================================================================
+마스터 코드
+[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]
+================================================================
+에피소드명: 혼자인 밤, 친구들 SNS를 보다
+채널: 서여리 인스타그램 릴스 (IG_R05)
+총 길이: 34초 목표 (8 + 6 + 8 + 4 + 8) — 생성단위(Veo 8초 / 그래픽 6·4초) 기준
+콘셉트: 금요일 밤 혼자 친구들 피드를 넘기다 쓸쓸해짐 → 여행 간 지아의 "집 가고 싶다" DM → "다들 보여주고 싶은 것만 올리는 거지" 피식
+================================================================
+EP.HEADER
+CHAR  : YEORI.NT (서여리 묶은 머리 변형 — characters.json yeori_nt)
+EP    : IG_R05
+TITLE : 혼자인 밤, 친구들 SNS를 보다
+LOOK.A: LOOK_NT (오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리, 무릎 위 크림 니트 담요)
+BG.A  : 불 꺼진 원룸 침실, 침대 헤드에 기댄 자세, 작은 스탠드 하나
+LIGHT : LT_DK (어두운 방 + 폰 화면의 차가운 빛 + 스탠드의 약한 웜톤)
+REF   : yeori_nt face / closeup
+BGM   : 느린 로파이 피아노, 낮게 → CUT4 DM 알림음 순간 멈춤 → CUT5 다시 낮게
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — 금요일 밤 11시, 나만 집인가 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 불 꺼진 방, 침대 헤드에 기대 앉은 서여리. 얼굴에 폰 화면 빛만 비친다. 무표정하게 엄지로 피드를 넘기다 잠깐 멈칫하고 다시 넘긴다.
+SP: IN.HM.TZ_NT.LT_DK
+PL: YR_VD
+CH: YR_NT / LK_NT
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SAD
+AC: 없음
+LOOK_ID: LOOK_NT
+DU: 8
+CP: 금요일 밤 11시. / 나만 집인가.
+CT: YEORI
+오디오:
+  BGM: 느린 로파이 피아노 (0초부터, 낮게)
+  음성: 없음
+  효과음: 폰 스크롤 톡톡 (아주 작게)
+  앰비언스: 조용한 방, 멀리 도로 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     불 꺼진 침실, 밤 11시, 스탠드 하나
+CH(캐릭터):   오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리, 무릎 위 니트 담요
+SH(샷):       미디엄 클로즈업, 폰을 든 상반신
+CA(카메라):   고정
+AC(동작):     0~3초 무표정하게 스크롤 → 3~5초 한 게시물에서 멈칫, 눈만 살짝 커짐 → 5~8초 다시 천천히 스크롤
+MD(감정):     무심한 척하는 쓸쓸함
+DL(대사):     없음
+NR(나레이션): (화면 자막) 금요일 밤 11시. 나만 집인가.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun high at the back of her head with a few soft strands falling around her face, hair NOT down,
+natural skin texture on right cheek (very subtle, not exaggerated), sitting up in bed leaning against the headboard at night, holding a smartphone in one hand at chest height and scrolling with her thumb,
+wearing an oversized heather-grey hoodie DO NOT change clothing, a soft cream knit blanket over her knees, delicate gold necklace barely visible at the collar,
+expression: blank, slightly tired and absent-minded, eyes looking down at the phone screen,
+lighting: dark bedroom at 11pm, the cool bluish glow of the phone screen lighting her face from below, a small warm bedside lamp far in the background, deep shadows,
+effortlessly photogenic not posing just existing beautifully,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, the phone screen is facing her so its content is not visible to the camera
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-3s] In a dark bedroom she scrolls her phone with her thumb, face lit only by the cool screen glow, expression blank.
+[3-6s] She stops on one post; her eyes widen very slightly, she holds still for a beat.
+[6-8s] She lets out a quiet breath through her nose and slowly resumes scrolling.
+NO dialogue — narration added in post. No on-screen subtitle text or captions. The phone screen faces her and is never readable by the camera. Hair stays tied up in the messy bun the whole time.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ GRAPHIC | 친구들 피드 — 지아 제주·지유 루프탑·커플링, 하트 세 번 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 폰 화면 시점. 인스타 피드가 한 장씩 넘어가고, 게시물마다 엄지가 ♡를 누른다.
+SP: IN.HM.TZ_NT.LT_DK
+PL: GR_ED
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_ECU
+CA: CA_ST
+MD: MD_SAD
+AC: 없음
+DU: 6
+CT: GRAPHIC
+HTML: cut_02_feed.html
+MOTION: self
+CP: 다들 잘 지내는구나
+오디오:
+  BGM: 로파이 피아노 계속
+  음성: 없음
+  효과음: 스와이프 3회 + 하트 톡 3회
+  앰비언스: 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     폰 화면(인스타 피드 목업, 다크 모드)
+CH(캐릭터):   피드 게시물로만 등장 — 한지아(제주 바다), 지유(루프탑 파티), 모르는 지인(커플링 손)
+SH(샷):       폰 화면 풀샷
+CA(카메라):   고정
+AC(동작):     0~2초 지아 "제주 3일째 🌊" ♡ → 2~4초 지유 "우리 또 모였다 🥂" ♡ → 4~6초 지인 커플링 "1주년 💍" ♡
+MD(감정):     부러움 반, 무심함 반
+DL(대사):     없음
+NR(나레이션): (화면 자막) 다들 잘 지내는구나
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+GRAPHIC 타입 — 이미지 생성 불필요(피드 사진 3장은 별도 준비: feed_jia.jpg · feed_jiyu.jpg · feed_ring.jpg, 02_images/feed/)
+파일: cut_02_feed.html — 1080×1920, 다크모드 인스타 피드 목업, 게시물 3개가 위로 스와이프되며 각 게시물에 하트 탭 애니메이션(CSS @keyframes, 절대시각).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 좋아요는 다 눌렀는데 — 폰을 가슴에 내려놓고 천장 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서여리가 폰을 가슴 위로 내려놓고 베개에 머리를 기댄 채 천장을 본다. 작게 한숨 쉬고 혼잣말한다.
+SP: IN.HM.TZ_NT.LT_DK
+PL: YR_VD
+CH: YR_NT / LK_NT
+DL: 좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SAD
+AC: 없음
+LOOK_ID: LOOK_NT
+DU: 8
+CP: 좋아요는 다 눌렀는데… / 왜 나만 멈춰 있는 것 같지.
+CT: YEORI
+오디오:
+  BGM: 로파이 피아노 계속, 조금 더 낮게
+  음성: 작고 담담한 혼잣말, 자조 섞인 낮은 톤 (속삭임에 가깝게)
+  효과음: 폰을 담요 위에 내려놓는 소리
+  앰비언스: 조용한 방
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     불 꺼진 침실
+CH(캐릭터):   오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리
+SH(샷):       미디엄 클로즈업, 베개에 기댄 얼굴과 가슴 위 폰
+CA(카메라):   고정
+AC(동작):     0~2초 폰을 가슴 위에 엎어 내려놓고 고개를 뒤로 기댐 → 2~3초 천장을 보며 작은 한숨 → 3~7초 천장을 본 채 혼잣말 → 7~8초 눈을 한 번 천천히 깜빡임
+MD(감정):     담담한 외로움, 자조
+DL(대사):     좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.
+NR(나레이션): (화면 자막) 대사 자막만
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun with a few soft strands on the pillow and around her face, hair NOT down,
+natural skin texture on right cheek (very subtle, not exaggerated), half-lying in bed with her head resting back against a pillow and the headboard, looking up at the ceiling,
+a smartphone lying face-down on her chest under one relaxed hand, its faint glow spilling from the edges onto her chin,
+wearing an oversized heather-grey hoodie DO NOT change clothing, soft cream knit blanket, delicate gold necklace,
+expression: quiet, a little lonely, lips slightly parted as if about to sigh, eyes open and gazing upward,
+lighting: dark bedroom at night, faint cool light from the phone edges and a small warm bedside lamp glow from the side, soft deep shadows,
+effortlessly photogenic not posing just existing beautifully,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-3s] She lays the phone face-down on her chest, leans her head back into the pillow and lets out a small sigh, looking up at the ceiling.
+[3-6s] Still gazing at the ceiling, she quietly says her line to herself in Korean, almost a whisper: "좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지."
+[6-8s] She blinks slowly once and stays still, a faint lonely look.
+No on-screen subtitle text or captions. She speaks to herself, not to the camera. Hair stays tied up in the messy bun.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ GRAPHIC | 반전 — 지아의 DM "집 가고 싶다" | 4
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 가슴 위 폰이 진동하고, 화면에 지아의 DM이 뜬다.
+SP: IN.HM.TZ_NT.LT_DK
+PL: GR_ED
+CH: 없음
+DL: 없음
+NR: 없음
+SH: SH_ECU
+CA: CA_ST
+MD: MD_REL
+AC: 없음
+DU: 4
+CT: GRAPHIC
+HTML: cut_04_dm.html
+MOTION: self
+CP: 없음
+오디오:
+  BGM: DM 알림음 순간 멈춤
+  음성: 없음
+  효과음: 폰 진동 "지잉" + DM 알림음
+  앰비언스: 정적
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     폰 화면(인스타 DM 목업, 다크 모드)
+CH(캐릭터):   한지아 DM (프로필 사진 = 지아 얼굴 레퍼런스)
+SH(샷):       폰 화면 풀샷
+CA(카메라):   고정
+AC(동작):     0~0.8초 잠금화면 알림 배너 "jia.han 님이 메시지를 보냈습니다" 흔들림 → 0.8~4초 DM 화면, 말풍선이 타이핑 점 뒤에 차례로 등장
+MD(감정):     반전, 웃음 터지기 직전
+DL(대사):     없음
+NR(나레이션): 지아 DM — "뭐해?" / "나 여행 와서 사진만 찍고 지금 숙소에서 컵라면 먹는 중ㅋㅋ" / "집 가고 싶다"
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP / VP
+━━━━━━━━━━━━━━━━━━━━━━━━
+GRAPHIC 타입 — 이미지 생성 불필요(프로필 사진은 downloads/flow/character/jia-face.jpg)
+파일: cut_04_dm.html — 1080×1920, 다크모드 인스타 DM 목업, 알림 배너 → DM 말풍선 3개 순차 등장(타이핑 점 포함, CSS @keyframes 절대시각).
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5] ─ YEORI | 마무리 — 피식, "다들 보여주고 싶은 것만" | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서여리가 폰을 다시 얼굴 위로 들어 화면을 보다가 피식 웃는다. 엄지로 짧게 답장하고, 폰을 얼굴 옆에 내려놓은 채 편하게 눈을 감는다.
+SP: IN.HM.TZ_NT.LT_DK
+PL: YR_VD
+CH: YR_NT / LK_NT
+DL: 다들 보여주고 싶은 것만 올리는 거지, 뭐.
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL
+AC: 없음
+LOOK_ID: LOOK_NT
+DU: 8
+CP: 다들 보여주고 싶은 것만 올리는 거지, 뭐. / 오늘 밤 혼자인 사람, 사실 꽤 많아요.
+CT: YEORI
+오디오:
+  BGM: 로파이 피아노 다시 낮게 재진입
+  음성: 피식 웃음이 섞인 편안하고 따뜻한 톤
+  효과음: 짧은 타이핑 톡톡 + 전송음
+  앰비언스: 조용한 방
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     불 꺼진 침실
+CH(캐릭터):   오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리
+SH(샷):       미디엄 클로즈업, 베개에 누운 얼굴과 얼굴 위로 든 폰
+CA(카메라):   고정
+AC(동작):     0~2초 폰을 얼굴 위로 들어 화면을 보다 피식 → 2~5초 폰을 보며 대사 → 5~7초 엄지로 짧게 답장 → 7~8초 폰을 얼굴 옆 베개에 내려놓고 편하게 눈 감음
+MD(감정):     안도, 따뜻한 웃음
+DL(대사):     다들 보여주고 싶은 것만 올리는 거지, 뭐.
+NR(나레이션): (화면 자막) 오늘 밤 혼자인 사람, 사실 꽤 많아요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun with a few soft strands falling on the pillow, hair NOT down,
+natural skin texture on right cheek (very subtle, not exaggerated), lying back on a pillow in bed, holding a smartphone up above her face with both hands and looking at the screen,
+wearing an oversized heather-grey hoodie DO NOT change clothing, soft cream knit blanket, delicate gold necklace,
+expression: a small amused snort of a smile breaking out, eyes softening, relieved and warm,
+lighting: dark bedroom at night, the phone screen glow lighting her face softly from above, a small warm bedside lamp in the background, cozy shadows,
+effortlessly photogenic not posing just existing beautifully,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, the phone screen faces her so its content is not visible to the camera
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-3s] Lying back on the pillow, she looks at the phone held above her face and lets out a small amused snort, a smile breaking out.
+[3-6s] Still looking at the screen, smiling, she says her line softly in Korean: "다들 보여주고 싶은 것만 올리는 거지, 뭐." then types a quick reply with her thumbs.
+[6-8s] She lowers the phone onto the pillow beside her face and comfortably closes her eyes, a calm smile remaining.
+No on-screen subtitle text or captions. The phone screen faces her and is never readable by the camera. Hair stays tied up in the messy bun.
+
+
+[게시 캡션]
+금요일 밤, 다들 뭐 해요?
+좋아요는 눌렀는데 괜히 나만 멈춰 있는 것 같은 밤.
+근데 사실… 다들 보여주고 싶은 것만 올리는 거더라고요.
+
+이 시간에 이거 보고 있는 친구한테 보내기 📩
+#혼자인밤 #금요일밤 #서여리

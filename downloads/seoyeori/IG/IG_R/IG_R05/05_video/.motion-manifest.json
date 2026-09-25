@@ -1,0 +1,34 @@
+{
+  "1": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-25T08:18:33.517Z"
+  },
+  "2": {
+    "method": "graphic",
+    "motion": "self",
+    "baked": true,
+    "duration": 6,
+    "producedAt": "2026-09-25T07:52:45.069Z"
+  },
+  "3": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-25T08:18:35.022Z"
+  },
+  "4": {
+    "method": "graphic",
+    "motion": "self",
+    "baked": true,
+    "duration": 4,
+    "producedAt": "2026-09-25T07:53:05.127Z"
+  },
+  "5": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-25T08:18:36.497Z"
+  }
+}
