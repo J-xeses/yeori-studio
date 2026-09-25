@@ -1379,7 +1379,7 @@ app.post('/api/flow/image', (req, res) => {
   const dir = FLOW_JOB_DIR()
   fs.mkdirSync(dir, { recursive: true })
   const jobPath = path.join(dir, `${jobId}.json`)
-  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '', extraRefs: Array.isArray(b.extraRefs) ? b.extraRefs.map(String) : [] }
+  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '', extraRefs: Array.isArray(b.extraRefs) ? b.extraRefs.map(String) : [], ...(Array.isArray(b.charIds) ? { charIds: b.charIds.map(String) } : {}) }
   fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
   const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-image.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
   activeFlowJob = { id: jobId, child }

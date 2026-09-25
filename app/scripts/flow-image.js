@@ -6,7 +6,7 @@
  *
  * 사용법: node scripts/flow-image.js --job=<job.json 경로>
  *   job.json: { jobId, episodeCode, cutNos:[..], count?(2), model?('Nano Banana 2'), ratio?, dryRun?, maxPerDay?(180),
- *               minIntervalSec?(20), promptOverride?, projectId? }
+ *               minIntervalSec?(20), promptOverride?, projectId?, charIds?([..] 레퍼런스 캐릭터 직접 지정) }
  *
  * 안전장치
  *  - 하루 생성 장수 카운터(downloads/state/flow-image-usage.json). 한도(기본 180, Flow 무료 200장/일 여유분)를 넘기면 중단.
@@ -98,10 +98,12 @@ async function main() {
   for (const no of cutNos) {
     const cut = (ep.cuts || []).find(c => c.no === no)
     if (!cut) throw new Error(`컷 ${no} 를 찾지 못했습니다`)
-    if (['GRAPHIC', 'CAPCUT'].includes(cut.cutType)) { step(`컷 ${no}: ${cut.cutType} 컷이라 건너뜀`); continue }
+    // promptOverride 가 있으면 GRAPHIC 컷도 생성(목업에 넣을 사진 소재 — IG_R05 피드 사진 등)
+    if (['GRAPHIC', 'CAPCUT'].includes(cut.cutType) && !(job.promptOverride && cutNos.length === 1)) { step(`컷 ${no}: ${cut.cutType} 컷이라 건너뜀`); continue }
     const base = (job.promptOverride && cutNos.length === 1 ? job.promptOverride : (cut.imagePrompt || cut.ip || '')).trim()
     if (!base) { step(`컷 ${no}: 이미지 프롬프트가 없어 건너뜀`); continue }
-    const ids = resolveCharIds(cut.masterCode?.ch, chars)
+    // job.charIds: 컷 CH 대신 레퍼런스 캐릭터를 직접 지정(예: 서여리 컷 목업 속 친구 사진 → ['jia']). [] 이면 레퍼런스 없이.
+    const ids = Array.isArray(job.charIds) ? job.charIds.filter(id => chars[id]) : resolveCharIds(cut.masterCode?.ch, chars)
     const { refs, descriptorText } = refsAndDescriptors(ids, chars)
     // 추가 레퍼런스(의상·분위기 기준 이미지): 캐릭터 얼굴 레퍼런스 뒤에 붙이고, 프롬프트에 역할을 알려 준다.
     const extra = (job.extraRefs || []).map(r => path.resolve(String(r))).filter(r => r.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase()) && fs.existsSync(r))
