@@ -15,6 +15,7 @@
  */
 
 import fs from 'fs'
+import crypto from 'crypto'
 import os from 'os'
 import path from 'path'
 import { execFileSync } from 'child_process'
@@ -207,6 +208,17 @@ ${REGISTERS[reg].delivery}`
     if (res.status !== 'done') throw new Error('8분 안에 생성이 끝나지 않았습니다')
     step('생성 완료 — 다운로드')
     const bytes = await kit.saveResult(res.thumbSrc, outPath)
+    // 엉뚱한(예전) 결과 타일을 받는 사고 방지 — 같은 raw 폴더의 다른 클립과 바이트가 똑같으면 실패 처리.
+    // 2026-09-25 IG_R05: 타일 감지가 화면 밖 요소를 잡아 컷3 이 컷1 영상을, 컷5 가 컷3 영상을 받았다(한 칸씩 밀림).
+    {
+      const md5 = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex')
+      const mine = md5(outPath)
+      const twin = fs.readdirSync(path.dirname(outPath)).filter(n => n.endsWith('.mp4') && n !== path.basename(outPath)).find(n => md5(path.join(path.dirname(outPath), n)) === mine)
+      if (twin) {
+        fs.renameSync(outPath, outPath.replace(/\.mp4$/, `.dup-of-${twin.replace(/\.mp4$/, '')}.mp4`))
+        throw new Error(`받은 영상이 기존 ${twin} 과 똑같습니다 — 새 결과가 아니라 예전 타일을 받은 것(Flow 화면에서 방금 생성분을 직접 확인하세요, 생성 자체는 완료됨)`)
+      }
+    }
     let dur = null
     try { dur = Number(run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', outPath]).trim()) } catch { /* noop */ }
     status.result = { ...status.result, path: outPath, name: path.basename(outPath), bytes, duration: dur }

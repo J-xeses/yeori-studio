@@ -575,7 +575,11 @@ export function flowKit(page) {
         if (shouldStop && shouldStop()) return { status: 'cancelled' }
         if (snap.abuse && !before.abuse) return { status: 'failed', abuse: true, reason: 'Flow가 "비정상적인 활동이 감지되었습니다"라고 표시했습니다 — 자동 제출을 중단합니다(요금 미청구)' }
         if (snap.fails > before.fails) return { status: 'failed', reason: '동영상을 생성할 수 없습니다(Flow가 사유를 표시하지 않음, 요금 미청구)' }
-        if (fresh.length) return { status: 'done', thumbSrc: fresh[0] }
+        // 새 결과는 목록 맨 앞(최신순)에 생긴다. "before 에 없던 타일"만 보면, 제출 시점에 덜 로드됐다가 늦게 나타난
+        // 예전 타일을 새 결과로 오인한다 — 2026-09-25 IG_R05 컷3 이 컷1 영상을, 컷5 가 컷3 영상을 받아 한 칸씩 밀린 사고.
+        // → 맨 앞 타일이 새것이고, 진행률(%) 표시가 사라졌을 때만 완료로 본다.
+        const head = snap.thumbs[0]
+        if (head && !seen.has(head) && !(snap.progress || []).length) return { status: 'done', thumbSrc: head }
         await sleep(intervalMs)
       }
       return { status: 'timeout' }
@@ -594,7 +598,7 @@ export function flowKit(page) {
         if (!pos) throw new Error('결과 타일을 찾지 못했습니다')
         await page.mouse.click(pos.x, pos.y)
         let inViewer = false
-        for (let i = 0; i < 15 && !inViewer; i++) { await sleep(1000); inViewer = await page.evaluate(() => document.body.innerText.includes('현재 시간')) }
+        for (let i = 0; i < 15 && !inViewer; i++) { await sleep(1000); inViewer = await page.evaluate(() => /현재 시간|Current time/i.test(document.body.innerText)) }
         if (!inViewer) throw new Error('결과 뷰어가 열리지 않았습니다')
 
         await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: tmpDir })
