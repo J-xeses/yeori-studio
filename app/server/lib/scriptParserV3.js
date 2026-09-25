@@ -122,7 +122,8 @@ function splitV3Cuts(raw) {
     const trimmed = line.trim()
     // [CUT N] 이 아닌 대괄호 표제([제작 체크리스트] 등 에피소드 말미 블록)는 컷 본문 종료로 본다.
     // [캡션 …]은 CAPCUT 컷 imagePrompt 안의 관용 표기라 예외.
-    if (/^\[/.test(trimmed) && !V3_CUT_HEADER_RE.test(trimmed) && !/^\[캡션/.test(trimmed)) { section = null; continue }
+    // [0-3s] · [1.5-3.5s] · [Clip 1/2 …] 같은 VP 시간 구간 표기도 본문 — 이걸 끊으면 VP 가 통째로 빈값(IG_R04·R05 실측, 2026-09-25).
+    if (/^\[/.test(trimmed) && !V3_CUT_HEADER_RE.test(trimmed) && !/^\[캡션/.test(trimmed) && !/^\[(\d|clip\b|seg\b)/i.test(trimmed)) { section = null; continue }
     // 섹션 헤더: "KR (한글 컨펌본)" / "IP (이미지 프롬프트)" / "VP (영상 프롬프트)" /
     // "IP / VP" (BROLL·GRAPHIC 컷은 IP·VP 를 한 섹션으로 합쳐 쓴다) 모두 인식
     if (/^KR\s*\(/.test(trimmed)) { section = 'kr'; continue }

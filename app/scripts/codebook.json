@@ -435,6 +435,11 @@
       "label": "거리 캐주얼",
       "ip_outfit": "beige baseball cap, white APC graphic tee, bootcut rolled jeans, red sandals, gold necklace, gold bracelet,",
       "ep": "E06"
+    },
+    "LOOK_NT": {
+      "label": "홈 나이트 후드+묶은머리",
+      "ip_outfit": "oversized heather-grey hoodie, hair tied up in a loose messy bun with a few face-framing strands, soft cream knit blanket over the knees,",
+      "ep": "IG_R05"
     }
   },
   "BG_RULE": {
