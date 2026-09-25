@@ -7950,12 +7950,15 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
       return (k && speakerVoices[k]) || defaultVoice
     }
     const epNum = ep.episode?.number
-    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => c.dialogue?.trim() || c.narration?.trim())
-    if (!targetCuts.length) return res.status(400).json({ error: '대사/나레이션이 있는 컷이 없습니다' })
+    // 릴스(IG_R): 대사는 Flow 영상 자체 음성을 쓰므로 TTS 는 나레이션(NR)만 — 최종본(reelFinalize)이 컷 시작에 믹스한다.
+    // 대사+나레이션이 같이 있는 컷은 cut_NN_nr.mp3 로 따로 저장(대사 TTS 와 섞이지 않게). 2026-09-25
+    const narrOnly = req.body?.narrationOnly ?? /^IG_R/i.test(String(resolveEpisodeCode(ep.episode, episodeId) || ''))
+    const targetCuts = filterCutsByIds(ep.cuts || [], cutIds).filter(c => narrOnly ? c.narration?.trim() : (c.dialogue?.trim() || c.narration?.trim()))
+    if (!targetCuts.length) return res.status(400).json({ error: narrOnly ? '나레이션(NR)이 있는 컷이 없습니다(릴스는 대사 TTS 를 만들지 않음)' : '대사/나레이션이 있는 컷이 없습니다' })
 
     // 화자별 세그먼트로 분리 (+ 지문/화자명/따옴표 정제). 세그먼트 text 는 이미 정제본.
     const prepared = targetCuts.map(c => {
-      const raw = c.dialogue?.trim() || c.narration?.trim() || ''
+      const raw = narrOnly ? (c.narration?.trim() || '') : (c.dialogue?.trim() || c.narration?.trim() || '')
       const segs = splitSpeakerSegments(raw)
       const removed = cleanForTTS(raw).removed
       return { cut: c, segs, removed }
@@ -7985,7 +7988,7 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
     for (const p of toGenerate) {
       const c = p.cut
       const padded = String(c.no).padStart(2, '0')
-      const dest = path.join(audioDir, `cut_${padded}.mp3`)
+      const dest = path.join(audioDir, narrOnly && c.dialogue?.trim() ? `cut_${padded}_nr.mp3` : `cut_${padded}.mp3`)
       const parts = []
       try {
         for (let i = 0; i < p.segs.length; i++) {
@@ -8281,7 +8284,7 @@ function buildStudioStatusPayload(episodeId) {
       g1: !!g.g1, g2: !!g.g2, g3: !!g.g3, g4: !!g.g4, g5: !!g.g5,
       selectedImage: g.selectedImage || null,
       hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
-      hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)),
+      hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)) || fs.existsSync(path.join(audioDir, `cut_${padded}_nr.mp3`)),
       hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
       hasOverlayVideo: fs.existsSync(path.join(videoDir, `cut_${padded}_overlay.mp4`)),
       cutType: c.cutType,

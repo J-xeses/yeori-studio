@@ -146,7 +146,9 @@ const MAKING_TYPES = ['GRAPHIC', 'CAPCUT', 'BROLL']
 const cutTypeOf     = (c) => String(c.cutType || 'YEORI').toUpperCase()
 const isMakingType  = (c) => MAKING_TYPES.includes(cutTypeOf(c))
 const needsGenImage = (c) => !isMakingType(c)                    // YEORI 등 — 생성 이미지 필요
-const needsG3       = (c) => !!(c.hasDialogue || c.hasNarration) // TTS 대상
+// TTS 대상. 릴스(IG_R)는 대사를 Flow 영상 음성으로 쓰므로 나레이션 컷만(2026-09-25) — IS_REEL 은 첫 사이클에서 코드로 판정
+let IS_REEL = false
+const needsG3       = (c) => IS_REEL ? !!c.hasNarration : !!(c.hasDialogue || c.hasNarration)
 
 // 에피소드가 현재 걸린 게이트 — 가장 앞선 미완료 단계. 파이프라인 DB "현재 게이트" 값.
 function deriveGate(cuts, summary) {
@@ -311,6 +313,7 @@ async function checkAndAdvance() {
   }
   const { episode, cuts, summary } = statusRes.data
   EP_LABEL = episode?.code || episode?.title || EPISODE_ID
+  IS_REEL = /^IG_R/i.test(String(episode?.code || ''))
   log('상태', `${episode?.title || EPISODE_ID} · G1 ${summary.g1} · G2 ${summary.g2} · G3 ${summary.g3} · G4 ${summary.g4} · G5 ${summary.g5} (전체 ${cuts.length}컷)`)
 
   // ── P3: 사람이 Notion 에서 건 정책 읽기 (보류 / 에이전트 자동승인) ──

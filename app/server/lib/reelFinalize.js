@@ -577,6 +577,28 @@ export async function finalizeReel(p) {
     }
   }
 
+  // 나레이션(NR) 음성 — G3 TTS 의 03_audio/cut_NN.mp3 를 그 컷 시작(+0.3초)에 얹는다. 대사(DL)는 영상(Flow) 자체 음성을
+  // 쓰므로 여기서 섞지 않는다. 예전엔 이 단계가 없어 릴스 나레이션 TTS 를 만들어도 최종본에 안 들어갔다(2026-09-25).
+  const narrNotes = []
+  for (const d of decisions) {
+    const cut = (cuts || []).find((c) => Number(c.no) === Number(d.no))
+    const nrText = String(cut?.narration || '').trim()
+    if (!nrText || /^(없음|-)$/.test(nrText)) continue
+    // 대사+나레이션 컷은 G3 가 cut_NN_nr.mp3 로 따로 만든다. 대사 컷의 cut_NN.mp3 는 (예전) 대사 TTS 일 수 있어 쓰지 않는다.
+    const pad2 = String(d.no).padStart(2, '0')
+    const hasDl = !!String(cut?.dialogue || '').trim()
+    const nrFile = [path.join(mp.audioDir(epNum), `cut_${pad2}_nr.mp3`), ...(hasDl ? [] : [path.join(mp.audioDir(epNum), `cut_${pad2}.mp3`)])].find((f) => fs.existsSync(f))
+      || path.join(mp.audioDir(epNum), hasDl ? `cut_${pad2}_nr.mp3` : `cut_${pad2}.mp3`)
+    if (!fs.existsSync(nrFile)) { log(`⚠ 컷 ${d.no}: 나레이션 음성 없음(${path.basename(nrFile)}) — G3 필요`); continue }
+    const ms = Math.round((d.startSec + 0.3) * 1000)
+    sfxInputs.push('-i', nrFile)
+    sfxFilters.push(`[${idx}:a]adelay=${ms}|${ms},volume=1.0[n${idx}]`)
+    sfxLabels.push(`[n${idx}]`)
+    narrNotes.push(`컷${d.no}`)
+    idx++
+  }
+  if (narrNotes.length) log(`나레이션 음성 믹스: ${narrNotes.join(', ')}`)
+
   // BGM
   let bgmAbs = null
   const wantsBgm = decisions.some((d) => d.bgmText && !/^\s*(없음|-|n\/?a)?\s*$/i.test(d.bgmText))
