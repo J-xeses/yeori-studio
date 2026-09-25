@@ -750,7 +750,7 @@
   "IG_R05": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-09-25T08:07:04.842Z",
+      "updatedAt": "2026-09-25T08:46:30.413Z",
       "g2": true,
       "selectedImage": "cut_01_a.jpg"
     },
@@ -760,7 +760,7 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-09-25T08:07:04.932Z",
+      "updatedAt": "2026-09-25T08:46:40.653Z",
       "g2": true,
       "selectedImage": "cut_03_a.jpg"
     },
@@ -770,7 +770,7 @@
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-09-25T08:07:05.008Z",
+      "updatedAt": "2026-09-25T08:46:50.749Z",
       "g2": true,
       "selectedImage": "cut_05_a.jpg"
     }
