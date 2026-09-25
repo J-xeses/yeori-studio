@@ -153,6 +153,15 @@ await check('B1', 'BGM 자동 선택(대본 문구 → 태그 → 곡/생성)', 
   return { ok: b.wants && b.tags.length > 0 && !wrong, evidence: `요청 태그 ${b.tags.join('·')} · 라이브러리 후보 ${rankLibrary(b.tags).map(r => `${r.track.title}(${r.score})`).join(', ') || '없음'} → ${s.source === 'none' ? '맞는 곡 없음(생성 대상)' : s.title} · ${s.reason}` }
 })
 
+// ── 1g2. 나레이션 오인 방지 — 메인 NR: 없음 인 컷의 "(화면 자막)…" 을 음성 나레이션으로 읽지 않는가 ──
+await check('N1', '나레이션 오인 방지(화면 자막·DM 글자 ≠ 음성)', async () => {
+  const { enrichCutsFromScript } = await import('../server/lib/reelFinalize.js')
+  const raw = fs.readFileSync(path.join(scriptDir, scriptFile), 'utf-8')
+  const cs = enrichCutsFromScript(parseCutsV3(raw), raw)
+  const wrong = cs.filter(c => (c.narration || '').trim() && /^\s*NR\s*[:：]\s*없음/m.test(raw.split(/\[CUT \d+\]/)[c.no] || ''))
+  return { ok: !wrong.length, evidence: wrong.length ? `오인 컷 ${wrong.map(c => c.no)}` : `메인 NR 없음 컷 ${cs.filter(c => !(c.narration || '').trim()).length}개 — 나레이션으로 안 읽음` }
+})
+
 // ── 1h. 승인 기록(G포인트) 병합 — 일부 필드만 보낸 최신 기록이 다른 승인·선택 이미지를 지우지 않는가 ──
 await check('G2', '승인 기록 병합(부분 기록이 다른 승인을 지우지 않음)', async () => {
   const gp = mp.statePath('gpoints.json')

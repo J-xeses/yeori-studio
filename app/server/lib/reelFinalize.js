@@ -142,8 +142,10 @@ export function enrichCutsFromScript(cuts, raw) {
     if (!body) return c
     const cp = pick(body, /CP\s*\(자막\)\s*[:：]\s*(.+)/)
       || pick(body, /^\s*CP\s*[:：]\s*(.+)/m)
-    const nr = pick(body, /NR\s*\(나레이션\)\s*[:：]\s*(.+)/)
-      || pick(body, /^\s*NR\s*[:：]\s*(.+)/m)
+    // 메인 필드 "NR:" 가 우선. 메인이 "없음"이면 한글 확인 블록의 "NR(나레이션): (화면 자막)…/DM 글자" 는 음성 나레이션이 아니므로 쓰지 않는다
+    // (IG_R05 에서 화면 자막·DM 문구가 나레이션으로 잡혀 5컷 모두 "나레이션 음성 없음" 오경고, 2026-09-25)
+    const mainNr = pick(body, /^\s*NR\s*[:：]\s*(.+)/m)
+    const nr = mainNr ? (notNone(mainNr) ? mainNr : '') : pick(body, /NR\s*\(나레이션\)\s*[:：]\s*(.+)/)
     // 오디오 블록 — "오디오" 헤더(콜론 유무 무관) 다음의 BGM/음성/효과음/앰비언스 줄
     const audioSeg = body.split(/(?:^|\n)\s*오디오\s*[:：]?\s*\n/).slice(1).join('\n')
     const ax = (label) => pick(audioSeg || body, new RegExp(`(?:^|\\n)\\s*${label}\\s*[:：]\\s*(.+)`))
@@ -643,6 +645,8 @@ export async function finalizeReel(p) {
     const cut = (cuts || []).find((c) => Number(c.no) === Number(d.no))
     const nrText = String(cut?.narration || '').trim()
     if (!nrText || /^(없음|-)$/.test(nrText)) continue
+    // "(화면 자막) …" 은 한글 확인 블록에 적은 화면 글자 — 음성 나레이션이 아니다(IG_R05 에서 5컷 모두 오경고, 2026-09-25)
+    if (/^\(?\s*(화면\s*자막|자막|텍스트)\s*\)?/.test(nrText) || /대사 자막만/.test(nrText)) continue
     // 대사+나레이션 컷은 G3 가 cut_NN_nr.mp3 로 따로 만든다. 대사 컷의 cut_NN.mp3 는 (예전) 대사 TTS 일 수 있어 쓰지 않는다.
     const pad2 = String(d.no).padStart(2, '0')
     const hasDl = !!String(cut?.dialogue || '').trim()
