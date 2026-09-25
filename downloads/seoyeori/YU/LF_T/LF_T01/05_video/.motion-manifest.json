@@ -123,6 +123,12 @@
     "duration": 10,
     "producedAt": "2026-09-17T09:31:55.695Z"
   },
+  "21": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-25T11:52:10.141Z"
+  },
   "22": {
     "method": "graphic",
     "motion": "self",
