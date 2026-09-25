@@ -102,6 +102,23 @@ await check('A1', '목소리 이탈 감지(화자 임베딩)', async () => {
   return { ok: bad < VOICE_SIM_MIN && good >= VOICE_SIM_MIN, evidence: `이탈 클립 13-2 ${bad.toFixed(2)} → ${bad < VOICE_SIM_MIN ? '잡음' : '놓침'} · 정상 클립 19-1 ${good.toFixed(2)} → ${good >= VOICE_SIM_MIN ? '통과' : '오탐'} (기준 ${VOICE_SIM_MIN})` }
 })
 
+// ── 1d. 영상 탭 자막 미리보기 규칙 = 최종본(handwriting_overlay.py) 규칙 — 한쪽만 바뀌면 탭과 결과가 달라진다 ──
+await check('F2', '영상 탭 자막 미리보기 규칙 = 최종본 규칙', () => {
+  const py = fs.readFileSync(path.join(ROOT, 'scripts', 'handwriting_overlay.py'), 'utf-8')
+  const tab = fs.readFileSync(path.join(ROOT, 'src', 'tabs', 'VideoTab.jsx'), 'utf-8')
+  const ov = tab.slice(tab.indexOf('function ReelCaptionOverlay'), tab.indexOf('function wrapCanvasText'))
+  const rules = [
+    ['기본 기준선 0.87', /"bottom_center":\s*\(0\.5,\s*0\.87\)/.test(py), /H \* 0\.87/.test(ov)],
+    ['하단 안전선 0.72', /H \* 0\.72 - box_h/.test(py), /H \* 0\.72 - boxH/.test(ov)],
+    ['상하 여백 52', /max\(52 \+ iy/.test(py), /52 \* k/.test(ov)],
+    ['줄 간격 1.32', /line_h = font_size \* 1\.32/.test(py), /lineHeight: 1\.32/.test(ov)],
+    ['상자 안쪽 여백 18', /pad_x, pad_y = 28, 18/.test(py), /18 \* k/.test(ov)],
+    ['1920 기준 크기', true, /H \/ 1920/.test(ov)],
+  ]
+  const bad = rules.filter(([, a, b]) => !(a && b)).map(([n]) => n)
+  return { ok: !bad.length && ov.length > 0, evidence: bad.length ? `어긋남: ${bad.join(', ')}` : `규칙 ${rules.length}개 일치(기준선·안전선·여백·줄간격·안쪽여백·1920 환산)` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

@@ -148,6 +148,40 @@ function clipTimings(clips, plannedSegs = []) {
 // 사용자 지적: "줄바꿈 설정대로 자막이 나타나는 기능이 안 된다"). 먼저 \n으로 문단을
 // 나누고, 각 문단을 기존처럼 폭 기준 자동 줄바꿈 — 수동 개행은 항상 줄 경계로 유지되고,
 // 자동 줄바꿈은 그 안에서만 동작.
+// 릴스 최종본 자막 미리보기 레이어 — 9:16 영상 영역 전체에 겹쳐 handwriting_overlay.py 배치 규칙을 그대로 재현한다.
+// 크기 = fontPx × (화면 높이/1920), 기본 위치 = 블록 아래끝이 87% 기준 → 72% 안전선 위로 올림, y 지정 시 블록 중심.
+// (2026-09-25: 처음엔 영상 아래 "자막 띠" 캔버스(640×360)에 그려서 최종본보다 4~5배 작게 보였다 — 성준님 스크린샷)
+function ReelCaptionOverlay({ text, fontPx, y, fontReady }) {
+  const boxRef = useRef(null), textRef = useRef(null)
+  const [H, setH] = useState(0)
+  const [blockH, setBlockH] = useState(0)
+  useEffect(() => {
+    const el = boxRef.current; if (!el) return
+    const ro = new ResizeObserver(() => setH(el.clientHeight))
+    ro.observe(el); setH(el.clientHeight)
+    return () => ro.disconnect()
+  }, [])
+  const k = H / 1920
+  const F = fontPx * k
+  useEffect(() => { if (textRef.current) setBlockH(textRef.current.offsetHeight) }, [text, F, fontReady])
+  const t = String(text || '').trim()
+  const boxH = blockH + 36 * k
+  let top = y ? H * y - boxH / 2 : H * 0.87 - boxH
+  top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.72 - boxH)))
+  return (
+    <div ref={boxRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 3 }}>
+      {t && H > 0 && (
+        <div ref={textRef} style={{
+          position: 'absolute', left: 52 * k, right: 52 * k, top: top + 18 * k, textAlign: 'center',
+          fontFamily: fontReady ? '"GaeguFinal", sans-serif' : 'sans-serif', fontSize: F, lineHeight: 1.32, color: '#fff',
+          textShadow: `0 0 ${F * 0.22}px rgba(0,0,0,.92), 0 0 ${F * 0.22}px rgba(0,0,0,.92), 0 0 ${F * 0.11}px rgba(0,0,0,.92)`,
+          wordBreak: 'keep-all', whiteSpace: 'pre-wrap',
+        }}>{`"${t}"`}</div>
+      )}
+    </div>
+  )
+}
+
 function wrapCanvasText(ctx, text, maxWidth) {
   const lines = []
   for (const para of String(text ?? '').split('\n')) {
@@ -612,34 +646,13 @@ export default function VideoTab() {
 
   const allG4Done = cuts.length > 0 && cuts.every(c => !needsFlowVideo(c.cutType) || g4Approved[c.id])
 
-  // 최종본 오버레이(handwriting_overlay.py render_scene) 배치 규칙을 캔버스로 재현
-  const drawReelCaption = (ctx, W, H, raw) => {
-    const text = String(raw || '').trim(); if (!text) return
-    const k = H / 1920
-    const F = reelFontPx * k
-    ctx.font = `${F}px "${gaeguReady ? 'GaeguFinal' : 'sans-serif'}"`
-    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
-    const lines = wrapCanvasText(ctx, `"${text}"`, W - 2 * (24 + 28) * k)
-    const lineH = F * 1.32
-    const boxH = lines.length * lineH + 36 * k
-    let top = reelStyle.y ? H * reelStyle.y - boxH / 2 : H * 0.87 - boxH
-    top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.72 - boxH)))
-    lines.forEach((l, i) => {
-      const y = top + 18 * k + lineH * i + F
-      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.92)'; ctx.fillStyle = 'rgba(0,0,0,0.92)'
-      for (const b of [F * 0.22, F * 0.11]) { ctx.shadowBlur = b; ctx.fillText(l, W / 2, y) }
-      ctx.restore()
-      ctx.fillStyle = '#ffffff'; ctx.fillText(l, W / 2, y)
-    })
-  }
-
   const drawPreview = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')
     const W = canvas.width, H = canvas.height
     ctx.clearRect(0, 0, W, H)
     if (!subtitleEnabled) return
-    if (isReel) { drawReelCaption(ctx, W, H, previewText); return }
+    if (isReel) return   // 릴스는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다 — 이 띠는 클릭해서 문구 수정용
     const text = previewText
     const scale = H / 720
     const fSize = Math.max(10, Math.round(fontSize * scale))
@@ -1878,6 +1891,9 @@ export default function VideoTab() {
                           서버에서 파일이 옮겨졌거나 삭제됐을 수 있습니다 — "프록시" 또는 "폴더에서 일괄 가져오기"로 다시 불러오거나, 클립을 삭제하고 다시 배정하세요.
                         </span>
                       </div>
+                    )}
+                    {isSelected && subtitleEnabled && isReel && !subtitleEditMode && previewT >= (Number(selCut.captionStartSec) || 0) && (
+                      <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} />
                     )}
                     {isSelected && subtitleEnabled && !subtitleEditMode && (
                       <div
