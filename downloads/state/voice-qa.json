@@ -162,5 +162,163 @@
         "checkedAt": "2026-09-22T07:44:45.119Z"
       }
     }
+  },
+  "IG_R05": {
+    "1": {
+      "cut_01_clip_1.mp4": {
+        "verdict": "ok",
+        "ratio": 1,
+        "heard": "",
+        "expected": "",
+        "words": [],
+        "flags": [],
+        "checkedAt": "2026-09-25T08:18:21.586Z"
+      }
+    },
+    "3": {
+      "cut_03_clip_1.mp4": {
+        "verdict": "ok",
+        "ratio": 1,
+        "heard": "좋아요는 다 눌렀는데 왜 나만 멈춰 있는 것 같지?",
+        "expected": "좋아요는 다 눌렀는데 왜 나만 멈춰 있는 것 같지",
+        "words": [
+          {
+            "text": "좋아요는",
+            "start": 3.26,
+            "end": 3.8,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "다",
+            "start": 3.86,
+            "end": 3.96,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "눌렀는데",
+            "start": 4.1,
+            "end": 4.78,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "왜",
+            "start": 5.04,
+            "end": 5.12,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "나만",
+            "start": 5.22,
+            "end": 5.42,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "멈춰",
+            "start": 5.6,
+            "end": 5.78,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "있는",
+            "start": 5.84,
+            "end": 6,
+            "logprob": -0.04,
+            "speaker": null
+          },
+          {
+            "text": "것",
+            "start": 6.08,
+            "end": 6.16,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "같지?",
+            "start": 6.38,
+            "end": 6.58,
+            "logprob": 0,
+            "speaker": null
+          }
+        ],
+        "flags": [],
+        "checkedAt": "2026-09-25T08:18:22.325Z"
+      }
+    },
+    "5": {
+      "cut_05_clip_1.mp4": {
+        "verdict": "ok",
+        "ratio": 1,
+        "heard": "다들 보여주고 싶은 것만 올리는 거지 뭐.",
+        "expected": "다들 보여주고 싶은 것만 올리는 거지 뭐",
+        "words": [
+          {
+            "text": "다들",
+            "start": 3.04,
+            "end": 3.3,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "보여주고",
+            "start": 3.42,
+            "end": 3.9,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "싶은",
+            "start": 4.04,
+            "end": 4.2,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "것만",
+            "start": 4.28,
+            "end": 4.5,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "올리는",
+            "start": 4.58,
+            "end": 4.92,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "거지",
+            "start": 5.02,
+            "end": 5.24,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "뭐.",
+            "start": 5.38,
+            "end": 5.5,
+            "logprob": -0.2,
+            "speaker": null
+          }
+        ],
+        "flags": [
+          {
+            "kind": "low-confidence",
+            "severity": "note",
+            "word": "뭐.",
+            "at": 5.38,
+            "logprob": -0.2,
+            "message": "인식 신뢰도 낮음: \"뭐.\" (-0.2)"
+          }
+        ],
+        "checkedAt": "2026-09-25T08:18:23.374Z"
+      }
+    }
   }
 }

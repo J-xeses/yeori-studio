@@ -746,5 +746,33 @@
       "g1": true,
       "g3": true
     }
+  },
+  "IG_R05": {
+    "cut_1": {
+      "g1": true,
+      "updatedAt": "2026-09-25T08:07:04.842Z",
+      "g2": true,
+      "selectedImage": "cut_01_a.jpg"
+    },
+    "cut_2": {
+      "g1": true,
+      "updatedAt": "2026-09-25T07:52:52.968Z"
+    },
+    "cut_3": {
+      "g1": true,
+      "updatedAt": "2026-09-25T08:07:04.932Z",
+      "g2": true,
+      "selectedImage": "cut_03_a.jpg"
+    },
+    "cut_4": {
+      "g1": true,
+      "updatedAt": "2026-09-25T07:52:52.968Z"
+    },
+    "cut_5": {
+      "g1": true,
+      "updatedAt": "2026-09-25T08:07:05.008Z",
+      "g2": true,
+      "selectedImage": "cut_05_a.jpg"
+    }
   }
 }
