@@ -27,6 +27,8 @@ export async function attachFlow({ port = 9222, projectId = null, lang = null } 
   const browser = await puppeteer.connect({ browserURL: `http://localhost:${port}`, defaultViewport: null })
   const page = (await browser.pages()).find(p => p.url().includes('flow.google.com/project') && (!projectId || p.url().includes(projectId)))
   if (!page) { browser.disconnect(); throw new Error('Flow 프로젝트 탭을 찾지 못했습니다(전용 Chrome에서 Flow 프로젝트를 열어두세요)') }
+  // 백그라운드 탭(visibilityState hidden)이면 설정 팝업이 안 열려 "설정 팝업이 열리지 않습니다"로 실패 — 앞으로 가져온다(2026-09-25 실측)
+  if (await page.evaluate(() => document.visibilityState).catch(() => 'visible') !== 'visible') { await page.bringToFront().catch(() => {}); await sleep(1200) }
   // 화면 언어 고정(2026-09-21): 같은 프로젝트라도 탭에 따라 한글/영어로 열린다. 영상 조작은 한글 버튼명, 이미지 조작은 영어 버튼명에
   // 맞춰져 있어서 주소의 ?hl= 로 맞춘다(다르면 그 언어로 다시 불러온다).
   if (lang) {
