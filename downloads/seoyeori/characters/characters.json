@@ -95,8 +95,8 @@
       "서여리_묶음",
       "여리_묶음"
     ],
-    "face": "downloads/flow/character/yeori-face.jpg",
-    "closeup": "downloads/flow/character/yeori-closeup.jpg",
+    "face": "downloads/flow/character/yeori_nt-face.jpg",
+    "closeup": "downloads/flow/character/yeori_nt-closeup.jpg",
     "flowCharacterName": "서여리",
     "primary": false,
     "descriptor": "Consistent character face: Oval face with warm fair skin, almond-shaped hazel-brown eyes, full dark eyebrows, a straight medium nose, full naturally pink lips with a gentle smile; clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin. HAIR: her long wavy dark brown hair is TIED UP in a loose messy bun high at the back of the head, a few soft wavy strands falling around the face and neck — hair is NOT down, NOT loose over the shoulders, NOT short.",
@@ -105,10 +105,10 @@
     "refBasename": "yeori_nt",
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "voiceName": "Sian (Tender, Calm & Clear)",
-    "notes": "서여리 동일인 — 밤·집 무드용 묶은 머리 변형(성준님 2026-09-25: 묶은 머리가 핵심). face/closeup 은 묶은머리 레퍼런스 확정 전까지 기본 서여리 이미지 사용 → 확정 후 yeori_nt-face/closeup.jpg 로 교체.",
+    "notes": "서여리 동일인 — 밤·집 무드용 묶은 머리 변형(성준님 2026-09-25: 묶은 머리가 핵심). face/closeup = 01_sheet/sheet_b 확정(성준님 2026-09-25, 4장 중 B — 가장 앳되고 잔머리 적당).",
     "looks": {
       "LOOK_NT": {
-        "file": null,
+        "file": "downloads/flow/character/yeori_nt-face.jpg",
         "desc": "oversized heather-grey hoodie, hair in a loose messy bun, soft knit blanket over the knees (home, night)",
         "season": "fall-winter night at home"
       }
