@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode, validateEpisodeCode } from './lib/episodeCode'
-import { setGPoint, loadGPoints } from './lib/gpoints'
+import { setGPoint, loadGPoints, hydrateFromServer } from './lib/gpoints'
 
 const SIDEBAR_W = 288
 import NavBar from './components/NavBar'
@@ -92,12 +92,17 @@ function EpisodeSidebar({ onClose }) {
     // (EpisodeInfoSidebar.jsx)과 동일한 폴링 방식으로 주기적으로 다시 읽어온다.
     useEffect(() => {
         const id = setInterval(() => setGData(loadGPoints()), 2000)
-        return () => clearInterval(id)
+        // 서버 gpoints.json 을 받아 합친다 — localStorage 만 보면 새 브라우저에서 승인 0 으로 보였음(2026-09-25)
+        const pull = () => hydrateFromServer().then(ch => { if (ch) setGData(loadGPoints()) })
+        pull()
+        const id2 = setInterval(pull, 20000)
+        return () => { clearInterval(id); clearInterval(id2) }
     }, [])
 
-    const approveAllG1 = (e, ep) => {
+    const approveAllG1 = async (e, ep) => {
         e.stopPropagation()
         const epCode = resolveEpisodeCode(ep.episode)
+        await hydrateFromServer()   // 서버 최신 기록을 먼저 받아 합친 뒤 승인(모르는 필드 덮어쓰기 방지)
         ;(ep.cuts || []).forEach(c => setGPoint(epCode, c.no, 'g1', true))
         setGData(loadGPoints())
         setTimeout(() => dispatch({ type: 'SET_TAB', p: 'studio' }), 600)

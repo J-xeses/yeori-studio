@@ -1265,7 +1265,10 @@ function mergeGpointsData(existing, incoming) {
       if (!existingCut) { mergedEp[cutKey] = incomingCut; continue }
       const incomingTime = Date.parse(incomingCut?.updatedAt || '') || 0
       const existingTime = Date.parse(existingCut?.updatedAt || '') || 0
-      mergedEp[cutKey] = incomingTime >= existingTime ? incomingCut : existingCut
+      // 필드 단위 병합(2026-09-25): 더 최신 쪽은 "자기가 들고 온 필드"만 덮어쓰고, 모르는 필드(g2·g3·selectedImage 등)는
+      // 남긴다. 예전엔 컷을 통째로 교체해서, G1 만 아는 탭이 "전체 G1 승인"을 누르자 LF_T01 의 G2 16·G3 13·선택 이미지 15 가
+      // 지워졌다(9/20 CUT17/20/21 G3 유실과 같은 계열). 승인 취소는 false 로 명시해 보내면 그대로 반영된다.
+      mergedEp[cutKey] = incomingTime >= existingTime ? { ...existingCut, ...incomingCut } : { ...incomingCut, ...existingCut }
     }
     result[epCode] = mergedEp
   }

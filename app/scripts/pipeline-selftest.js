@@ -153,6 +153,18 @@ await check('B1', 'BGM 자동 선택(대본 문구 → 태그 → 곡/생성)', 
   return { ok: b.wants && b.tags.length > 0 && !wrong, evidence: `요청 태그 ${b.tags.join('·')} · 라이브러리 후보 ${rankLibrary(b.tags).map(r => `${r.track.title}(${r.score})`).join(', ') || '없음'} → ${s.source === 'none' ? '맞는 곡 없음(생성 대상)' : s.title} · ${s.reason}` }
 })
 
+// ── 1h. 승인 기록(G포인트) 병합 — 일부 필드만 보낸 최신 기록이 다른 승인·선택 이미지를 지우지 않는가 ──
+await check('G2', '승인 기록 병합(부분 기록이 다른 승인을 지우지 않음)', async () => {
+  const gp = mp.statePath('gpoints.json')
+  const clean = () => { const g = JSON.parse(fs.readFileSync(gp, 'utf-8')); delete g.SELFTEST_GP; fs.writeFileSync(gp, JSON.stringify(g, null, 2)) }
+  try {
+    await post('/api/gpoints', { SELFTEST_GP: { cut_1: { g1: true, g2: true, selectedImage: 'x.jpg', updatedAt: '2026-01-01T00:00:00Z' } } })
+    await post('/api/gpoints', { SELFTEST_GP: { cut_1: { g1: true, updatedAt: '2026-01-02T00:00:00Z' } } })
+    const c = (await get('/api/gpoints')).data?.SELFTEST_GP?.cut_1 || {}
+    return { ok: c.g2 === true && c.selectedImage === 'x.jpg', evidence: `G1만 담은 최신 기록 후 → g2 ${c.g2} · 선택이미지 ${c.selectedImage || '없음'}` }
+  } finally { clean() }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

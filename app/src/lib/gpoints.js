@@ -137,3 +137,32 @@ export function getGPointSummary(episodeCode, cutCount) {
   }
   return { g1, g2, g3, g4, g5, total: cutCount }
 }
+
+// 서버(gpoints.json) → 이 브라우저 localStorage 로 필드 단위 병합(2026-09-25).
+// 화면이 localStorage 만 보고 그려서, 서버엔 G1 이 있는데 새 브라우저(또는 저장소가 비워진 프로필)에서는 "G1 0/23" 으로
+// 보였고, 그 상태로 "전체 G1 승인"을 누르면 모르는 필드를 덮어쓰는 사고로 이어졌다. 앱 시작·주기적으로 호출한다.
+export async function hydrateFromServer() {
+  try {
+    const r = await fetch(`${SERVER}/api/gpoints`)
+    const server = await r.json()
+    if (!server || typeof server !== 'object') return false
+    const local = loadGPoints()
+    let changed = false
+    for (const [ep, cuts] of Object.entries(server)) {
+      if (!cuts || typeof cuts !== 'object') continue
+      const lep = { ...(local[ep] || {}) }
+      for (const [ck, sv] of Object.entries(cuts)) {
+        const lv = lep[ck]
+        const sT = Date.parse(sv?.updatedAt || '') || 0, lT = Date.parse(lv?.updatedAt || '') || 0
+        const merged = !lv ? sv : (sT >= lT ? { ...lv, ...sv } : { ...sv, ...lv })
+        if (JSON.stringify(merged) !== JSON.stringify(lv)) { lep[ck] = merged; changed = true }
+      }
+      local[ep] = lep
+    }
+    if (changed) {
+      localStorage.setItem(GP_KEY, JSON.stringify(local))
+      window.dispatchEvent(new CustomEvent('gpoints_updated', { detail: { hydrated: true } }))
+    }
+    return changed
+  } catch { return false }
+}
