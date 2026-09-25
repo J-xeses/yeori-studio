@@ -244,10 +244,29 @@ ${REGISTERS[reg].delivery}`
       // 세그 컷은 이 클립의 대사 조각으로 검수(전체 대사와 비교하면 항상 "누락"으로 나왔다)
       const partial = false
       const qa = await checkClip({ videoPath: outPath, expected: clipCount > 1 ? clipLine : (stCut?.dialogue || chkCut.dialogue || ''), apiKey: secrets.apiKeys?.elevenLabs, partial })
+      // 목소리 이탈 감지 — 이 클립 화자의 기준 음성(characters.json voiceRef)과 화자 임베딩 유사도. 기준 미만이면 사람 확인.
+      if (clipLine && built.speakerIds?.length) {
+        try {
+          const { speakerSimilarity, VOICE_SIM_MIN } = await import('../server/lib/voiceSim.js')
+          const chars = JSON.parse(fs.readFileSync(mp.charactersJsonPath(), 'utf-8'))
+          const who = chars[built.speakerIds[0]]
+          if (who?.voiceRef) {
+            const sim = speakerSimilarity(outPath, path.join(mp.DOWNLOADS, '..', who.voiceRef))
+            if (sim != null) {
+              qa.voiceSim = +sim.toFixed(3)
+              if (sim < VOICE_SIM_MIN) {
+                qa.voiceMismatch = true
+                qa.flags.push({ severity: 'error', message: `목소리가 ${who.name} 기준과 다름(유사도 ${sim.toFixed(2)} < ${VOICE_SIM_MIN})` })
+              }
+              step(`목소리 유사도(${who.name} 기준): ${sim.toFixed(2)}${sim < VOICE_SIM_MIN ? ' — 기준 미만, 사람 확인 필요' : ''}`)
+            }
+          }
+        } catch (e) { step(`목소리 유사도 건너뜀: ${e.message}`) }
+      }
       const qaPath = mp.statePath('voice-qa.json'), all = loadQa(qaPath), code = mp.resolveCode(epNum)
       ;((all[code] ||= {})[cutNo] ||= {})[path.basename(outPath)] = qa
       saveQa(qaPath, all)
-      status.result = { ...status.result, voiceQa: { verdict: qa.verdict, ratio: qa.ratio, flags: qa.flags.filter(f => f.severity !== 'note').map(f => f.message) } }
+      status.result = { ...status.result, voiceQa: { verdict: qa.verdict, ratio: qa.ratio, voiceSim: qa.voiceSim ?? null, voiceMismatch: !!qa.voiceMismatch, flags: qa.flags.filter(f => f.severity !== 'note').map(f => f.message) } }
       step(`음성 검수: ${qa.verdict} (일치율 ${Math.round(qa.ratio * 100)}%)${qa.flags.some(f => f.severity !== 'note') ? ' — ' + qa.flags.filter(f => f.severity !== 'note').map(f => f.message).join(' / ') : ''}`)
     } catch (e) { step(`음성 검수 건너뜀: ${e.message}`) }
   } finally {

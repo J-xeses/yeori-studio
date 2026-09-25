@@ -3,7 +3,35 @@
 // 10개가 [Clip k/N] 표기가 없어, 제출 코드가 VP 전체(모든 클립의 동작·대사)를 클립마다 통째로 넣고 있었다.
 // 원칙: ① 이 클립에서 "보일 것"만 ② 이 클립에서 "말할 것"만(DL 의 || 조각) ③ 2번째 클립부터 이어짐 명시
 //       ④ 화면 서술을 못 찾으면 VP 전체를 넣지 않고 멈춘다(fail-closed).
+import fs from 'node:fs'
 import { splitSpeakerSegments } from './ttsText.js'
+import * as mp from './mediaPaths.js'
+
+// 목소리 고정 문구(characters.json voicePrompt) — Flow 는 목소리 ID 입력이 없어, 말하는 인물마다 같은 묘사를 매번 넣어
+// 컷 사이 흔들림을 줄인다(보장은 아님 — 9/25 실측 공식 목소리 대비 0.48~0.74). 화자: 대사 표기 > 서술 속 이름 > 컷 CH > 주인공
+export function speakerIdsFor(cut, speakers) {
+  let chars = {}
+  try { chars = JSON.parse(fs.readFileSync(mp.charactersJsonPath(), 'utf-8')) } catch { return [] }
+  const EN = { 'Seo Yeori': 'yeori', 'Han Jia': 'jia', Jiyu: 'jiyu' }
+  const find = (name) => {
+    if (!name) return null
+    if (EN[name] && chars[EN[name]]) return EN[name]
+    const hit = Object.entries(chars).find(([id, c]) => c && typeof c === 'object' && (id === name || c.name === name || (c.aliases || []).map(a => String(a).toUpperCase()).includes(String(name).toUpperCase())))
+    return hit ? hit[0] : null
+  }
+  let ids = speakers.map(find).filter(Boolean)
+  if (!ids.length) {
+    const tokens = String(cut.masterCode?.ch || cut.ch || '').split(/[+,/·]|\s{2,}/).map(t => t.trim()).filter(Boolean)
+    const first = tokens.map(find).find(Boolean)
+    ids = first ? [first] : Object.entries(chars).filter(([, c]) => c?.primary).map(([id]) => id).slice(0, 1)
+  }
+  return [...new Set(ids)]
+}
+function voiceAnchors(cut, speakers) {
+  let chars = {}
+  try { chars = JSON.parse(fs.readFileSync(mp.charactersJsonPath(), 'utf-8')) } catch { return [] }
+  return speakerIdsFor(cut, speakers).map(id => chars[id]?.voicePrompt).filter(Boolean)
+}
 
 const CHAR_EN = { 서여리: 'Seo Yeori', 여리: 'Seo Yeori', 한지아: 'Han Jia', 지아: 'Han Jia', 지유: 'Jiyu' }
 const norm = (t) => String(t || '').replace(/[^가-힣a-zA-Z0-9]/g, '')
@@ -99,6 +127,14 @@ export function buildClipPrompt(cut, k, n) {
       prompt = prompt.replace(koQuote, `"${segs[0].text}"`)
       alreadyIn = true
     }
+    // 두 사람 이상 나오는 클립인데 누가 말하는지 알 수 없으면 추측하지 않고 멈춘다("She says" 로 보내면 도구가 아무나 말하게 함)
+    const namesInFrame = ['Seo Yeori', 'Han Jia', 'Jiyu'].filter(nm => prompt.includes(nm)).length
+    const multi = namesInFrame >= 2 || /\b(two|both)\b[^.\n]{0,40}\b(women|girls|friends)\b/i.test(prompt)
+    if (segs.length && multi && !speakers.length && !segs.some(x => x.speaker)) {
+      throw new Error(`컷 ${cut.no} 클립 ${k}/${n}: 두 사람이 나오는데 대사 "${line}" 를 누가 말하는지 대본에 없습니다 — DL 에 '여리 "…"' / '지아 "…"' 처럼 화자를 적어 주세요(추측해서 보내지 않음)`)
+    }
+    const anchors = segs.length ? voiceAnchors(cut, speakers.length ? speakers : segs.map(x => x.speaker).filter(Boolean)) : []
+    if (anchors.length) prompt += `\n\n${anchors.map(a => a.replace(/\.?$/, '.')).join(' ')} Keep exactly this voice.`
     if (!segs.length) {
       prompt += `\n\nNo one speaks in this clip — mouths stay closed or show only natural silent reactions. No on-screen subtitle text or captions.`
     } else if (!alreadyIn) {
@@ -110,5 +146,6 @@ export function buildClipPrompt(cut, k, n) {
   } else if (isNarration) {
     prompt += `\n\nNO dialogue — narration is added in post; she does not move her lips to speak. No on-screen subtitle text or captions.`
   }
-  return { prompt: prompt.trim(), visualSource: vis.source, line, speakers }
+  const speakerIds = line ? speakerIdsFor(cut, speakers.length ? speakers : splitSpeakerSegments(line).map(x => x.speaker).filter(Boolean)) : []
+  return { prompt: prompt.trim(), visualSource: vis.source, line, speakers, speakerIds }
 }

@@ -643,9 +643,9 @@ async function pollActiveFlow() {
       addVideoUsage(credits, `${EP_LABEL} 컷${job.cutNo} 클립${job.clipNo}`)
       const qa = r.data.result?.voiceQa
       log('G4', `✅ ${tag} 생성·다운로드 완료 (${credits}크레딧${qa ? `, 음성검수 ${qa.verdict}` : ''})`)
-      if (qa && qa.verdict === 'fail') {
+      if (qa && (qa.verdict === 'fail' || qa.voiceMismatch)) {   // 발음 실패 또는 목소리 이탈(유사도 기준 미만) → 사람 확인
         flowHuman.add(`g4:${job.cutNo}`)
-        await leaderLog({ stage: 'G4', kind: '블로커', summary: `컷 ${job.cutNo} 음성 검수 실패 — 사람 확인`, result: (qa.flags || []).slice(0, 4).join(' / '), humanInvolved: true })
+        await leaderLog({ stage: 'G4', kind: '블로커', summary: `컷 ${job.cutNo} ${qa.voiceMismatch ? `목소리 이탈(유사도 ${qa.voiceSim})` : '음성 검수 실패'} — 사람 확인`, result: (qa.flags || []).slice(0, 4).join(' / '), humanInvolved: true })
       } else {
         await leaderLog({ stage: 'G4', kind: '자동실행', summary: `${tag} Flow 자동 생성`, result: `${credits}크레딧 · 음성검수 ${qa?.verdict || '-'}`, humanInvolved: false })
       }

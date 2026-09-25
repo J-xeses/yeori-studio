@@ -19,7 +19,9 @@
     "descriptorUpdatedAt": "2026-09-09T00:00:00.000Z",
     "refBasename": "yeori",
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
-    "voiceName": "Sian (Tender, Calm & Clear)"
+    "voiceName": "Sian (Tender, Calm & Clear)",
+    "voicePrompt": "Seo Yeori voice: young Korean woman in her early 20s, soft mid-pitched voice, clear and gently breathy, warm and calm, standard Seoul accent, never shrill or childish",
+    "voiceRef": "downloads/seoyeori/characters/voice_ref/yeori.mp3"
   },
   "jia": {
     "id": "jia",
@@ -47,7 +49,9 @@
     "aliasesUpdatedAt": "2026-09-10",
     "aliasesNote": "HJ/HJ_VD 추가 — LF_T01 대본이 CH: YR_TX + HJ 로 표기 (YEORI 의 YR_* 와 대칭)",
     "voiceId": "5n5gqmaQi9Ewevrz7bOS",
-    "voiceName": "Sian - Tender, Calm & Clear (지아 기준 목소리, 성준님 기획 — TTS탭과 일치)"
+    "voiceName": "Sian - Tender, Calm & Clear (지아 기준 목소리, 성준님 기획 — TTS탭과 일치)",
+    "voicePrompt": "Han Jia voice: young Korean woman in her early 20s, slightly lower and a little husky, quick casual delivery with big reactions, standard Seoul accent",
+    "voiceRef": "downloads/seoyeori/characters/voice_ref/jia.mp3"
   },
   "jiyu": {
     "id": "jiyu",
@@ -84,7 +88,9 @@
         "hairChange": "full bangs → light see-through bangs",
         "ref": "downloads/seoyeori/characters/jiyu/01. 테스트/Girl_laughing_in_bedroom_20260924205254.jpeg"
       }
-    }
+    },
+    "voicePrompt": "Jiyu voice: young Korean woman in her early 20s, bright and higher-pitched but clearly adult, fast speech, laughs easily, standard Seoul accent",
+    "voiceRef": "downloads/seoyeori/characters/voice_ref/jiyu.mp3"
   },
   "_voiceNote": "voiceId = ElevenLabs 목소리(클론/프리셋). STS·TTS 공용. ⚠️ 실제 우선순위: ttsSettings.speakerVoices(TTS탭 화자별 목소리) > 여기(시드). TTS탭에서 바꾸면 그게 최신.",
   "yeori_nt": {
@@ -113,6 +119,8 @@
         "season": "fall-winter night at home"
       }
     },
-    "id": "yeori_nt"
+    "id": "yeori_nt",
+    "voicePrompt": "Seo Yeori voice: young Korean woman in her early 20s, soft mid-pitched voice, clear and gently breathy, warm and calm, standard Seoul accent, never shrill or childish",
+    "voiceRef": "downloads/seoyeori/characters/voice_ref/yeori_nt.mp3"
   }
 }

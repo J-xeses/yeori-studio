@@ -76,21 +76,30 @@ await check('P2', '롱폼 클립별 프롬프트 분리(LF_T01)', async () => {
   const lf = Object.values(st.episodes || {}).find(e => e.episode?.code === (args.lf || 'LF_T01'))
   if (!lf) return { skip: true, evidence: '롱폼 시험 에피소드 없음' }
   const nz = (t) => String(t || '').replace(/[^가-힣a-zA-Z0-9]/g, '')
-  let clips = 0; const problems = []
+  let clips = 0; const problems = []; const scriptTodo = []
   for (const c of lf.cuts.filter(x => x.cutType === 'YEORI')) {
     const n = Array.isArray(c.segments) && c.segments.length > 1 ? c.segments.length : 1
     const parts = splitLines(c.dialogue, n) || []
     for (let k = 1; k <= n; k++) {
       clips++
       let r
-      try { r = buildClipPrompt(c, k, n) } catch (e) { problems.push(`컷${c.no}-${k} 멈춤`); continue }
+      try { r = buildClipPrompt(c, k, n) } catch (e) { (/누가 말하는지/.test(e.message) ? scriptTodo : problems).push(`컷${c.no}-${k}`); continue }
       const p = nz(r.prompt)
       if (r.line && !p.includes(nz(r.line).slice(0, 12))) problems.push(`컷${c.no}-${k} 자기 대사 없음`)
       parts.forEach((o, j) => { if (j !== k - 1 && nz(o).length >= 6 && p.includes(nz(o).slice(0, 12))) problems.push(`컷${c.no}-${k} 남의 대사(${j + 1}) 포함`) })
       if (/^(생성|후처리):|━━━\s*발화/m.test(r.prompt)) problems.push(`컷${c.no}-${k} 제작 메모 포함`)
     }
   }
-  return { ok: !problems.length, evidence: `클립 ${clips}개 점검${problems.length ? ' · ' + problems.slice(0, 4).join(' / ') : ' · 전부 자기 대사만, 제작 메모 없음'}` }
+  return { ok: !problems.length, evidence: `클립 ${clips}개 점검${problems.length ? ' · ' + problems.slice(0, 4).join(' / ') : ' · 자기 대사만·남의 대사 없음·제작 메모 없음'}${scriptTodo.length ? ` · ⚠ 대본 화자 표기 필요(멈춤 정상): ${scriptTodo.join(', ')}` : ''}` }
+})
+
+// ── 1c. 목소리 이탈 감지 — 실측 기준 클립: LF_T01 컷13-2(다른 목소리 0.48)는 잡고, 컷19-1(0.74)은 통과시켜야 ──
+await check('A1', '목소리 이탈 감지(화자 임베딩)', async () => {
+  const { speakerSimilarity, VOICE_SIM_MIN } = await import('../server/lib/voiceSim.js')
+  const raw = path.join(mp.makingDir('LF_T01'), 'raw'), ref = path.join(mp.DOWNLOADS, 'seoyeori', 'characters', 'voice_ref', 'yeori.mp3')
+  const bad = speakerSimilarity(path.join(raw, 'cut_13_clip_2.mp4'), ref), good = speakerSimilarity(path.join(raw, 'cut_19_clip_1.mp4'), ref)
+  if (bad == null || good == null) return { skip: true, evidence: '기준 클립/음성 또는 Python 임베딩 없음' }
+  return { ok: bad < VOICE_SIM_MIN && good >= VOICE_SIM_MIN, evidence: `이탈 클립 13-2 ${bad.toFixed(2)} → ${bad < VOICE_SIM_MIN ? '잡음' : '놓침'} · 정상 클립 19-1 ${good.toFixed(2)} → ${good >= VOICE_SIM_MIN ? '통과' : '오탐'} (기준 ${VOICE_SIM_MIN})` }
 })
 
 // ── 2. 서버·상태 API ──
