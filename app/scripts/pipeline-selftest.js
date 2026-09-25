@@ -139,6 +139,20 @@ await check('P3', '게시 캡션 추출(대본 [게시 캡션] → 운영실)', 
   return { ok: tagOk && linesOk && !!post?.caption, evidence: `캡션 ${cap.split('\n').length}줄·해시태그 ${tagOk} · 운영실 ${post ? `${post.id} ${post.status}, 캡션 ${post.caption ? '있음' : '없음'}` : '미등록'}` }
 })
 
+// ── 1g. BGM 자동 선택 — 대본 문구 → 태그, 분위기 안 맞는 곡은 고르지 않음 ──
+await check('B1', 'BGM 자동 선택(대본 문구 → 태그 → 곡/생성)', async () => {
+  const { episodeBgmBrief, rankLibrary, selectBgm } = await import('../server/lib/bgmSelect.js')
+  const { enrichCutsFromScript } = await import('../server/lib/reelFinalize.js')
+  const raw = fs.readFileSync(path.join(scriptDir, scriptFile), 'utf-8')
+  const cs = enrichCutsFromScript(parseCutsV3(raw), raw)
+  const b = episodeBgmBrief(cs)
+  const usageBefore = fs.existsSync(mp.statePath('bgm-usage.json')) ? fs.readFileSync(mp.statePath('bgm-usage.json'), 'utf-8') : null
+  const s = await selectBgm({ code: CODE, cuts: cs, durSec: 30, allowGenerate: false })
+  if (usageBefore == null) { try { fs.unlinkSync(mp.statePath('bgm-usage.json')) } catch { /* noop */ } } else fs.writeFileSync(mp.statePath('bgm-usage.json'), usageBefore)
+  const wrong = s.title && /Code Switch/.test(s.title) && b.tags.includes('calm')
+  return { ok: b.wants && b.tags.length > 0 && !wrong, evidence: `요청 태그 ${b.tags.join('·')} · 라이브러리 후보 ${rankLibrary(b.tags).map(r => `${r.track.title}(${r.score})`).join(', ') || '없음'} → ${s.source === 'none' ? '맞는 곡 없음(생성 대상)' : s.title} · ${s.reason}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

@@ -663,12 +663,16 @@ export async function finalizeReel(p) {
   const wantsBgm = decisions.some((d) => d.bgmText && !/^\s*(없음|-|n\/?a)?\s*$/i.test(d.bgmText))
   if (bgmFile) bgmAbs = path.isAbsolute(bgmFile) ? bgmFile : mp.bgmFile(bgmFile)
   else if (wantsBgm) {
-    // _shared/bgm 에서 첫 파일 자동 사용
+    // 대본 BGM 문구 → 태그 → 라이브러리 최적 곡, 없으면 ElevenLabs 음악 생성(에피소드 길이 맞춤, 재사용 등록).
+    // 예전엔 bgm/ 최상위 첫 파일만 찾아서(곡은 하위 폴더에 있음) 한 번도 자동으로 붙지 않았다(2026-09-25).
     try {
-      const dir = mp.bgmDir()
-      const first = fs.readdirSync(dir).find((f) => /\.(mp3|wav|m4a|aac|ogg)$/i.test(f))
-      if (first) bgmAbs = path.join(dir, first)
-    } catch { /* noop */ }
+      const { selectBgm } = await import('./bgmSelect.js')
+      let apiKey = ''
+      try { apiKey = JSON.parse(fs.readFileSync(path.join(mp.DOWNLOADS, '..', 'app', 'studio-secrets.json'), 'utf-8')).apiKeys?.elevenLabs || '' } catch { /* noop */ }
+      const sel = await selectBgm({ code, cuts, durSec: totalDur, allowGenerate: p.allowBgmGenerate !== false, apiKey, onLog: log })
+      log(`BGM 선택: ${sel.source === 'none' ? '없음' : sel.title} — ${sel.reason}${sel.tags?.length ? ` (요청 태그 ${sel.tags.join('·')})` : ''}`)
+      if (sel.file) bgmAbs = mp.bgmFile(sel.file)
+    } catch (e) { log(`⚠ BGM 자동 선택 실패: ${e.message}`) }
   }
   let bgmNote = 'BGM 없음'
   let bgmFilterOut = ''
