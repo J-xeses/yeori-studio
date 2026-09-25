@@ -13,6 +13,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import * as mp from './mediaPaths.js'
+import { loadOverrides } from './reelOverrides.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // 손글씨체 — 레퍼런스(0808.mp4) 스타일. app/assets/fonts 번들.
@@ -214,6 +215,47 @@ function assTime(sec) {
 // 보장. 상수 3개는 시행착오로 튜닝될 여지가 있어 여기 모아둠.
 const MIN_SEG_EXPOSURE_SEC = 1.2
 const SEG_LEAD_SEC = 0.3
+
+// ── 대사 자막 ↔ 실제 발화 싱크(2026-09-25) ─────────────────────────────
+// 글자수 비례 자동배분은 "말하기 전에 떴다가 말하는 도중에 사라지는" 자막을 만들었다(IG_R05 컷3·5 실측).
+// 음성 검수(voice-qa.json)의 단어별 시각으로 대사 세그먼트를 발화 구간에 맞추고, 대사가 아닌 세그먼트(태그라인·화면 나레이션)는
+// 발화 앞/뒤 빈 구간에 둔다. 수동 captionSegTiming 이 있거나, 단일 클립 컷이 아니거나, 매칭 실패면 null(기존 방식 유지).
+const normKo = (t) => String(t || "").replace(/[^가-힣a-zA-Z0-9]/g, "")
+function speechSyncedTimings(cut, segs, durSec, code) {
+  let qa
+  try { qa = JSON.parse(fs.readFileSync(mp.statePath("voice-qa.json"), "utf-8"))?.[code]?.[String(cut.no)] } catch { return null }
+  if (!qa) return null
+  const entries = Object.entries(qa).filter(([f, r]) => /_clip_1.mp4$/i.test(f) && Array.isArray(r?.words) && r.words.length)
+  if (!entries.length || Object.keys(qa).some((f) => /_clip_[2-9].mp4$/i.test(f))) return null     // 세그(다중 클립) 컷은 제외
+  const words = entries.sort((a, b) => String(b[1].checkedAt || "").localeCompare(String(a[1].checkedAt || "")))[0][1].words
+  const dl = normKo(cut.dialogue)
+  if (!dl) return null
+  // 단어들을 이어 붙인 글자열과, 글자 위치 → 단어 인덱스 표
+  let stream = ""; const owner = []
+  words.forEach((w, i) => { const n = normKo(w.text); stream += n; for (let k = 0; k < n.length; k++) owner.push(i) })
+  const out = new Array(segs.length).fill(null)
+  let cursorChar = 0
+  segs.forEach((seg, i) => {
+    const n = normKo(seg.raw)
+    if (!n || !dl.includes(n)) return
+    let pos = stream.indexOf(n, cursorChar)
+    if (pos < 0) pos = stream.indexOf(n.slice(0, Math.min(4, n.length)), cursorChar)
+    if (pos < 0) return
+    const endChar = Math.min(stream.length - 1, pos + n.length - 1)
+    const ws = words[owner[pos]], we = words[owner[endChar]]
+    out[i] = [Math.max(0, ws.start - SEG_LEAD_SEC - 0.1), Math.min(durSec, we.end + 0.45)]
+    cursorChar = endChar + 1
+  })
+  const dlIdx = out.map((t, i) => (t ? i : -1)).filter((i) => i >= 0)
+  const dlSegCount = segs.filter((sg) => { const n = normKo(sg.raw); return n && dl.includes(n) }).length
+  if (!dlIdx.length || dlIdx.length !== dlSegCount) return null
+  const first = out[dlIdx[0]][0], last = out[dlIdx[dlIdx.length - 1]][1]
+  segs.forEach((_, i) => { if (!out[i]) out[i] = i < dlIdx[0] ? [0, Math.max(0.8, first)] : [Math.min(durSec - 0.8, last), durSec] })
+  // 겹치면 뒤 자막을 밀지 않고 앞 자막 끝을 줄인다(뒤 대사가 늦게 뜨지 않게). 대사 아닌 세그는 대사 구간을 피해 둔 값 유지
+  for (let i = 1; i < out.length; i++) if (out[i][0] < out[i - 1][1]) out[i - 1][1] = Math.max(out[i - 1][0] + 0.6, out[i][0])
+  for (let i = 1; i < out.length; i++) if (out[i][0] < out[i - 1][1]) out[i][0] = out[i - 1][1]   // 최소 길이 확보 후에도 겹치면 순차화
+  return out.map(([a, b]) => [+a.toFixed(2), +Math.max(b, a + 0.6).toFixed(2)])
+}
 const SEG_TRAIL_GUARD_SEC = 0.05
 function computeSegmentTimings(segs, durSec) {
   const n = segs.length
@@ -238,6 +280,13 @@ function cleanCaption(s) {
 }
 
 // ── 컷별 편집 판단 ──────────────────────────────────────────────────
+// 영상 탭·리더용: 이 컷의 자막 세그먼트를 발화 시각에 맞춘 타이밍([[s,e],…], 컷 기준 초). 없으면 null.
+export function autoCaptionTimings(cut, code, durSec) {
+  const d = decideCut(cut)
+  if (!d.caption || !String(cut.dialogue || "").trim()) return null
+  return speechSyncedTimings(cut, d.caption.segments, Number(durSec) || d.durSec, code)
+}
+
 export function decideCut(cut) {
   const mc = cut.masterCode || {}
   const sp = String(mc.sp || '')
@@ -419,6 +468,8 @@ export async function finalizeReel(p) {
   const { epNum, cuts, bgmFile, onLog } = p
   const log = (m) => { try { onLog && onLog(m) } catch { /* noop */ } }
   const code = mp.resolveCode(epNum)
+  // 영상 탭에서 정한 자막 스타일(오버라이드 _style: fontPx=1920 세로 기준 px, y=블록 중심 비율) — 미리보기와 최종본 일치(2026-09-25)
+  const capStyle = loadOverrides(code)._style || {}
   const vdir = mp.videoDir(epNum)
   const fdir = mp.finalDir(epNum)
   const mdir = mp.makingDir(epNum)
@@ -439,6 +490,11 @@ export async function finalizeReel(p) {
     d.durSec = realDur > 0 ? realDur : d.durSec
     d.startSec = cursor
     d.src = src
+    // 대사 자막을 실제 발화 시각에 맞춤(수동 captionSegTiming 우선)
+    if (d.caption && !d.captionSegTiming && String(cut.dialogue || "").trim()) {
+      const t = speechSyncedTimings(cut, d.caption.segments, d.durSec, code)
+      if (t) { d.captionSegTiming = t; d.captionStart = 0; log(`컷 ${cut.no}: 대사 자막을 발화 시각에 맞춤 ${t.map(([a, b]) => a + "~" + b).join(" / ")}s`) }
+    }
     cursor += d.durSec
     decisions.push(d)
     const capDesc = !d.caption ? 'skip'
@@ -524,7 +580,8 @@ export async function finalizeReel(p) {
           time: `${st.toFixed(2)}~${en.toFixed(2)}s`,
           text: `"${stacked}"`,
           position: o.position, bubble: o.bubble || 'none', color: o.color || 'white',
-          font_size: o.font_size || 58, backing: o.backing === true,
+          font_size: capStyle.fontPx || o.font_size || 58, backing: o.backing === true,
+          ...(capStyle.y ? { x: 0.5, y: capStyle.y } : {}),   // 영상 탭에서 정한 세로 위치(글자 블록 중심, 0~1)
           deco: o.deco || [], arrow: !!o.arrow, arrow_direction: o.arrow_direction || 'right',
         })
       })

@@ -386,6 +386,30 @@ export default function VideoTab() {
       .then(d => setReelOverrides(d.overrides || {}))
       .catch(() => setReelOverrides({}))
   }, [state.episode?.number])
+  // 릴스(IG_R): 미리보기 자막을 최종본(reel-finalize → handwriting_overlay.py)과 똑같이 그린다 — Gaegu 손글씨·1920 기준 px·
+  // 외곽 헤일로·하단 72% 안전선. 크기/세로위치는 오버라이드 _style 에 저장되어 최종본(G5)이 그대로 쓴다(2026-09-25, 성준님:
+  // "영상 탭에서 자막이 보여야 크기·위치를 정할 수 있다" — 전엔 탭 설정이 최종본과 무관했음).
+  const isReel = /^IG_R/i.test(String(state.episode?.code || ''))
+  const reelStyle = reelOverrides._style || {}
+  const reelFontPx = Number(reelStyle.fontPx) || 58
+  const [gaeguReady, setGaeguReady] = useState(false)
+  useEffect(() => {
+    if (!isReel || gaeguReady) return
+    const f = new FontFace('GaeguFinal', 'url(http://localhost:3001/assets/fonts/Gaegu-Bold.ttf)')
+    f.load().then(ff => { document.fonts.add(ff); setGaeguReady(true) }).catch(() => {})
+  }, [isReel, gaeguReady])
+  const styleSaveTimer = useRef(null)
+  const setReelStyle = (patch) => {
+    const next = { ...reelStyle, ...patch }
+    setReelOverrides(prev => ({ ...prev, _style: next }))
+    clearTimeout(styleSaveTimer.current)
+    styleSaveTimer.current = setTimeout(() => {
+      fetch('http://localhost:3001/api/reel-finalize/override', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: state.episode?.number, cutNo: '_style', patch: next }),
+      }).catch(() => {})
+    }, 500)
+  }
   // 컷 하나에 오버라이드(자막류만 — SFX 등 audio 필드는 화면 미리보기와 무관)를 병합해서
   // 반환. 오버라이드가 없으면 원본 cut을 그대로 반환(새 객체를 만들지 않아 불필요한 리렌더 방지).
   const withCaptionOverride = useCallback((cut) => {
@@ -588,12 +612,34 @@ export default function VideoTab() {
 
   const allG4Done = cuts.length > 0 && cuts.every(c => !needsFlowVideo(c.cutType) || g4Approved[c.id])
 
+  // 최종본 오버레이(handwriting_overlay.py render_scene) 배치 규칙을 캔버스로 재현
+  const drawReelCaption = (ctx, W, H, raw) => {
+    const text = String(raw || '').trim(); if (!text) return
+    const k = H / 1920
+    const F = reelFontPx * k
+    ctx.font = `${F}px "${gaeguReady ? 'GaeguFinal' : 'sans-serif'}"`
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'
+    const lines = wrapCanvasText(ctx, `"${text}"`, W - 2 * (24 + 28) * k)
+    const lineH = F * 1.32
+    const boxH = lines.length * lineH + 36 * k
+    let top = reelStyle.y ? H * reelStyle.y - boxH / 2 : H * 0.87 - boxH
+    top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.72 - boxH)))
+    lines.forEach((l, i) => {
+      const y = top + 18 * k + lineH * i + F
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.92)'; ctx.fillStyle = 'rgba(0,0,0,0.92)'
+      for (const b of [F * 0.22, F * 0.11]) { ctx.shadowBlur = b; ctx.fillText(l, W / 2, y) }
+      ctx.restore()
+      ctx.fillStyle = '#ffffff'; ctx.fillText(l, W / 2, y)
+    })
+  }
+
   const drawPreview = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')
     const W = canvas.width, H = canvas.height
     ctx.clearRect(0, 0, W, H)
     if (!subtitleEnabled) return
+    if (isReel) { drawReelCaption(ctx, W, H, previewText); return }
     const text = previewText
     const scale = H / 720
     const fSize = Math.max(10, Math.round(fontSize * scale))
@@ -643,7 +689,7 @@ export default function VideoTab() {
       ctx.fillText(l, subX, lineY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles])
+  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, isReel, reelFontPx, reelStyle.y, gaeguReady])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -1523,11 +1569,26 @@ export default function VideoTab() {
                   </select>
                 </div>
               </div>
+              {isReel ? (<>
+                <div className={s.field}>
+                  <label>🎬 최종본 자막(손글씨) 크기 <span className={s.val}>{reelFontPx}px</span></label>
+                  <input type="range" min="36" max="110" value={reelFontPx} disabled={!subtitleEnabled}
+                    onChange={e => setReelStyle({ fontPx: parseInt(e.target.value) })} />
+                </div>
+                <div className={s.field}>
+                  <label>세로 위치 <span className={s.val}>{reelStyle.y ? `${Math.round(reelStyle.y * 100)}%` : "기본(하단)"}</span></label>
+                  <input type="range" min="15" max="72" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
+                    onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5 }}>
+                  릴스는 최종본과 같은 손글씨 자막으로 미리봅니다. 여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다. 화면 72% 아래는 인스타 UI 영역이라 자동으로 올려 배치됩니다.
+                </div>
+              </>) : (
               <div className={s.field}>
                 <label>글자 크기 <span className={s.val}>{fontSize}px</span></label>
                 <input type="range" min="16" max="72" value={fontSize} disabled={!subtitleEnabled}
                   onChange={e => set({ fontSize: parseInt(e.target.value) })} />
-              </div>
+              </div>)}
               <div className={s.sidePanelRow2}>
                 <div className={s.field}>
                   <label>글자 색상</label>

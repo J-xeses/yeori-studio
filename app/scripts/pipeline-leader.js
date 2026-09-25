@@ -492,6 +492,11 @@ async function checkAndAdvance() {
       if (k === 0) {
         const r = await api('POST', '/api/render-cut-clips', { epNum, cutNo: c.no, clips: clips.map(file => ({ file })) })
         didTrigger = true
+        if (r.ok && IS_REEL) {   // 대사 자막을 발화 시각에 맞춤 — 영상 탭 미리보기·최종본이 같은 타이밍을 쓴다
+          const sc = await api('POST', '/api/reel-finalize/sync-captions', { epNum })
+          const syn = (sc.data?.results || []).filter(x => x.status === 'synced').map(x => x.cutNo)
+          if (syn.length) log('자막', `대사 자막 발화 싱크 — 컷 ${syn.join(',')}`)
+        }
         if (r.ok) { log('G4', `컷 ${c.no} 컷 영상 렌더 완료 → G4 승인(사람) 대기`); await leaderLog({ stage: 'G4', kind: '자동실행', summary: `컷 ${c.no} 클립 ${n}개 → 컷 영상 렌더`, result: 'G4 승인 대기', humanInvolved: true }) }
         else { cycleBlocker = `컷 ${c.no} 렌더 실패: ${r.data?.error || r.status}`; log('G4', `❌ ${cycleBlocker}`) }
       } else {

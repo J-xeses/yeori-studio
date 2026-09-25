@@ -8,7 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
-import { finalizeReel, enrichCutsFromScript, checkFinalStale } from './lib/reelFinalize.js'
+import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
@@ -110,6 +110,8 @@ process.on('exit', (code) => {
 app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://127.0.0.1:3000', 'null'], exposedHeaders: ['X-State-Mtime'] }))
 app.use(express.json({ limit: '10mb' }))
 app.use('/downloads', express.static(mp.DOWNLOADS))
+// 최종본 손글씨 자막 글꼴(Gaegu 등) — 영상 탭 미리보기가 최종본과 같은 글꼴로 그리도록(2026-09-25)
+app.use('/assets/fonts', express.static(path.join(ROOT, 'assets', 'fonts')))
 
 // ── 인스타 운영실 (/insta-ops) — 계정 세팅·운영 보드·성과 분석 한 페이지 ─────────────
 // 데이터: downloads/seoyeori/IG/_account/ops.json (server/lib/instaOps.js, rev 확인 저장)
@@ -3575,6 +3577,32 @@ app.post('/api/reel-finalize/override', (req, res) => {
     const code = resolveEpisodeCode(ep.episode, epId)
     const result = setReelOverride(code, cutNo, patch || {})
     res.json({ ok: true, code, cutNo, override: result })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
+// POST { epNum } — 대사 자막 타이밍을 실제 발화(voice-qa 단어 시각)에 맞춰 오버라이드에 저장(2026-09-25).
+// 영상 탭 미리보기와 최종본이 같은 captionSegTiming 을 쓰게 된다. 사람이 직접 정한 타이밍(captionTimingAuto 없음)은 건드리지 않는다.
+app.post('/api/reel-finalize/sync-captions', async (req, res) => {
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(req.body?.epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const epNum = ep.episode?.number
+    const ovAll = loadReelOverrides(code)
+    const results = []
+    for (const cut of resolveEpisodeCuts(ep, code)) {
+      if (!String(cut.dialogue || '').trim() || !String(cut.subtitle || '').trim()) continue
+      const ov = ovAll[String(cut.no)] || {}
+      if (ov.captionSegTiming && !ov.captionTimingAuto) { results.push({ cutNo: cut.no, status: 'manual-kept' }); continue }
+      const vid = path.join(mp.videoDir(epNum), `cut_${String(cut.no).padStart(2, '0')}.mp4`)
+      const dur = fs.existsSync(vid) ? await getMediaDuration(vid) : cut.duration
+      const t = autoCaptionTimings(cut, code, dur)
+      if (!t) { results.push({ cutNo: cut.no, status: 'no-speech-data' }); continue }
+      setReelOverride(code, cut.no, { captionSegTiming: t, captionTimingAuto: true })
+      results.push({ cutNo: cut.no, status: 'synced', timing: t })
+    }
+    res.json({ ok: true, code, results })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
