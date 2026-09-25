@@ -8204,7 +8204,19 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
       const r = await finalizeReel({ epNum: Number(epNum), cuts: resolveEpisodeCuts(ep, g5Code) })
       const deliverable = copyToDeliverables(g5Code, r.finalPath, `${g5Code}_final.mp4`)
       const approvedCount = approveGForCuts(g5Code, cuts, 'g5')
-      return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount })
+      // 게시 준비: 대본의 [게시 캡션] → 07_output/{CODE}_caption.txt, 격자 썸네일(3:4) → 운영실 게시물 등록/갱신(2026-09-25)
+      let publish = null
+      try {
+        const { extractPublishCaption, upsertEpisodePost } = await import('./lib/instaOps.js')
+        let raw = ep.scriptRaw || ''
+        if (!raw) { const sf = path.join(scriptDir(g5Code), 'script_v3.txt'); if (fs.existsSync(sf)) raw = fs.readFileSync(sf, 'utf-8') }
+        const caption = extractPublishCaption(raw)
+        if (caption) fs.writeFileSync(path.join(path.dirname(r.finalPath), `${g5Code}_caption.txt`), caption, 'utf-8')
+        const grid = path.join(path.dirname(r.finalPath), `${g5Code}_grid.jpg`)
+        await new Promise((ok) => { const pr = spawn('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', r.finalPath, '-frames:v', '1', '-vf', 'crop=iw:iw*4/3,scale=1080:1440', '-q:v', '3', grid], { windowsHide: true }); pr.on('close', ok); pr.on('error', ok) })
+        publish = upsertEpisodePost({ code: g5Code, title: ep.episode?.title, caption, gridSrc: grid })
+      } catch (e) { publish = { error: e.message } }
+      return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount, publish })
     }
 
     let cursor = 0

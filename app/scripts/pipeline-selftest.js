@@ -119,6 +119,26 @@ await check('F2', '영상 탭 자막 미리보기 규칙 = 최종본 규칙', ()
   return { ok: !bad.length && ov.length > 0, evidence: bad.length ? `어긋남: ${bad.join(', ')}` : `규칙 ${rules.length}개 일치(기준선·안전선·여백·줄간격·안쪽여백·1920 환산)` }
 })
 
+// ── 1e. 효과음 규칙 — "DM 알림음·진동" 컷에 알림음(타이핑 아님) ──
+await check('S2', '효과음 규칙(알림/DM 컷 → 알림음)', async () => {
+  const { decideCut, enrichCutsFromScript } = await import('../server/lib/reelFinalize.js')
+  const raw = fs.readFileSync(path.join(scriptDir, scriptFile), 'utf-8')
+  const cs = enrichCutsFromScript(parseCutsV3(raw), raw)
+  const dm = cs.find(c => /DM|알림|진동/.test(c.masterCode?.audio?.sfx || ''))
+  if (!dm) return { skip: true, evidence: '알림 효과음 컷 없음' }
+  const f = decideCut(dm).sfx.map(x => x.file.split('/').pop()).join(',')
+  return { ok: /message-pop/.test(f), evidence: `컷${dm.no} "${dm.masterCode.audio.sfx}" → ${f || '없음'}` }
+})
+
+// ── 1f. 게시 캡션 추출 → 운영실 ──
+await check('P3', '게시 캡션 추출(대본 [게시 캡션] → 운영실)', async () => {
+  const { extractPublishCaption, loadOps } = await import('../server/lib/instaOps.js')
+  const cap = extractPublishCaption(fs.readFileSync(path.join(scriptDir, scriptFile), 'utf-8'))
+  const post = (loadOps().posts || []).find(p => p.code === CODE)
+  const tagOk = /#\S+/.test(cap), linesOk = cap.split('\n').length >= 3
+  return { ok: tagOk && linesOk && !!post?.caption, evidence: `캡션 ${cap.split('\n').length}줄·해시태그 ${tagOk} · 운영실 ${post ? `${post.id} ${post.status}, 캡션 ${post.caption ? '있음' : '없음'}` : '미등록'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

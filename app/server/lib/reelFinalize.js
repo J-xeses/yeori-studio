@@ -29,6 +29,8 @@ const SFX_RULES = [
   // 특정도 높은 것 먼저
   { kw: /하트[·,\s]*별|별[·,\s]*하트|데코\s*팝업|하트.*팝업|별.*팝업/i, file: 'click/mixkit-happy-bell-alert-601.wav', at: 'start', gain: 0.5 },
   // 감성 자연소리·타이핑 (layer — BGM 과 겹쳐 길게)
+  // 폰 알림·DM 도착(2026-09-25 IG_R05 컷4: "폰 진동 지잉 + DM 알림음"이 어떤 규칙에도 안 맞아 장면 추론으로 타이핑 소리가 붙었음) — 타이핑보다 먼저 본다
+  { kw: /DM|디엠|알림음|푸시\s*알림|진동|지잉|notification|message\s*alert/i, file: 'pop/mixkit-message-pop-alert-2354.mp3', at: 'start', gain: 0.55 },
   { kw: /타이핑|키보드|typing|keyboard|메시지\s*작성/i, file: 'ambience/mixkit-keyboard-typing-1386.wav', at: 'start', gain: 0.4, maxDur: 4.5 },
   { kw: /마무리|엔딩|ending|피아노/i, file: 'ambience/mixkit-little-piano-game-over-1944.wav', at: 'end', gain: 0.4 },
   { kw: /슬픈\s*회상|비극|비와\s*천둥|폭우/i, file: 'ambience/mixkit-rain-and-thunder-storm-2390.wav', at: 'start', gain: 0.22, layer: true },

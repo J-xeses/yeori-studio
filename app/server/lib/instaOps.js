@@ -84,3 +84,35 @@ export function saveOps(next) {
 export function listProfilePhotos() {
   try { return fs.readdirSync(path.join(ACCOUNT_DIR, 'profile')).filter(f => /\.(jpe?g|png|webp)$/i.test(f)).sort() } catch { return [] }
 }
+
+// ── 에피소드 → 운영실 자동 연결(2026-09-25) ────────────────────────────
+// 대본의 게시 캡션 블록([게시 캡션] / [캡션 (게시용)] / [캡션 + 해시태그]) — 다음 [블록] 또는 끝까지. 없으면 ''.
+export function extractPublishCaption(raw) {
+  const m = String(raw || '').replace(/\r/g, '').match(/^\s*\[(?:게시\s*캡션|캡션\s*\(게시용\)|캡션\s*\+\s*해시태그)[^\]]*\]\s*\n([\s\S]*?)(?=\n\s*\[[^\]]+\]\s*\n|(?![\s\S]))/m)   // 끝 = 문자열 끝((?![\s\S])) — m 플래그의 $ 는 줄 끝이라 첫 줄만 잡혔음
+  return m ? m[1].trim() : ''
+}
+
+// G5 완성 시 운영실 게시물 등록/갱신(rev 확인 저장). 이미 예약·게시된 글은 상태를 되돌리지 않는다.
+// gridSrc: 격자 썸네일로 쓸 이미지 파일(있으면 _account/grid/{id}.jpg 로 복사)
+export function upsertEpisodePost({ code, title, caption = '', status = '완성', type, gridSrc }) {
+  const ops = loadOps()
+  const posts = Array.isArray(ops.posts) ? ops.posts : []
+  const letter = (String(code).match(/^IG_([A-Z])/) || [])[1]?.toLowerCase() || 'x'
+  const num = (String(code).match(/(\d+)$/) || [])[1] || '0'
+  let post = posts.find(p => p.code === code)
+  const isNew = !post
+  if (!post) {
+    post = { id: letter === 't' ? `t${Number(num)}` : `${letter}${num.padStart(2, '0')}`, date: '', time: '', type: type || (letter === 'p' ? '사진 Carousel' : '일상 Reel'), title: title || code, code, status: '기획', img: '', link: '', note: '자동 등록(G5 최종본 완성)', metrics: {} }
+    posts.push(post)
+  }
+  if (!['예약', '게시'].includes(post.status)) post.status = status
+  if (caption) post.caption = caption
+  if (gridSrc && fs.existsSync(gridSrc)) {
+    const rel = `grid/${post.id}.jpg`
+    fs.mkdirSync(path.join(ACCOUNT_DIR, 'grid'), { recursive: true })
+    fs.copyFileSync(gridSrc, path.join(ACCOUNT_DIR, rel))
+    post.img = rel
+  }
+  const saved = saveOps({ ...ops, posts })
+  return { post, isNew, rev: saved.rev }
+}
