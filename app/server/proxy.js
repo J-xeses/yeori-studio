@@ -7406,7 +7406,14 @@ app.post('/api/render-cut-clips', async (req, res) => {
     for (const c of resolvedClips) {
       const isStaged = path.resolve(c.file).startsWith(path.resolve(rawDir))
         && /cut_\d+_(clip|selfref)_/.test(path.basename(c.file))
-      if (isStaged) { try { fs.unlinkSync(c.file) } catch { /* noop */ } }
+      // 삭제하지 않고 raw/_composed/ 로 보관 — Flow 로 크레딧 들여 만든 원본까지 지워져 재편집·검수 불가였음(2026-09-25 IG_R05)
+      if (isStaged) {
+        try {
+          const keepDir = path.join(rawDir, '_composed'); fs.mkdirSync(keepDir, { recursive: true })
+          const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14)
+          fs.renameSync(c.file, path.join(keepDir, path.basename(c.file).replace(/\.mp4$/i, `.${stamp}.mp4`)))
+        } catch { /* noop */ }
+      }
     }
 
     const st = fs.statSync(outPath)
@@ -7617,7 +7624,20 @@ app.post('/api/episodes', (req, res) => {
     const state = loadStudioState()
     if (!state.episodes) state.episodes = {}
     const nextNumber = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number)) + 1
-    const code = `${contentType}_E${String(nextNumber).padStart(2, '0')}`
+    // 인스타(IG_R/IG_P)는 실제 운영 코드 체계(IG_R04 → IG_R05)를 따른다 — 전역 번호로 IG_R_E100 이 되어 폴더·운영실과
+    // 어긋났다(2026-09-25 IG_R05). body.code 로 직접 지정도 가능(중복이면 거부).
+    const codes = Object.values(state.episodes).map(e => String(e.episode.code || ''))
+    let code
+    if (req.body?.code) {
+      code = String(req.body.code).trim()
+      if (!/^[A-Z_]+\d{2,3}$/.test(code)) return res.status(400).json({ error: `code 형식 오류: ${code} (예: IG_R06)` })
+      if (codes.includes(code)) return res.status(409).json({ error: `이미 있는 코드: ${code}` })
+    } else if (contentType === 'IG_R' || contentType === 'IG_P') {
+      const nn = Math.max(0, ...codes.map(c => (c.match(new RegExp(`^${contentType}(\\d{2,3})$`)) || [])[1]).filter(Boolean).map(Number).filter(n => n < 90))
+      code = `${contentType}${String(nn + 1).padStart(2, '0')}`
+    } else {
+      code = `${contentType}_E${String(nextNumber).padStart(2, '0')}`
+    }
     const id = `ep_${Date.now()}`
 
     const makeCut = (no) => ({
@@ -7638,7 +7658,7 @@ app.post('/api/episodes', (req, res) => {
         contentType,
         topicCode: 'PSY',
         scnCode: 'DOC',
-        instaNum: '',
+        instaNum: /^IG_/.test(code) ? (code.match(/(\d+)$/) || [])[1] || '' : '',
         character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
         code,
       },
@@ -8146,6 +8166,16 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     const epNum = ep.episode?.number
     const cuts = ep.cuts || []
 
+    // 릴스(IG_R) 는 reel-finalize 경로로 최종본을 만든다 — 손글씨 자막(CP)·효과음·A/V 싱크 보정·07_output 지문.
+    // 예전 G5(SRT+단순 concat)는 릴스 최종본이 아니라서 이 단계만 매번 사람이 따로 돌려야 했다(2026-09-25).
+    const g5Code = resolveEpisodeCode(ep.episode, episodeId)
+    if (/^IG_R/i.test(String(g5Code || ''))) {
+      const r = await finalizeReel({ epNum: Number(epNum), cuts: resolveEpisodeCuts(ep, g5Code) })
+      const deliverable = copyToDeliverables(g5Code, r.finalPath, `${g5Code}_final.mp4`)
+      const approvedCount = approveGForCuts(g5Code, cuts, 'g5')
+      return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount })
+    }
+
     let cursor = 0
     const meta = cuts.map(c => {
       const dur = c.duration || 5
@@ -8259,6 +8289,10 @@ function buildStudioStatusPayload(episodeId) {
       review: madeReview[String(c.no)] || null,   // { status, note, at } | null(미검토)
       hasDialogue: c.dialogue?.trim() ? true : false,
       hasNarration: c.narration?.trim() ? true : false,
+      // pipeline-leader G4 자동 제출용(2026-09-25): 생성 길이·세그(클립) 수
+      duration: Number(c.duration) || null,
+      segCount: Array.isArray(c.segments) && c.segments.length > 1 ? c.segments.length : 1,
+      segments: Array.isArray(c.segments) && c.segments.length > 1 ? c.segments : null,
     }
   })
 

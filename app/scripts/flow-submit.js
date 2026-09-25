@@ -207,7 +207,15 @@ ${REGISTERS[reg].delivery}`
     }
     if (res.status !== 'done') throw new Error('8분 안에 생성이 끝나지 않았습니다')
     step('생성 완료 — 다운로드')
-    const bytes = await kit.saveResult(res.thumbSrc, outPath)
+    // 프레임 모드: 첫 프레임이 시작 프레임과 맞는 타일만 받는다(SSIM 검증, 타일 오인 방지). 소재 모드는 시작 프레임이 없어 맨 앞 타일.
+    let bytes
+    if (mode === 'frames' && framePath) {
+      const v = await kit.saveVerified(outPath, framePath, { onTry: (t) => step(t.error ? `타일 ${t.index}: 받기 실패 — ${t.error}` : `타일 ${t.index}: 첫 프레임 SSIM ${t.ssim?.toFixed?.(2) ?? '측정 실패'}`) })
+      bytes = v.bytes
+      step(`시작 프레임 일치 확인 — 타일 ${v.index}, SSIM ${v.ssim.toFixed(2)}`)
+    } else {
+      bytes = await kit.saveResult(res.tileIndex ?? res.thumbSrc, outPath)
+    }
     // 엉뚱한(예전) 결과 타일을 받는 사고 방지 — 같은 raw 폴더의 다른 클립과 바이트가 똑같으면 실패 처리.
     // 2026-09-25 IG_R05: 타일 감지가 화면 밖 요소를 잡아 컷3 이 컷1 영상을, 컷5 가 컷3 영상을 받았다(한 칸씩 밀림).
     {

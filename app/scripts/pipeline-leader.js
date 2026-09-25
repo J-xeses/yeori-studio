@@ -37,6 +37,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import * as mp from '../server/lib/mediaPaths.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const CODE_ROOT = path.join(__dirname, '..')
@@ -111,6 +112,13 @@ process.on('SIGINT', () => { releaseLock(); process.exit(0) })
 process.on('SIGTERM', () => { releaseLock(); process.exit(0) })
 // 메이킹 컷(GRAPHIC/CAPCUT/BROLL) 자동 제작 — 기본 ON, --making=off 로 비활성(로그만)
 const MAKING_AUTORUN = args.making !== 'off'
+// G2·G4 Flow 무료 경로 자동 실행(2026-09-25 재연결). 9/2 "수동 전환" 이후 flow-image.js / flow-submit.js 가 새로 생겼는데
+// 리더에 연결되지 않아 매번 이 두 단계에서 흐름이 끊겼다. --g2=off / --g4=off 로 끌 수 있다.
+const G2_AUTO = args.g2 !== 'off'
+const G4_AUTO = args.g4 !== 'off'
+const G4_BUDGET = Number(args['g4-budget'] || 50)          // 하루 Flow 영상 크레딧 한도(성준님 계정 일 50)
+const G4_MAX_CREDITS_PER_CLIP = 15
+const FLOW_DRY = !!args["flow-dry"]                      // 시험용: 영상 제출을 검증 관문까지만(전송·크레딧 없음)
 
 // ── 스테이지 범위(--from/--to) — 웹 UI(에이전트 리더 탭)가 "이 구간만 실행"을
 // 지정할 수 있도록 지원. 기본은 g1~g5 전체. G1은 사람이 스튜디오 UI에서 승인하는
@@ -340,10 +348,23 @@ async function checkAndAdvance() {
   }
 
   // ── G2: 이미지 생성 자동 트리거 안 함(수동). 생성 이미지가 필요한 컷(YEORI 등)만 보고. ──
+  if (await pollActiveFlow()) { didTrigger = true; log('Flow', `진행 중 — ${flowLabel(activeFlow)}`) }
   if (stageInRange('g2') && !isStageComplete(cuts, 'g2')) {
     const needImg = cuts.filter(c => c.g1 && needsGenImage(c) && !c.hasImage && !c.hasVideo)
-    if (needImg.length) {
-      log('G2', `이미지 수동 제작 대기 — 컷 ${needImg.map(c => c.no).join(',')} (외부 생성 후 스튜디오 탭 업로드)`)
+    const autoImg = needImg.filter(c => !flowHuman.has(`g2:${c.no}`))
+    if (G2_AUTO && autoImg.length && !activeFlow) {
+      if (!(await flowReady())) {
+        cycleBlocker = 'Flow 전용 Chrome(9222)·Flow 프로젝트 탭이 준비되지 않음'
+        log('G2', `⏸ ${cycleBlocker}`)
+      } else {
+        const r = await api('POST', '/api/flow/image', { episodeCode: episode?.code, cutNos: autoImg.map(c => c.no), count: 2 })
+        if (r.ok && r.data?.jobId) {
+          activeFlow = { kind: 'g2', jobId: r.data.jobId, cutNos: autoImg.map(c => c.no) }; didTrigger = true
+          log('G2', `이미지 자동 생성 시작(Flow 무료) — 컷 ${autoImg.map(c => c.no).join(',')} · 컷당 2장`)
+        } else log('G2', `이미지 생성 요청 실패 — ${r.data?.error || r.status}`)
+      }
+    } else if (needImg.length && !G2_AUTO) {
+      log('G2', `이미지 수동 제작 대기 — 컷 ${needImg.map(c => c.no).join(',')} (--g2=off)`)
     }
   }
 
@@ -452,10 +473,44 @@ async function checkAndAdvance() {
   // 파이프라인 신뢰성을 못 지켰다(2026-09-02 결정). 영상 컷은 사람이 Veo/Flow에서 직접
   // 제작 → 스튜디오 "영상 만들기" 탭 체크리스트에서 mp4 업로드하는 방식으로 전환.
   // 리더는 "어느 컷이 영상 필요한데 아직 없는지" 보고만 한다.
+  // (2026-09-25) G2 승인 = 영상 생성 진행 신호. 서여리(YEORI) 컷만 자동 — 클립 제출 → 시작 프레임 SSIM 검증 다운로드 →
+  // 음성 검수 → (모든 클립 준비되면) render-cut-clips 로 05_video/cut_NN.mp4. 진행은 raw 클립 존재로 판단(재시작 안전).
   if (stageInRange('g4') && !isStageComplete(cuts, 'g4')) {
     const needVeo = cuts.filter(c => needsGenImage(c) && c.g2 && !c.hasVideo)
-    if (needVeo.length) {
-      log('G4', `Veo 수동 제작 대기 — 컷 ${needVeo.map(c => c.no).join(',')} (Veo/Flow 제작 후 영상 탭 업로드)`)
+    const autoVeo = needVeo.filter(c => (c.cutType || 'YEORI') === 'YEORI' && !flowHuman.has(`g4:${c.no}`))
+    const manualVeo = needVeo.filter(c => !autoVeo.includes(c))
+    if (manualVeo.length) log('G4', `수동 제작 대기 — 컷 ${manualVeo.map(c => c.no).join(',')} (PIP·사람 확인 대상)`)
+    const epNum = episode?.number
+    if (G4_AUTO && autoVeo.length && !activeFlow && epNum) {
+      const c = autoVeo[0]
+      const n = c.segCount || 1
+      const clips = Array.from({ length: n }, (_, i) => rawClipPath(epNum, c.no, i + 1))
+      const k = clips.findIndex((f, i) => !findClip(epNum, c.no, i + 1)) + 1          // 0 이면 전부 있음(보관본 복구 포함)
+      if (k === 0) {
+        const r = await api('POST', '/api/render-cut-clips', { epNum, cutNo: c.no, clips: clips.map(file => ({ file })) })
+        didTrigger = true
+        if (r.ok) { log('G4', `컷 ${c.no} 컷 영상 렌더 완료 → G4 승인(사람) 대기`); await leaderLog({ stage: 'G4', kind: '자동실행', summary: `컷 ${c.no} 클립 ${n}개 → 컷 영상 렌더`, result: 'G4 승인 대기', humanInvolved: true }) }
+        else { cycleBlocker = `컷 ${c.no} 렌더 실패: ${r.data?.error || r.status}`; log('G4', `❌ ${cycleBlocker}`) }
+      } else {
+        const durationSec = omniSec(c.segments ? c.segments[k - 1] : c.duration)
+        const used = readVideoUsage().credits
+        if (used + estCredits(durationSec) > G4_BUDGET) {
+          cycleBlocker = `오늘 Flow 영상 크레딧 한도(${G4_BUDGET}) 도달 — 사용 ${used}`
+          log('G4', `⏸ ${cycleBlocker}`)
+        } else if (!(await flowReady())) {
+          cycleBlocker = 'Flow 전용 Chrome(9222)·Flow 프로젝트 탭이 준비되지 않음'
+          log('G4', `⏸ ${cycleBlocker}`)
+        } else {
+          const body = { epNum, cutNo: c.no, clipNo: k, durationSec, maxCredits: G4_MAX_CREDITS_PER_CLIP, dryRun: FLOW_DRY, ...(k > 1 ? { prevClipPath: clips[k - 2] } : {}) }
+          const r = await api('POST', '/api/flow/submit', body)
+          if (r.ok && r.data?.jobId) {
+            activeFlow = { kind: 'g4', jobId: r.data.jobId, cutNo: c.no, clipNo: k }; didTrigger = true
+            log('G4', `영상 자동 제출(Flow Omni 720p ${durationSec}초) — 컷 ${c.no} 클립 ${k}/${n} · 오늘 사용 ${used}/${G4_BUDGET}`)
+          } else log('G4', `영상 제출 요청 실패 — ${r.data?.error || r.status}`)
+        }
+      }
+    } else if (needVeo.length && !G4_AUTO) {
+      log('G4', `영상 수동 제작 대기 — 컷 ${needVeo.map(c => c.no).join(',')} (--g4=off)`)
     }
   }
 
@@ -538,6 +593,74 @@ async function checkAndAdvance() {
 
   if (TO_STAGE === 'g3') return isG3Complete(cuts)
   return cuts.length > 0 && summary[TO_STAGE] === cuts.length
+}
+
+// ── Flow(G2 이미지 · G4 영상) 작업 추적 — 한 번에 하나(서버도 409 로 막음) ──────────────
+let activeFlow = null                  // { kind:'g2'|'g4', jobId, cutNo, clipNo, cutNos }
+const flowFailures = {}                // 'g2:3' / 'g4:5:1' → 실패 횟수(2번 실패하면 사람에게 넘김)
+const flowHuman = new Set()            // 사람 확인으로 넘긴 컷('g2:3', 'g4:5')
+const VIDEO_USAGE = path.join(mp.DOWNLOADS, 'state', 'flow-video-usage.json')
+const today = () => new Date().toLocaleDateString('sv-SE')
+function readVideoUsage() { try { const u = JSON.parse(fs.readFileSync(VIDEO_USAGE, 'utf-8')); return u.date === today() ? u : { date: today(), credits: 0, clips: [] } } catch { return { date: today(), credits: 0, clips: [] } } }
+function addVideoUsage(credits, label) { const u = readVideoUsage(); u.credits += credits || 0; u.clips.push({ at: new Date().toISOString(), label, credits }); fs.mkdirSync(path.dirname(VIDEO_USAGE), { recursive: true }); fs.writeFileSync(VIDEO_USAGE, JSON.stringify(u, null, 2), 'utf-8') }
+// Omni 길이 단위(4/6/8/10초) — 대본 DU/세그 길이를 올림해 맞춘다
+const omniSec = (d) => [4, 6, 8, 10].find(x => x >= (Number(d) || 8)) || 10
+const estCredits = (sec) => Math.ceil(sec * 1.5)          // 720p 실측: 8초 12크레딧
+const rawClipPath = (epNum, no, k) => path.join(mp.makingDir(epNum), 'raw', `cut_${String(no).padStart(2, '0')}_clip_${k}.mp4`)
+// raw 에 없으면 render-cut-clips 가 옮겨 둔 raw/_composed/ 의 가장 최근 보관본을 되살린다(크레딧 들인 원본 재생성 방지)
+function findClip(epNum, no, k) {
+  const f = rawClipPath(epNum, no, k)
+  if (fs.existsSync(f)) return f
+  const keep = path.join(path.dirname(f), "_composed")
+  const base = path.basename(f, ".mp4")
+  const hit = fs.existsSync(keep) ? fs.readdirSync(keep).filter(n => n.startsWith(base + ".") && n.endsWith(".mp4")).sort().pop() : null
+  if (!hit) return null
+  fs.copyFileSync(path.join(keep, hit), f)
+  return f
+}
+const flowLabel = (j) => j.kind === 'g2' ? `G2 이미지 컷 ${j.cutNos.join(',')}` : `G4 컷 ${j.cutNo} 클립 ${j.clipNo}`
+
+// 진행 중인 Flow 작업을 확인하고, 끝났으면 후처리. 반환: 아직 진행 중이면 true
+async function pollActiveFlow() {
+  if (!activeFlow) return false
+  const r = await api('GET', `/api/flow/job/${activeFlow.jobId}`)
+  const st = r.data?.state
+  if (!r.ok || st === 'running' || !st) return true
+  const job = activeFlow; activeFlow = null
+  const tag = flowLabel(job)
+  if (st === 'done') {
+    if (job.kind === 'g4') {
+      if (r.data.result?.dryRun) { log("G4", `🧪 ${tag} 드라이런 통과 — 예상 ${r.data.result?.gate?.credits}크레딧(전송 안 함)`); return false }
+      const credits = r.data.result?.gate?.credits || 0
+      addVideoUsage(credits, `${EP_LABEL} 컷${job.cutNo} 클립${job.clipNo}`)
+      const qa = r.data.result?.voiceQa
+      log('G4', `✅ ${tag} 생성·다운로드 완료 (${credits}크레딧${qa ? `, 음성검수 ${qa.verdict}` : ''})`)
+      if (qa && qa.verdict === 'fail') {
+        flowHuman.add(`g4:${job.cutNo}`)
+        await leaderLog({ stage: 'G4', kind: '블로커', summary: `컷 ${job.cutNo} 음성 검수 실패 — 사람 확인`, result: (qa.flags || []).slice(0, 4).join(' / '), humanInvolved: true })
+      } else {
+        await leaderLog({ stage: 'G4', kind: '자동실행', summary: `${tag} Flow 자동 생성`, result: `${credits}크레딧 · 음성검수 ${qa?.verdict || '-'}`, humanInvolved: false })
+      }
+    } else {
+      const n = (r.data.result?.cuts || []).reduce((a, c) => a + (c.files?.length || 0), 0)
+      log('G2', `✅ ${tag} 이미지 ${n}장 생성 — G2 선택(사람) 대기`)
+      await leaderLog({ stage: 'G2', kind: '자동실행', summary: `${tag} Flow 자동 생성 ${n}장`, result: 'G2 이미지 선택 대기', humanInvolved: true })
+    }
+  } else {
+    const key = job.kind === 'g2' ? `g2:${job.cutNos.join(',')}` : `g4:${job.cutNo}:${job.clipNo}`
+    flowFailures[key] = (flowFailures[key] || 0) + 1
+    const err = r.data?.error || st
+    log(job.kind.toUpperCase(), `❌ ${tag} 실패(${flowFailures[key]}회) — ${err}`)
+    if (flowFailures[key] >= 2) {
+      if (job.kind === 'g2') job.cutNos.forEach(n => flowHuman.add(`g2:${n}`)); else flowHuman.add(`g4:${job.cutNo}`)
+      await leaderLog({ stage: job.kind.toUpperCase(), kind: '블로커', summary: `${tag} 2회 실패 — 사람 확인`, result: String(err).slice(0, 300), humanInvolved: true })
+    }
+  }
+  return false
+}
+async function flowReady() {
+  const r = await api('GET', '/api/flow/ready')
+  return !!(r.data?.ok && r.data?.flowTab)
 }
 
 async function main() {

@@ -17,8 +17,19 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import crypto from 'crypto'
+import { spawnSync } from 'child_process'
 
 export const sleep = (ms) => new Promise(r => setTimeout(r, ms))
+
+// 영상 첫 프레임 ↔ 이미지 SSIM(흑백 360x640). 실패 시 null.
+export function firstFrameSsim(video, image) {
+  try {
+    const out = spawnSync('ffmpeg', ['-hide_banner', '-i', video, '-i', image, '-filter_complex',
+      '[0:v]trim=end_frame=1,scale=360:640,format=gray[a];[1:v]scale=360:640,format=gray[b];[a][b]ssim', '-f', 'null', '-'], { encoding: 'utf-8' })
+    const m = String(out.stderr || '').match(/All:([0-9.]+)/)
+    return m ? Number(m[1]) : null
+  } catch { return null }
+}
 
 export const MODELS = ['Omni 1.1 Flash', 'Veo 3.1 - Lite', 'Veo 3.1 - Fast', 'Veo 3.1 - Quality']
 const TARGET_SEL = 'button, [role="tab"], [role="menuitem"], [role="radio"]'
@@ -556,9 +567,13 @@ export function flowKit(page) {
     // ── 생성 결과 감지·저장 ─────────────────────────────────────────
     // 실측(2026-09-20): 목록의 생성 결과는 <video>가 아니라 alt="생성된 동영상 썸네일" 이미지 타일이고, 실패하면 타일에
     // "죄송합니다. 동영상을 생성할 수 없습니다. 이 생성에 대한 요금이 청구되지 않았습니다." 문구가 뜬다(사유는 표시되지 않음).
+    // 타일 목록은 <flow-video-tile> 요소를 화면(DOM) 순서대로 본다 — 최신이 맨 앞. 썸네일 <img> 는 재생·호버 시 <video> 로
+    // 바뀌고 목록은 가상 스크롤이라, alt="생성된 동영상 썸네일" img 목록으로 보면 예전 타일이 새것처럼 보였다(2026-09-25 한 칸 밀림).
+    // 키 = 그 타일의 img 또는 video 주소. 호버로 바뀌지 않게 스냅샷 전에 마우스를 구석으로 치운다.
     async mediaSnapshot() {
+      try { await page.mouse.move(2, 2) } catch { /* noop */ }
       return page.evaluate(() => ({
-        thumbs: [...document.querySelectorAll('img')].filter(i => i.alt === '생성된 동영상 썸네일' && i.getBoundingClientRect().width > 0).map(i => i.currentSrc || i.src),
+        thumbs: [...document.querySelectorAll('flow-video-tile')].map(t => { const i = t.querySelector('img'), v = t.querySelector('video'); return (i && (i.currentSrc || i.src)) || (v && (v.currentSrc || v.src)) || '' }).filter(Boolean),
         fails: (document.body.innerText.match(/이 생성에 대한 요금이 청구되지 않았습니다/g) || []).length,
         abuse: /비정상적인 활동이 감지/.test(document.body.innerText),
         progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).slice(0, 3),
@@ -579,7 +594,7 @@ export function flowKit(page) {
         // 예전 타일을 새 결과로 오인한다 — 2026-09-25 IG_R05 컷3 이 컷1 영상을, 컷5 가 컷3 영상을 받아 한 칸씩 밀린 사고.
         // → 맨 앞 타일이 새것이고, 진행률(%) 표시가 사라졌을 때만 완료로 본다.
         const head = snap.thumbs[0]
-        if (head && !seen.has(head) && !(snap.progress || []).length) return { status: 'done', thumbSrc: head }
+        if (head && !seen.has(head) && !(snap.progress || []).length) return { status: 'done', thumbSrc: head, tileIndex: 0 }
         await sleep(intervalMs)
       }
       return { status: 'timeout' }
@@ -594,7 +609,14 @@ export function flowKit(page) {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'flowdl-'))
       let behaviorSet = false
       try {
-        const pos = await page.evaluate((src) => { const i = [...document.querySelectorAll('img')].find(i => (i.currentSrc || i.src) === src); if (!i) return null; const r = i.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } }, thumbSrc)
+        // thumbSrc 가 숫자면 N번째 <flow-video-tile>(0=최신), 문자열이면 img/video 주소가 같은 타일
+        const pos = await page.evaluate((key) => {
+          const tiles = [...document.querySelectorAll('flow-video-tile')]
+          const t = typeof key === 'number' ? tiles[key] : tiles.find(t => [...t.querySelectorAll('img, video')].some(m => (m.currentSrc || m.src) === key))
+          if (!t) return null
+          t.scrollIntoView({ block: 'center' })
+          const r = t.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+        }, thumbSrc)
         if (!pos) throw new Error('결과 타일을 찾지 못했습니다')
         await page.mouse.click(pos.x, pos.y)
         let inViewer = false
@@ -641,6 +663,21 @@ export function flowKit(page) {
         const back = await rectOf('arrow_back', 'exact', 'button')
         if (back) { await page.mouse.click(back.x, back.y); await sleep(1500) }
       }
+    },
+    // 받은 영상의 첫 프레임이 시작 프레임(G2 이미지/이전 클립 마지막 프레임)과 같은지 SSIM 으로 확인하며 맞는 타일을 찾는다.
+    // 실측(IG_R05): 같은 컷 0.61~0.86, 다른 컷(같은 방·같은 인물 포함) 0.29 이하 → 기준 0.45. 맨 앞부터 maxTiles 개까지 시도.
+    async saveVerified(outPath, refImage, { maxTiles = 6, threshold = 0.45, onTry } = {}) {
+      const tmp = outPath.replace(/.mp4$/i, '.verify.mp4')
+      let best = null
+      for (let i = 0; i < maxTiles; i++) {
+        try { await this.saveResult(i, tmp) } catch (e) { if (onTry) onTry({ index: i, error: e.message }); break }
+        const score = firstFrameSsim(tmp, refImage)
+        if (onTry) onTry({ index: i, ssim: score })
+        if (score != null && score >= threshold) { fs.renameSync(tmp, outPath); return { index: i, ssim: score, bytes: fs.statSync(outPath).size } }
+        if (score != null && (!best || score > best.ssim)) best = { index: i, ssim: score }
+      }
+      try { fs.unlinkSync(tmp) } catch { /* noop */ }
+      throw new Error(`시작 프레임과 맞는 결과 타일을 찾지 못했습니다(최고 SSIM ${best ? best.ssim.toFixed(2) + ' @' + best.index : '없음'}) — Flow 화면을 확인하세요(생성은 완료됨)`)
     },
     // 브라우저(로그인 쿠키 포함) 안에서 영상 주소를 fetch해 파일로 저장한다. 반환: 저장한 바이트 수
     async saveVideo(src, outPath) {
