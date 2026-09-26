@@ -1,18 +1,19 @@
 {
-  "activeTab": "making",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
     "remainingChars": 89429
   },
-  "activeEpisodeId": "ep_1790322063208",
+  "activeEpisodeId": "ep_1790411385724",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
     "ep_TEST_OVERLAY",
     "ep_test_r03",
     "ep_1789977729018",
-    "ep_1790322063208"
+    "ep_1790322063208",
+    "ep_1790411385724"
   ],
   "episodes": {
     "ep_1786261078428": {
@@ -4529,7 +4530,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-1",
+          "selectedCutId": "cut-4",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -4615,247 +4616,420 @@
           "imageRatio": {}
         }
       }
+    },
+    "ep_1790411385724": {
+      "id": "ep_1790411385724",
+      "episode": {
+        "number": 6,
+        "title": "흑역사 챌린지_친구가 발견하다.",
+        "location": "집 (방)",
+        "mood": [
+          "유머",
+          "일상"
+        ],
+        "cutCount": 7,
+        "contentType": "IG_R",
+        "topicCode": "LIF",
+        "scnCode": "ENT",
+        "instaNum": "R06",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "code": "IG_R06",
+        "finishMode": "cutter",
+        "masterCode": "[IG_R06] :: [PL:IG_RL] :: [SP:IN.HM.TZ_AF.LT_WM] :: [CH:YR_VD+JY_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]",
+        "epHeaderRaw": ""
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "\"야, 이거 너지?\" 흑역사 발굴",
+          "lipsync": false,
+          "scene": "오후 자취방. 침대에 기대 폰을 보던 서여리 옆으로 지유가 폰을 들고 뛰어들어 화면을 들이민다. 서여리는 화면을 보고 그대로 굳는다.",
+          "action": "0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음",
+          "character": "서여리",
+          "dialogue": "지유 \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"",
+          "narration": "",
+          "subtitle": "친구가 내 흑역사를 발굴했다",
+          "imagePrompt": "MEDIUM SHOT — two young Korean women in their early 20s sitting on a bed in a cozy studio apartment, warm afternoon sunlight from the window, \nSeo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey dolphine pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen, \nJiyu (left): very long straight glossy jet-black hair with full bangs NOT wavy NOT bob, soft round face, coral-red lip tint, white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering and light-wash vintage denim shorts, wearing socks, kneeling on the bed and eagerly holding her phone screen toward Yeori, bright mischievous grin, clearly an adult woman in her early 20s, \nthe phone screen faces Yeori so its content is not visible to the camera, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-2s] Seo Yeori relaxes on the bed scrolling her phone.\n[2-4s] Jiyu plops down beside her from the left and thrusts her phone screen toward Yeori's face.\n[4-7s] Jiyu, bursting with laughter, says in Korean: \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"\n[7-8s] Yeori stares at the screen and freezes, mouth slightly open.\nOnly Jiyu speaks in this clip; Yeori stays silent. No on-screen subtitle text or captions. The phone screen faces Yeori and is never readable by the camera. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.HM.TZ_AF.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지유",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_JOY",
+            "ac": "없음",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "경쾌한 로파이, 통통 튀는 느낌 (0초부터)",
+              "voice": "지유 — 신나서 숨넘어가는 웃음 섞인 톤(친구 결)",
+              "sfx": "없음",
+              "ambience": "조용한 방"
+            },
+            "kr": {
+              "sp": "서여리 자취방 침대 위, 오후 창가 햇빛",
+              "ch": "서여리(흰 오버사이즈 티, 풀어 내린 긴 웨이브) · 지유(흰 크롭 베이비티, 데님 쇼츠, 풀뱅 긴 생머리)",
+              "sh": "미디엄 샷, 침대 위 두 사람",
+              "ca": "고정",
+              "ac": "0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음",
+              "md": "지유 신남, 서여리 당황"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "새내기 MT 엉망 챌린지",
+          "lipsync": false,
+          "scene": "폰 속 옛날 영상. 대학 새내기 MT 숙소 거실, 서여리가 비장한 얼굴로 댄스 챌린지를 추는데 박자가 전부 어긋난다. 뒤에서 동기들 웃음소리.",
+          "action": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "subtitle": "새내기 MT, 비장했던 그날",
+          "imagePrompt": "FULL SHOT — vertical smartphone video still, slightly grainy and slightly blurry old-phone footage look, a young Korean woman about 20 years old (college freshman, clearly an adult) in the living room of a rented group-trip pension at night under harsh fluorescent light, \nsame face as Seo Yeori but younger and less styled: long dark brown hair a bit messy with light see-through bangs, no makeup look, wearing an oversized navy university club hoodie and track pants, striking a dead-serious dance pose mid-move with arms awkwardly off-beat, \nblurry friends sitting on the floor in the background laughing (faces soft and out of focus, not interacting), \nphotorealistic, candid, vertical 9:16, no text or logos on screen, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-6s] Handheld old smartphone footage: the young woman performs a dance challenge with a dead-serious face, but every move is half a beat late, her arms go one way and her feet the other, and on the final pose she wobbles and almost falls; friends in the soft-focus background burst out laughing.\nNo one speaks — only background laughter and a tinny dance beat. No on-screen subtitle text or captions. Slightly grainy, shaky phone-video look. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "duration": 6,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.MT.TZ_NT.LT_STD",
+            "pl": "YR_VD",
+            "ch": "서여리",
+            "sh": "SH_FS",
+            "ca": "CA_HH",
+            "md": "MD_JOY",
+            "ac": "없음",
+            "lookId": "",
+            "du": 6,
+            "audio": {
+              "bgm": "촌스러운 댄스 비트(영상 속 소리처럼 폰 스피커 질감)",
+              "voice": "없음 (동기들 웃음소리만)",
+              "sfx": "없음",
+              "ambience": "왁자지껄한 MT 숙소"
+            },
+            "kr": {
+              "sp": "대학 MT 펜션 거실, 밤, 형광등",
+              "ch": "새내기 시절 서여리(스무 살, 성인) — 과 단체 후드티, 앞머리 살짝, 풀 메이크업 없음",
+              "sh": "풀샷, 흔들리는 폰 세로 촬영 느낌",
+              "ca": "핸드헬드(친구가 폰으로 찍는 느낌)",
+              "ac": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
+              "md": "본인은 진지, 보는 사람은 웃김"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "\"지워, 당장!\" / \"이미 단톡방에…\"",
+          "lipsync": false,
+          "scene": "다시 자취방. 서여리가 지유의 폰을 뺏으려 달려들고, 지유는 폰을 높이 들고 피하며 먼저 웃음을 터뜨린다.",
+          "action": "0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐",
+          "character": "서여리",
+          "dialogue": "여리 \"그거 어디서 났어? 지워, 당장 지워!\" / 지유 \"이미 단톡방에 올렸는데?\"",
+          "narration": "",
+          "subtitle": "지워, 당장! / 이미 단톡방에 올렸는데?",
+          "imagePrompt": "MEDIUM SHOT — the same two young Korean women on the bed in the sunny studio apartment, playful struggle, \nSeo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey dolphine pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face, \nJiyu: very long straight jet-black hair with full bangs, white cropped baby tee and light-wash denim shorts DO NOT change clothing, holding her phone high above her head out of reach, laughing out loud with eyes curved, \nboth wearing socks, warm afternoon window light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-1s] Seo Yeori lunges toward Jiyu's phone.\n[1-4s] Yeori, flustered and pleading, says in Korean: \"그거 어디서 났어? 지워, 당장 지워!\"\n[4-5s] Jiyu lifts the phone high over her head out of reach and bursts out laughing first.\n[5-7s] Jiyu, still laughing, says in Korean: \"이미 단톡방에 올렸는데?\"\n[7-8s] Yeori covers her face with both hands and flops backward onto the bed.\nNo on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.HM.TZ_AF.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지유",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_JOY",
+            "ac": "없음",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "경쾌한 로파이 다시",
+              "voice": "여리 — 다급하고 억울한 친구 결 / 지유 — 웃음 터진 장난스러운 톤",
+              "sfx": "이불 부스럭",
+              "ambience": "조용한 방"
+            },
+            "kr": {
+              "sp": "서여리 자취방 침대 위",
+              "ch": "서여리 · 지유 (CUT1과 동일)",
+              "sh": "미디엄 샷, 두 사람 엎치락뒤치락",
+              "ca": "고정",
+              "ac": "0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐",
+              "md": "서여리 억울·다급, 지유 장난·웃음"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "이불 속 \"이번 생은 망했어\"",
+          "lipsync": false,
+          "scene": "이불을 머리끝까지 뒤집어쓴 서여리. 눈만 빼꼼 내놓고 카메라를 보며 체념한 목소리로 말한다. 옆에서 지유의 웃음소리가 계속 들린다.",
+          "action": "0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음",
+          "character": "서여리",
+          "dialogue": "여리 \"…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요.\"",
+          "narration": "",
+          "subtitle": "이번 생은 망했어 / 여러분 흑역사도 댓글로 👇",
+          "imagePrompt": "MEDIUM CLOSE-UP SHOT — a young Korean woman in her early 20s lying in bed completely wrapped in a soft white duvet pulled up over her head, only her eyes, eyebrows and a bit of long wavy dark brown hair peeking out, \nSeo Yeori's face (natural skin texture on right cheek, very subtle), deadpan resigned look straight into the camera, \nwarm afternoon light, cozy bedroom background softly blurred, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-2s] Only her eyes peek out from under the duvet, blinking slowly at the camera.\n[2-6s] With a muffled, resigned deadpan voice she says in Korean: \"…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요.\"\n[6-8s] She slowly pulls the duvet up over her eyes until her face is fully covered; soft laughter continues off-screen.\nOnly Seo Yeori speaks; the off-screen laughter has no words. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "duration": 8,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "masterCode": {
+            "sp": "IN.HM.TZ_AF.LT_WM",
+            "pl": "YR_VD",
+            "ch": "서여리",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_COM",
+            "ac": "없음",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "잔잔하게 낮아지며 마무리",
+              "voice": "여리 — 이불 속 먹먹한, 체념한 드라이 톤(시청자 결)",
+              "sfx": "없음",
+              "ambience": "화면 밖 지유 웃음소리 작게"
+            },
+            "kr": {
+              "sp": "서여리 침대, 이불 속",
+              "ch": "서여리 (이불을 뒤집어써서 눈과 이마만 보임)",
+              "sh": "미디엄 클로즈업",
+              "ca": "고정",
+              "ac": "0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음",
+              "md": "체념, 드라이한 유머"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "",
+      "createdAt": "2026-09-26T08:29:45.724Z",
+      "tabState": {
+        "videoTabState": {
+          "videoClips": {},
+          "g4Approved": {},
+          "selectedCutId": null,
+          "subtitles": {}
+        },
+        "ttsTabState": {
+          "audioUrls": {},
+          "audioTexts": {},
+          "g3Confirmed": {},
+          "focusCutId": null
+        },
+        "voiceInsertState": {
+          "tracks": {}
+        },
+        "studioTabState": {
+          "imageRatio": {}
+        }
+      }
     }
   },
   "episode": {
-    "number": 5,
-    "title": "혼자인 밤, 친구들 SNS를 보다",
-    "location": "집",
-    "mood": "밤",
+    "number": 6,
+    "title": "흑역사 챌린지_친구가 발견하다.",
+    "location": "집 (방)",
+    "mood": [
+      "유머",
+      "일상"
+    ],
     "cutCount": 7,
     "contentType": "IG_R",
-    "topicCode": "PSY",
-    "scnCode": "DOC",
-    "instaNum": "05",
-    "character": "서여리(묶은 머리) - 20대 초반 한국 여성, 느슨하게 올려 묶은 긴 웨이비 다크 브라운 헤어, 오버사이즈 회색 후드티, 밤의 집",
-    "code": "IG_R05",
-    "masterCode": "[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]"
+    "topicCode": "LIF",
+    "scnCode": "ENT",
+    "instaNum": "R06",
+    "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+    "code": "IG_R06",
+    "finishMode": "cutter",
+    "masterCode": "[IG_R06] :: [PL:IG_RL] :: [SP:IN.HM.TZ_AF.LT_WM] :: [CH:YR_VD+JY_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]",
+    "epHeaderRaw": ""
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "금요일 밤 11시, 나만 집인가",
+      "cutTitle": "\"야, 이거 너지?\" 흑역사 발굴",
       "lipsync": false,
-      "scene": "불 꺼진 방, 침대 헤드에 기대 앉은 서여리. 얼굴에 폰 화면 빛만 비친다. 무표정하게 엄지로 피드를 넘기다 잠깐 멈칫하고 다시 넘긴다.",
-      "action": "0~3초 무표정하게 스크롤 → 3~5초 한 게시물에서 멈칫, 눈만 살짝 커짐 → 5~8초 다시 천천히 스크롤",
+      "scene": "오후 자취방. 침대에 기대 폰을 보던 서여리 옆으로 지유가 폰을 들고 뛰어들어 화면을 들이민다. 서여리는 화면을 보고 그대로 굳는다.",
+      "action": "0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음",
       "character": "서여리",
-      "dialogue": "",
-      "subtitle": "금요일 밤 11시. / 나만 집인가.",
+      "dialogue": "지유 \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"",
       "narration": "",
-      "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun high at the back of her head with a few soft strands falling around her face, hair NOT down, \nnatural skin texture on right cheek (very subtle, not exaggerated), sitting up in bed leaning against the headboard at night, holding a smartphone in one hand at chest height and scrolling with her thumb, \nwearing an oversized heather-grey hoodie DO NOT change clothing, a soft cream knit blanket over her knees, delicate gold necklace barely visible at the collar, \nexpression: blank, slightly tired and absent-minded, eyes looking down at the phone screen, \nlighting: dark bedroom at 11pm, the cool bluish glow of the phone screen lighting her face from below, a small warm bedside lamp far in the background, deep shadows, \neffortlessly photogenic not posing just existing beautifully, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, the phone screen is facing her so its content is not visible to the camera, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-3s] In a dark bedroom she scrolls her phone with her thumb, face lit only by the cool screen glow, expression blank.\n[3-6s] She stops on one post; her eyes widen very slightly, she holds still for a beat.\n[6-8s] She lets out a quiet breath through her nose and slowly resumes scrolling.\nNO dialogue — narration added in post. No on-screen subtitle text or captions. The phone screen faces her and is never readable by the camera. Hair stays tied up in the messy bun the whole time. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "subtitle": "친구가 내 흑역사를 발굴했다",
+      "imagePrompt": "MEDIUM SHOT — two young Korean women in their early 20s sitting on a bed in a cozy studio apartment, warm afternoon sunlight from the window, \nSeo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey dolphine pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen, \nJiyu (left): very long straight glossy jet-black hair with full bangs NOT wavy NOT bob, soft round face, coral-red lip tint, white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering and light-wash vintage denim shorts, wearing socks, kneeling on the bed and eagerly holding her phone screen toward Yeori, bright mischievous grin, clearly an adult woman in her early 20s, \nthe phone screen faces Yeori so its content is not visible to the camera, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-2s] Seo Yeori relaxes on the bed scrolling her phone.\n[2-4s] Jiyu plops down beside her from the left and thrusts her phone screen toward Yeori's face.\n[4-7s] Jiyu, bursting with laughter, says in Korean: \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"\n[7-8s] Yeori stares at the screen and freezes, mouth slightly open.\nOnly Jiyu speaks in this clip; Yeori stays silent. No on-screen subtitle text or captions. The phone screen faces Yeori and is never readable by the camera. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
-      "shotType": "CLOSEUP",
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_DK",
+        "sp": "IN.HM.TZ_AF.LT_WM",
         "pl": "YR_VD",
-        "ch": "YR_NT / LK_NT",
-        "sh": "SH_MCU",
+        "ch": "서여리 + 지유",
+        "sh": "SH_MS",
         "ca": "CA_ST",
-        "md": "MD_SAD",
+        "md": "MD_JOY",
         "ac": "없음",
-        "lookId": "LOOK_NT",
+        "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "느린 로파이 피아노 (0초부터, 낮게)",
-          "voice": "없음",
-          "sfx": "폰 스크롤 톡톡 (아주 작게)",
-          "ambience": "조용한 방, 멀리 도로 소음"
+          "bgm": "경쾌한 로파이, 통통 튀는 느낌 (0초부터)",
+          "voice": "지유 — 신나서 숨넘어가는 웃음 섞인 톤(친구 결)",
+          "sfx": "없음",
+          "ambience": "조용한 방"
         },
         "kr": {
-          "sp": "불 꺼진 침실, 밤 11시, 스탠드 하나",
-          "ch": "오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리, 무릎 위 니트 담요",
-          "sh": "미디엄 클로즈업, 폰을 든 상반신",
+          "sp": "서여리 자취방 침대 위, 오후 창가 햇빛",
+          "ch": "서여리(흰 오버사이즈 티, 풀어 내린 긴 웨이브) · 지유(흰 크롭 베이비티, 데님 쇼츠, 풀뱅 긴 생머리)",
+          "sh": "미디엄 샷, 침대 위 두 사람",
           "ca": "고정",
-          "ac": "0~3초 무표정하게 스크롤 → 3~5초 한 게시물에서 멈칫, 눈만 살짝 커짐 → 5~8초 다시 천천히 스크롤",
-          "md": "무심한 척하는 쓸쓸함"
+          "ac": "0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음",
+          "md": "지유 신남, 서여리 당황"
         }
-      },
-      "videoMode": "veo"
+      }
     },
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "지아 제주·지유 루프탑·커플링, 하트 세 번",
+      "cutTitle": "새내기 MT 엉망 챌린지",
       "lipsync": false,
-      "scene": "폰 화면 시점. 인스타 피드가 한 장씩 넘어가고, 게시물마다 엄지가 ♡를 누른다.",
-      "action": "0~2초 지아 \"제주 3일째 🌊\" ♡ → 2~4초 지유 \"우리 또 모였다 🥂\" ♡ → 4~6초 지인 커플링 \"1주년 💍\" ♡",
+      "scene": "폰 속 옛날 영상. 대학 새내기 MT 숙소 거실, 서여리가 비장한 얼굴로 댄스 챌린지를 추는데 박자가 전부 어긋난다. 뒤에서 동기들 웃음소리.",
+      "action": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
       "character": "서여리",
       "dialogue": "",
-      "subtitle": "다들 잘 지내는구나",
       "narration": "",
-      "imagePrompt": "GRAPHIC 타입 — 이미지 생성 불필요(피드 사진 3장은 별도 준비: feed_jia.jpg · feed_jiyu.jpg · feed_ring.jpg, 02_images/feed/)\n파일: cut_02_feed.html — 1080×1920, 다크모드 인스타 피드 목업, 게시물 3개가 위로 스와이프되며 각 게시물에 하트 탭 애니메이션(CSS @keyframes, 절대시각).",
-      "videoPrompt": "GRAPHIC 타입 — 이미지 생성 불필요(피드 사진 3장은 별도 준비: feed_jia.jpg · feed_jiyu.jpg · feed_ring.jpg, 02_images/feed/)\n파일: cut_02_feed.html — 1080×1920, 다크모드 인스타 피드 목업, 게시물 3개가 위로 스와이프되며 각 게시물에 하트 탭 애니메이션(CSS @keyframes, 절대시각).",
+      "subtitle": "새내기 MT, 비장했던 그날",
+      "imagePrompt": "FULL SHOT — vertical smartphone video still, slightly grainy and slightly blurry old-phone footage look, a young Korean woman about 20 years old (college freshman, clearly an adult) in the living room of a rented group-trip pension at night under harsh fluorescent light, \nsame face as Seo Yeori but younger and less styled: long dark brown hair a bit messy with light see-through bangs, no makeup look, wearing an oversized navy university club hoodie and track pants, striking a dead-serious dance pose mid-move with arms awkwardly off-beat, \nblurry friends sitting on the floor in the background laughing (faces soft and out of focus, not interacting), \nphotorealistic, candid, vertical 9:16, no text or logos on screen, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-6s] Handheld old smartphone footage: the young woman performs a dance challenge with a dead-serious face, but every move is half a beat late, her arms go one way and her feet the other, and on the final pose she wobbles and almost falls; friends in the soft-focus background burst out laughing.\nNo one speaks — only background laughter and a tinny dance beat. No on-screen subtitle text or captions. Slightly grainy, shaky phone-video look. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 6,
-      "shotType": "CLOSEUP",
-      "cutType": "GRAPHIC",
+      "shotType": "FULLBODY",
+      "cutType": "YEORI",
       "cutMark": "NORMAL",
-      "htmlFile": "cut_02_feed.html",
-      "motion": "self",
       "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_DK",
-        "pl": "GR_ED",
-        "ch": "없음",
-        "sh": "SH_ECU",
-        "ca": "CA_ST",
-        "md": "MD_SAD",
+        "sp": "IN.MT.TZ_NT.LT_STD",
+        "pl": "YR_VD",
+        "ch": "서여리",
+        "sh": "SH_FS",
+        "ca": "CA_HH",
+        "md": "MD_JOY",
         "ac": "없음",
         "lookId": "",
         "du": 6,
         "audio": {
-          "bgm": "로파이 피아노 계속",
-          "voice": "없음",
-          "sfx": "스와이프 3회 + 하트 톡 3회",
-          "ambience": "없음"
+          "bgm": "촌스러운 댄스 비트(영상 속 소리처럼 폰 스피커 질감)",
+          "voice": "없음 (동기들 웃음소리만)",
+          "sfx": "없음",
+          "ambience": "왁자지껄한 MT 숙소"
         },
         "kr": {
-          "sp": "폰 화면(인스타 피드 목업, 다크 모드)",
-          "ch": "피드 게시물로만 등장 — 한지아(제주 바다), 지유(루프탑 파티), 모르는 지인(커플링 손)",
-          "sh": "폰 화면 풀샷",
-          "ca": "고정",
-          "ac": "0~2초 지아 \"제주 3일째 🌊\" ♡ → 2~4초 지유 \"우리 또 모였다 🥂\" ♡ → 4~6초 지인 커플링 \"1주년 💍\" ♡",
-          "md": "부러움 반, 무심함 반"
+          "sp": "대학 MT 펜션 거실, 밤, 형광등",
+          "ch": "새내기 시절 서여리(스무 살, 성인) — 과 단체 후드티, 앞머리 살짝, 풀 메이크업 없음",
+          "sh": "풀샷, 흔들리는 폰 세로 촬영 느낌",
+          "ca": "핸드헬드(친구가 폰으로 찍는 느낌)",
+          "ac": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
+          "md": "본인은 진지, 보는 사람은 웃김"
         }
       }
     },
     {
       "id": "cut-3",
       "no": 3,
-      "cutTitle": "폰을 가슴에 내려놓고 천장",
+      "cutTitle": "\"지워, 당장!\" / \"이미 단톡방에…\"",
       "lipsync": false,
-      "scene": "서여리가 폰을 가슴 위로 내려놓고 베개에 머리를 기댄 채 천장을 본다. 작게 한숨 쉬고 혼잣말한다.",
-      "action": "0~2초 폰을 가슴 위에 엎어 내려놓고 고개를 뒤로 기댐 → 2~3초 천장을 보며 작은 한숨 → 3~7초 천장을 본 채 혼잣말 → 7~8초 눈을 한 번 천천히 깜빡임",
+      "scene": "다시 자취방. 서여리가 지유의 폰을 뺏으려 달려들고, 지유는 폰을 높이 들고 피하며 먼저 웃음을 터뜨린다.",
+      "action": "0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐",
       "character": "서여리",
-      "dialogue": "좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.",
-      "subtitle": "좋아요는 다 눌렀는데… / 왜 나만 멈춰 있는 것 같지.",
+      "dialogue": "여리 \"그거 어디서 났어? 지워, 당장 지워!\" / 지유 \"이미 단톡방에 올렸는데?\"",
       "narration": "",
-      "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun with a few soft strands on the pillow and around her face, hair NOT down, \nnatural skin texture on right cheek (very subtle, not exaggerated), half-lying in bed with her head resting back against a pillow and the headboard, looking up at the ceiling, \na smartphone lying face-down on her chest under one relaxed hand, its faint glow spilling from the edges onto her chin, \nwearing an oversized heather-grey hoodie DO NOT change clothing, soft cream knit blanket, delicate gold necklace, \nexpression: quiet, a little lonely, lips slightly parted as if about to sigh, eyes open and gazing upward, \nlighting: dark bedroom at night, faint cool light from the phone edges and a small warm bedside lamp glow from the side, soft deep shadows, \neffortlessly photogenic not posing just existing beautifully, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-3s] She lays the phone face-down on her chest, leans her head back into the pillow and lets out a small sigh, looking up at the ceiling.\n[3-6s] Still gazing at the ceiling, she quietly says her line to herself in Korean, almost a whisper: \"좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.\"\n[6-8s] She blinks slowly once and stays still, a faint lonely look.\nNo on-screen subtitle text or captions. She speaks to herself, not to the camera. Hair stays tied up in the messy bun. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "subtitle": "지워, 당장! / 이미 단톡방에 올렸는데?",
+      "imagePrompt": "MEDIUM SHOT — the same two young Korean women on the bed in the sunny studio apartment, playful struggle, \nSeo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey dolphine pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face, \nJiyu: very long straight jet-black hair with full bangs, white cropped baby tee and light-wash denim shorts DO NOT change clothing, holding her phone high above her head out of reach, laughing out loud with eyes curved, \nboth wearing socks, warm afternoon window light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-1s] Seo Yeori lunges toward Jiyu's phone.\n[1-4s] Yeori, flustered and pleading, says in Korean: \"그거 어디서 났어? 지워, 당장 지워!\"\n[4-5s] Jiyu lifts the phone high over her head out of reach and bursts out laughing first.\n[5-7s] Jiyu, still laughing, says in Korean: \"이미 단톡방에 올렸는데?\"\n[7-8s] Yeori covers her face with both hands and flops backward onto the bed.\nNo on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
-      "shotType": "CLOSEUP",
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_DK",
+        "sp": "IN.HM.TZ_AF.LT_WM",
         "pl": "YR_VD",
-        "ch": "YR_NT / LK_NT",
-        "sh": "SH_MCU",
+        "ch": "서여리 + 지유",
+        "sh": "SH_MS",
         "ca": "CA_ST",
-        "md": "MD_SAD",
+        "md": "MD_JOY",
         "ac": "없음",
-        "lookId": "LOOK_NT",
+        "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "로파이 피아노 계속, 조금 더 낮게",
-          "voice": "작고 담담한 혼잣말, 자조 섞인 낮은 톤 (속삭임에 가깝게)",
-          "sfx": "폰을 담요 위에 내려놓는 소리",
+          "bgm": "경쾌한 로파이 다시",
+          "voice": "여리 — 다급하고 억울한 친구 결 / 지유 — 웃음 터진 장난스러운 톤",
+          "sfx": "이불 부스럭",
           "ambience": "조용한 방"
         },
         "kr": {
-          "sp": "불 꺼진 침실",
-          "ch": "오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리",
-          "sh": "미디엄 클로즈업, 베개에 기댄 얼굴과 가슴 위 폰",
+          "sp": "서여리 자취방 침대 위",
+          "ch": "서여리 · 지유 (CUT1과 동일)",
+          "sh": "미디엄 샷, 두 사람 엎치락뒤치락",
           "ca": "고정",
-          "ac": "0~2초 폰을 가슴 위에 엎어 내려놓고 고개를 뒤로 기댐 → 2~3초 천장을 보며 작은 한숨 → 3~7초 천장을 본 채 혼잣말 → 7~8초 눈을 한 번 천천히 깜빡임",
-          "md": "담담한 외로움, 자조"
-        }
-      },
-      "videoMode": "veo"
-    },
-    {
-      "id": "cut-4",
-      "no": 4,
-      "cutTitle": "지아의 DM \"집 가고 싶다\"",
-      "lipsync": false,
-      "scene": "가슴 위 폰이 진동하고, 화면에 지아의 DM이 뜬다.",
-      "action": "0~0.8초 잠금화면 알림 배너 \"jia.han 님이 메시지를 보냈습니다\" 흔들림 → 0.8~4초 DM 화면, 말풍선이 타이핑 점 뒤에 차례로 등장",
-      "character": "서여리",
-      "dialogue": "",
-      "subtitle": "",
-      "narration": "",
-      "imagePrompt": "GRAPHIC 타입 — 이미지 생성 불필요(프로필 사진은 downloads/flow/character/jia-face.jpg)\n파일: cut_04_dm.html — 1080×1920, 다크모드 인스타 DM 목업, 알림 배너 → DM 말풍선 3개 순차 등장(타이핑 점 포함, CSS @keyframes 절대시각).",
-      "videoPrompt": "GRAPHIC 타입 — 이미지 생성 불필요(프로필 사진은 downloads/flow/character/jia-face.jpg)\n파일: cut_04_dm.html — 1080×1920, 다크모드 인스타 DM 목업, 알림 배너 → DM 말풍선 3개 순차 등장(타이핑 점 포함, CSS @keyframes 절대시각).",
-      "duration": 4,
-      "shotType": "CLOSEUP",
-      "cutType": "GRAPHIC",
-      "cutMark": "NORMAL",
-      "htmlFile": "cut_04_dm.html",
-      "motion": "self",
-      "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_DK",
-        "pl": "GR_ED",
-        "ch": "없음",
-        "sh": "SH_ECU",
-        "ca": "CA_ST",
-        "md": "MD_REL",
-        "ac": "없음",
-        "lookId": "",
-        "du": 4,
-        "audio": {
-          "bgm": "DM 알림음 순간 멈춤",
-          "voice": "없음",
-          "sfx": "폰 진동 \"지잉\" + DM 알림음",
-          "ambience": "정적"
-        },
-        "kr": {
-          "sp": "폰 화면(인스타 DM 목업, 다크 모드)",
-          "ch": "한지아 DM (프로필 사진 = 지아 얼굴 레퍼런스)",
-          "sh": "폰 화면 풀샷",
-          "ca": "고정",
-          "ac": "0~0.8초 잠금화면 알림 배너 \"jia.han 님이 메시지를 보냈습니다\" 흔들림 → 0.8~4초 DM 화면, 말풍선이 타이핑 점 뒤에 차례로 등장",
-          "md": "반전, 웃음 터지기 직전"
+          "ac": "0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐",
+          "md": "서여리 억울·다급, 지유 장난·웃음"
         }
       }
     },
     {
-      "id": "cut-5",
-      "no": 5,
-      "cutTitle": "피식, \"다들 보여주고 싶은 것만\"",
+      "id": "cut-4",
+      "no": 4,
+      "cutTitle": "이불 속 \"이번 생은 망했어\"",
       "lipsync": false,
-      "scene": "서여리가 폰을 다시 얼굴 위로 들어 화면을 보다가 피식 웃는다. 엄지로 짧게 답장하고, 폰을 얼굴 옆에 내려놓은 채 편하게 눈을 감는다.",
-      "action": "0~2초 폰을 얼굴 위로 들어 화면을 보다 피식 → 2~5초 폰을 보며 대사 → 5~7초 엄지로 짧게 답장 → 7~8초 폰을 얼굴 옆 베개에 내려놓고 편하게 눈 감음",
+      "scene": "이불을 머리끝까지 뒤집어쓴 서여리. 눈만 빼꼼 내놓고 카메라를 보며 체념한 목소리로 말한다. 옆에서 지유의 웃음소리가 계속 들린다.",
+      "action": "0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음",
       "character": "서여리",
-      "dialogue": "다들 보여주고 싶은 것만 올리는 거지, 뭐.",
-      "subtitle": "다들 보여주고 싶은 것만 올리는 거지, 뭐. / 오늘 밤 혼자인 사람, 사실 꽤 많아요.",
+      "dialogue": "여리 \"…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요.\"",
       "narration": "",
-      "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun with a few soft strands falling on the pillow, hair NOT down, \nnatural skin texture on right cheek (very subtle, not exaggerated), lying back on a pillow in bed, holding a smartphone up above her face with both hands and looking at the screen, \nwearing an oversized heather-grey hoodie DO NOT change clothing, soft cream knit blanket, delicate gold necklace, \nexpression: a small amused snort of a smile breaking out, eyes softening, relieved and warm, \nlighting: dark bedroom at night, the phone screen glow lighting her face softly from above, a small warm bedside lamp in the background, cozy shadows, \neffortlessly photogenic not posing just existing beautifully, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, the phone screen faces her so its content is not visible to the camera, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-3s] Lying back on the pillow, she looks at the phone held above her face and lets out a small amused snort, a smile breaking out.\n[3-6s] Still looking at the screen, smiling, she says her line softly in Korean: \"다들 보여주고 싶은 것만 올리는 거지, 뭐.\" then types a quick reply with her thumbs.\n[6-8s] She lowers the phone onto the pillow beside her face and comfortably closes her eyes, a calm smile remaining.\nNo on-screen subtitle text or captions. The phone screen faces her and is never readable by the camera. Hair stays tied up in the messy bun. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "subtitle": "이번 생은 망했어 / 여러분 흑역사도 댓글로 👇",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — a young Korean woman in her early 20s lying in bed completely wrapped in a soft white duvet pulled up over her head, only her eyes, eyebrows and a bit of long wavy dark brown hair peeking out, \nSeo Yeori's face (natural skin texture on right cheek, very subtle), deadpan resigned look straight into the camera, \nwarm afternoon light, cozy bedroom background softly blurred, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-2s] Only her eyes peek out from under the duvet, blinking slowly at the camera.\n[2-6s] With a muffled, resigned deadpan voice she says in Korean: \"…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요.\"\n[6-8s] She slowly pulls the duvet up over her eyes until her face is fully covered; soft laughter continues off-screen.\nOnly Seo Yeori speaks; the off-screen laughter has no words. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_DK",
+        "sp": "IN.HM.TZ_AF.LT_WM",
         "pl": "YR_VD",
-        "ch": "YR_NT / LK_NT",
+        "ch": "서여리",
         "sh": "SH_MCU",
         "ca": "CA_ST",
-        "md": "MD_REL",
+        "md": "MD_COM",
         "ac": "없음",
-        "lookId": "LOOK_NT",
+        "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "로파이 피아노 다시 낮게 재진입",
-          "voice": "피식 웃음이 섞인 편안하고 따뜻한 톤",
-          "sfx": "짧은 타이핑 톡톡 + 전송음",
-          "ambience": "조용한 방"
+          "bgm": "잔잔하게 낮아지며 마무리",
+          "voice": "여리 — 이불 속 먹먹한, 체념한 드라이 톤(시청자 결)",
+          "sfx": "없음",
+          "ambience": "화면 밖 지유 웃음소리 작게"
         },
         "kr": {
-          "sp": "불 꺼진 침실",
-          "ch": "오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리",
-          "sh": "미디엄 클로즈업, 베개에 누운 얼굴과 얼굴 위로 든 폰",
+          "sp": "서여리 침대, 이불 속",
+          "ch": "서여리 (이불을 뒤집어써서 눈과 이마만 보임)",
+          "sh": "미디엄 클로즈업",
           "ca": "고정",
-          "ac": "0~2초 폰을 얼굴 위로 들어 화면을 보다 피식 → 2~5초 폰을 보며 대사 → 5~7초 엄지로 짧게 답장 → 7~8초 폰을 얼굴 옆 베개에 내려놓고 편하게 눈 감음",
-          "md": "안도, 따뜻한 웃음"
+          "ac": "0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음",
+          "md": "체념, 드라이한 유머"
         }
-      },
-      "videoMode": "veo"
+      }
     }
   ],
-  "scriptRaw": "================================================================\n마스터 코드\n[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]\n================================================================\n에피소드명: 혼자인 밤, 친구들 SNS를 보다\n채널: 서여리 인스타그램 릴스 (IG_R05)\n총 길이: 34초 목표 (8 + 6 + 8 + 4 + 8) — 생성단위(Veo 8초 / 그래픽 6·4초) 기준\n콘셉트: 금요일 밤 혼자 친구들 피드를 넘기다 쓸쓸해짐 → 여행 간 지아의 \"집 가고 싶다\" DM → \"다들 보여주고 싶은 것만 올리는 거지\" 피식\n================================================================\nEP.HEADER\nCHAR  : YEORI.NT (서여리 묶은 머리 변형 — characters.json yeori_nt)\nEP    : IG_R05\nTITLE : 혼자인 밤, 친구들 SNS를 보다\nLOOK.A: LOOK_NT (오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리, 무릎 위 크림 니트 담요)\nBG.A  : 불 꺼진 원룸 침실, 침대 헤드에 기댄 자세, 작은 스탠드 하나\nLIGHT : LT_DK (어두운 방 + 폰 화면의 차가운 빛 + 스탠드의 약한 웜톤)\nREF   : yeori_nt face / closeup\nBGM   : 느린 로파이 피아노, 낮게 → CUT4 DM 알림음 순간 멈춤 → CUT5 다시 낮게\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] ─ YEORI | 훅 — 금요일 밤 11시, 나만 집인가 | 8\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 불 꺼진 방, 침대 헤드에 기대 앉은 서여리. 얼굴에 폰 화면 빛만 비친다. 무표정하게 엄지로 피드를 넘기다 잠깐 멈칫하고 다시 넘긴다.\nSP: IN.HM.TZ_NT.LT_DK\nPL: YR_VD\nCH: YR_NT / LK_NT\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_SAD\nAC: 없음\nLOOK_ID: LOOK_NT\nDU: 8\nCP: 금요일 밤 11시. / 나만 집인가.\nCT: YEORI\n오디오:\n  BGM: 느린 로파이 피아노 (0초부터, 낮게)\n  음성: 없음\n  효과음: 폰 스크롤 톡톡 (아주 작게)\n  앰비언스: 조용한 방, 멀리 도로 소음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     불 꺼진 침실, 밤 11시, 스탠드 하나\nCH(캐릭터):   오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리, 무릎 위 니트 담요\nSH(샷):       미디엄 클로즈업, 폰을 든 상반신\nCA(카메라):   고정\nAC(동작):     0~3초 무표정하게 스크롤 → 3~5초 한 게시물에서 멈칫, 눈만 살짝 커짐 → 5~8초 다시 천천히 스크롤\nMD(감정):     무심한 척하는 쓸쓸함\nDL(대사):     없음\nNR(나레이션): (화면 자막) 금요일 밤 11시. 나만 집인가.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun high at the back of her head with a few soft strands falling around her face, hair NOT down,\nnatural skin texture on right cheek (very subtle, not exaggerated), sitting up in bed leaning against the headboard at night, holding a smartphone in one hand at chest height and scrolling with her thumb,\nwearing an oversized heather-grey hoodie DO NOT change clothing, a soft cream knit blanket over her knees, delicate gold necklace barely visible at the collar,\nexpression: blank, slightly tired and absent-minded, eyes looking down at the phone screen,\nlighting: dark bedroom at 11pm, the cool bluish glow of the phone screen lighting her face from below, a small warm bedside lamp far in the background, deep shadows,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, the phone screen is facing her so its content is not visible to the camera\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-3s] In a dark bedroom she scrolls her phone with her thumb, face lit only by the cool screen glow, expression blank.\n[3-6s] She stops on one post; her eyes widen very slightly, she holds still for a beat.\n[6-8s] She lets out a quiet breath through her nose and slowly resumes scrolling.\nNO dialogue — narration added in post. No on-screen subtitle text or captions. The phone screen faces her and is never readable by the camera. Hair stays tied up in the messy bun the whole time.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] ─ GRAPHIC | 친구들 피드 — 지아 제주·지유 루프탑·커플링, 하트 세 번 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 폰 화면 시점. 인스타 피드가 한 장씩 넘어가고, 게시물마다 엄지가 ♡를 누른다.\nSP: IN.HM.TZ_NT.LT_DK\nPL: GR_ED\nCH: 없음\nDL: 없음\nNR: 없음\nSH: SH_ECU\nCA: CA_ST\nMD: MD_SAD\nAC: 없음\nDU: 6\nCT: GRAPHIC\nHTML: cut_02_feed.html\nMOTION: self\nCP: 다들 잘 지내는구나\n오디오:\n  BGM: 로파이 피아노 계속\n  음성: 없음\n  효과음: 스와이프 3회 + 하트 톡 3회\n  앰비언스: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     폰 화면(인스타 피드 목업, 다크 모드)\nCH(캐릭터):   피드 게시물로만 등장 — 한지아(제주 바다), 지유(루프탑 파티), 모르는 지인(커플링 손)\nSH(샷):       폰 화면 풀샷\nCA(카메라):   고정\nAC(동작):     0~2초 지아 \"제주 3일째 🌊\" ♡ → 2~4초 지유 \"우리 또 모였다 🥂\" ♡ → 4~6초 지인 커플링 \"1주년 💍\" ♡\nMD(감정):     부러움 반, 무심함 반\nDL(대사):     없음\nNR(나레이션): (화면 자막) 다들 잘 지내는구나\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP / VP\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — 이미지 생성 불필요(피드 사진 3장은 별도 준비: feed_jia.jpg · feed_jiyu.jpg · feed_ring.jpg, 02_images/feed/)\n파일: cut_02_feed.html — 1080×1920, 다크모드 인스타 피드 목업, 게시물 3개가 위로 스와이프되며 각 게시물에 하트 탭 애니메이션(CSS @keyframes, 절대시각).\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] ─ YEORI | 좋아요는 다 눌렀는데 — 폰을 가슴에 내려놓고 천장 | 8\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 서여리가 폰을 가슴 위로 내려놓고 베개에 머리를 기댄 채 천장을 본다. 작게 한숨 쉬고 혼잣말한다.\nSP: IN.HM.TZ_NT.LT_DK\nPL: YR_VD\nCH: YR_NT / LK_NT\nDL: 좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_SAD\nAC: 없음\nLOOK_ID: LOOK_NT\nDU: 8\nCP: 좋아요는 다 눌렀는데… / 왜 나만 멈춰 있는 것 같지.\nCT: YEORI\n오디오:\n  BGM: 로파이 피아노 계속, 조금 더 낮게\n  음성: 작고 담담한 혼잣말, 자조 섞인 낮은 톤 (속삭임에 가깝게)\n  효과음: 폰을 담요 위에 내려놓는 소리\n  앰비언스: 조용한 방\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     불 꺼진 침실\nCH(캐릭터):   오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리\nSH(샷):       미디엄 클로즈업, 베개에 기댄 얼굴과 가슴 위 폰\nCA(카메라):   고정\nAC(동작):     0~2초 폰을 가슴 위에 엎어 내려놓고 고개를 뒤로 기댐 → 2~3초 천장을 보며 작은 한숨 → 3~7초 천장을 본 채 혼잣말 → 7~8초 눈을 한 번 천천히 깜빡임\nMD(감정):     담담한 외로움, 자조\nDL(대사):     좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.\nNR(나레이션): (화면 자막) 대사 자막만\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun with a few soft strands on the pillow and around her face, hair NOT down,\nnatural skin texture on right cheek (very subtle, not exaggerated), half-lying in bed with her head resting back against a pillow and the headboard, looking up at the ceiling,\na smartphone lying face-down on her chest under one relaxed hand, its faint glow spilling from the edges onto her chin,\nwearing an oversized heather-grey hoodie DO NOT change clothing, soft cream knit blanket, delicate gold necklace,\nexpression: quiet, a little lonely, lips slightly parted as if about to sigh, eyes open and gazing upward,\nlighting: dark bedroom at night, faint cool light from the phone edges and a small warm bedside lamp glow from the side, soft deep shadows,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-3s] She lays the phone face-down on her chest, leans her head back into the pillow and lets out a small sigh, looking up at the ceiling.\n[3-6s] Still gazing at the ceiling, she quietly says her line to herself in Korean, almost a whisper: \"좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.\"\n[6-8s] She blinks slowly once and stays still, a faint lonely look.\nNo on-screen subtitle text or captions. She speaks to herself, not to the camera. Hair stays tied up in the messy bun.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4] ─ GRAPHIC | 반전 — 지아의 DM \"집 가고 싶다\" | 4\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 가슴 위 폰이 진동하고, 화면에 지아의 DM이 뜬다.\nSP: IN.HM.TZ_NT.LT_DK\nPL: GR_ED\nCH: 없음\nDL: 없음\nNR: 없음\nSH: SH_ECU\nCA: CA_ST\nMD: MD_REL\nAC: 없음\nDU: 4\nCT: GRAPHIC\nHTML: cut_04_dm.html\nMOTION: self\nCP: 없음\n오디오:\n  BGM: DM 알림음 순간 멈춤\n  음성: 없음\n  효과음: 폰 진동 \"지잉\" + DM 알림음\n  앰비언스: 정적\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     폰 화면(인스타 DM 목업, 다크 모드)\nCH(캐릭터):   한지아 DM (프로필 사진 = 지아 얼굴 레퍼런스)\nSH(샷):       폰 화면 풀샷\nCA(카메라):   고정\nAC(동작):     0~0.8초 잠금화면 알림 배너 \"jia.han 님이 메시지를 보냈습니다\" 흔들림 → 0.8~4초 DM 화면, 말풍선이 타이핑 점 뒤에 차례로 등장\nMD(감정):     반전, 웃음 터지기 직전\nDL(대사):     없음\nNR(나레이션): 지아 DM — \"뭐해?\" / \"나 여행 와서 사진만 찍고 지금 숙소에서 컵라면 먹는 중ㅋㅋ\" / \"집 가고 싶다\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP / VP\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — 이미지 생성 불필요(프로필 사진은 downloads/flow/character/jia-face.jpg)\n파일: cut_04_dm.html — 1080×1920, 다크모드 인스타 DM 목업, 알림 배너 → DM 말풍선 3개 순차 등장(타이핑 점 포함, CSS @keyframes 절대시각).\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5] ─ YEORI | 마무리 — 피식, \"다들 보여주고 싶은 것만\" | 8\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 서여리가 폰을 다시 얼굴 위로 들어 화면을 보다가 피식 웃는다. 엄지로 짧게 답장하고, 폰을 얼굴 옆에 내려놓은 채 편하게 눈을 감는다.\nSP: IN.HM.TZ_NT.LT_DK\nPL: YR_VD\nCH: YR_NT / LK_NT\nDL: 다들 보여주고 싶은 것만 올리는 거지, 뭐.\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_REL\nAC: 없음\nLOOK_ID: LOOK_NT\nDU: 8\nCP: 다들 보여주고 싶은 것만 올리는 거지, 뭐. / 오늘 밤 혼자인 사람, 사실 꽤 많아요.\nCT: YEORI\n오디오:\n  BGM: 로파이 피아노 다시 낮게 재진입\n  음성: 피식 웃음이 섞인 편안하고 따뜻한 톤\n  효과음: 짧은 타이핑 톡톡 + 전송음\n  앰비언스: 조용한 방\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     불 꺼진 침실\nCH(캐릭터):   오버사이즈 회색 후드티, 느슨하게 올려 묶은 머리\nSH(샷):       미디엄 클로즈업, 베개에 누운 얼굴과 얼굴 위로 든 폰\nCA(카메라):   고정\nAC(동작):     0~2초 폰을 얼굴 위로 들어 화면을 보다 피식 → 2~5초 폰을 보며 대사 → 5~7초 엄지로 짧게 답장 → 7~8초 폰을 얼굴 옆 베개에 내려놓고 편하게 눈 감음\nMD(감정):     안도, 따뜻한 웃음\nDL(대사):     다들 보여주고 싶은 것만 올리는 거지, 뭐.\nNR(나레이션): (화면 자막) 오늘 밤 혼자인 사람, 사실 꽤 많아요.\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, her long wavy dark brown hair tied up in a loose messy bun with a few soft strands falling on the pillow, hair NOT down,\nnatural skin texture on right cheek (very subtle, not exaggerated), lying back on a pillow in bed, holding a smartphone up above her face with both hands and looking at the screen,\nwearing an oversized heather-grey hoodie DO NOT change clothing, soft cream knit blanket, delicate gold necklace,\nexpression: a small amused snort of a smile breaking out, eyes softening, relieved and warm,\nlighting: dark bedroom at night, the phone screen glow lighting her face softly from above, a small warm bedside lamp in the background, cozy shadows,\neffortlessly photogenic not posing just existing beautifully,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, the phone screen faces her so its content is not visible to the camera\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n[0-3s] Lying back on the pillow, she looks at the phone held above her face and lets out a small amused snort, a smile breaking out.\n[3-6s] Still looking at the screen, smiling, she says her line softly in Korean: \"다들 보여주고 싶은 것만 올리는 거지, 뭐.\" then types a quick reply with her thumbs.\n[6-8s] She lowers the phone onto the pillow beside her face and comfortably closes her eyes, a calm smile remaining.\nNo on-screen subtitle text or captions. The phone screen faces her and is never readable by the camera. Hair stays tied up in the messy bun.\n\n\n[게시 캡션]\n금요일 밤, 다들 뭐 해요?\n좋아요는 눌렀는데 괜히 나만 멈춰 있는 것 같은 밤.\n근데 사실… 다들 보여주고 싶은 것만 올리는 거더라고요.\n\n이 시간에 이거 보고 있는 친구한테 보내기 📩\n#혼자인밤 #금요일밤 #서여리\n",
+  "scriptRaw": "",
   "ttsSettings": {
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "emotion": 35,
@@ -4970,159 +5144,18 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-26T06:55:59.369Z",
+  "savedAt": "2026-09-26T08:32:44.535Z",
   "videoTabState": {
-    "videoClips": {
-      "cut-1": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R05/05_video/cut_01.mp4?t=1790325894187",
-          "name": "cut_01.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R05\\05_video\\cut_01.mp4",
-          "keepAudio": false,
-          "createdAt": 1790324313000
-        }
-      ],
-      "cut-2": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R05/05_video/cut_02.mp4?t=1790325894804",
-          "name": "cut_02.mp4",
-          "duration": 6,
-          "trimStart": 0,
-          "trimEnd": 6,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R05\\05_video\\cut_02.mp4",
-          "keepAudio": false,
-          "createdAt": 1790322764000
-        }
-      ],
-      "cut-3": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R05/05_video/cut_03.mp4?t=1790325895061",
-          "name": "cut_03.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R05\\05_video\\cut_03.mp4",
-          "keepAudio": true,
-          "createdAt": 1790324314000
-        }
-      ],
-      "cut-4": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R05/05_video/cut_04.mp4?t=1790325895316",
-          "name": "cut_04.mp4",
-          "duration": 4,
-          "trimStart": 0,
-          "trimEnd": 4,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R05\\05_video\\cut_04.mp4",
-          "keepAudio": false,
-          "createdAt": 1790322785000
-        }
-      ],
-      "cut-5": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R05/05_video/cut_05.mp4?t=1790325895568",
-          "name": "cut_05.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R05\\05_video\\cut_05.mp4",
-          "keepAudio": true,
-          "createdAt": 1790324316000
-        }
-      ]
-    },
+    "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": "cut-4",
+    "selectedCutId": null,
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-3": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-4": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-2__v1": [
-        {
-          "id": "track_1790324342203_tr0k",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-3__v1": [
-        {
-          "id": "track_1790324358218_4404",
-          "type": "dialogue",
-          "text": "좋아요는 다 눌렀는데… 왜 나만 멈춰 있는 것 같지.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-4__v1": [
-        {
-          "id": "track_1790325809893_fif9",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ]
-    }
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {}

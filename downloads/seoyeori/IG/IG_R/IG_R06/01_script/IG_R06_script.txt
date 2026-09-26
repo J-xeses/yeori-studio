@@ -1,22 +1,22 @@
-================================================================
+=======================================================================================================
 마스터 코드
 [IG_R06] :: [PL:IG_RL] :: [SP:IN.HM.TZ_AF.LT_WM] :: [CH:YR_VD+JY_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]
-================================================================
+=======================================================================================================
 에피소드명: 흑역사 챌린지 — 친구가 내 흑역사를 발굴했다
 채널: 서여리 인스타그램 릴스 (IG_R06) · 지유 첫 등장
 총 길이: 30초 목표 (8 + 6 + 8 + 8) — 생성단위(Veo/Omni 8초·6초)
 콘셉트: 지유가 서여리의 새내기 MT 챌린지 영상을 찾아옴 → 엉망 챌린지 공개 → 지우라고 난리 / 지유는 이미 단톡방에 → 이불 속 여리 "이번 생은 망했어"
-================================================================
+=======================================================================================================
 EP.HEADER
 CHAR  : YEORI.BASE + JIYU (지유 첫 등장 — characters.json jiyu, 목소리 "김지유 목소리")
 EP    : IG_R06
 TITLE : 흑역사 챌린지
-LOOK.A: 서여리 — 오버사이즈 흰 티셔츠 + 회색 라운지 팬츠, 긴 웨이브 다크브라운(풀어 내림), 양말
+LOOK.A: 서여리 — 오버사이즈 흰 티셔츠 + 회색 돌핀 팬츠, 긴 웨이브 다크브라운(풀어 내림), 양말
 LOOK.B: 지유 — look01 (흰 크롭 베이비티 'SEOUL CAFE CLUB' + 빈티지 데님 쇼츠), 양말
 BG.A  : 서여리 자취방 침대·러그, 오후 창가 햇빛
 LIGHT : LT_WM (오후 따뜻한 자연광)
 BGM   : 경쾌한 로파이, 통통 튀는 느낌 → CUT2 흑역사 영상 동안 촌스러운 댄스 비트(영상 속 소리) → CUT4 잔잔하게
-================================================================
+=======================================================================================================
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -57,7 +57,7 @@ NR(나레이션): (화면 자막) 친구가 내 흑역사를 발굴했다
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — two young Korean women in their early 20s sitting on a bed in a cozy studio apartment, warm afternoon sunlight from the window,
-Seo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey lounge pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen,
+Seo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey dolphine pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen,
 Jiyu (left): very long straight glossy jet-black hair with full bangs NOT wavy NOT bob, soft round face, coral-red lip tint, white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering and light-wash vintage denim shorts, wearing socks, kneeling on the bed and eagerly holding her phone screen toward Yeori, bright mischievous grin, clearly an adult woman in her early 20s,
 the phone screen faces Yeori so its content is not visible to the camera,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
@@ -159,7 +159,7 @@ NR(나레이션): (화면 자막) 대사 자막만
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — the same two young Korean women on the bed in the sunny studio apartment, playful struggle,
-Seo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey lounge pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face,
+Seo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey dolphine pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face,
 Jiyu: very long straight jet-black hair with full bangs, white cropped baby tee and light-wash denim shorts DO NOT change clothing, holding her phone high above her head out of reach, laughing out loud with eyes curved,
 both wearing socks, warm afternoon window light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
 
@@ -230,3 +230,14 @@ Only Seo Yeori speaks; the off-screen laughter has no words. No on-screen subtit
 
 여러분 흑역사도 댓글로 풀어 주세요. 저만 당할 순 없어요 👇
 #흑역사챌린지 #새내기MT #서여리 #지유
+
+
+
+
+
+
+
+
+
+
+
