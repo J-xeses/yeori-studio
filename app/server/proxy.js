@@ -3587,6 +3587,16 @@ app.post('/api/reel-finalize/override', (req, res) => {
 
 // POST { epNum } — 대사 자막 타이밍을 실제 발화(voice-qa 단어 시각)에 맞춰 오버라이드에 저장(2026-09-25).
 // 영상 탭 미리보기와 최종본이 같은 captionSegTiming 을 쓰게 된다. 사람이 직접 정한 타이밍(captionTimingAuto 없음)은 건드리지 않는다.
+// 인스타 성과 자동 수집(Instagram API with Instagram Login) — 기동 1분 뒤 + 6시간마다, 수동은 POST /api/ig-sync (2026-09-26)
+app.post('/api/ig-sync', async (_req, res) => {
+  try { const { syncInsights } = await import('./lib/igInsights.js'); res.json(await syncInsights({ log: console.log })) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+{
+  const runIg = async () => { try { const { syncInsights, igConfigured } = await import('./lib/igInsights.js'); if (igConfigured()) await syncInsights({ log: (l) => console.log('[ig-sync]', l) }) } catch (e) { console.warn('[ig-sync] 실패:', e.message) } }
+  setTimeout(runIg, 60 * 1000); setInterval(runIg, 6 * 3600 * 1000)
+}
+
 app.post('/api/reel-finalize/sync-captions', async (req, res) => {
   try {
     const { ep, epId } = findEpisodeByNumOrThrow(req.body?.epNum)

@@ -174,6 +174,14 @@ await check('G2', '승인 기록 병합(부분 기록이 다른 승인을 지우
   } finally { clean() }
 })
 
+// ── 1i. 인스타 성과 자동 수집(공식 API) — 토큰 있으면 실제 동기화, 없으면 건너뜀 ──
+await check('I1', '인스타 성과 자동 수집(공식 API)', async () => {
+  const { igConfigured, syncInsights } = await import('../server/lib/igInsights.js')
+  if (!igConfigured()) return { skip: true, evidence: '토큰 미설정(studio-secrets.json apiKeys.instagram.token)' }
+  const r = await syncInsights()
+  return { ok: r.ok && Number.isFinite(r.followers), evidence: `팔로워 ${r.followers} · 게시물 ${r.media} · 연결 ${r.linked} · 지표 갱신 ${r.updated}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))
