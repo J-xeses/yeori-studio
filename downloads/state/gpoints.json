@@ -855,9 +855,10 @@
   "IG_R06": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-09-26T11:29:12.524Z",
+      "updatedAt": "2026-09-26T11:36:31.643Z",
       "g2": true,
-      "selectedImage": "cut_01_a.jpg"
+      "selectedImage": "cut_01_a.jpg",
+      "g3": true
     },
     "cut_2": {
       "g1": true,
@@ -867,15 +868,17 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-09-26T11:29:40.235Z",
+      "updatedAt": "2026-09-26T11:43:46.812Z",
       "g2": true,
-      "selectedImage": "cut_03_a.jpg"
+      "selectedImage": "cut_03_a.jpg",
+      "g3": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-09-26T11:30:41.790Z",
+      "updatedAt": "2026-09-26T12:21:40.588Z",
       "g2": true,
-      "selectedImage": "cut_04_a.jpg"
+      "selectedImage": "cut_04_a.jpg",
+      "g3": true
     }
   }
 }

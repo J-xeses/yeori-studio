@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -4818,14 +4818,141 @@
         "videoTabState": {
           "videoClips": {},
           "g4Approved": {},
-          "selectedCutId": null,
-          "subtitles": {}
+          "selectedCutId": "cut-1",
+          "subtitles": {
+            "cut-1": "야, 서여리! 이거 너지?~  새내기 MT 때 챌린지!!",
+            "cut-3": "어머!~ 그거 어디서 났어?~ 지워!~ 당장 지워엇!\n이미,, 단톡방에 올렸는데??",
+            "cut-4": "… 휴~, 이번 생은 망했어... 여러분 흑역사도,  좀 풀어 줘요,,"
+          }
         },
         "ttsTabState": {
           "audioUrls": {},
           "audioTexts": {},
-          "g3Confirmed": {},
-          "focusCutId": null
+          "g3Confirmed": {
+            "cut-1": true,
+            "cut-3": true,
+            "cut-4": true
+          },
+          "focusCutId": null,
+          "tracks": {
+            "cut-1__v1": [],
+            "cut-1__v1790422480973_qos": [
+              {
+                "id": "track_1790422480973_hf4m",
+                "type": "dialogue",
+                "text": "야, 서여리! 이거 너지?~  새내기 MT 때 챌린지!!",
+                "speaker": "지유",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_01_track_1790422480973_hf4m.mp3?t=1790422583554",
+                "voiceId": "BQG3ggTf1gzxjqP4CEYv",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-3__v1": [
+              {
+                "id": "track_1790422597851_5qjx",
+                "type": "dialogue",
+                "text": "어머!~ 그거 어디서 났어?~ 지워!~ 당장 지워엇!",
+                "speaker": "여리",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_03_track_1790422597851_5qjx.mp3?t=1790422757512",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              },
+              {
+                "id": "track_1790422597851_5hxq",
+                "type": "dialogue",
+                "text": "이미,, 단톡방에 올렸는데??",
+                "speaker": "지유",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_03_track_1790422597851_5hxq.mp3?t=1790423024469",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-4__v1": [
+              {
+                "id": "track_1790422771611_hgnc",
+                "type": "dialogue",
+                "text": "… 휴~, 이번 생은 망했어... 여러분 흑역사도,  좀 풀어 줘요,,",
+                "speaker": "여리",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_04_track_1790422771611_hgnc.mp3?t=1790422846952",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-2__v1": [
+              {
+                "id": "track_1790422855181_vnjp",
+                "type": "dialogue",
+                "text": "",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ]
+          },
+          "voiceTabs": {
+            "cut-1": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              },
+              {
+                "id": "v1790422480973_qos",
+                "label": "목소리 2",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-3": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-4": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "activeVoiceTab": {
+            "cut-1": 1
+          },
+          "mergedUrls": {
+            "cut-1__v1790422480973_qos": "blob:http://localhost:5173/3454e906-a694-48de-a509-3fa838d688d2",
+            "cut-3__v1": "blob:http://localhost:5173/03265f7d-ae3b-431d-9ef3-2ef734354455",
+            "cut-4__v1": "blob:http://localhost:5173/92b5c43b-e990-4d35-a199-c7af43764ba0"
+          }
         },
         "voiceInsertState": {
           "tracks": {}
@@ -5058,8 +5185,8 @@
         "similarity": 70
       },
       "서여리": {
-        "speed": 0.9,
-        "stability": 45,
+        "speed": 0.95,
+        "stability": 30,
         "similarity": 75
       },
       "지유": {
@@ -5144,17 +5271,25 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-26T10:49:13.189Z",
+  "savedAt": "2026-09-26T11:53:56.471Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": null,
-    "subtitles": {}
+    "selectedCutId": "cut-1",
+    "subtitles": {
+      "cut-1": "야, 서여리! 이거 너지?~  새내기 MT 때 챌린지!!",
+      "cut-3": "어머!~ 그거 어디서 났어?~ 지워!~ 당장 지워엇!\n이미,, 단톡방에 올렸는데??",
+      "cut-4": "… 휴~, 이번 생은 망했어... 여러분 흑역사도,  좀 풀어 줘요,,"
+    }
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
+    "g3Confirmed": {
+      "cut-1": true,
+      "cut-3": true,
+      "cut-4": true
+    },
     "focusCutId": null,
     "tracks": {
       "cut-1__v1": [],
@@ -5162,10 +5297,68 @@
         {
           "id": "track_1790422480973_hf4m",
           "type": "dialogue",
-          "text": "야, 서여리!~ 이거 너지?~~~  새내기 MT 때 챌린지!!",
+          "text": "야, 서여리! 이거 너지?~  새내기 MT 때 챌린지!!",
           "speaker": "지유",
-          "url": "blob:http://localhost:5173/8ce30f8a-29f0-47fd-a040-cc8bc01b2d28",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_01_track_1790422480973_hf4m.mp3?t=1790422583554",
           "voiceId": "BQG3ggTf1gzxjqP4CEYv",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-3__v1": [
+        {
+          "id": "track_1790422597851_5qjx",
+          "type": "dialogue",
+          "text": "어머!~ 그거 어디서 났어?~ 지워!~ 당장 지워엇!",
+          "speaker": "여리",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_03_track_1790422597851_5qjx.mp3?t=1790422757512",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1790422597851_5hxq",
+          "type": "dialogue",
+          "text": "이미,, 단톡방에 올렸는데??",
+          "speaker": "지유",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_03_track_1790422597851_5hxq.mp3?t=1790423024469",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-4__v1": [
+        {
+          "id": "track_1790422771611_hgnc",
+          "type": "dialogue",
+          "text": "… 휴~, 이번 생은 망했어... 여러분 흑역사도,  좀 풀어 줘요,,",
+          "speaker": "여리",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_04_track_1790422771611_hgnc.mp3?t=1790422846952",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-2__v1": [
+        {
+          "id": "track_1790422855181_vnjp",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
           "settings": {
             "speed": 0.95,
             "stability": 30,
@@ -5186,10 +5379,36 @@
           "label": "목소리 2",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-4": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "activeVoiceTab": {
       "cut-1": 1
+    },
+    "mergedUrls": {
+      "cut-1__v1790422480973_qos": "blob:http://localhost:5173/3454e906-a694-48de-a509-3fa838d688d2",
+      "cut-3__v1": "blob:http://localhost:5173/03265f7d-ae3b-431d-9ef3-2ef734354455",
+      "cut-4__v1": "blob:http://localhost:5173/92b5c43b-e990-4d35-a199-c7af43764ba0"
     }
   },
   "voiceInsertState": {
