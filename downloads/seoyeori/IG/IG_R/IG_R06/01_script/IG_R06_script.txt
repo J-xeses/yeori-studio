@@ -57,7 +57,7 @@ NR(나레이션): (화면 자막) 친구가 내 흑역사를 발굴했다
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — two young Korean women in their early 20s sitting on a bed in a cozy studio apartment, warm afternoon sunlight from the window,
-Seo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey dolphine pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen,
+Seo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey dolphine shot pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen,
 Jiyu (left): very long straight glossy jet-black hair with full bangs NOT wavy NOT bob, soft round face, coral-red lip tint, white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering and light-wash vintage denim shorts, wearing socks, kneeling on the bed and eagerly holding her phone screen toward Yeori, bright mischievous grin, clearly an adult woman in her early 20s,
 the phone screen faces Yeori so its content is not visible to the camera,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
@@ -159,7 +159,7 @@ NR(나레이션): (화면 자막) 대사 자막만
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — the same two young Korean women on the bed in the sunny studio apartment, playful struggle,
-Seo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey dolphine pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face,
+Seo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey dolphine shot pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face,
 Jiyu: very long straight jet-black hair with full bangs, white cropped baby tee and light-wash denim shorts DO NOT change clothing, holding her phone high above her head out of reach, laughing out loud with eyes curved,
 both wearing socks, warm afternoon window light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
 
