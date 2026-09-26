@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -5144,7 +5144,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-26T09:25:17.603Z",
+  "savedAt": "2026-09-26T10:49:13.189Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
@@ -5155,7 +5155,42 @@
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null
+    "focusCutId": null,
+    "tracks": {
+      "cut-1__v1": [],
+      "cut-1__v1790422480973_qos": [
+        {
+          "id": "track_1790422480973_hf4m",
+          "type": "dialogue",
+          "text": "야, 서여리!~ 이거 너지?~~~  새내기 MT 때 챌린지!!",
+          "speaker": "지유",
+          "url": "blob:http://localhost:5173/8ce30f8a-29f0-47fd-a040-cc8bc01b2d28",
+          "voiceId": "BQG3ggTf1gzxjqP4CEYv",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ]
+    },
+    "voiceTabs": {
+      "cut-1": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        },
+        {
+          "id": "v1790422480973_qos",
+          "label": "목소리 2",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "activeVoiceTab": {
+      "cut-1": 1
+    }
   },
   "voiceInsertState": {
     "tracks": {}
