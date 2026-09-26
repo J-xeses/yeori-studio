@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -5271,7 +5271,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-26T11:53:56.471Z",
+  "savedAt": "2026-09-26T13:29:25.003Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
