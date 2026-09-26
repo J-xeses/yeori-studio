@@ -1,0 +1,232 @@
+================================================================
+마스터 코드
+[IG_R06] :: [PL:IG_RL] :: [SP:IN.HM.TZ_AF.LT_WM] :: [CH:YR_VD+JY_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]
+================================================================
+에피소드명: 흑역사 챌린지 — 친구가 내 흑역사를 발굴했다
+채널: 서여리 인스타그램 릴스 (IG_R06) · 지유 첫 등장
+총 길이: 30초 목표 (8 + 6 + 8 + 8) — 생성단위(Veo/Omni 8초·6초)
+콘셉트: 지유가 서여리의 새내기 MT 챌린지 영상을 찾아옴 → 엉망 챌린지 공개 → 지우라고 난리 / 지유는 이미 단톡방에 → 이불 속 여리 "이번 생은 망했어"
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE + JIYU (지유 첫 등장 — characters.json jiyu, 목소리 "김지유 목소리")
+EP    : IG_R06
+TITLE : 흑역사 챌린지
+LOOK.A: 서여리 — 오버사이즈 흰 티셔츠 + 회색 라운지 팬츠, 긴 웨이브 다크브라운(풀어 내림), 양말
+LOOK.B: 지유 — look01 (흰 크롭 베이비티 'SEOUL CAFE CLUB' + 빈티지 데님 쇼츠), 양말
+BG.A  : 서여리 자취방 침대·러그, 오후 창가 햇빛
+LIGHT : LT_WM (오후 따뜻한 자연광)
+BGM   : 경쾌한 로파이, 통통 튀는 느낌 → CUT2 흑역사 영상 동안 촌스러운 댄스 비트(영상 속 소리) → CUT4 잔잔하게
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — "야, 이거 너지?" 흑역사 발굴 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 오후 자취방. 침대에 기대 폰을 보던 서여리 옆으로 지유가 폰을 들고 뛰어들어 화면을 들이민다. 서여리는 화면을 보고 그대로 굳는다.
+SP: IN.HM.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 + 지유
+DL: 지유 "야, 서여리! 이거 너지? 새내기 MT 때 챌린지!"
+NR: 없음
+SH: SH_MS
+CA: CA_ST
+MD: MD_JOY
+AC: 없음
+DU: 8
+CP: 친구가 내 흑역사를 발굴했다
+CT: YEORI
+오디오:
+  BGM: 경쾌한 로파이, 통통 튀는 느낌 (0초부터)
+  음성: 지유 — 신나서 숨넘어가는 웃음 섞인 톤(친구 결)
+  효과음: 없음
+  앰비언스: 조용한 방
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 자취방 침대 위, 오후 창가 햇빛
+CH(캐릭터):   서여리(흰 오버사이즈 티, 풀어 내린 긴 웨이브) · 지유(흰 크롭 베이비티, 데님 쇼츠, 풀뱅 긴 생머리)
+SH(샷):       미디엄 샷, 침대 위 두 사람
+CA(카메라):   고정
+AC(동작):     0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음
+MD(감정):     지유 신남, 서여리 당황
+DL(대사):     지유 "야, 서여리! 이거 너지? 새내기 MT 때 챌린지!"
+NR(나레이션): (화면 자막) 친구가 내 흑역사를 발굴했다
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — two young Korean women in their early 20s sitting on a bed in a cozy studio apartment, warm afternoon sunlight from the window,
+Seo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey lounge pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen,
+Jiyu (left): very long straight glossy jet-black hair with full bangs NOT wavy NOT bob, soft round face, coral-red lip tint, white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering and light-wash vintage denim shorts, wearing socks, kneeling on the bed and eagerly holding her phone screen toward Yeori, bright mischievous grin, clearly an adult woman in her early 20s,
+the phone screen faces Yeori so its content is not visible to the camera,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-2s] Seo Yeori relaxes on the bed scrolling her phone.
+[2-4s] Jiyu plops down beside her from the left and thrusts her phone screen toward Yeori's face.
+[4-7s] Jiyu, bursting with laughter, says in Korean: "야, 서여리! 이거 너지? 새내기 MT 때 챌린지!"
+[7-8s] Yeori stares at the screen and freezes, mouth slightly open.
+Only Jiyu speaks in this clip; Yeori stays silent. No on-screen subtitle text or captions. The phone screen faces Yeori and is never readable by the camera.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI | 흑역사 공개 — 새내기 MT 엉망 챌린지 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 폰 속 옛날 영상. 대학 새내기 MT 숙소 거실, 서여리가 비장한 얼굴로 댄스 챌린지를 추는데 박자가 전부 어긋난다. 뒤에서 동기들 웃음소리.
+SP: IN.MT.TZ_NT.LT_STD
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: 없음
+SH: SH_FS
+CA: CA_HH
+MD: MD_JOY
+AC: 없음
+DU: 6
+CP: 새내기 MT, 비장했던 그날
+CT: YEORI
+오디오:
+  BGM: 촌스러운 댄스 비트(영상 속 소리처럼 폰 스피커 질감)
+  음성: 없음 (동기들 웃음소리만)
+  효과음: 없음
+  앰비언스: 왁자지껄한 MT 숙소
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     대학 MT 펜션 거실, 밤, 형광등
+CH(캐릭터):   새내기 시절 서여리(스무 살, 성인) — 과 단체 후드티, 앞머리 살짝, 풀 메이크업 없음
+SH(샷):       풀샷, 흔들리는 폰 세로 촬영 느낌
+CA(카메라):   핸드헬드(친구가 폰으로 찍는 느낌)
+AC(동작):     0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청
+MD(감정):     본인은 진지, 보는 사람은 웃김
+DL(대사):     없음
+NR(나레이션): (화면 자막) 새내기 MT, 비장했던 그날
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULL SHOT — vertical smartphone video still, slightly grainy and slightly blurry old-phone footage look, a young Korean woman about 20 years old (college freshman, clearly an adult) in the living room of a rented group-trip pension at night under harsh fluorescent light,
+same face as Seo Yeori but younger and less styled: long dark brown hair a bit messy with light see-through bangs, no makeup look, wearing an oversized navy university club hoodie and track pants, striking a dead-serious dance pose mid-move with arms awkwardly off-beat,
+blurry friends sitting on the floor in the background laughing (faces soft and out of focus, not interacting),
+photorealistic, candid, vertical 9:16, no text or logos on screen
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-6s] Handheld old smartphone footage: the young woman performs a dance challenge with a dead-serious face, but every move is half a beat late, her arms go one way and her feet the other, and on the final pose she wobbles and almost falls; friends in the soft-focus background burst out laughing.
+No one speaks — only background laughter and a tinny dance beat. No on-screen subtitle text or captions. Slightly grainy, shaky phone-video look.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 난리 — "지워, 당장!" / "이미 단톡방에…" | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 다시 자취방. 서여리가 지유의 폰을 뺏으려 달려들고, 지유는 폰을 높이 들고 피하며 먼저 웃음을 터뜨린다.
+SP: IN.HM.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 + 지유
+DL: 여리 "그거 어디서 났어? 지워, 당장 지워!" / 지유 "이미 단톡방에 올렸는데?"
+NR: 없음
+SH: SH_MS
+CA: CA_ST
+MD: MD_JOY
+AC: 없음
+DU: 8
+CP: 지워, 당장! / 이미 단톡방에 올렸는데?
+CT: YEORI
+오디오:
+  BGM: 경쾌한 로파이 다시
+  음성: 여리 — 다급하고 억울한 친구 결 / 지유 — 웃음 터진 장난스러운 톤
+  효과음: 이불 부스럭
+  앰비언스: 조용한 방
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 자취방 침대 위
+CH(캐릭터):   서여리 · 지유 (CUT1과 동일)
+SH(샷):       미디엄 샷, 두 사람 엎치락뒤치락
+CA(카메라):   고정
+AC(동작):     0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐
+MD(감정):     서여리 억울·다급, 지유 장난·웃음
+DL(대사):     여리 "그거 어디서 났어? 지워, 당장 지워!" / 지유 "이미 단톡방에 올렸는데?"
+NR(나레이션): (화면 자막) 대사 자막만
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — the same two young Korean women on the bed in the sunny studio apartment, playful struggle,
+Seo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey lounge pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face,
+Jiyu: very long straight jet-black hair with full bangs, white cropped baby tee and light-wash denim shorts DO NOT change clothing, holding her phone high above her head out of reach, laughing out loud with eyes curved,
+both wearing socks, warm afternoon window light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-1s] Seo Yeori lunges toward Jiyu's phone.
+[1-4s] Yeori, flustered and pleading, says in Korean: "그거 어디서 났어? 지워, 당장 지워!"
+[4-5s] Jiyu lifts the phone high over her head out of reach and bursts out laughing first.
+[5-7s] Jiyu, still laughing, says in Korean: "이미 단톡방에 올렸는데?"
+[7-8s] Yeori covers her face with both hands and flops backward onto the bed.
+No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI | 마무리 — 이불 속 "이번 생은 망했어" | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 이불을 머리끝까지 뒤집어쓴 서여리. 눈만 빼꼼 내놓고 카메라를 보며 체념한 목소리로 말한다. 옆에서 지유의 웃음소리가 계속 들린다.
+SP: IN.HM.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리
+DL: 여리 "…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요."
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AC: 없음
+DU: 8
+CP: 이번 생은 망했어 / 여러분 흑역사도 댓글로 👇
+CT: YEORI
+오디오:
+  BGM: 잔잔하게 낮아지며 마무리
+  음성: 여리 — 이불 속 먹먹한, 체념한 드라이 톤(시청자 결)
+  효과음: 없음
+  앰비언스: 화면 밖 지유 웃음소리 작게
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 침대, 이불 속
+CH(캐릭터):   서여리 (이불을 뒤집어써서 눈과 이마만 보임)
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음
+MD(감정):     체념, 드라이한 유머
+DL(대사):     여리 "…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요."
+NR(나레이션): (화면 자막) 여러분 흑역사도 댓글로 👇
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — a young Korean woman in her early 20s lying in bed completely wrapped in a soft white duvet pulled up over her head, only her eyes, eyebrows and a bit of long wavy dark brown hair peeking out,
+Seo Yeori's face (natural skin texture on right cheek, very subtle), deadpan resigned look straight into the camera,
+warm afternoon light, cozy bedroom background softly blurred, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-2s] Only her eyes peek out from under the duvet, blinking slowly at the camera.
+[2-6s] With a muffled, resigned deadpan voice she says in Korean: "…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요."
+[6-8s] She slowly pulls the duvet up over her eyes until her face is fully covered; soft laughter continues off-screen.
+Only Seo Yeori speaks; the off-screen laughter has no words. No on-screen subtitle text or captions.
+
+
+[게시 캡션]
+친구가 제 흑역사를 발굴했습니다… 새내기 MT 때 챌린지요.
+지워 달라고 했는데 이미 단톡방에 있대요. 이번 생은 망했어요.
+
+여러분 흑역사도 댓글로 풀어 주세요. 저만 당할 순 없어요 👇
+#흑역사챌린지 #새내기MT #서여리 #지유
