@@ -880,5 +880,37 @@
       "selectedImage": "cut_04_a.jpg",
       "g3": true
     }
+  },
+  "SF_E11": {
+    "cut_1": {
+      "g1": true,
+      "updatedAt": "2026-09-26T14:35:08.033Z",
+      "g2": true,
+      "selectedImage": "cut_01_b.jpg"
+    },
+    "cut_2": {
+      "g1": true,
+      "updatedAt": "2026-09-26T13:43:08.156Z"
+    },
+    "cut_3": {
+      "g1": true,
+      "updatedAt": "2026-09-26T13:43:08.157Z"
+    },
+    "cut_4": {
+      "g1": true,
+      "updatedAt": "2026-09-26T13:43:08.157Z"
+    },
+    "cut_5": {
+      "g1": true,
+      "updatedAt": "2026-09-26T13:43:08.158Z"
+    },
+    "cut_6": {
+      "g1": true,
+      "updatedAt": "2026-09-26T13:43:08.158Z"
+    },
+    "cut_7": {
+      "g1": true,
+      "updatedAt": "2026-09-26T13:43:08.159Z"
+    }
   }
 }
