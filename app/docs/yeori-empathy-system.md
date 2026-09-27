@@ -70,3 +70,18 @@ R04 에서 "저 사실 이 채널 AI로 만들어요"를 공개했다. → **캐
 1. **캐논**: 서여리는 ① 막 시작한 AI 크리에이터(현재 채널 현실) ② 이미 인기 인플루언서(초창기 설정) — 어느 쪽으로? (추천 ①, "인기 인플루언서" 설정은 번외·상상 에피소드용)
 2. **말투**: 시청자에게 존댓말(현재 릴스) / 댓글 답장은 존댓말 vs 친근한 반말 섞기?
 3. **첫 구현 범위**: P1+P2 부터(추천) 또는 P4 댓글 답장부터?
+
+## 7. 구현 현황 (2026-09-27)
+| 단계 | 상태 | 위치 |
+|---|---|---|
+| P1 | 완료 — 캐논 ①, 시청자 존댓말(영어 댓글은 영어) | `characters.json → yeori.persona`, `yeoriMood.checkScriptVoice` |
+| P2 | 완료 — 운영실 보드 "💜 오늘의 여리" | `yeoriMood.computeMood`, `/api/yeori-mood` |
+| P3 | 라인 설치 — 게시·팔로워 이정표(1·5·10·30·50·100…)·저장/공유 3회+ → 초안 | `server/lib/yeoriActive.js runTriggers` |
+| P4 | 라인 설치 — 댓글 읽기 → 안전선(악플·링크·연락 유도=무대응) → 답장 초안 → **승인 시 실제 답글 게시** | `pullComments`, `decide`, `POST /api/yeori-queue/:id/approve` |
+| P5 | 라인 설치 — 사건 원장(`state/yeori-events.json`, G5 때 자동 기록, 시드 `scripts/seed-yeori-events.mjs`) → 콜백 제안 → 오늘의 여리 callback | `recordEpisodeEvent`, `suggestCallbacks` |
+
+- 실행: 서버 기동 3분 뒤 + 6시간마다 자동, 운영실 "지금 확인" 버튼 = `POST /api/yeori-queue/run`
+- 초안 문장: Haiku(하루 10회 상한, `state/yeori-llm-usage.json`) → 상한·키 없음이면 템플릿(토큰 0)
+- 큐 저장: `ops.json → yeoriQueue`(최근 100건), 같은 트리거 key 중복 금지, 이미 처리된 초안 재승인 차단(답글 이중 게시 방지)
+- selftest: E3(큐·중복·무승인 게시 0) · E4(안전선·언어 판정 + 댓글 읽기 권한) · E5(원장·콜백·오늘의 여리 연결)
+- 남은 판단: 칭찬·이모지 댓글 자동 답장 범위(현재 전부 사람 승인), 조회 저조 트리거, 콜백을 대본 생성 프롬프트에 주입

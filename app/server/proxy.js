@@ -3607,6 +3607,24 @@ app.post('/api/ig-sync', async (_req, res) => {
   const runIg = async () => { try { const { syncInsights, igConfigured } = await import('./lib/igInsights.js'); if (igConfigured()) await syncInsights({ log: (l) => console.log('[ig-sync]', l) }) } catch (e) { console.warn('[ig-sync] 실패:', e.message) } }
   setTimeout(runIg, 60 * 1000); setInterval(runIg, 6 * 3600 * 1000)
 }
+// 서여리 능동 대응 큐(감정이입 P3 캡션·스토리 / P4 댓글 답장 / P5 콜백) — ig-sync 직후 6시간마다 + 수동 POST /api/yeori-queue/run (2026-09-27)
+// 게시·답장은 항상 사람 승인: approve 시 reply 만 실제 게시(POST /{comment-id}/replies), caption·story 는 '승인(직접 게시)' 표시만
+app.get('/api/yeori-queue', async (_req, res) => {
+  try { const { loadOps } = await import('./lib/instaOps.js'); const { suggestCallbacks } = await import('./lib/yeoriActive.js'); res.json({ queue: (loadOps().yeoriQueue || []).slice().reverse(), callbacks: suggestCallbacks() }) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/yeori-queue/run', async (_req, res) => {
+  try { const { runAll } = await import('./lib/yeoriActive.js'); res.json(await runAll()) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/yeori-queue/:id/:action', async (req, res) => {
+  if (!['approve', 'reject'].includes(req.params.action)) return res.status(400).json({ error: 'approve|reject' })
+  try { const { decide } = await import('./lib/yeoriActive.js'); res.json(await decide(req.params.id, req.params.action, req.body?.text)) }
+  catch (err) { res.status(err.statusCode || 500).json({ error: err.message }) }
+})
+{
+  const runQ = async () => { try { const { runAll } = await import('./lib/yeoriActive.js'); console.log('[yeori-queue]', JSON.stringify(await runAll())) } catch (e) { console.warn('[yeori-queue] 실패:', e.message) } }
+  setTimeout(runQ, 3 * 60 * 1000); setInterval(runQ, 6 * 3600 * 1000)
+}
 
 app.post('/api/reel-finalize/sync-captions', async (req, res) => {
   try {
@@ -8240,6 +8258,7 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
         await new Promise((ok) => { const pr = spawn('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', r.finalPath, '-frames:v', '1', '-vf', 'crop=iw:iw*4/3,scale=1080:1440', '-q:v', '3', grid], { windowsHide: true }); pr.on('close', ok); pr.on('error', ok) })
         publish = upsertEpisodePost({ code: g5Code, title: ep.episode?.title, caption, gridSrc: grid })
       } catch (e) { publish = { error: e.message } }
+      try { (await import('./lib/yeoriActive.js')).recordEpisodeEvent({ code: g5Code, title: ep.episode?.title, cuts: resolveEpisodeCuts(ep, g5Code) }) } catch (e) { console.warn('[yeori-events]', e.message) }  // 감정이입 P5 사건 원장
       return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount, publish })
     }
 

@@ -196,6 +196,28 @@ await check('E2', '오늘의 여리(감정 엔진, 토큰 0)', async () => {
   return { ok: !!(m.mood && m.captionLine && m.face && Array.isArray(m.reasons)), evidence: `${m.mood} · ${m.face} · 주제 ${m.topic} · 근거 ${m.reasons.join('·') || '기본'} · 캡션 "${m.captionLine}"` }
 })
 
+// ── 1k. 감정이입 P3(캡션·스토리 초안)·P4(댓글 답장)·P5(사건 원장·콜백) ──
+await check('E3', '여리 초안함 큐(API·중복 방지·승인 대기)', async () => {
+  const q = await get('/api/yeori-queue'); if (!q.ok) return { ok: false, evidence: '/api/yeori-queue 응답 없음' }
+  const list = q.data.queue || []; const keys = list.map(x => x.key)
+  const dup = keys.length - new Set(keys).size
+  const autoPosted = list.filter(x => x.status === '게시됨' && !x.decidedAt).length   // 승인 없이 게시된 건 = 0 이어야 함
+  return { ok: dup === 0 && autoPosted === 0, evidence: `초안 ${list.length}건(대기 ${list.filter(x => x.status === '대기').length}) · 중복 ${dup} · 승인 없이 게시 ${autoPosted}` }
+})
+await check('E4', '댓글 답장 안전선·언어 판정 + 댓글 읽기 권한', async () => {
+  const { replyMode, pullComments } = await import('../server/lib/yeoriActive.js')
+  const cases = [['너무 귀여워요ㅠㅠ', 'ko'], ['So cute, love this vibe!', 'en'], ['카톡 아이디 알려줘', '무대응'], ['http://spam.link 클릭', '무대응']]
+  const miss = cases.filter(([t, want]) => replyMode(t) !== want)
+  const { igConfigured } = await import('../server/lib/igInsights.js')
+  const r = igConfigured() ? await pullComments() : { skipped: '토큰 없음' }
+  return { ok: miss.length === 0 && !r.error, evidence: `판정 ${cases.length - miss.length}/${cases.length} · 댓글 읽기: ${r.error || r.skipped || `댓글 ${r.comments}건, 새 초안 ${r.drafts}`}` }
+})
+await check('E5', '에피소드 사건 원장 + 콜백 제안(오늘의 여리 연결)', async () => {
+  const { suggestCallbacks } = await import('../server/lib/yeoriActive.js')
+  const ev = JSON.parse(fs.readFileSync(mp.statePath('yeori-events.json'), 'utf-8'))
+  const cb = suggestCallbacks(); const mood = JSON.parse(fs.readFileSync(mp.statePath('yeori-mood.json'), 'utf-8')).current
+  return { ok: ev.length > 0 && cb.length > 0 && mood.callback === cb[0], evidence: `원장 ${ev.length}편(${ev.map(e => e.code).join(',')}) · 콜백 "${cb[0]}" · 오늘의 여리 연결 ${mood.callback === cb[0] ? 'O' : 'X'}` }
+})
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

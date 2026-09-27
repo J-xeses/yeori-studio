@@ -49,6 +49,9 @@ export async function syncInsights({ log = () => {} } = {}) {
   const token = await maybeRefresh(sec)
   const me = await gget(`${G}/me?fields=user_id,username,followers_count,follows_count,media_count&access_token=${token}`)
   const media = (await gget(`${G}/me/media?fields=id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count&limit=50&access_token=${token}`)).data || []
+  // 지표를 먼저 다 받아 두고, 불러오기→반영→저장은 await 없이 한 번에 — 도중에 다른 저장(여리 초안함 등)과 rev 충돌 방지(9/27 I1 실패)
+  const insById = {}
+  for (const m of media) insById[m.id] = await mediaInsights(m.id, m.media_product_type === 'REELS' ? 'REELS' : m.media_type, token)
   const ops = loadOps()
   const now = new Date().toISOString()
   const short = (u) => (String(u || '').match(/\/(?:p|reel)\/([^/?#]+)/) || [])[1]
@@ -61,8 +64,7 @@ export async function syncInsights({ log = () => {} } = {}) {
     if (!post) continue
     if (!post.link) { post.link = m.permalink; linked++ }
     if (post.status !== '게시') post.status = '게시'
-    const type = m.media_product_type === 'REELS' ? 'REELS' : m.media_type
-    const ins = await mediaInsights(m.id, type, token)
+    const ins = insById[m.id]
     const metrics = {
       reach: ins.reach ?? null, views: ins.views ?? null, likes: ins.likes ?? m.like_count ?? null, comments: ins.comments ?? m.comments_count ?? null,
       shares: ins.shares ?? null, saves: ins.saved ?? null, visits: ins.profile_visits ?? null, follows: ins.follows ?? null,

@@ -120,6 +120,26 @@
     "<br>📝 캡션 한 줄: <i>"+m.captionLine+"</i><br>📱 스토리 아이디어: "+m.storyIdea+(m.callback?"<br>🔁 "+m.callback:"")+
     "<br><span style=\"color:#888;font-size:11px\">근거: "+(m.reasons||[]).join(" · ")+" · "+new Date(m.at).toLocaleString("ko-KR")+"</span>"}).catch(()=>{})
   </script>
+  <!-- 서여리 능동 대응 큐(감정이입 P3·P4·P5, 2026-09-27) — /api/yeori-queue. 답장 승인 = 실제 인스타 답글 게시 -->
+  <div id="yeoriQ" style="border:1px solid #6b5bd6;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:13px;line-height:1.6"><b>💬 여리의 초안함</b> <span style="color:#888">불러오는 중…</span></div>
+  <script>
+  function yqEsc(t){return String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+  function yqLoad(){fetch("/api/yeori-queue").then(r=>r.json()).then(d=>{const e=document.getElementById("yeoriQ");const q=d.queue||[];const wait=q.filter(x=>x.status==="대기");
+    let h="<b>💬 여리의 초안함</b> · 대기 "+wait.length+"건 <button onclick=\"yqRun(this)\" style=\"font-size:11px\">지금 확인(댓글·트리거)</button>";
+    for(const x of wait){const tag=x.kind==="reply"?"💬 답장":x.kind==="story"?"📱 스토리":"📝 캡션";
+      h+="<div style=\"border-top:1px dashed #555;margin-top:6px;padding-top:6px\">"+tag+" · <span style=\"color:#888\">"+yqEsc(x.trigger)+" · "+yqEsc(x.by)+"</span>"+(x.comment?"<br>└ 댓글: <i>"+yqEsc(x.comment)+"</i>"+(x.postLink?" <a href=\""+yqEsc(x.postLink)+"\" target=_blank>게시물</a>":""):"")+
+        "<br><textarea id=\"yq_"+x.id+"\" rows=2 style=\"width:100%;font-size:13px\">"+yqEsc(x.text)+"</textarea>"+
+        "<button onclick=\"yqDo('"+x.id+"','approve')\">"+(x.kind==="reply"?"승인 → 답글 게시":"승인(직접 게시)")+"</button> <button onclick=\"yqDo('"+x.id+"','reject')\">반려</button> <button onclick=\"navigator.clipboard.writeText(document.getElementById('yq_"+x.id+"').value)\">복사</button></div>"}
+    const skip=q.filter(x=>x.status==="무대응").length; if(skip)h+="<div style=\"color:#888;font-size:11px\">안전선 무대응 "+skip+"건(악플·링크·연락 유도)</div>";
+    if((d.callbacks||[]).length)h+="<div style=\"margin-top:6px\">🔁 다음 대본 콜백 제안: "+d.callbacks.map(yqEsc).join(" / ")+"</div>";
+    e.innerHTML=h}).catch(()=>{})}
+  function yqDo(id,a){const t=document.getElementById("yq_"+id).value;if(a==="approve"&&!confirm("이 문장으로 승인할까요?
+
+"+t))return;
+    fetch("/api/yeori-queue/"+id+"/"+a,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:t})}).then(r=>r.json()).then(j=>{if(j.error)alert(j.error);yqLoad()})}
+  function yqRun(b){b.disabled=true;b.textContent="확인 중…";fetch("/api/yeori-queue/run",{method:"POST"}).then(r=>r.json()).then(()=>yqLoad())}
+  yqLoad();
+  </script>
   <div class="kpis" id="kpis"></div>
   <h2>30일 캘린더 <span class="muted" id="calr"></span></h2><div class="cal" id="cal"></div>
   <div class="two" style="margin-top:6px">

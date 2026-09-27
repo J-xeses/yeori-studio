@@ -90,6 +90,8 @@ export async function computeMood({ now = new Date() } = {}) {
     if (hit) { mood = '뿌듯'; reasons.push(`"${hit.title}" 저장·공유 ${(hit.metrics.shares || 0) + (hit.metrics.saves || 0)}`) }
     if (posted[0]) callback = `지난 게시물 "${posted[0].title}" 이야기를 이어서`
   } catch { /* ops 없음 */ }
+  // P5 사건 원장이 있으면 콜백은 원장 기준(누가 무엇을 했나)
+  try { const { suggestCallbacks } = await import('./yeoriActive.js'); callback = suggestCallbacks(1)[0] || callback } catch { /* 원장 없음 */ }
 
   const state = {
     date: kst.toISOString().slice(0, 10), at: new Date().toISOString(),
