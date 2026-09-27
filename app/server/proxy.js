@@ -7675,6 +7675,61 @@ function swapServerTabState(state, toId) {
   for (const k of Object.keys(defs)) state[k] = { ...defs[k], ...(src[k] || {}) }
 }
 
+// ── GET /api/episodes · GET /api/episodes/:episodeId — 에피소드 목록/컷 요약(읽기전용) ──
+// code_generator_v1.html(Codi_GEN, file://) 사이드바·컷 목록 전용(2026-09-27 코디젠 개편).
+// /api/studio-state 는 studio-secrets.json(apiKeys)까지 병합해 내려주므로 정적 페이지에 쓰기엔
+// 과함 — 필요한 필드만 추려 준다. 상태를 바꾸지 않는다(활성 전환은 /api/set-active-episode).
+function episodeSummaryForList(id, ep) {
+  const e = ep?.episode || {}
+  return {
+    id,
+    code: resolveEpisodeCode(e, id),
+    title: e.title || '',
+    contentType: e.contentType || '',
+    number: e.number ?? null,
+    topicCode: e.topicCode || '',
+    scnCode: e.scnCode || '',
+    cutCount: (ep?.cuts || []).length,
+    masterCode: typeof e.masterCode === 'string' ? e.masterCode : '',
+    createdAt: ep?.createdAt || null,
+  }
+}
+
+app.get('/api/episodes', (req, res) => {
+  try {
+    const state = loadStudioState()
+    const episodes = Object.entries(state.episodes || {}).map(([id, ep]) => episodeSummaryForList(id, ep))
+    res.json({ ok: true, activeEpisodeId: state.activeEpisodeId || null, episodes })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+app.get('/api/episodes/:episodeId', (req, res) => {
+  try {
+    const state = loadStudioState()
+    const ep = getEpisodeOrThrow(state, req.params.episodeId)
+    const hasText = (v) => typeof v === 'string' && v.trim() !== ''
+    const cuts = (ep.cuts || []).map(c => ({
+      no: c.no,
+      cutTitle: c.cutTitle || '',
+      cutType: c.cutType || '',
+      scene: c.scene || '',
+      character: c.character || '',
+      duration: Number(c.duration) || null,
+      segCount: Array.isArray(c.segments) && c.segments.length > 1 ? c.segments.length : 1,
+      hasDialogue: hasText(c.dialogue),
+      hasNarration: hasText(c.narration),
+      hasImagePrompt: hasText(c.imagePrompt),
+      hasVideoPrompt: hasText(c.videoPrompt),
+      masterCode: c.masterCode && typeof c.masterCode === 'object' ? c.masterCode : null,
+    }))
+    res.json({ ok: true, episode: episodeSummaryForList(req.params.episodeId, ep), cuts })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ ok: false, error: err.message })
+  }
+})
+
 // ── POST /api/episodes — 신규 에피소드 생성(에이전트 리더 채팅의 create_episode 액션 전용,
 // content_matrix_v3.html의 file:// 페이지가 직접 호출하므로 /api/script-upload·/api/pipeline/*와
 // 같은 패턴으로 인증 없이 둠). 지금까지 에피소드 생성은 스튜디오 UI의 "+ 새 에피소드 추가"
