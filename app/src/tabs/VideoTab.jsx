@@ -577,7 +577,7 @@ export default function VideoTab() {
   const selCutForText = withCaptionOverride(selCutForTextRaw)
   const clipsForText = selCutForText ? (videoClips[selCutForText.id] || []) : []
   const segsForText = selCutForText
-    ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0, selCutForText.captionSegTiming)
+    ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), isReel ? '' : stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0, selCutForText.captionSegTiming)
     : []
   // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
   // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다. 클립이 1개뿐인데 자막 구간이
@@ -1832,7 +1832,7 @@ export default function VideoTab() {
           // 보이게 한다(2026-09-14, 사용자 지적: "컷2는 a,b로 구분되는데 왜 다른 컷은 안 되나").
           const plannedSegs = Array.isArray(selCut.segments) ? selCut.segments : []
           const slotCount = Math.max(clips.length, plannedSegs.length)
-          const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), stripMeta(selCut.dialogue || selCut.narration || ''), selCut.duration || 0, selCut.captionSegTiming)
+          const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), isReel ? '' : stripMeta(selCut.dialogue || selCut.narration || ''),   /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */ selCut.duration || 0, selCut.captionSegTiming)
           // 클립(영상 조각) 수보다 자막 구간이 더 많은 컷(예: 클립 1개 안에서 대사→나레이션이
           // 순차 전환되는 R04 스타일) — 남는 구간은 업로드 UI 없는 "자막 전용" 행으로 추가 표시.
           // 2026-09-22, 성준님 지적: 자막칸에 "/"가 안 나뉜 채 통짜로 들어가 있던 사고 수정.

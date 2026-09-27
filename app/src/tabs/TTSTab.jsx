@@ -138,8 +138,9 @@ export default function TTSTab() {
 
   // 화자별 미세조정 — 이름이 명시된 화자 트랙(CUT 15/21 두샷 등)에만 적용. 전 컷 공통.
   // 이름 없는 대사(대부분의 서여리 대사)는 트랙 개별값(= trackDefaults) 을 그대로 쓴다.
+  // 옛 트랙엔 settings 가 없는 경우가 있어(LF_T01 컷3·5·7) 슬라이더가 'speed' 를 읽다 탭 전체가 멈췄음 → 트랙 종류 기본값으로(2026-09-27)
   const resolveSettings = (track) =>
-    (track.speaker && speakerSettingFor(track.speaker)) || track.settings
+    (track.speaker && speakerSettingFor(track.speaker)) || track.settings || { ...(FALLBACK_DEFAULTS[track.type] || FALLBACK_DEFAULTS.dialogue) }
   const setSpeakerSetting = (name, key, value) => {
     const canon = canonSpeaker(name)
     const cur = speakerSettings[canon] || { ...FALLBACK_DEFAULTS.dialogue }
