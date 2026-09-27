@@ -16,10 +16,38 @@ blurry friends sitting on the floor in the background laughing (faces soft and o
 photorealistic, candid, vertical 9:16, no text or logos on screen
 
 
+.....
+
+❗소리 미생성!
+
+지금 바로: 다시 생성할 때 쓸 프롬프트
+
+기존 VP 끝에 아래 Audio 문단을 붙여 Flow에서 한 번 더 생성해 보세요.
+[0-6s] Handheld old smartphone footage: the young woman performs a dance challenge with a dead-serious face, but every move is half a beat late, her arms go one way and her feet the other, and on the final pose she wobbles and almost falls; friends in the soft-focus background burst out laughing.
+
+Audio: a cheesy, upbeat dance track is playing loudly from a small phone speaker in the room — tinny, slightly distorted, clearly part of the scene — and it keeps playing through the whole clip. Friends giggle from the start, laugh louder as she misses the beats, clap along off-rhythm, and scream with laughter at the final wobble. No dialogue, no narration, no subtitles.
+
+근본 수정 (다음 작업 제안)
+
+대본에 현장음 전용 줄(예: AU: 폰 스피커 댄스 비트 + 동기들 웃음)을 두고, 클립 프롬프트가 이 줄을 "Audio:" 문단으로 자동으로 붙이게 하겠습니다.
+- 편집 때 따로 까는 배경 BGM과 구분하는 게 핵심입니다. 그러지 않으면 Veo 음악과 최종 BGM이 겹칩니다.
+- 파서(대본 탭 + 서버, 두 파일 동기)와 clipPrompt, 자가 점검 항목까지 코드만 다루는 작업이라 클라우드 크레딧으로 처리하기 좋습니다(예상 약 $5).
+
+다시 생성해 보시고 결과를 알려 주세요. 그 결과를 근거로 근본 수정 지시서를 만들겠습니다.
+
+
+
+
 
 [CUT 3]
 
 두 인물이 서로 주고받는 상황에서 지유와 여리 구분 못하는 현상....  이름마다 좌, 우 표시....  --> 성공!!!
+
+
+
+
+
+
 
 
 
