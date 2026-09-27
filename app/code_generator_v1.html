@@ -83,6 +83,21 @@
   .sb-item.active .sb-item-label { color: var(--teal); font-weight: 700; }
   .sb-badge { margin-left: auto; font-size: 9px; padding: 1px 6px; border-radius: 8px; background: transparent; color: var(--text3); border: 1px solid var(--border2); font-family: 'Space Mono', monospace; }
   .sb-item.active .sb-badge { background: transparent; color: var(--teal); border-color: var(--teal); }
+  .sb-empty { font-size: 10px; color: var(--text3); padding: 4px 12px 6px; line-height: 1.6; }
+  .sb-empty b { color: var(--text2); font-weight: 700; }
+  .sb-retry { display: inline-block; margin-top: 4px; font-size: 9px; padding: 2px 8px; border: 1px solid var(--border2); border-radius: 3px; cursor: pointer; color: var(--text2); font-family: 'Space Mono', monospace; }
+  .sb-retry:hover { border-color: var(--teal); color: var(--teal); }
+  .sb-refresh { margin-left: auto; cursor: pointer; font-size: 11px; color: var(--text3); padding: 0 2px; }
+  .sb-refresh:hover { color: var(--teal); }
+  .sb-ep-code { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text2); flex-shrink: 0; }
+  .sb-item.active .sb-ep-code { color: var(--teal); font-weight: 700; }
+  .sb-ep-title { font-size: 10px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .sb-live { font-size: 8px; color: var(--teal-light); border: 1px solid rgba(159,225,203,0.35); border-radius: 3px; padding: 0 4px; flex-shrink: 0; font-family: 'Space Mono', monospace; }
+  .cut-empty { font-size: 10px; color: var(--text3); padding: 6px 12px; line-height: 1.6; }
+  .empty-card { border: 1px dashed var(--border2); border-radius: var(--radius-sm); padding: 22px 18px; text-align: center; color: var(--text3); font-size: 12px; line-height: 1.8; }
+  .empty-card b { color: var(--text2); }
+  .ep-id-note { font-size: 10px; margin-top: 6px; color: var(--text3); line-height: 1.6; }
+  .ep-id-note.warn { color: var(--scarlet-light); }
   .sb-div { height: 1px; background: var(--border); margin: 8px 12px; }
 
   .cut-list { padding: 0 8px; flex: 1; }
@@ -244,22 +259,25 @@
     <span class="tb-sep">—</span>
     <span class="tb-brand">A Creative Agent · Code Generator</span>
     <div class="tb-meta">
-      <span>에피소드 <b id="tb-ep-id">SF_E01</b></span>
-      <span>컷 <b id="tb-cut-pos">C01/05</b></span>
+      <span>에피소드 <b id="tb-ep-id">—</b></span>
+      <span>컷 <b id="tb-cut-pos">—</b></span>
       <span>완성도 <b id="tb-progress" style="color:var(--teal)">0%</b></span>
     </div>
   </div>
 
   <!-- 시스템 상태 티커 -->
   <div class="ticker">
-    <span class="ticker-dot"></span>
-    <span id="ticker-text">SYSTEM ONLINE</span>
+    <!-- 전부 실제 연결 결과로만 채움(renderTicker) — 고정 "ONLINE/READY" 문구 없음 -->
+    <span class="ticker-dot" id="ticker-dot"></span>
+    <span>STUDIO_SERVER <span id="ticker-server-state" style="color:var(--text3)">CHECKING</span></span>
     <span class="ticker-sep">·</span>
-    <span>PIPELINE READY</span>
+    <span>EPISODES <span id="ticker-episodes-state" style="color:var(--text3)">—</span></span>
     <span class="ticker-sep">·</span>
-    <span>CANDIDATE_POOL <span id="ticker-linked-state" style="color:var(--text3)">UNLINKED</span></span>
+    <span>CANDIDATE_POOL <span id="ticker-linked-state" style="color:var(--text3)">CHECKING</span></span>
     <span class="ticker-sep">·</span>
-    <span>CODI_GEN v1.0</span>
+    <span>CODEBOOK <span id="ticker-codebook-state" style="color:var(--text3)">CHECKING</span></span>
+    <span class="ticker-sep">·</span>
+    <span>CODI_GEN v1.1</span>
   </div>
 
   <!-- 탭 -->
@@ -274,36 +292,22 @@
 
   <div class="body">
 
-    <!-- 사이드바 -->
+    <!-- 사이드바 — 채널·에피소드는 GET /api/episodes(스튜디오 studio-state.json) 실데이터, 컷 목록은
+         선택한 에피소드(GET /api/episodes/:id) 또는 후보·초안에서 직접 추가한 컷. 고정 예시 없음. -->
     <div class="sidebar">
       <div class="sb-sec">
-        <div class="sb-label">채널</div>
-        <div class="sb-item active">
-          <span class="sb-item-icon">👩</span>
-          <span class="sb-item-label">서여리</span>
-          <span class="sb-badge">2</span>
-        </div>
-        <div class="sb-item">
-          <span class="sb-item-icon">📱</span>
-          <span class="sb-item-label">AI 자기계발</span>
-        </div>
+        <div class="sb-label">채널 · 서여리</div>
+        <div id="sb-channels"></div>
       </div>
       <div class="sb-div"></div>
       <div class="sb-sec">
-        <div class="sb-label">에피소드</div>
-        <div class="sb-item active">
-          <span class="sb-item-icon">●</span>
-          <span class="sb-item-label" id="sb-ep-current">SF_E01</span>
-        </div>
-        <div class="sb-item">
-          <span class="sb-item-icon">○</span>
-          <span class="sb-item-label">LF_E01_MEM</span>
-        </div>
+        <div class="sb-label" style="display:flex;align-items:center">에피소드<span class="sb-refresh" onclick="loadStudioEpisodes(true)" title="다시 불러오기">↻</span></div>
+        <div id="sb-episodes"></div>
       </div>
       <div class="sb-div"></div>
-      <div class="sb-label" style="padding:0 12px;margin-bottom:6px">컷 목록</div>
+      <div class="sb-label" style="padding:0 12px;margin-bottom:6px">컷 목록 <span id="sb-cut-source" style="text-transform:none;letter-spacing:0;font-weight:400"></span></div>
       <div class="cut-list" id="cut-list"></div>
-      <div class="cut-add" onclick="showToast('컷 설계 탭에서 컷을 추가할 수 있어요')">+ 컷 추가</div>
+      <div class="cut-add" onclick="addCut()">+ 컷 추가</div>
     </div>
 
     <!-- 메인 -->
@@ -334,9 +338,10 @@
         <div class="card" style="margin-bottom:16px">
           <div class="card-h"><span class="idx">04</span>🆔 에피소드 ID</div>
           <div style="display:flex;gap:8px;align-items:center">
-            <input class="input" id="ep-id-input" placeholder="예: SF_E01_PSY" oninput="state.epId=this.value; renderAll()">
+            <input class="input" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); renderAll()">
             <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
           </div>
+          <div class="ep-id-note" id="ep-id-note"></div>
         </div>
 
         <div class="phase-badge pb-2"><span class="idx">P2</span>Phase 2 — 서여리 기본값</div>
@@ -374,6 +379,8 @@
       <!-- TAB: 컷 설계 -->
       <div id="tab-cut" class="tab-content" style="display:none">
         <div class="phase-badge pb-1"><span class="idx">P3</span>Phase 3 — 컷 설계 · <span id="cut-phase-num">C01</span> 진행 중</div>
+        <div id="cut-empty" class="empty-card" style="display:none"></div>
+        <div id="cut-body">
 
         <div class="g g2" style="margin-bottom:16px">
           <div class="card">
@@ -454,6 +461,7 @@
             </div>
           </div>
         </div>
+        </div><!-- /cut-body -->
       </div>
 
       <!-- TAB: 코드 확인 -->
@@ -531,28 +539,70 @@ const YEORI_SERVER = 'http://localhost:3001';
 // (같은 스킴) Chrome에서는 이 값이 두 파일 사이에 실제로 공유된다.
 const CODI_GEN_STORAGE_KEY = 'codi_gen_candidate';
 
-// ── 데이터 ─────────────────────────────────────────────────────
-const PLATFORM_OPTIONS = [
-  { code: 'SF',   label: 'SF 숏폼' },
-  { code: 'LF',   label: 'LF 롱폼' },
-  { code: 'IG_R', label: 'IG_R 릴스' },
-  { code: 'IG_P', label: 'IG_P 피드' },
-  { code: 'IG_S', label: 'IG_S 스토리' },
-  { code: 'TK',   label: 'TK 틱톡' },
-];
-const TOPIC_OPTIONS = [
-  { code: 'PSY', label: 'PSY 심리' },
-  { code: 'SOC', label: 'SOC 사회' },
-  { code: 'LIF', label: 'LIF 일상' },
-  { code: 'REL', label: 'REL 관계' },
-  { code: 'TRD', label: 'TRD 트렌드' },
-];
-const SCENARIO_OPTIONS = [
-  { code: 'MYS', label: 'MYS 미스터리' },
-  { code: 'DOC', label: 'DOC 다큐' },
-  { code: 'EDU', label: 'EDU 교육' },
-  { code: 'ENT', label: 'ENT 엔터' },
-];
+// ── 어휘(VOCAB) — 스튜디오와 같은 코드만 쓴다. 바꿀 땐 괄호 안 출처와 함께 바꿀 것 ──────────
+// 예전엔 주제·시나리오·플랫폼이 이 파일에만 있는 상수였고 에피소드 ID도 옛 규칙(SF_E01_PSY)이었다
+// (2026-09-27 성준님 점검). 지금은 스튜디오가 실제로 저장하는 값과 같은 목록을 한곳에 모은다.
+const VOCAB = {
+  // 콘텐츠 유형 — src/App.jsx CONTENT_TYPE_OPTIONS / SIDEBAR_EP_GROUPS 와 동일.
+  // series = 에피소드 코드 접두사(server/lib/episodeCode.js: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리}).
+  PLATFORM: [
+    { code: 'IG_R', label: 'IG_R 릴스',   series: 'IG_R', channel: 'instagram' },
+    { code: 'IG_P', label: 'IG_P 피드',   series: 'IG_P', channel: 'instagram' },
+    { code: 'IG_S', label: 'IG_S 스토리', series: 'IG_S', channel: 'instagram' },
+    { code: 'SF',   label: 'SF 숏폼',     series: 'SF_E', channel: 'youtube' },
+    { code: 'LF',   label: 'LF 롱폼',     series: 'LF_E', channel: 'youtube' },
+    { code: 'TK',   label: 'TK 틱톡',     series: 'TK_E', channel: 'tiktok' },
+  ],
+  CHANNELS: [
+    { id: 'youtube',   icon: '📺', label: 'YouTube' },
+    { id: 'instagram', icon: '📷', label: 'Instagram' },
+    { id: 'tiktok',    icon: '🎵', label: 'TikTok' },
+  ],
+  // 주제(episode.topicCode) — src/tabs/ScriptGenTab.jsx TOPIC_CODES 와 동일. 단일 선택(에피소드당 1개 저장).
+  TOPIC: [
+    { code: 'PSY', label: 'PSY 심리' },
+    { code: 'SOC', label: 'SOC 사회' },
+    { code: 'LIF', label: 'LIF 라이프스타일' },
+    { code: 'REL', label: 'REL 관계' },
+    { code: 'TRD', label: 'TRD 트렌드' },
+  ],
+  // 시나리오(episode.scnCode) — src/tabs/ScriptGenTab.jsx SCN_CODES 와 동일. 단일 선택(이야기 틀은 하나).
+  SCN: [
+    { code: 'DOC',  label: 'DOC 다큐' },
+    { code: 'MYS',  label: 'MYS 미스터리' },
+    { code: 'NEWS', label: 'NEWS 뉴스' },
+    { code: 'EDU',  label: 'EDU 교육' },
+    { code: 'ENT',  label: 'ENT 엔터' },
+    { code: 'REL',  label: 'REL 릴레이션십' },
+  ],
+  // 스튜디오 컷 유형(cut.cutType, v8 대본 CT 필드) → codebook.PL 파이프라인 코드
+  CUT_TYPE_TO_PL: { YEORI: 'YR_VD', BROLL: 'BR_VD', GRAPHIC: 'GR_ED', CAPCUT: 'CC_ED', PIP: 'PIP_VD' },
+  // 후보 풀의 주제 요약/키워드 → TOPIC 추정(대충 맞히는 기본값용, 정교한 분류 아님)
+  TOPIC_KEYWORDS: [
+    { code: 'PSY', words: ['심리', '정신', '마음', '감정'] },
+    { code: 'SOC', words: ['사회', '뉴스', '이슈'] },
+    { code: 'LIF', words: ['일상', '라이프', '브이로그'] },
+    { code: 'REL', words: ['관계', '연애', '친구'] },
+    { code: 'TRD', words: ['트렌드', '유행', '챌린지'] },
+  ],
+};
+const PLATFORM_OPTIONS = VOCAB.PLATFORM;
+// 스튜디오 데이터에 목록 밖 코드(예: IG_R04 의 topicCode "INT")가 있으면 지우지 않고 뒤에 붙여 보여준다.
+function vocabWithExtra(list, current, note = '스튜디오 목록 외') {
+  if (!current || list.some(o => o.code === current)) return list;
+  return [...list, { code: current, label: `${current} (${note})`, extra: true }];
+}
+// 컷 설계 필드용 — 코드북에 없는 코드(스튜디오 대본에서 온 MD_IMP 등)는 따로 표시
+function cbExtra(list, current) {
+  return vocabWithExtra(list, current, codebook ? '코드북 외' : '코드북 미로드');
+}
+function pipelineTypeClass(pl) {
+  if (!pl) return 't-br';
+  if (pl.startsWith('YR_') || pl.startsWith('PIP_')) return 't-yr';
+  if (pl.startsWith('GR_') || pl.startsWith('CC_')) return 't-gr';
+  return 't-br';
+}
+
 const LOOK_OPTIONS = [
   { code: 'LK_CS', label: 'LK_CS 캐주얼' },
   { code: 'LK_FM', label: 'LK_FM 포멀' },
@@ -633,8 +683,9 @@ async function loadCodebook() {
     if (!data.ok) throw new Error(data.error || '코드북 로드 실패');
     codebook = data.codebook;
     buildCodebookOptions();
-    showToast('✓ 코드북 연동 완료 (SP/SH/CA/MD/AT/LOOK)');
+    markServer(true);
   } catch (e) {
+    if (e instanceof TypeError) markServer(false);
     console.warn('[codi_gen] codebook 로드 실패:', e.message);
     showToast('⚠️ 코드북 서버 연결 실패 — proxy.js(localhost:3001) 실행 중인지 확인하세요');
   }
@@ -664,31 +715,29 @@ const SHOT_EN = { SH_CU: 'close-up shot', SH_MCU: 'medium close-up shot', SH_ECU
 const ACTION_EN = { AT_AC_05: 'looking directly at camera', AT_SI_01: 'sitting', AT_MW_01: 'walking' };
 const MOOD_EN = { MD_SUR: 'shocked expression', MD_INT: 'focused expression', MD_CUR: 'curious expression', MD_DRM: 'dreamy atmosphere' };
 
-const DEMO_CANDIDATES = [
-  { icon: '🧠', title: '회의가 끝나면 기억이 안 나는 이유', type: 'LF', keywords: 'PSY · 트렌드레이더 수집', story: '', script: '' },
-  { icon: '😴', title: '한국인이 번아웃을 모르는 이유', type: 'SF', keywords: 'PSY · SOC · 직접 기획', story: '', script: '' },
-  { icon: '📱', title: '숏폼을 보고 나면 왜 공허할까', type: 'SF', keywords: 'PSY · LIF · 트렌드레이더 수집', story: '', script: '' },
-];
-
-const DEMO_CUTS = [
-  { num: 'C01', type: 'YR_VD', typeClass: 't-yr', status: 'done' },
-  { num: 'C02', type: 'BR_',   typeClass: 't-br', status: 'done' },
-  { num: 'C03', type: 'YR_VD', typeClass: 't-yr', status: 'wip' },
-  { num: 'C04', type: 'GR_',   typeClass: 't-gr', status: 'tbd' },
-  { num: 'C05', type: 'YR_VD', typeClass: 't-yr', status: 'tbd' },
-];
-
 // ── 상태 ─────────────────────────────────────────────────────
-let candidatePool = [...DEMO_CANDIDATES];
-let currentCutIndex = 2; // C03 활성(데모 기본값)
-const cutDesignState = {}; // 컷 번호(C01 등)별 컷 설계(Phase 3) 상태
+// 고정 예시 데이터(DEMO_CANDIDATES/DEMO_CUTS)는 2026-09-27 제거 — 서버가 없으면 빈 상태를 보여준다.
+let candidatePool = [];
+let candidateLink = { state: 'checking', error: '' }; // checking | linked | empty | nokey | offline
+let serverState = 'checking';                          // checking | online | offline
+let studioEpisodes = { status: 'loading', list: [], activeEpisodeId: null, error: '' }; // loading | ok | offline | error
+let selectedChannel = 'all';
+// 지금 작업 대상: 스튜디오 에피소드 / 후보 풀 후보 / 직접 만든 초안
+let source = { kind: 'none' }; // { kind:'episode', id, code } | { kind:'candidate', idx } | { kind:'draft' }
+let cuts = [];                 // 작업 대상의 컷 — { uid, num, no, type, typeClass, status, origin, title, scene, g }
+let cutsStatus = 'none';       // none | loading | ok | error
+let cutsError = '';
+let currentCutIndex = 0;
+const cutDesignState = {};     // cut.uid 별 컷 설계 상태(에피소드가 바뀌어도 섞이지 않게 uid = 출처:컷번호)
 
 const state = {
-  selectedCandidateIdx: 0,
-  platform: 'SF',
-  topic: 'PSY',
-  scenario: 'MYS',
+  selectedCandidateIdx: -1,
+  platform: 'IG_R',
+  topic: '',
+  scenario: '',
   epId: '',
+  epIdNote: '',
+  epIdAuto: false,
   look: 'LK_CS',
   top: 'TOP_KNT',
   bottom: 'BTM_DNM',
@@ -715,56 +764,82 @@ function showTab(id, btn) {
   btn.classList.add('active');
 }
 
+// ── 서버 연결 상태 · 티커 ─────────────────────────────────────────────────────
+// 티커의 모든 값은 실제 요청 결과로만 채운다(예전의 고정 "SYSTEM ONLINE · PIPELINE READY" 제거).
+function tickerSpan(id, text, tone) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = tone === 'ok' ? 'var(--teal)' : tone === 'warn' ? 'var(--scarlet-light)' : 'var(--text3)';
+}
+function renderTicker() {
+  const srv = serverState === 'online' ? ['ONLINE', 'ok'] : serverState === 'offline' ? ['OFFLINE', 'warn'] : ['CHECKING', ''];
+  tickerSpan('ticker-server-state', srv[0], srv[1]);
+  const dot = document.getElementById('ticker-dot');
+  if (dot) dot.style.background = serverState === 'online' ? 'var(--teal)' : serverState === 'offline' ? 'var(--scarlet)' : 'var(--border2)';
+
+  const ep = studioEpisodes;
+  tickerSpan('ticker-episodes-state',
+    ep.status === 'ok' ? `${ep.list.length}` : ep.status === 'loading' ? '…' : '—',
+    ep.status === 'ok' ? 'ok' : ep.status === 'loading' ? '' : 'warn');
+
+  const c = candidateLink;
+  const candText = { linked: `LINKED ${candidatePool.length}`, empty: 'EMPTY', nokey: 'NO NOTION KEY', offline: 'UNLINKED', checking: 'CHECKING' }[c.state] || 'UNLINKED';
+  tickerSpan('ticker-linked-state', candText, c.state === 'linked' ? 'ok' : c.state === 'checking' ? '' : 'warn');
+
+  tickerSpan('ticker-codebook-state', codebook ? 'LOADED' : (serverState === 'offline' ? 'UNAVAILABLE' : 'CHECKING'), codebook ? 'ok' : (serverState === 'offline' ? 'warn' : ''));
+}
+function markServer(ok) {
+  if (ok) serverState = 'online';
+  else if (serverState !== 'online') serverState = 'offline';
+}
+
 // ── 후보 풀 ─────────────────────────────────────────────────────
-// 주제 요약/키워드 텍스트에서 TOPIC_OPTIONS 코드를 추측(간단한 키워드 매칭 -- 정교한
-// 분류가 아니라 Phase1 주제 필 기본 선택값을 대충이라도 맞혀주기 위한 용도)
-const TOPIC_KEYWORD_MAP = [
-  { code: 'PSY', words: ['심리', '정신', '마음'] },
-  { code: 'SOC', words: ['사회'] },
-  { code: 'LIF', words: ['일상', '라이프'] },
-  { code: 'REL', words: ['관계', '연애'] },
-  { code: 'TRD', words: ['트렌드', '유행'] },
-];
 function guessTopicCode(text) {
   const t = String(text || '');
-  const hit = TOPIC_KEYWORD_MAP.find(e => e.words.some(w => t.includes(w)));
+  const hit = VOCAB.TOPIC_KEYWORDS.find(e => e.words.some(w => t.includes(w)));
   return hit ? hit.code : null;
 }
 
+// updateLinkedStatus(true/false)는 content_matrix 핸드오프 경로 호환용으로 남김
 function updateLinkedStatus(linked) {
-  const el = document.getElementById('ticker-linked-state');
-  if (!el) return;
-  el.textContent = linked ? 'LINKED' : 'UNLINKED';
-  el.style.color = linked ? 'var(--teal)' : 'var(--text3)';
+  candidateLink = { state: linked ? 'linked' : 'offline', error: '' };
+  renderTicker();
 }
 
-async function loadFromCandidatePool() {
+async function loadFromCandidatePool(silent) {
+  candidateLink = { state: 'checking', error: '' };
+  renderTicker();
   try {
     const res = await fetch(`${YEORI_SERVER}/api/candidates`);
     const data = await res.json();
-    if (data.success && Array.isArray(data.candidates) && data.candidates.length) {
-      candidatePool = data.candidates.map(c => ({
+    markServer(true);
+    const linked = candidatePool.filter(c => c.linked); // content_matrix에서 넘겨받은 후보는 유지
+    if (data.success && Array.isArray(data.candidates)) {
+      candidatePool = [...linked, ...data.candidates.map(c => ({
         icon: '📦',
         id: c.id || null,
         title: c.title || '(제목 없음)',
-        type: c.type || 'SF',
+        type: c.type || '',
         keywords: c.keywords || '',
         topic: c.topic || '',
         story: c.story || '',
         script: c.script || '',
         checklist: c.checklist || {},
-      }));
-      state.selectedCandidateIdx = 0;
-      updateLinkedStatus(true);
-      showToast('✓ 후보 풀에서 불러왔어요 (' + candidatePool.length + '건)');
+      }))];
+      candidateLink = { state: candidatePool.length ? 'linked' : 'empty', error: '' };
+      if (!silent) showToast(candidatePool.length ? `✓ 후보 풀에서 불러왔어요 (${candidatePool.length}건)` : '후보 풀이 비어 있어요');
     } else {
-      updateLinkedStatus(false);
-      showToast('⚠️ 후보 풀에 데이터가 없어요 — 데모 데이터를 유지합니다');
+      const nokey = /Notion API 키/.test(data.error || '');
+      candidateLink = { state: nokey ? 'nokey' : 'empty', error: data.error || '' };
+      if (!silent) showToast(nokey ? '⚠️ Notion 키가 없어 후보 풀을 못 읽었어요 (studio-secrets.json apiKeys.notion)' : '⚠️ 후보 풀 조회 실패: ' + (data.error || '데이터 없음'));
     }
   } catch (e) {
-    updateLinkedStatus(false);
-    showToast('⚠️ 후보 풀 연결 실패 — 데모 데이터를 유지합니다');
+    markServer(false);
+    candidateLink = { state: 'offline', error: e.message };
+    if (!silent) showToast('⚠️ 스튜디오 서버가 꺼져 있어요 — 후보 풀을 불러올 수 없어요');
   }
+  if (source.kind === 'candidate' && !candidatePool[state.selectedCandidateIdx]) source = { kind: 'none' };
   renderAll();
 }
 
@@ -774,7 +849,7 @@ function applyIncomingCandidate(data) {
     icon: '🔗',
     id: data.id || null,
     title: data.title || '(제목 없음)',
-    type: data.type || 'SF',
+    type: data.type || '',
     keywords: data.keyword || '',
     topic: data.topic || '',
     story: data.story || '',
@@ -783,7 +858,7 @@ function applyIncomingCandidate(data) {
     linked: true,
   };
   candidatePool = [cand, ...candidatePool.filter(c => !c.linked)];
-  updateLinkedStatus(true);
+  candidateLink = { state: 'linked', error: '' };
   showToast('📥 후보 풀에서 전달받았어요: ' + cand.title);
   selectCandidate(0);
 }
@@ -803,25 +878,34 @@ function loadCandidateFromLocalStorage() {
   }
 }
 
+// 후보 선택 = "새 에피소드 초안" 시작. 후보엔 컷이 없으므로 컷 목록은 비워 두고 "+ 컷 추가"로 채운다.
 function selectCandidate(idx) {
-  state.selectedCandidateIdx = idx;
   const cand = candidatePool[idx];
-  if (cand) {
-    if (PLATFORM_OPTIONS.some(p => p.code === cand.type)) state.platform = cand.type;
-    const topicCode = guessTopicCode((cand.topic || '') + ' ' + (cand.keywords || ''));
-    if (topicCode) state.topic = topicCode;
-  }
+  if (!cand) return;
+  state.selectedCandidateIdx = idx;
+  source = { kind: 'candidate', idx };
+  setWorkingCuts([], 'ok');
+  if (PLATFORM_OPTIONS.some(p => p.code === cand.type)) state.platform = cand.type;
+  const topicCode = guessTopicCode((cand.topic || '') + ' ' + (cand.keywords || ''));
+  state.topic = topicCode || '';
+  state.scenario = '';
   autoGenEpId();
 }
 
 function renderStoryCards() {
   const el = document.getElementById('story-card-list');
   if (!candidatePool.length) {
-    el.innerHTML = '<div class="story-empty">표시할 후보가 없어요. "후보 풀에서 불러오기"를 눌러보세요.</div>';
+    const msg = {
+      offline: '스튜디오 서버가 꺼져 있어요 — 서버(localhost:3001)를 켠 뒤 "후보 풀에서 불러오기"를 눌러주세요.',
+      nokey: 'Notion 키가 설정되지 않아 후보 풀(Notion DB)을 읽지 못했어요.',
+      empty: '후보 풀이 비어 있어요. 트렌드 레이더·에이전트 리더에서 후보를 먼저 보내주세요.',
+      checking: '후보 풀 확인 중…',
+    }[candidateLink.state] || '표시할 후보가 없어요. "후보 풀에서 불러오기"를 눌러보세요.';
+    el.innerHTML = `<div class="story-empty">${escapeHtml(msg)}</div>`;
     return;
   }
   el.innerHTML = candidatePool.map((c, i) => {
-    const on = i === state.selectedCandidateIdx;
+    const on = source.kind === 'candidate' && i === state.selectedCandidateIdx;
     const summary = [c.keywords, c.story ? c.story.slice(0, 40) + (c.story.length > 40 ? '…' : '') : '', c.script ? '대본 있음' : '']
       .filter(Boolean).join(' · ');
     return `
@@ -829,61 +913,305 @@ function renderStoryCards() {
       <div class="story-icon">${c.icon || '📦'}</div>
       <div>
         <div class="story-title">${escapeHtml(c.title)}</div>
-        <div class="story-tag">${escapeHtml(c.type)}${summary ? ' · ' + escapeHtml(summary) : ''}</div>
+        <div class="story-tag">${escapeHtml(c.type || '유형 미정')}${summary ? ' · ' + escapeHtml(summary) : ''}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── 필 그룹 렌더링 ─────────────────────────────────────────────────────
-function renderPillGroup(containerId, options, stateKey, className) {
-  const el = document.getElementById(containerId);
-  el.innerHTML = options.map(o => {
-    const on = state[stateKey] === o.code;
-    return `<div class="pill ${on ? (className || 'on') : ''}" onclick="setState('${stateKey}','${o.code}')">${escapeHtml(o.label)}</div>`;
-  }).join('');
+// ── 스튜디오 에피소드 목록(사이드바) — GET /api/episodes ──────────────────────────
+function channelOfEpisode(ep) {
+  const code = String(ep.code || '').toUpperCase();
+  const m = code.match(/^(SF|LF|IG|TK)_/);
+  if (m) return { SF: 'youtube', LF: 'youtube', IG: 'instagram', TK: 'tiktok' }[m[1]];
+  const p = PLATFORM_OPTIONS.find(o => o.code === ep.contentType);
+  return p ? p.channel : 'etc';
+}
+function platformOfEpisode(ep) {
+  const code = String(ep.code || '').toUpperCase();
+  const byCode = PLATFORM_OPTIONS.find(o => o.code.startsWith('IG_') ? code.startsWith(o.code) : code.startsWith(o.code + '_'));
+  if (byCode) return byCode.code;
+  return PLATFORM_OPTIONS.some(o => o.code === ep.contentType) ? ep.contentType : state.platform;
 }
 
-function setState(key, value) {
-  state[key] = value;
+async function loadStudioEpisodes(manual) {
+  studioEpisodes = { ...studioEpisodes, status: 'loading', error: '' };
+  renderSidebar();
+  renderTicker();
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/episodes`);
+    markServer(true);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok || !Array.isArray(data.episodes)) {
+      // 서버는 켜져 있지만 GET /api/episodes 가 없는 구버전 proxy.js — 재시작 필요
+      throw Object.assign(new Error(data.error || (res.status === 404 ? 'GET /api/episodes 없음 — proxy.js 재시작 필요' : `HTTP ${res.status}`)), { online: true });
+    }
+    studioEpisodes = {
+      status: 'ok',
+      list: data.episodes.slice().sort((a, b) => String(a.code).localeCompare(String(b.code), 'en', { numeric: true })),
+      activeEpisodeId: data.activeEpisodeId || null,
+      error: '',
+    };
+    if (manual) showToast(`✓ 스튜디오 에피소드 ${studioEpisodes.list.length}개`);
+  } catch (e) {
+    if (!e.online) markServer(false);
+    studioEpisodes = { status: e.online ? 'error' : 'offline', list: [], activeEpisodeId: null, error: e.message };
+    if (manual) showToast(e.online ? '⚠️ 에피소드 목록 실패: ' + e.message : '⚠️ 스튜디오 서버가 꺼져 있어요');
+  }
+  // 초안 ID가 기존 코드와 겹치지 않는지 다시 계산(서버 응답 뒤에야 번호를 알 수 있음)
+  if (source.kind !== 'episode' && state.epIdAuto) autoGenEpId(true);
   renderAll();
 }
 
-// ── 에피소드 ID 자동생성 ─────────────────────────────────────────────────────
-function autoGenEpId() {
-  const num = String(state.selectedCandidateIdx + 1).padStart(2, '0');
-  state.epId = `${state.platform}_E${num}_${state.topic}`;
+function selectChannel(id) {
+  selectedChannel = id;
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const chEl = document.getElementById('sb-channels');
+  const epEl = document.getElementById('sb-episodes');
+  if (!chEl || !epEl) return;
+  const list = studioEpisodes.list;
+  const count = (id) => id === 'all' ? list.length : list.filter(e => channelOfEpisode(e) === id).length;
+  const chItems = [{ id: 'all', icon: '◎', label: '전체' }, ...VOCAB.CHANNELS];
+  if (list.some(e => channelOfEpisode(e) === 'etc')) chItems.push({ id: 'etc', icon: '…', label: '기타(코드 규칙 밖)' });
+  chEl.innerHTML = chItems.map(c => `
+    <div class="sb-item ${selectedChannel === c.id ? 'active' : ''}" onclick="selectChannel('${c.id}')">
+      <span class="sb-item-icon">${c.icon}</span>
+      <span class="sb-item-label">${escapeHtml(c.label)}</span>
+      ${studioEpisodes.status === 'ok' ? `<span class="sb-badge">${count(c.id)}</span>` : ''}
+    </div>`).join('');
+
+  let html = '';
+  if (source.kind === 'candidate' || source.kind === 'draft') {
+    const cand = source.kind === 'candidate' ? candidatePool[source.idx] : null;
+    html += `<div class="sb-item active" title="${escapeHtml(cand ? cand.title : '직접 만든 초안')}">
+      <span class="sb-item-icon">✎</span>
+      <span class="sb-ep-code">${escapeHtml(state.epId || '초안')}</span>
+      <span class="sb-ep-title">${escapeHtml(cand ? cand.title : '새 초안')}</span>
+    </div>`;
+  }
+  if (studioEpisodes.status === 'loading') {
+    html += `<div class="sb-empty">스튜디오 에피소드 불러오는 중…</div>`;
+  } else if (studioEpisodes.status === 'offline') {
+    html += `<div class="sb-empty"><b>스튜디오 서버가 꺼져 있어요</b><br>localhost:3001 을 켠 뒤 다시 시도하세요.<br><span class="sb-retry" onclick="loadStudioEpisodes(true)">다시 시도</span></div>`;
+  } else if (studioEpisodes.status === 'error') {
+    html += `<div class="sb-empty"><b>에피소드 목록을 못 읽었어요</b><br>${escapeHtml(studioEpisodes.error)}<br><span class="sb-retry" onclick="loadStudioEpisodes(true)">다시 시도</span></div>`;
+  } else {
+    const shown = list.filter(e => selectedChannel === 'all' || channelOfEpisode(e) === selectedChannel);
+    if (!shown.length) {
+      html += `<div class="sb-empty">이 채널에 에피소드가 없어요.</div>`;
+    } else {
+      html += shown.map(e => {
+        const on = source.kind === 'episode' && source.id === e.id;
+        const live = e.id === studioEpisodes.activeEpisodeId;
+        return `<div class="sb-item ${on ? 'active' : ''}" onclick="selectStudioEpisode('${escapeHtml(e.id)}')" title="${escapeHtml(e.code + ' · ' + (e.title || '(제목 없음)') + ' · ' + e.cutCount + '컷')}">
+          <span class="sb-ep-code">${escapeHtml(e.code)}</span>
+          <span class="sb-ep-title">${escapeHtml(e.title || '(제목 없음)')}</span>
+          ${live ? '<span class="sb-live" title="스튜디오에서 지금 열려 있는 에피소드">LIVE</span>' : ''}
+        </div>`;
+      }).join('');
+    }
+  }
+  epEl.innerHTML = html;
+}
+
+// 스튜디오 에피소드 선택 → 코드·주제·시나리오·유형을 그대로 가져오고, 컷은 GET /api/episodes/:id 로 채운다.
+async function selectStudioEpisode(id) {
+  const ep = studioEpisodes.list.find(e => e.id === id);
+  if (!ep) return;
+  source = { kind: 'episode', id, code: ep.code };
+  state.selectedCandidateIdx = -1;
+  state.platform = platformOfEpisode(ep);
+  state.topic = ep.topicCode || '';
+  state.scenario = ep.scnCode || '';
+  state.epId = ep.code;
+  state.epIdAuto = false;
+  state.epIdNote = '스튜디오에 이미 있는 에피소드라 코드를 그대로 씁니다(바꾸면 폴더·G포인트 키가 어긋남).';
+  setWorkingCuts([], 'loading');
   renderAll();
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/episodes/${encodeURIComponent(id)}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (source.kind !== 'episode' || source.id !== id) return; // 그 사이 다른 걸 골랐으면 버림
+    const list = (data.cuts || []).map((c, i) => makeCut({
+      origin: 'studio',
+      no: Number(c.no) || i + 1,
+      type: VOCAB.CUT_TYPE_TO_PL[c.cutType] || 'YR_VD',
+      title: c.cutTitle || '',
+      scene: c.scene || '',
+      studio: c,
+    }));
+    setWorkingCuts(list, 'ok');
+    loadStudioGpoints(id);
+  } catch (e) {
+    if (source.kind !== 'episode' || source.id !== id) return;
+    const offline = e instanceof TypeError; // fetch 자체 실패
+    if (offline) markServer(false);
+    setWorkingCuts([], 'error', offline ? '스튜디오 서버가 꺼져 있어요' : e.message);
+  }
+  renderAll();
+}
+
+// G1~G5 승인 여부(컷 목록 점·워크플로우 G포인트 행) — studio-status-public 는 에피소드별 조회 가능
+async function loadStudioGpoints(id) {
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/studio-status-public?episodeId=${encodeURIComponent(id)}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (source.kind !== 'episode' || source.id !== id) return;
+    const byNo = Object.fromEntries((data.cuts || []).map(c => [String(c.no), c]));
+    cuts.forEach(c => {
+      const st = byNo[String(c.no)];
+      if (!st) return;
+      c.g = { g1: !!st.g1, g2: !!st.g2, g3: !!st.g3, g4: !!st.g4, g5: !!st.g5, hasImage: !!st.hasImage, hasVideo: !!st.hasVideo };
+      const n = ['g1', 'g2', 'g3', 'g4', 'g5'].filter(k => c.g[k]).length;
+      c.status = n === 5 ? 'done' : n > 0 ? 'wip' : 'tbd';
+    });
+    renderAll();
+  } catch (e) { /* 선택 정보라 조용히 무시 — 점은 미확인(회색)으로 남음 */ }
+}
+
+// ── 에피소드 ID 자동생성 — 지금 규칙: 시리즈 접두 + 다음 빈 번호 (IG_R07, SF_E12 …) ──────────
+// 번호는 스튜디오의 기존 코드에서 같은 시리즈 최댓값+1(테스트용 90번대 이상 제외 — server POST
+// /api/episodes 의 IG 규칙과 같음). 서버가 꺼져 있으면 번호를 확인할 수 없다고 분명히 표시한다.
+function nextEpisodeCode(platformCode) {
+  const p = PLATFORM_OPTIONS.find(o => o.code === platformCode) || PLATFORM_OPTIONS[0];
+  const series = p.series;
+  if (studioEpisodes.status !== 'ok') {
+    return { code: `${series}01`, note: '⚠ 스튜디오 서버가 꺼져 있어 기존 번호를 확인하지 못했어요 — 전달 전에 번호를 꼭 확인하세요', warn: true };
+  }
+  const re = new RegExp(`^${series}(\\d{2,3})(?:_|$)`);
+  const nums = studioEpisodes.list.map(e => (String(e.code).toUpperCase().match(re) || [])[1]).filter(Boolean).map(Number).filter(n => n < 90);
+  const next = (nums.length ? Math.max(...nums) : 0) + 1;
+  return { code: `${series}${String(next).padStart(2, '0')}`, note: nums.length ? `기존 ${series} 최댓값 ${String(Math.max(...nums)).padStart(2, '0')} → 다음 번호` : `${series} 첫 에피소드`, warn: false };
+}
+
+function autoGenEpId(silent) {
+  if (source.kind === 'episode') {
+    // 기존 에피소드는 코드가 이미 정해져 있다 — 바꾸면 폴더·G포인트 키가 어긋남
+    state.epId = source.code;
+    state.epIdNote = '스튜디오에 이미 있는 에피소드라 코드를 그대로 씁니다.';
+    if (!silent) renderAll();
+    return;
+  }
+  const r = nextEpisodeCode(state.platform);
+  state.epId = r.code;
+  state.epIdAuto = true;
+  state.epIdNote = (r.warn ? '' : '자동: ') + r.note;
+  if (!silent) renderAll();
+}
+
+// 입력된 ID 검사(형식·중복) — episodeCode.js EPISODE_CODE_RE 와 같은 규칙
+const EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRS])(\d{2,})(?:_([A-Z0-9]+))?$/;
+function renderEpIdNote() {
+  const el = document.getElementById('ep-id-note');
+  if (!el) return;
+  const id = state.epId;
+  let msg = state.epIdNote || '';
+  let warn = /^⚠/.test(msg);
+  if (!id) { msg = '에피소드 ID가 비어 있어요 — "자동생성"을 누르거나 직접 입력하세요.'; warn = true; }
+  else if (!EPISODE_CODE_RE.test(id)) { msg = `⚠ 지금 코드 규칙과 달라요 (예: IG_R07 · SF_E12 · LF_T01) — 입력값 ${id}`; warn = true; }
+  else if (source.kind !== 'episode' && studioEpisodes.list.some(e => String(e.code).toUpperCase() === id)) { msg = `⚠ 스튜디오에 이미 있는 코드예요 (${id}) — 그 에피소드를 고치려면 왼쪽 목록에서 선택하세요.`; warn = true; }
+  el.textContent = msg;
+  el.classList.toggle('warn', warn);
 }
 
 // ── 컷 목록 ─────────────────────────────────────────────────────
+function sourceKey() {
+  if (source.kind === 'episode') return 'ep:' + source.id;
+  if (source.kind === 'candidate') return 'cand:' + (candidatePool[source.idx]?.id || source.idx);
+  return 'draft';
+}
+function makeCut({ origin, no, type, title = '', scene = '', studio = null }) {
+  const num = 'C' + String(no).padStart(2, '0');
+  return { uid: `${sourceKey()}:${num}`, num, no, type, typeClass: pipelineTypeClass(type), status: 'tbd', origin, title, scene, studio, g: null };
+}
+function setWorkingCuts(list, status, error) {
+  cuts = list;
+  cutsStatus = status;
+  cutsError = error || '';
+  currentCutIndex = 0;
+  lastGeneratedResult = null; // 다른 대상의 생성 결과를 이 컷들에 섞지 않는다
+}
+
+function addCut() {
+  if (cutsStatus === 'loading') { showToast('컷을 불러오는 중이에요 — 잠시 후 다시 눌러주세요'); return; }
+  if (source.kind === 'none') {
+    source = { kind: 'draft' };
+    setWorkingCuts([], 'ok');
+    if (!state.epId) autoGenEpId(true);
+  }
+  const no = cuts.reduce((m, c) => Math.max(m, c.no), 0) + 1;
+  cuts.push(makeCut({ origin: 'local', no, type: 'YR_VD' }));
+  cutsStatus = 'ok';
+  currentCutIndex = cuts.length - 1;
+  renderAll();
+  showToast(`＋ C${String(no).padStart(2, '0')} 추가 — 컷 설계 탭에서 채워주세요`);
+}
+
 function renderCutList() {
   const el = document.getElementById('cut-list');
-  el.innerHTML = DEMO_CUTS.map((c, i) => `
-    <div class="cut-item ${i === currentCutIndex ? 'active' : ''}" onclick="currentCutIndex=${i}; renderAll()">
+  const srcEl = document.getElementById('sb-cut-source');
+  if (srcEl) srcEl.textContent = source.kind === 'episode' ? `· ${source.code}` : source.kind === 'candidate' ? '· 후보 초안' : source.kind === 'draft' ? '· 초안' : '';
+  let emptyMsg = '';
+  if (cutsStatus === 'loading') emptyMsg = '컷 불러오는 중…';
+  else if (cutsStatus === 'error') emptyMsg = `컷을 못 불러왔어요 — ${cutsError}`;
+  else if (source.kind === 'none') emptyMsg = '위에서 에피소드를 고르거나, 에피소드 탭에서 후보를 고르세요.';
+  else if (!cuts.length) emptyMsg = '아직 컷이 없어요 — 아래 "+ 컷 추가"로 시작하세요.';
+  el.innerHTML = emptyMsg ? `<div class="cut-empty">${escapeHtml(emptyMsg)}</div>` : cuts.map((c, i) => `
+    <div class="cut-item ${i === currentCutIndex ? 'active' : ''}" onclick="currentCutIndex=${i}; renderAll()" title="${escapeHtml([c.title, c.scene].filter(Boolean).join(' — ') || c.num)}">
       <span class="cut-num">${c.num}</span>
-      <span class="cut-type ${c.typeClass}">${c.type}</span>
-      <span class="cut-dot d-${c.status}"></span>
+      <span class="cut-type ${c.typeClass}">${escapeHtml(getCutDesign(c).pipeline || c.type)}</span>
+      <span class="cut-dot d-${c.status}" title="${c.g ? 'G포인트 ' + ['g1','g2','g3','g4','g5'].filter(k => c.g[k]).length + '/5' : 'G포인트 미확인'}"></span>
     </div>`).join('');
-  document.getElementById('tb-cut-pos').textContent = `${DEMO_CUTS[currentCutIndex].num}/${String(DEMO_CUTS.length).padStart(2,'0')}`;
-  document.getElementById('bb-info').textContent = `${DEMO_CUTS[currentCutIndex].num} · 에피소드 설정 진행 중`;
+  const cut = currentCut();
+  document.getElementById('tb-cut-pos').textContent = cut ? `${cut.num}/${String(cuts.length).padStart(2, '0')}` : '—';
+  document.getElementById('bb-info').textContent = cut ? `${cut.num} · ${cut.title || (cut.origin === 'studio' ? '스튜디오 컷' : '새 컷')}` : (source.kind === 'none' ? '작업 대상 없음 — 에피소드나 후보를 고르세요' : '컷 없음 — "+ 컷 추가"');
 }
 
 function moveCut(dir) {
-  currentCutIndex = Math.min(DEMO_CUTS.length - 1, Math.max(0, currentCutIndex + dir));
+  if (!cuts.length) return;
+  currentCutIndex = Math.min(cuts.length - 1, Math.max(0, currentCutIndex + dir));
   renderAll();
 }
 
 function currentCut() {
-  return DEMO_CUTS[currentCutIndex];
+  return cuts[currentCutIndex] || null;
 }
 
 // ── 컷 설계(Phase 3) ─────────────────────────────────────────────────────
+// 스튜디오 컷의 masterCode({sp,sh,ca,md,lookId,du}) → 컷 설계 필드. 알아볼 수 있는 코드만 가져오고
+// 가져온 필드는 touched 로 표시(워크플로우 히트맵이 "기본값" 과 "실제 값"을 구분하는 근거).
+function seedFromStudioCut(c) {
+  const seed = {};
+  if (!c) return seed;
+  const pl = VOCAB.CUT_TYPE_TO_PL[c.cutType];
+  if (pl) seed.pipeline = pl;
+  const mc = c.masterCode || {};
+  const sp = String(mc.sp || '').trim().split(/\s/)[0];
+  const parts = sp.split('.');
+  if (parts[0] === 'IN' || parts[0] === 'OT') seed.indoor = parts[0];
+  if (parts[1] && /^[A-Z]{2,3}$/.test(parts[1])) seed.location = parts[1];
+  const tz = parts.find(p => /^TZ_[A-Z]+$/.test(p)); if (tz) seed.timezone = tz;
+  const lt = parts.find(p => /^LT_[A-Z]+$/.test(p)); if (lt) seed.light = lt;
+  const sh = String(mc.sh || '').match(/SH_[A-Z]+/);
+  const ca = String(mc.ca || '').match(/^CA_[A-Z]+/);
+  if (sh || ca) seed.segA = { shot: sh ? sh[0] : null, cam: ca ? ca[0] : null };
+  const md = String(mc.md || '').match(/MD_[A-Z]+/); if (md) seed.mood = md[0];
+  const look = String(mc.lookId || '').match(/^LOOK[_A-Z0-9]*/); if (look) seed.look = look[0];
+  const du = Number(mc.du || c.duration); if (du > 0) seed.length = `${du}s`;
+  return seed;
+}
+
 function getCutDesign(cut) {
-  if (!cutDesignState[cut.num]) {
-    cutDesignState[cut.num] = {
+  if (!cut) return null;
+  if (!cutDesignState[cut.uid]) {
+    const d = {
       emotion: 'EMO_SUR',
-      pipeline: PL_OPTIONS.some(p => p.code === cut.type) ? cut.type : 'YR_VD',
+      pipeline: cut.type || 'YR_VD',
       look: 'LOOK_CS',
       indoor: 'IN',
       location: 'CF',
@@ -904,26 +1232,61 @@ function getCutDesign(cut) {
       comment: '',
       sketchUrl: null,
       sketchPrompt: '',
+      touched: {}, // 사람이 고르거나 스튜디오에서 가져온 필드만 true — 나머지는 기본값(히트맵에선 "일부")
     };
+    const seed = seedFromStudioCut(cut.studio);
+    for (const [k, v] of Object.entries(seed)) {
+      if (k === 'segA') {
+        if (v.shot) { d.segments.CL_A.shot = v.shot; d.touched['seg.CL_A.shot'] = true; }
+        if (v.cam) { d.segments.CL_A.cam = v.cam; d.touched['seg.CL_A.cam'] = true; }
+      } else { d[k] = v; d.touched[k] = true; }
+    }
+    if (cut.studio) d.touched.pipeline = true;
+    cutDesignState[cut.uid] = d;
   }
-  return cutDesignState[cut.num];
+  return cutDesignState[cut.uid];
 }
 
 function setCutField(key, value) {
-  getCutDesign(currentCut())[key] = value;
-  renderCutDesignTab();
+  const d = getCutDesign(currentCut());
+  if (!d) return;
+  d[key] = value;
+  d.touched[key] = true;
+  if (key === 'pipeline') { const c = currentCut(); c.typeClass = pipelineTypeClass(value); }
+  renderAll();
+}
+
+// ── 필 그룹 렌더링 ─────────────────────────────────────────────────────
+function renderPillGroup(containerId, options, stateKey, className) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = options.map(o => {
+    const on = state[stateKey] === o.code;
+    return `<div class="pill ${on ? (className || 'on') : ''}" onclick="setState('${stateKey}','${o.code}')">${escapeHtml(o.label)}</div>`;
+  }).join('');
+}
+
+function setState(key, value) {
+  state[key] = value;
+  // 초안의 자동 ID는 유형을 바꾸면 그 시리즈의 다음 번호로 따라간다(직접 입력한 ID는 건드리지 않음)
+  if (key === 'platform' && source.kind !== 'episode' && state.epIdAuto) autoGenEpId(true);
+  renderAll();
 }
 
 function setCutRegion(value) {
   const d = getCutDesign(currentCut());
+  if (!d) return;
   d.region = value;
+  d.touched.region = true;
   if (value !== '직접입력') d.regionCustom = '';
-  renderCutDesignTab();
+  renderAll();
 }
 
 function setCutSegmentField(segKey, field, value) {
-  getCutDesign(currentCut()).segments[segKey][field] = value;
-  renderCutDesignTab();
+  const d = getCutDesign(currentCut());
+  if (!d) return;
+  d.segments[segKey][field] = value;
+  d.touched[`seg.${segKey}.${field}`] = true;
+  renderAll();
 }
 
 // 코드가 아닌 값(예: 세그먼트 키)도 안전하게 다루기 위해 값은 항상 이 목록에 정의된
@@ -966,9 +1329,9 @@ function renderCutSegmentEditor(d) {
     <div class="seg-box">
       <div class="seg-label">${SEGMENT_LABELS[segKey]} <span class="idx">${segKey}</span></div>
       <div class="field-label">샷타입</div>
-      <div class="kw-wrap" style="margin-bottom:6px">${pillsHtml(SHOT_OPTIONS, seg.shot, `setCutSegmentField('${segKey}','shot','{v}')`)}</div>
+      <div class="kw-wrap" style="margin-bottom:6px">${pillsHtml(cbExtra(SHOT_OPTIONS, seg.shot), seg.shot, `setCutSegmentField('${segKey}','shot','{v}')`)}</div>
       <div class="field-label">카메라</div>
-      <div class="kw-wrap">${pillsHtml(CAMERA_OPTIONS, seg.cam, `setCutSegmentField('${segKey}','cam','{v}')`)}</div>
+      <div class="kw-wrap">${pillsHtml(cbExtra(CAMERA_OPTIONS, seg.cam), seg.cam, `setCutSegmentField('${segKey}','cam','{v}')`)}</div>
     </div>`;
   }).join('');
 }
@@ -978,7 +1341,7 @@ function renderCutSegmentEditor(d) {
 // (parse_master_code_line은 "::" 5개 이상만 요구하고 4번째 이후는 전부 하나의 토큰
 // 풀로 재분류하므로, DU를 별도 "::" 구간으로 둬도 SH/CA/MD/AT와 동일하게 인식된다)
 function buildMasterCodeLine(d, cut) {
-  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const epId = state.epId || 'EP_ID_미정';
   const spKey = `${d.indoor}.${d.location}.${d.timezone}.${d.light}`;
   const segCount = Number(d.segCount);
   const segKeys = SEGMENT_KEYS.slice(0, segCount);
@@ -1013,7 +1376,7 @@ function buildSketchPrompt(d) {
   const light = [TIMEZONE_EN[d.timezone], LIGHT_EN[d.light]].filter(Boolean).join(', ');
 
   let subject;
-  if (d.pipeline === 'BR_' || d.pipeline === 'GR_') {
+  if (/^(BR_|GR_|CC_)/.test(d.pipeline)) {
     subject = `still life detail shot inside a ${loc}, relevant props and objects, no people`;
   } else {
     const action = ACTION_EN[d.action] || 'standing';
@@ -1131,17 +1494,31 @@ function renderCutDesignTab() {
   const d = getCutDesign(cut);
 
   const phaseNumEl = document.getElementById('cut-phase-num');
-  if (phaseNumEl) phaseNumEl.textContent = cut.num;
+  if (phaseNumEl) phaseNumEl.textContent = cut ? cut.num : '—';
+  const emptyEl = document.getElementById('cut-empty');
+  const bodyEl = document.getElementById('cut-body');
+  if (!cut) {
+    // 고정 예시 컷 대신 빈 상태를 분명히 보여준다
+    const msg = cutsStatus === 'loading' ? '스튜디오에서 컷을 불러오는 중이에요…'
+      : cutsStatus === 'error' ? `컷을 불러오지 못했어요 — <b>${escapeHtml(cutsError)}</b>`
+      : source.kind === 'none' ? '작업할 대상이 없어요.<br>왼쪽 <b>에피소드</b>를 고르거나, 에피소드 탭에서 <b>후보</b>를 고른 뒤 <b>+ 컷 추가</b>로 시작하세요.'
+      : '이 대상엔 아직 컷이 없어요 — 왼쪽 아래 <b>+ 컷 추가</b>를 눌러주세요.';
+    if (emptyEl) { emptyEl.innerHTML = msg; emptyEl.style.display = 'block'; }
+    if (bodyEl) bodyEl.style.display = 'none';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (bodyEl) bodyEl.style.display = 'block';
 
   setPills('pills-cut-emotion', CUT_EMOTION_OPTIONS, d.emotion, "setCutField('emotion','{v}')", 'on-o');
-  setPills('pills-cut-pipeline', PL_OPTIONS, d.pipeline, "setCutField('pipeline','{v}')");
+  setPills('pills-cut-pipeline', cbExtra(PL_OPTIONS, d.pipeline), d.pipeline, "setCutField('pipeline','{v}')");
   renderPipelineFlow(d);
-  setPills('pills-cut-look', LOOK_OPTIONS_CB, d.look, "setCutField('look','{v}')");
+  setPills('pills-cut-look', cbExtra(LOOK_OPTIONS_CB, d.look), d.look, "setCutField('look','{v}')");
 
   setPills('pills-cut-indoor', SP_INDOOR_OPTIONS, d.indoor, "setCutField('indoor','{v}')");
-  setPills('pills-cut-location', SP_LOCATION_OPTIONS, d.location, "setCutField('location','{v}')");
-  setPills('pills-cut-timezone', SP_TIMEZONE_OPTIONS, d.timezone, "setCutField('timezone','{v}')");
-  setPills('pills-cut-light', SP_LIGHT_OPTIONS, d.light, "setCutField('light','{v}')");
+  setPills('pills-cut-location', cbExtra(SP_LOCATION_OPTIONS, d.location), d.location, "setCutField('location','{v}')");
+  setPills('pills-cut-timezone', cbExtra(SP_TIMEZONE_OPTIONS, d.timezone), d.timezone, "setCutField('timezone','{v}')");
+  setPills('pills-cut-light', cbExtra(SP_LIGHT_OPTIONS, d.light), d.light, "setCutField('light','{v}')");
 
   const regionSelect = document.getElementById('cut-region-select');
   if (regionSelect) {
@@ -1153,13 +1530,13 @@ function renderCutDesignTab() {
     if (document.activeElement !== customInput) customInput.value = d.regionCustom;
   }
 
-  setPills('pills-cut-length', LENGTH_OPTIONS, d.length, "setCutField('length','{v}')");
+  setPills('pills-cut-length', vocabWithExtra(LENGTH_OPTIONS, d.length, '스튜디오 길이'), d.length, "setCutField('length','{v}')");
   setPills('pills-cut-segcount', SEGCOUNT_OPTIONS, d.segCount, "setCutField('segCount','{v}')");
 
   renderCutSegmentEditor(d);
 
   setPills('pills-cut-action', ACTION_OPTIONS, d.action, "setCutField('action','{v}')");
-  setPills('pills-cut-mood', MOOD_OPTIONS, d.mood, "setCutField('mood','{v}')", 'on-o');
+  setPills('pills-cut-mood', cbExtra(MOOD_OPTIONS, d.mood), d.mood, "setCutField('mood','{v}')", 'on-o');
 
   const moodboardEl = document.getElementById('cut-moodboard');
   if (moodboardEl && document.activeElement !== moodboardEl) moodboardEl.value = d.moodboard;
@@ -1173,23 +1550,23 @@ function renderCutDesignTab() {
 
 // ── 코드 프리뷰 / 자동연동 / 완성도 ─────────────────────────────────────────────────────
 function renderCodePreview() {
-  const cand = candidatePool[state.selectedCandidateIdx];
-  const epId = state.epId || `${state.platform}_E01_${state.topic}`;
+  const cand = source.kind === 'candidate' ? candidatePool[state.selectedCandidateIdx] : null;
+  const ep = source.kind === 'episode' ? studioEpisodes.list.find(e => e.id === source.id) : null;
+  const epId = state.epId || '(ID 미정)';
   const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
-  const title = cand ? cand.title : '(후보 미선택)';
+  const title = ep ? (ep.title || '(제목 없음)') + ' · 스튜디오' : cand ? cand.title + ' · 후보' : source.kind === 'draft' ? '직접 만든 초안' : '(대상 미선택)';
 
   const html = `<span class="cp-m">## A군 식별</span>
 <span class="cp-a">${escapeHtml(epId)}</span> <span class="cp-m">← ${escapeHtml(title)}</span>
 <span class="cp-m">## A군 기획</span>
-<span class="cp-b">TOPIC.${state.topic}</span> :: <span class="cp-b">SCN.${state.scenario}</span>
+<span class="cp-b">TOPIC.${escapeHtml(state.topic || '미선택')}</span> :: <span class="cp-b">SCN.${escapeHtml(state.scenario || '미선택')}</span>
 <span class="cp-m">## D군 캐릭터 기본값</span>
 <span class="cp-d">${state.look}.${state.top}.${state.bottom}.${state.season}</span>
 <span class="cp-d">${link.hr.split(' ')[0]} + ${link.mk.split(' ')[0]} + ${link.ac.split(' ')[0]}</span> <span class="cp-m">← 자동연동</span>`;
 
   document.getElementById('code-preview').innerHTML = html;
   document.getElementById('tb-ep-id').textContent = epId;
-  document.getElementById('sb-ep-current').textContent = epId;
-  document.getElementById('ref-fs-code').textContent = `FS_${epId.split('_').slice(0,2).join('_')}`;
+  document.getElementById('ref-fs-code').textContent = state.epId ? `FS_${state.epId}` : 'FS_(ID 미정)';
 }
 
 function renderAutoLink() {
@@ -1204,7 +1581,7 @@ function renderAutoLink() {
 function computeProgress() {
   const fields = [state.platform, state.topic, state.scenario, state.epId, state.look, state.top, state.bottom, state.season];
   const filled = fields.filter(Boolean).length;
-  const candBonus = candidatePool[state.selectedCandidateIdx] ? 1 : 0;
+  const candBonus = source.kind !== 'none' && cuts.length ? 1 : 0; // 작업 대상 + 컷이 있어야 채운 것으로 본다
   return Math.round(((filled + candBonus) / (fields.length + 1)) * 100);
 }
 
@@ -1242,7 +1619,8 @@ function toggleWfRowAll(show) {
 
 async function generatePackage() {
   if (!codebook) { showToast('⚠️ 코드북이 아직 로드되지 않았어요 — 잠시 후 다시 시도하세요'); return; }
-  const code = DEMO_CUTS.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+  if (!cuts.length) { showToast('⚠️ 컷이 없어요 — 에피소드를 고르거나 "+ 컷 추가"를 먼저 해주세요'); return; }
+  const code = cuts.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
 
   showToast('⏳ 대본 생성 중... (script_generator.py 실행)');
   try {
@@ -1255,7 +1633,7 @@ async function generatePackage() {
     if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`);
     lastGeneratedResult = { prompts: data.prompts, meta: data.meta };
     renderAll(); // 코드 확인/패키지 탭의 "생성 상태"·프롬프트 미리보기도 같이 갱신
-    showToast(`✓ ${data.meta?.cuts ?? DEMO_CUTS.length}컷 생성 완료 — 아래 결과 확인`);
+    showToast(`✓ ${data.meta?.cuts ?? cuts.length}컷 생성 완료 — 아래 결과 확인`);
   } catch (e) {
     showToast('⚠️ 생성 실패: ' + e.message);
     console.error('[generatePackage]', e);
@@ -1376,7 +1754,12 @@ function renderCodeCheckTab() {
   if (!table || !previewEl) return;
 
   const active = currentCut();
-  const rows = DEMO_CUTS.map((cut, i) => {
+  if (!active) {
+    table.innerHTML = `<tbody><tr><td style="padding:14px;color:var(--text3);font-size:11px">표시할 컷이 없어요 — 왼쪽에서 에피소드를 고르거나 "+ 컷 추가"를 눌러주세요.</td></tr></tbody>`;
+    previewEl.innerHTML = '';
+    return;
+  }
+  const rows = cuts.map((cut, i) => {
     const d = getCutDesign(cut);
     const spSummary = `${d.indoor}.${d.location}.${d.timezone}`;
     const segCount = Number(d.segCount);
@@ -1406,7 +1789,7 @@ function renderCodeCheckTab() {
     <th style="padding:7px 10px;text-align:left;color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:1px">생성 상태</th>
   </tr></thead><tbody>${rows}</tbody>`;
 
-  const activeIdx = DEMO_CUTS.indexOf(active);
+  const activeIdx = cuts.indexOf(active);
   const activeGenerated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(activeIdx + 1));
   if (!activeGenerated) {
     previewEl.innerHTML = `<div style="font-size:11px;color:var(--text3)">아직 이 컷의 생성 결과가 없어요 — 컷 설계 탭에서 "패키지 생성"을 먼저 눌러주세요.</div>`;
@@ -1431,7 +1814,7 @@ function renderPackageTab() {
   const resultEl = document.getElementById('pkg-generate-result');
   if (!codeEl || !resultEl) return;
 
-  codeEl.textContent = DEMO_CUTS.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+  codeEl.textContent = cuts.length ? cuts.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n') : '(컷 없음)';
 
   if (!lastGeneratedResult) {
     resultEl.innerHTML = `<div class="card-h"><span class="idx">18</span>📦 생성 결과</div><div style="font-size:11px;color:var(--text3)">아직 생성된 패키지가 없어요 — 위 마스터 코드를 확인한 뒤 하단 "패키지 생성" 버튼을 눌러주세요.</div>`;
@@ -1479,7 +1862,13 @@ function renderWorkflowTab() {
   if (!controlsEl || !canvasEl || !summaryEl) return;
 
   const active = currentCut();
-  const cutMeta = DEMO_CUTS.map((cut, i) => {
+  if (!cuts.length) {
+    controlsEl.innerHTML = '';
+    canvasEl.innerHTML = `<div class="empty-card" style="border:none">표시할 컷이 없어요 — 왼쪽에서 에피소드를 고르거나 "+ 컷 추가"를 눌러주세요.</div>`;
+    summaryEl.innerHTML = '';
+    return;
+  }
+  const cutMeta = cuts.map((cut, i) => {
     const d = getCutDesign(cut);
     const generated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(i + 1));
     const isActive = cut === active;
@@ -1593,10 +1982,12 @@ function renderWorkflowTab() {
 
 // ── 전체 렌더 ─────────────────────────────────────────────────────
 function renderAll() {
+  renderTicker();
+  renderSidebar();
   renderStoryCards();
   renderPillGroup('pills-platform', PLATFORM_OPTIONS, 'platform', 'on');
-  renderPillGroup('pills-topic', TOPIC_OPTIONS, 'topic', 'on');
-  renderPillGroup('pills-scenario', SCENARIO_OPTIONS, 'scenario', 'on-o');
+  renderPillGroup('pills-topic', vocabWithExtra(VOCAB.TOPIC, state.topic), 'topic', 'on');
+  renderPillGroup('pills-scenario', vocabWithExtra(VOCAB.SCN, state.scenario), 'scenario', 'on-o');
   renderPillGroup('pills-look', LOOK_OPTIONS, 'look', 'on');
   renderPillGroup('pills-top', TOP_OPTIONS, 'top', 'on');
   renderPillGroup('pills-bottom', BOTTOM_OPTIONS, 'bottom', 'on');
@@ -1613,14 +2004,15 @@ function renderAll() {
   renderProgress();
 
   const epIdInput = document.getElementById('ep-id-input');
-  if (document.activeElement !== epIdInput) {
-    const num = String(state.selectedCandidateIdx + 1).padStart(2, '0');
-    epIdInput.value = state.epId || `${state.platform}_E${num}_${state.topic}`;
-  }
+  if (document.activeElement !== epIdInput) epIdInput.value = state.epId || '';
+  epIdInput.readOnly = source.kind === 'episode';
+  renderEpIdNote();
 }
 
 loadCandidateFromLocalStorage();
 renderAll();
+loadStudioEpisodes();          // 비동기 -- 사이드바 채널·에피소드 + 자동 ID 번호 근거
+loadFromCandidatePool(true);   // 비동기 -- 후보 풀(Notion) 조회, 실패하면 빈 상태 + 티커에 이유 표시
 loadCodebook(); // 비동기 -- codebook.json 도착 시 buildCodebookOptions() + renderAll() 재실행
 loadStudioActiveEpisode(); // 비동기 -- 스튜디오 활성 에피소드 배지(결과 카드가 아직 없으면 표시할 곳도 없어 조용히 끝남)
 </script>
