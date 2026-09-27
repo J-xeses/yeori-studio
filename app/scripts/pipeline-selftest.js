@@ -182,6 +182,20 @@ await check('I1', '인스타 성과 자동 수집(공식 API)', async () => {
   return { ok: r.ok && Number.isFinite(r.followers), evidence: `팔로워 ${r.followers} · 게시물 ${r.media} · 연결 ${r.linked} · 지표 갱신 ${r.updated}` }
 })
 
+// ── 1j. 서여리 감정이입 P1(감성 코어·대본 점검)·P2(오늘의 여리) ──
+await check('E1', '서여리 감성 코어 + 대본 점검(여운 엔딩·존댓말·말버릇)', async () => {
+  const { checkScriptVoice } = await import('../server/lib/yeoriMood.js')
+  const per = JSON.parse(fs.readFileSync(mp.charactersJsonPath(), 'utf-8')).yeori?.persona || {}
+  const w = checkScriptVoice(cuts)
+  const bad = checkScriptVoice([{ no: 9, cutType: 'YEORI', dialogue: '여리 "여러분 이거 봐 봐."', videoPrompt: '[0-3s] She says her line directly to the camera: "여러분 이거 봐 봐."', masterCode: { ch: '서여리' } }])
+  return { ok: !!per.canon && per.speech?.toViewer?.includes('존댓말') && w.length === 0 && bad.length >= 1, evidence: `캐논·존댓말 규칙 ${per.canon ? '있음' : '없음'} · ${CODE} 대본 경고 ${w.length}건 · 시험 반말 대사 → ${bad.length}건 잡음` }
+})
+await check('E2', '오늘의 여리(감정 엔진, 토큰 0)', async () => {
+  const { computeMood } = await import('../server/lib/yeoriMood.js')
+  const m = await computeMood()
+  return { ok: !!(m.mood && m.captionLine && m.face && Array.isArray(m.reasons)), evidence: `${m.mood} · ${m.face} · 주제 ${m.topic} · 근거 ${m.reasons.join('·') || '기본'} · 캡션 "${m.captionLine}"` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

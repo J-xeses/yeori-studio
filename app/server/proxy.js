@@ -3587,6 +3587,17 @@ app.post('/api/reel-finalize/override', (req, res) => {
 
 // POST { epNum } — 대사 자막 타이밍을 실제 발화(voice-qa 단어 시각)에 맞춰 오버라이드에 저장(2026-09-25).
 // 영상 탭 미리보기와 최종본이 같은 captionSegTiming 을 쓰게 된다. 사람이 직접 정한 타이밍(captionTimingAuto 없음)은 건드리지 않는다.
+// 오늘의 여리(감정이입 시스템 P2) — 3시간이 지났거나 ?refresh=1 이면 다시 계산, 규칙 기반 토큰 0 (2026-09-27)
+app.get('/api/yeori-mood', async (req, res) => {
+  try {
+    const { computeMood } = await import('./lib/yeoriMood.js')
+    let cur = null
+    try { cur = JSON.parse(fs.readFileSync(mp.statePath('yeori-mood.json'), 'utf-8')).current } catch { /* 없음 */ }
+    if (!cur || req.query.refresh || Date.now() - Date.parse(cur.at) > 3 * 3600e3) cur = await computeMood()
+    res.json(cur)
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
 // 인스타 성과 자동 수집(Instagram API with Instagram Login) — 기동 1분 뒤 + 6시간마다, 수동은 POST /api/ig-sync (2026-09-26)
 app.post('/api/ig-sync', async (_req, res) => {
   try { const { syncInsights } = await import('./lib/igInsights.js'); res.json(await syncInsights({ log: console.log })) }
