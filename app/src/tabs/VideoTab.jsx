@@ -5,6 +5,7 @@ import { setGPoint, setGPoints, loadGPoints } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { resolveVideoPolicy, VIDEO_MODES, contentRatio } from '../lib/videoPolicy'
 import { epMediaUrl } from '../lib/mediaPaths'
+import { splitSpeakerSegments } from '../lib/ttsText'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import DiagnosisPanel from '../components/DiagnosisPanel'
@@ -2015,7 +2016,10 @@ export default function VideoTab() {
               <div className={s.cutCardBody}>
                 {(selCut.dialogue || selCut.narration || selCut.imagePrompt) && (
                   <div className={s.cutCardPromptPreview}>
-                    {stripMeta(selCut.dialogue || selCut.narration || '') || selCut.imagePrompt}
+                    {/* 대사(DL)·나레이션(NR)을 역할별로 정리해 표시 — 원문의 화자 표기·따옴표를 그대로 노출하지 않음(2026-09-27) */}
+                    {selCut.dialogue ? splitSpeakerSegments(selCut.dialogue).map((g, i) => <div key={'d' + i}>🗣 {g.speaker ? `${g.speaker}: ` : ''}{g.text}</div>) : null}
+                    {selCut.narration ? <div>🎙 나레이션: {stripMeta(selCut.narration)}</div> : null}
+                    {!selCut.dialogue && !selCut.narration ? selCut.imagePrompt : null}
                   </div>
                 )}
 

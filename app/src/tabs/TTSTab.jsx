@@ -584,13 +584,9 @@ export default function TTSTab() {
       // ⚠️ 대본에 세그별 자막(CPP: cut.subtitleSegments)이 있는 컷은 덮어쓰지 않는다 — 이 문자열이
       // videoTabState.subtitles[cutId]에 들어가면 "직접 수정한 값"으로 취급돼 필드게이트에서 나눠둔
       // 세그별 자막보다 우선해버려, 클립 1에 대사 전체가 들어가는 사고가 났음(2026-09-20, CUT 14).
-      const mergeCut = cuts.find(c => c.id === cutId)
-      const hasPlannedCaptions = Array.isArray(mergeCut?.subtitleSegments) && mergeCut.subtitleSegments.length > 1
-      if (!hasPlannedCaptions) {
-        const allText = list.map(t => t.text).filter(Boolean).join('\n')
-        dispatch({ type: 'SET_VIDEO_TAB_STATE',
-          p: { subtitles: { ...(state.videoTabState?.subtitles || {}), [cutId]: allText } } })
-      }
+      // (2026-09-27 제거) 예전엔 여기서 TTS 대사 연출본("어머!~ 지워엇!" 같은 말투 텍스트)을 영상탭 자막
+      // (videoTabState.subtitles)에 복사했다 → 대사 연출이 화면 자막(CP) 자리를 차지해 대사·자막이 섞였음(성준님 지적).
+      // 규칙: 대사(DL)=말하는 것 · 나레이션(NR)=화면 밖 목소리 · 자막(CP)=화면 글자. TTS 는 자막을 건드리지 않는다.
 
       const c = cuts.find(c => c.id === cutId)
       if (c) setGPoint(episodeCode, c.no, 'g2', true)

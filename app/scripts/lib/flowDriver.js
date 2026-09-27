@@ -36,7 +36,13 @@ const TARGET_SEL = 'button, [role="tab"], [role="menuitem"], [role="radio"]'
 
 export async function attachFlow({ port = 9222, projectId = null, lang = null } = {}) {
   const browser = await puppeteer.connect({ browserURL: `http://localhost:${port}`, defaultViewport: null })
-  const page = (await browser.pages()).find(p => p.url().includes('flow.google.com/project') && (!projectId || p.url().includes(projectId)))
+  let page = (await browser.pages()).find(p => p.url().includes('flow.google.com/project') && (!projectId || p.url().includes(projectId)))
+  // 지정 프로젝트 탭이 없으면 전용 Chrome 에 새 탭으로 연다(이미지·영상 프로젝트가 달라 "탭을 찾지 못함"이 반복됐음, 2026-09-27)
+  if (!page && projectId && (await browser.pages()).some(p => /flow\.google\.com|labs\.google/.test(p.url()))) {
+    page = await browser.newPage()
+    await page.goto(`https://flow.google.com/project/${projectId}${lang ? `?hl=${lang}` : ''}`, { waitUntil: 'networkidle2', timeout: 60000 }).catch(() => {})
+    await sleep(3000)
+  }
   if (!page) { browser.disconnect(); throw new Error('Flow 프로젝트 탭을 찾지 못했습니다(전용 Chrome에서 Flow 프로젝트를 열어두세요)') }
   // 백그라운드 탭(visibilityState hidden)이면 설정 팝업이 안 열려 "설정 팝업이 열리지 않습니다"로 실패 — 앞으로 가져온다(2026-09-25 실측)
   if (await page.evaluate(() => document.visibilityState).catch(() => 'visible') !== 'visible') { await page.bringToFront().catch(() => {}); await sleep(1200) }
