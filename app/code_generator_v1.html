@@ -29,10 +29,19 @@
     --scarlet-light: #F07070;
     --radius: 8px;
     --radius-sm: 4px;
+    --sb-w: 225px; /* 사이드바 폭 — 180px에서 +25%(성준님 요청, 2026-09-27). 탭 머리 칸 등 정렬 필요한 곳은 전부 이 변수를 씀 */
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
+
+  /* ── 스크롤바 — 사이드바·메인·코드블록·워크플로우 그리드 등 모든 스크롤 컨테이너에 공통 적용 ── */
+  * { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(29,158,117,0.45); }
+  ::-webkit-scrollbar-corner { background: transparent; }
   body {
     background:
       radial-gradient(rgba(29,158,117,0.07) 1px, transparent 1px) 0 0/24px 24px,
@@ -63,8 +72,14 @@
   .tb-meta { margin-left: auto; display: flex; gap: 16px; font-size: 11px; color: var(--text3); }
   .tb-meta b { color: var(--teal); font-family: 'Space Mono', monospace; font-weight: 700; }
 
-  /* ── 탭 ── */
-  .tabs { display: flex; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; overflow-x: auto; }
+  /* ── 탭 머리 줄 — 사이드바 폭만큼의 안내 칸(.tabs-head-cell) + 탭(.tabs). 안내 칸은 사이드바와
+       같은 배경·오른쪽 테두리로 사이드바 컬럼의 연장처럼 보이게 한다(2026-09-27 성준님 요청). ── */
+  .tabs-row { display: flex; flex-shrink: 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .tabs-head-cell { width: var(--sb-w); flex-shrink: 0; border-right: 1px solid var(--border); padding: 4px 14px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+  .tabs-head-title { font-size: 11px; font-weight: 700; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+  .tabs-head-title .arrow { color: var(--teal); font-weight: 700; }
+  .tabs-head-sub { font-size: 9px; color: var(--text3); }
+  .tabs { display: flex; flex: 1; min-width: 0; padding: 0 20px; overflow-x: auto; }
   .tab { font-size: 12px; padding: 10px 16px; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; display: flex; align-items: center; gap: 6px; white-space: nowrap; font-family: 'Noto Sans KR', sans-serif; }
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 700; }
@@ -72,9 +87,9 @@
   .body { display: flex; flex: 1; min-height: 0; }
 
   /* ── 사이드바 ── */
-  .sidebar { width: 180px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 14px 0; overflow-y: auto; display: flex; flex-direction: column; }
+  .sidebar { width: var(--sb-w); flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 14px 0; overflow-y: auto; display: flex; flex-direction: column; }
   .sb-sec { margin-bottom: 14px; }
-  .sb-label { font-size: 9px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 0 12px; margin-bottom: 6px; }
+  .sb-label { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; padding: 0 12px; margin-bottom: 6px; }
   .sb-item { display: flex; align-items: center; gap: 7px; padding: 7px 12px; cursor: pointer; border-left: 2px solid transparent; }
   .sb-item:hover { background: var(--surface2); }
   .sb-item.active { background: transparent; border-left-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(29,158,117,0.2); }
@@ -85,13 +100,16 @@
   .sb-item.active .sb-badge { background: transparent; color: var(--teal); border-color: var(--teal); }
   .sb-empty { font-size: 10px; color: var(--text3); padding: 4px 12px 6px; line-height: 1.6; }
   .sb-empty b { color: var(--text2); font-weight: 700; }
-  .sb-retry { display: inline-block; margin-top: 4px; font-size: 9px; padding: 2px 8px; border: 1px solid var(--border2); border-radius: 3px; cursor: pointer; color: var(--text2); font-family: 'Space Mono', monospace; }
+  .sb-retry { display: inline-block; margin-top: 4px; font-size: 9px; padding: 2px 8px; border: 1px solid var(--border2); border-radius: 3px; cursor: pointer; color: var(--text2); }
   .sb-retry:hover { border-color: var(--teal); color: var(--teal); }
   .sb-refresh { margin-left: auto; cursor: pointer; font-size: 11px; color: var(--text3); padding: 0 2px; }
   .sb-refresh:hover { color: var(--teal); }
+  /* 에피소드/후보 행 — 코드는 한 줄로 고정, 제목은 넓어진 사이드바에서 2줄까지 보여준다(2026-09-27) */
+  .sb-item-ep { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .sb-ep-top { display: flex; align-items: center; gap: 6px; width: 100%; }
   .sb-ep-code { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text2); flex-shrink: 0; }
   .sb-item.active .sb-ep-code { color: var(--teal); font-weight: 700; }
-  .sb-ep-title { font-size: 10px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; flex: 1; }
+  .sb-ep-title { font-size: 10px; color: var(--text3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4; width: 100%; }
   .sb-live { font-size: 8px; color: var(--teal-light); border: 1px solid rgba(159,225,203,0.35); border-radius: 3px; padding: 0 4px; flex-shrink: 0; font-family: 'Space Mono', monospace; }
   .cut-empty { font-size: 10px; color: var(--text3); padding: 6px 12px; line-height: 1.6; }
   .empty-card { border: 1px dashed var(--border2); border-radius: var(--radius-sm); padding: 22px 18px; text-align: center; color: var(--text3); font-size: 12px; line-height: 1.8; }
@@ -110,10 +128,18 @@
   .t-yr { background: transparent; color: var(--teal); border-color: rgba(29,158,117,0.4); }
   .t-br { background: transparent; color: var(--teal-light); border-color: rgba(8,80,65,0.6); }
   .t-gr { background: transparent; color: var(--scarlet-light); border-color: rgba(196,50,50,0.4); }
-  .cut-dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .cut-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .d-done { background: var(--teal); }
-  .d-wip { background: var(--scarlet); }
+  /* "진행 중"은 문제가 아니라 정상 진행 상태라 스칼렛 대신 밝은 틸 계열(teal-light) 사용.
+     스칼렛은 아래 .cut-dot.d-attn(코드북 외 코드 등 실제 문제)에만 남긴다(2026-09-27 성준님 점검). */
+  .d-wip { background: var(--teal-light); }
   .d-tbd { background: var(--border2); }
+  .cut-dot.d-attn { box-shadow: 0 0 0 2px var(--scarlet); }
+  .cut-gpt { margin-left: auto; font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text3); flex-shrink: 0; }
+  .cut-item.active .cut-gpt { color: var(--teal-light); }
+  .cut-legend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 12px 2px; font-size: 9px; color: var(--text3); line-height: 1.6; }
+  .cut-legend-item { display: flex; align-items: center; gap: 4px; }
+  .cut-legend-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
   .cut-add { display: flex; align-items: center; gap: 6px; padding: 6px 10px; margin: 6px 8px 0; border-radius: var(--radius-sm); border: 1px dashed var(--border2); color: var(--text3); font-size: 11px; cursor: pointer; }
   .cut-add:hover { border-color: var(--teal); color: var(--teal); }
 
@@ -121,7 +147,8 @@
   .main { flex: 1; overflow-y: auto; padding: 20px; }
 
 
-  .section-label { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; }
+  /* 한글 라벨이 섞여 있어 모노스페이스(Space Mono)를 쓰지 않는다 — 코드 부분은 자식 .idx 가 따로 모노를 담당 */
+  .section-label { font-size: 10px; font-weight: 700; color: var(--text3); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
   .section-label::after { content: ''; flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--border2) 0, var(--border2) 4px, transparent 4px, transparent 8px); }
 
   .g { display: grid; gap: 12px; }
@@ -136,14 +163,15 @@
   .card-h { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.3px; }
 
   .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
-  .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', monospace; }
+  /* 라벨이 "코드 + 한글"(예: PSY 심리) 이라 코드는 모노, 한글은 산세리프로 자동 폴백되게 순서만 지정 */
+  .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', 'Noto Sans KR', sans-serif; }
   .pill:hover { border-color: var(--teal); color: var(--text); }
   .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset; }
   /* 선택 표시는 틸 한 계열만: .on = 기본 틸, .on-alt = 같은 계열 밝은 톤(두 그룹을 나란히 둘 때 구분용).
      예전 .on-o(스칼렛)는 초록 UI 에서 불균형해 보여 2026-09-27 제거(성준님 점검). */
   .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-light); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset; }
 
-  .field-label { font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Space Mono', monospace; }
+  .field-label { font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; }
 
   .story-card { position: relative; background: rgba(15,42,34,0.12); border: 1px solid var(--border2); border-left: 2px solid transparent; border-radius: 3px; padding: 10px 12px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; }
   .story-card:hover { border-color: var(--teal); }
@@ -151,13 +179,15 @@
   .story-icon { font-size: 16px; }
   .story-title { font-size: 12px; font-weight: 700; color: var(--text); }
   .story-card.on .story-title { color: var(--teal); }
-  .story-tag { font-size: 9px; color: var(--text3); margin-top: 2px; font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
-  .story-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 16px; font-family: 'Space Mono', monospace; }
+  .story-tag { font-size: 9px; color: var(--text3); margin-top: 2px; }
+  .story-empty { text-align: center; color: var(--text3); font-size: 11px; padding: 16px; }
 
-  .input { width: 100%; font-size: 12px; padding: 7px 10px; border-radius: 3px; background: transparent; border: 1px solid var(--border2); color: var(--text); font-family: 'Space Mono', monospace; }
+  /* 대부분 한글을 직접 입력하는 필드(지역·무드보드 등)라 기본은 산세리프 — 코드를 입력하는 필드만 예외로 모노 지정 */
+  .input { width: 100%; font-size: 12px; padding: 7px 10px; border-radius: 3px; background: transparent; border: 1px solid var(--border2); color: var(--text); font-family: 'Noto Sans KR', sans-serif; }
+  .input.input-code { font-family: 'Space Mono', monospace; }
   .input:focus { outline: none; border-color: var(--teal); }
 
-  .code-preview { background: rgba(0,0,0,0.3); border: 1px solid var(--border2); border-left: 2px solid var(--teal); border-radius: 3px; padding: 12px 14px; font-family: 'Space Mono', monospace; font-size: 11px; line-height: 2; white-space: pre-wrap; word-break: break-all; }
+  .code-preview { background: rgba(0,0,0,0.3); border: 1px solid var(--border2); border-left: 2px solid var(--teal); border-radius: 3px; padding: 12px 14px; font-family: 'Space Mono', 'Noto Sans KR', sans-serif; font-size: 11px; line-height: 2; white-space: pre-wrap; word-break: break-all; }
   .cp-m { color: var(--text3); }
   .cp-a { color: var(--teal); font-weight: 700; }
   .cp-b { color: var(--teal-light); }
@@ -168,11 +198,11 @@
   .auto-check { color: var(--teal); }
   .auto-note { color: var(--text3); font-size: 10px; }
 
-  .btn-loadpool { font-size: 11px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--teal); color: #080C0E; border: none; cursor: pointer; font-weight: 700; font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
+  .btn-loadpool { font-size: 11px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--teal); color: #080C0E; border: none; cursor: pointer; font-weight: 700; }
   .btn-loadpool:hover { opacity: 0.85; }
 
   .seg-box { background: rgba(15,42,34,0.25); border: 1px solid var(--border2); border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; }
-  .seg-label { font-size: 10px; font-weight: 700; color: var(--teal-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
+  .seg-label { font-size: 10px; font-weight: 700; color: var(--teal-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 
   /* ── 워크플로우 탭: 컷을 가로축(직렬 진행), 코드 군을 세로축(병렬 트랙)으로 배치한 행렬 뷰 ── */
   .wf-legend { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 0 12px; font-size: 10px; color: var(--text2); }
@@ -180,10 +210,10 @@
   .wf-leg-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
   .wf-row-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 8px 0 12px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
   .wf-rc-label { font-size: 9px; color: var(--text3); margin-right: 2px; }
-  .wf-rc-btn { font-size: 9px; padding: 3px 9px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .wf-rc-btn { font-size: 9px; padding: 3px 9px; border-radius: 10px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text3); }
   .wf-rc-btn.on { background: rgba(29,158,117,0.14); border-color: var(--teal); color: var(--teal); }
   .wf-rc-sep { width: 1px; height: 14px; background: var(--border2); }
-  .wf-missing-badge { font-size: 9px; padding: 3px 9px; border-radius: 10px; background: var(--scarlet-bg); border: 1px solid var(--scarlet); color: var(--scarlet-light); margin-left: auto; font-family: 'Space Mono', monospace; }
+  .wf-missing-badge { font-size: 9px; padding: 3px 9px; border-radius: 10px; background: var(--scarlet-bg); border: 1px solid var(--scarlet); color: var(--scarlet-light); margin-left: auto; }
   .wf-canvas-outer { overflow-x: auto; overflow-y: hidden; border: 1px solid var(--border2); border-radius: var(--radius-sm); }
   .wf-canvas-inner { display: flex; flex-direction: column; min-width: max-content; }
   .wf-header-row, .wf-data-row { display: flex; border-bottom: 1px solid var(--border); }
@@ -200,7 +230,7 @@
   .wf-data-cell { width: 190px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 6px 8px; }
   .wf-data-row.wf-hidden { display: none; }
   .wf-ctags { display: flex; flex-wrap: wrap; gap: 3px; }
-  .wf-ctag { font-family: 'Space Mono', monospace; font-size: 8px; padding: 2px 5px; border-radius: 2px; background: rgba(15,42,34,0.4); border: 1px solid var(--border2); color: var(--text2); }
+  .wf-ctag { font-family: 'Space Mono', 'Noto Sans KR', sans-serif; font-size: 8px; padding: 2px 5px; border-radius: 2px; background: rgba(15,42,34,0.4); border: 1px solid var(--border2); color: var(--text2); }
   .wf-ptext { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text2); line-height: 1.6; white-space: pre-wrap; }
   .wf-gp-row { display: flex; gap: 3px; }
   .wf-gp { width: 16px; height: 16px; border-radius: 50%; font-size: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border2); background: transparent; color: var(--text3); font-family: 'Space Mono', monospace; }
@@ -213,7 +243,7 @@
   .wf-arc-bar { height: 4px; border-radius: 2px; background: var(--teal); margin-bottom: 4px; }
   .wf-arc-code { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text2); }
   /* ── 워크플로우 히트맵 — 셀 배경 농도 = 채움 정도, 주의 = 스칼렛 테두리, 활성 컷 = 밝은 틸 세로선 ── */
-  .wf-legend .wf-leg-title { font-size: 9px; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .wf-legend .wf-leg-title { font-size: 9px; color: var(--text3); }
   .wf-leg-dot { width: 12px; height: 12px; }
   .hm-0 { background: transparent; }
   .wf-leg-dot.hm-0, .wf-sum .hm-0 { border: 1px dashed var(--border2); }
@@ -257,8 +287,8 @@
   /* ── 탭 머리 · Phase 블록 — 탭마다 P1… / 01… 을 새로 센다 ── */
   .tab-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border2); }
   .tab-head-name { font-size: 14px; font-weight: 700; color: var(--text); }
-  .tab-head-flow { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
-  .tab-head-flow b { color: var(--teal-light); font-weight: 700; }
+  .tab-head-flow { font-size: 10px; color: var(--text3); }
+  .tab-head-flow b { color: var(--teal-light); font-weight: 700; font-family: 'Space Mono', monospace; }
   .phase { position: relative; border: 1px solid var(--border); border-left: 2px solid var(--teal); border-radius: var(--radius-sm); padding: 12px 14px 14px; margin-bottom: 18px; background: rgba(8,12,14,0.35); }
   .phase-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--border2); }
   .phase-no { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: #080C0E; background: var(--teal); border-radius: 3px; padding: 1px 7px; }
@@ -272,10 +302,12 @@
   .pkg-v .studio-active-badge { margin: 0 !important; }
   .pkg-ok { color: var(--teal); }
   .pkg-warn { color: var(--scarlet-light); font-size: 11px; }
+  .pkg-warn-box { background: var(--scarlet-bg); border: 1px solid var(--scarlet); border-radius: var(--radius-sm); padding: 8px 10px; margin-top: 8px; font-size: 11px; color: var(--scarlet-light); line-height: 1.7; }
+  .pkg-warn-box b { color: var(--scarlet-light); }
   .pkg-dim { color: var(--text3); font-size: 10px; line-height: 1.7; }
   .pkg-miss { list-style: none; font-size: 11px; line-height: 1.6; }
   .pkg-miss li { display: flex; gap: 6px; align-items: baseline; padding: 2px 0; color: var(--text2); }
-  .pkg-miss-tag { font-size: 8px; padding: 0 5px; border-radius: 3px; border: 1px solid var(--border2); color: var(--text3); flex-shrink: 0; font-family: 'Space Mono', monospace; }
+  .pkg-miss-tag { font-size: 8px; padding: 0 5px; border-radius: 3px; border: 1px solid var(--border2); color: var(--text3); flex-shrink: 0; }
   .pkg-miss li.block .pkg-miss-tag { border-color: var(--scarlet); color: var(--scarlet-light); }
   .pkg-line { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--border); font-size: 10px; }
   .pkg-line code { flex: 1; min-width: 0; font-family: 'Space Mono', monospace; color: var(--teal-light); word-break: break-all; }
@@ -296,13 +328,13 @@
   .bottombar { border-top: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; background: var(--surface); flex-shrink: 0; }
   .bb-info { font-size: 11px; color: var(--text3); }
   .bb-right { margin-left: auto; display: flex; gap: 8px; }
-  .bb-btn { font-size: 11px; padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-family: 'Space Mono', monospace; border: none; letter-spacing: 0.3px; }
+  .bb-btn { font-size: 11px; padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; border: none; }
   .bb-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
   .bb-ghost:hover { border-color: var(--teal); color: var(--teal); }
   .bb-primary { background: var(--teal); color: #080C0E; }
   .bb-primary:hover { opacity: 0.85; }
 
-  .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(12,20,24,0.95); border: 1px solid var(--teal); color: var(--teal); font-size: 12px; padding: 8px 16px; border-radius: var(--radius-sm); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.2s; font-family: 'Space Mono', monospace; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(12,20,24,0.95); border: 1px solid var(--teal); color: var(--teal); font-size: 12px; padding: 8px 16px; border-radius: var(--radius-sm); z-index: 999; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .toast.show { opacity: 1; }
 </style>
 </head>
@@ -320,7 +352,8 @@
     <div class="tb-meta">
       <span>에피소드 <b id="tb-ep-id">—</b></span>
       <span>컷 <b id="tb-cut-pos">—</b></span>
-      <span>완성도 <b id="tb-progress" style="color:var(--teal)">0%</b></span>
+      <span title="에피소드 기본 필드가 얼마나 채워졌는지(주제·시나리오·ID·룩 등) — 프롬프트 생성 여부와는 별개">설계 <b id="tb-progress" style="color:var(--teal)">0%</b></span>
+      <span title="① 프롬프트 생성으로 실제 G2/G4 프롬프트가 나온 컷 수 / 전체 컷 수">생성 <b id="tb-gen-count" style="color:var(--text3)">0/0</b></span>
     </div>
   </div>
 
@@ -339,14 +372,20 @@
     <span>CODI_GEN v1.1</span>
   </div>
 
-  <!-- 탭 -->
-  <div class="tabs">
-    <div class="tab active" data-tab="ep" onclick="showTab('ep', this)">🎬 에피소드</div>
-    <div class="tab" data-tab="cut" onclick="showTab('cut', this)">✂️ 컷 설계</div>
-    <div class="tab" data-tab="code" onclick="showTab('code', this)">🔍 코드 확인</div>
-    <div class="tab" data-tab="workflow" onclick="showTab('workflow', this)">📊 워크플로우</div>
-    <div class="tab" data-tab="pkg" onclick="showTab('pkg', this)">📦 패키지</div>
-    <div class="tab" data-tab="bank" onclick="showTab('bank', this)">🗄 CA_BANK</div>
+  <!-- 탭 머리 줄 — 왼쪽은 사이드바 폭만큼의 안내 칸, 오른쪽은 탭 -->
+  <div class="tabs-row">
+    <div class="tabs-head-cell">
+      <div class="tabs-head-title">작업 단계 <span class="arrow">→</span></div>
+      <div class="tabs-head-sub">아래: 채널 · 에피소드 · 컷</div>
+    </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="ep" onclick="showTab('ep', this)">🎬 에피소드</div>
+      <div class="tab" data-tab="cut" onclick="showTab('cut', this)">✂️ 컷 설계</div>
+      <div class="tab" data-tab="code" onclick="showTab('code', this)">🔍 코드 확인</div>
+      <div class="tab" data-tab="workflow" onclick="showTab('workflow', this)">📊 워크플로우</div>
+      <div class="tab" data-tab="pkg" onclick="showTab('pkg', this)">📦 패키지</div>
+      <div class="tab" data-tab="bank" onclick="showTab('bank', this)">🗄 CA_BANK</div>
+    </div>
   </div>
 
   <div class="body">
@@ -367,6 +406,12 @@
       <div class="sb-label" style="padding:0 12px;margin-bottom:6px">컷 목록 <span id="sb-cut-source" style="text-transform:none;letter-spacing:0;font-weight:400"></span></div>
       <div class="cut-list" id="cut-list"></div>
       <div class="cut-add" onclick="addCut()">+ 컷 추가</div>
+      <div class="cut-legend">
+        <span class="cut-legend-item"><span class="cut-legend-dot" style="background:var(--teal)"></span>완료(G1~5)</span>
+        <span class="cut-legend-item"><span class="cut-legend-dot" style="background:var(--teal-light)"></span>진행 중</span>
+        <span class="cut-legend-item"><span class="cut-legend-dot" style="background:var(--border2)"></span>미착수</span>
+        <span class="cut-legend-item"><span class="cut-legend-dot" style="box-shadow:0 0 0 2px var(--scarlet)"></span>주의(코드북 외 코드)</span>
+      </div>
     </div>
 
     <!-- 메인 — 탭마다 Phase(P1…)와 항목 번호(01…)를 탭 안에서 새로 센다(2026-09-27 개편:
@@ -404,7 +449,7 @@
           <div class="card">
             <div class="card-h"><span class="idx">04</span>🆔 에피소드 ID</div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input class="input" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); state.epIdAuto=false; state.epIdNote=''; renderAll()">
+              <input class="input input-code" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); state.epIdAuto=false; state.epIdNote=''; renderAll()">
               <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
             </div>
             <div class="ep-id-note" id="ep-id-note"></div>
@@ -819,19 +864,27 @@ async function loadCodebook() {
   renderAll();
 }
 
+// codebook.json 항목 중 일부(예: PL.making_record — 파이프라인 코드가 아니라 메이킹 기록 방식을 적은
+// 메타데이터라 label 이 없음)는 .label 이 비어 있다. 화면에 "undefined" 가 찍히지 않도록 알려진
+// 코드는 사람이 읽을 수 있는 이름으로, 그 외는 코드만 보여준다.
+const CODE_LABEL_FALLBACK = { making_record: '메이킹 기록' };
+function codeOpt(code, v) {
+  const label = v && v.label ? `${code} ${v.label}` : (CODE_LABEL_FALLBACK[code] ? `${code} ${CODE_LABEL_FALLBACK[code]}` : code);
+  return { code, label };
+}
 function buildCodebookOptions() {
   if (!codebook) return;
   const entries = (obj) => Object.entries(obj || {});
-  PL_OPTIONS       = entries(codebook.PL).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
-  SHOT_OPTIONS      = entries(codebook.SH).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
-  CAMERA_OPTIONS    = entries(codebook.CA).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
-  MOOD_OPTIONS      = entries(codebook.MD).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
-  ACTION_OPTIONS    = entries(codebook.AT).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
-  LOOK_OPTIONS_CB   = entries(codebook.LOOK_BANK).filter(([k]) => !k.startsWith('_')).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  PL_OPTIONS       = entries(codebook.PL).map(([code, v]) => codeOpt(code, v));
+  SHOT_OPTIONS      = entries(codebook.SH).map(([code, v]) => codeOpt(code, v));
+  CAMERA_OPTIONS    = entries(codebook.CA).map(([code, v]) => codeOpt(code, v));
+  MOOD_OPTIONS      = entries(codebook.MD).map(([code, v]) => codeOpt(code, v));
+  ACTION_OPTIONS    = entries(codebook.AT).map(([code, v]) => codeOpt(code, v));
+  LOOK_OPTIONS_CB   = entries(codebook.LOOK_BANK).filter(([k]) => !k.startsWith('_')).map(([code, v]) => codeOpt(code, v));
   const sp = codebook.SP || {};
-  SP_LOCATION_OPTIONS = entries(sp._location_codes).map(([code, label]) => ({ code, label: `${code} ${String(label).split(' (')[0]}` }));
-  SP_TIMEZONE_OPTIONS = entries(sp._time_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
-  SP_LIGHT_OPTIONS    = entries(sp._light_codes).map(([code, v]) => ({ code, label: `${code} ${v.label}` }));
+  SP_LOCATION_OPTIONS = entries(sp._location_codes).map(([code, label]) => ({ code, label: label ? `${code} ${String(label).split(' (')[0]}` : code }));
+  SP_TIMEZONE_OPTIONS = entries(sp._time_codes).map(([code, v]) => codeOpt(code, v));
+  SP_LIGHT_OPTIONS    = entries(sp._light_codes).map(([code, v]) => codeOpt(code, v));
 }
 
 // ── 러프 스케치 프롬프트용 코드→영문 매핑 (2026-08-07 실측 기준, 상황별_스케치_구현기준.md 참고) ──
@@ -1113,9 +1166,8 @@ function renderSidebar() {
   let html = '';
   if (source.kind === 'candidate' || source.kind === 'draft') {
     const cand = source.kind === 'candidate' ? candidatePool[source.idx] : null;
-    html += `<div class="sb-item active" title="${escapeHtml(cand ? cand.title : '직접 만든 초안')}">
-      <span class="sb-item-icon">✎</span>
-      <span class="sb-ep-code">${escapeHtml(state.epId || '초안')}</span>
+    html += `<div class="sb-item sb-item-ep active" title="${escapeHtml(cand ? cand.title : '직접 만든 초안')}">
+      <div class="sb-ep-top"><span class="sb-item-icon">✎</span><span class="sb-ep-code">${escapeHtml(state.epId || '초안')}</span></div>
       <span class="sb-ep-title">${escapeHtml(cand ? cand.title : '새 초안')}</span>
     </div>`;
   }
@@ -1133,10 +1185,9 @@ function renderSidebar() {
       html += shown.map(e => {
         const on = source.kind === 'episode' && source.id === e.id;
         const live = e.id === studioEpisodes.activeEpisodeId;
-        return `<div class="sb-item ${on ? 'active' : ''}" onclick="selectStudioEpisode('${escapeHtml(e.id)}')" title="${escapeHtml(e.code + ' · ' + (e.title || '(제목 없음)') + ' · ' + e.cutCount + '컷')}">
-          <span class="sb-ep-code">${escapeHtml(e.code)}</span>
+        return `<div class="sb-item sb-item-ep ${on ? 'active' : ''}" onclick="selectStudioEpisode('${escapeHtml(e.id)}')" title="${escapeHtml(e.code + ' · ' + (e.title || '(제목 없음)') + ' · ' + e.cutCount + '컷')}">
+          <div class="sb-ep-top"><span class="sb-ep-code">${escapeHtml(e.code)}</span>${live ? '<span class="sb-live" title="스튜디오에서 지금 열려 있는 에피소드">LIVE</span>' : ''}</div>
           <span class="sb-ep-title">${escapeHtml(e.title || '(제목 없음)')}</span>
-          ${live ? '<span class="sb-live" title="스튜디오에서 지금 열려 있는 에피소드">LIVE</span>' : ''}
         </div>`;
       }).join('');
     }
@@ -1290,12 +1341,18 @@ function renderCutList() {
   else if (cutsStatus === 'error') emptyMsg = `컷을 못 불러왔어요 — ${cutsError}`;
   else if (source.kind === 'none') emptyMsg = '위에서 에피소드를 고르거나, 에피소드 탭에서 후보를 고르세요.';
   else if (!cuts.length) emptyMsg = '아직 컷이 없어요 — 아래 "+ 컷 추가"로 시작하세요.';
-  el.innerHTML = emptyMsg ? `<div class="cut-empty">${escapeHtml(emptyMsg)}</div>` : cuts.map((c, i) => `
+  el.innerHTML = emptyMsg ? `<div class="cut-empty">${escapeHtml(emptyMsg)}</div>` : cuts.map((c, i) => {
+    const gDone = c.g ? ['g1','g2','g3','g4','g5'].filter(k => c.g[k]).length : null;
+    const attn = codebook && cutHealth(c).extra.length > 0; // 코드북 외 코드 등 실제 문제만 스칼렛
+    const dotTitle = (gDone === null ? 'G포인트 미확인' : `G포인트 ${gDone}/5`) + (attn ? ' · ⚠ 코드북 외 코드 있음' : '');
+    return `
     <div class="cut-item ${i === currentCutIndex ? 'active' : ''}" onclick="currentCutIndex=${i}; renderAll()" title="${escapeHtml([c.title, c.scene].filter(Boolean).join(' — ') || c.num)}">
       <span class="cut-num">${c.num}</span>
       <span class="cut-type ${c.typeClass}">${escapeHtml(getCutDesign(c).pipeline || c.type)}</span>
-      <span class="cut-dot d-${c.status}" title="${c.g ? 'G포인트 ' + ['g1','g2','g3','g4','g5'].filter(k => c.g[k]).length + '/5' : 'G포인트 미확인'}"></span>
-    </div>`).join('');
+      <span class="cut-gpt">${gDone === null ? '—/5' : gDone + '/5'}</span>
+      <span class="cut-dot d-${c.status} ${attn ? 'd-attn' : ''}" title="${escapeHtml(dotTitle)}"></span>
+    </div>`;
+  }).join('');
   const cut = currentCut();
   document.getElementById('tb-cut-pos').textContent = cut ? `${cut.num}/${String(cuts.length).padStart(2, '0')}` : '—';
   document.getElementById('bb-info').textContent = cut ? `${cut.num} · ${cut.title || (cut.origin === 'studio' ? '스튜디오 컷' : '새 컷')}` : (source.kind === 'none' ? '작업 대상 없음 — 에피소드나 후보를 고르세요' : '컷 없음 — "+ 컷 추가"');
@@ -1720,6 +1777,22 @@ function renderProgress() {
   const el = document.getElementById('tb-progress');
   el.textContent = pct + '%';
   el.style.color = pct >= 80 ? 'var(--teal)' : pct >= 40 ? 'var(--scarlet-light)' : 'var(--text3)';
+  renderGenCount();
+}
+
+// "생성" = 실제 ① 프롬프트 생성을 눌러 G2/G4 프롬프트가 나온 컷 수 — 필드만 채운 "설계"와는 별개 지표
+// (예전 "완성도 100%"가 설계만 보고 판단해 프롬프트 미생성 상태에서도 100%로 보였던 문제 수정, 2026-09-27)
+function computeGenCount() {
+  const total = cuts.length;
+  const done = Math.min(total, lastGeneratedResult?.prompts?.cuts?.length ?? 0);
+  return { done, total };
+}
+function renderGenCount() {
+  const el = document.getElementById('tb-gen-count');
+  if (!el) return;
+  const { done, total } = computeGenCount();
+  el.textContent = `${done}/${total}`;
+  el.style.color = total > 0 && done === total ? 'var(--teal)' : done > 0 ? 'var(--teal-light)' : 'var(--text3)';
 }
 
 // ── 대본/프롬프트 생성 (/api/generate-script -> script_generator.py -> script_to_prompts.py) ──
@@ -2032,7 +2105,9 @@ function renderPackageTab() {
   const tEl = document.getElementById('pkg-target');
   let targetHtml = kv('스튜디오 활성', studioBadgeHtml()) + kv('코디젠 대상', escapeHtml(state.epId || '—'));
   if (s.status === 'ok' && state.epId && s.code !== state.epId) {
-    targetHtml += `<div class="pkg-warn" style="margin-top:6px">⚠ 스튜디오에 열린 에피소드(${escapeHtml(s.code)})와 코디젠 대상(${escapeHtml(state.epId)})이 달라요 — 스튜디오에서 먼저 ${escapeHtml(state.epId)} 를 열어두세요.</div>`;
+    targetHtml += `<div class="pkg-warn-box">⚠ <b>스튜디오에 열린 에피소드(${escapeHtml(s.code)})와 코디젠 대상(${escapeHtml(state.epId)})이 달라요.</b><br>
+      지금 ② 전달을 누르면 ${escapeHtml(s.code)}가 아니라 <b>${escapeHtml(state.epId)}</b>용 프롬프트가 스튜디오 "대본생성" 탭 미리보기로 들어가요 — 스튜디오 화면엔 ${escapeHtml(s.code)}가 열려 있으니 서로 다른 에피소드를 보게 됩니다.<br>
+      전달 전에 스튜디오에서 먼저 <b>${escapeHtml(state.epId)}</b>를 열어두세요.</div>`;
   }
   targetHtml += `<div class="pkg-dim" style="margin-top:6px">전달 = 스튜디오 대본생성 탭 미리보기(자동 반영 아님) · Field Gate 와 같은 큐라 대기 중인 genline 패치를 덮어쓸 수 있어요 <span class="sb-retry" onclick="loadStudioActiveEpisode()">활성 다시 확인</span></div>`;
   tEl.innerHTML = targetHtml;
@@ -2150,9 +2225,9 @@ function renderCaBankTab() {
     const info = codebook.LOOK_BANK?.[o.code] || {};
     return `<div class="card">
       <div class="card-h" style="font-size:11px">${escapeHtml(o.code)}</div>
-      <div style="font-size:10px;color:var(--text2);margin-bottom:6px">${escapeHtml(info.label || '')}</div>
-      <div style="font-size:9px;color:var(--text3);line-height:1.6;font-family:'Space Mono',monospace">${escapeHtml(info.ip_outfit || '')}</div>
-      <div style="margin-top:6px;font-size:9px;color:var(--teal)">참조: ${escapeHtml(info.ep || '-')}</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:700">${escapeHtml(info.label || '')}</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7;font-family:'Space Mono',monospace">${escapeHtml(info.ip_outfit || '')}</div>
+      <div style="margin-top:6px;font-size:9px;color:var(--teal-light)">참조: ${escapeHtml(info.ep || '-')}</div>
     </div>`;
   }).join('');
 }
