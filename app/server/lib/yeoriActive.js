@@ -16,7 +16,8 @@ const mood = () => { try { return JSON.parse(fs.readFileSync(mp.statePath('yeori
 const readJson = (p, d) => { try { return JSON.parse(fs.readFileSync(p, 'utf-8')) } catch { return d } }
 const isEnglish = (t) => { const s = String(t || ''); const lat = (s.match(/[A-Za-z]/g) || []).length, ko = (s.match(/[가-힣]/g) || []).length; return lat > 3 && lat > ko * 2 }
 export const replyMode = (t) => RISKY.test(String(t || '')) ? '무대응' : isEnglish(t) ? 'en' : 'ko'   // 안전선·언어 판정(selftest 대상)
-const RISKY = /(씨발|병신|꺼져|죽어|fuck|shit|bitch|http[s]?:\/\/|카톡|오픈채팅|DM\s*주세요|번호\s*알려)/i
+// 악플·링크·연락 유도 + 홍보 봇 전형 문구("Share me this post", "promote", "collab", "DM us") — 9/27 티저② 봇 댓글
+const RISKY = /(씨발|병신|꺼져|죽어|fuck|shit|bitch|http[s]?:\/\/|카톡|오픈채팅|DM\s*주세요|번호\s*알려|share\s+(me\s+)?(this|your)\s+post|promot(e|ion)|collab|send\s+(us\s+)?(a\s+)?dm|dm\s+(us|me)|check\s+(my|our)\s+(bio|page)|brand\s+ambassador)/i
 
 // ── LLM(선택, 하루 상한) ──
 async function llm(prompt) {
@@ -116,19 +117,21 @@ export async function pullComments() {
   const me = (await (await fetch(`${G}/me?fields=username&access_token=${tk}`)).json()).username
   const media = (await (await fetch(`${G}/me/media?fields=id,permalink,caption,comments_count&limit=25&access_token=${tk}`)).json()).data || []
   for (const m of media) {
-    const r = await (await fetch(`${G}/${m.id}/comments?fields=id,text,username,timestamp,replies{username}&access_token=${tk}`)).json()
+    const r = await (await fetch(`${G}/${m.id}/comments?fields=id,text,username,from{id,username},timestamp,replies{username,from{username}}&access_token=${tk}`)).json()
     if (r.error) return { error: r.error.message }
     // 댓글 수는 있는데 목록이 비면 = Meta 앱 개발 모드(역할 없는 사람 댓글 숨김) — 9/27 티저② 댓글 2개가 안 보였던 원인
     hidden += Math.max(0, (m.comments_count || 0) - (r.data || []).length)
     for (const c of r.data || []) {
       seen++
+      c.username = c.username || c.from?.username || '알 수 없음'   // Instagram Login API 는 from{username} 으로 줌(9/27 @undefined)
+      for (const x of c.replies?.data || []) x.username = x.username || x.from?.username
       if (c.username === me || (c.replies?.data || []).some(x => x.username === me)) continue
       const k = `reply:${c.id}`
       if ((ops.yeoriQueue || []).some(x => x.key === k)) continue
       if (RISKY.test(c.text)) { out.push({ key: k, kind: 'reply', trigger: `댓글 @${c.username}`, commentId: c.id, comment: c.text, text: '', status: '무대응', by: '안전선' }); continue }
       const en = isEnglish(c.text)
       const tpl = en ? 'Thank you so much for watching! It really means a lot to me.' : '와… 봐 주셔서 고마워요. 근데 있잖아요, 이런 댓글 하나에 하루가 괜찮아져요.'
-      const g = await llm(`${voiceBrief()}\n댓글(@${c.username}): "${c.text}"\n${en ? 'Reply in natural English, 1-2 sentences.' : '서여리의 답장(존댓말, 1~2문장):'}`)
+      const g = await llm(`${voiceBrief()}\n게시물 캡션(맥락): "${String(m.caption || '').slice(0, 400)}"\n참고: "여리 스튜디오(Yeori Studio)"는 실제 공간이 아니라 서여리가 AI로 콘텐츠를 만드는 채널 브랜드다. 모르는 사실은 지어내지 말 것.\n댓글(@${c.username}): "${c.text}"\n${en ? 'Reply in natural English, 1-2 sentences.' : '서여리의 답장(존댓말, 1~2문장):'}`)
       out.push({ key: k, kind: 'reply', trigger: `댓글 @${c.username}`, commentId: c.id, comment: c.text, postLink: m.permalink, text: g || tpl, by: g ? 'LLM(Haiku)' : '템플릿' })
     }
   }

@@ -209,7 +209,7 @@ await check('E3', '여리 초안함 큐(API·중복 방지·승인 대기)', asy
 })
 await check('E4', '댓글 답장 안전선·언어 판정 + 댓글 읽기 권한', async () => {
   const { replyMode, pullComments } = await import('../server/lib/yeoriActive.js')
-  const cases = [['너무 귀여워요ㅠㅠ', 'ko'], ['So cute, love this vibe!', 'en'], ['카톡 아이디 알려줘', '무대응'], ['http://spam.link 클릭', '무대응']]
+  const cases = [['너무 귀여워요ㅠㅠ', 'ko'], ['So cute, love this vibe!', 'en'], ['카톡 아이디 알려줘', '무대응'], ['http://spam.link 클릭', '무대응'], ['Share me this post🔥', '무대응'], ['DM us for collab', '무대응']]
   const miss = cases.filter(([t, want]) => replyMode(t) !== want)
   const { igConfigured } = await import('../server/lib/igInsights.js')
   const r = igConfigured() ? await pullComments() : { skipped: '토큰 없음' }
