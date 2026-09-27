@@ -202,7 +202,10 @@ await check('E3', '여리 초안함 큐(API·중복 방지·승인 대기)', asy
   const list = q.data.queue || []; const keys = list.map(x => x.key)
   const dup = keys.length - new Set(keys).size
   const autoPosted = list.filter(x => x.status === '게시됨' && !x.decidedAt).length   // 승인 없이 게시된 건 = 0 이어야 함
-  return { ok: dup === 0 && autoPosted === 0, evidence: `초안 ${list.length}건(대기 ${list.filter(x => x.status === '대기').length}) · 중복 ${dup} · 승인 없이 게시 ${autoPosted}` }
+  // 운영실 페이지 인라인 스크립트 문법(9/27 초안함 '불러오는 중' 멈춤 = 문자열 안 줄바꿈)
+  const html = fs.readFileSync(new URL('../server/pages/insta-ops.html', import.meta.url), 'utf-8')
+  const bad = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].filter(m => { try { new Function(m[1]); return false } catch { return true } }).length
+  return { ok: dup === 0 && autoPosted === 0 && bad === 0, evidence: `운영실 스크립트 문법 오류 ${bad}개 · 초안 ${list.length}건(대기 ${list.filter(x => x.status === '대기').length}) · 중복 ${dup} · 승인 없이 게시 ${autoPosted}` }
 })
 await check('E4', '댓글 답장 안전선·언어 판정 + 댓글 읽기 권한', async () => {
   const { replyMode, pullComments } = await import('../server/lib/yeoriActive.js')
