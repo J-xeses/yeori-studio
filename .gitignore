@@ -54,3 +54,8 @@ app/.tunnel-state.json
 # 개인 백업/브라우저 저장 부산물 -- 프로젝트 소스 아님
 _backup_desktop_tilde_movies_20260704/
 app/TREND RADAR v7_files/
+
+# 이 PC 전용 실행 기록(매 실행마다 바뀜, 커밋 불필요) — 2026-09-27
+downloads/state/yeori-llm-usage.json
+downloads/state/yeori-comments-last.json
+downloads/state/.status-mirror.json
