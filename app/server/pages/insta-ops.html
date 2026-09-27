@@ -76,8 +76,8 @@
   .scroll{overflow-x:auto}
   @media (max-width:1100px){.setup{grid-template-columns:1fr}.two{grid-template-columns:1fr}}
   /* ── 오늘의 여리 · 여리의 초안함 (감정이입 P2~P5) — 운영실 공용 팔레트 사용 ── */
-  .yr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;margin-bottom:12px;align-items:start}
-  .yr .card{padding:12px 14px}
+  .yr{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}   /* 오늘의 여리 위, 초안함 아래(한 줄씩) */
+  .yr .card{padding:12px 14px;border-color:#6b5bd6}
   .yr h3{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:8px}
   .yr h3 .muted{font-weight:400}.yr h3 .sp{flex:1}
   .pill{font-size:11px;border-radius:10px;padding:1px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--tx2)}
@@ -93,7 +93,6 @@
   .yq-tg{cursor:pointer;user-select:none}.yq-tg .ar{display:inline-block;width:12px;color:var(--tx2);transition:transform .15s}
   #yeoriQ.fold .yq-body{display:none}#yeoriQ.fold .ar{transform:rotate(-90deg)}#yeoriQ.fold h3{margin:0}
   .yq-empty{font-size:12px;color:var(--tx2);padding:6px 0}
-  @media (max-width:1100px){.yr{grid-template-columns:1fr}}
 </style></head><body>
 <header class="top"><b>서여리 인스타 운영실</b>
   <button class="tab" data-t="setup">⚙️ 계정 세팅</button>
