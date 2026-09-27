@@ -118,6 +118,37 @@
   .ep-id-note.warn { color: var(--scarlet-light); }
   .sb-div { height: 1px; background: var(--border); margin: 8px 12px; }
 
+  /* 에피소드 목록이 길면 컷 목록을 화면 밖으로 밀어내던 문제 — 자체 높이 제한 + 스크롤, 접기 가능 */
+  #sb-episodes-wrap { max-height: 220px; overflow-y: auto; transition: max-height 0.15s; }
+  #sb-episodes-wrap.collapsed { max-height: 0; overflow: hidden; }
+  .sb-label[onclick] { cursor: pointer; user-select: none; }
+  #sb-ep-collapse-arrow { display: inline-block; width: 10px; font-size: 8px; color: var(--text3); }
+
+  /* ── CA_BANK 탭 전용 사이드바(캐릭터·룩·코드 분류 트리) ───────────────────────────── */
+  .cab-tree-sec { margin-bottom: 14px; }
+  .cab-char-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; cursor: pointer; border-left: 2px solid transparent; }
+  .cab-char-row:hover { background: var(--surface2); }
+  .cab-char-row.active { border-left-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(29,158,117,0.2); }
+  .cab-char-thumb { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border2); }
+  .cab-char-thumb-ph { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text3); }
+  .cab-char-name { font-size: 11px; color: var(--text2); flex: 1; min-width: 0; }
+  .cab-char-row.active .cab-char-name { color: var(--teal); font-weight: 700; }
+  .cab-char-count { font-size: 9px; color: var(--text3); font-family: 'Space Mono', monospace; }
+  .cab-char-arrow { font-size: 9px; color: var(--text3); width: 10px; text-align: center; flex-shrink: 0; }
+  .cab-look-row { display: flex; align-items: baseline; gap: 6px; padding: 5px 12px 5px 40px; cursor: pointer; border-left: 2px solid transparent; }
+  .cab-look-row:hover { background: var(--surface2); }
+  .cab-look-row.active { border-left-color: var(--teal-light); background: rgba(159,225,203,0.06); }
+  .cab-look-code { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--teal-light); flex-shrink: 0; }
+  .cab-look-label { font-size: 10px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .cab-look-dupe { font-size: 8px; color: var(--scarlet-light); flex-shrink: 0; }
+  .cab-look-empty { font-size: 10px; color: var(--text3); padding: 5px 12px 5px 40px; }
+  .cab-vocab-group { margin-bottom: 8px; }
+  .cab-vocab-title { font-size: 9px; color: var(--text3); padding: 4px 12px; }
+  .cab-vocab-items { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 12px; }
+  .cab-vocab-chip { font-family: 'Space Mono', 'Noto Sans KR', sans-serif; font-size: 9px; padding: 3px 7px; border-radius: 8px; border: 1px solid var(--border2); color: var(--text2); cursor: pointer; }
+  .cab-vocab-chip:hover { border-color: var(--teal); color: var(--text); }
+  .cab-vocab-chip.active { border-color: var(--teal); color: var(--teal); background: rgba(29,158,117,0.1); }
+
   .cut-list { padding: 0 8px; flex: 1; }
   .cut-item { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: var(--radius-sm); margin-bottom: 2px; cursor: pointer; border-left: 2px solid transparent; }
   .cut-item:hover { background: var(--surface2); }
@@ -324,6 +355,38 @@
   .placeholder-tab-icon { font-size: 34px; opacity: 0.5; }
   .placeholder-tab-text { font-size: 12px; }
 
+  /* ── CA_BANK 탭 — 시뮬레이터(A) + 표준 캐릭터 보드(B) ───────────────────────────── */
+  .cab-sim-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .cab-sim-field { flex: 1; min-width: 150px; }
+  .cab-copy-btn { font-size: 9px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; margin-left: 8px; font-family: 'Space Mono', monospace; }
+  .cab-copy-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .cab-warn-line { font-size: 10px; color: var(--scarlet-light); margin-top: 6px; line-height: 1.6; }
+  .cab-flow-name { font-size: 11px; color: var(--teal-light); }
+
+  .cab-board-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
+  .cab-board-title { font-size: 11px; font-weight: 700; color: var(--text); }
+  .cab-board-fill { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text3); }
+  .cab-board-fill.full { color: var(--teal); }
+  .cab-board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 6px; }
+  .cab-slot { border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; background: rgba(15,42,34,0.12); display: flex; flex-direction: column; }
+  .cab-slot-img-wrap { height: 150px; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .cab-slot-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cab-slot-empty-badge { font-size: 9px; color: var(--text3); font-family: 'Space Mono', monospace; text-align: center; padding: 0 8px; }
+  .cab-slot-body { padding: 8px 9px; }
+  .cab-slot-label { font-size: 10px; color: var(--text2); font-weight: 700; margin-bottom: 4px; }
+  .cab-slot-file { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text3); word-break: break-all; line-height: 1.5; margin-bottom: 5px; }
+  .cab-slot-prompt { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text3); line-height: 1.5; max-height: 64px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 5px 6px; margin-bottom: 5px; }
+  .cab-slot-copy { font-size: 9px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; width: 100%; font-family: 'Space Mono', monospace; }
+  .cab-slot-copy:hover { border-color: var(--teal); color: var(--teal); }
+  .cab-slot.filled .cab-slot-img-wrap { border-bottom: 1px solid var(--border2); }
+  .cab-slot.filled .cab-slot-label { color: var(--teal); }
+
+  /* ── 시뮬레이터 결과 출력(코드/프롬프트) ── */
+  .cab-out-head { display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── CA_BANK 지표 참고 문구 ── */
+  .cab-hint { font-size: 10px; color: var(--text3); line-height: 1.7; margin-top: 4px; }
+
   /* ── 하단바 ── */
   .bottombar { border-top: 1px solid var(--border); padding: 10px 16px; display: flex; align-items: center; gap: 10px; background: var(--surface); flex-shrink: 0; }
   .bb-info { font-size: 11px; color: var(--text3); }
@@ -393,14 +456,18 @@
     <!-- 사이드바 — 채널·에피소드는 GET /api/episodes(스튜디오 studio-state.json) 실데이터, 컷 목록은
          선택한 에피소드(GET /api/episodes/:id) 또는 후보·초안에서 직접 추가한 컷. 고정 예시 없음. -->
     <div class="sidebar">
+      <!-- 일반 탭용 사이드바(채널·에피소드·컷 목록) — CA_BANK 탭에서는 숨기고 아래 #sidebar-cabank 로 교체(showTab) -->
+      <div id="sidebar-normal">
       <div class="sb-sec">
         <div class="sb-label">채널 · 서여리</div>
         <div id="sb-channels"></div>
       </div>
       <div class="sb-div"></div>
       <div class="sb-sec">
-        <div class="sb-label" style="display:flex;align-items:center">에피소드<span class="sb-refresh" onclick="loadStudioEpisodes(true)" title="다시 불러오기">↻</span></div>
-        <div id="sb-episodes"></div>
+        <div class="sb-label" style="display:flex;align-items:center" onclick="toggleEpisodeListCollapse()" title="눌러서 접기/펼치기">
+          <span id="sb-ep-collapse-arrow">▾</span>&nbsp;에피소드<span class="sb-refresh" onclick="event.stopPropagation(); loadStudioEpisodes(true)" title="다시 불러오기">↻</span>
+        </div>
+        <div id="sb-episodes-wrap"><div id="sb-episodes"></div></div>
       </div>
       <div class="sb-div"></div>
       <div class="sb-label" style="padding:0 12px;margin-bottom:6px">컷 목록 <span id="sb-cut-source" style="text-transform:none;letter-spacing:0;font-weight:400"></span></div>
@@ -412,6 +479,9 @@
         <span class="cut-legend-item"><span class="cut-legend-dot" style="background:var(--border2)"></span>미착수</span>
         <span class="cut-legend-item"><span class="cut-legend-dot" style="box-shadow:0 0 0 2px var(--scarlet)"></span>주의(코드북 외 코드)</span>
       </div>
+      </div>
+      <!-- CA_BANK 탭 전용 사이드바 — 캐릭터/룩/코드 분류 트리(renderCaBankSidebar) -->
+      <div id="sidebar-cabank" style="display:none"></div>
     </div>
 
     <!-- 메인 — 탭마다 Phase(P1…)와 항목 번호(01…)를 탭 안에서 새로 센다(2026-09-27 개편:
@@ -675,12 +745,51 @@
 
       <!-- TAB: CA_BANK — LOOK_BANK(codebook.json) 참고용 뷰. characters.json 과의 단일화·아카데미 설계는
            app/docs/ca-bank-academy-proposal.md(제안서, 미구현) -->
+      <!-- CA_BANK — characters.json(캐릭터·룩 원본, ca-bank-academy-proposal.md A안) + codebook.json(LOOK_BANK 등)
+           을 합쳐 보여주는 읽기 전용 탭. 왼쪽 사이드바는 이 탭에서만 캐릭터/룩/코드 분류 트리로 바뀐다(showTab). -->
       <div id="tab-bank" class="tab-content" style="display:none">
-        <div class="tab-head"><span class="tab-head-name">🗄 CA_BANK</span><span class="tab-head-flow"><b>P1</b> LOOK_BANK 참고</span></div>
+        <div class="tab-head"><span class="tab-head-name">🗄 CA_BANK</span><span class="tab-head-flow"><b>P1</b> 시뮬레이터 → <b>P2</b> 표준 캐릭터 보드</span></div>
+
         <section class="phase">
-          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">LOOK_BANK 참고</span><span class="phase-desc">codebook.json 등록 룩(읽기전용) — 캐릭터 레지스트리(characters.json)와 합치는 안은 docs/ca-bank-academy-proposal.md</span></div>
-          <div class="section-label"><span class="idx">01</span>LOOK_BANK — codebook.json 등록 캐릭터 룩</div>
-          <div id="ca-bank-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">시뮬레이터</span><span class="phase-desc">캐릭터 · 룩 · 상/하의 · 시즌 · 표정 · 샷을 골라 코드·이미지 프롬프트를 조합(읽기 전용 — 저장하지 않음)</span></div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-h"><span class="idx">01</span>👤 캐릭터</div>
+            <div class="kw-wrap" id="cab-pills-char"></div>
+          </div>
+          <div class="g g2" style="margin-bottom:12px">
+            <div class="card">
+              <div class="card-h"><span class="idx">02</span>👗 룩(LOOK)</div>
+              <div class="kw-wrap" id="cab-pills-look" style="margin-bottom:10px"></div>
+              <div class="field-label">상의(선택)</div>
+              <div class="kw-wrap" id="cab-pills-top" style="margin-bottom:8px"></div>
+              <div class="field-label">하의(선택)</div>
+              <div class="kw-wrap" id="cab-pills-bottom" style="margin-bottom:8px"></div>
+              <div class="field-label">시즌(선택)</div>
+              <div class="kw-wrap" id="cab-pills-season"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">03</span>🎭 표정 · 샷</div>
+              <div class="field-label">표정(MD_)</div>
+              <div class="kw-wrap" id="cab-pills-mood" style="margin-bottom:8px"></div>
+              <div class="field-label">샷(SH_)</div>
+              <div class="kw-wrap" id="cab-pills-shot"></div>
+            </div>
+          </div>
+          <div class="card accent">
+            <div class="card-h cab-out-head"><span><span class="idx">04</span>💻 조합 결과</span></div>
+            <div class="field-label" style="display:flex;align-items:center">코드 줄<button class="cab-copy-btn" onclick="cabCopy('code')">복사</button></div>
+            <div class="code-preview" id="cab-code-preview" style="margin-bottom:10px"></div>
+            <div class="field-label" style="display:flex;align-items:center">이미지 프롬프트<button class="cab-copy-btn" onclick="cabCopy('prompt')">복사</button></div>
+            <div class="code-preview" id="cab-prompt-preview" style="margin-bottom:6px"></div>
+            <div class="cab-flow-name" id="cab-flow-name"></div>
+            <div id="cab-warnings"></div>
+          </div>
+        </section>
+
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P2</span><span class="phase-title">표준 캐릭터 보드</span><span class="phase-desc" id="cab-board-char-desc">선택한 캐릭터의 이미지 세팅 현황 — 빈 슬롯은 무료 생성 크레딧으로 채울 목록</span></div>
+          <div id="cab-board-empty" class="empty-card" style="display:none"></div>
+          <div id="cab-board"></div>
         </section>
       </div>
 
@@ -819,6 +928,10 @@ const CUT_EMOTION_OPTIONS = [
 // 채워지기 전 값(예: CA_ZO/MD_CUR/AT_AC_05 등)은 실제 codebook에 없는 코드라
 // 예전엔 겉보기만 그럴듯한 더미 데이터였다 — 전부 실제 codebook 로드로 대체한다.
 let codebook = null;
+// CA_BANK — GET /api/characters(캐릭터 레지스트리, characters.json) 는 이 라운드 전체의 두 번째 데이터 원본.
+// 서버는 { characters: { <id>: {...} } } 형태(배열이 아니라 id로 키를 삼은 객체)로 응답한다(app/server/proxy.js).
+let characters = null;               // null=아직 안 물어봄, {} 이상 = 응답 받음(내용 비어도 정상)
+let charactersStatus = 'loading';    // loading | ok | offline | error
 let PL_OPTIONS = [];
 let SP_LOCATION_OPTIONS = [];
 let SP_TIMEZONE_OPTIONS = [];
@@ -887,6 +1000,37 @@ function buildCodebookOptions() {
   SP_LIGHT_OPTIONS    = entries(sp._light_codes).map(([code, v]) => codeOpt(code, v));
 }
 
+// GET /api/characters — CA_BANK 탭 전용, 읽기 전용(이 라운드는 쓰기 없음). 서버 꺼져 있으면
+// charactersStatus='offline'로 명확히 표시(예전 완성도 오해와 같은 문제를 여기서 반복하지 않는다).
+async function loadCharacters() {
+  charactersStatus = 'loading';
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/characters`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    characters = data.characters || {};
+    charactersStatus = 'ok';
+    markServer(true);
+  } catch (e) {
+    characters = null;
+    charactersStatus = e instanceof TypeError ? 'offline' : 'error';
+    if (e instanceof TypeError) markServer(false);
+    console.warn('[codi_gen] characters 로드 실패:', e.message);
+  }
+  if (activeTab === 'bank') renderCaBankTab();
+}
+
+// characters.json/codebook 속 상대경로(예: "downloads/flow/character/yeori-face.jpg")를
+// 정적 라우트 app.use('/downloads', express.static(DOWNLOADS)) 의 실제 URL로 바꾼다.
+// DOWNLOADS = 저장소 루트의 downloads/ 라 필드값이 이미 "downloads/"로 시작하는 걸 그대로 이어 붙이면 된다
+// (혹시 그 접두어가 빠진 값이 와도 안전하게 붙여준다). 공백·한글 경로가 있어 세그먼트별로 encodeURIComponent.
+function mediaUrl(rel) {
+  if (!rel) return null;
+  const clean = String(rel).replace(/^\/+/, '');
+  const withPrefix = clean.startsWith('downloads/') ? clean : `downloads/${clean}`;
+  return `${YEORI_SERVER}/${withPrefix.split('/').map(encodeURIComponent).join('/')}`;
+}
+
 // ── 러프 스케치 프롬프트용 코드→영문 매핑 (2026-08-07 실측 기준, 상황별_스케치_구현기준.md 참고) ──
 const LOCATION_EN = { CF: 'cafe interior', RE: 'restaurant interior', HM: 'home living room', ST: 'city street', GY: 'gym', KC: 'Korean sauna jjimjilbang', SW: 'subway station', RT: 'rooftop' };
 const TIMEZONE_EN = { TZ_GH: 'golden hour warm light', TZ_NT: 'night time', TZ_AM: 'morning light' };
@@ -894,6 +1038,36 @@ const LIGHT_EN = { LT_WM: 'warm lighting', LT_CL: 'cool toned lighting', LT_NT: 
 const SHOT_EN = { SH_CU: 'close-up shot', SH_MCU: 'medium close-up shot', SH_ECU: 'extreme close-up shot', SH_MS: 'medium shot', SH_WS: 'wide shot' };
 const ACTION_EN = { AT_AC_05: 'looking directly at camera', AT_SI_01: 'sitting', AT_MW_01: 'walking' };
 const MOOD_EN = { MD_SUR: 'shocked expression', MD_INT: 'focused expression', MD_CUR: 'curious expression', MD_DRM: 'dreamy atmosphere' };
+
+// ── CA_BANK 표준 캐릭터 보드용 영문 문구 — codebook에 없는 슬롯(턴어라운드·표정 시트·시즌)은
+// 이 파일에서만 쓰는 프롬프트 조립 문구라 EN_ 접두 없이 CAB_ 로 구분한다.
+const CAB_EXPR_EN = {
+  neutral: 'neutral calm expression, relaxed face',
+  smile: 'bright smiling expression, gentle laugh',
+  surprise: 'surprised shocked expression, wide eyes, raised eyebrows',
+  sad: 'sad melancholic expression, downcast eyes',
+  flustered: 'flustered embarrassed expression, light blush, avoiding eye contact',
+};
+const CAB_EXPR_LABEL = { neutral: '기본', smile: '웃음', surprise: '놀람', sad: '슬픔', flustered: '당황' };
+const CAB_TURN_EN = {
+  front: 'full body, front view, standing straight, plain neutral background, character turnaround reference sheet',
+  side: 'full body, side profile view, standing straight, plain neutral background, character turnaround reference sheet',
+  back: 'full body, back view, standing straight, plain neutral background, character turnaround reference sheet',
+};
+const CAB_TURN_LABEL = { front: '정면', side: '측면', back: '후면' };
+const CAB_SEASON_EN = {
+  spring: 'light spring outfit, soft pastel tones, mild weather',
+  summer: 'light summer outfit, short sleeves, bright daylight',
+  fall: 'layered autumn outfit, knitwear, warm muted tones',
+  winter: 'warm winter outfit, coat or thick knit, cold weather styling',
+};
+const CAB_SEASON_LABEL = { spring: '봄', summer: '여름', fall: '가을', winter: '겨울' };
+const CAB_SEASON_KEYWORDS = {
+  spring: ['spring', '봄'],
+  summer: ['summer', '여름'],
+  fall: ['fall', 'autumn', '가을'],
+  winter: ['winter', '겨울', 'nov', 'dec', 'jan', 'feb'],
+};
 
 // ── 상태 ─────────────────────────────────────────────────────
 // 고정 예시 데이터(DEMO_CANDIDATES/DEMO_CUTS)는 2026-09-27 제거 — 서버가 없으면 빈 상태를 보여준다.
@@ -937,11 +1111,30 @@ function showToast(msg='✓ 저장됐어요') {
 }
 
 // ── 탭 ─────────────────────────────────────────────────────
+let activeTab = 'ep';
 function showTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + id).style.display = 'block';
   btn.classList.add('active');
+  activeTab = id;
+  // CA_BANK 탭에서만 사이드바를 캐릭터/룩/코드 분류 트리로 바꾼다(그 외 탭은 채널·에피소드·컷 목록 그대로)
+  const normalEl = document.getElementById('sidebar-normal');
+  const cabEl = document.getElementById('sidebar-cabank');
+  if (normalEl && cabEl) {
+    normalEl.style.display = id === 'bank' ? 'none' : '';
+    cabEl.style.display = id === 'bank' ? '' : 'none';
+  }
+  if (id === 'bank') renderCaBankTab();
+}
+
+let epListCollapsed = false;
+function toggleEpisodeListCollapse() {
+  epListCollapsed = !epListCollapsed;
+  const wrap = document.getElementById('sb-episodes-wrap');
+  const arrow = document.getElementById('sb-ep-collapse-arrow');
+  if (wrap) wrap.classList.toggle('collapsed', epListCollapsed);
+  if (arrow) arrow.textContent = epListCollapsed ? '▸' : '▾';
 }
 
 // ── 서버 연결 상태 · 티커 ─────────────────────────────────────────────────────
@@ -2214,22 +2407,303 @@ function renderCodeCheckTab() {
 // mockup의 "캐릭터 아카데미"(HR_/MK_/AC_ 조합 검증 상태 관리)는 그 서브코드들이
 // codebook.json에 없어 이번 범위에서 제외(사용자 확인). 대신 실제 codebook의
 // LOOK_BANK를 그대로 참고용으로 보여준다 — 컷 설계할 때 어떤 LOOK_ID가 있는지 찾아보는 용도.
-function renderCaBankTab() {
-  const el = document.getElementById('ca-bank-list');
+// ═══════════════════════════════════════════════════════════════════════════
+// CA_BANK 탭 — GET /api/characters(characters.json, ca-bank-academy-proposal.md A안 원본) +
+// codebook.LOOK_BANK 를 합쳐 보여주는 읽기 전용 탭. 이 라운드는 표시·선택·조합·복사만 한다 —
+// 서버에 아무 것도 쓰지 않는다(승격·시도 로그 등은 제안서 §4 이후 단계, 미구현).
+// ═══════════════════════════════════════════════════════════════════════════
+const CAB_CHAR_ORDER = ['yeori', 'yeori_nt', 'jia', 'jiyu'];
+const CAB_CHAR_SHORT = { yeori: '서여리', yeori_nt: '서여리(묶은머리)', jia: '지아', jiyu: '지유' };
+
+const cab = {
+  charId: null, look: '', top: '', bottom: '', season: '', mood: '', shot: '',
+  expandedChar: null,  // 사이드바 트리에서 룩 목록을 펼친 캐릭터
+  lastCode: '', lastPrompt: '',
+};
+
+function cabChar(id) { return (characters || {})[id] || null; }
+
+// 캐릭터 1명의 룩 목록 — codebook.LOOK_BANK(지금은 서여리 전용, meta.character_id=yeori) 와
+// characters.json 캐릭터별 looks{} 를 합친다. 같은 코드가 두 군데 다 있으면(예: LOOK_NT) dupeCodebook=true
+// 로 표시해 ca-bank-academy-proposal.md §1 이 지적한 중복을 감추지 않고 그대로 드러낸다(이 라운드는 읽기 전용).
+function characterLooks(id) {
+  const out = [];
+  const seen = new Set();
+  if (id === 'yeori' && codebook) {
+    Object.entries(codebook.LOOK_BANK || {}).forEach(([code, v]) => {
+      if (code.startsWith('_')) return;
+      out.push({ code, label: v.label || code, desc: v.ip_outfit || '', file: null, season: null, ep: v.ep, source: 'codebook' });
+      seen.add(code);
+    });
+  }
+  const c = cabChar(id);
+  Object.entries((c && c.looks) || {}).forEach(([code, v]) => {
+    const cbEntry = codebook?.LOOK_BANK?.[code];
+    out.push({
+      code, label: (cbEntry && cbEntry.label) || v.label || code, desc: v.desc || (cbEntry && cbEntry.ip_outfit) || '',
+      file: v.file || null, season: v.season || null, source: 'char',
+      dupeCodebook: !!cbEntry && !seen.has(code),
+    });
+    seen.add(code);
+  });
+  return out;
+}
+function cabFindLookOwner(code, excludeId) {
+  for (const id of CAB_CHAR_ORDER) {
+    if (id === excludeId) continue;
+    if (characterLooks(id).some(l => l.code === code)) return id;
+  }
+  return null;
+}
+
+// ── 클립보드 복사 — 이 라운드에서 새로 필요해진 유일한 브라우저 API. HTTPS/localhost 밖(예: file://)
+// 이나 권한 거부 시 navigator.clipboard 가 없을 수 있어 textarea+execCommand 로 물러난다. ──
+function copyToClipboard(text) {
+  const ok = () => showToast('📋 복사했어요');
+  const fail = () => showToast('⚠️ 복사 실패 — 직접 선택해 복사해주세요');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(ok).catch(() => cabFallbackCopy(text, ok, fail));
+  } else {
+    cabFallbackCopy(text, ok, fail);
+  }
+}
+function cabFallbackCopy(text, ok, fail) {
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    ok();
+  } catch (e) { fail(); }
+}
+function cabCopy(which) { copyToClipboard((which === 'code' ? cab.lastCode : cab.lastPrompt) || ''); }
+function cabCopyText(btn) { copyToClipboard(btn.getAttribute('data-cab-prompt') || ''); }
+// 이미지가 실제로 없거나(offline) 경로가 깨져 로드 실패하면 그 슬롯만 "미생성" 표시로 전환.
+function cabSlotFallback(slotId) {
+  const el = document.getElementById(slotId);
+  if (!el || !el.classList.contains('filled')) return; // 이미 처리됐으면 카운트를 두 번 빼지 않게
+  el.classList.remove('filled');
+  const imgWrap = el.querySelector('.cab-slot-img-wrap');
+  if (imgWrap) imgWrap.innerHTML = '<div class="cab-slot-empty-badge">미생성(이미지 로드 실패)</div>';
+  const realBody = el.querySelector('.cab-slot-body:not(.cab-slot-fallback)');
+  if (realBody) realBody.style.display = 'none';
+  const fb = el.querySelector('.cab-slot-fallback');
+  if (fb) fb.style.display = '';
+  // 헤더 "n/N" 채움 비율도 실제 로드 실패를 반영해 하나 뺀다(경로만 있고 실제 파일은 없는 경우 그대로 "채움"으로
+  // 세면 표준 캐릭터 보드 §7 지표가 부정확해짐).
+  const m = slotId.match(/^cab-slot-(.+)-([a-z]+)-[^-]+$/);
+  if (m) {
+    const fillEl = document.getElementById(`cab-fill-${m[1]}-${m[2]}`);
+    if (fillEl) {
+      const total = Number(fillEl.dataset.total) || 0;
+      const filled = Math.max(0, (Number(fillEl.dataset.filled) || 0) - 1);
+      fillEl.dataset.filled = String(filled);
+      fillEl.textContent = `${filled}/${total}`;
+      fillEl.classList.toggle('full', total > 0 && filled === total);
+    }
+  }
+}
+
+function cabSelectChar(id) { cab.charId = id; cab.expandedChar = id; cab.look = ''; renderCaBankTab(); }
+function cabToggleCharExpand(id) { cab.expandedChar = cab.expandedChar === id ? null : id; renderCaBankSidebar(); }
+function cabSelectLook(id, code) { cab.charId = id; cab.expandedChar = id; cab.look = code; renderCaBankTab(); }
+function cabSetField(field, code) { cab[field] = cab[field] === code ? '' : code; renderCaBankTab(); }
+
+// ── 사이드바(CA_BANK 전용) — 캐릭터(+룩 아코디언) / 코드 분류(LOOK·TOP·BOTTOM·SEASON·표정·샷) ──
+function renderCaBankSidebar() {
+  const el = document.getElementById('sidebar-cabank');
   if (!el) return;
-  if (!codebook) {
-    el.innerHTML = `<div style="font-size:11px;color:var(--text3)">코드북 로딩 중...</div>`;
+  let html = '<div class="cab-tree-sec"><div class="sb-label">캐릭터</div>';
+  if (charactersStatus !== 'ok') {
+    const msg = { loading: '캐릭터 정보 불러오는 중…', offline: '스튜디오 서버가 꺼져 있어요 — localhost:3001 을 켠 뒤 다시 시도하세요.', error: '캐릭터 정보를 못 불러왔어요.' }[charactersStatus] || '';
+    html += `<div class="sb-empty">${escapeHtml(msg)}<br><span class="sb-retry" onclick="loadCharacters()">다시 시도</span></div>`;
+  } else {
+    const looks = Object.fromEntries(CAB_CHAR_ORDER.map(id => [id, characterLooks(id)]));
+    CAB_CHAR_ORDER.forEach(id => {
+      const c = cabChar(id);
+      const name = (c && c.name) || CAB_CHAR_SHORT[id];
+      const face = c && c.face;
+      const thumb = face
+        ? `<div class="cab-char-thumb-wrap" style="position:relative"><div class="cab-char-thumb-ph" style="position:absolute;inset:0">?</div><img class="cab-char-thumb" style="position:absolute;inset:0" src="${escapeHtml(mediaUrl(face))}" onerror="this.style.display='none'"></div>`
+        : `<div class="cab-char-thumb-ph">?</div>`;
+      const list = looks[id] || [];
+      const expanded = cab.expandedChar === id;
+      html += `<div class="cab-char-row ${cab.charId === id ? 'active' : ''}" onclick="cabSelectChar('${id}')">
+        ${thumb}<span class="cab-char-name">${escapeHtml(name)}</span><span class="cab-char-count">${list.length}</span>
+        <span class="cab-char-arrow" onclick="event.stopPropagation(); cabToggleCharExpand('${id}')">${expanded ? '▾' : '▸'}</span>
+      </div>`;
+      if (expanded) {
+        if (!list.length) html += `<div class="cab-look-empty">아직 등록된 룩이 없어요</div>`;
+        else list.forEach(l => {
+          html += `<div class="cab-look-row ${cab.charId === id && cab.look === l.code ? 'active' : ''}" onclick="event.stopPropagation(); cabSelectLook('${id}','${escapeHtml(l.code)}')" title="${escapeHtml(l.desc || '')}">
+            <span class="cab-look-code">${escapeHtml(l.code)}</span><span class="cab-look-label">${escapeHtml(l.label)}</span>
+            ${l.dupeCodebook ? '<span class="cab-look-dupe" title="codebook.LOOK_BANK 에도 같은 코드가 있어요(ca-bank-academy-proposal.md §1)">⚠중복</span>' : ''}
+          </div>`;
+        });
+      }
+    });
+  }
+  html += '</div>';
+
+  html += '<div class="cab-tree-sec"><div class="sb-label">코드 분류</div>'
+    + cabVocabGroup('LOOK', LOOK_OPTIONS, 'look')
+    + cabVocabGroup('TOP', TOP_OPTIONS, 'top')
+    + cabVocabGroup('BOTTOM', BOTTOM_OPTIONS, 'bottom')
+    + cabVocabGroup('SEASON', SEASON_OPTIONS, 'season')
+    + cabVocabGroup('표정(MD_)', MOOD_OPTIONS, 'mood')
+    + cabVocabGroup('샷(SH_)', SHOT_OPTIONS, 'shot')
+    + '</div>';
+
+  el.innerHTML = html;
+}
+function cabVocabGroup(title, options, field) {
+  if (!options.length) return `<div class="cab-vocab-group"><div class="cab-vocab-title">${escapeHtml(title)} — 코드북 로딩 전</div></div>`;
+  return `<div class="cab-vocab-group"><div class="cab-vocab-title">${escapeHtml(title)}</div><div class="cab-vocab-items">
+    ${options.map(o => `<span class="cab-vocab-chip ${cab[field] === o.code ? 'active' : ''}" onclick="cabSetField('${field}','${escapeHtml(o.code)}')" title="${escapeHtml(o.label)}">${escapeHtml(o.code)}</span>`).join('')}
+  </div></div>`;
+}
+
+// ── A. 시뮬레이터 ────────────────────────────────────────────────────────
+function renderCabSimulator() {
+  const charOptions = CAB_CHAR_ORDER.map(id => ({ code: id, label: (cabChar(id) && cabChar(id).name) || CAB_CHAR_SHORT[id] }));
+  setPills('cab-pills-char', charOptions, cab.charId, "cabSelectChar('{v}')");
+
+  const looks = cab.charId ? characterLooks(cab.charId) : [];
+  const lookEl = document.getElementById('cab-pills-look');
+  if (lookEl) {
+    lookEl.innerHTML = looks.length
+      ? pillsHtml(looks.map(l => ({ code: l.code, label: `${l.code} ${l.label}` })), cab.look, "cabSetField('look','{v}')")
+      : `<div class="cab-hint">${cab.charId ? '이 캐릭터에 등록된 룩이 없어요.' : '캐릭터를 먼저 고르면 룩 목록이 나와요.'}</div>`;
+  }
+  setPills('cab-pills-top', TOP_OPTIONS, cab.top, "cabSetField('top','{v}')");
+  setPills('cab-pills-bottom', BOTTOM_OPTIONS, cab.bottom, "cabSetField('bottom','{v}')");
+  setPills('cab-pills-season', SEASON_OPTIONS, cab.season, "cabSetField('season','{v}')");
+  const moodEl = document.getElementById('cab-pills-mood');
+  if (moodEl) moodEl.innerHTML = MOOD_OPTIONS.length ? pillsHtml(MOOD_OPTIONS, cab.mood, "cabSetField('mood','{v}')") : `<div class="cab-hint">코드북 로딩 전이에요.</div>`;
+  const shotEl = document.getElementById('cab-pills-shot');
+  if (shotEl) shotEl.innerHTML = SHOT_OPTIONS.length ? pillsHtml(SHOT_OPTIONS, cab.shot, "cabSetField('shot','{v}')") : `<div class="cab-hint">코드북 로딩 전이에요.</div>`;
+
+  // 04 조합 결과 — 마스터 코드와 같은 " :: " 토큰 스타일(buildMasterCodeLine 참고)
+  const c = cabChar(cab.charId);
+  const charCode = cab.charId ? cab.charId.toUpperCase() : 'CHAR_미선택';
+  const lookCode = cab.look || 'LOOK_미선택';
+  const tbsPart = [cab.top || '-', cab.bottom || '-', cab.season || '-'].join('.');
+  const moodCode = cab.mood || 'MD_미선택';
+  const shotCode = cab.shot || 'SH_미선택';
+  cab.lastCode = `${charCode} :: ${lookCode} :: ${tbsPart} :: ${moodCode} :: ${shotCode}`;
+  const codeEl = document.getElementById('cab-code-preview');
+  if (codeEl) codeEl.innerHTML = `<span class="cp-a">${escapeHtml(charCode)}</span> <span class="cp-m">::</span> <span class="cp-b">${escapeHtml(lookCode)}</span> <span class="cp-m">::</span> <span class="cp-d">${escapeHtml(tbsPart)}</span> <span class="cp-m">::</span> <span class="cp-c">${escapeHtml(moodCode)}</span> <span class="cp-m">::</span> <span class="cp-b">${escapeHtml(shotCode)}</span>`;
+
+  const lookEntry = looks.find(l => l.code === cab.look);
+  const moodEn = cab.mood ? (MOOD_EN[cab.mood] || labelOf(MOOD_OPTIONS, cab.mood)) : null;
+  const shotEn = cab.shot ? (SHOT_EN[cab.shot] || labelOf(SHOT_OPTIONS, cab.shot)) : null;
+  const tbsExtra = [cab.top, cab.bottom, cab.season].filter(Boolean)
+    .map(code => (([...TOP_OPTIONS, ...BOTTOM_OPTIONS, ...SEASON_OPTIONS].find(o => o.code === code)) || {}).label || code)
+    .join(', ');
+  const promptText = [
+    (c && c.descriptor) || (cab.charId ? '(descriptor 없음)' : '(캐릭터 미선택)'),
+    lookEntry ? `wearing ${lookEntry.desc || lookEntry.label}` : null,
+    tbsExtra || null, moodEn, shotEn,
+  ].filter(Boolean).join(', ');
+  cab.lastPrompt = promptText;
+  const promptEl = document.getElementById('cab-prompt-preview');
+  if (promptEl) promptEl.textContent = promptText;
+  const flowEl = document.getElementById('cab-flow-name');
+  if (flowEl) flowEl.textContent = (c && c.flowCharacterName) ? `Flow 캐릭터 이름: ${c.flowCharacterName}` : '';
+
+  const warns = [];
+  if (cab.look && !looks.some(l => l.code === cab.look)) {
+    const owner = cabFindLookOwner(cab.look, cab.charId);
+    warns.push(owner ? `이 룩(${cab.look})은 "${CAB_CHAR_SHORT[owner] || owner}" 소속이에요 — 다른 캐릭터 룩을 선택했어요.` : `이 룩 코드(${cab.look})가 캐릭터 룩 목록·codebook 어디에도 없어요.`);
+  }
+  if (cab.mood && !codeKnown(MOOD_OPTIONS, cab.mood)) warns.push(`표정 코드 ${cab.mood} 가 codebook에 없어요.`);
+  if (cab.shot && !codeKnown(SHOT_OPTIONS, cab.shot)) warns.push(`샷 코드 ${cab.shot} 가 codebook에 없어요.`);
+  const warnEl = document.getElementById('cab-warnings');
+  if (warnEl) warnEl.innerHTML = warns.map(w => `<div class="cab-warn-line">⚠ ${escapeHtml(w)}</div>`).join('');
+}
+
+// ── B. 표준 캐릭터 보드 — 슬롯: 이미지 있으면 이미지, 없으면 "미생성" + 복사 가능한 프롬프트·저장 위치 ──
+function cabSlotHtml(slotId, label, file, promptText, targetFile) {
+  const fileBlock = file
+    ? `<div class="cab-slot-img-wrap"><img src="${escapeHtml(mediaUrl(file))}" alt="${escapeHtml(label)}" onerror="cabSlotFallback('${slotId}')"></div>
+       <div class="cab-slot-body"><div class="cab-slot-label">${escapeHtml(label)}</div><div class="cab-slot-file">${escapeHtml(file)}</div></div>`
+    : '';
+  return `<div class="cab-slot ${file ? 'filled' : ''}" id="${slotId}">
+    ${fileBlock}
+    <div class="cab-slot-body cab-slot-fallback" style="${file ? 'display:none' : ''}">
+      ${file ? '' : `<div class="cab-slot-img-wrap"><div class="cab-slot-empty-badge">미생성</div></div><div class="cab-slot-label">${escapeHtml(label)}</div>`}
+      <div class="cab-slot-prompt">${escapeHtml(promptText)}</div>
+      <button class="cab-slot-copy" data-cab-prompt="${escapeHtml(promptText)}" onclick="cabCopyText(this)">프롬프트 복사</button>
+      <div class="cab-slot-file" style="margin-top:4px">저장 위치: ${escapeHtml(targetFile)}</div>
+    </div>
+  </div>`;
+}
+function cabBoardDefs(charId) {
+  const c = cabChar(charId);
+  const looks = characterLooks(charId);
+  const descriptor = (c && c.descriptor) || '(descriptor 없음)';
+  const mk = extra => [descriptor, extra].filter(Boolean).join(', ');
+  const targetFile = (board, slot) => `downloads/seoyeori/characters/${charId}/${board}_${slot}.jpg`;
+
+  const boards = [];
+  boards.push({ key: 'face', title: '① 얼굴 기준', slots: [
+    { key: 'front', label: '정면 얼굴', file: c && c.face, prompt: mk('front-facing portrait, neutral clean background, consistent character reference sheet'), target: targetFile('face', 'front') },
+    { key: 'closeup', label: '클로즈업', file: c && c.closeup, prompt: mk('close-up shot, shoulders up, soft studio lighting, consistent character reference'), target: targetFile('face', 'closeup') },
+  ] });
+  boards.push({ key: 'turnaround', title: '② 턴어라운드', slots: ['front', 'side', 'back'].map(k => (
+    { key: k, label: CAB_TURN_LABEL[k] + ' 전신', file: null, prompt: mk(CAB_TURN_EN[k]), target: targetFile('turnaround', k) }
+  )) });
+  boards.push({ key: 'expr', title: '③ 표정 시트', slots: Object.keys(CAB_EXPR_LABEL).map(k => (
+    { key: k, label: CAB_EXPR_LABEL[k], file: null, prompt: mk(`close-up portrait, ${CAB_EXPR_EN[k]}`), target: targetFile('expr', k) }
+  )) });
+  boards.push({ key: 'look', title: '④ 룩별 전신', slots: looks.map(l => (
+    { key: l.code, label: `${l.code} ${l.label}`, file: l.file, prompt: mk(`full body, wearing ${l.desc || l.label}`), target: targetFile('look', l.code) }
+  )) });
+  boards.push({ key: 'season', title: '⑤ 시즌', slots: Object.keys(CAB_SEASON_LABEL).map(sk => {
+    const matched = looks.find(l => l.season && CAB_SEASON_KEYWORDS[sk].some(w => String(l.season).toLowerCase().includes(w)));
+    return {
+      key: sk, label: CAB_SEASON_LABEL[sk] + ' 룩',
+      file: matched ? matched.file : null,
+      prompt: matched ? mk(`full body, wearing ${matched.desc || matched.label}, ${CAB_SEASON_EN[sk]}`) : mk(`full body outfit, ${CAB_SEASON_EN[sk]}`),
+      target: targetFile('season', sk),
+    };
+  }) });
+  return boards;
+}
+function renderCabBoard() {
+  const boardEl = document.getElementById('cab-board');
+  const emptyEl = document.getElementById('cab-board-empty');
+  const descEl = document.getElementById('cab-board-char-desc');
+  if (!boardEl) return;
+  if (!cab.charId) {
+    boardEl.innerHTML = '';
+    if (emptyEl) { emptyEl.style.display = ''; emptyEl.textContent = '왼쪽 사이드바나 위 시뮬레이터에서 캐릭터를 먼저 골라주세요.'; }
     return;
   }
-  el.innerHTML = LOOK_OPTIONS_CB.map(o => {
-    const info = codebook.LOOK_BANK?.[o.code] || {};
-    return `<div class="card">
-      <div class="card-h" style="font-size:11px">${escapeHtml(o.code)}</div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:700">${escapeHtml(info.label || '')}</div>
-      <div style="font-size:11px;color:var(--text2);line-height:1.7;font-family:'Space Mono',monospace">${escapeHtml(info.ip_outfit || '')}</div>
-      <div style="margin-top:6px;font-size:9px;color:var(--teal-light)">참조: ${escapeHtml(info.ep || '-')}</div>
-    </div>`;
+  if (emptyEl) emptyEl.style.display = 'none';
+  const c = cabChar(cab.charId);
+  if (descEl) descEl.textContent = `${(c && c.name) || CAB_CHAR_SHORT[cab.charId]} 의 이미지 세팅 현황 — 빈 슬롯은 무료 생성 크레딧으로 채울 목록(프롬프트·저장 위치 복사 가능)`;
+  const boards = cabBoardDefs(cab.charId);
+  boardEl.innerHTML = boards.map(b => {
+    const total = b.slots.length;
+    const filled = b.slots.filter(s => s.file).length; // "데이터에 경로가 있다" 기준 — 실제 로드 실패는 cabSlotFallback이 아래에서 다시 뺀다
+    const fillId = `cab-fill-${cab.charId}-${b.key}`;
+    const body = total
+      ? `<div class="cab-board-grid">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
+      : `<div class="cab-look-empty" style="padding-left:0">이 캐릭터에 등록된 룩이 없어요 — 왼쪽 "룩(LOOK)"에서 확인하세요.</div>`;
+    return `<div class="cab-board-head"><span class="cab-board-title">${escapeHtml(b.title)}</span><span class="cab-board-fill ${total > 0 && filled === total ? 'full' : ''}" id="${fillId}" data-total="${total}" data-filled="${filled}">${filled}/${total}</span></div>${body}`;
   }).join('');
+}
+
+function renderCaBankTab() {
+  if (!cab.charId && characters) {
+    cab.charId = CAB_CHAR_ORDER.find(id => characters[id]) || null;
+    cab.expandedChar = cab.charId;
+  }
+  renderCaBankSidebar();
+  renderCabSimulator();
+  renderCabBoard();
 }
 
 // ── 워크플로우 탭 — 컷(가로, 직렬) × 코드 군(세로, 병렬) 히트맵 ─────────────────────
@@ -2469,6 +2943,7 @@ renderAll();
 loadStudioEpisodes();          // 비동기 -- 사이드바 채널·에피소드 + 자동 ID 번호 근거
 loadFromCandidatePool(true);   // 비동기 -- 후보 풀(Notion) 조회, 실패하면 빈 상태 + 티커에 이유 표시
 loadCodebook(); // 비동기 -- codebook.json 도착 시 buildCodebookOptions() + renderAll() 재실행
+loadCharacters(); // 비동기 -- CA_BANK 탭용 characters.json(GET /api/characters), 실패해도 명확한 오프라인 표시
 loadStudioActiveEpisode(); // 비동기 -- 스튜디오 활성 에피소드 배지(결과 카드가 아직 없으면 표시할 곳도 없어 조용히 끝남)
 </script>
 
