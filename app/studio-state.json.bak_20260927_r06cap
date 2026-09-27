@@ -4820,7 +4820,11 @@
           "videoClips": {},
           "g4Approved": {},
           "selectedCutId": "cut-1",
-          "subtitles": {}
+          "subtitles": {
+            "cut-1": "야, 서여리! 이거 너지?~  새내기 MT 때 챌린지!!",
+            "cut-3": "어머!~ 그거 어디서 났어?~ 지워!~ 당장 지워엇!\n이미,, 단톡방에 올렸는데??",
+            "cut-4": "… 휴~, 이번 생은 망했어... 여러분 흑역사도,  좀 풀어 줘요,,"
+          }
         },
         "ttsTabState": {
           "audioUrls": {},
