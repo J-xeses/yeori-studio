@@ -75,6 +75,25 @@
   .fnl{display:flex;gap:6px}.fnl div{flex:1;text-align:center;font-size:11px;color:var(--tx2)}
   .scroll{overflow-x:auto}
   @media (max-width:1100px){.setup{grid-template-columns:1fr}.two{grid-template-columns:1fr}}
+  /* ── 오늘의 여리 · 여리의 초안함 (감정이입 P2~P5) — 운영실 공용 팔레트 사용 ── */
+  .yr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:12px;margin-bottom:12px;align-items:start}
+  .yr .card{padding:12px 14px}
+  .yr h3{margin:0 0 8px;font-size:13px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:8px}
+  .yr h3 .muted{font-weight:400}.yr h3 .sp{flex:1}
+  .pill{font-size:11px;border-radius:10px;padding:1px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--tx2)}
+  .pill.acc{color:#111;background:var(--acc);border-color:var(--acc)}
+  .yr .row{font-size:13px;margin:4px 0;color:var(--tx);display:grid;grid-template-columns:92px minmax(0,1fr);gap:8px}.yr .row .k{color:var(--tx2)}
+  .yq-item{border-top:1px solid var(--line);padding:10px 0 4px}.yq-item:first-of-type{border-top:none;padding-top:2px}
+  .yq-meta{font-size:12px;color:var(--tx2);margin-bottom:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  .yq-cmt{font-size:12px;color:var(--tx2);background:var(--panel2);border-radius:6px;padding:6px 8px;margin-bottom:6px}
+  .yq-item textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--tx);font:13px/1.5 system-ui,'Malgun Gothic',sans-serif;resize:vertical}
+  .yq-item textarea:focus{outline:none;border-color:var(--acc)}
+  .yq-act{display:flex;gap:6px;margin-top:6px}.yq-act .btn{padding:4px 10px;font-size:12px}
+  .btn.pri{background:var(--acc);border-color:var(--acc);color:#111;font-weight:600}.btn.pri:hover{filter:brightness(1.08)}
+  .yq-tg{cursor:pointer;user-select:none}.yq-tg .ar{display:inline-block;width:12px;color:var(--tx2);transition:transform .15s}
+  #yeoriQ.fold .yq-body{display:none}#yeoriQ.fold .ar{transform:rotate(-90deg)}#yeoriQ.fold h3{margin:0}
+  .yq-empty{font-size:12px;color:var(--tx2);padding:6px 0}
+  @media (max-width:1100px){.yr{grid-template-columns:1fr}}
 </style></head><body>
 <header class="top"><b>서여리 인스타 운영실</b>
   <button class="tab" data-t="setup">⚙️ 계정 세팅</button>
@@ -111,32 +130,40 @@
 
 <!-- 📅 운영 보드 -->
 <section data-tab="board"><div class="wrap">
-  <!-- 오늘의 여리(감정이입 시스템 P2, 2026-09-27) — /api/yeori-mood -->
-  <div id="yeoriMood" style="border:1px solid #6b5bd6;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:13px;line-height:1.6"><b>💜 오늘의 여리</b> <span style="color:#888">불러오는 중…</span></div>
-  <script>
-  fetch("/api/yeori-mood").then(r=>r.json()).then(m=>{const e=document.getElementById("yeoriMood");if(!m||!m.mood){e.innerHTML="<b>💜 오늘의 여리</b> — 아직 없음";return}
-    const w=m.weather&&m.weather.sky?(m.weather.sky+" "+(m.weather.temp??"")+"°"):"";
-    e.innerHTML="<b>💜 오늘의 여리</b> · <b>"+m.mood+"</b> · "+m.face+" · 에너지 "+Math.round(m.energy*100)+"% · 주제: "+m.topic+(w?" · 서울 "+w:"")+
-    "<br>📝 캡션 한 줄: <i>"+m.captionLine+"</i><br>📱 스토리 아이디어: "+m.storyIdea+(m.callback?"<br>🔁 "+m.callback:"")+
-    "<br><span style=\"color:#888;font-size:11px\">근거: "+(m.reasons||[]).join(" · ")+" · "+new Date(m.at).toLocaleString("ko-KR")+"</span>"}).catch(()=>{})
-  </script>
-  <!-- 서여리 능동 대응 큐(감정이입 P3·P4·P5, 2026-09-27) — /api/yeori-queue. 답장 승인 = 실제 인스타 답글 게시 -->
-  <div id="yeoriQ" style="border:1px solid #6b5bd6;border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:13px;line-height:1.6"><b>💬 여리의 초안함</b> <span style="color:#888">불러오는 중…</span></div>
+  <!-- 오늘의 여리(P2) · 여리의 초안함(P3~P5) — /api/yeori-mood, /api/yeori-queue (2026-09-27) -->
+  <div class="yr">
+    <div class="card" id="yeoriMood"><h3>💜 오늘의 여리 <span class="muted">불러오는 중…</span></h3></div>
+    <div class="card" id="yeoriQ"><h3>💬 여리의 초안함 <span class="muted">불러오는 중…</span></h3></div>
+  </div>
   <script>
   function yqEsc(t){return String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]))}
+  function yrMood(){fetch("/api/yeori-mood").then(r=>r.json()).then(m=>{const e=document.getElementById("yeoriMood");if(!m||!m.mood){e.innerHTML="<h3>💜 오늘의 여리 <span class=muted>아직 없음</span></h3>";return}
+    const w=m.weather&&m.weather.sky?("서울 "+m.weather.sky+" "+(m.weather.temp??"")+"°"):"";
+    e.innerHTML="<h3>💜 오늘의 여리 <span class=\"pill acc\">"+yqEsc(m.mood)+"</span><span class=pill>에너지 "+Math.round(m.energy*100)+"%</span><span class=sp></span><span class=muted>"+yqEsc(w)+"</span></h3>"+
+      "<div class=row><span class=k>모드</span>"+yqEsc(m.face)+"</div>"+
+      "<div class=row><span class=k>주제</span>"+yqEsc(m.topic)+"</div>"+
+      "<div class=row><span class=k>캡션 한 줄</span><i>"+yqEsc(m.captionLine)+"</i></div>"+
+      "<div class=row><span class=k>스토리</span>"+yqEsc(m.storyIdea)+"</div>"+
+      (m.callback?"<div class=row><span class=k>이어갈 이야기</span>"+yqEsc(m.callback)+"</div>":"")+
+      "<div class=\"muted\" style=\"margin-top:6px\">근거: "+yqEsc((m.reasons||[]).join(" · ")||"기본")+" · "+new Date(m.at).toLocaleString("ko-KR")+"</div>"}).catch(()=>{})}
   function yqLoad(){fetch("/api/yeori-queue").then(r=>r.json()).then(d=>{const e=document.getElementById("yeoriQ");const q=d.queue||[];const wait=q.filter(x=>x.status==="대기");
-    let h="<b>💬 여리의 초안함</b> · 대기 "+wait.length+"건 <button onclick=\"yqRun(this)\" style=\"font-size:11px\">지금 확인(댓글·트리거)</button>";
+    const skip=q.filter(x=>x.status==="무대응").length;
+    let h="<h3 class=yq-tg onclick=\"yqFold(event)\" title=\"클릭해서 접기/펼치기\"><span class=ar>▾</span>💬 여리의 초안함 <span class=\"pill"+(wait.length?" acc":"")+"\">대기 "+wait.length+"</span>"+(skip?"<span class=pill title=\"악플·링크·연락 유도\">안전선 무대응 "+skip+"</span>":"")+"<span class=sp></span><button class=btn onclick=\"event.stopPropagation();yqRun(this)\" style=\"padding:3px 10px;font-size:12px\">지금 확인</button></h3><div class=yq-body>";
+    if(!wait.length)h+="<div class=yq-empty>대기 중인 초안이 없어요. 새 게시·댓글·팔로워 변화가 생기면 6시간마다 자동으로 채워집니다.</div>";
     for(const x of wait){const tag=x.kind==="reply"?"💬 답장":x.kind==="story"?"📱 스토리":"📝 캡션";
-      h+="<div style=\"border-top:1px dashed #555;margin-top:6px;padding-top:6px\">"+tag+" · <span style=\"color:#888\">"+yqEsc(x.trigger)+" · "+yqEsc(x.by)+"</span>"+(x.comment?"<br>└ 댓글: <i>"+yqEsc(x.comment)+"</i>"+(x.postLink?" <a href=\""+yqEsc(x.postLink)+"\" target=_blank>게시물</a>":""):"")+
-        "<br><textarea id=\"yq_"+x.id+"\" rows=2 style=\"width:100%;font-size:13px\">"+yqEsc(x.text)+"</textarea>"+
-        "<button onclick=\"yqDo('"+x.id+"','approve')\">"+(x.kind==="reply"?"승인 → 답글 게시":"승인(직접 게시)")+"</button> <button onclick=\"yqDo('"+x.id+"','reject')\">반려</button> <button onclick=\"navigator.clipboard.writeText(document.getElementById('yq_"+x.id+"').value)\">복사</button></div>"}
-    const skip=q.filter(x=>x.status==="무대응").length; if(skip)h+="<div style=\"color:#888;font-size:11px\">안전선 무대응 "+skip+"건(악플·링크·연락 유도)</div>";
-    if((d.callbacks||[]).length)h+="<div style=\"margin-top:6px\">🔁 다음 대본 콜백 제안: "+d.callbacks.map(yqEsc).join(" / ")+"</div>";
-    e.innerHTML=h}).catch(()=>{})}
+      h+="<div class=yq-item><div class=yq-meta><span class=pill>"+tag+"</span>"+yqEsc(x.trigger)+" · "+yqEsc(x.by)+(x.postLink?" · <a href=\""+yqEsc(x.postLink)+"\" target=_blank style=\"color:var(--link)\">게시물</a>":"")+"</div>"+
+        (x.comment?"<div class=yq-cmt>└ "+yqEsc(x.comment)+"</div>":"")+
+        "<textarea id=\"yq_"+x.id+"\" rows=2>"+yqEsc(x.text)+"</textarea>"+
+        "<div class=yq-act><button class=\"btn pri\" onclick=\"yqDo('"+x.id+"','approve')\">"+(x.kind==="reply"?"승인 → 답글 게시":"승인")+"</button><button class=btn onclick=\"yqDo('"+x.id+"','reject')\">반려</button><button class=btn onclick=\"navigator.clipboard.writeText(document.getElementById('yq_"+x.id+"').value);this.textContent='복사됨'\">복사</button></div></div>"}
+    if((d.callbacks||[]).length)h+="<div class=\"muted\" style=\"margin-top:8px\">🔁 다음 대본 콜백: "+d.callbacks.map(yqEsc).join(" / ")+"</div>";
+    e.innerHTML=h+"</div>";yqApplyFold()}).catch(()=>{})}
+  // 접기 상태는 이 브라우저에만 기억(없거나 막혀도 펼친 상태로 동작)
+  function yqApplyFold(){let f=false;try{f=localStorage.getItem("yqFold")==="1"}catch{}document.getElementById("yeoriQ").classList.toggle("fold",f)}
+  function yqFold(ev){if(ev.target.closest("button,a"))return;const f=!document.getElementById("yeoriQ").classList.contains("fold");try{localStorage.setItem("yqFold",f?"1":"0")}catch{}yqApplyFold();document.getElementById("yeoriQ").classList.toggle("fold",f)}
   function yqDo(id,a){const t=document.getElementById("yq_"+id).value;if(a==="approve"&&!confirm("이 문장으로 승인할까요? — "+t))return;
     fetch("/api/yeori-queue/"+id+"/"+a,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text:t})}).then(r=>r.json()).then(j=>{if(j.error)alert(j.error);yqLoad()})}
-  function yqRun(b){b.disabled=true;b.textContent="확인 중…";fetch("/api/yeori-queue/run",{method:"POST"}).then(r=>r.json()).then(()=>yqLoad())}
-  yqLoad();
+  function yqRun(b){b.disabled=true;b.textContent="확인 중…";fetch("/api/yeori-queue/run",{method:"POST"}).then(r=>r.json()).then(()=>{yqLoad();yrMood()})}
+  yrMood();yqLoad();
   </script>
   <div class="kpis" id="kpis"></div>
   <h2>30일 캘린더 <span class="muted" id="calr"></span></h2><div class="cal" id="cal"></div>
