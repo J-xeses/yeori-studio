@@ -213,7 +213,7 @@ await check('E4', '댓글 답장 안전선·언어 판정 + 댓글 읽기 권한
   const miss = cases.filter(([t, want]) => replyMode(t) !== want)
   const { igConfigured } = await import('../server/lib/igInsights.js')
   const r = igConfigured() ? await pullComments() : { skipped: '토큰 없음' }
-  return { ok: miss.length === 0 && !r.error, evidence: `판정 ${cases.length - miss.length}/${cases.length} · 댓글 읽기: ${r.error || r.skipped || `댓글 ${r.comments}건, 새 초안 ${r.drafts}`}` }
+  return { ok: miss.length === 0 && !r.error, evidence: `판정 ${cases.length - miss.length}/${cases.length} · 댓글 읽기: ${r.error || r.skipped || `댓글 ${r.comments}건, 새 초안 ${r.drafts}${r.hidden ? ` · ⚠ 숨김 ${r.hidden}개(Meta 앱 개발 모드)` : ''}`}` }
 })
 await check('E5', '에피소드 사건 원장 + 콜백 제안(오늘의 여리 연결)', async () => {
   const { suggestCallbacks } = await import('../server/lib/yeoriActive.js')

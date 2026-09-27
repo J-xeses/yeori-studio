@@ -112,12 +112,14 @@ const G = 'https://graph.instagram.com'
 const token = () => readJson(SECRETS, {}).apiKeys?.instagram?.token
 export async function pullComments() {
   const tk = token(); if (!tk) return { skipped: '인스타 토큰 없음' }
-  const ops = loadOps(); const out = []; let seen = 0
+  const ops = loadOps(); const out = []; let seen = 0, hidden = 0
   const me = (await (await fetch(`${G}/me?fields=username&access_token=${tk}`)).json()).username
-  const media = (await (await fetch(`${G}/me/media?fields=id,permalink,caption&limit=25&access_token=${tk}`)).json()).data || []
+  const media = (await (await fetch(`${G}/me/media?fields=id,permalink,caption,comments_count&limit=25&access_token=${tk}`)).json()).data || []
   for (const m of media) {
     const r = await (await fetch(`${G}/${m.id}/comments?fields=id,text,username,timestamp,replies{username}&access_token=${tk}`)).json()
     if (r.error) return { error: r.error.message }
+    // 댓글 수는 있는데 목록이 비면 = Meta 앱 개발 모드(역할 없는 사람 댓글 숨김) — 9/27 티저② 댓글 2개가 안 보였던 원인
+    hidden += Math.max(0, (m.comments_count || 0) - (r.data || []).length)
     for (const c of r.data || []) {
       seen++
       if (c.username === me || (c.replies?.data || []).some(x => x.username === me)) continue
@@ -130,7 +132,9 @@ export async function pullComments() {
       out.push({ key: k, kind: 'reply', trigger: `댓글 @${c.username}`, commentId: c.id, comment: c.text, postLink: m.permalink, text: g || tpl, by: g ? 'LLM(Haiku)' : '템플릿' })
     }
   }
-  return { comments: seen, drafts: commitDrafts(out) }
+  const res = { comments: seen, drafts: commitDrafts(out), hidden }
+  try { fs.writeFileSync(mp.statePath('yeori-comments-last.json'), JSON.stringify({ at: new Date().toISOString(), ...res })) } catch { /* 표시용 */ }
+  return res
 }
 
 // ── 승인/반려 — 답장은 승인 시 실제 게시 ──

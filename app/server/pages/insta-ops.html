@@ -148,6 +148,8 @@
   function yqLoad(){fetch("/api/yeori-queue").then(r=>r.json()).then(d=>{const e=document.getElementById("yeoriQ");const q=d.queue||[];const wait=q.filter(x=>x.status==="대기");
     const skip=q.filter(x=>x.status==="무대응").length;
     let h="<h3 class=yq-tg onclick=\"yqFold(event)\" title=\"클릭해서 접기/펼치기\"><span class=ar>▾</span>💬 여리의 초안함 <span class=\"pill"+(wait.length?" acc":"")+"\">대기 "+wait.length+"</span>"+(skip?"<span class=pill title=\"악플·링크·연락 유도\">안전선 무대응 "+skip+"</span>":"")+"<span class=sp></span><button class=btn onclick=\"event.stopPropagation();yqRun(this)\" style=\"padding:3px 10px;font-size:12px\">지금 확인</button></h3><div class=yq-body>";
+    const c=d.comments;if(c&&c.hidden)h+="<div class=yq-cmt style=\"color:var(--warn)\">⚠ 인스타에 댓글 "+c.hidden+"개가 있지만 API가 내용을 숨기고 있어요 — Meta 앱(yeori-insights)이 개발 모드라 역할 없는 사람의 댓글은 안 보입니다. 앱을 라이브 모드로 전환해야 답장 초안이 만들어져요.</div>";
+    else if(c)h+="<div class=muted style=\"margin-bottom:4px\">댓글 확인 "+new Date(c.at).toLocaleTimeString("ko-KR")+" · 새 댓글 "+c.drafts+"건</div>";
     if(!wait.length)h+="<div class=yq-empty>대기 중인 초안이 없어요. 새 게시·댓글·팔로워 변화가 생기면 6시간마다 자동으로 채워집니다.</div>";
     for(const x of wait){const tag=x.kind==="reply"?"💬 답장":x.kind==="story"?"📱 스토리":"📝 캡션";
       h+="<div class=yq-item><div class=yq-meta><span class=pill>"+tag+"</span>"+yqEsc(x.trigger)+" · "+yqEsc(x.by)+(x.postLink?" · <a href=\""+yqEsc(x.postLink)+"\" target=_blank style=\"color:var(--link)\">게시물</a>":"")+"</div>"+

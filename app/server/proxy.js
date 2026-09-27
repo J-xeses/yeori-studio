@@ -3610,7 +3610,8 @@ app.post('/api/ig-sync', async (_req, res) => {
 // 서여리 능동 대응 큐(감정이입 P3 캡션·스토리 / P4 댓글 답장 / P5 콜백) — ig-sync 직후 6시간마다 + 수동 POST /api/yeori-queue/run (2026-09-27)
 // 게시·답장은 항상 사람 승인: approve 시 reply 만 실제 게시(POST /{comment-id}/replies), caption·story 는 '승인(직접 게시)' 표시만
 app.get('/api/yeori-queue', async (_req, res) => {
-  try { const { loadOps } = await import('./lib/instaOps.js'); const { suggestCallbacks } = await import('./lib/yeoriActive.js'); res.json({ queue: (loadOps().yeoriQueue || []).slice().reverse(), callbacks: suggestCallbacks() }) }
+  try { const { loadOps } = await import('./lib/instaOps.js'); const { suggestCallbacks } = await import('./lib/yeoriActive.js'); let last = null; try { last = JSON.parse(fs.readFileSync(mp.statePath('yeori-comments-last.json'), 'utf-8')) } catch { /* 아직 없음 */ }
+    res.json({ queue: (loadOps().yeoriQueue || []).slice().reverse(), callbacks: suggestCallbacks(), comments: last }) }
   catch (err) { res.status(500).json({ error: err.message }) }
 })
 app.post('/api/yeori-queue/run', async (_req, res) => {
