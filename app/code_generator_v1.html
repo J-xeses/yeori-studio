@@ -120,10 +120,6 @@
   /* ── 메인 ── */
   .main { flex: 1; overflow-y: auto; padding: 20px; }
 
-  .phase-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; padding: 3px 10px; border-radius: 3px; margin-bottom: 12px; font-weight: 700; background: transparent; font-family: 'Space Mono', monospace; letter-spacing: 0.5px; }
-  .pb-0 { color: var(--text3); border: 1px solid var(--border2); }
-  .pb-1 { color: var(--teal); border: 1px solid var(--teal); }
-  .pb-2 { color: var(--scarlet-light); border: 1px solid var(--scarlet); }
 
   .section-label { font-size: 10px; font-weight: 700; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-family: 'Space Mono', monospace; }
   .section-label::after { content: ''; flex: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--border2) 0, var(--border2) 4px, transparent 4px, transparent 8px); }
@@ -229,6 +225,40 @@
   .wf-arc-code { font-family: 'Space Mono', monospace; font-size: 9px; color: var(--text2); }
   .wf-summary-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-top: 12px; font-size: 10px; color: var(--text2); }
 
+  /* ── 탭 머리 · Phase 블록 — 탭마다 P1… / 01… 을 새로 센다 ── */
+  .tab-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 1px solid var(--border2); }
+  .tab-head-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .tab-head-flow { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; letter-spacing: 0.3px; }
+  .tab-head-flow b { color: var(--teal-light); font-weight: 700; }
+  .phase { position: relative; border: 1px solid var(--border); border-left: 2px solid var(--teal); border-radius: var(--radius-sm); padding: 12px 14px 14px; margin-bottom: 18px; background: rgba(8,12,14,0.35); }
+  .phase-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--border2); }
+  .phase-no { font-family: 'Space Mono', monospace; font-size: 10px; font-weight: 700; color: #080C0E; background: var(--teal); border-radius: 3px; padding: 1px 7px; }
+  .phase-title { font-size: 12px; font-weight: 700; color: var(--text); }
+  .phase-desc { font-size: 10px; color: var(--text3); }
+
+  /* ── 패키지 탭 소항목 ── */
+  .pkg-kv { display: flex; gap: 10px; font-size: 11px; line-height: 1.9; }
+  .pkg-k { width: 96px; flex-shrink: 0; color: var(--text3); font-size: 10px; }
+  .pkg-v { color: var(--text2); min-width: 0; word-break: break-all; }
+  .pkg-v .studio-active-badge { margin: 0 !important; }
+  .pkg-ok { color: var(--teal); }
+  .pkg-warn { color: var(--scarlet-light); font-size: 11px; }
+  .pkg-dim { color: var(--text3); font-size: 10px; line-height: 1.7; }
+  .pkg-miss { list-style: none; font-size: 11px; line-height: 1.6; }
+  .pkg-miss li { display: flex; gap: 6px; align-items: baseline; padding: 2px 0; color: var(--text2); }
+  .pkg-miss-tag { font-size: 8px; padding: 0 5px; border-radius: 3px; border: 1px solid var(--border2); color: var(--text3); flex-shrink: 0; font-family: 'Space Mono', monospace; }
+  .pkg-miss li.block .pkg-miss-tag { border-color: var(--scarlet); color: var(--scarlet-light); }
+  .pkg-line { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--border); font-size: 10px; }
+  .pkg-line code { flex: 1; min-width: 0; font-family: 'Space Mono', monospace; color: var(--teal-light); word-break: break-all; }
+  .pkg-line-num { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--teal); font-weight: 700; flex-shrink: 0; margin-right: 6px; }
+  .pkg-action { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
+  .pkg-action-note { font-size: 10px; color: var(--scarlet-light); }
+  .pkg-cut { border: 1px solid var(--border); border-radius: 3px; margin-bottom: 4px; }
+  .pkg-cut summary { cursor: pointer; padding: 6px 8px; font-size: 11px; color: var(--text2); }
+  .pkg-cut[open] summary { border-bottom: 1px solid var(--border); }
+  .pkg-cut-body { padding: 8px 10px; }
+  .pkg-cut-body pre { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text2); white-space: pre-wrap; word-break: break-all; line-height: 1.7; margin-bottom: 8px; }
+  .is-disabled { opacity: 0.35; pointer-events: none; }
   .placeholder-tab { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--text3); gap: 10px; }
   .placeholder-tab-icon { font-size: 34px; opacity: 0.5; }
   .placeholder-tab-text { font-size: 12px; }
@@ -310,208 +340,274 @@
       <div class="cut-add" onclick="addCut()">+ 컷 추가</div>
     </div>
 
-    <!-- 메인 -->
+    <!-- 메인 — 탭마다 Phase(P1…)와 항목 번호(01…)를 탭 안에서 새로 센다(2026-09-27 개편:
+         예전엔 01~19 가 탭을 넘나들며 이어져 14·18 중복, 18 누락이 있었음). -->
     <div class="main">
 
       <!-- TAB: 에피소드 -->
       <div id="tab-ep" class="tab-content">
-        <div class="phase-badge pb-0"><span class="idx">P0</span>Phase 0 — 스토리 연결</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div class="section-label" style="flex:1;margin-bottom:0"><span class="idx">01</span>후보 풀 데이터</div>
-          <button class="btn-loadpool" onclick="loadFromCandidatePool()">📥 후보 풀에서 불러오기</button>
-        </div>
-        <div class="g" style="grid-template-columns:1fr;margin-bottom:16px" id="story-card-list"></div>
+        <div class="tab-head"><span class="tab-head-name">🎬 에피소드</span><span class="tab-head-flow"><b>P1</b> 스토리 연결 → <b>P2</b> 기본 설정 → <b>P3</b> 서여리 기본값 → <b>P4</b> 코드 확인</span></div>
 
-        <div class="phase-badge pb-1"><span class="idx">P1</span>Phase 1 — 에피소드 기본 설정</div>
-        <div class="g g2" style="margin-bottom:16px">
-          <div class="card">
-            <div class="card-h"><span class="idx">02</span>📺 플랫폼 · 포맷</div>
-            <div class="kw-wrap" id="pills-platform"></div>
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">스토리 연결</span><span class="phase-desc">후보를 고르면 새 에피소드 초안, 왼쪽 에피소드를 고르면 스튜디오 에피소드를 이어서 작업</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div class="section-label" style="flex:1;margin-bottom:0"><span class="idx">01</span>후보 풀 데이터</div>
+            <button class="btn-loadpool" onclick="loadFromCandidatePool()">📥 후보 풀에서 불러오기</button>
           </div>
-          <div class="card">
-            <div class="card-h"><span class="idx">03</span>🏷️ 주제 × 시나리오</div>
-            <div class="kw-wrap" id="pills-topic" style="margin-bottom:8px"></div>
-            <div class="kw-wrap" id="pills-scenario"></div>
-          </div>
-        </div>
+          <div class="g" style="grid-template-columns:1fr" id="story-card-list"></div>
+        </section>
 
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-h"><span class="idx">04</span>🆔 에피소드 ID</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input class="input" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); renderAll()">
-            <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
-          </div>
-          <div class="ep-id-note" id="ep-id-note"></div>
-        </div>
-
-        <div class="phase-badge pb-2"><span class="idx">P2</span>Phase 2 — 서여리 기본값</div>
-        <div class="g g3" style="margin-bottom:16px">
-          <div class="card">
-            <div class="card-h"><span class="idx">05</span>👗 의상 룩</div>
-            <div class="kw-wrap" id="pills-look" style="margin-bottom:8px"></div>
-            <div class="field-label">상의</div>
-            <div class="kw-wrap" id="pills-top" style="margin-bottom:8px"></div>
-            <div class="field-label">하의</div>
-            <div class="kw-wrap" id="pills-bottom" style="margin-bottom:8px"></div>
-            <div class="field-label">시즌</div>
-            <div class="kw-wrap" id="pills-season"></div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="idx">06</span>✨ 자동 연동</div>
-            <div class="auto-link" id="auto-link-box"></div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="idx">07</span>🖼️ 레퍼런스</div>
-            <div class="auto-link">
-              <span class="auto-check">✓</span> FA_01 고정<br>
-              <span class="auto-check">✓</span> FA_02 고정<br>
-              <span style="color:var(--scarlet-light)">→</span> <span id="ref-fs-code">FS_E01</span> 생성 필요
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P2</span><span class="phase-title">에피소드 기본 설정</span><span class="phase-desc">스튜디오 에피소드의 contentType · topicCode · scnCode · code 와 같은 값</span></div>
+          <div class="g g2" style="margin-bottom:12px">
+            <div class="card">
+              <div class="card-h"><span class="idx">02</span>📺 플랫폼 · 포맷</div>
+              <div class="kw-wrap" id="pills-platform"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">03</span>🏷️ 주제 × 시나리오</div>
+              <div class="field-label">주제 TOPIC · 1개</div>
+              <div class="kw-wrap" id="pills-topic" style="margin-bottom:10px"></div>
+              <div class="field-label">시나리오 SCN · 1개</div>
+              <div class="kw-wrap" id="pills-scenario"></div>
             </div>
           </div>
-        </div>
+          <div class="card">
+            <div class="card-h"><span class="idx">04</span>🆔 에피소드 ID</div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="input" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); state.epIdAuto=false; state.epIdNote=''; renderAll()">
+              <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
+            </div>
+            <div class="ep-id-note" id="ep-id-note"></div>
+          </div>
+        </section>
 
-        <div class="card accent">
-          <div class="card-h"><span class="idx">08</span>💻 에피소드 코드 프리뷰</div>
-          <div class="code-preview" id="code-preview"></div>
-        </div>
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P3</span><span class="phase-title">서여리 기본값</span><span class="phase-desc">에피소드 전체에 깔리는 기본 룩(컷별 LOOK_ID 는 컷 설계 탭)</span></div>
+          <div class="g g3">
+            <div class="card">
+              <div class="card-h"><span class="idx">05</span>👗 의상 룩</div>
+              <div class="kw-wrap" id="pills-look" style="margin-bottom:8px"></div>
+              <div class="field-label">상의</div>
+              <div class="kw-wrap" id="pills-top" style="margin-bottom:8px"></div>
+              <div class="field-label">하의</div>
+              <div class="kw-wrap" id="pills-bottom" style="margin-bottom:8px"></div>
+              <div class="field-label">시즌</div>
+              <div class="kw-wrap" id="pills-season"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">06</span>✨ 자동 연동</div>
+              <div class="auto-link" id="auto-link-box"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">07</span>🖼️ 레퍼런스</div>
+              <div class="auto-link">
+                <span class="auto-check">✓</span> FA_01 고정<br>
+                <span class="auto-check">✓</span> FA_02 고정<br>
+                <span style="color:var(--teal-light)">→</span> <span id="ref-fs-code">FS_(ID 미정)</span> 생성 필요
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P4</span><span class="phase-title">에피소드 코드 확인</span></div>
+          <div class="card accent">
+            <div class="card-h"><span class="idx">08</span>💻 에피소드 코드 프리뷰</div>
+            <div class="code-preview" id="code-preview"></div>
+          </div>
+        </section>
       </div>
 
       <!-- TAB: 컷 설계 -->
       <div id="tab-cut" class="tab-content" style="display:none">
-        <div class="phase-badge pb-1"><span class="idx">P3</span>Phase 3 — 컷 설계 · <span id="cut-phase-num">C01</span> 진행 중</div>
+        <div class="tab-head"><span class="tab-head-name">✂️ 컷 설계 · <span id="cut-phase-num">—</span></span><span class="tab-head-flow"><b>P1</b> 컷 성격 → <b>P2</b> 공간·연출 → <b>P3</b> 확인·스케치</span></div>
         <div id="cut-empty" class="empty-card" style="display:none"></div>
         <div id="cut-body">
 
-        <div class="g g2" style="margin-bottom:16px">
-          <div class="card">
-            <div class="card-h"><span class="idx">09</span>🎭 감정 선택</div>
-            <div class="kw-wrap" id="pills-cut-emotion"></div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="idx">10</span>🎞️ 파이프라인</div>
-            <div class="kw-wrap" id="pills-cut-pipeline" style="margin-bottom:8px"></div>
-            <div class="field-label">G단계 흐름</div>
-            <div id="cut-pipeline-flow" style="margin-bottom:8px"></div>
-            <div class="field-label">캐릭터 룩(LOOK_ID)</div>
-            <div class="kw-wrap" id="pills-cut-look"></div>
-          </div>
-        </div>
-
-        <div class="g g2" style="margin-bottom:16px">
-          <div class="card">
-            <div class="card-h"><span class="idx">11</span>🗺️ C군 공간 설정</div>
-            <div class="field-label">실내 · 실외</div>
-            <div class="kw-wrap" id="pills-cut-indoor" style="margin-bottom:8px"></div>
-            <div class="field-label">장소</div>
-            <div class="kw-wrap" id="pills-cut-location" style="margin-bottom:8px"></div>
-            <div class="field-label">지역</div>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <select class="input" id="cut-region-select" onchange="setCutRegion(this.value)"></select>
-              <input class="input" id="cut-region-custom" placeholder="지역 직접입력" style="display:none" oninput="setCutField('regionCustom', this.value)">
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">컷 성격</span><span class="phase-desc">감정 · 파이프라인(B군) · 캐릭터 룩(D군)</span></div>
+          <div class="g g2">
+            <div class="card">
+              <div class="card-h"><span class="idx">01</span>🎭 감정 선택</div>
+              <div class="kw-wrap" id="pills-cut-emotion"></div>
             </div>
-            <div class="field-label">시간대</div>
-            <div class="kw-wrap" id="pills-cut-timezone" style="margin-bottom:8px"></div>
-            <div class="field-label">조명</div>
-            <div class="kw-wrap" id="pills-cut-light"></div>
-          </div>
-
-          <div class="card">
-            <div class="card-h"><span class="idx">12</span>🎬 E군 연출 설계</div>
-            <div class="field-label">컷 길이</div>
-            <div class="kw-wrap" id="pills-cut-length" style="margin-bottom:8px"></div>
-            <div class="field-label">구간</div>
-            <div class="kw-wrap" id="pills-cut-segcount" style="margin-bottom:10px"></div>
-
-            <div id="cut-segment-editor"></div>
-
-            <div class="field-label" style="margin-top:8px">동작</div>
-            <div class="kw-wrap" id="pills-cut-action" style="margin-bottom:8px"></div>
-            <div class="field-label">감정코드</div>
-            <div class="kw-wrap" id="pills-cut-mood" style="margin-bottom:8px"></div>
-
-            <div class="field-label">무드보드 키워드</div>
-            <input class="input" id="cut-moodboard" placeholder="쉼표로 구분(예: 담담한, 창가, 공허한)" oninput="setCutField('moodboard', this.value)">
-
-            <div class="field-label" style="margin-top:8px">감독 코멘트</div>
-            <textarea class="input" id="cut-director-comment" style="min-height:52px;font-family:'Noto Sans KR',sans-serif" placeholder="감독 코멘트를 입력하세요" oninput="setCutField('comment', this.value)"></textarea>
-          </div>
-        </div>
-
-        <div class="card accent">
-          <div class="card-h"><span class="idx">13</span>💻 C컷 코드 프리뷰</div>
-          <div class="code-preview" id="cut-code-preview"></div>
-        </div>
-
-        <div class="card accent" id="cut-generate-result" style="display:none;margin-top:16px"></div>
-
-        <div class="card" style="margin-top:16px">
-          <div class="card-h"><span class="idx">14</span>🖼️ 러프 스케치 프리비주얼</div>
-          <div style="display:flex;gap:14px;align-items:flex-start">
-            <div id="sketch-preview" style="width:170px;height:226px;flex-shrink:0;background:rgba(0,0,0,0.25);border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden">
-              <span style="color:var(--text3);font-size:10px;font-family:'Space Mono',monospace">미생성</span>
+            <div class="card">
+              <div class="card-h"><span class="idx">02</span>🎞️ 파이프라인</div>
+              <div class="kw-wrap" id="pills-cut-pipeline" style="margin-bottom:8px"></div>
+              <div class="field-label">G단계 흐름</div>
+              <div id="cut-pipeline-flow" style="margin-bottom:8px"></div>
+              <div class="field-label">캐릭터 룩(LOOK_ID)</div>
+              <div class="kw-wrap" id="pills-cut-look"></div>
             </div>
-            <div style="flex:1;min-width:0">
-              <div class="field-label">자동 생성 프롬프트 (구도·연출 코드 기반)</div>
-              <div class="code-preview" id="sketch-prompt-preview" style="margin-bottom:10px;max-height:90px;overflow-y:auto;font-size:10px"></div>
-              <div style="display:flex;align-items:center;gap:10px">
-                <button class="btn-loadpool" id="sketch-gen-btn" onclick="generateSketch()">🎨 스케치 생성</button>
-                <span id="sketch-status" style="font-size:10px;color:var(--text3)"></span>
+          </div>
+        </section>
+
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P2</span><span class="phase-title">공간 · 연출</span><span class="phase-desc">C군 공간(SP) · E군 연출(SH/CA/AT/MD)</span></div>
+          <div class="g g2">
+            <div class="card">
+              <div class="card-h"><span class="idx">03</span>🗺️ C군 공간 설정</div>
+              <div class="field-label">실내 · 실외</div>
+              <div class="kw-wrap" id="pills-cut-indoor" style="margin-bottom:8px"></div>
+              <div class="field-label">장소</div>
+              <div class="kw-wrap" id="pills-cut-location" style="margin-bottom:8px"></div>
+              <div class="field-label">지역</div>
+              <div style="display:flex;gap:8px;margin-bottom:8px">
+                <select class="input" id="cut-region-select" onchange="setCutRegion(this.value)"></select>
+                <input class="input" id="cut-region-custom" placeholder="지역 직접입력" style="display:none" oninput="setCutField('regionCustom', this.value)">
               </div>
-              <div class="auto-note" style="margin-top:8px">생성(Pollinations) → 선화 변환(informative-drawings, 브라우저 내 실행) 2단계 — 첫 실행 시 변환 모델(약 17MB) 다운로드로 다소 걸릴 수 있음. 인물 얼굴은 컷마다 달라질 수 있음(구도·톤 확인용, 캐릭터 확정용 아님).</div>
+              <div class="field-label">시간대</div>
+              <div class="kw-wrap" id="pills-cut-timezone" style="margin-bottom:8px"></div>
+              <div class="field-label">조명</div>
+              <div class="kw-wrap" id="pills-cut-light"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><span class="idx">04</span>🎬 E군 연출 설계</div>
+              <div class="field-label">컷 길이</div>
+              <div class="kw-wrap" id="pills-cut-length" style="margin-bottom:8px"></div>
+              <div class="field-label">구간</div>
+              <div class="kw-wrap" id="pills-cut-segcount" style="margin-bottom:10px"></div>
+
+              <div id="cut-segment-editor"></div>
+
+              <div class="field-label" style="margin-top:8px">동작</div>
+              <div class="kw-wrap" id="pills-cut-action" style="margin-bottom:8px"></div>
+              <div class="field-label">감정코드</div>
+              <div class="kw-wrap" id="pills-cut-mood" style="margin-bottom:8px"></div>
+
+              <div class="field-label">무드보드 키워드</div>
+              <input class="input" id="cut-moodboard" placeholder="쉼표로 구분(예: 담담한, 창가, 공허한)" oninput="setCutField('moodboard', this.value)">
+
+              <div class="field-label" style="margin-top:8px">감독 코멘트</div>
+              <textarea class="input" id="cut-director-comment" style="min-height:52px;font-family:'Noto Sans KR',sans-serif" placeholder="감독 코멘트를 입력하세요" oninput="setCutField('comment', this.value)"></textarea>
             </div>
           </div>
-        </div>
+        </section>
+
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P3</span><span class="phase-title">확인 · 스케치</span><span class="phase-desc">프롬프트 생성·전달은 📦 패키지 탭에서</span></div>
+          <div class="card accent" style="margin-bottom:12px">
+            <div class="card-h"><span class="idx">05</span>💻 C컷 코드 프리뷰</div>
+            <div class="code-preview" id="cut-code-preview"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-h"><span class="idx">06</span>🖼️ 러프 스케치 프리비주얼</div>
+            <div style="display:flex;gap:14px;align-items:flex-start">
+              <div id="sketch-preview" style="width:170px;height:226px;flex-shrink:0;background:rgba(0,0,0,0.25);border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+                <span style="color:var(--text3);font-size:10px;font-family:'Space Mono',monospace">미생성</span>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div class="field-label">자동 생성 프롬프트 (구도·연출 코드 기반)</div>
+                <div class="code-preview" id="sketch-prompt-preview" style="margin-bottom:10px;max-height:90px;overflow-y:auto;font-size:10px"></div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <button class="btn-loadpool" id="sketch-gen-btn" onclick="generateSketch()">🎨 스케치 생성</button>
+                  <span id="sketch-status" style="font-size:10px;color:var(--text3)"></span>
+                </div>
+                <div class="auto-note" style="margin-top:8px">생성(Pollinations) → 선화 변환(informative-drawings, 브라우저 내 실행) 2단계 — 첫 실행 시 변환 모델(약 17MB) 다운로드로 다소 걸릴 수 있음. 인물 얼굴은 컷마다 달라질 수 있음(구도·톤 확인용, 캐릭터 확정용 아님).</div>
+              </div>
+            </div>
+          </div>
+        </section>
         </div><!-- /cut-body -->
       </div>
 
       <!-- TAB: 코드 확인 -->
       <div id="tab-code" class="tab-content" style="display:none">
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-h"><span class="idx">15</span>🔍 전체 컷 코드 현황</div>
-          <div style="overflow-x:auto">
-            <table id="code-check-table" style="width:100%;border-collapse:collapse;font-size:11px"></table>
+        <div class="tab-head"><span class="tab-head-name">🔍 코드 확인</span><span class="tab-head-flow"><b>P1</b> 전체 점검</span></div>
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">전체 점검</span><span class="phase-desc">컷 설계 값과 마지막 생성 결과만 보여줌(가짜 프리뷰 없음)</span></div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-h"><span class="idx">01</span>🔍 전체 컷 코드 현황</div>
+            <div style="overflow-x:auto">
+              <table id="code-check-table" style="width:100%;border-collapse:collapse;font-size:11px"></table>
+            </div>
           </div>
-        </div>
-        <div class="card accent">
-          <div class="card-h"><span class="idx">16</span>⚡ 활성 컷 프롬프트 미리보기</div>
-          <div id="code-check-preview"></div>
-        </div>
+          <div class="card accent">
+            <div class="card-h"><span class="idx">02</span>⚡ 활성 컷 프롬프트 미리보기</div>
+            <div id="code-check-preview"></div>
+          </div>
+        </section>
       </div>
 
-      <!-- TAB: 워크플로우 — 컷(가로, 직렬 진행) × 코드 군(세로, 병렬 트랙) 통합 전개도.
-           표시 행 토글은 code_generator_interactive_dashboard_v2.html 기획을 그대로 따름.
-           모든 셀은 실제 cutDesignState/codebook/lastGeneratedResult 값만 사용(가짜 상태 없음) -->
+      <!-- TAB: 워크플로우 — 컷(가로, 직렬 진행) × 코드 군(세로, 병렬 트랙) 히트맵.
+           셀 색 = 채움 정도(빈칸 → 일부 → 채움 → 생성됨), 주의(필수 누락·코드북 외 코드)는 테두리.
+           모든 셀은 실제 cutDesignState/codebook/lastGeneratedResult/G포인트 값만 사용(가짜 상태 없음) -->
       <div id="tab-workflow" class="tab-content" style="display:none">
-        <div class="wf-legend">
-          <div class="wf-leg"><div class="wf-leg-dot" style="background:var(--teal)"></div>생성됨</div>
-          <div class="wf-leg"><div class="wf-leg-dot" style="background:rgba(29,158,117,0.4)"></div>활성 컷</div>
-          <div class="wf-leg"><div class="wf-leg-dot" style="background:var(--border2)"></div>미생성</div>
-          <span style="font-size:9px;color:var(--text3);margin-left:auto">← 가로: 컷 진행(직렬) · 세로: 코드 군(병렬) →</span>
-        </div>
-
-        <div class="wf-row-controls" id="wf-row-controls"></div>
-
-        <div class="wf-canvas-outer">
-          <div class="wf-canvas-inner" id="wf-canvas"></div>
-        </div>
-
-        <div class="wf-summary-bar" id="wf-summary"></div>
+        <div class="tab-head"><span class="tab-head-name">📊 워크플로우</span><span class="tab-head-flow"><b>P1</b> 컷 × 코드 군 히트맵</span></div>
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">컷 × 코드 군 히트맵</span><span class="phase-desc">행 이름 클릭 = 그 행 전체 펼침 · 컷 번호 클릭 = 그 컷 활성 · ⤢ = 그 열 펼침</span></div>
+          <div class="section-label"><span class="idx">01</span>히트맵</div>
+          <div class="wf-legend" id="wf-legend"></div>
+          <div class="wf-row-controls" id="wf-row-controls"></div>
+          <div class="wf-canvas-outer">
+            <div class="wf-canvas-inner" id="wf-canvas"></div>
+          </div>
+          <div class="section-label" style="margin-top:14px"><span class="idx">02</span>요약</div>
+          <div class="wf-summary-bar" id="wf-summary"></div>
+        </section>
       </div>
 
-      <!-- TAB: 패키지 -->
+      <!-- TAB: 패키지 — (a) 프롬프트 생성 과 (b) 스튜디오로 전달 을 이름 붙은 두 단계로 분리 -->
       <div id="tab-pkg" class="tab-content" style="display:none">
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-h"><span class="idx">17</span>💻 전체 마스터 코드</div>
-          <div class="code-preview" id="pkg-master-code"></div>
-        </div>
-        <div class="card accent" id="pkg-generate-result"></div>
+        <div class="tab-head"><span class="tab-head-name">📦 패키지</span><span class="tab-head-flow"><b>P1</b> 프롬프트 생성 → <b>P2</b> 스튜디오로 전달</span></div>
+
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">프롬프트 생성</span><span class="phase-desc">컷별 마스터 코드 → /api/generate-script(script_generator.py → script_to_prompts.py) → G2 이미지 · G4 영상 프롬프트</span></div>
+          <div class="g g2" style="margin-bottom:12px">
+            <div class="card">
+              <div class="card-h"><span class="idx">01</span>🆔 에피소드 코드</div>
+              <div id="pkg-ep"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">02</span>⚠ 누락 항목</div>
+              <div id="pkg-missing"></div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-h"><span class="idx">03</span>💻 컷별 마스터 코드</div>
+            <div id="pkg-master-code"></div>
+          </div>
+          <div class="pkg-action">
+            <button class="btn-loadpool" id="pkg-gen-btn" onclick="generatePackage()">① 프롬프트 생성</button>
+            <span class="pkg-action-note" id="pkg-gen-note"></span>
+          </div>
+          <div class="card accent">
+            <div class="card-h"><span class="idx">04</span>⚡ 생성된 프롬프트</div>
+            <div id="pkg-generated"></div>
+          </div>
+        </section>
+
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P2</span><span class="phase-title">스튜디오로 전달</span><span class="phase-desc">생성 결과를 스튜디오 "대본생성" 탭 미리보기로 넘김 — 스튜디오에서 "실제 적용"을 눌러야 컷에 반영</span></div>
+          <div class="g g2" style="margin-bottom:12px">
+            <div class="card">
+              <div class="card-h"><span class="idx">05</span>🎯 전달 대상</div>
+              <div id="pkg-target"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">06</span>📤 전달 상태 · 시각</div>
+              <div id="pkg-handoff"></div>
+            </div>
+          </div>
+          <div class="pkg-action">
+            <button class="btn-loadpool" id="pkg-send-btn" onclick="sendToStudio()">② 스튜디오로 전달</button>
+            <span class="pkg-action-note" id="pkg-send-note"></span>
+          </div>
+        </section>
       </div>
 
-      <!-- TAB: CA_BANK — LOOK_BANK(codebook.json) 참고용 뷰. F군/캐릭터 서브코드(HR_/MK_/AC_ 등)는
-           codebook.json에 아직 없어 이번 범위에서는 다루지 않음(사용자 확인, 축소판) -->
+      <!-- TAB: CA_BANK — LOOK_BANK(codebook.json) 참고용 뷰. characters.json 과의 단일화·아카데미 설계는
+           app/docs/ca-bank-academy-proposal.md(제안서, 미구현) -->
       <div id="tab-bank" class="tab-content" style="display:none">
-        <div class="card-h" style="margin-bottom:10px"><span class="idx">19</span>🗄 LOOK_BANK — codebook.json 등록 캐릭터 룩</div>
-        <div id="ca-bank-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+        <div class="tab-head"><span class="tab-head-name">🗄 CA_BANK</span><span class="tab-head-flow"><b>P1</b> LOOK_BANK 참고</span></div>
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">LOOK_BANK 참고</span><span class="phase-desc">codebook.json 등록 룩(읽기전용) — 캐릭터 레지스트리(characters.json)와 합치는 안은 docs/ca-bank-academy-proposal.md</span></div>
+          <div class="section-label"><span class="idx">01</span>LOOK_BANK — codebook.json 등록 캐릭터 룩</div>
+          <div id="ca-bank-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+        </section>
       </div>
 
     </div>
@@ -519,11 +615,12 @@
 
   <!-- 하단바 -->
   <div class="bottombar">
-    <div class="bb-info" id="bb-info">C01 · 에피소드 설정 진행 중</div>
+    <div class="bb-info" id="bb-info">작업 대상 없음</div>
     <div class="bb-right">
       <div class="bb-btn bb-ghost" onclick="moveCut(-1)">← 이전 컷</div>
       <div class="bb-btn bb-ghost" onclick="moveCut(1)">다음 컷 →</div>
-      <div class="bb-btn bb-primary" onclick="generatePackage()">패키지 생성 ↗</div>
+      <div class="bb-btn bb-primary" id="bb-gen-btn" onclick="generatePackage()">① 프롬프트 생성</div>
+      <div class="bb-btn bb-ghost" id="bb-send-btn" onclick="sendToStudio()">② 스튜디오로 전달 ↗</div>
     </div>
   </div>
 
@@ -670,6 +767,7 @@ const LENGTH_OPTIONS = [
   { code: '24s', label: '24s' },
 ];
 const SEGCOUNT_OPTIONS = [
+  { code: '1', label: '1구간' }, // 스튜디오 컷 대부분이 단일 샷(SH 1개) — 없으면 기본 구간 B가 코드에 끼어듦
   { code: '2', label: '2구간' },
   { code: '3', label: '3구간' },
 ];
@@ -1135,6 +1233,8 @@ function setWorkingCuts(list, status, error) {
   cutsError = error || '';
   currentCutIndex = 0;
   lastGeneratedResult = null; // 다른 대상의 생성 결과를 이 컷들에 섞지 않는다
+  lastGeneratedCode = '';
+  lastGeneratedAt = null;
 }
 
 function addCut() {
@@ -1200,6 +1300,7 @@ function seedFromStudioCut(c) {
   const sh = String(mc.sh || '').match(/SH_[A-Z]+/);
   const ca = String(mc.ca || '').match(/^CA_[A-Z]+/);
   if (sh || ca) seed.segA = { shot: sh ? sh[0] : null, cam: ca ? ca[0] : null };
+  seed.segCount = String(Math.min(3, Math.max(1, Number(c.segCount) || 1)));
   const md = String(mc.md || '').match(/MD_[A-Z]+/); if (md) seed.mood = md[0];
   const look = String(mc.lookId || '').match(/^LOOK[_A-Z0-9]*/); if (look) seed.look = look[0];
   const du = Number(mc.du || c.duration); if (du > 0) seed.length = `${du}s`;
@@ -1617,12 +1718,70 @@ function toggleWfRowAll(show) {
   renderWorkflowTab();
 }
 
-async function generatePackage() {
-  if (!codebook) { showToast('⚠️ 코드북이 아직 로드되지 않았어요 — 잠시 후 다시 시도하세요'); return; }
-  if (!cuts.length) { showToast('⚠️ 컷이 없어요 — 에피소드를 고르거나 "+ 컷 추가"를 먼저 해주세요'); return; }
-  const code = cuts.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+// ── 패키지 (a) 프롬프트 생성 — 컷별 마스터 코드 → /api/generate-script ─────────────────
+function allMasterCodeText() {
+  return cuts.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n');
+}
 
-  showToast('⏳ 대본 생성 중... (script_generator.py 실행)');
+// 누락 항목 — block: 생성 자체를 막는 것 / warn: 생성은 되지만 확인이 필요한 것
+function computeMissing() {
+  const items = [];
+  if (!codebook) items.push({ level: 'block', text: '코드북(codebook.json)이 아직 없어요 — 스튜디오 서버 확인' });
+  if (source.kind === 'none') items.push({ level: 'block', text: '작업 대상이 없어요 — 에피소드 또는 후보 선택' });
+  if (!cuts.length) items.push({ level: 'block', text: '컷이 0개예요 — "+ 컷 추가"' });
+  if (!state.epId) items.push({ level: 'block', text: '에피소드 ID가 비어 있어요' });
+  else if (!EPISODE_CODE_RE.test(state.epId)) items.push({ level: 'warn', text: `에피소드 ID ${state.epId} 가 지금 코드 규칙과 달라요` });
+  if (!state.topic) items.push({ level: 'warn', text: '주제(TOPIC) 미선택' });
+  if (!state.scenario) items.push({ level: 'warn', text: '시나리오(SCN) 미선택' });
+  cuts.forEach(cut => {
+    const h = cutHealth(cut);
+    if (h.extra.length) items.push({ level: 'warn', text: `${cut.num} 코드북 외 코드: ${h.extra.join(', ')}` });
+    if (h.defaults.length) items.push({ level: 'warn', text: `${cut.num} 기본값 그대로: ${h.defaults.join(', ')}` });
+  });
+  return items;
+}
+
+// 컷 하나의 코드 상태 — 히트맵·누락 항목·코드 확인이 같은 기준을 쓴다
+const REQUIRED_FIELDS = [
+  { key: 'pipeline', label: '파이프라인' },
+  { key: 'location', label: '장소' },
+  { key: 'mood', label: '감정코드' },
+  { key: 'seg.CL_A.shot', label: '샷' },
+];
+function isTouched(d, key) { return !!d.touched[key]; }
+function codeKnown(list, code) { return !codebook || list.some(o => o.code === code); }
+function cutHealth(cut) {
+  const d = getCutDesign(cut);
+  const extra = [];
+  if (codebook) {
+    if (!codeKnown(PL_OPTIONS, d.pipeline)) extra.push(d.pipeline);
+    if (!codeKnown(SP_LOCATION_OPTIONS, d.location)) extra.push(d.location);
+    if (!codeKnown(SP_TIMEZONE_OPTIONS, d.timezone)) extra.push(d.timezone);
+    if (!codeKnown(SP_LIGHT_OPTIONS, d.light)) extra.push(d.light);
+    if (!codeKnown(MOOD_OPTIONS, d.mood)) extra.push(d.mood);
+    if (usesCharacter(d) && !codeKnown(LOOK_OPTIONS_CB, d.look)) extra.push(d.look);
+    SEGMENT_KEYS.slice(0, Number(d.segCount)).forEach(k => {
+      if (!codeKnown(SHOT_OPTIONS, d.segments[k].shot)) extra.push(d.segments[k].shot);
+      if (!codeKnown(CAMERA_OPTIONS, d.segments[k].cam)) extra.push(d.segments[k].cam);
+    });
+  }
+  const defaults = REQUIRED_FIELDS.filter(f => !isTouched(d, f.key)).map(f => f.label);
+  return { d, extra: [...new Set(extra)], defaults };
+}
+function usesCharacter(d) { return !/^(BR_|GR_|CC_)/.test(d.pipeline || ''); }
+
+let lastGeneratedCode = '';   // 생성에 쓴 마스터 코드 — 이후 컷 설계가 바뀌면 "다시 생성 필요" 표시
+let lastGeneratedAt = null;
+let generating = false;
+
+async function generatePackage() {
+  const blockers = computeMissing().filter(m => m.level === 'block');
+  if (blockers.length) { showToast('⚠️ ' + blockers[0].text); return; }
+  if (generating) return;
+  const code = allMasterCodeText();
+  generating = true;
+  renderPackageTab();
+  showToast('⏳ 프롬프트 생성 중... (script_generator.py 실행)');
   try {
     const res = await fetch(`${YEORI_SERVER}/api/generate-script`, {
       method: 'POST',
@@ -1632,28 +1791,18 @@ async function generatePackage() {
     const data = await res.json();
     if (!res.ok || !data.ok) throw new Error(data.error || `서버 오류 ${res.status}`);
     lastGeneratedResult = { prompts: data.prompts, meta: data.meta };
-    renderAll(); // 코드 확인/패키지 탭의 "생성 상태"·프롬프트 미리보기도 같이 갱신
-    showToast(`✓ ${data.meta?.cuts ?? cuts.length}컷 생성 완료 — 아래 결과 확인`);
+    lastGeneratedCode = code;
+    lastGeneratedAt = new Date();
+    showToast(`✓ ${data.meta?.cuts ?? cuts.length}컷 프롬프트 생성 완료 — 패키지 탭 04`);
   } catch (e) {
-    showToast('⚠️ 생성 실패: ' + e.message);
+    const offline = e instanceof TypeError;
+    if (offline) markServer(false);
+    showToast('⚠️ 생성 실패: ' + (offline ? '스튜디오 서버가 꺼져 있어요' : e.message));
     console.error('[generatePackage]', e);
+  } finally {
+    generating = false;
+    renderAll(); // 코드 확인/워크플로우/패키지 탭의 생성 상태 동시 갱신
   }
-}
-
-function renderGenerateResult(result) {
-  const el = document.getElementById('cut-generate-result');
-  if (!el) return;
-  if (!result) { el.style.display = 'none'; return; }
-  const cutCount = result.prompts?.cuts?.length ?? 0;
-  el.style.display = 'block';
-  el.innerHTML = `
-    <div class="card-h"><span class="idx">14</span>✅ 생성 결과</div>
-    <div class="cp-m">에피소드: ${escapeHtml(result.meta?.episode || result.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(result.meta?.version || '?')} · ${cutCount}컷</div>
-    <div style="margin-top:10px">
-      ${studioBadgeHtml()}
-      <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
-    </div>
-  `;
 }
 
 // ── 스튜디오 활성 에피소드 배지 ──────────────────────────────────────────
@@ -1684,7 +1833,7 @@ async function fetchStudioActiveInfo() {
 
 async function loadStudioActiveEpisode() {
   studioActiveInfo = await fetchStudioActiveInfo();
-  document.querySelectorAll('.studio-active-badge').forEach(el => { el.outerHTML = studioBadgeHtml(); });
+  renderPackageTab(); // 05 전달 대상 갱신
 }
 
 function studioBadgeHtml() {
@@ -1701,23 +1850,34 @@ function studioBadgeHtml() {
   return `<div class="studio-active-badge" style="font-size:11px;color:var(--text3)">확인 중...</div>`;
 }
 
-// ── 스튜디오(ScriptGenTab.jsx)로 전달 ──────────────────────────────────────
+// ── 패키지 (b) 스튜디오(ScriptGenTab.jsx)로 전달 ──────────────────────────────────────
 // Codi_GEN(file://)과 React 스튜디오 앱(http://localhost:5173)은 origin이 달라
-// localStorage를 공유할 수 없어서(content_matrix_v3.html<->code_generator_v1.html
-// 사이의 기존 codi_gen_candidate 핸드오프는 둘 다 file://라 가능했던 것) 서버
-// (/api/codi-gen-handoff)를 경유한다. ScriptGenTab.jsx가 마운트 시 이 값을 가져가
-// "마스터 코드로 대본 생성"의 미리보기 상태로 반영한다.
-async function sendToStudio() {
-  if (!lastGeneratedResult) return;
+// localStorage를 공유할 수 없어서 서버(/api/codi-gen-handoff)를 경유한다. 스튜디오 대본생성 탭이
+// 6초마다 GET 으로 가져가(1회성 — 읽으면 서버 파일이 지워짐) 미리보기로 띄우고, 사람이 "실제 적용"을
+// 눌러야 컷에 반영된다. ⚠ 코디젠은 GET 을 부르면 안 된다(스튜디오 몫을 대신 소비해 버림).
+// ⚠ 같은 큐를 Field Gate(genline)도 쓴다 — 아직 스튜디오가 안 가져간 genline 패치가 있으면 덮어쓴다.
+const HANDOFF_LOG_KEY = 'codi_gen_last_handoff';
+let lastHandoff = (() => { try { return JSON.parse(localStorage.getItem(HANDOFF_LOG_KEY) || 'null'); } catch (e) { return null; } })();
+function saveLastHandoff(h) {
+  lastHandoff = h;
+  try { localStorage.setItem(HANDOFF_LOG_KEY, JSON.stringify(h)); } catch (e) { /* 저장 못 해도 화면 표시는 유지 */ }
+}
 
-  // 클릭 시점 재확인 — 배지는 페이지 로드 시점 스냅샷이라 그 사이 스튜디오에서 다른
-  // 에피소드로 전환했을 수 있음.
+async function sendToStudio() {
+  if (!lastGeneratedResult) { showToast('먼저 ① 프롬프트 생성을 해주세요'); return; }
+  if (lastGeneratedCode !== allMasterCodeText() && !confirm('생성 이후 컷 설계가 바뀌었어요. 예전 생성 결과를 그대로 전달할까요?\n(취소 후 ① 프롬프트 생성을 다시 누르는 걸 권해요)')) return;
+
+  // 클릭 시점 재확인 — 스튜디오에서 그 사이 다른 에피소드로 전환했을 수 있음
   const info = await fetchStudioActiveInfo();
+  studioActiveInfo = info;
   const target = info.status === 'ok' ? `${info.code} ${info.title}`
     : info.status === 'no-episode' ? '(활성 에피소드 없음)'
     : '(스튜디오 서버 연결 확인 불가)';
-  if (!confirm(`${target}에 덮어씁니다. 계속하시겠습니까?`)) return;
+  const mismatch = info.status === 'ok' && state.epId && info.code !== state.epId
+    ? `\n\n⚠ 코디젠 대상은 ${state.epId} 인데 스튜디오에 열린 에피소드는 ${info.code} 예요.` : '';
+  if (!confirm(`스튜디오 대본생성 탭 → ${target} 의 미리보기로 전달합니다.${mismatch}\n("실제 적용"을 눌러야 컷에 반영돼요) 계속할까요?`)) return;
 
+  const episode = lastGeneratedResult.meta?.episode || lastGeneratedResult.prompts?.episode || state.epId;
   try {
     const res = await fetch(`${YEORI_SERVER}/api/codi-gen-handoff`, {
       method: 'POST',
@@ -1726,10 +1886,127 @@ async function sendToStudio() {
     });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || '전달 실패');
-    showToast('📤 스튜디오 "대본생성" 탭에서 받아갈 수 있게 전달했어요');
+    saveLastHandoff({ ok: true, at: new Date().toISOString(), episode, target, cuts: lastGeneratedResult.prompts?.cuts?.length ?? 0 });
+    showToast('📤 전달했어요 — 스튜디오 "대본생성" 탭에서 미리보기 확인 후 "실제 적용"');
   } catch (e) {
-    showToast('⚠️ 전달 실패: ' + e.message);
+    const offline = e instanceof TypeError;
+    if (offline) markServer(false);
+    saveLastHandoff({ ok: false, at: new Date().toISOString(), episode, target, error: offline ? '스튜디오 서버가 꺼져 있어요' : e.message });
+    showToast('⚠️ 전달 실패: ' + (offline ? '스튜디오 서버가 꺼져 있어요' : e.message));
   }
+  renderAll();
+}
+
+function fmtTime(d) {
+  const t = d instanceof Date ? d : new Date(d);
+  if (isNaN(t)) return '-';
+  const p = n => String(n).padStart(2, '0');
+  return `${t.getFullYear()}-${p(t.getMonth() + 1)}-${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}:${p(t.getSeconds())}`;
+}
+function kv(label, valueHtml) {
+  return `<div class="pkg-kv"><span class="pkg-k">${escapeHtml(label)}</span><span class="pkg-v">${valueHtml}</span></div>`;
+}
+
+// ── 패키지 탭 — 타이틀 아래 소항목(01~06) 구조 ─────────────────────────────────────────
+// F군(BGM_/HK_/RT_ …) 피커와 [EP]/[CHAR]/[REF] 확장 포맷은 codebook.json에 코드가 없어 여전히 제외.
+function renderPackageTab() {
+  const epEl = document.getElementById('pkg-ep');
+  if (!epEl) return;
+  const ep = source.kind === 'episode' ? studioEpisodes.list.find(e => e.id === source.id) : null;
+  const cand = source.kind === 'candidate' ? candidatePool[source.idx] : null;
+  const srcLabel = ep ? `스튜디오 에피소드 · ${escapeHtml(ep.title || '(제목 없음)')}` : cand ? `후보 초안 · ${escapeHtml(cand.title)}` : source.kind === 'draft' ? '직접 만든 초안' : '<span class="pkg-dim">없음</span>';
+  const idOk = state.epId && EPISODE_CODE_RE.test(state.epId);
+
+  // 01 에피소드 코드
+  epEl.innerHTML =
+    kv('코드', state.epId ? `<b class="${idOk ? 'pkg-ok' : 'pkg-warn'}">${escapeHtml(state.epId)}</b>${idOk ? '' : ' <span class="pkg-warn">규칙 확인</span>'}` : '<span class="pkg-warn">미정</span>') +
+    kv('출처', srcLabel) +
+    kv('유형', escapeHtml(state.platform)) +
+    kv('주제 × 시나리오', `${escapeHtml(state.topic || '—')} × ${escapeHtml(state.scenario || '—')}`) +
+    kv('컷 수', `${cuts.length}컷`);
+
+  // 02 누락 항목
+  const missing = computeMissing();
+  const missEl = document.getElementById('pkg-missing');
+  missEl.innerHTML = missing.length
+    ? `<ul class="pkg-miss">${missing.map(m => `<li class="${m.level}"><span class="pkg-miss-tag">${m.level === 'block' ? '필수' : '확인'}</span>${escapeHtml(m.text)}</li>`).join('')}</ul>`
+    : '<div class="pkg-ok">✓ 누락 없음 — 생성할 수 있어요</div>';
+
+  // 03 컷별 마스터 코드
+  const codeEl = document.getElementById('pkg-master-code');
+  codeEl.innerHTML = cuts.length
+    ? cuts.map(cut => {
+        const h = cutHealth(cut);
+        const flag = h.extra.length ? '<span class="pkg-warn">코드북 외</span>' : h.defaults.length ? '<span class="pkg-dim">기본값 있음</span>' : '<span class="pkg-ok">✓</span>';
+        return `<div class="pkg-line"><span class="pkg-line-num">${cut.num}</span><code>${escapeHtml(buildMasterCodeLine(h.d, cut))}</code>${flag}</div>`;
+      }).join('')
+    : '<div class="pkg-dim">(컷 없음)</div>';
+
+  // ① 버튼 상태
+  const blocked = missing.some(m => m.level === 'block');
+  const stale = lastGeneratedResult && lastGeneratedCode !== allMasterCodeText();
+  setBtn('pkg-gen-btn', !blocked && !generating, generating ? '⏳ 생성 중…' : lastGeneratedResult ? '① 프롬프트 다시 생성' : '① 프롬프트 생성');
+  setBtn('bb-gen-btn', !blocked && !generating, generating ? '⏳ 생성 중…' : '① 프롬프트 생성');
+  document.getElementById('pkg-gen-note').textContent = blocked ? '필수 누락을 먼저 채워주세요' : serverState === 'offline' ? '스튜디오 서버가 꺼져 있어요 — 생성은 서버가 필요해요' : '';
+
+  // 04 생성된 프롬프트
+  const genEl = document.getElementById('pkg-generated');
+  if (!lastGeneratedResult) {
+    genEl.innerHTML = '<div class="pkg-dim">아직 생성 전이에요 — 위 ① 프롬프트 생성을 눌러주세요.</div>';
+  } else {
+    const r = lastGeneratedResult;
+    const gcuts = r.prompts?.cuts || [];
+    genEl.innerHTML =
+      kv('에피소드', escapeHtml(r.meta?.episode || r.prompts?.episode || '(알수없음)')) +
+      kv('버전 · 상태', `${escapeHtml(r.meta?.version || '?')} · ${escapeHtml(r.meta?.status || '-')}`) +
+      kv('생성 시각', escapeHtml(lastGeneratedAt ? fmtTime(lastGeneratedAt) : '-')) +
+      kv('컷', `${gcuts.length}컷`) +
+      (stale ? '<div class="pkg-warn" style="margin:6px 0">⚠ 생성 이후 컷 설계가 바뀌었어요 — 다시 생성해야 반영돼요</div>' : '') +
+      `<div style="margin-top:8px">${gcuts.map(c => `
+        <details class="pkg-cut">
+          <summary><span class="pkg-line-num">C${String(c.no).padStart(2, '0')}</span>${escapeHtml(c.sc || (c.imagePrompt || '').split('\n')[0] || '(장면 요약 없음)')}</summary>
+          <div class="pkg-cut-body">
+            <div class="field-label">G2 이미지 프롬프트</div><pre>${escapeHtml(c.imagePrompt || '(없음)')}</pre>
+            <div class="field-label">G4 영상 프롬프트</div><pre>${escapeHtml(c.videoPrompt || '(없음)')}</pre>
+            <div class="field-label">KR 컨펌본</div><pre>${escapeHtml(formatKrSummary(c.kr))}</pre>
+          </div>
+        </details>`).join('')}</div>`;
+  }
+
+  // 05 전달 대상
+  const s = studioActiveInfo;
+  const tEl = document.getElementById('pkg-target');
+  let targetHtml = kv('스튜디오 활성', studioBadgeHtml()) + kv('코디젠 대상', escapeHtml(state.epId || '—'));
+  if (s.status === 'ok' && state.epId && s.code !== state.epId) {
+    targetHtml += `<div class="pkg-warn" style="margin-top:6px">⚠ 스튜디오에 열린 에피소드(${escapeHtml(s.code)})와 코디젠 대상(${escapeHtml(state.epId)})이 달라요 — 스튜디오에서 먼저 ${escapeHtml(state.epId)} 를 열어두세요.</div>`;
+  }
+  targetHtml += `<div class="pkg-dim" style="margin-top:6px">전달 = 스튜디오 대본생성 탭 미리보기(자동 반영 아님) · Field Gate 와 같은 큐라 대기 중인 genline 패치를 덮어쓸 수 있어요 <span class="sb-retry" onclick="loadStudioActiveEpisode()">활성 다시 확인</span></div>`;
+  tEl.innerHTML = targetHtml;
+
+  // 06 전달 상태 · 시각
+  const hEl = document.getElementById('pkg-handoff');
+  const h = lastHandoff;
+  hEl.innerHTML = !h
+    ? '<div class="pkg-dim">아직 전달한 적 없어요.</div>'
+    : kv('결과', h.ok ? '<span class="pkg-ok">✓ 전달됨</span>' : `<span class="pkg-warn">✕ 실패 — ${escapeHtml(h.error || '')}</span>`) +
+      kv('시각', escapeHtml(fmtTime(h.at))) +
+      kv('에피소드', escapeHtml(h.episode || '-')) +
+      kv('대상', escapeHtml(h.target || '-')) +
+      (h.ok ? kv('컷', `${h.cuts}컷`) + '<div class="pkg-dim" style="margin-top:6px">스튜디오가 가져갔는지는 여기서 알 수 없어요 — 대본생성 탭 미리보기에서 확인</div>' : '');
+
+  // ② 버튼 상태
+  const canSend = !!lastGeneratedResult;
+  setBtn('pkg-send-btn', canSend, '② 스튜디오로 전달');
+  setBtn('bb-send-btn', canSend, '② 스튜디오로 전달 ↗');
+  document.getElementById('pkg-send-note').textContent = canSend ? (stale ? '⚠ 생성 이후 수정됨 — 다시 생성 권장' : '') : '① 생성 결과가 있어야 전달할 수 있어요';
+}
+
+function setBtn(id, enabled, label) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('is-disabled', !enabled);
+  if (el.tagName === 'BUTTON') el.disabled = !enabled;
+  if (label) el.textContent = label;
 }
 
 // script_to_prompts.py의 prompts.json cut.kr은 문자열이 아니라
@@ -1792,7 +2069,7 @@ function renderCodeCheckTab() {
   const activeIdx = cuts.indexOf(active);
   const activeGenerated = lastGeneratedResult?.prompts?.cuts?.find(c => String(c.no) === String(activeIdx + 1));
   if (!activeGenerated) {
-    previewEl.innerHTML = `<div style="font-size:11px;color:var(--text3)">아직 이 컷의 생성 결과가 없어요 — 컷 설계 탭에서 "패키지 생성"을 먼저 눌러주세요.</div>`;
+    previewEl.innerHTML = `<div style="font-size:11px;color:var(--text3)">아직 이 컷의 생성 결과가 없어요 — 📦 패키지 탭 P1 "① 프롬프트 생성"을 먼저 눌러주세요.</div>`;
     return;
   }
   previewEl.innerHTML = `
@@ -1801,31 +2078,6 @@ function renderCodeCheckTab() {
       <div class="card"><div class="card-h" style="font-size:10px;color:var(--scarlet-light)">G4 영상 프롬프트</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(activeGenerated.videoPrompt || '(없음)')}</div></div>
     </div>
     <div class="card"><div class="card-h" style="font-size:10px;color:var(--teal)">KR 컨펌본</div><div style="font-size:10px;color:var(--text2);white-space:pre-wrap;font-family:'Space Mono',monospace;line-height:1.7">${escapeHtml(formatKrSummary(activeGenerated.kr))}</div></div>
-  `;
-}
-
-// ── 패키지 탭 (축소판) ────────────────────────────────────────────────
-// mockup의 F군(BGM_/HK_/RT_/PB_/Q_SF/Q_FM) 피커와 [EP]/[CHAR]/[REF] 등 확장
-// 패키지 포맷은 codebook.json에 해당 코드가 없어 이번 범위에서 제외(사용자 확인).
-// 여기서는 실제로 동작하는 것만 보여준다: 전체 컷의 마스터 코드 원문 + 마지막
-// 생성 결과 + 스튜디오 전달(패키지 생성 자체는 하단바의 기존 버튼을 그대로 씀).
-function renderPackageTab() {
-  const codeEl = document.getElementById('pkg-master-code');
-  const resultEl = document.getElementById('pkg-generate-result');
-  if (!codeEl || !resultEl) return;
-
-  codeEl.textContent = cuts.length ? cuts.map(cut => buildMasterCodeLine(getCutDesign(cut), cut)).join('\n') : '(컷 없음)';
-
-  if (!lastGeneratedResult) {
-    resultEl.innerHTML = `<div class="card-h"><span class="idx">18</span>📦 생성 결과</div><div style="font-size:11px;color:var(--text3)">아직 생성된 패키지가 없어요 — 위 마스터 코드를 확인한 뒤 하단 "패키지 생성" 버튼을 눌러주세요.</div>`;
-    return;
-  }
-  const cutCount = lastGeneratedResult.prompts?.cuts?.length ?? 0;
-  resultEl.innerHTML = `
-    <div class="card-h"><span class="idx">18</span>📦 생성 결과</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:10px">에피소드: ${escapeHtml(lastGeneratedResult.meta?.episode || lastGeneratedResult.prompts?.episode || '(알수없음)')} · 버전 ${escapeHtml(lastGeneratedResult.meta?.version || '?')} · ${cutCount}컷</div>
-    ${studioBadgeHtml()}
-    <div class="bb-btn bb-primary" style="display:inline-block" onclick="sendToStudio()">🎬 스튜디오로 전달</div>
   `;
 }
 
@@ -1996,7 +2248,6 @@ function renderAll() {
   renderCodePreview();
   renderCutList();
   renderCutDesignTab();
-  renderGenerateResult(lastGeneratedResult);
   renderCodeCheckTab();
   renderWorkflowTab();
   renderPackageTab();
