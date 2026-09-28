@@ -186,6 +186,17 @@
 .subtitleDoneBtn { padding: 5px 16px; border-radius: 6px; border: none; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
 .subtitleDoneBtn:hover { opacity: .85; }
 
+/* 릴스 자막 세그먼트 표시시간 편집 막대(2026-09-28) — 컷 길이를 가로축으로, 세그먼트마다
+   막대+양끝 드래그 핸들. subtitleEditBox 안(어두운 배경) 위에 얹혀서 좁은 폭에서도 보이게. */
+.reelTimingBar { position: relative; height: 22px; margin-top: 8px; background: rgba(255,255,255,.08); border-radius: 4px; }
+.reelTimingSeg { position: absolute; top: 0; bottom: 0; min-width: 6px; background: rgba(139,92,246,.55); border: 1px solid rgba(196,181,253,.9); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+.reelTimingLabel { font-size: 9px; color: #fff; pointer-events: none; white-space: nowrap; }
+.reelTimingHandle { position: absolute; top: -3px; bottom: -3px; width: 10px; cursor: ew-resize; touch-action: none; }
+.reelCaptionHintRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+.reelCaptionHint { font-size: 10.5px; color: rgba(255,255,255,.5); }
+.reelTimingResetBtn { padding: 3px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.05); color: rgba(255,255,255,.75); font-size: 10.5px; cursor: pointer; white-space: nowrap; }
+.reelTimingResetBtn:hover { background: rgba(255,255,255,.12); }
+
 /* 자막 모니터링 리스트 */
 
 /* Clip trim controls */

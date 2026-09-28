@@ -195,6 +195,74 @@ function ReelCaptionOverlay({ text, fontPx, y, fontReady, plate = false }) {
   )
 }
 
+// 릴스 자막 세그먼트별 "표시 시간" 편집 막대(2026-09-28, 성준님: 줄바꿈뿐 아니라 각 자막이
+// 얼마나 떠 있을지도 직접 정하고 싶다). 컷 길이(0~duration)를 가로 막대로 표시하고, 세그먼트마다
+// 시작/끝 핸들을 드래그해서 노출 구간을 조정 — 0.1초 스냅, 최소 0.5초 노출. 놓으면 onCommit으로
+// 확정 구간을 올려서 override API(captionSegTiming)에 저장한다(자동 발화싱크가 덮어쓰지 않도록
+// captionTimingAuto도 같이 해제 — 호출부 책임).
+function ReelCaptionTimingBar({ segs, duration, onCommit }) {
+  const barRef = useRef(null)
+  const [drag, setDrag] = useState(null) // { idx, edge: 'start'|'end' }
+  const [local, setLocal] = useState(() => segs.map(sg => [sg.start, sg.end]))
+  const localRef = useRef(local)
+  useEffect(() => { localRef.current = local }, [local])
+  useEffect(() => { if (!drag) setLocal(segs.map(sg => [sg.start, sg.end])) }, [segs, drag])
+  // onCommit을 ref로 받아 effect 의존성에서 뺀다 — 영상 재생 중(previewT가 매 프레임 바뀜)에도
+  // 부모가 리렌더되며 매번 새 onCommit 클로저를 넘기는데, 그걸 의존성에 넣으면 드래그 도중에도
+  // 전역 리스너가 계속 떼였다 붙는다. duration도 마찬가지로 ref화해서 드래그 시작 시점 값에
+  // 묶이지 않게 한다(컷 길이는 드래그 중 안 바뀌지만 안전하게 통일).
+  const onCommitRef = useRef(onCommit)
+  useEffect(() => { onCommitRef.current = onCommit }, [onCommit])
+  const durationRef = useRef(duration)
+  useEffect(() => { durationRef.current = duration }, [duration])
+
+  const snap = (v, dur) => Math.round(Math.max(0, Math.min(dur, v)) / 0.1) * 0.1
+  const posToSec = (clientX) => {
+    const el = barRef.current
+    const dur = durationRef.current
+    if (!el || !dur) return 0
+    const r = el.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (clientX - r.left) / r.width))
+    return snap(ratio * dur, dur)
+  }
+
+  useEffect(() => {
+    if (!drag) return
+    const onMove = (e) => {
+      const sec = posToSec(e.clientX)
+      const dur = durationRef.current
+      setLocal((prev) => {
+        const next = prev.map((t) => [...t])
+        const seg = next[drag.idx]
+        if (!seg) return prev
+        if (drag.edge === 'start') seg[0] = Math.max(0, Math.min(sec, seg[1] - 0.5))
+        else seg[1] = Math.min(dur, Math.max(sec, seg[0] + 0.5))
+        return next
+      })
+    }
+    const onUp = () => { onCommitRef.current(localRef.current); setDrag(null) }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    return () => { window.removeEventListener('pointermove', onMove); window.removeEventListener('pointerup', onUp) }
+  }, [drag])
+
+  if (!duration || !local.length) return null
+  return (
+    <div ref={barRef} className={s.reelTimingBar} onClick={e => e.stopPropagation()}>
+      {local.map(([st, en], i) => (
+        <div key={i} className={s.reelTimingSeg}
+          style={{ left: `${(st / duration) * 100}%`, width: `${Math.max(0, (en - st) / duration) * 100}%` }}>
+          <span className={s.reelTimingLabel}>{(en - st).toFixed(1)}s</span>
+          <div className={s.reelTimingHandle} style={{ left: -5 }}
+            onPointerDown={e => { e.stopPropagation(); setDrag({ idx: i, edge: 'start' }) }} />
+          <div className={s.reelTimingHandle} style={{ right: -5 }}
+            onPointerDown={e => { e.stopPropagation(); setDrag({ idx: i, edge: 'end' }) }} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function wrapCanvasText(ctx, text, maxWidth) {
   const lines = []
   for (const para of String(text ?? '').split('\n')) {
@@ -457,6 +525,47 @@ export default function VideoTab() {
       }).catch(() => {})
     }, 500)
   }
+  // 릴스 자막 텍스트(줄바꿈 \n 포함) 수동 편집을 override 파일에 저장(2026-09-28) — studio-state.json
+  // 로컬 subtitles 상태만으로는 최종본(reel-finalize) 렌더가 이 값을 전혀 못 읽는다(로컬 상태는 화면
+  // 미리보기·SRT 내보내기 전용). subtitle 전체 문자열(" / "로 세그 구분, 세그 내부는 \n 그대로)로 저장.
+  const captionSaveTimer = useRef(null)
+  const saveReelCaptionText = (cutNo, subtitleStr) => {
+    if (cutNo == null) return
+    clearTimeout(captionSaveTimer.current)
+    captionSaveTimer.current = setTimeout(() => {
+      fetch('http://localhost:3001/api/reel-finalize/override', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: state.episode?.number, cutNo, patch: { subtitle: subtitleStr } }),
+      }).then(() => setReelOverrides(prev => ({ ...prev, [String(cutNo)]: { ...(prev[String(cutNo)] || {}), subtitle: subtitleStr } })))
+        .catch(() => {})
+    }, 600)
+  }
+  // 세그먼트별 표시시간(captionSegTiming) 확정 저장 — 드래그가 끝나면 바로 호출(디바운스 없음).
+  // 수동으로 정한 타이밍은 자동 발화싱크(sync-captions)가 절대 덮어쓰지 않아야 하므로
+  // captionTimingAuto를 같이 지운다(proxy.js sync-captions가 이 필드 없으면 manual-kept로 건너뜀).
+  const saveReelCaptionTiming = (cutNo, timingPairs) => {
+    if (cutNo == null) return
+    const rounded = timingPairs.map(([st, en]) => [+st.toFixed(2), +en.toFixed(2)])
+    setReelOverrides(prev => ({ ...prev, [String(cutNo)]: { ...(prev[String(cutNo)] || {}), captionSegTiming: rounded, captionTimingAuto: undefined } }))
+    fetch('http://localhost:3001/api/reel-finalize/override', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum: state.episode?.number, cutNo, patch: { captionSegTiming: rounded, captionTimingAuto: '' } }),
+    }).catch(() => {})
+  }
+  // "자동 타이밍으로 되돌리기" — captionSegTiming·captionTimingAuto override를 지워서 다시
+  // 자동배분(글자수 비례) 또는 다음 발화싱크(sync-captions) 대상으로 되돌린다.
+  const revertReelCaptionTiming = (cutNo) => {
+    if (cutNo == null) return
+    setReelOverrides(prev => {
+      const cur = { ...(prev[String(cutNo)] || {}) }
+      delete cur.captionSegTiming; delete cur.captionTimingAuto
+      return { ...prev, [String(cutNo)]: cur }
+    })
+    fetch('http://localhost:3001/api/reel-finalize/override', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum: state.episode?.number, cutNo, patch: { captionSegTiming: '', captionTimingAuto: '' } }),
+    }).catch(() => {})
+  }
   // 컷 하나에 오버라이드(자막류만 — SFX 등 audio 필드는 화면 미리보기와 무관)를 병합해서
   // 반환. 오버라이드가 없으면 원본 cut을 그대로 반환(새 객체를 만들지 않아 불필요한 리렌더 방지).
   const withCaptionOverride = useCallback((cut) => {
@@ -630,9 +739,13 @@ export default function VideoTab() {
             text: i === activeSegIdx ? text : (cur[i]?.text ?? ''),
           }
         })
+        // 릴스는 이 편집이 최종본(reel-finalize)에 실제로 반영되게 override 파일에도 저장한다
+        // (subtitles는 로컬 미리보기 전용 — 서버 렌더는 이 값을 아예 안 읽음, 2026-09-28).
+        if (isReel) saveReelCaptionText(selCutForText.no, next.map(n => n.text || '').join(' / '))
         return { ...prev, [selCutForText.id]: next }
       })
     } else {
+      if (isReel) saveReelCaptionText(selCutForText.no, text)
       setSubtitles(prev => ({ ...prev, [selCutForText.id]: text }))
     }
   }
@@ -1939,6 +2052,24 @@ export default function VideoTab() {
                           placeholder="자막 텍스트 입력... (Enter로 줄바꿈 가능)"
                           onClick={(e) => e.stopPropagation()}
                         />
+                        {isReel && segsForText.length > 0 && (
+                          <>
+                            <ReelCaptionTimingBar
+                              segs={segsForText}
+                              duration={selCut.duration || 0}
+                              onCommit={(pairs) => saveReelCaptionTiming(selCut.no, pairs)}
+                            />
+                            <div className={s.reelCaptionHintRow}>
+                              <span className={s.reelCaptionHint}>Enter = 줄바꿈 · 막대 끝을 끌어 표시 시간 조절</span>
+                              {reelOverrides[String(selCut.no)]?.captionSegTiming && (
+                                <button className={s.reelTimingResetBtn}
+                                  onClick={(e) => { e.stopPropagation(); revertReelCaptionTiming(selCut.no) }}>
+                                  자동 타이밍으로 되돌리기
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
                         <div className={s.subtitleEditControls}>
                           <div className={s.posSelector}>
                             {['top','middle','bottom'].map(pos => (
