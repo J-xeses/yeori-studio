@@ -263,6 +263,63 @@ await check('E5', '에피소드 사건 원장 + 콜백 제안(오늘의 여리 �
   const cb = suggestCallbacks(); const mood = JSON.parse(fs.readFileSync(mp.statePath('yeori-mood.json'), 'utf-8')).current
   return { ok: ev.length > 0 && cb.length > 0 && mood.callback === cb[0], evidence: `원장 ${ev.length}편(${ev.map(e => e.code).join(',')}) · 콜백 "${cb[0]}" · 오늘의 여리 연결 ${mood.callback === cb[0] ? 'O' : 'X'}` }
 })
+// ── 1l2. Codi_Gen 에피소드 탭 ① 소스 팩(2026-09-28, codigen-brief-r4) — 후보 script [CUT NN] 대본
+// 초안 파서 + [콜백: …] 코드 파서 + GET /api/yeori-events. 코디젠은 브라우저 전용 단일 HTML이라
+// import가 안 돼 함수 정의만 뽑아 new Function으로 돌린다(파서는 순수 함수, DOM 접근 없음).
+await check('E9', 'Codi_Gen 대본 초안 파서(①) + /api/yeori-events', async () => {
+  const html = fs.readFileSync(path.join(ROOT, 'code_generator_v1.html'), 'utf-8')
+  const marker = html.indexOf("const YEORI_SERVER = 'http://localhost:3001';")
+  const src = html.slice(marker, html.lastIndexOf('</script>'))
+  const grab = (name) => {
+    const start = src.indexOf(`function ${name}(`)
+    if (start < 0) throw new Error(`${name} 정의를 code_generator_v1.html에서 못 찾음`)
+    let depth = 0, end = -1
+    for (let i = src.indexOf('{', start); i < src.length; i++) {
+      if (src[i] === '{') depth++
+      else if (src[i] === '}') { depth--; if (depth === 0) { end = i + 1; break } }
+    }
+    return src.slice(start, end)
+  }
+  const { parseDraftScript, parseCallbackCodes } = new Function(
+    `${grab('parseDraftScript')}\n${grab('parseCallbackCodes')}\nreturn { parseDraftScript, parseCallbackCodes }`
+  )()
+
+  // E12 스타일 샘플 — 5컷, 그중 하나 6초, 한 줄에 두 화자, 나레이션 포함(지시서 검증 항목 그대로).
+  const sample = [
+    '**[CUT 01]** (8초)', '**씬:** 자취방, 아침', '**액션:** 알람을 끄고 겨우 일어난다',
+    '**대사:** 여리 "아... 오늘도 늦잠"', '**나레이션(V.O.):** "매일 다짐하지만 소용없다"', '---',
+    '**[CUT 02]** (8초)', '**씬:** 거실', '**액션:** 커피를 내린다',
+    '**대사:** 여리 "커피 없인 못 살아"', '---',
+    '**[CUT 03]** (8초)', '**씬:** 자취방, 지유 등장', '**액션:** 지유가 문을 벌컥 연다',
+    '**대사:** 여리 "야 노크 좀 해!" / 지유 "미안 미안 급해서"', '---',
+    '**[CUT 04]** (6초)', '**씬:** 클로즈업', '**액션:** 여리가 한숨을 쉰다',
+    '**나레이션(V.O.):** "이게 내 일상이다"', '---',
+    '**[CUT 05]** (8초)', '**씬:** 엔딩', '**액션:** 웃으며 마무리',
+    '**대사:** 여리 "그래도 오늘도 화이팅"',
+  ].join('\n')
+  const parsed = parseDraftScript(sample)
+  const durations = parsed.map(c => c.duration).join('/')
+  const speakerLineCount = parsed.reduce((n, c) => n + c.lines.filter(l => l.speaker).length, 0)
+  const twoSpeakerCut = parsed.find(c => c.lines.length === 2 && c.lines.every(l => l.speaker))
+  const narrationCount = parsed.filter(c => c.narration).length
+  const callbackCodes = parseCallbackCodes('[콜백: IG_R05 · IG_R06] 오늘은 흑역사 이야기')
+  const parserOk = parsed.length === 5 && durations === '8/8/8/6/8' && speakerLineCount >= 5 && !!twoSpeakerCut
+    && narrationCount === 2 && callbackCodes.join(',') === 'IG_R05,IG_R06'
+
+  // GET /api/yeori-events — 읽기 전용, 새 엔드포인트(proxy.js). 서버 꺼져 있으면 파서 점검만으로 판단.
+  let serverReachable = false, eventsOk = null, eventsLen = null
+  try {
+    const r = await get('/api/yeori-events')
+    serverReachable = true
+    eventsOk = r.ok && Array.isArray(r.data)
+    eventsLen = Array.isArray(r.data) ? r.data.length : null
+  } catch { /* 서버 꺼짐 — 파서 점검은 그대로 유효 */ }
+
+  return {
+    ok: parserOk && (!serverReachable || eventsOk === true),
+    evidence: `컷 ${parsed.length}개 · 길이 ${durations} · 대사 화자 ${speakerLineCount}명 · 2인 동시대사 컷 ${twoSpeakerCut ? 'C' + String(twoSpeakerCut.no).padStart(2, '0') : '없음'} · 나레이션 컷 ${narrationCount}개 · 콜백 코드 [${callbackCodes.join(', ')}] · /api/yeori-events ${serverReachable ? `배열 ${eventsOk}(길이 ${eventsLen})` : '서버 꺼짐(오프라인) — 코드 파서만 검증'}`,
+  }
+})
 // ── 1l. 자막 표시 규칙(9/28): 따옴표 없음 · 대사만 반투명 직각 바탕 · 재합성 때 BGM 유지 ──
 await check('C2', '자막 역할 표시 — 대사=바탕, 나레이션·장면 자막=바탕 없음, 따옴표 없음', async () => {
   const { isDialogueSeg } = await import('../server/lib/reelFinalize.js')

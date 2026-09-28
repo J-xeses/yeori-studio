@@ -3587,6 +3587,17 @@ app.post('/api/reel-finalize/override', (req, res) => {
 
 // POST { epNum } — 대사 자막 타이밍을 실제 발화(voice-qa 단어 시각)에 맞춰 오버라이드에 저장(2026-09-25).
 // 영상 탭 미리보기와 최종본이 같은 captionSegTiming 을 쓰게 된다. 사람이 직접 정한 타이밍(captionTimingAuto 없음)은 건드리지 않는다.
+
+// 에피소드 사건 원장(읽기 전용) — Codi_Gen 에피소드 탭 ①에서 [콜백: IG_R05 · IG_R06] 코드의
+// 제목·모먼트를 보여줄 때 씀(2026-09-28, codigen-brief-r4). 쓰기는 없음 — yeoriActive.js가
+// 관리하는 downloads/state/yeori-events.json 을 그대로 반환.
+app.get('/api/yeori-events', (_req, res) => {
+  try {
+    const events = JSON.parse(fs.readFileSync(mp.statePath('yeori-events.json'), 'utf-8'))
+    res.json(Array.isArray(events) ? events : [])
+  } catch { res.json([]) }
+})
+
 // 오늘의 여리(감정이입 시스템 P2) — 3시간이 지났거나 ?refresh=1 이면 다시 계산, 규칙 기반 토큰 0 (2026-09-27)
 app.get('/api/yeori-mood', async (req, res) => {
   try {

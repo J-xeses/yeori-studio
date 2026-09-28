@@ -234,6 +234,58 @@
   .btn-loadpool { font-size: 11px; padding: 6px 14px; border-radius: var(--radius-sm); background: var(--teal); color: #080C0E; border: none; cursor: pointer; font-weight: 700; }
   .btn-loadpool:hover { opacity: 0.85; }
 
+  /* ── 에피소드 탭 재구성(2026-09-28, codigen-brief-r4) — 소스팩 · 기본정보 · 출연캐스트 · 톤 · 점검.
+       짧은 코드는 .mono(예전엔 각 클래스가 개별로 Space Mono를 지정했는데, 여기서 코드/한글이 섞인
+       자유 조합 문구가 늘어 공용 유틸로 뺐다) · 한글 문장은 body 기본 산세리프 그대로. ── */
+  .mono { font-family: 'Space Mono', monospace; }
+  .auto-badge { display: inline-block; font-size: 9px; padding: 1px 7px; border-radius: 8px; background: rgba(29,158,117,0.14); border: 1px solid var(--teal); color: var(--teal); font-family: 'Space Mono', 'Noto Sans KR', sans-serif; margin-left: 8px; }
+  .draft-cut { border: 1px solid var(--border2); border-radius: 3px; padding: 8px 10px; margin-bottom: 6px; font-size: 11px; line-height: 1.7; }
+  .draft-cut-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .draft-cut-no { font-size: 10px; color: var(--teal); font-weight: 700; }
+  .draft-cut-dur { font-size: 9px; color: var(--text3); }
+  .draft-cut-row { color: var(--text2); }
+  .draft-cut-row b { color: var(--text3); font-weight: 700; font-size: 9px; margin-right: 4px; }
+  .cb-src-row { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--border); font-size: 11px; }
+  .cb-src-code { color: var(--teal-light); flex-shrink: 0; }
+  .cb-src-title { color: var(--text2); }
+  .cb-src-moments { color: var(--text3); font-size: 10px; }
+  .ref-slot-row { display: flex; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .ref-slot-row .input { flex: 1; }
+  .ref-slot-del { cursor: pointer; color: var(--text3); font-size: 14px; padding: 0 4px; flex-shrink: 0; }
+  .ref-slot-del:hover { color: var(--scarlet-light); }
+  .cast-card { border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; }
+  .cast-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .cast-card-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .cast-card-pos { font-size: 9px; padding: 1px 7px; border-radius: 8px; border: 1px solid var(--border2); color: var(--text3); cursor: pointer; }
+  .cast-card-pos.on { border-color: var(--teal); color: var(--teal); }
+  .cast-card-del { margin-left: auto; cursor: pointer; color: var(--text3); font-size: 11px; }
+  .cast-card-del:hover { color: var(--scarlet-light); }
+  .cast-step-label { font-size: 9px; color: var(--text3); margin: 10px 0 5px; text-transform: uppercase; }
+  .cast-thumb-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cast-thumb { width: 56px; text-align: center; cursor: pointer; }
+  .cast-thumb img { width: 56px; height: 56px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border2); display: block; }
+  .cast-thumb .ph { width: 56px; height: 56px; border-radius: 6px; border: 1px solid var(--border2); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text3); }
+  .cast-thumb.on img, .cast-thumb.on .ph { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal); }
+  .cast-thumb-label { font-size: 9px; color: var(--text3); margin-top: 3px; }
+  .cast-thumb.on .cast-thumb-label { color: var(--teal); }
+  .cast-look-card { border: 1px solid var(--border2); border-radius: 3px; padding: 6px 8px; margin-bottom: 5px; cursor: pointer; display: flex; gap: 8px; align-items: flex-start; }
+  .cast-look-card:hover { border-color: var(--teal); }
+  .cast-look-card.on { border-color: var(--teal); background: rgba(29,158,117,0.06); }
+  .cast-look-card img { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
+  .cast-look-card .ph { width: 40px; height: 40px; border-radius: 4px; flex-shrink: 0; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 8px; color: var(--text3); }
+  .cast-look-label { font-size: 10px; color: var(--text2); font-weight: 700; }
+  .cast-look-desc { font-size: 9px; color: var(--text3); line-height: 1.5; }
+  .ref-thumb-row { display: flex; gap: 12px; }
+  .ref-thumb { text-align: center; }
+  .ref-thumb img { width: 64px; height: 64px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border2); display: block; }
+  .ref-thumb .ph { width: 64px; height: 64px; border-radius: 6px; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text3); }
+  .ref-confirm-btns { display: flex; gap: 4px; justify-content: center; margin-top: 4px; }
+  .ref-confirm-btn { font-size: 10px; width: 20px; height: 20px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--text3); cursor: pointer; }
+  .ref-confirm-btn.ok.on { border-color: var(--teal); color: var(--teal); background: rgba(29,158,117,0.14); }
+  .ref-confirm-btn.no.on { border-color: var(--scarlet); color: var(--scarlet-light); background: var(--scarlet-bg); }
+  .checklist-jump { margin-left: auto; cursor: pointer; color: var(--teal-light); font-size: 10px; }
+  .checklist-jump:hover { text-decoration: underline; }
+
   .seg-box { background: rgba(15,42,34,0.25); border: 1px solid var(--border2); border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; }
   .seg-label { font-size: 10px; font-weight: 700; color: var(--teal-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 
@@ -490,78 +542,164 @@
          예전엔 01~19 가 탭을 넘나들며 이어져 14·18 중복, 18 누락이 있었음). -->
     <div class="main">
 
-      <!-- TAB: 에피소드 -->
+      <!-- TAB: 에피소드 — 스튜디오로 넘기기 전 "브리프" 단계. 후보의 대본·콜백·레퍼런스를 그대로
+           들고 와서(①) 컷 설계(✂️ 컷 설계 탭)의 출발점을 채운다(2026-09-28, codigen-brief-r4:
+           app/docs/codigen-review-2026-09-27.md §1 "후보 선택이 화면 표시로만 끝나고 컷 설계로
+           이어지지 않는다"를 해결). 번호(①~⑤)는 이 탭 안에서만 — 다른 탭의 P1… 과는 무관. -->
       <div id="tab-ep" class="tab-content">
-        <div class="tab-head"><span class="tab-head-name">🎬 에피소드</span><span class="tab-head-flow"><b>P1</b> 스토리 연결 → <b>P2</b> 기본 설정 → <b>P3</b> 서여리 기본값 → <b>P4</b> 코드 확인</span></div>
+        <div class="tab-head"><span class="tab-head-name">🎬 에피소드 · 브리프</span><span class="tab-head-flow"><b>①</b> 소스 팩 → <b>②</b> 기본 정보 → <b>③</b> 출연·룩 → <b>④</b> 톤·연출 → <b>⑤</b> 점검</span></div>
 
+        <!-- ① 소스 팩 -->
         <section class="phase">
-          <div class="phase-head"><span class="phase-no">P1</span><span class="phase-title">스토리 연결</span><span class="phase-desc">후보를 고르면 새 에피소드 초안, 왼쪽 에피소드를 고르면 스튜디오 에피소드를 이어서 작업</span></div>
+          <div class="phase-head"><span class="phase-no">①</span><span class="phase-title">소스 팩</span><span class="phase-desc">후보를 고르면 대본 초안·콜백·레퍼런스가 여기 모인다 — 컷 설계가 여기서 시작됨</span></div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div class="section-label" style="flex:1;margin-bottom:0"><span class="idx">01</span>후보 풀 데이터</div>
+            <div class="section-label" style="flex:1;margin-bottom:0"><span class="idx">01</span>후보 선택</div>
             <button class="btn-loadpool" onclick="loadFromCandidatePool()">📥 후보 풀에서 불러오기</button>
           </div>
           <div class="g" style="grid-template-columns:1fr" id="story-card-list"></div>
-        </section>
 
-        <section class="phase">
-          <div class="phase-head"><span class="phase-no">P2</span><span class="phase-title">에피소드 기본 설정</span><span class="phase-desc">스튜디오 에피소드의 contentType · topicCode · scnCode · code 와 같은 값</span></div>
-          <div class="g g2" style="margin-bottom:12px">
-            <div class="card">
-              <div class="card-h"><span class="idx">02</span>📺 플랫폼 · 포맷</div>
-              <div class="kw-wrap" id="pills-platform"></div>
-            </div>
-            <div class="card">
-              <div class="card-h"><span class="idx">03</span>🏷️ 주제 × 시나리오</div>
-              <div class="field-label">주제 TOPIC · 1개</div>
-              <div class="kw-wrap" id="pills-topic" style="margin-bottom:10px"></div>
-              <div class="field-label">시나리오 SCN · 1개</div>
-              <div class="kw-wrap" id="pills-scenario"></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-h"><span class="idx">04</span>🆔 에피소드 ID</div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input class="input input-code" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); state.epIdAuto=false; state.epIdNote=''; renderAll()">
-              <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
-            </div>
-            <div class="ep-id-note" id="ep-id-note"></div>
-          </div>
-        </section>
+          <div id="src-pack-card" style="display:none">
+            <div class="section-label" style="margin-top:14px"><span class="idx">02</span>후보 요약</div>
+            <div class="card" style="margin-bottom:12px" id="src-summary"></div>
 
-        <section class="phase">
-          <div class="phase-head"><span class="phase-no">P3</span><span class="phase-title">서여리 기본값</span><span class="phase-desc">에피소드 전체에 깔리는 기본 룩(컷별 LOOK_ID 는 컷 설계 탭)</span></div>
-          <div class="g g3">
-            <div class="card">
-              <div class="card-h"><span class="idx">05</span>👗 의상 룩</div>
-              <div class="kw-wrap" id="pills-look" style="margin-bottom:8px"></div>
-              <div class="field-label">상의</div>
-              <div class="kw-wrap" id="pills-top" style="margin-bottom:8px"></div>
-              <div class="field-label">하의</div>
-              <div class="kw-wrap" id="pills-bottom" style="margin-bottom:8px"></div>
-              <div class="field-label">시즌</div>
-              <div class="kw-wrap" id="pills-season"></div>
-            </div>
-            <div class="card">
-              <div class="card-h"><span class="idx">06</span>✨ 자동 연동</div>
-              <div class="auto-link" id="auto-link-box"></div>
-            </div>
-            <div class="card">
-              <div class="card-h"><span class="idx">07</span>🖼️ 레퍼런스</div>
-              <div class="auto-link">
-                <span class="auto-check">✓</span> FA_01 고정<br>
-                <span class="auto-check">✓</span> FA_02 고정<br>
-                <span style="color:var(--teal-light)">→</span> <span id="ref-fs-code">FS_(ID 미정)</span> 생성 필요
+            <div class="section-label"><span class="idx">03</span>컷 초안 (<span id="src-draft-count">0</span>컷)</div>
+            <div id="src-draft-list" style="margin-bottom:12px"></div>
+
+            <div class="g g2">
+              <div class="card">
+                <div class="card-h"><span class="idx">04</span>🔁 콜백 소스</div>
+                <div id="src-callback-list"></div>
+              </div>
+              <div class="card">
+                <div class="card-h"><span class="idx">05</span>🔗 레퍼런스 슬롯</div>
+                <div id="ref-slot-list"></div>
+                <button class="bb-btn bb-ghost" style="margin-top:6px" onclick="addRefSlot()">+ 레퍼런스 추가</button>
               </div>
             </div>
           </div>
         </section>
 
-        <section class="phase">
-          <div class="phase-head"><span class="phase-no">P4</span><span class="phase-title">에피소드 코드 확인</span></div>
-          <div class="card accent">
-            <div class="card-h"><span class="idx">08</span>💻 에피소드 코드 프리뷰</div>
-            <div class="code-preview" id="code-preview"></div>
+        <!-- ② 기본 정보(자동) -->
+        <section class="phase" id="ep-basic-card">
+          <div class="phase-head">
+            <span class="phase-no">②</span><span class="phase-title">기본 정보</span><span class="auto-badge">후보에서 자동</span>
+            <button class="bb-btn bb-ghost" style="margin-left:auto" id="ep-basic-edit-btn" onclick="toggleEpBasicEdit()">수정</button>
           </div>
+          <div id="ep-basic-readonly"></div>
+          <div id="ep-basic-edit" style="display:none">
+            <div class="g g2" style="margin-bottom:12px">
+              <div class="card">
+                <div class="card-h"><span class="idx">06</span>📺 플랫폼 · 포맷</div>
+                <div class="kw-wrap" id="pills-platform"></div>
+              </div>
+              <div class="card">
+                <div class="card-h"><span class="idx">07</span>🏷️ 주제 × 시나리오</div>
+                <div class="field-label">주제 TOPIC · 1개</div>
+                <div class="kw-wrap" id="pills-topic" style="margin-bottom:10px"></div>
+                <div class="field-label">시나리오 SCN · 1개</div>
+                <div class="kw-wrap" id="pills-scenario"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">08</span>🆔 에피소드 ID</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="input input-code" id="ep-id-input" placeholder="예: IG_R07 · SF_E12 · LF_T01" oninput="state.epId=this.value.trim().toUpperCase(); state.epIdAuto=false; state.epIdNote=''; renderAll()">
+                <button class="bb-btn bb-ghost" style="flex-shrink:0" onclick="autoGenEpId()">자동생성</button>
+              </div>
+              <div class="ep-id-note" id="ep-id-note"></div>
+            </div>
+          </div>
+          <div class="code-preview" id="ep-code-line" style="margin-top:10px"></div>
+        </section>
+
+        <!-- ③ 출연·룩 -->
+        <section class="phase" id="cast-card">
+          <div class="phase-head"><span class="phase-no">③</span><span class="phase-title">출연 · 룩</span><span class="phase-desc">CA_BANK에서 고르기 — 필수(체크리스트 ⑤ 참고)</span></div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-h"><span class="idx">09</span>💡 대본에서 자동 추천</div>
+            <div class="kw-wrap" id="cast-suggest-list"></div>
+          </div>
+          <div id="cast-confirmed-list"></div>
+          <div class="card">
+            <div class="card-h"><span class="idx">10</span>➕ 출연진 추가</div>
+            <div class="cast-step-label">1 인물</div>
+            <div class="kw-wrap" id="cast-pick-person"></div>
+            <div id="cast-pick-variant-wrap" style="display:none">
+              <div class="cast-step-label">2 변형</div>
+              <div class="cast-thumb-row" id="cast-pick-variant"></div>
+            </div>
+            <div id="cast-pick-look-wrap" style="display:none">
+              <div class="cast-step-label">3 룩 &nbsp;<select class="input" style="width:auto;display:inline-block;font-size:9px;padding:2px 6px" id="cast-season-filter" onchange="castSetSeasonFilter(this.value)"></select></div>
+              <div id="cast-pick-look"></div>
+            </div>
+            <div id="cast-adjust-wrap" style="display:none">
+              <div class="cast-step-label">4 조정</div>
+              <div class="g g2" style="margin-bottom:8px">
+                <div>
+                  <div class="field-label">시즌 오버라이드</div>
+                  <div class="kw-wrap" id="cast-season-override"></div>
+                </div>
+                <div>
+                  <div class="field-label">실내 신발 규칙</div>
+                  <div class="kw-wrap" id="cast-footwear"></div>
+                </div>
+              </div>
+              <div class="field-label">머리 변화</div>
+              <input class="input" id="cast-hairchange" placeholder="예: 묶은 머리로 변경" oninput="castDraft.hairChange=this.value">
+              <div class="field-label" style="margin-top:8px">메모</div>
+              <input class="input" id="cast-note" placeholder="조정 메모" oninput="castDraft.note=this.value">
+              <div class="cast-step-label">5 목소리</div>
+              <div class="auto-link" id="cast-voice-preview"></div>
+              <div class="cast-step-label">6 레퍼런스 고정</div>
+              <div class="ref-thumb-row" id="cast-ref-preview"></div>
+              <button class="btn-loadpool" style="margin-top:10px" onclick="confirmCastMember()">출연진에 추가</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ④ 톤·연출 규칙 -->
+        <section class="phase" id="tone-card">
+          <div class="phase-head"><span class="phase-no">④</span><span class="phase-title">톤 · 연출 규칙</span><span class="phase-desc">컷 하나가 아니라 에피소드 전체에 적용</span></div>
+          <div class="g g2">
+            <div class="card">
+              <div class="card-h"><span class="idx">11</span>🎭 감정 아크(오프닝 → 전개 → 마무리)</div>
+              <div class="field-label">오프닝</div>
+              <div class="kw-wrap" id="tone-arc-open" style="margin-bottom:8px"></div>
+              <div class="field-label">전개</div>
+              <div class="kw-wrap" id="tone-arc-mid" style="margin-bottom:8px"></div>
+              <div class="field-label">마무리</div>
+              <div class="kw-wrap" id="tone-arc-close"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">12</span>🎵 BGM 방향</div>
+              <div class="kw-wrap" id="tone-bgm-mode" style="margin-bottom:8px"></div>
+              <div class="field-label">메모</div>
+              <input class="input" id="tone-bgm-note" placeholder="예: 잔잔한 로파이 / 폰 스피커로 틀어놓은 댄스 비트" oninput="state.tone.bgmNote=this.value">
+            </div>
+          </div>
+          <div class="g g2" style="margin-top:12px">
+            <div class="card">
+              <div class="card-h"><span class="idx">13</span>💬 자막 스타일</div>
+              <div class="auto-note">대사 = 어두운 반투명 바탕(plate) · 나레이션·장면 자막 = 바탕 없음 — 고정 규칙(영상 탭 ReelCaptionOverlay와 동일)</div>
+            </div>
+            <div class="card">
+              <div class="card-h"><span class="idx">14</span>🎨 컬러 · 무드 / 엔딩</div>
+              <div class="field-label">컬러·무드 키워드</div>
+              <input class="input" id="tone-mood" placeholder="예: 담담한, 창가, 공허한" oninput="state.tone.mood=this.value" style="margin-bottom:8px">
+              <label style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:6px;cursor:pointer">
+                <input type="checkbox" id="tone-ending" onchange="state.tone.endingRule=this.checked; renderAll()"> 마지막 대사 뒤 여운 2–3초
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ⑤ 점검 → 컷 뼈대 만들기 -->
+        <section class="phase">
+          <div class="phase-head"><span class="phase-no">⑤</span><span class="phase-title">점검 → 컷 뼈대 만들기</span><span class="phase-desc">여기서 만든 컷 뼈대는 ✂️ 컷 설계 탭으로 이어짐 — 못 채운 코드는 비워 둬서 📊 워크플로우 히트맵이 표시</span></div>
+          <div class="card" style="margin-bottom:12px">
+            <ul class="pkg-miss" id="checklist-list"></ul>
+          </div>
+          <button class="btn-loadpool" id="build-cuts-btn" onclick="buildCutsFromDraft()">🏗️ 컷 뼈대 만들기 (<span id="build-cuts-count">0</span>컷)</button>
         </section>
       </div>
 
@@ -907,14 +1045,6 @@ const SEASON_OPTIONS = [
   { code: 'SS', label: 'SS 봄/여름' },
   { code: 'FW', label: 'FW 가을/겨울' },
 ];
-// 의상 룩 → 헤어/메이크업/액세서리 자동 연동 매핑(초안 기본값)
-const LOOK_AUTO_LINK = {
-  LK_CS: { hr: 'HR_DN 다운스타일', mk: 'MK_WN 웜톤 메이크업', ac: 'AC_SC 목도리' },
-  LK_FM: { hr: 'HR_UP 업스타일',   mk: 'MK_CL 클래식 메이크업', ac: 'AC_EL 이어링' },
-  LK_AT: { hr: 'HR_PO 포니테일',   mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
-  LK_HM: { hr: 'HR_DN 다운스타일', mk: 'MK_NT 내추럴 메이크업', ac: 'AC_NO 없음' },
-};
-
 // ── 컷 설계(Phase 3) 옵션 ─────────────────────────────────────────────────────
 const CUT_EMOTION_OPTIONS = [
   { code: 'EMO_SUR', icon: '😲', label: '충격·각성' },
@@ -951,6 +1081,7 @@ const SP_INDOOR_OPTIONS = [
 ];
 const REGION_OPTIONS = ['성수동', '이태원', '한강', '홍대', '직접입력'];
 const LENGTH_OPTIONS = [
+  { code: '6s',  label: '6s' },
   { code: '8s',  label: '8s' },
   { code: '16s', label: '16s' },
   { code: '24s', label: '24s' },
@@ -1086,6 +1217,19 @@ let cutsError = '';
 let currentCutIndex = 0;
 const cutDesignState = {};     // cut.uid 별 컷 설계 상태(에피소드가 바뀌어도 섞이지 않게 uid = 출처:컷번호)
 
+// ── 에피소드 탭 "브리프" 상태(2026-09-28, codigen-brief-r4) ────────────────────────
+// 후보를 고르면 draftCuts/callbackSources가 그 후보 script/story에서 결정적으로(정규식만, LLM 없음)
+// 다시 계산된다 — refreshSourcePack() 참고.
+let draftCuts = [];            // 후보 script의 [CUT NN] 블록 파싱 결과 — { no, duration, scene, action, lines:[{speaker,text}], narration }
+let callbackSources = [];      // story의 [콜백: CODE · CODE] 파싱 + /api/yeori-events 조회 결과
+let yeoriEventsCache = null;   // null=아직 안 물어봄 | 'offline' | 사건 원장 배열(최초 1회만 요청, 후보 바뀌어도 재사용)
+let castDraft = null;          // ③ "출연진 추가" 진행 중인 한 명 — { personId, variantId, lookCode, season, footwear, hairChange, note, seasonFilter, refConfirmed }
+
+// ③ 레퍼런스 슬롯 — 출처(sourceKey())별로 저장. HANDOFF_LOG_KEY와 같은 방식(로컬 JSON, 실패해도 화면은 유지).
+const REF_SLOTS_KEY = 'codi_gen_ref_slots';
+let refSlotsStore = (() => { try { return JSON.parse(localStorage.getItem(REF_SLOTS_KEY) || '{}'); } catch { return {}; } })();
+function saveRefSlots() { try { localStorage.setItem(REF_SLOTS_KEY, JSON.stringify(refSlotsStore)); } catch { /* 저장 못 해도 화면 표시는 유지 */ } }
+
 const state = {
   selectedCandidateIdx: -1,
   platform: 'IG_R',
@@ -1094,10 +1238,9 @@ const state = {
   epId: '',
   epIdNote: '',
   epIdAuto: false,
-  look: 'LK_CS',
-  top: 'TOP_KNT',
-  bottom: 'BTM_DNM',
-  season: 'FW',
+  epBasicEdit: false,          // ② "수정" 토글 — 꺼져 있으면 읽기전용 요약만
+  cast: [],                    // ③ 확정된 출연진 — { charId, lookKey, season, footwear, hairChange, note, refConfirmed:{face,closeup}, position }
+  tone: { arcOpen: 'EMO_SUR', arcMid: 'EMO_CUR', arcClose: 'EMO_CLM', bgmMode: 'post', bgmNote: '', mood: '', endingRule: true }, // ④
 };
 
 function escapeHtml(str) {
@@ -1264,7 +1407,109 @@ function selectCandidate(idx) {
   const topicCode = guessTopicCode((cand.topic || '') + ' ' + (cand.keywords || ''));
   state.topic = topicCode || '';
   state.scenario = '';
+  state.cast = [];
+  state.tone = { arcOpen: 'EMO_SUR', arcMid: 'EMO_CUR', arcClose: 'EMO_CLM', bgmMode: 'post', bgmNote: '', mood: '', endingRule: true };
+  castDraft = null;
   autoGenEpId();
+  refreshSourcePack();
+}
+
+// ── ① 소스 팩 — 후보 script의 [CUT NN] 블록·story의 [콜백: …]을 결정적으로(정규식만) 파싱 ──────
+// 대본 형식(대본 생성 쪽이 실제로 쓰는 마크다운):
+//   **[CUT 01]** (8초)
+//   **씬:** …
+//   **액션:** …
+//   **대사:** 여리 "…" / 지유 "…"
+//   **나레이션(V.O.):** "…"
+//   ---
+// 필드가 없는 컷·형식이 다른 후보는 그냥 빈 배열 — 억지로 맞추지 않는다(fail-closed, ⑤ 체크리스트가 "초안 컷 없음"으로 표시).
+function parseDraftScript(raw) {
+  const text = String(raw || '').trim();
+  if (!text) return [];
+  const blocks = text.split(/\n?-{3,}\n?/).map(b => b.trim()).filter(Boolean);
+  const cuts = [];
+  for (const block of blocks) {
+    const headerM = block.match(/\*\*\s*\[CUT\s*(\d+)\]\s*\*\*\s*\((\d+)\s*초\)/);
+    if (!headerM) continue;
+    const sceneM = block.match(/\*\*씬:\*\*\s*([^\n]+)/);
+    const actionM = block.match(/\*\*액션:\*\*\s*([^\n]+)/);
+    const dialogueM = block.match(/\*\*대사:\*\*\s*([^\n]+)/);
+    const narrM = block.match(/\*\*나레이션\s*\(V\.O\.\):\*\*\s*([^\n]+)/i);
+    const lines = [];
+    if (dialogueM) {
+      dialogueM[1].split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean).forEach(part => {
+        const named = part.match(/^([가-힣A-Za-z0-9]+)\s*[""]([^""]*)[""]/) || part.match(/^([가-힣A-Za-z0-9]+)\s*"([^"]*)"/);
+        if (named) { lines.push({ speaker: named[1], text: named[2] }); return; }
+        const quoted = part.match(/["""]([^"""]*)["""]/) || part.match(/"([^"]*)"/);
+        lines.push({ speaker: '', text: quoted ? quoted[1] : part });
+      });
+    }
+    cuts.push({
+      no: Number(headerM[1]),
+      duration: Number(headerM[2]),
+      scene: sceneM ? sceneM[1].trim() : '',
+      action: actionM ? actionM[1].trim() : '',
+      lines,
+      narration: narrM ? narrM[1].trim().replace(/^["""]|["""]$/g, '') : '',
+    });
+  }
+  return cuts.sort((a, b) => a.no - b.no);
+}
+function parseCallbackCodes(story) {
+  const m = String(story || '').match(/\[콜백:\s*([^\]]+)\]/);
+  if (!m) return [];
+  return m[1].split(/[·,]/).map(s => s.trim()).filter(Boolean);
+}
+// GET /api/yeori-events(읽기 전용, ① 하드 제약)는 한 번만 물어보고 캐시 — 서버 꺼져 있으면
+// 'offline'으로 남겨 콜백 소스를 코드만 보여준다(성준님 지시: "offline → codes only").
+async function loadCallbackEvents() {
+  if (yeoriEventsCache === null) {
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/yeori-events`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      yeoriEventsCache = Array.isArray(data) ? data : [];
+      markServer(true);
+    } catch (e) {
+      yeoriEventsCache = 'offline';
+      if (e instanceof TypeError) markServer(false);
+    }
+  }
+  callbackSources = callbackSources.map(cb => {
+    if (yeoriEventsCache === 'offline') return { ...cb, status: 'offline' };
+    const ev = yeoriEventsCache.find(x => x.code === cb.code);
+    return ev ? { ...cb, status: 'ok', title: ev.title, moments: ev.moments || [] } : { ...cb, status: 'notfound' };
+  });
+  renderAll();
+}
+function refreshSourcePack() {
+  const cand = source.kind === 'candidate' ? candidatePool[state.selectedCandidateIdx] : null;
+  draftCuts = cand ? parseDraftScript(cand.script) : [];
+  callbackSources = cand ? parseCallbackCodes(cand.story).map(code => ({ code, status: 'loading', title: '', moments: [] })) : [];
+  if (callbackSources.length) loadCallbackEvents();
+  renderAll();
+}
+
+// ③ 레퍼런스 슬롯 — sourceKey()로 구분(에피소드/후보가 바뀌어도 안 섞임, cutDesignState와 같은 원칙)
+function currentRefSlots() { return refSlotsStore[sourceKey()] || []; }
+function addRefSlot() {
+  const key = sourceKey();
+  const list = refSlotsStore[key] || (refSlotsStore[key] = []);
+  list.push({ id: 'rs' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), url: '', note: '' });
+  saveRefSlots();
+  renderAll();
+}
+function setRefSlotField(id, field, value) {
+  const list = refSlotsStore[sourceKey()] || [];
+  const s = list.find(x => x.id === id);
+  if (!s) return;
+  s[field] = value;
+  saveRefSlots();
+}
+function removeRefSlot(id) {
+  refSlotsStore[sourceKey()] = (refSlotsStore[sourceKey()] || []).filter(x => x.id !== id);
+  saveRefSlots();
+  renderAll();
 }
 
 function renderStoryCards() {
@@ -1416,6 +1661,10 @@ async function selectStudioEpisode(id) {
   state.epId = ep.code;
   state.epIdAuto = false;
   state.epIdNote = '스튜디오에 이미 있는 에피소드라 코드를 그대로 씁니다(바꾸면 폴더·G포인트 키가 어긋남).';
+  state.cast = [];
+  state.tone = { arcOpen: 'EMO_SUR', arcMid: 'EMO_CUR', arcClose: 'EMO_CLM', bgmMode: 'post', bgmNote: '', mood: '', endingRule: true };
+  castDraft = null;
+  draftCuts = []; callbackSources = []; // 스튜디오 에피소드는 후보 script가 없어 ① 소스 팩 대상이 아님
   setWorkingCuts([], 'loading');
   renderAll();
   try {
@@ -1945,40 +2194,324 @@ function renderCutDesignTab() {
 }
 
 // ── 코드 프리뷰 / 자동연동 / 완성도 ─────────────────────────────────────────────────────
-function renderCodePreview() {
+// ── ② 기본 정보 — 후보/스튜디오 에피소드에서 자동으로 채우고, "수정" 토글로만 편집 노출 ──────────
+function toggleEpBasicEdit() {
+  state.epBasicEdit = !state.epBasicEdit;
+  renderAll();
+}
+function renderEpBasic() {
+  const btnEl = document.getElementById('ep-basic-edit-btn');
+  const roEl = document.getElementById('ep-basic-readonly');
+  const editEl = document.getElementById('ep-basic-edit');
+  if (btnEl) btnEl.textContent = state.epBasicEdit ? '완료' : '수정';
+  if (roEl) roEl.style.display = state.epBasicEdit ? 'none' : 'block';
+  if (editEl) editEl.style.display = state.epBasicEdit ? 'block' : 'none';
+
+  const platformLabel = (PLATFORM_OPTIONS.find(o => o.code === state.platform) || {}).label || state.platform || '(미선택)';
+  const topicLabel = state.topic ? labelOf(VOCAB.TOPIC, state.topic) : '(미선택)';
+  const scnLabel = state.scenario ? labelOf(VOCAB.SCN, state.scenario) : '(미선택)';
+  // 목표 길이 = 초안 컷 합계(있으면) 아니면 지금 컷 설계 상태의 length 합계
+  const targetLen = draftCuts.length
+    ? draftCuts.reduce((s, c) => s + (Number(c.duration) || 0), 0)
+    : cuts.reduce((s, c) => { const d = cutDesignState[c.uid]; return s + (d ? Number(String(d.length).replace(/[^0-9]/g, '')) || 0 : 0); }, 0);
+  const cutCount = draftCuts.length || cuts.length;
+  if (roEl) roEl.innerHTML = `
+    <div class="g g2">
+      <div class="card"><div class="field-label">유형</div><div style="font-size:12px;color:var(--text)">${escapeHtml(platformLabel)}</div></div>
+      <div class="card"><div class="field-label">주제 · 시나리오</div><div style="font-size:12px;color:var(--text)">${escapeHtml(topicLabel)} · ${escapeHtml(scnLabel)}</div></div>
+      <div class="card"><div class="field-label">목표 길이</div><div style="font-size:12px;color:var(--text)">${targetLen}초</div></div>
+      <div class="card"><div class="field-label">컷 수</div><div style="font-size:12px;color:var(--text)">${cutCount}컷</div></div>
+    </div>`;
+
+  const codeLineEl = document.getElementById('ep-code-line');
+  if (codeLineEl) codeLineEl.innerHTML = `<span class="cp-a">${escapeHtml(state.epId || '(ID 미정)')}</span> <span class="cp-m">:: ${escapeHtml(state.platform)} :: TOPIC.${escapeHtml(state.topic || '-')} :: SCN.${escapeHtml(state.scenario || '-')}</span>`;
+  const tbEpIdEl = document.getElementById('tb-ep-id');
+  if (tbEpIdEl) tbEpIdEl.textContent = state.epId || '(ID 미정)';
+}
+
+// ── ⑤ 점검 — 필수 항목 ✓/✗ + 해당 섹션으로 이동 ──────────────────────────────────
+function jumpTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function computeChecklist() {
   const cand = source.kind === 'candidate' ? candidatePool[state.selectedCandidateIdx] : null;
   const ep = source.kind === 'episode' ? studioEpisodes.list.find(e => e.id === source.id) : null;
-  const epId = state.epId || '(ID 미정)';
-  const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
-  const title = ep ? (ep.title || '(제목 없음)') + ' · 스튜디오' : cand ? cand.title + ' · 후보' : source.kind === 'draft' ? '직접 만든 초안' : '(대상 미선택)';
-
-  const html = `<span class="cp-m">## A군 식별</span>
-<span class="cp-a">${escapeHtml(epId)}</span> <span class="cp-m">← ${escapeHtml(title)}</span>
-<span class="cp-m">## A군 기획</span>
-<span class="cp-b">TOPIC.${escapeHtml(state.topic || '미선택')}</span> :: <span class="cp-b">SCN.${escapeHtml(state.scenario || '미선택')}</span>
-<span class="cp-m">## D군 캐릭터 기본값</span>
-<span class="cp-d">${state.look}.${state.top}.${state.bottom}.${state.season}</span>
-<span class="cp-d">${link.hr.split(' ')[0]} + ${link.mk.split(' ')[0]} + ${link.ac.split(' ')[0]}</span> <span class="cp-m">← 자동연동</span>`;
-
-  document.getElementById('code-preview').innerHTML = html;
-  document.getElementById('tb-ep-id').textContent = epId;
-  document.getElementById('ref-fs-code').textContent = state.epId ? `FS_${state.epId}` : 'FS_(ID 미정)';
+  const title = (cand && cand.title) || (ep && ep.title) || '';
+  return [
+    { label: '제목', ok: !!title.trim(), jump: 'story-card-list' },
+    { label: '유형 · 에피소드 ID', ok: !!state.platform && EPISODE_CODE_RE.test(state.epId || ''), jump: 'ep-basic-card' },
+    { label: '초안 컷 1개 이상', ok: draftCuts.length > 0, jump: 'src-pack-card' },
+    { label: '출연진 1명 이상(룩 포함)', ok: state.cast.some(c => c.lookKey), jump: 'cast-card' },
+    { label: '감정 아크(오프닝·전개·마무리)', ok: !!(state.tone.arcOpen && state.tone.arcMid && state.tone.arcClose), jump: 'tone-card' },
+  ];
 }
-
-function renderAutoLink() {
-  const link = LOOK_AUTO_LINK[state.look] || LOOK_AUTO_LINK.LK_CS;
-  document.getElementById('auto-link-box').innerHTML = `
-    <span class="auto-check">✓</span> ${escapeHtml(link.hr)}<br>
-    <span class="auto-check">✓</span> ${escapeHtml(link.mk)}<br>
-    <span class="auto-check">✓</span> ${escapeHtml(link.ac)}<br>
-    <span class="auto-note">${state.season} 시즌 자동 연동</span>`;
+function renderChecklist() {
+  const el = document.getElementById('checklist-list');
+  if (el) {
+    el.innerHTML = computeChecklist().map(it =>
+      `<li class="${it.ok ? '' : 'block'}"><span class="pkg-miss-tag">${it.ok ? '✓' : '✗'}</span>${escapeHtml(it.label)}<span class="checklist-jump" onclick="jumpTo('${it.jump}')">↧ 이동</span></li>`
+    ).join('');
+  }
+  const countEl = document.getElementById('build-cuts-count');
+  if (countEl) countEl.textContent = draftCuts.length;
 }
-
+// topbar "설계 %" 배지 — ⑤ 체크리스트와 같은 기준(2026-09-28부터: 예전 look/top/bottom/season
+// pill 채움 기준은 이 탭 구조가 바뀌며 사라짐, 체크리스트가 그 자리를 대신함).
 function computeProgress() {
-  const fields = [state.platform, state.topic, state.scenario, state.epId, state.look, state.top, state.bottom, state.season];
-  const filled = fields.filter(Boolean).length;
-  const candBonus = source.kind !== 'none' && cuts.length ? 1 : 0; // 작업 대상 + 컷이 있어야 채운 것으로 본다
-  return Math.round(((filled + candBonus) / (fields.length + 1)) * 100);
+  const items = computeChecklist();
+  return items.length ? Math.round((items.filter(x => x.ok).length / items.length) * 100) : 0;
+}
+
+// ── ⑤ 컷 뼈대 만들기 — 초안 컷을 실제 컷 목록 + 컷 설계 상태로 전개. 코드북 코드(SH/CA/MD/AT 등)는
+// 문장에서 추측하지 않고 비워 둔다 — 📊 워크플로우 히트맵이 "일부만 채움"으로 정확히 표시하게 하려는
+// 의도(성준님 지시: "추론 못 하는 코드는 비워 둬서 히트맵이 표시하게"). 길이·코멘트·룩·톤만 채운다.
+function buildCutsFromDraft() {
+  if (!draftCuts.length) { showToast('⚠️ 초안 컷이 없어요 — ①에서 [CUT] 형식 대본이 있는 후보를 고르세요'); return; }
+  if (cuts.length && !confirm(`이미 컷 ${cuts.length}개가 있어요. 초안 ${draftCuts.length}컷으로 덮어쓸까요?`)) return;
+  if (source.kind === 'none') source = { kind: 'draft' };
+  const list = draftCuts.map(dc => makeCut({ origin: 'local', no: dc.no, type: 'YR_VD', scene: dc.scene }));
+  setWorkingCuts(list, 'ok');
+  list.forEach((cut, i) => {
+    const dc = draftCuts[i];
+    const d = getCutDesign(cut);
+    const lenCode = `${dc.duration}s`;
+    d.length = lenCode; d.touched.length = true;
+    const parts = [];
+    if (dc.scene) parts.push(`씬: ${dc.scene}`);
+    if (dc.action) parts.push(`액션: ${dc.action}`);
+    dc.lines.forEach(l => parts.push(`대사${l.speaker ? ' ' + l.speaker : ''}: "${l.text}"`));
+    if (dc.narration) parts.push(`나레이션: "${dc.narration}"`);
+    d.comment = parts.join('\n'); d.touched.comment = true;
+    // 이 컷 화자와 매칭되는 출연진이 있으면 그 룩을 반영(코드북 밖 코드라도 그대로 — cbExtra가 표시)
+    const speakerCharIds = dc.lines.map(l => resolveCharId(l.speaker)).filter(Boolean);
+    const castMatch = state.cast.find(cm => speakerCharIds.includes(cm.charId));
+    if (castMatch && castMatch.lookKey) { d.look = castMatch.lookKey; d.touched.look = true; }
+    // 감정 아크 3분할(오프닝/전개/마무리)
+    const third = list.length > 1 ? Math.min(2, Math.floor((i / list.length) * 3)) : 0;
+    const arcCode = [state.tone.arcOpen, state.tone.arcMid, state.tone.arcClose][third];
+    if (arcCode) { d.emotion = arcCode; d.touched.emotion = true; }
+  });
+  showToast(`✓ 컷 뼈대 ${list.length}개 생성 — 컷 설계 탭에서 이어서 채워주세요`);
+  renderAll();
+  const cutTabBtn = document.querySelector('.tab[data-tab="cut"]');
+  if (cutTabBtn) showTab('cut', cutTabBtn);
+}
+
+// ── ① 소스 팩 렌더 ──────────────────────────────────────────────────────────
+function renderSourcePack() {
+  const cand = source.kind === 'candidate' ? candidatePool[state.selectedCandidateIdx] : null;
+  const packEl = document.getElementById('src-pack-card');
+  if (!packEl) return;
+  if (!cand) { packEl.style.display = 'none'; return; }
+  packEl.style.display = 'block';
+
+  const summaryEl = document.getElementById('src-summary');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">${escapeHtml(cand.title)}</div>
+      <div class="field-label">키워드</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${escapeHtml(cand.keywords || '(없음)')}</div>
+      <div class="field-label">주제</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${escapeHtml(cand.topic || '(없음)')}</div>
+      <div class="field-label">스토리</div>
+      <div style="font-size:11px;color:var(--text2);white-space:pre-wrap;line-height:1.7">${escapeHtml(cand.story || '(없음)')}</div>`;
+  }
+
+  const countEl = document.getElementById('src-draft-count');
+  if (countEl) countEl.textContent = draftCuts.length;
+
+  const listEl = document.getElementById('src-draft-list');
+  if (listEl) {
+    listEl.innerHTML = draftCuts.length ? draftCuts.map(dc => `
+      <div class="draft-cut">
+        <div class="draft-cut-head"><span class="draft-cut-no mono">C${String(dc.no).padStart(2, '0')}</span><span class="draft-cut-dur mono">${dc.duration}초</span></div>
+        ${dc.scene ? `<div class="draft-cut-row"><b>씬</b>${escapeHtml(dc.scene)}</div>` : ''}
+        ${dc.action ? `<div class="draft-cut-row"><b>액션</b>${escapeHtml(dc.action)}</div>` : ''}
+        ${dc.lines.map(l => `<div class="draft-cut-row"><b>대사</b>${l.speaker ? escapeHtml(l.speaker) + ' ' : ''}"${escapeHtml(l.text)}"</div>`).join('')}
+        ${dc.narration ? `<div class="draft-cut-row"><b>나레이션</b>"${escapeHtml(dc.narration)}"</div>` : ''}
+      </div>`).join('') : `<div class="story-empty">이 후보엔 [CUT NN] 형식 대본이 없어요 — script 필드를 확인하세요.</div>`;
+  }
+
+  const cbEl = document.getElementById('src-callback-list');
+  if (cbEl) {
+    cbEl.innerHTML = callbackSources.length ? callbackSources.map(cb => `
+      <div class="cb-src-row">
+        <span class="cb-src-code mono">${escapeHtml(cb.code)}</span>
+        <div style="min-width:0">
+          <div class="cb-src-title">${cb.status === 'loading' ? '불러오는 중…' : cb.status === 'offline' ? '(서버 꺼짐 — 코드만 표시)' : cb.status === 'notfound' ? '(사건 원장에 없음)' : escapeHtml(cb.title)}</div>
+          ${cb.moments && cb.moments.length ? `<div class="cb-src-moments">${cb.moments.map(m => escapeHtml(m)).join(' · ')}</div>` : ''}
+        </div>
+      </div>`).join('') : `<div class="story-empty" style="padding:8px">이 후보엔 [콜백: …] 표기가 없어요.</div>`;
+  }
+
+  renderRefSlots();
+}
+function renderRefSlots() {
+  const el = document.getElementById('ref-slot-list');
+  if (!el) return;
+  const list = currentRefSlots();
+  el.innerHTML = list.length ? list.map(s => `
+    <div class="ref-slot-row">
+      <input class="input" placeholder="URL" value="${escapeHtml(s.url)}" oninput="setRefSlotField('${s.id}','url',this.value)">
+      <input class="input" placeholder="메모" value="${escapeHtml(s.note)}" oninput="setRefSlotField('${s.id}','note',this.value)" style="flex:0.7">
+      <span class="ref-slot-del" onclick="removeRefSlot('${s.id}')" title="삭제">✕</span>
+    </div>`).join('') : `<div class="story-empty" style="padding:8px">레퍼런스가 없어요.</div>`;
+}
+
+// ── ③ 출연·룩 렌더 — 1 인물 → 2 변형 → 3 룩 → 4 조정 → 5 목소리 → 6 레퍼런스 고정 ──────────────
+function castStartAdd(personId) {
+  castDraft = { personId, variantId: null, lookCode: null, season: '', footwear: 'barefoot', hairChange: '', note: '', seasonFilter: '', refConfirmed: {} };
+  renderAll();
+}
+function castPickPerson(id) { castStartAdd(id); }
+function castPickVariant(id) { if (castDraft) { castDraft.variantId = id; castDraft.lookCode = null; renderAll(); } }
+function castPickLook(code) { if (castDraft) { castDraft.lookCode = code; renderAll(); } }
+function castSetSeasonFilter(v) { if (castDraft) { castDraft.seasonFilter = v; renderAll(); } }
+function castSetField(k, v) { if (castDraft) { castDraft[k] = v; renderAll(); } }
+function setCastRefConfirm(key, val) { if (!castDraft) return; if (!castDraft.refConfirmed) castDraft.refConfirmed = {}; castDraft.refConfirmed[key] = val; renderAll(); }
+function confirmCastMember() {
+  if (!castDraft || !castDraft.variantId || !castDraft.lookCode) { showToast('⚠️ 인물 · 변형 · 룩을 먼저 골라주세요'); return; }
+  state.cast.push({
+    charId: castDraft.variantId, lookKey: castDraft.lookCode,
+    season: castDraft.season, footwear: castDraft.footwear, hairChange: castDraft.hairChange, note: castDraft.note,
+    refConfirmed: castDraft.refConfirmed || {},
+    position: state.cast.length === 0 ? 'LEFT' : state.cast.length === 1 ? 'RIGHT' : '',
+  });
+  castDraft = null;
+  showToast('✓ 출연진에 추가했어요');
+  renderAll();
+}
+function removeCastMember(i) {
+  state.cast.splice(i, 1);
+  state.cast.forEach((c, idx) => { if (idx === 0) c.position = 'LEFT'; else if (idx === 1) c.position = 'RIGHT'; });
+  renderAll();
+}
+// 2명 이상일 때만 의미 있는 좌/우 — 다른 사람이 그 자리에 있으면 서로 바꿔 겹치지 않게 한다.
+function setCastPosition(i, pos) {
+  state.cast.forEach((c, idx) => { if (idx === i) c.position = pos; else if (c.position === pos) c.position = pos === 'LEFT' ? 'RIGHT' : 'LEFT'; });
+  renderAll();
+}
+function renderCastSection() {
+  const suggestEl = document.getElementById('cast-suggest-list');
+  if (suggestEl) {
+    const names = new Set();
+    draftCuts.forEach(dc => dc.lines.forEach(l => { if (l.speaker) names.add(l.speaker); }));
+    const already = new Set(state.cast.map(c => c.charId));
+    const list = [...names].map(nm => ({ name: nm, charId: resolveCharId(nm) })).filter(x => x.charId && !already.has(x.charId));
+    suggestEl.innerHTML = list.length ? list.map(x => `<div class="pill" onclick="castStartAdd('${x.charId}')">＋ ${escapeHtml(x.name)} → ${escapeHtml(x.charId)}</div>`).join('')
+      : `<span style="font-size:10px;color:var(--text3)">${!characters ? '캐릭터 정보 확인 중…' : draftCuts.length ? '추천할 새 화자가 없어요' : '①에서 후보를 먼저 골라주세요'}</span>`;
+  }
+
+  const confirmedEl = document.getElementById('cast-confirmed-list');
+  if (confirmedEl) {
+    confirmedEl.innerHTML = state.cast.map((c, i) => {
+      const ch = cabChar(c.charId) || {};
+      const look = characterLooks(c.charId).find(l => l.code === c.lookKey);
+      return `<div class="cast-card">
+        <div class="cast-card-head">
+          ${ch.face ? `<img src="${mediaUrl(ch.face)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover">` : `<span class="cab-char-thumb-ph">${escapeHtml((ch.name || c.charId || '?')[0])}</span>`}
+          <span class="cast-card-name">${escapeHtml(ch.name || c.charId)}</span>
+          ${state.cast.length >= 2 ? `<span class="cast-card-pos ${c.position === 'LEFT' ? 'on' : ''}" onclick="setCastPosition(${i},'LEFT')">LEFT</span><span class="cast-card-pos ${c.position === 'RIGHT' ? 'on' : ''}" onclick="setCastPosition(${i},'RIGHT')">RIGHT</span>` : ''}
+          <span class="cast-card-del" onclick="removeCastMember(${i})">✕ 제거</span>
+        </div>
+        <div style="font-size:10px;color:var(--text2)">룩: ${look ? escapeHtml(look.label) : escapeHtml(c.lookKey || '(미지정)')} ${c.season ? '· ' + escapeHtml(CAB_SEASON_LABEL[c.season] || c.season) : ''} · ${c.footwear === 'shoes' ? '신발 있음' : '맨발/양말'}</div>
+        ${c.note ? `<div style="font-size:10px;color:var(--text3);margin-top:2px">${escapeHtml(c.note)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  setPills('cast-pick-person', basePersons().map(id => ({ code: id, label: CAB_CHAR_SHORT[id] || id })), castDraft ? castDraft.personId : null, "castPickPerson('{v}')");
+
+  const variantWrap = document.getElementById('cast-pick-variant-wrap');
+  const lookWrap = document.getElementById('cast-pick-look-wrap');
+  const adjustWrap = document.getElementById('cast-adjust-wrap');
+  if (!castDraft || !castDraft.personId) {
+    if (variantWrap) variantWrap.style.display = 'none';
+    if (lookWrap) lookWrap.style.display = 'none';
+    if (adjustWrap) adjustWrap.style.display = 'none';
+    return;
+  }
+
+  if (variantWrap) variantWrap.style.display = 'block';
+  const variants = variantsOf(castDraft.personId);
+  const variantEl = document.getElementById('cast-pick-variant');
+  if (variantEl) {
+    variantEl.innerHTML = variants.map(id => {
+      const c = cabChar(id) || {};
+      const on = castDraft.variantId === id;
+      return `<div class="cast-thumb ${on ? 'on' : ''}" onclick="castPickVariant('${id}')">
+        ${c.face ? `<img src="${mediaUrl(c.face)}">` : `<div class="ph">${escapeHtml((c.name || id || '?')[0])}</div>`}
+        <div class="cast-thumb-label">${escapeHtml(id === castDraft.personId ? '기본' : (c.name || id))}</div>
+      </div>`;
+    }).join('');
+  }
+  if (!castDraft.variantId) { if (lookWrap) lookWrap.style.display = 'none'; if (adjustWrap) adjustWrap.style.display = 'none'; return; }
+
+  if (lookWrap) lookWrap.style.display = 'block';
+  const seasonSelect = document.getElementById('cast-season-filter');
+  if (seasonSelect && !seasonSelect.options.length) {
+    seasonSelect.innerHTML = `<option value="">전체 시즌</option>` + Object.entries(CAB_SEASON_LABEL).map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+  }
+  if (seasonSelect) seasonSelect.value = castDraft.seasonFilter || '';
+  let looks = characterLooks(castDraft.variantId);
+  if (castDraft.seasonFilter) {
+    const kws = CAB_SEASON_KEYWORDS[castDraft.seasonFilter] || [];
+    looks = looks.filter(l => !l.season || kws.some(w => String(l.season).toLowerCase().includes(w)));
+  }
+  const lookEl = document.getElementById('cast-pick-look');
+  if (lookEl) {
+    lookEl.innerHTML = looks.length ? looks.map(l => `
+      <div class="cast-look-card ${castDraft.lookCode === l.code ? 'on' : ''}" onclick="castPickLook('${l.code}')">
+        ${l.file ? `<img src="${mediaUrl(l.file)}">` : `<div class="ph">${l.source === 'codebook' ? 'CB' : 'IMG'}</div>`}
+        <div style="min-width:0">
+          <div class="cast-look-label">${escapeHtml(l.code)} · ${escapeHtml(l.label)}</div>
+          <div class="cast-look-desc">${escapeHtml(l.desc || '')}${l.season ? ' · ' + escapeHtml(l.season) : ''}</div>
+        </div>
+      </div>`).join('') : `<div class="story-empty" style="padding:8px">이 변형엔 등록된 룩이 없어요${castDraft.seasonFilter ? ' (이 시즌엔)' : ''}.</div>`;
+  }
+  if (!castDraft.lookCode) { if (adjustWrap) adjustWrap.style.display = 'none'; return; }
+
+  if (adjustWrap) adjustWrap.style.display = 'block';
+  setPills('cast-season-override', Object.entries(CAB_SEASON_LABEL).map(([k, l]) => ({ code: k, label: l })), castDraft.season, "castSetField('season','{v}')");
+  setPills('cast-footwear', [{ code: 'barefoot', label: '맨발/양말만' }, { code: 'shoes', label: '신발 있음' }], castDraft.footwear, "castSetField('footwear','{v}')");
+  const hairEl = document.getElementById('cast-hairchange');
+  if (hairEl && document.activeElement !== hairEl) hairEl.value = castDraft.hairChange || '';
+  const noteEl = document.getElementById('cast-note');
+  if (noteEl && document.activeElement !== noteEl) noteEl.value = castDraft.note || '';
+
+  const vc = cabChar(castDraft.variantId) || {};
+  const voiceEl = document.getElementById('cast-voice-preview');
+  if (voiceEl) voiceEl.innerHTML = vc.voicePrompt ? `<span class="auto-check">✓</span> ${escapeHtml(vc.voiceName || '')}<br>${escapeHtml(vc.voicePrompt)}` : `<span style="color:var(--text3)">목소리 정보 없음</span>`;
+
+  const refEl = document.getElementById('cast-ref-preview');
+  if (refEl) {
+    const mk = (key, label, url) => `
+      <div class="ref-thumb">
+        ${url ? `<img src="${url}">` : `<div class="ph">없음</div>`}
+        <div style="font-size:9px;color:var(--text3);margin-top:3px">${label}</div>
+        <div class="ref-confirm-btns">
+          <button class="ref-confirm-btn ok ${castDraft.refConfirmed[key] === true ? 'on' : ''}" onclick="setCastRefConfirm('${key}',true)">✓</button>
+          <button class="ref-confirm-btn no ${castDraft.refConfirmed[key] === false ? 'on' : ''}" onclick="setCastRefConfirm('${key}',false)">✗</button>
+        </div>
+      </div>`;
+    refEl.innerHTML = mk('face', '얼굴', vc.face ? mediaUrl(vc.face) : null) + mk('closeup', '클로즈업', vc.closeup ? mediaUrl(vc.closeup) : null);
+  }
+}
+
+// ── ④ 톤·연출 규칙 렌더 ─────────────────────────────────────────────────────
+function setToneField(k, v) { state.tone[k] = v; renderAll(); }
+function renderToneSection() {
+  setPills('tone-arc-open', CUT_EMOTION_OPTIONS, state.tone.arcOpen, "setToneField('arcOpen','{v}')", 'on-alt');
+  setPills('tone-arc-mid', CUT_EMOTION_OPTIONS, state.tone.arcMid, "setToneField('arcMid','{v}')", 'on-alt');
+  setPills('tone-arc-close', CUT_EMOTION_OPTIONS, state.tone.arcClose, "setToneField('arcClose','{v}')", 'on-alt');
+  setPills('tone-bgm-mode', [{ code: 'post', label: '후반 작업(기본)' }, { code: 'in-scene', label: '장면 안 소리(폰 스피커 등)' }], state.tone.bgmMode, "setToneField('bgmMode','{v}')");
+  const bgmNoteEl = document.getElementById('tone-bgm-note');
+  if (bgmNoteEl && document.activeElement !== bgmNoteEl) bgmNoteEl.value = state.tone.bgmNote || '';
+  const moodEl = document.getElementById('tone-mood');
+  if (moodEl && document.activeElement !== moodEl) moodEl.value = state.tone.mood || '';
+  const endingEl = document.getElementById('tone-ending');
+  if (endingEl) endingEl.checked = !!state.tone.endingRule;
 }
 
 function renderProgress() {
@@ -2464,6 +2997,21 @@ function characterLooks(id) {
   });
   return out;
 }
+// ③ 출연·룩(에피소드 탭)도 CA_BANK와 같은 characters.json + characterLooks()를 그대로 읽는다(읽기 전용).
+// personaOf가 없는 캐릭터 = "인물"(1단계), personaOf===그 인물 인 캐릭터 = "변형"(2단계, 예: yeori_nt).
+function basePersons() { return CAB_CHAR_ORDER.filter(id => !(cabChar(id) || {}).personaOf); }
+function variantsOf(baseId) { return CAB_CHAR_ORDER.filter(id => id === baseId || (cabChar(id) || {}).personaOf === baseId); }
+// 대본 화자 표기(예: "여리") → characters.json id — name/aliases 매칭(clipPrompt.js speakerIdsFor와 같은 원칙).
+function resolveCharId(speakerName) {
+  const target = String(speakerName || '').trim();
+  if (!target || !characters) return null;
+  for (const [id, c] of Object.entries(characters)) {
+    if (!c || typeof c !== 'object') continue;
+    if (c.name === target) return id;
+    if ((c.aliases || []).some(a => String(a).toUpperCase() === target.toUpperCase())) return id;
+  }
+  return null;
+}
 function cabFindLookOwner(code, excludeId) {
   for (const id of CAB_CHAR_ORDER) {
     if (id === excludeId) continue;
@@ -2931,15 +3479,14 @@ function renderAll() {
   renderTicker();
   renderSidebar();
   renderStoryCards();
+  renderSourcePack();
   renderPillGroup('pills-platform', PLATFORM_OPTIONS, 'platform', 'on');
   renderPillGroup('pills-topic', vocabWithExtra(VOCAB.TOPIC, state.topic), 'topic', 'on');
   renderPillGroup('pills-scenario', vocabWithExtra(VOCAB.SCN, state.scenario), 'scenario', 'on-alt');
-  renderPillGroup('pills-look', LOOK_OPTIONS, 'look', 'on');
-  renderPillGroup('pills-top', TOP_OPTIONS, 'top', 'on');
-  renderPillGroup('pills-bottom', BOTTOM_OPTIONS, 'bottom', 'on');
-  renderPillGroup('pills-season', SEASON_OPTIONS, 'season', 'on');
-  renderAutoLink();
-  renderCodePreview();
+  renderEpBasic();
+  renderCastSection();
+  renderToneSection();
+  renderChecklist();
   renderCutList();
   renderCutDesignTab();
   renderCodeCheckTab();
