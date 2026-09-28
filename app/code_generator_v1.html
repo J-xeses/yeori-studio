@@ -107,6 +107,8 @@
   /* 에피소드/후보 행 — 코드는 한 줄로 고정, 제목은 넓어진 사이드바에서 2줄까지 보여준다(2026-09-27) */
   .sb-item-ep { align-items: flex-start; flex-direction: column; gap: 3px; }
   .sb-ep-top { display: flex; align-items: center; gap: 6px; width: 100%; }
+  .sb-del { margin-left: auto; font-size: 11px; opacity: 0; cursor: pointer; padding: 0 2px; }
+  .sb-item-ep:hover .sb-del { opacity: .7; } .sb-del:hover { opacity: 1 !important; }
   .sb-ep-code { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text2); flex-shrink: 0; }
   .sb-item.active .sb-ep-code { color: var(--teal); font-weight: 700; }
   .sb-ep-title { font-size: 10px; color: var(--text3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; white-space: normal; line-height: 1.4; width: 100%; }
@@ -1379,7 +1381,7 @@ function renderSidebar() {
         const on = source.kind === 'episode' && source.id === e.id;
         const live = e.id === studioEpisodes.activeEpisodeId;
         return `<div class="sb-item sb-item-ep ${on ? 'active' : ''}" onclick="selectStudioEpisode('${escapeHtml(e.id)}')" title="${escapeHtml(e.code + ' · ' + (e.title || '(제목 없음)') + ' · ' + e.cutCount + '컷')}">
-          <div class="sb-ep-top"><span class="sb-ep-code">${escapeHtml(e.code)}</span>${live ? '<span class="sb-live" title="스튜디오에서 지금 열려 있는 에피소드">LIVE</span>' : ''}</div>
+          <div class="sb-ep-top"><span class="sb-ep-code">${escapeHtml(e.code)}</span>${live ? '<span class="sb-live" title="스튜디오에서 지금 열려 있는 에피소드">LIVE</span>' : ''}${live ? '' : `<span class="sb-del" title="이 에피소드 삭제(휴지통에 백업)" onclick="event.stopPropagation(); deleteStudioEpisode('${escapeHtml(e.id)}', '${escapeHtml(e.code)}')">🗑</span>`}</div>
           <span class="sb-ep-title">${escapeHtml(e.title || '(제목 없음)')}</span>
         </div>`;
       }).join('');
@@ -1389,6 +1391,20 @@ function renderSidebar() {
 }
 
 // 스튜디오 에피소드 선택 → 코드·주제·시나리오·유형을 그대로 가져오고, 컷은 GET /api/episodes/:id 로 채운다.
+// 사이드바 에피소드 삭제(9/28) — 서버가 휴지통(downloads/state/episode-trash)에 백업 후 지움. LIVE·마지막 1개는 서버가 거부.
+async function deleteStudioEpisode(id, code) {
+  if (!confirm(`${code} 에피소드를 삭제할까요?
+
+· 스튜디오 목록에서 사라지고, 휴지통 파일로 백업돼요(복구 가능)
+· 영상·이미지 폴더는 그대로 남아요`)) return
+  try {
+    const r = await fetch(`${YEORI_SERVER}/api/episodes/${encodeURIComponent(id)}/delete`, { method: 'POST' })
+    const j = await r.json(); if (!r.ok) throw new Error(j.error || `서버 오류 ${r.status}`)
+    showToast(`🗑 ${code} 삭제 — 휴지통: ${j.trash}`)
+    if (source.kind === 'episode' && source.id === id) source = { kind: 'none' }
+    await loadStudioEpisodes(true)
+  } catch (e) { showToast('⚠️ 삭제 실패: ' + e.message) }
+}
 async function selectStudioEpisode(id) {
   const ep = studioEpisodes.list.find(e => e.id === id);
   if (!ep) return;

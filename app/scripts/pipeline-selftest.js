@@ -324,6 +324,18 @@ await check('E7', '기획 붙여넣기 → 후보 등록(API 없음) — 정해�
   return { ok: ok && noApi, evidence: `형식 파싱 ${ok ? 'O' : 'X'}(제목·유형·2컷·대사 속 '주제:' 보존) · API 호출 경로 ${noApi ? '없음' : '남아 있음(X)'}` }
 })
 
+await check('E8', '코디젠 에피소드 삭제 — LIVE·없는 에피소드 거부, 휴지통 백업 경로, 후보 다시 보내기', async () => {
+  const eps = await get('/api/episodes'); if (!eps.ok) return { ok: false, evidence: '/api/episodes 응답 없음' }
+  const live = await fetch(SERVER + '/api/episodes/' + eps.data.activeEpisodeId + '/delete', { method: 'POST' })
+  const none = await fetch(SERVER + '/api/episodes/ep_selftest_none/delete', { method: 'POST' })
+  const after = await get('/api/episodes')
+  const src = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const cm = fs.readFileSync(new URL('../content_matrix_v3.html', import.meta.url), 'utf-8')
+  const trash = /episode-trash/.test(src), resend = cm.includes('코디젠에 다시 보내기')
+  const ok = live.status === 409 && none.status === 404 && after.data.episodes.length === eps.data.episodes.length && trash && resend
+  return { ok, evidence: `LIVE 삭제 거부 ${live.status} · 없는 에피소드 ${none.status} · 개수 유지 ${after.data.episodes.length} · 휴지통 백업 ${trash ? 'O' : 'X'} · 후보 다시 보내기 ${resend ? 'O' : 'X'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

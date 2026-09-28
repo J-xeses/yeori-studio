@@ -4064,7 +4064,7 @@ function refreshCandidateStageUI(cand) {
   const g1Btn = document.getElementById('cand-g1-btn');
   if (prevBtn) prevBtn.disabled = idx <= 0;
   if (nextBtn) nextBtn.disabled = idx >= CANDIDATE_STAGES.length - 1;
-  if (g1Btn) g1Btn.disabled = cand.stage !== 'approval';
+  if (g1Btn) { g1Btn.disabled = !['approval', 'g1'].includes(cand.stage); g1Btn.textContent = cand.stage === 'g1' ? '🔁 코디젠에 다시 보내기' : '✨ G1 투입'; }
 }
 
 function renderCandidateChecklistItem(cand, it) {
@@ -4199,6 +4199,7 @@ function sendCandidateToCodiGen(cand) {
 function promoteCandidateToG1() {
   if (!currentCandidateId) return;
   const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
+  if (cand.stage === 'g1') { if (!confirm('이미 코디젠에 보낸 후보예요. 수정한 내용으로 다시 보낼까요?')) return; sendCandidateToCodiGen(cand); showToast('🔁 코디젠에 다시 보냈어요 — 코디젠에서 후보 풀에서 불러오기를 눌러 주세요'); return; }
   if (cand.stage !== 'approval') { showToast('⚠️ 승인대기 상태에서만 G1 투입할 수 있어요'); return; }
   cand.stage = 'g1';
   saveCandidatesLocal();

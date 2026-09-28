@@ -7742,6 +7742,32 @@ app.get('/api/episodes/:episodeId', (req, res) => {
   }
 })
 
+// ── POST /api/episodes/:episodeId/delete — 코디젠 사이드바에서 에피소드 삭제(2026-09-28 성준님) ──
+// 안전장치: 스튜디오에서 지금 열린(LIVE) 에피소드·마지막 1개는 거부, 지우기 전 휴지통(downloads/state/episode-trash)에
+// 에피소드 전체를 저장(복구용), 미디어 폴더는 건드리지 않음. 파일을 바꾸면 열린 스튜디오는 다음 저장 때 409 → 최신본을
+// 다시 불러오므로(mtime 가드) 지운 에피소드가 되살아나지 않는다.
+app.post('/api/episodes/:episodeId/delete', (req, res) => {
+  try {
+    const statePath = path.join(CODE_ROOT, 'studio-state.json')
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf-8'))
+    const id = req.params.episodeId
+    const ep = state.episodes?.[id]
+    if (!ep) return res.status(404).json({ error: '에피소드를 찾을 수 없어요' })
+    if (state.activeEpisodeId === id) return res.status(409).json({ error: '스튜디오에서 지금 열려 있는(LIVE) 에피소드라 지울 수 없어요 — 스튜디오에서 다른 에피소드를 연 뒤 다시 시도해 주세요' })
+    if (Object.keys(state.episodes).length <= 1) return res.status(409).json({ error: '마지막 남은 에피소드는 지울 수 없어요' })
+    const code = resolveEpisodeCode(ep.episode, id) || id
+    const trashDir = mp.statePath('episode-trash')
+    fs.mkdirSync(trashDir, { recursive: true })
+    const trashFile = path.join(trashDir, `${String(code).replace(/[^\w.-]/g, '_')}_${new Date().toISOString().replace(/[:.]/g, '-')}.json`)
+    fs.writeFileSync(trashFile, JSON.stringify({ episodeId: id, deletedAt: new Date().toISOString(), episode: ep }, null, 2), 'utf-8')
+    delete state.episodes[id]
+    state.openTabIds = (state.openTabIds || []).filter((t) => t !== id)
+    fs.writeFileSync(statePath, JSON.stringify(state, null, 2), 'utf-8')
+    console.log(`[episodes] 삭제: ${code} (${id}) → 휴지통 ${path.basename(trashFile)}`)
+    res.json({ ok: true, code, trash: path.relative(mp.DOWNLOADS, trashFile) })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
 // ── POST /api/episodes — 신규 에피소드 생성(에이전트 리더 채팅의 create_episode 액션 전용,
 // content_matrix_v3.html의 file:// 페이지가 직접 호출하므로 /api/script-upload·/api/pipeline/*와
 // 같은 패턴으로 인증 없이 둠). 지금까지 에피소드 생성은 스튜디오 UI의 "+ 새 에피소드 추가"
