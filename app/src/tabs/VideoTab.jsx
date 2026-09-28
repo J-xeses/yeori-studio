@@ -2161,6 +2161,14 @@ export default function VideoTab() {
                   <div className={s.cutCardPromptPreview}>
                     {/* 대사(DL)·나레이션(NR)을 역할별로 정리해 표시 — 원문의 화자 표기·따옴표를 그대로 노출하지 않음(2026-09-27) */}
                     {selCut.dialogue ? splitSpeakerSegments(selCut.dialogue).map((g, i) => <div key={'d' + i}>🗣 {g.speaker ? `${g.speaker}: ` : ''}{g.text}</div>) : null}
+                    {/* 연기 텍스트(TTS 탭 트랙 — "어~~, 왔어요??"처럼 말투·길이 지시)는 대사 아래에 표시. 자막 칸에는 넣지 않는다(2026-09-28 성준님) */}
+                    {(() => {
+                      const tr = state.ttsTabState?.tracks || {}
+                      const acted = Object.entries(tr).filter(([k]) => k.startsWith(`${selCut.id}__`)).flatMap(([, v]) => [].concat(v)).map((x) => String(x?.text || '').trim()).find(Boolean)
+                      const norm = (v) => String(v || '').replace(/[\s"“”'‘’]/g, '')
+                      return acted && norm(acted) !== norm(splitSpeakerSegments(selCut.dialogue || '').map((g) => g.text).join(' '))
+                        ? <div style={{ opacity: 0.8 }}>🎭 연기: {acted.replace(/\s{2,}/g, ' ')}</div> : null
+                    })()}
                     {selCut.narration ? <div>🎙 나레이션: {stripMeta(selCut.narration)}</div> : null}
                     {!selCut.dialogue && !selCut.narration ? selCut.imagePrompt : null}
                   </div>
