@@ -537,6 +537,13 @@ def render_scene(canvas_size, scene, font_size=64):
         vr = math.hypot(box_w, box_h) * 0.62
         img = apply_soft_vignette(img, left + box_w / 2, top + box_h / 2, vr)
 
+    # 1-b) 대사 바탕판(plate) — 어두운 반투명 직각 상자. 대사만(나레이션·장면 자막은 없음, 2026-09-28)
+    if scene.get("plate"):
+        pl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        pad_x, pad_y = font_size * 0.45, font_size * 0.22
+        ImageDraw.Draw(pl).rectangle((left - pad_x, top - pad_y, left + box_w + pad_x, top + box_h + pad_y), fill=(18, 18, 24, 150))
+        img = Image.alpha_composite(img, pl)
+
     # 2) 다크 헤일로 — 투명 레이어에 검게 그린 뒤 블러해서 여러 겹 합성
     dark = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     paint(dark, (0, 0, 0, 235))

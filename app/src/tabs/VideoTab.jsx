@@ -152,7 +152,16 @@ function clipTimings(clips, plannedSegs = []) {
 // 릴스 최종본 자막 미리보기 레이어 — 9:16 영상 영역 전체에 겹쳐 handwriting_overlay.py 배치 규칙을 그대로 재현한다.
 // 크기 = fontPx × (화면 높이/1920), 기본 위치 = 블록 아래끝이 87% 기준 → 72% 안전선 위로 올림, y 지정 시 블록 중심.
 // (2026-09-25: 처음엔 영상 아래 "자막 띠" 캔버스(640×360)에 그려서 최종본보다 4~5배 작게 보였다 — 성준님 스크린샷)
-function ReelCaptionOverlay({ text, fontPx, y, fontReady }) {
+// 자막 세그먼트가 실제 대사인지 — 서버 reelFinalize.isDialogueSeg 와 같은 규칙(2026-09-28).
+// 대사 = 어두운 반투명 직각 바탕, 나레이션·장면 자막 = 바탕 없음. 따옴표는 쓰지 않는다.
+function isDialogueSeg(text, dialogue) {
+  const norm = (v) => String(v || '').replace(/[\s"“”'‘’.,!?…~·-]/g, '')
+  const d = norm(dialogue), t = norm(text)
+  if (!d || d === '없음' || t.length < 2) return false
+  return d.includes(t)
+}
+
+function ReelCaptionOverlay({ text, fontPx, y, fontReady, plate = false }) {
   const boxRef = useRef(null), textRef = useRef(null)
   const [H, setH] = useState(0)
   const [blockH, setBlockH] = useState(0)
@@ -177,7 +186,10 @@ function ReelCaptionOverlay({ text, fontPx, y, fontReady }) {
           fontFamily: fontReady ? '"GaeguFinal", sans-serif' : 'sans-serif', fontSize: F, lineHeight: 1.32, color: '#fff',
           textShadow: `0 0 ${F * 0.22}px rgba(0,0,0,.92), 0 0 ${F * 0.22}px rgba(0,0,0,.92), 0 0 ${F * 0.11}px rgba(0,0,0,.92)`,
           wordBreak: 'keep-all', whiteSpace: 'pre-wrap',
-        }}>{`"${t}"`}</div>
+        }}>
+          {/* 대사: 글자 뒤 반투명 직각 바탕(handwriting_overlay.py plate 와 같은 여백 0.45em/0.22em·rgba(18,18,24,.59)) */}
+          <span style={plate ? { background: 'rgba(18,18,24,0.59)', padding: `${F * 0.22}px ${F * 0.45}px`, boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' } : undefined}>{t}</span>
+        </div>
       )}
     </div>
   )
@@ -1894,7 +1906,7 @@ export default function VideoTab() {
                       </div>
                     )}
                     {isSelected && subtitleEnabled && isReel && !subtitleEditMode && previewT >= (Number(selCut.captionStartSec) || 0) && (
-                      <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} />
+                      <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} plate={isDialogueSeg(previewText, selCutForText?.dialogue)} />
                     )}
                     {isSelected && subtitleEnabled && !subtitleEditMode && (
                       <div

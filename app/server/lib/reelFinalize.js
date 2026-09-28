@@ -283,6 +283,15 @@ function cleanCaption(s) {
   return String(s).replace(/[\u{FE0F}\u{FE0E}]/gu, '').replace(/\s{2,}/g, ' ').trim()
 }
 
+// 자막 세그먼트가 실제 대사(DL)인지 — 대사는 어두운 반투명 직각 바탕(plate), 나레이션·장면 자막은 바탕 없음.
+// 따옴표 대신 바탕으로 구분(2026-09-28 성준님). 영상 탭 미리보기(VideoTab isDialogueSeg)와 같은 규칙.
+export function isDialogueSeg(text, dialogue) {
+  const norm = (v) => String(v || '').replace(/[\s"“”'‘’.,!?…~·-]/g, '')
+  const d = norm(dialogue), t = norm(text)
+  if (!d || d === '없음' || t.length < 2) return false
+  return d.includes(t)
+}
+
 // ── 컷별 편집 판단 ──────────────────────────────────────────────────
 // 영상 탭·리더용: 이 컷의 자막 세그먼트를 발화 시각에 맞춘 타이밍([[s,e],…], 컷 기준 초). 없으면 null.
 export function autoCaptionTimings(cut, code, durSec) {
@@ -328,11 +337,11 @@ export function decideCut(cut) {
         const segStyle = segPunch ? 'Punch' : 'Cap'
         let burn = cleanCaption(t)
         if (/\s→\s/.test(burn) && burn.length > 16) burn = burn.replace(/\s→\s/, ' →\\N')
-        burn = `"${burn}"`
         // 오버레이(handwriting_overlay.py) 씬 속성 — 레퍼런스처럼 판/비네트 없이(backing:false)
         // 흰 손글씨 + 외곽선 + 컬러 이모지 + 가벼운 데코. 말풍선은 과해서 기본 미사용.
         const overlay = {
-          text: `"${cleanCaption(t).replace(/\s→\s/, ' →\n')}"`,
+          text: cleanCaption(t).replace(/\s→\s/, ' →\n'),
+          plate: isDialogueSeg(t, cut.dialogue),
           position: basePos,
           font_size: 58,
           backing: false,
@@ -582,9 +591,9 @@ export async function finalizeReel(p) {
         const o = seg.overlay
         scenes.push({
           time: `${st.toFixed(2)}~${en.toFixed(2)}s`,
-          text: `"${stacked}"`,
+          text: stacked,
           position: o.position, bubble: o.bubble || 'none', color: o.color || 'white',
-          font_size: capStyle.fontPx || o.font_size || 58, backing: o.backing === true,
+          font_size: capStyle.fontPx || o.font_size || 58, backing: o.backing === true, plate: o.plate === true,
           ...(capStyle.y ? { x: 0.5, y: capStyle.y } : {}),   // 영상 탭에서 정한 세로 위치(글자 블록 중심, 0~1)
           deco: o.deco || [], arrow: !!o.arrow, arrow_direction: o.arrow_direction || 'right',
         })
@@ -666,7 +675,19 @@ export async function finalizeReel(p) {
   let bgmAbs = null
   const wantsBgm = decisions.some((d) => d.bgmText && !/^\s*(없음|-|n\/?a)?\s*$/i.test(d.bgmText))
   if (bgmFile) bgmAbs = path.isAbsolute(bgmFile) ? bgmFile : mp.bgmFile(bgmFile)
-  else if (wantsBgm) {
+  // 다시 합성할 때는 이전 최종본의 곡을 그대로 쓴다 — 9/28 R04 재합성에서 확정곡(Sea Breeze) 대신 새 곡을 생성해 버린 사고
+  if (!bgmAbs && wantsBgm) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(path.join(fdir, `${code}_finalize.json`), 'utf-8'))
+      const name = prev.bgmFile || (String(prev.bgm || '').match(/^BGM:\s*(.+?)\s*\(/) || [])[1]
+      if (name) {
+        const root = mp.bgmFile('')
+        const hit = path.isAbsolute(name) ? name : fs.readdirSync(root, { recursive: true }).map((f) => path.join(root, f)).find((f) => path.basename(f) === path.basename(name))
+        if (hit && fs.existsSync(hit)) { bgmAbs = hit; log(`BGM: 이전 최종본 곡 유지 — ${path.basename(hit)}`) }
+      }
+    } catch { /* 이전 최종본 없음 */ }
+  }
+  if (!bgmAbs && wantsBgm) {
     // 대본 BGM 문구 → 태그 → 라이브러리 최적 곡, 없으면 ElevenLabs 음악 생성(에피소드 길이 맞춤, 재사용 등록).
     // 예전엔 bgm/ 최상위 첫 파일만 찾아서(곡은 하위 폴더에 있음) 한 번도 자동으로 붙지 않았다(2026-09-25).
     try {
@@ -734,6 +755,7 @@ export async function finalizeReel(p) {
     captionsBurned: capCount,
     captionMode: captionMode === 'overlay' ? 'handwriting-overlay(컬러이모지·말풍선)' : (needAssBurn ? 'ass(libass 모노크롬)' : 'none'),
     bgm: bgmNote,
+    bgmFile: bgmAbs && fs.existsSync(bgmAbs) ? path.relative(mp.bgmFile(''), bgmAbs) : null,   // 재합성 때 같은 곡 유지용
     cuts: decisions.map((d) => ({
       no: d.no, cutType: d.cutType, fit: d.fit,
       startSec: +d.startSec.toFixed(2), durSec: +d.durSec.toFixed(2),
