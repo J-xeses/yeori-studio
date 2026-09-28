@@ -164,6 +164,44 @@ def measure_line(draw, text, size):
     return w
 
 
+# 릴스 자막 줄바꿈·표시시간 수동 편집(2026-09-28, 성준님): 자막 편집 UI(Enter=\n)로 넣은
+# 수동 줄바꿈은 항상 그대로 유지하고, 한 줄이 안전 폭을 넘칠 때만 그 줄만 자동으로 더 나눈다.
+# 영상 탭 미리보기(ReelCaptionOverlay, CSS white-space:pre-wrap)와 같은 규칙.
+def wrap_paragraph(draw, para, size, max_width):
+    if not para:
+        return [""]
+    if measure_line(draw, para, size) <= max_width:
+        return [para]
+    words = para.split(" ")
+    lines, cur = [], ""
+    for w in words:
+        test = f"{cur} {w}" if cur else w
+        if not cur or measure_line(draw, test, size) <= max_width:
+            cur = test
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    # 공백 기준으로 나눠도 한 조각이 폭을 넘으면(긴 단어) 글자 단위로 다시 쪼갠다.
+    final = []
+    for ln in lines:
+        if measure_line(draw, ln, size) <= max_width:
+            final.append(ln)
+            continue
+        buf = ""
+        for ch in ln:
+            test = buf + ch
+            if not buf or measure_line(draw, test, size) <= max_width:
+                buf = test
+            else:
+                final.append(buf)
+                buf = ch
+        if buf:
+            final.append(buf)
+    return final or [""]
+
+
 _TOFU_CACHE = {}
 
 
@@ -409,6 +447,11 @@ def measure_block(draw, lines, size):
     return max(widths), size * 1.32 * len(lines)
 
 
+# 안전 폭(캔버스 가로 비율) — 이보다 넓어지는 줄만 자동 줄바꿈 대상. 영상 탭 미리보기 박스
+# 좌우 여백(52*k, 1920 기준 → 1080 기준 약 0.904)보다 데코/회전 여유를 두고 조금 더 좁게.
+SAFE_TEXT_WIDTH_RATIO = 0.82
+
+
 def render_scene(canvas_size, scene, font_size=64):
     """레퍼런스 그림1 방향: 검은 외곽선/판 금지. 가독성 = 어두운 헤일로(블러) +
     글자영역 소프트 비네트 + 얇은 컬러 획. 다크/컬러 2패스가 같은 좌표를 쓰도록
@@ -417,8 +460,11 @@ def render_scene(canvas_size, scene, font_size=64):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     measure = ImageDraw.Draw(img)
     color = COLORS.get(scene.get("color", "white"), COLORS["white"])
-    lines = scene.get("text", "").split("\n")
     font_size = int(scene.get("font_size", font_size))
+    # 수동 줄바꿈(\n)은 그대로 줄 경계로 유지 — 문단별로 안전 폭을 넘을 때만 자동 줄바꿈 추가.
+    lines = []
+    for para in scene.get("text", "").split("\n"):
+        lines.extend(wrap_paragraph(measure, para, font_size, W * SAFE_TEXT_WIDTH_RATIO))
     pen_w = max(3, int(font_size * 0.05))
 
     try:

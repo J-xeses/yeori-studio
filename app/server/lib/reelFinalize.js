@@ -279,8 +279,16 @@ function computeSegmentTimings(segs, durSec) {
 
 // 이모지는 유지한다(레퍼런스 스타일). seguiemj.ttf 폴백으로 컬러 렌더.
 // variation selector(FE0F)·ZWJ(200D)만 정리 — libass 에서 폭 계산이 어긋날 수 있어서.
+// ⚠️ 2026-09-28: 예전엔 \s{2,}(공백 2개 이상) 통짜로 collapse해서, 자막 편집 UI(Enter=줄바꿈)로
+// 넣은 개행 앞뒤에 공백이 하나라도 있으면(예: "첫줄 \n 둘째줄") 그 \n까지 공백 1개로 뭉개져
+// 사라졌다(성준님: "줄바꿈한 대로 자막이 나와야 한다" — 릴스 자막 줄바꿈·표시시간 편집).
+// 줄바꿈(\n) 자체는 항상 보존하고, 그 앞뒤에 붙은 공백/탭만 정리한다.
 function cleanCaption(s) {
-  return String(s).replace(/[\u{FE0F}\u{FE0E}]/gu, '').replace(/\s{2,}/g, ' ').trim()
+  return String(s)
+    .replace(/[\u{FE0F}\u{FE0E}]/gu, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]*\n[ \t]*/g, '\n')
+    .trim()
 }
 
 // 자막 세그먼트가 실제 대사(DL)인지 — 대사는 어두운 반투명 직각 바탕(plate), 나레이션·장면 자막은 바탕 없음.

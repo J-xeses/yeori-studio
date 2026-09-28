@@ -232,6 +232,35 @@ await check('C2', '자막 역할 표시 — 대사=바탕, 나레이션·장면 
   return { ok: miss === 0 && quoteWrap === 0 && keepsBgm, evidence: `판정 ${cases.length - miss}/${cases.length} · 따옴표 감싸기 코드 ${quoteWrap}곳 · 재합성 BGM 유지 ${keepsBgm ? 'O' : 'X'}` }
 })
 
+// ── 1m. 릴스 자막 줄바꿈·표시시간 수동 편집(2026-09-28): 수동 \n 보존 + 수동 타이밍이 자동 싱크에 안 덮임 ──
+await check('C3', '자막 수동 줄바꿈 보존 + 수동 타이밍이 자동 싱크에 안 덮임', async () => {
+  const { setOverride, applyOverrides } = await import('../server/lib/reelOverrides.js')
+  const { decideCut } = await import('../server/lib/reelFinalize.js')
+  const TEST_CODE = '__SELFTEST_C3__'
+  const ovPath = mp.statePath(`reel-overrides/${TEST_CODE}.json`)
+  try {
+    // 1) 수동 줄바꿈 — 개행 앞뒤에 공백이 붙어도(Enter 직후 흔한 케이스) cleanCaption이 \n을
+    // 지우면 안 된다(예전 버그: \s{2,} 통짜 collapse가 " \n "을 공백 1개로 뭉갬).
+    setOverride(TEST_CODE, 1, { subtitle: '첫줄 \n 둘째줄 / 나레이션' })
+    const cuts1 = applyOverrides([{ no: 1, subtitle: '원본', dialogue: '', masterCode: {} }], TEST_CODE)
+    const seg0 = decideCut(cuts1[0]).caption?.segments?.[0]
+    const nlOk = !!seg0 && seg0.overlay.text === '첫줄\n둘째줄'
+    // 2) 수동 타이밍(captionTimingAuto 없음) — override 파일에 그대로 남아있어야 하고,
+    // sync-captions 라우트(proxy.js)가 이 조합을 건드리지 않는 가드가 실제 코드에 있어야 한다.
+    setOverride(TEST_CODE, 2, { captionSegTiming: [[1, 3]] })
+    const cuts2 = applyOverrides([{ no: 2 }], TEST_CODE)
+    const manualKept = Array.isArray(cuts2[0].captionSegTiming) && cuts2[0].captionSegTiming[0][0] === 1 && cuts2[0].captionSegTiming[0][1] === 3
+    const proxySrc = fs.readFileSync(path.join(ROOT, 'server', 'proxy.js'), 'utf-8')
+    const guardOk = /ov\.captionSegTiming\s*&&\s*!ov\.captionTimingAuto/.test(proxySrc)
+    return {
+      ok: nlOk && manualKept && guardOk,
+      evidence: `세그0 텍스트 "${(seg0?.overlay.text || '').replace(/\n/g, '\\n')}" · 개행 보존 ${nlOk} · 수동 타이밍 유지 ${manualKept} · sync-captions 가드 ${guardOk}`,
+    }
+  } finally {
+    try { fs.unlinkSync(ovPath) } catch { /* noop */ }
+  }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))
