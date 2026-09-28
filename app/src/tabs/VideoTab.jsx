@@ -187,8 +187,8 @@ function ReelCaptionOverlay({ text, fontPx, y, fontReady, plate = false }) {
           textShadow: `0 0 ${F * 0.22}px rgba(0,0,0,.92), 0 0 ${F * 0.22}px rgba(0,0,0,.92), 0 0 ${F * 0.11}px rgba(0,0,0,.92)`,
           wordBreak: 'keep-all', whiteSpace: 'pre-wrap',
         }}>
-          {/* 대사: 글자 뒤 반투명 직각 바탕(handwriting_overlay.py plate 와 같은 여백 0.45em/0.22em·rgba(18,18,24,.59)) */}
-          <span style={plate ? { background: 'rgba(18,18,24,0.59)', padding: `${F * 0.22}px ${F * 0.45}px`, boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' } : undefined}>{t}</span>
+          {/* 대사: 글자 뒤 반투명 직각 바탕(handwriting_overlay.py plate 와 같은 여백 0.22em/0.04em·rgba(18,18,24,.59)) */}
+          <span style={plate ? { background: 'rgba(18,18,24,0.59)', padding: `${F * 0.04}px ${F * 0.22}px`, boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone' } : undefined}>{t}</span>
         </div>
       )}
     </div>

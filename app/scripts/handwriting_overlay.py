@@ -540,8 +540,9 @@ def render_scene(canvas_size, scene, font_size=64):
     # 1-b) 대사 바탕판(plate) — 어두운 반투명 직각 상자. 대사만(나레이션·장면 자막은 없음, 2026-09-28)
     if scene.get("plate"):
         pl = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        pad_x, pad_y = font_size * 0.45, font_size * 0.22
-        ImageDraw.Draw(pl).rectangle((left - pad_x, top - pad_y, left + box_w + pad_x, top + box_h + pad_y), fill=(18, 18, 24, 150))
+        # 글자 블록(안쪽 여백 pad_x/pad_y 제외)에 딱 붙이고 가장자리만 살짝 — 9/28 성준님 "텍스트보다 살짝만 크게"
+        mx, my = font_size * 0.22, font_size * 0.04
+        ImageDraw.Draw(pl).rectangle((left + pad_x - mx, top + pad_y - my, left + box_w - pad_x + mx, top + box_h - pad_y + my), fill=(18, 18, 24, 150))
         img = Image.alpha_composite(img, pl)
 
     # 2) 다크 헤일로 — 투명 레이어에 검게 그린 뒤 블러해서 여러 겹 합성
