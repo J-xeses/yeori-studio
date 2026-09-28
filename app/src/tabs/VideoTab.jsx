@@ -2021,7 +2021,15 @@ export default function VideoTab() {
                     {isSelected && subtitleEnabled && isReel && !subtitleEditMode && previewT >= (Number(selCut.captionStartSec) || 0) && (
                       <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} plate={isDialogueSeg(previewText, selCutForText?.dialogue)} />
                     )}
-                    {isSelected && subtitleEnabled && !subtitleEditMode && (
+                    {/* 릴스: 자막은 ReelCaptionOverlay(클릭 통과)로 그리고, 수정은 오른쪽 위 작은 버튼으로 연다.
+                        예전엔 투명한 자막 띠가 영상 아래쪽을 덮어 재생 버튼 클릭을 가로챘다(2026-09-28 성준님 제보) */}
+                    {isSelected && subtitleEnabled && !subtitleEditMode && isReel && (
+                      <button type="button" onClick={() => setSubtitleEditMode(true)} title="클릭하여 자막 수정"
+                        style={{ position: 'absolute', top: 8, right: 8, zIndex: 4, fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,.35)', background: 'rgba(0,0,0,.55)', color: '#fff', cursor: 'pointer' }}>
+                        ✏ 자막 수정
+                      </button>
+                    )}
+                    {isSelected && subtitleEnabled && !subtitleEditMode && !isReel && (
                       <div
                         className={s.subtitleDisplay}
                         onClick={() => setSubtitleEditMode(true)}
@@ -2072,13 +2080,18 @@ export default function VideoTab() {
                         )}
                         <div className={s.subtitleEditControls}>
                           <div className={s.posSelector}>
-                            {['top','middle','bottom'].map(pos => (
+                            {['top','middle','bottom'].map(pos => {
+                              // 릴스는 세로 위치(reelStyle.y — 최종본과 같은 값)에 연결: 상단 25%·중앙 50%·하단=기본(안전선 위)
+                              const reelPos = !reelStyle.y ? 'bottom' : reelStyle.y <= 0.35 ? 'top' : 'middle'
+                              const active = isReel ? reelPos === pos : subtitlePosition === pos
+                              return (
                               <button key={pos}
-                                className={`${s.posBtn} ${subtitlePosition === pos ? s.posBtnActive : ''}`}
-                                onClick={(e) => { e.stopPropagation(); setSubtitlePosition(pos) }}>
+                                className={`${s.posBtn} ${active ? s.posBtnActive : ''}`}
+                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.25 : pos === 'middle' ? 0.5 : null }); else setSubtitlePosition(pos) }}>
                                 {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
                               </button>
-                            ))}
+                              )
+                            })}
                           </div>
                           <button className={s.subtitleDoneBtn} onClick={(e) => { e.stopPropagation(); setSubtitleEditMode(false) }}>
                             완료
