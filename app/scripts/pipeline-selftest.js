@@ -221,6 +221,17 @@ await check('E5', '에피소드 사건 원장 + 콜백 제안(오늘의 여리 �
   const cb = suggestCallbacks(); const mood = JSON.parse(fs.readFileSync(mp.statePath('yeori-mood.json'), 'utf-8')).current
   return { ok: ev.length > 0 && cb.length > 0 && mood.callback === cb[0], evidence: `원장 ${ev.length}편(${ev.map(e => e.code).join(',')}) · 콜백 "${cb[0]}" · 오늘의 여리 연결 ${mood.callback === cb[0] ? 'O' : 'X'}` }
 })
+// ── 1l. 자막 표시 규칙(9/28): 따옴표 없음 · 대사만 반투명 직각 바탕 · 재합성 때 BGM 유지 ──
+await check('C2', '자막 역할 표시 — 대사=바탕, 나레이션·장면 자막=바탕 없음, 따옴표 없음', async () => {
+  const { isDialogueSeg } = await import('../server/lib/reelFinalize.js')
+  const src = fs.readFileSync(new URL('../server/lib/reelFinalize.js', import.meta.url), 'utf-8')
+  const cases = [['어, 왔어요?', '어, 왔어요?', true], ['그녀는 항상 먼저 와 있었다', '어, 왔어요?', false], ['AI로 만들어요', '저 사실 이 채널… AI로 만들어요.', true], ['금요일 밤 11시.', '없음', false]]
+  const miss = cases.filter(([t, d, w]) => isDialogueSeg(t, d) !== w).length
+  const quoteWrap = (src.match(/`"\$\{/g) || []).length
+  const keepsBgm = /이전 최종본 곡 유지/.test(src)
+  return { ok: miss === 0 && quoteWrap === 0 && keepsBgm, evidence: `판정 ${cases.length - miss}/${cases.length} · 따옴표 감싸기 코드 ${quoteWrap}곳 · 재합성 BGM 유지 ${keepsBgm ? 'O' : 'X'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))
