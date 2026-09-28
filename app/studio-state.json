@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9,7 +9,6 @@
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
-    "ep_TEST_OVERLAY",
     "ep_test_r03",
     "ep_1789977729018",
     "ep_1790322063208",
@@ -3170,217 +3169,6 @@
         }
       }
     },
-    "ep_TEST_OVERLAY": {
-      "id": "ep_TEST_OVERLAY",
-      "episode": {
-        "number": 99,
-        "title": "손글씨+그래픽 연출 테스트",
-        "code": "TEST_OVERLAY",
-        "contentType": "IG_R",
-        "topicCode": "SOC",
-        "scnCode": "DOC",
-        "location": "카페",
-        "instaNum": "",
-        "masterCode": "[TEST_OVERLAY] :: [PL:IG_RL] :: [SP:IN.CF] :: [CH:YR_TX] :: [SH:SH_CU] :: [F군:테스트]",
-        "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : TEST_OVERLAY\nTITLE : 손글씨+그래픽 연출 테스트\nBG    : 검정 배경 텍스트 카드 / 인스타 DM 목업\nBGM   : 로파이 잔잔하게\nREF   : 텍스트 전용 (이미지 생성 불필요)"
-      },
-      "cuts": [
-        {
-          "id": "cut-1",
-          "no": 1,
-          "cutTitle": "오프닝 훅 텍스트 카드",
-          "lipsync": false,
-          "scene": "검정 배경, 흰 텍스트 훅 등장. 시청자 시선 즉시 탈취",
-          "action": "타이핑 애니메이션으로 텍스트 등장",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "AI인 줄 몰랐다고?",
-          "narration": "",
-          "imagePrompt": "검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\nAI인 줄 모르고 DM 보낸 사람들 반응 모음 😅",
-          "videoPrompt": "타이핑 애니메이션으로 텍스트 등장, 3초간 정지",
-          "duration": 3,
-          "shotType": "CLOSEUP",
-          "cutType": "GRAPHIC",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.CF",
-            "pl": "GR_TX",
-            "ch": "서여리",
-            "sh": "SH_CU",
-            "ca": "CA_STATIC",
-            "md": "MD_INT",
-            "ac": "AT_NONE",
-            "lookId": "",
-            "du": 3,
-            "audio": {
-              "bgm": "로파이 오프닝 잔잔하게",
-              "voice": "없음",
-              "sfx": "팝",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "검정 배경 텍스트 카드",
-              "ch": "등장 없음 (텍스트만)",
-              "sh": "-",
-              "ca": "고정",
-              "ac": "타이핑 애니메이션으로 텍스트 등장",
-              "md": "궁금증 유발"
-            }
-          }
-        },
-        {
-          "id": "cut-2",
-          "no": 2,
-          "cutTitle": "인스타 DM 목업",
-          "lipsync": false,
-          "scene": "인스타 DM 화면 목업 — 협찬 문의 메시지",
-          "action": "DM 말풍선이 위에서 슬라이드로 등장",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "이게 실화입니다",
-          "narration": "",
-          "imagePrompt": "이미지 생성 불필요 — CapCut/HTML로 인스타 DM UI 직접 제작\n\n[캡션 + 해시태그]\n협찬 문의인 줄 알았는데...",
-          "videoPrompt": "DM 말풍선 순차 등장, 마지막 메시지에서 살짝 확대",
-          "duration": 4,
-          "shotType": "CLOSEUP",
-          "cutType": "CAPCUT",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.DM",
-            "pl": "IG_RL",
-            "ch": "서여리",
-            "sh": "SH_CU",
-            "ca": "CA_STATIC",
-            "md": "MD_SUR",
-            "ac": "AT_NONE",
-            "lookId": "",
-            "du": 4,
-            "audio": {
-              "bgm": "로파이 계속",
-              "voice": "없음",
-              "sfx": "DM 알림음",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "인스타 DM 화면 목업",
-              "ch": "등장 없음 (화면 캡처 스타일)",
-              "sh": "-",
-              "ca": "고정",
-              "ac": "DM 말풍선이 위에서 슬라이드로 등장",
-              "md": "당황, 어이없음"
-            }
-          }
-        },
-        {
-          "id": "cut-3",
-          "no": 3,
-          "cutTitle": "다음 편 예고 텍스트 카드",
-          "lipsync": false,
-          "scene": "검정 배경 + 팔로우 유도 + 다음 편 예고 텍스트",
-          "action": "텍스트 페이드 인",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "다음 편에서 계속",
-          "narration": "",
-          "imagePrompt": "검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\n다음 편에서 AI가 어떻게 만들어졌는지 공개해요 👀",
-          "videoPrompt": "텍스트 페이드 인 후 3초 정지",
-          "duration": 3,
-          "shotType": "CLOSEUP",
-          "cutType": "GRAPHIC",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.CF",
-            "pl": "GR_TX",
-            "ch": "서여리",
-            "sh": "SH_CU",
-            "ca": "CA_STATIC",
-            "md": "MD_DRM",
-            "ac": "AT_NONE",
-            "lookId": "",
-            "du": 3,
-            "audio": {
-              "bgm": "로파이 마무리로 페이드",
-              "voice": "없음",
-              "sfx": "없음",
-              "ambience": ""
-            },
-            "kr": {
-              "sp": "검정 배경 텍스트 카드",
-              "ch": "등장 없음 (텍스트만)",
-              "sh": "-",
-              "ca": "고정",
-              "ac": "텍스트 페이드 인",
-              "md": "여운, 기대감"
-            }
-          }
-        }
-      ],
-      "scriptRaw": "마스터 코드\n[TEST_OVERLAY] :: [PL:IG_RL] :: [SP:IN.CF] :: [CH:YR_TX] :: [SH:SH_CU] :: [F군:테스트]\n\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : TEST_OVERLAY\nTITLE : 손글씨+그래픽 연출 테스트\nBG    : 검정 배경 텍스트 카드 / 인스타 DM 목업\nBGM   : 로파이 잔잔하게\nREF   : 텍스트 전용 (이미지 생성 불필요)\n================================================================\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] GR_TX — 오프닝 훅 텍스트 카드 / 3초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 검정 배경, 흰 텍스트 훅 등장. 시청자 시선 즉시 탈취\nSP: IN.CF\nPL: GR_TX\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: AI인 줄 몰랐다고?\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_INT\nAC: AT_NONE\nDU: 3\n오디오:\n  BGM: 로파이 오프닝 잔잔하게\n  음성: 없음\n  효과음: 팝\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 텍스트 카드\nCH(캐릭터):   등장 없음 (텍스트만)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 텍스트 등장\nMD(감정):     궁금증 유발\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     AI인 줄 몰랐다고?\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\nAI인 줄 모르고 DM 보낸 사람들 반응 모음 😅\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n타이핑 애니메이션으로 텍스트 등장, 3초간 정지\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] CC_DM — 인스타 DM 목업 / 4초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 인스타 DM 화면 목업 — 협찬 문의 메시지\nSP: IN.DM\nPL: IG_RL\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: 이게 실화입니다\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_SUR\nAC: AT_NONE\nDU: 4\n오디오:\n  BGM: 로파이 계속\n  음성: 없음\n  효과음: DM 알림음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     인스타 DM 화면 목업\nCH(캐릭터):   등장 없음 (화면 캡처 스타일)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     DM 말풍선이 위에서 슬라이드로 등장\nMD(감정):     당황, 어이없음\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 실화입니다\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n이미지 생성 불필요 — CapCut/HTML로 인스타 DM UI 직접 제작\n\n[캡션 + 해시태그]\n협찬 문의인 줄 알았는데...\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nDM 말풍선 순차 등장, 마지막 메시지에서 살짝 확대\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] GR_TX — 다음 편 예고 텍스트 카드 / 3초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 검정 배경 + 팔로우 유도 + 다음 편 예고 텍스트\nSP: IN.CF\nPL: GR_TX\nCH: 서여리\nDL: 없음\nNR: 없음\nCP: 다음 편에서 계속\nSH: SH_CU\nCA: CA_STATIC\nMD: MD_DRM\nAC: AT_NONE\nDU: 3\n오디오:\n  BGM: 로파이 마무리로 페이드\n  음성: 없음\n  효과음: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 텍스트 카드\nCH(캐릭터):   등장 없음 (텍스트만)\nSH(샷):       -\nCA(카메라):   고정\nAC(동작):     텍스트 페이드 인\nMD(감정):     여운, 기대감\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     다음 편에서 계속\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n검정 배경(#0a0a0a) + 흰색 굵은 텍스트 중앙 정렬 그래픽 카드\n\n[캡션 + 해시태그]\n다음 편에서 AI가 어떻게 만들어졌는지 공개해요 👀\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\n텍스트 페이드 인 후 3초 정지\n",
-      "createdAt": "2026-08-30T09:31:13.246265Z",
-      "tabState": {
-        "videoTabState": {
-          "videoClips": {
-            "cut-1": [
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_01.mp4?t=1789991047704",
-                "name": "cut_01.mp4",
-                "duration": 4,
-                "trimStart": 0,
-                "trimEnd": 4,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_01.mp4",
-                "keepAudio": false,
-                "createdAt": 1788243715000
-              }
-            ],
-            "cut-2": [
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_02.mp4?t=1789991047963",
-                "name": "cut_02.mp4",
-                "duration": 4,
-                "trimStart": 0,
-                "trimEnd": 4,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_02.mp4",
-                "keepAudio": false,
-                "createdAt": 1788181220000
-              }
-            ],
-            "cut-3": [
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/_etc/TEST_OVERLAY/05_video/cut_03.mp4?t=1789991048228",
-                "name": "cut_03.mp4",
-                "duration": 3,
-                "trimStart": 0,
-                "trimEnd": 3,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\_etc\\TEST_OVERLAY\\05_video\\cut_03.mp4",
-                "keepAudio": false,
-                "createdAt": 1788181222000
-              }
-            ]
-          },
-          "g4Approved": {},
-          "selectedCutId": "cut-1",
-          "subtitles": {}
-        },
-        "ttsTabState": {
-          "audioUrls": {},
-          "audioTexts": {},
-          "g3Confirmed": {},
-          "focusCutId": null
-        },
-        "voiceInsertState": {
-          "tracks": {}
-        },
-        "studioTabState": {
-          "imageRatio": {}
-        }
-      }
-    },
     "ep_test_r03": {
       "id": "ep_test_r03",
       "episode": {
@@ -5610,7 +5398,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-28T11:06:08.174Z",
+  "savedAt": "2026-09-28T12:15:02.943Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
