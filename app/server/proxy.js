@@ -5962,56 +5962,6 @@ async function searchWebTrends(typeLabel) {
   return text.trim()
 }
 
-// ── POST /api/candidates/from-idea — 아이디어·기획 메모 → 후보 기획(제목·키워드·주제·스토리·[CUT] 대본) (2026-09-28 성준님) ──
-// 자동 플로우(STEP1~4)와 달리 사람이 가져온 아이디어의 내용·의도를 보존하고 형식만 맞춘다. 저장은 화면(후보 풀)이 한다.
-app.post('/api/candidates/from-idea', async (req, res) => {
-  const text = String(req.body?.text || '').trim(); const type = String(req.body?.type || 'SF')
-  if (text.length < 10) return res.status(400).json({ error: '아이디어를 10자 이상 적어 주세요' })
-  try {
-    const cutSpec = CANDIDATE_CUT_SPEC_BY_TYPE[type] || CANDIDATE_CUT_SPEC_DEFAULT
-    const raw = await callClaudeText(
-      `${YEORI_CHANNEL_CONTEXT}
-
-아래는 운영자(성준님)의 아이디어/기획 메모다. 내용과 의도를 최대한 보존해서 에피소드 후보 기획으로 정리하라.
-` +
-      `- 메모에 컷 구성이 이미 있으면 컷 수·장면·대사를 그대로 살리고 형식만 맞춘다. 없으면 ${cutSpec}으로 구성한다.
-` +
-      `- 시청자에게 말할 땐 존댓말, 친구끼리는 반말. 마지막 컷은 대사 뒤 2~3초 여운(침묵·시선·소품). 컷 길이는 Veo 생성 단위(8초 또는 6초)로 괄호에 표기.
-` +
-      `- 지난 에피소드를 잇는 콜백이 메모에 있으면 스토리 첫머리에 [콜백: …]로 남긴다.
-` +
-      `출력 형식(설명 없이 아래 5개 구획만, 구획 표시는 그대로):
-===TITLE===
-제목 한 줄
-===KEYWORDS===
-쉼표로 구분
-===TOPIC===
-2~3문장
-===STORY===
-한 단락
-===SCRIPT===
----
-
-**[CUT 01]** (8초)
-**씬:** …
-**액션:** …
-**대사:** 화자 "…"   (또는 **나레이션(V.O.):** "…")
-
----
-(컷마다 반복)
-
-` +
-      `유형: ${type}
-[메모]
-${text}`, 3500)
-    // 대본에 따옴표·줄바꿈이 많아 JSON 은 자주 깨진다(9/28 실측) → 구획 표시로 나눠 읽는다
-    const sec = (k) => ((raw.split(`===${k}===`)[1] || '').split(/\n===[A-Z]+===/)[0] || '').trim()
-    const j = { title: sec('TITLE').split('\n')[0].trim(), keywords: sec('KEYWORDS'), topic: sec('TOPIC'), story: sec('STORY'), script: sec('SCRIPT') }
-    if (!j.title || !/\[CUT/.test(j.script)) throw new Error('정리 결과에 제목/[CUT] 대본이 없습니다')
-    res.json({ ok: true, cand: { title: j.title, type, keywords: j.keywords || '', topic: j.topic || '', story: j.story || '', script: j.script } })
-  } catch (err) { res.status(500).json({ error: err.message }) }
-})
-
 app.post('/api/generate-candidate-flow', async (req, res) => {
   const { type } = req.body || {}
   const typeLabel = CANDIDATE_FLOW_TYPE_LABEL[type]

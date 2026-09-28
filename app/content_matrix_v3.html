@@ -578,7 +578,7 @@
           </div>
 
           <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:8px" onclick="addCandidateCard()">+ 후보 추가</button>
-        <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;background:transparent;border:1px solid var(--accent, #7c6cf0);color:inherit" onclick="openIdeaCandidateModal()">📝 아이디어로 후보 만들기</button>
+        <button class="btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;background:transparent;border:1px solid var(--accent, #7c6cf0);color:inherit" onclick="openIdeaCandidateModal()">📝 기획 붙여넣기로 등록</button>
           <button class="btn-cancel" style="width:100%;justify-content:center;margin-bottom:10px" onclick="openCandidateFlowModal()">🤖 자동 플로우 실행</button>
 
           <div class="candidate-side-title" style="margin-bottom:6px">후보 목록 <span class="candidate-count-badge" id="candidate-list-count">0</span></div>
@@ -4224,33 +4224,66 @@ function deleteCandidate() {
   renderCandidateTab();
 }
 
-// ── 📝 아이디어로 후보 만들기 (2026-09-28 성준님) — 메모·대화 속 기획을 붙여 넣으면 서버가 후보 기획 형식으로 정리 ──
-// 결과는 '승인대기'(approval)로 들어가 바로 G1 투입할 수 있다. 저장·Notion 동기화는 기존 후보와 같은 경로.
+// ── 📝 기획 붙여넣기로 후보 등록 (2026-09-28 성준님) — API 호출 없음 ──
+// 기획은 Claude 대화로 다듬고, 아래 정해진 형식으로 붙여 넣으면 자동 플로우 결과와 똑같은 후보로 등록된다(승인대기 → 바로 G1 투입 가능).
+// 형식: 제목:/유형:/키워드:/주제:/스토리: 한 줄씩(주제·스토리는 여러 줄 가능) + "대본:" 다음 줄부터 [CUT] 대본 전체.
+const IDEA_FORMAT_EXAMPLE = [
+  '제목: 틀려도 괜찮아, 그게 나니까',
+  '유형: SF',
+  '키워드: 나답게, 실수해도 괜찮아, 콜백',
+  '주제: 두세 문장 요약',
+  '스토리: 한 단락 줄거리 ([콜백: …] 있으면 맨 앞에)',
+  '대본:',
+  '---',
+  '',
+  '**[CUT 01]** (8초)',
+  '**씬:** …',
+  '**액션:** …',
+  '**대사:** 여리 "…"   또는   **나레이션(V.O.):** "…"',
+  '',
+  '---',
+].join('\n')
+function parseIdeaFormat(text) {
+  const out = { title: '', type: 'SF', keywords: '', topic: '', story: '', script: '' }
+  const KEY = { '제목': 'title', '유형': 'type', '키워드': 'keywords', '주제': 'topic', '스토리': 'story', '대본': 'script' }
+  let cur = null
+  for (const line of String(text || '').replace(/\r/g, '').split('\n')) {
+    const m = cur !== 'script' && line.match(/^\s*(제목|유형|키워드|주제|스토리|대본)\s*[:：]\s*(.*)$/)
+    if (m) { cur = KEY[m[1]]; out[cur] = m[2]; continue }
+    if (cur) out[cur] += (out[cur] ? '\n' : '') + line
+  }
+  for (const k of Object.keys(out)) out[k] = out[k].trim()
+  out.type = (out.type || 'SF').toUpperCase()
+  return out
+}
 function openIdeaCandidateModal() {
   if (document.getElementById('idea-cand-modal')) return
   const wrap = document.createElement('div'); wrap.id = 'idea-cand-modal'
   wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center'
-  wrap.innerHTML = '<div style="background:var(--bg2,#1b1b22);color:inherit;border:1px solid var(--border,#333);border-radius:12px;padding:18px;width:min(640px,92vw)">' +
-    '<div style="font-weight:700;margin-bottom:6px">📝 아이디어로 후보 만들기</div>' +
-    '<div style="font-size:12px;opacity:.75;margin-bottom:10px">메모·기획을 그대로 붙여 넣으세요. 컷 구성이 있으면 그대로 살리고, 없으면 유형에 맞게 컷을 짜서 [CUT] 대본으로 정리합니다. 결과는 승인대기로 들어갑니다.</div>' +
-    '<textarea id="idea-cand-text" rows="12" style="width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--border,#444);border-radius:8px;padding:10px;font:13px/1.5 inherit" placeholder="예: R06 흑역사 영상이 단톡방 레전드가 된 뒤, 여리가 그 챌린지를 스스로 다시 찍는 콜백 에피소드…"></textarea>' +
-    '<div style="display:flex;gap:8px;align-items:center;margin-top:10px">유형 <select id="idea-cand-type"><option>SF</option><option>IG_R</option><option>IG_P</option><option>LF</option><option>TK</option></select>' +
-    '<span style="flex:1"></span><button class="btn-cancel" id="idea-cand-cancel">취소</button><button class="btn-save" id="idea-cand-go">정리해서 후보로 추가</button></div></div>'
+  wrap.innerHTML = '<div style="background:var(--bg2,#1b1b22);color:inherit;border:1px solid var(--border,#333);border-radius:12px;padding:18px;width:min(680px,92vw)">' +
+    '<div style="font-weight:700;margin-bottom:6px">📝 기획 붙여넣기로 후보 등록</div>' +
+    '<div style="font-size:12px;opacity:.75;margin-bottom:10px">Claude와 대화로 정리한 기획을 아래 형식 그대로 붙여 넣으세요(API 호출 없음 · 비용 0). 등록되면 승인대기 상태라 바로 G1 투입할 수 있어요.</div>' +
+    '<textarea id="idea-cand-text" rows="14" style="width:100%;box-sizing:border-box;background:transparent;color:inherit;border:1px solid var(--border,#444);border-radius:8px;padding:10px;font:12px/1.5 monospace"></textarea>' +
+    '<div id="idea-cand-check" style="font-size:12px;margin-top:6px;opacity:.85"></div>' +
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:10px"><button class="btn-cancel" id="idea-cand-sample">형식 예시 넣기</button>' +
+    '<span style="flex:1"></span><button class="btn-cancel" id="idea-cand-cancel">취소</button><button class="btn-save" id="idea-cand-go">후보로 등록</button></div></div>'
   document.body.appendChild(wrap)
-  const close = () => wrap.remove()
-  document.getElementById('idea-cand-cancel').onclick = close
-  document.getElementById('idea-cand-go').onclick = async (e) => {
-    const text = document.getElementById('idea-cand-text').value.trim(); const type = document.getElementById('idea-cand-type').value
-    if (text.length < 10) { showToast('⚠️ 아이디어를 조금 더 적어 주세요'); return }
-    e.target.disabled = true; e.target.textContent = '정리 중… (30초 안팎)'
-    try {
-      const r = await fetch(`${YEORI_SERVER}/api/candidates/from-idea`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text, type }) })
-      const j = await r.json(); if (!r.ok || !j.ok) throw new Error(j.error || `서버 오류 ${r.status}`)
-      const cand = { id: 'cand_' + uid(), notionPageId: null, stage: 'approval', source: '아이디어', memo: '아이디어로 생성 ' + new Date().toLocaleDateString('ko-KR'), checklist: {}, ...j.cand }
-      candidatePool.unshift(cand); candidateFilterType = 'all'; candidateFilterStage = 'all'; currentCandidateId = cand.id
-      saveCandidatesLocal(); syncCandidateToNotion(cand); renderCandidateTab(); close()
-      showToast('✅ 후보 추가: ' + cand.title)
-    } catch (err) { showToast('⚠️ 정리 실패: ' + err.message); e.target.disabled = false; e.target.textContent = '정리해서 후보로 추가' }
+  const ta = document.getElementById('idea-cand-text'), chk = document.getElementById('idea-cand-check')
+  const check = () => {
+    const c = parseIdeaFormat(ta.value); const cuts = (c.script.match(/\[CUT\s*\d+\]/g) || []).length
+    chk.textContent = ta.value.trim() ? `제목 ${c.title ? '✓' : '✗ 없음'} · 유형 ${c.type} · 키워드 ${c.keywords ? '✓' : '–'} · 주제 ${c.topic ? '✓' : '–'} · 스토리 ${c.story ? '✓' : '–'} · 대본 ${cuts ? cuts + '컷 ✓' : '✗ [CUT] 없음'}` : ''
+    return { c, ok: !!c.title && cuts > 0 }
+  }
+  ta.oninput = check
+  document.getElementById('idea-cand-sample').onclick = () => { ta.value = IDEA_FORMAT_EXAMPLE; check() }
+  document.getElementById('idea-cand-cancel').onclick = () => wrap.remove()
+  document.getElementById('idea-cand-go').onclick = () => {
+    const { c, ok } = check()
+    if (!ok) { showToast('⚠️ 제목과 [CUT] 대본은 꼭 있어야 해요 — 형식 예시를 참고해 주세요'); return }
+    const cand = { id: 'cand_' + uid(), notionPageId: null, stage: 'approval', source: '기획 붙여넣기', memo: '기획 붙여넣기로 등록 ' + new Date().toLocaleDateString('ko-KR'), checklist: {}, ...c }
+    candidatePool.unshift(cand); candidateFilterType = 'all'; candidateFilterStage = 'all'; currentCandidateId = cand.id
+    saveCandidatesLocal(); syncCandidateToNotion(cand); renderCandidateTab(); wrap.remove()
+    showToast('✅ 후보 등록: ' + cand.title)
   }
 }
 
