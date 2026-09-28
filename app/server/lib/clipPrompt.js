@@ -36,6 +36,120 @@ function voiceAnchors(cut, speakers) {
 const CHAR_EN = { 서여리: 'Seo Yeori', 여리: 'Seo Yeori', 한지아: 'Han Jia', 지아: 'Han Jia', 지유: 'Jiyu' }
 const norm = (t) => String(t || '').replace(/[^가-힣a-zA-Z0-9]/g, '')
 
+// ── 두 사람 프레임 — 좌/우 위치·외형 태그 (2026-09-28, IG_R06 컷3 실측) ────────────
+// Veo가 여러 시도에서 누구 대사인지 헷갈려했는데, 성준님이 캐릭터 이름 옆에 좌/우를 직접
+// 적어주자 해결됨. 대본에 이미 좌/우 힌트가 있으면 그대로 쓰고, 없으면 CH: 필드에 적힌
+// 이름 순서(먼저 나온 사람 = LEFT)로 결정적으로 정한다 — 추측(LLM) 없음.
+const EN_TO_CHAR_ID = { 'Seo Yeori': 'yeori', 'Han Jia': 'jia', Jiyu: 'jiyu' }
+// characters.json에 lookTag가 있으면 그걸 우선 쓴다(선택 필드) — 없으면 이 기본값.
+const DEFAULT_LOOK_TAGS = {
+  yeori: 'long wavy dark brown hair, warm smile',
+  yeori_nt: 'dark brown hair tied back, warm smile',
+  jia: 'short wavy black bob with curtain bangs',
+  jiyu: 'very long straight black hair with full bangs',
+}
+function lookTagFor(charId) {
+  if (!charId) return ''
+  let chars = {}
+  try { chars = JSON.parse(fs.readFileSync(mp.charactersJsonPath(), 'utf-8')) } catch { return DEFAULT_LOOK_TAGS[charId] || '' }
+  return (chars[charId] && chars[charId].lookTag) || DEFAULT_LOOK_TAGS[charId] || ''
+}
+const LEFT_HINT_RE = /(왼쪽|좌측|\bLEFT\b)/i
+const RIGHT_HINT_RE = /(오른쪽|우측|\bRIGHT\b)/i
+const NAME_VARIANTS_FOR_POS = {
+  'Seo Yeori': ['서여리', '여리', 'Seo Yeori', 'Yeori'],
+  'Han Jia': ['한지아', '지아', 'Han Jia', 'Jia'],
+  Jiyu: ['지유', 'Jiyu'],
+}
+const escapeRe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+// 이름 바로 뒤(괄호 포함, 최대 14자)에서 좌/우 힌트를 찾는다 — "Seo Yeori(right)", "지유(왼쪽)" 둘 다 인식.
+function detectPositionHint(haystack, en) {
+  if (!haystack) return null
+  for (const nm of (NAME_VARIANTS_FOR_POS[en] || [en])) {
+    const re = new RegExp(`${escapeRe(nm)}\\s*[(（]?\\s*([^)\\n,.;]{0,14})`, 'i')
+    const m = haystack.match(re)
+    if (!m) continue
+    if (LEFT_HINT_RE.test(m[1])) return 'LEFT'
+    if (RIGHT_HINT_RE.test(m[1])) return 'RIGHT'
+  }
+  return null
+}
+// speakerNamesKo(대본 화자 표기, 예 ['여리','지유']) → { 'Seo Yeori': 'LEFT', Jiyu: 'RIGHT' } 같은 위치 맵.
+export function resolvePositions(cut, speakerNamesKo) {
+  const ens = [...new Set((speakerNamesKo || []).map(nm => CHAR_EN[nm] || nm))]
+  const haystack = [cut.masterCode?.ch, cut.masterCode?.ac, cut.masterCode?.kr?.ac, cut.videoPrompt].filter(Boolean).join('\n')
+  const positions = {}
+  for (const en of ens) {
+    const hint = detectPositionHint(haystack, en)
+    if (hint) positions[en] = hint
+  }
+  const missing = ens.filter(en => !positions[en])
+  if (missing.length) {
+    const chTokens = String(cut.masterCode?.ch || '').split(/[+,/·]|\s{2,}/).map(t => t.trim()).filter(Boolean)
+    const chOrderEn = chTokens.map(t => CHAR_EN[t] || t)
+    const takenSides = new Set(Object.values(positions))
+    const sides = ['LEFT', 'RIGHT'].filter(sd => !takenSides.has(sd))
+    let i = 0
+    for (const en of chOrderEn) {
+      if (!missing.includes(en) || positions[en]) continue
+      if (i < sides.length) { positions[en] = sides[i]; i++ }
+    }
+  }
+  return positions
+}
+function speakerLabel(en, side) {
+  const look = lookTagFor(EN_TO_CHAR_ID[en])
+  const tag = [side ? `on the ${side}` : '', look].filter(Boolean).join(', ')
+  return tag ? `${en} (${tag})` : en
+}
+
+// ── 오디오 문단 — Veo에 "이 장면 안에서 나는 소리"를 명시한다(2026-09-28, IG_R06 컷2 실측:
+// 대사도 나레이션도 없는 컷은 오디오 지시가 아예 안 들어가 비트 없는 클립이 나왔음).
+// 후반 합성 BGM(bgmSelect.js)은 여기 넣지 않는다 — Veo가 장면 안 소리처럼 임의로 음악을 깔면
+// 후반 BGM과 겹친다. "영상 속"/"현장"/"폰 스피커"/"틀어놓은"/"라디오" 같은 문구로 대본에서
+// 명시적으로 "장면 안 소리"라고 한 BGM만 예외로 포함한다.
+const IN_SCENE_BGM_RE = /(영상\s*속|현장|폰\s*스피커|스피커\s*질감|틀어\s*놓|라디오)/
+const NONE_RE = /^(없음|무|no|none)$/i
+
+// voice 필드는 대사 있는 컷에선 "말투/톤" 지시(anchors가 이미 처리)라 오디오 문단엔 안 쓴다.
+// 대사가 없는 컷(예: 웃음소리만)에서만 괄호 안 부가음을 뽑아 쓴다.
+function nonDialogueVoiceText(cut, voiceText) {
+  if (!voiceText || NONE_RE.test(voiceText.trim())) return ''
+  if (String(cut.dialogue || '').trim()) return ''
+  const paren = voiceText.match(/\(([^)]+)\)/)
+  const extracted = (paren ? paren[1] : voiceText).trim()
+  return NONE_RE.test(extracted) ? '' : extracted
+}
+
+// AU: 필드(명시 오디오 지시)가 없을 때 masterCode.audio(대본 "오디오:" 블록)에서 결정적으로
+// 유도한다 — LLM 호출 없음(토큰 0 원칙). 한국어 원문 문구는 그대로 유지하고 영문 틀로 감싼다.
+export function deriveAudioParagraph(cut) {
+  const audio = cut.masterCode?.audio || {}
+  const bgmText = String(audio.bgm || '').trim()
+  const inSceneBgm = bgmText && !NONE_RE.test(bgmText) && IN_SCENE_BGM_RE.test(bgmText)
+  const parts = []
+  if (inSceneBgm) parts.push(`in-scene music/beat (diegetic, as if playing from a source inside the scene, not a mixed score) — ${bgmText}`)
+  const sfxText = String(audio.sfx || '').trim()
+  if (sfxText && !NONE_RE.test(sfxText)) parts.push(`sound effect — ${sfxText}`)
+  const ambText = String(audio.ambience || '').trim()
+  if (ambText && !NONE_RE.test(ambText)) parts.push(`ambience — ${ambText}`)
+  const voiceExtra = nonDialogueVoiceText(cut, String(audio.voice || '').trim())
+  if (voiceExtra) parts.push(`non-dialogue voice/reaction sound — ${voiceExtra}`)
+  let out = parts.length ? `Audio (in-scene, not background score): ${parts.join('; ')}.` : ''
+  if (bgmText && !inSceneBgm) out += `${out ? ' ' : ''}No background music score unless stated as in-scene.`
+  return out
+}
+
+// AU: 필드(대본에 영문으로 직접 적은 오디오 지시)가 있으면 그대로(verbatim) 쓴다 — 컷 전체 1개
+// 문자열(audioNote) 또는 클립별 "|||" 분할(audioPrompts, SEGP/CPP와 같은 관례) 지원.
+export function buildAudioParagraph(cut, k) {
+  if (Array.isArray(cut.audioPrompts) && cut.audioPrompts[k - 1] && cut.audioPrompts[k - 1].trim()) {
+    return cut.audioPrompts[k - 1].trim()
+  }
+  if (cut.audioNote && String(cut.audioNote).trim()) return String(cut.audioNote).trim()
+  return deriveAudioParagraph(cut)
+}
+
 // VP 에서 클립 k 의 화면 서술을 찾는다. 반환 { text, source } | null
 // 생성 도구에 들어가면 안 되는 한국어 제작 메모 제거(명세 §2-3 발화 블록의 생성:/후처리: 안내, 헤더 줄, 대사 원문 줄 — 대사는 따로 넣는다)
 export function stripProductionNotes(vp) {
@@ -137,6 +251,20 @@ export function buildClipPrompt(cut, k, n) {
     if (anchors.length) prompt += `\n\n${anchors.map(a => a.replace(/\.?$/, '.')).join(' ')} Keep exactly this voice.`
     if (!segs.length) {
       prompt += `\n\nNo one speaks in this clip — mouths stay closed or show only natural silent reactions. No on-screen subtitle text or captions.`
+    } else if (multi) {
+      // 두 사람 이상 프레임 — 대본에 대사 인용이 이미 있어도(alreadyIn) 화자 혼동을 막기 위해
+      // 위치(좌/우)+외형 태그를 붙인 문장을 항상 명시한다(2026-09-28, IG_R06 컷3 실측:
+      // Veo가 몇 번 시도에서 누구 대사인지 헷갈려했고, 좌/우를 직접 적어주자 해결됨).
+      const positions = resolvePositions(cut, segs.map(x => x.speaker).filter(Boolean))
+      const said = segs.map(sgm => {
+        const en = sgm.speaker ? (CHAR_EN[sgm.speaker] || sgm.speaker) : 'She'
+        const label = sgm.speaker ? speakerLabel(en, positions[en]) : en
+        return `${label} says in Korean, lips synced: "${sgm.text}"`
+      }).join(' Then ')
+      const tail = segs.length > 1
+        ? 'Only these lines are spoken in this clip, each by the character named.'
+        : 'Only this line is spoken in this clip, by the character named.'
+      prompt += `\n\n${said}. ${tail} No on-screen subtitle text or captions — dialogue is spoken audio only.`
     } else if (!alreadyIn) {
       const said = segs.map(s => `${s.speaker ? (CHAR_EN[s.speaker] || s.speaker) : 'She'} says in Korean, lips synced: "${s.text}"`).join(' Then ')
       prompt += `\n\n${said}. Only this line is spoken in this clip. No on-screen subtitle text or captions — dialogue is spoken audio only.`
@@ -145,7 +273,14 @@ export function buildClipPrompt(cut, k, n) {
     }
   } else if (isNarration) {
     prompt += `\n\nNO dialogue — narration is added in post; she does not move her lips to speak. No on-screen subtitle text or captions.`
+  } else {
+    // 대사도 나레이션도 없는 무성 컷(예: IG_R06 컷2 춤 챌린지) — 예전엔 여기 아무 지시도 안 붙어서
+    // Veo가 임의로 화면에 자막을 태우는 사고가 났다(2026-09-28 실측, 성준님 지적).
+    prompt += `\n\nNo one speaks and there is no narration in this clip — mouths stay closed or show only natural silent reactions like laughing. No on-screen subtitle text or captions.`
   }
+  // 오디오 문단 — 대사 유무와 무관하게 모든 클립에 공통으로 추가(2026-09-28).
+  const audioParagraph = buildAudioParagraph(cut, k)
+  if (audioParagraph) prompt += `\n\n${audioParagraph}`
   const speakerIds = line ? speakerIdsFor(cut, speakers.length ? speakers : splitSpeakerSegments(line).map(x => x.speaker).filter(Boolean)) : []
   return { prompt: prompt.trim(), visualSource: vis.source, line, speakers, speakerIds }
 }

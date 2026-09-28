@@ -93,6 +93,48 @@ await check('P2', '롱폼 클립별 프롬프트 분리(LF_T01)', async () => {
   return { ok: !problems.length, evidence: `클립 ${clips}개 점검${problems.length ? ' · ' + problems.slice(0, 4).join(' / ') : ' · 자기 대사만·남의 대사 없음·제작 메모 없음'}${scriptTodo.length ? ` · ⚠ 대본 화자 표기 필요(멈춤 정상): ${scriptTodo.join(', ')}` : ''}` }
 })
 
+// ── 1b2. Veo 클립 프롬프트 오디오 문단 + 좌우 위치 태그(2026-09-28, IG_R06 현장 실측 2건) ──
+// 컷2: 대사 없는 컷의 대본 오디오 지시(BGM/웃음소리)가 Veo에 전혀 안 전달돼 비트 없는 클립이 나왔음.
+// 컷3: 두 사람이 나오는데 Veo가 여러 시도에서 누구 대사인지 헷갈려함 — 이름 옆 좌/우 표기로 해결.
+const r06Dir = (() => { try { return mp.scriptDir('IG_R06') } catch { return null } })()
+const r06ScriptFile = r06Dir && fs.existsSync(r06Dir)
+  ? fs.readdirSync(r06Dir).filter(f => /_script\.txt$|^script_v3\.txt$/.test(f)).sort((a, b) => (a === 'script_v3.txt') - (b === 'script_v3.txt'))[0]
+  : null
+const r06Cuts = r06ScriptFile ? parseCutsV3(fs.readFileSync(path.join(r06Dir, r06ScriptFile), 'utf-8')) : null
+
+await check('P4', 'Veo 클립 프롬프트 — 오디오 문단(대사 없는 컷도 현장음 전달, IG_R06 컷2)', async () => {
+  if (!r06Cuts) return { skip: true, evidence: 'IG_R06 대본 없음' }
+  const cut2 = r06Cuts.find(c => c.no === 2)
+  if (!cut2) return { skip: true, evidence: 'IG_R06 컷2 없음' }
+  const { buildClipPrompt } = await import('../server/lib/clipPrompt.js')
+  const r = buildClipPrompt({ ...cut2 }, 1, 1)
+  const hasBeat = /폰\s*스피커|phone speaker/i.test(r.prompt)
+  const hasLaughter = /웃음소리|laugh/i.test(r.prompt)
+  const noSubtitleGuard = /No on-screen subtitle text or captions/.test(r.prompt)
+  // 현장 BGM(폰 스피커 비트)이라 "후반 BGM 없음" 가드 문구는 안 붙어야 함(장면 안 소리는 살려야 하므로).
+  const noGenericGuard = !/No background music score unless stated as in-scene\./.test(r.prompt)
+  return {
+    ok: hasBeat && hasLaughter && noSubtitleGuard && noGenericGuard,
+    evidence: `현장 비트 언급 ${hasBeat} · 웃음소리 언급 ${hasLaughter} · 자막 금지 문구 ${noSubtitleGuard} · 일반 BGM 가드 불필요(현장음이라) ${noGenericGuard}`,
+  }
+})
+
+await check('P5', 'Veo 클립 프롬프트 — 두 사람 프레임 좌/우 위치 태그(IG_R06 컷3)', async () => {
+  if (!r06Cuts) return { skip: true, evidence: 'IG_R06 대본 없음' }
+  const cut3 = r06Cuts.find(c => c.no === 3)
+  if (!cut3) return { skip: true, evidence: 'IG_R06 컷3 없음' }
+  const { buildClipPrompt } = await import('../server/lib/clipPrompt.js')
+  const r = buildClipPrompt({ ...cut3 }, 1, 1)
+  const yeoriRight = /Seo Yeori \(on the RIGHT/.test(r.prompt)
+  const jiyuLeft = /Jiyu \(on the LEFT/.test(r.prompt)
+  // 컷3 BGM("경쾌한 로파이 다시")은 현장 소리 문구가 없는 후반 작업 곡 — 가드 문구가 붙어야 함.
+  const bgmGuard = /No background music score unless stated as in-scene\./.test(r.prompt)
+  return {
+    ok: yeoriRight && jiyuLeft && bgmGuard,
+    evidence: `서여리 RIGHT 태그 ${yeoriRight} · 지유 LEFT 태그 ${jiyuLeft} · 후반 BGM 가드(현장음 아님) ${bgmGuard}`,
+  }
+})
+
 // ── 1c. 목소리 이탈 감지 — 실측 기준 클립: LF_T01 컷13-2(다른 목소리 0.48)는 잡고, 컷19-1(0.74)은 통과시켜야 ──
 await check('A1', '목소리 이탈 감지(화자 임베딩)', async () => {
   const { speakerSimilarity, VOICE_SIM_MIN } = await import('../server/lib/voiceSim.js')

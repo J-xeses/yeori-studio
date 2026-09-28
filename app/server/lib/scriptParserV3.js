@@ -13,7 +13,11 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // SEGP: 세그별 영문 비주얼 프롬프트("p1 ||| p2", 줄바꿈은 ⏎) — 2026-09-12 추가, src/tabs/ScriptGenTab.jsx 와 함께 유지
 // CPP: 세그별 화면 자막("자막1 ||| 자막2", 줄바꿈은 ⏎) — 2026-09-15 추가, 필드게이트 세그 분할 탭에서
 // 세그(=클립) 슬롯마다 다른 자막을 지정할 때 씀. src/tabs/ScriptGenTab.jsx 와 함께 유지.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// AU: Veo 클립 프롬프트에 그대로(verbatim) 들어갈 영문 오디오 지시 — 2026-09-28 추가(IG_R06 컷2
+// 실측: 대사 없는 컷은 오디오 지시가 Veo에 전혀 안 전달됨). 없으면 clipPrompt.js가 masterCode.audio
+// (오디오: 블록)에서 결정적으로 유도한다. 컷 전체 1개 문자열, 또는 SEGP처럼 "|||"로 클립별 분할
+// 가능. src/tabs/ScriptGenTab.jsx 와 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // src/tabs/ScriptGenTab.jsx 의 동일 함수와 반드시 함께 유지.
@@ -342,6 +346,10 @@ export function parseCutsV3(raw) {
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.CPP && parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) ? { subtitleSegments: parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      // AU: clipPrompt.js buildAudioParagraph()가 verbatim으로 쓴다. audioPrompts는 "|||" 클립별
+      // 분할이 세그 개수와 맞을 때만, audioNote는 원문 그대로(컷 전체 공통 폴백).
+      ...(fields.AU && parseSegPrompts(fields.AU, (parseSegCombo(fields.SEG) || []).length) ? { audioPrompts: parseSegPrompts(fields.AU, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      ...(fields.AU ? { audioNote: fields.AU } : {}),
       // PIP_VD(codebook PL) 컷 전용 필드 — YEORI 컷 위에 합성할 BROLL 컷 번호/레이아웃/크기.
       // pipTarget은 ScriptGenTab.jsx의 기존 PIP 메커니즘(수동 입력 필드, proxy.js가 이미
       // c.pipTarget을 읽어 pip_target으로 씀)과 이름을 맞춘 것 — 대본 텍스트만으로는 알 수

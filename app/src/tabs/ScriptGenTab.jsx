@@ -210,7 +210,10 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // 2026-09-12 추가. 있으면 ensureDialogueInVP이 세그별로 비주얼+발화를 인터리브해서 재구성.
 // CPP: 세그별 화면 자막("자막1 ||| 자막2", 줄바꿈은 ⏎) — 2026-09-15 추가, 필드게이트 세그 분할
 // 탭에서 세그(=클립) 슬롯마다 다른 자막을 지정. server/lib/scriptParserV3.js 와 반드시 함께 유지.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// AU: Veo 클립 프롬프트에 그대로(verbatim) 들어갈 영문 오디오 지시 — 2026-09-28 추가. 없으면
+// server/lib/clipPrompt.js가 masterCode.audio(오디오: 블록)에서 결정적으로 유도한다.
+// server/lib/scriptParserV3.js 와 반드시 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
@@ -528,6 +531,9 @@ function parseCutsV3(raw) {
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.CPP && parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) ? { subtitleSegments: parseSegPrompts(fields.CPP, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      // AU: server/lib/clipPrompt.js buildAudioParagraph()가 verbatim으로 쓴다 — 위와 동일 규칙.
+      ...(fields.AU && parseSegPrompts(fields.AU, (parseSegCombo(fields.SEG) || []).length) ? { audioPrompts: parseSegPrompts(fields.AU, (parseSegCombo(fields.SEG) || []).length) } : {}),
+      ...(fields.AU ? { audioNote: fields.AU } : {}),
       // server/lib/scriptParserV3.js와 반드시 동일하게 유지 — PIP_VD 컷 전용 필드.
       // pipTarget은 이 파일의 기존 PIP 메커니즘(수동 입력 필드, cutType === 'PIP' 케이스)과
       // 같은 필드명 — 별개로 두지 않고 그대로 재사용.
@@ -582,6 +588,7 @@ function serializeCutForRevision(c) {
   L.push(`MD: ${m.md || ''}`)
   L.push(`AC: ${m.ac || ''}`)
   L.push(`DU: ${c.duration || 8}`)
+  if (c.audioNote) L.push(`AU: ${c.audioNote}`)
   if (Array.isArray(c.segments) && c.segments.length > 1) {
     L.push(`SEG: ${c.segments.join('+')}`)
     if (Array.isArray(c.segTiming) && c.segTiming.length === c.segments.length) {
@@ -619,6 +626,7 @@ function v3RevisionPatch(fields, original) {
   if (fields.NR != null) p.narration = clr(fields.NR) ? '' : fields.NR
   if (fields.CP != null) p.subtitle = clr(fields.CP) ? '' : fields.CP
   if (fields.DU != null) { const d = parseInt(fields.DU, 10); if (d) p.duration = d }
+  if (fields.AU != null) p.audioNote = clr(fields.AU) || isBlank(fields.AU) ? '' : fields.AU.trim()
   // SEG: "8+8+10" → segments 배열. 없거나 "auto"/형식불량이면 그동안 있던 세그 지정을 지운다
   // (필드가 아예 없던 컷이면 fields.SEG 도 undefined 라 이 분기 자체를 안 탐 — 기존 값 유지).
   if (fields.SEG != null) p.segments = parseSegCombo(fields.SEG) || undefined
@@ -688,6 +696,10 @@ function buildV3ScriptText(cuts, episode) {
       `AC: ${mc.ac || ''}`,
       `LOOK_ID: ${mc.lookId || ''}`,
       `DU: ${c.duration || 8}`,
+      // AU: audioPrompts(클립별 "|||" 분할)가 세그 수와 맞으면 그걸, 아니면 audioNote(컷 전체
+      // 공통 한 줄) — 겹치면 파싱 시 나중 줄이 이기므로 한 줄만 쓴다.
+      ...(Array.isArray(c.segments) && c.segments.length > 1 && Array.isArray(c.audioPrompts) && c.audioPrompts.length === c.segments.length
+        ? [`AU: ${formatSegPrompts(c.audioPrompts)}`] : c.audioNote ? [`AU: ${c.audioNote}`] : []),
       ...(Array.isArray(c.segments) && c.segments.length > 1 ? [`SEG: ${c.segments.join('+')}`] : []),
       ...(Array.isArray(c.segments) && c.segments.length > 1 && Array.isArray(c.segTiming) && c.segTiming.length === c.segments.length
         ? [`SEGT: ${c.segTiming.map(t => Array.isArray(t) ? `${t[0]}-${t[1]}` : '').join(',')}`] : []),
