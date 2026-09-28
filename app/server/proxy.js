@@ -3607,6 +3607,21 @@ app.post('/api/ig-sync', async (_req, res) => {
   const runIg = async () => { try { const { syncInsights, igConfigured } = await import('./lib/igInsights.js'); if (igConfigured()) await syncInsights({ log: (l) => console.log('[ig-sync]', l) }) } catch (e) { console.warn('[ig-sync] 실패:', e.message) } }
   setTimeout(runIg, 60 * 1000); setInterval(runIg, 6 * 3600 * 1000)
 }
+// 관심사 설계 탭 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기, 2026-09-28) — seedDiscovery.js
+app.get('/api/seed-discovery', async (_req, res) => {
+  try { const { discoveryStatus } = await import('./lib/seedDiscovery.js'); res.json(discoveryStatus()) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/seed-discovery/run', async (req, res) => {
+  try { const { runDiscovery } = await import('./lib/seedDiscovery.js'); res.json(await runDiscovery({ groups: req.body?.groups, log: console.log })) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/seed-discovery/link', async (req, res) => {
+  try { const { addFromLink } = await import('./lib/seedDiscovery.js'); const row = await addFromLink(req.body?.url); res.json({ ok: true, row }) } catch (err) { res.status(400).json({ error: err.message }) }
+})
+{
+  const runSeed = async () => { try { const { maybeWeeklyDiscovery } = await import('./lib/seedDiscovery.js'); const r = await maybeWeeklyDiscovery(console.log); if (r) console.log('[seed-discovery] 주간 발굴:', JSON.stringify(r)) } catch (e) { console.warn('[seed-discovery] 실패:', e.message) } }
+  setTimeout(runSeed, 5 * 60 * 1000); setInterval(runSeed, 6 * 3600 * 1000)
+}
+
 // 서여리 능동 대응 큐(감정이입 P3 캡션·스토리 / P4 댓글 답장 / P5 콜백) — ig-sync 직후 6시간마다 + 수동 POST /api/yeori-queue/run (2026-09-27)
 // 게시·답장은 항상 사람 승인: approve 시 reply 만 실제 게시(POST /{comment-id}/replies), caption·story 는 '승인(직접 게시)' 표시만
 app.get('/api/yeori-queue', async (_req, res) => {

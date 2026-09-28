@@ -203,6 +203,7 @@
     </ul></div></div>
   </div>
   <h2>후보 <span class="muted">— 팔로우 직후 인스타가 보여주는 "비슷한 계정" 추천에서 발견한 곳을 담아 두고, 며칠 보고 승격/제외</span></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="sdisc">🔎 지금 발굴</button><input type="text" id="slink" placeholder="인스타 계정 링크 또는 @아이디 붙여넣기" style="flex:1;min-width:220px"><button class="btn" id="slinkadd">+ 링크로 추가</button><span class="muted" id="sdiscst" style="width:100%;font-size:12px"></span></div>
   <div class="card scroll"><table id="ctable"></table></div>
   <h2>계정 목록 <span class="muted">개설일 <input type="date" id="acctDate" style="margin-left:4px"></span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
   <div class="card scroll"><table id="stable"></table></div>
@@ -488,14 +489,14 @@ function renderSeeds() {
   $('ctable').innerHTML = cands.length ? '<tr><th>계정</th><th>분류</th><th>핵심 요약</th><th>출처</th><th>담은 날</th><th></th></tr>' +
     all.map((x, i) => [x, i]).filter(([x]) => x.status === 'candidate').map(([x, i]) =>
       '<tr data-c="' + i + '"><td style="white-space:nowrap"><button class="btn" data-go="1">↗</button> ' + PF[pfOf(x)].icon + ' @' + esc(x.handle) + '</td><td>' + esc(x.group) + '</td><td style="font-size:12px">' + esc(x.why) + '</td>' +
-      '<td class="muted">' + esc(x.source || '') + '</td><td class="muted">' + (x.addedAt ? md(x.addedAt) : '') + '</td>' +
+      '<td class="muted">' + esc(x.source || '') + (x.evidence ? ' <a href="' + esc(x.evidence) + '" target="_blank" style="color:var(--link)">근거</a>' : '') + '</td><td class="muted">' + (x.addedAt ? md(x.addedAt) : '') + '</td>' +
       '<td style="white-space:nowrap"><button class="btn" data-up="1">승격</button> <button class="x" data-no="1" title="제외">✕</button></td></tr>').join('')
     : '<tr><td class="muted">후보가 없습니다. 팔로우 후 뜨는 "비슷한 계정"이나 탐색 탭에서 눈에 띈 곳을 "+ 후보 추가"로 담아 주세요.</td></tr>'
   document.querySelectorAll('#ctable tr[data-c]').forEach(tr => {
     const x = all[+tr.dataset.c]
     tr.querySelector('[data-go]').onclick = () => openSeed(x)
     tr.querySelector('[data-up]').onclick = () => { x.status = 'active'; x.day = Math.max(0, dayN); touch(); renderSeeds() }
-    tr.querySelector('[data-no]').onclick = () => { if (confirm('@' + x.handle + ' 후보를 제외할까요?')) { all.splice(+tr.dataset.c, 1); touch(); renderSeeds() } }
+    tr.querySelector('[data-no]').onclick = () => { if (confirm('@' + x.handle + ' 후보를 제외할까요?')) { (S.seedRejected = S.seedRejected || []).push(x.handle); all.splice(+tr.dataset.c, 1); touch(); renderSeeds() } }
   })
   document.querySelectorAll('#stable tr[data-i]').forEach(tr => {
     const x = all[+tr.dataset.i]
@@ -506,6 +507,11 @@ function renderSeeds() {
     tr.querySelector('[data-del]').onclick = () => { if (confirm('@' + x.handle + ' 을(를) 목록에서 뺄까요?')) { S.seeds.splice(+tr.dataset.i, 1); touch(); renderSeeds() } }
   })
 }
+// 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기) — 서버가 ops.json 에 후보를 쓰므로 끝나면 다시 불러온다
+async function seedDiscStatus() { try { const st = await (await fetch('/api/seed-discovery')).json(); const r = st.lastRunResult; $('sdiscst').textContent = '주 1회 자동 발굴(분야 3개씩 순환: ' + st.groups.join(' · ') + ') · 다음 차례: ' + st.nextGroups.join(', ') + (st.lastRun ? ' · 마지막 ' + new Date(st.lastRun).toLocaleString('ko-KR') + (r ? ' → 새 후보 ' + r.added + '개' : '') : ' · 아직 실행 전') } catch { } }
+$('sdisc').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '발굴 중… (1분 안팎)'; try { const r = await (await fetch('/api/seed-discovery/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 후보 ' + r.added.length + '개' + (r.added.length ? ' — ' + r.added.join(', ') : '') + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('발굴 실패: ' + err.message) } b.disabled = false; b.textContent = '🔎 지금 발굴'; seedDiscStatus() }
+$('slinkadd').onclick = async (e) => { const v = $('slink').value.trim(); if (!v) return; const b = e.target; b.disabled = true; b.textContent = '확인 중…'; try { const r = await (await fetch('/api/seed-discovery/link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: v }) })).json(); if (r.error) throw new Error(r.error); $('slink').value = ''; await load() } catch (err) { alert(err.message) } b.disabled = false; b.textContent = '+ 링크로 추가' }
+seedDiscStatus()
 $('sadd').onclick = () => {
   const pf = (prompt('플랫폼: instagram / youtube / tiktok', 'instagram') || '').trim().toLowerCase()
   if (!PF[pf]) return alert('instagram, youtube, tiktok 중 하나로 입력해 주세요.')
