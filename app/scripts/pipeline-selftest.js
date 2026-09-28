@@ -262,12 +262,13 @@ await check('C3', '자막 수동 줄바꿈 보존 + 수동 타이밍이 자동 �
 })
 
 // ── 1m. 관심사 설계 후보 발굴(9/28 A+C) — API 비용 없이 구조만 확인 ──
-await check('E6', '관심사 후보 발굴 — 분야 10개·주간 상태·게시물 링크 거절', async () => {
+await check('E6', '관심사 후보 발굴 — 분야 10개·버튼 실행·월 사용량·게시물 링크 거절', async () => {
   const st = await get('/api/seed-discovery'); if (!st.ok) return { ok: false, evidence: '/api/seed-discovery 응답 없음(서버 재시작 필요?)' }
   const { addFromLink } = await import('../server/lib/seedDiscovery.js')
   let rejected = 0; for (const u of ['https://www.instagram.com/p/Dd04SFFhHjA/', 'https://www.instagram.com/reel/abc123/']) { try { await addFromLink(u) } catch { rejected++ } }
   const g = st.data.groups || []
-  return { ok: g.length === 10 && rejected === 2, evidence: `분야 ${g.length}개 · 다음 차례 ${(st.data.nextGroups || []).join(',')} · 마지막 실행 ${st.data.lastRun ? new Date(st.data.lastRun).toLocaleString('ko-KR') : '없음'} · 게시물 링크 거절 ${rejected}/2` }
+  const auto = /runSeed|maybeWeeklyDiscovery\(/.test(fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8'))
+  return { ok: g.length === 10 && rejected === 2 && !auto && !!st.data.month, evidence: `분야 ${g.length}개 · 다음 차례 ${(st.data.nextGroups || []).join(',')} · 마지막 실행 ${st.data.lastRun ? new Date(st.data.lastRun).toLocaleString('ko-KR') : '없음'} · 게시물 링크 거절 ${rejected}/2 · 자동 실행 ${auto ? '켜짐(X)' : '없음'} · 이번 달 검색 ${st.data.month?.searches ?? '?'}회` }
 })
 
 // ── 2. 서버·상태 API ──

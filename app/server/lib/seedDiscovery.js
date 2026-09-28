@@ -1,5 +1,5 @@
 // ── 관심사 설계 탭 — 후보 계정 발굴 (2026-09-28, 성준님 A+C) ─────────────────────────────
-// A. 주 1회 자동 발굴: 분야 3개씩 돌아가며 Haiku + 웹 검색으로 인스타 계정 후보를 찾아 "후보"로 올린다.
+// A. 버튼 발굴(9/28 자동 주간 실행 제거 — 성준님이 직접 찾는 시간을 들이도록): 분야 3개씩 돌아가며 Haiku + 웹 검색으로 인스타 계정 후보를 찾아 "후보"로 올린다.
 //    팔로우·승격은 항상 성준님(운영실 후보 표의 승격/✕). 인스타 화면 긁기는 약관 위반이라 쓰지 않는다.
 // C. 링크 붙여넣기: instagram.com/{handle} 링크 → 분야·요약·적용점을 자동으로 채워 후보로 추가.
 // 비용: 웹 검색 분야당 최대 2회 + 짧은 답 — 1회 실행(3분야) 약 150~200원. 주 1회.
@@ -125,6 +125,11 @@ export async function addFromLink(input) {
 
 export function discoveryStatus() {
   const st = readJson(STATE(), { nextIdx: 0, runs: [] })
+  const month = new Date().toISOString().slice(0, 7)
+  const mRuns = (st.runs || []).filter((r) => String(r.at).startsWith(month))
+  const searches = mRuns.reduce((a, r) => a + (r.searches || 0), 0)
   const next = Array.from({ length: PER_RUN }, (_, i) => DISCOVERY_GROUPS[(st.nextIdx + i) % DISCOVERY_GROUPS.length].group)
-  return { lastRun: st.lastRun || null, nextGroups: next, groups: DISCOVERY_GROUPS.map((g) => g.group), lastRunResult: (st.runs || []).slice(-1)[0] || null }
+  return { lastRun: st.lastRun || null, nextGroups: next, groups: DISCOVERY_GROUPS.map((g) => g.group), lastRunResult: (st.runs || []).slice(-1)[0] || null,
+    // 이번 달 추정 비용(웹 검색 $10/1000회 + 1회당 토큰 약 $0.03) — 정확한 청구는 Anthropic 콘솔 사용량 화면
+    month: { runs: mRuns.length, searches, estUsd: +(searches * 0.01 + mRuns.length * 3 * 0.03).toFixed(2) } }
 }
