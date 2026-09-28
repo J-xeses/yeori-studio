@@ -313,6 +313,15 @@ await check('E6', '관심사 후보 발굴 — 분야 10개·버튼 실행·월 
   return { ok: g.length === 10 && rejected === 2 && !auto && !!st.data.month, evidence: `분야 ${g.length}개 · 다음 차례 ${(st.data.nextGroups || []).join(',')} · 마지막 실행 ${st.data.lastRun ? new Date(st.data.lastRun).toLocaleString('ko-KR') : '없음'} · 게시물 링크 거절 ${rejected}/2 · 자동 실행 ${auto ? '켜짐(X)' : '없음'} · 이번 달 검색 ${st.data.month?.searches ?? '?'}회` }
 })
 
+await check('E7', '아이디어 → 후보 기획(후보 풀 📝 버튼) — 엔드포인트·화면 버튼·구획 파싱', async () => {
+  const r = await fetch(SERVER + '/api/candidates/from-idea', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: '짧음' }) })
+  const html = fs.readFileSync(new URL('../content_matrix_v3.html', import.meta.url), 'utf-8')
+  const src = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const btn = html.includes('openIdeaCandidateModal()') && html.includes('function openIdeaCandidateModal')
+  const sections = /===SCRIPT===/.test(src) && !/출력은 JSON 객체 하나만/.test(src)
+  return { ok: r.status === 400 && btn && sections, evidence: `짧은 입력 거절 ${r.status} · 화면 버튼 ${btn ? 'O' : 'X'} · 구획 파싱(JSON 깨짐 방지) ${sections ? 'O' : 'X'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))
