@@ -608,6 +608,7 @@
               <input class="candidate-title-input" id="cand-f-title" placeholder="에피소드명" oninput="onCandidateFieldInput('title', this.value)">
               <div class="candidate-detail-topbar-actions">
                 <button class="btn-cancel" style="color:var(--red)" onclick="deleteCandidate()">🗑️ 삭제</button>
+                <button class="btn-cancel" onclick="sendCandidateToScriptGen()" title="코디젠 코드화 없이, 이 후보의 스토리 기획·한글대본을 그대로 스튜디오 대본 생성 탭 새 에피소드로 보냅니다">🎬 대본생성으로 바로</button>
                 <button class="btn-save" id="cand-g1-btn" onclick="promoteCandidateToG1()">✨ G1 투입</button>
               </div>
             </div>
@@ -4211,6 +4212,33 @@ function promoteCandidateToG1() {
   renderCandidateTypeStats();
   renderCandidateStageStats();
   renderCandidateList();
+}
+
+// ── 🎬 후보 풀 → 대본 생성 탭 직결(2026-09-29, 성준님 요청) ──────────────────
+// "코디젠에서 코드화까지 따지는 고도화는 이후로 연기하고, 대본생성 기능 선에서 코드 매치·
+// 연출 요소 설정을 보완하자" — 코디젠 라인(sendCandidateToCodiGen)은 그대로 두고, 이걸
+// 거치지 않는 더 짧은 경로를 별도로 추가. /api/episodes 로 새 에피소드를 만들면서
+// 후보의 스토리 기획+한글대본을 storyBrief 로 심어두면, 대본 생성 탭(ScriptGenTab)의
+// "AI로 스토리 디벨롭"/"Claude로 대본 생성"이 그대로 이어받는다.
+const SCRIPTGEN_TYPE_MAP = { SF: 'SF', LF: 'LF', IG_R: 'IG_R', IG_P: 'IG_P', TK: 'TK' }; // IG_S(스토리)는 대본생성 탭에 대응 유형 없음
+async function sendCandidateToScriptGen() {
+  if (!currentCandidateId) return;
+  const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
+  const contentType = SCRIPTGEN_TYPE_MAP[cand.type];
+  if (!contentType) { showToast(`⚠️ ${cand.type} 유형은 대본생성 탭에 대응 유형이 없어요(SF/LF/IG_R/IG_P/TK만 가능)`); return; }
+  const storyBrief = [cand.story, cand.script].filter(t => t && t.trim()).join('\n\n---\n\n');
+  if (!storyBrief) { showToast('⚠️ 스토리 기획이나 한글 대본을 먼저 채워주세요'); return; }
+  try {
+    const res = await fetch(`${YEORI_SERVER}/api/episodes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentType, title: cand.title || '', storyBrief }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    showToast(`✅ ${data.code} 에피소드로 생성됨 — 스튜디오 "대본 생성" 탭에서 바로 이어가세요`);
+  } catch (e) {
+    showToast('⚠️ 대본생성 탭 연동 실패: ' + e.message);
+  }
 }
 
 function deleteCandidate() {

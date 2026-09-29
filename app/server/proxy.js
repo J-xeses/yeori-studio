@@ -7847,7 +7847,7 @@ app.post('/api/episodes/:episodeId/delete', (req, res) => {
 // downloads/flow/ep{N}/ 폴더를 실제로 공유하는 사고를 겪고 전역 카운터로 되돌렸는데, 여기서
 // 다시 유형별로 매기면 그 버그가 그대로 재발한다.
 app.post('/api/episodes', (req, res) => {
-  const { contentType, title } = req.body || {}
+  const { contentType, title, storyBrief } = req.body || {}
   const VALID_TYPES = ['SF', 'LF', 'IG_R', 'IG_P', 'TK']
   if (!VALID_TYPES.includes(contentType)) {
     return res.status(400).json({ error: `contentType은 ${VALID_TYPES.join('/')} 중 하나여야 합니다` })
@@ -7893,6 +7893,10 @@ app.post('/api/episodes', (req, res) => {
         instaNum: /^IG_/.test(code) ? (code.match(/(\d+)$/) || [])[1] || '' : '',
         character: '서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터',
         code,
+        // 후보 풀(content_matrix_v3.html)에서 "대본생성으로 바로" 보낼 때 스토리 기획/
+        // 한글대본을 여기 심어두면, 대본 생성 탭의 "AI로 스토리 디벨롭"/"Claude로 대본 생성"이
+        // 그대로 이어받는다(2026-09-29, ScriptGenTab의 storyBrief 사용 배선과 동일 필드).
+        ...(storyBrief ? { storyBrief } : {}),
       },
       cuts: Array.from({ length: 7 }, (_, i) => makeCut(i + 1)),
       scriptRaw: '',
