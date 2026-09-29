@@ -12,14 +12,21 @@
   :root{--bg:#121214;--panel:#1a1a1e;--panel2:#202026;--line:#2c2c33;--tx:#e4e4e7;--tx2:#9a9aa3;--acc:#ff5c5c;--ok:#7bd88f;--warn:#f4a261;--bad:#ef6f6c;--link:#8ab4ff}
   *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
   button,input,select,textarea{font:inherit;color:inherit}
-  .top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;height:52px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
-  .top b{font-size:15px;margin-right:14px}
-  .tab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 12px;cursor:pointer;color:var(--tx2)}
-  .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+  .app{display:flex;min-height:100vh}
+  .sidebar{width:230px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+  .sidebar .logo{padding:16px 14px;font-size:14px;font-weight:700;border-bottom:1px solid var(--line)}
+  .navgroup{padding:14px 0 2px}
+  .navgroup .gl{font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;padding:0 14px 6px}
+  .tab{display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;padding:9px 14px;cursor:pointer;color:var(--tx2);font-size:13px}
+  .tab.on{color:var(--tx);background:var(--panel2);border-left-color:var(--acc)}
+  .tab:hover{color:var(--tx)}
+  .sidefoot{margin-top:auto;padding:14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+  .main{flex:1;min-width:0}
   .sp{flex:1}.save{font-size:12px;color:var(--tx2)}.save.err{color:var(--bad)}
   .banner{display:none;padding:8px 16px;background:#3a1414;color:var(--acc);font-size:13px}
   section[data-tab]{display:none}section[data-tab].on{display:block}
   .wrap{padding:18px}
+  @media (max-width:800px){.app{flex-direction:column}.sidebar{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center}.sidebar .logo{border:none;width:100%}.navgroup{display:flex;align-items:center;gap:2px;padding:6px 8px}.navgroup .gl{display:none}.tab{width:auto;border-left:none;border-bottom:2px solid transparent;border-radius:0}.tab.on{border-left:none;border-bottom-color:var(--acc)}.sidefoot{margin-top:0;border-top:none;flex-direction:row;width:100%;padding:6px 14px 10px}}
   h2{font-size:14px;margin:22px 0 10px;color:var(--tx2);font-weight:600}h2:first-child{margin-top:0}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
   .muted{color:var(--tx2);font-size:12px}
@@ -56,13 +63,27 @@
   .cat-연출품질{border-color:#c3a6f7;color:#c3a6f7}.cat-일정{border-color:#7bd88f;color:#7bd88f}
   @media (max-width:1000px){.setup,.two{grid-template-columns:1fr}}
 </style></head><body>
-<header class="top"><b>▶️ 서여리 유튜브 운영실</b>
-  <button class="tab" data-t="setup">⚙️ 계정·크리에이터 설정</button>
-  <button class="tab" data-t="goal">🎯 목표·대시보드</button>
-  <button class="tab" data-t="insight">📈 성과 현황</button>
-  <button class="tab" data-t="strategy">🎬 콘텐츠 전략</button>
-  <span class="sp"></span><button class="btn" id="openYt" title="채널 페이지를 새 창으로">▶️ 채널 열기</button><span class="save" id="save">불러오는 중…</span>
-</header>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">▶️ 서여리 유튜브 운영실</div>
+  <nav>
+    <div class="navgroup"><div class="gl">설정</div>
+      <button class="tab" data-t="setup">⚙️ 계정·크리에이터 설정</button>
+    </div>
+    <div class="navgroup"><div class="gl">운영</div>
+      <button class="tab" data-t="goal">🎯 목표·대시보드</button>
+      <button class="tab" data-t="insight">📈 성과 현황</button>
+    </div>
+    <div class="navgroup"><div class="gl">전략</div>
+      <button class="tab" data-t="strategy">🎬 콘텐츠 전략</button>
+    </div>
+  </nav>
+  <div class="sidefoot">
+    <button class="btn" id="openYt" title="채널 페이지를 새 창으로">▶️ 채널 열기</button>
+    <span class="save" id="save">불러오는 중…</span>
+  </div>
+</aside>
+<main class="main">
 <div class="banner" id="banner"></div>
 
 <!-- ⚙️ 계정·크리에이터 설정 -->
@@ -157,6 +178,9 @@
   </div>
   <div class="card scroll"><table id="rl"></table></div>
 </div></section>
+
+</main>
+</div>
 
 <script>
 const API = '/api/youtube-ops'
