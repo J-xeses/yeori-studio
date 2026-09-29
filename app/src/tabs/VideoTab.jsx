@@ -177,7 +177,7 @@ function ReelCaptionOverlay({ text, fontPx, y, fontReady, plate = false }) {
   const t = String(text || '').trim()
   const boxH = blockH + 36 * k
   let top = y ? H * y - boxH / 2 : H * 0.87 - boxH
-  top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.80 - boxH)))
+  top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.88 - boxH)))
   return (
     <div ref={boxRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 3 }}>
       {t && H > 0 && (
@@ -1725,7 +1725,7 @@ export default function VideoTab() {
                 </div>
                 <div className={s.field}>
                   <label>세로 위치 <span className={s.val}>{reelStyle.y ? `${Math.round(reelStyle.y * 100)}%` : "기본(하단)"}</span></label>
-                  <input type="range" min="55" max="78" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
+                  <input type="range" min="65" max="86" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
                     onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5 }}>
@@ -2090,13 +2090,13 @@ export default function VideoTab() {
                         <div className={s.subtitleEditControls}>
                           <div className={s.posSelector}>
                             {['top','middle','bottom'].map(pos => {
-                              // 릴스는 세로 위치(reelStyle.y — 최종본과 같은 값)에 연결: 하단=기본(인스타 하단 UI 바로 위 안전선) · 중 70% · 상 63% — 화면 가운데(인물 영역)로 안 들어가게(9/29 성준님), 슬라이더도 55~78%, 안전선 0.72→0.80
-                              const reelPos = !reelStyle.y ? 'bottom' : reelStyle.y <= 0.665 ? 'top' : 'middle'
+                              // 릴스는 세로 위치(reelStyle.y — 최종본과 같은 값)에 연결: 하단=기본(인스타 하단 UI 바로 위 안전선) · 중 82% · 상 74%(9/29 2차) — 화면 가운데(인물 영역)로 안 들어가게(9/29 성준님), 슬라이더 65~86%, 안전선 0.88
+                              const reelPos = !reelStyle.y ? 'bottom' : reelStyle.y <= 0.78 ? 'top' : 'middle'
                               const active = isReel ? reelPos === pos : subtitlePosition === pos
                               return (
                               <button key={pos}
                                 className={`${s.posBtn} ${active ? s.posBtnActive : ''}`}
-                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.63 : pos === 'middle' ? 0.70 : null }); else setSubtitlePosition(pos) }}>
+                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.74 : pos === 'middle' ? 0.82 : null }); else setSubtitlePosition(pos) }}>
                                 {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
                               </button>
                               )

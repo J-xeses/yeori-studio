@@ -151,7 +151,7 @@ await check('F2', '영상 탭 자막 미리보기 규칙 = 최종본 규칙', ()
   const ov = tab.slice(tab.indexOf('function ReelCaptionOverlay'), tab.indexOf('function wrapCanvasText'))
   const rules = [
     ['기본 기준선 0.87', /"bottom_center":\s*\(0\.5,\s*0\.87\)/.test(py), /H \* 0\.87/.test(ov)],
-    ['하단 안전선 0.80', /H \* 0\.80 - box_h/.test(py), /H \* 0\.80 - boxH/.test(ov)],
+    ['하단 안전선 0.88', /H \* 0\.88 - box_h/.test(py), /H \* 0\.88 - boxH/.test(ov)],
     ['상하 여백 52', /max\(52 \+ iy/.test(py), /52 \* k/.test(ov)],
     ['줄 간격 1.32', /line_h = font_size \* 1\.32/.test(py), /lineHeight: 1\.32/.test(ov)],
     ['상자 안쪽 여백 18', /pad_x, pad_y = 28, 18/.test(py), /18 \* k/.test(ov)],
@@ -399,9 +399,9 @@ await check('C4', '대본 탭 효과음(이름만 있는 선택) → 최종본·
   const s = d.sfx?.[0] || {}
   const vt = fs.readFileSync(new URL('../src/tabs/VideoTab.jsx', import.meta.url), 'utf-8')
   const autoCompose = /먼저 클립 합성 중/.test(vt) && /sfxName:/.test(vt)
-  const posOk = /0\.63 : pos === 'middle' \? 0\.70/.test(vt) && /min="55" max="78"/.test(vt)
+  const posOk = /0\.74 : pos === 'middle' \? 0\.82/.test(vt) && /min="65" max="86"/.test(vt)
   const ok = /glass-hit-suspense-677\.wav$/.test(s.file || '') && s.atSec === 6.5 && s.gain === 1 && autoCompose && posOk
-  return { ok, evidence: `효과음 ${s.file || '없음'} · ${s.atSec}초 · 음량 ${s.gain} · 합성본 없으면 자동 클립 합성 ${autoCompose ? 'O' : 'X'} · 자막 위치 상63%/중70%/하단 안전선 80% ${posOk ? 'O' : 'X'}` }
+  return { ok, evidence: `효과음 ${s.file || '없음'} · ${s.atSec}초 · 음량 ${s.gain} · 합성본 없으면 자동 클립 합성 ${autoCompose ? 'O' : 'X'} · 자막 위치 상74%/중82%/하단 안전선 88% ${posOk ? 'O' : 'X'}` }
 })
 
 // ── 2. 서버·상태 API ──
