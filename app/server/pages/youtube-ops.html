@@ -1,0 +1,329 @@
+<!doctype html>
+<!--
+  서여리 유튜브 운영실 — http://localhost:3001/youtube-ops (proxy.js 가 제공)
+  탭: ⚙️ 계정·크리에이터 설정 / 🎯 목표·대시보드 / 📈 성과 현황 / 🎬 콘텐츠 전략
+  데이터: GET/PUT /api/youtube-ops → downloads/seoyeori/YU/_account/ops.json (rev 확인 저장, server/lib/youtubeOps.js)
+  콘텐츠 목록(posts)은 studio-state.json 의 SF_E*·IG_R* 에피소드를 자동 동기화(코드/제목/컷수) — 날짜·상태·지표는 사람이 채움.
+  1차 구축(2026-09-29): 유튜브 계정이 아직 없어 실 API 연동 없이 전부 수동 입력. 인스타 운영실과 같은 골격.
+-->
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서여리 유튜브 운영실</title>
+<style>
+  :root{--bg:#121214;--panel:#1a1a1e;--panel2:#202026;--line:#2c2c33;--tx:#e4e4e7;--tx2:#9a9aa3;--acc:#ff5c5c;--ok:#7bd88f;--warn:#f4a261;--bad:#ef6f6c;--link:#8ab4ff}
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  .top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;height:52px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .top b{font-size:15px;margin-right:14px}
+  .tab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 12px;cursor:pointer;color:var(--tx2)}
+  .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+  .sp{flex:1}.save{font-size:12px;color:var(--tx2)}.save.err{color:var(--bad)}
+  .banner{display:none;padding:8px 16px;background:#3a1414;color:var(--acc);font-size:13px}
+  section[data-tab]{display:none}section[data-tab].on{display:block}
+  .wrap{padding:18px}
+  h2{font-size:14px;margin:22px 0 10px;color:var(--tx2);font-weight:600}h2:first-child{margin-top:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .muted{color:var(--tx2);font-size:12px}
+  select,input[type=text],input[type=date],input[type=number],textarea{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+  textarea{width:100%;resize:vertical;font:13px/1.5 system-ui,'Malgun Gothic',sans-serif}
+  .setup{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+  .ph{display:flex;flex-wrap:wrap;gap:8px}
+  .ph button{border:2px solid transparent;border-radius:8px;padding:0;width:80px;height:80px;overflow:hidden;cursor:pointer;background:#000}
+  .ph button.on{border-color:var(--acc)}.ph img{width:100%;height:100%;object-fit:cover}
+  .field{margin-bottom:12px}.field label{display:block;font-size:12px;color:var(--tx2);margin-bottom:4px}
+  .field input[type=text],.field select,.field textarea{width:100%}
+  .chk{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .chk:last-child{border-bottom:none}
+  .chk input{width:16px;height:16px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .kpi .v{font-size:24px;font-weight:700}.kpi .l{font-size:12px;color:var(--tx2)}
+  .kpi.bad .v{color:var(--bad)}.kpi.ok .v{color:var(--ok)}
+  .gaugewrap{margin:6px 0}
+  .gaugelb{display:flex;justify-content:space-between;font-size:12px;color:var(--tx2);margin-bottom:3px}
+  .gauge{height:14px;background:var(--panel2);border-radius:7px;overflow:hidden}
+  .gauge i{display:block;height:100%;border-radius:7px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+  th{color:var(--tx2);font-weight:600;font-size:12px;white-space:nowrap}
+  td input[type=text]{width:100%}td input[type=number]{width:80px}
+  .st{font-size:11px;border-radius:10px;padding:1px 8px}
+  .btn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+  .btn:hover{border-color:var(--tx2)}.x{background:none;border:none;color:var(--tx2);cursor:pointer}
+  .btn.pri{background:var(--acc);border-color:var(--acc);color:#111;font-weight:600}.btn.pri:hover{filter:brightness(1.08)}
+  .scroll{overflow-x:auto}
+  .pill{display:inline-block;font-size:11px;border-radius:10px;padding:1px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--tx2);margin-right:4px}
+  .cat-변수·대응{border-color:#f4a261;color:#f4a261}.cat-구축{border-color:#8ab4ff;color:#8ab4ff}
+  .cat-연출품질{border-color:#c3a6f7;color:#c3a6f7}.cat-일정{border-color:#7bd88f;color:#7bd88f}
+  @media (max-width:1000px){.setup,.two{grid-template-columns:1fr}}
+</style></head><body>
+<header class="top"><b>▶️ 서여리 유튜브 운영실</b>
+  <button class="tab" data-t="setup">⚙️ 계정·크리에이터 설정</button>
+  <button class="tab" data-t="goal">🎯 목표·대시보드</button>
+  <button class="tab" data-t="insight">📈 성과 현황</button>
+  <button class="tab" data-t="strategy">🎬 콘텐츠 전략</button>
+  <span class="sp"></span><button class="btn" id="openYt" title="채널 페이지를 새 창으로">▶️ 채널 열기</button><span class="save" id="save">불러오는 중…</span>
+</header>
+<div class="banner" id="banner"></div>
+
+<!-- ⚙️ 계정·크리에이터 설정 -->
+<section data-tab="setup"><div class="wrap setup">
+  <div>
+    <h2>프로필·배너</h2>
+    <div class="field"><label>프로필 사진</label><div class="ph" id="ph"></div>
+      <p class="muted">추가: <code>downloads/seoyeori/YU/_account/profile/</code> 에 넣고 새로고침</p></div>
+    <div class="field"><label>채널명</label><input type="text" id="channelName"></div>
+    <div class="field"><label>핸들(@)</label><input type="text" id="handle" placeholder="예: seoyeori"></div>
+    <div class="field"><label>카테고리</label><select id="category">
+      <option>People & Blogs</option><option>Entertainment</option><option>Comedy</option><option>Howto & Style</option><option>Film & Animation</option>
+    </select></div>
+    <div class="field"><label>채널 소개</label><textarea id="description" rows="4" placeholder="AI 캐릭터라는 점을 밝히는 문구 포함 권장"></textarea></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="openYtSetup">▶️ 채널 확인</button><button class="btn" id="openStudio">🎛 유튜브 스튜디오</button></div>
+  </div>
+  <div>
+    <h2>체크리스트</h2>
+    <div class="card">
+      <div class="chk"><input type="checkbox" id="c_accountCreated"><label for="c_accountCreated">구글/브랜드 계정 및 채널 생성 완료</label></div>
+      <div class="chk"><input type="checkbox" id="c_creatorChannelOn"><label for="c_creatorChannelOn">채널 아트·프로필·소개 기본 세팅 완료</label></div>
+      <div class="chk"><input type="checkbox" id="c_aiLabelOn"><label for="c_aiLabelOn">"변조/합성 콘텐츠" 표시 라벨 켬(업로드마다)</label></div>
+      <div class="chk"><input type="checkbox" id="c_twoFactorOn"><label for="c_twoFactorOn">2단계 인증 활성화</label></div>
+      <div class="chk"><input type="checkbox" id="c_monetizationApplied"><label for="c_monetizationApplied">YPP(수익창출) 신청함</label></div>
+      <div class="chk"><input type="checkbox" id="c_monetizationApproved"><label for="c_monetizationApproved">YPP 승인 완료 🎉</label></div>
+    </div>
+    <p class="muted" style="margin-top:10px">근거(2026-09-29 확인): 2027-02-01부터 신규 가입 기준이 2배(시청시간 4,000→8,000h, 쇼츠 조회수 1,000만→2,000만/90일)로 강화됨 — <b>그 전에 YPP 승인까지 끝내는 게 핵심.</b> 구독자 1,000명 기준은 안 바뀜. 승인 후 유지 기준은 훨씬 낮음(연 1,000h 또는 쇼츠 90일 100만, 또는 90일마다 롱폼 2개/쇼츠 5개).</p>
+    <h2>업로드·설정 8가지 체크리스트 <span class="muted">(성준님 기존 조사 반영)</span></h2>
+    <div class="card">
+      <div class="chk"><input type="checkbox" id="s_privateFirst"><label for="s_privateFirst">첫 업로드는 비공개로 24시간 예열 후 공개 전환(알고리즘 사전검토 시간 확보)</label></div>
+      <div class="chk"><input type="checkbox" id="s_layout"><label for="s_layout">홈탭 레이아웃 설정(인기 동영상→게시물→동영상→재생목록 순)</label></div>
+      <div class="chk"><input type="checkbox" id="s_keywords"><label for="s_keywords">채널 키워드 등록(설정→채널→키워드, 시크릿창으로 조사한 검색어 기반)</label></div>
+      <div class="chk"><input type="checkbox" id="s_autoChapterOff"><label for="s_autoChapterOff">자동챕터·주요 순간 허용 끄고 수동 타임스탬프 사용</label></div>
+      <div class="chk"><input type="checkbox" id="s_hashtag"><label for="s_hashtag">업로드마다 해시태그 3~6개 + 태그란 활용 규칙 정착</label></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 🎯 목표·대시보드 -->
+<section data-tab="goal"><div class="wrap">
+  <div class="kpis" id="kpis"></div>
+  <h2>YPP 진행률 <span class="muted">(구독자 AND (시청시간 OR 쇼츠 조회수) — 각 단계 둘 중 하나만 채우면 됨)</span></h2>
+  <div class="card">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="field" style="margin-bottom:0"><label>구독자 수</label><input type="number" id="ySubs" min="0"></div>
+      <div class="field" style="margin-bottom:0"><label>연 시청시간(h)</label><input type="number" id="yHours" min="0"></div>
+      <div class="field" style="margin-bottom:0"><label>쇼츠 조회수(최근 90일)</label><input type="number" id="yShorts" min="0"></div>
+      <div class="field" style="margin-bottom:0"><label>최근 90일 공개 영상 수</label><input type="number" id="yUploads90" min="0"></div>
+    </div>
+    <p class="muted" style="margin:0 0 6px">🥉 1단계 — 멤버십·슈퍼챗 (구독 500 + 최근90일 영상 3개 + 시청3,000h 또는 쇼츠300만)</p>
+    <div class="gaugewrap"><div class="gaugelb"><span>구독자</span><span id="g1t"></span></div><div class="gauge"><i id="g1" style="background:var(--acc)"></i></div></div>
+    <div class="gaugewrap"><div class="gaugelb"><span>연 시청시간</span><span id="g2t"></span></div><div class="gauge"><i id="g2" style="background:#8ab4ff"></i></div></div>
+    <div class="gaugewrap"><div class="gaugelb"><span>쇼츠 조회수(90일 롤링)</span><span id="g3t"></span></div><div class="gauge"><i id="g3" style="background:#c3a6f7"></i></div></div>
+    <p class="muted" style="margin:14px 0 6px">🥈 2단계 — AdSense 광고수익, 실질 목표 (구독 1,000 + 시청4,000h 또는 쇼츠1,000만)</p>
+    <div class="gaugewrap"><div class="gaugelb"><span>구독자</span><span id="g4t"></span></div><div class="gauge"><i id="g4" style="background:var(--acc)"></i></div></div>
+    <div class="gaugewrap"><div class="gaugelb"><span>연 시청시간</span><span id="g5t"></span></div><div class="gauge"><i id="g5" style="background:#8ab4ff"></i></div></div>
+    <div class="gaugewrap"><div class="gaugelb"><span>쇼츠 조회수(90일 롤링)</span><span id="g6t"></span></div><div class="gauge"><i id="g6" style="background:#c3a6f7"></i></div></div>
+    <p class="muted" style="margin-top:8px">유튜브 스튜디오 → 분석에서 직접 확인해 입력(자동 연동은 채널 생성 후 API 연결 예정).</p>
+  </div>
+  <h2>콘텐츠 파이프라인 현황</h2>
+  <div class="kpis" id="pkpis"></div>
+  <div class="card scroll" style="margin-top:10px"><table id="posts"></table></div>
+</div></section>
+
+<!-- 📈 성과 현황 -->
+<section data-tab="insight"><div class="wrap">
+  <p class="muted">"게시" 상태인 콘텐츠만 표시됩니다. 유튜브 스튜디오 → 분석 탭에서 확인해 입력하세요.</p>
+  <div class="kpis" id="ikpis"></div>
+  <h2>지표 입력</h2><div class="card scroll"><table id="mt"></table></div>
+</div></section>
+
+<!-- 🎬 콘텐츠 전략 -->
+<section data-tab="strategy"><div class="wrap">
+  <h2>숏폼·롱폼 믹스</h2>
+  <div class="kpis" id="mixkpi"></div>
+  <p class="muted">쇼츠는 90일 롤링 조회수로 YPP 가입에 직접 반영(주력) · 롱폼은 연 시청시간 누적 + 세계관 확장(병행) — 둘 다 채워지면 어느 쪽이든 먼저 문턱을 넘는 쪽으로 가입.</p>
+  <h2>제작·운영 참고(성준님 기존 조사)</h2>
+  <div class="card">
+    <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.9">
+      <li><b>숏츠 퍼널 전략</b> — 롱폼의 가장 임팩트 있는 장면 1개를 60초 쇼츠로 재편집해 유입 깔때기로 사용</li>
+      <li><b>CPM(광고단가) 카테고리 참고</b> — AI/테크/자기계발 ₩2,000~5,000 · 일상/브이로그 ₩500~1,500 · 재테크/투자 ₩3,000~8,000 (직장인 공감 소재를 "AI×자기계발" 프레이밍으로 걸치면 유리)</li>
+      <li><b>월별 제작 페이스(참고 목표)</b> — 1~2개월차 숏츠 월 8~10편 · 3개월차 이후 월 15~20편</li>
+      <li><b>업로드 후 48시간</b>이 알고리즘 1차 판단 구간 — 이 시간에 댓글 응대·공유 집중</li>
+      <li><b>재시청 잘 되는 포맷</b> — 튜토리얼/방법론, 비교·랭킹, 공감형 스토리텔링, 연속 시리즈</li>
+    </ul>
+  </div>
+  <h2>검토사항 로그 <span class="muted">— 변수·대응 / 구축 / 연출품질 / 일정, 진행하며 계속 쌓기(성준님 2026-09-29 방침)</span></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <select id="rlCat"><option>변수·대응</option><option>구축</option><option>연출품질</option><option>일정</option></select>
+    <input type="text" id="rlText" placeholder="내용" style="flex:1;min-width:240px">
+    <button class="btn pri" id="rlAdd">+ 추가</button>
+  </div>
+  <div class="card scroll"><table id="rl"></table></div>
+</div></section>
+
+<script>
+const API = '/api/youtube-ops'
+const MEDIA = '/downloads/seoyeori/YU/_account/'
+const TYPES = ['숏폼(유튜브 전용)','숏폼(릴스 교차)','롱폼']
+const STATUS = ['기획','제작중','완성','게시']
+const STC = {'기획':'#555','제작중':'#8a6420','완성':'#2f6b45','게시':'#7bd88f'}
+const RLSTATUS = ['open','done']
+const YPP_DEADLINE = '2027-02-01'
+// 1단계(멤버십·슈퍼챗): 구독 500 + 최근90일 공개영상 3개 + (연 시청 3,000h 또는 쇼츠 300만/90일)
+// 2단계(AdSense 광고수익, 실질 목표): 구독 1,000 + (연 시청 4,000h 또는 쇼츠 1,000만/90일)
+const YPP_TIER1 = { subs: 500, watchHours: 3000, shortsViews90d: 3000000 }
+const YPP_CUR = { subs: 1000, watchHours: 4000, shortsViews90d: 10000000 }
+
+const $ = id => document.getElementById(id)
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
+let S = null, photos = [], saveTimer = null
+const local = { get(k, d) { try { const v = localStorage.getItem('ytops.' + k); return v == null ? d : JSON.parse(v) } catch (e) { return d } },
+                set(k, v) { try { localStorage.setItem('ytops.' + k, JSON.stringify(v)) } catch (e) {} } }
+
+const ds = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
+const diffD = (a, b) => Math.round((pd(b) - pd(a)) / 864e5)
+const today = ds(new Date())
+const md = s => { if (!s) return ''; const d = pd(s); return (d.getMonth() + 1) + '/' + d.getDate() }
+
+async function load(msg) {
+  const r = await fetch(API); const j = await r.json()
+  S = j.ops; photos = j.photos || []
+  if (msg) { $('banner').textContent = msg; $('banner').style.display = 'block'; setTimeout(() => $('banner').style.display = 'none', 6000) }
+  status('저장됨 · rev ' + S.rev); renderAll()
+}
+function touch() { status('저장 대기…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 700) }
+async function save() {
+  status('저장 중…')
+  try {
+    const r = await fetch(API, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(S) })
+    const j = await r.json()
+    if (r.status === 409) return load('⚠️ ' + j.error)
+    if (!r.ok) throw new Error(j.error || r.status)
+    S.rev = j.rev; S.savedAt = j.savedAt; status('저장됨 · rev ' + S.rev)
+  } catch (e) { status('저장 실패: ' + e.message, true) }
+}
+function status(t, err) { $('save').textContent = t; $('save').className = 'save' + (err ? ' err' : '') }
+
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => showTab(b.dataset.t))
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t))
+  document.querySelectorAll('section[data-tab]').forEach(s => s.classList.toggle('on', s.dataset.tab === t))
+  local.set('tab', t)
+}
+
+function renderAll() { renderSetup(); renderGoal(); renderInsight(); renderStrategy() }
+
+// ── ⚙️ 계정·크리에이터 설정 ──
+function renderSetup() {
+  const st = S.settings
+  $('ph').innerHTML = photos.map(f => '<div><button class="' + (f === st.profilePhoto ? 'on' : '') + '" data-f="' + esc(f) + '"><img src="' + MEDIA + 'profile/' + encodeURIComponent(f) + '"></button></div>').join('') || '<span class="muted">아직 사진 없음</span>'
+  document.querySelectorAll('.ph button').forEach(b => b.onclick = () => { st.profilePhoto = b.dataset.f; touch(); renderSetup() })
+  $('channelName').value = st.channelName || ''; $('handle').value = st.handle || ''
+  $('category').value = st.category || 'People & Blogs'; $('description').value = st.description || ''
+  ;[['channelName',''],['handle',''],['category',''],['description','']].forEach(([id]) => $(id).onchange = e => { st[id] = e.target.value; touch() })
+  ;['accountCreated','creatorChannelOn','aiLabelOn','twoFactorOn','monetizationApplied','monetizationApproved'].forEach(k => {
+    const el = $('c_' + k); el.checked = !!st[k]; el.onchange = () => { st[k] = el.checked; touch(); renderGoal() }
+  })
+  ;['privateFirst','layout','keywords','autoChapterOff','hashtag'].forEach(k => {
+    const el = $('s_' + k); el.checked = !!st[k]; el.onchange = () => { st[k] = el.checked; touch() }
+  })
+}
+
+// ── 🎯 목표·대시보드 ──
+function renderGoal() {
+  const y = S.ypp, dday = diffD(today, YPP_DEADLINE)
+  const approved = S.settings.monetizationApproved
+  const kpi = (v, l, cls) => '<div class="card kpi' + (cls ? ' ' + cls : '') + '"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
+  $('kpis').innerHTML =
+    kpi(approved ? '승인됨 🎉' : 'D-' + dday, approved ? 'YPP 이미 승인 — 강화기준 영향 없음' : '2027-02-01 신규기준 강화 전까지', approved ? 'ok' : (dday < 30 ? 'bad' : '')) +
+    kpi(S.posts.filter(p => p.status === '게시').length + ' / ' + S.posts.length, '게시 완료 / 전체 등록 콘텐츠') +
+    kpi(S.posts.filter(p => p.status === '제작중' || p.status === '완성').length, '제작중·완성(게시 대기)')
+  const gauge = (id, v, goal) => { const pct = Math.min(100, goal ? v / goal * 100 : 0); $(id).style.width = pct + '%'; return pct }
+  $('ySubs').value = y.subs || ''; $('yHours').value = y.watchHours || ''; $('yShorts').value = y.shortsViews90d || ''; $('yUploads90').value = y.uploads90d || ''
+  ;[['ySubs','subs'],['yHours','watchHours'],['yShorts','shortsViews90d'],['yUploads90','uploads90d']].forEach(([id, k]) => $(id).onchange = e => { y[k] = +e.target.value || 0; y.lastUpdated = today; touch(); renderGoal() })
+  gauge('g1', y.subs || 0, YPP_TIER1.subs); $('g1t').textContent = (y.subs || 0).toLocaleString() + ' / ' + YPP_TIER1.subs.toLocaleString()
+  gauge('g2', y.watchHours || 0, YPP_TIER1.watchHours); $('g2t').textContent = (y.watchHours || 0).toLocaleString() + ' / ' + YPP_TIER1.watchHours.toLocaleString() + 'h'
+  gauge('g3', y.shortsViews90d || 0, YPP_TIER1.shortsViews90d); $('g3t').textContent = (y.shortsViews90d || 0).toLocaleString() + ' / ' + YPP_TIER1.shortsViews90d.toLocaleString()
+  gauge('g4', y.subs || 0, YPP_CUR.subs); $('g4t').textContent = (y.subs || 0).toLocaleString() + ' / ' + YPP_CUR.subs.toLocaleString()
+  gauge('g5', y.watchHours || 0, YPP_CUR.watchHours); $('g5t').textContent = (y.watchHours || 0).toLocaleString() + ' / ' + YPP_CUR.watchHours.toLocaleString() + 'h'
+  gauge('g6', y.shortsViews90d || 0, YPP_CUR.shortsViews90d); $('g6t').textContent = (y.shortsViews90d || 0).toLocaleString() + ' / ' + YPP_CUR.shortsViews90d.toLocaleString()
+  const byStatus = STATUS.map(s => ({ s, n: S.posts.filter(p => p.status === s).length }))
+  $('pkpis').innerHTML = byStatus.map(o => kpi(o.n, o.s)).join('')
+  renderPostsTable()
+}
+function renderPostsTable() {
+  const rows = S.posts.slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'))
+  $('posts').innerHTML = '<tr><th>코드</th><th>제목</th><th>유형</th><th>컷수</th><th>예정일</th><th>상태</th><th>링크</th><th></th></tr>' + (rows.length ? rows.map(p =>
+    '<tr data-id="' + esc(p.id) + '">' +
+    '<td>' + esc(p.code) + '</td>' +
+    '<td><input type="text" data-k="title" value="' + esc(p.title) + '"></td>' +
+    '<td><select data-k="type">' + TYPES.map(t => '<option' + (t === p.type ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></td>' +
+    '<td class="muted">' + (p.cutCount || '') + '</td>' +
+    '<td><input type="date" data-k="date" value="' + esc(p.date) + '"></td>' +
+    '<td><select data-k="status" style="border-color:' + STC[p.status] + '">' + STATUS.map(s => '<option' + (s === p.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td>' +
+    '<td style="white-space:nowrap"><input type="text" data-k="link" value="' + esc(p.link) + '" placeholder="게시 URL" style="width:140px">' + (p.link ? ' <button class="x" data-open="1">↗</button>' : '') + '</td>' +
+    '<td><button class="x" data-del="1" title="목록에서 제외">✕</button></td></tr>').join('')
+    : '<tr><td colspan="8" class="muted">등록된 에피소드가 없습니다 — 스튜디오에서 SF_E*/IG_R* 에피소드를 등록하면 자동으로 나타납니다.</td></tr>')
+  document.querySelectorAll('#posts tr[data-id], #pInsightRef tr[data-id]').forEach(tr => {
+    const p = S.posts.find(x => x.id === tr.dataset.id)
+    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { p[el.dataset.k] = el.value; touch(); renderGoal(); renderInsight(); renderStrategy() })
+    const ob = tr.querySelector('[data-open]'); if (ob) ob.onclick = () => openB({ target: 'url', url: p.link })
+    const db = tr.querySelector('[data-del]'); if (db) db.onclick = () => { if (confirm('"' + (p.title || p.code) + '" 을(를) 운영실 목록에서만 제외할까요? (에피소드 자체는 안 지워짐)')) { S.posts = S.posts.filter(x => x !== p); touch(); renderAll() } }
+  })
+}
+
+// ── 📈 성과 현황 ──
+const n = v => (v === '' || v == null || isNaN(+v)) ? 0 : +v
+function renderInsight() {
+  const posted = S.posts.filter(p => p.status === '게시')
+  const sum = k => posted.reduce((a, p) => a + n(p[k]), 0)
+  const kpi = (v, l) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
+  $('ikpis').innerHTML = kpi(posted.length, '게시된 콘텐츠') + kpi(sum('views').toLocaleString(), '총 조회수') + kpi(sum('watchHours').toLocaleString(), '총 시청시간(h)') + kpi(sum('subsGained').toLocaleString(), '유입 구독자(합계)')
+  $('mt').innerHTML = '<tr><th>콘텐츠</th><th class="num">조회수</th><th class="num">시청시간(h)</th><th class="num">쇼츠조회수</th><th class="num">구독전환</th><th class="num">좋아요</th><th class="num">댓글</th></tr>' + (posted.length ? posted.map(p =>
+    '<tr data-id="' + esc(p.id) + '"><td>' + esc(p.code) + ' ' + esc(p.title) + '</td>' +
+    ['views','watchHours','shortsViews','subsGained','likes','comments'].map(k => '<td><input type="number" min="0" data-m="' + k + '" value="' + esc(p[k] ?? '') + '" style="width:90px"></td>').join('') + '</tr>').join('')
+    : '<tr><td colspan="7" class="muted">아직 "게시" 상태인 콘텐츠가 없습니다 — 목표·대시보드 탭에서 상태를 "게시"로 바꾸면 여기 나타납니다.</td></tr>')
+  document.querySelectorAll('#mt tr[data-id]').forEach(tr => {
+    const p = S.posts.find(x => x.id === tr.dataset.id)
+    tr.querySelectorAll('[data-m]').forEach(el => el.onchange = () => { p[el.dataset.m] = el.value === '' ? '' : +el.value; touch(); renderInsight(); renderGoal() })
+  })
+}
+
+// ── 🎬 콘텐츠 전략 ──
+function renderStrategy() {
+  const kpi = (v, l) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
+  $('mixkpi').innerHTML = TYPES.map(t => kpi(S.posts.filter(p => p.type === t).length, t)).join('')
+  const log = (S.reviewLog || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  $('rl').innerHTML = '<tr><th>날짜</th><th>분류</th><th>내용</th><th>상태</th><th></th></tr>' + (log.length ? log.map(x =>
+    '<tr data-id="' + esc(x.id) + '"><td class="muted" style="white-space:nowrap">' + md(x.date) + '</td>' +
+    '<td><span class="pill cat-' + esc(x.category) + '">' + esc(x.category) + '</span></td>' +
+    '<td><input type="text" data-k="text" value="' + esc(x.text) + '"></td>' +
+    '<td><select data-k="status"><option' + (x.status === 'open' ? ' selected' : '') + '>open</option><option' + (x.status === 'done' ? ' selected' : '') + '>done</option></select></td>' +
+    '<td><button class="x" data-del="1">✕</button></td></tr>').join('')
+    : '<tr><td colspan="5" class="muted">아직 기록된 검토사항이 없습니다.</td></tr>')
+  document.querySelectorAll('#rl tr[data-id]').forEach(tr => {
+    const x = S.reviewLog.find(r => r.id === tr.dataset.id)
+    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { x[el.dataset.k] = el.value; touch(); renderStrategy() })
+    tr.querySelector('[data-del]').onclick = () => { if (confirm('삭제할까요?')) { S.reviewLog = S.reviewLog.filter(r => r !== x); touch(); renderStrategy() } }
+  })
+}
+$('rlAdd').onclick = () => {
+  const text = $('rlText').value.trim(); if (!text) return
+  S.reviewLog = S.reviewLog || []
+  S.reviewLog.push({ id: 'rl' + Date.now().toString(36), date: today, category: $('rlCat').value, text, status: 'open' })
+  $('rlText').value = ''; touch(); renderStrategy()
+}
+
+async function openB(body) {
+  try {
+    const r = await fetch('/api/open-browser', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const j = await r.json(); if (!r.ok) throw new Error(j.error)
+  } catch (e) {
+    const u = body.url || 'https://www.youtube.com/@' + (S?.settings?.handle || '')
+    window.open(u, '_blank')
+  }
+}
+$('openYt').onclick = () => openB({ target: 'url', url: 'https://www.youtube.com/@' + (S?.settings?.handle || '') })
+$('openYtSetup').onclick = () => $('openYt').onclick()
+$('openStudio').onclick = () => openB({ target: 'url', url: 'https://studio.youtube.com/' })
+
+;(async () => { showTab(local.get('tab', 'goal')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
+</script></body></html>

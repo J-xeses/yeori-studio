@@ -15,6 +15,7 @@ import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } 
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { loadOps, saveOps, listProfilePhotos } from './lib/instaOps.js'
+import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYtProfilePhotos } from './lib/youtubeOps.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
@@ -119,6 +120,15 @@ app.get('/insta-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 
 app.get('/api/insta-ops', (_req, res) => res.json({ ops: loadOps(), photos: listProfilePhotos() }))
 app.put('/api/insta-ops', (req, res) => {
   try { const out = saveOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
+  catch (e) { res.status(e.statusCode || 500).json({ ok: false, error: e.message, rev: e.current?.rev }) }
+})
+
+// ── 유튜브 운영실 (/youtube-ops) — 계정·크리에이터 설정 · 목표(YPP 게이트) · 성과 · 콘텐츠 전략 ──
+// 데이터: downloads/seoyeori/YU/_account/ops.json (server/lib/youtubeOps.js, rev 확인 저장)
+app.get('/youtube-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'youtube-ops.html')))
+app.get('/api/youtube-ops', (_req, res) => res.json({ ops: loadYtOps(), photos: listYtProfilePhotos() }))
+app.put('/api/youtube-ops', (req, res) => {
+  try { const out = saveYtOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
   catch (e) { res.status(e.statusCode || 500).json({ ok: false, error: e.message, rev: e.current?.rev }) }
 })
 
