@@ -1,0 +1,561 @@
+# SF_E08_BATTERY 폰 배터리 1% 사건 대본
+# 생성일: 2026. 8. 2.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+
+================================================================
+마스터 코드
+SF_E08_BATTERY :: YR_VD+BR_VD :: OT.ST.TZ_AF.LT_WM → OT.BS.TZ_AF.LT_WM :: LK_RS(white square-neck crop top+blue plaid pleated mini skirt+white high-heel strap sandals+small black crossbody bag+gold necklace) :: MD_COM→MD_REL→MD_DRM :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E08_BATTERY
+TITLE : 폰 배터리 1% 사건
+LOOK  : LOOK02 (white square-neck crop top + blue plaid pleated mini skirt + white high-heel strap sandals + small black crossbody bag + gold necklace + gold bracelet)
+BG.A  : 서울 도심 거리 (골든아워)
+BG.B  : 버스정류장 쉘터 (골든아워 → 오후 늦은 시간)
+LIGHT : LT_WM (골든아워 따뜻한 햇살)
+REF   : face / closeup / fs-masked
+BGM   : 경쾌한 일상 BGM → 배터리 발견 순간 업 → 조용하고 감성적으로 마무리
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  YR_VD — 배터리 1% 발견 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 도심 거리 / 오후 골든아워 / 걷다가 폰 보고 멈춤
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 아 진짜... 1%가 뭐야 1%가.
+NR: 완벽한 타이밍이란 건 없어. 늘 가장 필요할 때 배터리가 죽으니까.
+SH: SH_MCU
+CA: CA_ZI
+MD: MD_COM
+AT: AT_AC_04 + AT_EM_04
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 경쾌한 일상 BGM
+  음성: 당황하고 억울한 립싱크 + 공감 나레이션
+  효과음: 배터리 경고음
+  앰비언스: 서울 거리 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 도심 거리 / 오후 골든아워 / 따뜻한 햇살
+CH(캐릭터):   LOOK02 전체
+SH(샷):       미디엄 클로즈업 → 줌인
+CA(카메라):   줌인
+AT(동작):     걷다가 스마트폰 화면 내려다보며 걸음 멈춤 → 눈 살짝 커지며 입술 앙 깨뭄 → 주변 두리번거림 → 카메라 줌인
+MD(감정):     당황함과 약간의 웃음이 동시에 / 억울하고 유머러스
+DL(대사):     "아 진짜... 1%가 뭐야 1%가."
+NR(나레이션): "완벽한 타이밍이란 건 없어. 늘 가장 필요할 때 배터리가 죽으니까."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace visible at collarbone,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, blue plaid pleated mini skirt,
+white high-heel strap sandals, small black crossbody bag,
+standing on Seoul urban sidewalk during golden hour,
+warm sunlight hitting her face from the left,
+holding smartphone with visible concern expression,
+lips slightly pressed together, eyes slightly wide,
+background shows blurred city street with soft bokeh pedestrians,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she walks then stops suddenly,
+eyes dropping to phone screen,
+expression shifting to concern.
+
+Next 2-6s: she speaks flustered —
+"아 진짜... 1%가 뭐야 1%가."
+eyes slightly wide, lips pressed,
+looks around instinctively.
+
+Final 6-8s: camera gently zooms in,
+expression caught between panic and amusement,
+a small helpless laugh forming.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 버스정류장 발견 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 도심 거리 / 오후 골든아워 / 버스정류장 방향으로 이동
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 그때 눈에 들어온 건... 버스정류장이었어. 지붕 있고, 벤치 있고, 뭔가 있을 것 같은 느낌.
+SH: SH_MS
+CA: CA_ST
+MD: MD_REL
+AT: AT_MW_01
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 경쾌한 BGM 유지
+  음성: 약간 안도하는 나레이션 톤
+  효과음: 없음
+  앰비언스: 서울 거리 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 도심 거리 / 골든아워
+CH(캐릭터):   LOOK02 / 걸어가는 미디엄샷
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AT(동작):     폰 꽉 쥐고 주변 천천히 둘러보기 → 시선이 버스정류장 방향으로 고정 → 조심스럽게 그쪽으로 발걸음 이동 / 체크 스커트 자락 살짝 흔들림
+MD(감정):     눈에 희미한 안도감 / 해결책을 찾은 순간
+DL(대사):     없음
+NR(나레이션): "그때 눈에 들어온 건... 버스정류장이었어. 지붕 있고, 벤치 있고, 뭔가 있을 것 같은 느낌."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair natural waves catching warm sunlight,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace catching golden light,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, blue plaid pleated mini skirt
+with subtle pleat movement from walking,
+white high-heel strap sandals, small black crossbody bag,
+walking slowly on Seoul urban sidewalk during golden hour,
+gazing toward a distant bus shelter with faint expression of relief,
+clutching phone with both hands,
+blue plaid skirt hem gently swaying with each step,
+background shows Seoul street with soft bokeh storefronts,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she clutches phone tightly,
+slowly scanning the area around her,
+golden hour light on the street.
+
+Next 3-6s: her gaze fixes on something in the distance —
+a bus shelter,
+faint relief crossing her expression.
+
+Final 6-8s: she begins walking carefully in that direction,
+navy check skirt swaying with each step,
+camera holds steady.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — 충전 포트 발견 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 버스정류장 쉘터 안 / 오후 늦은 시간 / USB 충전 포트 발견
+SP: OT.BS.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 어... 이거 진짜야? 충전 되는 거야?
+NR: 세상에. 버스정류장에 충전 포트가 있었어. 서울이 날 살린 거잖아.
+SH: SH_CU
+CA: CA_ST
+MD: MD_JOY
+AT: AT_EM_01 + AT_AC_04
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 배터리 발견 순간 업 — 경쾌하게
+  음성: 믿기지 않는 놀라움 + 공감 나레이션
+  효과음: 케이블 꽂는 소리
+  앰비언스: 버스정류장 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버스정류장 쉘터 안 / 황금빛 햇살 / 기둥에 USB 충전 포트
+CH(캐릭터):   LOOK02 / 클로즈업
+SH(샷):       클로즈업
+CA(카메라):   고정
+AT(동작):     쉘터 안으로 들어오며 기둥에 부착된 USB 충전 포트 발견 → 눈 동그래지며 입꼬리 올라가기 → 믿기지 않는다는 듯 고개 살짝 젓기 → 가방에서 케이블 꺼내 꽂기
+MD(감정):     믿기지 않는 기쁨 / 서울에 감사한 순간
+DL(대사):     "어... 이거 진짜야? 충전 되는 거야?"
+NR(나레이션): "세상에. 버스정류장에 충전 포트가 있었어. 서울이 날 살린 거잖아."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair framing her face naturally,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace at collarbone, gold bracelet naturally sliding down wrist,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, small black crossbody bag strap across chest,
+inside a bus shelter,
+eyes wide with genuine surprise and delight,
+lips curling into a disbelieving smile,
+one hand extended forward reaching toward a USB charging port on a shelter pole,
+warm golden hour light filtering through shelter glass panels
+creating soft rim lighting on her hair,
+close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she enters the bus shelter,
+eyes landing on the USB charging port on the pole,
+expression shifting instantly to wide-eyed surprise.
+
+Next 2-6s: she speaks with disbelief and delight —
+"어... 이거 진짜야? 충전 되는 거야?"
+lips curling into a disbelieving smile,
+head shaking slightly in amazement.
+
+Final 6-8s: she reaches into her bag for a cable,
+plugs it in with a gold bracelet sliding down her wrist,
+small triumphant exhale.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 벤치에 앉아 충전 중 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 버스정류장 쉘터 벤치 / 오후 늦은 시간 / 충전하며 창밖 바라봄
+SP: OT.BS.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 어쩌면... 이게 오늘 제일 좋은 시간일 수도 있겠다.
+NR: 아무것도 안 해도 되는 이유가 생겼어. 충전될 때까지는, 여기 있어도 되니까.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL → MD_DRM
+AT: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK02
+DU: 10
+오디오:
+  BGM: 조용하고 감성적으로 전환
+  음성: 조용하고 여유로운 립싱크 + 나레이션
+  효과음: 없음
+  앰비언스: 버스 지나가는 소리 / 사람들 소리 / 쉘터 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버스정류장 쉘터 벤치 / 오후 늦은 시간 / 황금빛 + 쉘터 실내 조명
+CH(캐릭터):   LOOK02 / 벤치에 앉은 모습 / 다리 가지런히 모음
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     벤치에 앉아 케이블 꽂힌 폰 무릎에 올려두고 한숨 내쉬기 → 창밖 지나가는 버스와 사람들 멍하니 바라보기 → 입꼬리에 아주 작고 조용한 미소
+MD(감정):     아무것도 안 해도 되는 이유가 생긴 편안함 / 어쩌다 얻은 쉼
+DL(대사):     "어쩌면... 이게 오늘 제일 좋은 시간일 수도 있겠다."
+NR(나레이션): "아무것도 안 해도 되는 이유가 생겼어. 충전될 때까지는, 여기 있어도 되니까."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair cascading over shoulders
+as she sits slightly turned toward the shelter window,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet visible,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, blue plaid pleated mini skirt sitting neatly
+as she crosses her ankles, white high-heel strap sandals,
+small black crossbody bag resting beside her,
+charging cable plugged into phone resting on her lap,
+gazing softly out through the shelter glass at blurred passing buses and pedestrians,
+a quiet barely-there smile on her lips,
+warm golden hour light and soft interior shelter lighting,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she sits on bench, phone charging on lap,
+lets out a quiet exhale,
+legs crossed neatly at the ankle.
+
+Next 3-7s: gaze drifts out through shelter glass —
+buses and people passing in soft blur,
+she speaks quietly —
+"어쩌면... 이게 오늘 제일 좋은 시간일 수도 있겠다."
+the tiniest smile forming.
+
+Final 7-10s: she settles into the moment,
+expression quietly content,
+just being — nowhere to go.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  BR_VD — 쉘터 B-roll 디테일 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 버스정류장 쉘터 외부 + 내부 디테일 / 오후 골든아워
+SP: OT.BS.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 (부분) — 손/다리/얼굴 디테일
+DL: 없음
+NR: 가끔은 배터리가 다 닳아야 비로소 잠깐 멈출 수 있어. 억지로 만든 쉼이 아니라, 어쩔 수 없이 얻게 된 쉼.
+SH: SH_ECU
+CA: CA_ST
+MD: MD_REL
+AT: AT_SI_01
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 조용하고 감성적 BGM
+  음성: 따뜻하고 여운 있는 나레이션 톤
+  효과음: 없음
+  앰비언스: 버스정류장 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버스정류장 쉘터 내외부 / 골든아워
+CH(캐릭터):   손+케이블+스커트+샌들 디테일 / 얼굴 클로즈업
+SH(샷):       익스트림 클로즈업 (디테일 컷)
+CA(카메라):   고정
+AT(동작):     외부 황금빛 반사 → 손+케이블+스커트+골드 브레이슬렛 디테일 → 얼굴 클로즈업 창밖 바라봄
+MD(감정):     억지로 만든 쉼이 아닌 / 어쩌다 얻은 쉼의 소중함
+DL(대사):     없음
+NR(나레이션): "가끔은 배터리가 다 닳아야 비로소 잠깐 멈출 수 있어. 억지로 만든 쉼이 아니라, 어쩔 수 없이 얻게 된 쉼."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+Detail B-roll inside Seoul bus shelter during golden hour —
+Panel focus: close-up of her hands on lap,
+charging cable connected to phone,
+blue plaid pleated mini skirt fabric texture,
+white high-heel strap sandal with ankle strap detail,
+gold bracelet on wrist catching warm light,
+condensation-free glass shelter panels visible,
+warm golden hour light filtering through shelter glass,
+shallow depth of field,
+extreme close-up, vertical 9:16,
+Cinematic, photorealistic, 8K
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: exterior shot — golden sunlight
+reflecting off bus shelter glass,
+her silhouette softly visible inside.
+
+Next 3-6s: extreme close-up of hands on lap —
+charging cable, blue plaid skirt fabric,
+white sandal strap, gold bracelet catching warm light.
+
+Final 6-8s: face close-up —
+eyes soft and calm gazing off-frame through shelter window,
+expression peaceful and unhurried.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 충전 완료 / 일어서기 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 버스정류장 쉘터 / 충전 완료 직전 / 일어서기
+SP: OT.BS.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 좋아. 이제 나가볼까.
+NR: 충전된 건 폰만이 아닌 것 같았어. 나도 조금, 다시 채워진 것 같았으니까.
+SH: SH_MCU → SH_MS
+CA: CA_ST
+MD: MD_REL → MD_JOY
+AT: AT_SI_01 + AT_EM_01
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 밝고 가벼운 BGM으로 전환
+  음성: 가볍고 산뜻한 립싱크 + 따뜻한 나레이션
+  효과음: 케이블 뽑는 소리
+  앰비언스: 버스정류장 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버스정류장 쉘터 / 충전 완료 직전
+CH(캐릭터):   LOOK02 / 일어서는 모습
+SH(샷):       미디엄 클로즈업 → 미디엄샷
+CA(카메라):   고정
+AT(동작):     폰 화면 확인하며 배터리 올라간 것 확인 → 케이블 뽑아 가방에 넣기 → 천천히 일어서며 쉘터 밖 거리 바라보기 → 짧게 숨 들이마시기
+MD(감정):     폰만이 아닌 나도 충전된 느낌 / 다시 나갈 준비가 된
+DL(대사):     "좋아. 이제 나가볼까."
+NR(나레이션): "충전된 건 폰만이 아닌 것 같았어. 나도 조금, 다시 채워진 것 같았으니까."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair settling naturally as she rises,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet catching warm light,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, blue plaid pleated mini skirt falling into place as she stands,
+white high-heel strap sandals, small black crossbody bag now secured on shoulder,
+holding phone in one hand cable removed and stored,
+gazing out toward the open street beyond the shelter
+with a calm and ready expression,
+warm golden hour backlight creating soft halo on hair edges,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she checks phone screen,
+battery percentage up —
+eyebrows lifting slightly with quiet satisfaction.
+
+Next 2-6s: unplugs cable and stores it,
+rises slowly from the bench —
+she speaks lightly —
+"좋아. 이제 나가볼까."
+navy check skirt settling naturally as she stands.
+
+Final 6-8s: she looks out toward the street beyond the shelter,
+calm and ready,
+golden backlight creating a soft halo on her hair.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  BR_VD — 엔딩 뒷모습 / 10초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 버스정류장 앞 거리 / 오후 골든아워 엔딩
+SP: OT.ST.TZ_GH.LT_WM
+PL: BR_VD
+CH: 서여리 (뒷모습)
+DL: 없음
+NR: 배터리 1%가 그냥 잠깐 숨 고르라고 멈춰준 거였어....
+SH: SH_FS
+CA: CA_ST
+MD: MD_DRM
+AT: AT_MW_01
+LOOK_ID: LOOK02
+DU: 10
+오디오:
+  BGM: 감성적 BGM 페이드아웃
+  음성: 조용하고 여운 있는 나레이션 톤
+  효과음: 없음
+  앰비언스: 서울 거리 소음 / 여운 침묵 2~3초
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버스정류장 앞 거리 / 골든아워 역광
+CH(캐릭터):   LOOK02 / 뒷모습 전신
+SH(샷):       풀샷 — 뒷모습
+CA(카메라):   고정
+AT(동작):     쉘터 나와 거리로 걸어나오기 → 카메라 향해 살짝 눈 마주치다 다시 앞 봄(대사 없이 입꼬리만) → 거리 안쪽으로 천천히 걸어 들어가는 원경 → 화면 서서히 페이드
+MD(감정):     배터리 1%가 멈추라는 신호였다는 따뜻한 깨달음 / 여운
+DL(대사):     없음
+NR(나레이션): "배터리 1%가 그냥 잠깐 숨 고르라고 멈춰준 거였어...."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair flowing down her back clearly visible from behind,
+delicate gold necklace visible in brief profile moment,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, blue plaid pleated mini skirt,
+white high-heel strap sandals, small black crossbody bag,
+full-body back shot of her walking slowly into a narrow Seoul alley
+bathed in warm golden-pink dusk light,
+long legs and flowy skirt silhouetted against glowing sunset street,
+figure gradually shrinking into the warm glowing street,
+camera stays fixed — silence holds 2-3 seconds,
+full body shot from behind, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she exits the shelter, walks into the street,
+golden backlight silhouetting her figure,
+long legs and navy check skirt moving naturally.
+
+Next 3-7s: she pauses briefly —
+a slight turn toward camera, eyes meeting lens for just a moment,
+the quietest smile at the corner of her lips,
+then she turns back and walks forward.
+
+Final 7-10s: her figure grows smaller down the golden street,
+camera holds fixed,
+BGM fades out — silence 2-3 seconds — gentle fade to black.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목              | 길이 | PL     | LOOK   | SH          | CA     | 립싱크 | 상태 |
+|-----|------------------|----- |--------|--------|-------------|--------|--------|------|
+| C01 | 배터리 1% 발견    | 8s   | YR_VD  | LOOK02 | SH_MCU      | CA_ZI  | ✅     | 신규 |
+| C02 | 버스정류장 발견   | 8s   | YR_VD  | LOOK02 | SH_MS       | CA_ST  | ❌     | 신규 |
+| C03 | 충전 포트 발견    | 8s   | YR_VD  | LOOK02 | SH_CU       | CA_ST  | ✅     | 신규 |
+| C04 | 벤치에 앉아 충전  | 10s  | YR_VD  | LOOK02 | SH_MCU      | CA_ST  | ✅     | 신규 |
+| C05 | 쉘터 B-roll 디테일| 8s   | BR_VD  | LOOK02 | SH_ECU      | CA_ST  | ❌     | 신규 |
+| C06 | 충전 완료 일어서기| 8s   | YR_VD  | LOOK02 | SH_MCU→MS   | CA_ST  | ✅     | 신규 |
+| C07 | 엔딩 뒷모습       | 10s  | BR_VD  | LOOK02 | SH_FS       | CA_ST  | ❌     | 신규 |
+
+총 길이: 60초 / 립싱크: C01·C03·C04·C06
+BGM: 경쾌한 일상 → 발견 순간 업 → 감성적 → 페이드아웃
+================================================================
+버전 이력
+================================================================
+v1.0 (구버전) — 기존 포맷으로 작성
+v3.0 (2026-08-02) — 표준 포맷 v3 재작성
+================================================================

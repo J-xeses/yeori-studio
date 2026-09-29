@@ -1,0 +1,633 @@
+# SF_E09_HOMECAFE 홈카페 브이로그 대참사 대본
+# 생성일: 2026. 8. 2.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+# K-요소: 편의점 커피 문화
+
+================================================================
+마스터 코드
+SF_E09_HOMECAFE :: YR_VD+BR_VD :: IN.HM.TZ_NT.LT_STD → IN.CV.TZ_NT.LT_WM :: LK_HM(pastel pink hoodie+black leggings+gold necklace) :: MD_JOY→MD_COM→MD_REL :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E09_HOMECAFE
+TITLE : 홈카페 브이로그 대참사
+LOOK  : LOOK_HM2 (oversized pastel pink hoodie + black leggings + gold necklace + gold earrings)
+BG.A  : 집 홈카페 세팅 (링라이트 / 삼각대 / 커피 머신 / 목제 선반)
+BG.B  : GS25 편의점 내부 (형광등 / 한국 간식 진열대)
+BG.C  : 집 부엌 + 거실 소파 (따뜻한 간접조명)
+LIGHT : LT_STD (링라이트) → LT_CV (편의점 형광등) → LT_WM (집 따뜻한 조명)
+REF   : face / closeup / fs-masked
+BGM   : 밝고 경쾌한 오프닝 → 당황 효과음 → 편의점 경쾌 → 따뜻하고 감성적 마무리
+소품  : vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  YR_VD — Hook 홈카페 인플루언서 모드 / 6초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 홈카페 세팅 앞 / 링라이트 ON / 완벽한 인플루언서 모드
+SP: IN.HM.TZ_NT.LT_STD
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: 안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?
+NR: 없음
+SH: SH_MS
+CA: CA_ST
+MD: MD_JOY
+AT: AT_EM_01 + AT_SD_01
+LOOK_ID: LOOK_HM2
+DU: 6
+오디오:
+  BGM: 밝고 경쾌한 오프닝 BGM
+  음성: 과하게 밝고 에너지 넘치는 인플루언서 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 집 링라이트 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 홈카페 세팅 / 링라이트 ON / 삼각대 세팅
+CH(캐릭터):   파스텔 핑크 후드티 + 블랙 레깅스 + 골드 목걸이 / 라떼 글라스 들고
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AT(동작):     눈 크게 뜨고 과하게 밝게 카메라 보기 / 라떼 글라스 들어올리며 인사 / 시청자는 뭔가 수상하다는 걸 느끼기 시작
+MD(감정):     과도하게 밝은 인플루언서 모드 / 내심 뭔가 숨기는
+DL(대사):     "안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and small gold hoop earrings,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie, black leggings,
+standing in a cozy home cafe setup,
+ring light glowing on left side, smartphone on tripod filming her,
+wood shelf behind with coffee beans jar books small potted plant,
+espresso machine on counter,
+she holds a latte glass with beautiful rosette latte art,
+smiling brightly at camera with big confident eyes — full influencer mode,
+medium shot, eye level, vertical 9:16,
+bright clean white ring light warm background ambient,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she stands confidently in home cafe setup,
+ring light glowing, latte glass in hand,
+big bright smile at camera.
+
+Next 2-5s: she speaks brightly —
+"안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?"
+over-the-top influencer energy,
+eyes wide and sparkling.
+
+Final 5-6s: smile holds — but something imperceptibly off underneath.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 커피 머신 앞 멘붕 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 부엌 커피 머신 앞 / 카메라 꺼진 후 / 완전 다른 사람
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: 어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야... 설명서가 어딨지? 아 몰라 몰라~
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AT: AT_EM_04
+LOOK_ID: LOOK_HM2
+DU: 8
+오디오:
+  BGM: 갑자기 중단 → 당황 효과음
+  음성: 카메라 의식 없이 혼자 중얼거리는 톤 — ★립싱크
+  효과음: 당황 효과음
+  앰비언스: 부엌 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 부엌 / 커피 머신 앞 / 부드러운 자연 창문 빛
+CH(캐릭터):   LOOK_HM2 / 머신 옆에 서서 당황
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정 / 살짝 옆에서
+AT(동작):     복잡한 버튼들 멍하니 바라봄 → 눈썹 찌푸리고 고개 기울이기 → 머리 긁적이며 당황 → 뒤로 물러서며 어깨 힘 빠짐
+MD(감정):     완전 다른 사람 / 당황해서 우왕좌왕 / 카메라 의식 없음
+DL(대사):     "어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야... 설명서가 어딨지? 아 몰라 몰라~"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie, black leggings,
+standing beside a large professional espresso machine at kitchen counter,
+leaning in close staring at complicated buttons and dials
+with complete confusion,
+eyebrows deeply furrowed, head tilted, mouth slightly open — totally lost,
+soft natural window light from left, no ring light visible,
+medium shot slightly from the side,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she stands before the espresso machine,
+leaning in close, staring at the buttons,
+completely confused — no camera awareness.
+
+Next 2-7s: she speaks to herself —
+"어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야...
+설명서가 어딨지? 아 몰라 몰라~"
+scratching her head, stepping back helplessly.
+
+Final 7-8s: shoulders slump, completely defeated.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — GS25에서 편의점 커피 들고 나오기 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: GS25 편의점 내부 → 나오며 / 형광등 / 한국 간식 진열대
+SP: IN.CV.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: 그러니까, 있잖아~ 집에 커피 머신 있어봤자... GS25 커피가 젤 맛있어. 이건 팩트야. 근데~
+NR: 없음
+SH: SH_MS
+CA: CA_ST
+MD: MD_COM → MD_JOY
+AT: AT_MW_01 + AT_EM_01
+LOOK_ID: LOOK_HM2
+DU: 8
+오디오:
+  BGM: 편의점 경쾌한 BGM
+  음성: 처음 살짝 부끄럽다가 당당하게 반전 — ★립싱크
+  효과음: 편의점 도어벨 소리
+  앰비언스: 편의점 형광등 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     GS25 편의점 내부 / 밝은 형광등 / 한국 간식 진열대
+CH(캐릭터):   LOOK_HM2 + 흰 운동화 / 편의점 커피 페이퍼컵 들고
+SH(샷):       미디엄샷
+CA(카메라):   고정 (카메라 쪽으로 걸어오는 스타일)
+AT(동작):     편의점 커피 들고 카메라 쪽으로 천천히 걸어오기 → 처음엔 살짝 찔린 표정 → 점점 당당하게 반전 → 컵 살짝 들어올리기
+MD(감정):     처음 부끄럽다가 완전 당당하게 반전 / 이 반전이 웃음 포인트
+DL(대사):     "그러니까, 있잖아~ 집에 커피 머신 있어봤자... GS25 커피가 젤 맛있어. 이건 팩트야. 근데~"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie, black leggings, white sneakers,
+walking slowly toward camera inside Korean GS25 convenience store,
+bright fluorescent overhead lighting,
+blue and white GS25 signage visible on wall,
+colorful Korean snack shelves in background,
+holding a paper coffee cup with Cafe25 printed on it lid on top,
+expression starting with slightly guilty sideways glance
+then transitioning to confident direct eye contact
+with a small satisfied smile,
+medium full shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she walks toward camera in GS25,
+holding the paper coffee cup,
+initially looking slightly guilty to the side.
+
+Next 2-7s: she faces camera directly, speaking with growing confidence —
+"그러니까, 있잖아~ 집에 커피 머신 있어봤자...
+GS25 커피가 젤 맛있어. 이건 팩트야. 근데~"
+cup raised slightly — fully owning it.
+
+Final 7-8s: confident direct smile at camera.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 예쁜 컵에 따르기 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 부엌 / 편의점 커피를 예쁜 빈티지 글라스에 옮겨 담기
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: 진~짜 중요한 거~ 편의점 커피지만, 컵은 aesthetic 해야 해~ 이게 포인트! 아무도 몰라. ㅎㅎ 솔직히..
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AT: AT_AC_02
+LOOK_ID: LOOK_HM2
+DU: 10
+소품: vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)
+오디오:
+  BGM: 따뜻하고 귀여운 BGM
+  음성: 혀 내밀고 집중하는 진지한 톤 → 당당한 윙크 — ★립싱크
+  효과음: 컵에 커피 따르는 소리
+  앰비언스: 부엌 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 부엌 / 따뜻한 조명 / 흰 배경
+CH(캐릭터):   LOOK_HM2 / 부엌 카운터에 서서
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정 / 살짝 위에서
+AT(동작):     편의점 커피 천천히 빈티지 글라스에 따르기 → 혀 살짝 내밀고 집중 → 가득 채워진 컵 흐뭇하게 바라봄 → 카메라 향해 슬쩍 윙크
+MD(감정):     진지하게 집중하는 귀여움 / 아무도 모른다는 당당함
+DL(대사):     "진~짜 중요한 거~ 편의점 커피지만, 컵은 aesthetic 해야 해~ 이게 포인트! 아무도 몰라. ㅎㅎ 솔직히.."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie, black leggings,
+standing at kitchen counter carefully pouring convenience store coffee
+into a vintage diamond-textured clear glass tumbler
+(short cylindrical shape, embossed geometric pattern, no stem),
+dark coffee liquid pouring in,
+tongue slightly out in concentration,
+hyper-focused adorably serious expression,
+then looking down at the filled glass with a pleased satisfied expression,
+warm soft kitchen light slightly overhead,
+close-up slightly above angled down at hands and face,
+vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she pours coffee slowly and carefully
+into the vintage textured glass,
+tongue slightly out, completely focused.
+
+Next 3-8s: she speaks while pouring —
+"진~짜 중요한 거~ 편의점 커피지만,
+컵은 aesthetic 해야 해~ 이게 포인트!
+아무도 몰라. ㅎㅎ 솔직히.."
+sets carton down, gazes at glass warmly.
+
+Final 8-10s: glances up at camera with a sneaky wink.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — Deep Talk 소파 고백 / 16초  ★립싱크+나레이션
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 거실 소파 / POV 앵글 / 커피 들고 카메라 응시 / 핵심 컷
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: 팔로워들은 아마 모를껄~? Actually~ 난 편의점! (8초)
+NR: 방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ (8초)
+SH: SH_CU
+CA: CA_ST
+MD: MD_COM → MD_JOY
+AT: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_HM2
+DU: 16
+소품: vintage diamond-textured clear glass tumbler
+오디오:
+  BGM: 따뜻한 코지 BGM / 나레이션 시작 시 볼륨 낮추기
+  음성: 나레이션(전반8초) + 립싱크(후반8초)
+  효과음: 없음
+  앰비언스: 조용한 거실 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     거실 소파 / 따뜻한 플로어 램프 / POV 샷
+CH(캐릭터):   LOOK_HM2 / 소파에 앉아 빈티지 글라스 두 손으로 들고
+SH(샷):       클로즈업 / POV / 친밀한 거리
+CA(카메라):   고정
+AT(동작):     살짝 앞으로 기울며 글라스 카메라 향해 → 친구한테 고백하듯 낮은 목소리로 나레이션 → 잠깐 웃음 → 음흉한 눈빛으로 립싱크
+MD(감정):     진지하게 시작했다가 픽 웃는 타이밍 / 이 컷이 영상의 핵심
+DL(대사):     (후반8초) "팔로워들은 아마 모를껄~? Actually~ 난 편의점!"
+NR(나레이션): (전반8초) "방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ"
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and small gold hoop earrings,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie, black leggings,
+sitting on a beige fabric sofa living room
+with warm floor lamp glowing softly behind her,
+holding vintage diamond-textured clear glass tumbler with both hands
+(murky brown coffee liquid inside slight condensation on glass),
+POV shot — feels like viewer is sitting across from her,
+looking directly into camera with a guilty playful smile
+one eyebrow slightly raised leaning forward slightly,
+like confessing a harmless secret to a close friend,
+warm golden floor lamp cozy indoor evening atmosphere,
+POV close-up, eye level, intimate, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-8s (나레이션):
+she leans slightly forward, holds glass toward camera,
+guilty playful expression — like confessing to a close friend,
+NO dialogue — narration added in post
+"방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ"
+
+Next 8-16s (립싱크):
+she speaks with mischievous sparkling eyes —
+"팔로워들은 아마 모를껄~?
+Actually~ 난 편의점!"
+small natural laugh with shoulder shake,
+completely owning the confession.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  BR_VD — 빈티지 글라스 클로즈업 / 10초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 / 빈티지 글라스 손 클로즈업 / K-감성 승화 순간
+SP: IN.HM.TZ_NT.LT_WM
+PL: BR_VD
+CH: 서여리 손만 (얼굴 미등장)
+DL: 없음
+NR: 근데 있잖아~ 한국 편의점 커피가 왜 맛있냐면... 집앞에 언제나 거기 있거든~ 그게 좋은 거잖아..
+SH: SH_ECU
+CA: CA_ST
+MD: MD_REL
+AT: AT_AC_02
+LOOK_ID: LOOK_HM2 (소매만)
+DU: 10
+소품: vintage diamond-textured clear glass tumbler + 고양이 스티커 ("커피" 한글 텍스트)
+오디오:
+  BGM: 따뜻하고 감성적 BGM
+  음성: 따뜻하고 편안한 나레이션 톤
+  효과음: 없음
+  앰비언스: 조용한 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     거실 / 따뜻한 황금빛 램프 조명
+CH(캐릭터):   손 + 빈티지 글라스만 / 얼굴 없음
+SH(샷):       익스트림 클로즈업
+CA(카메라):   고정
+AT(동작):     두 손으로 글라스 감싸 쥐기 → 살짝 돌려 스티커 보여주기 → 느리고 평화로운 동작
+MD(감정):     편의점 커피를 K-감성으로 승화 / 따뜻하고 소박한 행복
+DL(대사):     없음
+NR(나레이션): "근데 있잖아~ 한국 편의점 커피가 왜 맛있냐면... 집앞에 언제나 거기 있거든~ 그게 좋은 거잖아.."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+Close-up of both hands wrapped around a vintage diamond-textured clear glass tumbler
+(short cylindrical shape, embossed geometric pattern, no stem),
+iced coffee visible inside — dark amber liquid with ice cubes,
+small cute cat sticker on the glass surface
+(cat face illustration, Korean text 커피 below),
+condensation droplets on glass exterior,
+warm golden-beige blurred background,
+pastel pink hoodie sleeves visible only at edges of frame,
+hands gently cradling the glass with slight subtle rotation to show sticker,
+slow peaceful tactile movement,
+warm golden indoor lamp light soft and intimate,
+extreme close-up detail shot only hands glass sticker in frame no face,
+shallow depth of field, vertical 9:16,
+Cinematic, photorealistic, 8K warm color grade
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: both hands wrap gently around the glass,
+condensation catching the warm light,
+cat sticker visible on the surface.
+
+Next 3-7s: hands slowly rotate the glass,
+sticker coming into clearer view,
+no dramatic movement — slow and peaceful.
+
+Final 7-10s: hands hold the glass still,
+warm lamp light glowing on the scene,
+quiet intimate moment.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7-1]  YR_VD — 엔딩 레시피 공개 전반 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 거실 소파 / 빈티지 글라스 들고 카메라 향해 당당하게
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: 없음
+NR: 자, 내 진짜 홈카페 레시피~ GS25 간다. 예쁜 컵에 따른다. 아무한테도 말 안 한다.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_JOY
+AT: AT_SI_01 + AT_EM_01
+LOOK_ID: LOOK_HM2
+DU: 8
+오디오:
+  BGM: 밝고 유쾌한 엔딩 BGM 시작
+  음성: 밝고 당당한 나레이션 톤
+  효과음: 없음
+  앰비언스: 조용한 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     거실 소파 / 따뜻한 황금빛 램프
+CH(캐릭터):   LOOK_HM2 / 소파에 앉아 글라스 들고
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     소파에 앉아 카메라 향해 밝게 / 글라스 들어올리며 레시피 공개 / 환한 자신감 넘치는 미소
+MD(감정):     밝고 당당한 / 이게 진짜 레시피라는 자신감
+DL(대사):     없음
+NR(나레이션): "자, 내 진짜 홈카페 레시피~ GS25 간다. 예쁜 컵에 따른다. 아무한테도 말 안 한다."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and small gold hoop earrings,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie, black leggings,
+sitting on beige sofa leaning forward toward camera with bright warm smile,
+holding up vintage diamond-textured clear glass tumbler
+(short cylindrical embossed geometric pattern NO stem NOT a wine glass)
+filled with iced dark coffee raising it toward camera as if making a cheerful toast,
+small cat sticker visible on glass,
+warm floor lamp glowing behind her cozy living room atmosphere,
+wide bright confident smile playful and proud,
+POV medium-close slightly tilted dynamic and cheerful, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she sits up brightly on sofa,
+raises the vintage glass toward camera in a toast gesture,
+wide bright smile — completely proud.
+
+Next 3-7s: she holds the pose confidently,
+glass raised, cat sticker visible,
+warm lamp glowing behind her.
+
+Final 7-8s: big smile holds — ready for the punchline.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7-2]  YR_VD — 엔딩 시그니처 라인 / 6초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 거실 소파 / 윙크하며 시그니처 마무리 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HM2
+DL: It's called creative direction, okay?
+NR: 없음
+SH: SH_CU
+CA: CA_PS
+MD: MD_JOY
+AT: AT_EM_01
+LOOK_ID: LOOK_HM2
+DU: 6
+오디오:
+  BGM: 유쾌한 BGM 유지 → 엔딩 페이드아웃
+  음성: 장난스럽고 당당한 립싱크 — ★립싱크
+  효과음: 없음
+  앰비언스: 조용한 거실 여운
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     거실 소파 / 황금빛 보케 배경
+CH(캐릭터):   LOOK_HM2 / C07-1보다 더 가까이
+SH(샷):       클로즈업
+CA(카메라):   푸시인
+AT(동작):     카메라 향해 윙크 → 시그니처 라인 대사 → 포즈 유지하며 환한 미소 여운
+MD(감정):     장난스럽고 자신감 / 시청자와의 공모 느낌
+DL(대사):     "It's called creative direction, okay?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and small gold hoop earrings,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized pastel pink hoodie,
+leaning toward camera on sofa with bright warm smile,
+one eye winking playfully, expression "yeah this is still aesthetic and I stand by it",
+warm golden lamp bokeh background,
+close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: camera pushes in gently,
+she leans toward camera with conspiratorial energy,
+one eye winking.
+
+Next 2-5s: she speaks with playful confidence —
+"It's called creative direction, okay?"
+bright proud smile, completely owning it.
+
+Final 5-6s: holds the wink and smile — 여운.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷    | 제목               | 길이 | PL     | LOOK     | SH       | CA     | 립싱크 | 상태 |
+|-------|--------------------|------|--------|----------|----------|--------|--------|------|
+| C01   | Hook 인플루언서 모드 | 6s  | YR_VD  | LOOK_HM2 | SH_MS    | CA_ST  | ✅     | 신규 |
+| C02   | 커피 머신 멘붕      | 8s   | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ✅     | 신규 |
+| C03   | GS25 나오기         | 8s   | YR_VD  | LOOK_HM2 | SH_MS    | CA_ST  | ✅     | 신규 |
+| C04   | 예쁜 컵에 따르기    | 10s  | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ✅     | 신규 |
+| C05   | Deep Talk 소파 고백 | 16s  | YR_VD  | LOOK_HM2 | SH_CU    | CA_ST  | ✅     | 신규 ⭐ |
+| C06   | 빈티지 글라스 디테일 | 10s | BR_VD  | LOOK_HM2 | SH_ECU   | CA_ST  | ❌     | 신규 |
+| C07-1 | 엔딩 레시피 전반    | 8s   | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ❌     | 신규 |
+| C07-2 | 엔딩 시그니처 라인  | 6s   | YR_VD  | LOOK_HM2 | SH_CU    | CA_PS  | ✅     | 신규 |
+
+총 길이: 약 72초 / 립싱크: C01·C02·C03·C04·C05·C07-2
+BGM: 밝은 오프닝 → 중단(멘붕) → 경쾌(편의점) → 따뜻한 → 유쾌한 엔딩
+핵심 소품: vintage diamond-textured clear glass tumbler (짧은 원통형 / 스템 없음)
+시그니처 라인: "It's called creative direction, okay?" — 매 화 고정
+================================================================
+버전 이력
+================================================================
+v1.0 (구버전) — 초기 기획안 + 영상 프롬프트 분리 작성
+v3.0 (2026-08-02) — 표준 포맷 v3 통합
+                    마스터 코드 / EP.HEADER / KR 섹션 / VP 섹션 정리
+                    C05 나레이션+립싱크 분리 (16초 구조)
+                    C07 → C07-1(나레이션8초) + C07-2(립싱크6초) 분리
+================================================================

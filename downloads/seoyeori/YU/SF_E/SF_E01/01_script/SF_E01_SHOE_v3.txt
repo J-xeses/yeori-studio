@@ -1,0 +1,612 @@
+# SF_E01_SHOE 신발을 벗는다는 의미 대본
+# 생성일: 2026. 7. 18. / 업그레이드: 2026. 7. 25.
+# 버전: v3.0 (E01 fullprompt + v2 표준 포맷 통합)
+# 룰셋: v1.3.1 적용
+# ※ [CUT N] 헤더 / ━*24 구분선 / script_to_prompts.py 호환
+
+================================================================
+마스터 코드
+SF_E01_SHOE :: YR_VD :: OT.CF.TZ_AF.LT_WM → IN.HM.TZ_NT.LT_WM :: LK_CS.TOP_CRP(white square-neck).BTM_SHT(light blue denim).SH_HHL(white stiletto) :: MD_JOY→MD_REL→MD_INT→MD_DRM :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E01_SHOE
+TITLE : 신발을 벗는다는 의미
+LOOK.A: LOOK_CS (white square-neck crop top + light blue denim shorts + white stiletto high heels + gold necklace)
+LOOK.B: LOOK_HM (white square-neck crop top + light blue denim shorts + bare feet + gold necklace)
+BG.A  : 카페 테라스 외부 (성수동 / 촬영 세팅 / 황금빛 오후)
+BG.B  : 집 현관 + 거실 소파 (따뜻한 간접조명 / 저녁)
+LIGHT : LT_WM (황금빛 오후 자연광) → LT_WD (창문빛) → LT_WM (따뜻한 실내 간접조명)
+REF   : face / closeup / fs-masked
+BGM   : 밝은 오프닝 BGM → 조용한 감성 BGM (집 입장 후) → 따뜻하고 진심 어린 BGM (엔딩)
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  BR_VD — 촬영 세팅 B-roll / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 카페 테라스 외부 / 촬영 마무리 직전 세팅샷 / 서여리 미등장
+SP: OT.CF.TZ_AF.LT_WM
+PL: BR_VD
+CH: 없음 (서여리 미등장)
+DL: 없음
+NR: 없음
+SH: SH_WS
+CA: CA_ST
+MD: MD_REL
+AC: 없음
+LOOK_ID: 없음
+DU: 8
+오디오:
+  BGM: 밝은 오프닝 BGM 잔잔하게
+  음성: 없음
+  효과음: 없음
+  앰비언스: 거리 소음, 카페 환경음, 장비 조작 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     카페 테라스 외부 / 오후 따뜻한 햇살 / 도심 배경
+CH(캐릭터):   서여리 미등장 — 공간 단독 B-roll
+SH(샷):       와이드샷 — 테라스 전체 구도
+CA(카메라):   고정 (삼각대)
+AC(동작):     없음 — 공간과 분위기만
+MD(감정):     차분하고 따뜻한 일상적 분위기
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+WIDE SHOT —
+Outdoor cafe wooden deck terrace,
+wooden folding tables and chairs arranged naturally,
+canvas awning overhead casting soft shadow,
+filming camera on tripod visible to one side,
+crew hands adjusting equipment,
+real cafe patrons seated in background naturally,
+city street and modern buildings softly visible behind,
+no main character in frame,
+bright warm golden afternoon sunlight,
+wide shot, eye level, vertical 9:16,
+Cinematic, photorealistic, 8K
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: wide establishing shot of cafe terrace,
+camera holds steady, warm afternoon light on wooden deck,
+cafe patrons naturally moving in background.
+
+Next 3-6s: gentle ambient movement —
+leaves rustling slightly, light shifting softly,
+crew equipment visible at edge of frame.
+
+Final 6-8s: camera holds steady,
+warm golden light fills the frame,
+anticipation of someone about to arrive.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 촬영 마무리 인사 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 카페 테라스 / 촬영 마무리 후 밝게 인사하는 서여리
+SP: OT.CF.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL
+DL: 오늘 촬영 끝~~
+NR: 없음
+SH: SH_MCU → SH_CU → SH_MCU
+CA: CA_ST → CA_PS
+MD: MD_JOY
+AC: AT_SD_01 + AT_EM_01
+LOOK_ID: LOOK_CS
+DU: 8
+오디오:
+  BGM: 밝은 BGM 유지
+  음성: 밝고 에너지 넘치는 인사 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 카페 테라스 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     카페 테라스 / 오후 따뜻한 햇살 / 도심 배경 소프트 블러
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 연청 데님 숏츠 + 흰색 스틸레토 힐 + 골드 목걸이
+SH(샷):       미디엄 클로즈업 → 클로즈업 → 미디엄 클로즈업
+CA(카메라):   고정 → 부드러운 푸시인
+AC(동작):     카메라 보며 오른손 흔들기 → 대사 → 환하게 웃으며 마무리
+MD(감정):     밝고 에너지 넘치는 마무리 / 따뜻한 기쁨
+DL(대사):     "오늘 촬영 끝~~"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, light blue denim shorts, white stiletto high heels,
+outdoor cafe terrace wooden folding tables and chairs canvas awning overhead,
+warm golden afternoon sunlight modern city buildings softly blurred in background,
+face clearly visible, bright genuine smile, right hand raised in cheerful wave,
+medium close-up shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: bright direct smile at camera,
+right hand raises in cheerful wave,
+eyes full of warm energy, slight playful head tilt,
+medium close-up eye level.
+
+Next 3-6s: she says "오늘 촬영 끝~~"
+with bright satisfied expression,
+natural lip movement, leaning slightly forward.
+
+Final 6-8s: smile softens warmly,
+eyes crinkle with genuine joy,
+expression relaxes naturally.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — 무대 뒤의 한숨 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 카페 테라스 / 촬영 끝나고 카메라 향해 걸어오는 서여리 / 긴장 풀린 표정
+SP: OT.CF.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL
+DL: 없음
+NR: 없음
+SH: SH_MS → SH_MCU
+CA: CA_PS
+MD: MD_REL
+AC: AT_MW_01
+LOOK_ID: LOOK_CS
+DU: 8
+오디오:
+  BGM: 조용하고 감성적으로 전환
+  음성: 없음
+  효과음: 힐 소리 (나무 바닥)
+  앰비언스: 카페 테라스 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     카페 테라스 / 오후 황금빛 햇살 / 촬영 장비 배경 소프트
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 연청 데님 숏츠 + 흰색 스틸레토 힐 + 골드 목걸이
+SH(샷):       미디엄샷 → 미디엄 클로즈업 (걸어오면서 자연스럽게 가까워짐)
+CA(카메라):   부드러운 푸시인 (걸음에 맞춰)
+AC(동작):     천천히 카메라 쪽으로 걸어옴 / 어깨 자연스럽게 이완 / 시선 아래로 내려가다 올라옴
+MD(감정):     조용한 피로와 해방감 / 긴장이 풀리는 순간 / 무방비 상태의 진짜 모습
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, light blue denim shorts, white stiletto high heels,
+outdoor cafe terrace wooden folding tables and chairs canvas awning overhead,
+warm golden afternoon sunlight filming equipment and tripod softly visible in background,
+face clearly visible, expression quietly tired and relieved,
+shoulders relaxing naturally, candid unguarded moment,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she walks slowly toward camera,
+heels clicking softly on wooden deck,
+expression quietly tired and relieved,
+medium shot, warm afternoon sunlight.
+
+Next 3-6s: shoulders relaxing naturally,
+a quiet exhale visible in expression,
+eyes lifting gently, soft unfocused gaze.
+
+Final 6-8s: she pauses naturally,
+expression warm and quietly content,
+camera settles into medium close-up.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  BR_VD — 신발을 벗는 순간 / 8초  (음성 오버레이)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 현관 / 하이힐을 벗는 손과 발 / 익스트림 클로즈업
+SP: IN.HM.TZ_GH.LT_WD
+PL: BR_VD
+CH: 서여리 하체만 (발 + 연청 데님 숏츠 + 손) — 얼굴 미등장
+DL: 아~ 살 것 같다 (음성 오버레이 — Veo3 대사 포함 금지)
+NR: 없음
+SH: SH_ECU
+CA: CA_ST
+MD: MD_REL
+AC: AT_AC_01
+LOOK_ID: LOOK_CS (하체만)
+DU: 8
+오디오:
+  BGM: 거의 무음 → 힐 벗는 소리에 집중
+  음성: "아~ 살 것 같다" — TTS 오버레이 방식
+  효과음: 힐 바닥에 떨어지는 소리 / 맨발이 바닥에 닿는 소리
+  앰비언스: 조용한 집 현관 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 현관 / 저녁노을빛 / 따뜻한 창문 빛
+CH(캐릭터):   연청 데님 숏츠 + 한쪽 흰색 스틸레토 힐 벗는 중 + 맨발 + 손
+SH(샷):       익스트림 클로즈업 — 발과 손만 / 얼굴 없음
+CA(카메라):   로우 앵글 고정
+AC(동작):     한 손이 천천히 내려와 힐을 벗김 / 힐 하나는 이미 바닥에 / 맨발이 바닥에 닿음
+MD(감정):     조용한 해방감 / 고요한 안도
+DL(대사):     "아~ 살 것 같다" (음성 오버레이 — Veo3 대사 포함 금지)
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+Extreme close-up of bare feet and legs,
+light blue denim shorts visible at top of frame,
+one foot still inside a single white pointed-toe stiletto high heel,
+hand reaching down gracefully to slip it off,
+other foot already bare on warm wooden floor,
+exactly two white stiletto heels total —
+one being removed from foot, one already lying on floor beside her,
+warm natural light from nearby window,
+cozy home interior softly visible in background,
+low angle close-up, vertical 9:16,
+Cinematic, photorealistic, 8K
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post ("아~ 살 것 같다" TTS 오버레이)
+
+First 0-2s: extreme close-up of feet on wooden floor,
+one white stiletto heel still on foot,
+other heel already lying beside her,
+hand begins reaching down slowly.
+
+Next 2-5s: hand gently slips the heel off,
+heel drops softly beside the first one,
+both heels now on the floor together,
+bare foot touches warm wooden surface.
+
+Final 5-8s: bare toes settle gently on wooden floor,
+slight wiggle of toes — quiet satisfaction,
+warm window light glowing softly.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — 친구 옆으로 다가오기 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / 프레임 왼쪽에서 등장 후 앉으며 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_HM.TOP_CRP(white square-neck).맨발
+DL: 아, 드디어 끝났다. 많이 기다렸지? 미안... 인플루언서 생활이... 가끔은 인형이 된 기분이라니까.
+NR: 없음
+SH: SH_MCU
+CA: CA_ST (소파 시점 / 살짝 로우 앵글)
+MD: MD_REL → MD_SAD
+AC: AT_MW_01 → AT_SI_01 + AT_EM_03
+LOOK_ID: LOOK_HM
+DU: 10
+오디오:
+  BGM: 조용하고 감성적 BGM 유지
+  음성: 지치지만 따뜻한 대화 톤 — ★립싱크
+  효과음: 맨발 소리 / 소파 쿠션 소리
+  앰비언스: 조용한 집 거실 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 / 저녁 / 따뜻한 간접조명 / 소파 배경
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 연청 데님 숏츠 + 맨발 + 골드 목걸이
+SH(샷):       미디엄 클로즈업 — 소파에 앉아서 카메라 쪽으로 몸 살짝 틀기
+CA(카메라):   소파 시점 / 살짝 로우 앵글 고정
+AC(동작):     프레임 왼쪽에서 걸어와 소파에 앉음(약 2초) / 카메라 쪽으로 몸 틀기 / 머리 쓸어넘기며 대사
+MD(감정):     지쳐있지만 따뜻한 / 솔직하고 편안한 분위기
+DL(대사):     "아, 드디어 끝났다. 많이 기다렸지? 미안... 인플루언서 생활이... 가끔은 인형이 된 기분이라니까."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, light blue denim shorts, bare feet,
+sitting on cozy sofa turned slightly toward camera,
+warm home interior soft warm lamps glowing in background cozy evening atmosphere gentle bokeh,
+face clearly visible tired but warm expression leaning slightly forward with genuine warmth,
+medium close-up, slightly low angle, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background must not interfere with main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she enters naturally from left side of frame,
+walks casually toward sofa on bare feet,
+sits down naturally next to camera.
+
+Next 2-8s: she speaks naturally —
+"아, 드디어 끝났다. 많이 기다렸지? 미안...
+인플루언서 생활이... 가끔은 인형이 된 기분이라니까."
+tired but warm conversational tone,
+leaning slightly forward, sincere eye contact.
+
+Final 8-10s: soft smile, quiet moment after speaking.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 보리차 한 잔의 여유 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / 컵을 입에 대고 한 모금 → 내려놓고 → 여유롭게 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_HM.TOP_CRP(white square-neck).맨발
+DL: 근데 너 그거 알아? 그 어떤 음료수보다, 할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아.
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL → MD_JOY
+AC: AT_AC_03
+LOOK_ID: LOOK_HM
+DU: 10
+오디오:
+  BGM: 따뜻하고 감성적 BGM
+  음성: 편안하고 따뜻한 대화 톤 — ★립싱크
+  효과음: 얼음 소리 / 조용한 홀짝임
+  앰비언스: 조용한 거실 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 저녁 / 따뜻한 간접조명 / 보케 배경
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 맨발 + 골드 목걸이 / 자연스럽게 내린 헤어
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정 / 아이레벨
+AC(동작):     처음부터 컵 입에 대고 한 모금(3초) → 컵 내려놓기(2초) → 여유있게 대사
+MD(감정):     편안하고 따뜻한 만족감 / 작은 기쁨
+DL(대사):     "근데 너 그거 알아? 그 어떤 음료수보다, 할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, bare feet,
+sitting comfortably on sofa,
+clear glass of iced barley tea held in hand —
+golden-amber liquid with ice cubes condensation on glass,
+face clearly visible eyes closing slightly with quiet satisfaction small natural smile,
+soft cinematic indoor lighting warm bokeh background,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she holds glass of iced barley tea up to lips,
+takes a slow savoring sip,
+eyes closing slightly with quiet satisfaction.
+
+Next 3-5s: lowers glass gently,
+small natural smile forming.
+
+Final 5-10s: she speaks with a warm small smile —
+"근데 너 그거 알아? 그 어떤 음료수보다,
+할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아."
+conversational warm tone, holding glass lightly.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 진심 어린 시선 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / 카메라를 직시하며 진지한 감성 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_HM.TOP_CRP(white square-neck).맨발
+DL: 근데~ 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나 지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든.
+NR: 없음
+SH: SH_ECU → SH_CU
+CA: CA_ST
+MD: MD_INT → MD_DRM
+AC: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_HM
+DU: 10
+오디오:
+  BGM: 따뜻하고 진심 어린 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 장난스럽게 시작 → 조용하고 진지하게 마무리 — ★립싱크
+  효과음: 없음
+  앰비언스: 조용한 거실 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 저녁 / 부드러운 간접조명 보케 / 따뜻하고 친밀한 분위기
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 맨발 + 골드 목걸이 / 자연스럽게 내린 헤어
+SH(샷):       익스트림 클로즈업 → 클로즈업
+CA(카메라):   고정 / 아이레벨
+AC(동작):     소파에 앉아 살짝 앞으로 기울기 / 장난스럽다가 진지해지는 표정 전환
+MD(감정):     장난스럽게 시작해 진지하고 따뜻하게 마무리
+DL(대사):     "근데~ 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나 지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top,
+sitting on sofa leaning slightly forward,
+face clearly visible playful yet sincere expression gazing directly into camera with warm intimacy,
+warm soft-focus background gentle bokeh of indoor lamp light quiet intimate atmosphere,
+extreme close-up transitioning to close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: playful direct gaze, slight head tilt.
+
+Next 2-8s: she speaks —
+"근데~ 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~
+그래서 나 지금 되게 편해.
+하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든."
+voice starting playful then shifting quiet and sincere.
+
+Final 8-10s: warm sincere expression, quiet after speaking.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 8]  YR_VD — 너를 향한 손길 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 / 카메라를 향해 손을 뻗으며 따뜻하게 마무리 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_HM.TOP_CRP(white square-neck)
+DL: 우리... 진짜 자기 모습이야~ 그러니까 너도... 오늘 하루 수고했어.
+NR: 없음
+SH: SH_CU
+CA: CA_ST
+MD: MD_DRM → MD_JOY
+AC: AT_EM_05
+LOOK_ID: LOOK_HM
+DU: 8
+오디오:
+  BGM: 따뜻하고 진심 어린 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 부드럽고 진심 어린 마무리 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 조용한 거실 환경음 / 여운
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 / 저녁 / 황금빛 보케 배경 / 따뜻한 실내 조명
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 골드 목걸이 / 자연스럽게 내린 헤어
+SH(샷):       클로즈업 / 얕은 심도
+CA(카메라):   고정 / 아이레벨
+AC(동작):     카메라를 향해 한 손 부드럽게 뻗기 / 손가락이 렌즈 쪽으로 천천히 다가옴 / 여운 2초
+MD(감정):     따뜻하고 진심 어린 / 시청자를 다독이는 감성
+DL(대사):     "우리... 진짜 자기 모습이야~ 그러니까 너도... 오늘 하루 수고했어."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top,
+one hand gently extended toward camera lens fingers softly reaching as if tenderly touching the viewer,
+face clearly visible warm genuine smile sincere eyes,
+shallow depth of field warm golden bokeh background soft cinematic indoor light,
+close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she reaches one hand gently toward camera,
+warm genuine smile, direct sincere gaze.
+
+Next 2-6s: she speaks softly and warmly —
+"우리... 진짜 자기 모습이야~
+그러니까 너도... 오늘 하루 수고했어."
+soft warm voice, fingers gently extended toward camera.
+
+Final 6-8s: hand lowers gently, warm smile holds,
+eyes soft — 여운 2초 유지.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목              | 길이 | PL     | LOOK     | SH            | CA         | 립싱크 | 상태      |
+|-----|------------------|------|--------|----------|---------------|------------|--------|-----------|
+| C01 | 촬영 세팅 B-roll  | 8s   | BR_VD  | 없음     | SH_WS         | CA_ST      | ❌     | ✅ 확정   |
+| C02 | 촬영 마무리 인사  | 8s   | YR_VD  | LOOK_CS  | SH_MCU→CU     | CA_ST→PS   | ✅     | 🔴 재생성 |
+| C03 | 무대 뒤의 한숨    | 8s   | YR_VD  | LOOK_CS  | SH_MS→MCU     | CA_PS      | ❌     | ✅ 완료   |
+| C04 | 신발 벗는 순간    | 8s   | BR_VD  | LOOK_CS  | SH_ECU        | CA_ST      | ❌오버레이| ✅ 확정|
+| C05 | 친구 옆으로       | 10s  | YR_VD  | LOOK_HM  | SH_MCU        | CA_ST      | ✅     | 🔴 재생성 |
+| C06 | 보리차 한 잔      | 10s  | YR_VD  | LOOK_HM  | SH_MCU        | CA_ST      | ✅     | 🔴 재생성 |
+| C07 | 진심 어린 시선    | 10s  | YR_VD  | LOOK_HM  | SH_ECU→CU     | CA_ST      | ✅     | 🔴 재생성 |
+| C08 | 너를 향한 손길    | 8s   | YR_VD  | LOOK_HM  | SH_CU         | CA_ST      | ✅     | 🔴 재생성 |
+
+총 길이: 72초 / 재생성: C02·C05·C06·C07·C08 / 립싱크: C02·C05·C06·C07·C08
+BGM: 밝은 오프닝 → 조용한 감성 → 따뜻하고 진심 어린 엔딩
+================================================================
+버전 이력
+================================================================
+v1.0 (2026-07-18) — 최초 fullprompt 작성 (E01 마스터코드 포맷)
+v2.0 (2026-07-24) — 재생성 컷 확정 / 컷 번호 정리 / 대사 수정
+v3.1 (2026-07-25) — 표준 포맷 v3 통합
+                    EP.HEADER / LOOK_ID / 오디오 섹션 추가
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    헤어 느슨하게 묶음 → 자연스럽게 내린 헤어로 수정
+                    VP 섹션 수정 — THIS IS A SILENT FILM 제거
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
+================================================================

@@ -1,0 +1,550 @@
+# SF_E03_JJIMJILBANG 찜질방에서 발견한 요가루틴 대본
+# 생성일: 2026. 7. 08. / 업그레이드: 2026. 7. 25.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+
+================================================================
+마스터 코드
+SF_E03_JJIMJILBANG :: YR_VD+BR_VD :: IN.ST.TZ_AF.LT_STD → IN.JJ.TZ_AF.LT_WM :: LK_YOGA(pastel lavender yoga set).LK_JJM(sage green jjimjilbang set+white towel hat) :: MD_JOY→MD_COM→MD_REL→MD_DRM :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E03_JJIMJILBANG
+TITLE : 찜질방에서 발견한 요가루틴
+LOOK.A: LOOK_YOGA (pastel lavender yoga crop top + matching high-waist leggings + barefoot + gold necklace + small gold hoop earrings)
+LOOK.B: LOOK_JJM (sage green jjimjilbang short-sleeve t-shirt + matching shorts + white towel hat + barefoot + gold necklace)
+BG.A  : 밝고 깔끔한 요가 스튜디오 (링라이트 / 거울벽 / 촬영 장비 세팅)
+BG.B  : 한국 찜질방 내부 (황금빛 조명 / 나무 바닥 / 대나무 매트)
+LIGHT : LT_STD (스튜디오 링라이트) → LT_WM (찜질방 황금빛 실내 조명)
+REF   : face / closeup / fs-masked
+BGM   : 밝은 오프닝 BGM → BGM 갑작스러운 중단 (넘어짐) → 따뜻하고 아늑한 BGM (찜질방) → 유쾌한 엔딩 BGM
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  YR_VD — Hook 요가 인플루언서 / 8초  ★립싱크  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 요가 스튜디오 / 링라이트 밝은 조명 / 카메라 향해 밝게 대사
+SP: IN.ST.TZ_AF.LT_STD
+PL: YR_VD
+CH: 서여리 / LOOK_YOGA
+DL: 안녕 여러분~ 오늘은 제가 너무 좋아하는 요가 콜라보 촬영이에요! 저 사실 요가 엄청 잘해요~
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_JOY
+AC: AT_EM_01
+LOOK_ID: LOOK_YOGA
+DU: 8
+오디오:
+  BGM: 밝고 에너지 넘치는 오프닝 BGM
+  음성: 밝고 에너지 넘치는 인플루언서 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 스튜디오 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     요가 스튜디오 / 링라이트 / 거울벽 / 촬영 카메라 세팅 배경
+CH(캐릭터):   파스텔 라벤더 요가 크롭탑 + 매칭 레깅스 + 맨발 + 골드 목걸이 + 작은 골드 후프 귀걸이
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AC(동작):     손 허리에 얹고 밝은 미소로 카메라 직시 / 눈에 약간의 긴장감 숨어있음 / 자연스러운 손 제스처
+MD(감정):     밝고 에너지 넘치는 인플루언서 모드 / 내심 약간 긴장
+DL(대사):     "안녕 여러분~ 오늘은 제가 너무 좋아하는 요가 콜라보 촬영이에요! 저 사실 요가 엄청 잘해요~"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair worn down naturally NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace, small gold hoop earrings,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+pastel lavender yoga crop top matching lavender high-waist yoga leggings barefoot,
+standing on yoga mat in bright modern yoga studio
+ring light and camera setup visible in background
+mirror wall reflecting studio behind her,
+hands on hips confident influencer pose big bright smile
+eyes slightly nervous underneath,
+medium shot, eye level, vertical 9:16,
+bright clean studio lighting,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she stands on yoga mat, hands on hips,
+bright confident smile at camera,
+ring light glowing behind her in studio.
+
+Next 2-7s: she says brightly —
+"안녕 여러분~ 오늘은 제가 너무 좋아하는 요가 콜라보 촬영이에요!
+저 사실 요가 엄청 잘해요~"
+bright energetic influencer tone, natural hand gesture.
+
+Final 7-8s: big warm smile holds, direct gaze — influencer mode.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 다운독→넘어짐 / 10초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 요가 스튜디오 / 다운독 자세 유지하다가 쾅 넘어짐
+SP: IN.ST.TZ_AF.LT_STD
+PL: YR_VD
+CH: 서여리 / LOOK_YOGA
+DL: 없음
+NR: (후반) ...다운독이 뭐야 진짜. 왜 개 자세가 이렇게 어려워.
+SH: SH_MCU → SH_TLD
+CA: CA_ST → CA_TLD
+MD: MD_COM
+AC: AT_EM_01 → AT_EM_03
+LOOK_ID: LOOK_YOGA
+DU: 10
+오디오:
+  BGM: 밝은 BGM 유지 → 쾅 소리와 함께 갑자기 중단
+  음성: 멍한 중얼거림 톤 나레이션
+  효과음: 넘어지는 소리 (쿵)
+  앰비언스: 스튜디오 정적
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     요가 스튜디오 / 다크 그레이 요가 매트 / 링라이트 배경
+CH(캐릭터):   파스텔 라벤더 요가셋 + 맨발 / 다운독 자세에서 얼굴 카메라 향해
+SH(샷):       미디엄 클로즈업 → 틸트다운 (넘어짐 따라)
+CA(카메라):   고정 → 틸트다운
+AC(동작):     전반: 다운독 유지, 힘겹지만 미소, 이마에 땀 / 후반: 자세 무너지며 쓰러짐, 천장 바라보며 멍한 표정
+MD(감정):     전반 힘겨운 노력 → 후반 멍하고 우스운 상황
+DL(대사):     없음
+NR(나레이션): "...다운독이 뭐야 진짜. 왜 개 자세가 이렇게 어려워."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair hanging down naturally NOT short hair,
+a very subtle natural skin texture on her right cheek,
+delicate gold necklace small gold hoop earrings,
+face clearly visible looking directly into camera from below,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions,
+natural makeup, warm skin tone, appearing no older than 22-23,
+pastel lavender yoga crop top matching lavender high-waist yoga leggings barefoot,
+in downward dog yoga pose on dark grey yoga mat
+body bent forward hips raised high head hanging down between arms
+face visible looking toward camera,
+expression strained smile trying hard to hold pose
+sweat on forehead effort visible but maintaining composure,
+ring light visible in background mirror wall behind,
+close-up from floor level looking up at face, vertical 9:16,
+bright clean studio lighting,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-5s: she holds downward dog pose,
+face visible looking toward camera from between arms,
+strained smile, forehead sweating, trying hard.
+
+Next 5-7s: pose begins to wobble,
+arms shaking slightly,
+expression shifting from effort to panic.
+
+Final 7-10s: she collapses onto the mat with a thud,
+lies there looking up at the ceiling,
+blank dazed expression — quiet comic moment.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — 찜질방 입장 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 찜질방 탈의실 출구 → 메인홀 / 편안하게 걸어 들어오기
+SP: IN.JJ.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_JJM
+DL: 없음
+NR: 그러니까 있잖아. 요가 끝나고 왜 찜질방에 왔냐고? ...요가를 못 끝냈거든.
+SH: SH_FS → SH_MS
+CA: CA_ZI → CA_TR
+MD: MD_REL
+AC: AT_MW_01
+LOOK_ID: LOOK_JJM
+DU: 8
+오디오:
+  BGM: 따뜻하고 아늑한 BGM 부드럽게 시작
+  음성: 캐주얼하고 자연스러운 나레이션 톤
+  효과음: 없음
+  앰비언스: 찜질방 환경음 (원거리)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 탈의실 출구 → 메인홀 / 황금빛 실내 조명
+CH(캐릭터):   세이지 그린 찜질방 세트 + 흰색 타월햇 + 맨발 + 골드 목걸이
+SH(샷):       풀샷 → 미디엄샷 (걸어 들어오며)
+CA(카메라):   줌인 → 트래킹
+AC(동작):     탈의실에서 나오는 모습 → 어깨 완전히 이완 → 찜질방 홀로 편안하게 걸어가기
+MD(감정):     완전히 편안하고 해방된 / 요가 실패 후 찾아온 안식
+DL(대사):     없음
+NR(나레이션): "그러니까 있잖아. 요가 끝나고 왜 찜질방에 왔냐고? ...요가를 못 끝냈거든."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+wavy dark brown hair pulled into bun under white towel hat NOT short hair,
+white towel wrapped around head in classic Korean jjimjilbang style,
+a very subtle natural skin texture on her right cheek,
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural dewy skin minimal makeup warm skin tone, appearing no older than 22-23,
+sage green jjimjilbang short-sleeve t-shirt matching sage green shorts barefoot,
+walking out of changing room into jjimjilbang lounge area
+Korean jjimjilbang interior wooden floors warm lighting lockers visible,
+shoulders completely relaxed at ease,
+medium shot, eye level, vertical 9:16,
+warm cozy indoor lighting,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she walks out of changing area,
+white towel hat on head, sage green jjimjilbang set,
+shoulders immediately relaxing.
+
+Next 3-6s: she walks into the main jjimjilbang hall,
+warm golden lighting wrapping around her,
+completely at ease, unhurried.
+
+Final 6-8s: she looks around the space,
+finding a spot, warm content expression,
+wooden floor under bare feet.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 홀 누워 + 시그니처 눈마주침 / 10초  ⭐시그니처
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 찜질방 메인홀 대나무 매트 / 식혜 캔 배 위에 올리고 천장 바라보다가 카메라 향해 눈 마주침
+SP: IN.JJ.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_JJM
+DL: 없음
+NR: (전반) 있잖아, 한국에서 찜질방은 말이야... 그냥 뜨거운 방이 아니야. 아무것도 안 해도 되는 유일한 장소거든. (후반) 인플루언서도, 요가 선생님도 아닌... 그냥 사람으로 있어도 되는 곳.
+SH: SH_MCU → SH_CU
+CA: CA_ZI → CA_ST
+MD: MD_REL → MD_DRM
+AC: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_JJM
+DU: 10
+오디오:
+  BGM: 매우 조용하고 따뜻한 앰비언스 — 나레이션 동안 거의 무음
+  음성: 부드럽고 진심 어린 나레이션 톤
+  효과음: 없음
+  앰비언스: 찜질방 원거리 소리만
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 메인홀 바닥 / 대나무 매트 / 황금빛 조명
+CH(캐릭터):   LOOK_JJM 전체 / 매트에 누운 모습
+SH(샷):       미디엄 클로즈업 → 클로즈업 (카메라 향해 천천히 고개 돌리기)
+CA(카메라):   줌인 → 고정
+AC(동작):     매트에 누워 식혜 캔 배 위에 올리고 천장 바라보기 → 카메라 쪽으로 천천히 고개 돌리기 → 따뜻한 눈 마주침
+MD(감정):     전반: 완전히 편안하고 진심 어린 나레이션 / 후반: 감성적이고 따뜻한 눈 마주침
+DL(대사):     없음
+NR(나레이션): "있잖아, 한국에서 찜질방은 말이야... 그냥 뜨거운 방이 아니야. 아무것도 안 해도 되는 유일한 장소거든. 인플루언서도, 요가 선생님도 아닌... 그냥 사람으로 있어도 되는 곳."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+wavy dark brown hair in bun under white towel wrap NOT short hair,
+a very subtle natural skin texture on her right cheek,
+delicate gold necklace,
+face clearly visible turning slowly toward camera warm genuine smile eyes making direct contact with lens,
+effortlessly photogenic not posing just existing beautifully,
+natural dewy skin cheeks slightly flushed pink from heat minimal makeup warm skin tone,
+appearing no older than 22-23,
+sage green jjimjilbang short-sleeve t-shirt matching shorts,
+lying on bamboo mat on heated floor of large jjimjilbang hall
+looking up at ceiling holding canned sikhye resting on stomach,
+other people resting softly blurred in background,
+slightly above angle looking down at her,
+warm golden jjimjilbang atmosphere, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-4s: she lies on bamboo mat,
+sikhye can resting on stomach,
+gazing up at the ceiling, completely relaxed.
+
+Next 4-7s: she slowly turns her head toward the camera,
+warm gentle eye contact forming,
+expression soft and genuine.
+
+Final 7-10s: she holds eye contact with camera,
+warm sincere smile,
+golden jjimjilbang light wrapping around her — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — 소금방 앞 고백 / 8초  ★립싱크  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 찜질방 소금방 앞 / 정면 나레이션 후 옆으로 당겨지며 소근소근 대사
+SP: IN.JJ.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_JJM
+DL: 그런데.... 세 번 다 넘어졌어.
+NR: 솔직히 말할게. 나 요가 딱 세 번 해봤는데~ 첫 번째는 오늘. 두 번째도 오늘. 세 번째도... 오늘이야.
+SH: SH_CU → SH_MCU
+CA: CA_ST → CA_PAN
+MD: MD_COM
+AC: AT_EM_01 + AT_EM_04
+LOOK_ID: LOOK_JJM
+DU: 8
+오디오:
+  BGM: 따뜻하고 가벼운 BGM
+  음성: (전반) 웃음 섞인 나레이션 / (후반) 비밀스러운 속삭임 — ★립싱크
+  효과음: 식혜 캔 소리
+  앰비언스: 찜질방 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 소금방 앞 / 황금빛 조명
+CH(캐릭터):   LOOK_JJM / 대나무 매트에 앉아 식혜 캔 들고
+SH(샷):       클로즈업 → 미디엄 클로즈업 (카메라가 옆으로 이동하며)
+CA(카메라):   고정 → 패닝 (옆으로 당겨지는 연출)
+AC(동작):     정면 직시 → 웃음 참기 → 손으로 입 가리고 옆으로 소근소근 자세
+MD(감정):     장난스럽고 유머러스 / 비밀스러운 속삭임
+DL(대사):     "그런데.... 세 번 다 넘어졌어."
+NR(나레이션): "솔직히 말할게. 나 요가 딱 세 번 해봤는데~ 첫 번째는 오늘. 두 번째도 오늘. 세 번째도... 오늘이야."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+wavy dark brown hair in bun under white towel hat NOT short hair,
+a very subtle natural skin texture on her right cheek,
+delicate gold necklace,
+face clearly visible looking directly into camera,
+playful expression lips slightly pressed holding back a smile
+eyes sparkling with suppressed amusement,
+effortlessly photogenic not posing just existing beautifully,
+natural dewy skin cheeks slightly flushed from heat minimal makeup warm skin tone,
+appearing no older than 22-23,
+sage green jjimjilbang short-sleeve t-shirt sitting cross-legged on bamboo mat
+holding sikhye can,
+jjimjilbang interior with warm glowing lights softly blurred in background,
+POV close-up, eye level, vertical 9:16,
+warm golden jjimjilbang lighting,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she looks directly into camera,
+playful expression, lips pressed holding back a smile,
+eyes sparkling with amusement.
+
+Next 3-7s: she leans to the side, cups hand near mouth,
+she speaks conspiratorially —
+"그런데.... 세 번 다 넘어졌어."
+playful secretive whisper tone, eyes sparkling.
+
+Final 7-8s: suppressed grin, warm mischievous expression.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  BR_VD — 식혜 + 달걀 디테일 / 8초  🤔보류
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 찜질방 나무 바닥 / 두 손으로 식혜 캔 쥐고 한 모금 마시기 / 소품 클로즈업
+SP: IN.JJ.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 손 + 소품만 (얼굴 미등장)
+DL: 없음
+NR: 찜질방 식혜 알아? 세상에서 제일 달고 시원한 거. 힘든 날 찜질방 식혜 한 캔이면... 웬만한 건 다 괜찮아지거든.
+SH: SH_ECU
+CA: CA_ST
+MD: MD_REL
+AC: AT_AC_03
+LOOK_ID: LOOK_JJM (소매만)
+DU: 8
+오디오:
+  BGM: 따뜻하고 감성적인 BGM
+  음성: 따뜻하고 여운 있는 나레이션 톤
+  효과음: 캔 따는 소리 + 조용한 홀짝임 + 만족스러운 숨소리
+  앰비언스: 찜질방 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 나무 바닥 / 황금빛 실내 조명
+CH(캐릭터):   세이지 그린 소매만 / 손과 소품만 / 얼굴 없음
+SH(샷):       익스트림 클로즈업 — 손+소품 디테일
+CA(카메라):   고정 / 로우 앵글
+AC(동작):     두 손으로 식혜 캔 감싸 쥐기 → 조용히 한 모금 홀짝이기 → 캔 내려놓기
+MD(감정):     조용한 만족감 / 찜질방 식혜의 소박한 행복
+DL(대사):     없음
+NR(나레이션): "찜질방 식혜 알아? 세상에서 제일 달고 시원한 거. 힘든 날 찜질방 식혜 한 캔이면... 웬만한 건 다 괜찮아지거든."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+Close-up of two hands holding a yellow canned sikhye (식혜)
+Korean hangul text clearly visible on the can
+condensation droplets on the can,
+a halved hard-boiled egg on a small white plate next to the can
+small salt packet beside it,
+warm wooden jjimjilbang floor visible,
+sage green fabric short sleeve visible at edges of frame,
+warm golden indoor lighting soft cozy atmosphere,
+she takes a slow quiet sip NO face visible soft satisfied exhale,
+close-up detail shot, vertical 9:16,
+Photorealistic 8K cinematic
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: two hands wrap around yellow sikhye can,
+condensation visible on the cold can,
+hard-boiled egg and salt on small plate beside it.
+
+Next 3-6s: can lifts slowly to lips,
+quiet slow sip, no face visible,
+sage green sleeve at edge of frame.
+
+Final 6-8s: can lowers back down gently,
+both hands still holding it,
+warm golden light on the scene.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 엔딩 식혜 건배 / 10초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 찜질방 메인홀 매트 / 카메라 향해 고개 돌리며 식혜 캔 건배 포즈
+SP: IN.JJ.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_JJM
+DL: 없음
+NR: 자, 이게 진짜 나의 요가 루틴이야. 요가 자세 잡는다. 넘어진다. 찜질방 온다. 식혜 마신다.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_JOY
+AC: AT_SD_01 + AT_EM_01
+LOOK_ID: LOOK_JJM
+DU: 10
+오디오:
+  BGM: 밝고 유쾌한 엔딩 BGM 시작
+  음성: 장난스럽고 자신감 있는 나레이션 톤
+  효과음: 식혜 캔 건배 소리
+  앰비언스: 따뜻한 찜질방 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     찜질방 메인홀 / 대나무 매트 / 황금빛 조명
+CH(캐릭터):   LOOK_JJM 전체 / 매트에 누운 채 고개 돌리기
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     매트에 누운 채 카메라 향해 고개 돌리기 → 큰 환한 미소 → 식혜 캔 건배 → 한쪽 눈 살짝 윙크
+MD(감정):     장난스럽고 자신감 있는 / 나만의 루틴을 발견한 유쾌한 결론
+DL(대사):     없음
+NR(나레이션): "자, 이게 진짜 나의 요가 루틴이야. 요가 자세 잡는다. 넘어진다. 찜질방 온다. 식혜 마신다."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+wavy dark brown hair in bun under white towel hat NOT short hair,
+a very subtle natural skin texture on her right cheek,
+delicate gold necklace,
+face clearly visible big bright warm smile toward camera one eye slightly winking,
+effortlessly photogenic not posing just existing beautifully,
+natural dewy skin cheeks slightly flushed pink from heat minimal makeup warm skin tone,
+appearing no older than 22-23,
+sage green jjimjilbang short-sleeve t-shirt,
+lying on mat in jjimjilbang turning head toward camera
+with big warm smile holding sikhye can up toward camera as if making a toast
+one eye slightly winking,
+POV close-up slightly above angle cheerful and intimate, vertical 9:16,
+warm golden jjimjilbang lighting,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she lies on mat, then turns head toward camera,
+big bright warm smile forming immediately.
+
+Next 3-7s: raises sikhye can toward camera in a toast gesture,
+one eye winking playfully,
+completely cheerful and self-assured.
+
+Final 7-10s: warm smile holds,
+can still raised in toast,
+eyes sparkling with playful energy — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목              | 길이 | PL     | LOOK      | SH          | CA           | 립싱크 | 상태       |
+|-----|------------------|------|--------|-----------|-------------|--------------|--------|------------|
+| C01 | Hook 요가 인플루언서| 8s  | YR_VD  | LOOK_YOGA | SH_MCU      | CA_ST        | ✅     | 🔴 재생성  |
+| C02 | 다운독→넘어짐     | 10s  | YR_VD  | LOOK_YOGA | SH_MCU→TLD  | CA_ST→TLD    | ❌     | ✅ 완료    |
+| C03 | 찜질방 입장       | 8s   | YR_VD  | LOOK_JJM  | SH_FS→MS    | CA_ZI→TR     | ❌     | ✅ 완료    |
+| C04 | 홀 누워+시그니처  | 10s  | YR_VD  | LOOK_JJM  | SH_MCU→CU   | CA_ZI→ST     | ❌     | ✅ 완료 ⭐ |
+| C05 | 소금방 앞 고백    | 8s   | YR_VD  | LOOK_JJM  | SH_CU→MCU   | CA_ST→PAN    | ✅     | 🔴 재생성  |
+| C06 | 식혜+달걀 디테일  | 8s   | BR_VD  | LOOK_JJM  | SH_ECU      | CA_ST        | ❌     | 🤔 보류    |
+| C07 | 엔딩 식혜 건배    | 10s  | YR_VD  | LOOK_JJM  | SH_MCU      | CA_ST        | ❌     | ✅ 완료    |
+
+총 길이: 62초 / 재생성: C01·C05 / 보류: C06 / 립싱크: C01·C05
+BGM: 밝은 오프닝 → BGM 중단(넘어짐) → 따뜻한 찜질방 BGM → 유쾌한 엔딩
+================================================================
+버전 이력
+================================================================
+v1.0 (2026-07-08) — 최초 작성
+v2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)
+v3.1 (2026-07-25) — 표준 포맷 v3 통합
+                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    LOOK.A/B 멀티룩 구분 / 재생성 대상 명시
+                    VP 섹션 수정 — THIS IS A SILENT FILM 제거
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
+================================================================

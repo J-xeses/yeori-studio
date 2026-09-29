@@ -1,0 +1,737 @@
+# SF_E04_PUBLICPLACE 공공장소에서 웃었던 이유 대본
+# 생성일: 2026. 7. 17. / 업그레이드: 2026. 7. 25.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+# 재생성 대상: C04 / C05-2 / C07-2
+
+================================================================
+마스터 코드
+SF_E04_PUBLICPLACE :: YR_VD :: IN.ST.TZ_AF.LT_STD → IN.HM.TZ_NT.LT_WM :: LK_PB(white heart-pattern crop top+pink scarf+green running shorts+pink flip-flop sandals) :: MD_JOY→MD_SAD→MD_REL→MD_DRM :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E04_PUBLICPLACE
+TITLE : 공공장소에서 웃었던 이유
+LOOK  : LOOK_PB (white heart-pattern crop top + pink scarf draped over shoulders + green running shorts + pink flip-flop sandals + gold necklace)
+BG.A  : 스튜디오 세트장 (sharp white studio lights / 촬영 장비)
+BG.B  : 택시 안 (밤 / 도시 불빛)
+BG.C  : 집 현관 + 거실 소파 + 부엌 (따뜻한 실내 조명 / 밤)
+LIGHT : LT_STD (스튜디오 샤프 화이트) → LT_DK (택시 밤 / 도시 불빛) → LT_WM (집 따뜻한 조명)
+REF   : face / closeup / fs-masked
+BGM   : 밝은 오프닝 BGM → C02에서 뚝 끊김 (무음) → 조용하고 감성적 BGM → 따뜻한 엔딩
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  YR_VD — Hook 화보촬영 현장 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 스튜디오 세트장 / 촬영 마친 서여리가 카메라 향해 밝게 인사
+SP: IN.ST.TZ_AF.LT_STD
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 오늘 촬영 대박이었어요! 여러분~
+NR: 없음
+SH: SH_MS
+CA: CA_ST
+MD: MD_JOY
+AC: AT_SD_01 + AT_EM_01
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 밝은 오프닝 BGM
+  음성: 밝고 에너지 넘치는 인플루언서 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 스튜디오 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     스튜디오 세트장 / 샤프 화이트 스튜디오 조명 / 촬영 장비 배경
+CH(캐릭터):   화이트 하트패턴 크롭탑 + 핑크 스카프 어깨에 걸침 + 그린 숏츠 + 핑크 플립플롭 + 골드 목걸이
+SH(샷):       미디엄샷 (전신 가까이)
+CA(카메라):   고정
+AC(동작):     스텝들 향해 손 흔들며 밝게 인사 / 카메라 직시
+MD(감정):     밝고 에너지 넘치는 인플루언서 모드 — 그러나 눈과 입의 감정이 미묘하게 불일치 (시청자는 뭔가 이상하다고 느끼지만 정확히 모름)
+DL(대사):     "오늘 촬영 대박이었어요! 여러분~"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped loosely over shoulders,
+green running shorts, pink flip-flop sandals,
+standing in photography studio set sharp white studio lights
+camera equipment and lighting rigs visible in background
+white seamless backdrop behind her,
+face clearly visible bright big smile waving toward camera
+eyes and mouth expression subtly mismatched — smile present but eyes slightly hollow,
+medium shot, eye level, vertical 9:16,
+sharp white studio lighting,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she stands in studio set, bright smile,
+right hand raised waving toward camera and crew,
+sharp white lights illuminating her.
+
+Next 3-6s: smile holds perfectly maintained,
+eyes direct toward camera,
+subtle hollow quality behind the brightness.
+
+Final 6-8s: smile remains, slight turn toward camera,
+expression polished and professional,
+something imperceptibly off underneath.
+
+First 0-2s: bright wave toward crew, big smile.
+
+Next 2-7s: she says brightly —
+"오늘 촬영 대박이었어요! 여러분~"
+energetic influencer tone, hand waving,
+eyes slightly hollow beneath the performance.
+
+Final 7-8s: smile holds, professional polish.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 모두가 사라진 무대 뒤 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 스튜디오 세트장 / 모두 빠져나간 후 혼자 남은 서여리 / BGM 뚝 끊김
+SP: IN.ST.TZ_AF.LT_DK
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 없음
+NR: 없음 (표정만으로 전달)
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SAD
+AC: AT_EM_02
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: C01 BGM 뚝 끊김 → 완전 무음 (이 침묵이 훅)
+  음성: 없음
+  효과음: 없음
+  앰비언스: 스튜디오 적막 / 멀리서 들리는 장비 소리만
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     스튜디오 세트장 / 촬영 끝난 후 / 어두운 배경 조명 + 한쪽 소프트 사이드 라이트
+CH(캐릭터):   LOOK_PB 전체
+SH(샷):       미디엄 클로즈업 / 살짝 위 아이레벨
+CA(카메라):   고정
+AC(동작):     아무것도 하지 않음 / 표정만으로 전달 / 스텝들 다 빠져나간 공간에서 혼자 멍하게 서있음
+MD(감정):     인플루언서 모드 OFF / 무너지기 직전의 고요함 / 텅 빈 공간의 쓸쓸함
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped over shoulders, green running shorts,
+standing alone in now-empty studio set,
+dim background light one soft side light on her face,
+expression blank and unguarded — the performance completely dropped,
+eyes slightly hollow, not quite looking at anything,
+the quiet after everyone has left,
+medium close-up, slightly above eye level, vertical 9:16,
+dim studio lighting soft side light,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands alone in the empty studio,
+everyone else gone, equipment still around her,
+dim lighting, one soft side light on her face.
+
+Next 3-6s: expression completely unguarded,
+the performance mask fully dropped,
+eyes slightly unfocused, not looking at anything specific.
+
+Final 6-8s: she stays still,
+quiet in the emptiness,
+soft side light catching the subtle emotion in her eyes.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — 택시 안에서 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 택시 뒷좌석 / 밤 / 도시 불빛 반사 / 속으로만 말하는 연출
+SP: IN.TX.TZ_NT.LT_DK
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 없음
+NR: 집에 가는 길... 오늘따라 왜 이렇게 멀지. (속삭임 / TTS 오버레이)
+SH: SH_CU
+CA: CA_ST
+MD: MD_SAD
+AC: AT_EM_02
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 조용하고 감성적 BGM 시작 (매우 작게)
+  음성: 속삭임 톤 TTS 오버레이 (립싱크 없음 / 자막 처리)
+  효과음: 없음
+  앰비언스: 택시 엔진 소리, 도시 소음, 빗소리 (선택)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     택시 뒷좌석 / 밤 / 도시 불빛이 창문으로 반사
+CH(캐릭터):   LOOK_PB / 측면 프로필
+SH(샷):       클로즈업 / 측면 프로필
+CA(카메라):   고정
+AC(동작):     창밖을 바라보며 / 입술을 살며시 모으고 / 도시 불빛이 눈에 반사
+MD(감정):     피로와 거리감 / 집이 왜 이렇게 멀게 느껴지는 날
+DL(대사):     없음
+NR(나레이션): "집에 가는 길... 오늘따라 왜 이렇게 멀지." (속삭임 톤 / TTS 오버레이 / 자막 처리)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped over shoulders,
+sitting in back seat of taxi at night,
+looking out the window,
+side profile close-up lips pressed together gently
+eyes reflecting warm city lights outside,
+dark taxi interior warm city lights reflecting through window,
+side profile, close-up, vertical 9:16,
+dark interior warm city light reflection,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: side profile in taxi backseat,
+city lights streaming past the window,
+eyes reflecting the passing lights.
+
+Next 3-6s: lips pressed together gently,
+gaze fixed on the window,
+expression quietly tired and distant.
+
+Final 6-8s: city light plays across her face,
+she continues looking out,
+expression soft and emotionally heavy.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 현관에서 무너져버린 감정 / 8초  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 현관 / 문 닫고 나서 비로소 감정이 무너지는 순간
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 없음
+NR: 오늘... 되게 억울했어. (2초 간격) 근데 웃었어. 계속. (TTS 오버레이)
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SAD
+AC: AT_EM_02
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 감성적 BGM — 이 장면에서 가장 조용하게
+  음성: 지치고 억울한 나레이션 톤 / "억울했어"와 "웃었어" 사이 2초 간격
+  효과음: 문 닫히는 소리 (컷 시작 직전)
+  앰비언스: 조용한 현관 / 집 안 정적
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 현관 / 방금 문 닫은 직후 / 부드러운 복도 조명
+CH(캐릭터):   LOOK_PB 전체 / 현관에 서있는 모습
+SH(샷):       미디엄샷 / 아이레벨 / 약간 친밀한 거리
+CA(카메라):   고정
+AC(동작):     문 닫고 나서 그 자리에 서있음 / 얼굴이 무너지기 시작 / 눈물이 고이는 순간 / 드디어 혼자 감정을 내려놓는 순간
+MD(감정):     인플루언서 모드 완전 OFF / 오늘 하루 참았던 감정이 터지는 순간 / 억울하고 지친 진짜 모습
+DL(대사):     없음
+NR(나레이션): "오늘... 되게 억울했어." (2초 간격) "근데 웃었어. 계속." (TTS 오버레이)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped over shoulders, green running shorts, pink flip-flop sandals,
+standing at her apartment entrance just closed the front door behind her,
+face crumbling with genuine emotion eyes welling up with tears,
+the moment she finally lets her guard down completely,
+soft warm hallway light, medium shot, eye level slightly intimate distance, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-2s: she stands at the apartment entrance,
+door just closed behind her,
+still in her outdoor look, slightly stiff.
+
+Next 2-5s: expression begins to crumble,
+the performance completely dropping away,
+eyes welling up, emotional release starting.
+
+Final 5-8s: she stands there letting herself feel it,
+eyes glistening, face soft and raw,
+soft warm hallway light holding her quietly.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5-1]  YR_VD — Deep Talk 진솔한 심정 전반 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / POV 샷 / 두 손으로 턱 괴고 카메라 직시
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 없음
+NR: 한국에선 말이야... 공공장소에서 우는 게 민폐래. 나 오늘 여섯 시간 동안 웃었어.
+SH: SH_CU
+CA: CA_ST
+MD: MD_INT
+AC: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 감성적 BGM 매우 조용하게
+  음성: 담담하고 진심 어린 나레이션 톤
+  효과음: 없음
+  앰비언스: 조용한 거실 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 밤 / 따뜻한 황금빛 램프 조명 / 아늑한 인테리어
+CH(캐릭터):   LOOK_PB / 소파에 앉아 두 손으로 턱 괴기
+SH(샷):       클로즈업 / POV 샷 / 아이레벨 / 친밀한 거리
+CA(카메라):   고정
+AC(동작):     소파에 앉아 두 손으로 턱 괴기 / 카메라 직시 / 눈이 살짝 촉촉하지만 울지 않음 / 취약하고 직접적인 시선
+MD(감정):     담담하게 고백하는 / 억울함과 지침의 정제된 표현
+DL(대사):     없음
+NR(나레이션): "한국에선 말이야... 공공장소에서 우는 게 민폐래. 나 오늘 여섯 시간 동안 웃었어."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped over shoulders,
+sitting on beige sofa at home POV shot from directly in front of her,
+chin resting on both hands folded together,
+eyes slightly glistening but not crying
+direct vulnerable gaze into camera lens,
+warm golden hour lamp light cozy home interior background,
+POV close-up, eye level, intimate, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she sits on sofa, chin resting on both hands,
+direct gaze into camera,
+expression open and vulnerable.
+
+Next 3-6s: eyes slightly glistening,
+not crying but close,
+holding the gaze steadily.
+
+Final 6-8s: expression stays raw and genuine,
+warm lamp light behind her,
+quiet intimate moment.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5-2]  YR_VD — Deep Talk 진솔한 심정 후반 / 8초  ★립싱크  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / C05-1보다 가까운 샷 / 진지한 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 근데... 그게 더 무서워. 언제부터 내가 이렇게 잘 참게 된 거지?
+NR: 없음
+SH: SH_ECU
+CA: CA_ST
+MD: MD_INT → MD_DRM
+AC: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: BGM 거의 무음 / 대사에 집중
+  음성: 조용하고 진지한 대화 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 매우 조용한 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 밤 / 따뜻한 황금빛 램프 조명
+CH(캐릭터):   LOOK_PB / C05-1보다 더 가까이
+SH(샷):       익스트림 클로즈업 (C05-1 클로즈업에서 더 당겨진 샷)
+CA(카메라):   고정
+AC(동작):     C05-1에서 연속되는 장면 / 같은 자세에서 더 가까운 샷 / 대사
+MD(감정):     조용한 공포 / 언제부터 이렇게 됐지라는 자기 인식의 순간
+DL(대사):     "근데... 그게 더 무서워. 언제부터 내가 이렇게 잘 참게 된 거지?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf,
+sitting on sofa extremely close to camera,
+chin resting on hands eyes direct and slightly searching,
+expression quietly frightened — a moment of self-realization,
+eyes glistening with unshed emotion,
+warm golden lamp light cozy interior,
+extreme close-up, eye level, POV intimate, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: extremely close to camera,
+chin still resting on hands,
+eyes searching, quietly frightened expression.
+
+Next 3-6s: gaze stays direct and vulnerable,
+subtle emotional shift — realization settling in,
+warm light catching the slight glisten in her eyes.
+
+Next 2-7s: she speaks quietly —
+"근데... 그게 더 무서워.
+언제부터 내가 이렇게 잘 참게 된 거지?"
+quiet searching tone, slight vulnerability.
+Final 7-8s: expression holds after speaking, quiet.
+
+First 0-2s: extremely close, direct gaze, quiet expression.
+
+Next 2-7s: she speaks quietly —
+"근데... 그게 더 무서워.
+언제부터 내가 이렇게 잘 참게 된 거지?"
+quiet searching tone, slight vulnerability.
+
+Final 7-8s: expression holds after speaking, quiet.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — Korean Mood 냉장고 앞에서 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 부엌 / 밤 / 냉장고 앞 / 멍하니 열어보다가 그냥 닫음
+SP: IN.HM.TZ_NT.LT_DK
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 없음
+NR: 배고프지도 않은데 냉장고를 열었어. ...그냥 뭔가 채우고 싶었나봐.
+SH: SH_MS
+CA: CA_ST
+MD: MD_SAD
+AC: AT_AC_01
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 조용하고 감성적 BGM / 냉장고 모터 소리와 대비
+  음성: 담담하고 텅 빈 나레이션 톤
+  효과음: 냉장고 문 열리는 소리 / 닫히는 소리
+  앰비언스: 밤 부엌 / 냉장고 모터 소리 / 집 안 정적
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     현대적 한국 부엌 / 밤 / 열린 냉장고 앞
+CH(캐릭터):   LOOK_PB / 옆모습
+SH(샷):       미디엄샷 / 살짝 옆에서
+CA(카메라):   고정
+AC(동작):     냉장고 앞에 서서 문 열기 → 멍하니 안을 바라봄 → 아무것도 안 꺼내고 그냥 닫음
+MD(감정):     감정적 공허함을 가장 일상적인 행동으로 표현 / 배고픈 게 아니라 채우고 싶었던 것
+DL(대사):     없음
+NR(나레이션): "배고프지도 않은데 냉장고를 열었어. ...그냥 뭔가 채우고 싶었나봐."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped over shoulders,
+green running shorts, pink flip-flop sandals,
+standing in front of open refrigerator in modern Korean kitchen at night,
+blank empty stare into the fridge not really looking for food emotionally hollow,
+cool blue refrigerator light contrasting with warm kitchen background,
+slightly from the side, medium shot, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands in front of open refrigerator,
+cool blue light spilling out onto her,
+blank stare into the contents.
+
+Next 3-6s: she doesn't reach for anything,
+just stands there looking,
+emotionally hollow expression.
+
+Final 6-8s: she slowly closes the refrigerator door,
+warm kitchen light returns,
+stands there in the quiet.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7-1]  YR_VD — Ending 오늘도 수고한 나와 여러분 전반 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / 따뜻하게 카메라 향해 나레이션
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 없음
+NR: 그래도 있잖아. 오늘 하루 버텨준 나... 잘했다고 말하고 싶어서.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL → MD_DRM
+AC: AT_SI_01 + AT_EM_01
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 따뜻하고 위로가 되는 BGM 시작
+  음성: 부드럽고 따뜻한 나레이션 톤
+  효과음: 없음
+  앰비언스: 조용한 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 밤 / 따뜻한 황금빛 램프 조명
+CH(캐릭터):   LOOK_PB / 소파에 앉아 카메라 향해 살짝 기울기
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     소파에 앉아 카메라 향해 따뜻하게 / C07-2로의 연결 의식하며 조금 멀리서 시작
+MD(감정):     오늘 하루를 버텨준 자신에 대한 따뜻한 인정 / 시청자를 위로하기 전에 자신을 먼저 다독이는
+DL(대사):     없음
+NR(나레이션): "그래도 있잖아. 오늘 하루 버텨준 나... 잘했다고 말하고 싶어서."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf draped over shoulders,
+sitting on sofa leaning slightly toward camera,
+expression soft and warm eyes slightly emotional but gentle,
+like comforting herself before comforting someone else,
+warm golden lamp light cozy home interior,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she sits on sofa, leaning slightly forward,
+soft warm smile forming,
+eyes still slightly emotional but gentling.
+
+Next 3-6s: expression shifts to warm and comforting,
+like she's made peace with the day,
+golden lamp light wrapping around her.
+
+Final 6-8s: direct warm gaze into camera,
+expression like a quiet breath out,
+ready for the final moment.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7-2]  YR_VD — Ending 너도 수고했어 / 8초  ★립싱크  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / C07-1보다 가까운 샷 / 손 뻗으며 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_PB
+DL: 너도 오늘 많이 참았지? (립싱크) ...수고했어. (입모양만 / 자막 처리)
+NR: 없음
+SH: SH_CU → SH_ECU
+CA: CA_PS
+MD: MD_DRM → MD_JOY
+AC: AT_EM_05
+LOOK_ID: LOOK_PB
+DU: 8
+오디오:
+  BGM: 따뜻한 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 부드럽고 진심 어린 마무리 톤 — ★립싱크 ("너도 오늘 많이 참았지?")
+  효과음: 없음
+  앰비언스: 조용한 거실 / 여운
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 밤 / 황금빛 보케 배경
+CH(캐릭터):   LOOK_PB / C07-1보다 카메라에 더 가까이
+SH(샷):       클로즈업 → 익스트림 클로즈업 (손 뻗으며 카메라 당겨지는 효과)
+CA(카메라):   푸시인 (카메라가 서여리 쪽으로 천천히 당겨지는 느낌)
+AC(동작):     소파에서 카메라 쪽으로 한 손 천천히 뻗기 → 손가락이 렌즈 향해 / 대사 후 "수고했어" 입모양만
+MD(감정):     시청자를 진심으로 다독이는 / 오늘 하루 참았을 누군가에게 건네는 위로
+DL(대사):     "너도 오늘 많이 참았지?" (립싱크) / "...수고했어." (입모양만 / 자막 처리)
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white heart-pattern crop top, pink scarf,
+sitting on sofa leaning toward camera,
+one hand slowly reaching toward camera lens
+fingers softly extended as if tenderly touching the viewer,
+expression soft warm smile eyes slightly emotional but deeply sincere,
+like comforting a close friend,
+shallow depth of field warm golden bokeh background,
+close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she leans slightly toward camera,
+one hand beginning to reach slowly toward lens,
+warm sincere expression.
+
+Next 3-6s: fingers extend gently toward camera,
+as if touching the viewer's cheek softly,
+expression deeply warm and genuine.
+
+Final 6-8s: hand lowers gently,
+lips close softly — 입모양만 (수고했어),
+warm smile, eyes full of genuine care — 여운 2초.
+
+First 0-2s: leans toward camera, hand reaches out.
+
+Next 2-5s: she says warmly —
+"너도 오늘 많이 참았지?"
+soft sincere tone, hand extended toward lens.
+
+Next 2-5s: she says warmly —
+"너도 오늘 많이 참았지?"
+soft sincere tone, hand extended toward lens.
+Final 5-8s: hand lowers,
+lips move silently — "...수고했어." (자막 처리)
+warm smile holds — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷    | 제목                 | 길이 | PL    | LOOK    | SH            | CA        | 립싱크 | 상태       |
+|-------|---------------------|------|-------|---------|---------------|-----------|--------|------------|
+| C01   | Hook 화보촬영 현장   | 8s   | YR_VD | LOOK_PB | SH_MS         | CA_ST     | ✅     | 신규       |
+| C02   | 모두가 사라진 무대 뒤| 8s   | YR_VD | LOOK_PB | SH_MCU        | CA_ST     | ❌     | 신규       |
+| C03   | 택시 안에서          | 8s   | YR_VD | LOOK_PB | SH_CU         | CA_ST     | ❌속삭임| 신규       |
+| C04   | 현관에서 무너진 감정 | 8s   | YR_VD | LOOK_PB | SH_MCU        | CA_ST     | ❌     | 🔴 재생성  |
+| C05-1 | Deep Talk 전반      | 8s   | YR_VD | LOOK_PB | SH_CU         | CA_ST     | ❌     | 신규       |
+| C05-2 | Deep Talk 후반      | 8s   | YR_VD | LOOK_PB | SH_ECU        | CA_ST     | ✅     | 🔴 재생성  |
+| C06   | 냉장고 앞에서        | 8s   | YR_VD | LOOK_PB | SH_MS         | CA_ST     | ❌     | 신규       |
+| C07-1 | Ending 전반          | 8s   | YR_VD | LOOK_PB | SH_MCU        | CA_ST     | ❌     | 신규       |
+| C07-2 | Ending 후반          | 8s   | YR_VD | LOOK_PB | SH_CU→ECU     | CA_PS     | ✅     | 🔴 재생성  |
+
+총 길이: 72초 / 재생성: C04·C05-2·C07-2 / 립싱크: C01·C05-2·C07-2
+BGM: 밝은 오프닝 → C02 뚝 끊김(무음) → 조용한 감성 → 따뜻한 위로 엔딩
+================================================================
+버전 이력
+================================================================
+v1.0 (2026-07-17) — 최초 작성
+v3.1 (2026-07-25) — 표준 포맷 v3 통합
+                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    C07-2 "수고했어" 입모양만 연출 명시
+                    VP 섹션 수정 — THIS IS A SILENT FILM 제거
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
+================================================================

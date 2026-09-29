@@ -1,0 +1,582 @@
+# SF_E07_HANGANG 한강 라이딩의 묘미 대본
+# 생성일: 2026. 8. 2.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+# 재생성 대상: 전체 신규
+
+================================================================
+마스터 코드
+SF_E07_HANGANG :: BR_VD+YR_VD :: OT.HG.TZ_AF.LT_WM → OT.HG.TZ_GH.LT_DK :: LK_HG(ivory crewneck+beige wide-leg linen pants+white canvas sneakers+gold necklace+gold bracelet) :: MD_REL→MD_DRM→MD_JOY :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E07_HANGANG
+TITLE : 한강 라이딩의 묘미
+LOOK  : LOOK_HG (oversized soft ivory cotton crewneck top loosely tucked into wide-leg light beige linen pants with cuffed rollup at ankle + white low-top canvas sneakers + gold necklace + gold bracelet)
+BG.A  : 한강 공원 자전거 대여소 / 자전거 도로 / 잔디밭 (오후 골든아워)
+BG.B  : 한강 강변 난간 (블루아워 / 야경 시작)
+LIGHT : LT_WM (오후 황금빛) → LT_GH (노을 황혼빛) → LT_DK (블루아워)
+REF   : face / closeup / fs-masked
+BGM   : 잔잔하고 감성적인 인디팝 → C6 BGM 완전 중단 (강바람+물소리만) → 여운
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  BR_VD — 자전거 안장 맞추기 / 10초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 자전거 대여소 앞 / 오후 골든아워 직전
+SP: OT.HG.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_HG
+DL: 없음
+NR: 어떤 날은 그냥, 이유 없이 밖으로 나가고 싶어질 때가 있잖아요.
+SH: SH_FS
+CA: CA_ST
+MD: MD_REL
+AT: AT_MW_01
+LOOK_ID: LOOK_HG
+DU: 10
+오디오:
+  BGM: 잔잔한 인디팝 — 부드럽게 시작
+  음성: 편안하고 자연스러운 나레이션 톤
+  효과음: 자전거 핸들 잡는 소리
+  앰비언스: 한강 공원 환경음 / 바람 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 공원 자전거 대여소 앞 / 오후 따뜻한 햇살
+CH(캐릭터):   LOOK_HG 전체 / 자전거 옆에 서있는 전신
+SH(샷):       풀샷
+CA(카메라):   고정
+AT(동작):     자전거 핸들 양손으로 잡고 안장 확인 → 까치발로 안장에 앉아보며 좌우 흔들기 → 핸들 꽉 쥐고 앞 바라보며 작게 미소
+MD(감정):     이유 없이 나가고 싶은 가벼운 충동 / 설렘
+DL(대사):     없음
+NR(나레이션): "어떤 날은 그냥, 이유 없이 밖으로 나가고 싶어질 때가 있잖아요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace and gold bracelet clearly visible,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized soft ivory cotton crewneck top loosely tucked into
+wide-leg light beige linen pants with cuffed rollup at ankle,
+white low-top canvas sneakers,
+standing beside a pastel mint rental bicycle at Han River park,
+late afternoon golden hour light,
+gently gripping bicycle handlebars with both hands,
+slight tiptoe as she tests the saddle height,
+soft natural smile forming,
+background shows Han River park with soft blurred greenery
+and rental station signage,
+full body shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands beside rental bicycle,
+both hands gripping handlebars,
+head slightly lowered checking the saddle,
+golden hour light warming the scene.
+
+Next 3-7s: slight tiptoe as she tests saddle height,
+body swaying gently left and right,
+expression focused and slightly playful.
+
+Final 7-10s: she grips handlebars firmly,
+looks ahead with a small quiet smile,
+ready to go.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  BR_VD — 한강변 자전거 달리기 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 자전거 전용 도로 / 오후 골든아워
+SP: OT.HG.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_HG
+DL: 없음
+NR: 두 바퀴가 굴러가는 소리만 들리는 순간, 머릿속이 조용해지더라고요.
+SH: SH_FS
+CA: CA_TR
+MD: MD_REL
+AT: AT_MW_01
+LOOK_ID: LOOK_HG
+DU: 8
+오디오:
+  BGM: 인디팝 유지
+  음성: 조용하고 감성적인 나레이션 톤
+  효과음: 자전거 바퀴 소리
+  앰비언스: 바람 소리 / 한강 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 공원 자전거 전용 도로 / 오후 황금빛
+CH(캐릭터):   LOOK_HG / 자전거 타는 전신
+SH(샷):       풀샷
+CA(카메라):   트래킹
+AT(동작):     페달 가볍게 밟으며 출발 → 머리카락 바람에 날림 → 속도 높이며 강 쪽으로 시선
+MD(감정):     머릿속이 조용해지는 순간 / 편안한 해방감
+DL(대사):     없음
+NR(나레이션): "두 바퀴가 굴러가는 소리만 들리는 순간, 머릿속이 조용해지더라고요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair flowing back in the wind,
+delicate gold necklace catching the light,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized soft ivory cotton crewneck top loosely tucked into
+wide-leg light beige linen pants with cuffed rollup at ankle,
+white low-top canvas sneakers,
+riding a pastel mint rental bicycle along Han River cycling path,
+golden afternoon sunlight casting long warm shadows on the path,
+both hands relaxed on handlebars,
+head slightly turned toward the river with a soft distant gaze,
+background shows shimmering Han River surface
+distant bridge silhouette softly blurred,
+full body shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she pedals gently along the cycling path,
+dark brown hair flowing behind in the wind,
+golden light on the path ahead.
+
+Next 3-6s: she picks up pace naturally,
+gaze drifting toward the shimmering river,
+expression calm and faraway.
+
+Final 6-8s: she slows slightly,
+head turning softly toward the river light,
+the moment stretching quietly.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — 헬멧 벗으며 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 잔디밭 옆 벤치 구역 / 오후 골든아워
+SP: OT.HG.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HG
+DL: 아, 시원하다.
+NR: 잠깐 멈추는 것만으로도, 이미 충분한 여행이 될 수 있어요.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL
+AT: AT_EM_03
+LOOK_ID: LOOK_HG
+DU: 8
+오디오:
+  BGM: 인디팝 잔잔하게
+  음성: 편안하고 시원한 립싱크 + 감성적 나레이션
+  효과음: 헬멧 버클 소리
+  앰비언스: 한강 공원 바람 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 공원 잔디밭 옆 / 오후 황금빛 사이드라이트
+CH(캐릭터):   LOOK_HG / 자전거 내리며
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     자전거에서 내려 헬멧 버클 풀고 핸들에 걸기 → 고개 숙였다가 들며 웨이비 헤어 흘러내림 → 손가락으로 머리 쓸어 넘기며 강 쪽 바라보기
+MD(감정):     잠깐 멈추는 것의 충분함 / 편안하고 시원한 안도
+DL(대사):     "아, 시원하다."
+NR(나레이션): "잠깐 멈추는 것만으로도, 이미 충분한 여행이 될 수 있어요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair spilling naturally over shoulders
+as she lifts her head,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace visible at neckline of ivory cotton crewneck,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+just dismounted from bicycle at Han River park,
+removing a pastel mint helmet and hooking it on the handlebar,
+soft expression of relief and refreshment,
+lips slightly parted as if exhaling a contented breath,
+warm golden afternoon light hitting her face from the side,
+background softly blurred Han River and green park lawn,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she dismounts bicycle, one foot on ground,
+unhooks helmet buckle slowly.
+
+Next 2-5s: removes helmet, hooking it on handlebar,
+head dipping then lifting —
+long wavy hair spilling naturally over shoulders,
+she speaks naturally —
+"아, 시원하다."
+expression completely relieved and refreshed.
+
+Final 5-8s: fingers gently sweep hair back,
+gaze drifting toward the river,
+quiet satisfied exhale.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 잔디에 앉아 강 촬영 / 8초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 강변 잔디 구역 / 골든아워 피크
+SP: OT.HG.TZ_GH.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_HG
+DL: 이거 진짜 너무 예쁘다. 사람들한테 보여주고 싶어.
+NR: 좋은 걸 발견했을 때, 제일 먼저 드는 생각은 항상 — 이거 나눠주고 싶다, 였어요.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_JOY
+AT: AT_AC_04
+LOOK_ID: LOOK_HG
+DU: 8
+오디오:
+  BGM: 인디팝 따뜻하게
+  음성: 밝고 자연스러운 립싱크 + 감성적 나레이션
+  효과음: 폰 셔터 소리
+  앰비언스: 한강 강바람 / 잔디 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 공원 잔디 / 골든아워 피크 / 강빛 황금빛
+CH(캐릭터):   LOOK_HG / 잔디에 앉은 모습
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     잔디에 앉아 두 무릎 세우고 폰을 강 쪽으로 향해 촬영 → 구도 바꾸며 셔터 누르기 → 폰 내리고 강 직접 바라봄
+MD(감정):     좋은 걸 나누고 싶은 따뜻한 충동 / 감탄
+DL(대사):     "이거 진짜 너무 예쁘다. 사람들한테 보여주고 싶어."
+NR(나레이션): "좋은 걸 발견했을 때, 제일 먼저 드는 생각은 항상 — 이거 나눠주고 싶다, 였어요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair falling softly around her shoulders,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet catching the warm light,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+seated on Han River park grass with knees gently raised,
+holding a smartphone toward the river to capture the view,
+warm golden sunlight flooding the frame from the front-left
+creating a luminous glow on her face,
+small gentle smile as she checks the photo on screen,
+ivory crewneck and beige linen pants visible,
+background is softly blurred shimmering Han River
+bathed in orange-gold sunset light,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she sits on grass, knees raised,
+phone extended toward the river,
+golden light flooding the scene.
+
+Next 2-6s: she adjusts the frame slightly, taps shutter,
+small smile as she checks the photo —
+she speaks warmly —
+"이거 진짜 너무 예쁘다. 사람들한테 보여주고 싶어."
+
+Final 6-8s: she lowers phone,
+looks directly at the river,
+expression quietly moved.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  BR_VD — 한 손 뻗으며 달리기 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 자전거 도로 직선 구간 / 해질 무렵 노을
+SP: OT.HG.TZ_GH.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_HG
+DL: 없음
+NR: 속도보다 방향보다, 지금 이 바람이 더 중요한 것 같았어요.
+SH: SH_FS
+CA: CA_TR
+MD: MD_DRM
+AT: AT_MW_01
+LOOK_ID: LOOK_HG
+DU: 8
+오디오:
+  BGM: 인디팝 살짝 업 템포
+  음성: 자유롭고 감성적인 나레이션 톤
+  효과음: 바람 가르는 소리
+  앰비언스: 한강 노을빛 바람 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 자전거 도로 직선 구간 / 노을빛
+CH(캐릭터):   LOOK_HG / 자전거 타는 전신
+SH(샷):       풀샷
+CA(카메라):   트래킹
+AT(동작):     페달 밟으며 속도 올리기 → 오른손 핸들에서 살짝 떼어 옆으로 자연스럽게 뻗기 → 팔 내리고 다시 핸들 잡으며 노을 강 바라봄
+MD(감정):     바람 자체가 중요한 / 자유롭고 몽환적인 해방감
+DL(대사):     없음
+NR(나레이션): "속도보다 방향보다, 지금 이 바람이 더 중요한 것 같았어요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair flowing dramatically behind her in the wind,
+delicate gold necklace and bracelet catching warm sunset light,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized ivory cotton crewneck top loosely tucked into
+wide-leg light beige linen pants with cuffed rollup at ankle,
+white low-top canvas sneakers,
+riding pastel mint rental bicycle along Han River cycling path at sunset,
+right arm extended sideways away from handlebar as if feeling the breeze,
+left hand loosely gripping handlebar,
+looking straight ahead with calm liberated expression,
+background shows Han River bathed in deep orange and pink sunset hues
+with silhouetted tree lines,
+full body shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she pedals, picking up speed,
+hair flowing dramatically behind in the wind,
+warm sunset light ahead.
+
+Next 3-6s: right hand lifts gently from handlebar,
+arm extending sideways naturally —
+feeling the breeze,
+expression liberated and dreamy.
+
+Final 6-8s: arm lowers back to handlebar,
+gaze toward the glowing river,
+the moment quietly electric.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 강변 난간 기대기 / 10초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 강변 난간 앞 / 해질 직후 블루아워 시작
+SP: OT.HG.TZ_GH.LT_DK
+PL: YR_VD
+CH: 서여리 / LOOK_HG
+DL: 없음
+NR: 도시가 불을 켜는 순간을, 강이 가장 먼저 받아요.
+SH: SH_FS
+CA: CA_ST
+MD: MD_DRM
+AT: AT_SI_01
+LOOK_ID: LOOK_HG
+DU: 10
+오디오:
+  BGM: 완전 중단 → 강바람 소리 + 물 소리만
+  음성: 조용하고 여운 있는 나레이션 톤
+  효과음: 없음
+  앰비언스: 강바람 / 물 소리 / 멀리서 들리는 도시 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 강변 난간 앞 / 블루아워 시작 / 야경 막 켜지기 시작
+CH(캐릭터):   LOOK_HG / 난간에 팔꿈치 올린 모습
+SH(샷):       풀샷
+CA(카메라):   고정
+AT(동작):     자전거 난간 옆에 기대어 세우고 두 팔꿈치 올리기 → 한강 너머 야경 바라보며 턱 살짝 내리기 → BGM 중단 / 강바람 소리만 / 아무 말 없이 그 순간 흡수
+MD(감정):     도시가 불을 켜는 순간의 고요함 / 감성적 몰입
+DL(대사):     없음
+NR(나레이션): "도시가 불을 켜는 순간을, 강이 가장 먼저 받아요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair gently moved by the river breeze,
+delicate gold necklace and bracelet visible,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+oversized ivory cotton crewneck top loosely tucked into
+wide-leg light beige linen pants with cuffed rollup at ankle,
+white low-top canvas sneakers,
+leaning on Han River railing with both forearms resting on the metal rail,
+body facing the river,
+pastel mint bicycle leaned against the railing beside her,
+head slightly lowered gazing at the river,
+blue hour lighting with city lights just beginning to glow on the far bank
+reflecting on the river surface,
+background shows Han River with emerging city lights and deep blue twilight sky,
+full body shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she leans both forearms on railing,
+bicycle beside her,
+blue hour sky deepening above.
+
+Next 3-7s: city lights begin flickering on across the river,
+reflections shimmering on the water below,
+she absorbs the moment completely still.
+
+Final 7-10s: BGM cuts completely —
+only river wind and water sounds remain,
+she stays in absolute stillness — 여운.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 엔딩 대사 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 한강 공원 강변 난간 앞 / 블루아워 / 야경 완성 직전
+SP: OT.HG.TZ_GH.LT_DK
+PL: YR_VD
+CH: 서여리 / LOOK_HG
+DL: 가끔은 아무 계획 없이 그냥 나와도 돼요. 한강이 다 받아줄 테니까.
+NR: 오늘 한강은, 꽤 좋은 대답을 해줬어요.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL → MD_DRM
+AT: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_HG
+DU: 10
+오디오:
+  BGM: 감성적 BGM 다시 부드럽게 시작
+  음성: 편안하고 따뜻한 립싱크 + 여운 있는 나레이션
+  효과음: 없음
+  앰비언스: 강바람 소리 / 여운
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한강 강변 난간 / 블루아워 / 야경 완성 직전
+CH(캐릭터):   LOOK_HG / 난간에 등 살짝 기댄 모습
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     난간에 등 살짝 기대듯 몸 반 돌려 카메라 향해 시선 맞추기 → 따뜻하고 편안하게 대사 → 대사 후 카메라에서 시선 거두고 강 쪽으로 고개 돌리기 → 여운 2초
+MD(감정):     한강이 다 받아준다는 따뜻한 확신 / 편안한 마무리
+DL(대사):     "가끔은 아무 계획 없이 그냥 나와도 돼요. 한강이 다 받아줄 테니까."
+NR(나레이션): "오늘 한강은, 꽤 좋은 대답을 해줬어요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair falling gently over one shoulder
+with river breeze catching the ends,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace catching the cool blue ambient light with warm city glow,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+ivory crewneck visible,
+at Han River railing during blue hour,
+body slightly turned toward camera with back lightly leaning on the railing,
+warm calm gaze directed at camera with a soft sincere expression,
+lips just finishing a sentence then relaxing into a quiet smile
+that slowly fades as she turns her face back toward the river,
+background is softly blurred Han River with emerging yellow city lights
+and deep indigo blue hour sky,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she turns slightly toward camera,
+back lightly leaning on railing,
+warm calm gaze meeting the lens,
+blue hour sky and city lights behind her.
+
+Next 3-8s: she speaks warmly and directly —
+"가끔은 아무 계획 없이 그냥 나와도 돼요.
+한강이 다 받아줄 테니까."
+expression open and sincere, eyes steady.
+
+Final 8-10s: she turns gaze back toward the river,
+quiet smile fading softly,
+only river wind remains — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목                | 길이 | PL     | LOOK    | SH        | CA     | 립싱크 | 상태 |
+|-----|--------------------|----- |--------|---------|-----------|--------|--------|------|
+| C01 | 자전거 안장 맞추기  | 10s  | BR_VD  | LOOK_HG | SH_FS     | CA_ST  | ❌     | 신규 |
+| C02 | 한강변 달리기       | 8s   | BR_VD  | LOOK_HG | SH_FS     | CA_TR  | ❌     | 신규 |
+| C03 | 헬멧 벗으며         | 8s   | YR_VD  | LOOK_HG | SH_MCU    | CA_ST  | ✅     | 신규 |
+| C04 | 잔디에 앉아 강 촬영 | 8s   | YR_VD  | LOOK_HG | SH_MCU    | CA_ST  | ✅     | 신규 |
+| C05 | 한 손 뻗으며 달리기 | 8s   | BR_VD  | LOOK_HG | SH_FS     | CA_TR  | ❌     | 신규 |
+| C06 | 강변 난간 기대기    | 10s  | YR_VD  | LOOK_HG | SH_FS     | CA_ST  | ❌     | 신규 |
+| C07 | 엔딩 대사           | 10s  | YR_VD  | LOOK_HG | SH_MCU    | CA_ST  | ✅     | 신규 |
+
+총 길이: 62초 / 립싱크: C03·C04·C07
+BGM: 인디팝 → C06 완전 중단(강바람+물소리) → 다시 시작 → 여운
+================================================================
+버전 이력
+================================================================
+v1.0 (구버전) — 기존 포맷으로 작성
+v3.0 (2026-08-02) — 표준 포맷 v3 재작성
+                    마스터 코드 / EP.HEADER / AT 코드 / KR 섹션
+                    VP 섹션 (립싱크/나레이션 분기) 전체 정리
+================================================================

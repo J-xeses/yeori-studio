@@ -1,0 +1,588 @@
+# SF_E11_AUTUMN 가을 감성 충전하러 나왔다가 생긴 일
+# 생성일: 2026-08-31
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+
+================================================================
+마스터 코드
+SF_E11_AUTUMN :: BR_VD+YR_VD :: OT.ST.TZ_AF.LT_WM → OT.CV.TZ_AF.LT_WM :: LK_AUT(black LA cap+white ribbed crop top+black plaid flannel tied at waist+black wide-leg cargo pants+white sneakers+gold necklace) :: MD_JOY→MD_COM→MD_REL :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E11_AUTUMN
+TITLE : 가을 감성 충전하러 나왔다가 생긴 일
+LOOK  : LOOK_AUT (black LA baseball cap worn low + white ribbed crop top + black plaid flannel shirt tied at waist + black wide-leg cargo pants + white sneakers + gold necklace)
+BG.A  : 서울 낙엽 가로수길 (은행나무 / 단풍 / 오후 황금빛)
+BG.B  : GS25 편의점 외부 + 편의점 앞 벤치
+LIGHT : LT_WM (오후 따뜻한 햇살) → LT_WM (편의점 외부 자연광)
+REF   : face / closeup / fs-masked
+BGM   : 경쾌하고 가벼운 시티팝 → C04 편의점 장면부터 따뜻하고 코지한 BGM
+썸네일 후보: C04 (편의점 핫초코 + 가로수 배경)
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  BR_VD — 오프닝 / 가을 가로수길 입장 / 8초  🔥임팩트
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 낙엽 가로수길 / 오후 황금빛 / LOOK_AUT 첫 등장
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_AUT
+DL: 없음
+NR: 오늘은 진짜 가을 감성 제대로 충전하러 나왔어요. 완벽한 계획이었죠.
+SH: SH_FS
+CA: CA_TR
+MD: MD_JOY
+AT: AT_MW_01
+LOOK_ID: LOOK_AUT
+DU: 8
+오디오:
+  BGM: 경쾌하고 가벼운 시티팝 — 설레는 오프닝
+  음성: 밝고 자신감 넘치는 나레이션 톤
+  효과음: 낙엽 밟는 소리
+  앰비언스: 가로수길 바람 소리 / 낙엽 살랑이는 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 낙엽 가득한 은행나무 가로수길 / 오후 황금빛
+CH(캐릭터):   LOOK_AUT 전체 / 블랙 LA 볼캡 낮게 눌러쓰기 / 플란넬 허리 묶기 자연스럽게
+SH(샷):       풀샷
+CA(카메라):   트래킹 (서여리 따라가며)
+AT(동작):     가로수길로 천천히 걸어 들어오기 / 낙엽 밟으며 / 주변 둘러보는 여유로운 걸음
+MD(감정):     완벽한 계획이라는 자신감 / 설레는 출발 / 볼캡 눌러쓴 쿨한 매력
+DL(대사):     없음
+NR(나레이션): "오늘은 진짜 가을 감성 제대로 충전하러 나왔어요. 완벽한 계획이었죠."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair
+tucked under a black LA baseball cap worn low,
+delicate gold necklace visible at collarbone,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA baseball cap worn low, white ribbed crop top,
+black plaid flannel shirt tied loosely at waist,
+black wide-leg cargo pants, white sneakers,
+walking along a Seoul autumn ginkgo tree lined boulevard,
+golden yellow leaves covering the ground and falling gently,
+warm afternoon golden sunlight filtering through yellow autumn leaves above,
+casual confident stride, hands in cargo pants pockets,
+background shows blurred autumn tree canopy
+with warm yellow and orange tones,
+full body shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-4s: she walks into the autumn boulevard,
+golden leaves falling gently around her,
+black cargo pants and white sneakers
+stepping naturally through fallen leaves,
+flannel shirt tied at waist catching the breeze.
+
+Next 4-6s: she looks around the tree-lined path,
+warm golden canopy above her,
+expression bright and confident — the plan is perfect.
+
+Final 6-8s: camera tracks alongside her,
+LOOK_AUT silhouette against golden autumn backdrop,
+낙엽 밟는 소리 자연스럽게.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 낙엽보다 핸드폰 / 8초  🔥공감 임팩트
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 가을 가로수길 / 낙엽 가득한데 핸드폰만 보는 서여리
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_AUT
+DL: 없음
+NR: ...근데 낙엽보다 인스타 피드를 더 많이 봤어요. 솔직히.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AT: AT_AC_04
+LOOK_ID: LOOK_AUT
+DU: 8
+오디오:
+  BGM: 시티팝 유지 — 약간 코믹하게
+  음성: 솔직하고 담담한 고백 나레이션 톤
+  효과음: 핸드폰 스크롤 소리
+  앰비언스: 가로수길 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     낙엽 가득한 가로수길 / 오후 황금빛
+CH(캐릭터):   LOOK_AUT / 걸으면서 핸드폰 보기
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     낙엽 가득한 가로수길 걸으면서 고개 숙여 핸드폰 피드 스크롤 / 주변 가을 풍경은 완전 무시 / 가끔 엄지로 빠르게 스크롤
+MD(감정):     완전한 집중 — 근데 낙엽이 아닌 인스타 피드에 / 공감 유발 포인트
+DL(대사):     없음
+NR(나레이션): "...근데 낙엽보다 인스타 피드를 더 많이 봤어요. 솔직히."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair under black LA cap worn low,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA cap, white ribbed crop top,
+black plaid flannel tied at waist, black cargo pants,
+walking along autumn leaf-covered boulevard
+completely absorbed in scrolling her smartphone,
+head tilted down toward phone screen,
+expression focused and neutral — totally in the feed,
+beautiful golden autumn leaves and trees completely ignored behind her,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she walks along the golden autumn path,
+head tilted down, completely absorbed in phone screen,
+thumb scrolling rapidly through instagram feed.
+
+Next 3-6s: golden leaves fall around her — she doesn't notice,
+expression neutral and focused on the screen,
+the beautiful autumn completely ignored.
+
+Final 6-8s: she pauses briefly,
+double-taps something on screen,
+looks up for one second — sees the leaves —
+then looks back down at phone.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  YR_VD — 사진 찍으려다 포기 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 가을 가로수길 / 낙엽 무더기 앞 / 사진 찍으려다 그냥 뒤
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_AUT
+DL: 없음
+NR: 사진도 찍으려 했는데... 각도가 안 나와서 그냥 뒀어.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AT: AT_AC_04
+LOOK_ID: LOOK_AUT
+DU: 8
+오디오:
+  BGM: 시티팝 — 살짝 맥 빠지는 톤으로
+  음성: 담담하고 체념한 나레이션 톤
+  효과음: 폰 카메라 앱 여는 소리
+  앰비언스: 가로수길 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     낙엽 무더기 쌓인 가로수길 / 오후
+CH(캐릭터):   LOOK_AUT / 핸드폰 들어올리기
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     낙엽 무더기 발견 → 폰 들어 카메라 앱 열기 → 이리저리 각도 잡아보기 → 한숨 쉬며 폰 내리기 → 어깨 살짝 으쓱
+MD(감정):     의욕은 있었지만 현실은 달랐던 / 담담한 체념 / 웃픈 포기
+DL(대사):     없음
+NR(나레이션): "사진도 찍으려 했는데... 각도가 안 나와서 그냥 뒀어."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair under black LA cap,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA cap worn low, white ribbed crop top,
+black plaid flannel tied at waist, black cargo pants,
+standing in front of a pile of golden autumn leaves on the ground,
+holding phone up trying different angles to photograph the leaves,
+expression mildly frustrated and resigned,
+arm lowering with a small defeated exhale,
+background shows beautiful autumn ginkgo trees completely bathed in golden light,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-2s: she spots a pile of golden leaves,
+raises phone to take a photo,
+trying to frame it perfectly.
+
+Next 2-5s: arm moves left, right, up —
+none of the angles feel right,
+expression shifting to mild resignation.
+
+Final 5-8s: phone lowers slowly,
+a small defeated exhale,
+slight shoulder shrug — and she walks on.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 편의점 핫초코 발견 / 8초  🔥썸네일 후보
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: GS25 편의점 외부 / 핫초코 들고 나오기
+SP: OT.CV.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_AUT
+DL: 없음
+NR: 그러다 편의점 핫초코를 발견했고.
+SH: SH_MS
+CA: CA_ST
+MD: MD_JOY
+AT: AT_AC_02
+LOOK_ID: LOOK_AUT
+DU: 8
+오디오:
+  BGM: 따뜻하고 코지한 BGM으로 전환
+  음성: 발견의 기쁨 / 담담하지만 약간 들뜬 나레이션
+  효과음: 편의점 도어벨 소리
+  앰비언스: 편의점 외부 / 가을 거리 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     GS25 편의점 외부 / 가을 가로수 배경 / 오후 황금빛
+CH(캐릭터):   LOOK_AUT / 편의점 핫초코 컵 들고 나오기
+SH(샷):       미디엄샷
+CA(카메라):   고정
+AT(동작):     편의점 문 열고 나오기 → 두 손으로 핫초코 컵 감싸 쥐기 → 한 모금 마시며 눈 살짝 감기 → 가을 가로수 배경에 자연스럽게 서있기
+MD(감정):     계획에 없던 발견의 기쁨 / 작지만 확실한 행복
+DL(대사):     없음
+NR(나레이션): "그러다 편의점 핫초코를 발견했고."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair under black LA cap worn low,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace catching warm afternoon light,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA cap, white ribbed crop top,
+black plaid flannel tied at waist, black wide-leg cargo pants, white sneakers,
+just exited a GS25 convenience store,
+holding a hot chocolate paper cup with both hands,
+taking a slow first sip eyes closing slightly with quiet satisfaction,
+background shows Seoul autumn ginkgo tree boulevard
+with golden yellow leaves — warm afternoon light,
+GS25 signage softly visible behind her,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: convenience store door opens,
+she steps out holding hot chocolate cup with both hands,
+GS25 signage visible behind her,
+golden autumn trees framing the scene.
+
+Next 3-6s: she takes a slow first sip,
+eyes closing slightly with quiet satisfaction,
+BGM shifts to warm and cozy.
+
+Final 6-8s: she holds the cup close,
+autumn backdrop behind her —
+LOOK_AUT silhouette + hot chocolate + golden leaves
+= 썸네일 컷.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — 편의점 벤치 / 시그니처 교감 / 8초  ★립싱크  ⭐시그니처
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 편의점 앞 벤치 / 핫초코 들고 앉아 카메라 향해 대사
+SP: OT.CV.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_AUT
+DL: 어... 이게 더 좋은데?
+NR: 없음
+SH: SH_CU
+CA: CA_ST
+MD: MD_REL → MD_JOY
+AT: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_AUT
+DU: 8
+오디오:
+  BGM: 따뜻하고 코지한 BGM / 대사 시작 시 볼륨 낮추기
+  음성: 진짜 놀란 듯 자연스럽고 솔직한 톤 — ★립싱크
+  효과음: 없음
+  앰비언스: 편의점 앞 조용한 거리 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 앞 벤치 / 가을 가로수 배경 / 오후 따뜻한 햇살
+CH(캐릭터):   LOOK_AUT / 벤치에 앉아 핫초코 두 손으로 감싸 쥐기
+SH(샷):       클로즈업
+CA(카메라):   고정
+AT(동작):     벤치에 앉아 핫초코 한 모금 더 마시기 → 문득 카메라 향해 시선 맞추기 → 진짜 놀란 듯 자연스럽게 대사 → 잠깐 멈추며 본인도 신기하다는 표정
+MD(감정):     계획 실패했는데 오히려 더 좋은 순간 / 진짜 놀라움 / 1대1 교감
+DL(대사):     "어... 이게 더 좋은데?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair under black LA cap worn low,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA cap, white ribbed crop top visible above flannel,
+sitting on a bench outside GS25 convenience store,
+holding hot chocolate cup with both hands close to her chest,
+looking directly into camera with genuine surprised expression —
+eyebrows slightly raised, lips parted,
+the real unplanned realization visible on her face,
+warm afternoon light and autumn trees softly blurred behind her,
+close-up, eye level, intimate vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she sits on bench, both hands wrapped around cup,
+takes another slow sip,
+autumn trees softly blurred behind her.
+
+Next 3-6s: she looks up toward camera —
+genuine surprised direct gaze,
+she speaks naturally —
+"어... 이게 더 좋은데?"
+eyebrows slightly raised, real unplanned realization.
+
+Final 6-8s: she holds that gaze,
+a small wondering smile forming —
+cup still warm in her hands — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 그냥 멍하니 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 편의점 앞 벤치 / 핫초코 들고 거리 멍하니 바라보기
+SP: OT.CV.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_AUT
+DL: 없음
+NR: 가을 감성 충전은 실패했는데... 왜 이 순간이 제일 좋지.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_DRM
+AT: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_AUT
+DU: 8
+오디오:
+  BGM: 따뜻한 BGM 매우 조용하게
+  음성: 조용하고 여운 있는 나레이션 톤
+  효과음: 없음
+  앰비언스: 편의점 앞 거리 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 앞 벤치 / 오후 황금빛 / 가을 거리
+CH(캐릭터):   LOOK_AUT / 벤치에 앉아 거리 바라보기
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AT(동작):     핫초코 컵 두 손으로 감싸 쥔 채 / 시선이 거리로 향함 / 아무 생각 없이 멍하니 / 가을 거리 사람들 지나가는 거 바라봄
+MD(감정):     계획 실패했는데 오히려 더 좋은 / 이 역설이 주는 따뜻한 혼란
+DL(대사):     없음
+NR(나레이션): "가을 감성 충전은 실패했는데... 왜 이 순간이 제일 좋지."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair under black LA cap worn low,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA cap, white ribbed crop top,
+sitting on bench outside convenience store,
+holding hot chocolate cup with both hands resting in lap,
+gaze drifting softly toward the street —
+NOT looking at camera,
+expression quietly wondering and content,
+the kind of expression when something unexpected turns out better,
+warm afternoon golden light, autumn street softly blurred,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she sits on bench,
+cup held in both hands resting in lap,
+gaze drifting toward the street.
+
+Next 3-6s: people walk past on the autumn street,
+she watches them softly — unfocused gaze,
+expression quietly content and wondering.
+
+Final 6-8s: she stays completely still,
+warm cup in hands, autumn light around her,
+the unexpected moment settling in.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 엔딩 대사 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 편의점 앞 벤치 / 카메라 향해 엔딩 대사
+SP: OT.CV.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_AUT
+DL: 있잖아요, 가을 감성이 뭔지 아직도 모르겠는데... 편의점 핫초코는 확실히 알겠어. 이게 내 가을인가봐요.
+NR: 없음
+SH: SH_MCU
+CA: CA_PS
+MD: MD_REL → MD_JOY
+AT: AT_SI_01 + AT_EM_01
+LOOK_ID: LOOK_AUT
+DU: 10
+오디오:
+  BGM: 따뜻하고 감성적 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 따뜻하고 자연스러운 친구한테 말하듯 — ★립싱크
+  효과음: 없음
+  앰비언스: 편의점 앞 거리 환경음 / 여운
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 앞 벤치 / 가을 황금빛 보케 배경
+CH(캐릭터):   LOOK_AUT / 벤치에 앉아 카메라 향해
+SH(샷):       미디엄 클로즈업
+CA(카메라):   푸시인 (천천히 가까워지며)
+AT(동작):     카메라 향해 자연스럽게 몸 살짝 틀기 → 핫초코 컵 살짝 들어올리며 대사 → 대사 후 컵 내려다보며 혼자 피식 웃음 → 여운 2초
+MD(감정):     가을 감성 실패를 완전히 받아들인 따뜻한 결론 / 이게 내 방식이라는 자신감
+DL(대사):     "있잖아요, 가을 감성이 뭔지 아직도 모르겠는데... 편의점 핫초코는 확실히 알겠어. 이게 내 가을인가봐요."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair under black LA cap worn low,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+black LA cap, white ribbed crop top,
+sitting on bench turned slightly toward camera,
+holding hot chocolate cup slightly raised —
+warm direct gaze into camera with a genuine smile,
+the kind of smile that says "I figured something out",
+autumn golden bokeh behind her,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she turns slightly toward camera,
+warm direct gaze,
+hot chocolate cup held close.
+
+Next 3-8s: she speaks warmly —
+"있잖아요, 가을 감성이 뭔지 아직도 모르겠는데...
+편의점 핫초코는 확실히 알겠어.
+이게 내 가을인가봐요."
+natural and warm like talking to a close friend,
+cup raised slightly as she speaks.
+
+Final 8-10s: she looks down at the cup,
+a small private smile —
+여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+❗아래 컷별 시간 조정 생성진행 결과 반영할 것❗
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목              | 길이 | PL     | LOOK     | SH      | CA     | 립싱크 | 상태      |
+|-----|------------------|------|--------|----------|---------|--------|--------|-----------|
+| C01 | 가로수길 입장     | 10s  | BR_VD  | LOOK_AUT | SH_FS   | CA_TR  | ❌     | 신규 🔥   |
+| C02 | 낙엽보다 핸드폰   | 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규 🔥공감|
+| C03 | 사진 찍다 포기    | 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규      |
+| C04 | 편의점 핫초코     | 8s   | YR_VD  | LOOK_AUT | SH_MS   | CA_ST  | ❌     | 신규 🔥썸네일|
+| C05 | 벤치 시그니처     | 10s  | YR_VD  | LOOK_AUT | SH_CU   | CA_ST  | ✅     | 신규 ⭐   |
+| C06 | 멍하니 거리 바라봄| 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규      |
+| C07 | 엔딩 대사         | 10s  | YR_VD  | LOOK_AUT | SH_MCU  | CA_PS  | ✅     | 신규      |
+
+총 길이: 62초 / 립싱크: C05·C07
+BGM: 경쾌한 시티팝 → C04부터 따뜻하고 코지한 BGM
+썸네일 후보: C04 (LOOK_AUT + 핫초코 + 가을 가로수)
+시그니처 컷: C05 (편의점 벤치 / "어... 이게 더 좋은데?")
+================================================================
+버전 이력
+================================================================
+v3.0 (2026-08-31) — 표준 포맷 v3 최초 작성
+                    가을 배경 + 서여리 반전 스토리
+                    LOOK_AUT 신규 등록
+================================================================
+
+8/19
+9/2
+9/16
+9/30
+
+

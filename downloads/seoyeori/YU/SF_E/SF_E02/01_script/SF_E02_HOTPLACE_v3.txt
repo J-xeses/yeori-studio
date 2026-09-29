@@ -1,0 +1,572 @@
+# SF_E02_HOTPLACE 핫플 갔다가 폰 내린 이유 대본
+# 생성일: 2026. 7. 24. / 업그레이드: 2026. 7. 25.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+
+================================================================
+마스터 코드
+SF_E02_HOTPLACE :: BR_VD+YR_VD :: OT.ST.TZ_AF.LT_WM → OT.RF.TZ_GH.LT_DK :: LK_CS.TOP_CRP(white square-neck).BTM_SKT(navy check pleated mini).SH_STR(white strap sandal).BG_BLK(black crossbody) :: MD_REL→MD_DRM :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E02_HOTPLACE
+TITLE : 핫플 갔다가 폰 내린 이유
+LOOK  : LOOK02 (white square-neck crop top + navy blue check pleated mini skirt + white strap high-heel sandals + small black crossbody bag + gold necklace)
+BG.A  : 성수동 거리 / 팝업스토어 / 버킷 플라워 꽃집 (오후 황금빛)
+BG.B  : 삼청동 감성 카페 창가 / 포토존 / 성수동 벽화 / 루프탑 (저녁 황혼빛)
+LIGHT : LT_WM (오후 황금빛 자연광) → LT_DK (저녁 황혼빛)
+REF   : face / closeup / fs-masked
+BGM   : Lo-fi 인디 어쿠스틱 (잔잔하고 감성적) → C06 이후 서정적으로 전환
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  BR_VD — 성수동 오후 4시 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 거리 / 오후 4시 황금빛 햇살 / 뒷모습으로 걸어가기
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 오후 4시쯤 되면... 왠지 모르게 밖에 나가고 싶어져.
+SH: SH_FS
+CA: CA_ST
+MD: MD_REL
+AC: AT_MW_01
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: Lo-fi 인디 어쿠스틱 — 잔잔하게 시작
+  음성: 조용하고 감성적인 나레이션 톤
+  효과음: 없음
+  앰비언스: 거리 소음, 멀리서 들리는 카페 음악, 바람 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     성수동 거리 / 오후 4시 황금빛 햇살 / 붉은 벽돌 건물
+CH(캐릭터):   LOOK02 전체 / 뒷모습
+SH(샷):       풀샷 — 뒷모습으로 걸어가는 전신
+CA(카메라):   고정
+AC(동작):     카메라에서 멀어지는 방향으로 천천히 걸으며 주변 둘러봄
+MD(감정):     여유롭고 편안한 / 밖에 나오고 싶었던 충동
+DL(대사):     없음
+NR(나레이션): "오후 4시쯤 되면... 왠지 모르게 밖에 나가고 싶어져."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+white strap high-heel sandals, small black crossbody bag,
+Seongsu-dong street Seoul red brick building walls on both sides
+trendy cafe signs and storefronts young people casually passing by,
+warm golden afternoon sunlight at 4PM soft long shadows on the street,
+she walks slowly away from camera looking around naturally,
+low medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she walks slowly away from camera,
+warm golden afternoon light casting long soft shadows,
+red brick buildings and cafe signs on both sides.
+
+Next 3-6s: she glances naturally to the side at storefronts,
+pace unhurried, shoulders relaxed,
+other pedestrians softly blurred in background.
+
+Final 6-8s: she continues walking,
+figure growing smaller in frame,
+warm light wrapping the scene.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  BR_VD — 팝업스토어 거리 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 팝업스토어 거리 / 쇼윈도 앞에서 잠깐 멈추며 바라봄
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 오늘따라 바람이 좋다...
+SH: SH_FS
+CA: CA_TR
+MD: MD_REL
+AC: AT_MW_01
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: Lo-fi 인디 어쿠스틱 유지
+  음성: 조용한 혼잣말 톤 나레이션
+  효과음: 없음
+  앰비언스: 거리 소음, 카페 인디음악, 발소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     팝업스토어 밀집 거리 / 오후 4시 / 도시 에너지
+CH(캐릭터):   LOOK02 전체
+SH(샷):       풀샷 — 거리 걸으며 쇼윈도 앞 멈춤
+CA(카메라):   트래킹
+AC(동작):     팝업스토어 거리 따라 천천히 걷다가 쇼윈도 앞 잠깐 멈춤
+MD(감정):     여유롭고 천천히 / 서두르지 않는 오후
+DL(대사):     없음
+NR(나레이션): "오늘따라 바람이 좋다..."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+white strap high-heel sandals, small black crossbody bag,
+trendy Seoul street popup store signage visible flagship cafe exterior
+with large glass windows MZ generation young people casually walking,
+warm 4PM afternoon light city energy but unhurried pace,
+she walks slowly along the street glancing at storefronts with soft expression,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she walks slowly along trendy street,
+popup store signage visible on both sides,
+camera tracking alongside her naturally.
+
+Next 3-6s: she slows slightly in front of a storefront,
+gaze drifting to the window display,
+soft unhurried expression.
+
+Final 6-8s: she continues walking,
+navy check skirt catching the breeze softly,
+warm afternoon light.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  BR_VD — 버킷 플라워 꽃집 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 버킷 플라워 꽃집 앞 / 손끝으로 꽃 살며시 건드림
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 예쁜 것들은 왜 이렇게 금방 지나가버리는 걸까.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_DRM
+AC: AT_AC_04
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: Lo-fi 인디 어쿠스틱 — 살짝 조용해지며
+  음성: 조용하고 아련한 나레이션 톤
+  효과음: 바람에 꽃잎 살랑이는 소리
+  앰비언스: 거리 소음 멀어짐, 꽃집 주변 조용한 분위기
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버킷 플라워 꽃집 앞 / 오후 / 파스텔 꽃들
+CH(캐릭터):   LOOK02 상반신 / 손 클로즈업
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     꽃집 앞 멈추기 → 손끝으로 작은 꽃 살짝 건드리기 → 손 내리며 여운
+MD(감정):     조용하고 약간 아련한 / 금방 지나가는 것들에 대한 감성
+DL(대사):     없음
+NR(나레이션): "예쁜 것들은 왜 이렇게 금방 지나가버리는 걸까."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+charming Seoul flower shop exterior buckets of fresh spring flowers
+displayed along the sidewalk pastel tulips soft handwritten Korean phrase on wall,
+she stops in front of flowers reaches out gently to touch a small bloom
+with her fingertips expression quiet and slightly wistful,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she pauses naturally in front of flower buckets,
+gaze settling softly on the blooms,
+pastel flowers filling the frame around her.
+
+Next 3-6s: hand reaches out slowly,
+fingertips gently touch a small flower,
+expression quiet and slightly wistful.
+
+Final 6-8s: hand lowers gently,
+she looks at the flowers a moment longer,
+soft warm light on her face.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  BR_VD — 삼청동 감성 카페 창가 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 삼청동 감성 카페 창가 / 테이크아웃 컵 두 손으로 감싸며 창밖 바라봄
+SP: IN.CF.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 여기 자주 오고 싶다...
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL
+AC: AT_AC_02
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 카페 내부 소프트 재즈 or 인디 어쿠스틱
+  음성: 조용하고 여운 있는 나레이션 톤
+  효과음: 컵 테이블에 내려놓는 소리 (부드럽게)
+  앰비언스: 카페 조용한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     삼청동 미니멀 감성 카페 창가 / 오후 5시 황금빛
+CH(캐릭터):   LOOK02 상반신 / 창가 자리
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     두 손으로 컵 감싸 쥐기 → 창밖 바라보기 → 컵 살며시 내려놓기
+MD(감정):     완전히 편안한 / 여기 자주 오고 싶다는 소박한 기쁨
+DL(대사):     없음
+NR(나레이션): "여기 자주 오고 싶다..."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+minimal cozy cafe interior Samcheong-dong Seoul seated alone at window seat
+traditional Korean hanok rooftile softly visible through window
+warm afternoon light filtering in local cafe takeout cup with handwritten logo on table,
+she holds cup with both hands gazes softly out the window slight smile completely at ease
+5PM golden light warming her face,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she sits at window seat, both hands wrapped around takeout cup,
+gazing softly out the window,
+golden afternoon light filtering through glass.
+
+Next 3-6s: slight smile forms naturally,
+completely at ease, unhurried,
+hanok rooftile visible softly beyond the window.
+
+Final 6-8s: she lowers cup gently onto table,
+warm satisfied expression,
+golden light warming her face.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — 인스타 포토존 앞 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 인스타 포토존 앞 / 폰 들었다가 천천히 내리며 그냥 눈으로 담기로 결정
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 됐다, 그냥 눈으로 담자.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL → MD_DRM
+AC: AT_AC_04
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 인디 어쿠스틱 — 잔잔하게 유지
+  음성: 담담하고 자연스러운 나레이션 톤
+  효과음: 주변 사람들 폰 셔터 소리 (대비 효과)
+  앰비언스: 주변 소음, 서여리만 조용한 대비
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 트렌디 포토존 앞 / 오후 / 아트 뮤럴 벽 배경
+CH(캐릭터):   LOOK02 상반신
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     폰 들어올리기 → 천천히 내리기 → 그냥 바라보기로 결정
+MD(감정):     약간 아련하지만 평온한 / 기록보다 경험을 택하는 순간
+DL(대사):     없음
+NR(나레이션): "됐다, 그냥 눈으로 담자."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+standing alone in front of trendy aesthetic photo zone wall in Seoul
+colorful art mural backdrop other visitors nearby taking photos of wall NOT of her,
+she holds phone up as if about to take selfie then slowly lowers it back down
+quiet contemplative expression slightly wistful but peaceful,
+warm afternoon light, medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands in front of art mural wall,
+raises phone slowly as if about to take a selfie,
+other visitors taking photos in background.
+
+Next 3-6s: phone lowers slowly back down,
+quiet contemplative expression,
+slightly wistful but peaceful decision.
+
+Final 6-8s: she stands holding phone at side,
+just looking at the wall with soft eyes,
+calm contrast to the busy photo-taking around her.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 감성 벽화 앞 황금빛 노을 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 대형 벽화 앞 / 눈 살며시 감고 황금빛 노을 맞기
+SP: OT.ST.TZ_GH.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 이런 오후가 있어서 다행이라고 생각했다.
+SH: SH_FS
+CA: CA_ST
+MD: MD_DRM
+AC: AT_EM_04
+LOOK_ID: LOOK02
+DU: 8
+오디오:
+  BGM: 서정적으로 전환 — 감정 고조
+  음성: 여운 있고 감성적인 나레이션 톤
+  효과음: 바람 소리, 스커트 살랑이는 소리
+  앰비언스: 황혼 도시 조용한 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     성수동 대형 벽화 앞 / 황금빛 노을 / 따뜻한 앰버 빛
+CH(캐릭터):   LOOK02 전신 / 벽화 앞에 서있는 모습
+SH(샷):       풀샷
+CA(카메라):   고정
+AC(동작):     벽화 앞에 서서 눈 살며시 감기 / 얼굴 살짝 위로 향하기 / 체크 스커트 바람에 살랑
+MD(감정):     이런 오후가 있어서 다행이라는 감사함 / 감성적인 여운
+DL(대사):     없음
+NR(나레이션): "이런 오후가 있어서 다행이라고 생각했다."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+white strap high-heel sandals, small black crossbody bag,
+Seongsu-dong street large aesthetic mural on wall
+golden hour sunset light casting warm amber glow
+long soft shadows on street city buildings softly visible beyond,
+she stands still in front of mural eyes gently closing
+face tilted slightly upward bathed in warm golden light
+navy check skirt catching the breeze softly,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands still in front of large mural,
+looking at it for a moment,
+warm amber golden light bathing the scene.
+
+Next 3-6s: eyes gently close,
+face tilts slightly upward toward the light,
+navy check skirt catches the evening breeze softly.
+
+Final 6-8s: she remains still,
+completely quiet in the golden hour light,
+soft shadow stretching behind her.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 루프탑 엔딩 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 루프탑 카페 / 도시 전경 바라보다가 카메라 향해 돌아보며 대사
+SP: OT.RF.TZ_GH.LT_DK
+PL: YR_VD
+CH: 서여리 / LOOK02
+DL: 너... 오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.
+NR: 없음
+SH: SH_CU
+CA: CA_ST
+MD: MD_DRM → MD_JOY
+AC: AT_SI_01 + AT_EM_01
+LOOK_ID: LOOK02
+DU: 10
+오디오:
+  BGM: 서정적 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 밝고 자연스럽게 (친구한테 말하듯) — ★립싱크
+  효과음: 없음
+  앰비언스: 저녁 도시 바람 소리, 원거리 도시 소음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 루프탑 카페 / 저녁노을 / 딥 앰버와 소프트 핑크 하늘
+CH(캐릭터):   LOOK02 전체 / 루프탑 난간 근처
+SH(샷):       클로즈업
+CA(카메라):   고정
+AC(동작):     도시 전경 조용히 바라보기 → 천천히 카메라 향해 돌아보기 → 밝고 자연스러운 미소로 대사 → 여운 2초
+MD(감정):     부드럽고 약간 쓸쓸하지만 따뜻한 / 친구한테 말하듯 자연스러운
+DL(대사):     "너... 오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top, navy blue check pleated mini skirt,
+rooftop cafe or rooftop bench central Seoul
+city skyline softly visible in background
+warm dusk sky deep amber and soft pink gentle evening breeze,
+she sits quietly looking at view then slowly turns to face camera
+with soft bright natural smile warm and genuine expression like talking to a close friend,
+close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she sits quietly at rooftop,
+gazing at Seoul city skyline,
+warm dusk sky behind her.
+
+Next 3-7s: she turns slowly toward camera,
+soft bright natural smile forming,
+like turning to tell a close friend something.
+
+Next 3-8s: she speaks brightly —
+"너... 오늘, 이런 시간 없었다면...
+내일은 꼭 만들어봐. 오후 4시쯤."
+bright and natural, like talking to a close friend.
+Final 8-10s: warm smile, direct gaze — 여운 2초.
+
+First 0-3s: she sits quietly gazing at city view.
+
+Next 3-8s: she turns toward camera, smiles naturally —
+"너... 오늘, 이런 시간 없었다면...
+내일은 꼭 만들어봐. 오후 4시쯤."
+bright and natural, like talking to a close friend.
+
+Final 8-10s: warm smile, direct gaze — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |
+|-----|------------------|------|--------|--------|-----------|--------|--------|------|
+| C01 | 성수동 오후 4시   | 8s   | BR_VD  | LOOK02 | SH_FS     | CA_ST  | ❌     | 신규 |
+| C02 | 팝업스토어 거리   | 8s   | BR_VD  | LOOK02 | SH_FS     | CA_TR  | ❌     | 신규 |
+| C03 | 버킷 플라워 꽃집  | 8s   | BR_VD  | LOOK02 | SH_MCU    | CA_ST  | ❌     | 신규 |
+| C04 | 삼청동 감성 카페  | 8s   | BR_VD  | LOOK02 | SH_MCU    | CA_ST  | ❌     | 신규 |
+| C05 | 인스타 포토존     | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ❌     | 신규 |
+| C06 | 감성 벽화 노을    | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_ST  | ❌     | 신규 |
+| C07 | 루프탑 엔딩       | 10s  | YR_VD  | LOOK02 | SH_CU     | CA_ST  | ✅     | 신규 |
+
+총 길이: 62초 / 재생성 없음 / 립싱크 1컷 (C07)
+BGM: Lo-fi 인디 어쿠스틱 → C06부터 서정적 전환
+================================================================
+버전 이력
+================================================================
+v1.0 (2026-07-08) — 최초 작성
+v2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)
+v3.1 (2026-07-25) — 표준 포맷 v3 통합
+                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    VP 섹션 수정 — THIS IS A SILENT FILM 제거
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
+================================================================

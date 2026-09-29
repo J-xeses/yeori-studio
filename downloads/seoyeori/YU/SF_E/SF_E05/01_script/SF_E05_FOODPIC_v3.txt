@@ -1,0 +1,659 @@
+# SF_E05_FOODPIC 음식을 보면 생기는 일 대본
+# 생성일: 2026. 7. 17. / 업그레이드: 2026. 7. 25.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+# 재생성 대상: C05 / C06 / C07
+
+================================================================
+마스터 코드
+SF_E05_FOODPIC :: YR_VD+BR_VD :: IN.RS.TZ_NT.LT_WM :: LK_RS(white APC graphic tee+dark wash bootcut rolled jeans+red strappy heels+black baseball cap+beige mini shoulder bag) :: MD_JOY→MD_COM→MD_JOY :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E05_FOODPIC
+TITLE : 음식을 보면 생기는 일
+LOOK  : LOOK_RS (white A.P.C. graphic tee + dark wash slim bootcut rolled-up jeans + red strappy heels + black baseball cap worn loosely + small structured beige leather mini shoulder bag on left shoulder + gold necklace)
+BG    : 플레이팅 근사한 전통주점 한식당 (한옥 인테리어 / 앰버 조명 / 나무 격자 파티션)
+LIGHT : LT_WM (따뜻한 앰버 실내 조명)
+REF   : face / closeup / fs-masked
+BGM   : 가볍고 따뜻한 재즈 or 시티팝 → 유쾌한 엔딩 BGM
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1-1]  BR_VD — 입장 뒷모습 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 전통주점 입구 → 카운터 앞 / 두 명 입장하는 뒷모습
+SP: IN.RS.TZ_NT.LT_WM
+PL: BR_VD
+CH: 서여리 + 친구 (뒷모습 / 얼굴 미등장)
+DL: 없음
+NR: 주말에 단짝 친구랑 요즘 핫한 전통주점을 방문했습니다~
+SH: SH_FS
+CA: CA_TR
+MD: MD_JOY
+AC: AT_MW_01
+LOOK_ID: LOOK_RS
+DU: 8
+오디오:
+  BGM: 가볍고 따뜻한 재즈 or 시티팝 — 잔잔하게 시작
+  음성: 밝고 자연스러운 나레이션 톤
+  효과음: 식당 문 열리는 소리
+  앰비언스: 식당 대화 소리, 그릇 소리, 따뜻한 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전통주점 한식당 입구 / 따뜻한 앰버 조명 / 한옥 인테리어
+CH(캐릭터):   서여리 + 친구 뒷모습 / LOOK_RS (서여리) + 블랙 캐주얼 (친구)
+SH(샷):       풀샷 — 두 명 뒷모습으로 걸어 들어가기
+CA(카메라):   트래킹 (두 명 따라가기)
+AC(동작):     식당 입구로 함께 걸어 들어가기 / 자연스럽게 대화하는 뒷모습
+MD(감정):     밝고 기대되는 / 주말 나들이 설렘
+DL(대사):     없음
+NR(나레이션): "주말에 단짝 친구랑 요즘 핫한 전통주점을 방문했습니다~"
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Two young Korean women in their early-20s walking together into an upscale Korean restaurant,
+shot from behind relaxed natural walk,
+lead woman wearing white graphic tee dark wash slim bootcut jeans red strappy heels
+black baseball cap worn loosely small beige structured shoulder bag on left shoulder,
+friend beside her in black casual chic outfit,
+warm amber lighting elegant Korean traditional tavern interior visible ahead,
+wooden lattice partitions amber pendant lights,
+seen from behind full body,
+medium shot, eye level, vertical 9:16,
+warm interior lighting,
+Cinematic, photorealistic, 8K natural Korean beauty,
+background people must not interact with or interfere with the main characters
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: two women enter through restaurant door,
+shot from behind, warm amber light spilling from inside,
+elegant Korean traditional tavern interior visible.
+
+Next 3-6s: they walk past the entrance counter,
+natural relaxed walk, slight conversation body language,
+warm wooden interior wrapping around them.
+
+Final 6-8s: they continue deeper into the restaurant,
+hanok interior details visible — lattice partitions, pendant lights,
+camera follows from behind.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1-2]  BR_VD — 자리로 이동 롱테이크 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 카운터 지나 자리로 이동 / 두 명 따라가는 롱테이크
+SP: IN.RS.TZ_NT.LT_WM
+PL: BR_VD
+CH: 서여리 + 친구 (뒷모습 / 옆모습)
+DL: 없음
+NR: 없음
+SH: SH_FS → SH_MS
+CA: CA_TR
+MD: MD_JOY
+AC: AT_MW_01
+LOOK_ID: LOOK_RS
+DU: 8
+오디오:
+  BGM: 재즈 or 시티팝 유지
+  음성: 없음
+  효과음: 없음
+  앰비언스: 식당 환경음 — 대화 소리, 그릇 소리, 앰비언스
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전통주점 메인홀 / 카운터에서 자리까지 이동 / 한옥 인테리어
+CH(캐릭터):   서여리 + 친구 / LOOK_RS (서여리)
+SH(샷):       풀샷 → 미디엄샷 (가까워지며)
+CA(카메라):   트래킹 (두 명 자리까지 따라가기)
+AC(동작):     카운터 지나 자리로 이동 / 식당 내부 구경하며 걷기
+MD(감정):     기대와 설렘 / 식당 분위기 감상
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Two young Korean women in their early-20s walking through Korean traditional tavern interior,
+shot from behind tracking their movement,
+lead woman white graphic tee dark wash bootcut jeans red strappy heels black baseball cap beige shoulder bag,
+friend in black casual outfit beside her,
+walking past wooden counter toward their table,
+hanok restaurant interior — wooden lattice partitions amber pendant lights warm wooden floors,
+other diners softly visible in background,
+full body to medium shot, eye level, vertical 9:16,
+warm amber interior lighting,
+Cinematic, photorealistic, 8K,
+background people must not interact with or interfere with the main characters
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: camera follows two women past the counter,
+warm wooden interior, amber pendant lights above,
+natural relaxed walk together.
+
+Next 3-6s: they move toward their table,
+hanok lattice partitions on the sides,
+other diners softly blurred in background.
+
+Final 6-8s: they arrive at their table,
+sit down naturally,
+warm ambient restaurant atmosphere.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  BR_VD — 음식 세팅 POV / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 테이블에 음식 하나씩 세팅되는 장면 / 서여리 시점 POV
+SP: IN.RS.TZ_NT.LT_WM
+PL: BR_VD
+CH: 없음 (POV / 음식+손만)
+DL: 없음
+NR: …와. (혼잣말 감탄 / TTS 오버레이)
+SH: SH_ECU
+CA: CA_ST
+MD: MD_JOY
+AC: 없음
+LOOK_ID: 없음
+DU: 8
+오디오:
+  BGM: 재즈 유지 — 음식 세팅 장면에 맞게 부드럽게
+  음성: 짧은 감탄 "...와" / TTS 오버레이
+  효과음: 그릇 내려놓는 소리 / 대나무 트레이 소리
+  앰비언스: 식당 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한옥 한식당 테이블 / 앉은 시점 POV / 웨이터 손
+CH(캐릭터):   없음 (음식 + 웨이터 손만)
+SH(샷):       익스트림 클로즈업 — 음식 POV
+CA(카메라):   고정 (앉은 시점)
+AC(동작):     웨이터 손이 대나무 트레이 위에 모듬전 세팅 / 각종 반찬 하나씩 올라오기
+MD(감정):     감탄 / 비주얼에 압도되는 순간
+DL(대사):     없음
+NR(나레이션): "…와." (혼잣말 감탄)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+POV shot from seated person's perspective at a traditional Korean hanok restaurant,
+waiter's hands carefully placing a large bamboo tray overflowing with assorted Korean pancakes —
+at least 5-6 varieties: bright red kimchijeon, green pajeon with seafood, golden nokdujeon,
+haemul pajeon, crispy donggeurangttaeng, all beautifully arranged filling the entire tray,
+small dipping sauce bowl in center,
+side dishes: kimchi, kongnamul, spinach namul, cucumber muchim — each different no duplicates,
+one ceramic makgeolli bowl filled with milky white makgeolli,
+one set of metal chopsticks and spoon,
+warm hanok interior background — wooden lattice partitions amber pendant lights diners in background,
+POV close-up from seated angle, vertical 9:16,
+warm tones, food photography quality,
+Cinematic, photorealistic, 8K
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: waiter's hands place large bamboo tray on table,
+colorful assorted Korean pancakes filling the tray,
+warm amber light illuminating the food beautifully.
+
+Next 3-6s: side dishes placed one by one,
+each carefully positioned,
+makgeolli bowl set beside the tray.
+
+Final 6-8s: full spread visible,
+steam rising slightly,
+camera holds on the beautiful food display.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  BR_VD — 자동반사 인증샷 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 본능적으로 폰 들어서 찍는 손 클로즈업 → 화면에 음식 담기는 장면
+SP: IN.RS.TZ_NT.LT_WM
+PL: BR_VD
+CH: 없음 (손 + 폰 + 음식만)
+DL: 없음
+NR: 각도… 조명… 완벽. (혼잣말 / TTS 오버레이)
+SH: SH_ECU
+CA: CA_ST
+MD: MD_JOY
+AC: AT_AC_04
+LOOK_ID: LOOK_RS (손만)
+DU: 8
+오디오:
+  BGM: 재즈 유지
+  음성: 혼잣말 톤 / TTS 오버레이
+  효과음: 폰 셔터음 여러 번
+  앰비언스: 식당 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한식당 테이블 / 대나무 트레이 위
+CH(캐릭터):   손 + 스마트폰만 (얼굴 미등장)
+SH(샷):       익스트림 클로즈업 — 손+폰+음식
+CA(카메라):   고정
+AC(동작):     폰을 들어 대나무 트레이 위에서 음식 촬영 / 폰 화면에 음식 담기는 장면
+MD(감정):     본능적이고 자동반사적인 / 먹기도 전에 찍는 한국인 공감 장면
+DL(대사):     없음
+NR(나레이션): "각도… 조명… 완벽." (혼잣말)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSEUP SHOT —
+POV shot — close-up of woman's hands holding smartphone horizontally over the bamboo tray
+of assorted Korean pancakes,
+screen visible showing food being framed for a photo,
+multiple colorful jeon visible below —
+red kimchijeon, green pajeon, golden nokdujeon,
+warm hanok restaurant ambient lighting,
+shutter sound implied,
+close-up detail shot, vertical 9:16,
+warm tones,
+Cinematic, photorealistic, 8K
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: hands raise smartphone over the food tray,
+phone screen visible framing the colorful pancakes below,
+warm restaurant light catching the food beautifully.
+
+Next 3-6s: hands adjust angle slightly,
+finding the perfect shot composition,
+multiple shutter clicks implied by movement.
+
+Final 6-8s: phone held steady over the beautiful spread,
+screen showing perfectly framed food photo,
+warm amber light on the scene.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 메타인지 순간 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 폰 내려놓으며 갑자기 멈칫 / 메타인지 순간 / 피식 웃음
+SP: IN.RS.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_RS
+DL: 없음
+NR: …잠깐. 나 방금 밥도 안 먹고 사진부터 찍었어. 심지어 각도까지 잡으면서. (혼잣말 / TTS 오버레이 + 피식 웃음)
+SH: SH_CU
+CA: CA_ST
+MD: MD_COM
+AC: AT_AC_04 + AT_EM_01
+LOOK_ID: LOOK_RS
+DU: 8
+오디오:
+  BGM: 재즈 잠깐 멈추다가 다시 시작 (멈칫 효과)
+  음성: 혼잣말 톤 + 피식 웃음 / TTS 오버레이
+  효과음: 폰 내려놓는 소리
+  앰비언스: 식당 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한식당 테이블 / 한옥 인테리어 보케 배경
+CH(캐릭터):   LOOK_RS / 테이블에 앉아 폰 내려놓기
+SH(샷):       클로즈업
+CA(카메라):   고정
+AC(동작):     폰 내려놓으며 갑자기 멈칫 → 자기 행동 인식 순간 → 한쪽 눈썹 살짝 올리며 피식 웃음
+MD(감정):     갑작스러운 자기 인식 / 유머러스한 자각 / 공감 가는 피식 웃음
+DL(대사):     없음
+NR(나레이션): "…잠깐. 나 방금 밥도 안 먹고 사진부터 찍었어. 심지어 각도까지 잡으면서."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white graphic tee black baseball cap worn loosely,
+just put down her smartphone slight pause —
+sudden moment of self-realization subtle amused smile
+one eyebrow slightly raised,
+warm Korean restaurant hanok interior bokeh background —
+amber lighting wooden beams,
+close-up, eye level, vertical 9:16,
+warm tones,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-2s: she sets her phone down on the table,
+motion stops suddenly — a pause of realization.
+
+Next 2-5s: expression shifts — one eyebrow raises slightly,
+subtle amused self-aware smile forming,
+the moment of catching herself.
+
+Final 5-8s: soft laugh visible in expression,
+shaking head slightly at herself,
+warm restaurant bokeh behind her.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  CC_ED — 이유 풀어주기-1 편집본 / ❗총 20초  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서여리❗ 대사(4초) + 음식 B-roll(10초) + 서여리 대사(6초) CapCut 편집 합성
+SP: IN.RS.TZ_NT.LT_WM
+PL: CC_ED
+CH: 서여리 / LOOK_RS
+DL: (전반) 근데 이거 나만 그런 거 아니잖아요? / (후반) 이게 한 상에 다 올라오면… 자동으로 폰 들게 돼 있어요.
+NR: (중간 B-roll) 한국 음식이 유독 포토제닉한 데는 이유가 있거든요. 색감 — 빨간 김치, 초록 나물, 하얀 쌀밥.
+SH: SH_MCU (서여리) / SH_ECU (B-roll 음식)
+CA: CA_ST
+MD: MD_JOY
+AC: AT_EM_01
+LOOK_ID: LOOK_RS
+DU: 20
+오디오:
+  BGM: 밝고 수다스러운 BGM
+  음성: 수다스럽고 밝은 대화 톤 — ★립싱크 (서여리 파트)
+  효과음: 없음
+  앰비언스: 식당 환경음 (B-roll 파트)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한식당 테이블 / 한옥 인테리어 배경
+CH(캐릭터):   LOOK_RS / 카메라 향해 가볍게 말 거는 느낌
+SH(샷):       미디엄 클로즈업 (서여리) / 익스트림 클로즈업 (음식 B-roll)
+CA(카메라):   고정
+AC(동작):     카메라 보며 자연스럽게 대화 / 한 손 가볍게 제스처 / 뿌듯한 표정
+MD(감정):     수다스럽고 밝은 / 시청자에게 말 거는 친근한 톤
+DL(대사):     (전반 4초) "근데 이거 나만 그런 거 아니잖아요?" / (후반 6초) "이게 한 상에 다 올라오면… 자동으로 폰 들게 돼 있어요."
+NR(나레이션): (중간B-roll 10초) "한국 음식이 유독 포토제닉한 데는 이유가 있거든요. 색감 — 빨간 김치, 초록 나물, 하얀 쌀밥."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[C05-A] 서여리 전반 — 생성용 (4초)
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP:
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white graphic tee black baseball cap worn loosely,
+looking directly into camera warm engaging expression
+soft knowing smile one hand lightly gesturing,
+hanok restaurant interior bokeh background amber lighting wooden beams,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+VP (무음):
+First 0-0.5s: direct warm gaze into camera, bright expression.
+Next 0.5-3.5s: soft knowing smile, one hand gestures lightly.
+Final 3.5-4s: smile holds, engaging expression.
+
+VP (립싱크):
+she says — "근데 이거 나만 그런 거 아니잖아요?"
+bright friendly tone, slight lean forward.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[C05-B] B-roll 음식 교차 — 생성용 (10초)
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP:
+EXTREME CLOSEUP SHOT —
+Close-up detail shots of colorful Korean food on table —
+bright red kimchijeon, fresh green pajeon, golden nokdujeon,
+white rice bowl, green spinach namul, yellow radish kimchi,
+beautiful color contrast on traditional Korean table setting,
+warm amber hanok restaurant lighting,
+food photography quality, extreme close-up, vertical 9:16,
+Cinematic photorealistic 8K
+
+VP (무음):
+Various food close-up cuts — color variety emphasized,
+red green white yellow all visible,
+warm amber light making colors pop.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[C05-C] 서여리 후반 — 생성용 (6초)
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP: (C05-A와 동일 — 스타트 프레임 C05-A 확정 이미지 사용)
+
+VP (무음):
+First 0-1s: warm smile, direct gaze.
+Next 1-5s: slight nod, confident expression.
+Final 5-6s: bright smile holds.
+
+VP (립싱크):
+she says — "이게 한 상에 다 올라오면… 자동으로 폰 들게 돼 있어요."
+bright conclusive tone, small shrug gesture.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  CC_ED — 이유 풀어주기-2 편집본 / 총 16초  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: B-roll 플레이팅(8초) + 서여리 대사(8초) CapCut 편집 합성
+SP: IN.RS.TZ_NT.LT_WM
+PL: CC_ED
+CH: 서여리 / LOOK_RS
+DL: (후반) 그러니까 우리가 사진 찍는 게 아니라… 음식이 찍어달라고 하는 거예요. 사실.
+NR: (전반 B-roll) 게다가 한국은 플레이팅 문화가 진짜 발달했잖아요. 동네 한식당도 그냥 안 내줘요. 예쁘게 내줘요.
+SH: SH_ECU (B-roll) / SH_MCU (서여리)
+CA: CA_ST
+MD: MD_JOY
+AC: AT_EM_01
+LOOK_ID: LOOK_RS
+DU: 16
+오디오:
+  BGM: 밝고 수다스러운 BGM 유지
+  음성: 수다스럽고 자신감 있는 대화 톤 — ★립싱크 (서여리 파트)
+  효과음: 음식 서빙 소리 (B-roll 파트)
+  앰비언스: 식당 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한식당 / 서빙 장면 + 테이블 전경 (B-roll) / 테이블 앉은 서여리 (후반)
+CH(캐릭터):   LOOK_RS / 약간 더 자신감 있는 표정으로
+SH(샷):       익스트림 클로즈업 (B-roll 플레이팅) / 미디엄 클로즈업 (서여리)
+CA(카메라):   고정
+AC(동작):     B-roll: 서빙 플레이팅 장면 / 서여리: 살짝 뿌듯한 표정 + 작은 어깨 으쓱
+MD(감정):     자신감 있고 수다스러운 / 결론을 내리는 뿌듯한 표정
+DL(대사):     (후반8초) "그러니까 우리가 사진 찍는 게 아니라… 음식이 찍어달라고 하는 거예요. 사실."
+NR(나레이션): (전반B-roll8초) "게다가 한국은 플레이팅 문화가 진짜 발달했잖아요. 동네 한식당도 그냥 안 내줘요. 예쁘게 내줘요."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[C06-A] B-roll 플레이팅 서빙 — 생성용 (8초)
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP:
+EXTREME CLOSEUP SHOT —
+Beautiful Korean restaurant food plating close-ups —
+waiter's hands elegantly placing beautifully arranged dishes on table,
+artistic plating presentation: colorful bibimbap in stone bowl,
+delicate garnishes on jeon, sauce drizzled carefully,
+side dishes arranged symmetrically,
+Korean traditional tableware ceramic bowls lacquer trays,
+warm amber hanok lighting making colors glow,
+food photography quality, extreme close-up details, vertical 9:16,
+Cinematic photorealistic 8K warm tones
+
+VP (무음):
+Various plating close-ups — waiter hands placing dishes elegantly,
+beautiful food arrangement from above and side angles,
+warm amber light highlighting colors.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[C06-B] 서여리 후반 — 생성용 (8초)
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP:
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white graphic tee black baseball cap worn loosely,
+looking directly into camera slightly more confident expression than before,
+subtle proud smile eyebrows slightly raised small shrug gesture,
+hanok restaurant interior bokeh background amber lighting,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+VP (무음):
+First 0-3s: confident direct gaze, eyebrows slightly raised.
+Next 3-6s: subtle proud smile, small shrug gesture.
+Final 6-8s: bright conclusive expression, warm bokeh behind.
+
+VP (립싱크):
+she says — "그러니까 우리가 사진 찍는 게 아니라…
+음식이 찍어달라고 하는 거예요. 사실."
+confident conclusive tone, slight proud shrug.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 엔딩 헤프닝 / 10초  ★립싱크  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서여리 카메라 보며 얘기하다가 → 친구 손이 옆에서 툭! → 당황하며 젓가락 드는 해프닝
+SP: IN.RS.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_RS
+DL: (친구 목소리 오프스크린) 여리야~ 너 지금 누구랑 얘기하는 거야? 식기 전에 빨리 먹어야지!! / (서여리) 아— 맞다 밥!!
+NR: 없음
+SH: SH_MCU → SH_CU
+CA: CA_ST
+MD: MD_COM → MD_JOY
+AC: AT_EM_01 + AT_EM_04
+LOOK_ID: LOOK_RS
+DU: 10
+오디오:
+  BGM: 유쾌한 엔딩 BGM 시작
+  음성: (친구) 오프스크린 목소리 / (서여리) 당황하며 밝게 — ★립싱크
+  효과음: 어깨 툭 치는 소리 / 젓가락 드는 소리
+  앰비언스: 식당 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     한식당 테이블 / 대나무 트레이 음식 전경 보이기
+CH(캐릭터):   LOOK_RS / 테이블에 앉아 카메라 향해 얘기하다가
+SH(샷):       미디엄 클로즈업 → 클로즈업 (당황하며)
+CA(카메라):   고정
+AC(동작):     카메라 향해 신나게 얘기 → 오른쪽에서 친구 손이 어깨 툭 → 눈 크게 뜨고 당황 → 젓가락 들기
+MD(감정):     신나게 얘기하다가 갑자기 당황 / 귀엽고 유쾌한 해프닝
+DL(대사):     (친구 오프스크린) "여리야~ 너 지금 누구랑 얘기하는 거야? 식기 전에 빨리 먹어야지!!" / (서여리) "아— 맞다 밥!!"
+🔴자막추가: 맨 마지막 2초 — "이어서 먹방이 시작되었습니다 ㅎㅎ" (CapCut 오버레이)
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white graphic tee black baseball cap worn loosely,
+looking directly into camera talking naturally mid-sentence,
+suddenly a hand reaches into frame from the right side tapping her shoulder,
+expression shifts to surprised and flustered — eyes wide mouth slightly open caught off guard,
+bamboo tray with Korean pancakes and makgeolli bowl visible on table in foreground,
+medium close-up, eye level, vertical 9:16,
+warm hanok restaurant lighting,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she looks directly into camera talking naturally,
+animated expression mid-conversation,
+food tray visible in foreground.
+
+Next 2-7s: hand taps shoulder from right side of frame,
+friend's voice off-screen —
+"여리야~ 너 지금 누구랑 얘기하는 거야? 식기 전에 빨리 먹어야지!!"
+she reacts — eyes wide, surprised and flustered.
+
+Next 7-10s: she says flustered —
+"아— 맞다 밥!!"
+reaches for chopsticks, bright embarrassed smile.
+
+Final 8-10s (자막): "이어서 먹방이 시작되었습니다 ㅎㅎ" 자막 오버레이 (CapCut)
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷     | 제목                | 길이  | PL     | LOOK    | SH          | CA     | 립싱크 | 상태       |
+|--------|--------------------|----- |--------|---------|-------------|--------|--------|------------|
+| C01-1  | 입장 뒷모습         | 8s   | BR_VD  | LOOK_RS | SH_FS       | CA_TR  | ❌     | 신규       |
+| C01-2  | 자리로 이동 롱테이크 | 8s   | BR_VD  | LOOK_RS | SH_FS→MS    | CA_TR  | ❌     | 신규       |
+| C02    | 음식 세팅 POV       | 8s   | BR_VD  | 없음    | SH_ECU      | CA_ST  | ❌     | 신규       |
+| C03    | 자동반사 인증샷      | 8s   | BR_VD  | LOOK_RS | SH_ECU      | CA_ST  | ❌     | 신규       |
+| C04    | 메타인지 순간        | 8s   | YR_VD  | LOOK_RS | SH_CU       | CA_ST  | ❌     | 신규       |
+| C05    | 이유풀기-1 편집본   | 20s  | CC_ED  | LOOK_RS | MCU+ECU     | CA_ST  | ✅     | 🔴 재생성  |
+| C06    | 이유풀기-2 편집본   | 16s  | CC_ED  | LOOK_RS | ECU+MCU     | CA_ST  | ✅     | 🔴 재생성  |
+| C07    | 엔딩 헤프닝          | 10s  | YR_VD  | LOOK_RS | SH_MCU→CU   | CA_ST  | ✅     | 🔴 재생성  |
+
+총 길이: 약 80초 (편집 후 조정) / 재생성: C05·C06·C07 / 립싱크: C05·C06·C07
+BGM: 가볍고 따뜻한 재즈 → 수다스러운 BGM → 유쾌한 엔딩 BGM
+
+생성 순서:
+1. C01-1/C01-2/C02/C03/C04 신규 생성
+2. C05-A(서여리4초) + C05-B(B-roll10초) + C05-C(서여리6초) 개별 생성 → CapCut 합성
+3. C06-A(B-roll8초) + C06-B(서여리8초) 개별 생성 → CapCut 합성
+4. C07 재생성 (친구 손 오른쪽에서 등장 연출)
+================================================================
+버전 이력
+================================================================
+v1.0 (2026-07-17) — 최초 작성
+v3.2 (2026-07-27) — 표준 포맷 v3 통합
+                    C01 → C01-1/C01-2 분할 (롱테이크 연출)
+                    C05/C06 편집 합성 구조 상세 분리 (A/B/C 서브컷)
+                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    VP 섹션 수정 — THIS IS A SILENT FILM 제거
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
+v3.2 (2026-07-27) — C05 총 20초로 수정 (A=4초/B=10초/C=6초)
+                    C07 VP 중복 제거 + 마지막 2초 자막 추가
+================================================================

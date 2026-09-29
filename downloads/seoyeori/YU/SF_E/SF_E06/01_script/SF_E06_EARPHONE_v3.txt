@@ -1,0 +1,564 @@
+# SF_E06_EARPHONE 이어폰 끼는 순간 대본
+# 생성일: 2026. 7. 27.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
+# 재생성 대상: C02 / C03 / C04 / C05 / C06 / C07
+
+================================================================
+마스터 코드
+SF_E06_EARPHONE :: BR_VD+YR_VD :: OT.ST.TZ_AF.LT_WM → OT.ST.TZ_GH.LT_WM :: LK_ST(beige baseball cap+white APC graphic tee+bootcut rolled jeans+red sandals+gold necklace+gold bracelet) :: MD_REL→MD_DRM→MD_JOY :: Q_SH.RT_916.PB_YT
+================================================================
+EP.HEADER
+================================================================
+CHAR  : YEORI.BASE
+EP    : SF_E06_EARPHONE
+TITLE : 이어폰 끼는 순간
+LOOK  : LOOK_ST (beige baseball cap worn loosely + white A.P.C. graphic tee + dark wash bootcut jeans hem rolled up one side only + red sandals + gold necklace + gold bracelet)
+BG    : 서울 거리 (건물 벽 / 쇼윈도 골목 / 벤치 / 횡단보도 / 골목 입구 / 황혼빛 거리)
+LIGHT : LT_WM (오후 따뜻한 자연광) → LT_GH (황혼 황금빛)
+REF   : face / closeup / fs-masked
+BGM   : 감성적인 인디팝 or 시티팝 — 이어폰 꽂는 순간부터 본격 시작 / C06 이어폰 뺄 때 완전 중단 / C07 다시 시작
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  BR_VD — 서울 거리 이어폰 꽂기 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 거리 건물 벽 옆 / 가방에서 이어폰 꺼내 귀에 꽂는 순간
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_ST
+DL: 없음
+NR: 이 순간 알고 있어? 이어폰 하나가 세상을 완전히 바꿔버린다는 거.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL
+AC: AT_AC_04
+LOOK_ID: LOOK_ST
+DU: 8
+오디오:
+  BGM: 없음 (이어폰 꽂기 전 — 무음 또는 거리 소리만)
+  음성: 잔잔하고 감성적인 나레이션 톤
+  효과음: 가방 지퍼 소리 / 이어폰 케이스 열리는 소리
+  앰비언스: 서울 거리 소음 / 바람 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 거리 / 건물 벽 옆 / 오후 따뜻한 햇살
+CH(캐릭터):   베이지 볼캡 + 화이트 그래픽 티 + 부츠컷 롤업 진 (한쪽만) + 레드 샌들 + 골드 목걸이 + 골드 브레이슬렛
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     건물 벽 옆에서 멈춰 서서 가방에서 무선이어폰 케이스 꺼내기 → 이어폰 천천히 꺼내 한쪽 귀에 꽂기 → 눈을 살짝 감고 음악 시작 기다리는 표정
+MD(감정):     차분하고 약간의 기대감 / 음악이 시작되기 직전의 정적
+DL(대사):     없음
+NR(나레이션): "이 순간 알고 있어? 이어폰 하나가 세상을 완전히 바꿔버린다는 거."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet clearly visible,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely slightly higher on head, white graphic tee,
+dark wash bootcut jeans with hem rolled up on one side, red sandals,
+standing beside building wall on Seoul street,
+pulling wireless earphone case from shoulder bag,
+expression calm and slightly anticipatory effortlessly photogenic not posing,
+warm afternoon sunlight, Seoul street background softly blurred,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands beside building wall,
+reaches into shoulder bag, pulls out wireless earphone case,
+calm anticipatory expression.
+
+Next 2s: opens case, takes out one earphone,
+slowly raises it to her ear, places it in,
+the gesture deliberate and familiar.
+
+Final 3s: eyes closing slightly,
+waiting for the music to begin,
+lips barely parting with quiet anticipation.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  BR_VD — 눈 뜨는 순간 / 10초  🔥시그니처  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 이어폰 꽂힌 순간 눈이 천천히 열리며 세상이 달라진 느낌
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_ST
+DL: 없음
+NR: 같은 거리인데… 갑자기 내가 영화 주인공이 된 것 같잖아.
+SH: SH_CU → SH_ECU
+CA: CA_ZI
+MD: MD_DRM
+AC: AT_EM_04
+LOOK_ID: LOOK_ST
+DU: 10
+오디오:
+  BGM: 이어폰 꽂히는 순간 — 인디팝/시티팝 BGM 본격 시작 (볼륨 서서히 올라옴)
+  음성: 감성적이고 살짝 경이로운 나레이션 톤
+  효과음: 이어폰 연결음 (귀에 꽂히는 찰나)
+  앰비언스: BGM에 묻히며 거리 소음 사라지는 효과
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 거리 / 이어폰 꽂힌 직후 / 오후 햇살
+CH(캐릭터):   LOOK_ST / 클로즈업 얼굴 중심
+SH(샷):       클로즈업 → 익스트림 클로즈업 (눈에 집중)
+CA(카메라):   줌인 (서서히 가까워지며)
+AC(동작):     이어폰이 귀에 꽂히는 순간 눈이 천천히 열림 → 주변 거리를 새로운 시선으로 올려다봄 → 입꼬리 아주 살짝 올라가며 혼자만의 미소
+MD(감정):     세상이 달라진 느낌 / 영화 주인공이 된 순간 / 감성적 경이로움
+DL(대사):     없음
+NR(나레이션): "같은 거리인데… 갑자기 내가 영화 주인공이 된 것 같잖아."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely, white graphic tee,
+wireless earphone just placed in ear,
+eyes slowly opening — the moment music begins,
+gaze lifting slightly upward toward the street,
+the faintest smile forming at the corner of her lips,
+expression subtly transformed — like the world just changed,
+Seoul street warm afternoon light, shallow depth of field,
+close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: eyes slowly opening as wireless earphone is placed,
+the moment of music beginning visible in her expression,
+camera begins gentle zoom in.
+
+Next 0-3s: gaze lifting toward the street,
+viewing the world with a slightly new perspective,
+head tilting barely upward.
+
+Final 4s: the faintest smile forming at corner of lips,
+a private quiet joy,
+camera holds in close-up — 시그니처 컷.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3]  BR_VD — 거리 걷기 + 쇼윈도 반영 / 8초  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 음악에 맞춰 걷다가 쇼윈도에 자기 모습 발견
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK_ST
+DL: 없음
+NR: 음악이 깔리면… 심지어 걷는 것도 연기가 돼.
+SH: SH_MS → SH_CU
+CA: CA_TR
+MD: MD_DRM
+AC: AT_MW_01
+LOOK_ID: LOOK_ST
+DU: 8
+오디오:
+  BGM: 인디팝/시티팝 유지
+  음성: 감성적이고 조용한 나레이션 톤
+  효과음: 없음
+  앰비언스: 발소리 / 거리 소음 BGM에 묻힘
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 거리 / 가게 쇼윈도 앞 / 오후
+CH(캐릭터):   LOOK_ST 전체 / 걸어가는 모습
+SH(샷):       미디엄샷 → 클로즈업 (쇼윈도 앞에서)
+CA(카메라):   트래킹 → 고정
+AC(동작):     거리를 리듬감 있게 천천히 걷기 → 쇼윈도에 자기 모습 무심히 발견 → 쇼윈도 앞 잠깐 멈추며 한 번 깜빡임
+MD(감정):     음악으로 인해 걷는 것조차 연기처럼 느껴지는 / 자신이 영화 속 인물인 듯한 감각
+DL(대사):     없음
+NR(나레이션): "음악이 깔리면… 심지어 걷는 것도 연기가 돼."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace and gold bracelet,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely, white graphic tee,
+dark wash bootcut jeans rolled up one side, red sandals,
+walking along Seoul street with natural rhythm,
+noticing her own reflection in a shop window glass as she passes,
+pausing briefly in front of window, blinking at her reflection with quiet curiosity,
+warm afternoon sunlight, Seoul street life softly visible,
+medium shot, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she walks along the street with natural rhythm,
+pace unhurried but with a subtle musicality to her movement,
+camera tracking alongside her.
+
+Next 2s: she notices her reflection in shop window glass,
+gaze shifting briefly to the window,
+the discovery casual and unplanned.
+
+Final 3s: pauses briefly in front of window,
+blinks at her own reflection with quiet curiosity,
+camera closes in slightly — intimate moment.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 벤치 옆 / 10초  ★립싱크  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 거리 벤치 근처 / 하늘 올려다보다가 카메라 향해 대사
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_ST
+DL: 나 진짜 묻고 싶은 게 있는데, 너도 이런 적 있지 않아?
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_REL → MD_JOY
+AC: AT_EM_04 + AT_SD_01
+LOOK_ID: LOOK_ST
+DU: 10
+오디오:
+  BGM: 인디팝 유지 — 대사 시작 시 살짝 볼륨 낮추기
+  음성: 친구한테 말 거는 듯 자연스럽고 밝은 톤 — ★립싱크
+  효과음: 바람 소리 / 볼캡 챙 잡는 소리
+  앰비언스: 거리 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 거리 / 벤치 근처 / 오후 따뜻한 햇살
+CH(캐릭터):   LOOK_ST / 서있는 모습
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     벤치 근처 멈춰 서서 하늘 올려다보기(2초) → 바람에 머리카락 날려 볼캡 챙 가볍게 잡기(2초) → 카메라 향해 시선 내리며 대사(6초 = 대사5초+여유1초)
+MD(감정):     여유롭고 자연스러운 / 시청자에게 말 거는 친근한 감성
+DL(대사):     "나 진짜 묻고 싶은 게 있는데, 너도 이런 적 있지 않아?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet clearly visible,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely, white graphic tee, red sandals,
+standing near street bench, looking up at the sky,
+wind catching her hair softly, one hand lightly touching cap brim,
+then lowering gaze naturally toward camera,
+warm natural street lighting, Seoul background softly blurred,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she stands near bench, gazing up at the sky,
+expression open and relaxed,
+afternoon light catching her face.
+
+Next 0-2s: wind blows gently,
+hair moves softly, one hand reaches up to hold cap brim lightly,
+natural effortless gesture.
+
+Final 6s: gaze lowers naturally toward camera,
+she speaks warmly —
+"나 진짜 묻고 싶은 게 있는데, 너도 이런 적 있지 않아?"
+like asking a close friend, soft natural expression.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — 횡단보도 / 10초  ★립싱크+나레이션  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 폰으로 음악 확인 후 걸음 빨라지다가 횡단보도 앞 멈춤
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_ST
+DL: 이 노래 나올 때마다… 진짜 어디든 갈 수 있을 것 같거든. (1~5초)
+NR: 목적지가 없어도 괜찮아. 음악이 있으면 어디든 다른 세상이야~ (6~10초)
+SH: SH_MS → SH_MCU
+CA: CA_TR → CA_ST
+MD: MD_JOY → MD_DRM
+AC: AT_MW_01 + AT_AC_04
+LOOK_ID: LOOK_ST
+DU: 10
+오디오:
+  BGM: 인디팝 — 걸음 빨라지는 구간에서 살짝 업 템포
+  음성: 전반 립싱크 / 후반 나레이션 (감성적)
+  효과음: 신호 대기음 (횡단보도)
+  앰비언스: 거리 소음 / 자동차 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 거리 → 횡단보도 앞 / 오후
+CH(캐릭터):   LOOK_ST / 걸어가는 모습
+SH(샷):       미디엄샷 → 미디엄 클로즈업 (횡단보도 앞에서)
+CA(카메라):   트래킹 → 고정
+AC(동작):     걸으며 스마트폰 화면 잠깐 내려다보기(2초) → 폰 가방에 넣고 두 손 자유롭게 걸음 빠르게(3초) → 횡단보도 앞 멈추며 신호 대기 / 여유와 설렘이 공존하는 표정(5초)
+MD(감정):     음악으로 인한 에너지 / 어디든 갈 수 있을 것 같은 자유로운 기분
+DL(대사):     (1~5초) "이 노래 나올 때마다… 진짜 어디든 갈 수 있을 것 같거든."
+NR(나레이션): (6~10초) "목적지가 없어도 괜찮아. 음악이 있으면 어디든 다른 세상이야~"
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely, white graphic tee, red sandals,
+stopped at pedestrian crosswalk waiting for signal,
+expression showing quiet excitement and ease — the feeling of being able to go anywhere,
+wireless earphone visible in ear,
+warm afternoon Seoul street light, crosswalk lines visible below,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: she walks along, glances briefly at phone screen,
+checking the song playing,
+camera tracking alongside.
+
+Next 3s: phone goes back into bag, both hands free,
+pace increases slightly with energy,
+bootcut jeans and red sandals in rhythm.
+
+Next 5s (전반 립싱크 + 후반 나레이션):
+she stops at crosswalk, looks toward camera —
+she speaks warmly —
+"이 노래 나올 때마다… 진짜 어디든 갈 수 있을 것 같거든."
+expression full of quiet excitement and freedom.
+
+Final: expression softens to dreamy contentment,
+waiting at crosswalk, signal colors behind her.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 골목 입구 이어폰 뺄 때 / 10초  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 좁은 골목 입구 앞 / 이어폰 한쪽 빼며 골목 소리 듣기 / BGM 완전 중단
+SP: OT.ST.TZ_AF.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_ST
+DL: 없음
+NR: 가끔 이어폰을 내려놓기라도 하면, 늘 낯익은 세상 가운데로 돌아가는 순간이야~
+SH: SH_MCU → SH_CU
+CA: CA_ST
+MD: MD_REL → MD_DRM
+AC: AT_AC_04
+LOOK_ID: LOOK_ST
+DU: 10
+오디오:
+  BGM: 이어폰 뺄 때 BGM 완전 중단 → 골목 소리만 (대비 효과)
+  음성: 조용하고 내성적인 나레이션 톤
+  효과음: 이어폰 빠지는 소리 / 골목 소음 들어오는 효과
+  앰비언스: 골목 환경음 — 멀리서 들리는 대화 소리 / 고양이 소리 / 바람
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 좁은 골목 입구 / 오후
+CH(캐릭터):   LOOK_ST / 골목 입구에 서있는 모습
+SH(샷):       미디엄 클로즈업 → 클로즈업
+CA(카메라):   고정
+AC(동작):     좁은 골목 입구 앞에서 멈추며 골목 안쪽 바라봄(3초) → 이어폰 천천히 한쪽 빼서 손에 들고 골목 소리 듣기(3초) → 두 눈 가늘게 뜨며 골목 안과 내면 사이 어딘가 바라보는 표정(4초)
+MD(감정):     이어폰 없는 세상으로 잠깐 돌아오는 순간 / 내성적이고 감성적인 인식
+DL(대사):     없음
+NR(나레이션): "가끔 이어폰을 내려놓기라도 하면, 늘 낯익은 세상 가운데로 돌아가는 순간이야~"
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace and gold bracelet,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely, white graphic tee, red sandals,
+standing at entrance of narrow Seoul alley, looking inward,
+one wireless earphone slowly removed from ear, held in hand,
+eyes slightly narrowed — gazing at the alley and something beyond it,
+introspective distant expression, warm afternoon light,
+medium close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty,
+background must not interfere with main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
+
+First 0-3s: she stands still at alley entrance,
+looking into the narrow alley ahead,
+expression quietly contemplative.
+
+Next 3s: one wireless earphone slowly removed from ear,
+held loosely in her hand,
+BGM cuts completely — only ambient alley sounds remain.
+
+Final 4s: eyes narrowing slightly,
+gazing into the alley with distant introspective expression,
+somewhere between the alley and her inner world.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 황혼빛 거리 엔딩 / 10초  ★립싱크+나레이션  🔴재생성
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 다시 이어폰 꽂고 황혼빛 거리 속으로 걸어가는 뒷모습 엔딩
+SP: OT.ST.TZ_GH.LT_WM
+PL: YR_VD
+CH: 서여리 / LOOK_ST
+DL: 오늘도… 내 인생은 영화야. (전반 3초 — 립싱크)
+NR: 이어폰 하나면 어디서든, 너의 인생도 영화가 돼~ (중반 4초 — 나레이션)
+SH: SH_FS
+CA: CA_ST
+MD: MD_DRM → MD_JOY
+AC: AT_MW_01 + AT_AC_04
+LOOK_ID: LOOK_ST
+DU: 10
+오디오:
+  BGM: BGM 다시 시작 — 엔딩 감성으로 서서히 올라옴
+  음성: 립싱크(전반) + 나레이션(중반) + 여운 침묵(후반)
+  효과음: 이어폰 꽂히는 소리
+  앰비언스: 황혼빛 거리 바람 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 황혼빛 거리 / 골든아워 / 긴 그림자
+CH(캐릭터):   LOOK_ST / 뒷모습 전신
+SH(샷):       풀샷 — 뒷모습으로 걸어가는 엔딩
+CA(카메라):   고정
+AC(동작):     다시 이어폰 귀에 꽂고 걷기 시작(3초) → 뒷모습이 황혼빛 거리 속으로 멀어짐(4초) → 카메라 고정, 서여리 뒷모습 점점 작아짐(3초 여운)
+MD(감정):     자신만의 영화 속에서 걷는 / 감성적이고 여운 있는 엔딩
+DL(대사):     (전반 3초) "오늘도… 내 인생은 영화야."
+NR(나레이션): (중반 4초) "이어폰 하나면 어디서든, 너의 인생도 영화가 돼~"
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+delicate gold necklace and gold bracelet,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, very small face, long slim legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+beige baseball cap worn loosely, white graphic tee,
+dark wash bootcut jeans rolled up one side, red sandals,
+walking away from camera down golden hour Seoul street,
+back toward camera hair and cap silhouetted in warm amber light,
+long soft shadows stretching behind her,
+street framing her like a cinematic movie still,
+full body shot from behind, eye level, vertical 9:16,
+warm golden hour lighting,
+Photorealistic 8K cinematic natural Korean beauty,
+background people must not interact with or interfere with the main character
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: she re-inserts wireless earphone,
+begins walking away from camera,
+BGM starts again — she speaks as she walks —
+"오늘도… 내 인생은 영화야."
+back toward camera, golden light ahead.
+
+Next 4s: figure moving down glowing street,
+wavy hair and beige cap catching golden light,
+long soft shadows stretching behind her.
+
+Final 3s: camera holds static,
+her figure growing smaller in the distance,
+street framing her like a movie still — 여운 침묵 구간.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+================================================================
+전체 컷 요약
+================================================================
+| 컷  | 제목                  | 길이 | PL     | LOOK    | SH          | CA        | 립싱크 | 상태       |
+|-----|-----------------------|------|--------|---------|-------------|-----------|--------|------------|
+| C01 | 이어폰 꽂기           | 8s   | BR_VD  | LOOK_ST | SH_MCU      | CA_ST     | ❌     | 신규       |
+| C02 | 눈 뜨는 순간 시그니처 | 10s  | BR_VD  | LOOK_ST | SH_CU→ECU   | CA_ZI     | ❌     | 🔴 재생성  |
+| C03 | 거리 걷기+쇼윈도 반영 | 8s   | BR_VD  | LOOK_ST | SH_MS→CU    | CA_TR     | ❌     | 🔴 재생성  |
+| C04 | 벤치 옆 대사          | 10s  | YR_VD  | LOOK_ST | SH_MCU      | CA_ST     | ✅     | 🔴 재생성  |
+| C05 | 횡단보도              | 10s  | YR_VD  | LOOK_ST | SH_MS→MCU   | CA_TR→ST  | ✅     | 🔴 재생성  |
+| C06 | 골목 이어폰 빼기      | 10s  | YR_VD  | LOOK_ST | SH_MCU→CU   | CA_ST     | ❌     | 🔴 재생성  |
+| C07 | 황혼빛 엔딩 뒷모습    | 10s  | YR_VD  | LOOK_ST | SH_FS       | CA_ST     | ✅     | 🔴 재생성  |
+
+총 길이: 66초 / 재생성: C02~C07 / 립싱크: C04·C05·C07
+BGM: 없음(C01) → 인디팝 시작(C02) → 유지 → 완전중단(C06) → 재시작(C07)
+================================================================
+버전 이력
+================================================================
+v1.0 (2026-07-17) — 최초 작성
+v3.0 (2026-07-27) — 표준 포맷 v3 적용
+                    마스터 코드 헤더 / EP.HEADER / KR 섹션 / VP 섹션 전체 구성
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
+================================================================
