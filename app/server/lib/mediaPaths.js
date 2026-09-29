@@ -111,6 +111,19 @@ export function sfxFile(rel) {
   if (r.startsWith('_shared/sfx/')) return path.join(DOWNLOADS, r)
   return sfxDir(r.replace(/^(library\/)?sfx\//, ''))
 }
+// 대본 탭 효과음 선택은 "효과음:" 글에 파일 이름만 남긴다(예: "mixkit-…-677.wav — 유리 깨지는 충격").
+// 그 이름으로 _shared/sfx 아래를 찾아 sfxDir 기준 상대경로를 돌려준다(없으면 null) — 2026-09-29
+export function findSfxByName(name) {
+  const base = path.basename(String(name || '').trim())
+  if (!base) return null
+  try {
+    const hit = fs.readdirSync(sfxDir(), { recursive: true }).map(String).find((f) => path.basename(f) === base)
+    return hit ? hit.replace(/\\/g, '/') : null
+  } catch { return null }
+}
+export function sfxNameFromText(text) {
+  return (String(text || '').match(/([\w.\-]+\.(?:wav|mp3))/i) || [])[1] || null
+}
 export function bgmDir(sub = '')   { return path.join(DOWNLOADS, '_shared', 'bgm', sub) }
 export function bgmFile(rel) {
   const r = String(rel).replace(/\\/g, '/')

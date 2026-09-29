@@ -502,7 +502,7 @@ def render_scene(canvas_size, scene, font_size=64):
     margin_x = 24 + ix
     arrow_pad = H * 0.09 if scene.get("arrow") else 0
     tail_pad = H * 0.05 if bubble == "cloud" else 0
-    cap_safe_top = H * 0.72 - box_h - iy - arrow_pad - tail_pad
+    cap_safe_top = H * 0.80 - box_h - iy - arrow_pad - tail_pad
     left = max(margin_x, min(left, W - box_w - margin_x))
     top = max(52 + iy, min(top, min(H - box_h - 52 - iy, cap_safe_top)))
     text_box = (left, top, left + box_w, top + box_h)

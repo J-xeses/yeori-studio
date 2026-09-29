@@ -4748,8 +4748,11 @@ app.post('/api/save-tts-track', (req, res) => {
 
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
 app.post('/api/run-ffmpeg', async (req, res) => {
-  const { ep, cutNo, duration, sfxFile, sfxStart, audioStart, audioEnd, bgVolume, narrationVolume, sfxVolume } = req.body
+  const { ep, cutNo, duration, sfxFile: sfxFileIn, sfxName, sfxStart, audioStart, audioEnd, bgVolume, narrationVolume, sfxVolume } = req.body
   if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
+  // 대본 탭에서 고른 효과음은 이름만 있다(sfxName) → 라이브러리에서 찾아 절대경로로(9/29)
+  const sfxRel = !sfxFileIn && sfxName ? mp.findSfxByName(sfxName) : null
+  const sfxFile = sfxFileIn || (sfxRel ? mp.sfxFile(sfxRel) : undefined)
   const dur = parseFloat(duration) || 8
 
   const padded   = String(cutNo).padStart(2, '0')

@@ -177,7 +177,7 @@ function ReelCaptionOverlay({ text, fontPx, y, fontReady, plate = false }) {
   const t = String(text || '').trim()
   const boxH = blockH + 36 * k
   let top = y ? H * y - boxH / 2 : H * 0.87 - boxH
-  top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.72 - boxH)))
+  top = Math.max(52 * k, Math.min(top, Math.min(H - boxH - 52 * k, H * 0.80 - boxH)))
   return (
     <div ref={boxRef} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 3 }}>
       {t && H > 0 && (
@@ -1349,7 +1349,7 @@ export default function VideoTab() {
   // 항상 써온 절대경로 관례(C:\yeori-studio\downloads\...)로 변환.
   const sfxAbsolutePath = (cut) => cut?.sfxFile ? `C:\\yeori-studio\\downloads\\${cut.sfxFile.replace(/\//g, '\\')}` : undefined
 
-  const runFfmpegForCut = async (cut) => {
+  const runFfmpegForCut = async (cut, retried = false) => {
     setFfmpegStatus(p => ({ ...p, [cut.id]: 'running' }))
     setFfmpegLog(p => ({ ...p, [cut.id]: '합성 시작…' }))
     try {
@@ -1360,6 +1360,8 @@ export default function VideoTab() {
         body: JSON.stringify({
           ep, cutNo: cut.no, duration: cut.duration || 8,
           sfxFile: sfxAbsolutePath(cut), sfxStart: cut.sfxStart, sfxVolume: cut.sfxVolume,
+          // 대본 탭 효과음 선택은 "효과음:" 글에 파일 이름으로만 남는다 → 서버가 이름으로 찾음(9/29)
+          sfxName: (String(cut.masterCode?.audio?.sfx || '').match(/([\w.-]+\.(?:wav|mp3))/i) || [])[1],
           audioStart: cut.narrationStart, narrationVolume: cut.narrationVolume,
           bgVolume: cut.narrBgVolume,
         }),
@@ -1371,6 +1373,13 @@ export default function VideoTab() {
       if (!res.ok) {
         let msg = `HTTP ${res.status}`
         try { msg = (await res.json())?.error || msg } catch {}
+        // 컷 영상(05_video/cut_NN.mp4)이 아직 없으면 = 클립 합성을 안 한 상태 → 먼저 클립 합성 후 한 번만 다시 시도(9/29 R06 컷1)
+        if (res.status === 404 && /영상 파일 없음/.test(msg) && !retried && (videoClips[cut.id] || []).length) {
+          setFfmpegLog(p => ({ ...p, [cut.id]: '컷 영상이 아직 없어 먼저 클립 합성 중…' }))
+          await renderCutClips(cut)
+          return runFfmpegForCut(cut, true)
+        }
+        if (res.status === 404 && /영상 파일 없음/.test(msg)) msg = '컷 영상이 아직 없어요 — 먼저 "🎞 클립 합성"을 눌러 주세요'
         setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
         setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${msg}` }))
         return
@@ -1716,7 +1725,7 @@ export default function VideoTab() {
                 </div>
                 <div className={s.field}>
                   <label>세로 위치 <span className={s.val}>{reelStyle.y ? `${Math.round(reelStyle.y * 100)}%` : "기본(하단)"}</span></label>
-                  <input type="range" min="15" max="72" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
+                  <input type="range" min="55" max="78" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
                     onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5 }}>
@@ -2081,13 +2090,13 @@ export default function VideoTab() {
                         <div className={s.subtitleEditControls}>
                           <div className={s.posSelector}>
                             {['top','middle','bottom'].map(pos => {
-                              // 릴스는 세로 위치(reelStyle.y — 최종본과 같은 값)에 연결: 상단 25%·중앙 50%·하단=기본(안전선 위)
-                              const reelPos = !reelStyle.y ? 'bottom' : reelStyle.y <= 0.35 ? 'top' : 'middle'
+                              // 릴스는 세로 위치(reelStyle.y — 최종본과 같은 값)에 연결: 하단=기본(인스타 하단 UI 바로 위 안전선) · 중 70% · 상 63% — 화면 가운데(인물 영역)로 안 들어가게(9/29 성준님), 슬라이더도 55~78%, 안전선 0.72→0.80
+                              const reelPos = !reelStyle.y ? 'bottom' : reelStyle.y <= 0.665 ? 'top' : 'middle'
                               const active = isReel ? reelPos === pos : subtitlePosition === pos
                               return (
                               <button key={pos}
                                 className={`${s.posBtn} ${active ? s.posBtnActive : ''}`}
-                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.25 : pos === 'middle' ? 0.5 : null }); else setSubtitlePosition(pos) }}>
+                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.63 : pos === 'middle' ? 0.70 : null }); else setSubtitlePosition(pos) }}>
                                 {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
                               </button>
                               )

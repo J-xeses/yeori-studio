@@ -370,14 +370,20 @@ export function decideCut(cut) {
   const pickRule = (hay) => SFX_RULES.find((r) => r.kw.test(hay))
   // 0순위: 컷에 직접 지정한 파일(masterCode.audio.sfxFile — 메이킹 탭 SFX 열에서 선택) — 키워드 규칙보다 우선.
   // sfxAt(start|mid|end, 기본 mid) · sfxGain(0~1, 기본 0.7) 은 선택. sfxFile 이 '__none__' 이면 효과음 없음.
-  const manualFile = String(audio.sfxFile || '').replace(/\\/g, '/').replace(/^(_shared\/)?(library\/)?sfx\//, '').trim()
+  // 대본 탭에서 고른 효과음은 "효과음:" 글에 파일 이름으로만 남는다 → 이름으로 라이브러리에서 찾아 직접 지정으로 취급.
+  // 영상 탭의 시작(cut.sfxStart)·음량(cut.sfxVolume, 1=100%)도 최종본에 반영(9/29 R06 컷1: 6.5초·150%가 무시되던 문제)
+  const namedSfx = mp.sfxNameFromText(audio.sfx)
+  const manualFile = String(audio.sfxFile || cut.sfxFile || (namedSfx ? mp.findSfxByName(namedSfx) || '' : '')).replace(/\\/g, '/').replace(/^(_shared\/)?(library\/)?sfx\//, '').trim()
   if (manualFile === '__none__') {
     /* 사용자가 명시적으로 효과음 없음 */
   } else if (manualFile) {
     const at = ['start', 'mid', 'end'].includes(audio.sfxAt) ? audio.sfxAt : 'mid'
-    const gain = Number.isFinite(Number(audio.sfxGain)) && audio.sfxGain !== '' && audio.sfxGain != null ? Math.min(1, Math.max(0.05, Number(audio.sfxGain))) : 0.7
+    const vol = Number(cut.sfxVolume)
+    const gain = Number.isFinite(Number(audio.sfxGain)) && audio.sfxGain !== '' && audio.sfxGain != null ? Math.min(1, Math.max(0.05, Number(audio.sfxGain)))
+      : Number.isFinite(vol) && cut.sfxVolume != null ? Math.min(1, Math.max(0.05, 0.7 * vol)) : 0.7
     // sfxAtSec(컷 시작 기준 초): start/mid/end로는 못 짚는 정확한 지점(예: "2초 지점에서 BGM 끊김")을 직접 지정할 때.
-    const atSec = Number.isFinite(Number(audio.sfxAtSec)) ? Math.max(0, Number(audio.sfxAtSec)) : null
+    const atRaw = audio.sfxAtSec ?? cut.sfxStart
+    const atSec = atRaw !== '' && atRaw != null && Number.isFinite(Number(atRaw)) ? Math.max(0, Number(atRaw)) : null
     sfx.push({ file: manualFile, at, atSec, gain, maxDur: null, layer: false, manual: true, reason: '직접 지정' })
   } else if (!SFX_NONE.test(sfxText)) {
     let rule = pickRule(sfxText)
