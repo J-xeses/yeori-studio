@@ -33,6 +33,7 @@
 |항목|기준|
 |-|-|
 |대사 처리|**⚠️ 2026-09-10 변경 — §⑬-2 참조.** (구) "프롬프트에 대사 금지 + 무음 반환"은 Flow 퍼펫티어 시절 규칙(2026-09-02 폐기). (신) YEORI 대사 컷은 Veo 가 **대사를 말하도록** 생성(립싱크·음성 함께) → 음성 추출 → 서여리 음성 변환. 나레이션(NR) 컷은 여전히 인물 무발화 + ElevenLabs 직접.|
+|**나레이션 컷 무발화 지시 강화**|**⚠️ 실측(2026-09-29, SF_E11 컷3·6)**: "NO dialogue — narration added in post"만 써두면 Veo 가 감정 표현 구간(체념·한숨 등)에서 스스로 입모양·중얼거림(주로 영어)을 만들어내는 사고가 있었음. NR 컷 VP 끝에 반드시 **"her mouth stays closed and neutral throughout, she does not speak or mouth any words, no lip movement, silent expression only"**를 명시 문구로 추가한다. "NO dialogue" 한 줄만으로 끝내지 말 것.|
 |시간 명시|"First 3s / Next 3s / Final 4s" 형식으로 행동 순서 명시|
 |전신샷|불안정 → B-roll + 클로즈업 조합으로 대체|
 |배경 인물|배경 인물 자체는 허용 / 단 서여리 행동·연출에 개입 금지 → "background people must not interact with or interfere with the main character" 필수|
@@ -156,6 +157,24 @@ avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin
 □ 의상 설명 구체적 (색상·소재·스타일)
 □ 한국어 텍스트는 CapCut 후처리 계획
 ```
+
+\---
+
+### 프레임·화질 마감 묘사는 컷마다 다양화 [v1.4.5 신설 — 2026-09-29]
+
+⚠️ **실측(2026-09-29)**: 최근 에피소드(IG_R04~06 등)의 이미지 프롬프트 마지막 문구가 "photorealistic 8K cinematic, natural Korean beauty, vertical 9:16"로 컷·에피소드를 가리지 않고 토씨 하나 안 틀리고 반복되고 있었음(성준님 지적 — 유튜브의 "비진정성(대량생산·템플릿) 콘텐츠" 판정이 정확히 이런 "매번 같은 레시피로 찍어낸 흔적"을 문제 삼는다). 문구 자체가 노출되지 않아도, 결과물의 색감·질감·렌즈감이 매번 똑같아 보이는 원인이 된다.
+
+**규칙**: 이미지 프롬프트 마지막 마감 문구를 컷마다 아래 중 겹치지 않게 골라 쓴다(같은 에피소드 안에서 연속 2컷 이상 동일 문구 금지):
+
+```
+- photorealistic 8K cinematic, natural Korean beauty
+- shot on a full-frame mirrorless camera, shallow depth of field, natural color grading
+- soft cinematic lighting, subtle film grain, realistic skin tones
+- editorial photography style, crisp detail, true-to-life color
+- documentary-style realism, natural ambient light, unposed candid feel
+```
+
+샷타입(SH_CU/SH_MS/SH_FS 등)은 이미 스토리 흐름에 따라 자연스럽게 달라지므로 그대로 두고(무작위로 섞지 말 것 — 서사에 안 맞는 샷이 나옴), **서사와 무관한 기술적 마감 묘사만** 이렇게 순환시킨다.
 
 \---
 
