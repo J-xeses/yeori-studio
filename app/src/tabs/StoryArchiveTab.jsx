@@ -448,8 +448,13 @@ function TrendEpisodesSection({ dispatch }) {
 
   useEffect(() => { load() }, [])
 
+  // 2026-09-29 수정 — 예전엔 title/contentType만 넘기고 angle(트렌드를 서여리 관점으로
+  // 다루는 방향 한 문장, /api/trend-to-episode가 실제로 생성해준 핵심 내용)을 버렸다.
+  // 그 결과 ScriptGenTab이 제목 한 줄만 보고 완전히 새 이야기를 지어내 "후보의 내용이
+  // 반영 안 되고 분량만 채워지는" 문제가 생겼음(문제2). angle을 storyBrief 초기값으로
+  // 넘겨 ScriptGenTab의 "스토리 디벨롭" 단계가 이걸 기반으로 확장하게 한다.
   const sendToScript = (ep) => {
-    dispatch({ type: 'SET_EPISODE', p: { title: ep.title, contentType: ep.category } })
+    dispatch({ type: 'SET_EPISODE', p: { title: ep.title, contentType: ep.category, storyBrief: ep.angle || '' } })
     dispatch({ type: 'SET_TAB', p: 'script' })
   }
 

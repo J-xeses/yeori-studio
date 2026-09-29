@@ -421,6 +421,56 @@ await check('E8', '코디젠 에피소드 삭제 — LIVE·없는 에피소드 �
   return { ok, evidence: `LIVE 삭제 거부 ${live.status} · 없는 에피소드 ${none.status} · 개수 유지 ${after.data.episodes.length} · 휴지통 백업 ${trash ? 'O' : 'X'} · 후보 다시 보내기 ${resend ? 'O' : 'X'}` }
 })
 
+// ── 후보 자동생성 키워드 반복 버그(2026-09-29 문제1) ──
+// 근본 원인: trend_episodes.json이 몇 달째 갱신 안 되는데(실측: 2026-07-12 단일 항목에서 정지)
+// fetchTrendData()가 "1건이라도 있으면" 그 오래된 항목을 매번 그대로 재사용해 "자동 플로우"가
+// 항상 같은 소재 → 비슷한 키워드(걸크러시/자신감 회복 등)만 반복 생성했다. Claude 호출 없이
+// (토큰 0) ①신선도 가드 코드가 실제로 있는지 ②실제 trend_episodes.json 데이터가 이 가드를
+// 통과하는지(오래된 항목은 걸러져 웹검색 폴백으로 넘어가는지)만 확인한다.
+await check('E10', '후보 자동생성 — 오래된 trend_episodes.json 재사용 방지(신선도 가드)', async () => {
+  const src = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const hasGuard = /TREND_STALE_HOURS/.test(src) && /shuffleArray/.test(src)
+  const fallbackWired = /trendEntries\.length\s*\)\s*\{[\s\S]{0,200}?formatTrendEntries/.test(src) && /searchWebTrends\(typeLabel\)/.test(src)
+  const te = await get('/api/trend-episodes')
+  const entries = te.ok ? (te.data.entries || []) : []
+  const staleHoursMatch = src.match(/TREND_STALE_HOURS\s*=\s*(\d+)/)
+  const staleHours = staleHoursMatch ? Number(staleHoursMatch[1]) : 48
+  const now = Date.now()
+  const fresh = entries.filter(e => { const t = Date.parse(e?.createdAt || ''); return Number.isFinite(t) && (now - t) < staleHours * 3600 * 1000 })
+  const oldest = entries.length ? Math.min(...entries.map(e => Date.parse(e?.createdAt || '') || now)) : null
+  const ok = hasGuard && fallbackWired
+  return {
+    ok,
+    evidence: `가드 코드 존재 ${hasGuard ? 'O' : 'X'}(TREND_STALE_HOURS=${staleHours}h) · 웹검색 폴백 배선 ${fallbackWired ? 'O' : 'X'} · 실제 데이터: 전체 ${entries.length}건 중 신선 ${fresh.length}건${oldest ? ` · 가장 오래된 항목 ${new Date(oldest).toLocaleDateString('ko-KR')}` : ''}`,
+  }
+})
+
+// ── 후보→대본 "양만 채워짐" 버그(2026-09-29 문제2·3) ──
+// 근본 원인: StoryArchiveTab의 "대본 생성 →" 버튼(sendToScript)이 트렌드 후보의 angle(핵심
+// 내용 한 줄)을 버리고 title만 넘겼고, ScriptGenTab의 generateScript() 프롬프트에도 스토리
+// 개요를 넣을 자리가 아예 없어 Claude가 제목 한 줄만 보고 매번 새 이야기를 지어냈다.
+// storyBrief 배선(후보 angle → 디벨롭 단계 → 최종 대본 프롬프트)과 연출 템플릿 반자동화
+// (룰셋 §②-1) 코드가 실제로 남아있는지 소스 기준으로 확인한다(Claude 호출 없음, 토큰 0).
+await check('E11', '후보→대본 스토리 디벨롭 배선 + 연출 템플릿 반자동화(룰셋 §②-1) 코드 존재', async () => {
+  const storyTab = fs.readFileSync(new URL('../src/tabs/StoryArchiveTab.jsx', import.meta.url), 'utf-8')
+  const scriptTab = fs.readFileSync(new URL('../src/tabs/ScriptGenTab.jsx', import.meta.url), 'utf-8')
+  const angleWired = /storyBrief:\s*ep\.angle/.test(storyTab)
+  const developStep = /const developStory = async/.test(scriptTab) && /episode\.storyBrief/.test(scriptTab)
+  const promptUsesBrief = /스토리 개요\(반드시 이 장면 전개를 그대로 따라/.test(scriptTab)
+  const pickerImported = /import ShotTemplatePicker from/.test(scriptTab)
+  const pickerFileExists = fs.existsSync(new URL('../src/components/ShotTemplatePicker.jsx', import.meta.url))
+  let templateCount = 0
+  if (pickerFileExists) {
+    const pickerSrc = fs.readFileSync(new URL('../src/components/ShotTemplatePicker.jsx', import.meta.url), 'utf-8')
+    templateCount = (pickerSrc.match(/id:\s*'T0\d'/g) || []).length
+  }
+  const ok = angleWired && developStep && promptUsesBrief && pickerImported && pickerFileExists && templateCount === 5
+  return {
+    ok,
+    evidence: `후보 angle→storyBrief 배선 ${angleWired ? 'O' : 'X'} · 디벨롭 단계 ${developStep ? 'O' : 'X'} · 대본 프롬프트가 개요 사용 ${promptUsesBrief ? 'O' : 'X'} · 연출 템플릿 피커 연결 ${pickerImported ? 'O' : 'X'} · 룰셋 §②-1 템플릿 ${templateCount}/5개`,
+  }
+})
+
 await check('C4', '대본 탭 효과음(이름만 있는 선택) → 최종본·영상 탭 반영 + 자막 위치 하단 영역 제한', async () => {
   const { decideCut } = await import('../server/lib/reelFinalize.js')
   const d = decideCut({ no: 1, cutType: 'YEORI', subtitle: '', sfxStart: 6.5, sfxVolume: 1.5, masterCode: { audio: { sfx: 'mixkit-cinematic-glass-hit-suspense-677.wav — 유리 깨지는 충격' } } })

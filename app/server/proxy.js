@@ -5958,13 +5958,39 @@ async function callClaudeText(prompt, maxTokens = 512) {
   return textBlock.text.trim()
 }
 
-// downloads/trend_episodes.json에 실제 수집된 트렌드가 있으면 그걸 우선 사용하고,
+// downloads/trend_episodes.json에 실제 수집된 "신선한" 트렌드가 있으면 그걸 우선 사용하고,
 // 없으면 Claude의 web_search 서버 도구로 최신 트렌드를 직접 검색해 대체한다.
+//
+// 2026-09-29 수정 — 근본 원인: trend_episodes.json은 TREND RADAR(외부 사이트)나
+// create_trend_episode MCP 도구로 "수동으로" 채워지는 파일인데, 실측 결과 2026-07-12
+// 항목 1건에서 몇 달째 갱신이 멈춰 있었다. 예전 코드는 entries가 "1건이라도" 있으면
+// 무조건 그 1건(항상 같은 과거 트렌드)을 그대로 재사용했기 때문에, "자동 플로우 실행"을
+// 몇 번을 돌려도 같은 소재 → 같은 계열의 키워드(걸크러시/자신감 회복 등)만 반복 생성됐다.
+// 신선도 기준(TREND_STALE_HOURS)을 넘는 항목은 버리고 웹검색 폴백으로 넘어가게 하고,
+// 신선한 항목이 여러 개면 매번 무작위로 섞어서 다양성을 확보한다.
+const TREND_STALE_HOURS = 48
+function shuffleArray(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
 async function fetchTrendData() {
   try {
     const { status, body } = await selfFetch('/api/trend-episodes')
     if (status === 200 && Array.isArray(body?.entries) && body.entries.length) {
-      return body.entries
+      const now = Date.now()
+      const fresh = body.entries.filter(e => {
+        const t = Date.parse(e?.createdAt || '')
+        return Number.isFinite(t) && (now - t) < TREND_STALE_HOURS * 3600 * 1000
+      })
+      if (fresh.length) {
+        console.log(`[generate-candidate-flow] 신선한 트렌드 ${fresh.length}건 중 무작위 샘플 사용`)
+        return shuffleArray(fresh).slice(0, 5)
+      }
+      console.log(`[generate-candidate-flow] trend_episodes.json 전부 ${TREND_STALE_HOURS}시간 초과(stale) → 웹검색 폴백`)
     }
   } catch { /* 무시하고 웹 검색 fallback으로 진행 */ }
   return []

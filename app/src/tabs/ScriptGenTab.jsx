@@ -7,6 +7,7 @@ import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
 import { ensureDialogueInVP, parseSegTiming } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
+import ShotTemplatePicker from '../components/ShotTemplatePicker'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -801,6 +802,15 @@ export default function ScriptGenTab() {
   const [gData, setGData] = useState(() => loadGPoints())
   const [revisionInput, setRevisionInput] = useState('')
   const [revisionLoading, setRevisionLoading] = useState(false)
+  // ── 스토리 디벨롭 단계(문제2, 2026-09-29 추가) ──────────────────────
+  // 기획 후보(StoryArchiveTab 트렌드 에피소드 후보의 "angle" 한 줄)를 그대로 대본화하면
+  // "양만 채워진" 대본이 되는 문제가 있었다(원인: sendToScript가 title만 넘기고 angle은
+  // 버려졌고, generateScript() 프롬프트에도 스토리 개요를 넣을 자리가 아예 없었음). 짧은
+  // 아이디어 → (이 단계) 3막 구조 장면 전개안 → (generateScript) 최종 v3 대본, 순서로
+  // 중간 디벨롭 단계를 추가한다. 완전 자동 대체가 아니라 episode.storyBrief textarea에
+  // 결과를 채워 넣을 뿐 — 사람이 검토·수정 후 "대본 생성"을 눌러야 실제 컷이 만들어진다.
+  const [developLoading, setDevelopLoading] = useState(false)
+  const [developError, setDevelopError] = useState('')
   const [revisionHistory, setRevisionHistory] = useState([])
   const [viewMode, setViewMode] = useState('detail') // 'list' | 'detail'
 
@@ -1044,6 +1054,48 @@ export default function ScriptGenTab() {
   비웠다면 의도적 이유가 있음(나레이션이 대신 설명하는 경우 등)
 === 룰셋 끝 ===`
 
+  // 짧은 후보 아이디어(episode.storyBrief, 보통 후보의 angle 한 줄이나 사용자가 직접 쓴 메모)를
+  // 사건→감정변화→선택 3막 구조의 장면 전개안으로 확장한다. 결과는 storyBrief 자체를 덮어써서
+  // "더 발전시키기"를 반복 클릭할 때마다 점점 구체화되게 한다(사람이 매 단계 확인 가능).
+  const developStory = async () => {
+    if (!apiKeys.claude) { alert('Claude API 키를 입력하세요 (상단 API 바)'); return }
+    setDevelopLoading(true); setDevelopError('')
+    try {
+      const seed = episode.storyBrief?.trim() || episode.title || ''
+      if (!seed) { setDevelopError('제목이나 스토리 개요를 먼저 입력하세요'); return }
+      const res = await claudeMessages(apiKeys.claude, {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1200,
+        messages: [{
+          role: 'user',
+          content: `당신은 서여리(20대 한국 여성 AI 버추얼 인플루언서) 채널의 스토리 디벨롭 작가입니다.
+
+아래는 아직 다듬어지지 않은 에피소드 아이디어입니다:
+"${seed}"
+
+기준 컷 수: 약 ${episode.cutCount}개 (컷당 8초 내외)
+배경 장소: ${episode.location || '(미정)'}
+전체 분위기: ${Array.isArray(episode.mood) ? episode.mood.join(' + ') : (episode.mood || '(미정)')}
+
+이 아이디어를 "사건 → 감정변화 → 선택" 3막 구조의 구체적인 장면 전개안으로 발전시키세요.
+- 컷 수에 맞춰 도입/전개/절정/여운 단위로 장면을 나누고, 각 장면에서 어떤 감정이 어떻게 변하는지 명시
+- 짧은 아이디어를 억지로 늘리지 말고, 장면마다 구체적인 디테일(장소 변화, 소품, 대사 힌트)을 새로 만들어 채우세요
+- 엔딩에는 여운 2~3초 분량의 마무리 비트를 포함하세요
+- 출력은 한국어 평문 5~10문장 내외, 마크다운/번호 매기기 없이 자연스러운 문단으로. 다른 설명 없이 전개안만 출력하세요.`,
+        }],
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || '오류') }
+      const data = await res.json()
+      const text = (data.content?.[0]?.text || '').trim()
+      if (!text) throw new Error('빈 응답')
+      dispatch({ type: 'SET_EPISODE', p: { storyBrief: text } })
+    } catch (err) {
+      setDevelopError(err.message)
+    } finally {
+      setDevelopLoading(false)
+    }
+  }
+
   const generateScript = async () => {
     if (!apiKeys.claude) { alert('Claude API 키를 입력하세요 (상단 API 바)'); return }
     setLoading(true)
@@ -1065,6 +1117,10 @@ ${YEORI_RULESET}
 배경 장소: ${episode.location}
 전체 분위기: ${Array.isArray(episode.mood) ? episode.mood.join(' + ') : episode.mood}
 주인공 캐릭터: ${episode.character}
+${episode.storyBrief?.trim() ? `
+스토리 개요(반드시 이 장면 전개를 그대로 따라 컷으로 확장할 것 — 새로운 이야기를 지어내지 말고 아래 개요의 사건·감정 흐름을 각 컷에 배분하세요):
+${episode.storyBrief.trim()}
+` : ''}
 
 각 컷은 반드시 아래 형식으로 작성하세요.
 ⚠️ 중요: 마크다운 형식 절대 금지! ** 굵은 글씨, # 헤더, --- 구분선 사용 금지!
@@ -1680,6 +1736,33 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                   onChange={e => dispatch({ type: 'SET_EPISODE', p: { title: e.target.value } })} />
               </div>
               <div className={s.field}>
+                <label>
+                  스토리 개요(디벨롭) <span style={{fontSize:10,color:'var(--text3)'}}>— 기획 후보의 짧은 아이디어를 장면 전개로 발전시키는 중간 단계</span>
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder="기획 후보 선택 시 아이디어가 여기 자동으로 채워집니다. 직접 입력하거나, 아래 버튼으로 3막 구조 장면 전개안으로 발전시켜보세요."
+                  style={{ fontSize: 12.5, lineHeight: 1.6, resize: 'vertical' }}
+                  value={episode.storyBrief || ''}
+                  onChange={e => dispatch({ type: 'SET_EPISODE', p: { storyBrief: e.target.value } })}
+                />
+                <button type="button"
+                  onClick={developStory}
+                  disabled={developLoading || !apiKeys.claude}
+                  style={{
+                    marginTop: 6, fontSize: 11.5, padding: '6px 12px', borderRadius: 6,
+                    border: '1px solid var(--accent-border)', background: 'var(--accent-glow)',
+                    color: 'var(--accent-light)', cursor: developLoading ? 'default' : 'pointer',
+                  }}>
+                  {developLoading ? '디벨롭 중...' : `✨ ${episode.storyBrief?.trim() ? '더 발전시키기' : 'AI로 스토리 디벨롭'}`}
+                </button>
+                {developError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>⚠️ {developError}</div>}
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>
+                  여기 채워진 개요는 "대본 생성" 시 Claude에게 그대로 전달되어, 짧은 아이디어를 분량만 채운
+                  대본이 아니라 실제 장면·감정선이 있는 대본으로 확장하는 근거가 됩니다(2026-09-29 추가).
+                </div>
+              </div>
+              <div className={s.field}>
                 <label>배경 장소</label>
                 <select value={episode.location}
                   onChange={e => dispatch({ type: 'SET_EPISODE', p: { location: e.target.value } })}>
@@ -2034,6 +2117,17 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
           const mcField = (key, val) => updateCutMC(cut.id, key, val)
           const audioField = (key, val) => updateCutMCNested(cut.id, 'audio', key, val)
           const krField = (key, val) => updateCutMCNested(cut.id, 'kr', key, val)
+          // 연출 세부설정 반자동화(문제3, 2026-09-29) — 룰셋 §②-1 검증된 템플릿을 고르거나
+          // AI 추천을 받으면, 빈 코드 필드만 채우고 VP 앞에 핵심 문구를 삽입한다. 기존 값이
+          // 있는 필드는 덮어쓰지 않아 사람이 이미 조정해둔 내용을 실수로 날리지 않는다.
+          const applyShotTemplate = ({ sh, ca, md, ac, phrase }) => {
+            if (sh && !mc.sh) mcField('sh', sh)
+            if (ca && !mc.ca) mcField('ca', ca)
+            if (md && !mc.md) mcField('md', md)
+            if (ac && !mc.ac) mcField('ac', ac)
+            const prevVp = (cut?.videoPrompt || '').trim()
+            updateCut(cut.id, 'videoPrompt', prevVp ? `${phrase}\n\n${prevVp}` : phrase)
+          }
 
           return (
             <>
@@ -2101,6 +2195,10 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
 
                     <div className={s.v3Divider} />
 
+                    <div className={s.v3MiniField} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      <ShotTemplatePicker apiKey={apiKeys.claude} cut={cut} onApply={applyShotTemplate} />
+                      <span className={s.v3CardHint}>샷타입/카메라/분위기 반자동 설정 — 룰셋 §②-1</span>
+                    </div>
                     <div className={s.v3SubGrid}>
                       <div className={s.v3MiniField}>
                         <label>SH (샷타입)</label>
