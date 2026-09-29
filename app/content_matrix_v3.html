@@ -4226,19 +4226,69 @@ async function sendCandidateToScriptGen() {
   const cand = candidatePool.find(c => c.id === currentCandidateId); if (!cand) return;
   const contentType = SCRIPTGEN_TYPE_MAP[cand.type];
   if (!contentType) { showToast(`⚠️ ${cand.type} 유형은 대본생성 탭에 대응 유형이 없어요(SF/LF/IG_R/IG_P/TK만 가능)`); return; }
-  const storyBrief = [cand.story, cand.script].filter(t => t && t.trim()).join('\n\n---\n\n');
-  if (!storyBrief) { showToast('⚠️ 스토리 기획이나 한글 대본을 먼저 채워주세요'); return; }
+
+  // "이미 정답(완성된 컷별 한글대본)이 있으면 API를 또 쓰지 않는다"(성준님 원칙, 2026-09-29) —
+  // STEP4 한글대본이 **[CUT N]** 형식으로 완성돼 있으면 Claude 호출 없이 코드로 그대로
+  // 파싱해서 컷을 채운다. 이 형식이 아니면(짧은 아이디어 단계) storyBrief만 심어서
+  // 대본생성 탭의 "Claude로 대본 생성"이 처리하도록 예전 방식으로 폴백.
+  const { cuts, intro } = parseCandidateScriptToCuts(cand.script || '');
+  const storyBrief = [intro || cand.story, cuts.length ? '' : cand.script].filter(t => t && t.trim()).join('\n\n');
+
+  if (!storyBrief && !cuts.length) { showToast('⚠️ 스토리 기획이나 한글 대본을 먼저 채워주세요'); return; }
   try {
     const res = await fetch(`${YEORI_SERVER}/api/episodes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contentType, title: cand.title || '', storyBrief }),
+      body: JSON.stringify({ contentType, title: cand.title || '', storyBrief: storyBrief || undefined, cuts: cuts.length ? cuts : undefined }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    showToast(`✅ ${data.code} 에피소드 생성됨 — 스튜디오 "대본 생성" 탭에서 "✨ Claude로 대본 생성" 버튼을 눌러야 컷이 채워져요(스토리 개요는 이미 넣어뒀어요)`);
+    showToast(cuts.length
+      ? `✅ ${data.code} 에피소드 생성 — 컷 ${cuts.length}개 그대로 반영됨(API 비용 없음). 샷타입 등 연출 설정만 대본 생성 탭에서 보완하세요`
+      : `✅ ${data.code} 에피소드 생성됨 — 스토리 개요만 있어서, 대본 생성 탭에서 "✨ Claude로 대본 생성"을 눌러야 컷이 채워져요`);
   } catch (e) {
     showToast('⚠️ 대본생성 탭 연동 실패: ' + e.message);
   }
+}
+
+// 후보 STEP4 한글대본(**[CUT N]** (N초) / **씬:**/**액션:**/**대사:**/**나레이션(...):**）을
+// Claude 없이 그대로 파싱 — 형식이 안 맞으면(자유서술 초안 단계) cuts:[] 반환해 위에서 폴백.
+function extractLabeledFields(block) {
+  const markerRe = /\*\*([^*:]+?):\*\*/g;
+  const marks = [];
+  let m;
+  while ((m = markerRe.exec(block))) marks.push({ label: m[1].trim(), start: m.index, end: markerRe.lastIndex });
+  const fields = {};
+  marks.forEach((mk, i) => {
+    const valEnd = i + 1 < marks.length ? marks[i + 1].start : block.length;
+    let val = block.slice(mk.end, valEnd);
+    val = val.replace(/^\s*\n+/, '').replace(/\n+\s*$/, '').replace(/-{2,}\s*$/, '').trim();
+    fields[mk.label] = val;
+  });
+  return fields;
+}
+function parseCandidateScriptToCuts(raw) {
+  if (!raw || !raw.trim()) return { cuts: [], intro: '' };
+  const cutHeaderRe = /\*\*\[CUT\s*0*(\d+)\]\*\*\s*(?:\((\d+)\s*초\))?/g;
+  const marks = [];
+  let m;
+  while ((m = cutHeaderRe.exec(raw))) marks.push({ no: parseInt(m[1], 10), duration: m[2] ? parseInt(m[2], 10) : null, start: m.index, contentStart: cutHeaderRe.lastIndex });
+  if (!marks.length) return { cuts: [], intro: raw.trim() };
+  const intro = raw.slice(0, marks[0].start).trim();
+  const cuts = marks.map((mk, i) => {
+    const blockEnd = i + 1 < marks.length ? marks[i + 1].start : raw.length;
+    const block = raw.slice(mk.contentStart, blockEnd);
+    const fields = extractLabeledFields(block);
+    const dlKey = Object.keys(fields).find(k => k.startsWith('대사'));
+    const nrKey = Object.keys(fields).find(k => k.startsWith('나레이션'));
+    let dialogue = (dlKey ? fields[dlKey] : '').trim() || '없음';
+    let narration = (nrKey ? fields[nrKey] : '').trim();
+    narration = narration.replace(/^"(.*)"$/s, '$1').trim() || '없음';
+    return {
+      no: mk.no, scene: fields['씬'] || '', action: fields['액션'] || '',
+      dialogue, narration, duration: mk.duration || 8,
+    };
+  });
+  return { cuts, intro };
 }
 
 function deleteCandidate() {

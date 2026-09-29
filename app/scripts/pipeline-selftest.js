@@ -474,6 +474,38 @@ await check('E11', '후보→대본 스토리 디벨롭 배선 + 연출 템플�
   }
 })
 
+// 후보 풀(content_matrix_v3.html) "🎬 대본생성으로 바로" — 이미 컷 단위로 완성된 한글대본을
+// Claude 호출 없이 코드로 파싱하는지 실제로 함수를 실행해 검증(2026-09-29, "정답이 이미
+// 보이면 API를 또 쓰지 않는다" 원칙). 정적 패턴 매칭이 아니라 실제 파싱 결과를 확인.
+await check('E12', '후보 한글대본 → 컷 파싱(API 비용 0) 실제 동작', () => {
+  const html = fs.readFileSync(new URL('../content_matrix_v3.html', import.meta.url), 'utf-8')
+  const src = html.match(/<script>([\s\S]*)<\/script>/)?.[1] || ''
+  const hasFns = /function parseCandidateScriptToCuts/.test(src) && /function extractLabeledFields/.test(src) && /cuts:\s*cuts\.length\s*\?\s*cuts\s*:\s*undefined/.test(src)
+  if (!hasFns) return { ok: false, evidence: '파서 함수 또는 /api/episodes 호출 배선을 찾을 수 없음' }
+  const sample = `intro line\n\n---\n\n**[CUT 01]** (8초)\n**씬:** 장소A\n**액션:** 행동A\n**나레이션(V.O.):** "나레이션A"\n\n---\n\n**[CUT 02]** (6초)\n**씬:** 장소B\n**액션:** 행동B\n**대사:** 여리 "대사B" / 지유 "대사B2"\n\n---\n\n**[CUT 03]** (8초)\n**씬:** 장소C\n**액션:** 행동C\n**대사:** 없음 (현장음: 효과음C)\n\n---`
+  // 브라우저 전역(window 등) 의존 없는 순수 함수라 중괄호 균형을 세어 소스를 통째로 추출 후 실행
+  const extractFn = (name) => {
+    const start = src.indexOf(`function ${name}`)
+    if (start < 0) return null
+    const braceStart = src.indexOf('{', start)
+    let depth = 0
+    for (let i = braceStart; i < src.length; i++) {
+      if (src[i] === '{') depth++
+      else if (src[i] === '}') { depth--; if (depth === 0) return src.slice(start, i + 1) }
+    }
+    return null
+  }
+  const fn1 = extractFn('extractLabeledFields'), fn2 = extractFn('parseCandidateScriptToCuts')
+  if (!fn1 || !fn2) return { ok: false, evidence: '파서 함수 소스 추출 실패' }
+  const { cuts } = new Function(`${fn1}\n${fn2}\nreturn parseCandidateScriptToCuts(${JSON.stringify(sample)})`)()
+  const c1 = cuts[0] || {}, c2 = cuts[1] || {}, c3 = cuts[2] || {}
+  const ok = cuts.length === 3
+    && c1.scene === '장소A' && c1.narration === '나레이션A' && c1.dialogue === '없음' && c1.duration === 8
+    && c2.dialogue === '여리 "대사B" / 지유 "대사B2"' && c2.duration === 6
+    && c3.dialogue === '없음 (현장음: 효과음C)'
+  return { ok, evidence: `컷 ${cuts.length}/3개 · 컷1 나레이션 "${c1.narration}" · 컷2 대사 "${c2.dialogue}"(${c2.duration}초) · 컷3 대사 "${c3.dialogue}"` }
+})
+
 await check('C4', '대본 탭 효과음(이름만 있는 선택) → 최종본·영상 탭 반영 + 자막 위치 하단 영역 제한', async () => {
   const { decideCut } = await import('../server/lib/reelFinalize.js')
   const d = decideCut({ no: 1, cutType: 'YEORI', subtitle: '', sfxStart: 6.5, sfxVolume: 1.5, masterCode: { audio: { sfx: 'mixkit-cinematic-glass-hit-suspense-677.wav — 유리 깨지는 충격' } } })

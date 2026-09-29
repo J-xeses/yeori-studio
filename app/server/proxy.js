@@ -7847,7 +7847,7 @@ app.post('/api/episodes/:episodeId/delete', (req, res) => {
 // downloads/flow/ep{N}/ 폴더를 실제로 공유하는 사고를 겪고 전역 카운터로 되돌렸는데, 여기서
 // 다시 유형별로 매기면 그 버그가 그대로 재발한다.
 app.post('/api/episodes', (req, res) => {
-  const { contentType, title, storyBrief } = req.body || {}
+  const { contentType, title, storyBrief, cuts: cutsIn } = req.body || {}
   const VALID_TYPES = ['SF', 'LF', 'IG_R', 'IG_P', 'TK']
   if (!VALID_TYPES.includes(contentType)) {
     return res.status(400).json({ error: `contentType은 ${VALID_TYPES.join('/')} 중 하나여야 합니다` })
@@ -7872,12 +7872,18 @@ app.post('/api/episodes', (req, res) => {
     }
     const id = `ep_${Date.now()}`
 
-    const makeCut = (no) => ({
+    const makeCut = (no, seed) => ({
       id: `cut-${no}`, no,
-      scene: '', action: '', character: '서여리',
-      dialogue: '', narration: '', imagePrompt: '',
-      duration: 5, cutType: 'YEORI', cutMark: 'NORMAL',
+      scene: seed?.scene || '', action: seed?.action || '', character: seed?.character || '서여리',
+      dialogue: seed?.dialogue || '', narration: seed?.narration || '', imagePrompt: seed?.imagePrompt || '',
+      duration: seed?.duration || 5, cutType: seed?.cutType || 'YEORI', cutMark: 'NORMAL',
     })
+    // 후보 풀에서 이미 컷 단위로 완성된 한글대본을 코드로 파싱해 보낸 경우(2026-09-29,
+    // "API는 정답이 보이는 상황에서만 쓴다" — 성준님 원칙) — Claude 호출 없이 그대로 반영.
+    // 형식이 안 맞는 필드만 있어도(scene/action 등) 그냥 받아들이고, 없으면 기본값으로 채움.
+    const cuts = Array.isArray(cutsIn) && cutsIn.length
+      ? cutsIn.map((c, i) => makeCut(i + 1, c))
+      : Array.from({ length: 7 }, (_, i) => makeCut(i + 1))
 
     const newEp = {
       id,
@@ -7886,7 +7892,7 @@ app.post('/api/episodes', (req, res) => {
         title: title || '',
         location: '카페',
         mood: '감성',
-        cutCount: 7,
+        cutCount: cuts.length,
         contentType,
         topicCode: 'PSY',
         scnCode: 'DOC',
@@ -7898,7 +7904,7 @@ app.post('/api/episodes', (req, res) => {
         // 그대로 이어받는다(2026-09-29, ScriptGenTab의 storyBrief 사용 배선과 동일 필드).
         ...(storyBrief ? { storyBrief } : {}),
       },
-      cuts: Array.from({ length: 7 }, (_, i) => makeCut(i + 1)),
+      cuts,
       scriptRaw: '',
       createdAt: new Date().toISOString(),
     }
