@@ -4235,7 +4235,7 @@ async function sendCandidateToScriptGen() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    showToast(`✅ ${data.code} 에피소드로 생성됨 — 스튜디오 "대본 생성" 탭에서 바로 이어가세요`);
+    showToast(`✅ ${data.code} 에피소드 생성됨 — 스튜디오 "대본 생성" 탭에서 "✨ Claude로 대본 생성" 버튼을 눌러야 컷이 채워져요(스토리 개요는 이미 넣어뒀어요)`);
   } catch (e) {
     showToast('⚠️ 대본생성 탭 연동 실패: ' + e.message);
   }

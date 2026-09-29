@@ -1117,10 +1117,24 @@ ${YEORI_RULESET}
 배경 장소: ${episode.location}
 전체 분위기: ${Array.isArray(episode.mood) ? episode.mood.join(' + ') : episode.mood}
 주인공 캐릭터: ${episode.character}
-${episode.storyBrief?.trim() ? `
+${episode.storyBrief?.trim() ? (
+  // 후보 풀(content_matrix_v3.html)의 STEP4 한글대본처럼 이미 [CUT N] 단위로 완성된
+  // 초안이 storyBrief에 들어있는 경우를 감지 — 이땐 "요약해서 재배치"가 아니라 "그대로
+  // 보존하고 기술 필드만 채우는" 지시로 바꾼다. 안 그러면 Claude가 이미 잘 써진 대사·
+  // 액션을 새로 지어내 축약해버리는 문제가 있었다(2026-09-29, 성준님 실측: "내용이 안 왔다").
+  /\[CUT\s*\d+\]/.test(episode.storyBrief)
+    ? `
+아래는 이미 컷 단위로 완성된 초안 대본입니다. 절대 요약하거나 새로 지어내지 마세요 —
+씬·액션·대사·나레이션 내용을 한 글자도 바꾸지 않고 그대로 옮기고, 거기 없는 기술 필드
+(샷 타입/컷 타입/이미지 프롬프트)만 새로 채워 넣어 아래 출력 형식에 맞추세요. 컷 경계와
+개수도 원본 그대로 유지하세요(8초 초과 시에만 룰셋 분할 규칙 적용):
+${episode.storyBrief.trim()}
+`
+    : `
 스토리 개요(반드시 이 장면 전개를 그대로 따라 컷으로 확장할 것 — 새로운 이야기를 지어내지 말고 아래 개요의 사건·감정 흐름을 각 컷에 배분하세요):
 ${episode.storyBrief.trim()}
-` : ''}
+`
+) : ''}
 
 각 컷은 반드시 아래 형식으로 작성하세요.
 ⚠️ 중요: 마크다운 형식 절대 금지! ** 굵은 글씨, # 헤더, --- 구분선 사용 금지!
