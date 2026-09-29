@@ -78,6 +78,10 @@ export default function TTSTab() {
   const { cuts, apiKeys, ttsSettings, elevenLabsStatus } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
   const episodeCode = resolveEpisodeCode(state.episode)
+  // 릴스(IG_R)는 대사(DL)를 영상(Flow) 자체 음성으로 쓴다 — 여기서 대사 트랙까지 같이
+  // cut_NN.mp3 로 저장해버리면, 영상탭 "나레이션·효과음 입히기"/reelFinalize 가 그걸 나레이션인
+  // 줄 알고 영상에 이미 있는 대사 위에 또 얹어 대사가 겹쳐 들린다(2026-09-29, IG_R06 컷1 실측).
+  const isReel = /^IG_R/i.test(episodeCode || '')
   const {
     tracks = {}, mergedUrls = {}, g3Confirmed = {},
     voiceTabs = {}, activeVoiceTab = {}, focusCutId = null,
@@ -560,9 +564,15 @@ export default function TTSTab() {
       const url  = URL.createObjectURL(blob)
       setTTS({ mergedUrls: { ...mergedUrls, [key]: url } })
 
-      // 서버에 MP3로 저장 (컷당 1개 파일 — 마지막으로 합친 목소리 탭 결과가 저장됨)
+      // 서버에 MP3로 저장 (컷당 1개 파일 cut_NN.mp3 — 마지막으로 합친 목소리 탭 결과가 저장됨).
+      // 릴스는 이 파일명을 "나레이션"으로만 인정한다(run-ffmpeg/reelFinalize, isReel 주석) —
+      // 대사 트랙이 섞여 있으면 미리듣기(mergedUrls)만 하고 디스크엔 저장하지 않는다. 그대로
+      // 저장하면 영상에 이미 있는 대사(Flow 음성) 위에 TTS 대사가 또 얹혀 겹쳐 들린다.
       const c2 = cuts.find(c => c.id === cutId)
-      if (c2) {
+      const skipSaveDialogueReel = isReel && toMerge.some(t => t.type === 'dialogue')
+      if (c2 && skipSaveDialogueReel) {
+        alert('릴스 대사는 영상 자체 음성을 쓰므로 저장하지 않았습니다(미리듣기만 가능). 나레이션 트랙만 있는 경우엔 정상 저장됩니다.')
+      } else if (c2) {
         const epNo = state.episode?.number ?? ''
         setSaving(p => ({ ...p, [key]: true }))
         try {

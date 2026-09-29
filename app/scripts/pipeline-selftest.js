@@ -204,6 +204,34 @@ await check('N1', '나레이션 오인 방지(화면 자막·DM 글자 ≠ 음�
   return { ok: !wrong.length, evidence: wrong.length ? `오인 컷 ${wrong.map(c => c.no)}` : `메인 NR 없음 컷 ${cs.filter(c => !(c.narration || '').trim()).length}개 — 나레이션으로 안 읽음` }
 })
 
+// ── 1g-2. "나레이션·효과음 입히기" 미리보기 버튼이 대사 TTS 잔재를 나레이션으로 오인하지 않는가 ──
+// 배경(2026-09-29, IG_R06 컷1 실측): TTSTab "합치기"가 대사 트랙까지 cut_NN.mp3 로 저장해버린
+// 적이 있어(이제 isReel 가드로 막음, TTSTab.jsx), 그 잔재 파일이 남아있으면 run-ffmpeg 가 그걸
+// "나레이션"으로 여기고 영상에 이미 있는 대사(Flow 음성) 위에 또 얹어 대사가 겹쳐 들렸다.
+// reelFinalize.js 와 같은 규칙(대사 있는 컷은 cut_NN_nr.mp3 만 나레이션으로 인정)을 재확인.
+await check('N2', '나레이션·효과음 입히기 — 대사 TTS 잔재(cut_NN.mp3)를 나레이션으로 안 씀', async () => {
+  if (!epNum) return { skip: true, evidence: '에피소드 번호 없음' }
+  const dlCut = cuts.find(c => (c.dialogue || '').trim() && !(c.narration || '').trim())
+  if (!dlCut) return { skip: true, evidence: '대사만 있고 나레이션 없는 컷 없음' }
+  const audioDir = mp.audioDir(CODE)
+  fs.mkdirSync(audioDir, { recursive: true })
+  const stray = path.join(audioDir, `cut_${String(dlCut.no).padStart(2, '0')}.mp3`)
+  const nrFile = path.join(audioDir, `cut_${String(dlCut.no).padStart(2, '0')}_nr.mp3`)
+  const strayExisted = fs.existsSync(stray)
+  const sample = path.join(mp.DOWNLOADS, 'seoyeori', 'characters', 'jiyu', 'voice_test', '3_jiyu_calm.mp3')
+  try {
+    if (!fs.existsSync(sample)) return { skip: true, evidence: '테스트용 샘플 음성 없음' }
+    if (!strayExisted) fs.copyFileSync(sample, stray) // 대사 TTS 잔재 시뮬레이션
+    const r = await post('/api/run-ffmpeg', { ep: epNum, cutNo: dlCut.no, duration: dlCut.duration })
+    // 대사 있는 컷은 nr.mp3 가 없으면 쓸 나레이션이 없어야 정상(음성 파일 없음 404) — 성공하면 잔재를 나레이션으로 잘못 얹은 것
+    const ok = !r.ok && /음성 파일 없음/.test(r.data?.error || '') && new RegExp(`cut_${String(dlCut.no).padStart(2, '0')}_nr\\.mp3`).test(r.data?.error || '')
+    return { ok, evidence: `컷${dlCut.no}(대사만) + 잔재 cut_NN.mp3 → ${r.ok ? '합성 성공(오사용!)' : r.data?.error || '실패'}` }
+  } finally {
+    if (!strayExisted) { try { fs.unlinkSync(stray) } catch { /* noop */ } }
+    try { fs.unlinkSync(nrFile) } catch { /* noop */ }
+  }
+})
+
 // ── 1h. 승인 기록(G포인트) 병합 — 일부 필드만 보낸 최신 기록이 다른 승인·선택 이미지를 지우지 않는가 ──
 await check('G2', '승인 기록 병합(부분 기록이 다른 승인을 지우지 않음)', async () => {
   const gp = mp.statePath('gpoints.json')

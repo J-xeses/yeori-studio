@@ -4762,7 +4762,25 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   fs.mkdirSync(outDir, { recursive: true })
 
   const videoFile = path.join(videoDir, `cut_${padded}.mp4`)
-  const audioFile = path.join(audioDir, `cut_${padded}.mp3`)
+  // 릴스(IG_R)는 대사(DL)를 영상(Flow) 자체 음성으로 쓴다 — TTSTab 미리듣기 "합치기"가
+  // 대사 트랙까지 같이 cut_NN.mp3 로 저장해버린 경우, 그걸 "나레이션"으로 여기서 또 얹으면
+  // 영상에 이미 있는 대사 위에 TTS 대사가 겹쳐 들려 대사가 꼬인다(2026-09-29, IG_R06 컷1 실측
+  // — reelFinalize.js 가 최종 합성에서 이미 쓰던 것과 동일한 규칙: 대사 있는 컷은
+  // cut_NN_nr.mp3 만 나레이션으로 인정, cut_NN.mp3 는 옛 대사 TTS일 수 있어 무시).
+  let hasDialogue = false
+  try {
+    const { ep: epEntry } = findEpisodeByNumOrThrow(ep)
+    const episodeCode = resolveEpisodeCode(epEntry.episode)
+    if (/^IG_R/i.test(episodeCode || '')) {
+      const cut = (epEntry.cuts || []).find(c => Number(c.no) === Number(cutNo))
+      hasDialogue = !!String(cut?.dialogue || '').trim()
+    }
+  } catch { /* 조회 실패해도 기존 동작(대사 없음 취급) 유지 */ }
+  const nrFile    = path.join(audioDir, `cut_${padded}_nr.mp3`)
+  const plainFile = path.join(audioDir, `cut_${padded}.mp3`)
+  // 대사 있는 컷은 nr.mp3 만 인정 — 없으면 plainFile(옛 대사 TTS 의심)로 폴백하지 않고
+  // 그대로 nrFile(미존재) 경로를 넘겨 아래 existsSync 체크가 자연히 실패하게 둔다.
+  const audioFile = hasDialogue ? nrFile : plainFile
   const outFile   = path.join(outDir,   `cut_${padded}_final.mp4`)
 
   if (!fs.existsSync(videoFile)) return res.status(404).json({ error: `영상 파일 없음: ${videoFile}` })
