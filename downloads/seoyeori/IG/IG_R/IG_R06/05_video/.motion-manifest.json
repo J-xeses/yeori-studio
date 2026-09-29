@@ -4,5 +4,11 @@
     "motion": null,
     "baked": true,
     "producedAt": "2026-09-29T03:47:56.205Z"
+  },
+  "2": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-29T08:56:17.892Z"
   }
 }

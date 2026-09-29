@@ -1,11 +1,11 @@
 {
-  "activeTab": "editmeta",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
     "remainingChars": 82362
   },
-  "activeEpisodeId": "ep_1790664275655",
+  "activeEpisodeId": "ep_1790411385724",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -4427,7 +4427,8 @@
         "code": "IG_R06",
         "finishMode": "cutter",
         "masterCode": "[IG_R06] :: [PL:IG_RL] :: [SP:IN.HM.TZ_AF.LT_WM] :: [CH:YR_VD+JY_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]",
-        "epHeaderRaw": ""
+        "epHeaderRaw": "",
+        "storyBrief": ""
       },
       "cuts": [
         {
@@ -4472,8 +4473,16 @@
               "md": "지유 신남, 서여리 당황"
             }
           },
-          "sfxStart": 6.5,
-          "sfxVolume": 1.5
+          "sfxStart": 7,
+          "sfxVolume": 0.7,
+          "videoMode": "veo",
+          "overrides": {
+            "videoPrompt": {
+              "value": "[0-2s] Seo Yeori relaxes on the bed scrolling her phone.\n[2-4s] Jiyu plops down beside her from the left and thrusts her phone screen toward Yeori's face.\n[4-7s] Jiyu, bursting with laughter, says in Korean: \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"\n[7-8s] Yeori stares at the screen and freezes, mouth slightly open.\nOnly Jiyu speaks in this clip; Yeori stays silent. No on-screen subtitle text or captions. The phone screen faces Yeori and is never readable by the camera. Barefoot or socks only, no shoes worn (indoor home setting).",
+              "at": "2026-09-29T09:02:46.735Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-2",
@@ -4488,7 +4497,7 @@
           "subtitle": "새내기 MT, 비장했던 그날",
           "imagePrompt": "FULL SHOT — vertical smartphone video still, slightly grainy and slightly blurry old-phone footage look, a young Korean woman about 20 years old (college freshman, clearly an adult) in the living room of a rented group-trip pension at night under harsh fluorescent light, \nsame face as Seo Yeori but younger and less styled: long dark brown hair a bit messy with light see-through bangs, no makeup look, wearing an oversized navy university club hoodie and track pants, striking a dead-serious dance pose mid-move with arms awkwardly off-beat, \nblurry friends sitting on the floor in the background laughing (faces soft and out of focus, not interacting), \nphotorealistic, candid, vertical 9:16, no text or logos on screen, Barefoot or socks only, no shoes worn (indoor home setting).",
           "videoPrompt": "[0-6s] Handheld old smartphone footage: the young woman performs a dance challenge with a dead-serious face, but every move is half a beat late, her arms go one way and her feet the other, and on the final pose she wobbles and almost falls; friends in the soft-focus background burst out laughing.\nNo one speaks — only background laughter and a tinny dance beat. No on-screen subtitle text or captions. Slightly grainy, shaky phone-video look. Barefoot or socks only, no shoes worn (indoor home setting).",
-          "duration": 6,
+          "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -4515,6 +4524,14 @@
               "ca": "핸드헬드(친구가 폰으로 찍는 느낌)",
               "ac": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
               "md": "본인은 진지, 보는 사람은 웃김"
+            }
+          },
+          "videoMode": "veo",
+          "overrides": {
+            "duration": {
+              "value": 8,
+              "at": "2026-09-29T08:56:06.652Z",
+              "reason": "스튜디오 화면에서 직접 수정"
             }
           }
         },
@@ -8441,328 +8458,242 @@
         }
       ],
       "scriptRaw": "# SF_E10_LETTER 나에게 쓰는 편지 대본\n# 생성일: 2026. 8. 2.\n# 버전: v3.0\n# 룰셋: v1.3.1 적용\n\n================================================================\n마스터 코드\nSF_E10_LETTER :: YR_VD+BR_VD :: IN.CF.TZ_AF.LT_WM :: LK_CF(cream knit top+beige wide-leg trousers+gold necklace+gold bracelet) :: MD_DRM→MD_INT→MD_REL :: Q_SH.RT_916.PB_YT\n================================================================\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : SF_E10_LETTER\nTITLE : 나에게 쓰는 편지\nLOOK  : LOOK_CF (cream-colored knit top tucked into wide-leg beige trousers with subtle ankle cuff roll-up + gold necklace + thin gold bracelet)\nBG    : 카페 창가 자리 (오후 황금빛 / 따뜻한 보케 / 나무 테이블)\nLIGHT : LT_WM (오후 황금빛 자연광 → 오후 늦게 앰버빛으로 변화)\nREF   : face / closeup / fs-masked\nBGM   : 조용하고 감성적인 피아노 or 어쿠스틱 — 전체 유지 / 엔딩 페이드아웃\n소품  : 편지지 + 펜 + 흰 봉투 + 아메리카노 / 화이트 세라믹 컵\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1]  YR_VD — 카페 창가 자리 / 편지지 꺼내기 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 편지지와 펜 꺼내기\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 없음\nNR: 가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.\nSH: SH_FS\nCA: CA_ST\nMD: MD_DRM\nAT: AT_AC_02\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 조용한 피아노 — 부드럽게 시작\n  음성: 조용하고 감성적인 나레이션 톤\n  효과음: 펜 뚜껑 딸깍 소리\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 자리 / 오후 황금빛 / 따뜻한 보케\nCH(캐릭터):   크림 니트 탑 + 베이지 와이드 팬츠 + 골드 목걸이 + 골드 브레이슬렛 / 전신\nSH(샷):       풀샷\nCA(카메라):   고정\nAT(동작):     창밖 잠시 바라보며 생각에 잠김 → 가방 조용히 뒤져 편지지 꺼내기 → 테이블에 조심스럽게 펼치고 펜 뚜껑 딸깍 열며 미소\nMD(감정):     말로 못 한 것들을 글로 꺼내고 싶은 조용한 충동\nDL(대사):     없음\nNR(나레이션): \"가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair resting softly over shoulders,\ndelicate gold necklace and thin gold bracelet visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream-colored knit top tucked into wide-leg beige trousers\nwith subtle ankle cuff roll-up,\nsitting by a sunlit cafe window,\npulling out stationery paper from a tote bag\nand placing it gently on the wooden table,\nuncapping a pen with a quiet smile,\nwarm afternoon golden light streaming through large cafe windows,\nsoft bokeh of coffee cups and plants in background,\nbackground people sitting quietly,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she sits at cafe window, gazing outside briefly,\nlost in thought, warm afternoon light on her face.\n\nNext 3-6s: reaches into tote bag quietly,\npulls out stationery paper and places it gently on the table.\n\nFinal 6-8s: uncaps pen with a soft click,\na quiet smile forming —\nready to write.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2]  YR_VD — 첫 문장 고민 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 편지지 내려다보며 첫 문장 고민\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_INT\nAT: AT_EM_04\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 유지 / 매우 조용하게\n  음성: 생각에 잠긴 듯 자연스러운 립싱크\n  효과음: 없음\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 황금빛 역광\nCH(캐릭터):   LOOK_CF / 클로즈업 얼굴 중심\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     편지지 내려다보며 눈 잠깐 감기 → 생각에 잠기기 → 눈 다시 뜨고 입술 끝 살짝 올라감\nMD(감정):     첫 문장이 제일 어렵다는 진심 / 섬세하고 내향적인 고민\nDL(대사):     \"근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace glinting softly,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible at shoulder,\ngazing down at stationery paper with a quietly contemplative expression,\nlips gently pressed together then a barely-there soft smile forms\nat the corner of her mouth,\nwarm golden afternoon backlight from cafe window kissing her hair,\nemotion: thoughtful, tender, searching,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she gazes down at the stationery paper,\nexpression thoughtful and searching,\ngolden backlight on her hair.\n\nNext 2-6s: she speaks naturally —\n\"근데 막상 쓰려고 하면...\n첫 문장이 제일 어렵더라고요.\"\neyes dropping then lifting, lips pressing gently.\n\nFinal 6-8s: a barely-there smile forms at the corner of her mouth,\nthe kind that comes from recognizing something true.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3]  BR_VD — 편지 써 내려가기 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 글 쓰는 손과 옆모습\nSP: IN.CF.TZ_AF.LT_WM\nPL: BR_VD\nCH: 서여리 / LOOK_CF\nDL: 없음\nNR: 받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.\nSH: SH_FS\nCA: CA_ST\nMD: MD_INT\nAT: AT_AC_02\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 유지\n  음성: 집중하고 따뜻한 나레이션 톤\n  효과음: 펜이 종이에 닿는 소리\n  앰비언스: 카페 조용한 환경음 / 창문 빛\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 황금빛 / 창문 빛이 손등 위로\nCH(캐릭터):   LOOK_CF / 살짝 옆모습으로 글 쓰는 전신\nSH(샷):       풀샷\nCA(카메라):   고정\nAT(동작):     펜 들고 편지지 위에 천천히 글 쓰기 → 가끔 멈추며 고개 살짝 기울이기 → 다시 펜 움직이며 집중하는 옆모습\nMD(감정):     그 사람 생각만 하는 완전한 집중 / 조용하고 섬세한 순간\nDL(대사):     없음\nNR(나레이션): \"받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair falling softly over one shoulder,\ndelicate gold necklace and gold bracelet on wrist catching the afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top and wide-leg beige trousers visible,\nsitting at a wooden cafe table by the window slightly turned to the side in profile,\nholding a pen and writing slowly on cream stationery paper laid on the table,\nwrist moving in gentle fluid motion,\nwarm window light falls across her hand and the paper,\ntote bag visible on the seat beside her,\nbackground people seated quietly at distance,\nfull body slightly side profile, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she picks up the pen,\ntip touching paper — the first word begins,\ngolden window light on her hand.\n\nNext 3-6s: she writes slowly, two or three lines,\npauses and tilts her head slightly,\nwrist movement gentle and fluid.\n\nFinal 6-8s: she resumes writing, concentrated side profile,\nwindow light falling across her hand and the paper.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4]  YR_VD — 커피 한 모금 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 잠깐 멈추고 커피 한 모금\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_COM\nAT: AT_AC_03\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 유지\n  음성: 따뜻하고 살짝 자기인식적인 립싱크 톤\n  효과음: 컵 내려놓는 소리\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 따뜻한 빛\nCH(캐릭터):   LOOK_CF / 클로즈업\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     두 손으로 컵 감싸 들어올리기 → 한 모금 마시며 눈이 창밖으로 향함 → 컵 내려놓으며 작은 피식 웃음\nMD(감정):     따뜻하고 자기인식적인 / 편지 쓰다가 감성 오바됐다는 유머\nDL(대사):     \"이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace visible, gold bracelet on wrist,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\nholding a white ceramic coffee cup with both hands,\ntaking a gentle sip eyes drifting toward the window\nwith a soft faraway gaze,\nthen she lowers the cup and a small amused smile\nflickers across her face as she glances back down,\nemotion: warmly self-aware, gently amused, tender,\nwarm afternoon light soft bokeh background of cafe interior,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she sets down her pen,\nlifts the white ceramic cup with both hands,\neyes drifting toward the window.\n\nNext 2-6s: she takes a gentle sip,\ngaze soft and faraway,\nshe speaks with warm self-awareness —\n\"이거 쓰다 보면 나도 모르게\n감성 오바가 되는 것 같기도 하고...\"\n\nFinal 6-8s: lowers cup, small amused smile\nflickering across her face as she glances back down.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5]  YR_VD — 편지 다시 읽기 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 편지 다 쓰고 다시 읽기\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.\nNR: 편지는 쓰는 사람의 마음도 함께 정리해주니까요.\nSH: SH_CU\nCA: CA_ST\nMD: MD_INT → MD_REL\nAT: AT_SI_01 + AT_EM_04\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 매우 조용하게\n  음성: 조용하고 진심 어린 립싱크 + 나레이션\n  효과음: 없음\n  앰비언스: 카페 매우 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 따뜻한 황금빛 카페 조명\nCH(캐릭터):   LOOK_CF / 양손으로 턱 괴고 편지 읽기\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     편지지 테이블에 살며시 내려놓기 → 양손으로 턱 괴고 편지 천천히 읽기 → 읽다가 눈가 살짝 부드러워지며 고개 미세하게 끄덕임\nMD(감정):     내가 나한테 쓴 편지라는 자각 / 조용하고 감동적인 인식\nDL(대사):     \"다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.\"\nNR(나레이션): \"편지는 쓰는 사람의 마음도 함께 정리해주니까요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\nresting her chin on both hands elbows on the wooden table\nreading a handwritten letter below her,\nexpression quiet softly satisfied\neyes moving gently as she reads,\nthen eyes soften further and she gives a tiny barely perceptible nod,\nemotion: peaceful, introspective, quietly moved,\nwarm golden cafe light,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she places the letter gently on the table,\nrests chin on both hands, elbows on the table,\nreading quietly.\n\nNext 2-6s: she speaks softly —\n\"다 읽어보니까... 이게 상대한테 쓴 건지\n나한테 쓴 건지 모르겠네.\"\neyes moving gently as she reads, expression quietly moved.\n\nFinal 6-8s: eyes soften further,\na tiny barely perceptible nod,\npeaceful and introspective.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 6]  YR_VD — 봉투에 넣기 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 늦게 / 편지 봉투에 넣기\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 보낼지 말지는 나중에 결정하기로 했어요.\nNR: 쓴다는 것 자체로 이미 충분한 용기니까요.\nSH: SH_FS\nCA: CA_ST\nMD: MD_REL\nAT: AT_AC_02\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 — 살짝 따뜻하게\n  음성: 조용하고 결단이 담긴 립싱크 + 따뜻한 나레이션\n  효과음: 봉투 밀봉 소리\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 늦은 앰버빛\nCH(캐릭터):   LOOK_CF / 편지 접고 봉투 넣기\nSH(샷):       풀샷\nCA(카메라):   고정\nAT(동작):     편지지 천천히 반으로 접어 봉투에 넣기 → 봉투 입구 손가락으로 꼼꼼히 밀봉 → 봉투를 가슴 근처로 잠깐 들어올려 바라보기 → 가방 안으로 집어넣기\nMD(감정):     보낼지 말지는 나중에 / 쓴다는 것 자체가 이미 용기라는 확신\nDL(대사):     \"보낼지 말지는 나중에 결정하기로 했어요.\"\nNR(나레이션): \"쓴다는 것 자체로 이미 충분한 용기니까요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\ndelicate gold necklace and gold bracelet visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top and wide-leg beige trousers,\nsitting at a wooden cafe table by the window,\ncarefully folding stationery paper into a white envelope,\nsealing it with her fingertip,\nthen gently holding the sealed envelope up near her chest\nlooking at it briefly before placing it into her tote bag,\nwarm late-afternoon amber light slightly cooler than before,\nbackground people seated quietly further away,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she folds the letter carefully,\nplaces it into the white envelope,\nsealing it with her fingertip.\n\nNext 2-6s: she lifts the sealed envelope near her chest,\nlooks at it for a moment —\nshe speaks quietly —\n\"보낼지 말지는 나중에 결정하기로 했어요.\"\nexpression resolved and at peace.\n\nFinal 6-8s: she places the envelope gently into her tote bag,\na small exhale — the decision made.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 7]  YR_VD — 엔딩 창밖 여운 / 10초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 늦게 / 마지막 커피 한 모금 + 창밖 응시\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 없음\nNR: 오늘 이 카페는, 나의 아주 작은 고백함이었어요.\nSH: SH_CU\nCA: CA_ST\nMD: MD_REL → MD_DRM\nAT: AT_AC_03 + AT_EM_04\nLOOK_ID: LOOK_CF\nDU: 10\n오디오:\n  BGM: 피아노 페이드아웃 / 앰비언스만 남기며\n  음성: 조용하고 여운 있는 나레이션 톤\n  효과음: 컵 내려놓는 소리\n  앰비언스: 카페 조용한 환경음 / 여운 침묵\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 늦은 앰버빛 / 부드러운 렌즈 플레어\nCH(캐릭터):   LOOK_CF / 클로즈업\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     식어가는 커피 천천히 마지막 모금 마시기 → 컵 내려놓고 창밖으로 고개 돌려 조용히 바라보기 → 아무 말 없이 눈을 천천히 내리깔며 페이드\nMD(감정):     오늘 이 카페가 나의 고백함이었다는 조용한 확신 / 감성적 여운\nDL(대사):     없음\nNR(나레이션): \"오늘 이 카페는, 나의 아주 작은 고백함이었어요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace catches last rays of late afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\ntaking the last quiet sip from a white ceramic cup,\nthen setting it down and turning her gaze toward the window,\nexpression still, soft, emotionally settled\nnot smiling but deeply at peace,\nafter a long beat her eyes gently lower\nlashes casting faint shadow,\nemotion: quiet resolution, lingering warmth, gentle melancholy,\nwindow light is amber and cooler soft lens flare at edge of frame,\nno movement except the subtle shift of her gaze,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she lifts the white ceramic cup slowly,\ntakes the very last quiet sip,\nsets it down gently.\n\nNext 3-7s: she turns her gaze toward the window,\nexpression still and emotionally settled —\nnot smiling but deeply at peace,\nsoft amber light at the edge of the frame.\n\nFinal 7-10s: after a long beat\nher eyes gently lower,\nlashes casting faint shadow —\nBGM fades — only ambient cafe sound remains\n— gentle fade to black.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n================================================================\n전체 컷 요약\n================================================================\n| 컷  | 제목              | 길이 | PL     | LOOK    | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|----- |--------|---------|-----------|--------|--------|------|\n| C01 | 편지지 꺼내기     | 8s   | YR_VD  | LOOK_CF | SH_FS     | CA_ST  | ❌     | 신규 |\n| C02 | 첫 문장 고민      | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C03 | 편지 써 내려가기  | 8s   | BR_VD  | LOOK_CF | SH_FS     | CA_ST  | ❌     | 신규 |\n| C04 | 커피 한 모금      | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C05 | 편지 다시 읽기    | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C06 | 봉투에 넣기       | 8s   | YR_VD  | LOOK_CF | SH_FS     | CA_ST  | ✅     | 신규 |\n| C07 | 엔딩 창밖 여운    | 10s  | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ❌     | 신규 |\n\n총 길이: 58초 / 립싱크: C02·C04·C05·C06\nBGM: 조용한 피아노 전체 유지 → 엔딩 페이드아웃\n핵심 소품: 편지지 + 펜 + 흰 봉투 + 화이트 세라믹 컵\n================================================================\n버전 이력\n================================================================\nv1.0 (구버전) — 기존 포맷으로 작성\nv3.0 (2026-08-02) — 표준 포맷 v3 재작성\n                    마스터 코드 / EP.HEADER / AT 코드 / KR 섹션\n                    VP 섹션 (립싱크/나레이션 분기) 전체 정리\n================================================================\n",
-      "createdAt": "2026-09-29T06:44:35.655Z"
+      "createdAt": "2026-09-29T06:44:35.655Z",
+      "tabState": {
+        "videoTabState": {
+          "videoClips": {},
+          "g4Approved": {},
+          "selectedCutId": "cut-1",
+          "subtitles": {}
+        },
+        "ttsTabState": {
+          "audioUrls": {},
+          "audioTexts": {},
+          "g3Confirmed": {},
+          "focusCutId": null
+        },
+        "voiceInsertState": {
+          "tracks": {}
+        },
+        "studioTabState": {
+          "imageRatio": {}
+        }
+      }
     }
   },
   "episode": {
-    "number": 108,
-    "title": "",
-    "location": "카페",
-    "mood": "감성",
+    "number": 6,
+    "title": "흑역사 챌린지_친구가 발견하다.",
+    "location": "집 (방)",
+    "mood": [
+      "유머",
+      "일상"
+    ],
     "cutCount": 7,
-    "contentType": "SF",
-    "topicCode": "PSY",
-    "scnCode": "DOC",
-    "instaNum": "",
+    "contentType": "IG_R",
+    "topicCode": "LIF",
+    "scnCode": "ENT",
+    "instaNum": "R06",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "code": "SF_E10",
-    "masterCode": "SF_E10_LETTER :: YR_VD+BR_VD :: IN.CF.TZ_AF.LT_WM :: LK_CF(cream knit top+beige wide-leg trousers+gold necklace+gold bracelet) :: MD_DRM→MD_INT→MD_REL :: Q_SH.RT_916.PB_YT",
-    "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : SF_E10_LETTER\nTITLE : 나에게 쓰는 편지\nLOOK  : LOOK_CF (cream-colored knit top tucked into wide-leg beige trousers with subtle ankle cuff roll-up + gold necklace + thin gold bracelet)\nBG    : 카페 창가 자리 (오후 황금빛 / 따뜻한 보케 / 나무 테이블)\nLIGHT : LT_WM (오후 황금빛 자연광 → 오후 늦게 앰버빛으로 변화)\nREF   : face / closeup / fs-masked\nBGM   : 조용하고 감성적인 피아노 or 어쿠스틱 — 전체 유지 / 엔딩 페이드아웃\n소품  : 편지지 + 펜 + 흰 봉투 + 아메리카노 / 화이트 세라믹 컵"
+    "code": "IG_R06",
+    "finishMode": "cutter",
+    "masterCode": "[IG_R06] :: [PL:IG_RL] :: [SP:IN.HM.TZ_AF.LT_WM] :: [CH:YR_VD+JY_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]",
+    "epHeaderRaw": "",
+    "storyBrief": ""
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "카페 창가 자리 / 편지지 꺼내기",
+      "cutTitle": "\"야, 이거 너지?\" 흑역사 발굴",
       "lipsync": false,
-      "scene": "카페 창가 테이블 / 오후 / 편지지와 펜 꺼내기",
-      "action": "",
+      "scene": "오후 자취방. 침대에 기대 폰을 보던 서여리 옆으로 지유가 폰을 들고 뛰어들어 화면을 들이민다. 서여리는 화면을 보고 그대로 굳는다.",
+      "action": "0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음",
       "character": "서여리",
-      "dialogue": "",
-      "subtitle": "",
-      "narration": "가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.",
-      "imagePrompt": "FULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair resting softly over shoulders,\ndelicate gold necklace and thin gold bracelet visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream-colored knit top tucked into wide-leg beige trousers\nwith subtle ankle cuff roll-up,\nsitting by a sunlit cafe window,\npulling out stationery paper from a tote bag\nand placing it gently on the wooden table,\nuncapping a pen with a quiet smile,\nwarm afternoon golden light streaming through large cafe windows,\nsoft bokeh of coffee cups and plants in background,\nbackground people sitting quietly,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
-      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she sits at cafe window, gazing outside briefly,\nlost in thought, warm afternoon light on her face.\n\nNext 3-6s: reaches into tote bag quietly,\npulls out stationery paper and places it gently on the table.\n\nFinal 6-8s: uncaps pen with a soft click,\na quiet smile forming —\nready to write.",
+      "dialogue": "지유 \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"",
+      "narration": "",
+      "subtitle": "친구가 내 흑역사를 발굴했다",
+      "imagePrompt": "MEDIUM SHOT — two young Korean women in their early 20s sitting on a bed in a cozy studio apartment, warm afternoon sunlight from the window, \nSeo Yeori (right): long wavy dark brown hair worn down NOT tied, natural skin texture on right cheek (very subtle), oversized white t-shirt and grey dolphine shot pants DO NOT change clothing, delicate gold necklace, wearing socks, leaning back against the headboard with a surprised frozen expression, eyes locked on a phone screen, \nJiyu (left): very long straight glossy jet-black hair with full bangs NOT wavy NOT bob, soft round face, coral-red lip tint, white cropped baby tee with small blue 'SEOUL CAFE CLUB' lettering and light-wash vintage denim shorts, wearing socks, kneeling on the bed and eagerly holding her phone screen toward Yeori, bright mischievous grin, clearly an adult woman in her early 20s, \nthe phone screen faces Yeori so its content is not visible to the camera, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-2s] Seo Yeori relaxes on the bed scrolling her phone.\n[2-4s] Jiyu plops down beside her from the left and thrusts her phone screen toward Yeori's face.\n[4-7s] Jiyu, bursting with laughter, says in Korean: \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"\n[7-8s] Yeori stares at the screen and freezes, mouth slightly open.\nOnly Jiyu speaks in this clip; Yeori stays silent. No on-screen subtitle text or captions. The phone screen faces Yeori and is never readable by the camera. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
+        "sp": "IN.HM.TZ_AF.LT_WM",
         "pl": "YR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_FS",
+        "ch": "서여리 + 지유",
+        "sh": "SH_MS",
         "ca": "CA_ST",
-        "md": "MD_DRM",
-        "ac": "",
-        "lookId": "LOOK_CF",
+        "md": "MD_JOY",
+        "ac": "없음",
+        "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "조용한 피아노 — 부드럽게 시작",
-          "voice": "조용하고 감성적인 나레이션 톤",
-          "sfx": "펜 뚜껑 딸깍 소리",
-          "ambience": "카페 조용한 환경음"
+          "bgm": "경쾌한 로파이, 통통 튀는 느낌 (0초부터)",
+          "voice": "지유 — 신나서 숨넘어가는 웃음 섞인 톤(친구 결)",
+          "sfx": "mixkit-cinematic-glass-hit-suspense-677.wav — 유리 깨지는 충격",
+          "ambience": "조용한 방"
         },
         "kr": {
-          "sp": "카페 창가 자리 / 오후 황금빛 / 따뜻한 보케",
-          "ch": "크림 니트 탑 + 베이지 와이드 팬츠 + 골드 목걸이 + 골드 브레이슬렛 / 전신",
-          "sh": "풀샷",
+          "sp": "서여리 자취방 침대 위, 오후 창가 햇빛",
+          "ch": "서여리(흰 오버사이즈 티, 풀어 내린 긴 웨이브) · 지유(흰 크롭 베이비티, 데님 쇼츠, 풀뱅 긴 생머리)",
+          "sh": "미디엄 샷, 침대 위 두 사람",
           "ca": "고정",
-          "ac": "",
-          "md": "말로 못 한 것들을 글로 꺼내고 싶은 조용한 충동"
+          "ac": "0~2초 서여리 혼자 폰 보며 느긋 → 2~4초 지유가 옆으로 털썩 앉으며 폰 화면을 들이밂 → 4~7초 지유가 대사 → 7~8초 화면 본 서여리 굳음",
+          "md": "지유 신남, 서여리 당황"
+        }
+      },
+      "sfxStart": 7,
+      "sfxVolume": 0.7,
+      "videoMode": "veo",
+      "overrides": {
+        "videoPrompt": {
+          "value": "[0-2s] Seo Yeori relaxes on the bed scrolling her phone.\n[2-4s] Jiyu plops down beside her from the left and thrusts her phone screen toward Yeori's face.\n[4-7s] Jiyu, bursting with laughter, says in Korean: \"야, 서여리! 이거 너지? 새내기 MT 때 챌린지!\"\n[7-8s] Yeori stares at the screen and freezes, mouth slightly open.\nOnly Jiyu speaks in this clip; Yeori stays silent. No on-screen subtitle text or captions. The phone screen faces Yeori and is never readable by the camera. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "at": "2026-09-29T09:02:46.735Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "첫 문장 고민",
-      "lipsync": true,
-      "scene": "카페 창가 테이블 / 편지지 내려다보며 첫 문장 고민",
-      "action": "",
+      "cutTitle": "새내기 MT 엉망 챌린지",
+      "lipsync": false,
+      "scene": "폰 속 옛날 영상. 대학 새내기 MT 숙소 거실, 서여리가 비장한 얼굴로 댄스 챌린지를 추는데 박자가 전부 어긋난다. 뒤에서 동기들 웃음소리.",
+      "action": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
       "character": "서여리",
-      "dialogue": "근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.",
-      "subtitle": "",
+      "dialogue": "",
       "narration": "",
-      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace glinting softly,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible at shoulder,\ngazing down at stationery paper with a quietly contemplative expression,\nlips gently pressed together then a barely-there soft smile forms\nat the corner of her mouth,\nwarm golden afternoon backlight from cafe window kissing her hair,\nemotion: thoughtful, tender, searching,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-      "videoPrompt": "First 0-2s: she gazes down at the stationery paper,\nexpression thoughtful and searching,\ngolden backlight on her hair.\n\nNext 2-6s: she speaks naturally —\n\"근데 막상 쓰려고 하면...\n첫 문장이 제일 어렵더라고요.\"\neyes dropping then lifting, lips pressing gently.\n\nFinal 6-8s: a barely-there smile forms at the corner of her mouth,\nthe kind that comes from recognizing something true.",
+      "subtitle": "새내기 MT, 비장했던 그날",
+      "imagePrompt": "FULL SHOT — vertical smartphone video still, slightly grainy and slightly blurry old-phone footage look, a young Korean woman about 20 years old (college freshman, clearly an adult) in the living room of a rented group-trip pension at night under harsh fluorescent light, \nsame face as Seo Yeori but younger and less styled: long dark brown hair a bit messy with light see-through bangs, no makeup look, wearing an oversized navy university club hoodie and track pants, striking a dead-serious dance pose mid-move with arms awkwardly off-beat, \nblurry friends sitting on the floor in the background laughing (faces soft and out of focus, not interacting), \nphotorealistic, candid, vertical 9:16, no text or logos on screen, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-6s] Handheld old smartphone footage: the young woman performs a dance challenge with a dead-serious face, but every move is half a beat late, her arms go one way and her feet the other, and on the final pose she wobbles and almost falls; friends in the soft-focus background burst out laughing.\nNo one speaks — only background laughter and a tinny dance beat. No on-screen subtitle text or captions. Slightly grainy, shaky phone-video look. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
-      "shotType": "CLOSEUP",
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
+        "sp": "IN.MT.TZ_NT.LT_STD",
         "pl": "YR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_CU",
-        "ca": "CA_ST",
-        "md": "MD_INT",
-        "ac": "",
-        "lookId": "LOOK_CF",
-        "du": 8,
+        "ch": "서여리",
+        "sh": "SH_FS",
+        "ca": "CA_HH",
+        "md": "MD_JOY",
+        "ac": "없음",
+        "lookId": "",
+        "du": 6,
         "audio": {
-          "bgm": "피아노 유지 / 매우 조용하게",
-          "voice": "생각에 잠긴 듯 자연스러운 립싱크",
+          "bgm": "촌스러운 댄스 비트(영상 속 소리처럼 폰 스피커 질감)",
+          "voice": "없음 (동기들 웃음소리만)",
           "sfx": "없음",
-          "ambience": "카페 조용한 환경음"
+          "ambience": "왁자지껄한 MT 숙소"
         },
         "kr": {
-          "sp": "카페 창가 / 오후 황금빛 역광",
-          "ch": "LOOK_CF / 클로즈업 얼굴 중심",
-          "sh": "클로즈업",
-          "ca": "고정",
-          "ac": "",
-          "md": "첫 문장이 제일 어렵다는 진심 / 섬세하고 내향적인 고민"
+          "sp": "대학 MT 펜션 거실, 밤, 형광등",
+          "ch": "새내기 시절 서여리(스무 살, 성인) — 과 단체 후드티, 앞머리 살짝, 풀 메이크업 없음",
+          "sh": "풀샷, 흔들리는 폰 세로 촬영 느낌",
+          "ca": "핸드헬드(친구가 폰으로 찍는 느낌)",
+          "ac": "0~6초 비장한 표정으로 챌린지 춤 — 팔은 반 박자 늦고 발은 반대로, 마지막 포즈에서 휘청",
+          "md": "본인은 진지, 보는 사람은 웃김"
+        }
+      },
+      "videoMode": "veo",
+      "overrides": {
+        "duration": {
+          "value": 8,
+          "at": "2026-09-29T08:56:06.652Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
     {
       "id": "cut-3",
       "no": 3,
-      "cutTitle": "편지 써 내려가기",
+      "cutTitle": "\"지워, 당장!\" / \"이미 단톡방에…\"",
       "lipsync": false,
-      "scene": "카페 창가 테이블 / 오후 / 글 쓰는 손과 옆모습",
-      "action": "",
+      "scene": "다시 자취방. 서여리가 지유의 폰을 뺏으려 달려들고, 지유는 폰을 높이 들고 피하며 먼저 웃음을 터뜨린다.",
+      "action": "0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐",
       "character": "서여리",
-      "dialogue": "",
-      "subtitle": "",
-      "narration": "받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.",
-      "imagePrompt": "FULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair falling softly over one shoulder,\ndelicate gold necklace and gold bracelet on wrist catching the afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top and wide-leg beige trousers visible,\nsitting at a wooden cafe table by the window slightly turned to the side in profile,\nholding a pen and writing slowly on cream stationery paper laid on the table,\nwrist moving in gentle fluid motion,\nwarm window light falls across her hand and the paper,\ntote bag visible on the seat beside her,\nbackground people seated quietly at distance,\nfull body slightly side profile, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
-      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she picks up the pen,\ntip touching paper — the first word begins,\ngolden window light on her hand.\n\nNext 3-6s: she writes slowly, two or three lines,\npauses and tilts her head slightly,\nwrist movement gentle and fluid.\n\nFinal 6-8s: she resumes writing, concentrated side profile,\nwindow light falling across her hand and the paper.",
+      "dialogue": "여리 \"그거 어디서 났어? 지워, 당장 지워!\" / 지유 \"이미 단톡방에 올렸는데?\"",
+      "narration": "",
+      "subtitle": "지워, 당장! / 이미 단톡방에 올렸는데?",
+      "imagePrompt": "MEDIUM SHOT — the same two young Korean women on the bed in the sunny studio apartment, playful struggle, \nSeo Yeori: long wavy dark brown hair worn down, oversized white t-shirt and grey dolphine shot pants DO NOT change clothing, lunging toward the phone with an outstretched hand and a flustered pleading face, \nJiyu: very long straight jet-black hair with full bangs, white cropped baby tee and light-wash denim shorts DO NOT change clothing, holding her phone high above her head out of reach, laughing out loud with eyes curved, \nboth wearing socks, warm afternoon window light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-1s] Seo Yeori lunges toward Jiyu's phone.\n[1-4s] Yeori, flustered and pleading, says in Korean: \"그거 어디서 났어? 지워, 당장 지워!\"\n[4-5s] Jiyu lifts the phone high over her head out of reach and bursts out laughing first.\n[5-7s] Jiyu, still laughing, says in Korean: \"이미 단톡방에 올렸는데?\"\n[7-8s] Yeori covers her face with both hands and flops backward onto the bed.\nNo on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
       "shotType": "FULLBODY",
-      "cutType": "BROLL",
+      "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "BR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_FS",
+        "sp": "IN.HM.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 + 지유",
+        "sh": "SH_MS",
         "ca": "CA_ST",
-        "md": "MD_INT",
-        "ac": "",
-        "lookId": "LOOK_CF",
+        "md": "MD_JOY",
+        "ac": "없음",
+        "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "피아노 유지",
-          "voice": "집중하고 따뜻한 나레이션 톤",
-          "sfx": "펜이 종이에 닿는 소리",
-          "ambience": "카페 조용한 환경음 / 창문 빛"
+          "bgm": "경쾌한 로파이 다시",
+          "voice": "여리 — 다급하고 억울한 친구 결 / 지유 — 웃음 터진 장난스러운 톤",
+          "sfx": "이불 부스럭",
+          "ambience": "조용한 방"
         },
         "kr": {
-          "sp": "카페 창가 / 오후 황금빛 / 창문 빛이 손등 위로",
-          "ch": "LOOK_CF / 살짝 옆모습으로 글 쓰는 전신",
-          "sh": "풀샷",
+          "sp": "서여리 자취방 침대 위",
+          "ch": "서여리 · 지유 (CUT1과 동일)",
+          "sh": "미디엄 샷, 두 사람 엎치락뒤치락",
           "ca": "고정",
-          "ac": "",
-          "md": "그 사람 생각만 하는 완전한 집중 / 조용하고 섬세한 순간"
+          "ac": "0~1초 서여리가 폰을 향해 손을 뻗음 → 1~4초 서여리 대사 → 4~5초 지유가 폰을 머리 위로 들어 피하며 웃음 터짐 → 5~7초 지유 대사 → 7~8초 서여리 얼굴 감싸고 뒤로 쓰러짐",
+          "md": "서여리 억울·다급, 지유 장난·웃음"
         }
       }
     },
     {
       "id": "cut-4",
       "no": 4,
-      "cutTitle": "커피 한 모금",
-      "lipsync": true,
-      "scene": "카페 창가 테이블 / 오후 / 잠깐 멈추고 커피 한 모금",
-      "action": "",
+      "cutTitle": "이불 속 \"이번 생은 망했어\"",
+      "lipsync": false,
+      "scene": "이불을 머리끝까지 뒤집어쓴 서여리. 눈만 빼꼼 내놓고 카메라를 보며 체념한 목소리로 말한다. 옆에서 지유의 웃음소리가 계속 들린다.",
+      "action": "0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음",
       "character": "서여리",
-      "dialogue": "이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...",
-      "subtitle": "",
+      "dialogue": "여리 \"…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요.\"",
       "narration": "",
-      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace visible, gold bracelet on wrist,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\nholding a white ceramic coffee cup with both hands,\ntaking a gentle sip eyes drifting toward the window\nwith a soft faraway gaze,\nthen she lowers the cup and a small amused smile\nflickers across her face as she glances back down,\nemotion: warmly self-aware, gently amused, tender,\nwarm afternoon light soft bokeh background of cafe interior,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-      "videoPrompt": "First 0-2s: she sets down her pen,\nlifts the white ceramic cup with both hands,\neyes drifting toward the window.\n\nNext 2-6s: she takes a gentle sip,\ngaze soft and faraway,\nshe speaks with warm self-awareness —\n\"이거 쓰다 보면 나도 모르게\n감성 오바가 되는 것 같기도 하고...\"\n\nFinal 6-8s: lowers cup, small amused smile\nflickering across her face as she glances back down.",
+      "subtitle": "이번 생은 망했어 / 여러분 흑역사도 댓글로 👇",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — a young Korean woman in her early 20s lying in bed completely wrapped in a soft white duvet pulled up over her head, only her eyes, eyebrows and a bit of long wavy dark brown hair peeking out, \nSeo Yeori's face (natural skin texture on right cheek, very subtle), deadpan resigned look straight into the camera, \nwarm afternoon light, cozy bedroom background softly blurred, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-2s] Only her eyes peek out from under the duvet, blinking slowly at the camera.\n[2-6s] With a muffled, resigned deadpan voice she says in Korean: \"…이번 생은 망했어. 여러분 흑역사도 좀 풀어 줘요.\"\n[6-8s] She slowly pulls the duvet up over her eyes until her face is fully covered; soft laughter continues off-screen.\nOnly Seo Yeori speaks; the off-screen laughter has no words. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
+        "sp": "IN.HM.TZ_AF.LT_WM",
         "pl": "YR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_CU",
+        "ch": "서여리",
+        "sh": "SH_MCU",
         "ca": "CA_ST",
         "md": "MD_COM",
-        "ac": "",
-        "lookId": "LOOK_CF",
+        "ac": "없음",
+        "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "피아노 유지",
-          "voice": "따뜻하고 살짝 자기인식적인 립싱크 톤",
-          "sfx": "컵 내려놓는 소리",
-          "ambience": "카페 조용한 환경음"
-        },
-        "kr": {
-          "sp": "카페 창가 / 오후 따뜻한 빛",
-          "ch": "LOOK_CF / 클로즈업",
-          "sh": "클로즈업",
-          "ca": "고정",
-          "ac": "",
-          "md": "따뜻하고 자기인식적인 / 편지 쓰다가 감성 오바됐다는 유머"
-        }
-      }
-    },
-    {
-      "id": "cut-5",
-      "no": 5,
-      "cutTitle": "편지 다시 읽기",
-      "lipsync": true,
-      "scene": "카페 창가 테이블 / 오후 / 편지 다 쓰고 다시 읽기",
-      "action": "",
-      "character": "서여리",
-      "dialogue": "다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.",
-      "subtitle": "",
-      "narration": "편지는 쓰는 사람의 마음도 함께 정리해주니까요.",
-      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\nresting her chin on both hands elbows on the wooden table\nreading a handwritten letter below her,\nexpression quiet softly satisfied\neyes moving gently as she reads,\nthen eyes soften further and she gives a tiny barely perceptible nod,\nemotion: peaceful, introspective, quietly moved,\nwarm golden cafe light,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-      "videoPrompt": "First 0-2s: she places the letter gently on the table,\nrests chin on both hands, elbows on the table,\nreading quietly.\n\nNext 2-6s: she speaks softly —\n\"다 읽어보니까... 이게 상대한테 쓴 건지\n나한테 쓴 건지 모르겠네.\"\neyes moving gently as she reads, expression quietly moved.\n\nFinal 6-8s: eyes soften further,\na tiny barely perceptible nod,\npeaceful and introspective.",
-      "duration": 8,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_CU",
-        "ca": "CA_ST",
-        "md": "MD_INT → MD_REL",
-        "ac": "",
-        "lookId": "LOOK_CF",
-        "du": 8,
-        "audio": {
-          "bgm": "피아노 매우 조용하게",
-          "voice": "조용하고 진심 어린 립싱크 + 나레이션",
+          "bgm": "잔잔하게 낮아지며 마무리",
+          "voice": "여리 — 이불 속 먹먹한, 체념한 드라이 톤(시청자 결)",
           "sfx": "없음",
-          "ambience": "카페 매우 조용한 환경음"
+          "ambience": "화면 밖 지유 웃음소리 작게"
         },
         "kr": {
-          "sp": "카페 창가 / 따뜻한 황금빛 카페 조명",
-          "ch": "LOOK_CF / 양손으로 턱 괴고 편지 읽기",
-          "sh": "클로즈업",
+          "sp": "서여리 침대, 이불 속",
+          "ch": "서여리 (이불을 뒤집어써서 눈과 이마만 보임)",
+          "sh": "미디엄 클로즈업",
           "ca": "고정",
-          "ac": "",
-          "md": "내가 나한테 쓴 편지라는 자각 / 조용하고 감동적인 인식"
-        }
-      }
-    },
-    {
-      "id": "cut-6",
-      "no": 6,
-      "cutTitle": "봉투에 넣기",
-      "lipsync": true,
-      "scene": "카페 창가 테이블 / 오후 늦게 / 편지 봉투에 넣기",
-      "action": "",
-      "character": "서여리",
-      "dialogue": "보낼지 말지는 나중에 결정하기로 했어요.",
-      "subtitle": "",
-      "narration": "쓴다는 것 자체로 이미 충분한 용기니까요.",
-      "imagePrompt": "FULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\ndelicate gold necklace and gold bracelet visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top and wide-leg beige trousers,\nsitting at a wooden cafe table by the window,\ncarefully folding stationery paper into a white envelope,\nsealing it with her fingertip,\nthen gently holding the sealed envelope up near her chest\nlooking at it briefly before placing it into her tote bag,\nwarm late-afternoon amber light slightly cooler than before,\nbackground people seated quietly further away,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
-      "videoPrompt": "First 0-2s: she folds the letter carefully,\nplaces it into the white envelope,\nsealing it with her fingertip.\n\nNext 2-6s: she lifts the sealed envelope near her chest,\nlooks at it for a moment —\nshe speaks quietly —\n\"보낼지 말지는 나중에 결정하기로 했어요.\"\nexpression resolved and at peace.\n\nFinal 6-8s: she places the envelope gently into her tote bag,\na small exhale — the decision made.",
-      "duration": 8,
-      "shotType": "FULLBODY",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_FS",
-        "ca": "CA_ST",
-        "md": "MD_REL",
-        "ac": "",
-        "lookId": "LOOK_CF",
-        "du": 8,
-        "audio": {
-          "bgm": "피아노 — 살짝 따뜻하게",
-          "voice": "조용하고 결단이 담긴 립싱크 + 따뜻한 나레이션",
-          "sfx": "봉투 밀봉 소리",
-          "ambience": "카페 조용한 환경음"
-        },
-        "kr": {
-          "sp": "카페 창가 / 오후 늦은 앰버빛",
-          "ch": "LOOK_CF / 편지 접고 봉투 넣기",
-          "sh": "풀샷",
-          "ca": "고정",
-          "ac": "",
-          "md": "보낼지 말지는 나중에 / 쓴다는 것 자체가 이미 용기라는 확신"
-        }
-      }
-    },
-    {
-      "id": "cut-7",
-      "no": 7,
-      "cutTitle": "엔딩 창밖 여운",
-      "lipsync": false,
-      "scene": "카페 창가 테이블 / 오후 늦게 / 마지막 커피 한 모금 + 창밖 응시",
-      "action": "",
-      "character": "서여리",
-      "dialogue": "",
-      "subtitle": "",
-      "narration": "오늘 이 카페는, 나의 아주 작은 고백함이었어요.",
-      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace catches last rays of late afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\ntaking the last quiet sip from a white ceramic cup,\nthen setting it down and turning her gaze toward the window,\nexpression still, soft, emotionally settled\nnot smiling but deeply at peace,\nafter a long beat her eyes gently lower\nlashes casting faint shadow,\nemotion: quiet resolution, lingering warmth, gentle melancholy,\nwindow light is amber and cooler soft lens flare at edge of frame,\nno movement except the subtle shift of her gaze,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she lifts the white ceramic cup slowly,\ntakes the very last quiet sip,\nsets it down gently.\n\nNext 3-7s: she turns her gaze toward the window,\nexpression still and emotionally settled —\nnot smiling but deeply at peace,\nsoft amber light at the edge of the frame.\n\nFinal 7-10s: after a long beat\nher eyes gently lower,\nlashes casting faint shadow —\nBGM fades — only ambient cafe sound remains\n— gentle fade to black.\n\n\n전체 컷 요약\n| 컷  | 제목              | 길이 | PL     | LOOK    | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|----- |--------|---------|-----------|--------|--------|------|\n| C01 | 편지지 꺼내기     | 8s   | YR_VD  | LOOK_CF | SH_FS     | CA_ST  | ❌     | 신규 |\n| C02 | 첫 문장 고민      | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C03 | 편지 써 내려가기  | 8s   | BR_VD  | LOOK_CF | SH_FS     | CA_ST  | ❌     | 신규 |\n| C04 | 커피 한 모금      | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C05 | 편지 다시 읽기    | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C06 | 봉투에 넣기       | 8s   | YR_VD  | LOOK_CF | SH_FS     | CA_ST  | ✅     | 신규 |\n| C07 | 엔딩 창밖 여운    | 10s  | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ❌     | 신규 |\n\n총 길이: 58초 / 립싱크: C02·C04·C05·C06\nBGM: 조용한 피아노 전체 유지 → 엔딩 페이드아웃\n핵심 소품: 편지지 + 펜 + 흰 봉투 + 화이트 세라믹 컵\n버전 이력\nv1.0 (구버전) — 기존 포맷으로 작성\nv3.0 (2026-08-02) — 표준 포맷 v3 재작성\n                    마스터 코드 / EP.HEADER / AT 코드 / KR 섹션\n                    VP 섹션 (립싱크/나레이션 분기) 전체 정리",
-      "duration": 10,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "masterCode": {
-        "sp": "IN.CF.TZ_AF.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LOOK_CF",
-        "sh": "SH_CU",
-        "ca": "CA_ST",
-        "md": "MD_REL → MD_DRM",
-        "ac": "",
-        "lookId": "LOOK_CF",
-        "du": 10,
-        "audio": {
-          "bgm": "피아노 페이드아웃 / 앰비언스만 남기며",
-          "voice": "조용하고 여운 있는 나레이션 톤",
-          "sfx": "컵 내려놓는 소리",
-          "ambience": "카페 조용한 환경음 / 여운 침묵"
-        },
-        "kr": {
-          "sp": "카페 창가 / 오후 늦은 앰버빛 / 부드러운 렌즈 플레어",
-          "ch": "LOOK_CF / 클로즈업",
-          "sh": "클로즈업",
-          "ca": "고정",
-          "ac": "",
-          "md": "오늘 이 카페가 나의 고백함이었다는 조용한 확신 / 감성적 여운"
+          "ac": "0~2초 이불 속에서 눈만 빼꼼 → 2~6초 카메라 보며 체념한 대사 → 6~8초 다시 이불을 천천히 끌어올려 얼굴을 덮음",
+          "md": "체념, 드라이한 유머"
         }
       }
     }
   ],
-  "scriptRaw": "# SF_E10_LETTER 나에게 쓰는 편지 대본\n# 생성일: 2026. 8. 2.\n# 버전: v3.0\n# 룰셋: v1.3.1 적용\n\n================================================================\n마스터 코드\nSF_E10_LETTER :: YR_VD+BR_VD :: IN.CF.TZ_AF.LT_WM :: LK_CF(cream knit top+beige wide-leg trousers+gold necklace+gold bracelet) :: MD_DRM→MD_INT→MD_REL :: Q_SH.RT_916.PB_YT\n================================================================\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : SF_E10_LETTER\nTITLE : 나에게 쓰는 편지\nLOOK  : LOOK_CF (cream-colored knit top tucked into wide-leg beige trousers with subtle ankle cuff roll-up + gold necklace + thin gold bracelet)\nBG    : 카페 창가 자리 (오후 황금빛 / 따뜻한 보케 / 나무 테이블)\nLIGHT : LT_WM (오후 황금빛 자연광 → 오후 늦게 앰버빛으로 변화)\nREF   : face / closeup / fs-masked\nBGM   : 조용하고 감성적인 피아노 or 어쿠스틱 — 전체 유지 / 엔딩 페이드아웃\n소품  : 편지지 + 펜 + 흰 봉투 + 아메리카노 / 화이트 세라믹 컵\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1]  YR_VD — 카페 창가 자리 / 편지지 꺼내기 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 편지지와 펜 꺼내기\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 없음\nNR: 가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.\nSH: SH_FS\nCA: CA_ST\nMD: MD_DRM\nAT: AT_AC_02\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 조용한 피아노 — 부드럽게 시작\n  음성: 조용하고 감성적인 나레이션 톤\n  효과음: 펜 뚜껑 딸깍 소리\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 자리 / 오후 황금빛 / 따뜻한 보케\nCH(캐릭터):   크림 니트 탑 + 베이지 와이드 팬츠 + 골드 목걸이 + 골드 브레이슬렛 / 전신\nSH(샷):       풀샷\nCA(카메라):   고정\nAT(동작):     창밖 잠시 바라보며 생각에 잠김 → 가방 조용히 뒤져 편지지 꺼내기 → 테이블에 조심스럽게 펼치고 펜 뚜껑 딸깍 열며 미소\nMD(감정):     말로 못 한 것들을 글로 꺼내고 싶은 조용한 충동\nDL(대사):     없음\nNR(나레이션): \"가끔은, 말로 전하지 못한 것들을 글로 꺼내고 싶어지는 날이 있어요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair resting softly over shoulders,\ndelicate gold necklace and thin gold bracelet visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream-colored knit top tucked into wide-leg beige trousers\nwith subtle ankle cuff roll-up,\nsitting by a sunlit cafe window,\npulling out stationery paper from a tote bag\nand placing it gently on the wooden table,\nuncapping a pen with a quiet smile,\nwarm afternoon golden light streaming through large cafe windows,\nsoft bokeh of coffee cups and plants in background,\nbackground people sitting quietly,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she sits at cafe window, gazing outside briefly,\nlost in thought, warm afternoon light on her face.\n\nNext 3-6s: reaches into tote bag quietly,\npulls out stationery paper and places it gently on the table.\n\nFinal 6-8s: uncaps pen with a soft click,\na quiet smile forming —\nready to write.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2]  YR_VD — 첫 문장 고민 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 편지지 내려다보며 첫 문장 고민\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_INT\nAT: AT_EM_04\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 유지 / 매우 조용하게\n  음성: 생각에 잠긴 듯 자연스러운 립싱크\n  효과음: 없음\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 황금빛 역광\nCH(캐릭터):   LOOK_CF / 클로즈업 얼굴 중심\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     편지지 내려다보며 눈 잠깐 감기 → 생각에 잠기기 → 눈 다시 뜨고 입술 끝 살짝 올라감\nMD(감정):     첫 문장이 제일 어렵다는 진심 / 섬세하고 내향적인 고민\nDL(대사):     \"근데 막상 쓰려고 하면... 첫 문장이 제일 어렵더라고요.\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace glinting softly,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible at shoulder,\ngazing down at stationery paper with a quietly contemplative expression,\nlips gently pressed together then a barely-there soft smile forms\nat the corner of her mouth,\nwarm golden afternoon backlight from cafe window kissing her hair,\nemotion: thoughtful, tender, searching,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she gazes down at the stationery paper,\nexpression thoughtful and searching,\ngolden backlight on her hair.\n\nNext 2-6s: she speaks naturally —\n\"근데 막상 쓰려고 하면...\n첫 문장이 제일 어렵더라고요.\"\neyes dropping then lifting, lips pressing gently.\n\nFinal 6-8s: a barely-there smile forms at the corner of her mouth,\nthe kind that comes from recognizing something true.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3]  BR_VD — 편지 써 내려가기 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 글 쓰는 손과 옆모습\nSP: IN.CF.TZ_AF.LT_WM\nPL: BR_VD\nCH: 서여리 / LOOK_CF\nDL: 없음\nNR: 받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.\nSH: SH_FS\nCA: CA_ST\nMD: MD_INT\nAT: AT_AC_02\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 유지\n  음성: 집중하고 따뜻한 나레이션 톤\n  효과음: 펜이 종이에 닿는 소리\n  앰비언스: 카페 조용한 환경음 / 창문 빛\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 황금빛 / 창문 빛이 손등 위로\nCH(캐릭터):   LOOK_CF / 살짝 옆모습으로 글 쓰는 전신\nSH(샷):       풀샷\nCA(카메라):   고정\nAT(동작):     펜 들고 편지지 위에 천천히 글 쓰기 → 가끔 멈추며 고개 살짝 기울이기 → 다시 펜 움직이며 집중하는 옆모습\nMD(감정):     그 사람 생각만 하는 완전한 집중 / 조용하고 섬세한 순간\nDL(대사):     없음\nNR(나레이션): \"받는 사람이 누구든, 편지를 쓰는 동안만큼은 그 사람 생각만 해요. 완전히.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair falling softly over one shoulder,\ndelicate gold necklace and gold bracelet on wrist catching the afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top and wide-leg beige trousers visible,\nsitting at a wooden cafe table by the window slightly turned to the side in profile,\nholding a pen and writing slowly on cream stationery paper laid on the table,\nwrist moving in gentle fluid motion,\nwarm window light falls across her hand and the paper,\ntote bag visible on the seat beside her,\nbackground people seated quietly at distance,\nfull body slightly side profile, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she picks up the pen,\ntip touching paper — the first word begins,\ngolden window light on her hand.\n\nNext 3-6s: she writes slowly, two or three lines,\npauses and tilts her head slightly,\nwrist movement gentle and fluid.\n\nFinal 6-8s: she resumes writing, concentrated side profile,\nwindow light falling across her hand and the paper.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4]  YR_VD — 커피 한 모금 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 잠깐 멈추고 커피 한 모금\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_COM\nAT: AT_AC_03\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 유지\n  음성: 따뜻하고 살짝 자기인식적인 립싱크 톤\n  효과음: 컵 내려놓는 소리\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 따뜻한 빛\nCH(캐릭터):   LOOK_CF / 클로즈업\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     두 손으로 컵 감싸 들어올리기 → 한 모금 마시며 눈이 창밖으로 향함 → 컵 내려놓으며 작은 피식 웃음\nMD(감정):     따뜻하고 자기인식적인 / 편지 쓰다가 감성 오바됐다는 유머\nDL(대사):     \"이거 쓰다 보면 나도 모르게 감성 오바가 되는 것 같기도 하고...\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace visible, gold bracelet on wrist,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\nholding a white ceramic coffee cup with both hands,\ntaking a gentle sip eyes drifting toward the window\nwith a soft faraway gaze,\nthen she lowers the cup and a small amused smile\nflickers across her face as she glances back down,\nemotion: warmly self-aware, gently amused, tender,\nwarm afternoon light soft bokeh background of cafe interior,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she sets down her pen,\nlifts the white ceramic cup with both hands,\neyes drifting toward the window.\n\nNext 2-6s: she takes a gentle sip,\ngaze soft and faraway,\nshe speaks with warm self-awareness —\n\"이거 쓰다 보면 나도 모르게\n감성 오바가 되는 것 같기도 하고...\"\n\nFinal 6-8s: lowers cup, small amused smile\nflickering across her face as she glances back down.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5]  YR_VD — 편지 다시 읽기 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 / 편지 다 쓰고 다시 읽기\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.\nNR: 편지는 쓰는 사람의 마음도 함께 정리해주니까요.\nSH: SH_CU\nCA: CA_ST\nMD: MD_INT → MD_REL\nAT: AT_SI_01 + AT_EM_04\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 매우 조용하게\n  음성: 조용하고 진심 어린 립싱크 + 나레이션\n  효과음: 없음\n  앰비언스: 카페 매우 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 따뜻한 황금빛 카페 조명\nCH(캐릭터):   LOOK_CF / 양손으로 턱 괴고 편지 읽기\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     편지지 테이블에 살며시 내려놓기 → 양손으로 턱 괴고 편지 천천히 읽기 → 읽다가 눈가 살짝 부드러워지며 고개 미세하게 끄덕임\nMD(감정):     내가 나한테 쓴 편지라는 자각 / 조용하고 감동적인 인식\nDL(대사):     \"다 읽어보니까... 이게 상대한테 쓴 건지 나한테 쓴 건지 모르겠네.\"\nNR(나레이션): \"편지는 쓰는 사람의 마음도 함께 정리해주니까요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\nresting her chin on both hands elbows on the wooden table\nreading a handwritten letter below her,\nexpression quiet softly satisfied\neyes moving gently as she reads,\nthen eyes soften further and she gives a tiny barely perceptible nod,\nemotion: peaceful, introspective, quietly moved,\nwarm golden cafe light,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she places the letter gently on the table,\nrests chin on both hands, elbows on the table,\nreading quietly.\n\nNext 2-6s: she speaks softly —\n\"다 읽어보니까... 이게 상대한테 쓴 건지\n나한테 쓴 건지 모르겠네.\"\neyes moving gently as she reads, expression quietly moved.\n\nFinal 6-8s: eyes soften further,\na tiny barely perceptible nod,\npeaceful and introspective.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 6]  YR_VD — 봉투에 넣기 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 늦게 / 편지 봉투에 넣기\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 보낼지 말지는 나중에 결정하기로 했어요.\nNR: 쓴다는 것 자체로 이미 충분한 용기니까요.\nSH: SH_FS\nCA: CA_ST\nMD: MD_REL\nAT: AT_AC_02\nLOOK_ID: LOOK_CF\nDU: 8\n오디오:\n  BGM: 피아노 — 살짝 따뜻하게\n  음성: 조용하고 결단이 담긴 립싱크 + 따뜻한 나레이션\n  효과음: 봉투 밀봉 소리\n  앰비언스: 카페 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 늦은 앰버빛\nCH(캐릭터):   LOOK_CF / 편지 접고 봉투 넣기\nSH(샷):       풀샷\nCA(카메라):   고정\nAT(동작):     편지지 천천히 반으로 접어 봉투에 넣기 → 봉투 입구 손가락으로 꼼꼼히 밀봉 → 봉투를 가슴 근처로 잠깐 들어올려 바라보기 → 가방 안으로 집어넣기\nMD(감정):     보낼지 말지는 나중에 / 쓴다는 것 자체가 이미 용기라는 확신\nDL(대사):     \"보낼지 말지는 나중에 결정하기로 했어요.\"\nNR(나레이션): \"쓴다는 것 자체로 이미 충분한 용기니까요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\ndelicate gold necklace and gold bracelet visible,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top and wide-leg beige trousers,\nsitting at a wooden cafe table by the window,\ncarefully folding stationery paper into a white envelope,\nsealing it with her fingertip,\nthen gently holding the sealed envelope up near her chest\nlooking at it briefly before placing it into her tote bag,\nwarm late-afternoon amber light slightly cooler than before,\nbackground people seated quietly further away,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she folds the letter carefully,\nplaces it into the white envelope,\nsealing it with her fingertip.\n\nNext 2-6s: she lifts the sealed envelope near her chest,\nlooks at it for a moment —\nshe speaks quietly —\n\"보낼지 말지는 나중에 결정하기로 했어요.\"\nexpression resolved and at peace.\n\nFinal 6-8s: she places the envelope gently into her tote bag,\na small exhale — the decision made.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 7]  YR_VD — 엔딩 창밖 여운 / 10초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 카페 창가 테이블 / 오후 늦게 / 마지막 커피 한 모금 + 창밖 응시\nSP: IN.CF.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_CF\nDL: 없음\nNR: 오늘 이 카페는, 나의 아주 작은 고백함이었어요.\nSH: SH_CU\nCA: CA_ST\nMD: MD_REL → MD_DRM\nAT: AT_AC_03 + AT_EM_04\nLOOK_ID: LOOK_CF\nDU: 10\n오디오:\n  BGM: 피아노 페이드아웃 / 앰비언스만 남기며\n  음성: 조용하고 여운 있는 나레이션 톤\n  효과음: 컵 내려놓는 소리\n  앰비언스: 카페 조용한 환경음 / 여운 침묵\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     카페 창가 / 오후 늦은 앰버빛 / 부드러운 렌즈 플레어\nCH(캐릭터):   LOOK_CF / 클로즈업\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     식어가는 커피 천천히 마지막 모금 마시기 → 컵 내려놓고 창밖으로 고개 돌려 조용히 바라보기 → 아무 말 없이 눈을 천천히 내리깔며 페이드\nMD(감정):     오늘 이 카페가 나의 고백함이었다는 조용한 확신 / 감성적 여운\nDL(대사):     없음\nNR(나레이션): \"오늘 이 카페는, 나의 아주 작은 고백함이었어요.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace catches last rays of late afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\ncream knit top visible,\ntaking the last quiet sip from a white ceramic cup,\nthen setting it down and turning her gaze toward the window,\nexpression still, soft, emotionally settled\nnot smiling but deeply at peace,\nafter a long beat her eyes gently lower\nlashes casting faint shadow,\nemotion: quiet resolution, lingering warmth, gentle melancholy,\nwindow light is amber and cooler soft lens flare at edge of frame,\nno movement except the subtle shift of her gaze,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she lifts the white ceramic cup slowly,\ntakes the very last quiet sip,\nsets it down gently.\n\nNext 3-7s: she turns her gaze toward the window,\nexpression still and emotionally settled —\nnot smiling but deeply at peace,\nsoft amber light at the edge of the frame.\n\nFinal 7-10s: after a long beat\nher eyes gently lower,\nlashes casting faint shadow —\nBGM fades — only ambient cafe sound remains\n— gentle fade to black.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n================================================================\n전체 컷 요약\n================================================================\n| 컷  | 제목              | 길이 | PL     | LOOK    | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|----- |--------|---------|-----------|--------|--------|------|\n| C01 | 편지지 꺼내기     | 8s   | YR_VD  | LOOK_CF | SH_FS     | CA_ST  | ❌     | 신규 |\n| C02 | 첫 문장 고민      | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C03 | 편지 써 내려가기  | 8s   | BR_VD  | LOOK_CF | SH_FS     | CA_ST  | ❌     | 신규 |\n| C04 | 커피 한 모금      | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C05 | 편지 다시 읽기    | 8s   | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ✅     | 신규 |\n| C06 | 봉투에 넣기       | 8s   | YR_VD  | LOOK_CF | SH_FS     | CA_ST  | ✅     | 신규 |\n| C07 | 엔딩 창밖 여운    | 10s  | YR_VD  | LOOK_CF | SH_CU     | CA_ST  | ❌     | 신규 |\n\n총 길이: 58초 / 립싱크: C02·C04·C05·C06\nBGM: 조용한 피아노 전체 유지 → 엔딩 페이드아웃\n핵심 소품: 편지지 + 펜 + 흰 봉투 + 화이트 세라믹 컵\n================================================================\n버전 이력\n================================================================\nv1.0 (구버전) — 기존 포맷으로 작성\nv3.0 (2026-08-02) — 표준 포맷 v3 재작성\n                    마스터 코드 / EP.HEADER / AT 코드 / KR 섹션\n                    VP 섹션 (립싱크/나레이션 분기) 전체 정리\n================================================================\n",
+  "scriptRaw": "",
   "ttsSettings": {
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "emotion": 35,
@@ -8877,18 +8808,202 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-29T07:33:06.702Z",
+  "savedAt": "2026-09-29T09:26:57.545Z",
   "videoTabState": {
-    "videoClips": {},
+    "videoClips": {
+      "cut-1": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/06_publishing/cut_01_final.mp4?t=1790672077847",
+          "name": "FFmpeg 합성 (cut_01_final.mp4)",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "createdAt": 1790672077859,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\06_publishing\\cut_01_final.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/1a6498c2-f0d1-4cd5-886c-f5e2781c7cb9",
+          "name": "Young_woman_dancing_in_room_20260927222600.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1790515560694,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_02_clip_1.mp4"
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "blob:http://localhost:5173/87650038-6fc8-4988-96bd-edce926be820",
+          "name": "Two_women_struggling_over_phone_20260926211736.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1790425056914,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_03_clip_1.mp4"
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/13c89d0d-5340-4f2f-a5e0-4986c5bcf152",
+          "name": "Woman_under_duvet_speaking_Korean_20260927224514.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": false,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1790516715151,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_04_clip_1.mp4"
+        }
+      ]
+    },
     "g4Approved": {},
-    "selectedCutId": null,
-    "subtitles": {}
+    "selectedCutId": "cut-2",
+    "subtitles": {
+      "cut-1": "\n친구가 내 흑역사를 발굴했다"
+    }
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
-    "focusCutId": null
+    "g3Confirmed": {
+      "cut-1": true,
+      "cut-3": true,
+      "cut-4": true
+    },
+    "focusCutId": null,
+    "tracks": {
+      "cut-1__v1": [],
+      "cut-1__v1790422480973_qos": [
+        {
+          "id": "track_1790422480973_hf4m",
+          "type": "dialogue",
+          "text": "야, 서여리! 이거 너지?~  새내기 MT 때 챌린지!!",
+          "speaker": "지유",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_01_track_1790422480973_hf4m.mp3?t=1790422583554",
+          "voiceId": "BQG3ggTf1gzxjqP4CEYv",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-3__v1": [
+        {
+          "id": "track_1790422597851_5qjx",
+          "type": "dialogue",
+          "text": "어머!~ 그거 어디서 났어?~ 지워!~ 당장 지워엇!",
+          "speaker": "여리",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_03_track_1790422597851_5qjx.mp3?t=1790422757512",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1790422597851_5hxq",
+          "type": "dialogue",
+          "text": "이미,, 단톡방에 올렸는데??",
+          "speaker": "지유",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_03_track_1790422597851_5hxq.mp3?t=1790423024469",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-4__v1": [
+        {
+          "id": "track_1790422771611_hgnc",
+          "type": "dialogue",
+          "text": "… 휴~, 이번 생은 망했어... 여러분 흑역사도,  좀 풀어 줘요,,",
+          "speaker": "여리",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R06/03_audio/tts-previews/cut_04_track_1790422771611_hgnc.mp3?t=1790422846952",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-2__v1": [
+        {
+          "id": "track_1790422855181_vnjp",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ]
+    },
+    "voiceTabs": {
+      "cut-1": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        },
+        {
+          "id": "v1790422480973_qos",
+          "label": "목소리 2",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-4": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "activeVoiceTab": {
+      "cut-1": 1
+    },
+    "mergedUrls": {
+      "cut-1__v1790422480973_qos": "blob:http://localhost:5173/5c7059b1-8a0b-424e-a90c-5abc1d9be3c9",
+      "cut-3__v1": "blob:http://localhost:5173/87e0db7f-f591-46d8-bf66-ec5404bef60f",
+      "cut-4__v1": "blob:http://localhost:5173/0801fb40-984f-4495-abf0-f77bfe265fd5"
+    }
   },
   "voiceInsertState": {
     "tracks": {}
