@@ -94,7 +94,7 @@ async function generateFallbackKeywords(apiKey) {
 // 📺 유튜브 분석 탭
 // ════════════════════════════════════════════════
 function YoutubeAnalysisTab() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const apiKey = state.apiKeys?.claude || ""
   const [keywords, setKeywords] = useState([])
   const [dataSource, setDataSource] = useState('') // 'live' | 'ai'
@@ -405,6 +405,7 @@ ${formatsText}
                 <div className={s.archiveHeader}>
                   <span className={s.archiveTitle}>{c.title}</span>
                   <span className={s.archiveDate}>{c.savedAt}</span>
+                  <button className={s.scriptBtn} onClick={() => dispatch({ type: 'SET_EPISODE', p: { title: c.title, storyBrief: c.hook + (c.reason ? ` — ${c.reason}` : '') } })}>대본 생성 →</button>
                   <button className={s.removeBtn} onClick={() => setSaved(prev => prev.filter(x => x.id !== c.id))}>✕</button>
                 </div>
                 <div className={s.comboFormula}>
@@ -610,7 +611,7 @@ function ShortIdeaTab() {
             <div className={s.archiveList}>
               {saved.map(story => (
                 <div key={story.id} className={s.archiveCard}>
-                  <div className={s.archiveHeader}><span className={s.archiveTitle}>{story.title}</span><span className={s.archiveDate}>{story.savedAt}</span><button className={s.removeBtn} onClick={() => setSaved(prev => prev.filter(x => x.id !== story.id))}>✕</button></div>
+                  <div className={s.archiveHeader}><span className={s.archiveTitle}>{story.title}</span><span className={s.archiveDate}>{story.savedAt}</span><button className={s.scriptBtn} onClick={() => dispatch({ type: 'SET_EPISODE', p: { title: story.title, storyBrief: story.summary || story.hook || '' } })}>대본 생성 →</button><button className={s.removeBtn} onClick={() => setSaved(prev => prev.filter(x => x.id !== story.id))}>✕</button></div>
                   <p className={s.archiveHook}>"{story.hook}"</p>
                 </div>
               ))}
@@ -628,7 +629,7 @@ function ShortIdeaTab() {
 // 🎬 시리즈 기획
 // ════════════════════════════════════════════════
 function SeriesPlanTab() {
-  const { state } = useApp()
+  const { state, dispatch } = useApp()
   const apiKey = state.apiKeys?.claude || ""
   const [channel, setChannel] = useState({ name: '', concept: '', target: '', genre: '', tone: '' })
   const [keyword, setKeyword] = useState('')
@@ -706,6 +707,7 @@ episodes 4개.`,
                         <span className={s.epNum}>{ep.ep}화</span>
                         <div className={s.epInfo}><span className={s.epTitle}>{ep.title}</span><span className={s.epHook}>"{ep.hook}"</span></div>
                         <span className={s.epKeyword}>{ep.keyword}</span>
+                        <button className={s.scriptBtn} onClick={() => dispatch({ type: 'SET_EPISODE', p: { title: ep.title, storyBrief: `${plan.concept} — ${ep.hook}` } })}>대본 생성 →</button>
                       </div>
                     ))}
                   </div>
