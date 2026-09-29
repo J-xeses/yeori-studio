@@ -33,7 +33,7 @@
 |항목|기준|
 |-|-|
 |대사 처리|**⚠️ 2026-09-10 변경 — §⑬-2 참조.** (구) "프롬프트에 대사 금지 + 무음 반환"은 Flow 퍼펫티어 시절 규칙(2026-09-02 폐기). (신) YEORI 대사 컷은 Veo 가 **대사를 말하도록** 생성(립싱크·음성 함께) → 음성 추출 → 서여리 음성 변환. 나레이션(NR) 컷은 여전히 인물 무발화 + ElevenLabs 직접.|
-|**나레이션 컷 무발화 지시 강화**|**⚠️ 실측(2026-09-29, SF_E11 컷3·6)**: "NO dialogue — narration added in post"만 써두면 Veo 가 감정 표현 구간(체념·한숨 등)에서 스스로 입모양·중얼거림(주로 영어)을 만들어내는 사고가 있었음. NR 컷 VP 끝에 반드시 **"her mouth stays closed and neutral throughout, she does not speak or mouth any words, no lip movement, silent expression only"**를 명시 문구로 추가한다. "NO dialogue" 한 줄만으로 끝내지 말 것.|
+|**나레이션 컷 무발화 지시 강화**|**⚠️ 실측(2026-09-29, SF_E11 컷3·6)**: "NO dialogue — narration added in post"만 써두면 Veo 가 감정 표현 구간(체념·한숨 등)에서 스스로 입모양·중얼거림(주로 영어)을 만들어내는 사고가 있었음. 성준님이 별도 검증한(§②-1 참조) 문구를 표준으로 채택: NR 컷 VP 끝에 반드시 **"NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM."** 을 그대로 추가한다. "NO dialogue" 한 줄만으로 끝내지 말 것.|
 |시간 명시|"First 3s / Next 3s / Final 4s" 형식으로 행동 순서 명시|
 |전신샷|불안정 → B-roll + 클로즈업 조합으로 대체|
 |배경 인물|배경 인물 자체는 허용 / 단 서여리 행동·연출에 개입 금지 → "background people must not interact with or interfere with the main character" 필수|
@@ -47,6 +47,24 @@
 □ 배경 인물이 서여리 연출에 개입하지 않도록 분리 문구 포함
 □ 전신샷은 B-roll로 대체 계획 있음
 ```
+
+\---
+
+### ②-1 샷타입별 검증된 프롬프트 템플릿 [v1.4.5 신설 — 성준님 실측 테스트, 2026-09-29 룰셋 반영]
+
+출처: `# 편집의도 자동반영 테스트 컷.txt`(A Creative Studio 폴더) — 5개 샷타입을 실제로 생성해 의도대로 구현되는지 검증 완료(T04 전신+트래킹 포함, 이미지 확인함). 새 컷 작성 시 아래 패턴을 베이스로 삼고 의상·장소만 바꿔 쓴다:
+
+|테스트|샷/카메라|핵심 문구|
+|-|-|-|
+|T01|SH_ECU 고정|`extreme close-up shot, eyes and lips fill the frame, only face visible, background fully out of focus, camera locked, no camera movement`|
+|T02|SH_WS + CA_PAN|`wide shot, full body in frame, generous background space, camera pans horizontally left to right following her movement, smooth steady pan, no shake`|
+|T03|MD_DRM|`medium close-up, dreamy hazy pastel atmosphere throughout, strong bokeh, light bloom effect, minimal body movement, camera locked`|
+|T04|AT_MW_01 + CA_TR|`upper body to full body in frame, camera tracks alongside her at the same pace, smooth lateral tracking shot, steady movement`|
+|T05|CA_ZI|`starts as medium shot, camera slowly zooms in toward her face, smooth continuous zoom, medium shot → close-up`|
+
+모든 VP 끝에 공통으로 (나레이션/무발화 컷이면) §② 위 항목의 "NO dialogue. NO speaking..." 문구를 그대로 붙인다.
+
+**추가 기법 — 이미지 역프롬프트 활용(성준님 발견, 2026-09-29)**: 프롬프트 글만으로는 전신샷 등 한계가 있는 구도를, 먼저 기본 이미지를 생성한 뒤 그 이미지를 [zemith.com](https://www.zemith.com/ko/app/tools/) 의 image-to-prompt 기능(비회원 일 3회)에 넣어 상세 프롬프트를 역추출하고, 그 프롬프트로 다시 생성하면 원하는 구도를 더 정확히 재현할 수 있다. 외부 무료 툴이라 결과 일관성은 매번 확인.
 
 \---
 
