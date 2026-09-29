@@ -457,17 +457,20 @@ await check('E11', '후보→대본 스토리 디벨롭 배선 + 연출 템플�
   const angleWired = /storyBrief:\s*ep\.angle/.test(storyTab)
   const developStep = /const developStory = async/.test(scriptTab) && /episode\.storyBrief/.test(scriptTab)
   const promptUsesBrief = /스토리 개요\(반드시 이 장면 전개를 그대로 따라/.test(scriptTab)
-  const pickerImported = /import ShotTemplatePicker from/.test(scriptTab)
-  const pickerFileExists = fs.existsSync(new URL('../src/components/ShotTemplatePicker.jsx', import.meta.url))
-  let templateCount = 0
-  if (pickerFileExists) {
-    const pickerSrc = fs.readFileSync(new URL('../src/components/ShotTemplatePicker.jsx', import.meta.url), 'utf-8')
-    templateCount = (pickerSrc.match(/id:\s*'T0\d'/g) || []).length
+  // 2026-09-29 저녁 추가 개정: 성준님 요청으로 팝업(ShotTemplatePicker) → KR 컨펌본 아래
+  // 접이식 패널(DirectionSettingsPanel, 연출의도/샷타입/LOOK_ID/오디오/KR 5개 탭)로 교체.
+  const panelImported = /import DirectionSettingsPanel from/.test(scriptTab)
+  const panelFileExists = fs.existsSync(new URL('../src/components/DirectionSettingsPanel.jsx', import.meta.url))
+  let templateCount = 0, tabCount = 0
+  if (panelFileExists) {
+    const panelSrc = fs.readFileSync(new URL('../src/components/DirectionSettingsPanel.jsx', import.meta.url), 'utf-8')
+    templateCount = (panelSrc.match(/id:\s*'T0\d'/g) || []).length
+    tabCount = (panelSrc.match(/id: '(intent|shot|look|audio|kr)'/g) || []).length
   }
-  const ok = angleWired && developStep && promptUsesBrief && pickerImported && pickerFileExists && templateCount === 5
+  const ok = angleWired && developStep && promptUsesBrief && panelImported && panelFileExists && templateCount === 5 && tabCount === 5
   return {
     ok,
-    evidence: `후보 angle→storyBrief 배선 ${angleWired ? 'O' : 'X'} · 디벨롭 단계 ${developStep ? 'O' : 'X'} · 대본 프롬프트가 개요 사용 ${promptUsesBrief ? 'O' : 'X'} · 연출 템플릿 피커 연결 ${pickerImported ? 'O' : 'X'} · 룰셋 §②-1 템플릿 ${templateCount}/5개`,
+    evidence: `후보 angle→storyBrief 배선 ${angleWired ? 'O' : 'X'} · 디벨롭 단계 ${developStep ? 'O' : 'X'} · 대본 프롬프트가 개요 사용 ${promptUsesBrief ? 'O' : 'X'} · 설정 점검 패널(접이식) 연결 ${panelImported ? 'O' : 'X'} · 룰셋 §②-1 템플릿 ${templateCount}/5개 · 설정 탭 ${tabCount}/5개`,
   }
 })
 

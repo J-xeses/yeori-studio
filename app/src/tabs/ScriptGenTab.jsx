@@ -7,7 +7,7 @@ import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
 import { ensureDialogueInVP, parseSegTiming } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
-import ShotTemplatePicker from '../components/ShotTemplatePicker'
+import DirectionSettingsPanel from '../components/DirectionSettingsPanel'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -2195,10 +2195,6 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
 
                     <div className={s.v3Divider} />
 
-                    <div className={s.v3MiniField} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      <ShotTemplatePicker apiKey={apiKeys.claude} cut={cut} onApply={applyShotTemplate} />
-                      <span className={s.v3CardHint}>샷타입/카메라/분위기 반자동 설정 — 룰셋 §②-1</span>
-                    </div>
                     <div className={s.v3SubGrid}>
                       <div className={s.v3MiniField}>
                         <label>SH (샷타입)</label>
@@ -2348,6 +2344,16 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                     </div>
                     <div className={s.v3CardHint}>※ DL/NR/CP는 좌측 "씬 설명"과 자동으로 같은 값을 사용해요.</div>
                   </div>
+
+                  {/* 연출 세부설정 반자동화(문제3, 2026-09-29) — 팝업이 아니라 KR 컨펌본 아래
+                      접이식 패널로(성준님 요청). 연출의도(룰셋 §②-1 템플릿) 외에 샷타입·
+                      LOOK_ID·오디오·KR 컨펌본도 한 곳에서 훑어보고 고칠 수 있게 범위 확장. */}
+                  <DirectionSettingsPanel
+                    apiKey={apiKeys.claude} cut={cut} cuts={cuts}
+                    mc={mc} audio={audio} kr={kr}
+                    mcField={mcField} audioField={audioField} krField={krField}
+                    onApplyTemplate={applyShotTemplate}
+                  />
 
                 </div>
 
