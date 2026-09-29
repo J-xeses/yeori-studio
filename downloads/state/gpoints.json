@@ -900,15 +900,15 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-09-29T10:24:11.421Z",
-      "g2": false,
-      "selectedImage": null
+      "updatedAt": "2026-09-29T10:51:52.495Z",
+      "g2": true,
+      "selectedImage": "cut_03_b.jpg"
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-09-29T10:26:12.786Z",
-      "g2": false,
-      "selectedImage": null
+      "updatedAt": "2026-09-29T10:52:03.814Z",
+      "g2": true,
+      "selectedImage": "cut_04_a.jpg"
     },
     "cut_5": {
       "g1": true,
@@ -918,11 +918,15 @@
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-09-26T13:43:08.158Z"
+      "updatedAt": "2026-09-29T10:52:27.070Z",
+      "g2": true,
+      "selectedImage": "cut_06_b.jpg"
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-09-26T13:43:08.159Z"
+      "updatedAt": "2026-09-29T10:52:41.954Z",
+      "g2": true,
+      "selectedImage": "cut_07_a.jpg"
     }
   }
 }
