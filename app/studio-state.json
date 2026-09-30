@@ -1,9 +1,9 @@
 {
-  "activeTab": "making",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 81882
+    "remainingChars": 81864
   },
   "activeEpisodeId": "ep_1787406807164",
   "openTabIds": [
@@ -8982,7 +8982,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-30T09:16:58.756Z",
+  "savedAt": "2026-09-30T10:23:31.769Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
@@ -9058,7 +9058,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-2",
     "subtitles": {}
   },
   "ttsTabState": {

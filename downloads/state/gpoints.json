@@ -439,10 +439,10 @@
   "IG_R02": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-09-30T09:31:26.768Z",
+      "updatedAt": "2026-09-30T10:03:22.262Z",
       "g3": true,
       "g2": true,
-      "selectedImage": "cut_01_a.jpg"
+      "selectedImage": "cut_01_b.jpg"
     },
     "cut_2": {
       "g1": true,
