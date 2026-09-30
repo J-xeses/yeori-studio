@@ -176,7 +176,7 @@ export function validateGraphicHtml(raw, dims = { w: 1920, h: 1080 }) {
 // (파일 읽기/base64 인코딩은 호출부인 scripts/make-image-sequence-cut.js 담당).
 // motion:'self' 캡처 경로(proxy.js runGraphicCapture, ANIMATED_MOTIONS 'self')와
 // 호환되도록, CSS 애니메이션 총 길이를 durationSec에 정확히 맞춘다.
-export function buildImageSequenceHtml({ images, w = 1080, h = 1920, durationSec = 3, effect = 'auto' }) {
+export function buildImageSequenceHtml({ images, w = 1080, h = 1920, durationSec = 3, effect = 'auto', fit = 'cover' }) {
   const list = (images || []).filter(Boolean)
   const n = list.length
   if (!n) throw new Error('images 최소 1장 필요')
@@ -242,7 +242,7 @@ ${[...zoomPoints.entries()].sort((a, b) => a[0] - b[0]).map(([pct, sc]) => `  ${
 * { margin:0; padding:0; box-sizing:border-box; }
 html, body { width:${w}px; height:${h}px; overflow:hidden; background:#000; }
 .layer { position:absolute; inset:0; width:${w}px; height:${h}px; }
-.layer img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform-origin:center center; }
+.layer img { position:absolute; inset:0; width:100%; height:100%; object-fit:${fit === 'contain' ? 'contain' : 'cover'}; transform-origin:center center; }
 ${keyframeCss}
 </style>
 </head>

@@ -442,14 +442,19 @@ export default function VideoTab() {
         if (d.error) return
         setVChk(d)
         // 이전 세션에서 이미 합성된 컷도(방금 이 브라우저에서 합성 안 해도) "최종 합성본"
-        // 미리보기가 바로 보이게 — hasVideo인 컷마다 최초 1회 타임스탬프를 채워둔다.
+        // 미리보기가 바로 보이게. 예전엔 컷마다 "최초 1회"만 타임스탬프를 채워서, 메이킹 탭
+        // 등 다른 경로로 cut_NN.mp4가 새로 바뀌어도 이 값이 안 바뀌어 브라우저가 옛날 영상을
+        // 계속 캐시에서 보여주는 버그가 있었다(2026-09-30 실측: "최종합성본이 이전버전으로
+        // 고정"). 서버가 파일 mtime을 내려주므로 그걸 그대로 캐시버스팅 키로 쓴다 — 매
+        // 로드마다 디스크의 실제 상태와 항상 일치.
         setFinalPreviewTs(p => {
           let changed = false
           const next = { ...p }
-          const now = Date.now()
           for (const row of d.cuts || []) {
             const cut = (state.cuts || []).find(c => c.no === row.no)
-            if (row.hasVideo && cut && next[cut.id] == null) { next[cut.id] = now; changed = true }
+            if (row.hasVideo && cut && row.mtimeMs != null && next[cut.id] !== row.mtimeMs) {
+              next[cut.id] = row.mtimeMs; changed = true
+            }
           }
           return changed ? next : p
         })

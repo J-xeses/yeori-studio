@@ -195,7 +195,7 @@ const SUBTITLE_EFFECT_GROUPS = [
   ['기본형', [['fade', 'FADE'], ['slide', 'SLIDE'], ['typer', 'TYPER'], ['pop', 'POP']]],
   ['강조형', [['slam', 'SLAM'], ['glow', 'GLOW'], ['highlight', 'HIGHLIGHT'], ['split', 'SPLIT']]],
 ]
-const SUBTITLE_EFFECT_IMPLEMENTED = new Set(['fade', 'slide', 'pop', 'slam', 'glow'])
+const SUBTITLE_EFFECT_IMPLEMENTED = new Set(['fade', 'slide', 'typer', 'pop', 'slam', 'glow'])
 const SUBTITLE_POSITIONS = [['bottom', '하단'], ['center', '중앙'], ['top', '상단']]
 const DEFAULT_SUBTITLE = {
   effect: 'slam',
@@ -460,6 +460,7 @@ export default function MakingTab() {
   const [seqImages, setSeqImages] = useState([]) // 에피소드 전체 02_images 목록 [{cutNo, url}]
   const [seqSelected, setSeqSelected] = useState([]) // 이 컷에 쓸 파일명, 고른 순서대로
   const [seqEffect, setSeqEffect] = useState('auto')
+  const [seqFit, setSeqFit] = useState('cover') // cover=꽉채우기(크롭) · contain=전체보이기(레터박스, 스크린샷용)
   const [seqBusy, setSeqBusy] = useState(false)
   const [seqResult, setSeqResult] = useState(null)
 
@@ -468,7 +469,7 @@ export default function MakingTab() {
     try {
       const res = await fetch(`${YEORI_SERVER}/api/scan-images?ep=${episode.number}`)
       const data = await res.json()
-      setSeqImages(data.images || [])
+      setSeqImages((data.images || []).map(img => ({ ...img, url: `${YEORI_SERVER}${img.url}` })))
     } catch { /* noop */ }
   }
 
@@ -488,7 +489,7 @@ export default function MakingTab() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          epNum: episode.number, cutNo: cut.no, images: seqSelected, duration, effect: seqEffect, preview,
+          epNum: episode.number, cutNo: cut.no, images: seqSelected, duration, effect: seqEffect, fit: seqFit, preview,
         }),
       })
       const data = await res.json()
@@ -1344,6 +1345,7 @@ export default function MakingTab() {
   const [hwScenes, setHwScenes] = useState([newHwScene()])
   const [hwBusy, setHwBusy] = useState(false)
   const [hwResult, setHwResult] = useState(null)
+  const [hwCutNoFill, setHwCutNoFill] = useState('')
 
   useEffect(() => {
     fetch(`${YEORI_SERVER}/api/hw-source-images`).then(r => r.json())
@@ -1866,6 +1868,13 @@ export default function MakingTab() {
               <option value="crossfade">크로스페이드만</option>
               <option value="kenburns">켄번즈 줌만</option>
               <option value="both">크로스페이드+줌</option>
+            </select>
+          </label>
+          <label className={s.durationField}>
+            맞춤
+            <select value={seqFit} onChange={e => setSeqFit(e.target.value)}>
+              <option value="cover">꽉 채우기(크롭) — 인물 사진용</option>
+              <option value="contain">전체 보이기(레터박스) — 스크린샷/목업용</option>
             </select>
           </label>
           <button className={s.previewBtn} disabled={seqBusy || !seqSelected.length}
@@ -2785,13 +2794,28 @@ export default function MakingTab() {
             서여리 얼굴 이미지 등 임의 이미지 위에 손글씨 주석을 얹습니다. 씬마다 별도 PNG로 저장됩니다
             (1080×1920, 서여리 시그니처 프레임 포함). downloads/making/hw_stills/ 에 생성.
           </div>
-          <label className={s.styleField}>이미지 경로 (downloads/ 기준)
-            <input list="hw-source-images" value={hwImgPath} placeholder="flow/character/yeori-closeup.jpg"
+          <label className={s.styleField}>이미지/영상 경로 (downloads/ 기준 — cut_NN.mp4 같은 확정된 컷 영상도 가능)
+            <input list="hw-source-images" value={hwImgPath} placeholder="flow/character/yeori-closeup.jpg 또는 seoyeori/IG/IG_R/IG_R02/05_video/cut_04.mp4"
               onChange={e => setHwImgPath(e.target.value)} />
           </label>
           <datalist id="hw-source-images">
             {hwImgList.map(p => <option key={p} value={p} />)}
           </datalist>
+          <div className={s.editorActions} style={{ marginTop: 4 }}>
+            <label className={s.durationField}>
+              컷 번호
+              <input type="number" min="1" style={{ width: 60 }} value={hwCutNoFill}
+                onChange={e => setHwCutNoFill(e.target.value)} />
+            </label>
+            <button className={s.previewBtn} disabled={!episode?.number || !hwCutNoFill}
+              onClick={() => {
+                const padded = String(parseInt(hwCutNoFill, 10) || 0).padStart(2, '0')
+                const rel = epMediaUrl(episode, 'video').replace(`${YEORI_SERVER}/downloads/`, '')
+                setHwImgPath(`${rel}/cut_${padded}.mp4`)
+              }}>
+              이 컷 영상 경로로 채우기
+            </button>
+          </div>
 
           {hwScenes.map((sc, i) => (
             <div key={i} className={s.overlayScene}>
@@ -2856,6 +2880,13 @@ export default function MakingTab() {
           {hwResult && (
             hwResult.error ? (
               <div className={s.resultError}>❌ {hwResult.error}</div>
+            ) : hwResult.mode === 'video' ? (
+              <div className={s.resultOk}>
+                ✅ 영상에 합성됨 — {hwResult.outputPath?.split(/[/\\]/).pop()} ({hwResult.sizeKB}KB)
+                <br />
+                <video className={s.makingVideo} controls
+                  src={`${YEORI_SERVER}${hwResult.url}?t=${hwResult._ts || 0}`} />
+              </div>
             ) : (
               <div className={s.resultOk}>
                 ✅ {hwResult.count}개 씬 저장됨

@@ -8982,13 +8982,26 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-30T12:24:49.035Z",
+  "savedAt": "2026-09-30T13:28:29.196Z",
   "videoTabState": {
     "videoClips": {
-      "cut-2": [],
+      "cut-2": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_02.mp4?t=1790774774598",
+          "name": "cut_02.mp4",
+          "duration": 4,
+          "trimStart": 0,
+          "trimEnd": 4,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_02.mp4",
+          "keepAudio": false,
+          "createdAt": 1790762921000
+        }
+      ],
       "cut-3": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_03.mp4?t=1789989979519",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_03.mp4?t=1790774774858",
           "name": "cut_03.mp4",
           "duration": 4,
           "trimStart": 0,
@@ -8997,12 +9010,12 @@
           "ratio": "9:16",
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_03.mp4",
           "keepAudio": false,
-          "createdAt": 1788070322000
+          "createdAt": 1790763001000
         }
       ],
       "cut-4": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_04.mp4?t=1789989979772",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_04.mp4?t=1790774775124",
           "name": "cut_04.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -9011,12 +9024,12 @@
           "ratio": "9:16",
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_04.mp4",
           "keepAudio": false,
-          "createdAt": 1787479377000
+          "createdAt": 1790763464000
         }
       ],
       "cut-5": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_05.mp4?t=1789989980025",
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_05.mp4?t=1790774775382",
           "name": "cut_05.mp4",
           "duration": 4,
           "trimStart": 0,
@@ -9025,13 +9038,13 @@
           "ratio": "9:16",
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_05.mp4",
           "keepAudio": false,
-          "createdAt": 1788070362000
+          "createdAt": 1790762766000
         }
       ],
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/12b93ce2-5544-4c67-8794-1bf6d6078ba8",
-          "name": "cut_01_seq.mp4",
+          "url": "blob:http://localhost:5173/868d4e7c-526e-4afd-a3bd-31534361d785",
+          "name": "cut_01_preview.mp4",
           "duration": 3,
           "trimStart": 0,
           "trimEnd": 3,
@@ -9039,13 +9052,13 @@
           "ratio": "9:16",
           "staging": false,
           "keepAudio": true,
-          "createdAt": 1790770272884,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_1.mp4"
+          "createdAt": 1790773820418,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_new1790774522097.mp4"
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-5",
     "subtitles": {}
   },
   "ttsTabState": {

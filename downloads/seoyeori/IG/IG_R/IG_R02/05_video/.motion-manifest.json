@@ -1,8 +1,9 @@
 {
   "1": {
-    "subtitle": true,
-    "subtitleEffect": "slam",
-    "subtitleAt": "2026-09-18T11:54:50.151Z"
+    "method": "veo-manual",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-09-30T13:22:24.025Z"
   },
   "3": {}
 }

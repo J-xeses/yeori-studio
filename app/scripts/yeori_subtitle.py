@@ -40,7 +40,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageChops
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -62,7 +62,7 @@ EFFECT_TYPES = {
     "split":     {"left_from": "left", "right_from": "right"},
 }
 # 이번 버전에서 실제 렌더 구현된 효과. 나머지는 fade로 폴백 + 경고.
-IMPLEMENTED = {"fade", "slide", "pop", "slam", "glow"}
+IMPLEMENTED = {"fade", "slide", "pop", "slam", "glow", "typer"}
 
 # ── 폰트 (자막용 볼드 산세리프) ────────────────────────────────────────
 BUNDLED_FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
@@ -214,6 +214,33 @@ def render_text_layer(lines, font, fill_rgba, outline):
     return layer
 
 
+def typer_reveal_mask(lines, font, outline, layer_size, chars_shown):
+    """render_text_layer와 동일한 줄별 x/y 배치로 왼쪽부터 chars_shown자까지만 보이는 마스크.
+    (2026-09-30 실측: 글자 수가 늘 때마다 전체 블록을 다시 중앙정렬하면 글자가 매 프레임
+    가운데서 부풀어 나오는 것처럼 보인다 — 그래서 블록은 항상 "완성된 전체 텍스트" 기준
+    고정 위치로 한 번만 그리고, 왼쪽부터 잘라 보여주는 마스크만 시간에 따라 넓힌다.)"""
+    scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
+    metrics = [scratch.textbbox((0, 0), ln or " ", font=font, stroke_width=outline) for ln in lines]
+    line_h = int(font.size * 1.42)
+    mask = Image.new("L", layer_size, 0)
+    d = ImageDraw.Draw(mask)
+    pad = max(outline * 2, 6)
+    remaining = chars_shown
+    y = pad
+    for ln, m in zip(lines, metrics):
+        n = len(ln)
+        shown_n = clamp(remaining, 0, n) if n else 0
+        remaining -= shown_n
+        if shown_n > 0:
+            visible = ln[:int(shown_n)]
+            vis_w = scratch.textbbox((0, 0), visible, font=font, stroke_width=outline)[2]
+            full_w = m[2] - m[0]
+            x0 = (layer_size[0] - full_w) / 2 - m[0]
+            d.rectangle([0, y, x0 + vis_w + outline + 4, y + line_h], fill=255)
+        y += line_h
+    return mask
+
+
 def compose_frame(canvas_wh, lines, font, style, effect, params, t_rel, dur):
     """엔트리 한 프레임(RGBA, canvas 크기). 모션(스케일/이동/알파/글로우)을 여기서 굽는다."""
     cw, ch = canvas_wh
@@ -259,12 +286,24 @@ def compose_frame(canvas_wh, lines, font, style, effect, params, t_rel, dur):
     elif eff == "glow":
         glow_a = 0.5 + 0.28 * math.sin(t_rel * 2 * math.pi * 1.15)
         alpha = min(1.0, ease_out_cubic(t_rel / 0.25), ease_out_cubic((dur - t_rel) / 0.25))
+    elif eff == "typer":
+        delay = max(0.01, float(params.get("char_delay", 0.05)))
+        alpha = min(1.0, ease_out_cubic((dur - t_rel) / 0.2))
 
     alpha = clamp(alpha)
     if alpha <= 0.003:
         return frame
 
     layer = render_text_layer(lines, font, fill, outline)
+
+    if eff == "typer":
+        total_chars = sum(len(ln) for ln in lines)
+        chars_shown = min(total_chars, int(t_rel / delay) + 1) if t_rel >= 0 else 0
+        if chars_shown < total_chars:
+            mask = typer_reveal_mask(lines, font, outline, layer.size, chars_shown)
+            r, g, b, a = layer.split()
+            a = ImageChops.multiply(a, mask)
+            layer = Image.merge("RGBA", (r, g, b, a))
 
     # 글로우: glow 효과이거나 style.glow=true 이면 컬러 헤일로를 깐다.
     want_glow = eff == "glow" or style.get("glow")

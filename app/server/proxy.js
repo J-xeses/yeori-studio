@@ -4591,7 +4591,7 @@ app.post('/api/graphic-capture', async (req, res) => {
 // preview:true(기본)면 05_video/_manual_work/에만 쓰고 실제 cut_NN.mp4는 안 건드린다 —
 // 메이킹 탭에서 여러 조합을 테스트→리뷰하다가 마음에 든 것만 preview:false로 확정.
 app.post('/api/image-sequence-cut', async (req, res) => {
-  const { epNum, cutNo, images, duration, effect, preview = true } = req.body || {}
+  const { epNum, cutNo, images, duration, effect, fit, preview = true } = req.body || {}
   if (!epNum || cutNo == null || !Array.isArray(images) || !images.length) {
     return res.status(400).json({ error: 'epNum, cutNo, images(배열, 파일명) 필요' })
   }
@@ -4607,7 +4607,7 @@ app.post('/api/image-sequence-cut', async (req, res) => {
     })
     const { w: CW, h: CH } = episodeCutDims(epNum)
     const dur = parseFloat(duration) || 3
-    const html = buildImageSequenceHtml({ images: dataUris, w: CW, h: CH, durationSec: dur, effect: effect || 'auto' })
+    const html = buildImageSequenceHtml({ images: dataUris, w: CW, h: CH, durationSec: dur, effect: effect || 'auto', fit: fit === 'contain' ? 'contain' : 'cover' })
 
     const padded = String(cutNo).padStart(2, '0')
     const outputPath = preview
@@ -7192,6 +7192,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         hasImage: !!startFrame,
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
         hasVideo: !!savedFile,
+        mtimeMs: savedFile ? fs.statSync(path.join(videoDir, savedFile)).mtimeMs : null,
         savedFile,                              // 실제 저장된 파일명(cut_NN.mp4 / _overlay / _final)
         videoUrl: savedFile ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), savedFile))}` : null,
         savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치
