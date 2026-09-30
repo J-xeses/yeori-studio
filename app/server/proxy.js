@@ -19,7 +19,7 @@ import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYt
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
-import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml } from './lib/graphicGen.js'
+import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml, buildImageSequenceHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
 import { syncEpisodeState } from './lib/leaderState.js'
@@ -4482,7 +4482,7 @@ function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
   return vf
 }
 
-async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
+async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
   const animated = ANIMATED_MOTIONS.has(motion)
@@ -4491,7 +4491,9 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
   const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
   const imagePath = path.join(videoDir, `cut_${padded}_graphic.png`)
-  const videoPath = path.join(videoDir, `cut_${padded}.mp4`)
+  // outputPath 지정 시(미리보기 등) 그쪽에 쓰고 실제 cut_NN.mp4는 건드리지 않는다.
+  const videoPath = outputPath || path.join(videoDir, `cut_${padded}.mp4`)
+  if (outputPath) fs.mkdirSync(path.dirname(outputPath), { recursive: true })
   // motion:'self' 는 HTML 이 스스로 애니메이션하므로 템플릿 CSS 를 주입하지 않는다.
   const pageHtml = (animated && motion !== 'self') ? injectAnimationCss(html, motion, dur) : html
 
@@ -4561,8 +4563,10 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion }) {
 
   // 그래픽 컷은 전체화면 텍스트/캡션 카드 — 그 위에 커터 켄번스가 얹히면 글씨가
   // 흐르듯 밀려 아마추어처럼 보인다. 모션이 필요하면 "유형별 기본 모션"으로 여기서
-  // 굽는다. 따라서 그래픽은 항상 baked 처리.
-  recordCutMotion(epNum, cutNo, { method: 'graphic', motion: motion || 'none', baked: true, duration: dur })
+  // 굽는다. 따라서 그래픽은 항상 baked 처리. (미리보기 렌더는 기록하지 않음)
+  if (!skipMotionRecord) {
+    recordCutMotion(epNum, cutNo, { method: 'graphic', motion: motion || 'none', baked: true, duration: dur })
+  }
 
   return { imagePath, videoPath, animated: !!animated }
 }
@@ -4578,6 +4582,44 @@ app.post('/api/graphic-capture', async (req, res) => {
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
+  }
+})
+
+// POST /api/image-sequence-cut — 사진 1~N장을 크로스페이드/켄번즈 줌으로 이어붙여
+// 컷 mp4를 만든다(2026-09-30 신설, IG_R02 컷1/5 재작업 계기). graphicGen.js
+// buildImageSequenceHtml + 위 runGraphicCapture(motion:'self')를 그대로 재사용.
+// preview:true(기본)면 05_video/_manual_work/에만 쓰고 실제 cut_NN.mp4는 안 건드린다 —
+// 메이킹 탭에서 여러 조합을 테스트→리뷰하다가 마음에 든 것만 preview:false로 확정.
+app.post('/api/image-sequence-cut', async (req, res) => {
+  const { epNum, cutNo, images, duration, effect, preview = true } = req.body || {}
+  if (!epNum || cutNo == null || !Array.isArray(images) || !images.length) {
+    return res.status(400).json({ error: 'epNum, cutNo, images(배열, 파일명) 필요' })
+  }
+  try {
+    const imgDir = mp.imagesDir(epNum)
+    const dataUris = images.map(name => {
+      const safe = path.basename(String(name))
+      const abs = path.join(imgDir, safe)
+      if (!fs.existsSync(abs)) { const e = new Error(`이미지 없음: ${safe}`); e.statusCode = 404; throw e }
+      const ext = path.extname(safe).toLowerCase()
+      const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg'
+      return `data:${mime};base64,${fs.readFileSync(abs).toString('base64')}`
+    })
+    const { w: CW, h: CH } = episodeCutDims(epNum)
+    const dur = parseFloat(duration) || 3
+    const html = buildImageSequenceHtml({ images: dataUris, w: CW, h: CH, durationSec: dur, effect: effect || 'auto' })
+
+    const padded = String(cutNo).padStart(2, '0')
+    const outputPath = preview
+      ? path.join(mp.videoDir(epNum), '_manual_work', `cut_${padded}_preview.mp4`)
+      : undefined
+    const result = await runGraphicCapture({
+      html, cutNo, epNum, duration: dur, motion: 'self',
+      outputPath, skipMotionRecord: !!preview,
+    })
+    res.json({ success: true, preview: !!preview, ...result, previewUrl: mp.toMediaUrl(result.videoPath) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
   }
 })
 

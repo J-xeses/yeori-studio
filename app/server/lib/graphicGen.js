@@ -169,3 +169,85 @@ export function validateGraphicHtml(raw, dims = { w: 1920, h: 1080 }) {
 
   return { ok: true, html, issues }
 }
+
+// ── 이미지 시퀀스 컷 (크로스페이드 / 켄번즈 줌) ────────────────────────────
+// 사진 1장은 "켄번즈"(천천히 확대), 2장 이상은 기본적으로 "크로스페이드+줌"으로
+// 자연스럽게 이어붙인다. 순수 함수 — 이미지는 이미 data URI로 인코딩된 상태로 받는다
+// (파일 읽기/base64 인코딩은 호출부인 scripts/make-image-sequence-cut.js 담당).
+// motion:'self' 캡처 경로(proxy.js runGraphicCapture, ANIMATED_MOTIONS 'self')와
+// 호환되도록, CSS 애니메이션 총 길이를 durationSec에 정확히 맞춘다.
+export function buildImageSequenceHtml({ images, w = 1080, h = 1920, durationSec = 3, effect = 'auto' }) {
+  const list = (images || []).filter(Boolean)
+  const n = list.length
+  if (!n) throw new Error('images 최소 1장 필요')
+  const dur = Math.max(0.5, Number(durationSec) || 3)
+  const mode = effect === 'auto' ? (n > 1 ? 'both' : 'kenburns') : effect
+  const doFade = n > 1 && (mode === 'crossfade' || mode === 'both')
+  const doZoom = mode === 'kenburns' || mode === 'both'
+
+  const slotPct = 100 / n
+  const overlapPct = doFade ? slotPct * 0.3 : 0
+
+  const layers = list.map((dataUri, i) => {
+    const p0 = Math.max(0, i * slotPct - overlapPct)
+    const p1 = Math.min(100, i * slotPct + overlapPct)
+    const p2 = Math.max(0, (i + 1) * slotPct - overlapPct)
+    const p3 = Math.min(100, (i + 1) * slotPct + overlapPct)
+    const fadeName = `fade${i}`
+    const zoomName = `zoom${i}`
+    const zoomDir = i % 2 === 0 ? [1.0, 1.08] : [1.08, 1.0] // 번갈아 확대/축소 — 단조로움 방지
+    const opacityCss = !doFade
+      ? '' // 단일 이미지 또는 켄번즈 단독: 불투명 고정
+      : `animation: ${fadeName} ${dur}s linear forwards;`
+    const zoomCss = doZoom
+      ? `animation: ${zoomName} ${dur}s linear forwards;`
+      : ''
+    // CSS 키프레임은 명시 안 된 0%/100%를 "카스케이드 기본값"에서 합성한다(직전/직후
+    // 키프레임 값으로 이어받지 않음) — 그래서 0%·100%를 항상 직접 박아둬야 함.
+    // 안 그러면 화면 밖(불투명 0이어야 할) 구간에서 레이어가 되레 기본 불투명 1로
+    // 튀어나와 순서가 뒤집히거나 유령처럼 겹쳐 보인다(실측: 2026-09-30).
+    // 첫 레이어는 시작부터 바로 불투명(도입부 페이드인으로 첫 프레임이 어두워지는 것
+    // 방지), 마지막 레이어는 끝까지 불투명 유지(영상 맨 끝이 검게 사라지는 것 방지).
+    const isFirst = i === 0
+    const isLast = i === n - 1
+    const fadePoints = new Map([
+      [0, isFirst ? 1 : 0], [p0, isFirst ? 1 : 0],
+      [p1, 1], [p2, 1],
+      [p3, isLast ? 1 : 0], [100, isLast ? 1 : 0],
+    ])
+    const fadeKeyframes = doFade ? `
+@keyframes ${fadeName} {
+${[...fadePoints.entries()].sort((a, b) => a[0] - b[0]).map(([pct, op]) => `  ${pct.toFixed(2)}% { opacity: ${op}; }`).join('\n')}
+}` : ''
+    const zoomPoints = new Map([[0, zoomDir[0]], [p0, zoomDir[0]], [p3, zoomDir[1]], [100, zoomDir[1]]])
+    const zoomKeyframes = doZoom ? `
+@keyframes ${zoomName} {
+${[...zoomPoints.entries()].sort((a, b) => a[0] - b[0]).map(([pct, sc]) => `  ${pct.toFixed(2)}% { transform: scale(${sc}); }`).join('\n')}
+}` : ''
+    return { i, dataUri, opacityCss, zoomCss, fadeKeyframes, zoomKeyframes }
+  })
+
+  const layerDivs = layers.map(l => `
+  <div class="layer" style="${l.opacityCss}${!doFade ? 'opacity:1;' : ''}">
+    <img src="${l.dataUri}" style="${l.zoomCss}" />
+  </div>`).join('\n')
+
+  const keyframeCss = layers.map(l => l.fadeKeyframes + l.zoomKeyframes).join('\n')
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:${w}px; height:${h}px; overflow:hidden; background:#000; }
+.layer { position:absolute; inset:0; width:${w}px; height:${h}px; }
+.layer img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform-origin:center center; }
+${keyframeCss}
+</style>
+</head>
+<body>
+${layerDivs}
+</body>
+</html>`
+}

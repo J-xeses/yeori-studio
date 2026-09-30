@@ -453,12 +453,63 @@ export default function MakingTab() {
   const [capturing, setCapturing] = useState(false)
   const [captureResult, setCaptureResult] = useState(null)
 
+  // ── 사진 시퀀스(크로스페이드/켄번즈 줌) — 2026-09-30 신설, IG_R02 컷1/5 재작업 계기.
+  // GRAPHIC/CAPCUT 자동 템플릿(단색 배경 텍스트카드)로는 "사진 배경 + 자막" 조합이
+  // 안 돼서(배경이 무조건 flat color), 실제 사진 여러 장을 크로스페이드+줌으로 이어
+  // 붙이는 별도 제작 경로. /api/image-sequence-cut(서버) 재사용.
+  const [seqImages, setSeqImages] = useState([]) // 에피소드 전체 02_images 목록 [{cutNo, url}]
+  const [seqSelected, setSeqSelected] = useState([]) // 이 컷에 쓸 파일명, 고른 순서대로
+  const [seqEffect, setSeqEffect] = useState('auto')
+  const [seqBusy, setSeqBusy] = useState(false)
+  const [seqResult, setSeqResult] = useState(null)
+
+  const fetchSeqImages = async () => {
+    if (!episode?.number) return
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/scan-images?ep=${episode.number}`)
+      const data = await res.json()
+      setSeqImages(data.images || [])
+    } catch { /* noop */ }
+  }
+
+  const toggleSeqImage = (file) => {
+    setSeqSelected(prev => prev.includes(file) ? prev.filter(f => f !== file) : [...prev, file])
+    setSeqResult(null)
+  }
+
+  // preview=true(기본): 05_video/_manual_work/에만 렌더 — 여러 조합 시험 후 마음에 든
+  // 것만 preview=false로 다시 눌러 실제 cut_NN.mp4를 확정한다.
+  const runImageSequence = async (cut, preview = true) => {
+    if (!episode.number || !seqSelected.length) return
+    setSeqBusy(true)
+    setSeqResult(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/image-sequence-cut`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number, cutNo: cut.no, images: seqSelected, duration, effect: seqEffect, preview,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setSeqResult({ error: data.error || '제작 실패' }); return }
+      setSeqResult({ ...data, _ts: Date.now() })
+    } catch (e) {
+      setSeqResult({ error: `서버 연결 실패: ${e.message}` })
+    } finally {
+      setSeqBusy(false)
+    }
+  }
+
   const selectCut = (cut) => {
     setSelectedCutNo(cut.no)
     setHtmlSource(fillTemplate(cut, styleFor(cut.cutType), epDims))
     setPreviewHtml('')
     setCaptureResult(null)
     setDuration(cutDuration(cut))
+    setSeqSelected([])
+    setSeqResult(null)
+    fetchSeqImages()
   }
 
   // [제작 실행] — 편집기의 현재 HTML을 그대로 캡처한다(/api/graphic-capture).
@@ -1775,6 +1826,71 @@ export default function MakingTab() {
           </div>
         )
       )}
+
+      <div className={s.settingGroup} style={{ marginTop: 16, borderTop: '1px dashed var(--border)', paddingTop: 12 }}>
+        <div className={s.settingLabel}>🖼 사진 시퀀스로 만들기 (사진 여러 장 크로스페이드/켄번즈 줌)</div>
+        <div className={s.emptyHint}>
+          자동 템플릿은 배경이 단색 고정이라 사진을 못 씁니다. 아래서 사진을 순서대로 고르면
+          1장=천천히 확대(켄번즈 줌), 2장 이상=크로스페이드+줌으로 이어붙입니다. 클릭한 순서대로 등장합니다.
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+          {seqImages.length === 0 && <span className={s.emptyHint}>02_images에 사진이 없습니다.</span>}
+          {seqImages.map(img => {
+            const file = img.url.split('/').pop()
+            const order = seqSelected.indexOf(file)
+            const picked = order !== -1
+            return (
+              <div key={img.url} onClick={() => toggleSeqImage(file)} title={file}
+                style={{
+                  position: 'relative', width: 70, height: 124, borderRadius: 6, overflow: 'hidden',
+                  cursor: 'pointer', border: picked ? '3px solid #5BB8FF' : '1px solid var(--border)',
+                  opacity: picked ? 1 : 0.85, flexShrink: 0,
+                }}>
+                <img src={img.url} alt={file} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {picked && (
+                  <span style={{
+                    position: 'absolute', top: 2, left: 2, background: '#5BB8FF', color: '#0C0A10',
+                    fontSize: 11, fontWeight: 700, borderRadius: '50%', width: 18, height: 18,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{order + 1}</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        <div className={s.editorActions} style={{ marginTop: 8 }}>
+          <label className={s.durationField}>
+            효과
+            <select value={seqEffect} onChange={e => setSeqEffect(e.target.value)}>
+              <option value="auto">자동(1장=줌 / 2장+=크로스페이드+줌)</option>
+              <option value="crossfade">크로스페이드만</option>
+              <option value="kenburns">켄번즈 줌만</option>
+              <option value="both">크로스페이드+줌</option>
+            </select>
+          </label>
+          <button className={s.previewBtn} disabled={seqBusy || !seqSelected.length}
+            onClick={() => runImageSequence(cut, true)}>
+            {seqBusy ? '⏳ 렌더 중…' : `미리보기 생성 (${seqSelected.length}장)`}
+          </button>
+          {seqResult && !seqResult.error && seqResult.preview && (
+            <button className={s.captureBtn} disabled={seqBusy} onClick={() => runImageSequence(cut, false)}>
+              이 결과로 확정 (cut_{String(cut.no).padStart(2, '0')}.mp4로 저장)
+            </button>
+          )}
+        </div>
+        {seqResult && (
+          seqResult.error ? (
+            <div className={s.resultError}>❌ {seqResult.error}</div>
+          ) : (
+            <div className={s.resultOk}>
+              {seqResult.preview ? '✅ 미리보기 생성됨 (실제 컷 파일은 아직 안 바뀜 — 확인 후 확정하세요)' : '✅ 확정 저장됨 — 실제 cut 파일이 교체되었습니다'}
+              <br />
+              <video className={s.makingVideo} controls
+                src={`${epMediaUrl(episode, 'video')}${seqResult.preview ? '/_manual_work' : ''}/cut_${String(cut.no).padStart(2, '0')}${seqResult.preview ? '_preview' : ''}.mp4?t=${seqResult._ts}`} />
+            </div>
+          )
+        )}
+      </div>
     </>
   )
 

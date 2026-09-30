@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -8982,24 +8982,10 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-30T10:23:31.769Z",
+  "savedAt": "2026-09-30T12:24:49.035Z",
   "videoTabState": {
     "videoClips": {
-      "cut-2": [
-        {
-          "url": "blob:http://localhost:5173/f3bc9099-8c1f-4f0d-b0c7-ffd0a7d5c96b",
-          "name": "cut_02_overlay.mp4",
-          "duration": 4,
-          "trimStart": 0,
-          "trimEnd": 4,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1788071940040,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_02_clip_1.mp4"
-        }
-      ],
+      "cut-2": [],
       "cut-3": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_03.mp4?t=1789989979519",
@@ -9044,21 +9030,22 @@
       ],
       "cut-1": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_01.mp4?t=1789991016594",
-          "name": "cut_01.mp4",
+          "url": "blob:http://localhost:5173/12b93ce2-5544-4c67-8794-1bf6d6078ba8",
+          "name": "cut_01_seq.mp4",
           "duration": 3,
           "trimStart": 0,
           "trimEnd": 3,
           "useFullDuration": true,
           "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_01.mp4",
-          "keepAudio": false,
-          "createdAt": 1788070449000
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1790770272884,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_1.mp4"
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
