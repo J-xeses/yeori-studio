@@ -461,7 +461,9 @@
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-09-18T11:58:33.090Z"
+      "updatedAt": "2026-09-30T11:00:14.153Z",
+      "g2": true,
+      "selectedImage": "cut_05_a.jpg"
     },
     "g5m": {},
     "g5mUpdatedAt": {
