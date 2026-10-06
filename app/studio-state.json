@@ -1,9 +1,9 @@
 {
-  "activeTab": "making",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 81864
+    "remainingChars": 90000
   },
   "activeEpisodeId": "ep_1787406807164",
   "openTabIds": [
@@ -2880,7 +2880,7 @@
             "ca": "CA_ST",
             "md": "MD_COM (유머)",
             "ac": "없음",
-            "lookId": "",
+            "lookId": "YEORI.BASE",
             "du": 3,
             "audio": {
               "bgm": "",
@@ -2913,7 +2913,14 @@
               }
             ]
           },
-          "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅"
+          "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅",
+          "overrides": {
+            "duration": {
+              "value": 3,
+              "at": "2026-10-06T23:31:41.904Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-2",
@@ -8659,7 +8666,7 @@
         "ca": "CA_ST",
         "md": "MD_COM (유머)",
         "ac": "없음",
-        "lookId": "",
+        "lookId": "YEORI.BASE",
         "du": 3,
         "audio": {
           "bgm": "",
@@ -8692,7 +8699,14 @@
           }
         ]
       },
-      "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅"
+      "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅",
+      "overrides": {
+        "duration": {
+          "value": 3,
+          "at": "2026-10-06T23:31:41.904Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     },
     {
       "id": "cut-2",
@@ -8982,7 +8996,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-09-30T13:28:29.196Z",
+  "savedAt": "2026-10-06T23:26:34.502Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
@@ -9027,23 +9041,10 @@
           "createdAt": 1790763464000
         }
       ],
-      "cut-5": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_05.mp4?t=1790774775382",
-          "name": "cut_05.mp4",
-          "duration": 4,
-          "trimStart": 0,
-          "trimEnd": 4,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_05.mp4",
-          "keepAudio": false,
-          "createdAt": 1790762766000
-        }
-      ],
+      "cut-5": [],
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/868d4e7c-526e-4afd-a3bd-31534361d785",
+          "url": "blob:http://localhost:5173/3f950300-f9b1-4fd1-b55f-2b9efbdaa3f3",
           "name": "cut_01_preview.mp4",
           "duration": 3,
           "trimStart": 0,
@@ -9051,9 +9052,9 @@
           "useFullDuration": true,
           "ratio": "9:16",
           "staging": false,
-          "keepAudio": true,
+          "keepAudio": false,
           "createdAt": 1790773820418,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_new1790774522097.mp4"
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_new1791329243325.mp4"
         }
       ]
     },
