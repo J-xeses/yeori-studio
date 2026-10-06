@@ -461,8 +461,26 @@ export default function MakingTab() {
   const [seqSelected, setSeqSelected] = useState([]) // 이 컷에 쓸 파일명, 고른 순서대로
   const [seqEffect, setSeqEffect] = useState('auto')
   const [seqFit, setSeqFit] = useState('cover') // cover=꽉채우기(크롭) · contain=전체보이기(레터박스, 스크린샷용)
+  const [seqAudioList, setSeqAudioList] = useState([]) // 03_audio/ 파일 목록
+  const [seqAudio, setSeqAudio] = useState('') // 나레이션으로 합칠 파일명(선택), ''=없음
   const [seqBusy, setSeqBusy] = useState(false)
   const [seqResult, setSeqResult] = useState(null)
+
+  // 캡처 자체는 헤드리스 화면 녹화라 무음 — cut_NN_nr.mp3(나레이션) 컨벤션이 있으면
+  // 자동으로 골라주고, 아니면 목록에서 직접 고르게 한다(2026-09-30, 컷5 재작업 중 발견:
+  // 켄번즈 줌만 되고 나레이션이 안 붙어 있었음).
+  const fetchSeqAudio = async (cutNo) => {
+    if (!episode?.number) return
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/scan-audio?ep=${episode.number}`)
+      const data = await res.json()
+      const files = data.files || []
+      setSeqAudioList(files)
+      const padded = String(cutNo).padStart(2, '0')
+      const guess = files.find(f => f === `cut_${padded}_nr.mp3`) || ''
+      setSeqAudio(guess)
+    } catch { /* noop */ }
+  }
 
   const fetchSeqImages = async () => {
     if (!episode?.number) return
@@ -489,7 +507,8 @@ export default function MakingTab() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          epNum: episode.number, cutNo: cut.no, images: seqSelected, duration, effect: seqEffect, fit: seqFit, preview,
+          epNum: episode.number, cutNo: cut.no, images: seqSelected, duration, effect: seqEffect, fit: seqFit,
+          audioFile: seqAudio || undefined, preview,
         }),
       })
       const data = await res.json()
@@ -511,6 +530,7 @@ export default function MakingTab() {
     setSeqSelected([])
     setSeqResult(null)
     fetchSeqImages()
+    fetchSeqAudio(cut.no)
   }
 
   // [제작 실행] — 편집기의 현재 HTML을 그대로 캡처한다(/api/graphic-capture).
@@ -1877,6 +1897,13 @@ export default function MakingTab() {
               <option value="contain">전체 보이기(레터박스) — 스크린샷/목업용</option>
             </select>
           </label>
+          <label className={s.durationField}>
+            나레이션
+            <select value={seqAudio} onChange={e => setSeqAudio(e.target.value)}>
+              <option value="">없음(무음)</option>
+              {seqAudioList.map(f => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </label>
           <button className={s.previewBtn} disabled={seqBusy || !seqSelected.length}
             onClick={() => runImageSequence(cut, true)}>
             {seqBusy ? '⏳ 렌더 중…' : `미리보기 생성 (${seqSelected.length}장)`}
@@ -1893,6 +1920,7 @@ export default function MakingTab() {
           ) : (
             <div className={s.resultOk}>
               {seqResult.preview ? '✅ 미리보기 생성됨 (실제 컷 파일은 아직 안 바뀜 — 확인 후 확정하세요)' : '✅ 확정 저장됨 — 실제 cut 파일이 교체되었습니다'}
+              {seqResult.audioApplied ? ' · 🔊 나레이션 포함' : ' · 🔇 무음'}
               <br />
               <video className={s.makingVideo} controls
                 src={`${epMediaUrl(episode, 'video')}${seqResult.preview ? '/_manual_work' : ''}/cut_${String(cut.no).padStart(2, '0')}${seqResult.preview ? '_preview' : ''}.mp4?t=${seqResult._ts}`} />

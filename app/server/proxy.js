@@ -4590,8 +4590,39 @@ app.post('/api/graphic-capture', async (req, res) => {
 // buildImageSequenceHtml + 위 runGraphicCapture(motion:'self')를 그대로 재사용.
 // preview:true(기본)면 05_video/_manual_work/에만 쓰고 실제 cut_NN.mp4는 안 건드린다 —
 // 메이킹 탭에서 여러 조합을 테스트→리뷰하다가 마음에 든 것만 preview:false로 확정.
+// 이미지 시퀀스 캡처(무음) 뒤에 선택적으로 나레이션 mp3를 입혀준다. 캡처 자체는
+// 헤드리스 브라우저 화면 녹화라 오디오가 없다 — 컷1/5류 타이틀카드는 나레이션이
+// 필요한 경우가 많아서(2026-09-30, IG_R02 컷5 재작업 중 발견) 바로 이어붙일 수 있게 함.
+function muxAudioIntoVideo(videoPath, audioPath) {
+  return new Promise((resolve, reject) => {
+    const tmp = videoPath.replace(/\.mp4$/i, `_a${Date.now()}.mp4`)
+    const proc = spawn('ffmpeg', [
+      '-y', '-i', videoPath, '-i', audioPath,
+      '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-shortest',
+      tmp,
+    ], { windowsHide: true })
+    let err = ''
+    proc.stderr.on('data', d => { err += d })
+    proc.on('close', code => {
+      if (code !== 0) return reject(new Error(`오디오 합성 실패: ${err.slice(-500)}`))
+      fs.renameSync(tmp, videoPath)
+      resolve()
+    })
+    proc.on('error', reject)
+  })
+}
+
+app.get('/api/scan-audio', (req, res) => {
+  const { ep } = req.query
+  if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
+  const dir = mp.audioDir(ep)
+  if (!fs.existsSync(dir)) return res.json({ files: [] })
+  const files = fs.readdirSync(dir).filter(f => /\.(mp3|wav|m4a|aac)$/i.test(f)).sort()
+  res.json({ files })
+})
+
 app.post('/api/image-sequence-cut', async (req, res) => {
-  const { epNum, cutNo, images, duration, effect, fit, preview = true } = req.body || {}
+  const { epNum, cutNo, images, duration, effect, fit, audioFile, preview = true } = req.body || {}
   if (!epNum || cutNo == null || !Array.isArray(images) || !images.length) {
     return res.status(400).json({ error: 'epNum, cutNo, images(배열, 파일명) 필요' })
   }
@@ -4617,7 +4648,16 @@ app.post('/api/image-sequence-cut', async (req, res) => {
       html, cutNo, epNum, duration: dur, motion: 'self',
       outputPath, skipMotionRecord: !!preview,
     })
-    res.json({ success: true, preview: !!preview, ...result, previewUrl: mp.toMediaUrl(result.videoPath) })
+
+    let audioApplied = false
+    if (audioFile) {
+      const audioAbs = path.join(mp.audioDir(epNum), path.basename(String(audioFile)))
+      if (!fs.existsSync(audioAbs)) { const e = new Error(`오디오 없음: ${audioFile}`); e.statusCode = 404; throw e }
+      await muxAudioIntoVideo(result.videoPath, audioAbs)
+      audioApplied = true
+    }
+
+    res.json({ success: true, preview: !!preview, audioApplied, ...result, previewUrl: mp.toMediaUrl(result.videoPath) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
