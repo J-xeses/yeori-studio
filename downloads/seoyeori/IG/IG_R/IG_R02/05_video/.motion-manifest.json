@@ -5,7 +5,10 @@
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-10-07T05:29:58.092Z"
+    "producedAt": "2026-10-07T05:29:58.092Z",
+    "subtitle": true,
+    "subtitleEffect": "slam",
+    "subtitleAt": "2026-10-07T05:54:14.477Z"
   },
   "2": {
     "method": "graphic",
@@ -13,7 +16,10 @@
     "motion": "none",
     "baked": true,
     "duration": 4,
-    "producedAt": "2026-10-07T05:35:48.490Z"
+    "producedAt": "2026-10-07T05:35:48.490Z",
+    "subtitle": true,
+    "subtitleEffect": "typer",
+    "subtitleAt": "2026-10-07T05:38:29.414Z"
   },
   "3": {
     "method": "graphic",
@@ -21,7 +27,10 @@
     "motion": "none",
     "baked": true,
     "duration": 4,
-    "producedAt": "2026-10-07T01:59:06.831Z"
+    "producedAt": "2026-10-07T05:37:06.996Z",
+    "subtitle": true,
+    "subtitleEffect": "typer",
+    "subtitleAt": "2026-10-07T05:39:25.097Z"
   },
   "4": {
     "method": "s2c-video",
@@ -31,6 +40,17 @@
     "srcPath": "C:/yeori-studio/downloads/video/ep2/cut_04.mp4",
     "producedAt": "2026-10-07T02:00:10.569Z",
     "overlay": true,
-    "overlayAt": "2026-10-07T02:08:36.966Z"
+    "overlayAt": "2026-10-07T05:41:06.887Z",
+    "subtitle": true,
+    "subtitleEffect": "slam",
+    "subtitleAt": "2026-10-07T05:53:01.047Z"
+  },
+  "5": {
+    "method": "imgseq",
+    "selfText": false,
+    "motion": "self",
+    "baked": true,
+    "duration": 4,
+    "producedAt": "2026-10-07T05:49:32.021Z"
   }
 }

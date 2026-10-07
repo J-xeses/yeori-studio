@@ -1,9 +1,9 @@
 {
-  "activeTab": "making",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 90000
+    "remainingChars": 89974
   },
   "activeEpisodeId": "ep_1787406807164",
   "openTabIds": [
@@ -2908,7 +2908,7 @@
             "entries": [
               {
                 "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
-                "start": 2,
+                "start": 1,
                 "end": 4
               }
             ]
@@ -2980,6 +2980,22 @@
               "at": "2026-10-07T05:35:48.493Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
+          },
+          "subtitleCfgSaved": {
+            "effect": "typer",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "bottom",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "\"안녕하세요, 혹시 협찬 가능하신가요?",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
           }
         },
         {
@@ -3023,7 +3039,31 @@
               "md": "유머 · 공감"
             }
           },
-          "subtitle": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\""
+          "subtitle": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\"",
+          "imageSeq": null,
+          "overrides": {
+            "duration": {
+              "value": 4,
+              "at": "2026-10-07T05:37:06.999Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          },
+          "subtitleCfgSaved": {
+            "effect": "typer",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "bottom",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요?",
+                "start": 0.3,
+                "end": 3
+              }
+            ]
+          }
         },
         {
           "id": "cut-4",
@@ -3074,7 +3114,33 @@
               "reason": "스튜디오 화면에서 직접 수정"
             }
           },
-          "videoMode": "veo"
+          "videoMode": "veo",
+          "bubbleScenesSaved": [
+            {
+              "text": "어;;;  이, 이게\n아닌데... ;;",
+              "position": "top_left",
+              "bubble": "cloud",
+              "color": "white",
+              "start": 0.3,
+              "end": 3.5
+            }
+          ],
+          "subtitleCfgSaved": {
+            "effect": "slam",
+            "style": {
+              "font_size": 72,
+              "color": "#FFFFFF",
+              "position": "bottom",
+              "outline": true
+            },
+            "entries": [
+              {
+                "text": "사실 저... AI 에요..~~",
+                "start": 4,
+                "end": 7.5
+              }
+            ]
+          }
         },
         {
           "id": "cut-5",
@@ -3117,7 +3183,22 @@
               "md": "따뜻함 · 기대감"
             }
           },
-          "subtitle": "다음화에서 제가 어떻게 만들어졌는지 공개해요 👀"
+          "subtitle": "다음화에서 제가 어떻게 만들어졌는지 공개해요 👀",
+          "imageSeq": {
+            "images": [
+              "cut_05_a.jpg"
+            ],
+            "effect": "kenburns",
+            "fit": "cover",
+            "audio": "cut_05_nr.mp3"
+          },
+          "overrides": {
+            "duration": {
+              "value": 4,
+              "at": "2026-10-07T05:49:32.206Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         }
       ],
       "tabState": {
@@ -8719,7 +8800,7 @@
         "entries": [
           {
             "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
-            "start": 2,
+            "start": 1,
             "end": 4
           }
         ]
@@ -8791,6 +8872,22 @@
           "at": "2026-10-07T05:35:48.493Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
+      },
+      "subtitleCfgSaved": {
+        "effect": "typer",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "bottom",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "\"안녕하세요, 혹시 협찬 가능하신가요?",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
       }
     },
     {
@@ -8834,7 +8931,31 @@
           "md": "유머 · 공감"
         }
       },
-      "subtitle": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\""
+      "subtitle": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\"",
+      "imageSeq": null,
+      "overrides": {
+        "duration": {
+          "value": 4,
+          "at": "2026-10-07T05:37:06.999Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      },
+      "subtitleCfgSaved": {
+        "effect": "typer",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "bottom",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요?",
+            "start": 0.3,
+            "end": 3
+          }
+        ]
+      }
     },
     {
       "id": "cut-4",
@@ -8885,7 +9006,33 @@
           "reason": "스튜디오 화면에서 직접 수정"
         }
       },
-      "videoMode": "veo"
+      "videoMode": "veo",
+      "bubbleScenesSaved": [
+        {
+          "text": "어;;;  이, 이게\n아닌데... ;;",
+          "position": "top_left",
+          "bubble": "cloud",
+          "color": "white",
+          "start": 0.3,
+          "end": 3.5
+        }
+      ],
+      "subtitleCfgSaved": {
+        "effect": "slam",
+        "style": {
+          "font_size": 72,
+          "color": "#FFFFFF",
+          "position": "bottom",
+          "outline": true
+        },
+        "entries": [
+          {
+            "text": "사실 저... AI 에요..~~",
+            "start": 4,
+            "end": 7.5
+          }
+        ]
+      }
     },
     {
       "id": "cut-5",
@@ -8928,7 +9075,22 @@
           "md": "따뜻함 · 기대감"
         }
       },
-      "subtitle": "다음화에서 제가 어떻게 만들어졌는지 공개해요 👀"
+      "subtitle": "다음화에서 제가 어떻게 만들어졌는지 공개해요 👀",
+      "imageSeq": {
+        "images": [
+          "cut_05_a.jpg"
+        ],
+        "effect": "kenburns",
+        "fit": "cover",
+        "audio": "cut_05_nr.mp3"
+      },
+      "overrides": {
+        "duration": {
+          "value": 4,
+          "at": "2026-10-07T05:49:32.206Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     }
   ],
   "scriptRaw": "",
@@ -9046,7 +9208,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-07T05:22:48.864Z",
+  "savedAt": "2026-10-07T06:09:32.437Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
@@ -9129,7 +9291,10 @@
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
+    "g3Confirmed": {
+      "cut-1": true,
+      "cut-5": true
+    },
     "focusCutId": null,
     "voiceTabs": {
       "cut-4": [
@@ -9140,6 +9305,13 @@
         }
       ],
       "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-5": [
         {
           "id": "v1",
           "label": "목소리 1",
@@ -9177,7 +9349,54 @@
             "similarity": 75
           }
         }
+      ],
+      "cut-1__v1": [
+        {
+          "id": "track_1791353450971_whds",
+          "type": "narration",
+          "text": "AI한테 DM 보낸 사람들 반응 모음,",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/03_audio/tts-previews/cut_01_track_1791353450971_whds.mp3?t=1791354761577",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-5__v1": [
+        {
+          "id": "track_1791354815748_x9ae",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1791354844299_ye6d",
+          "type": "narration",
+          "text": "다음화에서 제가 어떻게 만들어졌는지 공개해요!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/03_audio/tts-previews/cut_05_track_1791354844299_ye6d.mp3?t=1791354863742",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
       ]
+    },
+    "mergedUrls": {
+      "cut-1__v1": "blob:http://localhost:5173/cfe2d50b-2d38-488b-b0f4-fd76006b382f",
+      "cut-5__v1": "blob:http://localhost:5173/27954ce8-73a3-4aff-bf88-dd72e5861141"
     }
   },
   "voiceInsertState": {
