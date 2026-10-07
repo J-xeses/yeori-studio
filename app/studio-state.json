@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -2908,7 +2908,7 @@
             "entries": [
               {
                 "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
-                "start": 0.3,
+                "start": 2,
                 "end": 4
               }
             ]
@@ -8702,7 +8702,7 @@
         "entries": [
           {
             "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
-            "start": 0.3,
+            "start": 2,
             "end": 4
           }
         ]
@@ -9012,7 +9012,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-07T03:05:32.833Z",
+  "savedAt": "2026-10-07T03:36:32.894Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
