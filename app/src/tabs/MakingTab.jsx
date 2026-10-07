@@ -282,6 +282,8 @@ export default function MakingTab() {
   // 컷별 cut_NN.mp4 제작완료 여부(파일 존재 기반, 별도 플래그 저장 없음) — 2초마다
   // 다시 불러와서 캡처/녹화 직후에도 뱃지가 자동으로 갱신되게 한다.
   const [videoStatus, setVideoStatus] = useState({})
+  // 컷별 "실제로 쓰일 파일" — { [cutNo]: { file, derived: 'subtitle'|'overlay'|null, mtimeMs } }
+  const [finalInfo, setFinalInfo] = useState({})
   useEffect(() => {
     if (!episode?.number) return
     const load = () => {
@@ -289,6 +291,8 @@ export default function MakingTab() {
         .then(r => r.json())
         .then(data => {
           const next = data.videoByCut || {}
+          const fin = data.finalByCut || {}
+          setFinalInfo(prev => (JSON.stringify(prev) === JSON.stringify(fin) ? prev : fin))
           // 값이 실제로 바뀔 때만 setState — 2초 폴링이 불필요한 리렌더/미리보기 깜빡임을 만들지 않게
           setVideoStatus(prev => {
             const pk = Object.keys(prev), nk = Object.keys(next)
@@ -1351,7 +1355,9 @@ export default function MakingTab() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           epNum: episode.number, cutNo: cut.no,
-          effect: cfg.effect, style: cfg.style, entries, preview,
+          effect: cfg.effect, style: cfg.style, preview,
+          // 효과 세부값(페이드 시간·타이핑 속도)은 엔트리마다 params 로 실어 보낸다
+          entries: entries.map(e => ({ ...e, params: { ...(cfg.params || {}), ...(e.params || {}) } })),
         }),
       })
       const data = await res.json()
@@ -2476,8 +2482,8 @@ export default function MakingTab() {
     }
     const outName = r?.outputPath?.split(/[/\\]/).pop()
     return (
-      <div className={s.subPanel}>
-        <div className={s.settingLabel}>🎬 모션 자막 — cut_{String(cut.no).padStart(2, '0')}.mp4</div>
+      <div className={s.subPanel} id={`mk-${cut.no}-subtitle`}>
+        <div className={s.settingLabel}>③ 🎬 자막 효과(모션 자막) — cut_{String(cut.no).padStart(2, '0')}.mp4 위에 얹기</div>
         {!ready && (
           <div className={s.emptyHint}>이 컷의 영상을 먼저 제작하면(cut_{String(cut.no).padStart(2, '0')}.mp4) 자막을 얹을 수 있습니다.</div>
         )}
@@ -2501,8 +2507,30 @@ export default function MakingTab() {
           </div>
         ))}
 
-        <div className={s.settingLabel}>자막 목록</div>
-        <div className={s.emptyHint}>대본의 자막/대사/나레이션에서 자동으로 초안이 채워집니다 — 그대로 미리보기하거나 실제 문구로 수정하세요.</div>
+        {cfg.effect === 'fade' && (
+          <div className={s.editorActions}>
+            <label className={s.durationField}>페이드 인(초)
+              <input type="number" step="0.1" min="0" max="5" value={cfg.params?.in ?? 0.3}
+                onChange={e => patchSubCfg(cut.no, { params: { ...(cfg.params || {}), in: Math.max(0, parseFloat(e.target.value) || 0) } })} />
+            </label>
+            <label className={s.durationField}>페이드 아웃(초)
+              <input type="number" step="0.1" min="0" max="5" value={cfg.params?.out ?? 0.3}
+                onChange={e => patchSubCfg(cut.no, { params: { ...(cfg.params || {}), out: Math.max(0, parseFloat(e.target.value) || 0) } })} />
+            </label>
+          </div>
+        )}
+        {cfg.effect === 'typer' && (
+          <div className={s.editorActions}>
+            <label className={s.durationField}>글자당 간격(초)
+              <input type="number" step="0.01" min="0.01" max="1" value={cfg.params?.char_delay ?? 0.05}
+                onChange={e => patchSubCfg(cut.no, { params: { ...(cfg.params || {}), char_delay: Math.max(0.01, parseFloat(e.target.value) || 0.05) } })} />
+            </label>
+            <span className={s.emptyHint} style={{ margin: 0 }}>작을수록 빨리 타이핑됩니다(0.05 = 1초에 20자)</span>
+          </div>
+        )}
+
+        <div className={s.settingLabel}>자막 목록 — 문구 · 시작(초) ~ 끝(초)</div>
+        <div className={s.emptyHint}>대본의 자막/대사/나레이션에서 자동으로 초안이 채워집니다 — 그대로 미리보기하거나 실제 문구로 수정하세요. 시작·끝은 이 컷 안에서의 시각입니다.</div>
         {cfg.entries.map((e, i) => (
           <div key={i} className={s.subEntryRow}>
             <input className={s.subTextInput} value={e.text} placeholder="자막 문구"
@@ -2547,7 +2575,7 @@ export default function MakingTab() {
         <div className={s.editorActions}>
           <button className={s.previewBtn} disabled={!ready || !!busy}
             onClick={() => runSubtitle(cut, { preview: true })}>
-            {busy === 'preview' ? '⏳ 미리보기…' : '▶ 미리보기 (앞 2.5초)'}
+            {busy === 'preview' ? '⏳ 미리보기…' : '▶ 미리보기 (컷 전체)'}
           </button>
           <button className={s.captureBtn} disabled={!ready || !!busy}
             onClick={() => runSubtitle(cut)}>
@@ -2561,7 +2589,8 @@ export default function MakingTab() {
           ) : (
             <div className={s.resultOk}>
               {r.preview ? '👀 미리보기' : '✅ 자막 합성됨'} — {outName} ({r.sizeKB}KB){r.effect ? ` · ${r.effect}` : ''}
-              {!r.preview && <><br />조립 시 이 컷은 <b>{outName}</b>로 포함됩니다.</>}
+              {!r.preview && <><br />이 컷의 최종 결과가 <b>{outName}</b>로 바뀌었습니다 — 릴스 최종본·영상 만들기 탭에 이대로 들어갑니다.</>}
+              {r.preview && <><br />미리보기만 만든 상태입니다. <b>✅ 합성 시작</b>을 눌러야 컷에 반영됩니다.</>}
               <br />
               <video className={s.makingVideo} controls
                 src={`${epMediaUrl(episode, 'video')}/${outName}?t=${r._ts || 0}`} />
@@ -2659,6 +2688,161 @@ export default function MakingTab() {
     )
   }
 
+  // ── 이 컷의 최종 결과 — 릴스 최종본·영상 만들기 탭이 실제로 쓰는 파일을 그대로 보여준다 ──
+  const [clearBusy, setClearBusy] = useState({})
+  const clearDerived = async (cut) => {
+    if (!episode?.number) return
+    setClearBusy(p => ({ ...p, [cut.no]: true }))
+    try {
+      await fetch(`${YEORI_SERVER}/api/cut-derived/clear`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum: episode.number, cutNo: cut.no }),
+      })
+    } catch { /* 2초 폴링이 상태를 다시 읽는다 */ } finally {
+      setClearBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+  const jumpTo = (cutNo, key) => {
+    const el = document.getElementById(`mk-${cutNo}-${key}`)
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const renderFinalResultPanel = (cut) => {
+    const fi = finalInfo[cut.no]
+    const pad = String(cut.no).padStart(2, '0')
+    const manual = MANUAL_TYPES.includes(cut.cutType || 'YEORI')
+    return (
+      <div className={s.subPanel} id={`mk-${cut.no}-final`}>
+        <div className={s.editorActions} style={{ flexWrap: 'wrap' }}>
+          <span className={s.settingLabel} style={{ margin: 0 }}>바로가기</span>
+          {manual && <button className={s.previewBtn} onClick={() => jumpTo(cut.no, 'make')}>① 화면 만들기</button>}
+          <button className={s.previewBtn} onClick={() => jumpTo(cut.no, 'bubble')}>② 말풍선·손글씨</button>
+          {cut.cutType !== 'GRAPHIC' && <button className={s.previewBtn} onClick={() => jumpTo(cut.no, 'subtitle')}>③ 자막 효과(타이핑·페이드 등)</button>}
+        </div>
+        <div className={s.settingLabel}>✅ 이 컷의 최종 결과 — 릴스 최종본·영상 만들기 탭에 들어가는 파일</div>
+        {!fi ? (
+          <div className={s.emptyHint}>아직 cut_{pad}.mp4 가 없습니다.{manual ? ' 아래 ① 화면 만들기부터 진행하세요.' : ' 스튜디오·영상 만들기 탭에서 영상을 먼저 만드세요.'}</div>
+        ) : (
+          <>
+            <div className={s.emptyHint}>
+              <b>{fi.file}</b>
+              {fi.derived === 'subtitle' && ' — 자막 효과를 얹은 결과입니다(이 컷은 최종본에서 자막을 따로 굽지 않음).'}
+              {fi.derived === 'overlay' && ' — 말풍선·손글씨를 얹은 결과입니다(이 컷은 최종본에서 자막을 따로 굽지 않음).'}
+              {!fi.derived && ' — 원본 화면입니다. 자막은 릴스 최종본 단계에서 대본 자막으로 자동으로 들어갑니다.'}
+              {' '}수정 {new Date(fi.mtimeMs).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <video key={`${fi.file}-${fi.mtimeMs}`} className={s.makingVideo} controls preload="metadata"
+              src={`${epMediaUrl(episode, 'video')}/${fi.file}?t=${fi.mtimeMs}`} />
+            {fi.derived && (
+              <div className={s.editorActions}>
+                <button className={s.previewBtn} disabled={!!clearBusy[cut.no]} onClick={() => clearDerived(cut)}>
+                  {clearBusy[cut.no] ? '⏳' : '얹은 자막·말풍선 떼고 원본으로'}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    )
+  }
+
+  // ── 컷별 말풍선·손글씨 — 씬 여러 개를 시간대별로 얹는다(05_video/cut_NN_overlay.mp4) ──
+  const newBubble = (cut) => ({ text: '', position: 'top_center', bubble: 'cloud', color: 'white', start: 0.2, end: Math.min(3, cutDuration(cut)) })
+  const [bubbleScenes, setBubbleScenes] = useState({})   // { [cutNo]: scene[] }
+  const [bubbleBusy, setBubbleBusy] = useState({})
+  const [bubbleResult, setBubbleResult] = useState({})
+  const getBubbles = (cut) => bubbleScenes[cut.no] || cut.bubbleScenesSaved || [newBubble(cut)]
+  const setBubbles = (cut, list) => {
+    setBubbleScenes(p => ({ ...p, [cut.no]: list }))
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { bubbleScenesSaved: list } })
+  }
+  const runBubbles = async (cut) => {
+    const list = getBubbles(cut).filter(b => String(b.text || '').trim())
+    if (!list.length || !episode?.number) return
+    setBubbleBusy(p => ({ ...p, [cut.no]: true }))
+    setBubbleResult(p => ({ ...p, [cut.no]: null }))
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number, cutNo: cut.no, signature: false,
+          scenes: list.map(b => ({
+            text: b.text, position: b.position, bubble: b.bubble, color: b.color,
+            deco: [], arrow: false, arrow_direction: 'down', underline: false,
+            time: `${Number(b.start) || 0}s~${Number(b.end) || cutDuration(cut)}s`,
+          })),
+        }),
+      })
+      const data = await res.json()
+      setBubbleResult(p => ({ ...p, [cut.no]: res.ok ? { ...data, _ts: Date.now() } : { error: data.error || '합성 실패' } }))
+    } catch (e) {
+      setBubbleResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
+    } finally {
+      setBubbleBusy(p => ({ ...p, [cut.no]: false }))
+    }
+  }
+  const renderBubblePanel = (cut) => {
+    const list = getBubbles(cut)
+    const patch = (i, p) => setBubbles(cut, list.map((b, k) => (k === i ? { ...b, ...p } : b)))
+    const ready = !!videoStatus[cut.no]
+    const r = bubbleResult[cut.no]
+    return (
+      <div className={s.subPanel} id={`mk-${cut.no}-bubble`}>
+        <div className={s.settingLabel}>② 💬 말풍선·손글씨 — cut_{String(cut.no).padStart(2, '0')}.mp4 위에 얹기</div>
+        <div className={s.emptyHint}>
+          시간대별로 여러 개를 넣을 수 있습니다(예: 앞 4초 구름 말풍선 속마음 → 뒤 4초 말풍선 없는 자막). 줄바꿈은 Enter.
+          자막 효과(③)도 같이 쓰려면 <b>말풍선을 먼저 적용한 뒤</b> 자막 효과를 합성하세요.
+        </div>
+        {!ready && <div className={s.emptyHint}>이 컷의 영상(cut_{String(cut.no).padStart(2, '0')}.mp4)이 먼저 있어야 합니다.</div>}
+        {list.map((b, i) => (
+          <div key={i} className={s.overlayScene}>
+            <div className={s.overlaySceneHead}>
+              {i + 1}번
+              {list.length > 1 && <button className={s.linkBtn} onClick={() => setBubbles(cut, list.filter((_, k) => k !== i))}>제거</button>}
+            </div>
+            <textarea className={s.urlInput} style={{ width: '100%', minHeight: 52 }} value={b.text} placeholder="문구 (줄바꿈 가능)"
+              onChange={e => patch(i, { text: e.target.value })} />
+            <div className={s.styleRow}>
+              <label className={s.styleField}>모양
+                <select value={b.bubble} onChange={e => patch(i, { bubble: e.target.value })}>
+                  {OVERLAY_BUBBLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </label>
+              <label className={s.styleField}>위치
+                <select value={b.position} onChange={e => patch(i, { position: e.target.value })}>
+                  {[['top_center', '위 가운데'], ['top_left', '위 왼쪽'], ['top_right', '위 오른쪽'], ['center', '정가운데'], ['bottom_center', '아래 가운데'], ['bottom_left', '아래 왼쪽'], ['bottom_right', '아래 오른쪽']].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </label>
+              <label className={s.styleField}>색
+                <select value={b.color} onChange={e => patch(i, { color: e.target.value })}>
+                  {OVERLAY_COLORS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                </select>
+              </label>
+              <label className={s.styleField}>시작(초)
+                <input type="number" step="0.1" min="0" value={b.start} onChange={e => patch(i, { start: parseFloat(e.target.value) || 0 })} />
+              </label>
+              <label className={s.styleField}>끝(초)
+                <input type="number" step="0.1" min="0" value={b.end} onChange={e => patch(i, { end: parseFloat(e.target.value) || 0 })} />
+              </label>
+            </div>
+          </div>
+        ))}
+        <div className={s.editorActions}>
+          <button className={s.previewBtn} onClick={() => {
+            const last = list[list.length - 1]
+            setBubbles(cut, [...list, { ...newBubble(cut), bubble: 'none', position: 'bottom_center', start: +(Number(last?.end) || 0).toFixed(1), end: cutDuration(cut) }])
+          }}>+ 추가</button>
+          <button className={s.captureBtn} disabled={!ready || !!bubbleBusy[cut.no] || !list.some(b => String(b.text || '').trim())}
+            onClick={() => runBubbles(cut)}>
+            {bubbleBusy[cut.no] ? '⏳ 합성 중…' : '💬 말풍선 적용'}
+          </button>
+        </div>
+        {r && (r.error
+          ? <div className={s.resultError}>❌ {r.error}</div>
+          : <div className={s.resultOk}>✅ 적용됨 — 위 “이 컷의 최종 결과”가 {r.outputPath?.split(/[/\\]/).pop()} 로 바뀝니다.</div>)}
+      </div>
+    )
+  }
+
   const renderPanel = (cut) => {
     let panel = null
     if (cut.cutType === 'GRAPHIC') panel = renderGraphicPanel(cut)
@@ -2666,9 +2850,12 @@ export default function MakingTab() {
     else if (cut.cutType === 'CAPCUT') panel = renderCapcutPanel(cut)
     return (
       <>
+        {renderFinalResultPanel(cut)}
         {MANUAL_TYPES.includes(cut.cutType) && renderReviewPanel(cut)}
+        <div id={`mk-${cut.no}-make`} />
         {panel}
         {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
+        {renderBubblePanel(cut)}
         {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
         {/* 모션 자막 패널은 원래 BROLL 전용이었는데, GRAPHIC(자체 텍스트 카드라 중복) 빼고는
             모든 컷 타입이 다 "영상 위에 자막 얹기"가 필요할 수 있다(2026-09-14, 사용자 지적:
@@ -3271,7 +3458,7 @@ export default function MakingTab() {
                         <div key={cut.id} className={`${s.cutRow} ${expanded ? s.cutRowActive : ''}`}>
                           <button
                             className={s.cutRowHead}
-                            onClick={() => manual ? toggleCut(cut) : setExpandedCutNo(expanded ? null : cut.no)}>
+                            onClick={() => manual ? toggleCut(cut) : (setExpandedCutNo(expanded ? null : cut.no), !expanded && setDuration(cutDuration(cut)))}>
                             <span className={s.cutNo}>#{cut.no}</span>
                             <span className={`${s.typeBadge} ${s['type' + type] || ''}`}>{type}</span>
                             <span className={s.cutSummary}>
@@ -3282,7 +3469,9 @@ export default function MakingTab() {
                             {manual && rvStatus !== 'rejected' && done && g4 && <span className={s.doneBadge}>G4 승인 ✅</span>}
                             {manual && rvStatus !== 'rejected' && done && !g4 && <span className={s.doneBadge} style={{ background: '#0e7490' }}>제작됨 · 검토 대기</span>}
                             {manual && !done && <span className={s.doneBadge} style={{ background: '#3f3f46' }}>미제작</span>}
-                            {manual && <span className={s.chevron}>{expanded ? '▲' : '▼'}</span>}
+                            {finalInfo[cut.no]?.derived === 'subtitle' && <span className={s.doneBadge} style={{ background: '#6d28d9' }}>🎬 자막 효과</span>}
+                            {finalInfo[cut.no]?.derived === 'overlay' && <span className={s.doneBadge} style={{ background: '#6d28d9' }}>💬 말풍선</span>}
+                            <span className={s.chevron}>{expanded ? '▲' : '▼'}</span>
                           </button>
 
                           {expanded && manual && renderPanel(cut)}
@@ -3294,15 +3483,10 @@ export default function MakingTab() {
                                   ? '(파이프라인 자동처리 — G2~G5에서 이미지·음성·영상이 생성됩니다)'
                                   : '(파이프라인 자동처리 컷)'}
                               </div>
-                              {done && makingUrl && (
-                                <video
-                                  className={s.makingVideo}
-                                  src={`${epMediaUrl(episode, 'video')}/cut_${String(cut.no).padStart(2, '0')}.mp4`}
-                                  controls
-                                />
-                              )}
+                              <div className={s.emptyHint}>화면(영상) 자체는 스튜디오·영상 만들기 탭에서 만들고, 여기서는 그 위에 말풍선·자막 효과를 얹습니다.</div>
                             </div>
                           )}
+                          {expanded && !manual && renderPanel(cut)}
                         </div>
                       )
                     })}

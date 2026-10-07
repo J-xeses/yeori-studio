@@ -4637,6 +4637,29 @@ function muxAudioIntoVideo(videoPath, audioPath) {
   })
 }
 
+// POST /api/cut-derived/clear — 컷에 얹은 자막·말풍선본을 떼고 원본 cut_NN.mp4 로 되돌린다.
+// 지우지 않고 _manual_work/ 로 옮긴다(되돌릴 수 있게).
+app.post('/api/cut-derived/clear', (req, res) => {
+  const { epNum, cutNo } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const vdir = mp.videoDir(epNum)
+    const padded = String(cutNo).padStart(2, '0')
+    const keep = path.join(vdir, '_manual_work')
+    fs.mkdirSync(keep, { recursive: true })
+    const moved = []
+    for (const kind of ['subtitle', 'overlay']) {
+      const f = path.join(vdir, `cut_${padded}_${kind}.mp4`)
+      if (!fs.existsSync(f)) continue
+      fs.renameSync(f, path.join(keep, `cut_${padded}_${kind}_removed.mp4`))
+      moved.push(path.basename(f))
+    }
+    res.json({ success: true, moved })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 app.get('/api/scan-audio', (req, res) => {
   const { ep } = req.query
   if (!ep) return res.status(400).json({ error: 'ep 파라미터 필요' })
@@ -7052,7 +7075,17 @@ app.get('/api/episode-video-status', (req, res) => {
     const payload = buildStudioStatusPayload(epId)
     const videoByCut = {}
     payload.cuts.forEach(c => { videoByCut[c.no] = c.hasVideo })
-    res.json({ videoByCut })
+    // finalByCut: 릴스 최종본·조립이 실제로 쓸 파일(메이킹 탭 자막·말풍선본 포함) — 컷 카드의
+    // "이 컷의 최종 결과" 미리보기와 배지가 이걸 본다(탭마다 다른 파일을 보여주던 문제 방지).
+    const finalByCut = {}
+    const vdir = mp.videoDir(epNum)
+    payload.cuts.forEach(c => {
+      const pk = mp.pickCutSource(vdir, c.no)
+      if (!pk.path) return
+      const st = fs.statSync(pk.path)
+      finalByCut[c.no] = { file: path.basename(pk.path), derived: pk.derived, mtimeMs: Math.round(st.mtimeMs) }
+    })
+    res.json({ videoByCut, finalByCut })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -9864,8 +9897,10 @@ app.post('/api/subtitle/render', async (req, res) => {
     }
   }
 
-  const previewSec = preview ? 2.5 : 0
-  const outputPath = previewSec ? `${outStem}_preview.mp4` : `${outStem}.mp4`
+  // 미리보기도 컷 전체를 렌더한다. 예전엔 앞 2.5초만 잘라서, 자막 시작을 그 뒤로 잡으면
+  // 미리보기에 자막이 아예 안 나와 "시작시간 설정이 안 먹는다"로 보였다(2026-10-07 실측).
+  const previewSec = preview ? Math.max(0, parseFloat(req.body?.previewSec) || 0) : 0
+  const outputPath = preview ? `${outStem}_preview.mp4` : `${outStem}.mp4`
 
   // 출력 규격 = 입력 영상 실측 크기(자막은 항상 원본과 동일 비율로). 실패 시 에피소드
   // 화면비율 → 최후 세로 기본값. (예전엔 [1080,1920] 고정이라 16:9 컷이 레터박스됨)
@@ -9900,9 +9935,9 @@ app.post('/api/subtitle/render', async (req, res) => {
       return res.status(500).json({ error: `자막 합성 실패: ${(result.err || result.out || '').slice(-900)}` })
     }
     const stat = fs.statSync(outputPath)
-    if (!inputRel && !previewSec && cutNo != null) recordCutSubtitle(epNum, cutNo, effect)
+    if (!inputRel && !preview && cutNo != null) recordCutSubtitle(epNum, cutNo, effect)
     res.json({
-      success: true, preview: !!previewSec, effect,
+      success: true, preview: !!preview, effect,
       outputPath, url: mp.toMediaUrl(outputPath), sizeKB: Math.round(stat.size / 1024),
     })
   } catch (err) {
