@@ -3574,7 +3574,7 @@ export default function MakingTab() {
                           <td>{c.no}</td>
                           <td>{c.cutType}</td>
                           <td>{c.fit === 'contain' ? '레터박스' : '채움'}</td>
-                          <td>{!c.caption ? '—' : c.caption.segments.map((sg, i) => (
+                          <td>{!c.caption ? (c.captionSkipReason ? <span style={{ opacity: 0.75 }}>굽지 않음 — {c.captionSkipReason}</span> : '—') : c.caption.segments.map((sg, i) => (
                             <span key={i} style={{ color: sg.style === 'Punch' ? '#f04747' : 'inherit', marginRight: 6 }}>
                               {sg.burn || sg.raw}
                             </span>
@@ -3594,7 +3594,7 @@ export default function MakingTab() {
                               <button type="button" title="직접 지정 해제 — 대본 키워드로 자동 판단" onClick={() => setCutSfx(c.no, { sfxFile: '' })}>자동</button>
                             </div>
                           </td>
-                          <td>{c.hasFile ? '✓' : <span style={{ color: '#f04747' }}>없음</span>}</td>
+                          <td>{c.hasFile ? (c.sourceFile || '✓') : <span style={{ color: '#f04747' }}>없음</span>}</td>
                         </tr>
                       ))}
                     </tbody>

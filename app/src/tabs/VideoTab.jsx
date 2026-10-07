@@ -397,6 +397,8 @@ export default function VideoTab() {
   // 서버 파일은 직접 프레임 추출로 매번 정상 확인됨). 이 state가 있는 컷은 세그 목록과는
   // 별도로, 실제 05_video/cut_NN.mp4를 명확히 라벨링해 보여준다.
   const [finalPreviewTs, setFinalPreviewTs] = useState({})
+  // 메이킹 탭에서 만든 컷(텍스트카드·사진 시퀀스·목업·소스 컷)을 여기 "클립 합성"으로 덮어쓰려 할 때 한 번 더 확인
+  const [composeArmed, setComposeArmed] = useState(null)   // cut.id | null
   const [batchFfmpegStatus,   setBatchFfmpegStatus]   = useState('idle') // idle | running | done | error
   const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
   const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
@@ -534,6 +536,17 @@ export default function VideoTab() {
   // 릴스 자막 텍스트(줄바꿈 \n 포함) 수동 편집을 override 파일에 저장(2026-09-28) — studio-state.json
   // 로컬 subtitles 상태만으로는 최종본(reel-finalize) 렌더가 이 값을 전혀 못 읽는다(로컬 상태는 화면
   // 미리보기·SRT 내보내기 전용). subtitle 전체 문자열(" / "로 세그 구분, 세그 내부는 \n 그대로)로 저장.
+  // 컷별 자막 시작 지연(초) — 최종본(G5)이 이 컷 자막을 그 시각부터 띄운다. 예전엔 오버라이드 파일을
+  // 직접 고쳐야만 설정할 수 있었다(화면에 입력란 없음, 2026-10-07).
+  const saveCaptionStart = (cutNo, sec) => {
+    if (cutNo == null) return
+    const v = Math.max(0, Number(sec) || 0)
+    setReelOverrides(prev => ({ ...prev, [String(cutNo)]: { ...(prev[String(cutNo)] || {}), captionStartSec: v } }))
+    fetch('http://localhost:3001/api/reel-finalize/override', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum: state.episode?.number, cutNo, patch: { captionStartSec: v } }),
+    }).catch(() => {})
+  }
   const captionSaveTimer = useRef(null)
   const saveReelCaptionText = (cutNo, subtitleStr) => {
     if (cutNo == null) return
@@ -2546,8 +2559,16 @@ export default function VideoTab() {
                     className={s.composeBtn}
                     disabled={composeStatus[selCut.id] === 'running' || !clips.length}
                     title="여기 있는 클립들을 순서/트림대로 이어붙여 실제 cut_NN.mp4를 만듭니다"
-                    onClick={() => renderCutClips(selCut)}>
-                    {composeStatus[selCut.id] === 'running' ? '⏳ 합성 중…' : '🎬 클립 합성'}
+                    style={composeArmed === selCut.id ? { borderColor: '#b45309', color: '#f59e0b' } : undefined}
+                    onClick={() => {
+                      const madeBy = (vChk?.cuts || []).find(r => r.no === selCut.no)?.madeBy
+                      const fromMaking = /^(graphic|imgseq|s2c)/.test(String(madeBy || ''))
+                      if (fromMaking && composeArmed !== selCut.id) { setComposeArmed(selCut.id); return }
+                      setComposeArmed(null)
+                      renderCutClips(selCut)
+                    }}>
+                    {composeStatus[selCut.id] === 'running' ? '⏳ 합성 중…'
+                      : composeArmed === selCut.id ? '⚠ 메이킹 탭 결과를 덮어씀 — 한 번 더 누르면 실행' : '🎬 클립 합성'}
                   </button>
                   <button
                     className={s.ffmpegBtn}
@@ -2583,6 +2604,19 @@ export default function VideoTab() {
                       <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다
                         {finalRow?.finalDerived ? ` · 메이킹 탭 ${finalRow.finalDerived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본(${finalName}) — 릴스 최종본에 이대로 들어가고 자막은 따로 굽지 않습니다` : ''}</label>
                       <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6 }} />
+                      {isReel && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                          <label style={{ margin: 0 }}>이 컷 자막 시작(초)</label>
+                          <input type="number" step="0.1" min="0" style={{ width: 70 }} disabled={!!finalRow?.finalDerived}
+                            value={Number(selCut.captionStartSec) || 0}
+                            onChange={e => saveCaptionStart(selCut.no, e.target.value)} />
+                          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+                            {finalRow?.finalDerived
+                              ? '이 컷은 메이킹 탭에서 얹은 자막·말풍선을 그대로 쓰므로 여기 설정은 적용되지 않습니다 — 메이킹 탭에서 조정하세요.'
+                              : '릴스 최종본에서 이 컷 자막이 이 시각부터 뜹니다(이 미리보기 영상에는 자막이 없고, 위 화면 미리보기와 최종본에 반영).'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )
                 })()}

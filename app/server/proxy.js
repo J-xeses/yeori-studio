@@ -3529,10 +3529,17 @@ app.get('/api/reel-finalize/plan', async (req, res) => {
     if (!cuts.length) return res.status(400).json({ error: '컷/대본이 없습니다 (스크립트 업로드 또는 01_script 확인)' })
     const { decideCut } = await import('./lib/reelFinalize.js')
     const vdir = mp.videoDir(req.query.epNum)
+    // 실제 최종화(finalizeReel)와 같은 규칙으로 보여준다 — 메이킹 탭 자막·말풍선본을 쓰는 컷과
+    // 텍스트카드 컷은 자막 번인 생략. (미리보기는 "자막 굽는다"인데 실제는 안 굽는 불일치 방지)
+    const mm = readCutManifest(req.query.epNum)
     const plan = cuts.slice().sort((a, b) => a.no - b.no).map((c) => {
       const d = decideCut(c)
-      const f = path.join(vdir, `cut_${String(c.no).padStart(2, '0')}.mp4`)
-      return { ...d, hasFile: fs.existsSync(f), src: undefined }
+      const pk = mp.pickCutSource(vdir, c.no)
+      let captionSkipReason = null
+      if (pk.derived) captionSkipReason = pk.derived === 'subtitle' ? '메이킹 탭 모션 자막본 사용' : '메이킹 탭 손글씨·말풍선본 사용'
+      else if (mm[String(c.no)]?.selfText === true) captionSkipReason = '텍스트카드(화면 글자 포함)'
+      if (captionSkipReason) d.caption = null
+      return { ...d, hasFile: !!pk.path, sourceFile: pk.path ? path.basename(pk.path) : null, derived: pk.derived, captionSkipReason, src: undefined }
     })
     res.json({ code, epNum: Number(req.query.epNum), cuts: plan })
   } catch (err) {
@@ -7307,6 +7314,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치
         g2: !!g.g2, g4: !!g.g4,
         motionBaked: isMotionBaked(c),           // true면 캡컷 켄번스 적용 안 됨(메이킹 탭에서 이미 모션 내장)
+        madeBy: motionManifest[String(c.no)]?.method || null,   // graphic·imgseq·s2c-* = 메이킹 탭에서 만든 컷
         actualDurationSec,                        // 실제 렌더된 파일 길이(초) — hasVideo일 때만
         lengthMismatch: actualDurationSec != null && actualDurationSec < targetSec - 0.05,
         order: Number.isFinite(editMetaByCutNo[String(c.no)]?.order) ? editMetaByCutNo[String(c.no)].order : c.no,
@@ -7621,6 +7629,7 @@ app.post('/api/render-cut-clips', async (req, res) => {
   const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
   const outPath = path.join(videoDir, `cut_${padded}.mp4`)
+  backupCutBeforeOverwrite(videoDir, padded)   // 메이킹 탭 결과를 덮어쓰는 경우 대비 — 직전본 1벌 보관
   const { w: CW, h: CH } = episodeCutDims(epNum)
 
   // 지금 만들려는 출력 파일 자체를 입력으로 참조하는 클립("프록시"로 이미 있는 cut_NN.mp4를

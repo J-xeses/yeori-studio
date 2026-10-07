@@ -550,9 +550,20 @@ export async function finalizeReel(p) {
   const listLines = []
   for (const d of decisions) {
     const out = path.join(tmp, `n_${String(d.no).padStart(2, '0')}.mp4`)
-    await ff(['-i', d.src, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo',
-      '-vf', normVf(d.fit), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
-      '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', out])
+    // 컷에 자체 오디오가 있으면 그걸 명시적으로 쓴다(48k 스테레오로 맞추고 영상 길이까지 무음 패딩).
+    // 예전엔 -map 없이 무음 소스(anullsrc 스테레오)를 같이 넣어서, 컷 오디오가 모노면 ffmpeg 가
+    // 채널 수가 많은 무음 쪽을 골라 컷 소리가 통째로 사라졌다(2026-10-07 실측: 모노 나레이션 -91dB).
+    const hasOwnAudio = (await ffprobeStreamDuration(d.src, 'audio')) > 0
+    if (hasOwnAudio) {
+      await ff(['-i', d.src, '-map', '0:v:0', '-map', '0:a:0',
+        '-vf', normVf(d.fit), '-af', 'aresample=48000,aformat=channel_layouts=stereo,apad',
+        '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
+        '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', out])
+    } else {
+      await ff(['-i', d.src, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo', '-map', '0:v:0', '-map', '1:a:0',
+        '-vf', normVf(d.fit), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
+        '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', out])
+    }
     listLines.push(`file '${out.replace(/\\/g, '/')}'`)
   }
   const listFile = path.join(tmp, 'list.txt')
