@@ -68,25 +68,69 @@
     },
     "making_record": {
       "G2-R": {
-        "YR_VD": { "source": "Flow", "target": "이미지/영상 생성 화면", "output": "g2r_cut{N}.mp4" },
-        "BR_VD": { "source": "Flow", "target": "B-roll 생성 화면", "output": "g2r_cut{N}.mp4" },
-        "PIP_VD": { "source": "Flow", "target": "이미지 생성 화면", "output": "g2r_cut{N}.mp4" },
+        "YR_VD": {
+          "source": "Flow",
+          "target": "이미지/영상 생성 화면",
+          "output": "g2r_cut{N}.mp4"
+        },
+        "BR_VD": {
+          "source": "Flow",
+          "target": "B-roll 생성 화면",
+          "output": "g2r_cut{N}.mp4"
+        },
+        "PIP_VD": {
+          "source": "Flow",
+          "target": "이미지 생성 화면",
+          "output": "g2r_cut{N}.mp4"
+        },
         "CC_ED": null,
         "GR_ED": null
       },
       "G3-R": {
-        "YR_VD": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "YR_VD": {
+          "source": "ElevenLabs",
+          "target": "TTS 생성 화면",
+          "output": "g3r_cut{N}.mp4"
+        },
         "BR_VD": null,
-        "PIP_VD": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
-        "CC_ED": { "source": "ElevenLabs", "target": "TTS 생성 화면", "output": "g3r_cut{N}.mp4" },
+        "PIP_VD": {
+          "source": "ElevenLabs",
+          "target": "TTS 생성 화면",
+          "output": "g3r_cut{N}.mp4"
+        },
+        "CC_ED": {
+          "source": "ElevenLabs",
+          "target": "TTS 생성 화면",
+          "output": "g3r_cut{N}.mp4"
+        },
         "GR_ED": null
       },
       "G4-R": {
-        "YR_VD": { "source": "Flow", "target": "영상 생성 화면", "output": "g4r_cut{N}.mp4" },
-        "BR_VD": { "source": "Flow", "target": "영상 생성 화면", "output": "g4r_cut{N}.mp4" },
-        "PIP_VD": { "source": "CapCut", "target": "PIP 합성 과정", "output": "g4r_cut{N}.mp4" },
-        "CC_ED": { "source": "CapCut", "target": "편집 화면", "output": "g4r_cut{N}.mp4" },
-        "GR_ED": { "source": "CapCut", "target": "그래픽 제작 화면", "output": "g4r_cut{N}.mp4" }
+        "YR_VD": {
+          "source": "Flow",
+          "target": "영상 생성 화면",
+          "output": "g4r_cut{N}.mp4"
+        },
+        "BR_VD": {
+          "source": "Flow",
+          "target": "영상 생성 화면",
+          "output": "g4r_cut{N}.mp4"
+        },
+        "PIP_VD": {
+          "source": "CapCut",
+          "target": "PIP 합성 과정",
+          "output": "g4r_cut{N}.mp4"
+        },
+        "CC_ED": {
+          "source": "CapCut",
+          "target": "편집 화면",
+          "output": "g4r_cut{N}.mp4"
+        },
+        "GR_ED": {
+          "source": "CapCut",
+          "target": "그래픽 제작 화면",
+          "output": "g4r_cut{N}.mp4"
+        }
       },
       "G5-M": {
         "label": "메이킹 필름 조립",
@@ -248,6 +292,22 @@
       "ip_prefix": "MEDIUM SHOT —",
       "ip_suffix": "medium shot, vertical 9:16,",
       "note": "CA_TLD와 세트"
+    },
+    "SH_GR": {
+      "label": "그래픽 컷",
+      "usage": 8
+    },
+    "SH_TEXT": {
+      "label": "텍스트 전용 컷",
+      "usage": 4
+    },
+    "SH_SCR": {
+      "label": "화면 목업·화면녹화",
+      "usage": 4
+    },
+    "SH_SPL": {
+      "label": "분할 화면",
+      "usage": 1
     }
   },
   "CA": {
@@ -280,6 +340,15 @@
       "label": "틸트다운(Tilt-down)",
       "vp_phrase": "camera tilts down slowly",
       "note": "SH_TLD와 세트"
+    },
+    "CA_HH": {
+      "label": "핸드헬드",
+      "vp_phrase": "handheld camera, slight natural movement",
+      "usage": 1
+    },
+    "CA_ZIN": {
+      "label": "서서히 줌인",
+      "usage": 1
     }
   },
   "MD": {
@@ -318,6 +387,36 @@
       "ip_phrase": "sincere direct gaze thoughtful introspective expression",
       "vp_phrase": "thoughtful sincere gaze, quiet introspective expression",
       "usage": 3
+    },
+    "MD_SUR": {
+      "label": "놀람·당황",
+      "ip_phrase": "surprised expression, eyes slightly wide",
+      "vp_phrase": "surprised awakened expression, subtle tension",
+      "usage": 6
+    },
+    "MD_WRM": {
+      "label": "따뜻함",
+      "usage": 6
+    },
+    "MD_ANL": {
+      "label": "차분한 분석",
+      "usage": 5
+    },
+    "MD_IMP": {
+      "label": "임팩트·존재감",
+      "usage": 3
+    },
+    "MD_BRT": {
+      "label": "밝고 경쾌",
+      "usage": 2
+    },
+    "MD_ABS": {
+      "label": "몰입",
+      "usage": 2
+    },
+    "MD_DZD": {
+      "label": "멍함·여운",
+      "usage": 1
     }
   },
   "AT": {
@@ -440,6 +539,24 @@
       "label": "홈 나이트 후드+묶은머리",
       "ip_outfit": "oversized heather-grey hoodie, hair tied up in a loose messy bun with a few face-framing strands, soft cream knit blanket over the knees,",
       "ep": "IG_R05"
+    },
+    "LOOK_AUT": {
+      "label": "볼캡+크롭탑+플란넬+카고팬츠",
+      "ip_outfit": "black LA baseball cap worn low, white ribbed crop top, black plaid flannel shirt tied at waist, black wide-leg cargo pants, white sneakers, gold necklace,",
+      "ep": "SF_E11"
+    },
+    "LOOK_HG": {
+      "label": "아이보리 크루넥+베이지 린넨 와이드팬츠",
+      "ip_outfit": "oversized soft ivory cotton crewneck top tucked loosely into wide-leg light beige linen pants with a subtle cuffed rollup at the ankle, white low-top canvas sneakers,",
+      "ep": "SF_E07"
+    },
+    "LOOK_CF": {
+      "label": "크림 니트+베이지 와이드팬츠",
+      "ep": "SF_E10"
+    },
+    "LOOK_HM2": {
+      "label": "핑크 후드티+블랙 레깅스",
+      "ep": "SF_E09"
     }
   },
   "BG_RULE": {
