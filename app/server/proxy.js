@@ -6346,8 +6346,9 @@ async function fetchChosicDetail(detailUrl) {
 
 // ── POST /api/bgm-search — Chosic 무드/키워드 기반 BGM 검색 ──────────
 app.post('/api/bgm-search', async (req, res) => {
-  const { mood, keywords, source } = req.body || {}
-  if (!mood) return res.status(400).json({ error: 'mood 필요' })
+  // tag: Chosic 태그를 직접 지정(예: lofi, happy, chill) — 정해진 4개 무드로는 "로파이·밝은" 같은 곡을 못 찾는다(2026-10-07).
+  const { mood, keywords, source, tag: rawTag } = req.body || {}
+  if (!mood && !rawTag) return res.status(400).json({ error: 'mood 또는 tag 필요' })
 
   if (source === 'bensound') {
     return res.json({
@@ -6356,7 +6357,7 @@ app.post('/api/bgm-search', async (req, res) => {
     })
   }
 
-  const tag = CHOSIC_MOOD_TAG[mood]
+  const tag = rawTag ? String(rawTag).toLowerCase().replace(/[^a-z0-9-]/g, '') : CHOSIC_MOOD_TAG[mood]
   if (!tag) return res.status(400).json({ error: `알 수 없는 mood: ${mood} (BGM_EMO/BGM_INFO/BGM_HOOK/BGM_CALM 중 하나)` })
 
   try {
@@ -6386,7 +6387,8 @@ app.post('/api/bgm-search', async (req, res) => {
 
 // ── POST /api/bgm-download — Chosic mp3 다운로드 + index.json 갱신 ────
 app.post('/api/bgm-download', async (req, res) => {
-  const { url, mood, filename } = req.body || {}
+  // tags: 자동 선곡(bgmSelect)이 대본 문구와 맞춰볼 태그(lofi·bright 등). license: 출처 표기 의무 확인용으로 같이 남긴다.
+  const { url, mood, filename, tags, license, title: givenTitle } = req.body || {}
   if (!url || !mood) return res.status(400).json({ error: 'url, mood 필요' })
 
   try {
@@ -6420,8 +6422,10 @@ app.post('/api/bgm-download', async (req, res) => {
     }
     index.unshift({
       id: Date.now(),
-      title: safeName.replace(/\.mp3$/i, ''),
+      title: givenTitle || safeName.replace(/\.mp3$/i, ''),
       mood: moodDir,
+      ...(Array.isArray(tags) && tags.length ? { tags } : {}),
+      ...(license ? { license } : {}),
       sourceUrl: url,
       mp3Url,
       file: path.join('bgm', moodDir, safeName).replace(/\\/g, '/'),

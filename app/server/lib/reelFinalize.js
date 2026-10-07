@@ -529,6 +529,10 @@ export async function finalizeReel(p) {
     if (!src) { log(`⚠ cut_${String(cut.no).padStart(2, '0')}.mp4 없음 — 건너뜀`); continue }
     const d = decideCut(cut)
     d.derived = picked.derived
+    // 사진 시퀀스 컷의 자체 소리는 "컷 영상에 직접 합친 나레이션"뿐이다. 대본에 나레이션이 있어 아래에서
+    // TTS 음성을 믹스할 컷이면 그 소리는 버린다 — 안 그러면 옛 나레이션과 새 나레이션이 겹쳐 들린다
+    // (2026-10-07 R02 컷5: 정식 절차로 바꾼 뒤 컷을 다시 확정하지 않은 상태에서 실측).
+    d.dropOwnAudio = hasVoiceNarration(cut) && makingManifest[String(cut.no)]?.method === 'imgseq'
     if (picked.derived) {
       if (d.caption) d.caption = null
       log(`컷 ${cut.no}: 메이킹 탭 ${picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본 사용(${path.basename(src)}) — 자막 번인 생략`)
@@ -562,7 +566,8 @@ export async function finalizeReel(p) {
     // 컷에 자체 오디오가 있으면 그걸 명시적으로 쓴다(48k 스테레오로 맞추고 영상 길이까지 무음 패딩).
     // 예전엔 -map 없이 무음 소스(anullsrc 스테레오)를 같이 넣어서, 컷 오디오가 모노면 ffmpeg 가
     // 채널 수가 많은 무음 쪽을 골라 컷 소리가 통째로 사라졌다(2026-10-07 실측: 모노 나레이션 -91dB).
-    const hasOwnAudio = (await ffprobeStreamDuration(d.src, 'audio')) > 0
+    const hasOwnAudio = !d.dropOwnAudio && (await ffprobeStreamDuration(d.src, 'audio')) > 0
+    if (d.dropOwnAudio && (await ffprobeStreamDuration(d.src, 'audio')) > 0) log(`컷 ${d.no}: 컷 영상에 합쳐져 있던 소리는 빼고 TTS 나레이션만 사용(이중 재생 방지)`)
     if (hasOwnAudio) {
       // 길이는 -t 로 못박는다 — apad + -shortest 만 쓰면 재인코딩 시 오디오 버퍼만큼 컷이 몇 초씩
       // 길어져 전체 타임라인(자막·효과음 시각)이 밀린다(2026-10-07 실측: 25초가 36.9초로).
