@@ -3406,9 +3406,11 @@ async function assembleMakingFilm(epNum) {
     // (원본은 항상 보존 — 파생본은 그 위에 얹은 결과)
     const subtitleP = path.join(videoDir, `cut_${padded}_subtitle.mp4`)
     const overlayP = path.join(videoDir, `cut_${padded}_overlay.mp4`)
-    const p = fs.existsSync(subtitleP) ? subtitleP
-      : fs.existsSync(overlayP) ? overlayP
-        : path.join(videoDir, `cut_${padded}.mp4`)
+    const baseP = path.join(videoDir, `cut_${padded}.mp4`)
+    // 파생본은 원본보다 나중에 만든 것만 유효 — 원본을 다시 만들면 옛 파생본은 무시.
+    const p = isFreshDerivative(subtitleP, baseP) ? subtitleP
+      : isFreshDerivative(overlayP, baseP) ? overlayP
+        : baseP
     if (fs.existsSync(p)) {
       files.push(p)
       includedCuts.push(c.no)
@@ -4092,6 +4094,24 @@ app.post('/api/episode-making-review', (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 // 컷 제작 성공 시 호출 — 그 컷 항목을 통째로 새로 쓴다(재제작이면 손글씨 등 이전 상태 리셋).
+// 파생본(_overlay/_subtitle)이 원본 cut_NN.mp4 보다 나중에 만들어졌는지. 원본이 없으면
+// 파생본만이라도 쓴다(기존 동작 유지).
+function isFreshDerivative(derivedPath, basePath) {
+  if (!fs.existsSync(derivedPath)) return false
+  if (!fs.existsSync(basePath)) return true
+  return fs.statSync(derivedPath).mtimeMs >= fs.statSync(basePath).mtimeMs
+}
+// 컷을 다시 만들기 직전, 지금의 cut_NN.mp4 를 _manual_work/cut_NN_prev.mp4 로 한 벌 남긴다
+// (한 단계 되돌리기용 — 메이킹 탭의 여러 제작 버튼이 같은 파일을 덮어쓰기 때문).
+function backupCutBeforeOverwrite(videoDir, padded) {
+  try {
+    const cur = path.join(videoDir, `cut_${padded}.mp4`)
+    if (!fs.existsSync(cur)) return
+    const dir = path.join(videoDir, '_manual_work')
+    fs.mkdirSync(dir, { recursive: true })
+    fs.copyFileSync(cur, path.join(dir, `cut_${padded}_prev.mp4`))
+  } catch (e) { console.warn('[backupCutBeforeOverwrite]', e.message) }
+}
 function recordCutMotion(epNum, cutNo, info) {
   if (epNum == null || cutNo == null) return
   try {
@@ -4146,6 +4166,7 @@ app.post('/api/source-to-cut', async (req, res) => {
     const videoDir = mp.videoDir(epNum)
     fs.mkdirSync(videoDir, { recursive: true })
     const outPath = path.join(videoDir, `cut_${String(cutNo).padStart(2, '0')}.mp4`)
+    backupCutBeforeOverwrite(videoDir, String(cutNo).padStart(2, '0'))
     const fitMode = ['cover', 'contain', 'blur'].includes(fit) ? fit : 'cover'
 
     let meta = {}
@@ -4482,7 +4503,7 @@ function graphicMotionVf(motion, dur, W = 1080, H = 1920, fps = 30) {
   return vf
 }
 
-async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord }) {
+async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputPath, skipMotionRecord, method = 'graphic', selfText = false }) {
   const dur = parseInt(duration, 10) || 5
   const padded = String(cutNo).padStart(2, '0')
   const animated = ANIMATED_MOTIONS.has(motion)
@@ -4490,10 +4511,13 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputP
 
   const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
-  const imagePath = path.join(videoDir, `cut_${padded}_graphic.png`)
-  // outputPath 지정 시(미리보기 등) 그쪽에 쓰고 실제 cut_NN.mp4는 건드리지 않는다.
+  // outputPath 지정 시(미리보기 등) 그쪽에 쓰고 실제 cut_NN.mp4·대표 스틸은 건드리지 않는다.
   const videoPath = outputPath || path.join(videoDir, `cut_${padded}.mp4`)
   if (outputPath) fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+  else backupCutBeforeOverwrite(videoDir, padded)
+  const imagePath = outputPath
+    ? outputPath.replace(/\.mp4$/i, '.png')
+    : path.join(videoDir, `cut_${padded}_graphic.png`)
   // motion:'self' 는 HTML 이 스스로 애니메이션하므로 템플릿 CSS 를 주입하지 않는다.
   const pageHtml = (animated && motion !== 'self') ? injectAnimationCss(html, motion, dur) : html
 
@@ -4565,20 +4589,21 @@ async function runGraphicCapture({ html, cutNo, epNum, duration, motion, outputP
   // 흐르듯 밀려 아마추어처럼 보인다. 모션이 필요하면 "유형별 기본 모션"으로 여기서
   // 굽는다. 따라서 그래픽은 항상 baked 처리. (미리보기 렌더는 기록하지 않음)
   if (!skipMotionRecord) {
-    recordCutMotion(epNum, cutNo, { method: 'graphic', motion: motion || 'none', baked: true, duration: dur })
+    // selfText: 자동 텍스트카드(화면 글자가 곧 자막)인지 — 릴스 최종화가 자막을 또 굽지 않게 하는 근거.
+    recordCutMotion(epNum, cutNo, { method, selfText: !!selfText, motion: motion || 'none', baked: true, duration: dur })
   }
 
   return { imagePath, videoPath, animated: !!animated }
 }
 
 app.post('/api/graphic-capture', async (req, res) => {
-  const { html, cutNo, epNum, duration, motion } = req.body || {}
+  const { html, cutNo, epNum, duration, motion, selfText, align } = req.body || {}
   if (!html || cutNo == null || !epNum) return res.status(400).json({ error: 'html, cutNo, epNum 필요' })
   try {
     // 커스텀 목업 HTML(.phone-wrap 여러 컷 포함, 예: RL02_DM_mockup_v3.html)이면 이 컷만
     // 남기고 나머지 .phone-wrap은 숨긴다 — MCP make_graphic_cut 경로와 동일 처리.
     // 자동 템플릿엔 .phone-wrap이 없어 isolateCutInHtml이 무영향(원본 그대로 반환).
-    const result = await runGraphicCapture({ html: isolateCutInHtml(html, cutNo), cutNo, epNum, duration, motion })
+    const result = await runGraphicCapture({ html: isolateCutInHtml(html, cutNo, { align }), cutNo, epNum, duration, motion, selfText: !!selfText })
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, ...(err.extra || {}) })
@@ -4596,9 +4621,14 @@ app.post('/api/graphic-capture', async (req, res) => {
 function muxAudioIntoVideo(videoPath, audioPath) {
   return new Promise((resolve, reject) => {
     const tmp = videoPath.replace(/\.mp4$/i, `_a${Date.now()}.mp4`)
+    // apad + -shortest → 길이는 항상 "영상" 기준. 예전엔 -shortest만 써서 나레이션이
+    // 영상보다 짧으면 영상이 나레이션 길이로 잘렸다(실측 2026-10-07: 5초 지정 → 2.6초).
+    // 스테레오 48k로 맞추는 이유: 릴스 최종화가 모노 오디오 컷을 무음으로 만들던 문제와 같은 계열.
     const proc = spawn('ffmpeg', [
       '-y', '-i', videoPath, '-i', audioPath,
-      '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-shortest',
+      '-map', '0:v', '-map', '1:a', '-c:v', 'copy',
+      '-af', 'aresample=48000,aformat=channel_layouts=stereo,apad',
+      '-c:a', 'aac', '-b:a', '160k', '-shortest',
       tmp,
     ], { windowsHide: true })
     let err = ''
@@ -4646,7 +4676,7 @@ app.post('/api/image-sequence-cut', async (req, res) => {
       : undefined
     const result = await runGraphicCapture({
       html, cutNo, epNum, duration: dur, motion: 'self',
-      outputPath, skipMotionRecord: !!preview,
+      outputPath, skipMotionRecord: !!preview, method: 'imgseq',
     })
 
     let audioApplied = false
@@ -7095,7 +7125,7 @@ app.get('/api/cut-timing', async (req, res) => {
       const p = String(c.no).padStart(2, '0')
       const overlayMp4 = path.join(videoDir, `cut_${p}_overlay.mp4`)
       const baseMp4 = path.join(videoDir, `cut_${p}.mp4`)
-      const mp4 = fs.existsSync(overlayMp4) ? overlayMp4 : (fs.existsSync(baseMp4) ? baseMp4 : null)
+      const mp4 = isFreshDerivative(overlayMp4, baseMp4) ? overlayMp4 : (fs.existsSync(baseMp4) ? baseMp4 : null)
       const mp3 = path.join(audioDir, `cut_${p}.mp3`)
       const hasMp3 = fs.existsSync(mp3)
 
@@ -8993,8 +9023,12 @@ function fillTemplateForMcp(cut, dims) {
 // 아닌 .phone-wrap을 숨기는 스크립트를 주입한다 — 원본 파일은 건드리지 않고
 // 메모리상에서만 변형. .phone-wrap 구조가 없는 일반 HTML(단일 그래픽 카드 등)에는
 // 영향 없음.
-function isolateCutInHtml(html, cutNo) {
+function isolateCutInHtml(html, cutNo, opts = {}) {
   if (!/class="phone-wrap"/.test(html)) return html
+  // 목업의 "CUT 2 — 협찬 문의" 같은 .label 은 제작 확인용 표식 — 완성 컷에 찍히면 안 된다
+  // (2026-10-07 실측: 캡처본 상단에 그대로 보임). align:'top' 이면 휴대폰을 잘라내지 않고
+  // 프레임 위쪽으로 붙여서 아래에 자막 자리를 만든다.
+  const top = opts.align === 'top'
   const script = `<script>
 (function(){
   var re = new RegExp('^CUT\\\\s*${cutNo}\\\\b');
@@ -9002,7 +9036,9 @@ function isolateCutInHtml(html, cutNo) {
     var label = el.querySelector('.label');
     var text = label ? label.textContent : '';
     if (!re.test(text.trim())) el.style.display = 'none';
+    if (label) label.style.display = 'none';
   });
+  ${top ? "document.body.style.alignItems='flex-start';document.body.style.paddingTop='40px';document.querySelectorAll('.phone-wrap').forEach(function(el){el.style.transformOrigin='top center';el.style.transform='scale(2.0)';});" : ''}
 })();
 </script>`
   return html.includes('</body>') ? html.replace('</body>', `${script}</body>`) : html + script
@@ -9114,7 +9150,7 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
     html = fillTemplateForMcp(cut, cutDims(ep.episode || {}))
   }
 
-  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion })
+  return runGraphicCapture({ html, cutNo: cut.no, epNum, duration: cut.duration, motion: motion || cut.motion, selfText: !effectiveHtmlFile })
 }
 
 // ── BROLL "CLIP:" — 웹 영상의 한 구간을 screen-scenario 화면녹화로 컷 만들기 ──────
@@ -9816,7 +9852,10 @@ app.post('/api/subtitle/render', async (req, res) => {
     workDir = mp.videoDir(epNum)
     const overlayP = path.join(workDir, `cut_${padded}_overlay.mp4`)
     const baseP = path.join(workDir, `cut_${padded}.mp4`)
-    inputPath = (stackOnOverlay && fs.existsSync(overlayP)) ? overlayP : baseP
+    // 손글씨본(_overlay)은 "지금의 cut_NN.mp4 위에 만든 것"일 때만 쓴다. 컷을 다시 만들면
+    // 예전 _overlay 는 옛 화면 그대로라, 그 위에 자막을 얹으면 옛 컷이 되살아난다
+    // (실측 2026-10-07: R02 컷2 — 8/30 깨진 말풍선본 위에 자막이 올라감).
+    inputPath = (stackOnOverlay && isFreshDerivative(overlayP, baseP)) ? overlayP : baseP
     outStem = path.join(workDir, `cut_${padded}_subtitle`)
     configPath = path.join(workDir, `cut_${padded}_subtitle_config.json`)
     if (!fs.existsSync(inputPath)) {

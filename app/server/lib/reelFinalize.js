@@ -509,10 +509,18 @@ export async function finalizeReel(p) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'reelfin_'))
   const decisions = []
   let cursor = 0
+  // 메이킹 탭이 남긴 제작 기록 — selfText(자동 텍스트카드: 화면 글자가 곧 자막)인 컷은
+  // 여기서 자막을 또 구우면 같은 문구가 두 겹이 된다(2026-10-07 R02 컷1 실측).
+  let makingManifest = {}
+  try { makingManifest = JSON.parse(fs.readFileSync(path.join(vdir, '.motion-manifest.json'), 'utf-8')) || {} } catch { /* 없음 */ }
   for (const cut of cuts.slice().sort((a, b) => a.no - b.no)) {
     const src = path.join(vdir, `cut_${String(cut.no).padStart(2, '0')}.mp4`)
     if (!fs.existsSync(src)) { log(`⚠ cut_${String(cut.no).padStart(2, '0')}.mp4 없음 — 건너뜀`); continue }
     const d = decideCut(cut)
+    if (d.caption && makingManifest[String(cut.no)]?.selfText === true) {
+      d.caption = null
+      log(`컷 ${cut.no}: 텍스트카드(화면 글자 포함) — 자막 중복 방지로 번인 생략`)
+    }
     const realDur = await ffprobeDuration(src)
     d.durSec = realDur > 0 ? realDur : d.durSec
     d.startSec = cursor

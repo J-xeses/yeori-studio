@@ -514,6 +514,7 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setSeqResult({ error: data.error || '제작 실패' }); return }
       setSeqResult({ ...data, _ts: Date.now() })
+      if (!preview && Number(cut.duration) !== Number(duration)) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration } })
     } catch (e) {
       setSeqResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -529,6 +530,7 @@ export default function MakingTab() {
     setDuration(cutDuration(cut))
     setSeqSelected([])
     setSeqResult(null)
+    setOverwriteArmed(null)
     fetchSeqImages()
     fetchSeqAudio(cut.no)
   }
@@ -538,9 +540,20 @@ export default function MakingTab() {
   // 결과가, 목업 파일을 골랐으면 그 파일 전체가 htmlSource에 들어 있고, 서버가
   // .phone-wrap 다중 컷이면 이 컷만 isolate한 뒤 캡처한다. MCP make_graphic_cut은
   // /api/make-graphic-cut(별도)로 남는다.
+  // 자동 템플릿(검은 배경 텍스트카드)으로 "이미 만든 컷"을 덮어쓰려 할 때 한 번 더 누르게 한다.
+  // 2026-10-07 실측: 사진 시퀀스로 확정해둔 컷1에서 길이만 5초로 바꾸려고 [제작 실행]을
+  // 눌렀더니 사진 컷이 텍스트카드로 통째로 바뀌었다 — 길이 칸이 두 제작 방식에 공용이라 생긴 함정.
+  const [overwriteArmed, setOverwriteArmed] = useState(null) // cutNo | null
+  const [mockAlign, setMockAlign] = useState('center')       // 목업 HTML 캡처 시 휴대폰 위치: center | top
   const captureGraphic = async () => {
     if (selectedCutNo == null || !episode.number) return
     const cut = allCuts.find(c => c.no === selectedCutNo)
+    const isAuto = selectedHtmlFile === '__auto__'
+    if (isAuto && videoStatus[selectedCutNo] && overwriteArmed !== selectedCutNo) {
+      setOverwriteArmed(selectedCutNo)
+      return
+    }
+    setOverwriteArmed(null)
     setCapturing(true)
     setCaptureResult(null)
     try {
@@ -550,11 +563,13 @@ export default function MakingTab() {
         body: JSON.stringify({
           html: htmlSource, cutNo: selectedCutNo, epNum: episode.number, duration,
           motion: styleFor(cut?.cutType)?.motion || 'none',
+          selfText: isAuto, align: isAuto ? undefined : mockAlign,
         }),
       })
       const data = await res.json()
       if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
-      setCaptureResult(data)
+      setCaptureResult({ ...data, _ts: Date.now() })
+      if (cut && Number(cut.duration) !== Number(duration)) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration } })
       // 대본 CP가 있고 유형별 손글씨 오버레이가 켜져 있으면 이어서 자동 합성.
       if (cut && cut.subtitle && typeStyles[cut.cutType]?.overlay?.enabled) {
         await runOverlay(cut)
@@ -828,7 +843,7 @@ export default function MakingTab() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           epNum: episode.number, cutNo: cut.no, srcPath,
-          duration: cutDuration(cut),
+          duration: selectedCutNo === cut.no ? duration : cutDuration(cut),
           trimStart: s2cTrimStart[cut.no] || '',
           trimMode: 'start',
           motion: s2cMotion[cut.no] || cut.motion || 'none',
@@ -1366,6 +1381,8 @@ export default function MakingTab() {
   const [hwBusy, setHwBusy] = useState(false)
   const [hwResult, setHwResult] = useState(null)
   const [hwCutNoFill, setHwCutNoFill] = useState('')
+  // 서여리 시그니처(보라 테두리+워터마크) — 썸네일·스틸엔 필요하지만 릴스 중간 컷에 얹으면 그 컷만 테두리가 생긴다.
+  const [hwSignature, setHwSignature] = useState(true)
 
   useEffect(() => {
     fetch(`${YEORI_SERVER}/api/hw-source-images`).then(r => r.json())
@@ -1385,7 +1402,7 @@ export default function MakingTab() {
       }))
       const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputPath: hwImgPath.trim(), scenes }),
+        body: JSON.stringify({ inputPath: hwImgPath.trim(), scenes, signature: hwSignature }),
       })
       const data = await res.json()
       if (!res.ok) { setHwResult({ error: data.error || '합성 실패' }); return }
@@ -1813,11 +1830,29 @@ export default function MakingTab() {
           <input type="number" min="1" value={duration}
             onChange={e => setDuration(parseInt(e.target.value) || 1)} />
         </label>
+        {selectedHtmlFile !== '__auto__' && (
+          <label className={s.durationField}>
+            목업 위치
+            <select value={mockAlign} onChange={e => setMockAlign(e.target.value)}>
+              <option value="center">가운데</option>
+              <option value="top">위쪽으로 붙이기(아래에 자막 자리)</option>
+            </select>
+          </label>
+        )}
         <button className={s.previewBtn} onClick={() => setPreviewHtml(htmlSource)}>미리보기</button>
-        <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}>
-          {capturing ? '⏳ 제작 중…' : '제작 실행'}
+        <button className={s.captureBtn} disabled={capturing} onClick={captureGraphic}
+          style={overwriteArmed === cut.no ? { borderColor: '#b45309', color: '#f59e0b' } : undefined}>
+          {capturing ? '⏳ 제작 중…'
+            : overwriteArmed === cut.no ? '⚠ 한 번 더 누르면 덮어씀'
+              : selectedHtmlFile === '__auto__' ? '제작 실행 (텍스트카드)' : '제작 실행 (목업 캡처)'}
         </button>
       </div>
+      {overwriteArmed === cut.no && (
+        <div className={s.emptyHint} style={{ color: '#f59e0b' }}>
+          이 컷은 이미 만든 영상(cut_{String(cut.no).padStart(2, '0')}.mp4)이 있습니다. 지금 누르면 <b>검은 배경 텍스트카드</b>로 바뀝니다.
+          사진·영상 컷의 길이만 바꾸려면 아래 “사진 시퀀스” 또는 “스튜디오 소스로 컷 만들기”에서 다시 만드세요(직전 영상은 _manual_work/에 백업됩니다).
+        </div>
+      )}
 
       <div className={s.settingLabel}>HTML 소스 (미세조정용 — 이 내용 그대로 캡처됩니다)</div>
       <textarea
@@ -1845,6 +1880,9 @@ export default function MakingTab() {
         ) : (
           <div className={s.resultOk}>
             ✅ 저장됨 — 이미지: {captureResult.imagePath} · 영상: {captureResult.videoPath}
+            <br />
+            <video className={s.makingVideo} controls
+              src={`${epMediaUrl(episode, 'video')}/cut_${String(cut.no).padStart(2, '0')}.mp4?t=${captureResult._ts || 0}`} />
           </div>
         )
       )}
@@ -2840,9 +2878,14 @@ export default function MakingTab() {
                 const padded = String(parseInt(hwCutNoFill, 10) || 0).padStart(2, '0')
                 const rel = epMediaUrl(episode, 'video').replace(`${YEORI_SERVER}/downloads/`, '')
                 setHwImgPath(`${rel}/cut_${padded}.mp4`)
+                setHwSignature(false)
               }}>
               이 컷 영상 경로로 채우기
             </button>
+            <label className={s.radioLabel}>
+              <input type="checkbox" checked={hwSignature} onChange={e => setHwSignature(e.target.checked)} />
+              시그니처(테두리·워터마크) 포함
+            </label>
           </div>
 
           {hwScenes.map((sc, i) => (
