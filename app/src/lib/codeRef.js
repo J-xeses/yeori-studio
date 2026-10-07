@@ -43,8 +43,38 @@ export function labelOf(cb, kind, code) { return table(cb, kind)[code]?.label ||
 // 설정 점검 카드의 선택지 — 많이 쓴 순.
 export function refOptions(cb, kind) {
   return Object.entries(table(cb, kind))
-    .map(([code, v]) => ({ code, label: v.label || '', usage: Number(v.usage) || 0 }))
+    .map(([code, v]) => ({ code, label: v.label || '', usage: Number(v.usage) || 0, group: v.group || '' }))
     .sort((a, b) => b.usage - a.usage)
+}
+// 성격별 묶음(코드북의 group) — [{ group, items }] . 묶음 순서는 코드북에 적힌 순서, 묶음 안은 많이 쓴 순.
+export function refGroups(cb, kind) {
+  const order = [...new Set(Object.values(table(cb, kind)).map(v => v.group || ''))]
+  const opts = refOptions(cb, kind)
+  return order.map(group => ({ group, items: opts.filter(o => o.group === group) })).filter(g => g.items.length)
+}
+
+// ── 의상(LOOK) — 요약 코드를 펼치면 부위별 구성과 상황별 설정이 나온다 ──
+const PART_NAMES = [['head', '머리·모자'], ['top', '상의'], ['outer', '겉옷'], ['set', '세트(상·하의)'], ['bottom', '하의'], ['shoes', '신발'], ['acc', '소품']]
+const FRAMINGS = [
+  { name: '전신', suffix: '', keys: ['head', 'top', 'outer', 'set', 'bottom', 'shoes', 'acc'] },
+  { name: '상반신·클로즈업', suffix: '상반신', keys: ['head', 'top', 'outer', 'set', 'acc'] },
+  { name: '하체·발', suffix: '하체만', keys: ['set', 'bottom', 'shoes'] },
+]
+const joinParts = (parts, keys) => keys.map(k => parts[k]).filter(Boolean).join(' + ')
+export function lookDetail(cb, code) {
+  const e = cb?.LOOK_BANK?.[code]
+  if (!e || typeof e !== 'object') return null
+  const parts = e.parts || {}
+  const partRows = PART_NAMES.filter(([k]) => parts[k]).map(([key, name]) => ({ key, name, text: parts[key] }))
+  // 화면에 잡히는 범위별 — 저장값은 "LOOK_CS (상반신)" 처럼 코드 뒤에 범위를 붙인다(기존 대본 표기 관례)
+  const framings = FRAMINGS.map(f => ({ name: f.name, lookId: f.suffix ? `${code} (${f.suffix})` : code, text: joinParts(parts, f.keys) })).filter(f => f.text)
+  // 상황별 — 다른 코드로 등록된 변형(예: 집·실내 = LOOK_HM)이거나 일부 부위만 바뀌는 변형
+  const situations = (e.situations || []).map(sit => {
+    if (sit.code) return { name: sit.name, lookId: sit.code, text: joinParts(cb.LOOK_BANK[sit.code]?.parts || {}, FRAMINGS[0].keys) }
+    const merged = { ...parts, ...(sit.parts || {}) }
+    return { name: sit.name, lookId: `${code} (${sit.suffix || sit.name})`, text: joinParts(merged, FRAMINGS[0].keys) }
+  })
+  return { code, label: e.label || '', group: e.group || '', base: e.base || null, partRows, framings, situations, hasPrompt: !!e.ip_outfit }
 }
 
 // 값 안의 코드 낱말들(예: "SH_MCU → SH_CU" → [SH_MCU, SH_CU])

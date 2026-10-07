@@ -270,100 +270,119 @@
       "label": "익스트림 클로즈업",
       "ip_prefix": "EXTREME CLOSEUP SHOT —",
       "ip_suffix": "extreme close-up, eye level, vertical 9:16,",
-      "usage": 7
+      "usage": 7,
+      "group": "일반 연출"
     },
     "SH_CU": {
       "label": "클로즈업",
       "ip_prefix": "CLOSEUP SHOT —",
       "ip_suffix": "close-up, eye level, vertical 9:16,",
-      "usage": 8
+      "usage": 8,
+      "group": "일반 연출"
     },
     "SH_MCU": {
       "label": "미디엄 클로즈업",
       "ip_prefix": "CLOSEUP SHOT —",
       "ip_suffix": "medium close-up, eye level, vertical 9:16,",
-      "usage": 18
+      "usage": 18,
+      "group": "일반 연출"
     },
     "SH_MS": {
       "label": "미디엄샷",
       "ip_prefix": "MEDIUM SHOT —",
       "ip_suffix": "medium shot, eye level, vertical 9:16,",
-      "usage": 5
+      "usage": 5,
+      "group": "일반 연출"
     },
     "SH_FS": {
       "label": "풀샷(전신)",
       "ip_prefix": "FULLBODY SHOT —",
       "ip_suffix": "full body shot, eye level, vertical 9:16,",
-      "usage": 7
+      "usage": 7,
+      "group": "일반 연출"
     },
     "SH_WS": {
       "label": "와이드샷",
       "ip_prefix": "WIDE SHOT —",
       "ip_suffix": "wide shot, eye level, vertical 9:16,",
-      "usage": 1
+      "usage": 1,
+      "group": "일반 연출"
     },
     "SH_TLD": {
       "label": "틸트다운",
       "ip_prefix": "MEDIUM SHOT —",
       "ip_suffix": "medium shot, vertical 9:16,",
-      "note": "CA_TLD와 세트"
+      "note": "CA_TLD와 세트",
+      "group": "일반 연출"
     },
     "SH_GR": {
       "label": "그래픽 컷",
-      "usage": 8
+      "usage": 8,
+      "group": "화면 설정"
     },
     "SH_TXT": {
       "label": "텍스트 전용 컷",
-      "usage": 4
+      "usage": 4,
+      "group": "화면 설정"
     },
     "SH_SCR": {
       "label": "화면 목업·화면녹화",
-      "usage": 4
+      "usage": 4,
+      "group": "화면 설정"
     },
     "SH_SPL": {
       "label": "분할 화면",
-      "usage": 1
+      "usage": 1,
+      "group": "화면 설정"
     }
   },
   "CA": {
     "CA_ST": {
       "label": "고정(Static)",
       "vp_phrase": "camera holds steady",
-      "usage": 36
+      "usage": 36,
+      "group": "고정"
     },
     "CA_PS": {
       "label": "푸시인(Push-in)",
       "vp_phrase": "camera slowly pushes in",
-      "usage": 2
+      "usage": 2,
+      "group": "다가가기 (줌·푸시)"
     },
     "CA_TR": {
       "label": "트래킹(Tracking)",
       "vp_phrase": "camera tracks alongside her movement",
-      "usage": 5
+      "usage": 5,
+      "group": "이동·훑기"
     },
     "CA_ZI": {
       "label": "줌인(Zoom-in)",
       "vp_phrase": "camera gently zooms in",
-      "usage": 3
+      "usage": 3,
+      "group": "다가가기 (줌·푸시)"
     },
     "CA_PAN": {
       "label": "패닝(Pan)",
       "vp_phrase": "camera pans smoothly",
-      "usage": 1
+      "usage": 1,
+      "group": "이동·훑기"
     },
     "CA_TLD": {
       "label": "틸트다운(Tilt-down)",
       "vp_phrase": "camera tilts down slowly",
-      "note": "SH_TLD와 세트"
+      "note": "SH_TLD와 세트",
+      "group": "이동·훑기"
     },
     "CA_HH": {
       "label": "핸드헬드",
       "vp_phrase": "handheld camera, slight natural movement",
-      "usage": 1
+      "usage": 1,
+      "group": "손에 든 느낌"
     },
     "CA_ZIN": {
       "label": "서서히 줌인",
-      "usage": 1
+      "usage": 1,
+      "group": "다가가기 (줌·푸시)"
     }
   },
   "MD": {
@@ -371,67 +390,80 @@
       "label": "밝은 기쁨",
       "ip_phrase": "bright genuine smile warm energetic expression",
       "vp_phrase": "bright warm smile, energetic expression",
-      "usage": 18
+      "usage": 18,
+      "group": "밝음·따뜻함"
     },
     "MD_REL": {
       "label": "편안한 해방",
       "ip_phrase": "expression quietly relaxed and at ease candid unguarded moment",
       "vp_phrase": "expression softening to quiet relief, completely at ease",
-      "usage": 16
+      "usage": 16,
+      "group": "차분·몰입"
     },
     "MD_DRM": {
       "label": "몽환/꿈결",
       "ip_phrase": "dreamy soft gaze warm intimate expression",
       "vp_phrase": "gaze soft and dreamy, warm intimate expression",
-      "usage": 15
+      "usage": 15,
+      "group": "차분·몰입"
     },
     "MD_SAD": {
       "label": "슬픔/지침",
       "ip_phrase": "expression quietly tired and melancholy vulnerable unguarded",
       "vp_phrase": "expression quietly sad, shoulders heavy",
-      "usage": 5
+      "usage": 5,
+      "group": "가라앉음"
     },
     "MD_COM": {
       "label": "코믹/장난",
       "ip_phrase": "playful surprised comic expression",
       "vp_phrase": "playful expression, slight comedic reaction",
-      "usage": 4
+      "usage": 4,
+      "group": "밝음·따뜻함"
     },
     "MD_INT": {
       "label": "진지/내면",
       "ip_phrase": "sincere direct gaze thoughtful introspective expression",
       "vp_phrase": "thoughtful sincere gaze, quiet introspective expression",
-      "usage": 3
+      "usage": 3,
+      "group": "차분·몰입"
     },
     "MD_SUR": {
       "label": "놀람·당황",
       "ip_phrase": "surprised expression, eyes slightly wide",
       "vp_phrase": "surprised awakened expression, subtle tension",
-      "usage": 6
+      "usage": 6,
+      "group": "강한 반응"
     },
     "MD_WRM": {
       "label": "따뜻함",
-      "usage": 6
+      "usage": 6,
+      "group": "밝음·따뜻함"
     },
     "MD_ANL": {
       "label": "차분한 분석",
-      "usage": 5
+      "usage": 5,
+      "group": "차분·몰입"
     },
     "MD_IMP": {
       "label": "임팩트·존재감",
-      "usage": 3
+      "usage": 3,
+      "group": "강한 반응"
     },
     "MD_BRT": {
       "label": "밝고 경쾌",
-      "usage": 2
+      "usage": 2,
+      "group": "밝음·따뜻함"
     },
     "MD_ABS": {
       "label": "몰입",
-      "usage": 2
+      "usage": 2,
+      "group": "차분·몰입"
     },
     "MD_DZD": {
       "label": "멍함·여운",
-      "usage": 1
+      "usage": 1,
+      "group": "가라앉음"
     }
   },
   "AT": {
@@ -439,73 +471,85 @@
       "label": "자연스럽게 걷기",
       "ip_phrase": "walking naturally along street unhurried pace shoulders relaxed",
       "vp_phrase": "walks naturally, unhurried pace, shoulders relaxed",
-      "usage": 10
+      "usage": 10,
+      "group": "이동·자세"
     },
     "AT_SI_01": {
       "label": "앉아서 시선 맞춤",
       "ip_phrase": "sitting leaning slightly forward sincere eye contact",
       "vp_phrase": "sitting leaning slightly forward, direct sincere gaze",
-      "usage": 7
+      "usage": 7,
+      "group": "이동·자세"
     },
     "AT_SD_01": {
       "label": "손 흔들기",
       "ip_phrase": "right hand raised in cheerful wave",
       "vp_phrase": "right hand raises in cheerful wave",
-      "usage": 4
+      "usage": 4,
+      "group": "인사·손짓"
     },
     "AT_EM_01": {
       "label": "밝은 웃음/에너지",
       "ip_phrase": "bright genuine smile eyes full of warm energy",
       "vp_phrase": "bright genuine smile, eyes full of warm energy",
-      "usage": 12
+      "usage": 12,
+      "group": "표정"
     },
     "AT_EM_02": {
       "label": "멍하게/지친 표정",
       "ip_phrase": "expression blank quietly exhausted staring distantly",
       "vp_phrase": "expression blank, staring distantly, shoulders heavy",
-      "usage": 3
+      "usage": 3,
+      "group": "표정"
     },
     "AT_EM_03": {
       "label": "당황/코믹 리액션",
       "ip_phrase": "surprised off-balance expression comic reaction",
       "vp_phrase": "surprised expression, off-balance comic reaction",
-      "usage": 2
+      "usage": 2,
+      "group": "표정"
     },
     "AT_EM_04": {
       "label": "몽환적 응시",
       "ip_phrase": "gaze lifting slightly dreamy soft expression looking into distance",
       "vp_phrase": "gaze lifting slightly dreamy, soft unfocused look",
-      "usage": 9
+      "usage": 9,
+      "group": "표정"
     },
     "AT_EM_05": {
       "label": "손 뻗기(카메라 향해)",
       "ip_phrase": "one hand gently extended toward camera lens fingers softly reaching",
       "vp_phrase": "one hand reaches gently toward camera, fingers softly extended",
-      "usage": 2
+      "usage": 2,
+      "group": "인사·손짓"
     },
     "AT_AC_01": {
       "label": "냉장고 문 열기",
       "ip_phrase": "hand reaching to open refrigerator door",
       "vp_phrase": "hand reaches to open refrigerator door slowly",
-      "usage": 2
+      "usage": 2,
+      "group": "소품 동작"
     },
     "AT_AC_02": {
       "label": "커피 마시기",
       "ip_phrase": "holding coffee cup gently raised to lips",
       "vp_phrase": "holds cup gently, raises to lips slowly",
-      "usage": 1
+      "usage": 1,
+      "group": "소품 동작"
     },
     "AT_AC_03": {
       "label": "컵 들고 홀짝이기",
       "ip_phrase": "holding glass sipping slowly eyes closing with quiet satisfaction",
       "vp_phrase": "holds glass up to lips, takes a slow savoring sip, eyes closing slightly",
-      "usage": 2
+      "usage": 2,
+      "group": "소품 동작"
     },
     "AT_AC_04": {
       "label": "손동작(소품/포즈)",
       "ip_phrase": "hands naturally gesturing or holding object",
       "vp_phrase": "hands move naturally, slight gestural action",
-      "usage": 8
+      "usage": 8,
+      "group": "인사·손짓"
     }
   },
   "LOOK_BANK": {
@@ -513,65 +557,166 @@
     "LOOK_CS": {
       "label": "크롭탑+데님숏츠+힐",
       "ip_outfit": "white square-neck crop top, light blue denim shorts, white stiletto high heels,",
-      "ep": "E01"
+      "ep": "E01",
+      "group": "외출",
+      "parts": {
+        "top": "흰색 스퀘어넥 크롭탑",
+        "bottom": "연청 데님 숏츠",
+        "shoes": "흰색 스틸레토 힐"
+      },
+      "situations": [
+        {
+          "name": "집·실내 (맨발)",
+          "code": "LOOK_HM"
+        }
+      ]
     },
     "LOOK_HM": {
       "label": "크롭탑+데님숏츠+맨발",
       "ip_outfit": "white square-neck crop top, light blue denim shorts, bare feet,",
-      "ep": "E01"
+      "ep": "E01",
+      "group": "집·실내",
+      "parts": {
+        "top": "흰색 스퀘어넥 크롭탑",
+        "bottom": "연청 데님 숏츠",
+        "shoes": "맨발"
+      },
+      "base": "LOOK_CS"
     },
     "LOOK02": {
       "label": "성수동 체크스커트",
       "ip_outfit": "white square-neck crop top, navy check pleated mini skirt, white strap sandals, black crossbody bag,",
-      "ep": "E02"
+      "ep": "E02",
+      "group": "외출",
+      "parts": {
+        "top": "흰색 스퀘어넥 크롭탑",
+        "bottom": "네이비 체크 플리츠 미니스커트",
+        "shoes": "흰색 스트랩 샌들",
+        "acc": "검정 크로스백"
+      }
     },
     "LOOK_YOGA": {
       "label": "파스텔 요가셋",
       "ip_outfit": "pastel lavender yoga set, hair tied back neatly,",
-      "ep": "E03"
+      "ep": "E03",
+      "group": "운동·찜질방",
+      "parts": {
+        "head": "단정하게 묶은 머리",
+        "set": "파스텔 라벤더 요가 세트"
+      }
     },
     "LOOK_JJM": {
       "label": "찜질방 세트",
       "ip_outfit": "sage green jjimjilbang set, white towel hat,",
-      "ep": "E03"
+      "ep": "E03",
+      "group": "운동·찜질방",
+      "parts": {
+        "head": "흰 수건 모자",
+        "set": "세이지 그린 찜질복 세트"
+      }
     },
     "LOOK_PB": {
       "label": "공공장소 캐주얼",
       "ip_outfit": "white heart-pattern crop top, pink scarf, green running shorts, pink flip-flop sandals,",
-      "ep": "E04"
+      "ep": "E04",
+      "group": "외출",
+      "parts": {
+        "top": "흰색 하트 패턴 크롭탑",
+        "bottom": "그린 러닝 쇼츠",
+        "shoes": "핑크 플립플롭 샌들",
+        "acc": "핑크 스카프"
+      }
     },
     "LOOK_RS": {
       "label": "레스토랑 캐주얼",
       "ip_outfit": "white APC graphic tee, dark wash bootcut rolled jeans, red strappy heels, black baseball cap, beige mini shoulder bag,",
-      "ep": "E05"
+      "ep": "E05",
+      "group": "외출",
+      "parts": {
+        "head": "검정 볼캡",
+        "top": "흰색 APC 그래픽 티",
+        "bottom": "진청 부츠컷 롤업 진",
+        "shoes": "레드 스트랩 힐",
+        "acc": "베이지 미니 숄더백"
+      }
     },
     "LOOK_ST": {
       "label": "거리 캐주얼",
       "ip_outfit": "beige baseball cap, white APC graphic tee, bootcut rolled jeans, red sandals, gold necklace, gold bracelet,",
-      "ep": "E06"
+      "ep": "E06",
+      "group": "외출",
+      "parts": {
+        "head": "베이지 볼캡",
+        "top": "흰색 APC 그래픽 티",
+        "bottom": "부츠컷 롤업 진",
+        "shoes": "레드 샌들",
+        "acc": "골드 목걸이 · 골드 팔찌"
+      }
     },
     "LOOK_NT": {
       "label": "홈 나이트 후드+묶은머리",
       "ip_outfit": "oversized heather-grey hoodie, hair tied up in a loose messy bun with a few face-framing strands, soft cream knit blanket over the knees,",
-      "ep": "IG_R05"
+      "ep": "IG_R05",
+      "group": "집·실내",
+      "parts": {
+        "head": "느슨하게 올려 묶은 번 머리",
+        "top": "오버사이즈 헤더 그레이 후드티",
+        "acc": "무릎 위 크림 니트 담요"
+      }
     },
     "LOOK_AUT": {
       "label": "볼캡+크롭탑+플란넬+카고팬츠",
       "ip_outfit": "black LA baseball cap worn low, white ribbed crop top, black plaid flannel shirt tied at waist, black wide-leg cargo pants, white sneakers, gold necklace,",
-      "ep": "SF_E11"
+      "ep": "SF_E11",
+      "group": "외출",
+      "parts": {
+        "head": "검정 LA 볼캡 (낮게 눌러씀)",
+        "top": "흰색 골지 크롭탑",
+        "outer": "검정 체크 플란넬 셔츠 (허리에 묶음)",
+        "bottom": "검정 와이드 카고 팬츠",
+        "shoes": "흰색 스니커즈",
+        "acc": "골드 목걸이"
+      }
     },
     "LOOK_HG": {
       "label": "아이보리 크루넥+베이지 린넨 와이드팬츠",
       "ip_outfit": "oversized soft ivory cotton crewneck top tucked loosely into wide-leg light beige linen pants with a subtle cuffed rollup at the ankle, white low-top canvas sneakers,",
-      "ep": "SF_E07"
+      "ep": "SF_E07",
+      "group": "외출",
+      "parts": {
+        "top": "오버사이즈 아이보리 코튼 크루넥 (느슨하게 넣어 입음)",
+        "bottom": "라이트 베이지 린넨 와이드 팬츠 (밑단 롤업)",
+        "shoes": "흰색 로우탑 캔버스 스니커즈"
+      }
     },
     "LOOK_CF": {
       "label": "크림 니트+베이지 와이드팬츠",
-      "ep": "SF_E10"
+      "ep": "SF_E10",
+      "group": "외출",
+      "parts": {
+        "top": "크림 니트 탑",
+        "bottom": "베이지 와이드 팬츠",
+        "acc": "골드 목걸이 · 골드 브레이슬렛"
+      }
     },
     "LOOK_HM2": {
       "label": "핑크 후드티+블랙 레깅스",
-      "ep": "SF_E09"
+      "ep": "SF_E09",
+      "group": "집·실내",
+      "parts": {
+        "top": "파스텔 핑크 후드티",
+        "bottom": "블랙 레깅스",
+        "acc": "골드 목걸이"
+      },
+      "situations": [
+        {
+          "name": "집 밖 (편의점 등)",
+          "suffix": "집 밖",
+          "parts": {
+            "shoes": "흰 운동화"
+          }
+        }
+      ]
     }
   },
   "BG_RULE": {

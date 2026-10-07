@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { claudeMessages } from '../lib/api'
 import CodeGloss from './CodeGloss'
-import { useCodebook, refOptions, tokensOf, koreanFor, hasUnknown, labelOf, JOINER,
+import { useCodebook, refOptions, refGroups, lookDetail, tokensOf, koreanFor, hasUnknown, labelOf, JOINER,
   spPresets, spScreens, spLocations, spTimes, spLights, spIos, parseSp, composeSp, spKorean } from '../lib/codeRef'
 import s from './DirectionSettingsPanel.module.css'
 
@@ -78,6 +78,7 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
   const cb = useCodebook()
   const [expanded, setExpanded] = useState(false)
   const [tab, setTab] = useState('sp')
+  const [openLook, setOpenLook] = useState(null)   // 펼쳐 보고 있는 의상 코드
   const [append, setAppend] = useState(false)   // 샷·카메라: 고른 코드를 앞 값 뒤에 "→" 로 이어 붙이기
   const [recommended, setRecommended] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
@@ -126,7 +127,7 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
   // 이 에피소드 다른 컷들이 이미 쓴 LOOK_ID — 전역 고정 목록이 없어(에피소드마다 자유 의상이라
   // §⑥ 원칙), 같은 에피소드 안에서 일관되게 재사용하도록 후보로 보여준다(오타로 인한 컷간
   // 룩 불일치 방지 목적).
-  const usedLookIds = [...new Set((cuts || []).map(c => c.masterCode?.lookId).filter(Boolean))]
+  const usedLookIds = [...new Set((cuts || []).map(c => tokensOf('lookId', c.masterCode?.lookId)[0]).filter(Boolean))]
 
   // 레퍼런스에서 고르면 코드와 KR 컨펌 문구를 한 번에 메인 설정에 반영한다(둘이 어긋나지 않게).
   const pickCode = (kind, code) => {
@@ -150,12 +151,15 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
     if (next.io === 'GR') { next.time = ''; next.light = '' }
     pickSp(composeSp(next))
   }
-  const pickLook = (code) => {
+  // lookId: "LOOK_CS" 또는 "LOOK_CS (상반신)" — krText 가 있으면 KR 컨펌 문구(CH)도 그 구성으로 바꾼다
+  const pickLook = (lookId, krText) => {
+    const code = (String(lookId).match(/LOOK[A-Z0-9_]*/) || [lookId])[0]
     const ch = String(mc.ch || '')
     const nextCh = /LOOK[A-Z0-9_]*/.test(ch) ? ch.replace(/LOOK[A-Z0-9_]*/, code) : (ch.trim() ? ch : `서여리 / ${code}`)
-    const label = labelOf(cb, 'lookId', code)
-    mcPatch({ lookId: code, ch: nextCh, ...(label ? { kr: { ch: label } } : {}) })
+    const text = krText || labelOf(cb, 'lookId', code)
+    mcPatch({ lookId, ch: nextCh, ...(text ? { kr: { ch: text } } : {}) })
   }
+  const curLook = (tokensOf('lookId', mc.lookId)[0]) || ''
   const lookRef = refOptions(cb, 'lookId')
   const lookExtra = usedLookIds.filter(c => /^LOOK/.test(c) && !lookRef.some(o => o.code === c))
   const warnTab = { sp: hasUnknown(cb, 'sp', mc.sp), ch: hasUnknown(cb, 'lookId', mc.lookId), sh: hasUnknown(cb, 'sh', mc.sh), ca: hasUnknown(cb, 'ca', mc.ca), ac: hasUnknown(cb, 'ac', mc.ac), md: hasUnknown(cb, 'md', mc.md) }
@@ -246,19 +250,56 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
                 <label>KR 컨펌 문구 — CH(캐릭터)</label>
                 <textarea rows={2} value={kr.ch || ''} onChange={e => krField('ch', e.target.value)} />
               </div>
-              <div className={s.refTitle}>레퍼런스 — 등록된 룩</div>
-              <div className={s.chipRow}>
-                {lookRef.map(o => (
-                  <button key={o.code} type="button" className={chip(mc.lookId === o.code)} onClick={() => pickLook(o.code)}>
-                    {o.code} <span className={s.chipDesc}>({o.label})</span>
-                  </button>
-                ))}
-              </div>
+              <div className={s.refTitle}>레퍼런스 — 등록된 의상 (▸ 펼치면 구성과 상황별 설정)</div>
+              {refGroups(cb, 'lookId').map(g => (
+                <div key={g.group} className={s.refGroup}>
+                  <div className={s.refGroupName}>{g.group || '기타'}</div>
+                  <div className={s.lookList}>
+                    {g.items.map(o => {
+                      const d = lookDetail(cb, o.code)
+                      const open = openLook === o.code
+                      return (
+                        <div key={o.code} className={`${s.lookItem} ${curLook === o.code ? s.lookItemOn : ''}`}>
+                          <div className={s.lookHead}>
+                            <button type="button" className={s.lookToggle} onClick={() => setOpenLook(open ? null : o.code)}>
+                              {open ? '▾' : '▸'} {o.code} <span className={s.chipDesc}>({o.label})</span>
+                              {d?.base && <span className={s.chipDesc}> ← {d.base} 변형</span>}
+                            </button>
+                            <button type="button" className={s.chip} onClick={() => pickLook(o.code, d?.framings[0]?.text)}>전신으로 선택</button>
+                          </div>
+                          {open && d && (
+                            <div className={s.lookBody}>
+                              <div className={s.lookParts}>
+                                {d.partRows.map(r => (<div key={r.key} className={s.lookPart}><span>{r.name}</span>{r.text}</div>))}
+                              </div>
+                              <div className={s.refGroupName}>화면에 잡히는 범위</div>
+                              {d.framings.map(f => (
+                                <button key={f.lookId} type="button" className={`${s.lookOpt} ${mc.lookId === f.lookId ? s.chipOn : ''}`} onClick={() => pickLook(f.lookId, f.text)}>
+                                  <b>{f.name}</b> {f.text}
+                                </button>
+                              ))}
+                              {d.situations.length > 0 && (<>
+                                <div className={s.refGroupName}>상황별</div>
+                                {d.situations.map(f => (
+                                  <button key={f.lookId} type="button" className={`${s.lookOpt} ${mc.lookId === f.lookId ? s.chipOn : ''}`} onClick={() => pickLook(f.lookId, f.text)}>
+                                    <b>{f.name}</b> {f.text}
+                                  </button>
+                                ))}
+                              </>)}
+                              {!d.hasPrompt && <div className={s.note}>영어 의상 문장(프롬프트용)이 아직 등록되지 않은 의상입니다.</div>}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
               {lookExtra.length > 0 && (<>
                 <div className={s.refTitle}>이 에피소드 다른 컷에서 쓴 룩 (레퍼런스 미등록)</div>
                 <div className={s.chipRow}>
                   {lookExtra.map(code => (
-                    <button key={code} type="button" className={chip(mc.lookId === code)} onClick={() => pickLook(code)}>{code}</button>
+                    <button key={code} type="button" className={chip(curLook === code)} onClick={() => pickLook(code)}>{code}</button>
                   ))}
                 </div>
               </>)}
@@ -291,13 +332,18 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
                     </label>
                   )}
                 </div>
-                <div className={s.chipRow}>
-                  {refOptions(cb, tab).map(o => (
-                    <button key={o.code} type="button" className={chip(cur.includes(o.code))} onClick={() => pickCode(tab, o.code)}>
-                      {o.code} <span className={s.chipDesc}>({o.label})</span>
-                    </button>
-                  ))}
-                </div>
+                {refGroups(cb, tab).map(g => (
+                  <div key={g.group} className={s.refGroup}>
+                    <div className={s.refGroupName}>{g.group || '기타'}</div>
+                    <div className={s.chipRow} style={{ marginTop: 0 }}>
+                      {g.items.map(o => (
+                        <button key={o.code} type="button" className={chip(cur.includes(o.code))} onClick={() => pickCode(tab, o.code)}>
+                          {o.code} <span className={s.chipDesc}>({o.label})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )
           })()}
