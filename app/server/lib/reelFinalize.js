@@ -723,8 +723,9 @@ export async function finalizeReel(p) {
 
   // BGM
   let bgmAbs = null
-  const wantsBgm = decisions.some((d) => d.bgmText && !/^\s*(없음|-|n\/?a)?\s*$/i.test(d.bgmText))
-  if (bgmFile) bgmAbs = path.isAbsolute(bgmFile) ? bgmFile : mp.bgmFile(bgmFile)
+  // p.noBgm: 사람이 "BGM 없이"를 고른 경우 — 대본에 BGM 문구가 있어도 넣지 않는다.
+  const wantsBgm = !p.noBgm && decisions.some((d) => d.bgmText && !/^\s*(없음|-|n\/?a)?\s*$/i.test(d.bgmText))
+  if (bgmFile && !p.noBgm) bgmAbs = path.isAbsolute(bgmFile) ? bgmFile : mp.bgmFile(bgmFile)
   // 다시 합성할 때는 이전 최종본의 곡을 그대로 쓴다 — 9/28 R04 재합성에서 확정곡(Sea Breeze) 대신 새 곡을 생성해 버린 사고
   if (!bgmAbs && wantsBgm) {
     try {
@@ -752,7 +753,8 @@ export async function finalizeReel(p) {
   let bgmNote = 'BGM 없음'
   let bgmFilterOut = ''
   if (bgmAbs && fs.existsSync(bgmAbs)) {
-    const bgmStart = decisions.find((d) => d.bgmText && !/없음/.test(d.bgmText))?.startSec ?? 0
+    // 사람이 곡을 직접 고른 경우는 처음부터 깐다. 자동일 때는 대본에서 BGM 문구가 처음 나오는 컷부터.
+    const bgmStart = bgmFile ? 0 : (decisions.find((d) => d.bgmText && !/없음/.test(d.bgmText))?.startSec ?? 0)
     sfxInputs.push('-stream_loop', '-1', '-i', bgmAbs)
     const bi = idx
     const fadeOut = Math.max(0, totalDur - 1.5)

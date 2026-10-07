@@ -1118,6 +1118,8 @@ export default function MakingTab() {
   // ── 릴스 최종본 (자막 번인 + SFX + 컷별 편집 판단) — /api/reel-finalize ──
   const [reelPlan, setReelPlan] = useState(null)      // [{no,cutType,fit,caption,sfx,hasFile}]
   const [reelBusy, setReelBusy] = useState(false)
+  // 릴스 최종본 BGM — 'auto'(보유 곡에서 고르고 없으면 새로 생성) | 'library'(보유 곡만) | 'none' | 보유 곡 파일 경로
+  const [reelBgm, setReelBgm] = useState('library')
   const [reelLog, setReelLog] = useState('')
   const [reelVideo, setReelVideo] = useState(null)
   const [reelManifest, setReelManifest] = useState(null)
@@ -1165,7 +1167,10 @@ export default function MakingTab() {
     try {
       const res = await fetch(`${YEORI_SERVER}/api/reel-finalize`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ epNum: episode.number }),
+        body: JSON.stringify({
+          epNum: episode.number,
+          ...(['auto', 'library', 'none'].includes(reelBgm) ? { bgmMode: reelBgm } : { bgmFile: reelBgm }),
+        }),
       })
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
       for (;;) {
@@ -3577,9 +3582,24 @@ export default function MakingTab() {
                   <button className={s.previewBtn} disabled={reelBusy || !episode?.number} onClick={loadReelPlan}>
                     컷별 판단 미리보기
                   </button>
+                  <label className={s.durationField}>
+                    BGM
+                    <select value={reelBgm} onFocus={loadBgmLibrary} onChange={e => setReelBgm(e.target.value)}>
+                      <option value="library">자동 — 보유 곡에서만 고름(없으면 BGM 없이)</option>
+                      <option value="auto">자동 — 맞는 곡 없으면 새로 생성(ElevenLabs 크레딧 사용)</option>
+                      <option value="none">BGM 없이</option>
+                      {bgmLibrary.filter((t, i, arr) => arr.findIndex(x => x.file === t.file) === i).map(t => (
+                        <option key={t.file} value={t.file}>직접 선택: {String(t.title || '').replace(/&#8211;/g, '–')} ({t.mood})</option>
+                      ))}
+                    </select>
+                  </label>
                   <button className={s.captureBtn} disabled={reelBusy || !episode?.number} onClick={runReelFinalize}>
                     {reelBusy ? '⏳ 생성 중…' : '🎬 릴스 최종본 생성'}
                   </button>
+                </div>
+                <div className={s.emptyHint}>
+                  BGM은 릴스 전체에 한 곡이 낮은 음량으로 깔립니다(컷마다 따로 지정하는 방식이 아님). 자동은 대본에서 BGM 문구가 처음 나오는 컷부터 시작하고,
+                  곡을 직접 고르면 처음부터 깝니다. 한 번 만든 뒤 다시 만들 때는 이전 최종본의 곡을 그대로 씁니다. 효과음은 아래 “컷별 판단 미리보기” 표에서 컷마다 바꿀 수 있습니다.
                 </div>
 
                 {Array.isArray(reelPlan) && (

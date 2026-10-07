@@ -3699,7 +3699,9 @@ app.get('/api/reel-finalize/staleness', (req, res) => {
 
 // POST — 실제 생성 (SSE 진행)
 app.post('/api/reel-finalize', async (req, res) => {
-  const { epNum, bgmFile } = req.body || {}
+  // bgmMode: 'auto'(기본 — 보유 곡에서 고르고 없으면 생성) | 'library'(보유 곡만, 생성 안 함) | 'none'(BGM 없이)
+  //          bgmFile 이 있으면 그 곡을 처음부터 깐다.
+  const { epNum, bgmFile, bgmMode } = req.body || {}
   let ctx
   try {
     const { ep, epId } = findEpisodeByNumOrThrow(epNum)
@@ -3719,7 +3721,11 @@ app.post('/api/reel-finalize', async (req, res) => {
   send({ type: 'start', code: ctx.code, cuts: ctx.cuts.length })
 
   try {
-    const r = await finalizeReel({ epNum: Number(epNum), cuts: ctx.cuts, bgmFile, onLog: (line) => send({ type: 'log', line }) })
+    const r = await finalizeReel({
+      epNum: Number(epNum), cuts: ctx.cuts, bgmFile: bgmFile || undefined,
+      noBgm: bgmMode === 'none', allowBgmGenerate: bgmMode !== 'library' && bgmMode !== 'none',
+      onLog: (line) => send({ type: 'log', line }),
+    })
     const url = `http://localhost:3001${mp.toMediaUrl(r.finalPath)}?t=${Date.now()}`
     // GRAPHIC/CAPCUT 컷들이 이미 g4 인 상태에서 최종본까지 나오면 조립 완료로 볼 수 있음 (참고용)
     send({ type: 'done', ok: true, videoUrl: url, manifest: r.manifest })
