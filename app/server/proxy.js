@@ -4703,14 +4703,25 @@ async function makeImageSequenceCut({ epNum, cutNo, images, duration, effect, fi
     outputPath, skipMotionRecord: !!preview, method: 'imgseq',
   })
 
+  // 대본에 음성 나레이션이 있는 컷은 최종본이 TTS 음성(G3)을 직접 믹스한다 — 컷 영상에 또 합치면
+  // 두 번 들린다. 그런 컷은 여기서 합치지 않는다(정식 절차: 나레이션 칸 → TTS 탭 → 최종본).
   let audioApplied = false
+  let audioSkipped = null
   if (audioFile) {
+    try {
+      const { hasVoiceNarration } = await import('./lib/reelFinalize.js')
+      const { ep } = findEpisodeByNumOrThrow(epNum)
+      const cut = (ep.cuts || []).find(c => Number(c.no) === Number(cutNo))
+      if (cut && hasVoiceNarration(cut)) audioSkipped = '대본에 나레이션이 있어 최종본에서 TTS 음성으로 들어갑니다'
+    } catch { /* 컷을 못 찾으면 요청대로 합친다 */ }
+  }
+  if (audioFile && !audioSkipped) {
     const audioAbs = path.join(mp.audioDir(epNum), path.basename(String(audioFile)))
     if (!fs.existsSync(audioAbs)) { const e = new Error(`오디오 없음: ${audioFile}`); e.statusCode = 404; throw e }
     await muxAudioIntoVideo(result.videoPath, audioAbs)
     audioApplied = true
   }
-  return { preview: !!preview, audioApplied, ...result, previewUrl: mp.toMediaUrl(result.videoPath) }
+  return { preview: !!preview, audioApplied, audioSkipped, ...result, previewUrl: mp.toMediaUrl(result.videoPath) }
 }
 
 app.post('/api/image-sequence-cut', async (req, res) => {

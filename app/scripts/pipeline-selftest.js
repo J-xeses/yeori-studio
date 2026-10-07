@@ -565,6 +565,16 @@ await check('M4', '모션 자막 — 미리보기가 컷 전체 길이(시작시
   return { ok: full && typer && fresh && allTypes, evidence: `미리보기 전체 길이 ${full ? 'O' : 'X'} · TYPER 구현 ${typer ? 'O' : 'X'} · 옛 말풍선본 위에 자막 안 얹음 ${fresh ? 'O' : 'X'} · 영상생성 유형 컷도 말풍선·자막 패널 ${allTypes ? 'O' : 'X'}` }
 })
 
+await check('M5', '나레이션 이중 재생 방지 — 대본에 나레이션이 있는 컷은 컷 영상에 음성을 또 합치지 않음', async () => {
+  const { hasVoiceNarration } = await import('../server/lib/reelFinalize.js')
+  const px = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const rule = hasVoiceNarration({ narration: '오늘도 평범한 하루였어요.' }) === true
+    && hasVoiceNarration({ narration: '없음' }) === false && hasVoiceNarration({ narration: '' }) === false
+    && hasVoiceNarration({ narration: '(화면 자막) DM 도착' }) === false
+  const guard = /if \(cut && hasVoiceNarration\(cut\)\) audioSkipped/.test(px) && /if \(audioFile && !audioSkipped\)/.test(px)
+  return { ok: rule && guard, evidence: `나레이션 판정(문구 O·없음 X·빈칸 X·화면자막 X) ${rule ? 'O' : 'X'} · 사진 시퀀스가 그런 컷엔 음성 합치기 생략 ${guard ? 'O' : 'X'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

@@ -1955,13 +1955,19 @@ export default function MakingTab() {
               <option value="contain">전체 보이기(레터박스) — 스크린샷/목업용</option>
             </select>
           </label>
-          <label className={s.durationField}>
-            나레이션
-            <select value={seqAudio} onChange={e => setSeqAudio(e.target.value)}>
-              <option value="">없음(무음)</option>
-              {seqAudioList.map(f => <option key={f} value={f}>{f}</option>)}
-            </select>
-          </label>
+          {String(cut.narration || '').trim() && !/^(없음|-)$/.test(String(cut.narration).trim()) ? (
+            <span className={s.emptyHint} style={{ margin: 0 }}>
+              🔊 나레이션: 대본에 있음 → 최종본에서 TTS 음성(G3)으로 자동으로 들어갑니다(컷 영상은 무음으로 만듭니다)
+            </span>
+          ) : (
+            <label className={s.durationField}>
+              나레이션
+              <select value={seqAudio} onChange={e => setSeqAudio(e.target.value)}>
+                <option value="">없음(무음)</option>
+                {seqAudioList.map(f => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </label>
+          )}
           <button className={s.previewBtn} disabled={seqBusy || !seqSelected.length}
             onClick={() => runImageSequence(cut, true)}>
             {seqBusy ? '⏳ 렌더 중…' : `미리보기 생성 (${seqSelected.length}장)`}
@@ -1978,7 +1984,7 @@ export default function MakingTab() {
           ) : (
             <div className={s.resultOk}>
               {seqResult.preview ? '✅ 미리보기 생성됨 (실제 컷 파일은 아직 안 바뀜 — 확인 후 확정하세요)' : '✅ 확정 저장됨 — 실제 cut 파일이 교체되었습니다'}
-              {seqResult.audioApplied ? ' · 🔊 나레이션 포함' : ' · 🔇 무음'}
+              {seqResult.audioApplied ? ' · 🔊 나레이션 포함' : seqResult.audioSkipped ? ` · 🔇 컷 영상은 무음 — ${seqResult.audioSkipped}` : ' · 🔇 무음'}
               <br />
               <video className={s.makingVideo} controls
                 src={`${epMediaUrl(episode, 'video')}${seqResult.preview ? '/_manual_work' : ''}/cut_${String(cut.no).padStart(2, '0')}${seqResult.preview ? '_preview' : ''}.mp4?t=${seqResult._ts}`} />

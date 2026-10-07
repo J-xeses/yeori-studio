@@ -308,6 +308,15 @@ export function autoCaptionTimings(cut, code, durSec) {
   return speechSyncedTimings(cut, d.caption.segments, Number(durSec) || d.durSec, code)
 }
 
+// 이 컷에 "음성 나레이션"이 있는가 — 최종본이 TTS 음성(03_audio)을 믹스하는 조건과 같은 판정.
+// "(화면 자막) …" 처럼 화면 글자를 적어둔 것은 음성이 아니다.
+export function hasVoiceNarration(cut) {
+  const nrText = String(cut?.narration || '').trim()
+  if (!nrText || /^(없음|-)$/.test(nrText)) return false
+  if (/^\(?\s*(화면\s*자막|자막|텍스트)\s*\)?/.test(nrText) || /대사 자막만/.test(nrText)) return false
+  return true
+}
+
 export function decideCut(cut) {
   const mc = cut.masterCode || {}
   const sp = String(mc.sp || '')
@@ -695,10 +704,8 @@ export async function finalizeReel(p) {
   const narrNotes = []
   for (const d of decisions) {
     const cut = (cuts || []).find((c) => Number(c.no) === Number(d.no))
-    const nrText = String(cut?.narration || '').trim()
-    if (!nrText || /^(없음|-)$/.test(nrText)) continue
     // "(화면 자막) …" 은 한글 확인 블록에 적은 화면 글자 — 음성 나레이션이 아니다(IG_R05 에서 5컷 모두 오경고, 2026-09-25)
-    if (/^\(?\s*(화면\s*자막|자막|텍스트)\s*\)?/.test(nrText) || /대사 자막만/.test(nrText)) continue
+    if (!hasVoiceNarration(cut)) continue
     // 대사+나레이션 컷은 G3 가 cut_NN_nr.mp3 로 따로 만든다. 대사 컷의 cut_NN.mp3 는 (예전) 대사 TTS 일 수 있어 쓰지 않는다.
     const pad2 = String(d.no).padStart(2, '0')
     const hasDl = !!String(cut?.dialogue || '').trim()
