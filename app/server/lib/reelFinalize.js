@@ -555,10 +555,13 @@ export async function finalizeReel(p) {
     // 채널 수가 많은 무음 쪽을 골라 컷 소리가 통째로 사라졌다(2026-10-07 실측: 모노 나레이션 -91dB).
     const hasOwnAudio = (await ffprobeStreamDuration(d.src, 'audio')) > 0
     if (hasOwnAudio) {
+      // 길이는 -t 로 못박는다 — apad + -shortest 만 쓰면 재인코딩 시 오디오 버퍼만큼 컷이 몇 초씩
+      // 길어져 전체 타임라인(자막·효과음 시각)이 밀린다(2026-10-07 실측: 25초가 36.9초로).
       await ff(['-i', d.src, '-map', '0:v:0', '-map', '0:a:0',
         '-vf', normVf(d.fit), '-af', 'aresample=48000,aformat=channel_layouts=stereo,apad',
+        '-t', d.durSec.toFixed(3),
         '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
-        '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', out])
+        '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', out])
     } else {
       await ff(['-i', d.src, '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=stereo', '-map', '0:v:0', '-map', '1:a:0',
         '-vf', normVf(d.fit), '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',

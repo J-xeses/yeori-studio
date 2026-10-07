@@ -657,7 +657,12 @@ else await check('F1', '최종본 — 나레이션 믹스·대사 음성·영상
     const style = JSON.parse(fs.readFileSync(mp.statePath(`reel-overrides/${CODE}.json`), 'utf-8'))._style || {}
     const styleOk = !style.fontPx || ov.scenes.every(s => s.font_size === style.fontPx)
     const mixed = logs.some(l => /나레이션 음성 믹스/.test(l))
-    return { ok: mixed && nrDb > -40 && dlDb > -40 && styleOk, evidence: `나레이션 믹스 로그 ${mixed} · 컷1 음량 ${nrDb}dB · 대사컷${dlCut.no} 음량 ${dlDb}dB · 자막 크기 ${style.fontPx || '기본58'}px 반영 ${styleOk}` }
+    // 최종본 길이 = 컷 길이 합(±0.5초). 2026-10-07: 컷 규격화 단계 수정이 컷을 몇 초씩 늘려
+    // 전체가 25초→36.9초가 된 적이 있다 — 길이가 밀리면 자막·효과음 시각이 전부 어긋난다.
+    const planned = r.manifest.duration
+    const actual = Number(String(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', r.finalPath]).stdout || '').trim())
+    const durOk = Math.abs(actual - planned) <= 0.5
+    return { ok: mixed && nrDb > -40 && dlDb > -40 && styleOk && durOk, evidence: `나레이션 믹스 로그 ${mixed} · 컷1 음량 ${nrDb}dB · 대사컷${dlCut.no} 음량 ${dlDb}dB · 자막 크기 ${style.fontPx || '기본58'}px 반영 ${styleOk} · 길이 ${actual.toFixed(2)}s(컷 합 ${planned}s) ${durOk ? 'O' : 'X'}` }
   } finally {
     if (!nrExisted) { try { fs.unlinkSync(nrTarget) } catch { /* noop */ } }
     if (!hadAudioDir) { try { fs.rmdirSync(audioDir) } catch { /* noop */ } }
