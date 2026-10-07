@@ -2917,9 +2917,18 @@
           "overrides": {
             "duration": {
               "value": 5,
-              "at": "2026-10-06T23:37:47.581Z",
+              "at": "2026-10-07T05:29:58.263Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
+          },
+          "imageSeq": {
+            "images": [
+              "cut_01_a.jpg",
+              "cut_01_b.jpg"
+            ],
+            "effect": "auto",
+            "fit": "cover",
+            "audio": "cut_01_nr.mp3"
           }
         },
         {
@@ -2963,7 +2972,15 @@
               "md": "유머 · 공감"
             }
           },
-          "subtitle": "\"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\""
+          "subtitle": "\"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\"",
+          "imageSeq": null,
+          "overrides": {
+            "duration": {
+              "value": 4,
+              "at": "2026-10-07T05:35:48.493Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-3",
@@ -8711,9 +8728,18 @@
       "overrides": {
         "duration": {
           "value": 5,
-          "at": "2026-10-06T23:37:47.581Z",
+          "at": "2026-10-07T05:29:58.263Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
+      },
+      "imageSeq": {
+        "images": [
+          "cut_01_a.jpg",
+          "cut_01_b.jpg"
+        ],
+        "effect": "auto",
+        "fit": "cover",
+        "audio": "cut_01_nr.mp3"
       }
     },
     {
@@ -8757,7 +8783,15 @@
           "md": "유머 · 공감"
         }
       },
-      "subtitle": "\"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\""
+      "subtitle": "\"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\"",
+      "imageSeq": null,
+      "overrides": {
+        "duration": {
+          "value": 4,
+          "at": "2026-10-07T05:35:48.493Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     },
     {
       "id": "cut-3",
@@ -9012,7 +9046,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-07T03:36:32.894Z",
+  "savedAt": "2026-10-07T05:22:48.864Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
@@ -9104,12 +9138,34 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
       "cut-4__v1": [
         {
           "id": "track_1790760756607_1k86",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-2__v1": [
+        {
+          "id": "track_1791350492628_9hv1",
           "type": "dialogue",
           "text": "",
           "speaker": null,

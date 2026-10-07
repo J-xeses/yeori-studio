@@ -1,13 +1,11 @@
 {
   "1": {
-    "method": "graphic",
-    "motion": "none",
+    "method": "imgseq",
+    "selfText": false,
+    "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-10-06T23:42:46.558Z",
-    "subtitle": true,
-    "subtitleEffect": "fade",
-    "subtitleAt": "2026-10-07T03:41:14.811Z"
+    "producedAt": "2026-10-07T05:29:58.092Z"
   },
   "2": {
     "method": "graphic",
@@ -15,10 +13,7 @@
     "motion": "none",
     "baked": true,
     "duration": 4,
-    "producedAt": "2026-10-07T01:59:03.339Z",
-    "subtitle": true,
-    "subtitleEffect": "slam",
-    "subtitleAt": "2026-10-07T03:22:24.440Z"
+    "producedAt": "2026-10-07T05:35:48.490Z"
   },
   "3": {
     "method": "graphic",
