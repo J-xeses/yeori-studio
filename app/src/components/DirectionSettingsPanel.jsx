@@ -269,8 +269,16 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
                           </div>
                           {open && d && (
                             <div className={s.lookBody}>
+                              {d.summary.code && (
+                                <div className={s.lookSummary}>요약 코드 <b>{d.summary.code}</b> <span className={s.chipDesc}>({d.summary.ko})</span></div>
+                              )}
                               <div className={s.lookParts}>
-                                {d.partRows.map(r => (<div key={r.key} className={s.lookPart}><span>{r.name}</span>{r.text}</div>))}
+                                {d.partRows.map(r => (
+                                  <div key={r.key} className={s.lookPart}>
+                                    <span>{r.name}</span>{r.text}
+                                    {r.code && <em> {r.code}({r.codeLabel})</em>}
+                                  </div>
+                                ))}
                               </div>
                               <div className={s.refGroupName}>화면에 잡히는 범위</div>
                               {d.framings.map(f => (

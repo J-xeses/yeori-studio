@@ -74,7 +74,12 @@ export function lookDetail(cb, code) {
     const merged = { ...parts, ...(sit.parts || {}) }
     return { name: sit.name, lookId: `${code} (${sit.suffix || sit.name})`, text: joinParts(merged, FRAMINGS[0].keys) }
   })
-  return { code, label: e.label || '', group: e.group || '', base: e.base || null, partRows, framings, situations, hasPrompt: !!e.ip_outfit }
+  // 요약 코드 — 스타일.상의.하의.신발 (예: LK_CS.TOP_CRP.BTM_DNM.SH_HHL = 캐주얼 · 크롭탑 · 데님쇼츠/팬츠 · 하이힐)
+  const cats = cb.LOOK_BANK._categories || {}, pc = cb.LOOK_BANK._part_codes || {}
+  const codes = [e.lk, e.part_codes?.top, e.part_codes?.bottom, e.part_codes?.shoes].filter(Boolean)
+  const summary = { code: codes.join('.'), ko: codes.map(c => cats[c] || pc[c] || c).join(' · ') }
+  for (const r of partRows) { const c = e.part_codes?.[r.key]; if (c) { r.code = c; r.codeLabel = pc[c] || '' } }
+  return { code, label: e.label || '', group: e.group || '', base: e.base || null, summary, partRows, framings, situations, hasPrompt: !!e.ip_outfit }
 }
 
 // 값 안의 코드 낱말들(예: "SH_MCU → SH_CU" → [SH_MCU, SH_CU])
@@ -126,7 +131,15 @@ export function glossParts(cb, kind, value) {
     const k = spKorean(cb, v)
     return [{ text: `${code}(${k.text})`, warn: k.unknown.length > 0 }]
   }
-  const lookKind = kind === 'ch' ? 'lookId' : kind
+  if (kind === 'ch') {
+    const cats = cb.LOOK_BANK?._categories || {}, pc = cb.LOOK_BANK?._part_codes || {}
+    const toks = v.match(/LOOK[A-Z0-9_]*|LK_[A-Z]+|(?:TOP|BTM)_[A-Z]+|SH_(?:HHL|SNK|FLT)/g) || []
+    return toks.map(tok => {
+      const label = cats[tok] || pc[tok] || labelOf(cb, 'lookId', tok)
+      return { text: `${tok}(${label || '?'})`, warn: !label }
+    })
+  }
+  const lookKind = kind
   return tokensOf(kind, v).map(tok => {
     const label = labelOf(cb, lookKind, tok)
     // PL 은 플랫폼 코드(LF_YU 등)도 섞여 쓰여서 모르는 값에 경고를 달지 않는다
@@ -154,6 +167,8 @@ export function codeListForPrompt(cb) {
     `MD: ${line('md')}`,
     `AC: ${line('ac')}`,
     `LOOK_ID: ${line('lookId')}`,
+    `의상 스타일(LK): ${Object.entries(cb.LOOK_BANK?._categories || {}).map(([c, l]) => `${c}(${l})`).join(' ')}`,
+    `의상 부위 코드: ${Object.entries(cb.LOOK_BANK?._part_codes || {}).map(([c, l]) => `${c}(${l})`).join(' ')}`,
     `SP 형식: 실내외(IN 실내 / OT 실외).장소.시간.조명 — 예 OT.CF.TZ_AF.LT_WM`,
     `SP 장소: ${pairs(spLocations(cb))}`,
     `SP 시간: ${pairs(spTimes(cb))} / 조명: ${pairs(spLights(cb))}`,

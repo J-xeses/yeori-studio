@@ -102,7 +102,7 @@
 }
 
 /* 성격별 묶음 · 의상 펼침(2026-10-07) */
-.refGroup { display: grid; grid-template-columns: 96px 1fr; gap: 8px; align-items: start; margin-top: 8px; }
+.refGroup { display: grid; grid-template-columns: 112px 1fr; gap: 8px; align-items: start; margin-top: 8px; }
 .refGroupName { font-size: 11px; color: var(--text-3); padding-top: 5px; }
 .lookList { display: flex; flex-direction: column; gap: 4px; }
 .lookItem { border: 1px solid var(--border-light); border-radius: 6px; background: var(--bg-input); }
@@ -111,7 +111,7 @@
 .lookToggle { background: none; border: none; color: var(--text-2); font-size: 11.5px; cursor: pointer; text-align: left; padding: 3px 2px; flex: 1; }
 .lookToggle:hover { color: var(--text); }
 .lookBody { padding: 4px 10px 10px; border-top: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 4px; }
-.lookParts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; margin: 6px 0 2px; }
+.lookParts { display: grid; grid-template-columns: 1fr; gap: 2px; margin: 4px 0 2px; }
 .lookPart { font-size: 12px; color: var(--text); }
 .lookPart span { display: inline-block; width: 84px; color: var(--text-3); font-size: 11px; }
 .lookOpt {
@@ -120,3 +120,6 @@
 }
 .lookOpt:hover { border-color: var(--accent-border); color: var(--text); }
 .lookOpt b { display: inline-block; min-width: 118px; color: var(--text); font-weight: 600; }
+.lookSummary { font-size: 11.5px; color: var(--text-2); margin-top: 6px; }
+.lookSummary b { color: var(--accent-light); font-weight: 600; margin-left: 4px; }
+.lookPart em { font-style: normal; font-size: 11px; color: var(--text-3); margin-left: 6px; }

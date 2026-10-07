@@ -554,11 +554,29 @@
   },
   "LOOK_BANK": {
     "_note": "LOOK_ID → IP 의상 문장 매핑 (character_id=yeori 전용)",
+    "_categories": {
+      "LK_CS": "캐주얼",
+      "LK_NT": "나이트·드레시",
+      "LK_HM": "홈·편안",
+      "LK_SH": "화보·촬영"
+    },
+    "_part_codes": {
+      "TOP_CRP": "크롭탑",
+      "TOP_KNT": "니트",
+      "TOP_TNK": "터틀넥",
+      "TOP_OFS": "오프숄더",
+      "BTM_DNM": "데님쇼츠/팬츠",
+      "BTM_SHT": "쇼츠",
+      "BTM_SKT": "스커트",
+      "SH_HHL": "하이힐 (스틸레토)",
+      "SH_SNK": "스니커즈",
+      "SH_FLT": "플랫슈즈"
+    },
     "LOOK_CS": {
       "label": "크롭탑+데님숏츠+힐",
       "ip_outfit": "white square-neck crop top, light blue denim shorts, white stiletto high heels,",
       "ep": "E01",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "top": "흰색 스퀘어넥 크롭탑",
         "bottom": "연청 데님 숏츠",
@@ -569,106 +587,88 @@
           "name": "집·실내 (맨발)",
           "code": "LOOK_HM"
         }
-      ]
-    },
-    "LOOK_HM": {
-      "label": "크롭탑+데님숏츠+맨발",
-      "ip_outfit": "white square-neck crop top, light blue denim shorts, bare feet,",
-      "ep": "E01",
-      "group": "집·실내",
-      "parts": {
-        "top": "흰색 스퀘어넥 크롭탑",
-        "bottom": "연청 데님 숏츠",
-        "shoes": "맨발"
-      },
-      "base": "LOOK_CS"
+      ],
+      "lk": "LK_CS",
+      "part_codes": {
+        "top": "TOP_CRP",
+        "bottom": "BTM_DNM",
+        "shoes": "SH_HHL"
+      }
     },
     "LOOK02": {
       "label": "성수동 체크스커트",
       "ip_outfit": "white square-neck crop top, navy check pleated mini skirt, white strap sandals, black crossbody bag,",
       "ep": "E02",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "top": "흰색 스퀘어넥 크롭탑",
         "bottom": "네이비 체크 플리츠 미니스커트",
         "shoes": "흰색 스트랩 샌들",
         "acc": "검정 크로스백"
-      }
-    },
-    "LOOK_YOGA": {
-      "label": "파스텔 요가셋",
-      "ip_outfit": "pastel lavender yoga set, hair tied back neatly,",
-      "ep": "E03",
-      "group": "운동·찜질방",
-      "parts": {
-        "head": "단정하게 묶은 머리",
-        "set": "파스텔 라벤더 요가 세트"
-      }
-    },
-    "LOOK_JJM": {
-      "label": "찜질방 세트",
-      "ip_outfit": "sage green jjimjilbang set, white towel hat,",
-      "ep": "E03",
-      "group": "운동·찜질방",
-      "parts": {
-        "head": "흰 수건 모자",
-        "set": "세이지 그린 찜질복 세트"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "top": "TOP_CRP",
+        "bottom": "BTM_SKT"
       }
     },
     "LOOK_PB": {
       "label": "공공장소 캐주얼",
       "ip_outfit": "white heart-pattern crop top, pink scarf, green running shorts, pink flip-flop sandals,",
       "ep": "E04",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "top": "흰색 하트 패턴 크롭탑",
         "bottom": "그린 러닝 쇼츠",
         "shoes": "핑크 플립플롭 샌들",
         "acc": "핑크 스카프"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "top": "TOP_CRP",
+        "bottom": "BTM_SHT"
       }
     },
     "LOOK_RS": {
       "label": "레스토랑 캐주얼",
       "ip_outfit": "white APC graphic tee, dark wash bootcut rolled jeans, red strappy heels, black baseball cap, beige mini shoulder bag,",
       "ep": "E05",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "head": "검정 볼캡",
         "top": "흰색 APC 그래픽 티",
         "bottom": "진청 부츠컷 롤업 진",
         "shoes": "레드 스트랩 힐",
         "acc": "베이지 미니 숄더백"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "bottom": "BTM_DNM",
+        "shoes": "SH_HHL"
       }
     },
     "LOOK_ST": {
       "label": "거리 캐주얼",
       "ip_outfit": "beige baseball cap, white APC graphic tee, bootcut rolled jeans, red sandals, gold necklace, gold bracelet,",
       "ep": "E06",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "head": "베이지 볼캡",
         "top": "흰색 APC 그래픽 티",
         "bottom": "부츠컷 롤업 진",
         "shoes": "레드 샌들",
         "acc": "골드 목걸이 · 골드 팔찌"
-      }
-    },
-    "LOOK_NT": {
-      "label": "홈 나이트 후드+묶은머리",
-      "ip_outfit": "oversized heather-grey hoodie, hair tied up in a loose messy bun with a few face-framing strands, soft cream knit blanket over the knees,",
-      "ep": "IG_R05",
-      "group": "집·실내",
-      "parts": {
-        "head": "느슨하게 올려 묶은 번 머리",
-        "top": "오버사이즈 헤더 그레이 후드티",
-        "acc": "무릎 위 크림 니트 담요"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "bottom": "BTM_DNM"
       }
     },
     "LOOK_AUT": {
       "label": "볼캡+크롭탑+플란넬+카고팬츠",
       "ip_outfit": "black LA baseball cap worn low, white ribbed crop top, black plaid flannel shirt tied at waist, black wide-leg cargo pants, white sneakers, gold necklace,",
       "ep": "SF_E11",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "head": "검정 LA 볼캡 (낮게 눌러씀)",
         "top": "흰색 골지 크롭탑",
@@ -676,33 +676,75 @@
         "bottom": "검정 와이드 카고 팬츠",
         "shoes": "흰색 스니커즈",
         "acc": "골드 목걸이"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "top": "TOP_CRP",
+        "shoes": "SH_SNK"
       }
     },
     "LOOK_HG": {
       "label": "아이보리 크루넥+베이지 린넨 와이드팬츠",
       "ip_outfit": "oversized soft ivory cotton crewneck top tucked loosely into wide-leg light beige linen pants with a subtle cuffed rollup at the ankle, white low-top canvas sneakers,",
       "ep": "SF_E07",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "top": "오버사이즈 아이보리 코튼 크루넥 (느슨하게 넣어 입음)",
         "bottom": "라이트 베이지 린넨 와이드 팬츠 (밑단 롤업)",
         "shoes": "흰색 로우탑 캔버스 스니커즈"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "shoes": "SH_SNK"
       }
     },
     "LOOK_CF": {
       "label": "크림 니트+베이지 와이드팬츠",
       "ep": "SF_E10",
-      "group": "외출",
+      "group": "LK_CS 캐주얼",
       "parts": {
         "top": "크림 니트 탑",
         "bottom": "베이지 와이드 팬츠",
         "acc": "골드 목걸이 · 골드 브레이슬렛"
+      },
+      "lk": "LK_CS",
+      "part_codes": {
+        "top": "TOP_KNT"
       }
+    },
+    "LOOK_HM": {
+      "label": "크롭탑+데님숏츠+맨발",
+      "ip_outfit": "white square-neck crop top, light blue denim shorts, bare feet,",
+      "ep": "E01",
+      "group": "LK_HM 홈·편안",
+      "parts": {
+        "top": "흰색 스퀘어넥 크롭탑",
+        "bottom": "연청 데님 숏츠",
+        "shoes": "맨발"
+      },
+      "base": "LOOK_CS",
+      "lk": "LK_HM",
+      "part_codes": {
+        "top": "TOP_CRP",
+        "bottom": "BTM_DNM"
+      }
+    },
+    "LOOK_NT": {
+      "label": "홈 나이트 후드+묶은머리",
+      "ip_outfit": "oversized heather-grey hoodie, hair tied up in a loose messy bun with a few face-framing strands, soft cream knit blanket over the knees,",
+      "ep": "IG_R05",
+      "group": "LK_HM 홈·편안",
+      "parts": {
+        "head": "느슨하게 올려 묶은 번 머리",
+        "top": "오버사이즈 헤더 그레이 후드티",
+        "acc": "무릎 위 크림 니트 담요"
+      },
+      "lk": "LK_HM"
     },
     "LOOK_HM2": {
       "label": "핑크 후드티+블랙 레깅스",
       "ep": "SF_E09",
-      "group": "집·실내",
+      "group": "LK_HM 홈·편안",
       "parts": {
         "top": "파스텔 핑크 후드티",
         "bottom": "블랙 레깅스",
@@ -716,7 +758,28 @@
             "shoes": "흰 운동화"
           }
         }
-      ]
+      ],
+      "lk": "LK_HM"
+    },
+    "LOOK_YOGA": {
+      "label": "파스텔 요가셋",
+      "ip_outfit": "pastel lavender yoga set, hair tied back neatly,",
+      "ep": "E03",
+      "group": "스타일 미분류",
+      "parts": {
+        "head": "단정하게 묶은 머리",
+        "set": "파스텔 라벤더 요가 세트"
+      }
+    },
+    "LOOK_JJM": {
+      "label": "찜질방 세트",
+      "ip_outfit": "sage green jjimjilbang set, white towel hat,",
+      "ep": "E03",
+      "group": "스타일 미분류",
+      "parts": {
+        "head": "흰 수건 모자",
+        "set": "세이지 그린 찜질복 세트"
+      }
     }
   },
   "BG_RULE": {
