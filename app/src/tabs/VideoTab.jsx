@@ -2598,9 +2598,12 @@ export default function VideoTab() {
                   <button
                     className={s.ffmpegBtn}
                     disabled={ffmpegStatus[selCut.id] === 'running'}
-                    title="서버에 이미 있는 cut_NN.mp4 위에 나레이션·효과음만 입힙니다"
+                    title={isReel
+                      ? '이 컷 하나만 나레이션·효과음을 입혀 미리 들어봅니다(06_publishing/cut_NN_final.mp4). 릴스 최종본에는 쓰이지 않아요 — 최종본은 메이킹 탭 "릴스 최종본 생성"이 한 번에 입힙니다'
+                      : '서버에 이미 있는 cut_NN.mp4 위에 나레이션·효과음만 입힙니다'}
                     onClick={() => runFfmpegForCut(selCut)}>
-                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…' : '🔊 나레이션·효과음 입히기'}
+                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…'
+                      : isReel ? '🔊 컷 단독 미리듣기(최종본에 안 쓰임)' : '🔊 나레이션·효과음 입히기'}
                   </button>
                   <label className={s.uploadBtn} title="외부(CapCut/Veo 등)에서 이미 완성한 파일 1개를 바로 올립니다">
                     {up.busy ? '업로드 중…' : '📤 완성본 바로 업로드'}
@@ -2608,6 +2611,11 @@ export default function VideoTab() {
                       onChange={e => { const f = e.target.files[0]; if (f) uploadCutVideo(selCut.no, f, up.keepAudio ?? !!selCut.dialogue); e.target.value = '' }} />
                   </label>
                 </div>
+                {isReel && (
+                  <div className={s.ffmpegLog}>
+                    릴스는 여기서 소리를 따로 입힐 필요가 없어요 — 나레이션·효과음·BGM 은 메이킹 탭 "릴스 최종본 생성"이 한 번에 입힙니다. 미리듣기 결과에는 메이킹 자막 효과와 BGM 이 없습니다.
+                  </div>
+                )}
                 {ffmpegLog[selCut.id] && (
                   <div className={s.ffmpegLog}>{ffmpegLog[selCut.id]}</div>
                 )}
