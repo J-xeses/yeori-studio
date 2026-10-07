@@ -2868,7 +2868,7 @@
           "narration": "",
           "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작",
           "videoPrompt": "타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================",
-          "duration": 3,
+          "duration": 5,
           "shotType": "FULLBODY",
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
@@ -2902,22 +2902,22 @@
             "style": {
               "font_size": 72,
               "color": "#FFFFFF",
-              "position": "center",
+              "position": "bottom",
               "outline": true
             },
             "entries": [
               {
                 "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
                 "start": 0.3,
-                "end": 3
+                "end": 4
               }
             ]
           },
           "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅",
           "overrides": {
             "duration": {
-              "value": 3,
-              "at": "2026-10-06T23:31:41.904Z",
+              "value": 5,
+              "at": "2026-10-06T23:37:47.581Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -3020,7 +3020,7 @@
           "narration": "",
           "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
           "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
-          "duration": 5,
+          "duration": 8,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -3049,7 +3049,15 @@
               "md": "당황 · \"어...?\" 순간"
             }
           },
-          "subtitle": "사실 저... AI예요."
+          "subtitle": "사실 저... AI예요.",
+          "overrides": {
+            "duration": {
+              "value": 8,
+              "at": "2026-10-06T23:37:07.153Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          },
+          "videoMode": "veo"
         },
         {
           "id": "cut-5",
@@ -8654,7 +8662,7 @@
       "narration": "",
       "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작",
       "videoPrompt": "타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================",
-      "duration": 3,
+      "duration": 5,
       "shotType": "FULLBODY",
       "cutType": "CAPCUT",
       "cutMark": "NORMAL",
@@ -8688,22 +8696,22 @@
         "style": {
           "font_size": 72,
           "color": "#FFFFFF",
-          "position": "center",
+          "position": "bottom",
           "outline": true
         },
         "entries": [
           {
             "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
             "start": 0.3,
-            "end": 3
+            "end": 4
           }
         ]
       },
       "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅",
       "overrides": {
         "duration": {
-          "value": 3,
-          "at": "2026-10-06T23:31:41.904Z",
+          "value": 5,
+          "at": "2026-10-06T23:37:47.581Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -8806,7 +8814,7 @@
       "narration": "",
       "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
       "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
-      "duration": 5,
+      "duration": 8,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -8835,7 +8843,15 @@
           "md": "당황 · \"어...?\" 순간"
         }
       },
-      "subtitle": "사실 저... AI예요."
+      "subtitle": "사실 저... AI예요.",
+      "overrides": {
+        "duration": {
+          "value": 8,
+          "at": "2026-10-06T23:37:07.153Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      },
+      "videoMode": "veo"
     },
     {
       "id": "cut-5",
@@ -8927,7 +8943,7 @@
     "font": "Noto Sans KR",
     "fontSize": 56,
     "color": "#ffffff",
-    "bgStyle": "semi",
+    "bgStyle": "반투명 직각 박스",
     "boxColor": "#000000"
   },
   "renderProgress": {
@@ -8996,7 +9012,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-06T23:26:34.502Z",
+  "savedAt": "2026-10-06T23:44:47.111Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
@@ -9041,7 +9057,21 @@
           "createdAt": 1790763464000
         }
       ],
-      "cut-5": [],
+      "cut-5": [
+        {
+          "url": "blob:http://localhost:5173/783629ce-1c7f-42bd-84cf-b8ed8871908f",
+          "name": "cut_05_preview.mp4",
+          "duration": 3.3,
+          "trimStart": 0,
+          "trimEnd": 3.3,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1790775710565,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_05_clip_1.mp4"
+        }
+      ],
       "cut-1": [
         {
           "url": "blob:http://localhost:5173/3f950300-f9b1-4fd1-b55f-2b9efbdaa3f3",
@@ -9059,7 +9089,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-5",
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
