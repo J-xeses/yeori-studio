@@ -173,12 +173,93 @@ def ease_out_back(u):
 POSITION_FRAC = {"top": 0.15, "center": 0.5, "bottom": 0.80}
 
 
+# ── 이모지 섞인 글자 ─────────────────────────────────────────────────
+# 자막 글꼴(고딕·손글씨)에는 이모지 글리프가 없어 □(두부)로 찍힌다(2026-10-07 성준님: "이모티콘이 깨진다").
+# 줄을 [글자 구간 / 이모지 구간]으로 나눠 이모지 구간만 컬러 이모지 글꼴(Segoe UI Emoji)로 그린다
+# — handwriting_overlay.py 의 draw_mixed_text 와 같은 방식.
+EMOJI_FONT_PATH = _find_font(["seguiemj.ttf", "NotoColorEmoji.ttf", "AppleColorEmoji.ttf"])
+_EMOJI_CACHE = {}
+_EMOJI_RANGES = [(0x1F300, 0x1FAFF), (0x2600, 0x27BF), (0x2190, 0x21FF), (0x2B00, 0x2BFF), (0x1F1E6, 0x1F1FF), (0x1F000, 0x1F2FF)]
+_EMOJI_JOINERS = {0xFE0F, 0x200D}   # 변형 선택자·ZWJ — 앞 이모지에 붙는다
+
+
+def _is_emoji(ch):
+    cp = ord(ch)
+    return any(lo <= cp <= hi for lo, hi in _EMOJI_RANGES)
+
+
+def split_runs(text):
+    """[(is_emoji, 구간)] — 이모지와 일반 글자를 번갈아 나눈다."""
+    runs, cur, cur_e = [], "", None
+    for ch in text:
+        if ord(ch) == 0xFE0F:
+            continue   # 변형 선택자는 그리면 빈 칸만 차지한다(❤️ 뒤가 벌어짐) — 컬러 글꼴이라 없어도 같은 그림
+        e = _is_emoji(ch) or (ord(ch) in _EMOJI_JOINERS and cur_e is True)
+        if cur_e is None or e == cur_e:
+            cur += ch
+        else:
+            runs.append((cur_e, cur)); cur = ch
+        cur_e = e
+    if cur:
+        runs.append((bool(cur_e), cur))
+    return runs
+
+
+def has_emoji(text):
+    return EMOJI_FONT_PATH is not None and any(_is_emoji(c) for c in text)
+
+
+def emoji_font(size):
+    size = max(8, int(size * 0.92))
+    if size not in _EMOJI_CACHE:
+        _EMOJI_CACHE[size] = ImageFont.truetype(str(EMOJI_FONT_PATH), size)
+    return _EMOJI_CACHE[size]
+
+
+_SCRATCH = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
+
+
+def line_bbox(text, font, stroke=0):
+    """textbbox 와 같은 (x0, y0, x1, y1). 이모지가 없으면 PIL 값 그대로(기존 배치 불변)."""
+    if not has_emoji(text):
+        return _SCRATCH.textbbox((0, 0), text, font=font, stroke_width=stroke)
+    w = 0.0
+    for is_e, run in split_runs(text):
+        w += _SCRATCH.textlength(run, font=emoji_font(font.size) if is_e else font)
+    return (0, 0, int(w + stroke * 2), int(font.size * 1.2))
+
+
+def draw_line(d, x, y, text, font, fill, outline):
+    """한 줄 그리기 — 이모지 구간은 컬러 이모지 글꼴로, 나머지는 자막 글꼴(+외곽선)로."""
+    stroke_fill = (0, 0, 0, min(235, fill[3]))
+    if not has_emoji(text):
+        if outline:
+            d.text((x, y), text, font=font, fill=fill, stroke_width=outline, stroke_fill=stroke_fill)
+        else:
+            d.text((x, y), text, font=font, fill=fill)
+        return
+    cx = x + outline
+    for is_e, run in split_runs(text):
+        if is_e:
+            ef = emoji_font(font.size)
+            ey = y + font.size * 0.14      # 이모지 글꼴은 윗여백이 적어 살짝 내려야 글자 높이와 맞는다
+            try:
+                d.text((cx, ey), run, font=ef, embedded_color=True)
+            except TypeError:
+                d.text((cx, ey), run, font=ef, fill=fill)
+            cx += d.textlength(run, font=ef)
+        else:
+            if outline:
+                d.text((cx, y), run, font=font, fill=fill, stroke_width=outline, stroke_fill=stroke_fill)
+            else:
+                d.text((cx, y), run, font=font, fill=fill)
+            cx += d.textlength(run, font=font)
+
+
 def wrap_lines(text, font, max_w):
     """공백 기준 줄바꿈 + 명시적 \\n 유지."""
-    scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
-
     def width(t):
-        return scratch.textbbox((0, 0), t, font=font)[2]
+        return line_bbox(t, font)[2]
 
     out = []
     for para in str(text).split("\n"):
@@ -201,8 +282,7 @@ def fit_font(text, base_size, max_w):
     for _ in range(6):
         font = load_font(size)
         lines = wrap_lines(text, font, max_w)
-        scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
-        widest = max(scratch.textbbox((0, 0), ln, font=font)[2] for ln in lines)
+        widest = max(line_bbox(ln, font)[2] for ln in lines)
         if widest <= max_w or size <= base_size * 0.62:
             return font, lines
         size = int(size * 0.92)
@@ -212,7 +292,7 @@ def fit_font(text, base_size, max_w):
 def render_text_layer(lines, font, fill_rgba, outline):
     """여러 줄 중앙정렬 텍스트를 자기 크기의 RGBA 레이어로. (스케일 전 1.0 기준)"""
     scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
-    metrics = [scratch.textbbox((0, 0), ln or " ", font=font, stroke_width=outline) for ln in lines]
+    metrics = [line_bbox(ln or " ", font, outline) for ln in lines]
     line_h = int(font.size * 1.42)
     block_w = max(m[2] - m[0] for m in metrics) + outline * 2 + 8
     block_h = line_h * len(lines) + outline * 2 + 8
@@ -223,11 +303,7 @@ def render_text_layer(lines, font, fill_rgba, outline):
     for ln, m in zip(lines, metrics):
         w = m[2] - m[0]
         x = (layer.width - w) / 2 - m[0]
-        if outline:
-            d.text((x, y), ln, font=font, fill=fill_rgba,
-                   stroke_width=outline, stroke_fill=(0, 0, 0, min(235, fill_rgba[3])))
-        else:
-            d.text((x, y), ln, font=font, fill=fill_rgba)
+        draw_line(d, x, y, ln, font, fill_rgba, outline)
         y += line_h
     return layer
 
@@ -238,7 +314,7 @@ def typer_reveal_mask(lines, font, outline, layer_size, chars_shown):
     가운데서 부풀어 나오는 것처럼 보인다 — 그래서 블록은 항상 "완성된 전체 텍스트" 기준
     고정 위치로 한 번만 그리고, 왼쪽부터 잘라 보여주는 마스크만 시간에 따라 넓힌다.)"""
     scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
-    metrics = [scratch.textbbox((0, 0), ln or " ", font=font, stroke_width=outline) for ln in lines]
+    metrics = [line_bbox(ln or " ", font, outline) for ln in lines]
     line_h = int(font.size * 1.42)
     mask = Image.new("L", layer_size, 0)
     d = ImageDraw.Draw(mask)
@@ -251,10 +327,11 @@ def typer_reveal_mask(lines, font, outline, layer_size, chars_shown):
         remaining -= shown_n
         if shown_n > 0:
             visible = ln[:int(shown_n)]
-            vis_w = scratch.textbbox((0, 0), visible, font=font, stroke_width=outline)[2]
+            vis_w = line_bbox(visible, font, outline)[2]
             full_w = m[2] - m[0]
             x0 = (layer_size[0] - full_w) / 2 - m[0]
-            d.rectangle([0, y, x0 + vis_w + outline + 4, y + line_h], fill=255)
+            # 왼쪽 경계를 이 줄의 시작점으로 — 0 부터 열면 더 왼쪽에서 시작하는 아랫줄의 윗부분이 비쳐 보인다
+            d.rectangle([max(0, x0 - outline - 6), y, x0 + vis_w + outline + 4, y + line_h - outline - 2], fill=255)
         y += line_h
     return mask
 

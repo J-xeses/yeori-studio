@@ -592,6 +592,13 @@ await check('M6', '영상 만들기 큰 화면 — 최종 결과(말풍선·자�
   return { ok: big && gate && fonts, evidence: `큰 화면 최종 결과 전환 ${big ? 'O' : 'X'} · 표시 시간(막대) 밖에서는 자막 숨김 ${gate ? 'O' : 'X'} · 고딕/둥근 손글씨/펜 손글씨 + 번들 폰트 파일 ${fonts ? 'O' : 'X'}` }
 })
 
+await check('M7', '모션 자막 이모지 — 컬러 이모지 글꼴로 그려 두부(□)로 안 깨짐', () => {
+  const py = fs.readFileSync(new URL('./yeori_subtitle.py', import.meta.url), 'utf-8')
+  const wired = /def draw_line\(/.test(py) && /embedded_color=True/.test(py) && /draw_line\(d, x, y, ln, font, fill_rgba, outline\)/.test(py) && /def line_bbox\(/.test(py)
+  const font = fs.existsSync('C:/Windows/Fonts/seguiemj.ttf')
+  return { ok: wired && font, evidence: `이모지 구간 분리·컬러 글꼴 그리기 ${wired ? 'O' : 'X'} · Segoe UI Emoji 글꼴 ${font ? '있음' : '없음'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))
