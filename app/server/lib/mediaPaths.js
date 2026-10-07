@@ -167,6 +167,28 @@ export function toMediaUrl(abs) {
   return '/downloads/' + path.relative(DOWNLOADS, abs).replace(/\\/g, '/')
 }
 
+// ── 컷의 "실제로 쓸 파일" 고르기 ─────────────────────────────────────
+// 메이킹 탭에서 컷 위에 자막(_subtitle)·손글씨/말풍선(_overlay)을 얹으면 파생본이 생긴다.
+// 최종본·조립·미리보기가 전부 같은 규칙으로 고르도록 여기 한 곳에 둔다(2026-10-07, 성준님 A안):
+//   · 파생본은 원본 cut_NN.mp4 보다 나중에 만든 것만 유효(원본을 다시 만들면 옛 파생본은 무시)
+//   · 유효한 파생본이 둘이면 더 나중에 만든 쪽(= 마지막으로 확인한 결과)
+// 반환: { path, derived: 'subtitle' | 'overlay' | null } — 원본도 없으면 path:null
+export function pickCutSource(videoDirPath, no) {
+  const p = String(no).padStart(2, '0')
+  const base = path.join(videoDirPath, `cut_${p}.mp4`)
+  const baseM = fs.existsSync(base) ? fs.statSync(base).mtimeMs : null
+  let best = null
+  for (const kind of ['subtitle', 'overlay']) {
+    const f = path.join(videoDirPath, `cut_${p}_${kind}.mp4`)
+    if (!fs.existsSync(f)) continue
+    const m = fs.statSync(f).mtimeMs
+    if (baseM != null && m < baseM) continue
+    if (!best || m > best.m) best = { path: f, derived: kind, m }
+  }
+  if (best) return { path: best.path, derived: best.derived }
+  return { path: baseM != null ? base : null, derived: null }
+}
+
 // ── cut 파일명 ─────────────────────────────────────────────────────
 export function paddedCutNo(no) { return String(no).padStart(2, '0') }
 export function cutFile(no, ext) { return `cut_${paddedCutNo(no)}.${ext}` }

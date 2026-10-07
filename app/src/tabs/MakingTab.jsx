@@ -1383,6 +1383,7 @@ export default function MakingTab() {
   const [hwCutNoFill, setHwCutNoFill] = useState('')
   // 서여리 시그니처(보라 테두리+워터마크) — 썸네일·스틸엔 필요하지만 릴스 중간 컷에 얹으면 그 컷만 테두리가 생긴다.
   const [hwSignature, setHwSignature] = useState(true)
+  const [hwCutTarget, setHwCutTarget] = useState(null) // { cutNo, path } — 컷 번호로 채운 경우
 
   useEffect(() => {
     fetch(`${YEORI_SERVER}/api/hw-source-images`).then(r => r.json())
@@ -1402,11 +1403,15 @@ export default function MakingTab() {
       }))
       const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputPath: hwImgPath.trim(), scenes, signature: hwSignature }),
+        // "컷 번호로 채우기"로 고른 컷이면 그 컷의 파생본(05_video/cut_NN_overlay.mp4)으로 저장한다 —
+        // 그래야 릴스 최종본·조립·영상 탭 미리보기가 이 결과를 쓴다(A안, 2026-10-07).
+        body: JSON.stringify(hwCutTarget && hwCutTarget.path === hwImgPath.trim()
+          ? { epNum: episode.number, cutNo: hwCutTarget.cutNo, scenes, signature: hwSignature }
+          : { inputPath: hwImgPath.trim(), scenes, signature: hwSignature }),
       })
       const data = await res.json()
       if (!res.ok) { setHwResult({ error: data.error || '합성 실패' }); return }
-      setHwResult({ ...data, _ts: Date.now() })
+      setHwResult({ ...data, _ts: Date.now(), linkedCut: !!(hwCutTarget && hwCutTarget.path === hwImgPath.trim()) })
     } catch (e) {
       setHwResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -2878,6 +2883,7 @@ export default function MakingTab() {
                 const padded = String(parseInt(hwCutNoFill, 10) || 0).padStart(2, '0')
                 const rel = epMediaUrl(episode, 'video').replace(`${YEORI_SERVER}/downloads/`, '')
                 setHwImgPath(`${rel}/cut_${padded}.mp4`)
+                setHwCutTarget({ cutNo: parseInt(hwCutNoFill, 10), path: `${rel}/cut_${padded}.mp4` })
                 setHwSignature(false)
               }}>
               이 컷 영상 경로로 채우기
@@ -2954,6 +2960,7 @@ export default function MakingTab() {
             ) : hwResult.mode === 'video' ? (
               <div className={s.resultOk}>
                 ✅ 영상에 합성됨 — {hwResult.outputPath?.split(/[/\\]/).pop()} ({hwResult.sizeKB}KB)
+                {hwResult.linkedCut ? ' · 이 컷의 최종 결과로 연결됨(릴스 최종본에 그대로 사용)' : ' · 별도 저장(컷과 연결 안 됨)'}
                 <br />
                 <video className={s.makingVideo} controls
                   src={`${YEORI_SERVER}${hwResult.url}?t=${hwResult._ts || 0}`} />

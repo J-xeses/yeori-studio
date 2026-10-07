@@ -452,8 +452,9 @@ export default function VideoTab() {
           const next = { ...p }
           for (const row of d.cuts || []) {
             const cut = (state.cuts || []).find(c => c.no === row.no)
-            if (row.hasVideo && cut && row.mtimeMs != null && next[cut.id] !== row.mtimeMs) {
-              next[cut.id] = row.mtimeMs; changed = true
+            const ts = row.finalMtimeMs ?? row.mtimeMs
+            if (row.hasVideo && cut && ts != null && next[cut.id] !== ts) {
+              next[cut.id] = ts; changed = true
             }
           }
           return changed ? next : p
@@ -2569,14 +2570,18 @@ export default function VideoTab() {
                 )}
                 {finalPreviewTs[selCut.id] != null && (() => {
                   const padded = String(selCut.no).padStart(2, '0')
-                  const finalUrl = `${epMediaUrl(episode, 'video')}/cut_${padded}.mp4?t=${finalPreviewTs[selCut.id]}`
+                  // 릴스 최종본이 실제로 쓸 파일 — 메이킹 탭에서 자막·말풍선을 얹었으면 그 파생본(A안, 2026-10-07)
+                  const finalRow = (vChk?.cuts || []).find(r => r.no === selCut.no)
+                  const finalName = finalRow?.finalSource || `cut_${padded}.mp4`
+                  const finalUrl = `${epMediaUrl(episode, 'video')}/${finalName}?t=${finalPreviewTs[selCut.id]}`
                   // 자막 라이브 오버레이는 뺐다(2026-09-18, 사용자 확정: "최종 합성본
                   // 미리보기에서 자막을 빼자" — 위치/크기 조정이 실제로 반영되는 것처럼
                   // 안 보여서 오히려 혼란만 줬음). 메인 화면(위 세그 카드 캔버스 오버레이)
                   // 쪽 자막은 그대로 유지 — 여긴 순수 미리보기 영상만.
                   return (
                     <div className={s.field} style={{ marginTop: 8 }}>
-                      <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다</label>
+                      <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다
+                        {finalRow?.finalDerived ? ` · 메이킹 탭 ${finalRow.finalDerived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본(${finalName}) — 릴스 최종본에 이대로 들어가고 자막은 따로 굽지 않습니다` : ''}</label>
                       <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6 }} />
                     </div>
                   )

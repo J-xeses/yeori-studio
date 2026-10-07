@@ -3404,14 +3404,9 @@ async function assembleMakingFilm(epNum) {
     const padded = String(c.no).padStart(2, '0')
     // 파생본 우선순위: 모션 자막(_subtitle) > 손글씨 오버레이(_overlay) > 원본 cut_NN.mp4.
     // (원본은 항상 보존 — 파생본은 그 위에 얹은 결과)
-    const subtitleP = path.join(videoDir, `cut_${padded}_subtitle.mp4`)
-    const overlayP = path.join(videoDir, `cut_${padded}_overlay.mp4`)
-    const baseP = path.join(videoDir, `cut_${padded}.mp4`)
-    // 파생본은 원본보다 나중에 만든 것만 유효 — 원본을 다시 만들면 옛 파생본은 무시.
-    const p = isFreshDerivative(subtitleP, baseP) ? subtitleP
-      : isFreshDerivative(overlayP, baseP) ? overlayP
-        : baseP
-    if (fs.existsSync(p)) {
+    // 릴스 최종본과 같은 규칙(mp.pickCutSource) — 유효한 파생본 중 마지막에 만든 것, 없으면 원본.
+    const p = mp.pickCutSource(videoDir, c.no).path
+    if (p && fs.existsSync(p)) {
       files.push(p)
       includedCuts.push(c.no)
     } else {
@@ -7263,6 +7258,12 @@ app.get('/api/episode-video-checklist', (req, res) => {
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
         hasVideo: !!savedFile,
         mtimeMs: savedFile ? fs.statSync(path.join(videoDir, savedFile)).mtimeMs : null,
+        // 릴스 최종본·조립이 실제로 쓸 파일(메이킹 탭에서 얹은 자막·말풍선본 포함) — "최종 합성본" 미리보기용
+        ...(() => {
+          const pk = mp.pickCutSource(videoDir, c.no)
+          if (!pk.path) return { finalSource: null, finalDerived: null, finalMtimeMs: null }
+          return { finalSource: path.basename(pk.path), finalDerived: pk.derived, finalMtimeMs: fs.statSync(pk.path).mtimeMs }
+        })(),
         savedFile,                              // 실제 저장된 파일명(cut_NN.mp4 / _overlay / _final)
         videoUrl: savedFile ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), savedFile))}` : null,
         savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치

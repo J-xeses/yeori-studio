@@ -514,9 +514,16 @@ export async function finalizeReel(p) {
   let makingManifest = {}
   try { makingManifest = JSON.parse(fs.readFileSync(path.join(vdir, '.motion-manifest.json'), 'utf-8')) || {} } catch { /* 없음 */ }
   for (const cut of cuts.slice().sort((a, b) => a.no - b.no)) {
-    const src = path.join(vdir, `cut_${String(cut.no).padStart(2, '0')}.mp4`)
-    if (!fs.existsSync(src)) { log(`⚠ cut_${String(cut.no).padStart(2, '0')}.mp4 없음 — 건너뜀`); continue }
+    // 메이킹 탭에서 자막·말풍선을 얹은 컷은 그 결과물을 그대로 쓴다(A안). 그 컷은 자막 번인 생략.
+    const picked = mp.pickCutSource(vdir, cut.no)
+    const src = picked.path
+    if (!src) { log(`⚠ cut_${String(cut.no).padStart(2, '0')}.mp4 없음 — 건너뜀`); continue }
     const d = decideCut(cut)
+    d.derived = picked.derived
+    if (picked.derived) {
+      if (d.caption) d.caption = null
+      log(`컷 ${cut.no}: 메이킹 탭 ${picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본 사용(${path.basename(src)}) — 자막 번인 생략`)
+    }
     if (d.caption && makingManifest[String(cut.no)]?.selfText === true) {
       d.caption = null
       log(`컷 ${cut.no}: 텍스트카드(화면 글자 포함) — 자막 중복 방지로 번인 생략`)
@@ -779,7 +786,7 @@ export async function finalizeReel(p) {
     bgm: bgmNote,
     bgmFile: bgmAbs && fs.existsSync(bgmAbs) ? path.relative(mp.bgmFile(''), bgmAbs) : null,   // 재합성 때 같은 곡 유지용
     cuts: decisions.map((d) => ({
-      no: d.no, cutType: d.cutType, fit: d.fit,
+      no: d.no, cutType: d.cutType, fit: d.fit, derived: d.derived || null,
       startSec: +d.startSec.toFixed(2), durSec: +d.durSec.toFixed(2),
       caption: d.caption ? {
         segments: d.caption.segments.map((s) => ({
@@ -831,10 +838,12 @@ export function checkFinalStale(epNum) {
   for (const f of currentFiles) {
     const no = Number((f.match(/^cut_(\d+)\.mp4$/i) || [])[1])
     seenNo.add(no)
-    const abs = path.join(vdir, f)
+    // 지금 최종본을 다시 만들면 쓰일 파일(파생본 포함)과 비교한다.
+    const abs = mp.pickCutSource(vdir, no).path || path.join(vdir, f)
     let st; try { st = fs.statSync(abs) } catch { continue }
     const rec = bySrcNo.get(no)
     if (!rec) { mismatches.push(`컷 ${no}: 최종본 생성 이후 새로 추가됨`); continue }
+    if (rec.file && rec.file !== path.basename(abs)) { mismatches.push(`컷 ${no}: 최종본 생성 이후 자막·말풍선본이 바뀜(${rec.file} → ${path.basename(abs)})`); continue }
     const mtimeChanged = rec.mtimeMs != null && Math.abs(Math.round(st.mtimeMs) - rec.mtimeMs) > 1000
     const sizeChanged = rec.size != null && rec.size !== st.size
     if (mtimeChanged || sizeChanged) mismatches.push(`컷 ${no}: 최종본 생성 이후 파일이 다시 만들어짐`)
