@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { claudeMessages } from '../lib/api'
+import CodeGloss from './CodeGloss'
+import { useCodebook, refOptions, tokensOf, koreanFor, hasUnknown, labelOf, JOINER,
+  spPresets, spLocations, spTimes, spLights, spIos, parseSp, composeSp, spKorean } from '../lib/codeRef'
 import s from './DirectionSettingsPanel.module.css'
 
 // 룰셋 v1.4.5 §②-1 "샷타입별 검증된 프롬프트 템플릿"(2026-09-29 신설, 성준님 실측 테스트로
@@ -33,12 +36,6 @@ export const SHOT_TEMPLATES = [
   },
 ]
 
-// 룰셋 §⑬ "샷타입 코드 표준화" — 새 코드값을 여기서 지어내지 말 것, 룰셋과 동기화 유지.
-const SH_CODES = [
-  ['SH_ECU', '익스트림 클로즈업'], ['SH_CU', '클로즈업'], ['SH_MCU', '미디엄 클로즈업'],
-  ['SH_MS', '미디엄샷'], ['SH_MLS', '미디엄롱샷'], ['SH_FS', '풀샷(전신)'], ['SH_WS', '와이드샷'],
-]
-
 const SILENT_PHRASE = 'NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.'
 
 function codeBadges(t) {
@@ -50,13 +47,26 @@ function codeBadges(t) {
   ].filter(Boolean)
 }
 
-const TABS = [
-  { id: 'intent', label: '🎬 연출의도' },
-  { id: 'shot', label: '📐 샷타입' },
-  { id: 'look', label: '🎭 LOOK_ID' },
-  { id: 'audio', label: '🔊 오디오' },
-  { id: 'kr', label: '✅ KR 컨펌본' },
+// 탭 순서 = 메인 "씬 설명" 코드 · "KR 컨펌본" 항목 순서(SP → CH → SH → CA → AC → MD). 연출의도·오디오는
+// 부가 설정이라 뒤쪽(2026-10-07 성준님 요청). 요소 탭 하나에 "코드 + KR 컨펌 문구 + 레퍼런스 선택지"가 같이 있다.
+const MAIN_TABS = [
+  { id: 'sp', label: '📍 장소 SP' },
+  { id: 'ch', label: '👤 캐릭터·룩 CH' },
+  { id: 'sh', label: '📐 샷 SH' },
+  { id: 'ca', label: '🎥 카메라 CA' },
+  { id: 'ac', label: '🏃 동작 AC' },
+  { id: 'md', label: '💗 감정 MD' },
 ]
+const SUB_TABS = [
+  { id: 'intent', label: '🎬 연출의도' },
+  { id: 'audio', label: '🔊 오디오' },
+]
+const ELEMENT = {
+  sh: { name: '샷', ph: 'SH_MCU', multi: 'append' },
+  ca: { name: '카메라', ph: 'CA_ST', multi: 'append' },
+  ac: { name: '동작', ph: 'AT_SD_01', multi: 'toggle' },
+  md: { name: '감정', ph: 'MD_JOY', multi: 'single' },
+}
 
 // 대본 만들기 탭 "KR 컨펌본" 카드 아래에 붙는 접이식(아코디언) 패널 — 팝업이 아님(2026-09-29
 // 성준님 요청으로 ShotTemplatePicker 팝업에서 전환). 컷의 연출/설정 요소를 한 곳에 모아
@@ -64,9 +74,11 @@ const TABS = [
 // 편집기와 "같은" state/setter를 그대로 쓰므로 — 여기서 고치면 즉시 반영되고, 닫아도
 // 별도 동기화가 필요 없다(따로 보관했다가 닫을 때 합치는 방식이 아님 — 그 방식은 두 곳의
 // 값이 어긋나는 사고를 만들기 쉬움).
-export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, kr, mcField, audioField, krField, onApplyTemplate }) {
+export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, kr, mcField, audioField, krField, mcPatch, onApplyTemplate }) {
+  const cb = useCodebook()
   const [expanded, setExpanded] = useState(false)
-  const [tab, setTab] = useState('intent')
+  const [tab, setTab] = useState('sp')
+  const [append, setAppend] = useState(false)   // 샷·카메라: 고른 코드를 앞 값 뒤에 "→" 로 이어 붙이기
   const [recommended, setRecommended] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
@@ -116,23 +128,165 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
   // 룩 불일치 방지 목적).
   const usedLookIds = [...new Set((cuts || []).map(c => c.masterCode?.lookId).filter(Boolean))]
 
+  // 레퍼런스에서 고르면 코드와 KR 컨펌 문구를 한 번에 메인 설정에 반영한다(둘이 어긋나지 않게).
+  const pickCode = (kind, code) => {
+    const cur = String(mc[kind] || '').trim()
+    const mode = ELEMENT[kind].multi
+    let next = code
+    if (mode === 'toggle') {
+      const toks = tokensOf(kind, cur)
+      next = (toks.includes(code) ? toks.filter(t => t !== code) : [...toks, code]).join(JOINER[kind])
+    } else if (mode === 'append' && append && cur && !tokensOf(kind, cur).includes(code)) {
+      next = `${cur}${JOINER[kind]}${code}`
+    }
+    mcPatch({ [kind]: next, kr: { [kind]: koreanFor(cb, kind, next) } })
+  }
+  const pickSp = (code) => mcPatch({ sp: code, kr: { sp: spKorean(cb, code).text } })
+  const sp = parseSp(mc.sp)
+  const setSpPart = (key, val) => pickSp(composeSp({ io: sp.io || 'IN', loc: sp.loc, time: sp.time, light: sp.light, [key]: val }))
+  const pickLook = (code) => {
+    const ch = String(mc.ch || '')
+    const nextCh = /LOOK[A-Z0-9_]*/.test(ch) ? ch.replace(/LOOK[A-Z0-9_]*/, code) : (ch.trim() ? ch : `서여리 / ${code}`)
+    const label = labelOf(cb, 'lookId', code)
+    mcPatch({ lookId: code, ch: nextCh, ...(label ? { kr: { ch: label } } : {}) })
+  }
+  const lookRef = refOptions(cb, 'lookId')
+  const lookExtra = usedLookIds.filter(c => /^LOOK/.test(c) && !lookRef.some(o => o.code === c))
+  const warnTab = { sp: hasUnknown(cb, 'sp', mc.sp), ch: hasUnknown(cb, 'lookId', mc.lookId), sh: hasUnknown(cb, 'sh', mc.sh), ca: hasUnknown(cb, 'ca', mc.ca), ac: hasUnknown(cb, 'ac', mc.ac), md: hasUnknown(cb, 'md', mc.md) }
+  const chip = (on) => `${s.chip} ${on ? s.chipOn : ''}`
+
   return (
     <div className={s.panel}>
       <button type="button" className={s.header} onClick={() => setExpanded(v => !v)}>
         <span className={s.chevron}>{expanded ? '▾' : '▸'}</span>
-        <span className={s.title}>🔍 설정 점검 — 연출의도 · 샷타입 · LOOK_ID · 오디오 · KR 컨펌본</span>
-        <span className={s.hint}>초안에 부적절한 값이 있는지 훑어보고 여기서 바로 고치세요</span>
+        <span className={s.title}>🔍 설정 점검 — 장소 · 캐릭터 · 샷 · 카메라 · 동작 · 감정</span>
+        <span className={s.hint}>초안 설정을 확인하고 레퍼런스에서 고르면 위 씬 설명·KR 컨펌본에 바로 반영됩니다</span>
       </button>
 
       {expanded && (
         <div className={s.body}>
           <div className={s.tabs}>
-            {TABS.map(t => (
+            {MAIN_TABS.map(t => (
+              <button key={t.id} type="button" className={`${s.tabBtn} ${tab === t.id ? s.tabBtnOn : ''}`} onClick={() => setTab(t.id)}
+                title={warnTab[t.id] ? '레퍼런스(코드북)에 없는 코드가 있습니다' : undefined}>
+                {t.label}{warnTab[t.id] && <span style={{ color: '#f59e0b' }}> ⚠</span>}
+              </button>
+            ))}
+            <span style={{ alignSelf: 'center', fontSize: 11, color: 'var(--text-3)', margin: '0 2px 0 8px' }}>부가</span>
+            {SUB_TABS.map(t => (
               <button key={t.id} type="button" className={`${s.tabBtn} ${tab === t.id ? s.tabBtnOn : ''}`} onClick={() => setTab(t.id)}>
                 {t.label}
               </button>
             ))}
           </div>
+
+          {tab === 'sp' && (
+            <div className={s.tabBody}>
+              <div className={s.v3SubGrid}>
+                <div className={s.v3MiniField}>
+                  <label>SP 코드 (장소)</label>
+                  <input value={mc.sp || ''} onChange={e => mcField('sp', e.target.value)} placeholder="OT.CF.TZ_AF.LT_WM" />
+                  <CodeGloss cb={cb} kind="sp" value={mc.sp} />
+                </div>
+                <div className={s.v3MiniField}>
+                  <label>KR 컨펌 문구 — SP(장소)</label>
+                  <textarea rows={2} value={kr.sp || ''} onChange={e => krField('sp', e.target.value)} />
+                </div>
+              </div>
+              <div className={s.refTitle}>레퍼런스 — 자주 쓰는 장소</div>
+              <div className={s.chipRow}>
+                {spPresets(cb).map(o => (
+                  <button key={o.code} type="button" className={chip(sp.code === o.code)} onClick={() => pickSp(o.code)} title={o.code}>
+                    {o.code} <span className={s.chipDesc}>({o.label})</span>
+                  </button>
+                ))}
+              </div>
+              <div className={s.refTitle}>직접 조합 — 실내외 · 장소 · 시간 · 조명</div>
+              <div className={s.spRow}>
+                {[['io', spIos(), '실내외'], ['loc', spLocations(cb), '장소'], ['time', spTimes(cb), '시간'], ['light', spLights(cb), '조명']].map(([key, opts, name]) => (
+                  <select key={key} value={sp[key] || ''} onChange={e => setSpPart(key, e.target.value)}>
+                    <option value="">{name} —</option>
+                    {sp[key] && !opts.some(o => o.code === sp[key]) && <option value={sp[key]}>{sp[key]} (레퍼런스에 없음)</option>}
+                    {opts.map(o => <option key={o.code} value={o.code}>{o.code} ({o.label})</option>)}
+                  </select>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tab === 'ch' && (
+            <div className={s.tabBody}>
+              <div className={s.v3SubGrid}>
+                <div className={s.v3MiniField}>
+                  <label>CH 코드 (캐릭터·룩)</label>
+                  <input value={mc.ch || ''} onChange={e => mcField('ch', e.target.value)} placeholder="서여리 / LOOK_CS" />
+                  <CodeGloss cb={cb} kind="ch" value={mc.ch} />
+                </div>
+                <div className={s.v3MiniField}>
+                  <label>LOOK_ID</label>
+                  <input value={mc.lookId || ''} onChange={e => mcField('lookId', e.target.value)} placeholder="LOOK_CS" />
+                  <CodeGloss cb={cb} kind="lookId" value={mc.lookId} />
+                </div>
+              </div>
+              <div className={s.v3MiniField}>
+                <label>KR 컨펌 문구 — CH(캐릭터)</label>
+                <textarea rows={2} value={kr.ch || ''} onChange={e => krField('ch', e.target.value)} />
+              </div>
+              <div className={s.refTitle}>레퍼런스 — 등록된 룩</div>
+              <div className={s.chipRow}>
+                {lookRef.map(o => (
+                  <button key={o.code} type="button" className={chip(mc.lookId === o.code)} onClick={() => pickLook(o.code)}>
+                    {o.code} <span className={s.chipDesc}>({o.label})</span>
+                  </button>
+                ))}
+              </div>
+              {lookExtra.length > 0 && (<>
+                <div className={s.refTitle}>이 에피소드 다른 컷에서 쓴 룩 (레퍼런스 미등록)</div>
+                <div className={s.chipRow}>
+                  {lookExtra.map(code => (
+                    <button key={code} type="button" className={chip(mc.lookId === code)} onClick={() => pickLook(code)}>{code}</button>
+                  ))}
+                </div>
+              </>)}
+            </div>
+          )}
+
+          {ELEMENT[tab] && (() => {
+            const el = ELEMENT[tab]
+            const KEY = tab === 'ac' ? 'AC' : tab.toUpperCase()
+            const cur = tokensOf(tab, mc[tab])
+            return (
+              <div className={s.tabBody}>
+                <div className={s.v3SubGrid}>
+                  <div className={s.v3MiniField}>
+                    <label>{KEY} 코드 ({el.name})</label>
+                    <input value={mc[tab] || ''} onChange={e => mcField(tab, e.target.value)} placeholder={el.ph} />
+                    <CodeGloss cb={cb} kind={tab} value={mc[tab]} sep={JOINER[tab]} />
+                  </div>
+                  <div className={s.v3MiniField}>
+                    <label>KR 컨펌 문구 — {KEY}({el.name})</label>
+                    <textarea rows={2} value={kr[tab] || ''} onChange={e => krField(tab, e.target.value)} />
+                  </div>
+                </div>
+                <div className={s.refTitle}>
+                  레퍼런스 — {el.multi === 'toggle' ? '여러 개 선택 가능(다시 누르면 해제)' : '누르면 바로 반영'}
+                  {el.multi === 'append' && (
+                    <label className={s.checkboxRow} style={{ marginLeft: 12, display: 'inline-flex' }}>
+                      <input type="checkbox" checked={append} onChange={e => setAppend(e.target.checked)} />
+                      앞 값 뒤에 이어 붙이기 (→ 전환)
+                    </label>
+                  )}
+                </div>
+                <div className={s.chipRow}>
+                  {refOptions(cb, tab).map(o => (
+                    <button key={o.code} type="button" className={chip(cur.includes(o.code))} onClick={() => pickCode(tab, o.code)}>
+                      {o.code} <span className={s.chipDesc}>({o.label})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
 
           {tab === 'intent' && (
             <div className={s.tabBody}>
@@ -169,46 +323,6 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
             </div>
           )}
 
-          {tab === 'shot' && (
-            <div className={s.tabBody}>
-              <div className={s.v3MiniField}>
-                <label>SH (샷타입) — 현재값</label>
-                <input value={mc.sh || ''} onChange={e => mcField('sh', e.target.value)} placeholder="SH_MCU" />
-              </div>
-              <div className={s.chipRow}>
-                {SH_CODES.map(([code, desc]) => (
-                  <button key={code} type="button" className={`${s.chip} ${mc.sh === code ? s.chipOn : ''}`} onClick={() => mcField('sh', code)} title={desc}>
-                    {code} <span className={s.chipDesc}>{desc}</span>
-                  </button>
-                ))}
-              </div>
-              <div className={s.note}>룰셋 §⑬ 표준 샷타입 7종(칩 클릭으로 바로 반영).</div>
-            </div>
-          )}
-
-          {tab === 'look' && (
-            <div className={s.tabBody}>
-              <div className={s.v3MiniField}>
-                <label>LOOK_ID — 현재값</label>
-                <input value={mc.lookId || ''} onChange={e => mcField('lookId', e.target.value)} placeholder="LOOK_CS" />
-              </div>
-              {usedLookIds.length > 0 ? (
-                <>
-                  <div className={s.chipRow}>
-                    {usedLookIds.map(code => (
-                      <button key={code} type="button" className={`${s.chip} ${mc.lookId === code ? s.chipOn : ''}`} onClick={() => mcField('lookId', code)}>
-                        {code}
-                      </button>
-                    ))}
-                  </div>
-                  <div className={s.note}>이 에피소드 다른 컷들이 쓴 LOOK_ID입니다 — 오타로 컷 사이 의상·룩이 어긋나지 않게 같은 코드를 재사용하세요.</div>
-                </>
-              ) : (
-                <div className={s.note}>아직 다른 컷에 LOOK_ID가 없습니다. 이 컷이 처음이면 자유롭게 정하세요(예: LOOK_CS, LOOK_AUT).</div>
-              )}
-            </div>
-          )}
-
           {tab === 'audio' && (
             <div className={s.tabBody}>
               <div className={s.v3SubGrid}>
@@ -217,20 +331,6 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
                 <div className={s.v3MiniField}><label>효과음</label><input placeholder="힐 소리" value={audio.sfx || ''} onChange={e => audioField('sfx', e.target.value)} /></div>
                 <div className={s.v3MiniField}><label>앰비언스</label><input placeholder="카페 환경음" value={audio.ambience || ''} onChange={e => audioField('ambience', e.target.value)} /></div>
               </div>
-            </div>
-          )}
-
-          {tab === 'kr' && (
-            <div className={s.tabBody}>
-              <div className={s.v3SubGrid}>
-                <div className={s.v3MiniField}><label>SP(장소)</label><textarea rows={2} value={kr.sp || ''} onChange={e => krField('sp', e.target.value)} /></div>
-                <div className={s.v3MiniField}><label>CH(캐릭터)</label><textarea rows={2} value={kr.ch || ''} onChange={e => krField('ch', e.target.value)} /></div>
-                <div className={s.v3MiniField}><label>SH(샷)</label><textarea rows={2} value={kr.sh || ''} onChange={e => krField('sh', e.target.value)} /></div>
-                <div className={s.v3MiniField}><label>CA(카메라)</label><textarea rows={2} value={kr.ca || ''} onChange={e => krField('ca', e.target.value)} /></div>
-                <div className={s.v3MiniField}><label>AC(동작)</label><textarea rows={2} value={kr.ac || ''} onChange={e => krField('ac', e.target.value)} /></div>
-                <div className={s.v3MiniField}><label>MD(감정)</label><textarea rows={2} value={kr.md || ''} onChange={e => krField('md', e.target.value)} /></div>
-              </div>
-              <div className={s.note}>DL/NR/CP는 좌측 "씬 설명" 값을 그대로 미러링합니다(여기선 수정 불가 — 원본에서 고치세요).</div>
             </div>
           )}
         </div>

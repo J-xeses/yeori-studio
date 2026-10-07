@@ -465,12 +465,12 @@ await check('E11', '후보→대본 스토리 디벨롭 배선 + 연출 템플�
   if (panelFileExists) {
     const panelSrc = fs.readFileSync(new URL('../src/components/DirectionSettingsPanel.jsx', import.meta.url), 'utf-8')
     templateCount = (panelSrc.match(/id:\s*'T0\d'/g) || []).length
-    tabCount = (panelSrc.match(/id: '(intent|shot|look|audio|kr)'/g) || []).length
+    tabCount = (panelSrc.match(/id: '(sp|ch|sh|ca|ac|md|intent|audio)'/g) || []).length
   }
-  const ok = angleWired && developStep && promptUsesBrief && panelImported && panelFileExists && templateCount === 5 && tabCount === 5
+  const ok = angleWired && developStep && promptUsesBrief && panelImported && panelFileExists && templateCount === 5 && tabCount === 8
   return {
     ok,
-    evidence: `후보 angle→storyBrief 배선 ${angleWired ? 'O' : 'X'} · 디벨롭 단계 ${developStep ? 'O' : 'X'} · 대본 프롬프트가 개요 사용 ${promptUsesBrief ? 'O' : 'X'} · 설정 점검 패널(접이식) 연결 ${panelImported ? 'O' : 'X'} · 룰셋 §②-1 템플릿 ${templateCount}/5개 · 설정 탭 ${tabCount}/5개`,
+    evidence: `후보 angle→storyBrief 배선 ${angleWired ? 'O' : 'X'} · 디벨롭 단계 ${developStep ? 'O' : 'X'} · 대본 프롬프트가 개요 사용 ${promptUsesBrief ? 'O' : 'X'} · 설정 점검 패널(접이식) 연결 ${panelImported ? 'O' : 'X'} · 룰셋 §②-1 템플릿 ${templateCount}/5개 · 설정 탭 ${tabCount}/8개`,
   }
 })
 
@@ -528,6 +528,23 @@ await check('FX1', '효과음 설정 한 곳(메이킹 탭 최종본 표) — �
   const ui = /<ReelSfxCell /.test(mt)
   const ok = auto.startSec === 2.4 && auto.volumePct === 70 && set.startSec === 1.2 && set.volumePct === 40 && exact && ui
   return { ok, evidence: `자동 ${auto.startSec}초·${auto.volumePct}% / 지정 ${set.startSec}초·${set.volumePct}% · 지정한 초 그대로 배치 ${exact ? 'O' : 'X'} · 표에 설정 칸 ${ui ? 'O' : 'X'}` }
+})
+
+await check('REF1', '설정 점검 — 코드 한글 풀이 + 레퍼런스 선택 시 코드·KR 컨펌 문구 동시 반영', async () => {
+  const src = fs.readFileSync(new URL('../src/lib/codeRef.js', import.meta.url), 'utf-8')
+    .replace(/^import .*$/m, '').replace(/export /g, '')
+  const cb = JSON.parse(fs.readFileSync(new URL('./codebook.json', import.meta.url), 'utf-8'))
+  const api = new Function(`${src}\nreturn { glossParts, koreanFor, hasUnknown, spKorean, composeSp }`)()
+  const g = api.glossParts(cb, 'sh', 'SH_MCU → SH_CU').map(p => p.text).join(' → ')
+  const unk = api.hasUnknown(cb, 'md', 'MD_ZZZ') && !api.hasUnknown(cb, 'md', 'MD_JOY')
+  const kr = api.koreanFor(cb, 'ac', 'AT_SD_01 + AT_EM_01')
+  const sp = api.spKorean(cb, api.composeSp({ io: 'IN', loc: 'CF', time: 'TZ_NT', light: 'LT_DK' })).text
+  const pn = fs.readFileSync(new URL('../src/components/DirectionSettingsPanel.jsx', import.meta.url), 'utf-8')
+  const tab = fs.readFileSync(new URL('../src/tabs/ScriptGenTab.jsx', import.meta.url), 'utf-8')
+  const once = /mcPatch\(\{ \[kind\]: next, kr:/.test(pn) && /const mcPatch = /.test(tab)
+  const order = pn.indexOf("id: 'sp'") < pn.indexOf("id: 'md'") && pn.indexOf("id: 'md'") < pn.indexOf("id: 'intent'")
+  const ok = g === 'SH_MCU(미디엄 클로즈업) → SH_CU(클로즈업)' && unk && kr === '손 흔들기 + 밝은 웃음/에너지' && sp === '실내 · 카페 · 밤·저녁 · 어두운 조명' && once && order
+  return { ok, evidence: `${g} · 없는 코드 경고 ${unk ? 'O' : 'X'} · KR "${kr}" · 장소 조합 "${sp}" · 한 번에 반영 ${once ? 'O' : 'X'} · 탭 순서(요소→부가) ${order ? 'O' : 'X'}` }
 })
 
 // ── 메이킹 탭 ↔ 영상 만들기 ↔ 릴스 최종본 연계(2026-10-07 R02 점검에서 실측된 오류들) ──

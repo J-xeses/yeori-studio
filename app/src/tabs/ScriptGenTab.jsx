@@ -8,6 +8,8 @@ import { ensureDialogueInVP, parseSegTiming } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import DirectionSettingsPanel from '../components/DirectionSettingsPanel'
+import CodeGloss from '../components/CodeGloss'
+import { useCodebook } from '../lib/codeRef'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -765,6 +767,7 @@ function buildV3ScriptText(cuts, episode) {
 
 export default function ScriptGenTab() {
   const { state, dispatch } = useApp()
+  const codebook = useCodebook()   // 코드 한글 풀이·레퍼런스(scripts/codebook.json)
   const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체.
   // 활성 에피소드 하나만 다루는 곳은 이 값을 쓰고, 에피소드 목록처럼 여러 에피소드를
@@ -2131,14 +2134,22 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
           const mcField = (key, val) => updateCutMC(cut.id, key, val)
           const audioField = (key, val) => updateCutMCNested(cut.id, 'audio', key, val)
           const krField = (key, val) => updateCutMCNested(cut.id, 'kr', key, val)
+          // 코드와 KR 컨펌 문구처럼 여러 칸을 "한 번에" 바꿀 때 — mcField/krField 를 연달아 부르면 둘 다
+          // 같은(옛) masterCode 에서 출발해 뒤의 것이 앞의 변경을 지운다(UPDATE_CUT 은 얕은 병합).
+          const mcPatch = (patch) => {
+            const { kr: krPatch, ...rest } = patch || {}
+            dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { masterCode: { ...mc, ...rest, ...(krPatch ? { kr: { ...kr, ...krPatch } } : {}) } } })
+          }
           // 연출 세부설정 반자동화(문제3, 2026-09-29) — 룰셋 §②-1 검증된 템플릿을 고르거나
           // AI 추천을 받으면, 빈 코드 필드만 채우고 VP 앞에 핵심 문구를 삽입한다. 기존 값이
           // 있는 필드는 덮어쓰지 않아 사람이 이미 조정해둔 내용을 실수로 날리지 않는다.
           const applyShotTemplate = ({ sh, ca, md, ac, phrase }) => {
-            if (sh && !mc.sh) mcField('sh', sh)
-            if (ca && !mc.ca) mcField('ca', ca)
-            if (md && !mc.md) mcField('md', md)
-            if (ac && !mc.ac) mcField('ac', ac)
+            const fill = {}
+            if (sh && !mc.sh) fill.sh = sh
+            if (ca && !mc.ca) fill.ca = ca
+            if (md && !mc.md) fill.md = md
+            if (ac && !mc.ac) fill.ac = ac
+            if (Object.keys(fill).length) mcPatch(fill)
             const prevVp = (cut?.videoPrompt || '').trim()
             updateCut(cut.id, 'videoPrompt', prevVp ? `${phrase}\n\n${prevVp}` : phrase)
           }
@@ -2169,14 +2180,17 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                       <div className={s.v3MiniField}>
                         <label>SP (공간코드)</label>
                         <input placeholder="OT.CF.TZ_AF.LT_WM" value={mc.sp || ''} onChange={e => mcField('sp', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="sp" value={mc.sp} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>PL (파이프라인)</label>
                         <input placeholder="YR_VD" value={mc.pl || ''} onChange={e => mcField('pl', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="pl" value={mc.pl} />
                       </div>
                       <div className={`${s.v3MiniField} ${s.full}`}>
                         <label>CH (캐릭터·룩 코드)</label>
                         <input placeholder="서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL" value={mc.ch || ''} onChange={e => mcField('ch', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="ch" value={mc.ch} />
                       </div>
                     </div>
                     <div className={s.v3MiniField}>
@@ -2213,22 +2227,27 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                       <div className={s.v3MiniField}>
                         <label>SH (샷타입)</label>
                         <input placeholder="SH_MCU → SH_CU" value={mc.sh || ''} onChange={e => mcField('sh', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="sh" value={mc.sh} sep=" → " />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>CA (카메라)</label>
                         <input placeholder="CA_ST → CA_PS" value={mc.ca || ''} onChange={e => mcField('ca', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="ca" value={mc.ca} sep=" → " />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>MD (감정)</label>
                         <input placeholder="MD_JOY" value={mc.md || ''} onChange={e => mcField('md', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="md" value={mc.md} sep=" + " />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>AC (동작)</label>
                         <input placeholder="AT_SD_01 + AT_EM_01" value={mc.ac || ''} onChange={e => mcField('ac', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="ac" value={mc.ac} sep=" + " />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>LOOK_ID</label>
                         <input placeholder="LOOK_CS" value={mc.lookId || ''} onChange={e => mcField('lookId', e.target.value)} />
+                        <CodeGloss cb={codebook} kind="lookId" value={mc.lookId} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>DU (컷 길이·초)</label>
@@ -2365,7 +2384,7 @@ SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청
                   <DirectionSettingsPanel
                     apiKey={apiKeys.claude} cut={cut} cuts={cuts}
                     mc={mc} audio={audio} kr={kr}
-                    mcField={mcField} audioField={audioField} krField={krField}
+                    mcField={mcField} audioField={audioField} krField={krField} mcPatch={mcPatch}
                     onApplyTemplate={applyShotTemplate}
                   />
 

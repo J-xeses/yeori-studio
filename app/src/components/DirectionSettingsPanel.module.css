@@ -92,3 +92,11 @@
   padding: 6px 8px; font-size: 12.5px; color: var(--text); font-family: inherit; resize: vertical;
 }
 .v3SubGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+
+/* 레퍼런스 선택 영역(2026-10-07) */
+.refTitle { font-size: 11px; color: var(--text-3); margin-top: 10px; display: flex; align-items: center; }
+.spRow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.spRow select {
+  background: var(--bg-input); border: 1px solid var(--border-light); border-radius: 6px;
+  padding: 5px 6px; font-size: 12px; color: var(--text); min-width: 0;
+}
