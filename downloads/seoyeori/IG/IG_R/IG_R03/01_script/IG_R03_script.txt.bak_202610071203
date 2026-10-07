@@ -140,7 +140,7 @@ BGM    : CUT2 이어서 (볼륨 살짝 낮춤)
 
 [CUT 4]  YEORI — 실물 서여리 등장 / 7초
 SC: 현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.
-SP: IN.RM.LT_WD (실내 — 따뜻한 자연광)
+SP: IN.IN (실내 — 따뜻한 자연광)
 PL: IG_RL
 CH: 서여리 — YEORI.BASE (실물 이미지)
 DL: 없음
@@ -214,7 +214,7 @@ BGM    : 볼륨 낮아지며 긴장감
 
 [CUT 5]  YEORI — 감정 핵심컷 / 8초
 SC: 서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.
-SP: IN.RM.LT_WM (실내 — 따뜻한 조명)
+SP: IN.IN (실내 — 따뜻한 조명)
 PL: IG_RL
 CH: 서여리 — YEORI.BASE
 DL: 없음
