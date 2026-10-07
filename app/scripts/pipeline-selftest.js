@@ -575,6 +575,13 @@ await check('M5', '나레이션 이중 재생 방지 — 대본에 나레이션�
   return { ok: rule && guard, evidence: `나레이션 판정(문구 O·없음 X·빈칸 X·화면자막 X) ${rule ? 'O' : 'X'} · 사진 시퀀스가 그런 컷엔 음성 합치기 생략 ${guard ? 'O' : 'X'}` }
 })
 
+await check('G3', '생성이 승인을 대신 찍지 않음 — TTS 합치기가 G2(이미지 승인)를 찍지 않고, G3 는 승인 버튼으로만', () => {
+  const tts = fs.readFileSync(new URL('../src/tabs/TTSTab.jsx', import.meta.url), 'utf-8')
+  const calls = [...tts.matchAll(/setGPoint\(episodeCode, [\w.]+, '(g\d)', true\)/g)].map(m => m[1])
+  const onlyG3 = calls.length === 1 && calls[0] === 'g3' && /const approveG3 = /.test(tts)
+  return { ok: onlyG3, evidence: `TTS 탭이 찍는 게이트: ${calls.join(',') || '없음'} (승인 버튼의 g3 하나여야 함)` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

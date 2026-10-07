@@ -599,8 +599,9 @@ export default function TTSTab() {
       // (videoTabState.subtitles)에 복사했다 → 대사 연출이 화면 자막(CP) 자리를 차지해 대사·자막이 섞였음(성준님 지적).
       // 규칙: 대사(DL)=말하는 것 · 나레이션(NR)=화면 밖 목소리 · 자막(CP)=화면 글자. TTS 는 자막을 건드리지 않는다.
 
-      const c = cuts.find(c => c.id === cutId)
-      if (c) setGPoint(episodeCode, c.no, 'g2', true)
+      // (2026-10-07 제거) 예전엔 여기서 합치기가 끝나면 g2(이미지 승인)를 자동으로 찍었다. 음성 생성이
+      // 이미지 승인을 대신 찍는 것은 게이트 정책 위반("생성 이벤트가 승인을 대신 찍으면 안 된다",
+      // docs/gate-approval-policy.md) — G2 는 스튜디오 탭에서 사람이, G3 는 아래 approveG3 로만.
       await audioCtx.close()
     } catch (err) {
       alert('합치기 실패: ' + err.message)
