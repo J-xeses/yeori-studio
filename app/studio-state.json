@@ -67,7 +67,7 @@
           "htmlFile": "LF_T01_A01_intro.html",
           "motion": "self",
           "masterCode": {
-            "sp": "GR.BK",
+            "sp": "GR.BLK",
             "pl": "LF_YU",
             "ch": "없음",
             "sh": "SH_GR",
@@ -746,7 +746,7 @@
           "htmlFile": "LF_T01_B04_graphic.html",
           "motion": "self",
           "masterCode": {
-            "sp": "GR.BK",
+            "sp": "GR.BLK",
             "pl": "LF_YU",
             "ch": "없음",
             "sh": "SH_GR",
@@ -1057,7 +1057,7 @@
           "htmlFile": "LF_T01_B05_graphic.html",
           "motion": "self",
           "masterCode": {
-            "sp": "GR.BK",
+            "sp": "GR.BLK",
             "pl": "LF_YU",
             "ch": "없음",
             "sh": "SH_GR",
@@ -1586,7 +1586,7 @@
           "htmlFile": "LF_T01_A02_endcard.html",
           "motion": "self",
           "masterCode": {
-            "sp": "GR.BK",
+            "sp": "GR.BLK",
             "pl": "LF_YU",
             "ch": "없음",
             "sh": "SH_GR",
@@ -2873,11 +2873,11 @@
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.BK (검정 배경)",
+            "sp": "GR.BLK (검정 배경)",
             "pl": "IG_RL",
             "ch": "서여리 — 등장 없음 (텍스트만)",
-            "sh": "SH_TEXT",
-            "ca": "CA_ST",
+            "sh": "SH_TXT",
+            "ca": "CA_ZI",
             "md": "MD_COM (유머)",
             "ac": "없음",
             "lookId": "YEORI.BASE",
@@ -2892,7 +2892,7 @@
               "sp": "검정 단색 배경",
               "ch": "서여리 미등장 — 텍스트 훅만",
               "sh": "텍스트 전용 컷",
-              "ca": "고정",
+              "ca": "줌인(Zoom-in)",
               "ac": "타이핑 애니메이션 효과",
               "md": "유머 · 공감 유발"
             }
@@ -2956,7 +2956,7 @@
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.DM (DM 화면 목업)",
+            "sp": "GR.DM (DM 화면 목업)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장",
             "sh": "SH_SCR",
@@ -3027,7 +3027,7 @@
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.DM (DM 화면 목업)",
+            "sp": "GR.DM (DM 화면 목업)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장",
             "sh": "SH_SCR",
@@ -3175,10 +3175,10 @@
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.BK (검정 배경)",
+            "sp": "GR.BLK (검정 배경)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장",
-            "sh": "SH_TEXT",
+            "sh": "SH_TXT",
             "ca": "CA_ST",
             "md": "MD_WRM (따뜻함 · 기대감)",
             "ac": "없음",
@@ -3376,10 +3376,10 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.BK (검정 배경)",
+            "sp": "GR.BLK (검정 배경)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장 (텍스트만)",
-            "sh": "SH_TEXT",
+            "sh": "SH_TXT",
             "ca": "CA_ST",
             "md": "MD_SUR (충격·놀라움)",
             "ac": "타이핑 애니메이션",
@@ -3419,7 +3419,7 @@
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.SC (화면 녹화)",
+            "sp": "GR.SCR (화면 녹화)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장 (화면녹화)",
             "sh": "SH_SCR",
@@ -3462,7 +3462,7 @@
           "cutType": "CAPCUT",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.SC (화면 녹화)",
+            "sp": "GR.SCR (화면 녹화)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장",
             "sh": "SH_SCR",
@@ -3591,7 +3591,7 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.BK (검정 배경 분할)",
+            "sp": "GR.BLK (검정 배경 분할)",
             "pl": "IG_RL",
             "ch": "서여리 — 실물 + 웹툰 동시",
             "sh": "SH_SPL (분할화면)",
@@ -3634,10 +3634,10 @@
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.PK (라벤더 파스텔 배경)",
+            "sp": "GR.PST (라벤더 파스텔 배경)",
             "pl": "IG_RL",
             "ch": "서여리 — 미등장 (텍스트만)",
-            "sh": "SH_TEXT",
+            "sh": "SH_TXT",
             "ca": "CA_ST",
             "md": "MD_WRM (따뜻함·친근함)",
             "ac": "텍스트 페이드인",
@@ -3660,7 +3660,7 @@
           }
         }
       ],
-      "scriptRaw": "================================================================\n마스터 코드\n[IG_R03] :: [PL:IG_RL] :: [SP:IN.SC] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]\n================================================================\n에피소드명: AI 크리에이터 만드는 데 든 비용: 0원 🫢\n채널: 서여리 인스타그램 릴스 (IG_R03)\n총 길이: 60초 목표\n콘셉트: 현실(제작화면) × AI 세계관(서여리) 혼재 연출\n================================================================\n\n[CUT 1]  GRAPHIC — 훅 텍스트 / 5초\nSC: 검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.\nSP: IN.BK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: \"AI 크리에이터 만드는 데 든 비용: 0원 🫢\"\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_SUR (충격·놀라움)\nAC: 타이핑 애니메이션\nDU: 5\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 한 글자씩 등장\nMD(감정):     충격·놀라움 유발\nDL(대사):     없음\nNR(나레이션): AI 크리에이터 만드는 데 든 비용: 0원 🫢\nCP(자막):     AI 크리에이터 만드는 데 든 비용: 0원 🫢\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n검정 배경 + 흰색 타이핑 텍스트 애니메이션\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 없음 (다음 컷부터 시작)\n음성   : 없음\n효과음 : 타이핑 사운드\n================================================================\n\n[CUT 2]  CAPCUT — Flow 화면녹화 구간 / 9초\nSC: 실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.\nSP: IN.SC (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장 (화면녹화)\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR (놀라움·신기함)\nAC: Flow 프로젝트 이미지들 스크롤\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     Google Flow 프로젝트 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     Flow 프로젝트 내 서여리 이미지들 보여주기\nMD(감정):     놀라움·신기함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     프롬프트 입력하면 → 서여리가 만들어져요 ✨\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가)\n━━━━━━━━━━━━━━━━━━━━━━━━\n\"프롬프트 입력하면 →\"\n\"서여리가 만들어져요 ✨\"\n화살표 스티커 + 하트 데코\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 3]  CAPCUT — ElevenLabs 화면 + 남자목소리 반전 / 14초\nSC: ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.\nSP: IN.SC (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR → MD_COM (놀라움 → 유머)\nAC: 텍스트 입력 → 재생 버튼 클릭 → 남자 목소리 재생\nDU: 14\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     ElevenLabs 앱 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생\nMD(감정):     놀라움 → 반전 유머\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     1단계: 목소리도 AI로 만들어요 🎙️ / 2단계: 잠깐, 남자 목소리?! 😱\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가) — 2단계\n━━━━━━━━━━━━━━━━━━━━━━━━\n1단계 (0~8s): \"목소리도 AI로 만들어요 🎙️\"\n2단계 (8~14s): \"잠깐, 남자 목소리?! 😱\" (빨간 말풍선 + 깜빡임)\n              \"ㅋㅋㅋ 설정 잘못했다\" (핑크 텍스트)\n데코: 땀방울 💧 스티커\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT2 이어서 (볼륨 살짝 낮춤)\n음성   : 실제 ElevenLabs 생성 남자 목소리 삽입\n효과음 : 깜짝 효과음 (반전 순간)\n================================================================\n\n[CUT 4]  YEORI — 실물 서여리 등장 / 7초\nSC: 현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.\nSP: IN.IN (실내 — 따뜻한 자연광)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE (실물 이미지)\nDL: 없음\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_SUR (당황·민망)\nAC: 카메라 응시 + 당황한 표정\nDU: 7\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 자연광 배경\nCH(캐릭터):   서여리 YEORI.BASE 실물 이미지\nSH(샷):       클로즈업 — 얼굴 중심\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 살짝 당황한 표정\nMD(감정):     당황·민망 \"들켰다\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     저 사실... AI예요. 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\ndirect eye contact with camera, slightly flustered expression,\nsubtle \"caught in the act\" look, lips together, soft smile hint,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nlooking directly at camera, subtle flustered expression,\ntiny soft blink, \"caught\" moment — lips closed,\nminimal movement, just existing beautifully,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 볼륨 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================\n\n[CUT 5]  YEORI — 감정 핵심컷 / 8초\nSC: 서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.\nSP: IN.IN (실내 — 따뜻한 조명)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM (따뜻함·진심)\nAC: 카메라 응시 + 잔잔한 표정\nDU: 8\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 조명 배경\nCH(캐릭터):   서여리 YEORI.BASE\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 잔잔하고 따뜻한 표정\nMD(감정):     따뜻함·진심 \"꿈만큼은 진짜\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     꿈만큼은 진짜예요. 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nsoft smile, eyes slightly warm and reflective,\nmedium close-up face and upper body,\nwarm indoor lighting, soft bokeh background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nslow soft blink, barely perceptible breath movement,\nmedium close-up, warm indoor light, soft bokeh background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 감성적 로파이 or dreamy (볼륨 올라오며)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 6]  GRAPHIC — 분할화면 / 8초\nSC: 실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.\nSP: IN.BK (검정 배경 분할)\nPL: IG_RL\nCH: 서여리 — 실물 + 웹툰 동시\nDL: 없음\nNR: 없음\nSH: SH_SPL (분할화면)\nCA: CA_ST\nMD: MD_WRM (따뜻함·신기함)\nAC: 두 버전 나란히 또는 교차\nDU: 8\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 분할 화면\nCH(캐릭터):   실물 서여리 + 웹툰 서여리 동시 등장\nSH(샷):       분할 화면\nCA(카메라):   고정\nAC(동작):     실물과 웹툰 나란히 배치 or 교차 전환\nMD(감정):     따뜻함·신기함 \"현실 × AI\" 혼재\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 저예요 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 분할화면 애니메이션으로 직접 제작\n좌: 실물 서여리 이미지 (CUT4 선택본)\n우: 웹툰 서여리 이미지 (IG_P01_C03_final.jpg)\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT5 이어서\n음성   : 없음\n효과음 : 분할 전환 효과음\n================================================================\n\n[CUT 7]  GRAPHIC — CTA 마무리 / 9초\nSC: 라벤더 파스텔 배경 + 팔로우 유도 텍스트.\nSP: IN.PK (라벤더 파스텔 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: 없음\nSH: SH_TEXT\nCA: CA_ST\nMD: MD_WRM (따뜻함·친근함)\nAC: 텍스트 페이드인\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     라벤더 파스텔 배경 + 하트 별 데코\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     텍스트 페이드인 + 하트·별 데코 팝업\nMD(감정):     따뜻함·친근함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     앞으로 같이 봐주실 거죠? 🙏 / 팔로우하면 다음 화 먼저요 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n라벤더 파스텔 배경 + 하트·별 데코 + 팔로우 유도 텍스트\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 다시 올라오며 밝고 따뜻하게 마무리\n음성   : 없음\n효과음 : 하트·별 팝업 효과음\n================================================================\n\n[캡션 + 해시태그]\n━━━━━━━━━━━━━━━━━━━━━━━━\nAI 크리에이터 만드는 데 든 비용: 0원 🫢\n\n얼굴·목소리·영상 전부 AI로 만들었어요.\n근데 목소리 설정을 잘못했더니...\n남자 목소리가 나왔다 ㅋㅋㅋ 😅\n\n꿈만큼은 진짜인 AI 크리에이터 서여리입니다.\n같이 봐주실 거죠? 💜\n\n👇 AI 크리에이터 도전하고 싶으면 저장!\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[제작 체크리스트]\n□ CUT1 — 검정 배경 훅 텍스트 (GRAPHIC — HTML 애니메이션)\n□ CUT2 — Flow 화면녹화 (CAPCUT — 화면녹화 소스)\n□ CUT3 — ElevenLabs 화면 + 남자 목소리 반전 (CAPCUT — 화면녹화 소스)\n□ CUT4 — 실물 서여리 당황 표정 (YEORI — Flow 이미지 생성)\n□ CUT5 — 감정 핵심컷 \"꿈만큼은 진짜\" (YEORI — Flow 이미지 생성)\n□ CUT6 — 분할화면 실물+웹툰 (GRAPHIC — HTML 애니메이션)\n□ CUT7 — CTA 라벤더 배경 (GRAPHIC — HTML 애니메이션)\n□ BGM — 로파이 or dreamy (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R03_draft.mp4\n\n[📊 컷 요약]\n━━━━━━━━━━━━━━━━━━━━━━━━\nCUT1  훅 텍스트          5초   GRAPHIC   ← HTML 애니메이션\nCUT2  Flow 화면녹화       9초   CAPCUT    ← 화면녹화 소스\nCUT3  ElevenLabs 반전    14초   CAPCUT    ← 화면녹화 소스\nCUT4  서여리 실물 당황     7초   YEORI     ← Flow 이미지 생성 대상\nCUT5  감정 핵심컷         8초   YEORI     ← Flow 이미지 생성 대상\nCUT6  분할화면            8초   GRAPHIC   ← HTML 애니메이션\nCUT7  CTA 마무리          9초   GRAPHIC   ← HTML 애니메이션\n총 길이: 60초\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[버전 이력]\nv1.0  초기 작성 (IG_RL03)\nv2.0  v3 포맷 변환 (IG_RL03_G1_script_v2.txt)\nv3.0  IG_R03 코드 통일 + 새 스튜디오 입력 포맷 적용 + GRAPHIC/CAPCUT/YEORI 타입 명확화\n",
+      "scriptRaw": "================================================================\n마스터 코드\n[IG_R03] :: [PL:IG_RL] :: [SP:GR.SCR] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]\n================================================================\n에피소드명: AI 크리에이터 만드는 데 든 비용: 0원 🫢\n채널: 서여리 인스타그램 릴스 (IG_R03)\n총 길이: 60초 목표\n콘셉트: 현실(제작화면) × AI 세계관(서여리) 혼재 연출\n================================================================\n\n[CUT 1]  GRAPHIC — 훅 텍스트 / 5초\nSC: 검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.\nSP: GR.BLK (검정 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: \"AI 크리에이터 만드는 데 든 비용: 0원 🫢\"\nSH: SH_TXT\nCA: CA_ST\nMD: MD_SUR (충격·놀라움)\nAC: 타이핑 애니메이션\nDU: 5\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 단색 배경\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     타이핑 애니메이션으로 한 글자씩 등장\nMD(감정):     충격·놀라움 유발\nDL(대사):     없음\nNR(나레이션): AI 크리에이터 만드는 데 든 비용: 0원 🫢\nCP(자막):     AI 크리에이터 만드는 데 든 비용: 0원 🫢\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n검정 배경 + 흰색 타이핑 텍스트 애니메이션\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 없음 (다음 컷부터 시작)\n음성   : 없음\n효과음 : 타이핑 사운드\n================================================================\n\n[CUT 2]  CAPCUT — Flow 화면녹화 구간 / 9초\nSC: 실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.\nSP: GR.SCR (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장 (화면녹화)\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR (놀라움·신기함)\nAC: Flow 프로젝트 이미지들 스크롤\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     Google Flow 프로젝트 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     Flow 프로젝트 내 서여리 이미지들 보여주기\nMD(감정):     놀라움·신기함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     프롬프트 입력하면 → 서여리가 만들어져요 ✨\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가)\n━━━━━━━━━━━━━━━━━━━━━━━━\n\"프롬프트 입력하면 →\"\n\"서여리가 만들어져요 ✨\"\n화살표 스티커 + 하트 데코\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 3]  CAPCUT — ElevenLabs 화면 + 남자목소리 반전 / 14초\nSC: ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.\nSP: GR.SCR (화면 녹화)\nPL: IG_RL\nCH: 서여리 — 미등장\nDL: 없음\nNR: 없음\nSH: SH_SCR\nCA: CA_ST\nMD: MD_SUR → MD_COM (놀라움 → 유머)\nAC: 텍스트 입력 → 재생 버튼 클릭 → 남자 목소리 재생\nDU: 14\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     ElevenLabs 앱 화면 (화면녹화)\nCH(캐릭터):   서여리 미등장\nSH(샷):       화면녹화\nCA(카메라):   고정\nAC(동작):     텍스트 입력 → 재생 버튼 클릭 → 음파 시각화 → 남자목소리 재생\nMD(감정):     놀라움 → 반전 유머\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     1단계: 목소리도 AI로 만들어요 🎙️ / 2단계: 잠깐, 남자 목소리?! 😱\n━━━━━━━━━━━━━━━━━━━━━━━━\n손글씨 오버레이 (CapCut 추가) — 2단계\n━━━━━━━━━━━━━━━━━━━━━━━━\n1단계 (0~8s): \"목소리도 AI로 만들어요 🎙️\"\n2단계 (8~14s): \"잠깐, 남자 목소리?! 😱\" (빨간 말풍선 + 깜빡임)\n              \"ㅋㅋㅋ 설정 잘못했다\" (핑크 텍스트)\n데코: 땀방울 💧 스티커\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCAPCUT 타입 — 화면녹화 소스 사용\n소스: rl03_screen_scenario.py 실행 녹화본\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT2 이어서 (볼륨 살짝 낮춤)\n음성   : 실제 ElevenLabs 생성 남자 목소리 삽입\n효과음 : 깜짝 효과음 (반전 순간)\n================================================================\n\n[CUT 4]  YEORI — 실물 서여리 등장 / 7초\nSC: 현실인 듯 AI인 듯 — 시그니처 페이스 실물 이미지 등장. 당황한 표정.\nSP: IN.IN (실내 — 따뜻한 자연광)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE (실물 이미지)\nDL: 없음\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_SUR (당황·민망)\nAC: 카메라 응시 + 당황한 표정\nDU: 7\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 자연광 배경\nCH(캐릭터):   서여리 YEORI.BASE 실물 이미지\nSH(샷):       클로즈업 — 얼굴 중심\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 살짝 당황한 표정\nMD(감정):     당황·민망 \"들켰다\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     저 사실... AI예요. 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\ndirect eye contact with camera, slightly flustered expression,\nsubtle \"caught in the act\" look, lips together, soft smile hint,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nlooking directly at camera, subtle flustered expression,\ntiny soft blink, \"caught\" moment — lips closed,\nminimal movement, just existing beautifully,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 볼륨 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================\n\n[CUT 5]  YEORI — 감정 핵심컷 / 8초\nSC: 서여리가 카메라를 바라보며 꿈에 대해 이야기하는 감정 핵심 장면.\nSP: IN.IN (실내 — 따뜻한 조명)\nPL: IG_RL\nCH: 서여리 — YEORI.BASE\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM (따뜻함·진심)\nAC: 카메라 응시 + 잔잔한 표정\nDU: 8\nLOOK_ID: YEORI.BASE\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     실내 — 따뜻한 조명 배경\nCH(캐릭터):   서여리 YEORI.BASE\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAC(동작):     카메라 응시 + 잔잔하고 따뜻한 표정\nMD(감정):     따뜻함·진심 \"꿈만큼은 진짜\" 느낌\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     꿈만큼은 진짜예요. 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nsoft smile, eyes slightly warm and reflective,\nmedium close-up face and upper body,\nwarm indoor lighting, soft bokeh background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nYoung Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nwarm direct gaze at camera, gentle sincere expression,\nslow soft blink, barely perceptible breath movement,\nmedium close-up, warm indoor light, soft bokeh background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 감성적 로파이 or dreamy (볼륨 올라오며)\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[CUT 6]  GRAPHIC — 분할화면 / 8초\nSC: 실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.\nSP: GR.BLK (검정 배경 분할)\nPL: IG_RL\nCH: 서여리 — 실물 + 웹툰 동시\nDL: 없음\nNR: 없음\nSH: SH_SPL (분할화면)\nCA: CA_ST\nMD: MD_WRM (따뜻함·신기함)\nAC: 두 버전 나란히 또는 교차\nDU: 8\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     검정 배경 분할 화면\nCH(캐릭터):   실물 서여리 + 웹툰 서여리 동시 등장\nSH(샷):       분할 화면\nCA(카메라):   고정\nAC(동작):     실물과 웹툰 나란히 배치 or 교차 전환\nMD(감정):     따뜻함·신기함 \"현실 × AI\" 혼재\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     이게 저예요 🙂\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 분할화면 애니메이션으로 직접 제작\n좌: 실물 서여리 이미지 (CUT4 선택본)\n우: 웹툰 서여리 이미지 (IG_P01_C03_final.jpg)\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : CUT5 이어서\n음성   : 없음\n효과음 : 분할 전환 효과음\n================================================================\n\n[CUT 7]  GRAPHIC — CTA 마무리 / 9초\nSC: 라벤더 파스텔 배경 + 팔로우 유도 텍스트.\nSP: GR.PST (라벤더 파스텔 배경)\nPL: IG_RL\nCH: 서여리 — 미등장 (텍스트만)\nDL: 없음\nNR: 없음\nSH: SH_TXT\nCA: CA_ST\nMD: MD_WRM (따뜻함·친근함)\nAC: 텍스트 페이드인\nDU: 9\nLOOK_ID: 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     라벤더 파스텔 배경 + 하트 별 데코\nCH(캐릭터):   서여리 미등장\nSH(샷):       텍스트 전용 컷\nCA(카메라):   고정\nAC(동작):     텍스트 페이드인 + 하트·별 데코 팝업\nMD(감정):     따뜻함·친근함\nDL(대사):     없음\nNR(나레이션): 없음\nCP(자막):     앞으로 같이 봐주실 거죠? 🙏 / 팔로우하면 다음 화 먼저요 💜\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nGRAPHIC 타입 — HTML 애니메이션으로 직접 제작\n라벤더 파스텔 배경 + 하트·별 데코 + 팔로우 유도 텍스트\n━━━━━━━━━━━━━━━━━━━━━━━━\n오디오\n━━━━━━━━━━━━━━━━━━━━━━━━\nBGM    : 다시 올라오며 밝고 따뜻하게 마무리\n음성   : 없음\n효과음 : 하트·별 팝업 효과음\n================================================================\n\n[캡션 + 해시태그]\n━━━━━━━━━━━━━━━━━━━━━━━━\nAI 크리에이터 만드는 데 든 비용: 0원 🫢\n\n얼굴·목소리·영상 전부 AI로 만들었어요.\n근데 목소리 설정을 잘못했더니...\n남자 목소리가 나왔다 ㅋㅋㅋ 😅\n\n꿈만큼은 진짜인 AI 크리에이터 서여리입니다.\n같이 봐주실 거죠? 💜\n\n👇 AI 크리에이터 도전하고 싶으면 저장!\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[제작 체크리스트]\n□ CUT1 — 검정 배경 훅 텍스트 (GRAPHIC — HTML 애니메이션)\n□ CUT2 — Flow 화면녹화 (CAPCUT — 화면녹화 소스)\n□ CUT3 — ElevenLabs 화면 + 남자 목소리 반전 (CAPCUT — 화면녹화 소스)\n□ CUT4 — 실물 서여리 당황 표정 (YEORI — Flow 이미지 생성)\n□ CUT5 — 감정 핵심컷 \"꿈만큼은 진짜\" (YEORI — Flow 이미지 생성)\n□ CUT6 — 분할화면 실물+웹툰 (GRAPHIC — HTML 애니메이션)\n□ CUT7 — CTA 라벤더 배경 (GRAPHIC — HTML 애니메이션)\n□ BGM — 로파이 or dreamy (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R03_draft.mp4\n\n[📊 컷 요약]\n━━━━━━━━━━━━━━━━━━━━━━━━\nCUT1  훅 텍스트          5초   GRAPHIC   ← HTML 애니메이션\nCUT2  Flow 화면녹화       9초   CAPCUT    ← 화면녹화 소스\nCUT3  ElevenLabs 반전    14초   CAPCUT    ← 화면녹화 소스\nCUT4  서여리 실물 당황     7초   YEORI     ← Flow 이미지 생성 대상\nCUT5  감정 핵심컷         8초   YEORI     ← Flow 이미지 생성 대상\nCUT6  분할화면            8초   GRAPHIC   ← HTML 애니메이션\nCUT7  CTA 마무리          9초   GRAPHIC   ← HTML 애니메이션\n총 길이: 60초\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n[버전 이력]\nv1.0  초기 작성 (IG_RL03)\nv2.0  v3 포맷 변환 (IG_RL03_G1_script_v2.txt)\nv3.0  IG_R03 코드 통일 + 새 스튜디오 입력 포맷 적용 + GRAPHIC/CAPCUT/YEORI 타입 명확화\n",
       "createdAt": "2026-09-03T05:12:01.076Z",
       "tabState": {
         "videoTabState": {
@@ -8808,11 +8808,11 @@
       "cutType": "CAPCUT",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.BK (검정 배경)",
+        "sp": "GR.BLK (검정 배경)",
         "pl": "IG_RL",
         "ch": "서여리 — 등장 없음 (텍스트만)",
-        "sh": "SH_TEXT",
-        "ca": "CA_ST",
+        "sh": "SH_TXT",
+        "ca": "CA_ZI",
         "md": "MD_COM (유머)",
         "ac": "없음",
         "lookId": "YEORI.BASE",
@@ -8827,7 +8827,7 @@
           "sp": "검정 단색 배경",
           "ch": "서여리 미등장 — 텍스트 훅만",
           "sh": "텍스트 전용 컷",
-          "ca": "고정",
+          "ca": "줌인(Zoom-in)",
           "ac": "타이핑 애니메이션 효과",
           "md": "유머 · 공감 유발"
         }
@@ -8891,7 +8891,7 @@
       "cutType": "CAPCUT",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.DM (DM 화면 목업)",
+        "sp": "GR.DM (DM 화면 목업)",
         "pl": "IG_RL",
         "ch": "서여리 — 미등장",
         "sh": "SH_SCR",
@@ -8962,7 +8962,7 @@
       "cutType": "CAPCUT",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.DM (DM 화면 목업)",
+        "sp": "GR.DM (DM 화면 목업)",
         "pl": "IG_RL",
         "ch": "서여리 — 미등장",
         "sh": "SH_SCR",
@@ -9110,10 +9110,10 @@
       "cutType": "CAPCUT",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.BK (검정 배경)",
+        "sp": "GR.BLK (검정 배경)",
         "pl": "IG_RL",
         "ch": "서여리 — 미등장",
-        "sh": "SH_TEXT",
+        "sh": "SH_TXT",
         "ca": "CA_ST",
         "md": "MD_WRM (따뜻함 · 기대감)",
         "ac": "없음",
@@ -9294,7 +9294,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-07T10:33:14.371Z",
+  "savedAt": "2026-10-07T10:36:00.857Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [

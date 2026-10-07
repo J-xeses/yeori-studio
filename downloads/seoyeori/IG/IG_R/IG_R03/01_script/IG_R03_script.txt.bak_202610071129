@@ -1,6 +1,6 @@
 ================================================================
 마스터 코드
-[IG_R03] :: [PL:IG_RL] :: [SP:GR.SCR] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]
+[IG_R03] :: [PL:IG_RL] :: [SP:IN.SC] :: [CH:YR_VD] :: [SH:SH_SCR+SH_CU] :: [F군:미설정]
 ================================================================
 에피소드명: AI 크리에이터 만드는 데 든 비용: 0원 🫢
 채널: 서여리 인스타그램 릴스 (IG_R03)
@@ -10,12 +10,12 @@
 
 [CUT 1]  GRAPHIC — 훅 텍스트 / 5초
 SC: 검정 배경에 훅 텍스트 타이핑 애니메이션 등장. 시청자 시선 즉시 탈취.
-SP: GR.BLK (검정 배경)
+SP: IN.BK (검정 배경)
 PL: IG_RL
 CH: 서여리 — 미등장 (텍스트만)
 DL: 없음
 NR: "AI 크리에이터 만드는 데 든 비용: 0원 🫢"
-SH: SH_TXT
+SH: SH_TEXT
 CA: CA_ST
 MD: MD_SUR (충격·놀라움)
 AC: 타이핑 애니메이션
@@ -49,7 +49,7 @@ BGM    : 없음 (다음 컷부터 시작)
 
 [CUT 2]  CAPCUT — Flow 화면녹화 구간 / 9초
 SC: 실제 Google Flow 프로젝트 화면. 서여리 이미지들이 가득한 화면 녹화.
-SP: GR.SCR (화면 녹화)
+SP: IN.SC (화면 녹화)
 PL: IG_RL
 CH: 서여리 — 미등장 (화면녹화)
 DL: 없음
@@ -94,7 +94,7 @@ BGM    : 로파이 / 가볍고 통통 튀는 느낌 (시작)
 
 [CUT 3]  CAPCUT — ElevenLabs 화면 + 남자목소리 반전 / 14초
 SC: ElevenLabs TTS 화면. 텍스트 입력 → 음성 생성 → 남자 목소리 반전 연출.
-SP: GR.SCR (화면 녹화)
+SP: IN.SC (화면 녹화)
 PL: IG_RL
 CH: 서여리 — 미등장
 DL: 없음
@@ -287,7 +287,7 @@ BGM    : 감성적 로파이 or dreamy (볼륨 올라오며)
 
 [CUT 6]  GRAPHIC — 분할화면 / 8초
 SC: 실물 서여리(CUT4) + 웹툰 서여리 나란히 분할 화면.
-SP: GR.BLK (검정 배경 분할)
+SP: IN.BK (검정 배경 분할)
 PL: IG_RL
 CH: 서여리 — 실물 + 웹툰 동시
 DL: 없음
@@ -327,12 +327,12 @@ BGM    : CUT5 이어서
 
 [CUT 7]  GRAPHIC — CTA 마무리 / 9초
 SC: 라벤더 파스텔 배경 + 팔로우 유도 텍스트.
-SP: GR.PST (라벤더 파스텔 배경)
+SP: IN.PK (라벤더 파스텔 배경)
 PL: IG_RL
 CH: 서여리 — 미등장 (텍스트만)
 DL: 없음
 NR: 없음
-SH: SH_TXT
+SH: SH_TEXT
 CA: CA_ST
 MD: MD_WRM (따뜻함·친근함)
 AC: 텍스트 페이드인

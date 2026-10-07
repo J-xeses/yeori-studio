@@ -11,7 +11,7 @@
 
 [CUT 1] — GRAPHIC | 인트로 타이틀 | 3s
 SC: 채널 인트로. 세 그룹 색상 충돌 → 글리치 → 타이틀 등장.
-SP: GR.BLK
+SP: GR.BK
 PL: LF_YU
 CH: 없음
 DL: 없음
@@ -490,7 +490,7 @@ warm indoor lighting, static camera
 
 [CUT 10] — GRAPHIC | 각자의 색이 살아있다 | 8s
 SC: CUT 5 핵심 문장 시각화. 글리치 컷으로 진입.
-SP: GR.BLK
+SP: GR.BK
 PL: LF_YU
 CH: 없음
 DL: 없음
@@ -721,7 +721,7 @@ warm indoor lighting, static camera
 
 [CUT 14] — GRAPHIC | HYBE 전략 도식 | 10s
 SC: CUT 8 HYBE 전략 설명 시각화. 페이드 전환.
-SP: GR.BLK
+SP: GR.BK
 PL: LF_YU
 CH: 없음
 DL: 없음
@@ -1176,7 +1176,7 @@ fade to black begins, warm indoor lighting
 
 [CUT 22] — GRAPHIC | 엔드카드 | 5s
 SC: 엔드 카드. 구독/댓글 유도.
-SP: GR.BLK
+SP: GR.BK
 PL: LF_YU
 CH: 없음
 DL: 없음
