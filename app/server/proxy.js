@@ -4669,43 +4669,48 @@ app.get('/api/scan-audio', (req, res) => {
   res.json({ files })
 })
 
-app.post('/api/image-sequence-cut', async (req, res) => {
-  const { epNum, cutNo, images, duration, effect, fit, audioFile, preview = true } = req.body || {}
-  if (!epNum || cutNo == null || !Array.isArray(images) || !images.length) {
-    return res.status(400).json({ error: 'epNum, cutNo, images(배열, 파일명) 필요' })
+// 사진 시퀀스 컷 제작의 단일 구현 — 메이킹 탭 버튼(/api/image-sequence-cut), 자동실행·MCP·
+// run-making(makeGraphicCutForMcp 가 컷의 imageSeq 레시피를 보고 호출), CLI
+// (scripts/make-image-sequence-cut.js) 가 전부 이 함수를 거친다.
+async function makeImageSequenceCut({ epNum, cutNo, images, duration, effect, fit, audioFile, preview = true }) {
+  if (!Array.isArray(images) || !images.length) { const e = new Error('images(파일명 배열) 필요'); e.statusCode = 400; throw e }
+  const imgDir = mp.imagesDir(epNum)
+  const dataUris = images.map(name => {
+    const safe = path.basename(String(name))
+    const abs = path.join(imgDir, safe)
+    if (!fs.existsSync(abs)) { const e = new Error(`이미지 없음: ${safe}`); e.statusCode = 404; throw e }
+    const ext = path.extname(safe).toLowerCase()
+    const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg'
+    return `data:${mime};base64,${fs.readFileSync(abs).toString('base64')}`
+  })
+  const { w: CW, h: CH } = episodeCutDims(epNum)
+  const dur = parseFloat(duration) || 3
+  const html = buildImageSequenceHtml({ images: dataUris, w: CW, h: CH, durationSec: dur, effect: effect || 'auto', fit: fit === 'contain' ? 'contain' : 'cover' })
+
+  const padded = String(cutNo).padStart(2, '0')
+  const outputPath = preview
+    ? path.join(mp.videoDir(epNum), '_manual_work', `cut_${padded}_preview.mp4`)
+    : undefined
+  const result = await runGraphicCapture({
+    html, cutNo, epNum, duration: dur, motion: 'self',
+    outputPath, skipMotionRecord: !!preview, method: 'imgseq',
+  })
+
+  let audioApplied = false
+  if (audioFile) {
+    const audioAbs = path.join(mp.audioDir(epNum), path.basename(String(audioFile)))
+    if (!fs.existsSync(audioAbs)) { const e = new Error(`오디오 없음: ${audioFile}`); e.statusCode = 404; throw e }
+    await muxAudioIntoVideo(result.videoPath, audioAbs)
+    audioApplied = true
   }
+  return { preview: !!preview, audioApplied, ...result, previewUrl: mp.toMediaUrl(result.videoPath) }
+}
+
+app.post('/api/image-sequence-cut', async (req, res) => {
+  const { epNum, cutNo } = req.body || {}
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo, images(배열, 파일명) 필요' })
   try {
-    const imgDir = mp.imagesDir(epNum)
-    const dataUris = images.map(name => {
-      const safe = path.basename(String(name))
-      const abs = path.join(imgDir, safe)
-      if (!fs.existsSync(abs)) { const e = new Error(`이미지 없음: ${safe}`); e.statusCode = 404; throw e }
-      const ext = path.extname(safe).toLowerCase()
-      const mime = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg'
-      return `data:${mime};base64,${fs.readFileSync(abs).toString('base64')}`
-    })
-    const { w: CW, h: CH } = episodeCutDims(epNum)
-    const dur = parseFloat(duration) || 3
-    const html = buildImageSequenceHtml({ images: dataUris, w: CW, h: CH, durationSec: dur, effect: effect || 'auto', fit: fit === 'contain' ? 'contain' : 'cover' })
-
-    const padded = String(cutNo).padStart(2, '0')
-    const outputPath = preview
-      ? path.join(mp.videoDir(epNum), '_manual_work', `cut_${padded}_preview.mp4`)
-      : undefined
-    const result = await runGraphicCapture({
-      html, cutNo, epNum, duration: dur, motion: 'self',
-      outputPath, skipMotionRecord: !!preview, method: 'imgseq',
-    })
-
-    let audioApplied = false
-    if (audioFile) {
-      const audioAbs = path.join(mp.audioDir(epNum), path.basename(String(audioFile)))
-      if (!fs.existsSync(audioAbs)) { const e = new Error(`오디오 없음: ${audioFile}`); e.statusCode = 404; throw e }
-      await muxAudioIntoVideo(result.videoPath, audioAbs)
-      audioApplied = true
-    }
-
-    res.json({ success: true, preview: !!preview, audioApplied, ...result, previewUrl: mp.toMediaUrl(result.videoPath) })
+    res.json({ success: true, ...(await makeImageSequenceCut(req.body)) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
@@ -9173,6 +9178,15 @@ async function makeGraphicCutForMcp({ epNum, cutNo, htmlFile, motion }) {
 
   // htmlFile 인자가 없으면 컷 자체에 지정된 HTML 목업(대본 HTML: 필드 → cut.htmlFile)을 쓴다.
   // .html 파일이 아닌 값(예: "AE_제작대상_수동" 수동 마커)은 무시하고 자동 템플릿으로.
+  // 컷에 사진 시퀀스 레시피(메이킹 탭에서 확정할 때 저장됨)가 있으면 그대로 재현한다 —
+  // 자동실행·MCP·run-making 이 수동으로 정한 연출을 검은 텍스트카드로 되돌리지 않게.
+  // 호출자가 htmlFile 을 직접 지정한 경우만 그쪽이 우선.
+  if (!htmlFile && Array.isArray(cut.imageSeq?.images) && cut.imageSeq.images.length) {
+    return makeImageSequenceCut({
+      epNum, cutNo: cut.no, images: cut.imageSeq.images, duration: cut.duration,
+      effect: cut.imageSeq.effect, fit: cut.imageSeq.fit, audioFile: cut.imageSeq.audio || undefined, preview: false,
+    })
+  }
   const cand = htmlFile || cut.htmlFile
   const effectiveHtmlFile = /\.html?$/i.test(String(cand || '')) ? cand : null
   let html

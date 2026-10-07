@@ -517,6 +517,54 @@ await check('C4', '대본 탭 효과음(이름만 있는 선택) → 최종본·
   return { ok, evidence: `효과음 ${s.file || '없음'} · ${s.atSec}초 · 음량 ${s.gain} · 합성본 없으면 자동 클립 합성 ${autoCompose ? 'O' : 'X'} · 자막 위치 상74%/중82%/하단 안전선 88% ${posOk ? 'O' : 'X'}` }
 })
 
+// ── 메이킹 탭 ↔ 영상 만들기 ↔ 릴스 최종본 연계(2026-10-07 R02 점검에서 실측된 오류들) ──
+await check('M1', '컷 소스 선택 규칙 — 원본보다 나중에 만든 자막·말풍선본만, 그중 최신(최종본·조립·미리보기 공용)', async () => {
+  const mp2 = await import('../server/lib/mediaPaths.js')
+  const os2 = await import('node:os'); const path2 = await import('node:path')
+  const dir = fs.mkdtempSync(path2.join(os2.tmpdir(), 'st_pick_'))
+  const put = (name, ageSec) => { const f = path2.join(dir, name); fs.writeFileSync(f, 'x'); const t = new Date(Date.now() - ageSec * 1000); fs.utimesSync(f, t, t) }
+  put('cut_01.mp4', 100); put('cut_01_overlay.mp4', 500)                                    // 옛 말풍선본 → 무시
+  put('cut_02.mp4', 100); put('cut_02_overlay.mp4', 50); put('cut_02_subtitle.mp4', 10)    // 둘 다 유효 → 더 나중(자막)
+  put('cut_03.mp4', 100)                                                                    // 파생본 없음 → 원본
+  const a = mp2.pickCutSource(dir, 1), b = mp2.pickCutSource(dir, 2), c = mp2.pickCutSource(dir, 3), d = mp2.pickCutSource(dir, 4)
+  fs.rmSync(dir, { recursive: true, force: true })
+  const fin = fs.readFileSync(new URL('../server/lib/reelFinalize.js', import.meta.url), 'utf-8')
+  const px = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const vt = fs.readFileSync(new URL('../src/tabs/VideoTab.jsx', import.meta.url), 'utf-8')
+  const wired = /mp\.pickCutSource\(vdir, cut\.no\)/.test(fin) && (px.match(/mp\.pickCutSource\(/g) || []).length >= 3 && /finalSource/.test(vt)
+  const ok = a.derived === null && b.derived === 'subtitle' && c.derived === null && d.path === null && wired
+  return { ok, evidence: `옛 말풍선본 무시 ${a.derived === null ? 'O' : 'X'} · 둘 다 유효하면 최신(${b.derived}) · 파생본 없으면 원본 ${c.derived === null ? 'O' : 'X'} · 최종본·조립·상태API·영상탭 연결 ${wired ? 'O' : 'X'}` }
+})
+
+await check('M2', '파생본을 쓴 컷·텍스트카드 컷은 최종본에서 자막을 또 굽지 않음(자막 두 겹 방지)', async () => {
+  const fin = fs.readFileSync(new URL('../server/lib/reelFinalize.js', import.meta.url), 'utf-8')
+  const derivedSkip = /if \(picked\.derived\) \{\s*if \(d\.caption\) d\.caption = null/.test(fin)
+  const selfTextSkip = /selfText === true\) \{\s*d\.caption = null/.test(fin)
+  const stale = /자막·말풍선본이 바뀜/.test(fin)
+  return { ok: derivedSkip && selfTextSkip && stale, evidence: `파생본 컷 자막 생략 ${derivedSkip ? 'O' : 'X'} · 텍스트카드(selfText) 생략 ${selfTextSkip ? 'O' : 'X'} · 파생본 교체 시 최종본 스테일 판정 ${stale ? 'O' : 'X'}` }
+})
+
+await check('M3', '사진 시퀀스 — 서버 단일 구현(버튼·자동실행·CLI 공용) + 나레이션이 짧아도 영상 길이 유지', async () => {
+  const px = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const cli = fs.readFileSync(new URL('./make-image-sequence-cut.js', import.meta.url), 'utf-8')
+  const single = /async function makeImageSequenceCut\(/.test(px) && /cut\.imageSeq\.images/.test(px) && /\/api\/image-sequence-cut/.test(cli) && !/puppeteer/.test(cli)
+  const pad = /aresample=48000,aformat=channel_layouts=stereo,apad/.test(px)
+  const mt = fs.readFileSync(new URL('../src/tabs/MakingTab.jsx', import.meta.url), 'utf-8')
+  const recipe = /imageSeq: \{ images: seqSelected/.test(mt) && /imageSeq: null/.test(mt)
+  return { ok: single && pad && recipe, evidence: `단일 구현·자동실행 레시피 분기·CLI는 서버 호출 ${single ? 'O' : 'X'} · 나레이션 무음 패딩+스테레오 ${pad ? 'O' : 'X'} · 확정 시 레시피 저장/다른 방식이면 삭제 ${recipe ? 'O' : 'X'}` }
+})
+
+await check('M4', '모션 자막 — 미리보기가 컷 전체 길이(시작시간이 뒤여도 보임) + 타이핑이 왼쪽 고정', async () => {
+  const px = fs.readFileSync(new URL('../server/proxy.js', import.meta.url), 'utf-8')
+  const py = fs.readFileSync(new URL('./yeori_subtitle.py', import.meta.url), 'utf-8')
+  const mt = fs.readFileSync(new URL('../src/tabs/MakingTab.jsx', import.meta.url), 'utf-8')
+  const full = !/preview \? 2\.5 : 0/.test(px) && /미리보기 \(컷 전체\)/.test(mt)
+  const typer = /def typer_reveal_mask/.test(py) && /"typer"\}/.test(py.match(/IMPLEMENTED = \{[^}]*\}/)?.[0] || '')
+  const fresh = /isFreshDerivative\(overlayP, baseP\)/.test(px)
+  const allTypes = /expanded && !manual && renderPanel\(cut\)/.test(mt) && /renderBubblePanel\(cut\)/.test(mt)
+  return { ok: full && typer && fresh && allTypes, evidence: `미리보기 전체 길이 ${full ? 'O' : 'X'} · TYPER 구현 ${typer ? 'O' : 'X'} · 옛 말풍선본 위에 자막 안 얹음 ${fresh ? 'O' : 'X'} · 영상생성 유형 컷도 말풍선·자막 패널 ${allTypes ? 'O' : 'X'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

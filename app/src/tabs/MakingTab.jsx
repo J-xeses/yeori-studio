@@ -473,7 +473,7 @@ export default function MakingTab() {
   // 캡처 자체는 헤드리스 화면 녹화라 무음 — cut_NN_nr.mp3(나레이션) 컨벤션이 있으면
   // 자동으로 골라주고, 아니면 목록에서 직접 고르게 한다(2026-09-30, 컷5 재작업 중 발견:
   // 켄번즈 줌만 되고 나레이션이 안 붙어 있었음).
-  const fetchSeqAudio = async (cutNo) => {
+  const fetchSeqAudio = async (cutNo, saved) => {
     if (!episode?.number) return
     try {
       const res = await fetch(`${YEORI_SERVER}/api/scan-audio?ep=${episode.number}`)
@@ -482,7 +482,7 @@ export default function MakingTab() {
       setSeqAudioList(files)
       const padded = String(cutNo).padStart(2, '0')
       const guess = files.find(f => f === `cut_${padded}_nr.mp3`) || ''
-      setSeqAudio(guess)
+      setSeqAudio(saved != null && (saved === '' || files.includes(saved)) ? saved : guess)
     } catch { /* noop */ }
   }
 
@@ -518,7 +518,13 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setSeqResult({ error: data.error || '제작 실패' }); return }
       setSeqResult({ ...data, _ts: Date.now() })
-      if (!preview && Number(cut.duration) !== Number(duration)) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration } })
+      // 확정하면 "이 컷을 어떻게 만들었는지"를 컷에 남긴다 — 자동실행·리더가 같은 연출로 재현하고,
+      // 다음에 열었을 때 고른 사진·효과가 그대로 보인다.
+      if (!preview) {
+        dispatch({ type: 'UPDATE_CUT', id: cut.id, p: {
+          duration, imageSeq: { images: seqSelected, effect: seqEffect, fit: seqFit, audio: seqAudio || '' },
+        } })
+      }
     } catch (e) {
       setSeqResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -532,11 +538,13 @@ export default function MakingTab() {
     setPreviewHtml('')
     setCaptureResult(null)
     setDuration(cutDuration(cut))
-    setSeqSelected([])
+    setSeqSelected(Array.isArray(cut.imageSeq?.images) ? cut.imageSeq.images : [])
+    if (cut.imageSeq?.effect) setSeqEffect(cut.imageSeq.effect)
+    if (cut.imageSeq?.fit) setSeqFit(cut.imageSeq.fit)
     setSeqResult(null)
     setOverwriteArmed(null)
     fetchSeqImages()
-    fetchSeqAudio(cut.no)
+    fetchSeqAudio(cut.no, cut.imageSeq?.audio)
   }
 
   // [제작 실행] — 편집기의 현재 HTML을 그대로 캡처한다(/api/graphic-capture).
@@ -573,7 +581,8 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
       setCaptureResult({ ...data, _ts: Date.now() })
-      if (cut && Number(cut.duration) !== Number(duration)) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration } })
+      // 다른 방식(텍스트카드·목업 캡처)으로 다시 만들었으니 사진 시퀀스 레시피는 지운다
+      if (cut) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration, imageSeq: null } })
       // 대본 CP가 있고 유형별 손글씨 오버레이가 켜져 있으면 이어서 자동 합성.
       if (cut && cut.subtitle && typeStyles[cut.cutType]?.overlay?.enabled) {
         await runOverlay(cut)
@@ -858,7 +867,7 @@ export default function MakingTab() {
       setS2cResult(p => ({ ...p, [cut.no]: r.ok ? data : { error: data.error || '실패' } }))
       // 제작 성공 시 원본 소스 경로를 컷에 영구 저장 — 이전엔 s2cPath(로컬 state)뿐이라
       // 새로고침하면 "원본 경로"가 사라져 보였음(2026-09-17 사용자 지적).
-      if (r.ok) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { sourcePath: srcPath } })
+      if (r.ok) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { sourcePath: srcPath, imageSeq: null } })
       if (r.ok && cut.subtitle && typeStyles[cut.cutType]?.overlay?.enabled) await runOverlay(cut)
     } catch (e) {
       setS2cResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
