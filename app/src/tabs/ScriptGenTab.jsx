@@ -9,7 +9,7 @@ import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import DirectionSettingsPanel from '../components/DirectionSettingsPanel'
 import CodeGloss from '../components/CodeGloss'
-import { useCodebook } from '../lib/codeRef'
+import { useCodebook, codeListForPrompt } from '../lib/codeRef'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -1109,6 +1109,8 @@ export default function ScriptGenTab() {
 
 ${YEORI_RULESET}
 
+${codeListForPrompt(codebook)}
+
 위 룰셋을 완전히 내재화한 상태에서
 아래 설정에 맞는 유튜브 영상 대본을 작성해주세요.
 기준 장면 수는 ${episode.cutCount}개이지만, 룰셋의 [컷 길이 기준]에 따라 8초를 초과하는 장면은
@@ -1397,11 +1399,9 @@ CT 컷유형(YEORI|BROLL|GRAPHIC|CAPCUT|PIP)
 SRC(로컬 파일 "sources/x.mp4") · URL(영상 페이지) · BQ(Pexels 영어 검색어) ·
 CLIP("<url> @ 0:30 +10") · MOTION(self|zoom-in|fade|type-in|rise|none)
 
-[코드 값]
-SH: SH_ECU SH_CU SH_MCU SH_MS SH_MLS SH_FS SH_WS SH_POV SH_BIRD SH_LOW
-MD: MD_JOY MD_REL MD_SUR MD_INT MD_CUR MD_SAD MD_DRM MD_STR
+${codeListForPrompt(codebook)}
 GTPL 템플릿: text-card mv-intro stat-card info-source cards-3col relation / 스타일: minimal gradient dark-minimal yeori neon-dark bold-impact
-SP·CA·AC·PL 은 코드북 값이라 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 것.
+PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 것.
 
 [출력 규칙]
 1. 요청과 관련된 컷만 출력. 나머지 컷은 출력하지 말 것.

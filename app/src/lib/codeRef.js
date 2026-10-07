@@ -30,7 +30,7 @@ const TABLE = { sh: 'SH', ca: 'CA', md: 'MD', ac: 'AT', pl: 'PL', lookId: 'LOOK_
 export const JOINER = { sh: ' → ', ca: ' → ', md: ' + ', ac: ' + ' }
 
 // 코드북의 영어 라벨(afternoon 등)을 한글로 — 코드 자체는 코드북 것 그대로.
-const SP_IO = { IN: '실내', OT: '실외' }
+const SP_IO = { IN: '실내', OT: '실외', GR: '그래픽 화면' }
 const SP_TIME_KO = { TZ_AF: '오후', TZ_GH: '노을', TZ_NT: '밤·저녁', TZ_DW: '새벽' }
 const SP_LIGHT_KO = { LT_WM: '따뜻한 빛', LT_DK: '어두운 조명', LT_WD: '창가 자연광', LT_STD: '스튜디오 조명' }
 
@@ -52,7 +52,12 @@ const TOKEN_RE = { sh: /SH_[A-Z0-9_]+/g, ca: /CA_[A-Z0-9_]+/g, md: /MD_[A-Z0-9_]
 export function tokensOf(kind, value) { return String(value || '').match(TOKEN_RE[kind]) || [] }
 
 // ── SP(장소) = 실내외.장소.시간.조명 ──
-export function spLocations(cb) {
+// 화면 종류(GR.*) — 실제 장소가 아닌 컷(검정 배경·목업·녹화 등)
+export function spScreens(cb) {
+  return Object.entries(cb?.SP?._screen_codes || {}).filter(([k]) => !k.startsWith('_')).map(([code, label]) => ({ code, label }))
+}
+export function spLocations(cb, io) {
+  if (io === 'GR') return spScreens(cb)
   return Object.entries(cb?.SP?._location_codes || {}).map(([code, v]) => ({ code, label: (String(v).match(/\(([^)]+)\)/) || [])[1] || String(v) }))
 }
 export const spTimes = (cb) => Object.keys(cb?.SP?._time_codes || {}).map(code => ({ code, label: SP_TIME_KO[code] || cb.SP._time_codes[code].label }))
@@ -74,7 +79,7 @@ export function spKorean(cb, value) {
   const preset = cb?.SP?.presets?.[p.code]?.label
   const unknown = []
   const part = (code, map) => { if (!code) return null; if (map[code]) return map[code]; unknown.push(code); return `${code}?` }
-  const locMap = Object.fromEntries(spLocations(cb).map(o => [o.code, o.label]))
+  const locMap = Object.fromEntries(spLocations(cb, p.io).map(o => [o.code, o.label]))
   const timeMap = Object.fromEntries(spTimes(cb).map(o => [o.code, o.label]))
   const lightMap = Object.fromEntries(spLights(cb).map(o => [o.code, o.label]))
   const pieces = [part(p.io, SP_IO), part(p.loc, locMap), part(p.time, timeMap), part(p.light, lightMap)].filter(Boolean)
@@ -104,4 +109,24 @@ export const hasUnknown = (cb, kind, value) => glossParts(cb, kind, value).some(
 export function koreanFor(cb, kind, value) {
   if (kind === 'sp') return spKorean(cb, value).text
   return tokensOf(kind, value).map(t => labelOf(cb, kind, t) || t).join(JOINER[kind] || ' + ')
+}
+
+// 대본 생성·수정 지시문에 넣는 "쓸 수 있는 코드" 목록 — 코드북이 원본이라, 여기 없는 코드를 초안이
+// 새로 지어내 레퍼런스와 어긋나는 일을 막는다(2026-10-07: IG 릴스 초안이 IN.BK·SH_TEXT 등을 지어 쓴 사례).
+export function codeListForPrompt(cb) {
+  if (!cb) return ''
+  const line = (kind) => refOptions(cb, kind).map(o => `${o.code}(${o.label})`).join(' ')
+  const pairs = (arr) => arr.map(o => `${o.code}(${o.label})`).join(' ')
+  return [
+    '[코드 값 — 코드북 기준. 아래 목록에 없는 코드를 새로 만들지 말 것. 맞는 코드가 없으면 가장 가까운 코드를 쓰고 KR 컨펌 문구에 풀어 쓸 것]',
+    `SH: ${line('sh')}`,
+    `CA: ${line('ca')}`,
+    `MD: ${line('md')}`,
+    `AC: ${line('ac')}`,
+    `LOOK_ID: ${line('lookId')}`,
+    `SP 형식: 실내외(IN 실내 / OT 실외).장소.시간.조명 — 예 OT.CF.TZ_AF.LT_WM`,
+    `SP 장소: ${pairs(spLocations(cb))}`,
+    `SP 시간: ${pairs(spTimes(cb))} / 조명: ${pairs(spLights(cb))}`,
+    `SP 화면 종류(실제 장소가 아닌 그래픽·목업·녹화 컷은 GR.코드 로만 적음): ${spScreens(cb).map(o => `GR.${o.code}(${o.label})`).join(' ')}`,
+  ].join('\n')
 }

@@ -326,12 +326,12 @@ export function decideCut(cut) {
   const audio = mc.audio || {}
 
   // fit: 화면녹화(데스크톱 웹앱) 컷은 잘림 없이 레터박스, 나머지는 채움
-  const isScreen = /IN\.SC|화면\s*녹화|화면녹화|screen\s*rec/i.test(sp + scene) || /SH_SCR/i.test(sh)
+  const isScreen = /(?:IN|GR)\.SCR?\b|화면\s*녹화|화면녹화|screen\s*rec/i.test(sp + scene) || /SH_SCR/i.test(sh)
   const fit = isScreen ? 'contain' : 'cover'
 
-  // caption: CP(자막) 있고, 그래픽이 자체 텍스트를 렌더하는 컷(SH_TEXT)만 아니면 번인
+  // caption: CP(자막) 있고, 그래픽이 자체 텍스트를 렌더하는 컷(SH_TXT, 옛 표기 SH_TEXT)만 아니면 번인
   const cp = String(cut.subtitle || '').trim()
-  const graphicSelfText = cut.cutType === 'GRAPHIC' && /SH_TEXT/i.test(sh)
+  const graphicSelfText = cut.cutType === 'GRAPHIC' && /SH_TE?XT/i.test(sh)
   let caption = null
   if (cp && !graphicSelfText) {
     // 반전/멀티스텝 판정 → 해당 세그먼트만 Punch(빨강)
@@ -343,7 +343,7 @@ export function decideCut(cut) {
     // 오버레이 렌더용 색/말풍선/위치 기본값 (대본 힌트 > 감정 > 컷타입)
     const warm = /WRM/i.test(md)
     const baseColor = hint.color || (warm ? 'lavender' : 'white')
-    const basePos = /SH_TEXT/i.test(sh) ? 'center' : (fit === 'contain' ? 'bottom_center' : 'bottom_center')
+    const basePos = /SH_TE?XT/i.test(sh) ? 'center' : (fit === 'contain' ? 'bottom_center' : 'bottom_center')
     caption = {
       style: isPunch && segs.length === 1 ? 'Punch' : 'Cap',
       // 기본은 세그먼트 순차 교체(대사/나레이션이 섞이면 한번에 다 보이면 헷갈림) — cut.captionStack===true 일 때만 레퍼런스 스타일 누적.

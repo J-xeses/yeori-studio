@@ -547,6 +547,23 @@ await check('REF1', '설정 점검 — 코드 한글 풀이 + 레퍼런스 선�
   return { ok, evidence: `${g} · 없는 코드 경고 ${unk ? 'O' : 'X'} · KR "${kr}" · 장소 조합 "${sp}" · 한 번에 반영 ${once ? 'O' : 'X'} · 탭 순서(요소→부가) ${order ? 'O' : 'X'}` }
 })
 
+await check('REF2', '코드 정리 — SH_TXT·화면 종류(GR.*) 등록, 최종본 규칙은 옛 표기도 인식, 대본 지시문에 코드북 목록', async () => {
+  const src = fs.readFileSync(new URL('../src/lib/codeRef.js', import.meta.url), 'utf-8').replace(/^import .*$/m, '').replace(/export /g, '')
+  const cb = JSON.parse(fs.readFileSync(new URL('./codebook.json', import.meta.url), 'utf-8'))
+  const api = new Function(`${src}\nreturn { glossParts, codeListForPrompt }`)()
+  const g = (k, v) => api.glossParts(cb, k, v).map(p => p.text + (p.warn ? '!' : '')).join(' ')
+  const { decideCut } = await import('../server/lib/reelFinalize.js')
+  const mk = (sh, sp) => decideCut({ no: 1, cutType: 'GRAPHIC', subtitle: '자막', duration: 4, masterCode: { sh, sp, audio: {} } })
+  const selfNew = !mk('SH_TXT', 'GR.BLK').caption, selfOld = !mk('SH_TEXT', 'IN.BK').caption
+  const scrNew = mk('SH_MS', 'GR.SCR').fit === 'contain', scrOld = mk('SH_MS', 'IN.SC (화면 녹화)').fit === 'contain'
+  const list = api.codeListForPrompt(cb)
+  const tab = fs.readFileSync(new URL('../src/tabs/ScriptGenTab.jsx', import.meta.url), 'utf-8')
+  const wired = (tab.match(/\$\{codeListForPrompt\(codebook\)\}/g) || []).length === 2 && /GR\.BLK\(검정 배경\)/.test(list) && /SH_TXT\(/.test(list) && !/SH_TEXT/.test(list)
+  const ok = g('sh', 'SH_TXT') === 'SH_TXT(텍스트 전용 컷)' && g('sp', 'GR.BLK') === 'GR.BLK(그래픽 화면 · 검정 배경)' && g('sp', 'IN.BK') === 'IN.BK(실내 · 은행)'
+    && selfNew && selfOld && scrNew && scrOld && wired
+  return { ok, evidence: `${g('sh', 'SH_TXT')} · ${g('sp', 'GR.BLK')} · ${g('sp', 'IN.BK')} · 텍스트 컷 자막 생략 새/옛 ${selfNew ? 'O' : 'X'}/${selfOld ? 'O' : 'X'} · 화면녹화 레터박스 새/옛 ${scrNew ? 'O' : 'X'}/${scrOld ? 'O' : 'X'} · 생성·수정 지시문 연결 ${wired ? 'O' : 'X'}` }
+})
+
 // ── 메이킹 탭 ↔ 영상 만들기 ↔ 릴스 최종본 연계(2026-10-07 R02 점검에서 실측된 오류들) ──
 await check('M1', '컷 소스 선택 규칙 — 원본보다 나중에 만든 자막·말풍선본만, 그중 최신(최종본·조립·미리보기 공용)', async () => {
   const mp2 = await import('../server/lib/mediaPaths.js')

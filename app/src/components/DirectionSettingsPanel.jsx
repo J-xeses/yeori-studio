@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { claudeMessages } from '../lib/api'
 import CodeGloss from './CodeGloss'
 import { useCodebook, refOptions, tokensOf, koreanFor, hasUnknown, labelOf, JOINER,
-  spPresets, spLocations, spTimes, spLights, spIos, parseSp, composeSp, spKorean } from '../lib/codeRef'
+  spPresets, spScreens, spLocations, spTimes, spLights, spIos, parseSp, composeSp, spKorean } from '../lib/codeRef'
 import s from './DirectionSettingsPanel.module.css'
 
 // 룰셋 v1.4.5 §②-1 "샷타입별 검증된 프롬프트 템플릿"(2026-09-29 신설, 성준님 실측 테스트로
@@ -143,7 +143,13 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
   }
   const pickSp = (code) => mcPatch({ sp: code, kr: { sp: spKorean(cb, code).text } })
   const sp = parseSp(mc.sp)
-  const setSpPart = (key, val) => pickSp(composeSp({ io: sp.io || 'IN', loc: sp.loc, time: sp.time, light: sp.light, [key]: val }))
+  const setSpPart = (key, val) => {
+    const next = { io: sp.io || 'IN', loc: sp.loc, time: sp.time, light: sp.light, [key]: val }
+    // 실내외 ↔ 그래픽 화면을 바꾸면 장소 목록이 달라지므로 장소 칸을 비운다. 그래픽 화면은 시간·조명이 없다.
+    if (key === 'io' && (val === 'GR') !== (sp.io === 'GR')) next.loc = ''
+    if (next.io === 'GR') { next.time = ''; next.light = '' }
+    pickSp(composeSp(next))
+  }
   const pickLook = (code) => {
     const ch = String(mc.ch || '')
     const nextCh = /LOOK[A-Z0-9_]*/.test(ch) ? ch.replace(/LOOK[A-Z0-9_]*/, code) : (ch.trim() ? ch : `서여리 / ${code}`)
@@ -201,9 +207,17 @@ export default function DirectionSettingsPanel({ apiKey, cut, cuts, mc, audio, k
                   </button>
                 ))}
               </div>
+              <div className={s.refTitle}>레퍼런스 — 화면 종류 (실제 장소가 아닌 컷)</div>
+              <div className={s.chipRow}>
+                {spScreens(cb).map(o => (
+                  <button key={o.code} type="button" className={chip(sp.code === `GR.${o.code}`)} onClick={() => pickSp(`GR.${o.code}`)}>
+                    GR.{o.code} <span className={s.chipDesc}>({o.label})</span>
+                  </button>
+                ))}
+              </div>
               <div className={s.refTitle}>직접 조합 — 실내외 · 장소 · 시간 · 조명</div>
               <div className={s.spRow}>
-                {[['io', spIos(), '실내외'], ['loc', spLocations(cb), '장소'], ['time', spTimes(cb), '시간'], ['light', spLights(cb), '조명']].map(([key, opts, name]) => (
+                {[['io', spIos(), '실내외'], ['loc', spLocations(cb, sp.io), sp.io === 'GR' ? '화면 종류' : '장소'], ['time', spTimes(cb), '시간'], ['light', spLights(cb), '조명']].map(([key, opts, name]) => (
                   <select key={key} value={sp[key] || ''} onChange={e => setSpPart(key, e.target.value)}>
                     <option value="">{name} —</option>
                     {sp[key] && !opts.some(o => o.code === sp[key]) && <option value={sp[key]}>{sp[key]} (레퍼런스에 없음)</option>}

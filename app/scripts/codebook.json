@@ -149,7 +149,22 @@
       "JJ": "jjimjilbang (찜질방)",
       "RF": "rooftop (루프탑)",
       "TX": "taxi (택시)",
-      "STD": "studio (스튜디오)"
+      "STD": "studio (스튜디오)",
+      "BK": "bank (은행)",
+      "PK": "park (공원)",
+      "SF": "sofa living room (소파·거실)",
+      "HG": "Han river park (한강 공원)",
+      "CV": "convenience store (편의점)",
+      "BS": "bus stop (버스정류장)",
+      "MT": "MT pension (MT 펜션 거실)"
+    },
+    "_screen_codes": {
+      "_note": "화면 종류 — 실제 장소가 아닌 컷(그래픽·목업·녹화). SP 를 GR.[SCREEN] 으로 적는다. 장소 코드(BK=은행, PK=공원)와 글자가 겹치지 않게 분리(2026-10-07).",
+      "BLK": "검정 배경",
+      "PST": "파스텔 배경",
+      "DM": "DM 화면 목업",
+      "SCR": "화면 녹화",
+      "MV": "뮤직비디오 화면"
     },
     "_time_codes": {
       "TZ_AF": {
@@ -297,7 +312,7 @@
       "label": "그래픽 컷",
       "usage": 8
     },
-    "SH_TEXT": {
+    "SH_TXT": {
       "label": "텍스트 전용 컷",
       "usage": 4
     },
