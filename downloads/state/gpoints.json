@@ -464,10 +464,11 @@
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-10-07T06:34:34.322Z",
+      "updatedAt": "2026-10-07T07:07:46.235Z",
       "g2": true,
       "selectedImage": "cut_05_a.jpg",
-      "g3": true
+      "g3": true,
+      "g4": true
     },
     "g5m": {},
     "g5mUpdatedAt": {

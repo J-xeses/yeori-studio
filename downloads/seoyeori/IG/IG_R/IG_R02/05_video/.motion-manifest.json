@@ -5,10 +5,10 @@
     "motion": "self",
     "baked": true,
     "duration": 5,
-    "producedAt": "2026-10-07T05:29:58.092Z",
+    "producedAt": "2026-10-07T07:32:04.963Z",
     "subtitle": true,
     "subtitleEffect": "slam",
-    "subtitleAt": "2026-10-07T05:54:14.477Z"
+    "subtitleAt": "2026-10-07T07:32:46.395Z"
   },
   "2": {
     "method": "graphic",
@@ -19,7 +19,7 @@
     "producedAt": "2026-10-07T05:35:48.490Z",
     "subtitle": true,
     "subtitleEffect": "typer",
-    "subtitleAt": "2026-10-07T05:38:29.414Z"
+    "subtitleAt": "2026-10-07T07:04:17.596Z"
   },
   "3": {
     "method": "graphic",
@@ -30,7 +30,7 @@
     "producedAt": "2026-10-07T05:37:06.996Z",
     "subtitle": true,
     "subtitleEffect": "typer",
-    "subtitleAt": "2026-10-07T05:39:25.097Z"
+    "subtitleAt": "2026-10-07T07:06:12.267Z"
   },
   "4": {
     "method": "s2c-video",
@@ -51,6 +51,9 @@
     "motion": "self",
     "baked": true,
     "duration": 4,
-    "producedAt": "2026-10-07T05:49:32.021Z"
+    "producedAt": "2026-10-07T05:49:32.021Z",
+    "subtitle": true,
+    "subtitleEffect": "slam",
+    "subtitleAt": "2026-10-07T07:07:30.583Z"
   }
 }
