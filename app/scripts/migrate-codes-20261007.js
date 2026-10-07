@@ -21,6 +21,9 @@ const RULES = [
   [/\bIN\.PK\b/g, 'GR.PST'],
   [/\bIN\.DM\b/g, 'GR.DM'],
   [/\bIN\.SC\b/g, 'GR.SCR'],
+  // IN.IN = 장소 특정 없는 실내를 임시로 적은 것 → IN.RM(실내 일반) + 조명(자연광이면 창가 자연광, 아니면 따뜻한 빛)
+  [/\bIN\.IN\b(?=\s*\([^)]*자연광)/g, 'IN.RM.LT_WD'],
+  [/\bIN\.IN\b/g, 'IN.RM.LT_WM'],
 ]
 const fix = (v) => RULES.reduce((s, [re, to]) => s.replace(re, to), String(v))
 
