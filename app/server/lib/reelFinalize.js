@@ -501,7 +501,7 @@ function normVf(fit, w = 1080, h = 1920) {
  *   onLog   : (선택) 진행 로그 콜백 (line)
  */
 // 효과음이 컷 안에서 실제로 시작하는 초·음량(%) — 메이킹 탭 표가 "보이는 값 = 실제 값"으로 보여주기 위한 단일 계산.
-// 위 finalizeReel 의 배치 규칙과 같아야 한다(selftest E1).
+// 위 finalizeReel 의 배치 규칙과 같아야 한다(selftest FX1).
 export function sfxEffective(s, durSec) {
   const dur = Number(durSec) > 0 ? Number(durSec) : 0
   let at = 0.15

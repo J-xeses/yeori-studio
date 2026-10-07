@@ -517,7 +517,7 @@ await check('C4', '대본 탭 효과음(이름만 있는 선택) → 최종본·
   return { ok, evidence: `효과음 ${s.file || '없음'} · ${s.atSec}초 · 음량 ${s.gain} · 합성본 없으면 자동 클립 합성 ${autoCompose ? 'O' : 'X'} · 자막 위치 상74%/중82%/하단 안전선 88% ${posOk ? 'O' : 'X'}` }
 })
 
-await check('E1', '효과음 설정 한 곳(메이킹 탭 최종본 표) — 표에 보이는 시작 초·음량 = 최종본에 들어가는 값', async () => {
+await check('FX1', '효과음 설정 한 곳(메이킹 탭 최종본 표) — 표에 보이는 시작 초·음량 = 최종본에 들어가는 값', async () => {
   const { decideCut, sfxEffective } = await import('../server/lib/reelFinalize.js')
   const mk = (extra) => decideCut({ no: 1, cutType: 'CAPCUT', subtitle: '', duration: 4, masterCode: { audio: { sfx: 'mixkit-cinematic-glass-hit-suspense-677.wav', ...extra } } }).sfx[0]
   const auto = sfxEffective(mk({}), 4)                                   // 손 안 댄 컷 → 중간(55%)+0.15

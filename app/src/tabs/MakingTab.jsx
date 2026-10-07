@@ -3574,7 +3574,6 @@ export default function MakingTab() {
                 <div className={s.emptyHint}>
                   대본(CP 자막 · 효과음 · MD 감정)을 읽어 컷별로 <b>레터박스/채움</b>, <b>자막 번인</b>(반전 컷은 빨강),
                   <b>포인트 SFX</b>를 자동 판단해 <code>07_output/{'{'}CODE{'}'}_final.mp4</code>를 만듭니다.
-                  손글씨 데코·BGM 트랙은 CapCut에서 추가.
                 </div>
                 {reelStale?.stale && (
                   <div className={s.resultError} style={{ marginBottom: 8 }}>
