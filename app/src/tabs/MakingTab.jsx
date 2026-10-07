@@ -2574,6 +2574,14 @@ export default function MakingTab() {
             <input type="color" value={cfg.style.color}
               onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, color: e.target.value } })} />
           </label>
+          <label className={s.durationField}>글씨체
+            <select value={cfg.style.font || 'gothic'}
+              onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, font: e.target.value } })}>
+              <option value="gothic">고딕(굵게)</option>
+              <option value="gaegu">손글씨 — 둥근체(Gaegu)</option>
+              <option value="nanumpen">손글씨 — 펜글씨(나눔펜)</option>
+            </select>
+          </label>
           <label className={s.durationField}>위치
             <select value={cfg.style.position}
               onChange={e => patchSubCfg(cut.no, { style: { ...cfg.style, position: e.target.value } })}>
@@ -2705,6 +2713,7 @@ export default function MakingTab() {
 
   // ── 이 컷의 최종 결과 — 릴스 최종본·영상 만들기 탭이 실제로 쓰는 파일을 그대로 보여준다 ──
   const [clearBusy, setClearBusy] = useState({})
+  const [bigFinal, setBigFinal] = useState(false)   // "이 컷의 최종 결과"를 크게 보기
   const clearDerived = async (cut) => {
     if (!episode?.number) return
     setClearBusy(p => ({ ...p, [cut.no]: true }))
@@ -2746,7 +2755,11 @@ export default function MakingTab() {
               {' '}수정 {new Date(fi.mtimeMs).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
             <video key={`${fi.file}-${fi.mtimeMs}`} className={s.makingVideo} controls preload="metadata"
+              style={bigFinal ? { width: 'auto', maxWidth: '100%', height: '78vh', maxHeight: 'none' } : undefined}
               src={`${epMediaUrl(episode, 'video')}/${fi.file}?t=${fi.mtimeMs}`} />
+            <div className={s.editorActions}>
+              <button className={s.previewBtn} onClick={() => setBigFinal(v => !v)}>{bigFinal ? '작게 보기' : '🔍 크게 보기'}</button>
+            </div>
             {fi.derived && (
               <div className={s.editorActions}>
                 <button className={s.previewBtn} disabled={!!clearBusy[cut.no]} onClick={() => clearDerived(cut)}>

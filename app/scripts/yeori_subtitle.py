@@ -113,15 +113,33 @@ else:
 
 _FONT_CACHE = {}
 
+# 글씨체 선택(style.font) — gothic(기본, 볼드 고딕) / gaegu(둥근 손글씨) / nanumpen(펜 손글씨).
+# 손글씨 2종은 저장소 번들(assets/fonts)이라 어느 PC 에서도 같은 결과가 나온다.
+FONT_FAMILIES = {
+    "gothic": CAPTION_FONT_CANDIDATES,
+    "gaegu": ["Gaegu-Bold.ttf"] + CAPTION_FONT_CANDIDATES,
+    "nanumpen": ["NanumPenScript-Regular.ttf"] + CAPTION_FONT_CANDIDATES,
+}
+_FONT_PATHS = {"gothic": CAPTION_FONT_PATH}
+_CURRENT_FAMILY = "gothic"
+
+
+def set_font_family(key):
+    """이후 load_font 가 쓸 글씨체를 바꾼다. 모르는 값이면 기본(gothic)."""
+    global _CURRENT_FAMILY
+    key = key if key in FONT_FAMILIES else "gothic"
+    if key not in _FONT_PATHS:
+        _FONT_PATHS[key] = _find_font(FONT_FAMILIES[key]) or CAPTION_FONT_PATH
+    _CURRENT_FAMILY = key
+
 
 def load_font(size):
     size = max(8, int(size))
-    if size not in _FONT_CACHE:
-        _FONT_CACHE[size] = (
-            ImageFont.truetype(str(CAPTION_FONT_PATH), size)
-            if CAPTION_FONT_PATH else ImageFont.load_default()
-        )
-    return _FONT_CACHE[size]
+    ck = (_CURRENT_FAMILY, size)
+    if ck not in _FONT_CACHE:
+        fp = _FONT_PATHS.get(_CURRENT_FAMILY) or CAPTION_FONT_PATH
+        _FONT_CACHE[ck] = ImageFont.truetype(str(fp), size) if fp else ImageFont.load_default()
+    return _FONT_CACHE[ck]
 
 
 # ── 색/보간 유틸 ──────────────────────────────────────────────────────
@@ -359,6 +377,7 @@ def build_entry_frames(entry, defaults, style, canvas_wh, fps, work_dir, idx):
     est["_stack_dy"] = entry.get("_stack_dy", 0)
 
     base_size = int(est.get("font_size", 72))
+    set_font_family(str(entry.get("font") or est.get("font") or "gothic"))
     font, lines = fit_font(text, base_size, int(cw * 0.86))
 
     n = max(1, int(round(dur * fps)))

@@ -582,6 +582,16 @@ await check('G3', '생성이 승인을 대신 찍지 않음 — TTS 합치기가
   return { ok: onlyG3, evidence: `TTS 탭이 찍는 게이트: ${calls.join(',') || '없음'} (승인 버튼의 g3 하나여야 함)` }
 })
 
+await check('M6', '영상 만들기 큰 화면 — 최종 결과(말풍선·자막 포함) 보기 + 자막이 정한 표시 시간에만 뜸 · 자막 글씨체 3종', () => {
+  const vt = fs.readFileSync(new URL('../src/tabs/VideoTab.jsx', import.meta.url), 'utf-8')
+  const py = fs.readFileSync(new URL('./yeori_subtitle.py', import.meta.url), 'utf-8')
+  const big = /bigShowFinal \? bigFinalSrc : resolveClipSrc\(previewClip\)/.test(vt) && /최종 결과 보는 중/.test(vt)
+  const gate = /const captionVisibleNow = /.test(vt) && /segsForText\.some\(sg => previewT >= sg\.start && previewT < sg\.end\)/.test(vt) && /captionVisibleNow && !\(bigShowFinal && bigHasDerived\)/.test(vt)
+  const fonts = /"gaegu": \["Gaegu-Bold\.ttf"\]/.test(py) && /"nanumpen": \["NanumPenScript-Regular\.ttf"\]/.test(py)
+    && fs.existsSync(new URL('../assets/fonts/Gaegu-Bold.ttf', import.meta.url)) && fs.existsSync(new URL('../assets/fonts/NanumPenScript-Regular.ttf', import.meta.url))
+  return { ok: big && gate && fonts, evidence: `큰 화면 최종 결과 전환 ${big ? 'O' : 'X'} · 표시 시간(막대) 밖에서는 자막 숨김 ${gate ? 'O' : 'X'} · 고딕/둥근 손글씨/펜 손글씨 + 번들 폰트 파일 ${fonts ? 'O' : 'X'}` }
+})
+
 // ── 2. 서버·상태 API ──
 await check('S1', '서버 응답 + 컷 상태에 길이·세그 정보', async () => {
   const r = await get(`/api/mcp/studio-status?episodeId=${episodeId}`).catch(() => ({ ok: false }))

@@ -399,6 +399,9 @@ export default function VideoTab() {
   const [finalPreviewTs, setFinalPreviewTs] = useState({})
   // 메이킹 탭에서 만든 컷(텍스트카드·사진 시퀀스·목업·소스 컷)을 여기 "클립 합성"으로 덮어쓰려 할 때 한 번 더 확인
   const [composeArmed, setComposeArmed] = useState(null)   // cut.id | null
+  // 큰 미리보기에 무엇을 띄울지 — 'final'(릴스에 들어갈 결과: 메이킹 탭 말풍선·자막 포함) | 'raw'(편집용 클립).
+  // 메이킹 탭에서 효과를 얹은 컷은 기본이 'final' — 작은 "최종 합성본" 칸으로는 말풍선 표현을 확인하기 어렵다(2026-10-07 성준님).
+  const [bigPreviewMode, setBigPreviewMode] = useState({})   // { [cut.id]: 'final' | 'raw' }
   const [batchFfmpegStatus,   setBatchFfmpegStatus]   = useState('idle') // idle | running | done | error
   const [batchFfmpegProgress, setBatchFfmpegProgress] = useState({ current: 0, total: 0 })
   const [batchFfmpegLog,      setBatchFfmpegLog]      = useState('')
@@ -734,6 +737,16 @@ export default function VideoTab() {
         })()
       : 0)
   const previewText = segsForText[activeSegIdx]?.text ?? ''
+  // 지금 재생 위치에 자막이 떠 있어야 하는가. 예전엔 "컷별 자막 시작(captionStartSec)"만 보고,
+  // 막대를 끌어 정한 표시 시간(captionSegTiming, 예: 1~4.5초)은 구간이 하나뿐이면 무시해서
+  // 큰 화면에서는 자막이 0초부터 끝까지 떠 있었다 — "시작 설정이 안 먹는다"(2026-10-07 성준님).
+  const captionVisibleNow = (() => {
+    if (previewT < (Number(selCutForText?.captionStartSec) || 0)) return false
+    if (clipsForText.length > 1) return true
+    const explicit = Array.isArray(selCutForText?.captionSegTiming) && selCutForText.captionSegTiming.length === segsForText.length
+    if (!explicit) return true
+    return segsForText.some(sg => previewT >= sg.start && previewT < sg.end)
+  })()
   const setPreviewText = (text) => {
     if (!selCutForText) return
     const plannedForText = Array.isArray(selCutForText.segments) ? selCutForText.segments : []
@@ -2008,6 +2021,11 @@ export default function VideoTab() {
             })
           }
           const previewClip = clips[isSelected ? selectedClipIdx : 0] || clips[0]
+          const bigRow = (vChk?.cuts || []).find(r => r.no === selCut.no)
+          const bigHasDerived = !!bigRow?.finalDerived
+          const bigShowFinal = !!bigRow?.finalSource && (bigPreviewMode[selCut.id] || (bigHasDerived ? 'final' : 'raw')) === 'final'
+          const bigFinalSrc = bigRow?.finalSource ? `${epMediaUrl(episode, 'video')}/${bigRow.finalSource}?t=${bigRow.finalMtimeMs || 0}` : ''
+          const bigSrc = bigShowFinal ? bigFinalSrc : resolveClipSrc(previewClip)
           return (
             <div key={selCut.id} id={`video-cutcard-${selCut.id}`}
               className={`${s.selectedCutCard} ${isSelected ? s.selectedCutCardActive : ''}`}
@@ -2029,7 +2047,7 @@ export default function VideoTab() {
                   // 영상 비율에 고정해 레터박스가 생길 여지를 없앤다 — stretch 늘어남과 무관하게
                   // 항상 실제 영상 프레임과 박스가 일치.
                   <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto', ...(aspectRatio === '9:16' ? { width: '67%' } : {}) }}>
-                    <video key={resolveClipSrc(previewClip)} src={resolveClipSrc(previewClip)} controls className={s.cutCardVideoPlayer}
+                    <video key={bigSrc} src={bigSrc} controls className={s.cutCardVideoPlayer}
                       onTimeUpdate={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
                       onSeeked={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
                       onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
@@ -2046,7 +2064,14 @@ export default function VideoTab() {
                         </span>
                       </div>
                     )}
-                    {isSelected && subtitleEnabled && isReel && !subtitleEditMode && previewT >= (Number(selCut.captionStartSec) || 0) && (
+                    {bigRow?.finalSource && (
+                      <button type="button" onClick={() => setBigPreviewMode(p => ({ ...p, [selCut.id]: bigShowFinal ? 'raw' : 'final' }))}
+                        title="큰 화면에 띄울 영상 전환"
+                        style={{ position: 'absolute', top: 8, left: 8, zIndex: 4, fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,.35)', background: 'rgba(0,0,0,.55)', color: '#fff', cursor: 'pointer' }}>
+                        {bigShowFinal ? `▶ 최종 결과 보는 중${bigHasDerived ? '(말풍선·자막 포함)' : ''} — 편집용 클립 보기` : '▶ 편집용 클립 보는 중 — 최종 결과 보기'}
+                      </button>
+                    )}
+                    {isSelected && subtitleEnabled && isReel && !subtitleEditMode && captionVisibleNow && !(bigShowFinal && bigHasDerived) && (
                       <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} plate={isDialogueSeg(previewText, selCutForText?.dialogue)} />
                     )}
                     {/* 릴스: 자막은 ReelCaptionOverlay(클릭 통과)로 그리고, 수정은 오른쪽 위 작은 버튼으로 연다.
