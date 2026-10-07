@@ -517,6 +517,19 @@ await check('C4', '대본 탭 효과음(이름만 있는 선택) → 최종본·
   return { ok, evidence: `효과음 ${s.file || '없음'} · ${s.atSec}초 · 음량 ${s.gain} · 합성본 없으면 자동 클립 합성 ${autoCompose ? 'O' : 'X'} · 자막 위치 상74%/중82%/하단 안전선 88% ${posOk ? 'O' : 'X'}` }
 })
 
+await check('E1', '효과음 설정 한 곳(메이킹 탭 최종본 표) — 표에 보이는 시작 초·음량 = 최종본에 들어가는 값', async () => {
+  const { decideCut, sfxEffective } = await import('../server/lib/reelFinalize.js')
+  const mk = (extra) => decideCut({ no: 1, cutType: 'CAPCUT', subtitle: '', duration: 4, masterCode: { audio: { sfx: 'mixkit-cinematic-glass-hit-suspense-677.wav', ...extra } } }).sfx[0]
+  const auto = sfxEffective(mk({}), 4)                                   // 손 안 댄 컷 → 중간(55%)+0.15
+  const set = sfxEffective(mk({ sfxAtSec: 1.2, sfxGain: 0.4 }), 4)       // 표에서 정한 값 그대로
+  const rf = fs.readFileSync(new URL('../server/lib/reelFinalize.js', import.meta.url), 'utf-8')
+  const mt = fs.readFileSync(new URL('../src/tabs/MakingTab.jsx', import.meta.url), 'utf-8')
+  const exact = /if \(!Number\.isFinite\(s\.atSec\)\) atSec \+= 0\.15/.test(rf)
+  const ui = /<ReelSfxCell /.test(mt)
+  const ok = auto.startSec === 2.4 && auto.volumePct === 70 && set.startSec === 1.2 && set.volumePct === 40 && exact && ui
+  return { ok, evidence: `자동 ${auto.startSec}초·${auto.volumePct}% / 지정 ${set.startSec}초·${set.volumePct}% · 지정한 초 그대로 배치 ${exact ? 'O' : 'X'} · 표에 설정 칸 ${ui ? 'O' : 'X'}` }
+})
+
 // ── 메이킹 탭 ↔ 영상 만들기 ↔ 릴스 최종본 연계(2026-10-07 R02 점검에서 실측된 오류들) ──
 await check('M1', '컷 소스 선택 규칙 — 원본보다 나중에 만든 자막·말풍선본만, 그중 최신(최종본·조립·미리보기 공용)', async () => {
   const mp2 = await import('../server/lib/mediaPaths.js')

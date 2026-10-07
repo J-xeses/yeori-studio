@@ -6,7 +6,7 @@ import { getGPoint, setGPoint } from '../lib/gpoints'
 import { cutDims } from '../lib/videoPolicy'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
-import SfxPicker from '../components/SfxPicker'
+import ReelSfxCell from '../components/ReelSfxCell'
 import s from './MakingTab.module.css'
 import { epMediaUrl } from '../lib/mediaPaths'
 import { elSoundEffect, saveGeneratedSfx } from '../lib/api'
@@ -1133,12 +1133,15 @@ export default function MakingTab() {
     } catch { /* noop */ }
   }
   useEffect(() => { loadReelStaleness() }, [episode?.number])
+  // 릴스는 컷별 표(효과음 설정 포함)를 버튼 없이 바로 보여준다(2026-10-07)
+  useEffect(() => { if (/^IG_R/i.test(String(episodeCode || ''))) loadReelPlan(); else setReelPlan(null) }, [episode?.number, episodeCode])
 
   // 컷에 효과음 파일을 직접 지정(masterCode.audio.sfxFile/sfxAt) — 서버 reelFinalize 가 키워드 규칙보다
   // 우선 적용. patch: {sfxFile?, sfxAt?}. studio-state.json(브라우저 3초 자동저장)과 완전히 분리된
   // 서버 전용 오버라이드 파일에 바로 저장한다(2026-09-22: state.cuts 경유로 dispatch하던 예전 방식은
   // 열려있던 다른 탭의 stale snapshot이 3초 뒤 그대로 되저장되며 방금 지정한 값을 지우는 사고가
   // 반복됐음 — reelOverrides.js 참조).
+  // patch: {sfxFile?, sfxAtSec?(컷 안 시작 초), sfxGain?(0~1)} — ReelSfxCell 이 보낸다.
   const setCutSfx = async (cutNo, patch) => {
     if (!episode?.number) { alert('에피소드 정보가 없습니다'); return }
     try {
@@ -3599,13 +3602,13 @@ export default function MakingTab() {
                 </div>
                 <div className={s.emptyHint}>
                   BGM은 릴스 전체에 한 곡이 낮은 음량으로 깔립니다(컷마다 따로 지정하는 방식이 아님). 자동은 대본에서 BGM 문구가 처음 나오는 컷부터 시작하고,
-                  곡을 직접 고르면 처음부터 깝니다. 한 번 만든 뒤 다시 만들 때는 이전 최종본의 곡을 그대로 씁니다. 효과음은 아래 “컷별 판단 미리보기” 표에서 컷마다 바꿀 수 있습니다.
+                  곡을 직접 고르면 처음부터 깝니다. 한 번 만든 뒤 다시 만들 때는 이전 최종본의 곡을 그대로 씁니다. 효과음은 아래 표에서 컷마다 정합니다 — 표에 보이는 시작 초·음량이 최종본에 그대로 들어갑니다(바꾼 뒤 “릴스 최종본 생성”).
                 </div>
 
                 {Array.isArray(reelPlan) && (
                   <table className={s.cutTable} style={{ width: '100%', marginTop: 8, fontSize: 12, borderCollapse: 'collapse' }}>
                     <thead><tr style={{ textAlign: 'left', opacity: 0.7 }}>
-                      <th>컷</th><th>유형</th><th>화면</th><th>자막</th><th>SFX</th><th>파일</th>
+                      <th>컷</th><th>유형</th><th>화면</th><th>자막</th><th>효과음 (무엇을 · 몇 초에 · 얼마나 크게)</th><th>파일</th>
                     </tr></thead>
                     <tbody>
                       {reelPlan.map(c => (
@@ -3619,19 +3622,7 @@ export default function MakingTab() {
                             </span>
                           ))}</td>
                           <td>
-                            <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-                              <span title={c.sfx?.[0]?.file || ''}>
-                                {c.sfx?.length ? c.sfx.map(x => (x.manual ? '📌 ' : '') + x.file.split('/').pop()).join(', ') : '—'}
-                              </span>
-                              <SfxPicker onSelect={item => setCutSfx(c.no, { sfxFile: item.path, sfxAt: c.sfx?.[0]?.at || 'mid' })} />
-                              {c.sfx?.[0]?.manual && (
-                                <select value={c.sfx[0].at} onChange={e => setCutSfx(c.no, { sfxAt: e.target.value })} title="효과음 넣는 위치">
-                                  <option value="start">시작</option><option value="mid">중간</option><option value="end">끝</option>
-                                </select>
-                              )}
-                              <button type="button" title="이 컷은 효과음 없음" onClick={() => setCutSfx(c.no, { sfxFile: '__none__' })}>없음</button>
-                              <button type="button" title="직접 지정 해제 — 대본 키워드로 자동 판단" onClick={() => setCutSfx(c.no, { sfxFile: '' })}>자동</button>
-                            </div>
+                            <ReelSfxCell sfx={c.sfx} duration={c.duration} onChange={patch => setCutSfx(c.no, patch)} />
                           </td>
                           <td>{c.hasFile ? (c.sourceFile || '✓') : <span style={{ color: '#f04747' }}>없음</span>}</td>
                         </tr>

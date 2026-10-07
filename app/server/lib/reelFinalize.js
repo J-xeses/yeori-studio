@@ -500,6 +500,17 @@ function normVf(fit, w = 1080, h = 1920) {
  *   bgmFile : (선택) BGM 파일 절대경로 또는 _shared/bgm 상대경로
  *   onLog   : (선택) 진행 로그 콜백 (line)
  */
+// 효과음이 컷 안에서 실제로 시작하는 초·음량(%) — 메이킹 탭 표가 "보이는 값 = 실제 값"으로 보여주기 위한 단일 계산.
+// 위 finalizeReel 의 배치 규칙과 같아야 한다(selftest E1).
+export function sfxEffective(s, durSec) {
+  const dur = Number(durSec) > 0 ? Number(durSec) : 0
+  let at = 0.15
+  if (Number.isFinite(s.atSec)) at = Math.min(s.atSec, Math.max(0, dur - 0.3))
+  else if (s.at === 'mid') at = dur * 0.55 + 0.15
+  else if (s.at === 'end') at = Math.max(0, dur - 1.2) + 0.15
+  return { startSec: Math.round(at * 10) / 10, volumePct: Math.round((Number(s.gain) || 0.7) * 100) }
+}
+
 export async function finalizeReel(p) {
   const { epNum, cuts, bgmFile, onLog } = p
   const log = (m) => { try { onLog && onLog(m) } catch { /* noop */ } }
@@ -690,7 +701,8 @@ export async function finalizeReel(p) {
       if (Number.isFinite(s.atSec)) atSec = d.startSec + Math.min(s.atSec, Math.max(0, d.durSec - 0.3))
       else if (s.at === 'mid') atSec = d.startSec + d.durSec * 0.55
       else if (s.at === 'end') atSec = d.startSec + Math.max(0, d.durSec - 1.2)
-      atSec += 0.15
+      // 초를 직접 정한 효과음은 입력한 초 그대로(화면에 보이는 값 = 실제 값, 2026-10-07). 자동 위치만 살짝 늦춘다.
+      if (!Number.isFinite(s.atSec)) atSec += 0.15
       sfxInputs.push('-i', abs)
       const ms = Math.round(atSec * 1000)
       // layer(자연소리): 컷 길이만큼 길게, 페이드. 그 외: maxDur 로 짧게.

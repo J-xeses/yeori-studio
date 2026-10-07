@@ -2503,6 +2503,9 @@ export default function VideoTab() {
                       onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { narrationVolume: parseInt(e.target.value, 10) / 100 } })} />
                     <span style={{ minWidth: 26 }}>{Math.round((selCut.narrationVolume ?? 1) * 100)}%</span>
                   </label>
+                  {isReel ? (
+                    <span style={{ flexShrink: 0 }}>🔊 효과음은 메이킹 탭 → 릴스 최종본 표에서 정합니다</span>
+                  ) : (<>
                   <label title="효과음 시작(초)" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                     🔊⏱
                     <input type="number" min={0} step={0.1} value={selCut.sfxStart ?? 0} style={{ width: 32 }}
@@ -2514,6 +2517,7 @@ export default function VideoTab() {
                       onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { sfxVolume: parseInt(e.target.value, 10) / 100 } })} />
                     <span style={{ minWidth: 26 }}>{Math.round((selCut.sfxVolume ?? 1) * 100)}%</span>
                   </label>
+                  </>)}
                 </div>
                 {/* 목소리 결(register) 수동 지정 + 음성 검수(발음·애드립) — 결과는 영상 저장 직후 자동 실행, 여기서 다시 돌릴 수 있다 */}
                 <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, margin: '0 0 8px', fontSize: 11, color: 'var(--text3)' }}>

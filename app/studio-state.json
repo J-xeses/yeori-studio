@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -2935,7 +2935,9 @@
             "effect": "auto",
             "fit": "cover",
             "audio": ""
-          }
+          },
+          "sfxVolume": 1.5,
+          "sfxStart": 1.5
         },
         {
           "id": "cut-2",
@@ -2966,7 +2968,7 @@
             "audio": {
               "bgm": "",
               "voice": "",
-              "sfx": "mixkit-fish-moving-in-water-2921.wav — 물고기 움직임",
+              "sfx": "subscribe_bell_ding.mp3 — subscribe bell ding",
               "ambience": ""
             },
             "kr": {
@@ -3037,7 +3039,7 @@
             "audio": {
               "bgm": "",
               "voice": "",
-              "sfx": "",
+              "sfx": "mixkit-message-pop-alert-2354.mp3 — 메시지 알림",
               "ambience": ""
             },
             "kr": {
@@ -3108,7 +3110,7 @@
             "audio": {
               "bgm": "",
               "voice": "",
-              "sfx": "",
+              "sfx": "mixkit-bomb-drop-impact-2804.wav — 폭탄 투하",
               "ambience": ""
             },
             "kr": {
@@ -8868,7 +8870,9 @@
         "effect": "auto",
         "fit": "cover",
         "audio": ""
-      }
+      },
+      "sfxVolume": 1.5,
+      "sfxStart": 1.5
     },
     {
       "id": "cut-2",
@@ -8899,7 +8903,7 @@
         "audio": {
           "bgm": "",
           "voice": "",
-          "sfx": "mixkit-fish-moving-in-water-2921.wav — 물고기 움직임",
+          "sfx": "subscribe_bell_ding.mp3 — subscribe bell ding",
           "ambience": ""
         },
         "kr": {
@@ -8970,7 +8974,7 @@
         "audio": {
           "bgm": "",
           "voice": "",
-          "sfx": "",
+          "sfx": "mixkit-message-pop-alert-2354.mp3 — 메시지 알림",
           "ambience": ""
         },
         "kr": {
@@ -9041,7 +9045,7 @@
         "audio": {
           "bgm": "",
           "voice": "",
-          "sfx": "",
+          "sfx": "mixkit-bomb-drop-impact-2804.wav — 폭탄 투하",
           "ambience": ""
         },
         "kr": {
@@ -9290,7 +9294,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-07T06:48:05.777Z",
+  "savedAt": "2026-10-07T08:35:09.470Z",
   "videoTabState": {
     "videoClips": {
       "cut-2": [
@@ -9363,6 +9367,17 @@
           "keepAudio": false,
           "createdAt": 1791338338949,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_1.mp4"
+        },
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/06_publishing/cut_01_final.mp4?t=1791360016068",
+          "name": "FFmpeg 합성 (cut_01_final.mp4)",
+          "duration": 5,
+          "trimStart": 0,
+          "trimEnd": 5,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "createdAt": 1791360016084,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\06_publishing\\cut_01_final.mp4"
         }
       ]
     },
@@ -9494,4 +9509,4 @@
     "selectedClipId": null
   },
   "tabStateScoped": true
-}
+} 

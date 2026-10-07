@@ -3527,7 +3527,7 @@ app.get('/api/reel-finalize/plan', async (req, res) => {
     const code = resolveEpisodeCode(ep.episode, epId)
     const cuts = resolveEpisodeCuts(ep, code)
     if (!cuts.length) return res.status(400).json({ error: '컷/대본이 없습니다 (스크립트 업로드 또는 01_script 확인)' })
-    const { decideCut } = await import('./lib/reelFinalize.js')
+    const { decideCut, sfxEffective } = await import('./lib/reelFinalize.js')
     const vdir = mp.videoDir(req.query.epNum)
     // 실제 최종화(finalizeReel)와 같은 규칙으로 보여준다 — 메이킹 탭 자막·말풍선본을 쓰는 컷과
     // 텍스트카드 컷은 자막 번인 생략. (미리보기는 "자막 굽는다"인데 실제는 안 굽는 불일치 방지)
@@ -3539,7 +3539,9 @@ app.get('/api/reel-finalize/plan', async (req, res) => {
       if (pk.derived) captionSkipReason = pk.derived === 'subtitle' ? '메이킹 탭 모션 자막본 사용' : '메이킹 탭 손글씨·말풍선본 사용'
       else if (mm[String(c.no)]?.selfText === true) captionSkipReason = '텍스트카드(화면 글자 포함)'
       if (captionSkipReason) d.caption = null
-      return { ...d, hasFile: !!pk.path, sourceFile: pk.path ? path.basename(pk.path) : null, derived: pk.derived, captionSkipReason, src: undefined }
+      // 효과음: 실제로 들어갈 시작 초·음량(%)을 같이 내려준다 — 메이킹 탭 표가 그대로 보여주고 고친다
+      d.sfx = (d.sfx || []).map((x) => ({ ...x, ...sfxEffective(x, Number(c.duration) || 0) }))
+      return { ...d, duration: Number(c.duration) || null, hasFile: !!pk.path, sourceFile: pk.path ? path.basename(pk.path) : null, derived: pk.derived, captionSkipReason, src: undefined }
     })
     res.json({ code, epNum: Number(req.query.epNum), cuts: plan })
   } catch (err) {
