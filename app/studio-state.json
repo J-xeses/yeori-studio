@@ -1,11 +1,11 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
     "remainingChars": 89974
   },
-  "activeEpisodeId": "ep_1787406807164",
+  "activeEpisodeId": "ep_1790429909383",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -3249,21 +3249,21 @@
           "videoClips": {
             "cut-2": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_02.mp4?t=1789989979249",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_02.mp4?t=1790774774598",
                 "name": "cut_02.mp4",
-                "duration": 3,
+                "duration": 4,
                 "trimStart": 0,
-                "trimEnd": 3,
+                "trimEnd": 4,
                 "useFullDuration": true,
                 "ratio": "9:16",
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_02.mp4",
                 "keepAudio": false,
-                "createdAt": 1788078436000
+                "createdAt": 1790762921000
               }
             ],
             "cut-3": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_03.mp4?t=1789989979519",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_03.mp4?t=1790774774858",
                 "name": "cut_03.mp4",
                 "duration": 4,
                 "trimStart": 0,
@@ -3272,12 +3272,12 @@
                 "ratio": "9:16",
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_03.mp4",
                 "keepAudio": false,
-                "createdAt": 1788070322000
+                "createdAt": 1790763001000
               }
             ],
             "cut-4": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_04.mp4?t=1789989979772",
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_04.mp4?t=1790774775124",
                 "name": "cut_04.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -3286,35 +3286,48 @@
                 "ratio": "9:16",
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_04.mp4",
                 "keepAudio": false,
-                "createdAt": 1787479377000
+                "createdAt": 1790763464000
               }
             ],
             "cut-5": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_05.mp4?t=1789989980025",
-                "name": "cut_05.mp4",
-                "duration": 4,
+                "url": "blob:http://localhost:5173/783629ce-1c7f-42bd-84cf-b8ed8871908f",
+                "name": "cut_05_preview.mp4",
+                "duration": 3.3,
                 "trimStart": 0,
-                "trimEnd": 4,
+                "trimEnd": 3.3,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_05.mp4",
+                "staging": false,
                 "keepAudio": false,
-                "createdAt": 1788070362000
+                "createdAt": 1790775710565,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_05_clip_1.mp4"
               }
             ],
             "cut-1": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_01.mp4?t=1789991016594",
-                "name": "cut_01.mp4",
-                "duration": 3,
+                "url": "blob:http://localhost:5173/23f7f545-d271-4b3b-b43f-4c7beb9405f3",
+                "name": "cut_01_preview.mp4",
+                "duration": 5,
                 "trimStart": 0,
-                "trimEnd": 3,
+                "trimEnd": 5,
+                "useFullDuration": false,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": false,
+                "createdAt": 1791338338949,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_1.mp4"
+              },
+              {
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/06_publishing/cut_01_final.mp4?t=1791360016068",
+                "name": "FFmpeg 합성 (cut_01_final.mp4)",
+                "duration": 5,
+                "trimStart": 0,
+                "trimEnd": 5,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_01.mp4",
-                "keepAudio": false,
-                "createdAt": 1788070449000
+                "createdAt": 1791360016084,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\06_publishing\\cut_01_final.mp4"
               }
             ]
           },
@@ -3325,8 +3338,113 @@
         "ttsTabState": {
           "audioUrls": {},
           "audioTexts": {},
-          "g3Confirmed": {},
-          "focusCutId": null
+          "g3Confirmed": {
+            "cut-1": true,
+            "cut-5": true
+          },
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-4": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-5": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-4__v1": [
+              {
+                "id": "track_1790760756607_1k86",
+                "type": "dialogue",
+                "text": "",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-2__v1": [
+              {
+                "id": "track_1791350492628_9hv1",
+                "type": "dialogue",
+                "text": "",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-1__v1": [
+              {
+                "id": "track_1791353450971_whds",
+                "type": "narration",
+                "text": "AI한테 DM 보낸 사람들 반응 모음,",
+                "speaker": null,
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/03_audio/tts-previews/cut_01_track_1791353450971_whds.mp3?t=1791354761577",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.9,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-5__v1": [
+              {
+                "id": "track_1791354815748_x9ae",
+                "type": "dialogue",
+                "text": "",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              },
+              {
+                "id": "track_1791354844299_ye6d",
+                "type": "narration",
+                "text": "다음화에서 제가 어떻게 만들어졌는지 공개해요!",
+                "speaker": null,
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/03_audio/tts-previews/cut_05_track_1791354844299_ye6d.mp3?t=1791354863742",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ]
+          },
+          "mergedUrls": {
+            "cut-1__v1": "blob:http://localhost:5173/cfe2d50b-2d38-488b-b0f4-fd76006b382f",
+            "cut-5__v1": "blob:http://localhost:5173/27954ce8-73a3-4aff-bf88-dd72e5861141"
+          }
         },
         "voiceInsertState": {
           "tracks": {}
@@ -8772,414 +8890,328 @@
     }
   },
   "episode": {
-    "number": 2,
-    "code": "IG_R02",
-    "title": "AI인지 모르고 DM 보낸 사람들, 이거 실화?",
-    "location": "기타",
+    "number": 11,
+    "title": "가을 감성 충전하러 왔다가",
+    "location": "공원",
     "mood": [
-      "공감",
-      "유머"
+      "감성",
+      "공감"
     ],
-    "cutCount": 5,
-    "contentType": "IG_R",
-    "topicCode": "SOC",
-    "scnCode": "DOC",
-    "instaNum": "RL02",
+    "cutCount": 7,
+    "contentType": "SF",
+    "topicCode": "LIF",
+    "scnCode": "REL",
+    "instaNum": "",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "masterCode": "[IG_R02] :: [PL:IG_RL] :: [SP:IN.DM] :: [CH:YR_VD] :: [SH:SH_CU] :: [F군:미설정]",
-    "epHeaderRaw": "",
-    "finishMode": "cutter"
+    "code": "SF_E11",
+    "finishMode": "cutter",
+    "masterCode": "SF_E11_AUTUMN :: BR_VD+YR_VD :: OT.ST.TZ_AF.LT_WM → OT.CV.TZ_AF.LT_WM :: LK_AUT(black LA cap+white ribbed crop top+black plaid flannel tied at waist+black wide-leg cargo pants+white sneakers+gold necklace) :: MD_JOY→MD_COM→MD_REL :: Q_SH.RT_916.PB_YT",
+    "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : SF_E11_AUTUMN\nTITLE : 가을 감성 충전하러 나왔다가 생긴 일\nLOOK  : LOOK_AUT (black LA baseball cap worn low + white ribbed crop top + black plaid flannel shirt tied at waist + black wide-leg cargo pants + white sneakers + gold necklace)\nBG.A  : 서울 낙엽 가로수길 (은행나무 / 단풍 / 오후 황금빛)\nBG.B  : GS25 편의점 외부 + 편의점 앞 벤치\nLIGHT : LT_WM (오후 따뜻한 햇살) → LT_WM (편의점 외부 자연광)\nREF   : face / closeup / fs-masked\nBGM   : 경쾌하고 가벼운 시티팝 → C04 편의점 장면부터 따뜻하고 코지한 BGM\n썸네일 후보: C04 (편의점 핫초코 + 가로수 배경)"
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "─ 훅 컷 (0~3s)",
+      "cutTitle": "오프닝 / 가을 가로수길 입장",
       "lipsync": false,
-      "scene": "검정 배경에 훅 텍스트 등장. 시청자 시선 즉시 탈취.",
-      "action": "타이핑 애니메이션 효과",
+      "scene": "서울 낙엽 가로수길 / 오후 황금빛 / LOOK_AUT 첫 등장",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
-      "narration": "AI한테 DM 보낸 사람들 반응 모음,",
-      "imagePrompt": "텍스트 오버레이 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작",
-      "videoPrompt": "타이핑 애니메이션으로 텍스트 등장\n\"AI한테 DM 보낸 사람들 반응 모음 😅\"\n================================================================",
-      "duration": 5,
+      "subtitle": "",
+      "narration": "오늘은 진짜 가을 감성 제대로 충전하러 나왔어요. 완벽한 계획이었죠.",
+      "imagePrompt": "FULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair\ntucked under a black LA baseball cap worn low,\ndelicate gold necklace visible at collarbone,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA baseball cap worn low, white ribbed crop top,\nblack plaid flannel shirt tied loosely at waist,\nblack wide-leg cargo pants, white sneakers,\nwalking along a Seoul autumn ginkgo tree lined boulevard,\ngolden yellow leaves covering the ground and falling gently,\nwarm afternoon golden sunlight filtering through yellow autumn leaves above,\ncasual confident stride, hands in cargo pants pockets,\nbackground shows blurred autumn tree canopy\nwith warm yellow and orange tones,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
+      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-4s: she walks into the autumn boulevard,\ngolden leaves falling gently around her,\nblack cargo pants and white sneakers\nstepping naturally through fallen leaves,\nflannel shirt tied at waist catching the breeze.\n\nNext 4-6s: she looks around the tree-lined path,\nwarm golden canopy above her,\nexpression bright and confident — the plan is perfect.\n\nFinal 6-8s: camera tracks alongside her,\nLOOK_AUT silhouette against golden autumn backdrop,\n낙엽 밟는 소리 자연스럽게.",
+      "duration": 8,
       "shotType": "FULLBODY",
-      "cutType": "CAPCUT",
+      "cutType": "BROLL",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "GR.BLK (검정 배경)",
-        "pl": "IG_RL",
-        "ch": "서여리 — 등장 없음 (텍스트만)",
-        "sh": "SH_TXT",
-        "ca": "CA_ZI",
-        "md": "MD_COM (유머)",
-        "ac": "없음",
-        "lookId": "YEORI.BASE",
-        "du": 3,
+        "sp": "OT.ST.TZ_AF.LT_WM",
+        "pl": "BR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_FS",
+        "ca": "CA_TR",
+        "md": "MD_JOY",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 8,
         "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "mixkit-soft-quick-punch-2151.wav — 부드러운 펀치",
-          "ambience": ""
+          "bgm": "경쾌하고 가벼운 시티팝 — 설레는 오프닝",
+          "voice": "밝고 자신감 넘치는 나레이션 톤",
+          "sfx": "낙엽 밟는 소리",
+          "ambience": "가로수길 바람 소리 / 낙엽 살랑이는 소리"
         },
         "kr": {
-          "sp": "검정 단색 배경",
-          "ch": "서여리 미등장 — 텍스트 훅만",
-          "sh": "텍스트 전용 컷",
-          "ca": "줌인(Zoom-in)",
-          "ac": "타이핑 애니메이션 효과",
-          "md": "유머 · 공감 유발"
+          "sp": "서울 낙엽 가득한 은행나무 가로수길 / 오후 황금빛",
+          "ch": "LOOK_AUT 전체 / 블랙 LA 볼캡 낮게 눌러쓰기 / 플란넬 허리 묶기 자연스럽게",
+          "sh": "풀샷",
+          "ca": "트래킹 (서여리 따라가며)",
+          "ac": "",
+          "md": "완벽한 계획이라는 자신감 / 설레는 출발 / 볼캡 눌러쓴 쿨한 매력"
         }
-      },
-      "subtitleCfgSaved": {
-        "effect": "slam",
-        "style": {
-          "font_size": 58,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "AI한테 DM 보낸 사람들 반응 모음 😅",
-            "start": 1,
-            "end": 4
-          }
-        ]
-      },
-      "subtitle": "AI한테 DM 보낸 사람들 반응 모음 😅",
-      "overrides": {
-        "duration": {
-          "value": 5,
-          "at": "2026-10-07T07:32:04.966Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "narration": {
-          "value": "AI한테 DM 보낸 사람들 반응 모음,",
-          "at": "2026-10-07T07:26:52.251Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        }
-      },
-      "imageSeq": {
-        "images": [
-          "cut_01_a.jpg",
-          "cut_01_b.jpg"
-        ],
-        "effect": "auto",
-        "fit": "cover",
-        "audio": ""
-      },
-      "sfxVolume": 1.5,
-      "sfxStart": 1.5
+      }
     },
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "협찬 문의 (3~7s)",
+      "cutTitle": "낙엽보다 핸드폰",
       "lipsync": false,
-      "scene": "인스타 DM 화면 목업 — 협찬 문의 메시지.",
-      "action": "DM 화면 슬라이드인 애니메이션",
+      "scene": "가을 가로수길 / 낙엽 가득한데 핸드폰만 보는 서여리",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
-      "narration": "",
-      "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : 로파이 / 가볍고 통통 튀는 느낌 (CUT 1 이어서)\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
-      "cutType": "CAPCUT",
+      "subtitle": "",
+      "narration": "...근데 낙엽보다 인스타 피드를 더 많이 봤어요. 솔직히.",
+      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nblack plaid flannel tied at waist, black cargo pants,\nwalking along autumn leaf-covered boulevard\ncompletely absorbed in scrolling her smartphone,\nhead tilted down toward phone screen,\nexpression focused and neutral — totally in the feed,\nbeautiful golden autumn leaves and trees completely ignored behind her,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
+      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she walks along the golden autumn path,\nhead tilted down, completely absorbed in phone screen,\nthumb scrolling rapidly through instagram feed.\n\nNext 3-6s: golden leaves fall around her — she doesn't notice,\nexpression neutral and focused on the screen,\nthe beautiful autumn completely ignored.\n\nFinal 6-8s: she pauses briefly,\ndouble-taps something on screen,\nlooks up for one second — sees the leaves —\nthen looks back down at phone.",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "GR.DM (DM 화면 목업)",
-        "pl": "IG_RL",
-        "ch": "서여리 — 미등장",
-        "sh": "SH_SCR",
+        "sp": "OT.ST.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_MCU",
         "ca": "CA_ST",
-        "md": "MD_COM (유머)",
-        "ac": "없음",
-        "lookId": "",
-        "du": 4,
+        "md": "MD_COM",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 8,
         "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "subscribe_bell_ding.mp3 — subscribe bell ding",
-          "ambience": ""
+          "bgm": "시티팝 유지 — 약간 코믹하게",
+          "voice": "솔직하고 담담한 고백 나레이션 톤",
+          "sfx": "핸드폰 스크롤 소리",
+          "ambience": "가로수길 환경음"
         },
         "kr": {
-          "sp": "인스타 DM 화면 목업",
-          "ch": "서여리 미등장",
-          "sh": "화면 목업 슬라이드인",
+          "sp": "낙엽 가득한 가로수길 / 오후 황금빛",
+          "ch": "LOOK_AUT / 걸으면서 핸드폰 보기",
+          "sh": "미디엄 클로즈업",
           "ca": "고정",
-          "ac": "DM 화면 슬라이드인 애니메이션",
-          "md": "유머 · 공감"
-        }
-      },
-      "subtitle": "\"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\"",
-      "imageSeq": null,
-      "overrides": {
-        "duration": {
-          "value": 4,
-          "at": "2026-10-07T05:35:48.493Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        }
-      },
-      "subtitleCfgSaved": {
-        "effect": "typer",
-        "style": {
-          "font_size": 58,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "\"안녕하세요, 혹시 협찬 가능하신가요? 팔로워 수 대비 인게이지먼트가 높으셔서요 😊\"",
-            "start": 0.3,
-            "end": 3.8
-          }
-        ],
-        "params": {
-          "char_delay": 0.06
+          "ac": "",
+          "md": "완전한 집중 — 근데 낙엽이 아닌 인스타 피드에 / 공감 유발 포인트"
         }
       }
     },
     {
       "id": "cut-3",
       "no": 3,
-      "cutTitle": "팬 메시지 (7~11s)",
+      "cutTitle": "사진 찍으려다 포기",
       "lipsync": false,
-      "scene": "인스타 DM 화면 목업 — 팬 DM.",
-      "action": "DM 화면 슬라이드인 애니메이션",
+      "scene": "가을 가로수길 / 낙엽 무더기 앞 / 사진 찍으려다 그냥 뒤",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
-      "narration": "",
-      "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 인스타 DM 목업 UI 직접 제작\n오디오\nBGM    : CUT 1 이어서\n음성   : 없음\n효과음 : DM 알림음\n================================================================",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
-      "cutType": "CAPCUT",
+      "subtitle": "",
+      "narration": "사진도 찍으려 했는데... 각도가 안 나와서 그냥 뒀어.",
+      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap worn low, white ribbed crop top,\nblack plaid flannel tied at waist, black cargo pants,\nstanding in front of a pile of golden autumn leaves on the ground,\nholding phone up trying different angles to photograph the leaves,\nexpression mildly frustrated and resigned,\narm lowering with a small defeated exhale,\nbackground shows beautiful autumn ginkgo trees completely bathed in golden light,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
+      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-2s: she spots a pile of golden leaves,\nraises phone to take a photo,\ntrying to frame it perfectly.\n\nNext 2-5s: arm moves left, right, up —\nnone of the angles feel right,\nexpression shifting to mild resignation.\n\nFinal 5-8s: phone lowers slowly,\na small defeated exhale,\nslight shoulder shrug — and she walks on.",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "GR.DM (DM 화면 목업)",
-        "pl": "IG_RL",
-        "ch": "서여리 — 미등장",
-        "sh": "SH_SCR",
+        "sp": "OT.ST.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_MCU",
         "ca": "CA_ST",
-        "md": "MD_COM (유머)",
-        "ac": "없음",
-        "lookId": "",
-        "du": 4,
+        "md": "MD_COM",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 8,
         "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "mixkit-message-pop-alert-2354.mp3 — 메시지 알림",
-          "ambience": ""
+          "bgm": "시티팝 — 살짝 맥 빠지는 톤으로",
+          "voice": "담담하고 체념한 나레이션 톤",
+          "sfx": "폰 카메라 앱 여는 소리",
+          "ambience": "가로수길 환경음"
         },
         "kr": {
-          "sp": "인스타 DM 화면 목업",
-          "ch": "서여리 미등장",
-          "sh": "화면 목업 슬라이드인",
+          "sp": "낙엽 무더기 쌓인 가로수길 / 오후",
+          "ch": "LOOK_AUT / 핸드폰 들어올리기",
+          "sh": "미디엄 클로즈업",
           "ca": "고정",
-          "ac": "DM 화면 슬라이드인 애니메이션",
-          "md": "유머 · 공감"
-        }
-      },
-      "subtitle": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요? 혹시 화장품 뭐 쓰세요?\"",
-      "imageSeq": null,
-      "overrides": {
-        "duration": {
-          "value": 4,
-          "at": "2026-10-07T05:37:06.999Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        }
-      },
-      "subtitleCfgSaved": {
-        "effect": "typer",
-        "style": {
-          "font_size": 58,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "\"저 팬이에요 ㅠㅠ 어떻게 이렇게 예뻐요?",
-            "start": 0.3,
-            "end": 3.8
-          }
-        ],
-        "params": {
-          "char_delay": 0.1
+          "ac": "",
+          "md": "의욕은 있었지만 현실은 달랐던 / 담담한 체념 / 웃픈 포기"
         }
       }
     },
     {
       "id": "cut-4",
       "no": 4,
-      "cutTitle": "─ 서여리 리액션 컷 (11~16s)",
+      "cutTitle": "편의점 핫초코 발견",
       "lipsync": false,
-      "scene": "스마트폰 보다가 눈이 살짝 커지는 순간. 당황한 표정.",
-      "action": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
+      "scene": "GS25 편의점 외부 / 핫초코 들고 나오기",
+      "action": "",
       "character": "서여리",
       "dialogue": "",
-      "narration": "",
-      "imagePrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nnatural makeup, warm skin tone,\nappearing no older than 22-23,\n\nholding smartphone, eyes slightly widened mid-reaction,\ncaught off guard — mouth closed, only eyes responding,\nsubtle \"wait, what?\" expression, not performing just reacting,\nextreme close-up face and upper chest,\nsoft indoor natural light, blurred warm interior background,\nshallow depth of field,\nPhotorealistic 8K cinematic, natural Korean beauty",
-      "videoPrompt": "Young Korean woman early-20s,\nlong wavy dark brown hair, NOT short,\nsoft natural skin texture on right cheek,\ndelicate gold necklace,\neffortlessly photogenic not posing,\n1:8 head-to-body ratio, supermodel body proportions,\nmodel-like slim waist, small face,\nappearing no older than 22-23,\n\nholding smartphone, glances at screen — eyes widen slightly,\ntiny involuntary pause, blinks once slowly,\nNOT looking at camera lens, gaze fixed on phone screen,\nextreme close-up, soft indoor light, warm blurred background,\nPhotorealistic 8K cinematic 9:16,\nbackground people must not interact with main character.\nTHIS IS A SILENT FILM. ABSOLUTELY NO SPEAKING.\nNO WORDS. NO DIALOGUE. NO SUBTITLES. NO AUDIO.\nMOUTH STAYS CLOSED THROUGHOUT. LIPS DO NOT MOVE.\n오디오\nBGM    : 볼륨 살짝 낮아지며 긴장감\n음성   : 없음\n효과음 : 정적 0.5초\n================================================================",
+      "subtitle": "",
+      "narration": "그러다 편의점 핫초코를 발견했고.",
+      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace catching warm afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nblack plaid flannel tied at waist, black wide-leg cargo pants, white sneakers,\njust exited a GS25 convenience store,\nholding a hot chocolate paper cup with both hands,\ntaking a slow first sip eyes closing slightly with quiet satisfaction,\nbackground shows Seoul autumn ginkgo tree boulevard\nwith golden yellow leaves — warm afternoon light,\nGS25 signage softly visible behind her,\nmedium shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
+      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: convenience store door opens,\nshe steps out holding hot chocolate cup with both hands,\nGS25 signage visible behind her,\ngolden autumn trees framing the scene.\n\nNext 3-6s: she takes a slow first sip,\neyes closing slightly with quiet satisfaction,\nBGM shifts to warm and cozy.\n\nFinal 6-8s: she holds the cup close,\nautumn backdrop behind her —\nLOOK_AUT silhouette + hot chocolate + golden leaves\n= 썸네일 컷.",
       "duration": 8,
-      "shotType": "CLOSEUP",
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.RM.LT_WD (실내 — 따뜻한 자연광)",
-        "pl": "IG_RL",
-        "ch": "서여리 — YEORI.BASE",
-        "sh": "SH_CU",
+        "sp": "OT.CV.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_MS",
         "ca": "CA_ST",
-        "md": "MD_SUR (당황 · 놀람)",
-        "ac": "스마트폰 들고 화면 보다 눈 살짝 커짐",
-        "lookId": "LOOK_CF",
-        "du": 5,
+        "md": "MD_JOY",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 8,
         "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "mixkit-bomb-drop-impact-2804.wav — 폭탄 투하",
-          "ambience": ""
+          "bgm": "따뜻하고 코지한 BGM으로 전환",
+          "voice": "발견의 기쁨 / 담담하지만 약간 들뜬 나레이션",
+          "sfx": "편의점 도어벨 소리",
+          "ambience": "편의점 외부 / 가을 거리 환경음"
         },
         "kr": {
-          "sp": "실내 — 흐릿한 따뜻한 배경",
-          "ch": "크림 니트 탑 + 베이지 와이드 팬츠 + 골드 목걸이 · 골드 브레이슬렛",
-          "sh": "클로즈업 — 얼굴 + 상체",
+          "sp": "GS25 편의점 외부 / 가을 가로수 배경 / 오후 황금빛",
+          "ch": "LOOK_AUT / 편의점 핫초코 컵 들고 나오기",
+          "sh": "미디엄샷",
           "ca": "고정",
-          "ac": "스마트폰 보다 눈 살짝 커지는 순간 — 입은 다물고 눈만 반응",
-          "md": "당황 · \"어...?\" 순간"
+          "ac": "",
+          "md": "계획에 없던 발견의 기쁨 / 작지만 확실한 행복"
         }
-      },
-      "subtitle": "사실 저... AI예요.",
-      "overrides": {
-        "duration": {
-          "value": 8,
-          "at": "2026-10-06T23:37:07.153Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        }
-      },
-      "videoMode": "veo",
-      "bubbleScenesSaved": [
-        {
-          "text": "어;;;  이, 이게\n아닌데... ;;",
-          "position": "top_left",
-          "bubble": "cloud",
-          "color": "white",
-          "start": 0.3,
-          "end": 3.5
-        }
-      ],
-      "subtitleCfgSaved": {
-        "effect": "slam",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true
-        },
-        "entries": [
-          {
-            "text": "사실 저... AI 에요..~~",
-            "start": 4,
-            "end": 7.5
-          }
-        ]
       }
     },
     {
       "id": "cut-5",
       "no": 5,
-      "cutTitle": "─ CTA 마무리 (16~20s)",
-      "lipsync": false,
-      "scene": "검정 배경 + 팔로우 유도 + 다음화 예고 텍스트.",
-      "action": "텍스트 페이드인",
+      "cutTitle": "편의점 벤치 / 시그니처 교감",
+      "lipsync": true,
+      "scene": "편의점 앞 벤치 / 핫초코 들고 앉아 카메라 향해 대사",
+      "action": "",
       "character": "서여리",
-      "dialogue": "",
-      "narration": "다음화에서 제가 어떻게 만들어졌는지 공개해요!",
-      "imagePrompt": "텍스트 전용 컷 — 이미지 생성 불필요\nCapCut에서 검정 배경 + 흰색 텍스트로 직접 제작\n오디오\nBGM    : 다시 올라오며 마무리\n음성   : 없음\n효과음 : 없음\n================================================================\n\n[캡션 + 해시태그]\nAI인지 모르고 협찬 DM 보낸 사람들 실화? 😂\n\n\"혹시 협찬 가능하신가요?\"\n\"어떻게 이렇게 예뻐요?\"\n\n사실 저... AI예요. 🙂\n\n다음화에서 제가 어떻게 만들어졌는지 공개해요 👀\n\n[AI 생성 콘텐츠 · AI-generated content]\n\n#AI크리에이터 #버추얼인플루언서 #서여리 #AI인플루언서\n#가상인플루언서 #AI유튜버 #직장인자기계발 #AI콘텐츠\n#서여리채널 #yeori\n\n[제작 체크리스트]\n□ CUT 1 — 검정 배경 훅 텍스트 (CapCut 직접 제작)\n□ CUT 2 — DM 목업 협찬 문의 (CapCut 직접 제작)\n□ CUT 3 — DM 목업 팬 메시지 (CapCut 직접 제작)\n□ CUT 4 — 서여리 리액션 컷 (Flow 이미지 생성 + Veo3 영상)\n□ CUT 5 — CTA 텍스트 (CapCut 직접 제작)\n□ BGM — 로파이 / 통통 튀는 느낌 (CapCut 무료)\n□ 내보내기 — 9:16 / 1080p / IG_R02_draft.mp4\n\n[📊 컷 요약]\nCUT 1   훅 텍스트          3초    CAPCUT\nCUT 2   DM 목업 협찬       4초    CAPCUT\nCUT 3   DM 목업 팬         4초    CAPCUT\nCUT 4   서여리 리액션      5초    BROLL  ← Flow+Veo3 생성 대상\nCUT 5   CTA 텍스트         4초    CAPCUT\n총 길이: 약 20초\n\n[버전 이력]\nv1.0  2026-08-15  최초 작성",
-      "videoPrompt": "",
-      "duration": 4,
-      "shotType": "FULLBODY",
-      "cutType": "CAPCUT",
+      "dialogue": "어... 이게 더 좋은데?",
+      "subtitle": "",
+      "narration": "",
+      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top visible above flannel,\nsitting on a bench outside GS25 convenience store,\nholding hot chocolate cup with both hands close to her chest,\nlooking directly into camera with genuine surprised expression —\neyebrows slightly raised, lips parted,\nthe real unplanned realization visible on her face,\nwarm afternoon light and autumn trees softly blurred behind her,\nclose-up, eye level, intimate vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
+      "videoPrompt": "First 0-3s: she sits on bench, both hands wrapped around cup,\ntakes another slow sip,\nautumn trees softly blurred behind her.\n\nNext 3-6s: she looks up toward camera —\ngenuine surprised direct gaze,\nshe speaks naturally —\n\"어... 이게 더 좋은데?\"\neyebrows slightly raised, real unplanned realization.\n\nFinal 6-8s: she holds that gaze,\na small wondering smile forming —\ncup still warm in her hands — 여운 2초.",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
       "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "GR.BLK (검정 배경)",
-        "pl": "IG_RL",
-        "ch": "서여리 — 미등장",
-        "sh": "SH_TXT",
+        "sp": "OT.CV.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_CU",
         "ca": "CA_ST",
-        "md": "MD_WRM (따뜻함 · 기대감)",
-        "ac": "없음",
-        "lookId": "",
-        "du": 4,
+        "md": "MD_REL → MD_JOY",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 8,
         "audio": {
-          "bgm": "",
-          "voice": "",
-          "sfx": "",
-          "ambience": ""
+          "bgm": "따뜻하고 코지한 BGM / 대사 시작 시 볼륨 낮추기",
+          "voice": "진짜 놀란 듯 자연스럽고 솔직한 톤 — ★립싱크",
+          "sfx": "없음",
+          "ambience": "편의점 앞 조용한 거리 환경음"
         },
         "kr": {
-          "sp": "검정 단색 배경",
-          "ch": "서여리 미등장",
-          "sh": "텍스트 전용 컷",
+          "sp": "편의점 앞 벤치 / 가을 가로수 배경 / 오후 따뜻한 햇살",
+          "ch": "LOOK_AUT / 벤치에 앉아 핫초코 두 손으로 감싸 쥐기",
+          "sh": "클로즈업",
           "ca": "고정",
-          "ac": "텍스트 페이드인",
-          "md": "따뜻함 · 기대감"
+          "ac": "",
+          "md": "계획 실패했는데 오히려 더 좋은 순간 / 진짜 놀라움 / 1대1 교감"
         }
-      },
-      "subtitle": "다음화에서 제가 어떻게 만들어졌는지 공개해요 👀",
-      "imageSeq": {
-        "images": [
-          "cut_05_a.jpg"
-        ],
-        "effect": "kenburns",
-        "fit": "cover",
-        "audio": "cut_05_nr.mp3"
-      },
-      "overrides": {
-        "duration": {
-          "value": 4,
-          "at": "2026-10-07T05:49:32.206Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+      }
+    },
+    {
+      "id": "cut-6",
+      "no": 6,
+      "cutTitle": "그냥 멍하니",
+      "lipsync": false,
+      "scene": "편의점 앞 벤치 / 핫초코 들고 거리 멍하니 바라보기",
+      "action": "",
+      "character": "서여리",
+      "dialogue": "",
+      "subtitle": "",
+      "narration": "가을 감성 충전은 실패했는데... 왜 이 순간이 제일 좋지.",
+      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nsitting on bench outside convenience store,\nholding hot chocolate cup with both hands resting in lap,\ngaze drifting softly toward the street —\nNOT looking at camera,\nexpression quietly wondering and content,\nthe kind of expression when something unexpected turns out better,\nwarm afternoon golden light, autumn street softly blurred,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
+      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she sits on bench,\ncup held in both hands resting in lap,\ngaze drifting toward the street.\n\nNext 3-6s: people walk past on the autumn street,\nshe watches them softly — unfocused gaze,\nexpression quietly content and wondering.\n\nFinal 6-8s: she stays completely still,\nwarm cup in hands, autumn light around her,\nthe unexpected moment settling in.",
+      "duration": 8,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "OT.CV.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_DRM",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 8,
+        "audio": {
+          "bgm": "따뜻한 BGM 매우 조용하게",
+          "voice": "조용하고 여운 있는 나레이션 톤",
+          "sfx": "없음",
+          "ambience": "편의점 앞 거리 조용한 환경음"
         },
-        "dialogue": {
-          "value": "",
-          "at": "2026-10-07T07:27:09.819Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "narration": {
-          "value": "다음화에서 제가 어떻게 만들어졌는지 공개해요!",
-          "at": "2026-10-07T07:27:09.819Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+        "kr": {
+          "sp": "편의점 앞 벤치 / 오후 황금빛 / 가을 거리",
+          "ch": "LOOK_AUT / 벤치에 앉아 거리 바라보기",
+          "sh": "미디엄 클로즈업",
+          "ca": "고정",
+          "ac": "",
+          "md": "계획 실패했는데 오히려 더 좋은 / 이 역설이 주는 따뜻한 혼란"
         }
-      },
-      "subtitleCfgSaved": {
-        "effect": "slam",
-        "style": {
-          "font_size": 58,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
+      }
+    },
+    {
+      "id": "cut-7",
+      "no": 7,
+      "cutTitle": "엔딩 대사",
+      "lipsync": true,
+      "scene": "편의점 앞 벤치 / 카메라 향해 엔딩 대사",
+      "action": "",
+      "character": "서여리",
+      "dialogue": "있잖아요, 가을 감성이 뭔지 아직도 모르겠는데... 편의점 핫초코는 확실히 알겠어. 이게 내 가을인가봐요.",
+      "subtitle": "",
+      "narration": "",
+      "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nsitting on bench turned slightly toward camera,\nholding hot chocolate cup slightly raised —\nwarm direct gaze into camera with a genuine smile,\nthe kind of smile that says \"I figured something out\",\nautumn golden bokeh behind her,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
+      "videoPrompt": "First 0-3s: she turns slightly toward camera,\nwarm direct gaze,\nhot chocolate cup held close.\n\nNext 3-8s: she speaks warmly —\n\"있잖아요, 가을 감성이 뭔지 아직도 모르겠는데...\n편의점 핫초코는 확실히 알겠어.\n이게 내 가을인가봐요.\"\nnatural and warm like talking to a close friend,\ncup raised slightly as she speaks.\n\nFinal 8-10s: she looks down at the cup,\na small private smile —\n여운 2초.\n\n❗아래 컷별 시간 조정 생성진행 결과 반영할 것❗\n\n전체 컷 요약\n| 컷  | 제목              | 길이 | PL     | LOOK     | SH      | CA     | 립싱크 | 상태      |\n|-----|------------------|------|--------|----------|---------|--------|--------|-----------|\n| C01 | 가로수길 입장     | 10s  | BR_VD  | LOOK_AUT | SH_FS   | CA_TR  | ❌     | 신규 🔥   |\n| C02 | 낙엽보다 핸드폰   | 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규 🔥공감|\n| C03 | 사진 찍다 포기    | 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규      |\n| C04 | 편의점 핫초코     | 8s   | YR_VD  | LOOK_AUT | SH_MS   | CA_ST  | ❌     | 신규 🔥썸네일|\n| C05 | 벤치 시그니처     | 10s  | YR_VD  | LOOK_AUT | SH_CU   | CA_ST  | ✅     | 신규 ⭐   |\n| C06 | 멍하니 거리 바라봄| 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규      |\n| C07 | 엔딩 대사         | 10s  | YR_VD  | LOOK_AUT | SH_MCU  | CA_PS  | ✅     | 신규      |\n\n총 길이: 62초 / 립싱크: C05·C07\nBGM: 경쾌한 시티팝 → C04부터 따뜻하고 코지한 BGM\n썸네일 후보: C04 (LOOK_AUT + 핫초코 + 가을 가로수)\n시그니처 컷: C05 (편의점 벤치 / \"어... 이게 더 좋은데?\")\n버전 이력\nv3.0 (2026-08-31) — 표준 포맷 v3 최초 작성\n                    가을 배경 + 서여리 반전 스토리\n                    LOOK_AUT 신규 등록\n\n8/19\n9/2\n9/16\n9/30",
+      "duration": 10,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "masterCode": {
+        "sp": "OT.CV.TZ_AF.LT_WM",
+        "pl": "YR_VD",
+        "ch": "서여리 / LOOK_AUT",
+        "sh": "SH_MCU",
+        "ca": "CA_PS",
+        "md": "MD_REL → MD_JOY",
+        "ac": "",
+        "lookId": "LOOK_AUT",
+        "du": 10,
+        "audio": {
+          "bgm": "따뜻하고 감성적 BGM — 대사 시작 시 볼륨 낮추기",
+          "voice": "따뜻하고 자연스러운 친구한테 말하듯 — ★립싱크",
+          "sfx": "없음",
+          "ambience": "편의점 앞 거리 환경음 / 여운"
         },
-        "entries": [
-          {
-            "text": "다음화에서 제가 어떻게 만들어졌는지 공개해요 👀",
-            "start": 0.3,
-            "end": 3.3
-          }
-        ]
+        "kr": {
+          "sp": "편의점 앞 벤치 / 가을 황금빛 보케 배경",
+          "ch": "LOOK_AUT / 벤치에 앉아 카메라 향해",
+          "sh": "미디엄 클로즈업",
+          "ca": "푸시인 (천천히 가까워지며)",
+          "ac": "",
+          "md": "가을 감성 실패를 완전히 받아들인 따뜻한 결론 / 이게 내 방식이라는 자신감"
+        }
       }
     }
   ],
-  "scriptRaw": "",
+  "scriptRaw": "# SF_E11_AUTUMN 가을 감성 충전하러 나왔다가 생긴 일\n# 생성일: 2026-08-31\n# 버전: v3.0\n# 룰셋: v1.3.1 적용\n\n================================================================\n마스터 코드\nSF_E11_AUTUMN :: BR_VD+YR_VD :: OT.ST.TZ_AF.LT_WM → OT.CV.TZ_AF.LT_WM :: LK_AUT(black LA cap+white ribbed crop top+black plaid flannel tied at waist+black wide-leg cargo pants+white sneakers+gold necklace) :: MD_JOY→MD_COM→MD_REL :: Q_SH.RT_916.PB_YT\n================================================================\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : SF_E11_AUTUMN\nTITLE : 가을 감성 충전하러 나왔다가 생긴 일\nLOOK  : LOOK_AUT (black LA baseball cap worn low + white ribbed crop top + black plaid flannel shirt tied at waist + black wide-leg cargo pants + white sneakers + gold necklace)\nBG.A  : 서울 낙엽 가로수길 (은행나무 / 단풍 / 오후 황금빛)\nBG.B  : GS25 편의점 외부 + 편의점 앞 벤치\nLIGHT : LT_WM (오후 따뜻한 햇살) → LT_WM (편의점 외부 자연광)\nREF   : face / closeup / fs-masked\nBGM   : 경쾌하고 가벼운 시티팝 → C04 편의점 장면부터 따뜻하고 코지한 BGM\n썸네일 후보: C04 (편의점 핫초코 + 가로수 배경)\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1]  BR_VD — 오프닝 / 가을 가로수길 입장 / 8초  🔥임팩트\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 서울 낙엽 가로수길 / 오후 황금빛 / LOOK_AUT 첫 등장\nSP: OT.ST.TZ_AF.LT_WM\nPL: BR_VD\nCH: 서여리 / LOOK_AUT\nDL: 없음\nNR: 오늘은 진짜 가을 감성 제대로 충전하러 나왔어요. 완벽한 계획이었죠.\nSH: SH_FS\nCA: CA_TR\nMD: MD_JOY\nAT: AT_MW_01\nLOOK_ID: LOOK_AUT\nDU: 8\n오디오:\n  BGM: 경쾌하고 가벼운 시티팝 — 설레는 오프닝\n  음성: 밝고 자신감 넘치는 나레이션 톤\n  효과음: 낙엽 밟는 소리\n  앰비언스: 가로수길 바람 소리 / 낙엽 살랑이는 소리\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     서울 낙엽 가득한 은행나무 가로수길 / 오후 황금빛\nCH(캐릭터):   LOOK_AUT 전체 / 블랙 LA 볼캡 낮게 눌러쓰기 / 플란넬 허리 묶기 자연스럽게\nSH(샷):       풀샷\nCA(카메라):   트래킹 (서여리 따라가며)\nAT(동작):     가로수길로 천천히 걸어 들어오기 / 낙엽 밟으며 / 주변 둘러보는 여유로운 걸음\nMD(감정):     완벽한 계획이라는 자신감 / 설레는 출발 / 볼캡 눌러쓴 쿨한 매력\nDL(대사):     없음\nNR(나레이션): \"오늘은 진짜 가을 감성 제대로 충전하러 나왔어요. 완벽한 계획이었죠.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair\ntucked under a black LA baseball cap worn low,\ndelicate gold necklace visible at collarbone,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA baseball cap worn low, white ribbed crop top,\nblack plaid flannel shirt tied loosely at waist,\nblack wide-leg cargo pants, white sneakers,\nwalking along a Seoul autumn ginkgo tree lined boulevard,\ngolden yellow leaves covering the ground and falling gently,\nwarm afternoon golden sunlight filtering through yellow autumn leaves above,\ncasual confident stride, hands in cargo pants pockets,\nbackground shows blurred autumn tree canopy\nwith warm yellow and orange tones,\nfull body shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-4s: she walks into the autumn boulevard,\ngolden leaves falling gently around her,\nblack cargo pants and white sneakers\nstepping naturally through fallen leaves,\nflannel shirt tied at waist catching the breeze.\n\nNext 4-6s: she looks around the tree-lined path,\nwarm golden canopy above her,\nexpression bright and confident — the plan is perfect.\n\nFinal 6-8s: camera tracks alongside her,\nLOOK_AUT silhouette against golden autumn backdrop,\n낙엽 밟는 소리 자연스럽게.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2]  YR_VD — 낙엽보다 핸드폰 / 8초  🔥공감 임팩트\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 가을 가로수길 / 낙엽 가득한데 핸드폰만 보는 서여리\nSP: OT.ST.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_AUT\nDL: 없음\nNR: ...근데 낙엽보다 인스타 피드를 더 많이 봤어요. 솔직히.\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAT: AT_AC_04\nLOOK_ID: LOOK_AUT\nDU: 8\n오디오:\n  BGM: 시티팝 유지 — 약간 코믹하게\n  음성: 솔직하고 담담한 고백 나레이션 톤\n  효과음: 핸드폰 스크롤 소리\n  앰비언스: 가로수길 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     낙엽 가득한 가로수길 / 오후 황금빛\nCH(캐릭터):   LOOK_AUT / 걸으면서 핸드폰 보기\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAT(동작):     낙엽 가득한 가로수길 걸으면서 고개 숙여 핸드폰 피드 스크롤 / 주변 가을 풍경은 완전 무시 / 가끔 엄지로 빠르게 스크롤\nMD(감정):     완전한 집중 — 근데 낙엽이 아닌 인스타 피드에 / 공감 유발 포인트\nDL(대사):     없음\nNR(나레이션): \"...근데 낙엽보다 인스타 피드를 더 많이 봤어요. 솔직히.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nblack plaid flannel tied at waist, black cargo pants,\nwalking along autumn leaf-covered boulevard\ncompletely absorbed in scrolling her smartphone,\nhead tilted down toward phone screen,\nexpression focused and neutral — totally in the feed,\nbeautiful golden autumn leaves and trees completely ignored behind her,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she walks along the golden autumn path,\nhead tilted down, completely absorbed in phone screen,\nthumb scrolling rapidly through instagram feed.\n\nNext 3-6s: golden leaves fall around her — she doesn't notice,\nexpression neutral and focused on the screen,\nthe beautiful autumn completely ignored.\n\nFinal 6-8s: she pauses briefly,\ndouble-taps something on screen,\nlooks up for one second — sees the leaves —\nthen looks back down at phone.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3]  YR_VD — 사진 찍으려다 포기 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 가을 가로수길 / 낙엽 무더기 앞 / 사진 찍으려다 그냥 뒤\nSP: OT.ST.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_AUT\nDL: 없음\nNR: 사진도 찍으려 했는데... 각도가 안 나와서 그냥 뒀어.\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAT: AT_AC_04\nLOOK_ID: LOOK_AUT\nDU: 8\n오디오:\n  BGM: 시티팝 — 살짝 맥 빠지는 톤으로\n  음성: 담담하고 체념한 나레이션 톤\n  효과음: 폰 카메라 앱 여는 소리\n  앰비언스: 가로수길 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     낙엽 무더기 쌓인 가로수길 / 오후\nCH(캐릭터):   LOOK_AUT / 핸드폰 들어올리기\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAT(동작):     낙엽 무더기 발견 → 폰 들어 카메라 앱 열기 → 이리저리 각도 잡아보기 → 한숨 쉬며 폰 내리기 → 어깨 살짝 으쓱\nMD(감정):     의욕은 있었지만 현실은 달랐던 / 담담한 체념 / 웃픈 포기\nDL(대사):     없음\nNR(나레이션): \"사진도 찍으려 했는데... 각도가 안 나와서 그냥 뒀어.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap worn low, white ribbed crop top,\nblack plaid flannel tied at waist, black cargo pants,\nstanding in front of a pile of golden autumn leaves on the ground,\nholding phone up trying different angles to photograph the leaves,\nexpression mildly frustrated and resigned,\narm lowering with a small defeated exhale,\nbackground shows beautiful autumn ginkgo trees completely bathed in golden light,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-2s: she spots a pile of golden leaves,\nraises phone to take a photo,\ntrying to frame it perfectly.\n\nNext 2-5s: arm moves left, right, up —\nnone of the angles feel right,\nexpression shifting to mild resignation.\n\nFinal 5-8s: phone lowers slowly,\na small defeated exhale,\nslight shoulder shrug — and she walks on.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4]  YR_VD — 편의점 핫초코 발견 / 8초  🔥썸네일 후보\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: GS25 편의점 외부 / 핫초코 들고 나오기\nSP: OT.CV.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_AUT\nDL: 없음\nNR: 그러다 편의점 핫초코를 발견했고.\nSH: SH_MS\nCA: CA_ST\nMD: MD_JOY\nAT: AT_AC_02\nLOOK_ID: LOOK_AUT\nDU: 8\n오디오:\n  BGM: 따뜻하고 코지한 BGM으로 전환\n  음성: 발견의 기쁨 / 담담하지만 약간 들뜬 나레이션\n  효과음: 편의점 도어벨 소리\n  앰비언스: 편의점 외부 / 가을 거리 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     GS25 편의점 외부 / 가을 가로수 배경 / 오후 황금빛\nCH(캐릭터):   LOOK_AUT / 편의점 핫초코 컵 들고 나오기\nSH(샷):       미디엄샷\nCA(카메라):   고정\nAT(동작):     편의점 문 열고 나오기 → 두 손으로 핫초코 컵 감싸 쥐기 → 한 모금 마시며 눈 살짝 감기 → 가을 가로수 배경에 자연스럽게 서있기\nMD(감정):     계획에 없던 발견의 기쁨 / 작지만 확실한 행복\nDL(대사):     없음\nNR(나레이션): \"그러다 편의점 핫초코를 발견했고.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace catching warm afternoon light,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nblack plaid flannel tied at waist, black wide-leg cargo pants, white sneakers,\njust exited a GS25 convenience store,\nholding a hot chocolate paper cup with both hands,\ntaking a slow first sip eyes closing slightly with quiet satisfaction,\nbackground shows Seoul autumn ginkgo tree boulevard\nwith golden yellow leaves — warm afternoon light,\nGS25 signage softly visible behind her,\nmedium shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: convenience store door opens,\nshe steps out holding hot chocolate cup with both hands,\nGS25 signage visible behind her,\ngolden autumn trees framing the scene.\n\nNext 3-6s: she takes a slow first sip,\neyes closing slightly with quiet satisfaction,\nBGM shifts to warm and cozy.\n\nFinal 6-8s: she holds the cup close,\nautumn backdrop behind her —\nLOOK_AUT silhouette + hot chocolate + golden leaves\n= 썸네일 컷.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5]  YR_VD — 편의점 벤치 / 시그니처 교감 / 8초  ★립싱크  ⭐시그니처\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 편의점 앞 벤치 / 핫초코 들고 앉아 카메라 향해 대사\nSP: OT.CV.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_AUT\nDL: 어... 이게 더 좋은데?\nNR: 없음\nSH: SH_CU\nCA: CA_ST\nMD: MD_REL → MD_JOY\nAT: AT_SI_01 + AT_EM_04\nLOOK_ID: LOOK_AUT\nDU: 8\n오디오:\n  BGM: 따뜻하고 코지한 BGM / 대사 시작 시 볼륨 낮추기\n  음성: 진짜 놀란 듯 자연스럽고 솔직한 톤 — ★립싱크\n  효과음: 없음\n  앰비언스: 편의점 앞 조용한 거리 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     편의점 앞 벤치 / 가을 가로수 배경 / 오후 따뜻한 햇살\nCH(캐릭터):   LOOK_AUT / 벤치에 앉아 핫초코 두 손으로 감싸 쥐기\nSH(샷):       클로즈업\nCA(카메라):   고정\nAT(동작):     벤치에 앉아 핫초코 한 모금 더 마시기 → 문득 카메라 향해 시선 맞추기 → 진짜 놀란 듯 자연스럽게 대사 → 잠깐 멈추며 본인도 신기하다는 표정\nMD(감정):     계획 실패했는데 오히려 더 좋은 순간 / 진짜 놀라움 / 1대1 교감\nDL(대사):     \"어... 이게 더 좋은데?\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top visible above flannel,\nsitting on a bench outside GS25 convenience store,\nholding hot chocolate cup with both hands close to her chest,\nlooking directly into camera with genuine surprised expression —\neyebrows slightly raised, lips parted,\nthe real unplanned realization visible on her face,\nwarm afternoon light and autumn trees softly blurred behind her,\nclose-up, eye level, intimate vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: she sits on bench, both hands wrapped around cup,\ntakes another slow sip,\nautumn trees softly blurred behind her.\n\nNext 3-6s: she looks up toward camera —\ngenuine surprised direct gaze,\nshe speaks naturally —\n\"어... 이게 더 좋은데?\"\neyebrows slightly raised, real unplanned realization.\n\nFinal 6-8s: she holds that gaze,\na small wondering smile forming —\ncup still warm in her hands — 여운 2초.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 6]  YR_VD — 그냥 멍하니 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 편의점 앞 벤치 / 핫초코 들고 거리 멍하니 바라보기\nSP: OT.CV.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_AUT\nDL: 없음\nNR: 가을 감성 충전은 실패했는데... 왜 이 순간이 제일 좋지.\nSH: SH_MCU\nCA: CA_ST\nMD: MD_DRM\nAT: AT_SI_01 + AT_EM_04\nLOOK_ID: LOOK_AUT\nDU: 8\n오디오:\n  BGM: 따뜻한 BGM 매우 조용하게\n  음성: 조용하고 여운 있는 나레이션 톤\n  효과음: 없음\n  앰비언스: 편의점 앞 거리 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     편의점 앞 벤치 / 오후 황금빛 / 가을 거리\nCH(캐릭터):   LOOK_AUT / 벤치에 앉아 거리 바라보기\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAT(동작):     핫초코 컵 두 손으로 감싸 쥔 채 / 시선이 거리로 향함 / 아무 생각 없이 멍하니 / 가을 거리 사람들 지나가는 거 바라봄\nMD(감정):     계획 실패했는데 오히려 더 좋은 / 이 역설이 주는 따뜻한 혼란\nDL(대사):     없음\nNR(나레이션): \"가을 감성 충전은 실패했는데... 왜 이 순간이 제일 좋지.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nsitting on bench outside convenience store,\nholding hot chocolate cup with both hands resting in lap,\ngaze drifting softly toward the street —\nNOT looking at camera,\nexpression quietly wondering and content,\nthe kind of expression when something unexpected turns out better,\nwarm afternoon golden light, autumn street softly blurred,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she sits on bench,\ncup held in both hands resting in lap,\ngaze drifting toward the street.\n\nNext 3-6s: people walk past on the autumn street,\nshe watches them softly — unfocused gaze,\nexpression quietly content and wondering.\n\nFinal 6-8s: she stays completely still,\nwarm cup in hands, autumn light around her,\nthe unexpected moment settling in.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 7]  YR_VD — 엔딩 대사 / 10초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 편의점 앞 벤치 / 카메라 향해 엔딩 대사\nSP: OT.CV.TZ_AF.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_AUT\nDL: 있잖아요, 가을 감성이 뭔지 아직도 모르겠는데... 편의점 핫초코는 확실히 알겠어. 이게 내 가을인가봐요.\nNR: 없음\nSH: SH_MCU\nCA: CA_PS\nMD: MD_REL → MD_JOY\nAT: AT_SI_01 + AT_EM_01\nLOOK_ID: LOOK_AUT\nDU: 10\n오디오:\n  BGM: 따뜻하고 감성적 BGM — 대사 시작 시 볼륨 낮추기\n  음성: 따뜻하고 자연스러운 친구한테 말하듯 — ★립싱크\n  효과음: 없음\n  앰비언스: 편의점 앞 거리 환경음 / 여운\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     편의점 앞 벤치 / 가을 황금빛 보케 배경\nCH(캐릭터):   LOOK_AUT / 벤치에 앉아 카메라 향해\nSH(샷):       미디엄 클로즈업\nCA(카메라):   푸시인 (천천히 가까워지며)\nAT(동작):     카메라 향해 자연스럽게 몸 살짝 틀기 → 핫초코 컵 살짝 들어올리며 대사 → 대사 후 컵 내려다보며 혼자 피식 웃음 → 여운 2초\nMD(감정):     가을 감성 실패를 완전히 받아들인 따뜻한 결론 / 이게 내 방식이라는 자신감\nDL(대사):     \"있잖아요, 가을 감성이 뭔지 아직도 모르겠는데... 편의점 핫초코는 확실히 알겠어. 이게 내 가을인가봐요.\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair under black LA cap worn low,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nblack LA cap, white ribbed crop top,\nsitting on bench turned slightly toward camera,\nholding hot chocolate cup slightly raised —\nwarm direct gaze into camera with a genuine smile,\nthe kind of smile that says \"I figured something out\",\nautumn golden bokeh behind her,\nmedium close-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: she turns slightly toward camera,\nwarm direct gaze,\nhot chocolate cup held close.\n\nNext 3-8s: she speaks warmly —\n\"있잖아요, 가을 감성이 뭔지 아직도 모르겠는데...\n편의점 핫초코는 확실히 알겠어.\n이게 내 가을인가봐요.\"\nnatural and warm like talking to a close friend,\ncup raised slightly as she speaks.\n\nFinal 8-10s: she looks down at the cup,\na small private smile —\n여운 2초.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n❗아래 컷별 시간 조정 생성진행 결과 반영할 것❗\n\n================================================================\n전체 컷 요약\n================================================================\n| 컷  | 제목              | 길이 | PL     | LOOK     | SH      | CA     | 립싱크 | 상태      |\n|-----|------------------|------|--------|----------|---------|--------|--------|-----------|\n| C01 | 가로수길 입장     | 10s  | BR_VD  | LOOK_AUT | SH_FS   | CA_TR  | ❌     | 신규 🔥   |\n| C02 | 낙엽보다 핸드폰   | 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규 🔥공감|\n| C03 | 사진 찍다 포기    | 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규      |\n| C04 | 편의점 핫초코     | 8s   | YR_VD  | LOOK_AUT | SH_MS   | CA_ST  | ❌     | 신규 🔥썸네일|\n| C05 | 벤치 시그니처     | 10s  | YR_VD  | LOOK_AUT | SH_CU   | CA_ST  | ✅     | 신규 ⭐   |\n| C06 | 멍하니 거리 바라봄| 8s   | YR_VD  | LOOK_AUT | SH_MCU  | CA_ST  | ❌     | 신규      |\n| C07 | 엔딩 대사         | 10s  | YR_VD  | LOOK_AUT | SH_MCU  | CA_PS  | ✅     | 신규      |\n\n총 길이: 62초 / 립싱크: C05·C07\nBGM: 경쾌한 시티팝 → C04부터 따뜻하고 코지한 BGM\n썸네일 후보: C04 (LOOK_AUT + 핫초코 + 가을 가로수)\n시그니처 컷: C05 (편의점 벤치 / \"어... 이게 더 좋은데?\")\n================================================================\n버전 이력\n================================================================\nv3.0 (2026-08-31) — 표준 포맷 v3 최초 작성\n                    가을 배경 + 서여리 반전 스토리\n                    LOOK_AUT 신규 등록\n================================================================\n\n8/19\n9/2\n9/16\n9/30\n\n\n",
   "ttsSettings": {
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "emotion": 35,
@@ -9294,213 +9326,54 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-07T11:33:30.987Z",
+  "savedAt": "2026-10-07T13:42:10.303Z",
   "videoTabState": {
     "videoClips": {
-      "cut-2": [
+      "cut-1": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_02.mp4?t=1790774774598",
-          "name": "cut_02.mp4",
-          "duration": 4,
-          "trimStart": 0,
-          "trimEnd": 4,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_02.mp4",
-          "keepAudio": false,
-          "createdAt": 1790762921000
-        }
-      ],
-      "cut-3": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_03.mp4?t=1790774774858",
-          "name": "cut_03.mp4",
-          "duration": 4,
-          "trimStart": 0,
-          "trimEnd": 4,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_03.mp4",
-          "keepAudio": false,
-          "createdAt": 1790763001000
-        }
-      ],
-      "cut-4": [
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/05_video/cut_04.mp4?t=1790774775124",
-          "name": "cut_04.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E11/05_video/cut_01.mp4?t=1790687322893",
+          "name": "cut_01.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\05_video\\cut_04.mp4",
+          "ratio": "16:9",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E11\\05_video\\cut_01.mp4",
           "keepAudio": false,
-          "createdAt": 1790763464000
-        }
-      ],
-      "cut-5": [
-        {
-          "url": "blob:http://localhost:5173/783629ce-1c7f-42bd-84cf-b8ed8871908f",
-          "name": "cut_05_preview.mp4",
-          "duration": 3.3,
-          "trimStart": 0,
-          "trimEnd": 3.3,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1790775710565,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_05_clip_1.mp4"
-        }
-      ],
-      "cut-1": [
-        {
-          "url": "blob:http://localhost:5173/23f7f545-d271-4b3b-b43f-4c7beb9405f3",
-          "name": "cut_01_preview.mp4",
-          "duration": 5,
-          "trimStart": 0,
-          "trimEnd": 5,
-          "useFullDuration": false,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1791338338949,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\04_making\\raw\\cut_01_clip_1.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/06_publishing/cut_01_final.mp4?t=1791360016068",
-          "name": "FFmpeg 합성 (cut_01_final.mp4)",
-          "duration": 5,
-          "trimStart": 0,
-          "trimEnd": 5,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "createdAt": 1791360016084,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R02\\06_publishing\\cut_01_final.mp4"
+          "createdAt": 1790676783000
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {
-      "cut-1": true,
-      "cut-5": true
-    },
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-4": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-5": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-4__v1": [
-        {
-          "id": "track_1790760756607_1k86",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-2__v1": [
-        {
-          "id": "track_1791350492628_9hv1",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-1__v1": [
-        {
-          "id": "track_1791353450971_whds",
-          "type": "narration",
-          "text": "AI한테 DM 보낸 사람들 반응 모음,",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/03_audio/tts-previews/cut_01_track_1791353450971_whds.mp3?t=1791354761577",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.9,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-5__v1": [
-        {
-          "id": "track_1791354815748_x9ae",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1791354844299_ye6d",
-          "type": "narration",
-          "text": "다음화에서 제가 어떻게 만들어졌는지 공개해요!",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R02/03_audio/tts-previews/cut_05_track_1791354844299_ye6d.mp3?t=1791354863742",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ]
-    },
-    "mergedUrls": {
-      "cut-1__v1": "blob:http://localhost:5173/cfe2d50b-2d38-488b-b0f4-fd76006b382f",
-      "cut-5__v1": "blob:http://localhost:5173/27954ce8-73a3-4aff-bf88-dd72e5861141"
-    }
+    "g3Confirmed": {},
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {}
   },
   "studioTabState": {
-    "imageRatio": {}
+    "imageRatio": {
+      "cut-1_0": "9:16",
+      "cut-1_1": "9:16",
+      "cut-2_0": "9:16",
+      "cut-2_1": "9:16",
+      "cut-3_0": "9:16",
+      "cut-3_1": "9:16",
+      "cut-4_0": "9:16",
+      "cut-4_1": "9:16",
+      "cut-5_0": "9:16",
+      "cut-5_1": "9:16",
+      "cut-6_0": "9:16",
+      "cut-6_1": "9:16",
+      "cut-7_0": "9:16",
+      "cut-7_1": "9:16"
+    }
   },
   "conflict": true,
   "checkupTabState": {
