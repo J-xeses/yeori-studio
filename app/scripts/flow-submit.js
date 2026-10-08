@@ -77,7 +77,11 @@ const run = (file, argv) => execFileSync(file, argv, { encoding: 'utf-8', stdio:
 async function main() {
   const { epNum, cutNo, clipNo = 1 } = job
   const model = job.model || 'Omni 1.1 Flash'
-  const durationSec = job.durationSec || 8
+  // Omni는 4/6/8/10초 고정 단위만 받는다 — 임의 값(예: 5·7·12초)을 그대로 넘기면 Flow가
+  // "이 모델에는 N초 선택 줄이 없습니다"로 거부한다(2026-10-08 실제로 겪음). 올림해서 맞춘다.
+  const OMNI_SECS = [4, 6, 8, 10]
+  const rawDuration = job.durationSec || 8
+  const durationSec = OMNI_SECS.includes(rawDuration) ? rawDuration : (OMNI_SECS.find(x => x >= rawDuration) || 10)
   const maxCredits = job.maxCredits ?? 15
   // 화면 비율: 지정이 없으면 콘텐츠 유형으로 판단(LF 유튜브 롱폼 = 16:9, SF/IG/TK 쇼츠·릴스 = 9:16)
   let ratio = job.ratio || null

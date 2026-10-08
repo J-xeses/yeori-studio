@@ -613,7 +613,9 @@ function readVideoUsage() { try { const u = JSON.parse(fs.readFileSync(VIDEO_USA
 function addVideoUsage(credits, label) { const u = readVideoUsage(); u.credits += credits || 0; u.clips.push({ at: new Date().toISOString(), label, credits }); fs.mkdirSync(path.dirname(VIDEO_USAGE), { recursive: true }); fs.writeFileSync(VIDEO_USAGE, JSON.stringify(u, null, 2), 'utf-8') }
 // Omni 길이 단위(4/6/8/10초) — 대본 DU/세그 길이를 올림해 맞춘다
 const omniSec = (d) => [4, 6, 8, 10].find(x => x >= (Number(d) || 8)) || 10
-const estCredits = (sec) => Math.ceil(sec * 1.5)          // 720p 실측: 8초 12크레딧
+// 720p Omni 1.1 Flash 실측 크레딧(성준님 2026-10-08): 6초=10 · 8초=12 · 10초=15 — 1.5배 공식이
+// 6초에서만 어긋나서(9≠10) 룩업으로 전환. 4초는 미확인이라 비율 추정(8).
+const estCredits = (sec) => ({ 4: 8, 6: 10, 8: 12, 10: 15 }[sec] ?? Math.ceil(sec * 1.5))
 const rawClipPath = (epNum, no, k) => path.join(mp.makingDir(epNum), 'raw', `cut_${String(no).padStart(2, '0')}_clip_${k}.mp4`)
 // raw 에 없으면 render-cut-clips 가 옮겨 둔 raw/_composed/ 의 가장 최근 보관본을 되살린다(크레딧 들인 원본 재생성 방지)
 function findClip(epNum, no, k) {

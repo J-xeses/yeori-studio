@@ -20,11 +20,13 @@ import { applyReadings } from './ttsText.js'
 
 export const SEG_MAX_SEC = 8
 
-// ── 2단계 (2026-09-11) — SEG 필드 = "생성단위 조합 + 트림" 모델 ──────────────
-// Veo 는 임의 길이가 아니라 8초 또는 10초, 이 두 고정 모드로만 생성된다.
-// 20~25초 컷은 이 단위를 이어붙여 만들고, 남는 길이는 처음/끝에서 트림한다.
-// 상세: app/docs/vp-dialogue-seg-spec.md §2-1/2-1b/2-1c
-export const SEG_UNITS = [8, 10]
+// ── 2단계 (2026-09-11, 2026-10-08 갱신) — SEG 필드 = "생성단위 조합 + 트림" 모델 ──────────────
+// Veo(Omni)는 임의 길이가 아니라 4/6/8/10초, 이 네 고정 모드로만 생성된다(pipeline-leader.js
+// omniSec()과 동일 기준 — 원래 여기는 8/10만 알고 있었는데, 4·6초도 실제로 되는 걸 몰랐던
+// 구버전 가정이었음, 성준님이 2026-10-08 Omni 1.1 Flash 720p 실측가로 확인: 6초=10cr).
+// 짧은 컷(예: 12초 = 6+6)은 트림 없이 딱 맞게, 긴 컷(20~25초)은 8/10초를 이어붙이고 남는
+// 길이는 처음/끝에서 트림한다. 상세: app/docs/vp-dialogue-seg-spec.md §2-1/2-1b/2-1c
+export const SEG_UNITS = [4, 6, 8, 10]
 
 // SEG 필드 원문("8+8+10" 또는 "auto") + DU(초) → 세그별 [{ sec, trimStart, trimEnd }].
 // "auto"/빈 값/파싱 실패 시 null (호출부가 computeSegmentPlans 1위 후보로 대체해야 함).
