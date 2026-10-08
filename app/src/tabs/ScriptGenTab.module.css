@@ -251,22 +251,34 @@
   flex: 1; overflow-y: auto; padding: 8px 0;
   display: flex; flex-direction: column;
 }
+.cutListTotal {
+  padding: 2px 14px 8px;
+  font-size: 11px; font-weight: 700; color: var(--text-2);
+}
 .cutListHeader {
   display: grid;
-  grid-template-columns: 56px 72px 150px 1fr 1fr 60px;
-  gap: 0 8px; padding: 6px 14px;
+  grid-template-columns: 56px 72px 220px 1fr 0.8fr 56px 60px;
+  gap: 0; padding: 6px 14px;
   font-size: 10px; font-weight: 700; color: var(--text-3);
   text-transform: uppercase; letter-spacing: .6px;
   border-bottom: 1px solid var(--border);
 }
 .cutListRow {
   display: grid;
-  grid-template-columns: 56px 72px 150px 1fr 1fr 60px;
-  gap: 4px 8px; padding: 10px 14px;
+  grid-template-columns: 56px 72px 220px 1fr 0.8fr 56px 60px;
+  gap: 0; padding: 10px 14px;
   align-items: start; cursor: pointer;
   min-height: 44px;
   border-bottom: 1px solid rgba(255,255,255,.04);
   transition: background .1s;
+}
+.cutListHeader > span, .cutListRow > span {
+  padding: 0 8px;
+  border-right: 1px solid rgba(255,255,255,.07);
+  min-width: 0;
+}
+.cutListHeader > span:last-child, .cutListRow > span:last-child {
+  border-right: none;
 }
 .cutListRow:hover { background: var(--bg-hover); }
 .cutListRowActive { background: rgba(139,92,246,.1); }
@@ -274,20 +286,22 @@
   font-size: 11px; font-weight: 700; color: var(--accent-light);
   white-space: nowrap; padding-top: 1px;
 }
-.cutListScene {
-  font-size: 11.5px; color: var(--text-2);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  padding-top: 1px;
+/* 씬/대사/나레이션: 칸을 넘기면 줄바꿈 대신 가로 스크롤(2026-10-08, 성준님 요청) */
+.cutListScroll {
+  white-space: nowrap; overflow-x: auto; overflow-y: hidden;
+  padding-top: 1px; scrollbar-width: thin;
 }
+.cutListScroll::-webkit-scrollbar { height: 4px; }
 .cutListDialogue {
   font-size: 11.5px; color: var(--text-2); line-height: 1.5;
-  white-space: normal; overflow-wrap: anywhere;
-  min-width: 0;
 }
 .cutListVo {
   font-size: 11px; color: var(--text-3); line-height: 1.5;
-  white-space: normal; overflow-wrap: anywhere;
-  font-style: italic; min-width: 0;
+  font-style: italic;
+}
+.cutListDuration {
+  font-size: 11px; color: var(--text-2); text-align: right;
+  white-space: nowrap; padding-top: 1px;
 }
 .cutListBadges {
   display: flex; gap: 4px; justify-content: flex-end; align-items: center;

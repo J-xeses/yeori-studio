@@ -2174,8 +2174,14 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
         )}
 
         {/* ── 전체 목록 뷰 ──────────────────────────────────── */}
-        {viewMode === 'list' && cuts.length > 0 && (
+        {viewMode === 'list' && cuts.length > 0 && (() => {
+          // 2026-10-08: 길이 합계 + 룰셋 위반(11초 절대 금지, 20초 초과인데 안 쪼개짐) 표시 추가(성준님 요청).
+          const totalSec = cuts.reduce((sum, c) => sum + (Number(c.duration) || 0), 0)
+          const fmtSec = (sec) => sec >= 60 ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : `${sec}초`
+          const isBadDuration = (d) => d === 11 || d > 20
+          return (
           <div className={s.cutListView}>
+            <div className={s.cutListTotal}>총 {cuts.length}컷 · 합계 {fmtSec(totalSec)}</div>
             {/* 헤더 */}
             <div className={s.cutListHeader}>
               <span>CUT</span>
@@ -2183,6 +2189,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               <span>씬</span>
               <span>대사</span>
               <span>나레이션 (VO)</span>
+              <span style={{textAlign:'right'}}>길이</span>
               <span style={{textAlign:'right'}}>상태</span>
             </div>
             {cuts.map((c, i) => {
@@ -2191,6 +2198,8 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               const hasDial = c.dialogue && !/^없음$/i.test(c.dialogue.trim())
               const hasVo = c.narration && !/^없음$/i.test(c.narration.trim())
               const isActive = i === activeCut
+              const dur = Number(c.duration) || 0
+              const badDur = isBadDuration(dur)
               return (
                 <div
                   key={c.id}
@@ -2207,13 +2216,16 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       }}>{ct.label}</span>
                     )}
                   </span>
-                  <span className={s.cutListScene}>{c.scene || '—'}</span>
-                  <span className={s.cutListDialogue}>
+                  <span className={s.cutListScroll}>{c.scene || '—'}</span>
+                  <span className={`${s.cutListDialogue} ${s.cutListScroll}`}>
                     {hasDial ? c.dialogue : <span style={{color:'var(--text-3)'}}>—</span>}
                   </span>
-                  <span className={s.cutListVo}>
+                  <span className={`${s.cutListVo} ${s.cutListScroll}`}>
                     {hasVo ? c.narration : <span style={{color:'var(--text-3)'}}>—</span>}
                   </span>
+                  <span className={s.cutListDuration} style={badDur ? { color: 'var(--red, #ef4444)', fontWeight: 700 } : undefined}
+                    title={badDur ? '룰셋 위반 — 11초는 절대 금지, 20초 초과는 컷을 분할해야 합니다' : undefined}
+                  >{dur}초{badDur ? ' ⚠' : ''}</span>
                   <span className={s.cutListBadges}>
                     {isG1 && <span className={s.g1Badge}>G1</span>}
                     {c.cutMark === 'SIGNATURE' && <span className={s.sigBadge}>✨</span>}
@@ -2222,7 +2234,8 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               )
             })}
           </div>
-        )}
+          )
+        })()}
 
         {/* ── 상세 편집 뷰 (v3 포맷: 씬 설명 / KR 컨펌본 / IP / VP 4분할) ── */}
         {viewMode === 'detail' && cuts.length > 0 && (() => {
