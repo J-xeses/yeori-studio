@@ -73,6 +73,83 @@ export async function attachFlow({ port = 9222, projectId = null, lang = null } 
   return { browser, page, release, emulated: !!cdp, originalViewport: size }
 }
 
+// ── 에피소드 전용 Flow 프로젝트 보장 ───────────────────────────────────
+// 2026-10-08: G2(이미지)·G4(영상)가 2026-09-21부터 모든 에피소드를 단일 공용 Flow 프로젝트
+// (downloads/state/flow-image-project.json · flow-video-project.json)에 몰아넣고 있었다 —
+// 미디어가 쌓일수록 레퍼런스 썸네일 탐색·모델/비율 검증이 더 자주 엉뚱한 걸 집어내는 사고로
+// 이어졌다(findReferenceThumbs가 "모든 미디어" 대신 "업로드" 탭을 먼저 보게 고친 것도 같은
+// 증상). 성준님 지시로 에피소드마다 독립된 프로젝트를 쓰도록 전환 — projectUrlFile이 이미
+// 있으면 그대로 읽고, 없으면 Flow 대시보드에서 "새 프로젝트"를 직접 만들어 저장한다.
+// (이 모듈은 Enter를 절대 누르지 않는다는 안전 규칙을 그대로 지킨다 — 이름 입력 확인도 버튼
+// 클릭만 쓰고, 못 찾으면 이름 없이도 프로젝트 자체는 만들어지게 둔다.)
+export async function ensureProject({ port = 9222, projectUrlFile, title, lang = null }) {
+  if (fs.existsSync(projectUrlFile)) {
+    const url = fs.readFileSync(projectUrlFile, 'utf-8').trim()
+    const m = url.match(/\/project\/([a-zA-Z0-9-]+)/)
+    if (url && m) return { url, projectId: m[1], created: false }
+    // 파일은 있는데 형식이 깨졌으면(빈 파일 등) 새로 만든다 — 아래로 진행.
+  }
+  const browser = await puppeteer.connect({ browserURL: `http://localhost:${port}`, defaultViewport: null })
+  try {
+    let page = (await browser.pages()).find(p => /flow\.google\.com|labs\.google/.test(p.url()))
+    if (!page) {
+      page = await browser.newPage()
+      await page.goto(`https://labs.google/fx/ko/tools/flow${lang ? `?hl=${lang}` : ''}`, { waitUntil: 'networkidle2', timeout: 60000 })
+    } else {
+      if (page.url().includes('/project/')) {
+        await page.goto('https://labs.google/fx/ko/tools/flow', { waitUntil: 'networkidle2', timeout: 30000 })
+      }
+      await page.bringToFront().catch(() => {})
+    }
+    await sleep(1500)
+
+    const createClicked = await page.evaluate(() => {
+      const patterns = /(새 프로젝트|새프로젝트|create.{0,10}project|new project|시작하기|빈 프로젝트|blank)/i
+      for (const el of document.querySelectorAll('button, a, [role="button"]')) {
+        const txt = (el.textContent || '').trim()
+        if (patterns.test(txt) && el.getBoundingClientRect().width > 0) { el.click(); return txt }
+      }
+      return null
+    })
+    if (!createClicked) throw new Error('"새 프로젝트" 버튼을 찾지 못했습니다')
+    await sleep(2500)
+
+    if (title) {
+      const named = await page.evaluate((name) => {
+        for (const el of document.querySelectorAll('input[type="text"], input:not([type]), [contenteditable="true"]')) {
+          if (el.getBoundingClientRect().width > 0) {
+            el.focus(); el.value = name
+            el.dispatchEvent(new Event('input', { bubbles: true }))
+            el.dispatchEvent(new Event('change', { bubbles: true }))
+            return true
+          }
+        }
+        return false
+      }, title)
+      if (named) {
+        await sleep(400)
+        await page.evaluate(() => {
+          for (const el of document.querySelectorAll('button')) {
+            const txt = (el.textContent || '').trim()
+            if (/(확인|생성|만들기|create|done|continue|다음|시작)/i.test(txt) && !el.disabled && el.getBoundingClientRect().width > 0) { el.click(); return txt }
+          }
+          return null
+        })
+      }
+    }
+
+    await page.waitForFunction(() => location.href.includes('/project/'), { timeout: 30000 })
+    await sleep(2000)
+    const url = page.url().split('?')[0]
+    const m = url.match(/\/project\/([a-zA-Z0-9-]+)/)
+    fs.mkdirSync(path.dirname(projectUrlFile), { recursive: true })
+    fs.writeFileSync(projectUrlFile, url, 'utf-8')
+    return { url, projectId: m ? m[1] : null, created: true }
+  } finally {
+    try { browser.disconnect() } catch { /* noop */ }
+  }
+}
+
 export function flowKit(page) {
   // 화면에서 조건에 맞는 요소의 중심 좌표를 찾는다. match: exact | includes | startsWith | pill
   const rectOf = (text, match = 'exact', sel = TARGET_SEL) => page.evaluate((text, match, sel) => {
@@ -473,7 +550,7 @@ export function flowKit(page) {
       else {
         const want = expect.model.replace(/^[^A-Za-z]+/, '')
         const cur = norm(pill).replace(/^[^A-Za-z]+/, '').replace(/\s*crop_.*$/, '').trim()
-        if (cur !== want) problems.push(`모델 불일치: 기대 ${want} / 현재 ${cur}`)
+        if (!this.matchesModelLabel(cur, want)) problems.push(`모델 불일치: 기대 ${want} / 현재 ${cur}`)
         const icon = { '16:9': 'crop_16_9', '9:16': 'crop_9_16', '4:3': 'crop_landscape', '1:1': 'crop_square', '3:4': 'crop_portrait' }[expect.ratio]
         if (icon && !pill.includes(icon)) problems.push(`비율 불일치: 기대 ${expect.ratio} / ${pill}`)
         if (expect.count && !new RegExp(`x${expect.count}$`).test(norm(pill))) problems.push(`개수 불일치: 기대 x${expect.count} / ${pill}`)
@@ -565,7 +642,9 @@ export function flowKit(page) {
       const credits = await this.credits().catch(() => null)
       await this.closePopup()
       const pill = await this.pill()
-      if (model !== expect.model) problems.push(`모델 불일치: 기대 ${expect.model} / 현재 ${model}`)
+      // 2026-10-08: 이미지 모델과 같은 이유(Flow가 "Omni 1.1 Flash" 같은 이름에 소수점 버전을
+      // 덧붙이는 경우)로 정확히 같은 글자가 아니면 실패하던 문제 — matchesModelLabel로 통일.
+      if (!this.matchesModelLabel(model, expect.model)) problems.push(`모델 불일치: 기대 ${expect.model} / 현재 ${model}`)
       if (!pill || !pill.includes('동영상')) problems.push(`동영상 모드가 아님: ${pill}`)
       if (expect.ratio && pill && !pill.includes(expect.ratio === '9:16' ? 'crop_9_16' : 'crop_16_9')) problems.push(`비율 불일치: 기대 ${expect.ratio} / ${pill}`)
       if (expect.durationSec && pill && !pill.includes(`${expect.durationSec}초`)) problems.push(`길이 불일치: 기대 ${expect.durationSec}초 / ${pill}`)

@@ -20,7 +20,7 @@ import os from 'os'
 import path from 'path'
 import { execFileSync } from 'child_process'
 import * as mp from '../server/lib/mediaPaths.js'
-import { attachFlow, flowKit, sleep } from './lib/flowDriver.js'
+import { attachFlow, flowKit, sleep, ensureProject } from './lib/flowDriver.js'
 
 const SERVER = 'http://localhost:3001'
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true] }))
@@ -147,9 +147,16 @@ ${REGISTERS[reg].delivery}`
   }
 
   checkCancel('입력 시작 전')
-  // 영상 제출은 한글 화면 기준으로 만들어져 있다 — 프로젝트 주소에 ?hl=ko 를 붙여 맞춘다(영상 전용 프로젝트는 downloads/state/flow-video-project.json).
+  // 영상 제출은 한글 화면 기준으로 만들어져 있다 — 프로젝트 주소에 ?hl=ko 를 붙여 맞춘다.
+  // 2026-10-08: 공용 Flow 프로젝트(flow-video-project.json, G2 이미지와도 같이 씀)를 에피소드
+  // 전용 프로젝트로 전환(성준님 지시) — G2가 이미 만들어 둔 같은 episodeDir/project_url.txt를
+  // 공유해서, 한 에피소드의 이미지·영상이 같은 Flow 프로젝트 안에 모인다.
   let projectId = job.projectId
-  if (!projectId) { try { projectId = JSON.parse(fs.readFileSync(mp.statePath('flow-video-project.json'), 'utf-8')).projectId } catch { /* noop */ } }
+  if (!projectId) {
+    const projectUrlFile = path.join(mp.episodeDir(epNum), 'project_url.txt')
+    const { projectId: pid } = await ensureProject({ projectUrlFile, title: mp.resolveCode(epNum), lang: 'ko' })
+    projectId = pid
+  }
   const { page, release, emulated } = await attachFlow({ projectId: projectId || null, lang: 'ko' })
   const kit = flowKit(page)
   try {

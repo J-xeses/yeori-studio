@@ -19,7 +19,7 @@
 import fs from 'fs'
 import path from 'path'
 import * as mp from '../server/lib/mediaPaths.js'
-import { attachFlow, flowKit, sleep } from './lib/flowDriver.js'
+import { attachFlow, flowKit, sleep, ensureProject } from './lib/flowDriver.js'
 
 const SERVER = 'http://localhost:3001'
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true] }))
@@ -89,9 +89,17 @@ async function main() {
   const imgDir = mp.imagesDir(episodeCode)
   const chars = loadCharacters()
 
+  // 2026-10-08: 모든 에피소드가 공용 Flow 프로젝트(flow-image-project.json)를 같이 써서 미디어가
+  // 계속 쌓이던 걸 에피소드 전용 프로젝트로 전환(성준님 지시) — 에피소드 폴더에 project_url.txt가
+  // 있으면 그대로 쓰고, 없으면 지금 새로 만든다.
   let projectId = job.projectId
-  if (!projectId) { try { projectId = JSON.parse(fs.readFileSync(mp.statePath('flow-image-project.json'), 'utf-8')).projectId } catch { /* noop */ } }
-  if (!projectId) throw new Error('이미지용 Flow 프로젝트가 지정되지 않았습니다(downloads/state/flow-image-project.json)')
+  if (!projectId) {
+    const projectUrlFile = path.join(mp.episodeDir(episodeCode), 'project_url.txt')
+    const { projectId: pid, created } = await ensureProject({ projectUrlFile, title: episodeCode, lang: 'en' })
+    projectId = pid
+    step(`Flow 프로젝트 ${created ? '새로 생성' : '재사용'}: ${episodeCode}`)
+  }
+  if (!projectId) throw new Error('이미지용 Flow 프로젝트를 준비하지 못했습니다')
 
   // 대상 컷·프롬프트를 먼저 전부 만들어 문제가 있으면 화면 조작 전에 중단
   const plan = []
