@@ -1345,6 +1345,16 @@ app.get('/api/flow/ready', async (req, res) => {
     res.json({ ok: true, chrome: true, flowTab: !!flow, busy: !!activeFlowJob })
   } catch { res.json({ ok: true, chrome: false, flowTab: false, busy: !!activeFlowJob }) }
 })
+// 지금 돌고 있는 Flow 작업(있으면)의 실시간 상태 — 파이프라인 모니터 탭이 폴링해서
+// "전류가 흐르는" 애니메이션을 실제 진행 상황에 맞춰 보여주는 용도(2026-10-08).
+app.get('/api/flow/active', (req, res) => {
+  if (!activeFlowJob) return res.json({ ok: true, active: false })
+  try {
+    const sp = path.join(FLOW_JOB_DIR(), `${activeFlowJob.id}.status.json`)
+    const st = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf-8')) : { steps: [] }
+    res.json({ ok: true, active: true, jobId: activeFlowJob.id, state: st.state || 'running', steps: st.steps || [], error: st.error || null })
+  } catch (e) { res.json({ ok: true, active: true, jobId: activeFlowJob.id, state: 'running', steps: [], error: null }) }
+})
 app.post('/api/flow/submit', (req, res) => {
   const b = req.body || {}
   const epNum = Number(b.epNum), cutNo = Number(b.cutNo), clipNo = Number(b.clipNo || 1)

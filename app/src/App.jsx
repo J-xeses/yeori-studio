@@ -19,6 +19,7 @@ import CreditsTab from './tabs/CreditsTab'
 import RetentionHookTab from './tabs/RetentionHookTab'
 import EditMetaTab from './tabs/EditMetaTab'
 import StoryArchiveTab from './tabs/StoryArchiveTab'
+import PipelineMonitorTab from './tabs/PipelineMonitorTab'
 import MakingTab from './tabs/MakingTab'
 import TaskQueueTab from './tabs/TaskQueueTab'
 import s from './App.module.css'
@@ -37,6 +38,7 @@ const TAB_MAP = {
     retention: RetentionHookTab,
     editmeta: EditMetaTab,
     storyarchive: StoryArchiveTab,
+    monitor: PipelineMonitorTab,
     making: MakingTab,
     taskqueue: TaskQueueTab,
 }

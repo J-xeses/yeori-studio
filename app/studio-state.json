@@ -1,9 +1,9 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 89490
+    "remainingChars": 89459
   },
   "activeEpisodeId": "ep_1790684690932",
   "openTabIds": [
@@ -8995,7 +8995,7 @@
         "mood": "감성",
         "cutCount": 5,
         "contentType": "SF",
-        "topicCode": "PSY",
+        "topicCode": "REL",
         "scnCode": "ENT",
         "instaNum": "",
         "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
@@ -9183,7 +9183,7 @@
     "mood": "감성",
     "cutCount": 5,
     "contentType": "SF",
-    "topicCode": "PSY",
+    "topicCode": "REL",
     "scnCode": "ENT",
     "instaNum": "",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
@@ -9455,7 +9455,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-08T07:53:36.777Z",
+  "savedAt": "2026-10-08T08:52:45.892Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},

@@ -15,6 +15,7 @@ const TABS = [
   { id: 'checkup',       label: '체크업',             icon: '✅' },
   { id: 'publishing',    label: '퍼블리싱',          icon: '🚀' },
   { id: 'dashboard',     label: '대시보드',           icon: '📊' },
+  { id: 'monitor',       label: '파이프라인 모니터',   icon: '🔌' },
   { id: 'credits',       label: '일일 크레딧',        icon: '🎟️' },
   { id: 'storyarchive',  label: '스토리 아카이브',    icon: '📚' },
   { id: 'taskqueue',     label: '코드 작업 승인',      icon: '🤖' },
