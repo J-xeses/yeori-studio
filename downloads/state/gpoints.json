@@ -942,5 +942,27 @@
       "g2": true,
       "selectedImage": "cut_07_a.jpg"
     }
+  },
+  "SF_E109": {
+    "cut_1": {
+      "g1": true,
+      "updatedAt": "2026-10-08T05:31:24.753Z"
+    },
+    "cut_2": {
+      "g1": true,
+      "updatedAt": "2026-10-08T05:31:24.754Z"
+    },
+    "cut_3": {
+      "g1": true,
+      "updatedAt": "2026-10-08T05:31:24.754Z"
+    },
+    "cut_4": {
+      "g1": true,
+      "updatedAt": "2026-10-08T05:31:24.755Z"
+    },
+    "cut_5": {
+      "g1": true,
+      "updatedAt": "2026-10-08T05:31:24.755Z"
+    }
   }
 }

@@ -106,17 +106,20 @@ function parseCuts(raw, n) {
         id: `cut-${block.trim()}`,
         no: parseInt(block.trim()),
         scene: '', action: '', character: '서여리',
-        dialogue: '', narration: '', subtitle: '', imagePrompt: '', duration: 5
+        dialogue: '', narration: '', subtitle: '', imagePrompt: '', videoPrompt: '', duration: 5
       }
     } else if (cur) {
       // 멀티라인 파싱 (다음 필드 키워드가 나올 때까지 수집)
+      // 2026-10-08: 공간코드/캐릭터코드/카메라/감정/동작코드/룩ID/영상 프롬프트 필드 추가
+      // (generateScript 프롬프트의 출력 형식과 반드시 함께 유지 — 여기 없는 키워드가 필드
+      // 값 중간에 섞이면 getField가 다음 필드까지 통째로 삼켜버린다).
+      const FIELD_STOP_RE = /\n(씬|공간코드|캐릭터코드|카메라|감정|동작코드|룩ID|액션|캐릭터|대사|나레이션|자막|샷\s*타입|이미지 프롬프트|영상 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/
       const getField = (startRegex) => {
         const m = block.match(startRegex)
         if (!m) return ''
         const startIdx = block.indexOf(m[0]) + m[0].length
         const rest = block.slice(startIdx)
-        // 다음 필드 키워드 전까지 (샷 타입, 컷 길이, 컷 타입, PIP_TARGET, 그래픽 도구 포함)
-        const nextField = rest.search(/\n(씬|액션|캐릭터|대사|나레이션|자막|샷\s*타입|이미지 프롬프트|컷 길이|컷 타입|PIP_TARGET|그래픽 도구)[:：]/)
+        const nextField = rest.search(FIELD_STOP_RE)
         const content = nextField > -1 ? rest.slice(0, nextField) : rest
         return content.replace(/^[\s\n]+|[\s\n]+$/g, '').replace(/^없음$/i, '')
       }
@@ -137,12 +140,31 @@ function parseCuts(raw, n) {
       cur.pipTarget    = getField(/PIP_TARGET[:：]\s*/) || ''
       cur.graphicTool  = getField(/그래픽 도구[:：]\s*/) || ''
       cur.imagePrompt = getField(/이미지 프롬프트[:：]\s*/) || getField(/프롬프트[:：]\s*/)
+      cur.videoPrompt = getField(/영상 프롬프트[:：]\s*/)
 
       // 룰셋 통과 표시 제거 (UI에서 별도 표시)
       cur.imagePrompt = cur.imagePrompt
         .replace(/✅\s*룰셋\s*통과/g, '')
         .replace(/⚠️.*확인 필요/g, '')
         .trim()
+
+      // 코드북 세부 필드 — cut.masterCode.{sp,pl,ch,sh,ca,md,ac,lookId} (상세 편집 화면의
+      // SP/PL/CH/SH/CA/MD/AC/LOOK_ID 입력칸이 바로 이 경로를 읽는다, updateCutMC 참고).
+      // PL(파이프라인 코드)은 모델이 직접 안 쓰고 cutType에서 결정적으로 유도한다.
+      const CUT_TYPE_TO_PL = { YEORI: 'YR_VD', BROLL: 'BR_VD', GRAPHIC: 'GR_ED', CAPCUT: 'CC_ED', PIP: 'PIP_VD' }
+      // Claude에게 별도 "샷코드" 필드는 안 받음(프롬프트 복잡도↑ 대비 효용 낮음) — 이미 받는
+      // "샷 타입"(CLOSEUP/FULLBODY) 분류에서 가장 흔한 SH 코드로 결정적으로 유도.
+      cur.masterCode = {
+        sp: getField(/공간코드[:：]\s*/),
+        pl: CUT_TYPE_TO_PL[cur.cutType] || 'YR_VD',
+        ch: getField(/캐릭터코드[:：]\s*/),
+        sh: cur.shotType === 'CLOSEUP' ? 'SH_CU' : 'SH_WS',
+        ca: getField(/카메라[:：]\s*/),
+        md: getField(/감정[:：]\s*/),
+        ac: getField(/동작코드[:：]\s*/),
+        lookId: getField(/룩ID[:：]\s*/),
+        du: 8,
+      }
 
       // duration: 파일에 "컷 길이:" 값이 있으면 우선 사용, 없으면 글자수 자동 계산
       const fileDuration = parseInt(getField(/컷 길이[:：]\s*/))
@@ -1104,6 +1126,10 @@ export default function ScriptGenTab() {
     setLoading(true)
     setProgress('Claude에게 요청 중...')
 
+    // storyBrief에 이미 [CUT N] 단위로 완성된 초안이 있는지 — 프롬프트 두 군데(도입부 지시 +
+    // 맨 끝 재강조)에서 같이 써야 해서 바깥 스코프에 한 번만 계산해 둔다.
+    const hasDraft = !!(episode.storyBrief?.trim() && /\[CUT\s*\d+\]/.test(episode.storyBrief))
+
     const prompt = `당신은 한국 유튜브 숏폼/영상 전문 대본 작가입니다.
 아래 연출 원칙을 반드시 준수하여 대본과 이미지 프롬프트를 생성하세요.
 
@@ -1122,31 +1148,46 @@ ${codeListForPrompt(codebook)}
 배경 장소: ${episode.location}
 전체 분위기: ${Array.isArray(episode.mood) ? episode.mood.join(' + ') : episode.mood}
 주인공 캐릭터: ${episode.character}
-${episode.storyBrief?.trim() ? (
+${(() => {
   // 후보 풀(content_matrix_v3.html)의 STEP4 한글대본처럼 이미 [CUT N] 단위로 완성된
   // 초안이 storyBrief에 들어있는 경우를 감지 — 이땐 "요약해서 재배치"가 아니라 "그대로
   // 보존하고 기술 필드만 채우는" 지시로 바꾼다. 안 그러면 Claude가 이미 잘 써진 대사·
   // 액션을 새로 지어내 축약해버리는 문제가 있었다(2026-09-29, 성준님 실측: "내용이 안 왔다").
-  /\[CUT\s*\d+\]/.test(episode.storyBrief)
-    ? `
+  // 2026-10-08: 지시를 넣어도 Claude가 그대로 무시하고 완전히 다른 이야기를 지어낸 재현
+  // 사례 발생(SF_E109) — 지시를 프롬프트 맨 끝(출력 형식 직전)에도 한 번 더 반복해 두는
+  // 식으로 강화. 한 번의 지시만으로는 룰셋/형식 설명 사이에 묻혀 무시될 수 있다.
+  if (hasDraft) {
+    return `
 아래는 이미 컷 단위로 완성된 초안 대본입니다. 절대 요약하거나 새로 지어내지 마세요 —
 씬·액션·대사·나레이션 내용을 한 글자도 바꾸지 않고 그대로 옮기고, 거기 없는 기술 필드
-(샷 타입/컷 타입/이미지 프롬프트)만 새로 채워 넣어 아래 출력 형식에 맞추세요. 컷 경계와
-개수도 원본 그대로 유지하세요(8초 초과 시에만 룰셋 분할 규칙 적용):
+(코드·샷 타입/컷 타입/이미지·영상 프롬프트)만 새로 채워 넣어 아래 출력 형식에 맞추세요.
+컷 경계와 개수도 원본 그대로 유지하세요(8초 초과 시에만 룰셋 분할 규칙 적용):
 ${episode.storyBrief.trim()}
 `
-    : `
+  }
+  if (episode.storyBrief?.trim()) {
+    return `
 스토리 개요(반드시 이 장면 전개를 그대로 따라 컷으로 확장할 것 — 새로운 이야기를 지어내지 말고 아래 개요의 사건·감정 흐름을 각 컷에 배분하세요):
 ${episode.storyBrief.trim()}
 `
-) : ''}
+  }
+  return ''
+})()}
 
 각 컷은 반드시 아래 형식으로 작성하세요.
 ⚠️ 중요: 마크다운 형식 절대 금지! ** 굵은 글씨, # 헤더, --- 구분선 사용 금지!
 ⚠️ 반드시 아래 키워드로 시작하는 줄 형식만 사용할 것!
+⚠️ 공간코드/캐릭터코드/카메라/감정/동작코드/룩ID는 위에서 제공한 코드북(SP/CH/SH/CA/MD/AT/LOOK_BANK) 목록에
+  실제로 등록된 코드만 써서 채우세요 — 지어낸 코드 금지, 애매하면 가장 가까운 기존 코드를 고르세요.
 
 [CUT 1]
 씬: INT/EXT. 장소 - 시간대
+공간코드: 코드북 SP 중 하나 (예: IN.HM.TZ_NT.LT_WM)
+캐릭터코드: 코드북 CH/LOOK_BANK 기준 캐릭터·의상 코드 (예: 서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL)
+카메라: 코드북 CA 중 하나, 전환 있으면 "CA_ST → CA_PS" 형식
+감정: 코드북 MD 중 하나, 복수면 "MD_JOY + MD_REL" 형식
+동작코드: 코드북 AT 중 하나 이상, 복수면 "AT_SD_01 + AT_EM_01" 형식
+룩ID: 코드북 LOOK_BANK 키 하나 (예: LOOK_CS)
 액션: 주인공의 행동 묘사 — First 3s: / Next 3s: / Final 4s: 형식으로 분리
 캐릭터: 서여리
 대사: 실제 대사 (자연스러운 한국어, 없으면 "없음" 으로 표기)
@@ -1154,9 +1195,16 @@ ${episode.storyBrief.trim()}
 샷 타입: CLOSEUP 또는 FULLBODY (반드시 명시)
 컷 타입: YEORI 또는 BROLL 또는 GRAPHIC 또는 CAPCUT 또는 PIP (반드시 명시)
 이미지 프롬프트: 영어로 작성, "CLOSEUP SHOT —" 또는 "FULLBODY SHOT —" 으로 시작, 룰셋 체크리스트 전체 반영
+영상 프롬프트: 영어로 작성, "First 0-3s: ... / Next 3-6s: ... / Final 6-8s: ..." 형식으로 시간대별 동작 묘사 (GRAPHIC·CAPCUT은 "없음")
 
 [CUT 2]
 씬:
+공간코드:
+캐릭터코드:
+카메라:
+감정:
+동작코드:
+룩ID:
 액션:
 캐릭터: 서여리
 대사:
@@ -1164,9 +1212,16 @@ ${episode.storyBrief.trim()}
 샷 타입:
 컷 타입:
 이미지 프롬프트:
+영상 프롬프트:
 
 [CUT ${episode.cutCount}]
 씬:
+공간코드:
+캐릭터코드:
+카메라:
+감정:
+동작코드:
+룩ID:
 액션:
 캐릭터: 서여리
 대사:
@@ -1174,21 +1229,23 @@ ${episode.storyBrief.trim()}
 샷 타입:
 컷 타입:
 이미지 프롬프트:
+영상 프롬프트:
 
 ※ 위는 형식 예시이며, 분할이 발생하면 [CUT N+1], [CUT N+2]... 형식으로 자연스럽게 이어서 작성하세요.
 
 ⚠️ 절대 지킬 것:
 - 마크다운 ** ## --- 완전 금지
-- 각 필드는 반드시 "씬:" "액션:" "캐릭터:" "대사:" "나레이션:" "샷 타입:" "컷 타입:" "이미지 프롬프트:" 로 시작
+- 각 필드는 반드시 "씬:" "공간코드:" "캐릭터코드:" "카메라:" "감정:" "동작코드:" "룩ID:" "액션:" "캐릭터:" "대사:" "나레이션:" "샷 타입:" "컷 타입:" "이미지 프롬프트:" "영상 프롬프트:" 로 시작
 - [CUT 번호] 형식 정확히 유지
 - 대사 없는 컷은 대사: 없음 으로 표기
 - 컷 타입: 필드 반드시 명시 (YEORI/BROLL/GRAPHIC/CAPCUT/PIP 중 정확히 하나)
 - PIP 컷에는 PIP_TARGET: [배경 컷 번호] 추가 (예: PIP_TARGET: 3)
-- GRAPHIC·CAPCUT 컷은 이미지 프롬프트: 없음 으로 표기
+- GRAPHIC·CAPCUT 컷은 이미지 프롬프트: 없음, 영상 프롬프트: 없음 으로 표기
 - 이미지 프롬프트 끝에 ✅ 룰셋 통과 또는 ⚠️ [항목명] 확인 필요 표시
 
 대사는 구어체로 자연스럽게, 나레이션은 감성적으로 작성하세요.
-이미지 프롬프트는 영어로, 룰셋의 체크리스트를 모두 통과한 상태로 작성하세요.`
+이미지 프롬프트는 영어로, 룰셋의 체크리스트를 모두 통과한 상태로 작성하세요.
+${hasDraft ? '\n⚠️ 다시 한번 강조: 위에 제공된 [CUT N] 초안의 씬·액션·대사·나레이션 내용을 절대 새로 짓거나 요약하지 말고 토씨 하나 바꾸지 말고 그대로 옮기세요. 당신이 할 일은 이 대본 내용을 지어내는 것이 아니라, 이미 확정된 내용에 코드·샷타입·컷타입·이미지/영상 프롬프트 기술 필드만 추가하는 것입니다.' : ''}`
 
     try {
       const res = await claudeMessages(apiKeys.claude, {
