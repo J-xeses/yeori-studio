@@ -24,21 +24,24 @@ const CONTENT_TYPES = [
   { value: 'TK',   label: 'TK — TikTok' },
 ]
 
+// 2026-10-08: 라벨만 있고 실제 생성에 전혀 반영이 안 되던 걸 발견(성준님 지적) — "기획 단계에서
+// 정한 컨셉(주제+시나리오)에 맞는 대본이 만들어져야 한다"는 의도대로, generateScript() 프롬프트에
+// 아래 guide 문구를 같이 주입해서 실제로 글쓰기 방향을 바꾸도록 연결한다.
 const TOPIC_CODES = [
-  { value: 'PSY', label: 'PSY — 심리' },
-  { value: 'SOC', label: 'SOC — 사회' },
-  { value: 'LIF', label: 'LIF — 라이프스타일' },
-  { value: 'REL', label: 'REL — 관계' },
-  { value: 'TRD', label: 'TRD — 트렌드' },
+  { value: 'PSY', label: 'PSY — 심리', guide: '인물의 내면 심리·감정 변화(불안/수용/성장 등)를 사건보다 우선시해 서사의 중심에 둘 것' },
+  { value: 'SOC', label: 'SOC — 사회', guide: '또래·세대·사회적 분위기나 현상을 다루되, 한 인물의 개인 경험을 통해 그 현상을 보여줄 것' },
+  { value: 'LIF', label: 'LIF — 라이프스타일', guide: '특정 루틴·취향·소소한 일상 활동 자체를 콘텐츠의 중심으로 삼을 것(감정선보다 활동·디테일 비중을 높게)' },
+  { value: 'REL', label: 'REL — 관계', guide: '다른 인물(친구/가족/연인 등)과의 상호작용과 그 관계에서 오는 감정을 사건의 중심에 둘 것' },
+  { value: 'TRD', label: 'TRD — 트렌드', guide: '현재 화제가 되는 밈·챌린지·이슈를 소재로 삼고, 그 트렌드를 아는 시청자가 바로 공감할 디테일을 포함할 것' },
 ]
 
 const SCN_CODES = [
-  { value: 'DOC',  label: 'DOC — 다큐' },
-  { value: 'MYS',  label: 'MYS — 미스터리' },
-  { value: 'NEWS', label: 'NEWS — 뉴스' },
-  { value: 'EDU',  label: 'EDU — 교육' },
-  { value: 'ENT',  label: 'ENT — 엔터테인먼트' },
-  { value: 'REL',  label: 'REL — 릴레이션십' },
+  { value: 'DOC',  label: 'DOC — 다큐', guide: '실제 있을 법한 하루/사건을 담담하게 관찰하듯 서술 — 극적 반전이나 과장된 연출 지양' },
+  { value: 'MYS',  label: 'MYS — 미스터리', guide: '궁금증·긴장감을 초반에 걸고 끝까지 유지하다 마지막에 풀리는 구조로 전개' },
+  { value: 'NEWS', label: 'NEWS — 뉴스', guide: '정보 전달이 목적 — 사실관계·수치·배경 설명을 명확히 하고 나레이션 비중을 높일 것' },
+  { value: 'EDU',  label: 'EDU — 교육', guide: '시청자가 뭔가를 배워가도록 — 문제 제기 → 설명/과정 → 적용 가능한 결론 순서로 구성' },
+  { value: 'ENT',  label: 'ENT — 엔터테인먼트', guide: '가볍고 유쾌한 톤, 유머·반전·리액션 위주로 전개하고 무거운 메시지는 짧게만' },
+  { value: 'REL',  label: 'REL — 릴레이션십', guide: '두 인물 이상의 대화·티키타카가 서사를 끌고 가도록 — 독백/나레이션보다 대사 비중을 높게' },
 ]
 
 const CUT_TYPES = [
@@ -1147,6 +1150,10 @@ ${codeListForPrompt(codebook)}
 제목: ${episode.title || '(자유 설정)'}
 배경 장소: ${episode.location}
 전체 분위기: ${Array.isArray(episode.mood) ? episode.mood.join(' + ') : episode.mood}
+주제(TOPIC): ${TOPIC_CODES.find(t => t.value === episode.topicCode)?.label || episode.topicCode || 'PSY — 심리'}
+  → ${TOPIC_CODES.find(t => t.value === episode.topicCode)?.guide || TOPIC_CODES[0].guide}
+시나리오 장르(SCN): ${SCN_CODES.find(t => t.value === episode.scnCode)?.label || episode.scnCode || 'DOC — 다큐'}
+  → ${SCN_CODES.find(t => t.value === episode.scnCode)?.guide || SCN_CODES[0].guide}
 주인공 캐릭터: ${episode.character}
 ${(() => {
   // 후보 풀(content_matrix_v3.html)의 STEP4 한글대본처럼 이미 [CUT N] 단위로 완성된
@@ -1719,18 +1726,21 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       style={numError ? { borderColor: '#ef4444' } : {}}
                       onChange={e => {
                         const num = parseInt(e.target.value) || 1
-                        const thisType = episode.contentType || 'LF'
-                        const newCode = formatEpisodeCode(thisType, num)
-                        const isDup = Object.values(episodes || {}).some(ep => {
-                          if (ep.id === activeEpisodeId) return false
-                          return formatEpisodeCode(ep.episode?.contentType || 'LF', ep.episode.number) === newCode
-                        })
-                        if (isDup) {
-                          setNumError(`${newCode}은 이미 사용 중입니다`)
-                        } else {
-                          setNumError('')
-                          dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
+                        // AppContext의 RENUMBER_EPISODE는 downloads/{flow,video,audio}/ep{number}/
+                        // 폴더 충돌 방지를 위해 "번호" 자체를 유형 구분 없이 전역 유일로 막는다 —
+                        // 여기서 code(SF_E12 등) 기준으로만 중복을 검사하면 그 가드에 걸려 조용히
+                        // 아무 반응 없이 실패하는 경우가 있었다(2026-10-08, "낮은 번호가 안 먹힌다"
+                        // 로 보고됨 — 실제로는 막힌 게 아니라 에러 표시 없이 무시되고 있었음).
+                        // 번호 충돌을 먼저 정확히 검사해서 보여주고, 번호가 비어있으면 code 충돌도 본다.
+                        const numDup = Object.values(episodes || {}).some(
+                          ep => ep.id !== activeEpisodeId && ep.episode.number === num
+                        )
+                        if (numDup) {
+                          setNumError(`번호 ${num}은(는) 이미 다른 에피소드가 쓰고 있습니다 (내부 폴더 경로 충돌 방지 — 유형에 상관없이 전역으로 유일해야 함). 화면에 보이는 코드(${displayEpisodeCode(episode)})는 번호와 별개로 고정돼 있어 바뀌지 않으니, 겹치지 않는 다른 번호를 골라주세요.`)
+                          return
                         }
+                        setNumError('')
+                        dispatch({ type: 'RENUMBER_EPISODE', id: activeEpisodeId, number: num })
                       }}
                     />
                     <span className={s.epCodeBadge}>

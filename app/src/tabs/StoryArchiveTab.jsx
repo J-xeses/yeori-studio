@@ -434,10 +434,35 @@ const CAT_COLORS = {
   TK:   { color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.35)'  },
 }
 
+// ScriptGenTab.jsx의 TOPIC_CODES/SCN_CODES와 라벨을 반드시 동일하게 유지할 것(이 코드베이스
+// 관례대로 작은 데이터 상수라 탭마다 복제해서 씀). 2026-10-08: "기획 단계에서 주제 방향을
+// 먼저 제시·확인해야 한다"는 요청으로 후보 카드에 추가 — /api/trend-to-episode가 추천한 값을
+// 기본으로 보여주고, 여기서 고치면 sendToScript가 그 값을 새 에피소드에 그대로 넘긴다.
+// ⚠️ 이 5×6 분류 자체가 "정답"은 아님 — 진행하면서 더 보편적인 기준으로 재검토 예정(성준님,
+// 2026-10-08), 지금은 1차 적용.
+const TOPIC_CODES = [
+  { value: 'PSY', label: 'PSY 심리' },
+  { value: 'SOC', label: 'SOC 사회' },
+  { value: 'LIF', label: 'LIF 라이프스타일' },
+  { value: 'REL', label: 'REL 관계' },
+  { value: 'TRD', label: 'TRD 트렌드' },
+]
+const SCN_CODES = [
+  { value: 'DOC',  label: 'DOC 다큐' },
+  { value: 'MYS',  label: 'MYS 미스터리' },
+  { value: 'NEWS', label: 'NEWS 뉴스' },
+  { value: 'EDU',  label: 'EDU 교육' },
+  { value: 'ENT',  label: 'ENT 엔터' },
+  { value: 'REL',  label: 'REL 릴레이션십' },
+]
+
 function TrendEpisodesSection({ dispatch }) {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  // 후보 카드별 주제/시나리오 수정값 — key: `${entry.id}_${i}`. 안 고치면 Claude가 추천한
+  // ep.topicCode/ep.scnCode(없으면 PSY/DOC)를 그대로 씀.
+  const [catOverride, setCatOverride] = useState({})
 
   const load = () => {
     setLoading(true); setError('')
@@ -454,8 +479,13 @@ function TrendEpisodesSection({ dispatch }) {
   // 그 결과 ScriptGenTab이 제목 한 줄만 보고 완전히 새 이야기를 지어내 "후보의 내용이
   // 반영 안 되고 분량만 채워지는" 문제가 생겼음(문제2). angle을 storyBrief 초기값으로
   // 넘겨 ScriptGenTab의 "스토리 디벨롭" 단계가 이걸 기반으로 확장하게 한다.
-  const sendToScript = (ep) => {
-    dispatch({ type: 'SET_EPISODE', p: { title: ep.title, contentType: ep.category, storyBrief: ep.angle || '' } })
+  const sendToScript = (ep, key) => {
+    const ov = catOverride[key] || {}
+    dispatch({ type: 'SET_EPISODE', p: {
+      title: ep.title, contentType: ep.category, storyBrief: ep.angle || '',
+      topicCode: ov.topicCode || ep.topicCode || 'PSY',
+      scnCode: ov.scnCode || ep.scnCode || 'DOC',
+    } })
     dispatch({ type: 'SET_TAB', p: 'script' })
   }
 
@@ -500,6 +530,11 @@ function TrendEpisodesSection({ dispatch }) {
             <div className={s.trendEpCandidates}>
               {(entry.episodes || []).map((ep, i) => {
                 const c = CAT_COLORS[ep.category] || CAT_COLORS.LF
+                const key = `${entry.id}_${i}`
+                const ov = catOverride[key] || {}
+                const topicVal = ov.topicCode || ep.topicCode || 'PSY'
+                const scnVal = ov.scnCode || ep.scnCode || 'DOC'
+                const setOv = (patch) => setCatOverride(p => ({ ...p, [key]: { topicCode: topicVal, scnCode: scnVal, ...p[key], ...patch } }))
                 return (
                   <div key={i} className={s.trendEpRow}>
                     <span className={s.catBadge} style={{ color: c.color, background: c.bg, border: `1px solid ${c.border}` }}>
@@ -508,8 +543,18 @@ function TrendEpisodesSection({ dispatch }) {
                     <div className={s.trendEpInfo}>
                       <span className={s.trendEpCandTitle}>{ep.title}</span>
                       <span className={s.trendEpAngle}>{ep.angle}</span>
+                      {/* 이 키워드가 어떤 주제·장르인지 Claude가 추천한 값 — 기획 단계에서 바로
+                          확인·수정 가능. "대본 생성"을 누르면 이 값이 새 에피소드에 그대로 넘어감. */}
+                      <div className={s.trendEpCatRow}>
+                        <select value={topicVal} onChange={e => setOv({ topicCode: e.target.value })} title="주제(TOPIC)">
+                          {TOPIC_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                        </select>
+                        <select value={scnVal} onChange={e => setOv({ scnCode: e.target.value })} title="시나리오(SCN)">
+                          {SCN_CODES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                        </select>
+                      </div>
                     </div>
-                    <button className={s.scriptBtn} onClick={() => sendToScript(ep)}>
+                    <button className={s.scriptBtn} onClick={() => sendToScript(ep, key)}>
                       대본 생성 →
                     </button>
                   </div>

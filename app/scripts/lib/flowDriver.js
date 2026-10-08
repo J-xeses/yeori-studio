@@ -338,24 +338,41 @@ export function flowKit(page) {
       await this.openImagePopup(); await click(icon, 'startsWith', 'button')
     },
     async setImageCount(n = 1) { await this.openImagePopup(); await click(`x${n}`, 'exact', 'button') },
+    // Flow가 모델명에 소수점 버전을 붙이는 경우가 있다(2026-10-08 실측: 요청은 "Nano Banana 2"인데
+    // 화면 표시는 "Nano Banana 2.1" — 정확히 똑같은 글자가 아니라고 "모델을 못 찾았다"며 실패 처리되던
+    // 버그. "2.1"도 "2" 계열의 같은 모델이므로, 요청한 이름으로 시작하면(붙어서 Lite 같은 다른 단어가
+    // 아니라 숫자/점으로 이어지면) 같은 모델로 인정한다.
+    matchesModelLabel(label, name) {
+      if (!label) return false
+      if (label === name) return true
+      const rest = label.slice(name.length)
+      return label.startsWith(name) && /^[\d.]/.test(rest)
+    },
     async setImageModel(name) {
       if (!this.imageModels.includes(name)) throw new Error(`알 수 없는 이미지 모델: ${name}`)
       await this.openImagePopup()
       const label = async () => { const p = await rectOf('arrow_drop_down', 'includes', 'button'); return p ? norm(p.t).replace('arrow_drop_down', '').replace(/^[^A-Za-z]+/, '').trim() : null }
-      if ((await label()) === name) return
+      if (this.matchesModelLabel(await label(), name)) return
       const dd = await rectOf('arrow_drop_down', 'includes', 'button')
       if (!dd) throw new Error('이미지 모델 드롭다운을 찾지 못했습니다')
       await clickAt(dd)
       const item = await page.evaluate((name) => {
+        const matches = (label) => {
+          if (!label) return false
+          if (label === name) return true
+          const rest = label.slice(name.length)
+          return label.startsWith(name) && /^[\d.]/.test(rest)
+        }
         for (const e of document.querySelectorAll('button, [role="menuitem"], [role="option"], li')) {
           const r = e.getBoundingClientRect()
-          if (r.width > 0 && r.height > 0 && (e.textContent || '').replace(/\s+/g, ' ').replace(/^[^A-Za-z]+/, '').trim() === name && !(e.textContent || '').includes('arrow_drop_down')) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+          const t = (e.textContent || '').replace(/\s+/g, ' ').replace(/^[^A-Za-z]+/, '').trim()
+          if (r.width > 0 && r.height > 0 && matches(t) && !(e.textContent || '').includes('arrow_drop_down')) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
         }
         return null
       }, name)
       if (!item) throw new Error(`모델 메뉴에서 ${name} 를 찾지 못했습니다`)
       await clickAt(item)
-      if ((await label()) !== name) throw new Error(`이미지 모델 선택 실패(현재: ${await label()})`)
+      if (!this.matchesModelLabel(await label(), name)) throw new Error(`이미지 모델 선택 실패(현재: ${await label()})`)
     },
     // 프롬프트 창에 붙은 레퍼런스 썸네일 수(창 아래쪽의 작은 이미지)
     async refCount() {

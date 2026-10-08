@@ -205,6 +205,12 @@
 .trendEpInfo { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .trendEpCandTitle { font-size: 12px; font-weight: 600; color: var(--color-text-primary, #f0f0f0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .trendEpAngle { font-size: 11px; color: var(--color-text-tertiary, #888); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trendEpCatRow { display: flex; gap: 4px; margin-top: 2px; }
+.trendEpCatRow select {
+  font-size: 10px; padding: 1px 4px; border-radius: 4px; max-width: 110px;
+  background: rgba(124,92,252,0.08); border: 1px solid rgba(124,92,252,0.25);
+  color: var(--color-text-secondary, #bbb); cursor: pointer;
+}
 .scriptBtn {
   flex-shrink: 0; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700;
   background: rgba(124,92,252,0.15); border: 1px solid rgba(124,92,252,0.4);

@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url'
 import { TOOLS } from './mcp-tools.js'
 import { formatLeaderStatus } from './lib/leaderRead.js'
 import * as mp from './lib/mediaPaths.js'
+import { resolveEpisodeCode } from './lib/episodeCode.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const BASE_URL  = 'http://localhost:3001'
@@ -76,7 +77,10 @@ async function executeTool(name, args) {
       const cuts = data.cuts || []
       const g1 = Object.values(data.gData || {}).filter(v => v?.g1).length
       return [
-        `현재 에피소드: ${ep.contentType || '?'} ${ep.number ? `E${String(ep.number).padStart(2,'0')}` : ''} "${ep.title || '제목 없음'}"`,
+        // episode.code(정식 식별자)가 있으면 그대로 쓴다 — contentType+number로 재조립하면
+        // number는 전역 유일 폴더 카운터일 뿐이라 실제 코드(예: SF_E01)와 어긋날 수 있다
+        // (2026-10-08, "SF_E01인데 목록엔 SF_E13으로 나온다" 혼선 발견 후 수정).
+        `현재 에피소드: ${resolveEpisodeCode(ep, data.activeEpisodeId)} "${ep.title || '제목 없음'}"`,
         `컷 수: ${cuts.length}개  |  G1 승인: ${g1}개`,
         `마지막 저장: ${data.savedAt || '알 수 없음'}`,
       ].join('\n')
@@ -90,9 +94,9 @@ async function executeTool(name, args) {
       if (!episodes.length) return '등록된 에피소드 없음'
       return episodes.map(ep => {
         const e = ep.episode || {}
-        const code = ['IG_R','IG_P','IG_S'].includes(e.contentType)
-          ? `${e.contentType}${String(e.number||1).padStart(2,'0')}`
-          : `${e.contentType||'?'}_E${String(e.number||1).padStart(2,'0')}`
+        // episode.code 우선 — number는 downloads 폴더 충돌 방지용 전역 유일 카운터라 콘텐츠
+        // 유형별 회차와 다를 수 있다(2026-10-08, 위 get_studio_state와 동일 이유로 수정).
+        const code = resolveEpisodeCode(e, ep.id)
         return `[${code}] "${e.title || '제목 없음'}"  컷 ${(ep.cuts||[]).length}개${ep.id === state.activeEpisodeId ? '  ← 현재' : ''}`
       }).join('\n')
     }
