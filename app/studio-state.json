@@ -1,9 +1,9 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 89974
+    "remainingChars": 89506
   },
   "activeEpisodeId": "ep_1790664275051",
   "openTabIds": [
@@ -9397,8 +9397,172 @@
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
-    "focusCutId": null
+    "g3Confirmed": {
+      "cut-2": true,
+      "cut-4": true,
+      "cut-5": true,
+      "cut-6": true,
+      "cut-7": true,
+      "cut-8": true
+    },
+    "focusCutId": null,
+    "voiceTabs": {
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-4": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-5": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-6": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-7": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-8": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "tracks": {
+      "cut-2__v1": [
+        {
+          "id": "track_1791427575207_872b",
+          "type": "dialogue",
+          "text": "오늘 촬영 끝~~",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_02_track_1791427575207_872b.mp3?t=1791427617461",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-4__v1": [
+        {
+          "id": "track_1791427631494_30n0",
+          "type": "dialogue",
+          "text": "아~~,,, 살 것 같다,,,",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_04_track_1791427631494_30n0.mp3?t=1791427819190",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 33,
+            "similarity": 80
+          }
+        }
+      ],
+      "cut-5__v1": [
+        {
+          "id": "track_1791427850010_ct0a",
+          "type": "dialogue",
+          "text": "아, 드디어 끝났다. 많이 기다렸지? 미안... 인플루언서 생활이... 가끔은 인형이 된 기분이라니까.",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_05_track_1791427850010_ct0a.mp3?t=1791427952987",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-6__v1": [
+        {
+          "id": "track_1791427966163_akwg",
+          "type": "dialogue",
+          "text": "근데 너 그거 알아? 그 어떤 음료수보다, 할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아.",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_06_track_1791427966163_akwg.mp3?t=1791428027787",
+          "voiceId": "",
+          "settings": {
+            "speed": 1,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-7__v1": [
+        {
+          "id": "track_1791428034538_1sfj",
+          "type": "dialogue",
+          "text": "그리고, 신발을 벗는다는 건~,,, 진짜 내 모습으로 돌아오는 순간,,, 그래서 나~~",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_07_track_1791428034538_1sfj.mp3?t=1791428184149",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1791428059621_yr75",
+          "type": "dialogue",
+          "text": "지금 되게 편해~~ 하이힐도,,, 인플루언서 서여리도 현관에 두고 왔거든.",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_07_track_1791428059621_yr75.mp3?t=1791428221001",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-8__v1": [
+        {
+          "id": "track_1791428246394_hnlh",
+          "type": "dialogue",
+          "text": "우리~~ 진짜 자기 모습이야~~, 그러니까 너도... 오늘 하루 수고했어.",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_08_track_1791428246394_hnlh.mp3?t=1791428319954",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ]
+    },
+    "mergedUrls": {
+      "cut-2__v1": "blob:http://localhost:5173/b52509eb-b155-4a17-8a80-3ba97db6a420",
+      "cut-4__v1": "blob:http://localhost:5173/e5e6d698-bd86-433b-8c75-f24cebb5efa3",
+      "cut-5__v1": "blob:http://localhost:5173/a8b10b1e-ee00-48ad-a1a1-86e249888b8f",
+      "cut-6__v1": "blob:http://localhost:5173/080f35f0-48a0-4325-8da7-9a1dd0db3bed",
+      "cut-7__v1": "blob:http://localhost:5173/df4c8066-5f21-4ea7-979d-1858939b3612",
+      "cut-8__v1": "blob:http://localhost:5173/e9c77263-d35a-442a-a8d7-bb37e072eb70"
+    }
   },
   "voiceInsertState": {
     "tracks": {}
