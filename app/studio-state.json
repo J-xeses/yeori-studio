@@ -1,9 +1,9 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 89459
+    "remainingChars": 89426
   },
   "activeEpisodeId": "ep_1790684690932",
   "openTabIds": [
@@ -9661,7 +9661,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-08T13:25:13.838Z",
+  "savedAt": "2026-10-08T13:48:19.190Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
