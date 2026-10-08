@@ -111,7 +111,7 @@ async function main() {
     const allRefs = [...refs, ...extra]
     const roleNote = extra.length ? ' The first attached image is the reference face; the other attached image(s) are the outfit and overall look reference — keep the same cream oversized knit top style, jewelry and natural styling, while following the pose and scene described above.' : ''
     const prompt = descriptorText ? `${base}\n\n[Character consistency — the attached image is the reference face. Keep the face identical to it:]\n${descriptorText}${roleNote}` : base + roleNote
-    const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^(LF|SF)_/.test(episodeCode) ? '16:9' : '9:16')
+    const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^LF_/.test(episodeCode) ? '16:9' : '9:16')
     plan.push({ no, prompt, refs: allRefs, ratio, ids })
   }
   if (!plan.length) throw new Error('생성할 컷이 없습니다')

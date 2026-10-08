@@ -25,12 +25,13 @@ export function resolveVideoPolicy(episode = {}) {
   return 'image-first'   // IG_R, IG_P, IG_S, TK …
 }
 
-// 에피소드 콘텐츠 유형 기본 화면비율 — LF/SF = 유튜브 가로(16:9), 나머지 = 세로(9:16).
+// 에피소드 콘텐츠 유형 기본 화면비율 — LF(유튜브 롱폼) = 가로(16:9), SF(유튜브 쇼츠, 대본
+// 마스터코드 Q_SH.RT_916.PB_YT로 전편 확정) 및 나머지 = 세로(9:16).
 // episode.aspectRatio 로 명시 override 가능.
 export function contentRatio(episode = {}) {
   if (episode.aspectRatio === '16:9' || episode.aspectRatio === '9:16') return episode.aspectRatio
   const ct = (episode.contentType || '').toUpperCase()
-  return (ct === 'LF' || ct === 'SF') ? '16:9' : '9:16'
+  return ct === 'LF' ? '16:9' : '9:16'
 }
 
 // 컷 산출물 픽셀 규격 — contentRatio 기준. 메이킹 파이프라인 전체가 이걸로 스케일/크롭한다.

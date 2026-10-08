@@ -238,17 +238,21 @@
   "SF_E01": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-09-01T12:44:50.106Z",
-      "g4": true
+      "updatedAt": "2026-10-08T04:19:28.403Z",
+      "g4": true,
+      "g2": true,
+      "selectedImage": "cut_01_a.jpg"
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-10-08T02:47:03.242Z",
-      "g3": true
+      "updatedAt": "2026-10-08T04:19:28.404Z",
+      "g3": true,
+      "g2": true,
+      "selectedImage": "cut_02_a.jpg"
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-10-08T03:22:20.084Z",
+      "updatedAt": "2026-10-08T04:19:28.404Z",
       "g2": true,
       "selectedImage": "cut_03_a.jpg",
       "g4": true,
@@ -256,45 +260,45 @@
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-10-08T02:50:45.250Z",
+      "updatedAt": "2026-10-08T04:19:28.405Z",
       "g2": true,
-      "selectedImage": "cut_04.png",
+      "selectedImage": "cut_04_a.png",
       "g3": true,
       "g4": true,
       "g5": true
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-10-08T02:52:44.083Z",
+      "updatedAt": "2026-10-08T04:19:28.405Z",
       "g2": true,
-      "selectedImage": "cut_05.jpeg",
+      "selectedImage": "cut_05_b.jpg",
       "g3": true,
       "g4": true,
       "g5": true
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-10-08T02:53:51.031Z",
+      "updatedAt": "2026-10-08T04:19:28.406Z",
       "g2": true,
-      "selectedImage": "cut_06.jpeg",
+      "selectedImage": "cut_06_a.jpg",
       "g3": true,
       "g4": true,
       "g5": true
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-10-08T02:57:22.186Z",
+      "updatedAt": "2026-10-08T04:19:28.406Z",
       "g2": true,
-      "selectedImage": "cut_07.jpeg",
+      "selectedImage": "cut_07_b.jpg",
       "g3": true,
       "g4": true,
       "g5": true
     },
     "cut_8": {
       "g1": true,
-      "updatedAt": "2026-10-08T02:58:45.416Z",
+      "updatedAt": "2026-10-08T04:19:28.407Z",
       "g2": true,
-      "selectedImage": "cut_08.jpeg",
+      "selectedImage": "cut_08_b.jpg",
       "g3": true,
       "g4": true,
       "g5": true

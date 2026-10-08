@@ -57,11 +57,12 @@
   /* aspect-ratio는 JSX에서 인라인 스타일로 지정(9:16 숏폼 / 16:9 롱폼 토글) —
      파일의 실제 픽셀 비율에 의존하지 않고 사용자가 지정한 비율로 강제 표시 */
   border-radius: 8px; overflow: hidden; cursor: pointer;
-  border: 3px solid transparent; background: var(--bg-input);
+  border: 1.5px solid transparent; background: var(--bg-input);
   transition: border-color .15s;
 }
 .compareImg img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.compareImgSelected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+/* 컷 카드 "이미지 초기화" 버튼과 동일한 색 계열(rgba(239,68,68))로 통일 — 얇고 단순하게 */
+.compareImgSelected { border-color: #fca5a5; }
 
 .compareLetter {
   position: absolute; top: 6px; left: 6px;
@@ -78,13 +79,14 @@
   padding: 3px 6px; font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.6);
   background: transparent; border: none; cursor: pointer; transition: all .15s;
 }
-.ratioToggleActive { background: var(--accent) !important; color: #fff !important; }
+.ratioToggleActive { background: #ef4444 !important; color: #fff !important; }
 
+/* 배경을 없애 원본 이미지가 그대로 보이게 하고, 어떤 이미지 위에서도 읽히도록
+   검은 테두리(text-shadow 4방향)만 남긴다 */
 .selectedBadge {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  background: linear-gradient(0deg, rgba(124,58,237,.95), rgba(124,58,237,0));
-  color: #fff; font-size: 10.5px; font-weight: 700; text-align: center;
-  padding: 14px 4px 6px;
+  position: absolute; bottom: 6px; left: 0; right: 0;
+  color: #fca5a5; font-size: 10.5px; font-weight: 700; text-align: center;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 3px #000;
 }
 
 .compareRemove {

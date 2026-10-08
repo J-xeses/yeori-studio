@@ -7371,7 +7371,7 @@ app.post('/api/upload-cut-video', (req, res) => {
   const padded = String(cutNo).padStart(2, '0')
   const videoDir = mp.videoDir(epNum)
   fs.mkdirSync(videoDir, { recursive: true })
-  const { w: CW, h: CH } = episodeCutDims(epNum)   // 에피소드 화면비율(LF/SF=16:9)
+  const { w: CW, h: CH } = episodeCutDims(epNum)   // 에피소드 화면비율(LF만 16:9, 나머지 9:16)
   const fitMode = ['cover', 'contain', 'blur'].includes(fit) ? fit : 'cover'
   const tmpPath = path.join(videoDir, `cut_${padded}_upload_tmp.mp4`)
   const outPath = path.join(videoDir, `cut_${padded}.mp4`)

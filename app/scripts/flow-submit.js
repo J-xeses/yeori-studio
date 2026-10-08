@@ -79,7 +79,7 @@ async function main() {
   const model = job.model || 'Omni 1.1 Flash'
   const durationSec = job.durationSec || 8
   const maxCredits = job.maxCredits ?? 15
-  // 화면 비율: 지정이 없으면 콘텐츠 유형으로 판단(LF/SF 유튜브 = 16:9, IG/TK 릴스 = 9:16)
+  // 화면 비율: 지정이 없으면 콘텐츠 유형으로 판단(LF 유튜브 롱폼 = 16:9, SF/IG/TK 쇼츠·릴스 = 9:16)
   let ratio = job.ratio || null
 
   try {
@@ -89,7 +89,7 @@ async function main() {
   step(`컷 ${cutNo} 클립 ${clipNo} 준비`)
   const chk = await (await fetch(`${SERVER}/api/episode-video-checklist?epNum=${epNum}`)).json()
   const chkCut = (chk.cuts || []).find(c => c.no === cutNo)
-  if (!ratio) ratio = /^(LF|SF)/i.test(String(chk.contentType || '')) ? '16:9' : '9:16'
+  if (!ratio) ratio = /^LF/i.test(String(chk.contentType || '')) ? '16:9' : '9:16'
   if (!chkCut) throw new Error(`컷 ${cutNo}을(를) 찾지 못했습니다`)
   const st = await (await fetch(`${SERVER}/api/studio-state`)).json()
   const stCut = ((st.d || st).cuts || []).find(c => c.no === cutNo)

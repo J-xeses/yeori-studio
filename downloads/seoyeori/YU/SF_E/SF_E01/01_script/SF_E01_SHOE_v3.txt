@@ -448,20 +448,22 @@ conversational warm tone, holding glass lightly.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 7]  YR_VD — 진심 어린 시선 / 10초  ★립싱크
+[CUT 7]  YR_VD — 진심 어린 시선 / 16초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7-1]
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 집 거실 소파 / 카메라를 직시하며 진지한 감성 대사
 SP: IN.HM.TZ_NT.LT_WM
 PL: YR_VD
 CH: 서여리 / LK_HM.TOP_CRP(white square-neck).맨발
-DL: 근데~ 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나 지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든.
+DL: 그리고, 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나.......  
 NR: 없음
 SH: SH_ECU → SH_CU
 CA: CA_ST
 MD: MD_INT → MD_DRM
 AC: AT_SI_01 + AT_EM_04
 LOOK_ID: LOOK_HM
-DU: 10
+DU: 8
 오디오:
   BGM: 따뜻하고 진심 어린 BGM — 대사 시작 시 볼륨 낮추기
   음성: 장난스럽게 시작 → 조용하고 진지하게 마무리 — ★립싱크
@@ -477,7 +479,7 @@ SH(샷):       익스트림 클로즈업 → 클로즈업
 CA(카메라):   고정 / 아이레벨
 AC(동작):     소파에 앉아 살짝 앞으로 기울기 / 장난스럽다가 진지해지는 표정 전환
 MD(감정):     장난스럽게 시작해 진지하고 따뜻하게 마무리
-DL(대사):     "근데~ 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나 지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든."
+DL(대사):     "그리고, 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나..
 NR(나레이션): 없음
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -502,15 +504,74 @@ Photorealistic 8K cinematic natural Korean beauty
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: playful direct gaze, slight head tilt.
+First 0-1s: playful direct gaze, slight head tilt.
 
-Next 2-8s: she speaks —
-"근데~ 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~
-그래서 나 지금 되게 편해.
-하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든."
+Next 1-8s: she speaks —
+"그리고, 신발을 벗는다는 건, 진짜 내 모습으로 돌아오는 순간~ 그래서 나...
+
 voice starting playful then shifting quiet and sincere.
 
-Final 8-10s: warm sincere expression, quiet after speaking.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7-2]   
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 집 거실 소파 / 카메라를 직시하며 진지한 감성 대사
+SP: IN.HM.TZ_NT.LT_WM
+PL: YR_VD
+CH: 서여리 / LK_HM.TOP_CRP(white square-neck).맨발
+DL:  지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든.
+NR: 없음
+SH: SH_ECU → SH_CU
+CA: CA_ST
+MD: MD_INT → MD_DRM
+AC: AT_SI_01 + AT_EM_04
+LOOK_ID: LOOK_HM
+DU: 8
+오디오:
+  BGM: 따뜻하고 진심 어린 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 장난스럽게 시작 → 조용하고 진지하게 마무리 — ★립싱크
+  효과음: 없음
+  앰비언스: 조용한 거실 환경음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     집 거실 소파 / 저녁 / 부드러운 간접조명 보케 / 따뜻하고 친밀한 분위기
+CH(캐릭터):   흰색 스퀘어넥 크롭탑 + 맨발 + 골드 목걸이 / 자연스럽게 내린 헤어
+SH(샷):       익스트림 클로즈업 → 클로즈업
+CA(카메라):   고정 / 아이레벨
+AC(동작):     소파에 앉아 살짝 앞으로 기울기 / 장난스럽다가 진지해지는 표정 전환
+MD(감정):     장난스럽게 시작해 진지하고 따뜻하게 마무리
+DL(대사):     지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든."
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
+long wavy dark brown hair NOT short hair,
+a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
+delicate gold necklace,
+effortlessly photogenic not posing just existing beautifully,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+K-model proportions, small face, long legs, slender figure,
+natural makeup, warm skin tone, appearing no older than 22-23,
+white square-neck crop top,
+sitting on sofa leaning slightly forward,
+face clearly visible playful yet sincere expression gazing directly into camera with warm intimacy,
+warm soft-focus background gentle bokeh of indoor lamp light quiet intimate atmosphere,
+extreme close-up transitioning to close-up, eye level, vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-7s: she speaks —
+
+지금 되게 편해. 하이힐도, '인플루언서 서여리'도 현관에 두고 왔거든."
+
+last 7-8s: warm sincere expression, quiet after speaking.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 

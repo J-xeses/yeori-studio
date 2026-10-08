@@ -84,7 +84,7 @@ function blackSeconds(file) {
 
 function episodeRatio(ep) {
   if (ep?.aspectRatio) return ep.aspectRatio
-  return ['LF', 'SF'].includes(ep?.contentType) ? '16:9' : '9:16'
+  return ep?.contentType === 'LF' ? '16:9' : '9:16'
 }
 const ratioOk = (w, h, want) => { if (!w || !h) return false; const r = w / h; return want === '16:9' ? Math.abs(r - 16 / 9) < 0.03 : Math.abs(r - 9 / 16) < 0.03 }
 
