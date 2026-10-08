@@ -2108,7 +2108,7 @@ app.post('/api/scan-media', (req, res) => {
   if (fs.existsSync(imageDir)) {
     const filesByKey = {}
     fs.readdirSync(imageDir).sort().forEach(file => {
-      const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+      const m = file.match(/^cut_(\d+)(?:_[a-z0-9]{1,2})?\.(jpg|jpeg|png|webp)$/i)
       if (m) {
         const key = `cut_${String(parseInt(m[1], 10)).padStart(2, '0')}`
         ;(filesByKey[key] ??= []).push(file)
@@ -2825,7 +2825,7 @@ app.post('/api/run-flow', (req, res) => {
       const epDir = mp.imagesDir(episode)
       if (fs.existsSync(epDir)) {
         fs.readdirSync(epDir).sort().forEach(file => {
-          const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+          const m = file.match(/^cut_(\d+)(?:_[a-z0-9]{1,2})?\.(jpg|jpeg|png|webp)$/i)
           if (m) send({ type: 'cut_image', cutNo: parseInt(m[1], 10), url: `${mp.toMediaUrl(mp.imagesDir(episode))}/${file}` })
         })
       }
@@ -6781,7 +6781,7 @@ mcpRouter.get('/video-checklist', (req, res) => {
       const g = gData[`cut_${c.no}`] || {}
       const mode = serverCutVideoMode(c, ep.episode)
       const savedFile = vFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
-      const hasImage = !!(g.selectedImage || iFiles.find(f => new RegExp(`^cut_${p}(_[ab])?\\.(jpe?g|png|webp)$`, 'i').test(f)))
+      const hasImage = !!(g.selectedImage || iFiles.find(f => new RegExp(`^cut_${p}(_[a-z0-9]{1,2})?\\.(jpe?g|png|webp)$`, 'i').test(f)))
       return {
         no: c.no,
         cutType: c.cutType || 'YEORI',
@@ -7325,7 +7325,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
       // 시작 프레임 = G2에서 사람이 고른 이미지 우선, 없으면 cut_NN(_a).jpg
       let startFrame = null
       if (g.selectedImage && flowFiles.includes(g.selectedImage)) startFrame = g.selectedImage
-      if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[ab])?\\.(jpe?g|png|webp)$`, 'i').test(f))
+      if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[a-z0-9]{1,2})?\\.(jpe?g|png|webp)$`, 'i').test(f))
       // 다운스트림 소비자(run-cutter / assembleMakingFilm / concat-video)가 전부 이 파일명을 읽는다
       const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
       const targetSec = serverCutTargetDuration(c)
@@ -7831,7 +7831,7 @@ function scanFlowImagesByCut(epNum) {
   const byCut = {}
   if (fs.existsSync(dir)) {
     fs.readdirSync(dir).sort().forEach(file => {
-      const m = file.match(/^cut_(\d+)(?:_[ab])?\.(jpg|jpeg|png|webp)$/i)
+      const m = file.match(/^cut_(\d+)(?:_[a-z0-9]{1,2})?\.(jpg|jpeg|png|webp)$/i)
       if (m) {
         const no = parseInt(m[1], 10)
         if (!byCut[no]) byCut[no] = []
@@ -8750,7 +8750,7 @@ function buildStudioStatusPayload(episodeId) {
       no: c.no,
       g1: !!g.g1, g2: !!g.g2, g3: !!g.g3, g4: !!g.g4, g5: !!g.g5,
       selectedImage: g.selectedImage || null,
-      hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[ab])?\\.(jpg|jpeg|png|webp)$`, 'i')),
+      hasImage: hasFile(flowDir, new RegExp(`^cut_${padded}(_[a-z0-9]{1,2})?\\.(jpg|jpeg|png|webp)$`, 'i')),
       hasAudio: fs.existsSync(path.join(audioDir, `cut_${padded}.mp3`)) || fs.existsSync(path.join(audioDir, `cut_${padded}_nr.mp3`)),
       hasVideo: hasFile(videoDir, new RegExp(`^cut_${padded}(_final)?\\.mp4$`, 'i')),
       hasOverlayVideo: fs.existsSync(path.join(videoDir, `cut_${padded}_overlay.mp4`)),

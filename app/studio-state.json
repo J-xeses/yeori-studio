@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9138,7 +9138,7 @@
           "narration": "",
           "subtitle": "또 틀림 ㅋㅋㅋ",
           "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible), caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Shot from the friend's POV holding up her phone to film — only the friend's arm and the edge of her phone are visible at the bottom corner of the frame, her face and body out of frame, keeping full focus on the main character's dance move. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. No subtitles, no audio.",
-          "videoPrompt": "First 0-2s: Challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. / Next 2-4s: Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
+          "videoPrompt": "First 0-2s: Wide shot — challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. Her friend stands nearby holding up her phone, filming. / Next 2-4s: Camera pushes in toward the main character — the shot tightens until only the friend's arm and the edge of her phone remain visible at the frame's bottom corner, full focus now on the main character. Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Still in this close framing, both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
           "duration": 5,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -9168,6 +9168,11 @@
             "imagePrompt": {
               "value": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible), caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Shot from the friend's POV holding up her phone to film — only the friend's arm and the edge of her phone are visible at the bottom corner of the frame, her face and body out of frame, keeping full focus on the main character's dance move. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. No subtitles, no audio.",
               "at": "2026-10-08T12:44:18.872Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "videoPrompt": {
+              "value": "First 0-2s: Wide shot — challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. Her friend stands nearby holding up her phone, filming. / Next 2-4s: Camera pushes in toward the main character — the shot tightens until only the friend's arm and the edge of her phone remain visible at the frame's bottom corner, full focus now on the main character. Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Still in this close framing, both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
+              "at": "2026-10-08T13:14:57.586Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -9391,7 +9396,7 @@
       "narration": "",
       "subtitle": "또 틀림 ㅋㅋㅋ",
       "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible), caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Shot from the friend's POV holding up her phone to film — only the friend's arm and the edge of her phone are visible at the bottom corner of the frame, her face and body out of frame, keeping full focus on the main character's dance move. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. No subtitles, no audio.",
-      "videoPrompt": "First 0-2s: Challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. / Next 2-4s: Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
+      "videoPrompt": "First 0-2s: Wide shot — challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. Her friend stands nearby holding up her phone, filming. / Next 2-4s: Camera pushes in toward the main character — the shot tightens until only the friend's arm and the edge of her phone remain visible at the frame's bottom corner, full focus now on the main character. Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Still in this close framing, both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
       "duration": 5,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -9421,6 +9426,11 @@
         "imagePrompt": {
           "value": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible), caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Shot from the friend's POV holding up her phone to film — only the friend's arm and the edge of her phone are visible at the bottom corner of the frame, her face and body out of frame, keeping full focus on the main character's dance move. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. No subtitles, no audio.",
           "at": "2026-10-08T12:44:18.872Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "videoPrompt": {
+          "value": "First 0-2s: Wide shot — challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. Her friend stands nearby holding up her phone, filming. / Next 2-4s: Camera pushes in toward the main character — the shot tightens until only the friend's arm and the edge of her phone remain visible at the frame's bottom corner, full focus now on the main character. Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Still in this close framing, both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
+          "at": "2026-10-08T13:14:57.586Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -9585,7 +9595,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-08T12:54:59.093Z",
+  "savedAt": "2026-10-08T13:14:32.079Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
