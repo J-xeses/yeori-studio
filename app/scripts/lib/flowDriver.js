@@ -568,9 +568,10 @@ export function flowKit(page) {
       return page.evaluate(() => ({
         srcs: [...document.querySelectorAll('img')].filter(i => i.getBoundingClientRect().width > 80 && /flow-content\.google\/image\//.test(i.currentSrc || i.src)).map(i => i.currentSrc || i.src),
         progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).length,
+        abuse: /비정상적인 활동이 감지/.test(document.body.innerText),
       }))
     },
-    // before: 전송 전 imageSnapshot().  결과: { status:'done', srcs:[새 타일…] } | { status:'timeout' }
+    // before: 전송 전 imageSnapshot().  결과: { status:'done', srcs:[새 타일…] } | { status:'failed', abuse, reason } | { status:'timeout' }
     async waitForImages(before, count, { timeoutMs = 4 * 60 * 1000, intervalMs = 3000, onTick } = {}) {
       const seen = new Set(before.srcs)
       const t0 = Date.now()
@@ -579,6 +580,7 @@ export function flowKit(page) {
         const s = await this.imageSnapshot()
         const fresh = s.srcs.filter(x => !seen.has(x))
         if (onTick) onTick({ sec: Math.round((Date.now() - t0) / 1000), fresh: fresh.length, progress: s.progress })
+        if (s.abuse && !before.abuse) return { status: 'failed', abuse: true, reason: 'Flow가 "비정상적인 활동이 감지되었습니다"라고 표시했습니다 — 자동 제출을 중단합니다(요금 미청구)' }
         calm = (fresh.length >= count && s.progress === 0) ? calm + 1 : 0
         if (calm >= 2) return { status: 'done', srcs: fresh.slice(0, count) }
         await sleep(intervalMs)

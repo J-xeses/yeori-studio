@@ -80,6 +80,10 @@ async function main() {
   const model = job.model || 'Nano Banana 2'
   const maxPerDay = job.maxPerDay ?? 180
   const minIntervalSec = job.minIntervalSec ?? 20
+  try {
+    const blk = JSON.parse(fs.readFileSync(mp.statePath('flow-image-blocked.json'), 'utf-8'))
+    if (!job.ignoreBlock) throw new Error(`Flow 자동 이미지 생성이 잠겨 있습니다(${blk.at}): ${blk.reason} — 확인 후 downloads/state/flow-image-blocked.json 을 지우면 풀립니다`)
+  } catch (e) { if (String(e.message).startsWith('Flow 자동 이미지 생성이 잠겨')) throw e }
   if (!episodeCode || !cutNos.length) throw new Error('episodeCode, cutNos 필요')
 
   const st = await (await fetch(`${SERVER}/api/studio-state`)).json()
@@ -117,7 +121,7 @@ async function main() {
     const extra = (job.extraRefs || []).map(r => path.resolve(String(r))).filter(r => r.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase()) && fs.existsSync(r))
     if ((job.extraRefs || []).length !== extra.length) throw new Error('extraRefs 는 downloads 폴더 안의 존재하는 파일이어야 합니다')
     const allRefs = [...refs, ...extra]
-    const roleNote = extra.length ? ' The first attached image is the reference face; the other attached image(s) are the outfit and overall look reference — keep the same cream oversized knit top style, jewelry and natural styling, while following the pose and scene described above.' : ''
+    const roleNote = extra.length ? ' The first attached image is the reference face; the other attached image(s) are the outfit/room reference — match their clothing, hairstyle, and background/furniture exactly, while following the pose and scene described above.' : ''
     const prompt = descriptorText ? `${base}\n\n[Character consistency — the attached image is the reference face. Keep the face identical to it:]\n${descriptorText}${roleNote}` : base + roleNote
     const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^LF_/.test(episodeCode) ? '16:9' : '9:16')
     plan.push({ no, prompt, refs: allRefs, ratio, ids })
@@ -162,6 +166,11 @@ async function main() {
       step(`컷 ${p.no}: 전송(오늘 ${u2.count}/${maxPerDay}장) — 생성 대기`)
       await sleep(3000)
       const res = await kit.waitForImages(before, count, { onTick: (s) => { if (s.sec % 15 === 0) step(`컷 ${p.no}: 생성 중… ${s.sec}초 (새 타일 ${s.fresh}/${count})`) } })
+      if (res.status === 'failed') {
+        // Flow가 "비정상적인 활동" 경고를 띄우면 자동 생성을 잠시 막는다(flow-submit.js와 동일 패턴) — 사람이 확인한 뒤 파일을 지우면 풀린다.
+        if (res.abuse) { try { fs.writeFileSync(mp.statePath('flow-image-blocked.json'), JSON.stringify({ at: new Date().toISOString(), reason: res.reason, jobId: job.jobId, cutNo: p.no }, null, 2), 'utf-8') } catch { /* noop */ } }
+        throw new Error(res.reason)
+      }
       if (res.status !== 'done') throw new Error(`컷 ${p.no}: 4분 안에 ${count}장이 나오지 않았습니다(Flow 화면을 확인하세요)`)
       const slots = nextSlots(imgDir, p.no, res.srcs.length)
       // 타일은 최신이 앞쪽 — 화면 순서 그대로 a, b… 로 배정
