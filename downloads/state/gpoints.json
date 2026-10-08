@@ -946,33 +946,38 @@
   "SF_E109": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-10-08T11:45:12.547Z",
+      "updatedAt": "2026-10-08T13:43:14.264Z",
       "g2": true,
-      "selectedImage": "cut_01_a.jpg"
+      "selectedImage": "cut_01_a.jpg",
+      "g3": true
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-10-08T11:45:12.547Z",
+      "updatedAt": "2026-10-08T13:43:14.264Z",
       "g2": true,
-      "selectedImage": "cut_02_a.jpg"
+      "selectedImage": "cut_02_a.jpg",
+      "g3": true
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:13:53.667Z",
+      "updatedAt": "2026-10-08T13:43:14.264Z",
       "g2": true,
-      "selectedImage": "cut_03_c.jpg"
+      "selectedImage": "cut_03_c.jpg",
+      "g3": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:13:57.356Z",
+      "updatedAt": "2026-10-08T13:43:14.264Z",
       "g2": true,
-      "selectedImage": "cut_04_a.jpg"
+      "selectedImage": "cut_04_a.jpg",
+      "g3": true
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:27:48.143Z",
+      "updatedAt": "2026-10-08T13:43:14.264Z",
       "g2": true,
-      "selectedImage": "cut_05_c.jpg"
+      "selectedImage": "cut_05_c.jpg",
+      "g3": true
     }
   }
 }
