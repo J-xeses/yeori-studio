@@ -163,7 +163,22 @@ export function flowKit(page) {
     return null
   }, text, match, sel)
 
-  const clickAt = async (pos) => { await page.mouse.click(pos.x, pos.y); await sleep(900) }
+  // 2026-10-08: 기존엔 좌표로 순간이동(move 없이 click)해서 매번 버튼 정중앙을 정확히, 0ms 만에
+  // 눌렀음 — 사람 클릭과 달리 이동 경로·타이밍 편차가 전혀 없는 뚜렷한 패턴. 스크립트로 "생성"을
+  // 누른 두 번은 Flow가 "비정상적인 활동"으로 막았는데 사람이 직접 누른 한 번은 통과한 걸 보고
+  // (성준님 2026-10-08 실측), 클릭 메커니즘을 사람 손 움직임에 더 가깝게 바꿔본다 — 원인이
+  // 이것 하나라고 확정할 순 없지만(간격·빈도도 같이 의심됨) 비용 없는 개선이라 적용.
+  const jitter = (n) => Math.round((Math.random() - 0.5) * n)
+  const clickAt = async (pos) => {
+    const x = pos.x + jitter(12), y = pos.y + jitter(8)
+    // 어딘가 근처(실제 이전 좌표는 모르니 대략적인 출발점)에서 목표까지 여러 스텝으로 이동 —
+    // 순간이동 대신 궤적을 남겨서 "클릭 직전까지 멈춰있다 찍은" 패턴을 피한다.
+    await page.mouse.move(x + jitter(260) + 120, y + jitter(160) + 60)
+    await page.mouse.move(x, y, { steps: 12 + Math.floor(Math.random() * 10) })
+    await sleep(120 + Math.random() * 280)
+    await page.mouse.down(); await sleep(40 + Math.random() * 90); await page.mouse.up()
+    await sleep(700 + Math.random() * 500)
+  }
   const click = async (text, match = 'exact', sel) => {
     const pos = await rectOf(text, match, sel)
     if (!pos) throw new Error(`Flow 화면에서 "${text}" 요소를 찾지 못했습니다`)
@@ -568,7 +583,9 @@ export function flowKit(page) {
       return page.evaluate(() => ({
         srcs: [...document.querySelectorAll('img')].filter(i => i.getBoundingClientRect().width > 80 && /flow-content\.google\/image\//.test(i.currentSrc || i.src)).map(i => i.currentSrc || i.src),
         progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).length,
-        abuse: /비정상적인 활동이 감지/.test(document.body.innerText),
+        // "활동이 감지되었습니다"(배너)·"활동 감지됨"(타일 배지) 둘 다 잡도록 완화(2026-10-08,
+        // 영상 쪽에서 좁은 정규식이 타일 배지를 못 잡아 실패를 성공으로 오보고한 사고 이후 통일 수정).
+        abuse: /비정상적인\s*활동.{0,6}감지/.test(document.body.innerText),
       }))
     },
     // before: 전송 전 imageSnapshot().  결과: { status:'done', srcs:[새 타일…] } | { status:'failed', abuse, reason } | { status:'timeout' }
@@ -676,12 +693,28 @@ export function flowKit(page) {
     // 키 = 그 타일의 img 또는 video 주소. 호버로 바뀌지 않게 스냅샷 전에 마우스를 구석으로 치운다.
     async mediaSnapshot() {
       try { await page.mouse.move(2, 2) } catch { /* noop */ }
-      return page.evaluate(() => ({
-        thumbs: [...document.querySelectorAll('flow-video-tile')].map(t => { const i = t.querySelector('img'), v = t.querySelector('video'); return (i && (i.currentSrc || i.src)) || (v && (v.currentSrc || v.src)) || '' }).filter(Boolean),
-        fails: (document.body.innerText.match(/이 생성에 대한 요금이 청구되지 않았습니다/g) || []).length,
-        abuse: /비정상적인 활동이 감지/.test(document.body.innerText),
-        progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).slice(0, 3),
-      }))
+      return page.evaluate(() => {
+        const tiles = [...document.querySelectorAll('flow-video-tile')]
+        // 2026-10-08 발견: 타일 자체에 "실패 / 비정상적인 활동 감지됨" 배지가 뜨는 경우가 있는데,
+        // 이건 이전 waitForResult 로직이 "새 타일이 생김 + 진행률 사라짐"만 보고 성공으로 오판했던
+        // 사고(성준님 실측 — Flow 화면엔 실패 타일 2개가 떠 있는데 스크립트는 "생성 완료"라고 보고함).
+        // 타일 단위로 실패 여부를 같이 읽어서, 새로 생긴 타일이 실패 타일이면 성공 취급하지 않는다.
+        const thumbs = tiles.map(t => {
+          const i = t.querySelector('img'), v = t.querySelector('video')
+          const src = (i && (i.currentSrc || i.src)) || (v && (v.currentSrc || v.src)) || ''
+          const failed = /실패/.test(t.textContent || '')
+          return { src, failed }
+        }).filter(x => x.src)
+        return {
+          thumbs: thumbs.map(x => x.src),
+          failedThumbs: thumbs.filter(x => x.failed).map(x => x.src),
+          fails: (document.body.innerText.match(/이 생성에 대한 요금이 청구되지 않았습니다/g) || []).length,
+          // "활동이 감지되었습니다"(배너)와 "활동 감지됨"(타일 배지) 두 표현 다 잡도록 완화(2026-10-08,
+          // 좁은 정규식이 타일 배지를 못 잡아 실패를 성공으로 오보고한 사고 이후 수정).
+          abuse: /비정상적인\s*활동.{0,6}감지/.test(document.body.innerText),
+          progress: (document.body.innerText.match(/[0-9]+\s*%/g) || []).slice(0, 3),
+        }
+      })
     },
     // before: 전송 전 mediaSnapshot(). 결과: { status: 'done', thumbSrc } | { status: 'failed', reason } | { status: 'timeout' }
     async waitForResult(before, { timeoutMs = 6 * 60 * 1000, intervalMs = 4000, onTick, shouldStop } = {}) {
@@ -698,6 +731,11 @@ export function flowKit(page) {
         // 예전 타일을 새 결과로 오인한다 — 2026-09-25 IG_R05 컷3 이 컷1 영상을, 컷5 가 컷3 영상을 받아 한 칸씩 밀린 사고.
         // → 맨 앞 타일이 새것이고, 진행률(%) 표시가 사라졌을 때만 완료로 본다.
         const head = snap.thumbs[0]
+        // 2026-10-08: 새로 생긴 맨 앞 타일이 실패 배지("실패")를 달고 있으면 완료가 아니라 실패다 —
+        // 전엔 "새 타일 생김 + 진행률 없음"만 보고 성공으로 오판해서, 실제로는 실패한 타일을 "생성
+        // 완료"로 잘못 보고한 사고가 있었음(성준님 실측 발견, 2026-10-08).
+        const headFailed = head && (snap.failedThumbs || []).includes(head)
+        if (headFailed) return { status: 'failed', reason: '결과 타일이 실패 상태입니다(Flow 화면의 "실패" 배지, 요금 미청구 여부는 화면에서 직접 확인 필요)' }
         if (head && !seen.has(head) && !(snap.progress || []).length) return { status: 'done', thumbSrc: head, tileIndex: 0 }
         await sleep(intervalMs)
       }
