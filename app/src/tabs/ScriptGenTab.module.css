@@ -288,6 +288,7 @@
 }
 /* 씬/대사/나레이션: 칸을 넘기면 줄바꿈 대신 가로 스크롤(2026-10-08, 성준님 요청) */
 .cutListScroll {
+  font-size: 11.5px; color: var(--text-2);
   white-space: nowrap; overflow-x: auto; overflow-y: hidden;
   padding-top: 1px; scrollbar-width: thin;
 }
