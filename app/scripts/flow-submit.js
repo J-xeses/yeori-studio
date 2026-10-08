@@ -165,6 +165,11 @@ ${REGISTERS[reg].delivery}`
   const kit = flowKit(page)
   try {
     if (emulated) step('Flow 창이 작아 화면 크기를 임시 보정')
+    // 직전 생성 결과를 사람이 직접 보고 있던 탭을 그대로 재사용하면(예: 방금 다른 클립을 수동
+    // 생성·확인한 직후) 결과 뷰어 화면이라 프롬프트 바/설정 요약 버튼이 없어 이후 단계가 전부
+    // "찾지 못함"으로 실패한다(2026-10-08 실제 발생) — flow-image.js는 이미 매 컷마다
+    // backToList()를 부르는데 이 스크립트엔 빠져 있었다. 목록/편집 화면으로 복귀해 둔다.
+    await kit.backToList()
     await kit.setVideoMode()
     await kit.setModel(model)
     await kit.setRatio(ratio)
