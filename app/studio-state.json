@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9819,12 +9819,12 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T01:45:36.731Z",
+  "savedAt": "2026-10-09T01:56:59.572Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/513d0ba2-5924-4cdd-8f72-7fd4c77bb53b",
+          "url": "blob:http://localhost:5173/b73d20e7-572e-4f59-a9a4-b5f885398d88",
           "name": "cut_01.mp4",
           "duration": 6,
           "trimStart": 0,
@@ -9833,14 +9833,22 @@
           "ratio": "9:16",
           "staging": false,
           "keepAudio": false,
-          "createdAt": 1791509734240,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_1.mp4"
+          "createdAt": 1791510468723,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791510539888.mp4"
         }
       ]
     },
     "g4Approved": {},
     "selectedCutId": "cut-1",
-    "subtitles": {}
+    "subtitles": {
+      "cut-1": [
+        {
+          "start": 0,
+          "end": 6,
+          "text": "단톡방 레전드 됨 ㅋㅋ"
+        }
+      ]
+    }
   },
   "ttsTabState": {
     "audioUrls": {},

@@ -1447,16 +1447,29 @@ export default function VideoTab() {
                 const ratio = tempVideo.videoWidth && tempVideo.videoHeight
                   ? (tempVideo.videoWidth >= tempVideo.videoHeight ? '16:9' : '9:16')
                   : undefined
-                setVideoClips(p => ({
-                  ...p,
-                  [cut.id]: [...(p[cut.id] || []), {
-                    url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
-                    duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio, createdAt: Date.now(),
-                    // stagedPath가 없으면 파일이 실제로 만들어졌어도 "⚠ 서버 미반영"으로 잘못
-                    // 표시됨(2026-09-18, 사용자 실측 — 컷20) — 서버가 내려준 절대경로를 그대로 채움.
-                    stagedPath: ev.outputPath,
-                  }],
-                }))
+                const narratedClip = {
+                  url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
+                  duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio, createdAt: Date.now(),
+                  // stagedPath가 없으면 파일이 실제로 만들어졌어도 "⚠ 서버 미반영"으로 잘못
+                  // 표시됨(2026-09-18, 사용자 실측 — 컷20) — 서버가 내려준 절대경로를 그대로 채움.
+                  stagedPath: ev.outputPath,
+                  keepAudio: true,   // 이 클립의 존재 이유가 나레이션 오디오라 합성 때 반드시 살려야 함
+                }
+                // 2026-10-09 발견(성준님 실측, SF_E109 컷1): 비릴스 컷은 버튼 안내문구("...
+                // cut_NN.mp4 위에 나레이션·효과음만 입힙니다")가 "바로 적용된다"는 뜻으로 읽히지만,
+                // 실제로는 06_publishing/에 결과만 쓰고 05_video/cut_NN.mp4는 그대로였음 — 최종
+                // 합성본·완성본 업로드가 전부 이 파일을 읽으므로 "나레이션이 전혀 안 들린다"는
+                // 증상으로 나타남. 원래 의도된 경로는 "이 결과를 클립 목록에 추가 → 클립 합성을
+                // 한 번 더 눌러야" 였는데 그 안내가 전혀 없었다. 비릴스는 여기서 바로 클립 목록을
+                // 이 나레이션 클립 하나로 교체(기존 영상 클립과 이어붙으면 내용이 중복 재생됨)하고
+                // 자동으로 클립 합성까지 이어서 돌려, 버튼 문구가 약속한 "바로 입혀짐"을 실제로
+                // 맞춘다. 릴스는 기존 동작(추가만, 최종본은 메이킹 탭이 따로 조립) 그대로 유지.
+                if (isReel) {
+                  setVideoClips(p => ({ ...p, [cut.id]: [...(p[cut.id] || []), narratedClip] }))
+                } else {
+                  setVideoClips(p => ({ ...p, [cut.id]: [narratedClip] }))
+                  setTimeout(() => renderCutClips(cut), 150)
+                }
               } else {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
                 setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${ev.message}` }))
