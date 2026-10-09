@@ -242,7 +242,14 @@ export function buildClipPrompt(cut, k, n) {
     const parts = computeCaptionTimeline(cut)
     const segs = splitSpeakerSegments(dl)
     speakers = segs.map(s => s.speaker).filter(Boolean)
+    // 2026-10-09 (성준님: "앞부분 대사가 끝나자마자 바로 이어지지 않는 상황... 간격을 1초정도
+    // 두고 연출될 상황도 있잖아!") — 구간 쌍이 서로 독립적이라 사이에 공백(무음)이 생길 수
+    // 있다. 그 공백도 명시하지 않으면 Veo가 공백 구간에 뭘 해야 할지 몰라 임의로 채운다.
+    let prevEnd = 0
     for (const p of parts) {
+      if (p.start > prevEnd + 0.05) {
+        prompt += `\n\n${prevEnd.toFixed(1)}-${p.start.toFixed(1)}s: no one speaks, mouth stays closed in a natural neutral/resting shape.`
+      }
       const s0 = p.start.toFixed(1), s1 = p.end.toFixed(1)
       if (p.kind === 'dialogue') {
         const who = p.speaker ? (CHAR_EN[p.speaker] || p.speaker) : 'She'
@@ -250,6 +257,10 @@ export function buildClipPrompt(cut, k, n) {
       } else {
         prompt += `\n\n${s0}-${s1}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking. The line "${p.text}" is narration audio added afterward, not something she says on camera.`
       }
+      prevEnd = p.end
+    }
+    if (prevEnd < dur - 0.05) {
+      prompt += `\n\n${prevEnd.toFixed(1)}-${dur.toFixed(1)}s: no one speaks, mouth stays closed in a natural neutral/resting shape.`
     }
     prompt += `\n\nNo on-screen subtitle text or captions.`
     const anchors = segs.length ? voiceAnchors(cut, speakers) : []
@@ -300,8 +311,32 @@ export function buildClipPrompt(cut, k, n) {
     } else {
       prompt += `\n\nOnly the quoted line above is spoken in this clip. No on-screen subtitle text or captions.`
     }
+    // 2026-10-09 (성준님 실측: "나레이션 5~8s, 립싱크 삭제, 입모양 움직임 없음 조건을 뚜렷이
+    // 달았을 때 제대로 생성됐다"): 나레이션 없이 대사만 있는 단일 클립도, 그 대사가 전체 구간을
+    // 안 채우면(예: 1.5~6s만 말하고 앞뒤는 침묵) 몇 초에 시작·끝나는지 명시해야 립싱크가 그
+    // 구간에만 걸린다. cut.captionSegTiming(단일쌍 [[start,end]])로 사람이 직접 지정 가능.
+    if (n === 1 && !multi) {
+      const durW = Math.max(1, Number(cut.duration) || 8)
+      const timelineW = computeCaptionTimeline(cut)
+      const win = timelineW.length === 1 ? timelineW[0] : null  // 다중 화자 턴(복수 파트)엔 적용 안 함 — 단일 블록만
+      if (win && (win.start > 0.05 || win.end < durW - 0.05)) {
+        const s0 = win.start.toFixed(1), s1 = win.end.toFixed(1)
+        const before = win.start > 0.05 ? `0-${s0}s: no one speaks yet, mouth stays closed in a natural neutral/resting shape. ` : ''
+        const after = win.end < durW - 0.05 ? ` ${s1}-${durW.toFixed(1)}s: she has finished speaking, mouth returns to closed/neutral, no more lip movement.` : ''
+        prompt += `\n\n${before}${s0}-${s1}s (DIALOGUE, lip-synced): only during this window do her lips move in sync with the line above.${after}`
+      }
+    }
   } else if (isNarration) {
-    prompt += `\n\nNO dialogue — narration is added in post; she does not move her lips to speak. No on-screen subtitle text or captions.`
+    const durN = Math.max(1, Number(cut.duration) || 8)
+    const winN = computeCaptionTimeline(cut)[0]
+    if (winN && (winN.start > 0.05 || winN.end < durN - 0.05)) {
+      const s0 = winN.start.toFixed(1), s1 = winN.end.toFixed(1)
+      const before = winN.start > 0.05 ? `0-${s0}s: no narration yet, she is silent, mouth closed/neutral. ` : ''
+      const after = winN.end < durN - 0.05 ? ` ${s1}-${durN.toFixed(1)}s: narration has ended, mouth stays closed/neutral.` : ''
+      prompt += `\n\n${before}${s0}-${s1}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking.${after} No on-screen subtitle text or captions.`
+    } else {
+      prompt += `\n\nNO dialogue — narration is added in post; she does not move her lips to speak. No on-screen subtitle text or captions.`
+    }
   } else {
     // 대사도 나레이션도 없는 무성 컷(예: IG_R06 컷2 춤 챌린지) — 예전엔 여기 아무 지시도 안 붙어서
     // Veo가 임의로 화면에 자막을 태우는 사고가 났다(2026-09-28 실측, 성준님 지적).

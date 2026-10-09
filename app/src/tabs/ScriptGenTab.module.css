@@ -334,6 +334,8 @@
   border: 1px solid var(--border); background: var(--bg-input); color: var(--text-1);
   text-align: center;
 }
+.cutTimelinePairGroup { display: inline-flex; align-items: center; gap: 2px; padding: 0 3px; border-radius: 4px; background: var(--bg-2, rgba(255,255,255,.04)); }
+.cutTimelineEditSep { font-size: 9px; color: var(--text-3); }
 .cutTimelineResetBtn {
   margin-left: auto; font-size: 9.5px; padding: 1px 6px; border-radius: 4px;
   border: 1px solid var(--border); background: transparent; color: var(--text-3); cursor: pointer;

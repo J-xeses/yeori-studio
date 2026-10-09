@@ -6,6 +6,7 @@ import { resolveEpisodeCode } from '../lib/episodeCode'
 import { resolveVideoPolicy, VIDEO_MODES, contentRatio } from '../lib/videoPolicy'
 import { epMediaUrl } from '../lib/mediaPaths'
 import { splitSpeakerSegments } from '../lib/ttsText'
+import { computeCaptionTimeline } from '../lib/vpDialogue'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import DiagnosisPanel from '../components/DiagnosisPanel'
@@ -351,7 +352,10 @@ export default function VideoTab() {
   const { cuts, videoSettings, renderProgress, episode } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
   const episodeCode = resolveEpisodeCode(episode)
-  const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor } = videoSettings
+  // 2026-10-09: subtitlePosition도 font/fontSize처럼 videoSettings(persisted)에서 읽는다 —
+  // 전엔 로컬 useState('middle')뿐이라, 편집창에서 "위치" 버튼을 눌러도 새로고침/탭이동하면
+  // 사라지고 최종 결과물에도 전혀 반영되지 않았음(성준님 지적: "자막 위치설정 기능도 아직 안되고").
+  const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor, subtitlePosition = 'bottom' } = videoSettings
   const canvasRef = useRef(null)
   const textareaRef = useRef(null)
   const [renderLog, setRenderLog] = useState([])
@@ -393,7 +397,6 @@ export default function VideoTab() {
     return rs.reduce((a, b) => (rank[b.verdict] > rank[a.verdict] ? b : a))
   }
   const QA_ICON = { ok: '🎙✅', warn: '🎙⚠️', fail: '🎙❌' }
-  const [subtitlePosition, setSubtitlePosition] = useState('middle')
   const [selectedClipIdx, setSelectedClipIdx] = useState(0)
   const [videoGenStatus, setVideoGenStatus] = useState({})
   const [videoGenLog, setVideoGenLog] = useState({})
@@ -753,12 +756,12 @@ export default function VideoTab() {
   // 미리보기는 그 사실 자체를 몰랐던 것. 둘 다 있으면 같은 비례 분배로 2구간을 직접 만든다.
   const dlText = !isReel ? stripMeta(selCutForText?.dialogue || '') : ''
   const nrText = !isReel ? stripMeta(selCutForText?.narration || '') : ''
+  // ⚠️ 2026-10-09: 예전엔 여기서 대사+나레이션 2구간을 직접 proportional로 계산해
+  // cut.captionSegTiming(수동 수정값)을 무시했음 — ScriptGenTab 전체목록/실제 생성 프롬프트
+  // (clipPrompt.js)는 둘 다 computeCaptionTimeline()을 거쳐 override를 반영하는데, 이 바만
+  // 따로 계산해서 "수정해도 바가 원상태로 보이는" 증상의 원인이었다. 하나로 통일.
   const bothFallbackSegs = (dlText && nrText && selCutForText)
-    ? (() => {
-        const dur = Math.max(1, Number(selCutForText.duration) || 8)
-        const dlSec = Math.min(dur - 0.5, Math.max(0.5, +(dur * dlText.length / (dlText.length + nrText.length)).toFixed(1)))
-        return [{ start: 0, end: dlSec, text: dlText }, { start: dlSec, end: dur, text: nrText }]
-      })()
+    ? computeCaptionTimeline(selCutForText).map(p => ({ start: p.start, end: p.end, text: p.text }))
     : null
   const effCaption = selCutForText ? effectiveCaptionValue(subtitles, selCutForText, clipsForText) : undefined
   const segsForText = selCutForText
@@ -2202,7 +2205,7 @@ export default function VideoTab() {
                               return (
                               <button key={pos}
                                 className={`${s.posBtn} ${active ? s.posBtnActive : ''}`}
-                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.74 : pos === 'middle' ? 0.82 : null }); else setSubtitlePosition(pos) }}>
+                                onClick={(e) => { e.stopPropagation(); if (isReel) setReelStyle({ y: pos === 'top' ? 0.74 : pos === 'middle' ? 0.82 : null }); else { set({ subtitlePosition: pos }); flushSave() } }}>
                                 {pos === 'top' ? '상단' : pos === 'middle' ? '중앙' : '하단'}
                               </button>
                               )
@@ -2653,10 +2656,10 @@ export default function VideoTab() {
                   )}
                   <button
                     className={s.aiGenBtn}
-                    disabled={videoGenStatus[selCut.id] === 'running'}
-                    title="Flow/Veo 자동화는 2026-09-02에 폐기됨 — 외부에서 수동 제작 후 업로드 권장"
+                    disabled
+                    title="폐기됨(2026-09-02) — imagePrompt만 보내고 clipPrompt(대사/나레이션 구간·립싱크 억제 지시)를 전혀 거치지 않아 눌러도 그 내용이 반영되지 않음. 'Flow용 프롬프트 복사' 버튼의 clipPrompt를 Flow에 직접 붙여넣을 것"
                     onClick={() => generateVideoForCut(selCut)}>
-                    {videoGenStatus[selCut.id] === 'running' ? '⏳ 생성 중…' : '✨ AI 영상 생성 (레거시)'}
+                    ✨ AI 영상 생성 (레거시, 비활성화됨)
                   </button>
                   <button
                     className={s.composeBtn}

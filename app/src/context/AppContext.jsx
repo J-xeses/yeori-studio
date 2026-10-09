@@ -68,7 +68,7 @@ const defaultState = {
     speakerSettings: {}, // { '한지아': { speed, stability, similarity } } — 화자별 미세조정 (전 컷 공통)
     readingMap: {},      // { 'LE SSERAFIM': '르세라핌' } — 읽기 교정 (TTS 전용, 기본 사전 위에 덮어씀)
   },
-  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000' },
+  videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000', subtitlePosition: 'bottom' },
   renderProgress: { current: 0, total: 0, isRendering: false },
   thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '' },
   publishing: {

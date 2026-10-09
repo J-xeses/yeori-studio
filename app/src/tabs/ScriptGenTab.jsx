@@ -66,6 +66,27 @@ function timelineSegLabel(seg) {
   return seg.speaker ? `대사·${seg.speaker}` : '대사'
 }
 
+// 2026-10-09 (성준님: "시간이 각각 쌍으로 설정이 되어야 하는데 왜 뒤의 대사, 나레이션은 시작,
+// 종료가 없나? 앞의 대사와 간격을 1초정도 두고 연출될 상황도 있잖아!") — 처음엔 구간 경계를
+// "공유점"(경계 N+1개)으로 만들어서 대사·나레이션이 항상 딱 붙게 강제됐었다. 그래선 둘 사이에
+// 의도적인 공백(무음 간격)을 둘 수 없다 — 각 구간의 시작·끝을 완전히 독립된 [start,end] 쌍으로
+// 따로 편집한다. 이웃 구간을 "넘어가며 겹치는" 것만 막고, 간격(gap)은 자유롭게 허용.
+function commitTimelinePair(dispatch, flushSave, cutId, timeline, dur, idx, which, rawVal) {
+  const pairs = timeline.map(p => [p.start, p.end])
+  const v = isNaN(rawVal) ? pairs[idx][which === 'start' ? 0 : 1] : rawVal
+  if (which === 'start') {
+    const lo = idx === 0 ? 0 : pairs[idx - 1][1]       // 이전 구간 끝보다 앞으로는 못 감(겹침 방지) — 간격은 자유
+    const hi = pairs[idx][1] - 0.1
+    pairs[idx][0] = Math.min(Math.max(v, lo), Math.max(lo, hi))
+  } else {
+    const hi = idx === pairs.length - 1 ? dur : pairs[idx + 1][0]   // 다음 구간 시작보다 못 넘어감 — 간격은 자유
+    const lo = pairs[idx][0] + 0.1
+    pairs[idx][1] = Math.max(Math.min(v, hi), Math.min(lo, hi))
+  }
+  dispatch({ type: 'UPDATE_CUT', id: cutId, p: { captionSegTiming: pairs.map(([s, e]) => [+s.toFixed(2), +e.toFixed(2)]) } })
+  flushSave()
+}
+
 function getRunFlags(cut) {
   switch (cut.cutType || 'YEORI') {
     case 'BROLL':
@@ -2268,24 +2289,23 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                           실제 생성 프롬프트(buildClipPrompt, 같은 필드를 읽도록 다음 단계에서
                           연결 예정)와 같은 저장소라 화면이 어긋나지 않는다. */}
                       <div className={s.cutTimelineEditRow}>
-                        <span className={s.cutTimelineEditLabel}>0.0s</span>
-                        {timeline.slice(0, -1).map((seg, si) => (
-                          <input key={si} type="number" step="0.1" min={0.1} max={dur - 0.1}
-                            className={s.cutTimelineEditInput}
-                            defaultValue={seg.end}
-                            title={`"${timelineSegLabel(seg)}" 종료 / "${timelineSegLabel(timeline[si + 1])}" 시작 시점(초)`}
-                            onBlur={(e) => {
-                              const v = Math.min(dur - 0.1, Math.max(0.1, parseFloat(e.target.value) || seg.end))
-                              const bounds = [0, ...timeline.slice(0, -1).map((s2, i2) => i2 === si ? v : s2.end), dur]
-                              // 경계 단조증가 보정(앞뒤 경계를 넘어가게 입력하면 밀어내지 않고 그 경계에 붙임)
-                              for (let k = 1; k < bounds.length; k++) if (bounds[k] <= bounds[k - 1]) bounds[k] = bounds[k - 1] + 0.1
-                              const pairs = timeline.map((_, i2) => [bounds[i2], bounds[i2 + 1]])
-                              dispatch({ type: 'UPDATE_CUT', id: c.id, p: { captionSegTiming: pairs } })
-                              flushSave()
-                            }}
-                          />
+                        {timeline.map((seg, si) => (
+                          <span key={si} className={s.cutTimelinePairGroup} title={timelineSegLabel(seg)}>
+                            <input type="number" step="0.1" min={0} max={dur}
+                              className={s.cutTimelineEditInput}
+                              defaultValue={seg.start}
+                              title={`"${timelineSegLabel(seg)}" 시작(초)`}
+                              onBlur={(e) => commitTimelinePair(dispatch, flushSave, c.id, timeline, dur, si, 'start', parseFloat(e.target.value))}
+                            />
+                            <span className={s.cutTimelineEditSep}>~</span>
+                            <input type="number" step="0.1" min={0} max={dur}
+                              className={s.cutTimelineEditInput}
+                              defaultValue={seg.end}
+                              title={`"${timelineSegLabel(seg)}" 종료(초)`}
+                              onBlur={(e) => commitTimelinePair(dispatch, flushSave, c.id, timeline, dur, si, 'end', parseFloat(e.target.value))}
+                            />
+                          </span>
                         ))}
-                        <span className={s.cutTimelineEditLabel}>{dur.toFixed(1)}s</span>
                         {timeline.some(t => t.isManual) && (
                           <button className={s.cutTimelineResetBtn}
                             onClick={() => { dispatch({ type: 'UPDATE_CUT', id: c.id, p: { captionSegTiming: undefined } }); flushSave() }}>
@@ -2378,6 +2398,57 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       <label>NR (나레이션)</label>
                       <textarea rows={2} placeholder="없음" value={cut?.narration || ''} onChange={e => updateCut(cut.id, 'narration', e.target.value)} />
                     </div>
+                    {(() => {
+                      // 2026-10-09: "대사, 나레이션 입력창 옆에 시작~끝 시간" — 전체목록에만 있던
+                      // 구간 막대+편집 입력칸을 상세편집(이 바로 DL/NR을 고치는 화면)에도 둔다.
+                      // 같은 computeCaptionTimeline/captionSegTiming을 쓰므로 전체목록·VideoTab
+                      // 타이밍 바·실제 생성 프롬프트(clipPrompt.js)와 항상 같은 숫자를 본다.
+                      const hasDialD = cut?.dialogue && !/^없음$/i.test(cut.dialogue.trim())
+                      const hasVoD = cut?.narration && !/^없음$/i.test(cut.narration.trim())
+                      const durD = Number(cut?.duration) || 0
+                      const timelineD = cut && (!Array.isArray(cut.segments) || cut.segments.length <= 1) && (hasDialD || hasVoD) && durD > 0
+                        ? computeCaptionTimeline(cut) : []
+                      if (!timelineD.length) return null
+                      return (
+                        <div className={s.cutTimelineRow} style={{ marginBottom: 10 }}>
+                          <div className={s.cutTimelineBar}>
+                            {timelineD.map((seg, si) => (
+                              <div key={si}
+                                className={`${s.cutTimelineSeg} ${s[`cutTimelineSeg_${timelineSegClass(seg)}`]}`}
+                                style={{ left: `${(seg.start / durD) * 100}%`, width: `${Math.max(0, (seg.end - seg.start) / durD) * 100}%` }}
+                                title={`${timelineSegLabel(seg)} · ${(seg.end - seg.start).toFixed(1)}초 · ${seg.text}`}>
+                                <span className={s.cutTimelineSegText}>{timelineSegLabel(seg)} {seg.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className={s.cutTimelineEditRow}>
+                            {timelineD.map((seg, si) => (
+                              <span key={si} className={s.cutTimelinePairGroup} title={timelineSegLabel(seg)}>
+                                <input type="number" step="0.1" min={0} max={durD}
+                                  className={s.cutTimelineEditInput}
+                                  defaultValue={seg.start}
+                                  title={`"${timelineSegLabel(seg)}" 시작(초)`}
+                                  onBlur={(e) => commitTimelinePair(dispatch, flushSave, cut.id, timelineD, durD, si, 'start', parseFloat(e.target.value))}
+                                />
+                                <span className={s.cutTimelineEditSep}>~</span>
+                                <input type="number" step="0.1" min={0} max={durD}
+                                  className={s.cutTimelineEditInput}
+                                  defaultValue={seg.end}
+                                  title={`"${timelineSegLabel(seg)}" 종료(초)`}
+                                  onBlur={(e) => commitTimelinePair(dispatch, flushSave, cut.id, timelineD, durD, si, 'end', parseFloat(e.target.value))}
+                                />
+                              </span>
+                            ))}
+                            {timelineD.some(t => t.isManual) && (
+                              <button className={s.cutTimelineResetBtn}
+                                onClick={() => { dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: undefined } }); flushSave() }}>
+                                자동 비율로 되돌리기
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })()}
                     <div className={s.v3MiniField}>
                       <label>CP (자막·손글씨 오버레이)</label>
                       <textarea rows={2} placeholder="없음 — 이 컷에 손글씨 자막을 얹을 텍스트(순수 텍스트). 메이킹 탭에서 위치·말풍선·타이밍을 형성."
