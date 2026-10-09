@@ -308,3 +308,19 @@
   display: flex; gap: 4px; justify-content: flex-end; align-items: center;
   padding-top: 1px;
 }
+
+/* 2026-10-09: 전체 목록 — 대사(화자별)·나레이션 구간 타임라인 바. 컷 행 바로 아래,
+   구분선 없이 이어지는 같은 행의 일부처럼 보이게(위 패딩 0, 아래 패딩만). */
+.cutTimelineRow { padding: 0 14px 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.cutTimelineBar { position: relative; height: 18px; background: rgba(255,255,255,.05); border-radius: 4px; overflow: hidden; }
+.cutTimelineSeg {
+  position: absolute; top: 0; bottom: 0; min-width: 3px;
+  display: flex; align-items: center; padding: 0 5px; overflow: hidden;
+  border-right: 1px solid rgba(0,0,0,.35);
+}
+.cutTimelineSegText { font-size: 9px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .95; }
+.cutTimelineSeg_yeori     { background: rgba(167,139,250,.55); } /* 서여리 = 보라(CUT_TYPES YEORI와 동색 계열) */
+.cutTimelineSeg_jia       { background: rgba(244,114,182,.55); } /* 한지아 = 핑크 */
+.cutTimelineSeg_jiyu      { background: rgba(96,165,250,.55); }  /* 지유 = 파랑 */
+.cutTimelineSeg_dialogue  { background: rgba(167,139,250,.4); }  /* 화자 미표기 단일 대사 */
+.cutTimelineSeg_narration { background: rgba(156,163,175,.45); } /* 나레이션 = 회색 */

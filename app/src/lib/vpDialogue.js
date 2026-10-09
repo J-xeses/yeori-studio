@@ -16,9 +16,37 @@
 //
 // server(proxy.js) 와 client(ScriptGenTab.jsx) 양쪽에서 import 하는 순수 함수
 // (src/lib/videoPolicy.js 와 같은 병행 구조).
-import { applyReadings } from './ttsText.js'
+import { applyReadings, splitSpeakerSegments } from './ttsText.js'
 
 export const SEG_MAX_SEC = 8
+
+const isNoneText = (v) => /^(없음|-|n\/a)$/i.test(String(v == null ? '' : v).trim())
+
+// 2026-10-09 신설(성준님: "대사구간·나레이션 구간의 시간구분을 눈으로 직접 볼 수 있는 페이지가
+// 있어야 하지 않나") — 한 컷 안에서 "누가 언제 말하는지"를 시각화하기 위한 순수 계산. 대사는
+// splitSpeakerSegments로 화자별 턴(두 명이 번갈아 대화하는 경우 포함)으로 나누고, 그 뒤에
+// 나레이션이 있으면 마지막 구간으로 붙인다. 각 구간 길이는 buildClipPrompt()(clipPrompt.js)와
+// 동일하게 글자수 비례로 컷 전체 길이(cut.duration)에 배분 — 화면 미리보기와 실제 생성
+// 프롬프트가 같은 숫자를 쓰게 맞춘다. cut.segments(다중 클립) 컷은 1단계 스코프 밖(세그별
+// segPrompts/segTiming이 이미 그 역할을 함) — 여기선 단일 클립 컷만 다룬다.
+export function computeCaptionTimeline(cut = {}) {
+  const duration = Math.max(1, Number(cut.duration) || 8)
+  const dlRaw = isNoneText(cut.dialogue) ? '' : String(cut.dialogue).trim()
+  const nrRaw = isNoneText(cut.narration) ? '' : String(cut.narration).trim()
+  const turns = dlRaw ? splitSpeakerSegments(dlRaw) : []
+  const parts = [
+    ...turns.map(t => ({ kind: 'dialogue', speaker: t.speaker, text: t.text })),
+    ...(nrRaw ? [{ kind: 'narration', speaker: null, text: nrRaw }] : []),
+  ]
+  if (!parts.length) return []
+  const totalLen = parts.reduce((a, p) => a + p.text.length, 0) || 1
+  let acc = 0
+  return parts.map(p => {
+    const start = acc
+    acc += duration * p.text.length / totalLen
+    return { kind: p.kind, speaker: p.speaker, text: p.text, start: +start.toFixed(2), end: +acc.toFixed(2) }
+  })
+}
 
 // ── 2단계 (2026-09-11, 2026-10-08 갱신) — SEG 필드 = "생성단위 조합 + 트림" 모델 ──────────────
 // Veo(Omni)는 임의 길이가 아니라 4/6/8/10초, 이 네 고정 모드로만 생성된다(pipeline-leader.js

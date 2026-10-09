@@ -4,7 +4,7 @@ import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
-import { ensureDialogueInVP, parseSegTiming } from '../lib/vpDialogue'
+import { ensureDialogueInVP, parseSegTiming, computeCaptionTimeline } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import DirectionSettingsPanel from '../components/DirectionSettingsPanel'
@@ -52,6 +52,19 @@ const CUT_TYPES = [
   { value: 'CAPCUT',  label: 'CAPCUT',  color: '#9ca3af', border: 'rgba(156,163,175,0.45)' },
 ]
 const PIPE_TYPES = new Set(['YEORI', 'BROLL', 'PIP', 'GRAPHIC', 'CAPCUT'])
+
+// 2026-10-09: "전체 목록" 타임라인 바용 — 화자/나레이션 구간을 색·라벨로 구분.
+// 등록된 이름(ttsText.js KNOWN_SPEAKER_NAMES와 동일 목록) 기준으로 고정 색을 매기고,
+// 화자 표기가 없는 단일화자 대사·나레이션은 각각 공용 클래스로 묶는다.
+const SPEAKER_CLASS_MAP = { 서여리: 'yeori', 여리: 'yeori', 한지아: 'jia', 지아: 'jia', 지유: 'jiyu' }
+function timelineSegClass(seg) {
+  if (seg.kind === 'narration') return 'narration'
+  return SPEAKER_CLASS_MAP[seg.speaker] || 'dialogue'
+}
+function timelineSegLabel(seg) {
+  if (seg.kind === 'narration') return '나레이션'
+  return seg.speaker ? `대사·${seg.speaker}` : '대사'
+}
 
 function getRunFlags(cut) {
   switch (cut.cutType || 'YEORI') {
@@ -2200,36 +2213,56 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               const isActive = i === activeCut
               const dur = Number(c.duration) || 0
               const badDur = isBadDuration(dur)
+              // 2026-10-09: "대사구간·나레이션 구간의 시간구분을 눈으로 직접 볼 수 있는 페이지"
+              // 요청 — 세그(cut.segments) 컷은 segPrompts/segTiming이 이미 그 역할을 하므로
+              // 여기선 단일 클립 컷만(화자별 턴 포함) 계산해 보여준다.
+              const timeline = (!Array.isArray(c.segments) || c.segments.length <= 1) && (hasDial || hasVo)
+                ? computeCaptionTimeline(c) : []
               return (
-                <div
-                  key={c.id}
-                  className={`${s.cutListRow} ${isActive ? s.cutListRowActive : ''}`}
-                  onClick={() => { setActiveCut(i); setViewMode('detail') }}
-                >
-                  <span className={s.cutListNo}>CUT {c.no}</span>
-                  <span>
-                    {ct && (
-                      <span style={{
-                        fontSize:10, padding:'1px 5px', borderRadius:3,
-                        color:ct.color, background:`${ct.color}18`, border:`1px solid ${ct.border}`,
-                        whiteSpace:'nowrap',
-                      }}>{ct.label}</span>
-                    )}
-                  </span>
-                  <span className={s.cutListScroll}>{c.scene || '—'}</span>
-                  <span className={`${s.cutListDialogue} ${s.cutListScroll}`}>
-                    {hasDial ? c.dialogue : <span style={{color:'var(--text-3)'}}>—</span>}
-                  </span>
-                  <span className={`${s.cutListVo} ${s.cutListScroll}`}>
-                    {hasVo ? c.narration : <span style={{color:'var(--text-3)'}}>—</span>}
-                  </span>
-                  <span className={s.cutListDuration} style={badDur ? { color: 'var(--red, #ef4444)', fontWeight: 700 } : undefined}
-                    title={badDur ? '룰셋 위반 — 11초는 절대 금지, 20초 초과는 컷을 분할해야 합니다' : undefined}
-                  >{dur}초{badDur ? ' ⚠' : ''}</span>
-                  <span className={s.cutListBadges}>
-                    {isG1 && <span className={s.g1Badge}>G1</span>}
-                    {c.cutMark === 'SIGNATURE' && <span className={s.sigBadge}>✨</span>}
-                  </span>
+                <div key={c.id}>
+                  <div
+                    className={`${s.cutListRow} ${isActive ? s.cutListRowActive : ''}`}
+                    onClick={() => { setActiveCut(i); setViewMode('detail') }}
+                  >
+                    <span className={s.cutListNo}>CUT {c.no}</span>
+                    <span>
+                      {ct && (
+                        <span style={{
+                          fontSize:10, padding:'1px 5px', borderRadius:3,
+                          color:ct.color, background:`${ct.color}18`, border:`1px solid ${ct.border}`,
+                          whiteSpace:'nowrap',
+                        }}>{ct.label}</span>
+                      )}
+                    </span>
+                    <span className={s.cutListScroll}>{c.scene || '—'}</span>
+                    <span className={`${s.cutListDialogue} ${s.cutListScroll}`}>
+                      {hasDial ? c.dialogue : <span style={{color:'var(--text-3)'}}>—</span>}
+                    </span>
+                    <span className={`${s.cutListVo} ${s.cutListScroll}`}>
+                      {hasVo ? c.narration : <span style={{color:'var(--text-3)'}}>—</span>}
+                    </span>
+                    <span className={s.cutListDuration} style={badDur ? { color: 'var(--red, #ef4444)', fontWeight: 700 } : undefined}
+                      title={badDur ? '룰셋 위반 — 11초는 절대 금지, 20초 초과는 컷을 분할해야 합니다' : undefined}
+                    >{dur}초{badDur ? ' ⚠' : ''}</span>
+                    <span className={s.cutListBadges}>
+                      {isG1 && <span className={s.g1Badge}>G1</span>}
+                      {c.cutMark === 'SIGNATURE' && <span className={s.sigBadge}>✨</span>}
+                    </span>
+                  </div>
+                  {timeline.length > 0 && (
+                    <div className={s.cutTimelineRow} onClick={(e) => e.stopPropagation()}>
+                      <div className={s.cutTimelineBar}>
+                        {timeline.map((seg, si) => (
+                          <div key={si}
+                            className={`${s.cutTimelineSeg} ${s[`cutTimelineSeg_${timelineSegClass(seg)}`]}`}
+                            style={{ left: `${(seg.start / dur) * 100}%`, width: `${Math.max(0, (seg.end - seg.start) / dur) * 100}%` }}
+                            title={`${timelineSegLabel(seg)} · ${(seg.end - seg.start).toFixed(1)}초 · ${seg.text}`}>
+                            <span className={s.cutTimelineSegText}>{timelineSegLabel(seg)} {seg.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             })}
