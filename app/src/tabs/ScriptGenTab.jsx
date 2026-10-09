@@ -816,7 +816,7 @@ function buildV3ScriptText(cuts, episode) {
 }
 
 export default function ScriptGenTab() {
-  const { state, dispatch } = useApp()
+  const { state, dispatch, flushSave } = useApp()
   const codebook = useCodebook()   // 코드 한글 풀이·레퍼런스(scripts/codebook.json)
   const { episode, scriptRaw, cuts, apiKeys, episodes, activeEpisodeId } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체.
@@ -2260,6 +2260,38 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                             <span className={s.cutTimelineSegText}>{timelineSegLabel(seg)} {seg.text}</span>
                           </div>
                         ))}
+                      </div>
+                      {/* 2026-10-09: 막대만 있으면 "구분은 되는데 숫자를 못 고친다" — 성준님:
+                          "숫자가 나와서 수정이 될 수 있어야 한다, 어제 시간수정해서 입력했듯이".
+                          구간 경계(시작 0초·끝 dur초는 고정, 그 사이 경계만큼) 초 단위 입력칸을
+                          두고, 바뀌면 cut.captionSegTiming으로 즉시 저장 — VideoTab 타이밍 바·
+                          실제 생성 프롬프트(buildClipPrompt, 같은 필드를 읽도록 다음 단계에서
+                          연결 예정)와 같은 저장소라 화면이 어긋나지 않는다. */}
+                      <div className={s.cutTimelineEditRow}>
+                        <span className={s.cutTimelineEditLabel}>0.0s</span>
+                        {timeline.slice(0, -1).map((seg, si) => (
+                          <input key={si} type="number" step="0.1" min={0.1} max={dur - 0.1}
+                            className={s.cutTimelineEditInput}
+                            defaultValue={seg.end}
+                            title={`"${timelineSegLabel(seg)}" 종료 / "${timelineSegLabel(timeline[si + 1])}" 시작 시점(초)`}
+                            onBlur={(e) => {
+                              const v = Math.min(dur - 0.1, Math.max(0.1, parseFloat(e.target.value) || seg.end))
+                              const bounds = [0, ...timeline.slice(0, -1).map((s2, i2) => i2 === si ? v : s2.end), dur]
+                              // 경계 단조증가 보정(앞뒤 경계를 넘어가게 입력하면 밀어내지 않고 그 경계에 붙임)
+                              for (let k = 1; k < bounds.length; k++) if (bounds[k] <= bounds[k - 1]) bounds[k] = bounds[k - 1] + 0.1
+                              const pairs = timeline.map((_, i2) => [bounds[i2], bounds[i2 + 1]])
+                              dispatch({ type: 'UPDATE_CUT', id: c.id, p: { captionSegTiming: pairs } })
+                              flushSave()
+                            }}
+                          />
+                        ))}
+                        <span className={s.cutTimelineEditLabel}>{dur.toFixed(1)}s</span>
+                        {timeline.some(t => t.isManual) && (
+                          <button className={s.cutTimelineResetBtn}
+                            onClick={() => { dispatch({ type: 'UPDATE_CUT', id: c.id, p: { captionSegTiming: undefined } }); flushSave() }}>
+                            자동 비율로 되돌리기
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

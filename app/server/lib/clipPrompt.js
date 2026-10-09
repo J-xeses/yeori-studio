@@ -6,6 +6,7 @@
 import fs from 'node:fs'
 import { splitSpeakerSegments } from './ttsText.js'
 import * as mp from './mediaPaths.js'
+import { computeCaptionTimeline } from '../../src/lib/vpDialogue.js'
 
 // 목소리 고정 문구(characters.json voicePrompt) — Flow 는 목소리 ID 입력이 없어, 말하는 인물마다 같은 묘사를 매번 넣어
 // 컷 사이 흔들림을 줄인다(보장은 아님 — 9/25 실측 공식 목소리 대비 0.48~0.74). 화자: 대사 표기 > 서술 속 이름 > 컷 CH > 주인공
@@ -231,18 +232,25 @@ export function buildClipPrompt(cut, k, n) {
   // "립싱크 없음" 지시도 전혀 없었음 — 성준님이 수동으로 타이밍·"립싱크 삭제" 문구를 직접 써서
   // 보완했던 바로 그 증상. 세그(n>1) 컷은 SEG/"||" 메커니즘이 따로 있어 건드리지 않는다.
   if (n === 1 && String(cut.dialogue || '').trim() && String(cut.narration || '').trim()) {
-    const dl = String(cut.dialogue).trim(), nr = String(cut.narration).trim()
+    // 2026-10-09: computeCaptionTimeline(vpDialogue.js, ScriptGenTab "전체 목록" 타임라인 바와
+    // 동일 함수)로 교체 — 글자수 비례뿐 아니라, 성준님이 화면에서 직접 초를 고쳐 저장한
+    // cut.captionSegTiming override가 있으면 그걸 그대로 쓴다("숫자를 고치면 실제 생성에도
+    // 반영돼야 한다"). 다중 화자(두 명이 번갈아 대화 + 나레이션)도 일반적으로 처리.
+    const dl = String(cut.dialogue).trim()
     line = dl
     const dur = Math.max(1, Number(cut.duration) || 8)
-    const totalLen = dl.length + nr.length || 1
-    const dlSec = Math.min(dur - 1, Math.max(1, Math.round(dur * dl.length / totalLen)))
+    const parts = computeCaptionTimeline(cut)
     const segs = splitSpeakerSegments(dl)
     speakers = segs.map(s => s.speaker).filter(Boolean)
-    const said = segs.length
-      ? segs.map(s => `${s.speaker ? (CHAR_EN[s.speaker] || s.speaker) : 'She'} says in Korean, lips synced: "${s.text}"`).join(' Then ')
-      : `She says in Korean, lips synced: "${dl}"`
-    prompt += `\n\nFirst 0-${dlSec}s (DIALOGUE, lip-synced): ${said}. Only this line is spoken here, lips move naturally in sync with these exact words.`
-    prompt += `\n\nFrom ${dlSec}-${dur}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking. The line "${nr}" is narration audio added afterward, not something she says on camera.`
+    for (const p of parts) {
+      const s0 = p.start.toFixed(1), s1 = p.end.toFixed(1)
+      if (p.kind === 'dialogue') {
+        const who = p.speaker ? (CHAR_EN[p.speaker] || p.speaker) : 'She'
+        prompt += `\n\n${s0}-${s1}s (DIALOGUE, lip-synced): ${who} says in Korean, lips synced: "${p.text}". Only this line is spoken here, lips move naturally in sync with these exact words.`
+      } else {
+        prompt += `\n\n${s0}-${s1}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking. The line "${p.text}" is narration audio added afterward, not something she says on camera.`
+      }
+    }
     prompt += `\n\nNo on-screen subtitle text or captions.`
     const anchors = segs.length ? voiceAnchors(cut, speakers) : []
     if (anchors.length) prompt += `\n\n${anchors.map(a => a.replace(/\.?$/, '.')).join(' ')} Keep exactly this voice for the dialogue portion.`

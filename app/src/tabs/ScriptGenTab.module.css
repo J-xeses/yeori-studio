@@ -324,3 +324,18 @@
 .cutTimelineSeg_jiyu      { background: rgba(96,165,250,.55); }  /* 지유 = 파랑 */
 .cutTimelineSeg_dialogue  { background: rgba(167,139,250,.4); }  /* 화자 미표기 단일 대사 */
 .cutTimelineSeg_narration { background: rgba(156,163,175,.45); } /* 나레이션 = 회색 */
+
+/* 2026-10-09: 구간 경계 초(seconds) 직접 입력 — 타임라인 바 바로 아래, 눈에 보이는 숫자로
+   조정 가능하게. 경계 개수만큼만 입력칸(구간 N개 → 경계 N-1개), 양끝은 0/전체길이 고정 표시. */
+.cutTimelineEditRow { display: flex; align-items: center; gap: 4px; margin-top: 3px; flex-wrap: wrap; }
+.cutTimelineEditLabel { font-size: 9px; color: var(--text-3); }
+.cutTimelineEditInput {
+  width: 46px; font-size: 10px; padding: 1px 3px; border-radius: 3px;
+  border: 1px solid var(--border); background: var(--bg-input); color: var(--text-1);
+  text-align: center;
+}
+.cutTimelineResetBtn {
+  margin-left: auto; font-size: 9.5px; padding: 1px 6px; border-radius: 4px;
+  border: 1px solid var(--border); background: transparent; color: var(--text-3); cursor: pointer;
+}
+.cutTimelineResetBtn:hover { background: rgba(255,255,255,.08); color: var(--text-1); }

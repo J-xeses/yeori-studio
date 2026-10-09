@@ -39,12 +39,22 @@ export function computeCaptionTimeline(cut = {}) {
     ...(nrRaw ? [{ kind: 'narration', speaker: null, text: nrRaw }] : []),
   ]
   if (!parts.length) return []
+  // 2026-10-09 추가(성준님: "숫자가 나와서 수정이 될 수 있어야 한다 — 어제 시간수정해서
+  // 입력했듯이") — 글자수 비례는 어디까지나 "아직 아무도 안 정한" 기본 추정치다. 실제
+  // 연출 의도로 사람이 직접 조정한 값(cut.captionSegTiming, VideoTab 타이밍 바와 동일 필드)이
+  // 있으면 그걸 그대로 쓴다. 개수가 안 맞으면(컷 내용이 바뀌었는데 예전 override가 남은
+  // 경우) 안전하게 추정치로 폴백.
+  const override = Array.isArray(cut.captionSegTiming) && cut.captionSegTiming.length === parts.length
+    ? cut.captionSegTiming : null
+  if (override) {
+    return parts.map((p, i) => ({ kind: p.kind, speaker: p.speaker, text: p.text, start: +override[i][0].toFixed(2), end: +override[i][1].toFixed(2), isManual: true }))
+  }
   const totalLen = parts.reduce((a, p) => a + p.text.length, 0) || 1
   let acc = 0
   return parts.map(p => {
     const start = acc
     acc += duration * p.text.length / totalLen
-    return { kind: p.kind, speaker: p.speaker, text: p.text, start: +start.toFixed(2), end: +acc.toFixed(2) }
+    return { kind: p.kind, speaker: p.speaker, text: p.text, start: +start.toFixed(2), end: +acc.toFixed(2), isManual: false }
   })
 }
 
@@ -334,16 +344,14 @@ export function ensureDialogueInVP(cut = {}) {
     )
   }
   if (dl && nr) {
-    // 2026-10-09 발견(성준님 실측, SF_E109 컷2): 대사·나레이션이 둘 다 있는데 여기서 "구간" 구분
-    // 없이 그냥 둘 다 나열만 하면, 실제 생성 프롬프트(clipPrompt.js buildClipPrompt)는 구간을
-    // 나눠 명확히 지시하는데 화면에 보이는 이 요약 블록은 그 구분이 안 보여서 "고쳤다는데 그대로"
-    // 처럼 보임 — 화면 표시를 실제 생성 로직과 맞춘다(같은 비례 분배 계산).
-    const dur = Math.max(1, Number(cut.duration) || 8)
-    const dlSec = Math.min(dur - 1, Math.max(1, Math.round(dur * dl.length / (dl.length + nr.length || 1))))
+    // 2026-10-09: computeCaptionTimeline(ScriptGenTab "전체 목록" 타임라인 바·clipPrompt.js
+    // buildClipPrompt와 동일 함수)로 교체 — 성준님이 화면에서 직접 고친 cut.captionSegTiming
+    // override가 있으면 화면 요약도 그 숫자를 그대로 보여준다(없으면 기존처럼 글자수 비례).
+    const parts = computeCaptionTimeline(cut)
+    const windows = parts.map(p => `${p.kind === 'dialogue' ? '대사' : '나레이션'} ${p.start.toFixed(1)}-${p.end.toFixed(1)}s`).join(' · ')
     lines.push(
-      `생성: 0-${dlSec}s는 Veo 가 대사를 한국어로 말하도록(립싱크+음성 함께, 입모양이 대사와 맞아야 함). ` +
-      `${dlSec}-${dur}s는 입을 움직이지 않음 — 그 구간은 말하지 않고(mouth closed/neutral), ` +
-      `나레이션 음성은 ElevenLabs 서여리 나레이션을 그 구간에 얹음.`
+      `생성(구간): ${windows}. 대사 구간은 Veo 가 한국어로 말하도록(립싱크+음성 함께), ` +
+      `나레이션 구간은 입을 움직이지 않음(mouth closed/neutral) — ElevenLabs 서여리 나레이션을 그 구간에 얹음.`
     )
     lines.push(
       '후처리(STS, 대사 구간만): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) ' +
