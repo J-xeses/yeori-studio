@@ -312,6 +312,7 @@
 /* 2026-10-09: 전체 목록 — 대사(화자별)·나레이션 구간 타임라인 바. 컷 행 바로 아래,
    구분선 없이 이어지는 같은 행의 일부처럼 보이게(위 패딩 0, 아래 패딩만). */
 .cutTimelineRow { padding: 0 14px 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.cutTimelineSegWarn { font-size: 10px; color: #fbbf24; padding: 3px 0; }
 .cutTimelineBar { position: relative; height: 18px; background: rgba(255,255,255,.05); border-radius: 4px; overflow: hidden; }
 .cutTimelineSeg {
   position: absolute; top: 0; bottom: 0; min-width: 3px;
@@ -324,6 +325,7 @@
 .cutTimelineSeg_jiyu      { background: rgba(96,165,250,.55); }  /* 지유 = 파랑 */
 .cutTimelineSeg_dialogue  { background: rgba(167,139,250,.4); }  /* 화자 미표기 단일 대사 */
 .cutTimelineSeg_narration { background: rgba(156,163,175,.45); } /* 나레이션 = 회색 */
+.cutTimelineSeg_caption   { background: rgba(251,191,36,.4); }   /* 화면자막(CP)만 있는 컷 = 노랑 */
 
 /* 2026-10-09: 구간 경계 초(seconds) 직접 입력 — 타임라인 바 바로 아래, 눈에 보이는 숫자로
    조정 가능하게. 경계 개수만큼만 입력칸(구간 N개 → 경계 N-1개), 양끝은 0/전체길이 고정 표시. */

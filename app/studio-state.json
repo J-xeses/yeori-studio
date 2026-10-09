@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "storyarchive",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9053,7 +9053,7 @@
           },
           "captionSegTiming": [
             [
-              2.1,
+              1.4,
               6
             ]
           ]
@@ -9655,7 +9655,7 @@
       },
       "captionSegTiming": [
         [
-          2.1,
+          1.4,
           6
         ]
       ]
@@ -10017,7 +10017,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T08:33:48.993Z",
+  "savedAt": "2026-10-09T09:19:20.207Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -10110,7 +10110,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-2",
     "subtitles": {
       "cut-1": [
         {

@@ -4,7 +4,7 @@ import { claudeMessages } from '../lib/api'
 import { setGPoints, setGPoint, loadGPoints } from '../lib/gpoints'
 import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode } from '../lib/episodeCode'
 import { FINISH_MODES, resolveFinishMode } from '../lib/finishMode'
-import { ensureDialogueInVP, parseSegTiming, computeCaptionTimeline } from '../lib/vpDialogue'
+import { ensureDialogueInVP, parseSegTiming, computeCaptionTimeline, captionTimingToSegTiming } from '../lib/vpDialogue'
 import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import DirectionSettingsPanel from '../components/DirectionSettingsPanel'
@@ -59,10 +59,12 @@ const PIPE_TYPES = new Set(['YEORI', 'BROLL', 'PIP', 'GRAPHIC', 'CAPCUT'])
 const SPEAKER_CLASS_MAP = { 서여리: 'yeori', 여리: 'yeori', 한지아: 'jia', 지아: 'jia', 지유: 'jiyu' }
 function timelineSegClass(seg) {
   if (seg.kind === 'narration') return 'narration'
+  if (seg.kind === 'caption') return 'caption'
   return SPEAKER_CLASS_MAP[seg.speaker] || 'dialogue'
 }
 function timelineSegLabel(seg) {
   if (seg.kind === 'narration') return '나레이션'
+  if (seg.kind === 'caption') return '화면자막(CP)'
   return seg.speaker ? `대사·${seg.speaker}` : '대사'
 }
 
@@ -71,7 +73,7 @@ function timelineSegLabel(seg) {
 // "공유점"(경계 N+1개)으로 만들어서 대사·나레이션이 항상 딱 붙게 강제됐었다. 그래선 둘 사이에
 // 의도적인 공백(무음 간격)을 둘 수 없다 — 각 구간의 시작·끝을 완전히 독립된 [start,end] 쌍으로
 // 따로 편집한다. 이웃 구간을 "넘어가며 겹치는" 것만 막고, 간격(gap)은 자유롭게 허용.
-function commitTimelinePair(dispatch, flushSave, cutId, timeline, dur, idx, which, rawVal) {
+function commitTimelinePair(dispatch, flushSave, cut, timeline, dur, idx, which, rawVal) {
   const pairs = timeline.map(p => [p.start, p.end])
   const v = isNaN(rawVal) ? pairs[idx][which === 'start' ? 0 : 1] : rawVal
   if (which === 'start') {
@@ -83,7 +85,11 @@ function commitTimelinePair(dispatch, flushSave, cutId, timeline, dur, idx, whic
     const lo = pairs[idx][0] + 0.1
     pairs[idx][1] = Math.max(Math.min(v, hi), Math.min(lo, hi))
   }
-  dispatch({ type: 'UPDATE_CUT', id: cutId, p: { captionSegTiming: pairs.map(([s, e]) => [+s.toFixed(2), +e.toFixed(2)]) } })
+  const captionSegTiming = pairs.map(([s, e]) => [+s.toFixed(2), +e.toFixed(2)])
+  // 2026-10-09 ("컷5 연동 바로 진행") — 세그 컷이면 컷 전체 좌표(captionSegTiming)를 클립별
+  // 로컬 좌표(segTiming)로 변환해 같이 저장 — 실제 생성 프롬프트가 읽는 필드는 segTiming이다.
+  const segTiming = captionTimingToSegTiming({ ...cut, captionSegTiming })
+  dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming, ...(segTiming ? { segTiming } : {}) } })
   flushSave()
 }
 
@@ -2231,13 +2237,21 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               const isG1 = !!gData[episodeCode]?.[`cut_${c.no}`]?.g1
               const hasDial = c.dialogue && !/^없음$/i.test(c.dialogue.trim())
               const hasVo = c.narration && !/^없음$/i.test(c.narration.trim())
+              const hasCp = c.subtitle && !/^없음(\s|\(|$)/.test(c.subtitle.trim())
               const isActive = i === activeCut
               const dur = Number(c.duration) || 0
               const badDur = isBadDuration(dur)
               // 2026-10-09: "대사구간·나레이션 구간의 시간구분을 눈으로 직접 볼 수 있는 페이지"
-              // 요청 — 세그(cut.segments) 컷은 segPrompts/segTiming이 이미 그 역할을 하므로
-              // 여기선 단일 클립 컷만(화자별 턴 포함) 계산해 보여준다.
-              const timeline = (!Array.isArray(c.segments) || c.segments.length <= 1) && (hasDial || hasVo)
+              // 요청. DL/NR이 둘 다 없어도 CP(화면 자막)만 있는 컷(예: 컷4)은
+              // computeCaptionTimeline이 CP를 단일 구간으로 폴백하므로 hasCp도 조건에 포함.
+              // ⚠️ 전엔 세그(cut.segments, 예: 컷5 — 2클립) 컷을 통째로 빼뒀다 — "segPrompts/
+              // segTiming이 이미 그 역할을 한다"고 가정했는데 실측해보니 틀렸다: segTiming은
+              // 클립 "길이"만 다루지 클립 안 자막 타이밍은 전혀 안 다뤄서, 세그 컷은 자막
+              // 시간설정 UI가 아예 없는 상태로 방치돼 있었다("컷4,5 자막 시간설정 기능 누락").
+              // 세그 컷도 켜되, 실제 생성 프롬프트(buildClipPrompt n>1 분기)는 이 값을 아직 안
+              // 읽으므로 isSegmented로 표시해 화면 표시용임을 구분한다.
+              const isSegmented = Array.isArray(c.segments) && c.segments.length > 1
+              const timeline = (hasDial || hasVo || hasCp)
                 ? computeCaptionTimeline(c) : []
               return (
                 <div key={c.id}>
@@ -2272,6 +2286,11 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   </div>
                   {timeline.length > 0 && (
                     <div className={s.cutTimelineRow} onClick={(e) => e.stopPropagation()}>
+                      {isSegmented && (
+                        <div className={s.cutTimelineSegWarn} title="이 컷은 클립이 여러 개(세그)라, 여기서 조절한 시간은 화면 표시용 자막 타이밍만 바꿉니다 — 실제 Flow 생성 프롬프트(클립별)는 아직 이 값을 읽지 않습니다.">
+                          ⚠ 세그 컷 — 화면 표시용 타이밍만 (생성 프롬프트 미연동)
+                        </div>
+                      )}
                       <div className={s.cutTimelineBar}>
                         {timeline.map((seg, si) => (
                           <div key={si}
@@ -2290,25 +2309,33 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                           연결 예정)와 같은 저장소라 화면이 어긋나지 않는다. */}
                       <div className={s.cutTimelineEditRow}>
                         {timeline.map((seg, si) => (
-                          <span key={si} className={s.cutTimelinePairGroup} title={timelineSegLabel(seg)}>
+                          // ⚠️ 2026-10-09 실측(성준님: "숫자가 다시 되돌아감", "컷끼리 엮여있는 것
+                          // 같기도 하고") — key가 si(인덱스)뿐이면 컷을 전환해도 같은 자리(0번째
+                          // 등) DOM 노드를 리액트가 재사용해서, defaultValue(마운트 시 1회만
+                          // 적용)가 새 컷의 실제 값으로 안 바뀌고 이전 컷(또는 이전 렌더) 값이
+                          // 그대로 남아있었다 — 화면 숫자와 저장된 captionSegTiming이 서로 다른
+                          // 컷을 보여주는 사고(실측: 화면 "2.1~6/4~7.5" vs 서버 실제
+                          // "0.5~3.5/4~7.5"). 컷 id+실제 값까지 key에 넣어 값이 달라지면(컷
+                          // 전환·VideoTab 쪽 드래그·초기화 버튼 등 외부 변경 포함) 강제 재마운트.
+                          <span key={`${c.id}-${si}-${seg.start}-${seg.end}`} className={s.cutTimelinePairGroup} title={timelineSegLabel(seg)}>
                             <input type="number" step="0.1" min={0} max={dur}
                               className={s.cutTimelineEditInput}
                               defaultValue={seg.start}
                               title={`"${timelineSegLabel(seg)}" 시작(초)`}
-                              onBlur={(e) => commitTimelinePair(dispatch, flushSave, c.id, timeline, dur, si, 'start', parseFloat(e.target.value))}
+                              onBlur={(e) => commitTimelinePair(dispatch, flushSave, c, timeline, dur, si, 'start', parseFloat(e.target.value))}
                             />
                             <span className={s.cutTimelineEditSep}>~</span>
                             <input type="number" step="0.1" min={0} max={dur}
                               className={s.cutTimelineEditInput}
                               defaultValue={seg.end}
                               title={`"${timelineSegLabel(seg)}" 종료(초)`}
-                              onBlur={(e) => commitTimelinePair(dispatch, flushSave, c.id, timeline, dur, si, 'end', parseFloat(e.target.value))}
+                              onBlur={(e) => commitTimelinePair(dispatch, flushSave, c, timeline, dur, si, 'end', parseFloat(e.target.value))}
                             />
                           </span>
                         ))}
                         {timeline.some(t => t.isManual) && (
                           <button className={s.cutTimelineResetBtn}
-                            onClick={() => { dispatch({ type: 'UPDATE_CUT', id: c.id, p: { captionSegTiming: undefined } }); flushSave() }}>
+                            onClick={() => { dispatch({ type: 'UPDATE_CUT', id: c.id, p: { captionSegTiming: undefined, ...(isSegmented ? { segTiming: undefined } : {}) } }); flushSave() }}>
                             자동 비율로 되돌리기
                           </button>
                         )}
@@ -2405,12 +2432,19 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       // 타이밍 바·실제 생성 프롬프트(clipPrompt.js)와 항상 같은 숫자를 본다.
                       const hasDialD = cut?.dialogue && !/^없음$/i.test(cut.dialogue.trim())
                       const hasVoD = cut?.narration && !/^없음$/i.test(cut.narration.trim())
+                      const hasCpD = cut?.subtitle && !/^없음(\s|\(|$)/.test(cut.subtitle.trim())
                       const durD = Number(cut?.duration) || 0
-                      const timelineD = cut && (!Array.isArray(cut.segments) || cut.segments.length <= 1) && (hasDialD || hasVoD) && durD > 0
+                      const isSegmentedD = Array.isArray(cut?.segments) && cut.segments.length > 1
+                      const timelineD = cut && (hasDialD || hasVoD || hasCpD) && durD > 0
                         ? computeCaptionTimeline(cut) : []
                       if (!timelineD.length) return null
                       return (
                         <div className={s.cutTimelineRow} style={{ marginBottom: 10 }}>
+                          {isSegmentedD && (
+                            <div className={s.cutTimelineSegWarn} title="이 컷은 클립이 여러 개(세그)라, 여기서 조절한 시간은 화면 표시용 자막 타이밍만 바꿉니다 — 실제 Flow 생성 프롬프트(클립별)는 아직 이 값을 읽지 않습니다.">
+                              ⚠ 세그 컷 — 화면 표시용 타이밍만 (생성 프롬프트 미연동)
+                            </div>
+                          )}
                           <div className={s.cutTimelineBar}>
                             {timelineD.map((seg, si) => (
                               <div key={si}
@@ -2423,25 +2457,26 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                           </div>
                           <div className={s.cutTimelineEditRow}>
                             {timelineD.map((seg, si) => (
-                              <span key={si} className={s.cutTimelinePairGroup} title={timelineSegLabel(seg)}>
+                              // 리스트뷰와 동일한 이유로 cut.id+실제 값을 key에 포함(아래 설명 참고).
+                              <span key={`${cut.id}-${si}-${seg.start}-${seg.end}`} className={s.cutTimelinePairGroup} title={timelineSegLabel(seg)}>
                                 <input type="number" step="0.1" min={0} max={durD}
                                   className={s.cutTimelineEditInput}
                                   defaultValue={seg.start}
                                   title={`"${timelineSegLabel(seg)}" 시작(초)`}
-                                  onBlur={(e) => commitTimelinePair(dispatch, flushSave, cut.id, timelineD, durD, si, 'start', parseFloat(e.target.value))}
+                                  onBlur={(e) => commitTimelinePair(dispatch, flushSave, cut, timelineD, durD, si, 'start', parseFloat(e.target.value))}
                                 />
                                 <span className={s.cutTimelineEditSep}>~</span>
                                 <input type="number" step="0.1" min={0} max={durD}
                                   className={s.cutTimelineEditInput}
                                   defaultValue={seg.end}
                                   title={`"${timelineSegLabel(seg)}" 종료(초)`}
-                                  onBlur={(e) => commitTimelinePair(dispatch, flushSave, cut.id, timelineD, durD, si, 'end', parseFloat(e.target.value))}
+                                  onBlur={(e) => commitTimelinePair(dispatch, flushSave, cut, timelineD, durD, si, 'end', parseFloat(e.target.value))}
                                 />
                               </span>
                             ))}
                             {timelineD.some(t => t.isManual) && (
                               <button className={s.cutTimelineResetBtn}
-                                onClick={() => { dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: undefined } }); flushSave() }}>
+                                onClick={() => { dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: undefined, ...(isSegmentedD ? { segTiming: undefined } : {}) } }); flushSave() }}>
                                 자동 비율로 되돌리기
                               </button>
                             )}

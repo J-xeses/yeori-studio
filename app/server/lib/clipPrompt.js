@@ -214,6 +214,30 @@ export function splitLines(raw, n) {
   return parts
 }
 
+// 2026-10-09 (성준님: "컷5 연동 바로 진행") — 세그(n>1) 컷의 자막 타이밍 UI(ScriptGenTab)는
+// cut.captionSegTiming을 "컷 전체" 좌표계(0~cut.duration)로 다루는데, 각 클립은 Flow에 자기
+// 혼자만의 로컬 0~clipDur 좌표계로 생성된다. 이 클립이 차지하는 전체-좌표 구간
+// [cumStart, cumStart+clipDur]과 겹치는 captionSegTiming 윈도우를 찾아 로컬 좌표로 변환.
+// cut.segments가 없거나 길이가 안 맞으면(구간 정보 자체가 없음) null — 폴백은 기존 동작(클립
+// 전체에서 계속 말함, 창 지시 없음) 그대로 유지해 하위호환.
+function clipLocalWindow(cut, n, k) {
+  if (n <= 1) return null
+  const segs = Array.isArray(cut.segments) && cut.segments.length === n ? cut.segments : null
+  if (!segs) return null
+  const cumStart = segs.slice(0, k - 1).reduce((a, b) => a + (Number(b) || 0), 0)
+  const clipDur = Number(segs[k - 1]) || 0
+  if (!clipDur) return null
+  const timing = Array.isArray(cut.captionSegTiming) ? cut.captionSegTiming : null
+  if (!timing || !timing.length) return null
+  for (const pair of timing) {
+    if (!Array.isArray(pair)) continue
+    const [s, e] = pair
+    const os = Math.max(Number(s) || 0, cumStart), oe = Math.min(Number(e) || 0, cumStart + clipDur)
+    if (oe > os) return { start: +(os - cumStart).toFixed(2), end: +(oe - cumStart).toFixed(2), clipDur }
+  }
+  return null
+}
+
 // 클립 k 의 최종 프롬프트. 반환 { prompt, visualSource, line, speakers } — 못 만들면 throw(전체 VP 를 넣지 않는다)
 export function buildClipPrompt(cut, k, n) {
   const segPrompts = cut.segPrompts
@@ -311,14 +335,24 @@ export function buildClipPrompt(cut, k, n) {
     } else {
       prompt += `\n\nOnly the quoted line above is spoken in this clip. No on-screen subtitle text or captions.`
     }
-    // 2026-10-09 (성준님 실측: "나레이션 5~8s, 립싱크 삭제, 입모양 움직임 없음 조건을 뚜렷이
-    // 달았을 때 제대로 생성됐다"): 나레이션 없이 대사만 있는 단일 클립도, 그 대사가 전체 구간을
-    // 안 채우면(예: 1.5~6s만 말하고 앞뒤는 침묵) 몇 초에 시작·끝나는지 명시해야 립싱크가 그
-    // 구간에만 걸린다. cut.captionSegTiming(단일쌍 [[start,end]])로 사람이 직접 지정 가능.
-    if (n === 1 && !multi) {
-      const durW = Math.max(1, Number(cut.duration) || 8)
-      const timelineW = computeCaptionTimeline(cut)
-      const win = timelineW.length === 1 ? timelineW[0] : null  // 다중 화자 턴(복수 파트)엔 적용 안 함 — 단일 블록만
+    // 2026-10-09 (성준님 실측 + "컷5 연동 바로 진행"): 나레이션 없이 대사만 있는 클립도, 그
+    // 대사가 클립 구간을 안 채우면(예: 1.5~6s만 말하고 앞뒤는 침묵) 몇 초에 시작·끝나는지
+    // 명시해야 립싱크가 그 구간에만 걸린다. 단일 클립(n=1)은 cut.duration 전체 기준, 세그
+    // 클립(n>1, 예: 컷5 — 2클립)은 이 클립의 로컬 구간(clipLocalWindow, cut.segments 기준으로
+    // cut.captionSegTiming의 컷-전체 좌표를 클립 자신의 0~clipDur 좌표로 변환)으로 — 둘 다
+    // ScriptGenTab에서 사람이 고친 cut.captionSegTiming이 출처라 화면 숫자와 생성이 같아진다.
+    // segs.length 가드: n>1에서 이 클립 몫 대사가 비어있으면(예: 컷5 클립1 — "||" 앞쪽, 대사
+    // 없음) 위에서 이미 "No one speaks" 문구가 들어갔으니 창 지시를 또 안 붙인다.
+    if (!multi && segs.length) {
+      let win = null, durW = 0
+      if (n === 1) {
+        durW = Math.max(1, Number(cut.duration) || 8)
+        const timelineW = computeCaptionTimeline(cut)
+        win = timelineW.length === 1 ? timelineW[0] : null  // 다중 화자 턴(복수 파트)엔 적용 안 함 — 단일 블록만
+      } else {
+        const lw = clipLocalWindow(cut, n, k)
+        if (lw) { win = lw; durW = lw.clipDur }
+      }
       if (win && (win.start > 0.05 || win.end < durW - 0.05)) {
         const s0 = win.start.toFixed(1), s1 = win.end.toFixed(1)
         const before = win.start > 0.05 ? `0-${s0}s: no one speaks yet, mouth stays closed in a natural neutral/resting shape. ` : ''

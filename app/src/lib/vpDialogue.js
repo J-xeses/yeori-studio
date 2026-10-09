@@ -38,7 +38,15 @@ export function computeCaptionTimeline(cut = {}) {
     ...turns.map(t => ({ kind: 'dialogue', speaker: t.speaker, text: t.text })),
     ...(nrRaw ? [{ kind: 'narration', speaker: null, text: nrRaw }] : []),
   ]
-  if (!parts.length) return []
+  // 2026-10-09 실측(SF_E109 컷4): 발화 음성(DL/NR)은 없지만 화면 자막(CP)만 있는 컷도 있다
+  // (예: 리액션 컷에 캡션만 얹는 경우) — 이런 컷은 timeline이 빈 배열로 떨어져서 전체
+  // 목록/상세편집에 시간설정 UI 자체가 안 뜨고, captionSegTiming이 있어도 조절할 방법이
+  // 없었다("컷4,5 자막 시간설정 기능 누락"). DL/NR이 둘 다 없을 때만 CP를 단일 구간으로 폴백.
+  if (!parts.length) {
+    const cpRaw = isNoneText(cut.subtitle) ? '' : String(cut.subtitle || '').trim()
+    if (!cpRaw) return []
+    parts.push({ kind: 'caption', speaker: null, text: cpRaw })
+  }
   // 2026-10-09 추가(성준님: "숫자가 나와서 수정이 될 수 있어야 한다 — 어제 시간수정해서
   // 입력했듯이") — 글자수 비례는 어디까지나 "아직 아무도 안 정한" 기본 추정치다. 실제
   // 연출 의도로 사람이 직접 조정한 값(cut.captionSegTiming, VideoTab 타이밍 바와 동일 필드)이
@@ -56,6 +64,32 @@ export function computeCaptionTimeline(cut = {}) {
     acc += duration * p.text.length / totalLen
     return { kind: p.kind, speaker: p.speaker, text: p.text, start: +start.toFixed(2), end: +acc.toFixed(2), isManual: false }
   })
+}
+
+// 2026-10-09 ("컷5 연동 바로 진행") — 세그(cut.segments, 다중 클립) 컷의 실제 생성 프롬프트
+// (buildSegClipPrompt/buildOneSegLines, vpDialogue.js)는 cut.captionSegTiming이 아니라
+// cut.segTiming([[start,end]|null, ...], 클립 "로컬" 좌표 — "within Xs-Ys of this clip")을
+// 읽는다. ScriptGenTab 타이밍 바는 사람이 보기 편하게 "컷 전체" 좌표(captionSegTiming)로
+// 편집하므로, 세그 컷에 한해 그 값을 클립별 로컬 좌표로 변환해 segTiming도 같이 채운다 —
+// 화면에서 고친 숫자가 실제로 Flow에 들어가는 문장("within 1-4s of this clip")에 반영된다.
+// 캡션 구간이 없는 클립(겹치는 창이 없음)은 null로 둬 그 클립은 "세그 전체에서 말함"(기존 동작).
+export function captionTimingToSegTiming(cut = {}) {
+  const combo = Array.isArray(cut.segments) ? cut.segments : null
+  if (!combo || combo.length <= 1) return null
+  const timing = Array.isArray(cut.captionSegTiming) ? cut.captionSegTiming : null
+  if (!timing || !timing.length) return null
+  const out = combo.map((_, i) => {
+    const cumStart = combo.slice(0, i).reduce((a, b) => a + (Number(b) || 0), 0)
+    const clipDur = Number(combo[i]) || 0
+    for (const pair of timing) {
+      if (!Array.isArray(pair)) continue
+      const [s, e] = pair
+      const os = Math.max(Number(s) || 0, cumStart), oe = Math.min(Number(e) || 0, cumStart + clipDur)
+      if (oe > os) return [+(os - cumStart).toFixed(2), +(oe - cumStart).toFixed(2)]
+    }
+    return null
+  })
+  return out.some(x => x) ? out : null
 }
 
 // ── 2단계 (2026-09-11, 2026-10-08 갱신) — SEG 필드 = "생성단위 조합 + 트림" 모델 ──────────────

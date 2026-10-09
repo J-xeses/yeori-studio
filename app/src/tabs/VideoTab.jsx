@@ -241,8 +241,18 @@ function ReelCaptionTimingBar({ segs, duration, onCommit }) {
         const next = prev.map((t) => [...t])
         const seg = next[drag.idx]
         if (!seg) return prev
-        if (drag.edge === 'start') seg[0] = Math.max(0, Math.min(sec, seg[1] - 0.5))
-        else seg[1] = Math.min(dur, Math.max(sec, seg[0] + 0.5))
+        // 2026-10-09 (성준님 실측 스크린샷: 대사 끝 6s · 나레이션 시작 4s — 겹침. "숫자가 따로
+        // 논다") — 전엔 이 구간 안에서만 클램프해서, 이웃 구간을 넘어가도 그대로 저장됐다.
+        // ScriptGenTab 쪽 pairs 편집기(commitTimelinePair)는 이웃과 안 겹치게 막는데 여기는
+        // 안 막아서, 두 화면을 오가며 고치면 서로 모순된 값이 쌓였다. 같은 규칙으로 통일 —
+        // 간격(공백)은 자유, 겹침은 막는다.
+        if (drag.edge === 'start') {
+          const lo = drag.idx === 0 ? 0 : next[drag.idx - 1][1]
+          seg[0] = Math.max(lo, Math.min(sec, seg[1] - 0.5))
+        } else {
+          const hi = drag.idx === next.length - 1 ? dur : next[drag.idx + 1][0]
+          seg[1] = Math.min(hi, Math.max(sec, seg[0] + 0.5))
+        }
         return next
       })
     }
@@ -2179,7 +2189,13 @@ export default function VideoTab() {
                         // 문서 흐름상 원래 자리(영상 아래, 컨트롤바 위 틈)로 빠져 화면 밖처럼
                         // 보였다(2026-09-18, 사용자 스크린샷: 컷2/3은 정상, 컷4부터 틀어짐).
                         // CSS 모듈 클래스 대신 bottom%를 직접 계산해 인라인으로 고정.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: previewT >= (Number(selCut.captionStartSec) || 0) ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                        // 2026-10-09 실측(성준님: "컷1 조절 안됨" — 나레이션이 2.1s부터 시작하도록
+                        // 설정해도 0초부터 자막이 보였음): captionStartSec만 보고 visibility를
+                        // 정해서, 드래그/숫자로 잡은 실제 구간 타이밍(captionVisibleNow가 이미
+                        // 정확히 계산함, 2167번째 줄 릴스 자막엔 이미 적용 중)이 비릴스 캔버스
+                        // 자막에는 전혀 반영되지 않았다 — "타이밍바를 설정해도 실제 화면에
+                        // 적용 안 됨"의 핵심 원인. 릴스와 같은 기준으로 통일.
+                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>
