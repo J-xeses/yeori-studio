@@ -1,0 +1,277 @@
+================================================================
+마스터 코드
+[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]
+================================================================
+에피소드명: 스냅 아웃핏 트렌드 따라 해봤습니다
+채널: 서여리 인스타그램 릴스 (IG_R07)
+총 길이: 30초 목표 (6+6+6+6+6) — 생성단위(Veo 6초) 기준, 컷 경계마다 스냅 효과음으로 하드컷
+콘셉트: 손가락 스냅 한 번에 룩이 바뀌는 트렌드 챌린지. 대사 없이 BGM 비트+스냅 효과음으로만 전개, 마지막에 "오늘 네 기분 룩은?" 자막으로 댓글 유도
+================================================================
+EP.HEADER
+CHAR  : YEORI (서여리 기본)
+EP    : IG_R07
+TITLE : 스냅 아웃핏 트렌드 따라 해봤습니다
+LOOK.A: 컷마다 다른 아웃핏(아래 CH 참고) — 같은 자리·같은 구도 유지해 "스냅 한 번에 바뀐" 느낌
+BG.A  : 서여리 방, 전신거울 앞, 낮 자연광
+LIGHT : LT_WD (창가 낮 자연광, 밝고 선명)
+REF   : yeori face / closeup
+BGM   : 업비트 트렌디 팝(4박 루프), 컷마다 비트 드롭에 맞춰 하드컷
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — 손가락 스냅 준비 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 전신거울 앞, 아침 라운지웨어 차림의 서여리가 카메라를 정면으로 보며 장난스럽게 웃는다. 오른손을 들어올려 스냅 자세를 잡는다.
+SP: IN.HM.MR_DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LK_LNG (오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 헝클어진 자연스러운 웨이브 머리)
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_PLF
+AC: 오른손을 들어 스냅 직전 자세로 멈춤, 눈썹 한쪽 살짝 올림
+LOOK_ID: LOOK_LNG
+DU: 6
+CP: 오늘 기분에 맞는 룩, 스냅 한 번이면 끝.
+CT: YEORI
+오디오:
+  BGM: 업비트 트렌디 팝 (0초부터, 인트로 비트)
+  음성: 없음
+  효과음: 손가락 스냅 준비 숨죽임(컷 끝 지점)
+  앰비언스: 밝은 방, 거의 무음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전신거울 앞, 낮 자연광 방
+CH(캐릭터):   오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 자연스러운 웨이브 머리
+SH(샷):       미디엄 클로즈업, 거울 앞 정면
+CA(카메라):   고정
+AC(동작):     0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지
+MD(감정):     장난기 있는 자신감
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,
+standing in front of a full-length mirror in a bright bedroom, wearing an oversized cream lounge t-shirt and grey jogger pants, soft loungewear, barefoot,
+right hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,
+gold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,
+lighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,
+background: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI | 캐주얼 데일리 룩 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 스냅 효과음) 같은 자리, 같은 구도. 서여리가 캐주얼 데일리룩으로 바뀌어 있다. 가볍게 한 바퀴 돌며 옷을 보여준다.
+SP: IN.HM.MR_DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LK_CAS (크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이)
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_WRM
+AC: 가볍게 반 바퀴 턴하며 옷매무새 보여줌, 다시 정면
+LOOK_ID: LOOK_CAS
+DU: 6
+CP: 외출룩 버전.
+CT: YEORI
+오디오:
+  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)
+  음성: 없음
+  효과음: 손가락 스냅 "딱" (컷 시작 0.1초)
+  앰비언스: 밝은 방, 거의 무음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전신거울 앞, 동일 구도
+CH(캐릭터):   크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이
+SH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)
+CA(카메라):   고정
+AC(동작):     0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소
+MD(감정):     경쾌하고 따뜻한 에너지
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,
+standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing as before,
+now wearing a cropped knit cardigan over a simple top and wide-leg denim jeans, a thin gold necklace, casual daytime outfit,
+mid-turn showing off the outfit then facing camera again with a warm smile,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+lighting: same bright daytime window light, soft and clean,
+background: same softly blurred bedroom with mirror frame, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: She turns halfway, showing off the new casual outfit — cardigan and wide denim — with a light, breezy motion. / Next 3-6s: She turns back to face camera, warm playful smile, hand brushing hair back. No dialogue. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 오피스/포멀 룩 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 스냅 효과음) 같은 자리. 단정한 오피스룩으로 바뀐 서여리. 살짝 놀란 듯 과장된 표정으로 옷깃을 매만진다.
+SP: IN.HM.MR_DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LK_OFC (크림 블라우스 + 블랙 슬랙스, 단정하게 반 묶은 머리)
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SUR
+AC: 옷깃을 매만지며 과장되게 놀란 표정, 한쪽 눈썹 올림
+LOOK_ID: LOOK_OFC
+DU: 6
+CP: 출근룩 버전. 나 프로 맞아?
+CT: YEORI
+오디오:
+  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)
+  음성: 없음
+  효과음: 손가락 스냅 "딱" (컷 시작 0.1초)
+  앰비언스: 밝은 방, 거의 무음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전신거울 앞, 동일 구도
+CH(캐릭터):   크림 블라우스 + 블랙 슬랙스, 단정한 반 묶음 머리
+SH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)
+CA(카메라):   고정
+AC(동작):     0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환
+MD(감정):     과장된 놀람 → 당당함
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now neatly half-tied back,
+standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,
+now wearing a cream blouse and black tailored slacks, polished office outfit, minimal gold jewelry,
+hand adjusting the collar, exaggerated surprised expression with one eyebrow raised, playful not serious,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+lighting: same bright daytime window light,
+background: same softly blurred bedroom with mirror frame, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: She looks down at her new office outfit, adjusting her collar with an exaggerated surprised expression, eyebrow raised playfully. / Next 3-6s: Expression shifts into a confident, polished smile, chin slightly up. No dialogue. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI | 데이트 글램 룩 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 스냅 효과음) 같은 자리. 화려한 데이트룩으로 바뀐 서여리. 살짝 윙크하며 머리를 넘긴다.
+SP: IN.HM.MR_DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LK_GLM (버건디 슬립 드레스 + 웨이브 다운 스타일링, 포인트 이어링)
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_WRM
+AC: 머리를 손으로 넘기며 살짝 윙크
+LOOK_ID: LOOK_GLM
+DU: 6
+CP: 저녁 약속룩 버전.
+CT: YEORI
+오디오:
+  BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조)
+  음성: 없음
+  효과음: 손가락 스냅 "딱" (컷 시작 0.1초)
+  앰비언스: 밝은 방, 거의 무음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전신거울 앞, 동일 구도
+CH(캐릭터):   버건디 슬립 드레스, 웨이브 다운 스타일링, 포인트 이어링
+SH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)
+CA(카메라):   고정
+AC(동작):     0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크
+MD(감정):     매력적이고 여유로운 자신감
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair now down and styled glamorously,
+standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,
+now wearing a burgundy silk slip dress, statement earrings, elegant evening look,
+one hand gently sweeping hair back, confident alluring expression, subtle wink at camera,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+lighting: same bright daytime window light transitioning slightly warmer,
+background: same softly blurred bedroom with mirror frame, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: She sweeps her hair back with one hand in a slow, confident motion, glamorous evening look revealed. / Next 3-6s: She gives a subtle playful wink directly at camera, confident smile. No dialogue. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5] ─ YEORI | 다시 편안한 나 + CTA | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 스냅 효과음) 다시 처음 라운지웨어로 돌아온 서여리. 장난스럽게 웃으며 카메라를 가리킨다.
+SP: IN.HM.MR_DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LK_LNG (컷1과 동일 — 오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠)
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_PLF
+AC: 웃으며 검지로 카메라를 가리킴, 어깨 으쓱
+LOOK_ID: LOOK_LNG
+DU: 6
+CP: 근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?
+CT: YEORI
+오디오:
+  BGM: 업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)
+  음성: 없음
+  효과음: 손가락 스냅 "딱" (컷 시작 0.1초)
+  앰비언스: 밝은 방, 거의 무음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     전신거울 앞, 동일 구도
+CH(캐릭터):   컷1과 동일한 라운지웨어로 복귀
+SH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)
+CA(카메라):   고정
+AC(동작):     0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱
+MD(감정):     편안하고 장난기 있는 친밀함
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the oversized cream lounge t-shirt and grey jogger pants from the first look, hair naturally tousled again,
+standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,
+relaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+lighting: same bright daytime window light,
+background: same softly blurred bedroom with mirror frame, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.

@@ -1,11 +1,11 @@
 {
-  "activeTab": "storyarchive",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
     "remainingChars": 89333
   },
-  "activeEpisodeId": "ep_1790684690932",
+  "activeEpisodeId": "ep_1790664275565",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -8347,280 +8347,237 @@
       "id": "ep_1790664275565",
       "episode": {
         "number": 107,
-        "title": "",
+        "title": "스냅 아웃핏 트렌드 따라 해봤습니다",
         "location": "카페",
         "mood": "감성",
         "cutCount": 7,
-        "contentType": "SF",
+        "contentType": "IG_R",
         "topicCode": "PSY",
         "scnCode": "DOC",
         "instaNum": "",
         "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-        "code": "SF_E09",
-        "masterCode": "SF_E09_HOMECAFE :: YR_VD+BR_VD :: IN.HM.TZ_NT.LT_STD → IN.CV.TZ_NT.LT_WM :: LK_HM(pastel pink hoodie+black leggings+gold necklace) :: MD_JOY→MD_COM→MD_REL :: Q_SH.RT_916.PB_YT",
+        "code": "IG_R07",
+        "masterCode": "[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]",
         "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : SF_E09_HOMECAFE\nTITLE : 홈카페 브이로그 대참사\nLOOK  : LOOK_HM2 (oversized pastel pink hoodie + black leggings + gold necklace + gold earrings)\nBG.A  : 집 홈카페 세팅 (링라이트 / 삼각대 / 커피 머신 / 목제 선반)\nBG.B  : GS25 편의점 내부 (형광등 / 한국 간식 진열대)\nBG.C  : 집 부엌 + 거실 소파 (따뜻한 간접조명)\nLIGHT : LT_STD (링라이트) → LT_CV (편의점 형광등) → LT_WM (집 따뜻한 조명)\nREF   : face / closeup / fs-masked\nBGM   : 밝고 경쾌한 오프닝 → 당황 효과음 → 편의점 경쾌 → 따뜻하고 감성적 마무리\n소품  : vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)"
       },
       "cuts": [
         {
           "id": "cut-1",
           "no": 1,
-          "cutTitle": "Hook 홈카페 인플루언서 모드",
-          "lipsync": true,
-          "scene": "집 홈카페 세팅 앞 / 링라이트 ON / 완벽한 인플루언서 모드",
-          "action": "",
+          "cutTitle": "손가락 스냅 준비",
+          "lipsync": false,
+          "scene": "전신거울 앞, 아침 라운지웨어 차림의 서여리가 카메라를 정면으로 보며 장난스럽게 웃는다. 오른손을 들어올려 스냅 자세를 잡는다.",
+          "action": "0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지",
           "character": "서여리",
-          "dialogue": "안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?",
-          "subtitle": "",
+          "dialogue": "",
+          "subtitle": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
           "narration": "",
-          "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s, \nlong wavy dark brown hair NOT short hair, \na very subtle natural skin texture on her right cheek (subtle, never exaggerated), \ndelicate gold necklace and small gold hoop earrings, \neffortlessly photogenic not posing just existing beautifully, \n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, \nK-model proportions, small face, long legs, slender figure, \nnatural makeup, warm skin tone, appearing no older than 22-23, \noversized pastel pink hoodie, black leggings, \nstanding in a cozy home cafe setup, \nring light glowing on left side, smartphone on tripod filming her, \nwood shelf behind with coffee beans jar books small potted plant, \nespresso machine on counter, \nshe holds a latte glass with beautiful rosette latte art, \nsmiling brightly at camera with big confident eyes — full influencer mode, \nmedium shot, eye level, vertical 9:16, \nbright clean white ring light warm background ambient, \nPhotorealistic 8K cinematic natural Korean beauty, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "First 0-2s: she stands confidently in home cafe setup, \nring light glowing, latte glass in hand, \nbig bright smile at camera.\n\nNext 2-5s: she speaks brightly —\n\"안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?\"\nover-the-top influencer energy, \neyes wide and sparkling.\n\nFinal 5-6s: smile holds — but something imperceptibly off underneath. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing an oversized cream lounge t-shirt and grey jogger pants, soft loungewear, barefoot,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16",
+          "videoPrompt": "First 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.",
           "duration": 6,
-          "shotType": "FULLBODY",
+          "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.HM.TZ_NT.LT_STD",
+            "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
-            "ch": "서여리 / LOOK_HM2",
-            "sh": "SH_MS",
+            "ch": "YR_VD / LK_LNG (오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 헝클어진 자연스러운 웨이브 머리)",
+            "sh": "SH_MCU",
             "ca": "CA_ST",
-            "md": "MD_JOY",
-            "ac": "",
-            "lookId": "LOOK_HM2",
+            "md": "MD_PLF",
+            "ac": "오른손을 들어 스냅 직전 자세로 멈춤, 눈썹 한쪽 살짝 올림",
+            "lookId": "LOOK_LNG",
             "du": 6,
             "audio": {
-              "bgm": "밝고 경쾌한 오프닝 BGM",
-              "voice": "과하게 밝고 에너지 넘치는 인플루언서 톤 — ★립싱크",
-              "sfx": "없음",
-              "ambience": "집 링라이트 환경음"
+              "bgm": "업비트 트렌디 팝 (0초부터, 인트로 비트)",
+              "voice": "없음",
+              "sfx": "손가락 스냅 준비 숨죽임(컷 끝 지점)",
+              "ambience": "밝은 방, 거의 무음"
             },
             "kr": {
-              "sp": "집 홈카페 세팅 / 링라이트 ON / 삼각대 세팅",
-              "ch": "파스텔 핑크 후드티 + 블랙 레깅스 + 골드 목걸이 / 라떼 글라스 들고",
-              "sh": "미디엄샷",
+              "sp": "전신거울 앞, 낮 자연광 방",
+              "ch": "오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 자연스러운 웨이브 머리",
+              "sh": "미디엄 클로즈업, 거울 앞 정면",
               "ca": "고정",
-              "ac": "",
-              "md": "과도하게 밝은 인플루언서 모드 / 내심 뭔가 숨기는"
+              "ac": "0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지",
+              "md": "장난기 있는 자신감"
             }
           }
         },
         {
           "id": "cut-2",
           "no": 2,
-          "cutTitle": "커피 머신 앞 멘붕",
-          "lipsync": true,
-          "scene": "집 부엌 커피 머신 앞 / 카메라 꺼진 후 / 완전 다른 사람",
-          "action": "",
+          "cutTitle": "캐주얼 데일리 룩",
+          "lipsync": false,
+          "scene": "(하드컷, 스냅 효과음) 같은 자리, 같은 구도. 서여리가 캐주얼 데일리룩으로 바뀌어 있다. 가볍게 한 바퀴 돌며 옷을 보여준다.",
+          "action": "0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소",
           "character": "서여리",
-          "dialogue": "어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야... 설명서가 어딨지? 아 몰라 몰라~",
-          "subtitle": "",
+          "dialogue": "",
+          "subtitle": "외출룩 버전.",
           "narration": "",
-          "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s, \nlong wavy dark brown hair NOT short hair, \na very subtle natural skin texture on her right cheek (subtle, never exaggerated), \ndelicate gold necklace, \neffortlessly photogenic not posing just existing beautifully, \n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, \nK-model proportions, small face, long legs, slender figure, \nnatural makeup, warm skin tone, appearing no older than 22-23, \noversized pastel pink hoodie, black leggings, \nstanding beside a large professional espresso machine at kitchen counter, \nleaning in close staring at complicated buttons and dials\nwith complete confusion, \neyebrows deeply furrowed, head tilted, mouth slightly open — totally lost, \nsoft natural window light from left, no ring light visible, \nmedium shot slightly from the side, \nPhotorealistic 8K cinematic natural Korean beauty, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "First 0-2s: she stands before the espresso machine, \nleaning in close, staring at the buttons, \ncompletely confused — no camera awareness.\n\nNext 2-7s: she speaks to herself —\n\"어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야...\n설명서가 어딨지? 아 몰라 몰라~\"\nscratching her head, stepping back helplessly.\n\nFinal 7-8s: shoulders slump, completely defeated. Barefoot or socks only, no shoes worn (indoor home setting).",
-          "duration": 8,
+          "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing as before,\nnow wearing a cropped knit cardigan over a simple top and wide-leg denim jeans, a thin gold necklace, casual daytime outfit,\nmid-turn showing off the outfit then facing camera again with a warm smile,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light, soft and clean,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+          "videoPrompt": "First 0-3s: She turns halfway, showing off the new casual outfit — cardigan and wide denim — with a light, breezy motion. / Next 3-6s: She turns back to face camera, warm playful smile, hand brushing hair back. No dialogue. No on-screen subtitle text or captions.",
+          "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.HM.TZ_NT.LT_WM",
+            "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
-            "ch": "서여리 / LOOK_HM2",
+            "ch": "YR_VD / LK_CAS (크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이)",
             "sh": "SH_MCU",
             "ca": "CA_ST",
-            "md": "MD_COM",
-            "ac": "",
-            "lookId": "LOOK_HM2",
-            "du": 8,
+            "md": "MD_WRM",
+            "ac": "가볍게 반 바퀴 턴하며 옷매무새 보여줌, 다시 정면",
+            "lookId": "LOOK_CAS",
+            "du": 6,
             "audio": {
-              "bgm": "갑자기 중단 → 당황 효과음",
-              "voice": "카메라 의식 없이 혼자 중얼거리는 톤 — ★립싱크",
-              "sfx": "당황 효과음",
-              "ambience": "부엌 조용한 환경음"
+              "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
+              "voice": "없음",
+              "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+              "ambience": "밝은 방, 거의 무음"
             },
             "kr": {
-              "sp": "집 부엌 / 커피 머신 앞 / 부드러운 자연 창문 빛",
-              "ch": "LOOK_HM2 / 머신 옆에 서서 당황",
-              "sh": "미디엄 클로즈업",
-              "ca": "고정 / 살짝 옆에서",
-              "ac": "",
-              "md": "완전 다른 사람 / 당황해서 우왕좌왕 / 카메라 의식 없음"
+              "sp": "전신거울 앞, 동일 구도",
+              "ch": "크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이",
+              "sh": "미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)",
+              "ca": "고정",
+              "ac": "0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소",
+              "md": "경쾌하고 따뜻한 에너지"
             }
           }
         },
         {
           "id": "cut-3",
           "no": 3,
-          "cutTitle": "GS25에서 편의점 커피 들고 나오기",
-          "lipsync": true,
-          "scene": "GS25 편의점 내부 → 나오며 / 형광등 / 한국 간식 진열대",
-          "action": "",
+          "cutTitle": "오피스/포멀 룩",
+          "lipsync": false,
+          "scene": "(하드컷, 스냅 효과음) 같은 자리. 단정한 오피스룩으로 바뀐 서여리. 살짝 놀란 듯 과장된 표정으로 옷깃을 매만진다.",
+          "action": "0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환",
           "character": "서여리",
-          "dialogue": "그러니까, 있잖아~ 집에 커피 머신 있어봤자... GS25 커피가 젤 맛있어. 이건 팩트야. 근데~",
-          "subtitle": "",
+          "dialogue": "",
+          "subtitle": "출근룩 버전. 나 프로 맞아?",
           "narration": "",
-          "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings, white sneakers,\nwalking slowly toward camera inside Korean GS25 convenience store,\nbright fluorescent overhead lighting,\nblue and white GS25 signage visible on wall,\ncolorful Korean snack shelves in background,\nholding a paper coffee cup with Cafe25 printed on it lid on top,\nexpression starting with slightly guilty sideways glance\nthen transitioning to confident direct eye contact\nwith a small satisfied smile,\nmedium full shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-          "videoPrompt": "First 0-2s: she walks toward camera in GS25,\nholding the paper coffee cup,\ninitially looking slightly guilty to the side.\n\nNext 2-7s: she faces camera directly, speaking with growing confidence —\n\"그러니까, 있잖아~ 집에 커피 머신 있어봤자...\nGS25 커피가 젤 맛있어. 이건 팩트야. 근데~\"\ncup raised slightly — fully owning it.\n\nFinal 7-8s: confident direct smile at camera.",
-          "duration": 8,
-          "shotType": "FULLBODY",
+          "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now neatly half-tied back,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a cream blouse and black tailored slacks, polished office outfit, minimal gold jewelry,\nhand adjusting the collar, exaggerated surprised expression with one eyebrow raised, playful not serious,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+          "videoPrompt": "First 0-3s: She looks down at her new office outfit, adjusting her collar with an exaggerated surprised expression, eyebrow raised playfully. / Next 3-6s: Expression shifts into a confident, polished smile, chin slightly up. No dialogue. No on-screen subtitle text or captions.",
+          "duration": 6,
+          "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.CV.TZ_NT.LT_WM",
+            "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
-            "ch": "서여리 / LOOK_HM2",
-            "sh": "SH_MS",
+            "ch": "YR_VD / LK_OFC (크림 블라우스 + 블랙 슬랙스, 단정하게 반 묶은 머리)",
+            "sh": "SH_MCU",
             "ca": "CA_ST",
-            "md": "MD_COM → MD_JOY",
-            "ac": "",
-            "lookId": "LOOK_HM2",
-            "du": 8,
+            "md": "MD_SUR",
+            "ac": "옷깃을 매만지며 과장되게 놀란 표정, 한쪽 눈썹 올림",
+            "lookId": "LOOK_OFC",
+            "du": 6,
             "audio": {
-              "bgm": "편의점 경쾌한 BGM",
-              "voice": "처음 살짝 부끄럽다가 당당하게 반전 — ★립싱크",
-              "sfx": "편의점 도어벨 소리",
-              "ambience": "편의점 형광등 환경음"
+              "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
+              "voice": "없음",
+              "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+              "ambience": "밝은 방, 거의 무음"
             },
             "kr": {
-              "sp": "GS25 편의점 내부 / 밝은 형광등 / 한국 간식 진열대",
-              "ch": "LOOK_HM2 + 흰 운동화 / 편의점 커피 페이퍼컵 들고",
-              "sh": "미디엄샷",
-              "ca": "고정 (카메라 쪽으로 걸어오는 스타일)",
-              "ac": "",
-              "md": "처음 부끄럽다가 완전 당당하게 반전 / 이 반전이 웃음 포인트"
+              "sp": "전신거울 앞, 동일 구도",
+              "ch": "크림 블라우스 + 블랙 슬랙스, 단정한 반 묶음 머리",
+              "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
+              "ca": "고정",
+              "ac": "0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환",
+              "md": "과장된 놀람 → 당당함"
             }
           }
         },
         {
           "id": "cut-4",
           "no": 4,
-          "cutTitle": "예쁜 컵에 따르기",
-          "lipsync": true,
-          "scene": "집 부엌 / 편의점 커피를 예쁜 빈티지 글라스에 옮겨 담기",
-          "action": "",
+          "cutTitle": "데이트 글램 룩",
+          "lipsync": false,
+          "scene": "(하드컷, 스냅 효과음) 같은 자리. 화려한 데이트룩으로 바뀐 서여리. 살짝 윙크하며 머리를 넘긴다.",
+          "action": "0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크",
           "character": "서여리",
-          "dialogue": "진~짜 중요한 거~ 편의점 커피지만, 컵은 aesthetic 해야 해~ 이게 포인트! 아무도 몰라. ㅎㅎ 솔직히..",
-          "subtitle": "",
+          "dialogue": "",
+          "subtitle": "저녁 약속룩 버전.",
           "narration": "",
-          "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s, \nlong wavy dark brown hair NOT short hair, \na very subtle natural skin texture on her right cheek (subtle, never exaggerated), \ndelicate gold necklace, \neffortlessly photogenic not posing just existing beautifully, \n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, \nK-model proportions, small face, long legs, slender figure, \nnatural makeup, warm skin tone, appearing no older than 22-23, \noversized pastel pink hoodie, black leggings, \nstanding at kitchen counter carefully pouring convenience store coffee\ninto a vintage diamond-textured clear glass tumbler\n(short cylindrical shape, embossed geometric pattern, no stem), \ndark coffee liquid pouring in, \ntongue slightly out in concentration, \nhyper-focused adorably serious expression, \nthen looking down at the filled glass with a pleased satisfied expression, \nwarm soft kitchen light slightly overhead, \nclose-up slightly above angled down at hands and face, \nvertical 9:16, \nPhotorealistic 8K cinematic natural Korean beauty, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "First 0-3s: she pours coffee slowly and carefully\ninto the vintage textured glass, \ntongue slightly out, completely focused.\n\nNext 3-8s: she speaks while pouring —\n\"진~짜 중요한 거~ 편의점 커피지만, \n컵은 aesthetic 해야 해~ 이게 포인트!\n아무도 몰라. ㅎㅎ 솔직히..\"\nsets carton down, gazes at glass warmly.\n\nFinal 8-10s: glances up at camera with a sneaky wink. Barefoot or socks only, no shoes worn (indoor home setting).",
-          "duration": 10,
+          "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair now down and styled glamorously,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a burgundy silk slip dress, statement earrings, elegant evening look,\none hand gently sweeping hair back, confident alluring expression, subtle wink at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light transitioning slightly warmer,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+          "videoPrompt": "First 0-3s: She sweeps her hair back with one hand in a slow, confident motion, glamorous evening look revealed. / Next 3-6s: She gives a subtle playful wink directly at camera, confident smile. No dialogue. No on-screen subtitle text or captions.",
+          "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.HM.TZ_NT.LT_WM",
+            "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
-            "ch": "서여리 / LOOK_HM2",
+            "ch": "YR_VD / LK_GLM (버건디 슬립 드레스 + 웨이브 다운 스타일링, 포인트 이어링)",
             "sh": "SH_MCU",
             "ca": "CA_ST",
-            "md": "MD_COM",
-            "ac": "",
-            "lookId": "LOOK_HM2",
-            "du": 10,
+            "md": "MD_WRM",
+            "ac": "머리를 손으로 넘기며 살짝 윙크",
+            "lookId": "LOOK_GLM",
+            "du": 6,
             "audio": {
-              "bgm": "따뜻하고 귀여운 BGM",
-              "voice": "혀 내밀고 집중하는 진지한 톤 → 당당한 윙크 — ★립싱크",
-              "sfx": "컵에 커피 따르는 소리",
-              "ambience": "부엌 조용한 환경음"
+              "bgm": "업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조)",
+              "voice": "없음",
+              "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+              "ambience": "밝은 방, 거의 무음"
             },
             "kr": {
-              "sp": "집 부엌 / 따뜻한 조명 / 흰 배경",
-              "ch": "LOOK_HM2 / 부엌 카운터에 서서",
-              "sh": "미디엄 클로즈업",
-              "ca": "고정 / 살짝 위에서",
-              "ac": "",
-              "md": "진지하게 집중하는 귀여움 / 아무도 모른다는 당당함"
+              "sp": "전신거울 앞, 동일 구도",
+              "ch": "버건디 슬립 드레스, 웨이브 다운 스타일링, 포인트 이어링",
+              "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
+              "ca": "고정",
+              "ac": "0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크",
+              "md": "매력적이고 여유로운 자신감"
             }
           }
         },
         {
           "id": "cut-5",
           "no": 5,
-          "cutTitle": "Deep Talk 소파 고백",
-          "lipsync": true,
-          "scene": "거실 소파 / POV 앵글 / 커피 들고 카메라 응시 / 핵심 컷",
-          "action": "",
+          "cutTitle": "다시 편안한 나 + CTA",
+          "lipsync": false,
+          "scene": "(하드컷, 스냅 효과음) 다시 처음 라운지웨어로 돌아온 서여리. 장난스럽게 웃으며 카메라를 가리킨다.",
+          "action": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
           "character": "서여리",
-          "dialogue": "팔로워들은 아마 모를껄~? Actually~ 난 편의점! (8초)",
-          "subtitle": "",
-          "narration": "방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ (8초)",
-          "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s, \nlong wavy dark brown hair NOT short hair, \na very subtle natural skin texture on her right cheek (subtle, never exaggerated), \ndelicate gold necklace and small gold hoop earrings, \neffortlessly photogenic not posing just existing beautifully, \n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, \nK-model proportions, small face, long legs, slender figure, \nnatural makeup, warm skin tone, appearing no older than 22-23, \noversized pastel pink hoodie, black leggings, \nsitting on a beige fabric sofa living room\nwith warm floor lamp glowing softly behind her, \nholding vintage diamond-textured clear glass tumbler with both hands\n(murky brown coffee liquid inside slight condensation on glass), \nPOV shot — feels like viewer is sitting across from her, \nlooking directly into camera with a guilty playful smile\none eyebrow slightly raised leaning forward slightly, \nlike confessing a harmless secret to a close friend, \nwarm golden floor lamp cozy indoor evening atmosphere, \nPOV close-up, eye level, intimate, vertical 9:16, \nPhotorealistic 8K cinematic natural Korean beauty, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "First 0-8s (나레이션):\nshe leans slightly forward, holds glass toward camera, \nguilty playful expression — like confessing to a close friend, \nNO dialogue — narration added in post\n\"방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ\"\n\nNext 8-16s (립싱크):\nshe speaks with mischievous sparkling eyes —\n\"팔로워들은 아마 모를껄~?\nActually~ 난 편의점!\"\nsmall natural laugh with shoulder shake, \ncompletely owning the confession. Barefoot or socks only, no shoes worn (indoor home setting).",
-          "duration": 16,
+          "dialogue": "",
+          "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
+          "narration": "",
+          "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the oversized cream lounge t-shirt and grey jogger pants from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+          "videoPrompt": "First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.",
+          "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
           "masterCode": {
-            "sp": "IN.HM.TZ_NT.LT_WM",
+            "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
-            "ch": "서여리 / LOOK_HM2",
-            "sh": "SH_CU",
+            "ch": "YR_VD / LK_LNG (컷1과 동일 — 오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠)",
+            "sh": "SH_MCU",
             "ca": "CA_ST",
-            "md": "MD_COM → MD_JOY",
-            "ac": "",
-            "lookId": "LOOK_HM2",
-            "du": 16,
+            "md": "MD_PLF",
+            "ac": "웃으며 검지로 카메라를 가리킴, 어깨 으쓱",
+            "lookId": "LOOK_LNG",
+            "du": 6,
             "audio": {
-              "bgm": "따뜻한 코지 BGM / 나레이션 시작 시 볼륨 낮추기",
-              "voice": "나레이션(전반8초) + 립싱크(후반8초)",
-              "sfx": "없음",
-              "ambience": "조용한 거실 환경음"
+              "bgm": "업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)",
+              "voice": "없음",
+              "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+              "ambience": "밝은 방, 거의 무음"
             },
             "kr": {
-              "sp": "거실 소파 / 따뜻한 플로어 램프 / POV 샷",
-              "ch": "LOOK_HM2 / 소파에 앉아 빈티지 글라스 두 손으로 들고",
-              "sh": "클로즈업 / POV / 친밀한 거리",
+              "sp": "전신거울 앞, 동일 구도",
+              "ch": "컷1과 동일한 라운지웨어로 복귀",
+              "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
               "ca": "고정",
-              "ac": "",
-              "md": "진지하게 시작했다가 픽 웃는 타이밍 / 이 컷이 영상의 핵심"
-            }
-          }
-        },
-        {
-          "id": "cut-6",
-          "no": 6,
-          "cutTitle": "빈티지 글라스 클로즈업",
-          "lipsync": false,
-          "scene": "집 거실 / 빈티지 글라스 손 클로즈업 / K-감성 승화 순간",
-          "action": "",
-          "character": "서여리",
-          "dialogue": "",
-          "subtitle": "",
-          "narration": "근데 있잖아~ 한국 편의점 커피가 왜 맛있냐면... 집앞에 언제나 거기 있거든~ 그게 좋은 거잖아..",
-          "imagePrompt": "EXTREME CLOSEUP SHOT —\nClose-up of both hands wrapped around a vintage diamond-textured clear glass tumbler\n(short cylindrical shape, embossed geometric pattern, no stem), \niced coffee visible inside — dark amber liquid with ice cubes, \nsmall cute cat sticker on the glass surface\n(cat face illustration, Korean text 커피 below), \ncondensation droplets on glass exterior, \nwarm golden-beige blurred background, \npastel pink hoodie sleeves visible only at edges of frame, \nhands gently cradling the glass with slight subtle rotation to show sticker, \nslow peaceful tactile movement, \nwarm golden indoor lamp light soft and intimate, \nextreme close-up detail shot only hands glass sticker in frame no face, \nshallow depth of field, vertical 9:16, \nCinematic, photorealistic, 8K warm color grade\n\nCLOSEUP SHOT —\nYoung Korean woman early-20s, \nlong wavy dark brown hair NOT short hair, \na very subtle natural skin texture on her right cheek (subtle, never exaggerated), \ndelicate gold necklace and small gold hoop earrings, \neffortlessly photogenic not posing just existing beautifully, \n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, \nK-model proportions, small face, long legs, slender figure, \nnatural makeup, warm skin tone, appearing no older than 22-23, \noversized pastel pink hoodie, black leggings, \nsitting on beige sofa leaning forward toward camera with bright warm smile, \nholding up vintage diamond-textured clear glass tumbler\n(short cylindrical embossed geometric pattern NO stem NOT a wine glass)\nfilled with iced dark coffee raising it toward camera as if making a cheerful toast, \nsmall cat sticker visible on glass, \nwarm floor lamp glowing behind her cozy living room atmosphere, \nwide bright confident smile playful and proud, \nPOV medium-close slightly tilted dynamic and cheerful, vertical 9:16, \nPhotorealistic 8K cinematic natural Korean beauty\n\nCLOSEUP SHOT —\nYoung Korean woman early-20s, \nlong wavy dark brown hair NOT short hair, \na very subtle natural skin texture on her right cheek (subtle, never exaggerated), \ndelicate gold necklace and small gold hoop earrings, \neffortlessly photogenic not posing just existing beautifully, \n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, \nK-model proportions, small face, long legs, slender figure, \nnatural makeup, warm skin tone, appearing no older than 22-23, \noversized pastel pink hoodie, \nleaning toward camera on sofa with bright warm smile, \none eye winking playfully, expression \"yeah this is still aesthetic and I stand by it\", \nwarm golden lamp bokeh background, \nclose-up, eye level, vertical 9:16, \nPhotorealistic 8K cinematic natural Korean beauty, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: both hands wrap gently around the glass, \ncondensation catching the warm light, \ncat sticker visible on the surface.\n\nNext 3-7s: hands slowly rotate the glass, \nsticker coming into clearer view, \nno dramatic movement — slow and peaceful.\n\nFinal 7-10s: hands hold the glass still, \nwarm lamp light glowing on the scene, \nquiet intimate moment.\n\nNO dialogue — narration added in post\n\nFirst 0-3s: she sits up brightly on sofa, \nraises the vintage glass toward camera in a toast gesture, \nwide bright smile — completely proud.\n\nNext 3-7s: she holds the pose confidently, \nglass raised, cat sticker visible, \nwarm lamp glowing behind her.\n\nFinal 7-8s: big smile holds — ready for the punchline.\n\nFirst 0-2s: camera pushes in gently, \nshe leans toward camera with conspiratorial energy, \none eye winking.\n\nNext 2-5s: she speaks with playful confidence —\n\"It's called creative direction, okay?\"\nbright proud smile, completely owning it.\n\nFinal 5-6s: holds the wink and smile — 여운.\n\n전체 컷 요약\n| 컷    | 제목               | 길이 | PL     | LOOK     | SH       | CA     | 립싱크 | 상태 |\n|-------|--------------------|------|--------|----------|----------|--------|--------|------|\n| C01   | Hook 인플루언서 모드 | 6s  | YR_VD  | LOOK_HM2 | SH_MS    | CA_ST  | ✅     | 신규 |\n| C02   | 커피 머신 멘붕      | 8s   | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ✅     | 신규 |\n| C03   | GS25 나오기         | 8s   | YR_VD  | LOOK_HM2 | SH_MS    | CA_ST  | ✅     | 신규 |\n| C04   | 예쁜 컵에 따르기    | 10s  | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ✅     | 신규 |\n| C05   | Deep Talk 소파 고백 | 16s  | YR_VD  | LOOK_HM2 | SH_CU    | CA_ST  | ✅     | 신규 ⭐ |\n| C06   | 빈티지 글라스 디테일 | 10s | BR_VD  | LOOK_HM2 | SH_ECU   | CA_ST  | ❌     | 신규 |\n| C07-1 | 엔딩 레시피 전반    | 8s   | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C07-2 | 엔딩 시그니처 라인  | 6s   | YR_VD  | LOOK_HM2 | SH_CU    | CA_PS  | ✅     | 신규 |\n\n총 길이: 약 72초 / 립싱크: C01·C02·C03·C04·C05·C07-2\nBGM: 밝은 오프닝 → 중단(멘붕) → 경쾌(편의점) → 따뜻한 → 유쾌한 엔딩\n핵심 소품: vintage diamond-textured clear glass tumbler (짧은 원통형 / 스템 없음)\n시그니처 라인: \"It's called creative direction, okay?\" — 매 화 고정\n버전 이력\nv1.0 (구버전) — 초기 기획안 + 영상 프롬프트 분리 작성\nv3.0 (2026-08-02) — 표준 포맷 v3 통합\n                    마스터 코드 / EP.HEADER / KR 섹션 / VP 섹션 정리\n                    C05 나레이션+립싱크 분리 (16초 구조)\n                    C07 → C07-1(나레이션8초) + C07-2(립싱크6초) 분리, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "duration": 10,
-          "shotType": "CLOSEUP",
-          "cutType": "BROLL",
-          "cutMark": "NORMAL",
-          "masterCode": {
-            "sp": "IN.HM.TZ_NT.LT_WM",
-            "pl": "BR_VD",
-            "ch": "서여리 손만 (얼굴 미등장)",
-            "sh": "SH_ECU",
-            "ca": "CA_ST",
-            "md": "MD_REL",
-            "ac": "",
-            "lookId": "LOOK_HM2 (소매만)",
-            "du": 10,
-            "audio": {
-              "bgm": "따뜻하고 감성적 BGM",
-              "voice": "따뜻하고 편안한 나레이션 톤",
-              "sfx": "없음",
-              "ambience": "조용한 거실"
-            },
-            "kr": {
-              "sp": "거실 소파 / 황금빛 보케 배경",
-              "ch": "LOOK_HM2 / C07-1보다 더 가까이",
-              "sh": "클로즈업",
-              "ca": "푸시인",
-              "ac": "",
-              "md": "장난스럽고 자신감 / 시청자와의 공모 느낌"
+              "ac": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
+              "md": "편안하고 장난기 있는 친밀함"
             }
           }
         }
       ],
-      "scriptRaw": "# SF_E09_HOMECAFE 홈카페 브이로그 대참사 대본\n# 생성일: 2026. 8. 2.\n# 버전: v3.0\n# 룰셋: v1.3.1 적용\n# K-요소: 편의점 커피 문화\n\n================================================================\n마스터 코드\nSF_E09_HOMECAFE :: YR_VD+BR_VD :: IN.HM.TZ_NT.LT_STD → IN.CV.TZ_NT.LT_WM :: LK_HM(pastel pink hoodie+black leggings+gold necklace) :: MD_JOY→MD_COM→MD_REL :: Q_SH.RT_916.PB_YT\n================================================================\nEP.HEADER\n================================================================\nCHAR  : YEORI.BASE\nEP    : SF_E09_HOMECAFE\nTITLE : 홈카페 브이로그 대참사\nLOOK  : LOOK_HM2 (oversized pastel pink hoodie + black leggings + gold necklace + gold earrings)\nBG.A  : 집 홈카페 세팅 (링라이트 / 삼각대 / 커피 머신 / 목제 선반)\nBG.B  : GS25 편의점 내부 (형광등 / 한국 간식 진열대)\nBG.C  : 집 부엌 + 거실 소파 (따뜻한 간접조명)\nLIGHT : LT_STD (링라이트) → LT_CV (편의점 형광등) → LT_WM (집 따뜻한 조명)\nREF   : face / closeup / fs-masked\nBGM   : 밝고 경쾌한 오프닝 → 당황 효과음 → 편의점 경쾌 → 따뜻하고 감성적 마무리\n소품  : vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1]  YR_VD — Hook 홈카페 인플루언서 모드 / 6초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 집 홈카페 세팅 앞 / 링라이트 ON / 완벽한 인플루언서 모드\nSP: IN.HM.TZ_NT.LT_STD\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: 안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?\nNR: 없음\nSH: SH_MS\nCA: CA_ST\nMD: MD_JOY\nAT: AT_EM_01 + AT_SD_01\nLOOK_ID: LOOK_HM2\nDU: 6\n오디오:\n  BGM: 밝고 경쾌한 오프닝 BGM\n  음성: 과하게 밝고 에너지 넘치는 인플루언서 톤 — ★립싱크\n  효과음: 없음\n  앰비언스: 집 링라이트 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     집 홈카페 세팅 / 링라이트 ON / 삼각대 세팅\nCH(캐릭터):   파스텔 핑크 후드티 + 블랙 레깅스 + 골드 목걸이 / 라떼 글라스 들고\nSH(샷):       미디엄샷\nCA(카메라):   고정\nAT(동작):     눈 크게 뜨고 과하게 밝게 카메라 보기 / 라떼 글라스 들어올리며 인사 / 시청자는 뭔가 수상하다는 걸 느끼기 시작\nMD(감정):     과도하게 밝은 인플루언서 모드 / 내심 뭔가 숨기는\nDL(대사):     \"안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace and small gold hoop earrings,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings,\nstanding in a cozy home cafe setup,\nring light glowing on left side, smartphone on tripod filming her,\nwood shelf behind with coffee beans jar books small potted plant,\nespresso machine on counter,\nshe holds a latte glass with beautiful rosette latte art,\nsmiling brightly at camera with big confident eyes — full influencer mode,\nmedium shot, eye level, vertical 9:16,\nbright clean white ring light warm background ambient,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she stands confidently in home cafe setup,\nring light glowing, latte glass in hand,\nbig bright smile at camera.\n\nNext 2-5s: she speaks brightly —\n\"안녕 여러분! 홈카페 라떼 만들기 저 완전 카페 고수 됐거든요?\"\nover-the-top influencer energy,\neyes wide and sparkling.\n\nFinal 5-6s: smile holds — but something imperceptibly off underneath.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2]  YR_VD — 커피 머신 앞 멘붕 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 집 부엌 커피 머신 앞 / 카메라 꺼진 후 / 완전 다른 사람\nSP: IN.HM.TZ_NT.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: 어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야... 설명서가 어딨지? 아 몰라 몰라~\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAT: AT_EM_04\nLOOK_ID: LOOK_HM2\nDU: 8\n오디오:\n  BGM: 갑자기 중단 → 당황 효과음\n  음성: 카메라 의식 없이 혼자 중얼거리는 톤 — ★립싱크\n  효과음: 당황 효과음\n  앰비언스: 부엌 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     집 부엌 / 커피 머신 앞 / 부드러운 자연 창문 빛\nCH(캐릭터):   LOOK_HM2 / 머신 옆에 서서 당황\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정 / 살짝 옆에서\nAT(동작):     복잡한 버튼들 멍하니 바라봄 → 눈썹 찌푸리고 고개 기울이기 → 머리 긁적이며 당황 → 뒤로 물러서며 어깨 힘 빠짐\nMD(감정):     완전 다른 사람 / 당황해서 우왕좌왕 / 카메라 의식 없음\nDL(대사):     \"어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야... 설명서가 어딨지? 아 몰라 몰라~\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings,\nstanding beside a large professional espresso machine at kitchen counter,\nleaning in close staring at complicated buttons and dials\nwith complete confusion,\neyebrows deeply furrowed, head tilted, mouth slightly open — totally lost,\nsoft natural window light from left, no ring light visible,\nmedium shot slightly from the side,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she stands before the espresso machine,\nleaning in close, staring at the buttons,\ncompletely confused — no camera awareness.\n\nNext 2-7s: she speaks to herself —\n\"어머! 버튼이 왜 이리 많아? 아니 잠깐, 어떻게 켜야...\n설명서가 어딨지? 아 몰라 몰라~\"\nscratching her head, stepping back helplessly.\n\nFinal 7-8s: shoulders slump, completely defeated.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3]  YR_VD — GS25에서 편의점 커피 들고 나오기 / 8초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: GS25 편의점 내부 → 나오며 / 형광등 / 한국 간식 진열대\nSP: IN.CV.TZ_NT.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: 그러니까, 있잖아~ 집에 커피 머신 있어봤자... GS25 커피가 젤 맛있어. 이건 팩트야. 근데~\nNR: 없음\nSH: SH_MS\nCA: CA_ST\nMD: MD_COM → MD_JOY\nAT: AT_MW_01 + AT_EM_01\nLOOK_ID: LOOK_HM2\nDU: 8\n오디오:\n  BGM: 편의점 경쾌한 BGM\n  음성: 처음 살짝 부끄럽다가 당당하게 반전 — ★립싱크\n  효과음: 편의점 도어벨 소리\n  앰비언스: 편의점 형광등 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     GS25 편의점 내부 / 밝은 형광등 / 한국 간식 진열대\nCH(캐릭터):   LOOK_HM2 + 흰 운동화 / 편의점 커피 페이퍼컵 들고\nSH(샷):       미디엄샷\nCA(카메라):   고정 (카메라 쪽으로 걸어오는 스타일)\nAT(동작):     편의점 커피 들고 카메라 쪽으로 천천히 걸어오기 → 처음엔 살짝 찔린 표정 → 점점 당당하게 반전 → 컵 살짝 들어올리기\nMD(감정):     처음 부끄럽다가 완전 당당하게 반전 / 이 반전이 웃음 포인트\nDL(대사):     \"그러니까, 있잖아~ 집에 커피 머신 있어봤자... GS25 커피가 젤 맛있어. 이건 팩트야. 근데~\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings, white sneakers,\nwalking slowly toward camera inside Korean GS25 convenience store,\nbright fluorescent overhead lighting,\nblue and white GS25 signage visible on wall,\ncolorful Korean snack shelves in background,\nholding a paper coffee cup with Cafe25 printed on it lid on top,\nexpression starting with slightly guilty sideways glance\nthen transitioning to confident direct eye contact\nwith a small satisfied smile,\nmedium full shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: she walks toward camera in GS25,\nholding the paper coffee cup,\ninitially looking slightly guilty to the side.\n\nNext 2-7s: she faces camera directly, speaking with growing confidence —\n\"그러니까, 있잖아~ 집에 커피 머신 있어봤자...\nGS25 커피가 젤 맛있어. 이건 팩트야. 근데~\"\ncup raised slightly — fully owning it.\n\nFinal 7-8s: confident direct smile at camera.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4]  YR_VD — 예쁜 컵에 따르기 / 10초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 집 부엌 / 편의점 커피를 예쁜 빈티지 글라스에 옮겨 담기\nSP: IN.HM.TZ_NT.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: 진~짜 중요한 거~ 편의점 커피지만, 컵은 aesthetic 해야 해~ 이게 포인트! 아무도 몰라. ㅎㅎ 솔직히..\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_COM\nAT: AT_AC_02\nLOOK_ID: LOOK_HM2\nDU: 10\n소품: vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)\n오디오:\n  BGM: 따뜻하고 귀여운 BGM\n  음성: 혀 내밀고 집중하는 진지한 톤 → 당당한 윙크 — ★립싱크\n  효과음: 컵에 커피 따르는 소리\n  앰비언스: 부엌 조용한 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     집 부엌 / 따뜻한 조명 / 흰 배경\nCH(캐릭터):   LOOK_HM2 / 부엌 카운터에 서서\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정 / 살짝 위에서\nAT(동작):     편의점 커피 천천히 빈티지 글라스에 따르기 → 혀 살짝 내밀고 집중 → 가득 채워진 컵 흐뭇하게 바라봄 → 카메라 향해 슬쩍 윙크\nMD(감정):     진지하게 집중하는 귀여움 / 아무도 모른다는 당당함\nDL(대사):     \"진~짜 중요한 거~ 편의점 커피지만, 컵은 aesthetic 해야 해~ 이게 포인트! 아무도 몰라. ㅎㅎ 솔직히..\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings,\nstanding at kitchen counter carefully pouring convenience store coffee\ninto a vintage diamond-textured clear glass tumbler\n(short cylindrical shape, embossed geometric pattern, no stem),\ndark coffee liquid pouring in,\ntongue slightly out in concentration,\nhyper-focused adorably serious expression,\nthen looking down at the filled glass with a pleased satisfied expression,\nwarm soft kitchen light slightly overhead,\nclose-up slightly above angled down at hands and face,\nvertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: she pours coffee slowly and carefully\ninto the vintage textured glass,\ntongue slightly out, completely focused.\n\nNext 3-8s: she speaks while pouring —\n\"진~짜 중요한 거~ 편의점 커피지만,\n컵은 aesthetic 해야 해~ 이게 포인트!\n아무도 몰라. ㅎㅎ 솔직히..\"\nsets carton down, gazes at glass warmly.\n\nFinal 8-10s: glances up at camera with a sneaky wink.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5]  YR_VD — Deep Talk 소파 고백 / 16초  ★립싱크+나레이션\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 거실 소파 / POV 앵글 / 커피 들고 카메라 응시 / 핵심 컷\nSP: IN.HM.TZ_NT.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: 팔로워들은 아마 모를껄~? Actually~ 난 편의점! (8초)\nNR: 방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ (8초)\nSH: SH_CU\nCA: CA_ST\nMD: MD_COM → MD_JOY\nAT: AT_SI_01 + AT_EM_04\nLOOK_ID: LOOK_HM2\nDU: 16\n소품: vintage diamond-textured clear glass tumbler\n오디오:\n  BGM: 따뜻한 코지 BGM / 나레이션 시작 시 볼륨 낮추기\n  음성: 나레이션(전반8초) + 립싱크(후반8초)\n  효과음: 없음\n  앰비언스: 조용한 거실 환경음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     거실 소파 / 따뜻한 플로어 램프 / POV 샷\nCH(캐릭터):   LOOK_HM2 / 소파에 앉아 빈티지 글라스 두 손으로 들고\nSH(샷):       클로즈업 / POV / 친밀한 거리\nCA(카메라):   고정\nAT(동작):     살짝 앞으로 기울며 글라스 카메라 향해 → 친구한테 고백하듯 낮은 목소리로 나레이션 → 잠깐 웃음 → 음흉한 눈빛으로 립싱크\nMD(감정):     진지하게 시작했다가 픽 웃는 타이밍 / 이 컷이 영상의 핵심\nDL(대사):     (후반8초) \"팔로워들은 아마 모를껄~? Actually~ 난 편의점!\"\nNR(나레이션): (전반8초) \"방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace and small gold hoop earrings,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings,\nsitting on a beige fabric sofa living room\nwith warm floor lamp glowing softly behind her,\nholding vintage diamond-textured clear glass tumbler with both hands\n(murky brown coffee liquid inside slight condensation on glass),\nPOV shot — feels like viewer is sitting across from her,\nlooking directly into camera with a guilty playful smile\none eyebrow slightly raised leaning forward slightly,\nlike confessing a harmless secret to a close friend,\nwarm golden floor lamp cozy indoor evening atmosphere,\nPOV close-up, eye level, intimate, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-8s (나레이션):\nshe leans slightly forward, holds glass toward camera,\nguilty playful expression — like confessing to a close friend,\nNO dialogue — narration added in post\n\"방송 3년동안.. 커피 머신 그냥 인테리어였어 ㅎㅎ\"\n\nNext 8-16s (립싱크):\nshe speaks with mischievous sparkling eyes —\n\"팔로워들은 아마 모를껄~?\nActually~ 난 편의점!\"\nsmall natural laugh with shoulder shake,\ncompletely owning the confession.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 6]  BR_VD — 빈티지 글라스 클로즈업 / 10초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 집 거실 / 빈티지 글라스 손 클로즈업 / K-감성 승화 순간\nSP: IN.HM.TZ_NT.LT_WM\nPL: BR_VD\nCH: 서여리 손만 (얼굴 미등장)\nDL: 없음\nNR: 근데 있잖아~ 한국 편의점 커피가 왜 맛있냐면... 집앞에 언제나 거기 있거든~ 그게 좋은 거잖아..\nSH: SH_ECU\nCA: CA_ST\nMD: MD_REL\nAT: AT_AC_02\nLOOK_ID: LOOK_HM2 (소매만)\nDU: 10\n소품: vintage diamond-textured clear glass tumbler + 고양이 스티커 (\"커피\" 한글 텍스트)\n오디오:\n  BGM: 따뜻하고 감성적 BGM\n  음성: 따뜻하고 편안한 나레이션 톤\n  효과음: 없음\n  앰비언스: 조용한 거실\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     거실 / 따뜻한 황금빛 램프 조명\nCH(캐릭터):   손 + 빈티지 글라스만 / 얼굴 없음\nSH(샷):       익스트림 클로즈업\nCA(카메라):   고정\nAT(동작):     두 손으로 글라스 감싸 쥐기 → 살짝 돌려 스티커 보여주기 → 느리고 평화로운 동작\nMD(감정):     편의점 커피를 K-감성으로 승화 / 따뜻하고 소박한 행복\nDL(대사):     없음\nNR(나레이션): \"근데 있잖아~ 한국 편의점 커피가 왜 맛있냐면... 집앞에 언제나 거기 있거든~ 그게 좋은 거잖아..\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nEXTREME CLOSEUP SHOT —\nClose-up of both hands wrapped around a vintage diamond-textured clear glass tumbler\n(short cylindrical shape, embossed geometric pattern, no stem),\niced coffee visible inside — dark amber liquid with ice cubes,\nsmall cute cat sticker on the glass surface\n(cat face illustration, Korean text 커피 below),\ncondensation droplets on glass exterior,\nwarm golden-beige blurred background,\npastel pink hoodie sleeves visible only at edges of frame,\nhands gently cradling the glass with slight subtle rotation to show sticker,\nslow peaceful tactile movement,\nwarm golden indoor lamp light soft and intimate,\nextreme close-up detail shot only hands glass sticker in frame no face,\nshallow depth of field, vertical 9:16,\nCinematic, photorealistic, 8K warm color grade\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: both hands wrap gently around the glass,\ncondensation catching the warm light,\ncat sticker visible on the surface.\n\nNext 3-7s: hands slowly rotate the glass,\nsticker coming into clearer view,\nno dramatic movement — slow and peaceful.\n\nFinal 7-10s: hands hold the glass still,\nwarm lamp light glowing on the scene,\nquiet intimate moment.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 7-1]  YR_VD — 엔딩 레시피 공개 전반 / 8초\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 거실 소파 / 빈티지 글라스 들고 카메라 향해 당당하게\nSP: IN.HM.TZ_NT.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: 없음\nNR: 자, 내 진짜 홈카페 레시피~ GS25 간다. 예쁜 컵에 따른다. 아무한테도 말 안 한다.\nSH: SH_MCU\nCA: CA_ST\nMD: MD_JOY\nAT: AT_SI_01 + AT_EM_01\nLOOK_ID: LOOK_HM2\nDU: 8\n오디오:\n  BGM: 밝고 유쾌한 엔딩 BGM 시작\n  음성: 밝고 당당한 나레이션 톤\n  효과음: 없음\n  앰비언스: 조용한 거실\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     거실 소파 / 따뜻한 황금빛 램프\nCH(캐릭터):   LOOK_HM2 / 소파에 앉아 글라스 들고\nSH(샷):       미디엄 클로즈업\nCA(카메라):   고정\nAT(동작):     소파에 앉아 카메라 향해 밝게 / 글라스 들어올리며 레시피 공개 / 환한 자신감 넘치는 미소\nMD(감정):     밝고 당당한 / 이게 진짜 레시피라는 자신감\nDL(대사):     없음\nNR(나레이션): \"자, 내 진짜 홈카페 레시피~ GS25 간다. 예쁜 컵에 따른다. 아무한테도 말 안 한다.\"\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace and small gold hoop earrings,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie, black leggings,\nsitting on beige sofa leaning forward toward camera with bright warm smile,\nholding up vintage diamond-textured clear glass tumbler\n(short cylindrical embossed geometric pattern NO stem NOT a wine glass)\nfilled with iced dark coffee raising it toward camera as if making a cheerful toast,\nsmall cat sticker visible on glass,\nwarm floor lamp glowing behind her cozy living room atmosphere,\nwide bright confident smile playful and proud,\nPOV medium-close slightly tilted dynamic and cheerful, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nNO dialogue — narration added in post\n\nFirst 0-3s: she sits up brightly on sofa,\nraises the vintage glass toward camera in a toast gesture,\nwide bright smile — completely proud.\n\nNext 3-7s: she holds the pose confidently,\nglass raised, cat sticker visible,\nwarm lamp glowing behind her.\n\nFinal 7-8s: big smile holds — ready for the punchline.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 7-2]  YR_VD — 엔딩 시그니처 라인 / 6초  ★립싱크\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 거실 소파 / 윙크하며 시그니처 마무리 대사\nSP: IN.HM.TZ_NT.LT_WM\nPL: YR_VD\nCH: 서여리 / LOOK_HM2\nDL: It's called creative direction, okay?\nNR: 없음\nSH: SH_CU\nCA: CA_PS\nMD: MD_JOY\nAT: AT_EM_01\nLOOK_ID: LOOK_HM2\nDU: 6\n오디오:\n  BGM: 유쾌한 BGM 유지 → 엔딩 페이드아웃\n  음성: 장난스럽고 당당한 립싱크 — ★립싱크\n  효과음: 없음\n  앰비언스: 조용한 거실 여운\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     거실 소파 / 황금빛 보케 배경\nCH(캐릭터):   LOOK_HM2 / C07-1보다 더 가까이\nSH(샷):       클로즈업\nCA(카메라):   푸시인\nAT(동작):     카메라 향해 윙크 → 시그니처 라인 대사 → 포즈 유지하며 환한 미소 여운\nMD(감정):     장난스럽고 자신감 / 시청자와의 공모 느낌\nDL(대사):     \"It's called creative direction, okay?\"\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nCLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace and small gold hoop earrings,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\noversized pastel pink hoodie,\nleaning toward camera on sofa with bright warm smile,\none eye winking playfully, expression \"yeah this is still aesthetic and I stand by it\",\nwarm golden lamp bokeh background,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: camera pushes in gently,\nshe leans toward camera with conspiratorial energy,\none eye winking.\n\nNext 2-5s: she speaks with playful confidence —\n\"It's called creative direction, okay?\"\nbright proud smile, completely owning it.\n\nFinal 5-6s: holds the wink and smile — 여운.\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n================================================================\n전체 컷 요약\n================================================================\n| 컷    | 제목               | 길이 | PL     | LOOK     | SH       | CA     | 립싱크 | 상태 |\n|-------|--------------------|------|--------|----------|----------|--------|--------|------|\n| C01   | Hook 인플루언서 모드 | 6s  | YR_VD  | LOOK_HM2 | SH_MS    | CA_ST  | ✅     | 신규 |\n| C02   | 커피 머신 멘붕      | 8s   | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ✅     | 신규 |\n| C03   | GS25 나오기         | 8s   | YR_VD  | LOOK_HM2 | SH_MS    | CA_ST  | ✅     | 신규 |\n| C04   | 예쁜 컵에 따르기    | 10s  | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ✅     | 신규 |\n| C05   | Deep Talk 소파 고백 | 16s  | YR_VD  | LOOK_HM2 | SH_CU    | CA_ST  | ✅     | 신규 ⭐ |\n| C06   | 빈티지 글라스 디테일 | 10s | BR_VD  | LOOK_HM2 | SH_ECU   | CA_ST  | ❌     | 신규 |\n| C07-1 | 엔딩 레시피 전반    | 8s   | YR_VD  | LOOK_HM2 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C07-2 | 엔딩 시그니처 라인  | 6s   | YR_VD  | LOOK_HM2 | SH_CU    | CA_PS  | ✅     | 신규 |\n\n총 길이: 약 72초 / 립싱크: C01·C02·C03·C04·C05·C07-2\nBGM: 밝은 오프닝 → 중단(멘붕) → 경쾌(편의점) → 따뜻한 → 유쾌한 엔딩\n핵심 소품: vintage diamond-textured clear glass tumbler (짧은 원통형 / 스템 없음)\n시그니처 라인: \"It's called creative direction, okay?\" — 매 화 고정\n================================================================\n버전 이력\n================================================================\nv1.0 (구버전) — 초기 기획안 + 영상 프롬프트 분리 작성\nv3.0 (2026-08-02) — 표준 포맷 v3 통합\n                    마스터 코드 / EP.HEADER / KR 섹션 / VP 섹션 정리\n                    C05 나레이션+립싱크 분리 (16초 구조)\n                    C07 → C07-1(나레이션8초) + C07-2(립싱크6초) 분리\n================================================================\n",
+      "scriptRaw": "================================================================\n마스터 코드\n[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]\n================================================================\n에피소드명: 스냅 아웃핏 트렌드 따라 해봤습니다\n채널: 서여리 인스타그램 릴스 (IG_R07)\n총 길이: 30초 목표 (6+6+6+6+6) — 생성단위(Veo 6초) 기준, 컷 경계마다 스냅 효과음으로 하드컷\n콘셉트: 손가락 스냅 한 번에 룩이 바뀌는 트렌드 챌린지. 대사 없이 BGM 비트+스냅 효과음으로만 전개, 마지막에 \"오늘 네 기분 룩은?\" 자막으로 댓글 유도\n================================================================\nEP.HEADER\nCHAR  : YEORI (서여리 기본)\nEP    : IG_R07\nTITLE : 스냅 아웃핏 트렌드 따라 해봤습니다\nLOOK.A: 컷마다 다른 아웃핏(아래 CH 참고) — 같은 자리·같은 구도 유지해 \"스냅 한 번에 바뀐\" 느낌\nBG.A  : 서여리 방, 전신거울 앞, 낮 자연광\nLIGHT : LT_WD (창가 낮 자연광, 밝고 선명)\nREF   : yeori face / closeup\nBGM   : 업비트 트렌디 팝(4박 루프), 컷마다 비트 드롭에 맞춰 하드컷\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] ─ YEORI | 훅 — 손가락 스냅 준비 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 전신거울 앞, 아침 라운지웨어 차림의 서여리가 카메라를 정면으로 보며 장난스럽게 웃는다. 오른손을 들어올려 스냅 자세를 잡는다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_LNG (오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 헝클어진 자연스러운 웨이브 머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_PLF\nAC: 오른손을 들어 스냅 직전 자세로 멈춤, 눈썹 한쪽 살짝 올림\nLOOK_ID: LOOK_LNG\nDU: 6\nCP: 오늘 기분에 맞는 룩, 스냅 한 번이면 끝.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (0초부터, 인트로 비트)\n  음성: 없음\n  효과음: 손가락 스냅 준비 숨죽임(컷 끝 지점)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 낮 자연광 방\nCH(캐릭터):   오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 자연스러운 웨이브 머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면\nCA(카메라):   고정\nAC(동작):     0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지\nMD(감정):     장난기 있는 자신감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing an oversized cream lounge t-shirt and grey jogger pants, soft loungewear, barefoot,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] ─ YEORI | 캐주얼 데일리 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 같은 자리, 같은 구도. 서여리가 캐주얼 데일리룩으로 바뀌어 있다. 가볍게 한 바퀴 돌며 옷을 보여준다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_CAS (크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 가볍게 반 바퀴 턴하며 옷매무새 보여줌, 다시 정면\nLOOK_ID: LOOK_CAS\nDU: 6\nCP: 외출룩 버전.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소\nMD(감정):     경쾌하고 따뜻한 에너지\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing as before,\nnow wearing a cropped knit cardigan over a simple top and wide-leg denim jeans, a thin gold necklace, casual daytime outfit,\nmid-turn showing off the outfit then facing camera again with a warm smile,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light, soft and clean,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She turns halfway, showing off the new casual outfit — cardigan and wide denim — with a light, breezy motion. / Next 3-6s: She turns back to face camera, warm playful smile, hand brushing hair back. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] ─ YEORI | 오피스/포멀 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 같은 자리. 단정한 오피스룩으로 바뀐 서여리. 살짝 놀란 듯 과장된 표정으로 옷깃을 매만진다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_OFC (크림 블라우스 + 블랙 슬랙스, 단정하게 반 묶은 머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_SUR\nAC: 옷깃을 매만지며 과장되게 놀란 표정, 한쪽 눈썹 올림\nLOOK_ID: LOOK_OFC\nDU: 6\nCP: 출근룩 버전. 나 프로 맞아?\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   크림 블라우스 + 블랙 슬랙스, 단정한 반 묶음 머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환\nMD(감정):     과장된 놀람 → 당당함\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now neatly half-tied back,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a cream blouse and black tailored slacks, polished office outfit, minimal gold jewelry,\nhand adjusting the collar, exaggerated surprised expression with one eyebrow raised, playful not serious,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She looks down at her new office outfit, adjusting her collar with an exaggerated surprised expression, eyebrow raised playfully. / Next 3-6s: Expression shifts into a confident, polished smile, chin slightly up. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4] ─ YEORI | 데이트 글램 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 같은 자리. 화려한 데이트룩으로 바뀐 서여리. 살짝 윙크하며 머리를 넘긴다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_GLM (버건디 슬립 드레스 + 웨이브 다운 스타일링, 포인트 이어링)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 머리를 손으로 넘기며 살짝 윙크\nLOOK_ID: LOOK_GLM\nDU: 6\nCP: 저녁 약속룩 버전.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   버건디 슬립 드레스, 웨이브 다운 스타일링, 포인트 이어링\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크\nMD(감정):     매력적이고 여유로운 자신감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair now down and styled glamorously,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a burgundy silk slip dress, statement earrings, elegant evening look,\none hand gently sweeping hair back, confident alluring expression, subtle wink at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light transitioning slightly warmer,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She sweeps her hair back with one hand in a slow, confident motion, glamorous evening look revealed. / Next 3-6s: She gives a subtle playful wink directly at camera, confident smile. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5] ─ YEORI | 다시 편안한 나 + CTA | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 다시 처음 라운지웨어로 돌아온 서여리. 장난스럽게 웃으며 카메라를 가리킨다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_LNG (컷1과 동일 — 오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_PLF\nAC: 웃으며 검지로 카메라를 가리킴, 어깨 으쓱\nLOOK_ID: LOOK_LNG\nDU: 6\nCP: 근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   컷1과 동일한 라운지웨어로 복귀\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱\nMD(감정):     편안하고 장난기 있는 친밀함\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the oversized cream lounge t-shirt and grey jogger pants from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.\n",
       "createdAt": "2026-09-29T06:44:35.565Z",
       "tabState": {
         "videoTabState": {
@@ -9311,7 +9268,7 @@
                 "duration": 6,
                 "trimStart": 0,
                 "trimEnd": 6,
-                "useFullDuration": true,
+                "useFullDuration": false,
                 "ratio": "9:16",
                 "staging": false,
                 "keepAudio": false,
@@ -9325,7 +9282,7 @@
                 "name": "Woman_scrolling_phone_and_watching_20261009133728.mp4",
                 "duration": 8,
                 "trimStart": 1,
-                "trimEnd": 8,
+                "trimEnd": 3,
                 "useFullDuration": false,
                 "ratio": "9:16",
                 "staging": false,
@@ -9418,8 +9375,13 @@
             "cut-2": [
               {
                 "start": 0,
-                "end": 8,
-                "text": "근데 이때 나, 되게 신나 보이네."
+                "end": 2,
+                "text": "근데 이때 나, 되게 신나 보이네. "
+              },
+              {
+                "start": 0,
+                "end": 0,
+                "text": "완벽한 피드보다, 이게 더 나 같았다."
               }
             ]
           }
@@ -9591,317 +9553,238 @@
     }
   },
   "episode": {
-    "number": 109,
-    "title": "틀려도 괜찮아, 그게 나니까",
-    "location": "여리의 방 (집, 침실)",
+    "number": 107,
+    "title": "스냅 아웃핏 트렌드 따라 해봤습니다",
+    "location": "카페",
     "mood": "감성",
-    "cutCount": 5,
-    "contentType": "SF",
-    "topicCode": "REL",
-    "scnCode": "ENT",
+    "cutCount": 7,
+    "contentType": "IG_R",
+    "topicCode": "PSY",
+    "scnCode": "DOC",
     "instaNum": "",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "code": "SF_E109",
-    "storyBrief": "[CUT 1] 8초\nSC: 밤, 여리의 방. 침대에 앉아 폰을 보는 여리. 단톡방 알림이 연달아 쏟아진다(\"ㅋㅋㅋ 레전드\", \"다시 해봐ㅋㅋ\").\nDL: 없음\nNR: 그 영상, 결국 단톡방 레전드가 됐다.\nACTION: 여리, 화면을 보다 얼굴을 두 손으로 감싼다 — 그러다 손가락 사이로 피식 웃음이 새어 나온다.\n\n[CUT 2] 8초\nSC: 같은 밤. 습관처럼 남들의 완벽한 피드를 넘기던 손가락이 멈춘다.\nDL: 여리 \"…근데 이때 나, 되게 신나 보이네.\"\nNR: 완벽한 피드보다, 이게 더 나 같았다.\nACTION: 여리, 피드를 닫고 자기 흑역사 영상을 다시 재생한다. 화면 빛이 얼굴을 비추고, 표정이 조금씩 풀린다.\n\n[CUT 3] 8초\nSC: 다음 날 낮, 방 한쪽 벽 앞에 세운 삼각대. 같은 챌린지 음악. 지유(왼쪽)가 폰을 들고 촬영을 맡는다.\nDL: 지유 \"이번엔 제대로 해봐, 서여리!\" / 여리 \"보고 배워.\"\nNR: 없음\nACTION: 여리(오른쪽), 비장하게 어깨를 풀고 자세를 잡는다.\n\n[CUT 4] 6초\nSC: 같은 장소. 음악 시작.\nDL: 없음 (현장음: 폰 스피커 챌린지 비트 + 둘의 웃음소리)\nNR: 없음\nACTION: 역시 반 박자 늦고 손은 반대로 — 마지막 포즈에서 멈칫, 1초 정적. 그리고 여리와 지유가 동시에 웃음이 터진다.\n\n[CUT 5] 8초\nSC: 같은 방, 웃음이 잦아든 뒤. 여리가 카메라(시청자)를 바라본다.\nDL: 여리 \"틀려도 괜찮아요. 그게 저니까.\"\nNR: 없음\nACTION: 말을 마친 뒤 폰 화면의 업로드 버튼을 누르고, 2~3초 조용히 미소 짓는다(여운 엔딩)."
+    "code": "IG_R07",
+    "masterCode": "[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]",
+    "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : SF_E09_HOMECAFE\nTITLE : 홈카페 브이로그 대참사\nLOOK  : LOOK_HM2 (oversized pastel pink hoodie + black leggings + gold necklace + gold earrings)\nBG.A  : 집 홈카페 세팅 (링라이트 / 삼각대 / 커피 머신 / 목제 선반)\nBG.B  : GS25 편의점 내부 (형광등 / 한국 간식 진열대)\nBG.C  : 집 부엌 + 거실 소파 (따뜻한 간접조명)\nLIGHT : LT_STD (링라이트) → LT_CV (편의점 형광등) → LT_WM (집 따뜻한 조명)\nREF   : face / closeup / fs-masked\nBGM   : 밝고 경쾌한 오프닝 → 당황 효과음 → 편의점 경쾌 → 따뜻하고 감성적 마무리\n소품  : vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)"
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "scene": "INT. 여리의 방(침실) - 밤",
-      "action": "First 3s: 침대에 앉아 폰을 바라보며 알림이 쏟아지는 화면을 읽는다. 표정은 살짝 굳어 있다.\nNext 3s: 두 손으로 얼굴을 감싼다. 고개를 숙이고 잠시 정적.\nFinal 2s: 손가락 사이로 피식 — 참을 수 없는 웃음이 새어 나온다.",
+      "cutTitle": "손가락 스냅 준비",
+      "lipsync": false,
+      "scene": "전신거울 앞, 아침 라운지웨어 차림의 서여리가 카메라를 정면으로 보며 장난스럽게 웃는다. 오른손을 들어올려 스냅 자세를 잡는다.",
+      "action": "0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지",
       "character": "서여리",
       "dialogue": "",
-      "narration": "그 영상, 결국 단톡방 레전드가 됐다.",
-      "subtitle": "단톡방 레전드 됨 ㅋㅋ",
-      "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a cozy bed at night. Long wavy dark brown hair, NOT short — hair falls naturally over shoulders. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing a dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts (soft loungewear set, NOT denim), barefoot or socks only, no shoes worn indoors. Gold necklace visible. Holding a smartphone, warm amber bedside light softly illuminating her face from the side. She looks at the screen with a slightly stiff expression, then covers her face with both hands. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Background: soft blurred bedroom — pillows, warm lamp glow. No subtitles, no audio. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-      "videoPrompt": "First 0-3s: Young Korean woman sits on bed, gazes at glowing phone screen. Notification lights flicker softly on her face. Expression is still, slightly tense — reading something. / Next 3-6s: She slowly raises both hands and covers her face. Head dips slightly. A quiet stillness fills the frame. Warm lamplight wraps around her. / Final 6-8s: Fingers part just slightly — a small, helpless smile escapes between her hands. Shoulders relax. The moment feels like something between embarrassment and warmth.",
+      "subtitle": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
+      "narration": "",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing an oversized cream lounge t-shirt and grey jogger pants, soft loungewear, barefoot,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16",
+      "videoPrompt": "First 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.",
       "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
-      "pipTarget": "",
-      "graphicTool": "",
-      "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_HM.TOP_CRP.BTM_SHT",
-        "sh": "SH_CU",
-        "ca": "CA_ST → CA_ZIN",
-        "md": "MD_INT + MD_DZD",
-        "ac": "AT_EM_04 + AT_AC_04",
-        "lookId": "LOOK_HM",
-        "du": 8,
-        "kr": {
-          "sp": "집 침실, 밤, 따뜻한 조명 — 침대 위에 앉아 폰 빛이 얼굴을 비추는 아늑한 밤 분위기",
-          "ch": "홈 캐주얼 — 다크 차콜그레이 리브 탱크탑 + 매칭 그레이 리브 숏츠(러운지웨어 세트, 데님 아님), 맨발, 골드 목걸이, 편안한 밤 집 스타일",
-          "sh": "미디엄 클로즈업 — 침대 위 여리의 상반신과 표정 중심, 폰 빛이 얼굴을 비추는 구도",
-          "ca": "고정(삼각대) 시작 → 서서히 줌인으로 여리 표정 집중",
-          "md": "진지하게 화면을 보다가 멍하고 묘한 여운으로 번지는 감정",
-          "ac": "폰 화면을 멍하게 응시하다가, 두 손으로 얼굴을 감싸고 손가락 사이로 피식 웃음이 새어 나오는 동작"
-        }
-      },
       "cutMark": "NORMAL",
-      "overrides": {
-        "imagePrompt": {
-          "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a cozy bed at night. Long wavy dark brown hair, NOT short — hair falls naturally over shoulders. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing a dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts (soft loungewear set, NOT denim), barefoot or socks only, no shoes worn indoors. Gold necklace visible. Holding a smartphone, warm amber bedside light softly illuminating her face from the side. She looks at the screen with a slightly stiff expression, then covers her face with both hands. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Background: soft blurred bedroom — pillows, warm lamp glow. No subtitles, no audio. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-          "at": "2026-10-08T12:43:07.302Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+      "masterCode": {
+        "sp": "IN.HM.MR_DY.LT_WD",
+        "pl": "YR_VD",
+        "ch": "YR_VD / LK_LNG (오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 헝클어진 자연스러운 웨이브 머리)",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_PLF",
+        "ac": "오른손을 들어 스냅 직전 자세로 멈춤, 눈썹 한쪽 살짝 올림",
+        "lookId": "LOOK_LNG",
+        "du": 6,
+        "audio": {
+          "bgm": "업비트 트렌디 팝 (0초부터, 인트로 비트)",
+          "voice": "없음",
+          "sfx": "손가락 스냅 준비 숨죽임(컷 끝 지점)",
+          "ambience": "밝은 방, 거의 무음"
         },
-        "duration": {
-          "value": 6,
-          "at": "2026-10-08T13:26:58.607Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+        "kr": {
+          "sp": "전신거울 앞, 낮 자연광 방",
+          "ch": "오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 자연스러운 웨이브 머리",
+          "sh": "미디엄 클로즈업, 거울 앞 정면",
+          "ca": "고정",
+          "ac": "0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지",
+          "md": "장난기 있는 자신감"
         }
-      },
-      "captionSegTiming": [
-        [
-          1.4,
-          6
-        ]
-      ]
+      }
     },
     {
       "id": "cut-2",
       "no": 2,
-      "scene": "INT. 여리의 방(침실) - 밤 (CUT 1 연속)",
-      "action": "First 3s: 습관처럼 손가락으로 피드를 위로 넘긴다. 완벽한 피드들이 스쳐 지나간다. 표정은 무감각하게 평평하다.\nNext 3s: 손가락이 멈춘다. 자기 흑역사 영상을 재생한다. 폰 화면 빛이 얼굴 위로 부드럽게 올라온다.\nFinal 2s: 표정이 조금씩 풀리며 입꼬리가 아주 작게 올라간다. 대사 발화.",
+      "cutTitle": "캐주얼 데일리 룩",
+      "lipsync": false,
+      "scene": "(하드컷, 스냅 효과음) 같은 자리, 같은 구도. 서여리가 캐주얼 데일리룩으로 바뀌어 있다. 가볍게 한 바퀴 돌며 옷을 보여준다.",
+      "action": "0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소",
       "character": "서여리",
-      "dialogue": "…근데 이때 나, 되게 신나 보이네.",
-      "narration": "완벽한 피드보다, 이게 더 나 같았다.",
-      "subtitle": "근데 이때 나, 되게 신나 보이네.\n완벽한 피드보다, 이게 더 나 같았다.",
-      "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-      "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
-      "duration": 8,
+      "dialogue": "",
+      "subtitle": "외출룩 버전.",
+      "narration": "",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing as before,\nnow wearing a cropped knit cardigan over a simple top and wide-leg denim jeans, a thin gold necklace, casual daytime outfit,\nmid-turn showing off the outfit then facing camera again with a warm smile,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light, soft and clean,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+      "videoPrompt": "First 0-3s: She turns halfway, showing off the new casual outfit — cardigan and wide denim — with a light, breezy motion. / Next 3-6s: She turns back to face camera, warm playful smile, hand brushing hair back. No dialogue. No on-screen subtitle text or captions.",
+      "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
-      "pipTarget": "",
-      "graphicTool": "",
-      "masterCode": {
-        "sp": "IN.HM.TZ_NT.LT_WM",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_HM.TOP_CRP.BTM_SHT",
-        "sh": "SH_CU",
-        "ca": "CA_ZIN → CA_ST",
-        "md": "MD_INT + MD_WRM",
-        "ac": "AT_EM_04 + AT_AC_04",
-        "lookId": "LOOK_HM",
-        "du": 8,
-        "kr": {
-          "sp": "집 침실, 밤, 따뜻한 조명 — CUT 1과 같은 공간, 습관처럼 피드를 넘기다 멈추는 장면",
-          "ch": "CUT 1과 완전히 동일한 의상 — 다크 차콜그레이 리브 탱크탑 + 매칭 그레이 리브 숏츠, 맨발, 골드 목걸이",
-          "sh": "미디엄 클로즈업 — 폰을 든 손가락과 여리의 얼굴을 함께 잡는 구도. 화면 빛이 아래에서 위로 얼굴을 물들임",
-          "ca": "손가락 위 클로즈업에서 서서히 줌인 후 고정 — 얼굴로 시선 이동",
-          "md": "차분하고 내면적인 시선으로 자신의 영상을 다시 바라보며 조금씩 따뜻하게 표정이 풀리는 감정",
-          "ac": "피드를 넘기다 손가락이 멈추고, 자기 영상을 다시 재생하며 화면 빛을 받으며 표정이 서서히 풀리는 동작"
-        }
-      },
       "cutMark": "NORMAL",
-      "overrides": {
-        "imagePrompt": {
-          "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-          "at": "2026-10-09T01:45:29.666Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+      "masterCode": {
+        "sp": "IN.HM.MR_DY.LT_WD",
+        "pl": "YR_VD",
+        "ch": "YR_VD / LK_CAS (크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이)",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_WRM",
+        "ac": "가볍게 반 바퀴 턴하며 옷매무새 보여줌, 다시 정면",
+        "lookId": "LOOK_CAS",
+        "du": 6,
+        "audio": {
+          "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
+          "voice": "없음",
+          "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+          "ambience": "밝은 방, 거의 무음"
         },
-        "videoPrompt": {
-          "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
-          "at": "2026-10-09T01:45:29.697Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+        "kr": {
+          "sp": "전신거울 앞, 동일 구도",
+          "ch": "크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이",
+          "sh": "미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)",
+          "ca": "고정",
+          "ac": "0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소",
+          "md": "경쾌하고 따뜻한 에너지"
         }
-      },
-      "captionSegTiming": [
-        [
-          0.5,
-          3.5
-        ],
-        [
-          4,
-          7.5
-        ]
-      ]
+      }
     },
     {
       "id": "cut-3",
       "no": 3,
-      "scene": "INT. 여리의 방(침실) - 낮 (다음 날)",
-      "action": "First 3s: 방 한쪽 벽 앞, 삼각대와 폰 세팅이 보인다. 지유가 폰을 들고 촬영 준비를 마친다.\nNext 3s: 지유가 여리를 향해 대사를 던진다. 여리가 받아친다.\nFinal 2s: 여리, 비장하게 양 어깨를 크게 돌리며 자세를 잡는다. 눈빛은 真 진지.",
+      "cutTitle": "오피스/포멀 룩",
+      "lipsync": false,
+      "scene": "(하드컷, 스냅 효과음) 같은 자리. 단정한 오피스룩으로 바뀐 서여리. 살짝 놀란 듯 과장된 표정으로 옷깃을 매만진다.",
+      "action": "0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환",
       "character": "서여리",
-      "dialogue": "(지유) 이번엔 제대로 해봐, 서여리! / (여리) 보고 배워.",
+      "dialogue": "",
+      "subtitle": "출근룩 버전. 나 프로 맞아?",
       "narration": "",
-      "subtitle": "재도전 선언",
-      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible). Long wavy dark brown hair, NOT short — hair full and flowing. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, gold necklace. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. She stands with shoulders squared back in a mock-serious, confident stance, glancing toward her friend. Further back near the far wall, a second young Korean woman with long straight black hair and full bangs stands at a distance, holding up her phone to film/photograph the main character from across the room — she is NOT standing close beside the main character, keeping a natural filming distance. The friend wears an oversized white t-shirt and dark grey shorts, barefoot. Afternoon natural light streams in from a window. The energy is bright and playful. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. No subtitles, no audio.",
-      "videoPrompt": "First 0-3s: Wide shot of bedroom wall. Friend on the left adjusts phone held up at filming angle. Tripod visible in foreground. Afternoon daylight fills the room warmly. Both women face each other. / Next 3-6s: Friend tosses a teasing line. Main character on right responds with a sharp comeback, eyebrow raised. The exchange is quick and playful. / Final 6-8s: Main character rolls both shoulders back dramatically, cracks her neck, and plants her feet — dead serious expression. Friend stifles a laugh behind the phone.",
-      "duration": 8,
-      "shotType": "FULLBODY",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now neatly half-tied back,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a cream blouse and black tailored slacks, polished office outfit, minimal gold jewelry,\nhand adjusting the collar, exaggerated surprised expression with one eyebrow raised, playful not serious,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+      "videoPrompt": "First 0-3s: She looks down at her new office outfit, adjusting her collar with an exaggerated surprised expression, eyebrow raised playfully. / Next 3-6s: Expression shifts into a confident, polished smile, chin slightly up. No dialogue. No on-screen subtitle text or captions.",
+      "duration": 6,
+      "shotType": "CLOSEUP",
       "cutType": "YEORI",
-      "pipTarget": "",
-      "graphicTool": "",
-      "masterCode": {
-        "sp": "IN.HM.TZ_AF.LT_WD",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_CS.TOP_CRP.BTM_SHT",
-        "sh": "SH_WS",
-        "ca": "CA_ST",
-        "md": "MD_BRT + MD_JOY",
-        "ac": "AT_EM_01 + AT_AC_04",
-        "lookId": "LOOK_CS",
-        "du": 8,
-        "kr": {
-          "sp": "집 침실, 다음 날 낮, 창가 자연광 — 벽 앞에 삼각대를 세우고 친구와 챌린지 재도전하는 장면",
-          "ch": "낮 캐주얼 — 블랙 크롭 반팔티 + 블루 데님 숏츠, 골드 목걸이, 지유는 화이트 오버사이즈 티 + 다크그레이 숏츠(컷4와 동일)",
-          "sh": "풀샷 — 여리는 벽 앞 중앙, 지유는 화면 안쪽 멀리서 폰으로 촬영하는 자연스러운 거리감(바로 옆에 억지로 붙어선 구도 아님)",
-          "ca": "고정(삼각대) — 두 사람을 동시에 담는 와이드 고정 구도",
-          "md": "밝고 경쾌한 에너지 — 친구와 함께 비장하게 재도전 준비하는 유쾌한 분위기",
-          "ac": "비장하게 어깨를 풀고 자세를 잡는 동작, 친구(지유)와 서로 맞받아치는 대사 주고받기"
-        }
-      },
       "cutMark": "NORMAL",
-      "overrides": {
-        "imagePrompt": {
-          "value": "FULLBODY SHOT — A Korean woman in her early 20s stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible). Long wavy dark brown hair, NOT short — hair full and flowing. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, gold necklace. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. She stands with shoulders squared back in a mock-serious, confident stance, glancing toward her friend. Further back near the far wall, a second young Korean woman with long straight black hair and full bangs stands at a distance, holding up her phone to film/photograph the main character from across the room — she is NOT standing close beside the main character, keeping a natural filming distance. The friend wears an oversized white t-shirt and dark grey shorts, barefoot. Afternoon natural light streams in from a window. The energy is bright and playful. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. No subtitles, no audio.",
-          "at": "2026-10-08T12:43:55.867Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+      "masterCode": {
+        "sp": "IN.HM.MR_DY.LT_WD",
+        "pl": "YR_VD",
+        "ch": "YR_VD / LK_OFC (크림 블라우스 + 블랙 슬랙스, 단정하게 반 묶은 머리)",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_SUR",
+        "ac": "옷깃을 매만지며 과장되게 놀란 표정, 한쪽 눈썹 올림",
+        "lookId": "LOOK_OFC",
+        "du": 6,
+        "audio": {
+          "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
+          "voice": "없음",
+          "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+          "ambience": "밝은 방, 거의 무음"
         },
-        "duration": {
-          "value": 8,
-          "at": "2026-10-08T13:27:11.082Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+        "kr": {
+          "sp": "전신거울 앞, 동일 구도",
+          "ch": "크림 블라우스 + 블랙 슬랙스, 단정한 반 묶음 머리",
+          "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
+          "ca": "고정",
+          "ac": "0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환",
+          "md": "과장된 놀람 → 당당함"
         }
-      },
-      "captionSegTiming": [
-        [
-          0,
-          4.5
-        ],
-        [
-          5,
-          6
-        ]
-      ]
+      }
     },
     {
       "id": "cut-4",
       "no": 4,
-      "scene": "INT. 여리의 방(침실) - 낮 (CUT 3 연속)",
-      "action": "First 2s: 챌린지 비트가 시작된다. 여리가 비장하게 동작을 시작한다.\nNext 2s: 반 박자 늦고, 손이 반대 방향으로 간다. 마지막 포즈에서 멈칫.\nFinal 2s: 1초의 정적 — 그리고 여리와 지유가 동시에 웃음이 터진다.",
+      "cutTitle": "데이트 글램 룩",
+      "lipsync": false,
+      "scene": "(하드컷, 스냅 효과음) 같은 자리. 화려한 데이트룩으로 바뀐 서여리. 살짝 윙크하며 머리를 넘긴다.",
+      "action": "0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크",
       "character": "서여리",
       "dialogue": "",
+      "subtitle": "저녁 약속룩 버전.",
       "narration": "",
-      "subtitle": "또 틀림 ㅋㅋㅋ",
-      "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible), caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Shot from the friend's POV holding up her phone to film — only the friend's arm and the edge of her phone are visible at the bottom corner of the frame, her face and body out of frame, keeping full focus on the main character's dance move. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. No subtitles, no audio.",
-      "videoPrompt": "First 0-2s: Wide shot — challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. Her friend stands nearby holding up her phone, filming. / Next 2-4s: Camera pushes in toward the main character — the shot tightens until only the friend's arm and the edge of her phone remain visible at the frame's bottom corner, full focus now on the main character. Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Still in this close framing, both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
-      "duration": 8,
-      "shotType": "FULLBODY",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair now down and styled glamorously,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a burgundy silk slip dress, statement earrings, elegant evening look,\none hand gently sweeping hair back, confident alluring expression, subtle wink at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light transitioning slightly warmer,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+      "videoPrompt": "First 0-3s: She sweeps her hair back with one hand in a slow, confident motion, glamorous evening look revealed. / Next 3-6s: She gives a subtle playful wink directly at camera, confident smile. No dialogue. No on-screen subtitle text or captions.",
+      "duration": 6,
+      "shotType": "CLOSEUP",
       "cutType": "YEORI",
-      "pipTarget": "",
-      "graphicTool": "",
-      "masterCode": {
-        "sp": "IN.HM.TZ_AF.LT_WD",
-        "pl": "YR_VD",
-        "ch": "서여리 / LK_CS.TOP_CRP.BTM_SHT",
-        "sh": "SH_WS",
-        "ca": "CA_HH",
-        "md": "MD_COM + MD_JOY",
-        "ac": "AT_EM_03 + AT_EM_01",
-        "lookId": "LOOK_CS",
-        "du": 8,
-        "kr": {
-          "sp": "집 침실, 낮, 창가 자연광 — 챌린지 음악이 시작되고 역시 박자가 틀리며 폭소가 터지는 장면",
-          "ch": "CUT 3과 동일한 낮 캐주얼 — 블랙 크롭 반팔티 + 블루 데님 숏츠, 맨발, 골드 목걸이",
-          "sh": "풀샷(핸드헬드, 지유 시점) — 프레임 하단 모서리에 지유의 팔+폰만 살짝 걸리고, 포커스는 전부 여리의 춤 동작에",
-          "ca": "핸드헬드 — 지유가 들고 있는 폰 시점처럼 살짝 흔들리는 자연스러운 구도",
-          "md": "코믹하고 폭발적으로 유쾌한 감정 — 또 틀렸지만 동시에 터지는 웃음이 핵심",
-          "ac": "반 박자 늦고 손이 반대 방향으로 가는 동작 후 멈칫 — 1초 정적 뒤 동시에 웃음 폭발"
-        }
-      },
       "cutMark": "NORMAL",
-      "overrides": {
-        "imagePrompt": {
-          "value": "FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible), caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Shot from the friend's POV holding up her phone to film — only the friend's arm and the edge of her phone are visible at the bottom corner of the frame, her face and body out of frame, keeping full focus on the main character's dance move. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. No subtitles, no audio.",
-          "at": "2026-10-08T12:44:18.872Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+      "masterCode": {
+        "sp": "IN.HM.MR_DY.LT_WD",
+        "pl": "YR_VD",
+        "ch": "YR_VD / LK_GLM (버건디 슬립 드레스 + 웨이브 다운 스타일링, 포인트 이어링)",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_WRM",
+        "ac": "머리를 손으로 넘기며 살짝 윙크",
+        "lookId": "LOOK_GLM",
+        "du": 6,
+        "audio": {
+          "bgm": "업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조)",
+          "voice": "없음",
+          "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+          "ambience": "밝은 방, 거의 무음"
         },
-        "videoPrompt": {
-          "value": "First 0-2s: Wide shot — challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. Her friend stands nearby holding up her phone, filming. / Next 2-4s: Camera pushes in toward the main character — the shot tightens until only the friend's arm and the edge of her phone remain visible at the frame's bottom corner, full focus now on the main character. Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Still in this close framing, both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.",
-          "at": "2026-10-08T13:14:57.586Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 8,
-          "at": "2026-10-09T06:32:29.990Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+        "kr": {
+          "sp": "전신거울 앞, 동일 구도",
+          "ch": "버건디 슬립 드레스, 웨이브 다운 스타일링, 포인트 이어링",
+          "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
+          "ca": "고정",
+          "ac": "0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크",
+          "md": "매력적이고 여유로운 자신감"
         }
-      },
-      "captionSegTiming": [
-        [
-          3.5,
-          6
-        ]
-      ]
+      }
     },
     {
       "id": "cut-5",
       "no": 5,
-      "scene": "INT. 여리의 방(침실) - 낮 (CUT 4 연속, 웃음이 잦아든 뒤)",
-      "action": "First 3s: 웃음이 잦아든다. 여리가 카메라(시청자)를 정면으로 바라본다. 표정은 담담하고 따뜻하다. 대사 발화.\nNext 3s: 시선을 내려 폰 화면의 업로드 버튼을 누른다. 엄지가 화면에 닿는 순간 짧은 정적.\nFinal 2s: 다시 카메라를 바라본다. 아무 말 없이, 조용히 미소 짓는다. 여운.",
+      "cutTitle": "다시 편안한 나 + CTA",
+      "lipsync": false,
+      "scene": "(하드컷, 스냅 효과음) 다시 처음 라운지웨어로 돌아온 서여리. 장난스럽게 웃으며 카메라를 가리킨다.",
+      "action": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
       "character": "서여리",
-      "dialogue": "|| 틀려도 괜찮아요. 그게 저니까.",
+      "dialogue": "",
+      "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
       "narration": "",
-      "subtitle": "틀려도 괜찮아, 그게 나니까",
-      "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in the same bright bedroom as the previous cut (clothing rack, bed, vanity mirror visible in the background), looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing the same black crop short-sleeve t-shirt and blue denim shorts as the previous cut, barefoot, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing or location. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio.",
-      "videoPrompt": "First 0-3s: Laughter fades. She turns her gaze directly to camera. Expression is unhurried and genuine — the energy of someone who means what they're about to say. She speaks one quiet line, then holds eye contact for a beat. / Next 3-6s: She lowers her gaze to the phone. Her thumb finds the upload button. She presses it. A single still moment — no movement, just the weight of that tap. / Final 6-8s: She looks back up at camera. No more words. Just a small, real smile — the kind that doesn't try to be anything. Holds for 2-3 seconds of silence before cut.",
-      "duration": 11,
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the oversized cream lounge t-shirt and grey jogger pants from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
+      "videoPrompt": "First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.",
+      "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
-      "pipTarget": "",
-      "graphicTool": "",
+      "cutMark": "NORMAL",
       "masterCode": {
-        "sp": "IN.HM.TZ_AF.LT_WD",
+        "sp": "IN.HM.MR_DY.LT_WD",
         "pl": "YR_VD",
-        "ch": "서여리 / LK_CS.TOP_CRP.BTM_SHT",
-        "sh": "SH_CU",
-        "ca": "CA_PS → CA_ST",
-        "md": "MD_WRM + MD_DZD",
-        "ac": "AT_SI_01 + AT_AC_04",
-        "lookId": "LOOK_CS",
-        "du": 8,
+        "ch": "YR_VD / LK_LNG (컷1과 동일 — 오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠)",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_PLF",
+        "ac": "웃으며 검지로 카메라를 가리킴, 어깨 으쓱",
+        "lookId": "LOOK_LNG",
+        "du": 6,
+        "audio": {
+          "bgm": "업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)",
+          "voice": "없음",
+          "sfx": "손가락 스냅 \"딱\" (컷 시작 0.1초)",
+          "ambience": "밝은 방, 거의 무음"
+        },
         "kr": {
-          "sp": "집 침실, 낮, 창가 자연광 — 웃음이 가라앉은 뒤 여리가 카메라를 바라보며 마무리하는 장면",
-          "ch": "CUT 3~4와 완전히 동일한 방·동일한 낮 캐주얼(블랙 크롭 반팔티 + 블루 데님 숏츠), 맨발, 골드 목걸이 — 배경·의상 모두 직전 컷과 이어지게",
-          "sh": "미디엄 클로즈업 → 클로즈업 — 여리의 얼굴과 폰을 든 손이 함께 보이다 점점 얼굴로 좁혀지는 구도",
-          "ca": "부드러운 푸시인으로 여리 얼굴에 집중 → 업로드 버튼 누르는 순간 고정",
-          "md": "따뜻하고 진심 어린 마무리 — 말을 마친 뒤 조용히 미소 짓는 여운 엔딩",
-          "ac": "카메라를 정면으로 바라보며 대사를 건넨 뒤, 폰 화면의 업로드 버튼을 누르고 2~3초 조용히 미소 짓는 동작"
+          "sp": "전신거울 앞, 동일 구도",
+          "ch": "컷1과 동일한 라운지웨어로 복귀",
+          "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
+          "ca": "고정",
+          "ac": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
+          "md": "편안하고 장난기 있는 친밀함"
         }
-      },
-      "cutMark": "SIGNATURE",
-      "overrides": {
-        "imagePrompt": {
-          "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in the same bright bedroom as the previous cut (clothing rack, bed, vanity mirror visible in the background), looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing the same black crop short-sleeve t-shirt and blue denim shorts as the previous cut, barefoot, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing or location. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio.",
-          "at": "2026-10-08T12:44:49.679Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "duration": {
-          "value": 11,
-          "at": "2026-10-09T06:32:40.246Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        },
-        "dialogue": {
-          "value": "|| 틀려도 괜찮아요. 그게 저니까.",
-          "at": "2026-10-08T13:27:39.940Z",
-          "reason": "스튜디오 화면에서 직접 수정"
-        }
-      },
-      "segments": [
-        6,
-        6
-      ],
-      "segPrompts": [
-        "Extreme close-up on her face — dreamy, soft-focus atmosphere. Warm bokeh light drifts gently in the background, a few strands of hair move softly, her eyes are calm and slightly dreamy as if lost in a tender, hazy moment. Slow, cinematic signature shot. No dialogue — convey everything through her expression.",
-        "Camera pulls back quickly from the close-up into a steady medium shot, then locks completely still — same bedroom, same black crop top and denim shorts, phone in hand. She looks directly into the camera with a calm, genuine expression and delivers her line clearly."
-      ]
+      }
     }
   ],
-  "scriptRaw": "[CUT 1]\n씬: INT. 여리의 방(침실) - 밤\n공간코드: IN.HM.TZ_NT.LT_WM\n공간설명(한글): 집 침실, 밤, 따뜻한 조명 — 침대 위에 앉아 폰 빛이 얼굴을 비추는 아늑한 밤 분위기\n캐릭터코드: 서여리 / LK_HM.TOP_CRP.BTM_SHT\n캐릭터설명(한글): 홈 캐주얼 — 크롭탑 + 데님 숏츠, 맨발, 골드 목걸이, 편안한 밤 집 스타일\n카메라: CA_ST → CA_ZIN\n카메라설명(한글): 고정(삼각대) 시작 → 서서히 줌인으로 여리 표정 집중\n감정: MD_INT + MD_DZD\n감정설명(한글): 진지하게 화면을 보다가 멍하고 묘한 여운으로 번지는 감정\n동작코드: AT_EM_04 + AT_AC_04\n동작설명(한글): 폰 화면을 멍하게 응시하다가, 두 손으로 얼굴을 감싸고 손가락 사이로 피식 웃음이 새어 나오는 동작\n룩ID: LOOK_HM\n액션:\nFirst 3s: 침대에 앉아 폰을 바라보며 알림이 쏟아지는 화면을 읽는다. 표정은 살짝 굳어 있다.\nNext 3s: 두 손으로 얼굴을 감싼다. 고개를 숙이고 잠시 정적.\nFinal 2s: 손가락 사이로 피식 — 참을 수 없는 웃음이 새어 나온다.\n캐릭터: 서여리\n대사: 없음\n나레이션: 그 영상, 결국 단톡방 레전드가 됐다.\n샷 타입: CLOSEUP\n샷설명(한글): 미디엄 클로즈업 — 침대 위 여리의 상반신과 표정 중심, 폰 빛이 얼굴을 비추는 구도\n컷 타입: BROLL\nCP: 단톡방 레전드 됨 ㅋㅋ\n이미지 프롬프트: CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a cozy bed at night. Long wavy dark brown hair, NOT short — hair falls naturally over shoulders. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing a casual crop top and denim shorts, barefoot or socks only, no shoes worn indoors. Gold necklace visible. Holding a smartphone, warm amber bedside light softly illuminating her face from the side. She looks at the screen with a slightly stiff expression, then covers her face with both hands. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Background: soft blurred bedroom — pillows, warm lamp glow. No subtitles, no audio. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. ✅ 룰셋 통과\n영상 프롬프트: First 0-3s: Young Korean woman sits on bed, gazes at glowing phone screen. Notification lights flicker softly on her face. Expression is still, slightly tense — reading something. / Next 3-6s: She slowly raises both hands and covers her face. Head dips slightly. A quiet stillness fills the frame. Warm lamplight wraps around her. / Final 6-8s: Fingers part just slightly — a small, helpless smile escapes between her hands. Shoulders relax. The moment feels like something between embarrassment and warmth.\n\n\n[CUT 2]\n씬: INT. 여리의 방(침실) - 밤 (CUT 1 연속)\n공간코드: IN.HM.TZ_NT.LT_WM\n공간설명(한글): 집 침실, 밤, 따뜻한 조명 — CUT 1과 같은 공간, 습관처럼 피드를 넘기다 멈추는 장면\n캐릭터코드: 서여리 / LK_HM.TOP_CRP.BTM_SHT\n캐릭터설명(한글): CUT 1과 동일한 홈 캐주얼 — 크롭탑 + 데님 숏츠, 맨발, 골드 목걸이\n카메라: CA_ZIN → CA_ST\n카메라설명(한글): 손가락 위 클로즈업에서 서서히 줌인 후 고정 — 얼굴로 시선 이동\n감정: MD_INT + MD_WRM\n감정설명(한글): 차분하고 내면적인 시선으로 자신의 영상을 다시 바라보며 조금씩 따뜻하게 표정이 풀리는 감정\n동작코드: AT_EM_04 + AT_AC_04\n동작설명(한글): 피드를 넘기다 손가락이 멈추고, 자기 영상을 다시 재생하며 화면 빛을 받으며 표정이 서서히 풀리는 동작\n룩ID: LOOK_HM\n액션:\nFirst 3s: 습관처럼 손가락으로 피드를 위로 넘긴다. 완벽한 피드들이 스쳐 지나간다. 표정은 무감각하게 평평하다.\nNext 3s: 손가락이 멈춘다. 자기 흑역사 영상을 재생한다. 폰 화면 빛이 얼굴 위로 부드럽게 올라온다.\nFinal 2s: 표정이 조금씩 풀리며 입꼬리가 아주 작게 올라간다. 대사 발화.\n캐릭터: 서여리\n대사: …근데 이때 나, 되게 신나 보이네.\n나레이션: 완벽한 피드보다, 이게 더 나 같았다.\n샷 타입: CLOSEUP\n샷설명(한글): 미디엄 클로즈업 — 폰을 든 손가락과 여리의 얼굴을 함께 잡는 구도. 화면 빛이 아래에서 위로 얼굴을 물들임\n컷 타입: YEORI\nCP: 없음 (대사와 나레이션이 이 컷의 감정을 충분히 전달함 — 의도적 판단)\n이미지 프롬프트: CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing a casual crop top and denim shorts, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. ✅ 룰셋 통과\n영상 프롬프트: First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\n\n[CUT 3]\n씬: INT. 여리의 방(침실) - 낮 (다음 날)\n공간코드: IN.HM.TZ_AF.LT_WD\n공간설명(한글): 집 침실, 다음 날 낮, 창가 자연광 — 벽 앞에 삼각대를 세우고 친구와 챌린지 재도전하는 장면\n캐릭터코드: 서여리 / LK_CS.TOP_CRP.BTM_SHT\n캐릭터설명(한글): 낮 캐주얼 — 크롭탑 + 데님 숏츠, 골드 목걸이, 활동적인 낮 스타일\n카메라: CA_ST\n카메라설명(한글): 고정(삼각대) — 두 사람을 동시에 담는 와이드 고정 구도\n감정: MD_BRT + MD_JOY\n감정설명(한글): 밝고 경쾌한 에너지 — 친구와 함께 비장하게 재도전 준비하는 유쾌한 분위기\n동작코드: AT_EM_01 + AT_AC_04\n동작설명(한글): 비장하게 어깨를 풀고 자세를 잡는 동작, 친구(지유)와 서로 맞받아치는 대사 주고받기\n룩ID: LOOK_CS\n액션:\nFirst 3s: 방 한쪽 벽 앞, 삼각대와 폰 세팅이 보인다. 지유가 폰을 들고 촬영 준비를 마친다.\nNext 3s: 지유가 여리를 향해 대사를 던진다. 여리가 받아친다.\nFinal 2s: 여리, 비장하게 양 어깨를 크게 돌리며 자세를 잡는다. 눈빛은 真 진지.\n캐릭터: 서여리\n대사: (지유) 이번엔 제대로 해봐, 서여리! / (여리) 보고 배워.\n나레이션: 없음\n샷 타입: FULLBODY\n샷설명(한글): 풀샷 — 벽 앞에 선 여리(오른쪽)와 지유(왼쪽)를 전신으로 담는 구도. 삼각대와 방 배경이 함께 보임\n컷 타입: YEORI\nCP: 재도전 선언\n이미지 프롬프트: FULLBODY SHOT — Two young Korean women in their early 20s stand in a bright bedroom in the afternoon. Main character on the right: long wavy dark brown hair, NOT short — hair full and flowing. Natural skin texture on right cheek, very subtle. Wearing a crop top and denim shorts, barefoot or socks only, no shoes worn indoors. Gold necklace. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. On the left, a friend holds a phone up as if ready to record. A tripod stands in front of a plain bedroom wall. Afternoon natural light streams in from a window. Both women face each other mid-conversation — right figure has squared her shoulders back in a mock-serious, confident stance. The energy is bright and playful. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Background must not interact with the main character beyond the friend's participation in the scene. No subtitles, no audio. ✅ 룰셋 통과\n영상 프롬프트: First 0-3s: Wide shot of bedroom wall. Friend on the left adjusts phone held up at filming angle. Tripod visible in foreground. Afternoon daylight fills the room warmly. Both women face each other. / Next 3-6s: Friend tosses a teasing line. Main character on right responds with a sharp comeback, eyebrow raised. The exchange is quick and playful. / Final 6-8s: Main character rolls both shoulders back dramatically, cracks her neck, and plants her feet — dead serious expression. Friend stifles a laugh behind the phone.\n\n\n[CUT 4]\n씬: INT. 여리의 방(침실) - 낮 (CUT 3 연속)\n공간코드: IN.HM.TZ_AF.LT_WD\n공간설명(한글): 집 침실, 낮, 창가 자연광 — 챌린지 음악이 시작되고 역시 박자가 틀리며 폭소가 터지는 장면\n캐릭터코드: 서여리 / LK_CS.TOP_CRP.BTM_SHT\n캐릭터설명(한글): CUT 3과 동일한 낮 캐주얼 — 크롭탑 + 데님 숏츠, 맨발, 골드 목걸이\n카메라: CA_HH\n카메라설명(한글): 핸드헬드 — 지유가 들고 있는 폰 시점처럼 살짝 흔들리는 자연스러운 구도\n감정: MD_COM + MD_JOY\n감정설명(한글): 코믹하고 폭발적으로 유쾌한 감정 — 또 틀렸지만 동시에 터지는 웃음이 핵심\n동작코드: AT_EM_03 + AT_EM_01\n동작설명(한글): 반 박자 늦고 손이 반대 방향으로 가는 동작 후 멈칫 — 1초 정적 뒤 동시에 웃음 폭발\n룩ID: LOOK_CS\n액션:\nFirst 2s: 챌린지 비트가 시작된다. 여리가 비장하게 동작을 시작한다.\nNext 2s: 반 박자 늦고, 손이 반대 방향으로 간다. 마지막 포즈에서 멈칫.\nFinal 2s: 1초의 정적 — 그리고 여리와 지유가 동시에 웃음이 터진다.\n캐릭터: 서여리\n대사: 없음\n나레이션: 없음\n샷 타입: FULLBODY\n샷설명(한글): 풀샷(핸드헬드) — 챌린지 동작을 찍는 지유 시점에서 여리 전신이 담기는 구도. 살짝 흔들리는 현장감\n컷 타입: BROLL\nCP: 또 틀림 ㅋㅋㅋ\n이미지 프롬프트: FULLBODY SHOT — A Korean woman in her early 20s, appearing no older than 22-23, stands in a bright bedroom in the afternoon, caught mid-dance-challenge move. Long wavy dark brown hair, NOT short — swaying slightly with movement. Natural skin texture on right cheek, very subtle. Wearing a crop top and denim shorts, barefoot or socks only, no shoes worn indoors. Gold necklace catches afternoon light. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. Her arms are extended in the wrong direction — a beat off. Expression is frozen in a split-second of recognition — mouth slightly open, body halted mid-motion. The image feels like a freeze frame right before laughter. Bright natural daylight. Handheld camera feel — slightly imperfect framing, full of life. Photorealistic 8K cinematic, effortlessly photogenic. DO NOT change clothing. Background must not interact with the main character. No subtitles, no audio. ✅ 룰셋 통과\n영상 프롬프트: First 0-2s: Challenge beat drops from a phone speaker off-frame. Main character begins her move — determined face, full commitment. Arms start to swing. / Next 2-4s: Half a beat behind — arms swing the wrong way. Final pose lands awkward and lopsided. She freezes. One full second of complete silence and stillness. / Final 4-6s: Both women erupt into laughter simultaneously. She doubles over slightly, friend's laugh audible off-frame. The room fills with the sound of two people completely losing it together.\n\n\n[CUT 5]\n씬: INT. 여리의 방(침실) - 낮 (CUT 4 연속, 웃음이 잦아든 뒤)\n공간코드: IN.HM.TZ_AF.LT_WD\n공간설명(한글): 집 침실, 낮, 창가 자연광 — 웃음이 가라앉은 뒤 여리가 카메라를 바라보며 마무리하는 장면\n캐릭터코드: 서여리 / LK_CS.TOP_CRP.BTM_SHT\n캐릭터설명(한글): CUT 3~4와 동일한 낮 캐주얼 — 크롭탑 + 데님 숏츠, 맨발, 골드 목걸이\n카메라: CA_PS → CA_ST\n카메라설명(한글): 부드러운 푸시인으로 여리 얼굴에 집중 → 업로드 버튼 누르는 순간 고정\n감정: MD_WRM + MD_DZD\n감정설명(한글): 따뜻하고 진심 어린 마무리 — 말을 마친 뒤 조용히 미소 짓는 여운 엔딩\n동작코드: AT_SI_01 + AT_AC_04\n동작설명(한글): 카메라를 정면으로 바라보며 대사를 건넨 뒤, 폰 화면의 업로드 버튼을 누르고 2~3초 조용히 미소 짓는 동작\n룩ID: LOOK_CS\n액션:\nFirst 3s: 웃음이 잦아든다. 여리가 카메라(시청자)를 정면으로 바라본다. 표정은 담담하고 따뜻하다. 대사 발화.\nNext 3s: 시선을 내려 폰 화면의 업로드 버튼을 누른다. 엄지가 화면에 닿는 순간 짧은 정적.\nFinal 2s: 다시 카메라를 바라본다. 아무 말 없이, 조용히 미소 짓는다. 여운.\n캐릭터: 서여리\n대사: 틀려도 괜찮아요. 그게 저니까.\n나레이션: 없음\n샷 타입: CLOSEUP\n샷설명(한글): 미디엄 클로즈업 → 클로즈업 — 여리의 얼굴과 폰을 든 손이 함께 보이다 점점 얼굴로 좁혀지는 구도\n컷 타입: YEORI\nCP: 틀려도 괜찮아, 그게 나니까\n이미지 프롬프트: CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in a bright bedroom in the afternoon, looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing a crop top and denim shorts, barefoot or socks only, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio. ✅ 룰셋 통과\n영상 프롬프트: First 0-3s: Laughter fades. She turns her gaze directly to camera. Expression is unhurried and genuine — the energy of someone who means what they're about to say. She speaks one quiet line, then holds eye contact for a beat. / Next 3-6s: She lowers her gaze to the phone. Her thumb finds the upload button. She presses it. A single still moment — no movement, just the weight of that tap. / Final 6-8s: She looks back up at camera. No more words. Just a small, real smile — the kind that doesn't try to be anything. Holds for 2-3 seconds of silence before cut.",
+  "scriptRaw": "================================================================\n마스터 코드\n[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]\n================================================================\n에피소드명: 스냅 아웃핏 트렌드 따라 해봤습니다\n채널: 서여리 인스타그램 릴스 (IG_R07)\n총 길이: 30초 목표 (6+6+6+6+6) — 생성단위(Veo 6초) 기준, 컷 경계마다 스냅 효과음으로 하드컷\n콘셉트: 손가락 스냅 한 번에 룩이 바뀌는 트렌드 챌린지. 대사 없이 BGM 비트+스냅 효과음으로만 전개, 마지막에 \"오늘 네 기분 룩은?\" 자막으로 댓글 유도\n================================================================\nEP.HEADER\nCHAR  : YEORI (서여리 기본)\nEP    : IG_R07\nTITLE : 스냅 아웃핏 트렌드 따라 해봤습니다\nLOOK.A: 컷마다 다른 아웃핏(아래 CH 참고) — 같은 자리·같은 구도 유지해 \"스냅 한 번에 바뀐\" 느낌\nBG.A  : 서여리 방, 전신거울 앞, 낮 자연광\nLIGHT : LT_WD (창가 낮 자연광, 밝고 선명)\nREF   : yeori face / closeup\nBGM   : 업비트 트렌디 팝(4박 루프), 컷마다 비트 드롭에 맞춰 하드컷\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] ─ YEORI | 훅 — 손가락 스냅 준비 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 전신거울 앞, 아침 라운지웨어 차림의 서여리가 카메라를 정면으로 보며 장난스럽게 웃는다. 오른손을 들어올려 스냅 자세를 잡는다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_LNG (오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 헝클어진 자연스러운 웨이브 머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_PLF\nAC: 오른손을 들어 스냅 직전 자세로 멈춤, 눈썹 한쪽 살짝 올림\nLOOK_ID: LOOK_LNG\nDU: 6\nCP: 오늘 기분에 맞는 룩, 스냅 한 번이면 끝.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (0초부터, 인트로 비트)\n  음성: 없음\n  효과음: 손가락 스냅 준비 숨죽임(컷 끝 지점)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 낮 자연광 방\nCH(캐릭터):   오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠, 자연스러운 웨이브 머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면\nCA(카메라):   고정\nAC(동작):     0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지\nMD(감정):     장난기 있는 자신감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing an oversized cream lounge t-shirt and grey jogger pants, soft loungewear, barefoot,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] ─ YEORI | 캐주얼 데일리 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 같은 자리, 같은 구도. 서여리가 캐주얼 데일리룩으로 바뀌어 있다. 가볍게 한 바퀴 돌며 옷을 보여준다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_CAS (크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 가볍게 반 바퀴 턴하며 옷매무새 보여줌, 다시 정면\nLOOK_ID: LOOK_CAS\nDU: 6\nCP: 외출룩 버전.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   크롭 니트 가디건 + 와이드 데님, 심플 골드 목걸이\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 가볍게 반 바퀴 턴하며 옷 보여줌 → 3~6초 정면으로 돌아와 미소\nMD(감정):     경쾌하고 따뜻한 에너지\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing as before,\nnow wearing a cropped knit cardigan over a simple top and wide-leg denim jeans, a thin gold necklace, casual daytime outfit,\nmid-turn showing off the outfit then facing camera again with a warm smile,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light, soft and clean,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She turns halfway, showing off the new casual outfit — cardigan and wide denim — with a light, breezy motion. / Next 3-6s: She turns back to face camera, warm playful smile, hand brushing hair back. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] ─ YEORI | 오피스/포멀 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 같은 자리. 단정한 오피스룩으로 바뀐 서여리. 살짝 놀란 듯 과장된 표정으로 옷깃을 매만진다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_OFC (크림 블라우스 + 블랙 슬랙스, 단정하게 반 묶은 머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_SUR\nAC: 옷깃을 매만지며 과장되게 놀란 표정, 한쪽 눈썹 올림\nLOOK_ID: LOOK_OFC\nDU: 6\nCP: 출근룩 버전. 나 프로 맞아?\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   크림 블라우스 + 블랙 슬랙스, 단정한 반 묶음 머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 옷깃을 매만지며 과장되게 놀란 표정 → 3~6초 자신감 있는 표정으로 전환\nMD(감정):     과장된 놀람 → 당당함\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now neatly half-tied back,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a cream blouse and black tailored slacks, polished office outfit, minimal gold jewelry,\nhand adjusting the collar, exaggerated surprised expression with one eyebrow raised, playful not serious,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She looks down at her new office outfit, adjusting her collar with an exaggerated surprised expression, eyebrow raised playfully. / Next 3-6s: Expression shifts into a confident, polished smile, chin slightly up. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4] ─ YEORI | 데이트 글램 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 같은 자리. 화려한 데이트룩으로 바뀐 서여리. 살짝 윙크하며 머리를 넘긴다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_GLM (버건디 슬립 드레스 + 웨이브 다운 스타일링, 포인트 이어링)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 머리를 손으로 넘기며 살짝 윙크\nLOOK_ID: LOOK_GLM\nDU: 6\nCP: 저녁 약속룩 버전.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   버건디 슬립 드레스, 웨이브 다운 스타일링, 포인트 이어링\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 손으로 머리를 천천히 넘김 → 3~6초 카메라 보며 살짝 윙크\nMD(감정):     매력적이고 여유로운 자신감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair now down and styled glamorously,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nnow wearing a burgundy silk slip dress, statement earrings, elegant evening look,\none hand gently sweeping hair back, confident alluring expression, subtle wink at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light transitioning slightly warmer,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She sweeps her hair back with one hand in a slow, confident motion, glamorous evening look revealed. / Next 3-6s: She gives a subtle playful wink directly at camera, confident smile. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5] ─ YEORI | 다시 편안한 나 + CTA | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 다시 처음 라운지웨어로 돌아온 서여리. 장난스럽게 웃으며 카메라를 가리킨다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_LNG (컷1과 동일 — 오버사이즈 크림 라운지 티셔츠 + 그레이 조거팬츠)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_PLF\nAC: 웃으며 검지로 카메라를 가리킴, 어깨 으쓱\nLOOK_ID: LOOK_LNG\nDU: 6\nCP: 근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   컷1과 동일한 라운지웨어로 복귀\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱\nMD(감정):     편안하고 장난기 있는 친밀함\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the oversized cream lounge t-shirt and grey jogger pants from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.\n",
   "ttsSettings": {
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "emotion": 35,
@@ -10017,290 +9900,18 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T09:19:20.207Z",
+  "savedAt": "2026-10-09T09:55:27.635Z",
   "videoTabState": {
-    "videoClips": {
-      "cut-1": [
-        {
-          "url": "blob:http://localhost:5173/22893b1c-8f82-4039-ac80-140d7bc73e06",
-          "name": "cut_01.mp4",
-          "duration": 6,
-          "trimStart": 0,
-          "trimEnd": 6,
-          "useFullDuration": false,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1791511203451,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
-        }
-      ],
-      "cut-2": [
-        {
-          "url": "blob:http://localhost:5173/91936d14-1f70-40ce-b27e-6978d21038eb",
-          "name": "Woman_scrolling_phone_and_watching_20261009133728.mp4",
-          "duration": 8,
-          "trimStart": 1,
-          "trimEnd": 3,
-          "useFullDuration": false,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1791520649026,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_02_clip_1.mp4"
-        }
-      ],
-      "cut-3": [
-        {
-          "url": "blob:http://localhost:5173/35d85602-04e1-41c7-ac76-4923e4ad2dc2",
-          "name": "Two_women_recording_video_dialogue_20261009133633.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1791520593382,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_03_clip_1.mp4"
-        }
-      ],
-      "cut-4": [
-        {
-          "url": "blob:http://localhost:5173/26522e2d-4ae9-4b4e-975b-4966c76ed619",
-          "name": "Woman_dancing_in_bedroom_20261009135617.mp4",
-          "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1791521778053,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_04_clip_1.mp4"
-        }
-      ],
-      "cut-5": [
-        {
-          "url": "blob:http://localhost:5173/8063ee34-3c32-4abe-a4cc-4aa3b2c01951",
-          "name": "PixVerse_V6_Image_Text_540P_eyes_fully_open_wi.mp4",
-          "duration": 5.04,
-          "trimStart": 0,
-          "trimEnd": 5.04,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1791527438435,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_05_clip_1.mp4"
-        },
-        {
-          "url": "blob:http://localhost:5173/362aad16-0456-4fb6-bae7-e44823803594",
-          "name": "Woman_speaking_Korean_line_20261009154754.mp4",
-          "duration": 6.02,
-          "trimStart": 0,
-          "trimEnd": 6.02,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1791528474559,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_05_clip_2.mp4"
-        }
-      ]
-    },
+    "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": "cut-2",
-    "subtitles": {
-      "cut-1": [
-        {
-          "start": 0,
-          "end": 6,
-          "text": "단톡방 레전드 됨 ㅋㅋ"
-        }
-      ],
-      "cut-5": [
-        {
-          "start": 0,
-          "end": 5.04,
-          "text": ""
-        },
-        {
-          "start": 5.04,
-          "end": 11.059999999999999,
-          "text": "틀려도 괜찮아, 그게 나니까"
-        }
-      ],
-      "cut-2": [
-        {
-          "start": 0,
-          "end": 2,
-          "text": "근데 이때 나, 되게 신나 보이네. "
-        },
-        {
-          "start": 0,
-          "end": 0,
-          "text": "완벽한 피드보다, 이게 더 나 같았다."
-        }
-      ]
-    }
+    "selectedCutId": null,
+    "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {
-      "cut-3": true,
-      "cut-5": true,
-      "cut-1": true,
-      "cut-2": true
-    },
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-3": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-4": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-5": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-1": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-2__v1": [
-        {
-          "id": "track_1791453162733_71ps",
-          "type": "dialogue",
-          "text": "…근데 이때 나, 되게 신나 보이네.",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_02_track_1791453162733_71ps.mp3?t=1791519623200",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1791453162733_h1rg",
-          "type": "narration",
-          "text": "완벽한 피드보다, 이게 더 나 같았다.",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_02_track_1791453162733_h1rg.mp3?t=1791519629295",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-3__v1": [
-        {
-          "id": "track_1791453165517_89sc",
-          "type": "dialogue",
-          "text": "이번엔 제대로 해봐~, 서여리!",
-          "speaker": "지유",
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_03_track_1791453165517_89sc.mp3?t=1791519507568",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        },
-        {
-          "id": "track_1791453165517_l81i",
-          "type": "dialogue",
-          "text": "흥!! 보고 배워?",
-          "speaker": "여리",
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_03_track_1791453165517_l81i.mp3?t=1791519556526",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-4__v1": [
-        {
-          "id": "track_1791453175345_qxrm",
-          "type": "dialogue",
-          "text": "",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-5__v1": [
-        {
-          "id": "track_1791453367809_8tgn",
-          "type": "dialogue",
-          "text": "틀려도 괜찮아요. 그게 저니까.",
-          "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_05_track_1791453367809_8tgn.mp3?t=1791529706902",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.95,
-            "stability": 30,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-1__v1": [
-        {
-          "id": "track_1791519597422_7j43",
-          "type": "narration",
-          "text": "그 영상, 결국 단톡방 레전드가 됐다.",
-          "speaker": null,
-          "url": "blob:http://localhost:5173/dd9f30de-87fa-4a0d-93a9-ea4e1ec1dcf5",
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ]
-    },
-    "mergedUrls": {
-      "cut-3__v1": "blob:http://localhost:5173/c7ada21b-0333-43ab-b4b8-93eea5fd1e45",
-      "cut-5__v1": "blob:http://localhost:5173/3dbed893-4402-46ea-8fa5-a7f6f28950d9",
-      "cut-1__v1": "blob:http://localhost:5173/d73511ef-c544-4e5a-9c00-9f809c1df889",
-      "cut-2__v1": "blob:http://localhost:5173/ac958eff-8750-4bb7-aec4-5b6887576ce2"
-    }
+    "g3Confirmed": {},
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {}
