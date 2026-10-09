@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9228,7 +9228,13 @@
               "at": "2026-10-08T13:27:22.755Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              3.5,
+              6
+            ]
+          ]
         },
         {
           "id": "cut-5",
@@ -9699,7 +9705,13 @@
           "at": "2026-10-08T13:27:22.755Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          3.5,
+          6
+        ]
+      ]
     },
     {
       "id": "cut-5",
@@ -9899,21 +9911,52 @@
       ],
       "cut-2": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/05_video/cut_02.mp4?t=1791519314258",
-          "name": "cut_02.mp4",
+          "url": "blob:http://localhost:5173/91936d14-1f70-40ce-b27e-6978d21038eb",
+          "name": "Woman_scrolling_phone_and_watching_20261009133728.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\05_video\\cut_02.mp4",
+          "staging": false,
           "keepAudio": true,
-          "createdAt": 1791519313000
+          "createdAt": 1791520649026,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_02_clip_1.mp4"
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "blob:http://localhost:5173/9f919164-03e4-4ef6-bb8f-eb467962ad6a",
+          "name": "Two_women_recording_video_dialogue_20261009133633.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1791520593382,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_03_clip_1.mp4"
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/2fc9b84e-0ba9-4517-a653-1d2100da6612",
+          "name": "Woman_dancing_in_bedroom_20261009135617.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1791521778053,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_04_clip_1.mp4"
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-4",
     "subtitles": {
       "cut-1": [
         {
