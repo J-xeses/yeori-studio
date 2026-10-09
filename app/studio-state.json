@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9819,10 +9819,24 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T01:36:06.917Z",
+  "savedAt": "2026-10-09T01:41:17.129Z",
   "videoTabState": {
     "videoClips": {
-      "cut-1": []
+      "cut-1": [
+        {
+          "url": "blob:http://localhost:5173/513d0ba2-5924-4cdd-8f72-7fd4c77bb53b",
+          "name": "cut_01.mp4",
+          "duration": 6,
+          "trimStart": 0,
+          "trimEnd": 6,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1791509734240,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_1.mp4"
+        }
+      ]
     },
     "g4Approved": {},
     "selectedCutId": "cut-1",

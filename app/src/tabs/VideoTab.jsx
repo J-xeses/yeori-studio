@@ -2074,9 +2074,14 @@ export default function VideoTab() {
                     {isSelected && subtitleEnabled && isReel && !subtitleEditMode && captionVisibleNow && !(bigShowFinal && bigHasDerived) && (
                       <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} plate={isDialogueSeg(previewText, selCutForText?.dialogue)} />
                     )}
-                    {/* 릴스: 자막은 ReelCaptionOverlay(클릭 통과)로 그리고, 수정은 오른쪽 위 작은 버튼으로 연다.
-                        예전엔 투명한 자막 띠가 영상 아래쪽을 덮어 재생 버튼 클릭을 가로챘다(2026-09-28 성준님 제보) */}
-                    {isSelected && subtitleEnabled && !subtitleEditMode && isReel && (
+                    {/* 자막은 (릴스면 ReelCaptionOverlay로 클릭 통과, 아니면 아래 캔버스로) 그리고, 수정은
+                        오른쪽 위 작은 버튼으로 연다. 예전엔 투명한 자막 띠가 영상 아래쪽을 덮어 재생 버튼
+                        클릭을 가로챘다(2026-09-28 성준님 제보) — 이 버튼은 그 수정판이었는데 isReel(=코드가
+                        IG_R로 시작하는지)로만 분기돼 있어서, SF_E처럼 똑같이 세로 숏폼인데 IG_R이 아닌
+                        콘텐츠는 여전히 옛날처럼 자막 띠를 직접 눌러야 하는 버전에 머물러 있었다(2026-10-09
+                        성준님 제보 — 재생 버튼이 수정창 영역에 가려 안 눌리는 바로 그 증상 재발). isReel
+                        여부와 무관하게 항상 버튼으로 열도록 통일하고, 아래 캔버스 div에서는 onClick을 뺐다. */}
+                    {isSelected && subtitleEnabled && !subtitleEditMode && (
                       <button type="button" onClick={() => setSubtitleEditMode(true)} title="클릭하여 자막 수정"
                         style={{ position: 'absolute', top: 8, right: 8, zIndex: 4, fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,.35)', background: 'rgba(0,0,0,.55)', color: '#fff', cursor: 'pointer' }}>
                         ✏ 자막 수정
@@ -2085,15 +2090,13 @@ export default function VideoTab() {
                     {isSelected && subtitleEnabled && !subtitleEditMode && !isReel && (
                       <div
                         className={s.subtitleDisplay}
-                        onClick={() => setSubtitleEditMode(true)}
-                        title="클릭하여 자막 수정"
                         // s[`pos_${subtitlePosition}`] 문자열 조합 클래스가 이 컷카드 목록
                         // (.map 안에서 매번 다시 렌더되는 위치)에서 비어버리는 경우가 실측
                         // 확인됨 — position:absolute인데 bottom이 하나도 안 붙어서 자막 박스가
                         // 문서 흐름상 원래 자리(영상 아래, 컨트롤바 위 틈)로 빠져 화면 밖처럼
                         // 보였다(2026-09-18, 사용자 스크린샷: 컷2/3은 정상, 컷4부터 틀어짐).
                         // CSS 모듈 클래스 대신 bottom%를 직접 계산해 인라인으로 고정.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: previewT >= (Number(selCut.captionStartSec) || 0) ? 'visible' : 'hidden' }}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: previewT >= (Number(selCut.captionStartSec) || 0) ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>
