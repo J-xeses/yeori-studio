@@ -21,6 +21,12 @@ const SEP    = ''   // 대사 구분(슬래시) 임시 마커 — 실제 텍스
 const SPEAKER_LEAD_RE   = new RegExp(`(^|[/／\\n])[ \\t]*([가-힣]{1,6})(?:[ \\t]+(?=[${QOPEN}])|[ \\t]*[:：][ \\t]*)`, 'g')
 // 인라인형: "대사" __화자__ "대사" — 닫는/여는 따옴표 사이에 공백으로 둘러싸인 이름
 const SPEAKER_INLINE_RE = new RegExp(`([${QCLOSE}])[ \\t]+([가-힣]{1,6})[ \\t]+(?=[${QOPEN}])`, 'g')
+// 2026-10-09 발견(SF_E109 컷3 실측): 대본 생성이 실제로 쓰는 두 화자 표기는 `(지유) 대사 /
+// (여리) 대사`(괄호+이름)인데, 이 괄호가 PAREN_RE("(지문)" 제거용)에 먼저 걸려 화자명째로
+// 통째 삭제됐었음 — 등록된 이름으로만 제한해서 진짜 지문("(미소 지으며)" 등)은 그대로 둔다.
+export const KNOWN_SPEAKER_NAMES = ['서여리', '여리', '한지아', '지아', '지유']
+const PAREN_NAME_ALT = KNOWN_SPEAKER_NAMES.join('|')
+const SPEAKER_PAREN_RE = new RegExp(`(^|[/／\\n])[ \\t]*[（(](${PAREN_NAME_ALT})[)）][ \\t]*`, 'g')
 
 function endsSentence(s) { return /[.!?…。][)"'’”」』\s]*$/.test(s) }
 
@@ -28,6 +34,13 @@ export function cleanForTTS(input) {
   const removed = []
   let text = String(input || '')
 
+  // 등록된 화자 이름의 괄호 표기 — "(지문)" 제거(PAREN_RE)보다 먼저 떼어내 화자명을 보존.
+  text = text.replace(SPEAKER_PAREN_RE, (m, sep, name) => {
+    removed.push(`화자:${name}`)
+    if (sep === '/' || sep === '／') return SEP
+    if (sep === '\n') return '\n'
+    return ''
+  })
   text = text.replace(PAREN_RE,   (m) => { const t = m.trim(); if (t) removed.push(t); return ' ' })
   text = text.replace(BRACKET_RE, (m) => { const t = m.trim(); if (t) removed.push(t); return ' ' })
   text = text.replace(MD_RE, '')
@@ -139,7 +152,8 @@ export function dialogueToSubtitle(input) {
 // 세그먼트: (이름) (콜론?) (따옴표대사)  |  (이름) 콜론 (따옴표없는 대사, /·줄끝까지)
 const SEG_RE = new RegExp(
   `([가-힣]{1,6})[ \\t]*[:：]?[ \\t]*[${QOPEN}]([^${QCLOSE}]*)[${QCLOSE}]` +
-  `|([가-힣]{1,6})[ \\t]*[:：][ \\t]*([^/／\\n${QOPEN}]+)`,
+  `|([가-힣]{1,6})[ \\t]*[:：][ \\t]*([^/／\\n${QOPEN}]+)` +
+  `|[（(](${PAREN_NAME_ALT})[)）][ \\t]*([^/／\\n]+)`,
   'g',
 )
 
@@ -149,8 +163,8 @@ export function splitSpeakerSegments(input) {
   let m
   SEG_RE.lastIndex = 0
   while ((m = SEG_RE.exec(raw)) !== null) {
-    const speaker = (m[1] || m[3] || '').trim() || null
-    const body    = (m[2] ?? m[4] ?? '').trim()
+    const speaker = (m[1] || m[3] || m[5] || '').trim() || null
+    const body    = (m[2] ?? m[4] ?? m[6] ?? '').trim()
     const clean   = cleanForTTS(body).clean
     if (clean) segs.push({ speaker, text: clean })
   }

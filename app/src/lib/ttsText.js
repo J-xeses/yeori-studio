@@ -28,6 +28,13 @@ export function cleanForTTS(input) {
   const removed = []
   let text = String(input || '')
 
+  // 등록된 화자 이름의 괄호 표기 — "(지문)" 제거(PAREN_RE)보다 먼저 떼어내 화자명을 보존.
+  text = text.replace(SPEAKER_PAREN_RE, (m, sep, name) => {
+    removed.push(`화자:${name}`)
+    if (sep === '/' || sep === '／') return SEP
+    if (sep === '\n') return '\n'
+    return ''
+  })
   text = text.replace(PAREN_RE,   (m) => { const t = m.trim(); if (t) removed.push(t); return ' ' })
   text = text.replace(BRACKET_RE, (m) => { const t = m.trim(); if (t) removed.push(t); return ' ' })
   text = text.replace(MD_RE, '')
@@ -136,11 +143,26 @@ export function dialogueToSubtitle(input) {
 // [{speaker, text}] 로 쪼갠다. 화자별로 다른 목소리로 TTS 생성 → 합쳐 하나의 컷 오디오.
 // 화자 마커가 전혀 없으면 [{speaker: null, text: <정제본>}] 하나.
 //   `이름 "대사"`  ·  `이름: 대사`  ·  구분자 `/`  ·  인라인 `"대사" 이름 "대사"`
+//   `(이름) 대사`  ← 2026-10-09 추가, 아래 설명
+
+// 2026-10-09 발견(SF_E109 컷3 실측, 성준님 제보로 타임라인 기능 만들다 발견): 대본 생성이
+// 실제로 쓰는 두 화자 표기는 `(지유) 대사 / (여리) 대사`(괄호+이름)인데, 이 괄호가
+// PAREN_RE("(지문)" 제거용)에 먼저 걸려 화자명째로 통째 삭제됐었음 — 그래서 cut3의 G3
+// 나레이션/대사 생성이 "누가 말하는지" 정보 없이 한 덩어리로 처리됐고(화자 전환 없이 단일
+// 목소리), buildClipPrompt()의 다중화자 가드도 이 형태를 인식 못해 화자를 못 찾았음. 임의
+// 괄호를 전부 화자로 오인하면 "(미소 지으며)" 같은 진짜 지문까지 화자로 잘못 인식하니,
+// characters.json과 같은 등록된 이름(clipPrompt.js CHAR_EN과 동일 목록)으로만 제한한다.
+export const KNOWN_SPEAKER_NAMES = ['서여리', '여리', '한지아', '지아', '지유']
+const PAREN_NAME_ALT = KNOWN_SPEAKER_NAMES.join('|')
+// 화자 어트리뷰션(괄호형) — PAREN_RE보다 먼저 적용해야 괄호째 삭제되기 전에 잡힌다.
+const SPEAKER_PAREN_RE = new RegExp(`(^|[/／\\n])[ \\t]*[（(](${PAREN_NAME_ALT})[)）][ \\t]*`, 'g')
 
 // 세그먼트: (이름) (콜론?) (따옴표대사)  |  (이름) 콜론 (따옴표없는 대사, /·줄끝까지)
+//   |  (등록된 이름) 괄호 (따옴표없는 대사, /·줄끝까지) — 위 SPEAKER_PAREN_RE와 동일 관례
 const SEG_RE = new RegExp(
   `([가-힣]{1,6})[ \\t]*[:：]?[ \\t]*[${QOPEN}]([^${QCLOSE}]*)[${QCLOSE}]` +
-  `|([가-힣]{1,6})[ \\t]*[:：][ \\t]*([^/／\\n${QOPEN}]+)`,
+  `|([가-힣]{1,6})[ \\t]*[:：][ \\t]*([^/／\\n${QOPEN}]+)` +
+  `|[（(](${PAREN_NAME_ALT})[)）][ \\t]*([^/／\\n]+)`,
   'g',
 )
 
@@ -150,8 +172,8 @@ export function splitSpeakerSegments(input) {
   let m
   SEG_RE.lastIndex = 0
   while ((m = SEG_RE.exec(raw)) !== null) {
-    const speaker = (m[1] || m[3] || '').trim() || null
-    const body    = (m[2] ?? m[4] ?? '').trim()
+    const speaker = (m[1] || m[3] || m[5] || '').trim() || null
+    const body    = (m[2] ?? m[4] ?? m[6] ?? '').trim()
     const clean   = cleanForTTS(body).clean
     if (clean) segs.push({ speaker, text: clean })
   }
