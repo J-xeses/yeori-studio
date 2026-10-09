@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -2196,7 +2196,7 @@
           "g4Approved": {
             "cut-1": true
           },
-          "selectedCutId": "cut-10",
+          "selectedCutId": "cut-7",
           "subtitles": {
             "cut-1": "",
             "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
@@ -4183,7 +4183,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-2",
+          "selectedCutId": "cut-3",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -9053,7 +9053,7 @@
           },
           "captionSegTiming": [
             [
-              1.6,
+              2.1,
               6
             ]
           ]
@@ -9066,7 +9066,7 @@
           "character": "서여리",
           "dialogue": "…근데 이때 나, 되게 신나 보이네.",
           "narration": "완벽한 피드보다, 이게 더 나 같았다.",
-          "subtitle": "근데 이때 나, 되게 신나 보이네.",
+          "subtitle": "근데 이때 나, 되게 신나 보이네.\n완벽한 피드보다, 이게 더 나 같았다.",
           "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
           "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
           "duration": 8,
@@ -9108,12 +9108,12 @@
           },
           "captionSegTiming": [
             [
-              0,
-              3
+              0.5,
+              3.5
             ],
             [
-              3,
-              8
+              4,
+              7.5
             ]
           ]
         },
@@ -9168,11 +9168,11 @@
           "captionSegTiming": [
             [
               0,
-              5
+              4.5
             ],
             [
               5,
-              8
+              6
             ]
           ]
         },
@@ -9271,7 +9271,7 @@
               "ac": "카메라를 정면으로 바라보며 대사를 건넨 뒤, 폰 화면의 업로드 버튼을 누르고 2~3초 조용히 미소 짓는 동작"
             }
           },
-          "cutMark": "NORMAL",
+          "cutMark": "SIGNATURE",
           "overrides": {
             "imagePrompt": {
               "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in the same bright bedroom as the previous cut (clothing rack, bed, vanity mirror visible in the background), looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing the same black crop short-sleeve t-shirt and blue denim shorts as the previous cut, barefoot, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing or location. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio.",
@@ -9318,10 +9318,83 @@
                 "createdAt": 1791511203451,
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
               }
+            ],
+            "cut-2": [
+              {
+                "url": "blob:http://localhost:5173/91936d14-1f70-40ce-b27e-6978d21038eb",
+                "name": "Woman_scrolling_phone_and_watching_20261009133728.mp4",
+                "duration": 8,
+                "trimStart": 1,
+                "trimEnd": 8,
+                "useFullDuration": false,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": false,
+                "createdAt": 1791520649026,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_02_clip_1.mp4"
+              }
+            ],
+            "cut-3": [
+              {
+                "url": "blob:http://localhost:5173/35d85602-04e1-41c7-ac76-4923e4ad2dc2",
+                "name": "Two_women_recording_video_dialogue_20261009133633.mp4",
+                "duration": 8,
+                "trimStart": 0,
+                "trimEnd": 8,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1791520593382,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_03_clip_1.mp4"
+              }
+            ],
+            "cut-4": [
+              {
+                "url": "blob:http://localhost:5173/26522e2d-4ae9-4b4e-975b-4966c76ed619",
+                "name": "Woman_dancing_in_bedroom_20261009135617.mp4",
+                "duration": 8,
+                "trimStart": 0,
+                "trimEnd": 8,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": false,
+                "createdAt": 1791521778053,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_04_clip_1.mp4"
+              }
+            ],
+            "cut-5": [
+              {
+                "url": "blob:http://localhost:5173/8063ee34-3c32-4abe-a4cc-4aa3b2c01951",
+                "name": "PixVerse_V6_Image_Text_540P_eyes_fully_open_wi.mp4",
+                "duration": 5.04,
+                "trimStart": 0,
+                "trimEnd": 5.04,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1791527438435,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_05_clip_1.mp4"
+              },
+              {
+                "url": "blob:http://localhost:5173/362aad16-0456-4fb6-bae7-e44823803594",
+                "name": "Woman_speaking_Korean_line_20261009154754.mp4",
+                "duration": 6.02,
+                "trimStart": 0,
+                "trimEnd": 6.02,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1791528474559,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_05_clip_2.mp4"
+              }
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-1",
+          "selectedCutId": "cut-2",
           "subtitles": {
             "cut-1": [
               {
@@ -9329,13 +9402,37 @@
                 "end": 6,
                 "text": "단톡방 레전드 됨 ㅋㅋ"
               }
+            ],
+            "cut-5": [
+              {
+                "start": 0,
+                "end": 5.04,
+                "text": ""
+              },
+              {
+                "start": 5.04,
+                "end": 11.059999999999999,
+                "text": "틀려도 괜찮아, 그게 나니까"
+              }
+            ],
+            "cut-2": [
+              {
+                "start": 0,
+                "end": 8,
+                "text": "근데 이때 나, 되게 신나 보이네."
+              }
             ]
           }
         },
         "ttsTabState": {
           "audioUrls": {},
           "audioTexts": {},
-          "g3Confirmed": {},
+          "g3Confirmed": {
+            "cut-3": true,
+            "cut-5": true,
+            "cut-1": true,
+            "cut-2": true
+          },
           "focusCutId": null,
           "voiceTabs": {
             "cut-2": [
@@ -9365,6 +9462,13 @@
                 "label": "목소리 1",
                 "voiceId": "RmYuvmCbqOMBJxDLW4k8"
               }
+            ],
+            "cut-1": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
             ]
           },
           "tracks": {
@@ -9374,7 +9478,7 @@
                 "type": "dialogue",
                 "text": "…근데 이때 나, 되게 신나 보이네.",
                 "speaker": null,
-                "url": null,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_02_track_1791453162733_71ps.mp3?t=1791519623200",
                 "voiceId": "",
                 "settings": {
                   "speed": 0.95,
@@ -9387,7 +9491,7 @@
                 "type": "narration",
                 "text": "완벽한 피드보다, 이게 더 나 같았다.",
                 "speaker": null,
-                "url": null,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_02_track_1791453162733_h1rg.mp3?t=1791519629295",
                 "voiceId": "",
                 "settings": {
                   "speed": 0.85,
@@ -9400,9 +9504,9 @@
               {
                 "id": "track_1791453165517_89sc",
                 "type": "dialogue",
-                "text": "이번엔 제대로 해봐, 서여리!",
+                "text": "이번엔 제대로 해봐~, 서여리!",
                 "speaker": "지유",
-                "url": null,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_03_track_1791453165517_89sc.mp3?t=1791519507568",
                 "voiceId": "",
                 "settings": {
                   "speed": 0.95,
@@ -9413,9 +9517,9 @@
               {
                 "id": "track_1791453165517_l81i",
                 "type": "dialogue",
-                "text": "보고 배워.",
+                "text": "흥!! 보고 배워?",
                 "speaker": "여리",
-                "url": null,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_03_track_1791453165517_l81i.mp3?t=1791519556526",
                 "voiceId": "",
                 "settings": {
                   "speed": 0.95,
@@ -9445,7 +9549,7 @@
                 "type": "dialogue",
                 "text": "틀려도 괜찮아요. 그게 저니까.",
                 "speaker": null,
-                "url": null,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_05_track_1791453367809_8tgn.mp3?t=1791529706902",
                 "voiceId": "",
                 "settings": {
                   "speed": 0.95,
@@ -9453,7 +9557,28 @@
                   "similarity": 75
                 }
               }
+            ],
+            "cut-1__v1": [
+              {
+                "id": "track_1791519597422_7j43",
+                "type": "narration",
+                "text": "그 영상, 결국 단톡방 레전드가 됐다.",
+                "speaker": null,
+                "url": "blob:http://localhost:5173/dd9f30de-87fa-4a0d-93a9-ea4e1ec1dcf5",
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
             ]
+          },
+          "mergedUrls": {
+            "cut-3__v1": "blob:http://localhost:5173/c7ada21b-0333-43ab-b4b8-93eea5fd1e45",
+            "cut-5__v1": "blob:http://localhost:5173/3dbed893-4402-46ea-8fa5-a7f6f28950d9",
+            "cut-1__v1": "blob:http://localhost:5173/d73511ef-c544-4e5a-9c00-9f809c1df889",
+            "cut-2__v1": "blob:http://localhost:5173/ac958eff-8750-4bb7-aec4-5b6887576ce2"
           }
         },
         "voiceInsertState": {
@@ -9530,7 +9655,7 @@
       },
       "captionSegTiming": [
         [
-          1.6,
+          2.1,
           6
         ]
       ]
@@ -9543,7 +9668,7 @@
       "character": "서여리",
       "dialogue": "…근데 이때 나, 되게 신나 보이네.",
       "narration": "완벽한 피드보다, 이게 더 나 같았다.",
-      "subtitle": "근데 이때 나, 되게 신나 보이네.",
+      "subtitle": "근데 이때 나, 되게 신나 보이네.\n완벽한 피드보다, 이게 더 나 같았다.",
       "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
       "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
       "duration": 8,
@@ -9585,12 +9710,12 @@
       },
       "captionSegTiming": [
         [
-          0,
-          3
+          0.5,
+          3.5
         ],
         [
-          3,
-          8
+          4,
+          7.5
         ]
       ]
     },
@@ -9645,11 +9770,11 @@
       "captionSegTiming": [
         [
           0,
-          5
+          4.5
         ],
         [
           5,
-          8
+          6
         ]
       ]
     },
@@ -9748,7 +9873,7 @@
           "ac": "카메라를 정면으로 바라보며 대사를 건넨 뒤, 폰 화면의 업로드 버튼을 누르고 2~3초 조용히 미소 짓는 동작"
         }
       },
-      "cutMark": "NORMAL",
+      "cutMark": "SIGNATURE",
       "overrides": {
         "imagePrompt": {
           "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in the same bright bedroom as the previous cut (clothing rack, bed, vanity mirror visible in the background), looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. Natural skin texture on right cheek, very subtle, never exaggerated. Wearing the same black crop short-sleeve t-shirt and blue denim shorts as the previous cut, barefoot, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing or location. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio.",
@@ -9823,7 +9948,8 @@
     "fontSize": 56,
     "color": "#ffffff",
     "bgStyle": "반투명 직각 박스",
-    "boxColor": "#000000"
+    "boxColor": "#000000",
+    "subtitlePosition": "bottom"
   },
   "renderProgress": {
     "current": 0,
@@ -9891,7 +10017,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T07:00:12.724Z",
+  "savedAt": "2026-10-09T08:33:48.993Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -9901,7 +10027,7 @@
           "duration": 6,
           "trimStart": 0,
           "trimEnd": 6,
-          "useFullDuration": true,
+          "useFullDuration": false,
           "ratio": "9:16",
           "staging": false,
           "keepAudio": false,
@@ -9914,12 +10040,12 @@
           "url": "blob:http://localhost:5173/91936d14-1f70-40ce-b27e-6978d21038eb",
           "name": "Woman_scrolling_phone_and_watching_20261009133728.mp4",
           "duration": 8,
-          "trimStart": 0,
-          "trimEnd": 8,
+          "trimStart": 1,
+          "trimEnd": 3,
           "useFullDuration": false,
           "ratio": "9:16",
           "staging": false,
-          "keepAudio": true,
+          "keepAudio": false,
           "createdAt": 1791520649026,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_02_clip_1.mp4"
         }
@@ -9984,7 +10110,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-4",
     "subtitles": {
       "cut-1": [
         {
@@ -10008,8 +10134,13 @@
       "cut-2": [
         {
           "start": 0,
-          "end": 8,
-          "text": "근데 이때 나, 되게 신나 보이네."
+          "end": 2,
+          "text": "근데 이때 나, 되게 신나 보이네. "
+        },
+        {
+          "start": 0,
+          "end": 0,
+          "text": "완벽한 피드보다, 이게 더 나 같았다."
         }
       ]
     }

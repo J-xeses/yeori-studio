@@ -8633,25 +8633,36 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     const epNum = ep.episode?.number
     const cuts = ep.cuts || []
 
-    // 릴스(IG_R) 는 reel-finalize 경로로 최종본을 만든다 — 손글씨 자막(CP)·효과음·A/V 싱크 보정·07_output 지문.
-    // 예전 G5(SRT+단순 concat)는 릴스 최종본이 아니라서 이 단계만 매번 사람이 따로 돌려야 했다(2026-09-25).
+    // 2026-10-09 (성준님: "숏폼, 롱폼 콘텐츠의 자막은 영상 만들기에서 최종 완성되며, 메이킹에서는
+    // 말풍선이나 손글씨를 연출로 추가할 수 있는 기능이 연결되어야 한다") — finalizeReel은 이름만
+    // "Reel"이고 실제 로직(자막 번인·위치·타이밍·효과음·A/V 보정)은 isReel 분기가 전혀 없는 범용
+    // 엔진인데, 호출부가 IG_R로만 막혀 있었다. SF_E109의 실제 G5는 지금까지 이 아래 "옛 G5"
+    // (SRT 파일만 생성 + 단순 concat, 영상에 자막을 전혀 굽지 않음) 로만 떨어졌다 — 영상탭에서
+    // 고친 위치·타이밍·디자인이 "최종본"엔 한 번도 반영되지 않았던 진짜 원인.
+    // finalizeReel 내부(normVf·ASS PlayResX/Y·handwriting_overlay output_size)는 1080x1920
+    // 고정이라 9:16(IG_R·SF_E·TK)엔 맞지만 16:9 롱폼(LF)엔 아직 검증 안 됨 — contentRatio로
+    // 9:16만 이 경로로 보내고, LF(16:9)는 안전하게 옛 경로로 남겨둔다(16:9 지원은 별도 작업).
     const g5Code = resolveEpisodeCode(ep.episode, episodeId)
-    if (/^IG_R/i.test(String(g5Code || ''))) {
+    const useRichFinalize = /^IG_R/i.test(String(g5Code || '')) || contentRatio(ep.episode) === '9:16'
+    if (useRichFinalize) {
       const r = await finalizeReel({ epNum: Number(epNum), cuts: resolveEpisodeCuts(ep, g5Code) })
       const deliverable = copyToDeliverables(g5Code, r.finalPath, `${g5Code}_final.mp4`)
       const approvedCount = approveGForCuts(g5Code, cuts, 'g5')
-      // 게시 준비: 대본의 [게시 캡션] → 07_output/{CODE}_caption.txt, 격자 썸네일(3:4) → 운영실 게시물 등록/갱신(2026-09-25)
+      // 게시 준비(인스타그램 전용: [게시 캡션]·격자 썸네일·운영실 등록)는 IG_R에서만 — SF_E는
+      // 별도의 "유튜브 운영실" 경로가 있어 여기서 인스타 전용 로직을 같이 태우면 안 된다.
       let publish = null
-      try {
-        const { extractPublishCaption, upsertEpisodePost } = await import('./lib/instaOps.js')
-        let raw = ep.scriptRaw || ''
-        if (!raw) { const sf = path.join(scriptDir(g5Code), 'script_v3.txt'); if (fs.existsSync(sf)) raw = fs.readFileSync(sf, 'utf-8') }
-        const caption = extractPublishCaption(raw)
-        if (caption) fs.writeFileSync(path.join(path.dirname(r.finalPath), `${g5Code}_caption.txt`), caption, 'utf-8')
-        const grid = path.join(path.dirname(r.finalPath), `${g5Code}_grid.jpg`)
-        await new Promise((ok) => { const pr = spawn('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', r.finalPath, '-frames:v', '1', '-vf', 'crop=iw:iw*4/3,scale=1080:1440', '-q:v', '3', grid], { windowsHide: true }); pr.on('close', ok); pr.on('error', ok) })
-        publish = upsertEpisodePost({ code: g5Code, title: ep.episode?.title, caption, gridSrc: grid })
-      } catch (e) { publish = { error: e.message } }
+      if (/^IG_R/i.test(String(g5Code || ''))) {
+        try {
+          const { extractPublishCaption, upsertEpisodePost } = await import('./lib/instaOps.js')
+          let raw = ep.scriptRaw || ''
+          if (!raw) { const sf = path.join(scriptDir(g5Code), 'script_v3.txt'); if (fs.existsSync(sf)) raw = fs.readFileSync(sf, 'utf-8') }
+          const caption = extractPublishCaption(raw)
+          if (caption) fs.writeFileSync(path.join(path.dirname(r.finalPath), `${g5Code}_caption.txt`), caption, 'utf-8')
+          const grid = path.join(path.dirname(r.finalPath), `${g5Code}_grid.jpg`)
+          await new Promise((ok) => { const pr = spawn('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', r.finalPath, '-frames:v', '1', '-vf', 'crop=iw:iw*4/3,scale=1080:1440', '-q:v', '3', grid], { windowsHide: true }); pr.on('close', ok); pr.on('error', ok) })
+          publish = upsertEpisodePost({ code: g5Code, title: ep.episode?.title, caption, gridSrc: grid })
+        } catch (e) { publish = { error: e.message } }
+      }
       try { (await import('./lib/yeoriActive.js')).recordEpisodeEvent({ code: g5Code, title: ep.episode?.title, cuts: resolveEpisodeCuts(ep, g5Code) }) } catch (e) { console.warn('[yeori-events]', e.message) }  // 감정이입 P5 사건 원장
       return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount, publish })
     }

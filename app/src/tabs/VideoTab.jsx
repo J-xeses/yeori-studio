@@ -764,9 +764,20 @@ export default function VideoTab() {
     ? computeCaptionTimeline(selCutForText).map(p => ({ start: p.start, end: p.end, text: p.text }))
     : null
   const effCaption = selCutForText ? effectiveCaptionValue(subtitles, selCutForText, clipsForText) : undefined
+  // 2026-10-09 실측(SF_E109 컷2 — 타이밍 바가 매번 구간 1개·대사 텍스트만·전체 길이로만 뜸):
+  // CP(cut.subtitle)가 "/"로 나눠 쓰지 않은 대사 한 줄짜리 평문이면, effectiveCaptionValue가
+  // 그 평문을 그대로 돌려줘서 bothFallbackSegs(대사+나레이션 2구간)를 통째로 가려버렸다. CP가
+  // 이미 "/"로 다구간을 명시했거나(또는 배열이면) 그 값을 존중하고, 그게 아니면(=구조적으로
+  // 2구간을 표현 못 하는 단문) 2구간 분리가 우선한다 — 드래그로 두 구간을 따로 조절하려면
+  // 애초에 바에 두 구간이 보여야 한다.
+  // ⚠️ 2026-10-09 실측: effCaption이 "배열이기만 하면" 이미 제대로 분리된 걸로 봤었는데,
+  // subtitles[cut.id] 로컬 오버라이드가 과거에 대사 한 줄만 담긴 1개짜리 배열로 저장된 적이
+  // 있으면(이번 실측 사례) 그 1개짜리 배열도 "다구간"으로 오인해 bothFallbackSegs(2구간)를
+  // 또 가렸다 — 평문 CP와 증상이 완전히 같은 함정. 요소가 실제로 2개 이상일 때만 인정한다.
+  const effCaptionIsMultiPart = (Array.isArray(effCaption) && effCaption.length > 1) || (typeof effCaption === 'string' && /\s*\/\s*/.test(effCaption))
   const segsForText = selCutForText
     ? toSegments(
-        effCaption !== undefined ? effCaption : bothFallbackSegs,
+        bothFallbackSegs && !effCaptionIsMultiPart ? bothFallbackSegs : (effCaption !== undefined ? effCaption : bothFallbackSegs),
         isReel ? '' : (dlText || nrText),
         selCutForText.duration || 0, selCutForText.captionSegTiming,
       )
@@ -2060,7 +2071,17 @@ export default function VideoTab() {
           // 보이게 한다(2026-09-14, 사용자 지적: "컷2는 a,b로 구분되는데 왜 다른 컷은 안 되나").
           const plannedSegs = Array.isArray(selCut.segments) ? selCut.segments : []
           const slotCount = Math.max(clips.length, plannedSegs.length)
-          const cutSegs = toSegments(effectiveCaptionValue(subtitles, selCut, clips), isReel ? '' : stripMeta(selCut.dialogue || selCut.narration || ''),   /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */ selCut.duration || 0, selCut.captionSegTiming)
+          // 2026-10-09: 아래 메인 컷카드 자막 표시도 subtitleEditMode 타이밍 바(segsForText)와
+          // 같은 함정이 있었다 — effectiveCaptionValue가 대사 한 줄짜리 평문/1개짜리 배열을
+          // 돌려주면 대사+나레이션 2구간 분리를 가렸다. 같은 기준으로 통일.
+          const dlText2 = !isReel ? stripMeta(selCut.dialogue || '') : ''
+          const nrText2 = !isReel ? stripMeta(selCut.narration || '') : ''
+          const bothFallback2 = (dlText2 && nrText2) ? computeCaptionTimeline(selCut).map(p => ({ start: p.start, end: p.end, text: p.text })) : null
+          const effCap2 = effectiveCaptionValue(subtitles, selCut, clips)
+          const effCap2IsMultiPart = (Array.isArray(effCap2) && effCap2.length > 1) || (typeof effCap2 === 'string' && /\s*\/\s*/.test(effCap2))
+          const cutSegs = toSegments(
+            bothFallback2 && !effCap2IsMultiPart ? bothFallback2 : (effCap2 !== undefined ? effCap2 : bothFallback2),
+            isReel ? '' : stripMeta(selCut.dialogue || selCut.narration || ''),   /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */ selCut.duration || 0, selCut.captionSegTiming)
           // 클립(영상 조각) 수보다 자막 구간이 더 많은 컷(예: 클립 1개 안에서 대사→나레이션이
           // 순차 전환되는 R04 스타일) — 남는 구간은 업로드 UI 없는 "자막 전용" 행으로 추가 표시.
           // 2026-09-22, 성준님 지적: 자막칸에 "/"가 안 나뉜 채 통짜로 들어가 있던 사고 수정.
