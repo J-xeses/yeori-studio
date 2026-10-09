@@ -26,6 +26,7 @@ import { syncEpisodeState } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
+import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
 import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
@@ -7347,6 +7348,15 @@ app.get('/api/episode-video-checklist', (req, res) => {
           segments: c.segments, segTiming: c.segTiming, segPrompts: c.segPrompts,
         }),
         segClipPrompts: Array.isArray(c.segments) ? c.segments.map((_, i) => buildSegClipPrompt(c, i)) : null,
+        // 2026-10-09: 성준님이 "VP 복사"로 화면에 보이는 videoPrompt(위, 한글 라벨·STS 메모 섞인
+        // 사람용 요약)를 그대로 Flow 입력창에 붙여넣어도 되는지 질문 — 답은 아니오였음. 실제
+        // flow-submit.js가 Flow에 넣는 건 clipPrompt.js의 buildClipPrompt() 출력(영문 지시문 +
+        // 인용된 한국어 대사만, "유형:"/"후처리(STS):" 같은 라벨 없음)이라 서로 다른 텍스트였다.
+        // 세그 컷은 이미 segClipPrompts로 노출돼 있었으니, 비세그 컷도 같은 값을 노출해
+        // 화면에서 "이게 Flow에 실제로 들어가는 텍스트"를 바로 복사할 수 있게 한다.
+        clipPrompt: (!Array.isArray(c.segments) || c.segments.length <= 1)
+          ? (() => { try { return buildClipPrompt(c, 1, 1).prompt } catch { return null } })()
+          : null,
         duration: targetSec,   // 트림 목표(초) — 명시값 없으면 글자수 추정, 최소 4
         startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,
         startFrameName: startFrame || null,

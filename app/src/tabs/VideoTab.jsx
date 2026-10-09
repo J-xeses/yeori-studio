@@ -2248,8 +2248,15 @@ export default function VideoTab() {
                     한다는 지적(성준님: "VP프롬프트도 빠져있잖아") — videoPrompt만 있으면 항상 표시. */}
                 {vRow?.videoPrompt && (
                   <div className={s.vpRow} onClick={e => e.stopPropagation()}>
-                    <button className={s.vpCopyBtn} onClick={() => navigator.clipboard.writeText(vRow.videoPrompt)}>
-                      VP 복사
+                    {/* 2026-10-09: 이 버튼이 복사하던 videoPrompt는 "유형:"/"후처리(STS):" 같은 한글
+                        라벨이 섞인 사람용 요약이라, 그대로 Flow 입력창에 붙여넣을 텍스트가 아니었음
+                        (성준님 제보: "그대로 복사해서 입력하면 되는 뜻인가?" → 아니오). 세그 컷이
+                        이미 쓰던 clipPrompt(실제 flow-submit.js가 넣는 텍스트)를 비세그 컷도
+                        우선 쓰도록 — 없으면(파싱 실패 등) 기존 videoPrompt로 폴백. */}
+                    <button className={s.vpCopyBtn}
+                      title={vRow.clipPrompt ? 'Flow 입력창에 그대로 붙여넣을 수 있는 실제 생성 프롬프트' : '요약 VP(Flow용 정확한 프롬프트 생성 실패 — 이걸로 대체)'}
+                      onClick={() => navigator.clipboard.writeText(vRow.clipPrompt || vRow.videoPrompt)}>
+                      {vRow.clipPrompt ? 'Flow용 프롬프트 복사' : 'VP 복사'}
                     </button>
                     <button className={s.vpToggleBtn}
                       onClick={() => setExpandedVP(p => ({ ...p, [selCut.no]: !p[selCut.no] }))}
