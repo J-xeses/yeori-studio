@@ -225,7 +225,28 @@ export function buildClipPrompt(cut, k, n) {
   const isNarration = !String(cut.dialogue || '').trim() && String(cut.narration || '').trim()
   let line = ''
   let speakers = []
-  if (String(cut.dialogue || '').trim()) {
+  // 2026-10-09 발견(성준님 실측, 컷2 테스트): 대사(DL)와 나레이션(NR)이 "둘 다" 있는 단일(비세그)
+  // 클립 — 예: 앞부분 대사(립싱크) → 뒷부분 나레이션(보이스오버, 입모양 없음). 원래는 dialogue 분기가
+  // 걸리면 narration을 통째로 무시해서, 자동 생성 프롬프트엔 나레이션 자체가 아예 안 들어갔고
+  // "립싱크 없음" 지시도 전혀 없었음 — 성준님이 수동으로 타이밍·"립싱크 삭제" 문구를 직접 써서
+  // 보완했던 바로 그 증상. 세그(n>1) 컷은 SEG/"||" 메커니즘이 따로 있어 건드리지 않는다.
+  if (n === 1 && String(cut.dialogue || '').trim() && String(cut.narration || '').trim()) {
+    const dl = String(cut.dialogue).trim(), nr = String(cut.narration).trim()
+    line = dl
+    const dur = Math.max(1, Number(cut.duration) || 8)
+    const totalLen = dl.length + nr.length || 1
+    const dlSec = Math.min(dur - 1, Math.max(1, Math.round(dur * dl.length / totalLen)))
+    const segs = splitSpeakerSegments(dl)
+    speakers = segs.map(s => s.speaker).filter(Boolean)
+    const said = segs.length
+      ? segs.map(s => `${s.speaker ? (CHAR_EN[s.speaker] || s.speaker) : 'She'} says in Korean, lips synced: "${s.text}"`).join(' Then ')
+      : `She says in Korean, lips synced: "${dl}"`
+    prompt += `\n\nFirst 0-${dlSec}s (DIALOGUE, lip-synced): ${said}. Only this line is spoken here, lips move naturally in sync with these exact words.`
+    prompt += `\n\nFrom ${dlSec}-${dur}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking. The line "${nr}" is narration audio added afterward, not something she says on camera.`
+    prompt += `\n\nNo on-screen subtitle text or captions.`
+    const anchors = segs.length ? voiceAnchors(cut, speakers) : []
+    if (anchors.length) prompt += `\n\n${anchors.map(a => a.replace(/\.?$/, '.')).join(' ')} Keep exactly this voice for the dialogue portion.`
+  } else if (String(cut.dialogue || '').trim()) {
     const parts = splitLines(cut.dialogue, n)
     if (!parts) throw new Error(`컷 ${cut.no}: 클립 ${n}개인데 대사(DL)에 || 분할 표기가 없습니다 — 어느 클립에서 무엇을 말할지 정할 수 없어 멈춤`)
     line = parts[k - 1]
