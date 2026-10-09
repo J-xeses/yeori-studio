@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, useState, useCallback } from 'react'
 
 const SERVER = 'http://localhost:3001'
 
@@ -633,6 +633,20 @@ export function AppProvider({ children }) {
   }, [])
 
   // 상태 변경 시 localStorage 저장 + 서버 동기화 (디바운스 1.2초)
+  const doDataSync = useCallback(async () => {
+    try {
+      const res = await fetch(`${SERVER}/api/studio-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      })
+      if (!res.ok) throw new Error()
+      setSyncStatus('synced')
+    } catch {
+      setSyncStatus('offline')
+    }
+  }, [state])
+
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
@@ -646,55 +660,57 @@ export function AppProvider({ children }) {
 
     clearTimeout(syncTimer.current)
     setSyncStatus('syncing')
-    syncTimer.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`${SERVER}/api/studio-data`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(state),
-        })
-        if (!res.ok) throw new Error()
-        setSyncStatus('synced')
-      } catch {
-        setSyncStatus('offline')
-      }
-    }, 1200)
-  }, [state])
+    syncTimer.current = setTimeout(doDataSync, 1200)
+  }, [state, doDataSync])
 
   // 상태 변경 시 studio-state.json 저장 (디바운스 3초, 회사/집 PC 간 동기화용)
+  const doFileSync = useCallback(async () => {
+    try {
+      const res = await fetch(`${SERVER}/api/studio-state`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(stateMtimeRef.current != null ? { 'X-State-Base-Mtime': stateMtimeRef.current } : {}),
+        },
+        body: JSON.stringify(state),
+      })
+      // 409 = 이 탭이 마지막으로 읽은 뒤 다른 경로(직접 파일 편집/MCP)가 studio-state.json을
+      // 바꿨다는 뜻 — 이 탭의 구버전 state로 덮어쓰지 않고, 서버가 돌려준 최신 내용을 그대로
+      // 반영한다(2026-09-17, 반복되던 "고쳤는데 새로고침하면 도로 사라짐" 버그의 구조적 수정).
+      if (res.status === 409) {
+        const fresh = await res.json()
+        stateMtimeRef.current = res.headers.get('X-State-Mtime')
+        skipNextSync.current = true
+        skipNextFileSync.current = true
+        dispatch({ type: 'LOAD', p: migrateState(fresh, defaultState) })
+        return
+      }
+      stateMtimeRef.current = res.headers.get('X-State-Mtime') ?? stateMtimeRef.current
+    } catch {}
+  }, [state])
+
   useEffect(() => {
     if (!serverChecked.current) return
     if (skipNextFileSync.current) { skipNextFileSync.current = false; return }
 
     clearTimeout(fileSyncTimer.current)
-    fileSyncTimer.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`${SERVER}/api/studio-state`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(stateMtimeRef.current != null ? { 'X-State-Base-Mtime': stateMtimeRef.current } : {}),
-          },
-          body: JSON.stringify(state),
-        })
-        // 409 = 이 탭이 마지막으로 읽은 뒤 다른 경로(직접 파일 편집/MCP)가 studio-state.json을
-        // 바꿨다는 뜻 — 이 탭의 구버전 state로 덮어쓰지 않고, 서버가 돌려준 최신 내용을 그대로
-        // 반영한다(2026-09-17, 반복되던 "고쳤는데 새로고침하면 도로 사라짐" 버그의 구조적 수정).
-        if (res.status === 409) {
-          const fresh = await res.json()
-          stateMtimeRef.current = res.headers.get('X-State-Mtime')
-          skipNextSync.current = true
-          skipNextFileSync.current = true
-          dispatch({ type: 'LOAD', p: migrateState(fresh, defaultState) })
-          return
-        }
-        stateMtimeRef.current = res.headers.get('X-State-Mtime') ?? stateMtimeRef.current
-      } catch {}
-    }, 3000)
-  }, [state])
+    fileSyncTimer.current = setTimeout(doFileSync, 3000)
+  }, [state, doFileSync])
+
+  // 디바운스를 기다리지 않고 지금 즉시 저장 — "편집을 끝냈다"는 명시적 신호(예: 자막 수정
+  // "완료" 버튼) 직후 호출용. 2026-10-09 발견(성준님 실측): 편집 후 3초 안에 탭을 이동하면
+  // 디바운스 타이머가 상태 변경마다 계속 reset돼서 저장이 영영 안 일어날 수 있었음 — "저장됨"
+  // 표시(1.2초 동기화)만 보고 안심해도 실제 studio-state.json(3초 파일 동기화)은 아직 비어있는
+  // 경우가 있었던 근본 원인. 두 타이머를 즉시 취소하고 지금 상태로 바로 양쪽 다 저장한다.
+  const flushSave = useCallback(() => {
+    clearTimeout(syncTimer.current)
+    clearTimeout(fileSyncTimer.current)
+    doDataSync()
+    doFileSync()
+  }, [doDataSync, doFileSync])
 
   return (
-    <AppContext.Provider value={{ state, dispatch, syncStatus }}>
+    <AppContext.Provider value={{ state, dispatch, syncStatus, flushSave }}>
       {children}
     </AppContext.Provider>
   )

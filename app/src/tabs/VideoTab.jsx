@@ -336,7 +336,7 @@ function needsFlowVideo(cutType) {
 }
 
 export default function VideoTab() {
-  const { state, dispatch } = useApp()
+  const { state, dispatch, flushSave } = useApp()
   const { cuts, videoSettings, renderProgress, episode } = state
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
   const episodeCode = resolveEpisodeCode(episode)
@@ -2162,7 +2162,12 @@ export default function VideoTab() {
                               )
                             })}
                           </div>
-                          <button className={s.subtitleDoneBtn} onClick={(e) => { e.stopPropagation(); setSubtitleEditMode(false) }}>
+                          {/* 2026-10-09: "완료"는 사람이 "편집 끝났다"고 명시적으로 알리는 순간인데,
+                              여태 그냥 모드만 닫고 저장은 평소와 같은 디바운스(3초)에 맡겼음 — 그
+                              안에 탭을 옮기면 상태 변경마다 타이머가 계속 reset돼 저장이 영영 안
+                              될 수 있었다(성준님 실측: "이동했다가 다시오면 수정한 내용이 보존되어
+                              있지 않다"). flushSave()로 디바운스를 건너뛰고 지금 바로 저장한다. */}
+                          <button className={s.subtitleDoneBtn} onClick={(e) => { e.stopPropagation(); setSubtitleEditMode(false); flushSave() }}>
                             완료
                           </button>
                         </div>
