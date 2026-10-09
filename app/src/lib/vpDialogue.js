@@ -305,7 +305,24 @@ export function ensureDialogueInVP(cut = {}) {
       `대사를 클립별로 나눠 배치 — Field Gate "세그 분할" 탭에서 정밀 조합을 고르면 이 블록이 자동으로 세그별로 재구성됨.`
     )
   }
-  if (dl) {
+  if (dl && nr) {
+    // 2026-10-09 발견(성준님 실측, SF_E109 컷2): 대사·나레이션이 둘 다 있는데 여기서 "구간" 구분
+    // 없이 그냥 둘 다 나열만 하면, 실제 생성 프롬프트(clipPrompt.js buildClipPrompt)는 구간을
+    // 나눠 명확히 지시하는데 화면에 보이는 이 요약 블록은 그 구분이 안 보여서 "고쳤다는데 그대로"
+    // 처럼 보임 — 화면 표시를 실제 생성 로직과 맞춘다(같은 비례 분배 계산).
+    const dur = Math.max(1, Number(cut.duration) || 8)
+    const dlSec = Math.min(dur - 1, Math.max(1, Math.round(dur * dl.length / (dl.length + nr.length || 1))))
+    lines.push(
+      `생성: 0-${dlSec}s는 Veo 가 대사를 한국어로 말하도록(립싱크+음성 함께, 입모양이 대사와 맞아야 함). ` +
+      `${dlSec}-${dur}s는 입을 움직이지 않음 — 그 구간은 말하지 않고(mouth closed/neutral), ` +
+      `나레이션 음성은 ElevenLabs 서여리 나레이션을 그 구간에 얹음.`
+    )
+    lines.push(
+      '후처리(STS, 대사 구간만): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) ' +
+      '로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. ' +
+      '실행: node scripts/test-sts.js --ep=<N> --cut=<N>'
+    )
+  } else if (dl) {
     lines.push(
       '생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크와 음성을 함께 생성 (입모양이 대사와 맞아야 함).'
     )
@@ -314,8 +331,7 @@ export function ensureDialogueInVP(cut = {}) {
       '로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. ' +
       '실행: node scripts/test-sts.js --ep=<N> --cut=<N>'
     )
-  }
-  if (nr && !dl) {
+  } else if (nr) {
     lines.push('생성: 인물 입은 움직이지 않음. 나레이션 음성은 ElevenLabs 서여리 나레이션(cut_NN.mp3) 을 영상에 얹음.')
   }
 

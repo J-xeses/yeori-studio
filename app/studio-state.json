@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9061,8 +9061,8 @@
           "dialogue": "…근데 이때 나, 되게 신나 보이네.",
           "narration": "완벽한 피드보다, 이게 더 나 같았다.",
           "subtitle": "없음 (대사와 나레이션이 이 컷의 감정을 충분히 전달함 — 의도적 판단)",
-          "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing a black spaghetti-strap camisole top (thin straps) and dark olive-brown lounge shorts, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-          "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the same black spaghetti-strap camisole top and dark olive-brown lounge shorts as the reference start frame — do not change her outfit.",
+          "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
+          "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
           "duration": 8,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
@@ -9080,7 +9080,7 @@
             "du": 8,
             "kr": {
               "sp": "집 침실, 밤, 따뜻한 조명 — CUT 1과 같은 공간, 습관처럼 피드를 넘기다 멈추는 장면",
-              "ch": "CUT 1과 동일한 홈 캐주얼 — 블랙 끈 캐미솔 + 다크올리브 라운지 숏츠, 맨발, 골드 목걸이",
+              "ch": "CUT 1과 완전히 동일한 의상 — 다크 차콜그레이 리브 탱크탑 + 매칭 그레이 리브 숏츠, 맨발, 골드 목걸이",
               "sh": "미디엄 클로즈업 — 폰을 든 손가락과 여리의 얼굴을 함께 잡는 구도. 화면 빛이 아래에서 위로 얼굴을 물들임",
               "ca": "손가락 위 클로즈업에서 서서히 줌인 후 고정 — 얼굴로 시선 이동",
               "md": "차분하고 내면적인 시선으로 자신의 영상을 다시 바라보며 조금씩 따뜻하게 표정이 풀리는 감정",
@@ -9090,13 +9090,13 @@
           "cutMark": "NORMAL",
           "overrides": {
             "imagePrompt": {
-              "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing a black spaghetti-strap camisole top (thin straps) and dark olive-brown lounge shorts, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-              "at": "2026-10-09T01:28:01.980Z",
+              "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
+              "at": "2026-10-09T01:45:29.666Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "videoPrompt": {
-              "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the same black spaghetti-strap camisole top and dark olive-brown lounge shorts as the reference start frame — do not change her outfit.",
-              "at": "2026-10-09T01:28:02.016Z",
+              "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
+              "at": "2026-10-09T01:45:29.697Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -9498,8 +9498,8 @@
       "dialogue": "…근데 이때 나, 되게 신나 보이네.",
       "narration": "완벽한 피드보다, 이게 더 나 같았다.",
       "subtitle": "없음 (대사와 나레이션이 이 컷의 감정을 충분히 전달함 — 의도적 판단)",
-      "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing a black spaghetti-strap camisole top (thin straps) and dark olive-brown lounge shorts, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-      "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the same black spaghetti-strap camisole top and dark olive-brown lounge shorts as the reference start frame — do not change her outfit.",
+      "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
+      "videoPrompt": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
       "duration": 8,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
@@ -9517,7 +9517,7 @@
         "du": 8,
         "kr": {
           "sp": "집 침실, 밤, 따뜻한 조명 — CUT 1과 같은 공간, 습관처럼 피드를 넘기다 멈추는 장면",
-          "ch": "CUT 1과 동일한 홈 캐주얼 — 블랙 끈 캐미솔 + 다크올리브 라운지 숏츠, 맨발, 골드 목걸이",
+          "ch": "CUT 1과 완전히 동일한 의상 — 다크 차콜그레이 리브 탱크탑 + 매칭 그레이 리브 숏츠, 맨발, 골드 목걸이",
           "sh": "미디엄 클로즈업 — 폰을 든 손가락과 여리의 얼굴을 함께 잡는 구도. 화면 빛이 아래에서 위로 얼굴을 물들임",
           "ca": "손가락 위 클로즈업에서 서서히 줌인 후 고정 — 얼굴로 시선 이동",
           "md": "차분하고 내면적인 시선으로 자신의 영상을 다시 바라보며 조금씩 따뜻하게 표정이 풀리는 감정",
@@ -9527,13 +9527,13 @@
       "cutMark": "NORMAL",
       "overrides": {
         "imagePrompt": {
-          "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing a black spaghetti-strap camisole top (thin straps) and dark olive-brown lounge shorts, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
-          "at": "2026-10-09T01:28:01.980Z",
+          "value": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sitting on a bed at night, scrolling a phone with one finger in a habitual, expressionless manner. Long wavy dark brown hair, NOT short — falling softly over shoulders. Natural skin texture on right cheek, very subtle. Wearing the exact same dark charcoal-grey ribbed tank crop top (wide straps, ribbed knit fabric) and matching grey ribbed lounge shorts as CUT 1 — identical outfit, barefoot or socks only, no shoes worn indoors. Gold necklace catches the warm light. Phone screen glow rises upward onto her face — soft, cool-toned light from below contrasting with the warm amber lamp behind. Expression begins flat, then softens gradually into a tiny, private smile. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character.",
+          "at": "2026-10-09T01:45:29.666Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "videoPrompt": {
-          "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the same black spaghetti-strap camisole top and dark olive-brown lounge shorts as the reference start frame — do not change her outfit.",
-          "at": "2026-10-09T01:28:02.016Z",
+          "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
+          "at": "2026-10-09T01:45:29.697Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -9819,7 +9819,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T01:41:17.129Z",
+  "savedAt": "2026-10-09T01:45:36.731Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
