@@ -189,8 +189,11 @@
 /* 릴스 자막 세그먼트 표시시간 편집 막대(2026-09-28) — 컷 길이를 가로축으로, 세그먼트마다
    막대+양끝 드래그 핸들. subtitleEditBox 안(어두운 배경) 위에 얹혀서 좁은 폭에서도 보이게. */
 .reelTimingBar { position: relative; height: 22px; margin-top: 8px; background: rgba(255,255,255,.08); border-radius: 4px; }
-.reelTimingSeg { position: absolute; top: 0; bottom: 0; min-width: 6px; background: rgba(139,92,246,.55); border: 1px solid rgba(196,181,253,.9); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
-.reelTimingLabel { font-size: 9px; color: #fff; pointer-events: none; white-space: nowrap; }
+.reelTimingSeg { position: absolute; top: 0; bottom: 0; min-width: 6px; background: rgba(139,92,246,.55); border: 1px solid rgba(196,181,253,.9); border-radius: 3px; display: flex; align-items: center; justify-content: center; gap: 4px; padding: 0 4px; overflow: hidden; }
+/* 2026-10-09: 구간이 여러 개(대사/나레이션)일 때 어느 막대가 어느 내용인지 구분되게 구간
+   텍스트를 짧게 보여준다 — 막대가 좁으면 ellipsis로 잘림, 전체 글은 title 툴팁. */
+.reelTimingText { flex: 1; min-width: 0; font-size: 9px; color: #fff; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: .9; }
+.reelTimingLabel { font-size: 9px; color: #fff; pointer-events: none; white-space: nowrap; flex-shrink: 0; }
 .reelTimingHandle { position: absolute; top: -3px; bottom: -3px; width: 10px; cursor: ew-resize; touch-action: none; }
 .reelCaptionHintRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
 .reelCaptionHint { font-size: 10.5px; color: rgba(255,255,255,.5); }

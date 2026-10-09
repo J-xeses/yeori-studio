@@ -94,7 +94,12 @@ function effectiveCaptionValue(subtitlesState, cut, clips) {
       return { start, end: acc, text: text || '' }
     })
   }
-  if (cut.subtitle && !/^없음$/.test(cut.subtitle)) return cut.subtitle
+  // 2026-10-09 발견(SF_E109 컷2 실측): CP(자막 손글씨 오버레이) 필드가 "없음 (이유 설명)"처럼
+  // 괄호 설명이 붙으면 "없음" 글자 그대로만 매치하는 /^없음$/에 안 걸려서, "필요없다는 이유
+  // 메모" 자체가 화면 자막으로 떠버렸음(컷2의 "없음 (대사와 나레이션이 이 컷의 감정을 충분히
+  // 전달함 — 의도적 판단)"이 그대로 자막 텍스트가 됨). "없음"으로 시작하면(뒤에 공백/괄호/문장
+  // 부호가 오든) 전부 "자막 없음"으로 인정하도록 완화.
+  if (cut.subtitle && !/^없음(\s|\(|$)/.test(cut.subtitle.trim())) return cut.subtitle
   return undefined
 }
 
@@ -251,7 +256,13 @@ function ReelCaptionTimingBar({ segs, duration, onCommit }) {
     <div ref={barRef} className={s.reelTimingBar} onClick={e => e.stopPropagation()}>
       {local.map(([st, en], i) => (
         <div key={i} className={s.reelTimingSeg}
+          title={segs[i]?.text || ''}
           style={{ left: `${(st / duration) * 100}%`, width: `${Math.max(0, (en - st) / duration) * 100}%` }}>
+          {/* 2026-10-09: 구간이 몇 초인지만 보이고 "이 구간에 뭐가 배정됐는지"는 안 보여서,
+              대사/나레이션처럼 구간이 여러 개인 컷에서 어느 막대가 어느 내용인지 구분이 안 됐다
+              (성준님: "대사 구간, 나레이션 구간 지정 표시를 확인할 곳이 필요하지 않나"). 구간
+              텍스트를 막대 안에도 짧게 보여준다(전체 글은 title 툴팁으로). */}
+          {segs[i]?.text && <span className={s.reelTimingText}>{segs[i].text}</span>}
           <span className={s.reelTimingLabel}>{(en - st).toFixed(1)}s</span>
           <div className={s.reelTimingHandle} style={{ left: -5 }}
             onPointerDown={e => { e.stopPropagation(); setDrag({ idx: i, edge: 'start' }) }} />
@@ -588,6 +599,23 @@ export default function VideoTab() {
       body: JSON.stringify({ epNum: state.episode?.number, cutNo, patch: { captionSegTiming: '', captionTimingAuto: '' } }),
     }).catch(() => {})
   }
+  // 2026-10-09: 자막 시간조절 바는 "릴스냐 아니냐"와 무관하게 똑같이 필요한 기능인데(성준님:
+  // "콘텐츠와 관계없이 통용되어야 하는 설정 아닌가"), 저장 경로만 릴스 전용
+  // (reelOverrides/api/reel-finalize/override, 릴스 최종본 조립이 읽는 곳)이었다. 비릴스는 그
+  // 저장소 자체가 없으니, captionSegTiming을 컷 자체 필드로 직접 저장(UPDATE_CUT)하고 즉시
+  // flushSave — effectiveCaptionValue/captionVisibleNow는 이미 이 필드를 릴스 구분 없이 읽고
+  // 있어서(원래부터 범용 설계) 저장 쪽만 맞추면 됨. 릴스는 기존 전용 경로 그대로 유지.
+  const saveCaptionTiming = (cut, timingPairs) => {
+    if (isReel) return saveReelCaptionTiming(cut.no, timingPairs)
+    const rounded = timingPairs.map(([st, en]) => [+st.toFixed(2), +en.toFixed(2)])
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: rounded } })
+    flushSave()
+  }
+  const revertCaptionTiming = (cut) => {
+    if (isReel) return revertReelCaptionTiming(cut.no)
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: undefined } })
+    flushSave()
+  }
   // 컷 하나에 오버라이드(자막류만 — SFX 등 audio 필드는 화면 미리보기와 무관)를 병합해서
   // 반환. 오버라이드가 없으면 원본 cut을 그대로 반환(새 객체를 만들지 않아 불필요한 리렌더 방지).
   const withCaptionOverride = useCallback((cut) => {
@@ -719,8 +747,26 @@ export default function VideoTab() {
   const selCutForTextRaw = cuts.find(c => c.id === selectedCutId)
   const selCutForText = withCaptionOverride(selCutForTextRaw)
   const clipsForText = selCutForText ? (videoClips[selCutForText.id] || []) : []
+  // 2026-10-09 발견(성준님 실측, SF_E109 컷2): 대사(DL)·나레이션(NR)이 둘 다 있는 비릴스 컷은
+  // 폴백 텍스트가 `dialogue || narration`이라 narration이 통째로 안 보였음(대사만 자막에 뜸) —
+  // 실제 생성 프롬프트(clipPrompt.js buildClipPrompt)는 글자수 비례로 두 구간을 나누는데 자막
+  // 미리보기는 그 사실 자체를 몰랐던 것. 둘 다 있으면 같은 비례 분배로 2구간을 직접 만든다.
+  const dlText = !isReel ? stripMeta(selCutForText?.dialogue || '') : ''
+  const nrText = !isReel ? stripMeta(selCutForText?.narration || '') : ''
+  const bothFallbackSegs = (dlText && nrText && selCutForText)
+    ? (() => {
+        const dur = Math.max(1, Number(selCutForText.duration) || 8)
+        const dlSec = Math.min(dur - 0.5, Math.max(0.5, +(dur * dlText.length / (dlText.length + nrText.length)).toFixed(1)))
+        return [{ start: 0, end: dlSec, text: dlText }, { start: dlSec, end: dur, text: nrText }]
+      })()
+    : null
+  const effCaption = selCutForText ? effectiveCaptionValue(subtitles, selCutForText, clipsForText) : undefined
   const segsForText = selCutForText
-    ? toSegments(effectiveCaptionValue(subtitles, selCutForText, clipsForText), isReel ? '' : stripMeta(selCutForText.dialogue || selCutForText.narration || ''), selCutForText.duration || 0, selCutForText.captionSegTiming)
+    ? toSegments(
+        effCaption !== undefined ? effCaption : bothFallbackSegs,
+        isReel ? '' : (dlText || nrText),
+        selCutForText.duration || 0, selCutForText.captionSegTiming,
+      )
     : []
   // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
   // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다. 클립이 1개뿐인데 자막 구간이
@@ -2129,18 +2175,18 @@ export default function VideoTab() {
                           placeholder="자막 텍스트 입력... (Enter로 줄바꿈 가능)"
                           onClick={(e) => e.stopPropagation()}
                         />
-                        {isReel && segsForText.length > 0 && (
+                        {segsForText.length > 0 && (
                           <>
                             <ReelCaptionTimingBar
                               segs={segsForText}
                               duration={selCut.duration || 0}
-                              onCommit={(pairs) => saveReelCaptionTiming(selCut.no, pairs)}
+                              onCommit={(pairs) => saveCaptionTiming(selCut, pairs)}
                             />
                             <div className={s.reelCaptionHintRow}>
-                              <span className={s.reelCaptionHint}>Enter = 줄바꿈 · 막대 끝을 끌어 표시 시간 조절</span>
-                              {reelOverrides[String(selCut.no)]?.captionSegTiming && (
+                              <span className={s.reelCaptionHint}>Enter = 줄바꿈 · 막대 끝을 끌어 표시 시간 조절{segsForText.length > 1 ? ` · 구간 ${segsForText.length}개(대사/나레이션)` : ''}</span>
+                              {(isReel ? reelOverrides[String(selCut.no)]?.captionSegTiming : selCut.captionSegTiming) && (
                                 <button className={s.reelTimingResetBtn}
-                                  onClick={(e) => { e.stopPropagation(); revertReelCaptionTiming(selCut.no) }}>
+                                  onClick={(e) => { e.stopPropagation(); revertCaptionTiming(selCut) }}>
                                   자동 타이밍으로 되돌리기
                                 </button>
                               )}

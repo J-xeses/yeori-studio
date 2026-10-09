@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -3332,7 +3332,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-4",
+          "selectedCutId": "cut-1",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -9274,23 +9274,31 @@
           "videoClips": {
             "cut-1": [
               {
-                "url": "blob:http://localhost:5173/6b49435e-5cdc-4cd3-8118-40b368200315",
-                "name": "Woman_reacting_to_phone_message_20261008225516.mp4",
-                "duration": 6.02,
+                "url": "blob:http://localhost:5173/22893b1c-8f82-4039-ac80-140d7bc73e06",
+                "name": "cut_01.mp4",
+                "duration": 6,
                 "trimStart": 0,
-                "trimEnd": 6.02,
+                "trimEnd": 6,
                 "useFullDuration": true,
                 "ratio": "9:16",
                 "staging": false,
                 "keepAudio": false,
-                "createdAt": 1791467716332,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_1.mp4"
+                "createdAt": 1791511203451,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
               }
             ]
           },
           "g4Approved": {},
           "selectedCutId": "cut-1",
-          "subtitles": {}
+          "subtitles": {
+            "cut-1": [
+              {
+                "start": 0,
+                "end": 6,
+                "text": "단톡방 레전드 됨 ㅋㅋ"
+              }
+            ]
+          }
         },
         "ttsTabState": {
           "audioUrls": {},
@@ -9819,12 +9827,12 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T02:03:29.206Z",
+  "savedAt": "2026-10-09T02:24:28.092Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/b73d20e7-572e-4f59-a9a4-b5f885398d88",
+          "url": "blob:http://localhost:5173/22893b1c-8f82-4039-ac80-140d7bc73e06",
           "name": "cut_01.mp4",
           "duration": 6,
           "trimStart": 0,
@@ -9833,13 +9841,13 @@
           "ratio": "9:16",
           "staging": false,
           "keepAudio": false,
-          "createdAt": 1791510468723,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791510539888.mp4"
+          "createdAt": 1791511203451,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
         }
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-2",
     "subtitles": {
       "cut-1": [
         {
