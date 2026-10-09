@@ -3883,7 +3883,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-4",
+          "selectedCutId": "cut-2",
           "subtitles": {
             "cut-1": [
               {
@@ -5890,7 +5890,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-3",
+          "selectedCutId": "cut-1",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -9271,16 +9271,150 @@
       "createdAt": "2026-09-29T12:24:50.932Z",
       "tabState": {
         "videoTabState": {
-          "videoClips": {},
+          "videoClips": {
+            "cut-1": [
+              {
+                "url": "blob:http://localhost:5173/6b49435e-5cdc-4cd3-8118-40b368200315",
+                "name": "Woman_reacting_to_phone_message_20261008225516.mp4",
+                "duration": 6.02,
+                "trimStart": 0,
+                "trimEnd": 6.02,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": false,
+                "createdAt": 1791467716332,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_1.mp4"
+              }
+            ]
+          },
           "g4Approved": {},
-          "selectedCutId": null,
+          "selectedCutId": "cut-1",
           "subtitles": {}
         },
         "ttsTabState": {
           "audioUrls": {},
           "audioTexts": {},
           "g3Confirmed": {},
-          "focusCutId": null
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-3": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-4": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-5": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-2__v1": [
+              {
+                "id": "track_1791453162733_71ps",
+                "type": "dialogue",
+                "text": "…근데 이때 나, 되게 신나 보이네.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              },
+              {
+                "id": "track_1791453162733_h1rg",
+                "type": "narration",
+                "text": "완벽한 피드보다, 이게 더 나 같았다.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-3__v1": [
+              {
+                "id": "track_1791453165517_89sc",
+                "type": "dialogue",
+                "text": "이번엔 제대로 해봐, 서여리!",
+                "speaker": "지유",
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              },
+              {
+                "id": "track_1791453165517_l81i",
+                "type": "dialogue",
+                "text": "보고 배워.",
+                "speaker": "여리",
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-4__v1": [
+              {
+                "id": "track_1791453175345_qxrm",
+                "type": "dialogue",
+                "text": "",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-5__v1": [
+              {
+                "id": "track_1791453367809_8tgn",
+                "type": "dialogue",
+                "text": "틀려도 괜찮아요. 그게 저니까.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ]
+          }
         },
         "voiceInsertState": {
           "tracks": {}
@@ -9685,7 +9819,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T01:27:35.077Z",
+  "savedAt": "2026-10-09T01:34:37.650Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
