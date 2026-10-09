@@ -979,5 +979,55 @@
       "selectedImage": "cut_05_c.jpg",
       "g3": true
     }
+  },
+  "IG_R07": {
+    "cut_1": {
+      "g1": true,
+      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "g2": true,
+      "selectedImage": "cut_01_a.jpg",
+      "g5": true,
+      "g4": true
+    },
+    "cut_2": {
+      "g1": true,
+      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "g2": true,
+      "selectedImage": "cut_02_b.jpg",
+      "g4": true,
+      "g5": true
+    },
+    "cut_3": {
+      "g1": true,
+      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "g2": true,
+      "selectedImage": "cut_03_b.jpg",
+      "g4": true,
+      "g5": true
+    },
+    "cut_4": {
+      "g1": true,
+      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "g2": true,
+      "selectedImage": "cut_04_b.jpg",
+      "g4": true,
+      "g5": true
+    },
+    "cut_5": {
+      "g1": true,
+      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "g2": true,
+      "selectedImage": "cut_05_b.jpg",
+      "g4": true,
+      "g5": true
+    },
+    "cut_6": {
+      "g1": true,
+      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "g2": true,
+      "selectedImage": "cut_06_a.jpg",
+      "g5": true,
+      "g4": true
+    }
   }
 }

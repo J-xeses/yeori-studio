@@ -91,7 +91,7 @@ First 0-3s: She looks directly at camera with a playful, confident smile, slight
 ━━━━━━━━━━━━━━━━━━━━━━━━
 [CUT 2] ─ YEORI | 점프컷 전환 — K-아이돌 스트리트 룩 | 6
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: (하드컷, 점프 효과음+비트 드롭) 같은 자리, 같은 구도. 서여리가 가볍게 튀어 오르고, 공중에서 정지한 순간 컷 — 착지하면 캐주얼 데일리룩으로 바뀌어 있다.
+SC: (하드컷, 점프 효과음+비트 드롭) 같은 카메라 구도·프레이밍 유지, 배경이 침실에서 유럽풍 돌벽 야간 스트리트로 리빌. 서여리가 가볍게 튀어 오르고, 공중에서 정지한 순간 컷 — 착지하면 K-아이돌 스트리트룩+새 배경으로 바뀌어 있다.
 SP: OUT.ST.EU_NT.LT_NEON
 PL: YR_VD
 CH: YR_VD / LK_IDOL (K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠)
@@ -114,7 +114,7 @@ CT: YEORI
 ━━━━━━━━━━━━━━━━━━━━━━━━
 KR (한글 컨펌본)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SP(장소):     전신거울 앞, 동일 구도
+SP(장소):     유럽풍 돌벽 골목, 야간, 네온 반사(배경 리빌 — 카메라 구도는 컷1과 동일)
 CH(캐릭터):   K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠
 SH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)
 CA(카메라):   고정
@@ -127,12 +127,12 @@ NR(나레이션): 없음
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,
-standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing as before,
+same camera distance and framing as before, standing on an atmospheric European stone-paved side street at night,
 caught at the peak of a light jump, hair and skirt hem lifted mid-air, now wearing a K-idol street-layered outfit: a black vest layered over a grey striped button-up shirt, black pleated mini skirt, lace-pattern tights, burgundy ankle boots, edgy high-fashion streetwear styling,
 bright excited expression, landing into a warm confident smile,
 photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
-lighting: same bright daytime window light, soft and clean,
-background: same softly blurred bedroom with mirror frame, vertical 9:16
+lighting: moody night street lighting, warm window glow from old stone buildings, soft neon sign reflections in the wet pavement,
+background: blurred historic European stone facade, warm lit windows, vertical 9:16
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
@@ -143,7 +143,7 @@ First 0-2s: She is caught mid-air at the peak of a light playful jump, hair and 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 [CUT 3] ─ YEORI | 스핀 전환 — 플로럴 맥시멀리즘 룩 | 6
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: (하드컷, 스핀 블러 효과음) 같은 자리. 서여리가 빠르게 한 바퀴 회전하며 모션 블러 — 회전이 멈추면 비비드 플로럴 맥시멀리즘 드레스로 바뀌어 있다. 에디토리얼 캠페인처럼 과감한 포즈를 취한다.
+SC: (하드컷, 스핀 블러 효과음) 같은 카메라 구도 유지, 배경이 비비드 컬러 스튜디오 세트(과장된 플로럴 소품)로 리빌. 서여리가 빠르게 한 바퀴 회전하며 모션 블러 — 회전이 멈추면 비비드 플로럴 맥시멀리즘 드레스+새 배경으로 바뀌어 있다. 에디토리얼 캠페인처럼 과감한 포즈를 취한다.
 SP: IN.ST.COLOR.LT_SET
 PL: YR_VD
 CH: YR_VD / LK_FLOR (비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리)
@@ -166,7 +166,7 @@ CT: YEORI
 ━━━━━━━━━━━━━━━━━━━━━━━━
 KR (한글 컨펌본)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SP(장소):     전신거울 앞, 동일 구도
+SP(장소):     비비드 컬러 스튜디오 세트, 과장된 조형적 플로럴 소품(배경 리빌 — 카메라 구도는 동일)
 CH(캐릭터):   비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리
 SH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)
 CA(카메라):   고정
@@ -178,24 +178,24 @@ NR(나레이션): 없음
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now neatly half-tied back,
-standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,
-caught just as a fast spin settles — subtle motion blur trailing off her hair and blouse hem, now wearing a cream blouse and black tailored slacks, polished office outfit, minimal gold jewelry,
-hand adjusting the collar, exaggerated surprised expression with one eyebrow raised, playful not serious,
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair flowing as if caught in a breeze,
+same camera distance and framing as before, standing against a bold vivid-color studio backdrop with oversized sculptural floral props echoing the dress print,
+caught just as a fast spin settles — subtle motion blur trailing off her hair and dress hem, now wearing a vivid pink floral-print maxi dress, gold drop earrings, dramatic editorial campaign styling,
+one hand on her hip, bold confident campaign pose, chin lifted, striking directly at camera,
 photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
-lighting: same bright daytime window light,
-background: same softly blurred bedroom with mirror frame, vertical 9:16
+lighting: bold saturated studio lighting, strong colored gel accents matching the backdrop,
+background: vivid solid-color studio set with oversized stylized floral props, vertical 9:16
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair and clothing, fast energetic rotation — this is the transition moment. / Next 2-6s: The spin settles, she looks down at her new office outfit, adjusting her collar with an exaggerated surprised expression, eyebrow raised playfully, then shifts into a confident polished smile, chin slightly up. No dialogue. No on-screen subtitle text or captions.
+First 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair and the flowing dress, fast energetic rotation — this is the transition moment. / Next 2-6s: The spin settles into a bold editorial campaign pose, one hand on her hip, chin lifted, striking confident expression directly at camera. No dialogue. No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 [CUT 4] ─ YEORI | 업사이드다운 전환 — 오트쿠튀르 블랙 가운 | 6
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: (하드컷, 휙 뒤집기 효과음) 같은 자리. 서여리가 고개와 상체를 아래로 숙였다가 — 업사이드다운 자세에서 멈춘 순간 하드컷 — 다시 천천히 고개를 들면 샤넬풍 오트쿠튀르 블랙 가운으로 바뀌어 있다.
+SC: (하드컷, 휙 뒤집기 효과음) 같은 카메라 구도 유지, 배경이 화이트 플라워가 만개한 야외 정원 스톤 스텝으로 리빌. 서여리가 고개와 상체를 아래로 숙였다가 — 업사이드다운 자세에서 멈춘 순간 하드컷 — 다시 천천히 고개를 들면 샤넬풍 오트쿠튀르 블랙 가운+새 배경으로 바뀌어 있다.
 SP: OUT.GD.FLWR_DY.LT_SOFT
 PL: YR_VD
 CH: YR_VD / LK_COUTURE (블랙 오프숄더 코르셋 가운, 진주 체인 3겹, 화이트 카멜리아 브로치, 블랙&화이트 보터햇, 올백 헤어)
@@ -218,7 +218,7 @@ CT: YEORI
 ━━━━━━━━━━━━━━━━━━━━━━━━
 KR (한글 컨펌본)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SP(장소):     전신거울 앞, 동일 구도
+SP(장소):     야외 정원, 만개한 화이트 플라워, 스톤 스텝(배경 리빌 — 카메라 구도는 동일)
 CH(캐릭터):   블랙 오프숄더 코르셋 가운, 진주 체인 3겹, 화이트 카멜리아 브로치, 블랙&화이트 보터햇, 올백 헤어
 SH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)
 CA(카메라):   고정
@@ -231,13 +231,13 @@ NR(나레이션): 없음
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now slicked back elegantly,
-standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,
+same camera distance and framing as before, standing on a stone garden step with lush white flowering bushes softly blurred behind her,
 caught mid-motion rising from an upside-down head-tilt, hair settling back into place,
 now wearing a black off-shoulder corseted couture gown, three draped strands of pearl chain across the bodice, a white camellia brooch, a black-and-white boater hat with a grosgrain ribbon band, haute couture runway styling,
 poised elegant expression, calm and composed, looking directly at camera,
 photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
-lighting: same bright daytime window light, soft and clean,
-background: same softly blurred bedroom with mirror frame, vertical 9:16
+lighting: soft natural daylight, gentle and flattering, garden ambiance,
+background: softly blurred white flower garden, stone steps, vertical 9:16
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
@@ -248,7 +248,7 @@ First 0-2s: She tilts her upper body and head down into an upside-down position,
 ━━━━━━━━━━━━━━━━━━━━━━━━
 [CUT 5] ─ YEORI | 스프레이·미스트 전환 — 모던 한복 룩 | 6
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: (하드컷, 스프레이 효과음) 같은 자리. 서여리가 향수 보틀을 들어 카메라 쪽으로 살짝 분사 — 뿌연 미스트가 화면을 가리는 순간 하드컷, 미스트가 걷히면 피치톤 모던 한복으로 바뀌어 있다. 시스루 글리터 트레인이 살랑인다.
+SC: (하드컷, 스프레이 효과음) 같은 카메라 구도 유지, 배경이 한옥 대청마루·한지 창살로 리빌. 서여리가 향수 보틀을 들어 카메라 쪽으로 살짝 분사 — 뿌연 미스트가 화면을 가리는 순간 하드컷, 미스트가 걷히면 피치톤 모던 한복+새 배경으로 바뀌어 있다. 시스루 글리터 트레인이 살랑인다.
 SP: IN.HN.COURT.LT_WARM
 PL: YR_VD
 CH: YR_VD / LK_HANBOK (모던 한복 재해석 — 피치톤 저고리+치마, 은빛 시스루 글리터 트레인, 금박 고름, 올림머리)
@@ -271,7 +271,7 @@ CT: YEORI
 ━━━━━━━━━━━━━━━━━━━━━━━━
 KR (한글 컨펌본)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SP(장소):     전신거울 앞, 동일 구도
+SP(장소):     전통 한옥 대청마루, 한지 창살문, 따뜻한 등불(배경 리빌 — 카메라 구도는 동일)
 CH(캐릭터):   모던 한복 재해석 — 피치톤 저고리+치마, 은빛 시스루 글리터 트레인, 금박 고름, 단정한 올림머리
 SH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)
 CA(카메라):   고정
@@ -284,13 +284,13 @@ NR(나레이션): 없음
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now styled up in an elegant updo,
-standing in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,
-a soft perfume mist lingering and clearing in front of her, backlit by the window light creating a dreamy glow through the haze,
+same camera distance and framing as before, standing on the wooden daecheong-maru floor of a traditional Korean hanok, hanji paper lattice doors softly blurred behind her, warm lantern glow,
+a soft perfume mist lingering and clearing in front of her, backlit glow creating a dreamy haze,
 now wearing a modern reinterpreted hanbok: a peach-toned silk jeogori and chima with a flowing silver sheer glitter train layered over the skirt, gold-embroidered goreum ribbon tie at the chest, delicate traditional details with a contemporary editorial finish,
 one hand gently lifting the sheer train, graceful poised expression, elegant and proud,
 photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
-lighting: same bright daytime window light transitioning slightly warmer, soft glow through perfume mist catching the sheer fabric,
-background: same softly blurred bedroom with mirror frame, vertical 9:16
+lighting: warm traditional lantern light, soft glow through perfume mist catching the sheer fabric,
+background: traditional hanok wooden interior, hanji lattice doors, warm ambient light, vertical 9:16
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
