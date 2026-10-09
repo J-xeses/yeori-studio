@@ -946,21 +946,21 @@
   "SF_E109": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:43:14.264Z",
+      "updatedAt": "2026-10-09T04:20:07.918Z",
       "g2": true,
       "selectedImage": "cut_01_a.jpg",
       "g3": true
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:43:14.264Z",
+      "updatedAt": "2026-10-09T04:20:31.643Z",
       "g2": true,
       "selectedImage": "cut_02_a.jpg",
       "g3": true
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:43:14.264Z",
+      "updatedAt": "2026-10-09T04:19:26.647Z",
       "g2": true,
       "selectedImage": "cut_03_c.jpg",
       "g3": true
@@ -974,7 +974,7 @@
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-10-08T13:43:14.264Z",
+      "updatedAt": "2026-10-09T04:19:53.374Z",
       "g2": true,
       "selectedImage": "cut_05_c.jpg",
       "g3": true

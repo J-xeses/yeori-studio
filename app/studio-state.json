@@ -3,7 +3,7 @@
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 89426
+    "remainingChars": 89371
   },
   "activeEpisodeId": "ep_1790684690932",
   "openTabIds": [
@@ -9050,7 +9050,13 @@
               "at": "2026-10-08T13:26:58.607Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              0,
+              3
+            ]
+          ]
         },
         {
           "id": "cut-2",
@@ -9158,7 +9164,17 @@
               "at": "2026-10-08T13:27:11.082Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              0,
+              5
+            ],
+            [
+              5,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-4",
@@ -9505,7 +9521,13 @@
           "at": "2026-10-08T13:26:58.607Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          0,
+          3
+        ]
+      ]
     },
     {
       "id": "cut-2",
@@ -9613,7 +9635,17 @@
           "at": "2026-10-08T13:27:11.082Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          0,
+          5
+        ],
+        [
+          5,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-4",
@@ -9847,7 +9879,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T02:59:50.401Z",
+  "savedAt": "2026-10-09T03:47:07.931Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -9863,6 +9895,20 @@
           "keepAudio": false,
           "createdAt": 1791511203451,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/05_video/cut_02.mp4?t=1791519314258",
+          "name": "cut_02.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\05_video\\cut_02.mp4",
+          "keepAudio": true,
+          "createdAt": 1791519313000
         }
       ]
     },
@@ -9881,7 +9927,12 @@
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
+    "g3Confirmed": {
+      "cut-3": true,
+      "cut-5": true,
+      "cut-1": true,
+      "cut-2": true
+    },
     "focusCutId": null,
     "voiceTabs": {
       "cut-2": [
@@ -9911,6 +9962,13 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-1": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
@@ -9920,7 +9978,7 @@
           "type": "dialogue",
           "text": "…근데 이때 나, 되게 신나 보이네.",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_02_track_1791453162733_71ps.mp3?t=1791519623200",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -9933,7 +9991,7 @@
           "type": "narration",
           "text": "완벽한 피드보다, 이게 더 나 같았다.",
           "speaker": null,
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_02_track_1791453162733_h1rg.mp3?t=1791519629295",
           "voiceId": "",
           "settings": {
             "speed": 0.85,
@@ -9946,9 +10004,9 @@
         {
           "id": "track_1791453165517_89sc",
           "type": "dialogue",
-          "text": "이번엔 제대로 해봐, 서여리!",
+          "text": "이번엔 제대로 해봐~, 서여리!",
           "speaker": "지유",
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_03_track_1791453165517_89sc.mp3?t=1791519507568",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -9959,9 +10017,9 @@
         {
           "id": "track_1791453165517_l81i",
           "type": "dialogue",
-          "text": "보고 배워.",
+          "text": "흥!! 보고 배워?",
           "speaker": "여리",
-          "url": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E109/03_audio/tts-previews/cut_03_track_1791453165517_l81i.mp3?t=1791519556526",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -9991,7 +10049,7 @@
           "type": "dialogue",
           "text": "틀려도 괜찮아요. 그게 저니까.",
           "speaker": null,
-          "url": null,
+          "url": "blob:http://localhost:5173/85d04220-0d75-401d-8bf9-b5781d6abd39",
           "voiceId": "",
           "settings": {
             "speed": 0.95,
@@ -9999,7 +10057,28 @@
             "similarity": 75
           }
         }
+      ],
+      "cut-1__v1": [
+        {
+          "id": "track_1791519597422_7j43",
+          "type": "narration",
+          "text": "그 영상, 결국 단톡방 레전드가 됐다.",
+          "speaker": null,
+          "url": "blob:http://localhost:5173/dd9f30de-87fa-4a0d-93a9-ea4e1ec1dcf5",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
       ]
+    },
+    "mergedUrls": {
+      "cut-3__v1": "blob:http://localhost:5173/c7ada21b-0333-43ab-b4b8-93eea5fd1e45",
+      "cut-5__v1": "blob:http://localhost:5173/8d04e084-4fb6-4ee9-a744-4ebe0d3915fa",
+      "cut-1__v1": "blob:http://localhost:5173/d73511ef-c544-4e5a-9c00-9f809c1df889",
+      "cut-2__v1": "blob:http://localhost:5173/ac958eff-8750-4bb7-aec4-5b6887576ce2"
     }
   },
   "voiceInsertState": {
