@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9819,24 +9819,10 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-09T01:34:37.650Z",
+  "savedAt": "2026-10-09T01:36:06.917Z",
   "videoTabState": {
     "videoClips": {
-      "cut-1": [
-        {
-          "url": "blob:http://localhost:5173/6b49435e-5cdc-4cd3-8118-40b368200315",
-          "name": "Woman_reacting_to_phone_message_20261008225516.mp4",
-          "duration": 6.02,
-          "trimStart": 0,
-          "trimEnd": 6.02,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": false,
-          "createdAt": 1791467716332,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E109\\04_making\\raw\\cut_01_clip_1.mp4"
-        }
-      ]
+      "cut-1": []
     },
     "g4Approved": {},
     "selectedCutId": "cut-1",
