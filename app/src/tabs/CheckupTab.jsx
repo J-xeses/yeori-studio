@@ -18,6 +18,21 @@ function stripMeta(text) {
     .replace(/^(CLOSEUP|FULLBODY)\s*(SHOT)?\s*[-—]?\s*/i, '')
     .trim()
 }
+// 2026-10-10 — VideoTab에서 자막을 따로 입력 안 한 컷(subtitlesMap에 없음, LF_T01 23컷 중
+// 12컷 실측)은 대사(dialogue) 원문이 그대로 자막으로 떨어지는데, 그 원문은 TTS 발화 톤을
+// 위한 연기 지문 표기("진~~짜"처럼 모음 늘임, "♪" 등)가 섞여 있어 자막처럼 안 읽힌다
+// (성준님 지적: "자막이 아닌 대사지문이 표시되고 있다"). CP(subtitle)도 subtitlesMap도
+// 없을 때만 적용되는 최후 폴백이라, dialogue 데이터 자체(TTS가 읽는 원본)는 건드리지 않고
+// 화면 표시용으로만 다듬는다 — 사람이 나중에 VideoTab에서 직접 자막을 입력하면 이 정리는
+// 더 이상 안 거친다(그게 우선순위가 높으므로).
+function cleanDialogueForCaptionFallback(text) {
+  if (!text) return text
+  return text
+    .replace(/([가-힣])~+/g, '$1')        // "진~~짜" → "진짜" (모음 늘임 표기 제거)
+    .replace(/[♪♬]/g, '')                 // 음표 등 연기 지문 기호
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 function hexToRgba(hex, alpha) {
   const h = (hex || '#000000').replace('#', '')
   const r = parseInt(h.substring(0, 2), 16)
@@ -90,7 +105,7 @@ export default function CheckupTab() {
   // 클립이 여러 개인 컷은 세그먼트 배열이므로 지금 재생 위치(elapsedInActive)가 속한 구간의
   // 텍스트를 골라 보여준다 — 재생 중 자동으로 자막이 전환됨(2026-09-13).
   const activeCutSegs = activeCut
-    ? toSegments(subtitlesMap[activeCut.id], stripMeta(activeCut.dialogue || activeCut.narration || ''), activeCut.duration || 0)
+    ? toSegments(subtitlesMap[activeCut.id], cleanDialogueForCaptionFallback(stripMeta(activeCut.dialogue || activeCut.narration || '')), activeCut.duration || 0)
     : []
   const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text
     ?? activeCutSegs[activeCutSegs.length - 1]?.text ?? ''

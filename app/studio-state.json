@@ -185,7 +185,7 @@
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — camera focused on right side of beige sofa — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (Hanjia) visible on the LEFT edge of frame, slightly out of focus — same sofa, continuous space from previous cut,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nfocus pulled to right-side subject, left-side figure softly blurred but present\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
           "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-16s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic,\nwarm indoor lighting, static camera\n\nFinal 16-24s: her expression sharpens with emphasis, leaning in slightly,\nNOTE FOR COMPOSITING: this segment will be overlaid as a small bottom-right PIP window (~30%) on top of CUT4 footage in post-production, keep her framing centered and readable at small size,\nwarm indoor lighting, static camera",
-          "duration": 24,
+          "duration": 16,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -221,8 +221,12 @@
           ],
           "segTiming": [
             [
-              2,
-              6
+              0,
+              8
+            ],
+            [
+              0,
+              8
             ],
             null
           ],
@@ -239,7 +243,20 @@
             "LE SSERAFIM은요, 데뷔 3년 차인데",
             "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
             "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-          ]
+          ],
+          "captionSegTiming": [
+            [
+              0,
+              16
+            ]
+          ],
+          "overrides": {
+            "duration": {
+              "value": 16,
+              "at": "2026-10-10T09:57:45.638Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-4",
@@ -349,7 +366,7 @@
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera — another woman (Hanjia) visible on the left edge of frame, slightly out of focus, same sofa continuous space from previous cuts,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
           "videoPrompt": "First 0-10s: she sits at 45-degree angle on beige sofa,\nbright natural expression, speaking with light energy\n\nNext 10-18s: expression becomes more animated and bubbly,\nslight laughter in her eyes, gesturing lightly\n\nFinal 18-26s: she tilts her head slightly with a warm smile,\nNOTE FOR COMPOSITING: this segment will be overlaid as a small bottom-right PIP window (~30%) on top of CUT6 footage in post-production, keep her framing centered and readable at small size,\nwarm indoor lighting, static camera\n\n(no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame))",
-          "duration": 24,
+          "duration": 16,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -390,11 +407,11 @@
           ],
           "segTiming": [
             [
-              2,
-              7
+              0,
+              10
             ],
             [
-              1,
+              0,
               6
             ],
             null
@@ -408,7 +425,20 @@
             "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜",
             "어떻게 설명하지? 버블 같아요, 버블",
             "터질 것 같은데 터지면 또 귀여운 그 느낌?"
-          ]
+          ],
+          "captionSegTiming": [
+            [
+              0,
+              16
+            ]
+          ],
+          "overrides": {
+            "duration": {
+              "value": 16,
+              "at": "2026-10-10T09:58:03.787Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-6",
@@ -508,7 +538,7 @@
           "subtitle": "",
           "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
           "videoPrompt": "First 0-8s: extreme closeup of her face,\ncalm and composed expression,\neyes shifting slightly as she thinks\n\nNext 8-16s: her gaze becomes more analytical and sharp,\nspeaking with quiet authority,\nminimal movement — stillness carries the weight\n\nFinal 16-24s: she holds the camera with a piercing look,\nNOTE FOR COMPOSITING: this segment will be overlaid as a small bottom-right PIP window (~30%) on top of CUT8 footage in post-production, keep her framing centered and readable at small size,\nwarm soft side lighting, deep background blur\n\n(no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame))",
-          "duration": 24,
+          "duration": 16,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -548,15 +578,15 @@
             8
           ],
           "segTiming": [
-            null,
             [
-              1,
-              7
+              0,
+              8
             ],
             [
-              1,
-              6
-            ]
+              0,
+              8
+            ],
+            null
           ],
           "segPrompts": [
             "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -567,7 +597,20 @@
             "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만",
             "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
             "LA 베이스. 경계 자체가 없는 세계관!"
-          ]
+          ],
+          "captionSegTiming": [
+            [
+              0,
+              16
+            ]
+          ],
+          "overrides": {
+            "duration": {
+              "value": 16,
+              "at": "2026-10-10T09:58:18.011Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-8",
@@ -739,7 +782,7 @@
           "subtitle": "",
           "imagePrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
           "videoPrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
-          "duration": 12,
+          "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "GRAPHIC",
           "cutMark": "NORMAL",
@@ -778,9 +821,9 @@
           "narrBgVolume": 1,
           "overrides": {
             "duration": {
-              "value": 12,
-              "at": "2026-09-20T07:52:49.475Z",
-              "reason": "사용자 지시 시간 재조정 계획(2026-09-20) — 자동화/구탭 자동저장이 되돌리지 않도록 고정"
+              "value": 8,
+              "at": "2026-10-10T09:59:19.866Z",
+              "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "르세라핌의 존재감, 아일릿의 에너지, 캣츠아이의 세계관 — 한 곡에 다 담겼는데, 그 어떤 색도 죽지 않았어요.",
@@ -1413,7 +1456,7 @@
           "subtitle": "",
           "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
           "videoPrompt": "First 0-6s: medium closeup on sofa, quiet reflective expression,\ncamera very slowly zooming in\n\nNext 6-14s: she speaks with soft emotional weight,\nthe words carrying double meaning — about the MV and about herself,\ncamera continues slow zoom to closeup\n\nFinal 14-20s: a small quiet smile forms as she trails off,\nholds the moment in silence — 2 to 3 seconds of stillness,\nslow fade begins, warm indoor lighting",
-          "duration": 20,
+          "duration": 18,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -1489,6 +1532,11 @@
                 10
               ],
               "at": "2026-09-21T06:43:06.321Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 18,
+              "at": "2026-10-10T10:09:45.753Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
           }
@@ -2256,7 +2304,7 @@
           "g4Approved": {
             "cut-1": true
           },
-          "selectedCutId": "cut-7",
+          "selectedCutId": "cut-3",
           "subtitles": {
             "cut-1": "",
             "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",
@@ -4658,7 +4706,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-1",
+          "selectedCutId": "cut-2",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -9608,7 +9656,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-2",
+          "selectedCutId": "cut-3",
           "subtitles": {
             "cut-1": [
               {
@@ -9965,7 +10013,7 @@
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — camera focused on right side of beige sofa — Young Korean woman early-20s,\nsitting on the RIGHT side of beige sofa facing camera directly,\nanother woman (Hanjia) visible on the LEFT edge of frame, slightly out of focus — same sofa, continuous space from previous cut,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\ncalm analytical expression, slight excitement in eyes,\nwarm indoor lighting, soft background blur,\nfocus pulled to right-side subject, left-side figure softly blurred but present\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
       "videoPrompt": "First 0-8s: she sits facing camera on beige sofa,\ncalm analytical expression,\ngestures naturally with one hand as she speaks\n\nNext 8-16s: expression shifts with slight excitement,\nleaning forward slightly, engaged and enthusiastic,\nwarm indoor lighting, static camera\n\nFinal 16-24s: her expression sharpens with emphasis, leaning in slightly,\nNOTE FOR COMPOSITING: this segment will be overlaid as a small bottom-right PIP window (~30%) on top of CUT4 footage in post-production, keep her framing centered and readable at small size,\nwarm indoor lighting, static camera",
-      "duration": 24,
+      "duration": 16,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -10001,8 +10049,12 @@
       ],
       "segTiming": [
         [
-          2,
-          6
+          0,
+          8
+        ],
+        [
+          0,
+          8
         ],
         null
       ],
@@ -10019,7 +10071,20 @@
         "LE SSERAFIM은요, 데뷔 3년 차인데",
         "이미 글로벌 팬덤을 완전히 장악한 그룹이잖아요? 그쵸?",
         "이번 콜라보에서 얘네 역할이 진짜 중요한 게, 그 클래스"
-      ]
+      ],
+      "captionSegTiming": [
+        [
+          0,
+          16
+        ]
+      ],
+      "overrides": {
+        "duration": {
+          "value": 16,
+          "at": "2026-10-10T09:57:45.638Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     },
     {
       "id": "cut-4",
@@ -10129,7 +10194,7 @@
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa at 45-degree angle to camera — another woman (Hanjia) visible on the left edge of frame, slightly out of focus, same sofa continuous space from previous cuts,\nlong wavy dark brown hair NOT short,\ndelicate gold necklace,\nwhite slim ribbed crop inner tee,\nnavy blue fitted cardigan open-front,\nivory wide-leg tailored trousers,\neffortlessly photogenic not posing just existing beautifully,\nK-model proportions small face long legs,\nappearing no older than 22-23,\n\nbright expression, slight excitement, eyes lit up,\nwarm indoor lighting, soft background blur,\nNo other people in background — only the named characters in frame, plain empty background.\nPhotorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
       "videoPrompt": "First 0-10s: she sits at 45-degree angle on beige sofa,\nbright natural expression, speaking with light energy\n\nNext 10-18s: expression becomes more animated and bubbly,\nslight laughter in her eyes, gesturing lightly\n\nFinal 18-26s: she tilts her head slightly with a warm smile,\nNOTE FOR COMPOSITING: this segment will be overlaid as a small bottom-right PIP window (~30%) on top of CUT6 footage in post-production, keep her framing centered and readable at small size,\nwarm indoor lighting, static camera\n\n(no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame))",
-      "duration": 24,
+      "duration": 16,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -10170,11 +10235,11 @@
       ],
       "segTiming": [
         [
-          2,
-          7
+          0,
+          10
         ],
         [
-          1,
+          0,
           6
         ],
         null
@@ -10188,7 +10253,20 @@
         "ILLIT은 데뷔 1년 차인데, 얘네 에너지가 진짜",
         "어떻게 설명하지? 버블 같아요, 버블",
         "터질 것 같은데 터지면 또 귀여운 그 느낌?"
-      ]
+      ],
+      "captionSegTiming": [
+        [
+          0,
+          16
+        ]
+      ],
+      "overrides": {
+        "duration": {
+          "value": 16,
+          "at": "2026-10-10T09:58:03.787Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     },
     {
       "id": "cut-6",
@@ -10288,7 +10366,7 @@
       "subtitle": "",
       "imagePrompt": "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
       "videoPrompt": "First 0-8s: extreme closeup of her face,\ncalm and composed expression,\neyes shifting slightly as she thinks\n\nNext 8-16s: her gaze becomes more analytical and sharp,\nspeaking with quiet authority,\nminimal movement — stillness carries the weight\n\nFinal 16-24s: she holds the camera with a piercing look,\nNOTE FOR COMPOSITING: this segment will be overlaid as a small bottom-right PIP window (~30%) on top of CUT8 footage in post-production, keep her framing centered and readable at small size,\nwarm soft side lighting, deep background blur\n\n(no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame))",
-      "duration": 24,
+      "duration": 16,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -10328,15 +10406,15 @@
         8
       ],
       "segTiming": [
-        null,
         [
-          1,
-          7
+          0,
+          8
         ],
         [
-          1,
-          6
-        ]
+          0,
+          8
+        ],
+        null
       ],
       "segPrompts": [
         "EXTREME CLOSEUP SHOT — Young Korean woman early-20s,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nsharp analytical gaze, calm intense expression,\neyes focused and piercing,\nwarm indoor soft side lighting, deep background blur,\nNo other people in background — only the named character in frame, plain empty background, Photorealistic 8K cinematic 16:9, no TV or screens visible in this shot (the exact same TV/laptop screen appears separately via the PIP overlay in post-production, not in this generated frame).",
@@ -10347,7 +10425,20 @@
         "KATSEYE는 좀 달라요. 미국을 중심으로 활동하지만",
         "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요?",
         "LA 베이스. 경계 자체가 없는 세계관!"
-      ]
+      ],
+      "captionSegTiming": [
+        [
+          0,
+          16
+        ]
+      ],
+      "overrides": {
+        "duration": {
+          "value": 16,
+          "at": "2026-10-10T09:58:18.011Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     },
     {
       "id": "cut-8",
@@ -10519,7 +10610,7 @@
       "subtitle": "",
       "imagePrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
       "videoPrompt": "HTML 완성 — make_graphic_cut으로 캡처\n파일: LF_T01_B04_graphic.html",
-      "duration": 12,
+      "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "GRAPHIC",
       "cutMark": "NORMAL",
@@ -10558,9 +10649,9 @@
       "narrBgVolume": 1,
       "overrides": {
         "duration": {
-          "value": 12,
-          "at": "2026-09-20T07:52:49.475Z",
-          "reason": "사용자 지시 시간 재조정 계획(2026-09-20) — 자동화/구탭 자동저장이 되돌리지 않도록 고정"
+          "value": 8,
+          "at": "2026-10-10T09:59:19.866Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "르세라핌의 존재감, 아일릿의 에너지, 캣츠아이의 세계관 — 한 곡에 다 담겼는데, 그 어떤 색도 죽지 않았어요.",
@@ -11193,7 +11284,7 @@
       "subtitle": "",
       "imagePrompt": "MEDIUM CLOSEUP SHOT — Young Korean woman early-20s,\nsitting on beige sofa facing camera,\nlong wavy dark brown hair NOT short,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\nnavy blue fitted cardigan open-front visible at neckline,\neffortlessly photogenic not posing just existing beautifully,\nappearing no older than 22-23,\n\nwistful lingering expression, quiet emotion,\na barely-there smile forming at the end,\nwarm indoor lighting, soft background blur,\nsame beige sofa, same room, continuous space from previous cuts — No other people in background, plain empty background,\nPhotorealistic 8K cinematic 16:9",
       "videoPrompt": "First 0-6s: medium closeup on sofa, quiet reflective expression,\ncamera very slowly zooming in\n\nNext 6-14s: she speaks with soft emotional weight,\nthe words carrying double meaning — about the MV and about herself,\ncamera continues slow zoom to closeup\n\nFinal 14-20s: a small quiet smile forms as she trails off,\nholds the moment in silence — 2 to 3 seconds of stillness,\nslow fade begins, warm indoor lighting",
-      "duration": 20,
+      "duration": 18,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -11269,6 +11360,11 @@
             10
           ],
           "at": "2026-09-21T06:43:06.321Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 18,
+          "at": "2026-10-10T10:09:45.753Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
       }
@@ -11513,7 +11609,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-10T09:33:04.368Z",
+  "savedAt": "2026-10-10T09:55:51.456Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
@@ -11583,18 +11679,6 @@
           "keepAudio": true,
           "createdAt": 1789795176055,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_2.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_02.mp4?t=1791586313021",
-          "name": "cut_02.mp4",
-          "duration": 6.02,
-          "trimStart": 0,
-          "trimEnd": 6.02,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_02.mp4",
-          "keepAudio": false,
-          "createdAt": 1791547970000
         }
       ],
       "cut-23": [
@@ -11613,7 +11697,7 @@
       ],
       "cut-20": [
         {
-          "url": "blob:http://localhost:5173/c0df38d8-dc2b-4fe2-b31a-977eb881ea5f",
+          "url": "blob:http://localhost:5173/53e05b25-3931-4473-8675-f303de3e57c4",
           "name": "Woman_speaking_on_sofa_20260921002137.mp4",
           "duration": 10.01,
           "trimStart": 0,
@@ -11626,8 +11710,8 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_21_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/1f2d2853-d0bb-496d-a5df-d7d554332319",
-          "name": "Woman_speaking_on_sofa_20260921003219.mp4",
+          "url": "blob:http://localhost:5173/5660f60c-cc7c-4e99-a390-2252f8b61b71",
+          "name": "Woman_speaking_자막오류_20260921003219.mp4",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
@@ -11641,7 +11725,7 @@
       ],
       "cut-15": [
         {
-          "url": "blob:http://localhost:5173/cee508b4-d011-4286-949e-72aea85b3a9e",
+          "url": "blob:http://localhost:5173/81b8060d-e044-4e23-8971-5ef94c6d0eb8",
           "name": "Two_women_laughing_on_sofa_20260920231405.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11654,7 +11738,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_16_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/5fcabd33-540f-4796-b6d3-8157f5a840a6",
+          "url": "blob:http://localhost:5173/bacdbd53-55ff-4e9f-af70-3a3b3ddf80e0",
           "name": "Two_women_지아 대사설정필요_20260920233135.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11724,7 +11808,7 @@
       ],
       "cut-13": [
         {
-          "url": "blob:http://localhost:5173/909f4cfb-7e0b-48dd-a1ee-dc02a6072873",
+          "url": "blob:http://localhost:5173/eb68346f-92a8-4530-a98e-511b7974501d",
           "name": "Woman_speaking_Korean_on_sofa_20260920170704.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11737,7 +11821,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/7214ad41-b63d-42c2-8422-d4b65320b10e",
+          "url": "blob:http://localhost:5173/0512f5c7-8cce-4459-bfef-967434331b85",
           "name": "Woman_speaking_Korean_on_sofa_20260920233002.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11750,7 +11834,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_2.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/64c6b1f4-a40b-4431-996b-b56936d9cd80",
+          "url": "blob:http://localhost:5173/f47355cc-24b6-44b7-a1ea-438da17ebdb6",
           "name": "Two_women_laughing_on_sofa_20260920235555.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11857,18 +11941,6 @@
           "keepAudio": true,
           "createdAt": 1789540114752,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_3.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_03.mp4?t=1791586315170",
-          "name": "cut_03.mp4",
-          "duration": 6.02,
-          "trimStart": 0,
-          "trimEnd": 6.02,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_03.mp4",
-          "keepAudio": false,
-          "createdAt": 1791548151000
         }
       ],
       "cut-6": [
@@ -11883,18 +11955,6 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_06_clean_bg_subtitle.mp4",
           "keepAudio": false,
           "createdAt": 1789618889000
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_06.mp4?t=1791586316125",
-          "name": "cut_06.mp4",
-          "duration": 6,
-          "trimStart": 0,
-          "trimEnd": 6,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_06.mp4",
-          "keepAudio": false,
-          "createdAt": 1791548674000
         }
       ],
       "cut-8": [
@@ -11925,18 +11985,6 @@
           "keepAudio": false,
           "createdAt": 1789709935605,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_1.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_04.mp4?t=1791586315509",
-          "name": "cut_04.mp4",
-          "duration": 6.02,
-          "trimStart": 0,
-          "trimEnd": 6.02,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_04.mp4",
-          "keepAudio": false,
-          "createdAt": 1791548301000
         }
       ],
       "cut-5": [
@@ -11978,18 +12026,6 @@
           "keepAudio": true,
           "createdAt": 1789645879595,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_3.mp4"
-        },
-        {
-          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_05.mp4?t=1791586315832",
-          "name": "cut_05.mp4",
-          "duration": 6.02,
-          "trimStart": 0,
-          "trimEnd": 6.02,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_05.mp4",
-          "keepAudio": false,
-          "createdAt": 1791548486000
         }
       ],
       "cut-9": [
@@ -12150,7 +12186,7 @@
     "g4Approved": {
       "cut-1": true
     },
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-5",
     "subtitles": {
       "cut-1": "",
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",

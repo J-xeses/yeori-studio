@@ -33,6 +33,16 @@ function stripMeta(text) {
     .replace(/^(CLOSEUP|FULLBODY)\s*(SHOT)?\s*[-—]?\s*/i, '')
     .trim()
 }
+// CheckupTab.jsx와 동일(2026-10-10) — CP/subtitles 둘 다 없어 대사 원문이 그대로 자막
+// 폴백으로 쓰일 때만, TTS 발화 지문 표기("진~~짜" 등)를 화면 표시용으로만 다듬는다.
+function cleanDialogueForCaptionFallback(text) {
+  if (!text) return text
+  return text
+    .replace(/([가-힣])~+/g, '$1')
+    .replace(/[♪♬]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 
 // CP(자막) 필드가 "대사1 / 대사2 / 나레이션" 처럼 "/"로 여러 구간을 담고 있을 수 있다
 // (reelFinalize.js의 decideCut과 동일한 소스). 글자수 비례로 컷 전체 길이에 걸쳐 순차
@@ -1616,6 +1626,21 @@ export default function VideoTab() {
       const pipBgSegIndices = new Set(
         Object.values(pipSegs).filter(spec => spec.targetSegIdx != null).map(spec => Number(spec.targetSegIdx))
       )
+      // 2026-10-10 — 이 컷 "자신"이 다른 컷의 PIP 소스로 지정돼 있으면(pipSourceCutNo===이 컷
+      // 번호), 그 클립은 이 컷 본편에서는 빼야 한다(LF_T01 실측: 컷3/5/7이 자기 3클립을 전부
+      // 그대로 이어붙이면서, 컷4/6/8에 PIP로 재사용되는 같은 리액션이 또 한 번 나와 중복됐었다
+      // — 성준님 확인: "실제 합성은 클립1,2만 되도록 진행했던 것 같다"는 원래 의도였는데,
+      // pipBgSegIndices는 "컷 자신의 pipSegments"만 보고 "다른 컷이 나를 소스로 쓰는 경우"는
+      // 전혀 안 거르고 있었음). state.cuts 전체를 훑어 이 컷(cut.no)을 pipSourceCutNo로 쓰는
+      // 다른 컷의 pipSourceClipIdx를 찾아 같이 제외한다.
+      for (const other of (state.cuts || [])) {
+        if (other.id === cut.id) continue
+        for (const spec of Object.values(other.pipSegments || {})) {
+          if (Number(spec.pipSourceCutNo) === Number(cut.no) && spec.pipSourceClipIdx != null) {
+            pipBgSegIndices.add(Number(spec.pipSourceClipIdx))
+          }
+        }
+      }
       const clipsForRender = clips
         .map((c, i) => ({ i, c }))
         .filter(({ i }) => !pipBgSegIndices.has(i))
@@ -2113,7 +2138,7 @@ export default function VideoTab() {
           const effCap2IsMultiPart = (Array.isArray(effCap2) && effCap2.length > 1) || (typeof effCap2 === 'string' && /\s*\/\s*/.test(effCap2))
           const cutSegs = toSegments(
             bothFallback2 && !effCap2IsMultiPart ? bothFallback2 : (effCap2 !== undefined ? effCap2 : bothFallback2),
-            isReel ? '' : stripMeta(selCut.dialogue || selCut.narration || ''),   /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */ selCut.duration || 0, selCut.captionSegTiming)
+            isReel ? '' : cleanDialogueForCaptionFallback(stripMeta(selCut.dialogue || selCut.narration || '')),   /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */ selCut.duration || 0, selCut.captionSegTiming)
           // 클립(영상 조각) 수보다 자막 구간이 더 많은 컷(예: 클립 1개 안에서 대사→나레이션이
           // 순차 전환되는 R04 스타일) — 남는 구간은 업로드 UI 없는 "자막 전용" 행으로 추가 표시.
           // 2026-09-22, 성준님 지적: 자막칸에 "/"가 안 나뉜 채 통짜로 들어가 있던 사고 수정.
