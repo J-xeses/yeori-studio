@@ -329,11 +329,16 @@ export function decideCut(cut) {
   const isScreen = /(?:IN|GR)\.SCR?\b|화면\s*녹화|화면녹화|screen\s*rec/i.test(sp + scene) || /SH_SCR/i.test(sh)
   const fit = isScreen ? 'contain' : 'cover'
 
-  // caption: CP(자막) 있고, 그래픽이 자체 텍스트를 렌더하는 컷(SH_TXT, 옛 표기 SH_TEXT)만 아니면 번인
+  // caption: CP(자막) 있고, 그래픽이 자체 텍스트를 렌더하는 컷(SH_TXT, 옛 표기 SH_TEXT)만 아니면 번인.
+  // cut.captionOff===true 인 컷은 무조건 스킵 — 손편집 소스(R03 0808.mp4 등)처럼 화면 자체에
+  // 이미 캡션이 구워져 있어서, CP 필드가 "지금 넣을 자막"이 아니라 "이미 있는 자막을 문서화한
+  // 값"인 경우에 쓴다(2026-10-10 실측: R03 전 컷 이중 자막 — CP 값으로 새로 자막을 또 구워서
+  // 원래 있던 손글씨 캡션과 겹쳐 보임). reel-overrides 로만 설정 가능(스크립트 CP는 그대로 둠).
   const cp = String(cut.subtitle || '').trim()
   const graphicSelfText = cut.cutType === 'GRAPHIC' && /SH_TE?XT/i.test(sh)
+  const captionOff = cut.captionOff === true
   let caption = null
-  if (cp && !graphicSelfText) {
+  if (cp && !graphicSelfText && !captionOff) {
     // 반전/멀티스텝 판정 → 해당 세그먼트만 Punch(빨강)
     const isPunch = (/SUR/i.test(md) && /(COM|WRM)/i.test(md)) || /반전|twist|잠깐/i.test(scene + cp)
     // "1단계: X / 2단계: Y" 또는 "X / Y" → 세그먼트
