@@ -2186,7 +2186,12 @@ export default function VideoTab() {
                   // 짧아서 우연히 안 튀었을 뿐, 근본 원인은 동일). aspect-ratio로 박스 자체를
                   // 영상 비율에 고정해 레터박스가 생길 여지를 없앤다 — stretch 늘어남과 무관하게
                   // 항상 실제 영상 프레임과 박스가 일치.
-                  <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto', ...(aspectRatio === '9:16' ? { width: '67%' } : {}) }}>
+                  // 2026-10-10 — 영상칸(cutCardVideoCol) 캡을 없애고 5:5로 넓혔더니, 9:16은
+                  // 칸 폭의 %였던 탓에 칸이 넓어지는 만큼 같이 커져 버렸다(16:9만 키우고
+                  // 9:16은 지금 크기 그대로 두자는 요청과 반대). 9:16만 칸 폭 변화와 무관한
+                  // 고정 px(오늘 실측 421px)로 바꿔 분리 — 칸이 넓어져도 9:16은 그대로,
+                  // 16:9 등 나머지는 계속 칸 폭 100%라 칸이 넓어진 만큼 그대로 커진다.
+                  <div className={s.cutCardVideoInner} style={{ aspectRatio: aspectRatio.replace(':', '/'), height: 'auto', margin: 'auto', ...(aspectRatio === '9:16' ? { width: 'min(421px, 100%)' } : {}) }}>
                     <video key={bigSrc} src={bigSrc} controls className={s.cutCardVideoPlayer}
                       onTimeUpdate={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
                       onSeeked={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
@@ -2316,7 +2321,7 @@ export default function VideoTab() {
               </div>
               <div className={s.cutCardMainCol}>
               <div className={s.cutCardHeader}>
-                <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} — {selCut.scene || '씬 미입력'}</span>
+                <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} <span className={s.cutCardTitleDesc}>— {selCut.scene || '씬 미입력'}</span></span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {vRow && (
                     <select value={vRow.videoMode} onClick={e => e.stopPropagation()}
@@ -2738,13 +2743,6 @@ export default function VideoTab() {
                       )}
                     </>
                   )}
-                  <button
-                    className={s.aiGenBtn}
-                    disabled
-                    title="폐기됨(2026-09-02) — imagePrompt만 보내고 clipPrompt(대사/나레이션 구간·립싱크 억제 지시)를 전혀 거치지 않아 눌러도 그 내용이 반영되지 않음. 'Flow용 프롬프트 복사' 버튼의 clipPrompt를 Flow에 직접 붙여넣을 것"
-                    onClick={() => generateVideoForCut(selCut)}>
-                    ✨ AI 영상 생성 (레거시, 비활성화됨)
-                  </button>
                   <button
                     className={s.composeBtn}
                     disabled={composeStatus[selCut.id] === 'running' || !clips.length}

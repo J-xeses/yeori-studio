@@ -139,14 +139,22 @@
    사용자 지적) — 클립이 가장 많은 CUT2 기준(실측 526px)으로 전 컷 높이를 통일하고, 영상칸
    폭은 기존의 1.5배로 넓혀서 16:9 프레임이 레터박스 없이 넉넉히 들어가게 함. 에피소드가
    달라져도 이 CSS 비율이 그대로 적용됨(컷별 로직 아님). */
+/* 2026-10-10 저녁 — max-width:630px 고정 캡이 실제 병목이었다(실측: 57% 쓰는 자리인데도
+   화면폭이 넓어도 항상 630px에서 멈춰 있었음, 그래서 좁은 창에서나 630이 57%보다 작아
+   캡이 풀리지, 넓은 모니터에선 늘 630으로 묶여 있었던 것 — 16:9가 "늘 작아 보인다"던
+   체감의 진짜 원인). 캡을 없애고 5:5(컷카드영역과 동률)로 바꿔 넓은 화면일수록 16:9가
+   그만큼 커지게 함. 9:16은 JSX(cutCardVideoInner 인라인 style)에서 이 칸의 %가 아니라
+   고정 px로 바뀌었으므로 칸이 넓어져도 지금 크기 그대로 유지된다. */
 .cutCardRow { display: flex; align-items: stretch; min-height: 530px; }
-.cutCardVideoCol { width: 57%; max-width: 630px; min-width: 390px; flex-shrink: 0; background: #000; position: relative; cursor: default; border-right: 1px solid var(--border); }
+.cutCardVideoCol { width: 50%; min-width: 390px; flex-shrink: 0; background: #000; position: relative; cursor: default; border-right: 1px solid var(--border); }
 .cutCardVideoInner { position: relative; width: 100%; height: 100%; }
 .cutCardVideoPlayer { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .cutCardVideoEmpty { width: 100%; height: 100%; min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text-3); font-size: 12px; padding: 20px 10px; text-align: center; }
 .cutCardMainCol { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cutCardHeader { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--bg-input); border-bottom: 1px solid var(--border); }
 .cutCardTitle { font-size: 13px; font-weight: 700; color: var(--text); }
+/* 2026-10-10 — "CUT 01" 번호는 그대로, 뒤에 붙는 씬 설명 문장만 살짝 축소 */
+.cutCardTitleDesc { font-size: 11.5px; font-weight: 500; color: var(--text-2); }
 .cutCardDur { font-size: 12px; color: var(--accent-light); font-weight: 600; }
 .cutCardBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; cursor: default; }
 .cutCardFooter { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; cursor: default; }
