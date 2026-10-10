@@ -3714,7 +3714,7 @@ app.get('/api/reel-finalize/staleness', (req, res) => {
 app.post('/api/reel-finalize', async (req, res) => {
   // bgmMode: 'auto'(기본 — 보유 곡에서 고르고 없으면 생성) | 'library'(보유 곡만, 생성 안 함) | 'none'(BGM 없이)
   //          bgmFile 이 있으면 그 곡을 처음부터 깐다.
-  const { epNum, bgmFile, bgmMode } = req.body || {}
+  const { epNum, bgmFile, bgmMode, order } = req.body || {}
   let ctx
   try {
     const { ep, epId } = findEpisodeByNumOrThrow(epNum)
@@ -3737,6 +3737,7 @@ app.post('/api/reel-finalize', async (req, res) => {
     const r = await finalizeReel({
       epNum: Number(epNum), cuts: ctx.cuts, bgmFile: bgmFile || undefined,
       noBgm: bgmMode === 'none', allowBgmGenerate: bgmMode !== 'library' && bgmMode !== 'none',
+      order: Array.isArray(order) && order.length ? order : undefined,
       onLog: (line) => send({ type: 'log', line }),
     })
     const url = `http://localhost:3001${mp.toMediaUrl(r.finalPath)}?t=${Date.now()}`
@@ -6505,34 +6506,21 @@ app.post('/api/bgm-remix', async (req, res) => {
   if (!fs.existsSync(pathA)) return res.status(404).json({ error: 'trackA 파일 없음', path: pathA })
   if (!fs.existsSync(pathB)) return res.status(404).json({ error: 'trackB 파일 없음', path: pathB })
 
-  const cf = Math.max(0.2, Math.min(5, Number(crossfade) || 1.5))
-  const dA = Math.max(cf + 0.5, Number(durA))
-  const dB = Math.max(cf + 0.5, Number(durB))
   const safeName = path.basename(sanitizePathSegment(filename) || `remix_${Date.now()}`)
   const outName = /\.mp3$/i.test(safeName) ? safeName : `${safeName}.mp3`
   const dir = path.join(mp.bgmDir(), 'remix')
   fs.mkdirSync(dir, { recursive: true })
   const destPath = path.join(dir, outName)
 
-  const filter = `[0:a]afade=t=out:st=${(dA - cf).toFixed(2)}:d=${cf}[a0];` +
-    `[1:a]afade=t=in:st=0:d=${cf}[a1];` +
-    `[a0][a1]acrossfade=d=${cf}:c1=tri:c2=tri[aout]`
-
   try {
-    const code = await new Promise((resolve) => {
-      let errBuf = ''
-      const proc = spawn('ffmpeg', [
-        '-y',
-        '-ss', String(Math.max(0, Number(startA) || 0)), '-t', String(dA), '-i', pathA,
-        '-ss', String(Math.max(0, Number(startB) || 0)), '-t', String(dB), '-i', pathB,
-        '-filter_complex', filter,
-        '-map', '[aout]', '-c:a', 'libmp3lame', '-b:a', '192k',
-        destPath,
-      ], { windowsHide: true })
-      proc.stderr.on('data', d => { errBuf += d.toString() })
-      proc.on('close', c => { if (c !== 0) console.error('[bgm-remix] ffmpeg:', errBuf.slice(-800)); resolve(c) })
-    })
-    if (code !== 0 || !fs.existsSync(destPath)) return res.status(500).json({ error: 'ffmpeg 리믹스 실패' })
+    const { crossfadeTracks } = await import('./lib/bgmSelect.js')
+    try {
+      await crossfadeTracks({ pathA, startA, durA, pathB, startB, durB, crossfade, destPath })
+    } catch (e) {
+      console.error('[bgm-remix] ffmpeg:', e.message)
+      return res.status(500).json({ error: 'ffmpeg 리믹스 실패' })
+    }
+    if (!fs.existsSync(destPath)) return res.status(500).json({ error: 'ffmpeg 리믹스 실패' })
 
     const outDur = await getMediaDuration(destPath).catch(() => null)
     const indexPath = path.join(mp.bgmDir(), 'index.json')

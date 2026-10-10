@@ -1,4 +1,9 @@
 {
+  "1": {
+    "subtitle": true,
+    "subtitleEffect": "glow",
+    "subtitleAt": "2026-10-10T05:23:13.258Z"
+  },
   "2": {
     "method": "multi-clip-compose",
     "motion": null,

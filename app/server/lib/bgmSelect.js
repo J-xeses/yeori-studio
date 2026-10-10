@@ -4,6 +4,7 @@
 //       (에피소드 길이 맞춤, 라이브러리에 태그와 함께 등록 → 재사용). 생성은 유료라 호출부가 allowGenerate 로 허용할 때만.
 import fs from 'node:fs'
 import path from 'node:path'
+import { spawn } from 'node:child_process'
 import * as mp from './mediaPaths.js'
 
 // 한국어/영어 BGM 표현 → 태그 (위에서부터, 여러 개 동시 매칭)
@@ -106,4 +107,80 @@ export async function selectBgm({ code, cuts, headerBgm, durSec, allowGenerate =
   if (!pick) return { source: 'none', reason: `라이브러리에 맞는 곡 없음(요청 ${brief.tags.join('·') || '태그 없음'})${allowGenerate ? '' : ' — 생성 꺼짐'}`, tags: brief.tags, candidates: ranked.slice(0, 3).map(r => `${r.track.title}(${r.score})`) }
   const u = readUsage(); u.push({ at: new Date().toISOString(), code, file: pick.track.file }); fs.writeFileSync(USAGE(), JSON.stringify(u.slice(-50), null, 2))
   return { source: pick.track.source === 'elevenlabs-music' ? 'generated' : 'library', file: pick.track.file.replace(/^bgm\//, ''), title: pick.track.title, reason: pick.reason, tags: brief.tags }
+}
+
+// ── 두 BGM 트랙을 크로스페이드로 결합(2026-10-10) ──────────────────────
+// /api/bgm-remix(사람이 메이킹 탭에서 수동 결합)와 selectMultiSectionBgm(자동 다구간 결합)이
+// 공유하는 ffmpeg 호출부 — 필터식이 두 곳에서 따로 유지되며 틀어지는 걸 막는다.
+export async function crossfadeTracks({ pathA, startA = 0, durA, pathB, startB = 0, durB, crossfade = 1.5, destPath }) {
+  const cf = Math.max(0.2, Math.min(5, Number(crossfade) || 1.5))
+  const dA = Math.max(cf + 0.5, Number(durA))
+  const dB = Math.max(cf + 0.5, Number(durB))
+  const filter = `[0:a]afade=t=out:st=${(dA - cf).toFixed(2)}:d=${cf}[a0];` +
+    `[1:a]afade=t=in:st=0:d=${cf}[a1];` +
+    `[a0][a1]acrossfade=d=${cf}:c1=tri:c2=tri[aout]`
+  await new Promise((resolve, reject) => {
+    let errBuf = ''
+    const proc = spawn('ffmpeg', [
+      '-y',
+      '-ss', String(Math.max(0, Number(startA) || 0)), '-t', String(dA), '-i', pathA,
+      '-ss', String(Math.max(0, Number(startB) || 0)), '-t', String(dB), '-i', pathB,
+      '-filter_complex', filter,
+      '-map', '[aout]', '-c:a', 'libmp3lame', '-b:a', '192k',
+      destPath,
+    ], { windowsHide: true })
+    proc.stderr.on('data', (d) => { errBuf += d.toString() })
+    proc.on('close', (c) => (c === 0 ? resolve() : reject(new Error(`ffmpeg crossfade 실패: ${errBuf.slice(-500)}`))))
+  })
+  return destPath
+}
+
+// ── 컷 뒤쪽을 "클라이맥스/마무리 구간"으로 자동 분리(2026-10-10) ───────────
+// 신호는 MD(감정) 같은 자유 텍스트가 아니라 컷 길이 비율만 쓴다 — 에피소드 종류를
+// 안 가리고 항상 같은 방식으로 동작해야 하는 자동화 기본값이라, 의미 추론보다
+// 안전하고 예측 가능한 쪽을 택함. 전체의 마지막 ~18%(최소 1컷·최대 2컷)를 B구간으로.
+export function pickClimaxSplit(cuts) {
+  if (!Array.isArray(cuts) || cuts.length < 5) return null
+  const durs = cuts.map((c) => Number(c.duration) || 6)
+  const total = durs.reduce((a, b) => a + b, 0)
+  let tailDur = 0, splitIndex = null
+  for (let i = cuts.length - 1; i >= 1; i--) {
+    tailDur += durs[i]
+    if (tailDur >= total * 0.18) { splitIndex = i; break }
+  }
+  if (splitIndex == null) return null
+  if (cuts.length - splitIndex > 2) splitIndex = cuts.length - 2
+  if (splitIndex <= 0 || splitIndex >= cuts.length) return null
+  return splitIndex
+}
+
+// 섹션 A(앞부분)/B(뒷부분·클라이맥스)에 각각 selectBgm을 돌려 두 트랙을 고르고
+// 크로스페이드로 합친다. 분리 신호가 없거나 한쪽이라도 트랙을 못 구하면 안전하게
+// 기존 selectBgm(단일 트랙) 결과로 폴백 — 자동화 경로가 이 때문에 멈추지 않는다.
+export async function selectMultiSectionBgm({ code, cuts, headerBgm, durSec, allowGenerate = false, apiKey, onLog = () => {} }) {
+  const splitIndex = pickClimaxSplit(cuts)
+  if (splitIndex == null) return { ...(await selectBgm({ code, cuts, headerBgm, durSec, allowGenerate, apiKey, onLog })), multi: false }
+
+  const sectionA = cuts.slice(0, splitIndex)
+  const sectionB = cuts.slice(splitIndex)
+  const durA = sectionA.reduce((s, c) => s + (Number(c.duration) || 6), 0)
+  const durB = sectionB.reduce((s, c) => s + (Number(c.duration) || 6), 0)
+  const selA = await selectBgm({ code: `${code}_A`, cuts: sectionA, headerBgm, durSec: durA, allowGenerate, apiKey, onLog })
+  const selB = await selectBgm({ code: `${code}_B`, cuts: sectionB, headerBgm: '', durSec: durB, allowGenerate, apiKey, onLog })
+  if (selA.source === 'none' || selB.source === 'none') {
+    onLog('BGM: 2구간 분리용 트랙을 하나 이상 못 구함 — 단일 트랙으로 대체')
+    return { ...(await selectBgm({ code, cuts, headerBgm, durSec, allowGenerate, apiKey, onLog })), multi: false }
+  }
+  try {
+    const pathA = mp.bgmFile(selA.file), pathB = mp.bgmFile(selB.file)
+    const destDir = mp.bgmDir('remix')
+    fs.mkdirSync(destDir, { recursive: true })
+    const destPath = path.join(destDir, `${code}_auto-multi_${Date.now().toString(36)}.mp3`)
+    await crossfadeTracks({ pathA, startA: 0, durA: durA + 2, pathB, startB: 0, durB: durB + 2, crossfade: 1.5, destPath })
+    onLog(`BGM: 자동 2구간 결합 — ${selA.title}(${durA.toFixed(0)}s) → ${selB.title}(${durB.toFixed(0)}s), 컷 ${splitIndex + 1}번째부터 B구간`)
+    return { source: 'multi', file: path.relative(mp.bgmDir(), destPath).replace(/\\/g, '/'), title: `${selA.title} → ${selB.title}`, reason: '자동 2구간(마무리 클라이맥스 분리)', multi: true, splitIndex }
+  } catch (e) {
+    onLog(`⚠ BGM 2구간 결합 실패(${e.message}) — 단일 트랙으로 대체`)
+    return { ...(await selectBgm({ code, cuts, headerBgm, durSec, allowGenerate, apiKey, onLog })), multi: false }
+  }
 }

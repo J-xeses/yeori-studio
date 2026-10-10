@@ -517,7 +517,7 @@ export function sfxEffective(s, durSec) {
 }
 
 export async function finalizeReel(p) {
-  const { epNum, cuts, bgmFile, onLog } = p
+  const { epNum, cuts, bgmFile, onLog, order } = p
   const log = (m) => { try { onLog && onLog(m) } catch { /* noop */ } }
   const code = mp.resolveCode(epNum)
   // 영상 탭에서 정한 자막 스타일(오버라이드 _style: fontPx=1920 세로 기준 px, y=블록 중심 비율) — 미리보기와 최종본 일치(2026-09-25)
@@ -538,7 +538,12 @@ export async function finalizeReel(p) {
   // 여기서 자막을 또 구우면 같은 문구가 두 겹이 된다(2026-10-07 R02 컷1 실측).
   let makingManifest = {}
   try { makingManifest = JSON.parse(fs.readFileSync(path.join(vdir, '.motion-manifest.json'), 'utf-8')) || {} } catch { /* 없음 */ }
-  for (const cut of cuts.slice().sort((a, b) => a.no - b.no)) {
+  // order: 최종본 재생 순서를 컷 번호(no)와 다르게 주고 싶을 때(예: 연출상 재배열) — [1,3,2,4,5,6]처럼
+  // cut.no 목록을 원하는 순서로 전달. 없으면 기존처럼 no 오름차순(스크립트 작성 순서).
+  const playOrder = Array.isArray(order) && order.length
+    ? order.map((n) => cuts.find((c) => c.no === n)).filter(Boolean)
+    : cuts.slice().sort((a, b) => a.no - b.no)
+  for (const cut of playOrder) {
     // 메이킹 탭에서 자막·말풍선을 얹은 컷은 그 결과물을 그대로 쓴다(A안). 그 컷은 자막 번인 생략.
     const picked = mp.pickCutSource(vdir, cut.no)
     const src = picked.path
@@ -764,10 +769,13 @@ export async function finalizeReel(p) {
     // 대본 BGM 문구 → 태그 → 라이브러리 최적 곡, 없으면 ElevenLabs 음악 생성(에피소드 길이 맞춤, 재사용 등록).
     // 예전엔 bgm/ 최상위 첫 파일만 찾아서(곡은 하위 폴더에 있음) 한 번도 자동으로 붙지 않았다(2026-09-25).
     try {
-      const { selectBgm } = await import('./bgmSelect.js')
+      const { selectMultiSectionBgm } = await import('./bgmSelect.js')
       let apiKey = ''
       try { apiKey = JSON.parse(fs.readFileSync(path.join(mp.DOWNLOADS, '..', 'app', 'studio-secrets.json'), 'utf-8')).apiKeys?.elevenLabs || '' } catch { /* noop */ }
-      const sel = await selectBgm({ code, cuts, durSec: totalDur, allowGenerate: p.allowBgmGenerate !== false, apiKey, onLog: log })
+      // playOrder 순서 기준으로 뒤쪽 ~18%(최대 2컷)를 클라이맥스/마무리 구간으로 보고 가능하면
+      // 트랙을 둘로 나눠 크로스페이드 결합(2026-10-10, 오디오 연출 자동화) — 분리 신호가 없거나
+      // 생성 실패하면 selectMultiSectionBgm 내부에서 단일 트랙(기존 동작)으로 자동 폴백한다.
+      const sel = await selectMultiSectionBgm({ code, cuts: playOrder, durSec: totalDur, allowGenerate: p.allowBgmGenerate !== false, apiKey, onLog: log })
       log(`BGM 선택: ${sel.source === 'none' ? '없음' : sel.title} — ${sel.reason}${sel.tags?.length ? ` (요청 태그 ${sel.tags.join('·')})` : ''}`)
       if (sel.file) bgmAbs = mp.bgmFile(sel.file)
     } catch (e) { log(`⚠ BGM 자동 선택 실패: ${e.message}`) }
