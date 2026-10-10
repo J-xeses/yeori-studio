@@ -15,7 +15,13 @@
 /* 상단 행 — 목업 배치 고정(2026-09-13): 좌측은 추후반영 빈 영역, 플레이어는 우측 고정.
    플레이어가 화면 전체 폭을 안 쓰니 세로로는 오히려 더 키울 수 있고, 그만큼 아래
    타임라인에 높이를 더 배분한다(사용자: "화면비율 확대 + 좌측 영역 확보가 가능"). */
-.mainRow { display: flex; flex: 8; min-height: 0; }
+/* 2026-10-10 저녁 — 비트 바 추가 후 파형이 더 잘려 보인다는 피드백으로 경계선을 위로 이동.
+   videoWrapper는 height:100%로 playerWrap이 주는 공간을 전부 채우는 구조라(패딩/갭을
+   제외한 나머지), 화면·재생바 실제 크기를 그대로 지키면서 공간을 더 넘기려면 패딩/갭(여백)
+   만 줄이고 — 그만큼 mainRow 쪽 flex 비중도 같이 줄여서, 줄어든 여백만큼이 정확히
+   타임라인으로 넘어가게 한다(영상 자체 픽셀 높이는 변하지 않음, 실측: 패딩18→10·갭8→4로
+   20px 절약 + flex 8:3→13:6 로 그 20px를 그대로 타임라인에 이전). */
+.mainRow { display: flex; flex: 13; min-height: 0; }
 .futureArea {
   flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
   border-right: 1px dashed var(--border); padding: 20px; box-sizing: border-box;
@@ -24,7 +30,7 @@
 
 .playerWrap {
   flex: 1.7; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 8px; padding: 18px; position: relative; box-sizing: border-box;
+  gap: 4px; padding: 10px; position: relative; box-sizing: border-box;
 }
 .videoWrapper {
   position: relative; background: #000; border-radius: 0; overflow: hidden;
@@ -77,8 +83,39 @@
    카드 UI는 여기 안에서 다 할 수 있는 기능과 중복이라 삭제(2026-09-13, 사용자 지적) —
    이제 이 컴포넌트 하나만 상시 표시. 상단 행보다 비중을 더 줘서 아래로 내려 배치. */
 .timelineEditorWrap {
-  flex: 3; min-height: 208px; border-top: 1px solid var(--border);
+  flex: 6; min-height: 208px; border-top: 1px solid var(--border);
   padding: 10px 16px; box-sizing: border-box; overflow: hidden;
+  display: flex; flex-direction: column;
 }
+/* CheckupTimeline 자체가 height:100%짜리 컴포넌트라, 아래 비트 바를 같이 넣으려면
+   얘를 flex:1(남는 공간)로 감싸고 바는 그 아래 고정 높이로 둬야 한다(2026-10-10). */
+.timelineEditorInner { flex: 1; min-height: 0; }
 .nowPlaying { font-size: 12px; font-weight: 700; color: var(--accent-light); }
 .playerEmpty { font-size: 13px; color: var(--text-3); text-align: center; max-width: 360px; }
+
+/* 2026-10-10 — 체크업 타임라인 바로 밑 비트 요약 바(성준님 설계): 읽기 전용, 심플 단색,
+   컷 경계는 선으로만, 시그 컷은 굵은 시작 경계선. 범례는 전체에서 한 번만. */
+/* 2026-10-10 저녁 — 기존 CheckupTimeline 파형(waveRow)이 100% 배율에서 이 바에 밀려 안
+   보인다는 피드백으로 전체 두께를 줄임: 바 16px→9px, 줄 3개(컷/초/제목)→2개(컷·초 한 줄+제목),
+   여백도 축소해 파형 영역에 공간을 돌려준다. */
+.beatSummaryWrap { flex-shrink: 0; padding-top: 4px; margin-top: 4px; border-top: 1px dashed rgba(255,255,255,.08); }
+.beatSummaryBar { position: relative; display: flex; height: 9px; border-radius: 2px; overflow: hidden; background: rgba(255,255,255,.03); }
+.beatSummarySeg { height: 100%; box-sizing: border-box; }
+.beatSummaryPlayhead { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #fff; box-shadow: 0 0 4px rgba(255,255,255,.8); }
+.beatSummaryLabels { display: flex; margin-top: 2px; }
+.beatSummaryLabel {
+  display: flex; flex-direction: column; gap: 0; font-size: 8px; line-height: 1.25; color: var(--text-3);
+  overflow: hidden; white-space: nowrap; padding-right: 3px; box-sizing: border-box;
+}
+.beatSummaryLabelNo { font-weight: 700; color: var(--text-2); }
+.beatSummaryLabelText { overflow: hidden; text-overflow: ellipsis; }
+.beatSummaryLegend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 3px; font-size: 8.5px; color: var(--text-3); }
+.beatSummaryLegendItem { display: inline-flex; align-items: center; gap: 3px; }
+.beatSummaryLegendDot { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+/* 2026-10-10 — 비트 바 데이터를 유튜브 챕터 타임스탬프 텍스트로 바로 뽑아내는 버튼(연구 결과:
+   업로드 API가 아니라 "설명란에 M:SS 목록"이 유일한 입력 경로라 복사가 곧 전체 구현임) */
+.beatSummaryChapterBtn {
+  margin-left: auto; font-size: 10.5px; padding: 3px 9px; border-radius: 6px;
+  border: 1px solid var(--border); background: rgba(255,255,255,.04); color: var(--text-2); cursor: pointer;
+}
+.beatSummaryChapterBtn:hover { background: rgba(255,255,255,.09); }

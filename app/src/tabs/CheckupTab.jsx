@@ -76,6 +76,98 @@ function toSegments(value, fallbackText, totalDur) {
   })
 }
 
+// EpisodeInfoSidebar.jsx의 BEAT_COLORS와 동일.
+const BEAT_COLORS = { 훅: '#60a5fa', 긴장: '#fbbf24', 반전: '#f472b6', 안정: '#94a3b8', 고조: '#f97316', 결말: '#34d399', 시그: '#a78bfa' }
+
+// 체크업 탭 타임라인 바로 밑에 배치하는 비트 요약 바(2026-10-10, 성준님 설계) — 체크업
+// 타임라인(위, 편집용)과 같은 가로 축을 공유해 "타임마커 연동"처럼 보이게 하되, 구현은
+// 완전히 별개(읽기 전용 — CheckupTimeline의 trim/split 편집 상태에 영향 없음). 색은 심플한
+// 단색 블록, 컷 경계는 선으로만 구분, 시그 컷은 시작 경계선을 굵게/밝게 표시(아이콘 의존 X).
+// 범례는 이 블록 전체에서 한 번만 보여준다.
+function BeatSummaryBar({ cuts, scriptCuts, activeCutNo, elapsedInActive }) {
+  const byNo = Object.fromEntries((scriptCuts || []).map((c) => [c.no, c]))
+  const list = (cuts || []).slice().sort((a, b) => (a.order ?? a.no) - (b.order ?? b.no))
+  const total = list.reduce((s, c) => s + (Number(c.duration) || 0), 0)
+  if (!total) return null
+
+  let offset = 0
+  const positioned = list.map((c) => {
+    const dur = Number(c.duration) || 0
+    const item = { ...c, start: offset, dur, script: byNo[c.no] }
+    offset += dur
+    return item
+  })
+  const activeItem = positioned.find((p) => p.no === activeCutNo)
+  const playheadPct = activeItem ? ((activeItem.start + Math.min(elapsedInActive, activeItem.dur)) / total) * 100 : null
+  const anyBeatTagged = positioned.some((p) => p.script?.beat)
+
+  return (
+    <div className={s.beatSummaryWrap}>
+      <div className={s.beatSummaryBar}>
+        {positioned.map((p) => {
+          const beat = p.script?.beat
+          const isSig = beat === '시그'
+          return (
+            <div key={p.no} className={s.beatSummarySeg}
+              style={{
+                width: `${(p.dur / total) * 100}%`,
+                background: beat ? `${BEAT_COLORS[beat]}55` : 'rgba(255,255,255,.06)',
+                borderLeft: isSig ? '3px solid #a78bfa' : '1px solid rgba(255,255,255,.12)',
+              }}
+              title={`CUT ${p.no} · ${beat || '(비트 없음)'} · ${p.dur}s`} />
+          )
+        })}
+        {playheadPct != null && <div className={s.beatSummaryPlayhead} style={{ left: `${playheadPct}%` }} />}
+      </div>
+      <div className={s.beatSummaryLabels}>
+        {positioned.map((p) => (
+          <div key={p.no} className={s.beatSummaryLabel} style={{ width: `${(p.dur / total) * 100}%` }}
+            title={p.script?.cutTitle || p.script?.scene || ''}>
+            <span className={s.beatSummaryLabelNo}>C{p.no}·{p.dur}s</span>
+            <span className={s.beatSummaryLabelText}>{(p.script?.cutTitle || p.script?.scene || '').slice(0, 14)}</span>
+          </div>
+        ))}
+      </div>
+      {anyBeatTagged && (
+        <div className={s.beatSummaryLegend}>
+          {Object.entries(BEAT_COLORS).map(([beat, color]) => (
+            <span key={beat} className={s.beatSummaryLegendItem}>
+              <span className={s.beatSummaryLegendDot} style={{ background: color }} />{beat}
+            </span>
+          ))}
+          <button type="button" className={s.beatSummaryChapterBtn} onClick={() => copyYoutubeChapters(positioned)} title="유튜브 챕터 형식(0:00부터, 구간 10초 이상)으로 타임스탬프를 만들어 클립보드에 복사합니다 — 업로드 시 설명란에 붙여넣으면 자동으로 챕터가 생깁니다. 짧은 컷은 다음 컷과 자동으로 합쳐집니다.">
+            📋 유튜브 챕터 텍스트 복사
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// 유튜브 챕터는 "설명란에 M:SS 타임스탬프 목록"으로만 동작한다(별도 업로드 API/설정 없음) —
+// 0:00 시작·오름차순·최소 3개·구간 10초 이상이 조건(2026-10-10 리서치 확인). 짧은 컷(5~8초)이
+// 많은 릴스형 에피소드는 그대로 쓰면 조건을 못 채우므로, 직전 챕터와 10초 이상 벌어질 때만
+// 새 챕터를 끊고 그 전까지는 한 챕터로 묶는다.
+function fmtChapterTime(sec) {
+  const s = Math.floor(sec)
+  const m = Math.floor(s / 60), ss = s % 60
+  const h = Math.floor(m / 60), mm = m % 60
+  return h > 0 ? `${h}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}` : `${m}:${String(ss).padStart(2, '0')}`
+}
+function copyYoutubeChapters(positioned) {
+  if (!positioned?.length) return
+  const chapters = [{ t: 0, label: positioned[0].script?.cutTitle || positioned[0].script?.scene || `CUT ${positioned[0].no}` }]
+  for (const p of positioned.slice(1)) {
+    if (p.start - chapters[chapters.length - 1].t >= 10) {
+      chapters.push({ t: p.start, label: p.script?.cutTitle || p.script?.scene || `CUT ${p.no}` })
+    }
+  }
+  if (chapters.length < 3) { alert('챕터가 3개 미만입니다 — 유튜브는 최소 3개부터 챕터를 인식합니다(컷이 전부 너무 짧은 릴스형 에피소드는 적용 어려움).'); return }
+  const text = chapters.map((c) => `${fmtChapterTime(c.t)} ${c.label}`).join('\n')
+  navigator.clipboard?.writeText(text)
+  alert(`챕터 ${chapters.length}개 복사됨 — 유튜브 업로드 시 설명란에 붙여넣으세요.\n\n${text}`)
+}
+
 // 체크업 탭 — 메이킹/영상 탭을 거쳐 완성된 컷들을 순서대로 이어재생하며 업로드 전까지
 // 수시로 검토·편집하는 상시 도구. 실제 편집(분할/트림/드래그 재배치/실행취소)은 전부
 // CheckupTimeline(하단) 하나로 통합돼 있다 — 예전에 있던 읽기전용 필름스트립과 "배치
@@ -277,9 +369,12 @@ export default function CheckupTab() {
           </div>
 
           <div className={s.timelineEditorWrap}>
-            <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo}
-              activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
-              onSeek={seekTo} onSelectCut={setSelectedCutNo} />
+            <div className={s.timelineEditorInner}>
+              <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo}
+                activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
+                onSeek={seekTo} onSelectCut={setSelectedCutNo} />
+            </div>
+            <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} />
           </div>
         </div>
       </div>

@@ -11,6 +11,24 @@
 .title  { font-size: 18px; font-weight: 600; color: #e8e6e0; margin-bottom: 6px; }
 .desc   { font-size: 13px; color: #888; }
 
+/* 2026-10-10 — 리텐션 훅 / 시그 레퍼런스 모드 전환 */
+.modeToggle { display: flex; gap: 6px; margin-top: 10px; }
+.modeBtn {
+  font-size: 12px; padding: 6px 14px; border-radius: 8px; border: 0.5px solid #333;
+  background: #1a1a18; color: #888; cursor: pointer;
+}
+.modeBtn:hover { background: #222; }
+.modeBtnActive { background: #534AB7; color: #fff; border-color: transparent; }
+
+/* 대본 BEAT 태그와 연동된 컷 — 훅 카드 안에서 바로 가져다 쓸 수 있는 칩 목록 */
+.linkedCuts { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 8px; }
+.linkedCutsLabel { font-size: 10px; color: #666; width: 100%; }
+.linkedCutChip {
+  font-size: 10.5px; padding: 2px 8px; border-radius: 10px; border: 0.5px solid #444;
+  background: #111; color: #a78bfa; cursor: pointer;
+}
+.linkedCutChip:hover { background: #1a1a18; }
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
