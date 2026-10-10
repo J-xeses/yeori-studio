@@ -328,7 +328,7 @@
               "pipSourceClipIdx": 2,
               "layout": "bottom_right",
               "scale": 0.3,
-              "bgVolume": 0.45,
+              "bgVolume": 0.65,
               "note": "배경(CUT4 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
           },
@@ -499,7 +499,7 @@
               "pipSourceClipIdx": 2,
               "layout": "bottom_right",
               "scale": 0.3,
-              "bgVolume": 0.45,
+              "bgVolume": 0.65,
               "note": "배경(CUT6 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
           },
@@ -671,7 +671,7 @@
               "pipSourceClipIdx": 2,
               "layout": "bottom_right",
               "scale": 0.3,
-              "bgVolume": 0.45,
+              "bgVolume": 0.65,
               "note": "배경(CUT8 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
             }
           },
@@ -1737,18 +1737,6 @@
                 "keepAudio": true,
                 "createdAt": 1789795176055,
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_02_clip_2.mp4"
-              },
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_02.mp4?t=1791586313021",
-                "name": "cut_02.mp4",
-                "duration": 6.02,
-                "trimStart": 0,
-                "trimEnd": 6.02,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_02.mp4",
-                "keepAudio": false,
-                "createdAt": 1791547970000
               }
             ],
             "cut-23": [
@@ -1767,7 +1755,7 @@
             ],
             "cut-20": [
               {
-                "url": "blob:http://localhost:5173/c0df38d8-dc2b-4fe2-b31a-977eb881ea5f",
+                "url": "blob:http://localhost:5173/53e05b25-3931-4473-8675-f303de3e57c4",
                 "name": "Woman_speaking_on_sofa_20260921002137.mp4",
                 "duration": 10.01,
                 "trimStart": 0,
@@ -1780,8 +1768,8 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_21_clip_1.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/1f2d2853-d0bb-496d-a5df-d7d554332319",
-                "name": "Woman_speaking_on_sofa_20260921003219.mp4",
+                "url": "blob:http://localhost:5173/5660f60c-cc7c-4e99-a390-2252f8b61b71",
+                "name": "Woman_speaking_자막오류_20260921003219.mp4",
                 "duration": 8,
                 "trimStart": 0,
                 "trimEnd": 8,
@@ -1795,7 +1783,7 @@
             ],
             "cut-15": [
               {
-                "url": "blob:http://localhost:5173/cee508b4-d011-4286-949e-72aea85b3a9e",
+                "url": "blob:http://localhost:5173/81b8060d-e044-4e23-8971-5ef94c6d0eb8",
                 "name": "Two_women_laughing_on_sofa_20260920231405.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -1808,7 +1796,7 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_16_clip_1.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/5fcabd33-540f-4796-b6d3-8157f5a840a6",
+                "url": "blob:http://localhost:5173/bacdbd53-55ff-4e9f-af70-3a3b3ddf80e0",
                 "name": "Two_women_지아 대사설정필요_20260920233135.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -1878,7 +1866,7 @@
             ],
             "cut-13": [
               {
-                "url": "blob:http://localhost:5173/909f4cfb-7e0b-48dd-a1ee-dc02a6072873",
+                "url": "blob:http://localhost:5173/eb68346f-92a8-4530-a98e-511b7974501d",
                 "name": "Woman_speaking_Korean_on_sofa_20260920170704.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -1891,7 +1879,7 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_1.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/7214ad41-b63d-42c2-8422-d4b65320b10e",
+                "url": "blob:http://localhost:5173/0512f5c7-8cce-4459-bfef-967434331b85",
                 "name": "Woman_speaking_Korean_on_sofa_20260920233002.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -1904,7 +1892,7 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_14_clip_2.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/64c6b1f4-a40b-4431-996b-b56936d9cd80",
+                "url": "blob:http://localhost:5173/f47355cc-24b6-44b7-a1ea-438da17ebdb6",
                 "name": "Two_women_laughing_on_sofa_20260920235555.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -1974,7 +1962,7 @@
             ],
             "cut-3": [
               {
-                "url": "blob:http://localhost:5173/820cbbac-bb22-482c-aded-674f302a5252",
+                "url": "blob:http://localhost:5173/e6ac55e9-c019-41f2-bc5a-df33ee581883",
                 "name": "Woman_speaking_on_sofa_20260916152609.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -1987,7 +1975,7 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/87b491ff-496b-469d-989d-39fd3dbb3052",
+                "url": "blob:http://localhost:5173/8b9e2966-ff2f-49ce-8766-0563fe5718cf",
                 "name": "Young_woman_speaking_Korean_gesture_20260917203846.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -2000,7 +1988,7 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/3c6bd104-5bbe-42dc-a2c3-3c6bcdf6b380",
+                "url": "blob:http://localhost:5173/af8bbcc0-c5e9-4cb9-8af6-7e34d7610036",
                 "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -2011,18 +1999,6 @@
                 "keepAudio": true,
                 "createdAt": 1789540114752,
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_3.mp4"
-              },
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_03.mp4?t=1791586315170",
-                "name": "cut_03.mp4",
-                "duration": 6.02,
-                "trimStart": 0,
-                "trimEnd": 6.02,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_03.mp4",
-                "keepAudio": false,
-                "createdAt": 1791548151000
               }
             ],
             "cut-6": [
@@ -2037,18 +2013,6 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\cut_06_clean_bg_subtitle.mp4",
                 "keepAudio": false,
                 "createdAt": 1789618889000
-              },
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_06.mp4?t=1791586316125",
-                "name": "cut_06.mp4",
-                "duration": 6,
-                "trimStart": 0,
-                "trimEnd": 6,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_06.mp4",
-                "keepAudio": false,
-                "createdAt": 1791548674000
               }
             ],
             "cut-8": [
@@ -2079,18 +2043,6 @@
                 "keepAudio": false,
                 "createdAt": 1789709935605,
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_04_clip_1.mp4"
-              },
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_04.mp4?t=1791586315509",
-                "name": "cut_04.mp4",
-                "duration": 6.02,
-                "trimStart": 0,
-                "trimEnd": 6.02,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_04.mp4",
-                "keepAudio": false,
-                "createdAt": 1791548301000
               }
             ],
             "cut-5": [
@@ -2132,18 +2084,6 @@
                 "keepAudio": true,
                 "createdAt": 1789645879595,
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_3.mp4"
-              },
-              {
-                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/05_video/cut_05.mp4?t=1791586315832",
-                "name": "cut_05.mp4",
-                "duration": 6.02,
-                "trimStart": 0,
-                "trimEnd": 6.02,
-                "useFullDuration": true,
-                "ratio": "9:16",
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R07\\05_video\\cut_05.mp4",
-                "keepAudio": false,
-                "createdAt": 1791548486000
               }
             ],
             "cut-9": [
@@ -10156,7 +10096,7 @@
           "pipSourceClipIdx": 2,
           "layout": "bottom_right",
           "scale": 0.3,
-          "bgVolume": 0.45,
+          "bgVolume": 0.65,
           "note": "배경(CUT4 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
       },
@@ -10327,7 +10267,7 @@
           "pipSourceClipIdx": 2,
           "layout": "bottom_right",
           "scale": 0.3,
-          "bgVolume": 0.45,
+          "bgVolume": 0.65,
           "note": "배경(CUT6 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
       },
@@ -10499,7 +10439,7 @@
           "pipSourceClipIdx": 2,
           "layout": "bottom_right",
           "scale": 0.3,
-          "bgVolume": 0.45,
+          "bgVolume": 0.65,
           "note": "배경(CUT8 화면녹화) 위에 리액션 클립을 우하단 30% 창으로 합성. 자막은 하단 좌~중앙 1~2줄."
         }
       },
@@ -11609,12 +11549,12 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-10T09:55:51.456Z",
+  "savedAt": "2026-10-10T10:38:06.203Z",
   "videoTabState": {
     "videoClips": {
       "cut-7": [
         {
-          "url": "blob:http://localhost:5173/93cede37-974b-4422-b65a-2ebefdb4ce7b",
+          "url": "blob:http://localhost:5173/b5a00723-d5d8-4bfc-a47d-9ff0ee31c699",
           "name": "Young_woman_speaking_in_Korean_20260917213759.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11627,7 +11567,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/3830b882-004c-468f-a4a2-22546912c760",
+          "url": "blob:http://localhost:5173/2871d884-13d8-4db9-9443-397f1f6a5b77",
           "name": "Woman_speaking_in_Korean_20260918131727.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11640,7 +11580,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_07_clip_2.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/0150104b-e4d9-4201-99e7-eeca347406e3",
+          "url": "blob:http://localhost:5173/87318ef8-8f67-4a75-ada9-aacc8656d742",
           "name": "Woman_speaking_Korean_line_20260918132146.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11904,7 +11844,7 @@
       ],
       "cut-3": [
         {
-          "url": "blob:http://localhost:5173/820cbbac-bb22-482c-aded-674f302a5252",
+          "url": "blob:http://localhost:5173/e6ac55e9-c019-41f2-bc5a-df33ee581883",
           "name": "Woman_speaking_on_sofa_20260916152609.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11917,7 +11857,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/87b491ff-496b-469d-989d-39fd3dbb3052",
+          "url": "blob:http://localhost:5173/8b9e2966-ff2f-49ce-8766-0563fe5718cf",
           "name": "Young_woman_speaking_Korean_gesture_20260917203846.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11930,7 +11870,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_03_clip_2.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/3c6bd104-5bbe-42dc-a2c3-3c6bcdf6b380",
+          "url": "blob:http://localhost:5173/af8bbcc0-c5e9-4cb9-8af6-7e34d7610036",
           "name": "Young_woman_speaking_on_sofa_20260916152834.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -11989,7 +11929,7 @@
       ],
       "cut-5": [
         {
-          "url": "blob:http://localhost:5173/9ac16594-aa96-4363-bd8f-c224514b5a6f",
+          "url": "blob:http://localhost:5173/d1842f58-0334-46ef-910b-d1137ade066d",
           "name": "Young_woman_speaking_on_sofa_20260917202225.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -12002,7 +11942,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/bfef58ff-888d-49f0-bdb8-194bb8aae395",
+          "url": "blob:http://localhost:5173/f3c2782d-0fe0-4d75-95ea-4078b16a925d",
           "name": "Woman_speaking_on_sofa_20260917203241.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -12015,7 +11955,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\04_making\\raw\\cut_05_clip_2.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/0a3da33c-395b-4feb-b57a-fec9a80133ac",
+          "url": "blob:http://localhost:5173/29af9efa-8846-4f49-83b5-bafc57ac18fa",
           "name": "Woman_speaking_on_sofa_20260917205119.mp4",
           "duration": 8,
           "trimStart": 0,
@@ -12186,7 +12126,7 @@
     "g4Approved": {
       "cut-1": true
     },
-    "selectedCutId": "cut-5",
+    "selectedCutId": "cut-8",
     "subtitles": {
       "cut-1": "",
       "cut-6": "터질 것 같은데 터지면 또 귀여운 그 느낌?",

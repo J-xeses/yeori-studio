@@ -309,6 +309,21 @@
   padding-top: 1px;
 }
 
+/* 2026-10-10: 자막 타이밍 바 기본 접힘 — 컷 행 바로 아래, 비트 칩+한 줄 요약+체크만
+   보여주고, 펼쳐야 아래 cutTimelineRow(기존 타이밍 바+숫자칸)가 나온다. */
+.cutTimelineSummaryRow {
+  display: flex; align-items: center; gap: 8px; padding: 3px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04); font-size: 11px;
+}
+.beatChip { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; white-space: nowrap; }
+.cutTimelineSummaryText { flex: 1; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cutTimelineCheck { font-size: 11px; color: var(--text-3); width: 14px; text-align: center; }
+.cutTimelineToggleBtn {
+  background: transparent; border: none; color: var(--accent-light, #a78bfa); font-size: 10.5px;
+  cursor: pointer; padding: 2px 4px; white-space: nowrap;
+}
+.cutTimelineToggleBtn:hover { text-decoration: underline; }
+
 /* 2026-10-09: 전체 목록 — 대사(화자별)·나레이션 구간 타임라인 바. 컷 행 바로 아래,
    구분선 없이 이어지는 같은 행의 일부처럼 보이게(위 패딩 0, 아래 패딩만). */
 .cutTimelineRow { padding: 0 14px 8px; border-bottom: 1px solid rgba(255,255,255,.04); }

@@ -449,6 +449,8 @@ function joinTrimmedLines(lines) {
 
 // 자유 텍스트를 7종 표준 비트로 정규화 — server/lib/scriptParserV3.js의 동일 함수와 함께 유지.
 const BEAT_CANON = ['훅', '긴장', '반전', '안정', '고조', '결말', '시그']
+// EpisodeInfoSidebar.jsx의 BEAT_COLORS와 동일 — 리스트뷰 비트 칩 색을 체크업 탭 표시바와 맞춤.
+const BEAT_COLORS = { 훅: '#60a5fa', 긴장: '#fbbf24', 반전: '#f472b6', 안정: '#94a3b8', 고조: '#f97316', 결말: '#34d399', 시그: '#a78bfa' }
 const BEAT_ALIASES = {
   훅: /훅|hook/i, 긴장: /긴장|tension/i, 반전: /반전|twist/i, 안정: /안정|calm|stable/i,
   고조: /고조|climax|build/i, 결말: /결말|엔딩|ending/i, 시그: /시그|signature|시그니쳐|시그니처/i,
@@ -921,6 +923,10 @@ export default function ScriptGenTab() {
   const [developError, setDevelopError] = useState('')
   const [revisionHistory, setRevisionHistory] = useState([])
   const [viewMode, setViewMode] = useState('detail') // 'list' | 'detail'
+  // 2026-10-10: 리스트 뷰의 자막 타이밍 바(cutTimelineRow)가 컷마다 항상 펼쳐져 있어 한 화면에
+  // 몇 컷 안 보인다는 지적(성준님) — 기본은 접어두고, 그 자리엔 비트 칩+한 줄 요약+체크만
+  // 보여준다. 펼치면 기존 타이밍 바·숫자 입력칸 그대로 나온다(기능 삭제 아님).
+  const [expandedTimingRows, setExpandedTimingRows] = useState({})
 
   // ── 마스터 코드 대본 생성 (script_generator.py + script_to_prompts.py) ──
   const [masterCode, setMasterCode] = useState('')
@@ -2328,6 +2334,25 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                     </span>
                   </div>
                   {timeline.length > 0 && (
+                    <div className={s.cutTimelineSummaryRow} onClick={(e) => e.stopPropagation()}>
+                      {c.beat && (
+                        <span className={s.beatChip} style={{ background: `${BEAT_COLORS[c.beat] || '#64748b'}26`, color: BEAT_COLORS[c.beat] || '#94a3b8', border: `1px solid ${BEAT_COLORS[c.beat] || '#64748b'}55` }}>
+                          {c.beat === '시그' ? '✨' : ''}{c.beat}
+                        </span>
+                      )}
+                      <span className={s.cutTimelineSummaryText}>
+                        {(c.cutTitle || c.scene || '').slice(0, 44) || '—'}
+                      </span>
+                      <span className={s.cutTimelineCheck} title={c.beat ? '비트 태그 있음' : '비트 태그 없음 — BEAT: 필드 미작성'}>
+                        {c.beat ? '✓' : '○'}
+                      </span>
+                      <button type="button" className={s.cutTimelineToggleBtn}
+                        onClick={() => setExpandedTimingRows((p) => ({ ...p, [c.id]: !p[c.id] }))}>
+                        {expandedTimingRows[c.id] ? '자막타이밍 접기 ▾' : '자막타이밍 ▸'}
+                      </button>
+                    </div>
+                  )}
+                  {timeline.length > 0 && expandedTimingRows[c.id] && (
                     <div className={s.cutTimelineRow} onClick={(e) => e.stopPropagation()}>
                       {isSegmented && (
                         <div className={s.cutTimelineSegWarn} title="이 컷은 클립이 여러 개(세그)라, 여기서 조절한 시간은 화면 표시용 자막 타이밍만 바꿉니다 — 실제 Flow 생성 프롬프트(클립별)는 아직 이 값을 읽지 않습니다.">
