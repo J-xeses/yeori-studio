@@ -10,6 +10,7 @@ import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
+import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
@@ -6546,6 +6547,26 @@ app.post('/api/bgm-remix', async (req, res) => {
   }
 })
 
+// ── 시그니처 컷 레퍼런스(2026-10-10) — lib/signatureRefs.js 참조 ──────────────
+// GET  목록 / POST 저장(또는 id 있으면 갱신) / DELETE 제거 / POST apply 는 v3 스크립트
+// 스니펫(CH/LOOK_ID/SP/BEAT 줄)을 돌려줄 뿐 studio-state를 직접 건드리지 않는다.
+app.get('/api/signature-refs', (_req, res) => {
+  try { res.json({ signatures: listSignatures() }) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/signature-refs', (req, res) => {
+  try { res.json({ ok: true, saved: saveSignature(req.body || {}) }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.delete('/api/signature-refs/:id', (req, res) => {
+  try { deleteSignature(req.params.id); res.json({ ok: true }) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/signature-refs/apply', (req, res) => {
+  try { res.json(applySignatureAsSnippet(req.body?.id)) }
+  catch (err) { res.status(404).json({ error: err.message }) }
+})
+
 // ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──
 // body: { epNum, bgmFile('bgm/<mood>/<name>.mp3'), volume?=0.22, fadeOut?=2, duck?=true }
 // duck=true면 sidechaincompress로 컷 자체 오디오(대사/나레이션)가 있을 때 BGM을 자동으로
@@ -7185,7 +7206,12 @@ app.get('/api/episode-making-status', (req, res) => {
 // 그리고 처방(영상 재생성 / TTS 배속 / 여운 수용)을 계산해 넘긴다.
 //   delta = audioDur - videoDur  (양수 = 음성이 더 김 = 영상이 짧음)
 const SYNC_TOLERANCE = 0.4   // 이 이내면 정합으로 간주(초)
-function serverCutTargetDuration(c) {
+// ov: reel-overrides의 이 컷 패치({duration, ...}) — studio-state(c.duration)는 브라우저
+// 자동저장이 덮어쓸까봐 안 고치고 reel-overrides 전용 파일에만 길이를 고치는 경우가 있어서
+// (2026-10-10, R07 컷3·5 10초 실측), override.duration을 studio-state 값보다 먼저 본다.
+function serverCutTargetDuration(c, ov) {
+  const overridden = Number(ov?.duration)
+  if (overridden > 0) return overridden
   const explicit = Number(c.sec) || Number(c.duration)
   if (explicit > 0) return explicit
   const txt = String(c.script || c.text || c.narration || c.dialogue || '').replace(/\s/g, '')
@@ -7195,7 +7221,9 @@ app.get('/api/cut-timing', async (req, res) => {
   const { epNum } = req.query
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
   try {
-    const { ep } = findEpisodeByNumOrThrow(epNum)
+    const { ep, epId } = findEpisodeByNumOrThrow(epNum)
+    const episodeCode = resolveEpisodeCode(ep.episode, epId)
+    const reelOv = loadReelOverrides(episodeCode)
     const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
     const videoDir = mp.videoDir(epNum)
     const audioDir = mp.audioDir(epNum)
@@ -7211,7 +7239,7 @@ app.get('/api/cut-timing', async (req, res) => {
 
       const videoDur = mp4 ? await getMediaDuration(mp4) : null
       const audioDur = hasMp3 ? await getMediaDuration(mp3) : null
-      const targetDur = serverCutTargetDuration(c)
+      const targetDur = serverCutTargetDuration(c, reelOv[String(c.no)])
       const hasText = !!(String(c.dialogue || '').trim() || String(c.narration || '').trim())
 
       let status, delta = null, suggestSpeed = null, suggestVideoDur = null
@@ -7289,6 +7317,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
       for (const m of (Array.isArray(em) ? em : [])) editMetaByCutNo[String(Number(m.cutNo))] = m
     } catch { /* editMeta 없음 — order/gap 전부 기본값 */ }
     const gData = loadGpointsFile()[episodeCode] || {}
+    const reelOv = loadReelOverrides(episodeCode)
     const listDir = d => { try { return fs.readdirSync(d) } catch { return [] } }
     const flowFiles = listDir(flowDir)
     const videoFiles = listDir(videoDir)
@@ -7317,7 +7346,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
       if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[a-z0-9]{1,2})?\\.(jpe?g|png|webp)$`, 'i').test(f))
       // 다운스트림 소비자(run-cutter / assembleMakingFilm / concat-video)가 전부 이 파일명을 읽는다
       const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
-      const targetSec = serverCutTargetDuration(c)
+      const targetSec = serverCutTargetDuration(c, reelOv[String(c.no)])
       // 체크업 탭 뱃지용 실측 — 대본 목표(targetSec)보다 실제 렌더 파일이 짧으면(Veo 8/10초
       // 생성단위 제약 등으로) run-cutter가 캡컷 배치 시 자동으로 길이를 잘라낸다 — 사전에 표시.
       const probed = savedFile ? mp.probeMedia(path.join(videoDir, savedFile), true) : null

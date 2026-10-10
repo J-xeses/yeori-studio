@@ -293,7 +293,8 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // AU: Veo 클립 프롬프트에 그대로(verbatim) 들어갈 영문 오디오 지시 — 2026-09-28 추가. 없으면
 // server/lib/clipPrompt.js가 masterCode.audio(오디오: 블록)에서 결정적으로 유도한다.
 // server/lib/scriptParserV3.js 와 반드시 함께 유지.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// BEAT: 서사 비트 태그(훅/긴장/반전/안정/고조/결말/시그) — 2026-10-10 추가, server/lib/scriptParserV3.js 와 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|BEAT|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // server/lib/scriptParserV3.js 의 동일 함수와 반드시 함께 유지.
@@ -444,6 +445,32 @@ function joinTrimmedLines(lines) {
   while (start < end && lines[start].trim() === '') start++
   while (end > start && lines[end - 1].trim() === '') end--
   return lines.slice(start, end).join('\n')
+}
+
+// 자유 텍스트를 7종 표준 비트로 정규화 — server/lib/scriptParserV3.js의 동일 함수와 함께 유지.
+const BEAT_CANON = ['훅', '긴장', '반전', '안정', '고조', '결말', '시그']
+const BEAT_ALIASES = {
+  훅: /훅|hook/i, 긴장: /긴장|tension/i, 반전: /반전|twist/i, 안정: /안정|calm|stable/i,
+  고조: /고조|climax|build/i, 결말: /결말|엔딩|ending/i, 시그: /시그|signature|시그니쳐|시그니처/i,
+}
+function normalizeBeat(raw) {
+  const t = String(raw || '').trim()
+  if (!t) return ''
+  for (const canon of BEAT_CANON) if (BEAT_ALIASES[canon].test(t)) return canon
+  return ''
+}
+// 컷 배열의 비트 구성 점검 — 훅·고조·결말 필수, 시그 권장. server 사본과 동일 로직.
+export function checkBeatCoverage(cuts) {
+  const REQUIRED = ['훅', '고조', '결말']
+  const byBeat = {}
+  for (const c of (cuts || [])) {
+    const b = normalizeBeat(c.beat)
+    if (!b) continue
+    ;(byBeat[b] = byBeat[b] || []).push(c.no)
+  }
+  const covered = BEAT_CANON.filter((b) => byBeat[b]?.length)
+  const missing = REQUIRED.filter((b) => !byBeat[b]?.length)
+  return { byBeat, covered, missing, hasSignature: !!byBeat['시그']?.length }
 }
 
 function pipelineCodeToCutType(plCode) {
@@ -607,6 +634,7 @@ function parseCutsV3(raw) {
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
       cutMark: 'NORMAL',
+      beat: normalizeBeat(fields.BEAT),
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),
@@ -2219,9 +2247,24 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
           const totalSec = cuts.reduce((sum, c) => sum + (Number(c.duration) || 0), 0)
           const fmtSec = (sec) => sec >= 60 ? `${Math.floor(sec / 60)}분 ${sec % 60}초` : `${sec}초`
           const isBadDuration = (d) => d === 11 || d > 20
+          // 2026-10-10: 서사 비트(훅/긴장/반전/안정/고조/결말/시그) 설계 체크 — BEAT: 필드 미작성 시
+          // 전부 공란 처리되므로, 이 뱃지가 빨갛다고 "구성이 나쁘다"가 아니라 "아직 비트를 안 달았다"일
+          // 수 있다. 태깅은 선택이고, 단 비트를 하나라도 달았으면 훅·고조·결말 누락만 경고한다.
+          const beatCov = checkBeatCoverage(cuts)
+          const anyBeatTagged = Object.keys(beatCov.byBeat).length > 0
           return (
           <div className={s.cutListView}>
-            <div className={s.cutListTotal}>총 {cuts.length}컷 · 합계 {fmtSec(totalSec)}</div>
+            <div className={s.cutListTotal}>
+              총 {cuts.length}컷 · 합계 {fmtSec(totalSec)}
+              {anyBeatTagged && (
+                <span style={{ marginLeft: 12, fontSize: 12, color: beatCov.missing.length ? '#f87171' : '#4ade80' }}
+                  title={BEAT_CANON.map((b) => `${b}:${beatCov.byBeat[b]?.join(',') || '-'}`).join(' · ')}>
+                  비트 {beatCov.covered.join('·') || '없음'}
+                  {beatCov.missing.length ? ` (누락: ${beatCov.missing.join('·')})` : ''}
+                  {beatCov.hasSignature ? ' ✨시그' : ''}
+                </span>
+              )}
+            </div>
             {/* 헤더 */}
             <div className={s.cutListHeader}>
               <span>CUT</span>

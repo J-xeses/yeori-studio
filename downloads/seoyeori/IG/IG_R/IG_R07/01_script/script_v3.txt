@@ -4,24 +4,26 @@
 ================================================================
 에피소드명: 룩 체인지 챌린지 — 스냅·점프·스핀·스프레이로 4번 변신
 채널: 서여리 인스타그램 릴스 (IG_R07)
-총 길이: 36초 목표 (6×6초) — 생성단위(Veo 6초) 기준, 컷 경계마다 서로 다른 트랜지션 기법+효과음으로 하드컷
+총 길이: 44초 (컷1,3,4,6=6초·컷2,5=10초) — 컷2(플로럴)·컷5(한복 시그니처)는 제작 과정에서 10초로 확장, 컷 경계마다 서로 다른 트랜지션 기법+효과음으로 하드컷
 콘셉트: 2026-10 기준 릴스 트렌드 리서치 반영(이렇도 괜찮아/틀려도 류 반복 피하고 비주얼 임팩트 중심) —
   컷마다 다른 전환 기법 + 다른 트렌드 룩을 써서 "평범한 반복"이 아니라 매 컷이 서프라이즈가 되게 설계. 4가지 룩(컷2~5)으로
   다양성을 충분히 보여주도록 1컷 추가(성준님 피드백, 2026-10-09):
-  CUT1 스냅 셋업(훅, Y2K/Acubi 파스텔) → CUT2 점프컷(공중정지→착지, K-아이돌 스트리트 레이어드) →
-  CUT3 스핀 전환(회전 블러, 비비드 플로럴 맥시멀리즘 에디토리얼) →
+  CUT1 스냅 셋업(훅, Y2K/Acubi 파스텔) → CUT2 스핀 전환(회전 블러, 비비드 플로럴 맥시멀리즘 에디토리얼) →
+  CUT3 점프컷(공중정지→착지, K-아이돌 스트리트 레이어드) →
+  (2026-10-10 재생 순서 조정 — 성준님 "강약흐름" 피드백 반영: 훅 직후 비비드한 플로럴을 먼저 보여줘
+  시각 에너지를 바로 끌어올리고, 다소 어둡고 차분한 점프컷/야간거리를 중간 완급 구간으로 배치)
   CUT4 업사이드다운 전환(고개를 숙였다 드는 순간 리빌, 2026 릴스 최신 톱 트렌드 — 샤넬풍 오트쿠튀르 블랙 가운) →
   CUT5 스프레이·미스트 전환(향수 분사로 화면 가림→리빌, 모던 한복 재해석 — K문화 핵심) →
   CUT6 스냅 콜백(인트로 Y2K 룩으로 복귀)+CTA.
   의상 리서치: 성준님 제공 패션 레퍼런스(e-00/패션 레퍼런스) 반영 —
-  CUT1 Acubi(Y2K+모던, 파스텔톤, 데일리 베이스라인) / CUT2 K-아이돌 스트리트 레이어드(베스트+스트라이프 셔츠+플리츠 미니+레이스 타이즈+버건디 부츠) /
-  CUT3 맥시멀리즘 플로럴 에디토리얼(비비드 플로럴 맥시드레스, 캠페인 포즈감) /
+  CUT1 Acubi(Y2K+모던, 파스텔톤, 데일리 베이스라인) / CUT2 맥시멀리즘 플로럴 에디토리얼(비비드 플로럴 맥시드레스, 캠페인 포즈감) /
+  CUT3 K-아이돌 스트리트 레이어드(베스트+스트라이프 셔츠+플리츠 미니+레이스 타이즈+버건디 부츠) /
   CUT4 샤넬풍 오트쿠튀르 블랙 가운(오프숄더+진주 체인+카멜리아 브로치+보터햇, 모노톤 우아함) /
   CUT5 모던 한복 재해석(피치톤 치마저고리+시스루 글리터 트레인, K문화 핵심).
   배경 연출(성준님 피드백, 2026-10-09 — "의상과 배경의 조화로 2배 효과"): 릴스 "백그라운드 리빌" 트렌드 반영
   (전환 동작에 맞춰 배경 자체가 통째로 바뀌는 기법, 비포/애프터 비교가 선명하도록 카메라 위치·구도·인물 자세는
   매 컷 동일하게 고정하고 그 "틀" 안의 공간만 의상 무드에 맞춰 리빌) —
-  CUT1 실제 침실(데일리) → CUT2 유럽풍 돌벽 야간 스트리트(네온 반사) → CUT3 비비드 컬러 스튜디오 배경(과장된 플로럴 세트) →
+  CUT1 실제 침실(데일리) → CUT2 비비드 컬러 스튜디오 배경(과장된 플로럴 세트) → CUT3 유럽풍 돌벽 야간 스트리트(네온 반사) →
   CUT4 화이트 플라워 가든/스톤 스텝(샤넬 화보풍) → CUT5 한옥 대청마루·창살(전통 K문화) → CUT6 실제 침실로 복귀(컷1과 동일, 콜백).
   대사 없이 BGM 비트 드롭에 전환 타이밍 정확히 맞춤, 마지막에 "오늘 네 기분 룩은?" 자막으로 댓글 유도
 ================================================================
@@ -54,6 +56,7 @@ LOOK_ID: LOOK_Y2K
 DU: 6
 CP: 오늘 기분에 맞는 룩, 스냅 한 번이면 끝.
 CT: YEORI
+BEAT: 훅
 오디오:
   BGM: 업비트 트렌디 팝 (0초부터, 인트로 비트)
   음성: 없음
@@ -89,59 +92,7 @@ First 0-3s: She looks directly at camera with a playful, confident smile, slight
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 2] ─ YEORI | 점프컷 전환 — K-아이돌 스트리트 룩 | 6
-━━━━━━━━━━━━━━━━━━━━━━━━
-SC: (하드컷, 점프 효과음+비트 드롭) 같은 카메라 구도·프레이밍 유지, 배경이 침실에서 유럽풍 돌벽 야간 스트리트로 리빌. 서여리가 가볍게 튀어 오르고, 공중에서 정지한 순간 컷 — 착지하면 K-아이돌 스트리트룩+새 배경으로 바뀌어 있다.
-SP: OUT.ST.EU_NT.LT_NEON
-PL: YR_VD
-CH: YR_VD / LK_IDOL (K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠)
-DL: 없음
-NR: 없음
-SH: SH_MCU
-CA: CA_ST
-MD: MD_WRM
-AC: 가볍게 점프해 공중에서 정지(피크 모멘트), 착지 후 환하게 웃으며 정면
-LOOK_ID: LOOK_IDOL
-DU: 6
-CP: 외출룩 버전.
-CT: YEORI
-오디오:
-  BGM: 업비트 트렌디 팝 (이어서, 비트 드롭 정확히 착지 순간에 맞춤)
-  음성: 없음
-  효과음: 휙(점프 스우시) + 착지 "텅" (컷 시작 0.2초)
-  앰비언스: 밝은 방, 거의 무음
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-KR (한글 컨펌본)
-━━━━━━━━━━━━━━━━━━━━━━━━
-SP(장소):     유럽풍 돌벽 골목, 야간, 네온 반사(배경 리빌 — 카메라 구도는 컷1과 동일)
-CH(캐릭터):   K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠
-SH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)
-CA(카메라):   고정
-AC(동작):     0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소
-MD(감정):     경쾌하고 들뜬 에너지, 비트에 맞춘 리듬감
-DL(대사):     없음
-NR(나레이션): 없음
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-IP (이미지 프롬프트)
-━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,
-same camera distance and framing as before, standing on an atmospheric European stone-paved side street at night,
-caught at the peak of a light jump, hair and skirt hem lifted mid-air, now wearing a K-idol street-layered outfit: a black vest layered over a grey striped button-up shirt, black pleated mini skirt, lace-pattern tights, burgundy ankle boots, edgy high-fashion streetwear styling,
-bright excited expression, landing into a warm confident smile,
-photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
-lighting: moody night street lighting, warm window glow from old stone buildings, soft neon sign reflections in the wet pavement,
-background: blurred historic European stone facade, warm lit windows, vertical 9:16
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-VP (영상 프롬프트)
-━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: She is caught mid-air at the peak of a light playful jump, hair and cardigan hem lifting naturally, bright excited expression — this is the beat-drop moment. / Next 2-6s: She lands softly and smoothly, settling into a warm confident smile, slight bounce absorbed into her stance. No dialogue. No on-screen subtitle text or captions.
-
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 3] ─ YEORI | 스핀 전환 — 플로럴 맥시멀리즘 룩 | 6
+[CUT 2] ─ YEORI | 스핀 전환 — 플로럴 맥시멀리즘 룩 | 10
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: (하드컷, 스핀 블러 효과음) 같은 카메라 구도 유지, 배경이 비비드 컬러 스튜디오 세트(과장된 플로럴 소품)로 리빌. 서여리가 빠르게 한 바퀴 회전하며 모션 블러 — 회전이 멈추면 비비드 플로럴 맥시멀리즘 드레스+새 배경으로 바뀌어 있다. 에디토리얼 캠페인처럼 과감한 포즈를 취한다.
 SP: IN.ST.COLOR.LT_SET
@@ -154,9 +105,10 @@ CA: CA_ST
 MD: MD_SUR
 AC: 빠르게 360도 회전(모션 블러) → 회전 멈추며 한 손은 허리에, 캠페인 화보 같은 과감한 포즈
 LOOK_ID: LOOK_FLOR
-DU: 6
+DU: 10
 CP: 과감하게 한 번 입어본 버전. 나 화보 찍어도 돼?
 CT: YEORI
+BEAT: 고조
 오디오:
   BGM: 업비트 트렌디 팝 (이어서, 비트 유지)
   음성: 없음
@@ -193,6 +145,59 @@ First 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair 
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 점프컷 전환 — K-아이돌 스트리트 룩 | 6
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 점프 효과음+비트 드롭) 같은 카메라 구도·프레이밍 유지, 배경이 침실에서 유럽풍 돌벽 야간 스트리트로 리빌. 서여리가 가볍게 튀어 오르고, 공중에서 정지한 순간 컷 — 착지하면 K-아이돌 스트리트룩+새 배경으로 바뀌어 있다.
+SP: OUT.ST.EU_NT.LT_NEON
+PL: YR_VD
+CH: YR_VD / LK_IDOL (K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠)
+DL: 없음
+NR: 없음
+SH: SH_MCU
+CA: CA_ST
+MD: MD_WRM
+AC: 가볍게 점프해 공중에서 정지(피크 모멘트), 착지 후 환하게 웃으며 정면
+LOOK_ID: LOOK_IDOL
+DU: 6
+CP: 외출룩 버전.
+CT: YEORI
+BEAT: 안정
+오디오:
+  BGM: 업비트 트렌디 팝 (이어서, 비트 드롭 정확히 착지 순간에 맞춤)
+  음성: 없음
+  효과음: 휙(점프 스우시) + 착지 "텅" (컷 시작 0.2초)
+  앰비언스: 밝은 방, 거의 무음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     유럽풍 돌벽 골목, 야간, 네온 반사(배경 리빌 — 카메라 구도는 컷1과 동일)
+CH(캐릭터):   K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠
+SH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)
+CA(카메라):   고정
+AC(동작):     0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소
+MD(감정):     경쾌하고 들뜬 에너지, 비트에 맞춘 리듬감
+DL(대사):     없음
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,
+same camera distance and framing as before, standing on an atmospheric European stone-paved side street at night,
+caught at the peak of a light jump, hair and skirt hem lifted mid-air, now wearing a K-idol street-layered outfit: a black vest layered over a grey striped button-up shirt, black pleated mini skirt, lace-pattern tights, burgundy ankle boots, edgy high-fashion streetwear styling,
+bright excited expression, landing into a warm confident smile,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+lighting: moody night street lighting, warm window glow from old stone buildings, soft neon sign reflections in the wet pavement,
+background: blurred historic European stone facade, warm lit windows, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: She is caught mid-air at the peak of a light playful jump, hair and cardigan hem lifting naturally, bright excited expression — this is the beat-drop moment. / Next 2-6s: She lands softly and smoothly, settling into a warm confident smile, slight bounce absorbed into her stance. No dialogue. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
 [CUT 4] ─ YEORI | 업사이드다운 전환 — 오트쿠튀르 블랙 가운 | 6
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: (하드컷, 휙 뒤집기 효과음) 같은 카메라 구도 유지, 배경이 화이트 플라워가 만개한 야외 정원 스톤 스텝으로 리빌. 서여리가 고개와 상체를 아래로 숙였다가 — 업사이드다운 자세에서 멈춘 순간 하드컷 — 다시 천천히 고개를 들면 샤넬풍 오트쿠튀르 블랙 가운+새 배경으로 바뀌어 있다.
@@ -209,6 +214,7 @@ LOOK_ID: LOOK_COUTURE
 DU: 6
 CP: 오트쿠튀르 버전. 이 정도는 돼야지.
 CT: YEORI
+BEAT: 고조
 오디오:
   BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 현악 악센트 한 번)
   음성: 없음
@@ -262,6 +268,7 @@ LOOK_ID: LOOK_HANBOK
 DU: 6
 CP: 한복도 요즘은 이렇게 입어요.
 CT: YEORI
+BEAT: 시그
 오디오:
   BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조 + 국악 타악 악센트 한 번)
   음성: 없음
@@ -315,6 +322,7 @@ LOOK_ID: LOOK_Y2K
 DU: 6
 CP: 근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?
 CT: YEORI
+BEAT: 결말
 오디오:
   BGM: 업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)
   음성: 없음

@@ -17,7 +17,37 @@ const V3_CUT_HEADER_RE = /^\[CUT\s+(\d+)\]\s*(.*)$/
 // 실측: 대사 없는 컷은 오디오 지시가 Veo에 전혀 안 전달됨). 없으면 clipPrompt.js가 masterCode.audio
 // (오디오: 블록)에서 결정적으로 유도한다. 컷 전체 1개 문자열, 또는 SEGP처럼 "|||"로 클립별 분할
 // 가능. src/tabs/ScriptGenTab.jsx 와 함께 유지.
-const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+// BEAT: 서사 비트 태그(훅/긴장/반전/안정/고조/결말/시그) — 2026-10-10 추가, 스토리 전개연출
+// 설계 체크 기능. src/tabs/ScriptGenTab.jsx 와 함께 유지.
+const V3_MAIN_FIELD_RE = /^(SC|SP|PL|CH|DL|NR|CP|CPP|CT|SH|CA|MD|AC|LOOK_ID|DU|SEG|SEGT|SEGP|AU|BEAT|HTML|SRC|BQ|URL|CLIP|MOTION|GTPL):\s?(.*)$/
+
+// 자유 텍스트(한글/영문/오탈자 섞여도)를 7종 표준 비트로 정규화. 매칭 안 되면 ''(미태깅).
+const BEAT_CANON = ['훅', '긴장', '반전', '안정', '고조', '결말', '시그']
+const BEAT_ALIASES = {
+  훅: /훅|hook/i, 긴장: /긴장|tension/i, 반전: /반전|twist/i, 안정: /안정|calm|stable/i,
+  고조: /고조|climax|build/i, 결말: /결말|엔딩|ending/i, 시그: /시그|signature|시그니쳐|시그니처/i,
+}
+export function normalizeBeat(raw) {
+  const t = String(raw || '').trim()
+  if (!t) return ''
+  for (const canon of BEAT_CANON) if (BEAT_ALIASES[canon].test(t)) return canon
+  return ''
+}
+
+// 컷 배열의 비트 구성을 점검 — 훅·고조·결말은 필수, 시그는 권장. 중복 컷 번호도 같이 반환.
+// { missing: [...필수인데 없는 비트], hasSignature: bool, byBeat: {훅:[1], ...}, covered: [...] }
+export function checkBeatCoverage(cuts) {
+  const REQUIRED = ['훅', '고조', '결말']
+  const byBeat = {}
+  for (const c of (cuts || [])) {
+    const b = normalizeBeat(c.beat)
+    if (!b) continue
+    ;(byBeat[b] = byBeat[b] || []).push(c.no)
+  }
+  const covered = BEAT_CANON.filter((b) => byBeat[b]?.length)
+  const missing = REQUIRED.filter((b) => !byBeat[b]?.length)
+  return { byBeat, covered, missing, hasSignature: !!byBeat['시그']?.length }
+}
 
 // "8+8+10" → [8,10] 단위로만 구성된 배열(2개 이상). 형식이 안 맞거나 "auto"/빈값이면 null.
 // src/tabs/ScriptGenTab.jsx 의 동일 함수와 반드시 함께 유지.
@@ -342,6 +372,9 @@ export function parseCutsV3(raw) {
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
       cutMark: 'NORMAL',
+      // BEAT: 서사 비트 태그(훅/긴장/반전/안정/고조/결말/시그) — 2026-10-10, 스토리 전개연출
+      // 설계 체크 기능. 선택 필드라 없으면 빈 문자열(미태깅 컷으로 취급).
+      beat: normalizeBeat(fields.BEAT),
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),

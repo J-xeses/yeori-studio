@@ -629,8 +629,12 @@ export default function VideoTab() {
     dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: undefined } })
     flushSave()
   }
-  // 컷 하나에 오버라이드(자막류만 — SFX 등 audio 필드는 화면 미리보기와 무관)를 병합해서
-  // 반환. 오버라이드가 없으면 원본 cut을 그대로 반환(새 객체를 만들지 않아 불필요한 리렌더 방지).
+  // 컷 하나에 오버라이드(자막류 + duration/captionOff — SFX 등 audio 필드는 화면
+  // 미리보기와 무관이라 제외)를 병합해서 반환. 오버라이드가 없으면 원본 cut을 그대로
+  // 반환(새 객체를 만들지 않아 불필요한 리렌더 방지).
+  // duration은 2026-10-10 추가 — reel-overrides로 컷 길이를 고쳐도(studio-state는 그대로
+  // 둠, 브라우저 자동저장이 덮어쓰는 걸 피하려고) 영상 탭 헤더의 "목표"·"합계"가 옛 길이로
+  // 남아있어 실제 최종본과 어긋나 보이는 문제(성준님 실측 지적) — duration도 같이 병합한다.
   const withCaptionOverride = useCallback((cut) => {
     if (!cut) return cut
     const ov = reelOverrides[String(cut.no)]
@@ -639,6 +643,8 @@ export default function VideoTab() {
     if (ov.subtitle !== undefined) patch.subtitle = ov.subtitle
     if (ov.captionStartSec !== undefined) patch.captionStartSec = ov.captionStartSec
     if (ov.captionSegTiming !== undefined) patch.captionSegTiming = ov.captionSegTiming
+    if (ov.duration !== undefined) patch.duration = ov.duration
+    if (ov.captionOff !== undefined) patch.captionOff = ov.captionOff
     return Object.keys(patch).length ? { ...cut, ...patch } : cut
   }, [reelOverrides])
 

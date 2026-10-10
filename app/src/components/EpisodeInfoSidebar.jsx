@@ -54,9 +54,49 @@ function CollapsibleSection({ titleKey, title, defaultOpen = true, children }) {
 // 자체 사이드바가 없는 탭(스튜디오/퍼블리싱/추출/영상/리텐션훅 등)은
 // 아래 EpisodeInfoSidebar(컷 목록 포함 풀 사이드바)를 통째로 쓴다.
 // 개요/마스터코드는 접어서 컷 목록 볼 공간을 늘릴 수 있음(2026-09-11, 사용자 요청).
+// 비트 태그 → 색상(ScriptGenTab.jsx의 BEAT_CANON과 같은 7종). 시그는 별 마커까지 겸한다.
+const BEAT_COLORS = { 훅: '#60a5fa', 긴장: '#fbbf24', 반전: '#f472b6', 안정: '#94a3b8', 고조: '#f97316', 결말: '#34d399', 시그: '#a78bfa' }
+
+// 2026-10-10: 컷 길이 비율로 구간을 나눠 그리는 타임라인 바 — "유튜브 챕터구간·시그구간
+// 표시" 기능의 1차 버전. 챕터 자체는 컷 경계를 그대로 쓴다(컷 = 장면 전환 단위라 대체로
+// 챕터 경계와 일치). BEAT: 태그를 하나도 안 단 에피소드는 전부 회색으로만 보여 구분이
+// 안 되므로, 그런 경우(anyTagged===false) 바 자체를 숨긴다 — 의미 없는 회색 막대를
+// "표시바가 고장났다"로 오인하지 않게.
+function BeatTimelineBar({ cuts }) {
+  const list = Array.isArray(cuts) ? cuts : []
+  const total = list.reduce((s, c) => s + (Number(c.duration) || 0), 0)
+  const anyTagged = list.some((c) => c.beat)
+  if (!total || !anyTagged) return null
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div style={{ display: 'flex', width: '100%', height: 14, borderRadius: 4, overflow: 'hidden', border: '1px solid var(--border)' }}>
+        {list.map((c) => {
+          const pct = ((Number(c.duration) || 0) / total) * 100
+          const color = BEAT_COLORS[c.beat] || 'var(--surface2)'
+          return (
+            <div key={c.id || c.no} title={`CUT ${c.no}${c.beat ? ` · ${c.beat}` : ''} (${c.duration}s)`}
+              style={{ width: `${pct}%`, background: color, position: 'relative', borderRight: '1px solid var(--bg)' }}>
+              {c.beat === '시그' && (
+                <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9 }}>✨</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 4, fontSize: 10, color: 'var(--text-3)' }}>
+        {Object.entries(BEAT_COLORS).map(([beat, color]) => (
+          <span key={beat} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: color, display: 'inline-block' }} />{beat}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function EpisodeOverviewBlock() {
   const { state } = useApp()
-  const { episode } = state
+  const { episode, cuts } = state
   const code = displayEpisodeCode(episode)
   const moods = Array.isArray(episode?.mood) ? episode.mood : (episode?.mood ? [episode.mood] : [])
 
@@ -92,6 +132,7 @@ export function EpisodeOverviewBlock() {
             {moods.map(m => <span key={m} className={s.chip}>{m}</span>)}
           </div>
         )}
+        <BeatTimelineBar cuts={cuts} />
       </CollapsibleSection>
 
       {episode?.masterCode && (
