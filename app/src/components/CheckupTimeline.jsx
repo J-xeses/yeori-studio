@@ -98,13 +98,18 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
 
   useEffect(() => { latestClipsRef.current = clips }, [clips])
 
-  const load = useCallback(async () => {
+  // staleInfo: 저장된 편집본이 지금 실제 컷 파일들과 어긋났는지 — 2026-10-10, LF_T01 실측
+  // (9/15 저장 스냅샷이 23컷 중 13개를 빼먹고 길이도 그때 그대로라 타임라인이 실제 내용과
+  // 안 맞아 보이던 신고의 원인). 서버가 매 GET마다 계산해서 내려준다.
+  const [staleInfo, setStaleInfo] = useState(null)
+  const load = useCallback(async (force = false) => {
     if (epNum == null) return
     setLoading(true)
     try {
-      const r = await fetch(`${SERVER}/api/checkup-timeline?epNum=${epNum}`)
+      const r = await fetch(`${SERVER}/api/checkup-timeline?epNum=${epNum}${force ? '&force=1' : ''}`)
       const d = await r.json()
       setClips((d.clips || []).slice().sort((a, b) => a.order - b.order))
+      setStaleInfo(d.stale ? { missingCuts: d.missingCuts || [], durDriftCuts: d.durDriftCuts || [], updatedAt: d.updatedAt } : null)
       setUndoStack([])
       setRedoStack([])
     } catch {
@@ -114,6 +119,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
     }
   }, [epNum])
   useEffect(() => { load() }, [load])
+  const rebuildFromCurrent = useCallback(() => load(true), [load])
 
   // 클립이 참조하는 소스 컷의 파형을 컷당 1번만 lazy fetch(트림은 같은 배열을 슬라이스해서 재사용)
   useEffect(() => {
@@ -391,6 +397,19 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
 
   return (
     <div className={s.wrap}>
+      {staleInfo && (
+        <div className={s.staleBanner}>
+          <span>
+            ⚠️ 저장된 편집본({staleInfo.updatedAt ? new Date(staleInfo.updatedAt).toLocaleDateString('ko-KR') : '?'})이 지금 컷 파일과 어긋났습니다
+            {staleInfo.missingCuts.length > 0 && ` — 누락된 컷 ${staleInfo.missingCuts.join(',')}`}
+            {staleInfo.durDriftCuts.length > 0 && ` · 길이 어긋난 컷 ${staleInfo.durDriftCuts.join(',')}`}
+            . 타임라인 위치가 실제 영상과 안 맞게 보일 수 있습니다.
+          </span>
+          <button className={s.staleRebuildBtn} onClick={rebuildFromCurrent} disabled={loading}>
+            🔄 지금 컷 기준으로 새로 생성
+          </button>
+        </div>
+      )}
       <div className={s.toolbar}>
         <div className={s.toolbarGroup}>
           <button className={s.iconBtn} onClick={undo} disabled={!undoStack.length} title="실행취소 (Ctrl+Z)">↩</button>

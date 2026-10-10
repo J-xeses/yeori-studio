@@ -1694,33 +1694,72 @@ app.post('/api/checkup-effect', (req, res) => {
 // editMeta.json(cutNo 1:1, 실제 CapCut 배치용)과 완전히 분리된 미리보기 전용 레이어.
 // 분할된 클립도 같은 sourceCutNo를 공유할 수 있어 cutNo 1:1 가정을 깨지 않고 저장 가능하다.
 // epNum으로 키를 나눠 여러 에피소드를 오가도 서로 안 섞인다(editMeta.json은 전역 단일이라 다름).
+// 지금 실제 컷 파일들 기준으로 "컷당 1클립" 기본 구성을 새로 만든다 — 저장된 게 전혀 없을 때,
+// 또는 force=1로 재생성을 명시적으로 요청받았을 때 공용으로 쓴다.
+function buildFreshCheckupClips(epNum, ep) {
+  const videoDir = mp.videoDir(epNum)
+  const videoFiles = (() => { try { return fs.readdirSync(videoDir) } catch { return [] } })()
+  const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
+  const clips = []
+  let order = 0
+  for (const c of cuts) {
+    const p = String(c.no).padStart(2, '0')
+    const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+    if (!savedFile) continue
+    const probed = mp.probeMedia(path.join(videoDir, savedFile), true)
+    clips.push({
+      clipId: `c-${epNum}-${p}-a`, sourceCutNo: c.no, sourceFile: savedFile,
+      trimInSec: 0, trimOutSec: probed.durationUs / 1000000, effect: null, order: order++,
+    })
+  }
+  return clips
+}
 app.get('/api/checkup-timeline', (req, res) => {
-  const { epNum } = req.query
+  const { epNum, force } = req.query
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
   const tlPath = mp.checkupTimelinePath()
   try {
+    const { ep } = findEpisodeByNumOrThrow(epNum)
     const all = fs.existsSync(tlPath) ? JSON.parse(fs.readFileSync(tlPath, 'utf-8')) : {}
     const saved = all[String(epNum)]
-    if (saved?.clips?.length) return res.json({ clips: saved.clips, updatedAt: saved.updatedAt })
-
-    // 저장된 게 없으면 지금 필름스트립과 동일하게 "재생 가능한 컷당 1클립"으로 기본 생성.
-    const { ep } = findEpisodeByNumOrThrow(epNum)
-    const videoDir = mp.videoDir(epNum)
-    const videoFiles = (() => { try { return fs.readdirSync(videoDir) } catch { return [] } })()
-    const cuts = (ep.cuts || []).slice().sort((a, b) => a.no - b.no)
-    const clips = []
-    let order = 0
-    for (const c of cuts) {
-      const p = String(c.no).padStart(2, '0')
-      const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
-      if (!savedFile) continue
-      const probed = mp.probeMedia(path.join(videoDir, savedFile), true)
-      clips.push({
-        clipId: `c-${epNum}-${p}-a`, sourceCutNo: c.no, sourceFile: savedFile,
-        trimInSec: 0, trimOutSec: probed.durationUs / 1000000, effect: null, order: order++,
+    if (saved?.clips?.length && force !== '1') {
+      // 저장된 편집본이 실제 현재 컷 파일들과 얼마나 어긋났는지 — "조용히 옛날 걸 계속 보여주는"
+      // 사고를 막기 위한 탐지(2026-10-10, LF_T01 실측: 9/15에 저장된 10클립짜리 스냅샷이 지금의
+      // 23컷 중 13개를 아예 빼먹은 채로, trimOutSec도 그때 길이 그대로 계속 내려오고 있었다 —
+      // 체크업 타임라인이 실제 영상 내용과 안 맞아 보이던 신고의 근본 원인).
+      const videoDir = mp.videoDir(epNum)
+      const videoFiles = (() => { try { return fs.readdirSync(videoDir) } catch { return [] } })()
+      const currentPlayableNos = new Set((ep.cuts || []).filter((c) => {
+        const p = String(c.no).padStart(2, '0')
+        return videoFiles.some((f) => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+      }).map((c) => c.no))
+      const savedNos = new Set(saved.clips.map((c) => c.sourceCutNo))
+      const missingCuts = [...currentPlayableNos].filter((n) => !savedNos.has(n))
+      let durDriftCuts = []
+      for (const c of saved.clips) {
+        const p = String(c.sourceCutNo).padStart(2, '0')
+        const f = videoFiles.find((vf) => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(vf))
+        if (!f) { durDriftCuts.push(c.sourceCutNo); continue }
+        try {
+          const probed = mp.probeMedia(path.join(videoDir, f), true)
+          const actual = probed.durationUs / 1000000
+          if (Math.abs(actual - c.trimOutSec) > 1.5) durDriftCuts.push(c.sourceCutNo)
+        } catch { /* 프로브 실패는 드리프트 판정에서 제외 */ }
+      }
+      const stale = missingCuts.length > 0 || durDriftCuts.length > 0
+      return res.json({
+        clips: saved.clips, updatedAt: saved.updatedAt,
+        stale, missingCuts, durDriftCuts: [...new Set(durDriftCuts)],
       })
     }
-    res.json({ clips, updatedAt: null })
+
+    const clips = buildFreshCheckupClips(epNum, ep)
+    if (force === '1') {
+      all[String(epNum)] = { updatedAt: new Date().toISOString(), clips }
+      fs.mkdirSync(path.dirname(tlPath), { recursive: true })
+      fs.writeFileSync(tlPath, JSON.stringify(all, null, 2), 'utf-8')
+    }
+    res.json({ clips, updatedAt: force === '1' ? new Date().toISOString() : null, stale: false, missingCuts: [], durDriftCuts: [] })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

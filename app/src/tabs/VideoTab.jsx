@@ -38,7 +38,10 @@ function stripMeta(text) {
 // (reelFinalize.js의 decideCut과 동일한 소스). 글자수 비례로 컷 전체 길이에 걸쳐 순차
 // 타이밍을 배분한다 — server/lib/reelFinalize.js computeSegmentTimings와 같은 원칙.
 function splitCaptionString(text, totalDur, explicitTiming) {
-  const parts = String(text).split(/\s*\/\s*/).map((t) => t.trim()).filter(Boolean)
+  // "/" 와 "||" 둘 다 구분자로 인식(vpDialogue.js/ttsText.js가 쓰는 같은 2종,
+  // 2026-10-10 — "||"로 이어진 대사가 한 덩어리로 안 쪼개지던 체크업 탭 버그 수정하며
+  // 같이 맞춤, 두 탭이 같은 입력을 다르게 쪼개면 또 어긋나므로).
+  const parts = String(text).split(/\s*(?:\|\||\/)\s*/).map((t) => t.trim()).filter(Boolean)
   if (!parts.length) return []
   // 정확한 발화 타이밍을 손으로 지정한 컷(cut.captionSegTiming, reelFinalize.js와 동일 소스) —
   // 글자수 자동배분보다 우선. 대사+나레이션이 섞여 자동배분이 실제 발화 시점과 안 맞는 경우용.
@@ -462,6 +465,13 @@ export default function VideoTab() {
   // loadVChk가 (StrictMode 이중 렌더 등으로) 겹쳐서 두 번 돌면 같은 컷을 동시에
   // 프록시로 불러오다가 로컬 서버가 간헐적 503을 뱉는 게 확인됨(2026-09-14) — 단일 실행 가드.
   const proxyAutoLoadInFlight = useRef(false)
+  // 프록시 자동 불러오기 루프가 컷마다 await로 순차 진행되는 동안 사람이 다른 에피소드로
+  // 전환하면, 그 뒤 iteration이 "이미 바뀐" state.videoTabState(새 에피소드 것)에 그대로
+  // dispatch돼 예전 에피소드의 컷 영상이 새 에피소드 카드에 꽂히는 사고가 난다(2026-10-10
+  // 실측: LF_T01 화면에 R07 컷 영상이 올라와 있던 신고 — videoClipsRef 패턴과 같은 이유로
+  // epNum도 ref로 들고 루프마다 재확인).
+  const epNumRef = useRef(state.episode?.number)
+  epNumRef.current = state.episode?.number
   const loadVChk = useCallback(() => {
     const epNum = state.episode?.number
     if (epNum == null) { setVChk(null); return }
@@ -505,9 +515,11 @@ export default function VideoTab() {
         // 간헐적으로 503을 뱉는 게 확인됨(2026-09-14) — 순차 + 약간의 텀 + 단일 실행 가드로 완화.
         if (toLoad.length > 0 && !proxyAutoLoadInFlight.current) {
           proxyAutoLoadInFlight.current = true
+          const loadingForEpNum = epNum
           ;(async () => {
             try {
               for (const cut of toLoad) {
+                if (epNumRef.current !== loadingForEpNum) break   // 그 사이 다른 에피소드로 전환됨 — 중단
                 await loadFromProxy(cut, d.videoDir)
                 await new Promise(r => setTimeout(r, 250))
               }
@@ -1007,6 +1019,7 @@ export default function VideoTab() {
 
   const loadFromProxy = async (cut, videoDirOverride) => {
     const ep = episode?.number ?? ''
+    const loadingForEpNum = ep   // onloadedmetadata가 나중에(비동기) 불릴 때 에피소드가 바뀌었는지 재확인용
     const padded = String(cut.no).padStart(2, '0')
     for (const ext of ['mp4', 'mov', 'webm']) {
       const url = `${epMediaUrl(episode, 'video')}/cut_${padded}.${ext}?t=${Date.now()}`
@@ -1025,6 +1038,9 @@ export default function VideoTab() {
           const vid = document.createElement('video')
           vid.preload = 'metadata'
           vid.onloadedmetadata = () => {
+            // 메타데이터 로딩 중 다른 에피소드로 전환됐으면(2026-10-10 실측: LF_T01 화면에 R07
+            // 컷 영상이 꽂혀있던 신고의 근본 원인) 이 결과는 이미 무의미 — 버린다.
+            if (epNumRef.current !== loadingForEpNum) return
             const dur = Math.round(vid.duration * 100) / 100
             const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
             // 프록시로 불러온 클립은 이미 서버 실파일이라 재업로드 없이 stagedPath를 바로 채움

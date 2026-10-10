@@ -39,12 +39,26 @@ const fmtTime = (sec) => {
   return `${m}:${String(ss).padStart(2, '0')}`
 }
 
-// VideoTab.jsx의 toSegments와 동일(클립별 구간 타이밍 자막, 2026-09-13) — subtitles[cutId]는
-// 클립 1개 이하인 컷은 문자열 하나, 여러 개인 컷은 [{start,end,text}] 배열.
+// VideoTab.jsx의 toSegments/splitCaptionString과 동일(클립별 구간 타이밍 자막,
+// 2026-09-13 추가, 2026-09-22 VideoTab만 분리타이밍으로 고쳐지고 체크업 탭 사본은
+// 안 따라가서 뒤쳐져 있었음 — 2026-10-10, LF_T01 실측: "/" 또는 "||"로 이어진 대사가
+// 한 덩어리 자막으로 전체 컷 길이(24초) 내내 그대로 떠 있던 버그).
+// subtitles[cutId]가 배열이면 그대로 쓰고, 문자열/미지정이면 "/" 또는 "||" 구분자로
+// 쪼개서 글자수 비례로 구간을 나눈다(vpDialogue.js/ttsText.js가 쓰는 같은 구분자 2종).
 function toSegments(value, fallbackText, totalDur) {
   if (Array.isArray(value)) return value
   const text = value ?? fallbackText ?? ''
-  return text ? [{ start: 0, end: totalDur, text }] : []
+  if (!text) return []
+  const parts = String(text).split(/\s*(?:\|\||\/)\s*/).map((t) => t.trim()).filter(Boolean)
+  if (parts.length <= 1) return [{ start: 0, end: totalDur, text: parts[0] || text }]
+  const weights = parts.map((t) => Math.max(t.replace(/\s+/g, '').length, 1))
+  const totalW = weights.reduce((a, b) => a + b, 0)
+  let acc = 0
+  return parts.map((t, i) => {
+    const start = acc
+    acc += (totalDur * weights[i]) / totalW
+    return { start, end: i === parts.length - 1 ? totalDur : acc, text: t }
+  })
 }
 
 // 체크업 탭 — 메이킹/영상 탭을 거쳐 완성된 컷들을 순서대로 이어재생하며 업로드 전까지
@@ -210,21 +224,25 @@ export default function CheckupTab() {
                     onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
                     onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
                   {subtitleEnabled && captionText && (
-                    <div className={`${s.captionOverlay} ${bgStyle === '그림자' ? s.captionShadow : ''}`}
-                      style={{
-                        color: color || '#fff', fontFamily: font ? `"${font}",sans-serif` : undefined,
-                        // VideoTab 캔버스 미리보기와 같은 비율(fontSize/720, 640x360 기준 캔버스를
-                        // object-fit:contain으로 스케일하는 것과 동일한 효과)로 맞추기 위해 고정
-                        // px 대신 컨테이너 높이 기준(cqh)을 씀 — 2026-09-15, 사용자 지적: "영상
-                        // 만들기 화면과 체크업 화면의 글자크기가 서로 다르다".
-                        fontSize: fontSize ? `${(fontSize / 720) * 100}cqh` : `${(18 / 720) * 100}cqh`,
-                        background: bgStyle === '반투명 직각 박스' ? hexToRgba(boxColor || '#000000', 0.68) : 'transparent',
-                        // 배경 스타일과 별개로 항상 외곽선을 깔아 어떤 화면 위에서도 읽히게 함
-                        // (2026-09-15, 사용자 지적: "색상 외에 글씨 외곽 테두리 효과 정도는 있어야").
-                        WebkitTextStroke: `${Math.max(1, (fontSize || 18) * 0.045)}px ${isLightColor(color || '#fff') ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'}`,
-                        paintOrder: 'stroke fill',
-                      }}>
-                      {captionText}
+                    // 2026-10-10 실측: 9/15에 fontSize/720 cqh로 "VideoTab 캔버스와 같은 비율"을
+                    // 맞췄다고 적어뒀지만, VideoTab의 캔버스는 프레임 전체가 아니라 .subtitleDisplay
+                    // (height:30%, 자막 전용 하단 띠) 안에서 object-fit:contain되는 걸 놓쳤다 —
+                    // cqh를 프레임 전체(100%) 기준으로 계산해서 체크업 탭 자막이 영상 탭보다 실제로
+                    // 약 1/0.3 ≈ 3.3배 크게 보였다(성준님 실측 — "영상탭보다 거의 3배"). VideoTab과
+                    // 똑같이 height:30% 띠를 따로 만들고 그 안에서 cqh를 계산해 비율을 맞춘다.
+                    <div className={s.captionBand} style={{ height: '30%' }}>
+                      <div className={`${s.captionOverlay} ${bgStyle === '그림자' ? s.captionShadow : ''}`}
+                        style={{
+                          color: color || '#fff', fontFamily: font ? `"${font}",sans-serif` : undefined,
+                          fontSize: fontSize ? `${(fontSize / 720) * 100}cqh` : `${(18 / 720) * 100}cqh`,
+                          background: bgStyle === '반투명 직각 박스' ? hexToRgba(boxColor || '#000000', 0.68) : 'transparent',
+                          // 배경 스타일과 별개로 항상 외곽선을 깔아 어떤 화면 위에서도 읽히게 함
+                          // (2026-09-15, 사용자 지적: "색상 외에 글씨 외곽 테두리 효과 정도는 있어야").
+                          WebkitTextStroke: `${Math.max(1, (fontSize || 18) * 0.045)}px ${isLightColor(color || '#fff') ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'}`,
+                          paintOrder: 'stroke fill',
+                        }}>
+                        {captionText}
+                      </div>
                     </div>
                   )}
                 </div>

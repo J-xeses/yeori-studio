@@ -42,10 +42,18 @@
 .player { width: 100%; height: 100%; object-fit: contain; display: block; background: #000; }
 .player:not([src]) { display: none; }
 
+/* 자막 하단 띠(2026-10-10) — VideoTab의 .subtitleDisplay(height:30%)와 동일한 역할.
+   captionOverlay의 폰트크기(fontSize/720 cqh)가 이 띠의 높이를 기준으로 계산되게
+   container-type:size를 여기 둔다 — 프레임 전체 기준으로 계산하면 자막이 VideoTab보다
+   약 3.3배(1/0.3) 크게 보인다(성준님 실측, 2026-10-10). */
+.captionBand {
+  position: absolute; left: 0; right: 0; bottom: 8%;
+  display: flex; align-items: flex-end; justify-content: center;
+  container-type: size; pointer-events: none;
+}
 /* 자막 오버레이 — VideoTab에서 입력한 텍스트/스타일을 그대로 재사용해 표시만 함
    (2026-09-13). pointer-events:none이라 아래 컨트롤바 클릭을 절대 방해 안 함. */
 .captionOverlay {
-  position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
   max-width: 86%; text-align: center; white-space: pre-wrap; line-height: 1.4;
   padding: 6px 14px; border-radius: 4px; pointer-events: none; font-weight: 700;
 }
