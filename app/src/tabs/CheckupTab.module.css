@@ -29,7 +29,10 @@
 .videoWrapper {
   position: relative; background: #000; border-radius: 0; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
-  max-height: 84vh; max-width: 100%;
+  /* height:100%이 aspect-ratio의 기준 치수 — 이게 없으면 가로세로 둘 다 "내용에 맞춤"으로
+     풀리면서 0x0으로 접힌다(2026-10-10 실측: rectWrapper width/height 0, 플레이어는 재생
+     중이고 readyState=4·videoWidth/Height 정상인데 화면엔 안 보이던 버그 — 체크업 탭). */
+  height: 100%; width: auto; max-height: 84vh; max-width: 100%;
   /* 자막 글자크기를 실제 렌더된 플레이어 크기에 비례(cqh)시키려면 컨테이너 쿼리 기준이 필요함
      (2026-09-15) — VideoTab의 캔버스 자막(항상 프레임에 baked돼 같이 스케일됨)과 동일한
      상대 크기가 나오게 하기 위함. */

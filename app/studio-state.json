@@ -1,5 +1,5 @@
 {
-  "activeTab": "publishing",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -8425,7 +8425,7 @@
         "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
         "code": "IG_R07",
         "masterCode": "[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]",
-        "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : SF_E09_HOMECAFE\nTITLE : 홈카페 브이로그 대참사\nLOOK  : LOOK_HM2 (oversized pastel pink hoodie + black leggings + gold necklace + gold earrings)\nBG.A  : 집 홈카페 세팅 (링라이트 / 삼각대 / 커피 머신 / 목제 선반)\nBG.B  : GS25 편의점 내부 (형광등 / 한국 간식 진열대)\nBG.C  : 집 부엌 + 거실 소파 (따뜻한 간접조명)\nLIGHT : LT_STD (링라이트) → LT_CV (편의점 형광등) → LT_WM (집 따뜻한 조명)\nREF   : face / closeup / fs-masked\nBGM   : 밝고 경쾌한 오프닝 → 당황 효과음 → 편의점 경쾌 → 따뜻하고 감성적 마무리\n소품  : vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)"
+        "epHeaderRaw": ""
       },
       "cuts": [
         {
@@ -8437,14 +8437,15 @@
           "action": "0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지",
           "character": "서여리",
           "dialogue": "",
-          "subtitle": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
           "narration": "",
+          "subtitle": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing a Y2K Acubi-style outfit: a cropped lilac baby tee, low-rise cargo pants, chunky platform sneakers, soft pastel palette, mini shoulder bag,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16",
           "videoPrompt": "First 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.",
           "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
+          "beat": "훅",
           "masterCode": {
             "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
@@ -8470,25 +8471,7 @@
               "md": "장난기 있는 자신감"
             }
           },
-          "subtitleCfgSaved": {
-            "effect": "glow",
-            "style": {
-              "font_size": 72,
-              "color": "#FFFFFF",
-              "position": "bottom",
-              "outline": true,
-              "font": "gaegu"
-            },
-            "entries": [
-              {
-                "text": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
-                "start": 1,
-                "end": 5
-              }
-            ]
-          },
-          "videoMode": "veo",
-          "beat": "훅"
+          "videoMode": "veo"
         },
         {
           "id": "cut-2",
@@ -8499,14 +8482,15 @@
           "action": "0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)",
           "character": "서여리",
           "dialogue": "",
-          "subtitle": "과감하게 한 번 입어본 버전. 나 화보 찍어도 돼?",
           "narration": "",
+          "subtitle": "과감하게 한 번 입어본 버전. 나 화보 찍어도 돼?",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair flowing as if caught in a breeze,\nsame camera distance and framing as before, standing against a bold vivid-color studio backdrop with oversized sculptural floral props echoing the dress print,\ncaught just as a fast spin settles — subtle motion blur trailing off her hair and dress hem, now wearing a vivid pink floral-print maxi dress, gold drop earrings, dramatic editorial campaign styling,\none hand on her hip, bold confident campaign pose, chin lifted, striking directly at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: bold saturated studio lighting, strong colored gel accents matching the backdrop,\nbackground: vivid solid-color studio set with oversized stylized floral props, vertical 9:16",
           "videoPrompt": "First 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair and the flowing dress, fast energetic rotation — this is the transition moment. / Next 2-6s: The spin settles into a bold editorial campaign pose, one hand on her hip, chin lifted, striking confident expression directly at camera. No dialogue. No on-screen subtitle text or captions.",
-          "duration": 6,
+          "duration": 10,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
+          "beat": "고조",
           "masterCode": {
             "sp": "IN.ST.COLOR.LT_SET",
             "pl": "YR_VD",
@@ -8516,7 +8500,7 @@
             "md": "MD_SUR",
             "ac": "빠르게 360도 회전(모션 블러) → 회전 멈추며 한 손은 허리에, 캠페인 화보 같은 과감한 포즈",
             "lookId": "LOOK_FLOR",
-            "du": 6,
+            "du": 10,
             "audio": {
               "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
               "voice": "없음",
@@ -8531,26 +8515,7 @@
               "ac": "0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)",
               "md": "역동적인 회전 → 당당하고 화려한 자신감"
             }
-          },
-          "subtitleCfgSaved": {
-            "effect": "glow",
-            "style": {
-              "font_size": 72,
-              "color": "#FFFFFF",
-              "position": "bottom",
-              "outline": true,
-              "font": "gaegu"
-            },
-            "entries": [
-              {
-                "text": "과감하게 한 번 입어본 버전.",
-                "start": 0.3,
-                "end": 3
-              }
-            ]
-          },
-          "videoMode": "veo",
-          "beat": "고조"
+          }
         },
         {
           "id": "cut-3",
@@ -8561,14 +8526,15 @@
           "action": "0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소",
           "character": "서여리",
           "dialogue": "",
-          "subtitle": "외출룩 버전.",
           "narration": "",
+          "subtitle": "외출룩 버전.",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture, \nsame camera distance and framing as before, standing on an atmospheric European stone-paved side street at night, \ncaught at the peak of a light jump, hair and skirt hem lifted mid-air, now wearing a K-idol street-layered outfit: a black vest layered over a grey striped button-up shirt, black pleated mini skirt, lace-pattern tights, edgy high-fashion streetwear styling, \nbright excited expression, landing into a warm confident smile, \nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, \nlighting: moody night street lighting, warm window glow from old stone buildings, soft neon sign reflections in the wet pavement, \nbackground: blurred historic European stone facade, warm lit windows, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
           "videoPrompt": "First 0-2s: She is caught mid-air at the peak of a light playful jump, hair and cardigan hem lifting naturally, bright excited expression — this is the beat-drop moment. / Next 2-6s: She lands softly and smoothly, settling into a warm confident smile, slight bounce absorbed into her stance. No dialogue. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
           "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
+          "beat": "안정",
           "masterCode": {
             "sp": "OUT.ST.EU_NT.LT_NEON",
             "pl": "YR_VD",
@@ -8593,26 +8559,7 @@
               "ac": "0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소",
               "md": "경쾌하고 들뜬 에너지, 비트에 맞춘 리듬감"
             }
-          },
-          "subtitleCfgSaved": {
-            "effect": "slam",
-            "style": {
-              "font_size": 72,
-              "color": "#FFFFFF",
-              "position": "bottom",
-              "outline": true,
-              "font": "gaegu"
-            },
-            "entries": [
-              {
-                "text": "외출룩 버전.",
-                "start": 0.3,
-                "end": 3
-              }
-            ]
-          },
-          "videoMode": "veo",
-          "beat": "안정"
+          }
         },
         {
           "id": "cut-4",
@@ -8623,14 +8570,15 @@
           "action": "0~2초 상체를 숙여 고개를 아래로(업사이드다운 피크, 옷 이미 전환) → 2~6초 천천히 고개를 들며 우아한 표정으로 정면",
           "character": "서여리",
           "dialogue": "",
-          "subtitle": "오트쿠튀르 버전. 이 정도는 돼야지.",
           "narration": "",
+          "subtitle": "오트쿠튀르 버전. 이 정도는 돼야지.",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now slicked back elegantly, \nsame camera distance and framing as before, standing on a stone garden step with lush white flowering bushes softly blurred behind her, \ncaught mid-motion rising from an upside-down head-tilt, hair settling back into place, \nnow wearing a black off-shoulder corseted couture gown, three draped strands of pearl chain across the bodice, a white camellia brooch, a black-and-white boater hat with a grosgrain ribbon band, haute couture runway styling, \npoised elegant expression, calm and composed, looking directly at camera, \nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, \nlighting: soft natural daylight, gentle and flattering, garden ambiance, \nbackground: softly blurred white flower garden, stone steps, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
           "videoPrompt": "First 0-2s: She tilts her upper body and head down into an upside-down position, pausing briefly at the peak — this is the transition moment. / Next 2-6s: She slowly rises back up, hair settling elegantly into place, revealing the couture gown, calm poised expression, composed elegance directly at camera. No dialogue. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
           "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
+          "beat": "고조",
           "masterCode": {
             "sp": "OUT.GD.FLWR_DY.LT_SOFT",
             "pl": "YR_VD",
@@ -8655,26 +8603,7 @@
               "ac": "0~2초 상체를 숙여 고개를 아래로(업사이드다운 피크, 옷 이미 전환) → 2~6초 천천히 고개를 들며 우아한 표정으로 정면",
               "md": "차분하고 우아한 고급스러움"
             }
-          },
-          "subtitleCfgSaved": {
-            "effect": "slam",
-            "style": {
-              "font_size": 72,
-              "color": "#FFFFFF",
-              "position": "bottom",
-              "outline": true,
-              "font": "gaegu"
-            },
-            "entries": [
-              {
-                "text": "오트쿠튀르 버전.",
-                "start": 0.3,
-                "end": 3
-              }
-            ]
-          },
-          "videoMode": "veo",
-          "beat": "고조"
+          }
         },
         {
           "id": "cut-5",
@@ -8685,14 +8614,15 @@
           "action": "0~2초 향수를 가볍게 분사, 뿌연 미스트가 화면 가로지름 → 2~6초 미스트 걷히며 한 손으로 트레인을 살짝 들어올려 우아하게 정면",
           "character": "서여리",
           "dialogue": "",
-          "subtitle": "한복도 요즘은 이렇게 입어요.",
           "narration": "",
+          "subtitle": "한복도 요즘은 이렇게 입어요.",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now styled up in an elegant updo,\nsame camera distance and framing as before, standing on the wooden daecheong-maru floor of a traditional Korean hanok, hanji paper lattice doors softly blurred behind her, warm lantern glow,\na soft perfume mist lingering and clearing in front of her, backlit glow creating a dreamy haze,\nnow wearing a modern reinterpreted hanbok: a peach-toned silk jeogori and chima with a flowing silver sheer glitter train layered over the skirt, gold-embroidered goreum ribbon tie at the chest, delicate traditional details with a contemporary editorial finish,\none hand gently lifting the sheer train, graceful poised expression, elegant and proud,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: warm traditional lantern light, soft glow through perfume mist catching the sheer fabric,\nbackground: traditional hanok wooden interior, hanji lattice doors, warm ambient light, vertical 9:16",
           "videoPrompt": "First 0-2s: She lifts a small perfume bottle and mists it lightly toward camera, a soft cloud briefly veiling the frame, backlit and glowing — this is the transition moment. / Next 2-6s: The mist clears to reveal the modern hanbok, sheer glitter train catching the light as she gently lifts it with one hand, graceful and poised, elegant proud expression toward camera. No dialogue. No on-screen subtitle text or captions.",
-          "duration": 6,
+          "duration": 10,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
-          "cutMark": "NORMAL",
+          "cutMark": "SIGNATURE",
+          "beat": "시그",
           "masterCode": {
             "sp": "IN.HN.COURT.LT_WARM",
             "pl": "YR_VD",
@@ -8718,25 +8648,13 @@
               "md": "우아하고 자부심 있는 품격"
             }
           },
-          "subtitleCfgSaved": {
-            "effect": "glow",
-            "style": {
-              "font_size": 72,
-              "color": "#FFFFFF",
-              "position": "bottom",
-              "outline": true,
-              "font": "gaegu"
-            },
-            "entries": [
-              {
-                "text": "한복도 요즘은 이렇게 입어요.",
-                "start": 0.3,
-                "end": 3
-              }
-            ]
-          },
-          "videoMode": "veo",
-          "beat": "시그"
+          "overrides": {
+            "duration": {
+              "value": 10,
+              "at": "2026-10-10T07:56:18.196Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-6",
@@ -8747,14 +8665,15 @@
           "action": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
           "character": "서여리",
           "dialogue": "",
-          "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
           "narration": "",
+          "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the lilac cropped baby tee, low-rise cargo pants and chunky sneakers from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
           "videoPrompt": "First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.",
           "duration": 6,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
+          "beat": "결말",
           "masterCode": {
             "sp": "IN.HM.MR_DY.LT_WD",
             "pl": "YR_VD",
@@ -8779,26 +8698,7 @@
               "ac": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
               "md": "편안하고 장난기 있는 친밀함"
             }
-          },
-          "subtitleCfgSaved": {
-            "effect": "slam",
-            "style": {
-              "font_size": 72,
-              "color": "#FFFFFF",
-              "position": "bottom",
-              "outline": true,
-              "font": "gaegu"
-            },
-            "entries": [
-              {
-                "text": "근데 역시 이게 제일 편해.",
-                "start": 0.3,
-                "end": 3
-              }
-            ]
-          },
-          "videoMode": "veo",
-          "beat": "결말"
+          }
         }
       ],
       "scriptRaw": "================================================================\n마스터 코드\n[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]\n================================================================\n에피소드명: 룩 체인지 챌린지 — 스냅·점프·스핀·스프레이로 4번 변신\n채널: 서여리 인스타그램 릴스 (IG_R07)\n총 길이: 36초 목표 (6×6초) — 생성단위(Veo 6초) 기준, 컷 경계마다 서로 다른 트랜지션 기법+효과음으로 하드컷\n콘셉트: 2026-10 기준 릴스 트렌드 리서치 반영(이렇도 괜찮아/틀려도 류 반복 피하고 비주얼 임팩트 중심) —\n  컷마다 다른 전환 기법 + 다른 트렌드 룩을 써서 \"평범한 반복\"이 아니라 매 컷이 서프라이즈가 되게 설계. 4가지 룩(컷2~5)으로\n  다양성을 충분히 보여주도록 1컷 추가(성준님 피드백, 2026-10-09):\n  CUT1 스냅 셋업(훅, Y2K/Acubi 파스텔) → CUT2 점프컷(공중정지→착지, K-아이돌 스트리트 레이어드) →\n  CUT3 스핀 전환(회전 블러, 비비드 플로럴 맥시멀리즘 에디토리얼) →\n  CUT4 업사이드다운 전환(고개를 숙였다 드는 순간 리빌, 2026 릴스 최신 톱 트렌드 — 샤넬풍 오트쿠튀르 블랙 가운) →\n  CUT5 스프레이·미스트 전환(향수 분사로 화면 가림→리빌, 모던 한복 재해석 — K문화 핵심) →\n  CUT6 스냅 콜백(인트로 Y2K 룩으로 복귀)+CTA.\n  의상 리서치: 성준님 제공 패션 레퍼런스(e-00/패션 레퍼런스) 반영 —\n  CUT1 Acubi(Y2K+모던, 파스텔톤, 데일리 베이스라인) / CUT2 K-아이돌 스트리트 레이어드(베스트+스트라이프 셔츠+플리츠 미니+레이스 타이즈+버건디 부츠) /\n  CUT3 맥시멀리즘 플로럴 에디토리얼(비비드 플로럴 맥시드레스, 캠페인 포즈감) /\n  CUT4 샤넬풍 오트쿠튀르 블랙 가운(오프숄더+진주 체인+카멜리아 브로치+보터햇, 모노톤 우아함) /\n  CUT5 모던 한복 재해석(피치톤 치마저고리+시스루 글리터 트레인, K문화 핵심).\n  배경 연출(성준님 피드백, 2026-10-09 — \"의상과 배경의 조화로 2배 효과\"): 릴스 \"백그라운드 리빌\" 트렌드 반영\n  (전환 동작에 맞춰 배경 자체가 통째로 바뀌는 기법, 비포/애프터 비교가 선명하도록 카메라 위치·구도·인물 자세는\n  매 컷 동일하게 고정하고 그 \"틀\" 안의 공간만 의상 무드에 맞춰 리빌) —\n  CUT1 실제 침실(데일리) → CUT2 유럽풍 돌벽 야간 스트리트(네온 반사) → CUT3 비비드 컬러 스튜디오 배경(과장된 플로럴 세트) →\n  CUT4 화이트 플라워 가든/스톤 스텝(샤넬 화보풍) → CUT5 한옥 대청마루·창살(전통 K문화) → CUT6 실제 침실로 복귀(컷1과 동일, 콜백).\n  대사 없이 BGM 비트 드롭에 전환 타이밍 정확히 맞춤, 마지막에 \"오늘 네 기분 룩은?\" 자막으로 댓글 유도\n================================================================\nEP.HEADER\nCHAR  : YEORI (서여리 기본)\nEP    : IG_R07\nTITLE : 스냅 아웃핏 트렌드 따라 해봤습니다\nLOOK.A: 컷마다 다른 아웃핏(아래 CH 참고) — 같은 자리·같은 구도 유지해 \"스냅 한 번에 바뀐\" 느낌\nBG.A  : 서여리 방, 전신거울 앞, 낮 자연광\nLIGHT : LT_WD (창가 낮 자연광, 밝고 선명)\nREF   : yeori face / closeup\nBGM   : 업비트 트렌디 팝(4박 루프), 컷마다 비트 드롭에 맞춰 하드컷\n================================================================\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 1] ─ YEORI | 훅 — 손가락 스냅 준비 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: 전신거울 앞, 아침 라운지웨어 차림의 서여리가 카메라를 정면으로 보며 장난스럽게 웃는다. 오른손을 들어올려 스냅 자세를 잡는다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_Y2K (Acubi 스타일 — 라일락 크롭 베이비티 + 로우라이즈 카고팬츠 + 청키 스니커즈, 헝클어진 웨이브 머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_PLF\nAC: 오른손을 들어 스냅 직전 자세로 멈춤, 눈썹 한쪽 살짝 올림\nLOOK_ID: LOOK_Y2K\nDU: 6\nCP: 오늘 기분에 맞는 룩, 스냅 한 번이면 끝.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (0초부터, 인트로 비트)\n  음성: 없음\n  효과음: 손가락 스냅 준비 숨죽임(컷 끝 지점)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 낮 자연광 방\nCH(캐릭터):   Acubi(Y2K+모던) — 라일락 크롭 베이비티 + 로우라이즈 카고팬츠 + 청키 스니커즈, 자연스러운 웨이브 머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면\nCA(카메라):   고정\nAC(동작):     0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지\nMD(감정):     장난기 있는 자신감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing a Y2K Acubi-style outfit: a cropped lilac baby tee, low-rise cargo pants, chunky platform sneakers, soft pastel palette, mini shoulder bag,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 2] ─ YEORI | 점프컷 전환 — K-아이돌 스트리트 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 점프 효과음+비트 드롭) 같은 카메라 구도·프레이밍 유지, 배경이 침실에서 유럽풍 돌벽 야간 스트리트로 리빌. 서여리가 가볍게 튀어 오르고, 공중에서 정지한 순간 컷 — 착지하면 K-아이돌 스트리트룩+새 배경으로 바뀌어 있다.\nSP: OUT.ST.EU_NT.LT_NEON\nPL: YR_VD\nCH: YR_VD / LK_IDOL (K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 가볍게 점프해 공중에서 정지(피크 모멘트), 착지 후 환하게 웃으며 정면\nLOOK_ID: LOOK_IDOL\nDU: 6\nCP: 외출룩 버전.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 드롭 정확히 착지 순간에 맞춤)\n  음성: 없음\n  효과음: 휙(점프 스우시) + 착지 \"텅\" (컷 시작 0.2초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     유럽풍 돌벽 골목, 야간, 네온 반사(배경 리빌 — 카메라 구도는 컷1과 동일)\nCH(캐릭터):   K-아이돌 스트리트 레이어드 — 블랙 베스트 오버 그레이 스트라이프 셔츠, 블랙 플리츠 미니스커트, 레이스 패턴 타이즈, 버건디 앵클부츠\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(컷1과 동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소\nMD(감정):     경쾌하고 들뜬 에너지, 비트에 맞춘 리듬감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture,\nsame camera distance and framing as before, standing on an atmospheric European stone-paved side street at night,\ncaught at the peak of a light jump, hair and skirt hem lifted mid-air, now wearing a K-idol street-layered outfit: a black vest layered over a grey striped button-up shirt, black pleated mini skirt, lace-pattern tights, burgundy ankle boots, edgy high-fashion streetwear styling,\nbright excited expression, landing into a warm confident smile,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: moody night street lighting, warm window glow from old stone buildings, soft neon sign reflections in the wet pavement,\nbackground: blurred historic European stone facade, warm lit windows, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: She is caught mid-air at the peak of a light playful jump, hair and cardigan hem lifting naturally, bright excited expression — this is the beat-drop moment. / Next 2-6s: She lands softly and smoothly, settling into a warm confident smile, slight bounce absorbed into her stance. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 3] ─ YEORI | 스핀 전환 — 플로럴 맥시멀리즘 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스핀 블러 효과음) 같은 카메라 구도 유지, 배경이 비비드 컬러 스튜디오 세트(과장된 플로럴 소품)로 리빌. 서여리가 빠르게 한 바퀴 회전하며 모션 블러 — 회전이 멈추면 비비드 플로럴 맥시멀리즘 드레스+새 배경으로 바뀌어 있다. 에디토리얼 캠페인처럼 과감한 포즈를 취한다.\nSP: IN.ST.COLOR.LT_SET\nPL: YR_VD\nCH: YR_VD / LK_FLOR (비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_SUR\nAC: 빠르게 360도 회전(모션 블러) → 회전 멈추며 한 손은 허리에, 캠페인 화보 같은 과감한 포즈\nLOOK_ID: LOOK_FLOR\nDU: 6\nCP: 과감하게 한 번 입어본 버전. 나 화보 찍어도 돼?\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지)\n  음성: 없음\n  효과음: 휙 스핀 스우시 + 회전 멈추는 \"탁\" (컷 시작 0.2초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     비비드 컬러 스튜디오 세트, 과장된 조형적 플로럴 소품(배경 리빌 — 카메라 구도는 동일)\nCH(캐릭터):   비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)\nMD(감정):     역동적인 회전 → 당당하고 화려한 자신감\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair flowing as if caught in a breeze,\nsame camera distance and framing as before, standing against a bold vivid-color studio backdrop with oversized sculptural floral props echoing the dress print,\ncaught just as a fast spin settles — subtle motion blur trailing off her hair and dress hem, now wearing a vivid pink floral-print maxi dress, gold drop earrings, dramatic editorial campaign styling,\none hand on her hip, bold confident campaign pose, chin lifted, striking directly at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: bold saturated studio lighting, strong colored gel accents matching the backdrop,\nbackground: vivid solid-color studio set with oversized stylized floral props, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair and the flowing dress, fast energetic rotation — this is the transition moment. / Next 2-6s: The spin settles into a bold editorial campaign pose, one hand on her hip, chin lifted, striking confident expression directly at camera. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 4] ─ YEORI | 업사이드다운 전환 — 오트쿠튀르 블랙 가운 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 휙 뒤집기 효과음) 같은 카메라 구도 유지, 배경이 화이트 플라워가 만개한 야외 정원 스톤 스텝으로 리빌. 서여리가 고개와 상체를 아래로 숙였다가 — 업사이드다운 자세에서 멈춘 순간 하드컷 — 다시 천천히 고개를 들면 샤넬풍 오트쿠튀르 블랙 가운+새 배경으로 바뀌어 있다.\nSP: OUT.GD.FLWR_DY.LT_SOFT\nPL: YR_VD\nCH: YR_VD / LK_COUTURE (블랙 오프숄더 코르셋 가운, 진주 체인 3겹, 화이트 카멜리아 브로치, 블랙&화이트 보터햇, 올백 헤어)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 상체를 숙여 고개를 아래로 떨구었다가(업사이드다운 피크) 천천히 고개를 들며 우아하게 정면\nLOOK_ID: LOOK_COUTURE\nDU: 6\nCP: 오트쿠튀르 버전. 이 정도는 돼야지.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 현악 악센트 한 번)\n  음성: 없음\n  효과음: 휙 뒤집기 스우시 + 정지 \"탁\" (컷 시작 0.2초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     야외 정원, 만개한 화이트 플라워, 스톤 스텝(배경 리빌 — 카메라 구도는 동일)\nCH(캐릭터):   블랙 오프숄더 코르셋 가운, 진주 체인 3겹, 화이트 카멜리아 브로치, 블랙&화이트 보터햇, 올백 헤어\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~2초 상체를 숙여 고개를 아래로(업사이드다운 피크, 옷 이미 전환) → 2~6초 천천히 고개를 들며 우아한 표정으로 정면\nMD(감정):     차분하고 우아한 고급스러움\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now slicked back elegantly,\nsame camera distance and framing as before, standing on a stone garden step with lush white flowering bushes softly blurred behind her,\ncaught mid-motion rising from an upside-down head-tilt, hair settling back into place,\nnow wearing a black off-shoulder corseted couture gown, three draped strands of pearl chain across the bodice, a white camellia brooch, a black-and-white boater hat with a grosgrain ribbon band, haute couture runway styling,\npoised elegant expression, calm and composed, looking directly at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: soft natural daylight, gentle and flattering, garden ambiance,\nbackground: softly blurred white flower garden, stone steps, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: She tilts her upper body and head down into an upside-down position, pausing briefly at the peak — this is the transition moment. / Next 2-6s: She slowly rises back up, hair settling elegantly into place, revealing the couture gown, calm poised expression, composed elegance directly at camera. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 5] ─ YEORI | 스프레이·미스트 전환 — 모던 한복 룩 | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스프레이 효과음) 같은 카메라 구도 유지, 배경이 한옥 대청마루·한지 창살로 리빌. 서여리가 향수 보틀을 들어 카메라 쪽으로 살짝 분사 — 뿌연 미스트가 화면을 가리는 순간 하드컷, 미스트가 걷히면 피치톤 모던 한복+새 배경으로 바뀌어 있다. 시스루 글리터 트레인이 살랑인다.\nSP: IN.HN.COURT.LT_WARM\nPL: YR_VD\nCH: YR_VD / LK_HANBOK (모던 한복 재해석 — 피치톤 저고리+치마, 은빛 시스루 글리터 트레인, 금박 고름, 올림머리)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_WRM\nAC: 향수를 얼굴 쪽으로 가볍게 분사, 미스트 사이로 등장 → 한 손으로 트레인 자락을 살짝 들어올리며 우아하게 정면\nLOOK_ID: LOOK_HANBOK\nDU: 6\nCP: 한복도 요즘은 이렇게 입어요.\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (이어서, 비트 유지, 살짝 고조 + 국악 타악 악센트 한 번)\n  음성: 없음\n  효과음: 향수 스프레이 \"쉭\" + 미스트 걷히는 소리 (컷 시작 0.2초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전통 한옥 대청마루, 한지 창살문, 따뜻한 등불(배경 리빌 — 카메라 구도는 동일)\nCH(캐릭터):   모던 한복 재해석 — 피치톤 저고리+치마, 은빛 시스루 글리터 트레인, 금박 고름, 단정한 올림머리\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~2초 향수를 가볍게 분사, 뿌연 미스트가 화면 가로지름 → 2~6초 미스트 걷히며 한 손으로 트레인을 살짝 들어올려 우아하게 정면\nMD(감정):     우아하고 자부심 있는 품격\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now styled up in an elegant updo,\nsame camera distance and framing as before, standing on the wooden daecheong-maru floor of a traditional Korean hanok, hanji paper lattice doors softly blurred behind her, warm lantern glow,\na soft perfume mist lingering and clearing in front of her, backlit glow creating a dreamy haze,\nnow wearing a modern reinterpreted hanbok: a peach-toned silk jeogori and chima with a flowing silver sheer glitter train layered over the skirt, gold-embroidered goreum ribbon tie at the chest, delicate traditional details with a contemporary editorial finish,\none hand gently lifting the sheer train, graceful poised expression, elegant and proud,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: warm traditional lantern light, soft glow through perfume mist catching the sheer fabric,\nbackground: traditional hanok wooden interior, hanji lattice doors, warm ambient light, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-2s: She lifts a small perfume bottle and mists it lightly toward camera, a soft cloud briefly veiling the frame, backlit and glowing — this is the transition moment. / Next 2-6s: The mist clears to reveal the modern hanbok, sheer glitter train catching the light as she gently lifts it with one hand, graceful and poised, elegant proud expression toward camera. No dialogue. No on-screen subtitle text or captions.\n\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n[CUT 6] ─ YEORI | 다시 편안한 나 + CTA | 6\n━━━━━━━━━━━━━━━━━━━━━━━━\nSC: (하드컷, 스냅 효과음) 다시 처음 Y2K 캐주얼룩으로 돌아온 서여리. 장난스럽게 웃으며 카메라를 가리킨다.\nSP: IN.HM.MR_DY.LT_WD\nPL: YR_VD\nCH: YR_VD / LK_Y2K (컷1과 동일 — 라일락 크롭 베이비티 + 로우라이즈 카고팬츠 + 청키 스니커즈)\nDL: 없음\nNR: 없음\nSH: SH_MCU\nCA: CA_ST\nMD: MD_PLF\nAC: 웃으며 검지로 카메라를 가리킴, 어깨 으쓱\nLOOK_ID: LOOK_Y2K\nDU: 6\nCP: 근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?\nCT: YEORI\n오디오:\n  BGM: 업비트 트렌디 팝 (마지막 비트에서 페이드아웃 시작)\n  음성: 없음\n  효과음: 손가락 스냅 \"딱\" (컷 시작 0.1초)\n  앰비언스: 밝은 방, 거의 무음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nKR (한글 컨펌본)\n━━━━━━━━━━━━━━━━━━━━━━━━\nSP(장소):     전신거울 앞, 동일 구도\nCH(캐릭터):   컷1과 동일한 Y2K 캐주얼룩으로 복귀(라일락 크롭 베이비티+카고팬츠+청키 스니커즈)\nSH(샷):       미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)\nCA(카메라):   고정\nAC(동작):     0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱\nMD(감정):     편안하고 장난기 있는 친밀함\nDL(대사):     없음\nNR(나레이션): 없음\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nIP (이미지 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nMEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the lilac cropped baby tee, low-rise cargo pants and chunky sneakers from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16\n\n━━━━━━━━━━━━━━━━━━━━━━━━\nVP (영상 프롬프트)\n━━━━━━━━━━━━━━━━━━━━━━━━\nFirst 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.\n",
@@ -8892,7 +8792,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-2",
+          "selectedCutId": "cut-5",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -8907,12 +8807,34 @@
                 "label": "목소리 1",
                 "voiceId": "RmYuvmCbqOMBJxDLW4k8"
               }
+            ],
+            "cut-6": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
             ]
           },
           "tracks": {
             "cut-2__v1": [
               {
                 "id": "track_1791547306248_n1no",
+                "type": "dialogue",
+                "text": "",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.95,
+                  "stability": 30,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-6__v1": [
+              {
+                "id": "track_1791619045004_0yra",
                 "type": "dialogue",
                 "text": "",
                 "speaker": null,
@@ -9900,7 +9822,7 @@
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
     "code": "IG_R07",
     "masterCode": "[IG_R07] :: [PL:IG_RL] :: [SP:IN.HM.MR_DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]",
-    "epHeaderRaw": "CHAR  : YEORI.BASE\nEP    : SF_E09_HOMECAFE\nTITLE : 홈카페 브이로그 대참사\nLOOK  : LOOK_HM2 (oversized pastel pink hoodie + black leggings + gold necklace + gold earrings)\nBG.A  : 집 홈카페 세팅 (링라이트 / 삼각대 / 커피 머신 / 목제 선반)\nBG.B  : GS25 편의점 내부 (형광등 / 한국 간식 진열대)\nBG.C  : 집 부엌 + 거실 소파 (따뜻한 간접조명)\nLIGHT : LT_STD (링라이트) → LT_CV (편의점 형광등) → LT_WM (집 따뜻한 조명)\nREF   : face / closeup / fs-masked\nBGM   : 밝고 경쾌한 오프닝 → 당황 효과음 → 편의점 경쾌 → 따뜻하고 감성적 마무리\n소품  : vintage diamond-textured clear glass tumbler (짧은 원통형 / 기하학 패턴 / 스템 없음)"
+    "epHeaderRaw": ""
   },
   "cuts": [
     {
@@ -9912,14 +9834,15 @@
       "action": "0~3초 카메라 정면 응시하며 장난스러운 미소 → 3~6초 오른손을 들어 스냅 직전 자세로 정지",
       "character": "서여리",
       "dialogue": "",
-      "subtitle": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
       "narration": "",
+      "subtitle": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, long wavy dark brown hair falling naturally over shoulders, NOT short, natural skin texture on right cheek, very subtle, never exaggerated,\nstanding in front of a full-length mirror in a bright bedroom, wearing a Y2K Acubi-style outfit: a cropped lilac baby tee, low-rise cargo pants, chunky platform sneakers, soft pastel palette, mini shoulder bag,\nright hand raised near chest height in a snapping gesture, playful confident smile, looking directly at camera,\ngold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,\nlighting: bright daytime window light, soft and clean, warm natural tones, no harsh shadows,\nbackground: softly blurred bedroom with mirror frame visible, never legible text or UI, vertical 9:16",
       "videoPrompt": "First 0-3s: She looks directly at camera with a playful, confident smile, slight head tilt. / Next 3-6s: She slowly raises her right hand to chest height into a snapping pose, holding just before the snap, eyebrow raised, anticipation building. No dialogue — all through expression and gesture. No on-screen subtitle text or captions.",
       "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
+      "beat": "훅",
       "masterCode": {
         "sp": "IN.HM.MR_DY.LT_WD",
         "pl": "YR_VD",
@@ -9945,41 +9868,70 @@
           "md": "장난기 있는 자신감"
         }
       },
-      "subtitleCfgSaved": {
-        "effect": "glow",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "오늘 기분에 맞는 룩, 스냅 한 번이면 끝.",
-            "start": 1,
-            "end": 5
-          }
-        ]
-      }
+      "videoMode": "veo"
     },
     {
       "id": "cut-2",
       "no": 2,
+      "cutTitle": "플로럴 맥시멀리즘 룩",
+      "lipsync": false,
+      "scene": "(하드컷, 스핀 블러 효과음) 같은 카메라 구도 유지, 배경이 비비드 컬러 스튜디오 세트(과장된 플로럴 소품)로 리빌. 서여리가 빠르게 한 바퀴 회전하며 모션 블러 — 회전이 멈추면 비비드 플로럴 맥시멀리즘 드레스+새 배경으로 바뀌어 있다. 에디토리얼 캠페인처럼 과감한 포즈를 취한다.",
+      "action": "0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "",
+      "subtitle": "과감하게 한 번 입어본 버전. 나 화보 찍어도 돼?",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair flowing as if caught in a breeze,\nsame camera distance and framing as before, standing against a bold vivid-color studio backdrop with oversized sculptural floral props echoing the dress print,\ncaught just as a fast spin settles — subtle motion blur trailing off her hair and dress hem, now wearing a vivid pink floral-print maxi dress, gold drop earrings, dramatic editorial campaign styling,\none hand on her hip, bold confident campaign pose, chin lifted, striking directly at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: bold saturated studio lighting, strong colored gel accents matching the backdrop,\nbackground: vivid solid-color studio set with oversized stylized floral props, vertical 9:16",
+      "videoPrompt": "First 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair and the flowing dress, fast energetic rotation — this is the transition moment. / Next 2-6s: The spin settles into a bold editorial campaign pose, one hand on her hip, chin lifted, striking confident expression directly at camera. No dialogue. No on-screen subtitle text or captions.",
+      "duration": 10,
+      "shotType": "CLOSEUP",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "beat": "고조",
+      "masterCode": {
+        "sp": "IN.ST.COLOR.LT_SET",
+        "pl": "YR_VD",
+        "ch": "YR_VD / LK_FLOR (비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리)",
+        "sh": "SH_MCU",
+        "ca": "CA_ST",
+        "md": "MD_SUR",
+        "ac": "빠르게 360도 회전(모션 블러) → 회전 멈추며 한 손은 허리에, 캠페인 화보 같은 과감한 포즈",
+        "lookId": "LOOK_FLOR",
+        "du": 10,
+        "audio": {
+          "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
+          "voice": "없음",
+          "sfx": "휙 스핀 스우시 + 회전 멈추는 \"탁\" (컷 시작 0.2초)",
+          "ambience": "밝은 방, 거의 무음"
+        },
+        "kr": {
+          "sp": "비비드 컬러 스튜디오 세트, 과장된 조형적 플로럴 소품(배경 리빌 — 카메라 구도는 동일)",
+          "ch": "비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리",
+          "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
+          "ca": "고정",
+          "ac": "0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)",
+          "md": "역동적인 회전 → 당당하고 화려한 자신감"
+        }
+      }
+    },
+    {
+      "id": "cut-3",
+      "no": 3,
       "cutTitle": "K-아이돌 스트리트 룩",
       "lipsync": false,
       "scene": "(하드컷, 점프 효과음+비트 드롭) 같은 카메라 구도·프레이밍 유지, 배경이 침실에서 유럽풍 돌벽 야간 스트리트로 리빌. 서여리가 가볍게 튀어 오르고, 공중에서 정지한 순간 컷 — 착지하면 K-아이돌 스트리트룩+새 배경으로 바뀌어 있다.",
       "action": "0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소",
       "character": "서여리",
       "dialogue": "",
-      "subtitle": "외출룩 버전.",
       "narration": "",
+      "subtitle": "외출룩 버전.",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman in her early 20s, same face, long wavy dark brown hair, natural skin texture, \nsame camera distance and framing as before, standing on an atmospheric European stone-paved side street at night, \ncaught at the peak of a light jump, hair and skirt hem lifted mid-air, now wearing a K-idol street-layered outfit: a black vest layered over a grey striped button-up shirt, black pleated mini skirt, lace-pattern tights, edgy high-fashion streetwear styling, \nbright excited expression, landing into a warm confident smile, \nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, \nlighting: moody night street lighting, warm window glow from old stone buildings, soft neon sign reflections in the wet pavement, \nbackground: blurred historic European stone facade, warm lit windows, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
       "videoPrompt": "First 0-2s: She is caught mid-air at the peak of a light playful jump, hair and cardigan hem lifting naturally, bright excited expression — this is the beat-drop moment. / Next 2-6s: She lands softly and smoothly, settling into a warm confident smile, slight bounce absorbed into her stance. No dialogue. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
+      "beat": "안정",
       "masterCode": {
         "sp": "OUT.ST.EU_NT.LT_NEON",
         "pl": "YR_VD",
@@ -10004,83 +9956,6 @@
           "ac": "0~2초 가볍게 튀어 올라 공중 정지(피크, 옷 이미 바뀐 상태) → 2~6초 부드럽게 착지하며 환한 미소",
           "md": "경쾌하고 들뜬 에너지, 비트에 맞춘 리듬감"
         }
-      },
-      "subtitleCfgSaved": {
-        "effect": "slam",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "외출룩 버전.",
-            "start": 0.3,
-            "end": 3
-          }
-        ]
-      }
-    },
-    {
-      "id": "cut-3",
-      "no": 3,
-      "cutTitle": "플로럴 맥시멀리즘 룩",
-      "lipsync": false,
-      "scene": "(하드컷, 스핀 블러 효과음) 같은 카메라 구도 유지, 배경이 비비드 컬러 스튜디오 세트(과장된 플로럴 소품)로 리빌. 서여리가 빠르게 한 바퀴 회전하며 모션 블러 — 회전이 멈추면 비비드 플로럴 맥시멀리즘 드레스+새 배경으로 바뀌어 있다. 에디토리얼 캠페인처럼 과감한 포즈를 취한다.",
-      "action": "0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)",
-      "character": "서여리",
-      "dialogue": "",
-      "subtitle": "과감하게 한 번 입어본 버전. 나 화보 찍어도 돼?",
-      "narration": "",
-      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, long wavy hair flowing as if caught in a breeze,\nsame camera distance and framing as before, standing against a bold vivid-color studio backdrop with oversized sculptural floral props echoing the dress print,\ncaught just as a fast spin settles — subtle motion blur trailing off her hair and dress hem, now wearing a vivid pink floral-print maxi dress, gold drop earrings, dramatic editorial campaign styling,\none hand on her hip, bold confident campaign pose, chin lifted, striking directly at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: bold saturated studio lighting, strong colored gel accents matching the backdrop,\nbackground: vivid solid-color studio set with oversized stylized floral props, vertical 9:16",
-      "videoPrompt": "First 0-2s: She spins rapidly a full 360 degrees, motion blur trailing her hair and the flowing dress, fast energetic rotation — this is the transition moment. / Next 2-6s: The spin settles into a bold editorial campaign pose, one hand on her hip, chin lifted, striking confident expression directly at camera. No dialogue. No on-screen subtitle text or captions.",
-      "duration": 6,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "masterCode": {
-        "sp": "IN.ST.COLOR.LT_SET",
-        "pl": "YR_VD",
-        "ch": "YR_VD / LK_FLOR (비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리)",
-        "sh": "SH_MCU",
-        "ca": "CA_ST",
-        "md": "MD_SUR",
-        "ac": "빠르게 360도 회전(모션 블러) → 회전 멈추며 한 손은 허리에, 캠페인 화보 같은 과감한 포즈",
-        "lookId": "LOOK_FLOR",
-        "du": 6,
-        "audio": {
-          "bgm": "업비트 트렌디 팝 (이어서, 비트 유지)",
-          "voice": "없음",
-          "sfx": "휙 스핀 스우시 + 회전 멈추는 \"탁\" (컷 시작 0.2초)",
-          "ambience": "밝은 방, 거의 무음"
-        },
-        "kr": {
-          "sp": "비비드 컬러 스튜디오 세트, 과장된 조형적 플로럴 소품(배경 리빌 — 카메라 구도는 동일)",
-          "ch": "비비드 핑크 플로럴 프린트 맥시 드레스, 골드 드롭 이어링, 바람에 날리는 긴 웨이브 머리",
-          "sh": "미디엄 클로즈업, 거울 앞 정면(동일 프레이밍)",
-          "ca": "고정",
-          "ac": "0~2초 빠른 360도 회전, 모션 블러로 옷 전환 → 2~6초 회전 멈추며 캠페인 화보 같은 과감한 포즈(한 손 허리)",
-          "md": "역동적인 회전 → 당당하고 화려한 자신감"
-        }
-      },
-      "subtitleCfgSaved": {
-        "effect": "glow",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "과감하게 한 번 입어본 버전.",
-            "start": 0.3,
-            "end": 3
-          }
-        ]
       }
     },
     {
@@ -10092,14 +9967,15 @@
       "action": "0~2초 상체를 숙여 고개를 아래로(업사이드다운 피크, 옷 이미 전환) → 2~6초 천천히 고개를 들며 우아한 표정으로 정면",
       "character": "서여리",
       "dialogue": "",
-      "subtitle": "오트쿠튀르 버전. 이 정도는 돼야지.",
       "narration": "",
+      "subtitle": "오트쿠튀르 버전. 이 정도는 돼야지.",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now slicked back elegantly, \nsame camera distance and framing as before, standing on a stone garden step with lush white flowering bushes softly blurred behind her, \ncaught mid-motion rising from an upside-down head-tilt, hair settling back into place, \nnow wearing a black off-shoulder corseted couture gown, three draped strands of pearl chain across the bodice, a white camellia brooch, a black-and-white boater hat with a grosgrain ribbon band, haute couture runway styling, \npoised elegant expression, calm and composed, looking directly at camera, \nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, \nlighting: soft natural daylight, gentle and flattering, garden ambiance, \nbackground: softly blurred white flower garden, stone steps, vertical 9:16, Barefoot or socks only, no shoes worn (indoor home setting).",
       "videoPrompt": "First 0-2s: She tilts her upper body and head down into an upside-down position, pausing briefly at the peak — this is the transition moment. / Next 2-6s: She slowly rises back up, hair settling elegantly into place, revealing the couture gown, calm poised expression, composed elegance directly at camera. No dialogue. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
+      "beat": "고조",
       "masterCode": {
         "sp": "OUT.GD.FLWR_DY.LT_SOFT",
         "pl": "YR_VD",
@@ -10124,23 +10000,6 @@
           "ac": "0~2초 상체를 숙여 고개를 아래로(업사이드다운 피크, 옷 이미 전환) → 2~6초 천천히 고개를 들며 우아한 표정으로 정면",
           "md": "차분하고 우아한 고급스러움"
         }
-      },
-      "subtitleCfgSaved": {
-        "effect": "slam",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "오트쿠튀르 버전.",
-            "start": 0.3,
-            "end": 3
-          }
-        ]
       }
     },
     {
@@ -10152,14 +10011,15 @@
       "action": "0~2초 향수를 가볍게 분사, 뿌연 미스트가 화면 가로지름 → 2~6초 미스트 걷히며 한 손으로 트레인을 살짝 들어올려 우아하게 정면",
       "character": "서여리",
       "dialogue": "",
-      "subtitle": "한복도 요즘은 이렇게 입어요.",
       "narration": "",
+      "subtitle": "한복도 요즘은 이렇게 입어요.",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, hair now styled up in an elegant updo,\nsame camera distance and framing as before, standing on the wooden daecheong-maru floor of a traditional Korean hanok, hanji paper lattice doors softly blurred behind her, warm lantern glow,\na soft perfume mist lingering and clearing in front of her, backlit glow creating a dreamy haze,\nnow wearing a modern reinterpreted hanbok: a peach-toned silk jeogori and chima with a flowing silver sheer glitter train layered over the skirt, gold-embroidered goreum ribbon tie at the chest, delicate traditional details with a contemporary editorial finish,\none hand gently lifting the sheer train, graceful poised expression, elegant and proud,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: warm traditional lantern light, soft glow through perfume mist catching the sheer fabric,\nbackground: traditional hanok wooden interior, hanji lattice doors, warm ambient light, vertical 9:16",
       "videoPrompt": "First 0-2s: She lifts a small perfume bottle and mists it lightly toward camera, a soft cloud briefly veiling the frame, backlit and glowing — this is the transition moment. / Next 2-6s: The mist clears to reveal the modern hanbok, sheer glitter train catching the light as she gently lifts it with one hand, graceful and poised, elegant proud expression toward camera. No dialogue. No on-screen subtitle text or captions.",
-      "duration": 6,
+      "duration": 10,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
-      "cutMark": "NORMAL",
+      "cutMark": "SIGNATURE",
+      "beat": "시그",
       "masterCode": {
         "sp": "IN.HN.COURT.LT_WARM",
         "pl": "YR_VD",
@@ -10185,22 +10045,12 @@
           "md": "우아하고 자부심 있는 품격"
         }
       },
-      "subtitleCfgSaved": {
-        "effect": "glow",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "한복도 요즘은 이렇게 입어요.",
-            "start": 0.3,
-            "end": 3
-          }
-        ]
+      "overrides": {
+        "duration": {
+          "value": 10,
+          "at": "2026-10-10T07:56:18.196Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
       }
     },
     {
@@ -10212,14 +10062,15 @@
       "action": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
       "character": "서여리",
       "dialogue": "",
-      "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
       "narration": "",
+      "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the lilac cropped baby tee, low-rise cargo pants and chunky sneakers from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
       "videoPrompt": "First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.",
       "duration": 6,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
+      "beat": "결말",
       "masterCode": {
         "sp": "IN.HM.MR_DY.LT_WD",
         "pl": "YR_VD",
@@ -10244,23 +10095,6 @@
           "ac": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
           "md": "편안하고 장난기 있는 친밀함"
         }
-      },
-      "subtitleCfgSaved": {
-        "effect": "slam",
-        "style": {
-          "font_size": 72,
-          "color": "#FFFFFF",
-          "position": "bottom",
-          "outline": true,
-          "font": "gaegu"
-        },
-        "entries": [
-          {
-            "text": "근데 역시 이게 제일 편해.",
-            "start": 0.3,
-            "end": 3
-          }
-        ]
       }
     }
   ],
@@ -10380,7 +10214,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-10T06:56:26.961Z",
+  "savedAt": "2026-10-10T08:24:30.922Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -10469,7 +10303,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-5",
     "subtitles": {}
   },
   "ttsTabState": {
@@ -10484,12 +10318,34 @@
           "label": "목소리 1",
           "voiceId": "RmYuvmCbqOMBJxDLW4k8"
         }
+      ],
+      "cut-6": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
       ]
     },
     "tracks": {
       "cut-2__v1": [
         {
           "id": "track_1791547306248_n1no",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-6__v1": [
+        {
+          "id": "track_1791619045004_0yra",
           "type": "dialogue",
           "text": "",
           "speaker": null,

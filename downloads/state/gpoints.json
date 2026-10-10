@@ -991,7 +991,7 @@
   "IG_R07": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "updatedAt": "2026-10-10T07:53:43.062Z",
       "g2": true,
       "selectedImage": "cut_01_a.jpg",
       "g5": true,
@@ -999,7 +999,7 @@
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "updatedAt": "2026-10-10T07:53:43.063Z",
       "g2": true,
       "selectedImage": "cut_02_b.jpg",
       "g4": true,
@@ -1007,15 +1007,15 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "updatedAt": "2026-10-10T07:55:55.526Z",
       "g2": true,
-      "selectedImage": "cut_03_b.jpg",
+      "selectedImage": "cut_03_a.jpg",
       "g4": true,
       "g5": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "updatedAt": "2026-10-10T07:53:43.064Z",
       "g2": true,
       "selectedImage": "cut_04_b.jpg",
       "g4": true,
@@ -1023,7 +1023,7 @@
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "updatedAt": "2026-10-10T07:53:43.065Z",
       "g2": true,
       "selectedImage": "cut_05_b.jpg",
       "g4": true,
@@ -1031,7 +1031,7 @@
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-10-09T12:27:54.909Z",
+      "updatedAt": "2026-10-10T07:53:43.066Z",
       "g2": true,
       "selectedImage": "cut_06_a.jpg",
       "g5": true,
