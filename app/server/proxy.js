@@ -9092,6 +9092,37 @@ const mobileHoldHandler = async (req, res) => {
 mcpRouter.post('/mobile-hold', mobileHoldHandler)
 app.post('/mobile/mobile-hold', mobileHoldHandler)
 
+// ── GET /mobile/cut-video?no=2 — 모바일 상황실 "판단" 탭 미리보기 (2026-10-12) ──
+// 활성 에피소드의 해당 컷 영상 1개만 스트리밍. /downloads 전체를 열어주는 대신
+// 꼭 필요한 파일 하나만 narrow하게 노출(기존 보안 원칙 유지). 용량 큰 파일은 거절 —
+// Vercel 함수가 전체를 버퍼링해서 중계하므로 너무 크면 응답 크기 한도에 걸림.
+const CUT_VIDEO_MAX_BYTES = 8 * 1024 * 1024
+app.get('/mobile/cut-video', (req, res) => {
+  try {
+    const no = Number(req.query.no)
+    if (!no) return res.status(400).json({ error: 'no 필요' })
+    const state = loadStudioState()
+    const epKey = state.activeEpisodeId
+    const ep = state.episodes?.[epKey]
+    if (!ep) return res.status(400).json({ error: '활성 에피소드 없음' })
+    const epNum = ep.episode?.number
+    const videoDir = mp.videoDir(epNum)
+    const padded = String(no).padStart(2, '0')
+    const finalPath = path.join(videoDir, `cut_${padded}_final.mp4`)
+    const basePath = path.join(videoDir, `cut_${padded}.mp4`)
+    const file = fs.existsSync(finalPath) ? finalPath : (fs.existsSync(basePath) ? basePath : null)
+    if (!file) return res.status(404).json({ error: '영상 파일 없음' })
+    const size = fs.statSync(file).size
+    if (size > CUT_VIDEO_MAX_BYTES) {
+      return res.status(413).json({ error: `파일이 너무 커서(${(size / 1024 / 1024).toFixed(1)}MB) 모바일 미리보기 불가 — PC에서 확인해주세요` })
+    }
+    res.setHeader('content-type', 'video/mp4')
+    res.sendFile(file)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/mcp/leader-context?episode=LF_T01 — 리더가 매 사이클 읽는 정책 (P3) ──
 // 에피소드 파이프라인 행의 사람이 토글하는 값: 보류(checkbox) · 에이전트 자동승인(multi).
 // pipeline-leader 가 사이클 시작 시 호출 → 보류면 스킵, 자동승인 스테이지는 shouldAutoApprove 통과.

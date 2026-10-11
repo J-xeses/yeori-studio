@@ -54,6 +54,16 @@
   button.act { border:none; border-radius:10px; padding:10px 14px; font-size:13px; font-weight:700; color:#fff;
     background:var(--green); min-height:40px; }
   button.act:disabled { background:#3a3a40; color:#777; }
+  .review { }
+  .review .counter { font-size:12px; color:var(--dim); margin-bottom:8px; }
+  .review video { width:100%; border-radius:10px; background:#000; display:block; margin:10px 0; }
+  .review .why { font-size:13px; color:var(--dim); margin:6px 0 12px; }
+  .review .btnrow { display:flex; gap:8px; }
+  .review .btnrow button { flex:1; border:none; border-radius:10px; padding:12px 0; font-size:14px;
+    font-weight:700; color:#fff; min-height:44px; }
+  .review .previewBtn { background:var(--blue); }
+  .review .approveBtn { background:var(--green); }
+  .review .skipBtn { background:#444; }
   textarea { width:100%; min-height:90px; border-radius:10px; border:1px solid var(--line); background:var(--card2);
     color:var(--txt); font-size:14px; padding:10px; font-family:inherit; resize:vertical; }
   .sendbtn { width:100%; margin-top:10px; border:none; border-radius:10px; padding:13px 0; font-size:15px;
@@ -90,7 +100,7 @@
       <label class="switch"><input type="checkbox" id="holdSwitch" onchange="toggleHold(this.checked)">
         <span class="track"></span><span class="thumb"></span></label>
     </div>
-    <div class="card" id="recommendCard"><h2>✅ 승인 대기 (자동검사 통과)</h2><div class="empty">불러오는 중...</div></div>
+    <div class="card" id="recommendCard"><h2>✅ 승인 대기 (자동검사 통과, 하나씩 확인)</h2><div class="empty">불러오는 중...</div></div>
     <div class="card" id="blockedCard"><h2>⛔ 막힘 / 대상 없음 (읽기 전용)</h2><div class="empty">불러오는 중...</div></div>
   </section>
 
@@ -211,20 +221,15 @@ function renderStatus(d) {
     : '<div class="empty">없음</div>')
 }
 
+let reviewQueue = []   // 승인 대기 컷 — 순차 처리(한 번에 하나씩, 용량 절약)
+let reviewSkipped = []  // "다음 컷" 눌러서 이번엔 건너뛴 번호(새로고침 전까지만 유지)
+
 function renderDecide(gate, status) {
   const cuts = gate.cuts || []
-  const recommend = cuts.filter(c => c.verdict === 'recommend')
+  reviewQueue = cuts.filter(c => c.verdict === 'recommend' && !reviewSkipped.includes(c.no))
+  renderReviewCard()
+
   const other = cuts.filter(c => c.verdict === 'blocked' || c.verdict === 'not_ready')
-
-  const rc = document.getElementById('recommendCard')
-  rc.innerHTML = '<h2>✅ 승인 대기 (자동검사 통과)</h2>' + (recommend.length
-    ? recommend.map(c => `<div class="cut-item">
-        <div class="info">CUT ${c.no} <span class="pill y">권고</span>
-          <div class="why">${esc((c.reasons || []).join(' · ') || '자동검사 통과, 1클릭 승인 가능')}</div></div>
-        <button class="act" onclick="approve(${c.no}, this)">승인</button>
-      </div>`).join('')
-    : '<div class="empty">지금 승인 대기 중인 컷 없음</div>')
-
   const bc = document.getElementById('blockedCard')
   bc.innerHTML = '<h2>⛔ 막힘 / 대상 없음 (읽기 전용)</h2>' + (other.length
     ? other.map(c => `<div class="cut-item"><div class="info">CUT ${c.no}
@@ -233,8 +238,49 @@ function renderDecide(gate, status) {
     : '<div class="empty">없음</div>')
 }
 
+function renderReviewCard() {
+  const rc = document.getElementById('recommendCard')
+  const total = reviewQueue.length + reviewSkipped.length
+  if (!reviewQueue.length) {
+    rc.innerHTML = '<h2>✅ 승인 대기 (자동검사 통과, 하나씩 확인)</h2>' +
+      `<div class="empty">${reviewSkipped.length ? '건너뛴 컷만 남음 — 새로고침하면 다시 보임' : '지금 승인 대기 중인 컷 없음'}</div>`
+    return
+  }
+  const c = reviewQueue[0]
+  rc.innerHTML = `<h2>✅ 승인 대기 (자동검사 통과, 하나씩 확인)</h2>
+    <div class="review">
+      <div class="counter">${total - reviewQueue.length + 1} / ${total} 번째</div>
+      <div><b>CUT ${c.no}</b> <span class="pill y">권고</span></div>
+      <div class="why">${esc((c.reasons || []).join(' · ') || '자동검사 통과, 1클릭 승인 가능')}</div>
+      <div id="previewSlot"></div>
+      <div class="btnrow">
+        <button class="previewBtn" onclick="loadPreview(${c.no})">▶ 미리보기</button>
+        <button class="skipBtn" onclick="skipReview(${c.no})">다음 컷</button>
+        <button class="approveBtn" onclick="approve(${c.no}, this)">승인</button>
+      </div>
+    </div>`
+}
+
+let previewActive = false   // 미리보기 재생 중엔 자동갱신이 끊지 않게 잠깐 멈춤
+
+function loadPreview(cutNo) {
+  const slot = document.getElementById('previewSlot')
+  if (!slot) return
+  previewActive = true
+  const src = '/mobile/cut-video?no=' + cutNo + (PIN ? '&pin=' + encodeURIComponent(PIN) : '')
+  slot.innerHTML = `<video controls playsinline preload="auto" autoplay src="${src}"></video>`
+}
+
+function skipReview(cutNo) {
+  previewActive = false
+  reviewSkipped.push(cutNo)
+  reviewQueue = reviewQueue.filter(c => c.no !== cutNo)
+  renderReviewCard()
+}
+
 async function approve(cutNo, btn) {
   if (!confirm(`CUT ${cutNo} G4 승인할까요?`)) return
+  previewActive = false
   btn.disabled = true; btn.textContent = '...'
   try {
     await api('/studio-approve-g4', { method: 'POST', body: JSON.stringify({ episodeId: EP.episodeId, cutIds: [cutNo] }) })
@@ -266,7 +312,7 @@ async function sendMemo() {
 let refreshTimer = null
 function startAutoRefresh() {
   stopAutoRefresh()
-  refreshTimer = setInterval(() => { if (!document.hidden) loadAll() }, 18000)
+  refreshTimer = setInterval(() => { if (!document.hidden && !previewActive) loadAll() }, 18000)
 }
 function stopAutoRefresh() { if (refreshTimer) clearInterval(refreshTimer) }
 document.addEventListener('visibilitychange', () => {
