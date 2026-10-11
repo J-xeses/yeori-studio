@@ -263,7 +263,19 @@ async function sendMemo() {
   } catch (e) { setErr(e.message) }
 }
 
+let refreshTimer = null
+function startAutoRefresh() {
+  stopAutoRefresh()
+  refreshTimer = setInterval(() => { if (!document.hidden) loadAll() }, 18000)
+}
+function stopAutoRefresh() { if (refreshTimer) clearInterval(refreshTimer) }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopAutoRefresh()
+  else { loadAll(); startAutoRefresh() }
+})
+
 loadAll()
+startAutoRefresh()
 </script>
 </body>
 </html>
