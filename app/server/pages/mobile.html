@@ -16,7 +16,9 @@
   .wrap { max-width:520px; margin:0 auto; padding:14px 14px 40px; }
   header { display:flex; align-items:center; justify-content:space-between; padding:10px 2px 16px; }
   header h1 { font-size:17px; margin:0; font-weight:700; }
-  header button { background:none; border:none; color:var(--dim); font-size:20px; padding:6px; }
+  header button, header a { background:none; border:none; color:var(--dim); font-size:20px; padding:6px;
+    text-decoration:none; line-height:1; }
+  header .right { display:flex; align-items:center; gap:4px; }
   .tabs { display:flex; gap:6px; margin-bottom:14px; }
   .tabs button { flex:1; padding:10px 0; border-radius:10px; border:1px solid var(--line); background:var(--card);
     color:var(--dim); font-size:14px; font-weight:600; }
@@ -78,7 +80,10 @@
 <div class="wrap" id="app">
   <header>
     <h1>🎬 모바일 상황실</h1>
-    <button onclick="loadAll()">⟳</button>
+    <div class="right">
+      <a href="https://claude.ai" title="Claude 앱으로 이동(서여리 채널)">💬</a>
+      <button onclick="loadAll()">⟳</button>
+    </div>
   </header>
   <div class="tabs">
     <button class="on" data-tab="status" onclick="showTab('status')">상황</button>
