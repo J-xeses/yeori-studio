@@ -23,7 +23,7 @@ const HOOK_CONFIG = [
 
 export default function RetentionHookTab() {
   const { state, dispatch } = useApp()
-  const [mode, setMode] = useState('hook')   // 'hook' | 'signature' — 2026-10-10 모드 전환 추가
+  const [mode, setMode] = useState('hook')   // 'hook' | 'signature' | 'change' — 2026-10-10/11 모드 전환
   const [hooks, setHooks] = useState(
     Object.fromEntries(HOOK_CONFIG.map(h => [h.key, { text: '', emotions: [] }]))
   )
@@ -117,15 +117,18 @@ ${hookSummary}
       <EpisodeInfoSidebar maxStage={0} />
       <div className={styles.wrap}>
       <div className={`${styles.header} ${styles.topBar}`}>
-        <h2 className={styles.title}>{mode === 'hook' ? '리텐션 훅 설계' : '✨ 시그 레퍼런스'}</h2>
+        <h2 className={styles.title}>{mode === 'hook' ? '리텐션 훅 설계' : mode === 'signature' ? '✨ 시그 레퍼런스' : '🔄 체인지 조합 생성기'}</h2>
         <p className={styles.desc}>
           {mode === 'hook'
             ? '4구간 훅을 설정하면 서여리 말투로 CUT 스크립트를 자동 생성합니다 — 대본의 BEAT 태그와 연동됩니다'
-            : '몽환·절정 구간 연출 기법(시간멈춤·초근접·앵글반전 등)을 저장해두고, 시그 컷 프롬프트에 적용합니다'}
+            : mode === 'signature'
+            ? '몽환·절정 구간 연출 기법(시간멈춤·초근접·앵글반전 등)을 저장해두고, 시그 컷 프롬프트에 적용합니다'
+            : '트리거 액션×VFX×Scene B 조합으로 리빌 컷 하나(IP/VP/오디오)를 생성합니다 — 같은 구도 고정 + 별도 컷 생성 원칙(R07 패턴)'}
         </p>
         <div className={styles.modeToggle}>
           <button className={`${styles.modeBtn} ${mode === 'hook' ? styles.modeBtnActive : ''}`} onClick={() => setMode('hook')}>🎣 리텐션 훅</button>
           <button className={`${styles.modeBtn} ${mode === 'signature' ? styles.modeBtnActive : ''}`} onClick={() => setMode('signature')}>✨ 시그 레퍼런스</button>
+          <button className={`${styles.modeBtn} ${mode === 'change' ? styles.modeBtnActive : ''}`} onClick={() => setMode('change')}>🔄 체인지 생성기</button>
         </div>
       </div>
 
@@ -189,6 +192,7 @@ ${hookSummary}
       </>)}
 
       {mode === 'signature' && <SignatureRefPanel state={state} dispatch={dispatch} />}
+      {mode === 'change' && <ChangeComboPanel state={state} dispatch={dispatch} />}
       </div>
       </div>
     </div>
@@ -330,6 +334,174 @@ function SignatureRefPanel({ state, dispatch }) {
         )}
         {applyMsg && <div style={{ fontSize: 12, color: applyMsg.startsWith('✅') ? '#6ee7b7' : '#f09595' }}>{applyMsg}</div>}
       </div>
+    </>
+  )
+}
+
+// ── 체인지 조합 생성기(2026-10-11) ────────────────────────────────────────
+// 트리거 액션×VFX×Scene B 조합으로 "리빌 컷 하나"의 IP/VP/CP/오디오를 생성해 기존 컷에
+// 반영한다. 원본 도구(Instagram Change Effect Prompt Studio)처럼 한 샷 안에서 의상+배경을
+// 통째로 모핑시키지 않는다 — 실측(2026-10-11, Veo)에서 그 방식은 얼굴 identity가 끝까지
+// 안 붙잡혔다. 대신 이 컷의 시작 이미지(G2)가 이미 Scene B 모습이라는 전제로 VP는 "트리거
+// 동작이 시작→VFX 걷힘→완성 포즈"만 담당(R07 CUT2와 동일 로직) — 반영 후 기존 G2(Nano
+// Banana, 캐릭터 얼굴 레퍼런스 자동 첨부)를 돌리면 identity 문제가 자연히 해결된다.
+function ChangeComboPanel({ state, dispatch }) {
+  const [options, setOptions] = useState({ triggers: [], vfx: [], sceneBFashionPresets: [] })
+  const [triggerId, setTriggerId] = useState('')
+  const [vfxIndex, setVfxIndex] = useState(null)
+  const [sceneB, setSceneB] = useState({ outfit: '', env: '', lighting: '' })
+  const [durationSec, setDurationSec] = useState(6)
+  const [beat, setBeat] = useState('고조')
+  const [cpLine, setCpLine] = useState('')
+  const [targetCutId, setTargetCutId] = useState('')
+  const [buildResult, setBuildResult] = useState(null)   // { cutPatch, preview, audioCue }
+  const [buildError, setBuildError] = useState('')
+  const [applyMsg, setApplyMsg] = useState('')
+  const [lkSpace, setLkSpace] = useState('IN')
+  const [lkSeason, setLkSeason] = useState('CH')
+  const [registerMsg, setRegisterMsg] = useState('')
+
+  useEffect(() => {
+    fetch(`${SERVER}/api/change-combo/options`).then((r) => r.json()).then(setOptions).catch(() => {})
+  }, [])
+
+  const pickRandom = () => {
+    if (!options.triggers.length) return
+    const t = options.triggers[Math.floor(Math.random() * options.triggers.length)]
+    const v = Math.floor(Math.random() * options.vfx.length)
+    const s = options.sceneBFashionPresets[Math.floor(Math.random() * options.sceneBFashionPresets.length)] || sceneB
+    setTriggerId(t.id); setVfxIndex(v); setSceneB(s)
+    setBuildResult(null); setBuildError('')
+  }
+
+  const doBuild = async () => {
+    setBuildError(''); setApplyMsg('')
+    if (!triggerId || vfxIndex == null || !sceneB.outfit) { setBuildError('트리거·VFX·Scene B(의상)를 먼저 채워주세요.'); return }
+    const r = await fetch(`${SERVER}/api/change-combo/build`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ triggerId, vfxIndex, sceneB, durationSec, beat, cpLine }),
+    })
+    const d = await r.json()
+    if (!r.ok) { setBuildError(d.error || '생성 실패'); return }
+    setBuildResult(d)
+  }
+
+  const commitApply = () => {
+    const cut = (state.cuts || []).find((c) => c.id === targetCutId)
+    if (!cut || !buildResult?.cutPatch) return
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: buildResult.cutPatch })
+    setApplyMsg(`✅ CUT${cut.no}에 반영 완료 — G2(이미지 생성)를 돌리면 캐릭터 얼굴 레퍼런스가 자동 첨부됩니다.`)
+  }
+
+  // CA_BANK 룩 등록(2026-10-11, 성준님 설계 LK_{공간}_{계절}{번호}) — file은 아직 없을 수
+  // 있음(G2 생성 전이면 CA_BANK 화면에서 나중에 채움). server/lib/changeEffects.js nextLookId 참조.
+  const registerLook = async () => {
+    if (!sceneB.outfit) return
+    setRegisterMsg('')
+    const r = await fetch(`${SERVER}/api/characters/yeori/looks`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ spaceCode: lkSpace, seasonCode: lkSeason, desc: sceneB.outfit, season: options.lkSeasonCodes?.[lkSeason] || '' }),
+    })
+    const d = await r.json()
+    if (!r.ok) { setRegisterMsg(`❌ ${d.error || '등록 실패'}`); return }
+    setRegisterMsg(`✅ ${d.lookId}로 등록 완료 (characters.json) — 이미지 파일은 CA_BANK에서 나중에 연결하세요.`)
+  }
+
+  return (
+    <>
+      <div className={styles.result} style={{ marginBottom: 14 }}>
+        <div className={styles.resultLabel}>① 트리거 액션</div>
+        <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: 14 }}>
+          {options.triggers.map((t) => (
+            <div key={t.id} className={styles.card}
+              style={{ borderLeftColor: triggerId === t.id ? '#534AB7' : '#333', cursor: 'pointer', padding: 10 }}
+              onClick={() => { setTriggerId(t.id); setBuildResult(null) }}>
+              <div style={{ fontSize: 18 }}>{t.icon}</div>
+              <div className={styles.cardLabel} style={{ marginTop: 4 }}>{t.nameKo}</div>
+              <div style={{ fontSize: 10, color: '#777', marginTop: 2 }}>{t.descKo}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.resultLabel}>② VFX 이펙트</div>
+        <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 14 }}>
+          {options.vfx.map((v, idx) => (
+            <div key={idx} className={styles.card}
+              style={{ borderLeftColor: vfxIndex === idx ? '#a78bfa' : '#333', cursor: 'pointer', padding: 10 }}
+              onClick={() => { setVfxIndex(idx); setBuildResult(null) }}>
+              <div className={styles.cardLabel}>{v.nameKo}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className={styles.resultLabel}>③ Scene B — 리빌될 모습</div>
+        <p className={styles.desc} style={{ marginBottom: 8 }}>
+          프리셋 칩을 클릭해 채우거나 직접 입력하세요 — 의상 테마에 상관없이(직업·의상·기타) 자유롭게.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+          {options.sceneBFashionPresets.map((p, idx) => (
+            <button key={idx} type="button" className={styles.copyBtn} onClick={() => setSceneB(p)}>
+              {p.outfit.slice(0, 16)}…
+            </button>
+          ))}
+        </div>
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수)"
+          value={sceneB.outfit} onChange={(e) => { setSceneB({ ...sceneB, outfit: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경"
+          value={sceneB.env} onChange={(e) => { setSceneB({ ...sceneB, env: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="조명"
+          value={sceneB.lighting} onChange={(e) => { setSceneB({ ...sceneB, lighting: e.target.value }); setBuildResult(null) }} />
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+          <label style={{ fontSize: 11, color: '#888' }}>CA_BANK 룩 코드</label>
+          <select className={styles.textarea} style={{ width: 'auto' }} value={lkSpace} onChange={(e) => setLkSpace(e.target.value)}>
+            {Object.entries(options.lkSpaceCodes || {}).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
+          </select>
+          <select className={styles.textarea} style={{ width: 'auto' }} value={lkSeason} onChange={(e) => setLkSeason(e.target.value)}>
+            {Object.entries(options.lkSeasonCodes || {}).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
+          </select>
+          <button className={styles.copyBtn} disabled={!sceneB.outfit} onClick={registerLook}>🗂 캐릭터 룩으로 등록</button>
+          {registerMsg && <span style={{ fontSize: 11, color: registerMsg.startsWith('✅') ? '#6ee7b7' : '#f09595' }}>{registerMsg}</span>}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+          <label style={{ fontSize: 11, color: '#888' }}>컷 길이(초)</label>
+          <input className={styles.textarea} style={{ width: 60 }} type="number" min={4} max={10}
+            value={durationSec} onChange={(e) => setDurationSec(Number(e.target.value) || 6)} />
+          <label style={{ fontSize: 11, color: '#888' }}>BEAT</label>
+          <select className={styles.textarea} style={{ width: 'auto' }} value={beat} onChange={(e) => setBeat(e.target.value)}>
+            {['훅', '긴장', '반전', '안정', '고조', '결말', '시그'].map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+          <input className={styles.textarea} style={{ flex: 1, minWidth: 160 }} placeholder="자막(CP) — 비우면 기본 문구"
+            value={cpLine} onChange={(e) => setCpLine(e.target.value)} />
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className={styles.copyBtn} onClick={pickRandom}>🎲 랜덤 뽑기</button>
+          <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>조합 생성</button>
+        </div>
+        {buildError && <div className={styles.error} style={{ marginTop: 8 }}>{buildError}</div>}
+      </div>
+
+      {buildResult && (
+        <div className={styles.result}>
+          <div className={styles.resultLabel}>미리보기</div>
+          <pre className={styles.resultText}>{buildResult.preview.step1}{'\n'}{buildResult.preview.step2}{'\n'}{buildResult.preview.step3}</pre>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>IP (이미지 프롬프트)</div>
+          <pre className={styles.resultText} style={{ fontSize: 11 }}>{buildResult.cutPatch.imagePrompt}</pre>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>VP (영상 프롬프트)</div>
+          <pre className={styles.resultText} style={{ fontSize: 11, marginBottom: 10 }}>{buildResult.cutPatch.videoPrompt}</pre>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => setTargetCutId(e.target.value)}>
+              <option value="">대상 컷 선택…</option>
+              {(state.cuts || []).map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
+            </select>
+            <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
+          </div>
+          {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
+        </div>
+      )}
     </>
   )
 }

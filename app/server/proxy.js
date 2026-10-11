@@ -11,6 +11,7 @@ import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaConten
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
+import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
@@ -6604,6 +6605,40 @@ app.delete('/api/signature-refs/:id', (req, res) => {
 app.post('/api/signature-refs/apply', (req, res) => {
   try { res.json(applySignatureAsSnippet(req.body?.id)) }
   catch (err) { res.status(404).json({ error: err.message }) }
+})
+
+// ── 체인지(트랜지션) 조합 생성기(2026-10-11) — lib/changeEffects.js 참조 ──────
+// GET 옵션 목록(트리거/VFX/패션 Scene B 스타터) / POST build 는 리빌 컷 패치(imagePrompt·
+// videoPrompt·subtitle·beat·audioNote)와 미리보기 시나리오를 돌려줄 뿐, studio-state는
+// 프론트에서 UPDATE_CUT으로 반영(signature-refs와 동일 원칙 — 여기선 studio-state 안 건드림).
+app.get('/api/change-combo/options', (_req, res) => {
+  res.json({ triggers: TRIGGER_ACTIONS, vfx: VFX_PRESETS, sceneBFashionPresets: SCENE_B_FASHION_PRESETS, lkSpaceCodes: LK_SPACE_CODES, lkSeasonCodes: LK_SEASON_CODES })
+})
+// 체인지 생성기 결과를 characters.json 의 캐릭터 룩(CA_BANK)으로 등록(2026-10-11, 성준님 설계:
+// LK_{공간}_{계절}{번호}). file 은 비워도 됨 — G2 이미지가 아직 없으면 나중에 CA_BANK 화면에서
+// 채운다. loadCharacters/saveCharacters 는 /api/characters 와 동일 함수(proxy.js:2198).
+app.post('/api/characters/:id/looks', (req, res) => {
+  try {
+    const { spaceCode, seasonCode, desc, file = '', season = '' } = req.body || {}
+    const chars = loadCharacters()
+    const c = chars[req.params.id]
+    if (!c) return res.status(404).json({ error: `캐릭터 없음: ${req.params.id}` })
+    c.looks = c.looks || {}
+    const lookId = nextLookId(Object.keys(c.looks), spaceCode, seasonCode)
+    c.looks[lookId] = { file, desc: desc || '', season }
+    saveCharacters(chars)
+    res.json({ ok: true, lookId, look: c.looks[lookId] })
+  } catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.post('/api/change-combo/build', (req, res) => {
+  try {
+    const { triggerId, vfxIndex, sceneB, durationSec, beat, cpLine } = req.body || {}
+    const trigger = TRIGGER_ACTIONS.find((t) => t.id === triggerId)
+    const vfx = VFX_PRESETS[vfxIndex]
+    if (!trigger) return res.status(400).json({ error: `알 수 없는 triggerId: ${triggerId}` })
+    if (!vfx) return res.status(400).json({ error: `알 수 없는 vfxIndex: ${vfxIndex}` })
+    res.json(buildRevealCut({ trigger, vfx, sceneB, durationSec, beat, cpLine }))
+  } catch (err) { res.status(400).json({ error: err.message }) }
 })
 
 // ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──

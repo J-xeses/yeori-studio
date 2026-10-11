@@ -5600,7 +5600,21 @@
               "md": "차분하고 따뜻한 일상적 분위기"
             }
           },
-          "videoMode": "veo"
+          "videoMode": "veo",
+          "beat": "",
+          "audioNote": "",
+          "overrides": {
+            "imagePrompt": {
+              "value": "WIDE SHOT —\nOutdoor cafe wooden deck terrace,\nwooden folding tables and chairs arranged naturally,\ncanvas awning overhead casting soft shadow,\nfilming camera on tripod visible to one side,\ncrew hands adjusting equipment,\nreal cafe patrons seated in background naturally,\ncity street and modern buildings softly visible behind,\nno main character in frame,\nbright warm golden afternoon sunlight,\nwide shot, eye level, vertical 9:16,\nCinematic, photorealistic, 8K",
+              "at": "2026-10-11T02:41:13.294Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "videoPrompt": {
+              "value": "NO dialogue — narration added in post\n\nFirst 0-3s: wide establishing shot of cafe terrace,\ncamera holds steady, warm afternoon light on wooden deck,\ncafe patrons naturally moving in background.\n\nNext 3-6s: gentle ambient movement —\nleaves rustling slightly, light shifting softly,\ncrew equipment visible at edge of frame.\n\nFinal 6-8s: camera holds steady,\nwarm golden light fills the frame,\nanticipation of someone about to arrive.",
+              "at": "2026-10-11T02:41:13.311Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
         },
         {
           "id": "cut-2",
@@ -9860,7 +9874,21 @@
           "md": "차분하고 따뜻한 일상적 분위기"
         }
       },
-      "videoMode": "veo"
+      "videoMode": "veo",
+      "beat": "",
+      "audioNote": "",
+      "overrides": {
+        "imagePrompt": {
+          "value": "WIDE SHOT —\nOutdoor cafe wooden deck terrace,\nwooden folding tables and chairs arranged naturally,\ncanvas awning overhead casting soft shadow,\nfilming camera on tripod visible to one side,\ncrew hands adjusting equipment,\nreal cafe patrons seated in background naturally,\ncity street and modern buildings softly visible behind,\nno main character in frame,\nbright warm golden afternoon sunlight,\nwide shot, eye level, vertical 9:16,\nCinematic, photorealistic, 8K",
+          "at": "2026-10-11T02:41:13.294Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "videoPrompt": {
+          "value": "NO dialogue — narration added in post\n\nFirst 0-3s: wide establishing shot of cafe terrace,\ncamera holds steady, warm afternoon light on wooden deck,\ncafe patrons naturally moving in background.\n\nNext 3-6s: gentle ambient movement —\nleaves rustling slightly, light shifting softly,\ncrew equipment visible at edge of frame.\n\nFinal 6-8s: camera holds steady,\nwarm golden light fills the frame,\nanticipation of someone about to arrive.",
+          "at": "2026-10-11T02:41:13.311Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     },
     {
       "id": "cut-2",
@@ -10287,7 +10315,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-11T02:32:55.463Z",
+  "savedAt": "2026-10-11T03:11:58.400Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
