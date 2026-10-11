@@ -70,3 +70,29 @@ export async function syncEpisodeState(p = {}) {
     return { ok: false, error: e.message }
   }
 }
+
+// 모바일 상황실 "⏸ 지금 전부 보류" 토글 — 행이 없으면 생성하지 않음(리더가 아직 안 돈
+// 에피소드를 보류시킬 이유가 없음). 실패해도 던지지 않음(기존 함수들과 동일 계약).
+export async function setHold(episodeCode, hold) {
+  const token = notionToken()
+  if (!token) return { ok: false, skipped: 'no-token' }
+  const code = String(episodeCode || '').trim()
+  if (!code) return { ok: false, skipped: 'no-code' }
+  try {
+    const q = await fetch(`https://api.notion.com/v1/databases/${EPISODE_DB_ID}/query`, {
+      method: 'POST', headers: headers(token),
+      body: JSON.stringify({ filter: { property: 'title', title: { contains: code } }, page_size: 1 }),
+    })
+    const qd = await q.json()
+    if (!q.ok) return { ok: false, status: q.status, body: JSON.stringify(qd).slice(0, 300) }
+    const page = qd.results?.[0]
+    if (!page) return { ok: false, skipped: 'no-row' }
+    const r = await fetch(`https://api.notion.com/v1/pages/${page.id}`, {
+      method: 'PATCH', headers: headers(token),
+      body: JSON.stringify({ properties: { '보류': { checkbox: !!hold } } }),
+    })
+    return r.ok ? { ok: true } : { ok: false, status: r.status, body: (await r.text()).slice(0, 300) }
+  } catch (e) {
+    return { ok: false, error: e.message }
+  }
+}

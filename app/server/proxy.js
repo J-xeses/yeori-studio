@@ -24,7 +24,7 @@ import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicT
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml, buildImageSequenceHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
-import { syncEpisodeState } from './lib/leaderState.js'
+import { syncEpisodeState, setHold } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
@@ -129,6 +129,11 @@ app.put('/api/insta-ops', (req, res) => {
 // ── 유튜브 운영실 (/youtube-ops) — 계정·크리에이터 설정 · 목표(YPP 게이트) · 성과 · 콘텐츠 전략 ──
 // 데이터: downloads/seoyeori/YU/_account/ops.json (server/lib/youtubeOps.js, rev 확인 저장)
 app.get('/youtube-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'youtube-ops.html')))
+
+// ── 모바일 상황실 (/mobile) — 외출 중 상황 정리·판단(보류·G4 1클릭 승인)·공유(메모) 전용 화면 ──
+// 2026-10-11, 성준님 8시간 외출 경험 계기. 로컬은 PIN 없이, 원격은 Vercel api/mobile/[[...path]].js
+// 가 MOBILE_ACCESS_CODE 로 게이트한 뒤 Cloudflare 터널 경유로 이 라우트들에 그대로 중계.
+app.get('/mobile', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'mobile.html')))
 app.get('/api/youtube-ops', (_req, res) => res.json({ ops: loadYtOps(), photos: listYtProfilePhotos() }))
 app.put('/api/youtube-ops', (req, res) => {
   try { const out = saveYtOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
@@ -9033,6 +9038,39 @@ mcpRouter.get('/leader-status', async (req, res) => {
     }
     const r = await getLeaderStatus(code)
     res.json(r)
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+// ── GET /api/mcp/active-episode — 모바일 상황실용: 활성 에피소드의 episodeId+코드 (2026-10-11) ──
+// gate-eligibility/leader-status 는 코드(episodeCode)만 돌려줘서, studio-approve-g4/mobile-hold 가
+// 요구하는 episodeId(studio-state.json 의 episodes 키)를 모바일 화면이 따로 알아낼 방법이 필요했음.
+mcpRouter.get('/active-episode', (_req, res) => {
+  try {
+    const state = loadStudioState()
+    const epKey = state.activeEpisodeId
+    const ep = state.episodes?.[epKey]
+    if (!ep) return res.json({ ok: false, error: '활성 에피소드 없음' })
+    res.json({ ok: true, episodeId: epKey, episodeCode: resolveEpisodeCode(ep.episode, epKey) })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+// ── POST /api/mcp/mobile-hold — 모바일 상황실 "⏸ 지금 전부 보류" 토글 (2026-10-11) ──
+// { episodeId?, hold } — episodeId 생략 시 활성 에피소드. episodeId 는 studio-state.json 의
+// 에피소드 키(leader-status 와 동일 resolve 패턴), Notion 쪽은 episodeCode(title contains) 로 찾는다.
+mcpRouter.post('/mobile-hold', async (req, res) => {
+  try {
+    const { episodeId, hold } = req.body || {}
+    const state = loadStudioState()
+    const epKey = episodeId || state.activeEpisodeId
+    const ep = state.episodes?.[epKey]
+    if (!ep) return res.status(400).json({ ok: false, error: '활성 에피소드를 찾을 수 없음' })
+    const episodeCode = resolveEpisodeCode(ep.episode, epKey)
+    const r = await setHold(episodeCode, !!hold)
+    res.json({ ...r, episodeCode })
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })
   }
