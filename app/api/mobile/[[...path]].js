@@ -49,6 +49,9 @@ document.getElementById('f').onsubmit = (e) => {
 </script></body></html>`
 
 export default async function handler(req, res) {
+  if (req.query.debug === '1') {
+    return res.status(200).json({ url: req.url, query: req.query, method: req.method })
+  }
   if (ACCESS_CODE) {
     const given = req.query.pin || (req.headers['x-mobile-pin'] || '')
     if (given !== ACCESS_CODE) {
