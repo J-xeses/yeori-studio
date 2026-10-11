@@ -30,7 +30,7 @@
     },
     {
       "source": "/mobile",
-      "destination": "/api/mobile"
+      "destination": "/api/mobile/page"
     },
     {
       "source": "/mobile/:path*",

@@ -49,9 +49,6 @@ document.getElementById('f').onsubmit = (e) => {
 </script></body></html>`
 
 export default async function handler(req, res) {
-  if (req.query.debug === '1') {
-    return res.status(200).json({ url: req.url, query: req.query, method: req.method })
-  }
   if (ACCESS_CODE) {
     const given = req.query.pin || (req.headers['x-mobile-pin'] || '')
     if (given !== ACCESS_CODE) {
@@ -65,13 +62,17 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: '여리 스튜디오 로컬 서버에 연결하지 못했습니다 (터널 재연결 중일 수 있음, 30~60초 후 재시도)' })
   }
 
-  const segs = Array.isArray(req.query.path) ? req.query.path : (req.query.path ? [req.query.path] : [])
-  const subpath = '/' + segs.join('/')
+  // Vercel의 [[...path]].js 는 동적 세그먼트를 req.query.path 가 아니라
+  // 리터럴 키 "[...path]" 로 넘긴다(일반 Functions 라우팅의 비표준 동작, 실측 확인함
+  // 2026-10-11). 세그먼트가 0개인 요청(바로 /mobile)은 Vercel이 함수 호출 전에 404 처리해
+  // 아예 안 들어오므로, vercel.json 이 그 경우를 synthetic 세그먼트 "page"로 보내준다.
+  const raw = req.query['[...path]']
+  const seg = Array.isArray(raw) ? raw.join('/') : (raw || '')
   const search = new URLSearchParams(req.query)
-  search.delete('path')
+  search.delete('[...path]')
   search.delete('pin')
   const qs = search.toString()
-  const targetPath = subpath === '/' ? '/mobile' : `/mobile${subpath}`
+  const targetPath = (seg === '' || seg === 'page') ? '/mobile' : `/mobile/${seg}`
   const target = `${bridgeUrl}${targetPath}${qs ? `?${qs}` : ''}`
 
   try {
