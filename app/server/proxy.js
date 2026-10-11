@@ -8678,7 +8678,7 @@ mcpRouter.post('/studio-run-g4', async (req, res) => {
 })
 
 // ⑨ studio-approve-g4 — G4(영상) 승인 (cutIds 생략 시 전체 컷)
-mcpRouter.post('/studio-approve-g4', (req, res) => {
+const studioApproveG4Handler = (req, res) => {
   const { episodeId, cutIds } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
   try {
@@ -8716,7 +8716,9 @@ mcpRouter.post('/studio-approve-g4', (req, res) => {
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }
-})
+}
+mcpRouter.post('/studio-approve-g4', studioApproveG4Handler)
+app.post('/mobile/studio-approve-g4', studioApproveG4Handler)
 
 // ⑩ studio-run-g5 — 편집 메타 생성 → SRT 생성 → 컷 영상 순서대로 합치기(FFmpeg concat)
 mcpRouter.post('/studio-run-g5', async (req, res) => {
@@ -9009,12 +9011,14 @@ mcpRouter.post('/run-sts', async (req, res) => {
 // ── POST /api/mcp/leader-log — 에이전트 리더 로그 DB 에 한 행 (P1) ──
 // pipeline-leader / genline 이 자율 판단을 할 때마다 호출. 설계: "에이전트 리더 백본" §04.
 // { episode, stage, kind, source, summary, rationale, result, humanInvolved }
-mcpRouter.post('/leader-log', async (req, res) => {
+const leaderLogHandler = async (req, res) => {
   const e = req.body || {}
   if (!e.summary) return res.status(400).json({ success: false, error: 'summary가 필요합니다' })
   const r = await postLeaderLog(e)
   res.json({ success: r.ok, ...(r.ok ? {} : { error: r.body || r.error || r.skipped || r.status }) })
-})
+}
+mcpRouter.post('/leader-log', leaderLogHandler)
+app.post('/mobile/leader-log', leaderLogHandler)
 
 // ── POST /api/mcp/leader-episode-sync — 에피소드 파이프라인 DB 행 갱신 (P2) ──
 // { episodeCode, episodeTitle, currentGate, agentState, nextAction, blocker, cutCount, isLong }
@@ -9028,7 +9032,7 @@ mcpRouter.post('/leader-episode-sync', async (req, res) => {
 // ── GET /api/mcp/leader-status?episode=LF_T01 — 에이전트가 상황을 읽는다 (모니터링) ──
 // 에피소드 파이프라인 행(현재 게이트·에이전트 상태·다음 액션·블로커·보류·자동승인) +
 // 최근 리더 로그 + 사람 개입 대기 항목. episode 생략 시 활성 에피소드.
-mcpRouter.get('/leader-status', async (req, res) => {
+const leaderStatusHandler = async (req, res) => {
   try {
     let code = String(req.query.episode || '').trim()
     if (!code) {
@@ -9041,12 +9045,14 @@ mcpRouter.get('/leader-status', async (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })
   }
-})
+}
+mcpRouter.get('/leader-status', leaderStatusHandler)
+app.get('/mobile/leader-status', leaderStatusHandler)
 
 // ── GET /api/mcp/active-episode — 모바일 상황실용: 활성 에피소드의 episodeId+코드 (2026-10-11) ──
 // gate-eligibility/leader-status 는 코드(episodeCode)만 돌려줘서, studio-approve-g4/mobile-hold 가
 // 요구하는 episodeId(studio-state.json 의 episodes 키)를 모바일 화면이 따로 알아낼 방법이 필요했음.
-mcpRouter.get('/active-episode', (_req, res) => {
+const activeEpisodeHandler = (_req, res) => {
   try {
     const state = loadStudioState()
     const epKey = state.activeEpisodeId
@@ -9056,12 +9062,14 @@ mcpRouter.get('/active-episode', (_req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })
   }
-})
+}
+mcpRouter.get('/active-episode', activeEpisodeHandler)
+app.get('/mobile/active-episode', activeEpisodeHandler)
 
 // ── POST /api/mcp/mobile-hold — 모바일 상황실 "⏸ 지금 전부 보류" 토글 (2026-10-11) ──
 // { episodeId?, hold } — episodeId 생략 시 활성 에피소드. episodeId 는 studio-state.json 의
 // 에피소드 키(leader-status 와 동일 resolve 패턴), Notion 쪽은 episodeCode(title contains) 로 찾는다.
-mcpRouter.post('/mobile-hold', async (req, res) => {
+const mobileHoldHandler = async (req, res) => {
   try {
     const { episodeId, hold } = req.body || {}
     const state = loadStudioState()
@@ -9074,7 +9082,9 @@ mcpRouter.post('/mobile-hold', async (req, res) => {
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message })
   }
-})
+}
+mcpRouter.post('/mobile-hold', mobileHoldHandler)
+app.post('/mobile/mobile-hold', mobileHoldHandler)
 
 // ── GET /api/mcp/leader-context?episode=LF_T01 — 리더가 매 사이클 읽는 정책 (P3) ──
 // 에피소드 파이프라인 행의 사람이 토글하는 값: 보류(checkbox) · 에이전트 자동승인(multi).
@@ -9112,6 +9122,8 @@ const gateEligibilityHandler = async (req, res) => {
 }
 mcpRouter.get('/gate-eligibility', gateEligibilityHandler)
 app.get('/api/gate-eligibility', gateEligibilityHandler)
+// 모바일 상황실(/mobile)에서도 같은 핸들러 재사용 — 터널에 새로 노출되는 건 이 경로 하나뿐.
+app.get('/mobile/gate-eligibility', gateEligibilityHandler)
 
 // ── POST /api/mcp/restart-proxy — 새 프로세스를 먼저 detached로 띄운 뒤
 // (포트 경합은 startServer()의 기존 EADDRINUSE 재시도 로직이 흡수) 응답 후 자기 자신 종료 ──
