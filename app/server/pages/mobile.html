@@ -74,6 +74,7 @@
     <button class="on" data-tab="status" onclick="showTab('status')">상황</button>
     <button data-tab="decide" onclick="showTab('decide')">판단</button>
     <button data-tab="memo" onclick="showTab('memo')">메모</button>
+    <button data-tab="dev" onclick="showTab('dev')">개발</button>
   </div>
   <div id="err"></div>
 
@@ -100,6 +101,11 @@
       <button class="sendbtn" onclick="sendMemo()">리더 로그에 남기기</button>
     </div>
     <div class="card" id="memoLogCard"><h2>최근 남긴 메모</h2><div class="empty">불러오는 중...</div></div>
+  </section>
+
+  <section id="tab-dev">
+    <div id="devStaleBox"></div>
+    <div class="card" id="devCard"><h2>최근 변화 (STATUS.md)</h2><div class="empty">불러오는 중...</div></div>
   </section>
 </div>
 
@@ -136,15 +142,32 @@ async function loadAll() {
   try {
     EP = await api('/active-episode')
     if (!EP.ok) { setErr(EP.error || '활성 에피소드 없음'); return }
-    const [status, gate] = await Promise.all([
+    const [status, gate, dev] = await Promise.all([
       api('/leader-status?episode=' + encodeURIComponent(EP.episodeCode)),
       api('/gate-eligibility?gate=G4'),
+      api('/dev-status'),
     ])
     renderStatus(status)
     renderDecide(gate, status)
+    renderDev(dev)
   } catch (e) {
     setErr(e.message)
   }
+}
+
+function renderDev(d) {
+  const stale = document.getElementById('devStaleBox')
+  if (d.lastModified) {
+    const days = Math.floor((Date.now() - new Date(d.lastModified)) / 86400000)
+    stale.innerHTML = days >= 3
+      ? `<div class="blocker">⚠️ STATUS.md가 ${days}일째 안 갱신됨 — 그 사이 작업은 여기 안 보일 수 있음</div>`
+      : ''
+  }
+  const card = document.getElementById('devCard')
+  const entries = d.entries || []
+  card.innerHTML = '<h2>최근 변화 (STATUS.md)</h2>' + (entries.length
+    ? entries.map(e => `<div class="log-item"><div class="meta">${esc(e.heading)}</div>${esc(e.snippet)}</div>`).join('')
+    : '<div class="empty">없음</div>')
 }
 
 function renderStatus(d) {

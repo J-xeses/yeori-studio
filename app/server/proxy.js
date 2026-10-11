@@ -24,6 +24,7 @@ import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicT
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml, buildImageSequenceHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
 import { postLeaderLog } from './lib/leaderLog.js'
+import { recentStatusEntries, statusFileMtime } from './lib/statusFeed.js'
 import { syncEpisodeState, setHold } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
@@ -134,6 +135,11 @@ app.get('/youtube-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages'
 // 2026-10-11, 성준님 8시간 외출 경험 계기. 로컬은 PIN 없이, 원격은 Vercel api/mobile/[[...path]].js
 // 가 MOBILE_ACCESS_CODE 로 게이트한 뒤 Cloudflare 터널 경유로 이 라우트들에 그대로 중계.
 app.get('/mobile', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'mobile.html')))
+// "개발" 탭 — STATUS.md 최근 항목만 읽기전용으로 (2026-10-11)
+app.get('/mobile/dev-status', (_req, res) => {
+  try { res.json({ ok: true, entries: recentStatusEntries(12), lastModified: statusFileMtime() }) }
+  catch (err) { res.status(500).json({ ok: false, error: err.message }) }
+})
 app.get('/api/youtube-ops', (_req, res) => res.json({ ops: loadYtOps(), photos: listYtProfilePhotos() }))
 app.put('/api/youtube-ops', (req, res) => {
   try { const out = saveYtOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }

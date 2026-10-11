@@ -27,6 +27,14 @@
     {
       "source": "/token",
       "destination": "/api/oauth-token"
+    },
+    {
+      "source": "/mobile",
+      "destination": "/api/mobile"
+    },
+    {
+      "source": "/mobile/:path*",
+      "destination": "/api/mobile/:path*"
     }
   ]
 }
