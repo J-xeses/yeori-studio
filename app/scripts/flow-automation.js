@@ -87,7 +87,7 @@ const CONFIG = {
   faceCacheFile:   mp.charactersDir('yeori-face-cache.json'),
 
   // ── 클로즈업 얼굴 프롬프트 (에피소드당 1회) ────────────────────────
-  closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, clear even skin with a soft natural finish, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
+  closeupFacePrompt: 'Close-up face shot. Young Korean woman early-20s appearing no older than 22-23, long wavy dark brown hair NOT short NOT permed NOT curly, natural wave only flowing naturally, natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, delicate gold necklace, soft natural smile, calm expression NOT surprised NOT wide eyes, warm skin tone, high facial symmetry, sharp jawline, effortlessly photogenic not posing. Photorealistic 8K cinematic.',
 
   // ── 전신샷 자동 추가 프리픽스/서픽스 ──────────────────────────────
   // yeori_ruleset_v1.3 반영: "DO NOT change ~" 류 강한 명령형은 정책위반 오인 유발 가능성으로 제거,

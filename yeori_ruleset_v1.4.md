@@ -1,4 +1,4 @@
-# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.4
+# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.5
 
 > 출처: 성준님 직접 정리 (AI 유튜브 채널 운영 시작하기 1\~7)
 > 용도: 프롬프트 생성 후 자동 품질 체크 기준
@@ -11,7 +11,7 @@
 |-|-|-|
 |스타트 프레임|반드시 서여리 얼굴 있는 이미지 사용|즉시 재생성|
 |헤어|long wavy hair / NOT short 이중 강조 필수|프롬프트 수정 후 재생성|
-|피부|`clear healthy skin, smooth even complexion, soft natural finish` + `avoid: acne, blemishes, ...` 상시 포함. ⚠️ "skin texture on (right) cheek" 류 표현 **금지** — 모델이 여드름·잡티로 증폭 (2026-09-09 v1.4.1 실측)|해당 문구 제거 후 재생성|
+|피부|`natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen` + `avoid: acne, blemishes, ...` 상시 포함. ⚠️ "skin texture on (right) cheek" 류 표현 **금지** — "texture"라는 단어 자체가 여드름·잡티로 증폭됨 (2026-09-09 v1.4.1 실측). 2026-10-12 v1.4.5: 완전 플랫한 "clear healthy skin"도 너무 인공적이라는 판단 — "texture" 단어 없이 자연스러운 피부 느낌을 살리는 쪽으로 재조정(성준님 확정)|해당 문구 제거 후 재생성|
 |시그니처 디테일|`delicate gold necklace` 필수|프롬프트 추가|
 |의상|색상·소재·스타일 구체적으로 명시 (⚠️ "DO NOT change clothing" 등 강한 명령형 사용 금지 — 정책위반 오인 유발, 2026-06-14 확정)|프롬프트 수정|
 |소품|가방·신발·골드 목걸이·브레이슬렛 디테일 명시|프롬프트 추가|
@@ -21,7 +21,7 @@
 ✅ 통과 체크리스트:
 □ 스타트 프레임 = 서여리 얼굴 이미지
 □ 헤어 길이 이중 강조 포함
-□ 피부: 깨끗·균일한 톤 · 여드름/잡티/붉은기 없음 · avoid: 줄 포함
+□ 피부: natural-finish makeup·soft real sheen 문구 사용 · "texture"/"blemish" 단어 미포함 · avoid: 줄 포함
 □ 의상 색상·소재·스타일 구체적 명시 (명령형 문구 없이)
 □ 배경 일관성 확인
 ```
@@ -141,7 +141,7 @@
 ```
 Young Korean woman early-20s,
 long wavy dark brown hair, NOT short hair,
-clear healthy skin, smooth even complexion with a soft natural finish,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
 delicate gold necklace,
 effortlessly photogenic not posing just existing beautifully,
 K-model proportions small face long legs,
@@ -150,6 +150,8 @@ avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin
 ```
 
 ⚠️ **2026-09-09 확정 (v1.4.1)**: 이전 베이스의 `❗a very subtle natural skin texture on her right cheek (subtle, never exaggerated)` 삭제. 같은 이유로 `downloads/seoyeori/characters/characters.json` 여리 descriptor 의 `rosy cheeks and a few small facial moles` 도 `clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin` 로 교체(다인물 장면 `injectCharacterDescriptors` 가 주입하는 실제 데이터라 여기도 고쳐야 함). Flow·힉스필드·Krea 등이 이 문구를 **여드름·잡티·붉은기로 증폭**해 서여리 우뺨 피부를 심하게 망침(2026-09-09 실측 이미지). 원인: ① `skin texture on cheek` = 뺨에 뭔가 올리라는 지시로 읽힘 ② `(subtle, never exaggerated)` 괄호 부정 수식어는 대부분 무시됨 ③ `❗` 가 오히려 증폭. "AI 플라스틱 방지"는 `soft natural finish` + `avoid:` 목록으로 대체(긍정형 + 명시적 회피 목록이 훨씬 안정적).
+
+⚠️ **2026-10-12 재조정 (v1.4.5)**: v1.4.1의 `clear healthy skin, smooth even complexion`이 너무 인공적("플라스틱 피부")이라는 성준님 판단 — 옅은 화장 느낌의 자연스러운 피부 질감은 살리고 싶다는 요청. 핵심은 "잡티를 없애라"가 아니라 **"texture"라는 단어 자체가 트리거**였다는 v1.4.1의 원인 분석은 그대로 유효 — 그 단어만 피하면 자연스러움 묘사는 해도 된다는 결론. 신규 확정 문구: `natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen`(+ 기존 `avoid:` 목록 유지). `studio-state.json` 전체 스캔해 구 문구(스타일 변형 포함 총 181건) 전부 교체 완료(2026-10-12). `characters.json` 여리 descriptor는 `/api/characters/:id/analyze` 재생성 시 "faint cheek freckles/small moles" 표현이 자연스럽게 포함되는 것으로 실측 확인(Gemini 앱·Flow 양쪽 생성 테스트에서 점/주근깨가 과증폭 없이 정상 렌더링됨) — "moles/freckles" 자체는 "texture"와 달리 트리거가 아닌 것으로 판단, 유지.
 
 ⚠️ **2026-06-14 확정**: 위 베이스에 과거 포함되어 있던 "DO NOT change character appearance" 같은 강한 명령형 문구는 제거한다. 신체비율/외형 묘사 자체(K-model proportions 등)는 캐릭터 정체성의 핵심이므로 그대로 유지하되, "DO NOT", "absolutely mandatory", "strictly required" 같은 명령조 어휘가 누적되면 Flow 정책 모델이 "특정 실존 인물을 정밀 재현하려는 시도"로 오인해 정책위반 플래그가 발생한다(유명인 오인 플래그 회피 원칙). 명령형만 빼고 묘사는 유지하는 것이 핵심.
 
@@ -727,4 +729,11 @@ v1.4.4 (2026-09-11) — ⑬-3 대사·나레이션 문장부호 = TTS 프로소�
                      쉼표(짧은 끊음)·물결표(음절 늘임)·말줄임표(긴 정지)·느낌표/물음표(억양↑)가
                      정제·읽기교정 어디서도 지워지지 않고 그대로 TTS 로 들어감(검증 완료).
                      대본 작성 시 의도적 배치 규칙 명문화. TTS 탭 "목소리 제어 가이드"에도 동일 표 추가.
+v1.4.5 (2026-10-12) — ① 피부 항목 재조정. v1.4.1의 `clear healthy skin`(완전 플랫)이 너무
+                     인공적이라는 판단 — "texture"/"blemish" 단어만 피하고 자연스러운 피부
+                     느낌은 살리는 `natural-finish makeup, skin looking soft and real rather
+                     than airbrushed, gentle healthy sheen`로 교체(성준님 확정). studio-state.json
+                     전체(181건, 여러 episodes) + flow-automation.js 베이스 프롬프트 일괄 수정.
+                     Gemini 앱·Flow 양쪽 실측 생성 테스트로 검증(CUT 3 미디엄샷·진짜 전신샷 둘 다
+                     점/주근깨 과증폭 없이 정상 렌더링 확인).
 ```
