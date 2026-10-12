@@ -1,0 +1,420 @@
+================================================================
+마스터 코드
+[IG_R08] :: [PL:IG_RL] :: [SP:IN.SHOP.DY.LT_WD] :: [CH:YR_VD] :: [SH:SH_MCU] :: [F군:미설정]
+================================================================
+에피소드명: 아무도 모르는 내 두 번째 직업 — 꿈을 고치는 사람
+채널: 서여리 인스타그램 릴스 (IG_R08)
+총 길이: 58초 (컷1~5,7=8초 · 컷6=10초) — 컷 경계마다 체인지 생성기 트리거+VFX로 하드컷
+콘셉트: 2026-10-11 초안(직업 체인지, R07 베이스라인×변신 구조)을 이미지로 먼저 생성해본 결과
+  "평범하고 감흥 없음" 피드백(성준님) → 전면 재기획(2026-10-12). 이번엔:
+  ① 특이한 직업 설정 — "꿈 수선공(Dream Mender)": 낮엔 조용한 빈티지 소품 수리점 직원이지만,
+     손님이 맡긴 낡은 물건(거울·사진·회중시계·스노우글로브)을 만지는 순간 그 물건에 갇힌
+     "망가진 꿈" 속으로 들어가 고쳐주고 돌아온다 — 아무도 모르는 진짜 직업.
+  ② 체인지 조합 생성기(어제 구축, [[project_change_combo_generator]]) 트리거 5종을 각기 다른
+     꿈-세계 리빌에 배치 — mirror_touch(거울)·water_emerge(신규, 물 속에서 떠오름)·smoke_burst(연기)·
+     crash_zoom(눈동자로 확대)·finger_snap(완성의 스냅). 매 컷 "현실의 평범한 손동작"이 그대로
+     "환상으로 넘어가는 문"이 되어 현실과 환타지의 경계를 계속 지운다.
+  ③ 연출 재료 창고([[reference_direction_material_bank]])의 "수중 포트레이트"(①AI만 가능한
+     불가능한 비주얼)와 "단색 테마 스튜디오 강렬 대비"(Scene B) 신규 재료를 각각 CUT3·CUT6에 실사용.
+  구조: CUT1 훅(평범한 일상 — 아무도 내 진짜 직업을 모른다) → CUT2~5 고조×4(서로 다른 손님의
+  꿈 4개, 서로 다른 트리거) → CUT6 시그(수선 완료의 순간 — 체인지 생성기 신규 Scene B 프리셋으로
+  이 캐릭터만의 "진짜 얼굴" 시그니처 컷) → CUT7 결말(다시 평범한 가게로, 고친 물건을 돌려주며 CTA).
+  길이·체인지 비트: 전부 "0-2s 트리거(현실 동작) / 2-8s(또는 2-10s) VFX 정착+꿈-세계 리빌" 2단 구조,
+  R07과 동일 원리(같은 구도 고정 또는 컷마다 새 구도+하드컷, 아래 각 컷 SH/CA 참고).
+================================================================
+EP.HEADER
+CHAR  : YEORI (서여리 기본)
+EP    : IG_R08
+TITLE : 아무도 모르는 내 두 번째 직업
+LOOK.A: 컷마다 다른 "꿈-세계" 비주얼(아래 CH 참고) — 베이스라인(CUT1·7)은 동일 소품점·동일 구도
+BG.A  : 낡은 빈티지 소품 수리점, 선반 가득한 손님들의 물건
+LIGHT : LT_WD (낮, 창가 자연광 — 베이스라인) / 컷마다 꿈-세계 조명 별도
+REF   : yeori face / closeup
+BGM   : 로파이·몽환적 신스 팝(4박 루프), 컷마다 비트 드롭에 트리거 타이밍 정확히 맞춤
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — 평범한 소품 수리점의 하루 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 낡은 빈티지 소품 수리점 안. 서여리가 작업대에 앉아 손님이 맡긴 낡은 손거울을 조심스럽게 닦고 있다. 카메라를 흘끗 보며 옅은 미소.
+SP: IN.SHOP.DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LOOK_SHOP (내추럴 베이지 에이프런 + 화이트 셔츠, 느슨하게 묶은 머리, 손끝에 작업용 가죽 장갑)
+DL: 없음
+NR: 사람들은 내가 그냥 물건을 고치는 줄 안다.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_PLF
+AC: 손거울을 천으로 닦다가 멈추고, 카메라를 향해 옅은 미소. 손거울 표면에 금이 가 있는 게 보인다.
+LOOK_ID: LOOK_SHOP
+DU: 8
+CP: 사람들은 내가 그냥 물건을 고치는 줄 안다.
+CT: YEORI
+BEAT: 훅
+오디오:
+  BGM: 로파이 몽환 신스 팝 (0초부터, 조용한 인트로)
+  음성: 없음
+  효과음: 먼지 닦는 천 소리, 낡은 시계 초침
+  앰비언스: 조용한 가게, 바람에 풍경 살짝 흔들림
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     낡은 빈티지 소품 수리점, 낮 자연광
+CH(캐릭터):   베이지 에이프런 + 화이트 셔츠, 느슨한 묶음머리, 가죽 장갑
+SH(샷):       미디엄 클로즈업, 작업대 정면
+CA(카메라):   고정
+AC(동작):     0~4초 손거울을 천으로 닦음 → 4~8초 멈추고 카메라를 향해 옅은 미소, 금 간 거울 표면 클로즈업
+MD(감정):     차분하고 담담함, 묘한 여운
+DL(대사):     없음
+NR(나레이션): 사람들은 내가 그냥 물건을 고치는 줄 안다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — Korean woman in her early 20s, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure, long wavy dark brown hair loosely tied back, NOT short,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+sitting at a wooden workbench in a dusty vintage curio repair shop, shelves of old trinkets softly blurred behind her,
+wearing a beige canvas apron over a white shirt, fingerless leather work gloves,
+carefully polishing an antique hand mirror with a cracked surface, soft knowing smile toward camera,
+delicate gold necklace barely visible, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: soft daytime window light through dusty glass, warm and quiet,
+background: shelves of old clocks, photographs, trinkets, softly blurred, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-4s: She polishes an antique cracked hand mirror with a soft cloth, focused and gentle. / Next 4-8s: She pauses, glancing up at camera with a quiet knowing smile, the cracked mirror catching the light in her hands. No dialogue — narration only. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI | 고조 — 거울 속에 갇힌 웃음 (mirror_touch) | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 거울 리플렉션 효과음) 서여리가 손거울 표면을 손끝으로 가볍게 터치한다. 거울에 비친 그녀의 모습이 먼저 다른 옷·다른 빛으로 바뀌고, 그 반사가 현실로 번져 나오며 몽환적인 달빛 무도회장으로 전이된다.
+SP: OT.BALL.NT.LT_MOON
+PL: YR_VD
+CH: YR_VD / LOOK_MIRROR (은빛 시폰 가운, 달빛에 비치는 반투명 소재, 풀어 늘어뜨린 웨이브 머리에 은색 헤어핀)
+DL: 없음
+NR: 어떤 손님의 거울엔, 웃음이 갇혀 있었다.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_SUR
+AC: 거울 표면을 손끝으로 터치 → 반사된 모습이 먼저 바뀌며 리플렉션이 화면 전체로 번짐 → 몽환적 달빛 무도회장에서 천천히 고개를 들며 정면
+LOOK_ID: LOOK_MIRROR
+DU: 8
+CP: 어떤 손님의 거울엔, 웃음이 갇혀 있었다.
+CT: YEORI
+BEAT: 고조
+오디오:
+  BGM: 로파이 몽환 신스 팝 (이어서, 비트 살짝 고조)
+  음성: 없음
+  효과음: 유리 울림(리플렉션 트리거) + 몽환적 차임벨
+  앰비언스: 조용한 무도회장, 먼 왈츠 선율
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     달빛 비치는 몽환적 무도회장(꿈-세계), 야간
+CH(캐릭터):   은빛 시폰 가운, 반투명 소재, 풀어 늘어뜨린 웨이브 머리+은색 헤어핀
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정(거울 구도) → 꿈-세계 전이
+AC(동작):     0~2초 거울 표면 터치, 반사가 먼저 바뀌며 번짐(트리거) → 2~8초 몽환적 무도회장 리빌, 천천히 고개 들어 정면
+MD(감정):     신비롭고 몽환적
+DL(대사):     없음
+NR(나레이션): 어떤 손님의 거울엔, 웃음이 갇혀 있었다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+long wavy dark brown hair NOT short, now loose and flowing, standing in a dreamlike moonlit ballroom, liquid-mercury light ripples settling across the floor around her,
+now wearing a flowing silver chiffon gown, sheer moonlit fabric catching an ethereal glow, a silver hairpin,
+delicate gold necklace, slowly lifting her gaze toward camera, soft mysterious smile, enchanted expression,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: cool moonlight with a soft silver-blue glow, dreamy haze,
+background: vast empty moonlit ballroom, soft bokeh chandeliers, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: She touches the cracked mirror's surface with one fingertip — her reflection shifts first, changing into the silver gown before she does, liquid ripples of light spreading outward — this is the transition moment. / Next 2-8s: The reflection's light spreads to engulf the frame, revealing a dreamlike moonlit ballroom around her, she slowly lifts her gaze toward camera with a soft mysterious smile. No dialogue — narration only. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 고조 — 비에 젖은 사진 한 장 (water_emerge) | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 물소리) 서여리가 물에 얼룩진 낡은 사진 한 장을 손에 쥔 채 눈을 감는다. 화면이 서서히 물속으로 잠기고, 반쯤 물에 잠긴 채 수면을 깨고 떠오르는 그녀의 얼굴 — 빗속 어느 여름날의 기억 속이다.
+SP: OT.POOL.DY.LT_RAIN
+PL: YR_VD
+CH: YR_VD / LOOK_WATER (물에 젖은 화이트 리넨 원피스, 수면에 비친 햇살, 젖은 채 이마에 붙은 잔머리)
+DL: 없음
+NR: 빗속에서 멈춰버린 여름, 그 안에 있었다.
+SH: SH_ECU
+CA: CA_ST
+MD: MD_SUR
+AC: 눈을 감고 사진을 가슴에 품음 → 화면이 물속으로 전이 → 반쯤 잠긴 얼굴이 수면을 깨고 천천히 떠오름, 물방울이 흘러내림
+LOOK_ID: LOOK_WATER
+DU: 8
+CP: 빗속에서 멈춰버린 여름, 그 안에 있었다.
+CT: YEORI
+BEAT: 안정
+오디오:
+  BGM: 로파이 몽환 신스 팝 (이어서, 잔잔하게 가라앉음)
+  음성: 없음
+  효과음: 물속 기포 소리 + 수면 깨지는 소리(트리거)
+  앰비언스: 빗소리, 먼 천둥
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     빗속 기억 속 수영장/물가(꿈-세계), 낮
+CH(캐릭터):   젖은 화이트 리넨 원피스, 이마에 붙은 잔머리, 수면 반사광
+SH(샷):       익스트림 클로즈업(반수면 초근접 포트레이트 — [[reference_direction_material_bank]] ①)
+CA(카메라):   고정 → 수중 전이
+AC(동작):     0~2초 눈을 감고 사진을 품음, 화면이 물속으로 잠김(트리거) → 2~8초 반쯤 잠긴 얼굴이 수면을 깨고 떠오름, 물방울이 흘러내림
+MD(감정):     아련하고 몽환적인 그리움
+DL(대사):     없음
+NR(나레이션): 빗속에서 멈춰버린 여름, 그 안에 있었다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+EXTREME CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure, half-submerged underwater portrait, face breaking the water surface,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+light caustics rippling across her skin, scattered water droplets and air bubbles, long wavy dark brown hair NOT short, wet strands clinging to her forehead,
+keep her eyes and eye color sharply in focus as the one clear anchor, the rest of her face softly touched by water refraction,
+delicate gold necklace barely visible beneath the water line, calm wistful expression, direct gaze at camera,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, shallow depth of field,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: soft overcast daylight filtering through rain-streaked water surface, cool blue-grey tones,
+background: blurred rain-soaked poolside memory, soft bokeh raindrops, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: She closes her eyes holding a water-stained photograph to her chest, the frame slowly dissolving into water — this is the transition moment. / Next 2-8s: Breaking through the water surface while rising up, droplets cascading off her face and hair, she opens her eyes with a calm wistful gaze directly at camera. No dialogue — narration only. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI | 고조 — 멈춘 회중시계 속 재즈바 (smoke_burst) | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 연기 번짐 효과음) 서여리가 멈춰버린 낡은 회중시계의 태엽을 감는다. 뿌연 담배 연기 같은 안개가 피어오르고, 그 연기 속에서 그녀가 1920년대풍 재즈바 차림으로 등장한다.
+SP: IN.JAZZ.NT.LT_AMB
+PL: YR_VD
+CH: YR_VD / LOOK_JAZZ (버건디 벨벳 슬립 드레스, 깃털 장식 헤어밴드, 긴 진주 목걸이, 롱 웨이브(1920s 핑거웨이브 스타일링, 길이는 그대로 긴 머리))
+DL: 없음
+NR: 멈춰버린 시간 속에선, 아직도 음악이 흐르고 있었다.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_WRM
+AC: 회중시계 태엽을 감음 → 연기가 피어오름(트리거) → 연기 속에서 걸어 나오듯 등장, 느긋하고 여유로운 미소
+LOOK_ID: LOOK_JAZZ
+DU: 8
+CP: 멈춰버린 시간 속에선, 아직도 음악이 흐르고 있었다.
+CT: YEORI
+BEAT: 고조
+오디오:
+  BGM: 로파이 몽환 신스 팝 → 재즈 트럼펫 모티프로 잠깐 변주(이 컷만)
+  음성: 없음
+  효과음: 태엽 감는 소리 + 연기 피어오르는 소리(트리거)
+  앰비언스: 낮은 재즈바 웅성임, 잔 부딪히는 소리
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     1920년대풍 빈티지 재즈바(꿈-세계), 야간, 앰버 조명
+CH(캐릭터):   버건디 벨벳 슬립 드레스, 깃털 헤어밴드, 긴 진주 목걸이, 롱 웨이브(핑거웨이브 스타일링)
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정 → 연기 전이
+AC(동작):     0~2초 회중시계 태엽을 감음, 연기 피어오름(트리거) → 2~8초 연기 속에서 등장, 느긋한 미소
+MD(감정):     여유롭고 매혹적인 노스탤지어
+DL(대사):     없음
+NR(나레이션): 멈춰버린 시간 속에선, 아직도 음악이 흐르고 있었다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+long wavy dark brown hair NOT short, styled with soft 1920s finger-waves (length kept long, waves only), standing in a vintage jazz lounge with warm amber lighting,
+a burst of hazy smoke curling and dissolving around her as she steps forward,
+now wearing a burgundy velvet slip dress, a feathered headband, a long strand of pearls, art-deco glamour styling,
+delicate gold necklace layered beneath the pearls, relaxed alluring smile, confident and unhurried,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: warm amber lounge lighting, soft smoky haze, moody golden tones,
+background: blurred vintage jazz bar, brass instruments, soft bokeh string lights, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: She winds the stopped pocket watch, a plume of hazy smoke rising and curling around her — this is the transition moment. / Next 2-8s: A burst of colored smoke clears as she steps forward from within it, revealing the 1920s jazz lounge, relaxed alluring smile, confident and unhurried toward camera. No dialogue — narration only. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5] ─ YEORI | 고조 — 별 조각 스노우글로브 속 우주 (crash_zoom) | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 줌 스우시) 서여리가 금 간 스노우글로브를 들여다본다. 카메라가 그녀의 눈동자로 빠르게 크래시 줌인 — 동공 속으로 빨려 들어가듯 전환되며, 줌아웃되면 별이 쏟아지는 우주 한가운데 떠 있는 그녀가 보인다.
+SP: OT.SPACE.NT.LT_STAR
+PL: YR_VD
+CH: YR_VD / LOOK_COSMIC (딥블루 벨벳 오프숄더 톱, 반짝이는 별가루 메이크업 포인트, 자연스럽게 떠다니는 머리카락)
+DL: 없음
+NR: 어떤 꿈은, 우주보다 컸다.
+SH: SH_MCU
+CA: CA_CZ
+MD: MD_SUR
+AC: 스노우글로브를 눈높이로 들어올림 → 카메라가 눈동자로 크래시 줌인(트리거) → 줌아웃되며 우주 공간에 떠 있는 전신이 리빌, 머리카락과 옷자락이 무중력으로 떠다님
+LOOK_ID: LOOK_COSMIC
+DU: 8
+CP: 어떤 꿈은, 우주보다 컸다.
+CT: YEORI
+BEAT: 고조
+오디오:
+  BGM: 로파이 몽환 신스 팝 (이어서, 신스 패드로 웅장하게 확장)
+  음성: 없음
+  효과음: 줌 스우시(트리거) + 반짝이는 차임
+  앰비언스: 깊은 우주의 정적
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     별이 쏟아지는 우주 공간(꿈-세계), 무중력
+CH(캐릭터):   딥블루 벨벳 오프숄더 톱, 별가루 메이크업 포인트, 무중력으로 떠다니는 머리카락
+SH(샷):       미디엄 클로즈업 → 크래시 줌
+CA(카메라):   크래시 줌인→줌아웃
+AC(동작):     0~2초 스노우글로브를 눈높이로, 눈동자로 크래시 줌인(트리거) → 2~8초 줌아웃되며 우주 공간 리빌, 무중력으로 떠다님
+MD(감정):     경이롭고 초현실적인 황홀
+DL(대사):     없음
+NR(나레이션): 어떤 꿈은, 우주보다 컸다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, subtle shimmering star-dust makeup accents along cheekbones,
+long wavy dark brown hair NOT short, floating naturally as if weightless, suspended amid a starfield in deep space, countless stars and soft nebula glow surrounding her,
+now wearing a deep blue velvet off-shoulder top, fabric drifting weightlessly,
+delicate gold necklace catching starlight, awestruck serene expression, eyes wide with wonder, looking directly at camera,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: cool starlight and soft nebula glow, dreamlike cosmic ambiance,
+background: deep space starfield, soft bokeh stars, faint colorful nebula, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: She lifts a cracked snow globe to eye level, the camera crash-zooms rapidly into her eye, pulled into the reflection within — this is the transition moment. / Next 2-8s: The camera zooms back out to reveal her suspended weightlessly amid a starfield, hair and fabric drifting in zero gravity, awestruck serene expression directly at camera. No dialogue — narration only. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6] ─ YEORI | 시그 — 수선 완료, 진짜 나 (finger_snap + 단색 스튜디오) | 10
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 핑거 스냅 충격파) 네 개의 꿈을 모두 고친 서여리. 손가락을 튕기는 순간, 배경과 바닥이 강렬한 솔리드 레드로 통일된 스튜디오로 전환 — 광택 블랙 레더 코트와 레드 빈티지 전화기가 놓인, 이 "직업"의 진짜 얼굴을 보여주는 시그니처 컷.
+SP: IN.ST.COLOR.LT_SET
+PL: YR_VD
+CH: YR_VD / LOOK_SIGNATURE (광택 블랙 레더 트렌치코트, 무릎 위까지 오는 하이 블랙 부츠, 레드 빈티지 헤드셋 — 체인지 생성기 Scene B #5)
+DL: 없음
+NR: 이게, 내가 진짜 하는 일이다.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_CF
+AC: 손가락을 튕김(완성의 신호) → 빛과 입자가 사방으로 터짐 → 배경이 솔리드 레드 스튜디오로 전환, 당당하게 정면 응시
+LOOK_ID: LOOK_SIGNATURE
+DU: 10
+CP: 이게, 내가 진짜 하는 일이다.
+CT: YEORI
+BEAT: 시그
+오디오:
+  BGM: 로파이 몽환 신스 팝 (전 컷 모티프 전부 레이어링되며 절정)
+  음성: 없음
+  효과음: 핑거 스냅 "딱" + 충격파 베이스 드롭(트리거)
+  앰비언스: 완전한 정적 뒤 울림
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     배경·바닥 전부 솔리드 레드로 통일된 스튜디오(브랜드 시그니처 컬러)
+CH(캐릭터):   광택 블랙 레더 트렌치코트, 하이 블랙 부츠, 레드 빈티지 헤드셋
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~2초 손가락 스냅, 빛·입자 폭발(트리거) → 2~10초 레드 스튜디오 리빌, 당당한 정면 응시
+MD(감정):     확신에 찬 당당함, 채널의 "진짜 얼굴"
+DL(대사):     없음
+NR(나레이션): 이게, 내가 진짜 하는 일이다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+long wavy dark brown hair NOT short, sleek and settled, standing against a studio backdrop where the entire background and floor are unified in a bold solid red, dramatic studio lighting,
+now wearing a glossy black leather trench coat, knee-high black boots, a red vintage telephone headset over one ear, matching red vintage telephone subtly visible,
+delicate gold necklace layered beneath the collar, confident commanding expression, direct powerful gaze at camera,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: dramatic studio lighting, strong highlight on the leather coat and red telephone, bold color-blocked contrast,
+background: solid bold red studio backdrop and floor, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-2s: A finger snap gesture, light and particles bursting outward at the snap, the frame flashing briefly white — this is the transition moment. / Next 2-10s: The flash clears to reveal the solid red studio, she stands confidently in the black leather coat, direct powerful gaze at camera, commanding presence. No dialogue — narration only. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7] ─ YEORI | 결말 — 다시, 평범한 가게로 + CTA | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (하드컷, 조용한 풍경 소리) 다시 소품 수리점. 서여리가 이제 금이 사라진 손거울을 상자에 조심스럽게 담아 포장한다. 카메라를 보며 장난스럽게 눈을 찡긋.
+SP: IN.SHOP.DY.LT_WD
+PL: YR_VD
+CH: YR_VD / LOOK_SHOP (컷1과 동일 — 베이지 에이프런 + 화이트 셔츠)
+DL: 없음
+NR: 당신의 망가진 꿈은, 어떤 모습인가요?
+SH: SH_MCU
+CA: CA_ST
+MD: MD_PLF
+AC: 고친 거울을 상자에 조심스레 담고 리본을 묶음 → 카메라를 보며 장난스럽게 한쪽 눈 찡긋
+LOOK_ID: LOOK_SHOP
+DU: 8
+CP: 당신의 망가진 꿈은, 어떤 모습인가요?
+CT: YEORI
+BEAT: 결말
+오디오:
+  BGM: 로파이 몽환 신스 팝 (마지막 비트에서 페이드아웃)
+  음성: 없음
+  효과음: 상자 리본 묶는 소리, 작은 종소리
+  앰비언스: 조용한 가게, 바람에 풍경 살짝 흔들림
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     낡은 빈티지 소품 수리점, 낮 자연광(컷1과 동일 구도)
+CH(캐릭터):   컷1과 동일한 베이지 에이프런 + 화이트 셔츠로 복귀
+SH(샷):       미디엄 클로즈업, 작업대 정면(동일 프레이밍)
+CA(카메라):   고정
+AC(동작):     0~4초 고친 거울을 상자에 담고 리본을 묶음 → 4~8초 카메라를 보며 장난스럽게 윙크
+MD(감정):     편안하고 다정한 여운
+DL(대사):     없음
+NR(나레이션): 당신의 망가진 꿈은, 어떤 모습인가요?
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure, back in the beige canvas apron over a white shirt, long wavy dark brown hair NOT short, loosely tied back again,
+natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
+sitting at the same wooden workbench in the dusty vintage curio shop, same camera framing as the opening,
+carefully placing a now-flawless hand mirror into a small gift box, tying a ribbon around it,
+delicate gold necklace barely visible, playful warm wink toward camera, gentle knowing smile,
+photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,
+avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,
+lighting: same soft daytime window light through dusty glass,
+background: same shelves of old clocks, photographs, trinkets, softly blurred, vertical 9:16
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+First 0-4s: She carefully places the now-repaired mirror into a small box, tying a ribbon around it with gentle care. / Next 4-8s: She looks up at camera with a playful warm wink and a gentle knowing smile, inviting the viewer to wonder. No dialogue — narration only. No on-screen subtitle text or captions.

@@ -1,4 +1,4 @@
-# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.5
+# 서여리 연출 원칙 — 에이전트 판단 룰셋 v1.4.6
 
 > 출처: 성준님 직접 정리 (AI 유튜브 채널 운영 시작하기 1\~7)
 > 용도: 프롬프트 생성 후 자동 품질 체크 기준
@@ -144,12 +144,19 @@ long wavy dark brown hair, NOT short hair,
 natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,
 delicate gold necklace,
 effortlessly photogenic not posing just existing beautifully,
-K-model proportions small face long legs,
+1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,
 appearing no older than 22-23,
 avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine
 ```
 
 ⚠️ **2026-09-09 확정 (v1.4.1)**: 이전 베이스의 `❗a very subtle natural skin texture on her right cheek (subtle, never exaggerated)` 삭제. 같은 이유로 `downloads/seoyeori/characters/characters.json` 여리 descriptor 의 `rosy cheeks and a few small facial moles` 도 `clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin` 로 교체(다인물 장면 `injectCharacterDescriptors` 가 주입하는 실제 데이터라 여기도 고쳐야 함). Flow·힉스필드·Krea 등이 이 문구를 **여드름·잡티·붉은기로 증폭**해 서여리 우뺨 피부를 심하게 망침(2026-09-09 실측 이미지). 원인: ① `skin texture on cheek` = 뺨에 뭔가 올리라는 지시로 읽힘 ② `(subtle, never exaggerated)` 괄호 부정 수식어는 대부분 무시됨 ③ `❗` 가 오히려 증폭. "AI 플라스틱 방지"는 `soft natural finish` + `avoid:` 목록으로 대체(긍정형 + 명시적 회피 목록이 훨씬 안정적).
+
+⚠️ **2026-10-12 발견 (v1.4.6)**: 베이스의 `K-model proportions small face long legs,`가 실제로는
+약한 버전이었음 — 실전에서 이미 검증된 더 강한 문구는
+`1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions,
+small face, long legs, slender figure,`(SF_E01 CUT3 등 실제 production 컷에서 사용·검증됨). 약한 버전으로
+전신샷 생성 시 체형이 평범하게 나오는 걸 성준님이 실측으로 발견(IG_R08 CUT6 Flow 전신샷 테스트,
+2026-10-12). 베이스를 강한 버전으로 교체.
 
 ⚠️ **2026-10-12 재조정 (v1.4.5)**: v1.4.1의 `clear healthy skin, smooth even complexion`이 너무 인공적("플라스틱 피부")이라는 성준님 판단 — 옅은 화장 느낌의 자연스러운 피부 질감은 살리고 싶다는 요청. 핵심은 "잡티를 없애라"가 아니라 **"texture"라는 단어 자체가 트리거**였다는 v1.4.1의 원인 분석은 그대로 유효 — 그 단어만 피하면 자연스러움 묘사는 해도 된다는 결론. 신규 확정 문구: `natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen`(+ 기존 `avoid:` 목록 유지). `studio-state.json` 전체 스캔해 구 문구(스타일 변형 포함 총 181건) 전부 교체 완료(2026-10-12). `characters.json` 여리 descriptor는 `/api/characters/:id/analyze` 재생성 시 "faint cheek freckles/small moles" 표현이 자연스럽게 포함되는 것으로 실측 확인(Gemini 앱·Flow 양쪽 생성 테스트에서 점/주근깨가 과증폭 없이 정상 렌더링됨) — "moles/freckles" 자체는 "texture"와 달리 트리거가 아닌 것으로 판단, 유지.
 
@@ -736,4 +743,9 @@ v1.4.5 (2026-10-12) — ① 피부 항목 재조정. v1.4.1의 `clear healthy sk
                      전체(181건, 여러 episodes) + flow-automation.js 베이스 프롬프트 일괄 수정.
                      Gemini 앱·Flow 양쪽 실측 생성 테스트로 검증(CUT 3 미디엄샷·진짜 전신샷 둘 다
                      점/주근깨 과증폭 없이 정상 렌더링 확인).
+v1.4.6 (2026-10-12) — ⑥ 신체비율 베이스 보강. `K-model proportions small face long legs,`가
+                     약한 버전이었음을 실측 발견(IG_R08 CUT6 Flow 전신샷 — 체형이 평범하게 나옴)
+                     → 이미 실전 검증된 강한 버전(SF_E01 CUT3 등)으로 베이스 교체:
+                     `1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
+                     K-model proportions, small face, long legs, slender figure,`
 ```
