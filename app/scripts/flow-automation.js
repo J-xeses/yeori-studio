@@ -2413,6 +2413,21 @@ async function clickAddToPrompt(page) {
 
 // 접근성 트리 기반 입력창 위치 반환
 async function findPromptInputPos(page) {
+  // 2026-10-12 실측: Flow가 프롬프트 입력창을 <flow-rich-text-editor class="prompt-input">
+  // 커스텀 엘리먼트(closed shadow DOM 추정 — querySelector로 내부까지는 안 보이지만
+  // 엘리먼트 자체는 light DOM이라 태그/클래스로 바로 찾힘)로 바꿔서, 기존 textarea/
+  // input[type=text]/[role=textbox] 탐색이 전부 실패하고 0.48/0.895 비율 폴백으로
+  // 떨어졌는데 그 좌표가 실제 입력창보다 위로 빗나가 있었음(IG_R08 CUT1~2 연속 실패,
+  // 입력창은 항상 빈 채로 타임아웃). 태그/클래스로 직접 먼저 찾는다.
+  const directHit = await page.evaluate(() => {
+    const el = document.querySelector('flow-rich-text-editor.prompt-input, flow-rich-text-editor, .prompt-input')
+    if (!el) return null
+    const r = el.getBoundingClientRect()
+    if (r.width < 50 || r.height < 10) return null
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+  })
+  if (directHit) return directHit
+
   // 접근성 트리로 "무엇을 만들고" 또는 "What" 텍스트박스 탐색
   const found = await page.evaluate(() => {
     function searchA11y(root) {
