@@ -57,13 +57,14 @@ function resolveCharIds(chRaw, chars) {
   return ids
 }
 function refsAndDescriptors(ids, chars) {
-  const refs = [], desc = []
+  const refs = [], desc = [], neg = []
   for (const id of ids) {
     const c = chars[id]; if (!c) continue
     for (const rel of [c.closeup, c.face].filter(Boolean)) { const abs = path.join(MEDIA_ROOT, rel); if (fs.existsSync(abs)) { refs.push(abs); break } }
     if (c.descriptor) desc.push(`${c.name || id}: ${c.descriptor}`)
+    if (c.negativePrompt) neg.push(c.negativePrompt)
   }
-  return { refs, descriptorText: desc.join('\n') }
+  return { refs, descriptorText: desc.join('\n'), negativePromptText: neg.join(', ') }
 }
 
 function nextSlots(imgDir, no, n) {
@@ -116,13 +117,25 @@ async function main() {
     if (!base) { step(`컷 ${no}: 이미지 프롬프트가 없어 건너뜀`); continue }
     // job.charIds: 컷 CH 대신 레퍼런스 캐릭터를 직접 지정(예: 서여리 컷 목업 속 친구 사진 → ['jia']). [] 이면 레퍼런스 없이.
     const ids = Array.isArray(job.charIds) ? job.charIds.filter(id => chars[id]) : resolveCharIds(cut.masterCode?.ch, chars)
-    const { refs, descriptorText } = refsAndDescriptors(ids, chars)
+    const { refs, descriptorText, negativePromptText } = refsAndDescriptors(ids, chars)
     // 추가 레퍼런스(의상·분위기 기준 이미지): 캐릭터 얼굴 레퍼런스 뒤에 붙이고, 프롬프트에 역할을 알려 준다.
     const extra = (job.extraRefs || []).map(r => path.resolve(String(r))).filter(r => r.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase()) && fs.existsSync(r))
     if ((job.extraRefs || []).length !== extra.length) throw new Error('extraRefs 는 downloads 폴더 안의 존재하는 파일이어야 합니다')
     const allRefs = [...refs, ...extra]
     const roleNote = extra.length ? ' The first attached image is the reference face; the other attached image(s) are the outfit/room reference — match their clothing, hairstyle, and background/furniture exactly, while following the pose and scene described above.' : ''
-    const prompt = descriptorText ? `${base}\n\n[Character consistency — the attached image is the reference face. Keep the face identical to it:]\n${descriptorText}${roleNote}` : base + roleNote
+    // 얼굴 일관성 강화 3종(2026-10-12, proxy.js genImageForCut 과 동일 — 무료 Flow 경로도 같은 혜택 받게 포팅)
+    let prompt = base
+    if (descriptorText) {
+      prompt += `\n\n[CRITICAL INSTRUCTION: you must strictly preserve the identical facial bone structure, facial features, eyes, hair color, and identity of each character shown in the reference image(s). Apply this exact face identity to the following scene and composition:]\n${descriptorText}${roleNote}`
+    } else if (roleNote) {
+      prompt += roleNote
+    }
+    if (cut.shotType === 'FULLBODY') {
+      prompt += `\n\n[Camera: shot on an 85mm telephoto lens to minimize wide-angle facial distortion.]`
+    }
+    if (negativePromptText) {
+      prompt += `\n\n[Avoid: ${negativePromptText}]`
+    }
     const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^LF_/.test(episodeCode) ? '16:9' : '9:16')
     plan.push({ no, prompt, refs: allRefs, ratio, ids })
   }
