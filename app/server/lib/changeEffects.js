@@ -49,6 +49,7 @@ export const SCENE_B_FASHION_PRESETS = [
   { outfit: 'LED 파이버가 박힌 사이버 기모노, 발광 바이저', env: '미래형 초고층 빌딩 옥상, 야간', lighting: '네온 핑크·레이저 에메랄드 림라이트' },
   { outfit: '눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이', env: '눈 덮인 침엽수림, 얼어붙은 호수', lighting: '차가운 겨울 황혼 빛, 반짝이는 눈 결정' },
   { outfit: '버건디 벨벳 이브닝 드레스, 골드 커프', env: '마호가니 패널의 스피크이지 라운지, 그랜드 피아노', lighting: '앰버 촛불과 벽난로 플리커' },
+  { outfit: '광택 블랙 레더 트렌치코트, 무릎 위까지 오는 하이 블랙 부츠, 레드 빈티지 헤드셋', env: '배경·바닥 전부 강렬한 솔리드 레드로 통일된 스튜디오, 매칭되는 레드 빈티지 전화기 소품', lighting: '드라마틱한 스튜디오 조명, 레더 코트와 레드 소품에 하이라이트' },
 ]
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
