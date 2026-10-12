@@ -2180,6 +2180,7 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   }
 
   const before = await collectImageSrcs(page)
+  for (const it of before) _seenImageUuids.add(imageUuidOf(it.src))
   if (process.env.DIAG_NEWIMG) log('info', `[진단] 전체 스크롤 후 before=${before.length}`)
   await clickGenerate(page)
   await waitForTwoNewImages(page, before)
@@ -2619,12 +2620,17 @@ async function getCDPSession(page) {
 // 는 업로드한 레퍼런스 에셋, lh3.google.com 은 프로필 아이콘(둘 다 "새 이미지"가 아님).
 const GENERATED_IMAGE_URL_RE = /flow-content\.google\/image\//
 
-// 안전장치: 이번 실행에서 이미 저장한 이미지 UUID는 전역으로 기억해둔다. before/after
-// 비교(가상화 그리드 재렌더 타이밍에 취약 — 위 scrollGalleryToTop 메모 참고)가 또
-// 실패해도, "직전 컷에서 방금 저장한 바로 그 파일을 다음 컷에도 또 저장하는" 최악의
-// 사고만큼은 여기서 무조건 막는다. URL의 UUID 부분만 뽑아 비교(서명/Expires는 매번
-// 바뀌어도 같은 자산이면 UUID는 동일).
+// 안전장치: "저장한 것"만이 아니라 "한 번이라도 탐지된 것"까지 전역으로 기억해둔다.
+// 2026-10-12 실측(IG_R08) — 저장분만 추적했더니, 재시도가 걸린 컷(예: CUT4가 1차
+// 시도에서 차단되고 2차에서 성공)의 "차단되어 버려진 1차 시도 결과물"(서버에선 실제로
+// 멀쩡히 생성된 이미지)이 추적 대상에서 빠져, 그 다음 컷(CUT5)이 가상화 그리드
+// 렌더 지연 때문에 그 버려진 이미지를 자기 "새 이미지"로 주워가는 사고가 났다
+// (CUT5=CUT4 내용, CUT6=CUT5 내용, CUT7=CUT6 내용으로 한 칸씩 밀림 — 바이트는 전부
+// 달라서 1차 저장-중복 체크는 통과했지만 "엉뚱한 컷에 저장" 문제가 재발). 저장
+// 여부와 무관하게 "지금까지 collectImageSrcs가 관측한 모든 UUID"를 다 기억해서,
+// 나중 컷이 이전 컷(저장됐든 버려졌든)의 아무 결과물이나 재활용 못 하게 막는다.
 const _savedImageUuids = new Set()
+const _seenImageUuids = new Set()
 function imageUuidOf(src) {
   const m = src.match(/\/image\/([a-f0-9-]{36})/)
   return m ? m[1] : src
@@ -2732,7 +2738,12 @@ async function pollUntil(page, checkFn, { timeout, pollMs = 1000 } = {}) {
 
 async function collectNewImageSrcs(page, before) {
   const all = await collectImageSrcs(page)
-  return all.map(i => i.src).filter(src => !before.includes(src))
+  // saveTwoNewImages와 같은 기준(_seenImageUuids)으로 걸러야, 결국 저장 단계에서
+  // 차단될 "이미 본 자산"을 여기서 미리 "준비 완료"로 오판해 헛되이 저장을 시도하고
+  // 재시도 사이클을 한 바퀴 더 도는 낭비를 줄인다.
+  return all
+    .map(i => i.src)
+    .filter(src => !before.includes(src) && !_seenImageUuids.has(imageUuidOf(src)))
 }
 
 // 새 이미지가 나타날 때까지 대기
@@ -2940,13 +2951,18 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
   const beforeSet = new Set(beforeItems.map(i => i.src))
   const allItems = await collectImageSrcs(page)
   let newItems = allItems.filter(i => !beforeSet.has(i.src))
-  // 안전장치 — before/after 비교가 또 실패해도 "이전 컷에서 이미 저장한 그 자산"만큼은
-  // 여기서 한 번 더 걸러낸다(_savedImageUuids 메모 참고).
-  const dupBlocked = newItems.filter(i => _savedImageUuids.has(imageUuidOf(i.src)))
-  newItems = newItems.filter(i => !_savedImageUuids.has(imageUuidOf(i.src)))
+  // 안전장치 — before/after 비교가 또 실패해도 "지금까지 이 실행에서 한 번이라도
+  // 관측된 적 있는 자산"은 전부 걸러낸다(_seenImageUuids 메모 참고). 저장된 것만
+  // 추적하면 "재시도로 버려진 이전 컷의 진짜 생성물"이 다음다음 컷에 가서 재활용되는
+  // 2차 사고가 났었다 — 저장 여부와 무관하게 "본 적 있음" 전체를 기억해야 막힌다.
+  const dupBlocked = newItems.filter(i => _seenImageUuids.has(imageUuidOf(i.src)))
+  newItems = newItems.filter(i => !_seenImageUuids.has(imageUuidOf(i.src)))
   if (dupBlocked.length && process.env.DIAG_NEWIMG) {
-    log('warn', `[진단] CUT${cutNo} 이미 저장된 자산 재선택 차단: ${dupBlocked.map(i => imageUuidOf(i.src)).join(', ')}`)
+    log('warn', `[진단] CUT${cutNo} 이미 관측된 자산 재선택 차단: ${dupBlocked.map(i => imageUuidOf(i.src)).join(', ')}`)
   }
+  // allItems 전체(채택되지 않은 후보 포함)를 지금 바로 "본 적 있음"으로 등록한다 —
+  // newItems 필터링 '다음'에 해야 지금 막 찾은 진짜 새 후보까지 스스로 차단하지 않는다.
+  for (const it of allItems) _seenImageUuids.add(imageUuidOf(it.src))
 
   if (process.env.DIAG_NEWIMG) {
     log('info', `[진단] CUT${cutNo} before=${beforeItems.length} all=${allItems.length} new=${newItems.length}`)
