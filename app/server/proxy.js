@@ -20,6 +20,7 @@ import { loadOps, saveOps, listProfilePhotos } from './lib/instaOps.js'
 import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYtProfilePhotos } from './lib/youtubeOps.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
+import { generateVeoVideo, VEO_MODELS, VEO_DEFAULT_TIER, VEO_ALLOWED_DURATIONS } from './lib/veoApi.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
 import { parseGtpl, isGtplValid, fieldsFromCut, buildGraphicPrompt, validateGraphicHtml, buildImageSequenceHtml } from './lib/graphicGen.js'
 import { syncLatestStatusToNotion } from './lib/statusMirror.js'
@@ -9120,6 +9121,93 @@ app.get('/mobile/cut-video', (req, res) => {
     res.sendFile(file)
   } catch (err) {
     res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /mobile/veo-generate (+ /api/mcp/veo-generate) — Veo API 긴급 생성 (2026-10-12) ──
+// "평소엔 무료 Flow 경로(scripts/flow-submit.js), 급할 때만 API" — 사람이 그때그때 누르는
+// 비상 수단(자동 모드전환 아님). body: { episodeId?, cutNo, clipNo?, tier? }.
+const veoGenerateHandler = async (req, res) => {
+  try {
+    const { episodeId, cutNo, clipNo = 1, tier } = req.body || {}
+    if (!cutNo) return res.status(400).json({ error: 'cutNo 필요' })
+    const state = loadStudioState()
+    const epKey = episodeId || state.activeEpisodeId
+    const ep = state.episodes?.[epKey]
+    if (!ep) return res.status(400).json({ error: '활성 에피소드를 찾을 수 없음' })
+    const episodeCode = resolveEpisodeCode(ep.episode, epKey)
+    const epNum = ep.episode?.number
+    const cut = (ep.cuts || []).find(c => c.no === Number(cutNo))
+    if (!cut) return res.status(404).json({ error: `CUT ${cutNo} 없음` })
+    const durationSec = Number(cut.duration) || 8
+    if (!VEO_ALLOWED_DURATIONS.includes(durationSec)) {
+      return res.status(400).json({ error: `DU=${durationSec}초는 Veo API 미지원(4/6/8초만) — 10초 세그는 이 경로로 못 만듦` })
+    }
+    const prompt = (cut.videoPrompt || cut.imagePrompt || '').trim()
+    if (!prompt) return res.status(400).json({ error: '영상/이미지 프롬프트 없음' })
+
+    // 시작 프레임 = G2 선택 이미지
+    const gData = loadGpointsFile()[episodeCode] || {}
+    const selected = gData[`cut_${cutNo}`]?.selectedImage
+    let startFrameBase64 = null, mimeType = 'image/jpeg'
+    if (selected) {
+      const imgPath = path.join(mp.imagesDir(epNum), selected)
+      if (fs.existsSync(imgPath)) {
+        startFrameBase64 = fs.readFileSync(imgPath).toString('base64')
+        const ext = path.extname(selected).toLowerCase()
+        mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg'
+      }
+    }
+
+    const secrets = JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'studio-secrets.json'), 'utf-8'))
+    const apiKey = secrets.apiKeys?.gemini
+    if (!apiKey) return res.status(400).json({ error: 'Gemini API 키 없음 (studio-secrets.json)' })
+
+    const useTier = VEO_MODELS[tier] ? tier : VEO_DEFAULT_TIER
+    const m = VEO_MODELS[useTier]
+    const estimateUsd = m.usdPerSec * durationSec
+    const budget = checkBudget({ estimateUsd, ...paidBudgetInfo() })
+    if (!budget.ok) {
+      return res.status(402).json({
+        error: `월 예산 초과 — 이번 호출($${estimateUsd.toFixed(2)}) 포함 시 ${budget.afterKrw.toLocaleString()}원 (예산 ${budget.budgetKrw.toLocaleString()}원)`,
+        budget,
+      })
+    }
+
+    const aspectRatio = ep.episode?.contentType === 'LF' ? '16:9' : '9:16'
+    const result = await generateVeoVideo({ apiKey, tier: useTier, prompt, startFrameBase64, mimeType, aspectRatio, durationSec })
+
+    const rawDir = path.join(mp.makingDir(epNum), 'raw')
+    fs.mkdirSync(rawDir, { recursive: true })
+    const outPath = path.join(rawDir, `cut_${String(cutNo).padStart(2, '0')}_clip_${clipNo}.mp4`)
+    fs.writeFileSync(outPath, result.buffer)
+
+    const entry = recordPaidUsage({
+      provider: 'veo-api', model: result.modelId, seconds: result.seconds, usdPerSec: result.usdPerSec,
+      epCode: episodeCode, cutNo: Number(cutNo), clipNo: Number(clipNo), note: '모바일/챗 긴급 생성', source: 'manual',
+    })
+    res.json({ ok: true, outPath, model: result.modelId, tier: useTier, usd: entry.usd, krw: entry.krw })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+mcpRouter.post('/veo-generate', veoGenerateHandler)
+app.post('/mobile/veo-generate', veoGenerateHandler)
+
+// GET /mobile/veo-estimate?no=N — 호출 전 예상 비용만 (확인 다이얼로그용, 실제 호출 없음)
+app.get('/mobile/veo-estimate', (req, res) => {
+  try {
+    const cutNo = Number(req.query.no)
+    const tier = VEO_MODELS[req.query.tier] ? req.query.tier : VEO_DEFAULT_TIER
+    const state = loadStudioState()
+    const ep = state.episodes?.[state.activeEpisodeId]
+    const cut = (ep?.cuts || []).find(c => c.no === cutNo)
+    const durationSec = Number(cut?.duration) || 8
+    const m = VEO_MODELS[tier]
+    const usd = m.usdPerSec * durationSec
+    res.json({ ok: true, tier, model: m.id, durationSec, usd: Math.round(usd * 100) / 100, supported: VEO_ALLOWED_DURATIONS.includes(durationSec) })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
   }
 })
 

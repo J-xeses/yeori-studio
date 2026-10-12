@@ -239,8 +239,27 @@ function renderDecide(gate, status) {
   bc.innerHTML = '<h2>⛔ 막힘 / 대상 없음 (읽기 전용)</h2>' + (other.length
     ? other.map(c => `<div class="cut-item"><div class="info">CUT ${c.no}
         <span class="pill r">${c.verdict === 'blocked' ? '막힘' : '대상없음'}</span>
-        <div class="why">${esc((c.reasons || []).join(' · '))}</div></div></div>`).join('')
+        <div class="why">${esc((c.reasons || []).join(' · '))}</div></div>
+        ${c.verdict === 'not_ready' ? `<button class="act" style="background:#b5452e" onclick="veoEmergency(${c.no}, this)">🚨 API로 긴급 생성</button>` : ''}
+      </div>`).join('')
     : '<div class="empty">없음</div>')
+}
+
+async function veoEmergency(cutNo, btn) {
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = '견적 확인 중...'
+  try {
+    const est = await api('/veo-estimate?no=' + cutNo)
+    if (!est.supported) { alert(`CUT ${cutNo}는 길이 ${est.durationSec}초라 Veo API 미지원(4/6/8초만 가능)`); btn.disabled = false; btn.textContent = orig; return }
+    const ok = confirm(`CUT ${cutNo}를 Veo API(${est.model}, ${est.durationSec}초)로 긴급 생성할까요?\n예상 비용: 약 $${est.usd} — 무료 크레딧 아닌 실제 과금입니다.`)
+    if (!ok) { btn.disabled = false; btn.textContent = orig; return }
+    btn.textContent = '생성 중... (최대 5분)'
+    const r = await api('/veo-generate', { method: 'POST', body: JSON.stringify({ cutNo }) })
+    alert(`완료 — $${r.usd} 과금됨. raw 클립 생성됨(cut_${String(cutNo).padStart(2,'0')}_clip_1.mp4) — PC 영상탭에서 확인해주세요.`)
+    loadAll()
+  } catch (e) {
+    alert('실패: ' + e.message)
+    btn.disabled = false; btn.textContent = orig
+  }
 }
 
 function renderReviewCard() {
