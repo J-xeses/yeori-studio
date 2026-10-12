@@ -435,6 +435,38 @@ async function main() {
     process.exit(0)
   }
 
+  // ── 셀프테스트 모드 (1단계 안정화, 2026-10-12) ───────────────────────
+  //   --selftest : 실제 7컷 배치 전에 더미 프롬프트 1개로 핵심 경로(에디터
+  //   탐지 → 생성 → 새 이미지 탐지)가 지금도 정상인지 빠르게 확인.
+  if (args['selftest']) {
+    const browser = await connectBrowser()
+    const page = await setupPage(browser)
+    let exitCode = 0
+    try {
+      // 2026-10-12 실측: navigateToFlow()는 대시보드(프로젝트 목록)까지만 가고,
+      // 이미지 모드 토글/프롬프트 입력창은 실제 "프로젝트 안"에만 있다 — 그래서
+      // --url 없이 대시보드에서 바로 switchToImageMode를 부르면 엉뚱한 페이지
+      // 요소를 잘못 집는다(2026-10-12 1차 selftest 실패 원인). --url=<flow
+      // project url> 로 기존 프로젝트를 직접 열어서 검증한다.
+      if (args.url) {
+        log('info', `프로젝트 직접 열기: ${args.url}`)
+        await page.goto(args.url, { waitUntil: 'networkidle2', timeout: 30000 })
+        await sleep(2500)
+        await waitForImagesStable(page)
+      } else {
+        log('warn', '--url 없음 — 대시보드에서 시도(프로젝트 안이 아니면 실패할 수 있음)')
+        await navigateToFlow(page)
+      }
+      await runSelftest(page)
+    } catch (err) {
+      log('error', err.message)
+      exitCode = 1
+    } finally {
+      await browser.disconnect()
+    }
+    process.exit(exitCode)
+  }
+
   // ── 크레딧 표시 탐색 모드 (디스커버리 전용 — 자동 파싱 아님) ────────
   if (args['check-credits']) {
     const browser = await connectBrowser()
@@ -578,6 +610,10 @@ async function main() {
     }
     log('info', `모드 설정 완료: 이미지 / ${ratio} / x2`)
 
+    // 2026-10-12 (1단계 안정화): 재시작 사이에도 "이미 본 이미지" 기억이
+    // 끊기지 않도록, 루프 시작 전 이전 실행의 기억을 불러온다.
+    loadSeenUuids(episode)
+
     // ── ③ 컷별 이미지 생성 ──────────────────────────────────────────
     for (let i = 0; i < cuts.length; i++) {
       const cut = cuts[i]
@@ -603,8 +639,13 @@ async function main() {
           const savedArr = Array.isArray(savedPaths) ? savedPaths : [savedPaths]
           log('ok', `${label} → ${savedArr.map(p => path.relative(ROOT, p)).join(', ')}`)
           results.push({ cutNo: cut.no, status: 'ok', file: savedArr[0] })
-          ok++; break
+          ok++
+          saveSeenUuids(episode)
+          break
         } catch (err) {
+          // processCut 도중 던져도 before 스냅샷 등 일부 UUID는 이미 _seenImageUuids에
+          // 쌓였을 수 있으므로, 실패 시에도 저장해서 재시작 시 그 기억을 보존한다.
+          saveSeenUuids(episode)
           if (attempt < CONFIG.retryCount) {
             // Flow 자체 거부(레이트리밋/대기열초과)는 2초 기다린다고 안 풀림 —
             // 60초로 더 길게 백오프.
@@ -2066,6 +2107,47 @@ async function preFlightCheck(page) {
   log('ok', `[체크리스트] 레퍼런스 썸네일 ${foundBns.length}/${thumbs.wanted.length}: ${foundBns.join(', ')}`)
 }
 
+// 2026-10-12 (성준님 지시: 1단계 안정화) — 실제 7컷 배치를 돌리기 전에, 오늘
+// 깨졌던 두 지점(①프롬프트 입력창 탐지 ②생성 완료/새 이미지 탐지)이 지금도
+// 정상인지 더미 프롬프트 1회로 싸고 빠르게 확인한다. 배치 중간에 발견하는 대신
+// 배치 시작 전에 발견하는 게 목적 — 실제 생성 1회(저장은 안 함) 비용만 듦.
+async function runSelftest(page) {
+  const steps = []
+  const fail = (step, err) => { steps.push({ step, ok: false, detail: err?.message || String(err) }); throw new Error(`[selftest] "${step}" 단계 실패: ${err?.message || err}`) }
+
+  log('step', '[selftest] ① 이미지 모드 전환…')
+  try { await switchToImageMode(page, '9:16'); steps.push({ step: 'switchToImageMode', ok: true }) }
+  catch (err) { fail('이미지 모드 전환', err) }
+
+  log('step', '[selftest] ② 프롬프트 입력창 탐지…')
+  let pos
+  try { pos = await prepareInput(page); steps.push({ step: 'findPromptInput', ok: true }) }
+  catch (err) { fail('프롬프트 입력창 탐지', err) }
+
+  log('step', '[selftest] ③ 더미 프롬프트 입력 + 제출…')
+  const dummyPrompt = 'a simple red circle on a plain white background, minimal test image'
+  try {
+    await page.mouse.click(pos.x, pos.y)
+    await sleep(300)
+    await page.keyboard.press('End')
+    await sleep(100)
+    await page.keyboard.type(dummyPrompt, { delay: 15 })
+    await sleep(500)
+    steps.push({ step: '프롬프트 타이핑', ok: true })
+  } catch (err) { fail('더미 프롬프트 입력', err) }
+
+  log('step', '[selftest] ④ 생성 요청 + 새 이미지 탐지…')
+  try {
+    const before = await collectImageSrcs(page)
+    await clickGenerate(page)
+    await waitForNewImage(page, before)
+    steps.push({ step: '새 이미지 탐지', ok: true })
+  } catch (err) { fail('생성 완료/새 이미지 탐지', err) }
+
+  log('ok', `[selftest] 전부 통과 (${steps.length}/${steps.length}) — 실제 배치 진행해도 안전해 보임`)
+  return { pass: true, steps }
+}
+
 // ── 썸네일 좌표 → 프롬프트 입력창으로 드래그 ────────────────────────────
 
 async function dragToPrompt(page, fromPos, toPos) {
@@ -2634,6 +2716,40 @@ const _seenImageUuids = new Set()
 function imageUuidOf(src) {
   const m = src.match(/\/image\/([a-f0-9-]{36})/)
   return m ? m[1] : src
+}
+
+// 2026-10-12 (성준님 지시: 1단계 안정화) — _seenImageUuids/_savedImageUuids는
+// 프로세스 메모리에만 있어서 재시작(오늘 실제로 4번 재실행)마다 초기화됨.
+// 재시작 사이에도 레이스컨디션 방지 기억이 끊기지 않도록 에피소드별 파일로
+// 영속화한다. main()의 컷 루프 시작 전에 loadSeenUuids, 컷 처리 시도마다
+// saveSeenUuids를 호출한다.
+function seenUuidsFilePath(ep) {
+  return path.join(resolveContentDir(ep ?? 'x'), '.flow_seen_uuids.json')
+}
+function loadSeenUuids(ep) {
+  const p = seenUuidsFilePath(ep)
+  if (!fs.existsSync(p)) return
+  try {
+    const data = JSON.parse(fs.readFileSync(p, 'utf-8'))
+    ;(data.seen || []).forEach(u => _seenImageUuids.add(u))
+    ;(data.saved || []).forEach(u => _savedImageUuids.add(u))
+    log('info', `[상태복원] 이전 실행에서 기억 중이던 이미지 UUID ${data.seen?.length || 0}개 불러옴`)
+  } catch (err) {
+    log('warn', `[상태복원] seen-uuids 파일 읽기 실패(무시하고 진행): ${err.message}`)
+  }
+}
+function saveSeenUuids(ep) {
+  const p = seenUuidsFilePath(ep)
+  try {
+    ensureDir(path.dirname(p))
+    fs.writeFileSync(p, JSON.stringify({
+      updatedAt: new Date().toISOString(),
+      seen: [..._seenImageUuids],
+      saved: [..._savedImageUuids],
+    }, null, 2))
+  } catch (err) {
+    log('warn', `[상태저장] seen-uuids 파일 쓰기 실패(무시하고 진행): ${err.message}`)
+  }
 }
 
 // 2026-10-12 실측(IG_R08, DIAG_NEWIMG 증거 확보): 갤러리 그리드가 가상화(virtualized)
