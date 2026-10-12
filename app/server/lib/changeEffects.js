@@ -17,6 +17,7 @@ export const TRIGGER_ACTIONS = [
   { id: 'hand_wipe', nameKo: '핸드 와이프', descKo: '손바닥으로 렌즈를 쓸어내리거나 가렸다 떼는 순간 전환', en: 'a hand wiping across the camera lens', icon: '✋' },
   { id: 'mirror_touch', nameKo: '거울 터치 & 리플렉션', descKo: '거울 속 비친 모습이 먼저 바뀌며 현실로 전이', en: 'touching a mirror surface, reflection shifting first', icon: '🪞' },
   { id: 'smoke_burst', nameKo: '연기/스모크 버스트', descKo: '자욱한 연기가 터지며 그 속에서 새로운 모습으로 등장', en: 'a burst of colored smoke, figure emerging from within', icon: '💨' },
+  { id: 'water_emerge', nameKo: '수면 위로 떠오름', descKo: '물에 반쯤 잠겨 있다가 수면을 깨고 떠오르는 순간 새 룩 등장(연출 재료 창고 ① 수중 포트레이트 연결)', en: 'breaking through the water surface while rising up, droplets cascading off', icon: '💧' },
 ]
 
 export const VFX_PRESETS = [

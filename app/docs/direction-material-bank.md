@@ -13,6 +13,24 @@
 - **중력 무시** — 공중부양, 역재생 낙하
 - **시공간 순간전환** — 한 동작 안에서 배경이 완전히 바뀜 (현재 '체인지' 포맷의 배경 리빌 기법의 극단화)
 - **타임슬립** — 한 영상 안에서 과거-현재-미래를 오가는 구성
+- **수중/반수면 초근접 포트레이트** — 얼굴이 물에 반쯤 잠긴 채 수면 굴절·물방울·기포 속에서 눈빛만
+  또렷. 2026-10-12, 성준님이 인스타 레퍼런스(`kirin.cookie` 나노바나나 프로필 이미지 예시)에서 발견.
+  **용도 3갈래**:
+  - **체인지 리빌**: 물속에서 떠오르며 의상/배경이 완성되는 트리거 — `changeEffects.js`의
+    `TRIGGER_ACTIONS`에 "수면 위로 떠오름(emerge from water)" 한 종 추가하면 바로 조합 가능
+    ([[project_change_combo_generator]] 구조 그대로 — Scene B만 바뀌는 게 아니라 트리거 자체가 교체).
+  - **시그 컷**: 에피소드 오프닝/엔딩에 반복 등장시켜 "물속 눈빛" 구도·컬러를 고정하면
+    [[project_channel_signature_differentiation]](③ 채널 고유 시그널)과 직결.
+  - **감정 비트**: "숨 참고 버티는 중" 류 자기비하·고백성 캡션과 결합한 비하인드/감성 컷.
+  - **기술 메모**: 동영상 모션 불필요 — G2 단일 이미지(나노바나나)로 끝나는 정지컷이라 기존 얼굴
+    레퍼런스 파이프라인 그대로 사용 가능, 새 생성 경로 불필요. 단 물 굴절이 심하면 레퍼런스 매칭이
+    흔들릴 수 있어 프롬프트에 "눈매·눈동자 색은 선명하게 유지, 나머지 윤곽은 수면 굴절로 흐려짐"
+    식으로 핵심 특징만 명시적으로 보존하라고 지시할 것.
+  - **초안 프롬프트 패턴**: `{character descriptor}, extreme close-up, half-submerged underwater
+    portrait, face breaking the water surface, light caustics rippling across skin, scattered
+    air bubbles, cool blue underwater lighting, keep eyes and eye color sharply in focus as the
+    one clear anchor, rest of face softly distorted by water refraction, cinematic, shallow
+    depth of field` — 기존 characterRefsAndDescriptors() 얼굴 레퍼런스 문구와 그대로 이어붙이면 됨.
 
 ## ② 구조적 반전 재료
 - **루프 구조** — 끝이 처음과 같아 보이지만 디테일 하나가 달라져 있어 "다시 봄" 유도
