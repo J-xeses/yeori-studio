@@ -14,9 +14,9 @@
     "closeup": "downloads/flow/character/yeori-closeup.jpg",
     "flowCharacterName": "서여리",
     "primary": true,
-    "descriptor": "Consistent character face: Oval face with warm fair skin, almond-shaped hazel-brown eyes, full dark eyebrows, a straight medium nose, full naturally pink lips with a gentle smile, and long wavy dark brown hair NOT short parted loosely; clear even skin with a single small beauty mark near the right cheekbone; avoid acne blemishes redness rough skin.",
-    "descriptorSource": "ruleset-v1.4.1-skin-fix",
-    "descriptorUpdatedAt": "2026-09-09T00:00:00.000Z",
+    "descriptor": "Consistent character face: Oval face with soft, rounded cheeks and a gently tapered jaw; almond-shaped hazel-brown eyes with single eyelids and subtle inner corner definition, straight medium-thickness eyebrows slightly arched, small rounded nose, full lips with a defined cupid's bow in a natural rosy-pink tone, light warm ivory skin with faint cheek freckles/small moles, long straight dark brown hair with a center part and no bangs, delicate gold chain necklace visible at collarbone.",
+    "descriptorSource": "claude-vision",
+    "descriptorUpdatedAt": "2026-10-12T03:04:23.347Z",
     "refBasename": "yeori",
     "voiceId": "RmYuvmCbqOMBJxDLW4k8",
     "voiceName": "Sian (Tender, Calm & Clear)",
@@ -81,7 +81,8 @@
         "의료·금융 조언 금지"
       ]
     },
-    "looks": {}
+    "looks": {},
+    "negativePrompt": "hazel-brown eyes drifting to dark brown or black, single eyelids converting to double eyelids, cheek moles/freckles disappearing, soft oval face sharpening into a V-line or angular jaw, center part shifting or hair gaining bangs, cupid's bow lip definition flattening, warm ivory skin cooling to pale porcelain, eyebrows thickening or over-arching."
   },
   "jia": {
     "id": "jia",

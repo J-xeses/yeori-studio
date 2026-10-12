@@ -2291,6 +2291,7 @@ function characterRefsAndDescriptors(charIds) {
   const chars = loadCharacters()
   const refImages = []
   const descriptors = []
+  const negatives = []
   for (const id of charIds) {
     const c = chars[id]
     if (!c) continue
@@ -2302,8 +2303,9 @@ function characterRefsAndDescriptors(charIds) {
       }
     }
     if (c.descriptor) descriptors.push(`${c.name || id}: ${c.descriptor}`)
+    if (c.negativePrompt) negatives.push(c.negativePrompt)
   }
-  return { refImages, descriptorText: descriptors.join('\n') }
+  return { refImages, descriptorText: descriptors.join('\n'), negativePromptText: negatives.join(', ') }
 }
 
 app.get('/api/characters', (req, res) => {
@@ -2336,17 +2338,21 @@ app.post('/api/characters/:id/analyze', async (req, res) => {
         model: 'claude-sonnet-4-6', max_tokens: 250,
         messages: [{ role: 'user', content: [
           { type: 'image', source: { type: 'base64', media_type: mediaType, data: b64 } },
-          { type: 'text', text: "Analyze this woman's face and output a single concise descriptor for AI image generation consistency. Start with 'Consistent character face:' then precisely describe: face shape, eye shape and color, eyebrows, nose, lips (shape and color), skin tone, hair (length, color, style, bangs), and any distinctive features (freckles, moles, eyeliner style). 1-2 sentences max. No extra commentary." },
+          { type: 'text', text: "Analyze this woman's face and output exactly two lines for AI image generation.\nLine 1, starting with 'Consistent character face:' — precisely describe: face shape, eye shape and color, eyebrows, nose, lips (shape and color), skin tone, hair (length, color, style, bangs), and any distinctive features (freckles, moles, eyeliner style). 1-2 sentences max.\nLine 2, starting with 'Avoid:' — a comma-separated list of the specific failure modes most likely for THIS face in a full-body/wide shot (e.g. losing a specific eye color, a specific mole/scar disappearing, face shape drifting generic, asymmetric feature becoming symmetric). Be specific to this character's unique features, not generic boilerplate.\nNo extra commentary, no markdown." },
         ] }],
       }),
     })
     if (!r.ok) return res.status(502).json({ error: `Claude API ${r.status}: ${(await r.text()).slice(0, 200)}` })
     const data = await r.json()
-    const descriptor = (data.content || []).find(b => b.type === 'text')?.text?.trim()
-    if (!descriptor) return res.status(502).json({ error: 'descriptor 응답 없음' })
-    chars[req.params.id] = { ...c, descriptor, descriptorSource: 'claude-vision', descriptorUpdatedAt: new Date().toISOString() }
+    const text = (data.content || []).find(b => b.type === 'text')?.text?.trim() || ''
+    const descriptor = (text.match(/Consistent character face:.*/)?.[0] || '').trim()
+    const negativePrompt = (text.match(/Avoid:\s*(.*)/)?.[1] || '').trim()
+    if (!descriptor) return res.status(502).json({ error: 'descriptor 응답 없음', raw: text.slice(0, 300) })
+    chars[req.params.id] = {
+      ...c, descriptor, negativePrompt, descriptorSource: 'claude-vision', descriptorUpdatedAt: new Date().toISOString(),
+    }
     saveCharacters(chars)
-    res.json({ success: true, descriptor })
+    res.json({ success: true, descriptor, negativePrompt })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -2367,10 +2373,20 @@ async function genImageForCut(ep, cut, { apiKey, modelKey = NANO_BANANA_DEFAULT,
   const ratioMatch = basePrompt.match(/\b(16:9|9:16|1:1|4:5|3:4|4:3)\b/)
   const aspectRatio = ratioMatch ? ratioMatch[1] : null
   const charIds = resolveChToCharacterIds(cut.masterCode?.ch)
-  const { refImages, descriptorText } = characterRefsAndDescriptors(charIds)
-  const prompt = descriptorText
-    ? `${basePrompt}\n\n[Character consistency — the attached image(s) are reference faces. Keep each face identical to its reference:]\n${descriptorText}`
-    : basePrompt
+  const { refImages, descriptorText, negativePromptText } = characterRefsAndDescriptors(charIds)
+  // 얼굴 일관성 강화 3종(2026-10-12, Character Consistency Studio 레퍼런스 분석 기반):
+  // ① 강한 지시문 ② 전신/와이드샷 망원렌즈 토큰(cut.shotType, scriptParserV3.js 기존 판별 재사용)
+  // ③ 캐릭터별 네거티브 프롬프트(/api/characters/:id/analyze 에서 함께 생성·캐싱)
+  let prompt = basePrompt
+  if (descriptorText) {
+    prompt += `\n\n[CRITICAL INSTRUCTION: you must strictly preserve the identical facial bone structure, facial features, eyes, hair color, and identity of each character shown in the reference image(s). Apply this exact face identity to the following scene and composition:]\n${descriptorText}`
+  }
+  if (cut.shotType === 'FULLBODY') {
+    prompt += `\n\n[Camera: shot on an 85mm telephoto lens to minimize wide-angle facial distortion.]`
+  }
+  if (negativePromptText) {
+    prompt += `\n\n[Avoid: ${negativePromptText}]`
+  }
 
   const gen = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio, modelKey)
   // 기존 파일 유지 옵션(genline 재생성): _a 가 있으면 다음 빈 슬롯에

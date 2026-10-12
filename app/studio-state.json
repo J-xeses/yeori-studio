@@ -1,5 +1,5 @@
 {
-  "activeTab": "retention",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10315,7 +10315,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-11T23:39:27.858Z",
+  "savedAt": "2026-10-12T03:10:50.244Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -10344,6 +10344,90 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_04.mp4",
           "keepAudio": true,
           "createdAt": 1791433522000
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_02.mp4?t=1791775536613",
+          "name": "cut_02.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_02.mp4",
+          "keepAudio": true,
+          "createdAt": 1791733037000
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_03.mp4?t=1791775537547",
+          "name": "cut_03.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_03.mp4",
+          "keepAudio": false,
+          "createdAt": 1791733037000
+        }
+      ],
+      "cut-5": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_05.mp4?t=1791775537814",
+          "name": "cut_05.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_05.mp4",
+          "keepAudio": true,
+          "createdAt": 1791733037000
+        }
+      ],
+      "cut-6": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_06.mp4?t=1791775538068",
+          "name": "cut_06.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_06.mp4",
+          "keepAudio": true,
+          "createdAt": 1791733037000
+        }
+      ],
+      "cut-7": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_07.mp4?t=1791775538325",
+          "name": "cut_07.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_07.mp4",
+          "keepAudio": true,
+          "createdAt": 1791733037000
+        }
+      ],
+      "cut-8": [
+        {
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_08.mp4?t=1791775538588",
+          "name": "cut_08.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_08.mp4",
+          "keepAudio": true,
+          "createdAt": 1791733037000
         }
       ]
     },
