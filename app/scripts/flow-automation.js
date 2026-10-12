@@ -2143,6 +2143,25 @@ async function processCut(page, cut, defaultEpisode, type = 'shorts') {
   await page.keyboard.type(finalPrompt, { delay: 15 })
   await sleep(500)
 
+  // 2026-10-12 진단(성준님 지시): 컷마다 실제로 입력창 텍스트가 바뀌는지 증거로
+  // 남긴다 — CUT1/2가 md5 동일하게 저장되는 사고가 2차 수정 후에도 재현돼,
+  // "입력은 바뀌는데 저장이 틀렸다" vs "입력 자체가 안 바뀐다"를 구분해야 함.
+  if (process.env.DIAG_NEWIMG) {
+    const boxText = await page.evaluate(() => {
+      const el = document.querySelector('flow-rich-text-editor.prompt-input, flow-rich-text-editor')
+      return el ? el.textContent : '(엘리먼트 못 찾음)'
+    })
+    const diagDir = path.join(CONFIG.downloadDir, '_diag')
+    ensureDir(diagDir)
+    fs.writeFileSync(
+      path.join(diagDir, `cut${cut.no}_typed_prompt.txt`),
+      `[의도한 프롬프트 — finalPrompt 변수]\n${finalPrompt}\n\n[입력창 실제 textContent(타이핑 직후)]\n${boxText}\n`,
+      'utf-8'
+    )
+    log('info', `[진단] CUT${cut.no} 타이핑 직후 입력창 textContent 길이=${boxText.length}, finalPrompt 길이=${finalPrompt.length}`)
+    await page.screenshot({ path: path.join(diagDir, `cut${cut.no}_after_typing.png`) })
+  }
+
   // before 스냅샷 전에 "모든 미디어" 탭을 명시적으로 열어
   // 전체 그리드가 이미 렌더링된 상태에서 기준선을 잡는다.
   const clickedAllMedia = await page.evaluate(() => {
@@ -2579,23 +2598,90 @@ async function clickGenerate(page) {
   await page.keyboard.press('Enter')
 }
 
-// 페이지의 모든 큰 이미지 src + 크기 수집
-async function collectImageSrcs(page) {
-  return page.evaluate(() => {
-    function collect(root, list = []) {
-      for (const img of root.querySelectorAll('img')) {
-        if (img.naturalWidth > 80 && img.complete && img.src) {
-          const r = img.getBoundingClientRect()
-          list.push({ src: img.src, w: img.naturalWidth, h: img.naturalHeight, top: Math.round(r.top), left: Math.round(r.left) })
-        }
-      }
+// 2026-10-12 실측(IG_R08): Flow가 생성 결과 썸네일을 page-context에서 전혀 안 보이는
+// 방식으로 렌더링함 — document.querySelectorAll('img')(Shadow DOM 재귀 포함)도,
+// Puppeteer page.$$('pierce/img')도 0~2개(프로필 아이콘 뿐)만 찾음. 반면 CDP
+// DOM.getFlattenedDocument({pierce:true})는 DevTools와 동일한 권한이라 그 안까지 보여서
+// 32개 IMG 노드가 실제로 잡힘(src가 flow-content.google/image/… 패턴). 그래서 새 이미지
+// "생성 완료 감지"·"저장"이 전부 항상 타임아웃→실패로 오판했었음(실제로는 생성 성공,
+// Flow 프로젝트 갤러리에 멀쩡히 쌓여 있었음 — CUT1 재현으로 확인). page.evaluate 기반
+// 탐색을 CDP pierce 기반으로 교체한다.
+let _cdpSessionCache = new WeakMap()
+async function getCDPSession(page) {
+  if (_cdpSessionCache.has(page)) return _cdpSessionCache.get(page)
+  const client = await page.target().createCDPSession()
+  await client.send('DOM.enable')
+  _cdpSessionCache.set(page, client)
+  return client
+}
+
+// 실제 생성 결과만 거름 — flow-content.google/image/ 가 생성물 CDN, flow.google.com/asb/
+// 는 업로드한 레퍼런스 에셋, lh3.google.com 은 프로필 아이콘(둘 다 "새 이미지"가 아님).
+const GENERATED_IMAGE_URL_RE = /flow-content\.google\/image\//
+
+// 안전장치: 이번 실행에서 이미 저장한 이미지 UUID는 전역으로 기억해둔다. before/after
+// 비교(가상화 그리드 재렌더 타이밍에 취약 — 위 scrollGalleryToTop 메모 참고)가 또
+// 실패해도, "직전 컷에서 방금 저장한 바로 그 파일을 다음 컷에도 또 저장하는" 최악의
+// 사고만큼은 여기서 무조건 막는다. URL의 UUID 부분만 뽑아 비교(서명/Expires는 매번
+// 바뀌어도 같은 자산이면 UUID는 동일).
+const _savedImageUuids = new Set()
+function imageUuidOf(src) {
+  const m = src.match(/\/image\/([a-f0-9-]{36})/)
+  return m ? m[1] : src
+}
+
+// 2026-10-12 실측(IG_R08, DIAG_NEWIMG 증거 확보): 갤러리 그리드가 가상화(virtualized)
+// 렌더링이라 "화면/스크롤 위치에 지금 실제로 걸쳐 있는" 항목만 DOM에 존재하고,
+// CDP pierce로도 그 바깥은 안 보인다. 새 결과는 그리드 맨 앞(스크롤 top=0 쪽)에
+// 나타나는데, 레퍼런스 썸네일을 드래그하거나 이전 컷 작업을 거치면서 스크롤 위치가
+// 흐트러진 채로 before/after를 캡처하면, 둘 다 "지금 우연히 뷰포트에 걸린" 전혀
+// 엉뚱한(훨씬 오래된) 이미지 2장을 가리키게 된다 — CUT2의 before가 CUT1의 신선한
+// 결과물이 아니라 몇 세션 전의 낡은 이미지 2장이었고, 그 결과 "new"가 실제로는
+// CUT1의 완성본(그 사이 뷰포트에 들어온 것)이었던 사고를 cut2_srcs.txt로 직접 확인.
+// 매 조회 전 그리드를 강제로 맨 위/맨 왼쪽으로 스크롤해 최신 항목을 뷰포트에 고정한다.
+async function scrollGalleryToTop(page) {
+  await page.evaluate(() => {
+    function walk(root) {
       for (const el of root.querySelectorAll('*')) {
-        if (el.shadowRoot) collect(el.shadowRoot, list)
+        if (el.scrollHeight > el.clientHeight + 50 || el.scrollWidth > el.clientWidth + 50) {
+          el.scrollTop = 0
+          el.scrollLeft = 0
+        }
+        if (el.shadowRoot) walk(el.shadowRoot)
       }
-      return list
     }
-    return collect(document)
+    window.scrollTo(0, 0)
+    walk(document)
   })
+  // 가상화 리스트는 scrollTop=0을 찍은 직후 바로 쿼리하면 아직 재렌더 전이라
+  // 옛 뷰포트 기준 노드가 그대로 잡힌다(CUT1은 맞는데 CUT2부터 계속 같은 옛날
+  // 이미지 2장만 "before"로 잡히던 현상 — 렌더 프레임 한두 틱을 기다려야 함).
+  await sleep(400)
+}
+
+async function collectImageSrcs(page) {
+  await scrollGalleryToTop(page)
+  const client = await getCDPSession(page)
+  const doc = await client.send('DOM.getFlattenedDocument', { depth: -1, pierce: true })
+  const out = []
+  for (const n of doc.nodes) {
+    if (n.nodeName !== 'IMG' || !n.attributes) continue
+    const idx = n.attributes.indexOf('src')
+    if (idx === -1) continue
+    const src = n.attributes[idx + 1]
+    if (src && GENERATED_IMAGE_URL_RE.test(src)) {
+      // URL의 Expires= 쿼리파라미터(서명 URL 발급 시각 기준 유닉스초) — 가상화
+      // 렌더링이라 노드 순서로도 믿을 수 없어서(위 설명) 최종 선택은 이 값 기준
+      // 내림차순으로 한다(saveTwoNewImages/saveNewImage).
+      const expMatch = src.match(/[?&]Expires=(\d+)/)
+      const expires = expMatch ? Number(expMatch[1]) : 0
+      // 9:16 세로 생성물 전제 — w/h는 3분할 크롭 판정(w > h*1.3)에만 쓰이므로
+      // 실제 픽셀 치수 없이 절대 안 걸리는 값으로 고정(과거 3패널 가로 레이아웃은
+      // 이 UI에서 더 이상 안 씀).
+      out.push({ src, w: 900, h: 1600, top: 0, left: 0, expires })
+    }
+  }
+  return out
 }
 
 // Flow가 생성 요청 자체를 거부했을 때 뜨는 토스트 감지("너무 빨리 요청했습니다",
@@ -2625,11 +2711,14 @@ class FlowRejectionError extends Error {
 
 // page.waitForFunction 하나로는 "조건 충족"과 "Flow가 요청을 거부함"을 동시에
 // 감지할 수 없어서(둘 중 뭐가 됐는지 구분이 필요) 짧은 간격으로 직접 폴링한다.
-async function pollUntil(page, checkFn, checkArg, { timeout, pollMs = 1000 } = {}) {
+// checkFn은 이제 page.evaluate가 아니라 Node 컨텍스트 async 함수(page)=>boolean —
+// collectImageSrcs가 CDP 세션을 써야 해서 더 이상 브라우저-컨텍스트 직렬화 함수로
+// 넘길 수 없다(위 2026-10-12 메모 참고).
+async function pollUntil(page, checkFn, { timeout, pollMs = 1000 } = {}) {
   const deadline = Date.now() + timeout
   while (Date.now() < deadline) {
     const [ready, rejection] = await Promise.all([
-      page.evaluate(checkFn, checkArg),
+      checkFn(page),
       detectFlowRejection(page),
     ])
     if (ready) return
@@ -2641,17 +2730,9 @@ async function pollUntil(page, checkFn, checkArg, { timeout, pollMs = 1000 } = {
   throw err
 }
 
-const COLLECT_NEW_IMAGE_SRCS = (before) => {
-  function collect(root, list = []) {
-    for (const img of root.querySelectorAll('img')) {
-      if (img.naturalWidth > 80 && img.complete && img.src) list.push(img.src)
-    }
-    for (const el of root.querySelectorAll('*')) {
-      if (el.shadowRoot) collect(el.shadowRoot, list)
-    }
-    return list
-  }
-  return collect(document).filter(src => !before.includes(src))
+async function collectNewImageSrcs(page, before) {
+  const all = await collectImageSrcs(page)
+  return all.map(i => i.src).filter(src => !before.includes(src))
 }
 
 // 새 이미지가 나타날 때까지 대기
@@ -2660,8 +2741,7 @@ async function waitForNewImage(page, beforeItems) {
   try {
     await pollUntil(
       page,
-      (before) => COLLECT_NEW_IMAGE_SRCS(before).length >= 1,
-      beforeSrcs,
+      async (p) => (await collectNewImageSrcs(p, beforeSrcs)).length >= 1,
       { timeout: CONFIG.timeoutMs }
     )
   } catch (err) {
@@ -2680,8 +2760,7 @@ async function waitForTwoNewImages(page, beforeItems) {
   try {
     await pollUntil(
       page,
-      (before) => COLLECT_NEW_IMAGE_SRCS(before).length >= 2,
-      beforeSrcs,
+      async (p) => (await collectNewImageSrcs(p, beforeSrcs)).length >= 2,
       { timeout: CONFIG.twoImageTimeoutMs }
     )
   } catch (err) {
@@ -2749,7 +2828,8 @@ async function saveNewImage(page, beforeItems, cutNo, episode, prefix = 'cut') {
     return saveImage(page, cutNo, episode)
   }
 
-  const target = newItems[newItems.length - 1]
+  // saveTwoNewImages와 동일 이유로 배열 위치가 아니라 expires 내림차순 1위를 쓴다.
+  const target = [...newItems].sort((a, b) => b.expires - a.expires)[0]
   const imgSrc = target.src
   log('info', `새 이미지 src (${target.w}×${target.h}): ${imgSrc.slice(0, 80)}…`)
 
@@ -2859,17 +2939,31 @@ async function _saveImageTarget(page, target, outPath) {
 async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut') {
   const beforeSet = new Set(beforeItems.map(i => i.src))
   const allItems = await collectImageSrcs(page)
-  const newItems = allItems.filter(i => !beforeSet.has(i.src))
+  let newItems = allItems.filter(i => !beforeSet.has(i.src))
+  // 안전장치 — before/after 비교가 또 실패해도 "이전 컷에서 이미 저장한 그 자산"만큼은
+  // 여기서 한 번 더 걸러낸다(_savedImageUuids 메모 참고).
+  const dupBlocked = newItems.filter(i => _savedImageUuids.has(imageUuidOf(i.src)))
+  newItems = newItems.filter(i => !_savedImageUuids.has(imageUuidOf(i.src)))
+  if (dupBlocked.length && process.env.DIAG_NEWIMG) {
+    log('warn', `[진단] CUT${cutNo} 이미 저장된 자산 재선택 차단: ${dupBlocked.map(i => imageUuidOf(i.src)).join(', ')}`)
+  }
 
   if (process.env.DIAG_NEWIMG) {
-    log('info', `[진단] before=${beforeItems.length} all=${allItems.length} new=${newItems.length}`)
+    log('info', `[진단] CUT${cutNo} before=${beforeItems.length} all=${allItems.length} new=${newItems.length}`)
     const diagDir = path.join(CONFIG.downloadDir, '_diag')
     ensureDir(diagDir)
+    const diagLines = [
+      `before (${beforeItems.length}): ${beforeItems.map(i => i.src).join('\n  ')}`,
+      `all (${allItems.length}): ${allItems.map(i => `expires=${i.expires} ${i.src}`).join('\n  ')}`,
+      `new (${newItems.length}): ${newItems.map(i => `expires=${i.expires} ${i.src}`).join('\n  ')}`,
+    ].join('\n\n')
+    fs.writeFileSync(path.join(diagDir, `cut${cutNo}_srcs.txt`), diagLines, 'utf-8')
+    await page.screenshot({ path: path.join(diagDir, `cut${cutNo}_before_save.png`), fullPage: true })
     for (let i = 0; i < newItems.length; i++) {
       const it = newItems[i]
-      log('info', `[진단] new[${i}] top=${it.top} left=${it.left} ${it.w}x${it.h} ...${it.src.slice(-24)}`)
+      log('info', `[진단] CUT${cutNo} new[${i}] expires=${it.expires} ${it.src.slice(0, 90)}`)
       try {
-        await _saveImageTarget(page, it, path.join(diagDir, `cut${cutNo}_new${i}_top${it.top}_left${it.left}.jpg`))
+        await _saveImageTarget(page, it, path.join(diagDir, `cut${cutNo}_new${i}_exp${it.expires}.jpg`))
       } catch (e) {
         log('warn', `[진단] new[${i}] 저장 실패: ${e.message}`)
       }
@@ -2891,10 +2985,12 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
     throw new Error('2장 대기 타임아웃 후에도 새 이미지가 0개 — 생성 실패로 처리')
   }
 
-  // 마지막 2개 (가장 최근 생성)
-  const targets = newItems.length >= 2
-    ? [newItems[newItems.length - 2], newItems[newItems.length - 1]]
-    : [newItems[newItems.length - 1]]
+  // 가장 최근 생성 2개 — 배열 "마지막"이 아니라 expires(서명 URL 발급 시각) 내림차순으로
+  // 직접 고른다. Flow가 새 결과를 갤러리 앞쪽에 prepend하는데(CDP 노드 순서 = 최신→과거)
+  // "마지막 2개"로 뽑으면 매번 가장 오래된 2개(=최초 성공분, 예: CUT1)가 선택되는 사고가
+  // 났었음(IG_R08 7컷 전부 cut_01과 md5 동일 — 실측 확인, 2026-10-12).
+  const byRecency = [...newItems].sort((a, b) => b.expires - a.expires)
+  const targets = byRecency.length >= 2 ? [byRecency[1], byRecency[0]] : [byRecency[0]]
   const suffixes = targets.length === 2 ? ['a', 'b'] : ['a']
   const saved = []
 
@@ -2902,6 +2998,7 @@ async function saveTwoNewImages(page, beforeItems, cutNo, episode, prefix = 'cut
     const outPath = path.join(epDir, `${prefix}_${padded}_${suffixes[idx]}.jpg`)
     log('info', `저장 ${suffixes[idx].toUpperCase()}: ${path.basename(outPath)} (${targets[idx].w}×${targets[idx].h})`)
     await _saveImageTarget(page, targets[idx], outPath)
+    _savedImageUuids.add(imageUuidOf(targets[idx].src))
     saved.push(outPath)
   }
 
