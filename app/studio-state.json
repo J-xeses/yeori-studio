@@ -1,5 +1,5 @@
 {
-  "activeTab": "retention",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10157,7 +10157,7 @@
           "subtitle": "이게, 내가 진짜 하는 일이다.",
           "narration": "이게, 내가 진짜 하는 일이다.",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nnatural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,\nlong wavy dark brown hair NOT short, sleek and settled, standing against a studio backdrop where the entire background and floor are unified in a bold solid red, dramatic studio lighting,\nnow wearing a glossy black leather trench coat, knee-high black boots, a red vintage telephone headset over one ear, matching red vintage telephone subtly visible,\ndelicate gold necklace layered beneath the collar, confident commanding expression, direct powerful gaze at camera,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\navoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,\nlighting: dramatic studio lighting, strong highlight on the leather coat and red telephone, bold color-blocked contrast,\nbackground: solid bold red studio backdrop and floor, vertical 9:16",
-          "videoPrompt": "First 0-2s: A finger snap gesture, light and particles bursting outward at the snap, the frame flashing briefly white — this is the transition moment. / Next 2-10s: The flash clears to reveal the solid red studio, she stands confidently in the black leather coat, direct powerful gaze at camera, commanding presence. No dialogue — narration only. No on-screen subtitle text or captions.",
+          "videoPrompt": "First 0-2s: A finger snap gesture, light and particles bursting outward at the snap, the frame flashing briefly white — this is the transition moment. / Next 2-10s: The flash clears to reveal the solid red studio, she stands confidently in the black leather coat, direct powerful gaze at camera, commanding presence. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
           "duration": 10,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
@@ -10308,8 +10308,8 @@
       "dialogue": "",
       "subtitle": "어떤 손님의 거울엔, 웃음이 갇혀 있었다.",
       "narration": "어떤 손님의 거울엔, 웃음이 갇혀 있었다.",
-      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, appearing no older than 22-23, 1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure,\nnatural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen,\nlong wavy dark brown hair NOT short, now loose and flowing, standing in a dreamlike moonlit ballroom, liquid-mercury light ripples settling across the floor around her,\nnow wearing a flowing silver chiffon gown, sheer moonlit fabric catching an ethereal glow, a silver hairpin,\ndelicate gold necklace, slowly lifting her gaze toward camera, soft mysterious smile, enchanted expression,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\navoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine,\nlighting: cool moonlight with a soft silver-blue glow, dreamy haze,\nbackground: vast empty moonlit ballroom, soft bokeh chandeliers, vertical 9:16",
-      "videoPrompt": "First 0-2s: She touches the cracked mirror's surface with one fingertip — her reflection shifts first, changing into the silver gown before she does, liquid ripples of light spreading outward — this is the transition moment. / Next 2-8s: The reflection's light spreads to engulf the frame, revealing a dreamlike moonlit ballroom around her, she slowly lifts her gaze toward camera with a soft mysterious smile. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
+      "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, caught just as touching a mirror surface, reflection shifting first settles — neon cyan scanlines and chromatic glitch distortion clearing, now wearing 눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이, standing in 눈 덮인 침엽수림, 얼어붙은 호수, graceful confident pose, looking directly at camera, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, lighting: 차가운 겨울 황혼 빛, 반짝이는 눈 결정, background: softly blurred 눈 덮인 침엽수림, 얼어붙은 호수, never legible text or UI, vertical 9:16",
+      "videoPrompt": "First 0-2.1s: She initiates touching a mirror surface, reflection shifting first, neon cyan scanlines and chromatic glitch distortion clearing sweeping across the frame — this is the transition moment, beat drop at 1.8s. / Next 2.2-6s: The effect clears to reveal her in 눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이, settling into a graceful confident pose, looking directly at camera. No dialogue. No on-screen subtitle text or captions.",
       "duration": 8,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
@@ -10338,6 +10338,18 @@
           "ca": "고정(거울 구도) → 꿈-세계 전이",
           "ac": "0~2초 거울 표면 터치, 반사가 먼저 바뀌며 번짐(트리거) → 2~8초 몽환적 무도회장 리빌, 천천히 고개 들어 정면",
           "md": "신비롭고 몽환적"
+        }
+      },
+      "overrides": {
+        "imagePrompt": {
+          "value": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, caught just as touching a mirror surface, reflection shifting first settles — neon cyan scanlines and chromatic glitch distortion clearing, now wearing 눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이, standing in 눈 덮인 침엽수림, 얼어붙은 호수, graceful confident pose, looking directly at camera, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, lighting: 차가운 겨울 황혼 빛, 반짝이는 눈 결정, background: softly blurred 눈 덮인 침엽수림, 얼어붙은 호수, never legible text or UI, vertical 9:16",
+          "at": "2026-10-13T07:06:23.277Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "videoPrompt": {
+          "value": "First 0-2.1s: She initiates touching a mirror surface, reflection shifting first, neon cyan scanlines and chromatic glitch distortion clearing sweeping across the frame — this is the transition moment, beat drop at 1.8s. / Next 2.2-6s: The effect clears to reveal her in 눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이, settling into a graceful confident pose, looking directly at camera. No dialogue. No on-screen subtitle text or captions.",
+          "at": "2026-10-13T07:06:23.277Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     },
@@ -10678,7 +10690,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-13T09:01:10.309Z",
+  "savedAt": "2026-10-13T11:44:14.875Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
