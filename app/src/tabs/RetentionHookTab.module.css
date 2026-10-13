@@ -125,3 +125,37 @@
   cursor: pointer;
 }
 .copyBtn:hover { background: #1a1a18; }
+
+/* 2026-10-13 — 시그/체인지 탭 매트릭스 레이아웃(성준님 설계: 섹션헤더(열)+섹션헤더(열)...
+   각각 아래로 전개). 트리거×VFX×SceneB처럼 "여러 축에서 하나씩 골라 조합"하는 섹션들을
+   나란히 세운 칸반 열로 배치 — 섹션 하나가 끝나야 다음 섹션이 보이던 기존 세로 스택 대신,
+   모든 축을 한 화면에서 동시에 비교할 수 있게 한다. */
+.columns { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+.column { flex: 1; min-width: 0; background: #151513; border-radius: 10px; border: 0.5px solid #2a2a28; padding: 10px; }
+.columnHeader { font-size: 11px; font-weight: 600; color: #a78bfa; letter-spacing: .5px; text-transform: uppercase; padding: 4px 4px 10px; border-bottom: 0.5px solid #2a2a28; margin-bottom: 8px; }
+.columnList { display: flex; flex-direction: column; gap: 6px; max-height: 480px; overflow-y: auto; }
+.columnItem {
+  background: #1a1a18;
+  border-radius: 8px;
+  border: 0.5px solid #333;
+  border-left: 3px solid #333;
+  padding: 8px 10px;
+  cursor: pointer;
+  text-align: left;
+}
+.columnItem:hover { background: #1f1f1d; }
+.columnItemActive { border-left-color: #534AB7; background: #1f1d2b; }
+.columnItemLabel { font-size: 12px; color: #d4d2cc; font-weight: 500; }
+.columnItemDesc { font-size: 10.5px; color: #777; margin-top: 2px; line-height: 1.4; }
+.columnItemBadge { font-size: 9px; color: #a78bfa; margin-top: 2px; }
+.columnAddBtn {
+  width: 100%;
+  padding: 8px 0;
+  border-radius: 8px;
+  border: 1px dashed #444;
+  background: transparent;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+}
+.columnAddBtn:hover { background: #1a1a18; color: #ccc; }

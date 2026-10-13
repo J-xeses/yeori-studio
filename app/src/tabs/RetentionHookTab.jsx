@@ -299,36 +299,42 @@ function SignatureRefPanel({ state, dispatch }) {
 
   return (
     <>
-      <div style={{ marginBottom: 14 }}>
-        <div className={styles.resultLabel} style={{ marginBottom: 6 }}>연출 재료 창고에서 시작하기 (선택, 클릭하면 아래 폼을 채워줍니다 — 자유 수정 가능)</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-          {SIGNATURE_TECHNIQUE_PRESETS.map((p) => (
-            <button key={p.name} type="button" className={styles.copyBtn} style={{ fontSize: 11, textAlign: 'left' }}
-              title={p.description}
-              onClick={() => setEditing({ name: p.name, description: p.description, ch: p.ch, lookId: '', sp: p.sp, audioMotif: p.audioMotif })}>
-              {p.name}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className={styles.grid}>
-        {loading && <div className={styles.desc}>불러오는 중…</div>}
-        {!loading && refs.length === 0 && <div className={styles.desc}>저장된 시그 레퍼런스가 없습니다 — 아래에서 추가하세요.</div>}
-        {refs.map((ref) => (
-          <div key={ref.id} className={styles.card} style={{ borderLeftColor: '#a78bfa' }}>
-            <div className={styles.cardLabel}>{ref.name}</div>
-            {ref.originEpisode && <div className={styles.cardTime}>출처: {ref.originEpisode} 컷{ref.originCutNo}</div>}
-            <p style={{ fontSize: 12, color: '#aaa', margin: '6px 0' }}>{ref.description}</p>
-            <div style={{ fontSize: 11, color: '#888', lineHeight: 1.6 }}>
-              {ref.masterCodeTemplate?.ch && <div>CH: {ref.masterCodeTemplate.ch}</div>}
-              {ref.masterCodeTemplate?.sp && <div>SP: {ref.masterCodeTemplate.sp}</div>}
-              {ref.audioMotif && <div>오디오: {ref.audioMotif}</div>}
-            </div>
+      {/* 2026-10-13 — 체인지 생성기와 동일한 "섹션헤더(열)+섹션헤더(열), 각각 아래로 전개"
+          구조. 프리셋(시작점)과 저장된 레퍼런스(기존 자산)를 나란히 두 열로 비교하며 고름. */}
+      <div className={styles.columns}>
+        <div className={styles.column}>
+          <div className={styles.columnHeader}>연출 재료 창고 — 시작점 고르기</div>
+          <div className={styles.columnList}>
+            {SIGNATURE_TECHNIQUE_PRESETS.map((p) => (
+              <div key={p.name} className={styles.columnItem}
+                onClick={() => setEditing({ name: p.name, description: p.description, ch: p.ch, lookId: '', sp: p.sp, audioMotif: p.audioMotif })}>
+                <div className={styles.columnItemLabel}>{p.name}</div>
+                <div className={styles.columnItemDesc}>{p.description}</div>
+              </div>
+            ))}
           </div>
-        ))}
-        <div className={styles.card} style={{ borderLeftColor: '#555', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className={styles.desc} style={{ marginTop: 8, fontSize: 10.5 }}>클릭하면 오른쪽 아래 폼을 채워줍니다 — 자유 수정 가능.</div>
+        </div>
+
+        <div className={styles.column}>
+          <div className={styles.columnHeader}>저장된 시그 레퍼런스</div>
+          <div className={styles.columnList}>
+            {loading && <div className={styles.desc}>불러오는 중…</div>}
+            {!loading && refs.length === 0 && <div className={styles.desc}>아직 없습니다.</div>}
+            {refs.map((ref) => (
+              <div key={ref.id} className={styles.columnItem} style={{ cursor: 'default' }}>
+                <div className={styles.columnItemLabel}>{ref.name}</div>
+                {ref.originEpisode && <div className={styles.columnItemDesc}>출처: {ref.originEpisode} 컷{ref.originCutNo}</div>}
+                <div className={styles.columnItemDesc}>{ref.description}</div>
+                <div style={{ fontSize: 10.5, color: '#888', lineHeight: 1.6, marginTop: 4 }}>
+                  {ref.masterCodeTemplate?.ch && <div>CH: {ref.masterCodeTemplate.ch.slice(0, 50)}{ref.masterCodeTemplate.ch.length > 50 ? '…' : ''}</div>}
+                  {ref.masterCodeTemplate?.sp && <div>SP: {ref.masterCodeTemplate.sp}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
           {editing ? (
-            <div style={{ width: '100%' }}>
+            <div style={{ marginTop: 6 }}>
               <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="이름 (예: 모던 한복 클라이맥스)"
                 value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
               <textarea className={styles.textarea} rows={2} placeholder="묘사 — 어떤 상황에 쓰는 기법인지"
@@ -340,12 +346,12 @@ function SignatureRefPanel({ state, dispatch }) {
               <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="오디오 모티프"
                 value={editing.audioMotif} onChange={(e) => setEditing({ ...editing, audioMotif: e.target.value })} />
               <div style={{ display: 'flex', gap: 6 }}>
-                <button className={styles.genBtn} onClick={saveEditing}>저장</button>
+                <button className={styles.genBtn} style={{ marginBottom: 0 }} onClick={saveEditing}>저장</button>
                 <button className={styles.copyBtn} onClick={() => setEditing(null)}>취소</button>
               </div>
             </div>
           ) : (
-            <button className={styles.genBtn} onClick={startNew}>+ 새 레퍼런스 추가</button>
+            <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }} onClick={startNew}>+ 새 레퍼런스 추가</button>
           )}
         </div>
       </div>
@@ -478,21 +484,23 @@ function ChangeComboPanel({ state, dispatch }) {
   return (
     <>
       <div className={styles.result} style={{ marginBottom: 14 }}>
-        <div className={styles.resultLabel}>① 트리거 액션</div>
-        <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: 14 }}>
-          {options.triggers.map((t) => (
-            <div key={t.id} className={styles.card}
-              style={{ borderLeftColor: triggerId === t.id ? '#534AB7' : '#333', cursor: 'pointer', padding: 10 }}
-              onClick={() => { setTriggerId(t.id); setBuildResult(null) }}>
-              <div style={{ fontSize: 18 }}>{t.icon}</div>
-              <div className={styles.cardLabel} style={{ marginTop: 4 }}>{t.nameKo}</div>
-              <div style={{ fontSize: 10, color: '#777', marginTop: 2 }}>{t.descKo}</div>
-              {t.custom && <div style={{ fontSize: 9, color: '#a78bfa', marginTop: 2 }}>커스텀</div>}
+        {/* 2026-10-13 — 성준님 설계: 섹션헤더(열)+섹션헤더(열)+섹션헤더(열), 각각 아래로
+            전개. 트리거×VFX×Scene B를 3열 칸반으로 나란히 세워서 조합을 한눈에 비교. */}
+        <div className={styles.columns}>
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>① 트리거 액션</div>
+            <div className={styles.columnList}>
+              {options.triggers.map((t) => (
+                <div key={t.id} className={`${styles.columnItem} ${triggerId === t.id ? styles.columnItemActive : ''}`}
+                  onClick={() => { setTriggerId(t.id); setBuildResult(null) }}>
+                  <div className={styles.columnItemLabel}>{t.icon} {t.nameKo}</div>
+                  <div className={styles.columnItemDesc}>{t.descKo}</div>
+                  {t.custom && <div className={styles.columnItemBadge}>커스텀</div>}
+                </div>
+              ))}
             </div>
-          ))}
-          <div className={styles.card} style={{ borderLeftColor: '#555', padding: 10 }}>
             {newTrigger ? (
-              <div>
+              <div style={{ marginTop: 6 }}>
                 <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="이름 (예: 눈물 자국 와이프)"
                   value={newTrigger.nameKo} onChange={(e) => setNewTrigger({ ...newTrigger, nameKo: e.target.value })} />
                 <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="한글 설명(선택)"
@@ -500,57 +508,59 @@ function ChangeComboPanel({ state, dispatch }) {
                 <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="영문 트리거 묘사 (VP에 들어갈 동작 텍스트)"
                   value={newTrigger.en || ''} onChange={(e) => setNewTrigger({ ...newTrigger, en: e.target.value })} />
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button className={styles.genBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={addTrigger}>저장</button>
-                  <button className={styles.copyBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => setNewTrigger(null)}>취소</button>
+                  <button className={styles.genBtn} style={{ padding: '4px 8px', fontSize: 11, marginBottom: 0 }} onClick={addTrigger}>저장</button>
+                  <button className={styles.copyBtn} onClick={() => setNewTrigger(null)}>취소</button>
                 </div>
               </div>
             ) : (
-              <button className={styles.genBtn} style={{ width: '100%', height: '100%', fontSize: 12 }}
+              <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }}
                 onClick={() => setNewTrigger({ nameKo: '', descKo: '', en: '', icon: '✨' })}>+ 새 트리거 추가</button>
             )}
           </div>
-        </div>
 
-        <div className={styles.resultLabel}>② VFX 이펙트</div>
-        <div className={styles.grid} style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 14 }}>
-          {options.vfx.map((v, idx) => (
-            <div key={idx} className={styles.card}
-              style={{ borderLeftColor: vfxIndex === idx ? '#a78bfa' : '#333', cursor: 'pointer', padding: 10 }}
-              onClick={() => { setVfxIndex(idx); setBuildResult(null) }}>
-              <div className={styles.cardLabel}>{v.nameKo}</div>
-              {v.custom && <div style={{ fontSize: 9, color: '#a78bfa', marginTop: 2 }}>커스텀</div>}
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>② VFX 이펙트</div>
+            <div className={styles.columnList}>
+              {options.vfx.map((v, idx) => (
+                <div key={idx} className={`${styles.columnItem} ${vfxIndex === idx ? styles.columnItemActive : ''}`}
+                  onClick={() => { setVfxIndex(idx); setBuildResult(null) }}>
+                  <div className={styles.columnItemLabel}>{v.nameKo}</div>
+                  {v.custom && <div className={styles.columnItemBadge}>커스텀</div>}
+                </div>
+              ))}
             </div>
-          ))}
-          <div className={styles.card} style={{ borderLeftColor: '#555', padding: 10 }}>
             {newVfx ? (
-              <div>
+              <div style={{ marginTop: 6 }}>
                 <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="이름 (예: 빗방울 리플 디졸브)"
                   value={newVfx.nameKo} onChange={(e) => setNewVfx({ ...newVfx, nameKo: e.target.value })} />
                 <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="영문 VFX 묘사"
                   value={newVfx.en || ''} onChange={(e) => setNewVfx({ ...newVfx, en: e.target.value })} />
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button className={styles.genBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={addVfx}>저장</button>
-                  <button className={styles.copyBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => setNewVfx(null)}>취소</button>
+                  <button className={styles.genBtn} style={{ padding: '4px 8px', fontSize: 11, marginBottom: 0 }} onClick={addVfx}>저장</button>
+                  <button className={styles.copyBtn} onClick={() => setNewVfx(null)}>취소</button>
                 </div>
               </div>
             ) : (
-              <button className={styles.genBtn} style={{ width: '100%', height: '100%', fontSize: 12 }}
+              <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }}
                 onClick={() => setNewVfx({ nameKo: '', en: '' })}>+ 새 VFX 추가</button>
             )}
           </div>
+
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>③ Scene B — 리빌될 모습</div>
+            <div className={styles.columnList}>
+              {options.sceneBFashionPresets.map((p, idx) => (
+                <div key={idx} className={styles.columnItem}
+                  onClick={() => { setSceneB(p); setBuildResult(null) }}>
+                  <div className={styles.columnItemLabel}>{p.outfit.slice(0, 20)}…</div>
+                  <div className={styles.columnItemDesc}>{p.env.slice(0, 26)}…</div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.desc} style={{ marginTop: 8, fontSize: 10.5 }}>프리셋을 클릭해 채우거나, 아래 입력란에 직접 입력하세요.</div>
+          </div>
         </div>
 
-        <div className={styles.resultLabel}>③ Scene B — 리빌될 모습</div>
-        <p className={styles.desc} style={{ marginBottom: 8 }}>
-          프리셋 칩을 클릭해 채우거나 직접 입력하세요 — 의상 테마에 상관없이(직업·의상·기타) 자유롭게.
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
-          {options.sceneBFashionPresets.map((p, idx) => (
-            <button key={idx} type="button" className={styles.copyBtn} onClick={() => setSceneB(p)}>
-              {p.outfit.slice(0, 16)}…
-            </button>
-          ))}
-        </div>
         <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수)"
           value={sceneB.outfit} onChange={(e) => { setSceneB({ ...sceneB, outfit: e.target.value }); setBuildResult(null) }} />
         <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경"
