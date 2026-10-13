@@ -6,6 +6,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useApp } from '../context/AppContext'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
+import { claudeMessages } from '../lib/api'
 import styles from './RetentionHookTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -86,21 +87,19 @@ ${hookSummary}
   }
 
   const generate = async () => {
+    // 2026-10-13 수정 — 브라우저에서 api.anthropic.com 직접 호출(CORS·키 노출 위험,
+    // state.apiKey라는 실제로 어디에도 연결 안 된 유령 필드 참조) 때문에 "Failed to
+    // fetch"로 항상 실패하던 버그. ScriptGenTab.jsx의 generateScript()와 동일하게
+    // claudeMessages() 헬퍼(서버 프록시 경유) + apiKeys.claude로 교체.
+    if (!state.apiKeys?.claude) { setError('Claude API 키를 입력하세요 (상단 API 바)'); return }
     setLoading(true); setError(''); setResult('')
     try {
-      const apiKey = state.apiKey || ''
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(apiKey ? { 'x-api-key': apiKey } : {}),
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: buildPrompt() }],
-        }),
+      const res = await claudeMessages(state.apiKeys.claude, {
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: buildPrompt() }],
       })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || '오류') }
       const data = await res.json()
       setResult(data.content?.map(b => b.text || '').join('') || '')
     } catch (e) {
@@ -205,6 +204,42 @@ ${hookSummary}
 // 저장해두고, BEAT:시그 태그가 달린 컷에 CH/LOOK_ID/SP를 "적용"해 넣는다 — 원본 프롬프트를
 // studio-state에서 직접 가공/수정반영(UPDATE_CUT)하는 역할. 리텐션 훅 탭 구성(카드 그리드 +
 // 가공→생성→결과)을 그대로 재사용.
+// 2026-10-13 — 성준님 피드백("레퍼런스 1개뿐이고 새 레퍼런스는 백지상태 작성 구조라 시그
+// 영상 효과·기법에 대한 설정/선택지가 없다") 1차 반영: app/docs/direction-material-bank.md의
+// ①(AI만 할 수 있는 '불가능한 비주얼')·③(채널 고유 시그널) 카탈로그 중 이미 구체적으로
+// 문서화된 기법들을 선택 가능한 출발점으로 제공 — 클릭하면 "새 레퍼런스 추가" 폼을
+// 채워주고, 그 상태에서 자유롭게 수정 후 저장하면 된다(완전 백지 아님, 완전 고정도 아님).
+const SIGNATURE_TECHNIQUE_PRESETS = [
+  {
+    name: '수중/반수면 초근접 포트레이트',
+    description: '얼굴이 물에 반쯤 잠긴 채 수면 굴절·물방울·기포 속에서 눈빛만 또렷 — 2026-10-12 인스타 레퍼런스 발견, 체인지 리빌(water_emerge 트리거)·시그·감정비트 3갈래로 쓸 수 있음(연출 재료 창고 ①)',
+    ch: 'half-submerged underwater portrait, face breaking the water surface, light caustics rippling across skin, scattered air bubbles, keep eyes and eye color sharply in focus as the one clear anchor, rest of face softly distorted by water refraction',
+    sp: 'OT.POOL.DY.LT_RAIN (또는 꿈-세계 물가)',
+    audioMotif: '물속 기포 소리 + 수면 깨지는 소리(트리거)',
+  },
+  {
+    name: '단색 스튜디오 강렬 대비',
+    description: '배경·바닥·소품까지 전부 한 가지 강렬한 솔리드 컬러로 통일하고 고대비 소재 의상 하나만 얹는 컬러 블로킹 — 체인지 "After" 리빌처럼 극적 전환 장면에 적합(연출 재료 창고, 2026-10-12 kirin.cookie 레퍼런스)',
+    ch: 'glossy black leather trench coat, high black boots, vintage red accessory, standing in a solid red studio',
+    sp: 'IN.STUDIO.NT.LT_DRAMA (배경·바닥 전부 솔리드 컬러 통일)',
+    audioMotif: '충격파 베이스 드롭 + 완전한 정적 뒤 울림',
+  },
+  {
+    name: '무중력 / 공중부양',
+    description: '중력을 무시하는 연출 — 머리카락·옷자락이 떠다니는 무중력 상태, 또는 역재생 낙하. 실사 크리에이터는 물리적으로 못 하는 "AI만 할 수 있는 연출"(연출 재료 창고 ①)',
+    ch: 'suspended weightlessly, hair and fabric drifting in zero gravity, floating naturally as if weightless',
+    sp: 'OT.SPACE.NT.LT_STAR (또는 꿈-세계 무중력 공간)',
+    audioMotif: '신스 패드로 웅장하게 확장 + 반짝이는 차임',
+  },
+  {
+    name: '멀티 서여리 (한 프레임 다중 등장)',
+    description: '같은 인물이 한 프레임에 여러 명 등장 — 지아·지유 등 캐릭터 레지스트리 구조를 서여리 자신에게 확장 적용하면 기술적 기반 있음(연출 재료 창고 ①)',
+    ch: '(미완성 — 동일 인물 2~3명이 한 프레임에 서로 다른 포즈로 등장, 합성 방식 설계 필요)',
+    sp: '',
+    audioMotif: '',
+  },
+]
+
 function SignatureRefPanel({ state, dispatch }) {
   const [refs, setRefs] = useState([])
   const [loading, setLoading] = useState(false)
@@ -264,6 +299,18 @@ function SignatureRefPanel({ state, dispatch }) {
 
   return (
     <>
+      <div style={{ marginBottom: 14 }}>
+        <div className={styles.resultLabel} style={{ marginBottom: 6 }}>연출 재료 창고에서 시작하기 (선택, 클릭하면 아래 폼을 채워줍니다 — 자유 수정 가능)</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {SIGNATURE_TECHNIQUE_PRESETS.map((p) => (
+            <button key={p.name} type="button" className={styles.copyBtn} style={{ fontSize: 11, textAlign: 'left' }}
+              title={p.description}
+              onClick={() => setEditing({ name: p.name, description: p.description, ch: p.ch, lookId: '', sp: p.sp, audioMotif: p.audioMotif })}>
+              {p.name}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className={styles.grid}>
         {loading && <div className={styles.desc}>불러오는 중…</div>}
         {!loading && refs.length === 0 && <div className={styles.desc}>저장된 시그 레퍼런스가 없습니다 — 아래에서 추가하세요.</div>}
@@ -360,10 +407,31 @@ function ChangeComboPanel({ state, dispatch }) {
   const [lkSpace, setLkSpace] = useState('IN')
   const [lkSeason, setLkSeason] = useState('CH')
   const [registerMsg, setRegisterMsg] = useState('')
+  // 2026-10-13 — 성준님 피드백("효과별 조합 매트릭스와 확장성이 안 보여서 연출방법이 이미
+  // 뻔한 범위에 머물러 있게 된다") 1차 반영: 트리거/VFX를 코드 수정 없이 화면에서 바로
+  // 추가할 수 있게 함(server/lib/customChangePresets.js, custom:true로 내장과 구분).
+  const [newTrigger, setNewTrigger] = useState(null)
+  const [newVfx, setNewVfx] = useState(null)
 
-  useEffect(() => {
-    fetch(`${SERVER}/api/change-combo/options`).then((r) => r.json()).then(setOptions).catch(() => {})
-  }, [])
+  const loadOptions = () => fetch(`${SERVER}/api/change-combo/options`).then((r) => r.json()).then(setOptions).catch(() => {})
+  useEffect(() => { loadOptions() }, [])
+
+  const addTrigger = async () => {
+    if (!newTrigger?.nameKo?.trim() || !newTrigger?.en?.trim()) return
+    await fetch(`${SERVER}/api/change-combo/custom-trigger`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newTrigger),
+    })
+    setNewTrigger(null)
+    loadOptions()
+  }
+  const addVfx = async () => {
+    if (!newVfx?.nameKo?.trim() || !newVfx?.en?.trim()) return
+    await fetch(`${SERVER}/api/change-combo/custom-vfx`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newVfx),
+    })
+    setNewVfx(null)
+    loadOptions()
+  }
 
   const pickRandom = () => {
     if (!options.triggers.length) return
@@ -419,8 +487,28 @@ function ChangeComboPanel({ state, dispatch }) {
               <div style={{ fontSize: 18 }}>{t.icon}</div>
               <div className={styles.cardLabel} style={{ marginTop: 4 }}>{t.nameKo}</div>
               <div style={{ fontSize: 10, color: '#777', marginTop: 2 }}>{t.descKo}</div>
+              {t.custom && <div style={{ fontSize: 9, color: '#a78bfa', marginTop: 2 }}>커스텀</div>}
             </div>
           ))}
+          <div className={styles.card} style={{ borderLeftColor: '#555', padding: 10 }}>
+            {newTrigger ? (
+              <div>
+                <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="이름 (예: 눈물 자국 와이프)"
+                  value={newTrigger.nameKo} onChange={(e) => setNewTrigger({ ...newTrigger, nameKo: e.target.value })} />
+                <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="한글 설명(선택)"
+                  value={newTrigger.descKo || ''} onChange={(e) => setNewTrigger({ ...newTrigger, descKo: e.target.value })} />
+                <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="영문 트리거 묘사 (VP에 들어갈 동작 텍스트)"
+                  value={newTrigger.en || ''} onChange={(e) => setNewTrigger({ ...newTrigger, en: e.target.value })} />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button className={styles.genBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={addTrigger}>저장</button>
+                  <button className={styles.copyBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => setNewTrigger(null)}>취소</button>
+                </div>
+              </div>
+            ) : (
+              <button className={styles.genBtn} style={{ width: '100%', height: '100%', fontSize: 12 }}
+                onClick={() => setNewTrigger({ nameKo: '', descKo: '', en: '', icon: '✨' })}>+ 새 트리거 추가</button>
+            )}
+          </div>
         </div>
 
         <div className={styles.resultLabel}>② VFX 이펙트</div>
@@ -430,8 +518,26 @@ function ChangeComboPanel({ state, dispatch }) {
               style={{ borderLeftColor: vfxIndex === idx ? '#a78bfa' : '#333', cursor: 'pointer', padding: 10 }}
               onClick={() => { setVfxIndex(idx); setBuildResult(null) }}>
               <div className={styles.cardLabel}>{v.nameKo}</div>
+              {v.custom && <div style={{ fontSize: 9, color: '#a78bfa', marginTop: 2 }}>커스텀</div>}
             </div>
           ))}
+          <div className={styles.card} style={{ borderLeftColor: '#555', padding: 10 }}>
+            {newVfx ? (
+              <div>
+                <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="이름 (예: 빗방울 리플 디졸브)"
+                  value={newVfx.nameKo} onChange={(e) => setNewVfx({ ...newVfx, nameKo: e.target.value })} />
+                <input className={styles.textarea} style={{ marginBottom: 4, fontSize: 11 }} placeholder="영문 VFX 묘사"
+                  value={newVfx.en || ''} onChange={(e) => setNewVfx({ ...newVfx, en: e.target.value })} />
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button className={styles.genBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={addVfx}>저장</button>
+                  <button className={styles.copyBtn} style={{ padding: '4px 8px', fontSize: 11 }} onClick={() => setNewVfx(null)}>취소</button>
+                </div>
+              </div>
+            ) : (
+              <button className={styles.genBtn} style={{ width: '100%', height: '100%', fontSize: 12 }}
+                onClick={() => setNewVfx({ nameKo: '', en: '' })}>+ 새 VFX 추가</button>
+            )}
+          </div>
         </div>
 
         <div className={styles.resultLabel}>③ Scene B — 리빌될 모습</div>

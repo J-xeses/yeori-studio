@@ -12,6 +12,7 @@ import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
+import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger } from './lib/customChangePresets.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
@@ -6640,7 +6641,28 @@ app.post('/api/signature-refs/apply', (req, res) => {
 // videoPrompt·subtitle·beat·audioNote)와 미리보기 시나리오를 돌려줄 뿐, studio-state는
 // 프론트에서 UPDATE_CUT으로 반영(signature-refs와 동일 원칙 — 여기선 studio-state 안 건드림).
 app.get('/api/change-combo/options', (_req, res) => {
-  res.json({ triggers: TRIGGER_ACTIONS, vfx: VFX_PRESETS, sceneBFashionPresets: SCENE_B_FASHION_PRESETS, lkSpaceCodes: LK_SPACE_CODES, lkSeasonCodes: LK_SEASON_CODES })
+  // 2026-10-13: 내장 프리셋 + 사용자가 추가한 커스텀 트리거/VFX를 합쳐서 반환(custom:true로 구분
+  // 가능) — customChangePresets.js 참조. 순서 유지를 위해 커스텀은 항상 내장 뒤에 이어붙인다.
+  res.json({
+    triggers: [...TRIGGER_ACTIONS, ...listCustomTriggers()],
+    vfx: [...VFX_PRESETS, ...listCustomVfx()],
+    sceneBFashionPresets: SCENE_B_FASHION_PRESETS,
+    lkSpaceCodes: LK_SPACE_CODES,
+    lkSeasonCodes: LK_SEASON_CODES,
+  })
+})
+// 커스텀 트리거/VFX 추가 — body: { nameKo, descKo?, en, icon? } / { nameKo, en, type? }
+app.post('/api/change-combo/custom-trigger', (req, res) => {
+  try { res.json({ ok: true, trigger: addCustomTrigger(req.body || {}) }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.post('/api/change-combo/custom-vfx', (req, res) => {
+  try { res.json({ ok: true, vfx: addCustomVfx(req.body || {}) }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.delete('/api/change-combo/custom-trigger/:id', (req, res) => {
+  try { deleteCustomTrigger(req.params.id); res.json({ ok: true }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
 })
 // 체인지 생성기 결과를 characters.json 의 캐릭터 룩(CA_BANK)으로 등록(2026-10-11, 성준님 설계:
 // LK_{공간}_{계절}{번호}). file 은 비워도 됨 — G2 이미지가 아직 없으면 나중에 CA_BANK 화면에서
@@ -6661,8 +6683,10 @@ app.post('/api/characters/:id/looks', (req, res) => {
 app.post('/api/change-combo/build', (req, res) => {
   try {
     const { triggerId, vfxIndex, sceneB, durationSec, beat, cpLine } = req.body || {}
-    const trigger = TRIGGER_ACTIONS.find((t) => t.id === triggerId)
-    const vfx = VFX_PRESETS[vfxIndex]
+    // 커스텀 트리거/VFX도 선택 가능해야 하므로 /options와 동일하게 내장+커스텀을 합쳐서 찾는다
+    // (클라이언트의 vfxIndex는 /options가 내려준 합쳐진 배열 기준 인덱스).
+    const trigger = [...TRIGGER_ACTIONS, ...listCustomTriggers()].find((t) => t.id === triggerId)
+    const vfx = [...VFX_PRESETS, ...listCustomVfx()][vfxIndex]
     if (!trigger) return res.status(400).json({ error: `알 수 없는 triggerId: ${triggerId}` })
     if (!vfx) return res.status(400).json({ error: `알 수 없는 vfxIndex: ${vfxIndex}` })
     res.json(buildRevealCut({ trigger, vfx, sceneB, durationSec, beat, cpLine }))

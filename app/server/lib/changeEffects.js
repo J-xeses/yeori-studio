@@ -86,7 +86,10 @@ export function buildRevealCut({ trigger, vfx, sceneB, durationSec = 6, beat = '
 
   const imagePrompt = `MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, caught just as ${trigger.en} settles — ${vfx.en}, now wearing ${sceneB.outfit}, standing in ${sceneB.env}, graceful confident pose, looking directly at camera, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, lighting: ${sceneB.lighting}, background: softly blurred ${sceneB.env}, never legible text or UI, vertical 9:16`
 
-  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfit}, settling into a graceful confident pose, looking directly at camera. No dialogue. No on-screen subtitle text or captions.`
+  // 2026-10-13: 룰셋 표준 무발화 문구(2026-09-29 SF_E11 실측 확정)로 통일 — 예전 "No dialogue.
+  // No on-screen subtitle text or captions."만으로는 Veo가 감정 구간에서 스스로 입모양을
+  // 만들어내는 문제가 있었음(scriptParserV3.js의 applyNarrationSilentGuard와 동일 문구 유지).
+  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfit}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
   const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${trigger.nameKo} + ${audioCue.soundFx} (컷 시작 0.2초) / 타점: ${audioCue.beat}`
 
