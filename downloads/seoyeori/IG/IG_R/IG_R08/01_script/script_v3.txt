@@ -86,7 +86,7 @@ background: shelves of old clocks, photographs, trinkets, softly blurred, vertic
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-4s: She polishes an antique cracked hand mirror with a soft cloth, focused and gentle. / Next 4-8s: She pauses, glancing up at camera with a quiet knowing smile, the cracked mirror catching the light in her hands. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-4s: She polishes an antique cracked hand mirror with a soft cloth, focused and gentle. / Next 4-8s: She pauses, glancing up at camera with a quiet knowing smile, the cracked mirror catching the light in her hands. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -141,7 +141,7 @@ background: vast empty moonlit ballroom, soft bokeh chandeliers, vertical 9:16
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: She touches the cracked mirror's surface with one fingertip — her reflection shifts first, changing into the silver gown before she does, liquid ripples of light spreading outward — this is the transition moment. / Next 2-8s: The reflection's light spreads to engulf the frame, revealing a dreamlike moonlit ballroom around her, she slowly lifts her gaze toward camera with a soft mysterious smile. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-2s: She touches the cracked mirror's surface with one fingertip — her reflection shifts first, changing into the silver gown before she does, liquid ripples of light spreading outward — this is the transition moment. / Next 2-8s: The reflection's light spreads to engulf the frame, revealing a dreamlike moonlit ballroom around her, she slowly lifts her gaze toward camera with a soft mysterious smile. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -196,7 +196,7 @@ background: blurred rain-soaked poolside memory, soft bokeh raindrops, vertical 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: She closes her eyes holding a water-stained photograph to her chest, the frame slowly dissolving into water — this is the transition moment. / Next 2-8s: Breaking through the water surface while rising up, droplets cascading off her face and hair, she opens her eyes with a calm wistful gaze directly at camera. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-2s: She closes her eyes holding a water-stained photograph to her chest, the frame slowly dissolving into water — this is the transition moment. / Next 2-8s: Breaking through the water surface while rising up, droplets cascading off her face and hair, she opens her eyes with a calm wistful gaze directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -252,7 +252,7 @@ background: blurred vintage jazz bar, brass instruments, soft bokeh string light
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: She winds the stopped pocket watch, a plume of hazy smoke rising and curling around her — this is the transition moment. / Next 2-8s: A burst of colored smoke clears as she steps forward from within it, revealing the 1920s jazz lounge, relaxed alluring smile, confident and unhurried toward camera. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-2s: She winds the stopped pocket watch, a plume of hazy smoke rising and curling around her — this is the transition moment. / Next 2-8s: A burst of colored smoke clears as she steps forward from within it, revealing the 1920s jazz lounge, relaxed alluring smile, confident and unhurried toward camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -307,7 +307,7 @@ background: deep space starfield, soft bokeh stars, faint colorful nebula, verti
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: She lifts a cracked snow globe to eye level, the camera crash-zooms rapidly into her eye, pulled into the reflection within — this is the transition moment. / Next 2-8s: The camera zooms back out to reveal her suspended weightlessly amid a starfield, hair and fabric drifting in zero gravity, awestruck serene expression directly at camera. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-2s: She lifts a cracked snow globe to eye level, the camera crash-zooms rapidly into her eye, pulled into the reflection within — this is the transition moment. / Next 2-8s: The camera zooms back out to reveal her suspended weightlessly amid a starfield, hair and fabric drifting in zero gravity, awestruck serene expression directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -362,7 +362,7 @@ background: solid bold red studio backdrop and floor, vertical 9:16
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-2s: A finger snap gesture, light and particles bursting outward at the snap, the frame flashing briefly white — this is the transition moment. / Next 2-10s: The flash clears to reveal the solid red studio, she stands confidently in the black leather coat, direct powerful gaze at camera, commanding presence. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-2s: A finger snap gesture, light and particles bursting outward at the snap, the frame flashing briefly white — this is the transition moment. / Next 2-10s: The flash clears to reveal the solid red studio, she stands confidently in the black leather coat, direct powerful gaze at camera, commanding presence. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -417,4 +417,4 @@ background: same shelves of old clocks, photographs, trinkets, softly blurred, v
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-First 0-4s: She carefully places the now-repaired mirror into a small box, tying a ribbon around it with gentle care. / Next 4-8s: She looks up at camera with a playful warm wink and a gentle knowing smile, inviting the viewer to wonder. No dialogue — narration only. No on-screen subtitle text or captions.
+First 0-4s: She carefully places the now-repaired mirror into a small box, tying a ribbon around it with gentle care. / Next 4-8s: She looks up at camera with a playful warm wink and a gentle knowing smile, inviting the viewer to wonder. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.
