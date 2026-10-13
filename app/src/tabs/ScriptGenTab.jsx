@@ -576,6 +576,16 @@ function applyPrivateCastGuard(sceneKr, chField, ip, vp) {
   return { ip: finish(ip), vp: finish(vp) }
 }
 
+// 나레이션 컷 "무발화" 지시 강화 (server/lib/scriptParserV3.js와 동일 유지, 2026-10-13 추가)
+const SILENT_FILM_ADDENDUM = 'NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.'
+function applyNarrationSilentGuard(dl, nr, vp) {
+  if (dl || !nr || !vp) return vp
+  if (vp.includes(SILENT_FILM_ADDENDUM)) return vp // 멱등성
+  const trimmed = vp.trim()
+  const sep = /[.!?]$/.test(trimmed) ? ' ' : '. '
+  return `${trimmed}${sep}${SILENT_FILM_ADDENDUM}`
+}
+
 function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -618,6 +628,7 @@ function parseCutsV3(raw) {
     const spaceDetectionText = `${fields.SC || ''} ${kr.SP || ''}`
     const barefootGuarded = applyIndoorBarefootGuard(spaceDetectionText, kr.AC, ip, vp)
     const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
+    const silentGuardedVp = applyNarrationSilentGuard(dl, nr, castGuarded.vp)
 
     return {
       id: `cut-${rc.no}`,
@@ -631,7 +642,7 @@ function parseCutsV3(raw) {
       narration: nr,
       subtitle: cp,
       imagePrompt: castGuarded.ip,
-      videoPrompt: castGuarded.vp,
+      videoPrompt: silentGuardedVp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,

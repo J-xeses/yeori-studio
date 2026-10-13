@@ -308,6 +308,22 @@ function applyPrivateCastGuard(sceneKr, chField, ip, vp) {
   return { ip: finish(ip), vp: finish(vp) }
 }
 
+// ── 나레이션 컷 "무발화" 지시 강화 (2026-09-29 SF_E11 컷3·6 실측 확정 표준) ───────────
+// 대사(DL) 없이 나레이션(NR)만 있는 컷의 VP 끝에 반드시 아래 표준 문구를 붙인다 — 이게
+// 없으면 Veo가 감정 표현 구간(체념·한숨 등)에서 스스로 입모양/중얼거림을 만들어내는 사고가
+// 있었음(2026-09-29 SF_E11). "No dialogue — narration added in post" 류의 약한 변형
+// 문구만으로는 부족하다는 게 2026-10-12 IG_R08 실측(성준님 영상 생성 테스트)으로 재확인됨 —
+// 과거 에피소드들의 기존 텍스트는 건드리지 않고(이미 완성된 영상의 기록일 뿐), 앞으로
+// 신규/재구성 대본에만 이 가드로 표준을 강제한다(성준님 2026-10-13 확정).
+const SILENT_FILM_ADDENDUM = 'NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.'
+function applyNarrationSilentGuard(dl, nr, vp) {
+  if (dl || !nr || !vp) return vp
+  if (vp.includes(SILENT_FILM_ADDENDUM)) return vp // 멱등성
+  const trimmed = vp.trim()
+  const sep = /[.!?]$/.test(trimmed) ? ' ' : '. '
+  return `${trimmed}${sep}${SILENT_FILM_ADDENDUM}`
+}
+
 export function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
@@ -354,6 +370,7 @@ export function parseCutsV3(raw) {
     const spaceDetectionText = `${fields.SC || ''} ${kr.SP || ''}`
     const barefootGuarded = applyIndoorBarefootGuard(spaceDetectionText, kr.AC, ip, vp)
     const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
+    const silentGuardedVp = applyNarrationSilentGuard(dl, nr, castGuarded.vp)
 
     return {
       id: `cut-${rc.no}`,
@@ -367,7 +384,7 @@ export function parseCutsV3(raw) {
       subtitle: cp,
       narration: nr,
       imagePrompt: castGuarded.ip,
-      videoPrompt: castGuarded.vp,
+      videoPrompt: silentGuardedVp,
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
