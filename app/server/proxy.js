@@ -7957,6 +7957,39 @@ app.post('/api/render-cut-clips', async (req, res) => {
   }
 })
 
+// ── POST /api/checkup-trim-commit — 체크업 타임라인 트림을 실제 cut_NN.mp4에 반영 ──
+// 2026-10-14 발견: finalizeReel()이 각 컷 길이를 cut.duration이 아니라 cut_NN.mp4를 ffprobe로
+// 실측한 값으로 항상 덮어쓴다(d.durSec = realDur > 0 ? realDur : d.durSec — realDur은 거의
+// 항상 있으므로 사실상 무조건 덮어씀). 즉 cut.duration(UPDATE_CUT)만 바꾸는 건 메타 테이블/SRT
+// 타이밍 등 "서류상"으로만 반영되고 실제 발행 영상 길이엔 전혀 영향이 없었다(실측: cut.duration=7
+// 로 고쳤는데 cut_03.mp4 실제 길이는 그대로 8초). 진짜 반영하려면 파일 자체를 다시 잘라야 하므로,
+// 이미 있는 /api/render-cut-clips(자동 백업 + self-ref 안전 복사 포함)를 그대로 재사용해 같은
+// cut_NN.mp4를 입력이자 출력으로 넘긴다. trimStart>0을 허용해 왼쪽(시작점) 트림도 실제로
+// 반영되게 한다 — 체크업 탭에서 "왼쪽/오른쪽 중 살릴 쪽 선택"(성준님 요청)이 여기서 해결된다.
+app.post('/api/checkup-trim-commit', async (req, res) => {
+  const { epNum, cutNo, trimStart, trimEnd } = req.body || {}
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  const ts = Number(trimStart) || 0
+  const te = Number(trimEnd)
+  if (!(te > ts)) return res.status(400).json({ error: 'trimEnd가 trimStart보다 커야 합니다' })
+  try {
+    const videoDir = mp.videoDir(epNum)
+    const padded = String(cutNo).padStart(2, '0')
+    const videoFiles = (() => { try { return fs.readdirSync(videoDir) } catch { return [] } })()
+    const savedFile = videoFiles.find(f => new RegExp(`^cut_${padded}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+    if (!savedFile) return res.status(400).json({ error: `cut_${padded}.mp4 가 없습니다` })
+    const filePath = path.join(videoDir, savedFile)
+    const r = await selfFetch('/api/render-cut-clips', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo, clips: [{ file: filePath, trimStart: ts, trimEnd: te, useFullDuration: false, keepAudio: true }] }),
+    })
+    if (r.status !== 200) return res.status(r.status).json(r.body)
+    res.json({ success: true, duration: r.body.duration })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })

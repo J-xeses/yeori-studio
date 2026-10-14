@@ -95,6 +95,14 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
   const stripRef = useRef(null)
   const saveTimerRef = useRef(null)
   const dragMovedRef = useRef(false)
+  // 트림/재배치 드래그 중엔 뒤 클립들이 실시간으로 밀리면서 positioned가 매 프레임
+  // 재계산되는데, 재생 바늘 위치도 그 positioned를 따라 계산되다 보니 편집 중인 클립이
+  // 아니어도 같이 흔들렸다(2026-10-14, 성준님 지적: "재생 바늘은 컷 편집시, 움직이지
+  // 말아야 한다"). 드래그가 끝날 때까지 드래그 시작 시점의 바늘 위치로 고정한다.
+  const [isDragging, setIsDragging] = useState(false)
+  const frozenPlayheadRef = useRef(null)
+  // 트림 커밋(실제 ffmpeg 재인코딩) 진행 중인 클립 — 끝날 때까지 해당 클립에 "반영 중…" 표시.
+  const [committingClipId, setCommittingClipId] = useState(null)
 
   useEffect(() => { latestClipsRef.current = clips }, [clips])
 
@@ -230,6 +238,8 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     if (!hit) return null
     return hit.start + Math.max(0, elapsedInActive - hit.trimInSec)
   }, [positioned, activeCutNo, elapsedInActive])
+  // 드래그 중엔 고정값, 드래그가 아니면 실시간 값 — 드래그 시작/종료는 startTrim/startMove에서 관리.
+  const displayPlayheadSec = isDragging ? frozenPlayheadRef.current : playheadSec
 
   // 좌측 컷 목록을 클릭하면 activeCutNo가 바뀌는데, 그 컷이 지금 스크롤 뷰포트 밖에 있으면
   // 재생 위치(playhead)는 이동해도 화면엔 안 보여서 "눌러도 아무 반응 없다"처럼 느껴졌다
@@ -281,6 +291,8 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const startX = e.clientX
     const startIn = clip.trimInSec
     const startOut = clip.trimOutSec
+    frozenPlayheadRef.current = playheadSec
+    setIsDragging(true)
     const onMove = (ev) => {
       dragMovedRef.current = true
       const deltaSec = (ev.clientX - startX) / pxPerSec
@@ -290,21 +302,28 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
         return { ...c, trimOutSec: clamp(startOut + deltaSec, c.trimInSec + MIN_CLIP_SEC, maxDur) }
       }))
     }
-    const onUp = () => {
+    const onUp = async () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      setIsDragging(false)
       pushUndo(preDrag)
       const after = latestClipsRef.current
       scheduleSave(after)
-      // 오른쪽 끝 트림만 실제 컷 길이(cut.duration)에 반영 — reelFinalize.js가 각 컷을
-      // '-t duration'(시작점 0 기준)으로만 자르므로, 시작점이 안 움직인(trimInSec≈0) +
-      // 분할 안 된(이 컷을 이 클립 하나가 전부 대표하는) 경우에만 "순수 길이 조절"로
-      // 간주해 실제 파이프라인에 커밋한다. 왼쪽 트림/분할된 조각은 여전히 미리보기 전용.
-      if (edge === 'R' && onDurationCommit) {
-        const updated = after.find(c => c.clipId === clipId)
-        const siblingCount = after.filter(c => c.sourceCutNo === updated?.sourceCutNo).length
-        if (updated && siblingCount === 1 && updated.trimInSec < 0.05) {
-          onDurationCommit(updated.sourceCutNo, updated.trimOutSec - updated.trimInSec)
+      // 좌우 트림 모두 실제 cut_NN.mp4 파일 자체를 다시 잘라 반영한다(2026-10-14 재설계 —
+      // cut.duration만 바꾸는 방식은 finalizeReel이 파일 실측 길이로 항상 덮어써서 실제
+      // 발행 영상엔 전혀 반영이 안 됐던 걸 발견). 분할 안 된 컷(이 클립 하나가 그 컷 전체를
+      // 대표)일 때만 커밋 — 분할된 조각은 여전히 미리보기 전용(파일 하나를 조각낼 방법이
+      // 아직 없음). 실제 파일을 건드리는 작업이라 ffmpeg 처리 동안 "반영 중…" 표시.
+      const updated = after.find(c => c.clipId === clipId)
+      const siblingCount = after.filter(c => c.sourceCutNo === updated?.sourceCutNo).length
+      const changed = edge === 'L' ? Math.abs(updated.trimInSec - startIn) > 0.05 : Math.abs(updated.trimOutSec - startOut) > 0.05
+      if (updated && siblingCount === 1 && changed && onDurationCommit) {
+        setCommittingClipId(clipId)
+        try {
+          await onDurationCommit(updated.sourceCutNo, updated.trimInSec, updated.trimOutSec)
+          await rebuildFromCurrent()
+        } finally {
+          setCommittingClipId(null)
         }
       }
     }
@@ -318,6 +337,8 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const preDrag = cloneClips(latestClipsRef.current)
     let index = preDrag.findIndex(c => c.clipId === clipId)
     if (index < 0) return
+    frozenPlayheadRef.current = playheadSec
+    setIsDragging(true)
     let accumDx = 0
     let lastX = e.clientX
     const onMove = (ev) => {
@@ -349,6 +370,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      setIsDragging(false)
       if (dragMovedRef.current) {
         pushUndo(preDrag)
         scheduleSave(latestClipsRef.current)
@@ -467,10 +489,11 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                     <FilmstripThumbs frames={filmstrips[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
                       sourceDurationSec={info.actualDurationSec} fallbackImage={info.startFrame} />
                     <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
+                    {it.clipId === committingClipId && <span className={s.clipCommitting}>반영 중…</span>}
                     <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')}
-                      title="시작점 트림 — 미리보기 전용(실제 발행본엔 반영 안 됨)" />
+                      title="시작점 트림 — 분할 안 된 컷이면 끝났을 때 실제 영상 파일을 다시 잘라 반영합니다(앞부분 버림)" />
                     <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')}
-                      title="길이 조절 — 분할 안 된 컷이면 실제 컷 길이(cut.duration)에 바로 반영됩니다" />
+                      title="길이 조절 — 분할 안 된 컷이면 끝났을 때 실제 영상 파일을 다시 잘라 반영합니다(뒷부분 버림)" />
                   </div>
                 )
               })}
@@ -518,7 +541,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                 )
               })}
             </div>
-            {playheadSec != null && <div className={s.playhead} style={{ left: `${playheadSec * pxPerSec}px` }} />}
+            {displayPlayheadSec != null && <div className={s.playhead} style={{ left: `${displayPlayheadSec * pxPerSec}px` }} />}
           </div>
         </div>
       )}

@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -9349,8 +9349,8 @@
             },
             "duration": {
               "value": 6,
-              "at": "2026-10-14T04:45:52.837Z",
-              "reason": "체크업 트림 기능 테스트 중 실수로 바뀐 값 복원"
+              "at": "2026-10-14T08:26:34.500Z",
+              "reason": "체크업 타임라인에서 트림"
             }
           },
           "captionSegTiming": [
@@ -9411,6 +9411,11 @@
               "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
               "at": "2026-10-09T01:45:29.697Z",
               "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "duration": {
+              "value": 8,
+              "at": "2026-10-14T08:24:20.772Z",
+              "reason": "체크업 타임라인에서 트림"
             }
           },
           "captionSegTiming": [
@@ -9440,7 +9445,7 @@
           "subtitle": "재도전 선언",
           "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible). Long wavy dark brown hair, NOT short — hair full and flowing. natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, gold necklace. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. She stands with shoulders squared back in a mock-serious, confident stance, glancing toward her friend. Further back near the far wall, a second young Korean woman with long straight black hair and full bangs stands at a distance, holding up her phone to film/photograph the main character from across the room — she is NOT standing close beside the main character, keeping a natural filming distance. The friend wears an oversized white t-shirt and dark grey shorts, barefoot. Afternoon natural light streams in from a window. The energy is bright and playful. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. No subtitles, no audio.",
           "videoPrompt": "First 0-3s: Wide shot of bedroom wall. Friend on the left adjusts phone held up at filming angle. Tripod visible in foreground. Afternoon daylight fills the room warmly. Both women face each other. / Next 3-6s: Friend tosses a teasing line. Main character on right responds with a sharp comeback, eyebrow raised. The exchange is quick and playful. / Final 6-8s: Main character rolls both shoulders back dramatically, cracks her neck, and plants her feet — dead serious expression. Friend stifles a laugh behind the phone.",
-          "duration": 7.6,
+          "duration": 7,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
           "pipTarget": "",
@@ -9472,9 +9477,9 @@
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "duration": {
-              "value": 7.6,
-              "at": "2026-10-14T04:47:15.276Z",
-              "reason": "체크업 타임라인에서 트림"
+              "value": 7,
+              "at": "2026-10-14T04:47:45.995Z",
+              "reason": "체크업 타임라인 트림 기능 실측 테스트 후 원래 값(음성길이 기준)으로 복원"
             }
           },
           "captionSegTiming": [
@@ -10393,8 +10398,8 @@
         },
         "duration": {
           "value": 6,
-          "at": "2026-10-14T04:45:52.837Z",
-          "reason": "체크업 트림 기능 테스트 중 실수로 바뀐 값 복원"
+          "at": "2026-10-14T08:26:34.500Z",
+          "reason": "체크업 타임라인에서 트림"
         }
       },
       "captionSegTiming": [
@@ -10455,6 +10460,11 @@
           "value": "First 0-3s: She scrolls through a phone feed with a blank, habitual expression. Finger sweeps upward repeatedly. Warm ambient lamp behind her. The motion is automatic, almost mindless. / Next 3-6s: Finger stops abruptly. She taps to replay something. A cool blue-white glow from the screen rises slowly across her face. She watches quietly. / Final 6-8s: Expression softens — the corner of her mouth lifts just slightly. She murmurs a line to herself, voice barely above a whisper, gaze fixed on the screen.\n\nThroughout this clip she wears the exact same dark charcoal-grey ribbed tank crop top and matching grey ribbed lounge shorts as CUT 1 (identical outfit, continuous scene) — do not change her outfit.",
           "at": "2026-10-09T01:45:29.697Z",
           "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "duration": {
+          "value": 8,
+          "at": "2026-10-14T08:24:20.772Z",
+          "reason": "체크업 타임라인에서 트림"
         }
       },
       "captionSegTiming": [
@@ -10786,7 +10796,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-14T04:47:03.447Z",
+  "savedAt": "2026-10-14T08:35:11.003Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

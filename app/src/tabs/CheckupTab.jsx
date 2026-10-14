@@ -238,19 +238,28 @@ export default function CheckupTab() {
     return () => clearInterval(id)
   }, [load])
 
-  // 체크업 타임라인 트림 → 실제 컷 길이 반영(2026-10-14, 성준님 요청 — "전체길이를 살짝
-  // 늘리거나 줄이거나 하는 편집기능"). 지금까지 체크업 타임라인의 트림은 yeori_checkup_timeline.json
-  // 에만 저장되는 미리보기 전용이었다(editMeta/G5 조립과 완전히 분리) — reelFinalize.js가 각 컷을
-  // '-t duration'으로만 자르고(-ss 시작점 오프셋은 안 씀, line 597 확인) duration은 state.cuts의
-  // UPDATE_CUT로만 갱신되므로, "오른쪽 끝 트림(길이 늘리기/줄이기)"만 그대로 cut.duration에
-  // 반영하면 실제 G5 최종본에 정확히 맞는다. 왼쪽 끝(시작점) 트림은 파이프라인이 지원하지 않아
-  // 여전히 미리보기 전용으로 남긴다 — CheckupTimeline이 trimInSec===0일 때만 커밋을 호출한다.
-  const commitCutDuration = useCallback((cutNo, newDurationSec) => {
+  // 체크업 타임라인 트림 → 실제 cut_NN.mp4 파일 반영(2026-10-14, 성준님 요청 — "전체길이를
+  // 살짝 늘리거나 줄이거나", "왼쪽/오른쪽 중 살릴 쪽 선택"). 처음엔 cut.duration만 바꾸면 되는
+  // 줄 알았는데, finalizeReel()이 각 컷 길이를 cut.duration이 아니라 cut_NN.mp4를 ffprobe로
+  // 실측한 값으로 항상 덮어쓴다는 걸 실측으로 발견(cut.duration=7로 고쳤는데 실제 파일은 그대로
+  // 8초) — 메타데이터만 바꿔선 발행 영상에 전혀 반영이 안 됐다. 그래서 실제 파일 자체를 다시
+  // 잘라야 하고, /api/checkup-trim-commit(내부적으로 render-cut-clips 재사용, 자동 백업 포함)이
+  // 그 역할을 한다 — 왼쪽/오른쪽 둘 다 trimStart/trimEnd로 그대로 넘기면 되므로 "어느 쪽을
+  // 살릴지"도 자연히 해결된다. 성공하면 cut.duration도 같이 갱신해 메타 테이블/SRT 타이밍이
+  // 실제 파일과 어긋나지 않게 한다.
+  const commitCutTrim = useCallback(async (cutNo, trimStart, trimEnd) => {
+    const r = await fetch(`${SERVER}/api/checkup-trim-commit`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo, trimStart, trimEnd }),
+    })
+    const d = await r.json()
+    if (!r.ok || d.error) throw new Error(d.error || '트림 반영 실패')
     const cut = state.cuts?.find(c => c.no === cutNo)
-    if (!cut?.id) return
-    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(newDurationSec * 10) / 10 }, overrideReason: '체크업 타임라인에서 트림' })
-    load(true)
-  }, [state.cuts, dispatch, load])
+    if (cut?.id) {
+      dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round((trimEnd - trimStart) * 10) / 10 }, overrideReason: '체크업 타임라인에서 트림' })
+    }
+    await load(true)
+  }, [epNum, state.cuts, dispatch, load])
 
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
@@ -397,7 +406,7 @@ export default function CheckupTab() {
             <div className={s.timelineEditorInner}>
               <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo} subtitleSegmentsByNo={subtitleSegmentsByNo}
                 activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
-                onSeek={seekTo} onSelectCut={setSelectedCutNo} onDurationCommit={commitCutDuration} />
+                onSeek={seekTo} onSelectCut={setSelectedCutNo} onDurationCommit={commitCutTrim} />
             </div>
             <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} />
           </div>

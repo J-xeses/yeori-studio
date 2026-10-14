@@ -56,6 +56,10 @@
 .filmstrip { position: absolute; inset: 0; display: flex; }
 .filmstripImg { height: 100%; flex: 1 1 0; min-width: 0; object-fit: cover; display: block; }
 .filmstripFallback { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.clipCommitting {
+  position: absolute; top: 3px; right: 5px; font-size: 9px; font-weight: 700; color: #fbbf24;
+  background: rgba(0,0,0,0.65); padding: 1px 5px; border-radius: 3px; z-index: 2; white-space: nowrap;
+}
 
 /* 오디오 파형 전용 라인 — 클립 썸네일과 겹쳐서 안 보이던 문제 수정(2026-09-13).
    컷 경계마다 배경을 교차(보라/청록 틴트)시켜 어느 구간이 어느 컷인지 구분되게 함. */
