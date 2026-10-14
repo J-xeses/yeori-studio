@@ -2602,22 +2602,22 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       <div className={s.v3MiniField}>
                         <label>SH (샷타입)</label>
                         <input placeholder="SH_MCU → SH_CU" value={mc.sh || ''} onChange={e => mcField('sh', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="sh" value={mc.sh} sep=" → " />
+                        <CodeGloss cb={codebook} kind="sh" value={mc.sh} sep=" → " defaultLabel={kr.sh} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>CA (카메라)</label>
                         <input placeholder="CA_ST → CA_PS" value={mc.ca || ''} onChange={e => mcField('ca', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="ca" value={mc.ca} sep=" → " />
+                        <CodeGloss cb={codebook} kind="ca" value={mc.ca} sep=" → " defaultLabel={kr.ca} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>MD (감정)</label>
                         <input placeholder="MD_JOY" value={mc.md || ''} onChange={e => mcField('md', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="md" value={mc.md} sep=" + " />
+                        <CodeGloss cb={codebook} kind="md" value={mc.md} sep=" + " defaultLabel={kr.md} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>AC (동작)</label>
                         <input placeholder="AT_SD_01 + AT_EM_01" value={mc.ac || ''} onChange={e => mcField('ac', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="ac" value={mc.ac} sep=" + " />
+                        <CodeGloss cb={codebook} kind="ac" value={mc.ac} sep=" + " defaultLabel={kr.ac} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>LOOK_ID</label>

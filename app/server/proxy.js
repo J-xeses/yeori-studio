@@ -730,11 +730,12 @@ app.get('/api/codebook', (req, res) => {
   }
 })
 
-// ── POST /api/codebook/register — 대본 초안에 등장한 신규 SP(장소·시간·조명)/LOOK(의상)
-// 요소를 사람이 확인 후 정식 코드북에 등록(2026-10-14, 성준님 요청). SH/CA/MD/AC는
-// 대상 밖 — 대본 생성 프롬프트가 "코드북에 있는 코드만 쓰라"고 강제해 신규가 거의 안
-// 생기고, 등록하려면 ip_phrase/vp_phrase(실제 생성 프롬프트 문구)가 필요해 라벨 하나로
-// 자동 등록하면 빈 프롬프트가 생성에 그대로 쓰이는 위험이 있다.
+// ── POST /api/codebook/register — 대본 초안에 등장한 신규 요소를 사람이 확인 후 정식
+// 코드북에 등록(2026-10-14, 성준님 요청). SP(장소)·LOOK(의상)은 한글 이름만 받는다. SH/CA/MD/AC는
+// 실제 생성 프롬프트 문구(ip_prefix/ip_suffix/vp_phrase/ip_phrase, 테이블마다 다름)가 필요해서
+// 처음엔 대상 밖이었는데, 성준님 요청으로 "한글 이름 + 영문 문구"를 같이 받는 방식으로 확장
+// (PROMPT_FIELD_SHAPE, src/lib/codeRef.js와 동일 모양 유지) — 영문 필드가 비어 있으면 거절한다.
+const PROMPT_FIELD_SHAPE = { sh: ['ip_prefix', 'ip_suffix'], ca: ['vp_phrase'], md: ['ip_phrase', 'vp_phrase'], ac: ['ip_phrase', 'vp_phrase'] }
 app.post('/api/codebook/register', (req, res) => {
   const codebookPath = path.join(CODE_ROOT, 'scripts', 'codebook.json')
   try {
@@ -746,13 +747,19 @@ app.post('/api/codebook/register', (req, res) => {
     cb.SP._light_codes = cb.SP._light_codes || {}
     cb.LOOK_BANK = cb.LOOK_BANK || {}; cb.LOOK_BANK._categories = cb.LOOK_BANK._categories || {}
     cb.LOOK_BANK._part_codes = cb.LOOK_BANK._part_codes || {}
+    cb.SH = cb.SH || {}; cb.CA = cb.CA || {}; cb.MD = cb.MD || {}; cb.AT = cb.AT || {}
     const existsAt = {
       sp_loc: cb.SP._location_codes, sp_screen: cb.SP._screen_codes,
       sp_time: cb.SP._time_codes, sp_light: cb.SP._light_codes,
       look: cb.LOOK_BANK, look_category: cb.LOOK_BANK._categories, look_part: cb.LOOK_BANK._part_codes,
+      sh: cb.SH, ca: cb.CA, md: cb.MD, ac: cb.AT,
     }[kind]
     if (existsAt === undefined) return res.status(400).json({ ok: false, error: `알 수 없는 kind: ${kind}` })
     if (existsAt[code]) return res.json({ ok: true, alreadyExisted: true })
+    if (PROMPT_FIELD_SHAPE[kind]) {
+      const missing = PROMPT_FIELD_SHAPE[kind].filter((f) => !String(extra?.[f] || '').trim())
+      if (missing.length) return res.status(400).json({ ok: false, error: `영문 문구 필요: ${missing.join(', ')}` })
+    }
     if (kind === 'sp_loc' || kind === 'sp_screen') existsAt[code] = label
     else if (kind === 'sp_time' || kind === 'sp_light') existsAt[code] = { label, ip: extra?.ip || label }
     else if (kind === 'look_category' || kind === 'look_part') existsAt[code] = label
@@ -761,6 +768,12 @@ app.post('/api/codebook/register', (req, res) => {
         label, ip_outfit: extra?.ip_outfit || '', group: extra?.group || '',
         parts: extra?.parts || {}, lk: extra?.lk || '', part_codes: extra?.part_codes || {},
       }
+    } else if (kind === 'sh') {
+      existsAt[code] = { label, ip_prefix: extra.ip_prefix.trim(), ip_suffix: extra.ip_suffix.trim(), usage: 0, group: extra?.group || '사용자 등록' }
+    } else if (kind === 'ca') {
+      existsAt[code] = { label, vp_phrase: extra.vp_phrase.trim(), usage: 0, group: extra?.group || '사용자 등록' }
+    } else if (kind === 'md' || kind === 'ac') {
+      existsAt[code] = { label, ip_phrase: extra.ip_phrase.trim(), vp_phrase: extra.vp_phrase.trim(), usage: 0, group: extra?.group || '사용자 등록' }
     }
     fs.writeFileSync(codebookPath, JSON.stringify(cb, null, 2) + '\n', 'utf-8')
     res.json({ ok: true })

@@ -160,10 +160,28 @@ export function glossParts(cb, kind, value) {
 export const hasUnknown = (cb, kind, value) => glossParts(cb, kind, value).some(p => p.warn)
 
 // ── 신규 요소 체크 → 정식 코드 등록(2026-10-14) ──
-// 새 에피소드 초안에 자주 등장하는 두 카테고리(장소 SP, 의상 LOOK)만 대상. SH/CA/MD/AC는
-// 대본 생성 프롬프트가 "코드북에 있는 코드만 쓰라"고 이미 강제해 신규가 거의 안 생기고,
-// 등록하려면 ip_phrase/vp_phrase(생성 프롬프트 문구)가 필요해 라벨만으로 자동 등록하면
-// 빈 프롬프트가 그대로 쓰이는 위험이 있다 — 대상 밖으로 둔다.
+// 처음엔 SP(장소)·LOOK(의상)만 대상이었음 — SH/CA/MD/AC는 등록하려면 ip_phrase/vp_phrase(생성
+// 프롬프트 문구)가 필요해 한글 이름만으로 자동 등록하면 빈 프롬프트가 그대로 쓰이는 위험이
+// 있었다. 성준님 요청(2026-10-14, MD_PLF/MD_CF 등록 안 되는 이유 질문 뒤)으로 "한글 이름 +
+// 영문 문구"를 같이 받는 방식으로 확장 — 코드북 기존 항목과 같은 모양을 쓴다(테이블마다 필요한
+// 영문 필드가 다름):
+//   SH(샷)    — ip_prefix + ip_suffix (예: "MEDIUM SHOT —" + "medium shot, eye level, vertical 9:16,")
+//   CA(카메라) — vp_phrase 하나(카메라 움직임, 예: "camera slowly pushes in")
+//   MD(감정)   — ip_phrase + vp_phrase(이미지용·영상용 표정/분위기 묘사)
+//   AC(동작, 코드북 AT 테이블) — ip_phrase + vp_phrase(이미지용·영상용 동작 묘사)
+export const PROMPT_FIELD_SHAPE = {
+  sh: ['ip_prefix', 'ip_suffix'],
+  ca: ['vp_phrase'],
+  md: ['ip_phrase', 'vp_phrase'],
+  ac: ['ip_phrase', 'vp_phrase'],
+}
+const PROMPT_KIND_GROUP = { sh: '샷', ca: '카메라', md: '감정', ac: '동작' }
+export function promptCodeUnregistered(cb, kind, value) {
+  if (!cb || !PROMPT_FIELD_SHAPE[kind]) return []
+  return tokensOf(kind, value)
+    .filter((tok) => !labelOf(cb, kind, tok))
+    .map((code) => ({ code, kind, group: PROMPT_KIND_GROUP[kind] }))
+}
 export function spUnregistered(cb, value) {
   if (!cb) return []
   const p = parseSp(value)

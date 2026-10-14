@@ -202,6 +202,10 @@
       "LT_STD": {
         "label": "studio",
         "ip": "bright clean studio lighting"
+      },
+      "LT_SET": {
+        "label": "드라마틱한 스튜디오 조명(레더 코트·레드 소품에 하이라이트)",
+        "ip": "드라마틱한 스튜디오 조명(레더 코트·레드 소품에 하이라이트)"
       }
     },
     "presets": {
@@ -466,6 +470,13 @@
       "label": "멍함·여운",
       "usage": 1,
       "group": "가라앉음"
+    },
+    "MD_PLF": {
+      "label": "차분하고 담담함, 묘한 여운",
+      "ip_phrase": "calm understated expression, quiet lingering warmth",
+      "vp_phrase": "expression settles into quiet, understated calm",
+      "usage": 0,
+      "group": "사용자 등록"
     }
   },
   "AT": {
