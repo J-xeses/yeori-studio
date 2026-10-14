@@ -7,7 +7,11 @@ const TABS = [
   { id: 'studio',        label: '스튜디오',          icon: '🎬' },
   { id: 'tts',           label: 'ElevenLabs TTS',   icon: '🔊' },
   { id: 'voice',         label: '내 음성 삽입',      icon: '🎙️' },
-  { id: 'extract',       label: '추출',              icon: '📤' },
+  // 2026-10-14 — 성준님 확정: 실제 제작 과정에서 거쳐가는 단계가 아니라 UI에서만 숨김.
+  // API 직접 연동 전 "프롬프트를 수동 복사해 외부 도구에 붙여넣던" 시절의 흔적으로 추정.
+  // 컴포넌트(src/tabs/ExtractTab.jsx)는 그대로 둠 — exportJSON()이 전체 컷 G4를 전부
+  // true로 마킹하는 부수효과가 있다는 것도 같이 기록해둠(다시 켤 때 고치고 켤 것).
+  // { id: 'extract',    label: '추출',              icon: '📤' },
   { id: 'making',        label: '메이킹',             icon: '🎬' },
   { id: 'video',         label: '영상 만들기',        icon: '🎞️' },
   { id: 'retention',     label: '리텐션 훅',          icon: '🎯' },
@@ -18,7 +22,11 @@ const TABS = [
   { id: 'monitor',       label: '파이프라인 모니터',   icon: '🔌' },
   { id: 'credits',       label: '일일 크레딧',        icon: '🎟️' },
   { id: 'storyarchive',  label: '스토리 아카이브',    icon: '📚' },
-  { id: 'taskqueue',     label: '코드 작업 승인',      icon: '🤖' },
+  // 2026-10-14 — 성준님 확정: 큐/워커는 살아있지만(Task Scheduler 정상, 25분 주기) 8/29
+  // 테스트 1건 이후 전혀 미사용이라 UI에서만 숨김. 백엔드(scripts/task-queue-worker.js,
+  // /api/code-task-queue, queue_code_task MCP 도구)는 그대로 둬서 나중에 모바일 등
+  // PC 밖에서 코드 작업을 요청할 일이 생기면 이 줄만 되살리면 됨.
+  // { id: 'taskqueue',  label: '코드 작업 승인',      icon: '🤖' },
 ]
 
 export default function NavBar() {
