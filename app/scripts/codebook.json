@@ -157,7 +157,8 @@
       "CV": "convenience store (편의점)",
       "BS": "bus stop (버스정류장)",
       "MT": "MT pension (MT 펜션 거실)",
-      "RM": "room (실내 일반 — 장소 특정 없음)"
+      "RM": "room (실내 일반 — 장소 특정 없음)",
+      "SHOP": "소품 수리점"
     },
     "_screen_codes": {
       "_note": "화면 종류 — 실제 장소가 아닌 컷(그래픽·목업·녹화). SP 를 GR.[SCREEN] 으로 적는다. 장소 코드(BK=은행, PK=공원)와 글자가 겹치지 않게 분리(2026-10-07).",
@@ -781,6 +782,14 @@
         "head": "흰 수건 모자",
         "set": "세이지 그린 찜질복 세트"
       }
+    },
+    "LOOK_SHOP": {
+      "label": "베이지 에이프런 + 화이트 셔츠, 느슨한 묶음머리, 가죽 장갑",
+      "ip_outfit": "",
+      "group": "",
+      "parts": {},
+      "lk": "",
+      "part_codes": {}
     }
   },
   "BG_RULE": {

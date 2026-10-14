@@ -9,7 +9,7 @@ import TabToolbar from '../components/TabToolbar'
 import SfxPicker from '../components/SfxPicker'
 import DirectionSettingsPanel from '../components/DirectionSettingsPanel'
 import CodeGloss from '../components/CodeGloss'
-import { useCodebook, codeListForPrompt } from '../lib/codeRef'
+import { useCodebook, codeListForPrompt, scanUnregistered } from '../lib/codeRef'
 import s from './ScriptGenTab.module.css'
 
 const LOCATIONS = ['카페', '공원', '집 (방)', '도서관', '학교', '회사', '해변', '산', '거리', '기타']
@@ -1285,7 +1285,9 @@ ${episode.storyBrief.trim()}
   실제로 등록된 코드만 써서 채우세요 — 지어낸 코드 금지, 애매하면 가장 가까운 기존 코드를 고르세요.
 
 [CUT 1]
-씬: INT/EXT. 장소 - 시간대
+씬: INT/EXT. 장소 - 시간대, 그리고 이 컷에서 실제로 벌어지는 사건·줄거리를 한두 문장으로 구체적으로 서술
+  (장소·시간대만 쓰지 말 것 — 예: INT. 집 거실 저녁 — 서여리, 단톡방 캡처를 다시 보다가 웃음을 참지 못하고 터뜨린다.
+  전체목록에서 이 줄만 쭉 읽어도 에피소드 전개가 머리에 그려져야 함)
 공간코드: 코드북 SP 중 하나 (예: IN.HM.TZ_NT.LT_WM)
 공간설명(한글): 그 공간코드가 뜻하는 걸 사람이 바로 이해할 한글 문장 (예: 집 거실 저녁, 따뜻한 조명)
 캐릭터코드: 코드북 CH/LOOK_BANK 기준 캐릭터·의상 코드 (예: 서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL)
@@ -2269,6 +2271,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
           // 수 있다. 태깅은 선택이고, 단 비트를 하나라도 달았으면 훅·고조·결말 누락만 경고한다.
           const beatCov = checkBeatCoverage(cuts)
           const anyBeatTagged = Object.keys(beatCov.byBeat).length > 0
+          const unregistered = scanUnregistered(codebook, cuts)
           return (
           <div className={s.cutListView}>
             <div className={s.cutListTotal}>
@@ -2282,6 +2285,16 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                 </span>
               )}
             </div>
+            {/* 2026-10-14: 이 에피소드 초안에 등장한 신규 장소·의상 요소를 한눈에 보고
+                바로 정식 코드북(scripts/codebook.json)에 등록 — 등록되면 CodeGloss의
+                주황 "(?)" 경고가 사라진다. 2026-10-14: 전체목록에서 직접 입력받던 걸 성준님
+                피드백("에피소드마다 새로 이름짓는 부담")으로 상세편집의 클릭식 등록(CodeGloss)으로
+                옮기고, 여기엔 몇 개 있는지 안내만 — 숫자를 누르면 상세편집으로 이동. */}
+            {unregistered.length > 0 && (
+              <button type="button" className={s.unregHint} onClick={() => setViewMode('detail')}>
+                ⚠ 신규 요소 {unregistered.length}개 — 상세편집에서 클릭해 등록 ▸
+              </button>
+            )}
             {/* 헤더 */}
             <div className={s.cutListHeader}>
               <span>CUT</span>
@@ -2483,7 +2496,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       <div className={s.v3MiniField}>
                         <label>SP (공간코드)</label>
                         <input placeholder="OT.CF.TZ_AF.LT_WM" value={mc.sp || ''} onChange={e => mcField('sp', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="sp" value={mc.sp} />
+                        <CodeGloss cb={codebook} kind="sp" value={mc.sp} defaultLabel={kr.sp} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>PL (파이프라인)</label>
@@ -2493,7 +2506,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       <div className={`${s.v3MiniField} ${s.full}`}>
                         <label>CH (캐릭터·룩 코드)</label>
                         <input placeholder="서여리 / LK_CS.TOP_CRP.BTM_SHT.SH_HHL" value={mc.ch || ''} onChange={e => mcField('ch', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="ch" value={mc.ch} />
+                        <CodeGloss cb={codebook} kind="ch" value={mc.ch} defaultLabel={kr.ch} />
                       </div>
                     </div>
                     <div className={s.v3MiniField}>
@@ -2609,7 +2622,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                       <div className={s.v3MiniField}>
                         <label>LOOK_ID</label>
                         <input placeholder="LOOK_CS" value={mc.lookId || ''} onChange={e => mcField('lookId', e.target.value)} />
-                        <CodeGloss cb={codebook} kind="lookId" value={mc.lookId} />
+                        <CodeGloss cb={codebook} kind="lookId" value={mc.lookId} defaultLabel={kr.ch} />
                       </div>
                       <div className={s.v3MiniField}>
                         <label>DU (컷 길이·초)</label>

@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10040,7 +10040,13 @@
               "at": "2026-10-13T07:06:23.277Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              0,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-3",
@@ -10269,7 +10275,7 @@
         "videoTabState": {
           "videoClips": {},
           "g4Approved": {},
-          "selectedCutId": "cut-6",
+          "selectedCutId": "cut-1",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -10327,7 +10333,8 @@
           }
         },
         "voiceInsertState": {
-          "tracks": {}
+          "tracks": {},
+          "activeCutId": "cut-1"
         },
         "studioTabState": {
           "imageRatio": {}
@@ -10451,7 +10458,13 @@
           "at": "2026-10-13T07:06:23.277Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          0,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-3",
@@ -10790,11 +10803,11 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-14T09:01:11.153Z",
+  "savedAt": "2026-10-14T11:14:24.577Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-2",
     "subtitles": {}
   },
   "ttsTabState": {
@@ -10852,7 +10865,8 @@
     }
   },
   "voiceInsertState": {
-    "tracks": {}
+    "tracks": {},
+    "activeCutId": "cut-1"
   },
   "studioTabState": {
     "imageRatio": {}

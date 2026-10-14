@@ -7,12 +7,19 @@ const YEORI_SERVER = 'http://localhost:3001'
 
 let cache = null
 let promise = null
-export function loadCodebook() {
+// 이미 마운트된 모든 useCodebook() 소비자(CodeGloss·DirectionSettingsPanel·리스트 패널 등)에게
+// 새 코드북을 밀어준다 — 신규 요소를 등록한 뒤 새로고침 없이 그 자리에서 "(?)" 경고가 사라지게
+// 하려면(2026-10-14 요청) 캐시만 비우는 걸로는 부족하다: 이미 코드북을 들고 있는 컴포넌트의
+// useState는 "!cb"가 거짓이라 재요청 effect가 다시 안 돈다. force=true가 그 경로다.
+const subscribers = new Set()
+export function loadCodebook(force = false) {
+  if (force) { cache = null; promise = null }
   if (cache) return Promise.resolve(cache)
   if (!promise) {
     promise = fetch(`${YEORI_SERVER}/api/codebook`).then(r => r.json()).then(d => {
       if (!d.ok) throw new Error(d.error || '코드북 로드 실패')
       cache = d.codebook
+      subscribers.forEach((fn) => fn(cache))
       return cache
     }).catch(e => { promise = null; throw e })
   }
@@ -20,7 +27,11 @@ export function loadCodebook() {
 }
 export function useCodebook() {
   const [cb, setCb] = useState(cache)
-  useEffect(() => { if (!cb) loadCodebook().then(setCb).catch(() => {}) }, [cb])
+  useEffect(() => {
+    subscribers.add(setCb)
+    if (!cb) loadCodebook().then(setCb).catch(() => {})
+    return () => subscribers.delete(setCb)
+  }, [])
   return cb
 }
 
@@ -147,6 +158,65 @@ export function glossParts(cb, kind, value) {
   }).filter(p => kind !== 'pl' || !/\(\?\)$/.test(p.text))
 }
 export const hasUnknown = (cb, kind, value) => glossParts(cb, kind, value).some(p => p.warn)
+
+// ── 신규 요소 체크 → 정식 코드 등록(2026-10-14) ──
+// 새 에피소드 초안에 자주 등장하는 두 카테고리(장소 SP, 의상 LOOK)만 대상. SH/CA/MD/AC는
+// 대본 생성 프롬프트가 "코드북에 있는 코드만 쓰라"고 이미 강제해 신규가 거의 안 생기고,
+// 등록하려면 ip_phrase/vp_phrase(생성 프롬프트 문구)가 필요해 라벨만으로 자동 등록하면
+// 빈 프롬프트가 그대로 쓰이는 위험이 있다 — 대상 밖으로 둔다.
+export function spUnregistered(cb, value) {
+  if (!cb) return []
+  const p = parseSp(value)
+  if (!p.code || cb.SP?.presets?.[p.code]) return []
+  const out = []
+  if (p.loc) {
+    const isScreen = p.io === 'GR'
+    const known = isScreen ? cb.SP?._screen_codes : cb.SP?._location_codes
+    if (!known?.[p.loc]) out.push({ code: p.loc, kind: isScreen ? 'sp_screen' : 'sp_loc', group: '장소' })
+  }
+  if (p.time && !cb.SP?._time_codes?.[p.time]) out.push({ code: p.time, kind: 'sp_time', group: '시간대' })
+  if (p.light && !cb.SP?._light_codes?.[p.light]) out.push({ code: p.light, kind: 'sp_light', group: '조명' })
+  return out
+}
+const LOOK_TOKEN_RE = /LOOK[A-Z0-9_]*|LK_[A-Z]+|(?:TOP|BTM)_[A-Z]+|SH_(?:HHL|SNK|FLT)/g
+export function lookUnregistered(cb, value) {
+  const v = String(value || '').trim()
+  if (!cb || !v) return []
+  const toks = v.match(LOOK_TOKEN_RE) || []
+  const out = []
+  for (const tok of toks) {
+    if (tok.startsWith('LOOK')) { if (!cb.LOOK_BANK?.[tok]) out.push({ code: tok, kind: 'look', group: '의상(룩 전체)' }) }
+    else if (tok.startsWith('LK_')) { if (!cb.LOOK_BANK?._categories?.[tok]) out.push({ code: tok, kind: 'look_category', group: '의상 스타일' }) }
+    else { if (!cb.LOOK_BANK?._part_codes?.[tok]) out.push({ code: tok, kind: 'look_part', group: '의상 부위' }) }
+  }
+  return out
+}
+// 에피소드 전체 컷(cut.masterCode.{sp,ch,lookId})을 스캔해 미등록 요소를 중복 제거해 모은다.
+// 전체목록의 가벼운 안내 배지(개수만) 용도 — 실제 등록은 상세편집의 CodeGloss 클릭에서 한다.
+export function scanUnregistered(cb, cuts) {
+  if (!cb) return []
+  const map = new Map()
+  for (const c of (cuts || [])) {
+    const mc = c.masterCode || {}
+    for (const item of spUnregistered(cb, mc.sp)) map.set(`sp:${item.code}`, item)
+    for (const item of lookUnregistered(cb, mc.ch)) map.set(`look:${item.code}`, item)
+    for (const item of lookUnregistered(cb, mc.lookId)) map.set(`look:${item.code}`, item)
+  }
+  return [...map.values()]
+}
+// 등록 — 성공하면 다음 useCodebook()이 새로 받아오도록 캐시를 비운다(표시 전용이던 "(?)"가
+// 바로 사라지게). 저장은 scripts/codebook.json 원본에 직접 — Codi_GEN/script_generator.py도
+// 같은 파일을 읽으므로 등록 즉시 양쪽 다 반영된다.
+export async function registerCode(kind, code, label, extra = {}) {
+  const r = await fetch(`${YEORI_SERVER}/api/codebook/register`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind, code, label, extra }),
+  })
+  const d = await r.json()
+  if (!r.ok || !d.ok) throw new Error(d.error || '등록 실패')
+  await loadCodebook(true)
+  return d
+}
 
 // 코드값 → KR 컨펌 문구(레퍼런스 라벨을 같은 구분자로 이은 것)
 export function koreanFor(cb, kind, value) {

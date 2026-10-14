@@ -730,6 +730,45 @@ app.get('/api/codebook', (req, res) => {
   }
 })
 
+// ── POST /api/codebook/register — 대본 초안에 등장한 신규 SP(장소·시간·조명)/LOOK(의상)
+// 요소를 사람이 확인 후 정식 코드북에 등록(2026-10-14, 성준님 요청). SH/CA/MD/AC는
+// 대상 밖 — 대본 생성 프롬프트가 "코드북에 있는 코드만 쓰라"고 강제해 신규가 거의 안
+// 생기고, 등록하려면 ip_phrase/vp_phrase(실제 생성 프롬프트 문구)가 필요해 라벨 하나로
+// 자동 등록하면 빈 프롬프트가 생성에 그대로 쓰이는 위험이 있다.
+app.post('/api/codebook/register', (req, res) => {
+  const codebookPath = path.join(CODE_ROOT, 'scripts', 'codebook.json')
+  try {
+    const { kind, code, label, extra } = req.body || {}
+    if (!kind || !code || !label) return res.status(400).json({ ok: false, error: 'kind/code/label 필요' })
+    const cb = JSON.parse(fs.readFileSync(codebookPath, 'utf-8'))
+    cb.SP = cb.SP || {}; cb.SP._location_codes = cb.SP._location_codes || {}
+    cb.SP._screen_codes = cb.SP._screen_codes || {}; cb.SP._time_codes = cb.SP._time_codes || {}
+    cb.SP._light_codes = cb.SP._light_codes || {}
+    cb.LOOK_BANK = cb.LOOK_BANK || {}; cb.LOOK_BANK._categories = cb.LOOK_BANK._categories || {}
+    cb.LOOK_BANK._part_codes = cb.LOOK_BANK._part_codes || {}
+    const existsAt = {
+      sp_loc: cb.SP._location_codes, sp_screen: cb.SP._screen_codes,
+      sp_time: cb.SP._time_codes, sp_light: cb.SP._light_codes,
+      look: cb.LOOK_BANK, look_category: cb.LOOK_BANK._categories, look_part: cb.LOOK_BANK._part_codes,
+    }[kind]
+    if (existsAt === undefined) return res.status(400).json({ ok: false, error: `알 수 없는 kind: ${kind}` })
+    if (existsAt[code]) return res.json({ ok: true, alreadyExisted: true })
+    if (kind === 'sp_loc' || kind === 'sp_screen') existsAt[code] = label
+    else if (kind === 'sp_time' || kind === 'sp_light') existsAt[code] = { label, ip: extra?.ip || label }
+    else if (kind === 'look_category' || kind === 'look_part') existsAt[code] = label
+    else if (kind === 'look') {
+      existsAt[code] = {
+        label, ip_outfit: extra?.ip_outfit || '', group: extra?.group || '',
+        parts: extra?.parts || {}, lk: extra?.lk || '', part_codes: extra?.part_codes || {},
+      }
+    }
+    fs.writeFileSync(codebookPath, JSON.stringify(cb, null, 2) + '\n', 'utf-8')
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
 // ── GET /api/sfx-catalog — 효과음 카탈로그 읽기전용 서빙 ──────────────
 // app/data/sfx-catalog.json(카테고리별 파일명/용도/사용장면, git 추적)을 그대로
 // 반환. 실제 오디오 파일은 downloads/sfx/{categoryId}/{filename}에 있고, 이미
