@@ -13,6 +13,7 @@ import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, l
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger } from './lib/customChangePresets.js'
+import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
 import * as mp from './lib/mediaPaths.js'
@@ -6662,6 +6663,21 @@ app.post('/api/change-combo/custom-vfx', (req, res) => {
 })
 app.delete('/api/change-combo/custom-trigger/:id', (req, res) => {
   try { deleteCustomTrigger(req.params.id); res.json({ ok: true }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+
+// ── 스토리 아카이브 영구 저장소(2026-10-14) — lib/storyArchive.js 참조 ──────────
+// type 쿼리로 필터: idea / series / benchmark
+app.get('/api/story-archive', (req, res) => {
+  try { res.json({ entries: listArchiveEntries(req.query.type) }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.post('/api/story-archive', (req, res) => {
+  try { res.json({ ok: true, entry: saveArchiveEntry(req.body || {}) }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.delete('/api/story-archive/:id', (req, res) => {
+  try { deleteArchiveEntry(req.params.id); res.json({ ok: true }) }
   catch (err) { res.status(400).json({ error: err.message }) }
 })
 // 체인지 생성기 결과를 characters.json 의 캐릭터 룩(CA_BANK)으로 등록(2026-10-11, 성준님 설계:

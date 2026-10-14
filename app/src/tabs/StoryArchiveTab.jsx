@@ -114,6 +114,12 @@ function YoutubeAnalysisTab() {
     loadKeywords()
   }, [])
 
+  // 2026-10-14: 저장된 블루오션 조합을 서버 영구 저장소에서 불러오기 (새로고침해도 유지)
+  useEffect(() => {
+    fetch('http://localhost:3001/api/story-archive?type=combo')
+      .then(r => r.json()).then(d => setSaved(d.entries || [])).catch(() => {})
+  }, [])
+
   const loadKeywords = async () => {
     setLoadingKeywords(true)
     setKeywords([])
@@ -220,9 +226,17 @@ ${formatsText}
     }
   }
 
-  const saveCombination = (combo) => {
+  const saveCombination = async (combo) => {
     if (saved.find(x => x.title === combo.title)) return
-    setSaved(prev => [{ ...combo, keyword: selectedKeyword?.word, myTopic, savedAt: new Date().toLocaleString('ko-KR'), id: Date.now() }, ...prev])
+    const res = await fetch('http://localhost:3001/api/story-archive', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'combo', title: combo.title, description: combo.reason || '',
+        content: { ...combo, keyword: selectedKeyword?.word, myTopic },
+        tags: [combo.format, combo.topic].filter(Boolean),
+      }),
+    }).then(r => r.json())
+    if (res.entry) setSaved(prev => [res.entry, ...prev])
   }
 
   const reset = () => {
@@ -583,6 +597,12 @@ function ShortIdeaTab() {
   const [error, setError] = useState('')
   const canGenerate = selectedTrend && selectedEmotion && selectedSituation
 
+  // 2026-10-14: 서버 영구 저장소에서 불러오기 — 이전엔 React state뿐이라 새로고침하면 사라졌음
+  useEffect(() => {
+    fetch('http://localhost:3001/api/story-archive?type=idea')
+      .then(r => r.json()).then(d => setSaved(d.entries || [])).catch(() => {})
+  }, [])
+
   const generateStories = async () => {
     if (!canGenerate) return
     setLoading(true); setError(''); setStories([])
@@ -599,9 +619,13 @@ function ShortIdeaTab() {
     finally { setLoading(false) }
   }
 
-  const saveStory = (story) => {
+  const saveStory = async (story) => {
     if (saved.find(x => x.title === story.title)) return
-    setSaved(prev => [{ ...story, savedAt: new Date().toLocaleString('ko-KR'), id: Date.now() }, ...prev])
+    const res = await fetch('http://localhost:3001/api/story-archive', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'idea', title: story.title, description: story.summary || '', content: story, tags: story.tags || [] }),
+    }).then(r => r.json())
+    if (res.entry) setSaved(prev => [res.entry, ...prev])
   }
 
   return (
@@ -683,6 +707,12 @@ function SeriesPlanTab() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [channelSaved, setChannelSaved] = useState(false)
+
+  // 2026-10-14: 서버 영구 저장소에서 불러오기 (ShortIdeaTab과 동일한 수정)
+  useEffect(() => {
+    fetch('http://localhost:3001/api/story-archive?type=series')
+      .then(r => r.json()).then(d => setSaved(d.entries || [])).catch(() => {})
+  }, [])
   const channelComplete = channel.name && channel.concept && channel.target && channel.genre && channel.tone
   const canGenerate = channelComplete && channelSaved && keyword
   const updateChannel = (key, val) => { setChannel(p => ({ ...p, [key]: val })); setChannelSaved(false) }
@@ -705,9 +735,13 @@ episodes 4개.`,
     finally { setLoading(false) }
   }
 
-  const savePlan = (plan) => {
-    if (saved.find(x => x.seriesTitle === plan.seriesTitle)) return
-    setSaved(prev => [{ ...plan, savedAt: new Date().toLocaleString('ko-KR'), id: Date.now() }, ...prev])
+  const savePlan = async (plan) => {
+    if (saved.find(x => x.title === plan.seriesTitle)) return
+    const res = await fetch('http://localhost:3001/api/story-archive', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'series', title: plan.seriesTitle, description: plan.concept || '', content: plan, tags: plan.tags || [] }),
+    }).then(r => r.json())
+    if (res.entry) setSaved(prev => [res.entry, ...prev])
   }
 
   return (
@@ -769,14 +803,112 @@ episodes 4개.`,
 }
 
 // ════════════════════════════════════════════════
+// 연출기법·트렌드 벤치마킹 (2026-10-14 신설)
+// ════════════════════════════════════════════════
+// 배경: 2026-10-13 "연출 재료 정기 리서치"(웹 서치 + 로컬 소스 재확인 →
+// direction-material-bank.md 입고)가 지금은 파일/대화로만 남는데, 성준님 요청으로
+// "SNS 서치 외에 트렌드 벤치마킹 정보를 종합 수집하는 아카이브"로 앱 안에서도 보이게 함.
+// ⚠️ SNS를 자동으로 긁어오는 기능은 아님 — 성준님이 직접 모니터링한 발견이나, Claude가
+// 별도 리서치 때 찾은 걸 여기 모아두는 저장소. "+ 자료 추가"로 수동 등록.
+function BenchmarkTab() {
+  const [entries, setEntries] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [adding, setAdding] = useState(null)
+
+  const load = () => {
+    setLoading(true)
+    fetch('http://localhost:3001/api/story-archive?type=benchmark')
+      .then(r => r.json()).then(d => setEntries(d.entries || [])).catch(() => {})
+      .finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [])
+
+  const save = async () => {
+    if (!adding?.title?.trim()) return
+    await fetch('http://localhost:3001/api/story-archive', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'benchmark', title: adding.title, description: adding.description || '',
+        source: adding.source || '', tags: (adding.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+      }),
+    })
+    setAdding(null)
+    load()
+  }
+
+  const remove = async (id) => {
+    await fetch(`http://localhost:3001/api/story-archive/${id}`, { method: 'DELETE' })
+    load()
+  }
+
+  return (
+    <div className={s.grid}>
+      <div className={s.panel}>
+        <div className={s.section}>
+          <div className={s.sectionLabel}><span className={s.step}>+</span><span>자료 추가</span></div>
+          <p style={{ fontSize: 12, color: '#888', marginBottom: 10, lineHeight: 1.5 }}>
+            SNS·레퍼런스에서 발견한 연출기법·트렌드를 여기 모아둡니다. 자동 수집이 아니라
+            직접(또는 Claude 리서치 결과를) 등록하는 방식입니다.
+          </p>
+          {adding ? (
+            <div>
+              <div className={s.fieldGroup}><label className={s.fieldLabel}>제목</label>
+                <input className={s.input} placeholder="예: 피규어화(Figurine Box)" value={adding.title || ''} onChange={e => setAdding({ ...adding, title: e.target.value })} /></div>
+              <div className={s.fieldGroup}><label className={s.fieldLabel}>설명 / 영감</label>
+                <input className={s.input} placeholder="어떤 기법인지, 어디에 쓸 수 있을지" value={adding.description || ''} onChange={e => setAdding({ ...adding, description: e.target.value })} /></div>
+              <div className={s.fieldGroup}><label className={s.fieldLabel}>출처 (URL 또는 설명)</label>
+                <input className={s.input} placeholder="https://... 또는 '인스타 @계정'" value={adding.source || ''} onChange={e => setAdding({ ...adding, source: e.target.value })} /></div>
+              <div className={s.fieldGroup}><label className={s.fieldLabel}>태그 (쉼표로 구분)</label>
+                <input className={s.input} placeholder="예: 시그컷, 체인지, VFX" value={adding.tags || ''} onChange={e => setAdding({ ...adding, tags: e.target.value })} /></div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className={`${s.genBtn} ${s.genBtnActive}`} onClick={save}>저장</button>
+                <button className={s.genBtn} onClick={() => setAdding(null)}>취소</button>
+              </div>
+            </div>
+          ) : (
+            <button className={`${s.genBtn} ${s.genBtnActive}`} onClick={() => setAdding({})}>+ 새 자료 추가</button>
+          )}
+        </div>
+      </div>
+      <div className={s.resultCol}>
+        {loading && <div className={s.empty}><p>불러오는 중…</p></div>}
+        {!loading && entries.length === 0 && <div className={s.empty}><div className={s.emptyIcon}>🔎</div><p>아직 등록된 벤치마킹 자료가 없습니다</p></div>}
+        {!loading && entries.length > 0 && (
+          <div className={s.storyList}>
+            {entries.map(e => (
+              <div key={e.id} className={s.seriesCard}>
+                <div className={s.seriesHeader}>
+                  <div className={s.seriesTitleGroup}>
+                    <h3 className={s.seriesTitle}>{e.title}</h3>
+                    <p className={s.seriesConcept}>{e.description}</p>
+                  </div>
+                  <button className={s.saveBtn} onClick={() => remove(e.id)}>🗑️</button>
+                </div>
+                {e.source && (
+                  e.source.startsWith('http')
+                    ? <a href={e.source} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: '#60a5fa' }}>{e.source}</a>
+                    : <span style={{ fontSize: 11, color: '#888' }}>{e.source}</span>
+                )}
+                <div className={s.tagRow}>{e.tags?.map(tag => <span key={tag} className={s.tag}>#{tag}</span>)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════
 // 메인
 // ════════════════════════════════════════════════
 export default function StoryArchiveTab() {
   const [activeInner, setActiveInner] = useState('youtube')
   const INNER_TABS = [
-    { id: 'youtube', label: '📺 유튜브 분석' },
-    { id: 'short',   label: '💡 단편 아이디어' },
-    { id: 'series',  label: '🎬 시리즈 기획' },
+    { id: 'youtube',   label: '📺 유튜브 분석' },
+    { id: 'short',     label: '💡 단편 아이디어' },
+    { id: 'series',    label: '🎬 시리즈 기획' },
+    { id: 'benchmark', label: '🔎 연출기법 벤치마킹' },
   ]
   return (
     <div className={s.page}>
@@ -798,9 +930,10 @@ export default function StoryArchiveTab() {
           <button key={t.id} className={`${s.innerTab} ${activeInner === t.id ? s.innerTabActive : ''}`} onClick={() => setActiveInner(t.id)}>{t.label}</button>
         ))}
       </div>
-      {activeInner === 'youtube' && <YoutubeAnalysisTab />}
-      {activeInner === 'short'   && <ShortIdeaTab />}
-      {activeInner === 'series'  && <SeriesPlanTab />}
+      {activeInner === 'youtube'   && <YoutubeAnalysisTab />}
+      {activeInner === 'short'     && <ShortIdeaTab />}
+      {activeInner === 'series'    && <SeriesPlanTab />}
+      {activeInner === 'benchmark' && <BenchmarkTab />}
       </div>
         </div>
         </div>
