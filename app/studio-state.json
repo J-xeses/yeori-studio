@@ -1,5 +1,5 @@
 {
-  "activeTab": "editmeta",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10275,7 +10275,55 @@
           "audioUrls": {},
           "audioTexts": {},
           "g3Confirmed": {},
-          "focusCutId": null
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-6": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ],
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-6__v1": [
+              {
+                "id": "track_1791949502418_hwl7",
+                "type": "narration",
+                "text": "이게, 내가 진짜 하는 일이다.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-2__v1": [
+              {
+                "id": "track_1791949507649_0zcr",
+                "type": "narration",
+                "text": "어떤 손님의 거울엔, 웃음이 갇혀 있었다.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ]
+          }
         },
         "voiceInsertState": {
           "tracks": {}
@@ -10738,7 +10786,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-14T03:32:20.457Z",
+  "savedAt": "2026-10-14T04:02:21.813Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

@@ -202,6 +202,17 @@ export default function CheckupTab() {
   const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text
     ?? activeCutSegs[activeCutSegs.length - 1]?.text ?? ''
 
+  // 타임라인 자막 트랙(2026-10-14, 성준님 요청: "타임라인에 자막라인 추가") — 위 activeCutSegs와
+  // 완전히 같은 계산을 컷 전체에 대해 한 번에 해둔다. CheckupTimeline은 트림/분할 편집 상태를
+  // 가지므로 여기서는 "컷 번호 → 세그먼트 배열"만 넘기고, 클립 폭 안에 어떻게 배치할지는
+  // CheckupTimeline이 결정한다.
+  const subtitleSegmentsByNo = useMemo(() => Object.fromEntries(
+    (state.cuts || []).map(c => [
+      c.no,
+      toSegments(subtitlesMap[c.id], cleanDialogueForCaptionFallback(stripMeta(c.dialogue || c.narration || '')), c.duration || 0),
+    ])
+  ), [state.cuts, subtitlesMap])
+
   const load = useCallback(async (silent = false) => {
     if (epNum == null) return
     if (!silent) setLoading(true)
@@ -370,7 +381,7 @@ export default function CheckupTab() {
 
           <div className={s.timelineEditorWrap}>
             <div className={s.timelineEditorInner}>
-              <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo}
+              <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo} subtitleSegmentsByNo={subtitleSegmentsByNo}
                 activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
                 onSeek={seekTo} onSelectCut={setSelectedCutNo} />
             </div>

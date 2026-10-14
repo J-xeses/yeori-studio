@@ -210,5 +210,55 @@
         "order": 22
       }
     ]
+  },
+  "12": {
+    "updatedAt": "2026-10-14T04:03:44.033Z",
+    "clips": [
+      {
+        "clipId": "c-12-01-a",
+        "sourceCutNo": 1,
+        "sourceFile": "cut_01.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 6,
+        "effect": null,
+        "order": 0
+      },
+      {
+        "clipId": "c-12-02-a",
+        "sourceCutNo": 2,
+        "sourceFile": "cut_02.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 8,
+        "effect": null,
+        "order": 1
+      },
+      {
+        "clipId": "c-12-04-a",
+        "sourceCutNo": 4,
+        "sourceFile": "cut_04.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 8,
+        "effect": null,
+        "order": 2
+      },
+      {
+        "clipId": "c-12-03-a",
+        "sourceCutNo": 3,
+        "sourceFile": "cut_03.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 8,
+        "effect": null,
+        "order": 3
+      },
+      {
+        "clipId": "c-12-05-a",
+        "sourceCutNo": 5,
+        "sourceFile": "cut_05.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 11.057007,
+        "effect": null,
+        "order": 4
+      }
+    ]
   }
 }

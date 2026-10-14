@@ -81,7 +81,7 @@ function FilmstripThumbs({ frames, trimInSec, trimOutSec, sourceDurationSec, fal
 //   elapsedInActive — activeCutNo 소스파일 안에서의 재생 위치(초) — 플레이헤드 계산에 씀
 //   onSeek(cutNo, localTime) — 클릭/분할 시 CheckupTab의 기존 seekTo를 그대로 재사용
 //   onSelectCut(cutNo)       — 선택된 클립의 원본 컷 번호를 효과 사이드바에 전달
-export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut }) {
+export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut }) {
   const [clips, setClips] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -473,6 +473,33 @@ export default function CheckupTimeline({ epNum, cutsByNo, activeCutNo, elapsedI
                     style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px` }}>
                     <WaveformCanvas peaks={waveforms[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
                       sourceDurationSec={info.actualDurationSec} widthPx={widthPx} heightPx={34} />
+                  </div>
+                )
+              })}
+            </div>
+            {/* 자막 트랙(2026-10-14, 성준님 요청 — "타임라인에 자막라인 추가되면 어떤가?" → 파형과
+                스크롤바 사이 여유공간을 가리키며 "여기에 배치하면 문제없을듯"). CUT별 대사/나레이션
+                세그먼트(subtitleSegmentsByNo, CheckupTab의 toSegments 결과)를 그 컷의 편집길이
+                (cut.duration) 기준 비율로 클립 폭 안에 배치한다. 분할/트림 안 된 보통의 1클립=1컷
+                구간에선 정확히 들어맞고, 트림된 클립(raw 소스길이≠duration)에선 근사치 — 검수용
+                미리보기 목적엔 충분하고, 프레임 단위 정밀도가 필요하면 편집메타/영상 탭에서 확인. */}
+            <div className={s.subtitleRow}>
+              {positioned.map((it) => {
+                const info = cutsByNo?.[it.sourceCutNo] || {}
+                const segs = subtitleSegmentsByNo?.[it.sourceCutNo] || []
+                const cutDur = info.duration || (it.trimOutSec - it.trimInSec) || 1
+                const widthPx = it.dur * pxPerSec
+                return (
+                  <div key={it.clipId} className={s.subtitleBlock} style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px` }}>
+                    {segs.filter(seg => seg.text).map((seg, i) => {
+                      const segLeftPx = clamp((seg.start / cutDur) * widthPx, 0, widthPx)
+                      const segWidthPx = Math.max(2, Math.min(widthPx - segLeftPx, ((seg.end - seg.start) / cutDur) * widthPx))
+                      return (
+                        <span key={i} className={s.subtitleSeg}
+                          style={{ left: `${segLeftPx}px`, width: `${segWidthPx}px` }}
+                          title={seg.text}>{seg.text}</span>
+                      )
+                    })}
                   </div>
                 )
               })}
