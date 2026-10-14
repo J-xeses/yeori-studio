@@ -257,6 +257,14 @@ export default function EditMetaTab() {
     }
   }
 
+  // 탭을 벗어났다 돌아오면(언마운트→재마운트) meta/aiNote가 로컬 state라 비어 보이던 문제 —
+  // cuts는 이미 전역(state.cuts)에 있으니 마운트 때마다 조용히 재생성해 "초기화된 것처럼
+  // 보이는" 증상 자체를 없앤다(2026-10-14).
+  useEffect(() => {
+    if (state.cuts?.length) generate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // ── 편집 의도(editIntent) 자동 생성 — 대본 SH/CA/AT/MD → 컷별 켄번스 ──
   const [intentBusy, setIntentBusy] = useState(false)
   const buildEditIntent = async () => {

@@ -9440,7 +9440,7 @@
           "subtitle": "재도전 선언",
           "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible). Long wavy dark brown hair, NOT short — hair full and flowing. natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, gold necklace. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. She stands with shoulders squared back in a mock-serious, confident stance, glancing toward her friend. Further back near the far wall, a second young Korean woman with long straight black hair and full bangs stands at a distance, holding up her phone to film/photograph the main character from across the room — she is NOT standing close beside the main character, keeping a natural filming distance. The friend wears an oversized white t-shirt and dark grey shorts, barefoot. Afternoon natural light streams in from a window. The energy is bright and playful. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. No subtitles, no audio.",
           "videoPrompt": "First 0-3s: Wide shot of bedroom wall. Friend on the left adjusts phone held up at filming angle. Tripod visible in foreground. Afternoon daylight fills the room warmly. Both women face each other. / Next 3-6s: Friend tosses a teasing line. Main character on right responds with a sharp comeback, eyebrow raised. The exchange is quick and playful. / Final 6-8s: Main character rolls both shoulders back dramatically, cracks her neck, and plants her feet — dead serious expression. Friend stifles a laugh behind the phone.",
-          "duration": 8,
+          "duration": 7,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
           "pipTarget": "",
@@ -9472,9 +9472,9 @@
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "duration": {
-              "value": 8,
-              "at": "2026-10-08T13:27:11.082Z",
-              "reason": "스튜디오 화면에서 직접 수정"
+              "value": 7,
+              "at": "2026-10-14T03:14:18.655Z",
+              "reason": "스튜디오 화면에서 직접 수정 - 컷 싱크 \"여운 수용\"(음성 6.95s에 맞춤)"
             }
           },
           "captionSegTiming": [
@@ -9569,7 +9569,7 @@
           "subtitle": "틀려도 괜찮아, 그게 나니까",
           "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in the same bright bedroom as the previous cut (clothing rack, bed, vanity mirror visible in the background), looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, very subtle, never exaggerated. Wearing the same black crop short-sleeve t-shirt and blue denim shorts as the previous cut, barefoot, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing or location. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio.",
           "videoPrompt": "First 0-3s: Laughter fades. She turns her gaze directly to camera. Expression is unhurried and genuine — the energy of someone who means what they're about to say. She speaks one quiet line, then holds eye contact for a beat. / Next 3-6s: She lowers her gaze to the phone. Her thumb finds the upload button. She presses it. A single still moment — no movement, just the weight of that tap. / Final 6-8s: She looks back up at camera. No more words. Just a small, real smile — the kind that doesn't try to be anything. Holds for 2-3 seconds of silence before cut.",
-          "duration": 11,
+          "duration": 2.3,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
           "pipTarget": "",
@@ -9601,8 +9601,8 @@
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "duration": {
-              "value": 11,
-              "at": "2026-10-09T06:32:40.246Z",
+              "value": 2.3,
+              "at": "2026-10-14T02:45:44.822Z",
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "dialogue": {
@@ -9693,7 +9693,7 @@
             ],
             "cut-5": [
               {
-                "url": "blob:http://localhost:5173/8063ee34-3c32-4abe-a4cc-4aa3b2c01951",
+                "url": "blob:http://localhost:5173/639ca933-9f44-4cab-86a6-cf9c295d646d",
                 "name": "PixVerse_V6_Image_Text_540P_eyes_fully_open_wi.mp4",
                 "duration": 5.04,
                 "trimStart": 0,
@@ -9706,7 +9706,7 @@
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_05_clip_1.mp4"
               },
               {
-                "url": "blob:http://localhost:5173/362aad16-0456-4fb6-bae7-e44823803594",
+                "url": "blob:http://localhost:5173/d54f0beb-8d5e-4c72-8e72-311893678b74",
                 "name": "Woman_speaking_Korean_line_20261009154754.mp4",
                 "duration": 6.02,
                 "trimStart": 0,
@@ -9721,7 +9721,7 @@
             ]
           },
           "g4Approved": {},
-          "selectedCutId": "cut-3",
+          "selectedCutId": "cut-5",
           "subtitles": {
             "cut-1": [
               {
@@ -9926,12 +9926,15 @@
       "episode": {
         "number": 110,
         "title": "아무도 모르는 내 두 번째 직업",
-        "location": "카페",
-        "mood": "감성",
+        "location": "기타",
+        "mood": [
+          "치명",
+          "동기부여"
+        ],
         "cutCount": 7,
         "contentType": "IG_R",
-        "topicCode": "PSY",
-        "scnCode": "DOC",
+        "topicCode": "SOC",
+        "scnCode": "REL",
         "instaNum": "08",
         "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
         "code": "IG_R08",
@@ -10433,7 +10436,7 @@
       "subtitle": "재도전 선언",
       "imagePrompt": "FULLBODY SHOT — A Korean woman in her early 20s stands in a bright bedroom in the afternoon, the same room as the previous cut (clothing rack, bed, vanity mirror visible). Long wavy dark brown hair, NOT short — hair full and flowing. natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, very subtle. Wearing a black crop short-sleeve t-shirt and blue denim shorts, barefoot, gold necklace. K-model proportions, very small face, long slim legs, slender figure. Small head-to-body ratio, DO NOT make average body proportions. She stands with shoulders squared back in a mock-serious, confident stance, glancing toward her friend. Further back near the far wall, a second young Korean woman with long straight black hair and full bangs stands at a distance, holding up her phone to film/photograph the main character from across the room — she is NOT standing close beside the main character, keeping a natural filming distance. The friend wears an oversized white t-shirt and dark grey shorts, barefoot. Afternoon natural light streams in from a window. The energy is bright and playful. Photorealistic 8K cinematic, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing. No subtitles, no audio.",
       "videoPrompt": "First 0-3s: Wide shot of bedroom wall. Friend on the left adjusts phone held up at filming angle. Tripod visible in foreground. Afternoon daylight fills the room warmly. Both women face each other. / Next 3-6s: Friend tosses a teasing line. Main character on right responds with a sharp comeback, eyebrow raised. The exchange is quick and playful. / Final 6-8s: Main character rolls both shoulders back dramatically, cracks her neck, and plants her feet — dead serious expression. Friend stifles a laugh behind the phone.",
-      "duration": 8,
+      "duration": 7,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
       "pipTarget": "",
@@ -10465,9 +10468,9 @@
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "duration": {
-          "value": 8,
-          "at": "2026-10-08T13:27:11.082Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+          "value": 7,
+          "at": "2026-10-14T03:14:18.655Z",
+          "reason": "스튜디오 화면에서 직접 수정 - 컷 싱크 \"여운 수용\"(음성 6.95s에 맞춤)"
         }
       },
       "captionSegTiming": [
@@ -10562,7 +10565,7 @@
       "subtitle": "틀려도 괜찮아, 그게 나니까",
       "imagePrompt": "CLOSEUP SHOT — A Korean woman in her early 20s, appearing no older than 22-23, sits in the same bright bedroom as the previous cut (clothing rack, bed, vanity mirror visible in the background), looking directly into the camera with a calm, genuine expression. Long wavy dark brown hair, NOT short — slightly tousled from laughing, full and naturally wavy. natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen, very subtle, never exaggerated. Wearing the same black crop short-sleeve t-shirt and blue denim shorts as the previous cut, barefoot, no shoes worn indoors. Gold necklace rests softly against her collarbone. She holds a phone in one hand, thumb hovering near the screen. Expression: warm, settled, quietly confident — the look of someone who has made peace with something small but real. Afternoon natural light from a window falls gently across her face. Photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic, not posing, just existing beautifully. DO NOT change clothing or location. Screen shows only a blurred/abstract glow, never legible text or UI. Background must not interact with the main character. No subtitles, no audio.",
       "videoPrompt": "First 0-3s: Laughter fades. She turns her gaze directly to camera. Expression is unhurried and genuine — the energy of someone who means what they're about to say. She speaks one quiet line, then holds eye contact for a beat. / Next 3-6s: She lowers her gaze to the phone. Her thumb finds the upload button. She presses it. A single still moment — no movement, just the weight of that tap. / Final 6-8s: She looks back up at camera. No more words. Just a small, real smile — the kind that doesn't try to be anything. Holds for 2-3 seconds of silence before cut.",
-      "duration": 11,
+      "duration": 2.3,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "pipTarget": "",
@@ -10594,8 +10597,8 @@
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "duration": {
-          "value": 11,
-          "at": "2026-10-09T06:32:40.246Z",
+          "value": 2.3,
+          "at": "2026-10-14T02:45:44.822Z",
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "dialogue": {
@@ -10735,7 +10738,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-14T02:27:53.485Z",
+  "savedAt": "2026-10-14T03:32:20.457Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -10800,7 +10803,7 @@
       ],
       "cut-5": [
         {
-          "url": "blob:http://localhost:5173/8063ee34-3c32-4abe-a4cc-4aa3b2c01951",
+          "url": "blob:http://localhost:5173/639ca933-9f44-4cab-86a6-cf9c295d646d",
           "name": "PixVerse_V6_Image_Text_540P_eyes_fully_open_wi.mp4",
           "duration": 5.04,
           "trimStart": 0,
@@ -10813,7 +10816,7 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_05_clip_1.mp4"
         },
         {
-          "url": "blob:http://localhost:5173/362aad16-0456-4fb6-bae7-e44823803594",
+          "url": "blob:http://localhost:5173/d54f0beb-8d5e-4c72-8e72-311893678b74",
           "name": "Woman_speaking_Korean_line_20261009154754.mp4",
           "duration": 6.02,
           "trimStart": 0,

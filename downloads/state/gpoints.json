@@ -1004,9 +1004,9 @@
   "IG_R08": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-10-12T11:46:00.786Z",
+      "updatedAt": "2026-10-14T03:23:59.446Z",
       "g2": true,
-      "selectedImage": "cut_01_a.jpg"
+      "selectedImage": "cut_01_b.jpg"
     },
     "cut_2": {
       "g1": true,
@@ -1046,6 +1046,55 @@
     }
   },
   "SF_E12": {
+    "cut_1": {
+      "g1": true,
+      "updatedAt": "2026-10-14T03:34:56.565Z",
+      "g2": true,
+      "selectedImage": "cut_01_a.jpg",
+      "g3": true,
+      "g4": true,
+      "g5": true
+    },
+    "cut_2": {
+      "g1": true,
+      "updatedAt": "2026-10-14T03:34:56.565Z",
+      "g2": true,
+      "selectedImage": "cut_02_a.jpg",
+      "g3": true,
+      "g4": true,
+      "g5": true
+    },
+    "cut_3": {
+      "g1": true,
+      "updatedAt": "2026-10-14T03:34:56.565Z",
+      "g2": true,
+      "selectedImage": "cut_03_c.jpg",
+      "g3": true,
+      "g4": true,
+      "g5": true
+    },
+    "cut_4": {
+      "g1": true,
+      "updatedAt": "2026-10-14T03:34:56.565Z",
+      "g2": true,
+      "selectedImage": "cut_04_a.jpg",
+      "g3": true,
+      "g4": true,
+      "g5": true
+    },
+    "cut_5": {
+      "g1": true,
+      "updatedAt": "2026-10-14T03:34:56.565Z",
+      "g2": true,
+      "selectedImage": "cut_05_c.jpg",
+      "g3": true,
+      "g4": true,
+      "g5": true
+    },
+    "g5m": true,
+    "g5mUpdatedAt": "2026-10-14T03:33:38.490Z"
+  },
+  "SF_E109": {
     "cut_1": {
       "g1": true,
       "updatedAt": "2026-10-09T04:20:07.918Z",

@@ -1,6 +1,9 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useState, useCallback } from 'react'
 
 const SERVER = 'http://localhost:3001'
+// 저장 충돌(409) 시 로컬 편집을 버리지 않고 재시도할지 판단하는 기준 — "방금까지 이 탭이
+// 최신이었는지"의 임계값(5분). AppContext doFileSync 참고.
+const CONFLICT_RETRY_WINDOW_MS = 5 * 60 * 1000
 
 const AppContext = createContext(null)
 const STORAGE_KEY = 'yeori-studio-v2'
@@ -590,6 +593,8 @@ export function AppProvider({ children }) {
   const skipNextFileSync = useRef(false)
   const fileSyncTimer    = useRef(null)
   const stateMtimeRef    = useRef(null) // 마지막으로 GET한 studio-state.json의 mtime — 외부(스크립트/MCP) 편집 충돌 감지용
+  const lastSyncAtRef    = useRef(Date.now()) // 마지막으로 성공 동기화한 시각 — 409 충돌 시 "방금까지 최신이던 탭"인지 판단용
+  const conflictRetryRef = useRef(false)       // 409 재시도 1회 제한(무한루프 방지)
 
   // 앱 시작 시 서버 데이터 로드 (studio-state.json 우선, 없으면 studio-data.json)
   useEffect(() => {
@@ -602,6 +607,7 @@ export function AppProvider({ children }) {
         clearTimeout(tid)
         if (stateRes.ok) {
           stateMtimeRef.current = stateRes.headers.get('X-State-Mtime')
+          lastSyncAtRef.current = Date.now()
           const stateData = await stateRes.json()
           if (stateData && Object.keys(stateData).length > 0) {
             skipNextSync.current = true
@@ -674,17 +680,38 @@ export function AppProvider({ children }) {
         },
         body: JSON.stringify(state),
       })
-      // 409 = 이 탭이 마지막으로 읽은 뒤 다른 경로(직접 파일 편집/MCP)가 studio-state.json을
-      // 바꿨다는 뜻 — 이 탭의 구버전 state로 덮어쓰지 않고, 서버가 돌려준 최신 내용을 그대로
-      // 반영한다(2026-09-17, 반복되던 "고쳤는데 새로고침하면 도로 사라짐" 버그의 구조적 수정).
+      // 409 = 이 탭이 마지막으로 읽은 뒤 다른 경로(직접 파일 편집/MCP/리더 백본이 다른
+      // 에피소드를 건드리는 등)가 studio-state.json을 바꿨다는 뜻. 2026-09-17엔 "이 탭의
+      // 구버전 state로 덮어쓰지 않고 서버 최신본을 그대로 반영"하는 것으로 고쳤는데, 이게
+      // 또 다른 데이터 유실을 냈다 — 방금 막 편집한(예: 편집메타 "여운 수용") 내용까지
+      // 로컬 state에 있었다는 이유만으로 통째로 버려지고 서버의 (그 편집이 반영 안 된)
+      // 예전 내용으로 조용히 덮였다(2026-10-14 실측: CUT3 "여운 수용" 클릭 직후 저장이
+      // 충돌 → 편집이 그대로 증발). 이 탭이 방금까지 최신이었다면(최근 동기화 이후
+      // CONFLICT_RETRY_WINDOW_MS 이내) 외부 변경은 보통 다른 영역(다른 에피소드 등)을
+      // 건드린 것일 가능성이 높으므로, 로컬 편집을 버리지 않고 새 mtime으로 1회 재시도한다.
+      // 재시도도 또 충돌하거나 이 탭이 한참 방치돼 있었다면(= 진짜 오래된 구버전 탭) 그때
+      // 비로소 서버 최신본을 반영해 되돌린다 — 09-17 수정이 막던 "방치된 구탭이 새 내용을
+      // 덮어쓰는" 사고는 여전히 막힌다.
       if (res.status === 409) {
         const fresh = await res.json()
-        stateMtimeRef.current = res.headers.get('X-State-Mtime')
+        const freshMtime = res.headers.get('X-State-Mtime')
+        const recentlySynced = Date.now() - lastSyncAtRef.current < CONFLICT_RETRY_WINDOW_MS
+        if (recentlySynced && !conflictRetryRef.current) {
+          conflictRetryRef.current = true
+          stateMtimeRef.current = freshMtime
+          await doFileSync()
+          return
+        }
+        conflictRetryRef.current = false
+        stateMtimeRef.current = freshMtime
+        lastSyncAtRef.current = Date.now()
         skipNextSync.current = true
         skipNextFileSync.current = true
         dispatch({ type: 'LOAD', p: migrateState(fresh, defaultState) })
         return
       }
+      conflictRetryRef.current = false
+      lastSyncAtRef.current = Date.now()
       stateMtimeRef.current = res.headers.get('X-State-Mtime') ?? stateMtimeRef.current
     } catch {}
   }, [state])
