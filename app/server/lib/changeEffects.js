@@ -44,12 +44,23 @@ export const AUDIO_CUES = [
 export const FRAME_SYNC = { prepStart: 1.2, prepEnd: 1.8, dropEnd: 2.1, lockInStart: 2.2 }
 
 // "패션" 테마 스타터 Scene B 프리셋 — 다른 테마(직업 등)는 호출 측에서 자유 텍스트로 채움.
+// outfitEn/envEn/lightingEn: 2026-10-14 추가 — buildRevealCut()의 IP/VP(전부 영문이어야 하는
+// 이미지·영상 생성 프롬프트)는 반드시 이 영문 필드를 쓴다. 이전엔 한글 outfit/env/lighting을
+// 그대로 꽂아 넣어서 "같은 Korean woman... now wearing 눈꽃 자수 겨울 밍크 코트..." 처럼 영문
+// 프롬프트 한가운데 한글이 섞이는 버그가 있었다(IG_R08 CUT2 실측, 성준님 리포트: "이미지, 영상
+// 프롬프트에 유독 한글 텍스트가 섞여있는데"). 한글 필드는 scene(한글 컷 설명)·화면 표시용 preview
+// 에만 쓴다.
 export const SCENE_B_FASHION_PRESETS = [
-  { outfit: '스팽글이 촘촘히 박힌 오뜨꾸뛰르 미드나잇 블루 볼가운, 다이아몬드 목걸이', env: '거대한 크리스털 샹들리에 아래 오페라하우스 레드카펫', lighting: '파파라치 플래시와 황금빛 샹들리에 반사광' },
-  { outfit: 'LED 파이버가 박힌 사이버 기모노, 발광 바이저', env: '미래형 초고층 빌딩 옥상, 야간', lighting: '네온 핑크·레이저 에메랄드 림라이트' },
-  { outfit: '눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이', env: '눈 덮인 침엽수림, 얼어붙은 호수', lighting: '차가운 겨울 황혼 빛, 반짝이는 눈 결정' },
-  { outfit: '버건디 벨벳 이브닝 드레스, 골드 커프', env: '마호가니 패널의 스피크이지 라운지, 그랜드 피아노', lighting: '앰버 촛불과 벽난로 플리커' },
-  { outfit: '광택 블랙 레더 트렌치코트, 무릎 위까지 오는 하이 블랙 부츠, 레드 빈티지 헤드셋', env: '배경·바닥 전부 강렬한 솔리드 레드로 통일된 스튜디오, 매칭되는 레드 빈티지 전화기 소품', lighting: '드라마틱한 스튜디오 조명, 레더 코트와 레드 소품에 하이라이트' },
+  { outfit: '스팽글이 촘촘히 박힌 오뜨꾸뛰르 미드나잇 블루 볼가운, 다이아몬드 목걸이', env: '거대한 크리스털 샹들리에 아래 오페라하우스 레드카펫', lighting: '파파라치 플래시와 황금빛 샹들리에 반사광',
+    outfitEn: 'a densely sequined haute couture midnight-blue ball gown, a diamond necklace', envEn: 'an opera house red carpet beneath a massive crystal chandelier', lightingEn: 'paparazzi camera flashes and golden chandelier reflections' },
+  { outfit: 'LED 파이버가 박힌 사이버 기모노, 발광 바이저', env: '미래형 초고층 빌딩 옥상, 야간', lighting: '네온 핑크·레이저 에메랄드 림라이트',
+    outfitEn: 'a cyber kimono embedded with glowing LED fiber optics, a luminous visor', envEn: 'a futuristic skyscraper rooftop at night', lightingEn: 'neon pink and laser emerald rim lighting' },
+  { outfit: '눈꽃 자수 겨울 밍크 코트, 크리스털 귀걸이', env: '눈 덮인 침엽수림, 얼어붙은 호수', lighting: '차가운 겨울 황혼 빛, 반짝이는 눈 결정',
+    outfitEn: 'a snowflake-embroidered winter mink coat, crystal earrings', envEn: 'a snow-covered conifer forest beside a frozen lake', lightingEn: 'cold winter twilight light with glittering snow crystals' },
+  { outfit: '버건디 벨벳 이브닝 드레스, 골드 커프', env: '마호가니 패널의 스피크이지 라운지, 그랜드 피아노', lighting: '앰버 촛불과 벽난로 플리커',
+    outfitEn: 'a burgundy velvet evening dress, gold cuff bracelets', envEn: 'a mahogany-paneled speakeasy lounge with a grand piano', lightingEn: 'amber candlelight with flickering fireplace glow' },
+  { outfit: '광택 블랙 레더 트렌치코트, 무릎 위까지 오는 하이 블랙 부츠, 레드 빈티지 헤드셋', env: '배경·바닥 전부 강렬한 솔리드 레드로 통일된 스튜디오, 매칭되는 레드 빈티지 전화기 소품', lighting: '드라마틱한 스튜디오 조명, 레더 코트와 레드 소품에 하이라이트',
+    outfitEn: 'a glossy black leather trench coat, knee-high black boots, a red vintage headset', envEn: 'a studio with background and floor unified in bold solid red, a matching red vintage telephone prop', lightingEn: 'dramatic studio lighting highlighting the leather coat and red props' },
 ]
 
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
@@ -76,20 +87,25 @@ export function nextLookId(existingLookIds, spaceCode, seasonCode) {
   return `${prefix}${String(max + 1).padStart(2, '0')}`
 }
 
-// trigger/vfx = TRIGGER_ACTIONS/VFX_PRESETS 요소, sceneB = {outfit,env,lighting}
+// trigger/vfx = TRIGGER_ACTIONS/VFX_PRESETS 요소, sceneB = {outfit,env,lighting,outfitEn,envEn,lightingEn}
 // durationSec = 이 컷의 길이. beat = BEAT 태그(기본 '고조'). cpLine = 자막 한 줄(선택).
 export function buildRevealCut({ trigger, vfx, sceneB, durationSec = 6, beat = '고조', cpLine = '' }) {
   if (!trigger || !vfx || !sceneB?.outfit) throw new Error('trigger, vfx, sceneB.outfit 필요')
+  // IP/VP는 전부 영문이어야 하므로 영문 필드가 반드시 있어야 한다 — 2026-10-14, IG_R08 CUT2에서
+  // 한글 outfit/env/lighting이 영문 프롬프트에 그대로 섞여 들어간 버그를 잡은 뒤 추가한 가드.
+  if (!sceneB.outfitEn || !sceneB.envEn || !sceneB.lightingEn) {
+    throw new Error('sceneB.outfitEn/envEn/lightingEn(영문 설명) 필요 — 한글 설명만으로는 이미지·영상 프롬프트를 만들 수 없습니다')
+  }
   const audioCue = pick(AUDIO_CUES)
 
   const scene = `(하드컷, ${trigger.nameKo} 효과음) 같은 카메라 구도 유지, 배경이 ${sceneB.env}로 리빌. ${trigger.descKo} — 효과가 걷히면 ${sceneB.outfit}+새 배경으로 바뀌어 있다.`
 
-  const imagePrompt = `MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, caught just as ${trigger.en} settles — ${vfx.en}, now wearing ${sceneB.outfit}, standing in ${sceneB.env}, graceful confident pose, looking directly at camera, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, lighting: ${sceneB.lighting}, background: softly blurred ${sceneB.env}, never legible text or UI, vertical 9:16`
+  const imagePrompt = `MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, caught just as ${trigger.en} settles — ${vfx.en}, now wearing ${sceneB.outfitEn}, standing in ${sceneB.envEn}, graceful confident pose, looking directly at camera, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, lighting: ${sceneB.lightingEn}, background: softly blurred ${sceneB.envEn}, never legible text or UI, vertical 9:16`
 
   // 2026-10-13: 룰셋 표준 무발화 문구(2026-09-29 SF_E11 실측 확정)로 통일 — 예전 "No dialogue.
   // No on-screen subtitle text or captions."만으로는 Veo가 감정 구간에서 스스로 입모양을
   // 만들어내는 문제가 있었음(scriptParserV3.js의 applyNarrationSilentGuard와 동일 문구 유지).
-  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfit}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfitEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
   const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${trigger.nameKo} + ${audioCue.soundFx} (컷 시작 0.2초) / 타점: ${audioCue.beat}`
 

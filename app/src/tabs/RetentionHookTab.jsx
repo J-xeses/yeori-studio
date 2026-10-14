@@ -402,7 +402,7 @@ function ChangeComboPanel({ state, dispatch }) {
   const [options, setOptions] = useState({ triggers: [], vfx: [], sceneBFashionPresets: [] })
   const [triggerId, setTriggerId] = useState('')
   const [vfxIndex, setVfxIndex] = useState(null)
-  const [sceneB, setSceneB] = useState({ outfit: '', env: '', lighting: '' })
+  const [sceneB, setSceneB] = useState({ outfit: '', env: '', lighting: '', outfitEn: '', envEn: '', lightingEn: '' })
   const [durationSec, setDurationSec] = useState(6)
   const [beat, setBeat] = useState('고조')
   const [cpLine, setCpLine] = useState('')
@@ -451,6 +451,7 @@ function ChangeComboPanel({ state, dispatch }) {
   const doBuild = async () => {
     setBuildError(''); setApplyMsg('')
     if (!triggerId || vfxIndex == null || !sceneB.outfit) { setBuildError('트리거·VFX·Scene B(의상)를 먼저 채워주세요.'); return }
+    if (!sceneB.outfitEn || !sceneB.envEn || !sceneB.lightingEn) { setBuildError('Scene B의 영문 설명(의상/배경/조명)도 채워주세요 — 이미지·영상 프롬프트는 전부 영문이어야 합니다.'); return }
     const r = await fetch(`${SERVER}/api/change-combo/build`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ triggerId, vfxIndex, sceneB, durationSec, beat, cpLine }),
@@ -561,12 +562,22 @@ function ChangeComboPanel({ state, dispatch }) {
           </div>
         </div>
 
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수)"
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수, 한글 — 화면 설명용)"
           value={sceneB.outfit} onChange={(e) => { setSceneB({ ...sceneB, outfit: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경"
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경 (한글 — 화면 설명용)"
           value={sceneB.env} onChange={(e) => { setSceneB({ ...sceneB, env: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="조명"
+        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="조명 (한글 — 화면 설명용)"
           value={sceneB.lighting} onChange={(e) => { setSceneB({ ...sceneB, lighting: e.target.value }); setBuildResult(null) }} />
+        {/* 2026-10-14: 이미지·영상 프롬프트(IP/VP)는 전부 영문이어야 하는데, 위 한글 입력을
+            그대로 꽂아 넣었더니 영문 프롬프트 한가운데 한글이 섞이는 버그가 있었다(IG_R08 CUT2
+            실측). 프리셋을 고르면 자동으로 채워지고, 직접 입력할 때도 영문은 따로 받는다. */}
+        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>↓ 실제 이미지·영상 프롬프트에 들어가는 영문 설명(필수)</div>
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Outfit in English (required)"
+          value={sceneB.outfitEn} onChange={(e) => { setSceneB({ ...sceneB, outfitEn: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment in English"
+          value={sceneB.envEn} onChange={(e) => { setSceneB({ ...sceneB, envEn: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting in English"
+          value={sceneB.lightingEn} onChange={(e) => { setSceneB({ ...sceneB, lightingEn: e.target.value }); setBuildResult(null) }} />
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
           <label style={{ fontSize: 11, color: '#888' }}>CA_BANK 룩 코드</label>

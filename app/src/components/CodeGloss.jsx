@@ -18,8 +18,14 @@ export default function CodeGloss({ cb, kind, value, sep = ' · ', defaultLabel 
   const [err, setErr] = useState('')
   if (!parts.length) return null
 
-  const registerable = kind === 'sp' || kind === 'ch' || kind === 'lookId'
-  const items = !registerable ? [] : kind === 'sp' ? spUnregistered(cb, value) : lookUnregistered(cb, value)
+  // sp 는 ch/lookId 와 달리 glossParts가 "조각별" 아니라 "합쳐진 코드 전체"를 한 덩어리 span으로
+  // 돌려준다(예: "IN.BALL.TZ_NT.LT_MOON(...)") — spUnregistered()는 그 안의 낱개 조각(BALL,
+  // LT_MOON 등)을 코드로 쓰는데, 합쳐진 문자열 전체를 그 낱개 코드와 비교하면 절대 안 맞아서
+  // 클릭이 안 먹었다(2026-10-14 버그 리포트: "일부는 클릭이 안되는 상태"). sp는 본문 span을
+  // 클릭 타깃으로 쓰지 말고, 조각마다 별도 칩을 만든다.
+  const isSp = kind === 'sp'
+  const registerable = isSp || kind === 'ch' || kind === 'lookId'
+  const items = !registerable ? [] : isSp ? spUnregistered(cb, value) : lookUnregistered(cb, value)
   const itemFor = (code) => items.find((it) => it.code === code)
 
   const openItem = (code) => {
@@ -46,7 +52,7 @@ export default function CodeGloss({ cb, kind, value, sep = ' · ', defaultLabel 
     <div style={{ fontSize: 11, lineHeight: 1.5, color: 'var(--text-3)', marginTop: 2 }}>
       <div>
         {parts.map((p, i) => {
-          const code = (p.text.match(/^([A-Za-z0-9_.]+)\(/) || [])[1]
+          const code = !isSp ? (p.text.match(/^([A-Za-z0-9_.]+)\(/) || [])[1] : null
           const item = p.warn && code ? itemFor(code) : null
           return (
             <span key={i}>
@@ -64,6 +70,17 @@ export default function CodeGloss({ cb, kind, value, sep = ' · ', defaultLabel 
           )
         })}
       </div>
+      {isSp && items.length > 0 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 3 }}>
+          {items.map((item) => (
+            <span key={item.code}
+              style={{ color: '#f59e0b', cursor: 'pointer', textDecoration: 'underline dotted', fontSize: 10.5 }}
+              title="클릭하면 정식 코드로 등록할 수 있어요"
+              onClick={() => openItem(item.code)}
+            >{item.group} {item.code} 등록▸</span>
+          ))}
+        </div>
+      )}
       {items.filter((it) => it.code === openCode).map((item) => (
         <div key={item.code} style={{ marginTop: 4, padding: 8, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 6 }}>
           <div style={{ fontSize: 10.5, color: '#f59e0b', marginBottom: 4 }}>
