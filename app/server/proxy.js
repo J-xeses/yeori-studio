@@ -7990,6 +7990,28 @@ app.post('/api/checkup-trim-commit', async (req, res) => {
   }
 })
 
+// ── POST /api/checkup-trim-undo — 방금 트림 커밋한 실제 cut_NN.mp4를 백업본으로 되돌림 ──
+// backupCutBeforeOverwrite()가 _manual_work/cut_NN_prev.mp4에 "덮어쓰기 직전 1벌"만 보관하므로
+// (슬롯 하나, 누적 안 됨), 이 복구도 가장 최근 트림 1단계만 되돌릴 수 있다 — 체크업 탭의
+// 실행취소(↩)가 미리보기는 여러 단계 되돌리지만, 실제 파일은 이 한 단계만 따라간다(2026-10-14,
+// 성준님 요청: "↩ 버튼에 실제 파일도 같이 복구하는 기능").
+app.post('/api/checkup-trim-undo', async (req, res) => {
+  const { epNum, cutNo } = req.body || {}
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const videoDir = mp.videoDir(epNum)
+    const padded = String(cutNo).padStart(2, '0')
+    const backupPath = path.join(videoDir, '_manual_work', `cut_${padded}_prev.mp4`)
+    if (!fs.existsSync(backupPath)) return res.status(404).json({ error: '복구할 백업이 없습니다(이미 복구했거나 트림 이력이 없음)' })
+    const outPath = path.join(videoDir, `cut_${padded}.mp4`)
+    fs.copyFileSync(backupPath, outPath)
+    const duration = await getMediaDuration(outPath)
+    res.json({ success: true, duration })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })

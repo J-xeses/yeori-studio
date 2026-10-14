@@ -8,31 +8,8 @@ import s from './CheckupTab.module.css'
 
 const SERVER = 'http://localhost:3001'
 
-// VideoTab.jsx의 stripMeta/hexToRgba와 동일 — 이 코드베이스의 기존 관례대로 작은 순수함수는
-// 탭마다 그대로 복제해서 씀. 자막 텍스트/스타일을 VideoTab에서 입력한 것과 동일하게 재사용하려면
-// 같은 정제 로직이 필요하다(2026-09-13, 사용자 확인: "자막은 영상~편집메타 과정에서 입력됨").
-function stripMeta(text) {
-  if (!text) return text
-  return text
-    .replace(/\n?샷\s*타입[:：][^\n]*/gi, '')
-    .replace(/^(CLOSEUP|FULLBODY)\s*(SHOT)?\s*[-—]?\s*/i, '')
-    .trim()
-}
-// 2026-10-10 — VideoTab에서 자막을 따로 입력 안 한 컷(subtitlesMap에 없음, LF_T01 23컷 중
-// 12컷 실측)은 대사(dialogue) 원문이 그대로 자막으로 떨어지는데, 그 원문은 TTS 발화 톤을
-// 위한 연기 지문 표기("진~~짜"처럼 모음 늘임, "♪" 등)가 섞여 있어 자막처럼 안 읽힌다
-// (성준님 지적: "자막이 아닌 대사지문이 표시되고 있다"). CP(subtitle)도 subtitlesMap도
-// 없을 때만 적용되는 최후 폴백이라, dialogue 데이터 자체(TTS가 읽는 원본)는 건드리지 않고
-// 화면 표시용으로만 다듬는다 — 사람이 나중에 VideoTab에서 직접 자막을 입력하면 이 정리는
-// 더 이상 안 거친다(그게 우선순위가 높으므로).
-function cleanDialogueForCaptionFallback(text) {
-  if (!text) return text
-  return text
-    .replace(/([가-힣])~+/g, '$1')        // "진~~짜" → "진짜" (모음 늘임 표기 제거)
-    .replace(/[♪♬]/g, '')                 // 음표 등 연기 지문 기호
-    .replace(/\s{2,}/g, ' ')
-    .trim()
-}
+// VideoTab.jsx의 hexToRgba와 동일 — 이 코드베이스의 기존 관례대로 작은 순수함수는 탭마다
+// 그대로 복제해서 씀.
 function hexToRgba(hex, alpha) {
   const h = (hex || '#000000').replace('#', '')
   const r = parseInt(h.substring(0, 2), 16)
@@ -52,28 +29,6 @@ const fmtTime = (sec) => {
   if (!Number.isFinite(sec)) return '0:00'
   const m = Math.floor(sec / 60), ss = Math.floor(sec % 60)
   return `${m}:${String(ss).padStart(2, '0')}`
-}
-
-// VideoTab.jsx의 toSegments/splitCaptionString과 동일(클립별 구간 타이밍 자막,
-// 2026-09-13 추가, 2026-09-22 VideoTab만 분리타이밍으로 고쳐지고 체크업 탭 사본은
-// 안 따라가서 뒤쳐져 있었음 — 2026-10-10, LF_T01 실측: "/" 또는 "||"로 이어진 대사가
-// 한 덩어리 자막으로 전체 컷 길이(24초) 내내 그대로 떠 있던 버그).
-// subtitles[cutId]가 배열이면 그대로 쓰고, 문자열/미지정이면 "/" 또는 "||" 구분자로
-// 쪼개서 글자수 비례로 구간을 나눈다(vpDialogue.js/ttsText.js가 쓰는 같은 구분자 2종).
-function toSegments(value, fallbackText, totalDur) {
-  if (Array.isArray(value)) return value
-  const text = value ?? fallbackText ?? ''
-  if (!text) return []
-  const parts = String(text).split(/\s*(?:\|\||\/)\s*/).map((t) => t.trim()).filter(Boolean)
-  if (parts.length <= 1) return [{ start: 0, end: totalDur, text: parts[0] || text }]
-  const weights = parts.map((t) => Math.max(t.replace(/\s+/g, '').length, 1))
-  const totalW = weights.reduce((a, b) => a + b, 0)
-  let acc = 0
-  return parts.map((t, i) => {
-    const start = acc
-    acc += (totalDur * weights[i]) / totalW
-    return { start, end: i === parts.length - 1 ? totalDur : acc, text: t }
-  })
 }
 
 // EpisodeInfoSidebar.jsx의 BEAT_COLORS와 동일.
@@ -188,30 +143,55 @@ export default function CheckupTab() {
   const pendingSeekRef = useRef(null) // src 교체 후 loadedmetadata에서 적용할 목표 초
   const ratio = contentRatio(state.episode)
 
-  // 자막 — VideoTab에서 이미 입력하는 데이터(state.videoTabState.subtitles[cutId], 없으면
-  // dialogue/narration 폴백)를 그대로 재사용. 체크업 탭에서 새로 입력받지 않음(2026-09-13,
-  // 사용자 확인: "자막은 영상~편집메타 과정에서 입력될 수 있지 않나?" — 맞음, 여기선 표시만).
+  // 자막 — 2026-10-14 실측으로 발견: 이전엔 dialogue/narration(TTS가 읽는 대사 원문)을
+  // 보여주고 있었는데, 실제로 최종본에 번인되는 자막은 그것과 전혀 다른 cut.subtitle(CP
+  // 필드, 짧은 캡션용 문구 — 예: CUT3 대사는 "(지유) 이번엔 제대로 해봐, 서여리! / (여리)
+  // 보고 배워."인데 실제 CP는 "재도전 선언"이라는 완전히 다른 한 줄)이었다(reelFinalize.js
+  // decideCut()이 cp.split(/\/)로 세그먼트를 만듦). 타이밍도 cut.captionSegTiming이 있으면
+  // 그걸 그대로 쓰고(= 실제 최종본과 100% 동일), 없을 때만 글자수 비례로 근사 배분한다.
   const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor } = state.videoSettings || {}
-  const subtitlesMap = state.videoTabState?.subtitles || {}
+  const buildCaptionSegs = useCallback((cut) => {
+    const cp = String(cut?.subtitle || '').trim()
+    if (!cp) return []
+    const segs = cp.split(/\s*\/\s*/).map(t => t.replace(/^\s*\d+\s*단계\s*[:：]\s*/, '').trim()).filter(Boolean)
+    const parts = segs.length ? segs : [cp]
+    const dur = cut.duration || 0
+    if (Array.isArray(cut.captionSegTiming) && cut.captionSegTiming.length === parts.length) {
+      return parts.map((text, i) => ({ text, start: cut.captionSegTiming[i][0], end: cut.captionSegTiming[i][1] }))
+    }
+    // 수동 타이밍 없을 때의 근사 폴백 — reelFinalize.js의 computeSegmentTimings(글자수 비례)와
+    // 같은 발상이지만 정확히 같은 구현은 아님(서버 전용 함수라 클라에서 재현 불가, 미리보기용).
+    const weights = parts.map(t => Math.max(t.replace(/\s+/g, '').length, 1))
+    const totalW = weights.reduce((a, b) => a + b, 0)
+    let acc = 0
+    return parts.map((text, i) => {
+      const start = acc
+      acc += (dur * weights[i]) / totalW
+      return { text, start, end: i === parts.length - 1 ? dur : acc }
+    })
+  }, [])
   const activeCut = state.cuts?.find(c => c.no === activeCutNo)
   // 클립이 여러 개인 컷은 세그먼트 배열이므로 지금 재생 위치(elapsedInActive)가 속한 구간의
   // 텍스트를 골라 보여준다 — 재생 중 자동으로 자막이 전환됨(2026-09-13).
-  const activeCutSegs = activeCut
-    ? toSegments(subtitlesMap[activeCut.id], cleanDialogueForCaptionFallback(stripMeta(activeCut.dialogue || activeCut.narration || '')), activeCut.duration || 0)
-    : []
+  const activeCutSegs = activeCut ? buildCaptionSegs(activeCut) : []
   const captionText = activeCutSegs.find(seg => elapsedInActive >= seg.start && elapsedInActive < seg.end)?.text
     ?? activeCutSegs[activeCutSegs.length - 1]?.text ?? ''
 
-  // 타임라인 자막 트랙(2026-10-14, 성준님 요청: "타임라인에 자막라인 추가") — 위 activeCutSegs와
-  // 완전히 같은 계산을 컷 전체에 대해 한 번에 해둔다. CheckupTimeline은 트림/분할 편집 상태를
-  // 가지므로 여기서는 "컷 번호 → 세그먼트 배열"만 넘기고, 클립 폭 안에 어떻게 배치할지는
-  // CheckupTimeline이 결정한다.
+  // 타임라인 자막 트랙(2026-10-14, 성준님 요청: "타임라인에 자막라인 추가" → "자막도 자르는
+  // 기능") — 위 activeCutSegs와 같은 계산을 컷 전체에 대해 한 번에 해둔다.
   const subtitleSegmentsByNo = useMemo(() => Object.fromEntries(
-    (state.cuts || []).map(c => [
-      c.no,
-      toSegments(subtitlesMap[c.id], cleanDialogueForCaptionFallback(stripMeta(c.dialogue || c.narration || '')), c.duration || 0),
-    ])
-  ), [state.cuts, subtitlesMap])
+    (state.cuts || []).map(c => [c.no, buildCaptionSegs(c)])
+  ), [state.cuts, buildCaptionSegs])
+
+  // 자막 세그먼트 트림(경계만 이동, 중간 분할은 안 함 — 2026-10-14 성준님: "중간구간 자르기는
+  // 컷 안에서 자연스럽게 이어지지 않을 것이라 지금은 적용하지 말기로 하자"). 세그먼트 배열
+  // 전체를 cut.captionSegTiming에 그대로 저장 — 영상 파일은 안 건드리므로 duration 트림과
+  // 달리 즉시, 메타데이터만으로 실제 최종본에 반영된다(finalizeReel이 이 필드를 직접 읽음).
+  const commitCaptionSegTiming = useCallback((cutNo, segs) => {
+    const cut = state.cuts?.find(c => c.no === cutNo)
+    if (!cut?.id) return
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: segs.map(s => [s.start, s.end]) }, overrideReason: '체크업 타임라인에서 자막 트림' })
+  }, [state.cuts, dispatch])
 
   const load = useCallback(async (silent = false) => {
     if (epNum == null) return
@@ -254,9 +234,28 @@ export default function CheckupTab() {
     })
     const d = await r.json()
     if (!r.ok || d.error) throw new Error(d.error || '트림 반영 실패')
+    const actualDur = d.duration ?? (trimEnd - trimStart)
     const cut = state.cuts?.find(c => c.no === cutNo)
     if (cut?.id) {
-      dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round((trimEnd - trimStart) * 10) / 10 }, overrideReason: '체크업 타임라인에서 트림' })
+      dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(actualDur * 10) / 10 }, overrideReason: '체크업 타임라인에서 트림' })
+    }
+    load(true)
+    return actualDur
+  }, [epNum, state.cuts, dispatch, load])
+
+  // ↩(실행취소) 버튼이 실제 파일 트림까지 같이 되돌리게(2026-10-14, 성준님 요청) —
+  // /api/checkup-trim-undo가 _manual_work/cut_NN_prev.mp4(가장 최근 백업 1벌)로 복구하고
+  // 실제 복원된 길이를 돌려주면, 그 값을 cut.duration에도 그대로 반영해 메타와 어긋나지 않게 한다.
+  const undoCutTrim = useCallback(async (cutNo) => {
+    const r = await fetch(`${SERVER}/api/checkup-trim-undo`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo }),
+    })
+    const d = await r.json()
+    if (!r.ok || d.error) throw new Error(d.error || '실제 파일 복구 실패')
+    const cut = state.cuts?.find(c => c.no === cutNo)
+    if (cut?.id && d.duration) {
+      dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(d.duration * 10) / 10 }, overrideReason: '체크업 타임라인 트림 실행취소' })
     }
     await load(true)
   }, [epNum, state.cuts, dispatch, load])
@@ -406,7 +405,8 @@ export default function CheckupTab() {
             <div className={s.timelineEditorInner}>
               <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo} subtitleSegmentsByNo={subtitleSegmentsByNo}
                 activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
-                onSeek={seekTo} onSelectCut={setSelectedCutNo} onDurationCommit={commitCutTrim} />
+                onSeek={seekTo} onSelectCut={setSelectedCutNo} onDurationCommit={commitCutTrim} onDurationCommitUndo={undoCutTrim}
+                onCaptionSegCommit={commitCaptionSegTiming} />
             </div>
             <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} />
           </div>

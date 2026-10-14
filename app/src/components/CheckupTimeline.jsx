@@ -81,7 +81,7 @@ function FilmstripThumbs({ frames, trimInSec, trimOutSec, sourceDurationSec, fal
 //   elapsedInActive — activeCutNo 소스파일 안에서의 재생 위치(초) — 플레이헤드 계산에 씀
 //   onSeek(cutNo, localTime) — 클릭/분할 시 CheckupTab의 기존 seekTo를 그대로 재사용
 //   onSelectCut(cutNo)       — 선택된 클립의 원본 컷 번호를 효과 사이드바에 전달
-export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut, onDurationCommit }) {
+export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut, onDurationCommit, onDurationCommitUndo, onCaptionSegCommit }) {
   const [clips, setClips] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -103,6 +103,13 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
   const frozenPlayheadRef = useRef(null)
   // 트림 커밋(실제 ffmpeg 재인코딩) 진행 중인 클립 — 끝날 때까지 해당 클립에 "반영 중…" 표시.
   const [committingClipId, setCommittingClipId] = useState(null)
+  // 자막 세그먼트 드래그 중 로컬 미리보기(2026-10-14, 성준님 요청: "자막도 자르는 기능") —
+  // subtitleSegmentsByNo는 부모(state.cuts) 기반 props라 직접 못 바꾸므로, 드래그 중엔 이
+  // 로컬 state로 그 컷 하나만 덮어써서 즉각적인 시각 피드백을 주고, 손을 떼면
+  // onCaptionSegCommit으로 실제 반영(cut.captionSegTiming)한다. 세그먼트 각각 독립적으로
+  // 늘리거나 줄일 수 있고(이웃과 안 맞물림 — 자막 사이 공백은 정상), 중간에 새 분할점을
+  // 만드는 기능은 없다(성준님: "중간구간 자르기는... 지금은 적용하지 말기로 하자").
+  const [captionDrag, setCaptionDrag] = useState(null) // { cutNo, segs }
 
   useEffect(() => { latestClipsRef.current = clips }, [clips])
 
@@ -119,6 +126,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       setClips((d.clips || []).slice().sort((a, b) => a.order - b.order))
       setStaleInfo(d.stale ? { missingCuts: d.missingCuts || [], durDriftCuts: d.durDriftCuts || [], updatedAt: d.updatedAt } : null)
       setUndoStack([])
+      setUndoMetaStack([])
       setRedoStack([])
     } catch {
       // 조용히 무시 — 참고용 미리보기 레이어
@@ -161,8 +169,14 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clips, epNum])
 
-  const pushUndo = useCallback((snapshot) => {
+  // undoMetaStack: undoStack과 같은 인덱스로 나란히 쌓는다 — 그 단계가 실제 cut_NN.mp4까지
+  // 커밋한 트림이었으면 {cutNo}를, 미리보기 전용 편집(재배치/분할/삭제)이었으면 null을 넣는다.
+  // 실제 파일 백업은 cut_NN_prev.mp4 슬롯 하나뿐(누적 안 됨)이라, 실행취소가 실제 파일까지
+  // 되돌릴 수 있는 건 "가장 최근 트림 커밋 1단계"뿐이다(2026-10-14, 성준님 요청).
+  const [undoMetaStack, setUndoMetaStack] = useState([])
+  const pushUndo = useCallback((snapshot, meta = null) => {
     setUndoStack(prev => [...prev.slice(-29), snapshot])
+    setUndoMetaStack(prev => [...prev.slice(-29), meta])
     setRedoStack([])   // 새 편집이 생기면 재실행 이력은 무효
   }, [])
 
@@ -193,14 +207,21 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     })
   }, [pushUndo, scheduleSave])
 
-  const undo = useCallback(() => {
+  const undo = useCallback(async () => {
     if (!undoStack.length) return
     const snapshot = undoStack[undoStack.length - 1]
+    const meta = undoMetaStack[undoMetaStack.length - 1]
     setUndoStack(prev => prev.slice(0, -1))
+    setUndoMetaStack(prev => prev.slice(0, -1))
     setRedoStack(prev => [...prev.slice(-29), latestClipsRef.current])
     setClips(snapshot)
     scheduleSave(snapshot)
-  }, [undoStack, scheduleSave])
+    // 그 단계가 실제 파일까지 트림한 거였으면 백업(_manual_work/cut_NN_prev.mp4)에서 같이
+    // 복구 — 백업은 한 슬롯뿐이라 더 이전 단계를 undo할 땐 실제 파일 복구는 안 됨(조용히 무시).
+    if (meta?.cutNo != null && onDurationCommitUndo) {
+      try { await onDurationCommitUndo(meta.cutNo) } catch { /* 백업 없음 등 — 미리보기만 되돌림 */ }
+    }
+  }, [undoStack, undoMetaStack, scheduleSave, onDurationCommitUndo])
 
   const redo = useCallback(() => {
     if (!redoStack.length) return
@@ -306,26 +327,69 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       setIsDragging(false)
-      pushUndo(preDrag)
       const after = latestClipsRef.current
-      scheduleSave(after)
       // 좌우 트림 모두 실제 cut_NN.mp4 파일 자체를 다시 잘라 반영한다(2026-10-14 재설계 —
       // cut.duration만 바꾸는 방식은 finalizeReel이 파일 실측 길이로 항상 덮어써서 실제
       // 발행 영상엔 전혀 반영이 안 됐던 걸 발견). 분할 안 된 컷(이 클립 하나가 그 컷 전체를
       // 대표)일 때만 커밋 — 분할된 조각은 여전히 미리보기 전용(파일 하나를 조각낼 방법이
-      // 아직 없음). 실제 파일을 건드리는 작업이라 ffmpeg 처리 동안 "반영 중…" 표시.
+      // 아직 없음).
       const updated = after.find(c => c.clipId === clipId)
       const siblingCount = after.filter(c => c.sourceCutNo === updated?.sourceCutNo).length
       const changed = edge === 'L' ? Math.abs(updated.trimInSec - startIn) > 0.05 : Math.abs(updated.trimOutSec - startOut) > 0.05
       if (updated && siblingCount === 1 && changed && onDurationCommit) {
         setCommittingClipId(clipId)
         try {
-          await onDurationCommit(updated.sourceCutNo, updated.trimInSec, updated.trimOutSec)
-          await rebuildFromCurrent()
+          const actualDur = await onDurationCommit(updated.sourceCutNo, updated.trimInSec, updated.trimOutSec)
+          // 파일이 [0, actualDur]로 다시 만들어졌으므로 이 클립 하나만 그 틀에 맞춘다 — 전체
+          // rebuildFromCurrent(force)를 부르면 다른 컷들의 순서/분할까지 통째로 날아간다.
+          const patched = after.map(c => c.clipId === clipId ? { ...c, trimInSec: 0, trimOutSec: actualDur ?? (updated.trimOutSec - updated.trimInSec) } : c)
+          setClips(patched)
+          scheduleSave(patched)
+          // 실제 파일 커밋이 일어난 뒤에야 undo 스택에 넣는다(undo 시 실제 파일도 같이
+          // 복구해야 하므로 meta에 cutNo를 함께 기록).
+          pushUndo(preDrag, { cutNo: updated.sourceCutNo })
         } finally {
           setCommittingClipId(null)
         }
+      } else {
+        pushUndo(preDrag)
+        scheduleSave(after)
       }
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
+  // ── 자막 세그먼트 트림(좌/우 끝) ───────────────────────────────────
+  const startCaptionTrim = (e, cutNo, segIndex, edge, cutDur, widthPx) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const baseSegs = (subtitleSegmentsByNo?.[cutNo] || []).map(s => ({ ...s }))
+    const startSeg = baseSegs[segIndex]
+    if (!startSeg) return
+    const startX = e.clientX
+    const startStart = startSeg.start
+    const startEnd = startSeg.end
+    setCaptionDrag({ cutNo, segs: baseSegs })
+    const onMove = (ev) => {
+      const deltaSec = ((ev.clientX - startX) / widthPx) * cutDur
+      setCaptionDrag(prev => {
+        if (!prev || prev.cutNo !== cutNo) return prev
+        const next = prev.segs.map((s, i) => {
+          if (i !== segIndex) return s
+          if (edge === 'L') return { ...s, start: clamp(startStart + deltaSec, 0, s.end - MIN_CLIP_SEC) }
+          return { ...s, end: clamp(startEnd + deltaSec, s.start + MIN_CLIP_SEC, cutDur) }
+        })
+        return { cutNo, segs: next }
+      })
+    }
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      setCaptionDrag(curr => {
+        if (curr && curr.cutNo === cutNo) onCaptionSegCommit?.(cutNo, curr.segs)
+        return null
+      })
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
@@ -514,27 +578,35 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                 )
               })}
             </div>
-            {/* 자막 트랙(2026-10-14, 성준님 요청 — "타임라인에 자막라인 추가되면 어떤가?" → 파형과
-                스크롤바 사이 여유공간을 가리키며 "여기에 배치하면 문제없을듯"). CUT별 대사/나레이션
-                세그먼트(subtitleSegmentsByNo, CheckupTab의 toSegments 결과)를 그 컷의 편집길이
-                (cut.duration) 기준 비율로 클립 폭 안에 배치한다. 분할/트림 안 된 보통의 1클립=1컷
-                구간에선 정확히 들어맞고, 트림된 클립(raw 소스길이≠duration)에선 근사치 — 검수용
-                미리보기 목적엔 충분하고, 프레임 단위 정밀도가 필요하면 편집메타/영상 탭에서 확인. */}
+            {/* 자막 트랙(2026-10-14) — CUT별 실제 번인 자막(cut.subtitle=CP, finalizeReel이 직접
+                읽는 필드)을 그 컷의 편집 길이 기준 비율로 클립 폭 안에 배치. 각 세그먼트 양끝을
+                드래그해 시작/끝을 늘리거나 줄일 수 있다(성준님 요청) — commitCaptionSegTiming이
+                cut.captionSegTiming에 그대로 써서 실제 최종본에 반영됨(파일 재인코딩 불필요,
+                메타데이터만으로 충분). 세그먼트 사이 새 분할점을 만드는 기능은 없음(성준님:
+                "중간구간 자르기는 지금은 적용하지 말기로 하자") — 세그먼트 개수는 cut.subtitle의
+                "/" 구분 그대로, 끝점 이동만 가능. */}
             <div className={s.subtitleRow}>
               {positioned.map((it) => {
                 const info = cutsByNo?.[it.sourceCutNo] || {}
-                const segs = subtitleSegmentsByNo?.[it.sourceCutNo] || []
+                const isDraggingThis = captionDrag?.cutNo === it.sourceCutNo
+                const segs = isDraggingThis ? captionDrag.segs : (subtitleSegmentsByNo?.[it.sourceCutNo] || [])
                 const cutDur = info.duration || (it.trimOutSec - it.trimInSec) || 1
                 const widthPx = it.dur * pxPerSec
                 return (
                   <div key={it.clipId} className={s.subtitleBlock} style={{ left: `${it.start * pxPerSec}px`, width: `${widthPx}px` }}>
                     {segs.filter(seg => seg.text).map((seg, i) => {
                       const segLeftPx = clamp((seg.start / cutDur) * widthPx, 0, widthPx)
-                      const segWidthPx = Math.max(2, Math.min(widthPx - segLeftPx, ((seg.end - seg.start) / cutDur) * widthPx))
+                      const segWidthPx = Math.max(10, Math.min(widthPx - segLeftPx, ((seg.end - seg.start) / cutDur) * widthPx))
                       return (
                         <span key={i} className={s.subtitleSeg}
                           style={{ left: `${segLeftPx}px`, width: `${segWidthPx}px` }}
-                          title={seg.text}>{seg.text}</span>
+                          title={`${seg.text} · ${seg.start.toFixed(1)}s~${seg.end.toFixed(1)}s`}>
+                          {seg.text}
+                          <span className={s.subtitleHandle} style={{ left: 0 }}
+                            onMouseDown={(e) => startCaptionTrim(e, it.sourceCutNo, i, 'L', cutDur, widthPx)} />
+                          <span className={s.subtitleHandle} style={{ right: 0, left: 'auto' }}
+                            onMouseDown={(e) => startCaptionTrim(e, it.sourceCutNo, i, 'R', cutDur, widthPx)} />
+                        </span>
                       )
                     })}
                   </div>
