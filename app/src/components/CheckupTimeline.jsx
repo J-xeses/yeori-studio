@@ -81,7 +81,7 @@ function FilmstripThumbs({ frames, trimInSec, trimOutSec, sourceDurationSec, fal
 //   elapsedInActive — activeCutNo 소스파일 안에서의 재생 위치(초) — 플레이헤드 계산에 씀
 //   onSeek(cutNo, localTime) — 클릭/분할 시 CheckupTab의 기존 seekTo를 그대로 재사용
 //   onSelectCut(cutNo)       — 선택된 클립의 원본 컷 번호를 효과 사이드바에 전달
-export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut }) {
+export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut, onDurationCommit }) {
   const [clips, setClips] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -294,7 +294,19 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       pushUndo(preDrag)
-      scheduleSave(latestClipsRef.current)
+      const after = latestClipsRef.current
+      scheduleSave(after)
+      // 오른쪽 끝 트림만 실제 컷 길이(cut.duration)에 반영 — reelFinalize.js가 각 컷을
+      // '-t duration'(시작점 0 기준)으로만 자르므로, 시작점이 안 움직인(trimInSec≈0) +
+      // 분할 안 된(이 컷을 이 클립 하나가 전부 대표하는) 경우에만 "순수 길이 조절"로
+      // 간주해 실제 파이프라인에 커밋한다. 왼쪽 트림/분할된 조각은 여전히 미리보기 전용.
+      if (edge === 'R' && onDurationCommit) {
+        const updated = after.find(c => c.clipId === clipId)
+        const siblingCount = after.filter(c => c.sourceCutNo === updated?.sourceCutNo).length
+        if (updated && siblingCount === 1 && updated.trimInSec < 0.05) {
+          onDurationCommit(updated.sourceCutNo, updated.trimOutSec - updated.trimInSec)
+        }
+      }
     }
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
@@ -455,8 +467,10 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                     <FilmstripThumbs frames={filmstrips[it.sourceCutNo]} trimInSec={it.trimInSec} trimOutSec={it.trimOutSec}
                       sourceDurationSec={info.actualDurationSec} fallbackImage={info.startFrame} />
                     <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
-                    <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')} />
-                    <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')} />
+                    <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')}
+                      title="시작점 트림 — 미리보기 전용(실제 발행본엔 반영 안 됨)" />
+                    <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')}
+                      title="길이 조절 — 분할 안 된 컷이면 실제 컷 길이(cut.duration)에 바로 반영됩니다" />
                   </div>
                 )
               })}
