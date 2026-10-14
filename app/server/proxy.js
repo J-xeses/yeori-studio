@@ -7464,15 +7464,21 @@ function serverVideoPolicy(ep) {
   if (ct === 'SF') return 'mixed'
   return 'image-first'
 }
+// 2026-10-14: {mode, confirmed} 로 변경 — confirmed:false는 "대사 유무+에피소드 정책"만 보고
+// 찍은 추측(실제 그 컷이 어떻게 만들어졌는지와 무관)이라, 화면 개별 컷 카드에 추측을 확정값처럼
+// 보여주면 "안 맞는다"는 혼선이 생긴다(성준님 리포트). 집계용(veoNeeded 등)엔 추측도 여전히
+// 쓰지만, 컷 카드 배지는 confirmed일 때만 보여주도록 VideoTab.jsx에서 분기.
 function serverCutVideoMode(cut, ep) {
-  if (['veo', 'motion', 'still'].includes(cut?.videoMode)) return cut.videoMode
+  if (['veo', 'motion', 'still'].includes(cut?.videoMode)) return { mode: cut.videoMode, confirmed: true }
   const ctype = String(cut?.cutType || 'YEORI').toUpperCase()
-  if (['GRAPHIC', 'CAPCUT', 'BROLL'].includes(ctype)) return 'motion'
+  if (['GRAPHIC', 'CAPCUT', 'BROLL'].includes(ctype)) return { mode: 'motion', confirmed: true }
   const policy = serverVideoPolicy(ep)
   const hasSpeech = !!(String(cut?.dialogue || '').trim() || String(cut?.narration || '').trim())
-  if (policy === 'video-first') return hasSpeech ? 'veo' : 'motion'
-  if (policy === 'mixed') return hasSpeech ? 'veo' : 'still'
-  return hasSpeech ? 'motion' : 'still'
+  let mode
+  if (policy === 'video-first') mode = hasSpeech ? 'veo' : 'motion'
+  else if (policy === 'mixed') mode = hasSpeech ? 'veo' : 'still'
+  else mode = hasSpeech ? 'motion' : 'still'
+  return { mode, confirmed: false }
 }
 
 // GET /api/episode-video-checklist?epNum — VideoTab "영상 체크리스트" 데이터.
@@ -7519,7 +7525,8 @@ app.get('/api/episode-video-checklist', (req, res) => {
 
     const out = cuts.map(c => {
       const p = String(c.no).padStart(2, '0')
-      const mode = serverCutVideoMode(c, ep.episode)
+      const vm = serverCutVideoMode(c, ep.episode)
+      const mode = vm.mode
       const g = gData[`cut_${c.no}`] || {}
       // 시작 프레임 = G2에서 사람이 고른 이미지 우선, 없으면 cut_NN(_a).jpg
       let startFrame = null
@@ -7536,6 +7543,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         no: c.no,
         cutType: c.cutType || 'YEORI',
         videoMode: mode,
+        videoModeConfirmed: vm.confirmed,
         needsManualVideo: mode === 'veo',
         cutMark: c.cutMark || 'NORMAL',
         dialogue: String(c.dialogue || '').replace(/^없음$/i, '').trim(),

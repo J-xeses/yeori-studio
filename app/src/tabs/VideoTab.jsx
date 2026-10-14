@@ -2323,16 +2323,30 @@ export default function VideoTab() {
               <div className={s.cutCardHeader}>
                 <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} <span className={s.cutCardTitleDesc}>— {selCut.scene || '씬 미입력'}</span></span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {vRow && (
+                  {/* 2026-10-14: videoMode는 명시 지정(cut.videoMode)·타입 확정(GRAPHIC/CAPCUT/BROLL)일
+                      때만 "확정값"(videoModeConfirmed:true)이고, 그 외엔 "대사 유무+정책"만 보고 찍은
+                      추측이다. 추측을 드롭다운에 확정값처럼 보여주면 실제와 안 맞아 혼선만 준다는
+                      성준님 지적 — 추측일 땐 컷 카드에서 아예 숨기고, 실제 파일 유무(hasVideo, 사실)만
+                      보여준다. 집계 "Veo 필요 N컷"은 추측 포함 그대로 유지(기획 참고용으로는 유효). */}
+                  {vRow && vRow.videoModeConfirmed && (
                     <select value={vRow.videoMode} onClick={e => e.stopPropagation()}
                       onChange={e => setCutVideoMode(selCut.no, e.target.value)}
                       style={{ fontSize:11, background:'var(--bg-input)', color:'var(--text)', border:'1px solid var(--border)', borderRadius:4, padding:'2px 4px' }}>
                       {VIDEO_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                     </select>
                   )}
+                  {vRow && !vRow.videoModeConfirmed && !vRow.hasVideo && (
+                    <select value="" onClick={e => e.stopPropagation()}
+                      onChange={e => e.target.value && setCutVideoMode(selCut.no, e.target.value)}
+                      title="제작 방식이 아직 지정 안 됨 — 고르면 다음부턴 확정값으로 표시됩니다"
+                      style={{ fontSize:11, background:'none', color:'var(--text-3)', border:'1px dashed var(--border)', borderRadius:4, padding:'2px 4px' }}>
+                      <option value="">제작방식 미지정</option>
+                      {VIDEO_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  )}
                   {vRow && (
-                    <span style={{ fontSize:11, fontWeight:700, color: vRow.hasVideo ? '#4ade80' : vRow.videoMode === 'veo' ? '#fbbf24' : 'var(--text-3)' }}>
-                      {vRow.hasVideo ? '✓ 업로드됨' : vRow.videoMode === 'veo' ? '· 제작 필요' : vRow.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
+                    <span style={{ fontSize:11, fontWeight:700, color: vRow.hasVideo ? '#4ade80' : (vRow.videoModeConfirmed && vRow.videoMode === 'veo') ? '#fbbf24' : 'var(--text-3)' }}>
+                      {vRow.hasVideo ? '✓ 업로드됨' : !vRow.videoModeConfirmed ? '' : vRow.videoMode === 'veo' ? '· 제작 필요' : vRow.videoMode === 'motion' ? '· 메이킹 탭' : '· 정지'}
                     </span>
                   )}
                   {/* 서버엔 이미 완성본(vRow.hasVideo)이 있는데 로컬 클립 에디터만 비어있는 경우까지
@@ -2429,6 +2443,25 @@ export default function VideoTab() {
                       : <span className={s.vpNoStartFrame}>⚠ 시작 프레임 없음(G2 먼저)</span>}
                   </div>
                 )}
+                {/* 2026-10-14: VP만 보여주고 오디오(BGM/SFX/앰비언스) 설계는 화면에 전혀 안 보였다는
+                    지적 — masterCode.audio는 이미 대본 탭에서 컷마다 채워져 있는데 영상 탭에서 그걸
+                    확인할 곳이 없었다. 값이 있는 항목만 간단히 한 줄로 보여준다(표시 전용). */}
+                {(() => {
+                  const audio = selCut.masterCode?.audio || {}
+                  const parts = [
+                    audio.bgm && `BGM: ${audio.bgm}`,
+                    audio.sfx && `효과음: ${audio.sfx}`,
+                    audio.ambience && `앰비언스: ${audio.ambience}`,
+                    audio.voice && !/^없음$/i.test(audio.voice.trim()) && `음성메모: ${audio.voice}`,
+                  ].filter(Boolean)
+                  if (!parts.length) return null
+                  return (
+                    <div onClick={e => e.stopPropagation()}
+                      style={{ fontSize: 11, color: 'var(--text-3)', lineHeight: 1.6, padding: '4px 2px', borderTop: '1px solid var(--border)', marginTop: 4 }}>
+                      🔊 {parts.join('  ·  ')}
+                    </div>
+                  )
+                })()}
 
                 {/* 클립이 하나라도 있으면 아래 클립별 자막칸으로 통일 — 클립 개수(1개/여러개)에
                     따라 서로 다른 입력 UI가 보이던 비일관성을 없앰(2026-09-14, 사용자 지적:
