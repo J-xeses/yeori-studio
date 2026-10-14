@@ -421,7 +421,11 @@ function EpisodeBar({ onOpenSidebar }) {
     const { episodes, activeEpisodeId } = state
 
     const activeEp = episodes[activeEpisodeId]
-    const title = activeEp?.episode.title || `EP${activeEp?.episode.number ?? ''} 새 에피소드`
+    // 2026-10-14 — 성준님: "우측 상단 제목 앞에 코드넘버가 있어야겠다, IG_R05 혼자인..... 이렇게
+    // 보여져야 편한 느낌" — 사이드바엔 코드가 따로 있지만 제목 바에는 없어서 추가.
+    const epCode = activeEp ? resolveEpisodeCode(activeEp.episode) : ''
+    const titleOnly = activeEp?.episode.title || `EP${activeEp?.episode.number ?? ''} 새 에피소드`
+    const title = epCode ? `${epCode}  ${titleOnly}` : titleOnly
 
     return (
         <div style={{
