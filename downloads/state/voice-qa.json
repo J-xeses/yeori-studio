@@ -381,6 +381,61 @@
     }
   },
   "LF_T01": {
+    "7": {
+      "cut_07_clip_2.mp4": {
+        "verdict": "fail",
+        "ratio": 0.786,
+        "heard": "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요. 그룹이거든요.",
+        "expected": "처음부터 글로벌을 겨냥하고 만들어진 그룹이거든요",
+        "words": [
+          {
+            "text": "처음부터",
+            "start": 1.68,
+            "end": 2.46,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "글로벌을",
+            "start": 2.58,
+            "end": 3.1,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "겨냥하고",
+            "start": 3.22,
+            "end": 3.84,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "만들어진",
+            "start": 4,
+            "end": 4.5,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "그룹이거든요.",
+            "start": 4.64,
+            "end": 5.3,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "그룹이거든요.",
+            "start": 5.42,
+            "end": 6.1,
+            "logprob": 0,
+            "speaker": null
+          }
+        ],
+        "flags": [],
+        "checkedAt": "2026-10-15T06:40:28.329Z",
+        "voiceSim": 0.707
+      }
+    },
     "21": {
       "cut_21_clip_2.mp4": {
         "verdict": "warn",
