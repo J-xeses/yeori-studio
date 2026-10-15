@@ -11,7 +11,7 @@ import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaConten
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
-import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
+import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, buildFreezeBeatCut, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger } from './lib/customChangePresets.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
@@ -6802,6 +6802,14 @@ app.post('/api/change-combo/build', (req, res) => {
     if (!trigger) return res.status(400).json({ error: `알 수 없는 triggerId: ${triggerId}` })
     if (!vfx) return res.status(400).json({ error: `알 수 없는 vfxIndex: ${vfxIndex}` })
     res.json(buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec, beat, cpLine }))
+  } catch (err) { res.status(400).json({ error: err.message }) }
+})
+// 2026-10-15 — 프리즈 비트(돌발상황 정지) 전용 빌드 — buildRevealCut()과 달리 trigger/sceneB
+// (의상 리빌) 없이 action(돌발상황 묘사)만 받는다. changeEffects.js 주석 참고.
+app.post('/api/change-combo/build-freeze', (req, res) => {
+  try {
+    const { action, sceneA, durationSec, beat, cpLine } = req.body || {}
+    res.json(buildFreezeBeatCut({ action, sceneA, durationSec, beat, cpLine }))
   } catch (err) { res.status(400).json({ error: err.message }) }
 })
 

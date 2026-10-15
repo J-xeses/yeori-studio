@@ -29,11 +29,6 @@ export const VFX_PRESETS = [
   { nameKo: '꽃잎 & 나비 소용돌이', en: 'a whirlwind of floral petals and butterflies dispersing', type: 'particles' },
   { nameKo: '불꽃 스파크 분산', en: 'fiery sparks and ember particles fading along the edges', type: 'particles' },
   { nameKo: '잉크 스플래시 번짐', en: 'black ink plume in water clearing to reveal', type: 'dissolve' },
-  // 2026-10-15, 연출 재료 창고 ① "프리즈프레임/불릿타임"(성준님 인스타 벤치마킹 컬렉션,
-  // @akapepinho 유리공예·커피잔 파편 참고) — 다른 프리셋과 달리 "흐르며 사라지는" 효과가
-  // 아니라 "시간이 멈추고 카메라만 도는" 구조라 VP 문장 자체가 달라야 한다. type:'freeze'로
-  // 표시해 buildRevealCut()에서 별도 템플릿을 탄다(아래).
-  { nameKo: '프리즈프레임 & 불릿타임', en: 'every particle, droplet and loose fabric suspended perfectly still in mid-air as if time itself stopped, the camera rapidly orbiting around her frozen figure', type: 'freeze' },
 ]
 
 export const AUDIO_CUES = [
@@ -125,14 +120,7 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
   // 2026-10-13: 룰셋 표준 무발화 문구(2026-09-29 SF_E11 실측 확정)로 통일 — 예전 "No dialogue.
   // No on-screen subtitle text or captions."만으로는 Veo가 감정 구간에서 스스로 입모양을
   // 만들어내는 문제가 있었음(scriptParserV3.js의 applyNarrationSilentGuard와 동일 문구 유지).
-  // 2026-10-15: vfx.type === 'freeze'는 "흐르며 사라지는" 다른 프리셋과 구조가 달라(시간이
-  // 멈추고 카메라가 도는 쪽) transition 문장을 따로 쓴다 — "sweeping across the frame"은
-  // 정지된 장면엔 안 맞는 묘사라서.
-  const transitionLine = vfx.type === 'freeze'
-    ? `at the peak of this motion, time itself seems to stop — ${vfx.en}, beat drop at ${FRAME_SYNC.prepEnd}s`
-    : `${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s`
-  const resumeLine = vfx.type === 'freeze' ? 'Time resumes and the moment resolves' : 'The effect clears'
-  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${transitionLine}. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: ${resumeLine} to reveal her in ${sceneB.outfitEn}, standing in ${sceneB.envEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfitEn}, standing in ${sceneB.envEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
   const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${trigger.nameKo} + ${audioCue.soundFx} (컷 시작 0.2초) / 타점: ${audioCue.beat}`
 
@@ -140,10 +128,49 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
 
   const preview = {
     step1: `[0.0s ~ ${FRAME_SYNC.prepEnd}s 준비]: ${trigger.nameKo} 시동. 시청자 시선을 끄는 자연스러운 포즈.`,
-    step2: vfx.type === 'freeze'
-      ? `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 트랜지션 피크]: 비트 드롭(${audioCue.beat})과 동시에 시간이 멈춘 듯 ${vfx.nameKo} — 그녀는 정지, 카메라만 돈다.`
-      : `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 트랜지션 피크]: 비트 드롭(${audioCue.beat})과 동시에 ${vfx.nameKo}가 폭발하며 1프레임도 끊김 없이 모핑.`,
+    step2: `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 트랜지션 피크]: 비트 드롭(${audioCue.beat})과 동시에 ${vfx.nameKo}가 폭발하며 1프레임도 끊김 없이 모핑.`,
     step3: `[${FRAME_SYNC.lockInStart}s ~ ${durationSec}s 완성씬]: ${sceneB.outfit} 완성. ${sceneB.env}. 완청률을 높이는 시선 고정.`,
+  }
+
+  return {
+    cutPatch: { scene, imagePrompt, videoPrompt, subtitle, beat, audioNote },
+    preview,
+    audioCue,
+  }
+}
+
+// ── 프리즈 비트(돌발상황 정지) 생성기 — 2026-10-15 ──────────────────────────
+// buildRevealCut()은 "트리거 동작→VFX→의상/배경 리빌"(체인지) 구조라 프리즈프레임/불릿타임엔
+// 억지로 끼워 맞춘 상태였다. 성준님 피드백: "변신하는 장면보다 빠르게 움직이다가 갑자기
+// 돌발상황이 확 펼쳐지는 순간에 멈춰서 효과가 연출되는 장면이 적합" — 레퍼런스(유리공예 장인,
+// 커피잔 파편)도 전부 의상·배경은 그대로고 "사건"만 얼어붙는 구조. 그래서 trigger/sceneB(의상
+// 리빌) 없이 "무슨 돌발상황인지"만 받는 완전히 별도 생성기로 분리한다 — TRIGGER_ACTIONS는
+// 전부 "의상 바꾸는 동작"이라 이 용도엔 안 맞고 재사용하지 않는다.
+// action = { nameKo, ko, en } — 돌발상황 묘사. sceneA = 기존과 동일(선택, 평소 모습/환경).
+export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '긴장', cpLine = '' }) {
+  if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(돌발상황 한글/영문 묘사) 필요')
+  const audioCue = pick(AUDIO_CUES)
+  const poseEn = sceneA?.poseEn?.trim() || 'moving at a natural, everyday pace'
+  const poseKo = sceneA?.poseKo?.trim() || '평소처럼 움직이는 중'
+  const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
+  const lightingAEn = sceneA?.lightingEn?.trim() || 'soft neutral ambient light'
+  const label = action.nameKo || '돌발상황'
+
+  const scene = `(하드컷, ${label} 효과음) ${poseKo} — 갑자기 ${action.ko}. 그 순간 시간이 멈추고 카메라만 주변을 돈다. 시간이 다시 흐르며 놀란 반응.`
+
+  // 의상/배경은 바뀌지 않으므로(사건만 멈춤) 단일 이미지 프롬프트 — sceneB 불필요.
+  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, ${poseEn}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
+
+  const videoPrompt = `First 0-${FRAME_SYNC.prepEnd}s: She is ${poseEn}, a completely normal, everyday moment. / Next ${FRAME_SYNC.prepEnd}-${FRAME_SYNC.dropEnd}s: Suddenly, ${action.en} — at this exact peak moment time itself seems to stop, every object, droplet and loose fabric suspended perfectly still in mid-air, the camera rapidly orbiting around the frozen scene, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: Time resumes, she reacts with a startled, wide-eyed expression, same outfit, same environment throughout. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+
+  const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${label} 임팩트 + ${audioCue.soundFx} (프리즈 시작 지점) / 타점: ${audioCue.beat}`
+
+  const subtitle = cpLine || '...어?'
+
+  const preview = {
+    step1: `[0.0s ~ ${FRAME_SYNC.prepEnd}s 평소]: ${poseKo} — 아직은 평범한 순간.`,
+    step2: `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 돌발 프리즈]: 비트 드롭(${audioCue.beat})과 동시에 ${label} 발생 — 시간 정지, 카메라만 주변을 돈다.`,
+    step3: `[${FRAME_SYNC.lockInStart}s ~ ${durationSec}s 리액션]: 시간이 다시 흐르고 놀란 반응. 긴장감으로 완청 유도.`,
   }
 
   return {

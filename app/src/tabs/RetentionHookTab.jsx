@@ -116,18 +116,21 @@ ${hookSummary}
       <EpisodeInfoSidebar maxStage={0} />
       <div className={styles.wrap}>
       <div className={`${styles.header} ${styles.topBar}`}>
-        <h2 className={styles.title}>{mode === 'hook' ? '리텐션 훅 설계' : mode === 'signature' ? '✨ 시그 레퍼런스' : '🔄 체인지 조합 생성기'}</h2>
+        <h2 className={styles.title}>{mode === 'hook' ? '리텐션 훅 설계' : mode === 'signature' ? '✨ 시그 레퍼런스' : mode === 'freeze' ? '🧊 프리즈 비트 생성기' : '🔄 체인지 조합 생성기'}</h2>
         <p className={styles.desc}>
           {mode === 'hook'
             ? '4구간 훅을 설정하면 서여리 말투로 CUT 스크립트를 자동 생성합니다 — 대본의 BEAT 태그와 연동됩니다'
             : mode === 'signature'
             ? '몽환·절정 구간 연출 기법(시간멈춤·초근접·앵글반전 등)을 저장해두고, 시그 컷 프롬프트에 적용합니다'
-            : '트리거 액션×VFX×Scene B 조합으로 리빌 컷 하나(IP/VP/오디오)를 생성합니다 — 같은 구도 고정 + 별도 컷 생성 원칙(R07 패턴)'}
+            : mode === 'change'
+            ? '트리거 액션×VFX×Scene B 조합으로 리빌 컷 하나(IP/VP/오디오)를 생성합니다 — 같은 구도 고정 + 별도 컷 생성 원칙(R07 패턴)'
+            : '빠르게 움직이다가 돌발상황이 터지는 순간 시간이 멈추고 카메라만 도는 컷을 생성합니다 — 의상/배경 변화 없이 "사건"만 얼어붙습니다'}
         </p>
         <div className={styles.modeToggle}>
           <button className={`${styles.modeBtn} ${mode === 'hook' ? styles.modeBtnActive : ''}`} onClick={() => setMode('hook')}>🎣 리텐션 훅</button>
           <button className={`${styles.modeBtn} ${mode === 'signature' ? styles.modeBtnActive : ''}`} onClick={() => setMode('signature')}>✨ 시그 레퍼런스</button>
           <button className={`${styles.modeBtn} ${mode === 'change' ? styles.modeBtnActive : ''}`} onClick={() => setMode('change')}>🔄 체인지 생성기</button>
+          <button className={`${styles.modeBtn} ${mode === 'freeze' ? styles.modeBtnActive : ''}`} onClick={() => setMode('freeze')}>🧊 프리즈 비트</button>
         </div>
       </div>
 
@@ -192,6 +195,7 @@ ${hookSummary}
 
       {mode === 'signature' && <SignatureRefPanel state={state} dispatch={dispatch} />}
       {mode === 'change' && <ChangeComboPanel state={state} dispatch={dispatch} />}
+      {mode === 'freeze' && <FreezeBeatPanel state={state} dispatch={dispatch} />}
       </div>
       </div>
     </div>
@@ -629,6 +633,120 @@ function ChangeComboPanel({ state, dispatch }) {
           <button className={styles.copyBtn} onClick={pickRandom}>🎲 랜덤 뽑기</button>
           <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>조합 생성</button>
         </div>
+        {buildError && <div className={styles.error} style={{ marginTop: 8 }}>{buildError}</div>}
+      </div>
+
+      {buildResult && (
+        <div className={styles.result}>
+          <div className={styles.resultLabel}>미리보기</div>
+          <pre className={styles.resultText}>{buildResult.preview.step1}{'\n'}{buildResult.preview.step2}{'\n'}{buildResult.preview.step3}</pre>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>IP (이미지 프롬프트)</div>
+          <pre className={styles.resultText} style={{ fontSize: 11 }}>{buildResult.cutPatch.imagePrompt}</pre>
+          <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>VP (영상 프롬프트)</div>
+          <pre className={styles.resultText} style={{ fontSize: 11, marginBottom: 10 }}>{buildResult.cutPatch.videoPrompt}</pre>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => setTargetCutId(e.target.value)}>
+              <option value="">대상 컷 선택…</option>
+              {(state.cuts || []).map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
+            </select>
+            <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
+          </div>
+          {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
+        </div>
+      )}
+    </>
+  )
+}
+
+// ── 프리즈 비트(돌발상황 정지) 패널 — 2026-10-15 ──────────────────────────
+// ChangeComboPanel(체인지 생성기)과 달리 트리거 목록·Scene B(의상 리빌)가 없다 — 의상/배경은
+// 그대로고 "무슨 돌발상황인지"만 자유 입력. 성준님 피드백: "변신 장면보다, 빠르게 움직이다가
+// 돌발상황이 확 펼쳐지는 순간에 멈춰서 효과가 연출되는 장면이 적합" — buildRevealCut()과
+// 아키텍처 자체를 분리(server/lib/changeEffects.js buildFreezeBeatCut() 참고).
+function FreezeBeatPanel({ state, dispatch }) {
+  const [actionKo, setActionKo] = useState('')
+  const [actionEn, setActionEn] = useState('')
+  const [actionLabel, setActionLabel] = useState('')
+  const [sceneA, setSceneA] = useState({ poseKo: '', poseEn: '', envEn: '', lightingEn: '' })
+  const [durationSec, setDurationSec] = useState(6)
+  const [beat, setBeat] = useState('긴장')
+  const [cpLine, setCpLine] = useState('')
+  const [targetCutId, setTargetCutId] = useState('')
+  const [buildResult, setBuildResult] = useState(null)
+  const [buildError, setBuildError] = useState('')
+  const [applyMsg, setApplyMsg] = useState('')
+
+  const EXAMPLES = [
+    { label: '급브레이크 + 튀어나온 고양이', ko: '급브레이크를 밟는 순간 눈앞에 고양이가 튀어나옴', en: 'slamming the brakes as a cat suddenly darts in front of her' },
+    { label: '커피잔이 손에서 미끄러져 깨짐', ko: '들고 있던 커피잔이 손에서 미끄러져 바닥에 부딪혀 산산조각 남', en: 'the coffee cup slipping from her hand and shattering as it hits the floor, coffee droplets and ceramic shards exploding outward' },
+    { label: '갑자기 날아든 물건을 피함', ko: '어디선가 갑자기 날아든 물건을 반사적으로 피함', en: 'reflexively dodging an object suddenly flying toward her from off-frame' },
+  ]
+  const applyExample = (ex) => { setActionLabel(ex.label); setActionKo(ex.ko); setActionEn(ex.en); setBuildResult(null) }
+
+  const doBuild = async () => {
+    setBuildError(''); setApplyMsg('')
+    if (!actionKo.trim() || !actionEn.trim()) { setBuildError('돌발상황 설명(한글/영문)을 먼저 채워주세요.'); return }
+    const r = await fetch(`${SERVER}/api/change-combo/build-freeze`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA, durationSec, beat, cpLine }),
+    })
+    const d = await r.json()
+    if (!r.ok) { setBuildError(d.error || '생성 실패'); return }
+    setBuildResult(d)
+  }
+
+  const commitApply = () => {
+    const cut = (state.cuts || []).find((c) => c.id === targetCutId)
+    if (!cut || !buildResult?.cutPatch) return
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: buildResult.cutPatch })
+    setApplyMsg(`✅ CUT${cut.no}에 반영 완료 — G2(이미지 생성)를 돌리면 캐릭터 얼굴 레퍼런스가 자동 첨부됩니다.`)
+  }
+
+  return (
+    <>
+      <div className={styles.result} style={{ marginBottom: 14 }}>
+        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 6 }}>
+          예시에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+          {EXAMPLES.map((ex) => (
+            <button key={ex.label} className={styles.copyBtn} onClick={() => applyExample(ex)}>{ex.label}</button>
+          ))}
+        </div>
+
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="상황 이름(짧게, 한글 — 예: 급브레이크+고양이)"
+          value={actionLabel} onChange={(e) => { setActionLabel(e.target.value); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="돌발상황 묘사 (한글, 필수 — 화면 설명용)"
+          value={actionKo} onChange={(e) => { setActionKo(e.target.value); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Sudden event in English (required — goes into the video prompt)"
+          value={actionEn} onChange={(e) => { setActionEn(e.target.value); setBuildResult(null) }} />
+
+        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4, color: '#f0a050' }}>
+          ↓ 평소 모습(선택) — 돌발상황이 터지기 전, 의상·배경·동작은 끝까지 그대로 유지됩니다
+        </div>
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="평소 동작 (한글, 선택 — 예: 운전 중)"
+          value={sceneA.poseKo} onChange={(e) => { setSceneA({ ...sceneA, poseKo: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Everyday pose/action, in English (optional)"
+          value={sceneA.poseEn} onChange={(e) => { setSceneA({ ...sceneA, poseEn: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment, in English (optional)"
+          value={sceneA.envEn} onChange={(e) => { setSceneA({ ...sceneA, envEn: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting, in English (optional)"
+          value={sceneA.lightingEn} onChange={(e) => { setSceneA({ ...sceneA, lightingEn: e.target.value }); setBuildResult(null) }} />
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+          <label style={{ fontSize: 11, color: '#888' }}>컷 길이(초)</label>
+          <input className={styles.textarea} style={{ width: 60 }} type="number" min={4} max={10}
+            value={durationSec} onChange={(e) => setDurationSec(Number(e.target.value) || 6)} />
+          <label style={{ fontSize: 11, color: '#888' }}>BEAT</label>
+          <select className={styles.textarea} style={{ width: 'auto' }} value={beat} onChange={(e) => setBeat(e.target.value)}>
+            {['훅', '긴장', '반전', '안정', '고조', '결말', '시그'].map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+          <input className={styles.textarea} style={{ flex: 1, minWidth: 160 }} placeholder="자막(CP) — 비우면 기본 문구"
+            value={cpLine} onChange={(e) => setCpLine(e.target.value)} />
+        </div>
+
+        <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>프리즈 비트 생성</button>
         {buildError && <div className={styles.error} style={{ marginTop: 8 }}>{buildError}</div>}
       </div>
 
