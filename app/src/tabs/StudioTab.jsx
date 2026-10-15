@@ -47,14 +47,54 @@ function cutTypeInfo(cutType) {
   return CUT_TYPE_INFO[cutType || 'YEORI'] || CUT_TYPE_INFO.YEORI
 }
 
-// G2 승인 전 체크리스트 항목
+// G2 승인 전 체크리스트 — 2026-10-15: 단순 체크(있다/없다)에서 항목별 가중치×3단계 점수로
+// 전환(성준님 선택: "가중치 점수형"), "외모(캐릭터 일관성)" + "연출 의도 일치"(그 컷의
+// masterCode AC/CA/SH/MD/SP와 실제 이미지가 맞는지) 두 그룹으로 확장(성준님 요청: "컷 연출
+// 의도(동작·샷유형·카메라·감정·TREND)까지 추가 편성"). targetKey가 있으면 그 컷에 실제로
+// 적힌 코드값+한글설명을 같이 보여줘서 "원래 뭘 하려던 거였는지"와 바로 비교하며 채점할 수
+// 있다. face는 hardBlock — 룰셋 §① "캐릭터 일관성 최우선"을 반영해 다른 항목 점수로
+// 상쇄되지 않게 막는다. 점수·메모는 gpoints.json에 영구 저장(setGPoints의 g2Checklist 필드)
+// — "서여리 얼굴·외형 판단 근거를 기록해 쌓아가면서 공감대를 맞춰가자"는 요청 반영.
 const CHECKLIST_ITEMS = [
-  { key: 'face',       label: '얼굴 자연스럽게 고정됨' },
-  { key: 'hair',       label: '헤어 웨이브/다크브라운 유지' },
-  { key: 'outfit',     label: '의상 프롬프트와 일치' },
-  { key: 'proportion', label: '신체비율 정상 (슬림/모델 비율)' },
-  { key: 'background', label: '배경 씬과 적합' },
+  { key: 'face',       group: '외모', label: '얼굴 (identity)',    weight: 5, hardBlock: true },
+  { key: 'outfit',     group: '외모', label: '의상',                weight: 3 },
+  { key: 'proportion', group: '외모', label: '신체비율 (슬림/모델)', weight: 3 },
+  { key: 'hair',       group: '외모', label: '헤어',                weight: 2 },
+  { key: 'action',     group: '연출', label: '동작(AC)',            weight: 3, targetKey: 'ac' },
+  { key: 'mood',       group: '연출', label: '감정(MD)',            weight: 3, targetKey: 'md' },
+  { key: 'shot',       group: '연출', label: '샷유형(SH)',          weight: 2, targetKey: 'sh' },
+  { key: 'camera',     group: '연출', label: '카메라(CA)',          weight: 2, targetKey: 'ca' },
+  { key: 'background', group: '연출', label: '배경(SP)',            weight: 2, targetKey: 'sp' },
+  { key: 'trend',      group: '연출', label: '트렌드 반영',         weight: 2 },
 ]
+const SCORE_LEVELS = [
+  { value: 0, label: '✕ 문제', color: '#f87171' },
+  { value: 1, label: '△ 보통', color: '#fbbf24' },
+  { value: 2, label: '✓ 좋음', color: '#4ade80' },
+]
+const CHECKLIST_MAX = CHECKLIST_ITEMS.reduce((sum, it) => sum + it.weight * 2, 0)
+const PASS_THRESHOLD = 70 // 가중 평균 70% 이상 + hardBlock 없어야 G2 승인용으로 통과
+function computeChecklistScore(scores) {
+  let sum = 0, scoredCount = 0, hardBlocked = false
+  for (const item of CHECKLIST_ITEMS) {
+    const v = scores?.[item.key]
+    if (v == null) continue
+    scoredCount++
+    sum += v * item.weight
+    if (item.hardBlock && v === 0) hardBlocked = true
+  }
+  const total = Math.round((sum / CHECKLIST_MAX) * 100)
+  return { total, hardBlocked, scoredCount, allScored: scoredCount === CHECKLIST_ITEMS.length }
+}
+// targetKey가 가리키는 그 컷의 연출 코드값 + 한글 설명(있으면, masterCode.kr.*) — 채점 화면에서
+// "원래 의도"를 바로 대조할 수 있게.
+function targetRefText(cut, targetKey) {
+  const mc = cut?.masterCode || {}
+  const code = mc[targetKey]
+  const kr = mc.kr?.[targetKey]
+  if (!code && !kr) return null
+  return [code, kr].filter(Boolean).join(' — ')
+}
 
 // G2 승인 시 선택된 이미지의 실제 서버 파일명 추출 (gpoints.json selectedImage용).
 // blob:/data: URL(업로드/Gemini 생성 직후, 아직 디스크에 저장 안 됨)은 실제 파일이
@@ -102,8 +142,8 @@ export default function StudioTab() {
   const [generating, setGenerating] = useState({})
   const [confirmed, setConfirmed] = useState({})
   const [g2Approved, setG2Approved] = useState({})
-  const [checklist, setChecklist] = useState({})       // cut.id → { face, hair, outfit, proportion, background }
-  const [checklistCutId, setChecklistCutId] = useState(null) // 체크리스트 팝업이 열려있는 컷 id
+  const [checklist, setChecklist] = useState({})       // cut.id → { [imgIdx]: { scores:{key:0|1|2}, note } } — 이미지별 채점
+  const [checklistTarget, setChecklistTarget] = useState(null) // { cutId, idx } | null — 채점 팝업이 열려있는 컷+이미지
   // 비교뷰 화면비율 — 에피소드 유형 기본값(LF/SF=16:9, 그 외=9:16), 사용자 선택은 AppContext 에 영속.
   const epRatio = contentRatio(state.episode)
   const imageRatio = state.studioTabState?.imageRatio || {}
@@ -259,6 +299,38 @@ export default function StudioTab() {
       })
       .catch(() => {})
   }, [episodeCode])
+
+  // confirmed/g2Approved와 같은 이유로(위 237행), g2Checklist 점수 배지도 로컬 state(checklist)에만
+  // 있어서 탭 재방문·새로고침 시 gpoints.json엔 점수가 멀쩡히 남아있는데 화면엔 전부 "채점"으로
+  // 되돌아가 보였다(2026-10-15 실측: 저장 직후 새로고침하니 100점 배지가 사라짐). 저장 당시의
+  // 인덱스는 스캔 순서가 바뀌면(선택 이미지가 맨 앞으로 오는 정렬 등) 더 이상 같은 이미지를
+  // 가리키지 않을 수 있어, 인덱스가 아니라 g2Checklist에 같이 저장해 둔 filename으로 매칭해서
+  // 복원한다. 이미 로컬에 있는 항목(막 채점 중이라 아직 저장 전인 것)은 덮어쓰지 않는다.
+  useEffect(() => {
+    if (!episodeCode) return
+    const epData = gData[episodeCode] || {}
+    setChecklist(prev => {
+      let changed = false
+      const next = { ...prev }
+      state.cuts.forEach(cut => {
+        const persisted = epData[`cut_${cut.no}`]?.g2Checklist
+        const imgList = images[cut.id]
+        if (!persisted || !imgList?.length) return
+        const existingForCut = next[cut.id] || {}
+        const merged = { ...existingForCut }
+        let cutChanged = false
+        Object.values(persisted).forEach(rec => {
+          if (!rec?.filename) return
+          const idx = imgList.findIndex(u => extractImageFilename(u) === rec.filename)
+          if (idx === -1 || merged[idx]) return
+          merged[idx] = { scores: rec.scores, note: rec.note || '' }
+          cutChanged = true
+        })
+        if (cutChanged) { next[cut.id] = merged; changed = true }
+      })
+      return changed ? next : prev
+    })
+  }, [images, gData, episodeCode])
 
   const updateCut = (id, p) => dispatch({ type: 'UPDATE_CUT', id, p })
 
@@ -967,6 +1039,22 @@ export default function StudioTab() {
                         ))}
                       </div>
                       {isSelected && <div className={s.selectedBadge}>✓ G2 승인용 선택됨</div>}
+                      {/* 2026-10-15: A만 채점할 수 있었던 걸 이미지마다 독립적으로 채점 가능하게
+                          — A/B(/C..) 전부 미리 채점해 총점을 비교한 뒤 고를 수 있게(성준님:
+                          "선택근거 마련"). cut.id 기준 로컬 checklist 상태를 그대로 읽는다. */}
+                      {(() => {
+                        const cl = checklist[cut.id]?.[idx]
+                        const sc = cl ? computeChecklistScore(cl.scores) : null
+                        return (
+                          <button type="button" className={s.scoreBadge}
+                            onClick={e => { e.stopPropagation(); setChecklistTarget({ cutId: cut.id, idx }) }}
+                            title="이 이미지 채점하기">
+                            {sc
+                              ? `${!sc.allScored ? '…' : sc.hardBlocked ? '⛔' : sc.total >= PASS_THRESHOLD ? '✓' : '△'} ${sc.total}점`
+                              : '채점'}
+                          </button>
+                        )
+                      })()}
                       <button className={s.compareRemove} onClick={async e => {
                         e.stopPropagation()
                         if (!(await deleteCutImageFile(cut, url))) return
@@ -1103,8 +1191,8 @@ export default function StudioTab() {
               <div className={s.confirmRow} style={{marginTop:'auto'}}>
                 <button className={s.confirmBtn}
                   disabled={!images[cut.id]?.length || confirmed[cut.id]}
-                  onClick={() => setChecklistCutId(cut.id)}>
-                  {confirmed[cut.id] ? '✓ 컨펌' : '컨펌'}
+                  onClick={() => setChecklistTarget({ cutId: cut.id, idx: selectedImage[cut.id] ?? 0 })}>
+                  {confirmed[cut.id] ? '✓ 컨펌' : '채점하기'}
                 </button>
                 <button className={s.regenBtn}
                   onClick={() => {
@@ -1164,35 +1252,95 @@ export default function StudioTab() {
       )}
       </div>
 
-      {/* G2 승인 전 체크리스트 팝업 */}
-      {checklistCutId && (() => {
-        const checklistCut = cuts.find(c => c.id === checklistCutId)
-        const cl = checklist[checklistCutId] || {}
-        const doneCount = CHECKLIST_ITEMS.filter(item => cl[item.key]).length
-        const allDone = doneCount === CHECKLIST_ITEMS.length
+      {/* G2 승인 전 채점 팝업 — 2026-10-15 가중치 점수형 재설계(이미지별 독립 채점) */}
+      {checklistTarget && (() => {
+        const { cutId, idx } = checklistTarget
+        const checklistCut = cuts.find(c => c.id === cutId)
+        const cl = checklist[cutId]?.[idx] || { scores: {}, note: '' }
+        const sc = computeChecklistScore(cl.scores)
+        const setScore = (key, value) => setChecklist(p => ({
+          ...p,
+          [cutId]: { ...p[cutId], [idx]: { ...cl, scores: { ...cl.scores, [key]: value } } },
+        }))
+        const setNote = (note) => setChecklist(p => ({
+          ...p,
+          [cutId]: { ...p[cutId], [idx]: { ...cl, note } },
+        }))
+        const letter = String.fromCharCode(97 + idx).toUpperCase()
+        const groups = [...new Set(CHECKLIST_ITEMS.map(it => it.group))]
+        const saveLabel = !sc.allScored
+          ? `${CHECKLIST_ITEMS.length - sc.scoredCount}개 더 채점하세요`
+          : sc.hardBlocked ? '⛔ 얼굴 문제 — 기록만 저장'
+          : sc.total < PASS_THRESHOLD ? `△ 기준 미달(${sc.total}/${PASS_THRESHOLD}) — 기록만 저장`
+          : '✓ 채점 저장 + 컨펌'
         return (
-          <div className={s.checklistOverlay} onClick={() => setChecklistCutId(null)}>
+          <div className={s.checklistOverlay} onClick={() => setChecklistTarget(null)}>
             <div className={s.checklistModal} onClick={e => e.stopPropagation()}>
-              <div className={s.checklistTitle}>CUT {checklistCut?.no} · G2 승인 전 체크리스트</div>
-              <div className={s.checklistSub}>{doneCount}/{CHECKLIST_ITEMS.length}개 확인됨</div>
-              {CHECKLIST_ITEMS.map(item => (
-                <label key={item.key} className={s.checklistItem}>
-                  <input type="checkbox" checked={!!cl[item.key]}
-                    onChange={e => setChecklist(p => ({
-                      ...p,
-                      [checklistCutId]: { ...p[checklistCutId], [item.key]: e.target.checked },
-                    }))} />
-                  <span>{item.label}</span>
-                </label>
+              <div className={s.checklistTitle}>CUT {checklistCut?.no} · {letter} 채점</div>
+              <div className={s.checklistSub}>
+                {sc.scoredCount}/{CHECKLIST_ITEMS.length}개 채점됨
+                {sc.allScored && (
+                  <span style={{ marginLeft: 8, fontWeight: 700, color: sc.hardBlocked ? '#f87171' : sc.total >= PASS_THRESHOLD ? '#4ade80' : '#fbbf24' }}>
+                    총점 {sc.total}/100
+                  </span>
+                )}
+              </div>
+              {groups.map(group => (
+                <div key={group}>
+                  <div style={{ fontSize: 10.5, color: 'var(--text-3)', fontWeight: 700, margin: '8px 0 2px' }}>{group}</div>
+                  {CHECKLIST_ITEMS.filter(it => it.group === group).map(item => {
+                    const ref = item.targetKey ? targetRefText(checklistCut, item.targetKey) : null
+                    return (
+                      <div key={item.key} className={s.checklistItem} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '4px 0' }}>
+                        <span>
+                          {item.label}
+                          {ref && <span style={{ color: 'var(--text-3)', fontWeight: 400 }}> — {ref}</span>}
+                        </span>
+                        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                          {SCORE_LEVELS.map(lv => (
+                            <button key={lv.value} type="button" onClick={() => setScore(item.key, lv.value)}
+                              style={{
+                                fontSize: 10.5, fontWeight: 700, padding: '2px 7px', borderRadius: 4, cursor: 'pointer',
+                                border: cl.scores[item.key] === lv.value ? `1.5px solid ${lv.color}` : '1px solid var(--border)',
+                                background: cl.scores[item.key] === lv.value ? `${lv.color}22` : 'transparent',
+                                color: cl.scores[item.key] === lv.value ? lv.color : 'var(--text-3)',
+                              }}>{lv.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               ))}
+              {/* 2026-10-15: "서여리 얼굴·외형 판단안목을 동기화" 요청 — 점수만으론 "왜"가 안
+                  남으니 짧은 메모를 같이 기록해서 쌓아간다. */}
+              <textarea rows={2} placeholder="판단 이유 메모(선택) — 예: 눈매가 평소보다 날카로워 보임"
+                value={cl.note || ''} onChange={e => setNote(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, marginTop: 8, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-1)' }} />
               <div className={s.checklistActions}>
-                <button className={s.checklistClose} onClick={() => setChecklistCutId(null)}>닫기</button>
-                <button className={s.checklistDone} disabled={!allDone}
+                <button className={s.checklistClose} onClick={() => setChecklistTarget(null)}>닫기</button>
+                <button className={s.checklistDone} disabled={!sc.allScored}
                   onClick={() => {
-                    setConfirmed(p => ({ ...p, [checklistCutId]: true }))
-                    setChecklistCutId(null)
+                    // gData(마지막 로드본)를 베이스로, 이번 세션에서 채점한 이미지들을 덮어써서
+                    // 저장 — 다른 이미지(A/B 등)의 예전 기록을 잃지 않으면서 방금 채점한 것만 갱신.
+                    const persisted = gData[episodeCode]?.[`cut_${checklistCut.no}`]?.g2Checklist || {}
+                    const localForCut = checklist[cutId] || {}
+                    const merged = { ...persisted }
+                    for (const [i, rec] of Object.entries(localForCut)) {
+                      merged[i] = {
+                        filename: extractImageFilename((images[cutId] || [])[i]),
+                        scores: rec.scores, total: computeChecklistScore(rec.scores).total,
+                        note: rec.note || '', scoredAt: new Date().toISOString(),
+                      }
+                    }
+                    setGPoints(episodeCode, checklistCut.no, { g2Checklist: merged })
+                    setGData(loadGPoints())
+                    if (!sc.hardBlocked && sc.total >= PASS_THRESHOLD && (selectedImage[cutId] ?? 0) === idx) {
+                      setConfirmed(p => ({ ...p, [cutId]: true }))
+                    }
+                    setChecklistTarget(null)
                   }}>
-                  {allDone ? '✓ 컨펌 완료' : `${CHECKLIST_ITEMS.length - doneCount}개 더 체크하세요`}
+                  {saveLabel}
                 </button>
               </div>
             </div>

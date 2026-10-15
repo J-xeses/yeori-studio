@@ -1973,10 +1973,12 @@ app.get('/api/scan-images', (req, res) => {
   res.json({ images })
 })
 
-// ── POST /api/upload-cut-image — "드래그 배정" 화면에서 파일 1개를 특정 컷의 후보(A/B)로 저장 ──
+// ── POST /api/upload-cut-image — "드래그 배정" 화면에서 파일 1개를 특정 컷의 후보(A/B/C...)로 저장 ──
 // Flow가 만드는 A/B 후보와 같은 자리(cut_NN_a/_b)에 저장한다. /api/scan-media(스튜디오 탭이
-// 실제 첫 렌더에서 쓰는 스캔)는 _a/_b 슬롯만 인식하므로(위 1585행 근처) 그 이상은 새로고침 후
-// 화면에서 사라져버린다 — 그래서 슬롯을 a/b 두 개로만 제한하고, 둘 다 차있으면 에러로 알린다.
+// 실제 첫 렌더에서 쓰는 스캔, 위 2231행)는 `_[a-z0-9]{1,2}` 전부를 인식해 A/B를 넘는 슬롯도
+// 새로고침 후 그대로 남는다(제너레이션 재시도 keepExisting 경로의 a~f 슬롯과 동일 패턴,
+// 2457행 근처) — 그래서 여기도 a~z로 열어 둔다. 2026-10-15: 연출의도 채점 기능에 맞춰
+// 3장 이상 후보 비교(가로/세로 스크롤 레이아웃)를 지원하며 이 제한을 없앰.
 app.post('/api/upload-cut-image', (req, res) => {
   const { ep, cutNo, ext, instaContent, instaNum } = req.query
   if (!ep || !cutNo) return res.status(400).json({ error: 'ep, cutNo 필요' })
@@ -1990,11 +1992,12 @@ app.post('/api/upload-cut-image', (req, res) => {
   let existing = []
   try { existing = fs.readdirSync(dir) } catch { /* noop */ }
   for (const f of existing) {
-    const m = f.match(new RegExp(`^cut_${padded}(?:_([ab]))?\\.[a-z0-9]+$`, 'i'))
+    const m = f.match(new RegExp(`^cut_${padded}(?:_([a-z]))?\\.[a-z0-9]+$`, 'i'))
     if (m) used.add((m[1] || 'a').toLowerCase())
   }
-  const slot = !used.has('a') ? 'a' : (!used.has('b') ? 'b' : null)
-  if (!slot) return res.status(409).json({ error: `CUT ${cutNo}에 이미 A/B 이미지가 모두 있습니다. 기존 이미지를 먼저 정리해주세요.` })
+  const SLOT_LETTERS = 'abcdefghijklmnopqrstuvwxyz'
+  const slot = [...SLOT_LETTERS].find(s => !used.has(s))
+  if (!slot) return res.status(409).json({ error: `CUT ${cutNo}에 후보 이미지 슬롯이 가득 찼습니다(a~z). 기존 이미지를 먼저 정리해주세요.` })
 
   const destPath = path.join(dir, `cut_${padded}_${slot}.${safeExt}`)
   const chunks = []

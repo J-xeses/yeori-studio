@@ -1004,9 +1004,47 @@
   "IG_R08": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-10-14T03:23:59.446Z",
+      "updatedAt": "2026-10-15T03:55:19.470Z",
       "g2": true,
-      "selectedImage": "cut_01_b.jpg"
+      "selectedImage": "cut_01_b.jpg",
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_01_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 2
+          },
+          "total": 100,
+          "note": "",
+          "scoredAt": "2026-10-15T03:55:19.470Z"
+        },
+        "1": {
+          "filename": "cut_01_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 2
+          },
+          "total": 100,
+          "note": "",
+          "scoredAt": "2026-10-15T03:55:19.470Z"
+        }
+      }
     },
     "cut_2": {
       "g1": true,
@@ -1091,8 +1129,33 @@
       "g4": true,
       "g5": true
     },
-    "g5m": true,
-    "g5mUpdatedAt": "2026-10-14T03:33:38.490Z"
+    "g5m": {},
+    "g5mUpdatedAt": {
+      "0": "2",
+      "1": "0",
+      "2": "2",
+      "3": "6",
+      "4": "-",
+      "5": "1",
+      "6": "0",
+      "7": "-",
+      "8": "1",
+      "9": "4",
+      "10": "T",
+      "11": "0",
+      "12": "3",
+      "13": ":",
+      "14": "3",
+      "15": "3",
+      "16": ":",
+      "17": "3",
+      "18": "8",
+      "19": ".",
+      "20": "4",
+      "21": "9",
+      "22": "0",
+      "23": "Z"
+    }
   },
   "SF_E109": {
     "cut_1": {

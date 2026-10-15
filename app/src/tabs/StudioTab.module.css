@@ -47,13 +47,18 @@
    대칭적으로 최소화됨. width:100%(=cardLeft 폭까지 채움) + aspect-ratio:1로
    정사각형을 유지하되, max-width로 상한(60vh)을 잡아 cardLeft가 아주
    넓어져도 프레임이 과도하게 커지지 않게 하고, margin:auto로 가운데 정렬 */
-.imageCompareRow { display: flex; align-items: flex-start; gap: 8px; width: 100%; max-width: 60vh; aspect-ratio: 1 / 1; margin: 0 auto; }
+/* 2026-10-15: 2장 기준 크기는 그대로 두고, 3장째부터는 더 작아지는 대신 스크롤로 보게 함
+   (성준님: "컷 추가 시 9:16은 가로 스크롤바로 이미지 크기 유지, 16:9는 세로 스크롤바로").
+   overflow를 주면 이 박스(60vh 정사각 상한)는 자식 수가 늘어도 커지지 않으므로, 아래
+   .compareImg의 calc(50%-4px)이 몇 장이 있든 "2장 기준 크기"로 계속 고정된다 — 3장째부터는
+   그 고정 크기 그대로 넘쳐서 스크롤 대상이 된다(줄어들지 않게 하는 쪽은 flex-shrink:0). */
+.imageCompareRow { display: flex; align-items: flex-start; gap: 8px; width: 100%; max-width: 60vh; aspect-ratio: 1 / 1; margin: 0 auto; overflow: auto; }
 
 .compareImg {
   /* height:100%(고정)를 쓰면 16:9처럼 원래 폭이 넓어야 하는 비율에서
      max-width가 폭만 줄이고 높이는 그대로라 비율이 깨짐 — max-height로
      바꿔서 세로/가로 캡 중 더 타이트한 쪽에 맞춰 비율이 정확히 유지되도록 함 */
-  position: relative; max-height: 100%; max-width: calc(50% - 4px);
+  position: relative; max-height: 100%; max-width: calc(50% - 4px); flex-shrink: 0;
   /* aspect-ratio는 JSX에서 인라인 스타일로 지정(9:16 숏폼 / 16:9 롱폼 토글) —
      파일의 실제 픽셀 비율에 의존하지 않고 사용자가 지정한 비율로 강제 표시 */
   border-radius: 8px; overflow: hidden; cursor: pointer;
@@ -89,6 +94,15 @@
   text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0 0 3px #000;
 }
 
+/* 2026-10-15: 이미지별 독립 채점 배지 — compareRemove(✕, 우상단)와 자리 안 겹치게 좌하단에 둔다 */
+.scoreBadge {
+  position: absolute; bottom: 6px; left: 6px;
+  background: rgba(0,0,0,.65); border: 1px solid rgba(255,255,255,.2); color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+  transition: background .15s;
+}
+.scoreBadge:hover { background: rgba(0,0,0,.85); }
+
 .compareRemove {
   position: absolute; top: 6px; right: 6px;
   background: rgba(0,0,0,.6); border: none; color: #fff;
@@ -99,7 +113,7 @@
 .compareRemove:hover { background: var(--red); }
 
 .compareEmpty {
-  max-height: 100%; max-width: calc(50% - 4px); aspect-ratio: 9/16; border-radius: 8px;
+  max-height: 100%; max-width: calc(50% - 4px); flex-shrink: 0; aspect-ratio: 9/16; border-radius: 8px;
   border: 2px dashed var(--border); background: var(--bg-input); cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 4px; transition: background-color .15s;
