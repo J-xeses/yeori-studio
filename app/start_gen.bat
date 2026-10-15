@@ -15,9 +15,15 @@ if not exist "%CHROME%" set "CHROME=C:\Program Files (x86)\Google\Chrome\Applica
 set "PROFILE=C:\yeori-studio\downloads\flow\chrome-profile-main"
 set "DEBUGPORT=9222"
 set "TABLIST=%~dp0gen-tabs.txt"
+:: 서브 계정(2026-10-15) - 메인과 별도 구글 계정으로 Flow 무료 크레딧을 추가로 쓰기 위한
+:: 두 번째 Chrome 프로필/포트. scripts\flow-automation.js --profile=sub 와 동일한 규약
+:: (server\lib\mediaPaths.js flowProfileDir()).
+set "SUBPROFILE=C:\yeori-studio\downloads\flow\chrome-profile-sub"
+set "SUBDEBUGPORT=9223"
 
 if not exist "%CHROME%" goto :no_chrome
 if not exist "%PROFILE%" mkdir "%PROFILE%"
+if not exist "%SUBPROFILE%" mkdir "%SUBPROFILE%"
 
 echo [0] Checking production core (proxy :3001)
 netstat -ano | findstr /r /c:":3001 .*LISTENING" >nul 2>&1 && (echo     proxy :3001 OK) || (echo     [!] proxy :3001 not up -- run start_yeori.bat first)
@@ -44,6 +50,18 @@ echo     Chrome already on %DEBUGPORT% -- opening the tool tabs in one new windo
 start "" "%CHROME%" --user-data-dir="%PROFILE%" --new-window %TABS%
 
 :chrome_done
+echo.
+
+echo [1b] Sub-account Chrome debug session on port %SUBDEBUGPORT%  (profile: chrome-profile-sub)
+:: 서브 계정용 Flow 탭 하나만 - 메인 프로필(%DEBUGPORT%)과 완전히 분리된 창/포트/쿠키.
+:: 처음 켜면 빈 로그인 화면이니 그 창에서 직접 두 번째 구글 계정으로 로그인해두면 다음부터 세션 유지.
+netstat -ano | findstr /r /c:":%SUBDEBUGPORT% .*LISTENING" >nul 2>&1
+if %errorlevel%==0 (
+  echo     Chrome already on %SUBDEBUGPORT% -- leaving it as is
+) else (
+  start "" "%CHROME%" --remote-debugging-port=%SUBDEBUGPORT% --user-data-dir="%SUBPROFILE%" --no-first-run --no-default-browser-check "https://labs.google/fx/ko/tools/flow"
+  echo     launched sub-account Chrome -- log in with the second Google account once, it persists after
+)
 echo.
 
 echo [2] CapCut desktop
@@ -80,10 +98,12 @@ echo ============================================================
 echo   READY - tabs:
 if exist "%TABLIST%" for /f "usebackq eol=# tokens=1,* delims=|" %%A in ("%TABLIST%") do echo     %%A : %%B
 echo     debug port : %DEBUGPORT%  (screen-scenario / CLIP auto-record uses this)
+echo     sub debug port : %SUBDEBUGPORT%  (second Google account for Flow, optional)
 echo     pipeline   : "Yeori Pipeline Leader" window (auto making -^> G4 gate -^> G5)
 echo ============================================================
 echo.
 echo   Log in to each service once in this Chrome profile; the sessions persist.
+echo   Sub-account Chrome: log in with a different Google account once to use its own Flow credits.
 echo   Your only manual step for the making line: review + G4 approve in the Studio.
 echo.
 goto :end

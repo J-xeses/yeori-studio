@@ -214,7 +214,13 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
               </div>
             )}
             <div className={s.cutInfo}>
-              <span className={s.cutNo}>CUT {c.no}</span>
+              <span className={s.cutNo}>
+                CUT {c.no}
+                {/* 2026-10-15: 대본 탭에서만 보이던 ✨SIG 표시를, 이 컷목록을 공유하는 모든
+                    탭(영상 만들기·TTS·음성 삽입)에도 그대로 연결 — 성준님: "단계마다 시그표시를
+                    보존해서 연결되도록". cut.cutMark 하나만 보면 되므로 여기 한 군데만 고치면 됨. */}
+                {c.cutMark === 'SIGNATURE' && <span title="시그니처 컷" style={{ fontSize: 10, fontWeight: 700, color: '#f0c040', marginLeft: 3 }}>✨</span>}
+              </span>
               <span className={s.cutPreview}>{previewText ? previewText(c) : (c.dialogue || c.narration || c.scene || '(내용 없음)')}</span>
               {(badges.length > 0 || madeVideo || fileReadyOnly) && (
                 <span className={s.cutBadges}>

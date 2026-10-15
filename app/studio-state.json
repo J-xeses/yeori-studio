@@ -3,7 +3,7 @@
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88688
+    "remainingChars": 88686
   },
   "activeEpisodeId": "ep_1791799532368",
   "openTabIds": [
@@ -4983,7 +4983,7 @@
             ],
             "cut-3": [
               {
-                "url": "blob:http://localhost:5173/3c6bbac2-c306-4a69-a449-43fa036fb006",
+                "url": "blob:http://localhost:5173/c697068d-b34e-463d-ad92-99fdbcd2bd51",
                 "name": "Two_women_struggling_over_phone_20260926211736.mp4",
                 "duration": 8,
                 "trimStart": 0,
@@ -4993,22 +4993,22 @@
                 "staging": false,
                 "keepAudio": true,
                 "createdAt": 1790425056914,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_03_clip_2.mp4"
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_03_clip_new1792028477274.mp4"
               }
             ],
             "cut-4": [
               {
-                "url": "blob:http://localhost:5173/13c89d0d-5340-4f2f-a5e0-4986c5bcf152",
+                "url": "blob:http://localhost:5173/c74642d1-e5d8-4b75-974d-6da2f89bc420",
                 "name": "Woman_under_duvet_speaking_Korean_20260927224514.mp4",
                 "duration": 8,
                 "trimStart": 0,
                 "trimEnd": 8,
-                "useFullDuration": false,
+                "useFullDuration": true,
                 "ratio": "9:16",
                 "staging": false,
                 "keepAudio": true,
                 "createdAt": 1790516715151,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_04_clip_1.mp4"
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R06\\04_making\\raw\\cut_04_clip_2.mp4"
               }
             ]
           },
@@ -5018,7 +5018,7 @@
             "cut-3": true,
             "cut-4": true
           },
-          "selectedCutId": "cut-1",
+          "selectedCutId": "cut-4",
           "subtitles": {
             "cut-1": "\n친구가 내 흑역사를 발굴했다"
           }
@@ -5939,7 +5939,7 @@
                 "trimStart": 0,
                 "trimEnd": 8,
                 "useFullDuration": true,
-                "ratio": "16:9",
+                "ratio": "9:16",
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_01.mp4",
                 "keepAudio": false,
                 "createdAt": 1791433515000
@@ -5953,7 +5953,7 @@
                 "trimStart": 0,
                 "trimEnd": 8,
                 "useFullDuration": true,
-                "ratio": "16:9",
+                "ratio": "9:16",
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_04.mp4",
                 "keepAudio": true,
                 "createdAt": 1791433522000
@@ -10280,9 +10280,24 @@
       "createdAt": "2026-10-12T10:05:32.368Z",
       "tabState": {
         "videoTabState": {
-          "videoClips": {},
+          "videoClips": {
+            "cut-4": [
+              {
+                "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R08/04_making/raw/cut_04_clip_1.mp4?t=1791988738728",
+                "name": "cut_04_clip_1.mp4",
+                "duration": 8,
+                "trimStart": 0,
+                "trimEnd": 8,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R08\\04_making\\raw\\cut_04_clip_1.mp4",
+                "keepAudio": false,
+                "createdAt": 1791988738728
+              }
+            ]
+          },
           "g4Approved": {},
-          "selectedCutId": "cut-1",
+          "selectedCutId": "cut-4",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -10817,7 +10832,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-15T01:20:05.929Z",
+  "savedAt": "2026-10-15T02:22:39.079Z",
   "videoTabState": {
     "videoClips": {
       "cut-4": [
@@ -10828,7 +10843,7 @@
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
-          "ratio": "16:9",
+          "ratio": "9:16",
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R08\\04_making\\raw\\cut_04_clip_1.mp4",
           "keepAudio": false,
           "createdAt": 1791988738728
@@ -10836,7 +10851,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-6",
     "subtitles": {}
   },
   "ttsTabState": {

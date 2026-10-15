@@ -629,6 +629,7 @@ function parseCutsV3(raw) {
     const barefootGuarded = applyIndoorBarefootGuard(spaceDetectionText, kr.AC, ip, vp)
     const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
     const silentGuardedVp = applyNarrationSilentGuard(dl, nr, castGuarded.vp)
+    const beatVal = normalizeBeat(fields.BEAT)
 
     return {
       id: `cut-${rc.no}`,
@@ -646,8 +647,12 @@ function parseCutsV3(raw) {
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
-      cutMark: 'NORMAL',
-      beat: normalizeBeat(fields.BEAT),
+      // 2026-10-15: 전엔 항상 'NORMAL'로 고정해서, 대본에 BEAT: 시그 로 이미 표시해 둔 컷도
+      // 사람이 상세편집에서 SIGNATURE 버튼을 따로 눌러야만 ✨ 표시가 붙었다(성준님 리포트:
+      // "시그 표시가 현재는 수동"). 같은 줄에서 이미 파싱하는 BEAT 태그를 그대로 기본값으로
+      // 반영 — 그래도 사람이 버튼으로 바로잡을 수 있는 건 그대로(기본값일 뿐, 강제 아님).
+      cutMark: beatVal === '시그' ? 'SIGNATURE' : 'NORMAL',
+      beat: beatVal,
       ...(parseSegCombo(fields.SEG) ? { segments: parseSegCombo(fields.SEG) } : {}),
       ...(fields.SEGT && parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) ? { segTiming: parseSegTiming(fields.SEGT, (parseSegCombo(fields.SEG) || []).length) } : {}),
       ...(fields.SEGP && parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) ? { segPrompts: parseSegPrompts(fields.SEGP, (parseSegCombo(fields.SEG) || []).length) } : {}),

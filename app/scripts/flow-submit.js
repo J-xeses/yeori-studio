@@ -26,6 +26,13 @@ const SERVER = 'http://localhost:3001'
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = a.replace(/^--/, '').split('='); return [k, v ?? true] }))
 if (!args.job) { console.error('--job=<경로> 필요'); process.exit(2) }
 const job = JSON.parse(fs.readFileSync(args.job, 'utf-8'))
+// 2026-10-15: 서브 계정(별도 구글 계정, flow-automation.js --profile=sub 와 동일 규약 —
+// 포트/유저데이터 폴더는 server/lib/mediaPaths.js flowProfileDir()) 지원. job.profile='sub'면
+// 메인과 완전히 분리된 Chrome(9223)에 붙는다 — 계정이 다르므로 Flow 프로젝트도 공유 못 해서
+// project_url.txt 대신 project_url_sub.txt를 따로 쓴다(아래).
+const PROFILE_PORTS = { main: 9222, sub: 9223 }
+const profile = job.profile === 'sub' ? 'sub' : 'main'
+const flowPort = PROFILE_PORTS[profile]
 const statusPath = path.join(path.dirname(args.job), `${job.jobId}.status.json`)
 const status = { jobId: job.jobId, state: 'running', startedAt: new Date().toISOString(), steps: [], result: null, error: null }
 const save = () => fs.writeFileSync(statusPath, JSON.stringify(status, null, 2), 'utf-8')
@@ -157,11 +164,12 @@ ${REGISTERS[reg].delivery}`
   // 공유해서, 한 에피소드의 이미지·영상이 같은 Flow 프로젝트 안에 모인다.
   let projectId = job.projectId
   if (!projectId) {
-    const projectUrlFile = path.join(mp.episodeDir(epNum), 'project_url.txt')
-    const { projectId: pid } = await ensureProject({ projectUrlFile, title: mp.resolveCode(epNum), lang: 'ko' })
+    const projectUrlFile = path.join(mp.episodeDir(epNum), profile === 'sub' ? 'project_url_sub.txt' : 'project_url.txt')
+    const { projectId: pid } = await ensureProject({ port: flowPort, projectUrlFile, title: mp.resolveCode(epNum), lang: 'ko' })
     projectId = pid
   }
-  const { page, release, emulated } = await attachFlow({ projectId: projectId || null, lang: 'ko' })
+  if (profile === 'sub') step(`서브 계정 Chrome 사용 (포트 ${flowPort})`)
+  const { page, release, emulated } = await attachFlow({ port: flowPort, projectId: projectId || null, lang: 'ko' })
   const kit = flowKit(page)
   try {
     if (emulated) step('Flow 창이 작아 화면 크기를 임시 보정')

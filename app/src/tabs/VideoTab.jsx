@@ -1197,7 +1197,19 @@ export default function VideoTab() {
           if (res.path) {
             const rel = res.path.slice(res.path.toLowerCase().indexOf('\\downloads\\') + '\\downloads\\'.length).replace(/\\/g, '/')
             const dur = res.duration || durationSec
-            const obj = { url: `http://localhost:3001/downloads/${rel}?t=${Date.now()}`, name: res.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio: '16:9', stagedPath: res.path, keepAudio: !!cut.dialogue, createdAt: Date.now() }
+            const url = `http://localhost:3001/downloads/${rel}?t=${Date.now()}`
+            // 2026-10-15: 여기만 ratio를 '16:9'로 하드코딩해 뒀었다 — IG_R(9:16) 에피소드에서
+            // Flow로 생성한 클립도 전부 "16:9" 뱃지가 붙는 버그(성준님 리포트: "숏폼 비율인데
+            // 컷카드에 16:9 표시", SF_E01 컷1·4·IG_R08 컷4 실측). generateVideoForCut()과 동일하게
+            // 실제 파일 치수를 재서 쓴다.
+            const probeVideo = document.createElement('video')
+            probeVideo.preload = 'metadata'
+            probeVideo.src = url
+            await new Promise(resolve => { probeVideo.onloadedmetadata = resolve; probeVideo.onerror = resolve })
+            const ratio = probeVideo.videoWidth && probeVideo.videoHeight
+              ? (probeVideo.videoWidth >= probeVideo.videoHeight ? '16:9' : '9:16')
+              : '16:9'
+            const obj = { url, name: res.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath: res.path, keepAudio: !!cut.dialogue, createdAt: Date.now() }
             setVideoClips(p => { const arr = [...(p[cut.id] || [])]; arr[idx] = obj; return { ...p, [cut.id]: arr } })
           }
           if (credits > 0) dispatch({ type: 'CONSUME_CREDITS', p: { account: 'main', tool: 'flow', amount: credits } })
@@ -2325,7 +2337,12 @@ export default function VideoTab() {
               </div>
               <div className={s.cutCardMainCol}>
               <div className={s.cutCardHeader}>
-                <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')} <span className={s.cutCardTitleDesc}>— {selCut.scene || '씬 미입력'}</span></span>
+                <span className={s.cutCardTitle}>CUT {String(selCut.no).padStart(2,'0')}
+                  {/* 2026-10-15: 대본 탭에서만 보이던 ✨SIG 표시를 영상 탭에도 연결 — 같은
+                      cut.cutMark 필드를 그대로 읽는다(성준님: "단계마다 시그표시를 보존해서
+                      연결되도록"). */}
+                  {selCut.cutMark === 'SIGNATURE' && <span title="시그니처 컷" style={{ fontSize: 11, fontWeight: 700, color: '#f0c040', marginLeft: 4 }}>✨SIG</span>}
+                  {' '}<span className={s.cutCardTitleDesc}>— {selCut.scene || '씬 미입력'}</span></span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {/* 2026-10-14: videoMode는 명시 지정(cut.videoMode)·타입 확정(GRAPHIC/CAPCUT/BROLL)일
                       때만 "확정값"(videoModeConfirmed:true)이고, 그 외엔 "대사 유무+정책"만 보고 찍은

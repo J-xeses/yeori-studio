@@ -27,6 +27,12 @@ if (!args.job) { console.error('--job=<경로> 필요'); process.exit(2) }
 const job = JSON.parse(fs.readFileSync(args.job, 'utf-8'))
 const statusPath = path.join(path.dirname(args.job), `${job.jobId}.status.json`)
 const cancelPath = path.join(path.dirname(args.job), `${job.jobId}.cancel`)
+// 2026-10-15: 서브 계정 지원(flow-automation.js --profile=sub 와 동일 규약) — job.profile='sub'면
+// 메인과 분리된 Chrome(9223)·일일 사용량 카운터·Flow 프로젝트(project_url_sub.txt)를 쓴다.
+// 계정이 다르면 하루 장수 한도·프로젝트도 서로 안 섞여야 "두 계정 몫을 다 쓴다"는 의미가 있다.
+const PROFILE_PORTS = { main: 9222, sub: 9223 }
+const profile = job.profile === 'sub' ? 'sub' : 'main'
+const flowPort = PROFILE_PORTS[profile]
 const status = { jobId: job.jobId, state: 'running', startedAt: new Date().toISOString(), steps: [], result: { cuts: [] }, error: null }
 const save = () => fs.writeFileSync(statusPath, JSON.stringify(status, null, 2), 'utf-8')
 const step = (msg) => { status.steps.push({ at: new Date().toISOString(), msg }); save(); console.log(msg) }
@@ -34,7 +40,7 @@ class Cancelled extends Error {}
 const checkCancel = (where) => { if (fs.existsSync(cancelPath)) throw new Cancelled(where) }
 
 const pad = (n) => String(n).padStart(2, '0')
-const USAGE_PATH = mp.statePath('flow-image-usage.json')
+const USAGE_PATH = mp.statePath(profile === 'sub' ? 'flow-image-usage-sub.json' : 'flow-image-usage.json')
 const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
 const readUsage = () => {
   try { const u = JSON.parse(fs.readFileSync(USAGE_PATH, 'utf-8')); return u.date === today() ? u : { date: today(), count: 0, lastSubmitAt: u.lastSubmitAt || 0 } }
@@ -99,10 +105,10 @@ async function main() {
   // 있으면 그대로 쓰고, 없으면 지금 새로 만든다.
   let projectId = job.projectId
   if (!projectId) {
-    const projectUrlFile = path.join(mp.episodeDir(episodeCode), 'project_url.txt')
-    const { projectId: pid, created } = await ensureProject({ projectUrlFile, title: episodeCode, lang: 'en' })
+    const projectUrlFile = path.join(mp.episodeDir(episodeCode), profile === 'sub' ? 'project_url_sub.txt' : 'project_url.txt')
+    const { projectId: pid, created } = await ensureProject({ port: flowPort, projectUrlFile, title: episodeCode, lang: 'en' })
     projectId = pid
-    step(`Flow 프로젝트 ${created ? '새로 생성' : '재사용'}: ${episodeCode}`)
+    step(`Flow 프로젝트 ${created ? '새로 생성' : '재사용'}: ${episodeCode}${profile === 'sub' ? ' (서브 계정)' : ''}`)
   }
   if (!projectId) throw new Error('이미지용 Flow 프로젝트를 준비하지 못했습니다')
 
@@ -142,7 +148,7 @@ async function main() {
   if (!plan.length) throw new Error('생성할 컷이 없습니다')
   step(`대상 ${plan.length}컷 · 컷당 ${count}장 · ${model}`)
 
-  const { page, release, emulated } = await attachFlow({ projectId, lang: 'en' })
+  const { page, release, emulated } = await attachFlow({ port: flowPort, projectId, lang: 'en' })
   const kit = flowKit(page)
   try {
     if (emulated) step('Flow 창이 작아 화면 크기를 임시 보정')

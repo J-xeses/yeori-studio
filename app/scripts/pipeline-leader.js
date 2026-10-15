@@ -604,9 +604,26 @@ async function checkAndAdvance() {
 }
 
 // ── Flow(G2 이미지 · G4 영상) 작업 추적 — 한 번에 하나(서버도 409 로 막음) ──────────────
+// 2026-10-15: flowFailures/flowHuman이 메모리에만 있어서, 리더 프로세스를 재시작하면
+// "2번 실패해서 사람에게 넘긴" 기록이 통째로 사라지고 처음부터 다시 자동 재시도했다 —
+// 성준님 실측: "10여 차례 이상 중지시키고 다시 껐다 켜도 자동실행이 시작된다"(IG_R08 CUT4,
+// G2 이미지는 승인됐는데 영상이 계속 없어서 매 재시작마다 자동 제출 2회를 또 반복). 파일로
+// 영속화해 재시작해도 "이미 2번 실패 → 사람 확인"인 컷은 계속 제외되게 한다.
+const FLOW_STATE_PATH = path.join(mp.DOWNLOADS, 'state', `pipeline-leader-flow-state-${EPISODE_ID}.json`)
+function loadFlowState() {
+  try {
+    const d = JSON.parse(fs.readFileSync(FLOW_STATE_PATH, 'utf-8'))
+    return { failures: d.failures || {}, human: new Set(d.human || []) }
+  } catch { return { failures: {}, human: new Set() } }
+}
+function saveFlowState() {
+  try {
+    fs.mkdirSync(path.dirname(FLOW_STATE_PATH), { recursive: true })
+    fs.writeFileSync(FLOW_STATE_PATH, JSON.stringify({ failures: flowFailures, human: [...flowHuman] }, null, 2), 'utf-8')
+  } catch { /* noop — 영속화 실패해도 이번 사이클 동작엔 지장 없음 */ }
+}
 let activeFlow = null                  // { kind:'g2'|'g4', jobId, cutNo, clipNo, cutNos }
-const flowFailures = {}                // 'g2:3' / 'g4:5:1' → 실패 횟수(2번 실패하면 사람에게 넘김)
-const flowHuman = new Set()            // 사람 확인으로 넘긴 컷('g2:3', 'g4:5')
+const { failures: flowFailures, human: flowHuman } = loadFlowState()  // 'g2:3' / 'g4:5:1' → 실패 횟수(2번 실패하면 사람에게 넘김) / 사람 확인으로 넘긴 컷('g2:3', 'g4:5')
 const VIDEO_USAGE = path.join(mp.DOWNLOADS, 'state', 'flow-video-usage.json')
 const today = () => new Date().toLocaleDateString('sv-SE')
 function readVideoUsage() { try { const u = JSON.parse(fs.readFileSync(VIDEO_USAGE, 'utf-8')); return u.date === today() ? u : { date: today(), credits: 0, clips: [] } } catch { return { date: today(), credits: 0, clips: [] } } }
@@ -646,7 +663,7 @@ async function pollActiveFlow() {
       const qa = r.data.result?.voiceQa
       log('G4', `✅ ${tag} 생성·다운로드 완료 (${credits}크레딧${qa ? `, 음성검수 ${qa.verdict}` : ''})`)
       if (qa && (qa.verdict === 'fail' || qa.voiceMismatch)) {   // 발음 실패 또는 목소리 이탈(유사도 기준 미만) → 사람 확인
-        flowHuman.add(`g4:${job.cutNo}`)
+        flowHuman.add(`g4:${job.cutNo}`); saveFlowState()
         await leaderLog({ stage: 'G4', kind: '블로커', summary: `컷 ${job.cutNo} ${qa.voiceMismatch ? `목소리 이탈(유사도 ${qa.voiceSim})` : '음성 검수 실패'} — 사람 확인`, result: (qa.flags || []).slice(0, 4).join(' / '), humanInvolved: true })
       } else {
         await leaderLog({ stage: 'G4', kind: '자동실행', summary: `${tag} Flow 자동 생성`, result: `${credits}크레딧 · 음성검수 ${qa?.verdict || '-'}`, humanInvolved: false })
@@ -665,6 +682,7 @@ async function pollActiveFlow() {
       if (job.kind === 'g2') job.cutNos.forEach(n => flowHuman.add(`g2:${n}`)); else flowHuman.add(`g4:${job.cutNo}`)
       await leaderLog({ stage: job.kind.toUpperCase(), kind: '블로커', summary: `${tag} 2회 실패 — 사람 확인`, result: String(err).slice(0, 300), humanInvolved: true })
     }
+    saveFlowState()
   }
   return false
 }

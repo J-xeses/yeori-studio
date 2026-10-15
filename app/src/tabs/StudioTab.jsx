@@ -1036,6 +1036,9 @@ export default function StudioTab() {
             <div className={s.cardRight}>
               <div className={s.cardHeader}>
                 <span className={s.cutBadge}>CUT {cut.no}</span>
+                {/* 2026-10-15: 대본 탭에서만 보이던 ✨SIG 표시가 여기선 안 보여서 "단계마다
+                    연결이 안 된다"는 지적(성준님) — 같은 cut.cutMark를 그대로 읽어서 띄운다. */}
+                {cut.cutMark === 'SIGNATURE' && <span title="시그니처 컷" style={{ fontSize: 11, fontWeight: 700, color: '#f0c040' }}>✨SIG</span>}
                 <span className={s.scene}>{cut.scene || '씬 미입력'}</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
                   {gData[episodeCode]?.[`cut_${cut.no}`]?.g1 && <span className={`${s.gBadge} ${s.g1Badge}`}>G1</span>}
