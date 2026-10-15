@@ -574,11 +574,31 @@
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-09-25T11:45:47.339Z",
+      "updatedAt": "2026-10-15T05:01:08.893Z",
       "g5": false,
       "g3": true,
       "g2": true,
-      "selectedImage": "cut_07_a.jpg"
+      "selectedImage": "cut_07_a.jpg",
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_07_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 2
+          },
+          "total": 100,
+          "note": "",
+          "scoredAt": "2026-10-15T05:01:07.493Z"
+        }
+      }
     },
     "cut_9": {
       "g1": true,

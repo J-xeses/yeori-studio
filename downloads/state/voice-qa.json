@@ -379,5 +379,107 @@
         "checkedAt": "2026-10-14T14:38:54.095Z"
       }
     }
+  },
+  "LF_T01": {
+    "21": {
+      "cut_21_clip_2.mp4": {
+        "verdict": "warn",
+        "ratio": 0.929,
+        "heard": "Iconic by mistake. 밀스로 이렇게 좋아도 되는 건지.",
+        "expected": "iconic by mistake 실수로 이렇게 좋아도 되는 건지",
+        "words": [
+          {
+            "text": "Iconic",
+            "start": 1.38,
+            "end": 1.84,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "by",
+            "start": 1.92,
+            "end": 2.04,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "mistake.",
+            "start": 2.08,
+            "end": 2.6,
+            "logprob": -0.5,
+            "speaker": null
+          },
+          {
+            "text": "밀스로",
+            "start": 3.52,
+            "end": 3.96,
+            "logprob": -0.19,
+            "speaker": null
+          },
+          {
+            "text": "이렇게",
+            "start": 4.02,
+            "end": 4.6,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "좋아도",
+            "start": 5.64,
+            "end": 5.92,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "되는",
+            "start": 6.02,
+            "end": 6.2,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "건지.",
+            "start": 6.36,
+            "end": 6.74,
+            "logprob": -0.07,
+            "speaker": null
+          }
+        ],
+        "flags": [
+          {
+            "kind": "unexpected-word",
+            "severity": "warn",
+            "word": "밀스로",
+            "at": 3.52,
+            "logprob": -0.19,
+            "message": "대본에 없는 발음: \"밀스로\" (3.52s)"
+          },
+          {
+            "kind": "missing-word",
+            "severity": "warn",
+            "word": "실수로",
+            "message": "대본 어절이 들린 결과에 없음: \"실수로\""
+          },
+          {
+            "kind": "low-confidence",
+            "severity": "warn",
+            "word": "mistake.",
+            "at": 2.08,
+            "logprob": -0.5,
+            "message": "인식 신뢰도 매우 낮음: \"mistake.\" (-0.5)"
+          },
+          {
+            "kind": "low-confidence",
+            "severity": "note",
+            "word": "밀스로",
+            "at": 3.52,
+            "logprob": -0.19,
+            "message": "인식 신뢰도 낮음: \"밀스로\" (-0.19)"
+          }
+        ],
+        "checkedAt": "2026-10-15T05:27:46.527Z",
+        "voiceSim": 0.72
+      }
+    }
   }
 }

@@ -408,10 +408,18 @@ export function flowKit(page) {
       }
     },
     async isImageMode() { const p = await this.pill(); return !!p && /Nano Banana/i.test(p) },
+    // 2026-10-15 실측(LF_T01 서브계정, 기존 갤러리가 쌓인 프로젝트에서 처음 발견): Flow가 최근
+    // 좌측에 "전체 미디어/이미지/동영상/캐릭터/장면/업로드/도구" 내비게이션을 추가했는데, 그 안의
+    // "이미지"/"동영상" 항목도 텍스트가 "image 이미지"/"videocam 동영상"로 시작해 기존
+    // 'button, [role="tab"]' + startsWith 매칭과 겹친다. document 순서상 좌측 내비(MAT-SIDENAV)가
+    // 설정 팝업(FLOW-PROMPT-BOX-SETTINGS)보다 먼저 나와 매번 내비 쪽을 눌러버려서 갤러리 필터만
+    // 바뀌고 실제 생성 모드는 그대로였음("동영상 모드 전환 실패" 반복, 크레딧 소모 없이 조기 실패).
+    // 진짜 토글은 role="radio"인 버튼(Material 버튼 토글 그룹)이고 내비 항목엔 이 role이 없어
+    // 이걸로만 좁혀 찾는다 — 내비가 없던 새 프로젝트에서도 role="radio"는 토글에만 쓰이므로 안전.
     async setImageMode() {
       await this.openImagePopup()
       if (await this.isImageMode()) return
-      await click('image', 'startsWith', 'button, [role="tab"]')
+      await click('image', 'startsWith', 'button[role="radio"]')
       await sleep(800)
       if (!(await this.isImageMode())) throw new Error('이미지 모드 전환 실패')
     },
@@ -419,7 +427,7 @@ export function flowKit(page) {
     async setVideoMode() {
       if (!(await this.isImageMode())) return
       await this.openImagePopup()
-      await click('videocam', 'startsWith', 'button, [role="tab"]')
+      await click('videocam', 'startsWith', 'button[role="radio"]')
       await sleep(1000)
       if (await this.isImageMode()) throw new Error('동영상 모드 전환 실패')
       await page.keyboard.press('Escape'); await sleep(600)
