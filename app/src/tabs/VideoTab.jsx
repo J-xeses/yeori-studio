@@ -1175,10 +1175,14 @@ export default function VideoTab() {
     const wantSec = Array.isArray(cut.segments) && cut.segments[idx] != null ? Number(cut.segments[idx]) : (Number(cut.duration) > 8 ? 10 : 8)
     const durationSec = [4, 6, 8, 10].includes(wantSec) ? wantSec : (wantSec >= 10 ? 10 : 8)
     const costText = FLOW_COST[durationSec] != null ? `예상 ${FLOW_COST[durationSec]}크레딧` : '크레딧은 Flow 화면 표시값으로 확인(최대 16)'
-    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 모델 Omni 1.1 Flash · ${durationSec}초 · 720p (${costText}, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`}\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
+    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 모델 Omni 1.1 Flash · ${durationSec}초 · 720p (${costText}, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`} + 서여리 시그니처 클로즈업(얼굴 레퍼런스)\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
     setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '시작 중…' } }))
     try {
-      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null, durationSec, maxCredits: 16 }) })
+      // 2026-10-14: 기본(frames) 모드는 시작 프레임 1장만 넣어서 얼굴 레퍼런스가 없었다
+      // (성준님 리포트: "서여리 시그니쳐 클로즈업 이미지는 등록이 안된채 컷 이미지로만 생성").
+      // ingredients 모드는 시작 프레임 + characters.json의 서여리 클로즈업을 함께 참조 이미지로
+      // 붙여서(flow-submit.js) 얼굴 identity를 더 단단히 고정한다 — 이걸 기본값으로 바꾼다.
+      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null, durationSec, maxCredits: 16, mode: 'ingredients' }) })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || '제출 실패')
       setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '진행 중…', jobId: d.jobId } }))

@@ -6750,14 +6750,14 @@ app.post('/api/characters/:id/looks', (req, res) => {
 })
 app.post('/api/change-combo/build', (req, res) => {
   try {
-    const { triggerId, vfxIndex, sceneB, durationSec, beat, cpLine } = req.body || {}
+    const { triggerId, vfxIndex, sceneA, sceneB, durationSec, beat, cpLine } = req.body || {}
     // 커스텀 트리거/VFX도 선택 가능해야 하므로 /options와 동일하게 내장+커스텀을 합쳐서 찾는다
     // (클라이언트의 vfxIndex는 /options가 내려준 합쳐진 배열 기준 인덱스).
     const trigger = [...TRIGGER_ACTIONS, ...listCustomTriggers()].find((t) => t.id === triggerId)
     const vfx = [...VFX_PRESETS, ...listCustomVfx()][vfxIndex]
     if (!trigger) return res.status(400).json({ error: `알 수 없는 triggerId: ${triggerId}` })
     if (!vfx) return res.status(400).json({ error: `알 수 없는 vfxIndex: ${vfxIndex}` })
-    res.json(buildRevealCut({ trigger, vfx, sceneB, durationSec, beat, cpLine }))
+    res.json(buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec, beat, cpLine }))
   } catch (err) { res.status(400).json({ error: err.message }) }
 })
 

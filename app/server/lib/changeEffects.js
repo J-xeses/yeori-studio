@@ -88,8 +88,20 @@ export function nextLookId(existingLookIds, spaceCode, seasonCode) {
 }
 
 // trigger/vfx = TRIGGER_ACTIONS/VFX_PRESETS 요소, sceneB = {outfit,env,lighting,outfitEn,envEn,lightingEn}
+// sceneA = {poseEn?, envEn?, lightingEn?} 변신 "전" 모습(선택) — 비워두면 범용 문구로 대체.
 // durationSec = 이 컷의 길이. beat = BEAT 태그(기본 '고조'). cpLine = 자막 한 줄(선택).
-export function buildRevealCut({ trigger, vfx, sceneB, durationSec = 6, beat = '고조', cpLine = '' }) {
+//
+// 2026-10-15 — IP(시작 이미지) 기준 변경: 예전엔 IP가 sceneB(완성된 "후" 모습)를 그렸다. 실측
+// (IG_R08 CUT4, 성준님 리포트: "회중시계 태엽 감고 연기 피어오르는 장면은 안 나타나고 애초에
+// 변신의상으로 등장")에서 원인이 밝혀짐 — Veo는 image-to-video라 시작 프레임을 강하게 따라가기
+// 때문에, 시작 프레임이 이미 "완성 모습"이면 8초 내내 그 모습만 유지하고 트리거 동작(AC)은 VP에
+// 적어도 전혀 재현되지 않는다. 반대로 성준님이 예전에 "트리거 동작 중인 전 모습"을 시작 프레임
+// 으로 썼을 땐 같은 컷에서 트리거→VFX→리빌이 한 클립 안에 정상적으로 생성됐다(동일 컷 재검증,
+// raw/cut_04_clip_1.mp4 — t=0도 t=4도 이미 완성 모습인 걸 프레임 추출로 직접 확인). 그래서
+// **IP는 항상 "전" 모습(sceneA), VP가 트리거→VFX→리빌 전체 서사를 맡는다** — 이게 쪼개는 기준
+// (IP=전 / VP=전체)이다. 컷을 2개로 쪼개서 하드컷으로 잇는 방식(R07처럼)은 채택하지 않음 —
+// 한 클립 안에서 이미 재현되는 걸 실측으로 확인했기 때문에 더 간단한 쪽을 쓴다.
+export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, beat = '고조', cpLine = '' }) {
   if (!trigger || !vfx || !sceneB?.outfit) throw new Error('trigger, vfx, sceneB.outfit 필요')
   // IP/VP는 전부 영문이어야 하므로 영문 필드가 반드시 있어야 한다 — 2026-10-14, IG_R08 CUT2에서
   // 한글 outfit/env/lighting이 영문 프롬프트에 그대로 섞여 들어간 버그를 잡은 뒤 추가한 가드.
@@ -97,15 +109,18 @@ export function buildRevealCut({ trigger, vfx, sceneB, durationSec = 6, beat = '
     throw new Error('sceneB.outfitEn/envEn/lightingEn(영문 설명) 필요 — 한글 설명만으로는 이미지·영상 프롬프트를 만들 수 없습니다')
   }
   const audioCue = pick(AUDIO_CUES)
+  const poseEn = sceneA?.poseEn?.trim() || `caught in the middle of ${trigger.en}, her current everyday look, not yet transformed`
+  const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
+  const lightingAEn = sceneA?.lightingEn?.trim() || 'soft neutral ambient light'
 
-  const scene = `(하드컷, ${trigger.nameKo} 효과음) 같은 카메라 구도 유지, 배경이 ${sceneB.env}로 리빌. ${trigger.descKo} — 효과가 걷히면 ${sceneB.outfit}+새 배경으로 바뀌어 있다.`
+  const scene = `(하드컷, ${trigger.nameKo} 효과음) ${sceneA?.poseKo?.trim() || `${trigger.nameKo} 동작 중, 평소 모습 그대로`} — ${trigger.descKo}. 효과가 걷히면 배경이 ${sceneB.env}로 리빌되고, ${sceneB.outfit}+새 배경으로 바뀌어 있다.`
 
-  const imagePrompt = `MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, caught just as ${trigger.en} settles — ${vfx.en}, now wearing ${sceneB.outfitEn}, standing in ${sceneB.envEn}, graceful confident pose, looking directly at camera, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, lighting: ${sceneB.lightingEn}, background: softly blurred ${sceneB.envEn}, never legible text or UI, vertical 9:16`
+  const imagePrompt = `MEDIUM CLOSE-UP SHOT — same Korean woman, same face, natural skin texture, never exaggerated, ${poseEn}, standing in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
 
   // 2026-10-13: 룰셋 표준 무발화 문구(2026-09-29 SF_E11 실측 확정)로 통일 — 예전 "No dialogue.
   // No on-screen subtitle text or captions."만으로는 Veo가 감정 구간에서 스스로 입모양을
   // 만들어내는 문제가 있었음(scriptParserV3.js의 applyNarrationSilentGuard와 동일 문구 유지).
-  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfitEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfitEn}, standing in ${sceneB.envEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
   const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${trigger.nameKo} + ${audioCue.soundFx} (컷 시작 0.2초) / 타점: ${audioCue.beat}`
 

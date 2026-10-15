@@ -403,6 +403,10 @@ function ChangeComboPanel({ state, dispatch }) {
   const [triggerId, setTriggerId] = useState('')
   const [vfxIndex, setVfxIndex] = useState(null)
   const [sceneB, setSceneB] = useState({ outfit: '', env: '', lighting: '', outfitEn: '', envEn: '', lightingEn: '' })
+  // 2026-10-15: IP(시작 이미지)가 sceneB("후" 모습)를 그리면 Veo가 시작 프레임에 고정돼 트리거
+  // 동작(AC)이 전혀 재현 안 된다는 게 실측으로 밝혀져(IG_R08 CUT4) IP는 항상 "전" 모습을 그리게
+  // 바꿨다 — sceneA는 선택 입력, 비우면 서버가 범용 문구로 대체(changeEffects.js 참고).
+  const [sceneA, setSceneA] = useState({ poseKo: '', poseEn: '', envEn: '', lightingEn: '' })
   const [durationSec, setDurationSec] = useState(6)
   const [beat, setBeat] = useState('고조')
   const [cpLine, setCpLine] = useState('')
@@ -454,7 +458,7 @@ function ChangeComboPanel({ state, dispatch }) {
     if (!sceneB.outfitEn || !sceneB.envEn || !sceneB.lightingEn) { setBuildError('Scene B의 영문 설명(의상/배경/조명)도 채워주세요 — 이미지·영상 프롬프트는 전부 영문이어야 합니다.'); return }
     const r = await fetch(`${SERVER}/api/change-combo/build`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ triggerId, vfxIndex, sceneB, durationSec, beat, cpLine }),
+      body: JSON.stringify({ triggerId, vfxIndex, sceneA, sceneB, durationSec, beat, cpLine }),
     })
     const d = await r.json()
     if (!r.ok) { setBuildError(d.error || '생성 실패'); return }
@@ -562,6 +566,24 @@ function ChangeComboPanel({ state, dispatch }) {
           </div>
         </div>
 
+        {/* 2026-10-15 — "쪼개는 기준": 시작 이미지(IP)는 항상 변신 "전" 모습을 그리고, 영상
+            프롬프트(VP)가 트리거→VFX→리빌 전체를 책임진다. IP가 "후" 모습(sceneB)을 그리면
+            Veo가 시작 프레임에 고정돼 트리거 동작 자체가 영상에 전혀 안 나온다(IG_R08 CUT4 실측:
+            "회중시계 감고 연기 피어오르는 장면 없이 애초에 변신의상으로 등장"). Scene A는 비워도
+            되고, 비우면 서버가 "트리거 동작 중, 평소 모습" 범용 문구로 채운다. */}
+        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4, color: '#f0a050' }}>
+          ↓ Scene A — 변신 "전" 모습(선택) · 시작 이미지(IP)는 항상 이쪽을 그립니다
+        </div>
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="전 모습 포즈/동작 (한글, 선택 — 예: 회중시계 태엽을 감는 중)"
+          value={sceneA.poseKo} onChange={(e) => { setSceneA({ ...sceneA, poseKo: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Pose/action before the change, in English (optional)"
+          value={sceneA.poseEn} onChange={(e) => { setSceneA({ ...sceneA, poseEn: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment before the change, in English (optional)"
+          value={sceneA.envEn} onChange={(e) => { setSceneA({ ...sceneA, envEn: e.target.value }); setBuildResult(null) }} />
+        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting before the change, in English (optional)"
+          value={sceneA.lightingEn} onChange={(e) => { setSceneA({ ...sceneA, lightingEn: e.target.value }); setBuildResult(null) }} />
+
+        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>↓ Scene B — 변신 "후" 모습 · 영상 프롬프트(VP)의 리빌 구간에만 쓰입니다</div>
         <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수, 한글 — 화면 설명용)"
           value={sceneB.outfit} onChange={(e) => { setSceneB({ ...sceneB, outfit: e.target.value }); setBuildResult(null) }} />
         <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경 (한글 — 화면 설명용)"
