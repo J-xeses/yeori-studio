@@ -10,7 +10,7 @@ import { loadOps, saveOps } from './instaOps.js'
 
 const SECRETS = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'studio-secrets.json')
 const G = 'https://graph.instagram.com'
-const readSecrets = () => { try { return JSON.parse(fs.readFileSync(SECRETS, 'utf-8')) } catch { return {} } }
+export const readSecrets = () => { try { return JSON.parse(fs.readFileSync(SECRETS, 'utf-8')) } catch { return {} } }
 export const igConfigured = () => !!readSecrets().apiKeys?.instagram?.token
 
 async function gget(url) {
@@ -20,7 +20,7 @@ async function gget(url) {
 }
 
 // 장기 토큰 갱신(발급 24시간 이후~만료 전). 7일에 한 번만 시도.
-async function maybeRefresh(sec) {
+export async function maybeRefresh(sec) {
   const ig = sec.apiKeys.instagram
   if (ig.refreshedAt && Date.now() - Date.parse(ig.refreshedAt) < 7 * 864e5) return ig.token
   try {

@@ -495,21 +495,58 @@ function PackageSection({ epNum }) {
   )
 }
 
-// ── ④ 업로드 섹션 (UI만, 미구현) ──
-function UploadSection() {
-  const platforms = [
-    { key: 'youtube',   label: '📺 YouTube 업로드' },
-    { key: 'instagram', label: '📸 Instagram 업로드' },
-    { key: 'tiktok',    label: '🎵 TikTok 업로드' },
-  ]
+// ── ④ 업로드 섹션 ── 2026-10-15: 1단계로 Instagram 릴스 업로드 연결(②캡션+③패키징 그대로 사용).
+// YouTube/TikTok은 계정 연동이 아직 없어 "준비 중"으로 남김.
+function UploadSection({ epNum }) {
+  const { state } = useApp()
+  const ig = state.publishing?.instagram || { title: '', description: '', tags: '' }
+  const [status, setStatus] = useState('idle') // idle | running | done | error
+  const [message, setMessage] = useState('')
+  const [permalink, setPermalink] = useState(null)
+
+  const caption = [ig.title, ig.description, ig.tags].filter(s => s?.trim()).join('\n\n')
+
+  const doPublish = async () => {
+    if (!epNum) return
+    if (!caption.trim()) { setStatus('error'); setMessage('②제목/설명/태그를 먼저 채워주세요(인스타는 이걸 그대로 캡션으로 씁니다).'); return }
+    const preview = caption.length > 300 ? caption.slice(0, 300) + '…' : caption
+    if (!window.confirm(`Instagram에 릴스로 실제 게시합니다. 되돌릴 수 없습니다.\n\n캡션:\n${preview}\n\n진행할까요?`)) return
+    setStatus('running'); setMessage('업로드 중… (영상 처리까지 최대 몇 분 걸릴 수 있습니다)'); setPermalink(null)
+    try {
+      const res = await fetch(`${SERVER}/api/instagram/publish`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ epNum, caption }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.success) throw new Error(data.error || '업로드 실패')
+      setStatus('done'); setMessage('✅ 게시 완료'); setPermalink(data.permalink)
+    } catch (err) {
+      setStatus('error'); setMessage('❌ ' + err.message)
+    }
+  }
+
   return (
     <div className={s.uploadWrap}>
-      {platforms.map(pf => (
-        <div key={pf.key} className={s.uploadRow}>
-          <span className={s.uploadPlatform}>{pf.label}</span>
-          <button className={s.uploadBtn} disabled title="준비 중 (API 연동 미구현)">준비 중</button>
+      <div className={s.uploadRow}>
+        <span className={s.uploadPlatform}>📸 Instagram 업로드</span>
+        <button className={s.uploadBtn} onClick={doPublish} disabled={status === 'running'}>
+          {status === 'running' ? '⏳ 업로드 중...' : '🚀 릴스로 게시'}
+        </button>
+      </div>
+      {message && (
+        <div style={{ fontSize: 12, marginTop: 4, color: status === 'error' ? '#f87171' : status === 'done' ? '#4ade80' : 'var(--text3)' }}>
+          {message}
+          {permalink && <> — <a href={permalink} target="_blank" rel="noreferrer" style={{ color: '#a78bfa' }}>게시물 보기</a></>}
         </div>
-      ))}
+      )}
+      <div className={s.uploadRow}>
+        <span className={s.uploadPlatform}>📺 YouTube 업로드</span>
+        <button className={s.uploadBtn} disabled title="준비 중 (API 연동 미구현)">준비 중</button>
+      </div>
+      <div className={s.uploadRow}>
+        <span className={s.uploadPlatform}>🎵 TikTok 업로드</span>
+        <button className={s.uploadBtn} disabled title="준비 중 (API 연동 미구현)">준비 중</button>
+      </div>
     </div>
   )
 }
@@ -538,7 +575,7 @@ export default function PublishingTab() {
           {activeSection === 'thumb' && <ThumbnailSection epNum={epNum} />}
           {activeSection === 'meta' && <MetaSection />}
           {activeSection === 'package' && <PackageSection epNum={epNum} />}
-          {activeSection === 'upload' && <UploadSection />}
+          {activeSection === 'upload' && <UploadSection epNum={epNum} />}
         </div>
       </div>
     </div>

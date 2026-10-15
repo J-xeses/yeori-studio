@@ -6002,11 +6002,24 @@ app.post('/api/save-thumbnail', (req, res) => {
   }
 })
 
+// 최종본 경로 결정 — 두 가지 파이프라인이 서로 다른 이름 규칙을 쓴다:
+//   · reel-finalize.js(IG_R/SF 등 릴스 파이프라인, 현재 주로 쓰는 경로): 07_output/{코드}_final.mp4
+//   · 구 LF 수동 CapCut 내보내기 경로(레거시): 06_video/ep{N}_final.mp4
+// 퍼블리싱 탭 ③패키징이 레거시 경로만 확인하고 있어서, 릴스로 완성된 에피소드(IG_R05 등)가
+// 전부 "없음"으로 잘못 표시되는 버그가 있었다(2026-10-15, 성준님 실측: IG_R05 둘 다 ❌인데
+// 07_output/IG_R05_final.mp4는 실재함). 코드 기반 경로를 먼저 찾고, 없으면 레거시로 폴백.
+function resolveFinalVideoPath(epNum) {
+  const code = mp.resolveCode(epNum)
+  const byCode = path.join(mp.finalDir(epNum), `${code}_final.mp4`)
+  if (fs.existsSync(byCode)) return byCode
+  return path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+}
+
 // ── POST /api/check-final-assets — 최종 산출물(영상/썸네일) 존재 확인 ──
 app.post('/api/check-final-assets', (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
-  const videoPath = path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+  const videoPath = resolveFinalVideoPath(epNum)
   const thumbPath = path.join(mp.finalDir(epNum), 'thumb.jpg')
   res.json({
     videoExists: fs.existsSync(videoPath), videoPath,
@@ -6022,7 +6035,7 @@ app.post('/api/check-final-assets', (req, res) => {
 app.get('/api/check-final', (req, res) => {
   const epNum = req.query.epNum
   if (!epNum) return res.status(400).json({ error: 'epNum 쿼리 파라미터 필요' })
-  const videoPath = path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+  const videoPath = resolveFinalVideoPath(epNum)
   const rawPath   = path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`)
   const thumbPath = path.join(mp.finalDir(epNum), 'thumb.jpg')
 
@@ -6046,7 +6059,7 @@ app.get('/api/check-final', (req, res) => {
 app.post('/api/package-final', (req, res) => {
   const { epNum } = req.body
   if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
-  const videoPath = path.join(mp.videoDir(epNum), `ep${epNum}_final.mp4`)
+  const videoPath = resolveFinalVideoPath(epNum)
   const rawPath   = path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`)
   const finalDir  = mp.finalDir(epNum)
   const thumbPath = path.join(finalDir, 'thumb.jpg')
@@ -6067,6 +6080,22 @@ app.post('/api/package-final', (req, res) => {
       isRaw,
       files: { video: destVideo, thumb: fs.existsSync(thumbPath) ? thumbPath : null },
     })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/instagram/publish — 퍼블리싱 탭 ④업로드(1단계: 인스타 릴스), 2026-10-15 ──
+// 패키징된 ep{N}_final.mp4 + ②에서 준비한 캡션을 그대로 올린다. 공개 URL은 이미 떠 있는
+// MCP용 Cloudflare 터널을 재사용(server/lib/igPublish.js 주석 참고). 영상 처리 대기 포함
+// 최대 4분 걸릴 수 있어 응답을 그만큼 들고 있음 — 프런트는 로딩 스피너로 대기.
+app.post('/api/instagram/publish', async (req, res) => {
+  const { epNum, caption } = req.body || {}
+  if (!epNum) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const { publishReel } = await import('./lib/igPublish.js')
+    const result = await publishReel({ epNum, caption })
+    res.json({ success: true, ...result })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

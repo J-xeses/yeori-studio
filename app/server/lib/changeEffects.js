@@ -29,6 +29,11 @@ export const VFX_PRESETS = [
   { nameKo: '꽃잎 & 나비 소용돌이', en: 'a whirlwind of floral petals and butterflies dispersing', type: 'particles' },
   { nameKo: '불꽃 스파크 분산', en: 'fiery sparks and ember particles fading along the edges', type: 'particles' },
   { nameKo: '잉크 스플래시 번짐', en: 'black ink plume in water clearing to reveal', type: 'dissolve' },
+  // 2026-10-15, 연출 재료 창고 ① "프리즈프레임/불릿타임"(성준님 인스타 벤치마킹 컬렉션,
+  // @akapepinho 유리공예·커피잔 파편 참고) — 다른 프리셋과 달리 "흐르며 사라지는" 효과가
+  // 아니라 "시간이 멈추고 카메라만 도는" 구조라 VP 문장 자체가 달라야 한다. type:'freeze'로
+  // 표시해 buildRevealCut()에서 별도 템플릿을 탄다(아래).
+  { nameKo: '프리즈프레임 & 불릿타임', en: 'every particle, droplet and loose fabric suspended perfectly still in mid-air as if time itself stopped, the camera rapidly orbiting around her frozen figure', type: 'freeze' },
 ]
 
 export const AUDIO_CUES = [
@@ -120,7 +125,14 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
   // 2026-10-13: 룰셋 표준 무발화 문구(2026-09-29 SF_E11 실측 확정)로 통일 — 예전 "No dialogue.
   // No on-screen subtitle text or captions."만으로는 Veo가 감정 구간에서 스스로 입모양을
   // 만들어내는 문제가 있었음(scriptParserV3.js의 applyNarrationSilentGuard와 동일 문구 유지).
-  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: The effect clears to reveal her in ${sceneB.outfitEn}, standing in ${sceneB.envEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+  // 2026-10-15: vfx.type === 'freeze'는 "흐르며 사라지는" 다른 프리셋과 구조가 달라(시간이
+  // 멈추고 카메라가 도는 쪽) transition 문장을 따로 쓴다 — "sweeping across the frame"은
+  // 정지된 장면엔 안 맞는 묘사라서.
+  const transitionLine = vfx.type === 'freeze'
+    ? `at the peak of this motion, time itself seems to stop — ${vfx.en}, beat drop at ${FRAME_SYNC.prepEnd}s`
+    : `${vfx.en} sweeping across the frame — this is the transition moment, beat drop at ${FRAME_SYNC.prepEnd}s`
+  const resumeLine = vfx.type === 'freeze' ? 'Time resumes and the moment resolves' : 'The effect clears'
+  const videoPrompt = `First 0-${FRAME_SYNC.dropEnd}s: She initiates ${trigger.en}, ${transitionLine}. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: ${resumeLine} to reveal her in ${sceneB.outfitEn}, standing in ${sceneB.envEn}, settling into a graceful confident pose, looking directly at camera. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
   const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${trigger.nameKo} + ${audioCue.soundFx} (컷 시작 0.2초) / 타점: ${audioCue.beat}`
 
@@ -128,7 +140,9 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
 
   const preview = {
     step1: `[0.0s ~ ${FRAME_SYNC.prepEnd}s 준비]: ${trigger.nameKo} 시동. 시청자 시선을 끄는 자연스러운 포즈.`,
-    step2: `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 트랜지션 피크]: 비트 드롭(${audioCue.beat})과 동시에 ${vfx.nameKo}가 폭발하며 1프레임도 끊김 없이 모핑.`,
+    step2: vfx.type === 'freeze'
+      ? `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 트랜지션 피크]: 비트 드롭(${audioCue.beat})과 동시에 시간이 멈춘 듯 ${vfx.nameKo} — 그녀는 정지, 카메라만 돈다.`
+      : `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 트랜지션 피크]: 비트 드롭(${audioCue.beat})과 동시에 ${vfx.nameKo}가 폭발하며 1프레임도 끊김 없이 모핑.`,
     step3: `[${FRAME_SYNC.lockInStart}s ~ ${durationSec}s 완성씬]: ${sceneB.outfit} 완성. ${sceneB.env}. 완청률을 높이는 시선 고정.`,
   }
 

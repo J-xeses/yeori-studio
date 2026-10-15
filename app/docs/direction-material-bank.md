@@ -32,6 +32,40 @@
     one clear anchor, rest of face softly distorted by water refraction, cinematic, shallow
     depth of field` — 기존 characterRefsAndDescriptors() 얼굴 레퍼런스 문구와 그대로 이어붙이면 됨.
 
+### 2026-10-15 — 성준님 Instagram 저장 컬렉션("벤치마킹") 1차 선별
+전체 19개 저장물 훑어봄 — 영상 전환 VFX 참고 7, 정지컷/포트레이트 참고 5, 제작 프로세스/트렌드
+교육성 포스트 6, 브랜딩 그래픽 참고 1. 아래 두 개는 ①에 바로 추가할 만큼 구체적이고 구현
+가능한 재료였음(출처 게시물은 전부 프롬프트 원문을 댓글-게이트로 잠가둬서, 비주얼 묘사로 역추적한
+패턴 — 원문 그대로 베낀 것 아님).
+
+- **극적 줌아웃 리빌("지구까지 빠지기")** — 가까운 피사체(사진 속 식당 간판)에서 시작해 카메라가
+  빠르게 뒤로/위로 빠지며 대기권을 뚫고 올라가 지구 전체가 보이는 데까지 한 번에 이어지는 돌리줌.
+  스피드램프(가속)+방사형 모션블러, 음악 없이 시네마틱 SFX(휙 소리)만. "①불가능한 비주얼"의
+  "시공간 순간전환"과 같은 축이지만 **배경 전환이 아니라 스케일(카메라 거리) 자체를 극단으로
+  미는** 변종 — 에피소드 오프닝 훅(0~2초 안에 "뭐지?" 유발)이나 엔딩 임팩트에 바로 쓸 수 있음.
+  **초안 프롬프트 패턴**: `extreme continuous dolly-zoom-out, starting tight on {subject}, camera
+  rapidly pulls back and ascends through atmosphere, cloud layers with realistic atmospheric
+  scattering, city lights fading into daylight, terrain and roads shrinking with accurate
+  perspective, reveal full planet Earth from space, speed ramp acceleration, radial motion blur,
+  no music — cinematic whoosh SFX only`. 출처: Instagram @bibi_syedaa(2026-10-01 게시).
+- **프리즈프레임/불릿타임** — 동작 중 한 순간이 완전히 정지하고 카메라만 주변을 도는(또는 소재가
+  공중에 얼어붙은 채 흐르는) 연출. 참고 2건: ① 유리공예 장인 — 녹인 유리가 리본처럼 공중에
+  얼어붙은 채 조명이 반사되는 구도, ② 커피잔이 깨지며 파편·커피 방울이 전부 정지한 구도. 둘 다
+  "Parte 11"·"Swipe" 같은 연속 시리즈 포맷으로 운영돼 반복 노출 전략과도 맞물림. 서여리 쪽에서는
+  "체인지 생성기"의 VFX_PRESETS에 새 카테고리로 추가할 후보 — 트리거 직후 1프레임을 완전 정지시켜
+  보여주는 강조 비트로 쓸 수 있음(기존 VFX는 전부 "계속 움직이는" 전환이라 결이 다름).
+  출처: Instagram @akapepinho(유리공예, 2026-10-06), 커피잔 깨짐(출처 미확인, 동일 컬렉션).
+- **컬러 블로킹 보강 사례** — 회색 컨테이너 수십 개 사이 주황색 컨테이너 하나만("One needs
+  attention.") — 2026-10-12에 이미 입고한 "단색 테마 강렬 대비" 재료와 같은 원리를 "다수 속
+  하나만 다른 색"으로 변주한 버전. 체인지 생성기 Scene B 프리셋이 아니라, **썸네일/오프닝 1컷
+  구도용**으로 더 적합(서여리 혼자 색이 다른 배경 속에 있는 정지컷).
+
+**메타/교육성 포스트(재료 아님, 참고만)**: "AI 영상 만들 때 필수 카메라 연출 18가지"(돌리/줌/오빗/
+돌리줌 등 기본기 정리), "무조건 끝까지 보게 만드는 스토리텔링 6단계 공식", "전 세계 조회수 1위
+유튜버가 말하는 조회수 안 나오는 영상 특징" — 이런 건 "연출 재료"라기보다 **제작 공정 지식**이라
+카탈로그엔 안 넣음. 캐릭터 일관성·VP 프롬프트 설계([[reference_script_parser_v3]],
+`clipPrompt.js`)할 때 배경지식으로 참고할 가치는 있음.
+
 ## ② 구조적 반전 재료
 - **루프 구조** — 끝이 처음과 같아 보이지만 디테일 하나가 달라져 있어 "다시 봄" 유도
 - **숨은 메타 리빌** — 직업 에피소드 CUT6 안으로 짚었던 "사실 난 이미 직업이 있지, AI 인플루언서야" 식 정체성 반전
