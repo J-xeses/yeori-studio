@@ -53,10 +53,15 @@ function getEpStatus(ep) {
 }
 
 const SIDEBAR_EP_GROUPS = [
-    { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'] },
-    { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'] },
-    { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'] },
+    { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'],            barColor: '#a78bfa' },
+    { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'], barColor: '#ec4899' },
+    { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'],                  barColor: '#3b82f6' },
 ]
+// 에피소드 목록 사이드바의 G1 진행률 바 색상 — 플랫폼별 구분(2026-10-15, 성준님 요청:
+// "YouTube, Instagram, TikTok 별로 승인표시 바 색상을 좀 구분"). 완료(epAllDone)는 플랫폼과
+// 무관하게 기존 초록(#22c55e)을 그대로 유지 — "다 끝났다"는 신호 자체가 더 중요해서 덮지 않음.
+const platformBarColor = (contentType) =>
+    SIDEBAR_EP_GROUPS.find(g => g.types.includes(contentType))?.barColor || '#a78bfa'
 const CONTENT_TYPE_OPTIONS = [
     { value: 'LF',   label: 'LF — YouTube 롱폼' },
     { value: 'SF',   label: 'SF — YouTube 숏폼' },
@@ -208,7 +213,7 @@ function EpisodeSidebar({ onClose }) {
                     {epTotal > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
                             <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${(epG1 / epTotal) * 100}%`, background: epAllDone ? '#22c55e' : '#a78bfa' }} />
+                                <div style={{ height: '100%', width: `${(epG1 / epTotal) * 100}%`, background: epAllDone ? '#22c55e' : platformBarColor(ep.episode?.contentType) }} />
                             </div>
                             <span style={{ fontSize: 9, color: 'var(--text3)', flexShrink: 0 }}>G1 {epG1}/{epTotal}</span>
                         </div>
