@@ -118,6 +118,9 @@ export default function StudioTab() {
   // 02_images/cut_NN_<다음 빈 슬롯>.jpg 저장. 결과는 /api/scan-images 로 다시 읽어와 이 탭의 이미지 목록에 반영.
   const [flowImgBusy, setFlowImgBusy] = useState({})   // cut.id → true
   const [flowImgMsg, setFlowImgMsg] = useState({})     // cut.id → 진행 메시지
+  // 2026-10-15: 서브 구글 계정 Flow(start_gen.bat이 포트 9223에 띄움) 추가 — main/sub 전부
+  // 독립된 Chrome·일일 크레딧이라 동시에 쓸 수 있다. 기본은 main, 드롭다운으로 전환.
+  const [flowProfile, setFlowProfile] = useState('main')
   const runFlowImageForCut = async (cut) => {
     if (!cut.imagePrompt?.trim()) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
     setFlowImgBusy(p => ({ ...p, [cut.id]: true }))
@@ -125,7 +128,7 @@ export default function StudioTab() {
     try {
       const r = await fetch('http://localhost:3001/api/flow/image', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ episodeCode, cutNos: [cut.no], count: 2 }),
+        body: JSON.stringify({ episodeCode, cutNos: [cut.no], count: 2, profile: flowProfile }),
       })
       const d = await r.json()
       if (!r.ok || !d.ok) throw new Error(d.error || 'Flow 이미지 요청 실패')
@@ -738,6 +741,14 @@ export default function StudioTab() {
         tools={TOOLS}
         activeTool={selected}
         onToolChange={setSelected}
+        right={
+          <select value={flowProfile} onChange={e => setFlowProfile(e.target.value)}
+            title="Flow 계정 선택 — start_gen.bat이 포트 9223에 띄운 서브 계정 Chrome을 쓰려면 '서브 계정'으로"
+            style={{ fontSize: 11, background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 4, padding: '4px 6px' }}>
+            <option value="main">Flow: 메인 계정</option>
+            <option value="sub">Flow: 서브 계정</option>
+          </select>
+        }
         actions={[
           {
             key: 'flow-json', variant: 'green', disabled: flowRunning,

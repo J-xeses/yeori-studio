@@ -1164,6 +1164,9 @@ export default function VideoTab() {
   // 바로 앞 슬롯 영상의 마지막 프레임이 시작 프레임. 진행 상황은 flowRun[`${cutId}:${idx}`]에 담아 슬롯 줄에 보여준다.
   const [flowRun, setFlowRun] = useState({})
   const flowBusy = Object.values(flowRun).some(r => r?.state === 'running')
+  // 2026-10-15: 서브 구글 계정 Flow(start_gen.bat이 포트 9223에 띄움) 추가 — main/sub는
+  // 서로 다른 Chrome·크레딧이라 동시에 쓸 수 있다. 기본은 main.
+  const [flowProfile, setFlowProfile] = useState('main')
   const FLOW_COST = { 8: 12, 10: 15 } // Omni 1.1 Flash 720p 실측(8초 12, 10초 15). 4·6초는 화면 표시값으로 확인
   const submitToFlow = async (cut, idx, clips) => {
     const epNum = state.episode?.number
@@ -1175,14 +1178,15 @@ export default function VideoTab() {
     const wantSec = Array.isArray(cut.segments) && cut.segments[idx] != null ? Number(cut.segments[idx]) : (Number(cut.duration) > 8 ? 10 : 8)
     const durationSec = [4, 6, 8, 10].includes(wantSec) ? wantSec : (wantSec >= 10 ? 10 : 8)
     const costText = FLOW_COST[durationSec] != null ? `예상 ${FLOW_COST[durationSec]}크레딧` : '크레딧은 Flow 화면 표시값으로 확인(최대 16)'
-    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 모델 Omni 1.1 Flash · ${durationSec}초 · 720p (${costText}, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`} + 서여리 시그니처 클로즈업(얼굴 레퍼런스)\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
+    const accountText = flowProfile === 'sub' ? '서브 계정(포트 9223)' : '메인 계정(포트 9222)'
+    if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 계정: ${accountText}\n· 모델 Omni 1.1 Flash · ${durationSec}초 · 720p (${costText}, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`} + 서여리 시그니처 클로즈업(얼굴 레퍼런스)\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return
     setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '시작 중…' } }))
     try {
       // 2026-10-14: 기본(frames) 모드는 시작 프레임 1장만 넣어서 얼굴 레퍼런스가 없었다
       // (성준님 리포트: "서여리 시그니쳐 클로즈업 이미지는 등록이 안된채 컷 이미지로만 생성").
       // ingredients 모드는 시작 프레임 + characters.json의 서여리 클로즈업을 함께 참조 이미지로
       // 붙여서(flow-submit.js) 얼굴 identity를 더 단단히 고정한다 — 이걸 기본값으로 바꾼다.
-      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null, durationSec, maxCredits: 16, mode: 'ingredients' }) })
+      const r = await fetch('http://localhost:3001/api/flow/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ epNum, cutNo: cut.no, clipNo: idx + 1, prevClipPath: prev?.stagedPath || null, durationSec, maxCredits: 16, mode: 'ingredients', profile: flowProfile }) })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || '제출 실패')
       setFlowRun(p => ({ ...p, [key]: { state: 'running', msg: '진행 중…', jobId: d.jobId } }))
@@ -1818,6 +1822,14 @@ export default function VideoTab() {
   return (
     <div className={s.page}>
       <TabToolbar
+        right={
+          <select value={flowProfile} onChange={e => setFlowProfile(e.target.value)}
+            title="Flow 계정 선택 — '⚡ Flow 제출' 버튼에 적용(전체 AI 생성은 항상 메인 계정)"
+            style={{ fontSize: 11, background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 4, padding: '4px 6px' }}>
+            <option value="main">Flow: 메인 계정</option>
+            <option value="sub">Flow: 서브 계정</option>
+          </select>
+        }
         actions={[
           { key: 'srt', label: '📄 SRT', onClick: exportSRT },
           { key: 'load-all', label: '🔄 불러오기', onClick: loadAllFromProxy },

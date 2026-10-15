@@ -1399,36 +1399,43 @@ app.get('/api/paid-usage/check', (req, res) => {
 })
 
 // ── Flow 클립 제출 (무료 경로 반자동화, 2026-09-21) ─────────────────────────────
-// POST /api/flow/submit { epNum, cutNo, clipNo, prevClipPath?, model?, durationSec?, maxCredits?, dryRun?, overwrite? }
+// POST /api/flow/submit { epNum, cutNo, clipNo, prevClipPath?, model?, durationSec?, maxCredits?, dryRun?, overwrite?, profile? }
 //   → scripts/flow-submit.js 를 자식 프로세스로 실행(시작 프레임·프롬프트 입력 → 검증 관문 → 생성 → 다운로드 → raw/cut_NN_clip_K.mp4)
 // GET  /api/flow/job/:id  → { state: running|done|failed, steps[], result, error }
-// GET  /api/flow/ready    → 전용 Chrome(9222)에 Flow 프로젝트 탭이 열려 있는지
-// Flow 화면은 하나뿐이라 동시에 한 작업만 허용한다(진행 중이면 409).
+// GET  /api/flow/ready    → 전용 Chrome(main=9222, sub=9223 — ?profile=sub)에 Flow 프로젝트 탭이 열려 있는지
+// Flow 화면은 프로필(계정)당 하나뿐이라 같은 프로필 안에서는 동시에 한 작업만 허용(진행 중이면 409) —
+// main·sub는 서로 다른 Chrome 창이라 동시에 돌 수 있다(2026-10-15, 성준님 요청: "다른 계정 Flow 추가").
 const FLOW_JOB_DIR = () => path.join(mp.runtimeDir(), 'flow-jobs')
-let activeFlowJob = null // { id, child }
+const FLOW_PORTS = { main: 9222, sub: 9223 }
+let activeFlowJobs = { main: null, sub: null } // profile → { id, child }
+const flowProfileOf = (b) => (b?.profile === 'sub' ? 'sub' : 'main')
 app.get('/api/flow/ready', async (req, res) => {
+  const profile = req.query.profile === 'sub' ? 'sub' : 'main'
   try {
-    const r = await fetch('http://localhost:9222/json/list', { signal: AbortSignal.timeout(2500) })
+    const r = await fetch(`http://localhost:${FLOW_PORTS[profile]}/json/list`, { signal: AbortSignal.timeout(2500) })
     const tabs = await r.json()
     const flow = tabs.find(t => t.type === 'page' && String(t.url).includes('flow.google.com/project'))
-    res.json({ ok: true, chrome: true, flowTab: !!flow, busy: !!activeFlowJob })
-  } catch { res.json({ ok: true, chrome: false, flowTab: false, busy: !!activeFlowJob }) }
+    res.json({ ok: true, chrome: true, flowTab: !!flow, busy: !!activeFlowJobs[profile] })
+  } catch { res.json({ ok: true, chrome: false, flowTab: false, busy: !!activeFlowJobs[profile] }) }
 })
 // 지금 돌고 있는 Flow 작업(있으면)의 실시간 상태 — 파이프라인 모니터 탭이 폴링해서
 // "전류가 흐르는" 애니메이션을 실제 진행 상황에 맞춰 보여주는 용도(2026-10-08).
 app.get('/api/flow/active', (req, res) => {
-  if (!activeFlowJob) return res.json({ ok: true, active: false })
+  const profile = req.query.profile === 'sub' ? 'sub' : 'main'
+  const job = activeFlowJobs[profile]
+  if (!job) return res.json({ ok: true, active: false })
   try {
-    const sp = path.join(FLOW_JOB_DIR(), `${activeFlowJob.id}.status.json`)
+    const sp = path.join(FLOW_JOB_DIR(), `${job.id}.status.json`)
     const st = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf-8')) : { steps: [] }
-    res.json({ ok: true, active: true, jobId: activeFlowJob.id, state: st.state || 'running', steps: st.steps || [], error: st.error || null })
-  } catch (e) { res.json({ ok: true, active: true, jobId: activeFlowJob.id, state: 'running', steps: [], error: null }) }
+    res.json({ ok: true, active: true, jobId: job.id, state: st.state || 'running', steps: st.steps || [], error: st.error || null })
+  } catch (e) { res.json({ ok: true, active: true, jobId: job.id, state: 'running', steps: [], error: null }) }
 })
 app.post('/api/flow/submit', (req, res) => {
   const b = req.body || {}
+  const profile = flowProfileOf(b)
   const epNum = Number(b.epNum), cutNo = Number(b.cutNo), clipNo = Number(b.clipNo || 1)
   if (!Number.isInteger(epNum) || !Number.isInteger(cutNo) || !Number.isInteger(clipNo) || clipNo < 1) return res.status(400).json({ error: 'epNum, cutNo, clipNo(정수) 필요' })
-  if (activeFlowJob) return res.status(409).json({ error: '다른 Flow 작업이 진행 중입니다', jobId: activeFlowJob.id })
+  if (activeFlowJobs[profile]) return res.status(409).json({ error: `다른 Flow 작업이 진행 중입니다(${profile})`, jobId: activeFlowJobs[profile].id })
   if (b.prevClipPath) {
     const abs = path.resolve(String(b.prevClipPath))
     if (!abs.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase())) return res.status(400).json({ error: 'prevClipPath는 downloads 폴더 안이어야 합니다' })
@@ -1437,12 +1444,12 @@ app.post('/api/flow/submit', (req, res) => {
   const dir = FLOW_JOB_DIR()
   fs.mkdirSync(dir, { recursive: true })
   const jobPath = path.join(dir, `${jobId}.json`)
-  const job = { jobId, epNum, cutNo, clipNo, prevClipPath: b.prevClipPath || null, model: b.model || 'Omni 1.1 Flash', durationSec: Number(b.durationSec) || 8, maxCredits: b.maxCredits != null ? Number(b.maxCredits) : 15, dryRun: !!b.dryRun, overwrite: !!b.overwrite, mode: b.mode === 'ingredients' ? 'ingredients' : 'frames' }
+  const job = { jobId, epNum, cutNo, clipNo, prevClipPath: b.prevClipPath || null, model: b.model || 'Omni 1.1 Flash', durationSec: Number(b.durationSec) || 8, maxCredits: b.maxCredits != null ? Number(b.maxCredits) : 15, dryRun: !!b.dryRun, overwrite: !!b.overwrite, mode: b.mode === 'ingredients' ? 'ingredients' : 'frames', profile }
   fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
   const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-submit.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
-  activeFlowJob = { id: jobId, child }
+  activeFlowJobs[profile] = { id: jobId, child }
   child.on('exit', (code) => {
-    activeFlowJob = null
+    activeFlowJobs[profile] = null
     // 스크립트가 상태 파일을 못 남기고 죽은 경우(예: 문법 오류)를 대비해 running 으로 남았으면 failed 로 표시
     try {
       const sp = path.join(dir, `${jobId}.status.json`)
@@ -1450,14 +1457,16 @@ app.post('/api/flow/submit', (req, res) => {
       if (st.state !== 'done' && st.state !== 'failed' && st.state !== 'cancelled') { st.state = 'failed'; st.error = st.error || `작업 프로세스가 비정상 종료됨(코드 ${code})`; fs.writeFileSync(sp, JSON.stringify(st, null, 2), 'utf-8') }
     } catch { /* noop */ }
   })
-  child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
+  child.on('error', (e) => { activeFlowJobs[profile] = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
   res.json({ ok: true, jobId })
 })
 // POST /api/flow/image { episodeCode, cutNos:[..], count?, model?, ratio?, dryRun?, promptOverride? }  (2026-09-21)
 //   → scripts/flow-image.js: Flow(Nano Banana) 이미지 모드로 컷당 N장 생성 → 02_images/cut_NN_<다음 빈 슬롯>.jpg. 진행은 /api/flow/job/:id 로 조회.
 //   하루 장수 카운터·컷 간 20초 간격·프롬프트 일치 검증은 스크립트 안에서 처리. 영상 제출과 같은 Flow 화면을 쓰므로 동시에 한 작업만(409).
 app.get('/api/flow/image-usage', (req, res) => {
-  try { res.json({ ok: true, ...JSON.parse(fs.readFileSync(mp.statePath('flow-image-usage.json'), 'utf-8')) }) }
+  const profile = req.query.profile === 'sub' ? 'sub' : 'main'
+  const fname = profile === 'sub' ? 'flow-image-usage-sub.json' : 'flow-image-usage.json'
+  try { res.json({ ok: true, ...JSON.parse(fs.readFileSync(mp.statePath(fname), 'utf-8')) }) }
   catch { res.json({ ok: true, date: null, count: 0, lastSubmitAt: 0 }) }
 })
 app.post('/api/flow/image', (req, res) => {
@@ -1468,24 +1477,25 @@ app.post('/api/flow/image', (req, res) => {
   if (!episodeCode || !cutNos.length) return res.status(400).json({ error: 'episodeCode, cutNos[] 필요' })
   if (!Number.isInteger(count) || count < 1 || count > 4) return res.status(400).json({ error: 'count 는 1~4' })
   if (b.model && !['Nano Banana Pro', 'Nano Banana 2', 'Nano Banana 2 Lite'].includes(b.model)) return res.status(400).json({ error: '알 수 없는 이미지 모델' })
-  if (activeFlowJob) return res.status(409).json({ error: '다른 Flow 작업이 진행 중입니다', jobId: activeFlowJob.id })
+  const profile = flowProfileOf(b)
+  if (activeFlowJobs[profile]) return res.status(409).json({ error: `다른 Flow 작업이 진행 중입니다(${profile})`, jobId: activeFlowJobs[profile].id })
   const jobId = `flowimg_${Date.now()}`
   const dir = FLOW_JOB_DIR()
   fs.mkdirSync(dir, { recursive: true })
   const jobPath = path.join(dir, `${jobId}.json`)
-  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '', extraRefs: Array.isArray(b.extraRefs) ? b.extraRefs.map(String) : [], ...(Array.isArray(b.charIds) ? { charIds: b.charIds.map(String) } : {}) }
+  const job = { jobId, episodeCode, cutNos, count, model: b.model || 'Nano Banana 2', ratio: b.ratio || null, dryRun: !!b.dryRun, promptOverride: b.promptOverride || '', extraRefs: Array.isArray(b.extraRefs) ? b.extraRefs.map(String) : [], ...(Array.isArray(b.charIds) ? { charIds: b.charIds.map(String) } : {}), profile }
   fs.writeFileSync(jobPath, JSON.stringify(job, null, 2), 'utf-8')
   const child = spawn(process.execPath, [path.join(ROOT, 'scripts', 'flow-image.js'), `--job=${jobPath}`], { cwd: ROOT, stdio: 'ignore', windowsHide: true })
-  activeFlowJob = { id: jobId, child }
+  activeFlowJobs[profile] = { id: jobId, child }
   child.on('exit', (code) => {
-    activeFlowJob = null
+    activeFlowJobs[profile] = null
     try {
       const sp = path.join(dir, `${jobId}.status.json`)
       const st = fs.existsSync(sp) ? JSON.parse(fs.readFileSync(sp, 'utf-8')) : { jobId, steps: [] }
       if (st.state !== 'done' && st.state !== 'failed' && st.state !== 'cancelled') { st.state = 'failed'; st.error = st.error || `작업 프로세스가 비정상 종료됨(코드 ${code})`; fs.writeFileSync(sp, JSON.stringify(st, null, 2), 'utf-8') }
     } catch { /* noop */ }
   })
-  child.on('error', (e) => { activeFlowJob = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
+  child.on('error', (e) => { activeFlowJobs[profile] = null; try { fs.writeFileSync(path.join(dir, `${jobId}.status.json`), JSON.stringify({ jobId, state: 'failed', steps: [], error: '실행 실패: ' + e.message }), 'utf-8') } catch { /* noop */ } })
   res.json({ ok: true, jobId })
 })
 // ── 음성 검수(발음·애드립) 결과 조회 — scripts/voice-qa.js / flow-submit.js 가 downloads/state/voice-qa.json 에 기록 (2026-09-21) ──
@@ -1529,14 +1539,16 @@ app.get('/api/voice-qa', (req, res) => {
 })
 app.post('/api/flow/cancel', (req, res) => {
   const id = String(req.body?.jobId || '').replace(/[^\w-]/g, '')
-  if (!id || activeFlowJob?.id !== id) return res.status(404).json({ error: '진행 중인 해당 작업이 없습니다' })
+  const matches = (p) => activeFlowJobs[p]?.id === id
+  if (!id || (!matches('main') && !matches('sub'))) return res.status(404).json({ error: '진행 중인 해당 작업이 없습니다' })
   try { fs.writeFileSync(path.join(FLOW_JOB_DIR(), `${id}.cancel`), '1', 'utf-8'); res.json({ ok: true }) }
   catch (e) { res.status(500).json({ error: e.message }) }
 })
 app.get('/api/flow/job/:id', (req, res) => {
   const id = String(req.params.id).replace(/[^\w-]/g, '')
   const sp = path.join(FLOW_JOB_DIR(), `${id}.status.json`)
-  if (!fs.existsSync(sp)) return res.json({ ok: true, state: activeFlowJob?.id === id ? 'running' : 'unknown', steps: [], result: null, error: null })
+  const stillActive = activeFlowJobs.main?.id === id || activeFlowJobs.sub?.id === id
+  if (!fs.existsSync(sp)) return res.json({ ok: true, state: stillActive ? 'running' : 'unknown', steps: [], result: null, error: null })
   try { res.json({ ok: true, ...JSON.parse(fs.readFileSync(sp, 'utf-8')) }) } catch { res.json({ ok: true, state: 'running', steps: [] }) }
 })
 
