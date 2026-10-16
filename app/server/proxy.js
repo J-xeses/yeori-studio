@@ -11,7 +11,7 @@ import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaConten
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
-import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, buildFreezeBeatCut, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
+import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger } from './lib/customChangePresets.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
@@ -6817,8 +6817,18 @@ app.post('/api/change-combo/build', (req, res) => {
 // (의상 리빌) 없이 action(돌발상황 묘사)만 받는다. changeEffects.js 주석 참고.
 app.post('/api/change-combo/build-freeze', (req, res) => {
   try {
-    const { action, sceneA, durationSec, beat, cpLine } = req.body || {}
-    res.json(buildFreezeBeatCut({ action, sceneA, durationSec, beat, cpLine }))
+    const { action, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp } = req.body || {}
+    res.json(buildFreezeBeatCut({ action, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp }))
+  } catch (err) { res.status(400).json({ error: err.message }) }
+})
+// 2026-10-16 — 불릿타임 멀티앵글 키프레임 프롬프트 세트. LongTake AI Studio(성준님 자작 도구)의
+// Gemini API 키프레임 렌더링이 무료 티어 할당량 0(RESOURCE_EXHAUSTED)이라 막혀서, API 과금 없이
+// Gemini 앱(AI Pro 웹)에 수동으로 붙여넣을 각도별 프롬프트 텍스트만 생성한다 — 이미지 자체는
+// 여기서 만들지 않는다(changeEffects.js buildFreezeKeyframeAngles() 참고).
+app.post('/api/change-combo/build-freeze-keyframes', (req, res) => {
+  try {
+    const { action, sceneA, angles } = req.body || {}
+    res.json({ keyframes: buildFreezeKeyframeAngles({ action, sceneA, angles }) })
   } catch (err) { res.status(400).json({ error: err.message }) }
 })
 

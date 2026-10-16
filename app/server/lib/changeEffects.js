@@ -139,46 +139,102 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
   }
 }
 
-// ── 프리즈 비트(돌발상황 정지) 생성기 — 2026-10-15 신설, 패턴 교정 2026-10-16 ──────
-// 1차 버전("0~X초 평소 → 결정적 순간 정지 → 재생" 3단계 시간분할 프롬프트)은 실제 생성 결과
-// 실패 확인(10/15, 커피잔 깨짐 테스트 — 정지·오빗 효과 전혀 없이 평범한 연속 동작만 나옴).
-// 원인: Veo는 "동작을 멈추는 전환"을 지시로 못 받아들이고 그냥 제일 그럴듯한 연속 동작으로
-// 밀어버린다 — "정지"는 모델이 학습한 물리 바깥의 편집 개념이라서다.
-// 성준님이 별도로 테스트한 성공 레퍼런스(불릿타임 예시, 10/16)를 프레임 단위로 분석한 결과:
-// 성공 샷은 "평소→사건→정지"라는 시간 경과/전환을 전혀 요구하지 않는다. **영상 시작부터
-// 끝까지 인물이 이미 정지된 결정적 포즈를 유지**하고(머리카락·옷자락만 흔들림), 그 주변에서
-// 작은 물체(총알)만 느리게 지나가며, 카메라가 그 고정된 포즈 주위를 서서히 돈다 — 즉 "정지"는
-// 지시가 아니라 인물의 포즈 자체가 애초에 안 움직이는 "하나의 상태"로 설계돼 있다. Veo는
-// "동작을 멈춰라"는 못 하지만 "가만히 있는 사람 + 카메라 이동"은 흔한 오빗샷이라 아주 잘한다.
-// 그래서 action은 더 이상 "트리거(사건 발생)"가 아니라 **이미 얼어붙은 정점의 상태 묘사**를
-// 받는다(예: "커피잔이 깨져 파편과 물방울이 사방에 멈춰있는 채 놀란 표정으로 굳어있는 순간").
-// "평소 모습"과 "리액션"은 이 생성기에서 빠진다 — 필요하면 별도 클립(기존 Flow 생성)으로
-// 앞뒤에 하드컷 붙이는 방식으로 분리할 것, 한 클립 안에 욱여넣지 않는다.
-// action = { nameKo, ko, en } — 얼어붙은 정점 상태 묘사. sceneA = 환경/조명만 선택적으로 사용.
-export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '긴장', cpLine = '' }) {
+// ── 프리즈 비트(돌발상황 정지) 생성기 — 2026-10-15 신설, 2026-10-16 2차례 교정 ──────
+// v1("0~X초 평소 → 결정적 순간 정지 → 재생" 3단계 시간분할 프롬프트): 실패(10/15 커피잔 테스트,
+// 정지·오빗 효과 전혀 없이 평범한 연속 동작만 나옴 — Veo는 "동작을 멈추는 전환"을 못 받아들이고
+// 그냥 제일 그럴듯한 연속 동작으로 밀어버림. "정지"는 모델이 학습한 물리 바깥의 편집 개념).
+// v2(10/16 1차 교정): 레퍼런스(불릿타임 예시) 프레임 분석 — 성공 샷은 "평소→정지"라는 전환을
+// 아예 요구하지 않고 **처음부터 끝까지 이미 정지된 포즈**만 유지, 카메라만 돈다는 걸 확인하고
+// 그 패턴으로 단순화 → 실측 결과 "어느 정도 효과" (부분 성공, 성준님 확인).
+// v3(10/16 2차 교정, 이번): 성준님이 직접 구축한 전용 도구("LongTake AI Studio" — Veo 2 롱테이크
+// & 360° 불릿타임 전용 웹앱, 카메라 리그·셔터각·궤도반경/각속도까지 수치로 고정하는 "연속성 유지
+// 템플릿" 보유)로 만든 두 번째 테스트(커피잔 리테이크, 10/16)를 프레임 분석해 v2보다 확연히 나은
+// 결과를 확인. 차이 2가지를 반영한다:
+// ① "정지 상태 하나만" 묘사하는 대신 실제 카메라 촬영 장비 어휘(셔터 각도·초고속 프레임레이트·
+//    렌즈 스펙)로 앵커링하면 모델이 훨씬 더 많은 실사 고속촬영 레퍼런스를 끌어옴 — 막연한
+//    "bullet-time style"보다 "30° shutter angle, 1/3000s, 1500fps time-freeze" 식 수치가 먹힘.
+// ② 레퍼런스 영상 자체가 "평온한 클로즈업 표정으로 시작 → 카메라가 빠르게 줌아웃하며 이미 얼어붙은
+//    혼돈 장면을 리빌"하는 구조였다 — 이건 사실상 v1이 실패했던 "평소→정지 전환"을 **포즈가 아니라
+//    카메라 움직임(줌아웃 리빌)으로 숨겨서 우회**한 것. 모델이 "표정 변화"는 매끄럽게 못 하지만
+//    "줌아웃 리빌"은 흔한 광고 기법이라 잘한다 — 그래서 openOnCloseUp 옵션으로 기본 채택.
+// action = { nameKo, ko, en } — 얼어붙은 정점 상태 묘사(사건·자세 중심, 표정은 생략 가능 — 아래
+//   줌아웃 리빌 문구가 표정 전환을 따로 맡는다). sceneA = 환경/조명만 선택적으로 사용.
+// orbitDegrees: 카메라가 도는 궤도 각도(기본 120 — 두 레퍼런스 모두 완전 360도가 아니라 90~180도
+//   부분 오빗이었음, LongTake 스튜디오의 "일상 돌발상황"용 권장치와도 일치).
+// openOnCloseUp: true(기본)면 "평온한 클로즈업 표정 → 줌아웃 리빌" 오프닝을 붙인다.
+const FREEZE_RIG = 'shot on a high-speed cine camera rig, 30-degree shutter angle (1/3000s shutter speed), time dilated to an extreme 1500fps super-slow-motion freeze, shallow anamorphic depth of field'
+
+export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '긴장', cpLine = '', orbitDegrees = 120, openOnCloseUp = true }) {
   if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(얼어붙은 정점 상태 한글/영문 묘사) 필요')
   const audioCue = pick(AUDIO_CUES)
   const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
   const lightingAEn = sceneA?.lightingEn?.trim() || 'soft neutral ambient light'
   const label = action.nameKo || '돌발상황'
 
-  const scene = `(하드컷, ${label} 효과음) 시간이 멈춘 듯 ${action.ko} 채로 완전히 얼어붙어 있고, 카메라만 그 주위를 천천히 돈다.`
+  const scene = openOnCloseUp
+    ? `(하드컷) 평온한 클로즈업 표정에서 시작 → 카메라가 빠르게 줌아웃하며 ${label}로 이미 얼어붙은 혼돈 장면을 리빌, 카메라는 그 주위를 ${orbitDegrees}도 돈다.`
+    : `(하드컷, ${label} 효과음) 시간이 멈춘 듯 ${action.ko} 채로 완전히 얼어붙어 있고, 카메라가 그 주위를 ${orbitDegrees}도 돈다.`
 
-  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
+  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, ${FREEZE_RIG}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
 
-  const videoPrompt = `A frozen, suspended-in-time moment, bullet-time style: she is caught mid-action — ${action.en} — her pose held perfectly still at its most dramatic peak for the entire shot, only her hair and loose fabric gently drifting in the air, every falling object and droplet suspended mid-air with faint motion-trail ripples around it. The camera slowly orbits around her frozen pose, circling partway around to reveal the frozen scene from a new angle by the end. ${envAEn}. ${lightingAEn}. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+  const frozenCore = `A frozen, suspended-in-time bullet-time moment, ${FREEZE_RIG}: she is caught mid-action — ${action.en} — her pose held perfectly still at its most dramatic peak for the rest of the shot, only her hair and loose fabric gently drifting in the air, every falling object and droplet suspended mid-air with faint motion-trail ripples around it. The camera orbits roughly ${orbitDegrees} degrees around her frozen pose along a smooth arc, revealing the frozen scene from a new angle by the end.`
+
+  const videoPrompt = openOnCloseUp
+    ? `Opens on an extreme close-up of her calm, natural expression, ${envAEn}, ${lightingAEn}. / The camera rapidly pulls back and zooms out, revealing — ${frozenCore} ${envAEn}. ${lightingAEn}. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+    : `${frozenCore} ${envAEn}. ${lightingAEn}. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
   const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${label} 임팩트 + ${audioCue.soundFx}(컷 시작) / 타점: ${audioCue.beat}`
 
   const subtitle = cpLine || '...어?'
 
-  const preview = {
-    step1: `[0.0s ~ ${durationSec}s 전체]: ${label}의 정점에서 완전히 얼어붙은 채, 카메라만 주위를 천천히 돈다. 필요하면 앞뒤에 평소/리액션 클립을 별도 생성해 하드컷으로 붙일 것.`,
-  }
+  const preview = openOnCloseUp
+    ? {
+        step1: `[0.0s ~ 1.5s 오프닝]: 평온한 클로즈업 표정.`,
+        step2: `[1.5s ~ ${durationSec}s 줌아웃 리빌]: 카메라가 빠르게 빠지며 ${label}로 이미 얼어붙은 혼돈 장면 등장, 카메라가 주위를 ${orbitDegrees}도 돈다. 필요하면 뒤에 리액션 클립을 별도 생성해 하드컷으로 붙일 것.`,
+      }
+    : {
+        step1: `[0.0s ~ ${durationSec}s 전체]: ${label}의 정점에서 완전히 얼어붙은 채, 카메라가 주위를 ${orbitDegrees}도 돈다. 필요하면 앞뒤에 평소/리액션 클립을 별도 생성해 하드컷으로 붙일 것.`,
+      }
 
   return {
     cutPatch: { scene, imagePrompt, videoPrompt, subtitle, beat, audioNote },
     preview,
     audioCue,
   }
+}
+
+// ── 불릿타임 멀티앵글 키프레임 프롬프트 세트 — 2026-10-16 신설 ──────────────────
+// LongTake AI Studio(성준님 자작 도구)의 "카메라 어레이" 방식 참고: 진짜 불릿타임 리그는 여러
+// 각도에서 동시에 찍은 정지 스틸을 이어붙여 만든다. 그 도구의 Gemini API 키프레임 렌더링
+// (gemini-3.1-flash-lite-image)이 무료 티어 할당량 0으로 막혀있어(RESOURCE_EXHAUSTED, 10/16
+// 실측 — limit:0은 "오늘 다 씀"이 아니라 무료 티어 자체에서 제외된 모델이라는 뜻), 성준님 결정:
+// "운영이 활성화되기 전까지는 API 확대 보류, 수동이라도 AI Pro 구독 범위(Gemini 웹앱)에서 생성"
+// ([[project_veo_api_emergency_path]]와 동일 원칙 — 평소 무료 수동 경로, API는 나중에 확대).
+// 그래서 이 함수는 이미지를 직접 만들지 않고, Gemini 앱에 수동으로 붙여넣을 각도별 프롬프트
+// 텍스트만 만든다 — buildFreezeBeatCut()과 같은 "얼어붙은 정점" 묘사를 공유하되 카메라가 몇 도
+// 위치에서 바라보는지만 바꾼다. angles를 안 주면 LongTake 스튜디오와 동일한 8방향 전체를 낸다.
+const FREEZE_ANGLE_DIRECTIONS = [
+  { deg: 0,   ko: '정면',       en: 'front view, facing the camera' },
+  { deg: 45,  ko: '우측 45도',  en: 'three-quarter view from the front-right' },
+  { deg: 90,  ko: '우측면',     en: 'right profile view' },
+  { deg: 135, ko: '우후면',     en: 'three-quarter view from the back-right' },
+  { deg: 180, ko: '후면',       en: 'back view, facing away from the camera' },
+  { deg: 225, ko: '좌후면',     en: 'three-quarter view from the back-left' },
+  { deg: 270, ko: '좌측면',     en: 'left profile view' },
+  { deg: 315, ko: '좌측 45도',  en: 'three-quarter view from the front-left' },
+]
+
+export function buildFreezeKeyframeAngles({ action, sceneA, angles }) {
+  if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(얼어붙은 정점 상태 한글/영문 묘사) 필요')
+  const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
+  const lightingAEn = sceneA?.lightingEn?.trim() || 'soft neutral ambient light'
+  const list = Array.isArray(angles) && angles.length
+    ? FREEZE_ANGLE_DIRECTIONS.filter((a) => angles.includes(a.deg))
+    : FREEZE_ANGLE_DIRECTIONS
+
+  return list.map(({ deg, ko, en }) => ({
+    angleDeg: deg,
+    label: `${deg}° (${ko})`,
+    imagePrompt: `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, ${FREEZE_RIG}, camera positioned ${deg} degrees around her on a fixed ~2m-radius orbit, ${en}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`,
+  }))
 }

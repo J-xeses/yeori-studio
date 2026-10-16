@@ -672,10 +672,17 @@ function FreezeBeatPanel({ state, dispatch }) {
   const [durationSec, setDurationSec] = useState(6)
   const [beat, setBeat] = useState('긴장')
   const [cpLine, setCpLine] = useState('')
+  const [orbitDegrees, setOrbitDegrees] = useState(120)
+  const [openOnCloseUp, setOpenOnCloseUp] = useState(true)
   const [targetCutId, setTargetCutId] = useState('')
   const [buildResult, setBuildResult] = useState(null)
   const [buildError, setBuildError] = useState('')
   const [applyMsg, setApplyMsg] = useState('')
+  // 멀티앵글 키프레임(2026-10-16) — API 할당량 0(무료 티어 제외 모델)이라 이미지는 여기서
+  // 안 만들고, Gemini 앱(AI Pro 웹)에 수동으로 붙여넣을 각도별 프롬프트 텍스트만 만든다.
+  const [keyframes, setKeyframes] = useState(null)
+  const [keyframeError, setKeyframeError] = useState('')
+  const [copiedAngle, setCopiedAngle] = useState(null)
 
   const EXAMPLES = [
     { label: '급브레이크 + 튀어나온 고양이', ko: '급브레이크를 밟는 순간 눈앞에 고양이가 튀어나옴', en: 'slamming the brakes as a cat suddenly darts in front of her' },
@@ -689,11 +696,29 @@ function FreezeBeatPanel({ state, dispatch }) {
     if (!actionKo.trim() || !actionEn.trim()) { setBuildError('돌발상황 설명(한글/영문)을 먼저 채워주세요.'); return }
     const r = await fetch(`${SERVER}/api/change-combo/build-freeze`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA, durationSec, beat, cpLine }),
+      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp }),
     })
     const d = await r.json()
     if (!r.ok) { setBuildError(d.error || '생성 실패'); return }
     setBuildResult(d)
+  }
+
+  const doBuildKeyframes = async () => {
+    setKeyframeError(''); setKeyframes(null)
+    if (!actionKo.trim() || !actionEn.trim()) { setKeyframeError('돌발상황 설명(한글/영문)을 먼저 채워주세요.'); return }
+    const r = await fetch(`${SERVER}/api/change-combo/build-freeze-keyframes`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA }),
+    })
+    const d = await r.json()
+    if (!r.ok) { setKeyframeError(d.error || '생성 실패'); return }
+    setKeyframes(d.keyframes)
+  }
+
+  const copyKeyframe = (angleDeg, text) => {
+    navigator.clipboard?.writeText(text)
+    setCopiedAngle(angleDeg)
+    setTimeout(() => setCopiedAngle((a) => (a === angleDeg ? null : a)), 1500)
   }
 
   const commitApply = () => {
@@ -746,6 +771,16 @@ function FreezeBeatPanel({ state, dispatch }) {
             value={cpLine} onChange={(e) => setCpLine(e.target.value)} />
         </div>
 
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+          <label style={{ fontSize: 11, color: '#888' }}>카메라 오빗 각도</label>
+          <input className={styles.textarea} style={{ width: 70 }} type="number" min={30} max={360} step={10}
+            value={orbitDegrees} onChange={(e) => setOrbitDegrees(Number(e.target.value) || 120)} />
+          <label style={{ fontSize: 11, color: '#888', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <input type="checkbox" checked={openOnCloseUp} onChange={(e) => setOpenOnCloseUp(e.target.checked)} />
+            줌아웃 리빌 오프닝(10/16 실측 추천)
+          </label>
+        </div>
+
         <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>프리즈 비트 생성</button>
         {buildError && <div className={styles.error} style={{ marginTop: 8 }}>{buildError}</div>}
       </div>
@@ -753,7 +788,7 @@ function FreezeBeatPanel({ state, dispatch }) {
       {buildResult && (
         <div className={styles.result}>
           <div className={styles.resultLabel}>미리보기</div>
-          <pre className={styles.resultText}>{buildResult.preview.step1}{'\n'}{buildResult.preview.step2}{'\n'}{buildResult.preview.step3}</pre>
+          <pre className={styles.resultText}>{Object.values(buildResult.preview).join('\n')}</pre>
           <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>IP (이미지 프롬프트)</div>
           <pre className={styles.resultText} style={{ fontSize: 11 }}>{buildResult.cutPatch.imagePrompt}</pre>
           <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>VP (영상 프롬프트)</div>
@@ -769,6 +804,36 @@ function FreezeBeatPanel({ state, dispatch }) {
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
         </div>
       )}
+
+      <div className={styles.result} style={{ marginTop: 14 }}>
+        <div className={styles.resultLabel}>🎞️ 멀티앵글 키프레임 프롬프트 (수동, AI Pro 구독용)</div>
+        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 8 }}>
+          진짜 불릿타임 리그처럼 같은 정지 순간을 8개 각도에서 따로 생성해 이어붙이는 방식. LongTake AI
+          Studio의 Gemini API 키프레임 렌더링은 무료 할당량이 0이라 막혀있어서(10/16 실측), 여기선 이미지를
+          직접 안 만들고 Gemini 앱(AI Pro 구독, 웹)에 수동으로 붙여넣을 프롬프트 8개만 만들어줍니다 — 서여리
+          얼굴 레퍼런스 이미지를 함께 첨부해서 생성하세요(Flow 이미지 생성 때와 동일).
+        </div>
+        <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuildKeyframes}>
+          8각도 키프레임 프롬프트 생성
+        </button>
+        {keyframeError && <div className={styles.error} style={{ marginTop: 8 }}>{keyframeError}</div>}
+
+        {keyframes && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8, marginTop: 10 }}>
+            {keyframes.map((kf) => (
+              <div key={kf.angleDeg} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{kf.label}</span>
+                  <button className={styles.copyBtn} onClick={() => copyKeyframe(kf.angleDeg, kf.imagePrompt)}>
+                    {copiedAngle === kf.angleDeg ? '✓ 복사됨' : '복사'}
+                  </button>
+                </div>
+                <pre className={styles.resultText} style={{ fontSize: 10, maxHeight: 90, overflow: 'auto' }}>{kf.imagePrompt}</pre>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   )
 }
