@@ -1174,9 +1174,12 @@ export default function VideoTab() {
     const key = `${cut.id}:${idx}`
     const prev = idx > 0 ? clips[idx - 1] : null
     if (idx > 0 && !prev?.stagedPath) { alert(`클립 ${idx}(바로 앞 슬롯)의 서버 저장 파일이 필요합니다 — 먼저 앞 슬롯을 채워주세요.`); return }
-    // 목표 길이: 대본 SEG 조합의 해당 슬롯 값, 없으면 컷 길이로 8/10초 결정(Omni는 4·6·8·10초 지원)
-    const wantSec = Array.isArray(cut.segments) && cut.segments[idx] != null ? Number(cut.segments[idx]) : (Number(cut.duration) > 8 ? 10 : 8)
-    const durationSec = [4, 6, 8, 10].includes(wantSec) ? wantSec : (wantSec >= 10 ? 10 : 8)
+    // 목표 길이: 대본 SEG 조합의 해당 슬롯 값, 없으면 컷 길이 그대로(Omni는 4·6·8·10초만 지원해 가장 가까운 상위 값으로 올림).
+    // 2026-10-16 버그 수정: 예전엔 세그먼트 없는 컷에서 "cut.duration > 8 ? 10 : 8"로만 판정해
+    // 8 이하인 실제 길이(4·5·6·7초)가 전부 8초로 무시된 채 Flow에 제출되고 있었다(성준님 실측 발견).
+    const wantSec = Array.isArray(cut.segments) && cut.segments[idx] != null ? Number(cut.segments[idx]) : (Number(cut.duration) || 8)
+    const OMNI_SECS = [4, 6, 8, 10]
+    const durationSec = OMNI_SECS.includes(wantSec) ? wantSec : (OMNI_SECS.find((x) => x >= wantSec) || 10)
     const costText = FLOW_COST[durationSec] != null ? `예상 ${FLOW_COST[durationSec]}크레딧` : '크레딧은 Flow 화면 표시값으로 확인(최대 16)'
     const accountText = flowProfile === 'sub' ? '서브 계정(포트 9223)' : '메인 계정(포트 9222)'
     if (!window.confirm(`컷 ${cut.no} 클립 ${idx + 1}을(를) Flow에 제출합니다.\n\n· 계정: ${accountText}\n· 모델 Omni 1.1 Flash · ${durationSec}초 · 720p (${costText}, Flow 무료 크레딧 사용)\n· 시작 프레임: ${idx === 0 ? 'G2 승인 이미지' : `클립 ${idx}의 마지막 프레임`} + 서여리 시그니처 클로즈업(얼굴 레퍼런스)\n· 전용 Chrome의 Flow 프로젝트 탭을 자동 조작합니다 — 진행 중에는 그 창의 입력칸·설정을 직접 건드리지 마세요.\n\n진행할까요?`)) return

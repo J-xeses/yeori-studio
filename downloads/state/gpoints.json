@@ -1226,5 +1226,32 @@
       "g1": true,
       "updatedAt": "2026-10-15T07:54:35.007Z"
     }
+  },
+  "SF_E99_TEST": {
+    "cut_1": {
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_01_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 1
+          },
+          "total": 96,
+          "note": "",
+          "scoredAt": "2026-10-16T11:56:15.876Z"
+        }
+      },
+      "updatedAt": "2026-10-16T11:56:17.132Z",
+      "g2": true,
+      "selectedImage": "cut_01_a.jpg"
+    }
   }
 }
