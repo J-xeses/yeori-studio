@@ -62,6 +62,8 @@ const SIDEBAR_EP_GROUPS = [
 // 무관하게 기존 초록(#22c55e)을 그대로 유지 — "다 끝났다"는 신호 자체가 더 중요해서 덮지 않음.
 const platformBarColor = (contentType) =>
     SIDEBAR_EP_GROUPS.find(g => g.types.includes(contentType))?.barColor || '#a78bfa'
+// 에피소드 목록 "게시됨" 배지 아이콘 — publishStatus[epNum]의 플랫폼 키와 매칭(2026-10-16).
+const PUBLISH_PLATFORM_ICON = { instagram: '📸', youtube: '📺', tiktok: '🎵' }
 const CONTENT_TYPE_OPTIONS = [
     { value: 'LF',   label: 'LF — YouTube 롱폼' },
     { value: 'SF',   label: 'SF — YouTube 숏폼' },
@@ -92,6 +94,10 @@ function EpisodeSidebar({ onClose }) {
     const [newSlug, setNewSlug] = useState('')
     const [addError, setAddError] = useState('')
     const [gData, setGData] = useState(() => loadGPoints())
+    // 퍼블리싱 탭에서 실제 게시된 에피소드 기록(플랫폼별) — 2026-10-16, 성준님 요청:
+    // "업로드된 에피소드 구별 표시를 모든단계 목록에 일괄 적용". 에피소드 목록은 이 사이드바
+    // 하나뿐이라(탭 불문 항상 보임) 여기 한 군데만 고치면 모든 단계에서 공통으로 보임.
+    const [publishStatus, setPublishStatus] = useState({})
 
     // 다른 탭(대본생성 탭 등)에서 G1을 승인/취소해도 이 컴포넌트의 gData는 갱신되지
     // 않아서(각자 독립된 useState라 서로 안 알려줌), 사이드바의 진행률·"스튜디오 탭으로"
@@ -104,6 +110,14 @@ function EpisodeSidebar({ onClose }) {
         pull()
         const id2 = setInterval(pull, 20000)
         return () => { clearInterval(id); clearInterval(id2) }
+    }, [])
+
+    useEffect(() => {
+        const loadPublishStatus = () => fetch('http://localhost:3001/api/publish-status')
+            .then(r => r.json()).then(setPublishStatus).catch(() => {})
+        loadPublishStatus()
+        const id = setInterval(loadPublishStatus, 20000)
+        return () => clearInterval(id)
     }, [])
 
     const approveAllG1 = async (e, ep) => {
@@ -163,6 +177,7 @@ function EpisodeSidebar({ onClose }) {
         const isOpen = openTabIds.includes(ep.id)
         const epCode = ep.episode?.contentType ? displayEpisodeCode(ep.episode) : `EP${String(ep.episode.number).padStart(2, '0')}`
         const epGpKey = resolveEpisodeCode(ep.episode)
+        const publishedPlatforms = Object.keys(publishStatus[String(ep.episode.number)] || {})
         const epCuts = ep.cuts || []
         const epG1 = epCuts.filter(c => gData[epGpKey]?.[`cut_${c.no}`]?.g1).length
         const epTotal = epCuts.length
@@ -209,6 +224,11 @@ function EpisodeSidebar({ onClose }) {
                         <span>·</span>
                         <span>{ep.episode.location}</span>
                         {isOpen && <span style={{ color: '#a78bfa', fontWeight: 600 }}>· 열림</span>}
+                        {publishedPlatforms.length > 0 && (
+                            <span title={`게시됨: ${publishedPlatforms.join(', ')}`} style={{ color: '#4ade80', fontWeight: 600 }}>
+                                · 📤{publishedPlatforms.map(p => PUBLISH_PLATFORM_ICON[p] || '').join('')}
+                            </span>
+                        )}
                     </div>
                     {epTotal > 0 && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>

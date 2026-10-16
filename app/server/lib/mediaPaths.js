@@ -161,6 +161,9 @@ export function capcutExePath()    { return statePath('capcut_exe_path.txt') }
 // 실제 CapCut 배치용)과 완전히 분리. 에피소드별 여러 개를 오갈 수 있어 전역 단일 파일이 아니라
 // epNum으로 키를 나눈 구조로 저장(2026-09-13).
 export function checkupTimelinePath() { return statePath('yeori_checkup_timeline.json') }
+// 퍼블리싱 탭 ④업로드 실제 게시 기록 — { [epNum]: { [platform]: { publishedAt, permalink, mediaId, caption } } }
+// (2026-10-16, 에피소드 목록 사이드바에 "게시됨" 표시를 붙이기 위해 신설)
+export function publishStatusPath() { return statePath('publish-status.json') }
 
 // ── 절대경로 → /downloads/... URL ──────────────────────────────────
 export function toMediaUrl(abs) {

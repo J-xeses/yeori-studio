@@ -497,20 +497,53 @@ function PackageSection({ epNum }) {
 
 // ── ④ 업로드 섹션 ── 2026-10-15: 1단계로 Instagram 릴스 업로드 연결(②캡션+③패키징 그대로 사용).
 // YouTube/TikTok은 계정 연동이 아직 없어 "준비 중"으로 남김.
+// 이미 게시된 플랫폼은 "업로드된 현황"으로 상단에 먼저 보여준다(2026-10-16) — 새로고침·
+// 다른 세션에서도 "이거 이미 올렸던가?"를 다시 확인할 필요 없게 서버 기록을 그대로 띄움.
+const PUBLISH_PLATFORM_LABEL = { instagram: '📸 Instagram', youtube: '📺 YouTube', tiktok: '🎵 TikTok' }
+
+function PublishedStatusPanel({ publishStatus }) {
+  const entries = Object.entries(publishStatus || {})
+  if (entries.length === 0) return null
+  return (
+    <div className={s.uploadRow} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+      <span className={s.uploadPlatform}>업로드된 현황</span>
+      {entries.map(([platform, rec]) => (
+        <div key={platform} style={{ fontSize: 12, color: '#4ade80', display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span>✅ {PUBLISH_PLATFORM_LABEL[platform] || platform}</span>
+          <span style={{ color: 'var(--text3)' }}>{new Date(rec.publishedAt).toLocaleString('ko-KR')}</span>
+          {rec.permalink && <a href={rec.permalink} target="_blank" rel="noreferrer" style={{ color: '#a78bfa' }}>게시물 보기</a>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function UploadSection({ epNum }) {
   const { state } = useApp()
   const ig = state.publishing?.instagram || { title: '', description: '', tags: '' }
   const [status, setStatus] = useState('idle') // idle | running | done | error
   const [message, setMessage] = useState('')
   const [permalink, setPermalink] = useState(null)
+  const [publishStatus, setPublishStatus] = useState({})
+
+  const loadPublishStatus = useCallback(() => {
+    if (!epNum) return
+    fetch(`${SERVER}/api/publish-status`).then(r => r.json())
+      .then(all => setPublishStatus(all?.[epNum] || {}))
+      .catch(() => {})
+  }, [epNum])
+
+  useEffect(() => { loadPublishStatus() }, [loadPublishStatus])
 
   const caption = [ig.title, ig.description, ig.tags].filter(s => s?.trim()).join('\n\n')
+  const alreadyPublishedIg = !!publishStatus.instagram
 
   const doPublish = async () => {
     if (!epNum) return
     if (!caption.trim()) { setStatus('error'); setMessage('②제목/설명/태그를 먼저 채워주세요(인스타는 이걸 그대로 캡션으로 씁니다).'); return }
+    const reconfirm = alreadyPublishedIg ? '\n\n⚠️ 이 에피소드는 Instagram에 이미 게시된 기록이 있습니다. 또 올리면 중복 게시됩니다.' : ''
     const preview = caption.length > 300 ? caption.slice(0, 300) + '…' : caption
-    if (!window.confirm(`Instagram에 릴스로 실제 게시합니다. 되돌릴 수 없습니다.\n\n캡션:\n${preview}\n\n진행할까요?`)) return
+    if (!window.confirm(`Instagram에 릴스로 실제 게시합니다. 되돌릴 수 없습니다.${reconfirm}\n\n캡션:\n${preview}\n\n진행할까요?`)) return
     setStatus('running'); setMessage('업로드 중… (영상 처리까지 최대 몇 분 걸릴 수 있습니다)'); setPermalink(null)
     try {
       const res = await fetch(`${SERVER}/api/instagram/publish`, {
@@ -520,6 +553,7 @@ function UploadSection({ epNum }) {
       const data = await res.json()
       if (!res.ok || !data.success) throw new Error(data.error || '업로드 실패')
       setStatus('done'); setMessage('✅ 게시 완료'); setPermalink(data.permalink)
+      loadPublishStatus()
     } catch (err) {
       setStatus('error'); setMessage('❌ ' + err.message)
     }
@@ -527,10 +561,11 @@ function UploadSection({ epNum }) {
 
   return (
     <div className={s.uploadWrap}>
+      <PublishedStatusPanel publishStatus={publishStatus} />
       <div className={s.uploadRow}>
-        <span className={s.uploadPlatform}>📸 Instagram 업로드</span>
+        <span className={s.uploadPlatform}>📸 Instagram 업로드{alreadyPublishedIg ? ' (게시됨)' : ''}</span>
         <button className={s.uploadBtn} onClick={doPublish} disabled={status === 'running'}>
-          {status === 'running' ? '⏳ 업로드 중...' : '🚀 릴스로 게시'}
+          {status === 'running' ? '⏳ 업로드 중...' : alreadyPublishedIg ? '🚀 다시 게시' : '🚀 릴스로 게시'}
         </button>
       </div>
       {message && (

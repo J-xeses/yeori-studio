@@ -6095,10 +6095,19 @@ app.post('/api/instagram/publish', async (req, res) => {
   try {
     const { publishReel } = await import('./lib/igPublish.js')
     const result = await publishReel({ epNum, caption })
+    const { markPublished } = await import('./lib/publishStatus.js')
+    markPublished(epNum, 'instagram', { ...result, caption })
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// ── GET /api/publish-status — 전체 에피소드 게시 기록(플랫폼별), 2026-10-16 ──
+// 퍼블리싱 탭 "업로드된 현황" 표시 + 에피소드 목록 사이드바 "게시됨" 배지가 함께 쓴다.
+app.get('/api/publish-status', async (req, res) => {
+  const { getAllPublishStatus } = await import('./lib/publishStatus.js')
+  res.json(getAllPublishStatus())
 })
 
 // ── GET /api/trend-candidates, POST /api/trend-to-candidate ──────────
