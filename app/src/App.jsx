@@ -148,7 +148,7 @@ function EpisodeSidebar({ onClose }) {
     const previewCode = formatEpisodeCode(newType, nextNumber, newSlug)
 
     const openAddForm = () => {
-        if (Object.keys(episodes).length >= 10) { alert('에피소드는 최대 10개까지 만들 수 있어요.'); return }
+        if (Object.keys(episodes).length >= 99) { alert('에피소드는 최대 99개까지 만들 수 있어요.'); return }
         setNewType('LF'); setNewSlug(''); setAddError(''); setAddOpen(true)
     }
 
@@ -329,7 +329,7 @@ function EpisodeSidebar({ onClose }) {
                 borderBottom: '1px solid var(--border)',
             }}>
                 <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text3)', letterSpacing: '0.05em' }}>
-                    에피소드 목록 ({allEps.length}/10)
+                    에피소드 목록 ({allEps.length}/99)
                 </span>
                 <button
                     onClick={onClose}

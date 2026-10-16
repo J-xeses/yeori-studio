@@ -10417,6 +10417,48 @@
           "imageRatio": {}
         }
       }
+    },
+    "ep_test_freezebeat": {
+      "id": "ep_test_freezebeat",
+      "episode": {
+        "number": 999,
+        "title": "[TEST] 프리즈비트 실험 — 서류 돌풍",
+        "location": "홈 오피스",
+        "mood": "실험",
+        "cutCount": 1,
+        "contentType": "SF",
+        "topicCode": "LIF",
+        "scnCode": "DOC",
+        "instaNum": "",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, AI 크리에이터",
+        "code": "SF_E99_TEST"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "프리즈비트 테스트 — 서류 돌풍 정지",
+          "lipsync": false,
+          "scene": "(하드컷) 평온한 클로즈업 표정에서 시작 → 카메라가 빠르게 줌아웃하며 서류 돌풍 정지로 이미 얼어붙은 혼돈 장면을 리빌, 카메라는 그 주위를 90도 돈다.",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "subtitle": "...어?",
+          "narration": "",
+          "imagePrompt": "MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — a sudden gust of wind blowing through an open window, scattering a stack of papers off the desk, with dozens of sheets suspended and frozen mid-air around her — her pose held at its most dramatic peak, shot on a high-speed cine camera rig, 30-degree shutter angle (1/3000s shutter speed), time dilated to an extreme 1500fps super-slow-motion freeze, shallow anamorphic depth of field, in a cozy home office desk by a window, laptop and a cup of coffee on the desk, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: soft natural daylight from the window, never legible text or UI, vertical 9:16",
+          "videoPrompt": "Opens on an extreme close-up of her calm, natural expression, a cozy home office desk by a window, laptop and a cup of coffee on the desk, soft natural daylight from the window. / The camera rapidly pulls back and zooms out, revealing — A frozen, suspended-in-time bullet-time moment, shot on a high-speed cine camera rig, 30-degree shutter angle (1/3000s shutter speed), time dilated to an extreme 1500fps super-slow-motion freeze, shallow anamorphic depth of field: she is caught mid-action — a sudden gust of wind blowing through an open window, scattering a stack of papers off the desk, with dozens of sheets suspended and frozen mid-air around her — her pose held perfectly still at its most dramatic peak for the rest of the shot, only her hair and loose fabric gently drifting in the air, every falling object and droplet suspended mid-air with faint motion-trail ripples around it. The camera orbits roughly 90 degrees around her frozen pose along a smooth arc, revealing the frozen scene from a new angle by the end. a cozy home office desk by a window, laptop and a cup of coffee on the desk. soft natural daylight from the window. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
+          "duration": 4,
+          "shotType": "MEDIUM",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "긴장",
+          "audioNote": "BGM: 이어서, 비트 유지 / 효과음: 서류 돌풍 정지 임팩트 + 바이올린 아르페지오 급상승 + 시네마틱 붐(컷 시작) / 타점: 1.6초 스트링 크레센도",
+          "videoMode": "veo"
+        }
+      ],
+      "scriptRaw": "[TEST 전용 에피소드] 연출기법 실험(불릿타임/프리즈 비트) 검증용 — 실제 기획/업로드 대상 아님. 10/16 서류 돌풍 정지 씬.",
+      "createdAt": 1792144765187,
+      "tabState": {}
     }
   },
   "episode": {
