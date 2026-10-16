@@ -761,8 +761,28 @@ function FreezeBeatPanel({ state, dispatch }) {
   const commitApply = () => {
     const cut = (state.cuts || []).find((c) => c.id === targetCutId)
     if (!cut || !buildResult?.cutPatch) return
-    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: buildResult.cutPatch })
+    // 돌발상황 원문(actionKo/En)·평소모습을 cutPatch와 별도 필드로 컷에 같이 저장 — 나중에
+    // 이 컷을 다시 대상으로 고를 때(예: 멀티앵글 키프레임) 입력칸을 수동 재입력 없이 복원하기
+    // 위함(2026-10-16, "대상 컷 지정해도 키프레임 생성이 안 먹힘" 버그 수정).
+    dispatch({
+      type: 'UPDATE_CUT', id: cut.id,
+      p: { ...buildResult.cutPatch, freezeBeatAction: { nameKo: actionLabel, ko: actionKo, en: actionEn }, freezeBeatSceneA: sceneA },
+    })
     setApplyMsg(`✅ CUT${cut.no}에 반영 완료 — G2(이미지 생성)를 돌리면 캐릭터 얼굴 레퍼런스가 자동 첨부됩니다.`)
+  }
+
+  // 대상 컷을 고르면, 그 컷에 이미 저장된 돌발상황 설명(freezeBeatAction)이 있을 경우 입력칸에
+  // 그대로 불러온다 — 없으면(아직 아무 것도 적용 안 된 새 컷) 현재 입력값은 그대로 둔다.
+  const selectTargetCut = (cutId) => {
+    setTargetCutId(cutId)
+    const cut = (state.cuts || []).find((c) => c.id === cutId)
+    if (cut?.freezeBeatAction) {
+      setActionLabel(cut.freezeBeatAction.nameKo || '')
+      setActionKo(cut.freezeBeatAction.ko || '')
+      setActionEn(cut.freezeBeatAction.en || '')
+      setSceneA(cut.freezeBeatSceneA || { poseKo: '', poseEn: '', envEn: '', lightingEn: '' })
+      setBuildResult(null)
+    }
   }
 
   return (
@@ -832,7 +852,7 @@ function FreezeBeatPanel({ state, dispatch }) {
           <pre className={styles.resultText} style={{ fontSize: 11, marginBottom: 10 }}>{buildResult.cutPatch.videoPrompt}</pre>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => setTargetCutId(e.target.value)}>
+            <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => selectTargetCut(e.target.value)}>
               <option value="">대상 컷 선택…</option>
               {(state.cuts || []).map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
             </select>
@@ -851,7 +871,7 @@ function FreezeBeatPanel({ state, dispatch }) {
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
-          <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => setTargetCutId(e.target.value)}>
+          <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => selectTargetCut(e.target.value)}>
             <option value="">대상 컷 선택…</option>
             {(state.cuts || []).map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
           </select>
