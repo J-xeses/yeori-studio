@@ -12,7 +12,8 @@ import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
-import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger } from './lib/customChangePresets.js'
+import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent } from './lib/customChangePresets.js'
+import { listRefImages, listAllRefs, addRefImage, deleteRefImage } from './lib/directionRefs.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
@@ -6830,6 +6831,51 @@ app.post('/api/change-combo/build-freeze-keyframes', (req, res) => {
     const { action, sceneA, angles } = req.body || {}
     res.json({ keyframes: buildFreezeKeyframeAngles({ action, sceneA, angles }) })
   } catch (err) { res.status(400).json({ error: err.message }) }
+})
+// 2026-10-16 — 프리즈 비트 커스텀 사건 목록/추가. 내장 라이브러리(FREEZE_EVENT_LIBRARY, 클라이언트)는
+// 코드에 고정, 사람이 직접 입력한 조합만 여기 누적 저장(customChangePresets.js 참고).
+app.get('/api/change-combo/freeze-events', (req, res) => {
+  res.json({ events: listCustomFreezeEvents() })
+})
+app.post('/api/change-combo/freeze-events', (req, res) => {
+  try { res.json(addCustomFreezeEvent(req.body || {})) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.delete('/api/change-combo/freeze-events/:id', (req, res) => {
+  deleteCustomFreezeEvent(req.params.id)
+  res.json({ ok: true })
+})
+
+// ── 연출기법 공통 레퍼런스 이미지(시그/체인지/프리즈) — 2026-10-16 ──────────────
+// group: 'signature' | 'change' | 'freeze', key: 그 그룹 안 기법 항목 이름(예: 프리즈 사건
+// nameKo, 시그 프리셋 name, 체인지 트리거 id). server/lib/directionRefs.js 참고.
+app.get('/api/direction-refs', (req, res) => {
+  const { group, key } = req.query
+  if (!group) return res.status(400).json({ error: 'group 필요' })
+  if (key) return res.json({ images: listRefImages(group, key) })
+  res.json({ all: listAllRefs(group) })
+})
+app.post('/api/direction-refs/upload', (req, res) => {
+  const { group, key, ext, caption } = req.query
+  if (!group || !key) return res.status(400).json({ error: 'group, key 필요' })
+  const safeExt = (String(ext || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').replace('jpeg', 'jpg')) || 'jpg'
+  const chunks = []
+  req.on('data', (c) => chunks.push(c))
+  req.on('error', () => res.status(400).json({ error: '업로드 스트림 오류' }))
+  req.on('end', () => {
+    const buf = Buffer.concat(chunks)
+    if (!buf.length) return res.status(400).json({ error: '빈 파일' })
+    try {
+      const rec = addRefImage(group, key, buf, safeExt, caption || '')
+      res.json({ success: true, ...rec })
+    } catch (err) { res.status(500).json({ error: err.message }) }
+  })
+})
+app.delete('/api/direction-refs', (req, res) => {
+  const { group, key, filename } = req.query
+  if (!group || !key || !filename) return res.status(400).json({ error: 'group, key, filename 필요' })
+  deleteRefImage(group, key, filename)
+  res.json({ ok: true })
 })
 
 // ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──

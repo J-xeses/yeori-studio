@@ -22,6 +22,56 @@ function episodeContentTypeToInsta(contentType) {
   return map[(contentType || '').toUpperCase()] || null
 }
 
+// ── 연출기법 공통 레퍼런스 이미지 — 2026-10-16 신설 ─────────────────────────
+// 시그·체인지·프리즈 세 패널이 공유하는 레퍼런스 이미지 저장소(server/lib/directionRefs.js).
+// 성준님 피드백: "모습이 머리에 배경으로 떠올라야 에피소드 n번 컷도 최적으로 선정할 수 있다"
+// — 텍스트 설명뿐이던 기법 피커에 실제 레퍼런스 사진을 붙여서, 고를 때 바로 눈에 보이게 한다.
+// server/lib/directionRefs.js의 slugKey()와 반드시 동일하게 유지 — 클라이언트가 같은 key로
+// 조회해야 서버가 저장한 폴더(예: "서류 돌풍" → "서류_돌풍")와 매칭된다.
+function refSlugKey(key) {
+  return String(key).trim().toLowerCase().replace(/[^a-z0-9가-힣]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'untitled'
+}
+
+function useDirectionRefs(group) {
+  const [refsMap, setRefsMap] = useState({})
+  const reload = () => {
+    fetch(`${SERVER}/api/direction-refs?group=${group}`).then((r) => r.json())
+      .then((d) => setRefsMap(d.all || {})).catch(() => {})
+  }
+  useEffect(() => { reload() }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  return { refsMap, reload }
+}
+
+// key(기법 항목 이름)에 해당하는 레퍼런스 썸네일을 작게 보여주고, "+"로 새 이미지를 올릴 수
+// 있게 하는 공용 조각. 클릭하면 원본 크기로 새 탭에서 열림(간단한 미리보기 대용).
+function RefThumbStrip({ group, itemKey, images, onUploaded, size = 40 }) {
+  const upload = async (file) => {
+    if (!file) return
+    const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
+    await fetch(`${SERVER}/api/direction-refs/upload?group=${group}&key=${encodeURIComponent(itemKey)}&ext=${ext}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file,
+    })
+    onUploaded?.()
+  }
+  return (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
+      {(images || []).slice(0, 4).map((img) => (
+        <a key={img.filename} href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer" title={img.caption || ''}>
+          <img src={`${SERVER}${img.url}`} alt="" style={{ width: size, height: size, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border)' }} />
+        </a>
+      ))}
+      <label style={{
+        width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: '1px dashed var(--border)', borderRadius: 4, cursor: 'pointer', fontSize: 14, color: '#888', flexShrink: 0,
+      }} title="레퍼런스 이미지 추가">
+        +
+        <input type="file" accept="image/*" style={{ display: 'none' }}
+          onChange={(e) => upload(e.target.files[0])} />
+      </label>
+    </div>
+  )
+}
+
 // 2026-10-10 — 성준님: "롱폼의 경우 대본기획시 단계별 비트를 구성 컷에 반영하고, 그 내용이
 // 리텐션 훅 탭과 연동이 되어야겠다." 각 훅 슬롯에 대응하는 BEAT 태그(ScriptGenTab.jsx의
 // BEAT_CANON과 동일 어휘)를 매핑 — 시그는 "같은 성격"(성준님 표현)이라 피크 구간(mid2)·
@@ -253,9 +303,75 @@ const SIGNATURE_TECHNIQUE_PRESETS = [
     sp: '',
     audioMotif: '',
   },
+  // 2026-10-16 보강 — direction-material-bank.md에 카탈로그만 돼 있고 이 피커엔 아직 안 올라와
+  // 있던 기법들을 실제로 골라 쓸 수 있게 추가(성준님 피드백: "시그 레퍼런스도 좀더 보강했으면").
+  {
+    name: '극적 줌아웃 리빌 (지구까지 빠지기)',
+    description: '가까운 피사체에서 시작해 카메라가 빠르게 빠지며 지구 전체가 보이는 데까지 이어지는 돌리줌 — 오프닝 훅·엔딩 임팩트용(연출 재료 창고 ①, 2026-10-15 Instagram 레퍼런스)',
+    ch: 'extreme continuous dolly-zoom-out starting tight on her face, camera rapidly pulling back and ascending through the atmosphere, speed ramp acceleration, radial motion blur',
+    sp: 'OT.ST.NT (시작 공간은 실내외 무관, 카메라가 대기권 밖까지 빠짐)',
+    audioMotif: '시네마틱 휩 사운드만, 음악 없이',
+  },
+  {
+    name: '신화적 변신',
+    description: '신화 속 존재(여신·정령 등)로 잠깐 변했다가 다시 돌아오는 극적 리빌(연출 재료 창고, 2026-10-13 리서치)',
+    ch: 'momentarily transforming into a mythical, ethereal being — glowing light particles, flowing otherworldly fabric, then settling back to her normal self',
+    sp: '',
+    audioMotif: '신비로운 하프/차임 + 리버스 스웰',
+  },
+  {
+    name: '메이크업 모핑',
+    description: '민낯에서 완성 메이크업까지 손 없이 저절로 모핑되는 연출(연출 재료 창고, 2026-10-13 리서치)',
+    ch: 'face morphing seamlessly from bare skin to a fully finished glamorous makeup look, no hands touching the face, as if by magic',
+    sp: '',
+    audioMotif: '반짝이는 차임 상승 + 파우더 펑 소리',
+  },
+  {
+    name: '피규어화',
+    description: '순간적으로 피규어/인형처럼 변했다가 다시 사람으로 돌아오는 반전(연출 재료 창고, 2026-10-13 리서치)',
+    ch: 'briefly transforming into a collectible figurine on a display base, miniature glossy plastic look, then smoothly transforming back into her real self',
+    sp: '',
+    audioMotif: '장난감 조립 소리 + 리버스 스냅',
+  },
+  {
+    name: '흑백→컬러 리빌',
+    description: '흑백 화면에서 시작해 색이 번지듯 퍼지며 컬러로 전환되는 연출(연출 재료 창고, 2026-10-13 리서치)',
+    ch: 'scene begins in black and white, color blooming outward from her like ink spreading until the whole frame is in full color',
+    sp: '',
+    audioMotif: '정적 → 컬러풀한 신스 스웰',
+  },
+  {
+    name: '무빙워크 체인지',
+    description: '공항 무빙워크처럼 걸어 지나가는 동안 의상·배경이 바뀌는 연출(연출 재료 창고, 2026-10-13 리서치)',
+    ch: 'walking along a moving walkway, outfit and background seamlessly changing with each step forward',
+    sp: 'IN.AIRPORT.NT (또는 유사한 통로형 공간)',
+    audioMotif: '리드미컬한 워킹 비트 + 전환마다 스냅',
+  },
+  {
+    name: '콜라주 플라이인',
+    description: '여러 장의 사진·오브젝트가 화면 밖에서 날아들어와 콜라주처럼 쌓이는 연출(연출 재료 창고, 2026-10-13 리서치)',
+    ch: '(배경/오브젝트 중심 — 여러 사진·오브젝트 조각이 프레임 가장자리에서 날아들어와 콜라주처럼 쌓이는 장면)',
+    sp: '',
+    audioMotif: '연속 슬라이드 스냅 사운드',
+  },
+  {
+    name: '만화 패널 변환',
+    description: '실사에서 순간적으로 만화/웹툰 패널 스타일로 바뀌었다가 돌아오는 연출(연출 재료 창고, 2026-10-13 리서치)',
+    ch: 'briefly transforming into a bold comic-panel illustration style with ink outlines and halftone shading, then smoothly returning to photorealistic',
+    sp: '',
+    audioMotif: '만화 효과음(펑!) + 종이 넘기는 소리',
+  },
+  {
+    name: '컬러 블로킹 변주 (다수 속 하나만 다른 색)',
+    description: '같은 색 사물·배경 수십 개 사이에서 서여리(또는 소품) 하나만 다른 색으로 도드라지는 구도 — 썸네일·오프닝 1컷용(연출 재료 창고, 2026-10-15 레퍼런스)',
+    ch: 'standing out as the one element in a different color among dozens of identical same-colored objects and background around her',
+    sp: '',
+    audioMotif: '단순 임팩트 한 방 + 정적',
+  },
 ]
 
 function SignatureRefPanel({ state, dispatch }) {
+  const { refsMap: sigImageRefs, reload: reloadSigImageRefs } = useDirectionRefs('signature')
   const [refs, setRefs] = useState([])
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState(null)   // 새로 추가/수정 중인 레퍼런스 초안
@@ -325,6 +441,7 @@ function SignatureRefPanel({ state, dispatch }) {
                 onClick={() => setEditing({ name: p.name, description: p.description, ch: p.ch, lookId: '', sp: p.sp, audioMotif: p.audioMotif })}>
                 <div className={styles.columnItemLabel}>{p.name}</div>
                 <div className={styles.columnItemDesc}>{p.description}</div>
+                <RefThumbStrip group="signature" itemKey={p.name} images={sigImageRefs[refSlugKey(p.name)]} onUploaded={reloadSigImageRefs} />
               </div>
             ))}
           </div>
@@ -414,6 +531,7 @@ function SignatureRefPanel({ state, dispatch }) {
 // 동작이 시작→VFX 걷힘→완성 포즈"만 담당(R07 CUT2와 동일 로직) — 반영 후 기존 G2(Nano
 // Banana, 캐릭터 얼굴 레퍼런스 자동 첨부)를 돌리면 identity 문제가 자연히 해결된다.
 function ChangeComboPanel({ state, dispatch }) {
+  const { refsMap: changeImageRefs, reload: reloadChangeImageRefs } = useDirectionRefs('change')
   const [options, setOptions] = useState({ triggers: [], vfx: [], sceneBFashionPresets: [] })
   const [triggerId, setTriggerId] = useState('')
   const [vfxIndex, setVfxIndex] = useState(null)
@@ -516,6 +634,7 @@ function ChangeComboPanel({ state, dispatch }) {
                   <div className={styles.columnItemLabel}>{t.icon} {t.nameKo}</div>
                   <div className={styles.columnItemDesc}>{t.descKo}</div>
                   {t.custom && <div className={styles.columnItemBadge}>커스텀</div>}
+                  <RefThumbStrip group="change" itemKey={t.nameKo} images={changeImageRefs[refSlugKey(t.nameKo)]} onUploaded={reloadChangeImageRefs} />
                 </div>
               ))}
             </div>
@@ -670,12 +789,58 @@ function ChangeComboPanel({ state, dispatch }) {
   )
 }
 
+// ── 프리즈 비트 레퍼런스 라이브러리 — 2026-10-16 보강 ───────────────────────
+// 성준님 피드백: "다양한 레퍼런스가 1차적으로 갖춰졌으면 좋겠다 — 여러 상황을 조합해서
+// 상상할 수 있고, 그 상상에서 다른 가지를 더 만들 수도 있고, 입력하기도 하고". 한국어
+// 문장을 "계기+사물"로 쪼개 자동 합성하면 조사(이/가, 을/를) 처리가 깨지기 쉬워서, 대신
+// 두 개의 독립된 축으로 조합한다 — ① 사건(이미 완결된 문장, 안 깨짐) × ② 장소(환경/조명
+// 필드만 갈아끼움, 문장에 안 섞여서 안전). "🎲 랜덤 조합"으로 사건×장소를 무작위로 묶어
+// 새 상상을 유도하고, 사람이 직접 입력한 조합은 서버에 저장해 다음에도 다시 꺼내 쓸 수
+// 있다(server/lib/customChangePresets.js의 listCustomFreezeEvents 등 참고).
+const FREEZE_EVENT_LIBRARY = [
+  // 물건 파손
+  { nameKo: '커피잔 파손', category: '물건 파손', ko: '들고 있던 커피잔이 손에서 미끄러져 바닥에 부딪혀 산산조각 나며 파편과 커피 방울이 사방으로 튄', en: 'a coffee cup slipping from her hand and shattering as it hits the floor, with ceramic shards and coffee droplets frozen mid-explosion all around her' },
+  { nameKo: '유리잔 파손', category: '물건 파손', ko: '들고 있던 유리잔을 놓쳐 바닥에 부딪혀 산산조각 나며 날카로운 파편이 사방으로 튄', en: 'a glass tumbler slipping from her hand and shattering on the floor, with sharp glass shards scattering in every direction' },
+  { nameKo: '꽃병 쓰러짐', category: '물건 파손', ko: '팔꿈치에 부딪힌 꽃병이 기울어 떨어지며 물과 꽃잎이 사방으로 튄', en: 'a vase knocked over by her elbow, tipping and falling as water and flower petals burst outward' },
+  { nameKo: '접시 파손', category: '물건 파손', ko: '설거지하다 놓친 접시가 바닥에 부딪혀 산산조각 나는', en: 'a plate slipping from her soapy hands while washing dishes and shattering on the floor' },
+  // 날씨 / 바람
+  { nameKo: '서류 돌풍', category: '날씨/바람', ko: '열린 창문으로 갑자기 돌풍이 들이쳐 책상 위 서류 더미가 사방으로 날아올라 허공에 멈춘', en: 'a sudden gust of wind blowing through an open window, scattering a stack of papers off the desk, with dozens of sheets suspended and frozen mid-air around her' },
+  { nameKo: '우산 뒤집힘', category: '날씨/바람', ko: '갑작스런 돌풍에 우산이 뒤집히며 살이 꺾이고 빗방울이 튀는', en: 'a sudden gust turning her umbrella inside out, its ribs bending as raindrops splash outward around it' },
+  { nameKo: '눈보라', category: '날씨/바람', ko: '눈 쌓인 거리에서 돌풍에 흩날리는 눈송이 사이 멈춰선', en: 'caught amid a flurry of snow suddenly swirling around her in a gust on a snowy street' },
+  { nameKo: '벚꽃 흩날림', category: '날씨/바람', ko: '강풍에 머리 위로 벚꽃잎이 소나기처럼 흩날리는', en: 'a gust of wind scattering a shower of cherry blossom petals around her' },
+  // 신체반응 / 동작 정지
+  { nameKo: '급브레이크+고양이', category: '신체반응', ko: '급브레이크를 밟는 순간 눈앞에 고양이가 튀어나옴', en: 'slamming the brakes as a cat suddenly darts in front of her' },
+  { nameKo: '날아온 물건 피함', category: '신체반응', ko: '어디선가 갑자기 날아든 물건을 반사적으로 피함', en: 'reflexively dodging an object suddenly flying toward her from off-frame' },
+  { nameKo: '계단 헛디딤', category: '신체반응', ko: '계단에서 발을 헛디뎌 몸이 기울어진 채 공중에 멈춘', en: 'losing her footing on the stairs, her body tipping off-balance and frozen mid-stumble' },
+  { nameKo: '점프 정점', category: '신체반응', ko: '신나서 뛰어오른 순간, 머리카락과 옷자락이 떠오른 채 공중에 멈춘', en: 'caught at the peak of a joyful jump, hair and clothing billowing upward, frozen mid-air' },
+  { nameKo: '놀라서 폰 떨어뜨림', category: '신체반응', ko: '메시지를 보다 소스라치게 놀라 손에서 폰이 미끄러지는', en: 'startled while reading a message, her phone slipping from her hand mid-air' },
+  // 액체 / 음식
+  { nameKo: '라떼 쏟아짐', category: '액체/음식', ko: '들고 있던 라떼가 출렁여 쏟아지며 우유 거품이 허공에 튄', en: 'the latte in her hand sloshing and spilling, milk foam splashing into the air' },
+  { nameKo: '팝콘 봉지 터짐', category: '액체/음식', ko: '팝콘 봉지가 터지며 알갱이가 사방으로 쏟아지는', en: 'a bag of popcorn bursting open, kernels exploding outward in every direction' },
+  { nameKo: '탄산음료 터짐', category: '액체/음식', ko: '흔들었던 탄산음료 캔이 터지며 거품이 분수처럼 솟구치는', en: 'a shaken soda can bursting open, fizz erupting like a fountain around her' },
+  // 종이 / 카드
+  { nameKo: '폴라로이드 흩날림', category: '종이/카드', ko: '들고 있던 폴라로이드 사진 뭉치를 놓쳐 허공에 흩날리는', en: 'a stack of polaroid photos slipping from her hands, scattering and fluttering through the air' },
+  { nameKo: '트럼프 카드 던지기', category: '종이/카드', ko: '카드 뭉치를 허공으로 던져 올린 순간 카드들이 부채처럼 흩어진', en: 'a deck of cards tossed into the air, fanning out and scattering mid-flight' },
+]
+const FREEZE_LOCATION_LIBRARY = [
+  { nameKo: '홈 오피스', envEn: 'a cozy home office desk by a window, laptop and a cup of coffee on the desk', lightingEn: 'soft natural daylight from the window' },
+  { nameKo: '거실', envEn: 'a cozy home living room', lightingEn: 'soft warm indoor lighting' },
+  { nameKo: '주방', envEn: 'a bright modern kitchen', lightingEn: 'soft daylight through a kitchen window' },
+  { nameKo: '침실', envEn: 'a softly lit cozy bedroom', lightingEn: 'warm lamp light' },
+  { nameKo: '카페', envEn: 'a cozy café interior with wooden tables', lightingEn: 'warm ambient café lighting' },
+  { nameKo: '사무실', envEn: 'a modern office with desks and glass partitions', lightingEn: 'cool fluorescent office lighting' },
+  { nameKo: '길거리', envEn: 'a city street sidewalk', lightingEn: 'natural daylight' },
+  { nameKo: '차 안', envEn: 'the interior of a car, dashboard visible', lightingEn: 'daylight through the windshield' },
+]
+const pickRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)]
+
 // ── 프리즈 비트(돌발상황 정지) 패널 — 2026-10-15 ──────────────────────────
 // ChangeComboPanel(체인지 생성기)과 달리 트리거 목록·Scene B(의상 리빌)가 없다 — 의상/배경은
 // 그대로고 "무슨 돌발상황인지"만 자유 입력. 성준님 피드백: "변신 장면보다, 빠르게 움직이다가
 // 돌발상황이 확 펼쳐지는 순간에 멈춰서 효과가 연출되는 장면이 적합" — buildRevealCut()과
 // 아키텍처 자체를 분리(server/lib/changeEffects.js buildFreezeBeatCut() 참고).
 function FreezeBeatPanel({ state, dispatch }) {
+  const { refsMap: freezeRefs, reload: reloadFreezeRefs } = useDirectionRefs('freeze')
   const [actionKo, setActionKo] = useState('')
   const [actionEn, setActionEn] = useState('')
   const [actionLabel, setActionLabel] = useState('')
@@ -696,12 +861,42 @@ function FreezeBeatPanel({ state, dispatch }) {
   const [copiedAngle, setCopiedAngle] = useState(null)
   const [keyframeUploads, setKeyframeUploads] = useState({}) // { [angleDeg]: { status, url } }
 
-  const EXAMPLES = [
-    { label: '급브레이크 + 튀어나온 고양이', ko: '급브레이크를 밟는 순간 눈앞에 고양이가 튀어나옴', en: 'slamming the brakes as a cat suddenly darts in front of her' },
-    { label: '커피잔이 손에서 미끄러져 깨짐', ko: '들고 있던 커피잔이 손에서 미끄러져 바닥에 부딪혀 산산조각 남', en: 'the coffee cup slipping from her hand and shattering as it hits the floor, coffee droplets and ceramic shards exploding outward' },
-    { label: '갑자기 날아든 물건을 피함', ko: '어디선가 갑자기 날아든 물건을 반사적으로 피함', en: 'reflexively dodging an object suddenly flying toward her from off-frame' },
-  ]
-  const applyExample = (ex) => { setActionLabel(ex.label); setActionKo(ex.ko); setActionEn(ex.en); setBuildResult(null) }
+  // 2026-10-16 보강 — 내장 사건 라이브러리(FREEZE_EVENT_LIBRARY) + 사람이 저장해둔 커스텀 사건을
+  // 합쳐서 보여준다. 카테고리 필터로 다양한 레퍼런스를 훑어보고, "🎲 랜덤 조합"으로 사건×장소를
+  // 무작위로 묶어 새 상상을 유도한다("그 상상에서 다른 가지를 더 만들 수도 있고").
+  const [customEvents, setCustomEvents] = useState([])
+  const [categoryFilter, setCategoryFilter] = useState('전체')
+  const [savingCustom, setSavingCustom] = useState(false)
+
+  const loadCustomEvents = () => {
+    fetch(`${SERVER}/api/change-combo/freeze-events`).then((r) => r.json())
+      .then((d) => setCustomEvents(d.events || [])).catch(() => {})
+  }
+  useEffect(() => { loadCustomEvents() }, [])
+
+  const allEvents = [...FREEZE_EVENT_LIBRARY, ...customEvents]
+  const categories = ['전체', ...new Set(allEvents.map((e) => e.category))]
+  const visibleEvents = categoryFilter === '전체' ? allEvents : allEvents.filter((e) => e.category === categoryFilter)
+
+  const applyExample = (ex) => { setActionLabel(ex.nameKo); setActionKo(ex.ko); setActionEn(ex.en); setBuildResult(null) }
+  const applyLocation = (loc) => { setSceneA((p) => ({ ...p, envEn: loc.envEn, lightingEn: loc.lightingEn })); setBuildResult(null) }
+  const randomCombo = () => {
+    applyExample(pickRandomItem(allEvents))
+    applyLocation(pickRandomItem(FREEZE_LOCATION_LIBRARY))
+  }
+  const saveCustomEvent = async () => {
+    if (!actionLabel.trim() || !actionKo.trim() || !actionEn.trim()) return
+    setSavingCustom(true)
+    try {
+      await fetch(`${SERVER}/api/change-combo/freeze-events`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nameKo: actionLabel, ko: actionKo, en: actionEn, category: '직접입력' }),
+      })
+      loadCustomEvents()
+    } finally {
+      setSavingCustom(false)
+    }
+  }
 
   const doBuild = async () => {
     setBuildError(''); setApplyMsg('')
@@ -789,11 +984,31 @@ function FreezeBeatPanel({ state, dispatch }) {
     <>
       <div className={styles.result} style={{ marginBottom: 14 }}>
         <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 6 }}>
-          예시에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
+          레퍼런스에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
+          사건(아래)과 장소(그 아래)는 서로 독립이라 자유롭게 조합할 수 있습니다.
         </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
+          <button className={styles.genBtn} style={{ width: 'auto', padding: '6px 12px', marginBottom: 0 }} onClick={randomCombo}>🎲 랜덤 조합</button>
+          {categories.map((c) => (
+            <button key={c} className={styles.copyBtn}
+              style={categoryFilter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+              onClick={() => setCategoryFilter(c)}>{c}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+          {visibleEvents.map((ex) => (
+            <div key={ex.id || ex.nameKo} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 6, maxWidth: 160 }}>
+              <button className={styles.copyBtn} title={ex.ko} style={{ width: '100%', textAlign: 'left' }} onClick={() => applyExample(ex)}>
+                {ex.custom && '📝 '}{ex.nameKo}
+              </button>
+              <RefThumbStrip group="freeze" itemKey={ex.nameKo} images={freezeRefs[refSlugKey(ex.nameKo)]} onUploaded={reloadFreezeRefs} />
+            </div>
+          ))}
+        </div>
+        <div className={styles.desc} style={{ fontSize: 10.5, margin: '8px 0 4px' }}>장소(선택) — 사건과 조합해 환경·조명만 바뀝니다</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {EXAMPLES.map((ex) => (
-            <button key={ex.label} className={styles.copyBtn} onClick={() => applyExample(ex)}>{ex.label}</button>
+          {FREEZE_LOCATION_LIBRARY.map((loc) => (
+            <button key={loc.nameKo} className={styles.copyBtn} onClick={() => applyLocation(loc)}>📍 {loc.nameKo}</button>
           ))}
         </div>
 
@@ -838,7 +1053,12 @@ function FreezeBeatPanel({ state, dispatch }) {
           </label>
         </div>
 
-        <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>프리즈 비트 생성</button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>프리즈 비트 생성</button>
+          <button className={styles.copyBtn} disabled={!actionLabel.trim() || !actionKo.trim() || !actionEn.trim() || savingCustom} onClick={saveCustomEvent}>
+            {savingCustom ? '저장 중…' : '📝 이 사건 레퍼런스로 저장'}
+          </button>
+        </div>
         {buildError && <div className={styles.error} style={{ marginTop: 8 }}>{buildError}</div>}
       </div>
 

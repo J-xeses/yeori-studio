@@ -56,3 +56,42 @@ export function deleteCustomTrigger(id) {
   data.triggers = data.triggers.filter((t) => t.id !== id)
   persist(data)
 }
+
+// ── 프리즈 비트 커스텀 사건(이벤트) 저장소(2026-10-16) ───────────────────────
+// 배경: 성준님 피드백 — "프리즈 비트 생성 기능에 다양한 레퍼런스가 1차적으로 갖춰졌으면
+// 좋겠다 — 여러 상황을 조합해서 상상할 수 있고, 그 상상에서 다른 가지를 더 만들 수도 있고,
+// 입력하기도 하고". 내장 사건(FREEZE_EVENT_LIBRARY, RetentionHookTab.jsx)×장소 조합 위에,
+// 사람이 직접 입력한 조합을 저장해두면 다음에도 재사용할 수 있게 같은 패턴으로 추가.
+function freezeEventStorePath() {
+  return path.join(mp.DOWNLOADS, '_shared', 'change-combo', 'custom-freeze-events.json')
+}
+
+function loadFreezeEvents() {
+  try { return JSON.parse(fs.readFileSync(freezeEventStorePath(), 'utf-8')) } catch { return { events: [] } }
+}
+
+function persistFreezeEvents(data) {
+  fs.mkdirSync(path.dirname(freezeEventStorePath()), { recursive: true })
+  fs.writeFileSync(freezeEventStorePath(), JSON.stringify(data, null, 2), 'utf-8')
+}
+
+export function listCustomFreezeEvents() {
+  return loadFreezeEvents().events.map((e) => ({ ...e, custom: true }))
+}
+
+// entry: { nameKo, ko, en, category? }
+export function addCustomFreezeEvent(entry) {
+  if (!entry?.nameKo?.trim() || !entry?.ko?.trim() || !entry?.en?.trim()) throw new Error('nameKo, ko, en 필요')
+  const data = loadFreezeEvents()
+  const id = `customfz_${Date.now()}`
+  const saved = { id, nameKo: entry.nameKo.trim(), ko: entry.ko.trim(), en: entry.en.trim(), category: entry.category?.trim() || '직접입력', addedAt: new Date().toISOString() }
+  data.events.push(saved)
+  persistFreezeEvents(data)
+  return saved
+}
+
+export function deleteCustomFreezeEvent(id) {
+  const data = loadFreezeEvents()
+  data.events = data.events.filter((e) => e.id !== id)
+  persistFreezeEvents(data)
+}
