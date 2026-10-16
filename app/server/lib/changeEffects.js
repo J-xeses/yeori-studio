@@ -139,38 +139,41 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
   }
 }
 
-// ── 프리즈 비트(돌발상황 정지) 생성기 — 2026-10-15 ──────────────────────────
-// buildRevealCut()은 "트리거 동작→VFX→의상/배경 리빌"(체인지) 구조라 프리즈프레임/불릿타임엔
-// 억지로 끼워 맞춘 상태였다. 성준님 피드백: "변신하는 장면보다 빠르게 움직이다가 갑자기
-// 돌발상황이 확 펼쳐지는 순간에 멈춰서 효과가 연출되는 장면이 적합" — 레퍼런스(유리공예 장인,
-// 커피잔 파편)도 전부 의상·배경은 그대로고 "사건"만 얼어붙는 구조. 그래서 trigger/sceneB(의상
-// 리빌) 없이 "무슨 돌발상황인지"만 받는 완전히 별도 생성기로 분리한다 — TRIGGER_ACTIONS는
-// 전부 "의상 바꾸는 동작"이라 이 용도엔 안 맞고 재사용하지 않는다.
-// action = { nameKo, ko, en } — 돌발상황 묘사. sceneA = 기존과 동일(선택, 평소 모습/환경).
+// ── 프리즈 비트(돌발상황 정지) 생성기 — 2026-10-15 신설, 패턴 교정 2026-10-16 ──────
+// 1차 버전("0~X초 평소 → 결정적 순간 정지 → 재생" 3단계 시간분할 프롬프트)은 실제 생성 결과
+// 실패 확인(10/15, 커피잔 깨짐 테스트 — 정지·오빗 효과 전혀 없이 평범한 연속 동작만 나옴).
+// 원인: Veo는 "동작을 멈추는 전환"을 지시로 못 받아들이고 그냥 제일 그럴듯한 연속 동작으로
+// 밀어버린다 — "정지"는 모델이 학습한 물리 바깥의 편집 개념이라서다.
+// 성준님이 별도로 테스트한 성공 레퍼런스(불릿타임 예시, 10/16)를 프레임 단위로 분석한 결과:
+// 성공 샷은 "평소→사건→정지"라는 시간 경과/전환을 전혀 요구하지 않는다. **영상 시작부터
+// 끝까지 인물이 이미 정지된 결정적 포즈를 유지**하고(머리카락·옷자락만 흔들림), 그 주변에서
+// 작은 물체(총알)만 느리게 지나가며, 카메라가 그 고정된 포즈 주위를 서서히 돈다 — 즉 "정지"는
+// 지시가 아니라 인물의 포즈 자체가 애초에 안 움직이는 "하나의 상태"로 설계돼 있다. Veo는
+// "동작을 멈춰라"는 못 하지만 "가만히 있는 사람 + 카메라 이동"은 흔한 오빗샷이라 아주 잘한다.
+// 그래서 action은 더 이상 "트리거(사건 발생)"가 아니라 **이미 얼어붙은 정점의 상태 묘사**를
+// 받는다(예: "커피잔이 깨져 파편과 물방울이 사방에 멈춰있는 채 놀란 표정으로 굳어있는 순간").
+// "평소 모습"과 "리액션"은 이 생성기에서 빠진다 — 필요하면 별도 클립(기존 Flow 생성)으로
+// 앞뒤에 하드컷 붙이는 방식으로 분리할 것, 한 클립 안에 욱여넣지 않는다.
+// action = { nameKo, ko, en } — 얼어붙은 정점 상태 묘사. sceneA = 환경/조명만 선택적으로 사용.
 export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '긴장', cpLine = '' }) {
-  if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(돌발상황 한글/영문 묘사) 필요')
+  if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(얼어붙은 정점 상태 한글/영문 묘사) 필요')
   const audioCue = pick(AUDIO_CUES)
-  const poseEn = sceneA?.poseEn?.trim() || 'moving at a natural, everyday pace'
-  const poseKo = sceneA?.poseKo?.trim() || '평소처럼 움직이는 중'
   const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
   const lightingAEn = sceneA?.lightingEn?.trim() || 'soft neutral ambient light'
   const label = action.nameKo || '돌발상황'
 
-  const scene = `(하드컷, ${label} 효과음) ${poseKo} — 갑자기 ${action.ko}. 그 순간 시간이 멈추고 카메라만 주변을 돈다. 시간이 다시 흐르며 놀란 반응.`
+  const scene = `(하드컷, ${label} 효과음) 시간이 멈춘 듯 ${action.ko} 채로 완전히 얼어붙어 있고, 카메라만 그 주위를 천천히 돈다.`
 
-  // 의상/배경은 바뀌지 않으므로(사건만 멈춤) 단일 이미지 프롬프트 — sceneB 불필요.
-  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, ${poseEn}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
+  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
 
-  const videoPrompt = `First 0-${FRAME_SYNC.prepEnd}s: She is ${poseEn}, a completely normal, everyday moment. / Next ${FRAME_SYNC.prepEnd}-${FRAME_SYNC.dropEnd}s: Suddenly, ${action.en} — at this exact peak moment time itself seems to stop, every object, droplet and loose fabric suspended perfectly still in mid-air, the camera rapidly orbiting around the frozen scene, beat drop at ${FRAME_SYNC.prepEnd}s. / Next ${FRAME_SYNC.lockInStart}-${durationSec}s: Time resumes, she reacts with a startled, wide-eyed expression, same outfit, same environment throughout. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+  const videoPrompt = `A frozen, suspended-in-time moment, bullet-time style: she is caught mid-action — ${action.en} — her pose held perfectly still at its most dramatic peak for the entire shot, only her hair and loose fabric gently drifting in the air, every falling object and droplet suspended mid-air with faint motion-trail ripples around it. The camera slowly orbits around her frozen pose, circling partway around to reveal the frozen scene from a new angle by the end. ${envAEn}. ${lightingAEn}. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
 
-  const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${label} 임팩트 + ${audioCue.soundFx} (프리즈 시작 지점) / 타점: ${audioCue.beat}`
+  const audioNote = `BGM: 이어서, 비트 유지 / 효과음: ${label} 임팩트 + ${audioCue.soundFx}(컷 시작) / 타점: ${audioCue.beat}`
 
   const subtitle = cpLine || '...어?'
 
   const preview = {
-    step1: `[0.0s ~ ${FRAME_SYNC.prepEnd}s 평소]: ${poseKo} — 아직은 평범한 순간.`,
-    step2: `[${FRAME_SYNC.prepEnd}s ~ ${FRAME_SYNC.dropEnd}s 돌발 프리즈]: 비트 드롭(${audioCue.beat})과 동시에 ${label} 발생 — 시간 정지, 카메라만 주변을 돈다.`,
-    step3: `[${FRAME_SYNC.lockInStart}s ~ ${durationSec}s 리액션]: 시간이 다시 흐르고 놀란 반응. 긴장감으로 완청 유도.`,
+    step1: `[0.0s ~ ${durationSec}s 전체]: ${label}의 정점에서 완전히 얼어붙은 채, 카메라만 주위를 천천히 돈다. 필요하면 앞뒤에 평소/리액션 클립을 별도 생성해 하드컷으로 붙일 것.`,
   }
 
   return {
