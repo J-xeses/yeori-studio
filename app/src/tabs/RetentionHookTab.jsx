@@ -11,6 +11,17 @@ import styles from './RetentionHookTab.module.css'
 
 const SERVER = 'http://localhost:3001'
 
+// StudioTab.jsx·MakingTab.jsx·VideoTab.jsx와 동일 로직(이 코드베이스 관례대로 작은 순수함수는
+// 탭마다 복제) — /api/upload-cut-image 가 인스타 콘텐츠면 instaDir로 분기하는 데 필요하다.
+function pipelineCodeToInstaContent(plCode) {
+  const map = { IG_FD: 'FD', IG_RL: 'RL', IG_PT: 'PT', IG_ST: 'ST' }
+  return map[(plCode || '').toUpperCase()] || null
+}
+function episodeContentTypeToInsta(contentType) {
+  const map = { IG_R: 'RL', IG_F: 'FD', IG_P: 'PT', IG_S: 'ST' }
+  return map[(contentType || '').toUpperCase()] || null
+}
+
 // 2026-10-10 — 성준님: "롱폼의 경우 대본기획시 단계별 비트를 구성 컷에 반영하고, 그 내용이
 // 리텐션 훅 탭과 연동이 되어야겠다." 각 훅 슬롯에 대응하는 BEAT 태그(ScriptGenTab.jsx의
 // BEAT_CANON과 동일 어휘)를 매핑 — 시그는 "같은 성격"(성준님 표현)이라 피크 구간(mid2)·
@@ -683,6 +694,7 @@ function FreezeBeatPanel({ state, dispatch }) {
   const [keyframes, setKeyframes] = useState(null)
   const [keyframeError, setKeyframeError] = useState('')
   const [copiedAngle, setCopiedAngle] = useState(null)
+  const [keyframeUploads, setKeyframeUploads] = useState({}) // { [angleDeg]: { status, url } }
 
   const EXAMPLES = [
     { label: '급브레이크 + 튀어나온 고양이', ko: '급브레이크를 밟는 순간 눈앞에 고양이가 튀어나옴', en: 'slamming the brakes as a cat suddenly darts in front of her' },
@@ -719,6 +731,31 @@ function FreezeBeatPanel({ state, dispatch }) {
     navigator.clipboard?.writeText(text)
     setCopiedAngle(angleDeg)
     setTimeout(() => setCopiedAngle((a) => (a === angleDeg ? null : a)), 1500)
+  }
+
+  // Gemini 앱에서 수동으로 생성한 각도별 결과 이미지를 다시 가져와 대상 컷의 후보 이미지
+  // (cut_NN_a/_b/...) 슬롯으로 저장 — 드래그 배정·스튜디오 탭 업로드와 동일한
+  // /api/upload-cut-image 를 그대로 쓴다(2026-10-16).
+  const uploadKeyframeImage = async (angleDeg, file) => {
+    if (!file || !targetCutId) return
+    const cut = (state.cuts || []).find((c) => c.id === targetCutId)
+    if (!cut) return
+    setKeyframeUploads((p) => ({ ...p, [angleDeg]: { status: 'uploading' } }))
+    const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
+    const instaContent = (state.cuts || []).map((c) => pipelineCodeToInstaContent(c.masterCode?.pl)).find(Boolean)
+      || episodeContentTypeToInsta(state.episode?.contentType)
+    const instaNum = instaContent ? (state.episode?.instaNum?.trim() || null) : null
+    const qs = new URLSearchParams({ ep: state.episode.number, cutNo: cut.no, ext, ...(instaContent && instaNum ? { instaContent, instaNum } : {}) })
+    try {
+      const res = await fetch(`${SERVER}/api/upload-cut-image?${qs}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || '업로드 실패')
+      setKeyframeUploads((p) => ({ ...p, [angleDeg]: { status: 'done', url: `${SERVER}${data.url}?t=${Date.now()}` } }))
+    } catch (err) {
+      setKeyframeUploads((p) => ({ ...p, [angleDeg]: { status: 'error', message: err.message } }))
+    }
   }
 
   const commitApply = () => {
@@ -806,31 +843,51 @@ function FreezeBeatPanel({ state, dispatch }) {
       )}
 
       <div className={styles.result} style={{ marginTop: 14 }}>
-        <div className={styles.resultLabel}>🎞️ 멀티앵글 키프레임 프롬프트 (수동, AI Pro 구독용)</div>
+        <div className={styles.resultLabel}>🎞️ 멀티앵글 키프레임 (8각도 정지 스틸)</div>
         <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 8 }}>
-          진짜 불릿타임 리그처럼 같은 정지 순간을 8개 각도에서 따로 생성해 이어붙이는 방식. LongTake AI
-          Studio의 Gemini API 키프레임 렌더링은 무료 할당량이 0이라 막혀있어서(10/16 실측), 여기선 이미지를
-          직접 안 만들고 Gemini 앱(AI Pro 구독, 웹)에 수동으로 붙여넣을 프롬프트 8개만 만들어줍니다 — 서여리
-          얼굴 레퍼런스 이미지를 함께 첨부해서 생성하세요(Flow 이미지 생성 때와 동일).
+          1. 아래 버튼으로 각도별 프롬프트 8개 생성 → 2. 카드마다 "복사" → 3. Gemini 앱(AI Pro)에 서여리
+          얼굴 레퍼런스 이미지와 함께 붙여넣어 생성 → 4. 받은 이미지를 같은 카드의 "결과 업로드"로 올리면
+          대상 컷의 후보 이미지로 바로 저장됩니다(스튜디오 탭 이미지 목록에 그대로 나타남).
         </div>
-        <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuildKeyframes}>
-          8각도 키프레임 프롬프트 생성
-        </button>
+
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+          <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => setTargetCutId(e.target.value)}>
+            <option value="">대상 컷 선택…</option>
+            {(state.cuts || []).map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
+          </select>
+          <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuildKeyframes}>
+            8각도 키프레임 프롬프트 생성
+          </button>
+        </div>
+        {!targetCutId && <div style={{ fontSize: 11, color: '#f0a050', marginBottom: 8 }}>결과 이미지를 저장하려면 대상 컷을 먼저 선택하세요(프롬프트 생성·복사는 선택 없이도 가능).</div>}
         {keyframeError && <div className={styles.error} style={{ marginTop: 8 }}>{keyframeError}</div>}
 
         {keyframes && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 8, marginTop: 10 }}>
-            {keyframes.map((kf) => (
-              <div key={kf.angleDeg} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>{kf.label}</span>
-                  <button className={styles.copyBtn} onClick={() => copyKeyframe(kf.angleDeg, kf.imagePrompt)}>
-                    {copiedAngle === kf.angleDeg ? '✓ 복사됨' : '복사'}
-                  </button>
+            {keyframes.map((kf) => {
+              const up = keyframeUploads[kf.angleDeg]
+              return (
+                <div key={kf.angleDeg} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{kf.label}</span>
+                    <button className={styles.copyBtn} onClick={() => copyKeyframe(kf.angleDeg, kf.imagePrompt)}>
+                      {copiedAngle === kf.angleDeg ? '✓ 복사됨' : '복사'}
+                    </button>
+                  </div>
+                  <pre className={styles.resultText} style={{ fontSize: 10, maxHeight: 90, overflow: 'auto' }}>{kf.imagePrompt}</pre>
+                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <label className={styles.copyBtn} style={{ cursor: targetCutId ? 'pointer' : 'not-allowed', opacity: targetCutId ? 1 : 0.5 }}>
+                      결과 업로드
+                      <input type="file" accept="image/*" style={{ display: 'none' }} disabled={!targetCutId}
+                        onChange={(e) => uploadKeyframeImage(kf.angleDeg, e.target.files[0])} />
+                    </label>
+                    {up?.status === 'uploading' && <span style={{ fontSize: 11, color: '#888' }}>업로드 중...</span>}
+                    {up?.status === 'done' && <img src={up.url} alt={kf.label} style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />}
+                    {up?.status === 'error' && <span style={{ fontSize: 11, color: '#f87171' }}>❌ {up.message}</span>}
+                  </div>
                 </div>
-                <pre className={styles.resultText} style={{ fontSize: 10, maxHeight: 90, overflow: 'auto' }}>{kf.imagePrompt}</pre>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

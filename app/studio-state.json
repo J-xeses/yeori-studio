@@ -1,9 +1,9 @@
 {
-  "activeTab": "publishing",
+  "activeTab": "retention",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88267
+    "remainingChars": 88255
   },
   "activeEpisodeId": "ep_1790322063208",
   "openTabIds": [
@@ -10773,7 +10773,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-16T03:40:01.554Z",
+  "savedAt": "2026-10-16T09:06:11.928Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
