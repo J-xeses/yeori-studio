@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10801,7 +10801,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "9:16",
+    "ratio": "16:9",
     "bgImageUrl": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R05/02_images/cut_05_b.jpg"
   },
   "publishing": {
@@ -10855,7 +10855,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-17T02:49:24.657Z",
+  "savedAt": "2026-10-17T06:16:01.112Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
