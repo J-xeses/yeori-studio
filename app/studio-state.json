@@ -1,9 +1,9 @@
 {
-  "activeTab": "script",
+  "activeTab": "retention",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88255
+    "remainingChars": 88254
   },
   "activeEpisodeId": "ep_1790322063208",
   "openTabIds": [
@@ -4390,7 +4390,17 @@
               "md": "무심한 척하는 쓸쓸함"
             }
           },
-          "videoMode": "veo"
+          "videoMode": "veo",
+          "captionSegTiming": [
+            [
+              0,
+              4.571428571428571
+            ],
+            [
+              4.4714285714285715,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-2",
@@ -10538,7 +10548,17 @@
           "md": "무심한 척하는 쓸쓸함"
         }
       },
-      "videoMode": "veo"
+      "videoMode": "veo",
+      "captionSegTiming": [
+        [
+          0,
+          4.571428571428571
+        ],
+        [
+          4.4714285714285715,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-2",
