@@ -549,5 +549,121 @@
         "checkedAt": "2026-10-16T12:03:11.186Z"
       }
     }
+  },
+  "IG_R06": {
+    "1": {
+      "cut_01_clip_3.mp4": {
+        "verdict": "fail",
+        "ratio": 0.833,
+        "heard": "야, 서율이 이거 너지? 새내기 MT 때 챌린지. 허?",
+        "expected": "야 서여리 이거 너지 새내기 mt 때 챌린지",
+        "words": [
+          {
+            "text": "야,",
+            "start": 3.24,
+            "end": 3.36,
+            "logprob": -0.28,
+            "speaker": null
+          },
+          {
+            "text": "서율이",
+            "start": 3.5,
+            "end": 3.92,
+            "logprob": -0.13,
+            "speaker": null
+          },
+          {
+            "text": "이거",
+            "start": 4.7,
+            "end": 4.84,
+            "logprob": -0.1,
+            "speaker": null
+          },
+          {
+            "text": "너지?",
+            "start": 4.94,
+            "end": 5.32,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "새내기",
+            "start": 5.8,
+            "end": 6.08,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "MT",
+            "start": 6.18,
+            "end": 6.4,
+            "logprob": -0.03,
+            "speaker": null
+          },
+          {
+            "text": "때",
+            "start": 6.48,
+            "end": 6.56,
+            "logprob": -0.02,
+            "speaker": null
+          },
+          {
+            "text": "챌린지.",
+            "start": 6.68,
+            "end": 7.24,
+            "logprob": 0,
+            "speaker": null
+          },
+          {
+            "text": "허?",
+            "start": 7.4,
+            "end": 7.58,
+            "logprob": -0.28,
+            "speaker": null
+          }
+        ],
+        "flags": [
+          {
+            "kind": "unexpected-word",
+            "severity": "warn",
+            "word": "서율이",
+            "at": 3.5,
+            "logprob": -0.13,
+            "message": "대본에 없는 발음: \"서율이\" (3.5s)"
+          },
+          {
+            "kind": "unexpected-word",
+            "severity": "warn",
+            "word": "허?",
+            "at": 7.4,
+            "logprob": -0.28,
+            "message": "대본에 없는 발음: \"허?\" (7.4s)"
+          },
+          {
+            "kind": "missing-word",
+            "severity": "warn",
+            "word": "서여리",
+            "message": "대본 어절이 들린 결과에 없음: \"서여리\""
+          },
+          {
+            "kind": "low-confidence",
+            "severity": "note",
+            "word": "야,",
+            "at": 3.24,
+            "logprob": -0.28,
+            "message": "인식 신뢰도 낮음: \"야,\" (-0.28)"
+          },
+          {
+            "kind": "low-confidence",
+            "severity": "note",
+            "word": "허?",
+            "at": 7.4,
+            "logprob": -0.28,
+            "message": "인식 신뢰도 낮음: \"허?\" (-0.28)"
+          }
+        ],
+        "checkedAt": "2026-10-17T11:02:07.240Z"
+      }
+    }
   }
 }
