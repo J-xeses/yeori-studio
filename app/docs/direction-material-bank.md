@@ -81,6 +81,43 @@
   하나만 다른 색"으로 변주한 버전. 체인지 생성기 Scene B 프리셋이 아니라, **썸네일/오프닝 1컷
   구도용**으로 더 적합(서여리 혼자 색이 다른 배경 속에 있는 정지컷).
 
+- **명화/그림 속으로 파고드는 카메라 플라이스루** — Mike Staniforth(@mikestaniforth, 에미상 후보
+  경력의 실제 촬영감독, 현재 "Cinematography + practical AI for filmmakers"로 피봇)의 "Inside
+  Nighthawks"(Hopper 그림을 인터랙티브하게 걸어 들어가는 웹 경험 + 같은 소재의 AI 생성 루프 영상,
+  2백만+ 뷰)에서 영감. 2026-10-18 성준님이 "그림을 3D로 구현해 카메라가 깊게 들어가 안 보이던
+  그 너머까지 쓸고 회전"하는 연출에 경이로움을 느껴 조사 요청 → 조사 결과 3단계 기법 중 **Tier 1
+  (정지 이미지를 Veo/Flow 첫 프레임으로 넣고 카메라 무브+환각 생성만으로 시도, 추가 인프라 0)**이
+  지금 파이프라인으로 바로 테스트 가능하다고 판단, 1컷 테스트 진행 예정(상태: 테스트 대기).
+  Tier 2(깊이맵+아웃페인팅 조합)·Tier 3(완전 3D 재구성+엔진 렌더)는 Tier 1 결과가 부족할 때만
+  검토 — 지금은 투자 보류.
+
+  **IP (첫 프레임 정지컷) 프롬프트 패턴**:
+  `{character descriptor}, painterly oil-painting style portrait, seated inside a warmly-lit
+  room, classical painting aesthetic reminiscent of Edward Hopper, visible brushstroke texture,
+  single motivated light source from an off-frame window, soft shadow falloff, composition
+  slightly flattened as if viewed as a framed artwork hanging on a wall, rich warm color
+  palette, subtle depth cues suggesting the room continues beyond the visible frame`
+
+  **VP (카메라 무브) 프롬프트 패턴**:
+  `starting exactly on the painting as the still frame, camera begins a slow continuous push-in
+  directly into the canvas, breaking through the flat picture plane into a fully dimensional
+  version of the same room, foreground objects drift past camera creating parallax, midground
+  character turns slightly as the camera passes, background reveals previously unseen depth
+  beyond what the original frame showed — a continuation of the room not visible in the still,
+  camera gently arcs as it goes deeper revealing a new angle, lighting stays motivated from the
+  same source throughout, consistent color grade, one continuous unbroken shot, slow deliberate
+  camera speed, no cuts`
+
+  **네거티브 프롬프트** (카탈로그 하단 "표준 네거티브 세트"에 + 워핑 방어 2개 추가):
+  `flickering, face morphing distortion, extra limbs, duplicate human, melting eyes, glitchy
+  artifacts, jerky frames, sudden cut, warped geometry, inconsistent lighting direction`
+
+  **평가 기준(테스트 후 체크)**: ① 캔버스→3D 전환이 매끄러운가(경계에서 끊기거나 워핑되는가)
+  ② 프레임 밖으로 "있을 법한" 공간이 생성되는가, 아니면 반복/뭉개짐인가 ③ 얼굴이 포함된 경우
+  identity가 끝까지 유지되는가(위 "체인지 생성기" 실측 교훈 — 한 샷 안 변형에서 얼굴이 깨진
+  전례 있음, §2026-10-11 항목 참고) ④ 조명 방향이 샷 내내 동일 광원에서 동기부여되는가.
+  성공하면 서여리 쪽은 명화 패러디/오마주 번외 콘텐츠(`e-00 번외 소재 창고`)로 등록할 후보.
+
 **메타/교육성 포스트(재료 아님, 참고만)**: "AI 영상 만들 때 필수 카메라 연출 18가지"(돌리/줌/오빗/
 돌리줌 등 기본기 정리), "무조건 끝까지 보게 만드는 스토리텔링 6단계 공식", "전 세계 조회수 1위
 유튜버가 말하는 조회수 안 나오는 영상 특징" — 이런 건 "연출 재료"라기보다 **제작 공정 지식**이라
