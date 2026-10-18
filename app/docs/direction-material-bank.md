@@ -91,7 +91,9 @@
   Tier 2(깊이맵+아웃페인팅 조합)·Tier 3(완전 3D 재구성+엔진 렌더)는 Tier 1 결과가 부족할 때만
   검토 — 지금은 투자 보류.
 
-  **IP (첫 프레임 정지컷) 프롬프트 패턴**:
+  **IP (첫 프레임 정지컷) 프롬프트 패턴** (`{character descriptor}` = `characters.json`의
+  `yeori.descriptor` 그대로, Flow 정상 경로에선 `flow-image.js`의 `refsAndDescriptors()`가
+  얼굴 레퍼런스 이미지와 함께 자동 삽입함 — Flow/Veo 웹에서 수동 테스트할 때만 직접 붙여넣을 것):
   `{character descriptor}, painterly oil-painting style portrait, seated inside a warmly-lit
   room, classical painting aesthetic reminiscent of Edward Hopper, visible brushstroke texture,
   single motivated light source from an off-frame window, soft shadow falloff, composition
