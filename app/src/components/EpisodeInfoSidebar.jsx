@@ -146,9 +146,15 @@ export function EpisodeOverviewBlock() {
           ) : (
             <pre className={s.code}>{episode.masterCode}</pre>
           )}
-          {/* episode.code(생성 시 확정한 정식 식별자)와 대본에서 파싱된 masterCode가
-              다르면 경고만 표시 — 어느 쪽 값도 건드리지 않는다(둘 다 그대로 저장됨). */}
-          {episode?.code && episode.masterCode !== episode.code && (
+          {/* episode.code(생성 시 확정한 정식 식별자)와 마스터코드 맨 앞 [코드] 세그먼트가
+              다르면 경고만 표시 — 어느 쪽 값도 건드리지 않는다(둘 다 그대로 저장됨).
+              2026-10-18 수정: 예전엔 masterCode 전체 문자열("[IG_R06] :: [PL:...] :: ...")을
+              episode.code("IG_R06")와 통째로 비교해서 형식이 애초에 다르니 거의 모든 에피소드에서
+              항상 경고가 뜨던 오탐이었음(성준님 지적) — 맨 앞 [코드] 부분만 뽑아 비교하도록 수정. */}
+          {episode?.code && (() => {
+            const masterCodeTag = episode.masterCode.match(/^\[([^\]]+)\]/)?.[1]
+            return masterCodeTag && masterCodeTag !== episode.code
+          })() && (
             <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 4 }}>
               ⚠️ 에피소드 코드({episode.code})와 다릅니다
             </div>

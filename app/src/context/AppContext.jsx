@@ -104,7 +104,10 @@ const defaultState = {
 // 겹친다(LF_T01 의 cut-1 도, IG_R04 의 cut-1 도 "cut-1"). 예전에는 이 상태가 앱 전체에 하나뿐이라, 다른 에피소드 컷1에
 // 영상을 올리면 모든 에피소드의 컷1 영상이 그 파일로 바뀌었다. 지금은 "활성 에피소드"의 값만 최상위에 두고(서버와 각 탭이
 // 그대로 읽는다), 비활성 에피소드의 값은 episodes[id].tabState 에 보관했다가 전환할 때 맞바꾼다.
-const TAB_STATE_KEYS = ['videoTabState', 'ttsTabState', 'voiceInsertState', 'studioTabState']
+// thumbnail·publishing 누락 발견(2026-10-18, 성준님 지적): 퍼블리싱 탭 썸네일 미리보기·제목/설명/
+// 태그가 에피소드를 바꿔도 안 바뀌고 이전 에피소드 값이 그대로 남아있던 버그 — 이 둘이 TAB_STATE_KEYS에
+// 빠져있어서 videoTabState 등과 달리 전역으로 공유되고 있었음.
+const TAB_STATE_KEYS = ['videoTabState', 'ttsTabState', 'voiceInsertState', 'studioTabState', 'thumbnail', 'publishing']
 // ⚠️ 기본값의 중첩 객체(videoClips 등)를 그대로 공유하면 한 에피소드의 변경이 다른 에피소드 기본값으로 번진다 — 항상 새로 복제해서 쓴다.
 const freshTab = (k) => JSON.parse(JSON.stringify(defaultState[k]))
 function swapTabState(state, toId, { dropCurrent = false } = {}) {

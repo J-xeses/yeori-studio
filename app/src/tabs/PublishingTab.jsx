@@ -314,9 +314,22 @@ function ThumbnailSection({ epNum }) {
 }
 
 // ── ② 제목/설명/태그 섹션 (Claude 자동 생성 + 플랫폼별 수동 편집) ──
+// scriptRaw(대본 생성 탭에서 붙여넣은 원문)가 비어있어도 cuts 배열에 내용이 있으면(스튜디오
+// 컷 에디터로 직접 작성한 에피소드) 그걸로 요약 텍스트를 만든다 — 2026-10-18, IG_R06처럼 컷은
+// 전부 채워져 있는데 scriptRaw만 비어서 "대본이 없습니다"가 항상 뜨던 문제.
+function buildScriptFromCuts(cuts) {
+  return (cuts || []).map(c => {
+    const lines = [`[CUT ${c.no}] ${c.cutTitle || ''}`]
+    if (c.dialogue) lines.push(`대사: ${c.dialogue}`)
+    if (c.narration) lines.push(`나레이션: ${c.narration}`)
+    if (c.subtitle) lines.push(`자막: ${c.subtitle}`)
+    return lines.join('\n')
+  }).join('\n\n')
+}
+
 function MetaSection() {
   const { state, dispatch } = useApp()
-  const { publishing, scriptRaw, episode, apiKeys } = state
+  const { publishing, scriptRaw, episode, cuts, apiKeys } = state
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
 
@@ -325,7 +338,8 @@ function MetaSection() {
   const generate = async () => {
     const apiKey = apiKeys?.claude || ''
     if (!apiKey) { setGenError('상단 API 바에서 Claude 키를 입력하세요.'); return }
-    if (!scriptRaw?.trim()) { setGenError('대본이 없습니다. 대본 생성 탭에서 먼저 대본을 작성하세요.'); return }
+    const scriptText = scriptRaw?.trim() || buildScriptFromCuts(cuts)
+    if (!scriptText.trim()) { setGenError('대본이 없습니다. 대본 생성 탭에서 먼저 대본을 작성하거나 컷을 입력하세요.'); return }
     setGenerating(true); setGenError('')
     try {
       const data = await claudeMessages(apiKey, {
@@ -337,7 +351,7 @@ function MetaSection() {
 
 제목: ${episode?.title || '(제목 없음)'}
 대본:
-${scriptRaw.slice(0, 3000)}
+${scriptText.slice(0, 3000)}
 
 반드시 아래 JSON 형식으로만, 다른 설명 없이 응답해:
 {

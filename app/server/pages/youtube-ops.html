@@ -137,6 +137,7 @@
     <div class="gaugewrap"><div class="gaugelb"><span>구독자</span><span id="g1t"></span></div><div class="gauge"><i id="g1" style="background:var(--acc)"></i></div></div>
     <div class="gaugewrap"><div class="gaugelb"><span>연 시청시간</span><span id="g2t"></span></div><div class="gauge"><i id="g2" style="background:#8ab4ff"></i></div></div>
     <div class="gaugewrap"><div class="gaugelb"><span>쇼츠 조회수(90일 롤링)</span><span id="g3t"></span></div><div class="gauge"><i id="g3" style="background:#c3a6f7"></i></div></div>
+    <div class="gaugewrap"><div class="gaugelb"><span>최근 90일 공개 영상 수 (3개 필요)</span><span id="g0t"></span></div><div class="gauge"><i id="g0" style="background:var(--ok)"></i></div></div>
     <p class="muted" style="margin:14px 0 6px">🥈 2단계 — AdSense 광고수익, 실질 목표 (구독 1,000 + 시청4,000h 또는 쇼츠1,000만)</p>
     <div class="gaugewrap"><div class="gaugelb"><span>구독자</span><span id="g4t"></span></div><div class="gauge"><i id="g4" style="background:var(--acc)"></i></div></div>
     <div class="gaugewrap"><div class="gaugelb"><span>연 시청시간</span><span id="g5t"></span></div><div class="gauge"><i id="g5" style="background:#8ab4ff"></i></div></div>
@@ -263,6 +264,7 @@ function renderGoal() {
   const gauge = (id, v, goal) => { const pct = Math.min(100, goal ? v / goal * 100 : 0); $(id).style.width = pct + '%'; return pct }
   $('ySubs').value = y.subs || ''; $('yHours').value = y.watchHours || ''; $('yShorts').value = y.shortsViews90d || ''; $('yUploads90').value = y.uploads90d || ''
   ;[['ySubs','subs'],['yHours','watchHours'],['yShorts','shortsViews90d'],['yUploads90','uploads90d']].forEach(([id, k]) => $(id).onchange = e => { y[k] = +e.target.value || 0; y.lastUpdated = today; touch(); renderGoal() })
+  gauge('g0', y.uploads90d || 0, 3); $('g0t').textContent = (y.uploads90d || 0) + ' / 3' + ((y.uploads90d || 0) >= 3 ? ' ✅' : '')
   gauge('g1', y.subs || 0, YPP_TIER1.subs); $('g1t').textContent = (y.subs || 0).toLocaleString() + ' / ' + YPP_TIER1.subs.toLocaleString()
   gauge('g2', y.watchHours || 0, YPP_TIER1.watchHours); $('g2t').textContent = (y.watchHours || 0).toLocaleString() + ' / ' + YPP_TIER1.watchHours.toLocaleString() + 'h'
   gauge('g3', y.shortsViews90d || 0, YPP_TIER1.shortsViews90d); $('g3t').textContent = (y.shortsViews90d || 0).toLocaleString() + ' / ' + YPP_TIER1.shortsViews90d.toLocaleString()
@@ -345,7 +347,11 @@ async function openB(body) {
     window.open(u, '_blank')
   }
 }
-$('openYt').onclick = () => openB({ target: 'url', url: 'https://www.youtube.com/@' + (S?.settings?.handle || '') })
+$('openYt').onclick = () => {
+  const h = S?.settings?.handle
+  if (!h) { alert('아직 핸들(@)이 설정되지 않았습니다 — ⚙️ 계정·크리에이터 설정 탭에서 먼저 입력하세요.'); return }
+  openB({ target: 'url', url: 'https://www.youtube.com/@' + h })
+}
 $('openYtSetup').onclick = () => $('openYt').onclick()
 $('openStudio').onclick = () => openB({ target: 'url', url: 'https://studio.youtube.com/' })
 
