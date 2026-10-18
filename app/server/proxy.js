@@ -6097,7 +6097,12 @@ app.post('/api/instagram/publish', async (req, res) => {
     const { publishReel } = await import('./lib/igPublish.js')
     const result = await publishReel({ epNum, caption })
     const { markPublished } = await import('./lib/publishStatus.js')
-    markPublished(epNum, 'instagram', { ...result, caption })
+    // code/title을 게시 시점에 같이 저장 — studio-state.json에서 이 에피소드가 나중에 지워지거나
+    // 다른 레코드로 대체돼도 "뭘 올렸는지" 이력이 남는다(퍼블리싱 탭 ⑤업로드 현황 표시용, 2026-10-18:
+    // 과거 게시물(T01/T02/P01)이 레코드 없어 현황에서 빠졌던 문제 재발 방지).
+    const epEntry = Object.values(loadStudioState().episodes || {}).find(e => e?.episode?.number === Number(epNum))
+    const meta = epEntry ? { code: epEntry.episode.code, title: epEntry.episode.title } : {}
+    markPublished(epNum, 'instagram', { ...result, caption, ...meta })
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(500).json({ error: err.message })

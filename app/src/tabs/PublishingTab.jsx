@@ -11,6 +11,7 @@ const SECTIONS = [
   { key: 'meta',    label: '② 제목/설명/태그' },
   { key: 'package', label: '③ 결과물 패키징' },
   { key: 'upload',  label: '④ 업로드' },
+  { key: 'status',  label: '⑤ 업로드 현황' },
 ]
 
 const RATIOS = [
@@ -93,15 +94,20 @@ function ThumbnailSection({ epNum }) {
 
   useEffect(() => { draw() }, [draw])
 
-  // 탭 전환/재접속 후에도 배경 이미지가 유지되도록 thumbnail.bgImageUrl(데이터 URL 또는 서버 URL)로 복원
+  // 탭 전환/재접속 후에도 배경 이미지가 유지되도록 thumbnail.bgImageUrl(데이터 URL 또는 서버 URL)로 복원.
+  // bgImageUrl은 에피소드별 tabState에 들어있어 에피소드 전환 시 바뀌는데(AppContext swapTabState),
+  // 기존엔 "bgImage가 이미 있으면 건너뛴다" 가드 때문에 한 번 로드된 뒤로는 에피소드를 바꿔도 이전
+  // 이미지가 캔버스에 그대로 남아있었음(2026-10-18, 성준님 지적) — 로드한 URL을 직접 추적해서
+  // bgImageUrl이 실제로 바뀐 경우에만(그리고 비워진 경우엔 비우도록) 반응하게 수정.
+  const loadedBgUrlRef = useRef(null)
   useEffect(() => {
     const bgUrl = thumbnail.bgImageUrl
-    if (!bgUrl || bgImage) return
+    if (bgUrl === loadedBgUrlRef.current) return
+    if (!bgUrl) { loadedBgUrlRef.current = ''; bgRef.current = null; setBgImage(null); return }
     const img = new Image()
     if (/^https?:\/\//.test(bgUrl)) img.crossOrigin = 'anonymous'
-    img.onload = () => { bgRef.current = img; setBgImage(img) }
+    img.onload = () => { bgRef.current = img; setBgImage(img); loadedBgUrlRef.current = bgUrl }
     img.src = bgUrl
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [thumbnail.bgImageUrl])
 
   const handleBgUpload = (file) => {
@@ -110,7 +116,7 @@ function ThumbnailSection({ epNum }) {
     reader.onload = (ev) => {
       const dataUrl = ev.target.result
       const img = new Image()
-      img.onload = () => { bgRef.current = img; setBgImage(img) }
+      img.onload = () => { bgRef.current = img; setBgImage(img); loadedBgUrlRef.current = dataUrl }
       img.src = dataUrl
       set({ bgImageUrl: dataUrl })
     }
@@ -171,7 +177,7 @@ function ThumbnailSection({ epNum }) {
     const img = new Image()
     img.crossOrigin = 'anonymous' // 캔버스 toDataURL 시 오염 방지
     img.src = url
-    img.onload = () => { bgRef.current = img; setBgImage(img) }
+    img.onload = () => { bgRef.current = img; setBgImage(img); loadedBgUrlRef.current = url }
     set({ bgImageUrl: url })
   }
 
@@ -586,6 +592,63 @@ function UploadSection({ epNum }) {
   )
 }
 
+// ── ⑤ 업로드 현황 섹션 ── 2026-10-18: 에피소드 선택과 무관하게 전체 게시 기록을 한 번에 보여준다.
+// 기존엔 ④업로드 섹션 안의 "업로드된 현황" 패널이 "지금 선택된 에피소드"에만 묶여 있어서, 뭐가
+// 올라갔는지 파악하려면 에피소드를 하나씩 클릭해봐야 했음(성준님 지적) — 여기선 /api/episodes +
+// /api/publish-status를 합쳐 전체 목록을 최신 게시일 순으로 보여준다.
+function UploadStatusSection() {
+  const [episodes, setEpisodes] = useState([])
+  const [publishStatus, setPublishStatus] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${SERVER}/api/episodes`).then(r => r.json()),
+      fetch(`${SERVER}/api/publish-status`).then(r => r.json()),
+    ]).then(([epRes, statusRes]) => {
+      setEpisodes(epRes?.episodes || [])
+      setPublishStatus(statusRes || {})
+    }).catch(() => {}).finally(() => setLoading(false))
+  }, [])
+
+  const latestOf = (platforms) => Math.max(...Object.values(platforms).map(p => p.publishedAt || 0))
+  // 에피소드 번호로 매칭되면 그 제목을 쓰고, 안 되면(테스트번호·studio-state에 레코드가 없는
+  // 구형 콘텐츠 등) 백필 시 레코드에 같이 넣어둔 code/title로 대체 표시 — 2026-10-18.
+  const labelOf = (epNum, ep, platforms) => {
+    if (ep) return `${ep.code} — ${ep.title}`
+    const withMeta = Object.values(platforms).find(p => p.code || p.title)
+    if (withMeta) return `${withMeta.code || epNum} — ${withMeta.title || ''}`
+    return epNum
+  }
+  const rows = Object.entries(publishStatus)
+    .map(([epNum, platforms]) => ({ epNum, ep: episodes.find(e => String(e.number) === epNum), platforms }))
+    .filter(r => Object.keys(r.platforms).length > 0)
+    .sort((a, b) => latestOf(b.platforms) - latestOf(a.platforms))
+
+  if (loading) return <div className={s.uploadWrap}>불러오는 중...</div>
+
+  return (
+    <div className={s.uploadWrap} style={{ maxWidth: 640 }}>
+      <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
+        전체 {rows.length}건 게시됨 — 에피소드를 선택하지 않아도 항상 여기서 전체 현황이 보입니다.
+      </div>
+      {rows.length === 0 && <div className={s.uploadRow}>아직 게시된 에피소드가 없습니다.</div>}
+      {rows.map(({ epNum, ep, platforms }) => (
+        <div key={epNum} className={s.uploadRow} style={{ flexDirection: 'column', alignItems: 'stretch', gap: 6 }}>
+          <div className={s.uploadPlatform}>{labelOf(epNum, ep, platforms)}</div>
+          {Object.entries(platforms).map(([platform, rec]) => (
+            <div key={platform} style={{ fontSize: 12, color: '#4ade80', display: 'flex', gap: 6, alignItems: 'center' }}>
+              <span>✅ {PUBLISH_PLATFORM_LABEL[platform] || platform}</span>
+              <span style={{ color: 'var(--text3)' }}>{new Date(rec.publishedAt).toLocaleString('ko-KR')}</span>
+              {rec.permalink && <a href={rec.permalink} target="_blank" rel="noreferrer" style={{ color: '#a78bfa' }}>게시물 보기</a>}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function PublishingTab() {
   const { state } = useApp()
   const epNum = state.episode?.number
@@ -611,6 +674,7 @@ export default function PublishingTab() {
           {activeSection === 'meta' && <MetaSection />}
           {activeSection === 'package' && <PackageSection epNum={epNum} />}
           {activeSection === 'upload' && <UploadSection epNum={epNum} />}
+          {activeSection === 'status' && <UploadStatusSection />}
         </div>
       </div>
     </div>

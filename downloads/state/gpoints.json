@@ -893,12 +893,50 @@
   "IG_R06": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-10-10T05:21:52.822Z",
+      "updatedAt": "2026-10-18T05:31:38.580Z",
       "g2": true,
       "selectedImage": "cut_01_a.jpg",
       "g3": true,
       "g4": true,
-      "g5": true
+      "g5": true,
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_01_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 2
+          },
+          "total": 100,
+          "note": "",
+          "scoredAt": "2026-10-18T05:31:36.815Z"
+        },
+        "1": {
+          "filename": "cut_01_b.jpg",
+          "scores": {
+            "face": 1,
+            "outfit": 0,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 1
+          },
+          "total": 76,
+          "note": "",
+          "scoredAt": "2026-10-18T05:31:36.815Z"
+        }
+      }
     },
     "cut_2": {
       "g1": true,
