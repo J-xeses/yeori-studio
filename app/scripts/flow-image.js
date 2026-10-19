@@ -142,6 +142,10 @@ async function main() {
     if (negativePromptText) {
       prompt += `\n\n[Avoid: ${negativePromptText}]`
     }
+    // 2026-10-19: proxy.js genImageForCut 과 동일 패치(우산 테스트 실측 근거) — 무료 Flow 경로도 같은 혜택
+    if (descriptorText) {
+      prompt += `\n\n[Identity lock: every character's facial identity — eyes, nose shape, jawline, distinguishing marks — must exactly match their reference face image provided. Do not deviate from the reference faces.]`
+    }
     const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^LF_/.test(episodeCode) ? '16:9' : '9:16')
     plan.push({ no, prompt, refs: allRefs, ratio, ids })
   }

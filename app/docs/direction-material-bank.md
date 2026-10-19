@@ -129,6 +129,39 @@
   대신 이 트리거 고유 기준 사용 — ① 정지 포즈가 실제로 "얼어붙은" 것처럼 보이는가(흐르는 동작
   아님) ② 줌아웃 리빌 타이밍이 매끄러운가(1.5초 전환점에서 하드컷처럼 튀지 않는가) ③ 오빗 120도
   동안 identity·의상이 깨지지 않는가 ④ 빗방울·물보라가 "정지"로 표현되는가(계속 흐르면 실패).
+
+  **v1 실측 결과(2026-10-19) — IP 2장 생성, identity 실패**: 성준님이 얼굴 고정 문구(descriptor)
+  + 레퍼런스 얼굴 이미지 첨부해 IP 2장 생성(`Woman_holding_umbrella_in_rain_2K_*.jpg`). 실제
+  `yeori-closeup.jpg`와 대조 분석 — **얼굴 identity 불일치 확인**. 코·턱선이 레퍼런스보다 뚜렷이
+  다르고, 같은 배치로 뽑은 두 장끼리도 서로 다른 사람처럼 보일 정도로 흔들림(1번은 턱이 좁고
+  갸름, 2번은 턱·볼이 확연히 더 넓고 둥긂). **원인 2가지**: ① 코드 버그 — `buildFreezeBeatCut()`의
+  `imagePrompt`가 `FREEZE_RIG`(셔터각 30도·1/3000s·1500fps 등 **비디오 촬영 장비 어휘**)를 정지
+  이미지 프롬프트에도 그대로 포함시켜, 사진엔 무의미한 기술 디테일이 얼굴 고정 지시의 상대적
+  비중을 희석함(오늘 VP 과적합과 같은 축 — 억제지시 대신 무관한 기술지시 과다 버전). ②
+  바람에 날리는 머리·격한 표정·야간 네온 거리처럼 복잡한 동작/환경은 먼저 성공한 "차분한
+  초상화"(①명화 플라이스루) 패턴보다 모델이 훨씬 더 많은 걸 새로 창작해야 해서 얼굴 레퍼런스
+  고정력이 원래도 더 약해지는 구간.
+  **v2 패치(다음 시도, 미검증)**: IP에서 `FREEZE_RIG` 제거(VP엔 유지 — 비디오 쪽은 실제로 의미
+  있음), 프롬프트 끝에 `her facial identity — eyes, nose shape, jawline, cheek freckles — must
+  exactly match the provided reference face image, do not deviate from the reference face` 추가해
+  얼굴 고정 지시를 맨 앞(descriptor)·맨 끝 두 번 배치. `buildFreezeBeatCut()`의 `imagePrompt`
+  템플릿 자체도 `FREEZE_RIG`를 빼도록 코드 수정이 필요해 보임(별도 판단 — 지금은 수동 테스트
+  프롬프트만 패치). 승격 게이트 1/2~3회차 소진(identity 실패로 재시도).
+
+  **v2 실측 결과(2026-10-19) — identity 유지 확인, 승격 게이트 통과**: 성준님이 IP 2장을
+  직접 A/B 비교(`02. 이미지 생성 테스트/02. 비바람 속에서/`) — 1번(끝에 identity lock 문구
+  없음)·2번(문구 있음) **둘 다 identity 정상 유지**. 이전 v1 실패(코·턱선 불일치)가 재현되지
+  않음 — ①`FREEZE_RIG`(셔터각 등 비디오 전용 어휘)를 IP에서 뺀 효과 ②identity 지시를 맨 앞
+  + 맨 끝 두 번 배치한 효과 둘 다 기여한 것으로 추정(이번 테스트는 둘을 분리하지 않아 어느 쪽
+  기여도가 더 큰지는 미분리 — 필요하면 다음에 분리 테스트).
+  **→ 코드에 바로 반영**: `server/proxy.js`의 `genImageForCut()`과 `scripts/flow-image.js`의
+  `main()` 양쪽에 동일하게, descriptor가 있으면 프롬프트 맨 끝(네거티브 프롬프트 뒤)에
+  `[Identity lock: every character's facial identity — eyes, nose shape, jawline, distinguishing
+  marks — must exactly match their reference face image provided. Do not deviate from the
+  reference faces.]`를 자동으로 덧붙이도록 패치함(2026-10-19) — **이제 수동으로 안 붙여도 스튜디오
+  정상 경로(G2)·무료 Flow 경로 둘 다 자동으로 따라붙음**. 다만 이 효과 자체도 descriptor
+  원문과 마찬가지로 이번 1회 A/B가 전부라 "효과 있어 보임" 수준 — 추후 동일한 "검증됐나?"
+  질문이 다시 나오면 이 기록을 근거로 삼을 것.
 - **컬러 블로킹 보강 사례** — 회색 컨테이너 수십 개 사이 주황색 컨테이너 하나만("One needs
   attention.") — 2026-10-12에 이미 입고한 "단색 테마 강렬 대비" 재료와 같은 원리를 "다수 속
   하나만 다른 색"으로 변주한 버전. 체인지 생성기 Scene B 프리셋이 아니라, **썸네일/오프닝 1컷

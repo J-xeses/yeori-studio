@@ -2457,6 +2457,12 @@ async function genImageForCut(ep, cut, { apiKey, modelKey = NANO_BANANA_DEFAULT,
   if (negativePromptText) {
     prompt += `\n\n[Avoid: ${negativePromptText}]`
   }
+  // 2026-10-19: 우산 테스트(e-00 06.연출기법고도화) 성준님 실측 — descriptor를 프롬프트 맨 앞에서만
+  // 1회 지시하는 것보다, 끝에 한 번 더(특히 negative prompt 뒤, 모델이 마지막으로 읽는 위치) 짧게
+  // 재강조하면 극단적 동작/환경 프롬프트에서 identity 드리프트가 줄어듦 — 반복 배치로 고정.
+  if (descriptorText) {
+    prompt += `\n\n[Identity lock: every character's facial identity — eyes, nose shape, jawline, distinguishing marks — must exactly match their reference face image provided. Do not deviate from the reference faces.]`
+  }
 
   const gen = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio, modelKey)
   // 기존 파일 유지 옵션(genline 재생성): _a 가 있으면 다음 빈 슬롯에
