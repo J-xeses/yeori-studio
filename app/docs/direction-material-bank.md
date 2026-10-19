@@ -162,7 +162,45 @@
   정상 경로(G2)·무료 Flow 경로 둘 다 자동으로 따라붙음**. 다만 이 효과 자체도 descriptor
   원문과 마찬가지로 이번 1회 A/B가 전부라 "효과 있어 보임" 수준 — 추후 동일한 "검증됐나?"
   질문이 다시 나오면 이 기록을 근거로 삼을 것.
-- **컬러 블로킹 보강 사례** — 회색 컨테이너 수십 개 사이 주황색 컨테이너 하나만("One needs
+
+  **VP(영상) 실측 2회 — 시간정지 자체는 실패, 그러나 레퍼런스 소스 오판 발견(2026-10-19)**:
+  성준님이 IP를 레퍼런스/시작프레임으로 넣어 VP 2종 생성(`Woman_holding_umbrella_in_rain_
+  20261019201004.mp4`, `..._203026.mp4`). ffmpeg 프레임 분석 결과 **둘 다 "시간정지"는 전혀
+  안 됨** — 빗방울이 계속 흐르는 스트릭으로 떨어지고, 우산은 "뒤집히는 순간"이 아니라 처음부터
+  끝까지 이미 뒤집힌 채 들고 있는 상태로만 나옴. 다만 **카메라가 정면→측면으로 실제 이동하는
+  건 확인**(오빗 요소는 일부 작동). 이 시점에 성준님이 "비슷한 이유를 계속 들을 거냐"고 지적 —
+  Claude가 성급하게 "Veo는 시간정지를 구조적으로 못 한다, 0/6 성공"이라고 결론 내렸으나(기록은
+  안 함, 구두로만 전달), **같은 폴더의 `Cyber_samurai_holding_sword_jumping_20261017001756.mp4`
+  (성준님이 별도 진행, 확인 요청)를 못 보고 내린 성급한 결론이었음** — 재검토 필요.
+
+  **샘러이 영상 재검토 — 이론 정정**: 프레임 분석 결과 이건 **실제로 성공 사례**. 0.3~5.7초
+  구간에서 카메라가 정면→측면→뒷모습→측면으로 180도 가까이 실제로 돌고, 주변 총알(속도 링
+  그래픽 포함)·유리 파편이 매 프레임 거의 같은 상대 위치를 유지(진짜 정지에 가까움). 캐릭터
+  본인의 칼 든 손만 슬로우모션으로 계속 움직임 — "환경은 멈추고 인물만 슬로우모션"이라는 진짜
+  영화적 불릿타임 문법(매트릭스식)에 더 가까움. **"0/6 성공"은 틀린 결론이었음 — 정정.**
+  **왜 이건 되고 비/서류/우산은 안 됐는가**: 공통 요인 추정 — ① 스타일화된 CG/VFX 장르(포토리얼
+  아님) ② 총알·파편에 "속도 링" 그래픽이 붙어 물리적 낙하체가 아니라 VFX 그래픽 요소로 렌더링됨
+  ③ 캐릭터 자체가 공중에 떠 있는 설정이라 중력 전제가 약함. 이런 게임 시네마틱/VFX쇼릴 장르는
+  학습 데이터에 "멈춘 디테일+도는 카메라" 레퍼런스가 실제로 많은 반면, "포토리얼 인물+일상적
+  배경(비·서류)+시간정지"라는 조합은 학습 데이터에 사실상 없어 계속 실패한 것으로 추정.
+
+  **v3 VP 패치(2026-10-19, 다음 시도) — 샘러이 교훈을 포토리얼에 이식**: 장르 앵커 문구
+  ("cinematic video-game-trailer slow-motion style", "VFX showcase reel")와 빗방울을
+  "crystalline suspended particles"(그래픽 파티클처럼)로 재서술 + 캐릭터는 머리카락/옷자락만
+  슬로우모션으로 계속 움직이게(샘러이의 "환경 정지+인물만 슬로우모션" 문법) 패치. `IP`는 여전히
+  `FREEZE_RIG`(셔터각 어휘) 제외 + identity lock 문구 끝에 유지.
+  `buildFreezeBeatCut({ action: { nameKo: '우산 뒤집힘(VFX 스타일)', en: "her umbrella caught at
+  the exact instant of flipping inside-out in a violent gust — the raindrops around her rendered
+  as crystalline suspended particles, frozen completely motionless in the air like a cinematic
+  VFX slow-motion breakdown shot, while only her hair and coat fabric keep rippling in continuous
+  slow motion, her grip and pose on the umbrella held at the dramatic peak" }, sceneA: { envEn:
+  'a rain-soaked city street at night, cinematic video-game-trailer slow-motion style, wet
+  asphalt reflecting neon signs and streetlights, strong gusting wind', lightingEn: 'cool
+  blue-toned streetlight and neon reflections, high-contrast cinematic rim light, dramatic
+  volumetric lighting typical of a VFX showcase reel' }, durationSec: 6, orbitDegrees: 160,
+  openOnCloseUp: true })`로 생성. 승격 게이트는 이 트리거(우산) 전용으로 VP 쪽만 따로 카운트—
+  IP(identity)는 이미 통과, VP(시간정지+오빗)는 이번이 3회차(1·2회 완전실패, 이번은 이론을
+  새로 반영한 재시도) — 다음 결과로 게이트 통과 여부 결정. — 회색 컨테이너 수십 개 사이 주황색 컨테이너 하나만("One needs
   attention.") — 2026-10-12에 이미 입고한 "단색 테마 강렬 대비" 재료와 같은 원리를 "다수 속
   하나만 다른 색"으로 변주한 버전. 체인지 생성기 Scene B 프리셋이 아니라, **썸네일/오프닝 1컷
   구도용**으로 더 적합(서여리 혼자 색이 다른 배경 속에 있는 정지컷).
