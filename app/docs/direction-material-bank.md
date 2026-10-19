@@ -120,6 +120,24 @@
   전례 있음, §2026-10-11 항목 참고) ④ 조명 방향이 샷 내내 동일 광원에서 동기부여되는가.
   성공하면 서여리 쪽은 명화 패러디/오마주 번외 콘텐츠(`e-00 번외 소재 창고`)로 등록할 후보.
 
+  **v1 실측 결과(2026-10-19)**: IP(정지컷)·VP(8초, 720x1280, 24fps) 둘 다 생성 완료, ffmpeg로
+  1fps 프레임 추출해 분석. **②프레임 밖 공간 생성은 성공** — 5초 지점부터 원본에 없던 복도(괘종
+  시계·콘솔테이블·열린 문 너머 공간)가 만들어짐, 하드컷 없이 매끄럽게 이어짐(①도 합격). **④조명/
+  스타일 동기부여는 실패** — 0~4초의 "따뜻한 모던 카페풍 방"이 5초 이후 전혀 다른 톤(19세기풍
+  목재 패널·앤티크 사극 세트장 느낌)으로 튐. **③얼굴 identity는 검증 불가** — 5초부터 인물이
+  완전히 돌아서서 뒷모습만 보임(의도한 "얼굴 유지 연속샷"이 아니라 "그녀가 보는 걸 따라가는 1인칭
+  트래블링"으로 틀어짐), 덤으로 의상도 뒷모습 구간에서 미세하게 변함. **원인**: VP가 "the room
+  continues beyond the frame"이라고만 하고 그 방의 구체적 스타일(가구·벽재·창틀)을 반복 주입하지
+  않아서, 모델이 빈 공간을 "Hopper풍 초상화"에서 가장 흔히 연상되는 고전적 인테리어로 채움.
+  **v2 패치(다음 시도용, 아직 미검증)**: VP 끝에
+  `the revealed space beyond the frame must match the exact same decor style as the original
+  room — same warm cafe-style wood paneling, same window glass and frame style, no shift to a
+  different era, antique style, or genre, character's dark green boat-neck dress and gold
+  necklace remain unchanged throughout, character's face remains visible in profile or
+  three-quarter view and never fully turns away from camera` 추가, 네거티브에
+  `style drift to different era or decor, costume change, character fully turning away from
+  camera` 추가.
+
 **메타/교육성 포스트(재료 아님, 참고만)**: "AI 영상 만들 때 필수 카메라 연출 18가지"(돌리/줌/오빗/
 돌리줌 등 기본기 정리), "무조건 끝까지 보게 만드는 스토리텔링 6단계 공식", "전 세계 조회수 1위
 유튜버가 말하는 조회수 안 나오는 영상 특징" — 이런 건 "연출 재료"라기보다 **제작 공정 지식**이라
