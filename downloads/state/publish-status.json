@@ -1,4 +1,50 @@
 {
+  "2": {
+    "instagram": {
+      "publishedAt": 1791376800000,
+      "permalink": "https://www.instagram.com/p/DeMYq6gA4lo/",
+      "code": "IG_R02",
+      "title": "R02 AI인지 모르고 DM 보낸 사람들, 이거 실화?",
+      "note": "2026-10-07 21:40 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필"
+    }
+  },
+  "4": {
+    "instagram": {
+      "publishedAt": 1790586000000,
+      "permalink": "https://www.instagram.com/reel/Dd04SFFhHjA/",
+      "code": "IG_R04",
+      "title": "R04 서여리 실사 소개",
+      "note": "2026-09-28 18:00 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필"
+    }
+  },
+  "5": {
+    "instagram": {
+      "publishedAt": 1792056000000,
+      "permalink": "https://www.instagram.com/p/DegndRdjc13/",
+      "code": "IG_R05",
+      "title": "R05 혼자인 밤, 친구들 SNS를 보다",
+      "caption": "금요일 밤, 다들 뭐 해요?\n좋아요는 눌렀는데 괜히 나만 멈춰 있는 것 같은 밤.\n근데 사실… 다들 보여주고 싶은 것만 올리는 거더라고요.\n\n이 시간에 이거 보고 있는 친구한테 보내기 📩\n#혼자인밤 #금요일밤 #서여리",
+      "note": "2026-10-15 18:20 실제 게시 성공(확인됨) — publish-status.json 신설(10/16) 이전에 게시된 건이라 수동 백필"
+    }
+  },
+  "6": {
+    "instagram": {
+      "publishedAt": 1792418787392,
+      "mediaId": "18131088215504658",
+      "permalink": "https://www.instagram.com/reel/Derbs8fDu1s/",
+      "videoUrl": "https://unnecessary-governing-platforms-extended.trycloudflare.com/downloads/seoyeori/IG/IG_R/IG_R06/07_output/ep6_final.mp4",
+      "caption": "친구가 내 흑역사를 단톡방에 올려버렸다 😱\n\n야, 이거 너지?! 🔍\n새내기 MT 흑역사가 발굴됐다...\n지워, 당장 지워!! 🚨\n이미 단톡방에 올렸는데? 💀\n\n이번 생은 망했어 🛏️\n여러분 흑역사도 댓글로 풀어줘요 👇😂\n\n#흑역사 #흑역사챌린지 #새내기MT #단톡방 #대학생 #대학생일상 #공감 #챌린지 #이번생은망했어 #웃긴영상 #릴스 #Reels #친구 #MT #흑역사발굴 #대학생활 #공감백퍼 #일상 #유머 #웃참"
+    }
+  },
+  "98": {
+    "instagram": {
+      "publishedAt": 1791601200000,
+      "permalink": "https://www.instagram.com/p/DeTP8wRBzOj/",
+      "code": "IG_R03",
+      "title": "R03 AI 크리에이터 만드는 데 든 비용 0원",
+      "note": "2026-10-10 12:00 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필. ⚠️studio-state.json에서 이 에피소드의 id가 'ep_test_r03'·number가 98로 되어있음(테스트용 임시번호로 보임) — 그대로 키로 사용, 번호 자체 정리는 별도 판단 필요"
+    }
+  },
   "IG_T01": {
     "instagram": {
       "publishedAt": 1790311560000,
@@ -24,43 +70,6 @@
       "code": "IG_P01",
       "title": "P01 웹툰 자기소개",
       "note": "2026-09-27 18:00 게시(5장 캐러셀) — studio-state.json에 이 에피소드 번호 레코드 없음, code 키로 백필"
-    }
-  },
-  "4": {
-    "instagram": {
-      "publishedAt": 1790586000000,
-      "permalink": "https://www.instagram.com/reel/Dd04SFFhHjA/",
-      "code": "IG_R04",
-      "title": "R04 서여리 실사 소개",
-      "note": "2026-09-28 18:00 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필"
-    }
-  },
-  "2": {
-    "instagram": {
-      "publishedAt": 1791376800000,
-      "permalink": "https://www.instagram.com/p/DeMYq6gA4lo/",
-      "code": "IG_R02",
-      "title": "R02 AI인지 모르고 DM 보낸 사람들, 이거 실화?",
-      "note": "2026-10-07 21:40 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필"
-    }
-  },
-  "98": {
-    "instagram": {
-      "publishedAt": 1791601200000,
-      "permalink": "https://www.instagram.com/p/DeTP8wRBzOj/",
-      "code": "IG_R03",
-      "title": "R03 AI 크리에이터 만드는 데 든 비용 0원",
-      "note": "2026-10-10 12:00 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필. ⚠️studio-state.json에서 이 에피소드의 id가 'ep_test_r03'·number가 98로 되어있음(테스트용 임시번호로 보임) — 그대로 키로 사용, 번호 자체 정리는 별도 판단 필요"
-    }
-  },
-  "5": {
-    "instagram": {
-      "publishedAt": 1792056000000,
-      "permalink": "https://www.instagram.com/p/DegndRdjc13/",
-      "code": "IG_R05",
-      "title": "R05 혼자인 밤, 친구들 SNS를 보다",
-      "caption": "금요일 밤, 다들 뭐 해요?\n좋아요는 눌렀는데 괜히 나만 멈춰 있는 것 같은 밤.\n근데 사실… 다들 보여주고 싶은 것만 올리는 거더라고요.\n\n이 시간에 이거 보고 있는 친구한테 보내기 📩\n#혼자인밤 #금요일밤 #서여리",
-      "note": "2026-10-15 18:20 실제 게시 성공(확인됨) — publish-status.json 신설(10/16) 이전에 게시된 건이라 수동 백필"
     }
   }
 }
