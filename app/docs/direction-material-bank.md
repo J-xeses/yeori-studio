@@ -76,6 +76,59 @@
   각각 렌더링 후 이어붙이는 진짜 불릿타임 리그 방식)까지 지원하는 더 큰 도구인데, 지금 우리
   파이프라인은 Veo 단일 호출(연속 영상 1개) 방식만 반영함 — 멀티 키프레임 합성 파이프라인은
   범위가 커서 별도 판단 필요.
+
+  **새 트리거 Tier 1 테스트: 우산 뒤집힘(비바람) — 2026-10-19, 승격 게이트 1회차**: 성준님이
+  "비바람 치는 날 거리에서 우산이 뒤집히는 순간 시간이 멈추고 카메라가 도는 장면"을 신규 제안.
+  완전히 새 기법이 아니라 기존 `buildFreezeBeatCut()`(v3, 10/16 — 카메라 리그 어휘 앵커링 +
+  줌아웃 리빌 오프닝 두 교훈 반영됨)을 **처음 쓰는 트리거(우산/폭우)로 실제 호출**한 것 — 함수
+  자체는 검증된 패턴이지만 이 구체적 트리거로 Flow/Veo 생성은 아직 한 번도 안 해봤으므로 ①②③④
+  평가 기준과 별개로 승격 게이트(2~3회)를 새로 카운트한다.
+
+  `node`로 `buildFreezeBeatCut({ action: { nameKo: '우산 뒤집힘', ko: '비바람에 우산이 순간
+  뒤집히는', en: "her umbrella suddenly flipping inside-out in a violent gust of wind and rain" },
+  sceneA: { envEn: '...rain-soaked city street at night...', lightingEn: '...cool blue-toned
+  streetlight and neon reflections...' }, durationSec: 6, orbitDegrees: 120, openOnCloseUp: true })`
+  직접 호출해 생성한 실제 출력:
+
+  **IP(첫 프레임, Flow/Veo 이미지 생성용)**:
+  `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen
+  mid-action — her umbrella suddenly flipping inside-out in a violent gust of wind and rain —
+  her pose held at its most dramatic peak, shot on a high-speed cine camera rig, 30-degree
+  shutter angle (1/3000s shutter speed), time dilated to an extreme 1500fps super-slow-motion
+  freeze, shallow anamorphic depth of field, in a rain-soaked city street at night, wet asphalt
+  reflecting neon signs and streetlights, heavy rain falling in sheets, strong gusting wind
+  blowing her coat and hair sideways, photorealistic 8K cinematic, natural Korean beauty,
+  effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes,
+  skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: cool
+  blue-toned streetlight and neon reflections scattered across wet pavement, high-contrast rim
+  light from passing car headlights, never legible text or UI, vertical 9:16`
+
+  **VP(카메라 무브)**:
+  `Opens on an extreme close-up of her calm, natural expression, a rain-soaked city street at
+  night, wet asphalt reflecting neon signs and streetlights, heavy rain falling in sheets, strong
+  gusting wind blowing her coat and hair sideways, cool blue-toned streetlight and neon
+  reflections scattered across wet pavement, high-contrast rim light from passing car headlights.
+  / The camera rapidly pulls back and zooms out, revealing — A frozen, suspended-in-time
+  bullet-time moment, shot on a high-speed cine camera rig, 30-degree shutter angle (1/3000s
+  shutter speed), time dilated to an extreme 1500fps super-slow-motion freeze, shallow
+  anamorphic depth of field: she is caught mid-action — her umbrella suddenly flipping
+  inside-out in a violent gust of wind and rain — her pose held perfectly still at its most
+  dramatic peak for the rest of the shot, only her hair and loose fabric gently drifting in the
+  air, every falling object and droplet suspended mid-air with faint motion-trail ripples around
+  it. The camera orbits roughly 120 degrees around her frozen pose along a smooth arc, revealing
+  the frozen scene from a new angle by the end. a rain-soaked city street at night, wet asphalt
+  reflecting neon signs and streetlights, heavy rain falling in sheets, strong gusting wind
+  blowing her coat and hair sideways. cool blue-toned streetlight and neon reflections scattered
+  across wet pavement, high-contrast rim light from passing car headlights. NO dialogue. NO
+  speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
+
+  **참고**: 함수가 같이 뽑아준 `audioNote`의 SFX 기본값("유리 파쇄음")은 깨지는 유리/컵
+  시나리오용 디폴트라 우산 트리거와 안 맞음 — Veo 프롬프트 자체엔 오디오 지시가 섞여 들어가지
+  않으니 생성에는 영향 없고, 후반 편집(CapCut SFX 레이어)에서 "돌풍/천둥/우산 뒤집히는 파삭임"
+  계열로 직접 교체할 것. **평가 기준**: 기존 ①②③④(전환 매끄러움·프레임밖 공간·identity·조명)
+  대신 이 트리거 고유 기준 사용 — ① 정지 포즈가 실제로 "얼어붙은" 것처럼 보이는가(흐르는 동작
+  아님) ② 줌아웃 리빌 타이밍이 매끄러운가(1.5초 전환점에서 하드컷처럼 튀지 않는가) ③ 오빗 120도
+  동안 identity·의상이 깨지지 않는가 ④ 빗방울·물보라가 "정지"로 표현되는가(계속 흐르면 실패).
 - **컬러 블로킹 보강 사례** — 회색 컨테이너 수십 개 사이 주황색 컨테이너 하나만("One needs
   attention.") — 2026-10-12에 이미 입고한 "단색 테마 강렬 대비" 재료와 같은 원리를 "다수 속
   하나만 다른 색"으로 변주한 버전. 체인지 생성기 Scene B 프리셋이 아니라, **썸네일/오프닝 1컷
@@ -159,6 +212,17 @@
   기법 명칭은 "파고드는 푸시인"보다 "측면 오빗 리빌"이 더 정확한 표현.
   **→ 스포·후킹용 숏(5~6초) 채널 시그니처로 확정**([[⑦ 채널 시그니처 역할분담]] 참고). 최종
   레시피 = IP(①항목 원본) + v3 VP(동작 강조, 억제지시 "얼굴 안 돌아서기"만 유지) + v3 네거티브.
+
+  **실제 콘텐츠 적용 기획(2026-10-19)**: 추상 데모가 아니라 실제 번외 소재에 바로 연결 —
+  `00. 서여리 번외 에피소드 기획/서여리 번외 확장기획.txt`의 "🌙계절/감성 계열 · 비 오는 날"
+  라인과 묶어 **"비 오는 날" 번외 스포 2부작**으로 기획:
+  - **Shot A(이 레시피, 수정 없이 그대로 재사용)**: 창가 카페/서재에서 비 내리는 창밖을 보며
+    앉아있는 서여리. IP·VP·네거티브 전부 위 확정본 그대로 — 레시피를 다시 손대면 승격 게이트를
+    처음부터 다시 통과시켜야 하므로, "빗방울 흐르는 창문" 같은 장식 디테일만 IP에 선택적으로
+    얹고 VP 동작 지시는 절대 건드리지 않을 것.
+  - **Shot B(아래 신규 기법 1차 테스트)**: 거리에서 우산이 뒤집히는 순간 시간이 멈추고 카메라가
+    도는 장면. 두 숏을 "고요함(실내)과 혼돈(실외)이 공존하는 서여리"라는 한 컨셉으로 묶어 틔저
+    2종 업로드.
 
 **메타/교육성 포스트(재료 아님, 참고만)**: "AI 영상 만들 때 필수 카메라 연출 18가지"(돌리/줌/오빗/
 돌리줌 등 기본기 정리), "무조건 끝까지 보게 만드는 스토리텔링 6단계 공식", "전 세계 조회수 1위
