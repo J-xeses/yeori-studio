@@ -686,8 +686,9 @@
     },
     "cut_10": {
       "g1": true,
-      "updatedAt": "2026-09-25T11:45:47.340Z",
-      "g5": false
+      "updatedAt": "2026-10-20T11:00:55.988Z",
+      "g5": false,
+      "g3": true
     },
     "cut_15": {
       "g1": true,
