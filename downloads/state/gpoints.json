@@ -686,14 +686,17 @@
     },
     "cut_10": {
       "g1": true,
-      "updatedAt": "2026-10-20T11:00:55.988Z",
+      "updatedAt": "2026-10-20T13:29:48.776Z",
       "g5": false,
-      "g3": true
+      "g3": true,
+      "g4": true
     },
     "cut_15": {
       "g1": true,
-      "updatedAt": "2026-09-25T11:45:47.341Z",
-      "g5": false
+      "updatedAt": "2026-10-20T13:33:12.911Z",
+      "g5": false,
+      "g3": true,
+      "g4": false
     },
     "cut_20": {
       "g1": true,

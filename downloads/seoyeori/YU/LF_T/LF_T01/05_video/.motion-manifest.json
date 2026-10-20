@@ -55,11 +55,10 @@
     "producedAt": "2026-09-19T05:46:58.046Z"
   },
   "10": {
-    "method": "graphic",
-    "motion": "self",
+    "method": "multi-clip-compose",
+    "motion": null,
     "baked": true,
-    "duration": 8,
-    "producedAt": "2026-09-17T04:23:09.485Z"
+    "producedAt": "2026-10-20T13:26:23.304Z"
   },
   "11": {
     "method": "multi-clip-compose",
@@ -87,10 +86,11 @@
   },
   "15": {
     "method": "graphic",
-    "motion": "self",
+    "selfText": false,
+    "motion": "none",
     "baked": true,
-    "duration": 10,
-    "producedAt": "2026-09-17T04:24:35.067Z"
+    "duration": 16,
+    "producedAt": "2026-10-20T13:33:29.914Z"
   },
   "16": {
     "method": "multi-clip-compose",

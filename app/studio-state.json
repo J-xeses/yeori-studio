@@ -1,9 +1,9 @@
 {
-  "activeTab": "script",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88062
+    "remainingChars": 88018
   },
   "activeEpisodeId": "ep_1786261078428",
   "openTabIds": [
@@ -1134,15 +1134,16 @@
           "overrides": {
             "duration": {
               "value": 16,
-              "at": "2026-09-20T07:52:49.475Z",
-              "reason": "사용자 지시 시간 재조정 계획(2026-09-20) — 자동화/구탭 자동저장이 되돌리지 않도록 고정"
+              "at": "2026-10-20T13:33:29.917Z",
+              "reason": "스튜디오 화면에서 직접 수정"
             },
             "narration": {
               "value": "이게 그냥 콜라보가 아니라 진짜 전략이었던 거예요. 르세라핌으로 국내 팬덤 지키고, 아일릿으로 Z세대 새로 데려오고, 캣츠아이로 글로벌까지 — 한 곡으로 세 마리 토끼를 다 잡은 거죠.",
               "at": "2026-09-20T07:54:22.139Z",
               "reason": "그래픽 컷 나레이션 초안"
             }
-          }
+          },
+          "imageSeq": null
         },
         {
           "id": "cut-15",
@@ -11799,15 +11800,16 @@
       "overrides": {
         "duration": {
           "value": 16,
-          "at": "2026-09-20T07:52:49.475Z",
-          "reason": "사용자 지시 시간 재조정 계획(2026-09-20) — 자동화/구탭 자동저장이 되돌리지 않도록 고정"
+          "at": "2026-10-20T13:33:29.917Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         },
         "narration": {
           "value": "이게 그냥 콜라보가 아니라 진짜 전략이었던 거예요. 르세라핌으로 국내 팬덤 지키고, 아일릿으로 Z세대 새로 데려오고, 캣츠아이로 글로벌까지 — 한 곡으로 세 마리 토끼를 다 잡은 거죠.",
           "at": "2026-09-20T07:54:22.139Z",
           "reason": "그래픽 컷 나레이션 초안"
         }
-      }
+      },
+      "imageSeq": null
     },
     {
       "id": "cut-15",
@@ -12592,16 +12594,16 @@
       ],
       "cut-10": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/05_video/cut_10.mp4?t=1789375775114",
-          "name": "cut_10.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/06_publishing/cut_10_final.mp4?t=1792502781066",
+          "name": "FFmpeg 합성 (cut_10_final.mp4)",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "16:9",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\05_video\\cut_10.mp4",
-          "keepAudio": true,
-          "createdAt": 1788923816000
+          "createdAt": 1792502781115,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\LF_T\\LF_T01\\06_publishing\\cut_10_final.mp4",
+          "keepAudio": true
         }
       ],
       "cut-22": [
@@ -13145,7 +13147,8 @@
       "cut-20": true,
       "cut-21": true,
       "cut-9": true,
-      "cut-10": true
+      "cut-10": true,
+      "cut-14": true
     },
     "focusCutId": null,
     "voiceTabs": {
@@ -13449,13 +13452,26 @@
         {
           "id": "track_1789346165885_1ckz",
           "type": "dialogue",
-          "text": "근데 이게 그냥 운이 아니에요~. HYBE가 진짜 전략적으로 짠 거거든요... LE SSERAFIM으로 국내 팬덤 잡고, ILLIT으로 Z세대 새로 끌어오고~~. KATSEYE로 글로벌까지! 한 곡으로 세 시장을...",
+          "text": "",
           "speaker": null,
           "url": null,
           "voiceId": "",
           "settings": {
             "speed": 0.95,
             "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1792502390985_sc7x",
+          "type": "narration",
+          "text": "이게 그냥 콜라보가 아니라, 진짜 전략이었던 거예요~~. 르쎄라핌으로 국내 팬덤 지키고, 아일릿으로 Z세대 새로 데려오고... 캣츠아이로 글로벌까지~~ 한 곡으로 세 마리 토끼를 다잡은 거죠~!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/03_audio/tts-previews/cut_15_track_1792502390985_sc7x.mp3?t=1792502573260",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.9,
+            "stability": 55,
             "similarity": 75
           }
         }
@@ -13667,7 +13683,8 @@
       "cut-20__v1": "blob:http://localhost:5173/b99160e1-9190-4373-89fd-6c92793ff69b",
       "cut-21__v1789694806321_3ik": "blob:http://localhost:5173/0d24bc21-daab-42e2-812a-cbd70e57b20d",
       "cut-9__v1": "blob:http://localhost:5173/485ef3d0-5723-468e-bd80-500796acf77c",
-      "cut-10__v1": "blob:http://localhost:5173/d65f474b-3ab7-42b3-8861-af1d42e48e8b"
+      "cut-10__v1": "blob:http://localhost:5173/ec1dd9ec-53d8-4ec5-9f6e-81681980b665",
+      "cut-14__v1": "blob:http://localhost:5173/08680f91-2570-44c2-a568-e2bc078248c8"
     }
   },
   "voiceInsertState": {
