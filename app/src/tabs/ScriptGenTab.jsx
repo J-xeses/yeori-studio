@@ -1872,14 +1872,14 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
       <TabToolbar
         actions={[
           {
-            key: 'gen-script', variant: 'accent', disabled: loading,
-            label: loading ? <><span className={s.spinner} />{progress || '생성 중...'}</> : '✨ Claude로 대본 생성',
-            onClick: generateScript,
-          },
-          {
             key: 'open-script-file', variant: 'default',
             label: '📂 대본 파일 열기',
             onClick: openScriptFileModal,
+          },
+          {
+            key: 'gen-script', variant: 'accent', disabled: loading,
+            label: loading ? <><span className={s.spinner} />{progress || '생성 중...'}</> : '✨ Claude로 대본 생성',
+            onClick: generateScript,
           },
           {
             key: 'pipeline-export', variant: 'green', disabled: flowRunning || !cuts.length,
@@ -2103,11 +2103,13 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
             />
           </div>
 
-          {/* ② 대본 생성 버튼 */}
+          {/* ② 대본 생성 버튼 — 마스터 코드 입력 전엔 비활성(의도된 동작). "안 눌린다"고
+              오인되기 쉬워 2026-10-21 4차 보완에서 title로 이유를 밝힘. */}
           <button
             className={s.genBtn}
             onClick={generateFromMasterCode}
             disabled={mcLoading || !masterCode.trim()}
+            title={!masterCode.trim() ? '위 마스터 코드 입력창에 코드를 먼저 입력하세요' : undefined}
             style={{ width: '100%' }}
           >
             {mcLoading ? (<><span className={s.spinner} />생성 중...</>) : '🧬 대본 생성'}

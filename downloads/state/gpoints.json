@@ -990,12 +990,50 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-10-10T05:21:52.822Z",
+      "updatedAt": "2026-10-21T12:56:36.172Z",
       "g2": true,
       "selectedImage": "cut_03_a.jpg",
       "g3": true,
       "g4": true,
-      "g5": true
+      "g5": true,
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_03_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 2
+          },
+          "total": 100,
+          "note": "",
+          "scoredAt": "2026-10-21T12:56:36.172Z"
+        },
+        "1": {
+          "filename": "cut_03_b.jpg",
+          "scores": {
+            "face": 1,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 1,
+            "mood": 2,
+            "shot": 2,
+            "background": 2,
+            "camera": 2,
+            "trend": 2
+          },
+          "total": 85,
+          "note": "",
+          "scoredAt": "2026-10-21T12:56:36.172Z"
+        }
+      }
     },
     "cut_4": {
       "g1": true,

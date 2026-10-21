@@ -30,6 +30,24 @@ function makeTrack(type, text = '', trackDefaults, speaker = null) {
   }
 }
 
+// 인물 추가 입력행 — 친구-3·단역-1 같은 임시 화자를 카드 목록에 즉석으로 추가 (2026-10-21 4차 보완)
+function AddSpeakerRow({ onAdd }) {
+  const [name, setName] = useState('')
+  const submit = () => { onAdd(name); setName('') }
+  return (
+    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+      <input value={name} onChange={e => setName(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter') submit() }}
+        placeholder="새 인물 이름 (예: 친구-3, 단역-1)"
+        style={{ flex: 1, fontSize: 11.5, padding: '6px 8px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-1)' }} />
+      <button type="button" onClick={submit} disabled={!name.trim()}
+        style={{ fontSize: 11.5, padding: '6px 12px', borderRadius: 4, cursor: name.trim() ? 'pointer' : 'default', opacity: name.trim() ? 1 : 0.5 }}>
+        ＋ 인물 추가
+      </button>
+    </div>
+  )
+}
+
 function initTracksForCut(cut, trackDefaults) {
   const tracks = []
   if (cut.dialogue?.trim()) {
@@ -97,10 +115,21 @@ export default function TTSTab() {
   useEffect(() => {
     fetch('http://localhost:3001/api/characters')
       .then(r => r.json())
-      .then(d => setCharList(Object.entries(d.characters || {})
-        .filter(([id]) => !id.startsWith('_'))
-        .map(([, c]) => ({ name: c.name, aliases: c.aliases || [], primary: !!c.primary }))
-        .sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0))))
+      .then(d => {
+        const entries = Object.entries(d.characters || {}).filter(([id]) => !id.startsWith('_'))
+        // personaOf가 있는 항목(예: yeori_nt="서여리(묶은 머리)")은 같은 인물의 룩 변형일 뿐
+        // 목소리가 다른 게 아니다 — 별도 카드를 만들지 않고, 이름·별칭을 원본 캐릭터 카드의
+        // 별칭으로 합쳐서 canonSpeaker()가 계속 인식하게만 한다(2026-10-21 4차 보완).
+        setCharList(entries
+          .filter(([, c]) => !c.personaOf)
+          .map(([id, c]) => {
+            const variantAliases = entries
+              .filter(([, v]) => v.personaOf === id)
+              .flatMap(([, v]) => [v.name, ...(v.aliases || [])])
+            return { name: c.name, aliases: [...(c.aliases || []), ...variantAliases], primary: !!c.primary }
+          })
+          .sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0)))
+      })
       .catch(() => {})
   }, [])
   const canonSpeaker = (name) => {
@@ -139,6 +168,24 @@ export default function TTSTab() {
   // 화자별 목소리는 항상 정식 이름 키로 저장 → 대본 표기가 "지아"든 "한지아"든 한 곳으로 모임
   const setSpeakerVoice = (name, id) =>
     dispatch({ type: 'SET_TTS', p: { speakerVoices: { ...speakerVoices, [canonSpeaker(name)]: id } } })
+
+  // 인물 추가(친구-3·단역-1 같은 임시 화자) — characters.json 정식 레지스트리(얼굴·디스크립터 등
+  // 풀 캐릭터시트 필요)에는 안 넣고, TTS 탭 전용으로만 가볍게 저장한다(2026-10-21 4차 보완).
+  // canonSpeaker()는 charList에 없는 이름을 만나면 그 이름 그대로 키로 쓰므로 등록 없이도 작동.
+  const extraSpeakers = ttsSettings.extraSpeakers || []
+  const addExtraSpeaker = (name) => {
+    const n = name.trim()
+    if (!n || extraSpeakers.includes(n)) return
+    dispatch({ type: 'SET_TTS', p: { extraSpeakers: [...extraSpeakers, n] } })
+  }
+  const removeExtraSpeaker = (name) => {
+    const { [name]: _v, [canonSpeaker(name)]: _v2, ...restVoices } = speakerVoices
+    const { [name]: _s, [canonSpeaker(name)]: _s2, ...restSettings } = speakerSettings
+    dispatch({ type: 'SET_TTS', p: {
+      extraSpeakers: extraSpeakers.filter(n => n !== name),
+      speakerVoices: restVoices, speakerSettings: restSettings,
+    } })
+  }
 
   // 화자별 미세조정 — 이름이 명시된 화자 트랙(CUT 15/21 두샷 등)에만 적용. 전 컷 공통.
   // 이름 없는 대사(대부분의 서여리 대사)는 트랙 개별값(= trackDefaults) 을 그대로 쓴다.
@@ -750,13 +797,18 @@ export default function TTSTab() {
               "탭 별로 한 카드에 모아서 심플하게" 요청에 따라 캐릭터 하나당 접이식 카드 하나로
               재배치 — 기본 캐릭터만 펼친 채 시작, 나머지는 이름만 보이는 pill로 접어서 필요한
               캐릭터만 펼쳐보게 한다. 내부 설정/로직은 그대로, 감싸는 틀만 바꿈. */}
-          {charList.map(c => {
+          {[...charList, ...extraSpeakers.map(n => ({ name: n, aliases: [], primary: false, extra: true }))].map(c => {
             const tuned = !!speakerSettingFor(c.name)
             const sv = speakerSettingFor(c.name) || FALLBACK_DEFAULTS.dialogue
             return (
               <details key={c.name} className={s.speakerVoiceCard} open={c.primary}>
                 <summary className={s.speakerVoicePill}>
                   {c.name}{c.primary ? ' (기본)' : ''}
+                  {c.extra && (
+                    <span role="button" title="이 인물 삭제"
+                      onClick={e => { e.preventDefault(); e.stopPropagation(); removeExtraSpeaker(c.name) }}
+                      style={{ marginLeft: 8, color: 'var(--text3)', cursor: 'pointer' }}>✕</span>
+                  )}
                 </summary>
                 <div className={s.speakerVoiceRow} style={{ flexWrap: 'wrap' }}>
                 <VoicePicker
@@ -853,6 +905,7 @@ export default function TTSTab() {
               </details>
             )
           })}
+          <AddSpeakerRow onAdd={addExtraSpeaker} />
         </details>
 
         {/* 1-c. 읽기 교정 — 영문 고유명사 등을 한글 발음으로. TTS 에만 적용(자막엔 원문 유지) */}
