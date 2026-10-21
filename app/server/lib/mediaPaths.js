@@ -40,9 +40,13 @@ function numberToCodeMap() {
 // (그때) studio-state.json/gpoints 상태 계층도 브랜드로 나눠야 함. 현재 상태는 전역.
 export const BRAND = 'seoyeori'
 
-// 코드 형식: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리+ 숫자}[_{슬러그}]
+// 코드 형식: {SF|LF|IG|TK}_{E|T|P|R|S|H}{2자리+ 숫자}[_{슬러그}]
 //   SF_E01 → seoyeori/YU/SF_E/SF_E01     LF_T01 → seoyeori/YU/LF_T/LF_T01
 //   IG_R02 → seoyeori/IG/IG_R/IG_R02
+//   IG_H01 → seoyeori/IG/IG_H/IG_H01  (H=훅, 2026-10-21 신설 — 이미지/숏폼/연출기법 불문 "간지"
+//     역할 콘텐츠. 대본·기획 없이 즉흥 제작될 수 있어서 01_script~07_output 7단계 구조를 안 따름 —
+//     이 파서는 범용이라 별도 코드 수정 없이 이미 통과하지만, G-게이트/파이프라인 리더는 이 series를
+//     스캔 대상으로 건드리지 않음(자동 스캔 안 하는 구조라 안전))
 // 안 맞는 코드(ep3, TEST_OVERLAY, IG_RL_E02 …)는 전부 seoyeori/_etc/{code}/.
 const PLATFORM = { SF: 'YU', LF: 'YU', IG: 'IG', TK: 'TK' }
 const CODE_RE = /^(SF|LF|IG|TK)_([A-Z])(\d{2,})(?:_[A-Z0-9]+)?$/

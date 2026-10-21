@@ -953,6 +953,18 @@ export default function ScriptGenTab() {
   const [showChangesModal, setShowChangesModal] = useState(false)
   const [changesInput, setChangesInput] = useState('')
 
+  // ── 대본 파일 열기/수정/저장 (2026-10-21 4차 보완 — "Claude로 대본 생성" 대신
+  // 이미 있는 대본 원본 .txt를 열고 고쳐서 저장하는 쪽이 더 유용하다는 요청) ──
+  const [showScriptFileModal, setShowScriptFileModal] = useState(false)
+  const [scriptFileDir, setScriptFileDir] = useState('')
+  const [scriptFileList, setScriptFileList] = useState([])
+  const [scriptFileSelected, setScriptFileSelected] = useState('')
+  const [scriptFileContent, setScriptFileContent] = useState('')
+  const [scriptFileLoading, setScriptFileLoading] = useState(false)
+  const [scriptFileSaving, setScriptFileSaving] = useState(false)
+  const [scriptFileError, setScriptFileError] = useState('')
+  const [scriptFileDirty, setScriptFileDirty] = useState(false)
+
   // 이 탭은 에피소드를 전환해도 컴포넌트가 언마운트되지 않아서, 위 "마스터 코드로
   // 대본 생성" 입력값이 이전 에피소드 것 그대로 남아있는 문제가 있었다(예: A 에피소드의
   // 코드를 입력해두고 새 에피소드로 넘어가면 그 입력값이 그대로 남아 새 에피소드에
@@ -1223,6 +1235,64 @@ export default function ScriptGenTab() {
       setDevelopError(err.message)
     } finally {
       setDevelopLoading(false)
+    }
+  }
+
+  // 대본 파일 모달 열기 — 현재 에피소드 01_script 폴더의 .txt/.md 목록을 불러온다
+  const openScriptFileModal = async () => {
+    setShowScriptFileModal(true)
+    setScriptFileError('')
+    setScriptFileContent('')
+    setScriptFileSelected('')
+    setScriptFileDirty(false)
+    try {
+      const res = await fetch(`http://localhost:3001/api/script-files?code=${encodeURIComponent(episodeCode)}`)
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || '목록을 불러오지 못했습니다')
+      setScriptFileDir(data.dir)
+      setScriptFileList(data.files)
+      if (data.files.length) loadScriptFile(data.dir, data.files[0])
+    } catch (err) {
+      setScriptFileError(err.message)
+    }
+  }
+
+  const loadScriptFile = async (dir, filename) => {
+    setScriptFileLoading(true)
+    setScriptFileError('')
+    try {
+      const res = await fetch('http://localhost:3001/api/read-file', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: `${dir}\\${filename}` }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || '파일을 열지 못했습니다')
+      setScriptFileSelected(filename)
+      setScriptFileContent(data.content)
+      setScriptFileDirty(false)
+    } catch (err) {
+      setScriptFileError(err.message)
+    } finally {
+      setScriptFileLoading(false)
+    }
+  }
+
+  const saveScriptFile = async () => {
+    if (!scriptFileSelected) return
+    setScriptFileSaving(true)
+    setScriptFileError('')
+    try {
+      const res = await fetch('http://localhost:3001/api/write-file', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: `${scriptFileDir}\\${scriptFileSelected}`, content: scriptFileContent }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || '저장하지 못했습니다')
+      setScriptFileDirty(false)
+    } catch (err) {
+      setScriptFileError(err.message)
+    } finally {
+      setScriptFileSaving(false)
     }
   }
 
@@ -1807,6 +1877,11 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
             onClick: generateScript,
           },
           {
+            key: 'open-script-file', variant: 'default',
+            label: '📂 대본 파일 열기',
+            onClick: openScriptFileModal,
+          },
+          {
             key: 'pipeline-export', variant: 'green', disabled: flowRunning || !cuts.length,
             label: flowRunning ? <><span className={s.spinner} />Flow 실행 중…</> : '🚀 파이프라인 내보내기',
             onClick: handlePipelineExport,
@@ -2175,6 +2250,94 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                 >
                   확인 · 실제 적용
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showScriptFileModal && (
+          <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{
+              background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10,
+              padding: 20, width: 680, maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: 10,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+                  📂 대본 파일 열기 — {displayEpisodeCode(episodeCode)}
+                </div>
+                <button
+                  onClick={() => setShowScriptFileModal(false)}
+                  style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 16, cursor: 'pointer' }}
+                >✕</button>
+              </div>
+
+              {scriptFileError && (
+                <div style={{ fontSize: 11, color: '#ef4444' }}>⚠️ {scriptFileError}</div>
+              )}
+
+              {scriptFileList.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {scriptFileList.map(f => (
+                    <button
+                      key={f}
+                      onClick={() => {
+                        if (scriptFileDirty && !confirm('저장하지 않은 변경사항이 있습니다. 다른 파일을 여시겠습니까?')) return
+                        loadScriptFile(scriptFileDir, f)
+                      }}
+                      style={{
+                        padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
+                        background: f === scriptFileSelected ? 'var(--accent)' : 'var(--bg3)',
+                        color: f === scriptFileSelected ? '#fff' : 'var(--text2)',
+                        border: '1px solid var(--border2)',
+                      }}
+                    >{f}</button>
+                  ))}
+                </div>
+              )}
+              {scriptFileList.length === 0 && !scriptFileError && (
+                <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                  이 에피소드의 01_script 폴더에 .txt/.md 파일이 없습니다.
+                </div>
+              )}
+
+              <textarea
+                value={scriptFileContent}
+                disabled={scriptFileLoading || !scriptFileSelected}
+                onChange={e => { setScriptFileContent(e.target.value); setScriptFileDirty(true) }}
+                placeholder={scriptFileLoading ? '불러오는 중...' : ''}
+                style={{
+                  flex: 1, minHeight: 360, resize: 'vertical', fontFamily: 'monospace', fontSize: 12,
+                  padding: 10, borderRadius: 6, background: 'var(--bg3)', border: '1px solid var(--border2)',
+                  color: 'var(--text)', lineHeight: 1.6,
+                }}
+              />
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 10, color: 'var(--text3)' }}>
+                  {scriptFileDirty ? '수정됨 — 저장 전입니다' : scriptFileSelected ? '저장됨' : ''}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => setShowScriptFileModal(false)}
+                    style={{
+                      padding: '6px 14px', borderRadius: 6, background: 'var(--bg3)',
+                      border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 12, cursor: 'pointer',
+                    }}
+                  >닫기</button>
+                  <button
+                    onClick={saveScriptFile}
+                    disabled={!scriptFileSelected || scriptFileSaving || !scriptFileDirty}
+                    style={{
+                      padding: '6px 14px', borderRadius: 6, background: 'rgba(34,197,94,.2)',
+                      border: '1px solid rgba(34,197,94,.5)', color: '#4ade80', fontSize: 12,
+                      fontWeight: 700, cursor: scriptFileSelected && scriptFileDirty ? 'pointer' : 'default',
+                      opacity: !scriptFileSelected || scriptFileSaving || !scriptFileDirty ? 0.5 : 1,
+                    }}
+                  >{scriptFileSaving ? '저장 중...' : '💾 저장'}</button>
+                </div>
               </div>
             </div>
           </div>

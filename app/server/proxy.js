@@ -5460,6 +5460,33 @@ app.post('/api/read-file-binary', (req, res) => {
 })
 
 
+// ── POST /api/write-file — 텍스트 파일 쓰기(덮어쓰기) ──────────────
+app.post('/api/write-file', (req, res) => {
+  const { path: filePath, content } = req.body
+  if (!filePath) return res.status(400).json({ success: false, error: 'path 필요' })
+  try {
+    fs.writeFileSync(filePath, content ?? '', 'utf8')
+    res.json({ success: true })
+  } catch (err) {
+    res.json({ success: false, error: err.message })
+  }
+})
+
+// ── GET /api/script-files?code=EP_CODE — 해당 에피소드 01_script 폴더의 .txt/.md 목록 ──
+app.get('/api/script-files', (req, res) => {
+  const { code } = req.query
+  if (!code) return res.status(400).json({ success: false, error: 'code 필요' })
+  try {
+    const dir = scriptDir(code)
+    const files = fs.existsSync(dir)
+      ? fs.readdirSync(dir).filter(f => /\.(txt|md)$/i.test(f)).sort()
+      : []
+    res.json({ success: true, dir, files })
+  } catch (err) {
+    res.json({ success: false, error: err.message })
+  }
+})
+
 // ── POST /api/generate-capcut-spec — 편집 메타 → capcut compile 스펙 생성 ──
 app.post('/api/generate-capcut-spec', (req, res) => {
   const { epNum } = req.body

@@ -8,7 +8,7 @@ import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import s from './StudioTab.module.css'
 
-const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion']
+const TOOLS = ['Flow', 'Imagen', 'Midjourney', 'DALL-E 3', 'Stable Diffusion', 'Zemith']
 
 // PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
 // 하위로 라우팅할지 반환. server/lib/scriptParserV3.js·ScriptGenTab.jsx에 있는 것과 동일 로직
@@ -767,6 +767,9 @@ export default function StudioTab() {
     'Midjourney':       `photorealistic, 8K, cinematic lighting, --ar ${epRatio} --v 6`,
     'DALL-E 3':         `photorealistic, cinematic, high quality, ${epRatio} aspect ratio`,
     'Stable Diffusion': 'masterpiece, best quality, photorealistic, cinematic lighting, 8k uhd',
+    // Zemith는 이미지→프롬프트(디테일 묘사) 도구라 나머지와 방향이 반대(텍스트→이미지가 아님) —
+    // 이번 보완에서는 버튼만 추가, 실제 역방향 분석 연동은 범위 밖이라 접미사는 자리만 채워둔다.
+    'Zemith':           `Photorealistic 8K cinematic ${epRatio}`,
   }
 
   const allConfirmed = cuts.length > 0 && cuts.every(c => confirmed[c.id] && images[c.id]?.length > 0)
@@ -1335,8 +1338,22 @@ export default function StudioTab() {
                     }
                     setGPoints(episodeCode, checklistCut.no, { g2Checklist: merged })
                     setGData(loadGPoints())
-                    if (!sc.hardBlocked && sc.total >= PASS_THRESHOLD && (selectedImage[cutId] ?? 0) === idx) {
-                      setConfirmed(p => ({ ...p, [cutId]: true }))
+                    // 2026-10-21 4차 보완 버그수정: 기존엔 "지금 선택된 이미지를 채점했을 때만"
+                    // 컨펌됐다 — A(91점)를 먼저 채점해 선택→컨펌된 뒤 B(96점)를 채점하면, B가 더
+                    // 높은 점수로 기준을 통과해도 selectedImage가 그대로 A에 머물러 "점수 높은 쪽이
+                    // 자동 선택 안 됨" 버그로 보고됨. 이제 막 채점한 이미지가 기준을 통과하면,
+                    // 현재 선택된 이미지보다 점수가 높거나(또는 현재 선택본이 기준 미달/미채점)일 때
+                    // 자동으로 선택을 이 이미지로 옮긴 뒤 컨펌한다 — 사용자가 수동으로 고른 선택을
+                    // 덮어쓰지 않도록, 더 낮은 점수로는 자동 전환하지 않는다.
+                    if (!sc.hardBlocked && sc.total >= PASS_THRESHOLD) {
+                      const curIdx = selectedImage[cutId] ?? 0
+                      const curCl = checklist[cutId]?.[curIdx]
+                      const curSc = curCl ? computeChecklistScore(curCl.scores) : null
+                      const curPasses = curSc && !curSc.hardBlocked && curSc.allScored && curSc.total >= PASS_THRESHOLD
+                      if (curIdx === idx || !curPasses || sc.total > curSc.total) {
+                        if (curIdx !== idx) setSelectedImage(prev => ({ ...prev, [cutId]: idx }))
+                        setConfirmed(p => ({ ...p, [cutId]: true }))
+                      }
                     }
                     setChecklistTarget(null)
                   }}>
