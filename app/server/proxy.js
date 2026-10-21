@@ -5461,11 +5461,19 @@ app.post('/api/read-file-binary', (req, res) => {
 
 
 // ── POST /api/write-file — 텍스트 파일 쓰기(덮어쓰기) ──────────────
+// downloads/ 바깥 경로나 .txt/.md 외 확장자는 거부 — 임의 경로 쓰기(원격 코드 실행급 위험) 방지.
 app.post('/api/write-file', (req, res) => {
   const { path: filePath, content } = req.body
   if (!filePath) return res.status(400).json({ success: false, error: 'path 필요' })
+  const abs = path.resolve(filePath)
+  if (!abs.toLowerCase().startsWith(path.resolve(mp.DOWNLOADS).toLowerCase())) {
+    return res.status(400).json({ success: false, error: 'path는 downloads 폴더 안이어야 합니다' })
+  }
+  if (!/\.(txt|md)$/i.test(abs)) {
+    return res.status(400).json({ success: false, error: '.txt/.md 파일만 쓸 수 있습니다' })
+  }
   try {
-    fs.writeFileSync(filePath, content ?? '', 'utf8')
+    fs.writeFileSync(abs, content ?? '', 'utf8')
     res.json({ success: true })
   } catch (err) {
     res.json({ success: false, error: err.message })

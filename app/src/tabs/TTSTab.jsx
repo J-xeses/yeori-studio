@@ -746,12 +746,19 @@ export default function TTSTab() {
           {!charList.length && (
             <div className={s.sliderGuideNote}>캐릭터 레지스트리를 불러오지 못했습니다 (프록시 연결 확인).</div>
           )}
+          {/* 2026-10-21 4차 보완: 캐릭터별 카드가 전부 펼쳐진 채 세로로 길게 쌓여있던 걸,
+              "탭 별로 한 카드에 모아서 심플하게" 요청에 따라 캐릭터 하나당 접이식 카드 하나로
+              재배치 — 기본 캐릭터만 펼친 채 시작, 나머지는 이름만 보이는 pill로 접어서 필요한
+              캐릭터만 펼쳐보게 한다. 내부 설정/로직은 그대로, 감싸는 틀만 바꿈. */}
           {charList.map(c => {
             const tuned = !!speakerSettingFor(c.name)
             const sv = speakerSettingFor(c.name) || FALLBACK_DEFAULTS.dialogue
             return (
-              <div key={c.name} className={s.speakerVoiceRow} style={{ flexWrap: 'wrap' }}>
-                <span className={s.speakerVoiceName}>{c.name}{c.primary ? ' (기본)' : ''}</span>
+              <details key={c.name} className={s.speakerVoiceCard} open={c.primary}>
+                <summary className={s.speakerVoicePill}>
+                  {c.name}{c.primary ? ' (기본)' : ''}
+                </summary>
+                <div className={s.speakerVoiceRow} style={{ flexWrap: 'wrap' }}>
                 <VoicePicker
                   compact
                   value={speakerVoiceFor(c.name) || ''}
@@ -842,7 +849,8 @@ export default function TTSTab() {
                 <div className={s.sliderGuideNote} style={{ flexBasis: '100%' }}>
                   안 맞으면 → 위 슬라이더 조정 → <b>🔁 다시 듣기</b> 반복. NEW/이전 비교 가능. 확정되면 상단 <b>💾 저장</b>.
                 </div>
-              </div>
+                </div>
+              </details>
             )
           })}
         </details>
