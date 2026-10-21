@@ -914,14 +914,20 @@ export default function VideoTab() {
     if (!subtitleEnabled) return
     if (isReel) return   // 릴스는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다 — 이 띠는 클릭해서 문구 수정용
     const text = previewText
-    const scale = H / 720
+    // 2026-10-22 재점검: "글자 크기 56px"는 실제 출력 해상도 기준 픽셀이어야 한다(임의의 720
+    // 기준이 아니라) — cutDims()와 같은 기준(16:9=1920x1080, 9:16=1080x1920)의 실제 세로
+    // 픽셀 대비 이 캔버스 버퍼(H=360)의 비율로 환산해야 다른 에피소드와도 같은 기준으로
+    // 보인다. 레터박스를 걷어낸 뒤로는 이 비율이 화면에 그대로 드러난다.
+    const realH = aspectRatio === '16:9' ? 1080 : 1920
+    const scale = H / realH
     const fSize = Math.max(10, Math.round(fontSize * scale))
     const padX = 18, padY = 10, lineGap = 1.3
 
     ctx.font = `${fSize}px "${font}",sans-serif`
     ctx.textAlign = 'center'
 
-    const maxTextWidth = W * (aspectRatio === '16:9' ? 0.95 : 0.86)
+    // 2026-10-22 재점검: 가로를 꽉 채워 보인다는 지적 — 16:9 폭 비율을 95%→80%로 좁힘.
+    const maxTextWidth = W * (aspectRatio === '16:9' ? 0.80 : 0.86)
     const lines = wrapCanvasText(ctx, text, maxTextWidth)
     const lineHeight = fSize * lineGap
     const totalTextHeight = lineHeight * lines.length
