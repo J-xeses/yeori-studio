@@ -122,12 +122,18 @@
 .mainVideoEmpty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-3); font-size: 13px; width: 100%; padding: 40px 0; }
 .mainVideoEmptyIcon { font-size: 36px; }
 
-/* 자막 미리보기 모드 */
-.subtitleDisplay { position: absolute; left: 0; right: 0; pointer-events: auto; cursor: pointer; height: 30%; display: flex; align-items: center; justify-content: center; }
+/* 자막 미리보기 모드 — 캔버스 버퍼는 항상 640x360(16:9)인데 이 상자는 영상 높이의 30%인
+   가로로 얇은 띠(16:9 영상에서는 실제 비율이 약 5.93:1)라, width:100%;height:100%에
+   object-fit:contain을 쓰면 버퍼 전체가 세로 기준으로 줄어들며 가운데 ~30% 너비로 레터박스
+   처리됐다("16:9에서 자막이 가로폭 30%만 차지한다"는 2026-10-22 지적의 원인). 버퍼나 폰트
+   크기는 손대지 않고, 이 띠에 overflow:hidden을 주고 캔버스를 원래 비율(16:9) 그대로
+   가로폭 100%로 띄운 뒤 아래쪽에 붙여 위쪽 초과분만 잘라내는 방식으로 바꿨다 — 자막은
+   버퍼 하단 쪽에 그려지므로 이 크롭에 걸리지 않는다. */
+.subtitleDisplay { position: absolute; left: 0; right: 0; pointer-events: auto; cursor: pointer; height: 30%; overflow: hidden; }
 .pos_top { bottom: 24%; }
 .pos_middle { bottom: 14%; }
 .pos_bottom { bottom: 6%; }
-.overlayCanvas { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+.overlayCanvas { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; aspect-ratio: 640 / 360; pointer-events: none; }
 
 /* Selected cut card */
 .selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; cursor: pointer; transition: border-color .12s; }

@@ -921,18 +921,15 @@ export default function VideoTab() {
     ctx.font = `${fSize}px "${font}",sans-serif`
     ctx.textAlign = 'center'
 
-    // 2026-10-21 4차 보완: 16:9에서 자막 박스가 좁다는 지적 — 가로 폭 활용 비율을 더 넓힘
-    // (정확한 "50%"가 어느 기준인지 명시가 안 돼 있어 86%→95%로 잡음, 실측 후 조정 가능)
     const maxTextWidth = W * (aspectRatio === '16:9' ? 0.95 : 0.86)
     const lines = wrapCanvasText(ctx, text, maxTextWidth)
     const lineHeight = fSize * lineGap
     const totalTextHeight = lineHeight * lines.length
 
     const subX = W / 2
-    // 2026-10-21 4차 보완: 전부 세로비율의 8%만큼 위로(화면 하단에 너무 바짝 붙어있다는 지적)
-    const anchorY = subtitlePosition === 'top' ? H * 0.64
-                 : subtitlePosition === 'middle' ? H * 0.74
-                 : H * 0.82
+    const anchorY = subtitlePosition === 'top' ? H * 0.72
+                 : subtitlePosition === 'middle' ? H * 0.82
+                 : H * 0.90
 
     const boxBottom = anchorY
     let boxTop = boxBottom - totalTextHeight - padY * 2
@@ -2290,7 +2287,7 @@ export default function VideoTab() {
                         // 정확히 계산함, 2167번째 줄 릴스 자막엔 이미 적용 중)이 비릴스 캔버스
                         // 자막에는 전혀 반영되지 않았다 — "타이밍바를 설정해도 실제 화면에
                         // 적용 안 됨"의 핵심 원인. 릴스와 같은 기준으로 통일.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 32 : subtitlePosition === 'middle' ? 22 : 14}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>
@@ -2299,7 +2296,7 @@ export default function VideoTab() {
                       <div
                         className={s.subtitleEditBox}
                         style={{
-                          bottom: `${subtitlePosition === 'top' ? 32 : subtitlePosition === 'middle' ? 22 : 14}%`,
+                          bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`,
                           // 16:9에서도 좌우 22%/5% 고정폭을 그대로 쓰면 자막 칸이 좁아 보인다는
                           // 지적(2026-10-21 4차 보완) — 가로형일 때만 좌우 여백을 줄여 폭 확보.
                           ...(aspectRatio === '16:9' ? { left: '8%', right: '8%' } : {}),

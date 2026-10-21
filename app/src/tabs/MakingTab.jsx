@@ -395,8 +395,11 @@ export default function MakingTab() {
   }
   const focusCutFromSidebar = (cut) => {
     const type = cut.cutType || 'YEORI'
-    if (MANUAL_TYPES.includes(type)) openCut(cut)
-    else requestAnimationFrame(() => cutRowRefs.current[cut.no]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+    if (MANUAL_TYPES.includes(type)) { openCut(cut); return }
+    // 자동처리 컷도 스크롤만 하고 끝내면 "이동되나 마나"다(2026-10-22 재점검) — 펼쳐서
+    // 카드가 실제로 열리는 것까지 같이 해야 좌측 목록 클릭이 의미가 있다.
+    setExpandedCutNo(cut.no)
+    requestAnimationFrame(() => cutRowRefs.current[cut.no]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
   }
   const toggleCut = (cut) => {
     const willOpen = expandedCutNo !== cut.no
@@ -753,6 +756,7 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setBrollDownloadResult(p => ({ ...p, [cut.no]: { error: data.error || '다운로드 실패' } })); return }
       setBrollDownloadResult(p => ({ ...p, [cut.no]: data }))
+      clearRejectedReview(cut.no)
     } catch (e) {
       setBrollDownloadResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
     } finally {
@@ -825,6 +829,7 @@ export default function MakingTab() {
               append(`✅ 완료 — 내용 검증 통과${ev.verify?.peak ? ` (프레임 ${Math.round(ev.verify.peak / 1024)}KB)` : ''}`)
               setScenarioVideo(p => ({ ...p, [cut.no]: ev.videoUrl }))
               if (ev.verifyUrl) setScenarioVerify(p => ({ ...p, [cut.no]: { url: ev.verifyUrl, peak: ev.verify?.peak } }))
+              clearRejectedReview(cut.no)
             } else append(`❌ ${ev.error}`)
             // cut_NN.mp4 는 videoStatus 2초 폴링이 "제작됨"으로 잡는다. G4 승인은 별도(승인 버튼).
           }
@@ -989,6 +994,7 @@ export default function MakingTab() {
         }),
       })
       const data = await r.json()
+      if (r.ok) clearRejectedReview(cut.no)
       setSemiResult(p => ({ ...p, [cut.no]: r.ok ? data : { error: data.error || '자동편집 실패', log: data.log } }))
     } catch (e) {
       setSemiResult(p => ({ ...p, [cut.no]: { error: `서버 연결 실패: ${e.message}` } }))
@@ -1125,6 +1131,7 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setCapcutResult({ error: data.error || '녹화 종료 실패' }); return }
       setCapcutResult(data)
+      if (selectedCapcutCutNo != null) clearRejectedReview(selectedCapcutCutNo)
     } catch (e) {
       setCapcutResult({ error: `서버 연결 실패: ${e.message}` })
     } finally {
@@ -1635,6 +1642,7 @@ export default function MakingTab() {
     try {
       const data = await runBrollUrlCapture(cut, url)
       setBrollUrlResult(p => ({ ...p, [cut.no]: data }))
+      clearRejectedReview(cut.no)
     } catch (e) {
       setBrollUrlResult(p => ({ ...p, [cut.no]: { error: e.message } }))
     } finally {
@@ -1652,6 +1660,7 @@ export default function MakingTab() {
     try {
       const data = await autoProduceBroll(cut)
       setBrollAutoResult(p => ({ ...p, [cut.no]: data }))
+      clearRejectedReview(cut.no)
     } catch (e) {
       setBrollAutoResult(p => ({ ...p, [cut.no]: { error: e.message } }))
     } finally {
@@ -2913,21 +2922,25 @@ export default function MakingTab() {
     else if (cut.cutType === 'BROLL') panel = renderBrollPanel(cut)
     else if (cut.cutType === 'CAPCUT') panel = renderCapcutPanel(cut)
     return (
-      <>
-        {renderFinalResultPanel(cut)}
-        {MANUAL_TYPES.includes(cut.cutType) && renderReviewPanel(cut)}
-        <div id={`mk-${cut.no}-make`} />
-        {panel}
-        {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
-        {renderBubblePanel(cut)}
-        {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
-        {/* 모션 자막 패널은 원래 BROLL 전용이었는데, GRAPHIC(자체 텍스트 카드라 중복) 빼고는
-            모든 컷 타입이 다 "영상 위에 자막 얹기"가 필요할 수 있다(2026-09-14, 사용자 지적:
-            "메이킹 탭에서 자막까지 넣을 수 있으면 된다" — G4를 안 거치는 CAPCUT/BROLL도
-            자막 붙은 결과를 메이킹 탭에서 바로 확인해야 함). 함수 자체는 이미 컷타입과
-            무관하게 동작(videoStatus만 확인)하므로 조건만 넓힘. */}
-        {cut.cutType !== 'GRAPHIC' && renderSubtitlePanel(cut)}
-      </>
+      <div className={s.cutPanelCols}>
+        <div className={s.cutPanelPreviewCol}>
+          {renderFinalResultPanel(cut)}
+        </div>
+        <div className={s.cutPanelControlsCol}>
+          {MANUAL_TYPES.includes(cut.cutType) && renderReviewPanel(cut)}
+          <div id={`mk-${cut.no}-make`} />
+          {panel}
+          {MANUAL_TYPES.includes(cut.cutType) && renderSourceToCutPanel(cut)}
+          {renderBubblePanel(cut)}
+          {(cut.cutType === 'GRAPHIC' || cut.cutType === 'CAPCUT') && renderOverlayStatus(cut)}
+          {/* 모션 자막 패널은 원래 BROLL 전용이었는데, GRAPHIC(자체 텍스트 카드라 중복) 빼고는
+              모든 컷 타입이 다 "영상 위에 자막 얹기"가 필요할 수 있다(2026-09-14, 사용자 지적:
+              "메이킹 탭에서 자막까지 넣을 수 있으면 된다" — G4를 안 거치는 CAPCUT/BROLL도
+              자막 붙은 결과를 메이킹 탭에서 바로 확인해야 함). 함수 자체는 이미 컷타입과
+              무관하게 동작(videoStatus만 확인)하므로 조건만 넓힘. */}
+          {cut.cutType !== 'GRAPHIC' && renderSubtitlePanel(cut)}
+        </div>
+      </div>
     )
   }
 

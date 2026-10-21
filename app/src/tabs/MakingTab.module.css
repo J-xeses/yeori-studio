@@ -3,6 +3,16 @@
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 .scrollBody { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 
+/* 컷을 펼쳤을 때 미리보기·제작방식·말풍선·자막 등 기능들이 전부 세로로 쭉 이어붙어 있어서
+   "①②③ 바로가기" 점프 버튼까지 따로 둬야 할 만큼 스크롤이 길었다(2026-10-22 재점검:
+   "컷별로 화면 아래로 나열된 기능들을 우측배치해 한번에 보여지도록" — 큰 기능 카드는 그대로
+   두고, 컷 안쪽 내용만 좌/우 2열로). 좌측엔 최종 결과 미리보기, 우측엔 나머지 기능들을 모아
+   한 화면에서 같이 보이게 한다. */
+.cutPanelCols { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.cutPanelPreviewCol { flex: 1 1 420px; min-width: 320px; max-width: 480px; display: flex; flex-direction: column; }
+.cutPanelControlsCol { flex: 2 1 480px; min-width: 320px; display: flex; flex-direction: column; }
+.cutPanelControlsCol > .subPanel:first-child { border-top: none; }
+
 .content { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 
 .header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
