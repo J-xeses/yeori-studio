@@ -345,7 +345,7 @@ export default function CreditsTab() {
         <button className={s.addRowBtn} onClick={addPlanRow}>+ 컷 추가</button>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '8px 0' }}>
           <button className={s.addRowBtn} onClick={autoAssign} title="G4 미승인 YEORI 컷을 클립 단위로 풀어 메인→부 무료 크레딧 순으로 채웁니다">🧮 무료 우선 자동 배정</button>
-          <label style={{ fontSize: 12, color: 'var(--text3)' }}>무료로 못 만드는 클립은{' '}
+          <label style={{ fontSize: 12, color: 'var(--text-3)' }}>무료로 못 만드는 클립은{' '}
             <select value={overflow} onChange={e => setOverflow(e.target.value)}>
               <option value="defer">내일로 미룸</option>
               <option value="paid">유료 API로</option>
@@ -392,7 +392,7 @@ export default function CreditsTab() {
           <button className={s.addRowBtn} onClick={addPaidRecord}>+ 사용 기록</button>
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: 'var(--text3)' }}>환율 {usdKrw}원/USD</span>
+          <span style={{ fontSize: 12, color: 'var(--text-3)' }}>환율 {usdKrw}원/USD</span>
           <input type="number" placeholder="새 환율" value={rateInput} onChange={e => setRateInput(e.target.value)} style={{ width: 90 }} />
           <button className={s.addRowBtn} onClick={saveRate} disabled={!rateInput}>변경</button>
         </div>

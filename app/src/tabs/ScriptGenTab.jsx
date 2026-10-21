@@ -1991,7 +1991,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                     gpoints를 두 에피소드가 공유하게 됩니다. 이 값은 저장되지 않습니다 — 다른 코드로 바꾸세요.
                   </div>
                 )}
-                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3, lineHeight: 1.5 }}>
                   비우면 <code>{derivedCode}</code> 자동. gpoints·파일경로(<code>downloads/episodes/{'{code}'}/</code>)에
                   쓰이므로 전역 유일해야 함.
                   {episode?.code ? ' 바꾸면 이 에피소드의 기존 G승인 상태·산출물이 새 코드 폴더로 안 옮겨짐(재승인·재생성 필요).' : ' 처음 한 번만 정하는 게 안전.'}
@@ -2003,7 +2003,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   onChange={e => dispatch({ type: 'SET_EPISODE', p: { finishMode: e.target.value } })}>
                   {FINISH_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
-                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
                   {resolveFinishMode(episode) === 'assemble'
                     ? '컷을 바로 이어붙여 완성 (인스타·틱톡용 빠른 전개).'
                     : 'CapCut에서 켄번스·트랜지션·색보정 마무리 (서여리 에피소드 시리즈).'}
@@ -2015,7 +2015,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   <label>인스타 번호</label>
                   <input placeholder="예: P01, RL03, PT01, ST01" value={episode.instaNum || ''}
                     onChange={e => dispatch({ type: 'SET_EPISODE', p: { instaNum: e.target.value.trim() } })} />
-                  <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 3 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 3 }}>
                     컷의 PL이 IG_FD/IG_RL/IG_PT/IG_ST일 때 이 값으로 IG 코드(IG_R03 등)를 만들어 seoyeori/IG/ 아래 저장됩니다.
                   </div>
                 </div>
@@ -2027,7 +2027,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               </div>
               <div className={s.field}>
                 <label>
-                  스토리 개요(디벨롭) <span style={{fontSize:10,color:'var(--text3)'}}>— 기획 후보의 짧은 아이디어를 장면 전개로 발전시키는 중간 단계</span>
+                  스토리 개요(디벨롭) <span style={{fontSize:10,color:'var(--text-3)'}}>— 기획 후보의 짧은 아이디어를 장면 전개로 발전시키는 중간 단계</span>
                 </label>
                 <textarea
                   rows={5}
@@ -2047,7 +2047,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   {developLoading ? '디벨롭 중...' : `✨ ${episode.storyBrief?.trim() ? '더 발전시키기' : 'AI로 스토리 디벨롭'}`}
                 </button>
                 {developError && <div style={{ fontSize: 11, color: '#ef4444', marginTop: 4 }}>⚠️ {developError}</div>}
-                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 4, lineHeight: 1.5 }}>
                   여기 채워진 개요는 "대본 생성" 시 Claude에게 그대로 전달되어, 짧은 아이디어를 분량만 채운
                   대본이 아니라 실제 장면·감정선이 있는 대본으로 확장하는 근거가 됩니다(2026-09-29 추가).
                 </div>
@@ -2060,7 +2060,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                 </select>
               </div>
               <div className={s.field}>
-                <label>전체 분위기 <span style={{fontSize:10,color:'var(--text3)'}}>(최대 2개)</span></label>
+                <label>전체 분위기 <span style={{fontSize:10,color:'var(--text-3)'}}>(최대 2개)</span></label>
                 <div className={s.chips}>
                   {MOODS.map(m => {
                     const selected = Array.isArray(episode.mood)
@@ -2132,7 +2132,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   높이를 넘어서 "적용" 버튼이 화면 밖으로 밀려나 안 눌리는 문제가 있었다(2026-09-15,
                   사용자 지적) — mcPreview 목록과 같은 패턴으로 내부 스크롤을 둬서 버튼은 항상
                   카드 안(화면에 보이는 위치)에 고정되게 함. */}
-              <div style={{ fontSize: 11, lineHeight: 1.7, color: 'var(--text2)', whiteSpace: 'pre-wrap', marginBottom: 8, maxHeight: 220, overflowY: 'auto' }}>
+              <div style={{ fontSize: 11, lineHeight: 1.7, color: 'var(--text-2)', whiteSpace: 'pre-wrap', marginBottom: 8, maxHeight: 220, overflowY: 'auto' }}>
                 {Object.entries(genlinePatch.fields).map(([k, v]) => (
                   <div key={k}>{k}: {v}</div>
                 ))}
@@ -2146,7 +2146,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   border: 0, borderRadius: 6, padding: '4px 12px', cursor: 'pointer',
                 }}>CUT {genlinePatch.cutNo} 에 적용</button>
                 <button onClick={() => setGenlinePatch(null)} style={{
-                  fontSize: 11, fontWeight: 600, color: 'var(--text2)', background: 'rgba(255,255,255,.06)',
+                  fontSize: 11, fontWeight: 600, color: 'var(--text-2)', background: 'rgba(255,255,255,.06)',
                   border: '1px solid rgba(255,255,255,.12)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer',
                 }}>무시</button>
               </div>
@@ -2162,14 +2162,14 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               }}>
                 ⚠ 미리보기 상태 — 실제 적용 전까지 저장 안 됨
               </div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text2)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-2)' }}>
                 KR 컨펌본 미리보기 ({mcPreview.cuts.length}컷)
               </div>
               <div style={{ maxHeight: 260, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {mcPreview.cuts.map(c => (
                   <div key={c.no} style={{
-                    padding: 8, borderRadius: 6, background: 'var(--bg3)',
-                    border: '1px solid var(--border2)', fontSize: 11, lineHeight: 1.6,
+                    padding: 8, borderRadius: 6, background: 'var(--bg-input)',
+                    border: '1px solid var(--border-light)', fontSize: 11, lineHeight: 1.6,
                   }}>
                     <div style={{ fontWeight: 700, color: 'var(--accent-light)', marginBottom: 4 }}>CUT {c.no}</div>
                     <div>SP(장소): {c.kr.sp}</div>
@@ -2185,8 +2185,8 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                 <button
                   onClick={() => { setMcPreview(null); setMcMeta(null) }}
                   style={{
-                    flex: 1, padding: '6px 10px', borderRadius: 6, background: 'var(--bg3)',
-                    border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 11,
+                    flex: 1, padding: '6px 10px', borderRadius: 6, background: 'var(--bg-input)',
+                    border: '1px solid var(--border-light)', color: 'var(--text-2)', fontSize: 11,
                     fontWeight: 700, cursor: 'pointer',
                   }}
                 >
@@ -2214,7 +2214,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <div style={{
-              background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10,
+              background: 'var(--bg-panel)', border: '1px solid var(--border-light)', borderRadius: 10,
               padding: 20, width: 380, display: 'flex', flexDirection: 'column', gap: 12,
             }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
@@ -2227,17 +2227,17 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                 onChange={e => setChangesInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') confirmApplyMasterCode() }}
                 style={{
-                  padding: '8px 10px', borderRadius: 6, background: 'var(--bg3)',
-                  border: '1px solid var(--border2)', color: 'var(--text)', fontSize: 12,
+                  padding: '8px 10px', borderRadius: 6, background: 'var(--bg-input)',
+                  border: '1px solid var(--border-light)', color: 'var(--text)', fontSize: 12,
                 }}
               />
-              <div style={{ fontSize: 10, color: 'var(--text3)' }}>입력하지 않으면 "수동 수정"으로 기록됩니다.</div>
+              <div style={{ fontSize: 10, color: 'var(--text-3)' }}>입력하지 않으면 "수동 수정"으로 기록됩니다.</div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 <button
                   onClick={() => { setShowChangesModal(false); setChangesInput('') }}
                   style={{
-                    padding: '6px 14px', borderRadius: 6, background: 'var(--bg3)',
-                    border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 12, cursor: 'pointer',
+                    padding: '6px 14px', borderRadius: 6, background: 'var(--bg-input)',
+                    border: '1px solid var(--border-light)', color: 'var(--text-2)', fontSize: 12, cursor: 'pointer',
                   }}
                 >
                   취소
@@ -2263,25 +2263,26 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <div style={{
-              background: 'var(--bg2)', border: '1px solid var(--border2)', borderRadius: 10,
-              padding: 20, width: 680, maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: 10,
+              background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 12,
+              padding: 24, width: 816, maxHeight: '82vh', display: 'flex', flexDirection: 'column', gap: 12,
+              color: 'var(--text)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
                   📂 대본 파일 열기 — {displayEpisodeCode(episodeCode)}
                 </div>
                 <button
                   onClick={() => setShowScriptFileModal(false)}
-                  style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: 16, cursor: 'pointer' }}
+                  style={{ background: 'none', border: 'none', color: 'var(--text-3)', fontSize: 19, cursor: 'pointer' }}
                 >✕</button>
               </div>
 
               {scriptFileError && (
-                <div style={{ fontSize: 11, color: '#ef4444' }}>⚠️ {scriptFileError}</div>
+                <div style={{ fontSize: 13, color: '#ef4444' }}>⚠️ {scriptFileError}</div>
               )}
 
               {scriptFileList.length > 0 && (
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
                   {scriptFileList.map(f => (
                     <button
                       key={f}
@@ -2290,17 +2291,17 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                         loadScriptFile(scriptFileDir, f)
                       }}
                       style={{
-                        padding: '4px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
-                        background: f === scriptFileSelected ? 'var(--accent)' : 'var(--bg3)',
-                        color: f === scriptFileSelected ? '#fff' : 'var(--text2)',
-                        border: '1px solid var(--border2)',
+                        padding: '5px 12px', borderRadius: 7, fontSize: 13, cursor: 'pointer',
+                        background: f === scriptFileSelected ? 'var(--accent)' : 'var(--bg-card)',
+                        color: f === scriptFileSelected ? '#fff' : 'var(--text-2)',
+                        border: '1px solid var(--border-light)',
                       }}
                     >{f}</button>
                   ))}
                 </div>
               )}
               {scriptFileList.length === 0 && !scriptFileError && (
-                <div style={{ fontSize: 11, color: 'var(--text3)' }}>
+                <div style={{ fontSize: 13, color: 'var(--text-3)' }}>
                   이 에피소드의 01_script 폴더에 .txt/.md 파일이 없습니다.
                 </div>
               )}
@@ -2311,30 +2312,30 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                 onChange={e => { setScriptFileContent(e.target.value); setScriptFileDirty(true) }}
                 placeholder={scriptFileLoading ? '불러오는 중...' : ''}
                 style={{
-                  flex: 1, minHeight: 360, resize: 'vertical', fontFamily: 'monospace', fontSize: 12,
-                  padding: 10, borderRadius: 6, background: 'var(--bg3)', border: '1px solid var(--border2)',
+                  flex: 1, minHeight: 432, resize: 'vertical', fontFamily: 'monospace', fontSize: 14,
+                  padding: 12, borderRadius: 7, background: 'var(--bg-input)', border: '1px solid var(--border-light)',
                   color: 'var(--text)', lineHeight: 1.6,
                 }}
               />
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 10, color: 'var(--text3)' }}>
+                <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
                   {scriptFileDirty ? '수정됨 — 저장 전입니다' : scriptFileSelected ? '저장됨' : ''}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 10 }}>
                   <button
                     onClick={() => setShowScriptFileModal(false)}
                     style={{
-                      padding: '6px 14px', borderRadius: 6, background: 'var(--bg3)',
-                      border: '1px solid var(--border2)', color: 'var(--text2)', fontSize: 12, cursor: 'pointer',
+                      padding: '7px 17px', borderRadius: 7, background: 'var(--bg-card)',
+                      border: '1px solid var(--border-light)', color: 'var(--text-2)', fontSize: 14, cursor: 'pointer',
                     }}
                   >닫기</button>
                   <button
                     onClick={saveScriptFile}
                     disabled={!scriptFileSelected || scriptFileSaving || !scriptFileDirty}
                     style={{
-                      padding: '6px 14px', borderRadius: 6, background: 'rgba(34,197,94,.2)',
-                      border: '1px solid rgba(34,197,94,.5)', color: '#4ade80', fontSize: 12,
+                      padding: '7px 17px', borderRadius: 7, background: 'rgba(34,197,94,.2)',
+                      border: '1px solid rgba(34,197,94,.5)', color: '#4ade80', fontSize: 14,
                       fontWeight: 700, cursor: scriptFileSelected && scriptFileDirty ? 'pointer' : 'default',
                       opacity: !scriptFileSelected || scriptFileSaving || !scriptFileDirty ? 0.5 : 1,
                     }}
@@ -2855,7 +2856,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                         <select
                           value={cut?.cutType || 'YEORI'}
                           onChange={e => updateCut(cut.id, 'cutType', e.target.value)}
-                          style={{ width:'100%', padding:'6px 8px', borderRadius:6, background:'var(--bg3)', border:'1px solid var(--border)', color:'var(--text)', fontSize:12, cursor:'pointer' }}
+                          style={{ width:'100%', padding:'6px 8px', borderRadius:6, background:'var(--bg-input)', border:'1px solid var(--border)', color:'var(--text)', fontSize:12, cursor:'pointer' }}
                         >
                           {CUT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
@@ -2970,7 +2971,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                           style={{
                             width: '100%', boxSizing: 'border-box', fontFamily: 'var(--mono)',
                             fontSize: 13.5, lineHeight: 1.7, cursor: 'default',
-                            background: 'var(--bg3)', color: 'var(--text)', border: '1px dashed var(--border)',
+                            background: 'var(--bg-input)', color: 'var(--text)', border: '1px dashed var(--border)',
                             borderRadius: 6, padding: '8px 10px',
                           }} />
                       </div>

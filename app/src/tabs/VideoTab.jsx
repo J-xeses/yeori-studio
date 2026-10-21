@@ -12,6 +12,10 @@ import TabToolbar from '../components/TabToolbar'
 import DiagnosisPanel from '../components/DiagnosisPanel'
 import s from './VideoTab.module.css'
 
+// 영상 생성 도구 표시줄(2026-10-21 4차 보완) — 실제 생성 호출은 전부 Flow 고정(/api/flow/submit
+// 등)이라 Google AI Studio·runway는 StudioTab의 Zemith처럼 아직 placeholder로만 추가한다.
+const VIDEO_TOOLS = ['Flow', 'Google AI Studio', 'runway']
+
 const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
 const BG_STYLES = ['반투명 직각 박스', '없음', '그림자']
 const CLIP_MAX_SEC = 8
@@ -917,15 +921,18 @@ export default function VideoTab() {
     ctx.font = `${fSize}px "${font}",sans-serif`
     ctx.textAlign = 'center'
 
-    const maxTextWidth = W * 0.86
+    // 2026-10-21 4차 보완: 16:9에서 자막 박스가 좁다는 지적 — 가로 폭 활용 비율을 더 넓힘
+    // (정확한 "50%"가 어느 기준인지 명시가 안 돼 있어 86%→95%로 잡음, 실측 후 조정 가능)
+    const maxTextWidth = W * (aspectRatio === '16:9' ? 0.95 : 0.86)
     const lines = wrapCanvasText(ctx, text, maxTextWidth)
     const lineHeight = fSize * lineGap
     const totalTextHeight = lineHeight * lines.length
 
     const subX = W / 2
-    const anchorY = subtitlePosition === 'top' ? H * 0.72
-                 : subtitlePosition === 'middle' ? H * 0.82
-                 : H * 0.90
+    // 2026-10-21 4차 보완: 전부 세로비율의 8%만큼 위로(화면 하단에 너무 바짝 붙어있다는 지적)
+    const anchorY = subtitlePosition === 'top' ? H * 0.64
+                 : subtitlePosition === 'middle' ? H * 0.74
+                 : H * 0.82
 
     const boxBottom = anchorY
     let boxTop = boxBottom - totalTextHeight - padY * 2
@@ -958,7 +965,7 @@ export default function VideoTab() {
       ctx.fillText(l, subX, lineY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, isReel, reelFontPx, reelStyle.y, gaeguReady])
+  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, isReel, reelFontPx, reelStyle.y, gaeguReady, aspectRatio])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -1167,6 +1174,7 @@ export default function VideoTab() {
   // 2026-10-15: 서브 구글 계정 Flow(start_gen.bat이 포트 9223에 띄움) 추가 — main/sub는
   // 서로 다른 Chrome·크레딧이라 동시에 쓸 수 있다. 기본은 main.
   const [flowProfile, setFlowProfile] = useState('main')
+  const [videoTool, setVideoTool] = useState('Flow')
   const FLOW_COST = { 8: 12, 10: 15 } // Omni 1.1 Flash 720p 실측(8초 12, 10초 15). 4·6초는 화면 표시값으로 확인
   const submitToFlow = async (cut, idx, clips) => {
     const epNum = state.episode?.number
@@ -1825,6 +1833,10 @@ export default function VideoTab() {
   return (
     <div className={s.page}>
       <TabToolbar
+        toolLabel="영상 생성 도구"
+        tools={VIDEO_TOOLS}
+        activeTool={videoTool}
+        onToolChange={t => { setVideoTool(t); if (t !== 'Flow') alert(`${t} 연동은 아직 준비 중입니다 — 지금은 Flow로 생성됩니다.`) }}
         right={
           <select value={flowProfile} onChange={e => setFlowProfile(e.target.value)}
             title="Flow 계정 선택 — '⚡ Flow 제출' 버튼에 적용(전체 AI 생성은 항상 메인 계정)"
@@ -1921,7 +1933,7 @@ export default function VideoTab() {
                   <input type="range" min="65" max="86" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
                     onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
                 </div>
-                <div style={{ fontSize: 11, color: "var(--text3)", lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
                   릴스는 최종본과 같은 손글씨 자막으로 미리봅니다. 여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다. 화면 72% 아래는 인스타 UI 영역이라 자동으로 올려 배치됩니다.
                 </div>
               </>) : (
@@ -2059,9 +2071,9 @@ export default function VideoTab() {
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
             <div style={{fontWeight:700,color:'var(--purple)',fontSize:13}}>🎯 드래그 배정</div>
             <button onClick={() => setMatchOpen(false)}
-              style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
+              style={{background:'transparent',border:'none',color:'var(--text-3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
           </div>
-          <div style={{fontSize:11.5,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
+          <div style={{fontSize:11.5,color:'var(--text-3)',marginBottom:10,lineHeight:1.5}}>
             Flow/Veo 등에서 받은 영상 파일(파일명 무관)을 아래에 추가한 뒤, 썸네일을 원하는 컷 카드로 <b>드래그</b>하거나,
             썸네일을 클릭해 선택한 다음 컷 카드를 <b>클릭</b>해서 배정하세요(터치 화면 대응). 컷당 클립 개수 제한은 없습니다.
           </div>
@@ -2072,7 +2084,7 @@ export default function VideoTab() {
             + 파일 추가
           </button>
           {matchTray.length === 0 ? (
-            <div style={{fontSize:11.5,color:'var(--text3)',padding:'8px 0'}}>추가된 파일이 없습니다.</div>
+            <div style={{fontSize:11.5,color:'var(--text-3)',padding:'8px 0'}}>추가된 파일이 없습니다.</div>
           ) : (
             <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:4}}>
               {matchTray.map(item => (
@@ -2088,7 +2100,7 @@ export default function VideoTab() {
                     background:'#000',
                   }}>
                   <video src={item.url} muted draggable={false} style={{width:'100%',height:66,objectFit:'cover',display:'block',pointerEvents:'none'}} />
-                  <div style={{fontSize:9,color:'var(--text3)',padding:'2px 4px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                  <div style={{fontSize:9,color:'var(--text-3)',padding:'2px 4px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
                     {item.file.name}{item.duration != null ? ` · ${item.duration}s` : ''}
                   </div>
                   <button onClick={e => { e.stopPropagation(); removeMatchItem(item) }}
@@ -2136,7 +2148,7 @@ export default function VideoTab() {
                     fontSize:10.5,
                   }}>
                   <div style={{fontWeight:700,color:'var(--text1)'}}>CUT {cut.no} {clipCount > 0 ? `(${clipCount}개)` : ''}</div>
-                  <div style={{color:'var(--text3)',marginTop:2,lineHeight:1.3}}>{promptPreview || '(프롬프트 없음)'}</div>
+                  <div style={{color:'var(--text-3)',marginTop:2,lineHeight:1.3}}>{promptPreview || '(프롬프트 없음)'}</div>
                 </div>
               )
             })}
@@ -2235,7 +2247,7 @@ export default function VideoTab() {
                         background:'rgba(0,0,0,.75)', color:'#fca5a5', fontSize:12, fontWeight:600, pointerEvents:'none',
                       }}>
                         ⚠ 이 파일을 재생할 수 없습니다
-                        <span style={{fontWeight:400, color:'var(--text3)', fontSize:11}}>
+                        <span style={{fontWeight:400, color:'var(--text-3)', fontSize:11}}>
                           서버에서 파일이 옮겨졌거나 삭제됐을 수 있습니다 — "프록시" 또는 "폴더에서 일괄 가져오기"로 다시 불러오거나, 클립을 삭제하고 다시 배정하세요.
                         </span>
                       </div>
@@ -2278,7 +2290,7 @@ export default function VideoTab() {
                         // 정확히 계산함, 2167번째 줄 릴스 자막엔 이미 적용 중)이 비릴스 캔버스
                         // 자막에는 전혀 반영되지 않았다 — "타이밍바를 설정해도 실제 화면에
                         // 적용 안 됨"의 핵심 원인. 릴스와 같은 기준으로 통일.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 32 : subtitlePosition === 'middle' ? 22 : 14}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>
@@ -2286,7 +2298,12 @@ export default function VideoTab() {
                     {isSelected && subtitleEnabled && subtitleEditMode && (
                       <div
                         className={s.subtitleEditBox}
-                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%` }}
+                        style={{
+                          bottom: `${subtitlePosition === 'top' ? 32 : subtitlePosition === 'middle' ? 22 : 14}%`,
+                          // 16:9에서도 좌우 22%/5% 고정폭을 그대로 쓰면 자막 칸이 좁아 보인다는
+                          // 지적(2026-10-21 4차 보완) — 가로형일 때만 좌우 여백을 줄여 폭 확보.
+                          ...(aspectRatio === '16:9' ? { left: '8%', right: '8%' } : {}),
+                        }}
                         onClick={(e) => e.stopPropagation()}>
                         <textarea
                           ref={textareaRef}
@@ -2563,7 +2580,7 @@ export default function VideoTab() {
                               </label>
                             </div>
                             {flowRun[`${selCut.id}:${idx}`] && (
-                              <div style={{ fontSize: 11, padding: '2px 8px 6px', color: flowRun[`${selCut.id}:${idx}`].state === 'failed' ? '#f87171' : 'var(--text3)' }}>
+                              <div style={{ fontSize: 11, padding: '2px 8px 6px', color: flowRun[`${selCut.id}:${idx}`].state === 'failed' ? '#f87171' : 'var(--text-3)' }}>
                                 {flowRun[`${selCut.id}:${idx}`].state === 'failed' ? '❌ ' : flowRun[`${selCut.id}:${idx}`].state === 'done' ? '✅ ' : '⏳ '}{flowRun[`${selCut.id}:${idx}`].msg}
                               </div>
                             )}
@@ -2667,7 +2684,7 @@ export default function VideoTab() {
                   </div>
                 )}
                 {selCut.pipSegments && (
-                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '4px 0 8px', fontSize: 11.5, color: 'var(--text3)' }}>
+                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 8, margin: '4px 0 8px', fontSize: 11.5, color: 'var(--text-3)' }}>
                     {Object.entries(selCut.pipSegments).map(([segNoStr, spec]) => {
                       const pct = Math.round((spec.bgVolume ?? 0.42) * 100)
                       // 2026-09-18 — PIP 리액션은 이제 컷3/5/7 쪽 클립을 그대로 재사용(재업로드 없음).
@@ -2720,7 +2737,7 @@ export default function VideoTab() {
                     각자 따로 조절 가능하게 노출. */}
                 {/* 5개 항목이 창을 줄이면 2줄로 접혀서 복잡해 보이던 것 — 각 요소 폭을 줄이고
                     nowrap+가로스크롤로 항상 한 줄에 들어가게 함(2026-09-18 사용자 요청). */}
-                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 12, alignItems: 'center', margin: '4px 0 8px', fontSize: 11, color: 'var(--text3)', paddingBottom: 2 }}>
+                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'nowrap', overflowX: 'auto', gap: 12, alignItems: 'center', margin: '4px 0 8px', fontSize: 11, color: 'var(--text-3)', paddingBottom: 2 }}>
                   <label title="배경음량" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                     🎵
                     <input type="range" min={0} max={100} step={1} value={Math.round((selCut.narrBgVolume ?? 0.35) * 100)} style={{ width: 64 }}
@@ -2755,7 +2772,7 @@ export default function VideoTab() {
                   </>)}
                 </div>
                 {/* 목소리 결(register) 수동 지정 + 음성 검수(발음·애드립) — 결과는 영상 저장 직후 자동 실행, 여기서 다시 돌릴 수 있다 */}
-                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, margin: '0 0 8px', fontSize: 11, color: 'var(--text3)' }}>
+                <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, margin: '0 0 8px', fontSize: 11, color: 'var(--text-3)' }}>
                   <label title="이 컷의 말투: 자동(한지아가 함께 나오면 친구, 아니면 시청자) / 시청자 대상 / 친한 친구" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     🎭 말투
                     <select value={selCut.register || ''} style={{ fontSize: 11 }}
@@ -2779,7 +2796,7 @@ export default function VideoTab() {
                           <span title={`대본: ${qa.expected || '(없음)'}\n들림: ${qa.heard || '(없음)'}`}
                             style={{ color: qa.verdict === 'ok' ? 'var(--green, #34d399)' : qa.verdict === 'warn' ? '#fbbf24' : '#f87171', fontWeight: 600 }}>
                             {QA_ICON[qa.verdict]} {qa.verdict === 'ok' ? '통과' : qa.verdict === 'warn' ? '확인 권장' : '재생성 권장'} · 일치율 {Math.round((qa.ratio || 0) * 100)}%
-                            {msgs.length > 0 && <span style={{ fontWeight: 400, color: 'var(--text3)' }}> — {msgs.slice(0, 2).join(' / ')}</span>}
+                            {msgs.length > 0 && <span style={{ fontWeight: 400, color: 'var(--text-3)' }}> — {msgs.slice(0, 2).join(' / ')}</span>}
                           </span>
                         )
                       })()}
@@ -2806,7 +2823,7 @@ export default function VideoTab() {
                         <button className={s.proxyBtn} onClick={() => cancelFlow(`${selCut.id}:0`)}>✋ 취소</button>
                       )}
                       {flowRun[`${selCut.id}:0`] && (
-                        <span style={{ fontSize: 11, color: flowRun[`${selCut.id}:0`].state === 'failed' ? '#f87171' : 'var(--text3)' }}>
+                        <span style={{ fontSize: 11, color: flowRun[`${selCut.id}:0`].state === 'failed' ? '#f87171' : 'var(--text-3)' }}>
                           {flowRun[`${selCut.id}:0`].state === 'failed' ? '❌ ' : flowRun[`${selCut.id}:0`].state === 'done' ? '✅ ' : '⏳ '}{flowRun[`${selCut.id}:0`].msg}
                         </span>
                       )}
@@ -2875,7 +2892,7 @@ export default function VideoTab() {
                           <input type="number" step="0.1" min="0" style={{ width: 70 }} disabled={!!finalRow?.finalDerived}
                             value={Number(selCut.captionStartSec) || 0}
                             onChange={e => saveCaptionStart(selCut.no, e.target.value)} />
-                          <span style={{ fontSize: 11, color: 'var(--text3)' }}>
+                          <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
                             {finalRow?.finalDerived
                               ? '이 컷은 메이킹 탭에서 얹은 자막·말풍선을 그대로 쓰므로 여기 설정은 적용되지 않습니다 — 메이킹 탭에서 조정하세요.'
                               : '릴스 최종본에서 이 컷 자막이 이 시각부터 뜹니다(이 미리보기 영상에는 자막이 없고, 위 화면 미리보기와 최종본에 반영).'}

@@ -530,7 +530,7 @@ function PublishedStatusPanel({ publishStatus }) {
       {entries.map(([platform, rec]) => (
         <div key={platform} style={{ fontSize: 12, color: '#4ade80', display: 'flex', gap: 6, alignItems: 'center' }}>
           <span>✅ {PUBLISH_PLATFORM_LABEL[platform] || platform}</span>
-          <span style={{ color: 'var(--text3)' }}>{new Date(rec.publishedAt).toLocaleString('ko-KR')}</span>
+          <span style={{ color: 'var(--text-3)' }}>{new Date(rec.publishedAt).toLocaleString('ko-KR')}</span>
           {rec.permalink && <a href={rec.permalink} target="_blank" rel="noreferrer" style={{ color: '#a78bfa' }}>게시물 보기</a>}
         </div>
       ))}
@@ -589,7 +589,7 @@ function UploadSection({ epNum }) {
         </button>
       </div>
       {message && (
-        <div style={{ fontSize: 12, marginTop: 4, color: status === 'error' ? '#f87171' : status === 'done' ? '#4ade80' : 'var(--text3)' }}>
+        <div style={{ fontSize: 12, marginTop: 4, color: status === 'error' ? '#f87171' : status === 'done' ? '#4ade80' : 'var(--text-3)' }}>
           {message}
           {permalink && <> — <a href={permalink} target="_blank" rel="noreferrer" style={{ color: '#a78bfa' }}>게시물 보기</a></>}
         </div>
@@ -653,7 +653,7 @@ function UploadStatusSection() {
           {Object.entries(platforms).map(([platform, rec]) => (
             <div key={platform} style={{ fontSize: 12, color: '#4ade80', display: 'flex', gap: 6, alignItems: 'center' }}>
               <span>✅ {PUBLISH_PLATFORM_LABEL[platform] || platform}</span>
-              <span style={{ color: 'var(--text3)' }}>{new Date(rec.publishedAt).toLocaleString('ko-KR')}</span>
+              <span style={{ color: 'var(--text-3)' }}>{new Date(rec.publishedAt).toLocaleString('ko-KR')}</span>
               {rec.permalink && <a href={rec.permalink} target="_blank" rel="noreferrer" style={{ color: '#a78bfa' }}>게시물 보기</a>}
             </div>
           ))}

@@ -226,7 +226,7 @@
 .subEntryRow { display: flex; align-items: center; gap: 6px; }
 .subTextInput {
   flex: 1; min-width: 0; font-size: 13px; padding: 6px 8px;
-  border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-1);
+  border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text);
 }
 .subTimeInput {
   width: 58px; font-size: 12px; padding: 6px 4px; text-align: center;

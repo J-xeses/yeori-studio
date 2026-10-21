@@ -887,16 +887,16 @@ export default function StudioTab() {
             <div style={{fontWeight:700,color:'var(--purple)'}}>🤖 Google Flow 이미지 생성</div>
             {!flowRunning && (
               <button onClick={() => { setFlowLogs([]); setFlowDone(false) }}
-                style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
+                style={{background:'transparent',border:'none',color:'var(--text-3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
             )}
           </div>
-          <div style={{maxHeight:100,overflowY:'auto',color:'var(--text2)',display:'flex',flexDirection:'column',gap:2}}>
+          <div style={{maxHeight:100,overflowY:'auto',color:'var(--text-2)',display:'flex',flexDirection:'column',gap:2}}>
             {flowLogs.map((l,i) => (
               <div key={i} style={{
                 color: l.type==='done'||l.type==='ok' ? 'var(--teal)'
                      : l.type==='error' ? 'var(--red)'
                      : l.type==='progress' ? 'var(--purple)'
-                     : 'var(--text3)'
+                     : 'var(--text-3)'
               }}>{l.message}</div>
             ))}
           </div>
@@ -917,9 +917,9 @@ export default function StudioTab() {
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
             <div style={{fontWeight:700,color:'var(--purple)',fontSize:13}}>🎯 드래그 배정</div>
             <button onClick={() => setMatchOpen(false)}
-              style={{background:'transparent',border:'none',color:'var(--text3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
+              style={{background:'transparent',border:'none',color:'var(--text-3)',cursor:'pointer',fontSize:11}}>✕ 닫기</button>
           </div>
-          <div style={{fontSize:11.5,color:'var(--text3)',marginBottom:10,lineHeight:1.5}}>
+          <div style={{fontSize:11.5,color:'var(--text-3)',marginBottom:10,lineHeight:1.5}}>
             Flow 등에서 받은 이미지 파일(파일명 무관)을 아래에 추가한 뒤, 썸네일을 원하는 컷 카드로 <b>드래그</b>하거나,
             썸네일을 클릭해 선택한 다음 컷 카드를 <b>클릭</b>해서 배정하세요(터치 화면 대응). 컷 하나에 A/B 최대 2개까지 배정됩니다.
           </div>
@@ -930,7 +930,7 @@ export default function StudioTab() {
             + 파일 추가
           </button>
           {matchTray.length === 0 ? (
-            <div style={{fontSize:11.5,color:'var(--text3)',padding:'8px 0'}}>추가된 파일이 없습니다.</div>
+            <div style={{fontSize:11.5,color:'var(--text-3)',padding:'8px 0'}}>추가된 파일이 없습니다.</div>
           ) : (
             <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:4}}>
               {matchTray.map(item => (
@@ -987,7 +987,7 @@ export default function StudioTab() {
                     fontSize:10.5,
                   }}>
                   <div style={{fontWeight:700,color:'var(--text1)'}}>CUT {cut.no} {abCount >= 2 ? '(A/B 완료)' : abCount === 1 ? '(1개)' : ''}</div>
-                  <div style={{color:'var(--text3)',marginTop:2,lineHeight:1.3}}>{promptPreview || '(프롬프트 없음)'}</div>
+                  <div style={{color:'var(--text-3)',marginTop:2,lineHeight:1.3}}>{promptPreview || '(프롬프트 없음)'}</div>
                 </div>
               )
             })}
@@ -1130,7 +1130,7 @@ export default function StudioTab() {
                 </button>
               )}
               {flowImgMsg[cut.id] && (
-                <div style={{ fontSize: 10.5, color: 'var(--text3)', marginTop: 4, wordBreak: 'break-all' }}>{flowImgMsg[cut.id]}</div>
+                <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 4, wordBreak: 'break-all' }}>{flowImgMsg[cut.id]}</div>
               )}
             </div>
 
@@ -1163,7 +1163,7 @@ export default function StudioTab() {
               {(() => {
                 const info = cutTypeInfo(cut.cutType)
                 return (
-                  <div style={{ fontSize: 11, color: 'var(--text3)', display: 'flex', gap: 12, margin: '-4px 0 8px' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', display: 'flex', gap: 12, margin: '-4px 0 8px' }}>
                     <span>🏷 {info.label}</span>
                     <span>🖼 이미지: {info.image}</span>
                     <span>🎬 G4 영상: {info.video}</span>
@@ -1319,7 +1319,7 @@ export default function StudioTab() {
                   남으니 짧은 메모를 같이 기록해서 쌓아간다. */}
               <textarea rows={2} placeholder="판단 이유 메모(선택) — 예: 눈매가 평소보다 날카로워 보임"
                 value={cl.note || ''} onChange={e => setNote(e.target.value)}
-                style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, marginTop: 8, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-1)' }} />
+                style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, marginTop: 8, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)' }} />
               <div className={s.checklistActions}>
                 <button className={s.checklistClose} onClick={() => setChecklistTarget(null)}>닫기</button>
                 <button className={s.checklistDone} disabled={!sc.allScored}

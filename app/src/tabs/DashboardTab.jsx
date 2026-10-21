@@ -194,7 +194,7 @@ export default function DashboardTab() {
           <div className={s.costBar}>
             <div className={s.costFill} style={{ width: `${Math.min(100, dashboard.monthBudget > 0 ? (totalSpent / dashboard.monthBudget) * 100 : 0)}%`, ...(totalSpent > dashboard.monthBudget ? { background: '#ef4444' } : {}) }} />
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text3)', margin: '6px 0 2px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 11, color: 'var(--text-3)', margin: '6px 0 2px', lineHeight: 1.5 }}>
             직접 입력 ₩{spent.toLocaleString()} + 유료 영상 API 자동기록 ₩{paidKrw.toLocaleString()}
             {paid && paid.count > 0 && <> ({paid.count}건 · {paid.totalSeconds}초 · ${paid.totalUsd})</>}
             {paid && paid.count === 0 && <> (이번 달 기록 없음)</>}

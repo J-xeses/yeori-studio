@@ -148,6 +148,13 @@ const DEFAULT_OVERLAY = {
   deco: '', arrow: false, arrow_direction: 'down', underline: false,
   timing: 'full', // 'full' | 'first2' | 'first3' | 'first5'
 }
+// 메이킹 소재(B-roll/BGM 등) 구하러 가는 외부 사이트 — 생성도구가 아니라 참고/다운로드용
+// 링크라 StudioTab의 TOOLS(선택형)와 달리 그냥 새 탭으로 연다(2026-10-21 4차 보완).
+const EXTERNAL_TOOLS = [
+  { name: 'Pexels', url: 'https://www.pexels.com' },
+  { name: 'Pixabay', url: 'https://pixabay.com' },
+  { name: 'SellBuyMusic', url: 'https://www.sellbuymusic.com' },
+]
 const TYPE_STYLE_KEY = 'making_type_styles_v1'
 const DEFAULT_TYPE_STYLES = {
   GRAPHIC: { mode: 'auto',   htmlFile: '', style: { ...DEFAULT_GRAPHIC_STYLE }, overlay: { ...DEFAULT_OVERLAY } },
@@ -343,6 +350,14 @@ export default function MakingTab() {
     } catch { /* 로컬 상태는 이미 반영됨 */ }
   }
 
+  // 반려(재제작 대기) 상태였던 컷이 실제로 재생산에 성공하면 호출 — 그대로 두면 새 영상이
+  // 나와도 "반려 — 재제작 대기" 배지가 안 바뀌는 버그였음(2026-10-21 4차 보완, CUT15 10초→16초
+  // 재제작 실측). 승인까진 아니니 'pending'(검토 대기)으로만 되돌린다 — approved로 올리지 않음.
+  const clearRejectedReview = (cutNo) => {
+    if (review[cutNo]?.status === 'rejected') saveReview(cutNo, { status: 'pending' })
+    setRedoMode(p => (p[cutNo] ? { ...p, [cutNo]: false } : p))
+  }
+
   const approveMakingG4 = (cut) => {
     setGPoint(episodeCode, cut.no, 'g4', true); setGpVer(v => v + 1)
     setRedoMode(p => ({ ...p, [cut.no]: false }))
@@ -365,6 +380,9 @@ export default function MakingTab() {
   // ── 어느 컷을 펼쳐 놓았는지(한 번에 하나만). 펼치면서 타입에 맞는 기존 select 함수를
   // 호출해 htmlSource/selectedBrollCutNo/selectedCapcutCutNo 등 기존 상태를 그대로 채운다.
   const [expandedCutNo, setExpandedCutNo] = useState(null)
+  // 좌측 EpisodeInfoSidebar에서 컷을 고르면 이 ref로 "전체 컷 목록" 안 해당 행까지 스크롤한다
+  // (2026-10-21 4차 보완 — 컷 목록 선택이 우측 상세와 연동 안 되던 문제).
+  const cutRowRefs = useRef({})
   const openCut = (cut) => {
     setExpandedCutNo(cut.no)
     if (cut.cutType === 'GRAPHIC') selectHtmlCut(cut)
@@ -373,6 +391,12 @@ export default function MakingTab() {
       selectCapcutCut(cut)
       if (getCapcutMode(cut.no) === 'html') selectHtmlCut(cut)
     }
+    requestAnimationFrame(() => cutRowRefs.current[cut.no]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  }
+  const focusCutFromSidebar = (cut) => {
+    const type = cut.cutType || 'YEORI'
+    if (MANUAL_TYPES.includes(type)) openCut(cut)
+    else requestAnimationFrame(() => cutRowRefs.current[cut.no]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
   }
   const toggleCut = (cut) => {
     const willOpen = expandedCutNo !== cut.no
@@ -581,6 +605,7 @@ export default function MakingTab() {
       const data = await res.json()
       if (!res.ok) { setCaptureResult({ error: data.error || '제작 실패' }); return }
       setCaptureResult({ ...data, _ts: Date.now() })
+      clearRejectedReview(selectedCutNo)
       // 다른 방식(텍스트카드·목업 캡처)으로 다시 만들었으니 사진 시퀀스 레시피는 지운다
       if (cut) dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration, imageSeq: null } })
       // 대본 CP가 있고 유형별 손글씨 오버레이가 켜져 있으면 이어서 자동 합성.
@@ -1588,7 +1613,10 @@ export default function MakingTab() {
           let ev; try { ev = JSON.parse(line) } catch { continue }
           if (ev.type === 'start') append(`▶ 녹화 시작 — ${ev.target} (${ev.duration}초)`)
           else if (ev.type === 'log') append(ev.line)
-          else if (ev.type === 'done') append(ev.ok ? '✅ 완료 — cut_' + String(cut.no).padStart(2, '0') + '.mp4 (검토 후 G4 승인)' : `❌ ${ev.error}`)
+          else if (ev.type === 'done') {
+            if (ev.ok) { append('✅ 완료 — cut_' + String(cut.no).padStart(2, '0') + '.mp4 (검토 후 G4 승인)'); clearRejectedReview(cut.no) }
+            else append(`❌ ${ev.error}`)
+          }
         }
       }
     } catch (e) { append(`❌ ${e.message}`) }
@@ -1663,7 +1691,7 @@ export default function MakingTab() {
             // SRC 파일 아직 없음 + CLIP 있음 → 웹 영상 구간 녹화로 폴백
             autoPush({ kind: 'run', cutNo: cut.no, type, msg: 'SRC 파일 없음 → CLIP 웹 영상 구간 녹화' })
             await runBrollClip(cut)
-            ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: '완료 · CLIP 녹화 (검토 후 G4 승인)' })
+            ok++; clearRejectedReview(cut.no); autoPush({ kind: 'ok', cutNo: cut.no, type, msg: '완료 · CLIP 녹화 (검토 후 G4 승인)' })
             continue
           }
           if (!r.ok) throw new Error(d.error || '소스→컷 실패')
@@ -1671,7 +1699,7 @@ export default function MakingTab() {
           if (autoDoOverlay && cut.subtitle && typeStyles[type]?.overlay?.enabled) {
             const ov = await runOverlay(cut); extra = ov?.ok ? ' + 손글씨' : ''
           }
-          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · 스튜디오 소스(${d.kind})${extra}` })
+          ok++; clearRejectedReview(cut.no); autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · 스튜디오 소스(${d.kind})${extra}` })
         } catch (e) {
           fail++; autoPush({ kind: 'error', cutNo: cut.no, type, msg: e.message })
         }
@@ -1680,7 +1708,7 @@ export default function MakingTab() {
       // SRC 없고 CLIP 만 있는 BROLL 컷
       if (type === 'BROLL' && cut.clipUrl && !studioSrc) {
         autoPush({ kind: 'run', cutNo: cut.no, type, msg: 'CLIP 웹 영상 구간 녹화 중…' })
-        try { await runBrollClip(cut); ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: '완료 · CLIP 녹화 (검토 후 G4 승인)' }) }
+        try { await runBrollClip(cut); ok++; clearRejectedReview(cut.no); autoPush({ kind: 'ok', cutNo: cut.no, type, msg: '완료 · CLIP 녹화 (검토 후 G4 승인)' }) }
         catch (e) { fail++; autoPush({ kind: 'error', cutNo: cut.no, type, msg: e.message }) }
         continue
       }
@@ -1703,7 +1731,7 @@ export default function MakingTab() {
       try {
         if (brollViaUrl) {
           await runBrollUrlCapture(cut, brollUrl)
-          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · URL 캡처` })
+          ok++; clearRejectedReview(cut.no); autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · URL 캡처` })
         } else if (type === 'GRAPHIC' || type === 'CAPCUT') {
           await autoProduceGraphicish(cut)
           let extra = ''
@@ -1711,10 +1739,10 @@ export default function MakingTab() {
             const ov = await runOverlay(cut)
             extra = ov?.ok ? ' + 손글씨' : ov?.error ? ` (손글씨 실패: ${ov.error})` : ''
           }
-          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료${extra}` })
+          ok++; clearRejectedReview(cut.no); autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료${extra}` })
         } else if (type === 'BROLL') {
           const r = await autoProduceBroll(cut)
-          ok++; autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · ${r.aiUsed ? 'AI검색어' : '검색어'} "${r.query}"` })
+          ok++; clearRejectedReview(cut.no); autoPush({ kind: 'ok', cutNo: cut.no, type, msg: `완료 · ${r.aiUsed ? 'AI검색어' : '검색어'} "${r.query}"` })
         }
       } catch (e) {
         if (e.soft) { skip++; autoPush({ kind: 'skip', cutNo: cut.no, type, msg: e.message }) }
@@ -3449,7 +3477,11 @@ export default function MakingTab() {
 
   return (
     <div className={s.page}>
-      <TabToolbar />
+      <TabToolbar
+        toolLabel="외부 지원 앱 연동"
+        tools={EXTERNAL_TOOLS.map(t => t.name)}
+        onToolChange={name => window.open(EXTERNAL_TOOLS.find(t => t.name === name)?.url, '_blank')}
+      />
       <div className={s.root}>
         {/* 메이킹 탭 자체는 G5(편집메타 에피소드 조립)를 절대 안 다룬다 — maxStage를 5로
             두면 예전 버그로 남은 잔여 g5:true 데이터가 있을 때 "G5" 태그가 떠서 혼선을
@@ -3458,7 +3490,9 @@ export default function MakingTab() {
             doneStage="g4" — "제작완료" 배지도 컷 타입 상관없이 G4로 고정. YEORI 컷이 같은
             목록에 섞여 있어도(G5는 편집메타 탭 소관이라) 이 탭 안에서는 절대 G5를 들여다보지
             않는다(2026-09-14, 사용자 재지적: "컷2, 컷3... 제작완료 표시가 아직 있다"). */}
-        <EpisodeInfoSidebar maxStage={4} doneStage="g4" />
+        <EpisodeInfoSidebar maxStage={4} doneStage="g4"
+          onCutClick={focusCutFromSidebar}
+          activeCutId={allCuts.find(c => c.no === expandedCutNo)?.id} />
         <div className={s.main}>
           <div className={s.scrollBody}>
             <div className={s.content}>
@@ -3491,7 +3525,8 @@ export default function MakingTab() {
                       const g4 = manual && !!getGPoint(episodeCode, cut.no).g4
                       const rvStatus = manual ? review[cut.no]?.status : null
                       return (
-                        <div key={cut.id} className={`${s.cutRow} ${expanded ? s.cutRowActive : ''}`}>
+                        <div key={cut.id} ref={el => { cutRowRefs.current[cut.no] = el }}
+                          className={`${s.cutRow} ${expanded ? s.cutRowActive : ''}`}>
                           <button
                             className={s.cutRowHead}
                             onClick={() => manual ? toggleCut(cut) : (setExpandedCutNo(expanded ? null : cut.no), !expanded && setDuration(cutDuration(cut)))}>

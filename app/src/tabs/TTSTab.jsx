@@ -39,7 +39,7 @@ function AddSpeakerRow({ onAdd }) {
       <input value={name} onChange={e => setName(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') submit() }}
         placeholder="새 인물 이름 (예: 친구-3, 단역-1)"
-        style={{ flex: 1, fontSize: 11.5, padding: '6px 8px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-1)' }} />
+        style={{ flex: 1, fontSize: 11.5, padding: '6px 8px', background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)' }} />
       <button type="button" onClick={submit} disabled={!name.trim()}
         style={{ fontSize: 11.5, padding: '6px 12px', borderRadius: 4, cursor: name.trim() ? 'pointer' : 'default', opacity: name.trim() ? 1 : 0.5 }}>
         ＋ 인물 추가
@@ -807,7 +807,7 @@ export default function TTSTab() {
                   {c.extra && (
                     <span role="button" title="이 인물 삭제"
                       onClick={e => { e.preventDefault(); e.stopPropagation(); removeExtraSpeaker(c.name) }}
-                      style={{ marginLeft: 8, color: 'var(--text3)', cursor: 'pointer' }}>✕</span>
+                      style={{ marginLeft: 8, color: 'var(--text-3)', cursor: 'pointer' }}>✕</span>
                   )}
                 </summary>
                 <div className={s.speakerVoiceRow} style={{ flexWrap: 'wrap' }}>

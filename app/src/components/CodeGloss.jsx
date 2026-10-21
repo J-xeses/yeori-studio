@@ -120,11 +120,11 @@ export default function CodeGloss({ cb, kind, value, sep = ' · ', defaultLabel 
             {item.group} <code style={{ background: 'rgba(255,255,255,0.08)', padding: '0 4px', borderRadius: 3 }}>{item.code}</code> 신규 등록
           </div>
           <textarea rows={2}
-            style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-1)' }}
+            style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)' }}
             value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="한글 이름" />
           {PROMPT_FIELD_SHAPE[item.kind]?.map((f) => (
             <textarea key={f} rows={2}
-              style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, marginTop: 6, background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text-1)' }}
+              style={{ width: '100%', boxSizing: 'border-box', fontSize: 11.5, padding: 6, marginTop: 6, background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 4, color: 'var(--text)' }}
               value={draftExtra[f] || ''} onChange={(e) => setDraftExtra((p) => ({ ...p, [f]: e.target.value }))}
               placeholder={promptFieldPlaceholder(f, item.kind)} />
           ))}
