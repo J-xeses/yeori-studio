@@ -2641,6 +2641,65 @@ app.post('/api/genline/sts', async (req, res) => {
   }
 })
 
+// ── POST /api/checkup-voice-fix — 체크업 탭 "즉석 조치: 목소리 보정"(2026-10-22 4차 보완) ──
+// /api/genline/sts와 같은 로직(runSts)이지만, genline은 episodeId를 요구하는데 체크업 탭은
+// epNum만 들고 있어서 — studio-state.json의 episodes에서 번호로 역매칭만 해주는 얇은 래퍼.
+// 진행 상황은 같은 genline 잡 큐(/api/genline/job/:jobId)로 그대로 폴링한다.
+app.post('/api/checkup-voice-fix', async (req, res) => {
+  const { epNum, cutNo, character, voiceId } = req.body || {}
+  if (epNum == null || cutNo == null) return res.status(400).json({ ok: false, error: 'epNum, cutNo 필요' })
+  try {
+    const state = loadStudioState()
+    const episodeId = Object.keys(state.episodes || {}).find(id => Number(state.episodes[id]?.episode?.number) === Number(epNum))
+    if (!episodeId) return res.status(404).json({ ok: false, error: `에피소드 번호 ${epNum}에 해당하는 항목을 찾을 수 없습니다` })
+    const ep = state.episodes[episodeId]
+    const cut = (ep.cuts || []).find(c => c.no === cutNo)
+    if (!cut) return res.status(404).json({ ok: false, error: `CUT ${cutNo} 없음` })
+
+    const apiKey = process.env.ELEVENLABS_API_KEY ||
+      (JSON.parse(fs.readFileSync(path.join(CODE_ROOT, 'studio-secrets.json'), 'utf-8')).apiKeys?.elevenLabs)
+    if (!apiKey) return res.status(400).json({ ok: false, error: 'ElevenLabs API 키 없음' })
+
+    let charName = character
+    if (!charName && cut.dialogue) {
+      const m = String(cut.dialogue).match(/^\s*([가-힣]{2,4})\s*["'“]/)
+      if (m) charName = m[1]
+    }
+    const rv = resolveVoice({
+      character: charName, voiceId, characters: loadCharacters(),
+      speakerVoices: state.ttsSettings?.speakerVoices || {},
+      defaultVoiceId: state.ttsSettings?.voiceId || DEFAULT_YEORI_VOICE_ID,
+    })
+    if (!rv.voiceId) return res.status(400).json({ ok: false, error: `음성을 못 정함 (character=${charName || '?'}). 캐릭터에 voiceId 등록 필요` })
+
+    const charTag = (rv.id || rv.name || 'conv').toString().replace(/[^a-z0-9가-힣]/gi, '').slice(0, 12) || 'conv'
+    const speakerSettings = state.ttsSettings?.speakerSettings || {}
+    const tuned = resolveSpeakerSetting(speakerSettings, charName, rv.name)
+    let voiceSettings = tuned ? { stability: tuned.stability / 100, similarity_boost: tuned.similarity / 100 } : undefined
+    if (cutRegister(cut) === 'friend' && REGISTERS.friend.sts) voiceSettings = { ...REGISTERS.friend.sts }
+
+    const job = newGenlineJob('sts', epNum, [cutNo])
+    job.voice = { ...rv, charName: charName || rv.name }
+    res.json({ ok: true, jobId: job.id, voice: job.voice })
+
+    ;(async () => {
+      job.logs = []
+      try {
+        const r = await runSts({
+          epNum, cutNo, voiceId: rv.voiceId, apiKey, charTag, voiceSettings,
+          onLog: (m) => { if (m) { job.logs.push(m); if (job.logs.length > 40) job.logs.shift() } },
+        })
+        job.results.push({ cutNo, status: 'ok', ...r.files, voiceSource: rv.source })
+      } catch (e) {
+        job.results.push({ cutNo, status: 'error', error: e.message })
+      }
+      job.done = 1; job.running = false
+    })().catch(e => { job.running = false; job.error = e.message })
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
 // GET /api/genline/cut-files?episodeId=&cutNo= — 이 컷의 이미지/영상 후보 파일 목록.
 // 폴더(02_images = flow dir, 05_video = video dir) 를 매개로 왔다갔다 하기 위한 조회.
 app.get('/api/genline/cut-files', (req, res) => {

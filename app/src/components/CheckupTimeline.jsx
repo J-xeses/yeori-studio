@@ -305,6 +305,9 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
   }
 
   // ── 트림(좌/우 끝 드래그) ──────────────────────────────────────────
+  // 드래그 중 실시간 트림 값 — trimPreview(state)와 같은 값이지만, mouseup 핸들러가 React
+  // state 업데이트를 기다리지 않고 "방금 그 값"을 바로 읽으려고 ref로도 따로 들고 있는다.
+  const trimLiveRef = useRef(null)
   const startTrim = (e, clipId, edge) => {
     e.stopPropagation()
     e.preventDefault()
@@ -321,15 +324,21 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     // 고정했지만(frozenPlayheadRef), 실제 <video> 재생 자체는 CheckupTab 쪽이라 여기선 멈출
     // 수단이 없었다. 부모에 알려서 편집 시작 시 비디오를 일시정지하게 한다.
     onEditingChange?.(true)
-    setTrimPreview({ clipId, edge, orig: edge === 'L' ? startIn : startOut })
+    const origVal = edge === 'L' ? startIn : startOut
+    trimLiveRef.current = origVal
+    setTrimPreview({ clipId, edge, orig: origVal, cur: origVal })
+    // 2026-10-22 재점검(성준님: "컷 라인 길이 유지된 채, 자르려는 부분 어둡게 표시되어야
+    // 함 → 자른 뒤 길이 축소!") — 드래그 중엔 clips(실제 폭·이웃 배치의 근거)를 전혀
+    // 건드리지 않는다. trimPreview/trimLiveRef에만 진행값을 쌓아 어둡게 칠할 구간과 시간
+    // 라벨을 그리고, 실제 길이 변경(폭 축소 + 이웃 재배치)은 손을 뗀 뒤(onUp) 한 번에 반영한다.
     const onMove = (ev) => {
       dragMovedRef.current = true
       const deltaSec = (ev.clientX - startX) / pxPerSec
-      setClips(prev => prev.map(c => {
-        if (c.clipId !== clipId) return c
-        if (edge === 'L') return { ...c, trimInSec: clamp(startIn + deltaSec, 0, c.trimOutSec - MIN_CLIP_SEC) }
-        return { ...c, trimOutSec: clamp(startOut + deltaSec, c.trimInSec + MIN_CLIP_SEC, maxDur) }
-      }))
+      const next = edge === 'L'
+        ? clamp(startIn + deltaSec, 0, startOut - MIN_CLIP_SEC)
+        : clamp(startOut + deltaSec, startIn + MIN_CLIP_SEC, maxDur)
+      trimLiveRef.current = next
+      setTrimPreview(p => (p && p.clipId === clipId ? { ...p, cur: next } : p))
     }
     const onUp = async () => {
       window.removeEventListener('mousemove', onMove)
@@ -337,7 +346,13 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       setIsDragging(false)
       onEditingChange?.(false)
       setTrimPreview(null)
-      const after = latestClipsRef.current
+      const finalVal = trimLiveRef.current
+      trimLiveRef.current = null
+      // 여기서 처음으로 clips에 실제 반영 — 폭이 줄어들고 뒤 클립들이 그만큼 당겨진다.
+      const after = preDrag.map(c => c.clipId === clipId
+        ? (edge === 'L' ? { ...c, trimInSec: finalVal } : { ...c, trimOutSec: finalVal })
+        : c)
+      setClips(after)
       // 좌우 트림 모두 실제 cut_NN.mp4 파일 자체를 다시 잘라 반영한다(2026-10-14 재설계 —
       // cut.duration만 바꾸는 방식은 finalizeReel이 파일 실측 길이로 항상 덮어써서 실제
       // 발행 영상엔 전혀 반영이 안 됐던 걸 발견). 분할 안 된 컷(이 클립 하나가 그 컷 전체를
@@ -525,6 +540,59 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     onSelectCut?.(null)
   }, [selectedClip, commit, onSelectCut])
 
+  // 2026-10-22 4차 보완 — 타임라인 아이콘 추가요청 4건 반영.
+  // ① 클립 복제 — 같은 컷을 바로 뒤에 한 번 더 배치(반복 연출 등).
+  const duplicateSelected = useCallback(() => {
+    if (!selectedClip) return
+    commit(prev => {
+      const idx = prev.findIndex(c => c.clipId === selectedClip.clipId)
+      if (idx === -1) return prev
+      const copy = { ...prev[idx], clipId: `${prev[idx].clipId}-dup${Date.now().toString(36)}` }
+      const arr = prev.slice()
+      arr.splice(idx + 1, 0, copy)
+      return arr.map((c, i) => ({ ...c, order: i }))
+    })
+  }, [selectedClip, commit])
+
+  // ② 선택 컷 트림 초기화 — 전체 Undo 스택과 무관하게, 이 클립 하나만 실제 파일 백업
+  // (_manual_work/cut_NN_prev.mp4, 한 슬롯)에서 복구해 원래 길이로 되돌린다. 백업이 없으면
+  // (한 번도 트림한 적 없는 컷 등) 조용히 실패 — 되돌릴 게 없다는 뜻.
+  const resetSelectedTrim = useCallback(async () => {
+    if (!selectedClip || !onDurationCommitUndo) return
+    const { clipId, sourceCutNo } = selectedClip
+    setCommittingClipId(clipId)
+    try {
+      const restoredDur = await onDurationCommitUndo(sourceCutNo)
+      commit(prev => prev.map(c => c.clipId === clipId
+        ? { ...c, trimInSec: 0, trimOutSec: restoredDur ?? c.trimOutSec }
+        : c))
+    } catch {
+      // 백업 없음 — 복구할 원본이 없다는 뜻, 조용히 무시
+    } finally {
+      setCommittingClipId(null)
+    }
+  }, [selectedClip, onDurationCommitUndo, commit])
+
+  // ③ 자막 트랙 표시/숨김
+  const [subtitleTrackVisible, setSubtitleTrackVisible] = useState(true)
+
+  // ④ 다음/이전 컷 경계로 재생헤드 점프(←/→)
+  const jumpToBoundary = useCallback((dir) => {
+    if (!positioned.length) return
+    const cur = positioned.find(it => it.sourceCutNo === activeCutNo && elapsedInActive >= it.trimInSec && elapsedInActive < it.trimOutSec + 0.05)
+    const curAbs = cur ? cur.start + (elapsedInActive - cur.trimInSec) : 0
+    const boundaries = positioned.map(it => it.start)
+    const last = positioned[positioned.length - 1]
+    if (last) boundaries.push(last.start + last.dur)
+    const target = dir > 0
+      ? boundaries.find(b => b > curAbs + 0.05)
+      : [...boundaries].reverse().find(b => b < curAbs - 0.05)
+    if (target == null) return
+    const hit = positioned.find(it => target >= it.start && target < it.start + it.dur) || last
+    if (!hit) return
+    onSeek?.(hit.sourceCutNo, Math.max(0, Math.min(hit.trimInSec + (target - hit.start), hit.trimOutSec)))
+  }, [positioned, activeCutNo, elapsedInActive, onSeek])
+
   useEffect(() => {
     const onKey = (e) => {
       const tag = document.activeElement?.tagName
@@ -535,10 +603,12 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       else if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); undo() }
       else if (k === 's' && !e.ctrlKey && !e.metaKey && !e.altKey) { splitAtPlayhead() }
       else if ((k === 'delete' || k === 'backspace') && selectedClip) { e.preventDefault(); deleteSelected() }
+      else if (k === 'arrowright' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); jumpToBoundary(1) }
+      else if (k === 'arrowleft' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); jumpToBoundary(-1) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [undo, redo, splitAtPlayhead, deleteSelected, selectedClip])
+  }, [undo, redo, splitAtPlayhead, deleteSelected, selectedClip, jumpToBoundary])
 
   const zoomIn = () => setPxPerSec(p => clamp(p * 1.25, PX_PER_SEC_RANGE[0], PX_PER_SEC_RANGE[1]))
   const zoomOut = () => setPxPerSec(p => clamp(p / 1.25, PX_PER_SEC_RANGE[0], PX_PER_SEC_RANGE[1]))
@@ -569,6 +639,12 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
           <span className={s.divider} />
           <button className={s.iconBtn} onClick={splitAtPlayhead} disabled={!canSplit} title="선택한 클립을 재생헤드 위치에서 분할 (단축키 S)">✂</button>
           <button className={s.iconBtn} onClick={deleteSelected} disabled={!selectedClip} title="선택한 클립 삭제 (Delete)">🗑</button>
+          <button className={s.iconBtn} onClick={duplicateSelected} disabled={!selectedClip} title="선택한 클립 복제(바로 뒤에 추가)">⧉</button>
+          <button className={s.iconBtn} onClick={resetSelectedTrim} disabled={!selectedClip || !onDurationCommitUndo} title="선택한 클립의 트림을 원래 길이로 초기화(백업이 있을 때만)">⟲</button>
+          <span className={s.divider} />
+          <button className={s.iconBtn} onClick={() => jumpToBoundary(-1)} disabled={!positioned.length} title="이전 컷 경계로 (←)">⏮</button>
+          <button className={s.iconBtn} onClick={() => jumpToBoundary(1)} disabled={!positioned.length} title="다음 컷 경계로 (→)">⏭</button>
+          <button className={`${s.iconBtn} ${subtitleTrackVisible ? s.active : ''}`} onClick={() => setSubtitleTrackVisible(v => !v)} title="자막 트랙 표시/숨김">💬</button>
         </div>
         <span className={s.spacer} />
         {saving && <span className={s.savingDot}>저장 중…</span>}
@@ -609,16 +685,21 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                     <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
                     {it.clipId === committingClipId && <span className={s.clipCommitting}>반영 중…</span>}
                     {trimPreview?.clipId === it.clipId && (() => {
-                      const cur = trimPreview.edge === 'L' ? it.trimInSec : it.trimOutSec
-                      const removedSec = trimPreview.edge === 'L' ? Math.max(0, cur - trimPreview.orig) : Math.max(0, trimPreview.orig - cur)
+                      // it.trimInSec/trimOutSec은 드래그 중엔 그대로(폭 고정) — 진행 중인 값은
+                      // trimPreview.cur에서 읽는다(성준님: "컷 라인 길이 유지된 채, 자르려는
+                      // 부분 어둡게 표시 → 자른 뒤 길이 축소").
+                      const removedSec = trimPreview.edge === 'L'
+                        ? Math.max(0, trimPreview.cur - trimPreview.orig)
+                        : Math.max(0, trimPreview.orig - trimPreview.cur)
                       if (removedSec <= 0) return null
                       const removedPx = removedSec * pxPerSec
+                      const remainingSec = Math.max(0, it.dur - removedSec)
                       return (
                         <>
                           <div className={s.trimShadow}
                             style={trimPreview.edge === 'L' ? { left: 0, width: removedPx } : { right: 0, width: removedPx }} />
                           <div className={s.trimTimeLabel} style={trimPreview.edge === 'L' ? { left: 4 } : { right: 4 }}>
-                            −{removedSec.toFixed(1)}s ({it.trimInSec.toFixed(1)}s~{it.trimOutSec.toFixed(1)}s)
+                            −{removedSec.toFixed(1)}s (남음 {remainingSec.toFixed(1)}s)
                           </div>
                         </>
                       )
@@ -654,7 +735,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                 메타데이터만으로 충분). 세그먼트 사이 새 분할점을 만드는 기능은 없음(성준님:
                 "중간구간 자르기는 지금은 적용하지 말기로 하자") — 세그먼트 개수는 cut.subtitle의
                 "/" 구분 그대로, 끝점 이동만 가능. */}
-            <div className={s.subtitleRow}>
+            {subtitleTrackVisible && <div className={s.subtitleRow}>
               {positioned.map((it) => {
                 const info = cutsByNo?.[it.sourceCutNo] || {}
                 const isDraggingThis = captionDrag?.cutNo === it.sourceCutNo
@@ -682,7 +763,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                   </div>
                 )
               })}
-            </div>
+            </div>}
             {displayPlayheadSec != null && <div className={s.playhead} style={{ left: `${displayPlayheadSec * pxPerSec}px` }} />}
           </div>
         </div>

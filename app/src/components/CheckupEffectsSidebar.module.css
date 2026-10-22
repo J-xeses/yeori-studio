@@ -23,3 +23,10 @@
 }
 .emptyThumb { display: flex; align-items: center; justify-content: center; color: var(--text-3); font-size: 10.5px; }
 .noSelection { font-size: 11.5px; color: var(--text-3); padding: 8px 0; }
+.fixBtn {
+  width: 100%; box-sizing: border-box; text-align: left;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text-2);
+  font-size: 11px; font-weight: 600; padding: 7px 10px; border-radius: 6px; cursor: pointer;
+}
+.fixBtn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+.fixBtn:disabled { opacity: .5; cursor: default; }

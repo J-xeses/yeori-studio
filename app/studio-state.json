@@ -1,5 +1,5 @@
 {
-  "activeTab": "checkup",
+  "activeTab": "publishing",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -11146,7 +11146,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": ""
   },
   "publishing": {
@@ -11200,7 +11200,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-22T00:29:30.772Z",
+  "savedAt": "2026-10-22T00:57:48.616Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

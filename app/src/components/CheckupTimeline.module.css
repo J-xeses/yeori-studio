@@ -20,6 +20,7 @@
 }
 .iconBtn:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
 .iconBtn:disabled { opacity: .3; cursor: default; }
+.iconBtn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .zoomSlider { width: 90px; accent-color: var(--accent); }
 .savingDot { font-size: 11px; color: var(--accent-light); font-weight: 700; }
 .spacer { flex: 1; }

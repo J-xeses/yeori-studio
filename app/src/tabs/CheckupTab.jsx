@@ -3,7 +3,9 @@ import { useApp } from '../context/AppContext'
 import TabToolbar from '../components/TabToolbar'
 import CheckupTimeline from '../components/CheckupTimeline'
 import CheckupSidebar from '../components/CheckupSidebar'
+import DiagnosisPanel from '../components/DiagnosisPanel'
 import { contentRatio } from '../lib/videoPolicy'
+import { resolveEpisodeCode } from '../lib/episodeCode'
 import s from './CheckupTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -147,7 +149,16 @@ export default function CheckupTab() {
   const [muted, setMuted] = useState(false)
   const videoRef = useRef(null)
   const pendingSeekRef = useRef(null) // src 교체 후 loadedmetadata에서 적용할 목표 초
+  // 2026-10-22 4차 보완 재재점검: pause()만으로는 "전체 이어보기" 체인(handleEnded가 다음
+  // 컷으로 자동 전환) 때문에 편집 중에도 재생 바늘이 계속 돌았다 — 편집 중엔 자동 전환·
+  // 재생 재개를 전부 막는 플래그.
+  const isEditingRef = useRef(false)
   const ratio = contentRatio(state.episode)
+  const episodeCode = resolveEpisodeCode(state.episode)
+  // "즉석 조치: AI 검토코멘트"(2026-10-22 4차 보완) — VideoTab이 이미 쓰는 DiagnosisPanel을
+  // 그대로 재사용(컷별 AI 진단·대화). 전체 흐름별 코멘트는 범위가 달라 이번엔 포함 안 함.
+  const [diagCutId, setDiagCutId] = useState(null)
+  const diagCut = diagCutId != null ? state.cuts?.find(c => c.id === diagCutId) : null
 
   // 자막 — 2026-10-14 실측으로 발견: 이전엔 dialogue/narration(TTS가 읽는 대사 원문)을
   // 보여주고 있었는데, 실제로 최종본에 번인되는 자막은 그것과 전혀 다른 cut.subtitle(CP
@@ -215,6 +226,17 @@ export default function CheckupTab() {
 
   useEffect(() => { load() }, [load])
 
+  // 2026-10-22 4차 보완 재재점검(실측 — 여전히 리셋 안 됨): cuts 갱신에 기대는 방식으로는
+  // 안 됐다 — <video>와 <CheckupTimeline>에 key={epNum}을 줘서 에피소드가 바뀌면 두 컴포넌트를
+  // 통째로 새로 마운트하게 했다(React가 내부 상태를 전부 새로 시작 — clips/undoStack/activeCutNo
+  // 등 어디에 남아있는 묵은 참조든 추측할 필요 없이 확실하게 비워짐). 여기선 CheckupTab 쪽
+  // 재생 상태(activeCutNo 등)만 같이 리셋한다.
+  useEffect(() => {
+    setActiveCutNo(null)
+    setElapsedInActive(0)
+    pendingSeekRef.current = null
+  }, [epNum])
+
   // 컷이 생성되는 대로 자동으로 반영되도록 백그라운드 폴링(2026-09-14, 사용자 확정 —
   // 컷타입마다 완료 시점이 서로 다른 G단계에 걸쳐있어 특정 이벤트에 훅을 거는 대신,
   // 다른 탭(스튜디오/메이킹)이 이미 쓰는 단순 폴링 방식을 그대로 적용). silent=true라
@@ -264,6 +286,9 @@ export default function CheckupTab() {
       dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(d.duration * 10) / 10 }, overrideReason: '체크업 타임라인 트림 실행취소' })
     }
     await load(true)
+    return d.duration // 2026-10-22 4차 보완 — "선택 컷 트림 초기화" 버튼이 복구된 실제 길이를
+    // 알아야 클립의 trimOutSec을 거기 맞춰 되돌릴 수 있다(기존 undo()는 스냅샷이 이미 있어
+    // 이 반환값이 필요 없었음).
   }, [epNum, state.cuts, dispatch, load])
 
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
@@ -288,7 +313,8 @@ export default function CheckupTab() {
     const cut = playable.find(c => c.no === activeCutNo)
     if (!cut || !videoRef.current) return
     const v = videoRef.current
-    if (v.src !== cut.videoUrl) {
+    const srcChanged = v.src !== cut.videoUrl
+    if (srcChanged) {
       v.src = cut.videoUrl
     }
     const applyPending = () => {
@@ -298,18 +324,29 @@ export default function CheckupTab() {
       }
       v.play().catch(() => {})
     }
-    if (v.readyState >= 1) applyPending()
-    else v.addEventListener('loadedmetadata', applyPending, { once: true })
     // 2026-10-22 4차 보완 버그수정: 원래 [activeCutNo]만 의존해서, 다른 에피소드로 바꿔도
     // activeCutNo 숫자 자체(예: 3번 컷)가 안 바뀌면 이 effect가 재실행되지 않아 영상이
     // 이전 에피소드의 cut.videoUrl에 그대로 멈춰 있었다("다른 에피소드 선택 시 컷 미반영"
     // 신고 — 해당 컷 파일이 나중에 교체 완료돼도 cuts가 갱신될 때 이 effect가 다시 안 돌아
     // 여전히 안 잡혔다). cuts를 의존성에 추가해 에피소드 전환·폴링 갱신 때마다 다시 맞춘다.
+    // ── 재점검(같은 날 재신고): cuts는 5초 폴링마다 새 배열로 갱신되므로 이 effect가 그때마다
+    // 재실행된다 — srcChanged 가드 없이 매번 applyPending()을 부르면, 편집 중 일시정지해둔
+    // 영상이 몇 초 뒤 폴링 때마다 저절로 다시 재생됐다("컷 편집시 멈춤 안됨 — 몇초후 자동
+    // 재생됨"). src가 실제로 바뀌었거나 명시적 탐색(pendingSeek) 요청이 있을 때만 재생한다 —
+    // 단순 폴링 갱신으로는 지금 재생 상태(일시정지 포함)를 건드리지 않는다.
+    if ((srcChanged || pendingSeekRef.current != null) && !isEditingRef.current) {
+      if (v.readyState >= 1) applyPending()
+      else v.addEventListener('loadedmetadata', applyPending, { once: true })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCutNo, cuts])
 
   const playAll = () => { if (playable.length) seekTo(playable[0].no, 0) }
   const handleEnded = () => {
+    // 2026-10-22 4차 보완 재재점검: "타임라인 클릭해도 바늘이 쉬지 않고 계속 돌아감" — "전체
+    // 이어보기"로 컷이 끝날 때마다 다음 컷으로 자동 전환하는 이 체인이, 편집 중 pause()를
+    // 매번 무시하고 다음 컷을 계속 재생시키고 있었다. 편집 중엔 자동 전환을 멈춘다.
+    if (isEditingRef.current) return
     const next = playable[activeIdx + 1]
     if (next) seekTo(next.no, 0)
   }
@@ -362,7 +399,9 @@ export default function CheckupTab() {
       />
       <div className={s.pageOuter}>
         <CheckupSidebar cuts={state.cuts} cutsByNo={cutsByNo} selectedCutNo={selectedCutNo}
-          onSelectCut={setSelectedCutNo} onSeek={seekTo} onApplied={load} />
+          onSelectCut={setSelectedCutNo} onSeek={seekTo} onApplied={load}
+          epNum={epNum} episodeCode={episodeCode}
+          onOpenDiagnosis={(cutId) => setDiagCutId(cutId)} />
         <div className={s.page}>
           <div className={s.mainRow}>
             {/* 라이브러리/미디어 임포트 추후반영 영역 — 목업 배치 고정(2026-09-13, 사용자 지적:
@@ -373,7 +412,7 @@ export default function CheckupTab() {
             <div className={s.playerWrap}>
               <div className={s.videoWrapper} style={{ aspectRatio: ratio === '9:16' ? '9/16' : '16/9' }}>
                 <div className={s.videoInner}>
-                  <video ref={videoRef} className={s.player}
+                  <video ref={videoRef} key={epNum} className={s.player}
                     onEnded={handleEnded} onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
                     onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
@@ -417,16 +456,20 @@ export default function CheckupTab() {
 
           <div className={s.timelineEditorWrap}>
             <div className={s.timelineEditorInner}>
-              <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo} subtitleSegmentsByNo={subtitleSegmentsByNo}
+              <CheckupTimeline key={epNum} epNum={epNum} cutsByNo={cutsByNo} subtitleSegmentsByNo={subtitleSegmentsByNo}
                 activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
                 onSeek={seekTo} onSelectCut={setSelectedCutNo} onDurationCommit={commitCutTrim} onDurationCommitUndo={undoCutTrim}
                 onCaptionSegCommit={commitCaptionSegTiming}
-                onEditingChange={(editing) => { if (editing) videoRef.current?.pause() }} />
+                onEditingChange={(editing) => {
+                  isEditingRef.current = editing
+                  if (editing) videoRef.current?.pause()
+                }} />
             </div>
             <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} />
           </div>
         </div>
       </div>
+      {diagCut && <DiagnosisPanel cut={diagCut} episodeCode={episodeCode} stage="G4" onClose={() => setDiagCutId(null)} />}
     </div>
   )
 }
