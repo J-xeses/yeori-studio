@@ -826,6 +826,14 @@ export default function StudioTab() {
         }
         actions={[
           {
+            key: 'open-folder', label: '📁 폴더 열기', title: '이 에피소드 폴더를 탐색기로 열기(업로드 현황 확인)',
+            onClick: () => fetch('http://localhost:3001/api/open-folder', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ epNum: state.episode?.number }),
+            }).catch(() => {}),
+            disabled: !state.episode?.number,
+          },
+          {
             key: 'flow-json', variant: 'green', disabled: flowRunning,
             title: 'prompts.json 저장 후 Google Flow 자동 실행',
             label: flowRunning ? '⏳ Flow 실행 중…' : '📤 Flow용 JSON 내보내기',

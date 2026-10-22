@@ -13,7 +13,7 @@ import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, l
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent } from './lib/customChangePresets.js'
-import { listRefImages, listAllRefs, addRefImage, deleteRefImage } from './lib/directionRefs.js'
+import { listRefImages, listAllRefs, addRefImage, deleteRefImage, updateRefCaption } from './lib/directionRefs.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
@@ -5539,6 +5539,24 @@ app.post('/api/write-file', (req, res) => {
   }
 })
 
+// ── POST /api/open-folder — 에피소드 폴더를 탐색기로 연다(2026-10-22 4차 보완) ──
+// "파일 업로드와 관련있는 탭은 상단바에 해당 폴더 열기 기능이 있어야겠다 — 업로드 현황
+// 수시로 확인 가능하게". 인스턴스 루트(01_script~07_output 전부 보이는 폴더)를 연다.
+app.post('/api/open-folder', (req, res) => {
+  const { epNum } = req.body || {}
+  if (epNum == null) return res.status(400).json({ error: 'epNum 필요' })
+  try {
+    const dir = mp.instanceDir(epNum)
+    if (!fs.existsSync(dir)) return res.status(404).json({ error: `폴더 없음: ${dir}` })
+    // explorer.exe는 정상 실행돼도 0이 아닌 종료 코드를 낼 때가 있어 execFileSync 대신
+    // spawn(detached)으로 띄우고 완료를 기다리지 않는다.
+    spawn('explorer', [dir], { detached: true, stdio: 'ignore' }).unref()
+    res.json({ ok: true, path: dir })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // ── GET /api/script-files?code=EP_CODE — 해당 에피소드 01_script 폴더의 .txt/.md 목록 ──
 app.get('/api/script-files', (req, res) => {
   const { code } = req.query
@@ -6985,6 +7003,15 @@ app.delete('/api/direction-refs', (req, res) => {
   if (!group || !key || !filename) return res.status(400).json({ error: 'group, key, filename 필요' })
   deleteRefImage(group, key, filename)
   res.json({ ok: true })
+})
+// 2026-10-22 4차 보완 — "이미지 먼저 등록, 설명은 나중에" 흐름: 업로드 직후 filename을 받아
+// caption만 따로 채워 넣는다(파일 재업로드 없이).
+app.patch('/api/direction-refs', (req, res) => {
+  const { group, key, filename, caption } = req.body || {}
+  if (!group || !key || !filename) return res.status(400).json({ error: 'group, key, filename 필요' })
+  const rec = updateRefCaption(group, key, filename, caption)
+  if (!rec) return res.status(404).json({ error: '레코드 없음' })
+  res.json({ success: true, ...rec })
 })
 
 // ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──

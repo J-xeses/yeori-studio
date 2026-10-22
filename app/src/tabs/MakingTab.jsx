@@ -2675,6 +2675,24 @@ export default function MakingTab() {
     GRAPHIC: '아래 "HTML 소스" 편집기에서 고친 뒤 "제작 실행", 또는 유형 스타일/모션을 바꿔 다시.',
     CAPCUT: '아래 HTML 캡처 / 시나리오 자동 녹화에서 다시 실행하세요.',
   }
+  // 2026-10-22 4차 보완 — "캡컷 편집 유형은 좌측 미리보기 하부로 연출의도까지 배치하고,
+  // 우측은 '제작방식'부터 배치하면 좌우 내용 분배 밸런스가 맞을 것" — CAPCUT 타입만 좌측
+  // 열(미리보기 아래)에 이 블록을 따로 보여준다. 다른 타입은 기존처럼 renderReviewPanel
+  // 안(제작정보와 나란히)에 그대로 둔다.
+  const renderDirectionIntentBlock = (cut) => {
+    const mc = cut.masterCode || {}
+    return (
+      <div style={{ fontSize: 13, lineHeight: 1.7 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>연출 의도</div>
+        <div><b>제목</b> {cut.cutTitle || '—'}</div>
+        <div><b>씬</b> {cut.scene || '—'}</div>
+        {(mc.kr?.ac || mc.ac || cut.action) && <div><b>동작</b> {mc.kr?.ac || cut.action || mc.ac}</div>}
+        {(mc.kr?.md || mc.md) && <div><b>감정</b> {mc.kr?.md || mc.md}</div>}
+        {(cut.narration || cut.dialogue) && <div><b>{cut.narration ? 'NR' : 'DL'}</b> {cut.narration || cut.dialogue}</div>}
+      </div>
+    )
+  }
+
   const renderReviewPanel = (cut) => {
     const g4 = !!getGPoint(episodeCode, cut.no).g4
     const rv = review[cut.no] || {}
@@ -2685,8 +2703,8 @@ export default function MakingTab() {
     const frameSrc = cut.cutType === 'BROLL'
       ? `${vurl}/cut_${pad}_verify.jpg`
       : `${vurl}/cut_${pad}_graphic.png`
-    const mc = cut.masterCode || {}
     const landscape = epDims.w >= epDims.h
+    const showIntentHere = cut.cutType !== 'CAPCUT' // CAPCUT은 좌측 열에서 따로 보여줌
     // 검토용 크게 — 가로 에피소드는 넓게(≈680px), 세로는 높이 기준(≈480px)
     const vidStyle = landscape
       ? { width: '100%', maxWidth: 680, borderRadius: 10, border: '1px solid var(--border)', background: '#000', display: 'block' }
@@ -2694,16 +2712,9 @@ export default function MakingTab() {
     return (
       <div className={s.subPanel} style={redoMode[cut.no] ? { boxShadow: 'inset 0 0 0 2px #b45309' } : undefined}>
         <div className={s.settingLabel}>컷 리뷰 — 연출 의도 ↔ 제작 결과</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'start' }}>
-          <div style={{ fontSize: 13, lineHeight: 1.7 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>연출 의도</div>
-            <div><b>제목</b> {cut.cutTitle || '—'}</div>
-            <div><b>씬</b> {cut.scene || '—'}</div>
-            {(mc.kr?.ac || mc.ac || cut.action) && <div><b>동작</b> {mc.kr?.ac || cut.action || mc.ac}</div>}
-            {(mc.kr?.md || mc.md) && <div><b>감정</b> {mc.kr?.md || mc.md}</div>}
-            {(cut.narration || cut.dialogue) && <div><b>{cut.narration ? 'NR' : 'DL'}</b> {cut.narration || cut.dialogue}</div>}
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: 'right', whiteSpace: 'nowrap' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: showIntentHere ? '1fr auto' : 'auto', gap: 16, alignItems: 'start' }}>
+          {showIntentHere && renderDirectionIntentBlock(cut)}
+          <div style={{ fontSize: 11, color: 'var(--text-3)', textAlign: showIntentHere ? 'right' : 'left', whiteSpace: 'nowrap' }}>
             <div style={{ textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 4 }}>제작 정보</div>
             {done ? (
               <>
@@ -2925,6 +2936,9 @@ export default function MakingTab() {
       <div className={s.cutPanelCols}>
         <div className={s.cutPanelPreviewCol}>
           {renderFinalResultPanel(cut)}
+          {cut.cutType === 'CAPCUT' && (
+            <div className={s.subPanel} style={{ borderTop: 'none' }}>{renderDirectionIntentBlock(cut)}</div>
+          )}
         </div>
         <div className={s.cutPanelControlsCol}>
           {MANUAL_TYPES.includes(cut.cutType) && renderReviewPanel(cut)}
@@ -3494,6 +3508,16 @@ export default function MakingTab() {
         toolLabel="외부 지원 앱 연동"
         tools={EXTERNAL_TOOLS.map(t => t.name)}
         onToolChange={name => window.open(EXTERNAL_TOOLS.find(t => t.name === name)?.url, '_blank')}
+        actions={[
+          {
+            key: 'open-folder', label: '📁 폴더 열기', title: '이 에피소드 폴더를 탐색기로 열기(업로드 현황 확인)',
+            onClick: () => fetch(`${YEORI_SERVER}/api/open-folder`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ epNum: episode?.number }),
+            }).catch(() => {}),
+            disabled: !episode?.number,
+          },
+        ]}
       />
       <div className={s.root}>
         {/* 메이킹 탭 자체는 G5(편집메타 에피소드 조립)를 절대 안 다룬다 — maxStage를 5로

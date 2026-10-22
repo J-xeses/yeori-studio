@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "retention",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -11454,7 +11454,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-2",
     "subtitles": {}
   },
   "ttsTabState": {

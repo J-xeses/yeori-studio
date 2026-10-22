@@ -296,13 +296,20 @@ export default function CheckupTab() {
   const mismatchCount = cuts.filter(c => c.lengthMismatch).length
   const cutsByNo = useMemo(() => Object.fromEntries(cuts.map(c => [c.no, c])), [cuts])
 
-  const seekTo = useCallback((cutNo, localTime) => {
+  // forcePlay=true(기본) — "이 컷을 재생해줘" 의도(▶ 전체 이어보기, 컷 자동 연결, 사이드바
+  // 컷 클릭)는 지금 멈춰 있어도 재생을 시작해야 맞다. 반면 타임라인을 그냥 클릭해 위치만
+  // 보는 건 "재생해달라"는 뜻이 아니다 — 2026-10-22 4차 보완 세 번째 재신고("타임라인
+  // 클릭해도 바늘이 쉬지 않고 계속 돌아감")의 실제 범인이 여기였다: 같은 컷 안에서 위치만
+  // 바꾸는 분기가 무조건 v.play()를 불러서, 멈춰 둔 상태여도 매번 다시 재생됐다.
+  // CheckupTimeline의 타임라인 클릭(handleStripClick)만 forcePlay=false로 호출한다.
+  const seekTo = useCallback((cutNo, localTime, forcePlay = true) => {
     const cut = playable.find(c => c.no === cutNo)
     if (!cut || !videoRef.current) return
     const v = videoRef.current
     if (activeCutNo === cutNo && v.src === cut.videoUrl) {
+      const wasPaused = v.paused
       v.currentTime = localTime
-      v.play().catch(() => {})
+      if ((forcePlay || !wasPaused) && !isEditingRef.current) v.play().catch(() => {})
     } else {
       pendingSeekRef.current = localTime
       setActiveCutNo(cutNo)

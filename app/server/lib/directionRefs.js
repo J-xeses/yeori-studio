@@ -52,6 +52,18 @@ export function addRefImage(group, key, buffer, ext = 'jpg', caption = '') {
   return rec
 }
 
+// 2026-10-22 4차 보완 — "이미지 먼저 등록, 그 다음 설명 입력" 흐름을 위한 캡션 전용 패치.
+// 업로드는 이미 끝난 레코드의 caption 필드만 바꾼다(파일 재업로드 없음).
+export function updateRefCaption(group, key, filename, caption) {
+  const k = slugKey(key)
+  const idx = loadIndex()
+  const rec = idx[group]?.[k]?.find((r) => r.filename === filename)
+  if (!rec) return null
+  rec.caption = caption || ''
+  saveIndex(idx)
+  return rec
+}
+
 export function deleteRefImage(group, key, filename) {
   const k = slugKey(key)
   const idx = loadIndex()

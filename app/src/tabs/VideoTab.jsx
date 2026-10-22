@@ -1850,6 +1850,14 @@ export default function VideoTab() {
           </select>
         }
         actions={[
+          {
+            key: 'open-folder', label: '📁 폴더 열기', title: '이 에피소드 폴더를 탐색기로 열기(업로드 현황 확인)',
+            onClick: () => fetch('http://localhost:3001/api/open-folder', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ epNum: state.episode?.number }),
+            }).catch(() => {}),
+            disabled: !state.episode?.number,
+          },
           { key: 'srt', label: '📄 SRT', onClick: exportSRT },
           { key: 'load-all', label: '🔄 불러오기', onClick: loadAllFromProxy },
           { key: 'import-videos', label: '📁 폴더에서 일괄 가져오기', onClick: importVideosFromFolder },

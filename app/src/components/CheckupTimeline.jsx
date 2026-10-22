@@ -301,7 +301,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const hit = positioned.find(it => xSec >= it.start && xSec < it.start + it.dur)
     if (!hit) return
     selectClip(hit)
-    onSeek?.(hit.sourceCutNo, hit.trimInSec + (xSec - hit.start))
+    onSeek?.(hit.sourceCutNo, hit.trimInSec + (xSec - hit.start), false)
   }
 
   // ── 트림(좌/우 끝 드래그) ──────────────────────────────────────────
@@ -590,7 +590,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     if (target == null) return
     const hit = positioned.find(it => target >= it.start && target < it.start + it.dur) || last
     if (!hit) return
-    onSeek?.(hit.sourceCutNo, Math.max(0, Math.min(hit.trimInSec + (target - hit.start), hit.trimOutSec)))
+    onSeek?.(hit.sourceCutNo, Math.max(0, Math.min(hit.trimInSec + (target - hit.start), hit.trimOutSec)), false)
   }, [positioned, activeCutNo, elapsedInActive, onSeek])
 
   useEffect(() => {

@@ -731,6 +731,16 @@ export default function TTSTab() {
         toolLabel="음성 생성 도구"
         tools={['ElevenLabs']}
         onToolChange={() => window.open('https://elevenlabs.io', '_blank')}
+        actions={[
+          {
+            key: 'open-folder', label: '📁 폴더 열기', title: '이 에피소드 폴더를 탐색기로 열기(업로드 현황 확인)',
+            onClick: () => fetch('http://localhost:3001/api/open-folder', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ epNum: state.episode?.number }),
+            }).catch(() => {}),
+            disabled: !state.episode?.number,
+          },
+        ]}
       />
     <div className={s.root}>
       {/* 왼쪽 사이드바 */}
