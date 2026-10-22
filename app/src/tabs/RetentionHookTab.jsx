@@ -1096,55 +1096,93 @@ function FreezeSituationImagePanel({ freezeRefs, reloadFreezeRefs, actionLabel, 
 // 2026-10-22 그림7(4차 재재재점검) — "현재처럼 상황단어와 썸네일 조합 방식 삭제!! 상황별
 // 관련 연출이미지는 생성 후, 오른쪽에 등록!": 리스트 아이템마다 달려있던 RefThumbStrip
 // 썸네일을 전부 뺐다 — 이미지는 이제 오른쪽 FreezeSituationImagePanel(상황 연출 이미지 생성)
-// 하나로만 모은다. 그리고 ①상황/②동작·소품 아코디언 두 개로 나눴던 걸 리스트 하나로 합치고
-// "동작,소품"을 그 리스트의 4번째 필터 탭으로 추가 — 성준님: "상황, 동작, 장소... 모두
-// 레퍼런스 리스트창으로 규격화". 아이템을 고르면 카테고리에 따라 ①(상황) 또는 ②(동작·소품)
-// 자동입력 칸에 들어가고, 상단 "상황 조합"에 ①×②가 합쳐져 실제 actionLabel/Ko/En이 된다.
+// 하나로만 모은다.
+// 2026-10-22 재재재재점검 — "상황연출 부분도 그림처럼 좌,우로 창을 분할해서 구분해줘(상황연출
+// list, 동작연출 list), 창은 검은색으로, 필터 버튼은 제목보다 위에 배치(위계)". 리스트 하나로
+// 합쳤던 걸 되돌려 좌(①상황)/우(②동작·소품) 두 창으로 분리 — 단 아코디언 대신 필터탭이 각
+// 창 제목 위에 오는 고정형 리스트박스(검은 배경)로. 고르면 ①/②자동입력 칸에 들어가고
+// "상황 조합"에 ①×②가 합쳐져 실제 actionLabel/Ko/En이 된다.
 const SITUATION_EVENT_CATS = ['물건 파손', '날씨/바람']
 const ACTIONPROP_EVENT_CATS = ['신체반응', '액체/음식', '종이/카드']
-const EVENT_FILTER_TABS = ['전체', '물건 파손', '날씨/바람', '동작,소품']
-function matchesEventFilter(ev, tab) {
-  if (tab === '전체') return true
-  if (tab === '동작,소품') return ACTIONPROP_EVENT_CATS.includes(ev.category)
-  return ev.category === tab
+const EVENT_ADD_FIELDS = [
+  { key: 'nameKo', placeholder: '이름(짧게, 필수)', required: true },
+  { key: 'ko', placeholder: '한글 묘사(필수)', required: true },
+  { key: 'en', placeholder: '영문 묘사(필수, 프롬프트용)', required: true },
+]
+const LOCATION_ADD_FIELDS = [
+  { key: 'nameKo', placeholder: '장소 이름(필수)', required: true },
+  { key: 'envEn', placeholder: '환경 묘사(영문, 선택)' },
+  { key: 'lightingEn', placeholder: '조명 묘사(영문, 선택)' },
+]
+
+// 2026-10-22 7차 지적 — "추가할 수 있는 기능이 각 창마다 있어야겠다": 리스트가 늘어날 걸
+// 전제로, 상황·동작·장소-1·장소-2 창 4개 전부에 즉석 추가 폼을 붙인다. 평소엔 "+ 새 항목
+// 추가" 한 줄만 보이다가 누르면 입력칸이 펼쳐지는 구조(리스트 레코드는 pool.length로
+// 계속 늘어나도 레이아웃이 안 깨지게 리스트 영역만 스크롤, 추가 폼은 항상 하단 고정).
+function InlineAddRow({ fields, onSubmit, submitLabel = '추가' }) {
+  const [open, setOpen] = useState(false)
+  const [vals, setVals] = useState({})
+  const [saving, setSaving] = useState(false)
+  const submit = async () => {
+    if (fields.some((f) => f.required && !vals[f.key]?.trim())) return
+    setSaving(true)
+    try {
+      await onSubmit(vals)
+      setVals({})
+      setOpen(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)}
+        style={{ width: '100%', padding: '6px 10px', fontSize: 10.5, color: '#888', background: 'transparent', border: 'none', borderTop: '1px solid var(--border)', cursor: 'pointer', textAlign: 'left', flex: '0 0 auto' }}>
+        + 새 항목 추가
+      </button>
+    )
+  }
+  return (
+    <div style={{ padding: 8, borderTop: '1px solid var(--border)', flex: '0 0 auto' }}>
+      {fields.map((f) => (
+        <input key={f.key} className={styles.textarea} style={{ marginBottom: 4, fontSize: 10.5, padding: '5px 8px' }}
+          placeholder={f.placeholder} value={vals[f.key] || ''}
+          onChange={(e) => setVals((v) => ({ ...v, [f.key]: e.target.value }))} />
+      ))}
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button type="button" className={styles.copyBtn} disabled={saving} onClick={submit}>{saving ? '저장 중…' : submitLabel}</button>
+        <button type="button" className={styles.copyBtn} onClick={() => { setOpen(false); setVals({}) }}>취소</button>
+      </div>
+    </div>
+  )
 }
 
-function EventListSection({ events, applyEventPick, situationPick, actionpropPick }) {
-  const [open, setOpen] = useState(true)
+function EventListColumn({ title, cats, pool, pick, onPick, addFields, onAdd }) {
   const [filter, setFilter] = useState('전체')
-  const visible = events.filter((e) => matchesEventFilter(e, filter))
+  const visible = filter === '전체' ? pool : pool.filter((e) => e.category === filter)
   return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 8, marginBottom: 8, overflow: 'hidden' }}>
-      <button type="button" onClick={() => setOpen((o) => !o)}
-        style={{ width: '100%', textAlign: 'left', padding: '7px 10px', background: 'var(--bg-2, #1a1a24)', border: 'none', color: 'var(--text)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>① 상황 연출 리스트</span><span style={{ fontSize: 10, color: '#888' }}>{open ? '▲ 접기' : `▼ 펼치기 (${events.length})`}</span>
-      </button>
-      {open && (
-        <div style={{ padding: 8 }}>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-            {EVENT_FILTER_TABS.map((c) => (
-              <button key={c} className={styles.copyBtn}
-                style={filter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
-                onClick={() => setFilter(c)}>{c}</button>
-            ))}
-          </div>
-          <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
-            {visible.map((ex) => {
-              const isAp = ACTIONPROP_EVENT_CATS.includes(ex.category)
-              const selected = isAp ? actionpropPick?.nameKo === ex.nameKo : situationPick?.nameKo === ex.nameKo
-              return (
-                <div key={ex.id || ex.nameKo} title={ex.ko} onClick={() => applyEventPick(ex)}
-                  style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: selected ? 'var(--accent, #7c3aed)' : 'transparent',
-                    color: selected ? '#fff' : 'var(--text)' }}>
-                  <span>{ex.custom && '📝 '}{ex.nameKo}</span>
-                  <span style={{ fontSize: 9.5, opacity: 0.65 }}>{isAp ? '②' : '①'}</span>
-                </div>
-              )
-            })}
-          </div>
+    <div style={{ flex: '1 1 0', minWidth: 0 }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+        {['전체', ...cats].map((c) => (
+          <button key={c} className={styles.copyBtn}
+            style={filter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+            onClick={() => setFilter(c)}>{c}</button>
+        ))}
+      </div>
+      <div style={{ fontSize: 11.5, fontWeight: 600, marginBottom: 6 }}>{title}</div>
+      <div style={{ background: '#000', border: '1px solid var(--border)', borderRadius: 6, height: 220, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+          {visible.map((ex) => (
+            <div key={ex.id || ex.nameKo} title={ex.ko} onClick={() => onPick(ex)}
+              style={{ padding: '6px 10px', fontSize: 11, cursor: 'pointer',
+                background: pick?.nameKo === ex.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                color: pick?.nameKo === ex.nameKo ? '#fff' : 'var(--text)' }}>
+              {ex.custom && '📝 '}{ex.nameKo}
+            </div>
+          ))}
         </div>
-      )}
+        <InlineAddRow fields={addFields} onSubmit={onAdd} />
+      </div>
     </div>
   )
 }
@@ -1203,16 +1241,51 @@ function FreezeBeatPanel({ state, dispatch }) {
 
   const allEvents = [...FREEZE_EVENT_LIBRARY, ...customEvents]
 
+  // 2026-10-22 7차 지적 — "추가할 수 있는 기능이 각 창마다 있어야겠다": 상황/동작 리스트는
+  // 커스텀 이벤트 저장소를 category 태그로 나눠 쓰고('직접입력'=①상황, '직접입력(동작)'=②동작),
+  // 장소-1/장소-2는 새로 만든 freeze-locations 저장소를 group('local'|'extra')으로 나눠 쓴다.
+  const [customLocations, setCustomLocations] = useState([])
+  const loadCustomLocations = () => {
+    fetch(`${SERVER}/api/change-combo/freeze-locations`).then((r) => r.json())
+      .then((d) => setCustomLocations(d.locations || [])).catch(() => {})
+  }
+  useEffect(() => { loadCustomLocations() }, [])
+  const addSituationItem = async (vals) => {
+    await fetch(`${SERVER}/api/change-combo/freeze-events`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameKo: vals.nameKo, ko: vals.ko, en: vals.en, category: '직접입력' }),
+    })
+    loadCustomEvents()
+  }
+  const addActionpropItem = async (vals) => {
+    await fetch(`${SERVER}/api/change-combo/freeze-events`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameKo: vals.nameKo, ko: vals.ko, en: vals.en, category: '직접입력(동작)' }),
+    })
+    loadCustomEvents()
+  }
+  const addLocalLocation = async (vals) => {
+    await fetch(`${SERVER}/api/change-combo/freeze-locations`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameKo: vals.nameKo, envEn: vals.envEn, lightingEn: vals.lightingEn, group: 'local' }),
+    })
+    loadCustomLocations()
+  }
+  const addExtraLocation = async (vals) => {
+    await fetch(`${SERVER}/api/change-combo/freeze-locations`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nameKo: vals.nameKo, envEn: vals.envEn, lightingEn: vals.lightingEn, group: 'extra' }),
+    })
+    loadCustomLocations()
+  }
+
   // 2026-10-22 4차 보완 — "상황개요": 사건×장소 선택을 참고해 자동으로 한글 요약을 써준다.
   // 그냥 참고용 텍스트고 doBuild가 서버에 보내는 실제 요청(action/sceneA)은 안 건드린다 —
   // 사용자가 자유롭게 고칠 수 있는 입력창(자동완성이지 잠금 아님).
+  // 2026-10-22 재재재재점검 — "연출 장소 list에서는 전체·실내·실외 구분 버튼은 빼자" — 장소
+  // 카테고리/소분류 필터(locationCategoryFilter 등)를 쓰던 자리라 제거(데이터의 category·
+  // subtype 필드 자체는 FREEZE_LOCATION_LIBRARY에 남겨둔다, 나중에 다시 쓸 수 있도록).
   const [selectedLocationName, setSelectedLocationName] = useState('')
-  const [locationCategoryFilter, setLocationCategoryFilter] = useState('전체')
-  // 2026-10-22 그림6 — 실내는 신발 유무(신발X/신발O), 실외는 공인/특정장소로 한 단계 더
-  // 세분류(성준님: "실내-1/2/3·실외-1/2처럼 세부 분류만 먼저 늘려줘"). 대분류(실내/실외)를
-  // 바꾸면 소분류 선택은 의미가 없어지므로 같이 초기화한다.
-  const [locationSubtypeFilter, setLocationSubtypeFilter] = useState('전체')
-  const SUBTYPES_BY_CATEGORY = { 실내: ['신발X', '신발O'], 실외: ['공인', '특정장소'] }
   const [overviewKo, setOverviewKo] = useState('')
   const [overviewEdited, setOverviewEdited] = useState(false)
   useEffect(() => {
@@ -1230,11 +1303,8 @@ function FreezeBeatPanel({ state, dispatch }) {
   // 만든다 — 하나만 골라도(예: "급브레이크+고양이" 자체완결형) 그 값 그대로 쓰인다.
   const [situationPick, setSituationPick] = useState(null)
   const [actionpropPick, setActionpropPick] = useState(null)
-  const applyEventPick = (ex) => {
-    if (ACTIONPROP_EVENT_CATS.includes(ex.category)) setActionpropPick(ex)
-    else setSituationPick(ex)
-    setBuildResult(null)
-  }
+  const pickSituation = (ex) => { setSituationPick(ex); setBuildResult(null) }
+  const pickActionprop = (ex) => { setActionpropPick(ex); setBuildResult(null) }
   useEffect(() => {
     if (!situationPick && !actionpropPick) return
     setActionLabel([situationPick?.nameKo, actionpropPick?.nameKo].filter(Boolean).join(' × '))
@@ -1251,11 +1321,11 @@ function FreezeBeatPanel({ state, dispatch }) {
   // 풀에서 뽑는다(일상만 뽑히던 걸 번외도 섞이게). 그림7 — ①(상황 풀)과 ②(동작·소품 풀)에서
   // 각각 하나씩 뽑아 진짜 ①×② 조합을 만든다.
   const randomCombo = () => {
-    const situPool = allEvents.filter((e) => SITUATION_EVENT_CATS.includes(e.category))
-    const apPool = allEvents.filter((e) => ACTIONPROP_EVENT_CATS.includes(e.category))
+    const situPool = allEvents.filter((e) => SITUATION_EVENT_CATS.includes(e.category) || e.category === '직접입력')
+    const apPool = allEvents.filter((e) => ACTIONPROP_EVENT_CATS.includes(e.category) || e.category === '직접입력(동작)')
     setSituationPick(pickRandomItem(situPool))
     setActionpropPick(pickRandomItem(apPool))
-    applyLocation(pickRandomItem([...FREEZE_LOCATION_LIBRARY, ...FREEZE_LOCATION_LIBRARY_EXTRA]))
+    applyLocation(pickRandomItem([...FREEZE_LOCATION_LIBRARY, ...FREEZE_LOCATION_LIBRARY_EXTRA, ...customLocations]))
   }
   const saveCustomEvent = async () => {
     if (!actionLabel.trim() || !actionKo.trim() || !actionEn.trim()) return
@@ -1371,80 +1441,90 @@ function FreezeBeatPanel({ state, dispatch }) {
           레퍼런스에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
           사건(아래)과 장소(그 아래)는 서로 독립이라 자유롭게 조합할 수 있습니다.
         </div>
-        {/* 2026-10-22 그림7(4차 재재재점검) — "①/② 아코디언 둘 → 리스트 하나로 합치고,
-            선택하면 설정창(①/②/상황 조합)에 자동입력". 랜덤조합 버튼 옆에 현재 ①·②·조합
-            결과를 보여주는 자동입력 칸 3개를 두고, 그 아래 통합 리스트(EventListSection)에서
-            고르면 카테고리에 따라 해당 칸이 채워진다. */}
+        {/* 2026-10-22 재재재재점검 — "내가 색상을 표시한 건 이해를 돕기 위한 설명이었다":
+            앞서 ①/②/조합/장소 칸마다 다르게 칠했던 색(보라·주황·빨강·초록·분홍)을 전부 걷어내고
+            앱 전체가 쓰는 주요 색상계열(accent 보라) 하나로 통일했다. 그리고 "랜덤조합 행의
+            버튼라인을 맞추고, 입력창 폭을 조절해서 가로 여유가 남지 않게" — 버튼·세 칸 모두
+            높이를 맞추고(alignItems:stretch) flex:1로 늘려 패널 가로폭을 꽉 채운다. */}
         <div style={{ marginBottom: 8 }}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-            <button className={styles.genBtn} style={{ width: 'auto', padding: '6px 12px' }} onClick={randomCombo}>🎲 랜덤 조합</button>
-            <div style={{ border: '1px solid #7c3aed', borderRadius: 6, padding: '5px 10px', fontSize: 11, minWidth: 110 }}>
+          {/* 2026-10-22 5차 지적 — "버튼과 입력창 크기가 안 맞아 정렬이 안됨, 높이·폭을
+              맞춰달라는 뜻이었다": genBtn 클래스는 기본 width:100%라서, 이전에 inline
+              width:'auto' 오버라이드를 빼먹는 바람에 버튼이 가로 전체를 먹고 옆 칸 3개가
+              밀려났던 게 "하나로 통합된" 것처럼 보인 원인. width:'auto' 복구 + 4개 모두
+              height 36 고정으로 높이까지 맞춘다. */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <button className={styles.genBtn} style={{ width: 'auto', height: 36, boxSizing: 'border-box', padding: '0 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '0 0 auto', margin: 0 }} onClick={randomCombo}>🎲 랜덤 조합</button>
+            <div style={{ flex: 1, height: 36, boxSizing: 'border-box', background: '#000', border: '1px solid var(--accent, #7c3aed)', borderRadius: 6, padding: '0 10px', fontSize: 11, display: 'flex', alignItems: 'center' }}>
               <span style={{ color: '#888', marginRight: 4 }}>①</span>
               {situationPick?.nameKo || <span style={{ color: '#666' }}>상황 미선택</span>}
             </div>
-            <div style={{ border: '1px solid #f0a050', borderRadius: 6, padding: '5px 10px', fontSize: 11, minWidth: 110 }}>
+            <div style={{ flex: 1, height: 36, boxSizing: 'border-box', background: '#000', border: '1px solid var(--accent, #7c3aed)', borderRadius: 6, padding: '0 10px', fontSize: 11, display: 'flex', alignItems: 'center' }}>
               <span style={{ color: '#888', marginRight: 4 }}>②</span>
               {actionpropPick?.nameKo || <span style={{ color: '#666' }}>동작·소품 미선택</span>}
             </div>
-            <div style={{ border: '1px solid #e05070', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, minWidth: 140 }}>
+            <div style={{ flex: 1.2, height: 36, boxSizing: 'border-box', background: '#000', border: '1px solid var(--accent, #7c3aed)', borderRadius: 6, padding: '0 10px', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center' }}>
               상황 조합: {actionLabel || <span style={{ color: '#666', fontWeight: 400 }}>①×②</span>}
             </div>
           </div>
-          <EventListSection events={allEvents} applyEventPick={applyEventPick}
-            situationPick={situationPick} actionpropPick={actionpropPick} />
+          {/* 2026-10-22 5차 지적 — "list"는 한글 자판이 안 먹어 영어로 적었을 뿐인데 화면
+              글자에 그대로 박아버려서 "리스트"로 고쳤다. 상황연출/동작연출 좌우 분할·검은
+              리스트박스·필터 탭을 제목 위에 두는 배치는 그대로 유지. */}
+          <div style={{ display: 'flex', gap: 14 }}>
+            <EventListColumn title="① 상황연출 리스트" cats={SITUATION_EVENT_CATS}
+              pool={allEvents.filter((e) => SITUATION_EVENT_CATS.includes(e.category) || e.category === '직접입력')}
+              pick={situationPick} onPick={pickSituation}
+              addFields={EVENT_ADD_FIELDS} onAdd={addSituationItem} />
+            <EventListColumn title="② 동작연출 리스트" cats={ACTIONPROP_EVENT_CATS}
+              pool={allEvents.filter((e) => ACTIONPROP_EVENT_CATS.includes(e.category) || e.category === '직접입력(동작)')}
+              pick={actionpropPick} onPick={pickActionprop}
+              addFields={EVENT_ADD_FIELDS} onAdd={addActionpropItem} />
+          </div>
         </div>
-        {/* 2026-10-22 그림7 — "예시 내용 삭제! 설정 리스트 창 동일 크기, 위치 맞출 것!!":
-            장소-1/장소-2 둘 다 "예시)" 정적 텍스트 칸을 빼고 리스트박스만 남겨, 위 상황
-            리스트와 같은 maxHeight(220)로 맞췄다. 리스트 위에는 상황 쪽과 똑같은 패턴으로
-            "선택된 연출 장소" 자동입력 칸을 둔다. */}
+        {/* 2026-10-22 6차 지적 — "장소-2(번외) 리스트 창도 옆이랑 맞춰서 하단까지 내리고":
+            번외 쪽은 아이템이 3개뿐이라 maxHeight:220이어도 실제 박스 높이는 내용만큼만
+            차지해 일상 쪽(11개, 거의 220 꽉 참)보다 짧아 보였다. maxHeight→고정 height로
+            바꿔 내용과 무관하게 항상 220으로 내려오게 하고, 그 위 제목 줄도 minHeight로
+            맞춰(일상 쪽 설명이 2줄이라) 리스트박스 시작 지점부터 가지런해지게 했다. */}
+        <div className={styles.desc} style={{ fontSize: 11.5, fontWeight: 600, margin: '4px 0 6px', color: 'var(--text)' }}>③ 연출 장소 리스트</div>
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 10 }}>
           <div style={{ flex: '1 1 300px', minWidth: 260 }}>
-            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-1(일상) — 사건과 조합해 환경·조명·평소 동작이 바뀝니다</div>
-            <div style={{ border: '1px solid #6ee7b7', borderRadius: 6, padding: '5px 10px', fontSize: 11, marginBottom: 6 }}>
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4, minHeight: 30 }}>연출 장소-1(일상) — 사건과 조합해 환경·조명·평소 동작이 바뀝니다</div>
+            <div style={{ background: '#000', border: '1px solid var(--accent, #7c3aed)', borderRadius: 6, padding: '5px 10px', fontSize: 11, marginBottom: 6 }}>
               <span style={{ color: '#888', marginRight: 4 }}>선택된 장소</span>
               {selectedLocationName || <span style={{ color: '#666' }}>미선택</span>}
             </div>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-              {['전체', '실내', '실외'].map((c) => (
-                <button key={c} className={styles.copyBtn}
-                  style={locationCategoryFilter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
-                  onClick={() => { setLocationCategoryFilter(c); setLocationSubtypeFilter('전체') }}>{c}</button>
-              ))}
-              {SUBTYPES_BY_CATEGORY[locationCategoryFilter] && ['전체', ...SUBTYPES_BY_CATEGORY[locationCategoryFilter]].map((s) => (
-                <button key={s} className={styles.copyBtn} style={{ fontSize: 10, opacity: 0.85,
-                  ...(locationSubtypeFilter === s ? { background: 'var(--accent, #7c3aed)', color: '#fff', opacity: 1 } : {}) }}
-                  onClick={() => setLocationSubtypeFilter(s)}>{s}</button>
-              ))}
-            </div>
-            <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
-              {FREEZE_LOCATION_LIBRARY
-                .filter((loc) => locationCategoryFilter === '전체' || loc.category === locationCategoryFilter)
-                .filter((loc) => locationSubtypeFilter === '전체' || loc.subtype === locationSubtypeFilter)
-                .map((loc) => (
-                <div key={loc.nameKo} onClick={() => applyLocation(loc)}
-                  style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
-                    background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
-                    color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
-                  {loc.nameKo}
-                </div>
-              ))}
+            <div style={{ background: '#000', border: '1px solid var(--border)', borderRadius: 6, height: 220, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                {[...FREEZE_LOCATION_LIBRARY, ...customLocations.filter((l) => l.group === 'local')].map((loc) => (
+                  <div key={loc.id || loc.nameKo} onClick={() => applyLocation(loc)}
+                    style={{ padding: '6px 10px', fontSize: 11, cursor: 'pointer',
+                      background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                      color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
+                    {loc.custom && '📝 '}{loc.nameKo}
+                  </div>
+                ))}
+              </div>
+              <InlineAddRow fields={LOCATION_ADD_FIELDS} onSubmit={addLocalLocation} />
             </div>
           </div>
           <div style={{ flex: '1 1 300px', minWidth: 260 }}>
-            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-2(번외)</div>
-            <div style={{ border: '1px solid #f0a0d0', borderRadius: 6, padding: '5px 10px', fontSize: 11, marginBottom: 6 }}>
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4, minHeight: 30 }}>연출 장소-2(번외)</div>
+            <div style={{ background: '#000', border: '1px solid var(--accent, #7c3aed)', borderRadius: 6, padding: '5px 10px', fontSize: 11, marginBottom: 6 }}>
               <span style={{ color: '#888', marginRight: 4 }}>선택된 장소</span>
               {selectedLocationName || <span style={{ color: '#666' }}>미선택</span>}
             </div>
-            <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
-              {FREEZE_LOCATION_LIBRARY_EXTRA.map((loc) => (
-                <div key={loc.nameKo} onClick={() => applyLocation(loc)}
-                  style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
-                    background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
-                    color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
-                  {loc.code ? `${loc.code} (${loc.nameKo})` : loc.nameKo}
-                </div>
-              ))}
+            <div style={{ background: '#000', border: '1px solid var(--border)', borderRadius: 6, height: 220, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                {[...FREEZE_LOCATION_LIBRARY_EXTRA, ...customLocations.filter((l) => l.group === 'extra')].map((loc) => (
+                  <div key={loc.id || loc.nameKo} onClick={() => applyLocation(loc)}
+                    style={{ padding: '6px 10px', fontSize: 11, cursor: 'pointer',
+                      background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                      color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
+                    {loc.custom && '📝 '}{loc.code ? `${loc.code} (${loc.nameKo})` : loc.nameKo}
+                  </div>
+                ))}
+              </div>
+              <InlineAddRow fields={LOCATION_ADD_FIELDS} onSubmit={addExtraLocation} />
             </div>
           </div>
         </div>

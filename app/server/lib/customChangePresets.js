@@ -95,3 +95,51 @@ export function deleteCustomFreezeEvent(id) {
   data.events = data.events.filter((e) => e.id !== id)
   persistFreezeEvents(data)
 }
+
+// ── 프리즈 비트 커스텀 장소 저장소(2026-10-22) ───────────────────────────────
+// 배경: 성준님 — "추가할 수 있는 기능이 각 창마다 있어야겠다" — 상황/동작 리스트는 이미
+// addCustomFreezeEvent로 즉석 추가가 되는데, 장소-1(일상)/장소-2(번외) 리스트는 코드에
+// 박힌 배열뿐이었다. group('local'|'extra')으로 어느 리스트에 들어갈지만 구분해 저장하고,
+// 나머지(envEn/lightingEn/poseKo/poseEn)는 사건 저장소와 같은 패턴.
+function freezeLocationStorePath() {
+  return path.join(mp.DOWNLOADS, '_shared', 'change-combo', 'custom-freeze-locations.json')
+}
+
+function loadFreezeLocations() {
+  try { return JSON.parse(fs.readFileSync(freezeLocationStorePath(), 'utf-8')) } catch { return { locations: [] } }
+}
+
+function persistFreezeLocations(data) {
+  fs.mkdirSync(path.dirname(freezeLocationStorePath()), { recursive: true })
+  fs.writeFileSync(freezeLocationStorePath(), JSON.stringify(data, null, 2), 'utf-8')
+}
+
+export function listCustomFreezeLocations() {
+  return loadFreezeLocations().locations.map((l) => ({ ...l, custom: true }))
+}
+
+// entry: { nameKo, group('local'|'extra'), envEn, lightingEn, poseKo?, poseEn? }
+export function addCustomFreezeLocation(entry) {
+  if (!entry?.nameKo?.trim()) throw new Error('nameKo 필요')
+  const data = loadFreezeLocations()
+  const id = `customfzloc_${Date.now()}`
+  const saved = {
+    id,
+    nameKo: entry.nameKo.trim(),
+    group: entry.group === 'extra' ? 'extra' : 'local',
+    envEn: entry.envEn?.trim() || '',
+    lightingEn: entry.lightingEn?.trim() || '',
+    poseKo: entry.poseKo?.trim() || '',
+    poseEn: entry.poseEn?.trim() || '',
+    addedAt: new Date().toISOString(),
+  }
+  data.locations.push(saved)
+  persistFreezeLocations(data)
+  return saved
+}
+
+export function deleteCustomFreezeLocation(id) {
+  const data = loadFreezeLocations()
+  data.locations = data.locations.filter((l) => l.id !== id)
+  persistFreezeLocations(data)
+}

@@ -12,7 +12,7 @@ import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
-import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent } from './lib/customChangePresets.js'
+import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent, listCustomFreezeLocations, addCustomFreezeLocation, deleteCustomFreezeLocation } from './lib/customChangePresets.js'
 import { listRefImages, listAllRefs, addRefImage, deleteRefImage, updateRefCaption, moveRefImage } from './lib/directionRefs.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
@@ -6970,6 +6970,19 @@ app.post('/api/change-combo/freeze-events', (req, res) => {
 })
 app.delete('/api/change-combo/freeze-events/:id', (req, res) => {
   deleteCustomFreezeEvent(req.params.id)
+  res.json({ ok: true })
+})
+// 2026-10-22 — "추가할 수 있는 기능이 각 창마다 있어야겠다": 프리즈 비트 장소-1(일상)/
+// 장소-2(번외) 리스트도 사건 리스트처럼 즉석 추가가 되게(customChangePresets.js 참고).
+app.get('/api/change-combo/freeze-locations', (req, res) => {
+  res.json({ locations: listCustomFreezeLocations() })
+})
+app.post('/api/change-combo/freeze-locations', (req, res) => {
+  try { res.json(addCustomFreezeLocation(req.body || {})) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.delete('/api/change-combo/freeze-locations/:id', (req, res) => {
+  deleteCustomFreezeLocation(req.params.id)
   res.json({ ok: true })
 })
 
