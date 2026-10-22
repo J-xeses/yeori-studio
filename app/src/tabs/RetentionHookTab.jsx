@@ -1006,15 +1006,22 @@ const FREEZE_EVENT_LIBRARY = [
 // envEn/lightingEn뿐 아니라 이것도 같이 채운다.
 // 2026-10-22 재재점검(그림, PDF 12페이지) — "연출 장소-1(일상)"/"연출 장소-2(번외)" 두 그룹.
 // 일상 쪽은 분류 가능하면 분류(성준님: "구분이 가능하면 분류해도 좋겠다") — 실내/실외로.
+// 2026-10-22 그림6(4차 재재점검) — "장소군으로 구분 필요시, 유형별로 리스트 분류 적용!!":
+// 실내는 신발 유무(맨발로 다니는 사적 공간 vs 신발 신는 공공형 실내), 실외는 공인(누구나
+// 아는 공공장소) vs 특정장소(사적·상황적 공간)로 한 단계 더 세분류. 성준님 확인: 코드(ST/CF
+// 등)는 나중에, 지금은 이 세부 분류만 먼저 늘려달라고 함 — subtype만 추가하고 code는 보류.
 const FREEZE_LOCATION_LIBRARY = [
-  { nameKo: '홈 오피스', category: '실내', envEn: 'a cozy home office desk by a window, laptop and a cup of coffee on the desk', lightingEn: 'soft natural daylight from the window', poseKo: '책상 앞에 앉아 작업하는 중', poseEn: 'sitting at the desk working' },
-  { nameKo: '거실', category: '실내', envEn: 'a cozy home living room', lightingEn: 'soft warm indoor lighting', poseKo: '소파에 편하게 앉아 있는 중', poseEn: 'sitting comfortably on the couch' },
-  { nameKo: '주방', category: '실내', envEn: 'a bright modern kitchen', lightingEn: 'soft daylight through a kitchen window', poseKo: '요리하는 중', poseEn: 'cooking' },
-  { nameKo: '침실', category: '실내', envEn: 'a softly lit cozy bedroom', lightingEn: 'warm lamp light', poseKo: '침대에 누워 있는 중', poseEn: 'lying in bed' },
-  { nameKo: '카페', category: '실내', envEn: 'a cozy café interior with wooden tables', lightingEn: 'warm ambient café lighting', poseKo: '커피를 마시는 중', poseEn: 'sipping coffee' },
-  { nameKo: '사무실', category: '실내', envEn: 'a modern office with desks and glass partitions', lightingEn: 'cool fluorescent office lighting', poseKo: '일하는 중', poseEn: 'working at the office' },
-  { nameKo: '길거리', category: '실외', envEn: 'a city street sidewalk', lightingEn: 'natural daylight', poseKo: '걷는 중', poseEn: 'walking' },
-  { nameKo: '차 안', category: '실외', envEn: 'the interior of a car, dashboard visible', lightingEn: 'daylight through the windshield', poseKo: '운전하는 중', poseEn: 'driving' },
+  { nameKo: '홈 오피스', category: '실내', subtype: '신발X', envEn: 'a cozy home office desk by a window, laptop and a cup of coffee on the desk', lightingEn: 'soft natural daylight from the window', poseKo: '책상 앞에 앉아 작업하는 중', poseEn: 'sitting at the desk working' },
+  { nameKo: '거실', category: '실내', subtype: '신발X', envEn: 'a cozy home living room', lightingEn: 'soft warm indoor lighting', poseKo: '소파에 편하게 앉아 있는 중', poseEn: 'sitting comfortably on the couch' },
+  { nameKo: '주방', category: '실내', subtype: '신발X', envEn: 'a bright modern kitchen', lightingEn: 'soft daylight through a kitchen window', poseKo: '요리하는 중', poseEn: 'cooking' },
+  { nameKo: '침실', category: '실내', subtype: '신발X', envEn: 'a softly lit cozy bedroom', lightingEn: 'warm lamp light', poseKo: '침대에 누워 있는 중', poseEn: 'lying in bed' },
+  { nameKo: '카페', category: '실내', subtype: '신발O', envEn: 'a cozy café interior with wooden tables', lightingEn: 'warm ambient café lighting', poseKo: '커피를 마시는 중', poseEn: 'sipping coffee' },
+  { nameKo: '사무실', category: '실내', subtype: '신발O', envEn: 'a modern office with desks and glass partitions', lightingEn: 'cool fluorescent office lighting', poseKo: '일하는 중', poseEn: 'working at the office' },
+  { nameKo: '교실', category: '실내', subtype: '신발O', envEn: 'a classroom with rows of desks and a chalkboard', lightingEn: 'bright fluorescent classroom lighting', poseKo: '수업 듣는 중', poseEn: 'sitting in class listening' },
+  { nameKo: '길거리', category: '실외', subtype: '공인', envEn: 'a city street sidewalk', lightingEn: 'natural daylight', poseKo: '걷는 중', poseEn: 'walking' },
+  { nameKo: '공원', category: '실외', subtype: '공인', envEn: 'a public park with trees and a walking path', lightingEn: 'natural daylight filtering through trees', poseKo: '산책하는 중', poseEn: 'walking through the park' },
+  { nameKo: '차 안', category: '실외', subtype: '특정장소', envEn: 'the interior of a car, dashboard visible', lightingEn: 'daylight through the windshield', poseKo: '운전하는 중', poseEn: 'driving' },
+  { nameKo: '옥상', category: '실외', subtype: '특정장소', envEn: 'a building rooftop with a city skyline view', lightingEn: 'golden hour sunset light', poseKo: '옥상에 서 있는 중', poseEn: 'standing on the rooftop' },
 ]
 // 번외(비일상) 장소 — PDF 12페이지 예시(UW=수중, CLD=구름 위, FUW=미래 세계)만 우선 등록.
 // 코드(UW/CLD/FUW)는 참고용으로만 남기고(공간 코드 체계와 충돌 방지 위해 화면엔 이름만 표시).
@@ -1046,12 +1053,22 @@ function FreezeSituationImagePanel({ freezeRefs, reloadFreezeRefs, actionLabel, 
     await fetch(`${SERVER}/api/direction-refs?group=freeze&key=${encodeURIComponent(key)}&filename=${encodeURIComponent(filename)}`, { method: 'DELETE' })
     reloadFreezeRefs?.()
   }
+  // 2026-10-22 그림6 — "연출 유형별 기법 설정값 표시(연동, 수정기능 필요? 확인!)": 캡션은
+  // 업로드 시 현재 기법·오빗 각도로 자동 요약되지만, 지금까지는 고칠 수 없는 고정 텍스트였다.
+  // 시그/체인지 쪽 갤러리와 똑같이 onBlur에 PATCH 쳐서 직접 수정 가능하게 맞춘다.
+  const updateCaption = async (filename, caption) => {
+    await fetch(`${SERVER}/api/direction-refs`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ group: 'freeze', key, filename, caption }),
+    })
+    reloadFreezeRefs?.()
+  }
   return (
     <div className={styles.result}>
       <div className={styles.resultLabel}>상황 연출 이미지 생성</div>
       <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 8 }}>
         지금 선택된 사건·장소(<b>{actionLabel || '미정'} · {selectedLocationName || '미정'}</b>) 조합으로 만든 결과 이미지를 올려두는 곳입니다.
-        업로드하면 지금 설정(기법·오빗 각도)이 자동으로 캡션에 요약됩니다.
+        업로드하면 지금 설정(기법·오빗 각도)이 자동으로 캡션에 요약되고, 캡션은 아래에서 직접 고칠 수 있습니다.
       </div>
       <label className={styles.columnAddBtn} style={{ display: 'block', textAlign: 'center', marginBottom: 10 }}>
         + 상황 연출 이미지 등록
@@ -1064,12 +1081,57 @@ function FreezeSituationImagePanel({ freezeRefs, reloadFreezeRefs, actionLabel, 
             <a href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer">
               <img src={`${SERVER}${img.url}`} alt="" style={{ width: 170, height: 'auto', display: 'block', borderRadius: 6, border: '1px solid var(--border)' }} />
             </a>
-            <div style={{ fontSize: 9.5, color: '#888', marginTop: 2, textAlign: 'center', lineHeight: 1.3 }}>{img.caption || summary}</div>
+            <input className={styles.textarea} defaultValue={img.caption || summary}
+              style={{ fontSize: 9.5, marginTop: 4, padding: '3px 5px' }}
+              onBlur={(e) => { if (e.target.value !== (img.caption || summary)) updateCaption(img.filename, e.target.value) }} />
             <button type="button" onClick={() => del(img.filename)}
               style={{ display: 'block', margin: '2px auto 0', fontSize: 9, color: '#f09595', background: 'none', border: 'none', cursor: 'pointer' }}>삭제</button>
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// 2026-10-22 그림6 — "① (아코디언 접이식) 상황 연출 리스트 / ② 동작,소품 연출 리스트,
+// 상황조합 = ①×②". 성준님 확인: 기존 6개 카테고리를 두 축으로 쪼개는 게 아니라, 두 그룹으로
+// 묶어 아코디언 두 개로 접기만 하면 됨 — 프리셋(예: 급브레이크+고양이)은 그대로 ①쪽에 둔다.
+// ①=환경에 벌어지는 사건, ②=몸·소지품에서 비롯되는 사건.
+const SITUATION_EVENT_CATS = ['물건 파손', '날씨/바람']
+const ACTIONPROP_EVENT_CATS = ['신체반응', '액체/음식', '종이/카드']
+
+function EventAccordionSection({ title, cats, events, freezeRefs, reloadFreezeRefs, applyExample, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen)
+  const [filter, setFilter] = useState('전체')
+  const pool = events.filter((e) => cats.includes(e.category))
+  const visible = filter === '전체' ? pool : pool.filter((e) => e.category === filter)
+  return (
+    <div style={{ border: '1px solid var(--border)', borderRadius: 8, marginBottom: 8, overflow: 'hidden' }}>
+      <button type="button" onClick={() => setOpen((o) => !o)}
+        style={{ width: '100%', textAlign: 'left', padding: '7px 10px', background: 'var(--bg-2, #1a1a24)', border: 'none', color: 'var(--text)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>{title}</span><span style={{ fontSize: 10, color: '#888' }}>{open ? '▲ 접기' : `▼ 펼치기 (${pool.length})`}</span>
+      </button>
+      {open && (
+        <div style={{ padding: 8 }}>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+            {['전체', ...cats].map((c) => (
+              <button key={c} className={styles.copyBtn}
+                style={filter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+                onClick={() => setFilter(c)}>{c}</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {visible.map((ex) => (
+              <div key={ex.id || ex.nameKo} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 6, maxWidth: 160 }}>
+                <button className={styles.copyBtn} title={ex.ko} style={{ width: '100%', textAlign: 'left' }} onClick={() => applyExample(ex)}>
+                  {ex.custom && '📝 '}{ex.nameKo}
+                </button>
+                <RefThumbStrip group="freeze" itemKey={ex.nameKo} images={freezeRefs[refSlugKey(ex.nameKo)]} onUploaded={reloadFreezeRefs} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1118,7 +1180,6 @@ function FreezeBeatPanel({ state, dispatch }) {
   // 합쳐서 보여준다. 카테고리 필터로 다양한 레퍼런스를 훑어보고, "🎲 랜덤 조합"으로 사건×장소를
   // 무작위로 묶어 새 상상을 유도한다("그 상상에서 다른 가지를 더 만들 수도 있고").
   const [customEvents, setCustomEvents] = useState([])
-  const [categoryFilter, setCategoryFilter] = useState('전체')
   const [savingCustom, setSavingCustom] = useState(false)
 
   const loadCustomEvents = () => {
@@ -1128,14 +1189,17 @@ function FreezeBeatPanel({ state, dispatch }) {
   useEffect(() => { loadCustomEvents() }, [])
 
   const allEvents = [...FREEZE_EVENT_LIBRARY, ...customEvents]
-  const categories = ['전체', ...new Set(allEvents.map((e) => e.category))]
-  const visibleEvents = categoryFilter === '전체' ? allEvents : allEvents.filter((e) => e.category === categoryFilter)
 
   // 2026-10-22 4차 보완 — "상황개요": 사건×장소 선택을 참고해 자동으로 한글 요약을 써준다.
   // 그냥 참고용 텍스트고 doBuild가 서버에 보내는 실제 요청(action/sceneA)은 안 건드린다 —
   // 사용자가 자유롭게 고칠 수 있는 입력창(자동완성이지 잠금 아님).
   const [selectedLocationName, setSelectedLocationName] = useState('')
   const [locationCategoryFilter, setLocationCategoryFilter] = useState('전체')
+  // 2026-10-22 그림6 — 실내는 신발 유무(신발X/신발O), 실외는 공인/특정장소로 한 단계 더
+  // 세분류(성준님: "실내-1/2/3·실외-1/2처럼 세부 분류만 먼저 늘려줘"). 대분류(실내/실외)를
+  // 바꾸면 소분류 선택은 의미가 없어지므로 같이 초기화한다.
+  const [locationSubtypeFilter, setLocationSubtypeFilter] = useState('전체')
+  const SUBTYPES_BY_CATEGORY = { 실내: ['신발X', '신발O'], 실외: ['공인', '특정장소'] }
   const [overviewKo, setOverviewKo] = useState('')
   const [overviewEdited, setOverviewEdited] = useState(false)
   useEffect(() => {
@@ -1252,6 +1316,13 @@ function FreezeBeatPanel({ state, dispatch }) {
       setActionEn(cut.freezeBeatAction.en || '')
       setSceneA(cut.freezeBeatSceneA || { poseKo: '', poseEn: '', envEn: '', lightingEn: '' })
       setBuildResult(null)
+    } else if (cut) {
+      // 2026-10-22 그림6 — "에피소드 해당 컷 대본 설정내용 연계! 컷 연출 내용을 반영하여 자동
+      // 입력" — 아직 이 컷에 프리즈 비트를 한 번도 적용 안 했으면(freezeBeatAction 없음),
+      // 대본에 이미 적힌 "평소 동작"(cut.action/scene)을 끌어와 채운다. 환경·조명(영문)은
+      // 대본에 그 형태(영문 묘사)로 없어서, 장소 프리셋으로 채운 값은 그대로 둔다.
+      const scriptPose = cut.action || cut.scene || ''
+      setSceneA((p) => (p.poseKo ? p : { ...p, poseKo: scriptPose }))
     }
   }
 
@@ -1266,52 +1337,83 @@ function FreezeBeatPanel({ state, dispatch }) {
           레퍼런스에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
           사건(아래)과 장소(그 아래)는 서로 독립이라 자유롭게 조합할 수 있습니다.
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
-          <button className={styles.genBtn} style={{ width: 'auto', padding: '6px 12px', marginBottom: 0 }} onClick={randomCombo}>🎲 랜덤 조합</button>
-          {categories.map((c) => (
-            <button key={c} className={styles.copyBtn}
-              style={categoryFilter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
-              onClick={() => setCategoryFilter(c)}>{c}</button>
-          ))}
+        <div style={{ marginBottom: 8 }}>
+          <button className={styles.genBtn} style={{ width: 'auto', padding: '6px 12px', marginBottom: 8 }} onClick={randomCombo}>🎲 랜덤 조합</button>
+          <EventAccordionSection title="① 상황 연출 리스트" cats={SITUATION_EVENT_CATS} events={allEvents}
+            freezeRefs={freezeRefs} reloadFreezeRefs={reloadFreezeRefs} applyExample={applyExample} />
+          <EventAccordionSection title="② 동작·소품 연출 리스트" cats={ACTIONPROP_EVENT_CATS} events={allEvents}
+            freezeRefs={freezeRefs} reloadFreezeRefs={reloadFreezeRefs} applyExample={applyExample} defaultOpen={false} />
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
-          {visibleEvents.map((ex) => (
-            <div key={ex.id || ex.nameKo} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 6, maxWidth: 160 }}>
-              <button className={styles.copyBtn} title={ex.ko} style={{ width: '100%', textAlign: 'left' }} onClick={() => applyExample(ex)}>
-                {ex.custom && '📝 '}{ex.nameKo}
-              </button>
-              <RefThumbStrip group="freeze" itemKey={ex.nameKo} images={freezeRefs[refSlugKey(ex.nameKo)]} onUploaded={reloadFreezeRefs} />
-            </div>
-          ))}
-        </div>
-        {/* 2026-10-22 재재점검(PDF 12페이지 참고) — "연출 장소-1(일상)"/"연출 장소-2(번외)"
-            두 그룹으로 분리. 일상 쪽은 실내/실외로 분류 가능해서 필터 추가. */}
+        {/* 2026-10-22 그림6 재지적 — "여전히 아이콘 모양으로 적용" : pill 버튼(📍 아이콘)을
+            전부 걷어내고 그림과 같은 "예시 글 목록 | 장소 리스트박스" 2단 구성으로 다시 짰다.
+            오른쪽 "장소 —" 칸이 실제 선택 가능한 목록(리스트박스, 선택 시 행 전체가 칠해짐)이고
+            왼쪽 "예시)"는 분류 기준을 설명하는 정적 텍스트다. */}
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 10 }}>
-          <div style={{ flex: '1 1 260px', minWidth: 220 }}>
+          <div style={{ flex: '1 1 320px', minWidth: 280 }}>
             <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-1(일상) — 사건과 조합해 환경·조명·평소 동작이 바뀝니다</div>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
               {['전체', '실내', '실외'].map((c) => (
                 <button key={c} className={styles.copyBtn}
                   style={locationCategoryFilter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
-                  onClick={() => setLocationCategoryFilter(c)}>{c}</button>
+                  onClick={() => { setLocationCategoryFilter(c); setLocationSubtypeFilter('전체') }}>{c}</button>
+              ))}
+              {SUBTYPES_BY_CATEGORY[locationCategoryFilter] && ['전체', ...SUBTYPES_BY_CATEGORY[locationCategoryFilter]].map((s) => (
+                <button key={s} className={styles.copyBtn} style={{ fontSize: 10, opacity: 0.85,
+                  ...(locationSubtypeFilter === s ? { background: 'var(--accent, #7c3aed)', color: '#fff', opacity: 1 } : {}) }}
+                  onClick={() => setLocationSubtypeFilter(s)}>{s}</button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {FREEZE_LOCATION_LIBRARY.filter((loc) => locationCategoryFilter === '전체' || loc.category === locationCategoryFilter).map((loc) => (
-                <button key={loc.nameKo} className={styles.copyBtn}
-                  style={selectedLocationName === loc.nameKo ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
-                  onClick={() => applyLocation(loc)}>📍 {loc.nameKo}</button>
-              ))}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ flex: '0 0 120px' }}>
+                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>예시)</div>
+                <ul style={{ margin: 0, padding: '0 0 0 14px', fontSize: 9.5, color: '#888', lineHeight: 1.7 }}>
+                  <li>실내-1 (신발 X)</li>
+                  <li>실내-2 (신발 O)</li>
+                  <li>실외-1 (공인)</li>
+                  <li>실외-2 (특정장소)</li>
+                </ul>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>장소 —</div>
+                <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 190, overflowY: 'auto' }}>
+                  {FREEZE_LOCATION_LIBRARY
+                    .filter((loc) => locationCategoryFilter === '전체' || loc.category === locationCategoryFilter)
+                    .filter((loc) => locationSubtypeFilter === '전체' || loc.subtype === locationSubtypeFilter)
+                    .map((loc) => (
+                    <div key={loc.nameKo} onClick={() => applyLocation(loc)}
+                      style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
+                        background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                        color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
+                      {loc.nameKo}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-          <div style={{ flex: '1 1 220px', minWidth: 200 }}>
+          <div style={{ flex: '1 1 260px', minWidth: 240 }}>
             <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-2(번외)</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {FREEZE_LOCATION_LIBRARY_EXTRA.map((loc) => (
-                <button key={loc.nameKo} className={styles.copyBtn}
-                  style={selectedLocationName === loc.nameKo ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
-                  onClick={() => applyLocation(loc)}>📍 {loc.nameKo}</button>
-              ))}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ flex: '0 0 100px' }}>
+                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>예시)</div>
+                <ul style={{ margin: 0, padding: '0 0 0 14px', fontSize: 9.5, color: '#888', lineHeight: 1.7 }}>
+                  <li>일상 범위 밖</li>
+                  <li>장소</li>
+                </ul>
+              </div>
+              <div style={{ flex: 1, minWidth: 140 }}>
+                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>장소 —</div>
+                <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 190, overflowY: 'auto' }}>
+                  {FREEZE_LOCATION_LIBRARY_EXTRA.map((loc) => (
+                    <div key={loc.nameKo} onClick={() => applyLocation(loc)}
+                      style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
+                        background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                        color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
+                      {loc.code ? `${loc.code} (${loc.nameKo})` : loc.nameKo}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
