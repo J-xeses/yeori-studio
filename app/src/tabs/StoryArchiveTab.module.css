@@ -4,6 +4,11 @@
 .scrollBody { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
 
 .wrap { padding: 24px; width: 100%; box-sizing: border-box; font-family: 'Pretendard', 'Noto Sans KR', sans-serif; }
+
+/* 2026-10-22 4차 보완 PDF 16~18p — "상단바 고정 라인 : 아래부터 스크롤 바 작동": 제목+부제+
+   서브탭을 scrollBody 상단에 고정(position:sticky)하고 그 아래 컨텐츠만 스크롤되게 한다. */
+.stickyTop { position: sticky; top: 0; z-index: 5; background: var(--bg, #0a0a0f); padding-top: 4px; margin-bottom: 4px; }
+
 .header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
 .headerIcon { font-size: 36px; line-height: 1; }
 .title { font-size: 22px; font-weight: 700; color: var(--color-text-primary, #f0f0f0); margin: 0 0 4px; }

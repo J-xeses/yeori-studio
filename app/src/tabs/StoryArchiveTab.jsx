@@ -918,6 +918,11 @@ export default function StoryArchiveTab() {
         <div className={s.main}>
         <div className={s.scrollBody}>
       <div className={s.wrap}>
+      {/* 2026-10-22 4차 보완 PDF 16~18p — "상단바 고정 라인 : 아래부터 스크롤 바 작동":
+          제목+부제+서브탭 4개를 묶어서 scrollBody 안에서 sticky(top:0)로 고정하고, 그 아래
+          컷(유튜브 분석/단편 아이디어/시리즈 기획/연출기법 벤치마킹) 내용만 그 밑으로 스크롤되게
+          한다. 탭을 바꿔도 제목·탭줄은 화면에 계속 보인다. */}
+      <div className={s.stickyTop}>
       <div className={s.header}>
         <div className={s.headerIcon}>📚</div>
         <div>
@@ -929,6 +934,7 @@ export default function StoryArchiveTab() {
         {INNER_TABS.map(t => (
           <button key={t.id} className={`${s.innerTab} ${activeInner === t.id ? s.innerTabActive : ''}`} onClick={() => setActiveInner(t.id)}>{t.label}</button>
         ))}
+      </div>
       </div>
       {activeInner === 'youtube'   && <YoutubeAnalysisTab />}
       {activeInner === 'short'     && <ShortIdeaTab />}
