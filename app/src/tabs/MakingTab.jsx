@@ -2693,6 +2693,22 @@ export default function MakingTab() {
     )
   }
 
+  // 2026-10-22 4차 보완 재재점검 — "제작방식 위의 '제작결과'까지 좌측 하부에 이어서 배치".
+  // renderReviewPanel 안에 있던 "제작 결과(cut_NN.mp4)" 비디오 블록을 따로 뽑아서, CAPCUT
+  // 타입은 좌측 열(미리보기 아래, 연출 의도 다음)에 보여주고 renderReviewPanel 쪽에서는 뺀다.
+  const renderProductionResultBlock = (cut, vidStyle, vurl, frameSrc, pad, info) => (
+    <div style={{ marginTop: 10 }}>
+      <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 6 }}>제작 결과 (cut_{pad}.mp4)</div>
+      <video style={vidStyle} controls preload="metadata"
+        src={`${vurl}/cut_${pad}.mp4?t=${info.producedAt || 0}`}
+        poster={`${frameSrc}?t=${info.producedAt || 0}`} />
+      <div style={{ marginTop: 6 }}>
+        <a href={`${vurl}/cut_${pad}.mp4?t=${Date.now()}`} target="_blank" rel="noopener noreferrer"
+          className={s.emptyHint} style={{ margin: 0 }}>새 창에서 원본 크기로 ↗</a>
+      </div>
+    </div>
+  )
+
   const renderReviewPanel = (cut) => {
     const g4 = !!getGPoint(episodeCode, cut.no).g4
     const rv = review[cut.no] || {}
@@ -2704,7 +2720,8 @@ export default function MakingTab() {
       ? `${vurl}/cut_${pad}_verify.jpg`
       : `${vurl}/cut_${pad}_graphic.png`
     const landscape = epDims.w >= epDims.h
-    const showIntentHere = cut.cutType !== 'CAPCUT' // CAPCUT은 좌측 열에서 따로 보여줌
+    const isCapcut = cut.cutType === 'CAPCUT'
+    const showIntentHere = !isCapcut // CAPCUT은 좌측 열에서 따로 보여줌
     // 검토용 크게 — 가로 에피소드는 넓게(≈680px), 세로는 높이 기준(≈480px)
     const vidStyle = landscape
       ? { width: '100%', maxWidth: 680, borderRadius: 10, border: '1px solid var(--border)', background: '#000', display: 'block' }
@@ -2726,18 +2743,7 @@ export default function MakingTab() {
           </div>
         </div>
 
-        {done && (
-          <div style={{ marginTop: 10 }}>
-            <div style={{ fontSize: 11, color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '.4px', marginBottom: 6 }}>제작 결과 (cut_{pad}.mp4)</div>
-            <video style={vidStyle} controls preload="metadata"
-              src={`${vurl}/cut_${pad}.mp4?t=${info.producedAt || 0}`}
-              poster={`${frameSrc}?t=${info.producedAt || 0}`} />
-            <div style={{ marginTop: 6 }}>
-              <a href={`${vurl}/cut_${pad}.mp4?t=${Date.now()}`} target="_blank" rel="noopener noreferrer"
-                className={s.emptyHint} style={{ margin: 0 }}>새 창에서 원본 크기로 ↗</a>
-            </div>
-          </div>
-        )}
+        {done && !isCapcut && renderProductionResultBlock(cut, vidStyle, vurl, frameSrc, pad, info)}
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, flexWrap: 'wrap' }}>
           {g4
@@ -2936,9 +2942,23 @@ export default function MakingTab() {
       <div className={s.cutPanelCols}>
         <div className={s.cutPanelPreviewCol}>
           {renderFinalResultPanel(cut)}
-          {cut.cutType === 'CAPCUT' && (
-            <div className={s.subPanel} style={{ borderTop: 'none' }}>{renderDirectionIntentBlock(cut)}</div>
-          )}
+          {cut.cutType === 'CAPCUT' && (() => {
+            const pad = String(cut.no).padStart(2, '0')
+            const vurl = `${epMediaUrl(episode, 'video')}`
+            const frameSrc = `${vurl}/cut_${pad}_graphic.png`
+            const info = makingInfo[cut.no] || {}
+            const done = !!videoStatus[cut.no]
+            const landscape = epDims.w >= epDims.h
+            const vidStyle = landscape
+              ? { width: '100%', maxWidth: 680, borderRadius: 10, border: '1px solid var(--border)', background: '#000', display: 'block' }
+              : { height: 480, maxWidth: '100%', borderRadius: 10, border: '1px solid var(--border)', background: '#000', display: 'block' }
+            return (
+              <div className={s.subPanel} style={{ borderTop: 'none' }}>
+                {renderDirectionIntentBlock(cut)}
+                {done && renderProductionResultBlock(cut, vidStyle, vurl, frameSrc, pad, info)}
+              </div>
+            )
+          })()}
         </div>
         <div className={s.cutPanelControlsCol}>
           {MANUAL_TYPES.includes(cut.cutType) && renderReviewPanel(cut)}
