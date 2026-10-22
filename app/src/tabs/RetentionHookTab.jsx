@@ -1093,42 +1093,55 @@ function FreezeSituationImagePanel({ freezeRefs, reloadFreezeRefs, actionLabel, 
   )
 }
 
-// 2026-10-22 그림6 — "① (아코디언 접이식) 상황 연출 리스트 / ② 동작,소품 연출 리스트,
-// 상황조합 = ①×②". 성준님 확인: 기존 6개 카테고리를 두 축으로 쪼개는 게 아니라, 두 그룹으로
-// 묶어 아코디언 두 개로 접기만 하면 됨 — 프리셋(예: 급브레이크+고양이)은 그대로 ①쪽에 둔다.
-// ①=환경에 벌어지는 사건, ②=몸·소지품에서 비롯되는 사건.
+// 2026-10-22 그림7(4차 재재재점검) — "현재처럼 상황단어와 썸네일 조합 방식 삭제!! 상황별
+// 관련 연출이미지는 생성 후, 오른쪽에 등록!": 리스트 아이템마다 달려있던 RefThumbStrip
+// 썸네일을 전부 뺐다 — 이미지는 이제 오른쪽 FreezeSituationImagePanel(상황 연출 이미지 생성)
+// 하나로만 모은다. 그리고 ①상황/②동작·소품 아코디언 두 개로 나눴던 걸 리스트 하나로 합치고
+// "동작,소품"을 그 리스트의 4번째 필터 탭으로 추가 — 성준님: "상황, 동작, 장소... 모두
+// 레퍼런스 리스트창으로 규격화". 아이템을 고르면 카테고리에 따라 ①(상황) 또는 ②(동작·소품)
+// 자동입력 칸에 들어가고, 상단 "상황 조합"에 ①×②가 합쳐져 실제 actionLabel/Ko/En이 된다.
 const SITUATION_EVENT_CATS = ['물건 파손', '날씨/바람']
 const ACTIONPROP_EVENT_CATS = ['신체반응', '액체/음식', '종이/카드']
+const EVENT_FILTER_TABS = ['전체', '물건 파손', '날씨/바람', '동작,소품']
+function matchesEventFilter(ev, tab) {
+  if (tab === '전체') return true
+  if (tab === '동작,소품') return ACTIONPROP_EVENT_CATS.includes(ev.category)
+  return ev.category === tab
+}
 
-function EventAccordionSection({ title, cats, events, freezeRefs, reloadFreezeRefs, applyExample, defaultOpen = true }) {
-  const [open, setOpen] = useState(defaultOpen)
+function EventListSection({ events, applyEventPick, situationPick, actionpropPick }) {
+  const [open, setOpen] = useState(true)
   const [filter, setFilter] = useState('전체')
-  const pool = events.filter((e) => cats.includes(e.category))
-  const visible = filter === '전체' ? pool : pool.filter((e) => e.category === filter)
+  const visible = events.filter((e) => matchesEventFilter(e, filter))
   return (
     <div style={{ border: '1px solid var(--border)', borderRadius: 8, marginBottom: 8, overflow: 'hidden' }}>
       <button type="button" onClick={() => setOpen((o) => !o)}
         style={{ width: '100%', textAlign: 'left', padding: '7px 10px', background: 'var(--bg-2, #1a1a24)', border: 'none', color: 'var(--text)', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>{title}</span><span style={{ fontSize: 10, color: '#888' }}>{open ? '▲ 접기' : `▼ 펼치기 (${pool.length})`}</span>
+        <span>① 상황 연출 리스트</span><span style={{ fontSize: 10, color: '#888' }}>{open ? '▲ 접기' : `▼ 펼치기 (${events.length})`}</span>
       </button>
       {open && (
         <div style={{ padding: 8 }}>
           <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-            {['전체', ...cats].map((c) => (
+            {EVENT_FILTER_TABS.map((c) => (
               <button key={c} className={styles.copyBtn}
                 style={filter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
                 onClick={() => setFilter(c)}>{c}</button>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {visible.map((ex) => (
-              <div key={ex.id || ex.nameKo} style={{ border: '1px solid var(--border)', borderRadius: 8, padding: 6, maxWidth: 160 }}>
-                <button className={styles.copyBtn} title={ex.ko} style={{ width: '100%', textAlign: 'left' }} onClick={() => applyExample(ex)}>
-                  {ex.custom && '📝 '}{ex.nameKo}
-                </button>
-                <RefThumbStrip group="freeze" itemKey={ex.nameKo} images={freezeRefs[refSlugKey(ex.nameKo)]} onUploaded={reloadFreezeRefs} />
-              </div>
-            ))}
+          <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
+            {visible.map((ex) => {
+              const isAp = ACTIONPROP_EVENT_CATS.includes(ex.category)
+              const selected = isAp ? actionpropPick?.nameKo === ex.nameKo : situationPick?.nameKo === ex.nameKo
+              return (
+                <div key={ex.id || ex.nameKo} title={ex.ko} onClick={() => applyEventPick(ex)}
+                  style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: selected ? 'var(--accent, #7c3aed)' : 'transparent',
+                    color: selected ? '#fff' : 'var(--text)' }}>
+                  <span>{ex.custom && '📝 '}{ex.nameKo}</span>
+                  <span style={{ fontSize: 9.5, opacity: 0.65 }}>{isAp ? '②' : '①'}</span>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
@@ -1211,16 +1224,37 @@ function FreezeBeatPanel({ state, dispatch }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actionLabel, selectedLocationName])
 
-  const applyExample = (ex) => { setActionLabel(ex.nameKo); setActionKo(ex.ko); setActionEn(ex.en); setBuildResult(null) }
+  // 2026-10-22 그림7 — 리스트에서 고른 아이템을 카테고리로 라우팅: 물건파손/날씨바람은
+  // ①(상황) 자동입력 칸, 신체반응/액체음식/종이카드(="동작,소품" 탭)는 ②(동작·소품) 자동입력
+  // 칸에 들어간다. 아래 useEffect가 ①×②를 합쳐 실제 actionLabel/Ko/En(프롬프트에 쓰이는 값)을
+  // 만든다 — 하나만 골라도(예: "급브레이크+고양이" 자체완결형) 그 값 그대로 쓰인다.
+  const [situationPick, setSituationPick] = useState(null)
+  const [actionpropPick, setActionpropPick] = useState(null)
+  const applyEventPick = (ex) => {
+    if (ACTIONPROP_EVENT_CATS.includes(ex.category)) setActionpropPick(ex)
+    else setSituationPick(ex)
+    setBuildResult(null)
+  }
+  useEffect(() => {
+    if (!situationPick && !actionpropPick) return
+    setActionLabel([situationPick?.nameKo, actionpropPick?.nameKo].filter(Boolean).join(' × '))
+    setActionKo([situationPick?.ko, actionpropPick?.ko].filter(Boolean).join(' 동시에 '))
+    setActionEn([situationPick?.en, actionpropPick?.en].filter(Boolean).join(', while '))
+    setBuildResult(null)
+  }, [situationPick, actionpropPick])
   const applyLocation = (loc) => {
     setSceneA((p) => ({ ...p, envEn: loc.envEn, lightingEn: loc.lightingEn, poseKo: loc.poseKo || p.poseKo, poseEn: loc.poseEn || p.poseEn }))
     setSelectedLocationName(loc.nameKo)
     setBuildResult(null)
   }
   // 2026-10-22 재재점검 — "랜덤조합 칸을 잘 확인해서 반영" — 번외 장소까지 포함한 전체
-  // 풀에서 뽑는다(일상만 뽑히던 걸 번외도 섞이게).
+  // 풀에서 뽑는다(일상만 뽑히던 걸 번외도 섞이게). 그림7 — ①(상황 풀)과 ②(동작·소품 풀)에서
+  // 각각 하나씩 뽑아 진짜 ①×② 조합을 만든다.
   const randomCombo = () => {
-    applyExample(pickRandomItem(allEvents))
+    const situPool = allEvents.filter((e) => SITUATION_EVENT_CATS.includes(e.category))
+    const apPool = allEvents.filter((e) => ACTIONPROP_EVENT_CATS.includes(e.category))
+    setSituationPick(pickRandomItem(situPool))
+    setActionpropPick(pickRandomItem(apPool))
     applyLocation(pickRandomItem([...FREEZE_LOCATION_LIBRARY, ...FREEZE_LOCATION_LIBRARY_EXTRA]))
   }
   const saveCustomEvent = async () => {
@@ -1337,20 +1371,39 @@ function FreezeBeatPanel({ state, dispatch }) {
           레퍼런스에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
           사건(아래)과 장소(그 아래)는 서로 독립이라 자유롭게 조합할 수 있습니다.
         </div>
+        {/* 2026-10-22 그림7(4차 재재재점검) — "①/② 아코디언 둘 → 리스트 하나로 합치고,
+            선택하면 설정창(①/②/상황 조합)에 자동입력". 랜덤조합 버튼 옆에 현재 ①·②·조합
+            결과를 보여주는 자동입력 칸 3개를 두고, 그 아래 통합 리스트(EventListSection)에서
+            고르면 카테고리에 따라 해당 칸이 채워진다. */}
         <div style={{ marginBottom: 8 }}>
-          <button className={styles.genBtn} style={{ width: 'auto', padding: '6px 12px', marginBottom: 8 }} onClick={randomCombo}>🎲 랜덤 조합</button>
-          <EventAccordionSection title="① 상황 연출 리스트" cats={SITUATION_EVENT_CATS} events={allEvents}
-            freezeRefs={freezeRefs} reloadFreezeRefs={reloadFreezeRefs} applyExample={applyExample} />
-          <EventAccordionSection title="② 동작·소품 연출 리스트" cats={ACTIONPROP_EVENT_CATS} events={allEvents}
-            freezeRefs={freezeRefs} reloadFreezeRefs={reloadFreezeRefs} applyExample={applyExample} defaultOpen={false} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <button className={styles.genBtn} style={{ width: 'auto', padding: '6px 12px' }} onClick={randomCombo}>🎲 랜덤 조합</button>
+            <div style={{ border: '1px solid #7c3aed', borderRadius: 6, padding: '5px 10px', fontSize: 11, minWidth: 110 }}>
+              <span style={{ color: '#888', marginRight: 4 }}>①</span>
+              {situationPick?.nameKo || <span style={{ color: '#666' }}>상황 미선택</span>}
+            </div>
+            <div style={{ border: '1px solid #f0a050', borderRadius: 6, padding: '5px 10px', fontSize: 11, minWidth: 110 }}>
+              <span style={{ color: '#888', marginRight: 4 }}>②</span>
+              {actionpropPick?.nameKo || <span style={{ color: '#666' }}>동작·소품 미선택</span>}
+            </div>
+            <div style={{ border: '1px solid #e05070', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, minWidth: 140 }}>
+              상황 조합: {actionLabel || <span style={{ color: '#666', fontWeight: 400 }}>①×②</span>}
+            </div>
+          </div>
+          <EventListSection events={allEvents} applyEventPick={applyEventPick}
+            situationPick={situationPick} actionpropPick={actionpropPick} />
         </div>
-        {/* 2026-10-22 그림6 재지적 — "여전히 아이콘 모양으로 적용" : pill 버튼(📍 아이콘)을
-            전부 걷어내고 그림과 같은 "예시 글 목록 | 장소 리스트박스" 2단 구성으로 다시 짰다.
-            오른쪽 "장소 —" 칸이 실제 선택 가능한 목록(리스트박스, 선택 시 행 전체가 칠해짐)이고
-            왼쪽 "예시)"는 분류 기준을 설명하는 정적 텍스트다. */}
+        {/* 2026-10-22 그림7 — "예시 내용 삭제! 설정 리스트 창 동일 크기, 위치 맞출 것!!":
+            장소-1/장소-2 둘 다 "예시)" 정적 텍스트 칸을 빼고 리스트박스만 남겨, 위 상황
+            리스트와 같은 maxHeight(220)로 맞췄다. 리스트 위에는 상황 쪽과 똑같은 패턴으로
+            "선택된 연출 장소" 자동입력 칸을 둔다. */}
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 10 }}>
-          <div style={{ flex: '1 1 320px', minWidth: 280 }}>
+          <div style={{ flex: '1 1 300px', minWidth: 260 }}>
             <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-1(일상) — 사건과 조합해 환경·조명·평소 동작이 바뀝니다</div>
+            <div style={{ border: '1px solid #6ee7b7', borderRadius: 6, padding: '5px 10px', fontSize: 11, marginBottom: 6 }}>
+              <span style={{ color: '#888', marginRight: 4 }}>선택된 장소</span>
+              {selectedLocationName || <span style={{ color: '#666' }}>미선택</span>}
+            </div>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
               {['전체', '실내', '실외'].map((c) => (
                 <button key={c} className={styles.copyBtn}
@@ -1363,57 +1416,35 @@ function FreezeBeatPanel({ state, dispatch }) {
                   onClick={() => setLocationSubtypeFilter(s)}>{s}</button>
               ))}
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: '0 0 120px' }}>
-                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>예시)</div>
-                <ul style={{ margin: 0, padding: '0 0 0 14px', fontSize: 9.5, color: '#888', lineHeight: 1.7 }}>
-                  <li>실내-1 (신발 X)</li>
-                  <li>실내-2 (신발 O)</li>
-                  <li>실외-1 (공인)</li>
-                  <li>실외-2 (특정장소)</li>
-                </ul>
-              </div>
-              <div style={{ flex: 1, minWidth: 140 }}>
-                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>장소 —</div>
-                <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 190, overflowY: 'auto' }}>
-                  {FREEZE_LOCATION_LIBRARY
-                    .filter((loc) => locationCategoryFilter === '전체' || loc.category === locationCategoryFilter)
-                    .filter((loc) => locationSubtypeFilter === '전체' || loc.subtype === locationSubtypeFilter)
-                    .map((loc) => (
-                    <div key={loc.nameKo} onClick={() => applyLocation(loc)}
-                      style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
-                        background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
-                        color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
-                      {loc.nameKo}
-                    </div>
-                  ))}
+            <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
+              {FREEZE_LOCATION_LIBRARY
+                .filter((loc) => locationCategoryFilter === '전체' || loc.category === locationCategoryFilter)
+                .filter((loc) => locationSubtypeFilter === '전체' || loc.subtype === locationSubtypeFilter)
+                .map((loc) => (
+                <div key={loc.nameKo} onClick={() => applyLocation(loc)}
+                  style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
+                    background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                    color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
+                  {loc.nameKo}
                 </div>
-              </div>
+              ))}
             </div>
           </div>
-          <div style={{ flex: '1 1 260px', minWidth: 240 }}>
+          <div style={{ flex: '1 1 300px', minWidth: 260 }}>
             <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-2(번외)</div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: '0 0 100px' }}>
-                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>예시)</div>
-                <ul style={{ margin: 0, padding: '0 0 0 14px', fontSize: 9.5, color: '#888', lineHeight: 1.7 }}>
-                  <li>일상 범위 밖</li>
-                  <li>장소</li>
-                </ul>
-              </div>
-              <div style={{ flex: 1, minWidth: 140 }}>
-                <div style={{ fontSize: 9.5, color: '#888', marginBottom: 4 }}>장소 —</div>
-                <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 190, overflowY: 'auto' }}>
-                  {FREEZE_LOCATION_LIBRARY_EXTRA.map((loc) => (
-                    <div key={loc.nameKo} onClick={() => applyLocation(loc)}
-                      style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
-                        background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
-                        color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
-                      {loc.code ? `${loc.code} (${loc.nameKo})` : loc.nameKo}
-                    </div>
-                  ))}
+            <div style={{ border: '1px solid #f0a0d0', borderRadius: 6, padding: '5px 10px', fontSize: 11, marginBottom: 6 }}>
+              <span style={{ color: '#888', marginRight: 4 }}>선택된 장소</span>
+              {selectedLocationName || <span style={{ color: '#666' }}>미선택</span>}
+            </div>
+            <div style={{ border: '1px solid var(--border)', borderRadius: 6, maxHeight: 220, overflowY: 'auto' }}>
+              {FREEZE_LOCATION_LIBRARY_EXTRA.map((loc) => (
+                <div key={loc.nameKo} onClick={() => applyLocation(loc)}
+                  style={{ padding: '6px 10px', fontSize: 12, cursor: 'pointer',
+                    background: selectedLocationName === loc.nameKo ? 'var(--accent, #7c3aed)' : 'transparent',
+                    color: selectedLocationName === loc.nameKo ? '#fff' : 'var(--text)' }}>
+                  {loc.code ? `${loc.code} (${loc.nameKo})` : loc.nameKo}
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
