@@ -64,6 +64,32 @@ export function updateRefCaption(group, key, filename, caption) {
   return rec
 }
 
+// 2026-10-22 4차 보완 재재점검 — "이미지부터 먼저 등록, 기법 이름은 그 다음"으로 진짜 바꾸려면
+// 기법 이름(=key)을 미리 받지 않고 임시 그룹("미분류")에 업로드한 뒤, 나중에 진짜 이름으로
+// 옮길 수 있어야 한다. 파일을 실제로 다른 폴더(key)로 이동시키고 url도 새로 계산해 돌려준다.
+export function moveRefImage(group, oldKey, filename, newKey) {
+  const ok = slugKey(oldKey)
+  const nk = slugKey(newKey)
+  if (ok === nk) return updateRefCaption(group, oldKey, filename, undefined) // 이름 그대로면 이동 불필요
+  const idx = loadIndex()
+  const list = idx[group]?.[ok] || []
+  const i = list.findIndex((r) => r.filename === filename)
+  if (i === -1) return null
+  const rec = list[i]
+  const fromPath = path.join(baseDir(), group, ok, filename)
+  const toDir = path.join(baseDir(), group, nk)
+  fs.mkdirSync(toDir, { recursive: true })
+  const toPath = path.join(toDir, filename)
+  fs.renameSync(fromPath, toPath)
+  list.splice(i, 1)
+  idx[group][ok] = list
+  idx[group][nk] = idx[group][nk] || []
+  rec.url = mp.toMediaUrl(toPath)
+  idx[group][nk].push(rec)
+  saveIndex(idx)
+  return rec
+}
+
 export function deleteRefImage(group, key, filename) {
   const k = slugKey(key)
   const idx = loadIndex()

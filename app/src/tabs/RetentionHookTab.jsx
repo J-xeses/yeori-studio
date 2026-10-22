@@ -97,21 +97,26 @@ function RefThumbStrip({ group, itemKey, images, onUploaded, size = 40, uploadab
 // 문자열), 각 썸네일 아래 캡션 칸은 인라인 입력으로 바뀌어 나중에 아무 때나 적을 수 있다
 // (PATCH /api/direction-refs로 파일 재업로드 없이 caption만 갱신). 등록일시(addedAt)는
 // 서버가 이미 자동으로 기록해두던 값을 "10/22 등록" 같은 읽기 쉬운 형태로 보여준다.
+// 2026-10-22 재재점검 — "이미지를 눈으로 본 후, 설명에 도움이 될 수 있어 등록을 누르면
+// 일단 이미지부터 먼저 등록" — 기법 이름을 먼저 받지 않는다. 임시 분류("미분류")로 바로
+// 올라가고, 각 썸네일에서 기법 이름·설명을 나중에(눈으로 보면서) 채우면 그때 실제 분류로
+// 옮긴다(서버 PATCH의 newKey가 파일을 물리적으로 이동시킴 — moveRefImage).
+const UNSORTED_KEY = '미분류'
 function DirectionRefGallery({ group, refsMap, reload }) {
-  const [newKey, setNewKey] = useState('')
   const keys = Object.keys(refsMap).filter((k) => (refsMap[k] || []).length > 0)
+    .sort((a, b) => (a === UNSORTED_KEY ? -1 : b === UNSORTED_KEY ? 1 : 0)) // 미분류를 맨 위로
   const upload = async (file) => {
-    if (!file || !newKey.trim()) return
+    if (!file) return
     const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
-    await fetch(`${SERVER}/api/direction-refs/upload?group=${group}&key=${encodeURIComponent(newKey)}&ext=${ext}&caption=`, {
+    await fetch(`${SERVER}/api/direction-refs/upload?group=${group}&key=${encodeURIComponent(UNSORTED_KEY)}&ext=${ext}&caption=`, {
       method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file,
     })
     reload?.()
   }
-  const updateCaption = async (key, filename, caption) => {
+  const updateRecord = async (key, filename, { newKey, caption }) => {
     await fetch(`${SERVER}/api/direction-refs`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ group, key, filename, caption }),
+      body: JSON.stringify({ group, key, filename, ...(newKey !== undefined ? { newKey } : {}), ...(caption !== undefined ? { caption } : {}) }),
     })
     reload?.()
   }
@@ -126,29 +131,33 @@ function DirectionRefGallery({ group, refsMap, reload }) {
   }
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10, padding: 8, background: '#1a1a18', borderRadius: 8, border: '0.5px solid #333' }}>
-        <input className={styles.textarea} placeholder="기법 이름(위 카드 이름과 똑같이 — 예: 단색 스튜디오 강렬 대비)"
-          value={newKey} onChange={(e) => setNewKey(e.target.value)} />
-        <label className={styles.columnAddBtn} style={{ textAlign: 'center', cursor: newKey.trim() ? 'pointer' : 'default', opacity: newKey.trim() ? 1 : 0.5 }}>
-          + 이미지 등록(선택하면 바로 올라갑니다 — 설명은 아래서 나중에 입력)
-          <input type="file" accept="image/*" style={{ display: 'none' }} disabled={!newKey.trim()}
-            onChange={(e) => upload(e.target.files[0])} />
-        </label>
-      </div>
+      <label className={styles.columnAddBtn} style={{ display: 'block', textAlign: 'center', marginBottom: 10, cursor: 'pointer' }}>
+        + 이미지 등록(선택하면 바로 올라갑니다 — 기법 이름·설명은 아래서 눈으로 보면서 나중에 입력)
+        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => upload(e.target.files[0])} />
+      </label>
       {keys.length === 0 && <div className={styles.desc}>아직 등록된 이미지가 없습니다.</div>}
       {keys.map((k) => (
-        <div key={k} style={{ marginBottom: 12 }}>
-          <div style={{ fontSize: 10.5, color: '#a78bfa', marginBottom: 4 }}>{k.replace(/_/g, ' ')}</div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div key={k} style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 10.5, color: k === UNSORTED_KEY ? '#f0a050' : '#a78bfa', marginBottom: 4 }}>
+            {k === UNSORTED_KEY ? '⚠ 미분류 — 아래 기법 이름을 입력해 분류하세요' : k.replace(/_/g, ' ')}
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {refsMap[k].map((img) => (
-              <div key={img.filename} style={{ width: 96 }}>
+              // 2026-10-22 재재점검 — "이미지 리스트업에 등록되는 이미지가 작고 썸네일(정사각
+              // 크롭)로 표시된다 — 실제 화면비율로". width만 고정하고 height:auto로 원본 비율
+              // 그대로(크롭 없이) 보여준다.
+              <div key={img.filename} style={{ width: 170 }}>
                 <a href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer">
-                  <img src={`${SERVER}${img.url}`} alt="" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                  <img src={`${SERVER}${img.url}`} alt="" style={{ width: 170, height: 'auto', display: 'block', borderRadius: 6, border: '1px solid var(--border)' }} />
                 </a>
-                <div style={{ fontSize: 9, color: '#666', marginTop: 2, textAlign: 'center' }}>{fmtDate(img.addedAt)}</div>
+                <div style={{ fontSize: 9, color: '#666', marginTop: 3, textAlign: 'center' }}>{fmtDate(img.addedAt)}</div>
+                <input defaultValue={k === UNSORTED_KEY ? '' : k.replace(/_/g, ' ')} placeholder="기법 이름(필수 — 분류됩니다)"
+                  style={{ width: '100%', fontSize: 9.5, marginTop: 3, background: '#111', border: '1px solid #333', borderRadius: 4, color: '#ccc', padding: '2px 4px', boxSizing: 'border-box', textAlign: 'center' }}
+                  onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== k.replace(/_/g, ' ')) updateRecord(k, img.filename, { newKey: v }) }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }} />
                 <input defaultValue={img.caption || ''} placeholder="에피소드 이름/설명"
                   style={{ width: '100%', fontSize: 9.5, marginTop: 2, background: '#111', border: '1px solid #333', borderRadius: 4, color: '#ccc', padding: '2px 4px', boxSizing: 'border-box', textAlign: 'center' }}
-                  onBlur={(e) => { if (e.target.value !== (img.caption || '')) updateCaption(k, img.filename, e.target.value) }}
+                  onBlur={(e) => { if (e.target.value !== (img.caption || '')) updateRecord(k, img.filename, { caption: e.target.value }) }}
                   onKeyDown={(e) => { if (e.key === 'Enter') e.target.blur() }} />
                 <button type="button" onClick={() => del(k, img.filename)}
                   style={{ display: 'block', margin: '2px auto 0', fontSize: 9, color: '#f09595', background: 'none', border: 'none', cursor: 'pointer' }}>삭제</button>
@@ -740,11 +749,23 @@ function ChangeComboPanel({ state, dispatch }) {
     setRegisterMsg(`✅ ${d.lookId}로 등록 완료 (characters.json) — 이미지 파일은 CA_BANK에서 나중에 연결하세요.`)
   }
 
+  // 2026-10-22 재재점검(그림3.jpg) — Scene A도 Scene B와 같은 룩 프리셋을 고를 수 있어야
+  // 한다("SCENE A,B Look 사전등록" 행). Scene A엔 의상 필드가 없으니(IP가 항상 "전" 모습을
+  // 그리는 설계라 포즈/배경/조명만 받음) 프리셋의 환경·조명만 가져온다.
+  const applySceneAPreset = (p) => {
+    setSceneA((prev) => ({ ...prev, envEn: p.envEn || prev.envEn, lightingEn: p.lightingEn || prev.lightingEn }))
+    setBuildResult(null)
+  }
+
   return (
     <>
+    {/* 2026-10-22 재재점검 — "Scene A 입력 섹션의 오른쪽 범위가 이미지 리스트업까지 넘어가니,
+        그 앞까지로 줄이고 이미지 영역을 아래까지(스크롤되게) 확보해달라" — 전체를 좌(모든
+        설정)/우(연출 이미지 리스트업, 전체 높이) 2단 shell로 바꾼다. */}
+    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+    <div style={{ flex: '2 1 600px', minWidth: 320 }}>
       <div className={styles.result} style={{ marginBottom: 14 }}>
-        {/* 2026-10-13 — 성준님 설계: 섹션헤더(열)+섹션헤더(열)+섹션헤더(열), 각각 아래로
-            전개. 트리거×VFX×Scene B를 3열 칸반으로 나란히 세워서 조합을 한눈에 비교. */}
+        {/* 연출 & VFX — ①트리거, ②VFX만(③Scene B는 아래 "Look 사전등록" 행으로 이동) */}
         <div className={styles.columns}>
           <div className={styles.column}>
             <div className={styles.columnHeader}>① 트리거 액션</div>
@@ -755,7 +776,9 @@ function ChangeComboPanel({ state, dispatch }) {
                   <div className={styles.columnItemLabel}>{t.icon} {t.nameKo}</div>
                   <div className={styles.columnItemDesc}>{t.descKo}</div>
                   {t.custom && <div className={styles.columnItemBadge}>커스텀</div>}
-                  <RefThumbStrip group="change" itemKey={t.nameKo} images={changeImageRefs[refSlugKey(t.nameKo)]} onUploaded={reloadChangeImageRefs} />
+                  {/* 2026-10-22 재재점검 — "트리거 액션의 '+'가 이미지 리스트업과 중복" —
+                      업로드 입구를 없애고 썸네일만 참고용으로 남긴다(등록은 리스트업에서). */}
+                  <RefThumbStrip group="change" itemKey={t.nameKo} images={changeImageRefs[refSlugKey(t.nameKo)]} onUploaded={reloadChangeImageRefs} uploadable={false} />
                 </div>
               ))}
             </div>
@@ -806,13 +829,29 @@ function ChangeComboPanel({ state, dispatch }) {
               <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }}
                 onClick={() => setNewVfx({ nameKo: '', en: '' })}>+ 새 VFX 추가</button>
             )}
+          </div>
+        </div>
 
-            <div style={{ borderTop: '1px solid #2a2a28', margin: '14px 0 10px' }} />
-
-            <div className={styles.columnHeader}>③ Scene B — 리빌될 모습</div>
+        {/* SCENE A,B Look 사전등록 — 같은 프리셋 목록(sceneBFashionPresets)을 양쪽에서 쓴다.
+            A는 환경/조명만, B는 의상까지 전부 가져온다(기존 ③Scene B 동작 그대로 이동). */}
+        <div className={styles.columns} style={{ marginTop: 14 }}>
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>SCENE A — 변신 "전" 모습(선택)</div>
             <div className={styles.columnList}>
               {options.sceneBFashionPresets.map((p, idx) => (
-                <div key={idx} className={styles.columnItem}
+                <div key={`a-${idx}`} className={styles.columnItem} onClick={() => applySceneAPreset(p)}>
+                  <div className={styles.columnItemLabel}>{p.outfit.slice(0, 20)}…</div>
+                  <div className={styles.columnItemDesc}>{p.env.slice(0, 26)}…</div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.desc} style={{ marginTop: 8, fontSize: 10.5 }}>환경·조명만 Scene A에 반영됩니다(의상은 "전" 모습엔 없음).</div>
+          </div>
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>SCENE B — 리빌될 모습</div>
+            <div className={styles.columnList}>
+              {options.sceneBFashionPresets.map((p, idx) => (
+                <div key={`b-${idx}`} className={styles.columnItem}
                   onClick={() => { setSceneB(p); setBuildResult(null) }}>
                   <div className={styles.columnItemLabel}>{p.outfit.slice(0, 20)}…</div>
                   <div className={styles.columnItemDesc}>{p.env.slice(0, 26)}…</div>
@@ -821,51 +860,52 @@ function ChangeComboPanel({ state, dispatch }) {
             </div>
             <div className={styles.desc} style={{ marginTop: 8, fontSize: 10.5 }}>프리셋을 클릭해 채우거나, 아래 입력란에 직접 입력하세요.</div>
           </div>
+        </div>
 
-          <div className={styles.column}>
-            <div className={styles.columnHeader}>연출 이미지 리스트업</div>
-            <div className={styles.columnList} style={{ maxHeight: 'none' }}>
-              <DirectionRefGallery group="change" refsMap={changeImageRefs} reload={reloadChangeImageRefs} />
+        {/* SCENE A,B 신규 추가 — 그림3.jpg: 두 세트 입력을 좌우로 나란히. "기획단계에서 해당
+            내용 설정된 탭과 자동연동"은 범위가 커서 이번엔 입력 레이아웃만 맞추고 보류. */}
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginTop: 14 }}>
+          <div style={{ flex: '1 1 260px', minWidth: 240 }}>
+            {/* 2026-10-15 — "쪼개는 기준": 시작 이미지(IP)는 항상 변신 "전" 모습을 그리고, 영상
+                프롬프트(VP)가 트리거→VFX→리빌 전체를 책임진다. IP가 "후" 모습(sceneB)을 그리면
+                Veo가 시작 프레임에 고정돼 트리거 동작 자체가 영상에 전혀 안 나온다(IG_R08 CUT4
+                실측). Scene A는 비워도 되고, 비우면 서버가 범용 문구로 채운다. */}
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4, color: '#f0a050' }}>
+              Scene A — 변신 "전" 모습(선택) · 시작 이미지(IP)는 항상 이쪽을 그립니다
             </div>
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="전 모습 포즈/동작 (한글, 선택 — 예: 회중시계 태엽을 감는 중)"
+              value={sceneA.poseKo} onChange={(e) => { setSceneA({ ...sceneA, poseKo: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Pose/action before the change, in English (optional)"
+              value={sceneA.poseEn} onChange={(e) => { setSceneA({ ...sceneA, poseEn: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment before the change, in English (optional)"
+              value={sceneA.envEn} onChange={(e) => { setSceneA({ ...sceneA, envEn: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting before the change, in English (optional)"
+              value={sceneA.lightingEn} onChange={(e) => { setSceneA({ ...sceneA, lightingEn: e.target.value }); setBuildResult(null) }} />
+          </div>
+
+          <div style={{ flex: '1 1 260px', minWidth: 240 }}>
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>Scene B — 변신 "후" 모습 · 영상 프롬프트(VP)의 리빌 구간에만 쓰입니다</div>
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수, 한글 — 화면 설명용)"
+              value={sceneB.outfit} onChange={(e) => { setSceneB({ ...sceneB, outfit: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경 (한글 — 화면 설명용)"
+              value={sceneB.env} onChange={(e) => { setSceneB({ ...sceneB, env: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="조명 (한글 — 화면 설명용)"
+              value={sceneB.lighting} onChange={(e) => { setSceneB({ ...sceneB, lighting: e.target.value }); setBuildResult(null) }} />
+            {/* 2026-10-14: 이미지·영상 프롬프트(IP/VP)는 전부 영문이어야 하는데, 위 한글 입력을
+                그대로 꽂아 넣었더니 영문 프롬프트 한가운데 한글이 섞이는 버그가 있었다(IG_R08
+                CUT2 실측). 프리셋을 고르면 자동으로 채워지고, 직접 입력할 때도 영문은 따로 받는다. */}
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>실제 이미지·영상 프롬프트에 들어가는 영문 설명(필수)</div>
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Outfit in English (required)"
+              value={sceneB.outfitEn} onChange={(e) => { setSceneB({ ...sceneB, outfitEn: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment in English"
+              value={sceneB.envEn} onChange={(e) => { setSceneB({ ...sceneB, envEn: e.target.value }); setBuildResult(null) }} />
+            <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting in English"
+              value={sceneB.lightingEn} onChange={(e) => { setSceneB({ ...sceneB, lightingEn: e.target.value }); setBuildResult(null) }} />
           </div>
         </div>
 
-        {/* 2026-10-15 — "쪼개는 기준": 시작 이미지(IP)는 항상 변신 "전" 모습을 그리고, 영상
-            프롬프트(VP)가 트리거→VFX→리빌 전체를 책임진다. IP가 "후" 모습(sceneB)을 그리면
-            Veo가 시작 프레임에 고정돼 트리거 동작 자체가 영상에 전혀 안 나온다(IG_R08 CUT4 실측:
-            "회중시계 감고 연기 피어오르는 장면 없이 애초에 변신의상으로 등장"). Scene A는 비워도
-            되고, 비우면 서버가 "트리거 동작 중, 평소 모습" 범용 문구로 채운다. */}
-        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4, color: '#f0a050' }}>
-          ↓ Scene A — 변신 "전" 모습(선택) · 시작 이미지(IP)는 항상 이쪽을 그립니다
-        </div>
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="전 모습 포즈/동작 (한글, 선택 — 예: 회중시계 태엽을 감는 중)"
-          value={sceneA.poseKo} onChange={(e) => { setSceneA({ ...sceneA, poseKo: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Pose/action before the change, in English (optional)"
-          value={sceneA.poseEn} onChange={(e) => { setSceneA({ ...sceneA, poseEn: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment before the change, in English (optional)"
-          value={sceneA.envEn} onChange={(e) => { setSceneA({ ...sceneA, envEn: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting before the change, in English (optional)"
-          value={sceneA.lightingEn} onChange={(e) => { setSceneA({ ...sceneA, lightingEn: e.target.value }); setBuildResult(null) }} />
-
-        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>↓ Scene B — 변신 "후" 모습 · 영상 프롬프트(VP)의 리빌 구간에만 쓰입니다</div>
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="의상 (필수, 한글 — 화면 설명용)"
-          value={sceneB.outfit} onChange={(e) => { setSceneB({ ...sceneB, outfit: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="배경/환경 (한글 — 화면 설명용)"
-          value={sceneB.env} onChange={(e) => { setSceneB({ ...sceneB, env: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="조명 (한글 — 화면 설명용)"
-          value={sceneB.lighting} onChange={(e) => { setSceneB({ ...sceneB, lighting: e.target.value }); setBuildResult(null) }} />
-        {/* 2026-10-14: 이미지·영상 프롬프트(IP/VP)는 전부 영문이어야 하는데, 위 한글 입력을
-            그대로 꽂아 넣었더니 영문 프롬프트 한가운데 한글이 섞이는 버그가 있었다(IG_R08 CUT2
-            실측). 프리셋을 고르면 자동으로 채워지고, 직접 입력할 때도 영문은 따로 받는다. */}
-        <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>↓ 실제 이미지·영상 프롬프트에 들어가는 영문 설명(필수)</div>
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Outfit in English (required)"
-          value={sceneB.outfitEn} onChange={(e) => { setSceneB({ ...sceneB, outfitEn: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="Environment in English"
-          value={sceneB.envEn} onChange={(e) => { setSceneB({ ...sceneB, envEn: e.target.value }); setBuildResult(null) }} />
-        <input className={styles.textarea} style={{ marginBottom: 10 }} placeholder="Lighting in English"
-          value={sceneB.lightingEn} onChange={(e) => { setSceneB({ ...sceneB, lightingEn: e.target.value }); setBuildResult(null) }} />
-
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+        {/* 최종 설정, 조합 프롬프트 생성 */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10, marginTop: 4 }}>
           <label style={{ fontSize: 11, color: '#888' }}>CA_BANK 룩 코드</label>
           <select className={styles.textarea} style={{ width: 'auto' }} value={lkSpace} onChange={(e) => setLkSpace(e.target.value)}>
             {Object.entries(options.lkSpaceCodes || {}).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
@@ -915,6 +955,15 @@ function ChangeComboPanel({ state, dispatch }) {
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
         </div>
       )}
+    </div>
+
+    <div style={{ flex: '1 1 380px', minWidth: 300 }}>
+      <div className={styles.result}>
+        <div className={styles.resultLabel}>연출 이미지 리스트업</div>
+        <DirectionRefGallery group="change" refsMap={changeImageRefs} reload={reloadChangeImageRefs} />
+      </div>
+    </div>
+    </div>
     </>
   )
 }
@@ -955,15 +1004,24 @@ const FREEZE_EVENT_LIBRARY = [
 // 2026-10-22 4차 보완 — "선택 설정을 참고하여 상황개요·평소모습 입력내용이 자동으로
 // 채워지도록" — poseKo/poseEn(그 장소에 어울리는 평소 동작)을 각 장소에 추가, applyLocation이
 // envEn/lightingEn뿐 아니라 이것도 같이 채운다.
+// 2026-10-22 재재점검(그림, PDF 12페이지) — "연출 장소-1(일상)"/"연출 장소-2(번외)" 두 그룹.
+// 일상 쪽은 분류 가능하면 분류(성준님: "구분이 가능하면 분류해도 좋겠다") — 실내/실외로.
 const FREEZE_LOCATION_LIBRARY = [
-  { nameKo: '홈 오피스', envEn: 'a cozy home office desk by a window, laptop and a cup of coffee on the desk', lightingEn: 'soft natural daylight from the window', poseKo: '책상 앞에 앉아 작업하는 중', poseEn: 'sitting at the desk working' },
-  { nameKo: '거실', envEn: 'a cozy home living room', lightingEn: 'soft warm indoor lighting', poseKo: '소파에 편하게 앉아 있는 중', poseEn: 'sitting comfortably on the couch' },
-  { nameKo: '주방', envEn: 'a bright modern kitchen', lightingEn: 'soft daylight through a kitchen window', poseKo: '요리하는 중', poseEn: 'cooking' },
-  { nameKo: '침실', envEn: 'a softly lit cozy bedroom', lightingEn: 'warm lamp light', poseKo: '침대에 누워 있는 중', poseEn: 'lying in bed' },
-  { nameKo: '카페', envEn: 'a cozy café interior with wooden tables', lightingEn: 'warm ambient café lighting', poseKo: '커피를 마시는 중', poseEn: 'sipping coffee' },
-  { nameKo: '사무실', envEn: 'a modern office with desks and glass partitions', lightingEn: 'cool fluorescent office lighting', poseKo: '일하는 중', poseEn: 'working at the office' },
-  { nameKo: '길거리', envEn: 'a city street sidewalk', lightingEn: 'natural daylight', poseKo: '걷는 중', poseEn: 'walking' },
-  { nameKo: '차 안', envEn: 'the interior of a car, dashboard visible', lightingEn: 'daylight through the windshield', poseKo: '운전하는 중', poseEn: 'driving' },
+  { nameKo: '홈 오피스', category: '실내', envEn: 'a cozy home office desk by a window, laptop and a cup of coffee on the desk', lightingEn: 'soft natural daylight from the window', poseKo: '책상 앞에 앉아 작업하는 중', poseEn: 'sitting at the desk working' },
+  { nameKo: '거실', category: '실내', envEn: 'a cozy home living room', lightingEn: 'soft warm indoor lighting', poseKo: '소파에 편하게 앉아 있는 중', poseEn: 'sitting comfortably on the couch' },
+  { nameKo: '주방', category: '실내', envEn: 'a bright modern kitchen', lightingEn: 'soft daylight through a kitchen window', poseKo: '요리하는 중', poseEn: 'cooking' },
+  { nameKo: '침실', category: '실내', envEn: 'a softly lit cozy bedroom', lightingEn: 'warm lamp light', poseKo: '침대에 누워 있는 중', poseEn: 'lying in bed' },
+  { nameKo: '카페', category: '실내', envEn: 'a cozy café interior with wooden tables', lightingEn: 'warm ambient café lighting', poseKo: '커피를 마시는 중', poseEn: 'sipping coffee' },
+  { nameKo: '사무실', category: '실내', envEn: 'a modern office with desks and glass partitions', lightingEn: 'cool fluorescent office lighting', poseKo: '일하는 중', poseEn: 'working at the office' },
+  { nameKo: '길거리', category: '실외', envEn: 'a city street sidewalk', lightingEn: 'natural daylight', poseKo: '걷는 중', poseEn: 'walking' },
+  { nameKo: '차 안', category: '실외', envEn: 'the interior of a car, dashboard visible', lightingEn: 'daylight through the windshield', poseKo: '운전하는 중', poseEn: 'driving' },
+]
+// 번외(비일상) 장소 — PDF 12페이지 예시(UW=수중, CLD=구름 위, FUW=미래 세계)만 우선 등록.
+// 코드(UW/CLD/FUW)는 참고용으로만 남기고(공간 코드 체계와 충돌 방지 위해 화면엔 이름만 표시).
+const FREEZE_LOCATION_LIBRARY_EXTRA = [
+  { code: 'UW', nameKo: '수중', envEn: 'fully underwater, surrounded by drifting air bubbles and shafts of sunlight filtering through the water', lightingEn: 'soft blue underwater caustic light', poseKo: '물속에서 유영하는 중', poseEn: 'floating and swimming underwater' },
+  { code: 'CLD', nameKo: '구름 위', envEn: 'standing on soft clouds high above the earth, endless sky and horizon around', lightingEn: 'bright golden sunlight above the clouds', poseKo: '구름 위에 서 있는 중', poseEn: 'standing on top of the clouds' },
+  { code: 'FUW', nameKo: '미래 세계', envEn: 'a futuristic sci-fi cityscape with neon lights, holograms and flying vehicles', lightingEn: 'cool neon city lighting', poseKo: '미래 도시를 걷는 중', poseEn: 'walking through the futuristic city' },
 ]
 const pickRandomItem = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
@@ -1002,9 +1060,9 @@ function FreezeSituationImagePanel({ freezeRefs, reloadFreezeRefs, actionLabel, 
       {images.length === 0 && <div className={styles.desc}>아직 등록된 이미지가 없습니다.</div>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {images.map((img) => (
-          <div key={img.filename} style={{ width: 120 }}>
+          <div key={img.filename} style={{ width: 170 }}>
             <a href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer">
-              <img src={`${SERVER}${img.url}`} alt="" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+              <img src={`${SERVER}${img.url}`} alt="" style={{ width: 170, height: 'auto', display: 'block', borderRadius: 6, border: '1px solid var(--border)' }} />
             </a>
             <div style={{ fontSize: 9.5, color: '#888', marginTop: 2, textAlign: 'center', lineHeight: 1.3 }}>{img.caption || summary}</div>
             <button type="button" onClick={() => del(img.filename)}
@@ -1077,6 +1135,7 @@ function FreezeBeatPanel({ state, dispatch }) {
   // 그냥 참고용 텍스트고 doBuild가 서버에 보내는 실제 요청(action/sceneA)은 안 건드린다 —
   // 사용자가 자유롭게 고칠 수 있는 입력창(자동완성이지 잠금 아님).
   const [selectedLocationName, setSelectedLocationName] = useState('')
+  const [locationCategoryFilter, setLocationCategoryFilter] = useState('전체')
   const [overviewKo, setOverviewKo] = useState('')
   const [overviewEdited, setOverviewEdited] = useState(false)
   useEffect(() => {
@@ -1094,9 +1153,11 @@ function FreezeBeatPanel({ state, dispatch }) {
     setSelectedLocationName(loc.nameKo)
     setBuildResult(null)
   }
+  // 2026-10-22 재재점검 — "랜덤조합 칸을 잘 확인해서 반영" — 번외 장소까지 포함한 전체
+  // 풀에서 뽑는다(일상만 뽑히던 걸 번외도 섞이게).
   const randomCombo = () => {
     applyExample(pickRandomItem(allEvents))
-    applyLocation(pickRandomItem(FREEZE_LOCATION_LIBRARY))
+    applyLocation(pickRandomItem([...FREEZE_LOCATION_LIBRARY, ...FREEZE_LOCATION_LIBRARY_EXTRA]))
   }
   const saveCustomEvent = async () => {
     if (!actionLabel.trim() || !actionKo.trim() || !actionEn.trim()) return
@@ -1223,11 +1284,36 @@ function FreezeBeatPanel({ state, dispatch }) {
             </div>
           ))}
         </div>
-        <div className={styles.desc} style={{ fontSize: 10.5, margin: '8px 0 4px' }}>장소(선택) — 사건과 조합해 환경·조명만 바뀝니다</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-          {FREEZE_LOCATION_LIBRARY.map((loc) => (
-            <button key={loc.nameKo} className={styles.copyBtn} onClick={() => applyLocation(loc)}>📍 {loc.nameKo}</button>
-          ))}
+        {/* 2026-10-22 재재점검(PDF 12페이지 참고) — "연출 장소-1(일상)"/"연출 장소-2(번외)"
+            두 그룹으로 분리. 일상 쪽은 실내/실외로 분류 가능해서 필터 추가. */}
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 10 }}>
+          <div style={{ flex: '1 1 260px', minWidth: 220 }}>
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-1(일상) — 사건과 조합해 환경·조명·평소 동작이 바뀝니다</div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+              {['전체', '실내', '실외'].map((c) => (
+                <button key={c} className={styles.copyBtn}
+                  style={locationCategoryFilter === c ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+                  onClick={() => setLocationCategoryFilter(c)}>{c}</button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {FREEZE_LOCATION_LIBRARY.filter((loc) => locationCategoryFilter === '전체' || loc.category === locationCategoryFilter).map((loc) => (
+                <button key={loc.nameKo} className={styles.copyBtn}
+                  style={selectedLocationName === loc.nameKo ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+                  onClick={() => applyLocation(loc)}>📍 {loc.nameKo}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ flex: '1 1 220px', minWidth: 200 }}>
+            <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 4 }}>연출 장소-2(번외)</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {FREEZE_LOCATION_LIBRARY_EXTRA.map((loc) => (
+                <button key={loc.nameKo} className={styles.copyBtn}
+                  style={selectedLocationName === loc.nameKo ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+                  onClick={() => applyLocation(loc)}>📍 {loc.nameKo}</button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className={styles.desc} style={{ fontSize: 10.5, margin: '4px 0 4px' }}>상황 개요 — 사건·장소를 고르면 자동으로 채워집니다(직접 고쳐도 됩니다)</div>

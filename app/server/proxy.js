@@ -13,7 +13,7 @@ import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, l
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent } from './lib/customChangePresets.js'
-import { listRefImages, listAllRefs, addRefImage, deleteRefImage, updateRefCaption } from './lib/directionRefs.js'
+import { listRefImages, listAllRefs, addRefImage, deleteRefImage, updateRefCaption, moveRefImage } from './lib/directionRefs.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
 import { resolveEpisodeCode } from './lib/episodeCode.js'
 import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } from './lib/ttsText.js'
@@ -7006,12 +7006,25 @@ app.delete('/api/direction-refs', (req, res) => {
 })
 // 2026-10-22 4차 보완 — "이미지 먼저 등록, 설명은 나중에" 흐름: 업로드 직후 filename을 받아
 // caption만 따로 채워 넣는다(파일 재업로드 없이).
+// 2026-10-22 재재점검 — "기법 이름을 먼저 안 받고 이미지부터 등록"하려면, 임시 키(미분류)로
+// 올려둔 걸 나중에 진짜 기법 이름으로 옮길 수 있어야 한다. newKey가 오면 먼저 실제 파일을
+//옮기고(moveRefImage), 그 다음 caption을 반영한다.
 app.patch('/api/direction-refs', (req, res) => {
-  const { group, key, filename, caption } = req.body || {}
+  const { group, key, filename, caption, newKey } = req.body || {}
   if (!group || !key || !filename) return res.status(400).json({ error: 'group, key, filename 필요' })
-  const rec = updateRefCaption(group, key, filename, caption)
-  if (!rec) return res.status(404).json({ error: '레코드 없음' })
-  res.json({ success: true, ...rec })
+  try {
+    let rec
+    if (newKey && newKey !== key) {
+      rec = moveRefImage(group, key, filename, newKey)
+      if (rec && caption !== undefined) rec = updateRefCaption(group, newKey, filename, caption)
+    } else {
+      rec = updateRefCaption(group, key, filename, caption)
+    }
+    if (!rec) return res.status(404).json({ error: '레코드 없음' })
+    res.json({ success: true, ...rec })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // ── POST /api/making-bgm — 메이킹 필름(ep{N}_making.mp4) 밑에 BGM 트랙을 깐다 ──
