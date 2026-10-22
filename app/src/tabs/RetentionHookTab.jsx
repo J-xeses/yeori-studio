@@ -551,6 +551,10 @@ function SignatureRefPanel({ state, dispatch }) {
             ))}
           </div>
           <div className={styles.desc} style={{ marginTop: 8, fontSize: 10.5 }}>클릭하면 오른쪽 아래 폼을 채워줍니다 — 자유 수정 가능.</div>
+          {/* 2026-10-22 재재점검 — "연출재료창고의 '+'를 삭제하고 '+ 새 레퍼런스 추가'를
+              추가하자"는 이 열 자체에 입구가 있어야 한다는 뜻이었다(오른쪽 열에만 있던 걸
+              여기서도 바로 쓸 수 있게 — 같은 startNew 재사용, 폼은 오른쪽 열에 그대로 뜸). */}
+          <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }} onClick={startNew}>+ 새 레퍼런스 추가</button>
         </div>
 
         <div className={styles.column}>
