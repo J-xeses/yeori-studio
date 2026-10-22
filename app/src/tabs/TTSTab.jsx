@@ -727,7 +727,11 @@ export default function TTSTab() {
   // ── 렌더 ─────────────────────────────────────────────────
   return (
     <div className={s.page}>
-      <TabToolbar />
+      <TabToolbar
+        toolLabel="음성 생성 도구"
+        tools={['ElevenLabs']}
+        onToolChange={() => window.open('https://elevenlabs.io', '_blank')}
+      />
     <div className={s.root}>
       {/* 왼쪽 사이드바 */}
       <div className={s.sidebar}>

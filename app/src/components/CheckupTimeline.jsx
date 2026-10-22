@@ -81,7 +81,7 @@ function FilmstripThumbs({ frames, trimInSec, trimOutSec, sourceDurationSec, fal
 //   elapsedInActive — activeCutNo 소스파일 안에서의 재생 위치(초) — 플레이헤드 계산에 씀
 //   onSeek(cutNo, localTime) — 클릭/분할 시 CheckupTab의 기존 seekTo를 그대로 재사용
 //   onSelectCut(cutNo)       — 선택된 클립의 원본 컷 번호를 효과 사이드바에 전달
-export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut, onDurationCommit, onDurationCommitUndo, onCaptionSegCommit }) {
+export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo, activeCutNo, elapsedInActive, onSeek, onSelectCut, onDurationCommit, onDurationCommitUndo, onCaptionSegCommit, onEditingChange }) {
   const [clips, setClips] = useState([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -103,6 +103,9 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
   const frozenPlayheadRef = useRef(null)
   // 트림 커밋(실제 ffmpeg 재인코딩) 진행 중인 클립 — 끝날 때까지 해당 클립에 "반영 중…" 표시.
   const [committingClipId, setCommittingClipId] = useState(null)
+  // 트림 드래그 중 "잘려 나갈 구간" 어둡게 표시 + 시간 표시(2026-10-22 4차 보완 — 11번 추가
+  // 요청: "자르는 위치 표시(시간계산 포함) — 표시 기준으로 잘라야 할 구간 살짝 어둡게").
+  const [trimPreview, setTrimPreview] = useState(null) // { clipId, edge, orig }
   // 자막 세그먼트 드래그 중 로컬 미리보기(2026-10-14, 성준님 요청: "자막도 자르는 기능") —
   // subtitleSegmentsByNo는 부모(state.cuts) 기반 props라 직접 못 바꾸므로, 드래그 중엔 이
   // 로컬 state로 그 컷 하나만 덮어써서 즉각적인 시각 피드백을 주고, 손을 떼면
@@ -314,6 +317,11 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const startOut = clip.trimOutSec
     frozenPlayheadRef.current = playheadSec
     setIsDragging(true)
+    // 2026-10-22 4차 보완 버그수정: "컷 편집시 멈춤 안됨" 재신고 — 재생 바늘 위치는 이전에
+    // 고정했지만(frozenPlayheadRef), 실제 <video> 재생 자체는 CheckupTab 쪽이라 여기선 멈출
+    // 수단이 없었다. 부모에 알려서 편집 시작 시 비디오를 일시정지하게 한다.
+    onEditingChange?.(true)
+    setTrimPreview({ clipId, edge, orig: edge === 'L' ? startIn : startOut })
     const onMove = (ev) => {
       dragMovedRef.current = true
       const deltaSec = (ev.clientX - startX) / pxPerSec
@@ -327,6 +335,8 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       setIsDragging(false)
+      onEditingChange?.(false)
+      setTrimPreview(null)
       const after = latestClipsRef.current
       // 좌우 트림 모두 실제 cut_NN.mp4 파일 자체를 다시 잘라 반영한다(2026-10-14 재설계 —
       // cut.duration만 바꾸는 방식은 finalizeReel이 파일 실측 길이로 항상 덮어써서 실제
@@ -371,6 +381,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const startStart = startSeg.start
     const startEnd = startSeg.end
     setCaptionDrag({ cutNo, segs: baseSegs })
+    onEditingChange?.(true)
     const onMove = (ev) => {
       const deltaSec = ((ev.clientX - startX) / widthPx) * cutDur
       setCaptionDrag(prev => {
@@ -386,6 +397,47 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      onEditingChange?.(false)
+      setCaptionDrag(curr => {
+        if (curr && curr.cutNo === cutNo) onCaptionSegCommit?.(cutNo, curr.segs)
+        return null
+      })
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
+  // ── 자막 세그먼트 "위치 이동"(양끝 트림이 아니라 길이 그대로 통째로 좌우 이동) ──────
+  // 2026-10-22 4차 보완 — "자막 바 위치 이동 기능 아직 미반영" 신고. startCaptionTrim은
+  // 양 끝만 늘리고 줄이는 거라 바 전체를 좌우로 옮기는 방법이 없었다 — 길이(segDur)는
+  // 고정한 채 start/end를 같은 양만큼 이동시킨다.
+  const startCaptionMove = (e, cutNo, segIndex, cutDur, widthPx) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const baseSegs = (subtitleSegmentsByNo?.[cutNo] || []).map(s => ({ ...s }))
+    const seg = baseSegs[segIndex]
+    if (!seg) return
+    const segDur = seg.end - seg.start
+    const startX = e.clientX
+    const startStart = seg.start
+    setCaptionDrag({ cutNo, segs: baseSegs })
+    onEditingChange?.(true)
+    const onMove = (ev) => {
+      const deltaSec = ((ev.clientX - startX) / widthPx) * cutDur
+      setCaptionDrag(prev => {
+        if (!prev || prev.cutNo !== cutNo) return prev
+        const next = prev.segs.map((s, i) => {
+          if (i !== segIndex) return s
+          const newStart = clamp(startStart + deltaSec, 0, Math.max(0, cutDur - segDur))
+          return { ...s, start: newStart, end: newStart + segDur }
+        })
+        return { cutNo, segs: next }
+      })
+    }
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      onEditingChange?.(false)
       setCaptionDrag(curr => {
         if (curr && curr.cutNo === cutNo) onCaptionSegCommit?.(cutNo, curr.segs)
         return null
@@ -403,6 +455,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     if (index < 0) return
     frozenPlayheadRef.current = playheadSec
     setIsDragging(true)
+    onEditingChange?.(true)
     let accumDx = 0
     let lastX = e.clientX
     const onMove = (ev) => {
@@ -435,6 +488,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
       setIsDragging(false)
+      onEditingChange?.(false)
       if (dragMovedRef.current) {
         pushUndo(preDrag)
         scheduleSave(latestClipsRef.current)
@@ -554,6 +608,21 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                       sourceDurationSec={info.actualDurationSec} fallbackImage={info.startFrame} />
                     <span className={s.clipLabel}>CUT {it.sourceCutNo}</span>
                     {it.clipId === committingClipId && <span className={s.clipCommitting}>반영 중…</span>}
+                    {trimPreview?.clipId === it.clipId && (() => {
+                      const cur = trimPreview.edge === 'L' ? it.trimInSec : it.trimOutSec
+                      const removedSec = trimPreview.edge === 'L' ? Math.max(0, cur - trimPreview.orig) : Math.max(0, trimPreview.orig - cur)
+                      if (removedSec <= 0) return null
+                      const removedPx = removedSec * pxPerSec
+                      return (
+                        <>
+                          <div className={s.trimShadow}
+                            style={trimPreview.edge === 'L' ? { left: 0, width: removedPx } : { right: 0, width: removedPx }} />
+                          <div className={s.trimTimeLabel} style={trimPreview.edge === 'L' ? { left: 4 } : { right: 4 }}>
+                            −{removedSec.toFixed(1)}s ({it.trimInSec.toFixed(1)}s~{it.trimOutSec.toFixed(1)}s)
+                          </div>
+                        </>
+                      )
+                    })()}
                     <div className={`${s.trimHandle} ${s.trimHandleL}`} onMouseDown={(e) => startTrim(e, it.clipId, 'L')}
                       title="시작점 트림 — 분할 안 된 컷이면 끝났을 때 실제 영상 파일을 다시 잘라 반영합니다(앞부분 버림)" />
                     <div className={`${s.trimHandle} ${s.trimHandleR}`} onMouseDown={(e) => startTrim(e, it.clipId, 'R')}
@@ -600,7 +669,8 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
                       return (
                         <span key={i} className={s.subtitleSeg}
                           style={{ left: `${segLeftPx}px`, width: `${segWidthPx}px` }}
-                          title={`${seg.text} · ${seg.start.toFixed(1)}s~${seg.end.toFixed(1)}s`}>
+                          title={`${seg.text} · ${seg.start.toFixed(1)}s~${seg.end.toFixed(1)}s — 가운데를 끌면 통째로 이동`}
+                          onMouseDown={(e) => startCaptionMove(e, it.sourceCutNo, i, cutDur, widthPx)}>
                           {seg.text}
                           <span className={s.subtitleHandle} style={{ left: 0 }}
                             onMouseDown={(e) => startCaptionTrim(e, it.sourceCutNo, i, 'L', cutDur, widthPx)} />

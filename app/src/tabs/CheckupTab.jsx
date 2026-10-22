@@ -8,6 +8,12 @@ import s from './CheckupTab.module.css'
 
 const SERVER = 'http://localhost:3001'
 
+// PDF 13페이지 "주요 접속 사이트, 앱 확인 후 추가!" — 외부 편집 앱 연동(2026-10-21 4차 보완).
+const EXTERNAL_TOOLS = [
+  { name: 'CapCut', url: 'https://www.capcut.com' },
+  { name: 'SellBuyMusic', url: 'https://www.sellbuymusic.com' },
+]
+
 // VideoTab.jsx의 hexToRgba와 동일 — 이 코드베이스의 기존 관례대로 작은 순수함수는 탭마다
 // 그대로 복제해서 씀.
 function hexToRgba(hex, alpha) {
@@ -294,8 +300,13 @@ export default function CheckupTab() {
     }
     if (v.readyState >= 1) applyPending()
     else v.addEventListener('loadedmetadata', applyPending, { once: true })
+    // 2026-10-22 4차 보완 버그수정: 원래 [activeCutNo]만 의존해서, 다른 에피소드로 바꿔도
+    // activeCutNo 숫자 자체(예: 3번 컷)가 안 바뀌면 이 effect가 재실행되지 않아 영상이
+    // 이전 에피소드의 cut.videoUrl에 그대로 멈춰 있었다("다른 에피소드 선택 시 컷 미반영"
+    // 신고 — 해당 컷 파일이 나중에 교체 완료돼도 cuts가 갱신될 때 이 effect가 다시 안 돌아
+    // 여전히 안 잡혔다). cuts를 의존성에 추가해 에피소드 전환·폴링 갱신 때마다 다시 맞춘다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeCutNo])
+  }, [activeCutNo, cuts])
 
   const playAll = () => { if (playable.length) seekTo(playable[0].no, 0) }
   const handleEnded = () => {
@@ -330,6 +341,9 @@ export default function CheckupTab() {
   return (
     <div className={s.appOuter}>
       <TabToolbar
+        toolLabel="외부 편집 앱 연동"
+        tools={EXTERNAL_TOOLS.map(t => t.name)}
+        onToolChange={name => window.open(EXTERNAL_TOOLS.find(t => t.name === name)?.url, '_blank')}
         right={
           <div className={s.toolbarInfo}>
             <span className={s.toolbarTitle}>✅ 체크업</span>
@@ -406,7 +420,8 @@ export default function CheckupTab() {
               <CheckupTimeline epNum={epNum} cutsByNo={cutsByNo} subtitleSegmentsByNo={subtitleSegmentsByNo}
                 activeCutNo={activeCutNo} elapsedInActive={elapsedInActive}
                 onSeek={seekTo} onSelectCut={setSelectedCutNo} onDurationCommit={commitCutTrim} onDurationCommitUndo={undoCutTrim}
-                onCaptionSegCommit={commitCaptionSegTiming} />
+                onCaptionSegCommit={commitCaptionSegTiming}
+                onEditingChange={(editing) => { if (editing) videoRef.current?.pause() }} />
             </div>
             <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} />
           </div>

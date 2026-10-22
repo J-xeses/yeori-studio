@@ -11,7 +11,7 @@ import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaConten
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
-import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
+import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent } from './lib/customChangePresets.js'
 import { listRefImages, listAllRefs, addRefImage, deleteRefImage } from './lib/directionRefs.js'
 import { listEntries as listArchiveEntries, saveEntry as saveArchiveEntry, deleteEntry as deleteArchiveEntry } from './lib/storyArchive.js'
@@ -6864,9 +6864,13 @@ app.post('/api/change-combo/build', (req, res) => {
 // (의상 리빌) 없이 action(돌발상황 묘사)만 받는다. changeEffects.js 주석 참고.
 app.post('/api/change-combo/build-freeze', (req, res) => {
   try {
-    const { action, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp } = req.body || {}
-    res.json(buildFreezeBeatCut({ action, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp }))
+    const { action, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp, techniqueRig } = req.body || {}
+    res.json(buildFreezeBeatCut({ action, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp, techniqueRig }))
   } catch (err) { res.status(400).json({ error: err.message }) }
+})
+// 2026-10-22 4차 보완 — 프리즈 비트 "연출 기법 설정값"(불릿타임/3D패럴랙스 등) 프리셋 목록.
+app.get('/api/change-combo/freeze-technique-presets', (req, res) => {
+  res.json({ presets: FREEZE_TECHNIQUE_PRESETS })
 })
 // 2026-10-16 — 불릿타임 멀티앵글 키프레임 프롬프트 세트. LongTake AI Studio(성준님 자작 도구)의
 // Gemini API 키프레임 렌더링이 무료 티어 할당량 0(RESOURCE_EXHAUSTED)이라 막혀서, API 과금 없이
@@ -6874,8 +6878,8 @@ app.post('/api/change-combo/build-freeze', (req, res) => {
 // 여기서 만들지 않는다(changeEffects.js buildFreezeKeyframeAngles() 참고).
 app.post('/api/change-combo/build-freeze-keyframes', (req, res) => {
   try {
-    const { action, sceneA, angles } = req.body || {}
-    res.json({ keyframes: buildFreezeKeyframeAngles({ action, sceneA, angles }) })
+    const { action, sceneA, angles, techniqueRig } = req.body || {}
+    res.json({ keyframes: buildFreezeKeyframeAngles({ action, sceneA, angles, techniqueRig }) })
   } catch (err) { res.status(400).json({ error: err.message }) }
 })
 // 2026-10-16 — 프리즈 비트 커스텀 사건 목록/추가. 내장 라이브러리(FREEZE_EVENT_LIBRARY, 클라이언트)는

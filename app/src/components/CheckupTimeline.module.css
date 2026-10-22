@@ -81,6 +81,7 @@
   display: flex; align-items: center; padding: 0 8px; margin-right: 1px;
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px;
   font-size: 10.5px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  cursor: grab;
 }
 .subtitleHandle {
   position: absolute; top: 0; bottom: 0; width: 6px; cursor: ew-resize; z-index: 3;
@@ -95,6 +96,12 @@
 .trimHandle:hover { background: rgba(255,255,255,0.35); }
 .trimHandleL { left: 0; border-radius: 4px 0 0 4px; }
 .trimHandleR { right: 0; border-radius: 0 4px 4px 0; }
+/* 트림 드래그 중 "잘려 나갈 구간"을 어둡게 표시 + 시간 라벨(2026-10-22 4차 보완 추가요청) */
+.trimShadow { position: absolute; top: 0; bottom: 0; background: rgba(0,0,0,0.55); pointer-events: none; z-index: 2; }
+.trimTimeLabel {
+  position: absolute; top: 2px; font-size: 9px; color: #fff; background: rgba(0,0,0,0.8);
+  padding: 1px 5px; border-radius: 3px; pointer-events: none; z-index: 5; white-space: nowrap;
+}
 .playhead {
   position: absolute; top: 0; bottom: 0; width: 2px; background: #fff;
   box-shadow: 0 0 4px rgba(255,255,255,0.8); pointer-events: none; z-index: 4;

@@ -914,12 +914,12 @@ export default function VideoTab() {
     if (!subtitleEnabled) return
     if (isReel) return   // 릴스는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다 — 이 띠는 클릭해서 문구 수정용
     const text = previewText
-    // 2026-10-22 재점검: "글자 크기 56px"는 실제 출력 해상도 기준 픽셀이어야 한다(임의의 720
-    // 기준이 아니라) — cutDims()와 같은 기준(16:9=1920x1080, 9:16=1080x1920)의 실제 세로
-    // 픽셀 대비 이 캔버스 버퍼(H=360)의 비율로 환산해야 다른 에피소드와도 같은 기준으로
-    // 보인다. 레터박스를 걷어낸 뒤로는 이 비율이 화면에 그대로 드러난다.
-    const realH = aspectRatio === '16:9' ? 1080 : 1920
-    const scale = H / realH
+    // 2026-10-22 재점검: 16:9가 9:16보다 글자가 크게 보인다는 지적 — 직전엔 포맷별 실제
+    // 출력 세로 해상도(1080/1920)로 나눴는데, 그러면 16:9(1080)가 분모가 작아 같은 56px도
+    // 프레임 대비 더 크게 떠 버린다. 릴스 쪽(ReelCaptionOverlay, 187번째 줄 k = H/1920)은
+    // 포맷에 상관없이 항상 1920을 기준으로 삼아 같은 px 값이 어느 화면비에서나 같은 비율로
+    // 보이게 한다 — 여기도 같은 기준(1920 고정)으로 맞춘다.
+    const scale = H / 1920
     const fSize = Math.max(10, Math.round(fontSize * scale))
     const padX = 18, padY = 10, lineGap = 1.3
 
@@ -933,9 +933,10 @@ export default function VideoTab() {
     const totalTextHeight = lineHeight * lines.length
 
     const subX = W / 2
-    const anchorY = subtitlePosition === 'top' ? H * 0.72
-                 : subtitlePosition === 'middle' ? H * 0.82
-                 : H * 0.90
+    // 2026-10-22 재점검: 조금 더 아래로 내려 달라는 요청 — 각 위치 기준값을 3%p씩 더 내림.
+    const anchorY = subtitlePosition === 'top' ? H * 0.75
+                 : subtitlePosition === 'middle' ? H * 0.85
+                 : H * 0.93
 
     const boxBottom = anchorY
     let boxTop = boxBottom - totalTextHeight - padY * 2
@@ -2293,7 +2294,7 @@ export default function VideoTab() {
                         // 정확히 계산함, 2167번째 줄 릴스 자막엔 이미 적용 중)이 비릴스 캔버스
                         // 자막에는 전혀 반영되지 않았다 — "타이밍바를 설정해도 실제 화면에
                         // 적용 안 됨"의 핵심 원인. 릴스와 같은 기준으로 통일.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
                         <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
                       </div>
@@ -2302,7 +2303,7 @@ export default function VideoTab() {
                       <div
                         className={s.subtitleEditBox}
                         style={{
-                          bottom: `${subtitlePosition === 'top' ? 24 : subtitlePosition === 'middle' ? 14 : 6}%`,
+                          bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`,
                           // 16:9에서도 좌우 22%/5% 고정폭을 그대로 쓰면 자막 칸이 좁아 보인다는
                           // 지적(2026-10-21 4차 보완) — 가로형일 때만 좌우 여백을 줄여 폭 확보.
                           ...(aspectRatio === '16:9' ? { left: '8%', right: '8%' } : {}),

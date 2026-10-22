@@ -11,6 +11,12 @@ import styles from './RetentionHookTab.module.css'
 
 const SERVER = 'http://localhost:3001'
 
+// 리텐션 훅 탭 4개 모드(훅 설계·시그 레퍼런스·체인지 생성기·프리즈 비트) 전부에 걸친
+// "스페셜 연출과 연관있는 앱 라인 심볼 버튼 추가!" 요청(2026-10-21 4차 보완) — 아직 실제
+// 연동(API 키·업로드 흐름)이 없어 VideoTab의 Google AI Studio·runway와 같은 자리표시자로
+// 둔다(클릭 시 "준비 중" 안내만).
+const DIRECTION_TOOLS = ['LongTake AI Studio', 'colab', 'Morphic']
+
 // StudioTab.jsx·MakingTab.jsx·VideoTab.jsx와 동일 로직(이 코드베이스 관례대로 작은 순수함수는
 // 탭마다 복제) — /api/upload-cut-image 가 인스타 콘텐츠면 instaDir로 분기하는 데 필요하다.
 function pipelineCodeToInstaContent(plCode) {
@@ -44,30 +50,93 @@ function useDirectionRefs(group) {
 
 // key(기법 항목 이름)에 해당하는 레퍼런스 썸네일을 작게 보여주고, "+"로 새 이미지를 올릴 수
 // 있게 하는 공용 조각. 클릭하면 원본 크기로 새 탭에서 열림(간단한 미리보기 대용).
+// 2026-10-22 4차 보완 — 업로드 시 에피소드 이름을 같이 받아 caption으로 저장(성준님: "이미
+// 만들어진 시그는 등록기능 추가되면 내가 등록하겠다, 이미지 하단에 에피소드명 표시").
 function RefThumbStrip({ group, itemKey, images, onUploaded, size = 40 }) {
   const upload = async (file) => {
     if (!file) return
+    const caption = window.prompt('에피소드 이름/코드를 입력하세요(예: LF_T00) — 비워두면 나중에 다시 등록할 수 있습니다') || ''
     const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
-    await fetch(`${SERVER}/api/direction-refs/upload?group=${group}&key=${encodeURIComponent(itemKey)}&ext=${ext}`, {
+    await fetch(`${SERVER}/api/direction-refs/upload?group=${group}&key=${encodeURIComponent(itemKey)}&ext=${ext}&caption=${encodeURIComponent(caption)}`, {
       method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file,
     })
     onUploaded?.()
   }
   return (
-    <div style={{ display: 'flex', gap: 4, alignItems: 'center', marginTop: 4 }} onClick={(e) => e.stopPropagation()}>
+    <div style={{ display: 'flex', gap: 4, alignItems: 'flex-start', marginTop: 4, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
       {(images || []).slice(0, 4).map((img) => (
-        <a key={img.filename} href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer" title={img.caption || ''}>
+        <a key={img.filename} href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer" title={img.caption || ''}
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, width: size }}>
           <img src={`${SERVER}${img.url}`} alt="" style={{ width: size, height: size, objectFit: 'cover', borderRadius: 4, border: '1px solid var(--border)' }} />
+          {img.caption && <span style={{ fontSize: 8.5, color: '#888', maxWidth: size, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{img.caption}</span>}
         </a>
       ))}
       <label style={{
         width: size, height: size, display: 'flex', alignItems: 'center', justifyContent: 'center',
         border: '1px dashed var(--border)', borderRadius: 4, cursor: 'pointer', fontSize: 14, color: '#888', flexShrink: 0,
-      }} title="레퍼런스 이미지 추가">
+      }} title="레퍼런스 이미지 등록(에피소드 이름과 함께)">
         +
         <input type="file" accept="image/*" style={{ display: 'none' }}
           onChange={(e) => upload(e.target.files[0])} />
       </label>
+    </div>
+  )
+}
+
+// ── 기법별 이미지 리스트업 갤러리(2026-10-22 4차 보완) ───────────────────────
+// PDF 10·11페이지: "등록된 기법별로 생성한 시그/연출 이미지 리스트업 별도 구축~". RefThumbStrip과
+// 같은 저장소(directionRefs.js)를 그대로 읽어서 — 미리보기용 4장 미리보기가 아니라 전체를
+// 기법별로 쭉 펼쳐 보여주는 용도. 새 이미지 등록도 여기서 바로 할 수 있다(기법명을 직접 입력).
+function DirectionRefGallery({ group, refsMap, reload }) {
+  const [newKey, setNewKey] = useState('')
+  const [newCaption, setNewCaption] = useState('')
+  const keys = Object.keys(refsMap).filter((k) => (refsMap[k] || []).length > 0)
+  const upload = async (file) => {
+    if (!file || !newKey.trim()) return
+    const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
+    await fetch(`${SERVER}/api/direction-refs/upload?group=${group}&key=${encodeURIComponent(newKey)}&ext=${ext}&caption=${encodeURIComponent(newCaption)}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file,
+    })
+    setNewCaption('')
+    reload?.()
+  }
+  const del = async (key, filename) => {
+    await fetch(`${SERVER}/api/direction-refs?group=${group}&key=${encodeURIComponent(key)}&filename=${encodeURIComponent(filename)}`, { method: 'DELETE' })
+    reload?.()
+  }
+  return (
+    <div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10, padding: 8, background: '#1a1a18', borderRadius: 8, border: '0.5px solid #333' }}>
+        <input className={styles.textarea} placeholder="기법 이름(위 카드 이름과 똑같이 — 예: 단색 스튜디오 강렬 대비)"
+          value={newKey} onChange={(e) => setNewKey(e.target.value)} />
+        <input className={styles.textarea} placeholder="에피소드 이름/코드(예: LF_T00)"
+          value={newCaption} onChange={(e) => setNewCaption(e.target.value)} />
+        <label className={styles.columnAddBtn} style={{ textAlign: 'center', cursor: newKey.trim() ? 'pointer' : 'default', opacity: newKey.trim() ? 1 : 0.5 }}>
+          + 이미지 등록
+          <input type="file" accept="image/*" style={{ display: 'none' }} disabled={!newKey.trim()}
+            onChange={(e) => upload(e.target.files[0])} />
+        </label>
+      </div>
+      {keys.length === 0 && <div className={styles.desc}>아직 등록된 이미지가 없습니다.</div>}
+      {keys.map((k) => (
+        <div key={k} style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10.5, color: '#a78bfa', marginBottom: 4 }}>{k.replace(/_/g, ' ')}</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {refsMap[k].map((img) => (
+              <div key={img.filename} style={{ width: 90 }}>
+                <a href={`${SERVER}${img.url}`} target="_blank" rel="noreferrer">
+                  <img src={`${SERVER}${img.url}`} alt="" style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                </a>
+                <div style={{ fontSize: 9.5, color: '#888', marginTop: 2, textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {img.caption || '(에피소드 미기재)'}
+                </div>
+                <button type="button" onClick={() => del(k, img.filename)}
+                  style={{ display: 'block', margin: '2px auto 0', fontSize: 9, color: '#f09595', background: 'none', border: 'none', cursor: 'pointer' }}>삭제</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -172,7 +241,11 @@ ${hookSummary}
 
   return (
     <div className={styles.outer}>
-      <TabToolbar />
+      <TabToolbar
+        toolLabel="외부 연출 앱 연동"
+        tools={DIRECTION_TOOLS}
+        onToolChange={t => alert(`${t} 연동은 아직 준비 중입니다.`)}
+      />
     <div className={styles.page}>
       <EpisodeInfoSidebar maxStage={0} />
       <div className={styles.wrap}>
@@ -486,6 +559,13 @@ function SignatureRefPanel({ state, dispatch }) {
             <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }} onClick={startNew}>+ 새 레퍼런스 추가</button>
           )}
         </div>
+
+        <div className={styles.column}>
+          <div className={styles.columnHeader}>시그 이미지 리스트업</div>
+          <div className={styles.columnList} style={{ maxHeight: 'none' }}>
+            <DirectionRefGallery group="signature" refsMap={sigImageRefs} reload={reloadSigImageRefs} />
+          </div>
+        </div>
       </div>
 
       <div className={styles.result}>
@@ -698,6 +778,13 @@ function ChangeComboPanel({ state, dispatch }) {
             </div>
             <div className={styles.desc} style={{ marginTop: 8, fontSize: 10.5 }}>프리셋을 클릭해 채우거나, 아래 입력란에 직접 입력하세요.</div>
           </div>
+
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>연출 이미지 리스트업</div>
+            <div className={styles.columnList} style={{ maxHeight: 'none' }}>
+              <DirectionRefGallery group="change" refsMap={changeImageRefs} reload={reloadChangeImageRefs} />
+            </div>
+          </div>
         </div>
 
         {/* 2026-10-15 — "쪼개는 기준": 시작 이미지(IP)는 항상 변신 "전" 모습을 그리고, 영상
@@ -850,6 +937,19 @@ function FreezeBeatPanel({ state, dispatch }) {
   const [cpLine, setCpLine] = useState('')
   const [orbitDegrees, setOrbitDegrees] = useState(120)
   const [openOnCloseUp, setOpenOnCloseUp] = useState(true)
+  // 2026-10-22 4차 보완 — "연출 기법 설정값"(불릿타임/3D패럴랙스/1500fps 초슬로모션/셔터 앵글
+  // 30도 등, PDF 12페이지)을 편집 가능하게 노출. 서버 changeEffects.js의 FREEZE_RIG가 지금까지
+  // 모든 프리즈 비트 컷에 고정으로 박혀 있던 그 값 — 프리셋을 고르거나 직접 고쳐서 그대로
+  // 프롬프트에 반영한다(성준님 확인: "수정 가능하게"). 기본값은 기존 FREEZE_RIG와 동일.
+  const [techniquePresets, setTechniquePresets] = useState([])
+  const [techniqueRig, setTechniqueRig] = useState('')
+  useEffect(() => {
+    fetch(`${SERVER}/api/change-combo/freeze-technique-presets`).then((r) => r.json())
+      .then((d) => {
+        setTechniquePresets(d.presets || [])
+        if (d.presets?.[0]) setTechniqueRig((cur) => cur || d.presets[0].value)
+      }).catch(() => {})
+  }, [])
   const [targetCutId, setTargetCutId] = useState('')
   const [buildResult, setBuildResult] = useState(null)
   const [buildError, setBuildError] = useState('')
@@ -903,7 +1003,7 @@ function FreezeBeatPanel({ state, dispatch }) {
     if (!actionKo.trim() || !actionEn.trim()) { setBuildError('돌발상황 설명(한글/영문)을 먼저 채워주세요.'); return }
     const r = await fetch(`${SERVER}/api/change-combo/build-freeze`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp }),
+      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA, durationSec, beat, cpLine, orbitDegrees, openOnCloseUp, techniqueRig }),
     })
     const d = await r.json()
     if (!r.ok) { setBuildError(d.error || '생성 실패'); return }
@@ -915,7 +1015,7 @@ function FreezeBeatPanel({ state, dispatch }) {
     if (!actionKo.trim() || !actionEn.trim()) { setKeyframeError('돌발상황 설명(한글/영문)을 먼저 채워주세요.'); return }
     const r = await fetch(`${SERVER}/api/change-combo/build-freeze-keyframes`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA }),
+      body: JSON.stringify({ action: { nameKo: actionLabel, ko: actionKo, en: actionEn }, sceneA, techniqueRig }),
     })
     const d = await r.json()
     if (!r.ok) { setKeyframeError(d.error || '생성 실패'); return }
@@ -981,7 +1081,11 @@ function FreezeBeatPanel({ state, dispatch }) {
   }
 
   return (
-    <>
+    // 2026-10-22 4차 보완 — PDF 12페이지: "연출 영역, 이미지 영역으로 2분할 배치!!". 왼쪽은
+    // 사건·장소·설정값 등 "연출" 입력 전부, 오른쪽은 멀티앵글 키프레임(실제 이미지가 올라오는
+    // 칸)만 따로 — 컷 장면과 동시에 확인하며 작업하기 좋게.
+    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+    <div style={{ flex: '1 1 480px', minWidth: 320 }}>
       <div className={styles.result} style={{ marginBottom: 14 }}>
         <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 6 }}>
           레퍼런스에서 고르거나 직접 입력하세요 — 의상·배경은 바뀌지 않고, 이 "사건" 하나만 얼어붙습니다.
@@ -1053,6 +1157,18 @@ function FreezeBeatPanel({ state, dispatch }) {
           </label>
         </div>
 
+        <div className={styles.desc} style={{ fontSize: 10.5, margin: '4px 0 4px' }}>연출 기법 설정값 — 고르면 아래 칸을 채우고, 직접 고쳐도 됩니다</div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+          {techniquePresets.map((p) => (
+            <button key={p.name} className={styles.copyBtn}
+              style={techniqueRig === p.value ? { background: 'var(--accent, #7c3aed)', color: '#fff' } : undefined}
+              onClick={() => setTechniqueRig(p.value)}>{p.name}</button>
+          ))}
+        </div>
+        <textarea className={styles.textarea} style={{ marginBottom: 10, minHeight: 50 }}
+          placeholder="연출 기법 설정값(영문, 프롬프트에 그대로 들어갑니다)"
+          value={techniqueRig} onChange={(e) => setTechniqueRig(e.target.value)} />
+
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>프리즈 비트 생성</button>
           <button className={styles.copyBtn} disabled={!actionLabel.trim() || !actionKo.trim() || !actionEn.trim() || savingCustom} onClick={saveCustomEvent}>
@@ -1081,8 +1197,10 @@ function FreezeBeatPanel({ state, dispatch }) {
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
         </div>
       )}
+    </div>
 
-      <div className={styles.result} style={{ marginTop: 14 }}>
+    <div style={{ flex: '1 1 420px', minWidth: 320 }}>
+      <div className={styles.result}>
         <div className={styles.resultLabel}>🎞️ 멀티앵글 키프레임 (8각도 정지 스틸)</div>
         <div className={styles.desc} style={{ fontSize: 10.5, marginBottom: 8 }}>
           1. 아래 버튼으로 각도별 프롬프트 8개 생성 → 2. 카드마다 "복사" → 3. Gemini 앱(AI Pro)에 서여리
@@ -1131,6 +1249,7 @@ function FreezeBeatPanel({ state, dispatch }) {
           </div>
         )}
       </div>
-    </>
+    </div>
+    </div>
   )
 }

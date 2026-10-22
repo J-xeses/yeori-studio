@@ -164,7 +164,20 @@ export function buildRevealCut({ trigger, vfx, sceneA, sceneB, durationSec = 6, 
 // openOnCloseUp: true(기본)면 "평온한 클로즈업 표정 → 줌아웃 리빌" 오프닝을 붙인다.
 const FREEZE_RIG = 'shot on a high-speed cine camera rig, 30-degree shutter angle (1/3000s shutter speed), time dilated to an extreme 1500fps super-slow-motion freeze, shallow anamorphic depth of field'
 
-export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '긴장', cpLine = '', orbitDegrees = 120, openOnCloseUp = true }) {
+// 2026-10-22 4차 보완 — 지금까지 FREEZE_RIG 한 줄로 고정돼 있던 "연출 기법 설정값"을
+// 몇 가지 이름 붙은 프리셋으로 노출(PDF 12페이지: "연출 유형별 기법 설정값 표시(연동,
+// 수정기능 필요?" → 성준님 확인: "수정 가능하게"). 클라이언트가 이 중 하나를 고르거나
+// 직접 수정한 텍스트를 techniqueRig로 보내면 그대로 프롬프트에 들어간다 — 기본값은
+// 원래 FREEZE_RIG와 동일해 안 건드리면 지금까지와 똑같이 동작한다.
+export const FREEZE_TECHNIQUE_PRESETS = [
+  { name: '불릿 타임', value: FREEZE_RIG },
+  { name: '3D 패럴랙스(parallax)', value: 'shot with a 3D parallax camera move, foreground and background layers drifting at different speeds as the camera arcs past the frozen subject, shallow depth of field' },
+  { name: '1500fps 초슬로모션 정지', value: 'time dilated to an extreme 1500fps super-slow-motion freeze, every falling particle and strand of hair suspended mid-air, no motion blur on the frozen subject' },
+  { name: '셔터 앵글 30도(셔터속도 1/3000초)', value: '30-degree shutter angle (1/3000s shutter speed), crisp frozen motion with minimal motion blur, high-speed cine camera rig' },
+]
+
+export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '긴장', cpLine = '', orbitDegrees = 120, openOnCloseUp = true, techniqueRig = FREEZE_RIG }) {
+  const rig = techniqueRig?.trim() || FREEZE_RIG
   if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(얼어붙은 정점 상태 한글/영문 묘사) 필요')
   const audioCue = pick(AUDIO_CUES)
   const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
@@ -175,9 +188,9 @@ export function buildFreezeBeatCut({ action, sceneA, durationSec = 6, beat = '�
     ? `(하드컷) 평온한 클로즈업 표정에서 시작 → 카메라가 빠르게 줌아웃하며 ${label}로 이미 얼어붙은 혼돈 장면을 리빌, 카메라는 그 주위를 ${orbitDegrees}도 돈다.`
     : `(하드컷, ${label} 효과음) 시간이 멈춘 듯 ${action.ko} 채로 완전히 얼어붙어 있고, 카메라가 그 주위를 ${orbitDegrees}도 돈다.`
 
-  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, ${FREEZE_RIG}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
+  const imagePrompt = `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, ${rig}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`
 
-  const frozenCore = `A frozen, suspended-in-time bullet-time moment, ${FREEZE_RIG}: she is caught mid-action — ${action.en} — her pose held perfectly still at its most dramatic peak for the rest of the shot, only her hair and loose fabric gently drifting in the air, every falling object and droplet suspended mid-air with faint motion-trail ripples around it. The camera orbits roughly ${orbitDegrees} degrees around her frozen pose along a smooth arc, revealing the frozen scene from a new angle by the end.`
+  const frozenCore = `A frozen, suspended-in-time bullet-time moment, ${rig}: she is caught mid-action — ${action.en} — her pose held perfectly still at its most dramatic peak for the rest of the shot, only her hair and loose fabric gently drifting in the air, every falling object and droplet suspended mid-air with faint motion-trail ripples around it. The camera orbits roughly ${orbitDegrees} degrees around her frozen pose along a smooth arc, revealing the frozen scene from a new angle by the end.`
 
   const videoPrompt = openOnCloseUp
     ? `Opens on an extreme close-up of her calm, natural expression, ${envAEn}, ${lightingAEn}. / The camera rapidly pulls back and zooms out, revealing — ${frozenCore} ${envAEn}. ${lightingAEn}. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.`
@@ -224,8 +237,9 @@ const FREEZE_ANGLE_DIRECTIONS = [
   { deg: 315, ko: '좌측 45도',  en: 'three-quarter view from the front-left' },
 ]
 
-export function buildFreezeKeyframeAngles({ action, sceneA, angles }) {
+export function buildFreezeKeyframeAngles({ action, sceneA, angles, techniqueRig = FREEZE_RIG }) {
   if (!action?.ko?.trim() || !action?.en?.trim()) throw new Error('action.ko, action.en(얼어붙은 정점 상태 한글/영문 묘사) 필요')
+  const rig = techniqueRig?.trim() || FREEZE_RIG
   const envAEn = sceneA?.envEn?.trim() || 'a softly lit, minimal space with a shallow depth of field, no specific background details'
   const lightingAEn = sceneA?.lightingEn?.trim() || 'soft neutral ambient light'
   const list = Array.isArray(angles) && angles.length
@@ -235,6 +249,6 @@ export function buildFreezeKeyframeAngles({ action, sceneA, angles }) {
   return list.map(({ deg, ko, en }) => ({
     angleDeg: deg,
     label: `${deg}° (${ko})`,
-    imagePrompt: `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, ${FREEZE_RIG}, camera positioned ${deg} degrees around her on a fixed ~2m-radius orbit, ${en}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`,
+    imagePrompt: `MEDIUM SHOT — same Korean woman, same face, natural skin texture, never exaggerated, frozen mid-action — ${action.en} — her pose held at its most dramatic peak, ${rig}, camera positioned ${deg} degrees around her on a fixed ~2m-radius orbit, ${en}, in ${envAEn}, photorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic not posing just existing beautifully, avoid: acne, pimples, blemishes, skin blotches, rough or bumpy skin, uneven skin tone, redness, oily shine, lighting: ${lightingAEn}, never legible text or UI, vertical 9:16`,
   }))
 }
