@@ -48,7 +48,7 @@ const BEAT_COLORS = { 훅: '#60a5fa', 긴장: '#fbbf24', 반전: '#f472b6', 안�
 // 완전히 별개(읽기 전용 — CheckupTimeline의 trim/split 편집 상태에 영향 없음). 색은 심플한
 // 단색 블록, 컷 경계는 선으로만 구분, 시그 컷은 시작 경계선을 굵게/밝게 표시(아이콘 의존 X).
 // 범례는 이 블록 전체에서 한 번만 보여준다.
-function BeatSummaryBar({ cuts, scriptCuts, activeCutNo, elapsedInActive }) {
+function BeatSummaryBar({ cuts, scriptCuts, activeCutNo, elapsedInActive, onCopyChapters }) {
   const byNo = Object.fromEntries((scriptCuts || []).map((c) => [c.no, c]))
   const list = (cuts || []).slice().sort((a, b) => (a.order ?? a.no) - (b.order ?? b.no))
   const total = list.reduce((s, c) => s + (Number(c.duration) || 0), 0)
@@ -99,8 +99,8 @@ function BeatSummaryBar({ cuts, scriptCuts, activeCutNo, elapsedInActive }) {
               <span className={s.beatSummaryLegendDot} style={{ background: color }} />{beat}
             </span>
           ))}
-          <button type="button" className={s.beatSummaryChapterBtn} onClick={() => copyYoutubeChapters(positioned)} title="유튜브 챕터 형식(0:00부터, 구간 10초 이상)으로 타임스탬프를 만들어 클립보드에 복사합니다 — 업로드 시 설명란에 붙여넣으면 자동으로 챕터가 생깁니다. 짧은 컷은 다음 컷과 자동으로 합쳐집니다.">
-            📋 유튜브 챕터 텍스트 복사
+          <button type="button" className={s.beatSummaryChapterBtn} onClick={() => onCopyChapters?.(positioned)} title="유튜브 챕터 형식(0:00부터, 구간 10초 이상)으로 타임스탬프를 만들어 클립보드에 복사하고, 퍼블리싱 탭 YouTube 설명란에도 자동으로 넣어줍니다. 짧은 컷은 다음 컷과 자동으로 합쳐집니다.">
+            📋 유튜브 챕터 텍스트 복사 → 설명란 자동삽입
           </button>
         </div>
       )}
@@ -118,19 +118,19 @@ function fmtChapterTime(sec) {
   const h = Math.floor(m / 60), mm = m % 60
   return h > 0 ? `${h}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}` : `${m}:${String(ss).padStart(2, '0')}`
 }
-function copyYoutubeChapters(positioned) {
-  if (!positioned?.length) return
+// 순수 계산만(알럿·클립보드·dispatch 등 부수효과 없음) — CheckupTab 쪽에서 dispatch로
+// 퍼블리싱 탭 YouTube 설명란에도 바로 꽂아주려면 결과 텍스트가 필요해서 분리(2026-10-23).
+function buildYoutubeChapters(positioned) {
+  if (!positioned?.length) return null
   const chapters = [{ t: 0, label: positioned[0].script?.cutTitle || positioned[0].script?.scene || `CUT ${positioned[0].no}` }]
   for (const p of positioned.slice(1)) {
     if (p.start - chapters[chapters.length - 1].t >= 10) {
       chapters.push({ t: p.start, label: p.script?.cutTitle || p.script?.scene || `CUT ${p.no}` })
     }
   }
-  if (chapters.length < 3) { alert('챕터가 3개 미만입니다 — 유튜브는 최소 3개부터 챕터를 인식합니다(컷이 전부 너무 짧은 릴스형 에피소드는 적용 어려움).'); return }
-  const text = chapters.map((c) => `${fmtChapterTime(c.t)} ${c.label}`).join('\n')
-  navigator.clipboard?.writeText(text)
-  alert(`챕터 ${chapters.length}개 복사됨 — 유튜브 업로드 시 설명란에 붙여넣으세요.\n\n${text}`)
+  return chapters.length >= 3 ? chapters : null
 }
+const formatYoutubeChapters = (chapters) => chapters.map((c) => `${fmtChapterTime(c.t)} ${c.label}`).join('\n')
 
 // 체크업 탭 — 메이킹/영상 탭을 거쳐 완성된 컷들을 순서대로 이어재생하며 업로드 전까지
 // 수시로 검토·편집하는 상시 도구. 실제 편집(분할/트림/드래그 재배치/실행취소)은 전부
@@ -301,6 +301,23 @@ export default function CheckupTab() {
       dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(newDuration * 10) / 10 }, overrideReason: '체크업 비주얼 효과 적용/되돌리기' })
     }
   }, [state.cuts, dispatch])
+
+  // 2026-10-23 — "유튜브 챕터 텍스트 복사"가 클립보드로만 끝나서 퍼블리싱 탭 설명란에
+  // 수동으로 옮겨야 했던 걸, 성준님 제안대로 바로 state.publishing.youtube.description에도
+  // 꽂아준다(복사도 그대로 유지 — 다른 곳에 붙여넣고 싶을 때 대비). 재클릭 시 중복으로
+  // 쌓이지 않게 마커 아래 블록만 교체하고, 그 위 수동 작성분(제목 설명 등)은 그대로 둔다.
+  const CHAPTER_MARKER = '\n\n— 유튜브 챕터(자동) —\n'
+  const insertChaptersToDescription = useCallback((positioned) => {
+    const chapters = buildYoutubeChapters(positioned)
+    if (!chapters) { alert('챕터가 3개 미만입니다 — 유튜브는 최소 3개부터 챕터를 인식합니다(컷이 전부 너무 짧은 릴스형 에피소드는 적용 어려움).'); return }
+    const text = formatYoutubeChapters(chapters)
+    navigator.clipboard?.writeText(text)
+    const current = state.publishing?.youtube?.description || ''
+    const before = current.split(CHAPTER_MARKER)[0].trimEnd()
+    const next = (before ? before + CHAPTER_MARKER : CHAPTER_MARKER.trimStart()) + text
+    dispatch({ type: 'SET_PUBLISHING', platform: 'youtube', p: { description: next } })
+    alert(`챕터 ${chapters.length}개 — 클립보드 복사 완료 + 퍼블리싱 탭 YouTube 설명란에도 자동 삽입했습니다.\n\n${text}`)
+  }, [state.publishing, dispatch])
 
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
@@ -486,7 +503,7 @@ export default function CheckupTab() {
                   if (editing) videoRef.current?.pause()
                 }} />
             </div>
-            <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} />
+            <BeatSummaryBar cuts={cuts} scriptCuts={state.cuts} activeCutNo={activeCutNo} elapsedInActive={elapsedInActive} onCopyChapters={insertChaptersToDescription} />
           </div>
         </div>
       </div>

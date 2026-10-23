@@ -9,7 +9,8 @@ import s from './EpisodeInfoSidebar.module.css'
 const CONTENT_TYPE_LABELS = {
   LF: 'LF — YouTube 롱폼', SF: 'SF — YouTube 숏폼',
   IG_R: 'IG_R — Instagram 릴스', IG_P: 'IG_P — Instagram 피드',
-  IG_S: 'IG_S — Instagram 스토리', TK: 'TK — TikTok',
+  IG_S: 'IG_S — Instagram 스토리', IG_H: 'IG_H — Instagram 훅 컷',
+  TK: 'TK — TikTok',
 }
 const TOPIC_LABELS = {
   PSY: 'PSY — 심리', SOC: 'SOC — 사회', LIF: 'LIF — 라이프스타일',

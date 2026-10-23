@@ -21,6 +21,7 @@ const CONTENT_TYPES = [
   { value: 'IG_R', label: 'IG_R — Instagram 릴스' },
   { value: 'IG_P', label: 'IG_P — Instagram 피드' },
   { value: 'IG_S', label: 'IG_S — Instagram 스토리' },
+  { value: 'IG_H', label: 'IG_H — Instagram 훅 컷' },
   { value: 'TK',   label: 'TK — TikTok' },
 ]
 
