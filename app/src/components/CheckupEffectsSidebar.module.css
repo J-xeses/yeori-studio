@@ -1,5 +1,5 @@
 .wrap {
-  width: 100%; box-sizing: border-box; padding: 8px 14px 14px;
+  width: 100%; min-width: 0; box-sizing: border-box; padding: 8px 14px 14px;
   display: flex; flex-direction: column; gap: 10px;
 }
 .section { display: flex; flex-direction: column; gap: 6px; }

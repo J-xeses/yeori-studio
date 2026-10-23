@@ -24,7 +24,7 @@ function Section({ title, defaultOpen = true, bodyClassName, children }) {
 //
 // cuts: state.cuts(AppContext, .id/.no/.dialogue 보유) — checklist API의 cuts와는 다른 배열이라
 // "제작완료" 뱃지는 cutsByNo(checklist 파생, hasVideo)로 별도 합성해서 videoStatus로 넘긴다.
-export default function CheckupSidebar({ cuts, cutsByNo, selectedCutNo, onSelectCut, onSeek, onApplied, epNum, episodeCode, onOpenDiagnosis, onCutDurationChange }) {
+export default function CheckupSidebar({ cuts, cutsByNo, selectedCutNo, onSelectCut, onSeek, epNum, episodeCode, ratio, onOpenDiagnosis }) {
   const videoStatus = Object.fromEntries(Object.values(cutsByNo || {}).map(c => [c.no, c.hasVideo]))
   const selectedId = cuts?.find(c => c.no === selectedCutNo)?.id ?? null
 
@@ -38,9 +38,8 @@ export default function CheckupSidebar({ cuts, cutsByNo, selectedCutNo, onSelect
         />
       </Section>
       <Section title="효과" defaultOpen={true}>
-        <CheckupEffectsSidebar selectedCutNo={selectedCutNo} cutsByNo={cutsByNo} onApplied={onApplied}
-          cuts={cuts} epNum={epNum} episodeCode={episodeCode} onOpenDiagnosis={onOpenDiagnosis}
-          onCutDurationChange={onCutDurationChange} />
+        <CheckupEffectsSidebar selectedCutNo={selectedCutNo} cutsByNo={cutsByNo} ratio={ratio}
+          cuts={cuts} epNum={epNum} episodeCode={episodeCode} onOpenDiagnosis={onOpenDiagnosis} />
       </Section>
     </div>
   )

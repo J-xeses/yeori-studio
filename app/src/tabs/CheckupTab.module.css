@@ -22,11 +22,13 @@
    타임라인으로 넘어가게 한다(영상 자체 픽셀 높이는 변하지 않음, 실측: 패딩18→10·갭8→4로
    20px 절약 + flex 8:3→13:6 로 그 20px를 그대로 타임라인에 이전). */
 .mainRow { display: flex; flex: 13; min-height: 0; }
+/* 2026-10-23 재배치 — 원래 "추후반영" 플레이스홀더였던 자리에 켄번스·비주얼 효과 패널을
+   채움(성준님: "나머지 효과는 메인화면 좌측 빈 영역에"). 내용 길이가 가변적이라 중앙정렬
+   대신 상단 고정 + 세로 스크롤로 바꿈. */
 .futureArea {
-  flex: 1; display: flex; align-items: center; justify-content: center; text-align: center;
-  border-right: 1px dashed var(--border); padding: 20px; box-sizing: border-box;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;
+  border-right: 1px dashed var(--border); padding: 14px; box-sizing: border-box;
 }
-.futureAreaLabel { font-size: 12px; color: var(--text-3); line-height: 1.6; }
 
 .playerWrap {
   flex: 1.7; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;

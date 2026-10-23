@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import TabToolbar from '../components/TabToolbar'
 import CheckupTimeline from '../components/CheckupTimeline'
 import CheckupSidebar from '../components/CheckupSidebar'
+import CheckupMainEffectsPanel from '../components/CheckupMainEffectsPanel'
 import DiagnosisPanel from '../components/DiagnosisPanel'
 import { contentRatio } from '../lib/videoPolicy'
 import { resolveEpisodeCode } from '../lib/episodeCode'
@@ -416,16 +417,18 @@ export default function CheckupTab() {
       />
       <div className={s.pageOuter}>
         <CheckupSidebar cuts={state.cuts} cutsByNo={cutsByNo} selectedCutNo={selectedCutNo}
-          onSelectCut={setSelectedCutNo} onSeek={seekTo} onApplied={load}
-          epNum={epNum} episodeCode={episodeCode}
-          onOpenDiagnosis={(cutId) => setDiagCutId(cutId)}
-          onCutDurationChange={applyCutDuration} />
+          onSelectCut={setSelectedCutNo} onSeek={seekTo}
+          epNum={epNum} episodeCode={episodeCode} ratio={ratio}
+          onOpenDiagnosis={(cutId) => setDiagCutId(cutId)} />
         <div className={s.page}>
           <div className={s.mainRow}>
-            {/* 라이브러리/미디어 임포트 추후반영 영역 — 목업 배치 고정(2026-09-13, 사용자 지적:
-                "메인화면[플레이어]이 우측에 고정" — 카테고리별 에셋 브라우저는 나중에 여기 채움 */}
+            {/* 메인화면 좌측 "효과" 영역(2026-09-13 목업 배치 고정 → 2026-10-23 재배치, 성준님
+                지적: "사이드바에는 즉석으로 조치할 수 있는 기능이 배치되고, 나머지 효과는
+                메인화면 좌측 빈 영역에 넣어야 한다" — 켄번스·비주얼 효과 6종을 여기로 옮김.
+                미디어 임포트/에셋 브라우저는 아직 추후반영. */}
             <div className={s.futureArea}>
-              <span className={s.futureAreaLabel}>추후 반영 — 효과 라이브러리 / 미디어 임포트</span>
+              <CheckupMainEffectsPanel selectedCutNo={selectedCutNo} cut={selectedCutNo != null ? cutsByNo[selectedCutNo] : null}
+                epNum={epNum} onApplied={load} onCutDurationChange={applyCutDuration} />
             </div>
             <div className={s.playerWrap}>
               <div className={s.videoWrapper} style={{ aspectRatio: ratio === '9:16' ? '9/16' : '16/9' }}>

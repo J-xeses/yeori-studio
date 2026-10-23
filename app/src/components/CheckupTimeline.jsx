@@ -304,6 +304,24 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
     onSeek?.(hit.sourceCutNo, hit.trimInSec + (xSec - hit.start), false)
   }
 
+  // 2026-10-23 재재재점검("재생바늘이 멈춰야 하는데 멈추질 않는다") — 기존엔 클립 몸통/트림
+  // 핸들 위에서 "드래그"가 시작될 때만(startMove/startTrim 내부) onEditingChange(true)를 불러
+  // 비디오를 멈췄다. 하지만 눈금자·파형줄·자막트랙의 빈 배경을 클릭하면 어떤 onMouseDown도
+  // 안 거치고 곧장 stripOuter의 onClick(handleStripClick)만 실행돼 영상이 재생 중이면 그대로
+  // 계속 재생됐다(seekTo가 forcePlay=false라도 "이미 재생 중"이면 끊지 않게 설계돼 있어서).
+  // 타임라인 영역 전체에 공통 mousedown을 달아 클릭 즉시(= handleStripClick이 돌기도 전에)
+  // 먼저 멈추게 하면, 뒤이은 seekTo는 "이미 멈춰 있던 영상"으로 보고 다시 재생을 안 건다.
+  // 트림핸들/자막핸들은 자체 onMouseDown에서 stopPropagation을 걸어두어 여기로 안 올라오고
+  // 이미 각자 onEditingChange를 관리하므로 겹치지 않는다(클립 몸통만 중복 호출되는데 멱등).
+  const handleStripMouseDown = () => {
+    onEditingChange?.(true)
+    const onUp = () => {
+      window.removeEventListener('mouseup', onUp)
+      onEditingChange?.(false)
+    }
+    window.addEventListener('mouseup', onUp)
+  }
+
   // ── 트림(좌/우 끝 드래그) ──────────────────────────────────────────
   // 드래그 중 실시간 트림 값 — trimPreview(state)와 같은 값이지만, mouseup 핸들러가 React
   // state 업데이트를 기다리지 않고 "방금 그 값"을 바로 읽으려고 ref로도 따로 들고 있는다.
@@ -660,7 +678,7 @@ export default function CheckupTimeline({ epNum, cutsByNo, subtitleSegmentsByNo,
       {!clips.length && !loading && <div className={s.emptyMsg}>완성된 컷이 없어 편집할 클립이 없습니다.</div>}
 
       {!!clips.length && (
-        <div className={s.stripOuter} ref={stripRef} onClick={handleStripClick}>
+        <div className={s.stripOuter} ref={stripRef} onClick={handleStripClick} onMouseDown={handleStripMouseDown}>
           <div className={s.stripInner} style={{ width: `${totalSec * pxPerSec}px` }}>
             <div className={s.ruler}>
               {rulerTicks.map(t => (
