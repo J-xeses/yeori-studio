@@ -54,11 +54,20 @@ function ThumbnailSection({ epNum }) {
   const ratio = thumbnail.ratio || '16:9'
   const dims = RATIOS.find(r => r.key === ratio) || RATIOS[0]
 
+  // 2026-10-23 — 성준님 요청: "YouTube 업로드용 썸네일 편집효과" 1단계(편집의도 기획 수준,
+  // AI 배경제거·컷아웃 같은 무거운 작업 없이 캔버스 2D로 즉시 미리보기 가능한 수준). 벤치마킹
+  // (vidIQ·CapCut·Picsart 등 썸네일 메이커 + CTR 가이드)에서 추린 4종: ①텍스트 외곽선·글로우
+  // ②이미지 보정(밝기·대비·채도) ③비네트 ④강조 도형(원·화살표)+코너 뱃지.
   const draw = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')
     const W = canvas.width, H = canvas.height
     ctx.clearRect(0, 0, W, H)
+
+    // ② 이미지 보정 — ctx.filter(CSS filter 문법 그대로 사용 가능)를 배경에만 적용하고
+    // save/restore로 범위를 가둬 이후 텍스트/도형에는 전혀 영향을 안 준다.
+    ctx.save()
+    ctx.filter = `brightness(${thumbnail.brightness ?? 100}%) contrast(${thumbnail.contrast ?? 100}%) saturate(${thumbnail.saturation ?? 100}%)`
     if (bgImage) {
       drawImageCover(ctx, bgImage, 0, 0, W, H)
     } else {
@@ -67,6 +76,16 @@ function ThumbnailSection({ epNum }) {
       ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
       ctx.fillStyle = 'rgba(124,58,237,.06)'; ctx.fillRect(0, 0, W, H)
     }
+    ctx.restore()
+
+    // ③ 비네트 — 가장자리를 어둡게 눌러 시선을 중앙(인물/텍스트)으로 모은다.
+    if (thumbnail.vignette) {
+      const strength = (thumbnail.vignetteStrength ?? 55) / 100
+      const vgrad = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75)
+      vgrad.addColorStop(0, 'rgba(0,0,0,0)'); vgrad.addColorStop(1, `rgba(0,0,0,${strength})`)
+      ctx.fillStyle = vgrad; ctx.fillRect(0, 0, W, H)
+    }
+
     if (thumbnail.text) {
       const overlay = ctx.createLinearGradient(0, H * 0.5, 0, H)
       overlay.addColorStop(0, 'rgba(0,0,0,0)'); overlay.addColorStop(1, 'rgba(0,0,0,0.75)')
@@ -77,18 +96,81 @@ function ThumbnailSection({ epNum }) {
       const fSize = thumbnail.fontSize || 48
       ctx.font = `${thumbnail.bold ? 'bold ' : ''}${fSize}px ${'"Apple SD Gothic Neo"'},sans-serif`
       ctx.textAlign = 'center'
-      ctx.shadowColor = '#000'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2
-      ctx.fillStyle = thumbnail.color || '#ffffff'
       const yBase = H * ((thumbnail.textY || 70) / 100)
       const lineH = fSize * 1.3
       const totalH = lines.length * lineH
       lines.forEach((line, i) => {
         const y = yBase - totalH / 2 + i * lineH + fSize / 2
+        // ① 텍스트 글로우 — 네온 느낌의 번진 색 그림자를 한 번 먼저 깔고, 아래에서 외곽선+
+        // 본문을 또렷하게 덮어 그린다(동시에 적용하면 번짐이 외곽선에 섞여 뭉개짐).
+        if (thumbnail.textGlow) {
+          ctx.shadowColor = thumbnail.glowColor || '#fbbf24'; ctx.shadowBlur = 22
+          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0
+          ctx.fillStyle = thumbnail.color || '#ffffff'
+          ctx.fillText(line, W / 2, y)
+        }
+        ctx.shadowColor = '#000'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2
+        if (thumbnail.textOutline) {
+          ctx.lineJoin = 'round'
+          ctx.strokeStyle = thumbnail.outlineColor || '#000000'
+          ctx.lineWidth = Math.max(2, fSize * 0.12)
+          ctx.strokeText(line, W / 2, y)
+        }
+        ctx.fillStyle = thumbnail.color || '#ffffff'
         ctx.fillText(line, W / 2, y)
       })
       ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
     }
-    ctx.fillStyle = 'rgba(167,139,250,.25)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'
+
+    // ④ 강조 도형 — 얼굴·핵심 지점을 가리키는 원/화살표. 위치·크기는 %(화면비율 무관) 기준.
+    if (thumbnail.circleOn) {
+      const cx = W * (thumbnail.circleX ?? 75) / 100
+      const cy = H * (thumbnail.circleY ?? 35) / 100
+      const r = Math.min(W, H) * (thumbnail.circleSize ?? 18) / 100
+      ctx.save()
+      ctx.strokeStyle = thumbnail.circleColor || '#ef4444'
+      ctx.lineWidth = Math.max(4, r * 0.08)
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
+      ctx.restore()
+    }
+    if (thumbnail.arrowOn) {
+      const tipX = W * (thumbnail.arrowX ?? 50) / 100
+      const tipY = H * (thumbnail.arrowY ?? 50) / 100
+      const len = Math.min(W, H) * (thumbnail.arrowSize ?? 20) / 100
+      const angle = ((thumbnail.arrowAngle ?? 45) * Math.PI) / 180
+      const tailX = tipX - Math.cos(angle) * len, tailY = tipY - Math.sin(angle) * len
+      const color = thumbnail.arrowColor || '#facc15'
+      ctx.save()
+      ctx.strokeStyle = color; ctx.fillStyle = color
+      ctx.lineWidth = Math.max(5, len * 0.08); ctx.lineCap = 'round'
+      ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(tipX, tipY); ctx.stroke()
+      const headLen = len * 0.32, headAngle = Math.PI / 7
+      ctx.beginPath()
+      ctx.moveTo(tipX, tipY)
+      ctx.lineTo(tipX - headLen * Math.cos(angle - headAngle), tipY - headLen * Math.sin(angle - headAngle))
+      ctx.lineTo(tipX - headLen * Math.cos(angle + headAngle), tipY - headLen * Math.sin(angle + headAngle))
+      ctx.closePath(); ctx.fill()
+      ctx.restore()
+    }
+
+    // 코너 뱃지/리본 — "최초공개" 류 클릭베이트 문구를 모서리에 스티커처럼 고정.
+    if (thumbnail.badgeOn && thumbnail.badgeText) {
+      ctx.save()
+      ctx.font = 'bold 28px "Apple SD Gothic Neo",sans-serif'
+      const tw = ctx.measureText(thumbnail.badgeText).width
+      const boxW = tw + 28, boxH = 44, margin = 16
+      const corner = thumbnail.badgeCorner || 'tl'
+      const bx = corner === 'tr' || corner === 'br' ? W - boxW - margin : margin
+      const by = corner === 'bl' || corner === 'br' ? H - boxH - margin : margin
+      ctx.fillStyle = thumbnail.badgeColor || '#ef4444'
+      ctx.fillRect(bx, by, boxW, boxH)
+      ctx.fillStyle = thumbnail.badgeTextColor || '#ffffff'
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      ctx.fillText(thumbnail.badgeText, bx + boxW / 2, by + boxH / 2 + 1)
+      ctx.restore()
+    }
+
+    ctx.fillStyle = 'rgba(167,139,250,.25)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'
     ctx.fillText('여리 Studio', W - 12, H - 10)
   }, [bgImage, thumbnail])
 
@@ -287,6 +369,162 @@ function ThumbnailSection({ epNum }) {
                   onChange={e => set({ bold: e.target.checked })} />
                 굵게 (Bold)
               </label>
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.textOutline}
+                  onChange={e => set({ textOutline: e.target.checked })} />
+                외곽선 (클릭베이트 스타일)
+              </label>
+              {thumbnail.textOutline && (
+                <div className={s.colorRow}>
+                  <input type="color" className={s.colorPicker}
+                    value={thumbnail.outlineColor || '#000000'}
+                    onChange={e => set({ outlineColor: e.target.value })} />
+                  <span className={s.colorVal}>{thumbnail.outlineColor || '#000000'}</span>
+                </div>
+              )}
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.textGlow}
+                  onChange={e => set({ textGlow: e.target.checked })} />
+                글로우 (네온 번짐)
+              </label>
+              {thumbnail.textGlow && (
+                <div className={s.colorRow}>
+                  <input type="color" className={s.colorPicker}
+                    value={thumbnail.glowColor || '#fbbf24'}
+                    onChange={e => set({ glowColor: e.target.value })} />
+                  <span className={s.colorVal}>{thumbnail.glowColor || '#fbbf24'}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className={s.panel}>
+          <div className={s.panelTitle}>이미지 보정</div>
+          <div className={s.fields}>
+            <div className={s.field}>
+              <label>밝기 <span className={s.val}>{thumbnail.brightness ?? 100}%</span></label>
+              <input type="range" min="50" max="150" value={thumbnail.brightness ?? 100}
+                onChange={e => set({ brightness: parseInt(e.target.value) })} />
+            </div>
+            <div className={s.field}>
+              <label>대비 <span className={s.val}>{thumbnail.contrast ?? 100}%</span></label>
+              <input type="range" min="50" max="200" value={thumbnail.contrast ?? 100}
+                onChange={e => set({ contrast: parseInt(e.target.value) })} />
+            </div>
+            <div className={s.field}>
+              <label>채도 <span className={s.val}>{thumbnail.saturation ?? 100}%</span></label>
+              <input type="range" min="0" max="200" value={thumbnail.saturation ?? 100}
+                onChange={e => set({ saturation: parseInt(e.target.value) })} />
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.vignette}
+                  onChange={e => set({ vignette: e.target.checked })} />
+                비네트 (가장자리 어둡게)
+              </label>
+              {thumbnail.vignette && (
+                <input type="range" min="0" max="100" value={thumbnail.vignetteStrength ?? 55}
+                  onChange={e => set({ vignetteStrength: parseInt(e.target.value) })} />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className={s.panel}>
+          <div className={s.panelTitle}>강조 도형 · 코너 뱃지</div>
+          <div className={s.fields}>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.circleOn}
+                  onChange={e => set({ circleOn: e.target.checked })} />
+                강조 원 (얼굴·핵심 지점 포인트)
+              </label>
+              {thumbnail.circleOn && (
+                <>
+                  <label>가로 위치 <span className={s.val}>{thumbnail.circleX ?? 75}%</span></label>
+                  <input type="range" min="0" max="100" value={thumbnail.circleX ?? 75}
+                    onChange={e => set({ circleX: parseInt(e.target.value) })} />
+                  <label>세로 위치 <span className={s.val}>{thumbnail.circleY ?? 35}%</span></label>
+                  <input type="range" min="0" max="100" value={thumbnail.circleY ?? 35}
+                    onChange={e => set({ circleY: parseInt(e.target.value) })} />
+                  <label>크기 <span className={s.val}>{thumbnail.circleSize ?? 18}%</span></label>
+                  <input type="range" min="5" max="45" value={thumbnail.circleSize ?? 18}
+                    onChange={e => set({ circleSize: parseInt(e.target.value) })} />
+                  <div className={s.colorRow}>
+                    <input type="color" className={s.colorPicker}
+                      value={thumbnail.circleColor || '#ef4444'}
+                      onChange={e => set({ circleColor: e.target.value })} />
+                    <span className={s.colorVal}>{thumbnail.circleColor || '#ef4444'}</span>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.arrowOn}
+                  onChange={e => set({ arrowOn: e.target.checked })} />
+                강조 화살표
+              </label>
+              {thumbnail.arrowOn && (
+                <>
+                  <label>끝점 가로 <span className={s.val}>{thumbnail.arrowX ?? 50}%</span></label>
+                  <input type="range" min="0" max="100" value={thumbnail.arrowX ?? 50}
+                    onChange={e => set({ arrowX: parseInt(e.target.value) })} />
+                  <label>끝점 세로 <span className={s.val}>{thumbnail.arrowY ?? 50}%</span></label>
+                  <input type="range" min="0" max="100" value={thumbnail.arrowY ?? 50}
+                    onChange={e => set({ arrowY: parseInt(e.target.value) })} />
+                  <label>방향(각도) <span className={s.val}>{thumbnail.arrowAngle ?? 45}°</span></label>
+                  <input type="range" min="0" max="360" value={thumbnail.arrowAngle ?? 45}
+                    onChange={e => set({ arrowAngle: parseInt(e.target.value) })} />
+                  <label>길이 <span className={s.val}>{thumbnail.arrowSize ?? 20}%</span></label>
+                  <input type="range" min="8" max="45" value={thumbnail.arrowSize ?? 20}
+                    onChange={e => set({ arrowSize: parseInt(e.target.value) })} />
+                  <div className={s.colorRow}>
+                    <input type="color" className={s.colorPicker}
+                      value={thumbnail.arrowColor || '#facc15'}
+                      onChange={e => set({ arrowColor: e.target.value })} />
+                    <span className={s.colorVal}>{thumbnail.arrowColor || '#facc15'}</span>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.badgeOn}
+                  onChange={e => set({ badgeOn: e.target.checked })} />
+                코너 뱃지 (예: "최초공개")
+              </label>
+              {thumbnail.badgeOn && (
+                <>
+                  <input type="text" className={s.textInput} style={{ padding: '8px 10px', fontSize: 13 }}
+                    placeholder="뱃지 문구" value={thumbnail.badgeText || ''}
+                    onChange={e => set({ badgeText: e.target.value })} />
+                  <div className={s.ratioRow} style={{ padding: 0 }}>
+                    {[['tl', '↖ 좌상'], ['tr', '↗ 우상'], ['bl', '↙ 좌하'], ['br', '↘ 우하']].map(([k, label]) => (
+                      <button key={k} type="button"
+                        className={`${s.ratioBtn} ${(thumbnail.badgeCorner || 'tl') === k ? s.ratioBtnActive : ''}`}
+                        onClick={() => set({ badgeCorner: k })}>{label}</button>
+                    ))}
+                  </div>
+                  <div className={s.colorRow}>
+                    <input type="color" className={s.colorPicker}
+                      value={thumbnail.badgeColor || '#ef4444'}
+                      onChange={e => set({ badgeColor: e.target.value })} />
+                    <span className={s.colorVal}>배경 {thumbnail.badgeColor || '#ef4444'}</span>
+                  </div>
+                  <div className={s.colorRow}>
+                    <input type="color" className={s.colorPicker}
+                      value={thumbnail.badgeTextColor || '#ffffff'}
+                      onChange={e => set({ badgeTextColor: e.target.value })} />
+                    <span className={s.colorVal}>글자 {thumbnail.badgeTextColor || '#ffffff'}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
