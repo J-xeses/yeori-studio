@@ -54,7 +54,7 @@ function getEpStatus(ep) {
 
 const SIDEBAR_EP_GROUPS = [
     { id: 'youtube',   label: '📺 YouTube',   types: ['LF', 'SF'],            barColor: '#a78bfa' },
-    { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S'], barColor: '#ec4899' },
+    { id: 'instagram', label: '📷 Instagram', types: ['IG_R', 'IG_P', 'IG_S', 'IG_H'], barColor: '#ec4899' },
     { id: 'tiktok',    label: '🎵 TikTok',    types: ['TK'],                  barColor: '#3b82f6' },
 ]
 // 에피소드 목록 사이드바의 G1 진행률 바 색상 — 플랫폼별 구분(2026-10-15, 성준님 요청:
@@ -70,6 +70,7 @@ const CONTENT_TYPE_OPTIONS = [
     { value: 'IG_R', label: 'IG_R — Instagram 릴스' },
     { value: 'IG_P', label: 'IG_P — Instagram 피드' },
     { value: 'IG_S', label: 'IG_S — Instagram 스토리' },
+    { value: 'IG_H', label: 'IG_H — 훅 컷(간지, 대본 없이 즉흥 제작)' },
     { value: 'TK',   label: 'TK — TikTok' },
 ]
 

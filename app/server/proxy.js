@@ -8351,6 +8351,99 @@ app.post('/api/checkup-trim-undo', async (req, res) => {
   }
 })
 
+// ── 체크업 "비주얼 효과" 프리셋 — PDF 13페이지 "마스킹 및 색상 수정 / 오버레이 및 이펙트
+// (모션블러·필터링·스타일효과) / 프레임 동결(Freeze) / 역재생(Reverse)" 신규 구현(2026-10-23).
+// 값은 src/lib/checkupVisualEffects.js와 동일하게 유지할 것. 클라이언트가 임의 ffmpeg 필터
+// 문자열을 보낼 수 없도록 value→filter 매핑을 서버 화이트리스트로만 고정한다.
+const CHECKUP_COLOR_FILTERS = {
+  vignette: 'vignette=PI/4',
+  bw: 'hue=s=0',
+  sepia: 'colorbalance=rs=.3:gs=.1:bs=-.2,colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131:0:0:0:0:1',
+  highContrast: 'eq=contrast=1.35:saturation=1.15',
+  coolTone: 'colorbalance=rs=-.15:gs=0:bs=.18',
+  warmTone: 'colorbalance=rs=.15:gs=.05:bs=-.15',
+  vintage: 'curves=vintage,vignette=PI/5',
+}
+const CHECKUP_OVERLAY_FILTERS = {
+  // weights는 따옴표 없이: spawn()은 셸을 거치지 않아 리터럴 큰따옴표가 그대로 ffmpeg 필터
+  // 파서에 전달돼 "Invalid syntax for weights[0]"로 깨짐(2026-10-23 실측 — 합성 테스트 클립으로 확인).
+  motionBlur: 'tmix=frames=3:weights=1 1 1',
+  softGlow: 'gblur=sigma=1.2,eq=brightness=0.03:saturation=1.1',
+  filmGrain: 'noise=alls=12:allf=t+u',
+  vhs: 'curves=vintage,noise=alls=6:allf=t,hue=s=0.85',
+}
+
+// ── POST /api/checkup-visual-effect — 위 4종을 실제 cut_NN.mp4에 즉시 반영 ──────────────
+// 켄번스(/api/checkup-effect)는 아직 CapCut 배치 전 "의도"만 editMeta.json에 저장해 run-cutter.js가
+// 나중에 적용하지만, 이 4종(특히 프레임 동결·역재생)은 "다음 배치 때 반영"할 중간 표현이 마땅치
+// 않아 — /api/checkup-trim-commit과 똑같이 이미 다 구워진 파일 자체를 바로 재인코딩한다.
+// backupCutBeforeOverwrite로 직전 1벌만 보관하므로, 기존 /api/checkup-trim-undo를 그대로 재사용해
+// 되돌릴 수 있다(별도 undo 엔드포인트 불필요 — 트림이든 효과든 "덮어쓰기 직전 1벌" 규칙은 같음).
+app.post('/api/checkup-visual-effect', async (req, res) => {
+  const { epNum, cutNo, category, value, freezeSec } = req.body || {}
+  if (!epNum || cutNo == null) return res.status(400).json({ error: 'epNum, cutNo 필요' })
+  try {
+    const videoDir = mp.videoDir(epNum)
+    const padded = String(cutNo).padStart(2, '0')
+    const videoFiles = (() => { try { return fs.readdirSync(videoDir) } catch { return [] } })()
+    const savedFile = videoFiles.find(f => new RegExp(`^cut_${padded}(_final|_overlay)?\\.mp4$`, 'i').test(f))
+    if (!savedFile) return res.status(400).json({ error: `cut_${padded}.mp4 가 없습니다` })
+    const inPath = path.join(videoDir, savedFile)
+    const outPath = path.join(videoDir, `cut_${padded}.mp4`)
+
+    let vf = null, af = null
+    if (category === 'color') {
+      vf = CHECKUP_COLOR_FILTERS[value]
+      if (!vf) return res.status(400).json({ error: `알 수 없는 색상 효과: ${value}` })
+    } else if (category === 'overlay') {
+      vf = CHECKUP_OVERLAY_FILTERS[value]
+      if (!vf) return res.status(400).json({ error: `알 수 없는 오버레이 효과: ${value}` })
+    } else if (category === 'reverse') {
+      vf = 'reverse'; af = 'areverse'
+    } else if (category === 'freeze') {
+      const n = Math.min(5, Math.max(0.5, Number(freezeSec) || 1.5))
+      vf = `tpad=stop_mode=clone:stop_duration=${n}`
+      af = `apad=pad_dur=${n}`
+    } else {
+      return res.status(400).json({ error: `알 수 없는 category: ${category}` })
+    }
+
+    // 입력=출력 파일이 같은 경우(항상 그렇다 — cut_NN.mp4를 그대로 다시 씀) ffmpeg가 읽으면서
+    // 동시에 같은 파일에 쓸 수 없으므로 /api/render-cut-clips와 동일하게 임시 복사로 피해간다.
+    const rawDir = path.join(mp.makingDir(epNum), 'raw')
+    fs.mkdirSync(rawDir, { recursive: true })
+    const srcPath = path.join(rawDir, `cut_${padded}_effectsrc_${Date.now()}.mp4`)
+    fs.copyFileSync(inPath, srcPath)
+
+    backupCutBeforeOverwrite(videoDir, padded)
+
+    const withAudio = await hasAudioStream(srcPath)
+    const args = ['-y', '-i', srcPath, '-vf', vf]
+    if (withAudio) {
+      if (af) args.push('-af', af)
+      args.push('-c:a', 'aac', '-b:a', '192k')
+    } else {
+      args.push('-an')
+    }
+    args.push('-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-movflags', '+faststart', outPath)
+
+    const code = await new Promise((resolve) => {
+      const proc = spawn('ffmpeg', args, { windowsHide: true })
+      let errBuf = ''
+      proc.stderr.on('data', d => { errBuf += d.toString() })
+      proc.on('close', c => { if (c !== 0) console.error('[checkup-visual-effect]', errBuf.slice(-400)); resolve(c) })
+      proc.on('error', () => resolve(1))
+    })
+    try { fs.unlinkSync(srcPath) } catch { /* noop */ }
+    if (code !== 0 || !fs.existsSync(outPath)) return res.status(500).json({ error: 'FFmpeg 효과 적용 실패' })
+
+    const duration = await getMediaDuration(outPath)
+    res.json({ success: true, duration })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 app.get('/api/code-task-queue', (req, res) => {
   res.json({ tasks: loadTaskQueue() })
 })

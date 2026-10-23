@@ -291,6 +291,16 @@ export default function CheckupTab() {
     // 이 반환값이 필요 없었음).
   }, [epNum, state.cuts, dispatch, load])
 
+  // 2026-10-23 — 비주얼 효과(프레임 동결)는 trim과 마찬가지로 실제 cut_NN.mp4 길이를 바꾸므로,
+  // commitCutTrim/undoCutTrim과 동일하게 state.cuts의 duration도 같이 맞춰둔다(안 하면 메타
+  // 테이블·SRT 타이밍·BeatSummaryBar가 실제 파일보다 짧아진 영상 길이를 못 따라감).
+  const applyCutDuration = useCallback((cutNo, newDuration) => {
+    const cut = state.cuts?.find(c => c.no === cutNo)
+    if (cut?.id && newDuration) {
+      dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { duration: Math.round(newDuration * 10) / 10 }, overrideReason: '체크업 비주얼 효과 적용/되돌리기' })
+    }
+  }, [state.cuts, dispatch])
+
   const playable = cuts.filter(c => c.hasVideo && c.videoUrl)
   const activeIdx = playable.findIndex(c => c.no === activeCutNo)
   const mismatchCount = cuts.filter(c => c.lengthMismatch).length
@@ -408,7 +418,8 @@ export default function CheckupTab() {
         <CheckupSidebar cuts={state.cuts} cutsByNo={cutsByNo} selectedCutNo={selectedCutNo}
           onSelectCut={setSelectedCutNo} onSeek={seekTo} onApplied={load}
           epNum={epNum} episodeCode={episodeCode}
-          onOpenDiagnosis={(cutId) => setDiagCutId(cutId)} />
+          onOpenDiagnosis={(cutId) => setDiagCutId(cutId)}
+          onCutDurationChange={applyCutDuration} />
         <div className={s.page}>
           <div className={s.mainRow}>
             {/* 라이브러리/미디어 임포트 추후반영 영역 — 목업 배치 고정(2026-09-13, 사용자 지적:

@@ -1,10 +1,12 @@
 // 정식 에피소드 코드 형식 검증/분해 — 클라이언트용.
 // server/lib/episodeCode.js와 반드시 동일한 로직을 유지할 것.
 //
-// 형식: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리+ 번호}[_{슬러그}]
-//   SF_E01 (숏폼 에피소드) · LF_T01 (롱폼 트렌드) · IG_R02 (릴스) · IG_P01 (피드) …
+// 형식: {SF|LF|IG|TK}_{E|T|P|R|S|H}{2자리+ 번호}[_{슬러그}]
+//   SF_E01 (숏폼 에피소드) · LF_T01 (롱폼 트렌드) · IG_R02 (릴스) · IG_P01 (피드) · IG_H01 (훅) …
 //   폴더 경로(downloads/{platform}/{series}/{code}/)와 직결 — src/lib/mediaPaths.js parseCode 참고.
-export const EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRS])(\d{2,})(?:_([A-Z0-9]+))?$/
+//   H(훅, 2026-10-21 신설)는 server/lib/mediaPaths.js 파서 자체는 범용이라 수정이 필요 없었지만,
+//   이 검증 정규식은 kind를 [ETPRS]로 못박아둬서 IG_H가 "형식이 올바르지 않습니다"로 막혔음(2026-10-23 발견).
+export const EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRSH])(\d{2,})(?:_([A-Z0-9]+))?$/
 // 구 형식(IG_R_E02, X_E01…)도 당분간 허용 — 이미 만들어진 에피소드 호환용
 const EPISODE_CODE_RE_LEGACY = /^([A-Z0-9_]+)_E(\d{2,})(?:_([A-Z0-9]+))?$/
 

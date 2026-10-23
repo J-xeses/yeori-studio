@@ -6,10 +6,10 @@
 //   - 슬러그: 선택, 대문자/숫자만 (예: SHOE)
 // 이 정규식/파싱 로직은 src/lib/episodeCode.js(클라이언트)와 반드시 동일하게 유지할 것.
 
-// 형식: {SF|LF|IG|TK}_{E|T|P|R|S}{2자리+ 번호}[_{슬러그}]
-//   SF_E01 · LF_T01 · IG_R02 · IG_P01 … — 폴더 경로(downloads/{platform}/{series}/{code}/)와 직결.
+// 형식: {SF|LF|IG|TK}_{E|T|P|R|S|H}{2자리+ 번호}[_{슬러그}]
+//   SF_E01 · LF_T01 · IG_R02 · IG_P01 · IG_H01(훅) … — 폴더 경로(downloads/{platform}/{series}/{code}/)와 직결.
 //   src/lib/episodeCode.js·server/lib/mediaPaths.js parseCode 와 동일하게 유지할 것.
-export const EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRS])(\d{2,})(?:_([A-Z0-9]+))?$/
+export const EPISODE_CODE_RE = /^(SF|LF|IG|TK)_([ETPRSH])(\d{2,})(?:_([A-Z0-9]+))?$/
 const EPISODE_CODE_RE_LEGACY = /^([A-Z0-9_]+)_E(\d{2,})(?:_([A-Z0-9]+))?$/
 
 export function validateEpisodeCode(code) {
