@@ -55,6 +55,14 @@ app/.tunnel-state.json
 _backup_desktop_tilde_movies_20260704/
 app/TREND RADAR v7_files/
 
+# 2026-10-28: studio-secrets.json(API 키 원본)이 백업 폴더 커밋에 섞여
+# GitHub Push Protection에 걸렸던 사고(Anthropic/Gemini/Notion/ElevenLabs 키 노출) 재발 방지
+*.bak
+_rename-backup-*/
+**/_syncfix-backup-*/
+studio-secrets.json
+**/studio-secrets.json
+
 # 이 PC 전용 실행 기록(매 실행마다 바뀜, 커밋 불필요) — 2026-09-27
 downloads/state/yeori-llm-usage.json
 downloads/state/yeori-comments-last.json
