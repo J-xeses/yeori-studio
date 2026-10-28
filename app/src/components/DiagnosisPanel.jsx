@@ -102,6 +102,9 @@ const lsKey = (code, no) => `diag:${code || 'ep'}:cut${no}`
 const loadThread = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]') } catch { return [] } }
 const saveThread = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v.slice(-40))) } catch { /* 용량 초과 등 — 무시 */ } }
 
+const API = 'http://localhost:3001'
+const postJson = (path, body) => fetch(API + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+
 export default function DiagnosisPanel({ cut, episodeCode, stage = 'G4', onClose }) {
   const { state, dispatch } = useApp()
   const key = lsKey(episodeCode, cut.no)
@@ -111,6 +114,13 @@ export default function DiagnosisPanel({ cut, episodeCode, stage = 'G4', onClose
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
   const endRef = useRef(null)
+  const episodeId = state.activeEpisodeId   // 이 패널은 항상 활성 에피소드의 탭(VideoTab/CheckupTab)에서만 열린다
+
+  // 현장 판단 기록 — 서버(.genline-review.json)에 보조로 남긴다. 실패해도 UI 를 막지 않음(best-effort)
+  const recordReview = useCallback((kind, value, meta) => {
+    if (!episodeId) return Promise.resolve()
+    return postJson('/api/genline-review', { episodeId, cutNo: cut.no, kind, value, meta: meta ?? null }).catch(() => {})
+  }, [episodeId, cut.no])
 
   useEffect(() => { setThread(loadThread(key)); setText(''); setShot(null); setNotice('') }, [key])
   useEffect(() => { endRef.current?.scrollIntoView({ block: 'end' }) }, [thread, busy])
@@ -172,6 +182,7 @@ ${msg || '(이미지만 붙여넣음 — 결과를 보고 대본과 대조해줘
         fixes: (j.fixes || []).slice(0, 4).map(f => ({ ic: f.ic || '•', title: f.title || '', act: f.act || 'copy', body: f.body || '', applied: false })),
       }
       commit([...withMe, ai])
+      recordReview('note', `${msg || '(이미지만)'}\n→ ${ai.summaryLine}`, { stage, summaryLine: ai.summaryLine })
     } catch (e) {
       commit([...withMe, { role: 'ai', id: Date.now(), error: 'Claude 호출 실패: ' + e.message }])
     } finally { setBusy(false) }
@@ -184,6 +195,7 @@ ${msg || '(이미지만 붙여넣음 — 결과를 보고 대본과 대조해줘
 
   function applyFix(m, fi) {
     const f = m.fixes[fi]
+    if (f.act === 'ip' || f.act === 'vp') recordReview('ip', f.body, { stage, act: f.act })
     if (f.act === 'copy') {
       navigator.clipboard?.writeText(f.body).catch(() => {})
       markApplied(m.id, fi, '재생성 프롬프트를 복사했습니다 (대본 그대로).')
@@ -198,9 +210,27 @@ ${msg || '(이미지만 붙여넣음 — 결과를 보고 대본과 대조해줘
     } else if (f.act === 'script') {
       const { patch, notes } = scriptBodyToPatch(f.body)
       if (!Object.keys(patch).length) { setNotice('적용할 수 있는 필드(SC/DU/DL/NR/SEG)가 없습니다. ' + notes.join(' · ')); return }
+      recordReview('script', f.body, { stage, act: 'script' })
       dispatch({ type: 'UPDATE_CUT', id: cut.id, p: patch, overrideReason: 'AI 진단 패널: 대본 반영' })
       markApplied(m.id, fi, `대본 반영: ${Object.keys(patch).join(', ')}` + (notes.length ? ` — ${notes.join(' · ')}` : ''))
     }
+  }
+
+  // 판정: 서버 파일 + 에이전트 리더 로그 둘 다 기록. 네트워크 호출은 기다리지 않고, fetch 자체가 거부될 때만 실패 안내.
+  function judge(value) {
+    if (busy || !thread.length) return
+    const label = value === 'pass' ? '통과' : '재작업'
+    const summaryLine = [...thread].reverse().find(m => m.role === 'ai' && m.summaryLine)?.summaryLine || ''
+    const calls = [
+      postJson('/api/genline-review', { episodeId, cutNo: cut.no, kind: 'verdict', value, meta: { stage, summaryLine } }),
+      postJson('/api/genline-log', { episode: episodeCode, stage, kind: value === 'pass' ? '사람선택' : '반려감지', summary: `CUT ${cut.no} 판정: ${label}`, result: '', humanInvolved: true }),
+    ]
+    setNotice(`CUT ${cut.no} 판정 "${label}" 기록 중…`)
+    Promise.allSettled(calls).then(rs => {
+      setNotice(rs.some(r => r.status === 'rejected')
+        ? `판정 "${label}" 기록 실패 — 서버에 연결할 수 없습니다.`
+        : `CUT ${cut.no} 판정 "${label}" 을(를) 기록했습니다.`)
+    })
   }
 
   function clearThread() {
@@ -219,6 +249,8 @@ ${msg || '(이미지만 붙여넣음 — 결과를 보고 대본과 대조해줘
           <b>🔍 AI 진단 — CUT {String(cut.no).padStart(2, '0')}</b>
           <span className={s.chip}>{stage}</span>
           <span className={s.headSpacer} />
+          <button className={s.btn} onClick={() => judge('pass')} disabled={!thread.length || busy}>✓ 통과</button>
+          <button className={s.btn} onClick={() => judge('retry')} disabled={!thread.length || busy}>↻ 재작업</button>
           <button className={s.btn} onClick={clearThread} disabled={!thread.length}>🧹 초기화</button>
           <button className={s.btn} onClick={onClose}>닫기</button>
         </div>
