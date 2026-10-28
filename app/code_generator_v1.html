@@ -133,7 +133,8 @@
   .cab-char-row.active { border-left-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(29,158,117,0.2); }
   .cab-char-thumb { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border2); }
   .cab-char-thumb-ph { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; background: var(--surface2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text3); }
-  .cab-char-name { font-size: 11px; color: var(--text2); flex: 1; min-width: 0; }
+  .cab-char-name { font-size: 11px; color: var(--text2); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cab-look-scroll { max-height: 240px; overflow-y: auto; }
   .cab-char-row.active .cab-char-name { color: var(--teal); font-weight: 700; }
   .cab-char-count { font-size: 9px; color: var(--text3); font-family: 'Space Mono', monospace; }
   .cab-char-arrow { font-size: 9px; color: var(--text3); width: 10px; text-align: center; flex-shrink: 0; }
@@ -196,6 +197,9 @@
   .card-h { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.3px; }
 
   .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* CA_BANK 전용 — 긴 룩/표정/샷 라벨이 겹치지 않게 세로 배치(.kw-wrap 은 전역이라 건드리지 않음) */
+  .cab-look-col { display: flex; flex-direction: column; gap: 6px; }
+  .cab-pills-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
   /* 라벨이 "코드 + 한글"(예: PSY 심리) 이라 코드는 모노, 한글은 산세리프로 자동 폴백되게 순서만 지정 */
   .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', 'Noto Sans KR', sans-serif; }
   .pill:hover { border-color: var(--teal); color: var(--text); }
@@ -425,6 +429,7 @@
   .cab-attempt-res.discarded { color: var(--scarlet-light); }
 
   .cab-board-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
+  .cab-board-head .cab-copy-btn { margin-left: auto; }
   .cab-board-title { font-size: 11px; font-weight: 700; color: var(--text); }
   .cab-board-fill { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text3); }
   .cab-board-fill.full { color: var(--teal); }
@@ -906,7 +911,7 @@
           <div class="g g2" style="margin-bottom:12px">
             <div class="card">
               <div class="card-h"><span class="idx">02</span>👗 룩(LOOK)</div>
-              <div class="kw-wrap" id="cab-pills-look" style="margin-bottom:10px"></div>
+              <div class="cab-look-col" id="cab-pills-look" style="margin-bottom:10px"></div>
               <div class="field-label">상의(선택)</div>
               <div class="kw-wrap" id="cab-pills-top" style="margin-bottom:8px"></div>
               <div class="field-label">하의(선택)</div>
@@ -917,9 +922,9 @@
             <div class="card">
               <div class="card-h"><span class="idx">03</span>🎭 표정 · 샷</div>
               <div class="field-label">표정(MD_)</div>
-              <div class="kw-wrap" id="cab-pills-mood" style="margin-bottom:8px"></div>
+              <div class="cab-pills-2col" id="cab-pills-mood" style="margin-bottom:8px"></div>
               <div class="field-label">샷(SH_)</div>
-              <div class="kw-wrap" id="cab-pills-shot"></div>
+              <div class="cab-pills-2col" id="cab-pills-shot"></div>
             </div>
           </div>
           <div class="card accent">
@@ -3014,6 +3019,17 @@ function characterLooks(id) {
 }
 // ③ 출연·룩(에피소드 탭)도 CA_BANK와 같은 characters.json + characterLooks()를 그대로 읽는다(읽기 전용).
 // personaOf가 없는 캐릭터 = "인물"(1단계), personaOf===그 인물 인 캐릭터 = "변형"(2단계, 예: yeori_nt).
+// 베이스 캐릭터 + 변형(personaOf)의 룩을 한 목록으로 — 각 항목에 실제 소유 캐릭터(ownerId)를 붙인다.
+// 변형 소속이면 tag(예: 묶은머리)로 구분해 표시한다. 데이터(characters.json)는 그대로, 표시만 합친다.
+// 같은 코드가 base(codebook LOOK_BANK 의 LOOK_NT 등)와 변형 양쪽에 있으면 변형 쪽 항목이 이긴다(파일·소유자가 정확).
+function characterLooksAll(baseId) {
+  const byCode = new Map();
+  variantsOf(baseId).forEach(id => characterLooks(id).forEach(l => {
+    byCode.set(l.code, { ...l, ownerId: id, tag: id !== baseId ? '묶은머리' : '' });
+  }));
+  return [...byCode.values()];
+}
+function cabLookLabel(l) { return l.tag ? `${l.label} (${l.tag})` : l.label; }
 function basePersons() { return CAB_CHAR_ORDER.filter(id => !(cabChar(id) || {}).personaOf); }
 function variantsOf(baseId) { return CAB_CHAR_ORDER.filter(id => id === baseId || (cabChar(id) || {}).personaOf === baseId); }
 // 대본 화자 표기(예: "여리") → characters.json id — name/aliases 매칭(clipPrompt.js speakerIdsFor와 같은 원칙).
@@ -3178,8 +3194,8 @@ function renderCaBankSidebar() {
     const msg = { loading: '캐릭터 정보 불러오는 중…', offline: '스튜디오 서버가 꺼져 있어요 — localhost:3001 을 켠 뒤 다시 시도하세요.', error: '캐릭터 정보를 못 불러왔어요.' }[charactersStatus] || '';
     html += `<div class="sb-empty">${escapeHtml(msg)}<br><span class="sb-retry" onclick="loadCharacters()">다시 시도</span></div>`;
   } else {
-    const looks = Object.fromEntries(CAB_CHAR_ORDER.map(id => [id, characterLooks(id)]));
-    CAB_CHAR_ORDER.forEach(id => {
+    const looks = Object.fromEntries(basePersons().map(id => [id, characterLooksAll(id)]));
+    basePersons().forEach(id => {
       const c = cabChar(id);
       const name = (c && c.name) || CAB_CHAR_SHORT[id];
       const face = c && c.face;
@@ -3194,12 +3210,16 @@ function renderCaBankSidebar() {
       </div>`;
       if (expanded) {
         if (!list.length) html += `<div class="cab-look-empty">아직 등록된 룩이 없어요</div>`;
-        else list.forEach(l => {
+        else {
+          html += '<div class="cab-look-scroll">';
+          list.forEach(l => {
           html += `<div class="cab-look-row ${cab.charId === id && cab.look === l.code ? 'active' : ''}" onclick="event.stopPropagation(); cabSelectLook('${id}','${escapeHtml(l.code)}')" title="${escapeHtml(l.desc || '')}">
-            <span class="cab-look-code">${escapeHtml(l.code)}</span><span class="cab-look-label">${escapeHtml(l.label)}</span>
+            <span class="cab-look-code">${escapeHtml(l.code)}</span><span class="cab-look-label">${escapeHtml(cabLookLabel(l))}</span>
             ${l.dupeCodebook ? '<span class="cab-look-dupe" title="codebook.LOOK_BANK 에도 같은 코드가 있어요(ca-bank-academy-proposal.md §1)">⚠중복</span>' : ''}
           </div>`;
-        });
+          });
+          html += '</div>';
+        }
       }
     });
   }
@@ -3225,14 +3245,14 @@ function cabVocabGroup(title, options, field) {
 
 // ── A. 시뮬레이터 ────────────────────────────────────────────────────────
 function renderCabSimulator() {
-  const charOptions = CAB_CHAR_ORDER.map(id => ({ code: id, label: (cabChar(id) && cabChar(id).name) || CAB_CHAR_SHORT[id] }));
+  const charOptions = basePersons().map(id => ({ code: id, label: (cabChar(id) && cabChar(id).name) || CAB_CHAR_SHORT[id] }));
   setPills('cab-pills-char', charOptions, cab.charId, "cabSelectChar('{v}')");
 
-  const looks = cab.charId ? characterLooks(cab.charId) : [];
+  const looks = cab.charId ? characterLooksAll(cab.charId) : [];
   const lookEl = document.getElementById('cab-pills-look');
   if (lookEl) {
     lookEl.innerHTML = looks.length
-      ? pillsHtml(looks.map(l => ({ code: l.code, label: `${l.code} ${l.label}` })), cab.look, "cabSetField('look','{v}')")
+      ? pillsHtml(looks.map(l => ({ code: l.code, label: `${l.code} ${cabLookLabel(l)}` })), cab.look, "cabSetField('look','{v}')")
       : `<div class="cab-hint">${cab.charId ? '이 캐릭터에 등록된 룩이 없어요.' : '캐릭터를 먼저 고르면 룩 목록이 나와요.'}</div>`;
   }
   setPills('cab-pills-top', TOP_OPTIONS, cab.top, "cabSetField('top','{v}')");
@@ -3261,7 +3281,7 @@ function renderCabSimulator() {
     .map(code => (([...TOP_OPTIONS, ...BOTTOM_OPTIONS, ...SEASON_OPTIONS].find(o => o.code === code)) || {}).label || code)
     .join(', ');
   const promptText = [
-    (c && c.descriptor) || (cab.charId ? '(descriptor 없음)' : '(캐릭터 미선택)'),
+    (cabChar((lookEntry && lookEntry.ownerId) || cab.charId) || {}).descriptor || (cab.charId ? '(descriptor 없음)' : '(캐릭터 미선택)'),
     lookEntry ? `wearing ${lookEntry.desc || lookEntry.label}` : null,
     tbsExtra || null, moodEn, shotEn,
   ].filter(Boolean).join(', ');
@@ -3300,9 +3320,11 @@ function cabSlotHtml(slotId, label, file, promptText, targetFile) {
 }
 function cabBoardDefs(charId) {
   const c = cabChar(charId);
-  const looks = characterLooks(charId);
+  const looks = characterLooksAll(charId);
   const descriptor = (c && c.descriptor) || '(descriptor 없음)';
   const mk = extra => [descriptor, extra].filter(Boolean).join(', ');
+  // ④ 룩별 전신: 변형 소속 룩(LOOK_NT 등)은 그 변형 캐릭터의 descriptor 를 쓴다
+  const mkLook = l => extra => [(cabChar(l.ownerId) || {}).descriptor || descriptor, extra].filter(Boolean).join(', ');
   const targetFile = (board, slot) => `downloads/seoyeori/characters/${charId}/${board}_${slot}.jpg`;
 
   const boards = [];
@@ -3317,7 +3339,7 @@ function cabBoardDefs(charId) {
     { key: k, label: CAB_EXPR_LABEL[k], file: null, prompt: mk(`close-up portrait, ${CAB_EXPR_EN[k]}`), target: targetFile('expr', k) }
   )) });
   boards.push({ key: 'look', title: '④ 룩별 전신', slots: looks.map(l => (
-    { key: l.code, label: `${l.code} ${l.label}`, file: l.file, prompt: mk(`full body, wearing ${l.desc || l.label}`), target: targetFile('look', l.code) }
+    { key: l.code, label: `${l.code} ${cabLookLabel(l)}`, file: l.file, prompt: mkLook(l)(`full body, wearing ${l.desc || l.label}`), target: targetFile('look', l.code) }
   )) });
   boards.push({ key: 'season', title: '⑤ 시즌', slots: Object.keys(CAB_SEASON_LABEL).map(sk => {
     const matched = looks.find(l => l.season && CAB_SEASON_KEYWORDS[sk].some(w => String(l.season).toLowerCase().includes(w)));
@@ -3328,7 +3350,28 @@ function cabBoardDefs(charId) {
       target: targetFile('season', sk),
     };
   }) });
+  // 세션 한정 사용자 추가 슬롯(cabAddCustomSlot) — 일반 빈 슬롯과 동일하게 취급
+  boards.forEach(b => {
+    ((cab.customSlots[charId] || {})[b.key] || []).forEach(cs => {
+      b.slots.push({ key: cs.key, label: cs.label, file: null, prompt: mk(`additional reference view, ${cs.label}`), target: targetFile(b.key, cs.key) });
+    });
+  });
   return boards;
+}
+// 보드에 슬롯 추가 — 새로고침하면 사라지는 세션 메모리 전용(서버 저장은 다음 단계).
+cab.customSlots = {};
+function cabAddCustomSlot(boardKey) {
+  if (!cab.charId) return;
+  const label = (window.prompt('추가할 슬롯 이름 (영문 프롬프트 문구로도 쓰이니 짧은 영문 권장)') || '').trim();
+  if (!label) return;
+  const board = cabBoardDefs(cab.charId).find(b => b.key === boardKey);
+  const taken = new Set(board ? board.slots.map(s => s.key) : []);
+  const base = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'slot';
+  let key = base, n = 2;
+  while (taken.has(key)) key = `${base}_${n++}`;
+  const byChar = cab.customSlots[cab.charId] || (cab.customSlots[cab.charId] = {});
+  (byChar[boardKey] || (byChar[boardKey] = [])).push({ key, label });
+  renderCabBoard();
 }
 function renderCabBoard() {
   const boardEl = document.getElementById('cab-board');
@@ -3351,7 +3394,7 @@ function renderCabBoard() {
     const body = total
       ? `<div class="cab-board-grid">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
       : `<div class="cab-look-empty" style="padding-left:0">이 캐릭터에 등록된 룩이 없어요 — 왼쪽 "룩(LOOK)"에서 확인하세요.</div>`;
-    return `<div class="cab-board-head"><span class="cab-board-title">${escapeHtml(b.title)}</span><span class="cab-board-fill ${total > 0 && filled === total ? 'full' : ''}" id="${fillId}" data-total="${total}" data-filled="${filled}">${filled}/${total}</span></div>${body}`;
+    return `<div class="cab-board-head"><span class="cab-board-title">${escapeHtml(b.title)}</span><span class="cab-board-fill ${total > 0 && filled === total ? 'full' : ''}" id="${fillId}" data-total="${total}" data-filled="${filled}">${filled}/${total}</span><button class="cab-copy-btn" onclick="cabAddCustomSlot('${b.key}')">+ 슬롯 추가</button></div>${body}`;
   }).join('');
 }
 
