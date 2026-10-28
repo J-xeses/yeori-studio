@@ -204,10 +204,13 @@
   /* 라벨이 "코드 + 한글"(예: PSY 심리) 이라 코드는 모노, 한글은 산세리프로 자동 폴백되게 순서만 지정 */
   .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', 'Noto Sans KR', sans-serif; }
   .pill:hover { border-color: var(--teal); color: var(--text); }
-  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset, 0 0 6px 1px rgba(159,225,203,0.55); }
+  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset; text-shadow: 0 0 1px rgba(159,225,203,0.9); -webkit-text-stroke: 0.6px rgba(159,225,203,0.95); }
   /* 선택 표시는 틸 한 계열만: .on = 기본 틸, .on-alt = 같은 계열 밝은 톤(두 그룹을 나란히 둘 때 구분용).
-     예전 .on-o(스칼렛)는 초록 UI 에서 불균형해 보여 2026-09-27 제거(성준님 점검). */
-  .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-light); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset, 0 0 6px 1px rgba(159,225,203,0.6); }
+     예전 .on-o(스칼렛)는 초록 UI 에서 불균형해 보여 2026-09-27 제거(성준님 점검).
+     2026-10-28: 선택 강조를 프레임(box-shadow)이 아니라 텍스트 자체로 이동 — 성준님 피드백:
+     "프레임보다 텍스트가 부각돼야 선택구별이 더 강렬" + "테두리는 밝은 단선으로". 흐릿한 글로우(블러 text-shadow)
+     대신 text-stroke 로 또렷한 단선 테두리만 준다(text-shadow 는 안티앨리어싱 보정용 1px 뿐, 블러 없음). */
+  .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-light); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset; text-shadow: 0 0 1px rgba(255,255,255,0.9); -webkit-text-stroke: 0.6px rgba(255,255,255,0.9); }
 
   .field-label { font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; }
 
