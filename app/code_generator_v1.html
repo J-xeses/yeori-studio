@@ -198,15 +198,16 @@
 
   .kw-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
   /* CA_BANK 전용 — 긴 룩/표정/샷 라벨이 겹치지 않게 세로 배치(.kw-wrap 은 전역이라 건드리지 않음) */
-  .cab-look-col { display: flex; flex-direction: column; gap: 6px; }
-  .cab-pills-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cab-look-col { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; padding: 4px; }
+  .cab-md-sh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cab-pills-scroll-col { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; padding: 4px; }
   /* 라벨이 "코드 + 한글"(예: PSY 심리) 이라 코드는 모노, 한글은 산세리프로 자동 폴백되게 순서만 지정 */
   .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', 'Noto Sans KR', sans-serif; }
   .pill:hover { border-color: var(--teal); color: var(--text); }
-  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset; }
+  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset, 0 0 6px 1px rgba(159,225,203,0.55); }
   /* 선택 표시는 틸 한 계열만: .on = 기본 틸, .on-alt = 같은 계열 밝은 톤(두 그룹을 나란히 둘 때 구분용).
      예전 .on-o(스칼렛)는 초록 UI 에서 불균형해 보여 2026-09-27 제거(성준님 점검). */
-  .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-light); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset; }
+  .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-light); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset, 0 0 6px 1px rgba(159,225,203,0.6); }
 
   .field-label { font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; }
 
@@ -433,6 +434,11 @@
   .cab-board-title { font-size: 11px; font-weight: 700; color: var(--text); }
   .cab-board-fill { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text3); }
   .cab-board-fill.full { color: var(--teal); }
+  /* ④ 룩별 전신 전용 — 한 줄 가로 누적 + 가로 스크롤, 카드 확대 (①②③⑤ 는 .cab-board-grid 그대로) */
+  .cab-board-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+  .cab-board-row .cab-slot { flex: 0 0 220px; }
+  .cab-board-row .cab-slot-img-wrap { height: 220px; }
+  .cab-board-row .cab-slot-prompt { max-height: 120px; }
   .cab-board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 6px; }
   .cab-slot { border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; background: rgba(15,42,34,0.12); display: flex; flex-direction: column; }
   .cab-slot-img-wrap { height: 150px; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
@@ -441,7 +447,7 @@
   .cab-slot-body { padding: 8px 9px; }
   .cab-slot-label { font-size: 10px; color: var(--text2); font-weight: 700; margin-bottom: 4px; }
   .cab-slot-file { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text3); word-break: break-all; line-height: 1.5; margin-bottom: 5px; }
-  .cab-slot-prompt { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text3); line-height: 1.5; max-height: 64px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 5px 6px; margin-bottom: 5px; }
+  .cab-slot-prompt { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--teal-light); line-height: 1.5; max-height: 64px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 5px 6px; margin-bottom: 5px; }
   .cab-slot-copy { font-size: 9px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; width: 100%; font-family: 'Space Mono', monospace; }
   .cab-slot-copy:hover { border-color: var(--teal); color: var(--teal); }
   .cab-slot.filled .cab-slot-img-wrap { border-bottom: 1px solid var(--border2); }
@@ -911,7 +917,8 @@
           <div class="g g2" style="margin-bottom:12px">
             <div class="card">
               <div class="card-h"><span class="idx">02</span>👗 룩(LOOK)</div>
-              <div class="cab-look-col" id="cab-pills-look" style="margin-bottom:10px"></div>
+              <div class="cab-look-col" id="cab-pills-look" style="margin-bottom:6px"></div>
+              <div style="margin-bottom:10px"><button class="cab-copy-btn" style="margin-left:0" onclick="cabAddCustomLook()">+ 룩 추가</button><span class="cab-hint" style="margin-left:8px">초안 — 새로고침하면 사라져요</span></div>
               <div class="field-label">상의(선택)</div>
               <div class="kw-wrap" id="cab-pills-top" style="margin-bottom:8px"></div>
               <div class="field-label">하의(선택)</div>
@@ -921,10 +928,16 @@
             </div>
             <div class="card">
               <div class="card-h"><span class="idx">03</span>🎭 표정 · 샷</div>
-              <div class="field-label">표정(MD_)</div>
-              <div class="cab-pills-2col" id="cab-pills-mood" style="margin-bottom:8px"></div>
-              <div class="field-label">샷(SH_)</div>
-              <div class="cab-pills-2col" id="cab-pills-shot"></div>
+              <div class="cab-md-sh-grid">
+                <div>
+                  <div class="field-label">표정(MD_)</div>
+                  <div class="cab-pills-scroll-col" id="cab-pills-mood"></div>
+                </div>
+                <div>
+                  <div class="field-label">샷(SH_)</div>
+                  <div class="cab-pills-scroll-col" id="cab-pills-shot"></div>
+                </div>
+              </div>
             </div>
           </div>
           <div class="card accent">
@@ -3248,7 +3261,7 @@ function renderCabSimulator() {
   const charOptions = basePersons().map(id => ({ code: id, label: (cabChar(id) && cabChar(id).name) || CAB_CHAR_SHORT[id] }));
   setPills('cab-pills-char', charOptions, cab.charId, "cabSelectChar('{v}')");
 
-  const looks = cab.charId ? characterLooksAll(cab.charId) : [];
+  const looks = cab.charId ? cabAllLooksFor(cab.charId) : [];
   const lookEl = document.getElementById('cab-pills-look');
   if (lookEl) {
     lookEl.innerHTML = looks.length
@@ -3320,7 +3333,7 @@ function cabSlotHtml(slotId, label, file, promptText, targetFile) {
 }
 function cabBoardDefs(charId) {
   const c = cabChar(charId);
-  const looks = characterLooksAll(charId);
+  const looks = cabAllLooksFor(charId);
   const descriptor = (c && c.descriptor) || '(descriptor 없음)';
   const mk = extra => [descriptor, extra].filter(Boolean).join(', ');
   // ④ 룩별 전신: 변형 소속 룩(LOOK_NT 등)은 그 변형 캐릭터의 descriptor 를 쓴다
@@ -3360,6 +3373,21 @@ function cabBoardDefs(charId) {
 }
 // 보드에 슬롯 추가 — 새로고침하면 사라지는 세션 메모리 전용(서버 저장은 다음 단계).
 cab.customSlots = {};
+// 세션 한정 초안 룩(서버 저장 없음) — 시뮬레이터 룩 pill 과 ④ 보드에 실제 룩처럼 나타난다.
+cab.customLooks = {};
+function cabAllLooksFor(charId) { return characterLooksAll(charId).concat(cab.customLooks[charId] || []); }
+function cabAddCustomLook() {
+  if (!cab.charId) return;
+  const label = (window.prompt('추가할 룩 이름 (프롬프트의 "wearing …" 문구로도 쓰이니 짧은 영문 권장)') || '').trim();
+  if (!label) return;
+  const taken = new Set(cabAllLooksFor(cab.charId).map(l => l.code));
+  const base = 'DRAFT_' + (label.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'LOOK');
+  let code = base, n = 2;
+  while (taken.has(code)) code = `${base}_${n++}`;
+  (cab.customLooks[cab.charId] || (cab.customLooks[cab.charId] = [])).push({ code, label, desc: label, file: null, season: null, source: 'draft', ownerId: cab.charId, tag: '초안' });
+  renderCabSimulator();
+  renderCabBoard();
+}
 function cabAddCustomSlot(boardKey) {
   if (!cab.charId) return;
   const label = (window.prompt('추가할 슬롯 이름 (영문 프롬프트 문구로도 쓰이니 짧은 영문 권장)') || '').trim();
@@ -3392,7 +3420,7 @@ function renderCabBoard() {
     const filled = b.slots.filter(s => s.file).length; // "데이터에 경로가 있다" 기준 — 실제 로드 실패는 cabSlotFallback이 아래에서 다시 뺀다
     const fillId = `cab-fill-${cab.charId}-${b.key}`;
     const body = total
-      ? `<div class="cab-board-grid">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
+      ? `<div class="${b.key === 'look' ? 'cab-board-row' : 'cab-board-grid'}">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
       : `<div class="cab-look-empty" style="padding-left:0">이 캐릭터에 등록된 룩이 없어요 — 왼쪽 "룩(LOOK)"에서 확인하세요.</div>`;
     return `<div class="cab-board-head"><span class="cab-board-title">${escapeHtml(b.title)}</span><span class="cab-board-fill ${total > 0 && filled === total ? 'full' : ''}" id="${fillId}" data-total="${total}" data-filled="${filled}">${filled}/${total}</span><button class="cab-copy-btn" onclick="cabAddCustomSlot('${b.key}')">+ 슬롯 추가</button></div>${body}`;
   }).join('');
