@@ -441,24 +441,26 @@
   .cab-board-title { font-size: 11px; font-weight: 700; color: var(--text); }
   .cab-board-fill { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text3); }
   .cab-board-fill.full { color: var(--teal); }
-  /* ④ 룩별 전신 전용 — 한 줄 가로 누적 + 가로 스크롤, 카드 확대 (①②③⑤ 는 .cab-board-grid 그대로) */
+  /* ④ 룩별 전신 전용 — 한 줄 가로 누적 + 가로 스크롤, 카드 확대 (①③⑤ 는 .cab-board-grid 그대로) */
   .cab-board-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
   .cab-board-row .cab-slot { flex: 0 0 220px; }
-  .cab-board-row .cab-slot-img-wrap { height: 220px; }
+  .cab-board-row .cab-slot-img-wrap { height: 320px; }
   .cab-board-row .cab-slot-prompt { max-height: 120px; }
+  /* ② 턴어라운드 전용 — 전신 비율이 안정적으로 들어가도록 미생성 이미지 영역 세로 확장 */
+  .cab-board-turnaround .cab-slot-img-wrap { height: 260px; }
   .cab-board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 6px; }
   .cab-slot { border: 1px solid var(--border2); border-radius: var(--radius-sm); overflow: hidden; background: rgba(15,42,34,0.12); display: flex; flex-direction: column; }
   .cab-slot-img-wrap { height: 150px; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
   .cab-slot-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .cab-slot-empty-badge { font-size: 9px; color: var(--text3); font-family: 'Space Mono', monospace; text-align: center; padding: 0 8px; }
   .cab-slot-body { padding: 8px 9px; }
-  .cab-slot-label { font-size: 10px; color: var(--text2); font-weight: 700; margin-bottom: 4px; }
+  /* 제목·복사버튼은 "①얼굴기준 정면얼굴"과 같은 색(--teal)으로 통일 — 아래 밝은 프롬프트 텍스트(--teal-light)와 구별되도록 */
+  .cab-slot-label { font-size: 10px; color: var(--teal); font-weight: 700; margin-bottom: 4px; }
   .cab-slot-file { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text3); word-break: break-all; line-height: 1.5; margin-bottom: 5px; }
   .cab-slot-prompt { font-family: 'Space Mono', monospace; font-size: 8px; color: var(--teal-light); line-height: 1.5; max-height: 64px; overflow-y: auto; white-space: pre-wrap; word-break: break-word; background: rgba(0,0,0,0.25); border-radius: 3px; padding: 5px 6px; margin-bottom: 5px; }
-  .cab-slot-copy { font-size: 9px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; width: 100%; font-family: 'Space Mono', monospace; }
+  .cab-slot-copy { font-size: 9px; padding: 3px 8px; border-radius: 3px; border: 1px solid var(--border2); background: transparent; color: var(--teal); cursor: pointer; width: 100%; font-family: 'Space Mono', monospace; }
   .cab-slot-copy:hover { border-color: var(--teal); color: var(--teal); }
   .cab-slot.filled .cab-slot-img-wrap { border-bottom: 1px solid var(--border2); }
-  .cab-slot.filled .cab-slot-label { color: var(--teal); }
 
   /* ── 시뮬레이터 결과 출력(코드/프롬프트) ── */
   .cab-out-head { display: flex; align-items: center; justify-content: space-between; }
@@ -3427,7 +3429,7 @@ function renderCabBoard() {
     const filled = b.slots.filter(s => s.file).length; // "데이터에 경로가 있다" 기준 — 실제 로드 실패는 cabSlotFallback이 아래에서 다시 뺀다
     const fillId = `cab-fill-${cab.charId}-${b.key}`;
     const body = total
-      ? `<div class="${b.key === 'look' ? 'cab-board-row' : 'cab-board-grid'}">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
+      ? `<div class="${b.key === 'look' ? 'cab-board-row' : 'cab-board-grid'} cab-board-${b.key}">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
       : `<div class="cab-look-empty" style="padding-left:0">이 캐릭터에 등록된 룩이 없어요 — 왼쪽 "룩(LOOK)"에서 확인하세요.</div>`;
     return `<div class="cab-board-head"><span class="cab-board-title">${escapeHtml(b.title)}</span><span class="cab-board-fill ${total > 0 && filled === total ? 'full' : ''}" id="${fillId}" data-total="${total}" data-filled="${filled}">${filled}/${total}</span><button class="cab-copy-btn" onclick="cabAddCustomSlot('${b.key}')">+ 슬롯 추가</button></div>${body}`;
   }).join('');
