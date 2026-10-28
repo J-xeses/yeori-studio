@@ -22,6 +22,7 @@ import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from '.
 import { loadOps, saveOps, listProfilePhotos } from './lib/instaOps.js'
 import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYtProfilePhotos } from './lib/youtubeOps.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
+import { appendAttempt as appendAcademyAttempt } from './lib/academyLog.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateVeoVideo, VEO_MODELS, VEO_DEFAULT_TIER, VEO_ALLOWED_DURATIONS } from './lib/veoApi.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
@@ -926,6 +927,23 @@ app.post('/api/genline-log', async (req, res) => {
     res.json({ ok: !!r.ok, ...(r.ok ? {} : { error: r.body || r.error || r.skipped }) })
   } catch (err) {
     res.json({ ok: false, error: err.message })   // 실패해도 200 — genline 흐름 안 막음
+  }
+})
+
+// ── POST /api/academy-log — CA_BANK 시뮬레이터 시도 기록 (아카데미 3단계).
+// downloads/seoyeori/ca_bank/attempts.jsonl 에 한 줄 append (characters/ 와 분리). lookKey 는
+// <이니셜2자>_LK## — 새 시도(lookKey 없음/미등록)면 서버가 다음 번호 발급, 기존 키면 결과 갱신 줄.
+//   { character, lookKey?, prompt, result('kept'|'discarded'|'pending'), note }
+// genline-log 처럼 내부 실패해도 200 + ok:false — CA_BANK 흐름을 막지 않음.
+app.post('/api/academy-log', (req, res) => {
+  const e = req.body || {}
+  if (!e.character) return res.status(400).json({ ok: false, error: 'character 필요' })
+  try {
+    const entry = appendAcademyAttempt(mp.caBankDir(), loadCharacters(), e)
+    res.json({ ok: true, lookKey: entry.lookKey })
+  } catch (err) {
+    console.warn('[academy-log] 기록 실패:', err.message)
+    res.json({ ok: false, error: err.message })
   }
 })
 
