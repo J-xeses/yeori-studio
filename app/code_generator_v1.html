@@ -204,14 +204,15 @@
   /* 라벨이 "코드 + 한글"(예: PSY 심리) 이라 코드는 모노, 한글은 산세리프로 자동 폴백되게 순서만 지정 */
   .pill { font-size: 11px; padding: 5px 12px; border-radius: 3px; cursor: pointer; border: 1px solid var(--border2); background: transparent; color: var(--text2); transition: all 0.15s; font-family: 'Space Mono', 'Noto Sans KR', sans-serif; }
   .pill:hover { border-color: var(--teal); color: var(--text); }
-  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal-dark); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset; text-shadow: 0 0 2px rgba(159,225,203,0.95), 0 0 4px rgba(159,225,203,0.5); -webkit-text-stroke: 0.6px rgba(159,225,203,0.95); }
+  .pill.on { background: transparent; border: 1px solid var(--teal); color: var(--teal-dark); font-weight: 700; box-shadow: 0 0 0 1px rgba(29,158,117,0.25) inset; text-shadow: 0 0 2.5px rgba(159,225,203,0.6); -webkit-text-stroke: 0.3px rgba(159,225,203,0.9); }
   /* 선택 표시는 틸 한 계열만: .on = 기본 틸, .on-alt = 같은 계열 밝은 톤(두 그룹을 나란히 둘 때 구분용).
      예전 .on-o(스칼렛)는 초록 UI 에서 불균형해 보여 2026-09-27 제거(성준님 점검).
-     2026-10-28: 선택 강조를 프레임(box-shadow)이 아니라 텍스트 자체로 이동 — 성준님 피드백 3단계:
+     2026-10-28: 선택 강조를 프레임(box-shadow)이 아니라 텍스트 자체로 이동 — 성준님 피드백 4단계:
      ① "프레임보다 텍스트가 부각돼야 강렬" ② "테두리는 밝은 단선으로" ③ "텍스트 자체는 진한색, 테두리가
-     글로우여야 윤곽이 눈에 확 띔". 글자 채움은 진한 색(--teal-dark)으로 어둡게, 테두리(text-stroke)는
-     밝은 색 + 은은한 글로우(text-shadow)를 둘러 네온사인처럼 윤곽만 밝게 도드라지게 한다. */
-  .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-dark); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset; text-shadow: 0 0 2px rgba(255,255,255,0.95), 0 0 4px rgba(159,225,203,0.55); -webkit-text-stroke: 0.6px rgba(255,255,255,0.95); }
+     글로우여야 윤곽이 눈에 확 띔" ④ "글로우가 안쪽까지 스며드니 진한 색이 티가 안 남". text-stroke 는
+     글자 외곽선 위에 걸쳐 그려져 두꺼울수록 안쪽 채움을 깎아먹으므로 0.3px로 더 얇게, text-shadow 는
+     근접 고불투명 레이어를 없애고 저불투명 단일 레이어만 남겨 안쪽 번짐 체감을 줄인다. */
+  .pill.on-alt { background: rgba(159,225,203,0.07); border: 1px solid var(--teal-light); color: var(--teal-dark); font-weight: 700; box-shadow: 0 0 0 1px rgba(159,225,203,0.2) inset; text-shadow: 0 0 2.5px rgba(255,255,255,0.65); -webkit-text-stroke: 0.3px rgba(255,255,255,0.9); }
 
   .field-label { font-size: 9px; color: var(--text3); margin-bottom: 6px; text-transform: uppercase; }
 
