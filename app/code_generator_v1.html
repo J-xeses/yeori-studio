@@ -936,6 +936,7 @@
             <div class="card-h cab-out-head"><span><span class="idx">05</span>📝 시도 기록</span>
               <button class="cab-copy-btn" onclick="cabRecordAttempt()">시도로 기록</button></div>
             <div class="cab-credit" id="cab-credit"></div>
+            <div class="cab-credit" id="cab-summary"></div>
             <div id="cab-attempts"></div>
           </div>
         </section>
@@ -3094,8 +3095,35 @@ function renderCabAttempts() {
     <span class="cab-attempt-res ${a.result}">${CAB_RESULT_LABEL[a.result] || a.result}</span>
     <button class="cab-copy-btn" ${a.result === 'kept' ? 'disabled' : ''} onclick="cabSetResult('${escapeHtml(a.lookKey)}','kept')">유지</button>
     <button class="cab-copy-btn" ${a.result === 'discarded' ? 'disabled' : ''} onclick="cabSetResult('${escapeHtml(a.lookKey)}','discarded')">폐기</button>
+    ${a.promoted ? `<span class="cab-attempt-res kept">✓ 승격됨</span>`
+      : a.result === 'kept' ? `<button class="cab-copy-btn" onclick="cabPromote('${escapeHtml(a.lookKey)}')">✓ 레퍼런스로 승격</button>` : ''}
   </div>`).join('') : `<div class="cab-hint">조합을 골라 "시도로 기록"을 누르면 룩 키(예: JA_LK01)가 붙어 여기에 쌓여요.</div>`;
   cabLoadCredit();
+  cabLoadSummary();
+}
+// 승격 = kept 시도의 프롬프트를 characters.json 룩으로 편입(POST /api/academy-promote). 이미지는 옮기지 않음.
+async function cabPromote(lookKey) {
+  const a = cab.attempts.find(x => x.lookKey === lookKey);
+  if (!a || a.result !== 'kept' || a.promoted) return;
+  try {
+    const r = await fetch(`${YEORI_SERVER}/api/academy-promote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ character: a.character, lookKey }) });
+    const d = await r.json();
+    if (!d.ok) { showToast(d.error || '승격하지 못했어요'); if (/이미 승격/.test(d.error || '')) { a.promoted = true; renderCabAttempts(); } return; }
+    a.promoted = true;
+    if (characters && characters[a.character]) { (characters[a.character].looks = characters[a.character].looks || {})[lookKey] = d.look; }
+    renderCabAttempts();
+    showToast(`✓ ${lookKey} 레퍼런스로 승격`);
+  } catch (e) { showToast('승격하지 못했어요 (서버 꺼짐?)'); }
+}
+async function cabLoadSummary() {
+  const el = document.getElementById('cab-summary');
+  if (!el) return;
+  try {
+    const r = await fetch(`${YEORI_SERVER}/api/academy-summary`);
+    const sum = await r.json();
+    const rows = Object.entries(sum).map(([id, s]) => `${CAB_CHAR_SHORT[id] || id}: 시도 ${s.total} (유지 ${s.kept}·폐기 ${s.discarded}·대기 ${s.pending}) · 승격 ${s.promoted}`);
+    el.textContent = rows.length ? rows.join('  |  ') : '누적 시도 없음';
+  } catch (e) { el.textContent = '누적 집계 불러오지 못함(서버 꺼짐)'; }
 }
 async function cabLoadCredit() {
   const el = document.getElementById('cab-credit');

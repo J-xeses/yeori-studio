@@ -70,3 +70,44 @@ export function appendAttempt(dir, characters, { character, lookKey, prompt, res
   fs.appendFileSync(path.join(dir, 'attempts.jsonl'), JSON.stringify(entry) + '\n', 'utf-8')
   return entry
 }
+
+// ── 4단계: 승격 + 집계 ──────────────────────────────────────────────────────
+// 승격 = kept 시도의 프롬프트를 characters.json 의 기존 looks{} 구조에 그대로 편입한다.
+// 기존 구조: looks = { <lookId>: { file, desc, season } } (객체, 키 = 룩 코드). 그대로 맞추고
+// CA_BANK 출처 표시용 필드만 덧붙인다(promotedFrom/promotedAt/code) — 이미지가 없으니 file 은 빈 문자열
+// (POST /api/characters/:id/looks 가 file 없이 등록할 때와 동일, "나중에 연결").
+
+// 같은 lookKey+character 의 마지막 줄(= 현재 상태). 없으면 null.
+export function findLatest(attempts, character, lookKey) {
+  const hits = attempts.filter((a) => a.lookKey === lookKey && a.character === character)
+  return hits.length ? hits[hits.length - 1] : null
+}
+
+// characters 객체를 직접 수정한다(저장은 호출자). 실패 시 { ok:false, status, error }.
+export function promoteAttempt(dir, characters, { character, lookKey }) {
+  if (!character || !lookKey) return { ok: false, status: 400, error: 'character, lookKey 필요' }
+  const c = characters?.[character]
+  if (!c || typeof c !== 'object') return { ok: false, status: 404, error: `캐릭터 없음: ${character}` }
+  const a = findLatest(readAttempts(dir), character, lookKey)
+  if (!a) return { ok: false, status: 404, error: `시도를 찾을 수 없음: ${lookKey}` }
+  if (a.result !== 'kept') return { ok: false, status: 409, error: `유지(kept) 상태만 승격할 수 있어요 — 현재 ${a.result}` }
+  if (c.looks?.[lookKey]) return { ok: false, status: 409, error: `이미 승격됨: ${lookKey}` }
+  c.looks = c.looks || {}
+  c.looks[lookKey] = {
+    file: '', desc: a.prompt || '', season: '',
+    code: a.note || '', promotedFrom: 'ca_bank', promotedAt: new Date().toISOString(),
+  }
+  return { ok: true, look: c.looks[lookKey] }
+}
+
+// { [character]: { total, kept, discarded, pending, promoted } } — total = 고유 lookKey 수
+export function summarize(attempts, characters) {
+  const out = {}
+  for (const a of latestByLookKey(attempts)) {
+    const s = out[a.character] || (out[a.character] = { total: 0, kept: 0, discarded: 0, pending: 0, promoted: 0 })
+    s.total++
+    if (s[a.result] !== undefined) s[a.result]++
+    if (characters?.[a.character]?.looks?.[a.lookKey]) s.promoted++
+  }
+  return out
+}

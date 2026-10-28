@@ -22,7 +22,7 @@ import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from '.
 import { loadOps, saveOps, listProfilePhotos } from './lib/instaOps.js'
 import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYtProfilePhotos } from './lib/youtubeOps.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
-import { appendAttempt as appendAcademyAttempt } from './lib/academyLog.js'
+import { appendAttempt as appendAcademyAttempt, promoteAttempt as promoteAcademyAttempt, summarize as summarizeAcademy, readAttempts as readAcademyAttempts } from './lib/academyLog.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
 import { generateVeoVideo, VEO_MODELS, VEO_DEFAULT_TIER, VEO_ALLOWED_DURATIONS } from './lib/veoApi.js'
 import { generateHTML, getRecommendation, getTemplateList } from './lib/graphicTemplates.js'
@@ -945,6 +945,28 @@ app.post('/api/academy-log', (req, res) => {
     console.warn('[academy-log] 기록 실패:', err.message)
     res.json({ ok: false, error: err.message })
   }
+})
+
+// ── POST /api/academy-promote — kept 시도를 characters.json 의 looks{} 에 확정 룩으로 승격 (아카데미 4단계).
+// 이 파일(characters/)을 쓰는 건 승격뿐. CA_BANK 는 프롬프트/코드 조합만 다루므로 이미지 파일은 옮기지 않는다.
+//   { character, lookKey } → { ok:true, lookKey, look } | { ok:false, error }(400/404/409)
+app.post('/api/academy-promote', (req, res) => {
+  try {
+    const chars = loadCharacters()
+    const r = promoteAcademyAttempt(mp.caBankDir(), chars, req.body || {})
+    if (!r.ok) return res.status(r.status).json({ ok: false, error: r.error })
+    saveCharacters(chars)
+    res.json({ ok: true, lookKey: req.body.lookKey, look: r.look })
+  } catch (err) {
+    console.warn('[academy-promote] 실패:', err.message)
+    res.status(500).json({ ok: false, error: err.message })
+  }
+})
+
+// ── GET /api/academy-summary — 캐릭터별 시도 집계 { [character]: { total, kept, discarded, pending, promoted } }
+app.get('/api/academy-summary', (req, res) => {
+  try { res.json(summarizeAcademy(readAcademyAttempts(mp.caBankDir()), loadCharacters())) }
+  catch (err) { res.json({}) }
 })
 
 // ── POST /api/genline-review — 컷별 현장 판단·반영을 파일로 떨군다 (도구는 결과만 남기고 빠짐).
