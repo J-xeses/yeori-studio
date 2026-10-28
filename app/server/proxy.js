@@ -933,14 +933,15 @@ app.post('/api/genline-log', async (req, res) => {
 // ── POST /api/academy-log — CA_BANK 시뮬레이터 시도 기록 (아카데미 3단계).
 // downloads/seoyeori/ca_bank/attempts.jsonl 에 한 줄 append (characters/ 와 분리). lookKey 는
 // <이니셜2자>_LK## — 새 시도(lookKey 없음/미등록)면 서버가 다음 번호 발급, 기존 키면 결과 갱신 줄.
-//   { character, lookKey?, prompt, result('kept'|'discarded'|'pending'), note }
+//   { character, category?('look'|'turnaround'|'expr', 기본 look), lookKey?, prompt, result('kept'|'discarded'|'pending'), note }
+// turnaround/expr 는 lookKey 에 고정 슬롯 키(front/side/back · neutral/smile/surprise/sad/flustered)를 직접 보낸다.
 // genline-log 처럼 내부 실패해도 200 + ok:false — CA_BANK 흐름을 막지 않음.
 app.post('/api/academy-log', (req, res) => {
   const e = req.body || {}
   if (!e.character) return res.status(400).json({ ok: false, error: 'character 필요' })
   try {
     const entry = appendAcademyAttempt(mp.caBankDir(), loadCharacters(), e)
-    res.json({ ok: true, lookKey: entry.lookKey })
+    res.json({ ok: true, lookKey: entry.lookKey, category: entry.category })
   } catch (err) {
     console.warn('[academy-log] 기록 실패:', err.message)
     res.json({ ok: false, error: err.message })
@@ -956,7 +957,7 @@ app.post('/api/academy-promote', (req, res) => {
     const r = promoteAcademyAttempt(mp.caBankDir(), chars, req.body || {})
     if (!r.ok) return res.status(r.status).json({ ok: false, error: r.error })
     saveCharacters(chars)
-    res.json({ ok: true, lookKey: req.body.lookKey, look: r.look })
+    res.json({ ok: true, lookKey: req.body.lookKey, category: r.category, look: r.look })
   } catch (err) {
     console.warn('[academy-promote] 실패:', err.message)
     res.status(500).json({ ok: false, error: err.message })

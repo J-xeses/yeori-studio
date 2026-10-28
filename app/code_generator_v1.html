@@ -431,6 +431,7 @@
   .cab-credit { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; margin-bottom: 8px; }
   .cab-attempt { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border2); font-size: 10px; }
   .cab-attempt-key { font-family: 'Space Mono', monospace; color: var(--teal-light); font-weight: 700; min-width: 76px; }
+  .cab-attempt-cat { font-family: 'Noto Sans KR', sans-serif; font-weight: 400; color: var(--text2); }
   .cab-attempt-prompt { flex: 1; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cab-attempt-res { font-size: 9px; color: var(--text3); min-width: 40px; }
   .cab-attempt-res.kept { color: var(--teal); }
@@ -3109,16 +3110,32 @@ async function cabRecordAttempt() {
   if (!cab.lastPrompt) { showToast('기록할 조합이 없어요'); return; }
   try {
     const d = await cabPostLog({ character: cab.charId, prompt: cab.lastPrompt, result: 'pending', note: cab.lastCode });
-    cab.attempts.unshift({ lookKey: d.lookKey, character: cab.charId, prompt: cab.lastPrompt, note: cab.lastCode, result: 'pending' });
+    cab.attempts.unshift({ category: 'look', lookKey: d.lookKey, character: cab.charId, prompt: cab.lastPrompt, note: cab.lastCode, result: 'pending' });
     renderCabAttempts();
     showToast(`✓ ${d.lookKey} 기록`);
   } catch (e) { showToast('서버에 기록하지 못했어요 (서버 꺼짐?)'); }
 }
-async function cabSetResult(lookKey, result) {
-  const a = cab.attempts.find(x => x.lookKey === lookKey);
+// 보드(턴어라운드/표정) 빈 슬롯에서 바로 시도 기록 — 같은 cab.attempts 목록에 쌓인다. 슬롯 키가 곧 lookKey.
+async function cabRecordSlotAttempt(category, slotKey, promptText) {
+  if (!cab.charId) { showToast('캐릭터를 먼저 고르세요'); return; }
+  try {
+    const d = await cabPostLog({ character: cab.charId, category, lookKey: slotKey, prompt: promptText, result: 'pending', note: cab.lastCode || '' });
+    // 같은 슬롯을 다시 기록하면 기존 행을 대체(서버도 같은 키 갱신 줄)
+    const prev = cab.attempts.find(x => x.character === cab.charId && x.category === category && x.lookKey === slotKey);
+    cab.attempts = cab.attempts.filter(x => x !== prev);
+    cab.attempts.unshift({ category, lookKey: d.lookKey, character: cab.charId, prompt: promptText, note: cab.lastCode || '', result: 'pending', promoted: !!(prev && prev.promoted) });
+    renderCabAttempts();
+    showToast(`✓ ${CAB_CATEGORY_LABEL[category]} ${d.lookKey} 기록`);
+  } catch (e) { showToast('서버에 기록하지 못했어요 (서버 꺼짐?)'); }
+}
+const CAB_CATEGORY_LABEL = { look: '룩', turnaround: '턴어라운드', expr: '표정' };
+const CAB_CATEGORY_FIELD = { look: 'looks', turnaround: 'turnaround', expr: 'expressions' };
+const cabFindAttempt = (category, lookKey, character) => cab.attempts.find(x => x.category === category && x.lookKey === lookKey && (!character || x.character === character));
+async function cabSetResult(category, lookKey, result, character) {
+  const a = cabFindAttempt(category, lookKey, character);
   if (!a) return;
   try {
-    await cabPostLog({ character: a.character, lookKey, prompt: a.prompt, result, note: a.note });
+    await cabPostLog({ character: a.character, category, lookKey, prompt: a.prompt, result, note: a.note });
     a.result = result;
     renderCabAttempts();
   } catch (e) { showToast('결과를 기록하지 못했어요'); }
@@ -3128,28 +3145,30 @@ function renderCabAttempts() {
   const el = document.getElementById('cab-attempts');
   if (!el) return;
   el.innerHTML = cab.attempts.length ? cab.attempts.map(a => `<div class="cab-attempt">
-    <span class="cab-attempt-key">${escapeHtml(a.lookKey)}</span>
+    <span class="cab-attempt-key">${a.category && a.category !== 'look' ? `<span class="cab-attempt-cat">[${CAB_CATEGORY_LABEL[a.category]}]</span> ` : ''}${escapeHtml(a.lookKey)}</span>
     <span class="cab-attempt-prompt" title="${escapeHtml(a.prompt)}">${escapeHtml(a.prompt)}</span>
     <span class="cab-attempt-res ${a.result}">${CAB_RESULT_LABEL[a.result] || a.result}</span>
-    <button class="cab-copy-btn" ${a.result === 'kept' ? 'disabled' : ''} onclick="cabSetResult('${escapeHtml(a.lookKey)}','kept')">유지</button>
-    <button class="cab-copy-btn" ${a.result === 'discarded' ? 'disabled' : ''} onclick="cabSetResult('${escapeHtml(a.lookKey)}','discarded')">폐기</button>
+    <button class="cab-copy-btn" ${a.result === 'kept' ? 'disabled' : ''} onclick="cabSetResult('${a.category}','${escapeHtml(a.lookKey)}','kept','${a.character}')">유지</button>
+    <button class="cab-copy-btn" ${a.result === 'discarded' ? 'disabled' : ''} onclick="cabSetResult('${a.category}','${escapeHtml(a.lookKey)}','discarded','${a.character}')">폐기</button>
     ${a.promoted ? `<span class="cab-attempt-res kept">✓ 승격됨</span>`
-      : a.result === 'kept' ? `<button class="cab-copy-btn" onclick="cabPromote('${escapeHtml(a.lookKey)}')">✓ 레퍼런스로 승격</button>` : ''}
+      : a.result === 'kept' ? `<button class="cab-copy-btn" onclick="cabPromote('${a.category}','${escapeHtml(a.lookKey)}','${a.character}')">✓ 레퍼런스로 승격</button>` : ''}
   </div>`).join('') : `<div class="cab-hint">조합을 골라 "시도로 기록"을 누르면 룩 키(예: JA_LK01)가 붙어 여기에 쌓여요.</div>`;
   cabLoadCredit();
   cabLoadSummary();
 }
 // 승격 = kept 시도의 프롬프트를 characters.json 룩으로 편입(POST /api/academy-promote). 이미지는 옮기지 않음.
-async function cabPromote(lookKey) {
-  const a = cab.attempts.find(x => x.lookKey === lookKey);
+async function cabPromote(category, lookKey, character) {
+  const a = cabFindAttempt(category, lookKey, character);
   if (!a || a.result !== 'kept' || a.promoted) return;
   try {
-    const r = await fetch(`${YEORI_SERVER}/api/academy-promote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ character: a.character, lookKey }) });
+    const r = await fetch(`${YEORI_SERVER}/api/academy-promote`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ character: a.character, category, lookKey }) });
     const d = await r.json();
-    if (!d.ok) { showToast(d.error || '승격하지 못했어요'); if (/이미 승격/.test(d.error || '')) { a.promoted = true; renderCabAttempts(); } return; }
+    if (!d.ok) { showToast(d.error || '승격하지 못했어요'); if (/이미 승격/.test(d.error || '')) { a.promoted = true; renderCabAttempts(); if (category !== 'look') renderCabBoard(); } return; }
     a.promoted = true;
-    if (characters && characters[a.character]) { (characters[a.character].looks = characters[a.character].looks || {})[lookKey] = d.look; }
+    const field = CAB_CATEGORY_FIELD[category] || 'looks';
+    if (characters && characters[a.character]) { (characters[a.character][field] = characters[a.character][field] || {})[lookKey] = d.look; }
     renderCabAttempts();
+    if (category !== 'look') renderCabBoard();   // 턴어라운드/표정 보드의 해당 슬롯에 승격 표시
     showToast(`✓ ${lookKey} 레퍼런스로 승격`);
   } catch (e) { showToast('승격하지 못했어요 (서버 꺼짐?)'); }
 }
@@ -3325,7 +3344,8 @@ function renderCabSimulator() {
 }
 
 // ── B. 표준 캐릭터 보드 — 슬롯: 이미지 있으면 이미지, 없으면 "미생성" + 복사 가능한 프롬프트·저장 위치 ──
-function cabSlotHtml(slotId, label, file, promptText, targetFile) {
+// opts(선택) = { category, slotKey, promoted } — 턴어라운드/표정 기본 슬롯만 넘긴다. 없으면 이전과 동일.
+function cabSlotHtml(slotId, label, file, promptText, targetFile, opts) {
   const fileBlock = file
     ? `<div class="cab-slot-img-wrap"><img src="${escapeHtml(mediaUrl(file))}" alt="${escapeHtml(label)}" onerror="cabSlotFallback('${slotId}')"></div>
        <div class="cab-slot-body"><div class="cab-slot-label">${escapeHtml(label)}</div><div class="cab-slot-file">${escapeHtml(file)}</div></div>`
@@ -3336,6 +3356,8 @@ function cabSlotHtml(slotId, label, file, promptText, targetFile) {
       ${file ? '' : `<div class="cab-slot-img-wrap"><div class="cab-slot-empty-badge">미생성</div></div><div class="cab-slot-label">${escapeHtml(label)}</div>`}
       <div class="cab-slot-prompt">${escapeHtml(promptText)}</div>
       <button class="cab-slot-copy" data-cab-prompt="${escapeHtml(promptText)}" onclick="cabCopyText(this)">프롬프트 복사</button>
+      ${!file && opts && opts.category ? `${opts.promoted ? '<div class="cab-slot-file" style="margin-top:4px">✓ 승격됨 (이미지 미연결)</div>' : ''}
+      <button class="cab-slot-copy" style="margin-top:4px" data-cab-cat="${opts.category}" data-cab-slot="${escapeHtml(opts.slotKey)}" data-cab-prompt="${escapeHtml(promptText)}" onclick="cabRecordSlotAttempt(this.dataset.cabCat, this.dataset.cabSlot, this.dataset.cabPrompt)">시도로 기록</button>` : ''}
       <div class="cab-slot-file" style="margin-top:4px">저장 위치: ${escapeHtml(targetFile)}</div>
     </div>
   </div>`;
@@ -3354,12 +3376,16 @@ function cabBoardDefs(charId) {
     { key: 'front', label: '정면 얼굴', file: c && c.face, prompt: mk('front-facing portrait, neutral clean background, consistent character reference sheet'), target: targetFile('face', 'front') },
     { key: 'closeup', label: '클로즈업', file: c && c.closeup, prompt: mk('close-up shot, shoulders up, soft studio lighting, consistent character reference'), target: targetFile('face', 'closeup') },
   ] });
-  boards.push({ key: 'turnaround', title: '② 턴어라운드', slots: ['front', 'side', 'back'].map(k => (
-    { key: k, label: CAB_TURN_LABEL[k] + ' 전신', file: null, prompt: mk(CAB_TURN_EN[k]), target: targetFile('turnaround', k) }
-  )) });
-  boards.push({ key: 'expr', title: '③ 표정 시트', slots: Object.keys(CAB_EXPR_LABEL).map(k => (
-    { key: k, label: CAB_EXPR_LABEL[k], file: null, prompt: mk(`close-up portrait, ${CAB_EXPR_EN[k]}`), target: targetFile('expr', k) }
-  )) });
+  // characters.json 의 turnaround{}/expressions{} 값 = 이미지 경로 문자열 또는 승격 객체({file, desc, …}). 없으면 이전처럼 빈 슬롯.
+  const slotVal = (field, k) => { const v = c && c[field] && c[field][k]; return typeof v === 'string' ? { file: v || null, promoted: !!v } : { file: (v && v.file) || null, promoted: !!v }; };
+  boards.push({ key: 'turnaround', title: '② 턴어라운드', slots: ['front', 'side', 'back'].map(k => {
+    const v = slotVal('turnaround', k);
+    return { key: k, label: CAB_TURN_LABEL[k] + ' 전신', file: v.file, prompt: mk(CAB_TURN_EN[k]), target: targetFile('turnaround', k), cat: 'turnaround', promoted: v.promoted };
+  }) });
+  boards.push({ key: 'expr', title: '③ 표정 시트', slots: Object.keys(CAB_EXPR_LABEL).map(k => {
+    const v = slotVal('expressions', k);
+    return { key: k, label: CAB_EXPR_LABEL[k], file: v.file, prompt: mk(`close-up portrait, ${CAB_EXPR_EN[k]}`), target: targetFile('expr', k), cat: 'expr', promoted: v.promoted };
+  }) });
   boards.push({ key: 'look', title: '④ 룩별 전신', slots: looks.map(l => (
     { key: l.code, label: `${l.code} ${cabLookLabel(l)}`, file: l.file, prompt: mkLook(l)(`full body, wearing ${l.desc || l.label}`), target: targetFile('look', l.code) }
   )) });
@@ -3429,7 +3455,7 @@ function renderCabBoard() {
     const filled = b.slots.filter(s => s.file).length; // "데이터에 경로가 있다" 기준 — 실제 로드 실패는 cabSlotFallback이 아래에서 다시 뺀다
     const fillId = `cab-fill-${cab.charId}-${b.key}`;
     const body = total
-      ? `<div class="${b.key === 'look' ? 'cab-board-row' : 'cab-board-grid'} cab-board-${b.key}">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target)).join('')}</div>`
+      ? `<div class="${b.key === 'look' ? 'cab-board-row' : 'cab-board-grid'} cab-board-${b.key}">${b.slots.map(s => cabSlotHtml(`cab-slot-${cab.charId}-${b.key}-${s.key}`, s.label, s.file, s.prompt, s.target, s.cat ? { category: s.cat, slotKey: s.key, promoted: s.promoted } : undefined)).join('')}</div>`
       : `<div class="cab-look-empty" style="padding-left:0">이 캐릭터에 등록된 룩이 없어요 — 왼쪽 "룩(LOOK)"에서 확인하세요.</div>`;
     return `<div class="cab-board-head"><span class="cab-board-title">${escapeHtml(b.title)}</span><span class="cab-board-fill ${total > 0 && filled === total ? 'full' : ''}" id="${fillId}" data-total="${total}" data-filled="${filled}">${filled}/${total}</span><button class="cab-copy-btn" onclick="cabAddCustomSlot('${b.key}')">+ 슬롯 추가</button></div>${body}`;
   }).join('');
