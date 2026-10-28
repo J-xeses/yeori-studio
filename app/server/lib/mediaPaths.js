@@ -143,6 +143,8 @@ export function sourcesDir(sub = '') { return path.join(DOWNLOADS, BRAND, 'YU', 
 // ── 캐릭터 레퍼런스 — 브랜드별 (downloads/seoyeori/characters/) ────────
 export function charactersDir(sub = '') { return path.join(DOWNLOADS, BRAND, 'characters', sub) }
 export function charactersJsonPath()    { return path.join(DOWNLOADS, BRAND, 'characters', 'characters.json') }
+// CA_BANK 아카데미 시도 로그 — characters/ 와 형제 폴더(확정 레지스트리와 분리). attempts.jsonl + <attemptId>/
+export function caBankDir(sub = '')     { return path.join(DOWNLOADS, BRAND, 'ca_bank', sub) }
 
 // ── 런타임 (Flow 실행·프롬프트) — downloads/runtime/ (전역, 브랜드 무관) ──
 export function runtimeDir(sub = '') { return path.join(DOWNLOADS, 'runtime', sub) }

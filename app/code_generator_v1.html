@@ -416,6 +416,13 @@
   .cab-copy-btn:hover { border-color: var(--teal); color: var(--teal); }
   .cab-warn-line { font-size: 10px; color: var(--scarlet-light); margin-top: 6px; line-height: 1.6; }
   .cab-flow-name { font-size: 11px; color: var(--teal-light); }
+  .cab-credit { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; margin-bottom: 8px; }
+  .cab-attempt { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border2); font-size: 10px; }
+  .cab-attempt-key { font-family: 'Space Mono', monospace; color: var(--teal-light); font-weight: 700; min-width: 76px; }
+  .cab-attempt-prompt { flex: 1; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cab-attempt-res { font-size: 9px; color: var(--text3); min-width: 40px; }
+  .cab-attempt-res.kept { color: var(--teal); }
+  .cab-attempt-res.discarded { color: var(--scarlet-light); }
 
   .cab-board-head { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; }
   .cab-board-title { font-size: 11px; font-weight: 700; color: var(--text); }
@@ -923,6 +930,13 @@
             <div class="code-preview" id="cab-prompt-preview" style="margin-bottom:6px"></div>
             <div class="cab-flow-name" id="cab-flow-name"></div>
             <div id="cab-warnings"></div>
+          </div>
+          <!-- 시도 로그(3단계) — 지금 조합을 "시도"로 기록(POST /api/academy-log → downloads/seoyeori/ca_bank/attempts.jsonl) -->
+          <div class="card" style="margin-top:12px">
+            <div class="card-h cab-out-head"><span><span class="idx">05</span>📝 시도 기록</span>
+              <button class="cab-copy-btn" onclick="cabRecordAttempt()">시도로 기록</button></div>
+            <div class="cab-credit" id="cab-credit"></div>
+            <div id="cab-attempts"></div>
           </div>
         </section>
 
@@ -3041,6 +3055,59 @@ function cabFallbackCopy(text, ok, fail) {
     ok();
   } catch (e) { fail(); }
 }
+// ── 시도 로그(3단계) — 서버에 한 줄 append, 같은 lookKey 로 결과(keep/discard) 갱신 줄 추가 ──
+// 이 탭은 생성(Flow 호출)을 하지 않고 조합·복사만 하므로 recordUsage 는 부르지 않는다 —
+// 크레딧 표시는 기존 GET /api/credits-status(오늘 Flow 사용량)를 읽기 전용으로 보여줄 뿐.
+cab.attempts = [];
+async function cabPostLog(body) {
+  const r = await fetch(`${YEORI_SERVER}/api/academy-log`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const d = await r.json();
+  if (!d.ok) throw new Error(d.error || '기록 실패');
+  return d;
+}
+async function cabRecordAttempt() {
+  if (!cab.charId) { showToast('캐릭터를 먼저 고르세요'); return; }
+  if (!cab.lastPrompt) { showToast('기록할 조합이 없어요'); return; }
+  try {
+    const d = await cabPostLog({ character: cab.charId, prompt: cab.lastPrompt, result: 'pending', note: cab.lastCode });
+    cab.attempts.unshift({ lookKey: d.lookKey, character: cab.charId, prompt: cab.lastPrompt, note: cab.lastCode, result: 'pending' });
+    renderCabAttempts();
+    showToast(`✓ ${d.lookKey} 기록`);
+  } catch (e) { showToast('서버에 기록하지 못했어요 (서버 꺼짐?)'); }
+}
+async function cabSetResult(lookKey, result) {
+  const a = cab.attempts.find(x => x.lookKey === lookKey);
+  if (!a) return;
+  try {
+    await cabPostLog({ character: a.character, lookKey, prompt: a.prompt, result, note: a.note });
+    a.result = result;
+    renderCabAttempts();
+  } catch (e) { showToast('결과를 기록하지 못했어요'); }
+}
+const CAB_RESULT_LABEL = { pending: '대기', kept: '유지', discarded: '폐기' };
+function renderCabAttempts() {
+  const el = document.getElementById('cab-attempts');
+  if (!el) return;
+  el.innerHTML = cab.attempts.length ? cab.attempts.map(a => `<div class="cab-attempt">
+    <span class="cab-attempt-key">${escapeHtml(a.lookKey)}</span>
+    <span class="cab-attempt-prompt" title="${escapeHtml(a.prompt)}">${escapeHtml(a.prompt)}</span>
+    <span class="cab-attempt-res ${a.result}">${CAB_RESULT_LABEL[a.result] || a.result}</span>
+    <button class="cab-copy-btn" ${a.result === 'kept' ? 'disabled' : ''} onclick="cabSetResult('${escapeHtml(a.lookKey)}','kept')">유지</button>
+    <button class="cab-copy-btn" ${a.result === 'discarded' ? 'disabled' : ''} onclick="cabSetResult('${escapeHtml(a.lookKey)}','discarded')">폐기</button>
+  </div>`).join('') : `<div class="cab-hint">조합을 골라 "시도로 기록"을 누르면 룩 키(예: JA_LK01)가 붙어 여기에 쌓여요.</div>`;
+  cabLoadCredit();
+}
+async function cabLoadCredit() {
+  const el = document.getElementById('cab-credit');
+  if (!el) return;
+  const mine = `이번 세션 ${cab.attempts.length}회 기록`;
+  try {
+    const r = await fetch(`${YEORI_SERVER}/api/credits-status`);
+    const f = (await r.json()).main.flow;
+    el.textContent = `${mine} · 오늘 Flow 사용 ${f.usedToday}컷(${f.usedTodayPoints}pt) · 잔여 ${f.available}pt`;
+  } catch (e) { el.textContent = `${mine} · 크레딧 현황 불러오지 못함(서버 꺼짐)`; }
+}
+
 function cabCopy(which) { copyToClipboard((which === 'code' ? cab.lastCode : cab.lastPrompt) || ''); }
 function cabCopyText(btn) { copyToClipboard(btn.getAttribute('data-cab-prompt') || ''); }
 // 이미지가 실제로 없거나(offline) 경로가 깨져 로드 실패하면 그 슬롯만 "미생성" 표시로 전환.
@@ -3268,6 +3335,7 @@ function renderCaBankTab() {
   renderCaBankSidebar();
   renderCabSimulator();
   renderCabBoard();
+  renderCabAttempts();
 }
 
 // ── 워크플로우 탭 — 컷(가로, 직렬) × 코드 군(세로, 병렬) 히트맵 ─────────────────────
