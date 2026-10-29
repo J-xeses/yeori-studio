@@ -23,7 +23,7 @@ function defaultOps() {
     rev: 0,
     settings: {
       handle: '', channelName: 'Seoyeori 서여리', profilePhoto: '', bannerPhoto: '',
-      description: '', category: 'People & Blogs',
+      description: '', category: 'People & Blogs', keywords: '', residenceCountry: '',
       accountCreated: false, creatorChannelOn: false, aiLabelOn: false, twoFactorOn: false,
       monetizationApplied: false, monetizationApproved: false,
     },
