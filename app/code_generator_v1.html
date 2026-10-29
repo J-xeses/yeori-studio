@@ -431,6 +431,13 @@
   .cab-credit { font-size: 10px; color: var(--text3); font-family: 'Space Mono', monospace; margin-bottom: 8px; }
   .cab-attempt { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border2); font-size: 10px; }
   .cab-attempt-key { font-family: 'Space Mono', monospace; color: var(--teal-light); font-weight: 700; min-width: 76px; }
+  .cab-order-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
+  .cab-order-form select, .cab-order-form input[type=number] { background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 3px; padding: 4px 6px; font-size: 11px; }
+  .cab-order-all { font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+  .cab-order-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--border2); font-size: 10px; }
+  .cab-order-item .cab-order-label { color: var(--teal-light); font-weight: 700; min-width: 76px; }
+  .cab-order-item .cab-order-prompt { flex: 1; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cab-order-actions { display: flex; gap: 8px; margin-top: 8px; }
   .cab-attempt-cat { font-family: 'Noto Sans KR', sans-serif; font-weight: 400; color: var(--text2); }
   .cab-attempt-prompt { flex: 1; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cab-attempt-res { font-size: 9px; color: var(--text3); min-width: 40px; }
@@ -966,6 +973,22 @@
             <div class="cab-credit" id="cab-credit"></div>
             <div class="cab-credit" id="cab-summary"></div>
             <div id="cab-attempts"></div>
+          </div>
+          <!-- 오더 접수 → 자동 구성 → 승인 — 빈 턴어라운드/표정 슬롯을 골라 기존 시도 기록 파이프라인(/api/academy-log)으로 일괄 등록. 생성 호출 없음 -->
+          <div class="card" style="margin-top:12px">
+            <div class="card-h"><span class="idx">06</span>📦 오더 (자동 구성)</div>
+            <div class="cab-order-form">
+              <select id="cab-order-char"></select>
+              <select id="cab-order-cat">
+                <option value="turnaround">턴어라운드</option>
+                <option value="expr">표정</option>
+              </select>
+              <input type="number" id="cab-order-qty" min="1" value="3" style="width:64px">
+              <label class="cab-order-all"><input type="checkbox" id="cab-order-all"> 전체</label>
+              <button class="cab-copy-btn" onclick="cabComposeOrder()">구성하기</button>
+            </div>
+            <div class="cab-hint">캐릭터 1명 · 카테고리 1개 단위. 아직 이미지가 없는 빈 슬롯만 대상이에요.</div>
+            <div id="cab-order-preview"></div>
           </div>
         </section>
 
@@ -3116,17 +3139,71 @@ async function cabRecordAttempt() {
   } catch (e) { showToast('서버에 기록하지 못했어요 (서버 꺼짐?)'); }
 }
 // 보드(턴어라운드/표정) 빈 슬롯에서 바로 시도 기록 — 같은 cab.attempts 목록에 쌓인다. 슬롯 키가 곧 lookKey.
-async function cabRecordSlotAttempt(category, slotKey, promptText) {
-  if (!cab.charId) { showToast('캐릭터를 먼저 고르세요'); return; }
+// character(선택): 오더처럼 시뮬레이터 선택 캐릭터와 다른 캐릭터로 기록할 때. 생략하면 cab.charId (보드 슬롯 버튼 호출부는 그대로).
+// quiet(선택): 일괄 등록 중 건별 토스트를 끈다. 반환: 기록 성공 여부.
+async function cabRecordSlotAttempt(category, slotKey, promptText, character, quiet) {
+  const charId = character || cab.charId;
+  if (!charId) { showToast('캐릭터를 먼저 고르세요'); return false; }
+  // 조합 코드(cab.lastCode)는 시뮬레이터 선택 캐릭터 기준이라, 다른 캐릭터로 기록할 땐 붙이지 않는다
+  const note = charId === cab.charId ? (cab.lastCode || '') : '';
   try {
-    const d = await cabPostLog({ character: cab.charId, category, lookKey: slotKey, prompt: promptText, result: 'pending', note: cab.lastCode || '' });
+    const d = await cabPostLog({ character: charId, category, lookKey: slotKey, prompt: promptText, result: 'pending', note });
     // 같은 슬롯을 다시 기록하면 기존 행을 대체(서버도 같은 키 갱신 줄)
-    const prev = cab.attempts.find(x => x.character === cab.charId && x.category === category && x.lookKey === slotKey);
+    const prev = cab.attempts.find(x => x.character === charId && x.category === category && x.lookKey === slotKey);
     cab.attempts = cab.attempts.filter(x => x !== prev);
-    cab.attempts.unshift({ category, lookKey: d.lookKey, character: cab.charId, prompt: promptText, note: cab.lastCode || '', result: 'pending', promoted: !!(prev && prev.promoted) });
+    cab.attempts.unshift({ category, lookKey: d.lookKey, character: charId, prompt: promptText, note, result: 'pending', promoted: !!(prev && prev.promoted) });
     renderCabAttempts();
-    showToast(`✓ ${CAB_CATEGORY_LABEL[category]} ${d.lookKey} 기록`);
-  } catch (e) { showToast('서버에 기록하지 못했어요 (서버 꺼짐?)'); }
+    if (!quiet) showToast(`✓ ${CAB_CATEGORY_LABEL[category]} ${d.lookKey} 기록`);
+    return true;
+  } catch (e) { if (!quiet) showToast('서버에 기록하지 못했어요 (서버 꺼짐?)'); return false; }
+}
+
+// ── 오더 (자동 구성) — 빈 슬롯 후보를 cabBoardDefs() 결과 그대로 뽑아 승인 후 일괄 기록. 프롬프트는 손대지 않는다. ──
+cab.pendingOrder = null;
+function cabFillOrderChars() {
+  const el = document.getElementById('cab-order-char');
+  if (!el || el.options.length) return;
+  el.innerHTML = CAB_CHAR_ORDER.map(id => `<option value="${id}">${escapeHtml(CAB_CHAR_SHORT[id] || id)}</option>`).join('');
+}
+function cabComposeOrder() {
+  const character = document.getElementById('cab-order-char').value;
+  const category = document.getElementById('cab-order-cat').value;
+  if (category !== 'turnaround' && category !== 'expr') return;   // 룩 등은 이번 범위 밖
+  const all = document.getElementById('cab-order-all').checked;
+  const qty = Math.max(1, parseInt(document.getElementById('cab-order-qty').value, 10) || 1);
+  const board = cabBoardDefs(character).find(b => b.key === category);
+  const empty = board ? board.slots.filter(s => !s.file && s.cat) : [];   // s.cat = 기본 슬롯(커스텀 슬롯은 서버 허용 키가 아님)
+  if (!empty.length) { cab.pendingOrder = null; cabRenderOrder(); showToast('해당 카테고리는 이미 모두 채워져 있어요'); return; }
+  const picked = all ? empty : empty.slice(0, qty);
+  cab.pendingOrder = { character, category, items: picked.map(s => ({ slotKey: s.key, label: s.label, prompt: s.prompt, checked: true })) };
+  cabRenderOrder();
+}
+function cabRenderOrder() {
+  const el = document.getElementById('cab-order-preview');
+  if (!el) return;
+  const o = cab.pendingOrder;
+  if (!o) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="field-label" style="margin-top:8px">${escapeHtml(CAB_CHAR_SHORT[o.character] || o.character)} · ${CAB_CATEGORY_LABEL[o.category]} ${o.items.length}건 — 승인하면 시도 기록에 등록돼요</div>`
+    + o.items.map((i, n) => `<div class="cab-order-item">
+      <input type="checkbox" ${i.checked ? 'checked' : ''} onchange="cabOrderToggle(${n}, this.checked)">
+      <span class="cab-order-label">${escapeHtml(i.label)}</span>
+      <span class="cab-order-prompt" title="${escapeHtml(i.prompt)}">${escapeHtml(i.prompt)}</span>
+    </div>`).join('')
+    + `<div class="cab-order-actions"><button class="cab-copy-btn" style="margin-left:0" onclick="cabApproveOrder()">오더 승인</button><button class="cab-copy-btn" style="margin-left:0" onclick="cabCancelOrder()">취소</button></div>`;
+}
+function cabOrderToggle(n, v) { if (cab.pendingOrder && cab.pendingOrder.items[n]) cab.pendingOrder.items[n].checked = v; }
+function cabCancelOrder() { cab.pendingOrder = null; cabRenderOrder(); }
+async function cabApproveOrder() {
+  const o = cab.pendingOrder;
+  if (!o) return;
+  const todo = o.items.filter(i => i.checked);
+  if (!todo.length) { showToast('승인할 항목을 선택하세요'); return; }
+  let ok = 0;
+  for (const i of todo) { if (await cabRecordSlotAttempt(o.category, i.slotKey, i.prompt, o.character, true)) ok++; }
+  cab.pendingOrder = null;
+  cabRenderOrder();
+  renderCabAttempts();
+  showToast(ok === todo.length ? `✓ ${ok}건 오더 등록` : `${ok}/${todo.length}건 등록 (서버 확인 필요)`);
 }
 const CAB_CATEGORY_LABEL = { look: '룩', turnaround: '턴어라운드', expr: '표정' };
 const CAB_CATEGORY_FIELD = { look: 'looks', turnaround: 'turnaround', expr: 'expressions' };
@@ -3470,6 +3547,7 @@ function renderCaBankTab() {
   renderCabSimulator();
   renderCabBoard();
   renderCabAttempts();
+  cabFillOrderChars();
 }
 
 // ── 워크플로우 탭 — 컷(가로, 직렬) × 코드 군(세로, 병렬) 히트맵 ─────────────────────
