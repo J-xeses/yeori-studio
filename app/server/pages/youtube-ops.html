@@ -61,6 +61,15 @@
   .pill{display:inline-block;font-size:11px;border-radius:10px;padding:1px 8px;background:var(--panel2);border:1px solid var(--line);color:var(--tx2);margin-right:4px}
   .cat-변수·대응{border-color:#f4a261;color:#f4a261}.cat-구축{border-color:#8ab4ff;color:#8ab4ff}
   .cat-연출품질{border-color:#c3a6f7;color:#c3a6f7}.cat-일정{border-color:#7bd88f;color:#7bd88f}
+  .readywrap{background:#1f1a12;border:1px solid #4a3a1a;border-radius:10px;padding:12px 14px;margin:0 0 18px}
+  .readywrap h3{margin:0 0 8px;font-size:13px;color:var(--warn)}
+  .readyrow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #3a2f1c;font-size:13px}
+  .readyrow:last-child{border-bottom:none}
+  .readyrow .age{font-size:11px;border-radius:10px;padding:1px 8px;background:#3a2214;color:var(--warn);white-space:nowrap}
+  .readyrow .age.old{background:#3a1414;color:var(--bad)}
+  .readyrow .ig{font-size:11px;color:var(--tx2)}
+  .readyrow .code{color:var(--tx2);font-size:12px;white-space:nowrap}
+  .readyrow .ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   @media (max-width:1000px){.setup,.two{grid-template-columns:1fr}}
 </style></head><body>
 <div class="app">
@@ -125,6 +134,7 @@
 <!-- 🎯 목표·대시보드 -->
 <section data-tab="goal"><div class="wrap">
   <div class="kpis" id="kpis"></div>
+  <div id="readyBlock"></div>
   <h2>YPP 진행률 <span class="muted">(구독자 AND (시청시간 OR 쇼츠 조회수) — 각 단계 둘 중 하나만 채우면 됨)</span></h2>
   <div class="card">
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
@@ -198,7 +208,7 @@ const YPP_CUR = { subs: 1000, watchHours: 4000, shortsViews90d: 10000000 }
 
 const $ = id => document.getElementById(id)
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
-let S = null, photos = [], saveTimer = null
+let S = null, photos = [], R = [], saveTimer = null
 const local = { get(k, d) { try { const v = localStorage.getItem('ytops.' + k); return v == null ? d : JSON.parse(v) } catch (e) { return d } },
                 set(k, v) { try { localStorage.setItem('ytops.' + k, JSON.stringify(v)) } catch (e) {} } }
 
@@ -210,7 +220,7 @@ const md = s => { if (!s) return ''; const d = pd(s); return (d.getMonth() + 1) 
 
 async function load(msg) {
   const r = await fetch(API); const j = await r.json()
-  S = j.ops; photos = j.photos || []
+  S = j.ops; photos = j.photos || []; R = j.ready || []
   if (msg) { $('banner').textContent = msg; $('banner').style.display = 'block'; setTimeout(() => $('banner').style.display = 'none', 6000) }
   status('저장됨 · rev ' + S.rev); renderAll()
 }
@@ -274,6 +284,20 @@ function renderGoal() {
   const byStatus = STATUS.map(s => ({ s, n: S.posts.filter(p => p.status === s).length }))
   $('pkpis').innerHTML = byStatus.map(o => kpi(o.n, o.s)).join('')
   renderPostsTable()
+  renderReady()
+}
+// ── 완성됐지만 아직 "게시" 상태가 아닌 파일 실측 스캔 결과 (실시간, 07_output 직접 확인) ──
+function renderReady() {
+  const el = $('readyBlock')
+  if (!R.length) { el.innerHTML = ''; return }
+  el.innerHTML = '<div class="readywrap"><h3>🚨 제작 재고 — 최종 파일 완성됐는데 아직 "게시" 전인 콘텐츠 ' + R.length + '건</h3>' +
+    R.map(x => {
+      const ageCls = x.ageDays >= 14 ? 'old' : ''
+      const ig = x.otherPlatform ? '<span class="ig">✓ ' + esc(x.otherPlatform.platform) + ' 게시됨(' + new Date(x.otherPlatform.publishedAt).toISOString().slice(0,10) + ')</span>' : ''
+      return '<div class="readyrow"><span class="age ' + ageCls + '">' + x.ageDays + '일째 대기</span>' +
+        '<span class="code">' + esc(x.code) + '</span><span class="ttl">' + esc(x.title || '(제목 없음)') + '</span>' + ig + '</div>'
+    }).join('') +
+    '<p class="muted" style="margin:8px 0 0">최종 파일(07_output) 존재 여부를 직접 스캔한 결과입니다. 유튜브 채널 개설 후 이 목록부터 순서대로 업로드하면 "최근 90일 영상 3개" 조건을 바로 채울 수 있습니다.</p></div>'
 }
 function renderPostsTable() {
   const rows = S.posts.slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'))

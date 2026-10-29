@@ -65,6 +65,47 @@ export function listProfilePhotos() {
   try { return fs.readdirSync(path.join(ACCOUNT_DIR, 'profile')).filter(f => /\.(jpe?g|png|webp)$/i.test(f)).sort() } catch { return [] }
 }
 
+// ── 실시간 모니터링: "완성됐지만 아직 게시 안 됨" 자동 감지 ──────────────
+// posts 는 전부 사람이 status를 직접 바꿔야 해서, 실제로는 07_output에 최종 파일이
+// 이미 올라와 있는데도 화면엔 "기획"으로 보이는 맹점이 있었다(2026-10-29 실측: IG_R02~07·
+// SF_E12 7건이 최종본까지 끝나 있었는데 전부 "기획" 표시). status가 사람 입력인 건 유지하고,
+// 파일시스템을 직접 스캔해 "제작 재고"를 별도로 띄워주는 쪽으로 보완.
+const PUBLISH_STATUS_PATH = path.join(mp.DOWNLOADS, 'state', 'publish-status.json')
+function otherPlatformPublish(code) {
+  try {
+    const pub = JSON.parse(fs.readFileSync(PUBLISH_STATUS_PATH, 'utf-8'))
+    for (const rec of Object.values(pub)) {
+      for (const [platform, info] of Object.entries(rec)) {
+        // code 필드가 없는 과거 기록(예: IG_R06 등 mediaId 기반 신규 자동기록)은 permalink/videoUrl에
+        // 코드 문자열이 안 박혀있을 수 있어, publishedAt 날짜가 finalDir 파일 mtime 이후인 것만으로도
+        // "같은 코드로 보기엔 근거 부족"하므로 code 일치만 신뢰하고 videoUrl 경로의 코드 토큰도 보조로 본다.
+        const viaUrl = String(info?.videoUrl || '').toUpperCase().includes('/' + code.toUpperCase() + '/')
+        if (info?.code === code || viaUrl) return { platform, publishedAt: info.publishedAt, permalink: info.permalink }
+      }
+    }
+  } catch { /* 파일 없거나 파싱 실패 — 무시 */ }
+  return null
+}
+export function scanReadySignals(ops) {
+  const out = []
+  for (const p of ops.posts || []) {
+    if (p.status === '게시') continue
+    const parsed = mp.parseCode(p.code)
+    if (!parsed) continue
+    let files
+    try { files = fs.readdirSync(mp.finalDir(p.code)).filter(f => /\.mp4$/i.test(f)) } catch { files = [] }
+    if (!files.length) continue
+    const preferred = files.find(f => f.toLowerCase() === `${p.code.toLowerCase()}_final.mp4`) || files[0]
+    const stat = fs.statSync(path.join(mp.finalDir(p.code), preferred))
+    out.push({
+      code: p.code, title: p.title, status: p.status, file: preferred,
+      finalizedAt: stat.mtimeMs, ageDays: Math.floor((Date.now() - stat.mtimeMs) / 864e5),
+      otherPlatform: otherPlatformPublish(p.code),
+    })
+  }
+  return out.sort((a, b) => a.finalizedAt - b.finalizedAt)
+}
+
 // ── 스튜디오 에피소드 → 운영실 콘텐츠 목록 자동 동기화 ──────────────────────
 // SF_E*(유튜브 전용 숏폼)와 IG_R*(릴스 — 유튜브 쇼츠로 교차 업로드 가능)를 대상으로,
 // ops.posts에 없는 코드는 새로 추가한다(있으면 title/cutCount만 갱신, 사람이 채운 날짜·조회수·상태는 보존).
