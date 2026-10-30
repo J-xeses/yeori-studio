@@ -45,6 +45,15 @@ export function loadOps() {
   if (!Array.isArray(ops.posts)) ops.posts = []
   if (!Array.isArray(ops.reviewLog)) ops.reviewLog = []
   if (!Array.isArray(ops.competitors)) ops.competitors = []
+  for (const c of ops.competitors) {
+    if (typeof c.overview !== 'string') c.overview = ''
+    if (!Array.isArray(c.episodes)) {
+      // 구 스키마(채널당 단일 ref/perf/cause/takeaway) → 참고 콘텐츠 1건으로 이전
+      const hasOld = c.ref || c.perf || c.cause || c.takeaway
+      c.episodes = hasOld ? [{ id: c.id + '_e1', title: c.ref || '', screenshot: '', perf: c.perf || '', cause: c.cause || '', takeaway: c.takeaway || '' }] : []
+      delete c.ref; delete c.perf; delete c.cause; delete c.takeaway
+    }
+  }
   if (!ops.production || typeof ops.production !== 'object') ops.production = defaultOps().production
   if (typeof ops.production.weeklyCapacity !== 'number') ops.production.weeklyCapacity = Number(ops.production.weeklyCapacity) || 0
   if (typeof ops.production.note !== 'string') ops.production.note = ''
