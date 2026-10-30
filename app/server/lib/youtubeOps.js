@@ -50,6 +50,9 @@ export function loadOps() {
   if (!Array.isArray(ops.experiments)) ops.experiments = []
   for (const c of ops.competitors) {
     if (typeof c.overview !== 'string') c.overview = ''
+    if (typeof c.type !== 'string' || !c.type) c.type = '성숙 경쟁채널'   // '성숙 경쟁채널' | '신생 급성장 채널' — 후자는 블루오션 역산용 신호
+    if (typeof c.founded !== 'string') c.founded = ''
+    if (typeof c.growth !== 'string') c.growth = ''
     if (!Array.isArray(c.episodes)) {
       // 구 스키마(채널당 단일 ref/perf/cause/takeaway) → 참고 콘텐츠 1건으로 이전
       const hasOld = c.ref || c.perf || c.cause || c.takeaway

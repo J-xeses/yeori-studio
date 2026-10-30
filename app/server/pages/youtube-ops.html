@@ -277,9 +277,10 @@
   <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
     <input type="text" id="cpName" placeholder="채널명" style="width:160px">
     <input type="text" id="cpUrl" placeholder="채널 링크" style="flex:1;min-width:200px">
+    <select id="cpType"><option>성숙 경쟁채널</option><option>신생 급성장 채널</option></select>
     <button class="btn pri" id="cpAdd">+ 채널 추가</button>
   </div>
-  <p class="muted" style="margin:0 0 10px">채널 추가 후 카드를 클릭해 펼치면 개요·참고 콘텐츠(회차별 게시화면·성과·원인분석·전략시사점)를 채울 수 있습니다. 게시화면은 이미지 URL을 붙여넣거나, <code>downloads/seoyeori/YU/_account/competitors/</code>에 파일을 넣고 파일명만 입력하세요.</p>
+  <p class="muted" style="margin:0 0 10px">채널 추가 후 카드를 클릭해 펼치면 개요·참고 콘텐츠(회차별 게시화면·성과·원인분석·전략시사점)를 채울 수 있습니다. 게시화면은 이미지 URL을 붙여넣거나, <code>downloads/seoyeori/YU/_account/competitors/</code>에 파일을 넣고 파일명만 입력하세요.<br>🚀 <b>신생 급성장 채널</b> = 최근 개설인데 이미 조회수가 높은 채널 — "지금 경쟁이 약한 틈새"를 역산하는 신호로 따로 분류해 쌓습니다.</p>
   <div id="cpList"></div>
 
   <h2>적용 실험 기록 <span class="muted">— 경쟁채널·자체 성과분석에서 나온 결론을 실제 에피소드/연출에 적용하고 효과를 추적</span></h2>
@@ -728,28 +729,42 @@ $('exAdd').onclick = () => {
 }
 // 경쟁 채널 비교분석 — 채널 추가 → 카드로 리스트업 → 펼치면 개요 + 참고 콘텐츠(회차별 게시화면·성과·원인·시사점)
 const cpOpen = {}   // 세션 내 펼침 상태만 기억(저장 안 함)
+function renderCompetitorCard(c) {
+  const eps = c.episodes || []
+  const isNew = c.type === '신생 급성장 채널'
+  return '<div class="cpcard' + (cpOpen[c.id] ? ' open' : '') + '" data-id="' + esc(c.id) + '">' +
+    '<div class="cphead"><span class="caret">▶</span>' +
+    '<span class="pill ' + (isNew ? 'cat-일정' : 'cat-구축') + '">' + (isNew ? '🚀 신생 급성장' : '📊 성숙 경쟁') + '</span>' +
+    '<span class="name">' + esc(c.channel) + '</span>' +
+    (c.growth ? '<span class="muted" style="font-size:12px">' + esc(c.growth) + '</span>' : '') +
+    (c.url ? '<a class="elink" data-stop="1" href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.url) + ' ↗</a>' : '<span class="muted" style="font-size:12px">링크 미입력</span>') +
+    '<span class="ecount">참고 콘텐츠 ' + eps.length + '건</span>' +
+    '<button class="x" data-del="1" data-stop="1">✕</button></div>' +
+    '<div class="cpdet">' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+    '<div class="field" style="min-width:160px"><label>유형</label><select data-k="type"><option' + (!isNew ? ' selected' : '') + '>성숙 경쟁채널</option><option' + (isNew ? ' selected' : '') + '>신생 급성장 채널</option></select></div>' +
+    '<div class="field" style="min-width:140px"><label>개설일</label><input type="text" data-k="founded" value="' + esc(c.founded) + '" placeholder="예: 2026-05"></div>' +
+    '<div class="field" style="flex:1;min-width:200px"><label>성장속도</label><input type="text" data-k="growth" value="' + esc(c.growth) + '" placeholder="예: 6개월 만에 60만 구독자"></div>' +
+    '</div>' +
+    '<div class="field"><label>개요(채널 성격·톤·니치)</label><textarea data-k="overview" rows="2" placeholder="예: AI 햄스터 캐릭터, 직장인 번아웃 공감 1분 숏츠">' + esc(c.overview || '') + '</textarea></div>' +
+    '<div class="field"><label>채널 링크</label><input type="text" data-k="url" value="' + esc(c.url) + '"></div>' +
+    (eps.map((e, i) => renderEpisode(c, e, i)).join('')) +
+    '<button class="btn" data-addep="1">+ 참고 콘텐츠 추가</button>' +
+    '</div></div>'
+}
 function renderCompetitors() {
   const rows = S.competitors || []
-  $('cpList').innerHTML = rows.length ? rows.map(c => {
-    const eps = c.episodes || []
-    return '<div class="cpcard' + (cpOpen[c.id] ? ' open' : '') + '" data-id="' + esc(c.id) + '">' +
-      '<div class="cphead"><span class="caret">▶</span><span class="name">' + esc(c.channel) + '</span>' +
-      (c.url ? '<a class="elink" data-stop="1" href="' + esc(c.url) + '" target="_blank" rel="noopener">' + esc(c.url) + ' ↗</a>' : '<span class="muted" style="font-size:12px">링크 미입력</span>') +
-      '<span class="ecount">참고 콘텐츠 ' + eps.length + '건</span>' +
-      '<button class="x" data-del="1" data-stop="1">✕</button></div>' +
-      '<div class="cpdet">' +
-      '<div class="field"><label>개요(채널 성격·톤·니치)</label><textarea data-k="overview" rows="2" placeholder="예: AI 햄스터 캐릭터, 직장인 번아웃 공감 1분 숏츠">' + esc(c.overview || '') + '</textarea></div>' +
-      '<div class="field"><label>채널 링크</label><input type="text" data-k="url" value="' + esc(c.url) + '"></div>' +
-      (eps.map((e, i) => renderEpisode(c, e, i)).join('')) +
-      '<button class="btn" data-addep="1">+ 참고 콘텐츠 추가</button>' +
-      '</div></div>'
-  }).join('') : '<p class="muted">아직 기록된 경쟁 채널이 없습니다. 위에서 채널명·링크만 먼저 추가하고, 펼쳐서 상세를 채우세요.</p>'
+  const fresh = rows.filter(c => c.type === '신생 급성장 채널'), mature = rows.filter(c => c.type !== '신생 급성장 채널')
+  $('cpList').innerHTML = rows.length ? (
+    (fresh.length ? '<h3 style="font-size:12px;color:var(--tx2);margin:0 0 6px">🚀 신생 급성장 채널 — 지금 열려있는 틈새 역산용</h3>' + fresh.map(renderCompetitorCard).join('') : '') +
+    (mature.length ? '<h3 style="font-size:12px;color:var(--tx2);margin:14px 0 6px">📊 성숙 경쟁채널</h3>' + mature.map(renderCompetitorCard).join('') : '')
+  ) : '<p class="muted">아직 기록된 경쟁 채널이 없습니다. 위에서 채널명·링크만 먼저 추가하고, 펼쳐서 상세를 채우세요.</p>'
   document.querySelectorAll('.cpcard').forEach(card => {
     const c = S.competitors.find(x => x.id === card.dataset.id)
     card.querySelector('.cphead').onclick = e => { if (e.target.closest('[data-stop]')) return; cpOpen[c.id] = !cpOpen[c.id]; card.classList.toggle('open') }
     card.querySelector('[data-del]').onclick = () => { if (confirm('"' + c.channel + '" 채널 기록을 삭제할까요?')) { S.competitors = S.competitors.filter(x => x !== c); touch(); renderCompetitors() } }
     card.querySelector('[data-addep]').onclick = () => { c.episodes = c.episodes || []; c.episodes.push({ id: c.id + '_e' + Date.now().toString(36), title: '', screenshot: '', perf: '', cause: '', takeaway: '' }); cpOpen[c.id] = true; touch(); renderCompetitors() }
-    card.querySelectorAll(':scope > .cpdet > [data-k]').forEach(el => el.onchange = () => { c[el.dataset.k] = el.value; touch() })
+    card.querySelectorAll('.cpdet [data-k]').forEach(el => el.onchange = () => { c[el.dataset.k] = el.value; touch(); if (el.dataset.k === 'type' || el.dataset.k === 'growth') renderCompetitors() })
     bindEpisodeInputs(card, c)
   })
 }
@@ -774,9 +789,9 @@ $('cpAdd').onclick = () => {
   const channel = $('cpName').value.trim(); if (!channel) return
   S.competitors = S.competitors || []
   const id = 'cp' + Date.now().toString(36)
-  S.competitors.push({ id, channel, url: $('cpUrl').value.trim(), overview: '', episodes: [] })
+  S.competitors.push({ id, channel, url: $('cpUrl').value.trim(), type: $('cpType').value, founded: '', growth: '', overview: '', episodes: [] })
   cpOpen[id] = true
-  $('cpName').value = ''; $('cpUrl').value = ''
+  $('cpName').value = ''; $('cpUrl').value = ''; $('cpType').value = '성숙 경쟁채널'
   touch(); renderCompetitors()
 }
 // 검토사항 로그 — 날짜별 그룹핑, 핵심요약 한 줄 + 상세는 펼쳐서
