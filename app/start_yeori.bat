@@ -78,7 +78,7 @@ echo.
 ::     Without Chrome: fall back to the default browser, one by one.
 echo [4] Opening tabs...
 set "REF_BOARD=http://localhost:3001/downloads/_shared/references/teaser/index.html"
-set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "%REF_BOARD%""
+set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "http://localhost:3001/youtube-ops" "http://localhost:3001/mobile""
 if exist "%ACC_HTML%" set "TABS=%TABS% "%ACC_HTML%""
 if exist "%MATRIX_HTML%" set "TABS=%TABS% "%MATRIX_HTML%""
 set "TABS=%TABS% "http://localhost:3000""
@@ -90,7 +90,8 @@ if defined CHROME (
 ) else (
     start "" "http://localhost:5173"
     start "" "http://localhost:3001/insta-ops"
-    start "" "%REF_BOARD%"
+    start "" "http://localhost:3001/youtube-ops"
+    start "" "http://localhost:3001/mobile"
     if exist "%ACC_HTML%" start "" "%ACC_HTML%"
     if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
     start "" "http://localhost:3000"
@@ -111,6 +112,8 @@ echo   READY
 echo ============================================================
 echo   Studio      : http://localhost:5173
 echo   Insta Ops   : http://localhost:3001/insta-ops
+echo   YouTube Ops : http://localhost:3001/youtube-ops
+echo   Mobile      : http://localhost:3001/mobile
 echo   Ref Board   : %REF_BOARD%
 echo   Cutter      : %ACC_HTML%
 echo   Trend Radar : http://localhost:3000
