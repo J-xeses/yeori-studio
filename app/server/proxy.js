@@ -20,7 +20,7 @@ import { cleanForTTS, splitSpeakerSegments, dialogueToSubtitle, applyReadings } 
 import * as mp from './lib/mediaPaths.js'
 import { instaDir, instaCode, INSTA_SUBDIR, scriptDir, deliverablesDir } from './lib/mediaPaths.js'
 import { loadOps, saveOps, listProfilePhotos } from './lib/instaOps.js'
-import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYtProfilePhotos, scanReadySignals as scanYtReadySignals } from './lib/youtubeOps.js'
+import { loadOps as loadYtOps, saveOps as saveYtOps, listProfilePhotos as listYtProfilePhotos, listBannerPhotos as listYtBannerPhotos, scanReadySignals as scanYtReadySignals } from './lib/youtubeOps.js'
 import { getUsedCount, recordUsage } from './lib/creditUsage.js'
 import { appendAttempt as appendAcademyAttempt, promoteAttempt as promoteAcademyAttempt, summarize as summarizeAcademy, readAttempts as readAcademyAttempts } from './lib/academyLog.js'
 import { recordPaidUsage, summarizeMonth, checkBudget, setUsdKrw } from './lib/paidUsage.js'
@@ -145,7 +145,7 @@ app.get('/mobile/dev-status', (_req, res) => {
   try { res.json({ ok: true, entries: recentStatusEntries(12), lastModified: statusFileMtime() }) }
   catch (err) { res.status(500).json({ ok: false, error: err.message }) }
 })
-app.get('/api/youtube-ops', (_req, res) => { const ops = loadYtOps(); res.json({ ops, photos: listYtProfilePhotos(), ready: scanYtReadySignals(ops) }) })
+app.get('/api/youtube-ops', (_req, res) => { const ops = loadYtOps(); res.json({ ops, photos: listYtProfilePhotos(), banners: listYtBannerPhotos(), ready: scanYtReadySignals(ops) }) })
 app.put('/api/youtube-ops', (req, res) => {
   try { const out = saveYtOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
   catch (e) { res.status(e.statusCode || 500).json({ ok: false, error: e.message, rev: e.current?.rev }) }

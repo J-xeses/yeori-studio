@@ -36,6 +36,12 @@
   .ph{display:flex;flex-wrap:wrap;gap:8px}
   .ph button{border:2px solid transparent;border-radius:8px;padding:0;width:80px;height:80px;overflow:hidden;cursor:pointer;background:#000}
   .ph button.on{border-color:var(--acc)}.ph img{width:100%;height:100%;object-fit:cover}
+  .bph{display:flex;flex-wrap:wrap;gap:8px}
+  .bph button{border:2px solid transparent;border-radius:8px;padding:0;width:180px;height:101px;overflow:hidden;cursor:pointer;background:#000}
+  .bph button.on{border-color:var(--acc)}.bph img{width:100%;height:100%;object-fit:cover}
+  .chk.auto{opacity:.85}.chk .tag{font-size:10px;border-radius:8px;padding:1px 6px;margin-left:auto;white-space:nowrap}
+  .chk .tag.auto{background:#1c3324;color:var(--ok);border:1px solid #2f5b3c}
+  .chk .tag.manual{background:var(--panel2);color:var(--tx2);border:1px solid var(--line)}
   .field{margin-bottom:12px}.field label{display:block;font-size:12px;color:var(--tx2);margin-bottom:4px}
   .field input[type=text],.field select,.field textarea{width:100%}
   .chk{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
@@ -101,12 +107,18 @@
     <h2>프로필·배너</h2>
     <div class="field"><label>프로필 사진</label><div class="ph" id="ph"></div>
       <p class="muted">추가: <code>downloads/seoyeori/YU/_account/profile/</code> 에 넣고 새로고침</p></div>
+    <div class="field"><label>배너 이미지</label><div class="bph" id="bph"></div>
+      <p class="muted">추가: <code>downloads/seoyeori/YU/_account/banner/</code> 에 넣고 새로고침 · 안전영역 1546×423 기준으로 제작</p></div>
     <div class="field"><label>채널명</label><input type="text" id="channelName"></div>
     <div class="field"><label>핸들(@)</label><input type="text" id="handle" placeholder="예: seoyeori"></div>
-    <div class="field"><label>카테고리</label><select id="category">
+    <div class="field"><label>카테고리(업로드 기본값)</label><select id="category">
       <option>People & Blogs</option><option>Entertainment</option><option>Comedy</option><option>Howto & Style</option><option>Film & Animation</option>
     </select></div>
+    <div class="field"><label>거주국가</label><input type="text" id="residenceCountry" placeholder="예: 대한민국"></div>
     <div class="field"><label>채널 소개</label><textarea id="description" rows="4" placeholder="AI 캐릭터라는 점을 밝히는 문구 포함 권장"></textarea></div>
+    <div class="field"><label>채널 키워드</label><textarea id="keywords" rows="2" placeholder="쉼표로 구분"></textarea></div>
+    <div class="field"><label>업로드 기본 설명(매 영상 하단 고정 블록)</label><textarea id="uploadDefaultDescription" rows="4"></textarea></div>
+    <div class="field"><label>업로드 기본 태그</label><textarea id="uploadDefaultTags" rows="2" placeholder="쉼표로 구분"></textarea></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn" id="openYtSetup">▶️ 채널 확인</button><button class="btn" id="openStudio">🎛 유튜브 스튜디오</button></div>
   </div>
   <div>
@@ -120,14 +132,8 @@
       <div class="chk"><input type="checkbox" id="c_monetizationApproved"><label for="c_monetizationApproved">YPP 승인 완료 🎉</label></div>
     </div>
     <p class="muted" style="margin-top:10px">근거(2026-09-29 확인): 2027-02-01부터 신규 가입 기준이 2배(시청시간 4,000→8,000h, 쇼츠 조회수 1,000만→2,000만/90일)로 강화됨 — <b>그 전에 YPP 승인까지 끝내는 게 핵심.</b> 구독자 1,000명 기준은 안 바뀜. 승인 후 유지 기준은 훨씬 낮음(연 1,000h 또는 쇼츠 90일 100만, 또는 90일마다 롱폼 2개/쇼츠 5개).</p>
-    <h2>업로드·설정 8가지 체크리스트 <span class="muted">(성준님 기존 조사 반영)</span></h2>
-    <div class="card">
-      <div class="chk"><input type="checkbox" id="s_privateFirst"><label for="s_privateFirst">첫 업로드는 비공개로 24시간 예열 후 공개 전환(알고리즘 사전검토 시간 확보)</label></div>
-      <div class="chk"><input type="checkbox" id="s_layout"><label for="s_layout">홈탭 레이아웃 설정(인기 동영상→게시물→동영상→재생목록 순)</label></div>
-      <div class="chk"><input type="checkbox" id="s_keywords"><label for="s_keywords">채널 키워드 등록(설정→채널→키워드, 시크릿창으로 조사한 검색어 기반)</label></div>
-      <div class="chk"><input type="checkbox" id="s_autoChapterOff"><label for="s_autoChapterOff">자동챕터·주요 순간 허용 끄고 수동 타임스탬프 사용</label></div>
-      <div class="chk"><input type="checkbox" id="s_hashtag"><label for="s_hashtag">업로드마다 해시태그 3~6개 + 태그란 활용 규칙 정착</label></div>
-    </div>
+    <h2>업로드·설정 8가지 체크리스트 <span class="muted">(자동감지 4 + 수동 4)</span></h2>
+    <div class="card" id="chk8"></div>
   </div>
 </div></section>
 
@@ -208,7 +214,17 @@ const YPP_CUR = { subs: 1000, watchHours: 4000, shortsViews90d: 10000000 }
 
 const $ = id => document.getElementById(id)
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
-let S = null, photos = [], R = [], saveTimer = null
+let S = null, photos = [], banners = [], R = [], saveTimer = null
+const CHK8 = [
+  { k: 'residenceCountrySet', auto: true, label: '거주국가 설정', test: st => !!(st.residenceCountry && st.residenceCountry.trim()) },
+  { k: 'keywordsSet', auto: true, label: '채널 키워드 등록', test: st => !!(st.keywords && st.keywords.trim()) },
+  { k: 'uploadDefaultsSet', auto: true, label: '업로드 기본값(설명+태그) 등록', test: st => !!(st.uploadDefaultDescription && st.uploadDefaultTags && st.uploadDefaultTags.trim()) },
+  { k: 'visualAssetsSet', auto: true, label: '프로필·배너 비주얼 세팅 완료', test: st => !!(st.profilePhoto && st.bannerPhoto) },
+  { k: 'privateFirst', auto: false, label: '첫 업로드는 비공개로 24시간 예열 후 공개 전환(알고리즘 사전검토 시간 확보)' },
+  { k: 'layout', auto: false, label: '홈탭 레이아웃 설정(트레일러·섹션) — 영상 1개 이상 업로드 후 가능' },
+  { k: 'autoChapterOff', auto: false, label: '자동챕터·주요 순간 허용 끄고 수동 타임스탬프 사용' },
+  { k: 'hashtag', auto: false, label: '업로드마다 해시태그 3~6개 + 태그란 활용 규칙 정착' },
+]
 const local = { get(k, d) { try { const v = localStorage.getItem('ytops.' + k); return v == null ? d : JSON.parse(v) } catch (e) { return d } },
                 set(k, v) { try { localStorage.setItem('ytops.' + k, JSON.stringify(v)) } catch (e) {} } }
 
@@ -220,7 +236,7 @@ const md = s => { if (!s) return ''; const d = pd(s); return (d.getMonth() + 1) 
 
 async function load(msg) {
   const r = await fetch(API); const j = await r.json()
-  S = j.ops; photos = j.photos || []; R = j.ready || []
+  S = j.ops; photos = j.photos || []; banners = j.banners || []; R = j.ready || []
   if (msg) { $('banner').textContent = msg; $('banner').style.display = 'block'; setTimeout(() => $('banner').style.display = 'none', 6000) }
   status('저장됨 · rev ' + S.rev); renderAll()
 }
@@ -251,15 +267,28 @@ function renderSetup() {
   const st = S.settings
   $('ph').innerHTML = photos.map(f => '<div><button class="' + (f === st.profilePhoto ? 'on' : '') + '" data-f="' + esc(f) + '"><img src="' + MEDIA + 'profile/' + encodeURIComponent(f) + '"></button></div>').join('') || '<span class="muted">아직 사진 없음</span>'
   document.querySelectorAll('.ph button').forEach(b => b.onclick = () => { st.profilePhoto = b.dataset.f; touch(); renderSetup() })
+  $('bph').innerHTML = banners.map(f => '<div><button class="' + (f === st.bannerPhoto ? 'on' : '') + '" data-f="' + esc(f) + '"><img src="' + MEDIA + 'banner/' + encodeURIComponent(f) + '"></button></div>').join('') || '<span class="muted">아직 배너 없음</span>'
+  document.querySelectorAll('.bph button').forEach(b => b.onclick = () => { st.bannerPhoto = b.dataset.f; touch(); renderSetup() })
   $('channelName').value = st.channelName || ''; $('handle').value = st.handle || ''
   $('category').value = st.category || 'People & Blogs'; $('description').value = st.description || ''
-  ;[['channelName',''],['handle',''],['category',''],['description','']].forEach(([id]) => $(id).onchange = e => { st[id] = e.target.value; touch() })
+  $('residenceCountry').value = st.residenceCountry || ''; $('keywords').value = st.keywords || ''
+  $('uploadDefaultDescription').value = st.uploadDefaultDescription || ''; $('uploadDefaultTags').value = st.uploadDefaultTags || ''
+  ;['channelName','handle','category','description','residenceCountry','keywords','uploadDefaultDescription','uploadDefaultTags'].forEach(id => $(id).onchange = e => { st[id] = e.target.value; touch(); renderSetup() })
   ;['accountCreated','creatorChannelOn','aiLabelOn','twoFactorOn','monetizationApplied','monetizationApproved'].forEach(k => {
     const el = $('c_' + k); el.checked = !!st[k]; el.onchange = () => { st[k] = el.checked; touch(); renderGoal() }
   })
-  ;['privateFirst','layout','keywords','autoChapterOff','hashtag'].forEach(k => {
-    const el = $('s_' + k); el.checked = !!st[k]; el.onchange = () => { st[k] = el.checked; touch() }
-  })
+  renderChk8()
+}
+function renderChk8() {
+  const st = S.settings
+  $('chk8').innerHTML = CHK8.map(c => {
+    if (c.auto) {
+      const on = c.test(st)
+      return '<div class="chk auto"><input type="checkbox" disabled' + (on ? ' checked' : '') + '><label>' + c.label + '</label><span class="tag auto">' + (on ? '✅ 자동감지됨' : '⬜ 미완료') + '</span></div>'
+    }
+    return '<div class="chk"><input type="checkbox" id="s_' + c.k + '"' + (st[c.k] ? ' checked' : '') + '><label for="s_' + c.k + '">' + c.label + '</label><span class="tag manual">수동</span></div>'
+  }).join('')
+  CHK8.filter(c => !c.auto).forEach(c => { $('s_' + c.k).onchange = e => { st[c.k] = e.target.checked; touch() } })
 }
 
 // ── 🎯 목표·대시보드 ──

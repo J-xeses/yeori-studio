@@ -24,6 +24,7 @@ function defaultOps() {
     settings: {
       handle: '', channelName: 'Seoyeori 서여리', profilePhoto: '', bannerPhoto: '',
       description: '', category: 'People & Blogs', keywords: '', residenceCountry: '',
+      uploadDefaultDescription: '', uploadDefaultTags: '',
       accountCreated: false, creatorChannelOn: false, aiLabelOn: false, twoFactorOn: false,
       monetizationApplied: false, monetizationApproved: false,
     },
@@ -63,6 +64,10 @@ export function saveOps(next) {
 
 export function listProfilePhotos() {
   try { return fs.readdirSync(path.join(ACCOUNT_DIR, 'profile')).filter(f => /\.(jpe?g|png|webp)$/i.test(f)).sort() } catch { return [] }
+}
+
+export function listBannerPhotos() {
+  try { return fs.readdirSync(path.join(ACCOUNT_DIR, 'banner')).filter(f => /\.(jpe?g|png|webp)$/i.test(f)).sort() } catch { return [] }
 }
 
 // ── 실시간 모니터링: "완성됐지만 아직 게시 안 됨" 자동 감지 ──────────────
