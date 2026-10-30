@@ -31,6 +31,7 @@ function defaultOps() {
     ypp: { subs: 0, watchHours: 0, shortsViews90d: 0, lastUpdated: '' },
     posts: [],
     reviewLog: [],
+    competitors: [],
   }
 }
 
@@ -41,6 +42,7 @@ export function loadOps() {
   if (!ops.ypp) ops.ypp = defaultOps().ypp
   if (!Array.isArray(ops.posts)) ops.posts = []
   if (!Array.isArray(ops.reviewLog)) ops.reviewLog = []
+  if (!Array.isArray(ops.competitors)) ops.competitors = []
   syncEpisodesToPosts(ops)
   return ops
 }

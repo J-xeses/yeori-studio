@@ -77,6 +77,15 @@
   .readyrow .code{color:var(--tx2);font-size:12px;white-space:nowrap}
   .readyrow .ttl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   @media (max-width:1000px){.setup,.two{grid-template-columns:1fr}}
+  .loggroup{margin-bottom:14px}
+  .logdate{font-size:12px;color:var(--tx2);font-weight:600;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+  .logrow{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px}
+  .logrow .lhead{display:flex;align-items:center;gap:8px;cursor:pointer}
+  .logrow .lsum{flex:1;font-size:13px}
+  .logrow .ldet{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12px;color:var(--tx2);white-space:pre-wrap}
+  .logrow.open .ldet{display:block}
+  .logrow .caret{font-size:10px;color:var(--tx2);transition:transform .15s}
+  .logrow.open .caret{transform:rotate(90deg)}
 </style></head><body>
 <div class="app">
 <aside class="sidebar">
@@ -187,13 +196,26 @@
       <li><b>재시청 잘 되는 포맷</b> — 튜토리얼/방법론, 비교·랭킹, 공감형 스토리텔링, 연속 시리즈</li>
     </ul>
   </div>
-  <h2>검토사항 로그 <span class="muted">— 변수·대응 / 구축 / 연출품질 / 일정, 진행하며 계속 쌓기(성준님 2026-09-29 방침)</span></h2>
+  <h2>경쟁 채널 비교분석 <span class="muted">— 유사 채널 서치 + 수동 기록, 회차별 성과·전략 시사점 축적</span></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <input type="text" id="cpName" placeholder="채널명" style="width:140px">
+    <input type="text" id="cpUrl" placeholder="링크(검색해서 확인 후 입력)" style="width:160px">
+    <input type="text" id="cpRef" placeholder="참고 콘텐츠(회차/제목)" style="width:180px">
+    <input type="text" id="cpPerf" placeholder="성과(구독자/조회수 등)" style="width:140px">
+    <input type="text" id="cpCause" placeholder="원인 분석" style="flex:1;min-width:160px">
+    <input type="text" id="cpTakeaway" placeholder="전략 시사점" style="flex:1;min-width:160px">
+    <button class="btn pri" id="cpAdd">+ 추가</button>
+  </div>
+  <div class="card scroll"><table id="cp"></table></div>
+
+  <h2>검토사항 로그 <span class="muted">— 변수·대응 / 구축 / 연출품질 / 일정, 날짜별로 묶어서 핵심요약만 한눈에</span></h2>
   <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
     <select id="rlCat"><option>변수·대응</option><option>구축</option><option>연출품질</option><option>일정</option></select>
-    <input type="text" id="rlText" placeholder="내용" style="flex:1;min-width:240px">
+    <input type="text" id="rlSummary" placeholder="핵심요약 — 어떤 상황에서 뭘 보완해서 어떤 효과(한 줄)" style="flex:1;min-width:260px">
+    <input type="text" id="rlText" placeholder="상세 내용(선택)" style="flex:1;min-width:240px">
     <button class="btn pri" id="rlAdd">+ 추가</button>
   </div>
-  <div class="card scroll"><table id="rl"></table></div>
+  <div id="rlGrouped"></div>
 </div></section>
 
 </main>
@@ -370,25 +392,70 @@ function renderInsight() {
 function renderStrategy() {
   const kpi = (v, l) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
   $('mixkpi').innerHTML = TYPES.map(t => kpi(S.posts.filter(p => p.type === t).length, t)).join('')
-  const log = (S.reviewLog || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-  $('rl').innerHTML = '<tr><th>날짜</th><th>분류</th><th>내용</th><th>상태</th><th></th></tr>' + (log.length ? log.map(x =>
-    '<tr data-id="' + esc(x.id) + '"><td class="muted" style="white-space:nowrap">' + md(x.date) + '</td>' +
-    '<td><span class="pill cat-' + esc(x.category) + '">' + esc(x.category) + '</span></td>' +
-    '<td><input type="text" data-k="text" value="' + esc(x.text) + '"></td>' +
-    '<td><select data-k="status"><option' + (x.status === 'open' ? ' selected' : '') + '>open</option><option' + (x.status === 'done' ? ' selected' : '') + '>done</option></select></td>' +
+  renderCompetitors()
+  renderReviewLog()
+}
+// 경쟁 채널 비교분석 — 서치+수동기록
+function renderCompetitors() {
+  const rows = S.competitors || []
+  $('cp').innerHTML = '<tr><th>채널명</th><th>링크</th><th>참고 콘텐츠</th><th>성과</th><th>원인 분석</th><th>전략 시사점</th><th></th></tr>' + (rows.length ? rows.map(c =>
+    '<tr data-id="' + esc(c.id) + '">' +
+    '<td><input type="text" data-k="channel" value="' + esc(c.channel) + '" style="width:120px"></td>' +
+    '<td style="white-space:nowrap"><input type="text" data-k="url" value="' + esc(c.url) + '" style="width:120px">' + (c.url ? ' <button class="x" data-open="1">↗</button>' : '') + '</td>' +
+    '<td><input type="text" data-k="ref" value="' + esc(c.ref) + '" style="width:160px"></td>' +
+    '<td><input type="text" data-k="perf" value="' + esc(c.perf) + '" style="width:120px"></td>' +
+    '<td><input type="text" data-k="cause" value="' + esc(c.cause) + '"></td>' +
+    '<td><input type="text" data-k="takeaway" value="' + esc(c.takeaway) + '"></td>' +
     '<td><button class="x" data-del="1">✕</button></td></tr>').join('')
-    : '<tr><td colspan="5" class="muted">아직 기록된 검토사항이 없습니다.</td></tr>')
-  document.querySelectorAll('#rl tr[data-id]').forEach(tr => {
-    const x = S.reviewLog.find(r => r.id === tr.dataset.id)
-    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { x[el.dataset.k] = el.value; touch(); renderStrategy() })
-    tr.querySelector('[data-del]').onclick = () => { if (confirm('삭제할까요?')) { S.reviewLog = S.reviewLog.filter(r => r !== x); touch(); renderStrategy() } }
+    : '<tr><td colspan="7" class="muted">아직 기록된 경쟁 채널이 없습니다. 유사 채널을 찾아 위 입력란에 기록하세요.</td></tr>')
+  document.querySelectorAll('#cp tr[data-id]').forEach(tr => {
+    const c = S.competitors.find(x => x.id === tr.dataset.id)
+    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { c[el.dataset.k] = el.value; touch() })
+    const ob = tr.querySelector('[data-open]'); if (ob) ob.onclick = () => openB({ target: 'url', url: c.url })
+    tr.querySelector('[data-del]').onclick = () => { if (confirm('삭제할까요?')) { S.competitors = S.competitors.filter(x => x !== c); touch(); renderCompetitors() } }
+  })
+}
+$('cpAdd').onclick = () => {
+  const channel = $('cpName').value.trim(); if (!channel) return
+  S.competitors = S.competitors || []
+  S.competitors.push({ id: 'cp' + Date.now().toString(36), channel, url: $('cpUrl').value.trim(), ref: $('cpRef').value.trim(), perf: $('cpPerf').value.trim(), cause: $('cpCause').value.trim(), takeaway: $('cpTakeaway').value.trim() })
+  ;['cpName','cpUrl','cpRef','cpPerf','cpCause','cpTakeaway'].forEach(id => $(id).value = '')
+  touch(); renderCompetitors()
+}
+// 검토사항 로그 — 날짜별 그룹핑, 핵심요약 한 줄 + 상세는 펼쳐서
+function renderReviewLog() {
+  const log = (S.reviewLog || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  if (!log.length) { $('rlGrouped').innerHTML = '<p class="muted">아직 기록된 검토사항이 없습니다.</p>'; return }
+  const byDate = {}
+  log.forEach(x => { (byDate[x.date || '(날짜없음)'] = byDate[x.date || '(날짜없음)'] || []).push(x) })
+  $('rlGrouped').innerHTML = Object.keys(byDate).sort((a, b) => b.localeCompare(a)).map(date =>
+    '<div class="loggroup"><div class="logdate">' + esc(date) + '</div>' +
+    byDate[date].map(x => {
+      const sum = x.summary || (x.text || '').slice(0, 60)
+      return '<div class="logrow" data-id="' + esc(x.id) + '"><div class="lhead"><span class="caret">▶</span>' +
+        '<span class="pill cat-' + esc(x.category) + '">' + esc(x.category) + '</span>' +
+        '<span class="lsum">' + esc(sum) + '</span>' +
+        '<span class="st" style="background:' + (x.status === 'done' ? '#1c3324;color:var(--ok)' : 'var(--panel2);color:var(--tx2)') + '">' + esc(x.status) + '</span></div>' +
+        '<div class="ldet">' +
+        '<div class="field" style="margin-bottom:6px"><label>핵심요약</label><input type="text" data-k="summary" value="' + esc(x.summary || '') + '"></div>' +
+        '<div class="field" style="margin-bottom:6px"><label>상세 내용</label><textarea data-k="text" rows="3">' + esc(x.text || '') + '</textarea></div>' +
+        '<div style="display:flex;gap:8px;align-items:center">' +
+        '<select data-k="status"><option' + (x.status === 'open' ? ' selected' : '') + '>open</option><option' + (x.status === 'done' ? ' selected' : '') + '>done</option></select>' +
+        '<button class="x" data-del="1">✕ 삭제</button></div></div></div>'
+    }).join('') + '</div>').join('')
+  document.querySelectorAll('.logrow').forEach(row => {
+    const x = S.reviewLog.find(r => r.id === row.dataset.id)
+    row.querySelector('.lhead').onclick = () => row.classList.toggle('open')
+    row.querySelectorAll('[data-k]').forEach(el => { el.onclick = e => e.stopPropagation(); el.onchange = () => { x[el.dataset.k] = el.value; touch(); renderReviewLog() } })
+    row.querySelector('[data-del]').onclick = e => { e.stopPropagation(); if (confirm('삭제할까요?')) { S.reviewLog = S.reviewLog.filter(r => r !== x); touch(); renderReviewLog() } }
   })
 }
 $('rlAdd').onclick = () => {
-  const text = $('rlText').value.trim(); if (!text) return
+  const summary = $('rlSummary').value.trim(); const text = $('rlText').value.trim()
+  if (!summary && !text) return
   S.reviewLog = S.reviewLog || []
-  S.reviewLog.push({ id: 'rl' + Date.now().toString(36), date: today, category: $('rlCat').value, text, status: 'open' })
-  $('rlText').value = ''; touch(); renderStrategy()
+  S.reviewLog.push({ id: 'rl' + Date.now().toString(36), date: today, category: $('rlCat').value, summary, text, status: 'open' })
+  $('rlSummary').value = ''; $('rlText').value = ''; touch(); renderReviewLog()
 }
 
 async function openB(body) {
