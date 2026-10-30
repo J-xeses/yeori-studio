@@ -32,6 +32,8 @@ function defaultOps() {
     posts: [],
     reviewLog: [],
     competitors: [],
+    // 결론 적용 실험 기록 — 경쟁채널 비교·자체 성과분석에서 나온 결론을 실제 에피소드/연출에 적용하고 효과 추적
+    experiments: [],
     // 제작여건 모니터링(수동 입력) — 이번 주 가용 제작 편수 + 메모
     production: { weeklyCapacity: 0, note: '' },
   }
@@ -45,6 +47,7 @@ export function loadOps() {
   if (!Array.isArray(ops.posts)) ops.posts = []
   if (!Array.isArray(ops.reviewLog)) ops.reviewLog = []
   if (!Array.isArray(ops.competitors)) ops.competitors = []
+  if (!Array.isArray(ops.experiments)) ops.experiments = []
   for (const c of ops.competitors) {
     if (typeof c.overview !== 'string') c.overview = ''
     if (!Array.isArray(c.episodes)) {

@@ -98,6 +98,20 @@
   .epcard .eprow label{font-size:11px;color:var(--tx2);padding-top:5px}
   .epthumb{max-width:260px;max-height:160px;border-radius:6px;border:1px solid var(--line);display:block;margin-top:4px}
   .epthumb.empty{display:none}
+  .livekpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+  .livekpis .kpi{cursor:default}.livekpis .kpi.clk{cursor:pointer}.livekpis .kpi.clk:hover{border-color:var(--tx2)}
+  .apinote{font-size:11px;color:var(--tx2);border:1px dashed var(--line);border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:14px}
+  .vidrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .vidrow:last-child{border-bottom:none}.vidrow .vn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vidrow .vv{color:var(--tx2);white-space:nowrap}
+  .cmtempty{padding:22px 14px;text-align:center}
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;align-items:center;justify-content:center}
+  .modal-overlay.on{display:flex}
+  .modal-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;max-width:640px;width:92%;max-height:84vh;overflow:auto}
+  .modal-box h3{margin:0 0 4px;font-size:15px}
+  .modal-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:14px 0}
+  .modal-stats .ms{background:var(--panel2);border-radius:8px;padding:8px}
+  .modal-stats .ms .v{font-size:16px;font-weight:700}.modal-stats .ms .l{font-size:11px;color:var(--tx2)}
   /* 유형 색: 기존 팔레트 변수에서 파생 */
   :root{--t0:var(--acc);--t1:var(--link);--t2:var(--ok)}
   .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
@@ -224,6 +238,14 @@
 
 <!-- 📈 성과 현황 -->
 <section data-tab="insight"><div class="wrap">
+  <h2>실시간 채널 현황 <span class="muted">— 참고 레이아웃(다른 상황판 사례) 틀만 먼저, 값은 API 연동 후 채워짐</span></h2>
+  <div class="livekpis" id="liveKpis"></div>
+  <span class="apinote">⏸ 구독자/48시간·30일 조회수는 YouTube Data/Analytics API 연동 후 자동 채워집니다 — 지금은 자리만.</span>
+  <div class="two">
+    <div class="card"><div class="muted" style="margin-bottom:6px">최근 영상 조회수</div><div id="recentVids"></div></div>
+    <div class="card"><div class="muted" style="margin-bottom:6px">최근 댓글</div><div id="recentCmts"></div></div>
+  </div>
+  <h2>지표 입력(수동)</h2>
   <p class="muted">"게시" 상태인 콘텐츠만 표시됩니다. 유튜브 스튜디오 → 분석 탭에서 확인해 입력하세요.</p>
   <div class="kpis" id="ikpis"></div>
   <h2>유형별 집계 <span class="muted">(게시된 콘텐츠 기준)</span></h2>
@@ -260,6 +282,15 @@
   <p class="muted" style="margin:0 0 10px">채널 추가 후 카드를 클릭해 펼치면 개요·참고 콘텐츠(회차별 게시화면·성과·원인분석·전략시사점)를 채울 수 있습니다. 게시화면은 이미지 URL을 붙여넣거나, <code>downloads/seoyeori/YU/_account/competitors/</code>에 파일을 넣고 파일명만 입력하세요.</p>
   <div id="cpList"></div>
 
+  <h2>적용 실험 기록 <span class="muted">— 경쟁채널·자체 성과분석에서 나온 결론을 실제 에피소드/연출에 적용하고 효과를 추적</span></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <select id="exSource"><option>경쟁채널 분석</option><option>자체 성과 분석</option><option>기타</option></select>
+    <input type="text" id="exChange" placeholder="적용한 연출·전략 변경 내용" style="flex:1;min-width:220px">
+    <select id="exPost"><option value="">(에피소드 선택·선택사항)</option></select>
+    <button class="btn pri" id="exAdd">+ 기록 추가</button>
+  </div>
+  <div id="exList"></div>
+
   <h2>검토사항 로그 <span class="muted">— 변수·대응 / 구축 / 연출품질 / 일정, 날짜별로 묶어서 핵심요약만 한눈에</span></h2>
   <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
     <select id="rlCat"><option>변수·대응</option><option>구축</option><option>연출품질</option><option>일정</option></select>
@@ -271,6 +302,17 @@
 </div></section>
 
 </main>
+</div>
+
+<div class="modal-overlay" id="dailyModal">
+  <div class="modal-box">
+    <h3>30일 일별 조회수</h3>
+    <p class="muted" id="dmSub">—</p>
+    <div class="modal-stats" id="dmStats"></div>
+    <canvas class="chart" id="chDaily" style="height:200px"></canvas>
+    <p class="muted" style="margin-top:10px">⏸ 일별 조회수는 YouTube Analytics API 연동 후 실데이터로 채워집니다. 지금은 레이아웃만 미리 구성해뒀습니다.</p>
+    <div style="text-align:right;margin-top:10px"><button class="btn" id="dmClose">닫기</button></div>
+  </div>
 </div>
 
 <script>
@@ -509,6 +551,9 @@ function renderInsight() {
   const posted = S.posts.filter(p => p.status === '게시')
   const sum = k => posted.reduce((a, p) => a + n(p[k]), 0)
   const kpi = (v, l, d) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div>' + (d ? '<div class="d">' + d + '</div>' : '') + '</div>'
+  renderLiveKpis(posted, sum)
+  renderRecentVids(posted)
+  renderRecentCmts()
   $('ikpis').innerHTML = kpi(posted.length, '게시된 콘텐츠', '"게시" 상태로 표시된 영상 수') + kpi(sum('views').toLocaleString(), '총 조회수', '게시된 영상 전체 조회수 합') + kpi(sum('watchHours').toLocaleString(), '총 시청시간(h)', 'YPP 시청시간 조건(연 4,000h)에 쓰이는 값') + kpi(sum('subsGained').toLocaleString(), '유입 구독자(합계)', '영상을 보고 구독한 사람 수')
   // 유형별 집계 (TYPES 별 소계)
   const cols = [['views','조회수'],['watchHours','시청시간(h)'],['shortsViews','쇼츠조회수'],['subsGained','구독전환']]
@@ -530,10 +575,43 @@ function renderInsight() {
   })
 }
 
+// ── 실시간 채널 현황 (참고 상황판 레이아웃 — API 연동 전엔 틀만) ──
+function renderLiveKpis(posted, sum) {
+  const kpi = (v, l, cls, onclick) => '<div class="card kpi ' + (cls || '') + '"' + (onclick ? ' data-act="' + onclick + '"' : '') + '><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
+  $('liveKpis').innerHTML =
+    kpi((S.ypp.subs || 0).toLocaleString(), '구독자') +
+    kpi(sum('views').toLocaleString(), '총 조회수') +
+    kpi(posted.length, '영상 수') +
+    kpi('—', '48시간 조회수') +
+    kpi('—', '30일 조회수', 'clk', 'daily')
+  const el = $('liveKpis').querySelector('[data-act="daily"]')
+  if (el) el.onclick = openDailyModal
+}
+function renderRecentVids(posted) {
+  const rows = posted.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6)
+  $('recentVids').innerHTML = rows.length ? rows.map(p =>
+    '<div class="vidrow"><span class="vn">' + esc(p.code) + ' ' + esc(p.title || '') + '</span><span class="vv">' + n(p.views).toLocaleString() + '회</span></div>').join('')
+    : '<p class="muted" style="margin:0">게시된 영상이 없어요 — 올라가면 최근순으로 여기 표시됩니다.</p>'
+}
+function renderRecentCmts() {
+  $('recentCmts').innerHTML = '<div class="cmtempty"><p class="muted" style="margin:0 0 4px">💬 아직 연결된 댓글이 없어요</p>' +
+    '<p class="muted" style="margin:0">YouTube Data API 연동 후, 최근 댓글 + <span style="opacity:.7">답글</span> 버튼이 여기 표시될 예정입니다.</p></div>'
+}
+function openDailyModal() {
+  $('dmSub').textContent = '서여리 채널 전체 · 아직 게시된 영상이 없거나 API 미연동 상태입니다'
+  const stat = (v, l) => '<div class="ms"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
+  $('dmStats').innerHTML = stat('—', '48시간 조회수') + stat('—', '30일 합계') + stat('—', '하루 평균') + stat('—', '48시간 시청시간') + stat('—', '30일 시청시간')
+  $('dailyModal').classList.add('on')
+  const g = setupCanvas($('chDaily'), 40)   // .modal-box 좌우 패딩(20*2)
+  if (g) emptyChart(g, '일별 조회수 데이터 없음 (API 연동 전)')
+}
+$('dmClose').onclick = () => $('dailyModal').classList.remove('on')
+$('dailyModal').onclick = e => { if (e.target.id === 'dailyModal') $('dailyModal').classList.remove('on') }
+
 // ── 그래프 (canvas 직접 그리기, 색은 CSS 변수에서 읽음) ──
 const cssv = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-function setupCanvas(cv) {
-  const w = cv.parentElement.clientWidth - 28   // .card 좌우 패딩
+function setupCanvas(cv, hPad) {
+  const w = cv.parentElement.clientWidth - (hPad ?? 28)   // 기본: .card 좌우 패딩(14*2)
   if (w <= 0) return null                       // 숨겨진 탭 — showTab 에서 다시 그림
   const dpr = window.devicePixelRatio || 1, h = 240
   cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr)
@@ -600,7 +678,53 @@ function renderStrategy() {
   const kpi = (v, l) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
   $('mixkpi').innerHTML = TYPES.map(t => kpi(S.posts.filter(p => p.type === t).length, t)).join('')
   renderCompetitors()
+  renderExperiments()
   renderReviewLog()
+}
+// 적용 실험 기록 — 결론 → 적용 → 효과 추적
+const exOpen = {}
+const EXSTATUS = ['테스트중', '효과확인', '효과없음']
+const EXSTC = { '테스트중': 'var(--warn)', '효과확인': 'var(--ok)', '효과없음': 'var(--bad)' }
+function renderExperiments() {
+  const postOpts = S.posts.map(p => '<option value="' + esc(p.code) + '">' + esc(p.code) + ' ' + esc(p.title || '') + '</option>').join('')
+  $('exPost').innerHTML = '<option value="">(에피소드 선택·선택사항)</option>' + postOpts
+  const rows = (S.experiments || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  $('exList').innerHTML = rows.length ? rows.map(x =>
+    '<div class="cpcard' + (exOpen[x.id] ? ' open' : '') + '" data-id="' + esc(x.id) + '">' +
+    '<div class="cphead"><span class="caret">▶</span><span class="name">' + esc(x.change || '(내용 미입력)') + '</span>' +
+    (x.postCode ? '<span class="ecount">' + esc(x.postCode) + '</span>' : '') +
+    '<span class="st" style="border:1px solid ' + EXSTC[x.status] + '">' + esc(x.status) + '</span>' +
+    '<span class="muted" style="font-size:11px">' + esc(x.date) + '</span>' +
+    '<button class="x" data-del="1" data-stop="1">✕</button></div>' +
+    '<div class="cpdet">' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+    '<div class="field" style="min-width:160px"><label>출처</label><select data-k="source">' + ['경쟁채널 분석', '자체 성과 분석', '기타'].map(s => '<option' + (s === x.source ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div>' +
+    '<div class="field" style="flex:1;min-width:200px"><label>출처 메모</label><input type="text" data-k="sourceNote" value="' + esc(x.sourceNote) + '" placeholder="예: 정서불안 김햄찌 참고 / IG_R05 저조 원인"></div>' +
+    '<div class="field" style="min-width:160px"><label>적용 에피소드</label><select data-k="postCode"><option value="">(없음)</option>' + S.posts.map(p => '<option' + (p.code === x.postCode ? ' selected' : '') + ' value="' + esc(p.code) + '">' + esc(p.code) + '</option>').join('') + '</select></div>' +
+    '<div class="field" style="min-width:140px"><label>상태</label><select data-k="status">' + EXSTATUS.map(s => '<option' + (s === x.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div>' +
+    '</div>' +
+    '<div class="field"><label>적용 내용(연출·전략 변경)</label><textarea data-k="change" rows="2">' + esc(x.change) + '</textarea></div>' +
+    '<div style="display:flex;gap:16px;flex-wrap:wrap">' +
+    '<div class="field" style="flex:1;min-width:200px"><label>적용 전 성과</label><input type="text" data-k="beforeMetric" value="' + esc(x.beforeMetric) + '" placeholder="예: 직전 3편 평균 조회수 5,000"></div>' +
+    '<div class="field" style="flex:1;min-width:200px"><label>적용 후 성과</label><input type="text" data-k="afterMetric" value="' + esc(x.afterMetric) + '" placeholder="예: 게시 7일 후 15,000"></div>' +
+    '</div>' +
+    '<div class="field"><label>결론/효과 판단</label><textarea data-k="result" rows="2">' + esc(x.result) + '</textarea></div>' +
+    '</div></div>').join('') : '<p class="muted">아직 기록된 적용 실험이 없습니다. 경쟁채널 분석이나 성과 데이터에서 나온 결론을 실제로 적용했을 때 위에서 기록하세요.</p>'
+  document.querySelectorAll('#exList .cpcard').forEach(card => {
+    const x = S.experiments.find(e => e.id === card.dataset.id)
+    card.querySelector('.cphead').onclick = e => { if (e.target.closest('[data-stop]')) return; exOpen[x.id] = !exOpen[x.id]; card.classList.toggle('open') }
+    card.querySelector('[data-del]').onclick = () => { if (confirm('이 실험 기록을 삭제할까요?')) { S.experiments = S.experiments.filter(e => e !== x); touch(); renderExperiments() } }
+    card.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { x[el.dataset.k] = el.value; touch(); renderExperiments() })
+  })
+}
+$('exAdd').onclick = () => {
+  const change = $('exChange').value.trim(); if (!change) return
+  S.experiments = S.experiments || []
+  const id = 'ex' + Date.now().toString(36)
+  S.experiments.push({ id, date: today, source: $('exSource').value, sourceNote: '', change, postCode: $('exPost').value, beforeMetric: '', afterMetric: '', result: '', status: '테스트중' })
+  exOpen[id] = true
+  $('exChange').value = ''; $('exPost').value = ''
+  touch(); renderExperiments()
 }
 // 경쟁 채널 비교분석 — 채널 추가 → 카드로 리스트업 → 펼치면 개요 + 참고 콘텐츠(회차별 게시화면·성과·원인·시사점)
 const cpOpen = {}   // 세션 내 펼침 상태만 기억(저장 안 함)
