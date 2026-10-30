@@ -32,6 +32,8 @@ function defaultOps() {
     posts: [],
     reviewLog: [],
     competitors: [],
+    // 제작여건 모니터링(수동 입력) — 이번 주 가용 제작 편수 + 메모
+    production: { weeklyCapacity: 0, note: '' },
   }
 }
 
@@ -43,6 +45,14 @@ export function loadOps() {
   if (!Array.isArray(ops.posts)) ops.posts = []
   if (!Array.isArray(ops.reviewLog)) ops.reviewLog = []
   if (!Array.isArray(ops.competitors)) ops.competitors = []
+  if (!ops.production || typeof ops.production !== 'object') ops.production = defaultOps().production
+  if (typeof ops.production.weeklyCapacity !== 'number') ops.production.weeklyCapacity = Number(ops.production.weeklyCapacity) || 0
+  if (typeof ops.production.note !== 'string') ops.production.note = ''
+  for (const p of ops.posts) {
+    // planDate = 최초 계획일(한 번 정해지면 안 바뀜). 옛 항목은 현재 date 를 최초 계획으로 간주, 날짜 없으면 ''(UI에서 처음 날짜 입력 시 고정)
+    if (typeof p.planDate !== 'string') p.planDate = p.date || ''
+    if (!Array.isArray(p.statusHistory)) p.statusHistory = []
+  }
   syncEpisodesToPosts(ops)
   return ops
 }
@@ -131,7 +141,7 @@ function syncEpisodesToPosts(ops) {
       post = {
         id: code, code, title: ep.episode?.title || '', cutCount,
         type: isSF ? '숏폼(유튜브 전용)' : '숏폼(릴스 교차)',
-        status: '기획', date: '', link: '',
+        status: '기획', date: '', planDate: '', statusHistory: [], link: '',
         views: '', watchHours: '', shortsViews: '', subsGained: '', likes: '', comments: '',
       }
       ops.posts.push(post)
