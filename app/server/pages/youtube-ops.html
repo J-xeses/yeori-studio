@@ -86,6 +86,31 @@
   .logrow.open .ldet{display:block}
   .logrow .caret{font-size:10px;color:var(--tx2);transition:transform .15s}
   .logrow.open .caret{transform:rotate(90deg)}
+  /* 유형 색: 기존 팔레트 변수에서 파생 */
+  :root{--t0:var(--acc);--t1:var(--link);--t2:var(--ok)}
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+  .cal .dow{font-size:11px;color:var(--tx2);text-align:center;padding:2px 0}
+  .cal .day{min-height:78px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 4px;overflow:hidden}
+  .cal .day.out{opacity:.4}.cal .day.today{border-color:var(--acc)}
+  .cal .day .dn{font-size:11px;color:var(--tx2)}
+  .chip{display:block;font-size:11px;border-radius:4px;padding:1px 5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid transparent}
+  .chip.t0{color:var(--t0);background:color-mix(in srgb,var(--t0) 18%,transparent);border-color:color-mix(in srgb,var(--t0) 45%,transparent)}
+  .chip.t1{color:var(--t1);background:color-mix(in srgb,var(--t1) 18%,transparent);border-color:color-mix(in srgb,var(--t1) 45%,transparent)}
+  .chip.t2{color:var(--t2);background:color-mix(in srgb,var(--t2) 18%,transparent);border-color:color-mix(in srgb,var(--t2) 45%,transparent)}
+  .chip.ghost{background:none;border-style:dashed;opacity:.65}
+  .chip s{opacity:.7}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--tx2);align-items:center}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+  .legend i.t0{background:var(--t0)}.legend i.t1{background:var(--t1)}.legend i.t2{background:var(--t2)}
+  .moved{font-size:11px;color:var(--warn);margin-top:2px}.moved s{color:var(--tx2)}
+  .calhead{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .histrow{display:flex;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .histrow:last-child{border-bottom:none}.histrow .at{font-size:11px;color:var(--tx2);white-space:nowrap}
+  .livebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+  .livenote{font-size:11px;color:var(--tx2);border:1px dashed var(--line);border-radius:6px;padding:4px 8px;opacity:.8}
+  .kpi .d{font-size:11px;color:var(--tx2);margin-top:4px;opacity:.85}
+  canvas.chart{width:100%;height:240px;display:block}
+  #typeBreak .num{text-align:right}
 </style></head><body>
 <div class="app">
 <aside class="sidebar">
@@ -152,6 +177,11 @@
   <div id="readyBlock"></div>
   <h2>YPP 진행률 <span class="muted">(구독자 AND (시청시간 OR 쇼츠 조회수) — 각 단계 둘 중 하나만 채우면 됨)</span></h2>
   <div class="card">
+    <div class="livebar">
+      <span class="muted" id="liveStamp">마지막 갱신: -</span>
+      <button class="btn" id="liveRefresh">🔄 새로고침</button>
+      <span class="livenote">⏸ 실시간 자동 갱신(폴링)은 비활성 — 채널에 공개 영상이 생기고 API 연동이 되면 켤 예정입니다. 지금은 수동 새로고침만 동작해요.</span>
+    </div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px">
       <div class="field" style="margin-bottom:0"><label>구독자 수</label><input type="number" id="ySubs" min="0"></div>
       <div class="field" style="margin-bottom:0"><label>연 시청시간(h)</label><input type="number" id="yHours" min="0"></div>
@@ -169,15 +199,28 @@
     <div class="gaugewrap"><div class="gaugelb"><span>쇼츠 조회수(90일 롤링)</span><span id="g6t"></span></div><div class="gauge"><i id="g6" style="background:#c3a6f7"></i></div></div>
     <p class="muted" style="margin-top:8px">유튜브 스튜디오 → 분석에서 직접 확인해 입력(자동 연동은 채널 생성 후 API 연결 예정).</p>
   </div>
+  <h2>제작 여건 <span class="muted">(수동 입력 — 외부 크레딧/API 연동 없음)</span></h2>
+  <div class="card" id="prodBlock"></div>
+  <h2>일정 캘린더 <span class="muted">(예정일 기준 · 유형별 색 · 점선은 원래 계획일)</span></h2>
+  <div class="card" id="calBlock"></div>
   <h2>콘텐츠 파이프라인 현황</h2>
   <div class="kpis" id="pkpis"></div>
   <div class="card scroll" style="margin-top:10px"><table id="posts"></table></div>
+  <h2>최근 상태 변경 <span class="muted">(상태 select를 바꿀 때 자동 기록 · 최근 10건)</span></h2>
+  <div class="card" id="histBlock"></div>
 </div></section>
 
 <!-- 📈 성과 현황 -->
 <section data-tab="insight"><div class="wrap">
   <p class="muted">"게시" 상태인 콘텐츠만 표시됩니다. 유튜브 스튜디오 → 분석 탭에서 확인해 입력하세요.</p>
   <div class="kpis" id="ikpis"></div>
+  <h2>유형별 집계 <span class="muted">(게시된 콘텐츠 기준)</span></h2>
+  <div class="card scroll"><table id="typeBreak"></table></div>
+  <h2>그래프</h2>
+  <div class="two">
+    <div class="card"><div class="muted" style="margin-bottom:6px">콘텐츠별 조회수</div><canvas class="chart" id="chBar"></canvas></div>
+    <div class="card"><div class="muted" style="margin-bottom:6px">누적 조회수 (예정일 순)</div><canvas class="chart" id="chLine"></canvas></div>
+  </div>
   <h2>지표 입력</h2><div class="card scroll"><table id="mt"></table></div>
 </div></section>
 
@@ -236,7 +279,7 @@ const YPP_CUR = { subs: 1000, watchHours: 4000, shortsViews90d: 10000000 }
 
 const $ = id => document.getElementById(id)
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
-let S = null, photos = [], banners = [], R = [], saveTimer = null
+let S = null, photos = [], banners = [], R = [], saveTimer = null, lastLoadedAt = null, calMonth = null
 const CHK8 = [
   { k: 'residenceCountrySet', auto: true, label: '거주국가 설정', test: st => !!(st.residenceCountry && st.residenceCountry.trim()) },
   { k: 'keywordsSet', auto: true, label: '채널 키워드 등록', test: st => !!(st.keywords && st.keywords.trim()) },
@@ -259,6 +302,9 @@ const md = s => { if (!s) return ''; const d = pd(s); return (d.getMonth() + 1) 
 async function load(msg) {
   const r = await fetch(API); const j = await r.json()
   S = j.ops; photos = j.photos || []; banners = j.banners || []; R = j.ready || []
+  if (!S.production) S.production = { weeklyCapacity: 0, note: '' }
+  S.posts.forEach(p => { if (typeof p.planDate !== 'string') p.planDate = p.date || ''; if (!Array.isArray(p.statusHistory)) p.statusHistory = [] })
+  lastLoadedAt = new Date()
   if (msg) { $('banner').textContent = msg; $('banner').style.display = 'block'; setTimeout(() => $('banner').style.display = 'none', 6000) }
   status('저장됨 · rev ' + S.rev); renderAll()
 }
@@ -280,6 +326,7 @@ function showTab(t) {
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === t))
   document.querySelectorAll('section[data-tab]').forEach(s => s.classList.toggle('on', s.dataset.tab === t))
   local.set('tab', t)
+  if (t === 'insight') drawCharts()
 }
 
 function renderAll() { renderSetup(); renderGoal(); renderInsight(); renderStrategy() }
@@ -334,8 +381,78 @@ function renderGoal() {
   gauge('g6', y.shortsViews90d || 0, YPP_CUR.shortsViews90d); $('g6t').textContent = (y.shortsViews90d || 0).toLocaleString() + ' / ' + YPP_CUR.shortsViews90d.toLocaleString()
   const byStatus = STATUS.map(s => ({ s, n: S.posts.filter(p => p.status === s).length }))
   $('pkpis').innerHTML = byStatus.map(o => kpi(o.n, o.s)).join('')
+  $('liveStamp').textContent = '마지막 갱신: ' + (lastLoadedAt ? lastLoadedAt.toLocaleString('ko-KR') : '-') + (y.lastUpdated ? ' · 수치 입력일 ' + y.lastUpdated : '')
+  renderProduction()
+  renderCalendar()
   renderPostsTable()
+  renderHistory()
   renderReady()
+}
+// 새로고침 — 기존 load() 재실행(저장 대기 중이면 먼저 저장해서 입력이 날아가지 않게). 자동 폴링은 아직 없음.
+$('liveRefresh').onclick = async () => {
+  try { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; await save() }; await load('🔄 새로고침 완료') } catch (e) { status('새로고침 실패: ' + e.message, true) }
+}
+// TODO(채널 공개 영상 + YouTube Data API 키 연동 후): 아래 훅에서 주기적으로 load() 또는 지표 fetch 를 호출.
+// 지금은 의도적으로 아무것도 하지 않는다(setInterval 없음).
+function startLivePolling() { /* inert — 실시간 폴링 미연결 */ }
+
+// ── 제작 여건(수동) ──
+function renderProduction() {
+  const pr = S.production
+  const pending = S.posts.filter(p => p.status === '제작중' || p.status === '완성').length
+  $('prodBlock').innerHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end">' +
+    '<div class="field" style="margin-bottom:0"><label>이번 주 가용 제작 편수</label><input type="number" min="0" id="prCap" value="' + esc(pr.weeklyCapacity || 0) + '"></div>' +
+    '<div class="field" style="margin-bottom:0;flex:1;min-width:220px"><label>메모(크레딧·일정 등)</label><input type="text" id="prNote" value="' + esc(pr.note) + '" placeholder="예: 이번 주 무료 크레딧 소진 예상 목요일"></div>' +
+    '</div><p class="muted" style="margin:10px 0 0">현재 제작중·완성(게시 대기) <b>' + pending + '</b>건 · 이번 주 가용 <b>' + (pr.weeklyCapacity || 0) + '</b>편' +
+    (pr.weeklyCapacity ? (pending > pr.weeklyCapacity ? ' — <span style="color:var(--warn)">가용 편수보다 대기가 많아요</span>' : ' — 여유 있음') : '') + '</p>'
+  $('prCap').onchange = e => { pr.weeklyCapacity = Math.max(0, +e.target.value || 0); touch(); renderProduction() }
+  $('prNote').onchange = e => { pr.note = e.target.value; touch() }
+}
+
+// ── 일정 캘린더 (월 보기) ──
+function renderCalendar() {
+  if (!calMonth) { const d = new Date(); calMonth = new Date(d.getFullYear(), d.getMonth(), 1) }
+  const y = calMonth.getFullYear(), m = calMonth.getMonth()
+  const first = new Date(y, m, 1), startOff = first.getDay(), dim = new Date(y, m + 1, 0).getDate()
+  const cells = Math.ceil((startOff + dim) / 7) * 7
+  const moved = p => p.date && p.planDate && p.date !== p.planDate
+  const tIdx = p => Math.max(0, TYPES.indexOf(p.type))
+  const label = p => esc(p.code || p.title || '?')
+  const tip = p => esc((p.code || '') + ' ' + (p.title || '') + ' · ' + (p.type || '') + ' · ' + (p.status || '') + (moved(p) ? ' · 원래 ' + p.planDate : ''))
+  let html = '<div class="calhead"><button class="btn" id="calPrev">◀</button><b>' + y + '년 ' + (m + 1) + '월</b><button class="btn" id="calNext">▶</button><button class="btn" id="calToday">오늘</button><span class="sp"></span>' +
+    '<span class="legend">' + TYPES.map((t, i) => '<span><i class="t' + i + '"></i>' + esc(t) + '</span>').join('') + '</span></div>'
+  html += '<div class="cal">' + ['일','월','화','수','목','금','토'].map(d => '<div class="dow">' + d + '</div>').join('')
+  for (let i = 0; i < cells; i++) {
+    const dt = new Date(y, m, 1 - startOff + i), key = ds(dt), out = dt.getMonth() !== m
+    const here = S.posts.filter(p => p.date === key)
+    const ghosts = S.posts.filter(p => moved(p) && p.planDate === key)
+    html += '<div class="day' + (out ? ' out' : '') + (key === today ? ' today' : '') + '"><div class="dn">' + dt.getDate() + '</div>' +
+      here.map(p => '<span class="chip t' + tIdx(p) + '" title="' + tip(p) + '">' + label(p) + (moved(p) ? ' <s>' + md(p.planDate) + '</s>' : '') + '</span>').join('') +
+      ghosts.map(p => '<span class="chip ghost t' + tIdx(p) + '" title="' + tip(p) + ' (원래 계획일)">' + label(p) + ' (계획)</span>').join('') + '</div>'
+  }
+  html += '</div>'
+  const mv = S.posts.filter(moved), undated = S.posts.filter(p => !p.date)
+  html += '<div style="margin-top:12px">' +
+    (mv.length ? '<div class="muted" style="margin-bottom:4px">📌 일정 변경됨 ' + mv.length + '건</div>' + mv.map(p => {
+      const dd = diffD(p.planDate, p.date)
+      return '<div class="moved">' + esc(p.code) + ' ' + esc(p.title) + ' — <s>' + esc(p.planDate) + '</s> → ' + esc(p.date) + ' (' + (dd > 0 ? '+' : '') + dd + '일)</div>'
+    }).join('') : '<div class="muted">일정이 바뀐 콘텐츠는 아직 없어요.</div>') +
+    (undated.length ? '<div class="muted" style="margin-top:8px">🗓 예정일 미정 ' + undated.length + '건 — 아래 표에서 예정일을 입력하면 캘린더에 나타납니다.</div>' : '') + '</div>'
+  $('calBlock').innerHTML = html
+  $('calPrev').onclick = () => { calMonth = new Date(y, m - 1, 1); renderCalendar() }
+  $('calNext').onclick = () => { calMonth = new Date(y, m + 1, 1); renderCalendar() }
+  $('calToday').onclick = () => { calMonth = null; renderCalendar() }
+}
+
+// ── 최근 상태 변경 (모든 콘텐츠 합산, 최신순 10건) ──
+function renderHistory() {
+  const all = []
+  S.posts.forEach(p => (p.statusHistory || []).forEach(h => all.push({ p, status: h.status, at: h.at })))
+  all.sort((a, b) => String(b.at).localeCompare(String(a.at)))
+  $('histBlock').innerHTML = all.length ? all.slice(0, 10).map(h =>
+    '<div class="histrow"><span class="at">' + esc(new Date(h.at).toLocaleString('ko-KR')) + '</span><span class="code muted">' + esc(h.p.code) + '</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(h.p.title || '(제목 없음)') + '</span>' +
+    '<span class="st" style="border:1px solid ' + (STC[h.status] || 'var(--line)') + '">' + esc(h.status) + '</span></div>').join('')
+    : '<span class="muted">아직 상태 변경 기록이 없습니다 — 아래 표에서 상태를 바꾸면 자동으로 쌓여요.</span>'
 }
 // ── 완성됐지만 아직 "게시" 상태가 아닌 파일 실측 스캔 결과 (실시간, 07_output 직접 확인) ──
 function renderReady() {
@@ -358,14 +475,20 @@ function renderPostsTable() {
     '<td><input type="text" data-k="title" value="' + esc(p.title) + '"></td>' +
     '<td><select data-k="type">' + TYPES.map(t => '<option' + (t === p.type ? ' selected' : '') + '>' + t + '</option>').join('') + '</select></td>' +
     '<td class="muted">' + (p.cutCount || '') + '</td>' +
-    '<td><input type="date" data-k="date" value="' + esc(p.date) + '"></td>' +
+    '<td><input type="date" data-k="date" value="' + esc(p.date) + '">' + (p.date && p.planDate && p.date !== p.planDate ? '<div class="moved">일정 변경됨 · 원래 <s>' + md(p.planDate) + '</s></div>' : '') + '</td>' +
     '<td><select data-k="status" style="border-color:' + STC[p.status] + '">' + STATUS.map(s => '<option' + (s === p.status ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></td>' +
     '<td style="white-space:nowrap"><input type="text" data-k="link" value="' + esc(p.link) + '" placeholder="게시 URL" style="width:140px">' + (p.link ? ' <button class="x" data-open="1">↗</button>' : '') + '</td>' +
     '<td><button class="x" data-del="1" title="목록에서 제외">✕</button></td></tr>').join('')
     : '<tr><td colspan="8" class="muted">등록된 에피소드가 없습니다 — 스튜디오에서 SF_E*/IG_R* 에피소드를 등록하면 자동으로 나타납니다.</td></tr>')
   document.querySelectorAll('#posts tr[data-id], #pInsightRef tr[data-id]').forEach(tr => {
     const p = S.posts.find(x => x.id === tr.dataset.id)
-    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => { p[el.dataset.k] = el.value; touch(); renderGoal(); renderInsight(); renderStrategy() })
+    tr.querySelectorAll('[data-k]').forEach(el => el.onchange = () => {
+      const k = el.dataset.k, old = p[k]
+      p[k] = el.value
+      if (k === 'date' && !p.planDate && el.value) p.planDate = el.value   // 최초 계획일은 한 번만 고정
+      if (k === 'status' && old !== el.value) (p.statusHistory = p.statusHistory || []).push({ status: el.value, at: new Date().toISOString() })
+      touch(); renderGoal(); renderInsight(); renderStrategy()
+    })
     const ob = tr.querySelector('[data-open]'); if (ob) ob.onclick = () => openB({ target: 'url', url: p.link })
     const db = tr.querySelector('[data-del]'); if (db) db.onclick = () => { if (confirm('"' + (p.title || p.code) + '" 을(를) 운영실 목록에서만 제외할까요? (에피소드 자체는 안 지워짐)')) { S.posts = S.posts.filter(x => x !== p); touch(); renderAll() } }
   })
@@ -376,8 +499,18 @@ const n = v => (v === '' || v == null || isNaN(+v)) ? 0 : +v
 function renderInsight() {
   const posted = S.posts.filter(p => p.status === '게시')
   const sum = k => posted.reduce((a, p) => a + n(p[k]), 0)
-  const kpi = (v, l) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div></div>'
-  $('ikpis').innerHTML = kpi(posted.length, '게시된 콘텐츠') + kpi(sum('views').toLocaleString(), '총 조회수') + kpi(sum('watchHours').toLocaleString(), '총 시청시간(h)') + kpi(sum('subsGained').toLocaleString(), '유입 구독자(합계)')
+  const kpi = (v, l, d) => '<div class="card kpi"><div class="v">' + v + '</div><div class="l">' + l + '</div>' + (d ? '<div class="d">' + d + '</div>' : '') + '</div>'
+  $('ikpis').innerHTML = kpi(posted.length, '게시된 콘텐츠', '"게시" 상태로 표시된 영상 수') + kpi(sum('views').toLocaleString(), '총 조회수', '게시된 영상 전체 조회수 합') + kpi(sum('watchHours').toLocaleString(), '총 시청시간(h)', 'YPP 시청시간 조건(연 4,000h)에 쓰이는 값') + kpi(sum('subsGained').toLocaleString(), '유입 구독자(합계)', '영상을 보고 구독한 사람 수')
+  // 유형별 집계 (TYPES 별 소계)
+  const cols = [['views','조회수'],['watchHours','시청시간(h)'],['shortsViews','쇼츠조회수'],['subsGained','구독전환']]
+  $('typeBreak').innerHTML = '<tr><th>유형</th><th class="num">게시 편수</th>' + cols.map(c => '<th class="num">' + c[1] + '</th>').join('') + '</tr>' +
+    TYPES.map((t, i) => {
+      const list = posted.filter(p => p.type === t)
+      return '<tr><td><span class="legend"><span><i class="t' + i + '"></i>' + esc(t) + '</span></span></td><td class="num">' + list.length + '</td>' +
+        cols.map(c => '<td class="num">' + list.reduce((a, p) => a + n(p[c[0]]), 0).toLocaleString() + '</td>').join('') + '</tr>'
+    }).join('') +
+    '<tr><td><b>전체</b></td><td class="num"><b>' + posted.length + '</b></td>' + cols.map(c => '<td class="num"><b>' + sum(c[0]).toLocaleString() + '</b></td>').join('') + '</tr>'
+  drawCharts()
   $('mt').innerHTML = '<tr><th>콘텐츠</th><th class="num">조회수</th><th class="num">시청시간(h)</th><th class="num">쇼츠조회수</th><th class="num">구독전환</th><th class="num">좋아요</th><th class="num">댓글</th></tr>' + (posted.length ? posted.map(p =>
     '<tr data-id="' + esc(p.id) + '"><td>' + esc(p.code) + ' ' + esc(p.title) + '</td>' +
     ['views','watchHours','shortsViews','subsGained','likes','comments'].map(k => '<td><input type="number" min="0" data-m="' + k + '" value="' + esc(p[k] ?? '') + '" style="width:90px"></td>').join('') + '</tr>').join('')
@@ -387,6 +520,71 @@ function renderInsight() {
     tr.querySelectorAll('[data-m]').forEach(el => el.onchange = () => { p[el.dataset.m] = el.value === '' ? '' : +el.value; touch(); renderInsight(); renderGoal() })
   })
 }
+
+// ── 그래프 (canvas 직접 그리기, 색은 CSS 변수에서 읽음) ──
+const cssv = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+function setupCanvas(cv) {
+  const w = cv.parentElement.clientWidth - 28   // .card 좌우 패딩
+  if (w <= 0) return null                       // 숨겨진 탭 — showTab 에서 다시 그림
+  const dpr = window.devicePixelRatio || 1, h = 240
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr)
+  cv.style.width = w + 'px'; cv.style.height = h + 'px'
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h)
+  c.font = '11px system-ui,"Malgun Gothic",sans-serif'
+  return { c, w, h }
+}
+function emptyChart(g, msg) {
+  g.c.fillStyle = cssv('--tx2'); g.c.textAlign = 'center'; g.c.fillText(msg, g.w / 2, g.h / 2)
+}
+function drawAxes(g, maxV, pad) {
+  const { c, w, h } = g
+  c.strokeStyle = cssv('--line'); c.fillStyle = cssv('--tx2'); c.textAlign = 'right'; c.lineWidth = 1
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (h - pad.t - pad.b) * (1 - i / 4)
+    c.beginPath(); c.moveTo(pad.l, y); c.lineTo(w - pad.r, y); c.stroke()
+    c.fillText(Math.round(maxV * i / 4).toLocaleString(), pad.l - 6, y + 4)
+  }
+}
+function drawCharts() {
+  if (!S) return
+  const posted = S.posts.filter(p => p.status === '게시')
+  const pad = { l: 56, r: 12, t: 12, b: 34 }
+  const bar = $('chBar'), line = $('chLine')
+  const gb = bar && setupCanvas(bar)
+  if (gb) {
+    if (!posted.length) emptyChart(gb, '게시된 콘텐츠가 없어요')
+    else {
+      const vals = posted.map(p => n(p.views)), maxV = Math.max(1, ...vals)
+      drawAxes(gb, maxV, pad)
+      const plotW = gb.w - pad.l - pad.r, slot = plotW / posted.length, bw = Math.min(48, slot * 0.6)
+      posted.forEach((p, i) => {
+        const x = pad.l + slot * i + (slot - bw) / 2, bh = (gb.h - pad.t - pad.b) * vals[i] / maxV
+        gb.c.fillStyle = cssv('--t' + Math.max(0, TYPES.indexOf(p.type)))
+        gb.c.fillRect(x, gb.h - pad.b - bh, bw, bh)
+        gb.c.fillStyle = cssv('--tx2'); gb.c.textAlign = 'center'
+        gb.c.fillText(String(p.code || '').slice(-6), x + bw / 2, gb.h - pad.b + 14)
+      })
+    }
+  }
+  const gl = line && setupCanvas(line)
+  if (gl) {
+    const pts = posted.slice().sort((a, b) => (a.date || '9').localeCompare(b.date || '9'))
+    if (!pts.length) emptyChart(gl, '게시된 콘텐츠가 없어요')
+    else {
+      let acc = 0; const cum = pts.map(p => (acc += n(p.views)))
+      const maxV = Math.max(1, acc)
+      drawAxes(gl, maxV, pad)
+      const plotW = gl.w - pad.l - pad.r, X = i => pad.l + (pts.length === 1 ? plotW / 2 : plotW * i / (pts.length - 1)), Y = v => gl.h - pad.b - (gl.h - pad.t - pad.b) * v / maxV
+      gl.c.strokeStyle = cssv('--acc'); gl.c.lineWidth = 2; gl.c.beginPath()
+      cum.forEach((v, i) => i ? gl.c.lineTo(X(i), Y(v)) : gl.c.moveTo(X(i), Y(v))); gl.c.stroke()
+      gl.c.fillStyle = cssv('--acc'); gl.c.textAlign = 'center'
+      cum.forEach((v, i) => { gl.c.beginPath(); gl.c.arc(X(i), Y(v), 3.5, 0, Math.PI * 2); gl.c.fill() })
+      gl.c.fillStyle = cssv('--tx2')
+      pts.forEach((p, i) => gl.c.fillText(p.date ? md(p.date) : '미정', X(i), gl.h - pad.b + 14))
+    }
+  }
+}
+window.addEventListener('resize', () => { if (S) drawCharts() })
 
 // ── 🎬 콘텐츠 전략 ──
 function renderStrategy() {
