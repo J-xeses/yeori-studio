@@ -1195,9 +1195,10 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-10-12T23:33:31.689Z",
+      "updatedAt": "2026-10-31T11:39:44.850Z",
       "g2": true,
-      "selectedImage": "cut_03_a.jpg"
+      "selectedImage": "cut_03_a.jpg",
+      "g3": true
     },
     "cut_4": {
       "g1": true,
@@ -1208,21 +1209,24 @@
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-10-12T11:46:05.855Z",
+      "updatedAt": "2026-10-31T11:41:45.919Z",
       "g2": true,
-      "selectedImage": "cut_05_a.jpg"
+      "selectedImage": "cut_05_a.jpg",
+      "g3": true
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-10-12T11:46:07.107Z",
+      "updatedAt": "2026-10-31T11:42:47.858Z",
       "g2": true,
-      "selectedImage": "cut_06_a.jpg"
+      "selectedImage": "cut_06_a.jpg",
+      "g3": true
     },
     "cut_7": {
       "g1": false,
-      "updatedAt": "2026-10-15T07:54:59.455Z",
+      "updatedAt": "2026-10-31T11:43:59.826Z",
       "g2": true,
-      "selectedImage": "cut_07_a.jpg"
+      "selectedImage": "cut_07_a.jpg",
+      "g3": true
     }
   },
   "SF_E12": {
