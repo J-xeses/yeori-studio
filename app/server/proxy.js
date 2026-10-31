@@ -3783,12 +3783,12 @@ app.get('/api/reel-finalize/plan', async (req, res) => {
     const code = resolveEpisodeCode(ep.episode, epId)
     const cuts = resolveEpisodeCuts(ep, code)
     if (!cuts.length) return res.status(400).json({ error: '컷/대본이 없습니다 (스크립트 업로드 또는 01_script 확인)' })
-    const { decideCut, sfxEffective } = await import('./lib/reelFinalize.js')
+    const { decideCut, sfxEffective, ffprobeDuration } = await import('./lib/reelFinalize.js')
     const vdir = mp.videoDir(req.query.epNum)
     // 실제 최종화(finalizeReel)와 같은 규칙으로 보여준다 — 메이킹 탭 자막·말풍선본을 쓰는 컷과
     // 텍스트카드 컷은 자막 번인 생략. (미리보기는 "자막 굽는다"인데 실제는 안 굽는 불일치 방지)
     const mm = readCutManifest(req.query.epNum)
-    const plan = cuts.slice().sort((a, b) => a.no - b.no).map((c) => {
+    const base = cuts.slice().sort((a, b) => a.no - b.no).map((c) => {
       const d = decideCut(c)
       const pk = mp.pickCutSource(vdir, c.no)
       let captionSkipReason = null
@@ -3797,9 +3797,22 @@ app.get('/api/reel-finalize/plan', async (req, res) => {
       if (captionSkipReason) d.caption = null
       // 효과음: 실제로 들어갈 시작 초·음량(%)을 같이 내려준다 — 메이킹 탭 표가 그대로 보여주고 고친다
       d.sfx = (d.sfx || []).map((x) => ({ ...x, ...sfxEffective(x, Number(c.duration) || 0) }))
-      return { ...d, duration: Number(c.duration) || null, hasFile: !!pk.path, sourceFile: pk.path ? path.basename(pk.path) : null, derived: pk.derived, captionSkipReason, src: undefined }
+      return { d, pk, declaredDuration: Number(c.duration) || null, captionSkipReason }
     })
-    res.json({ code, epNum: Number(req.query.epNum), cuts: plan })
+    // 실제 파일 길이로 전체 타임라인 위치(startSec)를 계산 — finalizeReel의 cursor 누적과 같은 방식이라
+    // "BGM 구간별 음량" 패널에서 쓰는 영상-전체-기준 초가 실제 최종본과 어긋나지 않는다(2026-10-31).
+    const realDurs = await Promise.all(base.map(({ pk }) => (pk.path ? ffprobeDuration(pk.path) : Promise.resolve(0))))
+    let cursor = 0
+    const plan = base.map(({ d, pk, declaredDuration, captionSkipReason }, i) => {
+      const durSec = realDurs[i] > 0 ? realDurs[i] : (declaredDuration || d.durSec || 0)
+      const startSec = cursor
+      cursor += durSec
+      return {
+        ...d, duration: declaredDuration, durSec: +durSec.toFixed(2), startSec: +startSec.toFixed(2),
+        hasFile: !!pk.path, sourceFile: pk.path ? path.basename(pk.path) : null, derived: pk.derived, captionSkipReason, src: undefined,
+      }
+    })
+    res.json({ code, epNum: Number(req.query.epNum), cuts: plan, totalDur: +cursor.toFixed(2) })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }

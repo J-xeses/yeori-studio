@@ -9114,7 +9114,7 @@
           "action": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
           "character": "서여리",
           "dialogue": "",
-          "narration": "",
+          "narration": "근데.. 역시 이게 제일 편해~, 오늘.. 네 기분 룩은 뭐야?",
           "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
           "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the lilac cropped baby tee, low-rise cargo pants and chunky sneakers from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
           "videoPrompt": "First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.",
@@ -9146,6 +9146,18 @@
               "ca": "고정",
               "ac": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
               "md": "편안하고 장난기 있는 친밀함"
+            }
+          },
+          "overrides": {
+            "dialogue": {
+              "value": "",
+              "at": "2026-10-31T07:03:18.251Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "근데.. 역시 이게 제일 편해~, 오늘.. 네 기분 룩은 뭐야?",
+              "at": "2026-10-31T07:03:18.251Z",
+              "reason": "스튜디오 화면에서 직접 수정"
             }
           }
         }
@@ -11415,7 +11427,7 @@
       "action": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
       "character": "서여리",
       "dialogue": "",
-      "narration": "",
+      "narration": "근데.. 역시 이게 제일 편해~, 오늘.. 네 기분 룩은 뭐야?",
       "subtitle": "근데 역시 이게 제일 편해. / 오늘 네 기분 룩은 뭐야?",
       "imagePrompt": "MEDIUM CLOSE-UP SHOT — same Korean woman, same face, back in the lilac cropped baby tee, low-rise cargo pants and chunky sneakers from the first look, hair naturally tousled again,\nstanding in the exact same spot in front of the full-length mirror, same bedroom, same camera framing,\nrelaxed genuine smile, one finger pointing playfully toward camera, slight shoulder shrug,\nphotorealistic 8K cinematic, natural Korean beauty, effortlessly photogenic,\nlighting: same bright daytime window light,\nbackground: same softly blurred bedroom with mirror frame, vertical 9:16",
       "videoPrompt": "First 0-3s: Relaxed, genuine laugh, visibly more comfortable than the other looks. / Next 3-6s: She points playfully toward the camera with one finger, shrugging one shoulder, warm inviting smile, inviting the viewer to respond. No dialogue. No on-screen subtitle text or captions.",
@@ -11447,6 +11459,18 @@
           "ca": "고정",
           "ac": "0~3초 편안한 표정으로 웃음 → 3~6초 검지로 카메라를 가리키며 어깨 으쓱",
           "md": "편안하고 장난기 있는 친밀함"
+        }
+      },
+      "overrides": {
+        "dialogue": {
+          "value": "",
+          "at": "2026-10-31T07:03:18.251Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "narration": {
+          "value": "근데.. 역시 이게 제일 편해~, 오늘.. 네 기분 룩은 뭐야?",
+          "at": "2026-10-31T07:03:18.251Z",
+          "reason": "스튜디오 화면에서 직접 수정"
         }
       }
     }
@@ -11567,7 +11591,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-31T06:29:34.497Z",
+  "savedAt": "2026-10-31T07:29:55.879Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -11656,7 +11680,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {

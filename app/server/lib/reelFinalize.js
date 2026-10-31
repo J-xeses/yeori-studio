@@ -437,7 +437,7 @@ function ff(args, opts = {}) {
     p.on('close', (c) => (c === 0 ? resolve() : reject(new Error(`ffmpeg ${c}: ${err.slice(-500)}`))))
   })
 }
-function ffprobeDuration(file) {
+export function ffprobeDuration(file) {
   return new Promise((resolve) => {
     const p = spawn('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', file], { windowsHide: true })
     let out = ''
@@ -886,11 +886,14 @@ export function checkFinalStale(epNum) {
   const manifestPath = path.join(mp.finalDir(epNum), `${code}_finalize.json`)
   const finalPath = path.join(mp.finalDir(epNum), `${code}_final.mp4`)
   if (!fs.existsSync(finalPath)) return { stale: false, reason: 'no-final', code }
-  if (!fs.existsSync(manifestPath)) return { stale: true, reason: 'no-manifest', code, detail: '최종본은 있는데 생성 기록(_finalize.json)이 없어 소스와 일치하는지 확인 불가 — 재생성 권장' }
+  // 메이킹 탭을 새로고침해도 이미 만들어진 최종본이 바로 보이게(2026-10-31) — 다른 방법(MCP/API 직접
+  // 호출 등)으로 최종본이 생겼을 때 브라우저가 "방금 내가 생성 버튼을 눌러야만" 플레이어를 채우던 문제.
+  const videoUrl = `${mp.toMediaUrl(finalPath)}?t=${Math.round(fs.statSync(finalPath).mtimeMs)}`
+  if (!fs.existsSync(manifestPath)) return { stale: true, reason: 'no-manifest', code, videoUrl, detail: '최종본은 있는데 생성 기록(_finalize.json)이 없어 소스와 일치하는지 확인 불가 — 재생성 권장' }
   let manifest
-  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) } catch { return { stale: true, reason: 'bad-manifest', code } }
+  try { manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) } catch { return { stale: true, reason: 'bad-manifest', code, videoUrl } }
   const sources = manifest.sources || []
-  if (!sources.length) return { stale: false, reason: 'no-fingerprint-recorded', code } // 구버전 매니페스트 — 판단 보류
+  if (!sources.length) return { stale: false, reason: 'no-fingerprint-recorded', code, videoUrl } // 구버전 매니페스트 — 판단 보류
   const mismatches = []
   // 현재 05_video 의 cut_NN.mp4 전부를 확인 — 매니페스트에 없던 새 컷, 지워진 컷, mtime/size가
   // 달라진 컷을 모두 잡는다.
@@ -918,6 +921,7 @@ export function checkFinalStale(epNum) {
     stale: mismatches.length > 0,
     reason: mismatches.length ? 'source-changed' : 'ok',
     code,
+    videoUrl,
     detail: mismatches.join(' · '),
     generatedAt: manifest.generatedAt,
   }

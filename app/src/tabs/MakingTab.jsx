@@ -1192,7 +1192,11 @@ export default function MakingTab() {
     if (!episode?.number) return
     try {
       const r = await fetch(`${YEORI_SERVER}/api/reel-finalize/staleness?epNum=${episode.number}`)
-      setReelStale(await r.json())
+      const d = await r.json()
+      setReelStale(d)
+      // 이미 만들어져 있는 최종본을 "지금 이 탭에서 생성 버튼을 눌러야만" 보여주던 문제 수정
+      // (2026-10-31) — MCP/스크립트 등 다른 경로로 최종본이 생겼어도 새로고침하면 바로 보이게.
+      if (d.videoUrl) setReelVideo(d.videoUrl.startsWith('http') ? d.videoUrl : `${YEORI_SERVER}${d.videoUrl}`)
     } catch { /* noop */ }
   }
   useEffect(() => { loadReelStaleness() }, [episode?.number])
@@ -3756,12 +3760,13 @@ export default function MakingTab() {
                 {Array.isArray(reelPlan) && (
                   <table className={s.cutTable} style={{ width: '100%', marginTop: 8, fontSize: 12, borderCollapse: 'collapse' }}>
                     <thead><tr style={{ textAlign: 'left', opacity: 0.7 }}>
-                      <th>컷</th><th>유형</th><th>화면</th><th>자막</th><th>효과음 (무엇을 · 몇 초에 · 얼마나 크게)</th><th>파일</th>
+                      <th>컷</th><th title="영상 전체 기준 — 위 BGM 구간별 음량 패널 입력에 그대로 씀">구간(전체 기준)</th><th>유형</th><th>화면</th><th>자막</th><th>효과음 (무엇을 · 몇 초에 · 얼마나 크게)</th><th>파일</th>
                     </tr></thead>
                     <tbody>
                       {reelPlan.map(c => (
                         <tr key={c.no} style={{ borderTop: '1px solid var(--border,#333)' }}>
                           <td>{c.no}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>{Number.isFinite(c.startSec) ? `${c.startSec.toFixed(1)}~${(c.startSec + (c.durSec || 0)).toFixed(1)}s` : '—'}</td>
                           <td>{c.cutType}</td>
                           <td>{c.fit === 'contain' ? '레터박스' : '채움'}</td>
                           <td>{!c.caption ? (c.captionSkipReason ? <span style={{ opacity: 0.75 }}>굽지 않음 — {c.captionSkipReason}</span> : '—') : c.caption.segments.map((sg, i) => (
