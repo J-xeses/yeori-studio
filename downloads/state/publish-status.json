@@ -45,6 +45,17 @@
       "note": "2026-10-10 12:00 게시 — publish-status.json 신설(10/16) 이전 건, insta-ops.json 대조로 백필. ⚠️studio-state.json에서 이 에피소드의 id가 'ep_test_r03'·number가 98로 되어있음(테스트용 임시번호로 보임) — 그대로 키로 사용, 번호 자체 정리는 별도 판단 필요"
     }
   },
+  "107": {
+    "instagram": {
+      "publishedAt": 1793434643279,
+      "mediaId": "18129333577870656",
+      "permalink": "https://www.instagram.com/reel/DfJtSePFFT7/",
+      "videoUrl": "https://bass-calculation-del-documentary.trycloudflare.com/downloads/seoyeori/IG/IG_R/IG_R07/07_output/ep107_final.mp4",
+      "caption": "스냅 한 번에 룩이 바뀐다🫰✨ 5가지 변신 챌린지\n\n손가락 스냅으로 완전히 다른 세계로 🌸\nY2K → K-아이돌 → 플로럴 에디토리얼 → 오트쿠튀르 → 모던 한복\n\n오늘 네 기분 룩은 뭐야? 👇댓글로 알려줘!\n\n🫰 Look 1 — Acubi Y2K 파스텔\n🎸 Look 2 — K-아이돌 스트리트 레이어드\n🌺 Look 3 — 비비드 플로럴 맥시멀리즘\n🖤 Look 4 — 샤넬풍 오트쿠튀르 블랙 가운\n🌿 Look 5 — 모던 한복 재해석\n\n#스냅아웃핏 #룩체인지 #아웃핏변신 #패션릴스 #Y2K패션 #Acubi #K아이돌룩 #모던한복 #에디토리얼패션 #오트쿠튀르 #플로럴룩 #맥시멀리즘 #데일리룩 #패션챌린지 #서여리 #릴스챌린지 #ootd #kfashion #koreanfashion #outfitchange",
+      "code": "IG_R07",
+      "title": "스냅 아웃핏 트렌드 따라 해봤습니다"
+    }
+  },
   "IG_T01": {
     "instagram": {
       "publishedAt": 1790311560000,

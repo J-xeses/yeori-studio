@@ -555,6 +555,31 @@ function ThumbnailSection({ epNum }) {
 // scriptRaw(대본 생성 탭에서 붙여넣은 원문)가 비어있어도 cuts 배열에 내용이 있으면(스튜디오
 // 컷 에디터로 직접 작성한 에피소드) 그걸로 요약 텍스트를 만든다 — 2026-10-18, IG_R06처럼 컷은
 // 전부 채워져 있는데 scriptRaw만 비어서 "대본이 없습니다"가 항상 뜨던 문제.
+// AI가 JSON을 요청받아도 description처럼 긴 문장에 실제 줄바꿈(\n 문자가 아니라 진짜 개행)을
+// 그대로 넣어버리는 경우가 있다 — JSON 문자열 안의 리터럴 개행/탭은 불법이라 JSON.parse가
+// "Expected ',' or '}' ..." 로 깨진다(2026-10-31, 퍼블리싱 탭 제목/설명/태그 생성 실측).
+// 문자열 안에 있을 때만 개행·탭을 \n·\t로 escape해서 되살린다(문자열 밖 들여쓰기는 그대로 둠).
+function sanitizeLooseJson(text) {
+  let out = ''
+  let inString = false
+  let escaped = false
+  for (const ch of text) {
+    if (inString) {
+      if (escaped) { out += ch; escaped = false; continue }
+      if (ch === '\\') { out += ch; escaped = true; continue }
+      if (ch === '"') { inString = false; out += ch; continue }
+      if (ch === '\n') { out += '\\n'; continue }
+      if (ch === '\r') { continue }
+      if (ch === '\t') { out += '\\t'; continue }
+      out += ch
+    } else {
+      if (ch === '"') inString = true
+      out += ch
+    }
+  }
+  return out.replace(/,(\s*[}\]])/g, '$1')   // 끝에 붙은 trailing comma도 같이 방어
+}
+
 function buildScriptFromCuts(cuts) {
   return (cuts || []).map(c => {
     const lines = [`[CUT ${c.no}] ${c.cutTitle || ''}`]
@@ -582,7 +607,12 @@ function MetaSection() {
     try {
       const data = await claudeMessages(apiKey, {
         model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
+        // 1200 이었던 걸 3000으로 올림(2026-10-31) — 3플랫폼 제목/설명/태그를 전부 채우면
+        // 모델이 이모지·타임스탬프 섞인 긴 설명을 쓰는데, 1200으론 JSON이 다 끝나기 전에
+        // 토큰이 끊겨서 "따옴표도 안 닫힌 채 중간에 잘린" 응답이 됨 — 그래서 매번 JSON
+        // 파싱이 깨졌던 것(원인을 브라우저 콘솔로 실측 확인: text가 항상 정확히 1200자에서
+        // 끊기고 마지막 글자가 단어 중간). escape 문제가 아니라 순수 길이 부족이었음.
+        max_tokens: 3000,
         messages: [{
           role: 'user',
           content: `아래는 유튜브 쇼츠/릴스용 영상 대본이다. 이 내용을 바탕으로 유튜브, 인스타그램, 틱톡 각 플랫폼에 맞는 제목/설명/태그를 만들어줘.
@@ -603,7 +633,9 @@ ${scriptText.slice(0, 3000)}
       const text = data.content?.map(b => b.text || '').join('') || ''
       const jsonMatch = text.match(/\{[\s\S]*\}/)
       if (!jsonMatch) throw new Error('AI 응답에서 JSON을 찾을 수 없습니다')
-      const parsed = JSON.parse(jsonMatch[0])
+      let parsed
+      try { parsed = JSON.parse(jsonMatch[0]) }
+      catch { parsed = JSON.parse(sanitizeLooseJson(jsonMatch[0])) }   // 설명에 실제 개행이 섞여 깨진 경우 복구
       for (const platform of ['youtube', 'instagram', 'tiktok']) {
         if (parsed[platform]) setPlatform(platform, parsed[platform])
       }
