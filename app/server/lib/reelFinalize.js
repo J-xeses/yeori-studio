@@ -522,6 +522,11 @@ export async function finalizeReel(p) {
   const code = mp.resolveCode(epNum)
   // 영상 탭에서 정한 자막 스타일(오버라이드 _style: fontPx=1920 세로 기준 px, y=블록 중심 비율) — 미리보기와 최종본 일치(2026-09-25)
   const capStyle = loadOverrides(code)._style || {}
+  // 메이킹 탭 "BGM 구간별 음량" 패널(오버라이드 _bgm.gainSegments: [[시작초,끝초,배수], ...]) — 2026-10-31.
+  // 곡 자체의 다이내믹(브레이크다운 등)이 컷 길이와 안 맞아 특정 구간만 죽어 들릴 때, 사람이 직접
+  // 그 구간만 음량을 올리거나 내릴 수 있게. 배수 1.0=그대로, 2.0=2배. adelay 뒤에 이어 붙여서
+  // enable=between(t,..) 의 t 가 최종 영상 타임라인과 그대로 맞는다(bgmStart 오프셋과 무관).
+  const bgmGainSegments = Array.isArray(loadOverrides(code)._bgm?.gainSegments) ? loadOverrides(code)._bgm.gainSegments : []
   const vdir = mp.videoDir(epNum)
   const fdir = mp.finalDir(epNum)
   const mdir = mp.makingDir(epNum)
@@ -788,9 +793,14 @@ export async function finalizeReel(p) {
     sfxInputs.push('-stream_loop', '-1', '-i', bgmAbs)
     const bi = idx
     const fadeOut = Math.max(0, totalDur - 1.5)
-    sfxFilters.push(`[${bi}:a]atrim=0:${(totalDur - bgmStart).toFixed(2)},adelay=${Math.round(bgmStart * 1000)}|${Math.round(bgmStart * 1000)},volume=0.13,afade=t=in:st=${bgmStart.toFixed(2)}:d=1.2,afade=t=out:st=${fadeOut.toFixed(2)}:d=1.5[bgm]`)
+    // 구간별 수동 음량(배수) — t는 adelay 이후라 최종 영상 타임라인 초와 그대로 일치한다.
+    const segFilter = bgmGainSegments
+      .filter((s) => Array.isArray(s) && s.length >= 3 && Number.isFinite(s[0]) && Number.isFinite(s[1]) && Number.isFinite(s[2]))
+      .map((s) => `,volume=${Number(s[2])}:enable='between(t,${Number(s[0])},${Number(s[1])})'`)
+      .join('')
+    sfxFilters.push(`[${bi}:a]atrim=0:${(totalDur - bgmStart).toFixed(2)},adelay=${Math.round(bgmStart * 1000)}|${Math.round(bgmStart * 1000)},volume=0.13${segFilter},afade=t=in:st=${bgmStart.toFixed(2)}:d=1.2,afade=t=out:st=${fadeOut.toFixed(2)}:d=1.5[bgm]`)
     bgmFilterOut = '[bgm]'
-    bgmNote = `BGM: ${path.basename(bgmAbs)} (-17dB, 루프)`
+    bgmNote = `BGM: ${path.basename(bgmAbs)} (-17dB, 루프)${segFilter ? ` · 구간보정 ${bgmGainSegments.length}곳` : ''}`
     idx++
   } else if (wantsBgm) {
     bgmNote = 'BGM 필요(대본) 하나 _shared/bgm 에 트랙 없음 — CapCut 에서 추가'

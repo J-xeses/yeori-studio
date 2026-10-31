@@ -1,9 +1,9 @@
 {
-  "activeTab": "publishing",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 88018
+    "remainingChars": 87919
   },
   "activeEpisodeId": "ep_1790664275565",
   "openTabIds": [
@@ -11567,7 +11567,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-10-31T04:30:28.625Z",
+  "savedAt": "2026-10-31T06:29:34.497Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -11656,13 +11656,15 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-6",
+    "selectedCutId": "cut-2",
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
+    "g3Confirmed": {
+      "cut-6": true
+    },
     "focusCutId": null,
     "voiceTabs": {
       "cut-2": [
@@ -11673,6 +11675,13 @@
         }
       ],
       "cut-6": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-1": [
         {
           "id": "v1",
           "label": "목소리 1",
@@ -11709,8 +11718,39 @@
             "stability": 30,
             "similarity": 75
           }
+        },
+        {
+          "id": "track_1793427530028_iejs",
+          "type": "narration",
+          "text": "근데.. 역시 이게 제일 편해~, 오늘.. 네 기분 룩은 뭐야? ",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R07/03_audio/tts-previews/cut_06_track_1793427530028_iejs.mp3?t=1793427717097",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 53,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-1__v1": [
+        {
+          "id": "track_1793427319929_g07p",
+          "type": "dialogue",
+          "text": "",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
         }
       ]
+    },
+    "mergedUrls": {
+      "cut-6__v1": "blob:http://localhost:5173/faa3329c-9b1c-46d0-bbb0-f08a7bb13477"
     }
   },
   "voiceInsertState": {

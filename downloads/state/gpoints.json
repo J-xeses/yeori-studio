@@ -1132,11 +1132,12 @@
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-10-10T07:53:43.066Z",
+      "updatedAt": "2026-10-31T06:22:01.842Z",
       "g2": true,
       "selectedImage": "cut_06_a.jpg",
       "g5": true,
-      "g4": true
+      "g4": true,
+      "g3": true
     }
   },
   "IG_R08": {

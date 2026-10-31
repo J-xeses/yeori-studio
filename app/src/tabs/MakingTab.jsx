@@ -1156,6 +1156,37 @@ export default function MakingTab() {
   const [reelVideo, setReelVideo] = useState(null)
   const [reelManifest, setReelManifest] = useState(null)
   const [reelStale, setReelStale] = useState(null) // {stale, reason, detail} — 07_output이 05_video 컷들과 어긋난 채 방치됐는지
+  // BGM 구간별 음량 보정(오버라이드 _bgm.gainSegments) — 곡 자체의 다이내믹(브레이크다운 등)이 컷
+  // 길이와 안 맞아 특정 구간만 죽어 들릴 때, 사람이 직접 그 구간만 음량을 올리거나 내릴 수 있게
+  // (2026-10-31, R07 컷3·4 BGM 브레이크다운 실측 — 채팅으로 미세조정 요청하는 건 한계가 있음).
+  const [bgmSegments, setBgmSegmentsState] = useState([])   // [{start,end,gain}] gain: 1.0=그대로, 2.0=2배
+
+  const loadBgmSegments = async () => {
+    if (!episode?.number) return
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/reel-finalize/overrides?epNum=${episode.number}`)
+      const d = await r.json()
+      const segs = Array.isArray(d.overrides?._bgm?.gainSegments) ? d.overrides._bgm.gainSegments : []
+      setBgmSegmentsState(segs.map(([start, end, gain]) => ({ start, end, gain })))
+    } catch { /* noop */ }
+  }
+  useEffect(() => { if (/^IG_R/i.test(String(episodeCode || ''))) loadBgmSegments(); else setBgmSegmentsState([]) }, [episode?.number, episodeCode])
+
+  // rows 전체를 그대로 저장(구간 추가/삭제/수정 공용) — 값이 없는 구간([])은 _bgm 키 자체를 지운다(reelOverrides.js).
+  const saveBgmSegments = async (rows) => {
+    setBgmSegmentsState(rows)
+    if (!episode?.number) return
+    const valid = rows.filter(r => Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start && Number.isFinite(r.gain) && r.gain > 0)
+    try {
+      await fetch(`${YEORI_SERVER}/api/reel-finalize/override`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          epNum: episode.number, cutNo: '_bgm',
+          patch: { gainSegments: valid.length ? valid.map(r => [r.start, r.end, r.gain]) : '' },
+        }),
+      })
+    } catch (e) { alert(`BGM 구간 저장 실패: ${e.message}`) }
+  }
 
   const loadReelStaleness = async () => {
     if (!episode?.number) return
@@ -3694,6 +3725,32 @@ export default function MakingTab() {
                 <div className={s.emptyHint}>
                   BGM은 릴스 전체에 한 곡이 낮은 음량으로 깔립니다(컷마다 따로 지정하는 방식이 아님). 자동은 대본에서 BGM 문구가 처음 나오는 컷부터 시작하고,
                   곡을 직접 고르면 처음부터 깝니다. 한 번 만든 뒤 다시 만들 때는 이전 최종본의 곡을 그대로 씁니다. 효과음은 아래 표에서 컷마다 정합니다 — 표에 보이는 시작 초·음량이 최종본에 그대로 들어갑니다(바꾼 뒤 “릴스 최종본 생성”).
+                </div>
+
+                <div style={{ marginTop: 10, padding: 8, border: '1px solid var(--border,#333)', borderRadius: 6 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>🎚 BGM 구간별 음량 보정</div>
+                  <div className={s.emptyHint}>
+                    곡 자체가 특정 구간에서 조용해지거나(브레이크다운) 너무 커지는 경우, 그 구간만 음량을 올리거나 내립니다. "영상 전체 기준" 초입니다(컷 시작초 아님).
+                    100%=원곡 그대로, 200%=2배, 50%=절반. 저장만 하면 바로 반영되고, "🎬 릴스 최종본 생성"을 다시 눌러야 영상에 적용됩니다.
+                  </div>
+                  {bgmSegments.map((seg, i) => (
+                    <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12 }}>
+                      <label>시작<input type="number" min={0} step={0.1} value={seg.start ?? ''} style={{ width: 56, marginLeft: 4 }}
+                        onChange={e => { const v = [...bgmSegments]; v[i] = { ...v[i], start: parseFloat(e.target.value) }; setBgmSegmentsState(v) }}
+                        onBlur={() => saveBgmSegments(bgmSegments)} />초</label>
+                      <label>~ 끝<input type="number" min={0} step={0.1} value={seg.end ?? ''} style={{ width: 56, marginLeft: 4 }}
+                        onChange={e => { const v = [...bgmSegments]; v[i] = { ...v[i], end: parseFloat(e.target.value) }; setBgmSegmentsState(v) }}
+                        onBlur={() => saveBgmSegments(bgmSegments)} />초</label>
+                      <label>음량<input type="number" min={0} step={5} value={Math.round((seg.gain ?? 1) * 100)} style={{ width: 56, marginLeft: 4 }}
+                        onChange={e => { const v = [...bgmSegments]; v[i] = { ...v[i], gain: (parseFloat(e.target.value) || 0) / 100 }; setBgmSegmentsState(v) }}
+                        onBlur={() => saveBgmSegments(bgmSegments)} />%</label>
+                      <button className={s.captureBtn} onClick={() => saveBgmSegments(bgmSegments.filter((_, j) => j !== i))}>✕ 삭제</button>
+                    </div>
+                  ))}
+                  <button className={s.captureBtn} style={{ marginTop: 6 }}
+                    onClick={() => saveBgmSegments([...bgmSegments, { start: 0, end: 5, gain: 1.5 }])}>
+                    + 구간 추가
+                  </button>
                 </div>
 
                 {Array.isArray(reelPlan) && (
