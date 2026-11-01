@@ -1190,17 +1190,24 @@ export default function MakingTab() {
 
   // ── 트랙매트 연출(app/scripts/trackmatte.py) — 2026-11-01, "SEOYEORI" 인트로 작업에서
   // 쓴 일회성 ffmpeg 스크립트를 메이킹 탭 연출 기능으로 일반화. 구조는 스크립트 설명 그대로
-  // 앞레이어(글자 모양)·뒷레이어(장면 나열, 장면마다 좌우 패널)·연출 효과(페이드) 3단.
+  // 앞레이어(글자 모양)·뒷레이어(장면 나열, 장면마다 좌우 패널)·연출 효과(페이드·BGM) 3단.
+  const TM_DEFAULT_FRAMES = [
+    { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }, { type: 'video', src: '', start: 0, crop: 'face' }] },
+  ]
   const [tmOpen, setTmOpen] = useState(false)
   const [tmText, setTmText] = useState('SEOYEORI')
   const [tmFontSize, setTmFontSize] = useState(300)
   const [tmBg, setTmBg] = useState('black')
   const [tmFadeIn, setTmFadeIn] = useState(0.4)
   const [tmFadeOut, setTmFadeOut] = useState(0.7)
-  const [tmFrames, setTmFrames] = useState([
-    { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }, { type: 'video', src: '', start: 0, crop: 'face' }] },
-  ])
+  const [tmBgmFile, setTmBgmFile] = useState('')
+  const [tmBgmVolume, setTmBgmVolume] = useState(0.5)
+  const [tmFrames, setTmFrames] = useState(TM_DEFAULT_FRAMES)
+  const [tmSaveName, setTmSaveName] = useState('')
+  const [tmLoadedName, setTmLoadedName] = useState(null)   // null="새로 만들기" 중, 문자열="그 이름을 불러와 편집 중"
   const [tmBusy, setTmBusy] = useState(false)
+  const [tmPreviewBusy, setTmPreviewBusy] = useState(false)
+  const [tmPreviewImage, setTmPreviewImage] = useState(null)
   const [tmLog, setTmLog] = useState('')
   const [tmVideo, setTmVideo] = useState(null)
   const [tmResults, setTmResults] = useState([])
@@ -1222,27 +1229,88 @@ export default function MakingTab() {
   const updateTmPanel = (fi, pi, patch) => setTmFrames(p => p.map((f, i) => i === fi
     ? { ...f, panels: f.panels.map((pn, j) => j === pi ? { ...pn, ...patch } : pn) } : f))
 
-  const runTrackMatte = async () => {
+  const buildTmConfig = () => ({
+    canvas: { width: 1920, height: 1080, fps: 30 },
+    front_layer: { type: 'text', text: tmText, font_size: Number(tmFontSize) },
+    back_layer: {
+      background: tmBg,
+      frames: tmFrames.map(f => ({
+        duration: Number(f.duration),
+        panels: f.panels.map(pn => ({ type: pn.type, src: pn.src, start: Number(pn.start) || 0, crop: pn.crop })),
+      })),
+    },
+    effects: {
+      fade_in: Number(tmFadeIn), fade_out: Number(tmFadeOut),
+      ...(tmBgmFile.trim() ? { bgm: { file: tmBgmFile.trim(), volume: Number(tmBgmVolume) } } : {}),
+    },
+  })
+
+  // 새로 만들기 — 폼을 기본값으로 되돌리고 "불러온 상태"를 해제한다.
+  const resetTmForm = () => {
+    setTmText('SEOYEORI'); setTmFontSize(300); setTmBg('black')
+    setTmFadeIn(0.4); setTmFadeOut(0.7); setTmBgmFile(''); setTmBgmVolume(0.5)
+    setTmFrames(TM_DEFAULT_FRAMES)
+    setTmSaveName(''); setTmLoadedName(null)
+    setTmVideo(null); setTmPreviewImage(null); setTmLog('')
+  }
+
+  // 지난 결과물 불러오기 — 그 결과물을 만든 실제 설정값을 폼에 그대로 채우고, 영상도 바로 보여준다.
+  // (전엔 새 탭에서 파일 링크만 열어서 "지금 뭘 불러온 건지" 구분이 안 됐던 문제)
+  const loadTmResult = async (f) => {
+    if (!f.hasConfig) { alert('이 결과물은 설정 저장 기능 추가 전에 만들어져서 불러올 수 없습니다. 영상만 봅니다.'); setTmVideo(`${YEORI_SERVER}${f.url}`); return }
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/trackmatte/config?name=${encodeURIComponent(f.name)}`)
+      const d = await r.json()
+      if (!r.ok) { alert(`불러오기 실패: ${d.error}`); return }
+      const c = d.config
+      setTmText(c.front_layer?.text ?? 'SEOYEORI')
+      setTmFontSize(c.front_layer?.font_size ?? 300)
+      setTmBg(c.back_layer?.background ?? 'black')
+      setTmFadeIn(c.effects?.fade_in ?? 0.4)
+      setTmFadeOut(c.effects?.fade_out ?? 0.7)
+      setTmBgmFile(c.effects?.bgm?.file ?? '')
+      setTmBgmVolume(c.effects?.bgm?.volume ?? 0.5)
+      setTmFrames((c.back_layer?.frames || []).map(fr => ({
+        duration: fr.duration,
+        panels: (fr.panels || []).map(pn => ({ type: pn.type, src: pn.src, start: pn.start || 0, crop: pn.crop || 'face' })),
+      })))
+      setTmSaveName(f.name); setTmLoadedName(f.name)
+      setTmVideo(`${YEORI_SERVER}${f.url}`); setTmPreviewImage(null); setTmLog('')
+    } catch (e) { alert(`불러오기 실패: ${e.message}`) }
+  }
+
+  const validateTmFrames = () => {
+    if (!tmFrames.length) { alert('장면이 1개 이상 필요합니다'); return false }
     const badPanel = tmFrames.flatMap(f => f.panels).find(pn => !pn.src.trim())
-    if (badPanel) { alert('비어있는 패널 소스 경로가 있습니다'); return }
-    setTmBusy(true); setTmLog(''); setTmVideo(null)
+    if (badPanel) { alert('비어있는 패널 소스 경로가 있습니다'); return false }
+    return true
+  }
+
+  // 미리보기 — 첫 장면만 합성한 정지 이미지를 빠르게 받아온다(보통 1~2초). 글자 크기·위치처럼
+  // "눈으로 보고 바로 결정"해야 하는 값을 전체(여러 장면) 렌더 없이 확인할 때 씀.
+  const runTrackMattePreview = async () => {
+    if (!validateTmFrames()) return
+    setTmPreviewBusy(true); setTmPreviewImage(null)
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/trackmatte/preview`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config: buildTmConfig() }),
+      })
+      const d = await res.json()
+      if (!res.ok) { alert(`미리보기 실패: ${d.error}`); return }
+      setTmPreviewImage(d.imageUrl)
+    } catch (e) { alert(`미리보기 실패: ${e.message}`) }
+    finally { setTmPreviewBusy(false) }
+  }
+
+  const runTrackMatte = async () => {
+    if (!validateTmFrames()) return
+    setTmBusy(true); setTmLog(''); setTmVideo(null); setTmPreviewImage(null)
     const append = (l) => setTmLog(p => (p + l + '\n').slice(-6000))
-    const config = {
-      canvas: { width: 1920, height: 1080, fps: 30 },
-      front_layer: { type: 'text', text: tmText, font_size: Number(tmFontSize) },
-      back_layer: {
-        background: tmBg,
-        frames: tmFrames.map(f => ({
-          duration: Number(f.duration),
-          panels: f.panels.map(pn => ({ type: pn.type, src: pn.src, start: Number(pn.start) || 0, crop: pn.crop })),
-        })),
-      },
-      effects: { fade_in: Number(tmFadeIn), fade_out: Number(tmFadeOut) },
-    }
     try {
       const res = await fetch(`${YEORI_SERVER}/api/trackmatte/render`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ config: buildTmConfig(), outputName: tmSaveName.trim() || undefined }),
       })
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
       for (;;) {
@@ -1254,8 +1322,11 @@ export default function MakingTab() {
           let ev; try { ev = JSON.parse(line) } catch { continue }
           if (ev.type === 'log') append(ev.line)
           else if (ev.type === 'done') {
-            if (ev.ok) { append('✅ 완료'); setTmVideo(ev.videoUrl); loadTmResults() }
-            else append(`❌ ${ev.error}`)
+            if (ev.ok) {
+              append('✅ 완료'); setTmVideo(ev.videoUrl)
+              if (ev.name) { setTmSaveName(ev.name); setTmLoadedName(ev.name) }
+              loadTmResults()
+            } else append(`❌ ${ev.error}`)
           }
         }
       }
@@ -3641,18 +3712,47 @@ export default function MakingTab() {
       {tmOpen && (
         <>
           <div className={s.emptyHint}>
-            ①앞레이어(글자) 모양대로 ②뒷레이어(장면들)를 잘라 보여주고, ③연출 효과(페이드)를 입힙니다.
+            ①앞레이어(글자) 모양대로 ②뒷레이어(장면들)를 잘라 보여주고, ③연출 효과(페이드·BGM)를 입힙니다.
             장면(프레임)마다 패널을 여러 개 두면 가로로 나란히 다른 영상·이미지가 들어갑니다(좌우 미러링 아님).
             소스는 이 PC의 파일 경로를 그대로 붙여넣으세요(예: C:\yeori-studio\downloads\...\07_output\IG_R07_final.mp4).
+            <b> 효과음(SFX)은 여기서 안 다룹니다</b> — 이 매트 결과물(무음 영상)을 위 "릴스 최종본" 소스로 넣거나
+            영상 탭에서 다른 영상처럼 다뤄서, 이미 있는 효과음 기능으로 입히는 걸 추천합니다. BGM(배경음) 한 트랙만
+            여기서 바로 깔 수 있습니다.
           </div>
 
-          <div className={s.urlRow}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '4px 8px', borderRadius: 6,
+            background: tmLoadedName ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)', fontSize: 12,
+          }}>
+            {tmLoadedName
+              ? <>📂 <b>불러옴: {tmLoadedName}</b> — 수정 후 생성하면 이 이름으로 덮어씁니다(이름을 바꾸면 새로 저장됨)</>
+              : <>🆕 새로 만들기</>}
+            <button className={s.captureBtn} onClick={resetTmForm}>↺ 새로 만들기로 초기화</button>
+          </div>
+
+          <div className={s.urlRow} style={{ marginTop: 8 }}>
             <label>글자 <input className={s.urlInput} style={{ maxWidth: 180 }} value={tmText} onChange={e => setTmText(e.target.value)} /></label>
             <label>크기 <input type="number" min={50} max={500} value={tmFontSize} style={{ width: 70 }} onChange={e => setTmFontSize(e.target.value)} /></label>
             <label>배경 <input className={s.urlInput} style={{ maxWidth: 100 }} value={tmBg} onChange={e => setTmBg(e.target.value)} placeholder="black" /></label>
             <label>페이드인 <input type="number" min={0} max={5} step={0.1} value={tmFadeIn} style={{ width: 60 }} onChange={e => setTmFadeIn(e.target.value)} />초</label>
             <label>페이드아웃 <input type="number" min={0} max={5} step={0.1} value={tmFadeOut} style={{ width: 60 }} onChange={e => setTmFadeOut(e.target.value)} />초</label>
           </div>
+          <div className={s.urlRow} style={{ marginTop: 6 }}>
+            <label>BGM(선택) <input className={s.urlInput} style={{ minWidth: 260 }} placeholder="파일 경로(비우면 무음)"
+              value={tmBgmFile} onChange={e => setTmBgmFile(e.target.value)} /></label>
+            <label>음량 <input type="range" min={0} max={1} step={0.05} value={tmBgmVolume} style={{ width: 90 }}
+              onChange={e => setTmBgmVolume(e.target.value)} /> {Math.round(tmBgmVolume * 100)}%</label>
+          </div>
+
+          <button className={s.captureBtn} style={{ marginTop: 10 }} disabled={tmPreviewBusy} onClick={runTrackMattePreview}>
+            {tmPreviewBusy ? '⏳ 미리보기 중…' : '👁 미리보기(첫 장면만, 1~2초)'}
+          </button>
+          {tmPreviewImage && (
+            <div style={{ marginTop: 8 }}>
+              <img src={tmPreviewImage} alt="트랙매트 미리보기" style={{ width: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 6, background: '#000' }} />
+              <div className={s.emptyHint}>글자 크기·위치가 마음에 들면 아래 "트랙매트 생성"으로 전체(모든 장면)를 렌더하세요. 이 미리보기는 저장되지 않습니다.</div>
+            </div>
+          )}
 
           {tmFrames.map((frame, fi) => (
             <div key={fi} style={{ marginTop: 10, padding: 8, border: '1px solid var(--border,#333)', borderRadius: 6 }}>
@@ -3687,9 +3787,11 @@ export default function MakingTab() {
           ))}
           <button className={s.captureBtn} style={{ marginTop: 8 }} onClick={addTmFrame}>+ 장면 추가</button>
 
-          <div style={{ marginTop: 10 }}>
+          <div className={s.urlRow} style={{ marginTop: 10 }}>
+            <label>저장 이름 <input className={s.urlInput} style={{ maxWidth: 200 }} placeholder="비우면 자동 이름"
+              value={tmSaveName} onChange={e => setTmSaveName(e.target.value)} /></label>
             <button className={s.captureBtn} disabled={tmBusy} onClick={runTrackMatte}>
-              {tmBusy ? '⏳ 생성 중…' : '🎬 트랙매트 생성'}
+              {tmBusy ? '⏳ 생성 중…' : (tmLoadedName ? '🎬 같은 이름으로 다시 생성' : '🎬 트랙매트 생성')}
             </button>
           </div>
           {tmLog && (
@@ -3697,15 +3799,20 @@ export default function MakingTab() {
           )}
           {tmVideo && (
             <div className={s.previewWrap}>
-              <video className={s.makingVideo} src={tmVideo} controls style={{ width: '100%', maxHeight: 420, borderRadius: 6, background: '#000' }} />
+              <video key={tmVideo} className={s.makingVideo} src={tmVideo} controls style={{ width: '100%', maxHeight: 420, borderRadius: 6, background: '#000' }} />
             </div>
           )}
           {tmResults.length > 0 && (
             <div style={{ marginTop: 10 }}>
-              <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>지난 결과물</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>지난 결과물 — 눌러서 그 설정을 불러오고 영상을 바로 봅니다</div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {tmResults.map(f => (
-                  <a key={f.name} href={`${YEORI_SERVER}${f.url}`} target="_blank" rel="noreferrer" style={{ fontSize: 11 }}>{f.name}</a>
+                  <button key={f.name} className={s.captureBtn}
+                    style={{ fontSize: 11, opacity: f.hasConfig ? 1 : 0.6 }}
+                    title={f.hasConfig ? '설정을 불러와 폼에 채웁니다' : '이 결과물은 설정이 저장되기 전에 만들어져 영상만 볼 수 있습니다'}
+                    onClick={() => loadTmResult(f)}>
+                    {tmLoadedName === f.name ? '📂 ' : ''}{f.name}{!f.hasConfig ? ' (설정 없음)' : ''}
+                  </button>
                 ))}
               </div>
             </div>

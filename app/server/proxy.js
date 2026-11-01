@@ -10,7 +10,7 @@ import { randomUUID } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
-import { renderTrackMatte, trackMatteOutputDir } from './lib/trackMatte.js'
+import { renderTrackMatte, renderTrackMattePreview, listTrackMatteResults, loadTrackMatteConfig } from './lib/trackMatte.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent, listCustomFreezeLocations, addCustomFreezeLocation, deleteCustomFreezeLocation } from './lib/customChangePresets.js'
@@ -4023,7 +4023,7 @@ app.post('/api/trackmatte/render', async (req, res) => {
   send({ type: 'start' })
   try {
     const r = await renderTrackMatte({ config, outputName, onLog: (line) => send({ type: 'log', line }) })
-    send({ type: 'done', ok: true, videoUrl: `http://localhost:3001${r.videoUrl}?t=${Date.now()}` })
+    send({ type: 'done', ok: true, videoUrl: `http://localhost:3001${r.videoUrl}?t=${Date.now()}`, name: r.name })
   } catch (err) {
     send({ type: 'done', ok: false, error: err.message })
   }
@@ -4031,17 +4031,33 @@ app.post('/api/trackmatte/render', async (req, res) => {
 })
 
 // 지금까지 만든 트랙매트 결과물 목록(최근 생성순) — 메이킹 탭에서 지난 결과 다시 보기용.
+// hasConfig:true인 항목만 "불러오기"로 설정을 복원할 수 있다(그 전에 만든 결과물엔 설정 json이 없음).
 app.get('/api/trackmatte/list', (req, res) => {
   try {
-    const dir = trackMatteOutputDir()
-    const files = fs.readdirSync(dir).filter((f) => f.endsWith('.mp4'))
-      .map((f) => {
-        const full = path.join(dir, f)
-        const st = fs.statSync(full)
-        return { name: f, url: `${mp.toMediaUrl(full)}?t=${Math.round(st.mtimeMs)}`, mtimeMs: st.mtimeMs }
-      })
-      .sort((a, b) => b.mtimeMs - a.mtimeMs)
-    res.json({ files })
+    res.json({ files: listTrackMatteResults() })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// 지난 결과물 하나의 설정(JSON) — "불러오기"가 폼에 그대로 채워 넣을 값.
+app.get('/api/trackmatte/config', (req, res) => {
+  try {
+    const config = loadTrackMatteConfig(req.query.name)
+    if (!config) return res.status(404).json({ error: '설정을 찾을 수 없습니다(이 결과물은 설정이 저장되기 전에 만들어졌을 수 있음)' })
+    res.json({ config })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// 빠른 미리보기(첫 장면만, 정지 이미지) — 글자 크기 등을 전체 렌더 없이 바로 확인.
+app.post('/api/trackmatte/preview', async (req, res) => {
+  const { config } = req.body || {}
+  if (!config || typeof config !== 'object') return res.status(400).json({ error: 'config 필요' })
+  try {
+    const r = await renderTrackMattePreview({ config, onLog: () => {} })
+    res.json({ ok: true, imageUrl: `http://localhost:3001${r.imageUrl}?t=${Date.now()}` })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

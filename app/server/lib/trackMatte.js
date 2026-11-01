@@ -17,29 +17,82 @@ export function trackMatteOutputDir() {
   return dir
 }
 
-// config: trackmatte.py 가 읽는 그대로(front_layer/back_layer/effects/canvas).
-// outputName: 확장자 없는 파일명(기본 trackmatte_<시각>) — downloads/_shared/trackmatte/ 아래 저장.
-export async function renderTrackMatte({ config, outputName, onLog }) {
-  const log = (m) => { try { onLog && onLog(m) } catch { /* noop */ } }
-  if (!fs.existsSync(PY_SCRIPT)) throw new Error(`trackmatte.py 없음: ${PY_SCRIPT}`)
-  const name = (outputName || `trackmatte_${Date.now()}`).replace(/[^\w\-가-힣]/g, '_')
-  const outPath = path.join(trackMatteOutputDir(), `${name}.mp4`)
-  const cfgPath = path.join(os.tmpdir(), `trackmatte_cfg_${Date.now()}.json`)
-  fs.writeFileSync(cfgPath, JSON.stringify(config, null, 2), 'utf-8')
+export function sanitizeTrackMatteName(name) {
+  return (name || `trackmatte_${Date.now()}`).replace(/[^\w\-가-힣]/g, '_')
+}
 
-  await new Promise((resolve, reject) => {
-    const p = spawn('python', [PY_SCRIPT, '--config', cfgPath, '--output', outPath], {
-      cwd: path.dirname(PY_SCRIPT), windowsHide: true,
-    })
+function runPy(args, onLog) {
+  const log = (m) => { try { onLog && onLog(m) } catch { /* noop */ } }
+  return new Promise((resolve, reject) => {
+    const p = spawn('python', [PY_SCRIPT, ...args], { cwd: path.dirname(PY_SCRIPT), windowsHide: true })
     let err = ''
     p.stdout.on('data', (d) => { for (const line of d.toString().split(/\r?\n/)) if (line.trim()) log(line) })
     p.stderr.on('data', (d) => { err += d.toString() })
     p.on('error', reject)
-    p.on('close', (code) => {
-      try { fs.rmSync(cfgPath, { force: true }) } catch { /* noop */ }
-      if (code === 0 && fs.existsSync(outPath)) resolve()
-      else reject(new Error(err.slice(-1500) || `trackmatte.py 종료 코드 ${code}`))
-    })
+    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(err.slice(-1500) || `trackmatte.py 종료 코드 ${code}`))))
   })
-  return { outputPath: outPath, videoUrl: mp.toMediaUrl(outPath) }
+}
+
+// config: trackmatte.py 가 읽는 그대로(front_layer/back_layer/effects/canvas).
+// outputName: 확장자 없는 파일명(기본 trackmatte_<시각>) — downloads/_shared/trackmatte/ 아래 저장.
+// 같은 이름으로 다시 생성하면 mp4·설정 json 둘 다 덮어쓴다(= "불러와서 수정 후 재생성"이 업데이트가 됨).
+export async function renderTrackMatte({ config, outputName, onLog }) {
+  if (!fs.existsSync(PY_SCRIPT)) throw new Error(`trackmatte.py 없음: ${PY_SCRIPT}`)
+  const name = sanitizeTrackMatteName(outputName)
+  const dir = trackMatteOutputDir()
+  const outPath = path.join(dir, `${name}.mp4`)
+  const cfgTmpPath = path.join(os.tmpdir(), `trackmatte_cfg_${Date.now()}.json`)
+  fs.writeFileSync(cfgTmpPath, JSON.stringify(config, null, 2), 'utf-8')
+  try {
+    await runPy(['--config', cfgTmpPath, '--output', outPath], onLog)
+  } finally {
+    try { fs.rmSync(cfgTmpPath, { force: true }) } catch { /* noop */ }
+  }
+  if (!fs.existsSync(outPath)) throw new Error('출력 파일이 생성되지 않았습니다')
+  // 결과 옆에 설정을 같이 저장 — "지난 결과물 불러오기"가 이 파일을 읽어 폼에 그대로 채운다.
+  fs.writeFileSync(path.join(dir, `${name}.config.json`), JSON.stringify(config, null, 2), 'utf-8')
+  return { outputPath: outPath, videoUrl: mp.toMediaUrl(outPath), name }
+}
+
+// 미리보기: 첫 장면만 합성한 정지 이미지(빠름, 보통 1~2초) — 글자 크기 등을 눈으로 보고 결정할 때.
+// 결과는 임시 디렉터리에만 저장(지난 결과물 목록에 안 남게 trackMatteOutputDir과 분리).
+export async function renderTrackMattePreview({ config, onLog }) {
+  if (!fs.existsSync(PY_SCRIPT)) throw new Error(`trackmatte.py 없음: ${PY_SCRIPT}`)
+  const previewDir = path.join(mp.DOWNLOADS, '_shared', 'trackmatte', '_preview')
+  fs.mkdirSync(previewDir, { recursive: true })
+  const outPath = path.join(previewDir, `preview_${Date.now()}.png`)
+  const cfgTmpPath = path.join(os.tmpdir(), `trackmatte_preview_cfg_${Date.now()}.json`)
+  fs.writeFileSync(cfgTmpPath, JSON.stringify(config, null, 2), 'utf-8')
+  try {
+    await runPy(['--config', cfgTmpPath, '--output', outPath, '--preview'], onLog)
+  } finally {
+    try { fs.rmSync(cfgTmpPath, { force: true }) } catch { /* noop */ }
+  }
+  if (!fs.existsSync(outPath)) throw new Error('미리보기 이미지가 생성되지 않았습니다')
+  return { outputPath: outPath, imageUrl: mp.toMediaUrl(outPath) }
+}
+
+// 지금까지 만든 결과물 목록(최근순) — 설정 json이 같이 있으면 hasConfig:true로 표시해서
+// UI가 "불러오기" 버튼을 보여줄지 판단한다.
+export function listTrackMatteResults() {
+  const dir = trackMatteOutputDir()
+  const files = fs.readdirSync(dir).filter((f) => f.endsWith('.mp4'))
+  return files.map((f) => {
+    const full = path.join(dir, f)
+    const st = fs.statSync(full)
+    const name = f.replace(/\.mp4$/, '')
+    return {
+      name,
+      url: `${mp.toMediaUrl(full)}?t=${Math.round(st.mtimeMs)}`,
+      mtimeMs: st.mtimeMs,
+      hasConfig: fs.existsSync(path.join(dir, `${name}.config.json`)),
+    }
+  }).sort((a, b) => b.mtimeMs - a.mtimeMs)
+}
+
+export function loadTrackMatteConfig(name) {
+  const safe = sanitizeTrackMatteName(name)
+  const cfgPath = path.join(trackMatteOutputDir(), `${safe}.config.json`)
+  if (!fs.existsSync(cfgPath)) return null
+  return JSON.parse(fs.readFileSync(cfgPath, 'utf-8'))
 }
