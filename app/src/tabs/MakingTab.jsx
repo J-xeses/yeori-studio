@@ -1220,6 +1220,34 @@ export default function MakingTab() {
   const [tmVideo, setTmVideo] = useState(null)
   const [tmResults, setTmResults] = useState([])
 
+  // 패널 소스 "파일 경로"를 직접 타이핑/붙여넣기 하는 대신 클릭으로 고를 수 있는 파일 찾기
+  // 팝업(2026-11-01, 성준님 요청). downloads/ 아래만 탐색(서버 /api/fs-browse).
+  const [tmBrowseTarget, setTmBrowseTarget] = useState(null)   // {fi, pi} — 어느 패널에 넣을지
+  const [tmBrowseDir, setTmBrowseDir] = useState('')
+  const [tmBrowseDirs, setTmBrowseDirs] = useState([])
+  const [tmBrowseFiles, setTmBrowseFiles] = useState([])
+  const [tmBrowseBusy, setTmBrowseBusy] = useState(false)
+
+  const loadTmBrowse = async (dir) => {
+    setTmBrowseBusy(true)
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/fs-browse?dir=${encodeURIComponent(dir || '')}`)
+      const d = await r.json()
+      if (!r.ok) { alert(`폴더를 열 수 없습니다: ${d.error}`); return }
+      setTmBrowseDir(d.dir || ''); setTmBrowseDirs(d.dirs || []); setTmBrowseFiles(d.files || [])
+    } catch (e) { alert(`폴더를 열 수 없습니다: ${e.message}`) }
+    finally { setTmBrowseBusy(false) }
+  }
+  const openTmBrowse = (fi, pi) => { setTmBrowseTarget({ fi, pi }); loadTmBrowse('') }
+  const pickTmBrowseFile = (file) => {
+    updateTmPanel(tmBrowseTarget.fi, tmBrowseTarget.pi, { src: file.path, type: file.isVideo ? 'video' : 'image' })
+    setTmBrowseTarget(null)
+  }
+  const tmBrowseUp = () => {
+    const parts = tmBrowseDir.split('/').filter(Boolean)
+    loadTmBrowse(parts.slice(0, -1).join('/'))
+  }
+
   const loadTmResults = async () => {
     try {
       const r = await fetch(`${YEORI_SERVER}/api/trackmatte/list`)
@@ -3823,8 +3851,10 @@ export default function MakingTab() {
                     <option value="video">영상</option>
                     <option value="image">이미지</option>
                   </select>
-                  <input className={s.urlInput} style={{ flex: 1 }} placeholder="파일 경로"
-                    value={panel.src} onChange={e => updateTmPanel(fi, pi, { src: e.target.value })} />
+                  <input className={s.urlInput} style={{ flex: 1 }} placeholder="📁 눌러서 파일 찾기(또는 직접 입력)"
+                    value={panel.src} onChange={e => updateTmPanel(fi, pi, { src: e.target.value })}
+                    onClick={() => { if (!panel.src.trim()) openTmBrowse(fi, pi) }} />
+                  <button className={s.captureBtn} title="파일 찾기" onClick={() => openTmBrowse(fi, pi)}>📁</button>
                   {panel.type === 'video' && (
                     <label>시작 <input type="number" min={0} step={0.1} value={panel.start} style={{ width: 60 }}
                       onChange={e => updateTmPanel(fi, pi, { start: e.target.value })} />초</label>
@@ -3840,6 +3870,45 @@ export default function MakingTab() {
             </div>
           ))}
           <button className={s.captureBtn} style={{ marginTop: 8 }} onClick={addTmFrame}>+ 장면 추가</button>
+
+          {/* 패널 소스 "파일 찾기" 팝업 — downloads/ 아래를 클릭으로 탐색해 영상·이미지를 고르면
+              바로 그 패널의 경로칸에 들어간다(2026-11-01, 성준님 요청: 외부 탐색기로 경로
+              복사해 붙여넣던 걸 클릭 한 번으로). */}
+          {tmBrowseTarget && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onClick={() => setTmBrowseTarget(null)}>
+              <div style={{ background: 'var(--bg2,#111)', border: '1px solid var(--border,#333)', borderRadius: 10, width: 640, maxHeight: '70vh', display: 'flex', flexDirection: 'column', padding: 12 }}
+                onClick={e => e.stopPropagation()}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <b style={{ fontSize: 13 }}>📁 파일 찾기 — downloads/{tmBrowseDir}</b>
+                  <div style={{ flex: 1 }} />
+                  <button className={s.captureBtn} onClick={() => setTmBrowseTarget(null)}>✕ 닫기</button>
+                </div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  <button className={s.captureBtn} disabled={!tmBrowseDir} onClick={tmBrowseUp}>⬆ 상위 폴더</button>
+                  <button className={s.captureBtn} onClick={() => loadTmBrowse('')}>🏠 downloads</button>
+                </div>
+                <div style={{ overflow: 'auto', flex: 1, fontSize: 12 }}>
+                  {tmBrowseBusy && <div className={s.emptyHint}>불러오는 중…</div>}
+                  {!tmBrowseBusy && tmBrowseDirs.map(d => (
+                    <div key={d} style={{ padding: '6px 4px', cursor: 'pointer', borderRadius: 4 }}
+                      onClick={() => loadTmBrowse((tmBrowseDir ? tmBrowseDir + '/' : '') + d)}>
+                      📁 {d}
+                    </div>
+                  ))}
+                  {!tmBrowseBusy && tmBrowseFiles.map(f => (
+                    <div key={f.path} style={{ padding: '6px 4px', cursor: 'pointer', borderRadius: 4 }}
+                      onClick={() => pickTmBrowseFile(f)}>
+                      {f.isVideo ? '🎬' : '🖼'} {f.name}
+                    </div>
+                  ))}
+                  {!tmBrowseBusy && !tmBrowseDirs.length && !tmBrowseFiles.length && (
+                    <div className={s.emptyHint}>이 폴더엔 영상·이미지·하위폴더가 없습니다.</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className={s.urlRow} style={{ marginTop: 10 }}>
             <label>저장 이름 <input className={s.urlInput} style={{ maxWidth: 200 }} placeholder="비우면 자동 이름"

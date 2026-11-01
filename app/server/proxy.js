@@ -4063,6 +4063,41 @@ app.post('/api/trackmatte/preview', async (req, res) => {
   }
 })
 
+// 트랙매트 패널 소스 등 "경로를 직접 타이핑/붙여넣기" 대신 클릭으로 고를 수 있는 가벼운
+// 파일 탐색기(2026-11-01, 성준님 요청: "입력창을 누르면 경로 찾기가 되도록"). 브라우저는
+// 보안상 실제 파일의 절대경로를 알려주지 않아서(<input type=file>로는 불가) 서버가
+// downloads/ 아래를 직접 읽어서 보여준다 — 이 프로젝트의 모든 영상·이미지 소스가 결국
+// 여기 밑에 있으므로 범위를 downloads/로 제한해도 실사용엔 지장 없고, 더 안전하다.
+app.get('/api/fs-browse', (req, res) => {
+  const MEDIA_RE = /\.(mp4|mov|mkv|webm|m4v|jpg|jpeg|png|gif|webp)$/i
+  const VIDEO_RE = /\.(mp4|mov|mkv|webm|m4v)$/i
+  const rel = String(req.query.dir || '').replace(/\\/g, '/').replace(/\.\.+/g, '')
+  const target = path.normalize(path.join(mp.DOWNLOADS, rel))
+  const root = path.normalize(mp.DOWNLOADS)
+  if (target !== root && !target.startsWith(root + path.sep)) {
+    return res.status(400).json({ error: '허용되지 않은 경로' })
+  }
+  if (!fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
+    return res.status(404).json({ error: '폴더를 찾을 수 없습니다' })
+  }
+  try {
+    const entries = fs.readdirSync(target, { withFileTypes: true })
+    const dirs = entries.filter(e => e.isDirectory() && !e.name.startsWith('.')).map(e => e.name).sort()
+    const files = entries
+      .filter(e => e.isFile() && MEDIA_RE.test(e.name))
+      .map(e => {
+        const full = path.join(target, e.name)
+        const st = fs.statSync(full)
+        return { name: e.name, path: full, isVideo: VIDEO_RE.test(e.name), mtimeMs: st.mtimeMs }
+      })
+      .sort((a, b) => b.mtimeMs - a.mtimeMs)
+    const dirRel = path.relative(root, target).replace(/\\/g, '/')
+    res.json({ dir: dirRel, dirs, files })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // orientation 요청을 Pexels 자체 orientation 파라미터로 1차 필터링한 뒤, 응답 항목의
 // 실제 width/height도 다시 비교해 걸러낸다 — Pexels 태깅이 항상 정확하진 않아서
 // (세로 요청인데 가로 파일이 섞여 나오는 경우가 있음) 2중으로 확인한다.
