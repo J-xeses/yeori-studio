@@ -54,7 +54,7 @@ export async function syncInsights({ log = () => {} } = {}) {
   for (const m of media) insById[m.id] = await mediaInsights(m.id, m.media_product_type === 'REELS' ? 'REELS' : m.media_type, token)
   const ops = loadOps()
   const now = new Date().toISOString()
-  const short = (u) => (String(u || '').match(/\/(?:p|reel)\/([^/?#]+)/) || [])[1]
+  const short = (u) => (String(u || '').match(/\/(?:p|reels?)\/([^/?#]+)/) || [])[1]
   let linked = 0, updated = 0
   for (const m of media) {
     const code = short(m.permalink)
