@@ -1188,6 +1188,81 @@ export default function MakingTab() {
     } catch (e) { alert(`BGM 구간 저장 실패: ${e.message}`) }
   }
 
+  // ── 트랙매트 연출(app/scripts/trackmatte.py) — 2026-11-01, "SEOYEORI" 인트로 작업에서
+  // 쓴 일회성 ffmpeg 스크립트를 메이킹 탭 연출 기능으로 일반화. 구조는 스크립트 설명 그대로
+  // 앞레이어(글자 모양)·뒷레이어(장면 나열, 장면마다 좌우 패널)·연출 효과(페이드) 3단.
+  const [tmOpen, setTmOpen] = useState(false)
+  const [tmText, setTmText] = useState('SEOYEORI')
+  const [tmFontSize, setTmFontSize] = useState(300)
+  const [tmBg, setTmBg] = useState('black')
+  const [tmFadeIn, setTmFadeIn] = useState(0.4)
+  const [tmFadeOut, setTmFadeOut] = useState(0.7)
+  const [tmFrames, setTmFrames] = useState([
+    { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }, { type: 'video', src: '', start: 0, crop: 'face' }] },
+  ])
+  const [tmBusy, setTmBusy] = useState(false)
+  const [tmLog, setTmLog] = useState('')
+  const [tmVideo, setTmVideo] = useState(null)
+  const [tmResults, setTmResults] = useState([])
+
+  const loadTmResults = async () => {
+    try {
+      const r = await fetch(`${YEORI_SERVER}/api/trackmatte/list`)
+      const d = await r.json()
+      setTmResults(d.files || [])
+    } catch { /* noop */ }
+  }
+  useEffect(() => { if (tmOpen) loadTmResults() }, [tmOpen])
+
+  const addTmFrame = () => setTmFrames(p => [...p, { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }] }])
+  const removeTmFrame = (fi) => setTmFrames(p => p.filter((_, i) => i !== fi))
+  const updateTmFrame = (fi, patch) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, ...patch } : f))
+  const addTmPanel = (fi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: [...f.panels, { type: 'video', src: '', start: 0, crop: 'face' }] } : f))
+  const removeTmPanel = (fi, pi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: f.panels.filter((_, j) => j !== pi) } : f))
+  const updateTmPanel = (fi, pi, patch) => setTmFrames(p => p.map((f, i) => i === fi
+    ? { ...f, panels: f.panels.map((pn, j) => j === pi ? { ...pn, ...patch } : pn) } : f))
+
+  const runTrackMatte = async () => {
+    const badPanel = tmFrames.flatMap(f => f.panels).find(pn => !pn.src.trim())
+    if (badPanel) { alert('비어있는 패널 소스 경로가 있습니다'); return }
+    setTmBusy(true); setTmLog(''); setTmVideo(null)
+    const append = (l) => setTmLog(p => (p + l + '\n').slice(-6000))
+    const config = {
+      canvas: { width: 1920, height: 1080, fps: 30 },
+      front_layer: { type: 'text', text: tmText, font_size: Number(tmFontSize) },
+      back_layer: {
+        background: tmBg,
+        frames: tmFrames.map(f => ({
+          duration: Number(f.duration),
+          panels: f.panels.map(pn => ({ type: pn.type, src: pn.src, start: Number(pn.start) || 0, crop: pn.crop })),
+        })),
+      },
+      effects: { fade_in: Number(tmFadeIn), fade_out: Number(tmFadeOut) },
+    }
+    try {
+      const res = await fetch(`${YEORI_SERVER}/api/trackmatte/render`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config }),
+      })
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+      for (;;) {
+        const { value, done } = await reader.read(); if (done) break
+        buf += dec.decode(value, { stream: true })
+        const parts = buf.split('\n\n'); buf = parts.pop()
+        for (const part of parts) {
+          const line = part.replace(/^data: /, '').trim(); if (!line) continue
+          let ev; try { ev = JSON.parse(line) } catch { continue }
+          if (ev.type === 'log') append(ev.line)
+          else if (ev.type === 'done') {
+            if (ev.ok) { append('✅ 완료'); setTmVideo(ev.videoUrl); loadTmResults() }
+            else append(`❌ ${ev.error}`)
+          }
+        }
+      }
+    } catch (e) { append(`❌ ${e.message}`) }
+    finally { setTmBusy(false) }
+  }
+
   const loadReelStaleness = async () => {
     if (!episode?.number) return
     try {
@@ -3557,6 +3632,89 @@ export default function MakingTab() {
     </div>
   )
 
+  const TM_CROPS = [['face', '인물(얼굴 중심)'], ['cover', '꽉 채움'], ['contain', '그대로(레터박스)']]
+  const renderTrackMatteCard = () => (
+    <div className={s.card}>
+      <button className={s.collapseToggle} onClick={() => setTmOpen(v => !v)}>
+        {tmOpen ? '▼' : '▶'} 🎬 트랙매트 연출 — 글자 모양 구멍으로 영상·이미지가 비쳐 보이게
+      </button>
+      {tmOpen && (
+        <>
+          <div className={s.emptyHint}>
+            ①앞레이어(글자) 모양대로 ②뒷레이어(장면들)를 잘라 보여주고, ③연출 효과(페이드)를 입힙니다.
+            장면(프레임)마다 패널을 여러 개 두면 가로로 나란히 다른 영상·이미지가 들어갑니다(좌우 미러링 아님).
+            소스는 이 PC의 파일 경로를 그대로 붙여넣으세요(예: C:\yeori-studio\downloads\...\07_output\IG_R07_final.mp4).
+          </div>
+
+          <div className={s.urlRow}>
+            <label>글자 <input className={s.urlInput} style={{ maxWidth: 180 }} value={tmText} onChange={e => setTmText(e.target.value)} /></label>
+            <label>크기 <input type="number" min={50} max={500} value={tmFontSize} style={{ width: 70 }} onChange={e => setTmFontSize(e.target.value)} /></label>
+            <label>배경 <input className={s.urlInput} style={{ maxWidth: 100 }} value={tmBg} onChange={e => setTmBg(e.target.value)} placeholder="black" /></label>
+            <label>페이드인 <input type="number" min={0} max={5} step={0.1} value={tmFadeIn} style={{ width: 60 }} onChange={e => setTmFadeIn(e.target.value)} />초</label>
+            <label>페이드아웃 <input type="number" min={0} max={5} step={0.1} value={tmFadeOut} style={{ width: 60 }} onChange={e => setTmFadeOut(e.target.value)} />초</label>
+          </div>
+
+          {tmFrames.map((frame, fi) => (
+            <div key={fi} style={{ marginTop: 10, padding: 8, border: '1px solid var(--border,#333)', borderRadius: 6 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, fontWeight: 600 }}>
+                장면 {fi + 1}
+                <label>길이 <input type="number" min={0.1} step={0.1} value={frame.duration} style={{ width: 60 }}
+                  onChange={e => updateTmFrame(fi, { duration: e.target.value })} />초</label>
+                <button className={s.captureBtn} onClick={() => removeTmFrame(fi)}>✕ 장면 삭제</button>
+              </div>
+              {frame.panels.map((panel, pi) => (
+                <div key={pi} style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12 }}>
+                  <select value={panel.type} className={s.stageSelect}
+                    onChange={e => updateTmPanel(fi, pi, { type: e.target.value })}>
+                    <option value="video">영상</option>
+                    <option value="image">이미지</option>
+                  </select>
+                  <input className={s.urlInput} style={{ flex: 1 }} placeholder="파일 경로"
+                    value={panel.src} onChange={e => updateTmPanel(fi, pi, { src: e.target.value })} />
+                  {panel.type === 'video' && (
+                    <label>시작 <input type="number" min={0} step={0.1} value={panel.start} style={{ width: 60 }}
+                      onChange={e => updateTmPanel(fi, pi, { start: e.target.value })} />초</label>
+                  )}
+                  <select value={panel.crop} className={s.stageSelect}
+                    onChange={e => updateTmPanel(fi, pi, { crop: e.target.value })}>
+                    {TM_CROPS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                  <button className={s.captureBtn} onClick={() => removeTmPanel(fi, pi)}>✕</button>
+                </div>
+              ))}
+              <button className={s.captureBtn} style={{ marginTop: 6 }} onClick={() => addTmPanel(fi)}>+ 패널 추가(가로로 나란히)</button>
+            </div>
+          ))}
+          <button className={s.captureBtn} style={{ marginTop: 8 }} onClick={addTmFrame}>+ 장면 추가</button>
+
+          <div style={{ marginTop: 10 }}>
+            <button className={s.captureBtn} disabled={tmBusy} onClick={runTrackMatte}>
+              {tmBusy ? '⏳ 생성 중…' : '🎬 트랙매트 생성'}
+            </button>
+          </div>
+          {tmLog && (
+            <pre style={{ marginTop: 8, maxHeight: 160, overflow: 'auto', fontSize: 11, background: 'var(--bg2,#111)', padding: 8, borderRadius: 6, whiteSpace: 'pre-wrap' }}>{tmLog}</pre>
+          )}
+          {tmVideo && (
+            <div className={s.previewWrap}>
+              <video className={s.makingVideo} src={tmVideo} controls style={{ width: '100%', maxHeight: 420, borderRadius: 6, background: '#000' }} />
+            </div>
+          )}
+          {tmResults.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>지난 결과물</div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {tmResults.map(f => (
+                  <a key={f.name} href={`${YEORI_SERVER}${f.url}`} target="_blank" rel="noreferrer" style={{ fontSize: 11 }}>{f.name}</a>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
   return (
     <div className={s.page}>
       <TabToolbar
@@ -3802,6 +3960,7 @@ export default function MakingTab() {
 
               {renderSfxCard()}
               {renderBgmCard()}
+              {renderTrackMatteCard()}
 
               {renderHwImageCard()}
 
