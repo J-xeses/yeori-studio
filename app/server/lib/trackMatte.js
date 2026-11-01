@@ -21,6 +21,22 @@ export function sanitizeTrackMatteName(name) {
   return (name || `trackmatte_${Date.now()}`).replace(/[^\w\-가-힣]/g, '_')
 }
 
+// effects.bgm.file이 BGM 라이브러리 선택값(예: "_shared/bgm/BGM_HOOK/xxx.mp3", /api/bgm-library가
+// 주는 그대로)이면 절대경로로 풀어준다. 사용자가 "직접 입력"으로 이미 절대경로를 타이핑했으면
+// 그대로 둔다. (2026-11-01 2차 보완: UI에 BGM 라이브러리 선택 드롭다운을 새로 연결하면서 발견 —
+// 상대경로를 그대로 python/ffmpeg에 넘기면 "Error opening input file" 로 트랙매트 생성이 깨짐.)
+function resolveBgmPath(file) {
+  const f = String(file).replace(/\\/g, '/')
+  if (/^[a-zA-Z]:\//.test(f) || f.startsWith('/')) return file
+  return mp.bgmFile(f)
+}
+
+function withResolvedBgm(config) {
+  const bgm = config?.effects?.bgm
+  if (!bgm?.file) return config
+  return { ...config, effects: { ...config.effects, bgm: { ...bgm, file: resolveBgmPath(bgm.file) } } }
+}
+
 function runPy(args, onLog) {
   const log = (m) => { try { onLog && onLog(m) } catch { /* noop */ } }
   return new Promise((resolve, reject) => {
@@ -42,7 +58,7 @@ export async function renderTrackMatte({ config, outputName, onLog }) {
   const dir = trackMatteOutputDir()
   const outPath = path.join(dir, `${name}.mp4`)
   const cfgTmpPath = path.join(os.tmpdir(), `trackmatte_cfg_${Date.now()}.json`)
-  fs.writeFileSync(cfgTmpPath, JSON.stringify(config, null, 2), 'utf-8')
+  fs.writeFileSync(cfgTmpPath, JSON.stringify(withResolvedBgm(config), null, 2), 'utf-8')
   try {
     await runPy(['--config', cfgTmpPath, '--output', outPath], onLog)
   } finally {
@@ -62,7 +78,7 @@ export async function renderTrackMattePreview({ config, onLog }) {
   fs.mkdirSync(previewDir, { recursive: true })
   const outPath = path.join(previewDir, `preview_${Date.now()}.png`)
   const cfgTmpPath = path.join(os.tmpdir(), `trackmatte_preview_cfg_${Date.now()}.json`)
-  fs.writeFileSync(cfgTmpPath, JSON.stringify(config, null, 2), 'utf-8')
+  fs.writeFileSync(cfgTmpPath, JSON.stringify(withResolvedBgm(config), null, 2), 'utf-8')
   try {
     await runPy(['--config', cfgTmpPath, '--output', outPath, '--preview'], onLog)
   } finally {

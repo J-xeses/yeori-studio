@@ -1194,13 +1194,21 @@ export default function MakingTab() {
   const TM_DEFAULT_FRAMES = [
     { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }, { type: 'video', src: '', start: 0, crop: 'face' }] },
   ]
+  // 배경색·BGM 선택은 장면마다 바뀌는 값이 아니라 "환경설정"에 가까워서(성준님 2차 피드백:
+  // "설정 기능으로 일관된 값, 지정 경로 선택을 유지"), 직전에 고른 값을 localStorage에 남겨
+  // 새로 만들기를 해도 유지되게 한다. TM_BG_PRESETS/bgmLibrary에서 "클릭으로 선택"하고,
+  // 목록에 없는 값일 때만 직접 입력 칸이 나온다.
+  const TM_BG_PRESETS = [['black', '검정'], ['white', '흰색'], ['#101014', '다크 네이비'], ['#1a1a2e', '다크 퍼플']]
+  const tmPref = (key, fallback) => { try { return localStorage.getItem(key) ?? fallback } catch { return fallback } }
+  const tmSavePref = (key, v) => { try { localStorage.setItem(key, v) } catch { /* noop */ } }
   const [tmOpen, setTmOpen] = useState(false)
   const [tmText, setTmText] = useState('SEOYEORI')
   const [tmFontSize, setTmFontSize] = useState(300)
-  const [tmBg, setTmBg] = useState('black')
+  const [tmBg, setTmBg] = useState(() => tmPref('tm_bg_pref', 'black'))
   const [tmFadeIn, setTmFadeIn] = useState(0.4)
   const [tmFadeOut, setTmFadeOut] = useState(0.7)
-  const [tmBgmFile, setTmBgmFile] = useState('')
+  const [tmBgmFile, setTmBgmFile] = useState(() => tmPref('tm_bgm_pref', ''))
+  const [tmBgmCustom, setTmBgmCustom] = useState(false)   // "직접 입력" 선택 중(목록에 없는 경로를 타이핑하는 중)
   const [tmBgmVolume, setTmBgmVolume] = useState(0.5)
   const [tmFrames, setTmFrames] = useState(TM_DEFAULT_FRAMES)
   const [tmSaveName, setTmSaveName] = useState('')
@@ -1247,8 +1255,10 @@ export default function MakingTab() {
 
   // 새로 만들기 — 폼을 기본값으로 되돌리고 "불러온 상태"를 해제한다.
   const resetTmForm = () => {
-    setTmText('SEOYEORI'); setTmFontSize(300); setTmBg('black')
-    setTmFadeIn(0.4); setTmFadeOut(0.7); setTmBgmFile(''); setTmBgmVolume(0.5)
+    // 배경색·BGM은 직전에 쓰던 값을 그대로 유지(장면 구성만 초기화) — 매번 새로 고르지 않아도 되게.
+    setTmText('SEOYEORI'); setTmFontSize(300); setTmBg(tmPref('tm_bg_pref', 'black'))
+    setTmFadeIn(0.4); setTmFadeOut(0.7)
+    setTmBgmFile(tmPref('tm_bgm_pref', '')); setTmBgmCustom(false); setTmBgmVolume(0.5)
     setTmFrames(TM_DEFAULT_FRAMES)
     setTmSaveName(''); setTmLoadedName(null)
     setTmVideo(null); setTmPreviewImage(null); setTmLog('')
@@ -1265,10 +1275,12 @@ export default function MakingTab() {
       const c = d.config
       setTmText(c.front_layer?.text ?? 'SEOYEORI')
       setTmFontSize(c.front_layer?.font_size ?? 300)
-      setTmBg(c.back_layer?.background ?? 'black')
+      const loadedBg = c.back_layer?.background ?? 'black'
+      const loadedBgmFile = c.effects?.bgm?.file ?? ''
+      setTmBg(loadedBg); tmSavePref('tm_bg_pref', loadedBg)
       setTmFadeIn(c.effects?.fade_in ?? 0.4)
       setTmFadeOut(c.effects?.fade_out ?? 0.7)
-      setTmBgmFile(c.effects?.bgm?.file ?? '')
+      setTmBgmFile(loadedBgmFile); setTmBgmCustom(false); tmSavePref('tm_bgm_pref', loadedBgmFile)
       setTmBgmVolume(c.effects?.bgm?.volume ?? 0.5)
       setTmFrames((c.back_layer?.frames || []).map(fr => ({
         duration: fr.duration,
@@ -1279,17 +1291,23 @@ export default function MakingTab() {
     } catch (e) { alert(`불러오기 실패: ${e.message}`) }
   }
 
-  const validateTmFrames = () => {
+  // strict=false(미리보기 전용) — 패널 소스를 아직 안 넣었어도 글자 크기·위치만 먼저 보고
+  // 판단할 수 있게 막지 않는다(2차 피드백: "글자크기 수정 후 확인 안 됨" — 빈 소스면 막혀서
+  // 미리보기 자체가 안 열렸던 게 원인이었음). 실제 생성(strict=true)은 여전히 막는다 —
+  // 최종 영상은 실제 소스가 있어야 의미가 있으므로.
+  const validateTmFrames = (strict = true) => {
     if (!tmFrames.length) { alert('장면이 1개 이상 필요합니다'); return false }
-    const badPanel = tmFrames.flatMap(f => f.panels).find(pn => !pn.src.trim())
-    if (badPanel) { alert('비어있는 패널 소스 경로가 있습니다'); return false }
+    if (strict) {
+      const badPanel = tmFrames.flatMap(f => f.panels).find(pn => !pn.src.trim())
+      if (badPanel) { alert('비어있는 패널 소스 경로가 있습니다'); return false }
+    }
     return true
   }
 
   // 미리보기 — 첫 장면만 합성한 정지 이미지를 빠르게 받아온다(보통 1~2초). 글자 크기·위치처럼
   // "눈으로 보고 바로 결정"해야 하는 값을 전체(여러 장면) 렌더 없이 확인할 때 씀.
   const runTrackMattePreview = async () => {
-    if (!validateTmFrames()) return
+    if (!validateTmFrames(false)) return
     setTmPreviewBusy(true); setTmPreviewImage(null)
     try {
       const res = await fetch(`${YEORI_SERVER}/api/trackmatte/preview`, {
@@ -1298,6 +1316,8 @@ export default function MakingTab() {
       })
       const d = await res.json()
       if (!res.ok) { alert(`미리보기 실패: ${d.error}`); return }
+      // d.imageUrl은 proxy.js가 이미 http://localhost:3001을 붙여서 보냄(절대경로) — 여기서
+      // 또 붙이면 "localhost:3001http://localhost:3001/..." 꼴로 깨진다(실측 발견, 2차 보완).
       setTmPreviewImage(d.imageUrl)
     } catch (e) { alert(`미리보기 실패: ${e.message}`) }
     finally { setTmPreviewBusy(false) }
@@ -1323,6 +1343,7 @@ export default function MakingTab() {
           if (ev.type === 'log') append(ev.line)
           else if (ev.type === 'done') {
             if (ev.ok) {
+              // ev.videoUrl도 proxy.js가 이미 origin을 붙여 보냄 — 여기서 또 붙이지 않는다.
               append('✅ 완료'); setTmVideo(ev.videoUrl)
               if (ev.name) { setTmSaveName(ev.name); setTmLoadedName(ev.name) }
               loadTmResults()
@@ -3730,16 +3751,46 @@ export default function MakingTab() {
             <button className={s.captureBtn} onClick={resetTmForm}>↺ 새로 만들기로 초기화</button>
           </div>
 
-          <div className={s.urlRow} style={{ marginTop: 8 }}>
+          {/* 아래 두 줄은 fontSize:12로 통일(이전엔 라벨·숫자입력이 className 없이 브라우저
+              기본 크기를 써서 다른 줄보다 커 보이는 "밸런스 안 맞음" 문제가 있었음, 2차 피드백). */}
+          <div className={s.urlRow} style={{ marginTop: 8, fontSize: 12 }}>
             <label>글자 <input className={s.urlInput} style={{ maxWidth: 180 }} value={tmText} onChange={e => setTmText(e.target.value)} /></label>
-            <label>크기 <input type="number" min={50} max={500} value={tmFontSize} style={{ width: 70 }} onChange={e => setTmFontSize(e.target.value)} /></label>
-            <label>배경 <input className={s.urlInput} style={{ maxWidth: 100 }} value={tmBg} onChange={e => setTmBg(e.target.value)} placeholder="black" /></label>
-            <label>페이드인 <input type="number" min={0} max={5} step={0.1} value={tmFadeIn} style={{ width: 60 }} onChange={e => setTmFadeIn(e.target.value)} />초</label>
-            <label>페이드아웃 <input type="number" min={0} max={5} step={0.1} value={tmFadeOut} style={{ width: 60 }} onChange={e => setTmFadeOut(e.target.value)} />초</label>
+            <label>크기 <input className={s.durationInput} type="number" min={50} max={500} value={tmFontSize} style={{ width: 70 }} onChange={e => setTmFontSize(e.target.value)} /></label>
+            <label>배경
+              <select className={s.stageSelect} value={TM_BG_PRESETS.some(([v]) => v === tmBg) ? tmBg : '__custom__'}
+                onChange={e => {
+                  const v = e.target.value
+                  if (v === '__custom__') { setTmBg('') } else { setTmBg(v); tmSavePref('tm_bg_pref', v) }
+                }}>
+                {TM_BG_PRESETS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                <option value="__custom__">직접 입력…</option>
+              </select>
+              {!TM_BG_PRESETS.some(([v]) => v === tmBg) && (
+                <input className={s.urlInput} style={{ maxWidth: 100, marginLeft: 4 }} placeholder="색상명/#hex"
+                  value={tmBg} onChange={e => { setTmBg(e.target.value); tmSavePref('tm_bg_pref', e.target.value) }} />
+              )}
+            </label>
+            <label>페이드인 <input className={s.durationInput} type="number" min={0} max={5} step={0.1} value={tmFadeIn} style={{ width: 60 }} onChange={e => setTmFadeIn(e.target.value)} />초</label>
+            <label>페이드아웃 <input className={s.durationInput} type="number" min={0} max={5} step={0.1} value={tmFadeOut} style={{ width: 60 }} onChange={e => setTmFadeOut(e.target.value)} />초</label>
           </div>
-          <div className={s.urlRow} style={{ marginTop: 6 }}>
-            <label>BGM(선택) <input className={s.urlInput} style={{ minWidth: 260 }} placeholder="파일 경로(비우면 무음)"
-              value={tmBgmFile} onChange={e => setTmBgmFile(e.target.value)} /></label>
+          <div className={s.urlRow} style={{ marginTop: 6, fontSize: 12 }}>
+            <label>BGM(선택)
+              <select className={s.stageSelect}
+                value={tmBgmCustom || (tmBgmFile && !bgmLibrary.some(t => t.file === tmBgmFile)) ? '__custom__' : tmBgmFile}
+                onChange={e => {
+                  const v = e.target.value
+                  if (v === '__custom__') { setTmBgmCustom(true) }
+                  else { setTmBgmCustom(false); setTmBgmFile(v); tmSavePref('tm_bgm_pref', v) }
+                }}>
+                <option value="">없음(무음)</option>
+                {bgmLibrary.map(t => <option key={t.id} value={t.file}>{t.title} · {t.mood}</option>)}
+                <option value="__custom__">직접 입력(경로)…</option>
+              </select>
+              {(tmBgmCustom || (tmBgmFile && !bgmLibrary.some(t => t.file === tmBgmFile))) && (
+                <input className={s.urlInput} style={{ minWidth: 260, marginLeft: 4 }} placeholder="파일 경로"
+                  value={tmBgmFile} onChange={e => { setTmBgmFile(e.target.value); tmSavePref('tm_bgm_pref', e.target.value) }} />
+              )}
+            </label>
             <label>음량 <input type="range" min={0} max={1} step={0.05} value={tmBgmVolume} style={{ width: 90 }}
               onChange={e => setTmBgmVolume(e.target.value)} /> {Math.round(tmBgmVolume * 100)}%</label>
           </div>
@@ -3747,6 +3798,9 @@ export default function MakingTab() {
           <button className={s.captureBtn} style={{ marginTop: 10 }} disabled={tmPreviewBusy} onClick={runTrackMattePreview}>
             {tmPreviewBusy ? '⏳ 미리보기 중…' : '👁 미리보기(첫 장면만, 1~2초)'}
           </button>
+          <div className={s.emptyHint} style={{ marginTop: 4 }}>
+            장면 소스를 아직 안 넣었어도 글자 크기·배경만 먼저 볼 수 있습니다(배경색 위에 글자 모양만 표시).
+          </div>
           {tmPreviewImage && (
             <div style={{ marginTop: 8 }}>
               <img src={tmPreviewImage} alt="트랙매트 미리보기" style={{ width: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 6, background: '#000' }} />
@@ -3794,13 +3848,19 @@ export default function MakingTab() {
               {tmBusy ? '⏳ 생성 중…' : (tmLoadedName ? '🎬 같은 이름으로 다시 생성' : '🎬 트랙매트 생성')}
             </button>
           </div>
+          {/* 영상 플레이어를 로그보다 먼저 보여준다 — 장면이 여러 개면 로그 밑에 묻혀서
+              "플레이어가 어디 있냐"는 피드백이 나왔음(2차 피드백). 생성 버튼 바로 아래, 눈에
+              띄는 제목을 달아 바로 보이게 한다. */}
+          {tmVideo && (
+            <div style={{ marginTop: 10 }}>
+              <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>▶ 결과 영상</div>
+              <div className={s.previewWrap}>
+                <video key={tmVideo} className={s.makingVideo} src={tmVideo} controls style={{ width: '100%', maxHeight: 420, borderRadius: 6, background: '#000' }} />
+              </div>
+            </div>
+          )}
           {tmLog && (
             <pre style={{ marginTop: 8, maxHeight: 160, overflow: 'auto', fontSize: 11, background: 'var(--bg2,#111)', padding: 8, borderRadius: 6, whiteSpace: 'pre-wrap' }}>{tmLog}</pre>
-          )}
-          {tmVideo && (
-            <div className={s.previewWrap}>
-              <video key={tmVideo} className={s.makingVideo} src={tmVideo} controls style={{ width: '100%', maxHeight: 420, borderRadius: 6, background: '#000' }} />
-            </div>
           )}
           {tmResults.length > 0 && (
             <div style={{ marginTop: 10 }}>
