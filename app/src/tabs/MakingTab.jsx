@@ -1192,6 +1192,9 @@ export default function MakingTab() {
   // 쓴 일회성 ffmpeg 스크립트를 메이킹 탭 연출 기능으로 일반화. 구조는 스크립트 설명 그대로
   // 앞레이어(글자 모양)·뒷레이어(장면 나열, 장면마다 좌우 패널)·연출 효과(페이드·BGM) 3단.
   const TM_PANEL_DEFAULT = { type: 'video', src: '', start: 0, crop: 'face', crop_face_top: 0.04, crop_face_height: 0.62 }
+  // 패널을 ✕로 지워도 "그 영역"(가로 폭·위치)은 그대로 유지하기 위한 빈 칸 — hstack에서 실제
+  // 소스 대신 배경색만 채운 클립으로 렌더된다(2026-11-02, 성준님 요청: "삭제해도 원래 영역 유지").
+  const TM_PANEL_EMPTY = { type: 'empty', src: '', start: 0, crop: 'face', crop_face_top: 0.04, crop_face_height: 0.62 }
   const TM_DEFAULT_FRAMES = [
     { duration: 0.8, panels: [{ ...TM_PANEL_DEFAULT }, { ...TM_PANEL_DEFAULT }] },
   ]
@@ -1264,7 +1267,18 @@ export default function MakingTab() {
   const removeTmFrame = (fi) => setTmFrames(p => p.filter((_, i) => i !== fi))
   const updateTmFrame = (fi, patch) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, ...patch } : f))
   const addTmPanel = (fi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: [...f.panels, { ...TM_PANEL_DEFAULT }] } : f))
-  const removeTmPanel = (fi, pi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: f.panels.filter((_, j) => j !== pi) } : f))
+  // ✕ 버튼: 패널을 배열에서 빼지 않고 type:'empty'로 바꿔서 그 칸(가로 폭·위치)을 유지한다
+  // (지우면 나머지 패널이 전체 폭으로 늘어나 버리던 걸 막아달라는 요청). 이미 빈 칸인 "맨 끝"
+  // 칸을 다시 ✕하면 그때는 진짜로 배열에서 제거해 레이아웃 자체를 줄인다(최소 1칸은 유지).
+  const refillTmPanel = (fi, pi) => setTmFrames(p => p.map((f, i) => i === fi
+    ? { ...f, panels: f.panels.map((pn, j) => j === pi ? { ...TM_PANEL_DEFAULT } : pn) } : f))
+  const removeTmPanel = (fi, pi) => setTmFrames(p => {
+    const frame = p[fi]
+    const panel = frame?.panels[pi]
+    const isTrailingEmpty = panel?.type === 'empty' && pi === frame.panels.length - 1
+    return isTrailingEmpty ? p.map((f, i) => (i === fi && f.panels.length > 1) ? { ...f, panels: f.panels.filter((_, j) => j !== pi) } : f)
+      : p.map((f, i) => i === fi ? { ...f, panels: f.panels.map((pn, j) => j === pi ? { ...TM_PANEL_EMPTY } : pn) } : f)
+  })
   const updateTmPanel = (fi, pi, patch) => setTmFrames(p => p.map((f, i) => i === fi
     ? { ...f, panels: f.panels.map((pn, j) => j === pi ? { ...pn, ...patch } : pn) } : f))
 
@@ -1324,7 +1338,7 @@ export default function MakingTab() {
       setTmFrames((c.back_layer?.frames || []).map(fr => ({
         duration: fr.duration,
         panels: (fr.panels || []).map(pn => ({
-          type: pn.type, src: pn.src, start: pn.start || 0, crop: pn.crop || 'face',
+          type: pn.type, src: pn.src || '', start: pn.start || 0, crop: pn.crop || 'face',
           crop_face_top: pn.crop_face_top ?? 0.04, crop_face_height: pn.crop_face_height ?? 0.62,
         })),
       })))
@@ -1340,7 +1354,8 @@ export default function MakingTab() {
   const validateTmFrames = (strict = true) => {
     if (!tmFrames.length) { alert('장면이 1개 이상 필요합니다'); return false }
     if (strict) {
-      const badPanel = tmFrames.flatMap(f => f.panels).find(pn => !pn.src.trim())
+      // type:'empty'는 "일부러 빈 칸으로 둔" 패널(✕로 지웠지만 영역은 유지) — 소스 필수 검사 제외.
+      const badPanel = tmFrames.flatMap(f => f.panels).find(pn => pn.type !== 'empty' && !pn.src.trim())
       if (badPanel) { alert('비어있는 패널 소스 경로가 있습니다'); return false }
     }
     return true
@@ -3865,6 +3880,16 @@ export default function MakingTab() {
                 <button className={s.captureBtn} onClick={() => removeTmFrame(fi)}>✕ 장면 삭제</button>
               </div>
               {frame.panels.map((panel, pi) => (
+                panel.type === 'empty' ? (
+                  <div key={pi} style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12, opacity: 0.6 }}>
+                    <span>⬛ 빈 칸(배경색으로 채워짐) — 지워도 이 영역 폭은 유지됩니다</span>
+                    <button className={s.captureBtn} onClick={() => refillTmPanel(fi, pi)}>🎬 다시 채우기</button>
+                    {pi === frame.panels.length - 1 && frame.panels.length > 1 && (
+                      <button className={s.captureBtn} title="이 칸을 레이아웃에서 진짜로 없애 나머지 칸 폭을 다시 계산합니다"
+                        onClick={() => removeTmPanel(fi, pi)}>✕ 칸 자체 줄이기</button>
+                    )}
+                  </div>
+                ) : (
                 <div key={pi} style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12 }}>
                   <select value={panel.type} className={s.stageSelect}
                     onChange={e => updateTmPanel(fi, pi, { type: e.target.value })}>
@@ -3899,6 +3924,7 @@ export default function MakingTab() {
                   )}
                   <button className={s.captureBtn} onClick={() => removeTmPanel(fi, pi)}>✕</button>
                 </div>
+                )
               ))}
               <button className={s.captureBtn} style={{ marginTop: 6 }} onClick={() => addTmPanel(fi)}>+ 패널 추가(가로로 나란히)</button>
             </div>
