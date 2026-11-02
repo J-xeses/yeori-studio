@@ -3903,6 +3903,9 @@ app.post('/api/ig-sync', async (_req, res) => {
 {
   const runIg = async () => { try { const { syncInsights, igConfigured } = await import('./lib/igInsights.js'); if (igConfigured()) await syncInsights({ log: (l) => console.log('[ig-sync]', l) }) } catch (e) { console.warn('[ig-sync] 실패:', e.message) } }
   setTimeout(runIg, 60 * 1000); setInterval(runIg, 3 * 3600 * 1000)
+  // 벤치마킹 트렌드 리서치 — 주 1회(2026-11-02 성준님 확정). 3시간 틱마다 7일 경과했는지만 확인(내부적으로 자체 게이트).
+  const runTrend = async () => { try { const { maybeWeeklyTrendResearch } = await import('./lib/trendResearch.js'); await maybeWeeklyTrendResearch((l) => console.log('[trend-research]', l)) } catch (e) { console.warn('[trend-research] 실패:', e.message) } }
+  setTimeout(runTrend, 90 * 1000); setInterval(runTrend, 3 * 3600 * 1000)
 }
 // 관심사 설계 탭 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기, 2026-09-28) — seedDiscovery.js
 app.get('/api/seed-discovery', async (_req, res) => {
@@ -3915,6 +3918,14 @@ app.post('/api/seed-discovery/link', async (req, res) => {
   try { const { addFromLink } = await import('./lib/seedDiscovery.js'); const row = await addFromLink(req.body?.url); res.json({ ok: true, row }) } catch (err) { res.status(400).json({ error: err.message }) }
 })
 // (자동 주간 실행은 9/28 성준님 요청으로 뺌 — 직접 찾는 시간을 들이도록 버튼으로만 실행)
+
+// 벤치마킹 레퍼런스 — 트렌드/콘텐츠 자동 수집(주 1회, 2026-11-02) — trendResearch.js
+app.get('/api/trend-research', async (_req, res) => {
+  try { const { trendResearchStatus } = await import('./lib/trendResearch.js'); res.json(trendResearchStatus()) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/trend-research/run', async (req, res) => {
+  try { const { runTrendResearch } = await import('./lib/trendResearch.js'); res.json(await runTrendResearch({ groups: req.body?.groups, log: console.log })) } catch (err) { res.status(500).json({ error: err.message }) }
+})
 
 // 서여리 능동 대응 큐(감정이입 P3 캡션·스토리 / P4 댓글 답장 / P5 콜백) — ig-sync 직후 6시간마다 + 수동 POST /api/yeori-queue/run (2026-09-27)
 // 게시·답장은 항상 사람 승인: approve 시 reply 만 실제 게시(POST /{comment-id}/replies), caption·story 는 '승인(직접 게시)' 표시만

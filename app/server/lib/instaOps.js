@@ -42,7 +42,7 @@ function defaultOps() {
     settings: { photo: 'profile_A_front.jpg', handle: 'seoyeori.ai', name: '서여리 | AI 크리에이터', bio: 0 },
     goals: { mix: MIX, flexible: 4, checkpointDay: 14 },
     seeds: DEFAULT_SEEDS,
-    seedRules: { followPerDay: 5, firstWeekFollowMax: 20 },
+    seedRules: { followPerDay: 5, firstWeekFollowMax: 20, learned: [] },
     benchmarks: [],
     seedReviewLog: [],
     dayNotes: {},
@@ -65,7 +65,8 @@ export function loadOps() {
   try { ops = JSON.parse(fs.readFileSync(OPS_PATH, 'utf-8')) } catch { return defaultOps() }
   // 기존 ops.json 에 나중에 생긴 필드 채우기(파일은 다음 저장 때 반영)
   if (!Array.isArray(ops.seeds)) ops.seeds = DEFAULT_SEEDS
-  if (!ops.seedRules) ops.seedRules = { followPerDay: 5, firstWeekFollowMax: 20 }
+  if (!ops.seedRules) ops.seedRules = { followPerDay: 5, firstWeekFollowMax: 20, learned: [] }
+  if (!Array.isArray(ops.seedRules.learned)) ops.seedRules.learned = []
   if (!Array.isArray(ops.benchmarks)) ops.benchmarks = []
   if (!Array.isArray(ops.seedReviewLog)) ops.seedReviewLog = []
   if (!ops.dayNotes || typeof ops.dayNotes !== 'object') ops.dayNotes = {}

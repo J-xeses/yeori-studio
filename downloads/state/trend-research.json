@@ -1,0 +1,22 @@
+{
+  "nextIdx": 3,
+  "runs": [
+    {
+      "at": "2026-11-02T07:09:23.348Z",
+      "groups": [
+        "릴스 후킹 기법",
+        "AI 인플루언서 바이럴",
+        "인스타툰 인기 소재"
+      ],
+      "found": 0,
+      "added": 0,
+      "searches": 0,
+      "errors": [
+        "릴스 후킹 기법: invalid x-api-key",
+        "AI 인플루언서 바이럴: invalid x-api-key",
+        "인스타툰 인기 소재: invalid x-api-key"
+      ]
+    }
+  ],
+  "lastRun": "2026-11-02T07:09:23.348Z"
+}

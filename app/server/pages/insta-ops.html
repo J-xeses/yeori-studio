@@ -114,7 +114,7 @@
   <button class="tab" data-t="setup">⚙️ 계정 세팅</button>
   <button class="tab" data-t="board">📅 운영 보드</button>
   <button class="tab" data-t="insight">📊 성과 분석</button>
-  <button class="tab" data-t="seeds">🌱 관심사 설계</button>
+  <button class="tab" data-t="seeds">📌 벤치마킹</button>
   <span class="sp"></span><button class="btn" id="openIg" title="선택한 계정명의 인스타 페이지를 새 Chrome 창으로">📷 인스타 열기</button><span class="save" id="save">불러오는 중…</span>
 </header>
 <div class="banner" id="banner"></div>
@@ -163,6 +163,7 @@
       "<div class=\"muted\" style=\"margin-top:6px\">근거: "+yqEsc((m.reasons||[]).join(" · ")||"기본")+" · "+new Date(m.at).toLocaleString("ko-KR")+"</div>"}).catch(()=>{})}
   function yqLoad(){fetch("/api/yeori-queue").then(r=>r.json()).then(d=>{const e=document.getElementById("yeoriQ");const q=d.queue||[];const wait=q.filter(x=>x.status==="대기");
     const skip=q.filter(x=>x.status==="무대응").length;
+    window.yqWaitItems=wait; try{if(typeof S!=="undefined"&&S&&typeof renderSeeds==="function")renderSeeds()}catch(e){}
     let h="<h3 class=yq-tg onclick=\"yqFold(event)\" title=\"클릭해서 접기/펼치기\"><span class=ar>▾</span>💬 여리의 초안함 <span class=\"pill"+(wait.length?" acc":"")+"\">대기 "+wait.length+"</span>"+(skip?"<span class=pill title=\"악플·링크·연락 유도\">안전선 무대응 "+skip+"</span>":"")+"<span class=sp></span><button class=btn onclick=\"event.stopPropagation();yqRun(this)\" style=\"padding:3px 10px;font-size:12px\">지금 확인</button></h3><div class=yq-body>";
     const c=d.comments;if(c&&c.hidden)h+="<div class=yq-cmt style=\"color:var(--warn)\">⚠ 인스타에 댓글 "+c.hidden+"개가 있지만 API가 내용을 숨기고 있어요 — Meta 앱(yeori-insights) 권한(instagram_business_manage_comments) 반영 대기/심사 중이라 역할 없는 사람의 댓글은 아직 안 보입니다(2026-11-01 조사, 진행 중).</div>";
     else if(c)h+="<div class=muted style=\"margin-bottom:4px\">댓글 확인 "+new Date(c.at).toLocaleTimeString("ko-KR")+" · 새 댓글 "+c.drafts+"건</div>";
@@ -217,19 +218,19 @@
   </select></h2><div class="card" id="cp"></div>
 </div></section>
 
-<!-- 🌱 관심사 설계 -->
+<!-- 📌 벤치마킹 -->
 <section data-tab="seeds"><div class="wrap">
-  <p class="muted">새 계정의 관심사 신호(팔로우·끝까지 시청·저장)를 우리 분야로 채우는 방문 목록입니다. 탐색 탭·릴스 피드가 이 분야로 채워져 트렌드 조사 도구가 되고, 추천 계정 연결망에서도 비슷한 계정 근처에 놓일 가능성이 커집니다(공식 공개된 공식은 아님). 계정은 2026-09-24 웹 검색으로 실존 확인된 곳만.</p>
+  <p class="muted">벤치마킹을 어떻게 할 것인가 — 참고할 계정·콘텐츠를 어떤 방법으로 찾고, 쌓고, 실제 제작에 반영할지를 관리합니다. (참고 계정을 꾸준히 팔로우·시청·저장하면 탐색 탭·추천 계정 연결망도 이 분야로 채워지는 부가 효과가 있습니다 — 공식 공개된 알고리즘은 아님.) 계정은 2026-09-24 웹 검색으로 실존 확인된 곳만.</p>
   <div class="kpis" id="skpi"></div>
   <div class="two">
-    <div><h2>오늘 할 일</h2><div class="card"><ul class="todo" id="stoday"></ul></div></div>
+    <div><h2>오늘 할 일 <span class="muted">— 벤치마킹 과제뿐 아니라 운영보드·성과분석의 할 일도 모아 보여줍니다</span></h2><div class="card"><ul class="todo" id="stoday"></ul></div></div>
     <div><h2>규칙</h2><div class="card"><ul class="todo">
       <li>팔로우는 하루 <b id="rp1"></b>개 이내, 첫 주 합계 <b id="rp2"></b>개 이내</li>
       <li>좋아요·댓글을 몰아서 누르지 않기 — 릴스는 <b>끝까지 시청</b>, 좋은 건 <b>저장</b>(가장 강한 관심 신호)</li>
       <li>다른 AI 계정 댓글에 우리 계정 홍보 금지(스팸 판정 위험) — 댓글은 진심 1~2개만</li>
       <li>업로드 직후 30~60분은 방문보다 <b>내 게시물 댓글 응대</b> 우선</li>
       <li>하루 10~15분 · 방문하면 "오늘 방문" 기록 → 무엇을 봤는지 한 줄 메모</li>
-    </ul></div></div>
+    </ul><ul class="todo" id="ruleLearned"></ul></div></div>
   </div>
   <h2>📝 검토 로그 <span class="muted">— 세션 중 실제 이슈·분석 내용 기록(주로 제가 자동으로 남기고, 성준님도 바로 추가 가능)</span></h2>
   <div class="card" style="display:flex;gap:8px;margin-bottom:8px"><input type="text" id="rlInput" placeholder="메모 추가…" style="flex:1"><button class="btn" id="rlAdd">+ 추가</button></div>
@@ -237,7 +238,8 @@
   <h2>후보 <span class="muted">— AI 발굴은 선택적 보조 기능(자동 주기 실행 없음, 필요할 때만 눌러주세요). 팔로우 직후 인스타가 보여주는 "비슷한 계정" 추천에서 발견한 곳을 담아 두고, 며칠 보고 승격/제외</span></h2>
   <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="sdisc">🔎 지금 발굴(선택)</button><input type="text" id="slink" placeholder="인스타 계정 링크 또는 @아이디 붙여넣기" style="flex:1;min-width:220px"><button class="btn" id="slinkadd">+ 링크로 추가</button><span class="muted" id="sdiscst" style="width:100%;font-size:12px"></span></div>
   <div class="card scroll scroll-v" style="max-height:260px"><table id="ctable"></table></div>
-  <h2>📌 벤치마킹 레퍼런스 <span class="muted">— 급상승 이슈·참고할 콘텐츠를 모아 실제 제작에 바로 쓸 수 있게</span></h2>
+  <h2>📌 벤치마킹 레퍼런스 <span class="muted">— 급상승 이슈·참고할 콘텐츠를 모아 실제 제작에 바로 쓸 수 있게. "AI 발굴"은 매주 자동으로도 돌아갑니다(분야 로테이션)</span></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="tdisc">🔎 지금 조사(선택)</button><span class="muted" id="tdiscst" style="width:100%;font-size:12px"></span></div>
   <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
     <input type="text" id="bmUrl" placeholder="인스타에서 저장한 게시물/릴스 링크(수동기록은 비워도 됨)" style="flex:2;min-width:220px">
     <input type="text" id="bmNote" placeholder="계정/제목 또는 왜 참고할만한지 한 줄" style="flex:1;min-width:160px">
@@ -529,6 +531,7 @@ function renderInsight() {
     : '<tr><td colspan="8" class="muted">지표를 입력하면 자동 계산됩니다.</td></tr>')
   // 초반 이탈 대책 — 릴스 시청 비율(완주율) 30% 미만을 구체적으로 짚고 대응책 제시(2026-11-02, 성준님 지적)
   const reelDrop = rows.filter(r => /Reel/.test(r.p.type) && r.d.watch != null && r.d.watch < 0.3)
+  window.reelDropCache = reelDrop
   $('dropoff').innerHTML = '<b>🚨 릴스 초반 이탈 체크</b> <span class="muted">(완주율 = 평균 시청 / 영상 길이, 30% 미만을 "초반 이탈 심함"으로 판단)</span>' +
     (reelDrop.length
       ? '<ul class="todo">' + reelDrop.map(r => '<li><b>' + md(r.p.date) + ' ' + esc(r.p.title) + '</b> — 완주율 <span class="lo">' + pct(r.d.watch) + '</span>'
@@ -622,13 +625,22 @@ function renderSeeds() {
     (() => { const last = all.map(x => x.addedAt || '').filter(Boolean).sort().pop() || S.settings.accountDate || today, g = diffD(last, today)
       return kpi(g <= 0 ? '오늘' : g + '일 전', '목록 마지막 확장 · 후보 ' + cands.length + '곳', g > 7) })()
   $('rp1').textContent = rules.followPerDay; $('rp2').textContent = rules.firstWeekFollowMax
-  // 오늘 할 일: 오늘까지 도래했는데 아직 팔로우 안 한 계정(하루 한도 안에서)
+  // 오늘 할 일: 벤치마킹 과제 + 운영보드(댓글 응대)·성과분석(이탈경고)·후보 승격까지 모은 크로스탭 액션 피드(2026-11-02)
   const due = seeds.filter(x => !x.followedAt && (x.day ?? 0) <= dayN)
   const room = Math.max(0, rules.followPerDay - followedToday)
-  $('stoday').innerHTML = (dayN < 0 ? '<li class="muted">계정 개설 후 시작합니다.</li>' : '') +
-    (due.length ? due.slice(0, room).map(x => '<li><b>@' + esc(x.handle) + '</b> <span class="muted">' + esc(x.group) + '</span> — 방문해서 릴스 2~3개 끝까지 보고, 좋은 것 1개 저장 후 팔로우</li>').join('') +
-      (due.length > room ? '<li class="muted">나머지 ' + (due.length - room) + '곳은 내일로(오늘 팔로우 한도)</li>' : '')
-      : (dayN >= 0 ? '<li class="muted">오늘 새로 팔로우할 계정은 없습니다 — 팔로우한 계정 피드를 10분 정도 보고 저장 위주로.</li>' : ''))
+  const feed = []
+  if (dayN < 0) feed.push('<li class="muted">🌱 계정 개설 후 시작합니다.</li>')
+  else if (due.length) {
+    feed.push(...due.slice(0, room).map(x => '<li>🌱 <b>@' + esc(x.handle) + '</b> <span class="muted">' + esc(x.group) + '</span> — 방문해서 릴스 2~3개 끝까지 보고, 좋은 것 1개 저장 후 팔로우</li>'))
+    if (due.length > room) feed.push('<li class="muted">🌱 나머지 ' + (due.length - room) + '곳은 내일로(오늘 팔로우 한도)</li>')
+  } else feed.push('<li class="muted">🌱 오늘 새로 팔로우할 계정은 없습니다 — 팔로우한 계정 피드를 10분 정도 보고 저장 위주로.</li>')
+  const yqWait = window.yqWaitItems || []
+  if (yqWait.length) feed.push('<li>💬 <b>댓글 응대 대기 ' + yqWait.length + '건</b> <span class="muted">— 운영보드 탭 "여리의 초안함"에서 확인</span></li>')
+  const reelDrop = window.reelDropCache || []
+  if (reelDrop.length) feed.push('<li>🚨 <b>릴스 초반 이탈 ' + reelDrop.length + '건</b> <span class="muted">— 성과분석 탭에서 대책 확인</span></li>')
+  const staleCands = cands.filter(x => x.addedAt && diffD(x.addedAt, today) >= 3)
+  if (staleCands.length) feed.push('<li>📌 <b>후보 ' + staleCands.length + '곳</b>이 3일 이상 대기 중 <span class="muted">— 승격/제외 결정 필요</span></li>')
+  $('stoday').innerHTML = feed.join('')
   const groups = [...new Set(seeds.map(x => x.group))]
   $('stable').innerHTML = '<tr><th>계정</th><th>핵심 요약</th><th>우리에게 적용</th><th class="num">계획</th><th>팔로우</th><th>방문</th><th>메모</th><th></th></tr>' +
     groups.map(g => '<tr><td colspan="8" style="color:var(--acc);font-weight:600;padding-top:14px">' + esc(g) + '</td></tr>' +
@@ -663,12 +675,28 @@ function renderSeeds() {
   })
   renderReviewLog()
   renderBenchmarks()
+  renderRules()
 }
 // 📝 검토 로그 — 세션 중 실제 이슈·분석 내용 기록(2026-11-02, 성준님 요청: "소통·피드백" 자동 기록 위주)
 function renderReviewLog() {
-  const arr = (S.seedReviewLog || []).slice().reverse()
-  $('reviewLog').innerHTML = arr.length ? arr.map(r => '<div class="archiveRow"><span class="muted" style="width:130px;flex-shrink:0">' + new Date(r.at).toLocaleString('ko-KR') + '</span><span class="pill" style="font-size:10px;flex-shrink:0">' + esc(r.by || '성준') + '</span><span>' + esc(r.text) + '</span></div>').join('')
+  const all = S.seedReviewLog || []
+  const rows = all.map((r, i) => [r, i]).reverse()
+  $('reviewLog').innerHTML = rows.length ? rows.map(([r, i]) => '<div class="archiveRow"><span class="muted" style="width:130px;flex-shrink:0">' + new Date(r.at).toLocaleString('ko-KR') + '</span><span class="pill" style="font-size:10px;flex-shrink:0">' + esc(r.by || '성준') + '</span><span style="flex:1">' + esc(r.text) + '</span><button class="btn" data-rl2rule="' + i + '" title="이 기록을 규칙으로 추가" style="font-size:11px;padding:2px 8px;flex-shrink:0">📐 규칙으로</button></div>').join('')
     : '<p class="muted">아직 기록이 없습니다 — 세션 중 중요한 이슈나 분석 결과가 생기면 여기에 쌓입니다.</p>'
+  document.querySelectorAll('#reviewLog [data-rl2rule]').forEach(b => b.onclick = () => {
+    const r = all[+b.dataset.rl2rule]
+    if (!confirm('이 기록을 규칙에 추가할까요?\n\n"' + r.text + '"')) return
+    ;(S.seedRules.learned = S.seedRules.learned || []).push({ text: r.text, addedAt: new Date().toISOString() })
+    touch(); renderRules()
+  })
+}
+// 📐 학습형 규칙 — 검토 로그에서 승격된 규칙(고정 5개 외 세션 중 실제 경험으로 쌓인 것)
+function renderRules() {
+  const learned = S.seedRules?.learned || []
+  $('ruleLearned').innerHTML = learned.map((r, i) => '<li>🧩 ' + esc(r.text) + ' <button class="x" data-rmrule="' + i + '" title="삭제">✕</button></li>').join('')
+  document.querySelectorAll('#ruleLearned [data-rmrule]').forEach(b => b.onclick = () => {
+    S.seedRules.learned.splice(+b.dataset.rmrule, 1); touch(); renderRules()
+  })
 }
 $('rlAdd').onclick = () => { const v = $('rlInput').value.trim(); if (!v) return
   ;(S.seedReviewLog = S.seedReviewLog || []).push({ at: new Date().toISOString(), by: '성준', text: v })
@@ -701,6 +729,10 @@ async function seedDiscStatus() { try { const st = await (await fetch('/api/seed
 $('sdisc').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '발굴 중… (1분 안팎)'; try { const r = await (await fetch('/api/seed-discovery/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 후보 ' + r.added.length + '개' + (r.added.length ? ' — ' + r.added.join(', ') : '') + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('발굴 실패: ' + err.message) } b.disabled = false; b.textContent = '🔎 지금 발굴(선택)'; seedDiscStatus() }
 $('slinkadd').onclick = async (e) => { const v = $('slink').value.trim(); if (!v) return; const b = e.target; b.disabled = true; b.textContent = '확인 중…'; try { const r = await (await fetch('/api/seed-discovery/link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: v }) })).json(); if (r.error) throw new Error(r.error); $('slink').value = ''; await load() } catch (err) { alert(err.message) } b.disabled = false; b.textContent = '+ 링크로 추가' }
 seedDiscStatus()
+// 벤치마킹 트렌드 리서치(주 1회 자동 + 버튼으로도 실행, 2026-11-02) — 서버가 ops.json 에 바로 쓰므로 끝나면 다시 불러온다
+async function trendDiscStatus() { try { const st = await (await fetch('/api/trend-research')).json(); const r = st.lastRunResult, m = st.month || {}; $('tdiscst').innerHTML = '매주 자동 실행(분야 3개씩 순환) · 다음 차례: <b>' + st.nextGroups.join(', ') + '</b>' + (st.lastRun ? ' · 마지막 ' + new Date(st.lastRun).toLocaleString('ko-KR') + (r ? ' → 새 레퍼런스 ' + r.added + '개' : '') : ' · 아직 실행 전(기동 후 1분 30초 뒤 또는 7일 경과 시 자동 실행)') + '<br>이번 달 ' + (m.runs || 0) + '회 · 웹 검색 ' + (m.searches || 0) + '회 · 추정 약 $' + (m.estUsd || 0) + ' (약 ' + Math.round((m.estUsd || 0) * 1400) + '원)' } catch { } }
+$('tdisc').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '조사 중… (1분 안팎)'; try { const r = await (await fetch('/api/trend-research/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 레퍼런스 ' + r.added.length + '개' + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('조사 실패: ' + err.message) } b.disabled = false; b.textContent = '🔎 지금 조사(선택)'; trendDiscStatus() }
+trendDiscStatus()
 $('sadd').onclick = () => {
   const pf = (prompt('플랫폼: instagram / youtube / tiktok', 'instagram') || '').trim().toLowerCase()
   if (!PF[pf]) return alert('instagram, youtube, tiktok 중 하나로 입력해 주세요.')

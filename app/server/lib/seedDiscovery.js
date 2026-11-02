@@ -27,7 +27,7 @@ const STATE = () => mp.statePath('seed-discovery.json')
 const readJson = (p, d) => { try { return JSON.parse(fs.readFileSync(p, 'utf-8')) } catch { return d } }
 const HANDLE_RE = /^[A-Za-z0-9._]{2,30}$/
 
-function apiKey() {
+export function apiKey() {
   if (process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY) return process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY
   try {
     const env = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '.env.local'), 'utf-8')
@@ -35,7 +35,7 @@ function apiKey() {
   } catch { return '' }
 }
 
-async function askWithSearch(prompt, maxUses) {
+export async function askWithSearch(prompt, maxUses) {
   const key = apiKey(); if (!key) throw new Error('Anthropic API 키 없음')
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST', headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
@@ -46,7 +46,7 @@ async function askWithSearch(prompt, maxUses) {
   const text = (j.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('')
   return { text, searches: j.usage?.server_tool_use?.web_search_requests || 0 }
 }
-function parseArray(text) {
+export function parseArray(text) {
   const a = text.indexOf('['), b = text.lastIndexOf(']')
   if (a < 0 || b < a) return []
   try { const v = JSON.parse(text.slice(a, b + 1)); return Array.isArray(v) ? v : [] } catch { return [] }

@@ -1,5 +1,5 @@
 {
-  "nextIdx": 3,
+  "nextIdx": 6,
   "runs": [
     {
       "at": "2026-09-28T10:47:29.995Z",
@@ -12,7 +12,23 @@
       "added": 7,
       "searches": 6,
       "errors": []
+    },
+    {
+      "at": "2026-11-02T07:09:28.649Z",
+      "groups": [
+        "일상 브이로그",
+        "직장인 공감",
+        "감성 카페·공간"
+      ],
+      "found": 0,
+      "added": 0,
+      "searches": 0,
+      "errors": [
+        "일상 브이로그: invalid x-api-key",
+        "직장인 공감: invalid x-api-key",
+        "감성 카페·공간: invalid x-api-key"
+      ]
     }
   ],
-  "lastRun": "2026-09-28T10:47:29.995Z"
+  "lastRun": "2026-11-02T07:09:28.649Z"
 }
