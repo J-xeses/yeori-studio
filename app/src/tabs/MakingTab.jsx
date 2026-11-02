@@ -1204,6 +1204,8 @@ export default function MakingTab() {
   const [tmOpen, setTmOpen] = useState(false)
   const [tmText, setTmText] = useState('SEOYEORI')
   const [tmFontSize, setTmFontSize] = useState(300)
+  const [tmScaleX, setTmScaleX] = useState(100)   // % 단위(100=원래 비율) — font_size와 별개로 가로만 조정
+  const [tmScaleY, setTmScaleY] = useState(100)   // % 단위 — 세로만 조정(16:9에 글자수 따라 폭/높이 따로 맞출 때)
   const [tmBg, setTmBg] = useState(() => tmPref('tm_bg_pref', 'black'))
   const [tmFadeIn, setTmFadeIn] = useState(0.4)
   const [tmFadeOut, setTmFadeOut] = useState(0.7)
@@ -1267,7 +1269,10 @@ export default function MakingTab() {
 
   const buildTmConfig = () => ({
     canvas: { width: 1920, height: 1080, fps: 30 },
-    front_layer: { type: 'text', text: tmText, font_size: Number(tmFontSize) },
+    front_layer: {
+      type: 'text', text: tmText, font_size: Number(tmFontSize),
+      scale_x: Number(tmScaleX) / 100, scale_y: Number(tmScaleY) / 100,
+    },
     back_layer: {
       background: tmBg,
       frames: tmFrames.map(f => ({
@@ -1284,7 +1289,7 @@ export default function MakingTab() {
   // 새로 만들기 — 폼을 기본값으로 되돌리고 "불러온 상태"를 해제한다.
   const resetTmForm = () => {
     // 배경색·BGM은 직전에 쓰던 값을 그대로 유지(장면 구성만 초기화) — 매번 새로 고르지 않아도 되게.
-    setTmText('SEOYEORI'); setTmFontSize(300); setTmBg(tmPref('tm_bg_pref', 'black'))
+    setTmText('SEOYEORI'); setTmFontSize(300); setTmScaleX(100); setTmScaleY(100); setTmBg(tmPref('tm_bg_pref', 'black'))
     setTmFadeIn(0.4); setTmFadeOut(0.7)
     setTmBgmFile(tmPref('tm_bgm_pref', '')); setTmBgmCustom(false); setTmBgmVolume(0.5)
     setTmFrames(TM_DEFAULT_FRAMES)
@@ -1303,6 +1308,8 @@ export default function MakingTab() {
       const c = d.config
       setTmText(c.front_layer?.text ?? 'SEOYEORI')
       setTmFontSize(c.front_layer?.font_size ?? 300)
+      setTmScaleX(Math.round((c.front_layer?.scale_x ?? 1) * 100))
+      setTmScaleY(Math.round((c.front_layer?.scale_y ?? 1) * 100))
       const loadedBg = c.back_layer?.background ?? 'black'
       const loadedBgmFile = c.effects?.bgm?.file ?? ''
       setTmBg(loadedBg); tmSavePref('tm_bg_pref', loadedBg)
@@ -3781,9 +3788,15 @@ export default function MakingTab() {
 
           {/* 아래 두 줄은 fontSize:12로 통일(이전엔 라벨·숫자입력이 className 없이 브라우저
               기본 크기를 써서 다른 줄보다 커 보이는 "밸런스 안 맞음" 문제가 있었음, 2차 피드백). */}
-          <div className={s.urlRow} style={{ marginTop: 8, fontSize: 12 }}>
+          <div className={s.urlRow} style={{ marginTop: 8, fontSize: 12, flexWrap: 'wrap' }}>
             <label>글자 <input className={s.urlInput} style={{ maxWidth: 180 }} value={tmText} onChange={e => setTmText(e.target.value)} /></label>
             <label>크기 <input className={s.durationInput} type="number" min={50} max={500} value={tmFontSize} style={{ width: 70 }} onChange={e => setTmFontSize(e.target.value)} /></label>
+            <label title="글자 모양의 가로 폭만 늘리거나 줄입니다(세로는 그대로) — 16:9에 글자수에 맞춰 폭을 꽉 채울 때">
+              가로 <input className={s.durationInput} type="number" min={10} max={500} step={5} value={tmScaleX} style={{ width: 60 }} onChange={e => setTmScaleX(e.target.value)} />%
+            </label>
+            <label title="글자 모양의 세로 높이만 늘리거나 줄입니다(가로는 그대로)">
+              세로 <input className={s.durationInput} type="number" min={10} max={500} step={5} value={tmScaleY} style={{ width: 60 }} onChange={e => setTmScaleY(e.target.value)} />%
+            </label>
             <label>배경
               <select className={s.stageSelect} value={TM_BG_PRESETS.some(([v]) => v === tmBg) ? tmBg : '__custom__'}
                 onChange={e => {

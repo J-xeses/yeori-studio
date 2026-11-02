@@ -178,9 +178,14 @@
 
 <!-- 📊 성과 분석 -->
 <section data-tab="insight"><div class="wrap">
-  <p class="muted">게시 상태인 게시물만 표시됩니다. 수치는 인스타 앱 → 게시물 → 인사이트 보기에서 확인해 입력하세요(게시 후 48시간 기준 권장).</p>
+  <p class="muted">게시 상태인 게시물만 표시됩니다. 수치는 인스타 앱 → 게시물 → 인사이트 보기에서 확인해 입력하세요(게시 후 48시간 기준 권장). 아래 입력표는 인스타 API 자동 동기화로도 채워집니다(6시간마다 자동, 또는 지금 버튼으로 즉시).</p>
+  <div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <button class="btn" id="igSyncNow">🔄 지금 동기화</button>
+    <span class="muted" id="igSyncStatus"></span>
+  </div>
   <h2>지표 입력</h2><div class="card scroll"><table id="mt"></table></div>
   <h2>깔때기 비율 (도달 대비, 게시물 간 공정 비교)</h2><div class="card scroll"><table id="rt"></table></div>
+  <div class="card" id="dropoff"></div>
   <div class="two">
     <div><h2>유형별 평균</h2><div class="card scroll"><table id="tt"></table></div></div>
     <div><h2>전체 깔때기 (합계)</h2><div class="card"><div class="fn" id="fn"></div><div class="fnl" id="fnl"></div></div></div>
@@ -380,6 +385,8 @@ function derived(m) {
 }
 const DER = [['hold3','3초 유지'],['watch','시청 비율'],['share','공유율'],['save','저장율'],['visit','방문율'],['follow','팔로우 전환']]
 function renderInsight() {
+  const sa = S.account?.syncedAt
+  $('igSyncStatus').textContent = sa ? '마지막 동기화: ' + new Date(sa).toLocaleString('ko-KR') + (S.account?.followers != null ? ' · 팔로워 ' + S.account.followers : '') : '아직 동기화된 적 없음'
   const posted = sorted().filter(p => p.status === '게시')
   $('mt').innerHTML = '<tr><th>게시물</th>' + METRICS.map(m => '<th class="num">' + m[1] + '</th>').join('') + '</tr>' + (posted.length ? posted.map(p =>
     '<tr data-id="' + esc(p.id) + '"><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + COLOR[p.type] + ';margin-right:6px"></i>' + md(p.date) + ' ' + esc(p.title) + '</td>' +
@@ -399,11 +406,21 @@ function renderInsight() {
       return '<td class="num ' + c + '">' + pct(v) + '</td>' }).join('') + '</tr>').join('')
     + '<tr><td><b>평균</b></td><td></td>' + DER.map(([k]) => '<td class="num"><b>' + pct(A[k]) + '</b></td>').join('') + '</tr>'
     : '<tr><td colspan="8" class="muted">지표를 입력하면 자동 계산됩니다.</td></tr>')
-  // 유형별 평균
+  // 초반 이탈 대책 — 릴스 시청 비율(완주율) 30% 미만을 구체적으로 짚고 대응책 제시(2026-11-02, 성준님 지적)
+  const reelDrop = rows.filter(r => /Reel/.test(r.p.type) && r.d.watch != null && r.d.watch < 0.3)
+  $('dropoff').innerHTML = '<b>🚨 릴스 초반 이탈 체크</b> <span class="muted">(완주율 = 평균 시청 / 영상 길이, 30% 미만을 "초반 이탈 심함"으로 판단)</span>' +
+    (reelDrop.length
+      ? '<ul class="todo">' + reelDrop.map(r => '<li><b>' + md(r.p.date) + ' ' + esc(r.p.title) + '</b> — 완주율 <span class="lo">' + pct(r.d.watch) + '</span>'
+          + (r.d.hold3 != null ? ' · 3초 유지 ' + pct(r.d.hold3) : '') + '</li>').join('') + '</ul>'
+        + '<p class="muted">대책: ① 첫 1~2초에 결과/반전/질문을 바로 보여주기(설명·배경 설명 금지) ② 도입부 0.5~1초 컷 트리밍해서 템포를 당기기 ③ 다음 편엔 같은 영상의 오프닝 3컷만 바꿔 A/B로 비교 ④ 3초 유지(%)도 같이 입력하면 "후킹 실패"(3초 유지 낮음)와 "중반 이탈"(완주율만 낮음)을 구분할 수 있음.</p>'
+      : rows.filter(r => /Reel/.test(r.p.type)).length
+        ? '<p class="muted">현재 완주율 30% 미만인 릴스는 없습니다.</p>'
+        : '<p class="muted">완주율을 계산할 릴스 지표(평균 시청·길이)가 아직 없습니다.</p>')
+  // 유형별 평균 — 표본 1개는 참고용으로 표시(2026-11-02)
   const byType = TYPES.map(t => { const rs = rows.filter(r => r.p.type === t); const o = { t, n: rs.length }
     DER.forEach(([k]) => { const v = rs.map(r => r.d[k]).filter(x => x != null); o[k] = v.length ? v.reduce((a, b) => a + b, 0) / v.length : null }); return o })
   $('tt').innerHTML = '<tr><th>유형</th><th class="num">게시</th>' + DER.map(d => '<th class="num">' + d[1] + '</th>').join('') + '</tr>' +
-    byType.map(o => '<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + COLOR[o.t] + ';margin-right:6px"></i>' + o.t + '</td><td class="num">' + o.n + '</td>' + DER.map(([k]) => '<td class="num">' + pct(o[k]) + '</td>').join('') + '</tr>').join('')
+    byType.map(o => '<tr' + (o.n === 1 ? ' style="opacity:.6"' : '') + '><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + COLOR[o.t] + ';margin-right:6px"></i>' + o.t + '</td><td class="num">' + o.n + (o.n === 1 ? ' <span class="muted" title="표본 1개 — 참고만">⚠️</span>' : '') + '</td>' + DER.map(([k]) => '<td class="num">' + pct(o[k]) + '</td>').join('') + '</tr>').join('')
   // 전체 깔때기(합계)
   const sum = k => posted.reduce((a, p) => a + (n(p.metrics?.[k]) || 0), 0)
   const F = [['도달', sum('reach')], ['공유+저장', sum('shares') + sum('saves')], ['프로필 방문', sum('visits')], ['팔로우', sum('follows')]]
@@ -433,6 +450,16 @@ async function openB(body) {
     const u = body.url || (body.target === 'instagram' ? 'https://www.instagram.com/' + (body.query || '') : 'https://www.instagram.com')
     window.open(u, '_blank')
   }
+}
+$('igSyncNow').onclick = async () => {
+  const btn = $('igSyncNow'); btn.disabled = true; $('igSyncStatus').textContent = '동기화 중…'
+  try {
+    const r = await fetch('/api/ig-sync', { method: 'POST' }); const j = await r.json()
+    if (!r.ok || j.error) throw new Error(j.error || r.status)
+    if (j.ok === false) throw new Error(j.skipped || '동기화 안 됨')
+    await load('🔄 동기화 완료 · 팔로워 ' + j.followers + ' · 게시물 ' + j.media + '개 중 ' + j.updated + '개 지표 갱신')
+  } catch (e) { $('igSyncStatus').textContent = '동기화 실패: ' + e.message }
+  btn.disabled = false
 }
 $('openIg').onclick = () => openB({ target: 'instagram', query: S?.settings?.handle })
 $('chkHandle').onclick = () => openB({ target: 'instagram', query: S?.settings?.handle })
