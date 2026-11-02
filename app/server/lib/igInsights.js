@@ -2,7 +2,7 @@
 // 토큰: app/studio-secrets.json → apiKeys.instagram = { token, userId? }  (장기 토큰 60일, 여기서 자동 갱신)
 // 하는 일: 내 게시물 목록 → 운영실 게시물과 연결(링크 shortcode, 없으면 날짜) → 상태 '게시'·링크 채움 →
 //          게시물 인사이트(도달·조회·좋아요·댓글·공유·저장·프로필방문·팔로우·평균시청) → post.metrics + 시점별 기록(metricsLog)
-// LLM 호출 없음(토큰 0). 프록시가 기동 시 + 6시간마다 호출.
+// LLM 호출 없음(토큰 0). 프록시가 기동 시 + 3시간마다(2026-11-02, 기존 6시간) 호출, 인스타 업로드 직후에도 즉시 호출됨(igPublish.js).
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

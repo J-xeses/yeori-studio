@@ -43,6 +43,11 @@ function defaultOps() {
     goals: { mix: MIX, flexible: 4, checkpointDay: 14 },
     seeds: DEFAULT_SEEDS,
     seedRules: { followPerDay: 5, firstWeekFollowMax: 20 },
+    benchmarks: [],
+    seedReviewLog: [],
+    dayNotes: {},
+    calendarArchive: [],
+    lastArchivedMonth: '',
     posts: [
       seedPost('t1', '2026-09-25', '12:00', '실험 콘텐츠', '티저① Se ye ri → 서여리', 'IG_T01', '완성', 'grid/t1.jpg'),
       seedPost('t2', '2026-09-26', '12:00', '실험 콘텐츠', '티저② 텍스트 소개', 'IG_T02', '기획', ''),
@@ -61,6 +66,11 @@ export function loadOps() {
   // 기존 ops.json 에 나중에 생긴 필드 채우기(파일은 다음 저장 때 반영)
   if (!Array.isArray(ops.seeds)) ops.seeds = DEFAULT_SEEDS
   if (!ops.seedRules) ops.seedRules = { followPerDay: 5, firstWeekFollowMax: 20 }
+  if (!Array.isArray(ops.benchmarks)) ops.benchmarks = []
+  if (!Array.isArray(ops.seedReviewLog)) ops.seedReviewLog = []
+  if (!ops.dayNotes || typeof ops.dayNotes !== 'object') ops.dayNotes = {}
+  if (!Array.isArray(ops.calendarArchive)) ops.calendarArchive = []
+  if (typeof ops.lastArchivedMonth !== 'string') ops.lastArchivedMonth = ''
   return ops
 }
 
@@ -94,7 +104,7 @@ export function extractPublishCaption(raw) {
 
 // G5 완성 시 운영실 게시물 등록/갱신(rev 확인 저장). 이미 예약·게시된 글은 상태를 되돌리지 않는다.
 // gridSrc: 격자 썸네일로 쓸 이미지 파일(있으면 _account/grid/{id}.jpg 로 복사)
-export function upsertEpisodePost({ code, title, caption = '', status = '완성', type, gridSrc }) {
+export function upsertEpisodePost({ code, title, caption = '', status = '완성', type, gridSrc, link }) {
   const ops = loadOps()
   const posts = Array.isArray(ops.posts) ? ops.posts : []
   const letter = (String(code).match(/^IG_([A-Z])/) || [])[1]?.toLowerCase() || 'x'
@@ -107,6 +117,7 @@ export function upsertEpisodePost({ code, title, caption = '', status = '완성'
   }
   if (!['예약', '게시'].includes(post.status)) post.status = status
   if (caption) post.caption = caption
+  if (link) post.link = link
   if (gridSrc && fs.existsSync(gridSrc)) {
     const rel = `grid/${post.id}.jpg`
     fs.mkdirSync(path.join(ACCOUNT_DIR, 'grid'), { recursive: true })

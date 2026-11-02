@@ -71,9 +71,25 @@
   .hi{color:var(--ok)}.lo{color:var(--bad)}
   .fn{display:flex;gap:6px;align-items:flex-end;height:120px}
   .fn div{flex:1;background:var(--link);border-radius:4px 4px 0 0;position:relative;min-height:2px}
+  .fnrow{display:flex;align-items:center;gap:8px;margin:3px 0}
+  .fnrow .lbl{width:84px;flex-shrink:0;font-size:12px;color:var(--tx2)}
+  .fnrow .bar{height:26px;border-radius:4px;background:var(--link);display:flex;align-items:center;padding:0 8px;color:#0b0b0d;font-size:12px;font-weight:600;white-space:nowrap;min-width:34px}
+  .fnrow .of{font-size:11px;color:var(--tx2);white-space:nowrap}
+  .fnarrow{font-size:11px;color:var(--tx2);padding-left:92px;margin:1px 0}
+  .memoBtn{display:inline-block;margin-top:2px;padding:1px 5px;border-radius:3px;background:var(--panel2);color:var(--tx2);font-size:10px;cursor:pointer;border:1px solid var(--line)}
+  .memoBtn.has{background:#3a2a12;color:var(--acc);border-color:var(--acc)}
+  .memoBox{grid-column:1/-1;display:none}
+  .memoBox.open{display:block}
+  .memoBox textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;color:var(--tx);font:12px/1.4 system-ui,'Malgun Gothic',sans-serif;resize:vertical}
+  .calNav{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .calNav button{padding:3px 10px;font-size:12px}
+  .archiveRow{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:12px}.archiveRow:first-child{border-top:none}
   .fn span{position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:11px;color:var(--tx)}
   .fnl{display:flex;gap:6px}.fnl div{flex:1;text-align:center;font-size:11px;color:var(--tx2)}
   .scroll{overflow-x:auto}
+  .scroll-v{max-height:440px;overflow-y:auto}
+  .scroll-v table th{position:sticky;top:0;background:var(--panel);z-index:1}
+  .yq-body{max-height:460px;overflow-y:auto;padding-right:6px}
   @media (max-width:1100px){.setup{grid-template-columns:1fr}.two{grid-template-columns:1fr}}
   /* ── 오늘의 여리 · 여리의 초안함 (감정이입 P2~P5) — 운영실 공용 팔레트 사용 ── */
   .yr{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}   /* 오늘의 여리 위, 초안함 아래(한 줄씩) */
@@ -148,9 +164,9 @@
   function yqLoad(){fetch("/api/yeori-queue").then(r=>r.json()).then(d=>{const e=document.getElementById("yeoriQ");const q=d.queue||[];const wait=q.filter(x=>x.status==="대기");
     const skip=q.filter(x=>x.status==="무대응").length;
     let h="<h3 class=yq-tg onclick=\"yqFold(event)\" title=\"클릭해서 접기/펼치기\"><span class=ar>▾</span>💬 여리의 초안함 <span class=\"pill"+(wait.length?" acc":"")+"\">대기 "+wait.length+"</span>"+(skip?"<span class=pill title=\"악플·링크·연락 유도\">안전선 무대응 "+skip+"</span>":"")+"<span class=sp></span><button class=btn onclick=\"event.stopPropagation();yqRun(this)\" style=\"padding:3px 10px;font-size:12px\">지금 확인</button></h3><div class=yq-body>";
-    const c=d.comments;if(c&&c.hidden)h+="<div class=yq-cmt style=\"color:var(--warn)\">⚠ 인스타에 댓글 "+c.hidden+"개가 있지만 API가 내용을 숨기고 있어요 — Meta 앱(yeori-insights)이 개발 모드라 역할 없는 사람의 댓글은 안 보입니다. 앱을 라이브 모드로 전환해야 답장 초안이 만들어져요.</div>";
+    const c=d.comments;if(c&&c.hidden)h+="<div class=yq-cmt style=\"color:var(--warn)\">⚠ 인스타에 댓글 "+c.hidden+"개가 있지만 API가 내용을 숨기고 있어요 — Meta 앱(yeori-insights) 권한(instagram_business_manage_comments) 반영 대기/심사 중이라 역할 없는 사람의 댓글은 아직 안 보입니다(2026-11-01 조사, 진행 중).</div>";
     else if(c)h+="<div class=muted style=\"margin-bottom:4px\">댓글 확인 "+new Date(c.at).toLocaleTimeString("ko-KR")+" · 새 댓글 "+c.drafts+"건</div>";
-    if(!wait.length)h+="<div class=yq-empty>대기 중인 초안이 없어요. 새 게시·댓글·팔로워 변화가 생기면 6시간마다 자동으로 채워집니다.</div>";
+    if(!wait.length)h+="<div class=yq-empty>대기 중인 초안이 없어요. 새 게시·댓글·팔로워 변화가 생기면 3시간마다 자동으로 채워집니다.</div>";
     for(const x of wait){const tag=x.kind==="reply"?"💬 답장":x.kind==="story"?"📱 스토리":"📝 캡션";
       h+="<div class=yq-item><div class=yq-meta><span class=pill>"+tag+"</span>"+yqEsc(x.trigger)+" · "+yqEsc(x.by)+(x.postLink?" · <a href=\""+yqEsc(x.postLink)+"\" target=_blank style=\"color:var(--link)\">게시물</a>":"")+"</div>"+
         (x.comment?"<div class=yq-cmt>└ "+yqEsc(x.comment)+"</div>":"")+
@@ -167,30 +183,38 @@
   yrMood();yqLoad();
   </script>
   <div class="kpis" id="kpis"></div>
-  <h2>30일 캘린더 <span class="muted" id="calr"></span></h2><div class="cal" id="cal"></div>
+  <div class="card" id="followerGreet" style="margin-bottom:12px"></div>
+  <h2>캘린더 <span class="muted" id="calr"></span></h2>
+  <div class="calNav"><button class="btn" id="calPrev">◀ 이전 달</button><b id="calMonthLbl"></b><button class="btn" id="calNext">다음 달 ▶</button><button class="btn" id="calToday">오늘</button></div>
+  <div class="cal" id="cal"></div>
+  <div class="card" id="calArchive" style="margin-top:8px"></div>
   <div class="two" style="margin-top:6px">
     <div><h2>콘텐츠 구성 (시장조사 목표 대비)</h2><div class="card mix" id="mix"></div></div>
     <div><h2>임박한 할 일 (3일 이내)</h2><div class="card"><ul class="todo" id="todo"></ul></div></div>
   </div>
   <h2>게시물 목록 <button class="btn" id="add" style="margin-left:8px">+ 게시물 추가</button></h2>
-  <div class="card scroll"><table id="posts"></table></div>
+  <div class="card scroll scroll-v"><table id="posts"></table></div>
 </div></section>
 
 <!-- 📊 성과 분석 -->
 <section data-tab="insight"><div class="wrap">
-  <p class="muted">게시 상태인 게시물만 표시됩니다. 수치는 인스타 앱 → 게시물 → 인사이트 보기에서 확인해 입력하세요(게시 후 48시간 기준 권장). 아래 입력표는 인스타 API 자동 동기화로도 채워집니다(6시간마다 자동, 또는 지금 버튼으로 즉시).</p>
+  <p class="muted">게시 상태인 게시물만 표시됩니다. 수치는 인스타 앱 → 게시물 → 인사이트 보기에서 확인해 입력하세요(게시 후 48시간 기준 권장). 아래 입력표는 인스타 API 자동 동기화로도 채워집니다(3시간마다 자동, 스튜디오에서 올리면 즉시, 또는 지금 버튼으로 바로).</p>
   <div class="card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <button class="btn" id="igSyncNow">🔄 지금 동기화</button>
     <span class="muted" id="igSyncStatus"></span>
   </div>
   <h2>지표 입력</h2><div class="card scroll"><table id="mt"></table></div>
-  <h2>깔때기 비율 (도달 대비, 게시물 간 공정 비교)</h2><div class="card scroll"><table id="rt"></table></div>
+  <h2>깔때기 비율 (도달 대비, 게시물 간 공정 비교)</h2>
+  <p class="muted">읽는 법: 각 % 는 <b>그 게시물의 도달수 대비</b> 비율입니다(도달이 들쭉날쭉해도 게시물끼리 공정하게 비교하려고 비율로 봄). 예) 저장율 2% = 도달한 사람 100명 중 2명이 저장. 초록/빨강은 평균보다 15% 이상 높거나 낮은 값(3개 이상 게시물 쌓여야 표시).</p>
+  <div class="card scroll"><table id="rt"></table></div>
   <div class="card" id="dropoff"></div>
   <div class="two">
     <div><h2>유형별 평균</h2><div class="card scroll"><table id="tt"></table></div></div>
-    <div><h2>전체 깔때기 (합계)</h2><div class="card"><div class="fn" id="fn"></div><div class="fnl" id="fnl"></div></div></div>
+    <div><h2>전체 깔때기 (합계) <span class="muted">— 도달 100명 중 몇 명이 다음 단계까지 가는지</span></h2><div class="card" id="fnWrap"></div></div>
   </div>
-  <h2>14일 체크포인트 — 적응형 4칸 배정 제안</h2><div class="card" id="cp"></div>
+  <h2>체크포인트 — 적응형 4칸 배정 제안 <span class="muted">주기:</span> <select id="cpDaySel" style="margin-left:4px">
+    <option value="7">7일(주간)</option><option value="14">14일(2주)</option><option value="30">30일(월간)</option>
+  </select></h2><div class="card" id="cp"></div>
 </div></section>
 
 <!-- 🌱 관심사 설계 -->
@@ -207,10 +231,21 @@
       <li>하루 10~15분 · 방문하면 "오늘 방문" 기록 → 무엇을 봤는지 한 줄 메모</li>
     </ul></div></div>
   </div>
-  <h2>후보 <span class="muted">— 팔로우 직후 인스타가 보여주는 "비슷한 계정" 추천에서 발견한 곳을 담아 두고, 며칠 보고 승격/제외</span></h2>
-  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="sdisc">🔎 지금 발굴</button><input type="text" id="slink" placeholder="인스타 계정 링크 또는 @아이디 붙여넣기" style="flex:1;min-width:220px"><button class="btn" id="slinkadd">+ 링크로 추가</button><span class="muted" id="sdiscst" style="width:100%;font-size:12px"></span></div>
-  <div class="card scroll"><table id="ctable"></table></div>
-  <h2>계정 목록 <span class="muted">개설일 <input type="date" id="acctDate" style="margin-left:4px"></span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
+  <h2>📝 검토 로그 <span class="muted">— 세션 중 실제 이슈·분석 내용 기록(주로 제가 자동으로 남기고, 성준님도 바로 추가 가능)</span></h2>
+  <div class="card" style="display:flex;gap:8px;margin-bottom:8px"><input type="text" id="rlInput" placeholder="메모 추가…" style="flex:1"><button class="btn" id="rlAdd">+ 추가</button></div>
+  <div class="card scroll-v" id="reviewLog" style="max-height:220px;margin-bottom:16px"></div>
+  <h2>후보 <span class="muted">— AI 발굴은 선택적 보조 기능(자동 주기 실행 없음, 필요할 때만 눌러주세요). 팔로우 직후 인스타가 보여주는 "비슷한 계정" 추천에서 발견한 곳을 담아 두고, 며칠 보고 승격/제외</span></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="sdisc">🔎 지금 발굴(선택)</button><input type="text" id="slink" placeholder="인스타 계정 링크 또는 @아이디 붙여넣기" style="flex:1;min-width:220px"><button class="btn" id="slinkadd">+ 링크로 추가</button><span class="muted" id="sdiscst" style="width:100%;font-size:12px"></span></div>
+  <div class="card scroll scroll-v" style="max-height:260px"><table id="ctable"></table></div>
+  <h2>📌 벤치마킹 레퍼런스 <span class="muted">— 급상승 이슈·참고할 콘텐츠를 모아 실제 제작에 바로 쓸 수 있게</span></h2>
+  <div class="card" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+    <input type="text" id="bmUrl" placeholder="인스타에서 저장한 게시물/릴스 링크(수동기록은 비워도 됨)" style="flex:2;min-width:220px">
+    <input type="text" id="bmNote" placeholder="계정/제목 또는 왜 참고할만한지 한 줄" style="flex:1;min-width:160px">
+    <button class="btn" id="bmAddSaved">💾 저장 링크로 추가</button>
+    <button class="btn" id="bmAddManual">✍️ 수동기록으로 추가</button>
+  </div>
+  <div class="card scroll-v" id="bmTable" style="max-height:260px;margin-bottom:16px"></div>
+  <h2>계정 목록 <span class="muted">(우리 계정 개설일: <input type="date" id="acctDate" style="margin-left:2px"> — 후보별 "며칠째 방문" 기준이 되는 날짜)</span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
   <div class="card scroll"><table id="stable"></table></div>
 </div></section>
 
@@ -239,7 +274,7 @@ const METRICS = [['reach','도달'],['duration','길이(초)'],['avgWatch','평�
 
 const $ = id => document.getElementById(id)
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
-let S = null, photos = [], selId = null, saveTimer = null
+let S = null, photos = [], selId = null, saveTimer = null, calMonth = null
 const local = { get(k, d) { try { const v = localStorage.getItem('iops.' + k); return v == null ? d : JSON.parse(v) } catch (e) { return d } },
                 set(k, v) { try { localStorage.setItem('iops.' + k, JSON.stringify(v)) } catch (e) {} } }
 
@@ -257,6 +292,7 @@ async function load(msg) {
   S = j.ops; photos = j.photos || []
   if (msg) { $('banner').textContent = msg; $('banner').style.display = 'block'; setTimeout(() => $('banner').style.display = 'none', 6000) }
   status('저장됨 · rev ' + S.rev); renderAll()
+  if (maybeArchiveMonths()) touch()
 }
 function touch() { status('저장 대기…'); clearTimeout(saveTimer); saveTimer = setTimeout(save, 700) }
 async function save() {
@@ -316,21 +352,10 @@ function renderBoard() {
     kpi(dN < 1 ? 'D' + (dN - 1) : 'D+' + dN, '런칭 ' + md(L) + ' 기준') +
     kpi(posted + ' / ' + (total + (S.goals.flexible || 0)), '게시 완료 (목표 ' + total + ' + 적응형 ' + (S.goals.flexible || 0) + ')') +
     kpi(thisWeek, '앞으로 7일 예정') +
-    kpi(diffD(today, cpDay) >= 0 ? 'D-' + diffD(today, cpDay) : '지남', '14일 체크포인트 ' + md(cpDay)) +
+    kpi(diffD(today, cpDay) >= 0 ? 'D-' + diffD(today, cpDay) : '지남', (S.goals.checkpointDay || 14) + '일 체크포인트 ' + md(cpDay)) +
     kpi(urgent.length, '3일 내 준비 안 된 게시물')
-  // 캘린더: 런칭 주 월요일 ~ 30일째 주 일요일
-  $('calr').textContent = md(L) + ' ~ ' + md(end)
-  const start = (() => { const d = pd(L); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return ds(d) })()
-  let html = ['월','화','수','목','금','토','일'].map(w => '<div class="dw">' + w + '</div>').join('')
-  const calEnd = (() => { const d = pd(end); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() + 6 - w); return ds(d) })()
-  for (let s = start; s <= calEnd; s = addD(s, 1)) {
-    const items = S.posts.filter(p => p.date === s).sort((a, b) => (a.time || '').localeCompare(b.time || ''))
-    const cls = 'day' + (s < L || s > end ? ' out' : '') + (s === today ? ' today' : '') + (s === cpDay ? ' cp' : '')
-    html += '<div class="' + cls + '"><div class="d">' + md(s) + (s === cpDay ? ' · 체크포인트' : '') + '</div>' +
-      items.map(p => '<span class="chip" data-id="' + esc(p.id) + '" title="' + esc(p.type + ' · ' + p.status + ' · ' + p.title) + '" style="background:' + COLOR[p.type] + (p.status === '게시' ? '' : ';opacity:.75') + '">' + (p.status === '게시' ? '✓ ' : '') + esc(p.time || '') + ' ' + esc(p.title) + '</span>').join('') + '</div>'
-  }
-  $('cal').innerHTML = html
-  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { selId = c.dataset.id; renderPosts(); document.querySelector('tr.sel')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) })
+  renderCalendar()
+  renderArchive()
   // 콘텐츠 구성
   $('mix').innerHTML = TYPES.map(t => {
     const goal = S.goals.mix[t] || 0, asg = S.posts.filter(p => p.type === t).length, done = S.posts.filter(p => p.type === t && p.status === '게시').length
@@ -341,7 +366,101 @@ function renderBoard() {
   // 임박한 할 일
   $('todo').innerHTML = urgent.length ? urgent.map(p => '<li><b>' + md(p.date) + ' ' + esc(p.time || '') + '</b> ' + esc(p.title) + ' — <span class="st" style="background:' + STC[p.status] + '">' + p.status + '</span></li>').join('')
     : '<li class="muted">3일 안에 준비가 안 된 게시물이 없습니다 👍</li>'
+  renderFollowerGreet()
   renderPosts()
+}
+// ── 캘린더 월 이동 + 일별 메모(2026-11-02, 성준님 요청) ──
+function monthBounds(ym) { const d = pd(ym + '-01'); const next = new Date(d.getFullYear(), d.getMonth() + 1, 1); return [ym + '-01', ds(new Date(next - 86400000))] }
+function shiftMonth(ym, delta) { const [y, m] = ym.split('-').map(Number); const d = new Date(y, m - 1 + delta, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') }
+function renderCalendar() {
+  const L = S.launchDate, end = addD(L, 29), cpDay = addD(L, (S.goals.checkpointDay || 14) - 1)
+  calMonth = calMonth || local.get('calMonth', today.slice(0, 7))
+  const [mFirst, mLast] = monthBounds(calMonth)
+  $('calMonthLbl').textContent = calMonth.replace('-', '년 ') + '월'
+  $('calr').textContent = '런칭 30일 구간: ' + md(L) + '~' + md(end)
+  const start = (() => { const d = pd(mFirst); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() - w); return ds(d) })()
+  const calEnd = (() => { const d = pd(mLast); const w = (d.getDay() + 6) % 7; d.setDate(d.getDate() + 6 - w); return ds(d) })()
+  let html = ['월','화','수','목','금','토','일'].map(w => '<div class="dw">' + w + '</div>').join('')
+  for (let s = start; s <= calEnd; s = addD(s, 1)) {
+    const items = S.posts.filter(p => p.date === s).sort((a, b) => (a.time || '').localeCompare(b.time || ''))
+    const outMonth = s < mFirst || s > mLast
+    const note = (S.dayNotes || {})[s] || ''
+    const cls = 'day' + (outMonth ? ' out' : '') + (s === today ? ' today' : '') + (s === cpDay ? ' cp' : '')
+    html += '<div class="' + cls + '"><div class="d">' + md(s) + (s === cpDay ? ' · 체크포인트' : (s >= L && s <= end ? ' · 런칭30일' : '')) + '</div>' +
+      items.map(p => '<span class="chip" data-id="' + esc(p.id) + '" title="' + esc(p.type + ' · ' + p.status + ' · ' + p.title) + '" style="background:' + COLOR[p.type] + (p.status === '게시' ? '' : ';opacity:.75') + '">' + (p.status === '게시' ? '✓ ' : '') + esc(p.time || '') + ' ' + esc(p.title) + '</span>').join('') +
+      '<span class="memoBtn' + (note ? ' has' : '') + '" data-memo="' + s + '">' + (note ? '🗒 메모' : '+메모') + '</span></div>' +
+      '<div class="memoBox" data-memobox="' + s + '"><textarea placeholder="' + md(s) + ' 메모…">' + esc(note) + '</textarea></div>'
+  }
+  $('cal').innerHTML = html
+  document.querySelectorAll('.chip').forEach(c => c.onclick = () => { selId = c.dataset.id; renderPosts(); document.querySelector('tr.sel')?.scrollIntoView({ block: 'center', behavior: 'smooth' }) })
+  document.querySelectorAll('.memoBtn').forEach(b => b.onclick = () => document.querySelector('.memoBox[data-memobox="' + b.dataset.memo + '"]').classList.toggle('open'))
+  document.querySelectorAll('.memoBox textarea').forEach(ta => ta.onchange = () => {
+    const d = ta.closest('.memoBox').dataset.memobox
+    S.dayNotes = S.dayNotes || {}
+    if (ta.value.trim()) S.dayNotes[d] = ta.value; else delete S.dayNotes[d]
+    touch()
+    const btn = document.querySelector('.memoBtn[data-memo="' + d + '"]')
+    if (btn) { btn.classList.toggle('has', !!ta.value.trim()); btn.textContent = ta.value.trim() ? '🗒 메모' : '+메모' }
+  })
+}
+$('calPrev').onclick = () => { calMonth = shiftMonth(calMonth, -1); local.set('calMonth', calMonth); renderCalendar() }
+$('calNext').onclick = () => { calMonth = shiftMonth(calMonth, 1); local.set('calMonth', calMonth); renderCalendar() }
+$('calToday').onclick = () => { calMonth = today.slice(0, 7); local.set('calMonth', calMonth); renderCalendar() }
+// 월말 자동 아카이브 — 지난 달이 끝나면 캘린더/실적 스냅샷을 한 번만 자동 저장(비교용)
+function maybeArchiveMonths() {
+  const lastDoneYM = shiftMonth(today.slice(0, 7), -1)
+  if ((S.lastArchivedMonth || '') >= lastDoneYM) return false
+  let ym = S.lastArchivedMonth ? shiftMonth(S.lastArchivedMonth, 1) : lastDoneYM
+  let changed = false
+  while (ym <= lastDoneYM) {
+    const [mf, ml] = monthBounds(ym)
+    const postsIn = S.posts.filter(p => p.date >= mf && p.date <= ml && p.status === '게시')
+    const flog = (S.followersLog || []).filter(f => (f.at || '').slice(0, 7) === ym)
+    if (postsIn.length || flog.length) {
+      const top = postsIn.slice().sort((a, b) => (b.metrics?.reach || 0) - (a.metrics?.reach || 0))[0]
+      S.calendarArchive = (S.calendarArchive || [])
+      S.calendarArchive.push({ month: ym, archivedAt: new Date().toISOString(), posted: postsIn.length,
+        followersStart: flog[0]?.followers ?? null, followersEnd: flog[flog.length - 1]?.followers ?? null,
+        topPost: top ? { title: top.title, reach: top.metrics?.reach || 0 } : null })
+      S.calendarArchive = S.calendarArchive.slice(-24)
+      changed = true
+    }
+    S.lastArchivedMonth = ym; ym = shiftMonth(ym, 1)
+  }
+  return changed
+}
+function renderArchive() {
+  const arr = (S.calendarArchive || []).slice().reverse()
+  $('calArchive').innerHTML = '<b>📦 지난 달 기록(자동 저장)</b>' + (arr.length ? arr.map(a =>
+    '<div class="archiveRow"><b>' + a.month + '</b><span>게시 ' + a.posted + '건</span>' +
+    (a.followersStart != null ? '<span>팔로워 ' + a.followersStart + '→' + a.followersEnd + '</span>' : '') +
+    (a.topPost ? '<span class="muted">베스트: ' + esc(a.topPost.title) + ' (도달 ' + a.topPost.reach + ')</span>' : '') + '</div>').join('')
+    : '<p class="muted">아직 끝난 달이 없습니다 — 이번 달이 끝나면 자동으로 기록됩니다.</p>')
+}
+// 팔로워 변화 감지 + 인사말 초안(2026-11-02, 성준님 요청) — API로 "누가" 팔로우했는지는 알 수 없어
+// (Instagram Graph API 권한 범위 밖) 팔로워 수 변화만 감지하고, 최근 반응 좋은 게시물을 근거로
+// 인사말 문구를 템플릿으로 생성(LLM 호출 없음·토큰 0). 발송은 성준님이 직접.
+function greetingDraft() {
+  const posted = S.posts.filter(p => p.status === '게시' && n(p.metrics?.reach) != null)
+  const top = posted.slice().sort((a, b) => (b.metrics.reach || 0) - (a.metrics.reach || 0))[0]
+  const ref = top ? "'" + top.title + "' 보고" : '요즘'
+  return '안녕하세요, 서여리예요 🤍 ' + ref + ' 와주신 분들 반가워요! 공감되는 일상 이야기 계속 들고 올게요 — 편하게 댓글로 인사해주세요 :)'
+}
+function renderFollowerGreet() {
+  const flog = (S.followersLog || [])
+  const cur = S.account?.followers ?? (flog.length ? flog[flog.length - 1].followers : null)
+  const prev = flog.length > 1 ? flog[flog.length - 2].followers : null
+  const delta = (cur != null && prev != null) ? cur - prev : null
+  const el = $('followerGreet')
+  if (cur == null) { el.innerHTML = '<span class="muted">팔로워 데이터가 아직 없습니다 — 동기화 후 표시됩니다.</span>'; return }
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+    '<b>👥 팔로워 ' + cur + '</b>' +
+    (delta != null ? '<span class="pill' + (delta > 0 ? ' acc' : '') + '">최근 동기화 대비 ' + (delta > 0 ? '+' : '') + delta + '</span>' : '') +
+    '<span class="sp"></span><button class="btn" id="greetBtn" style="font-size:12px">✍️ 인사말 초안 생성</button></div>' +
+    '<div id="greetBox" style="display:none;margin-top:8px"><textarea id="greetTa" rows="2" style="width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--tx);font:13px/1.5 system-ui,\'Malgun Gothic\',sans-serif"></textarea>' +
+    '<div style="margin-top:4px"><button class="btn" id="greetCopy" style="font-size:12px">📋 복사</button> <span class="muted" style="font-size:12px">스토리·고정 댓글 등에 성준님이 직접 올려주세요</span></div></div>'
+  $('greetBtn').onclick = () => { $('greetBox').style.display = 'block'; $('greetTa').value = greetingDraft() }
+  $('greetCopy').onclick = async () => { try { await navigator.clipboard.writeText($('greetTa').value); $('greetCopy').textContent = '✅ 복사됨' } catch { prompt('복사하세요', $('greetTa').value) } setTimeout(() => { $('greetCopy').textContent = '📋 복사' }, 1500) }
 }
 function renderPosts() {
   const rows = sorted()
@@ -385,6 +504,8 @@ function derived(m) {
 }
 const DER = [['hold3','3초 유지'],['watch','시청 비율'],['share','공유율'],['save','저장율'],['visit','방문율'],['follow','팔로우 전환']]
 function renderInsight() {
+  $('cpDaySel').value = String(S.goals.checkpointDay || 14)
+  $('cpDaySel').onchange = e => { S.goals.checkpointDay = +e.target.value; touch(); renderAll() }
   const sa = S.account?.syncedAt
   $('igSyncStatus').textContent = sa ? '마지막 동기화: ' + new Date(sa).toLocaleString('ko-KR') + (S.account?.followers != null ? ' · 팔로워 ' + S.account.followers : '') : '아직 동기화된 적 없음'
   const posted = sorted().filter(p => p.status === '게시')
@@ -425,8 +546,15 @@ function renderInsight() {
   const sum = k => posted.reduce((a, p) => a + (n(p.metrics?.[k]) || 0), 0)
   const F = [['도달', sum('reach')], ['공유+저장', sum('shares') + sum('saves')], ['프로필 방문', sum('visits')], ['팔로우', sum('follows')]]
   const mx = Math.max(1, F[0][1])
-  $('fn').innerHTML = F.map(([, v]) => '<div style="height:' + Math.max(2, v / mx * 100) + '%"><span>' + v.toLocaleString() + '</span></div>').join('')
-  $('fnl').innerHTML = F.map(([l]) => '<div>' + l + '</div>').join('')
+  $('fnWrap').innerHTML = F.map(([label, v], i) => {
+    const w = Math.max(3, v / mx * 100)
+    let html = '<div class="fnrow"><span class="lbl">' + label + '</span><div class="bar" style="width:' + w + '%">' + v.toLocaleString() + '</div><span class="of">' + (v / mx * 100).toFixed(1) + '% of 도달</span></div>'
+    if (i < F.length - 1) {
+      const next = F[i + 1][1], conv = v ? (next / v * 100).toFixed(1) : '–'
+      html += '<div class="fnarrow">↓ 다음 단계로 ' + conv + '%</div>'
+    }
+    return html
+  }).join('')
   // 14일 체크포인트 제안: 공유율·저장율·방문율·팔로우 전환을 각각 최댓값 대비로 정규화해 평균
   const K = ['share','save','visit','follow'], scored = byType.filter(o => o.n > 0 && K.some(k => o[k] != null))
   const maxK = Object.fromEntries(K.map(k => [k, Math.max(0, ...scored.map(o => o[k] || 0))]))
@@ -533,10 +661,44 @@ function renderSeeds() {
     tr.querySelector('[data-n]').onchange = e => { x.note = e.target.value; touch() }
     tr.querySelector('[data-del]').onclick = () => { if (confirm('@' + x.handle + ' 을(를) 목록에서 뺄까요?')) { S.seeds.splice(+tr.dataset.i, 1); touch(); renderSeeds() } }
   })
+  renderReviewLog()
+  renderBenchmarks()
+}
+// 📝 검토 로그 — 세션 중 실제 이슈·분석 내용 기록(2026-11-02, 성준님 요청: "소통·피드백" 자동 기록 위주)
+function renderReviewLog() {
+  const arr = (S.seedReviewLog || []).slice().reverse()
+  $('reviewLog').innerHTML = arr.length ? arr.map(r => '<div class="archiveRow"><span class="muted" style="width:130px;flex-shrink:0">' + new Date(r.at).toLocaleString('ko-KR') + '</span><span class="pill" style="font-size:10px;flex-shrink:0">' + esc(r.by || '성준') + '</span><span>' + esc(r.text) + '</span></div>').join('')
+    : '<p class="muted">아직 기록이 없습니다 — 세션 중 중요한 이슈나 분석 결과가 생기면 여기에 쌓입니다.</p>'
+}
+$('rlAdd').onclick = () => { const v = $('rlInput').value.trim(); if (!v) return
+  ;(S.seedReviewLog = S.seedReviewLog || []).push({ at: new Date().toISOString(), by: '성준', text: v })
+  $('rlInput').value = ''; touch(); renderReviewLog() }
+// 📌 벤치마킹 레퍼런스 — AI 발굴(기존, 선택적) 외 두 경로: 저장 링크 가져오기 / 수동기록(2026-11-02)
+function renderBenchmarks() {
+  const arr = S.benchmarks || []
+  const rows = arr.map((b, i) => [b, i]).reverse()
+  $('bmTable').innerHTML = rows.length ? rows.map(([b, i]) =>
+    '<div class="archiveRow"><span class="pill" style="font-size:10px;flex-shrink:0">' + (b.source === '인스타 저장' ? '💾 저장링크' : b.source === 'AI 발굴' ? '🔎 AI발굴' : '✍️ 수동') + '</span>' +
+    (b.url ? '<a href="' + esc(b.url) + '" target="_blank" style="color:var(--link)">' + esc(b.url.length > 46 ? b.url.slice(0, 46) + '…' : b.url) + '</a>' : '') +
+    (b.note ? '<span' + (b.url ? ' class="muted"' : '') + '>' + esc(b.note) + '</span>' : '') +
+    '<span class="muted" style="margin-left:auto;flex-shrink:0">' + md((b.addedAt || today).slice(0, 10)) + '</span>' +
+    '<button class="x" data-bmdel="' + i + '" title="삭제">✕</button></div>').join('')
+    : '<p class="muted">아직 기록이 없습니다.</p>'
+  document.querySelectorAll('[data-bmdel]').forEach(b => b.onclick = () => { S.benchmarks.splice(+b.dataset.bmdel, 1); touch(); renderBenchmarks() })
+}
+$('bmAddSaved').onclick = () => {
+  const url = $('bmUrl').value.trim(); if (!url) return alert('링크를 입력하세요')
+  ;(S.benchmarks = S.benchmarks || []).push({ url, note: $('bmNote').value.trim(), source: '인스타 저장', addedAt: new Date().toISOString() })
+  $('bmUrl').value = ''; $('bmNote').value = ''; touch(); renderBenchmarks()
+}
+$('bmAddManual').onclick = () => {
+  const note = $('bmNote').value.trim(); if (!note) return alert('메모를 입력하세요(수동기록은 링크 없이도 가능)')
+  ;(S.benchmarks = S.benchmarks || []).push({ url: $('bmUrl').value.trim(), note, source: '수동기록', addedAt: new Date().toISOString() })
+  $('bmUrl').value = ''; $('bmNote').value = ''; touch(); renderBenchmarks()
 }
 // 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기) — 서버가 ops.json 에 후보를 쓰므로 끝나면 다시 불러온다
 async function seedDiscStatus() { try { const st = await (await fetch('/api/seed-discovery')).json(); const r = st.lastRunResult, m = st.month || {}; $('sdiscst').innerHTML = '버튼을 누를 때만 발굴(분야 3개씩 순환) · 다음 차례: <b>' + st.nextGroups.join(', ') + '</b>' + (st.lastRun ? ' · 마지막 ' + new Date(st.lastRun).toLocaleString('ko-KR') + (r ? ' → 새 후보 ' + r.added + '개' : '') : '') + '<br>이번 달 발굴 ' + (m.runs || 0) + '회 · 웹 검색 ' + (m.searches || 0) + '회 · 추정 약 $' + (m.estUsd || 0) + ' (약 ' + Math.round((m.estUsd || 0) * 1400) + '원) · 실제 청구: <a href="https://console.anthropic.com/settings/usage" target="_blank" style="color:var(--link)">Anthropic 사용량 ↗</a> · <a href="https://console.anthropic.com/settings/billing" target="_blank" style="color:var(--link)">결제·잔액 ↗</a> · <a href="https://elevenlabs.io/app/subscription" target="_blank" style="color:var(--link)">ElevenLabs 사용량 ↗</a>' } catch { } }
-$('sdisc').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '발굴 중… (1분 안팎)'; try { const r = await (await fetch('/api/seed-discovery/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 후보 ' + r.added.length + '개' + (r.added.length ? ' — ' + r.added.join(', ') : '') + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('발굴 실패: ' + err.message) } b.disabled = false; b.textContent = '🔎 지금 발굴'; seedDiscStatus() }
+$('sdisc').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '발굴 중… (1분 안팎)'; try { const r = await (await fetch('/api/seed-discovery/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 후보 ' + r.added.length + '개' + (r.added.length ? ' — ' + r.added.join(', ') : '') + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('발굴 실패: ' + err.message) } b.disabled = false; b.textContent = '🔎 지금 발굴(선택)'; seedDiscStatus() }
 $('slinkadd').onclick = async (e) => { const v = $('slink').value.trim(); if (!v) return; const b = e.target; b.disabled = true; b.textContent = '확인 중…'; try { const r = await (await fetch('/api/seed-discovery/link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: v }) })).json(); if (r.error) throw new Error(r.error); $('slink').value = ''; await load() } catch (err) { alert(err.message) } b.disabled = false; b.textContent = '+ 링크로 추가' }
 seedDiscStatus()
 $('sadd').onclick = () => {

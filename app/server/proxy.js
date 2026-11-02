@@ -3895,14 +3895,14 @@ app.get('/api/yeori-mood', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
-// 인스타 성과 자동 수집(Instagram API with Instagram Login) — 기동 1분 뒤 + 6시간마다, 수동은 POST /api/ig-sync (2026-09-26)
+// 인스타 성과 자동 수집(Instagram API with Instagram Login) — 기동 1분 뒤 + 3시간마다(2026-11-02, 기존 6시간→3시간), 수동은 POST /api/ig-sync (2026-09-26)
 app.post('/api/ig-sync', async (_req, res) => {
   try { const { syncInsights } = await import('./lib/igInsights.js'); res.json(await syncInsights({ log: console.log })) }
   catch (err) { res.status(500).json({ error: err.message }) }
 })
 {
   const runIg = async () => { try { const { syncInsights, igConfigured } = await import('./lib/igInsights.js'); if (igConfigured()) await syncInsights({ log: (l) => console.log('[ig-sync]', l) }) } catch (e) { console.warn('[ig-sync] 실패:', e.message) } }
-  setTimeout(runIg, 60 * 1000); setInterval(runIg, 6 * 3600 * 1000)
+  setTimeout(runIg, 60 * 1000); setInterval(runIg, 3 * 3600 * 1000)
 }
 // 관심사 설계 탭 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기, 2026-09-28) — seedDiscovery.js
 app.get('/api/seed-discovery', async (_req, res) => {
@@ -6366,6 +6366,13 @@ app.post('/api/instagram/publish', async (req, res) => {
     const epEntry = Object.values(loadStudioState().episodes || {}).find(e => e?.episode?.number === Number(epNum))
     const meta = epEntry ? { code: epEntry.episode.code, title: epEntry.episode.title } : {}
     markPublished(epNum, 'instagram', { ...result, caption, ...meta })
+    // 운영실 즉시 반영(성준님 요청 2026-11-02): 6시간/3시간 주기 동기화를 기다리지 않고 바로 '게시'+링크 반영,
+    // 실제 지표(도달 등)는 뒤이어 ig-sync 가 비동기로 채움(응답 지연 없게 await 하지 않음)
+    if (meta.code) {
+      try { const { upsertEpisodePost } = await import('./lib/instaOps.js'); upsertEpisodePost({ code: meta.code, title: meta.title, status: '게시', link: result.permalink }) }
+      catch (e) { console.warn('[ig-publish] 운영실 즉시 반영 실패:', e.message) }
+    }
+    import('./lib/igInsights.js').then(({ syncInsights }) => syncInsights({ log: (l) => console.log('[ig-sync]', l) })).catch((e) => console.warn('[ig-sync] 게시 직후 동기화 실패:', e.message))
     res.json({ success: true, ...result })
   } catch (err) {
     res.status(500).json({ error: err.message })

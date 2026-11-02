@@ -1191,8 +1191,9 @@ export default function MakingTab() {
   // ── 트랙매트 연출(app/scripts/trackmatte.py) — 2026-11-01, "SEOYEORI" 인트로 작업에서
   // 쓴 일회성 ffmpeg 스크립트를 메이킹 탭 연출 기능으로 일반화. 구조는 스크립트 설명 그대로
   // 앞레이어(글자 모양)·뒷레이어(장면 나열, 장면마다 좌우 패널)·연출 효과(페이드·BGM) 3단.
+  const TM_PANEL_DEFAULT = { type: 'video', src: '', start: 0, crop: 'face', crop_face_top: 0.04, crop_face_height: 0.62 }
   const TM_DEFAULT_FRAMES = [
-    { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }, { type: 'video', src: '', start: 0, crop: 'face' }] },
+    { duration: 0.8, panels: [{ ...TM_PANEL_DEFAULT }, { ...TM_PANEL_DEFAULT }] },
   ]
   // 배경색·BGM 선택은 장면마다 바뀌는 값이 아니라 "환경설정"에 가까워서(성준님 2차 피드백:
   // "설정 기능으로 일관된 값, 지정 경로 선택을 유지"), 직전에 고른 값을 localStorage에 남겨
@@ -1259,10 +1260,10 @@ export default function MakingTab() {
   }
   useEffect(() => { if (tmOpen) loadTmResults() }, [tmOpen])
 
-  const addTmFrame = () => setTmFrames(p => [...p, { duration: 0.8, panels: [{ type: 'video', src: '', start: 0, crop: 'face' }] }])
+  const addTmFrame = () => setTmFrames(p => [...p, { duration: 0.8, panels: [{ ...TM_PANEL_DEFAULT }] }])
   const removeTmFrame = (fi) => setTmFrames(p => p.filter((_, i) => i !== fi))
   const updateTmFrame = (fi, patch) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, ...patch } : f))
-  const addTmPanel = (fi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: [...f.panels, { type: 'video', src: '', start: 0, crop: 'face' }] } : f))
+  const addTmPanel = (fi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: [...f.panels, { ...TM_PANEL_DEFAULT }] } : f))
   const removeTmPanel = (fi, pi) => setTmFrames(p => p.map((f, i) => i === fi ? { ...f, panels: f.panels.filter((_, j) => j !== pi) } : f))
   const updateTmPanel = (fi, pi, patch) => setTmFrames(p => p.map((f, i) => i === fi
     ? { ...f, panels: f.panels.map((pn, j) => j === pi ? { ...pn, ...patch } : pn) } : f))
@@ -1277,7 +1278,10 @@ export default function MakingTab() {
       background: tmBg,
       frames: tmFrames.map(f => ({
         duration: Number(f.duration),
-        panels: f.panels.map(pn => ({ type: pn.type, src: pn.src, start: Number(pn.start) || 0, crop: pn.crop })),
+        panels: f.panels.map(pn => ({
+          type: pn.type, src: pn.src, start: Number(pn.start) || 0, crop: pn.crop,
+          crop_face_top: Number(pn.crop_face_top ?? 0.04), crop_face_height: Number(pn.crop_face_height ?? 0.62),
+        })),
       })),
     },
     effects: {
@@ -1319,7 +1323,10 @@ export default function MakingTab() {
       setTmBgmVolume(c.effects?.bgm?.volume ?? 0.5)
       setTmFrames((c.back_layer?.frames || []).map(fr => ({
         duration: fr.duration,
-        panels: (fr.panels || []).map(pn => ({ type: pn.type, src: pn.src, start: pn.start || 0, crop: pn.crop || 'face' })),
+        panels: (fr.panels || []).map(pn => ({
+          type: pn.type, src: pn.src, start: pn.start || 0, crop: pn.crop || 'face',
+          crop_face_top: pn.crop_face_top ?? 0.04, crop_face_height: pn.crop_face_height ?? 0.62,
+        })),
       })))
       setTmSaveName(f.name); setTmLoadedName(f.name)
       setTmVideo(`${YEORI_SERVER}${f.url}`); setTmPreviewImage(null); setTmLog('')
@@ -3876,6 +3883,20 @@ export default function MakingTab() {
                     onChange={e => updateTmPanel(fi, pi, { crop: e.target.value })}>
                     {TM_CROPS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
+                  {panel.crop === 'face' && (
+                    <>
+                      <label title="글자 획 안에서 보이는 위쪽 시작 지점(%) — 얼굴이 가려지면 올리거나 내려서 맞추세요">
+                        위치 <input type="number" min={0} max={95} step={1}
+                          value={Math.round((panel.crop_face_top ?? 0.04) * 100)} style={{ width: 48 }}
+                          onChange={e => updateTmPanel(fi, pi, { crop_face_top: Number(e.target.value) / 100 })} />%
+                      </label>
+                      <label title="보이는 범위(%) — 낮추면 확대되어 얼굴이 더 크게 보입니다">
+                        확대 <input type="number" min={5} max={100} step={1}
+                          value={Math.round((panel.crop_face_height ?? 0.62) * 100)} style={{ width: 48 }}
+                          onChange={e => updateTmPanel(fi, pi, { crop_face_height: Number(e.target.value) / 100 })} />%
+                      </label>
+                    </>
+                  )}
                   <button className={s.captureBtn} onClick={() => removeTmPanel(fi, pi)}>✕</button>
                 </div>
               ))}
@@ -3883,6 +3904,9 @@ export default function MakingTab() {
             </div>
           ))}
           <button className={s.captureBtn} style={{ marginTop: 8 }} onClick={addTmFrame}>+ 장면 추가</button>
+          <div className={s.emptyHint} style={{ marginTop: 4 }}>
+            장면마다 "패널 추가" 개수를 다르게 하면(1장면=1패널 → 2장면=2패널 → 3장면=3패널…) 화면이 점점 여러 칸으로 나뉘는 연출을 만들 수 있습니다.
+          </div>
 
           {/* 패널 소스 "파일 찾기" 팝업 — downloads/ 아래를 클릭으로 탐색해 영상·이미지를 고르면
               바로 그 패널의 경로칸에 들어간다(2026-11-01, 성준님 요청: 외부 탐색기로 경로
