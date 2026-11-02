@@ -11549,7 +11549,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": ""
   },
   "publishing": {
