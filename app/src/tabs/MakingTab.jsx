@@ -3940,7 +3940,7 @@ export default function MakingTab() {
           {tmBrowseTarget && (
             <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               onClick={() => setTmBrowseTarget(null)}>
-              <div style={{ background: 'var(--bg2,#111)', border: '1px solid var(--border,#333)', borderRadius: 10, width: 640, maxHeight: '70vh', display: 'flex', flexDirection: 'column', padding: 12 }}
+              <div style={{ background: 'var(--bg2,#111)', border: '1px solid var(--border,#333)', borderRadius: 10, width: 860, maxHeight: '78vh', display: 'flex', flexDirection: 'column', padding: 12 }}
                 onClick={e => e.stopPropagation()}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <b style={{ fontSize: 13 }}>📁 파일 찾기 — downloads/{tmBrowseDir}</b>
@@ -3953,18 +3953,39 @@ export default function MakingTab() {
                 </div>
                 <div style={{ overflow: 'auto', flex: 1, fontSize: 12 }}>
                   {tmBrowseBusy && <div className={s.emptyHint}>불러오는 중…</div>}
-                  {!tmBrowseBusy && tmBrowseDirs.map(d => (
-                    <div key={d} style={{ padding: '6px 4px', cursor: 'pointer', borderRadius: 4 }}
-                      onClick={() => loadTmBrowse((tmBrowseDir ? tmBrowseDir + '/' : '') + d)}>
-                      📁 {d}
+                  {!tmBrowseBusy && tmBrowseDirs.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                      {tmBrowseDirs.map(d => (
+                        <div key={d} style={{ padding: '6px 10px', cursor: 'pointer', borderRadius: 4, background: 'var(--bg3,#1a1a1a)', border: '1px solid var(--border,#333)' }}
+                          onClick={() => loadTmBrowse((tmBrowseDir ? tmBrowseDir + '/' : '') + d)}>
+                          📁 {d}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  {!tmBrowseBusy && tmBrowseFiles.map(f => (
-                    <div key={f.path} style={{ padding: '6px 4px', cursor: 'pointer', borderRadius: 4 }}
-                      onClick={() => pickTmBrowseFile(f)}>
-                      {f.isVideo ? '🎬' : '🖼'} {f.name}
+                  )}
+                  {/* 윈도우 탐색기처럼 썸네일로 보여달라는 요청(2026-11-02) — 파일명만으로는 뭐가
+                      뭔지 몰라서 경로 찾기가 무의미했다는 피드백. 영상은 서버가 ffmpeg로 1초(짧으면
+                      0초) 프레임을 뽑아 /api/fs-thumb로 캐시해 서빙한다. */}
+                  {!tmBrowseBusy && tmBrowseFiles.length > 0 && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
+                      {tmBrowseFiles.map(f => (
+                        <div key={f.path} style={{ cursor: 'pointer', borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border,#333)' }}
+                          onClick={() => pickTmBrowseFile(f)} title={f.name}>
+                          <div style={{ width: '100%', aspectRatio: '16/9', background: '#000', position: 'relative' }}>
+                            <img src={`${YEORI_SERVER}/api/fs-thumb?path=${encodeURIComponent(f.path)}`} loading="lazy" alt=""
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling.style.display = 'flex' }} />
+                            <div style={{ display: 'none', position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>
+                              {f.isVideo ? '🎬' : '🖼'}
+                            </div>
+                          </div>
+                          <div style={{ padding: '4px 6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {f.isVideo ? '🎬' : '🖼'} {f.name}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                   {!tmBrowseBusy && !tmBrowseDirs.length && !tmBrowseFiles.length && (
                     <div className={s.emptyHint}>이 폴더엔 영상·이미지·하위폴더가 없습니다.</div>
                   )}

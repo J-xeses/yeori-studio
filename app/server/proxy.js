@@ -6,7 +6,7 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { randomUUID } from 'node:crypto'
+import { randomUUID, createHash } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
@@ -4096,6 +4096,51 @@ app.get('/api/fs-browse', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
+})
+
+// 파일 찾기 팝업에서 파일명만 보고는 뭐가 뭔지 알 수 없다는 피드백(2026-11-02, 성준님:
+// "눈으로 원하는 내용을 확인해야 연출을 할 수 있다") — downloads/ 아래 영상·이미지의 작은
+// 썸네일 JPG를 만들어 서빙한다. 영상은 ffmpeg로 1초 지점(짧은 클립 대비 실패하면 0초로
+// 재시도) 프레임을 뽑아 축소, 이미지는 그대로 축소만. 같은 파일(경로+수정시각)은 다시 안
+// 만들고 캐시(_shared/_fsthumb/)에서 바로 서빙한다.
+const FS_THUMB_CACHE_DIR = path.join(mp.DOWNLOADS, '_shared', '_fsthumb')
+function makeFsThumb(srcPath, isVideo, cachePath, ss, onDone) {
+  const args = isVideo
+    ? ['-y', '-v', 'error', '-ss', String(ss), '-i', srcPath, '-frames:v', '1', '-vf', 'scale=220:-2', '-q:v', '5', cachePath]
+    : ['-y', '-v', 'error', '-i', srcPath, '-vf', 'scale=220:-2', '-frames:v', '1', '-q:v', '5', cachePath]
+  const pr = spawn('ffmpeg', args, { windowsHide: true })
+  let err = ''
+  pr.stderr.on('data', (d) => { err += d.toString() })
+  pr.on('close', (code) => onDone(code === 0 && fs.existsSync(cachePath), err))
+  pr.on('error', (e) => onDone(false, e.message))
+}
+app.get('/api/fs-thumb', (req, res) => {
+  const MEDIA_RE = /\.(mp4|mov|mkv|webm|m4v|jpg|jpeg|png|gif|webp)$/i
+  const VIDEO_RE = /\.(mp4|mov|mkv|webm|m4v)$/i
+  const target = path.normalize(String(req.query.path || ''))
+  const root = path.normalize(mp.DOWNLOADS)
+  if (target !== root && !target.startsWith(root + path.sep)) {
+    return res.status(400).json({ error: '허용되지 않은 경로' })
+  }
+  if (!fs.existsSync(target) || !fs.statSync(target).isFile() || !MEDIA_RE.test(target)) {
+    return res.status(404).json({ error: '파일을 찾을 수 없습니다' })
+  }
+  const st = fs.statSync(target)
+  const key = createHash('md5').update(`${target}:${st.mtimeMs}`).digest('hex')
+  fs.mkdirSync(FS_THUMB_CACHE_DIR, { recursive: true })
+  const cachePath = path.join(FS_THUMB_CACHE_DIR, `${key}.jpg`)
+  if (fs.existsSync(cachePath)) return res.sendFile(cachePath)
+
+  const isVideo = VIDEO_RE.test(target)
+  makeFsThumb(target, isVideo, cachePath, 1, (ok1, err1) => {
+    if (ok1) return res.sendFile(cachePath)
+    if (!isVideo) return res.status(500).json({ error: `썸네일 생성 실패: ${err1.slice(-500)}` })
+    // 1초보다 짧은 클립이면 0초로 재시도
+    makeFsThumb(target, true, cachePath, 0, (ok2, err2) => {
+      if (ok2) return res.sendFile(cachePath)
+      res.status(500).json({ error: `썸네일 생성 실패: ${err2.slice(-500)}` })
+    })
+  })
 })
 
 // orientation 요청을 Pexels 자체 orientation 파라미터로 1차 필터링한 뒤, 응답 항목의
