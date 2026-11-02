@@ -1,5 +1,5 @@
 {
-  "nextIdx": 3,
+  "nextIdx": 4,
   "runs": [
     {
       "at": "2026-11-02T07:09:23.348Z",
@@ -16,7 +16,35 @@
         "AI 인플루언서 바이럴: invalid x-api-key",
         "인스타툰 인기 소재: invalid x-api-key"
       ]
+    },
+    {
+      "at": "2026-11-02T09:01:39.670Z",
+      "groups": [
+        "숏폼 편집 트렌드",
+        "AI 제작도구 신기능",
+        "릴스 후킹 기법"
+      ],
+      "found": 0,
+      "added": 0,
+      "searches": 0,
+      "errors": [
+        "숏폼 편집 트렌드: invalid x-api-key",
+        "AI 제작도구 신기능: invalid x-api-key",
+        "릴스 후킹 기법: invalid x-api-key"
+      ]
+    },
+    {
+      "at": "2026-11-02T09:02:50.945Z",
+      "groups": [
+        "AI 인플루언서 바이럴",
+        "인스타툰 인기 소재",
+        "숏폼 편집 트렌드"
+      ],
+      "found": 9,
+      "added": 9,
+      "searches": 6,
+      "errors": []
     }
   ],
-  "lastRun": "2026-11-02T07:09:23.348Z"
+  "lastRun": "2026-11-02T09:02:50.945Z"
 }
