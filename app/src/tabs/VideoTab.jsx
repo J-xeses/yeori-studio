@@ -121,6 +121,31 @@ function effectiveCaptionValue(subtitlesState, cut, clips) {
   return undefined
 }
 
+// 2026-11-03, 성준님 요청("영상 탭 설정을 실제 번인 영상으로") — 미리보기(segsForText)가
+// 쓰던 "이 컷의 최종 자막 구간(시간대별 텍스트)" 계산을 재사용 가능한 함수로 뽑아냄.
+// 원래는 전역 선택된 컷(selectedCutId) 기준으로만 인라인 계산돼 있었는데, 자막 번인은
+// 컷 카드 목록(cuts.map) 안 "이 컷"(화면에 선택 안 돼 있어도) 기준으로 계산해야 해서
+// cut/clips를 인자로 받는 순수 함수로 분리 — 미리보기와 번인이 서로 다른 함수를 쓰면
+// 조용히 어긋날 위험이 있어(이 파일의 다른 여러 실측 버그들과 같은 패턴) 반드시 하나로 공유.
+function computeCaptionSegments(cut, clips, subtitlesState, isReelFlag) {
+  if (!cut) return []
+  const dlText = !isReelFlag ? stripMeta(cut.dialogue || '') : ''
+  const nrText = !isReelFlag ? stripMeta(cut.narration || '') : ''
+  const bothFallbackSegs = (dlText && nrText)
+    ? computeCaptionTimeline(cut).map(p => ({ start: p.start, end: p.end, text: p.text }))
+    : null
+  const effCaption = effectiveCaptionValue(subtitlesState, cut, clips || [])
+  const effCaptionIsMultiPart = (Array.isArray(effCaption) && effCaption.length > 1) || (typeof effCaption === 'string' && /\s*\/\s*/.test(effCaption))
+  // 2026-11-03: 이 폴백 텍스트에 cleanDialogueForCaptionFallback(TTS 발화 지문 "진~~짜" 등
+  // 정리)이 빠져 있던 게 바로 아래 컷 목록(cutSegs)쪽 구현과 달랐던 점 — 번인·미리보기·목록
+  // 셋 다 같은 함수를 쓰게 되면서 같이 맞춤(이전엔 두 군데가 서로 다른 폴백 다듬기를 썼음).
+  return toSegments(
+    bothFallbackSegs && !effCaptionIsMultiPart ? bothFallbackSegs : (effCaption !== undefined ? effCaption : bothFallbackSegs),
+    isReelFlag ? '' : cleanDialogueForCaptionFallback(dlText || nrText),
+    cut.duration || 0, cut.captionSegTiming,
+  )
+}
+
 // blob: 미리보기 URL은 그 브라우저 세션에서만 유효 — 새로고침하면 무조건 끊겨서 "재생할 수
 // 없습니다" 경고가 뜸(2026-09-17 실측 피드백). stagedPath(서버에 실제 저장된 경로)가 있으면
 // 죽은 blob: 대신 그 서버 URL을 바로 쓰게 해서 새로고침해도 계속 재생되게 한다.
@@ -792,38 +817,8 @@ export default function VideoTab() {
   const selCutForTextRaw = cuts.find(c => c.id === selectedCutId)
   const selCutForText = withCaptionOverride(selCutForTextRaw)
   const clipsForText = selCutForText ? (videoClips[selCutForText.id] || []) : []
-  // 2026-10-09 발견(성준님 실측, SF_E109 컷2): 대사(DL)·나레이션(NR)이 둘 다 있는 비릴스 컷은
-  // 폴백 텍스트가 `dialogue || narration`이라 narration이 통째로 안 보였음(대사만 자막에 뜸) —
-  // 실제 생성 프롬프트(clipPrompt.js buildClipPrompt)는 글자수 비례로 두 구간을 나누는데 자막
-  // 미리보기는 그 사실 자체를 몰랐던 것. 둘 다 있으면 같은 비례 분배로 2구간을 직접 만든다.
-  const dlText = !isReel ? stripMeta(selCutForText?.dialogue || '') : ''
-  const nrText = !isReel ? stripMeta(selCutForText?.narration || '') : ''
-  // ⚠️ 2026-10-09: 예전엔 여기서 대사+나레이션 2구간을 직접 proportional로 계산해
-  // cut.captionSegTiming(수동 수정값)을 무시했음 — ScriptGenTab 전체목록/실제 생성 프롬프트
-  // (clipPrompt.js)는 둘 다 computeCaptionTimeline()을 거쳐 override를 반영하는데, 이 바만
-  // 따로 계산해서 "수정해도 바가 원상태로 보이는" 증상의 원인이었다. 하나로 통일.
-  const bothFallbackSegs = (dlText && nrText && selCutForText)
-    ? computeCaptionTimeline(selCutForText).map(p => ({ start: p.start, end: p.end, text: p.text }))
-    : null
-  const effCaption = selCutForText ? effectiveCaptionValue(subtitles, selCutForText, clipsForText) : undefined
-  // 2026-10-09 실측(SF_E109 컷2 — 타이밍 바가 매번 구간 1개·대사 텍스트만·전체 길이로만 뜸):
-  // CP(cut.subtitle)가 "/"로 나눠 쓰지 않은 대사 한 줄짜리 평문이면, effectiveCaptionValue가
-  // 그 평문을 그대로 돌려줘서 bothFallbackSegs(대사+나레이션 2구간)를 통째로 가려버렸다. CP가
-  // 이미 "/"로 다구간을 명시했거나(또는 배열이면) 그 값을 존중하고, 그게 아니면(=구조적으로
-  // 2구간을 표현 못 하는 단문) 2구간 분리가 우선한다 — 드래그로 두 구간을 따로 조절하려면
-  // 애초에 바에 두 구간이 보여야 한다.
-  // ⚠️ 2026-10-09 실측: effCaption이 "배열이기만 하면" 이미 제대로 분리된 걸로 봤었는데,
-  // subtitles[cut.id] 로컬 오버라이드가 과거에 대사 한 줄만 담긴 1개짜리 배열로 저장된 적이
-  // 있으면(이번 실측 사례) 그 1개짜리 배열도 "다구간"으로 오인해 bothFallbackSegs(2구간)를
-  // 또 가렸다 — 평문 CP와 증상이 완전히 같은 함정. 요소가 실제로 2개 이상일 때만 인정한다.
-  const effCaptionIsMultiPart = (Array.isArray(effCaption) && effCaption.length > 1) || (typeof effCaption === 'string' && /\s*\/\s*/.test(effCaption))
-  const segsForText = selCutForText
-    ? toSegments(
-        bothFallbackSegs && !effCaptionIsMultiPart ? bothFallbackSegs : (effCaption !== undefined ? effCaption : bothFallbackSegs),
-        isReel ? '' : (dlText || nrText),
-        selCutForText.duration || 0, selCutForText.captionSegTiming,
-      )
-    : []
+  // 2026-11-03: computeCaptionSegments()로 추출(자막 번인과 공유) — 로직은 그대로.
+  const segsForText = computeCaptionSegments(selCutForText, clipsForText, subtitles, isReel)
   // 클립이 여러 개인 컷은 메인 미리보기에 지금 떠 있는 클립(selectedClipIdx)의 자막을 보여줌
   // — 클립을 바꿔 고르면 재생 영상과 자막이 같이 전환된다. 클립이 1개뿐인데 자막 구간이
   // 여러 개면(대사→나레이션 순차 전환, 2026-09-22) selectedClipIdx는 항상 0이라 의미가
@@ -914,14 +909,20 @@ export default function VideoTab() {
     if (!subtitleEnabled) return
     if (isReel) return   // 릴스는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다 — 이 띠는 클릭해서 문구 수정용
     const text = previewText
-    // 2026-10-22 재점검: 16:9가 9:16보다 글자가 크게 보인다는 지적 — 직전엔 포맷별 실제
-    // 출력 세로 해상도(1080/1920)로 나눴는데, 그러면 16:9(1080)가 분모가 작아 같은 56px도
-    // 프레임 대비 더 크게 떠 버린다. 릴스 쪽(ReelCaptionOverlay, 187번째 줄 k = H/1920)은
-    // 포맷에 상관없이 항상 1920을 기준으로 삼아 같은 px 값이 어느 화면비에서나 같은 비율로
-    // 보이게 한다 — 여기도 같은 기준(1920 고정)으로 맞춘다.
-    const scale = H / 1920
-    const fSize = Math.max(10, Math.round(fontSize * scale))
-    const padX = 18, padY = 10, lineGap = 1.3
+    // 2026-11-03 재수정: 이 캔버스는 ReelCaptionOverlay(187번째 줄)처럼 실제 화면에 꽉 차게
+    // 반응형으로 그려지는 DOM이 아니라, <canvas width={1920} height={1080}>(아래 JSX) 고정
+    // 해상도 래스터를 CSS로 늘려 보여주는 방식이다. 전엔 이 캔버스가 640×360으로 작았는데
+    // "릴스와 같은 1920 기준으로 맞춘다"며 scale=H/1920을 그대로 가져다 썼다가, H가
+    // ReelCaptionOverlay의 실제 표시 높이(수백px)가 아니라 캔버스 내부의 작은 고정값(360)이라
+    // 거의 모든 fontSize에서 10px 바닥값에 깔려버렸다(실측: fontSize 32 기본값 → 6px → 10px로
+    // 클램프, 슬라이더를 움직여도 53 이하면 전부 똑같이 10px) — "설정한 크기보다 훨씬 작게
+    // 보인다"는 지적의 원인. 캔버스 해상도를 실제 유튜브 16:9 출력 규격(1920×1080)에 맞추고,
+    // fontSize를 그 좌표계에서 그대로(스케일 보정 없이) 픽셀값으로 써서 슬라이더 값과 화면에
+    // 보이는 크기가 1:1로 맞게 한다.
+    const fSize = Math.max(10, Math.round(fontSize))
+    // 안쪽 여백도 폰트 크기에 비례하게(전엔 18/10 고정값이라, 해상도를 올리고 나니 큰 글자에선
+    // 박스가 너무 좁아 보이고 작은 글자에선 너무 헐렁해 보임).
+    const padX = Math.round(fSize * 0.45), padY = Math.round(fSize * 0.28), lineGap = 1.3
 
     ctx.font = `${fSize}px "${font}",sans-serif`
     ctx.textAlign = 'center'
@@ -963,10 +964,14 @@ export default function VideoTab() {
     ctx.lineWidth = Math.max(2, Math.round(fSize * 0.09))
     ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
     ctx.fillStyle = color
+    // 2026-11-03: alphabetic 기준선 + 어림 보정식(-(lineHeight-fSize)/2) 대신 textBaseline='middle'로
+    // 각 줄의 실제 세로 중앙에 바로 찍는다 — 전엔 보정이 fSize/2만큼 과하게 내려가 박스 안에서
+    // 글자가 아래로 치우쳐 보였음("박스 아래로 좀 치우친 배치" 지적).
+    ctx.textBaseline = 'middle'
     lines.forEach((l, i) => {
-      const lineY = boxTop + padY + lineHeight * (i + 1) - (lineHeight - fSize) / 2
-      ctx.strokeText(l, subX, lineY)
-      ctx.fillText(l, subX, lineY)
+      const lineCenterY = boxTop + padY + lineHeight * (i + 0.5)
+      ctx.strokeText(l, subX, lineCenterY)
+      ctx.fillText(l, subX, lineCenterY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
   }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, isReel, reelFontPx, reelStyle.y, gaeguReady, aspectRatio])
@@ -1518,11 +1523,16 @@ export default function VideoTab() {
   // 항상 써온 절대경로 관례(C:\yeori-studio\downloads\...)로 변환.
   const sfxAbsolutePath = (cut) => cut?.sfxFile ? `C:\\yeori-studio\\downloads\\${cut.sfxFile.replace(/\//g, '\\')}` : undefined
 
-  const runFfmpegForCut = async (cut, retried = false) => {
+  // segments — 이 컷의 자막 구간(computeCaptionSegments 결과, 호출부가 cuts.map 안에서
+  // 이미 계산해둔 cutSegs를 그대로 넘김). 릴스거나 자막 OFF면 호출부가 undefined로 보냄 —
+  // 그땐 기존과 완전히 동일하게(번인 없이) 동작한다(2026-11-03, 성준님 요청: "영상 탭
+  // 설정을 실제 번인 영상으로").
+  const runFfmpegForCut = async (cut, retried = false, segments) => {
     setFfmpegStatus(p => ({ ...p, [cut.id]: 'running' }))
     setFfmpegLog(p => ({ ...p, [cut.id]: '합성 시작…' }))
     try {
       const ep = episode?.number ?? ''
+      const burnSubtitle = !isReel && subtitleEnabled && Array.isArray(segments) && segments.some(s => String(s.text || '').trim())
       const res = await fetch('http://localhost:3001/api/run-ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1533,6 +1543,16 @@ export default function VideoTab() {
           sfxName: (String(cut.masterCode?.audio?.sfx || '').match(/([\w.-]+\.(?:wav|mp3))/i) || [])[1],
           audioStart: cut.narrationStart, narrationVolume: cut.narrationVolume,
           bgVolume: cut.narrBgVolume,
+          // 자막 번인(SF/LF 전용) — 영상 탭 "자막 디자인 설정"(글씨체·크기·색·배경·위치)과
+          // 이 컷의 실제 자막 구간을 그대로 넘긴다. 미리보기(drawPreview 캔버스)와 똑같은
+          // 값·똑같은 구간 계산(computeCaptionSegments)이라 "미리보기랑 실제 결과가 다르다"는
+          // 일이 안 생긴다.
+          ...(burnSubtitle ? {
+            subtitle: {
+              segments: segments.filter(s => String(s.text || '').trim()).map(s => ({ text: s.text, start: s.start, end: s.end })),
+              font, fontSize, color, bgStyle, boxColor, position: subtitlePosition,
+            },
+          } : {}),
         }),
       })
       // 서버가 이벤트스트림 대신 일반 에러(예: 시작 영상이 아직 없어 404)를 돌려주면
@@ -1546,7 +1566,7 @@ export default function VideoTab() {
         if (res.status === 404 && /영상 파일 없음/.test(msg) && !retried && (videoClips[cut.id] || []).length) {
           setFfmpegLog(p => ({ ...p, [cut.id]: '컷 영상이 아직 없어 먼저 클립 합성 중…' }))
           await renderCutClips(cut)
-          return runFfmpegForCut(cut, true)
+          return runFfmpegForCut(cut, true, segments)
         }
         if (res.status === 404 && /영상 파일 없음/.test(msg)) msg = '컷 영상이 아직 없어요 — 먼저 "🎞 클립 합성"을 눌러 주세요'
         setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
@@ -2186,14 +2206,10 @@ export default function VideoTab() {
           // 2026-10-09: 아래 메인 컷카드 자막 표시도 subtitleEditMode 타이밍 바(segsForText)와
           // 같은 함정이 있었다 — effectiveCaptionValue가 대사 한 줄짜리 평문/1개짜리 배열을
           // 돌려주면 대사+나레이션 2구간 분리를 가렸다. 같은 기준으로 통일.
-          const dlText2 = !isReel ? stripMeta(selCut.dialogue || '') : ''
-          const nrText2 = !isReel ? stripMeta(selCut.narration || '') : ''
-          const bothFallback2 = (dlText2 && nrText2) ? computeCaptionTimeline(selCut).map(p => ({ start: p.start, end: p.end, text: p.text })) : null
-          const effCap2 = effectiveCaptionValue(subtitles, selCut, clips)
-          const effCap2IsMultiPart = (Array.isArray(effCap2) && effCap2.length > 1) || (typeof effCap2 === 'string' && /\s*\/\s*/.test(effCap2))
-          const cutSegs = toSegments(
-            bothFallback2 && !effCap2IsMultiPart ? bothFallback2 : (effCap2 !== undefined ? effCap2 : bothFallback2),
-            isReel ? '' : cleanDialogueForCaptionFallback(stripMeta(selCut.dialogue || selCut.narration || '')),   /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */ selCut.duration || 0, selCut.captionSegTiming)
+          // 2026-11-03: computeCaptionSegments()로 추출(자막 번인과 공유) — 이 컷(selCut, 반드시
+          // 전역 선택 컷일 필요 없음)의 자막 구간을 그대로 자막 번인 요청에도 쓸 수 있다.
+          /* 릴스: CP 비면 대사로 대신 채우지 않음(9/27) */
+          const cutSegs = computeCaptionSegments(selCut, clips, subtitles, isReel)
           // 클립(영상 조각) 수보다 자막 구간이 더 많은 컷(예: 클립 1개 안에서 대사→나레이션이
           // 순차 전환되는 R04 스타일) — 남는 구간은 업로드 UI 없는 "자막 전용" 행으로 추가 표시.
           // 2026-09-22, 성준님 지적: 자막칸에 "/"가 안 나뉜 채 통짜로 들어가 있던 사고 수정.
@@ -2304,7 +2320,10 @@ export default function VideoTab() {
                         // 적용 안 됨"의 핵심 원인. 릴스와 같은 기준으로 통일.
                         style={{ bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
-                        <canvas ref={canvasRef} width={640} height={360} className={s.overlayCanvas} />
+                        {/* 2026-11-03: 640×360 → 1920×1080(실제 16:9 유튜브 출력 해상도)로 올림 —
+                            drawPreview()의 fontSize가 이제 이 좌표계를 스케일 보정 없이 그대로 쓰므로
+                            캔버스 자체도 그 기준에 맞아야 함(아래 drawPreview 주석 참조). */}
+                        <canvas ref={canvasRef} width={1920} height={1080} className={s.overlayCanvas} />
                       </div>
                     )}
                     {isSelected && subtitleEnabled && subtitleEditMode && (
@@ -2862,7 +2881,7 @@ export default function VideoTab() {
                     title={isReel
                       ? '이 컷 하나만 나레이션·효과음을 입혀 미리 들어봅니다(06_publishing/cut_NN_final.mp4). 릴스 최종본에는 쓰이지 않아요 — 최종본은 메이킹 탭 "릴스 최종본 생성"이 한 번에 입힙니다'
                       : '서버에 이미 있는 cut_NN.mp4 위에 나레이션·효과음만 입힙니다'}
-                    onClick={() => runFfmpegForCut(selCut)}>
+                    onClick={() => runFfmpegForCut(selCut, false, cutSegs)}>
                     {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…'
                       : isReel ? '🔊 컷 단독 미리듣기(최종본에 안 쓰임)' : '🔊 나레이션·효과음 입히기'}
                   </button>

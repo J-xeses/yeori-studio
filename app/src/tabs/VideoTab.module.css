@@ -133,7 +133,7 @@
 .pos_top { bottom: 24%; }
 .pos_middle { bottom: 14%; }
 .pos_bottom { bottom: 6%; }
-.overlayCanvas { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; aspect-ratio: 640 / 360; pointer-events: none; }
+.overlayCanvas { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; aspect-ratio: 1920 / 1080; pointer-events: none; }
 
 /* Selected cut card */
 .selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; cursor: pointer; transition: border-color .12s; }

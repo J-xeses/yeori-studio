@@ -10,7 +10,9 @@ handwriting_overlay.py — 서여리 릴스용 손글씨 주석 오버레이
   - "scenes": 시간대(time)별 1개씩. 영상은 구간 합성, 이미지는 씬별 파일 저장.
   - "bubbles": 한 화면에 여러 주석 자유 배치. x/y(0~1 비율), 씬별 font_size 지원.
                이미지는 파일 1개로 합성(레퍼런스 인스타 스토리처럼).
-각 항목 옵션: backing(false면 판 대신 글자 외곽선), arrow_target([x,y] 비율로 특정 지점 겨냥).
+각 항목 옵션: backing(false면 판 대신 글자 외곽선), arrow_target([x,y] 비율로 특정 지점 겨냥),
+  bubble_scale(말풍선 윤곽만 확대/축소, 기본 1.0), offset_x/offset_y(위치 미세조정, 비율, 기본 0),
+  angle(말풍선+글씨 전체를 한 장처럼 기울이는 입력각, 도 단위, 기본 0, 2026-11-03 추가).
 config 최상위 "subject_outline": true|{width,gap,color,opacity} → 인물 둘레 손그림 흰 테두리
   (이미지 전용, rembg + onnxruntime 필요 — 없으면 조용히 건너뜀).
 
@@ -113,10 +115,17 @@ def load_font(path, size):
 
 
 # ── 색상 ──────────────────────────────────────────────────────────────
+# 2026-11-03, 성준님 요청: "글씨 색 종류 몇 가지 추가" — 기존 3색에서 보색 계열까지 확장.
 COLORS = {
     "white": (255, 255, 255, 255),
+    "black": (0x2A, 0x2A, 0x2A, 255),
     "pink": (0xF9, 0xA8, 0xD0, 255),
     "lavender": (0xC3, 0xB3, 0xF5, 255),
+    "yellow": (0xFD, 0xE0, 0x47, 255),
+    "mint": (0x6E, 0xE7, 0xB7, 255),
+    "sky": (0x7D, 0xD3, 0xFC, 255),
+    "orange": (0xFD, 0xBA, 0x74, 255),
+    "red": (0xF8, 0x71, 0x71, 255),
 }
 
 
@@ -478,13 +487,18 @@ def render_scene(canvas_size, scene, font_size=64):
     pad_x, pad_y = 28, 18
     box_w, box_h = block_w + pad_x * 2, block_h + pad_y * 2
 
+    # 위치 세부 조정(2026-11-03, 성준님 요청) — 기존 프리셋(position)/자유좌표(x,y)는 그대로 두고,
+    # 거기서 좌우/상하로 추가로 살짝 미는 보정값. 비율(캔버스 폭·높이 기준)이라 해상도가 달라져도
+    # 같은 비율로 밀린다. 기본 0(=미조정, 기존 동작과 동일).
+    offset_x = float(scene.get("offset_x", 0) or 0)
+    offset_y = float(scene.get("offset_y", 0) or 0)
     if "x" in scene or "y" in scene:
-        cx = W * float(scene.get("x", 0.5))
-        cy = H * float(scene.get("y", 0.5))
+        cx = W * float(scene.get("x", 0.5)) + W * offset_x
+        cy = H * float(scene.get("y", 0.5)) + H * offset_y
         left, top = cx - box_w / 2, cy - box_h / 2
     else:
         ax, ay = POSITION_ANCHORS.get(scene.get("position", "center"), (0.5, 0.5))
-        cx, cy = W * ax, H * ay
+        cx, cy = W * ax + W * offset_x, H * ay + H * offset_y
         left, top = cx - box_w / 2, cy - box_h / 2
         if ax < 0.3:
             left = cx
@@ -495,10 +509,14 @@ def render_scene(canvas_size, scene, font_size=64):
         elif ay > 0.7:
             top = cy - box_h
 
+    # 말풍선 모양 크기 조절(2026-11-03, 성준님 요청) — 텍스트 크기(font_size)와는 별개로,
+    # 그 텍스트를 둘러싼 말풍선 윤곽만 더 크게/작게. 1.0=기존 동작과 동일.
+    bubble_scale = float(scene.get("bubble_scale", 1.0) or 1.0)
     bubble = scene.get("bubble", "none")
-    infl = {"cloud": (box_w * 0.10 + 24, box_h * 0.16 + 18),
-            "oval": (box_w * 0.16 + 14, box_h * 0.22 + 12),
-            "arrow_box": (22, 16)}.get(bubble, (0, 0))
+    base_infl = {"cloud": (box_w * 0.10 + 24, box_h * 0.16 + 18),
+                 "oval": (box_w * 0.16 + 14, box_h * 0.22 + 12),
+                 "arrow_box": (22, 16)}.get(bubble, (0, 0))
+    infl = (base_infl[0] * bubble_scale, base_infl[1] * bubble_scale)
     ix, iy = infl
     margin_x = 24 + ix
     arrow_pad = H * 0.09 if scene.get("arrow") else 0
@@ -603,6 +621,19 @@ def render_scene(canvas_size, scene, font_size=64):
 
     # 3) 깨끗한 컬러 패스
     paint(img, color)
+
+    # 4) 입력각(2026-11-03, 성준님 요청: "풍선·글씨 입력각 설정, 0~30도 정도 범위") — 말풍선+글씨+
+    # 장식+화살표를 통째로 한 장(스티커)처럼 비스듬히 기울인다. img는 이 시점까지 이 장면 말고는
+    # 아무것도 안 그려진 완전 투명 레이어라(배경 합성은 render_scene 밖에서 함), 캔버스 전체를
+    # 말풍선 중심 기준으로 그냥 회전시켜도 다른 내용을 침범하거나 잘릴 걱정이 없다 — 별도 크롭/
+    # 패딩 계산 불필요. 각도는 글자 한 줄 한 줄의 미세한 랜덤 기울기(-1.8~1.8도, 손글씨 느낌)와는
+    # 별개로 전체 그룹에 추가로 걸리는 값.
+    angle = float(scene.get("angle", 0) or 0)
+    if angle:
+        cx_rot = (bubble_box[0] + bubble_box[2]) / 2
+        cy_rot = (bubble_box[1] + bubble_box[3]) / 2
+        img = img.rotate(angle, resample=Image.BICUBIC, center=(cx_rot, cy_rot))
+
     return img
 
 

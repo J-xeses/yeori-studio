@@ -147,6 +147,9 @@ const DEFAULT_OVERLAY = {
   position: 'top_center', bubble: 'cloud', color: 'white',
   deco: '', arrow: false, arrow_direction: 'down', underline: false,
   timing: 'full', // 'full' | 'first2' | 'first3' | 'first5'
+  // 2026-11-03 추가: 글씨 크기, 말풍선 모양 크기(텍스트와 별개), 위치 미세조정(좌우/상하 %),
+  // 입력각(말풍선+글씨를 스티커처럼 비스듬히). 전부 기본값=기존 동작과 동일(0 또는 1.0).
+  font_size: 64, bubble_scale: 1, offset_x: 0, offset_y: 0, angle: 0,
 }
 // 메이킹 소재(B-roll/BGM 등) 구하러 가는 외부 사이트 — 생성도구가 아니라 참고/다운로드용
 // 링크라 StudioTab의 TOOLS(선택형)와 달리 그냥 새 탭으로 연다(2026-10-21 4차 보완).
@@ -1701,8 +1704,47 @@ export default function MakingTab() {
   // CP 있는 컷의 제작 실행 시 그 스타일로 자동 합성한다(+ 재적용 버튼만 노출).
   const OVERLAY_POSITIONS = ['top_center', 'top_left', 'top_right', 'center', 'bottom_center', 'bottom_left', 'bottom_right']
   const OVERLAY_BUBBLES = [['none', '없음'], ['cloud', '구름'], ['oval', '타원'], ['arrow_box', '화살표박스']]
-  const OVERLAY_COLORS = [['white', '흰색'], ['pink', '핑크'], ['lavender', '라벤더']]
+  // 2026-11-03, 성준님 요청: "글씨 색 종류 몇 가지 추가" — 기존 3색(흰/핑크/라벤더)에서 확장.
+  // handwriting_overlay.py COLORS와 1:1로 맞춰야 함(키 이름 동일).
+  const OVERLAY_COLORS = [
+    ['white', '흰색'], ['black', '검정'], ['pink', '핑크'], ['lavender', '라벤더'],
+    ['yellow', '노랑'], ['mint', '민트'], ['sky', '하늘'], ['orange', '오렌지'], ['red', '빨강'],
+  ]
   const OVERLAY_ARROW_DIRS = ['right', 'left', 'up', 'down']
+
+  // 말풍선·손글씨 "세부 조정" 줄(2026-11-03, 성준님 요청: 글씨 크기/풍선 모양 크기/위치 미세조정/
+  // 입력각). 손글씨 오버레이를 쓰는 3곳(컷별 말풍선, 유형별 기본 스타일, 이미지에 손글씨) 전부
+  // 같은 필드(font_size/bubble_scale/offset_x/offset_y/angle)를 쓰므로 공통 함수로 묶는다.
+  // item: 그 scene/스타일 객체, onPatch: 바뀐 값만 담은 부분 객체를 넘기면 적용하는 함수.
+  const renderOverlayFineTuneRow = (item, onPatch) => (
+    <div className={s.styleRow}>
+      <label className={s.styleField} title="글자 크기(기본 64)">글씨크기
+        <input type="number" min={24} max={160} step={2} style={{ width: 56 }}
+          value={item.font_size ?? 64} onChange={e => onPatch({ font_size: Number(e.target.value) || 64 })} />
+      </label>
+      {item.bubble !== 'none' && (
+        <label className={s.styleField} title="말풍선 윤곽만 커지거나 작아짐(글씨 크기와 별개, 기본 100%)">풍선크기
+          <input type="number" min={50} max={200} step={5} style={{ width: 56 }}
+            value={Math.round((item.bubble_scale ?? 1) * 100)}
+            onChange={e => onPatch({ bubble_scale: (Number(e.target.value) || 100) / 100 })} />%
+        </label>
+      )}
+      <label className={s.styleField} title="고른 위치에서 좌우로 더 밀기(-15~15%)">좌우
+        <input type="number" min={-15} max={15} step={1} style={{ width: 48 }}
+          value={Math.round((item.offset_x ?? 0) * 100)}
+          onChange={e => onPatch({ offset_x: (Number(e.target.value) || 0) / 100 })} />%
+      </label>
+      <label className={s.styleField} title="고른 위치에서 상하로 더 밀기(-15~15%)">상하
+        <input type="number" min={-15} max={15} step={1} style={{ width: 48 }}
+          value={Math.round((item.offset_y ?? 0) * 100)}
+          onChange={e => onPatch({ offset_y: (Number(e.target.value) || 0) / 100 })} />%
+      </label>
+      <label className={s.styleField} title="말풍선+글씨를 스티커처럼 통째로 비스듬히 기울임(-30~30도)">기울기
+        <input type="number" min={-30} max={30} step={1} style={{ width: 48 }}
+          value={item.angle ?? 0} onChange={e => onPatch({ angle: Number(e.target.value) || 0 })} />°
+      </label>
+    </div>
+  )
 
   const [overlayBusy, setOverlayBusy] = useState({})     // { [cutNo]: bool }
   const [overlayResult, setOverlayResult] = useState({}) // { [cutNo]: data | { error } }
@@ -1761,6 +1803,7 @@ export default function MakingTab() {
   const newHwScene = () => ({
     text: '', position: 'top_center', bubble: 'cloud', color: 'white',
     deco: '', arrow: false, arrow_direction: 'down', underline: false, time: '0s~3s',
+    font_size: 64, bubble_scale: 1, offset_x: 0, offset_y: 0, angle: 0,
   })
   const [hwOpen, setHwOpen] = useState(false)
   const [hwImgList, setHwImgList] = useState([])
@@ -1788,6 +1831,8 @@ export default function MakingTab() {
         text: s.text, position: s.position, bubble: s.bubble, color: s.color,
         deco: String(s.deco || '').split(',').map(x => x.trim()).filter(Boolean),
         arrow: !!s.arrow, arrow_direction: s.arrow_direction, underline: !!s.underline, time: s.time,
+        font_size: Number(s.font_size) || 64, bubble_scale: Number(s.bubble_scale) || 1,
+        offset_x: Number(s.offset_x) || 0, offset_y: Number(s.offset_y) || 0, angle: Number(s.angle) || 0,
       }))
       const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1821,6 +1866,8 @@ export default function MakingTab() {
       arrow_direction: ov.arrow_direction,
       underline: !!ov.underline,
       time: overlayTimeRange(ov.timing, cutDuration(cut)),
+      font_size: Number(ov.font_size) || 64, bubble_scale: Number(ov.bubble_scale) || 1,
+      offset_x: Number(ov.offset_x) || 0, offset_y: Number(ov.offset_y) || 0, angle: Number(ov.angle) || 0,
     }
     setOverlayBusy(p => ({ ...p, [cut.no]: true }))
     setOverlayResult(p => ({ ...p, [cut.no]: null }))
@@ -3169,7 +3216,10 @@ export default function MakingTab() {
   }
 
   // ── 컷별 말풍선·손글씨 — 씬 여러 개를 시간대별로 얹는다(05_video/cut_NN_overlay.mp4) ──
-  const newBubble = (cut) => ({ text: '', position: 'top_center', bubble: 'cloud', color: 'white', start: 0.2, end: Math.min(3, cutDuration(cut)) })
+  const newBubble = (cut) => ({
+    text: '', position: 'top_center', bubble: 'cloud', color: 'white', start: 0.2, end: Math.min(3, cutDuration(cut)),
+    font_size: 64, bubble_scale: 1, offset_x: 0, offset_y: 0, angle: 0,
+  })
   const [bubbleScenes, setBubbleScenes] = useState({})   // { [cutNo]: scene[] }
   const [bubbleBusy, setBubbleBusy] = useState({})
   const [bubbleResult, setBubbleResult] = useState({})
@@ -3192,6 +3242,8 @@ export default function MakingTab() {
             text: b.text, position: b.position, bubble: b.bubble, color: b.color,
             deco: [], arrow: false, arrow_direction: 'down', underline: false,
             time: `${Number(b.start) || 0}s~${Number(b.end) || cutDuration(cut)}s`,
+            font_size: Number(b.font_size) || 64, bubble_scale: Number(b.bubble_scale) || 1,
+            offset_x: Number(b.offset_x) || 0, offset_y: Number(b.offset_y) || 0, angle: Number(b.angle) || 0,
           })),
         }),
       })
@@ -3247,6 +3299,7 @@ export default function MakingTab() {
                 <input type="number" step="0.1" min="0" value={b.end} onChange={e => patch(i, { end: parseFloat(e.target.value) || 0 })} />
               </label>
             </div>
+            {renderOverlayFineTuneRow(b, p => patch(i, p))}
           </div>
         ))}
         <div className={s.editorActions}>
@@ -3334,7 +3387,10 @@ export default function MakingTab() {
               const st = cfg.style
               const ov = cfg.overlay
               const setStyle = patch => updateTypeStyle(t.key, { style: patch })
-              const setOv = patch => updateTypeStyle(t.key, { overlay: patch })
+              // updateTypeStyle은 overlay를 통째로 교체하므로(style만 따로 병합), 여기서 직접
+              // 기존 ov와 병합해서 넘긴다 — 안 그러면 필드 하나 바꿀 때마다 다른 필드(위치/색 등)가
+              // 날아감(실측 발견, 2026-11-03 — 세부조정 필드 추가하며 같이 수정).
+              const setOv = patch => updateTypeStyle(t.key, { overlay: { ...ov, ...patch } })
               return (
                 <div key={t.key} className={s.styleCol}>
                   <span className={`${s.typeBadge} ${s['type' + t.key] || ''}`}>{t.key}</span>
@@ -3442,6 +3498,7 @@ export default function MakingTab() {
                               </select>
                             </label>
                           </div>
+                          {renderOverlayFineTuneRow(ov, setOv)}
                           <label className={s.styleField}>데코 (쉼표 구분, 예: ✨,♡)
                             <input value={ov.deco} onChange={e => setOv({ deco: e.target.value })} />
                           </label>
@@ -3552,6 +3609,7 @@ export default function MakingTab() {
                   </select>
                 </label>
               </div>
+              {renderOverlayFineTuneRow(sc, p => patchHwScene(i, p))}
               <div className={s.styleRow}>
                 <label className={s.styleField}>데코 (쉼표 구분)
                   <input value={sc.deco} onChange={e => patchHwScene(i, { deco: e.target.value })} />
