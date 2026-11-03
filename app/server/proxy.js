@@ -11,6 +11,7 @@ import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaConten
 import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { renderTrackMatte, renderTrackMattePreview, listTrackMatteResults, loadTrackMatteConfig } from './lib/trackMatte.js'
+import { buildSubtitleDrawtextFilter } from './lib/subtitleBurn.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent, listCustomFreezeLocations, addCustomFreezeLocation, deleteCustomFreezeLocation } from './lib/customChangePresets.js'
@@ -34,7 +35,7 @@ import { recentStatusEntries, statusFileMtime } from './lib/statusFeed.js'
 import { syncEpisodeState, setHold } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
-import { ensureDialogueInVP, buildSegClipPrompt } from '../src/lib/vpDialogue.js'
+import { ensureDialogueInVP, buildSegClipPrompt, splitCaptionString, isCpEmpty } from '../src/lib/vpDialogue.js'
 import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
@@ -450,11 +451,23 @@ function runFFmpegCmd(args, logPath) {
 // 절대경로로 바꾸는 함수(호출부마다 기준 디렉터리가 다름)를 받는다.
 function buildAudioMergeArgs({
   videoFile, outFile, dur, audioFile, audioStart, audioEnd, sfxFile, sfxStart, resolvePath,
-  bgHasAudio, bgVolume, narrationVolume, sfxVolume,
+  bgHasAudio, bgVolume, narrationVolume, sfxVolume, subtitleFilter,
 }) {
   const hasVoice = !!audioFile
   const hasSfx = !!sfxFile
+  // subtitleFilter가 있으면 비디오 스트림에 drawtext를 그려야 해서 -c:v copy(스트림 복사)를
+  // 못 쓴다 — 자막 번인이 요청된 경우에만 재인코딩으로 전환(2026-11-03). 없으면 기존과
+  // 완전히 동일(모든 기존 호출부 동작 불변).
   if (!hasVoice && !hasSfx) {
+    if (subtitleFilter) {
+      return [
+        '-i', videoFile,
+        '-filter_complex', `[0:v]${subtitleFilter}[vout]`,
+        '-map', '[vout]', '-map', '0:a?',
+        '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
+        '-c:a', 'aac', '-t', String(dur), outFile, '-y',
+      ]
+    }
     return ['-i', videoFile, '-c:v', 'copy', '-an', outFile, '-y']
   }
 
@@ -494,11 +507,21 @@ function buildAudioMergeArgs({
 
   // normalize=0 — PIP 합성(renderPipComposite)과 동일 근거: amix 기본 자동감쇠(1/트랙수)를
   // 끄고, 각 트랙 volume은 위에서 이미 명시적으로 맞췄으니 그대로 합산.
-  const filter = labels.length > 1
+  const audioFilter = labels.length > 1
     ? `${chains.join(';')};${labels.join('')}amix=inputs=${labels.length}:duration=longest:dropout_transition=0:normalize=0[a]`
     : chains[0].replace(/\[a\w*\]$/, '[a]')
 
-  return [...inputs, '-filter_complex', filter, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-t', String(dur), outFile, '-y']
+  // 자막 번인(2026-11-03) — drawtext 체인을 오디오 그래프와 같은 filter_complex 안에
+  // "[0:v]...[vout]"로 같이 넣는다. -vf(단순 그래프)와 -filter_complex(오디오용 복합
+  // 그래프)를 한 명령에 같이 쓰면 -map 충돌이 날 수 있어, 하나의 filter_complex로 합쳐
+  // 비디오/오디오 출력 라벨을 각각 명시적으로 -map 하는 쪽이 안전하다.
+  if (subtitleFilter) {
+    const filter = `[0:v]${subtitleFilter}[vout];${audioFilter}`
+    return [...inputs, '-filter_complex', filter, '-map', '[vout]', '-map', '[a]',
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
+      '-c:a', 'aac', '-t', String(dur), outFile, '-y']
+  }
+  return [...inputs, '-filter_complex', audioFilter, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-t', String(dur), outFile, '-y']
 }
 
 // ── POST /api/ffmpeg — SSE 스트리밍 자동 편집 ─────────────────────
@@ -5336,8 +5359,12 @@ app.post('/api/save-tts-track', (req, res) => {
 })
 
 // ── POST /api/run-ffmpeg — 영상+음성 FFmpeg 합성 (SSE) ──
+// subtitle(선택, 2026-11-03 추가): { segments:[{text,start,end}], font, fontSize, color,
+// bgStyle, boxColor, position } — 영상 탭 "자막 디자인 설정" 그대로. 있으면 drawtext로
+// 실제 cut_NN_final.mp4에 굽는다(SF/LF 전용, 릴스는 안 씀 — 클라이언트가 isReel일 때
+// 이 필드를 아예 안 보냄).
 app.post('/api/run-ffmpeg', async (req, res) => {
-  const { ep, cutNo, duration, sfxFile: sfxFileIn, sfxName, sfxStart, audioStart, audioEnd, bgVolume, narrationVolume, sfxVolume } = req.body
+  const { ep, cutNo, duration, sfxFile: sfxFileIn, sfxName, sfxStart, audioStart, audioEnd, bgVolume, narrationVolume, sfxVolume, subtitle } = req.body
   if (!ep || cutNo == null) return res.status(400).json({ error: 'ep, cutNo 필요' })
   // 대본 탭에서 고른 효과음은 이름만 있다(sfxName) → 라이브러리에서 찾아 절대경로로(9/29)
   const sfxRel = !sfxFileIn && sfxName ? mp.findSfxByName(sfxName) : null
@@ -5376,7 +5403,10 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   // sfxFile이 없을 땐 기존 그대로 나레이션 필수(하위호환). sfxFile이 있으면
   // 나레이션 파일이 없어도(효과음만 있는 컷일 수 있으므로) 막지 않는다.
   const hasVoice = fs.existsSync(audioFile)
-  if (!sfxFile && !hasVoice) return res.status(404).json({ error: `음성 파일 없음: ${audioFile}` })
+  // 자막만 굽고 나레이션·효과음은 없는 컷(예: 대사 없는 장면 설명 자막)도 막지 않는다
+  // (2026-11-03 — 전엔 나레이션/효과음 중 하나가 꼭 있어야만 이 엔드포인트가 동작했음).
+  const hasSubtitle = !!(subtitle?.segments?.length)
+  if (!sfxFile && !hasVoice && !hasSubtitle) return res.status(404).json({ error: `음성 파일 없음: ${audioFile}` })
 
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -5385,6 +5415,21 @@ app.post('/api/run-ffmpeg', async (req, res) => {
 
   send({ type: 'progress', message: 'FFmpeg 합성 시작…' })
 
+  // 자막 번인 — 세그먼트별 텍스트를 임시 .txt로 써서 drawtext textfile=로 참조(인라인
+  // text= 이스케이프 지옥을 피함). ffmpeg 종료 후(성공/실패 무관) 정리.
+  let subtitleTempFiles = []
+  let subtitleFilter = ''
+  const subtitleWorkDir = path.join(os.tmpdir(), `subtitle_burn_${ep}_${padded}_${Date.now()}`)
+  if (hasSubtitle) {
+    const built = buildSubtitleDrawtextFilter(subtitle.segments, subtitle, subtitleWorkDir)
+    subtitleFilter = built.filter
+    subtitleTempFiles = built.tempFiles
+  }
+  const cleanupSubtitleTemp = () => {
+    if (!subtitleTempFiles.length) return
+    try { fs.rmSync(subtitleWorkDir, { recursive: true, force: true }) } catch { /* noop */ }
+  }
+
   const bgHasAudio = await hasAudioStream(videoFile)
   const args = buildAudioMergeArgs({
     videoFile, outFile, dur,
@@ -5392,6 +5437,7 @@ app.post('/api/run-ffmpeg', async (req, res) => {
     sfxFile: sfxFile || null, sfxStart,
     resolvePath: (p) => path.isAbsolute(p) ? p : path.join(mp.DOWNLOADS, p),
     bgHasAudio, bgVolume, narrationVolume, sfxVolume,
+    subtitleFilter: subtitleFilter || undefined,
   })
 
   const proc = spawn('ffmpeg', args, { windowsHide: true })
@@ -5400,6 +5446,7 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
 
   proc.on('close', code => {
+    cleanupSubtitleTemp()
     if (code === 0) {
       const url = `${mp.toMediaUrl(mp.outputDir(ep))}/cut_${padded}_final.mp4`
       // outputPath(절대경로)도 같이 내려줌 — 클라이언트가 이 클립의 stagedPath를 못 채워서
@@ -5415,6 +5462,7 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   })
 
   proc.on('error', err => {
+    cleanupSubtitleTemp()
     send({ type: 'error', message: 'FFmpeg 실행 오류: ' + err.message })
     res.end()
   })
@@ -5479,13 +5527,19 @@ app.post('/api/generate-srt', async (req, res) => {
     // 자막 텍스트는 studio-state.json의 현재 컷(진실)에서 정제해서 쓴다.
     // editMeta 는 다른 에피소드/이전 버전 내용으로 stale 해질 수 있어(2026-09-08 실측: 편집메타
     // CUT1 에 이전 IG_R98 훅이 남아 SRT 1번이 엉뚱하게 나옴) 폴백으로만 사용.
-    let stateCutText = {}
+    // 2026-11-03, 성준님 요청("SRT도 CP 우선으로 맞춰줘") — 영상 탭 미리보기/자막 번인
+    // (effectiveCaptionValue, VideoTab.jsx)과 똑같이 CP(cut.subtitle)를 1순위로 본다(CP가
+    // "없음"이거나 비어있을 때만 대사/나레이션 폴백). 전엔 SRT가 CP를 아예 안 봐서, CP를
+    // 따로 짧게 다듬어 쓴 컷은 SRT와 영상 탭 미리보기·번인 자막이 서로 다른 문구로 나왔음.
+    // CP가 "대사1 / 대사2"처럼 "/"로 여러 구간을 담고 있으면 splitCaptionString으로 쪼개
+    // SRT 항목도 그만큼 나눈다(한 줄에 슬래시가 그대로 보이는 것 방지, 구간 타이밍은
+    // cut.captionSegTiming 수동값이 있으면 그걸, 없으면 글자수 비례).
+    let stateCuts = {}
     try {
       const st = loadStudioState()
       const ep = Object.values(st.episodes || {}).find(e => String(e.episode?.number) === String(epNum))
       for (const c of (ep?.cuts || [])) {
-        const raw = c.dialogue?.trim() || c.narration?.trim() || ''
-        if (raw) stateCutText[String(c.no).padStart(2, "0")] = dialogueToSubtitle(raw)
+        stateCuts[String(c.no).padStart(2, '0')] = c
       }
     } catch { /* studio-state 못 읽으면 editMeta 폴백 */ }
 
@@ -5508,12 +5562,23 @@ app.post('/api/generate-srt', async (req, res) => {
       const filePath = path.join(audioDir, file)
       const dur = await getMediaDuration(filePath) || 8
 
+      const c = stateCuts[padded]
       const m = metaMap[padded]
-      const text = (stateCutText[padded] || m?.narration?.trim() || m?.dialogue?.trim() || '').replace(/\n/g, ' ')
+      let segs
+      if (c && !isCpEmpty(c.subtitle)) {
+        segs = splitCaptionString(c.subtitle, dur, c.captionSegTiming)
+      } else {
+        const raw = c ? (c.dialogue?.trim() || c.narration?.trim() || '')
+          : (m?.narration?.trim() || m?.dialogue?.trim() || '')
+        const text = raw ? dialogueToSubtitle(raw) : ''
+        segs = text ? [{ start: 0, end: dur, text }] : []
+      }
 
-      if (text) {
+      for (const seg of segs) {
+        const text = String(seg.text || '').replace(/\n/g, ' ').trim()
+        if (!text) continue
         lines.push(`${srtIdx}`)
-        lines.push(`${toSRTTimecode(cursor)} --> ${toSRTTimecode(cursor + dur)}`)
+        lines.push(`${toSRTTimecode(cursor + seg.start)} --> ${toSRTTimecode(cursor + seg.end)}`)
         lines.push(text)
         lines.push('')
         srtIdx++

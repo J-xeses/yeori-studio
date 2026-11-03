@@ -12,8 +12,10 @@
     "subtitleAt": "2026-11-03T08:24:48.689Z"
   },
   "2": {
-    "overlay": true,
-    "overlayAt": "2026-11-03T08:45:55.051Z"
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-03T09:41:19.151Z"
   },
   "4": {
     "method": "broll",

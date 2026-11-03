@@ -6,7 +6,7 @@ import { resolveEpisodeCode } from '../lib/episodeCode'
 import { resolveVideoPolicy, VIDEO_MODES, contentRatio } from '../lib/videoPolicy'
 import { epMediaUrl } from '../lib/mediaPaths'
 import { splitSpeakerSegments } from '../lib/ttsText'
-import { computeCaptionTimeline } from '../lib/vpDialogue'
+import { computeCaptionTimeline, splitCaptionString, isCpEmpty } from '../lib/vpDialogue'
 import { EpisodeOverviewBlock, CutList } from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import DiagnosisPanel from '../components/DiagnosisPanel'
@@ -48,30 +48,8 @@ function cleanDialogueForCaptionFallback(text) {
     .trim()
 }
 
-// CP(자막) 필드가 "대사1 / 대사2 / 나레이션" 처럼 "/"로 여러 구간을 담고 있을 수 있다
-// (reelFinalize.js의 decideCut과 동일한 소스). 글자수 비례로 컷 전체 길이에 걸쳐 순차
-// 타이밍을 배분한다 — server/lib/reelFinalize.js computeSegmentTimings와 같은 원칙.
-function splitCaptionString(text, totalDur, explicitTiming) {
-  // "/" 와 "||" 둘 다 구분자로 인식(vpDialogue.js/ttsText.js가 쓰는 같은 2종,
-  // 2026-10-10 — "||"로 이어진 대사가 한 덩어리로 안 쪼개지던 체크업 탭 버그 수정하며
-  // 같이 맞춤, 두 탭이 같은 입력을 다르게 쪼개면 또 어긋나므로).
-  const parts = String(text).split(/\s*(?:\|\||\/)\s*/).map((t) => t.trim()).filter(Boolean)
-  if (!parts.length) return []
-  // 정확한 발화 타이밍을 손으로 지정한 컷(cut.captionSegTiming, reelFinalize.js와 동일 소스) —
-  // 글자수 자동배분보다 우선. 대사+나레이션이 섞여 자동배분이 실제 발화 시점과 안 맞는 경우용.
-  if (Array.isArray(explicitTiming) && explicitTiming.length === parts.length) {
-    return parts.map((t, i) => ({ start: explicitTiming[i][0], end: explicitTiming[i][1], text: t }))
-  }
-  if (parts.length === 1) return [{ start: 0, end: totalDur, text: parts[0] }]
-  const weights = parts.map((t) => Math.max(t.replace(/\s+/g, '').length, 1))
-  const totalW = weights.reduce((a, b) => a + b, 0)
-  let acc = 0
-  return parts.map((t, i) => {
-    const start = acc
-    acc += (totalDur * weights[i]) / totalW
-    return { start, end: i === parts.length - 1 ? totalDur : acc, text: t }
-  })
-}
+// splitCaptionString — 2026-11-03, server/proxy.js의 SRT 생성도 CP를 1순위로 보게 맞추며
+// ../lib/vpDialogue.js로 옮김(양쪽이 같은 구현 공유, 더 이상 여기 따로 안 둠).
 
 // 클립별(구간별) 타이밍 자막(2026-09-13) — subtitles[cutId]는 클립이 1개 이하인 컷은
 // 지금처럼 문자열 하나, 클립이 여러 개인 컷은 [{start,end,text}] 배열. 구버전 문자열
@@ -117,7 +95,7 @@ function effectiveCaptionValue(subtitlesState, cut, clips) {
   // 메모" 자체가 화면 자막으로 떠버렸음(컷2의 "없음 (대사와 나레이션이 이 컷의 감정을 충분히
   // 전달함 — 의도적 판단)"이 그대로 자막 텍스트가 됨). "없음"으로 시작하면(뒤에 공백/괄호/문장
   // 부호가 오든) 전부 "자막 없음"으로 인정하도록 완화.
-  if (cut.subtitle && !/^없음(\s|\(|$)/.test(cut.subtitle.trim())) return cut.subtitle
+  if (!isCpEmpty(cut.subtitle)) return cut.subtitle
   return undefined
 }
 

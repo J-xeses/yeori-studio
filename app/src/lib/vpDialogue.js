@@ -22,6 +22,38 @@ export const SEG_MAX_SEC = 8
 
 const isNoneText = (v) => /^(없음|-|n\/a)$/i.test(String(v == null ? '' : v).trim())
 
+// CP(자막) 필드가 "대사1 / 대사2 / 나레이션" 처럼 "/"(또는 "||")로 여러 구간을 담고 있을 수
+// 있다. 글자수 비례로 totalDur(초)에 걸쳐 순차 타이밍을 배분한다(reelFinalize.js의
+// computeSegmentTimings와 같은 원칙). explicitTiming(cut.captionSegTiming, 사람이 직접
+// 고친 값)이 있고 parts 개수와 맞으면 그걸 우선 — reelFinalize.js/VideoTab.jsx와 동일
+// 소스를 공유. 2026-11-03 — 원래 VideoTab.jsx(클라이언트)에만 있던 걸 SRT 생성
+// (server/proxy.js)도 CP를 1순위로 보게 맞추면서 여기로 옮겨 양쪽이 공유하게 함.
+export function splitCaptionString(text, totalDur, explicitTiming) {
+  const parts = String(text).split(/\s*(?:\|\||\/)\s*/).map((t) => t.trim()).filter(Boolean)
+  if (!parts.length) return []
+  if (Array.isArray(explicitTiming) && explicitTiming.length === parts.length) {
+    return parts.map((t, i) => ({ start: explicitTiming[i][0], end: explicitTiming[i][1], text: t }))
+  }
+  if (parts.length === 1) return [{ start: 0, end: totalDur, text: parts[0] }]
+  const weights = parts.map((t) => Math.max(t.replace(/\s+/g, '').length, 1))
+  const totalW = weights.reduce((a, b) => a + b, 0)
+  let acc = 0
+  return parts.map((t, i) => {
+    const start = acc
+    acc += (totalDur * weights[i]) / totalW
+    return { start, end: i === parts.length - 1 ? totalDur : acc, text: t }
+  })
+}
+
+// CP(cut.subtitle)가 "없음"(과 그 괄호 설명 변형)인지 판정 — effectiveCaptionValue
+// (VideoTab.jsx)와 완전히 같은 규칙이어야 함. "없음"으로 시작하면(뒤에 공백/괄호/문장부호가
+// 오든) 전부 "자막 없음"으로 인정(2026-10-09 발견: "없음 (이유 설명)"처럼 괄호 설명이 붙으면
+// 단순 /^없음$/로는 "없음"으로 안 걸려서 이유 메모 자체가 자막으로 떠버렸던 버그의 수정분).
+export function isCpEmpty(subtitle) {
+  const s = String(subtitle || '').trim()
+  return !s || /^없음(\s|\(|$)/.test(s)
+}
+
 // 2026-10-09 신설(성준님: "대사구간·나레이션 구간의 시간구분을 눈으로 직접 볼 수 있는 페이지가
 // 있어야 하지 않나") — 한 컷 안에서 "누가 언제 말하는지"를 시각화하기 위한 순수 계산. 대사는
 // splitSpeakerSegments로 화자별 턴(두 명이 번갈아 대화하는 경우 포함)으로 나누고, 그 뒤에
