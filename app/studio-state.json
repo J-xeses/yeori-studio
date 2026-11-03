@@ -11550,7 +11550,42 @@
     "bold": true,
     "textY": 70,
     "ratio": "9:16",
-    "bgImageUrl": ""
+    "bgImageUrl": "",
+    "posterLayers": [
+      {
+        "id": "t1793689384244",
+        "kind": "text",
+        "text": "",
+        "xPct": 50,
+        "yPct": 50,
+        "fontKey": "east-sea-dokdo",
+        "size": 64,
+        "color": "#ffffff",
+        "rotate": 0,
+        "stroke": true,
+        "strokeColor": "#141214"
+      },
+      {
+        "id": "d1793690171289",
+        "kind": "doodle",
+        "doodleType": "star",
+        "xPct": 50,
+        "yPct": 50,
+        "size": 14,
+        "color": "#fbbf24",
+        "rotate": 0
+      },
+      {
+        "id": "d1793690173917",
+        "kind": "doodle",
+        "doodleType": "arrow2",
+        "xPct": 50,
+        "yPct": 50,
+        "size": 14,
+        "color": "#fbbf24",
+        "rotate": 0
+      }
+    ]
   },
   "publishing": {
     "youtube": {
@@ -11603,7 +11638,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-03T05:31:45.036Z",
+  "savedAt": "2026-11-03T07:02:47.047Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
