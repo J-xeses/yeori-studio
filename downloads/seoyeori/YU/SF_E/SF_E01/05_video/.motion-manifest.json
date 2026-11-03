@@ -4,7 +4,16 @@
     "motion": null,
     "baked": true,
     "duration": 8,
-    "producedAt": "2026-10-08T04:25:15.775Z"
+    "producedAt": "2026-10-08T04:25:15.775Z",
+    "overlay": true,
+    "overlayAt": "2026-11-03T08:23:23.490Z",
+    "subtitle": true,
+    "subtitleEffect": "typer",
+    "subtitleAt": "2026-11-03T08:24:48.689Z"
+  },
+  "2": {
+    "overlay": true,
+    "overlayAt": "2026-11-03T08:29:43.426Z"
   },
   "4": {
     "method": "broll",

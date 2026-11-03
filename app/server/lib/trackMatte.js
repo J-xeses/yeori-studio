@@ -70,9 +70,11 @@ export async function renderTrackMatte({ config, outputName, onLog }) {
   return { outputPath: outPath, videoUrl: mp.toMediaUrl(outPath), name }
 }
 
-// 미리보기: 첫 장면만 합성한 정지 이미지(빠름, 보통 1~2초) — 글자 크기 등을 눈으로 보고 결정할 때.
+// 미리보기: 장면 하나만 합성한 정지 이미지(빠름, 보통 1~2초) — 글자 크기 등을 눈으로 보고 결정할 때.
+// frameIndex — 몇 번째 장면(0부터)을 볼지. 장면별로 패널 구성이 다르면 첫 장면만으로는 편집이
+// 안 된다는 요청(2026-11-03)으로 장면 선택 가능하게 확장.
 // 결과는 임시 디렉터리에만 저장(지난 결과물 목록에 안 남게 trackMatteOutputDir과 분리).
-export async function renderTrackMattePreview({ config, onLog }) {
+export async function renderTrackMattePreview({ config, frameIndex = 0, onLog }) {
   if (!fs.existsSync(PY_SCRIPT)) throw new Error(`trackmatte.py 없음: ${PY_SCRIPT}`)
   const previewDir = path.join(mp.DOWNLOADS, '_shared', 'trackmatte', '_preview')
   fs.mkdirSync(previewDir, { recursive: true })
@@ -80,7 +82,7 @@ export async function renderTrackMattePreview({ config, onLog }) {
   const cfgTmpPath = path.join(os.tmpdir(), `trackmatte_preview_cfg_${Date.now()}.json`)
   fs.writeFileSync(cfgTmpPath, JSON.stringify(withResolvedBgm(config), null, 2), 'utf-8')
   try {
-    await runPy(['--config', cfgTmpPath, '--output', outPath, '--preview'], onLog)
+    await runPy(['--config', cfgTmpPath, '--output', outPath, '--preview', '--preview-frame', String(frameIndex)], onLog)
   } finally {
     try { fs.rmSync(cfgTmpPath, { force: true }) } catch { /* noop */ }
   }

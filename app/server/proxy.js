@@ -4062,12 +4062,13 @@ app.get('/api/trackmatte/config', (req, res) => {
   }
 })
 
-// 빠른 미리보기(첫 장면만, 정지 이미지) — 글자 크기 등을 전체 렌더 없이 바로 확인.
+// 빠른 미리보기(장면 하나, 정지 이미지) — 글자 크기 등을 전체 렌더 없이 바로 확인.
+// frameIndex — 어느 장면을 볼지(2026-11-03: 장면마다 패널이 달라 편집하려면 장면별 미리보기 필요).
 app.post('/api/trackmatte/preview', async (req, res) => {
-  const { config } = req.body || {}
+  const { config, frameIndex } = req.body || {}
   if (!config || typeof config !== 'object') return res.status(400).json({ error: 'config 필요' })
   try {
-    const r = await renderTrackMattePreview({ config, onLog: () => {} })
+    const r = await renderTrackMattePreview({ config, frameIndex: Number(frameIndex) || 0, onLog: () => {} })
     res.json({ ok: true, imageUrl: `http://localhost:3001${r.imageUrl}?t=${Date.now()}` })
   } catch (err) {
     res.status(500).json({ error: err.message })

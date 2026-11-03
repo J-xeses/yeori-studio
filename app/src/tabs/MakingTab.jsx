@@ -1220,11 +1220,23 @@ export default function MakingTab() {
   const [tmSaveName, setTmSaveName] = useState('')
   const [tmLoadedName, setTmLoadedName] = useState(null)   // null="새로 만들기" 중, 문자열="그 이름을 불러와 편집 중"
   const [tmBusy, setTmBusy] = useState(false)
-  const [tmPreviewBusy, setTmPreviewBusy] = useState(false)
-  const [tmPreviewImage, setTmPreviewImage] = useState(null)
+  // 장면별 미리보기(2026-11-03, 성준님 요청: "미리보기는 각 장면별로 적용되어야 편집이 가능") —
+  // 장면마다 패널 구성·크롭이 달라서 "첫 장면만" 보던 전역 미리보기 1개로는 다른 장면을 편집할
+  // 수 없었음. {fi: imageUrl} 로 장면별 결과를 따로 들고, 버튼도 각 장면 카드 안에 둔다.
+  const [tmPreviewBusyFrame, setTmPreviewBusyFrame] = useState(null)   // 지금 로딩 중인 장면 index, 없으면 null
+  const [tmPreviewByFrame, setTmPreviewByFrame] = useState({})
   const [tmLog, setTmLog] = useState('')
   const [tmVideo, setTmVideo] = useState(null)
   const [tmResults, setTmResults] = useState([])
+  // 작업 중 상태 자동저장(2026-11-03, 성준님 요청: "수정중인데 현재 작업중인 상태가 저장이
+  // 안된다") — 생성/저장 버튼을 누르기 전에 탭이 닫히거나 새로고침되면 편집 중이던 장면
+  // 구성이 전부 날아가던 문제. 다른 탭의 studio-state.json 3초 자동저장과 같은 패턴을
+  // 브라우저 localStorage로 가볍게 적용(서버 round-trip 없이 즉시). "결과물 저장"(이름 붙여
+  // 생성)과는 별개 — 이건 그냥 "마지막으로 만지던 내용"을 잃지 않기 위한 임시 저장.
+  const TM_DRAFT_KEY = 'tm_draft_v1'
+  const [tmDraftRestored, setTmDraftRestored] = useState(false)
+  const [tmDraftSavedAt, setTmDraftSavedAt] = useState(null)
+  const tmDraftLoadedRef = useRef(false)
 
   // 패널 소스 "파일 경로"를 직접 타이핑/붙여넣기 하는 대신 클릭으로 고를 수 있는 파일 찾기
   // 팝업(2026-11-01, 성준님 요청). downloads/ 아래만 탐색(서버 /api/fs-browse).
@@ -1304,7 +1316,8 @@ export default function MakingTab() {
     },
   })
 
-  // 새로 만들기 — 폼을 기본값으로 되돌리고 "불러온 상태"를 해제한다.
+  // 새로 만들기 — 폼을 기본값으로 되돌리고 "불러온 상태"를 해제한다. 임시저장(draft)도 같이
+  // 지운다 — 안 그러면 다음에 열었을 때 방금 지운 내용이 다시 복원되어 버림.
   const resetTmForm = () => {
     // 배경색·BGM은 직전에 쓰던 값을 그대로 유지(장면 구성만 초기화) — 매번 새로 고르지 않아도 되게.
     setTmText('SEOYEORI'); setTmFontSize(300); setTmScaleX(100); setTmScaleY(100); setTmBg(tmPref('tm_bg_pref', 'black'))
@@ -1312,7 +1325,19 @@ export default function MakingTab() {
     setTmBgmFile(tmPref('tm_bgm_pref', '')); setTmBgmCustom(false); setTmBgmVolume(0.5)
     setTmFrames(TM_DEFAULT_FRAMES)
     setTmSaveName(''); setTmLoadedName(null)
-    setTmVideo(null); setTmPreviewImage(null); setTmLog('')
+    setTmVideo(null); setTmPreviewByFrame({}); setTmLog('')
+    try { localStorage.removeItem(TM_DRAFT_KEY) } catch { /* noop */ }
+    setTmDraftRestored(false); setTmDraftSavedAt(null)
+  }
+
+  // "별도 파일로 저장"용 다음 버전 이름 — 이미 "_v숫자"로 끝나면 숫자를 올리고, 아니면
+  // "_v02"를 붙인다(2026-11-03, 성준님 요청: "수정본을 v_02를 붙여 별도 파일로"). 원본은
+  // 그대로 두고 새 이름으로 렌더하므로 덮어쓰지 않는다.
+  const nextTmVersionName = (base) => {
+    const name = (base || 'trackmatte').trim()
+    const m = /^(.*)_v(\d+)$/.exec(name)
+    if (m) return `${m[1]}_v${String(Number(m[2]) + 1).padStart(2, '0')}`
+    return `${name}_v02`
   }
 
   // 지난 결과물 불러오기 — 그 결과물을 만든 실제 설정값을 폼에 그대로 채우고, 영상도 바로 보여준다.
@@ -1343,9 +1368,53 @@ export default function MakingTab() {
         })),
       })))
       setTmSaveName(f.name); setTmLoadedName(f.name)
-      setTmVideo(`${YEORI_SERVER}${f.url}`); setTmPreviewImage(null); setTmLog('')
+      setTmVideo(`${YEORI_SERVER}${f.url}`); setTmPreviewByFrame({}); setTmLog('')
     } catch (e) { alert(`불러오기 실패: ${e.message}`) }
   }
+
+  // 작업 중 상태 임시저장(초안) — 열려 있는 동안 1.2초 디바운스로 localStorage에 저장하고,
+  // 카드를 다시 열 때 자동으로 복원한다(2026-11-03, 성준님 요청: "수정중인데 현재 작업중인
+  // 상태가 저장이 안된다"). "결과물 저장"(이름 붙여 생성)과는 완전히 별개 — 그건 서버에
+  // 영상+설정을 남기는 것이고, 이건 그냥 다음에 열었을 때 마지막 작업을 잃지 않기 위한 것.
+  useEffect(() => {
+    if (!tmOpen || tmDraftLoadedRef.current) return
+    tmDraftLoadedRef.current = true
+    try {
+      const raw = localStorage.getItem(TM_DRAFT_KEY)
+      if (!raw) return
+      const d = JSON.parse(raw)
+      if (!d || !Array.isArray(d.frames) || !d.frames.length) return
+      setTmText(d.text ?? 'SEOYEORI')
+      setTmFontSize(d.fontSize ?? 300)
+      setTmScaleX(d.scaleX ?? 100)
+      setTmScaleY(d.scaleY ?? 100)
+      setTmBg(d.bg ?? tmPref('tm_bg_pref', 'black'))
+      setTmFadeIn(d.fadeIn ?? 0.4)
+      setTmFadeOut(d.fadeOut ?? 0.7)
+      setTmBgmFile(d.bgmFile ?? ''); setTmBgmCustom(false)
+      setTmBgmVolume(d.bgmVolume ?? 0.5)
+      setTmFrames(d.frames)
+      setTmSaveName(d.saveName ?? ''); setTmLoadedName(d.loadedName ?? null)
+      setTmDraftRestored(true); setTmDraftSavedAt(d.savedAt ?? null)
+    } catch { /* noop */ }
+  }, [tmOpen])
+
+  useEffect(() => {
+    if (!tmOpen || !tmDraftLoadedRef.current) return
+    const t = setTimeout(() => {
+      try {
+        const savedAt = Date.now()
+        localStorage.setItem(TM_DRAFT_KEY, JSON.stringify({
+          text: tmText, fontSize: tmFontSize, scaleX: tmScaleX, scaleY: tmScaleY, bg: tmBg,
+          fadeIn: tmFadeIn, fadeOut: tmFadeOut, bgmFile: tmBgmFile, bgmVolume: tmBgmVolume,
+          frames: tmFrames, saveName: tmSaveName, loadedName: tmLoadedName, savedAt,
+        }))
+        setTmDraftSavedAt(savedAt)
+      } catch { /* noop */ }
+    }, 1200)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tmOpen, tmText, tmFontSize, tmScaleX, tmScaleY, tmBg, tmFadeIn, tmFadeOut, tmBgmFile, tmBgmVolume, tmFrames, tmSaveName, tmLoadedName])
 
   // strict=false(미리보기 전용) — 패널 소스를 아직 안 넣었어도 글자 크기·위치만 먼저 보고
   // 판단할 수 있게 막지 않는다(2차 피드백: "글자크기 수정 후 확인 안 됨" — 빈 소스면 막혀서
@@ -1361,33 +1430,38 @@ export default function MakingTab() {
     return true
   }
 
-  // 미리보기 — 첫 장면만 합성한 정지 이미지를 빠르게 받아온다(보통 1~2초). 글자 크기·위치처럼
+  // 미리보기 — 장면 하나를 합성한 정지 이미지를 빠르게 받아온다(보통 1~2초). 글자 크기·위치처럼
   // "눈으로 보고 바로 결정"해야 하는 값을 전체(여러 장면) 렌더 없이 확인할 때 씀.
-  const runTrackMattePreview = async () => {
+  // fi — 몇 번째 장면을 볼지(2026-11-03: 장면마다 패널이 달라 장면별로 따로 미리볼 수 있게 확장).
+  const runTrackMattePreview = async (fi = 0) => {
     if (!validateTmFrames(false)) return
-    setTmPreviewBusy(true); setTmPreviewImage(null)
+    setTmPreviewBusyFrame(fi)
     try {
       const res = await fetch(`${YEORI_SERVER}/api/trackmatte/preview`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: buildTmConfig() }),
+        body: JSON.stringify({ config: buildTmConfig(), frameIndex: fi }),
       })
       const d = await res.json()
       if (!res.ok) { alert(`미리보기 실패: ${d.error}`); return }
       // d.imageUrl은 proxy.js가 이미 http://localhost:3001을 붙여서 보냄(절대경로) — 여기서
       // 또 붙이면 "localhost:3001http://localhost:3001/..." 꼴로 깨진다(실측 발견, 2차 보완).
-      setTmPreviewImage(d.imageUrl)
+      setTmPreviewByFrame(p => ({ ...p, [fi]: d.imageUrl }))
     } catch (e) { alert(`미리보기 실패: ${e.message}`) }
-    finally { setTmPreviewBusy(false) }
+    finally { setTmPreviewBusyFrame(null) }
   }
 
-  const runTrackMatte = async () => {
+  // nameOverride — "새 버전으로 저장" 버튼이 nextTmVersionName()으로 계산한 이름을 즉시
+  // 넘겨준다(setTmSaveName 후 바로 호출하면 state가 비동기라 아직 반영 전 값을 읽는
+  // stale-closure 버그가 날 수 있어, 이 앱의 다른 탭에서 겪은 것과 같은 함정 — 인자로 직접 전달).
+  const runTrackMatte = async (nameOverride) => {
     if (!validateTmFrames()) return
-    setTmBusy(true); setTmLog(''); setTmVideo(null); setTmPreviewImage(null)
+    const outputName = (nameOverride ?? tmSaveName).trim() || undefined
+    setTmBusy(true); setTmLog(''); setTmVideo(null)
     const append = (l) => setTmLog(p => (p + l + '\n').slice(-6000))
     try {
       const res = await fetch(`${YEORI_SERVER}/api/trackmatte/render`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: buildTmConfig(), outputName: tmSaveName.trim() || undefined }),
+        body: JSON.stringify({ config: buildTmConfig(), outputName }),
       })
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
       for (;;) {
@@ -3803,10 +3877,19 @@ export default function MakingTab() {
             background: tmLoadedName ? 'rgba(124,58,237,0.15)' : 'rgba(255,255,255,0.05)', fontSize: 12,
           }}>
             {tmLoadedName
-              ? <>📂 <b>불러옴: {tmLoadedName}</b> — 수정 후 생성하면 이 이름으로 덮어씁니다(이름을 바꾸면 새로 저장됨)</>
+              ? <>📂 <b>불러옴: {tmLoadedName}</b> — 아래 "덮어쓰기 저장" 또는 "새 버전으로 저장" 중 골라서 생성하세요</>
               : <>🆕 새로 만들기</>}
             <button className={s.captureBtn} onClick={resetTmForm}>↺ 새로 만들기로 초기화</button>
           </div>
+          {/* 2026-11-03: "수정중인데 현재 작업중인 상태가 저장이 안된다" — 생성 버튼을 안 눌러도
+              이 브라우저에 1.2초 간격으로 자동 임시저장되고, 카드를 다시 열면 그대로 복원됨을
+              알려준다(복원 여부를 묻지 않고 바로 복원 — 되돌리기 가능한 작업은 확인 생략 원칙). */}
+          {tmDraftRestored && (
+            <div style={{ marginTop: 6, padding: '4px 8px', borderRadius: 6, background: 'rgba(255,200,0,0.12)', fontSize: 12 }}>
+              📝 마지막으로 작업 중이던 내용을 자동 복원했습니다{tmDraftSavedAt ? ` (${new Date(tmDraftSavedAt).toLocaleString('ko-KR')} 저장분)` : ''}.
+              이 내용이 아니라 새로 시작하려면 위 "↺ 새로 만들기로 초기화"를 누르세요.
+            </div>
+          )}
 
           {/* 아래 두 줄은 fontSize:12로 통일(이전엔 라벨·숫자입력이 className 없이 브라우저
               기본 크기를 써서 다른 줄보다 커 보이는 "밸런스 안 맞음" 문제가 있었음, 2차 피드백). */}
@@ -3858,18 +3941,9 @@ export default function MakingTab() {
               onChange={e => setTmBgmVolume(e.target.value)} /> {Math.round(tmBgmVolume * 100)}%</label>
           </div>
 
-          <button className={s.captureBtn} style={{ marginTop: 10 }} disabled={tmPreviewBusy} onClick={runTrackMattePreview}>
-            {tmPreviewBusy ? '⏳ 미리보기 중…' : '👁 미리보기(첫 장면만, 1~2초)'}
-          </button>
-          <div className={s.emptyHint} style={{ marginTop: 4 }}>
-            장면 소스를 아직 안 넣었어도 글자 크기·배경만 먼저 볼 수 있습니다(배경색 위에 글자 모양만 표시).
+          <div className={s.emptyHint} style={{ marginTop: 10 }}>
+            👁 미리보기는 이제 장면마다 따로 볼 수 있습니다 — 각 장면 카드 안의 "이 장면 미리보기"를 누르세요(소스를 아직 안 넣었어도 글자 크기·배경만 먼저 볼 수 있습니다).
           </div>
-          {tmPreviewImage && (
-            <div style={{ marginTop: 8 }}>
-              <img src={tmPreviewImage} alt="트랙매트 미리보기" style={{ width: '100%', maxHeight: 300, objectFit: 'contain', borderRadius: 6, background: '#000' }} />
-              <div className={s.emptyHint}>글자 크기·위치가 마음에 들면 아래 "트랙매트 생성"으로 전체(모든 장면)를 렌더하세요. 이 미리보기는 저장되지 않습니다.</div>
-            </div>
-          )}
 
           {tmFrames.map((frame, fi) => (
             <div key={fi} style={{ marginTop: 10, padding: 8, border: '1px solid var(--border,#333)', borderRadius: 6 }}>
@@ -3877,8 +3951,17 @@ export default function MakingTab() {
                 장면 {fi + 1}
                 <label>길이 <input type="number" min={0.1} step={0.1} value={frame.duration} style={{ width: 60 }}
                   onChange={e => updateTmFrame(fi, { duration: e.target.value })} />초</label>
+                <button className={s.captureBtn} disabled={tmPreviewBusyFrame === fi} onClick={() => runTrackMattePreview(fi)}>
+                  {tmPreviewBusyFrame === fi ? '⏳ 미리보기 중…' : '👁 이 장면 미리보기'}
+                </button>
                 <button className={s.captureBtn} onClick={() => removeTmFrame(fi)}>✕ 장면 삭제</button>
               </div>
+              {tmPreviewByFrame[fi] && (
+                <div style={{ marginTop: 6 }}>
+                  <img src={tmPreviewByFrame[fi]} alt={`장면 ${fi + 1} 미리보기`} style={{ width: '100%', maxHeight: 260, objectFit: 'contain', borderRadius: 6, background: '#000' }} />
+                  <div className={s.emptyHint}>이 미리보기는 저장되지 않습니다 — 마음에 들면 아래 "트랙매트 생성"으로 전체(모든 장면)를 렌더하세요.</div>
+                </div>
+              )}
               {frame.panels.map((panel, pi) => (
                 panel.type === 'empty' ? (
                   <div key={pi} style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12, opacity: 0.6 }}>
@@ -3997,9 +4080,31 @@ export default function MakingTab() {
           <div className={s.urlRow} style={{ marginTop: 10 }}>
             <label>저장 이름 <input className={s.urlInput} style={{ maxWidth: 200 }} placeholder="비우면 자동 이름"
               value={tmSaveName} onChange={e => setTmSaveName(e.target.value)} /></label>
-            <button className={s.captureBtn} disabled={tmBusy} onClick={runTrackMatte}>
-              {tmBusy ? '⏳ 생성 중…' : (tmLoadedName ? '🎬 같은 이름으로 다시 생성' : '🎬 트랙매트 생성')}
-            </button>
+            {/* 2026-11-03, 성준님 요청: "수정본을 v_02를 붙여 별도 파일로" — 불러와서 편집 중일 때
+                "덮어쓰기"(같은 이름)와 "새 버전으로 저장"(다른 이름, 원본은 그대로)을 버튼으로
+                뚜렷하게 구분한다. 색을 다르게 둬서 "이 버튼은 되돌릴 수 없이 덮어쓴다"는 걸 눈에
+                띄게 함. 새로 만드는 중(불러온 게 없음)이면 평소처럼 버튼 1개만 보인다. */}
+            {tmLoadedName ? (
+              <>
+                <button className={s.captureBtn} disabled={tmBusy} title={`기존 "${tmLoadedName}" 파일을 덮어씁니다`}
+                  style={{ borderColor: '#d9534f', color: '#d9534f' }} onClick={() => runTrackMatte()}>
+                  {tmBusy ? '⏳ 생성 중…' : '🔁 덮어쓰기 저장'}
+                </button>
+                <button className={s.captureBtn} disabled={tmBusy}
+                  title={`원본은 그대로 두고 "${nextTmVersionName(tmLoadedName)}"로 새로 저장합니다`}
+                  onClick={() => { const v = nextTmVersionName(tmLoadedName); setTmSaveName(v); setTmLoadedName(null); runTrackMatte(v) }}>
+                  {tmBusy ? '⏳ 생성 중…' : `🆕 새 버전으로 저장(${nextTmVersionName(tmLoadedName)})`}
+                </button>
+              </>
+            ) : (
+              <button className={s.captureBtn} disabled={tmBusy} onClick={() => runTrackMatte()}>
+                {tmBusy ? '⏳ 생성 중…' : '🎬 트랙매트 생성'}
+              </button>
+            )}
+          </div>
+          <div className={s.emptyHint} style={{ marginTop: 4 }}>
+            이 버튼을 누르면 영상과 설정이 함께 저장됩니다(이름이 같으면 덮어씀). 작업 중 화면 구성 자체는
+            {tmDraftSavedAt ? ` 방금(${new Date(tmDraftSavedAt).toLocaleTimeString('ko-KR')}) 이 브라우저에 자동으로 임시저장됐습니다 — 생성을 안 눌러도 잃지 않습니다.` : ' 이 브라우저에 자동으로 임시저장됩니다.'}
           </div>
           {/* 영상 플레이어를 로그보다 먼저 보여준다 — 장면이 여러 개면 로그 밑에 묻혀서
               "플레이어가 어디 있냐"는 피드백이 나왔음(2차 피드백). 생성 버튼 바로 아래, 눈에
