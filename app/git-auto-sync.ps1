@@ -54,10 +54,30 @@ try {
 
     $counts2 = (git rev-list --left-right --count origin/master...master) -split '\s+'
     $ahead2  = [int]$counts2[1]
-    if ($ahead2 -gt 0) {
+
+    # Push batching (2026-11-03): Vercel auto-deploys this project on every push
+    # to master. This script used to push every hour regardless of content,
+    # which produced ~15-20 production deployments/day and tripped Vercel's
+    # Hobby "fair use" pause (deployments paused 2026-10-31). The hourly commit
+    # above is unaffected (local-only, no deploy) -- only the push itself,
+    # which is what actually triggers a Vercel build, is now batched to roughly
+    # once a day via a last-push timestamp file.
+    $PushStateFile     = 'C:\yeori-studio\downloads\state\.last-push.json'
+    $PushIntervalHours = 20
+    $lastPush = $null
+    if (Test-Path $PushStateFile) {
+        try { $lastPush = [datetime](Get-Content $PushStateFile -Raw | ConvertFrom-Json).at } catch {}
+    }
+    $dueToPush = (-not $lastPush) -or ((Get-Date) - $lastPush).TotalHours -ge $PushIntervalHours
+
+    if ($ahead2 -gt 0 -and $dueToPush) {
         git push origin master | Out-Null
         if ($LASTEXITCODE -ne 0) { Log "ERROR: git push failed (exit $LASTEXITCODE)"; exit 1 }
-        Log "Pushed $ahead2 commit(s) to origin"
+        New-Item -ItemType Directory -Force -Path (Split-Path $PushStateFile) | Out-Null
+        @{ at = (Get-Date -Format 'o') } | ConvertTo-Json | Set-Content -Path $PushStateFile -Encoding utf8
+        Log "Pushed $ahead2 commit(s) to origin (batched, triggers Vercel deploy)"
+    } elseif ($ahead2 -gt 0) {
+        Log "Push deferred (batching -- $ahead2 commit(s) waiting, last push $lastPush)"
     } else {
         Log "Nothing to push"
     }
