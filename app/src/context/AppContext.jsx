@@ -73,7 +73,7 @@ const defaultState = {
   },
   videoSettings: { subtitleEnabled: true, font: 'Apple SD Gothic Neo', fontSize: 32, color: '#ffffff', bgStyle: '반투명 직각 박스', boxColor: '#000000', subtitlePosition: 'bottom' },
   renderProgress: { current: 0, total: 0, isRendering: false },
-  thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '' },
+  thumbnail: { text: '', fontSize: 48, color: '#ffffff', shadowColor: '#000000', bold: true, textY: 70, ratio: '16:9', bgImageUrl: '', posterLayers: [] },
   publishing: {
     youtube:   { title: '', description: '', tags: '' },
     instagram: { title: '', description: '', tags: '' },

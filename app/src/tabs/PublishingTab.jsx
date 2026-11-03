@@ -19,6 +19,64 @@ const RATIOS = [
   { key: '9:16', label: '9:16 (인스타/TikTok)', w: 1080, h: 1920 },
 ]
 
+// 2026-11-03 — "포스터 레이어" 손글씨 타이포 프리셋. 굵고 자유분방한 느낌 위주로 구글 폰트에서
+// 선별(눈누 상업용 폰트는 앱에 직접 임베드하기 번거로워 웹폰트로 안정적으로 로드되는 쪽을 택함).
+const FONT_PRESETS = [
+  { key: 'black-han-sans', label: 'Black Han Sans · 굵은 임팩트', family: '"Black Han Sans", sans-serif' },
+  { key: 'jua',             label: 'Jua · 두껍고 둥근 손글씨',    family: '"Jua", sans-serif' },
+  { key: 'gamja-flower',    label: 'Gamja Flower · 굵은 손글씨',  family: '"Gamja Flower", cursive' },
+  { key: 'do-hyeon',        label: 'Do Hyeon · 굵은 고딕',        family: '"Do Hyeon", sans-serif' },
+  { key: 'east-sea-dokdo',  label: 'East Sea Dokdo · 손글씨',     family: '"East Sea Dokdo", cursive' },
+  { key: 'gaegu',           label: 'Gaegu · 편안한 손글씨',       family: '"Gaegu", cursive' },
+]
+const GOOGLE_FONTS_HREF = 'https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Gamja+Flower&family=Do+Hyeon&family=East+Sea+Dokdo&family=Gaegu:wght@700&display=swap'
+const fontFamilyFor = (key) => (FONT_PRESETS.find(f => f.key === key) || FONT_PRESETS[0]).family
+
+const DOODLE_TYPES = [
+  { key: 'circle', label: '○ 낙서 동그라미' },
+  { key: 'star',   label: '★ 별' },
+  { key: 'arrow2', label: '↝ 손그림 화살표' },
+]
+
+// 포스터 레이어용 손그림 느낌 도형 — 랜덤 없이 고정된 손맛 변형(두 번 겹쳐 그린 삐뚠 원 등)으로
+// 매 렌더마다 모양이 흔들리지 않게 한다. ctx는 레이어 중심으로 이미 translate/rotate된 상태로 들어온다.
+function drawDoodle(ctx, type, r, color) {
+  ctx.save()
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+  if (type === 'star') {
+    const spikes = 5, outerR = r, innerR = r * 0.45
+    ctx.beginPath()
+    for (let i = 0; i < spikes * 2; i++) {
+      const rad = i % 2 === 0 ? outerR : innerR
+      const ang = (Math.PI / spikes) * i - Math.PI / 2
+      const px = Math.cos(ang) * rad, py = Math.sin(ang) * rad
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
+    }
+    ctx.closePath(); ctx.fill()
+  } else if (type === 'arrow2') {
+    ctx.lineWidth = Math.max(4, r * 0.18)
+    ctx.beginPath()
+    ctx.moveTo(-r, r * 0.6)
+    ctx.quadraticCurveTo(0, -r * 0.8, r, -r * 0.1)
+    ctx.stroke()
+    const headLen = r * 0.4
+    ctx.beginPath()
+    ctx.moveTo(r, -r * 0.1)
+    ctx.lineTo(r - headLen * 0.9, -r * 0.1 - headLen * 0.5)
+    ctx.moveTo(r, -r * 0.1)
+    ctx.lineTo(r - headLen * 0.3, -r * 0.1 + headLen * 0.55)
+    ctx.stroke()
+  } else {
+    ctx.lineWidth = Math.max(3, r * 0.1)
+    ctx.beginPath(); ctx.ellipse(0, 0, r, r * 0.9, 0.08, 0, Math.PI * 2 * 0.96); ctx.stroke()
+    ctx.beginPath(); ctx.ellipse(r * 0.04, r * 0.03, r * 0.97, r * 0.93, -0.05, 0, Math.PI * 2 * 0.9); ctx.stroke()
+  }
+  ctx.restore()
+}
+
 // object-fit: cover와 동일하게 비율을 유지하며 대상 영역을 꽉 채워 그린다
 function drawImageCover(ctx, img, x, y, w, h) {
   const imgRatio = img.width / img.height
@@ -49,10 +107,14 @@ function ThumbnailSection({ epNum }) {
   const [studioImages, setStudioImages] = useState([])
   const [loadingImages, setLoadingImages] = useState(true)
   const [saveStatus, setSaveStatus] = useState('')
+  const [selectedLayerId, setSelectedLayerId] = useState(null)
+  const [fontsTick, setFontsTick] = useState(0) // 구글 폰트 로드 완료 시 캔버스 강제 재렌더용
+  const draggingRef = useRef(false)
 
   const set = (p) => dispatch({ type: 'SET_THUMB', p })
   const ratio = thumbnail.ratio || '16:9'
   const dims = RATIOS.find(r => r.key === ratio) || RATIOS[0]
+  const posterLayers = thumbnail.posterLayers || []
 
   // 2026-10-23 — 성준님 요청: "YouTube 업로드용 썸네일 편집효과" 1단계(편집의도 기획 수준,
   // AI 배경제거·컷아웃 같은 무거운 작업 없이 캔버스 2D로 즉시 미리보기 가능한 수준). 벤치마킹
@@ -170,11 +232,111 @@ function ThumbnailSection({ epNum }) {
       ctx.restore()
     }
 
+    // ⑤ 포스터 레이어 — 손글씨 문구/낙서 요소를 사진의 여백에 자유 배치(2026-11-03, 포스터형
+    // 타이포 피드백 반영). 각 레이어는 자기 중심으로 translate/rotate 후 그려 회전이 자연스럽다.
+    posterLayers.forEach(layer => {
+      ctx.save()
+      const lx = W * (layer.xPct ?? 50) / 100
+      const ly = H * (layer.yPct ?? 50) / 100
+      ctx.translate(lx, ly)
+      ctx.rotate(((layer.rotate ?? 0) * Math.PI) / 180)
+      let bw = 80, bh = 60
+      if (layer.kind === 'text') {
+        const fam = fontFamilyFor(layer.fontKey)
+        const size = layer.size || 64
+        ctx.font = `${size}px ${fam}`
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+        const text = layer.text || ''
+        if (layer.stroke) {
+          ctx.lineJoin = 'round'
+          ctx.strokeStyle = layer.strokeColor || '#141214'
+          ctx.lineWidth = Math.max(3, size * 0.16)
+          ctx.strokeText(text, 0, 0)
+        }
+        ctx.fillStyle = layer.color || '#ffffff'
+        ctx.fillText(text, 0, 0)
+        bw = Math.max(60, ctx.measureText(text).width + size * 0.3); bh = size * 1.4
+      } else if (layer.kind === 'doodle') {
+        const r = Math.min(W, H) * (layer.size ?? 14) / 100
+        drawDoodle(ctx, layer.doodleType, r, layer.color || '#fbbf24')
+        bw = bh = r * 2.3
+      }
+      if (layer.id === selectedLayerId) {
+        ctx.strokeStyle = 'rgba(167,139,250,.9)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4])
+        ctx.strokeRect(-bw / 2, -bh / 2, bw, bh)
+        ctx.setLineDash([])
+      }
+      ctx.restore()
+    })
+
     ctx.fillStyle = 'rgba(167,139,250,.25)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'
     ctx.fillText('여리 Studio', W - 12, H - 10)
-  }, [bgImage, thumbnail])
+  }, [bgImage, thumbnail, posterLayers, selectedLayerId, fontsTick])
 
   useEffect(() => { draw() }, [draw])
+
+  // 포스터 레이어용 구글 폰트 로드 — 링크는 한 번만 head에 추가하고, 로드 완료 후 fontsTick을
+  // 올려 draw()가 fallback 폰트로 그려졌던 첫 프레임을 올바른 폰트로 다시 그리게 한다.
+  useEffect(() => {
+    if (!document.getElementById('yeori-poster-fonts')) {
+      const link = document.createElement('link')
+      link.id = 'yeori-poster-fonts'
+      link.rel = 'stylesheet'
+      link.href = GOOGLE_FONTS_HREF
+      document.head.appendChild(link)
+    }
+    let cancelled = false
+    Promise.all(FONT_PRESETS.map(f => document.fonts.load(`700 16px ${f.family}`).catch(() => {})))
+      .then(() => { if (!cancelled) setFontsTick(t => t + 1) })
+    return () => { cancelled = true }
+  }, [])
+
+  const addTextLayer = () => {
+    const id = `t${Date.now()}`
+    set({ posterLayers: [...posterLayers, {
+      id, kind: 'text', text: '문구 입력', xPct: 50, yPct: 50,
+      fontKey: 'gamja-flower', size: 64, color: '#ffffff', rotate: 0,
+      stroke: true, strokeColor: '#141214',
+    }] })
+    setSelectedLayerId(id)
+  }
+  const addDoodleLayer = (doodleType) => {
+    const id = `d${Date.now()}`
+    set({ posterLayers: [...posterLayers, {
+      id, kind: 'doodle', doodleType, xPct: 50, yPct: 50, size: 14, color: '#fbbf24', rotate: 0,
+    }] })
+    setSelectedLayerId(id)
+  }
+  const updateLayer = (id, patch) => {
+    set({ posterLayers: posterLayers.map(l => l.id === id ? { ...l, ...patch } : l) })
+  }
+  const removeLayer = (id) => {
+    set({ posterLayers: posterLayers.filter(l => l.id !== id) })
+    if (selectedLayerId === id) setSelectedLayerId(null)
+  }
+
+  // 선택된 레이어가 있을 때만 캔버스 클릭·드래그로 위치(xPct/yPct)를 옮길 수 있게 한다 —
+  // 슬라이더 대신 미리보기에서 직접 끌어다 놓는 쪽이 포스터형 자유배치에 훨씬 빠르다.
+  const canvasPosFromEvent = (e) => {
+    const canvas = canvasRef.current
+    const rect = canvas.getBoundingClientRect()
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width)
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+    return {
+      xPct: Math.max(0, Math.min(100, (x / canvas.width) * 100)),
+      yPct: Math.max(0, Math.min(100, (y / canvas.height) * 100)),
+    }
+  }
+  const handleCanvasDown = (e) => {
+    if (!selectedLayerId) return
+    draggingRef.current = true
+    updateLayer(selectedLayerId, canvasPosFromEvent(e))
+  }
+  const handleCanvasMove = (e) => {
+    if (!draggingRef.current || !selectedLayerId) return
+    updateLayer(selectedLayerId, canvasPosFromEvent(e))
+  }
+  const handleCanvasUp = () => { draggingRef.current = false }
 
   // 탭 전환/재접속 후에도 배경 이미지가 유지되도록 thumbnail.bgImageUrl(데이터 URL 또는 서버 URL)로 복원.
   // bgImageUrl은 에피소드별 tabState에 들어있어 에피소드 전환 시 바뀌는데(AppContext swapTabState),
@@ -529,6 +691,89 @@ function ThumbnailSection({ epNum }) {
           </div>
         </div>
 
+        <div className={s.panel}>
+          <div className={s.panelTitle}>포스터 레이어 (굵은 손글씨 포인트)</div>
+          <div className={s.layerPanelHead}>
+            <button className={s.smallAddBtn} onClick={addTextLayer}>+ 텍스트</button>
+            {DOODLE_TYPES.map(d => (
+              <button key={d.key} className={s.smallAddBtn} onClick={() => addDoodleLayer(d.key)}>+ {d.label}</button>
+            ))}
+          </div>
+          {posterLayers.length > 0 && (
+            <div className={s.layerHint}>레이어를 선택한 뒤 오른쪽 미리보기를 클릭·드래그하면 위치가 옮겨져요.</div>
+          )}
+          <div className={s.layerList}>
+            {posterLayers.map(layer => (
+              <div key={layer.id}
+                className={`${s.layerRow} ${selectedLayerId === layer.id ? s.layerRowActive : ''}`}
+                onClick={() => setSelectedLayerId(layer.id)}>
+                <div className={s.layerRowHead}>
+                  <span className={s.layerKindTag}>{layer.kind === 'text' ? '텍스트' : DOODLE_TYPES.find(d => d.key === layer.doodleType)?.label}</span>
+                  <button className={s.layerDelBtn} onClick={e => { e.stopPropagation(); removeLayer(layer.id) }}>삭제</button>
+                </div>
+                {layer.kind === 'text' ? (
+                  <>
+                    <input className={s.layerText} value={layer.text}
+                      onChange={e => updateLayer(layer.id, { text: e.target.value })}
+                      onClick={e => e.stopPropagation()} />
+                    <select className={s.fontSelect} value={layer.fontKey}
+                      onChange={e => updateLayer(layer.id, { fontKey: e.target.value })}
+                      onClick={e => e.stopPropagation()}>
+                      {FONT_PRESETS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
+                    </select>
+                    <div className={s.field}>
+                      <label>크기 <span className={s.val}>{layer.size}px</span></label>
+                      <input type="range" min="24" max="140" value={layer.size}
+                        onChange={e => updateLayer(layer.id, { size: parseInt(e.target.value) })}
+                        onClick={e => e.stopPropagation()} />
+                    </div>
+                    <div className={s.field}>
+                      <label>회전 <span className={s.val}>{layer.rotate}°</span></label>
+                      <input type="range" min="-45" max="45" value={layer.rotate}
+                        onChange={e => updateLayer(layer.id, { rotate: parseInt(e.target.value) })}
+                        onClick={e => e.stopPropagation()} />
+                    </div>
+                    <div className={s.colorRow} onClick={e => e.stopPropagation()}>
+                      <input type="color" className={s.colorPicker} value={layer.color}
+                        onChange={e => updateLayer(layer.id, { color: e.target.value })} />
+                      <span className={s.colorVal}>{layer.color}</span>
+                      <label className={s.checkLabel} style={{ marginLeft: 8 }}>
+                        <input type="checkbox" checked={!!layer.stroke}
+                          onChange={e => updateLayer(layer.id, { stroke: e.target.checked })} />
+                        외곽선
+                      </label>
+                      {layer.stroke && (
+                        <input type="color" className={s.colorPicker} value={layer.strokeColor || '#141214'}
+                          onChange={e => updateLayer(layer.id, { strokeColor: e.target.value })} />
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={s.field}>
+                      <label>크기 <span className={s.val}>{layer.size}%</span></label>
+                      <input type="range" min="4" max="35" value={layer.size}
+                        onChange={e => updateLayer(layer.id, { size: parseInt(e.target.value) })}
+                        onClick={e => e.stopPropagation()} />
+                    </div>
+                    <div className={s.field}>
+                      <label>회전 <span className={s.val}>{layer.rotate}°</span></label>
+                      <input type="range" min="-180" max="180" value={layer.rotate}
+                        onChange={e => updateLayer(layer.id, { rotate: parseInt(e.target.value) })}
+                        onClick={e => e.stopPropagation()} />
+                    </div>
+                    <div className={s.colorRow} onClick={e => e.stopPropagation()}>
+                      <input type="color" className={s.colorPicker} value={layer.color}
+                        onChange={e => updateLayer(layer.id, { color: e.target.value })} />
+                      <span className={s.colorVal}>{layer.color}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <button className={s.downloadBtn} onClick={downloadPNG}>
           ⬇ PNG 다운로드 ({dims.w}×{dims.h})
         </button>
@@ -544,8 +789,12 @@ function ThumbnailSection({ epNum }) {
           <span className={s.size}>{dims.w} × {dims.h}</span>
         </div>
         <div className={s.canvasWrap} style={ratio === '9:16' ? { maxWidth: 320, aspectRatio: '9/16' } : undefined}>
-          <canvas ref={canvasRef} width={dims.w} height={dims.h} className={s.canvas} />
+          <canvas ref={canvasRef} width={dims.w} height={dims.h} className={s.canvas}
+            style={{ cursor: selectedLayerId ? 'crosshair' : 'default' }}
+            onMouseDown={handleCanvasDown} onMouseMove={handleCanvasMove}
+            onMouseUp={handleCanvasUp} onMouseLeave={handleCanvasUp} />
         </div>
+        {selectedLayerId && <div className={s.layerHint} style={{ padding: 0 }}>선택된 레이어를 캔버스에서 드래그해 위치를 조정하세요.</div>}
       </div>
     </div>
   )
