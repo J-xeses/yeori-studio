@@ -60,9 +60,15 @@ EFFECT_TYPES = {
     "glow":      {"color": "#AFA9EC", "radius": 12},
     "highlight": {"underline_color": "#FFE066", "dur": 0.2},
     "split":     {"left_from": "left", "right_from": "right"},
+    # 카라오케(동시표시) — 2026-11-04, 필모라 "자동 자막" 레퍼런스 기준. 다른 효과들과
+    # 달리 문장 전체가 구간 내내 떠 있고, 현재 말하는 단어만 하이라이트+살짝 팝된다.
+    # entry.words(단어별 start/end, 엔트리 시작 기준 상대시간)가 있어야 동작 — 없으면
+    # 일반 text 엔트리처럼 fade로 폴백.
+    "karaoke":   {"base_color": "#FFFFFF", "base_opacity": 0.55, "highlight_color": "#FFE066",
+                  "pop_scale": 1.18, "pop_dur": 0.12},
 }
 # 이번 버전에서 실제 렌더 구현된 효과. 나머지는 fade로 폴백 + 경고.
-IMPLEMENTED = {"fade", "slide", "pop", "slam", "glow", "typer"}
+IMPLEMENTED = {"fade", "slide", "pop", "slam", "glow", "typer", "karaoke"}
 
 # ── 폰트 (자막용 볼드 산세리프) ────────────────────────────────────────
 BUNDLED_FONT_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
@@ -336,6 +342,70 @@ def typer_reveal_mask(lines, font, outline, layer_size, chars_shown):
     return mask
 
 
+# ── 카라오케(동시표시) 자막 ───────────────────────────────────────────
+# 다른 effect들은 엔트리 하나 = 텍스트 블록 하나가 통째로 들고남하는 방식이지만,
+# 이건 문장 전체를 구간 내내 띄워두고 "지금 말하는 단어"만 하이라이트+팝 시킨다.
+# 그래서 compose_frame(블록 단위 모션)과는 별도 경로 — build_entry_frames에서 분기.
+def layout_words(words, font, space_w):
+    """단어별 (x_offset, width) — 기준 폰트 크기(스케일 1.0) 기준 가로 배치."""
+    scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
+    widths = [scratch.textlength(w["text"], font=font) for w in words]
+    xs, cx = [], 0.0
+    for wdt in widths:
+        xs.append(cx)
+        cx += wdt + space_w
+    total_w = cx - space_w if words else 0.0
+    return xs, widths, total_w
+
+
+def compose_karaoke_frame(canvas_wh, words, font, style, params, t_rel):
+    cw, ch = canvas_wh
+    frame = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    outline = int(font.size * 0.09) if style.get("outline", True) else 0
+    base_opacity = int(255 * clamp(float(params.get("base_opacity", 0.55))))
+    base_color = hex_rgba(params.get("base_color", "#FFFFFF"), base_opacity)
+    hi_color = hex_rgba(params.get("highlight_color", "#FFE066"))
+    pop_scale = float(params.get("pop_scale", 1.18))
+    pop_dur = max(0.01, float(params.get("pop_dur", 0.12)))
+
+    scratch = ImageDraw.Draw(Image.new("RGBA", (4, 4)))
+    space_w = scratch.textlength(" ", font=font)
+    xs, widths, total_w = layout_words(words, font, space_w)
+    line_h = int(font.size * 1.42)
+    pad = max(outline * 2, 6)
+
+    active_idx = next((i for i, w in enumerate(words)
+                        if float(w["start"]) <= t_rel < float(w["end"])), None)
+
+    base_layer = Image.new("RGBA", (int(total_w) + pad * 2, line_h + pad * 2 + int(font.size * 0.3)), (0, 0, 0, 0))
+    d = ImageDraw.Draw(base_layer)
+    for i, w in enumerate(words):
+        is_active = (i == active_idx)
+        x, y = pad + xs[i], pad + int(font.size * 0.15)
+        if not is_active:
+            draw_line(d, x, y, w["text"], font, base_color, outline)
+            continue
+        # 활성 단어: ease-out-back 느낌으로 살짝 커졌다 안착(pop_dur 동안), 중심은 고정
+        k = clamp((t_rel - float(w["start"])) / pop_dur)
+        # 0→1 사이 살짝 튀었다가 1.0으로 안착(삼각형 곡선) — k=1 이후(단어가 계속 활성)는 1.0 유지
+        s = 1.0 + (pop_scale - 1.0) * (1 - abs(1 - 2 * k)) if k < 1.0 else 1.0
+        ww, wh = int(widths[i] + outline * 4 + 4), int(line_h * 1.3)
+        word_layer = Image.new("RGBA", (ww, wh), (0, 0, 0, 0))
+        wd = ImageDraw.Draw(word_layer)
+        draw_line(wd, outline * 2 + 2, int(font.size * 0.15), w["text"], font, hi_color, outline)
+        if s != 1.0:
+            nw, nh = max(1, int(ww * s)), max(1, int(wh * s))
+            word_layer = word_layer.resize((nw, nh), Image.Resampling.LANCZOS)
+        cx_ = x + widths[i] / 2
+        cy_ = y + line_h / 2
+        base_layer.alpha_composite(word_layer, (int(cx_ - word_layer.width / 2), int(cy_ - word_layer.height / 2)))
+
+    cx = cw / 2
+    cy = ch * POSITION_FRAC.get(style.get("position", "bottom"), 0.80) + style.get("_stack_dy", 0)
+    frame.alpha_composite(base_layer, (int(cx - base_layer.width / 2), int(cy - base_layer.height / 2)))
+    return frame
+
+
 def compose_frame(canvas_wh, lines, font, style, effect, params, t_rel, dur):
     """엔트리 한 프레임(RGBA, canvas 크기). 모션(스케일/이동/알파/글로우)을 여기서 굽는다."""
     cw, ch = canvas_wh
@@ -455,9 +525,27 @@ def build_entry_frames(entry, defaults, style, canvas_wh, fps, work_dir, idx):
 
     base_size = int(est.get("font_size", 72))
     set_font_family(str(entry.get("font") or est.get("font") or "gothic"))
-    font, lines = fit_font(text, base_size, int(cw * 0.86))
 
+    words = entry.get("words")
     n = max(1, int(round(dur * fps)))
+    if effect == "karaoke" and words:
+        # 카라오케는 줄바꿈 없는 한 줄 전용(v1) — 너무 길면 fit_font처럼 폭에 맞춰 폰트만 줄인다.
+        font = load_font(base_size)
+        full_text = " ".join(w["text"] for w in words)
+        full_w = line_bbox(full_text, font)[2]
+        max_w = int(cw * 0.86)
+        size = base_size
+        while full_w > max_w and size > base_size * 0.5:
+            size = int(size * 0.92)
+            font = load_font(size)
+            full_w = line_bbox(full_text, font)[2]
+        for f in range(n):
+            t_rel = f / fps
+            img = compose_karaoke_frame(canvas_wh, words, font, est, params, t_rel)
+            img.save(work_dir / f"e{idx}_{f:04d}.png")
+        return {"idx": idx, "count": n, "start": start, "end": end}
+
+    font, lines = fit_font(text, base_size, int(cw * 0.86))
     for f in range(n):
         t_rel = f / fps
         img = compose_frame(canvas_wh, lines, font, est, effect, params, t_rel, dur)
