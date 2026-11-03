@@ -1513,3 +1513,39 @@ TTSTab stale-closure 클립 소실(미수정), SRT 폴백 크로스에피소드 
 
 **남은 일**: 유튜브 업로드(10/29 전후) 전 stereo-morph-pipeline 완성, 불릿타임 오빗형 리빌 실제 기획 반영.
 
+
+---
+### 2026-11-03 (수동 기록 — MCP 터널 "claude.ai yeori-studio" 402 Payment Required 로 update_status_md 호출 불가, 직접 파일 편집)
+## 10/29~11/3 소급 기록 + Notion 미러 정지 원인 확정
+
+**공백 사유**: 이 기간 실작업은 있었으나 update_status_md 미호출로 기록 누락. 아래는 메모리 기록 기준 소급 정리(세부 일자·수치 오차 가능).
+
+**10/29 — 유튜브 채널 개설 착수**
+- accountCreated:false 확인, 재고 7건 발견(IG_R02~07·SF_E12 완성 미게시, 이 중 5건은 이후 IG 게시 완료)
+- 운영실에 재고 자동감지 배너 구축
+
+**10/30 — 로고 재제작 + 운영 방침**
+- 번개 로고 아이콘 도용 문제로 `seoyeori_logo_*.mp4` 폐기·재제작, 이미 게시된 콘텐츠엔 해당 워터마크 미노출 코드 grep으로 확인
+- 유튜브 운영실 검토로그 자동기록 방침 확정(수동 입력 비효율 지적 → 이후 Claude가 세션 중 주요 작업을 직접 reviewLog에 기록)
+
+**10/31 — IG_R07 오디오 수정 + 메이킹 탭 오디오 UI**
+- IG_R07 BGM/효과음/나레이션이 안 들리던 문제 수정(BGM 1곡 전체재생 구조, 나레이션 narration 필드 게이트)
+- 메이킹 탭에 오디오 조절 UI 3종 신설(구간별 음량 패널·구간 컬럼 등), 영상 탭은 순수 뷰어로 역할 분리
+
+**11/1 — 메이킹 탭 "트랙매트 연출" 기능 + Meta 앱 조사**
+- 파이썬 trackmatte.py(앞레이어/뒷레이어/효과 3단 구조) 신설, Node 래퍼·API·UI 카드까지 연결, 부동소수점 버그 실측 수정
+- yeori-insights Meta 앱 라이브 댓글 숨김 문제 조사 — 개발모드가 아니라 권한(instagram_business_manage_comments) 누락이 원인으로 확인, 권한 추가+토큰 재발급 완료했으나 아직 미해결(11/2 재테스트 예정이었음)
+
+**11/2~11/3 — 서여리 썸네일/후킹카드 재설계 진행 중**
+- 인스타 초반 이탈 개선 목적, 레퍼런스 벤치마킹 → 타이포 프리셋 3종 → 시그니처 페이스 Flow샷 → 포스터 합성 순서로 진행
+- 11/3 피드백: 얇은 캡션형 타이포 금지, 굵은 손글씨+여백 채우는 포스터 구도로 전환(Poor Story → Gamja Flower 폰트 교체), 사진의 네거티브 스페이스 따라 분산 배치
+
+**11/3 — Notion 허브/STATUS 미러 정지 원인 확정 (이번 세션)**
+- 노션 "마스터 허브"·"STATUS 자동 미러" 페이지 둘 다 2026-10-13 이후 정지 확인(최종편집시각 그대로)
+- 원인: `app/logs/auto-sync.log`에서 매시간 돌아가는 `mirror-status-notion.js`가 10/30~11/3 전 사이클 동일한 404(`Could not find block... Make sure the relevant pages... are shared with your integration "yeori-studio"`) 확인 — Notion 쪽에서 "yeori-studio" 인티그레이션이 해당 페이지 연결(Connections) 권한을 잃은 상태. 실패해도 auto-sync 자체는 계속되도록 설계돼 있어 20일간 조용히 누적됨
+- 10/28 소급 기록 커밋이 "Notion 미러 포함"이라 적었던 것도 이 404 때문에 실제로는 반영 안 됐던 것으로 확인(기록 오류)
+- **미해결 — 사람 조치 필요**: Notion에서 "STATUS 자동 미러 (yeori-studio)" 페이지와 "여리 스튜디오 마스터 허브" 페이지 각각의 "..." → 연결(Connections) 메뉴에서 "yeori-studio" 인티그레이션 재추가 필요(API로는 재부여 불가, Notion UI 전용 작업). 재연결 후 다음 git-auto-sync 사이클(매시 36분)에서 자동으로 밀린 절이 올라갈 것으로 예상
+- 별도로 이번 세션에서 "claude.ai yeori-studio" MCP 서버 자체가 402 Payment Required로 연결 불가 확인(404와는 별개 증상, 터널/결제 쪽 확인 필요) — 해결 전까지는 update_status_md 실시간 호출도 막혀 있음
+
+**남은 일**: Notion 인티그레이션 재연결(사람 조치), MCP 402 원인 확인, Meta 앱 댓글 숨김 재테스트, 썸네일 재설계 마무리.
+
