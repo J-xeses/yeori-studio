@@ -180,6 +180,8 @@ function isStageComplete(cuts, stage) {
 }
 const isG3Complete = (cuts) => isStageComplete(cuts, 'g3')   // 하위호환 별칭
 
+const stsFailCount = new Map()   // 컷번호 → STS 연속 실패 횟수(프로세스 메모리)
+
 async function api(method, endpoint, body) {
   const opts = {
     method,
@@ -519,6 +521,39 @@ async function checkAndAdvance() {
       }
     } else if (needVeo.length && !G4_AUTO) {
       log('G4', `영상 수동 제작 대기 — 컷 ${needVeo.map(c => c.no).join(',')} (--g4=off)`)
+    }
+  }
+
+  // ── G4 후처리: 대사 영상 목소리 → 캐릭터 음성 변환(STS, cut_NN_final.mp4) ──────────────
+  // 대상: YEORI + 대사 있음(studio-status 필드 hasDialogue) + g4 승인됨 + hasVideo + cut_NN_final.mp4 아직 없음.
+  // 정책 판단(2026-11): AUTO_APPROVE/Notion 위임으로 막지 않는다 — 새 승인이 아니라 "이미 g4 승인된 컷"에 대한
+  //   기계적 후처리이고, G3 TTS 트리거도 위임 없이 돌아간다. 대신 보수적으로: ① 한 사이클 1컷(유료 API+demucs 직렬),
+  //   ② --g4=off 면 끔, ③ 릴스(IG_R)는 제외(대사 = Flow 영상 음성 그대로), ④ 컷당 2회 실패하면 이 프로세스에서는 포기하고 사람 확인.
+  // 중복 방지: final.mp4 존재 확인(재시작해도 안전). 실패 횟수만 메모리(stsFailCount)에 둔다.
+  if (G4_AUTO && !IS_REEL && stageInRange('g4') && episode?.number) {
+    const epNum = episode.number
+    const stsTargets = cuts.filter(c =>
+      cutTypeOf(c) === 'YEORI' && c.hasDialogue && c.g4 && c.hasVideo
+      && (stsFailCount.get(c.no) || 0) < 2
+      && !fs.existsSync(path.join(mp.videoDir(epNum), `cut_${String(c.no).padStart(2, '0')}_final.mp4`)))
+    if (stsTargets.length) {
+      const c = stsTargets[0]   // 한 번에 1컷
+      didTrigger = true
+      log('G4', `음성 변환(STS) 요청 → 컷 ${c.no}${stsTargets.length > 1 ? ` (대기 ${stsTargets.length - 1}컷)` : ''}`)
+      const r = await api('POST', '/api/mcp/run-sts', { episodeId: EPISODE_ID, cutNo: c.no })
+      if (!r.ok) {
+        const n = (stsFailCount.get(c.no) || 0) + 1
+        stsFailCount.set(c.no, n)
+        log('G4', `음성 변환 실패(${n}/2) — ${r.data?.error || r.status}`)
+        cycleBlocker = `컷 ${c.no} 음성 변환(STS) 실패: ${r.data?.error || r.status}`
+        await leaderLog({ stage: 'G4', kind: '블로커', summary: `컷 ${c.no} 음성 변환(STS) 실패 (${n}/2)`,
+          result: String(r.data?.error || r.status), humanInvolved: true })
+      } else {
+        log('G4', `컷 ${c.no} 음성 변환 완료 → cut_${String(c.no).padStart(2, '0')}_final.mp4`)
+        await leaderLog({ stage: 'G4', kind: '자동실행', summary: `컷 ${c.no} 음성 변환(STS) 자동 실행`,
+          rationale: 'YEORI + 대사 + g4 승인 + final.mp4 없음', result: (r.data?.files ? Object.keys(r.data.files).join(', ') : 'ok').slice(0, 200),
+          humanInvolved: false })
+      }
     }
   }
 
