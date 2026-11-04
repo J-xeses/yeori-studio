@@ -4685,11 +4685,12 @@ async function lapRefreshStatus() {
           (e.url ? ` <a href="${lapEsc(e.url)}" target="_blank" rel="noopener" style="color:var(--purple);font-size:11px">Notion 행 ↗</a>` : '');
       }
     }
-    const list = d.pendingHuman || [];
+    const { list, otherCount } = lapFilterPending(d.pendingHuman, ep.episodeCode);
     if (pEl) {
-      pEl.innerHTML = list.length
-        ? list.map(x => `<div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;line-height:1.5;color:var(--text2)"><span style="color:var(--text3);font-family:'Space Mono',monospace">${lapEsc(lapFmtTime(x.at))}</span> · <strong>[${lapEsc(x.episode || '-')} ${lapEsc(x.stage || '')}]</strong> ${lapEsc(x.kind || '')} — ${lapEsc(x.summary || '')}</div>`).join('')
-        : `<div style="padding:12px;text-align:center;color:var(--text3);font-size:11px">✅ 승인 대기 없음</div>`;
+      pEl.innerHTML = (list.length
+        ? list.map(x => `<div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;line-height:1.5;color:var(--text2)"><span style="color:var(--text3);font-family:'Space Mono',monospace">${lapEsc(lapFmtTime(x.at))}</span> · <strong>[${lapEsc(x.episode || '-')} ${lapEsc(x.stage || '')}]</strong> ${lapEsc(x.kind || '')} — ${lapEsc(x.summary || '')}${x.count > 1 ? ` <span style="color:var(--text3)">(${x.count}회 반복)</span>` : ''}</div>`).join('')
+        : `<div style="padding:12px;text-align:center;color:var(--text3);font-size:11px">✅ ${lapEsc(ep.episodeCode)} 승인 대기 없음</div>`)
+        + (otherCount ? `<div style="padding:5px 10px;font-size:10px;color:var(--text3)">다른 에피소드 대기 ${otherCount}건은 숨김</div>` : '');
     }
     const up = document.getElementById('lap-updated'); if (up) up.textContent = '갱신 ' + new Date().toLocaleTimeString('ko-KR');
   } catch (err) {
@@ -4765,6 +4766,21 @@ async function lapApprove(gate) {
   }
 }
 
+// pendingHuman 은 전 에피소드 공용이고 리더가 매 사이클 같은 항목을 또 적는다 — 현재 에피소드만, 같은 항목은 최신 1건+횟수로.
+function lapFilterPending(items, episodeCode) {
+  const byKey = new Map();
+  let otherCount = 0;
+  for (const x of items || []) {
+    if (x.episode && episodeCode && x.episode !== episodeCode) { otherCount++; continue; }
+    const k = [x.episode, x.stage, x.kind, x.summary].join('|');
+    const prev = byKey.get(k);
+    if (!prev) byKey.set(k, { ...x, count: 1 });
+    else { prev.count++; if ((x.at || '') > (prev.at || '')) prev.at = x.at; }
+  }
+  const list = [...byKey.values()].sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')));
+  return { list, otherCount };
+}
+
 // 리더 채팅 프롬프트용 — server/lib/leaderRead.js formatLeaderStatus() 와 같은 순서·문구의 클라이언트판.
 function lapFormatLeaderCtx(d) {
   const L = [];
@@ -4780,11 +4796,13 @@ function lapFormatLeaderCtx(d) {
   } else {
     L.push(`■ ${d.episodeCode || '(활성 에피소드 없음)'} — 파이프라인 DB 행 없음 (리더가 아직 안 돌았거나 코드 불일치)`);
   }
-  const ph = (d.pendingHuman || []).slice(0, 5);
+  const { list: phAll, otherCount } = lapFilterPending(d.pendingHuman, d.episodeCode);
+  const ph = phAll.slice(0, 5);
   if (ph.length) {
     L.push('', `● 사람 개입 대기 (${ph.length})`);
-    ph.forEach(p => L.push(`  - [${p.episode || '?'} ${p.stage || ''}] ${p.summary}  (${(p.at || '').slice(0, 16).replace('T', ' ')})`));
+    ph.forEach(p => L.push(`  - [${p.episode || '?'} ${p.stage || ''}] ${p.summary}${p.count > 1 ? ` (${p.count}회 반복)` : ''}  (${(p.at || '').slice(0, 16).replace('T', ' ')})`));
   } else L.push('', '● 사람 개입 대기: 없음');
+  if (otherCount) L.push(`  (다른 에피소드 대기 ${otherCount}건 — 이 에피소드와 무관)`);
   const rl = (d.recentLog || []).slice(0, 6);
   if (rl.length) {
     L.push('', `● 최근 리더 로그 (${rl.length})`);
