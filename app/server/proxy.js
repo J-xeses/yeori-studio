@@ -3929,6 +3929,9 @@ app.post('/api/ig-sync', async (_req, res) => {
   // 벤치마킹 트렌드 리서치 — 주 1회(2026-11-02 성준님 확정). 3시간 틱마다 7일 경과했는지만 확인(내부적으로 자체 게이트).
   const runTrend = async () => { try { const { maybeWeeklyTrendResearch } = await import('./lib/trendResearch.js'); await maybeWeeklyTrendResearch((l) => console.log('[trend-research]', l)) } catch (e) { console.warn('[trend-research] 실패:', e.message) } }
   setTimeout(runTrend, 90 * 1000); setInterval(runTrend, 3 * 3600 * 1000)
+  // 계정 목록 — 팔로우한 계정 신규 소재 체크, 주 1회(2026-11-04 성준님: "계정목록이 벤치마킹 신규소재 체크·분석")
+  const runAcctWatch = async () => { try { const { maybeWeeklyAccountWatch } = await import('./lib/accountWatch.js'); await maybeWeeklyAccountWatch((l) => console.log('[account-watch]', l)) } catch (e) { console.warn('[account-watch] 실패:', e.message) } }
+  setTimeout(runAcctWatch, 150 * 1000); setInterval(runAcctWatch, 3 * 3600 * 1000)
 }
 // 관심사 설계 탭 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기, 2026-09-28) — seedDiscovery.js
 app.get('/api/seed-discovery', async (_req, res) => {
@@ -3948,6 +3951,14 @@ app.get('/api/trend-research', async (_req, res) => {
 })
 app.post('/api/trend-research/run', async (req, res) => {
   try { const { runTrendResearch } = await import('./lib/trendResearch.js'); res.json(await runTrendResearch({ groups: req.body?.groups, log: console.log })) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+
+// 계정 목록 — 팔로우한 계정 신규 소재 체크(주 1회, 2026-11-04) — accountWatch.js
+app.get('/api/account-watch', async (_req, res) => {
+  try { const { accountWatchStatus } = await import('./lib/accountWatch.js'); res.json(accountWatchStatus()) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/account-watch/run', async (req, res) => {
+  try { const { runAccountWatch } = await import('./lib/accountWatch.js'); res.json(await runAccountWatch({ handles: req.body?.handles, log: console.log })) } catch (err) { res.status(500).json({ error: err.message }) }
 })
 
 // 서여리 능동 대응 큐(감정이입 P3 캡션·스토리 / P4 댓글 답장 / P5 콜백) — ig-sync 직후 6시간마다 + 수동 POST /api/yeori-queue/run (2026-09-27)

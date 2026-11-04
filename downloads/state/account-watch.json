@@ -1,0 +1,30 @@
+{
+  "nextIdx": 3,
+  "runs": [
+    {
+      "at": "2026-11-04T04:46:44.793Z",
+      "handles": [
+        "rozy.gram",
+        "lilmiquela",
+        "imma.gram"
+      ],
+      "found": 0,
+      "added": 0,
+      "searches": 6,
+      "errors": []
+    },
+    {
+      "at": "2026-11-04T04:47:15.232Z",
+      "handles": [
+        "elevenlabsio",
+        "pixverse_official",
+        "runwayapp"
+      ],
+      "found": 5,
+      "added": 5,
+      "searches": 6,
+      "errors": []
+    }
+  ],
+  "lastRun": "2026-11-04T04:47:15.232Z"
+}

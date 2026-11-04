@@ -247,7 +247,8 @@
     <button class="btn" id="bmAddManual">✍️ 수동기록으로 추가</button>
   </div>
   <div class="card scroll-v" id="bmTable" style="max-height:260px;margin-bottom:16px"></div>
-  <h2>계정 목록 <span class="muted">(우리 계정 개설일: <input type="date" id="acctDate" style="margin-left:2px"> — 후보별 "며칠째 방문" 기준이 되는 날짜)</span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
+  <h2>계정 목록 <span class="muted">(우리 계정 개설일: <input type="date" id="acctDate" style="margin-left:2px"> — 후보별 "며칠째 방문" 기준이 되는 날짜) · 팔로우한 계정의 신규 소재도 매주 자동으로 체크해 위 벤치마킹 레퍼런스에 쌓입니다</span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
+  <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="awatch">🔍 지금 계정 소재 체크(선택)</button><span class="muted" id="awatchst" style="width:100%;font-size:12px"></span></div>
   <div class="card scroll"><table id="stable"></table></div>
 </div></section>
 
@@ -706,7 +707,7 @@ function renderBenchmarks() {
   const arr = S.benchmarks || []
   const rows = arr.map((b, i) => [b, i]).reverse()
   $('bmTable').innerHTML = rows.length ? rows.map(([b, i]) =>
-    '<div class="archiveRow"><span class="pill" style="font-size:10px;flex-shrink:0">' + (b.source === '인스타 저장' ? '💾 저장링크' : b.source === 'AI 발굴' ? '🔎 AI발굴' : '✍️ 수동') + '</span>' +
+    '<div class="archiveRow"><span class="pill" style="font-size:10px;flex-shrink:0">' + (b.source === '인스타 저장' ? '💾 저장링크' : b.source === 'AI 발굴' ? '🔎 AI발굴' : b.source === 'AI 발굴(계정)' ? '🔍 계정체크' : '✍️ 수동') + '</span>' +
     (b.url ? '<a href="' + esc(b.url) + '" target="_blank" style="color:var(--link)">' + esc(b.url.length > 46 ? b.url.slice(0, 46) + '…' : b.url) + '</a>' : '') +
     (b.note ? '<span' + (b.url ? ' class="muted"' : '') + '>' + esc(b.note) + '</span>' : '') +
     '<span class="muted" style="margin-left:auto;flex-shrink:0">' + md((b.addedAt || today).slice(0, 10)) + '</span>' +
@@ -733,6 +734,10 @@ seedDiscStatus()
 async function trendDiscStatus() { try { const st = await (await fetch('/api/trend-research')).json(); const r = st.lastRunResult, m = st.month || {}; $('tdiscst').innerHTML = '매주 자동 실행(분야 3개씩 순환) · 다음 차례: <b>' + st.nextGroups.join(', ') + '</b>' + (st.lastRun ? ' · 마지막 ' + new Date(st.lastRun).toLocaleString('ko-KR') + (r ? ' → 새 레퍼런스 ' + r.added + '개' : '') : ' · 아직 실행 전(기동 후 1분 30초 뒤 또는 7일 경과 시 자동 실행)') + '<br>이번 달 ' + (m.runs || 0) + '회 · 웹 검색 ' + (m.searches || 0) + '회 · 추정 약 $' + (m.estUsd || 0) + ' (약 ' + Math.round((m.estUsd || 0) * 1400) + '원)' } catch { } }
 $('tdisc').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '조사 중… (1분 안팎)'; try { const r = await (await fetch('/api/trend-research/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 레퍼런스 ' + r.added.length + '개' + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('조사 실패: ' + err.message) } b.disabled = false; b.textContent = '🔎 지금 조사(선택)'; trendDiscStatus() }
 trendDiscStatus()
+// 계정 목록 — 팔로우한 계정 신규 소재 체크(주 1회 자동 + 버튼으로도 실행, 2026-11-04) — 서버가 ops.json 에 바로 쓰므로 끝나면 다시 불러온다
+async function acctWatchStatus() { try { const st = await (await fetch('/api/account-watch')).json(); const r = st.lastRunResult, m = st.month || {}; $('awatchst').innerHTML = (st.poolSize ? '팔로우한 계정 ' + st.poolSize + '곳 중 매주 3곳씩 순환 체크 · 다음 차례: <b>' + st.nextHandles.map(h => '@' + h).join(', ') + '</b>' : '아직 팔로우한 계정이 없습니다') + (st.lastRun ? ' · 마지막 ' + new Date(st.lastRun).toLocaleString('ko-KR') + (r ? ' → 새 레퍼런스 ' + r.added + '개' : '') : ' · 아직 실행 전(기동 후 2분 30초 뒤 또는 7일 경과 시 자동 실행)') + '<br>이번 달 ' + (m.runs || 0) + '회 · 웹 검색 ' + (m.searches || 0) + '회 · 추정 약 $' + (m.estUsd || 0) + ' (약 ' + Math.round((m.estUsd || 0) * 1400) + '원)' } catch { } }
+$('awatch').onclick = async (e) => { const b = e.target; b.disabled = true; b.textContent = '체크 중… (1분 안팎)'; try { const r = await (await fetch('/api/account-watch/run', { method: 'POST' })).json(); if (r.error) throw new Error(r.error); await load(); alert('새 레퍼런스 ' + r.added.length + '개' + (r.errors && r.errors.length ? ' / 오류: ' + r.errors.join(' / ') : '')) } catch (err) { alert('체크 실패: ' + err.message) } b.disabled = false; b.textContent = '🔍 지금 계정 소재 체크(선택)'; acctWatchStatus() }
+acctWatchStatus()
 $('sadd').onclick = () => {
   const pf = (prompt('플랫폼: instagram / youtube / tiktok', 'instagram') || '').trim().toLowerCase()
   if (!PF[pf]) return alert('instagram, youtube, tiktok 중 하나로 입력해 주세요.')
