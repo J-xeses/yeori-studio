@@ -32,6 +32,7 @@ import argparse
 import json
 import math
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -143,12 +144,49 @@ def is_emoji(ch):
     return any(lo <= cp <= hi for lo, hi in ranges)
 
 
+# 강조 마커(부분 강조): 본문에는 <<강조>> 로 쓰고, 렌더 전에 이 두 사설 영역 문자로 바꿔 넘긴다.
+# 폭 0 — measure_line/split_runs 에서는 무시되고, draw_mixed_text 만 위치를 기록한다.
+EMPH_OPEN, EMPH_CLOSE = "\ue0a1", "\ue0a2"
+_EMPH_RE = re.compile(r"<<(.+?)>>", re.S)
+
+# 손글씨 폰트에 글리프가 없어도 예전 동작(빈 칸 유지)을 그대로 두는 문자 — "…", "·", "※" 등 일반 구두점은
+# 기존 주석에 이미 쓰이고 있어 폭이 바뀌면 안 된다(하위호환). 카오모지류(태국어·IPA·결합 부호 등)만 정리한다.
+_KEEP_BLANK_CHARS = set("…·‧※")
+_WARNED_MISSING = set()
+
+
+def _classify_char(ch):
+    """'text' | 'emoji' | None(그릴 수 없음 — 건너뜀). 기존에 문제없던 문자는 항상 기존 분류 그대로."""
+    if is_emoji(ch):
+        return "emoji"
+    if ch.isspace() or ch in _KEEP_BLANK_CHARS or 0x2000 <= ord(ch) <= 0x206F:
+        return "text"
+    if not _is_missing_glyph(TEXT_FONT_PATH, 48, ch):
+        return "text"
+    if EMOJI_FONT_PATH and not _is_missing_glyph(EMOJI_FONT_PATH, 48, ch):   # 손글씨엔 없고 이모지 폰트엔 있음
+        return "emoji"
+    if ch not in _WARNED_MISSING:    # 어느 폰트에도 없음 → tofu/빈 칸 대신 깔끔히 건너뛴다
+        _WARNED_MISSING.add(ch)
+        print(f"⚠ 글리프 없음 — 건너뜀: U+{ord(ch):04X} {ch!r}", file=sys.stderr)
+    return None
+
+
 def split_runs(text):
     """텍스트를 (이모지여부, 연속구간) 단위로 분리"""
     runs = []
     cur_emoji, cur = None, ""
+    dropped = False   # 직전에 글리프 없는 글자를 건너뛰었는가 — 카오모지 앞뒤 공백이 겹쳐 빈 칸이 두 배가 되는 것 방지
     for ch in text:
-        e = is_emoji(ch)
+        if ch in (EMPH_OPEN, EMPH_CLOSE):
+            continue
+        kind = _classify_char(ch)
+        if kind is None:
+            dropped = True
+            continue
+        if dropped and ch == " " and (cur.endswith(" ") or (not cur and runs and runs[-1][1].endswith(" "))):
+            continue
+        dropped = False
+        e = kind == "emoji"
         if cur_emoji is None:
             cur_emoji, cur = e, ch
         elif e == cur_emoji:
@@ -268,6 +306,8 @@ def draw_deco_glyph(draw, xy, ch, size, fill):
         _draw_vector_star(draw, cx, cy, size, fill)
     elif ch in ("!", "?", "·", "‧", "～", "~", "…", ".."):
         draw.text(xy, ch, font=load_font(TEXT_FONT_PATH, size), fill=fill)
+    elif EMOJI_FONT_PATH and not is_emoji(ch) and _is_missing_glyph(EMOJI_FONT_PATH, 48, ch):
+        _classify_char(ch)   # 이모지 폰트에도 없는 글자 — 경고 1줄만 남기고 건너뜀
     elif EMOJI_FONT_PATH:
         emoji_size = max(8, int(size * 0.92))
         try:
@@ -279,6 +319,28 @@ def draw_deco_glyph(draw, xy, ch, size, fill):
 
 
 def draw_mixed_text(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 0, 0, 210)):
+    """text 를 그린다. 강조 마커(EMPH_OPEN/CLOSE)가 있으면 강조 구간의 (x0, x1) 목록을 반환(없으면 빈 목록)."""
+    if EMPH_OPEN not in text and EMPH_CLOSE not in text:
+        _draw_plain(draw, xy, text, size, fill, stroke_width, stroke_fill)
+        return []
+    x, y = xy
+    spans, start = [], None
+    for piece in re.split(f"({EMPH_OPEN}|{EMPH_CLOSE})", text):
+        if piece == EMPH_OPEN:
+            start = x
+        elif piece == EMPH_CLOSE:
+            if start is not None:
+                spans.append((start, x))
+            start = None
+        elif piece:
+            x = _draw_plain(draw, (x, y), piece, size, fill, stroke_width, stroke_fill)
+    if start is not None:
+        spans.append((start, x))
+    return spans
+
+
+def _draw_plain(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 0, 0, 210)):
+    """마커 없는 텍스트 그리기(기존 draw_mixed_text 본문 그대로). 그린 뒤의 x 를 반환."""
     x, y = xy
     for is_e, run in split_runs(text):
         font = _run_font(is_e, size)
@@ -307,6 +369,7 @@ def draw_mixed_text(draw, xy, text, size, fill, stroke_width=0, stroke_fill=(0, 
             else:
                 draw.text((x, y), run, font=font, fill=fill)
         x += draw.textlength(run, font=font)
+    return x
 
 
 # ── 손그림 느낌 도형 ────────────────────────────────────────────────────
@@ -452,6 +515,22 @@ POSITION_ANCHORS = {
 }
 
 
+def _carry_emphasis(lines):
+    """강조 구간이 줄바꿈을 넘어가면 각 줄이 자기 마커 쌍을 갖도록 보정(줄 시작에 열기/끝에 닫기 추가)."""
+    if not any(EMPH_OPEN in ln or EMPH_CLOSE in ln for ln in lines):
+        return lines
+    out, is_open = [], False
+    for ln in lines:
+        cur = (EMPH_OPEN if is_open else "") + ln
+        for ch in ln:
+            if ch == EMPH_OPEN:
+                is_open = True
+            elif ch == EMPH_CLOSE:
+                is_open = False
+        out.append(cur + (EMPH_CLOSE if is_open else ""))
+    return out
+
+
 def measure_block(draw, lines, size):
     widths = [measure_line(draw, ln, size) for ln in lines] or [0]
     return max(widths), size * 1.32 * len(lines)
@@ -472,9 +551,13 @@ def render_scene(canvas_size, scene, font_size=64):
     color = COLORS.get(scene.get("color", "white"), COLORS["white"])
     font_size = int(scene.get("font_size", font_size))
     # 수동 줄바꿈(\n)은 그대로 줄 경계로 유지 — 문단별로 안전 폭을 넘을 때만 자동 줄바꿈 추가.
+    # 부분 강조 문법: <<강조할 말>> (단어/구절에만 물결 밑줄). '*' 는 별 장식 문자와 겹쳐 쓰지 않는다.
+    # 짝이 안 맞는 '<<' 는 그냥 글자로 남는다. 마커 없는 주석은 아래 처리가 전부 no-op.
+    raw_text = _EMPH_RE.sub(lambda m: EMPH_OPEN + m.group(1) + EMPH_CLOSE, scene.get("text", ""))
     lines = []
-    for para in scene.get("text", "").split("\n"):
+    for para in raw_text.split("\n"):
         lines.extend(wrap_paragraph(measure, para, font_size, W * SAFE_TEXT_WIDTH_RATIO))
+    lines = _carry_emphasis(lines)
     pen_w = max(3, int(font_size * 0.05))
 
     try:
@@ -558,11 +641,19 @@ def render_scene(canvas_size, scene, font_size=64):
             img_w = max(1, int(lw + 48))
             img_h = int(font_size * 1.7)
             line_img = Image.new("RGBA", (img_w, img_h), (0, 0, 0, 0))
-            draw_mixed_text(ImageDraw.Draw(line_img), (pad, (img_h - font_size) / 2), line, font_size, col)
+            emph_spans = draw_mixed_text(ImageDraw.Draw(line_img), (pad, (img_h - font_size) / 2), line, font_size, col)
             rotated = line_img.rotate(angle, resample=Image.BICUBIC, expand=True)
             tx = left + (box_w - lw) / 2 + dx
             line_center_y = top + pad_y + line_h * (i + 0.5)
             target.paste(rotated, (int(tx - pad), int(line_center_y - rotated.height / 2)), rotated)
+            if emph_spans:
+                # 강조 구간만 물결 밑줄 — 난수 상태를 보존해 이후 장식·화살표 모양이 마커 유무와 무관하게 같게 한다.
+                rs = random.getstate()
+                ey = line_center_y + font_size * 0.46
+                for sx0, sx1 in emph_spans:
+                    if sx1 - sx0 > 2:
+                        draw_wavy_underline(d, int(tx - pad) + sx0, int(tx - pad) + sx1, ey, col, pen_w)
+                random.setstate(rs)
 
         if underline:
             uy = top + pad_y + line_h * (len(lines) - 0.5) + font_size * 0.46
