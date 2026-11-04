@@ -78,7 +78,7 @@ echo.
 ::     Without Chrome: fall back to the default browser, one by one.
 echo [4] Opening tabs...
 set "REF_BOARD=http://localhost:3001/downloads/_shared/references/teaser/index.html"
-set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "http://localhost:3001/youtube-ops" "http://localhost:3001/mobile""
+set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "http://localhost:3001/youtube-ops" "http://localhost:3001/mobile" "%REF_BOARD%""
 if exist "%ACC_HTML%" set "TABS=%TABS% "%ACC_HTML%""
 if exist "%MATRIX_HTML%" set "TABS=%TABS% "%MATRIX_HTML%""
 set "TABS=%TABS% "http://localhost:3000""
@@ -92,6 +92,7 @@ if defined CHROME (
     start "" "http://localhost:3001/insta-ops"
     start "" "http://localhost:3001/youtube-ops"
     start "" "http://localhost:3001/mobile"
+    start "" "%REF_BOARD%"
     if exist "%ACC_HTML%" start "" "%ACC_HTML%"
     if exist "%MATRIX_HTML%" start "" "%MATRIX_HTML%"
     start "" "http://localhost:3000"
