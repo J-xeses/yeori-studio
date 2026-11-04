@@ -1,0 +1,43 @@
+# 클라우드 세션 작업 지시서 — 에이전트 리더 탭: 실제 리더 상태 + 승인 패널 (2026-11-04)
+
+> 사용법: claude.ai/code 에서 저장소 **J-xeses/yeori-studio** 로 새 클라우드 세션을 열고, 아래 "지시문" 전체를 붙여 넣는다.
+> 작업은 브랜치 `leader-tab-approval-panel-r1` 에서만. 합치기·실서버 확인은 로컬 Claude 가 한다.
+
+---
+
+## 지시문 (여기부터 복사)
+
+`app/content_matrix_v3.html` is a large single-file static dashboard (no build step, opened via `file://` or served statically — not part of the Vite app). It has a "🤖 에이전트 리더" tab (`<div id="tab-leader">`, search for `<!-- 에이전트 리더 탭 -->` around line ~804) that already has real pipeline integration for *starting/stopping* the autonomous pipeline (`startPipeline()`/`stopPipeline()`/`pollPipelineStatus()`, calling `POST /api/pipeline/start`/`/stop` and polling `GET /api/pipeline/status` every 3s, piping raw log lines into the shared `#agent-log` box via `logAgent()`). **What's missing**: there is a separate, already-built, structured status endpoint — `GET /api/mcp/leader-status?episode=<code>` (`server/lib/leaderRead.js` `getLeaderStatus()`/`formatLeaderStatus()`) — that returns the real pipeline-leader's current gate, agent state, blocker, next action, recent decision log, **and a `pendingHuman` list of items waiting on a human** (approvals, blockers). This tab never calls it. Today the only way to know "what needs my approval right now" is to watch raw scrolling log text — there's no persistent, actionable panel. The product owner's stated goal (long-deferred, ~3-4 months) is for this tab to become the single place they check status and handle approvals, rather than switching to Notion or the main studio app for that.
+
+**This task is Phase 1 only**: make the tab show real structured leader status and let the human batch-approve a gate's ready cuts from right here. Do **not** touch: the older per-agent-card click buttons (`runScriptAgent`/`runImageAgent`/`runVoiceAgent`/`runMakingAgent`/`runVideoAgent`/`runEditAgent`/`runPublishAgent` — these are a separate, intentionally-still-present manual single-step feature, leave them exactly as they are), the "💬 리더와 소통" chat box/its Claude-call logic, and the pipeline start/stop/poll logic that already works. This is additive UI only.
+
+### Read first (do not skip)
+- `app/content_matrix_v3.html`: the leader tab markup (~line 804-970), `loadStudioState()`/`studioState` (how the tab gets `activeEpisodeId` — see `startPipeline()` ~line 3177, and figure out how to get the episode **code** too, e.g. `studioState.episode?.code` — verify the actual field by reading how `studioState.episode` is populated/used elsewhere in this same file, don't guess), `pollPipelineStatus()` (~line 3484) and `logAgent()`/`setAgentState()` for the existing visual/polling conventions to match, and the CSS classes already used for cards/badges in this tab (`.agent-card`, `.agent-state`, `.gate-col`, `.section-title`, `.btn-primary`, `.btn-cancel`, inline style conventions — this file does **not** use a separate CSS file, styles are inline/in a `<style>` block, match its existing look).
+- `server/lib/leaderRead.js` in full — `getLeaderStatus(episodeCode, {logLimit})` returns `{ok, episodeCode, episode, recentLog, pendingHuman}`; `episode` has `{title, currentGate, agentState, nextAction, blocker, lastCycle, hold, autoApprove, channel, cutCount, url}`; `pendingHuman` is an array of `{at, episode, stage, kind, summary}` (no cut-number granularity — these are log-level, not per-cut).
+- `GET /api/mcp/leader-status?episode=` route in `server/proxy.js` (search `leader-status` — confirm the exact query param name and response shape by reading the actual route handler, not just `leaderRead.js`).
+- `GET /api/mcp/gate-eligibility?gate=G` route (`server/lib/gatePolicy.js` `evaluateEpisode`) — operates on the **currently active episode** server-side (no episodeId param needed), returns `{gate, episode, policy, tally, cuts: [{no, cutType, gate, verdict, checks, reasons}]}`. `verdict` is one of `approved/auto_ok/recommend/blocked/not_ready/n/a`. This is how you'll get the actual list of cut numbers ready to approve for a gate (not from `pendingHuman`, which is just log text).
+- `POST /api/mcp/studio-approve-g3` and `POST /api/mcp/studio-approve-g4` (`server/proxy.js`, search both) — both take `{episodeId, cutIds: [...]}` (batch). `POST /api/mcp/studio-approve-g2` takes `{episodeId, cutId, imageIndex}` (single cut, different shape — for this task, G2 is `delegable:false` by design anyway per `GATE_POLICY` in `gatePolicy.js`, so you likely don't need a G2 batch-approve button; confirm this reasoning yourself from `GATE_POLICY` before deciding whether to include G2).
+
+### Task
+1. Add a new panel in the leader tab, positioned sensibly relative to the existing gate-board/log/chat sections (your call, but it should be prominent — this is meant to be the first thing the user looks at). Title it something like "🔔 승인 필요" (or similar, your call on exact copy, keep it consistent with the Korean tone of the rest of the file).
+2. On load and on a reasonable poll interval (this hits Notion via the server, so don't reuse the 3s pipeline-status interval — pick something like 15-20s, and explain your choice in the report), call `GET /api/mcp/leader-status?episode=<code>` for the active episode (resolve the code the way the rest of this file already does — verify and reuse the existing pattern, don't invent a new way to get it) and render: current gate/agent state/blocker/next action as a compact status line, and the `pendingHuman` list as a simple timestamped list (reuse this file's existing list/card visual style).
+3. For each of G3/G4/G5 (skip G2 per the `delegable:false` reasoning above, and G1 is script-approval which this tab doesn't currently touch either — keep this to G3/G4/G5 unless you find a clear reason to include more), call `GET /api/mcp/gate-eligibility?gate=G3` etc. (reuse the same poll trigger as step 2, or a manual refresh button — your call) and if any cuts have `verdict === 'auto_ok'` or `'recommend'`, show a small summary ("G4: 3컷 승인 가능") with a button that calls the matching `studio-approve-gN` endpoint with those cut numbers' `no` values, using the active episode's `episodeId` (not code) from `studioState.activeEpisodeId`. After a successful approve call, show a toast (reuse `showToast()` if it exists in this file) and refresh both the gate-eligibility and leader-status data so the panel reflects the new state immediately.
+4. Don't auto-approve anything — every approval in this panel is a human clicking a button, same as it is everywhere else in this app. This task is about **visibility and one-click convenience**, not changing the approval policy.
+5. If `pendingHuman` or the gate-eligibility calls return empty/no issues, show a clean "승인 대기 없음" state rather than an empty gap.
+
+### Hard constraints
+- Create branch `leader-tab-approval-panel-r1` from `master`, commit there, push the branch. Never push to or merge into `master`.
+- **If the same command fails 3 times in a row, stop immediately, commit whatever is done, and report it instead of retrying further.** Do not loop.
+- Change only `app/content_matrix_v3.html`. This file has no build step and no automated tests — be extra careful not to break any existing function by shadowing a global name, redeclaring a `const`, or introducing a syntax error that breaks the whole inline `<script>` block (a single JS error anywhere in this file can silently break the entire dashboard, not just your new panel — this is a live tool the product owner uses daily, treat it with care).
+- Do not rename, remove, or change the behavior of anything that already exists (the per-agent-card buttons, the chat, pipeline start/stop/poll). Purely additive.
+- **You cannot open this file in a browser here.** Do static checks only (see Verification). Do not claim a live UI check.
+
+### Verification (required)
+- Extract the full inline `<script>` block and run it through a Node syntax check (e.g. `node -e "new Function(require('fs').readFileSync('app/content_matrix_v3.html','utf-8').match(/<script>([\s\S]*?)<\/script>/)[1])"` or equivalent — adjust for however many `<script>` blocks exist, there may be more than one external `<script src=...>` and one or more inline ones; only the inline ones need this check) — must pass with no syntax errors.
+- Confirm your new fetch calls use the same `YEORI_SERVER` constant and the same error-handling style (try/catch, `showToast`/`logAgent` on failure) as the rest of the file.
+- Grep your own additions for any hardcoded episode ID/code (should always come from `studioState`, never hardcoded).
+
+### Report (concise, Korean)
+브랜치 + 커밋; 추가한 패널이 구체적으로 뭘 보여주는지; 폴링 주기와 그 이유; G2를 왜 포함/제외했는지(판단 근거); 승인 버튼 클릭 후 갱신 흐름; 브라우저로 확인 못 한 부분 명시; 기존 코드(특히 전역 변수/함수명)와 충돌 여부 확인 방법.
+
+## 지시문 끝
