@@ -3400,18 +3400,23 @@ function openBrowserUrl({ target = 'youtube', query = '', url = '' } = {}) {
   }
   return null
 }
-function openChromeWindow(url) {
+// 인스타그램은 본계정(기본 Chrome 프로필)이 아니라 서여리로 로그인된 sub 프로필로 열어야
+// 방문·좋아요·저장이 서여리 계정 신호로 쌓인다(2026-11-04 성준님 버그 리포트: 본계정으로 열리고 있었음).
+// start_gen.bat이 Flow 서브 세션에 쓰는 것과 동일한 프로필(flowProfileDir('sub'))을 재사용 — 이미 로그인돼 있음.
+function openChromeWindow(url, profileDir) {
   const chromePath = ['C:/Program Files/Google/Chrome/Application/chrome.exe',
     'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'].find(p => fs.existsSync(p))
   if (!chromePath) { const e = new Error('Chrome 실행 파일을 찾을 수 없습니다'); e.statusCode = 404; throw e }
-  const child = spawn(chromePath, ['--new-window', url], { detached: true, stdio: 'ignore', windowsHide: false })
+  const args = profileDir ? [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', '--new-window', url] : ['--new-window', url]
+  const child = spawn(chromePath, args, { detached: true, stdio: 'ignore', windowsHide: false })
   child.unref()
 }
 // { target: youtube|pinterest|instagram|instagram-signup|url, query?, url? }
 app.post('/api/open-browser', (req, res) => {
   const url = openBrowserUrl(req.body || {})
   if (!url) return res.status(400).json({ error: '열 수 없는 주소입니다(유튜브·핀터레스트·인스타·틱톡만 허용)' })
-  try { openChromeWindow(url); res.json({ success: true, url }) }
+  const isInstagram = /(^|\.)instagram\.com$/i.test(new URL(url).hostname)
+  try { openChromeWindow(url, isInstagram ? mp.flowProfileDir('sub') : undefined); res.json({ success: true, url }) }
   catch (err) { res.status(err.statusCode || 500).json({ error: err.message }) }
 })
 // 기존 메이킹 탭 호환 — 유튜브 검색 창
