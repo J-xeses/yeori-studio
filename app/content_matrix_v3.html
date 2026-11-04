@@ -825,6 +825,21 @@
         </button>
       </div>
 
+      <!-- 🔔 승인 필요 패널 (Phase 1) — pipeline-leader 의 구조화된 상태 + 게이트별 일괄 승인 -->
+      <div id="leader-approval-panel" style="background:var(--surface);border:1px solid rgba(251,191,36,0.35);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+          <div class="section-title" style="margin:0">🔔 승인 필요</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="lap-updated" style="font-size:10px;color:var(--text3)"></span>
+            <button class="btn-cancel" onclick="lapRefreshAll(true)" style="font-size:11px;padding:4px 10px;white-space:nowrap">🔄 새로고침</button>
+          </div>
+        </div>
+        <div id="lap-status" style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px">불러오는 중…</div>
+        <div id="lap-gates" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+        <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:4px">사람 확인 대기 (리더 로그)</div>
+        <div id="lap-pending" style="border:1px solid var(--border);border-radius:var(--radius-sm);max-height:170px;overflow-y:auto"></div>
+      </div>
+
       <!-- 파이프라인 구간 설정 -->
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text3);white-space:nowrap">구간</span>
@@ -4547,6 +4562,159 @@ syncGPointsFromStudio();
 setInterval(syncGPointsFromStudio, 20000);
 // 스튜디오 에피소드 목록(사이드바) 주기적 갱신 — 새 에피소드/활성 전환 반영
 setInterval(loadStudioState, 30000);
+
+// ══ 🔔 승인 필요 패널 (에이전트 리더 탭 Phase 1) ══════════════════════════════
+// 상태: GET /mobile/leader-status (Notion 경유 — 무겁다) · 승인 가능 컷: GET /mobile/gate-eligibility?gate=G (ffmpeg 검수 — 더 무겁다).
+// ⚠️ /api/mcp/* 는 Bearer(MCP_BRIDGE_SECRET) 필수인데 이 파일은 그 비밀값을 갖지 않는다(갖게 해서도 안 됨).
+//    같은 핸들러를 공유하는 무인증 /mobile/* 별칭을 쓴다. 승인은 /mobile/studio-approve-g4 만 별칭이 있어 G4 일괄 승인만 제공
+//    (G3 승인은 /api/mcp 전용, G5·G2·G1 은 정책상 사람 판단 — 이 패널은 해당 게이트의 "현황"만 표시).
+// 폴링: 상태 20초, 게이트 검수 120초 — 리더 탭이 보일 때만. 3초 파이프라인 폴링과 별개.
+const LAP_STATUS_POLL_MS = 20000;
+const LAP_GATE_POLL_MS = 120000;
+const LAP_GATES = ['G3', 'G4', 'G5'];
+const LAP_NOTE = { G3: 'G3 승인은 스튜디오 음성 탭에서', G4: '', G5: 'G5 최종 편집 승인은 사람이 스튜디오에서' };
+let lapActiveEp = null;     // { episodeId, episodeCode }
+let lapGateData = {};       // { G4: { ready:[no..], blocked:n, total:n, err? } }
+let lapStatusBusy = false, lapGateBusy = false, lapApproving = false;
+let lapLastTab = '';
+
+function lapEsc(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+async function lapGetJson(path) {
+  const res = await fetch(`${YEORI_SERVER}${path}`);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function lapResolveEpisode() {
+  const d = await lapGetJson('/mobile/active-episode');   // { ok, episodeId, episodeCode } — 서버의 활성 에피소드
+  lapActiveEp = { episodeId: d.episodeId, episodeCode: d.episodeCode };
+  return lapActiveEp;
+}
+
+function lapFmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+async function lapRefreshStatus() {
+  if (lapStatusBusy) return;
+  lapStatusBusy = true;
+  const stEl = document.getElementById('lap-status');
+  const pEl = document.getElementById('lap-pending');
+  try {
+    const ep = await lapResolveEpisode();
+    const d = await lapGetJson(`/mobile/leader-status?episode=${encodeURIComponent(ep.episodeCode)}`);
+    const e = d.episode;
+    if (stEl) {
+      if (!e) stEl.innerHTML = `<span style="color:var(--text3)">${lapEsc(ep.episodeCode)} — 에피소드 파이프라인 행이 아직 없습니다 (리더가 첫 사이클을 돌면 생성)</span>`;
+      else {
+        const stateColor = e.hold ? 'var(--amber)' : (e.blocker ? 'var(--red)' : 'var(--teal)');
+        stEl.innerHTML =
+          `<strong style="color:var(--text)">${lapEsc(ep.episodeCode)}</strong> · 게이트 <strong>${lapEsc(e.currentGate || '-')}</strong>` +
+          ` · <span style="color:${stateColor};font-weight:700">${lapEsc(e.hold ? '⏸ 보류' : (e.agentState || '-'))}</span>` +
+          (e.lastCycle ? ` · 마지막 사이클 ${lapEsc(lapFmtTime(e.lastCycle))}` : '') +
+          (e.autoApprove && e.autoApprove.length ? ` · 자동승인 위임: ${lapEsc(e.autoApprove.join(', '))}` : '') +
+          (e.blocker ? `<br><span style="color:var(--red)">⛔ 블로커: ${lapEsc(e.blocker)}</span>` : '') +
+          (e.nextAction ? `<br>▶ 다음 액션: ${lapEsc(e.nextAction)}` : '') +
+          (e.url ? ` <a href="${lapEsc(e.url)}" target="_blank" rel="noopener" style="color:var(--purple);font-size:11px">Notion 행 ↗</a>` : '');
+      }
+    }
+    const list = d.pendingHuman || [];
+    if (pEl) {
+      pEl.innerHTML = list.length
+        ? list.map(x => `<div style="padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;line-height:1.5;color:var(--text2)"><span style="color:var(--text3);font-family:'Space Mono',monospace">${lapEsc(lapFmtTime(x.at))}</span> · <strong>[${lapEsc(x.episode || '-')} ${lapEsc(x.stage || '')}]</strong> ${lapEsc(x.kind || '')} — ${lapEsc(x.summary || '')}</div>`).join('')
+        : `<div style="padding:12px;text-align:center;color:var(--text3);font-size:11px">✅ 승인 대기 없음</div>`;
+    }
+    const up = document.getElementById('lap-updated'); if (up) up.textContent = '갱신 ' + new Date().toLocaleTimeString('ko-KR');
+  } catch (err) {
+    if (stEl) stEl.innerHTML = `<span style="color:var(--red)">리더 상태를 못 불러왔습니다 — ${lapEsc(err.message)} (proxy.js 실행·Notion 연동 확인)</span>`;
+    if (pEl) pEl.innerHTML = '';
+  } finally { lapStatusBusy = false; }
+}
+
+async function lapRefreshGates() {
+  if (lapGateBusy) return;
+  lapGateBusy = true;
+  try {
+    for (const g of LAP_GATES) {          // 검수가 자식 프로세스+ffmpeg라 순차 실행
+      try {
+        const d = await lapGetJson(`/mobile/gate-eligibility?gate=${g}`);
+        const cuts = d.cuts || [];
+        lapGateData[g] = {
+          ready: cuts.filter(c => c.verdict === 'auto_ok' || c.verdict === 'recommend').map(c => c.no),
+          blocked: cuts.filter(c => c.verdict === 'blocked').length,
+          total: cuts.length,
+        };
+      } catch (err) { lapGateData[g] = { ready: [], blocked: 0, total: 0, err: err.message }; }
+      lapRenderGates();
+    }
+  } finally { lapGateBusy = false; lapRenderGates(); }
+}
+
+function lapRenderGates() {
+  const el = document.getElementById('lap-gates');
+  if (!el) return;
+  const rows = LAP_GATES.map(g => {
+    const d = lapGateData[g];
+    if (!d) return `<div style="font-size:11px;color:var(--text3)">${g}: 검수 대기 중…</div>`;
+    if (d.err) return `<div style="font-size:11px;color:var(--red)">${g}: 검수 실패 — ${lapEsc(d.err)}</div>`;
+    if (!d.ready.length) return `<div style="font-size:11px;color:var(--text3)">${g}: 승인 가능한 컷 없음${d.blocked ? ` · 막힘 ${d.blocked}컷` : ''}</div>`;
+    const canApprove = g === 'G4';
+    return `<div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px">
+      <span style="font-size:12px;color:var(--text);flex:1"><strong>${g}: ${d.ready.length}컷 승인 가능</strong> <span style="color:var(--text3)">(CUT ${d.ready.map(lapEsc).join(', ')})${d.blocked ? ` · 막힘 ${d.blocked}컷` : ''}</span>${canApprove ? '' : `<br><span style="font-size:10px;color:var(--text3)">${lapEsc(LAP_NOTE[g])}</span>`}</span>
+      ${canApprove ? `<button class="btn-primary" ${lapApproving ? 'disabled' : ''} onclick="lapApprove('${g}')" style="white-space:nowrap;font-size:11px;padding:5px 12px">✓ ${g} ${d.ready.length}컷 승인</button>` : ''}
+    </div>`;
+  }).join('');
+  el.innerHTML = rows;
+}
+
+async function lapApprove(gate) {
+  if (lapApproving || gate !== 'G4') return;
+  const d = lapGateData[gate];
+  if (!d || !d.ready.length || !lapActiveEp) { showToast('⚠️ 승인할 컷이 없습니다'); return; }
+  if (!confirm(`${gate} — CUT ${d.ready.join(', ')} (${d.ready.length}컷)을 승인할까요?`)) return;
+  lapApproving = true; lapRenderGates();
+  try {
+    // 사람이 버튼을 눌렀을 때만 실행 — 자동 승인 아님. episodeId 는 서버 활성 에피소드(/mobile/active-episode)에서.
+    const res = await fetch(`${YEORI_SERVER}/mobile/studio-approve-g4`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ episodeId: lapActiveEp.episodeId, cutIds: d.ready }),
+    });
+    const out = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(out.error || `HTTP ${res.status}`);
+    showToast(`✓ ${gate} ${out.approvedCount ?? d.ready.length}컷 승인됨`);
+    logAgent('승인 패널', 'done', `${gate} 승인 — CUT ${d.ready.join(', ')}` + (out.skippedMissingVideo ? ` (영상 없어 제외: ${out.skippedMissingVideo.join(', ')})` : ''));
+  } catch (err) {
+    showToast('⚠️ 승인 실패: ' + err.message);
+    logAgent('승인 패널', 'error', `${gate} 승인 실패 — ${err.message}`);
+  } finally {
+    lapApproving = false;
+    lapRefreshGates(); lapRefreshStatus();     // 승인 직후 두 패널 다시 읽기
+  }
+}
+
+function lapRefreshAll(manual) {
+  if (manual) showToast('🔄 승인 현황 새로고침');
+  lapRefreshStatus();
+  lapRefreshGates();
+}
+
+(function lapInit() {
+  const visible = () => currentTab === 'leader' && !document.hidden;
+  lapRenderGates();
+  setInterval(() => { if (visible()) lapRefreshStatus(); }, LAP_STATUS_POLL_MS);
+  setInterval(() => { if (visible()) lapRefreshGates(); }, LAP_GATE_POLL_MS);
+  // 리더 탭으로 들어오는 순간 즉시 한 번 (switchTab 을 건드리지 않고 전환을 감지)
+  setInterval(() => {
+    if (currentTab === 'leader' && lapLastTab !== 'leader') lapRefreshAll(false);
+    lapLastTab = currentTab;
+  }, 1500);
+})();
 </script>
 </body>
 </html>
