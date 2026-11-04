@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useApp } from '../context/AppContext'
 import { claudeMessages } from '../lib/api'
+import { computeSegmentPlans, splitDialogueBySeg } from '../lib/vpDialogue'
 import s from './DiagnosisPanel.module.css'
 
 // Field Gate(C:\yeori-genline\index.html)의 "AI 판단/진단 챗"을 스튜디오 안으로 옮긴 패널
@@ -98,6 +99,30 @@ function parseLooseJson(text) {
   try { return JSON.parse(out) } catch { throw new Error('응답 형식 오류(JSON) — 입력을 더 짧게 나눠 다시 보내보세요.') }
 }
 
+// ── 세그 분할 후보 (Field Gate "세그 분할" 탭 이식, 2026-09-20 로드맵) ──
+// 임계값 DU>10 · 후보 상한 6장은 docs/vp-dialogue-seg-spec.md §4 2b(Field Gate 와 동일). 순수 계산 — AI 호출 없음.
+const SEG_BUILDER_MIN_DU = 10
+const SEG_BUILDER_MAX_CARDS = 6
+const isNoneText = (v) => /^(없음|-|n\/a)$/i.test(String(v || '').trim())
+const sameCombo = (a, b) => Array.isArray(a) && a.length === b.length && a.every((n, i) => Number(n) === b[i])
+
+// plan = computeSegmentPlans 원소 { combo, genTotal, trimTotal, trimStart, trimEnd }
+// 세그별 실사용 길이(트림 반영)를 가중치로 대사를 나눈다 — buildSegClipPrompt(영상 프롬프트)와 같은 규칙이라
+// 카드 미리보기 = 반영 후 VP/TTS 가 실제로 쓰는 분할.
+function buildSegCards(cut) {
+  const du = Number(cut.duration) || 0
+  if (du <= SEG_BUILDER_MIN_DU) return []
+  const dl = isNoneText(cut.dialogue) ? '' : String(cut.dialogue || '').trim()
+  const nr = isNoneText(cut.narration) ? '' : String(cut.narration || '').trim()
+  const text = dl || nr
+  return computeSegmentPlans(du).slice(0, SEG_BUILDER_MAX_CARDS).map(plan => {
+    const n = plan.combo.length
+    const segSecs = plan.combo.map((sec, k) => sec - (k === 0 ? plan.trimStart : 0) - (k === n - 1 ? plan.trimEnd : 0))
+    const parts = text ? splitDialogueBySeg(text, n, { segSecs }) : plan.combo.map(() => '')
+    return { ...plan, segSecs, parts, kind: dl ? '대사' : nr ? '나레이션' : '' }
+  })
+}
+
 const lsKey = (code, no) => `diag:${code || 'ep'}:cut${no}`
 const loadThread = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]') } catch { return [] } }
 const saveThread = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v.slice(-40))) } catch { /* 용량 초과 등 — 무시 */ } }
@@ -114,6 +139,8 @@ export default function DiagnosisPanel({ cut, episodeCode, stage = 'G4', onClose
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
   const endRef = useRef(null)
+  const segCards = buildSegCards(cut)
+  const [segOpen, setSegOpen] = useState(true)
   const episodeId = state.activeEpisodeId   // 이 패널은 항상 활성 에피소드의 탭(VideoTab/CheckupTab)에서만 열린다
 
   // 현장 판단 기록 — 서버(.genline-review.json)에 보조로 남긴다. 실패해도 UI 를 막지 않음(best-effort)
@@ -188,6 +215,13 @@ ${msg || '(이미지만 붙여넣음 — 결과를 보고 대본과 대조해줘
     } finally { setBusy(false) }
   }
 
+  // 세그 후보 반영 — 로컬 상태 갱신일 뿐(핸드오프 큐/API 없음). AppContext 가 보호 필드(segments) override 를 자동으로 찍는다.
+  function applySegCombo(plan) {
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { segments: plan.combo }, overrideReason: `AI 진단 패널: 세그 분할 ${plan.combo.join('+')} 반영` })
+    recordReview('script', `SEG: ${plan.combo.join('+')}`, { stage, act: 'seg-builder' })
+    setNotice(`세그 조합 ${plan.combo.join('+')} 을(를) 컷에 반영했습니다 (트림 ${plan.trimTotal}초).`)
+  }
+
   function markApplied(aiId, fi, msg) {
     commit(loadThread(key).map(m => m.id === aiId ? { ...m, fixes: m.fixes.map((f, i) => i === fi ? { ...f, applied: true } : f) } : m))
     setNotice(msg)
@@ -254,6 +288,38 @@ ${msg || '(이미지만 붙여넣음 — 결과를 보고 대본과 대조해줘
           <button className={s.btn} onClick={clearThread} disabled={!thread.length}>🧹 초기화</button>
           <button className={s.btn} onClick={onClose}>닫기</button>
         </div>
+
+        {segCards.length > 0 && (
+          <div className={s.segBox}>
+            <button className={s.segToggle} onClick={() => setSegOpen(v => !v)}>
+              {segOpen ? '▾' : '▸'} ✂ 세그 분할 — {cut.duration}초 · 트림 적은 순 후보 {segCards.length}개
+            </button>
+            {segOpen && (
+              <div className={s.segList}>
+                {segCards.map(plan => {
+                  const current = sameCombo(cut.segments, plan.combo)
+                  return (
+                    <div key={plan.combo.join('+')} className={`${s.segCard} ${current ? s.segCurrent : ''}`}>
+                      <div className={s.segTop}>
+                        <b>{plan.combo.join('+')}</b>
+                        <span className={s.segMeta}>생성 {plan.genTotal}초 · 트림 {plan.trimTotal}초{plan.trimTotal > 0 ? ` (앞 ${plan.trimStart} / 뒤 ${plan.trimEnd})` : ''}</span>
+                        <span className={s.headSpacer} />
+                        {current && <span className={s.chip}>현재 적용됨</span>}
+                        <button className={s.btn} disabled={current} onClick={() => applySegCombo(plan)}>📝 이 조합 반영</button>
+                      </div>
+                      {plan.parts.map((t, i) => (
+                        <div key={i} className={s.segRow}>
+                          <b>{i + 1}/{plan.combo.length} · {plan.combo[i]}초</b>
+                          <span>{t || <i className={s.segEmpty}>(비어 있음)</i>}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className={s.thread}>
           {!thread.length && <div className={s.empty}>결과 화면을 붙여넣거나(Ctrl+V) 느낀 점을 적어 보내면, 대본·룰셋과 대조해 고칠 안을 제시합니다.</div>}
