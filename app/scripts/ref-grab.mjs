@@ -4,6 +4,8 @@
 // 사용:
 //   node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force] [--scene=0.2]
 //   node scripts/ref-grab.mjs --rebuild [--cat=teaser]   갤러리 화면만 다시 생성
+//   node scripts/ref-grab.mjs --classify [--cat=teaser]  카테고리 안 분류된 항목에 기법 분류+적용 아이디어 자동 부여(Haiku, 검색 없음)
+//   node scripts/ref-grab.mjs --sites [--cat=teaser]     저장된 핀들의 출처(source) 도메인 빈도 랭킹 → <cat>/sites-report.md
 //   (또는 C:\yeori-studio\ref-grab.bat 더블클릭 → 링크 붙여넣기)
 // 지원: 핀터레스트 핀(kr./www.pinterest.com/pin/…, pin.it 단축링크), mp4 직링크.
 //   인스타·유튜브는 로그인/차단 때문에 미지원 — 핀터레스트에 저장된 핀 링크를 쓰면 원본 출처도 같이 기록됨.
@@ -19,6 +21,7 @@ import path from 'path'
 import { spawnSync, spawn } from 'child_process'
 import readline from 'readline'
 import { DOWNLOADS } from '../server/lib/mediaPaths.js'
+import { apiKey, askWithSearch, parseArray } from '../server/lib/seedDiscovery.js'
 
 const args = process.argv.slice(2)
 const opt = Object.fromEntries(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.slice(2).split('='); return [k, v.length ? v.join('=') : true] }))
@@ -27,14 +30,66 @@ const CAT = String(opt.cat || 'teaser').replace(/[^\w-]/g, '')
 const ROOT = path.join(DOWNLOADS, '_shared', 'references', CAT)
 const FONT_DIR = 'C:/Windows/Fonts'   // drawtext 의 fontfile 경로에 드라이브 콜론을 안 쓰려고 cwd 로 지정
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128 Safari/537.36'
+const TECHNIQUE_CATS = ['카메라워크', '텍스트/타이포 리빌', '라이팅/컬러', '트랜지션/컷', '루프/반복', 'AI전용 비주얼', '구도/합성', '사운드 싱크']
 
 fs.mkdirSync(ROOT, { recursive: true })
 if (opt.rebuild) {   // 링크 없이 갤러리(index.html)만 다시 생성 — 화면 레이아웃을 바꿨을 때
   writeIndex(readIndex()); console.log(`갤러리 재생성: ${path.join(ROOT, 'index.html')}`); process.exit(0)
 }
+if (opt.classify) { await classify(); await new Promise(r => setTimeout(r, 100)); process.exit(0) }
+if (opt.sites) { sitesReport(); process.exit(0) }
 if (!links.length && !opt.interactive) {
-  console.log('사용: node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force] [--scene=0.2]  |  --rebuild')
+  console.log('사용: node scripts/ref-grab.mjs <링크> [<링크> ...] [--cat=teaser] [--note="메모"] [--force] [--scene=0.2]  |  --rebuild  |  --classify  |  --sites')
   process.exit(1)
+}
+
+// 분류 안 된(category 없는) 항목들을 모아 Haiku 로 "연출/프롬프트 기법" 분류 + 적용 아이디어 한 줄을 매긴다.
+// 이미 수집된 title/description/tags/source(= parsePin 이 받아온 og:description·og:see_also)만 넘기므로 검색은 필요 없음(비용 ~0).
+async function classify() {
+  if (!apiKey()) { console.log('❌ Anthropic API 키가 없어 분류를 건너뜁니다'); return }
+  const index = readIndex()
+  const todo = index.filter(e => !e.category)
+  if (!todo.length) { console.log('분류할 새 항목이 없습니다(모두 분류됨)'); return }
+  console.log(`분류 대상 ${todo.length}개`)
+  for (let i = 0; i < todo.length; i += 5) {
+    const batch = todo.slice(i, i + 5)
+    const prompt = `아래는 핀터레스트에서 수집한 영상/이미지 레퍼런스들이다. 각각에 "연출·프롬프트 기법 분류"와 "서여리(AI 인플루언서 릴스·인스타툰 계정)에 적용할 아이디어" 한 줄을 붙여줘.\n` +
+      `분류는 다음 중 하나(더 맞는 분류가 있으면 새로 만들어도 됨): ${TECHNIQUE_CATS.join(' / ')}\n\n` +
+      batch.map((e, idx) => `[${idx}] 제목: ${e.title || '-'}\n설명: ${e.description || '-'}\n태그: ${(e.tags || []).join(', ') || '-'}\n출처: ${e.source || '-'}`).join('\n\n') +
+      `\n\n설명 없이 JSON 배열만: [{"i":0,"category":"분류","idea":"적용 아이디어 한국어 한 줄"}, ...]`
+    try {
+      const { text, searches } = await askWithSearch(prompt, 1)
+      for (const r of parseArray(text)) {
+        const e = batch[r.i]; if (!e) continue
+        e.category = String(r.category || '기타').slice(0, 30)
+        e.ideaNote = String(r.idea || '').slice(0, 160)
+      }
+      console.log(`  ${i + 1}~${i + batch.length}: 완료${searches ? ` (검색 ${searches}회)` : ''}`)
+    } catch (err) { console.log(`  ❌ 배치 실패: ${err.message}`) }
+  }
+  writeIndex(index)
+  console.log('✅ 분류 완료 — 갤러리(기법 필터)에 반영됨')
+}
+
+// 저장된 핀들의 출처(source = 원본 사이트/계정 URL) 도메인 빈도 랭킹. AI 호출 없음, index.json 만 집계.
+function sitesReport() {
+  const index = readIndex()
+  const counts = new Map()
+  for (const e of index) {
+    if (!e.source) continue
+    let host
+    try { host = new URL(e.source).hostname.replace(/^www\./, '') } catch { continue }
+    const row = counts.get(host) || { host, count: 0, examples: [] }
+    row.count++
+    if (row.examples.length < 3) row.examples.push(e.title || e.id)
+    counts.set(host, row)
+  }
+  const ranked = [...counts.values()].sort((a, b) => b.count - a.count)
+  const lines = ranked.map((r, i) => `${i + 1}. **${r.host}** — ${r.count}건 (예: ${r.examples.join(', ')})`)
+  const out = `# ${CAT} 핵심 사이트 (출처 도메인 빈도)\n\n수집 ${index.length}건 중 출처 확인 ${index.filter(e => e.source).length}건\n\n${lines.join('\n') || '(출처 정보가 있는 항목이 없습니다)'}\n`
+  fs.writeFileSync(path.join(ROOT, 'sites-report.md'), out)
+  console.log(out)
+  console.log(`✅ 저장: ${path.join(ROOT, 'sites-report.md')}`)
 }
 
 const run = (cmd, a, o = {}) => spawnSync(cmd, a, { encoding: 'utf-8', windowsHide: true, maxBuffer: 64 << 20, ...o })
@@ -171,8 +226,9 @@ function writeIndex(list) {
   <aside class="side">
     <div class="set">
       <label>분류 <select id="cat"></select></label>
+      <label>기법 <select id="tech"><option value="">전체</option></select></label>
       <label>정렬 <select id="sort"><option value="new">최근 추가순</option><option value="old">오래된순</option><option value="dur">짧은 영상순</option><option value="views">조회수순</option></select></label>
-      <label><input type="search" id="q" placeholder="제목·메모·태그 검색"></label>
+      <label><input type="search" id="q" placeholder="제목·메모·태그·기법 검색"></label>
       <div class="row"><label><input type="checkbox" id="auto" checked> 선택하면 바로 재생</label><label><input type="checkbox" id="snd"> 소리</label></div>
     </div>
     <div class="list" id="list"></div>
@@ -195,6 +251,10 @@ let view = [], cur = store.get('sel.' + D.cat, null)
 
 $('cat').innerHTML = D.cats.map(c => '<option' + (c === D.cat ? ' selected' : '') + '>' + esc(c) + '</option>').join('')
 $('cat').onchange = e => { location.href = '../' + e.target.value + '/index.html' }
+const techs = [...new Set(D.items.map(e => e.category).filter(Boolean))].sort()
+$('tech').innerHTML = '<option value="">전체</option>' + techs.map(t => '<option>' + esc(t) + '</option>').join('')
+$('tech').value = store.get('tech', '')
+$('tech').onchange = () => { store.set('tech', $('tech').value); render() }
 $('sort').value = store.get('sort', 'new'); $('auto').checked = store.get('auto', true); $('snd').checked = store.get('snd', false)
 $('sort').onchange = () => { store.set('sort', $('sort').value); render() }
 $('q').oninput = render
@@ -202,8 +262,8 @@ $('auto').onchange = () => store.set('auto', $('auto').checked)
 $('snd').onchange = () => { store.set('snd', $('snd').checked); $('vid').muted = !$('snd').checked }
 
 function render() {
-  const q = $('q').value.trim().toLowerCase(), s = $('sort').value
-  view = D.items.filter(e => !q || [e.title, e.note, e.author, (e.tags || []).join(' '), e.description].join(' ').toLowerCase().includes(q))
+  const q = $('q').value.trim().toLowerCase(), s = $('sort').value, tech = $('tech').value
+  view = D.items.filter(e => (!tech || e.category === tech) && (!q || [e.title, e.note, e.author, e.category, (e.tags || []).join(' '), e.description].join(' ').toLowerCase().includes(q)))
   const by = { new: (a, b) => (b.addedAt || '').localeCompare(a.addedAt || ''), old: (a, b) => (a.addedAt || '').localeCompare(b.addedAt || ''),
                dur: (a, b) => (a.duration || 1e9) - (b.duration || 1e9), views: (a, b) => (b.views || 0) - (a.views || 0) }[s]
   view.sort(by)
@@ -211,7 +271,7 @@ function render() {
   $('list').innerHTML = view.length ? view.map(e => '<div class="it' + (e.id === cur ? ' on' : '') + '" data-id="' + esc(e.id) + '">'
       + '<img src="' + esc(e.dir) + '/thumb.jpg" loading="lazy" alt="">'
       + '<div><div class="t">' + esc(e.title || e.id) + '</div>'
-      + '<div class="m">' + (e.duration ? e.duration.toFixed(1) + '초 · ' : '') + '컷 ' + (e.sceneCount ?? '-') + (e.views != null ? ' · 조회 ' + e.views : '') + '</div>'
+      + '<div class="m">' + (e.duration ? e.duration.toFixed(1) + '초 · ' : '') + '컷 ' + (e.sceneCount ?? '-') + (e.views != null ? ' · 조회 ' + e.views : '') + (e.category ? ' · 🏷' + esc(e.category) : '') + '</div>'
       + (e.note ? '<div class="n">📝 ' + esc(e.note) + '</div>' : '') + '</div></div>').join('')
     : '<div class="empty">' + (D.items.length ? '검색 결과가 없습니다' : '아직 레퍼런스가 없습니다 — ref-grab.bat 으로 링크를 추가하세요') + '</div>'
   document.querySelectorAll('.it').forEach(el => el.onclick = () => select(el.dataset.id))
@@ -231,6 +291,7 @@ function select(id, play = true) {
   if (play && $('auto').checked && e.duration) v.play().catch(() => {})
   $('info').innerHTML = '<h1>' + esc(e.title || e.id) + '</h1>'
     + '<p>' + esc(e.author || '') + (e.published ? ' · 게시 ' + esc(e.published.slice(0, 10)) : '') + (e.duration ? ' · ' + e.duration.toFixed(1) + '초' : '') + (e.size ? ' · ' + esc(e.size) : '') + ' · 컷 ' + (e.sceneCount ?? '-') + '</p>'
+    + (e.category ? '<p>🏷 ' + esc(e.category) + (e.ideaNote ? ' — ' + esc(e.ideaNote) : '') + '</p>' : '')
     + (e.note ? '<p class="n">📝 ' + esc(e.note) + '</p>' : '')
     + '<p><a href="' + esc(e.dir) + '/sheet_intro.png" target="_blank">도입 6초</a><a href="' + esc(e.dir) + '/sheet_scenes.png" target="_blank">컷별</a>'
     + '<a href="' + esc(e.dir) + '/sheet_overview.png" target="_blank">전체</a><a href="' + esc(e.dir) + '/README.md" target="_blank">메모</a>'
