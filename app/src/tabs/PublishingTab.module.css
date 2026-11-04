@@ -97,6 +97,35 @@
 .layerText { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); font-size: 13px; padding: 7px 9px; border-radius: 6px; outline: none; font-family: inherit; }
 .fontSelect { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); font-size: 12.5px; padding: 7px 9px; border-radius: 6px; outline: none; }
 
+/* 2026-11-04 — ThumbTrend Studio 벤치마킹 반영분(바이럴 텍스트/뱃지 프리셋, AI 후킹 문구 패널,
+   세이프존·CTR 검증 패널)의 스타일. 기존 토큰(--accent/--border/--text-*)을 그대로 재사용. */
+.presetGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.presetBtn { padding: 10px 6px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 800; background: #18181b; transition: transform .1s; }
+.presetBtn:hover { transform: translateY(-1px); border-color: var(--accent-light); }
+
+.aiResultBox { display: flex; flex-direction: column; gap: 6px; padding: 10px; background: rgba(124,58,237,0.08); border: 1px solid var(--border); border-radius: 8px; }
+.aiScoreRow { display: flex; align-items: center; justify-content: space-between; }
+.aiScore { font-size: 12.5px; font-weight: 700; color: var(--accent-light); }
+.aiSource { font-size: 10.5px; color: var(--text-3); text-transform: uppercase; }
+.aiTitleBtn { text-align: left; background: var(--bg-input); border: 1px solid var(--border); color: var(--text); font-size: 12.5px; padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+.aiTitleBtn:hover { border-color: var(--accent); background: rgba(124,58,237,0.12); }
+.aiBadgeBtn { text-align: left; background: none; border: 1px dashed var(--border); color: var(--text-2); font-size: 11.5px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+.aiTips { font-size: 11px; color: var(--text-3); line-height: 1.5; }
+
+.ctrScoreRow { display: flex; align-items: center; gap: 10px; }
+.ctrGrade { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; font-size: 15px; font-weight: 900; color: #fff; background: #52525b; }
+.ctrGrade[data-grade="S"] { background: #a855f7; }
+.ctrGrade[data-grade="A"] { background: #22c55e; }
+.ctrGrade[data-grade="B"] { background: #eab308; }
+.ctrGrade[data-grade="C"] { background: #ef4444; }
+.ctrScoreNum { font-size: 14px; font-weight: 700; color: var(--text); }
+.ctrCheckList { display: flex; flex-direction: column; gap: 6px; }
+.ctrCheckRow { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-2); line-height: 1.4; }
+.ctrDot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; background: #71717a; }
+.ctrCheckRow[data-severity="success"] .ctrDot { background: #22c55e; }
+.ctrCheckRow[data-severity="warning"] .ctrDot { background: #eab308; }
+.ctrCheckRow[data-severity="danger"] .ctrDot { background: #ef4444; }
+
 .previewHeader { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .previewHeader span { font-size: 13px; font-weight: 700; color: var(--text-2); }
 .size { font-size: 12px; color: var(--text-3); font-family: var(--mono); }

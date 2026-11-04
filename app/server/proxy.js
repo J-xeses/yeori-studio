@@ -38,6 +38,7 @@ import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt, splitCaptionString, isCpEmpty, splitDialogueBySeg, SEG_UNITS } from '../src/lib/vpDialogue.js'
 import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
+import { generateThumbnailHooks } from './lib/thumbnailAi.js'
 import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
 import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
 import { getWaveformPeaks } from './lib/waveform.js'
@@ -6427,6 +6428,19 @@ app.post('/api/save-thumbnail', (req, res) => {
     const outPath = path.join(dir, 'thumb.jpg')
     fs.writeFileSync(outPath, buffer)
     res.json({ success: true, path: outPath })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/thumbnail-ai-copy — 썸네일 탭 "AI 후킹 문구 제안"(Gemini, studio-secrets의
+// apiKeys.gemini 사용). ThumbTrend Studio(성준님 별도 도구) geminiService.ts 포팅, 키 없거나
+// 호출 실패 시 알고리즘 폴백으로 항상 결과를 돌려준다 ──
+app.post('/api/thumbnail-ai-copy', async (req, res) => {
+  const { title, scriptSummary, platform, currentText } = req.body || {}
+  try {
+    const result = await generateThumbnailHooks(CODE_ROOT, { title, scriptSummary, platform, currentText })
+    res.json(result)
   } catch (err) {
     res.status(500).json({ error: err.message })
   }

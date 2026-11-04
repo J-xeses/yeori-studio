@@ -14,9 +14,20 @@ const SECTIONS = [
   { key: 'status',  label: '⑤ 업로드 현황' },
 ]
 
+// 2026-11-04 — ThumbTrend Studio(성준님 별도 썸네일 도구, localhost:4000) 벤치마킹 반영:
+// 거기선 16:9/9:16 외에 인스타 피드용 1:1·4:5도 기본 제공했음 — 여리 스튜디오에도 추가.
 const RATIOS = [
   { key: '16:9', label: '16:9 (YouTube)', w: 1280, h: 720 },
-  { key: '9:16', label: '9:16 (인스타/TikTok)', w: 1080, h: 1920 },
+  { key: '9:16', label: '9:16 (쇼츠/릴스/TikTok)', w: 1080, h: 1920 },
+  { key: '1:1',  label: '1:1 (인스타 피드)', w: 1080, h: 1080 },
+  { key: '4:5',  label: '4:5 (인스타 세로피드)', w: 1080, h: 1350 },
+]
+
+// 해상도 배수 — ThumbTrend Studio Step4("고화질 출력")의 1x/2x QHD/4x 4K 선택지를 그대로 반영.
+const EXPORT_SCALES = [
+  { key: 1, label: '1x (기본)' },
+  { key: 2, label: '2x (QHD 권장)' },
+  { key: 4, label: '4x (4K 마스터)' },
 ]
 
 // 2026-11-03 — "포스터 레이어" 손글씨 타이포 프리셋. 굵고 자유분방한 느낌 위주로 구글 폰트에서
@@ -36,6 +47,50 @@ const DOODLE_TYPES = [
   { key: 'circle', label: '○ 낙서 동그라미' },
   { key: 'star',   label: '★ 별' },
   { key: 'arrow2', label: '↝ 손그림 화살표' },
+]
+
+// 2026-11-04 — ThumbTrend Studio TEXT_PRESETS 포팅(6종 선별). 거긴 TextLayer마다 독립 스타일을
+// 가지는 레이어 모델이었지만, 여기 메인 텍스트는 단일 thumbnail.text 필드이므로 "1클릭으로
+// thumbnail 상태 전체를 덮어쓰는 프리셋"으로 단순화. secondaryOutline·bgBox는 이번에 새로
+// 추가하는 필드(기존엔 외곽선 1단 + 글로우만 있었음).
+const VIRAL_TEXT_PRESETS = [
+  {
+    key: 'yt_dual_stroke', label: '유튜브 2단 외곽선', preview: '충격 실화',
+    apply: { fontKey: 'black-han-sans', color: '#FFE600', textOutline: true, outlineColor: '#000000', secondaryOutline: true, secondaryOutlineColor: '#1E1E24', textGlow: false, bgBox: false },
+  },
+  {
+    key: 'cyber_neon', label: '사이버펑크 네온 글로우', preview: '미친 성능', fontFamily: "'Pretendard', sans-serif",
+    apply: { fontKey: 'do-hyeon', color: '#00F0FF', textOutline: true, outlineColor: '#050515', secondaryOutline: false, textGlow: true, glowColor: '#00F0FF', bgBox: false },
+  },
+  {
+    key: 'breaking_red', label: '긴급 이슈 레드박스', preview: '단독 입수',
+    apply: { fontKey: 'black-han-sans', color: '#FFFFFF', textOutline: true, outlineColor: '#7F1D1D', secondaryOutline: false, textGlow: false, bgBox: true, bgBoxColor: '#DC2626' },
+  },
+  {
+    key: 'highlighter', label: '형광펜 마커 강조', preview: '진짜 이유',
+    apply: { fontKey: 'jua', color: '#0F172A', textOutline: false, secondaryOutline: false, textGlow: false, bgBox: true, bgBoxColor: '#A3E635' },
+  },
+  {
+    key: 'gold_luxury', label: '골드 럭셔리', preview: 'TOP 1%',
+    apply: { fontKey: 'do-hyeon', color: '#FDE047', textOutline: true, outlineColor: '#422006', secondaryOutline: false, textGlow: false, bgBox: false },
+  },
+  {
+    key: 'black_han_impact', label: '어그로 치트키', preview: '역대급 발견',
+    apply: { fontKey: 'black-han-sans', color: '#EF4444', textOutline: true, outlineColor: '#FFFFFF', secondaryOutline: true, secondaryOutlineColor: '#000000', textGlow: false, bgBox: false },
+  },
+]
+
+// ThumbTrend Studio TREND_BADGES 중 코너 뱃지에 바로 쓸 수 있는 9종 — 기존 badgeText/badgeColor를
+// 1클릭으로 채워주는 용도(색상 조합까지 포함해서 디자인 고민 없이 바로 적용).
+const TREND_BADGE_PRESETS = [
+  { label: '🔴 LIVE', text: '🔴 LIVE', bg: '#EF4444', fg: '#FFFFFF' },
+  { label: '🚨 긴급 속보', text: '🚨 긴급 속보', bg: '#DC2626', fg: '#FFFFFF' },
+  { label: '🔥 100만뷰 돌파', text: '🔥 100만뷰 돌파', bg: '#F59E0B', fg: '#000000' },
+  { label: '⚠️ 충격 주의', text: '⚠️ 충격 주의', bg: '#EAB308', fg: '#000000' },
+  { label: '🏆 TOP 5 추천', text: '🏆 TOP 5 추천', bg: '#6366F1', fg: '#FFFFFF' },
+  { label: '✨ 최신판', text: '✨ 2026 최신판', bg: '#10B981', fg: '#FFFFFF' },
+  { label: '💯 내돈내산', text: '💯 솔직 내돈내산', bg: '#06B6D4', fg: '#FFFFFF' },
+  { label: '⚡ 종결판', text: '⚡ 종결판 끝판왕', bg: '#8B5CF6', fg: '#FFFFFF' },
 ]
 
 // 포스터 레이어용 손그림 느낌 도형 — 랜덤 없이 고정된 손맛 변형(두 번 겹쳐 그린 삐뚠 원 등)으로
@@ -96,10 +151,298 @@ function drawImageCover(ctx, img, x, y, w, h) {
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h)
 }
 
+// 2026-11-04 — 기존 draw()의 그리기 로직을 모듈 레벨 순수 함수로 분리(ThumbTrend Studio
+// canvasRenderer.ts 벤치마킹: 해상도와 렌더 로직을 분리). scale은 EXPORT_SCALES 배수를 받아
+// 폰트 크기·선 두께·그림자 같은 "절대 px" 값들을 캔버스 실제 크기에 맞춰 같이 키운다 — W/H 기반
+// %값들은 자동으로 스케일되지만 thumbnail.fontSize 같은 절대값은 그대로 두면 고해상도 내보내기에서
+// 상대적으로 작아져 버리기 때문. selectedLayerId는 내보내기 시 null로 넘겨 선택 테두리를 뺀다.
+function renderThumbnailFrame(ctx, W, H, scale, { thumbnail, bgImage, posterLayers, selectedLayerId }) {
+  ctx.clearRect(0, 0, W, H)
+
+  ctx.save()
+  ctx.filter = `brightness(${thumbnail.brightness ?? 100}%) contrast(${thumbnail.contrast ?? 100}%) saturate(${thumbnail.saturation ?? 100}%)`
+  if (bgImage) {
+    drawImageCover(ctx, bgImage, 0, 0, W, H)
+  } else {
+    const grad = ctx.createLinearGradient(0, 0, W, H)
+    grad.addColorStop(0, '#1a0a2e'); grad.addColorStop(1, '#0a0a1f')
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
+    ctx.fillStyle = 'rgba(124,58,237,.06)'; ctx.fillRect(0, 0, W, H)
+  }
+  ctx.restore()
+
+  if (thumbnail.vignette) {
+    const strength = (thumbnail.vignetteStrength ?? 55) / 100
+    const vgrad = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75)
+    vgrad.addColorStop(0, 'rgba(0,0,0,0)'); vgrad.addColorStop(1, `rgba(0,0,0,${strength})`)
+    ctx.fillStyle = vgrad; ctx.fillRect(0, 0, W, H)
+  }
+
+  if (thumbnail.text) {
+    const overlay = ctx.createLinearGradient(0, H * 0.5, 0, H)
+    overlay.addColorStop(0, 'rgba(0,0,0,0)'); overlay.addColorStop(1, 'rgba(0,0,0,0.75)')
+    ctx.fillStyle = overlay; ctx.fillRect(0, 0, W, H)
+  }
+  if (thumbnail.text) {
+    const lines = thumbnail.text.split('\n')
+    const fSize = (thumbnail.fontSize || 48) * scale
+    const fam = thumbnail.fontKey ? fontFamilyFor(thumbnail.fontKey) : '"Apple SD Gothic Neo",sans-serif'
+    ctx.font = `${thumbnail.bold !== false ? 'bold ' : ''}${fSize}px ${fam}`
+    ctx.textAlign = 'center'
+    const yBase = H * ((thumbnail.textY || 70) / 100)
+    const lineH = fSize * 1.3
+    const totalH = lines.length * lineH
+
+    // 형광펜/레드박스 하이라이트 배경 — ThumbTrend TextLayer.backgroundColor 포팅. 외곽선보다
+    // 먼저(텍스트 뒤에) 그려야 글자가 박스 위에 얹힌 모양이 된다.
+    if (thumbnail.bgBox) {
+      let maxWidth = 0
+      lines.forEach(line => { const w = ctx.measureText(line).width; if (w > maxWidth) maxWidth = w })
+      const padX = 24 * scale, padY = 14 * scale, rad = 10 * scale
+      const boxW = maxWidth + padX * 2, boxH = totalH + padY * 2
+      const boxX = W / 2 - boxW / 2, boxY = yBase - totalH / 2 - padY
+      ctx.save()
+      ctx.fillStyle = thumbnail.bgBoxColor || '#DC2626'
+      const r = Math.min(rad, boxW / 2, boxH / 2)
+      ctx.beginPath()
+      ctx.moveTo(boxX + r, boxY)
+      ctx.lineTo(boxX + boxW - r, boxY)
+      ctx.quadraticCurveTo(boxX + boxW, boxY, boxX + boxW, boxY + r)
+      ctx.lineTo(boxX + boxW, boxY + boxH - r)
+      ctx.quadraticCurveTo(boxX + boxW, boxY + boxH, boxX + boxW - r, boxY + boxH)
+      ctx.lineTo(boxX + r, boxY + boxH)
+      ctx.quadraticCurveTo(boxX, boxY + boxH, boxX, boxY + boxH - r)
+      ctx.lineTo(boxX, boxY + r)
+      ctx.quadraticCurveTo(boxX, boxY, boxX + r, boxY)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
+    }
+
+    lines.forEach((line, i) => {
+      const y = yBase - totalH / 2 + i * lineH + fSize / 2
+      if (thumbnail.textGlow) {
+        ctx.shadowColor = thumbnail.glowColor || '#fbbf24'; ctx.shadowBlur = 22 * scale
+        ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0
+        ctx.fillStyle = thumbnail.color || '#ffffff'
+        ctx.fillText(line, W / 2, y)
+      }
+      ctx.shadowColor = '#000'; ctx.shadowBlur = 12 * scale; ctx.shadowOffsetX = 2 * scale; ctx.shadowOffsetY = 2 * scale
+      // 2단 외곽선(secondaryOutline) — ThumbTrend "유튜브 시그니처 2단 외곽선" 포팅. 바깥쪽
+      // 두꺼운 테두리를 먼저 그리고, 그 위에 기존 1단 외곽선을 더 얇게 겹쳐 그린다.
+      if (thumbnail.secondaryOutline) {
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = thumbnail.secondaryOutlineColor || '#000000'
+        ctx.lineWidth = Math.max(2, fSize * 0.26)
+        ctx.strokeText(line, W / 2, y)
+      }
+      if (thumbnail.textOutline) {
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = thumbnail.outlineColor || '#000000'
+        ctx.lineWidth = Math.max(2, fSize * 0.12)
+        ctx.strokeText(line, W / 2, y)
+      }
+      ctx.fillStyle = thumbnail.color || '#ffffff'
+      ctx.fillText(line, W / 2, y)
+    })
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
+  }
+
+  if (thumbnail.circleOn) {
+    const cx = W * (thumbnail.circleX ?? 75) / 100
+    const cy = H * (thumbnail.circleY ?? 35) / 100
+    const r = Math.min(W, H) * (thumbnail.circleSize ?? 18) / 100
+    ctx.save()
+    ctx.strokeStyle = thumbnail.circleColor || '#ef4444'
+    ctx.lineWidth = Math.max(4, r * 0.08)
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
+    ctx.restore()
+  }
+  if (thumbnail.arrowOn) {
+    const tipX = W * (thumbnail.arrowX ?? 50) / 100
+    const tipY = H * (thumbnail.arrowY ?? 50) / 100
+    const len = Math.min(W, H) * (thumbnail.arrowSize ?? 20) / 100
+    const angle = ((thumbnail.arrowAngle ?? 45) * Math.PI) / 180
+    const tailX = tipX - Math.cos(angle) * len, tailY = tipY - Math.sin(angle) * len
+    const color = thumbnail.arrowColor || '#facc15'
+    ctx.save()
+    ctx.strokeStyle = color; ctx.fillStyle = color
+    ctx.lineWidth = Math.max(5, len * 0.08); ctx.lineCap = 'round'
+    ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(tipX, tipY); ctx.stroke()
+    const headLen = len * 0.32, headAngle = Math.PI / 7
+    ctx.beginPath()
+    ctx.moveTo(tipX, tipY)
+    ctx.lineTo(tipX - headLen * Math.cos(angle - headAngle), tipY - headLen * Math.sin(angle - headAngle))
+    ctx.lineTo(tipX - headLen * Math.cos(angle + headAngle), tipY - headLen * Math.sin(angle + headAngle))
+    ctx.closePath(); ctx.fill()
+    ctx.restore()
+  }
+
+  if (thumbnail.badgeOn && thumbnail.badgeText) {
+    ctx.save()
+    ctx.font = `bold ${28 * scale}px "Apple SD Gothic Neo",sans-serif`
+    const tw = ctx.measureText(thumbnail.badgeText).width
+    const boxW = tw + 28 * scale, boxH = 44 * scale, margin = 16 * scale
+    const corner = thumbnail.badgeCorner || 'tl'
+    const bx = corner === 'tr' || corner === 'br' ? W - boxW - margin : margin
+    const by = corner === 'bl' || corner === 'br' ? H - boxH - margin : margin
+    ctx.fillStyle = thumbnail.badgeColor || '#ef4444'
+    ctx.fillRect(bx, by, boxW, boxH)
+    ctx.fillStyle = thumbnail.badgeTextColor || '#ffffff'
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.fillText(thumbnail.badgeText, bx + boxW / 2, by + boxH / 2 + 1)
+    ctx.restore()
+  }
+
+  posterLayers.forEach(layer => {
+    ctx.save()
+    const lx = W * (layer.xPct ?? 50) / 100
+    const ly = H * (layer.yPct ?? 50) / 100
+    ctx.translate(lx, ly)
+    ctx.rotate(((layer.rotate ?? 0) * Math.PI) / 180)
+    let bw = 80 * scale, bh = 60 * scale
+    if (layer.kind === 'text') {
+      const fam = fontFamilyFor(layer.fontKey)
+      const size = (layer.size || 64) * scale
+      ctx.font = `${size}px ${fam}`
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      const text = layer.text || ''
+      if (layer.stroke) {
+        ctx.lineJoin = 'round'
+        ctx.strokeStyle = layer.strokeColor || '#141214'
+        ctx.lineWidth = Math.max(3, size * 0.16)
+        ctx.strokeText(text, 0, 0)
+      }
+      ctx.fillStyle = layer.color || '#ffffff'
+      ctx.fillText(text, 0, 0)
+      bw = Math.max(60 * scale, ctx.measureText(text).width + size * 0.3); bh = size * 1.4
+    } else if (layer.kind === 'doodle') {
+      const r = Math.min(W, H) * (layer.size ?? 14) / 100
+      drawDoodle(ctx, layer.doodleType, r, layer.color || '#fbbf24')
+      bw = bh = r * 2.3
+    }
+    if (layer.id === selectedLayerId) {
+      ctx.strokeStyle = 'rgba(167,139,250,.9)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4])
+      ctx.strokeRect(-bw / 2, -bh / 2, bw, bh)
+      ctx.setLineDash([])
+    }
+    ctx.restore()
+  })
+
+  ctx.fillStyle = 'rgba(167,139,250,.25)'; ctx.font = `${12 * scale}px sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'
+  ctx.fillText('여리 Studio', W - 12 * scale, H - 10 * scale)
+}
+
+// 세이프존 가이드 — ThumbTrend Studio validationEngine.ts의 좌표 규칙을 그대로 가져와 "위험
+// 영역"을 캔버스 위에 점선으로 겹쳐 보여준다. 내보내기(PNG/클립보드)에는 포함하지 않고
+// 미리보기에서만 토글로 켠다.
+function drawSafeZoneGuides(ctx, W, H, ratio) {
+  if (ratio !== '16:9' && ratio !== '9:16') return
+  ctx.save()
+  ctx.setLineDash([8, 6])
+  ctx.lineWidth = 2
+  ctx.strokeStyle = 'rgba(239,68,68,0.85)'
+  ctx.font = '12px sans-serif'
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top'
+
+  const zone = (x0, y0, x1, y1, label) => {
+    const X = W * x0 / 100, Y = H * y0 / 100, Wz = W * (x1 - x0) / 100, Hz = H * (y1 - y0) / 100
+    ctx.fillStyle = 'rgba(239,68,68,0.12)'
+    ctx.fillRect(X, Y, Wz, Hz)
+    ctx.strokeRect(X, Y, Wz, Hz)
+    ctx.fillStyle = 'rgba(239,68,68,0.95)'
+    ctx.fillText(label, X + 6, Y + 4)
+  }
+
+  if (ratio === '16:9') {
+    zone(74, 70, 100, 100, '⏱ 재생시간 배지')
+  } else if (ratio === '9:16') {
+    zone(78, 30, 100, 90, '👍 좋아요/댓글')
+    zone(0, 76, 100, 100, '🔊 사운드/계정명')
+  }
+  ctx.setLineDash([])
+  ctx.restore()
+}
+
+// CTR 검증 — ThumbTrend Studio validationEngine.ts(runThumbnailValidation) 포팅. 레이어 모델이
+// 아니라 이 탭의 단일 thumbnail 상태값 기준으로 같은 체크 항목을 재현한다.
+function computeCtrReport(thumbnail, posterLayers, ratio) {
+  const checks = []
+  let score = 100
+
+  const text = (thumbnail.text || '').trim()
+  if (!text) {
+    checks.push({ severity: 'danger', msg: '핵심 타이틀이 없습니다. 후킹 문구를 추가하세요.' })
+    score -= 25
+  } else {
+    const wordCount = text.split(/\s+/).filter(Boolean).length
+    if (wordCount > 6) {
+      checks.push({ severity: 'warning', msg: `텍스트 단어 수가 ${wordCount}개로 많습니다. 3~6단어로 줄이세요.` })
+      score -= 10
+    } else {
+      checks.push({ severity: 'success', msg: `적정 단어 수(${wordCount}단어) — 3초 스캔에 최적화됨.` })
+    }
+    const fSize = thumbnail.fontSize || 48
+    if (fSize < 38) {
+      checks.push({ severity: 'warning', msg: `폰트 크기(${fSize}px)가 작습니다. 48px 이상 권장.` })
+      score -= 8
+    } else {
+      checks.push({ severity: 'success', msg: '충분한 폰트 크기 확보.' })
+    }
+    const hasContrast = thumbnail.textOutline || thumbnail.secondaryOutline || thumbnail.bgBox
+    if (!hasContrast) {
+      checks.push({ severity: 'warning', msg: '외곽선/하이라이트 박스가 없어 배경에 묻힐 수 있습니다.' })
+      score -= 12
+    } else {
+      checks.push({ severity: 'success', msg: '외곽선/박스로 배경과 분리됨.' })
+    }
+  }
+
+  // 세이프존 — 메인 텍스트(textY)·코너뱃지·강조원·화살표·포스터레이어 위치를 위험영역과 대조.
+  const dangerHit = (x, y) => {
+    if (ratio === '16:9') return x > 74 && y > 70
+    if (ratio === '9:16') return (x > 78 && y > 30 && y < 90) || y > 76
+    return false
+  }
+  const points = []
+  if (text) points.push([50, thumbnail.textY || 70])
+  if (thumbnail.badgeOn) {
+    const corner = thumbnail.badgeCorner || 'tl'
+    points.push([corner.includes('r') ? 92 : 8, corner.includes('b') ? 92 : 8])
+  }
+  if (thumbnail.circleOn) points.push([thumbnail.circleX ?? 75, thumbnail.circleY ?? 35])
+  if (thumbnail.arrowOn) points.push([thumbnail.arrowX ?? 50, thumbnail.arrowY ?? 50])
+  posterLayers.forEach(l => points.push([l.xPct ?? 50, l.yPct ?? 50]))
+  const violated = points.some(([x, y]) => dangerHit(x, y))
+  if (ratio === '16:9' || ratio === '9:16') {
+    if (violated) {
+      checks.push({ severity: 'danger', msg: ratio === '16:9' ? '우측 하단 재생시간 배지 영역을 요소가 가립니다.' : '쇼츠/릴스 UI(좋아요·사운드) 영역을 요소가 가립니다.' })
+      score -= 20
+    } else {
+      checks.push({ severity: 'success', msg: '플랫폼 UI 세이프존을 침범하지 않았습니다.' })
+    }
+  }
+
+  const hasHook = thumbnail.badgeOn || thumbnail.circleOn || thumbnail.arrowOn
+  if (!hasHook) {
+    checks.push({ severity: 'warning', msg: '뱃지/화살표 등 시선 유도 장식이 없습니다(선택, 클릭 유도력 +18% 참고).' })
+    score -= 5
+  } else {
+    checks.push({ severity: 'success', msg: '시선 유도 장식(뱃지/화살표)이 적용됨.' })
+  }
+
+  score = Math.max(20, Math.min(100, score))
+  let grade = 'C'
+  if (score >= 90) grade = 'S'
+  else if (score >= 80) grade = 'A'
+  else if (score >= 68) grade = 'B'
+  return { score, grade, checks }
+}
+
 // ── ① 썸네일 섹션 (기존 캔버스 편집기 + 스튜디오 이미지 불러오기 + 서버 저장) ──
 function ThumbnailSection({ epNum }) {
   const { state, dispatch } = useApp()
-  const { thumbnail } = state
+  const { thumbnail, episode, scriptRaw, cuts } = state
   const canvasRef = useRef(null)
   const bgRef = useRef(null)
   const fileRef = useRef(null)
@@ -109,169 +452,34 @@ function ThumbnailSection({ epNum }) {
   const [saveStatus, setSaveStatus] = useState('')
   const [selectedLayerId, setSelectedLayerId] = useState(null)
   const [fontsTick, setFontsTick] = useState(0) // 구글 폰트 로드 완료 시 캔버스 강제 재렌더용
+  const [exportScale, setExportScale] = useState(1)
+  const [copyStatus, setCopyStatus] = useState('')
+  // "AI 후킹 문구 제안" — ThumbTrend Studio geminiService.ts 포팅(서버의 /api/thumbnail-ai-copy
+  // 경유, studio-secrets.json apiKeys.gemini 사용, 키 없으면 서버가 알고리즘 폴백으로 응답).
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiResult, setAiResult] = useState(null)
+  const [aiError, setAiError] = useState('')
   const draggingRef = useRef(false)
 
   const set = (p) => dispatch({ type: 'SET_THUMB', p })
   const ratio = thumbnail.ratio || '16:9'
   const dims = RATIOS.find(r => r.key === ratio) || RATIOS[0]
   const posterLayers = thumbnail.posterLayers || []
+  const ctrReport = computeCtrReport(thumbnail, posterLayers, ratio)
 
   // 2026-10-23 — 성준님 요청: "YouTube 업로드용 썸네일 편집효과" 1단계(편집의도 기획 수준,
   // AI 배경제거·컷아웃 같은 무거운 작업 없이 캔버스 2D로 즉시 미리보기 가능한 수준). 벤치마킹
   // (vidIQ·CapCut·Picsart 등 썸네일 메이커 + CTR 가이드)에서 추린 4종: ①텍스트 외곽선·글로우
   // ②이미지 보정(밝기·대비·채도) ③비네트 ④강조 도형(원·화살표)+코너 뱃지.
+  // 2026-11-04 — 실제 그리기 로직은 renderThumbnailFrame(모듈 레벨, 해상도 독립)으로 옮겨
+  // 내보내기(2x/4x)에서도 재사용. 여기서는 라이브 캔버스에 scale=1로 그리고, 세이프존 가이드는
+  // 미리보기에만 겹쳐 그린다(내보낸 파일에는 포함 안 됨).
   const draw = useCallback(() => {
     const canvas = canvasRef.current; if (!canvas) return
     const ctx = canvas.getContext('2d')
-    const W = canvas.width, H = canvas.height
-    ctx.clearRect(0, 0, W, H)
-
-    // ② 이미지 보정 — ctx.filter(CSS filter 문법 그대로 사용 가능)를 배경에만 적용하고
-    // save/restore로 범위를 가둬 이후 텍스트/도형에는 전혀 영향을 안 준다.
-    ctx.save()
-    ctx.filter = `brightness(${thumbnail.brightness ?? 100}%) contrast(${thumbnail.contrast ?? 100}%) saturate(${thumbnail.saturation ?? 100}%)`
-    if (bgImage) {
-      drawImageCover(ctx, bgImage, 0, 0, W, H)
-    } else {
-      const grad = ctx.createLinearGradient(0, 0, W, H)
-      grad.addColorStop(0, '#1a0a2e'); grad.addColorStop(1, '#0a0a1f')
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
-      ctx.fillStyle = 'rgba(124,58,237,.06)'; ctx.fillRect(0, 0, W, H)
-    }
-    ctx.restore()
-
-    // ③ 비네트 — 가장자리를 어둡게 눌러 시선을 중앙(인물/텍스트)으로 모은다.
-    if (thumbnail.vignette) {
-      const strength = (thumbnail.vignetteStrength ?? 55) / 100
-      const vgrad = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.75)
-      vgrad.addColorStop(0, 'rgba(0,0,0,0)'); vgrad.addColorStop(1, `rgba(0,0,0,${strength})`)
-      ctx.fillStyle = vgrad; ctx.fillRect(0, 0, W, H)
-    }
-
-    if (thumbnail.text) {
-      const overlay = ctx.createLinearGradient(0, H * 0.5, 0, H)
-      overlay.addColorStop(0, 'rgba(0,0,0,0)'); overlay.addColorStop(1, 'rgba(0,0,0,0.75)')
-      ctx.fillStyle = overlay; ctx.fillRect(0, 0, W, H)
-    }
-    if (thumbnail.text) {
-      const lines = thumbnail.text.split('\n')
-      const fSize = thumbnail.fontSize || 48
-      ctx.font = `${thumbnail.bold ? 'bold ' : ''}${fSize}px ${'"Apple SD Gothic Neo"'},sans-serif`
-      ctx.textAlign = 'center'
-      const yBase = H * ((thumbnail.textY || 70) / 100)
-      const lineH = fSize * 1.3
-      const totalH = lines.length * lineH
-      lines.forEach((line, i) => {
-        const y = yBase - totalH / 2 + i * lineH + fSize / 2
-        // ① 텍스트 글로우 — 네온 느낌의 번진 색 그림자를 한 번 먼저 깔고, 아래에서 외곽선+
-        // 본문을 또렷하게 덮어 그린다(동시에 적용하면 번짐이 외곽선에 섞여 뭉개짐).
-        if (thumbnail.textGlow) {
-          ctx.shadowColor = thumbnail.glowColor || '#fbbf24'; ctx.shadowBlur = 22
-          ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0
-          ctx.fillStyle = thumbnail.color || '#ffffff'
-          ctx.fillText(line, W / 2, y)
-        }
-        ctx.shadowColor = '#000'; ctx.shadowBlur = 12; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2
-        if (thumbnail.textOutline) {
-          ctx.lineJoin = 'round'
-          ctx.strokeStyle = thumbnail.outlineColor || '#000000'
-          ctx.lineWidth = Math.max(2, fSize * 0.12)
-          ctx.strokeText(line, W / 2, y)
-        }
-        ctx.fillStyle = thumbnail.color || '#ffffff'
-        ctx.fillText(line, W / 2, y)
-      })
-      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-    }
-
-    // ④ 강조 도형 — 얼굴·핵심 지점을 가리키는 원/화살표. 위치·크기는 %(화면비율 무관) 기준.
-    if (thumbnail.circleOn) {
-      const cx = W * (thumbnail.circleX ?? 75) / 100
-      const cy = H * (thumbnail.circleY ?? 35) / 100
-      const r = Math.min(W, H) * (thumbnail.circleSize ?? 18) / 100
-      ctx.save()
-      ctx.strokeStyle = thumbnail.circleColor || '#ef4444'
-      ctx.lineWidth = Math.max(4, r * 0.08)
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke()
-      ctx.restore()
-    }
-    if (thumbnail.arrowOn) {
-      const tipX = W * (thumbnail.arrowX ?? 50) / 100
-      const tipY = H * (thumbnail.arrowY ?? 50) / 100
-      const len = Math.min(W, H) * (thumbnail.arrowSize ?? 20) / 100
-      const angle = ((thumbnail.arrowAngle ?? 45) * Math.PI) / 180
-      const tailX = tipX - Math.cos(angle) * len, tailY = tipY - Math.sin(angle) * len
-      const color = thumbnail.arrowColor || '#facc15'
-      ctx.save()
-      ctx.strokeStyle = color; ctx.fillStyle = color
-      ctx.lineWidth = Math.max(5, len * 0.08); ctx.lineCap = 'round'
-      ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(tipX, tipY); ctx.stroke()
-      const headLen = len * 0.32, headAngle = Math.PI / 7
-      ctx.beginPath()
-      ctx.moveTo(tipX, tipY)
-      ctx.lineTo(tipX - headLen * Math.cos(angle - headAngle), tipY - headLen * Math.sin(angle - headAngle))
-      ctx.lineTo(tipX - headLen * Math.cos(angle + headAngle), tipY - headLen * Math.sin(angle + headAngle))
-      ctx.closePath(); ctx.fill()
-      ctx.restore()
-    }
-
-    // 코너 뱃지/리본 — "최초공개" 류 클릭베이트 문구를 모서리에 스티커처럼 고정.
-    if (thumbnail.badgeOn && thumbnail.badgeText) {
-      ctx.save()
-      ctx.font = 'bold 28px "Apple SD Gothic Neo",sans-serif'
-      const tw = ctx.measureText(thumbnail.badgeText).width
-      const boxW = tw + 28, boxH = 44, margin = 16
-      const corner = thumbnail.badgeCorner || 'tl'
-      const bx = corner === 'tr' || corner === 'br' ? W - boxW - margin : margin
-      const by = corner === 'bl' || corner === 'br' ? H - boxH - margin : margin
-      ctx.fillStyle = thumbnail.badgeColor || '#ef4444'
-      ctx.fillRect(bx, by, boxW, boxH)
-      ctx.fillStyle = thumbnail.badgeTextColor || '#ffffff'
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-      ctx.fillText(thumbnail.badgeText, bx + boxW / 2, by + boxH / 2 + 1)
-      ctx.restore()
-    }
-
-    // ⑤ 포스터 레이어 — 손글씨 문구/낙서 요소를 사진의 여백에 자유 배치(2026-11-03, 포스터형
-    // 타이포 피드백 반영). 각 레이어는 자기 중심으로 translate/rotate 후 그려 회전이 자연스럽다.
-    posterLayers.forEach(layer => {
-      ctx.save()
-      const lx = W * (layer.xPct ?? 50) / 100
-      const ly = H * (layer.yPct ?? 50) / 100
-      ctx.translate(lx, ly)
-      ctx.rotate(((layer.rotate ?? 0) * Math.PI) / 180)
-      let bw = 80, bh = 60
-      if (layer.kind === 'text') {
-        const fam = fontFamilyFor(layer.fontKey)
-        const size = layer.size || 64
-        ctx.font = `${size}px ${fam}`
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-        const text = layer.text || ''
-        if (layer.stroke) {
-          ctx.lineJoin = 'round'
-          ctx.strokeStyle = layer.strokeColor || '#141214'
-          ctx.lineWidth = Math.max(3, size * 0.16)
-          ctx.strokeText(text, 0, 0)
-        }
-        ctx.fillStyle = layer.color || '#ffffff'
-        ctx.fillText(text, 0, 0)
-        bw = Math.max(60, ctx.measureText(text).width + size * 0.3); bh = size * 1.4
-      } else if (layer.kind === 'doodle') {
-        const r = Math.min(W, H) * (layer.size ?? 14) / 100
-        drawDoodle(ctx, layer.doodleType, r, layer.color || '#fbbf24')
-        bw = bh = r * 2.3
-      }
-      if (layer.id === selectedLayerId) {
-        ctx.strokeStyle = 'rgba(167,139,250,.9)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4])
-        ctx.strokeRect(-bw / 2, -bh / 2, bw, bh)
-        ctx.setLineDash([])
-      }
-      ctx.restore()
-    })
-
-    ctx.fillStyle = 'rgba(167,139,250,.25)'; ctx.font = '12px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'alphabetic'
-    ctx.fillText('여리 Studio', W - 12, H - 10)
-  }, [bgImage, thumbnail, posterLayers, selectedLayerId, fontsTick])
+    renderThumbnailFrame(ctx, canvas.width, canvas.height, 1, { thumbnail, bgImage, posterLayers, selectedLayerId })
+    if (thumbnail.showSafeZone) drawSafeZoneGuides(ctx, canvas.width, canvas.height, ratio)
+  }, [bgImage, thumbnail, posterLayers, selectedLayerId, fontsTick, ratio])
 
   useEffect(() => { draw() }, [draw])
 
@@ -367,10 +575,55 @@ function ThumbnailSection({ epNum }) {
     reader.readAsDataURL(file)
   }
 
+  // ThumbTrend Studio Step4("고화질 출력") 포팅 — 1x/2x/4x 중 선택한 배수로 오프스크린 캔버스에
+  // 새로 렌더링해서 내보낸다(기존 라이브 캔버스를 그대로 업스케일하면 텍스트가 뭉개짐).
+  const renderExportCanvas = (scale) => {
+    const off = document.createElement('canvas')
+    off.width = dims.w * scale
+    off.height = dims.h * scale
+    const ctx = off.getContext('2d')
+    renderThumbnailFrame(ctx, off.width, off.height, scale, { thumbnail, bgImage, posterLayers, selectedLayerId: null })
+    return off
+  }
+
   const downloadPNG = () => {
-    const canvas = canvasRef.current; if (!canvas) return
-    const url = canvas.toDataURL('image/png')
-    const a = document.createElement('a'); a.href = url; a.download = 'thumbnail.png'; a.click()
+    const off = renderExportCanvas(exportScale)
+    const url = off.toDataURL('image/png')
+    const a = document.createElement('a'); a.href = url; a.download = `thumbnail@${exportScale}x.png`; a.click()
+  }
+
+  // ThumbTrend Studio Step4 "클립보드로 이미지 복사(유튜브 스튜디오에 바로 붙여넣기)" 포팅.
+  const copyToClipboard = async () => {
+    setCopyStatus('복사 중...')
+    try {
+      const off = renderExportCanvas(exportScale)
+      const blob = await new Promise(resolve => off.toBlob(resolve, 'image/png'))
+      if (!blob) throw new Error('이미지 변환 실패')
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      setCopyStatus('✅ 클립보드에 복사됨 — 유튜브 스튜디오 등에 바로 붙여넣기 가능')
+    } catch (err) {
+      setCopyStatus('❌ 복사 실패: ' + err.message)
+    }
+  }
+
+  // "AI 후킹 문구 제안" — 서버 /api/thumbnail-ai-copy 호출(episode 제목 + 대본 요약 전달).
+  const generateAiHooks = async () => {
+    setAiLoading(true); setAiError(''); setAiResult(null)
+    try {
+      const scriptSummary = scriptRaw?.trim() || buildScriptFromCuts(cuts)
+      const platform = ratio === '9:16' ? 'shorts' : ratio === '16:9' ? 'youtube' : 'instagram'
+      const res = await fetch(`${SERVER}/api/thumbnail-ai-copy`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: episode?.title || '', scriptSummary, platform, currentText: thumbnail.text || '' }),
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setAiResult(data)
+    } catch (err) {
+      setAiError('AI 제안 생성 오류: ' + err.message)
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   // 스튜디오 탭에서 생성된 현재 에피소드 이미지 목록 불러오기
@@ -463,6 +716,42 @@ function ThumbnailSection({ epNum }) {
             placeholder={'첫 줄 텍스트\n둘째 줄 텍스트'}
             value={thumbnail.text || ''}
             onChange={e => set({ text: e.target.value })} />
+        </div>
+
+        {/* 2026-11-04 — "AI 후킹 문구 제안"(구글 Gemini). ThumbTrend Studio(성준님 별도 썸네일
+            도구) geminiService.ts의 generateSocialContentAi를 포팅 — studio-secrets.json에
+            이미 등록돼 있던 apiKeys.gemini를 처음으로 실제 사용하는 기능. 키가 없거나 호출이
+            실패해도 서버가 알고리즘 폴백으로 항상 결과를 돌려준다. */}
+        <div className={s.panel}>
+          <div className={s.panelTitle}>🪄 AI 후킹 문구 제안 (Google Gemini)</div>
+          <div className={s.fields}>
+            <button className={s.genBtn} style={{ margin: 0 }} onClick={generateAiHooks} disabled={aiLoading}>
+              {aiLoading ? '⏳ 생성 중...' : '✨ 현재 대본 기반 제안 받기'}
+            </button>
+            {aiError && <div style={{ color: '#f87171', fontSize: 12 }}>{aiError}</div>}
+            {aiResult && (
+              <div className={s.aiResultBox}>
+                <div className={s.aiScoreRow}>
+                  <span className={s.aiScore}>바이럴 점수 {aiResult.viralScore}</span>
+                  <span className={s.aiSource}>{aiResult.source === 'gemini' ? 'Gemini' : '알고리즘 폴백'}</span>
+                </div>
+                {aiResult.titles.map((t, i) => (
+                  <button key={i} type="button" className={s.aiTitleBtn} onClick={() => set({ text: t })}>
+                    {t}
+                  </button>
+                ))}
+                {aiResult.badge && (
+                  <button type="button" className={s.aiBadgeBtn}
+                    onClick={() => set({ badgeOn: true, badgeText: aiResult.badge })}>
+                    코너 뱃지로 적용: {aiResult.badge}
+                  </button>
+                )}
+                {aiResult.tips?.length > 0 && (
+                  <div className={s.aiTips}>{aiResult.tips.join(' · ')}</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className={s.panel}>
@@ -561,6 +850,48 @@ function ThumbnailSection({ epNum }) {
                   <span className={s.colorVal}>{thumbnail.glowColor || '#fbbf24'}</span>
                 </div>
               )}
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.secondaryOutline}
+                  onChange={e => set({ secondaryOutline: e.target.checked })} />
+                2단 외곽선 (유튜브 시그니처 스타일)
+              </label>
+              {thumbnail.secondaryOutline && (
+                <div className={s.colorRow}>
+                  <input type="color" className={s.colorPicker}
+                    value={thumbnail.secondaryOutlineColor || '#1E1E24'}
+                    onChange={e => set({ secondaryOutlineColor: e.target.value })} />
+                  <span className={s.colorVal}>{thumbnail.secondaryOutlineColor || '#1E1E24'}</span>
+                </div>
+              )}
+            </div>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.bgBox}
+                  onChange={e => set({ bgBox: e.target.checked })} />
+                하이라이트 박스 (형광펜/레드박스)
+              </label>
+              {thumbnail.bgBox && (
+                <div className={s.colorRow}>
+                  <input type="color" className={s.colorPicker}
+                    value={thumbnail.bgBoxColor || '#DC2626'}
+                    onChange={e => set({ bgBoxColor: e.target.value })} />
+                  <span className={s.colorVal}>{thumbnail.bgBoxColor || '#DC2626'}</span>
+                </div>
+              )}
+            </div>
+            <div className={s.field}>
+              <label>바이럴 스타일 1클릭 적용 (ThumbTrend Studio 벤치마킹)</label>
+              <div className={s.presetGrid}>
+                {VIRAL_TEXT_PRESETS.map(p => (
+                  <button key={p.key} type="button" className={s.presetBtn}
+                    style={{ fontFamily: fontFamilyFor(p.apply.fontKey), color: p.apply.color }}
+                    onClick={() => set(p.apply)} title={p.label}>
+                    {p.preview}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -666,6 +997,15 @@ function ThumbnailSection({ epNum }) {
                   <input type="text" className={s.textInput} style={{ padding: '8px 10px', fontSize: 13 }}
                     placeholder="뱃지 문구" value={thumbnail.badgeText || ''}
                     onChange={e => set({ badgeText: e.target.value })} />
+                  <div className={s.presetGrid}>
+                    {TREND_BADGE_PRESETS.map(b => (
+                      <button key={b.label} type="button" className={s.presetBtn}
+                        style={{ background: b.bg, color: b.fg, fontSize: 11 }}
+                        onClick={() => set({ badgeText: b.text, badgeColor: b.bg, badgeTextColor: b.fg })}>
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
                   <div className={s.ratioRow} style={{ padding: 0 }}>
                     {[['tl', '↖ 좌상'], ['tr', '↗ 우상'], ['bl', '↙ 좌하'], ['br', '↘ 우하']].map(([k, label]) => (
                       <button key={k} type="button"
@@ -687,6 +1027,35 @@ function ThumbnailSection({ epNum }) {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+
+        {/* 2026-11-04 — ThumbTrend Studio Step3("세이프존 & CTR 정밀 검증") 포팅. 레이어 모델이
+            아니라 이 탭의 단일 thumbnail 상태값 기준으로 같은 체크 항목(계산은 모듈 레벨
+            computeCtrReport)을 재현. 가이드 오버레이는 미리보기에만 겹쳐 보이고 내보내기엔
+            포함되지 않는다. */}
+        <div className={s.panel}>
+          <div className={s.panelTitle}>세이프존 & CTR 검증</div>
+          <div className={s.fields}>
+            <div className={s.field}>
+              <label className={s.checkLabel}>
+                <input type="checkbox" checked={!!thumbnail.showSafeZone}
+                  onChange={e => set({ showSafeZone: e.target.checked })} />
+                미리보기에 세이프존 가이드 표시 (타임코드/UI 영역)
+              </label>
+            </div>
+            <div className={s.ctrScoreRow}>
+              <span className={s.ctrGrade} data-grade={ctrReport.grade}>{ctrReport.grade}</span>
+              <span className={s.ctrScoreNum}>{ctrReport.score}점</span>
+            </div>
+            <div className={s.ctrCheckList}>
+              {ctrReport.checks.map((c, i) => (
+                <div key={i} className={s.ctrCheckRow} data-severity={c.severity}>
+                  <span className={s.ctrDot} />
+                  {c.msg}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -774,9 +1143,24 @@ function ThumbnailSection({ epNum }) {
           </div>
         </div>
 
+        {/* 2026-11-04 — ThumbTrend Studio Step4("고화질 출력") 포팅: 1x/2x/4x 해상도 선택 +
+            클립보드 복사(유튜브 스튜디오에 바로 붙여넣기). */}
+        <div className={s.ratioRow} style={{ padding: 0 }}>
+          {EXPORT_SCALES.map(sc => (
+            <button key={sc.key} type="button"
+              className={`${s.ratioBtn} ${exportScale === sc.key ? s.ratioBtnActive : ''}`}
+              onClick={() => setExportScale(sc.key)}>
+              {sc.label}
+            </button>
+          ))}
+        </div>
         <button className={s.downloadBtn} onClick={downloadPNG}>
-          ⬇ PNG 다운로드 ({dims.w}×{dims.h})
+          ⬇ PNG 다운로드 ({dims.w * exportScale}×{dims.h * exportScale})
         </button>
+        <button className={s.downloadBtn} onClick={copyToClipboard} style={{ background: 'rgba(255,255,255,0.08)' }}>
+          📋 클립보드로 복사
+        </button>
+        {copyStatus && <div style={{ fontSize: 11.5, color: copyStatus.startsWith('❌') ? '#f87171' : '#4ade80' }}>{copyStatus}</div>}
         <button className={s.downloadBtn} onClick={saveThumbnail} style={{ background: '#059669' }}>
           💾 thumb.jpg로 서버 저장
         </button>
@@ -788,7 +1172,7 @@ function ThumbnailSection({ epNum }) {
           <span>썸네일 미리보기</span>
           <span className={s.size}>{dims.w} × {dims.h}</span>
         </div>
-        <div className={s.canvasWrap} style={ratio === '9:16' ? { maxWidth: 320, aspectRatio: '9/16' } : undefined}>
+        <div className={s.canvasWrap} style={{ aspectRatio: `${dims.w}/${dims.h}`, maxWidth: dims.h > dims.w ? 320 : dims.h === dims.w ? 420 : undefined }}>
           <canvas ref={canvasRef} width={dims.w} height={dims.h} className={s.canvas}
             style={{ cursor: selectedLayerId ? 'crosshair' : 'default' }}
             onMouseDown={handleCanvasDown} onMouseMove={handleCanvasMove}
