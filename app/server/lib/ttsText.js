@@ -117,6 +117,7 @@ export const DEFAULT_READINGS = {
   'KPOP': '케이팝',
   'LA': '엘에이',
   'IU': '아이유',
+  '열가지': '열까지',   // "열 가지"(ten kinds) 자연발화 경음화 — ElevenLabs가 글자 그대로 읽어 어색했던 문제 (2026-11-04, LF_E00 엔딩 나레이션)
 }
 
 export function applyReadings(input, customMap = {}) {
