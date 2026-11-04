@@ -35,7 +35,7 @@ import { recentStatusEntries, statusFileMtime } from './lib/statusFeed.js'
 import { syncEpisodeState, setHold } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
 import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
-import { ensureDialogueInVP, buildSegClipPrompt, splitCaptionString, isCpEmpty } from '../src/lib/vpDialogue.js'
+import { ensureDialogueInVP, buildSegClipPrompt, splitCaptionString, isCpEmpty, splitDialogueBySeg, SEG_UNITS } from '../src/lib/vpDialogue.js'
 import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
@@ -8006,6 +8006,14 @@ app.get('/api/cut-timing', async (req, res) => {
         }
       }
 
+      // 세그(cut.segments) 컷만: 세그별 오디오 cut_NN_s{k}.mp3 존재 여부 — "3개 중 2개 생성됨" 표시용
+      const segAudio = (Array.isArray(c.segments) && c.segments.length > 1)
+        ? c.segments.map((_, i) => {
+            const sp = path.join(audioDir, `cut_${p}_s${i + 1}.mp3`)
+            return { seg: i + 1, path: sp, exists: fs.existsSync(sp) }
+          })
+        : null
+
       out.push({
         no: c.no, cutType: c.cutType || 'YEORI', hasText,
         videoDur: videoDur != null ? +videoDur.toFixed(2) : null,
@@ -8013,6 +8021,7 @@ app.get('/api/cut-timing', async (req, res) => {
         targetDur,
         overlayUsed: mp4 === overlayMp4,
         delta, status, suggestSpeed, suggestVideoDur,
+        ...(segAudio ? { segAudio, segAudioDone: segAudio.filter(x => x.exists).length, segAudioTotal: segAudio.length } : {}),
       })
     }
     const needsWork = out.filter(c => ['audio-longer', 'audio-much-longer', 'video-much-longer', 'no-audio'].includes(c.status)).length
@@ -9307,7 +9316,63 @@ async function concatMp3Files(files, dest) {
   if (code !== 0 || !fs.existsSync(dest)) throw new Error(`mp3 concat 실패 (ffmpeg code ${code})`)
 }
 
+// 세그(cut.segments, 예 [8,8,10]) 컷의 TTS 슬라이스 계산 — 세그 개수 > 1 일 때만 배열, 아니면 null.
+// buildSegClipPrompt(vpDialogue.js)와 같은 규칙(트림 반영 segSecs 가중치 + splitDialogueBySeg)으로
+// 원문을 나눠, 영상 클립 k 의 립싱크 대사와 오디오 세그 k 의 텍스트가 일치하게 한다.
+// 각 슬라이스는 기존 파이프라인(splitSpeakerSegments → cleanForTTS)을 그대로 통과시킨다.
+// 화자는 정제된 화자 세그 기준으로 보존한다(아래 (2)).
+function planSegmentTTS(cut, raw) {
+  const combo = Array.isArray(cut?.segments)
+    ? cut.segments.map(s => (s && typeof s === 'object' ? Number(s.sec) : Number(s))).filter(n => SEG_UNITS.includes(n))
+    : []
+  if (combo.length <= 1) return null
+  const DU = Number(cut.duration) || 0
+  const trimTotal = Math.max(0, combo.reduce((a, b) => a + b, 0) - DU)
+  const trimStart = Math.floor(trimTotal / 2), trimEnd = Math.ceil(trimTotal / 2)
+  const segSecs = combo.map((sec, k) => sec - (k === 0 ? trimStart : 0) - (k === combo.length - 1 ? trimEnd : 0))
+  const n = combo.length
+  // (1) 수동 "||" 분할이 세그 수와 맞으면 그대로 존중(splitDialogueBySeg 와 동일 규칙) — 각 조각을 개별 정제
+  if (String(raw).includes('||') && String(raw).split('||').length === n) {
+    let lastSpeaker = null
+    return splitDialogueBySeg(raw, n, { segSecs }).map((txt, i) => {
+      const segs = splitSpeakerSegments(txt).map(sg => ({ ...sg }))
+      for (const sg of segs) { if (sg.speaker) lastSpeaker = sg.speaker; else if (lastSpeaker) sg.speaker = lastSpeaker }
+      return { k: i + 1, segs }
+    })
+  }
+  // (2) 화자 표기가 있는 원문을 문장 단위로 자르면 따옴표·화자명이 끊겨 화자 인식이 깨지므로,
+  //     먼저 화자 세그(정제본)로 만든 뒤 그 이어붙인 텍스트를 splitDialogueBySeg 로 나누고,
+  //     각 조각이 걸친 화자 구간으로 되돌려 매핑한다(화자 보존).
+  const spk = splitSpeakerSegments(raw)
+  let full = '', ranges = []
+  for (const sg of spk) {
+    if (full) full += ' '
+    ranges.push({ start: full.length, end: full.length + sg.text.length, speaker: sg.speaker })
+    full += sg.text
+  }
+  const parts = splitDialogueBySeg(full, n, { segSecs })
+  let cursor = 0
+  return parts.map((txt, i) => {
+    let start = txt ? full.indexOf(txt, cursor) : -1
+    if (start < 0) start = cursor
+    const end = txt ? Math.min(full.length, start + txt.length) : start
+    cursor = end
+    const segs = []
+    for (const r of ranges) {
+      const a = Math.max(start, r.start), b = Math.min(end, r.end)
+      if (b <= a) continue
+      const text = full.slice(a, b).trim()
+      if (!text) continue
+      const prev = segs[segs.length - 1]
+      if (prev && prev.speaker === r.speaker) prev.text += ' ' + text
+      else segs.push({ speaker: r.speaker, text })
+    }
+    return { k: i + 1, segs }
+  })
+}
+
 // ⑥ studio-run-g3 — ElevenLabs TTS로 대사/나레이션 오디오 생성 (컷당 1개 파일)
+//    cut.segments 가 2개 이상이면 추가로 세그별 cut_NN_s{k}.mp3 도 만들고 합본 cut_NN.mp3 는 그것들을 이어붙여 만든다.
 //    다중 화자 대사(`지아 "…" / 여리 "…"`)는 화자별로 쪼개 각자 목소리로 생성 후 이어붙임.
 //    화자별 목소리: state.ttsSettings.speakerVoices[화자] → 없으면 기본 voiceId.
 //    지문·화자명·따옴표·슬래시는 server/lib/ttsText.js(cleanForTTS)로 정제 — 클라 TTS 탭과 동일.
@@ -9345,14 +9410,16 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
       const raw = narrOnly ? (c.narration?.trim() || '') : (c.dialogue?.trim() || c.narration?.trim() || '')
       const segs = splitSpeakerSegments(raw)
       const removed = cleanForTTS(raw).removed
-      return { cut: c, segs, removed }
+      return { cut: c, segs, removed, segSlices: planSegmentTTS(c, raw) }
     })
     const empties = prepared.filter(p => !p.segs.length)
     const toGenerate = prepared.filter(p => p.segs.length)
     if (!toGenerate.length) return res.status(400).json({ error: '정제 후 남는 텍스트가 없습니다 (대사가 전부 지문/메모였음)' })
 
     // ── ElevenLabs 잔여 글자수 사전 체크 ──
-    const totalChars = toGenerate.reduce((sum, p) => sum + p.segs.reduce((s, seg) => s + seg.text.length, 0), 0)
+    const totalChars = toGenerate.reduce((sum, p) => sum + (p.segSlices
+      ? p.segSlices.reduce((a, sl) => a + sl.segs.reduce((s, seg) => s + seg.text.length, 0), 0)
+      : p.segs.reduce((s, seg) => s + seg.text.length, 0)), 0)
     try {
       const userRes = await fetch('https://api.elevenlabs.io/v1/user', { headers: { 'xi-api-key': apiKey } })
       if (userRes.ok) {
@@ -9373,6 +9440,47 @@ mcpRouter.post('/studio-run-g3', async (req, res) => {
       const c = p.cut
       const padded = String(c.no).padStart(2, '0')
       const dest = path.join(audioDir, narrOnly && c.dialogue?.trim() ? `cut_${padded}_nr.mp3` : `cut_${padded}.mp3`)
+      if (p.segSlices) {
+        // ── 세그 컷: 세그별 mp3(cut_NN_s{k}.mp3) 생성 → 순서대로 이어붙여 합본 ──
+        const segResults = []
+        const segFiles = []
+        const segTmp = []
+        try {
+          for (const sl of p.segSlices) {
+            const segDest = path.join(audioDir, `cut_${padded}_s${sl.k}.mp3`)
+            if (!sl.segs.length) {   // 이 세그에 읽을 텍스트가 없음 — 묵음 세그, 낡은 파일 정리
+              try { fs.unlinkSync(segDest) } catch { /* 없으면 무시 */ }
+              segResults.push({ seg: sl.k, status: 'empty', path: null })
+              continue
+            }
+            const sparts = []
+            for (let i = 0; i < sl.segs.length; i++) {
+              const sg = sl.segs[i]
+              const buf = await elevenLabsTTS(apiKey, voiceFor(sg.speaker), applyReadings(sg.text, readingMap))
+              const pf = path.join(audioDir, `.cut_${padded}_s${sl.k}_p${i}.mp3`)
+              fs.writeFileSync(pf, buf)
+              sparts.push(pf); segTmp.push(pf)
+            }
+            await concatMp3Files(sparts, segDest)
+            segFiles.push(segDest)
+            const spk = [...new Set(sl.segs.map(x => x.speaker).filter(Boolean))]
+            segResults.push({ seg: sl.k, path: segDest, speakers: spk, voices: spk.map(voiceFor) })
+          }
+          await concatMp3Files(segFiles, dest)
+          const speakers = [...new Set(p.segSlices.flatMap(sl => sl.segs.map(x => x.speaker)).filter(Boolean))]
+          results.push({
+            cutNo: c.no, status: 'ok', path: dest,
+            ...(speakers.length ? { speakers, voices: speakers.map(voiceFor) } : {}),
+            ...(p.removed.length ? { removedNotes: p.removed } : {}),
+            segments: segResults,
+          })
+        } catch (err) {
+          results.push({ cutNo: c.no, status: 'error', error: err.message, segments: segResults })
+        } finally {
+          segTmp.forEach(f => { try { fs.unlinkSync(f) } catch { /* 임시파일 정리 실패 무시 */ } })
+        }
+        continue
+      }
       const parts = []
       try {
         for (let i = 0; i < p.segs.length; i++) {
