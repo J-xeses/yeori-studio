@@ -810,10 +810,59 @@ episodes 4개.`,
 // "SNS 서치 외에 트렌드 벤치마킹 정보를 종합 수집하는 아카이브"로 앱 안에서도 보이게 함.
 // ⚠️ SNS를 자동으로 긁어오는 기능은 아님 — 성준님이 직접 모니터링한 발견이나, Claude가
 // 별도 리서치 때 찾은 걸 여기 모아두는 저장소. "+ 자료 추가"로 수동 등록.
+// 2026-11 "AI로 자동 채우기": 사람이 링크를 열어 본 내용(캡션/설명)을 붙여넣으면 Claude 가 제목·설명·태그로 정리.
+// URL 을 서버가 긁는 게 아니다(SNS 로그인 불가) — 붙여넣은 텍스트만 읽는다. 결과는 폼에 채울 뿐, 저장은 사람이 누른다.
+const BENCHMARK_EXTRACT_SYSTEM = `당신은 서여리 채널의 연출기법 아카이브 정리 도구입니다.
+사용자가 SNS·레퍼런스에서 발견한 콘텐츠의 URL과 캡션/설명 원문을 붙여넣습니다. 이를 "실제로 구현 가능한 연출기법" 관점으로 정리하세요.
+- 범위: 영상/이미지 연출 기법(예: AI만 가능한 비주얼, 구조적 반전, 채널 고유 시그널, 감정적 어택, 포맷 파격). 일반 트렌드·콘텐츠 요약이 아니라, 우리가 컷 연출에 가져다 쓸 수 있는 "기법" 하나를 뽑는다.
+- title: 기법 이름(짧게, 20자 이내).
+- description: 1~3문장. 무엇이 어떻게 구현되는 기법인지 + 서여리 콘텐츠에서 어디에 쓸 수 있는지. 원문에 없는 사실은 지어내지 말 것.
+- tags: 3~6개 문자열 배열(짧은 한국어 키워드).
+반드시 JSON만 반환. 마크다운·설명 금지. 형식: {"title":"...","description":"...","tags":["...","..."]}`
+
+// 응답에서 JSON 객체만 뽑아 파싱 (코드펜스·앞뒤 설명 문장 복구). 실패하면 throw.
+function parseBenchmarkExtract(text) {
+  const t = String(text || '').replace(/```json|```/g, '')
+  const slice = t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)
+  const j = JSON.parse(slice)
+  const tags = Array.isArray(j.tags) ? j.tags : String(j.tags || '').split(',')
+  return {
+    title: String(j.title || '').trim(),
+    description: String(j.description || '').trim(),
+    tags: tags.map(x => String(x).replace(/^#/, '').trim()).filter(Boolean).slice(0, 6),
+  }
+}
+
 function BenchmarkTab() {
+  const { state } = useApp()
+  const apiKey = state.apiKeys?.claude || ""
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(null)
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiError, setAiError] = useState('')
+
+  const autoFill = async () => {
+    if (aiBusy) return
+    const raw = (adding?.raw || '').trim()
+    const url = (adding?.source || '').trim()
+    if (!raw && !url) { setAiError('출처 URL이나 원문 캡션을 먼저 붙여넣으세요.'); return }
+    if (!apiKey) { setAiError('Claude API 키가 없습니다 — 상단 API 바에서 입력하세요.'); return }
+    setAiBusy(true); setAiError('')
+    try {
+      const text = await callClaude(
+        BENCHMARK_EXTRACT_SYSTEM,
+        `[URL] ${url || '(없음)'}\n[원문 캡션/설명]\n${raw || '(없음 — URL만 있으면 내용을 추측하지 말고 title은 "확인 필요", description은 원문이 필요하다고 적을 것)'}`,
+        apiKey, 800
+      )
+      const r = parseBenchmarkExtract(text)
+      if (!r.title && !r.description) throw new Error('empty')
+      // 폼만 채운다 — 저장은 사람이 검토 후 "저장". source(URL)는 건드리지 않음.
+      setAdding(prev => ({ ...prev, title: r.title, description: r.description, tags: r.tags.join(', ') }))
+    } catch {
+      setAiError('AI 정리 실패 — 키/네트워크를 확인하거나 원문을 더 붙여넣어 다시 시도하세요.')
+    } finally { setAiBusy(false) }
+  }
 
   const load = () => {
     setLoading(true)
@@ -852,6 +901,13 @@ function BenchmarkTab() {
           </p>
           {adding ? (
             <div>
+              <div className={s.fieldGroup}><label className={s.fieldLabel}>원문 캡션/설명 (붙여넣기, 저장되지 않음)</label>
+                <textarea className={s.input} rows={4} style={{ resize: 'vertical' }} placeholder="링크를 열어 본 게시물의 캡션·설명을 붙여넣으면 아래 제목·설명·태그를 AI가 채웁니다 (출처 URL도 같이 적으세요)"
+                  value={adding.raw || ''} onChange={e => setAdding({ ...adding, raw: e.target.value })} /></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <button className={`${s.genBtn} ${s.genBtnActive}`} style={{ width: 'auto', padding: '8px 14px' }} onClick={autoFill} disabled={aiBusy}>{aiBusy ? '분석 중...' : '🤖 AI로 자동 채우기'}</button>
+                {aiError && <span className={s.error} style={{ margin: 0 }}>{aiError}</span>}
+              </div>
               <div className={s.fieldGroup}><label className={s.fieldLabel}>제목</label>
                 <input className={s.input} placeholder="예: 피규어화(Figurine Box)" value={adding.title || ''} onChange={e => setAdding({ ...adding, title: e.target.value })} /></div>
               <div className={s.fieldGroup}><label className={s.fieldLabel}>설명 / 영감</label>
@@ -862,7 +918,7 @@ function BenchmarkTab() {
                 <input className={s.input} placeholder="예: 시그컷, 체인지, VFX" value={adding.tags || ''} onChange={e => setAdding({ ...adding, tags: e.target.value })} /></div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className={`${s.genBtn} ${s.genBtnActive}`} onClick={save}>저장</button>
-                <button className={s.genBtn} onClick={() => setAdding(null)}>취소</button>
+                <button className={s.genBtn} onClick={() => { setAdding(null); setAiError('') }}>취소</button>
               </div>
             </div>
           ) : (
