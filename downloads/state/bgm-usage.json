@@ -58,5 +58,15 @@
     "at": "2026-10-10T05:21:45.698Z",
     "code": "IG_R06",
     "file": "bgm/BGM_LOFI/Morning Routine - Ghostrifter Official.mp3"
+  },
+  {
+    "at": "2026-11-04T01:52:42.933Z",
+    "code": "SF_E01_A",
+    "file": "bgm/BGM_HOOK/Sea Breeze.mp3"
+  },
+  {
+    "at": "2026-11-04T01:52:49.451Z",
+    "code": "SF_E01_B",
+    "file": "bgm/generated/SF_E01_B_warm_mw1gpe07.mp3"
   }
 ]
