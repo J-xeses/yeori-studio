@@ -79,6 +79,9 @@ const defaultState = {
     instagram: { title: '', description: '', tags: '' },
     tiktok:    { title: '', description: '', tags: '' },
   },
+  // 채널 전체 공통 핵심 키워드(2026-11-04, 성준님: "캡션에 키워드를 자주·반복 노출") — 에피소드별이
+  // 아니라 계정 레벨 설정이라 TAB_STATE_KEYS(에피소드 전환 시 교체되는 목록)에 넣지 않고 최상위에 둔다.
+  channelKeywords: [],
   dashboard: { monthBudget: 50000, spent: 0 },
   creditTracker: {
     main: {
@@ -343,6 +346,7 @@ function reducer(state, action) {
         [action.platform]: { ...(state.publishing?.[action.platform] || {}), ...action.p },
       },
     }
+    case 'SET_CHANNEL_KEYWORDS': return { ...state, channelKeywords: action.p }
     case 'SET_DASH': return { ...state, dashboard: { ...state.dashboard, ...action.p } }
 
     case 'SET_CREDIT_TOOL': {

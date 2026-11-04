@@ -841,11 +841,20 @@ function buildScriptFromCuts(cuts) {
 
 function MetaSection() {
   const { state, dispatch } = useApp()
-  const { publishing, scriptRaw, episode, cuts, apiKeys } = state
+  const { publishing, scriptRaw, episode, cuts, apiKeys, channelKeywords } = state
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
+  const [kwInput, setKwInput] = useState('')
 
   const setPlatform = (platform, p) => dispatch({ type: 'SET_PUBLISHING', platform, p })
+  const keywords = channelKeywords || []
+  const setKeywords = (arr) => dispatch({ type: 'SET_CHANNEL_KEYWORDS', p: arr })
+  const addKeyword = () => {
+    const v = kwInput.trim()
+    if (v && !keywords.includes(v)) setKeywords([...keywords, v])
+    setKwInput('')
+  }
+  const removeKeyword = (k) => setKeywords(keywords.filter(x => x !== k))
 
   const generate = async () => {
     const apiKey = apiKeys?.claude || ''
@@ -854,6 +863,11 @@ function MetaSection() {
     if (!scriptText.trim()) { setGenError('대본이 없습니다. 대본 생성 탭에서 먼저 대본을 작성하거나 컷을 입력하세요.'); return }
     setGenerating(true); setGenError('')
     try {
+      // 2026-11-04 — 성준님: "캡션에 핵심 키워드를 자주·반복해서 노출". 검색 노출용 키워드를
+      // 지정해두면, 억지로 나열하지 않고 설명 문장 안에 자연스럽게 2~3회 반복되도록 AI에게 지시.
+      const kwNote = keywords.length
+        ? `\n\n검색 노출용 핵심 키워드(계정 공통): ${keywords.join(', ')}\n- 이 키워드들을 instagram.description 안에서 자연스러운 문장으로 2~3회 반복해서 녹여줘(나열식 금지, 억지스럽지 않게).\n- instagram.tags에도 이 키워드를 해시태그로 포함해줘.`
+        : ''
       const data = await claudeMessages(apiKey, {
         model: 'claude-sonnet-4-6',
         // 1200 이었던 걸 3000으로 올림(2026-10-31) — 3플랫폼 제목/설명/태그를 전부 채우면
@@ -868,7 +882,7 @@ function MetaSection() {
 
 제목: ${episode?.title || '(제목 없음)'}
 대본:
-${scriptText.slice(0, 3000)}
+${scriptText.slice(0, 3000)}${kwNote}
 
 반드시 아래 JSON 형식으로만, 다른 설명 없이 응답해:
 {
@@ -903,6 +917,30 @@ ${scriptText.slice(0, 3000)}
 
   return (
     <div className={s.metaWrap}>
+      <div className={s.panel} style={{ marginBottom: 12 }}>
+        <div className={s.panelTitle}>핵심 키워드 (검색 노출용 · 캡션에 반복 노출)</div>
+        <div className={s.fields}>
+          <div style={{ fontSize: 11.5, color: 'var(--text-3)', marginTop: -4 }}>
+            계정 공통 설정입니다(에피소드 바꿔도 유지). AI 자동 생성 시 인스타 설명에 자연스럽게 2~3회 반복해 녹입니다.
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {keywords.map(k => (
+              <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(167,139,250,.15)', color: '#c4b5fd', borderRadius: 999, padding: '3px 10px', fontSize: 12 }}>
+                {k}
+                <button onClick={() => removeKeyword(k)} style={{ background: 'none', border: 'none', color: '#c4b5fd', cursor: 'pointer', fontSize: 13, lineHeight: 1 }}>×</button>
+              </span>
+            ))}
+            {keywords.length === 0 && <span style={{ fontSize: 12, color: 'var(--text-3)' }}>아직 등록된 키워드가 없습니다</span>}
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <input value={kwInput} onChange={e => setKwInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addKeyword() } }}
+              placeholder="예: 자취생 일상, 인간관계 공감 (Enter로 추가)"
+              style={{ flex: 1, padding: '8px 10px', fontSize: 13, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text)' }} />
+            <button className={s.smallAddBtn} onClick={addKeyword}>+ 추가</button>
+          </div>
+        </div>
+      </div>
       <button className={s.genBtn} onClick={generate} disabled={generating}>
         {generating ? '⏳ 생성 중...' : '✨ AI 자동 생성 (대본 기반)'}
       </button>
