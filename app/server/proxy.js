@@ -3945,6 +3945,34 @@ app.post('/api/seed-discovery/link', async (req, res) => {
 })
 // (자동 주간 실행은 9/28 성준님 요청으로 뺌 — 직접 찾는 시간을 들이도록 버튼으로만 실행)
 
+// PC 북마클릿 빠른 담기(2026-11-04, 성준님: "모바일 캡처 전, PC 인스타 접속으로 관심기록 수집") — 로컬(:3001)이라 Vercel 터널 무관.
+// 인스타그램 둘러보다가 북마클릿 클릭 → 새 탭(window.open, CORS 없음)으로 이 GET을 호출 → 계정 링크면 후보, 게시물/릴스 링크면 벤치마킹 레퍼런스로 바로 저장하고 자동으로 닫힘.
+app.get('/api/quick-capture', async (req, res) => {
+  res.set('Content-Type', 'text/html; charset=utf-8')
+  const page = (ok, msg) => res.send(`<!doctype html><meta charset="utf-8"><body style="font-family:system-ui,sans-serif;background:${ok ? '#123524' : '#3a1414'};color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:24px;font-size:15px;line-height:1.5">${msg}<script>setTimeout(()=>window.close(),${ok ? 1600 : 4000})</script></body>`)
+  const raw = String(req.query.url || '').trim()
+  if (!raw || !/instagram\.com/i.test(raw)) return page(false, '❌ 인스타그램 링크가 아닙니다')
+  try {
+    const segs = (raw.split(/instagram\.com\//i)[1] || '').split(/[/?#]/).filter(Boolean)
+    const first = segs[0] || ''
+    if (/^(p|reel|reels|stories|tv|explore|direct|accounts|highlights)$/i.test(first)) {
+      const { loadOps, saveOps } = await import('./lib/instaOps.js')
+      const ops = loadOps()
+      const known = new Set((ops.benchmarks || []).map((b) => String(b.url || '').trim().toLowerCase()))
+      if (known.has(raw.toLowerCase())) return page(true, '✅ 이미 담겨 있습니다')
+      ;(ops.benchmarks ||= []).push({ url: raw, note: '', source: '인스타 저장', addedAt: new Date().toISOString() })
+      saveOps({ ...ops })
+      return page(true, '✅ 벤치마킹 레퍼런스에 저장했습니다<br><span style="opacity:.7;font-size:12px">운영실에서 한 줄 메모를 채워 주세요</span>')
+    }
+    const { addFromLink } = await import('./lib/seedDiscovery.js')
+    const row = await addFromLink(raw)
+    return page(true, `✅ 후보에 담았습니다<br><b>@${row?.handle || first}</b>${row?.group ? ' · ' + row.group : ''}`)
+  } catch (e) {
+    const already = /이미/.test(e.message)
+    return page(already, (already ? '✅ ' : '❌ ') + e.message)
+  }
+})
+
 // 벤치마킹 레퍼런스 — 트렌드/콘텐츠 자동 수집(주 1회, 2026-11-02) — trendResearch.js
 app.get('/api/trend-research', async (_req, res) => {
   try { const { trendResearchStatus } = await import('./lib/trendResearch.js'); res.json(trendResearchStatus()) } catch (err) { res.status(500).json({ error: err.message }) }
