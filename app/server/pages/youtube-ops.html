@@ -440,13 +440,29 @@ function renderGoal() {
   renderHistory()
   renderReady()
 }
-// 새로고침 — 기존 load() 재실행(저장 대기 중이면 먼저 저장해서 입력이 날아가지 않게). 자동 폴링은 아직 없음.
+// 새로고침 — 기존 load() 재실행(저장 대기 중이면 먼저 저장해서 입력이 날아가지 않게). 자동 폴링은 startLivePolling() 참고.
 $('liveRefresh').onclick = async () => {
   try { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; await save() }; await load('🔄 새로고침 완료') } catch (e) { status('새로고침 실패: ' + e.message, true) }
 }
-// TODO(채널 공개 영상 + YouTube Data API 키 연동 후): 아래 훅에서 주기적으로 load() 또는 지표 fetch 를 호출.
-// 지금은 의도적으로 아무것도 하지 않는다(setInterval 없음).
-function startLivePolling() { /* inert — 실시간 폴링 미연결 */ }
+// 2026-11-05: ops.json 변경 자동 반영 polling(5초 간격, 내용 비교). YouTube Data API 연동(구독자·조회수 등 실 지표)은 아직 없음 — 그건 별도 TODO.
+// 입력 중(포커스된 입력/저장 대기 중)이면 건너뛰어 타이핑을 덮어쓰지 않음. rev 가 그대로면 재렌더링도 하지 않아 깜빡임 방지.
+function startLivePolling() {
+  setInterval(async () => {
+    if (saveTimer) return
+    const a = document.activeElement
+    if (a && ['INPUT', 'TEXTAREA', 'SELECT'].includes(a.tagName)) return
+    try {
+      const r = await fetch(API); const j = await r.json()
+      // rev 비교만으론 부족 — Claude 가 reviewLog 등을 PUT 아닌 직접 파일 수정으로 반영할 때는 rev 가 안 바뀜. 내용 전체 비교로 그런 변경도 잡아냄.
+      if (!S || JSON.stringify(j.ops) === JSON.stringify(S)) return
+      S = j.ops; photos = j.photos || []; banners = j.banners || []; R = j.ready || []
+      if (!S.production) S.production = { weeklyCapacity: 0, note: '' }
+      S.posts.forEach(p => { if (typeof p.planDate !== 'string') p.planDate = p.date || ''; if (!Array.isArray(p.statusHistory)) p.statusHistory = [] })
+      lastLoadedAt = new Date()
+      status('🔄 자동 갱신됨 · rev ' + S.rev); renderAll()
+    } catch (e) { /* 일시적 오류는 무시, 다음 주기에 재시도 */ }
+  }, 5000)
+}
 
 // ── 제작 여건(수동) ──
 function renderProduction() {
@@ -847,5 +863,5 @@ $('openYt').onclick = () => {
 $('openYtSetup').onclick = () => $('openYt').onclick()
 $('openStudio').onclick = () => openB({ target: 'url', url: 'https://studio.youtube.com/' })
 
-;(async () => { showTab(local.get('tab', 'goal')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
+;(async () => { showTab(local.get('tab', 'goal')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) }; startLivePolling() })()
 </script></body></html>

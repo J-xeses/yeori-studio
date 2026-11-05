@@ -3,7 +3,7 @@
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 87497
+    "remainingChars": 87480
   },
   "activeEpisodeId": "ep_1790664275051",
   "openTabIds": [
@@ -6101,9 +6101,9 @@
           "scene": "집 현관 / 하이힐을 벗는 손과 발 / 익스트림 클로즈업",
           "action": "한 손이 천천히 내려와 힐을 벗김 / 힐 하나는 이미 바닥에 / 맨발이 바닥에 닿음",
           "character": "서여리",
-          "dialogue": "아~ 살 것 같다... (음성 오버레이 — Veo3 대사 포함 금지)",
+          "dialogue": "",
           "subtitle": "아~ 살 것 같다.",
-          "narration": "",
+          "narration": "아~ 살 것 같다...",
           "imagePrompt": "EXTREME CLOSEUP SHOT —\nExtreme close-up of bare feet and legs,\nlight blue denim shorts visible at top of frame,\none foot still inside a single white pointed-toe stiletto high heel,\nhand reaching down gracefully to slip it off,\nother foot already bare on warm wooden floor,\nexactly two white stiletto heels total —\none being removed from foot, one already lying on floor beside her,\nwarm natural light from nearby window,\ncozy home interior softly visible in background,\nlow angle close-up, vertical 9:16,\nCinematic, photorealistic, 8K",
           "videoPrompt": "NO dialogue — narration added in post (\"아~ 살 것 같다\" TTS 오버레이)\n\nFirst 0-2s: extreme close-up of feet on wooden floor,\none white stiletto heel still on foot,\nother heel already lying beside her,\nhand begins reaching down slowly.\n\nNext 2-5s: hand gently slips the heel off,\nheel drops softly beside the first one,\nboth heels now on the floor together,\nbare foot touches warm wooden surface.\n\nFinal 5-8s: bare toes settle gently on wooden floor,\nslight wiggle of toes — quiet satisfaction,\nwarm window light glowing softly.",
           "duration": 8,
@@ -6137,11 +6137,22 @@
           },
           "overrides": {
             "dialogue": {
-              "value": "아~ 살 것 같다... (음성 오버레이 — Veo3 대사 포함 금지)",
-              "at": "2026-11-03T08:54:56.242Z",
+              "value": "",
+              "at": "2026-11-05T12:42:59.380Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            },
+            "narration": {
+              "value": "아~ 살 것 같다...",
+              "at": "2026-11-05T12:42:57.282Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              3,
+              5.5
+            ]
+          ]
         },
         {
           "id": "cut-5",
@@ -11950,9 +11961,9 @@
       "scene": "집 현관 / 하이힐을 벗는 손과 발 / 익스트림 클로즈업",
       "action": "한 손이 천천히 내려와 힐을 벗김 / 힐 하나는 이미 바닥에 / 맨발이 바닥에 닿음",
       "character": "서여리",
-      "dialogue": "아~ 살 것 같다... (음성 오버레이 — Veo3 대사 포함 금지)",
+      "dialogue": "",
       "subtitle": "아~ 살 것 같다.",
-      "narration": "",
+      "narration": "아~ 살 것 같다...",
       "imagePrompt": "EXTREME CLOSEUP SHOT —\nExtreme close-up of bare feet and legs,\nlight blue denim shorts visible at top of frame,\none foot still inside a single white pointed-toe stiletto high heel,\nhand reaching down gracefully to slip it off,\nother foot already bare on warm wooden floor,\nexactly two white stiletto heels total —\none being removed from foot, one already lying on floor beside her,\nwarm natural light from nearby window,\ncozy home interior softly visible in background,\nlow angle close-up, vertical 9:16,\nCinematic, photorealistic, 8K",
       "videoPrompt": "NO dialogue — narration added in post (\"아~ 살 것 같다\" TTS 오버레이)\n\nFirst 0-2s: extreme close-up of feet on wooden floor,\none white stiletto heel still on foot,\nother heel already lying beside her,\nhand begins reaching down slowly.\n\nNext 2-5s: hand gently slips the heel off,\nheel drops softly beside the first one,\nboth heels now on the floor together,\nbare foot touches warm wooden surface.\n\nFinal 5-8s: bare toes settle gently on wooden floor,\nslight wiggle of toes — quiet satisfaction,\nwarm window light glowing softly.",
       "duration": 8,
@@ -11986,11 +11997,22 @@
       },
       "overrides": {
         "dialogue": {
-          "value": "아~ 살 것 같다... (음성 오버레이 — Veo3 대사 포함 금지)",
-          "at": "2026-11-03T08:54:56.242Z",
+          "value": "",
+          "at": "2026-11-05T12:42:59.380Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        },
+        "narration": {
+          "value": "아~ 살 것 같다...",
+          "at": "2026-11-05T12:42:57.282Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          3,
+          5.5
+        ]
+      ]
     },
     {
       "id": "cut-5",
@@ -12435,7 +12457,7 @@
       "cut-1": true,
       "cut-2": true
     },
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-1",
     "subtitles": {
       "cut-1": "",
       "cut-6": [
@@ -12528,16 +12550,16 @@
       ],
       "cut-4__v1": [
         {
-          "id": "track_1791427631494_30n0",
-          "type": "dialogue",
-          "text": "아~~,,, 살 것 같다,,,",
+          "id": "track_1793882597266_s8xp",
+          "type": "narration",
+          "text": "아,,, 살 것 같다~~",
           "speaker": null,
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_04_track_1791427631494_30n0.mp3?t=1791427819190",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_04_track_1793882597266_s8xp.mp3?t=1793882664308",
           "voiceId": "",
           "settings": {
-            "speed": 0.85,
-            "stability": 33,
-            "similarity": 80
+            "speed": 0.75,
+            "stability": 55,
+            "similarity": 75
           }
         }
       ],
@@ -12632,7 +12654,7 @@
     },
     "mergedUrls": {
       "cut-2__v1": "blob:http://localhost:5173/b52509eb-b155-4a17-8a80-3ba97db6a420",
-      "cut-4__v1": "blob:http://localhost:5173/e5e6d698-bd86-433b-8c75-f24cebb5efa3",
+      "cut-4__v1": "blob:http://localhost:5173/6337e14d-e3c1-467e-9107-b3115a8f6eb7",
       "cut-5__v1": "blob:http://localhost:5173/a8b10b1e-ee00-48ad-a1a1-86e249888b8f",
       "cut-6__v1": "blob:http://localhost:5173/080f35f0-48a0-4325-8da7-9a1dd0db3bed",
       "cut-7__v1": "blob:http://localhost:5173/df4c8066-5f21-4ea7-979d-1858939b3612",
