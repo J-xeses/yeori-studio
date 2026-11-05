@@ -236,11 +236,18 @@ function subtitleSeed(cut) {
 }
 function loadSubtitleCfg(cut) {
   const seed = subtitleSeed(cut)
+  // 2026-11-05 수정(성준님 제보 — SF_E01 컷4: "나레이션 타이밍도 설정않은 상태로 덮어쓰기가
+  // 되는 시스템"): 영상 만들기 탭에서 사람이 직접 맞춘 나레이션/자막 타이밍(cut.captionSegTiming)이
+  // 있으면 그걸 기본 시드로 쓴다. 전엔 하드코딩된 0.3~3초만 써서, 이 패널에서 "합성 시작"을
+  // 누르면 영상 탭 타이밍과 무관한 값이 그대로 구워져(pickCutSource가 cut_NN_subtitle.mp4를
+  // 더 새 파일로 보고 최종본으로 승격) 나레이션·자막이 서로 어긋나는 사고로 이어졌다. 두
+  // 시스템이 "따로 놀지" 않게 하나를 기본 시드로 공유 — 사람이 여기서 다시 고치면 그 값이 유지됨.
+  const timedSeg = Array.isArray(cut.captionSegTiming) ? cut.captionSegTiming[0] : null
   const base = {
     ...DEFAULT_SUBTITLE,
     style: { ...DEFAULT_SUBTITLE.style },
     entries: (seed
-      ? [{ text: seed, start: 0.3, end: Math.min(3, cutDuration(cut)) }]
+      ? [{ text: seed, start: timedSeg ? timedSeg[0] : 0.3, end: timedSeg ? timedSeg[1] : Math.min(3, cutDuration(cut)) }]
       : [{ ...DEFAULT_SUBTITLE.entries[0], end: Math.min(2, cutDuration(cut)) }]),
   }
   // 컷에 저장된 값(cut.subtitleCfgSaved)이 있으면 그걸 기본값 위에 덮어씀 — 이전엔 이 함수가
@@ -2924,6 +2931,18 @@ export default function MakingTab() {
     return (
       <div className={s.subPanel} id={`mk-${cut.no}-subtitle`}>
         <div className={s.settingLabel}>③ 🎬 자막 효과(모션 자막) — cut_{String(cut.no).padStart(2, '0')}.mp4 위에 얹기</div>
+        {/* 2026-11-05 추가(성준님 제보): 영상 만들기 탭의 나레이션·자막 타이밍(captionSegTiming)과
+            이 패널은 서로 다른 저장소다 — 여기서 "합성 시작"을 누르면 cut_NN_subtitle.mp4가 생기고,
+            그게 cut_NN.mp4보다 새 파일이면 릴스 최종본·영상 만들기 탭 "최종 합성본" 전체가 이
+            파일로 바뀐다(영상 탭에서 설정한 나레이션 타이밍이 무시된 것처럼 보이는 원인). 시작
+            시각은 영상 탭 설정에서 가져와 미리 채워두지만(위 loadSubtitleCfg), 여기서 직접 고치면
+            그 값이 우선하고 영상 탭과 다시 어긋날 수 있다는 점을 명시한다. */}
+        <div className={s.emptyHint} style={{ background: 'var(--bg-input)', padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)' }}>
+          ⚠️ 여기서 <b>✅ 합성 시작</b>을 누르면 <code>cut_{String(cut.no).padStart(2, '0')}_subtitle.mp4</code>가 새로 만들어지고,
+          이후로는 영상 만들기 탭의 "나레이션·효과음 입히기" 결과 대신 <b>이 파일이 릴스 최종본·최종 합성본으로 우선 사용</b>됩니다.
+          아래 시작·끝 시각은 영상 만들기 탭에서 맞춘 나레이션 타이밍으로 초기값이 채워지지만, 별개 저장소라 여기서 직접 고치면
+          그때부터 영상 탭 설정과 다시 어긋날 수 있습니다 — 나레이션 타이밍만 바꾸고 싶다면 이 패널 대신 영상 만들기 탭에서 조정하세요.
+        </div>
         {!ready && (
           <div className={s.emptyHint}>이 컷의 영상을 먼저 제작하면(cut_{String(cut.no).padStart(2, '0')}.mp4) 자막을 얹을 수 있습니다.</div>
         )}
