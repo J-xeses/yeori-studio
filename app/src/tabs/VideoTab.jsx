@@ -626,6 +626,8 @@ export default function VideoTab() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ epNum: state.episode?.number, cutNo, patch: { captionSegTiming: rounded, captionTimingAuto: '' } }),
     }).catch(() => {})
+    const cutId = cuts.find(c => c.no === cutNo)?.id
+    if (cutId) syncSubtitlesArrayTiming(cutId, rounded)
   }
   // "자동 타이밍으로 되돌리기" — captionSegTiming·captionTimingAuto override를 지워서 다시
   // 자동배분(글자수 비례) 또는 다음 발화싱크(sync-captions) 대상으로 되돌린다.
@@ -647,10 +649,24 @@ export default function VideoTab() {
   // 저장소 자체가 없으니, captionSegTiming을 컷 자체 필드로 직접 저장(UPDATE_CUT)하고 즉시
   // flushSave — effectiveCaptionValue/captionVisibleNow는 이미 이 필드를 릴스 구분 없이 읽고
   // 있어서(원래부터 범용 설계) 저장 쪽만 맞추면 됨. 릴스는 기존 전용 경로 그대로 유지.
+  // 2026-11-05 수정(SF_E01 컷6 실측, 성준님 제보 "자막시간 설정이 작동 안 됨"): subtitles[cutId]가
+  // 배열(세그별 텍스트+시간 오버라이드, setPreviewText의 다중슬롯 경로가 만듦)로 남아있으면
+  // effectiveCaptionValue가 그 배열을 그대로 반환해(toSegments는 배열이면 그대로 통과) 아래서
+  // 막 저장한 captionSegTiming을 전혀 안 본다 — 타이밍 바를 아무리 조절해도 화면에 반영되지
+  // 않는 근본 원인이었다(컷6은 start:0으로 굳어있던 과거 배열이 계속 이김). 길이가 맞으면 그
+  // 배열의 start/end도 같이 갱신해 두 저장소가 다시 어긋나지 않게 한다.
+  const syncSubtitlesArrayTiming = (cutId, rounded) => {
+    setSubtitles(prev => {
+      const ov = prev[cutId]
+      if (!Array.isArray(ov) || ov.length !== rounded.length) return prev
+      return { ...prev, [cutId]: ov.map((seg, i) => ({ ...seg, start: rounded[i][0], end: rounded[i][1] })) }
+    })
+  }
   const saveCaptionTiming = (cut, timingPairs) => {
     if (isReel) return saveReelCaptionTiming(cut.no, timingPairs)
     const rounded = timingPairs.map(([st, en]) => [+st.toFixed(2), +en.toFixed(2)])
     dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionSegTiming: rounded } })
+    syncSubtitlesArrayTiming(cut.id, rounded)
     flushSave()
   }
   const revertCaptionTiming = (cut) => {

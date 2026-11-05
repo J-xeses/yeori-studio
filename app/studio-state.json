@@ -6150,7 +6150,7 @@
           "captionSegTiming": [
             [
               3,
-              5.5
+              7
             ]
           ]
         },
@@ -6247,8 +6247,8 @@
           },
           "captionSegTiming": [
             [
-              6.3,
-              10.01
+              1.5,
+              10
             ]
           ]
         },
@@ -6483,14 +6483,7 @@
           },
           "selectedCutId": "cut-2",
           "subtitles": {
-            "cut-1": "",
-            "cut-6": [
-              {
-                "start": 0,
-                "end": 10.01,
-                "text": "어떤 음료수보다, 할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아."
-              }
-            ]
+            "cut-1": ""
           }
         },
         "ttsTabState": {
@@ -12010,7 +12003,7 @@
       "captionSegTiming": [
         [
           3,
-          5.5
+          7
         ]
       ]
     },
@@ -12107,8 +12100,8 @@
       },
       "captionSegTiming": [
         [
-          6.3,
-          10.01
+          1.5,
+          10
         ]
       ]
     },
@@ -12336,7 +12329,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-05T09:23:48.080Z",
+  "savedAt": "2026-11-05T14:32:19.358Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -12355,16 +12348,16 @@
       ],
       "cut-4": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_04.mp4?t=1791434503318",
-          "name": "cut_04.mp4",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/06_publishing/cut_04_final.mp4?t=1793888585720",
+          "name": "FFmpeg 합성 (cut_04_final.mp4)",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_04.mp4",
-          "keepAudio": true,
-          "createdAt": 1791433522000
+          "createdAt": 1793888585805,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\06_publishing\\cut_04_final.mp4",
+          "keepAudio": true
         }
       ],
       "cut-2": [
@@ -12457,16 +12450,9 @@
       "cut-1": true,
       "cut-2": true
     },
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-6",
     "subtitles": {
-      "cut-1": "",
-      "cut-6": [
-        {
-          "start": 0,
-          "end": 10.01,
-          "text": "어떤 음료수보다, 할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아."
-        }
-      ]
+      "cut-1": ""
     }
   },
   "ttsTabState": {
