@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -2925,7 +2925,8 @@
           "bold": true,
           "textY": 70,
           "ratio": "16:9",
-          "bgImageUrl": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/02_images/cut_18_a.jpg"
+          "bgImageUrl": "http://localhost:3001/downloads/seoyeori/YU/LF_T/LF_T01/02_images/cut_18_a.jpg",
+          "posterLayers": []
         },
         "publishing": {
           "youtube": {
@@ -6381,16 +6382,17 @@
             ],
             "cut-2": [
               {
-                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/06_publishing/cut_02_final.mp4?t=1793698877396",
-                "name": "FFmpeg 합성 (cut_02_final.mp4)",
+                "url": "blob:http://localhost:5173/a5dba60b-8c39-4e16-a4a5-063aaeeec241",
+                "name": "cut_02_overlay.mp4",
                 "duration": 8,
                 "trimStart": 0,
                 "trimEnd": 8,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "createdAt": 1793698877420,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\06_publishing\\cut_02_final.mp4",
-                "keepAudio": true
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1793695554990,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\04_making\\raw\\cut_02_clip_1.mp4"
               }
             ],
             "cut-3": [
@@ -6431,7 +6433,7 @@
                 "useFullDuration": true,
                 "ratio": "9:16",
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_06.mp4",
-                "keepAudio": true,
+                "keepAudio": false,
                 "createdAt": 1791733037000
               }
             ],
@@ -6470,7 +6472,14 @@
           },
           "selectedCutId": "cut-2",
           "subtitles": {
-            "cut-1": ""
+            "cut-1": "",
+            "cut-6": [
+              {
+                "start": 0,
+                "end": 10.01,
+                "text": "어떤 음료수보다, 할머니가 끓여주신 이 시원한 보리차가 난 훨씬 좋아."
+              }
+            ]
           }
         },
         "ttsTabState": {
@@ -6541,7 +6550,7 @@
               {
                 "id": "track_1791427575207_872b",
                 "type": "dialogue",
-                "text": "오늘 촬영 끝~~",
+                "text": "",
                 "speaker": null,
                 "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/03_audio/tts-previews/cut_02_track_1791427575207_872b.mp3?t=1791427617461",
                 "voiceId": "",
@@ -6670,6 +6679,34 @@
         },
         "studioTabState": {
           "imageRatio": {}
+        },
+        "thumbnail": {
+          "text": "",
+          "fontSize": 48,
+          "color": "#ffffff",
+          "shadowColor": "#000000",
+          "bold": true,
+          "textY": 70,
+          "ratio": "16:9",
+          "bgImageUrl": "",
+          "posterLayers": []
+        },
+        "publishing": {
+          "youtube": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          },
+          "instagram": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          },
+          "tiktok": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          }
         }
       }
     },
