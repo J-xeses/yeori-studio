@@ -55,19 +55,96 @@ function escFilterValue(v) {
 // 가장자리"가 프레임 높이의 몇 %에 오는지.
 const POSITION_RATIO = { top: 0.75, middle: 0.85, bottom: 0.93 }
 
+// 2026-11-07 추가(성준님 제보 — SF_E01 전체 재번인 중 컷5~8만 글자가 눈에 띄게 크게 나옴):
+// VideoTab.jsx 미리보기 캔버스는 항상 1920x1080 고정 좌표계라 fontSize를 그 안에서
+// 그대로(스케일 없이) 픽셀값으로 쓰는데, 이 번인 함수도 똑같이 fontSize를 "실제 영상
+// 해상도와 무관하게" 그대로 픽셀로 썼다. 실측: 같은 fontSize=58인데 컷2/4는 출력이
+// 1080x1920(세로폭 1920)이라 의도한 크기로 나왔고, 컷5~8은 원본 Veo 클립 자체가
+// 720x1280(세로폭 1280, 더 낮은 해상도)이라 같은 58px가 프레임에서 차지하는 비율이
+// 1920/1280=1.5배 커 보였다 — 해상도가 들쭉날쭉한 소스를 다루는 이 파이프라인 구조상
+// 당연히 생기는 문제인데 보정이 전혀 없었음. referenceHeight(기본 1920, 지금까지
+// "정상으로 보였던" 컷들의 실제 세로폭)를 기준으로 fontSize·패딩·외곽선 두께를 실제
+// 영상 세로폭에 비례해서 조정 — videoHeight를 안 넘기면(호출부가 해상도를 모르는 옛
+// 경로) 기존처럼 스케일 없이 그대로 동작해 하위호환 유지.
+const DEFAULT_REFERENCE_HEIGHT = 1920
+
+// 2026-11-07 추가(같은 제보 — SF_E01 컷5 재번인 실측 중 발견): VideoTab.jsx 미리보기
+// 캔버스는 wrapCanvasText()로 긴 자막을 ctx.measureText 기반 정확 측정해 여러 줄로
+// 접는데, 이 번인 함수는 그런 줄바꿈이 아예 없어서 긴 문장이 한 줄로 프레임 밖까지
+// 삐져나갔다(실측: 컷5 "인플루언서 생활이, 가끔은 인형이 된 기분이라니까"가 좌우로
+// 잘려서 나옴 — "미리보기=번인 결과"가 짧은 자막에만 성립했던 셈). 서버엔 캔버스처럼
+// 실제 폰트로 측정할 방법이 없어(node-canvas 미설치) 글자당 너비를 어림(한글/한자 등
+// 전각은 fontSize, 영문·숫자·기호는 fontSize*0.55, 공백은 fontSize*0.3)해 greedy로
+// 줄바꿈 — 공백 기준으로 먼저 끊고, 공백 없이 한 단어(또는 한글 어절)가 그 자체로
+// maxWidth를 넘으면 글자 단위로도 끊는다(wrapCanvasText와 같은 전략).
+function estimateCharWidth(ch, fSize) {
+  if (ch === ' ') return fSize * 0.3
+  // 한글 완성형(가-힣)·한자·가나 등 전각 범위 — 대략 정사각형에 가깝게 그려짐.
+  if (/[぀-ヿ㐀-鿿가-힣＀-￯]/.test(ch)) return fSize
+  return fSize * 0.55
+}
+function measureLine(line, fSize) {
+  let w = 0
+  for (const ch of line) w += estimateCharWidth(ch, fSize)
+  return w
+}
+function wrapForDrawtext(text, maxWidth, fSize) {
+  const lines = []
+  for (const para of String(text ?? '').split('\n')) {
+    const words = para.split(' ')
+    let line = ''
+    for (const word of words) {
+      const test = line ? `${line} ${word}` : word
+      if (measureLine(test, fSize) > maxWidth && line) {
+        if (measureLine(word, fSize) > maxWidth) {
+          let charLine = line
+          for (const ch of word) {
+            const t2 = charLine + ch
+            if (measureLine(t2, fSize) > maxWidth && charLine) {
+              lines.push(charLine)
+              charLine = ch
+            } else {
+              charLine = t2
+            }
+          }
+          line = charLine
+        } else {
+          lines.push(line)
+          line = word
+        }
+      } else {
+        line = test
+      }
+    }
+    lines.push(line)
+  }
+  return lines.join('\n')
+}
+
 // segments: [{text, start, end}] — 빈 텍스트는 호출부가 이미 걸러서 넘겨야 함.
 // style: {font, fontSize, color, bgStyle, boxColor, position}
 // workDir: 세그먼트별 자막 텍스트를 임시 .txt로 쓸 디렉터리 — 호출부가 ffmpeg 종료 후 정리.
+// videoHeight/videoWidth: 실제 번인 대상 영상의 픽셀 크기 — 주어지면 referenceHeight
+// 대비 비율로 fontSize/패딩/외곽선을 보정하고(해상도가 다른 컷들 사이 글자 크기 통일),
+// videoWidth는 긴 자막 줄바꿈 폭 계산에 쓴다. 안 넘기면(호출부가 해상도를 모르는 옛
+// 경로) 기존처럼 스케일·줄바꿈 없이 그대로 동작해 하위호환 유지.
 // 반환: { filter: "drawtext=...,drawtext=...", tempFiles: [path,...] } — 세그먼트가
 // 없으면 filter는 빈 문자열.
-export function buildSubtitleDrawtextFilter(segments, style, workDir) {
+export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeight, videoWidth) {
   if (!Array.isArray(segments) || !segments.length) return { filter: '', tempFiles: [] }
 
   const fontFile = resolveSubtitleFontFile(style.font)
-  const fSize = Math.max(10, Math.round(Number(style.fontSize) || 32))
+  const scale = (typeof videoHeight === 'number' && videoHeight > 0)
+    ? videoHeight / DEFAULT_REFERENCE_HEIGHT : 1
+  const fSize = Math.max(10, Math.round((Number(style.fontSize) || 32) * scale))
   const color = style.color || '#ffffff'
   const outline = isLightColor(color) ? '0x000000' : '0xffffff'
   const pad = Math.round(fSize * 0.28)
+  // VideoTab.jsx drawPreview()와 같은 비율(세로형 0.86 / 가로형 0.80) — 실제 영상의
+  // 가로세로를 직접 보고 판정(aspectRatio UI 토글이 아니라 실측값이라 더 신뢰할 수 있음).
+  const maxTextWidth = (typeof videoWidth === 'number' && videoWidth > 0)
+    ? videoWidth * ((videoHeight >= videoWidth) ? 0.86 : 0.80)
+    : Infinity
   const ratio = POSITION_RATIO[style.position] ?? POSITION_RATIO.bottom
   const boxHex = '0x' + (style.boxColor || '#000000').replace('#', '')
 
@@ -77,7 +154,7 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir) {
     const txtPath = path.join(workDir, `cap_${i}.txt`)
     // drawtext textfile= 은 파일 내용을 그대로(이스케이프 불필요) 쓴다 — 콜론·슬래시·따옴표
     // 섞인 한글 대사를 text= 인라인으로 넘길 때 생기는 이스케이프 지옥을 통째로 피함.
-    fs.writeFileSync(txtPath, String(seg.text || ''), 'utf-8')
+    fs.writeFileSync(txtPath, wrapForDrawtext(seg.text, maxTextWidth, fSize), 'utf-8')
     tempFiles.push(txtPath)
     const opts = [
       `fontfile='${escFilterPath(fontFile)}'`,

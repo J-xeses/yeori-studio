@@ -5525,7 +5525,10 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   let subtitleFilter = ''
   const subtitleWorkDir = path.join(os.tmpdir(), `subtitle_burn_${ep}_${padded}_${Date.now()}`)
   if (hasSubtitle) {
-    const built = buildSubtitleDrawtextFilter(subtitle.segments, subtitle, subtitleWorkDir)
+    // 컷마다 원본 Veo 클립 해상도가 다를 수 있어(실측: SF_E01 컷5~8은 720x1280, 컷2/4는
+    // 1080x1920) fontSize를 실제 세로폭 기준으로 보정 — 2026-11-07, 아래 buildSubtitleDrawtextFilter 참고.
+    const videoSize = await ffprobeVideoSize(videoFile)
+    const built = buildSubtitleDrawtextFilter(subtitle.segments, subtitle, subtitleWorkDir, videoSize?.[1], videoSize?.[0])
     subtitleFilter = built.filter
     subtitleTempFiles = built.tempFiles
   }
