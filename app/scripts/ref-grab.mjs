@@ -243,9 +243,10 @@ function writeIndex(list) {
   :root{--bg:#121214;--panel:#1a1a1e;--panel2:#202026;--line:#2c2c33;--tx:#e4e4e7;--tx2:#9a9aa3;--acc:#e9c46a;--link:#8ab4ff}
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
-  .app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:300px 1fr;height:100vh}
+  /* 3단: 좌측 사이드바(레퍼런스 목록) | 가운데 작업 영역 | 우측 사이드바(📥 수집함) — 양쪽 사이드바는 상단바와 이어진 프레임(2026-11-06) */
+  .app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:300px 1fr 360px;height:100vh}
   /* 상단 타이틀 바 */
-  .top{grid-column:1/3;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .top{grid-column:1/4;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
   .top b{font-size:15px}.top .cnt{color:var(--tx2);font-size:12px}
   .top .sp{flex:1}.top .hint{color:var(--tx2);font-size:12px}
   @media (max-width:1200px){.top .hint{display:none}}
@@ -269,13 +270,13 @@ function writeIndex(list) {
   .player video{height:min(calc(100vh - 230px),782px);width:auto;max-width:100%;aspect-ratio:9/16;object-fit:contain;background:#000;border-radius:10px;align-self:flex-start}
   .info h1{font-size:15px;margin:0 0 4px}.info p{margin:2px 0;font-size:12px;color:var(--tx2)}
   .info .n{color:var(--acc)}.info a{color:var(--link);margin-right:10px;text-decoration:none;font-size:12px}
-  /* 부가기능 영역 — 세로로 2분할(2026-11-06): 왼쪽 수집함 리스트, 오른쪽은 미정 */
-  .extra{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0}
-  .reserve{border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#55555e;font-size:13px;min-height:240px}
-  .collect{display:flex;flex-direction:column;min-height:0;max-height:calc(100vh - 80px);background:var(--panel);border:1px solid var(--line);border-radius:10px}
+  /* 가운데 오른쪽 빈 영역 — 표시 없이 비워 둠(16:9 영상·관련 이미지 업로드용 예정) */
+  .stage{min-height:240px}
+  /* 우측 사이드바 📥 수집함 — 좌측 사이드바와 같은 프레임 */
+  .collect{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-left:1px solid var(--line)}
   .collect .hd{padding:10px 12px;border-bottom:1px solid var(--line);display:grid;gap:6px}
   .collect .hd b{font-size:13px}.collect .hd .st{font-size:11px;color:var(--tx2)}
-  .collect .hd .row{display:flex;gap:6px;align-items:center}
+  .collect .hd .row{display:flex;gap:6px;align-items:center}.collect .hd .row select{flex:1;min-width:0}
   .collect select,.btn{background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font:inherit;font-size:12px;cursor:pointer}
   .btn.pri{background:#3b3420;border-color:#6b5a2a;color:var(--acc)}.btn:disabled{opacity:.5;cursor:wait}
   .clist{flex:1;overflow-y:auto;min-height:0}
@@ -287,8 +288,8 @@ function writeIndex(list) {
   .chip.u{color:var(--acc)}
   .ci .acts{display:flex;gap:4px;margin-top:5px}
   .bm{color:var(--acc);text-decoration:none;border:1px dashed #6b5a2a;border-radius:6px;padding:4px 10px;font-size:12px;cursor:grab}
-  @media (max-width:1400px){.extra{grid-template-columns:1fr}}
-  @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:48px auto 1fr}.side{max-height:45vh}.main{grid-template-columns:1fr}.reserve{min-height:120px}}
+  @media (max-width:1200px){.app{grid-template-columns:260px 1fr 300px}}
+  @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:48px auto 1fr auto;height:auto}.side,.collect{max-height:45vh}.main{grid-template-columns:1fr}.stage{display:none}.top{grid-column:1}}
 </style></head><body>
 <div class="app">
   <header class="top"><b>레퍼런스 보드</b><span class="cnt" id="cnt"></span><span class="sp"></span>
@@ -312,22 +313,19 @@ function writeIndex(list) {
       <video id="vid" controls loop playsinline></video>
       <div class="info" id="info"></div>
     </section>
-    <div class="extra">
-      <section class="collect">
+    <section class="stage" id="stage"></section>
+  </main>
+  <aside class="collect">
         <div class="hd">
           <b>📥 수집함 <span class="st" id="cst"></span></b>
           <div class="row">
             <select id="cplat"><option value="">전체 플랫폼</option><option value="pinterest">📌 핀터레스트</option><option value="instagram">📸 인스타</option><option value="youtube">▶️ 유튜브</option><option value="web">🌐 기타</option></select>
             <select id="cuse"><option value="">전체 용도</option></select>
-            <span style="flex:1"></span>
-            <button class="btn" id="crun" title="핀터레스트 보드·유튜브 재생목록에서 새 항목을 가져오고 자동 정리">🔄 새로 가져오기</button>
+            <button class="btn" id="crun" style="white-space:nowrap;flex:none" title="핀터레스트 보드·유튜브 재생목록에서 새 항목을 가져오고 자동 정리">🔄 가져오기</button>
           </div>
         </div>
         <div class="clist" id="clist"><div class="empty">불러오는 중…</div></div>
-      </section>
-      <section class="reserve" id="reserve">부가기능 영역 (미정)</section>
-    </div>
-  </main>
+  </aside>
 </div>
 <script>
 const D = ${data}
@@ -459,7 +457,7 @@ $('clist').onclick = async ev => {
 $('crun').onclick = async () => {
   $('crun').disabled = true; $('crun').textContent = '가져오는 중…'
   await fetch(API + '/api/collect/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {})
-  $('crun').disabled = false; $('crun').textContent = '🔄 새로 가져오기'; cload()
+  $('crun').disabled = false; $('crun').textContent = '🔄 가져오기'; cload()
 }
 fetch(API + '/api/collect/bookmarklet').then(r => r.json()).then(d => { $('bm').href = d.href }).catch(() => { $('bm').style.display = 'none' })
 $('bm').onclick = ev => { ev.preventDefault(); alert('이 버튼은 클릭이 아니라 크롬 북마크바로 끌어다 놓아 설치합니다.') }
