@@ -3,7 +3,7 @@
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 87480
+    "remainingChars": 90000
   },
   "activeEpisodeId": "ep_1790664275051",
   "openTabIds": [
@@ -12329,21 +12329,22 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-06T09:25:16.445Z",
+  "savedAt": "2026-11-06T11:49:06.080Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/05_video/cut_01.mp4?t=1791434502655",
-          "name": "cut_01.mp4",
-          "duration": 8,
+          "url": "blob:http://localhost:5173/1fe3a394-7a9f-45b4-8afa-c2a39e70e529",
+          "name": "Drone_camera_soaring_and_diving_10e3cc21.mp4",
+          "duration": 8.04,
           "trimStart": 0,
-          "trimEnd": 8,
+          "trimEnd": 8.04,
           "useFullDuration": true,
           "ratio": "9:16",
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\05_video\\cut_01.mp4",
+          "staging": false,
           "keepAudio": false,
-          "createdAt": 1791433515000
+          "createdAt": 1793966234506,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\04_making\\raw\\cut_01_clip_1.mp4"
         }
       ],
       "cut-4": [
@@ -12447,10 +12448,10 @@
       ]
     },
     "g4Approved": {
-      "cut-1": true,
+      "cut-1": false,
       "cut-2": true
     },
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-2",
     "subtitles": {
       "cut-1": ""
     }
