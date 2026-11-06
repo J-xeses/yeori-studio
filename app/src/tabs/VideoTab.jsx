@@ -1619,6 +1619,13 @@ export default function VideoTab() {
                   // 표시됨(2026-09-18, 사용자 실측 — 컷20) — 서버가 내려준 절대경로를 그대로 채움.
                   stagedPath: ev.outputPath,
                   keepAudio: true,   // 이 클립의 존재 이유가 나레이션 오디오라 합성 때 반드시 살려야 함
+                  // 2026-11-06 추가(성준님 제보 — SF_E01 컷4: "자막이 2중으로 뜬다"): 이 클립이
+                  // 바로 이 실행에서 자막까지 함께 구워졌으면(burnSubtitle), 영상 픽셀에 이미
+                  // 캡션이 들어있다는 뜻 — 아래 미리보기 캔버스(effectiveCaptionValue)가 그걸
+                  // 모르고 똑같은 텍스트를 또 그려서 겹쳐 보였다. 이 플래그로 캔버스가 자기를
+                  // 숨기게 한다(릴스는 bigHasDerived로 이미 같은 문제를 막고 있었음, 비릴스엔
+                  // 그 가드가 없었다 — 11/3에 번인 기능을 추가하면서 빠뜨림).
+                  hasBurnedSubtitle: burnSubtitle,
                 }
                 // 2026-10-09 발견(성준님 실측, SF_E109 컷1): 비릴스 컷은 버튼 안내문구("...
                 // cut_NN.mp4 위에 나레이션·효과음만 입힙니다")가 "바로 적용된다"는 뜻으로 읽히지만,
@@ -1633,7 +1640,12 @@ export default function VideoTab() {
                   setVideoClips(p => ({ ...p, [cut.id]: [...(p[cut.id] || []), narratedClip] }))
                 } else {
                   setVideoClips(p => ({ ...p, [cut.id]: [narratedClip] }))
-                  setTimeout(() => renderCutClips(cut), 150)
+                  // forceCaptionBurned=burnSubtitle를 명시로 넘김 — setVideoClips 직후라
+                  // renderCutClips가 읽는 videoClips[cut.id]가 아직 방금 setVideoClips한
+                  // 값으로 안 바뀐 stale 클로저일 수 있어(실측: captionBurnedIntoBase가
+                  // false로 잘못 저장됨, 2026-11-06), 클립 배열에서 추론하는 대신 이 실행이
+                  // 이미 알고 있는 값을 그대로 전달한다.
+                  setTimeout(() => renderCutClips(cut, burnSubtitle), 150)
                 }
               } else {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
@@ -1656,7 +1668,7 @@ export default function VideoTab() {
   // (2026-09-13 — 로컬 클립 편집이 지금까지 미리보기용 blob: URL일 뿐이라 실제 출력에
   // 반영이 안 됐던 문제의 해결책). order 순서(배열 순서) 그대로 보냄, stagedPath 없는
   // 클립(아직 스테이징 중)이 있으면 막는다.
-  const renderCutClips = async (cut) => {
+  const renderCutClips = async (cut, forceCaptionBurned) => {
     const clips = videoClips[cut.id] || []
     if (!clips.length) return
     // ⚠️ clips 배열에 구멍이 있을 수 있음(세그1/3만 채우고 세그2는 비워둔 경우, 2026-09-16
@@ -1755,6 +1767,16 @@ export default function VideoTab() {
       setComposeStatus(p => ({ ...p, [cut.id]: 'done' }))
       setComposeLog(p => ({ ...p, [cut.id]: `✅ 합성 완료 (${d.sizeKB}KB, ${d.duration?.toFixed(1)}s)` }))
       setFinalPreviewTs(p => ({ ...p, [cut.id]: Date.now() }))
+      // 2026-11-06 추가(성준님 제보 — 컷4 자막 2중, 재검증에도 여전히 재현): runFfmpegForCut의
+      // narratedClip.hasBurnedSubtitle 플래그는 "방금 만든 클립 객체"에만 붙어있어서, 이
+      // 클립 합성(05_video/cut_NN.mp4를 실제로 덮어쓰는 단계, "바로 입혀짐"을 위해 burnSubtitle
+      // 직후 자동 호출됨)을 거치고 나면 — 혹은 새로고침으로 videoClips가 파일 스캔으로 다시
+      // 구성되면 — 플래그가 사라져 가드가 무력화됐다(방금 구운 캡션이 base 파일에 영구히
+      // 박힌 뒤에도 캔버스가 계속 또 그림). 클립이 아니라 컷 자체(studio-state에 영속)에
+      // "이 컷의 05_video/cut_NN.mp4엔 이미 자막이 구워져 있다"를 남겨 새로고침·재스캔을
+      // 버텨내게 한다 — 합성 입력 중 하나라도 번인된 클립이면 true, 전부 생클립이면 false로
+      // 갱신(나중에 새 원본을 올려 다시 합성하면 자동으로 false로 바로잡힘).
+      dispatch({ type: 'UPDATE_CUT', id: cut.id, p: { captionBurnedIntoBase: typeof forceCaptionBurned === 'boolean' ? forceCaptionBurned : clips.some(c => c.hasBurnedSubtitle) } })
       // 배경 세그(pipBgSegIndices)의 실제 파일은 방금 render-cut-clips 결과로 디스크에서
       // 덮어써졌는데, 그 세그의 클립 url은 예전 캐시버스팅(?t=...) 그대로라 브라우저가 계속
       // 옛 프레임(PIP 합성 전 화면)을 보여주는 문제가 있었음(2026-09-17, 사용자 지적: "PIP
@@ -2311,7 +2333,7 @@ export default function VideoTab() {
                         ✏ 자막 수정
                       </button>
                     )}
-                    {isSelected && subtitleEnabled && !subtitleEditMode && !isReel && (
+                    {isSelected && subtitleEnabled && !subtitleEditMode && !isReel && !(bigShowFinal && bigHasDerived) && !previewClip?.hasBurnedSubtitle && !selCut.captionBurnedIntoBase && (
                       <div
                         className={s.subtitleDisplay}
                         // s[`pos_${subtitlePosition}`] 문자열 조합 클래스가 이 컷카드 목록
