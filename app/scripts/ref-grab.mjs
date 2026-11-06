@@ -244,7 +244,7 @@ function writeIndex(list) {
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,'Malgun Gothic',sans-serif}
   /* 3단: 좌측 사이드바(레퍼런스 목록) | 가운데 작업 영역 | 우측 사이드바(📥 수집함) — 양쪽 사이드바는 상단바와 이어진 프레임(2026-11-06) */
-  .app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:300px 1fr 360px;height:100vh}
+  .app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:300px 1fr 450px;height:100vh}
   /* 상단 타이틀 바 */
   .top{grid-column:1/4;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--panel);border-bottom:1px solid var(--line)}
   .top b{font-size:15px}.top .cnt{color:var(--tx2);font-size:12px}
@@ -273,7 +273,7 @@ function writeIndex(list) {
   /* 가운데 오른쪽 빈 영역 — 표시 없이 비워 둠(16:9 영상·관련 이미지 업로드용 예정) */
   .stage{min-height:240px}
   /* 우측 사이드바 📥 수집함 — 좌측 사이드바와 같은 프레임 */
-  .collect{display:flex;flex-direction:column;min-height:0;background:var(--panel);border-left:1px solid var(--line)}
+  .collect{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;background:var(--panel);border-left:1px solid var(--line)}
   .collect .hd{padding:10px 12px;border-bottom:1px solid var(--line);display:grid;gap:6px}
   .collect .hd b{font-size:13px}.collect .hd .st{font-size:11px;color:var(--tx2)}
   .collect .hd .row{display:flex;gap:6px;align-items:center}.collect .hd .row select{flex:1;min-width:0}
@@ -288,7 +288,7 @@ function writeIndex(list) {
   .chip.u{color:var(--acc)}
   .ci .acts{display:flex;gap:4px;margin-top:5px}
   .bm{color:var(--acc);text-decoration:none;border:1px dashed #6b5a2a;border-radius:6px;padding:4px 10px;font-size:12px;cursor:grab}
-  @media (max-width:1200px){.app{grid-template-columns:260px 1fr 300px}}
+  @media (max-width:1200px){.app{grid-template-columns:260px 1fr 380px}}
   @media (max-width:900px){.app{grid-template-columns:1fr;grid-template-rows:48px auto 1fr auto;height:auto}.side,.collect{max-height:45vh}.main{grid-template-columns:1fr}.stage{display:none}.top{grid-column:1}}
 </style></head><body>
 <div class="app">
