@@ -48,7 +48,10 @@ export async function ingestFromBookmarklet(body = {}) {
     const u = new URL(body.listUrl || '')
     const id = u.searchParams.get('list')
     if (/youtube\.com/.test(u.hostname) && id && u.pathname === '/playlist') {
-      const t = await playlistTitle(id)
+      // 서버가 읽을 수 있는 재생목록(공개·일부공개)이면 화면에서 담은 것 대신 실제 재생목록 영상만 쓴다(추천 영상 섞임 방지)
+      const pv = await playlistVideos(id).catch(() => null)
+      const t = pv?.title || (await playlistTitle(id))
+      if (pv?.rows.length) body.items = pv.rows
       if (t) { body.list = t; for (const it of body.items || []) it.list = t }
     }
   } catch { /* listUrl 없음 */ }
@@ -166,13 +169,17 @@ async function refreshPinterest(src, log) {
   return n
 }
 
-// 유튜브 재생목록(공개·일부공개): 페이지의 ytInitialData 에서 영상 ID·제목(2026-11 기준 lockupViewModel 구조)
-async function refreshYoutube(pl, log) {
-  const h = await getText(`https://www.youtube.com/playlist?list=${pl.list}`)
+// 유튜브 재생목록(공개·일부공개)의 실제 영상 목록: 페이지의 ytInitialData 에서 영상 ID·제목(2026-11 기준 lockupViewModel 구조).
+// 재생목록 본문(playlistVideoListRenderer)만 본다 — 영상이 적은 재생목록 화면엔 아래에 "추천 동영상"이 붙어서, 화면 전체 링크를
+// 긁으면 엉뚱한 영상이 섞인다(11/6 실측: 실제 2개인데 북마클릿이 93개를 담음 → BTS 등이 키워드 후보 1위).
+async function playlistVideos(listId) {
+  const h = await getText(`https://www.youtube.com/playlist?list=${listId}`)
   const m = h.match(/var ytInitialData = (\{[\s\S]*?\});<\/script>/)
   if (!m) throw new Error('재생목록 데이터 없음(비공개일 수 있음 — 일부공개로 바꿔 주세요)')
   const j = JSON.parse(m[1]); const rows = []
-  const title = (h.match(/<meta property="og:title" content="([^"]*)"/) || [])[1] || pl.name || ''
+  const title = (h.match(/<meta property="og:title" content="([^"]*)"/) || [])[1] || ''
+  let body = null
+  ;(function find(o) { if (body || !o || typeof o !== 'object') return; if (o.playlistVideoListRenderer) { body = o.playlistVideoListRenderer; return } for (const k in o) find(o[k]) })(j)
   ;(function walk(o) {
     if (!o || typeof o !== 'object') return
     const lv = o.lockupViewModel
@@ -182,7 +189,13 @@ async function refreshYoutube(pl, log) {
     const pv = o.playlistVideoRenderer
     if (pv?.videoId) { rows.push({ url: `https://www.youtube.com/watch?v=${pv.videoId}`, title: pv.title?.runs?.[0]?.text || '', thumb: `https://i.ytimg.com/vi/${pv.videoId}/hqdefault.jpg` }); return }
     for (const k in o) walk(o[k])
-  })(j)
+  })(body || j)
+  return { title, rows }
+}
+
+async function refreshYoutube(pl, log) {
+  const { title: t, rows } = await playlistVideos(pl.list)
+  const title = t || pl.name || ''
   const r = ingest({ items: rows, list: title, listUrl: `https://www.youtube.com/playlist?list=${pl.list}` })
   log(`  유튜브 재생목록 ${title}: ${rows.length}개 중 새 항목 ${r.added}`)
   return r.added
@@ -332,4 +345,4 @@ export function collectStatus() {
 // 단일 게시물/핀/영상 화면에선 그 하나만, 목록 화면에선 보이는 항목 전부. 끝까지 스크롤한 뒤 누르면 다 담긴다.
 // 유튜브 목록은 영상 하나에 링크가 여러 개(썸네일=재생시간, "모두 재생" 버튼 등)라서 영상별로 가장 긴 진짜 제목을 고른다(11/6 실측).
 // 주의: javascript: 주소는 실행 전에 % 디코딩되고 # 이 끊길 수 있어서 코드 안에 % 와 # 글자를 쓰지 않는다(# → fromCharCode(35)).
-export const BOOKMARKLET = `javascript:(()=>{const H=location.hostname,U=location.href,P=location.pathname,o=[],s=new Set(),M=k=>(document.querySelector('meta[property="'+k+'"]')||{}).content||'';const a=(u,t,x,i)=>{if(!u||s.has(u))return;s.add(u);o.push({url:u,title:(t||'').trim().slice(0,300),text:(x||'').trim().slice(0,500),thumb:i||''})};const one=()=>a(U,M('og:title')||document.title,M('og:description'),M('og:image'));let L=document.title;if(/instagram\\.com/.test(H)){if(/\\/(p|reel|reels|tv)\\//.test(P))one();else document.querySelectorAll('a[href*="/p/"],a[href*="/reel/"]').forEach(e=>{const i=e.querySelector('img');a(new URL(e.getAttribute('href'),U).href.split('?')[0],'',i&&i.alt,i&&i.src)});L=(document.querySelector('h1,h2')||{}).textContent||L}else if(/pinterest\\./.test(H)){if(/\\/pin\\//.test(P))one();else document.querySelectorAll('[data-test-id="pin"] a[href*="/pin/"],[data-grid-item] a[href*="/pin/"]').forEach(e=>{const m=e.href.match(/\\/pin\\/(\\d+)/);if(!m)return;const i=e.querySelector('img')||e.closest('[data-grid-item]')?.querySelector('img');a('https://www.pinterest.com/pin/'+m[1]+'/',i&&i.alt,'',i&&i.src)});L=(document.querySelector('h1')||{}).textContent||L}else if(/youtube\\.com/.test(H)){if(P==='/watch'||/^\\/shorts\\//.test(P))one();else{const T={};document.querySelectorAll('a[href*="/watch?v="],a[href*="/shorts/"]').forEach(e=>{const m=e.href.match(/[?&]v=([\\w-]{11})|shorts\\/([\\w-]{11})/);if(!m)return;const v=m[1]||m[2];let t=(e.textContent||e.getAttribute('title')||'').trim().replace(/\\s+/g,' ');if(/^\\d+:\\d+|재생$|^Play|^Shuffle/.test(t))t='';if(!(v in T)||t.length>T[v].length)T[v]=t});for(const v in T)if(T[v])a('https://www.youtube.com/watch?v='+v,T[v],'','https://i.ytimg.com/vi/'+v+'/hqdefault.jpg')}L=M('og:title')||L}else one();L=(L||'').replace(/^\\(\\d+\\)\\s*/,'').replace(/ - YouTube$/,'');if(!o.length){alert('담을 항목을 못 찾았습니다');return}window.open('http://localhost:3001/collect-in'+String.fromCharCode(35)+encodeURIComponent(JSON.stringify({list:(L||'').trim().slice(0,80),listUrl:U,items:o})),'_blank')})()`
+export const BOOKMARKLET = `javascript:(()=>{const H=location.hostname,U=location.href,P=location.pathname,o=[],s=new Set(),M=k=>(document.querySelector('meta[property="'+k+'"]')||{}).content||'';const a=(u,t,x,i)=>{if(!u||s.has(u))return;s.add(u);o.push({url:u,title:(t||'').trim().slice(0,300),text:(x||'').trim().slice(0,500),thumb:i||''})};const one=()=>a(U,M('og:title')||document.title,M('og:description'),M('og:image'));let L=document.title;if(/instagram\\.com/.test(H)){if(/\\/(p|reel|reels|tv)\\//.test(P))one();else document.querySelectorAll('a[href*="/p/"],a[href*="/reel/"]').forEach(e=>{const i=e.querySelector('img');a(new URL(e.getAttribute('href'),U).href.split('?')[0],'',i&&i.alt,i&&i.src)});L=(document.querySelector('h1,h2')||{}).textContent||L}else if(/pinterest\\./.test(H)){if(/\\/pin\\//.test(P))one();else document.querySelectorAll('[data-test-id="pin"] a[href*="/pin/"],[data-grid-item] a[href*="/pin/"]').forEach(e=>{const m=e.href.match(/\\/pin\\/(\\d+)/);if(!m)return;const i=e.querySelector('img')||e.closest('[data-grid-item]')?.querySelector('img');a('https://www.pinterest.com/pin/'+m[1]+'/',i&&i.alt,'',i&&i.src)});L=(document.querySelector('h1')||{}).textContent||L}else if(/youtube\\.com/.test(H)){if(P==='/watch'||/^\\/shorts\\//.test(P))one();else{const T={};(document.querySelector('ytd-playlist-video-list-renderer')||document).querySelectorAll('a[href*="/watch?v="],a[href*="/shorts/"]').forEach(e=>{const m=e.href.match(/[?&]v=([\\w-]{11})|shorts\\/([\\w-]{11})/);if(!m)return;const v=m[1]||m[2];let t=(e.textContent||e.getAttribute('title')||'').trim().replace(/\\s+/g,' ').replace(/^(?:[▶\\d]+\\s+)?(?:\\d+:\\d+(?::\\d+)?\\s*)*(?:지금 재생 중\\s*|Now playing\\s*)?/,'');if(/^\\d+:\\d+|재생$|^Play|^Shuffle/.test(t))t='';if(!(v in T)||t.length>T[v].length)T[v]=t});for(const v in T)if(T[v])a('https://www.youtube.com/watch?v='+v,T[v],'','https://i.ytimg.com/vi/'+v+'/hqdefault.jpg')}L=M('og:title')||L}else one();L=(L||'').replace(/^\\(\\d+\\)\\s*/,'').replace(/ - YouTube$/,'');if(!o.length){alert('담을 항목을 못 찾았습니다');return}window.open('http://localhost:3001/collect-in'+String.fromCharCode(35)+encodeURIComponent(JSON.stringify({list:(L||'').trim().slice(0,80),listUrl:U,items:o})),'_blank')})()`

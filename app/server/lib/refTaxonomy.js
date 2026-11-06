@@ -34,8 +34,14 @@ export function taxonomyPrompt() {
     Object.entries(TECHNIQUES).map(([k, v]) => `- ${k}: ${v.join(', ')}`).join('\n')
 }
 
-// AI 응답 값 정리 — 목록 밖 값은 가장 가까운 걸로 안 바꾸고 그대로 두되 길이만 자른다(새 분류 발견 신호로 남김)
+// AI 응답 값 정리. AI 가 "AI 전용 - 스타일"·"카메라 / 타이포"처럼 섞어 쓰는 경우가 있어서(11/6 실측) 필터가 쪼개지지 않게
+// 목록에 있는 이름이 들어 있으면 그 이름(첫 번째)으로 맞춘다. 목록에 없는 값만 그대로 둔다(새 분류 발견 신호).
 export function cleanClass(r = {}) {
   const s = (v, n) => String(v || '').trim().slice(0, n)
-  return { usage: s(r.usage, 20), technique: s(r.technique, 12), techDetail: s(r.detail ?? r.techDetail, 20) }
+  const pick = (v, list) => { const t = String(v || ''); return list.map((x) => [x, t.indexOf(x)]).filter(([, i]) => i >= 0).sort((a, b) => a[1] - b[1])[0]?.[0] || '' }
+  const rawT = String(r.technique || '')
+  const technique = pick(rawT, Object.keys(TECHNIQUES)) || s(rawT, 12)
+  let detail = s(r.detail ?? r.techDetail, 20)
+  if (!detail && technique && rawT.length > technique.length) detail = s(rawT.replace(technique, '').replace(/^[\s\-–/›>,]+/, ''), 20)
+  return { usage: pick(r.usage, USAGES) || s(r.usage, 20), technique, techDetail: detail }
 }
