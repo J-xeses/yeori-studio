@@ -3949,14 +3949,14 @@ app.get('/collect-in', (_req, res) => {
   res.set('Content-Type', 'text/html; charset=utf-8')
   res.send(`<!doctype html><meta charset="utf-8"><title>수집함 담기</title><body style="font-family:system-ui,'Malgun Gothic',sans-serif;background:#16161a;color:#eee;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;font-size:15px;line-height:1.6"><div id="m">담는 중…</div><script>
 (async()=>{const m=document.getElementById('m');try{const d=JSON.parse(decodeURIComponent(location.hash.slice(1)));history.replaceState(null,'',location.pathname);
-const r=await fetch('/api/collect/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);
+const r=await fetch('/api/collect/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);if(j.rejected){document.body.style.background='#3a2a10';m.innerHTML='⚠️ 담지 않았습니다<br><span style="opacity:.8;font-size:12px">'+j.rejected+'</span>';return}
 document.body.style.background='#123524';m.innerHTML='✅ <b>'+j.total+'개</b> 중 새로 <b>'+j.added+'개</b> 담았습니다<br><span style="opacity:.75;font-size:12px">'+(d.list||'')+(j.added?' · 자동 정리 시작(1~2분)':'')+'</span>';setTimeout(()=>window.close(),2500)}
 catch(e){document.body.style.background='#3a1414';m.textContent='❌ 담기 실패: '+e.message}})()</script>`)
 })
 app.post('/api/collect/ingest', async (req, res) => {
   try {
     const hub = await import('./lib/collectHub.js')
-    const r = hub.ingest(req.body || {})
+    const r = await hub.ingestFromBookmarklet(req.body || {})
     res.json(r)
     if (r.added) hub.processInbox({ log: (l) => console.log('[collect]', l) }).catch((e) => console.warn('[collect] 정리 실패:', e.message))
   } catch (err) { res.status(400).json({ error: err.message }) }

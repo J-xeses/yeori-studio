@@ -23,12 +23,53 @@ const readJson = (p, d) => { try { return JSON.parse(fs.readFileSync(p, 'utf-8')
 const writeJson = (p, v) => { fs.mkdirSync(DIR, { recursive: true }); fs.writeFileSync(p, JSON.stringify(v, null, 2)) }
 
 // 기본 소스(성준님 2026-11-06 지정). 유튜브 재생목록은 북마클릿을 재생목록 화면에서 처음 누를 때 자동 등록된다.
+// 대상 한정(성준님 11/6): 핀터레스트는 이 세 보드만, 유튜브는 '벤치마킹 영상' 재생목록만. 나머지 보드(건축 등)·보드 없이
+// 저장한 핀·다른 재생목록은 자동 갱신에서도, 북마클릿 목록 담기에서도 받지 않는다(단일 핀/영상 화면에서 하나만 담는 건 허용).
 const DEFAULT_SOURCES = {
-  pinterest: [{ user: 'won566800' }],
+  pinterest: [{ user: 'won566800', boards: ['연출 기법', '모션 그래픽', '주목할 영상'] }],
   instagram: [{ url: 'https://www.instagram.com/jun9320027/saved/_/2253931955462918/', note: '북마클릿 전용(로그인 필요)' }],
   youtube: [],
+  youtubeAllow: ['벤치마킹 영상'],
 }
-export function loadSources() { return { ...DEFAULT_SOURCES, ...readJson(SOURCES, {}) } }
+export function loadSources() {
+  const s = { ...DEFAULT_SOURCES, ...readJson(SOURCES, {}) }
+  // 예전에 저장된 sources.json(보드 목록 없음)이 대상 한정을 덮어쓰지 않게 기본값으로 채움
+  s.pinterest = (s.pinterest || []).map((p) => ({ ...p, boards: p.boards || DEFAULT_SOURCES.pinterest.find((d) => d.user === p.user)?.boards }))
+  s.youtubeAllow = s.youtubeAllow || DEFAULT_SOURCES.youtubeAllow
+  return s
+}
+// 유튜브 재생목록의 진짜 이름 — 북마클릿이 화면에서 읽은 이름은 "YouTube"처럼 틀릴 때가 있어서(11/6 실측) 서버가 직접 확인
+async function playlistTitle(listId) {
+  try { return (( await getText(`https://www.youtube.com/playlist?list=${listId}`)).match(/<meta property="og:title" content="([^"]*)"/) || [])[1] || '' } catch { return '' }
+}
+// 북마클릿 입구용 — 유튜브 재생목록이면 진짜 이름으로 바꾼 뒤 담기
+export async function ingestFromBookmarklet(body = {}) {
+  try {
+    const u = new URL(body.listUrl || '')
+    const id = u.searchParams.get('list')
+    if (/youtube\.com/.test(u.hostname) && id && u.pathname === '/playlist') {
+      const t = await playlistTitle(id)
+      if (t) { body.list = t; for (const it of body.items || []) it.list = t }
+    }
+  } catch { /* listUrl 없음 */ }
+  return ingest(body)
+}
+const nameKey = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/[\s\-_·.]+/g, '')
+const allowedBoard = (name, s = loadSources()) => (s.pinterest || []).some((p) => !p.boards || p.boards.some((b) => nameKey(b) === nameKey(name)))
+const allowedPlaylist = (name, s = loadSources()) => !(s.youtubeAllow || []).length || s.youtubeAllow.some((b) => nameKey(b) === nameKey(name))
+
+// 목록 담기(북마클릿)가 대상 목록에서 온 건지 — 핀터레스트 보드/유튜브 재생목록 화면일 때만 검사
+export function listAllowed(listUrl, list) {
+  try {
+    const u = new URL(listUrl)
+    if (/pinterest\./.test(u.hostname) && !/\/pin\//.test(u.pathname)) {
+      const slug = decodeURIComponent(u.pathname.split('/').filter(Boolean)[1] || '')
+      return allowedBoard(slug) || allowedBoard(list)
+    }
+    if (/youtube\.com/.test(u.hostname) && u.searchParams.get('list') && u.pathname === '/playlist') return allowedPlaylist(list)
+  } catch { /* 주소 해석 실패 = 검사 안 함 */ }
+  return true
+}
 function saveSources(s) { writeJson(SOURCES, s) }
 export function loadInbox() { return readJson(INBOX, []) }
 function saveInbox(list) { writeJson(INBOX, list) }
@@ -51,6 +92,10 @@ const platformOf = (u) => /pinterest\./.test(u) ? 'pinterest' : /youtube\.com|yo
 
 // 담기 — 북마클릿·RSS·재생목록 공통 입구. 새로 들어온 개수를 돌려준다.
 export function ingest({ items = [], list = '', listUrl = '' } = {}) {
+  if (listUrl && !listAllowed(listUrl, list)) {
+    const s = loadSources()
+    return { added: 0, total: items.length, rejected: `대상 목록이 아닙니다 — 핀터레스트: ${(s.pinterest[0]?.boards || []).join(', ')} / 유튜브: ${(s.youtubeAllow || []).join(', ')}` }
+  }
   const inbox = loadInbox()
   // 핀터레스트 보드 RSS 의 암호화형 링크는 가져올 때마다 바뀐다(11/6 실측 — 같은 핀이 매번 새 항목으로 중복).
   // 그래서 핀터레스트는 썸네일 파일명 해시(핀마다 고정)로도 같은 항목인지 본다.
@@ -101,27 +146,23 @@ const imgKey = (u) => (String(u).match(/\/([0-9a-f]{32})\.\w+$/) || [])[1] || ''
 
 // 핀터레스트: 보드 RSS 의 핀 링크는 암호화형이라 상세(영상·출처)를 못 읽는다(2026-11-06 실측).
 // 계정 피드 RSS 는 숫자형 링크라서, 같은 썸네일 이미지(파일명 해시)끼리 짝지어 숫자형 링크로 바꿔 담는다.
-async function refreshPinterest(user, log) {
+async function refreshPinterest(src, log) {
+  const user = src.user
   let n = 0
   const feed = rssItems(await getText(`https://www.pinterest.com/${user}/feed.rss`))
   const byImg = new Map(feed.filter((f) => f.img).map((f) => [imgKey(f.img), f.link]))
   // 영상 핀은 RSS 에 썸네일이 없어 이미지로 못 짝짓는다 → 핀 생성 시각(pubDate, 피드·보드 RSS 에서 같음)으로 짝짓기
   const byDate = new Map(feed.filter((f) => f.date).map((f) => [f.date, f.link]))
-  const profile = await getText(`https://kr.pinterest.com/${user}/`)
-  const boards = [...new Set([...profile.matchAll(new RegExp(`"url":"(/${user}/[^"/]+/)"`, 'g'))].map((m) => m[1]))]
-    .filter((b) => !/\/_[^/]*\/$/.test(b))   // _tpd_social 같은 시스템 보드 제외
-  const inBoard = new Set()
+  // 대상 보드만 — 보드 주소는 이름의 띄어쓰기를 '-'로 바꾼 것(예: 연출 기법 → /연출-기법/). 비밀 보드는 RSS 가 404 라 북마클릿으로만.
+  const boards = (src.boards || []).map((b) => ({ name: b, slug: String(b).trim().replace(/\s+/g, '-') }))
   for (const b of boards) {
-    const name = decodeURIComponent(b.split('/')[2])
     try {
-      const items = rssItems(await getText(`https://www.pinterest.com${b.replace(/\/$/, '')}.rss`))
-      const rows = items.map((i) => { const link = (i.img && byImg.get(imgKey(i.img))) || byDate.get(i.date) || i.link; inBoard.add(link); return { url: link, title: i.title, text: i.text, thumb: i.img.replace('/236x/', '/564x/'), list: name, date: i.date } })
-      n += ingest({ items: rows, list: name, listUrl: `https://kr.pinterest.com${b}` }).added
-    } catch (e) { log(`  보드 ${name} 실패: ${e.message}`) }
+      const items = rssItems(await getText(`https://www.pinterest.com/${user}/${encodeURIComponent(b.slug)}.rss`))
+      const rows = items.map((i) => ({ url: (i.img && byImg.get(imgKey(i.img))) || byDate.get(i.date) || i.link, title: i.title, text: i.text, thumb: i.img.replace('/236x/', '/564x/'), list: b.name, date: i.date }))
+      n += ingest({ items: rows, list: b.name }).added
+    } catch (e) { log(`  보드 ${b.name}: ${/404/.test(e.message) ? '공개 RSS 없음(비밀 보드면 📥 담기로)' : e.message}`) }
   }
-  // 보드에 안 넣고 그냥 저장한 핀도 담는다(보드 이름 없음)
-  n += ingest({ items: feed.filter((f) => !inBoard.has(f.link)).map((f) => ({ url: f.link, title: f.title, text: f.text, thumb: f.img.replace('/236x/', '/564x/') })), list: '' }).added
-  log(`  핀터레스트 ${user}: 보드 ${boards.length}개, 새 항목 ${n}`)
+  log(`  핀터레스트 ${user}: 대상 보드 ${boards.length}개, 새 항목 ${n}`)
   return n
 }
 
@@ -149,8 +190,12 @@ async function refreshYoutube(pl, log) {
 
 export async function refreshSources(log = () => {}) {
   const s = loadSources(); let n = 0
-  for (const p of s.pinterest || []) { try { n += await refreshPinterest(p.user, log) } catch (e) { log(`  핀터레스트 실패: ${e.message}`) } }
-  for (const p of s.youtube || []) { try { n += await refreshYoutube(p, log) } catch (e) { log(`  유튜브 실패: ${e.message}`) } }
+  for (const p of s.pinterest || []) { try { n += await refreshPinterest(p, log) } catch (e) { log(`  핀터레스트 실패: ${e.message}`) } }
+  for (const p of s.youtube || []) {
+    const title = (await playlistTitle(p.list)) || p.name
+    if (!allowedPlaylist(title, s)) { log(`  유튜브 재생목록 ${title || p.list}: 대상 아님 — 건너뜀`); continue }
+    try { n += await refreshYoutube({ ...p, name: title }, log) } catch (e) { log(`  유튜브 실패: ${e.message}`) }
+  }
   return n
 }
 
