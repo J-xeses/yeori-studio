@@ -1,5 +1,5 @@
 {
-  "activeTab": "storyarchive",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -5881,16 +5881,16 @@
         {
           "id": "cut-1",
           "no": 1,
-          "cutTitle": "촬영 세팅 B-roll",
+          "cutTitle": "촬영 정리 → FPV 드론 다이브 전환",
           "lipsync": false,
           "scene": "카페 테라스 외부 / 촬영 마무리 직전 세팅샷 / 서여리 미등장",
-          "action": "없음 — 공간과 분위기만",
+          "action": "스태프들이 장비 정리 중 → 카메라 급상승 이탈(어닝 유지) → 급강하하며 서여리에게 돌진, 아이레벨 미디엄 클로즈업으로 착지(손 흔들기 직전에서 정지)",
           "character": "서여리",
           "dialogue": "",
           "subtitle": "",
           "narration": "",
           "imagePrompt": "WIDE SHOT —\nOutdoor cafe wooden deck terrace,\nwooden folding tables and chairs arranged naturally,\ncanvas awning overhead casting soft shadow,\nfilming camera on tripod visible to one side,\ncrew hands adjusting equipment,\nreal cafe patrons seated in background naturally,\ncity street and modern buildings softly visible behind,\nno main character in frame,\nbright warm golden afternoon sunlight,\nwide shot, eye level, vertical 9:16,\nCinematic, photorealistic, 8K",
-          "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: wide establishing shot of cafe terrace,\ncamera holds steady, warm afternoon light on wooden deck,\ncafe patrons naturally moving in background.\n\nNext 3-6s: gentle ambient movement —\nleaves rustling slightly, light shifting softly,\ncrew equipment visible at edge of frame.\n\nFinal 6-8s: camera holds steady,\nwarm golden light fills the frame,\nanticipation of someone about to arrive.",
+          "videoPrompt": "WIDE-TO-AERIAL WHIP SHOT —\n\nFirst 0-2s: static ground-level wide view of cafe terrace,\ncanvas awning stretched overhead casting soft shadow across the deck,\ncrew quietly packing up camera gear and folding chairs,\nwarm late-afternoon light, calm wrap-up mood,\nno main character visible yet.\n\nNext 2-4s: camera rockets straight up and back away from the terrace\nin a rapid FPV-drone-style ascent, motion blur streaking,\nthe canvas awning stays clearly visible over the terrace below\nas it shrinks into a vertiginous bird’s-eye view of the street block —\nfast, breathless pull-away. The awning never disappears or flickers —\nit remains a continuous physical structure throughout the ascent.\n\nNext 4-6s: without pausing, camera snaps into a steep dive,\nrushing back down toward the terrace at high speed,\nbuildings and the terrace’s canvas awning rushing back into view,\nperspective warping — same FPV-drone whip energy, now diving instead\nof climbing. The awning is consistently present and intact in every\nframe of the dive, same shape and position as the opening shot.\n\nFinal 6-8s: camera rockets forward low across the terrace, passing\njust beneath the canvas awning, and swoops to a hard stop directly in\nfront of Seoyeori, landing on a medium close-up at eye level — she is\nmid-turn, eyes just meeting the camera, lips parting into the start of\na smile. Her hand has NOT yet risen — freeze the action here, before\nany wave begins. This exact frame should match the opening of the next\ncut, where she raises her hand to wave.",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "BROLL",
@@ -5898,26 +5898,26 @@
           "masterCode": {
             "sp": "OT.CF.TZ_AF.LT_WM",
             "pl": "BR_VD",
-            "ch": "없음 (서여리 미등장)",
-            "sh": "SH_WS",
-            "ca": "CA_ST",
-            "md": "MD_REL",
-            "ac": "없음",
+            "ch": "없음 → 후반부 서여리 등장(클로즈업 직전)",
+            "sh": "SH_WS → SH_AERIAL → SH_MCU",
+            "ca": "CA_ST → CA_FPV_RISE_DIVE",
+            "md": "MD_REL → MD_RUSH → MD_ANTICIPATE",
+            "ac": "스태프들이 장비 정리 중 → 카메라 급상승 이탈(어닝 유지) → 급강하하며 서여리에게 돌진, 아이레벨 미디엄 클로즈업으로 착지(손 흔들기 직전에서 정지)",
             "lookId": "없음",
             "du": 8,
             "audio": {
               "bgm": "밝은 오프닝 BGM 잔잔하게",
               "voice": "없음",
-              "sfx": "없음",
+              "sfx": "급상승·급강하 구간 whoosh(바람 가르는 소리)",
               "ambience": "거리 소음, 카페 환경음, 장비 조작 소리"
             },
             "kr": {
               "sp": "카페 테라스 외부 / 오후 따뜻한 햇살 / 도심 배경",
-              "ch": "서여리 미등장 — 공간 단독 B-roll",
-              "sh": "와이드샷 — 테라스 전체 구도",
-              "ca": "고정 (삼각대)",
-              "ac": "없음 — 공간과 분위기만",
-              "md": "차분하고 따뜻한 일상적 분위기"
+              "ch": "없음 → 후반부 서여리 등장(클로즈업 직전까지)",
+              "sh": "와이드 → 항공뷰 → 미디엄 클로즈업",
+              "ca": "고정 → FPV 드론식 급상승·급강하",
+              "ac": "스태프들이 장비 정리 중 → 카메라 급상승 이탈(어닝 유지) → 급강하하며 서여리에게 돌진, 아이레벨 미디엄 클로즈업으로 착지(손 흔들기 직전에서 정지)",
+              "md": "차분함 → 질주감 → 기대감"
             }
           },
           "videoMode": "veo",
@@ -5930,9 +5930,9 @@
               "reason": "스튜디오 화면에서 직접 수정"
             },
             "videoPrompt": {
-              "value": "NO dialogue — narration added in post\n\nFirst 0-3s: wide establishing shot of cafe terrace,\ncamera holds steady, warm afternoon light on wooden deck,\ncafe patrons naturally moving in background.\n\nNext 3-6s: gentle ambient movement —\nleaves rustling slightly, light shifting softly,\ncrew equipment visible at edge of frame.\n\nFinal 6-8s: camera holds steady,\nwarm golden light fills the frame,\nanticipation of someone about to arrive.",
-              "at": "2026-10-11T02:41:13.311Z",
-              "reason": "스튜디오 화면에서 직접 수정"
+              "value": "WIDE-TO-AERIAL WHIP SHOT —\n\nFirst 0-2s: static ground-level wide view of cafe terrace,\ncanvas awning stretched overhead casting soft shadow across the deck,\ncrew quietly packing up camera gear and folding chairs,\nwarm late-afternoon light, calm wrap-up mood,\nno main character visible yet.\n\nNext 2-4s: camera rockets straight up and back away from the terrace\nin a rapid FPV-drone-style ascent, motion blur streaking,\nthe canvas awning stays clearly visible over the terrace below\nas it shrinks into a vertiginous bird’s-eye view of the street block —\nfast, breathless pull-away. The awning never disappears or flickers —\nit remains a continuous physical structure throughout the ascent.\n\nNext 4-6s: without pausing, camera snaps into a steep dive,\nrushing back down toward the terrace at high speed,\nbuildings and the terrace’s canvas awning rushing back into view,\nperspective warping — same FPV-drone whip energy, now diving instead\nof climbing. The awning is consistently present and intact in every\nframe of the dive, same shape and position as the opening shot.\n\nFinal 6-8s: camera rockets forward low across the terrace, passing\njust beneath the canvas awning, and swoops to a hard stop directly in\nfront of Seoyeori, landing on a medium close-up at eye level — she is\nmid-turn, eyes just meeting the camera, lips parting into the start of\na smile. Her hand has NOT yet risen — freeze the action here, before\nany wave begins. This exact frame should match the opening of the next\ncut, where she raises her hand to wave.",
+              "at": "2026-11-06T08:29:53.976Z",
+              "reason": "성준님 요청 — 마지막 구간을 6-7.5s에서 6-8s로 조정(Veo 8초 단위와 정확히 맞춤)"
             }
           },
           "bubbleScenesSaved": [
@@ -11734,16 +11734,16 @@
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "촬영 세팅 B-roll",
+      "cutTitle": "촬영 정리 → FPV 드론 다이브 전환",
       "lipsync": false,
       "scene": "카페 테라스 외부 / 촬영 마무리 직전 세팅샷 / 서여리 미등장",
-      "action": "없음 — 공간과 분위기만",
+      "action": "스태프들이 장비 정리 중 → 카메라 급상승 이탈(어닝 유지) → 급강하하며 서여리에게 돌진, 아이레벨 미디엄 클로즈업으로 착지(손 흔들기 직전에서 정지)",
       "character": "서여리",
       "dialogue": "",
       "subtitle": "",
       "narration": "",
       "imagePrompt": "WIDE SHOT —\nOutdoor cafe wooden deck terrace,\nwooden folding tables and chairs arranged naturally,\ncanvas awning overhead casting soft shadow,\nfilming camera on tripod visible to one side,\ncrew hands adjusting equipment,\nreal cafe patrons seated in background naturally,\ncity street and modern buildings softly visible behind,\nno main character in frame,\nbright warm golden afternoon sunlight,\nwide shot, eye level, vertical 9:16,\nCinematic, photorealistic, 8K",
-      "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: wide establishing shot of cafe terrace,\ncamera holds steady, warm afternoon light on wooden deck,\ncafe patrons naturally moving in background.\n\nNext 3-6s: gentle ambient movement —\nleaves rustling slightly, light shifting softly,\ncrew equipment visible at edge of frame.\n\nFinal 6-8s: camera holds steady,\nwarm golden light fills the frame,\nanticipation of someone about to arrive.",
+      "videoPrompt": "WIDE-TO-AERIAL WHIP SHOT —\n\nFirst 0-2s: static ground-level wide view of cafe terrace,\ncanvas awning stretched overhead casting soft shadow across the deck,\ncrew quietly packing up camera gear and folding chairs,\nwarm late-afternoon light, calm wrap-up mood,\nno main character visible yet.\n\nNext 2-4s: camera rockets straight up and back away from the terrace\nin a rapid FPV-drone-style ascent, motion blur streaking,\nthe canvas awning stays clearly visible over the terrace below\nas it shrinks into a vertiginous bird’s-eye view of the street block —\nfast, breathless pull-away. The awning never disappears or flickers —\nit remains a continuous physical structure throughout the ascent.\n\nNext 4-6s: without pausing, camera snaps into a steep dive,\nrushing back down toward the terrace at high speed,\nbuildings and the terrace’s canvas awning rushing back into view,\nperspective warping — same FPV-drone whip energy, now diving instead\nof climbing. The awning is consistently present and intact in every\nframe of the dive, same shape and position as the opening shot.\n\nFinal 6-8s: camera rockets forward low across the terrace, passing\njust beneath the canvas awning, and swoops to a hard stop directly in\nfront of Seoyeori, landing on a medium close-up at eye level — she is\nmid-turn, eyes just meeting the camera, lips parting into the start of\na smile. Her hand has NOT yet risen — freeze the action here, before\nany wave begins. This exact frame should match the opening of the next\ncut, where she raises her hand to wave.",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "BROLL",
@@ -11751,26 +11751,26 @@
       "masterCode": {
         "sp": "OT.CF.TZ_AF.LT_WM",
         "pl": "BR_VD",
-        "ch": "없음 (서여리 미등장)",
-        "sh": "SH_WS",
-        "ca": "CA_ST",
-        "md": "MD_REL",
-        "ac": "없음",
+        "ch": "없음 → 후반부 서여리 등장(클로즈업 직전)",
+        "sh": "SH_WS → SH_AERIAL → SH_MCU",
+        "ca": "CA_ST → CA_FPV_RISE_DIVE",
+        "md": "MD_REL → MD_RUSH → MD_ANTICIPATE",
+        "ac": "스태프들이 장비 정리 중 → 카메라 급상승 이탈(어닝 유지) → 급강하하며 서여리에게 돌진, 아이레벨 미디엄 클로즈업으로 착지(손 흔들기 직전에서 정지)",
         "lookId": "없음",
         "du": 8,
         "audio": {
           "bgm": "밝은 오프닝 BGM 잔잔하게",
           "voice": "없음",
-          "sfx": "없음",
+          "sfx": "급상승·급강하 구간 whoosh(바람 가르는 소리)",
           "ambience": "거리 소음, 카페 환경음, 장비 조작 소리"
         },
         "kr": {
           "sp": "카페 테라스 외부 / 오후 따뜻한 햇살 / 도심 배경",
-          "ch": "서여리 미등장 — 공간 단독 B-roll",
-          "sh": "와이드샷 — 테라스 전체 구도",
-          "ca": "고정 (삼각대)",
-          "ac": "없음 — 공간과 분위기만",
-          "md": "차분하고 따뜻한 일상적 분위기"
+          "ch": "없음 → 후반부 서여리 등장(클로즈업 직전까지)",
+          "sh": "와이드 → 항공뷰 → 미디엄 클로즈업",
+          "ca": "고정 → FPV 드론식 급상승·급강하",
+          "ac": "스태프들이 장비 정리 중 → 카메라 급상승 이탈(어닝 유지) → 급강하하며 서여리에게 돌진, 아이레벨 미디엄 클로즈업으로 착지(손 흔들기 직전에서 정지)",
+          "md": "차분함 → 질주감 → 기대감"
         }
       },
       "videoMode": "veo",
@@ -11783,9 +11783,9 @@
           "reason": "스튜디오 화면에서 직접 수정"
         },
         "videoPrompt": {
-          "value": "NO dialogue — narration added in post\n\nFirst 0-3s: wide establishing shot of cafe terrace,\ncamera holds steady, warm afternoon light on wooden deck,\ncafe patrons naturally moving in background.\n\nNext 3-6s: gentle ambient movement —\nleaves rustling slightly, light shifting softly,\ncrew equipment visible at edge of frame.\n\nFinal 6-8s: camera holds steady,\nwarm golden light fills the frame,\nanticipation of someone about to arrive.",
-          "at": "2026-10-11T02:41:13.311Z",
-          "reason": "스튜디오 화면에서 직접 수정"
+          "value": "WIDE-TO-AERIAL WHIP SHOT —\n\nFirst 0-2s: static ground-level wide view of cafe terrace,\ncanvas awning stretched overhead casting soft shadow across the deck,\ncrew quietly packing up camera gear and folding chairs,\nwarm late-afternoon light, calm wrap-up mood,\nno main character visible yet.\n\nNext 2-4s: camera rockets straight up and back away from the terrace\nin a rapid FPV-drone-style ascent, motion blur streaking,\nthe canvas awning stays clearly visible over the terrace below\nas it shrinks into a vertiginous bird’s-eye view of the street block —\nfast, breathless pull-away. The awning never disappears or flickers —\nit remains a continuous physical structure throughout the ascent.\n\nNext 4-6s: without pausing, camera snaps into a steep dive,\nrushing back down toward the terrace at high speed,\nbuildings and the terrace’s canvas awning rushing back into view,\nperspective warping — same FPV-drone whip energy, now diving instead\nof climbing. The awning is consistently present and intact in every\nframe of the dive, same shape and position as the opening shot.\n\nFinal 6-8s: camera rockets forward low across the terrace, passing\njust beneath the canvas awning, and swoops to a hard stop directly in\nfront of Seoyeori, landing on a medium close-up at eye level — she is\nmid-turn, eyes just meeting the camera, lips parting into the start of\na smile. Her hand has NOT yet risen — freeze the action here, before\nany wave begins. This exact frame should match the opening of the next\ncut, where she raises her hand to wave.",
+          "at": "2026-11-06T08:29:53.976Z",
+          "reason": "성준님 요청 — 마지막 구간을 6-7.5s에서 6-8s로 조정(Veo 8초 단위와 정확히 맞춤)"
         }
       },
       "bubbleScenesSaved": [
@@ -12329,7 +12329,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-06T02:01:14.943Z",
+  "savedAt": "2026-11-06T05:23:28.930Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
