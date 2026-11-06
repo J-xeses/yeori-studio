@@ -3964,7 +3964,7 @@ app.post('/api/collect/ingest', async (req, res) => {
 app.get('/api/collect', async (req, res) => {
   try {
     const hub = await import('./lib/collectHub.js')
-    let items = hub.loadInbox()
+    let items = hub.loadInbox().filter((e) => !e.hidden || req.query.all)
     if (req.query.platform) items = items.filter((e) => String(req.query.platform).split(',').includes(e.platform))
     if (req.query.board) items = items.filter((e) => !e.registered && !e.hidden)
     res.json({ items, status: hub.collectStatus() })
