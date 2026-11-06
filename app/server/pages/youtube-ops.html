@@ -273,6 +273,9 @@
       <li><b>재시청 잘 되는 포맷</b> — 튜토리얼/방법론, 비교·랭킹, 공감형 스토리텔링, 연속 시리즈</li>
     </ul>
   </div>
+  <h2>📥 수집함 — 유튜브 '벤치마킹 영상' 재생목록 <span class="muted">— 재생목록에 저장한 영상이 3시간마다 자동으로 들어와 개요·키워드·기법이 정리됩니다(퍼블리싱 키워드 후보·스토리 아카이브 연출기법과 같은 자료)</span></h2>
+  <div class="collect-panel" data-platform="youtube" style="margin-bottom:16px"></div>
+
   <h2>경쟁 채널 비교분석 <span class="muted">— 유사 채널 서치 + 수동 기록, 채널별로 펼쳐서 회차별 성과·시사점 축적</span></h2>
   <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
     <input type="text" id="cpName" placeholder="채널명" style="width:160px">
@@ -864,4 +867,4 @@ $('openYtSetup').onclick = () => $('openYt').onclick()
 $('openStudio').onclick = () => openB({ target: 'url', url: 'https://studio.youtube.com/' })
 
 ;(async () => { showTab(local.get('tab', 'goal')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) }; startLivePolling() })()
-</script></body></html>
+</script><script src="/collect-panel.js"></script></body></html>

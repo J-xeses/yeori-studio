@@ -841,6 +841,7 @@ function BenchmarkTab() {
   const [adding, setAdding] = useState(null)
   const [aiBusy, setAiBusy] = useState(false)
   const [aiError, setAiError] = useState('')
+  const [pulling, setPulling] = useState(false)
 
   const autoFill = async () => {
     if (aiBusy) return
@@ -896,8 +897,8 @@ function BenchmarkTab() {
         <div className={s.section}>
           <div className={s.sectionLabel}><span className={s.step}>+</span><span>자료 추가</span></div>
           <p style={{ fontSize: 12, color: '#888', marginBottom: 10, lineHeight: 1.5 }}>
-            SNS·레퍼런스에서 발견한 연출기법·트렌드를 여기 모아둡니다. 자동 수집이 아니라
-            직접(또는 Claude 리서치 결과를) 등록하는 방식입니다.
+            SNS·레퍼런스에서 발견한 연출기법·트렌드를 여기 모아둡니다. 직접 등록하거나,
+            📥 담기로 1차 스크랩한 수집함 자료가 자동으로 추가됩니다.
           </p>
           {adding ? (
             <div>
@@ -922,7 +923,19 @@ function BenchmarkTab() {
               </div>
             </div>
           ) : (
-            <button className={`${s.genBtn} ${s.genBtnActive}`} onClick={() => setAdding({})}>+ 새 자료 추가</button>
+            <>
+              <button className={`${s.genBtn} ${s.genBtnActive}`} onClick={() => setAdding({})}>+ 새 자료 추가</button>
+              {/* 2026-11-06 수집함 연결 — 📥 담기(인스타 저장 컬렉션·유튜브 재생목록·핀터레스트 보드)로 1차 스크랩한 자료 중
+                  연출기법으로 쓸 만한 건 자동으로 여기 추가된다(태그 '자동수집'). 이 버튼은 그걸 지금 바로 돌리는 것. */}
+              <button className={s.genBtn} style={{ marginTop: 8 }} disabled={pulling} onClick={async () => {
+                setPulling(true)
+                await fetch('http://localhost:3001/api/collect/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }).catch(() => {})
+                setPulling(false); load()
+              }}>{pulling ? '⏳ 수집함 가져오는 중…(1~2분)' : '📥 수집함에서 자동 추가'}</button>
+              <p style={{ fontSize: 11.5, color: '#888', marginTop: 6, lineHeight: 1.5 }}>
+                수집함 자료 중 연출기법으로 쓸 만한 것은 3시간마다 자동으로 추가됩니다(태그 '자동수집').
+              </p>
+            </>
           )}
         </div>
       </div>

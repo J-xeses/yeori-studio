@@ -77,7 +77,7 @@ echo.
 ::     Reference board is opened via the proxy (/downloads) instead of file://.
 ::     Without Chrome: fall back to the default browser, one by one.
 echo [4] Opening tabs...
-set "REF_BOARD=http://localhost:3001/downloads/_shared/references/teaser/index.html"
+set "REF_BOARD=http://localhost:3001/downloads/_shared/references/library/index.html"
 set "TABS="http://localhost:5173" "http://localhost:3001/insta-ops" "http://localhost:3001/youtube-ops" "http://localhost:3001/mobile" "%REF_BOARD%""
 if exist "%ACC_HTML%" set "TABS=%TABS% "%ACC_HTML%""
 if exist "%MATRIX_HTML%" set "TABS=%TABS% "%MATRIX_HTML%""

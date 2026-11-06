@@ -247,6 +247,8 @@
     <button class="btn" id="bmAddManual">✍️ 수동기록으로 추가</button>
   </div>
   <div class="card scroll-v" id="bmTable" style="max-height:260px;margin-bottom:16px"></div>
+  <h2>📥 수집함 — 인스타 저장 컬렉션 <span class="muted">— 저장 컬렉션 화면에서 📥 담기 버튼을 누르면 목록이 통째로 들어와 개요·키워드·기법이 자동 정리됩니다(퍼블리싱 키워드 후보·스토리 아카이브 연출기법과 같은 자료)</span></h2>
+  <div class="collect-panel" data-platform="instagram" style="margin-bottom:16px"></div>
   <h2>계정 목록 <span class="muted">(우리 계정 개설일: <input type="date" id="acctDate" style="margin-left:2px"> — 후보별 "며칠째 방문" 기준이 되는 날짜) · 팔로우한 계정의 신규 소재도 매주 자동으로 체크해 위 벤치마킹 레퍼런스에 쌓입니다</span> <button class="btn" id="sadd" style="margin-left:8px">+ 후보 추가</button></h2>
   <div class="card" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><button class="btn" id="awatch">🔍 지금 계정 소재 체크(선택)</button><span class="muted" id="awatchst" style="width:100%;font-size:12px"></span></div>
   <div class="card scroll"><table id="stable"></table></div>
@@ -753,4 +755,4 @@ $('sadd').onclick = () => {
 }
 
 ;(async () => { showTab(local.get('tab', 'board')); try { await load() } catch (e) { status('불러오기 실패: ' + e.message, true) } })()
-</script></body></html>
+</script><script src="/collect-panel.js"></script></body></html>

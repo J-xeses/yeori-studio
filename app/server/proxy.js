@@ -129,6 +129,7 @@ app.use('/assets/fonts', express.static(path.join(ROOT, 'assets', 'fonts')))
 // ── 인스타 운영실 (/insta-ops) — 계정 세팅·운영 보드·성과 분석 한 페이지 ─────────────
 // 데이터: downloads/seoyeori/IG/_account/ops.json (server/lib/instaOps.js, rev 확인 저장)
 app.get('/insta-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'insta-ops.html')))
+app.get('/collect-panel.js', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'collect-panel.js')))   // 운영실 공통 📥 수집함 패널(2026-11-06)
 app.get('/api/insta-ops', (_req, res) => res.json({ ops: loadOps(), photos: listProfilePhotos() }))
 app.put('/api/insta-ops', (req, res) => {
   try { const out = saveOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
@@ -3938,7 +3939,65 @@ app.post('/api/ig-sync', async (_req, res) => {
   // 계정 목록 — 팔로우한 계정 신규 소재 체크, 주 1회(2026-11-04 성준님: "계정목록이 벤치마킹 신규소재 체크·분석")
   const runAcctWatch = async () => { try { const { maybeWeeklyAccountWatch } = await import('./lib/accountWatch.js'); await maybeWeeklyAccountWatch((l) => console.log('[account-watch]', l)) } catch (e) { console.warn('[account-watch] 실패:', e.message) } }
   setTimeout(runAcctWatch, 150 * 1000); setInterval(runAcctWatch, 3 * 3600 * 1000)
+  // 수집함 — 핀터레스트 보드·유튜브 재생목록 새 항목 가져오기 + 정리, 3시간마다(2026-11-06)
+  const runCollectTick = async () => { try { const { runCollect } = await import('./lib/collectHub.js'); await runCollect({ log: (l) => console.log('[collect]', l) }) } catch (e) { console.warn('[collect] 실패:', e.message) } }
+  setTimeout(runCollectTick, 210 * 1000); setInterval(runCollectTick, 3 * 3600 * 1000)
 }
+
+// ── 수집함(2026-11-06) — collectHub.js. 📥 북마클릿 → /collect-in(해시로 받은 목록을 같은 출처로 POST) ──
+app.get('/collect-in', (_req, res) => {
+  res.set('Content-Type', 'text/html; charset=utf-8')
+  res.send(`<!doctype html><meta charset="utf-8"><title>수집함 담기</title><body style="font-family:system-ui,'Malgun Gothic',sans-serif;background:#16161a;color:#eee;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;font-size:15px;line-height:1.6"><div id="m">담는 중…</div><script>
+(async()=>{const m=document.getElementById('m');try{const d=JSON.parse(decodeURIComponent(location.hash.slice(1)));history.replaceState(null,'',location.pathname);
+const r=await fetch('/api/collect/ingest',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);
+document.body.style.background='#123524';m.innerHTML='✅ <b>'+j.total+'개</b> 중 새로 <b>'+j.added+'개</b> 담았습니다<br><span style="opacity:.75;font-size:12px">'+(d.list||'')+(j.added?' · 자동 정리 시작(1~2분)':'')+'</span>';setTimeout(()=>window.close(),2500)}
+catch(e){document.body.style.background='#3a1414';m.textContent='❌ 담기 실패: '+e.message}})()</script>`)
+})
+app.post('/api/collect/ingest', async (req, res) => {
+  try {
+    const hub = await import('./lib/collectHub.js')
+    const r = hub.ingest(req.body || {})
+    res.json(r)
+    if (r.added) hub.processInbox({ log: (l) => console.log('[collect]', l) }).catch((e) => console.warn('[collect] 정리 실패:', e.message))
+  } catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.get('/api/collect', async (req, res) => {
+  try {
+    const hub = await import('./lib/collectHub.js')
+    let items = hub.loadInbox()
+    if (req.query.platform) items = items.filter((e) => String(req.query.platform).split(',').includes(e.platform))
+    if (req.query.board) items = items.filter((e) => !e.registered && !e.hidden)
+    res.json({ items, status: hub.collectStatus() })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.get('/api/collect/keywords', async (_req, res) => {
+  try { const { keywordCandidates } = await import('./lib/collectHub.js'); res.json({ keywords: keywordCandidates() }) } catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.get('/api/collect/bookmarklet', async (_req, res) => {
+  const { BOOKMARKLET } = await import('./lib/collectHub.js'); res.json({ href: BOOKMARKLET })
+})
+app.post('/api/collect/run', async (req, res) => {
+  try { const { runCollect } = await import('./lib/collectHub.js'); res.json(await runCollect({ refresh: req.body?.refresh !== false, log: (l) => console.log('[collect]', l) })) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/collect/hide', async (req, res) => {
+  const { setItem } = await import('./lib/collectHub.js'); const e = setItem(String(req.body?.id || ''), { hidden: req.body?.hidden !== false })
+  e ? res.json({ ok: true }) : res.status(404).json({ error: '항목 없음' })
+})
+// 레퍼런스 보드 "레퍼런스 등록" — ref-grab 에 수집함 항목을 넘긴다(핀터레스트 숫자형 핀은 영상·장면시트까지, 나머지는 링크 레퍼런스)
+app.post('/api/collect/register', async (req, res) => {
+  const id = String(req.body?.id || '').replace(/[^\w]/g, '')
+  if (!id) return res.status(400).json({ error: 'id 필요' })
+  // 비동기 spawn — 영상 다운로드·장면시트에 수십 초 걸려도 서버(다른 요청)가 멈추지 않게
+  const p = spawn(process.execPath, [path.join(__dirname, '..', 'scripts', 'ref-grab.mjs'), `--from-collect=${id}`], { windowsHide: true })
+  let out = ''; p.stdout.on('data', (d) => { out += d }); p.stderr.on('data', (d) => { out += d })
+  const timer = setTimeout(() => p.kill(), 5 * 60e3)
+  p.on('close', (code) => {
+    clearTimeout(timer)
+    const tail = out.trim().split('\n').slice(-4)
+    code === 0 ? res.json({ ok: true, log: tail }) : res.status(500).json({ error: tail.slice(-2).join(' / ') || '등록 실패' })
+  })
+})
 // 관심사 설계 탭 후보 발굴(A 주간 AI 발굴 · C 링크 붙여넣기, 2026-09-28) — seedDiscovery.js
 app.get('/api/seed-discovery', async (_req, res) => {
   try { const { discoveryStatus } = await import('./lib/seedDiscovery.js'); res.json(discoveryStatus()) } catch (err) { res.status(500).json({ error: err.message }) }

@@ -1229,9 +1229,16 @@ function MetaSection() {
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState('')
   const [kwInput, setKwInput] = useState('')
+  // 수집함(인스타 저장 컬렉션·유튜브 '벤치마킹 영상'·핀터레스트 보드)에서 뽑힌 키워드 후보 — 클릭하면 등록(2026-11-06)
+  const [kwCands, setKwCands] = useState([])
+  useEffect(() => {
+    fetch('http://localhost:3001/api/collect/keywords').then(r => r.json()).then(d => setKwCands(d.keywords || [])).catch(() => {})
+  }, [])
 
   const setPlatform = (platform, p) => dispatch({ type: 'SET_PUBLISHING', platform, p })
   const keywords = channelKeywords || []
+  // 생성된 문구에 키워드가 몇 번 들어갔는지(AI 호출 없이 세기) — 플랫폼 카드 아래 표시
+  const countIn = (text, k) => { const t = String(text || '').toLowerCase().replace(/\s+/g, ''); const w = k.toLowerCase().replace(/\s+/g, ''); return w ? t.split(w).length - 1 : 0 }
   const setKeywords = (arr) => dispatch({ type: 'SET_CHANNEL_KEYWORDS', p: arr })
   const addKeyword = () => {
     const v = kwInput.trim()
@@ -1250,7 +1257,7 @@ function MetaSection() {
       // 2026-11-04 — 성준님: "캡션에 핵심 키워드를 자주·반복해서 노출". 검색 노출용 키워드를
       // 지정해두면, 억지로 나열하지 않고 설명 문장 안에 자연스럽게 2~3회 반복되도록 AI에게 지시.
       const kwNote = keywords.length
-        ? `\n\n검색 노출용 핵심 키워드(계정 공통): ${keywords.join(', ')}\n- 이 키워드들을 instagram.description 안에서 자연스러운 문장으로 2~3회 반복해서 녹여줘(나열식 금지, 억지스럽지 않게).\n- instagram.tags에도 이 키워드를 해시태그로 포함해줘.`
+        ? `\n\n검색 노출용 핵심 키워드(계정 공통): ${keywords.join(', ')}\n- 세 플랫폼 모두 description 안에 이 키워드들을 자연스러운 문장으로 2~3회 반복해서 녹여줘(나열식 금지, 억지스럽지 않게).\n- youtube.title 에는 가장 중요한 키워드 1개를 앞쪽에, youtube.description 첫 줄에도 키워드를 넣어줘(유튜브 검색은 제목·설명 첫 줄 비중이 큼).\n- 세 플랫폼 tags 에도 이 키워드를 포함해줘(유튜브는 쉼표 태그, 인스타·틱톡은 해시태그).`
         : ''
       const data = await claudeMessages(apiKey, {
         model: 'claude-sonnet-4-6',
@@ -1305,8 +1312,19 @@ ${scriptText.slice(0, 3000)}${kwNote}
         <div className={s.panelTitle}>핵심 키워드 (검색 노출용 · 캡션에 반복 노출)</div>
         <div className={s.fields}>
           <div style={{ fontSize: 11.5, color: 'var(--text-3)', marginTop: -4 }}>
-            계정 공통 설정입니다(에피소드 바꿔도 유지). AI 자동 생성 시 인스타 설명에 자연스럽게 2~3회 반복해 녹입니다.
+            계정 공통 설정입니다(에피소드 바꿔도 유지). AI 자동 생성 시 세 플랫폼 설명에 자연스럽게 2~3회 반복해 녹이고, 유튜브는 제목 앞쪽에도 넣습니다.
           </div>
+          {kwCands.filter(c => !keywords.includes(c.word)).length > 0 && (
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 11.5, color: 'var(--text-3)' }}>📥 수집함 후보(클릭=등록):</span>
+              {kwCands.filter(c => !keywords.includes(c.word)).slice(0, 24).map(c => (
+                <button key={c.word} onClick={() => setKeywords([...keywords, c.word])} title={`수집함 자료 ${c.count}건에서 나옴`}
+                  style={{ background: 'transparent', border: '1px dashed rgba(167,139,250,.5)', color: '#c4b5fd', borderRadius: 999, padding: '2px 9px', fontSize: 11.5, cursor: 'pointer' }}>
+                  + {c.word}{c.count > 1 ? ` ·${c.count}` : ''}
+                </button>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {keywords.map(k => (
               <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(167,139,250,.15)', color: '#c4b5fd', borderRadius: 999, padding: '3px 10px', fontSize: 12 }}>
@@ -1348,6 +1366,14 @@ ${scriptText.slice(0, 3000)}${kwNote}
                 <label>태그</label>
                 <textarea style={{ minHeight: 44 }} value={v.tags} onChange={e => setPlatform(pf.key, { tags: e.target.value })} />
               </div>
+              {keywords.length > 0 && (v.title || v.description || v.tags) && (
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }} title="제목+설명+태그에 키워드가 들어간 횟수 (0이면 빠진 것)">
+                  {keywords.map(k => {
+                    const n = countIn(`${v.title} ${v.description} ${v.tags}`, k)
+                    return <span key={k} style={{ fontSize: 11, padding: '1px 7px', borderRadius: 999, background: n ? 'rgba(52,211,153,.13)' : 'rgba(248,113,113,.13)', color: n ? '#6ee7b7' : '#fca5a5' }}>{k} ×{n}</span>
+                  })}
+                </div>
+              )}
             </div>
           )
         })}
