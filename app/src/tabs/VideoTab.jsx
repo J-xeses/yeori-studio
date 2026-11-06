@@ -1517,6 +1517,20 @@ export default function VideoTab() {
   // 항상 써온 절대경로 관례(C:\yeori-studio\downloads\...)로 변환.
   const sfxAbsolutePath = (cut) => cut?.sfxFile ? `C:\\yeori-studio\\downloads\\${cut.sfxFile.replace(/\//g, '\\')}` : undefined
 
+  // 나레이션 시작시간 기본값 — cut.narrationStart(사람이 직접 입력)가 없으면 0으로
+  // 고정돼 있었음(2026-11-06, 성준님 제보: SF_E01 컷4 — 자막은 captionSegTiming으로
+  // 3~7초로 맞췄는데 나레이션 오디오는 항상 0초부터 재생되게 보내서 자막·나레이션이
+  // 어긋남). 11/5에 고친 건 메이킹 탭(GRAPHIC/BROLL/CAPCUT 수동 합성 패널)의
+  // subtitleCfg 시드뿐이었고, 이 영상 탭의 나레이션 오디오 믹스 시작시간은 전혀
+  // 별개 필드(narrationStart)라 그때 안 고쳐졌다. 자막 구간(captionSegTiming) 첫
+  // 시작값을 기본 시드로 써서 두 타이밍이 기본적으로 맞게 — narrationStart를 직접
+  // 입력해두면 그 값이 항상 우선(사람이 일부러 어긋나게 할 수도 있으니 덮어쓰지 않음).
+  const defaultNarrationStart = (cut) => {
+    if (typeof cut?.narrationStart === 'number') return cut.narrationStart
+    const seg = Array.isArray(cut?.captionSegTiming) ? cut.captionSegTiming[0] : null
+    return seg ? seg[0] : 0
+  }
+
   // segments — 이 컷의 자막 구간(computeCaptionSegments 결과, 호출부가 cuts.map 안에서
   // 이미 계산해둔 cutSegs를 그대로 넘김). 릴스거나 자막 OFF면 호출부가 undefined로 보냄 —
   // 그땐 기존과 완전히 동일하게(번인 없이) 동작한다(2026-11-03, 성준님 요청: "영상 탭
@@ -1535,7 +1549,7 @@ export default function VideoTab() {
           sfxFile: sfxAbsolutePath(cut), sfxStart: cut.sfxStart, sfxVolume: cut.sfxVolume,
           // 대본 탭 효과음 선택은 "효과음:" 글에 파일 이름으로만 남는다 → 서버가 이름으로 찾음(9/29)
           sfxName: (String(cut.masterCode?.audio?.sfx || '').match(/([\w.-]+\.(?:wav|mp3))/i) || [])[1],
-          audioStart: cut.narrationStart, narrationVolume: cut.narrationVolume,
+          audioStart: defaultNarrationStart(cut), narrationVolume: cut.narrationVolume,
           bgVolume: cut.narrBgVolume,
           // 자막 번인(SF/LF 전용) — 영상 탭 "자막 디자인 설정"(글씨체·크기·색·배경·위치)과
           // 이 컷의 실제 자막 구간을 그대로 넘긴다. 미리보기(drawPreview 캔버스)와 똑같은
@@ -2771,7 +2785,7 @@ export default function VideoTab() {
                   </label>
                   <label title="나레이션 시작(초)" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                     🎙⏱
-                    <input type="number" min={0} step={0.1} value={selCut.narrationStart ?? 0} style={{ width: 32 }}
+                    <input type="number" min={0} step={0.1} value={defaultNarrationStart(selCut)} style={{ width: 32 }}
                       onChange={e => dispatch({ type: 'UPDATE_CUT', id: selCut.id, p: { narrationStart: parseFloat(e.target.value) || 0 } })} />
                   </label>
                   <label title="나레이션 음량" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
