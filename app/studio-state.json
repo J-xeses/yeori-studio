@@ -12220,7 +12220,113 @@
   "projectName": "새 프로젝트",
   "savedAt": "2026-11-07T06:59:49.905Z",
   "videoTabState": {
-    "videoClips": {},
+    "videoClips": {
+      "cut-1": [
+        {
+          "url": "blob:http://localhost:5173/8ca1baec-1cdf-4eb9-82a5-8c8d7507031a",
+          "name": "Woman_walking_down_street_90dae9be_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794058589963,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_01_clip_1.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/18bc0bab-ec8a-4157-a211-92ee496ce2e5",
+          "name": "02_옴니-장면전환_Seoul_street_202606132303.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1781359413742,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_02_clip_new1794067227054.mp4"
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "blob:http://localhost:5173/eab8950f-4c17-4c2c-a1ff-7f2a09ef5a1d",
+          "name": "Woman_touching_flowers_in_shop_baf1f7a7_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794067030140,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_03_clip_1.mp4"
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/a3558e3b-9ab9-44cc-925a-426a13f27394",
+          "name": "Woman_sitting_at_window_seat_b727f1fd_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794067765807,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_04_clip_1.mp4"
+        }
+      ],
+      "cut-5": [
+        {
+          "url": "blob:http://localhost:5173/08f919d4-3875-474a-bf11-2aa8e05be2b4",
+          "name": "05.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1779613994683,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_05_clip_1.mp4"
+        }
+      ],
+      "cut-6": [
+        {
+          "url": "blob:http://localhost:5173/5bf710fc-e275-41b0-a8df-d2500ecb5214",
+          "name": "06-더 낭만적임.mp4",
+          "duration": 8,
+          "trimStart": 0,
+          "trimEnd": 8,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1778502038000,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_06_clip_1.mp4"
+        }
+      ],
+      "cut-7": [
+        {
+          "url": "blob:http://localhost:5173/a4f8c6a5-e1d8-4d85-b2b6-dd09d04879c4",
+          "name": "07-립싱크 반영_20260717.mp4",
+          "duration": 10.01,
+          "trimStart": 0,
+          "trimEnd": 10.01,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1784279878647,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_07_clip_1.mp4"
+        }
+      ]
+    },
     "g4Approved": {},
     "selectedCutId": "cut-1",
     "subtitles": {}
