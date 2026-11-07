@@ -5482,19 +5482,20 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   fs.mkdirSync(outDir, { recursive: true })
 
   const videoFile = path.join(videoDir, `cut_${padded}.mp4`)
-  // 릴스(IG_R)는 대사(DL)를 영상(Flow) 자체 음성으로 쓴다 — TTSTab 미리듣기 "합치기"가
+  // 대사(DL) 있는 컷은 영상(Flow/Veo) 자체 음성을 이미 쓴다 — TTSTab 미리듣기 "합치기"가
   // 대사 트랙까지 같이 cut_NN.mp3 로 저장해버린 경우, 그걸 "나레이션"으로 여기서 또 얹으면
   // 영상에 이미 있는 대사 위에 TTS 대사가 겹쳐 들려 대사가 꼬인다(2026-09-29, IG_R06 컷1 실측
   // — reelFinalize.js 가 최종 합성에서 이미 쓰던 것과 동일한 규칙: 대사 있는 컷은
   // cut_NN_nr.mp3 만 나레이션으로 인정, cut_NN.mp3 는 옛 대사 TTS일 수 있어 무시).
+  // 2026-11-07 수정(성준님 제보 — SF_E01 컷5~8 실측: "영상 생성시 음성 생성"과 TTS 탭 대사
+  // 입력 두 목소리가 겹쳐서 번인됨): 이 가드가 `/^IG_R/` 코드일 때만 걸려있어서 SF/LF
+  // 대사 컷(cut.dialogue 있는 컷)엔 전혀 적용이 안 됐다 — 릴스만의 특수 사정이 아니라
+  // "대사 있는 컷은 영상 자체 음성을 쓴다"는 규칙 자체가 콘텐츠 유형과 무관하므로 전체로 확장.
   let hasDialogue = false
   try {
     const { ep: epEntry } = findEpisodeByNumOrThrow(ep)
-    const episodeCode = resolveEpisodeCode(epEntry.episode)
-    if (/^IG_R/i.test(episodeCode || '')) {
-      const cut = (epEntry.cuts || []).find(c => Number(c.no) === Number(cutNo))
-      hasDialogue = !!String(cut?.dialogue || '').trim()
-    }
+    const cut = (epEntry.cuts || []).find(c => Number(c.no) === Number(cutNo))
+    hasDialogue = !!String(cut?.dialogue || '').trim()
   } catch { /* 조회 실패해도 기존 동작(대사 없음 취급) 유지 */ }
   const nrFile    = path.join(audioDir, `cut_${padded}_nr.mp3`)
   const plainFile = path.join(audioDir, `cut_${padded}.mp3`)
