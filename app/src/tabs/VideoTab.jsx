@@ -451,6 +451,11 @@ export default function VideoTab() {
   // 서버 파일은 직접 프레임 추출로 매번 정상 확인됨). 이 state가 있는 컷은 세그 목록과는
   // 별도로, 실제 05_video/cut_NN.mp4를 명확히 라벨링해 보여준다.
   const [finalPreviewTs, setFinalPreviewTs] = useState({})
+  // 2026-11-07 추가 — 자막 번인 미리보기 전용 URL(컷ID별). cut_NN_final.mp4(05_video로
+  // 복사되는 "진짜" 파일)는 이제 자막을 절대 안 담으므로, 번인 결과를 보려면 서버가 따로
+  // 만들어준 cut_NN_preview.mp4(ev.previewUrl)를 여기 저장해 보여준다 — 아래 "✅ 최종
+  // 합성본" 패널 참고.
+  const [subtitlePreviewUrl, setSubtitlePreviewUrl] = useState({})
   // 메이킹 탭에서 만든 컷(텍스트카드·사진 시퀀스·목업·소스 컷)을 여기 "클립 합성"으로 덮어쓰려 할 때 한 번 더 확인
   const [composeArmed, setComposeArmed] = useState(null)   // cut.id | null
   // 큰 미리보기에 무엇을 띄울지 — 'final'(릴스에 들어갈 결과: 메이킹 탭 말풍선·자막 포함) | 'raw'(편집용 클립).
@@ -1629,13 +1634,16 @@ export default function VideoTab() {
                   // 표시됨(2026-09-18, 사용자 실측 — 컷20) — 서버가 내려준 절대경로를 그대로 채움.
                   stagedPath: ev.outputPath,
                   keepAudio: true,   // 이 클립의 존재 이유가 나레이션 오디오라 합성 때 반드시 살려야 함
-                  // 2026-11-06 추가(성준님 제보 — SF_E01 컷4: "자막이 2중으로 뜬다"): 이 클립이
-                  // 바로 이 실행에서 자막까지 함께 구워졌으면(burnSubtitle), 영상 픽셀에 이미
-                  // 캡션이 들어있다는 뜻 — 아래 미리보기 캔버스(effectiveCaptionValue)가 그걸
-                  // 모르고 똑같은 텍스트를 또 그려서 겹쳐 보였다. 이 플래그로 캔버스가 자기를
-                  // 숨기게 한다(릴스는 bigHasDerived로 이미 같은 문제를 막고 있었음, 비릴스엔
-                  // 그 가드가 없었다 — 11/3에 번인 기능을 추가하면서 빠뜨림).
-                  hasBurnedSubtitle: burnSubtitle,
+                  // 2026-11-07 수정(성준님 제보 — SF_E01 "최종 OUTPUT"에 자막 2중): 이제 이 url
+                  // (ev.url = cut_NN_final.mp4)은 서버가 자막을 절대 안 구워 넣은 "오디오만
+                  // 합친" 파일이다(05_video/cut_NN.mp4로 그대로 복사되는 바로 그 파일이라,
+                  // reelFinalize.js 등 다른 파이프라인이 또 자막을 구워도 안 겹침) — 그래서
+                  // hasBurnedSubtitle 플래그 자체가 더 이상 필요 없다(이 클립엔 캡션이 없음).
+                  // 캡션이 들어간 버전은 ev.previewUrl(있으면, subtitlePreviewUrl state)로 따로
+                  // 보여준다 — 아래 setSubtitlePreviewUrl 참고.
+                }
+                if (ev.previewUrl) {
+                  setSubtitlePreviewUrl(p => ({ ...p, [cut.id]: `http://localhost:3001${ev.previewUrl}?t=${Date.now()}` }))
                 }
                 // 2026-10-09 발견(성준님 실측, SF_E109 컷1): 비릴스 컷은 버튼 안내문구("...
                 // cut_NN.mp4 위에 나레이션·효과음만 입힙니다")가 "바로 적용된다"는 뜻으로 읽히지만,
@@ -1650,12 +1658,9 @@ export default function VideoTab() {
                   setVideoClips(p => ({ ...p, [cut.id]: [...(p[cut.id] || []), narratedClip] }))
                 } else {
                   setVideoClips(p => ({ ...p, [cut.id]: [narratedClip] }))
-                  // forceCaptionBurned=burnSubtitle를 명시로 넘김 — setVideoClips 직후라
-                  // renderCutClips가 읽는 videoClips[cut.id]가 아직 방금 setVideoClips한
-                  // 값으로 안 바뀐 stale 클로저일 수 있어(실측: captionBurnedIntoBase가
-                  // false로 잘못 저장됨, 2026-11-06), 클립 배열에서 추론하는 대신 이 실행이
-                  // 이미 알고 있는 값을 그대로 전달한다.
-                  setTimeout(() => renderCutClips(cut, burnSubtitle), 150)
+                  // 2026-11-07: narratedClip(=05_video로 복사될 파일)엔 이제 자막이 전혀 안
+                  // 들어있으므로(위 참고) captionBurnedIntoBase는 항상 false로 고정.
+                  setTimeout(() => renderCutClips(cut, false), 150)
                 }
               } else {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
@@ -2996,6 +3001,18 @@ export default function VideoTab() {
                     </div>
                   )
                 })()}
+                {/* 2026-11-07 추가 — 위 "✅ 최종 합성본"은 2026-09-18 결정대로 항상 자막 없는
+                    순수 영상만 보여준다(그게 05_video로 복사되는 진짜 파일이라 맞는 설계).
+                    자막이 실제로 어떻게 구워지는지 확인하고 싶을 때만 보라고, 완전히 별개
+                    파일(cut_NN_preview.mp4, 05_video/최종본엔 전혀 안 섞임)을 여기 따로
+                    보여준다 — "최종 합성본"과 섞여 보이지 않게 라벨과 테두리색을 다르게 둠. */}
+                {!isReel && subtitlePreviewUrl[selCut.id] && (
+                  <div className={s.field} style={{ marginTop: 8 }}>
+                    <label style={{ color: '#f59e0b' }}>🔤 자막 미리보기 전용 — 이 파일은 최종본과 별개이며 05_video엔 반영되지 않습니다(설정 확인용)</label>
+                    <video key={subtitlePreviewUrl[selCut.id]} src={subtitlePreviewUrl[selCut.id]} controls
+                      style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6, border: '1px solid #f59e0b' }} />
+                  </div>
+                )}
                 {videoGenLog[selCut.id] && (
                   <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
                 )}

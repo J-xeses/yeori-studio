@@ -470,6 +470,15 @@ function buildAudioMergeArgs({
         '-c:a', 'aac', '-t', String(dur), outFile, '-y',
       ]
     }
+    // 2026-11-07 수정(성준님 제보 — SF_E01 컷2,5,6,7,8 "음성 미적용"): 이 분기는 원래
+    // "나레이션도 효과음도 없는 컷"(예: 자체 오디오가 없는 화면녹화)을 위한 것이라 -an으로
+    // 무음 처리했는데, 대사 컷을 _nr.mp3만 인정하도록 막은 수정(hasDialogue 가드, 같은 날
+    // 8차) 때문에 대사 컷은 nr.mp3가 없으면 hasVoice=false가 되어 이 분기를 타게 됐다 —
+    // 영상 자체에 이미 들어있는 대사 음성(bgHasAudio)까지 같이 지워버려 완전 무음이 됐다.
+    // bgHasAudio가 있으면 그 오디오를 그대로 살려야 한다(스트림 복사, 재인코딩 불필요).
+    if (bgHasAudio) {
+      return ['-i', videoFile, '-c:v', 'copy', '-c:a', 'copy', outFile, '-y']
+    }
     return ['-i', videoFile, '-c:v', 'copy', '-an', outFile, '-y']
   }
 
@@ -5539,41 +5548,72 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   }
 
   const bgHasAudio = await hasAudioStream(videoFile)
+  // 2026-11-07 수정(성준님 제보 — SF_E01 "최종 OUTPUT" 영상에 자막이 2중으로 보임, 업로드
+  // 직전 발견): cut_NN_final.mp4(이 outFile)는 이름 그대로 "최종" 파일이라, 성공 직후
+  // 클라이언트가 자동으로 05_video/cut_NN.mp4(원본 자리)에 그대로 덮어쓴다(2026-10-09
+  // 의도적 설계 — "나레이션이 최종 업로드에 반영 안 됨" 문제를 고치려고 만든 것, 그
+  // 자체는 맞는 설계). 문제는 2026-11-03에 자막 번인을 "같은 파일"에 같이 구워 넣기
+  // 시작하면서, 이 05_video/cut_NN.mp4를 원본으로 읽는 **다른 독립 파이프라인**
+  // (reelFinalize.js — 릴스뿐 아니라 SF_E01 같은 비릴스 "최종본 생성"에도 쓰임, 자기
+  // 나름의 손글씨 오버레이 자막을 또 굽는다)이 이미 자막 박힌 영상 위에 자기 자막을
+  // 또 구워서 2중으로 보였다. CheckupTab도 같은 이유로 겹쳐 보였었다(바로 전에 고침).
+  // 근본 수정: outFile(= 05_video로 복사될 "진짜 최종" 파일)은 항상 자막 없이(오디오만
+  // 합쳐서) 만들고, 자막은 그 위에 "미리보기 전용" 두 번째 파일(previewFile)에만 입혀서
+  // 05_video/reelFinalize 등 다른 파이프라인에는 전혀 섞이지 않게 분리한다.
   const args = buildAudioMergeArgs({
     videoFile, outFile, dur,
     audioFile: hasVoice ? audioFile : null, audioStart, audioEnd,
     sfxFile: sfxFile || null, sfxStart,
     resolvePath: (p) => path.isAbsolute(p) ? p : path.join(mp.DOWNLOADS, p),
     bgHasAudio, bgVolume, narrationVolume, sfxVolume,
-    subtitleFilter: subtitleFilter || undefined,
+    // subtitleFilter는 여기 안 넘김 — outFile(05_video로 흘러가는 "진짜" 파일)엔 자막을
+    // 절대 안 구움. 자막 미리보기는 아래에서 outFile 위에 따로 한 번 더 입힌다.
   })
 
-  const proc = spawn('ffmpeg', args, { windowsHide: true })
-  let errBuf = ''
+  const previewFile = hasSubtitle ? path.join(outDir, `cut_${padded}_preview.mp4`) : null
 
-  proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
+  const runFfmpeg = (ffmpegArgs) => new Promise((resolve) => {
+    const proc = spawn('ffmpeg', ffmpegArgs, { windowsHide: true })
+    let errBuf = ''
+    proc.stderr.on('data', chunk => { errBuf += chunk.toString() })
+    proc.on('close', code => resolve({ code, errBuf }))
+    proc.on('error', err => resolve({ code: 1, errBuf: err.message }))
+  })
 
-  proc.on('close', code => {
+  const { code, errBuf } = await runFfmpeg(args)
+  if (code !== 0) {
     cleanupSubtitleTemp()
-    if (code === 0) {
-      const url = `${mp.toMediaUrl(mp.outputDir(ep))}/cut_${padded}_final.mp4`
-      // outputPath(절대경로)도 같이 내려줌 — 클라이언트가 이 클립의 stagedPath를 못 채워서
-      // 파일이 멀쩡히 만들어졌는데도 "⚠ 서버 미반영" 경고가 뜨던 문제(2026-09-18, 사용자
-      // 실측: 컷20 성공 뒤에도 경고 표시)의 원인.
-      send({ type: 'complete', success: true, url, outputPath: outFile, message: '합성 완료!' })
-      console.log(`[run-ffmpeg] 완료: ${outFile}`)
-    } else {
-      send({ type: 'complete', success: false, message: 'FFmpeg 실패', detail: errBuf.slice(-300) })
-      console.error('[run-ffmpeg] 실패:', errBuf.slice(-300))
-    }
-    res.end()
-  })
+    send({ type: 'complete', success: false, message: 'FFmpeg 실패', detail: errBuf.slice(-300) })
+    console.error('[run-ffmpeg] 실패:', errBuf.slice(-300))
+    return res.end()
+  }
 
-  proc.on('error', err => {
-    cleanupSubtitleTemp()
-    send({ type: 'error', message: 'FFmpeg 실행 오류: ' + err.message })
-    res.end()
-  })
+  let previewOk = true
+  if (hasSubtitle) {
+    // outFile(방금 만든, 자막 없는 오디오 합성본) 위에 자막만 한 번 더 입혀 미리보기 전용
+    // 파일로 — 비디오만 재인코딩, 오디오는 그대로 복사(이미 최종 믹스 끝났으므로).
+    const previewArgs = [
+      '-i', outFile,
+      '-filter_complex', `[0:v]${subtitleFilter}[vout]`,
+      '-map', '[vout]', '-map', '0:a?',
+      '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20', '-pix_fmt', 'yuv420p',
+      '-c:a', 'copy', previewFile, '-y',
+    ]
+    const r2 = await runFfmpeg(previewArgs)
+    previewOk = r2.code === 0
+    if (!previewOk) console.error('[run-ffmpeg] 자막 미리보기 실패:', r2.errBuf.slice(-300))
+  }
+
+  cleanupSubtitleTemp()
+  const url = `${mp.toMediaUrl(mp.outputDir(ep))}/cut_${padded}_final.mp4`
+  const previewUrl = (hasSubtitle && previewOk)
+    ? `${mp.toMediaUrl(mp.outputDir(ep))}/cut_${padded}_preview.mp4` : null
+  // outputPath(절대경로)도 같이 내려줌 — 클라이언트가 이 클립의 stagedPath를 못 채워서
+  // 파일이 멀쩡히 만들어졌는데도 "⚠ 서버 미반영" 경고가 뜨던 문제(2026-09-18, 사용자
+  // 실측: 컷20 성공 뒤에도 경고 표시)의 원인.
+  send({ type: 'complete', success: true, url, outputPath: outFile, previewUrl, message: '합성 완료!' })
+  console.log(`[run-ffmpeg] 완료: ${outFile}${previewUrl ? ' (+ 자막 미리보기 ' + previewFile + ')' : ''}`)
+  res.end()
 })
 
 // ── ffprobe 길이 측정 헬퍼 ──────────────────────────────────────────
