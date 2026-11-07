@@ -389,6 +389,16 @@ export default function VideoTab() {
   const canvasRef = useRef(null)
   const textareaRef = useRef(null)
   const [renderLog, setRenderLog] = useState([])
+  // 2026-11-07 추가(성준님 제보 — "자막수정 타이핑 창 폭에 따라 줄바꿈 설정도 화면 자막과
+  // 연동되어야 하는데, 입력창 입력과 화면자막의 글자 줄배치가 서로 다른 상태"): 편집용
+  // textarea는 13px 고정 UI 폰트로 자기 CSS 폭에서 그냥 reflow될 뿐이라, 실제 캡션
+  // 폰트(fontSize)·실제 캡션 최대폭(W*0.86/0.80, drawPreview와 동일 비율)과 전혀 무관하게
+  // 줄이 꺾였다 — 타이핑할 때 보이는 줄바꿈과 실제 화면(캔버스)·번인 결과의 줄바꿈이
+  // 서로 다를 수밖에 없었음. 실제 영상이 화면에 찍히는 픽셀 폭(editBoxRef의 부모 =
+  // cutCardVideoInner)을 측정해 그 비율로 textarea의 font-size·폭을 실제 자막과 맞춤
+  // (아래 subtitleEditBox textarea의 style 참고) — 같은 브라우저 텍스트 레이아웃 엔진을
+  // 쓰므로 폰트·폭만 맞추면 줄바꿈 지점도 사실상 그대로 일치한다.
+  const [editBoxVideoWidth, setEditBoxVideoWidth] = useState(0)
 
   // 하드코딩된 '9:16' 기본값이 아니라 에피소드 콘텐츠 유형 기준 실제 비율로 시작
   // (LF_YU 같은 16:9 유튜브 롱폼 에피소드에서도 항상 9:16으로 뜨던 문제, 2026-09-12 발견).
@@ -2356,8 +2366,26 @@ export default function VideoTab() {
                         <canvas ref={canvasRef} width={1920} height={1080} className={s.overlayCanvas} />
                       </div>
                     )}
-                    {isSelected && subtitleEnabled && subtitleEditMode && (
+                    {isSelected && subtitleEnabled && subtitleEditMode && (() => {
+                      // editBoxVideoWidth(실제 영상이 화면에 찍히는 CSS 픽셀 폭) 기준으로
+                      // drawPreview()·ffmpeg 번인과 같은 비율(W*0.86 세로형/0.80 가로형)을
+                      // textarea 줄바꿈 폭으로, fontSize도 같은 축척으로 적용.
+                      const wrapScale = editBoxVideoWidth ? editBoxVideoWidth / 1920 : 1
+                      const textMaxWidthPx = editBoxVideoWidth
+                        ? Math.round(editBoxVideoWidth * (aspectRatio === '16:9' ? 0.80 : 0.86))
+                        : null
+                      const editFontPx = Math.max(10, Math.round(fontSize * wrapScale))
+                      return (
                       <div
+                        ref={el => {
+                          if (!el) return
+                          if (!el.parentElement) return
+                          const measure = () => setEditBoxVideoWidth(el.parentElement.clientWidth || 0)
+                          measure()
+                          const ro = new ResizeObserver(measure)
+                          ro.observe(el.parentElement)
+                          return () => ro.disconnect()
+                        }}
                         className={s.subtitleEditBox}
                         style={{
                           bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`,
@@ -2369,6 +2397,10 @@ export default function VideoTab() {
                         <textarea
                           ref={textareaRef}
                           className={s.subtitleEditInput}
+                          style={textMaxWidthPx ? {
+                            width: textMaxWidthPx, maxWidth: '100%', margin: '0 auto', display: 'block',
+                            fontSize: editFontPx, fontFamily: `"${font}", sans-serif`, lineHeight: 1.32,
+                          } : undefined}
                           rows={1}
                           value={previewText}
                           onChange={e => setPreviewText(e.target.value)}
@@ -2419,7 +2451,8 @@ export default function VideoTab() {
                           </button>
                         </div>
                       </div>
-                    )}
+                      )
+                    })()}
                   </div>
                 ) : (
                   <div className={s.cutCardVideoEmpty}>

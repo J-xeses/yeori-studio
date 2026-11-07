@@ -6253,7 +6253,7 @@
           },
           "captionSegTiming": [
             [
-              1.5,
+              3.5,
               10
             ]
           ],
@@ -12118,7 +12118,7 @@
       },
       "captionSegTiming": [
         [
-          1.5,
+          3.5,
           10
         ]
       ],
@@ -12276,7 +12276,7 @@
   "videoSettings": {
     "subtitleEnabled": true,
     "font": "Nanum Gothic",
-    "fontSize": 58,
+    "fontSize": 50,
     "color": "#ffffff",
     "bgStyle": "반투명 직각 박스",
     "boxColor": "#000000",
@@ -12356,7 +12356,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-07T03:55:48.078Z",
+  "savedAt": "2026-11-07T05:29:29.952Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -12435,14 +12435,14 @@
       ],
       "cut-6": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/06_publishing/cut_06_final.mp4?t=1794023323099",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E01/06_publishing/cut_06_final.mp4?t=1794028747287",
           "name": "FFmpeg 합성 (cut_06_final.mp4)",
           "duration": 10,
           "trimStart": 0,
           "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "9:16",
-          "createdAt": 1794023323123,
+          "createdAt": 1794028747314,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E01\\06_publishing\\cut_06_final.mp4",
           "keepAudio": true,
           "hasBurnedSubtitle": true
@@ -12485,7 +12485,9 @@
     },
     "selectedCutId": "cut-7",
     "subtitles": {
-      "cut-1": ""
+      "cut-1": "",
+      "cut-5": "인플루언서 생활이, 가끔은 인형이 된 \n기분이라니까",
+      "cut-6": "어떤 음료수보다, 할머니가 끓여주신 \n이 시원한 보리차가 난 훨씬 좋아."
     }
   },
   "ttsTabState": {

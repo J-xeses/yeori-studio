@@ -454,7 +454,17 @@ export default function CheckupTab() {
                     onEnded={handleEnded} onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={(e) => setDuration(e.currentTarget.duration || 0)}
                     onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} />
-                  {subtitleEnabled && captionText && (
+                  {/* 2026-11-07 추가(성준님 제보 — "전체 이어보기에서 자막 겹침", 업로드 전 QA
+                      중 발견): VideoTab.jsx의 "나레이션·효과음 입히기"가 SF/LF 컷에 실제
+                      ffmpeg drawtext로 자막을 영상 픽셀에 구워 넣으면(2026-11-03~), 그 결과가
+                      이 탭이 재생하는 videoUrl과 같은 05_video/cut_NN.mp4 자리에 그대로
+                      들어간다(render-cut-clips가 덮어씀) — 이 탭은 그 사실을 몰라서 자기
+                      캡션 오버레이(아래 captionOverlay div)를 똑같은 텍스트로 또 그려,
+                      영상에 이미 박힌 글자 위에 겹쳐 보였다. VideoTab이 같은 문제를 막으려고
+                      쓰던 것과 같은 신호(cut.captionBurnedIntoBase, 번인 성공 시
+                      studio-state에 영속 저장됨)를 여기서도 그대로 참조 — 이미 번인된 컷은
+                      이 탭의 오버레이를 꺼서 중복을 막는다. */}
+                  {subtitleEnabled && captionText && !activeCut?.captionBurnedIntoBase && (
                     // 2026-10-10 실측: 9/15에 fontSize/720 cqh로 "VideoTab 캔버스와 같은 비율"을
                     // 맞췄다고 적어뒀지만, VideoTab의 캔버스는 프레임 전체가 아니라 .subtitleDisplay
                     // (height:30%, 자막 전용 하단 띠) 안에서 object-fit:contain되는 걸 놓쳤다 —

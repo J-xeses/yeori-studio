@@ -142,6 +142,15 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
   const pad = Math.round(fSize * 0.28)
   // VideoTab.jsx drawPreview()와 같은 비율(세로형 0.86 / 가로형 0.80) — 실제 영상의
   // 가로세로를 직접 보고 판정(aspectRatio UI 토글이 아니라 실측값이라 더 신뢰할 수 있음).
+  // 2026-11-07 재검증(성준님 제보 — 직접 두 줄로 입력한 자막이 또 세 줄로 쪼개짐):
+  // "videoHeight 기준으로 스케일하면 캔버스와 같은 좌표계가 될 것"이라 보고 한 번
+  // videoWidth 대신 videoHeight*scale로 바꿔봤는데, 실측(브라우저에서 실제 fontSize=39로
+  // 직접 measureText) 결과 그건 틀렸다 — 미리보기 캔버스(1920×1080 고정, CSS로 실제
+  // 플레이어 박스에 늘어나 맞춰짐)와 실제 영상 픽셀 사이엔 X·Y가 서로 다르게 늘어날 수
+  // 있어 단일 배율로 안 맞는다. 실측 기준은 "글자가 실제 영상 프레임 폭을 벗어나는가"
+  // 하나뿐 — videoWidth(진짜 가로 픽셀)에 비율을 곱한 게 맞는 상한선이었다(실측: 컷6
+  // "어떤 음료수보다, 할머니가 끓여주신 이 시원한"이 fontSize 39에서 736px로 720px
+  // 프레임 자체보다 넓어서, 사람이 그대로 한 줄로 써도 줄바꿈이 필요한 게 맞았음).
   const maxTextWidth = (typeof videoWidth === 'number' && videoWidth > 0)
     ? videoWidth * ((videoHeight >= videoWidth) ? 0.86 : 0.80)
     : Infinity
