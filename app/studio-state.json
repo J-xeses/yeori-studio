@@ -1,9 +1,9 @@
 {
-  "activeTab": "studio",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
-    "remainingChars": 89927
+    "remainingChars": 89229
   },
   "activeEpisodeId": "ep_1790664275118",
   "openTabIds": [
@@ -12222,14 +12222,189 @@
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
-    "selectedCutId": null,
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
-    "g3Confirmed": {},
-    "focusCutId": null
+    "g3Confirmed": {
+      "cut-1": true,
+      "cut-2": true,
+      "cut-3": true,
+      "cut-4": true,
+      "cut-5": true,
+      "cut-6": true,
+      "cut-7": true
+    },
+    "focusCutId": null,
+    "tracks": {
+      "cut-1__v1": [
+        {
+          "id": "track_1794055394007_h99c",
+          "type": "narration",
+          "text": "나른한 오후~~. 왠지 모르게 밖에 나가고 싶어져.",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_01_track_1794055394007_h99c.mp3?t=1794055506563",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.8,
+            "stability": 55,
+            "similarity": 77
+          }
+        }
+      ],
+      "cut-2__v1": [
+        {
+          "id": "track_1794055357873_erd6",
+          "type": "narration",
+          "text": "오늘 따라~~,, 바람이,,, 좋다~~",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_02_track_1794055357873_erd6.mp3?t=1794057326284",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.75,
+            "stability": 53,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-3__v1": [
+        {
+          "id": "track_1794057341321_20mq",
+          "type": "narration",
+          "text": "예쁜 것들은~ 왜 이렇게 금방 지나가 버리는 걸까~!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_03_track_1794057341321_20mq.mp3?t=1794057365725",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-4__v1": [
+        {
+          "id": "track_1794057372116_dpx6",
+          "type": "narration",
+          "text": "여기~,,, 자 주 오고 싶다,,,",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_04_track_1794057372116_dpx6.mp3?t=1794057567830",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.8,
+            "stability": 45,
+            "similarity": 85
+          }
+        }
+      ],
+      "cut-5__v1": [
+        {
+          "id": "track_1794057580492_bgb5",
+          "type": "narration",
+          "text": "됐다,,, 그냥~~, 눈으로 담짜~!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_05_track_1794057580492_bgb5.mp3?t=1794057745065",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-6__v1": [
+        {
+          "id": "track_1794057752785_jps7",
+          "type": "narration",
+          "text": "이런 오후가 있어서,,, 다행이라고 생각했다~!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_06_track_1794057752785_jps7.mp3?t=1794057768127",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 55,
+            "similarity": 75
+          }
+        }
+      ],
+      "cut-7__v1": [
+        {
+          "id": "track_1794057774065_vn52",
+          "type": "dialogue",
+          "text": "너... 오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐~~, 오후 4시 쯤~!",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/03_audio/tts-previews/cut_07_track_1794057774065_vn52.mp3?t=1794057861112",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 40,
+            "similarity": 75
+          }
+        }
+      ]
+    },
+    "voiceTabs": {
+      "cut-1": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-3": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-4": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-5": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-6": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ],
+      "cut-7": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "mergedUrls": {
+      "cut-1__v1": "blob:http://localhost:5173/43286b45-7755-4b04-b87a-0adab69aa59a",
+      "cut-2__v1": "blob:http://localhost:5173/9b773320-9ffa-493e-a8f2-d0330ae77b6b",
+      "cut-3__v1": "blob:http://localhost:5173/41eae0b5-95ab-42d9-81f1-6e7240a99b4c",
+      "cut-4__v1": "blob:http://localhost:5173/4c078af8-972b-49b2-bca8-fb766bce70e4",
+      "cut-5__v1": "blob:http://localhost:5173/14afc644-92ef-49e8-89a7-f1cfd629c0c2",
+      "cut-6__v1": "blob:http://localhost:5173/b531e4c0-df0f-495d-a27c-f818be3225ce",
+      "cut-7__v1": "blob:http://localhost:5173/62aafea4-76b3-4e40-bbde-cbbfb9e3d88e"
+    }
   },
   "voiceInsertState": {
     "tracks": {}

@@ -1384,7 +1384,7 @@
   "SF_E02": {
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-11-07T12:32:14.028Z",
+      "updatedAt": "2026-11-07T13:22:28.473Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_05_a.jpg",
@@ -1424,15 +1424,57 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_05_b.jpg"
+      "selectedImage": "cut_05_b.jpg",
+      "g3": true
     },
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-11-07T07:06:57.977Z"
+      "updatedAt": "2026-11-07T13:22:51.861Z",
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_06_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 1,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "trend": 2
+          },
+          "total": 94,
+          "note": "",
+          "scoredAt": "2026-11-07T12:36:50.531Z"
+        },
+        "1": {
+          "filename": "cut_06_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 1,
+            "background": 1,
+            "trend": 2
+          },
+          "total": 93,
+          "note": "",
+          "scoredAt": "2026-11-07T12:36:50.531Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_06_a.jpg",
+      "g3": true
     },
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-07T11:58:46.129Z",
+      "updatedAt": "2026-11-07T12:45:10.838Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_01_a.jpg",
@@ -1454,11 +1496,12 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_01_a.jpg"
+      "selectedImage": "cut_01_a.jpg",
+      "g3": true
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-07T12:06:14.785Z",
+      "updatedAt": "2026-11-07T13:15:33.913Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -1498,11 +1541,12 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_02_a.jpg"
+      "selectedImage": "cut_02_a.jpg",
+      "g3": true
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-07T12:19:27.330Z",
+      "updatedAt": "2026-11-07T13:16:09.780Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_03_a.jpg",
@@ -1542,11 +1586,12 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_03_b.jpg"
+      "selectedImage": "cut_03_b.jpg",
+      "g3": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-07T12:20:32.885Z",
+      "updatedAt": "2026-11-07T13:19:36.028Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_04_a.jpg",
@@ -1586,17 +1631,18 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_04_b.jpg"
+      "selectedImage": "cut_04_b.jpg",
+      "g3": true
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-11-07T12:35:49.200Z",
+      "updatedAt": "2026-11-07T13:24:24.111Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_07_a.jpg",
           "scores": {
             "face": 2,
-            "outfit": 1,
+            "outfit": 2,
             "proportion": 2,
             "hair": 2,
             "action": 2,
@@ -1606,9 +1652,9 @@
             "background": 2,
             "trend": 2
           },
-          "total": 94,
+          "total": 100,
           "note": "",
-          "scoredAt": "2026-11-07T12:35:47.753Z"
+          "scoredAt": "2026-11-07T12:40:18.599Z"
         },
         "1": {
           "filename": "cut_07_b.jpg",
@@ -1620,17 +1666,18 @@
             "action": 2,
             "mood": 2,
             "shot": 2,
-            "camera": 1,
+            "camera": 2,
             "background": 1,
             "trend": 2
           },
-          "total": 93,
+          "total": 96,
           "note": "",
-          "scoredAt": "2026-11-07T12:35:47.753Z"
+          "scoredAt": "2026-11-07T12:40:18.599Z"
         }
       },
-      "g2": false,
-      "selectedImage": null
+      "g2": true,
+      "selectedImage": "cut_07_a.jpg",
+      "g3": true
     }
   },
   "SF_E99_TEST": {
