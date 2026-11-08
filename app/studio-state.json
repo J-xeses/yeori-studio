@@ -1,5 +1,5 @@
 {
-  "activeTab": "retention",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12675,7 +12675,7 @@
       "cut-8": true,
       "cut-2": true
     },
-    "selectedCutId": "cut-2",
+    "selectedCutId": "cut-8",
     "subtitles": {
       "cut-8": "오늘, 이런 시간 없었다면, 내일은 꼭 \n만들어봐. 오후 4시쯤."
     }

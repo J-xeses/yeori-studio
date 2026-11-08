@@ -638,27 +638,20 @@ soft bright natural smile forming,
 like turning to tell a close friend something.
 
 Next 3-8s: she speaks brightly —
-"너... 오늘, 이런 시간 없었다면...
-내일은 꼭 만들어봐. 오후 4시쯤."
-bright and natural, like talking to a close friend.
-Final 8-10s: warm smile, direct gaze — 여운 2초.
-
-
-First 0-3s: she sits quietly gazing at city view.
-
-Next 3-8s: she turns toward camera, smiles naturally —
-"너... 오늘, 이런 시간 없었다면...
+"오늘, 이런 시간 없었다면...
 내일은 꼭 만들어봐. 오후 4시쯤."
 bright and natural, like talking to a close friend.
 
 Final 8-10s: warm smile, direct gaze — 여운 2초.
+
+
 
 
 전체 컷 요약
 | 컷   | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |
 |-----|------------------|------|--------|--------|-----------|--------|--------|------|
 | C01 | 성수동 오후 4시  |  8s   | YR_VD  | LOOK02 | SH_FS       | CA_ST  | ❌     | 신규 |
-| C02 |                       |  6s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |
+| C02 | 성수동 상공비행  |  6s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |
 | C03 | 팝업스토어 거리  |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_TR  | ❌     | 신규 |
 | C04 | 버킷 플라워 꽃집 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |
 | C05 | 삼청동 감성 카페 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |
