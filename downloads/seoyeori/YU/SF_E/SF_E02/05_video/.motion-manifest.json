@@ -4,5 +4,35 @@
     "motion": null,
     "baked": true,
     "producedAt": "2026-11-08T03:17:29.924Z"
+  },
+  "2": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-08T05:07:19.958Z"
+  },
+  "3": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-08T05:11:29.449Z"
+  },
+  "4": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-08T05:16:07.205Z"
+  },
+  "5": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-08T05:19:54.371Z"
+  },
+  "6": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-08T05:20:34.693Z"
   }
 }
