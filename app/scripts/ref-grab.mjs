@@ -296,6 +296,7 @@ function writeIndex(list) {
     <input type="search" id="pq" placeholder="핀터레스트 검색어 (예: text reveal teaser)" style="width:260px;background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 8px">
     <button id="pgo" style="background:var(--panel2);color:var(--tx);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer">📌 핀터레스트 열기</button>
     <a class="bm" id="bm" href="#" title="이 버튼을 크롬 북마크바로 끌어다 놓으세요. 인스타 저장 컬렉션·유튜브 재생목록·핀터레스트 보드 화면에서 누르면 보이는 목록이 수집함에 담깁니다">📥 담기 (북마크바로 끌어 놓기)</a>
+    <a class="bm" href="/collect-guide" target="_blank" style="cursor:pointer;border-style:solid" title="검색·담기·수집함 연동 사용법">❓ 가이드</a>
     <span class="hint">↑↓ 이동 · Space 재생/정지 · M 소리 · 추가: ref-grab.bat</span></header>
   <aside class="side">
     <div class="set">
@@ -427,7 +428,7 @@ function cload() {
   return fetch(API + '/api/collect?board=1').then(r => r.json()).then(d => {
     C = d.items || []
     const st = d.status || {}, cn = st.counts || {}
-    $('cst').textContent = '· 대기 ' + C.length + '개' + (cn.new ? ' · 정리 중 ' + cn.new : '') + (st.last ? ' · 마지막 ' + st.last.at.slice(5, 16).replace('T', ' ') : '')
+    $('cst').textContent = '· 대기 ' + C.length + '개' + (cn.new ? ' · 정리 중 ' + cn.new : '') + (st.last ? ' · 마지막 ' + new Date(st.last.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '')
     crender()
   }).catch(() => { $('clist').innerHTML = '<div class="empty">스튜디오 서버(:3001)가 꺼져 있어 수집함을 못 불러왔습니다</div>' })
 }

@@ -12,11 +12,12 @@
     const plat = el.dataset.platform
     el.innerHTML = `<div class="cp-hd"><button class="btn" data-run>🔄 지금 가져오기·정리</button>
       <a class="btn" href="/downloads/_shared/references/library/index.html" target="_blank" style="text-decoration:none">📥 담기 버튼 설치·레퍼런스 보드</a>
+      <a class="btn" href="/collect-guide" target="_blank" style="text-decoration:none">❓ 가이드</a>
       <span class="muted" data-st style="font-size:12px"></span></div><div class="card cp-list" data-list>불러오는 중…</div>`
     const load = () => fetch('/api/collect?platform=' + plat).then((r) => r.json()).then((d) => {
       const items = d.items || []
       const last = d.status?.last
-      el.querySelector('[data-st]').textContent = `${items.length}건` + (last ? ` · 마지막 정리 ${last.at.slice(5, 16).replace('T', ' ')}` : '') +
+      el.querySelector('[data-st]').textContent = `${items.length}건` + (last ? ` · 마지막 정리 ${new Date(last.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '') +
         (plat === 'youtube' && !(d.status?.sources?.youtube || []).length ? ' · 유튜브 "벤치마킹 영상" 재생목록 화면에서 📥 담기를 한 번 누르면 이후 자동으로 들어옵니다(일부공개)' : '') +
         (plat === 'instagram' ? ' · 인스타는 저장 컬렉션 화면에서 📥 담기를 누를 때만 들어옵니다(로그인 필요)' : '')
       el.querySelector('[data-list]').innerHTML = items.length ? items.map((e) => `<div class="cp-it">

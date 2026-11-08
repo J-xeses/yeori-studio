@@ -132,6 +132,7 @@ app.use('/assets/fonts', express.static(path.join(ROOT, 'assets', 'fonts')))
 // 데이터: downloads/seoyeori/IG/_account/ops.json (server/lib/instaOps.js, rev 확인 저장)
 app.get('/insta-ops', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'insta-ops.html')))
 app.get('/collect-panel.js', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'collect-panel.js')))   // 운영실 공통 📥 수집함 패널(2026-11-06)
+app.get('/collect-guide', (_req, res) => res.sendFile(path.join(__dirname, 'pages', 'collect-guide.html')))   // 수집함·레퍼런스 보드 사용 가이드(2026-11-08)
 app.get('/api/insta-ops', (_req, res) => res.json({ ops: loadOps(), photos: listProfilePhotos() }))
 app.put('/api/insta-ops', (req, res) => {
   try { const out = saveOps(req.body); res.json({ ok: true, rev: out.rev, savedAt: out.savedAt }) }
