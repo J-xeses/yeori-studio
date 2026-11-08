@@ -13,6 +13,8 @@ import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, l
 import { renderTrackMatte, renderTrackMattePreview, listTrackMatteResults, loadTrackMatteConfig } from './lib/trackMatte.js'
 import { buildSubtitleDrawtextFilter } from './lib/subtitleBurn.js'
 import { listSignatures, saveSignature, deleteSignature, applySignatureAsSnippet } from './lib/signatureRefs.js'
+import { listCameraMoves, saveCameraMove, deleteCameraMove, buildCameraMoveCut } from './lib/cameraMoves.js'
+import { insertCut } from './lib/insertCut.js'
 import { TRIGGER_ACTIONS, VFX_PRESETS, SCENE_B_FASHION_PRESETS, FREEZE_TECHNIQUE_PRESETS, buildRevealCut, buildFreezeBeatCut, buildFreezeKeyframeAngles, LK_SPACE_CODES, LK_SEASON_CODES, nextLookId } from './lib/changeEffects.js'
 import { listCustomTriggers, listCustomVfx, addCustomTrigger, addCustomVfx, deleteCustomTrigger, listCustomFreezeEvents, addCustomFreezeEvent, deleteCustomFreezeEvent, listCustomFreezeLocations, addCustomFreezeLocation, deleteCustomFreezeLocation } from './lib/customChangePresets.js'
 import { listRefImages, listAllRefs, addRefImage, deleteRefImage, updateRefCaption, moveRefImage } from './lib/directionRefs.js'
@@ -7299,6 +7301,40 @@ app.delete('/api/signature-refs/:id', (req, res) => {
 app.post('/api/signature-refs/apply', (req, res) => {
   try { res.json(applySignatureAsSnippet(req.body?.id)) }
   catch (err) { res.status(404).json({ error: err.message }) }
+})
+
+// ── 카메라 이동연출 레퍼런스(2026-11-08) — lib/cameraMoves.js 참조 ────────────
+// 시그 레퍼런스와 동일 패턴(GET 목록/POST 저장/DELETE 제거)이지만 저장 축이 CH/LOOK/SP가
+// 아니라 캐릭터·사건·의상과 무관한 "카메라 무브 자체" — build는 snippet이 아니라 완성된
+// IP/VP까지 돌려준다(체인지·프리즈 build와 동일하게, studio-state는 직접 안 건드림).
+app.get('/api/camera-moves', (_req, res) => {
+  try { res.json({ techniques: listCameraMoves() }) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/camera-moves', (req, res) => {
+  try { res.json({ ok: true, saved: saveCameraMove(req.body || {}) }) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+app.delete('/api/camera-moves/:id', (req, res) => {
+  try { deleteCameraMove(req.params.id); res.json({ ok: true }) }
+  catch (err) { res.status(500).json({ error: err.message }) }
+})
+app.post('/api/camera-moves/build', (req, res) => {
+  try { res.json(buildCameraMoveCut(req.body || {})) }
+  catch (err) { res.status(400).json({ error: err.message }) }
+})
+
+// ── 컷 끼워넣기(2026-11-08) — 시그/체인지/프리즈/카메라 4모드 공유 "연결루트" ────────
+// lib/insertCut.js 참조. commit:false(기본)면 디스크 안 건드리고 계획만 반환(미리보기),
+// commit:true면 대본 번호 재배열+파일 이동+gpoints 이동까지 실제 실행.
+app.post('/api/insert-cut', (req, res) => {
+  const { episodeCode, afterCutNo, newCutBlockText, scriptFileName, commit } = req.body || {}
+  try {
+    const plan = insertCut({ episodeCode, afterCutNo, newCutBlockText, scriptFileName }, { dryRun: !commit })
+    res.json({ ok: true, committed: !!commit, plan })
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
 })
 
 // ── 체인지(트랜지션) 조합 생성기(2026-10-11) — lib/changeEffects.js 참조 ──────

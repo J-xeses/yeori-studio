@@ -7,6 +7,8 @@ import { useApp } from '../context/AppContext'
 import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import { claudeMessages } from '../lib/api'
+import { resolveEpisodeCode } from '../lib/episodeCode'
+import { buildV3CutBlock } from './ScriptGenTab'
 import styles from './RetentionHookTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -183,7 +185,7 @@ const HOOK_CONFIG = [
 
 export default function RetentionHookTab() {
   const { state, dispatch } = useApp()
-  const [mode, setMode] = useState('hook')   // 'hook' | 'signature' | 'change' — 2026-10-10/11 모드 전환
+  const [mode, setMode] = useState('hook')   // 'hook' | 'signature' | 'change' | 'freeze' | 'camera' — 2026-10-10/11/11-08 모드 전환
   const [hooks, setHooks] = useState(
     Object.fromEntries(HOOK_CONFIG.map(h => [h.key, { text: '', emotions: [] }]))
   )
@@ -279,7 +281,7 @@ ${hookSummary}
       <EpisodeInfoSidebar maxStage={0} />
       <div className={styles.wrap}>
       <div className={`${styles.header} ${styles.topBar}`}>
-        <h2 className={styles.title}>{mode === 'hook' ? '리텐션 훅 설계' : mode === 'signature' ? '✨ 시그 레퍼런스' : mode === 'freeze' ? '🧊 프리즈 비트 생성기' : '🔄 체인지 조합 생성기'}</h2>
+        <h2 className={styles.title}>{mode === 'hook' ? '리텐션 훅 설계' : mode === 'signature' ? '✨ 시그 레퍼런스' : mode === 'freeze' ? '🧊 프리즈 비트 생성기' : mode === 'camera' ? '🎥 카메라 연출' : '🔄 체인지 조합 생성기'}</h2>
         <p className={styles.desc}>
           {mode === 'hook'
             ? '4구간 훅을 설정하면 서여리 말투로 CUT 스크립트를 자동 생성합니다 — 대본의 BEAT 태그와 연동됩니다'
@@ -287,6 +289,8 @@ ${hookSummary}
             ? '몽환·절정 구간 연출 기법(시간멈춤·초근접·앵글반전 등)을 저장해두고, 시그 컷 프롬프트에 적용합니다'
             : mode === 'change'
             ? '트리거 액션×VFX×Scene B 조합으로 리빌 컷 하나(IP/VP/오디오)를 생성합니다 — 같은 구도 고정 + 별도 컷 생성 원칙(R07 패턴)'
+            : mode === 'camera'
+            ? '캐릭터·사건·의상과 무관한 "카메라 무브 자체"(드론 급상승·급강하, 돌리줌아웃 등)를 저장해두고, 새 컷(IP/VP/CA)으로 생성합니다'
             : '빠르게 움직이다가 돌발상황이 터지는 순간 시간이 멈추고 카메라만 도는 컷을 생성합니다 — 의상/배경 변화 없이 "사건"만 얼어붙습니다'}
         </p>
         <div className={styles.modeToggle}>
@@ -294,6 +298,7 @@ ${hookSummary}
           <button className={`${styles.modeBtn} ${mode === 'signature' ? styles.modeBtnActive : ''}`} onClick={() => setMode('signature')}>✨ 시그 레퍼런스</button>
           <button className={`${styles.modeBtn} ${mode === 'change' ? styles.modeBtnActive : ''}`} onClick={() => setMode('change')}>🔄 체인지 생성기</button>
           <button className={`${styles.modeBtn} ${mode === 'freeze' ? styles.modeBtnActive : ''}`} onClick={() => setMode('freeze')}>🧊 프리즈 비트</button>
+          <button className={`${styles.modeBtn} ${mode === 'camera' ? styles.modeBtnActive : ''}`} onClick={() => setMode('camera')}>🎥 카메라 연출</button>
         </div>
       </div>
 
@@ -359,6 +364,7 @@ ${hookSummary}
       {mode === 'signature' && <SignatureRefPanel state={state} dispatch={dispatch} />}
       {mode === 'change' && <ChangeComboPanel state={state} dispatch={dispatch} />}
       {mode === 'freeze' && <FreezeBeatPanel state={state} dispatch={dispatch} />}
+      {mode === 'camera' && <CameraMovePanel state={state} dispatch={dispatch} />}
       </div>
       </div>
     </div>
@@ -407,13 +413,8 @@ const SIGNATURE_TECHNIQUE_PRESETS = [
   },
   // 2026-10-16 보강 — direction-material-bank.md에 카탈로그만 돼 있고 이 피커엔 아직 안 올라와
   // 있던 기법들을 실제로 골라 쓸 수 있게 추가(성준님 피드백: "시그 레퍼런스도 좀더 보강했으면").
-  {
-    name: '극적 줌아웃 리빌 (지구까지 빠지기)',
-    description: '가까운 피사체에서 시작해 카메라가 빠르게 빠지며 지구 전체가 보이는 데까지 이어지는 돌리줌 — 오프닝 훅·엔딩 임팩트용(연출 재료 창고 ①, 2026-10-15 Instagram 레퍼런스)',
-    ch: 'extreme continuous dolly-zoom-out starting tight on her face, camera rapidly pulling back and ascending through the atmosphere, speed ramp acceleration, radial motion blur',
-    sp: 'OT.ST.NT (시작 공간은 실내외 무관, 카메라가 대기권 밖까지 빠짐)',
-    audioMotif: '시네마틱 휩 사운드만, 음악 없이',
-  },
+  // "극적 줌아웃 리빌"은 2026-11-08 "🎥 카메라 연출" 모드로 이전됨 — CH/LOOK 축이 아니라
+  // 순수 카메라 무브라 이 저장소(CH/LOOK_ID/SP)보다 그쪽이 맞는 집이었음.
   {
     name: '신화적 변신',
     description: '신화 속 존재(여신·정령 등)로 잠깐 변했다가 다시 돌아오는 극적 리빌(연출 재료 창고, 2026-10-13 리서치)',
@@ -645,6 +646,10 @@ function SignatureRefPanel({ state, dispatch }) {
             <div style={{ color: '#888', marginBottom: 4 }}>적용될 내용:</div>
             <pre className={styles.resultText} style={{ marginBottom: 8 }}>{preview.snippet}</pre>
             <button className={styles.genBtn} onClick={commitApply}>이 컷에 반영</button>
+            <InsertCutSection
+              cutPatch={{ beat: '시그', masterCode: { ch: preview.sig?.masterCodeTemplate?.ch || '', lookId: preview.sig?.masterCodeTemplate?.lookId || '', sp: preview.sig?.masterCodeTemplate?.sp || '' } }}
+              state={state}
+            />
           </div>
         )}
         {applyMsg && <div style={{ fontSize: 12, color: applyMsg.startsWith('✅') ? '#6ee7b7' : '#f09595' }}>{applyMsg}</div>}
@@ -953,6 +958,7 @@ function ChangeComboPanel({ state, dispatch }) {
             <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
           </div>
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
+          <InsertCutSection cutPatch={buildResult.cutPatch} state={state} />
         </div>
       )}
     </div>
@@ -1615,6 +1621,7 @@ function FreezeBeatPanel({ state, dispatch }) {
             <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
           </div>
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
+          <InsertCutSection cutPatch={buildResult.cutPatch} state={state} />
         </div>
       )}
 
@@ -1678,6 +1685,350 @@ function FreezeBeatPanel({ state, dispatch }) {
         techniquePresets={techniquePresets} techniqueRig={techniqueRig} orbitDegrees={orbitDegrees}
       />
     </div>
+    </div>
+  )
+}
+
+// ── 컷 끼워넣기 공유 섹션(2026-11-08) ────────────────────────────────────────
+// 시그/체인지/프리즈/카메라 4개 모드가 전부 쓰는 "연결루트" — 성준님: "컷 생성과정이 원래
+// 용도인데, 연출 보완·수정 시 중간에 넣을 수도 있는 기능", "다른 모드들도 전체 컷 연출 이후
+// 중간에 끼워넣을 수 있도록 연결루트가 있어야겠다". 각 모드의 build 결과(cutPatch: imagePrompt/
+// videoPrompt/masterCode/beat/duration/subtitle 등)를 받아, 지정한 컷 "다음"에 새 컷으로
+// 밀어넣는다 — 기존 "이 컷에 반영"(UPDATE_CUT 패치)과 별개의 보조 경로.
+// 번호를 밀면 02_images~07_output에 이미 생성된 cut_NN.* 파일과 gpoints.json도 같이 밀어야
+// 상태↔파일이 안 어긋난다(server/lib/insertCut.js 참고) — 그래서 "미리보기 → 확정" 2단계로,
+// 무엇이 바뀌는지(파일 몇 개·G포인트 몇 개가 밀리는지) 먼저 보여주고 사람이 확정해야 실행된다.
+function InsertCutSection({ cutPatch, state }) {
+  const cuts = state.cuts || []
+  const episodeCode = resolveEpisodeCode(state.episode)
+  const [afterCutId, setAfterCutId] = useState('')
+  const [plan, setPlan] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const [done, setDone] = useState('')
+
+  const afterCut = cuts.find((c) => c.id === afterCutId)
+
+  const preview = async () => {
+    setErr(''); setDone(''); setPlan(null)
+    if (!afterCut) { setErr('먼저 "다음에 끼워넣을" 기준 컷을 선택하세요'); return }
+    if (!episodeCode) { setErr('에피소드 코드를 확인할 수 없습니다'); return }
+    setBusy(true)
+    try {
+      const draftCut = {
+        ...cutPatch,
+        no: afterCut.no + 1,
+        character: cutPatch.character || '서여리',
+        scene: cutPatch.scene || `(${afterCut.cutTitle || afterCut.scene || `CUT${afterCut.no}`} 다음 — 신규 삽입 컷)`,
+        cutTitle: cutPatch.cutTitle || '',
+      }
+      const newCutBlockText = buildV3CutBlock(draftCut)
+      const r = await fetch(`${SERVER}/api/insert-cut`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ episodeCode, afterCutNo: afterCut.no, newCutBlockText, commit: false }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '미리보기 실패')
+      setPlan({ ...d.plan, newCutBlockText })
+    } catch (e) { setErr(e.message) } finally { setBusy(false) }
+  }
+
+  const commit = async () => {
+    if (!plan || !afterCut) return
+    setBusy(true); setErr('')
+    try {
+      const scriptFileName = plan.scriptFile?.split(/[\\/]/).pop()
+      const r = await fetch(`${SERVER}/api/insert-cut`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ episodeCode, afterCutNo: afterCut.no, newCutBlockText: plan.newCutBlockText, scriptFileName, commit: true }),
+      })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '실행 실패')
+      setDone(`✅ CUT${plan.newCutNo}으로 끼워넣었습니다 — 이후 컷 번호 ${plan.shiftedCutCount}개가 +1 밀렸습니다. 대본 탭에서 이 대본 파일을 다시 열면 반영된 걸 볼 수 있습니다.`)
+      setPlan(null); setAfterCutId('')
+    } catch (e) { setErr(e.message) } finally { setBusy(false) }
+  }
+
+  return (
+    <div style={{ marginTop: 10, borderTop: '1px dashed var(--border)', paddingTop: 10 }}>
+      <div style={{ fontSize: 10.5, color: '#888', marginBottom: 6 }}>
+        또는 — 기존 컷을 고치지 않고, 지정한 컷 "다음"에 새 컷으로 끼워넣기(전체 컷 연출이 끝난 뒤 보완·수정할 때 쓰는 보조 경로)
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={afterCutId}
+          onChange={(e) => { setAfterCutId(e.target.value); setPlan(null); setDone('') }}>
+          <option value="">이 컷 "다음"에 끼워넣기…</option>
+          {cuts.map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
+        </select>
+        <button className={styles.copyBtn} disabled={!afterCutId || busy} onClick={preview}>끼워넣기 미리보기</button>
+      </div>
+      {plan && (
+        <div style={{ fontSize: 11.5, color: '#c2c0b6', background: '#111', borderRadius: 6, padding: 10, marginTop: 8 }}>
+          <div>새 컷 번호: <b>CUT{plan.newCutNo}</b>{plan.shiftedCutCount > 0 && <> — 이후 컷 {plan.shiftedCutCount}개 번호가 +1 밀립니다</>}</div>
+          {plan.fileRenames.length > 0 && (
+            <div style={{ marginTop: 4, color: '#f0a050' }}>
+              ⚠️ 이미 생성된 파일 {plan.fileRenames.length}개도 같이 이름이 바뀝니다 (예: {plan.fileRenames[0].from} → {plan.fileRenames[0].to}{plan.fileRenames.length > 1 ? ` 등 ${plan.fileRenames.length}건` : ''})
+            </div>
+          )}
+          {plan.gpointShifts.length > 0 && <div style={{ marginTop: 2, color: '#f0a050' }}>⚠️ G포인트 승인 현황 {plan.gpointShifts.length}개 컷도 같이 밀립니다</div>}
+          {plan.fileRenames.length === 0 && plan.gpointShifts.length === 0 && <div style={{ marginTop: 4, color: '#6ee7b7' }}>뒤에 이미 생성된 파일이 없어 번호만 밀리고 끝납니다 — 안전합니다.</div>}
+          <button className={styles.genBtn} style={{ marginTop: 8, width: 'auto', padding: '8px 16px' }} disabled={busy} onClick={commit}>
+            {busy ? '실행 중…' : '확정 — 실제로 끼워넣기'}
+          </button>
+        </div>
+      )}
+      {err && <div className={styles.error} style={{ marginTop: 6 }}>{err}</div>}
+      {done && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 6 }}>{done}</div>}
+    </div>
+  )
+}
+
+// ── 카메라 연출 패널(2026-11-08) ────────────────────────────────────────────
+// 시그/체인지/프리즈 셋 다 "카메라가 어떻게 움직이는가"를 1급 데이터로 다루지 않아서 신설—
+// 캐릭터·사건·의상과 무관하게 "카메라 무브 자체"가 재사용 단위(server/lib/cameraMoves.js).
+// 성준님 교정: 끼워넣기(InsertCutSection)는 보조 경로일 뿐, 원래 용도는 다른 세 모드와
+// 동일하게 "이 컷에 반영"(지정한 기존 컷을 이 카메라 무브로 패치)이 기본.
+function CameraMovePanel({ state, dispatch }) {
+  const { refsMap: camImageRefs, reload: reloadCamImageRefs } = useDirectionRefs('camera')
+  const [techniques, setTechniques] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [editingImageFile, setEditingImageFile] = useState(null)
+  const [selectedId, setSelectedId] = useState('')
+  const [beforeDescKo, setBeforeDescKo] = useState('')
+  const [afterDescKo, setAfterDescKo] = useState('')
+  const [beforeDesc, setBeforeDesc] = useState('')
+  const [afterDesc, setAfterDesc] = useState('')
+  const [translating, setTranslating] = useState(false)
+  const [translateError, setTranslateError] = useState('')
+  const [sp, setSp] = useState('')
+  const [lookId, setLookId] = useState('')
+  const [beat, setBeat] = useState('훅')
+  const [duration, setDuration] = useState(3)
+  const [cpLine, setCpLine] = useState('')
+  const [buildResult, setBuildResult] = useState(null)
+  const [buildError, setBuildError] = useState('')
+  const [targetCutId, setTargetCutId] = useState('')
+  const [applyMsg, setApplyMsg] = useState('')
+
+  const load = () => {
+    setLoading(true)
+    fetch(`${SERVER}/api/camera-moves`).then((r) => r.json())
+      .then((d) => setTechniques(d.techniques || [])).catch(() => {}).finally(() => setLoading(false))
+  }
+  useEffect(() => { load() }, [])
+
+  const startNew = () => {
+    setEditing({ name: '', description: '', caCode: '', suggestedDuration: 3, audioMotif: '', ipTemplate: '', vpTemplate: '' })
+    setEditingImageFile(null)
+  }
+  const saveEditing = async () => {
+    if (!editing?.name?.trim()) return
+    await fetch(`${SERVER}/api/camera-moves`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editing),
+    })
+    if (editingImageFile) {
+      const ext = (editingImageFile.name.match(/\.([a-z0-9]+)$/i)?.[1] || 'jpg').toLowerCase().replace('jpeg', 'jpg')
+      await fetch(`${SERVER}/api/direction-refs/upload?group=camera&key=${encodeURIComponent(editing.name)}&ext=${ext}&caption=`, {
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: editingImageFile,
+      })
+      reloadCamImageRefs()
+    }
+    setEditing(null); setEditingImageFile(null)
+    load()
+  }
+  const removeTechnique = async (id) => {
+    await fetch(`${SERVER}/api/camera-moves/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    if (selectedId === id) setSelectedId('')
+    load()
+  }
+
+  // 2026-11-08 — 성준님 피드백("프롬프트 입력을 가이드 해줘야 수동입력을 하던가 하지, 영문
+  // 입력은 절차가 까다로운 방식"): 영문 직접 입력을 기본 경로로 두지 않고, 한글로 먼저 적으면
+  // Claude가 영문 장면 묘사로 바꿔주는 쪽을 기본으로 — 영문 칸은 그 결과를 확인·수정하는
+  // 용도로만 남긴다(훅 설계 모드의 claudeMessages 호출과 동일 패턴, API 키도 동일하게 공유).
+  const translateToEnglish = async () => {
+    setTranslateError('')
+    if (!state.apiKeys?.claude) { setTranslateError('Claude API 키를 입력하세요 (상단 API 바)'); return }
+    if (!beforeDescKo.trim() && !afterDescKo.trim()) { setTranslateError('이전/다음 장면을 한글로 먼저 적어주세요'); return }
+    setTranslating(true)
+    try {
+      const prompt = `당신은 AI 영상 생성(Veo/Flow)용 영어 프롬프트 작가입니다. 아래 한국어 장면 묘사를 영상 생성 프롬프트에 그대로 들어갈 수 있는 구체적인 영문 한 문장(또는 짧은 구문)으로 바꿔주세요 — 장소·인물·동작을 분명하게, 과장 없이 담백하게.
+
+[이전 장면]
+${beforeDescKo || '(없음 — 생략)'}
+
+[다음 장면]
+${afterDescKo || '(없음 — 생략)'}
+
+출력은 반드시 아래 두 줄 형식 그대로(다른 말 없이):
+BEFORE: (영문 한 문장)
+AFTER: (영문 한 문장)`
+      const res = await claudeMessages(state.apiKeys.claude, {
+        model: 'claude-sonnet-4-6', max_tokens: 400,
+        messages: [{ role: 'user', content: prompt }],
+      })
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || '번역 실패') }
+      const data = await res.json()
+      const text = data.content?.map((b) => b.text || '').join('') || ''
+      const before = text.match(/BEFORE:\s*(.+)/i)?.[1]?.trim()
+      const after = text.match(/AFTER:\s*(.+)/i)?.[1]?.trim()
+      if (before) setBeforeDesc(before)
+      if (after) setAfterDesc(after)
+      if (!before && !after) throw new Error('응답 형식을 못 읽었습니다 — 영문 칸에 직접 입력해주세요')
+    } catch (e) {
+      setTranslateError(e.message)
+    } finally {
+      setTranslating(false)
+    }
+  }
+
+  const doBuild = async () => {
+    setBuildError(''); setApplyMsg(''); setBuildResult(null)
+    if (!selectedId) { setBuildError('먼저 카메라 기법을 선택하세요'); return }
+    if (!beforeDesc.trim() || !afterDesc.trim()) { setBuildError('이전 장면 / 다음 장면 묘사(영문)를 채워주세요'); return }
+    const r = await fetch(`${SERVER}/api/camera-moves/build`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: selectedId, beforeDesc, afterDesc, sp, lookId, beat, duration, cpLine }),
+    })
+    const d = await r.json()
+    if (!r.ok) { setBuildError(d.error || '생성 실패'); return }
+    setBuildResult(d)
+  }
+
+  const commitApply = () => {
+    const cut = (state.cuts || []).find((c) => c.id === targetCutId)
+    if (!cut || !buildResult?.cutPatch) return
+    dispatch({ type: 'UPDATE_CUT', id: cut.id, p: buildResult.cutPatch })
+    setApplyMsg(`✅ CUT${cut.no}에 반영 완료`)
+  }
+
+  const selected = techniques.find((t) => t.id === selectedId)
+
+  return (
+    <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <div style={{ flex: '1 1 480px', minWidth: 320 }}>
+        <div className={styles.columns}>
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>카메라 기법 고르기</div>
+            <div className={styles.columnList}>
+              {loading && <div className={styles.desc}>불러오는 중…</div>}
+              {!loading && techniques.length === 0 && <div className={styles.desc}>아직 없습니다.</div>}
+              {techniques.map((t) => (
+                <div key={t.id} className={`${styles.columnItem} ${styles.cameraCard} ${selectedId === t.id ? styles.cameraCardSelected : ''}`}
+                  onClick={() => { setSelectedId(t.id); setBuildResult(null) }}>
+                  <div className={styles.columnItemLabel}>{t.name}</div>
+                  <div className={styles.columnItemDesc}>{t.description}</div>
+                  {t.originEpisode && <div className={styles.columnItemDesc} style={{ color: '#888' }}>출처: {t.originEpisode} 컷{t.originCutNo}</div>}
+                  <div style={{ fontSize: 10, color: '#888', marginTop: 2 }}>CA: {t.caCode || '(없음)'} · 기본 {t.suggestedDuration}초</div>
+                  <RefThumbStrip group="camera" itemKey={t.name} images={camImageRefs[refSlugKey(t.name)]} onUploaded={reloadCamImageRefs} uploadable={false} />
+                  <button type="button" onClick={(e) => { e.stopPropagation(); removeTechnique(t.id) }}
+                    style={{ fontSize: 9, color: '#f09595', background: 'none', border: 'none', cursor: 'pointer', marginTop: 4 }}>삭제</button>
+                </div>
+              ))}
+            </div>
+            {editing ? (
+              <div style={{ marginTop: 6 }}>
+                <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="이름(예: 롤러코스터 급선회)"
+                  value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+                <textarea className={styles.textarea} rows={2} placeholder="묘사 — 어떤 상황에 쓰는 카메라 무브인지"
+                  value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+                <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="CA 코드(예: CA_DR)"
+                  value={editing.caCode} onChange={(e) => setEditing({ ...editing, caCode: e.target.value })} />
+                <textarea className={styles.textarea} rows={3} style={{ marginBottom: 6 }}
+                  placeholder="IP 템플릿(영문, {{BEFORE}} 토큰 사용 가능)"
+                  value={editing.ipTemplate} onChange={(e) => setEditing({ ...editing, ipTemplate: e.target.value })} />
+                <textarea className={styles.textarea} rows={4} style={{ marginBottom: 6 }}
+                  placeholder="VP 템플릿(영문, {{BEFORE}}/{{AFTER}} 토큰 사용 가능)"
+                  value={editing.vpTemplate} onChange={(e) => setEditing({ ...editing, vpTemplate: e.target.value })} />
+                <input className={styles.textarea} style={{ marginBottom: 6 }} placeholder="오디오 모티프"
+                  value={editing.audioMotif} onChange={(e) => setEditing({ ...editing, audioMotif: e.target.value })} />
+                <label className={styles.columnAddBtn} style={{ display: 'block', textAlign: 'center', marginBottom: 6 }}>
+                  {editingImageFile ? `🖼 ${editingImageFile.name}` : '🖼 레퍼런스 이미지 첨부(선택)'}
+                  <input type="file" accept="image/*" style={{ display: 'none' }}
+                    onChange={(e) => setEditingImageFile(e.target.files[0] || null)} />
+                </label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className={styles.genBtn} style={{ marginBottom: 0 }} onClick={saveEditing}>저장</button>
+                  <button className={styles.copyBtn} onClick={() => { setEditing(null); setEditingImageFile(null) }}>취소</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className={styles.columnAddBtn} style={{ marginTop: 6 }} onClick={startNew}>+ 새 카메라 기법 추가</button>
+            )}
+          </div>
+
+          <div className={styles.column}>
+            <div className={styles.columnHeader}>카메라 이미지 리스트업</div>
+            <div className={styles.columnList} style={{ maxHeight: 'none' }}>
+              <DirectionRefGallery group="camera" refsMap={camImageRefs} reload={reloadCamImageRefs} />
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.result} style={{ marginTop: 14 }}>
+          <div className={styles.resultLabel}>새 컷 생성{selected ? ` — ${selected.name}` : ''}</div>
+          <p className={styles.desc} style={{ marginBottom: 10 }}>
+            이 카메라 무브 바로 앞·뒤에 오는 장면을 한글로 간단히 적으면, Claude가 IP·VP에 들어갈 영문 묘사로 바꿔줍니다 — 영문 칸은 그 결과를 확인·수정하는 용도입니다.
+          </p>
+          <textarea className={styles.textarea} rows={2} style={{ marginBottom: 6 }}
+            placeholder="이전 장면(한글 — 예: 성수동 거리, 여리가 뒷모습으로 멀어지는 중)"
+            value={beforeDescKo} onChange={(e) => setBeforeDescKo(e.target.value)} />
+          <textarea className={styles.textarea} rows={2} style={{ marginBottom: 6 }}
+            placeholder="다음 장면(한글 — 예: 팝업스토어 쇼윈도 앞에 멈춰선 여리)"
+            value={afterDescKo} onChange={(e) => setAfterDescKo(e.target.value)} />
+          <button type="button" className={styles.copyBtn} style={{ marginBottom: 10 }} disabled={translating} onClick={translateToEnglish}>
+            {translating ? '변환 중…' : '✨ 영문으로 변환'}
+          </button>
+          {translateError && <div className={styles.error} style={{ marginBottom: 10 }}>{translateError}</div>}
+          <textarea className={styles.textarea} rows={2} style={{ marginBottom: 6 }}
+            placeholder="이전 장면 묘사(영문 — 위 변환 결과, 직접 고쳐도 됩니다)"
+            value={beforeDesc} onChange={(e) => { setBeforeDesc(e.target.value); setBuildResult(null) }} />
+          <textarea className={styles.textarea} rows={2} style={{ marginBottom: 10 }}
+            placeholder="다음 장면 묘사(영문 — 위 변환 결과, 직접 고쳐도 됩니다)"
+            value={afterDesc} onChange={(e) => { setAfterDesc(e.target.value); setBuildResult(null) }} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+            <input className={styles.textarea} style={{ width: 'auto', minWidth: 140 }} placeholder="SP(공간 코드, 선택)"
+              value={sp} onChange={(e) => setSp(e.target.value)} />
+            <input className={styles.textarea} style={{ width: 'auto', minWidth: 100 }} placeholder="LOOK_ID(선택)"
+              value={lookId} onChange={(e) => setLookId(e.target.value)} />
+            <label style={{ fontSize: 11, color: '#888' }}>컷 길이(초)</label>
+            <input className={styles.textarea} style={{ width: 60 }} type="number" min={1} max={10}
+              value={duration} onChange={(e) => setDuration(Number(e.target.value) || 3)} />
+            <label style={{ fontSize: 11, color: '#888' }}>BEAT</label>
+            <select className={styles.textarea} style={{ width: 'auto' }} value={beat} onChange={(e) => setBeat(e.target.value)}>
+              {['훅', '긴장', '반전', '안정', '고조', '결말', '시그'].map((b) => <option key={b} value={b}>{b}</option>)}
+            </select>
+            <input className={styles.textarea} style={{ flex: 1, minWidth: 160 }} placeholder="자막(CP) — 선택"
+              value={cpLine} onChange={(e) => setCpLine(e.target.value)} />
+          </div>
+          <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} onClick={doBuild}>카메라 연출 컷 생성</button>
+          {buildError && <div className={styles.error} style={{ marginTop: 8 }}>{buildError}</div>}
+        </div>
+
+        {buildResult && (
+          <div className={styles.result}>
+            <div className={styles.resultLabel}>미리보기</div>
+            <pre className={styles.resultText}>{Object.entries(buildResult.preview).map(([k, v]) => `${k}: ${v}`).join('\n')}</pre>
+            <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>IP (이미지 프롬프트)</div>
+            <pre className={styles.resultText} style={{ fontSize: 11 }}>{buildResult.cutPatch.imagePrompt}</pre>
+            <div style={{ fontSize: 11, color: '#888', marginBottom: 4 }}>VP (영상 프롬프트)</div>
+            <pre className={styles.resultText} style={{ fontSize: 11, marginBottom: 10 }}>{buildResult.cutPatch.videoPrompt}</pre>
+
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <select className={styles.textarea} style={{ width: 'auto', minWidth: 220 }} value={targetCutId} onChange={(e) => setTargetCutId(e.target.value)}>
+                <option value="">대상 컷 선택…</option>
+                {(state.cuts || []).map((c) => <option key={c.id} value={c.id}>CUT{c.no} — {(c.cutTitle || c.scene || '').slice(0, 30)}</option>)}
+              </select>
+              <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
+            </div>
+            {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
+
+            <InsertCutSection cutPatch={buildResult.cutPatch} state={state} />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

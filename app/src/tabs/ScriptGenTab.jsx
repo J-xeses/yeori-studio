@@ -587,7 +587,7 @@ function applyNarrationSilentGuard(dl, nr, vp) {
   return `${trimmed}${sep}${SILENT_FILM_ADDENDUM}`
 }
 
-function parseCutsV3(raw) {
+export function parseCutsV3(raw) {
   const rawCuts = splitV3Cuts(raw)
   if (!rawCuts.length) return []
 
@@ -798,11 +798,12 @@ function v3RevisionPatch(fields, original) {
 }
 
 // cuts 배열 -> v3 표준 포맷 텍스트 (다운로드용, parseCutsV3로 다시 읽을 수 있게 대칭 유지)
-function buildV3ScriptText(cuts, episode) {
+// 컷 하나를 v3 스크립트 텍스트 블록("[CUT N] ... VP 섹션"까지)으로 직렬화 — buildV3ScriptText가
+// 전체 대본을 이어붙일 때 쓰는 것과 동일 로직을 단일 컷 단위로도 쓸 수 있게 분리(2026-11-08,
+// RetentionHookTab의 "끼워넣기" 기능이 새 컷 하나만 이 포맷으로 렌더링해 /api/insert-cut에 보냄).
+export function buildV3CutBlock(c) {
   const sep = '━'.repeat(24)
-  const eq = '='.repeat(64)
-  const blocks = cuts.map(c => {
-    const mc = c.masterCode || {}
+  const mc = c.masterCode || {}
     const audio = mc.audio || {}
     const kr = mc.kr || {}
     const titlePart = c.cutTitle ? ` ${mc.pl || ''} — ${c.cutTitle} / ${c.duration || 8}초${c.lipsync ? '  ★립싱크' : ''}` : ` ${mc.pl || ''} / ${c.duration || 8}초`
@@ -873,7 +874,11 @@ function buildV3ScriptText(cuts, episode) {
       sep,
     ]
     return lines.join('\n')
-  })
+}
+
+export function buildV3ScriptText(cuts, episode) {
+  const eq = '='.repeat(64)
+  const blocks = cuts.map(buildV3CutBlock)
 
   const header = [
     eq,
