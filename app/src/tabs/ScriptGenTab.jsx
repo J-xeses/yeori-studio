@@ -686,7 +686,7 @@ export function parseCutsV3(raw) {
 
 // 마스터 코드 / EP.HEADER 글로벌 블록(====으로 감싼 부분) — 컷별 파서와 별개로
 // 에피소드 단위 메타로 보관해둔다(2단계 사이드바 표시용, 현재는 원문 그대로 저장만)
-function parseV3GlobalHeader(raw) {
+export function parseV3GlobalHeader(raw) {
   // "마스터 코드" 제목 줄 바로 다음 줄이 코드 본문(중간에 ==== 구분선 없음),
   // EP.HEADER는 제목과 본문 사이에 ==== 구분선이 하나 더 있어 패턴이 다르다.
   const mcMatch = raw.match(/마스터\s*코드\s*\n([^\n=][^\n]*)/)

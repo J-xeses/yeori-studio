@@ -8,7 +8,7 @@ import EpisodeInfoSidebar from '../components/EpisodeInfoSidebar'
 import TabToolbar from '../components/TabToolbar'
 import { claudeMessages } from '../lib/api'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { buildV3CutBlock } from './ScriptGenTab'
+import { buildV3CutBlock, parseCutsV3, parseV3GlobalHeader } from './ScriptGenTab'
 import styles from './RetentionHookTab.module.css'
 
 const SERVER = 'http://localhost:3001'
@@ -649,6 +649,7 @@ function SignatureRefPanel({ state, dispatch }) {
             <InsertCutSection
               cutPatch={{ beat: '시그', masterCode: { ch: preview.sig?.masterCodeTemplate?.ch || '', lookId: preview.sig?.masterCodeTemplate?.lookId || '', sp: preview.sig?.masterCodeTemplate?.sp || '' } }}
               state={state}
+              dispatch={dispatch}
             />
           </div>
         )}
@@ -958,7 +959,7 @@ function ChangeComboPanel({ state, dispatch }) {
             <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
           </div>
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
-          <InsertCutSection cutPatch={buildResult.cutPatch} state={state} />
+          <InsertCutSection cutPatch={buildResult.cutPatch} state={state} dispatch={dispatch} />
         </div>
       )}
     </div>
@@ -1621,7 +1622,7 @@ function FreezeBeatPanel({ state, dispatch }) {
             <button className={styles.genBtn} style={{ width: 'auto', padding: '8px 16px' }} disabled={!targetCutId} onClick={commitApply}>이 컷에 반영</button>
           </div>
           {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
-          <InsertCutSection cutPatch={buildResult.cutPatch} state={state} />
+          <InsertCutSection cutPatch={buildResult.cutPatch} state={state} dispatch={dispatch} />
         </div>
       )}
 
@@ -1698,7 +1699,7 @@ function FreezeBeatPanel({ state, dispatch }) {
 // 번호를 밀면 02_images~07_output에 이미 생성된 cut_NN.* 파일과 gpoints.json도 같이 밀어야
 // 상태↔파일이 안 어긋난다(server/lib/insertCut.js 참고) — 그래서 "미리보기 → 확정" 2단계로,
 // 무엇이 바뀌는지(파일 몇 개·G포인트 몇 개가 밀리는지) 먼저 보여주고 사람이 확정해야 실행된다.
-function InsertCutSection({ cutPatch, state }) {
+function InsertCutSection({ cutPatch, state, dispatch }) {
   const cuts = state.cuts || []
   const episodeCode = resolveEpisodeCode(state.episode)
   const [afterCutId, setAfterCutId] = useState('')
@@ -1744,7 +1745,29 @@ function InsertCutSection({ cutPatch, state }) {
       })
       const d = await r.json()
       if (!r.ok) throw new Error(d.error || '실행 실패')
-      setDone(`✅ CUT${plan.newCutNo}으로 끼워넣었습니다 — 이후 컷 번호 ${plan.shiftedCutCount}개가 +1 밀렸습니다. 대본 탭에서 이 대본 파일을 다시 열면 반영된 걸 볼 수 있습니다.`)
+
+      // 2026-11-08 — 끼워넣기는 서버가 디스크 파일을 직접 고치지만, 대본생성 탭이 보여주는
+      // state.cuts는 localStorage에 캐시된 값이라 서버 쪽 변경을 전혀 모른다("대본생성 탭에
+      // 가보니 그대로였다" 실측 버그). 커밋이 끝나는 즉시 방금 수정된 스크립트 파일을 다시
+      // 읽어 파싱 → SET_CUTS로 캐시를 갈아끼워서, 시그/체인지/프리즈/카메라 4개 모드 중
+      // 어느 쪽에서 끼워넣든 탭을 새로 열 필요 없이 바로 최신 상태가 보이게 한다.
+      try {
+        const rf = await fetch(`${SERVER}/api/read-file`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: d.scriptFile }),
+        })
+        const rfd = await rf.json()
+        if (rfd.success && dispatch) {
+          const parsedV3 = parseCutsV3(rfd.content)
+          if (parsedV3.length) {
+            dispatch({ type: 'SET_CUTS', p: parsedV3 })
+            const { masterCode, epHeaderRaw } = parseV3GlobalHeader(rfd.content)
+            if (masterCode || epHeaderRaw) dispatch({ type: 'SET_EPISODE', p: { masterCode, epHeaderRaw } })
+          }
+        }
+      } catch { /* 캐시 갈아끼우기 실패해도 디스크 반영 자체는 이미 끝났으니 치명적이지 않음 */ }
+
+      setDone(`✅ CUT${plan.newCutNo}으로 끼워넣었습니다 — 이후 컷 번호 ${plan.shiftedCutCount}개가 +1 밀렸습니다. 대본 탭 상태도 지금 바로 갱신했습니다.`)
       setPlan(null); setAfterCutId('')
     } catch (e) { setErr(e.message) } finally { setBusy(false) }
   }
@@ -2025,7 +2048,7 @@ AFTER: (영문 한 문장)`
             </div>
             {applyMsg && <div style={{ fontSize: 12, color: '#6ee7b7', marginTop: 8 }}>{applyMsg}</div>}
 
-            <InsertCutSection cutPatch={buildResult.cutPatch} state={state} />
+            <InsertCutSection cutPatch={buildResult.cutPatch} state={state} dispatch={dispatch} />
           </div>
         )}
       </div>
