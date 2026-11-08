@@ -95,7 +95,63 @@ warm light wrapping the scene.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 2]  BR_VD — 팝업스토어 거리 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  BR_VD — 팝업스토어 진입 리빌 / 6초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습 클로즈업에서 극적 줌아웃하며 팝업스토어 앞 여리로 리빌
+SP: OT.ST.TZ_AF.LT_WM
+PL: BR_VD
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 없음
+CP: 없음
+SH: SH_CU
+CA: CA_ZO
+MD: MD_REL
+AC: 없음
+LOOK_ID: LOOK02
+DU: 6
+오디오:
+  BGM:
+  음성:
+  효과음: 시네마틱 휩 사운드만, 음악 없이
+  앰비언스:
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     성수동 거리 → 팝업스토어 앞
+CH(캐릭터):   LOOK02 전체 / 뒷모습 → 옆모습
+SH(샷):       클로즈업 시작 → 와이드 리빌
+CA(카메라):   극적 줌아웃 리빌 (지구까지 빠지기) (A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts. → A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.)
+AC(동작):     없음(카메라 이동이 연출의 중심)
+MD(감정):     나른함 → 호기심/주목 전환
+DL(대사):
+NR(나레이션):
+CP(자막):
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,
+tight on her face,
+vertical 9:16,
+Photorealistic 8K cinematic natural Korean beauty
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — pure camera-move impact shot
+
+Extreme continuous dolly-zoom-out starting tight on her face,
+A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,
+camera rapidly pulling back and ascending through the atmosphere until A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.,
+speed ramp acceleration, radial motion blur.
+━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+[CUT 3]  BR_VD — 팝업스토어 거리 / 8초
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 성수동 팝업스토어 거리 / 쇼윈도 앞에서 잠깐 멈추며 바라봄
 SP: OT.ST.TZ_AF.LT_WM
@@ -168,7 +224,7 @@ warm afternoon light.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 3]  BR_VD — 버킷 플라워 꽃집 / 8초
+[CUT 4]  BR_VD — 버킷 플라워 꽃집 / 8초
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 성수동 버킷 플라워 꽃집 앞 / 손끝으로 꽃 살며시 건드림
 SP: OT.ST.TZ_AF.LT_WM
@@ -241,7 +297,7 @@ soft warm light on her face.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 4]  BR_VD — 삼청동 감성 카페 창가 / 8초
+[CUT 5]  BR_VD — 삼청동 감성 카페 창가 / 8초
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 삼청동 감성 카페 창가 / 테이크아웃 컵 두 손으로 감싸며 창밖 바라봄
 SP: IN.CF.TZ_AF.LT_WM
@@ -314,7 +370,7 @@ golden light warming her face.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 5]  YR_VD — 인스타 포토존 앞 / 8초
+[CUT 6]  YR_VD — 인스타 포토존 앞 / 8초
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 서울 인스타 포토존 앞 / 폰 들었다가 천천히 내리며 그냥 눈으로 담기로 결정
 SP: OT.ST.TZ_AF.LT_WM
@@ -387,7 +443,7 @@ calm contrast to the busy photo-taking around her.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 6]  YR_VD — 감성 벽화 앞 황금빛 노을 / 8초
+[CUT 7]  YR_VD — 감성 벽화 앞 황금빛 노을 / 8초
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 성수동 대형 벽화 앞 / 눈 살며시 감고 황금빛 노을 맞기
 SP: OT.ST.TZ_GH.LT_WM
@@ -462,7 +518,7 @@ soft shadow stretching behind her.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 7]  YR_VD — 루프탑 엔딩 / 10초  ★립싱크
+[CUT 8]  YR_VD — 루프탑 엔딩 / 10초  ★립싱크
 ━━━━━━━━━━━━━━━━━━━━━━━━
 SC: 서울 루프탑 카페 / 도시 전경 바라보다가 카메라 향해 돌아보며 대사
 SP: OT.RF.TZ_GH.LT_DK
