@@ -9,7 +9,7 @@
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-11-08T05:07:19.958Z"
+    "producedAt": "2026-11-08T12:25:28.117Z"
   },
   "3": {
     "method": "multi-clip-compose",
@@ -39,6 +39,12 @@
     "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-11-08T09:17:30.818Z"
+    "producedAt": "2026-11-08T12:32:42.728Z"
+  },
+  "8": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-08T12:24:57.572Z"
   }
 }

@@ -6778,7 +6778,7 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "나른한 오후... 왠지 모르게 밖에 나가고 싶어져.",
-          "subtitle": "나른한 오후, 왠지 모르게 밖에 나가고 싶어져.",
+          "subtitle": "",
           "imagePrompt": "FULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nwhite square-neck crop top, navy blue check pleated mini skirt,\nwhite strap high-heel sandals, small black crossbody bag,\nSeongsu-dong street Seoul red brick building walls on both sides\ntrendy cafe signs and storefronts young people casually passing by,\nwarm golden afternoon sunlight at 4PM soft long shadows on the street,\nshe walks slowly away from camera looking around naturally,\nlow medium shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
           "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she walks slowly away from camera,\nwarm golden afternoon light casting long soft shadows,\nred brick buildings and cafe signs on both sides.\n\nNext 3-6s: she glances naturally to the side at storefronts,\npace unhurried, shoulders relaxed,\nother pedestrians softly blurred in background.\n\nFinal 6-8s: she continues walking,\nfigure growing smaller in frame,\nwarm light wrapping the scene. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.\n\n━━━ 발화 (한국어) ━━━\n유형: 나레이션 — 보이스오버, 인물은 입을 움직이지 않음 (립싱크 금지)\n나레이션(VO): \"나른한 오후... 왠지 모르게 밖에 나가고 싶어져.\"\n생성: 인물 입은 움직이지 않음. 나레이션 음성은 ElevenLabs 서여리 나레이션(cut_NN.mp3) 을 영상에 얹음.",
           "duration": 8,
@@ -6822,18 +6822,18 @@
         {
           "id": "cut-2",
           "no": 2,
-          "cutTitle": "팝업스토어 진입 리빌",
+          "cutTitle": "급상승·지붕거리 횡단·급강하 리빌",
           "lipsync": false,
-          "scene": "(성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습 클로즈업에서 극적 줌아웃하며 팝업스토어 앞 여리로 리빌",
+          "scene": "(성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습에서 카메라가 하늘로 급상승 → 지붕이 펼쳐진 거리를 가로질러 이동(그 사이 빛·장소가 바뀌는 느낌) → 급강하하여 팝업스토어 앞 여리로 도착",
           "action": "없음(카메라 이동이 연출의 중심)",
           "character": "서여리",
           "dialogue": "",
           "narration": "",
           "subtitle": "",
-          "imagePrompt": "CLOSEUP SHOT —\nA young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,\ntight on her face,\nvertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-          "videoPrompt": "NO dialogue — pure camera-move impact shot\n\nExtreme continuous dolly-zoom-out starting tight on her face,\nA young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,\ncamera rapidly pulling back and ascending through the atmosphere until A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.,\nspeed ramp acceleration, radial motion blur.",
-          "duration": 6,
-          "shotType": "CLOSEUP",
+          "imagePrompt": "WIDE AERIAL SHOT —\na young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,\nseen from above as the camera rises away, rooftops of the street spreading out below, light subtly shifting as if time is quietly passing,\nvertical 9:16,\nCinematic, photorealistic, 8K,\nbackground people must not interact with or interfere with the main character",
+          "videoPrompt": "First 0-1.5s: camera rapidly ascends high above the scene,\na young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,\nfalling away below, fast upward motion, slight motion blur.\n\n1.5~3s: camera glides forward over a street of rooftops spreading out below — flat and sloped roofs, water tanks, rows of low buildings,\nthe light overhead subtly deepening as if minutes have quietly slipped by during the flight, the street below slowly giving way to a different one.\n\n3~4.5s: a new street comes into view below, camera begins descending toward it.\n\n4.5~6s: camera dives rapidly downward,\nswooping toward a young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window,\nfast descending motion, smooth landing into shot.",
+          "duration": 5,
+          "shotType": "FULLBODY",
           "cutType": "YEORI",
           "cutMark": "NORMAL",
           "beat": "",
@@ -6841,27 +6841,28 @@
             "sp": "OT.ST.TZ_AF.LT_WM",
             "pl": "YR_VD",
             "ch": "서여리 / LOOK02",
-            "sh": "SH_CU",
-            "ca": "CA_ZO",
+            "sh": "SH_WS",
+            "ca": "CA_DR",
             "md": "MD_REL",
             "ac": "없음",
             "lookId": "LOOK02",
-            "du": 6,
+            "du": 5,
             "audio": {
               "bgm": "",
               "voice": "",
-              "sfx": "시네마틱 휩 사운드만, 음악 없이",
+              "sfx": "급상승·급강하 스월(swoosh) 효과음 + 바람 소리, 상승 구간엔 BGM 위에 바람 레이어만 추가",
               "ambience": ""
             },
             "kr": {
-              "sp": "성수동 거리 → 팝업스토어 앞",
-              "ch": "LOOK02 전체 / 뒷모습 → 옆모습",
-              "sh": "클로즈업 시작 → 와이드 리빌",
-              "ca": "극적 줌아웃 리빌 (지구까지 빠지기) (A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts. → A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.)",
+              "sp": "성수동 벽돌 거리 → (공중에서 지붕거리 횡단) → 더 북적이는 팝업스토어 거리",
+              "ch": "LOOK02 전체 / 뒷모습 → (공중뷰, 인물 없음) → 옆모습",
+              "sh": "와이드 항공샷",
+              "ca": "급상승 → 지붕이 펼쳐진 거리 위로 가로질러 이동(빛이 살짝 저녁 쪽으로 기울며 시간이 흐른 느낌, 아래 거리도 다른 거리로 바뀜) → 급강하 리빌 (A young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer. → A young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window.)",
               "ac": "없음(카메라 이동이 연출의 중심)",
-              "md": "나른함 → 호기심/주목 전환"
+              "md": "나른함 → 공중에서의 아득함/시간 흐름 → 호기심·주목 전환"
             }
           },
+          "captionBurnedIntoBase": false,
           "overrides": {
             "narration": {
               "value": "",
@@ -6918,13 +6919,6 @@
               "md": "여유롭고 천천히 / 서두르지 않는 오후"
             }
           },
-          "captionSegTiming": [
-            [
-              3,
-              7.5
-            ]
-          ],
-          "captionBurnedIntoBase": false,
           "overrides": {
             "narration": {
               "value": "오늘 따라~~,, 바람이,,, 좋다~~",
@@ -6981,13 +6975,6 @@
               "md": "조용하고 약간 아련한 / 금방 지나가는 것들에 대한 감성"
             }
           },
-          "captionSegTiming": [
-            [
-              2,
-              7.5
-            ]
-          ],
-          "captionBurnedIntoBase": false,
           "overrides": {
             "narration": {
               "value": "예쁜 것들은~ 왜 이렇게 금방 지나가 버리는 걸까~!",
@@ -7044,13 +7031,6 @@
               "md": "완전히 편안한 / 여기 자주 오고 싶다는 소박한 기쁨"
             }
           },
-          "captionSegTiming": [
-            [
-              3,
-              7.5
-            ]
-          ],
-          "captionBurnedIntoBase": false,
           "overrides": {
             "narration": {
               "value": "여기~,,, 자 주 오고 싶다,,,",
@@ -7107,13 +7087,6 @@
               "md": "약간 아련하지만 평온한 / 기록보다 경험을 택하는 순간"
             }
           },
-          "captionSegTiming": [
-            [
-              3,
-              7
-            ]
-          ],
-          "captionBurnedIntoBase": false,
           "overrides": {
             "narration": {
               "value": "됐다,,, 그냥~~, 눈으로 담짜~!",
@@ -7170,13 +7143,13 @@
               "md": "이런 오후가 있어서 다행이라는 감사함 / 감성적인 여운"
             }
           },
+          "captionBurnedIntoBase": false,
           "captionSegTiming": [
             [
-              1.5,
-              7
+              2.5,
+              8
             ]
           ],
-          "captionBurnedIntoBase": false,
           "overrides": {
             "narration": {
               "value": "이런 오후가 있어서,,, 다행이라고 생각했다~!",
@@ -7202,7 +7175,7 @@
           "narration": "",
           "subtitle": "오늘, 이런 시간 없었다면 내일은 꼭 만들어봐. 오후 4시쯤.",
           "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nwhite square-neck crop top, navy blue check pleated mini skirt,\nrooftop cafe or rooftop bench central Seoul\ncity skyline softly visible in background\nwarm dusk sky deep amber and soft pink gentle evening breeze,\nshe sits quietly looking at view then slowly turns to face camera\nwith soft bright natural smile warm and genuine expression like talking to a close friend,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
-          "videoPrompt": "First 0-3s: she sits quietly at rooftop,\ngazing at Seoul city skyline,\nwarm dusk sky behind her.\n\nNext 3-7s: she turns slowly toward camera,\nsoft bright natural smile forming,\nlike turning to tell a close friend something.\n\nNext 3-8s: she speaks brightly —\n\"너... 오늘, 이런 시간 없었다면...\n내일은 꼭 만들어봐. 오후 4시쯤.\"\nbright and natural, like talking to a close friend.\nFinal 8-10s: warm smile, direct gaze — 여운 2초.\n\n\nFirst 0-3s: she sits quietly gazing at city view.\n\nNext 3-8s: she turns toward camera, smiles naturally —\n\"너... 오늘, 이런 시간 없었다면...\n내일은 꼭 만들어봐. 오후 4시쯤.\"\nbright and natural, like talking to a close friend.\n\nFinal 8-10s: warm smile, direct gaze — 여운 2초.\n\n\n전체 컷 요약\n| 컷   | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|------|--------|--------|-----------|--------|--------|------|\n| C01 | 성수동 오후 4시  |  8s   | YR_VD  | LOOK02 | SH_FS       | CA_ST  | ❌     | 신규 |\n| C02 |                       |  6s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C03 | 팝업스토어 거리  |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_TR  | ❌     | 신규 |\n| C04 | 버킷 플라워 꽃집 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C05 | 삼청동 감성 카페 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C06 | 인스타 포토존     |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C07 | 감성 벽화 노을    |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C08 | 루프탑 엔딩       | 10s   | YR_VD  | LOOK02 | SH_CU      | CA_ST  | ✅     | 신규 |\n\n총 길이: 62초 / 재생성 없음 / 립싱크 1컷 (C07)\nBGM: Lo-fi 인디 어쿠스틱 → C06부터 서정적 전환\n버전 이력\nv1.0 (2026-07-08) — 최초 작성\nv2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)\nv3.1 (2026-07-25) — 표준 포맷 v3 통합\n                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가\n                    ━*24 구분선 통일 / 코드 필드 전체 정리\n                    VP 섹션 수정 — THIS IS A SILENT FILM 제거\n                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기\n\n━━━ 발화 (한국어) ━━━\n유형: 대사 — 인물이 화면에서 이 대사를 말함 (립싱크)\n대사: \"오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.\"\n※ 10s — 8초 초과. Veo 클립을 이어붙여야 함 (8초 기준 최소 2개, 각 클립은 이전 클립의 마지막 프레임에서 연속: 인물·의상·헤어·조명 유지). 대사를 클립별로 나눠 배치 — Field Gate \"세그 분할\" 탭에서 정밀 조합을 고르면 이 블록이 자동으로 세그별로 재구성됨.\n생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크와 음성을 함께 생성 (입모양이 대사와 맞아야 함).\n후처리(STS): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) 로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. 실행: node scripts/test-sts.js --ep=<N> --cut=<N>",
+          "videoPrompt": "First 0-3s: she sits quietly at rooftop,\ngazing at Seoul city skyline,\nwarm dusk sky behind her.\n\nNext 3-7s: she turns slowly toward camera,\nsoft bright natural smile forming,\nlike turning to tell a close friend something.\n\nNext 3-8s: she speaks brightly —\n\"오늘, 이런 시간 없었다면...\n내일은 꼭 만들어봐. 오후 4시쯤.\"\nbright and natural, like talking to a close friend.\n\nFinal 8-10s: warm smile, direct gaze — 여운 2초.\n\n\n\n\n전체 컷 요약\n| 컷   | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|------|--------|--------|-----------|--------|--------|------|\n| C01 | 성수동 오후 4시  |  8s   | YR_VD  | LOOK02 | SH_FS       | CA_ST  | ❌     | 신규 |\n| C02 | 성수동 상공비행  |  6s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C03 | 팝업스토어 거리  |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_TR  | ❌     | 신규 |\n| C04 | 버킷 플라워 꽃집 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C05 | 삼청동 감성 카페 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C06 | 인스타 포토존     |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C07 | 감성 벽화 노을    |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C08 | 루프탑 엔딩       | 10s   | YR_VD  | LOOK02 | SH_CU      | CA_ST  | ✅     | 신규 |\n\n총 길이: 62초 / 재생성 없음 / 립싱크 1컷 (C07)\nBGM: Lo-fi 인디 어쿠스틱 → C06부터 서정적 전환\n버전 이력\nv1.0 (2026-07-08) — 최초 작성\nv2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)\nv3.1 (2026-07-25) — 표준 포맷 v3 통합\n                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가\n                    ━*24 구분선 통일 / 코드 필드 전체 정리\n                    VP 섹션 수정 — THIS IS A SILENT FILM 제거\n                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기\n\n━━━ 발화 (한국어) ━━━\n유형: 대사 — 인물이 화면에서 이 대사를 말함 (립싱크)\n대사: \"오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.\"\n※ 10s — 8초 초과. Veo 클립을 이어붙여야 함 (8초 기준 최소 2개, 각 클립은 이전 클립의 마지막 프레임에서 연속: 인물·의상·헤어·조명 유지). 대사를 클립별로 나눠 배치 — Field Gate \"세그 분할\" 탭에서 정밀 조합을 고르면 이 블록이 자동으로 세그별로 재구성됨.\n생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크와 음성을 함께 생성 (입모양이 대사와 맞아야 함).\n후처리(STS): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) 로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. 실행: node scripts/test-sts.js --ep=<N> --cut=<N>",
           "duration": 10,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
@@ -7239,6 +7212,7 @@
               10
             ]
           ],
+          "captionBurnedIntoBase": false,
           "overrides": {
             "dialogue": {
               "value": "오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.",
@@ -11955,7 +11929,7 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "나른한 오후... 왠지 모르게 밖에 나가고 싶어져.",
-      "subtitle": "나른한 오후, 왠지 모르게 밖에 나가고 싶어져.",
+      "subtitle": "",
       "imagePrompt": "FULLBODY SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, very small face, long slim legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nwhite square-neck crop top, navy blue check pleated mini skirt,\nwhite strap high-heel sandals, small black crossbody bag,\nSeongsu-dong street Seoul red brick building walls on both sides\ntrendy cafe signs and storefronts young people casually passing by,\nwarm golden afternoon sunlight at 4PM soft long shadows on the street,\nshe walks slowly away from camera looking around naturally,\nlow medium shot, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
       "videoPrompt": "NO dialogue — narration added in post\n\nFirst 0-3s: she walks slowly away from camera,\nwarm golden afternoon light casting long soft shadows,\nred brick buildings and cafe signs on both sides.\n\nNext 3-6s: she glances naturally to the side at storefronts,\npace unhurried, shoulders relaxed,\nother pedestrians softly blurred in background.\n\nFinal 6-8s: she continues walking,\nfigure growing smaller in frame,\nwarm light wrapping the scene. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.\n\n━━━ 발화 (한국어) ━━━\n유형: 나레이션 — 보이스오버, 인물은 입을 움직이지 않음 (립싱크 금지)\n나레이션(VO): \"나른한 오후... 왠지 모르게 밖에 나가고 싶어져.\"\n생성: 인물 입은 움직이지 않음. 나레이션 음성은 ElevenLabs 서여리 나레이션(cut_NN.mp3) 을 영상에 얹음.",
       "duration": 8,
@@ -11999,18 +11973,18 @@
     {
       "id": "cut-2",
       "no": 2,
-      "cutTitle": "팝업스토어 진입 리빌",
+      "cutTitle": "급상승·지붕거리 횡단·급강하 리빌",
       "lipsync": false,
-      "scene": "(성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습 클로즈업에서 극적 줌아웃하며 팝업스토어 앞 여리로 리빌",
+      "scene": "(성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습에서 카메라가 하늘로 급상승 → 지붕이 펼쳐진 거리를 가로질러 이동(그 사이 빛·장소가 바뀌는 느낌) → 급강하하여 팝업스토어 앞 여리로 도착",
       "action": "없음(카메라 이동이 연출의 중심)",
       "character": "서여리",
       "dialogue": "",
       "narration": "",
       "subtitle": "",
-      "imagePrompt": "CLOSEUP SHOT —\nA young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,\ntight on her face,\nvertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty",
-      "videoPrompt": "NO dialogue — pure camera-move impact shot\n\nExtreme continuous dolly-zoom-out starting tight on her face,\nA young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,\ncamera rapidly pulling back and ascending through the atmosphere until A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.,\nspeed ramp acceleration, radial motion blur.",
-      "duration": 6,
-      "shotType": "CLOSEUP",
+      "imagePrompt": "WIDE AERIAL SHOT —\na young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,\nseen from above as the camera rises away, rooftops of the street spreading out below, light subtly shifting as if time is quietly passing,\nvertical 9:16,\nCinematic, photorealistic, 8K,\nbackground people must not interact with or interfere with the main character",
+      "videoPrompt": "First 0-1.5s: camera rapidly ascends high above the scene,\na young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,\nfalling away below, fast upward motion, slight motion blur.\n\n1.5~3s: camera glides forward over a street of rooftops spreading out below — flat and sloped roofs, water tanks, rows of low buildings,\nthe light overhead subtly deepening as if minutes have quietly slipped by during the flight, the street below slowly giving way to a different one.\n\n3~4.5s: a new street comes into view below, camera begins descending toward it.\n\n4.5~6s: camera dives rapidly downward,\nswooping toward a young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window,\nfast descending motion, smooth landing into shot.",
+      "duration": 5,
+      "shotType": "FULLBODY",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "beat": "",
@@ -12018,27 +11992,28 @@
         "sp": "OT.ST.TZ_AF.LT_WM",
         "pl": "YR_VD",
         "ch": "서여리 / LOOK02",
-        "sh": "SH_CU",
-        "ca": "CA_ZO",
+        "sh": "SH_WS",
+        "ca": "CA_DR",
         "md": "MD_REL",
         "ac": "없음",
         "lookId": "LOOK02",
-        "du": 6,
+        "du": 5,
         "audio": {
           "bgm": "",
           "voice": "",
-          "sfx": "시네마틱 휩 사운드만, 음악 없이",
+          "sfx": "급상승·급강하 스월(swoosh) 효과음 + 바람 소리, 상승 구간엔 BGM 위에 바람 레이어만 추가",
           "ambience": ""
         },
         "kr": {
-          "sp": "성수동 거리 → 팝업스토어 앞",
-          "ch": "LOOK02 전체 / 뒷모습 → 옆모습",
-          "sh": "클로즈업 시작 → 와이드 리빌",
-          "ca": "극적 줌아웃 리빌 (지구까지 빠지기) (A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts. → A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.)",
+          "sp": "성수동 벽돌 거리 → (공중에서 지붕거리 횡단) → 더 북적이는 팝업스토어 거리",
+          "ch": "LOOK02 전체 / 뒷모습 → (공중뷰, 인물 없음) → 옆모습",
+          "sh": "와이드 항공샷",
+          "ca": "급상승 → 지붕이 펼쳐진 거리 위로 가로질러 이동(빛이 살짝 저녁 쪽으로 기울며 시간이 흐른 느낌, 아래 거리도 다른 거리로 바뀜) → 급강하 리빌 (A young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer. → A young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window.)",
           "ac": "없음(카메라 이동이 연출의 중심)",
-          "md": "나른함 → 호기심/주목 전환"
+          "md": "나른함 → 공중에서의 아득함/시간 흐름 → 호기심·주목 전환"
         }
       },
+      "captionBurnedIntoBase": false,
       "overrides": {
         "narration": {
           "value": "",
@@ -12095,13 +12070,6 @@
           "md": "여유롭고 천천히 / 서두르지 않는 오후"
         }
       },
-      "captionSegTiming": [
-        [
-          3,
-          7.5
-        ]
-      ],
-      "captionBurnedIntoBase": false,
       "overrides": {
         "narration": {
           "value": "오늘 따라~~,, 바람이,,, 좋다~~",
@@ -12158,13 +12126,6 @@
           "md": "조용하고 약간 아련한 / 금방 지나가는 것들에 대한 감성"
         }
       },
-      "captionSegTiming": [
-        [
-          2,
-          7.5
-        ]
-      ],
-      "captionBurnedIntoBase": false,
       "overrides": {
         "narration": {
           "value": "예쁜 것들은~ 왜 이렇게 금방 지나가 버리는 걸까~!",
@@ -12221,13 +12182,6 @@
           "md": "완전히 편안한 / 여기 자주 오고 싶다는 소박한 기쁨"
         }
       },
-      "captionSegTiming": [
-        [
-          3,
-          7.5
-        ]
-      ],
-      "captionBurnedIntoBase": false,
       "overrides": {
         "narration": {
           "value": "여기~,,, 자 주 오고 싶다,,,",
@@ -12284,13 +12238,6 @@
           "md": "약간 아련하지만 평온한 / 기록보다 경험을 택하는 순간"
         }
       },
-      "captionSegTiming": [
-        [
-          3,
-          7
-        ]
-      ],
-      "captionBurnedIntoBase": false,
       "overrides": {
         "narration": {
           "value": "됐다,,, 그냥~~, 눈으로 담짜~!",
@@ -12347,13 +12294,13 @@
           "md": "이런 오후가 있어서 다행이라는 감사함 / 감성적인 여운"
         }
       },
+      "captionBurnedIntoBase": false,
       "captionSegTiming": [
         [
-          1.5,
-          7
+          2.5,
+          8
         ]
       ],
-      "captionBurnedIntoBase": false,
       "overrides": {
         "narration": {
           "value": "이런 오후가 있어서,,, 다행이라고 생각했다~!",
@@ -12379,7 +12326,7 @@
       "narration": "",
       "subtitle": "오늘, 이런 시간 없었다면 내일은 꼭 만들어봐. 오후 4시쯤.",
       "imagePrompt": "CLOSEUP SHOT —\nYoung Korean woman early-20s,\nlong wavy dark brown hair NOT short hair,\na very subtle natural skin texture on her right cheek (subtle, never exaggerated),\ndelicate gold necklace,\neffortlessly photogenic not posing just existing beautifully,\n1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,\nK-model proportions, small face, long legs, slender figure,\nnatural makeup, warm skin tone, appearing no older than 22-23,\nwhite square-neck crop top, navy blue check pleated mini skirt,\nrooftop cafe or rooftop bench central Seoul\ncity skyline softly visible in background\nwarm dusk sky deep amber and soft pink gentle evening breeze,\nshe sits quietly looking at view then slowly turns to face camera\nwith soft bright natural smile warm and genuine expression like talking to a close friend,\nclose-up, eye level, vertical 9:16,\nPhotorealistic 8K cinematic natural Korean beauty,\nbackground people must not interact with or interfere with the main character",
-      "videoPrompt": "First 0-3s: she sits quietly at rooftop,\ngazing at Seoul city skyline,\nwarm dusk sky behind her.\n\nNext 3-7s: she turns slowly toward camera,\nsoft bright natural smile forming,\nlike turning to tell a close friend something.\n\nNext 3-8s: she speaks brightly —\n\"너... 오늘, 이런 시간 없었다면...\n내일은 꼭 만들어봐. 오후 4시쯤.\"\nbright and natural, like talking to a close friend.\nFinal 8-10s: warm smile, direct gaze — 여운 2초.\n\n\nFirst 0-3s: she sits quietly gazing at city view.\n\nNext 3-8s: she turns toward camera, smiles naturally —\n\"너... 오늘, 이런 시간 없었다면...\n내일은 꼭 만들어봐. 오후 4시쯤.\"\nbright and natural, like talking to a close friend.\n\nFinal 8-10s: warm smile, direct gaze — 여운 2초.\n\n\n전체 컷 요약\n| 컷   | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|------|--------|--------|-----------|--------|--------|------|\n| C01 | 성수동 오후 4시  |  8s   | YR_VD  | LOOK02 | SH_FS       | CA_ST  | ❌     | 신규 |\n| C02 |                       |  6s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C03 | 팝업스토어 거리  |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_TR  | ❌     | 신규 |\n| C04 | 버킷 플라워 꽃집 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C05 | 삼청동 감성 카페 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C06 | 인스타 포토존     |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C07 | 감성 벽화 노을    |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C08 | 루프탑 엔딩       | 10s   | YR_VD  | LOOK02 | SH_CU      | CA_ST  | ✅     | 신규 |\n\n총 길이: 62초 / 재생성 없음 / 립싱크 1컷 (C07)\nBGM: Lo-fi 인디 어쿠스틱 → C06부터 서정적 전환\n버전 이력\nv1.0 (2026-07-08) — 최초 작성\nv2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)\nv3.1 (2026-07-25) — 표준 포맷 v3 통합\n                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가\n                    ━*24 구분선 통일 / 코드 필드 전체 정리\n                    VP 섹션 수정 — THIS IS A SILENT FILM 제거\n                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기\n\n━━━ 발화 (한국어) ━━━\n유형: 대사 — 인물이 화면에서 이 대사를 말함 (립싱크)\n대사: \"오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.\"\n※ 10s — 8초 초과. Veo 클립을 이어붙여야 함 (8초 기준 최소 2개, 각 클립은 이전 클립의 마지막 프레임에서 연속: 인물·의상·헤어·조명 유지). 대사를 클립별로 나눠 배치 — Field Gate \"세그 분할\" 탭에서 정밀 조합을 고르면 이 블록이 자동으로 세그별로 재구성됨.\n생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크와 음성을 함께 생성 (입모양이 대사와 맞아야 함).\n후처리(STS): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) 로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. 실행: node scripts/test-sts.js --ep=<N> --cut=<N>",
+      "videoPrompt": "First 0-3s: she sits quietly at rooftop,\ngazing at Seoul city skyline,\nwarm dusk sky behind her.\n\nNext 3-7s: she turns slowly toward camera,\nsoft bright natural smile forming,\nlike turning to tell a close friend something.\n\nNext 3-8s: she speaks brightly —\n\"오늘, 이런 시간 없었다면...\n내일은 꼭 만들어봐. 오후 4시쯤.\"\nbright and natural, like talking to a close friend.\n\nFinal 8-10s: warm smile, direct gaze — 여운 2초.\n\n\n\n\n전체 컷 요약\n| 컷   | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |\n|-----|------------------|------|--------|--------|-----------|--------|--------|------|\n| C01 | 성수동 오후 4시  |  8s   | YR_VD  | LOOK02 | SH_FS       | CA_ST  | ❌     | 신규 |\n| C02 | 성수동 상공비행  |  6s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C03 | 팝업스토어 거리  |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_TR  | ❌     | 신규 |\n| C04 | 버킷 플라워 꽃집 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C05 | 삼청동 감성 카페 |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C06 | 인스타 포토존     |  8s   | YR_VD  | LOOK02 | SH_MCU   | CA_ST  | ❌     | 신규 |\n| C07 | 감성 벽화 노을    |  8s   | YR_VD  | LOOK02 | SH_FS      | CA_ST  | ❌     | 신규 |\n| C08 | 루프탑 엔딩       | 10s   | YR_VD  | LOOK02 | SH_CU      | CA_ST  | ✅     | 신규 |\n\n총 길이: 62초 / 재생성 없음 / 립싱크 1컷 (C07)\nBGM: Lo-fi 인디 어쿠스틱 → C06부터 서정적 전환\n버전 이력\nv1.0 (2026-07-08) — 최초 작성\nv2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)\nv3.1 (2026-07-25) — 표준 포맷 v3 통합\n                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가\n                    ━*24 구분선 통일 / 코드 필드 전체 정리\n                    VP 섹션 수정 — THIS IS A SILENT FILM 제거\n                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기\n\n━━━ 발화 (한국어) ━━━\n유형: 대사 — 인물이 화면에서 이 대사를 말함 (립싱크)\n대사: \"오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.\"\n※ 10s — 8초 초과. Veo 클립을 이어붙여야 함 (8초 기준 최소 2개, 각 클립은 이전 클립의 마지막 프레임에서 연속: 인물·의상·헤어·조명 유지). 대사를 클립별로 나눠 배치 — Field Gate \"세그 분할\" 탭에서 정밀 조합을 고르면 이 블록이 자동으로 세그별로 재구성됨.\n생성: Veo 가 이 대사를 한국어로 말하도록 — 립싱크와 음성을 함께 생성 (입모양이 대사와 맞아야 함).\n후처리(STS): demucs 로 대사/배경 분리 → ElevenLabs speech-to-speech(eleven_multilingual_sts_v2) 로 서여리 음성 변환(타이밍·립싱크 보존) → 3트랙 합성 → cut_NN_final.mp4. 실행: node scripts/test-sts.js --ep=<N> --cut=<N>",
       "duration": 10,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
@@ -12416,6 +12363,7 @@
           10
         ]
       ],
+      "captionBurnedIntoBase": false,
       "overrides": {
         "dialogue": {
           "value": "오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.",
@@ -12577,6 +12525,19 @@
           "keepAudio": false,
           "createdAt": 1794131798440,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_02_clip_new1794132551128.mp4"
+        },
+        {
+          "url": "blob:http://localhost:5173/3f2d2d6a-a418-4139-8285-7028b556a1b2",
+          "name": "Woman_walking_down_street_90dae9be_1080p.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794058589963,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_02_clip_2.mp4"
         }
       ],
       "cut-3": [
@@ -12637,31 +12598,30 @@
       ],
       "cut-7": [
         {
-          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/06_publishing/cut_07_final.mp4?t=1794129448764",
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/06_publishing/cut_07_final.mp4?t=1794141160881",
           "name": "FFmpeg 합성 (cut_07_final.mp4)",
           "duration": 8,
           "trimStart": 0,
           "trimEnd": 8,
           "useFullDuration": true,
           "ratio": "9:16",
-          "createdAt": 1794129448792,
+          "createdAt": 1794141160908,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\06_publishing\\cut_07_final.mp4",
           "keepAudio": true
         }
       ],
       "cut-8": [
         {
-          "url": "blob:http://localhost:5173/fe7dc49e-0f86-4bbd-940f-06a13b997fca",
-          "name": "07-립싱크 반영_20260717.mp4",
-          "duration": 10.01,
+          "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/06_publishing/cut_08_final.mp4?t=1794140700150",
+          "name": "FFmpeg 합성 (cut_08_final.mp4)",
+          "duration": 10,
           "trimStart": 0,
-          "trimEnd": 10.01,
+          "trimEnd": 10,
           "useFullDuration": true,
           "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1784279878647,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_08_clip_1.mp4"
+          "createdAt": 1794140700172,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\06_publishing\\cut_08_final.mp4",
+          "keepAudio": true
         }
       ]
     },
@@ -12675,7 +12635,7 @@
       "cut-8": true,
       "cut-2": true
     },
-    "selectedCutId": "cut-8",
+    "selectedCutId": "cut-2",
     "subtitles": {
       "cut-8": "오늘, 이런 시간 없었다면, 내일은 꼭 \n만들어봐. 오후 4시쯤."
     }
