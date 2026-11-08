@@ -1,57 +1,64 @@
-﻿# SF_E02_HOTPLACE ?ロ뵆 媛붾떎媛 ???대┛ ?댁쑀 ?蹂?# ?앹꽦?? 2026. 7. 24. / ?낃렇?덉씠?? 2026. 7. 25.
-# 踰꾩쟾: v3.0
-# 猷곗뀑: v1.3.1 ?곸슜
+﻿# SF_E02_HOTPLACE 핫플 갔다가 폰 내린 이유 대본
+# 생성일: 2026. 7. 24. / 업그레이드: 2026. 7. 25.
+# 버전: v3.0
+# 룰셋: v1.3.1 적용
 
 ================================================================
-留덉뒪??肄붾뱶
-SF_E02_HOTPLACE :: YR_VD+YR_VD :: OT.ST.TZ_AF.LT_WM ??OT.RF.TZ_GH.LT_DK :: LK_CS.TOP_CRP(white square-neck).BTM_SKT(navy check pleated mini).SH_STR(white strap sandal).BG_BLK(black crossbody) :: MD_REL?묺D_DRM :: Q_SH.RT_916.PB_YT
+마스터 코드
+SF_E02_HOTPLACE :: YR_VD :: OT.ST.TZ_AF.LT_WM → OT.RF.TZ_GH.LT_DK :: LK_CS.TOP_CRP(white square-neck).BTM_SKT(navy check pleated mini).SH_STR(white strap sandal).BG_BLK(black crossbody) :: MD_REL→MD_DRM :: Q_SH.RT_916.PB_YT
 ================================================================
 EP.HEADER
 ================================================================
 CHAR  : YEORI.BASE
 EP    : SF_E02_HOTPLACE
-TITLE : ?ロ뵆 媛붾떎媛 ???대┛ ?댁쑀
+TITLE : 핫플 갔다가 폰 내린 이유
 LOOK  : LOOK02 (white square-neck crop top + navy blue check pleated mini skirt + white strap high-heel sandals + small black crossbody bag + gold necklace)
-BG.A  : ?깆닔??嫄곕━ / ?앹뾽?ㅽ넗??/ 踰꾪궥 ?뚮씪??苑껋쭛 (?ㅽ썑 ?⑷툑鍮?
-BG.B  : ?쇱껌??媛먯꽦 移댄럹 李쎄? / ?ы넗議?/ ?깆닔??踰쏀솕 / 猷⑦봽??(????⑺샎鍮?
-LIGHT : LT_WM (?ㅽ썑 ?⑷툑鍮??먯뿰愿? ??LT_DK (????⑺샎鍮?
+BG.A  : 성수동 거리 / 팝업스토어 / 버킷 플라워 꽃집 (오후 황금빛)
+BG.B  : 삼청동 감성 카페 창가 / 포토존 / 성수동 벽화 / 루프탑 (저녁 황혼빛)
+LIGHT : LT_WM (오후 황금빛 자연광) → LT_DK (저녁 황혼빛)
 REF   : face / closeup / fs-masked
-BGM   : Lo-fi ?몃뵒 ?댁퓼?ㅽ떛 (?붿옍?섍퀬 媛먯꽦?? ??C06 ?댄썑 ?쒖젙?곸쑝濡??꾪솚
+BGM   : Lo-fi 인디 어쿠스틱 (잔잔하고 감성적) → C06 이후 서정적으로 전환
 ================================================================
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 1]  YR_VD ???깆닔???ㅽ썑 4??/ 8珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?깆닔??嫄곕━ / ?ㅽ썑 4???⑷툑鍮??뉗궡 / ?룸え?듭쑝濡?嫄몄뼱媛湲?SP: OT.ST.TZ_AF.LT_WM
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1]  YR_VD — 성수동 오후 4시 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 거리 / 오후 4시 황금빛 햇살 / 뒷모습으로 걸어가기
+SP: OT.ST.TZ_AF.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?ㅽ썑 4?쒖? ?섎㈃... ?좎? 紐⑤Ⅴ寃?諛뽰뿉 ?섍?怨??띠뼱??
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 오후 4시쯤 되면... 왠지 모르게 밖에 나가고 싶어져.
 SH: SH_FS
 CA: CA_ST
 MD: MD_REL
 AC: AT_MW_01
 LOOK_ID: LOOK02
 DU: 8
-?ㅻ뵒??
-  BGM: Lo-fi ?몃뵒 ?댁퓼?ㅽ떛 ???붿옍?섍쾶 ?쒖옉
-  ?뚯꽦: 議곗슜?섍퀬 媛먯꽦?곸씤 ?섎젅?댁뀡 ??  ?④낵?? ?놁쓬
-  ?곕퉬?몄뒪: 嫄곕━ ?뚯쓬, 硫由ъ꽌 ?ㅻ━??移댄럹 ?뚯븙, 諛붾엺 ?뚮━
+오디오:
+  BGM: Lo-fi 인디 어쿠스틱 — 잔잔하게 시작
+  음성: 조용하고 감성적인 나레이션 톤
+  효과음: 없음
+  앰비언스: 거리 소음, 멀리서 들리는 카페 음악, 바람 소리
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?깆닔??嫄곕━ / ?ㅽ썑 4???⑷툑鍮??뉗궡 / 遺됱? 踰쎈룎 嫄대Ъ
-CH(罹먮┃??:   LOOK02 ?꾩껜 / ?룸え??SH(??:       ??????룸え?듭쑝濡?嫄몄뼱媛???꾩떊
-CA(移대찓??:   怨좎젙
-AC(?숈옉):     移대찓?쇱뿉??硫?댁???諛⑺뼢?쇰줈 泥쒖쿇??嫄몄쑝硫?二쇰? ?섎윭遊?MD(媛먯젙):     ?ъ쑀濡?퀬 ?몄븞??/ 諛뽰뿉 ?섏삤怨??띠뿀??異⑸룞
-DL(???:     ?놁쓬
-NR(?섎젅?댁뀡): "?ㅽ썑 4?쒖? ?섎㈃... ?좎? 紐⑤Ⅴ寃?諛뽰뿉 ?섍?怨??띠뼱??"
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     성수동 거리 / 오후 4시 황금빛 햇살 / 붉은 벽돌 건물
+CH(캐릭터):   LOOK02 전체 / 뒷모습
+SH(샷):       풀샷 — 뒷모습으로 걸어가는 전신
+CA(카메라):   고정
+AC(동작):     카메라에서 멀어지는 방향으로 천천히 걸으며 주변 둘러봄
+MD(감정):     여유롭고 편안한 / 밖에 나오고 싶었던 충동
+DL(대사):     없음
+NR(나레이션): "오후 4시쯤 되면... 왠지 모르게 밖에 나가고 싶어져."
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-FULLBODY SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 delicate gold necklace,
 effortlessly photogenic not posing just existing beautifully,
@@ -68,10 +75,10 @@ low medium shot, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??narration added in post
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
 
 First 0-3s: she walks slowly away from camera,
 warm golden afternoon light casting long soft shadows,
@@ -84,94 +91,112 @@ other pedestrians softly blurred in background.
 Final 6-8s: she continues walking,
 figure growing smaller in frame,
 warm light wrapping the scene.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 2]  YR_VD ???앹뾽?ㅽ넗??吏꾩엯 由щ퉴 / 6珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: (?깆닔???ㅽ썑 4???ㅼ쓬 ???좉퇋 ?쎌엯 而? ?룸え???대줈利덉뾽?먯꽌 洹뱀쟻 以뚯븘?껎븯硫??앹뾽?ㅽ넗?????щ━濡?由щ퉴
+━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2]  YR_VD — 급상승·지붕거리 횡단·급강하 리빌 / 5초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: (성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습에서 카메라가 하늘로 급상승 → 지붕이 펼쳐진 거리를 가로질러 이동(그 사이 빛·장소가 바뀌는 느낌) → 급강하하여 팝업스토어 앞 여리로 도착
 SP: OT.ST.TZ_AF.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?놁쓬
-CP: ?놁쓬
-SH: SH_CU
-CA: CA_ZO
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 없음
+CP: 없음
+SH: SH_WS
+CA: CA_DR
 MD: MD_REL
-AC: ?놁쓬
+AC: 없음
 LOOK_ID: LOOK02
-DU: 6
-?ㅻ뵒??
+DU: 5
+오디오:
   BGM:
-  ?뚯꽦:
-  ?④낵?? ?쒕꽕留덊떛 ???ъ슫?쒕쭔, ?뚯븙 ?놁씠
-  ?곕퉬?몄뒪:
+  음성:
+  효과음: 급상승·급강하 스월(swoosh) 효과음 + 바람 소리, 상승 구간엔 BGM 위에 바람 레이어만 추가
+  앰비언스:
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?깆닔??嫄곕━ ???앹뾽?ㅽ넗????CH(罹먮┃??:   LOOK02 ?꾩껜 / ?룸え?????녿え??SH(??:       ?대줈利덉뾽 ?쒖옉 ????대뱶 由щ퉴
-CA(移대찓??:   洹뱀쟻 以뚯븘??由щ퉴 (吏援ш퉴吏 鍮좎?湲? (A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts. ??A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.)
-AC(?숈옉):     ?놁쓬(移대찓???대룞???곗텧??以묒떖)
-MD(媛먯젙):     ?섎Ⅸ?????멸린??二쇰ぉ ?꾪솚
-DL(???:
-NR(?섎젅?댁뀡):
-CP(?먮쭑):
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     성수동 벽돌 거리 → (공중에서 지붕거리 횡단) → 더 북적이는 팝업스토어 거리
+CH(캐릭터):   LOOK02 전체 / 뒷모습 → (공중뷰, 인물 없음) → 옆모습
+SH(샷):       와이드 항공샷
+CA(카메라):   급상승 → 지붕이 펼쳐진 거리 위로 가로질러 이동(빛이 살짝 저녁 쪽으로 기울며 시간이 흐른 느낌, 아래 거리도 다른 거리로 바뀜) → 급강하 리빌 (A young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer. → A young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window.)
+AC(동작):     없음(카메라 이동이 연출의 중심)
+MD(감정):     나른함 → 공중에서의 아득함/시간 흐름 → 호기심·주목 전환
+DL(대사):
+NR(나레이션):
+CP(자막):
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-CLOSEUP SHOT ??A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,
-tight on her face,
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+WIDE AERIAL SHOT —
+a young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,
+seen from above as the camera rises away, rooftops of the street spreading out below, light subtly shifting as if time is quietly passing,
 vertical 9:16,
-Photorealistic 8K cinematic natural Korean beauty
+Cinematic, photorealistic, 8K,
+background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??pure camera-move impact shot
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — pure camera-move hook, no narration
 
-Extreme continuous dolly-zoom-out starting tight on her face,
-A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,
-camera rapidly pulling back and ascending through the atmosphere until A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.,
-speed ramp acceleration, radial motion blur.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+First 0-25%: camera rapidly ascends high above the scene,
+a young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,
+falling away below, fast upward motion, slight motion blur.
+
+25-55%: camera glides forward over a street of rooftops spreading out below — flat and sloped roofs, water tanks, rows of low buildings,
+the light overhead subtly deepening as if minutes have quietly slipped by during the flight, the street below slowly giving way to a different one.
+
+55-75%: a new street comes into view below, camera begins descending toward it.
+
+Final 75-100%: camera dives rapidly downward,
+swooping toward a young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window,
+fast descending motion, smooth landing into shot.
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-[CUT 3]  YR_VD ???앹뾽?ㅽ넗??嫄곕━ / 8珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?깆닔???앹뾽?ㅽ넗??嫄곕━ / ?쇱쐢???욎뿉???좉퉸 硫덉텛硫?諛붾씪遊?SP: OT.ST.TZ_AF.LT_WM
+[CUT 3]  YR_VD — 팝업스토어 거리 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 팝업스토어 거리 / 쇼윈도 앞에서 잠깐 멈추며 바라봄
+SP: OT.ST.TZ_AF.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?ㅻ뒛?곕씪 諛붾엺??醫뗫떎...
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 오늘따라 바람이 좋다...
 SH: SH_FS
 CA: CA_TR
 MD: MD_REL
 AC: AT_MW_01
 LOOK_ID: LOOK02
 DU: 8
-?ㅻ뵒??
-  BGM: Lo-fi ?몃뵒 ?댁퓼?ㅽ떛 ?좎?
-  ?뚯꽦: 議곗슜???쇱옡留????섎젅?댁뀡
-  ?④낵?? ?놁쓬
-  ?곕퉬?몄뒪: 嫄곕━ ?뚯쓬, 移댄럹 ?몃뵒?뚯븙, 諛쒖냼由?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?앹뾽?ㅽ넗??諛吏?嫄곕━ / ?ㅽ썑 4??/ ?꾩떆 ?먮꼫吏
-CH(罹먮┃??:   LOOK02 ?꾩껜
-SH(??:       ?????嫄곕━ 嫄몄쑝硫??쇱쐢????硫덉땄
-CA(移대찓??:   ?몃옒??AC(?숈옉):     ?앹뾽?ㅽ넗??嫄곕━ ?곕씪 泥쒖쿇??嫄룸떎媛 ?쇱쐢?????좉퉸 硫덉땄
-MD(媛먯젙):     ?ъ쑀濡?퀬 泥쒖쿇??/ ?쒕몢瑜댁? ?딅뒗 ?ㅽ썑
-DL(???:     ?놁쓬
-NR(?섎젅?댁뀡): "?ㅻ뒛?곕씪 諛붾엺??醫뗫떎..."
+오디오:
+  BGM: Lo-fi 인디 어쿠스틱 유지
+  음성: 조용한 혼잣말 톤 나레이션
+  효과음: 없음
+  앰비언스: 거리 소음, 카페 인디음악, 발소리
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-FULLBODY SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     팝업스토어 밀집 거리 / 오후 4시 / 도시 에너지
+CH(캐릭터):   LOOK02 전체
+SH(샷):       풀샷 — 거리 걸으며 쇼윈도 앞 멈춤
+CA(카메라):   트래킹
+AC(동작):     팝업스토어 거리 따라 천천히 걷다가 쇼윈도 앞 잠깐 멈춤
+MD(감정):     여유롭고 천천히 / 서두르지 않는 오후
+DL(대사):     없음
+NR(나레이션): "오늘따라 바람이 좋다..."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 delicate gold necklace,
 effortlessly photogenic not posing just existing beautifully,
@@ -188,10 +213,10 @@ medium shot, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??narration added in post
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
 
 First 0-3s: she walks slowly along trendy street,
 popup store signage visible on both sides,
@@ -204,41 +229,47 @@ soft unhurried expression.
 Final 6-8s: she continues walking,
 navy check skirt catching the breeze softly,
 warm afternoon light.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 4]  YR_VD ??踰꾪궥 ?뚮씪??苑껋쭛 / 8珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?깆닔??踰꾪궥 ?뚮씪??苑껋쭛 ??/ ?먮걹?쇰줈 苑??대ŉ??嫄대뱶由?SP: OT.ST.TZ_AF.LT_WM
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4]  YR_VD — 버킷 플라워 꽃집 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 버킷 플라워 꽃집 앞 / 손끝으로 꽃 살며시 건드림
+SP: OT.ST.TZ_AF.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?덉걶 寃껊뱾? ???대젃寃?湲덈갑 吏?섍?踰꾨━??嫄멸퉴.
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 예쁜 것들은 왜 이렇게 금방 지나가버리는 걸까.
 SH: SH_MCU
 CA: CA_ST
 MD: MD_DRM
 AC: AT_AC_04
 LOOK_ID: LOOK02
 DU: 8
-?ㅻ뵒??
-  BGM: Lo-fi ?몃뵒 ?댁퓼?ㅽ떛 ???댁쭩 議곗슜?댁?硫?  ?뚯꽦: 議곗슜?섍퀬 ?꾨젴???섎젅?댁뀡 ??  ?④낵?? 諛붾엺??苑껋옂 ?대옉?대뒗 ?뚮━
-  ?곕퉬?몄뒪: 嫄곕━ ?뚯쓬 硫?댁쭚, 苑껋쭛 二쇰? 議곗슜??遺꾩쐞湲?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     踰꾪궥 ?뚮씪??苑껋쭛 ??/ ?ㅽ썑 / ?뚯뒪??苑껊뱾
-CH(罹먮┃??:   LOOK02 ?곷컲??/ ???대줈利덉뾽
-SH(??:       誘몃뵒???대줈利덉뾽
-CA(移대찓??:   怨좎젙
-AC(?숈옉):     苑껋쭛 ??硫덉텛湲????먮걹?쇰줈 ?묒? 苑??댁쭩 嫄대뱶由ш린 ?????대━硫??ъ슫
-MD(媛먯젙):     議곗슜?섍퀬 ?쎄컙 ?꾨젴??/ 湲덈갑 吏?섍???寃껊뱾?????媛먯꽦
-DL(???:     ?놁쓬
-NR(?섎젅?댁뀡): "?덉걶 寃껊뱾? ???대젃寃?湲덈갑 吏?섍?踰꾨━??嫄멸퉴."
+오디오:
+  BGM: Lo-fi 인디 어쿠스틱 — 살짝 조용해지며
+  음성: 조용하고 아련한 나레이션 톤
+  효과음: 바람에 꽃잎 살랑이는 소리
+  앰비언스: 거리 소음 멀어짐, 꽃집 주변 조용한 분위기
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-CLOSEUP SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     버킷 플라워 꽃집 앞 / 오후 / 파스텔 꽃들
+CH(캐릭터):   LOOK02 상반신 / 손 클로즈업
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     꽃집 앞 멈추기 → 손끝으로 작은 꽃 살짝 건드리기 → 손 내리며 여운
+MD(감정):     조용하고 약간 아련한 / 금방 지나가는 것들에 대한 감성
+DL(대사):     없음
+NR(나레이션): "예쁜 것들은 왜 이렇게 금방 지나가버리는 걸까."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
 delicate gold necklace,
@@ -255,10 +286,10 @@ medium close-up, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??narration added in post
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
 
 First 0-3s: she pauses naturally in front of flower buckets,
 gaze settling softly on the blooms,
@@ -271,41 +302,47 @@ expression quiet and slightly wistful.
 Final 6-8s: hand lowers gently,
 she looks at the flowers a moment longer,
 soft warm light on her face.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 5]  YR_VD ???쇱껌??媛먯꽦 移댄럹 李쎄? / 8珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?쇱껌??媛먯꽦 移댄럹 李쎄? / ?뚯씠?ъ븘??而????먯쑝濡?媛먯떥硫?李쎈컰 諛붾씪遊?SP: IN.CF.TZ_AF.LT_WM
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 5]  YR_VD — 삼청동 감성 카페 창가 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 삼청동 감성 카페 창가 / 테이크아웃 컵 두 손으로 감싸며 창밖 바라봄
+SP: IN.CF.TZ_AF.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?ш린 ?먯＜ ?ㅺ퀬 ?띕떎...
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 여기 자주 오고 싶다...
 SH: SH_MCU
 CA: CA_ST
 MD: MD_REL
 AC: AT_AC_02
 LOOK_ID: LOOK02
 DU: 8
-?ㅻ뵒??
-  BGM: 移댄럹 ?대? ?뚰봽???ъ쫰 or ?몃뵒 ?댁퓼?ㅽ떛
-  ?뚯꽦: 議곗슜?섍퀬 ?ъ슫 ?덈뒗 ?섎젅?댁뀡 ??  ?④낵?? 而??뚯씠釉붿뿉 ?대젮?볥뒗 ?뚮━ (遺?쒕읇寃?
-  ?곕퉬?몄뒪: 移댄럹 議곗슜???섍꼍??
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?쇱껌??誘몃땲硫 媛먯꽦 移댄럹 李쎄? / ?ㅽ썑 5???⑷툑鍮?CH(罹먮┃??:   LOOK02 ?곷컲??/ 李쎄? ?먮━
-SH(??:       誘몃뵒???대줈利덉뾽
-CA(移대찓??:   怨좎젙
-AC(?숈옉):     ???먯쑝濡?而?媛먯떥 伊먭린 ??李쎈컰 諛붾씪蹂닿린 ??而??대ŉ???대젮?볤린
-MD(媛먯젙):     ?꾩쟾???몄븞??/ ?ш린 ?먯＜ ?ㅺ퀬 ?띕떎???뚮컯??湲곗겏
-DL(???:     ?놁쓬
-NR(?섎젅?댁뀡): "?ш린 ?먯＜ ?ㅺ퀬 ?띕떎..."
+오디오:
+  BGM: 카페 내부 소프트 재즈 or 인디 어쿠스틱
+  음성: 조용하고 여운 있는 나레이션 톤
+  효과음: 컵 테이블에 내려놓는 소리 (부드럽게)
+  앰비언스: 카페 조용한 환경음
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-CLOSEUP SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     삼청동 미니멀 감성 카페 창가 / 오후 5시 황금빛
+CH(캐릭터):   LOOK02 상반신 / 창가 자리
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     두 손으로 컵 감싸 쥐기 → 창밖 바라보기 → 컵 살며시 내려놓기
+MD(감정):     완전히 편안한 / 여기 자주 오고 싶다는 소박한 기쁨
+DL(대사):     없음
+NR(나레이션): "여기 자주 오고 싶다..."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
 delicate gold necklace,
@@ -322,10 +359,10 @@ she holds cup with both hands gazes softly out the window slight smile completel
 medium close-up, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??narration added in post
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
 
 First 0-3s: she sits at window seat, both hands wrapped around takeout cup,
 gazing softly out the window,
@@ -338,42 +375,47 @@ hanok rooftile visible softly beyond the window.
 Final 6-8s: she lowers cup gently onto table,
 warm satisfied expression,
 golden light warming her face.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 6]  YR_VD ???몄뒪? ?ы넗議???/ 8珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?쒖슱 ?몄뒪? ?ы넗議???/ ???ㅼ뿀?ㅺ? 泥쒖쿇???대━硫?洹몃깷 ?덉쑝濡??닿린濡?寃곗젙
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 6]  YR_VD — 인스타 포토존 앞 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 인스타 포토존 앞 / 폰 들었다가 천천히 내리며 그냥 눈으로 담기로 결정
 SP: OT.ST.TZ_AF.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?먮떎, 洹몃깷 ?덉쑝濡??댁옄.
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 됐다, 그냥 눈으로 담자.
 SH: SH_MCU
 CA: CA_ST
-MD: MD_REL ??MD_DRM
+MD: MD_REL → MD_DRM
 AC: AT_AC_04
 LOOK_ID: LOOK02
 DU: 8
-?ㅻ뵒??
-  BGM: ?몃뵒 ?댁퓼?ㅽ떛 ???붿옍?섍쾶 ?좎?
-  ?뚯꽦: ?대떞?섍퀬 ?먯뿰?ㅻ윭???섎젅?댁뀡 ??  ?④낵?? 二쇰? ?щ엺?????뷀꽣 ?뚮━ (?鍮??④낵)
-  ?곕퉬?몄뒪: 二쇰? ?뚯쓬, ?쒖뿬由щ쭔 議곗슜???鍮?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?쒖슱 ?몃젋???ы넗議???/ ?ㅽ썑 / ?꾪듃 裕ㅻ윺 踰?諛곌꼍
-CH(罹먮┃??:   LOOK02 ?곷컲??SH(??:       誘몃뵒???대줈利덉뾽
-CA(移대찓??:   怨좎젙
-AC(?숈옉):     ???ㅼ뼱?щ━湲???泥쒖쿇???대━湲???洹몃깷 諛붾씪蹂닿린濡?寃곗젙
-MD(媛먯젙):     ?쎄컙 ?꾨젴?섏?留??됱삩??/ 湲곕줉蹂대떎 寃쏀뿕???앺븯???쒓컙
-DL(???:     ?놁쓬
-NR(?섎젅?댁뀡): "?먮떎, 洹몃깷 ?덉쑝濡??댁옄."
+오디오:
+  BGM: 인디 어쿠스틱 — 잔잔하게 유지
+  음성: 담담하고 자연스러운 나레이션 톤
+  효과음: 주변 사람들 폰 셔터 소리 (대비 효과)
+  앰비언스: 주변 소음, 서여리만 조용한 대비
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-CLOSEUP SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 트렌디 포토존 앞 / 오후 / 아트 뮤럴 벽 배경
+CH(캐릭터):   LOOK02 상반신
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     폰 들어올리기 → 천천히 내리기 → 그냥 바라보기로 결정
+MD(감정):     약간 아련하지만 평온한 / 기록보다 경험을 택하는 순간
+DL(대사):     없음
+NR(나레이션): "됐다, 그냥 눈으로 담자."
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
 delicate gold necklace,
@@ -390,10 +432,10 @@ warm afternoon light, medium shot, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??narration added in post
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
 
 First 0-3s: she stands in front of art mural wall,
 raises phone slowly as if about to take a selfie,
@@ -406,42 +448,47 @@ slightly wistful but peaceful decision.
 Final 6-8s: she stands holding phone at side,
 just looking at the wall with soft eyes,
 calm contrast to the busy photo-taking around her.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 7]  YR_VD ??媛먯꽦 踰쏀솕 ???⑷툑鍮??몄쓣 / 8珥??곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?깆닔?????踰쏀솕 ??/ ???대ŉ??媛먭퀬 ?⑷툑鍮??몄쓣 留욊린
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 7]  YR_VD — 감성 벽화 앞 황금빛 노을 / 8초
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 성수동 대형 벽화 앞 / 눈 살며시 감고 황금빛 노을 맞기
 SP: OT.ST.TZ_GH.LT_WM
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ?놁쓬
-NR: ?대윴 ?ㅽ썑媛 ?덉뼱???ㅽ뻾?대씪怨??앷컖?덈떎.
+CH: 서여리 / LOOK02
+DL: 없음
+NR: 이런 오후가 있어서 다행이라고 생각했다.
 SH: SH_FS
 CA: CA_ST
 MD: MD_DRM
 AC: AT_EM_04
 LOOK_ID: LOOK02
 DU: 8
-?ㅻ뵒??
-  BGM: ?쒖젙?곸쑝濡??꾪솚 ??媛먯젙 怨좎“
-  ?뚯꽦: ?ъ슫 ?덇퀬 媛먯꽦?곸씤 ?섎젅?댁뀡 ??  ?④낵?? 諛붾엺 ?뚮━, ?ㅼ빱???대옉?대뒗 ?뚮━
-  ?곕퉬?몄뒪: ?⑺샎 ?꾩떆 議곗슜???뚯쓬
+오디오:
+  BGM: 서정적으로 전환 — 감정 고조
+  음성: 여운 있고 감성적인 나레이션 톤
+  효과음: 바람 소리, 스커트 살랑이는 소리
+  앰비언스: 황혼 도시 조용한 소음
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?깆닔?????踰쏀솕 ??/ ?⑷툑鍮??몄쓣 / ?곕쑜???곕쾭 鍮?CH(罹먮┃??:   LOOK02 ?꾩떊 / 踰쏀솕 ?욎뿉 ?쒖엳??紐⑥뒿
-SH(??:       ???CA(移대찓??:   怨좎젙
-AC(?숈옉):     踰쏀솕 ?욎뿉 ?쒖꽌 ???대ŉ??媛먭린 / ?쇨뎬 ?댁쭩 ?꾨줈 ?ν븯湲?/ 泥댄겕 ?ㅼ빱??諛붾엺???대옉
-MD(媛먯젙):     ?대윴 ?ㅽ썑媛 ?덉뼱???ㅽ뻾?대씪??媛먯궗??/ 媛먯꽦?곸씤 ?ъ슫
-DL(???:     ?놁쓬
-NR(?섎젅?댁뀡): "?대윴 ?ㅽ썑媛 ?덉뼱???ㅽ뻾?대씪怨??앷컖?덈떎."
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     성수동 대형 벽화 앞 / 황금빛 노을 / 따뜻한 앰버 빛
+CH(캐릭터):   LOOK02 전신 / 벽화 앞에 서있는 모습
+SH(샷):       풀샷
+CA(카메라):   고정
+AC(동작):     벽화 앞에 서서 눈 살며시 감기 / 얼굴 살짝 위로 향하기 / 체크 스커트 바람에 살랑
+MD(감정):     이런 오후가 있어서 다행이라는 감사함 / 감성적인 여운
+DL(대사):     없음
+NR(나레이션): "이런 오후가 있어서 다행이라고 생각했다."
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-FULLBODY SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+FULLBODY SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 delicate gold necklace,
 effortlessly photogenic not posing just existing beautifully,
@@ -460,10 +507,10 @@ medium shot, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-NO dialogue ??narration added in post
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+NO dialogue — narration added in post
 
 First 0-3s: she stands still in front of large mural,
 looking at it for a moment,
@@ -476,42 +523,47 @@ navy check skirt catches the evening breeze softly.
 Final 6-8s: she remains still,
 completely quiet in the golden hour light,
 soft shadow stretching behind her.
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-[CUT 8]  YR_VD ??猷⑦봽???붾뵫 / 10珥? ?낅┰?깊겕
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SC: ?쒖슱 猷⑦봽??移댄럹 / ?꾩떆 ?꾧꼍 諛붾씪蹂대떎媛 移대찓???ν빐 ?뚯븘蹂대ŉ ???SP: OT.RF.TZ_GH.LT_DK
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 8]  YR_VD — 루프탑 엔딩 / 10초  ★립싱크
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서울 루프탑 카페 / 도시 전경 바라보다가 카메라 향해 돌아보며 대사
+SP: OT.RF.TZ_GH.LT_DK
 PL: YR_VD
-CH: ?쒖뿬由?/ LOOK02
-DL: ??.. ?ㅻ뒛, ?대윴 ?쒓컙 ?놁뿀?ㅻ㈃... ?댁씪? 瑗?留뚮뱾?대킄. ?ㅽ썑 4?쒖?.
-NR: ?놁쓬
+CH: 서여리 / LOOK02
+DL: 너... 오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤.
+NR: 없음
 SH: SH_CU
 CA: CA_ST
-MD: MD_DRM ??MD_JOY
+MD: MD_DRM → MD_JOY
 AC: AT_SI_01 + AT_EM_01
 LOOK_ID: LOOK02
 DU: 10
-?ㅻ뵒??
-  BGM: ?쒖젙??BGM ??????쒖옉 ??蹂쇰ⅷ ??텛湲?  ?뚯꽦: 諛앷퀬 ?먯뿰?ㅻ읇寃?(移쒓뎄?쒗뀒 留먰븯?? ???낅┰?깊겕
-  ?④낵?? ?놁쓬
-  ?곕퉬?몄뒪: ????꾩떆 諛붾엺 ?뚮━, ?먭굅由??꾩떆 ?뚯쓬
+오디오:
+  BGM: 서정적 BGM — 대사 시작 시 볼륨 낮추기
+  음성: 밝고 자연스럽게 (친구한테 말하듯) — ★립싱크
+  효과음: 없음
+  앰비언스: 저녁 도시 바람 소리, 원거리 도시 소음
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-KR (?쒓? 而⑦럩蹂?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-SP(?μ냼):     ?쒖슱 猷⑦봽??移댄럹 / ??곷끂??/ ???곕쾭? ?뚰봽???묓겕 ?섎뒛
-CH(罹먮┃??:   LOOK02 ?꾩껜 / 猷⑦봽???쒓컙 洹쇱쿂
-SH(??:       ?대줈利덉뾽
-CA(移대찓??:   怨좎젙
-AC(?숈옉):     ?꾩떆 ?꾧꼍 議곗슜??諛붾씪蹂닿린 ??泥쒖쿇??移대찓???ν빐 ?뚯븘蹂닿린 ??諛앷퀬 ?먯뿰?ㅻ윭??誘몄냼濡???????ъ슫 2珥?MD(媛먯젙):     遺?쒕읇怨??쎄컙 ?몄벝?섏?留??곕쑜??/ 移쒓뎄?쒗뀒 留먰븯???먯뿰?ㅻ윭??DL(???:     "??.. ?ㅻ뒛, ?대윴 ?쒓컙 ?놁뿀?ㅻ㈃... ?댁씪? 瑗?留뚮뱾?대킄. ?ㅽ썑 4?쒖?."
-NR(?섎젅?댁뀡): ?놁쓬
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서울 루프탑 카페 / 저녁노을 / 딥 앰버와 소프트 핑크 하늘
+CH(캐릭터):   LOOK02 전체 / 루프탑 난간 근처
+SH(샷):       클로즈업
+CA(카메라):   고정
+AC(동작):     도시 전경 조용히 바라보기 → 천천히 카메라 향해 돌아보기 → 밝고 자연스러운 미소로 대사 → 여운 2초
+MD(감정):     부드럽고 약간 쓸쓸하지만 따뜻한 / 친구한테 말하듯 자연스러운
+DL(대사):     "너... 오늘, 이런 시간 없었다면... 내일은 꼭 만들어봐. 오후 4시쯤."
+NR(나레이션): 없음
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-IP (?대?吏 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-CLOSEUP SHOT ??Young Korean woman early-20s,
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+CLOSEUP SHOT —
+Young Korean woman early-20s,
 long wavy dark brown hair NOT short hair,
 a very subtle natural skin texture on her right cheek (subtle, never exaggerated),
 delicate gold necklace,
@@ -529,9 +581,9 @@ close-up, eye level, vertical 9:16,
 Photorealistic 8K cinematic natural Korean beauty,
 background people must not interact with or interfere with the main character
 
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
-VP (?곸긽 ?꾨＼?꾪듃)
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
 First 0-3s: she sits quietly at rooftop,
 gazing at Seoul city skyline,
 warm dusk sky behind her.
@@ -540,45 +592,47 @@ Next 3-7s: she turns slowly toward camera,
 soft bright natural smile forming,
 like turning to tell a close friend something.
 
-Next 3-8s: she speaks brightly ??"??.. ?ㅻ뒛, ?대윴 ?쒓컙 ?놁뿀?ㅻ㈃...
-?댁씪? 瑗?留뚮뱾?대킄. ?ㅽ썑 4?쒖?."
+Next 3-8s: she speaks brightly —
+"너... 오늘, 이런 시간 없었다면...
+내일은 꼭 만들어봐. 오후 4시쯤."
 bright and natural, like talking to a close friend.
-Final 8-10s: warm smile, direct gaze ???ъ슫 2珥?
+Final 8-10s: warm smile, direct gaze — 여운 2초.
 
 
 First 0-3s: she sits quietly gazing at city view.
 
-Next 3-8s: she turns toward camera, smiles naturally ??"??.. ?ㅻ뒛, ?대윴 ?쒓컙 ?놁뿀?ㅻ㈃...
-?댁씪? 瑗?留뚮뱾?대킄. ?ㅽ썑 4?쒖?."
+Next 3-8s: she turns toward camera, smiles naturally —
+"너... 오늘, 이런 시간 없었다면...
+내일은 꼭 만들어봐. 오후 4시쯤."
 bright and natural, like talking to a close friend.
 
-Final 8-10s: warm smile, direct gaze ???ъ슫 2珥?
-?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺?곣봺
+Final 8-10s: warm smile, direct gaze — 여운 2초.
+━━━━━━━━━━━━━━━━━━━━━━━━
 
 
 ================================================================
-?꾩껜 而??붿빟
+전체 컷 요약
 ================================================================
-| 而? | ?쒕ぉ              | 湲몄씠 | PL     | LOOK   | SH        | CA     | 由쎌떛??| ?곹깭 |
+| 컷  | 제목              | 길이 | PL     | LOOK   | SH        | CA     | 립싱크 | 상태 |
 |-----|------------------|------|--------|--------|-----------|--------|--------|------|
-| C01 | ?깆닔???ㅽ썑 4??  | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_ST  | ??    | ?좉퇋 |
-| C02 | ?앹뾽?ㅽ넗??嫄곕━   | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_TR  | ??    | ?좉퇋 |
-| C03 | 踰꾪궥 ?뚮씪??苑껋쭛  | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ??    | ?좉퇋 |
-| C04 | ?쇱껌??媛먯꽦 移댄럹  | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ??    | ?좉퇋 |
-| C05 | ?몄뒪? ?ы넗議?    | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ??    | ?좉퇋 |
-| C06 | 媛먯꽦 踰쏀솕 ?몄쓣    | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_ST  | ??    | ?좉퇋 |
-| C07 | 猷⑦봽???붾뵫       | 10s  | YR_VD  | LOOK02 | SH_CU     | CA_ST  | ??    | ?좉퇋 |
+| C01 | 성수동 오후 4시   | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_ST  | ❌     | 신규 |
+| C02 | 팝업스토어 거리   | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_TR  | ❌     | 신규 |
+| C03 | 버킷 플라워 꽃집  | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ❌     | 신규 |
+| C04 | 삼청동 감성 카페  | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ❌     | 신규 |
+| C05 | 인스타 포토존     | 8s   | YR_VD  | LOOK02 | SH_MCU    | CA_ST  | ❌     | 신규 |
+| C06 | 감성 벽화 노을    | 8s   | YR_VD  | LOOK02 | SH_FS     | CA_ST  | ❌     | 신규 |
+| C07 | 루프탑 엔딩       | 10s  | YR_VD  | LOOK02 | SH_CU     | CA_ST  | ✅     | 신규 |
 
-珥?湲몄씠: 62珥?/ ?ъ깮???놁쓬 / 由쎌떛??1而?(C07)
-BGM: Lo-fi ?몃뵒 ?댁퓼?ㅽ떛 ??C06遺???쒖젙???꾪솚
+총 길이: 62초 / 재생성 없음 / 립싱크 1컷 (C07)
+BGM: Lo-fi 인디 어쿠스틱 → C06부터 서정적 전환
 ================================================================
-踰꾩쟾 ?대젰
+버전 이력
 ================================================================
-v1.0 (2026-07-08) ??理쒖큹 ?묒꽦
-v2.0 (2026-07-24) ???쒖? ?щ㎎ v2 ?곸슜 (LOOK_ID / CAM / ?ㅻ뵒??
-v3.1 (2026-07-25) ???쒖? ?щ㎎ v3 ?듯빀
-                    留덉뒪??肄붾뱶 ?ㅻ뜑 / KR ?뱀뀡 / VP ?뱀뀡 異붽?
-                    ??24 援щ텇???듭씪 / 肄붾뱶 ?꾨뱶 ?꾩껜 ?뺣━
-                    VP ?뱀뀡 ?섏젙 ??THIS IS A SILENT FILM ?쒓굅
-                    由쎌떛??踰꾩쟾 ?⑥씪??/ ?섎젅?댁뀡 而?NO dialogue ?쒓린
+v1.0 (2026-07-08) — 최초 작성
+v2.0 (2026-07-24) — 표준 포맷 v2 적용 (LOOK_ID / CAM / 오디오)
+v3.1 (2026-07-25) — 표준 포맷 v3 통합
+                    마스터 코드 헤더 / KR 섹션 / VP 섹션 추가
+                    ━*24 구분선 통일 / 코드 필드 전체 정리
+                    VP 섹션 수정 — THIS IS A SILENT FILM 제거
+                    립싱크 버전 단일화 / 나레이션 컷 NO dialogue 표기
 ================================================================

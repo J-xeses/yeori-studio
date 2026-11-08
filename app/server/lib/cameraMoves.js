@@ -23,12 +23,12 @@ const BUILTIN_PRESETS = [
   {
     id: 'drone-soar-dive',
     name: '드론 급상승·급강하 (훅)',
-    description: '현재 장면에서 카메라가 공중으로 빠르게 상승해 전체를 훑은 뒤, 다음 장면의 인물에게 급강하하며 접근 — 두 컷 사이 패턴 인터럽트용 훅. SF_E01 CUT1용 드론 후보(최종 미채택, Fly camera gen/Drone_camera_soaring_and_diving) 참고.',
+    description: '현재 장면에서 카메라가 공중으로 빠르게 상승해 지붕이 펼쳐진 거리 위를 잠시 가로질러 이동한 뒤, 다음 장면의 인물에게 급강하하며 접근 — 두 컷 사이 패턴 인터럽트용 훅. 공중 이동 구간에 "시간/장소가 그 사이 바뀌었다"는 의도를 빛·거리 변화로 암시한다(2026-11-08 성준님 교정). SF_E01 CUT1용 드론 후보(최종 미채택, Fly camera gen/Drone_camera_soaring_and_diving) 참고.',
     caCode: 'CA_DR',
-    suggestedDuration: 3,
+    suggestedDuration: 5,
     audioMotif: '급상승·급강하 스월(swoosh) 효과음 + 바람 소리, 상승 구간엔 BGM 위에 바람 레이어만 추가',
-    ipTemplate: 'WIDE SHOT —\n{{BEFORE}},\nstreet-level low angle wide shot framed to leave headroom for an upward camera move,\nvertical 9:16,\nCinematic, photorealistic, 8K,\nbackground people must not interact with or interfere with the main character',
-    vpTemplate: 'NO dialogue — pure camera-move hook, no narration\n\nFirst 0-33%: camera rapidly ascends high above the scene,\n{{BEFORE}},\nfalling away below, fast upward motion, slight motion blur.\n\nMid 33-50%: brief suspended aerial hold,\nwide view below, light and atmosphere visible across the scene.\n\nFinal 50-100%: camera dives rapidly downward,\nswooping toward {{AFTER}},\nfast descending motion, smooth landing into shot.',
+    ipTemplate: 'WIDE AERIAL SHOT —\n{{BEFORE}},\nseen from above as the camera rises away, rooftops of the street spreading out below, light subtly shifting as if time is quietly passing,\nvertical 9:16,\nCinematic, photorealistic, 8K,\nbackground people must not interact with or interfere with the main character',
+    vpTemplate: 'NO dialogue — pure camera-move hook, no narration\n\nFirst 0-25%: camera rapidly ascends high above the scene,\n{{BEFORE}},\nfalling away below, fast upward motion, slight motion blur.\n\n25-55%: camera glides forward over a street of rooftops spreading out below — flat and sloped roofs, water tanks, rows of low buildings,\nthe light overhead subtly deepening as if minutes have quietly slipped by during the flight, the street below slowly giving way to a different one.\n\n55-75%: a new street comes into view below, camera begins descending toward it.\n\nFinal 75-100%: camera dives rapidly downward,\nswooping toward {{AFTER}},\nfast descending motion, smooth landing into shot.',
     originEpisode: 'SF_E01',
     originCutNo: 1,
     referenceImage: '',
@@ -124,7 +124,11 @@ export function buildCameraMoveCut({ id, beforeDesc, afterDesc, sp = '', lookId 
       dialogue: '',
       narration: '',
       masterCode: {
-        ca: t.caCode, pl: 'BR_VD', sp, lookId,
+        // 2026-11-08 수정: 'BR_VD' 고정은 버그였음 — "서여리 미등장/하체만"이라는 BR_VD 정의와
+        // 달리, 이 기법들은 before/after 묘사에 보통 서여리가 실제로 등장한다(실측: SF_E02
+        // CUT2에 적용했더니 서여리가 풀샷으로 나오는데도 BR_VD가 찍혀 YEORI_BASE 디스크립터가
+        // 프롬프트에서 빠지는 사고로 이어짐). YR_VD를 기본값으로 바꾼다.
+        ca: t.caCode, pl: 'YR_VD', sp, lookId,
         audio: { bgm: '', voice: '', sfx: t.audioMotif || '', ambience: '' },
         kr: { ca: `${t.name} (${before} → ${after})` },
       },
