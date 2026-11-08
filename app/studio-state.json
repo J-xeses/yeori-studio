@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "retention",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12546,7 +12546,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-08T08:58:50.468Z",
+  "savedAt": "2026-11-08T09:41:10.569Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -12564,7 +12564,21 @@
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_01_clip_1.mp4"
         }
       ],
-      "cut-2": [],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/9ae1e279-b278-48d9-8b55-f33bc6cafd78",
+          "name": "Woman_walking_and_gazing_display_44cea0c0_1080p.mp4",
+          "duration": 5.97,
+          "trimStart": 0,
+          "trimEnd": 5.97,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794131798440,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E02\\04_making\\raw\\cut_02_clip_new1794132551128.mp4"
+        }
+      ],
       "cut-3": [
         {
           "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E02/06_publishing/cut_03_final.mp4?t=1794129290756",
@@ -12658,7 +12672,8 @@
       "cut-6": true,
       "cut-5": true,
       "cut-7": true,
-      "cut-8": true
+      "cut-8": true,
+      "cut-2": true
     },
     "selectedCutId": "cut-2",
     "subtitles": {

@@ -1688,7 +1688,7 @@
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-08T09:12:47.062Z",
+      "updatedAt": "2026-11-08T10:09:23.202Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -1698,15 +1698,15 @@
             "proportion": 2,
             "hair": 2,
             "action": 2,
-            "mood": 2,
+            "mood": 1,
             "shot": 2,
             "camera": 2,
-            "background": 1,
+            "background": 2,
             "trend": 2
           },
-          "total": 96,
+          "total": 94,
           "note": "",
-          "scoredAt": "2026-11-07T12:06:10.785Z"
+          "scoredAt": "2026-11-08T10:04:01.683Z"
         },
         "1": {
           "filename": "cut_02_b.jpg",
@@ -1729,7 +1729,8 @@
       },
       "g2": true,
       "selectedImage": "cut_02_a.jpg",
-      "g3": true
+      "g3": true,
+      "g4": true
     }
   },
   "SF_E99_TEST": {

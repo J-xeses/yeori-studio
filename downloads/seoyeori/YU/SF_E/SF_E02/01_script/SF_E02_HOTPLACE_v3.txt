@@ -78,8 +78,6 @@ background people must not interact with or interfere with the main character
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — narration added in post
-
 First 0-3s: she walks slowly away from camera,
 warm golden afternoon light casting long soft shadows,
 red brick buildings and cafe signs on both sides.
@@ -216,8 +214,6 @@ background people must not interact with or interfere with the main character
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — narration added in post
-
 First 0-3s: she walks slowly along trendy street,
 popup store signage visible on both sides,
 camera tracking alongside her naturally.
@@ -289,8 +285,6 @@ background people must not interact with or interfere with the main character
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — narration added in post
-
 First 0-3s: she pauses naturally in front of flower buckets,
 gaze settling softly on the blooms,
 pastel flowers filling the frame around her.
@@ -362,8 +356,6 @@ Photorealistic 8K cinematic natural Korean beauty
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — narration added in post
-
 First 0-3s: she sits at window seat, both hands wrapped around takeout cup,
 gazing softly out the window,
 golden afternoon light filtering through glass.
@@ -435,8 +427,6 @@ background people must not interact with or interfere with the main character
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — narration added in post
-
 First 0-3s: she stands in front of art mural wall,
 raises phone slowly as if about to take a selfie,
 other visitors taking photos in background.
@@ -510,8 +500,6 @@ background people must not interact with or interfere with the main character
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — narration added in post
-
 First 0-3s: she stands still in front of large mural,
 looking at it for a moment,
 warm amber golden light bathing the scene.

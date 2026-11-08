@@ -98,58 +98,67 @@ warm light wrapping the scene. NO dialogue. NO speaking. NO lip movement. MOUTH 
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[CUT 2]  YR_VD — 팝업스토어 진입 리빌 / 6초
+[CUT 2]  YR_VD — 급상승·지붕거리 횡단·급강하 리빌 / 6초
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SC: (성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습 클로즈업에서 극적 줌아웃하며 팝업스토어 앞 여리로 리빌
+SC: (성수동 오후 4시 다음 — 신규 삽입 컷) 뒷모습에서 카메라가 하늘로 급상승 → 지붕이 펼쳐진 거리를 가로질러 이동(그 사이 빛·장소가 바뀌는 느낌) → 급강하하여 팝업스토어 앞 여리로 도착
 SP: OT.ST.TZ_AF.LT_WM
 PL: YR_VD
 CH: 서여리 / LOOK02
 DL: 없음
 NR: 없음
 CP: 없음
-SH: SH_CU
-CA: CA_ZO
+SH: SH_WS
+CA: CA_DR
 MD: MD_REL
 AC: 없음
 LOOK_ID: LOOK02
-DU: 6
+DU: 5
 오디오:
-  BGM: 
-  음성: 
-  효과음: 시네마틱 휩 사운드만, 음악 없이
-  앰비언스: 
+  BGM:
+  음성:
+  효과음: 급상승·급강하 스월(swoosh) 효과음 + 바람 소리, 상승 구간엔 BGM 위에 바람 레이어만 추가
+  앰비언스:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 KR (한글 컨펌본)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-SP(장소):     성수동 거리 → 팝업스토어 앞
-CH(캐릭터):   LOOK02 전체 / 뒷모습 → 옆모습
-SH(샷):       클로즈업 시작 → 와이드 리빌
-CA(카메라):   극적 줌아웃 리빌 (지구까지 빠지기) (A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts. → A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.)
+SP(장소):     성수동 벽돌 거리 → (공중에서 지붕거리 횡단) → 더 북적이는 팝업스토어 거리
+CH(캐릭터):   LOOK02 전체 / 뒷모습 → (공중뷰, 인물 없음) → 옆모습
+SH(샷):       와이드 항공샷
+CA(카메라):   급상승 → 지붕이 펼쳐진 거리 위로 가로질러 이동(빛이 살짝 저녁 쪽으로 기울며 시간이 흐른 느낌, 아래 거리도 다른 거리로 바뀜) → 급강하 리빌 (A young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer. → A young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window.)
 AC(동작):     없음(카메라 이동이 연출의 중심)
-MD(감정):     나른함 → 호기심/주목 전환
-DL(대사):     
-NR(나레이션): 
-CP(자막):     
+MD(감정):     나른함 → 공중에서의 아득함/시간 흐름 → 호기심·주목 전환
+DL(대사):
+NR(나레이션):
+CP(자막):
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-CLOSEUP SHOT —
-A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,
-tight on her face,
+WIDE AERIAL SHOT —
+a young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,
+seen from above as the camera rises away, rooftops of the street spreading out below, light subtly shifting as if time is quietly passing,
 vertical 9:16,
-Photorealistic 8K cinematic natural Korean beauty
+Cinematic, photorealistic, 8K,
+background people must not interact with or interfere with the main character
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-NO dialogue — pure camera-move impact shot
+ 
+First 0-1.5s: camera rapidly ascends high above the scene,
+a young Korean woman walking away from camera down a quiet Seongsu-dong brick street, her back to the viewer,
+falling away below, fast upward motion, slight motion blur.
 
-Extreme continuous dolly-zoom-out starting tight on her face,
-A young Korean woman walks away from camera down a trendy Seongsu-dong street, her back to the viewer, passing brick walls and boutique storefronts.,
-camera rapidly pulling back and ascending through the atmosphere until A young Korean woman stands in side profile in front of a pop-up store, quietly gazing at the display window.,
-speed ramp acceleration, radial motion blur.
+1.5~3s: camera glides forward over a street of rooftops spreading out below — flat and sloped roofs, water tanks, rows of low buildings,
+the light overhead subtly deepening as if minutes have quietly slipped by during the flight, the street below slowly giving way to a different one.
+
+3~4.5s: a new street comes into view below, camera begins descending toward it.
+
+4.5~6s: camera dives rapidly downward,
+swooping toward a young Korean woman standing in side profile in front of a pop-up store on a busier street, quietly gazing at the display window,
+fast descending motion, smooth landing into shot.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━
 
 

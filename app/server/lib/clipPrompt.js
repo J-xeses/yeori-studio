@@ -112,11 +112,20 @@ function speakerLabel(en, side) {
 const IN_SCENE_BGM_RE = /(영상\s*속|현장|폰\s*스피커|스피커\s*질감|틀어\s*놓|라디오)/
 const NONE_RE = /^(없음|무|no|none)$/i
 
+// 나레이션(보이스오버 후반 합성) 전용 컷에 붙이는 짧은 무발화 지시 — 2026-11-08 교정(위 isNarration
+// 분기 주석 참고): "narration"이란 단어 자체를 반복하지 않고, 짧게 한 번만 지시한다.
+const SILENT_FILM_CUE = 'She stays silent on camera throughout — mouth closed, neutral expression, no lip movement. No on-screen subtitle text or captions.'
+
 // voice 필드는 대사 있는 컷에선 "말투/톤" 지시(anchors가 이미 처리)라 오디오 문단엔 안 쓴다.
-// 대사가 없는 컷(예: 웃음소리만)에서만 괄호 안 부가음을 뽑아 쓴다.
+// 2026-11-08 교정(성준님 실측, SF_E02 CUT3): 나레이션 전용 컷의 "음성:" 필드도 원래
+// ElevenLabs 나레이션 톤 지시(예: "조용한 혼잣말 톤 나레이션")일 뿐인데, 그걸 영상 생성
+// 오디오 문단에 "non-dialogue voice/reaction sound"로 집어넣으면 화면 속에서 뭔가 목소리를
+// 내야 하는 것처럼 읽혀 SILENT_FILM_CUE(무발화 지시)와 정반대로 충돌했다 — 나레이션 전용
+// 컷도 대사 컷과 똑같이 건너뛴다. 웃음소리 같은 "대사도 나레이션도 없는" 순수 리액션 사운드
+// 컷에서만 쓴다.
 function nonDialogueVoiceText(cut, voiceText) {
   if (!voiceText || NONE_RE.test(voiceText.trim())) return ''
-  if (String(cut.dialogue || '').trim()) return ''
+  if (String(cut.dialogue || '').trim() || String(cut.narration || '').trim()) return ''
   const paren = voiceText.match(/\(([^)]+)\)/)
   const extracted = (paren ? paren[1] : voiceText).trim()
   return NONE_RE.test(extracted) ? '' : extracted
@@ -153,6 +162,12 @@ export function buildAudioParagraph(cut, k) {
 
 // VP 에서 클립 k 의 화면 서술을 찾는다. 반환 { text, source } | null
 // 생성 도구에 들어가면 안 되는 한국어 제작 메모 제거(명세 §2-3 발화 블록의 생성:/후처리: 안내, 헤더 줄, 대사 원문 줄 — 대사는 따로 넣는다)
+// 2026-11-08 성준님 지적: VP 맨 위에 흔히 박히는 "NO dialogue — narration added in post" 류
+// 문구가 오히려 Flow가 말을 지어내게 하는 역효과 원인이었다("제거해야 한다" 명시). 이건
+// Claude가 대본 생성할 때 관습적으로 써온 production-note성 문구라 대본 파일마다 박혀있고,
+// 한 곳만 고쳐선 못 잡는다 — 그래서 모든 production-note를 걷어내는 이 함수(생성 직전
+// 마지막 관문)에서 패턴으로 통째 제거한다. 실제 화면 묘사(First 0-3s 등)는 그대로 둔다.
+const NARRATION_POST_NOTE_RE = /^NO dialogue\s*[—–-]\s*narration (?:is |has been )?added in post[^\n]*$/gim
 export function stripProductionNotes(vp) {
   let t = String(vp || '').replace(/\r/g, '')
   const footerAt = t.search(/^생성:/m)
@@ -160,6 +175,7 @@ export function stripProductionNotes(vp) {
     const nextSeg = t.slice(footerAt).search(/^━+\s*SEG\s*\d+/m)        // SEG 블록 사이의 생성: 줄이면 그 줄들만 제거
     t = nextSeg > 0 ? t.slice(0, footerAt) + t.slice(footerAt + nextSeg) : t.slice(0, footerAt)
   }
+  t = t.replace(NARRATION_POST_NOTE_RE, '')
   return t.replace(/^(━━━\s*발화.*|유형:.*|전체 대사\(참고용\):.*|대사:.*|나레이션\(VO\):.*|후처리:.*|※.*)$/gm, '').replace(/\n{3,}/g, '\n\n').trim()
 }
 
@@ -361,16 +377,12 @@ export function buildClipPrompt(cut, k, n) {
       }
     }
   } else if (isNarration) {
-    const durN = Math.max(1, Number(cut.duration) || 8)
-    const winN = computeCaptionTimeline(cut)[0]
-    if (winN && (winN.start > 0.05 || winN.end < durN - 0.05)) {
-      const s0 = winN.start.toFixed(1), s1 = winN.end.toFixed(1)
-      const before = winN.start > 0.05 ? `0-${s0}s: no narration yet, she is silent, mouth closed/neutral. ` : ''
-      const after = winN.end < durN - 0.05 ? ` ${s1}-${durN.toFixed(1)}s: narration has ended, mouth stays closed/neutral.` : ''
-      prompt += `\n\n${before}${s0}-${s1}s (NARRATION, voiceover added in post): she does NOT speak and her lips do NOT move — mouth stays closed or in a natural neutral/resting shape, no mouthing or mumbling. She may shift her gaze or expression slightly, but must not appear to be talking.${after} No on-screen subtitle text or captions.`
-    } else {
-      prompt += `\n\nNO dialogue — narration is added in post; she does not move her lips to speak. No on-screen subtitle text or captions.`
-    }
+    // 2026-11-08 성준님 실측(SF_E02 CUT3 Flow 생성) — "narration"/"voiceover"/"speak"/"mouth"
+    // 같은 단어를 구간별로 여러 번 반복해서 강조할수록(부정문이라도) Flow가 오히려 말을
+    // 지어내거나 입을 움직이는 역효과가 났다. 애초에 나레이션은 입모양과 무관(전체 구간
+    // 내내 입을 안 움직이면 됨)이라 구간을 나눌 이유가 없었다 — 타이밍 분기를 걷어내고
+    // 한 번만 짧게 지시한다.
+    if (!prompt.includes(SILENT_FILM_CUE)) prompt += `\n\n${SILENT_FILM_CUE}`
   } else {
     // 대사도 나레이션도 없는 무성 컷(예: IG_R06 컷2 춤 챌린지) — 예전엔 여기 아무 지시도 안 붙어서
     // Veo가 임의로 화면에 자막을 태우는 사고가 났다(2026-09-28 실측, 성준님 지적).
