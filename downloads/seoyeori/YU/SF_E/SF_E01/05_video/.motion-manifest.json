@@ -1,9 +1,9 @@
 {
   "1": {
-    "method": "veo-manual",
+    "method": "multi-clip-compose",
     "motion": null,
     "baked": true,
-    "producedAt": "2026-11-06T12:29:13.645Z"
+    "producedAt": "2026-11-09T07:55:03.623Z"
   },
   "2": {
     "method": "multi-clip-compose",
