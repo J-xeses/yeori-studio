@@ -1660,7 +1660,10 @@ export default function VideoTab() {
                   setVideoClips(p => ({ ...p, [cut.id]: [narratedClip] }))
                   // 2026-11-07: narratedClip(=05_video로 복사될 파일)엔 이제 자막이 전혀 안
                   // 들어있으므로(위 참고) captionBurnedIntoBase는 항상 false로 고정.
-                  setTimeout(() => renderCutClips(cut, false), 150)
+                  // 2026-11-09: clips 목록을 상태/ref 재조회에 맡기지 않고 narratedClip을 직접
+                  // 넘긴다 — 바로 위 setVideoClips 호출이 아직 반영 안 된 시점이어도(ref가 다음
+                  // 렌더를 기다려야 함) 무조건 "방금 만든 그 클립"이 05_video로 들어가게 한다.
+                  setTimeout(() => renderCutClips(cut, false, [narratedClip]), 150)
                 }
               } else {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
@@ -1683,8 +1686,18 @@ export default function VideoTab() {
   // (2026-09-13 — 로컬 클립 편집이 지금까지 미리보기용 blob: URL일 뿐이라 실제 출력에
   // 반영이 안 됐던 문제의 해결책). order 순서(배열 순서) 그대로 보냄, stagedPath 없는
   // 클립(아직 스테이징 중)이 있으면 막는다.
-  const renderCutClips = async (cut, forceCaptionBurned) => {
-    const clips = videoClips[cut.id] || []
+  // 2026-11-09 (SF_E01 성준님 제보 — "탭에서 확인된 파일 상태 그대로 05_video에 업데이트가
+  // 안 된다"): 이 함수는 원래 `videoClips[cut.id]`(렌더 당시 클로저 변수)를 그대로 읽었다.
+  // runFfmpegForCut이 나레이션 클립을 만든 뒤 `setTimeout(() => renderCutClips(...), 150)`로
+  // 자동 호출할 때, 그 setTimeout 콜백은 호출 당시(=나레이션 생성 이전) 렌더의 클로저를 그대로
+  // 들고 있어 몇 ms를 기다려도 "방금 setVideoClips한 새 값"을 보지 못하고 그 이전 클립 목록을
+  // 읽는 경우가 있었다(실측: SF_E02 CUT7 — 나레이션은 06_publishing에 정상 생성됐는데
+  // 05_video/cut_07.mp4엔 반영이 안 돼 무음이었음, 재클릭으로만 우회됨). clipsOverride를
+  // 받으면 그걸 최우선으로 쓰고(호출부가 "이 클립을 쓰라"고 명시한 경우, 타이밍 의존 전혀 없음),
+  // 없으면 항상 최신인 videoClipsRef(다른 비동기 콜백들도 쓰는 패턴, 위 745번째 줄 참고)를 쓴다 —
+  // 둘 다 렌더 당시 state 클로저보다 신뢰할 수 있다.
+  const renderCutClips = async (cut, forceCaptionBurned, clipsOverride) => {
+    const clips = clipsOverride || videoClipsRef.current[cut.id] || []
     if (!clips.length) return
     // ⚠️ clips 배열에 구멍이 있을 수 있음(세그1/3만 채우고 세그2는 비워둔 경우, 2026-09-16
     // 세그별 슬롯 지정 업로드 도입) — some/map은 구멍을 그냥 건너뛰어서 이 체크 없이는 세그2가

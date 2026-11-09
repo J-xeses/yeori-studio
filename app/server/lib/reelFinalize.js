@@ -551,10 +551,45 @@ export async function finalizeReel(p) {
   for (const cut of playOrder) {
     // 메이킹 탭에서 자막·말풍선을 얹은 컷은 그 결과물을 그대로 쓴다(A안). 그 컷은 자막 번인 생략.
     const picked = mp.pickCutSource(vdir, cut.no)
-    const src = picked.path
+    let src = picked.path
     if (!src) { log(`⚠ cut_${String(cut.no).padStart(2, '0')}.mp4 없음 — 건너뜀`); continue }
     const d = decideCut(cut)
     d.derived = picked.derived
+    // 2026-11-09 (SF_E01/SF_E02 성준님 제보, [[project_sf_subtitle_burn_video_tab]] 11차 버그 A/B):
+    // 영상 탭 "나레이션·효과음 입히기"가 이미 처리해 둔 컷은 그 결과를 그대로 쓴다. 이걸 안 하면
+    // reelFinalize가 같은 나레이션 mp3를 또 섞거나(버그A), 영상 탭이 번인한 자막과 다른 자막을
+    // 또 구워서(버그B) 2중 삽입·설정 불일치가 생긴다 — SF_E02에서 실제로 터진 사례.
+    // 06_publishing/cut_NN_preview.mp4(나레이션+SFX+영상 탭 자막 설정 전부 번인)가
+    // 05_video/cut_NN.mp4(=picked.path)보다 최신이면 그걸 그대로 쓰고(이 컷은 reelFinalize가
+    // 자막도 다시 안 구움), 없고 cut_NN_final.mp4(나레이션+SFX만, 자막 없음)만 최신이면 그걸
+    // 쓴다(이 컷은 reelFinalize가 자막만 평소대로 추가). 메이킹 탭 파생본(picked.derived)이 이미
+    // 있으면 그쪽이 기존 그대로 우선 — 이 블록을 안 거침.
+    let vtSkipNarrationMix = false
+    if (!picked.derived) {
+      const pad2 = String(cut.no).padStart(2, '0')
+      const outDir = mp.outputDir(epNum)
+      const vtPreview = path.join(outDir, `cut_${pad2}_preview.mp4`)
+      const vtFinal = path.join(outDir, `cut_${pad2}_final.mp4`)
+      const baseM = fs.existsSync(src) ? fs.statSync(src).mtimeMs : 0
+      // 실측(SF_E01 2026-11-07): VideoTab 자동복사 설계상 06_publishing 파일이 먼저 만들어지고
+      // 그 결과가 05_video/cut_NN.mp4로 복사되는 건 항상 몇 초(실측 2~3초) "뒤"다 — 즉 정상
+      // 상태에서도 05_video가 06_publishing보다 약간 더 최신인 게 맞다. 처음엔 반대로(06_publishing
+      // 이 05_video보다 최신이어야 유효)로 짜서 실제로는 한 번도 안 걸렸던 걸 재생성 테스트로
+      // 확인·수정 — 05_video가 06_publishing보다 10초 이내로만 더 최신이면 "같은 처리의 결과물"로
+      // 보고 그대로 신뢰, 그보다 훨씬 더 최신이면(=그 뒤에 새 원본이 올라와 narration과 무관하게
+      // 다시 덮어써진 것) 무시하고 기존 reelFinalize 판단으로 폴백한다.
+      const STALE_GRACE_MS = 10000
+      let vtSrc = null, vtHasCaption = false
+      if (fs.existsSync(vtPreview) && fs.statSync(vtPreview).mtimeMs >= baseM - STALE_GRACE_MS) { vtSrc = vtPreview; vtHasCaption = true }
+      else if (fs.existsSync(vtFinal) && fs.statSync(vtFinal).mtimeMs >= baseM - STALE_GRACE_MS) { vtSrc = vtFinal; vtHasCaption = false }
+      if (vtSrc) {
+        src = vtSrc
+        vtSkipNarrationMix = true
+        if (vtHasCaption) d.caption = null
+        log(`컷 ${cut.no}: 영상 탭 처리 결과(${path.basename(vtSrc)}) 그대로 사용 — 나레이션 재믹스${vtHasCaption ? '·자막 재번인' : ''} 생략`)
+      }
+    }
+    d.skipNarrationMix = vtSkipNarrationMix
     // 사진 시퀀스 컷의 자체 소리는 "컷 영상에 직접 합친 나레이션"뿐이다. 대본에 나레이션이 있어 아래에서
     // TTS 음성을 믹스할 컷이면 그 소리는 버린다 — 안 그러면 옛 나레이션과 새 나레이션이 겹쳐 들린다
     // (2026-10-07 R02 컷5: 정식 절차로 바꾼 뒤 컷을 다시 확정하지 않은 상태에서 실측).
@@ -738,6 +773,9 @@ export async function finalizeReel(p) {
     const cut = (cuts || []).find((c) => Number(c.no) === Number(d.no))
     // "(화면 자막) …" 은 한글 확인 블록에 적은 화면 글자 — 음성 나레이션이 아니다(IG_R05 에서 5컷 모두 오경고, 2026-09-25)
     if (!hasVoiceNarration(cut)) continue
+    // 2026-11-09: 영상 탭이 이미 나레이션을 입힌 컷(d.skipNarrationMix, 위 소스 선택 블록)은
+    // 그 오디오가 src 자체에 이미 들어있다 — 여기서 또 섞으면 2중 삽입(버그A, SF_E02 실측).
+    if (d.skipNarrationMix) continue
     // 대사+나레이션 컷은 G3 가 cut_NN_nr.mp3 로 따로 만든다. 대사 컷의 cut_NN.mp3 는 (예전) 대사 TTS 일 수 있어 쓰지 않는다.
     const pad2 = String(d.no).padStart(2, '0')
     const hasDl = !!String(cut?.dialogue || '').trim()
