@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThumbTrend Studio PRO - 오프라인 단독 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&family=Black+Han+Sans&family=Do+Hyeon&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background-color: #090D16; color: #F8FAFC; font-family: 'Pretendard', sans-serif; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
+    header { height: 60px; background: #0F172A; border-bottom: 1px solid #1E293B; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10; }
+    .brand { font-size: 17px; font-weight: 900; background: linear-gradient(135deg, #F43F5E, #FBBF24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .badge { font-size: 11px; background: rgba(34, 197, 94, 0.15); color: #4ADE80; border: 1px solid rgba(34, 197, 94, 0.3); padding: 2px 8px; border-radius: 9999px; font-weight: 700; margin-left: 8px; }
+    main { display: flex; flex: 1; flex-direction: row; overflow: hidden; height: calc(100vh - 60px); }
+    .sidebar { width: 360px; background: #0F172A; border-right: 1px solid #1E293B; padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+    .canvas-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: #050811; position: relative; }
+    canvas { max-width: 100%; max-height: 72vh; background: #000; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); border: 1px solid #1E293B; }
+    .btn { background: #F43F5E; color: white; border: none; padding: 9px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.15s; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn:hover { background: #E11D48; }
+    .btn-amber { background: linear-gradient(to right, #F59E0B, #EF4444); color: #000; font-weight: 900; }
+    .btn-secondary { background: #1E293B; color: #CBD5E1; border: 1px solid #334155; }
+    .btn-secondary:hover { background: #334155; }
+    label { font-size: 11px; font-weight: 700; color: #94A3B8; display: block; margin-bottom: 5px; }
+    input[type="text"], textarea, select { width: 100%; background: #1E293B; border: 1px solid #334155; border-radius: 8px; color: white; padding: 8px 12px; font-size: 12px; font-family: inherit; outline: none; }
+    input[type="text"]:focus, textarea:focus, select:focus { border-color: #F43F5E; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+    .tag { font-size: 11px; padding: 6px 8px; border-radius: 8px; background: #1E293B; color: #F8FAFC; cursor: pointer; text-align: center; font-weight: 700; border: 1px solid #334155; transition: 0.15s; }
+    .tag:hover { border-color: #F43F5E; transform: translateY(-1px); }
+    .ratio-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid #334155; background: #1E293B; color: #94A3B8; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; }
+    .ratio-btn.active { background: #F43F5E; color: white; border-color: #F43F5E; }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex; align-items:center;">
+      <span class="brand">ThumbTrend Studio PRO</span>
+      <span class="badge">100% 로컬 오프라인 모드</span>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <select id="exportMultiplier" style="width:auto; padding:6px 10px; font-size:11px; background:#1E293B; color:#CBD5E1; border:1px solid #334155; border-radius:8px;">
+        <option value="1">1x 표준 해상도</option>
+        <option value="2" selected>2x QHD 고해상도</option>
+      </select>
+      <button class="btn btn-amber" onclick="downloadImage()">💾 이미지 다운로드 (PNG)</button>
+    </div>
+  </header>
+  <main>
+    <div class="sidebar">
+      <!-- Ratio Selector -->
+      <div>
+        <label>📐 캔버스 규격 선택</label>
+        <div class="grid-3">
+          <button class="ratio-btn active" id="btn-16-9" onclick="setRatio('16:9')">16:9 가로형</button>
+          <button class="ratio-btn" id="btn-9-16" onclick="setRatio('9:16')">9:16 쇼츠</button>
+          <button class="ratio-btn" id="btn-1-1" onclick="setRatio('1:1')">1:1 피드</button>
+        </div>
+      </div>
+
+      <!-- Background Image -->
+      <div>
+        <label>🖼️ 배경 이미지 불러오기</label>
+        <input type="file" id="imageInput" accept="image/*" class="btn btn-secondary" style="width:100%" onchange="handleImage(event)">
+      </div>
+
+      <!-- Main Text -->
+      <div>
+        <label>✍️ 메인 헤드라인 자막 (줄바꿈 가능)</label>
+        <textarea id="textInput" rows="2" oninput="draw()">충격 실화
+역대급 반전 공개!</textarea>
+      </div>
+
+      <!-- Font Controls -->
+      <div class="grid-2">
+        <div>
+          <label>글자 크기 (<span id="sizeVal">68</span>px)</label>
+          <input type="range" id="fontSize" min="28" max="110" value="68" oninput="document.getElementById('sizeVal').innerText=this.value; draw()" style="width:100%; accent-color:#F43F5E;">
+        </div>
+        <div>
+          <label>글씨체 폰트</label>
+          <select id="fontSelect" onchange="draw()">
+            <option value="'Black Han Sans', sans-serif">블랙한산스 (어그로)</option>
+            <option value="'Do Hyeon', sans-serif">도현체 (예능 볼드)</option>
+            <option value="'Nanum Pen Script', cursive">나눔손글씨 펜</option>
+            <option value="'Pretendard', sans-serif" selected>프리텐다드 (고딕)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Color Controls -->
+      <div class="grid-2">
+        <div>
+          <label>글자 색상</label>
+          <input type="color" id="textColor" value="#FFE600" onchange="draw()" style="width:100%; height:34px; border:none; background:transparent; cursor:pointer;">
+        </div>
+        <div>
+          <label>외곽선 테두리</label>
+          <input type="color" id="strokeColor" value="#000000" onchange="draw()" style="width:100%; height:34px; border:none; background:transparent; cursor:pointer;">
+        </div>
+      </div>
+
+      <!-- Quick Color Themes -->
+      <div>
+        <label>🎨 인기 컬러 콤보</label>
+        <div class="grid-3">
+          <button class="tag" style="background:#000; color:#FFE600; border-color:#FFE600;" onclick="setColorTheme('#FFE600', '#000000')">옐로우+블랙</button>
+          <button class="tag" style="background:#000; color:#FFFFFF; border-color:#FFFFFF;" onclick="setColorTheme('#FFFFFF', '#000000')">화이트+블랙</button>
+          <button class="tag" style="background:#000; color:#22D3EE; border-color:#22D3EE;" onclick="setColorTheme('#22D3EE', '#083344')">네온+사이언</button>
+        </div>
+      </div>
+
+      <!-- Trend Badges -->
+      <div>
+        <label>🏷️ 인기 트렌드 배지 스탬프</label>
+        <div class="grid-2">
+          <div class="tag" style="background:#DC2626; color:white;" onclick="setBadge('🚨 긴급 속보')">🚨 긴급 속보</div>
+          <div class="tag" style="background:#F59E0B; color:black;" onclick="setBadge('🔥 100만뷰')">🔥 100만뷰</div>
+          <div class="tag" style="background:#EAB308; color:black;" onclick="setBadge('⚠️ 충격 주의')">⚠️ 충격 주의</div>
+          <div class="tag" style="background:#EF4444; color:white;" onclick="setBadge('🔴 LIVE 생방송')">🔴 LIVE 생방송</div>
+        </div>
+      </div>
+
+      <!-- Safe Zone Toggle -->
+      <div style="background:#020617; border:1px solid #1E293B; border-radius:10px; padding:10px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font-size:11px; font-weight:700; color:#E2E8F0;">🛡️ 유튜브 세이프존 시뮬레이션</span>
+        <input type="checkbox" id="safeZoneToggle" checked onchange="draw()" style="accent-color:#F43F5E; cursor:pointer;">
+      </div>
+
+      <div style="margin-top:auto; font-size:10px; color:#64748B; line-height:1.5; border-top:1px solid #1E293B; pt:8px;">
+        💡 이 파일은 서버 없이 단독 실행되는 오프라인 스탠드얼론 에디터입니다.
+      </div>
+    </div>
+    <div class="canvas-container">
+      <canvas id="c" width="1280" height="720"></canvas>
+    </div>
+  </main>
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    let bgImg = null;
+    let badgeText = '🚨 긴급 속보';
+    let currentRatio = '16:9';
+    let canvasW = 1280;
+    let canvasH = 720;
+
+    function setRatio(r) {
+      currentRatio = r;
+      document.getElementById('btn-16-9').classList.toggle('active', r === '16:9');
+      document.getElementById('btn-9-16').classList.toggle('active', r === '9:16');
+      document.getElementById('btn-1-1').classList.toggle('active', r === '1:1');
+
+      if (r === '9:16') {
+        canvasW = 1080; canvasH = 1920;
+      } else if (r === '1:1') {
+        canvasW = 1080; canvasH = 1080;
+      } else {
+        canvasW = 1280; canvasH = 720;
+      }
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+      draw();
+    }
+
+    function setBadge(txt) {
+      badgeText = badgeText === txt ? '' : txt;
+      draw();
+    }
+
+    function setColorTheme(textCol, strokeCol) {
+      document.getElementById('textColor').value = textCol;
+      document.getElementById('strokeColor').value = strokeCol;
+      draw();
+    }
+
+    function handleImage(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => { bgImg = img; draw(); };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function draw() {
+      // Background fill
+      ctx.fillStyle = '#090D16';
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      if (bgImg) {
+        // Draw image cover
+        const hRatio = canvasW / bgImg.width;
+        const vRatio = canvasH / bgImg.height;
+        const ratio = Math.max(hRatio, vRatio);
+        const centerShiftX = (canvasW - bgImg.width * ratio) / 2;
+        const centerShiftY = (canvasH - bgImg.height * ratio) / 2;
+        ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, centerShiftX, centerShiftY, bgImg.width * ratio, bgImg.height * ratio);
+      } else {
+        // Gradient
+        const grad = ctx.createLinearGradient(0, 0, canvasW, canvasH);
+        grad.addColorStop(0, '#1E1B4B');
+        grad.addColorStop(0.5, '#0F172A');
+        grad.addColorStop(1, '#090D16');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvasW, canvasH);
+      }
+
+      // Vignette shadow
+      const rad = ctx.createRadialGradient(canvasW/2, canvasH/2, canvasW*0.2, canvasW/2, canvasH/2, canvasW*0.7);
+      rad.addColorStop(0, 'rgba(0,0,0,0)');
+      rad.addColorStop(1, 'rgba(0,0,0,0.65)');
+      ctx.fillStyle = rad;
+      ctx.fillRect(0, 0, canvasW, canvasH);
+
+      // Badge
+      if (badgeText) {
+        ctx.save();
+        ctx.fillStyle = '#DC2626';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 12;
+        const bx = canvasW * 0.08;
+        const by = canvasH * 0.12;
+        const bw = Math.min(canvasW * 0.35, 240);
+        const bh = 54;
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeStyle = '#FEF08A';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(bx, by, bw, bh);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = "900 24px 'Pretendard', sans-serif";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeText, bx + bw/2, by + bh/2);
+        ctx.restore();
+      }
+
+      // Main Text with Dual Stroke
+      const text = document.getElementById('textInput').value;
+      const fontSize = parseInt(document.getElementById('fontSize').value);
+      const font = document.getElementById('fontSelect').value;
+      const color = document.getElementById('textColor').value;
+      const stroke = document.getElementById('strokeColor').value;
+
+      ctx.save();
+      ctx.font = "900 " + fontSize + "px " + font;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+
+      const lines = text.split('\n');
+      const lineHeight = fontSize * 1.25;
+      const startX = canvasW * 0.08;
+      const startY = canvasH * 0.45;
+
+      lines.forEach((line, i) => {
+        const y = startY + (i * lineHeight);
+
+        // 1. Deep 3D Shadow / Secondary Stroke
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = Math.max(12, fontSize * 0.24);
+        ctx.shadowColor = 'rgba(0,0,0,0.95)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 6;
+        ctx.strokeText(line, startX, y);
+
+        // 2. Primary Stroke
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = Math.max(6, fontSize * 0.14);
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.strokeText(line, startX, y);
+
+        // 3. Main Text Fill
+        ctx.fillStyle = color;
+        ctx.fillText(line, startX, y);
+      });
+      ctx.restore();
+
+      // Safe Zone Overlay
+      const showSafe = document.getElementById('safeZoneToggle').checked;
+      if (showSafe && currentRatio === '16:9') {
+        ctx.save();
+        // Time badge danger zone
+        const tW = 140; const tH = 44;
+        const tX = canvasW - tW - 20;
+        const tY = canvasH - tH - 20;
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.25)';
+        ctx.strokeStyle = '#EF4444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.fillRect(tX, tY, tW, tH);
+        ctx.strokeRect(tX, tY, tW, tH);
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(0,0,0,0.85)';
+        ctx.fillRect(tX + 10, tY + 8, tW - 20, tH - 16);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = "700 15px monospace";
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText("14:28", tX + tW/2, tY + tH/2);
+        // Bottom red bar
+        ctx.fillStyle = '#EF4444';
+        ctx.fillRect(0, canvasH - 6, canvasW, 6);
+        ctx.restore();
+      }
+    }
+
+    function downloadImage() {
+      const mult = parseInt(document.getElementById('exportMultiplier').value) || 1;
+      let outCanvas = canvas;
+      if (mult > 1) {
+        outCanvas = document.createElement('canvas');
+        outCanvas.width = canvasW * mult;
+        outCanvas.height = canvasH * mult;
+        const outCtx = outCanvas.getContext('2d');
+        outCtx.scale(mult, mult);
+        outCtx.drawImage(canvas, 0, 0);
+      }
+      const a = document.createElement('a');
+      a.href = outCanvas.toDataURL('image/png');
+      a.download = 'ThumbTrend_' + currentRatio.replace(':', 'x') + '_' + mult + 'x.png';
+      a.click();
+    }
+
+    window.onload = draw;
+  </script>
+</body>
+</html>
