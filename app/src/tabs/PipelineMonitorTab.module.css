@@ -96,7 +96,7 @@
 
 /* ── 노드 카드: 상단 → 코드 → 연결 → 변수 → 하단 ── */
 .node {
-  width: 300px; box-sizing: border-box;
+  width: 340px; box-sizing: border-box;
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
   color: var(--text); font-family: var(--sans); font-size: 12px;
   transition: border-color .25s, box-shadow .25s;
@@ -127,10 +127,20 @@
   display: block; font-family: var(--mono); font-size: 10.5px; line-height: 1.5; color: var(--text-2);
   background: #110f0c; border: 1px solid #1c1814; border-radius: 5px; padding: 2px 7px; margin-top: 3px; overflow-wrap: anywhere;
 }
-.io { display: flex; gap: 7px; font-size: 11.5px; line-height: 1.45; color: var(--text-2); margin-top: 3px; overflow-wrap: anywhere; }
-.ioIn, .ioOut { font-family: var(--mono); flex: none; }
-.ioIn { color: var(--muted); }
-.ioOut { color: var(--accent); }
+/* 플러그 줄 — 점(Handle)은 카드 가장자리에 걸치고, 바로 옆에 포트 이름 + 오가는 것. 입력은 왼쪽 정렬, 출력은 오른쪽 정렬 */
+.portSection { padding-left: 0; padding-right: 0; }
+.portSection .sectionLabel, .portSection .ioWarn { margin-left: 12px; margin-right: 12px; }
+.port { position: relative; display: flex; align-items: baseline; gap: 7px; padding: 4px 14px; min-height: 16px; }
+.portOut { flex-direction: row-reverse; text-align: right; }
+.portIn + .portOut { margin-top: 6px; padding-top: 9px; border-top: 1px dashed #1c1814; }
+.portName { font-family: var(--mono); font-size: 11px; font-weight: 500; flex: none; white-space: nowrap; }
+.portText { font-size: 10.5px; line-height: 1.4; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.node .plug { width: 11px; height: 11px; border-width: 2px; border-style: solid; box-shadow: 0 0 0 2px var(--panel); top: 13px; }
+.node .portIn + .portOut .plug { top: 18px; }
+.node .plug:hover { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--wire-edit); }
+.legend { display: inline-flex; gap: 10px; padding: 5px 10px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(13,11,9,.9); }
+.legendItem { display: inline-flex; align-items: center; gap: 5px; }
+.legendDot { width: 7px; height: 7px; border-radius: 50%; }
 .ioWarn { margin-top: 7px; font-family: var(--mono); font-size: 10.5px; line-height: 1.45; color: var(--hold); background: rgba(255,210,63,.06); border: 1px solid rgba(255,210,63,.25); border-radius: 6px; padding: 5px 8px; overflow-wrap: anywhere; }
 .ioWarnFail { color: #ffa3ac; background: rgba(255,93,108,.08); border-color: rgba(255,93,108,.35); }
 
@@ -153,9 +163,6 @@
 .footBtnAsk:hover { border-color: var(--wire-edit); color: #d6c9ff; }
 .gateCount { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: #a0957f; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .askNote { font-family: var(--mono); font-size: 10px; line-height: 1.45; color: #b9a4ff; padding: 0 12px 10px; }
-
-.node .handle { width: 10px; height: 10px; border-width: 1.5px; }
-.node .handle:hover { border-color: var(--wire-edit); background: var(--wire-edit); }
 
 /* 상태별 테두리 */
 .node.idle { opacity: .62; }

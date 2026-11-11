@@ -4,7 +4,7 @@ import '@xyflow/react/dist/style.css'
 import { useApp } from '../context/AppContext'
 import { getGPointSummary } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
-import { PIPELINE_NODES, buildEdges, autoLayout } from '../lib/pipelineNodes'
+import { PIPELINE_NODES, PORT_KINDS, buildEdges, autoLayout } from '../lib/pipelineNodes'
 import s from './PipelineMonitorTab.module.css'
 
 // 파이프라인 모니터 → "워크벤치" 캔버스.
@@ -37,7 +37,21 @@ function useInterval(fn, ms, deps) {
   }, deps)
 }
 
-// ── 커스텀 노드 카드: 상단(아이콘·이름·상태배지) → 코드 → 연결(← 입력 / → 출력 / 경고) → 변수 → 하단 버튼 ──
+// 플러그 한 줄 — ComfyUI 식: 카드 가장자리의 점(React Flow Handle, id = 포트 이름) + 바로 옆 포트 이름 + 실제로 오가는 것.
+// 입력은 왼쪽 가장자리, 출력은 오른쪽 가장자리. 전선은 노드가 아니라 이 점에 꽂힌다(buildEdges 의 sourceHandle/targetHandle).
+function PortRow({ side, p }) {
+  const color = PORT_KINDS[p.kind]?.color || PORT_KINDS.text.color
+  const isIn = side === 'in'
+  return (
+    <div className={`${s.port} ${isIn ? s.portIn : s.portOut}`} title={`${p.port} · ${PORT_KINDS[p.kind]?.label || ''}${isIn ? (p.from ? ` · ← ${p.from}` : ' · 외부 입력') : ''}`}>
+      <Handle type={isIn ? 'target' : 'source'} position={isIn ? Position.Left : Position.Right} id={p.port} className={s.plug} style={{ background: color, borderColor: color }} />
+      <span className={s.portName} style={{ color }}>{p.port}</span>
+      <span className={s.portText}>{p.text}</span>
+    </div>
+  )
+}
+
+// ── 커스텀 노드 카드: 상단(아이콘·이름·상태배지) → 코드 → 연결(입력 플러그 / 출력 플러그 / 경고) → 변수 → 하단 버튼 ──
 const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
   const def = data.def
   const { byId, cutsTotal, vars, setVar, openTab } = useContext(LiveCtx)
@@ -54,7 +68,6 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
   const badgeKind = live.state === 'fail' ? 'fail' : live.state === 'warn' ? 'warn' : live.state === 'active' ? 'active' : (live.state === 'done' || live.state === 'partial') ? 'ok' : 'idle'
   return (
     <div className={`${s.node} ${s[live.state] || ''} ${selected ? s.nodeSelected : ''}`}>
-      <Handle type="target" position={Position.Left} className={s.handle} />
       <div className={s.nodeHead}>
         <span className={s.nodeIcon}>{def.icon}</span>
         <div className={s.nodeTitle}>
@@ -70,14 +83,10 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
         {def.code.map(f => <code key={f} className={s.codeFile}>{f}</code>)}
       </div>
 
-      <div className={s.section}>
-        <div className={s.sectionLabel}>연결</div>
-        {def.inputs.map((inp, i) => (
-          <div key={'i' + i} className={s.io}><span className={s.ioIn}>←</span><span>{inp.text}</span></div>
-        ))}
-        {def.outputs.map((out, i) => (
-          <div key={'o' + i} className={s.io}><span className={s.ioOut}>→</span><span>{out}</span></div>
-        ))}
+      <div className={`${s.section} ${s.portSection}`}>
+        <div className={s.sectionLabel}>연결 <span className={s.sectionHint}>← 입력 플러그 · 출력 플러그 →</span></div>
+        {def.inputs.map(p => <PortRow key={'i_' + p.port} side="in" p={p} />)}
+        {def.outputs.map(p => <PortRow key={'o_' + p.port} side="out" p={p} />)}
         {problem && live.evidence && (
           <div className={`${s.ioWarn} ${live.state === 'fail' ? s.ioWarnFail : ''}`} title={live.issueTip}>⚠ {live.evidence}</div>
         )}
@@ -114,7 +123,6 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
         )}
       </div>
       {askNote && <div className={s.askNote}>다음 단계에서 연결 예정입니다 — 지금은 자리만 잡아둔 버튼입니다.</div>}
-      <Handle type="source" position={Position.Right} className={s.handle} />
     </div>
   )
 })
@@ -325,7 +333,12 @@ function Workbench() {
           <button className={`${s.toolBtn} ${resetArmed ? s.toolBtnArmed : ''}`} onClick={resetLayout}>
             {resetArmed ? '한 번 더 누르면 배치 초기화' : '자동 정렬'}
           </button>
-          <span className={s.toolHint}>노드 드래그 = 배치 저장 · 핸들에서 끌어 그은 보라색 배선은 아직 저장되지 않습니다</span>
+          <span className={s.legend}>
+            {Object.entries(PORT_KINDS).map(([k, v]) => (
+              <span key={k} className={s.legendItem}><span className={s.legendDot} style={{ background: v.color }} />{v.label}</span>
+            ))}
+          </span>
+          <span className={s.toolHint}>노드 드래그 = 배치 저장 · 플러그에서 끌어 그은 보라색 배선은 아직 저장되지 않습니다</span>
         </div>
         {layoutReady && (
           <LiveCtx.Provider value={{ byId, cutsTotal, vars, setVar, openTab }}>
