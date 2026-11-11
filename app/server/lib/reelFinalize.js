@@ -556,7 +556,7 @@ export async function finalizeReel(p) {
     const d = decideCut(cut)
     d.derived = picked.derived
     // 2026-11-09 (SF_E01/SF_E02 성준님 제보, [[project_sf_subtitle_burn_video_tab]] 11차 버그 A/B):
-    // 영상 탭 "나레이션·효과음 입히기"가 이미 처리해 둔 컷은 그 결과를 그대로 쓴다. 이걸 안 하면
+    // 영상 탭 "나레이션·효과음 미리듣기 생성"(옛 "입히기")이 이미 처리해 둔 컷은 그 결과를 그대로 쓴다. 이걸 안 하면
     // reelFinalize가 같은 나레이션 mp3를 또 섞거나(버그A), 영상 탭이 번인한 자막과 다른 자막을
     // 또 구워서(버그B) 2중 삽입·설정 불일치가 생긴다 — SF_E02에서 실제로 터진 사례.
     // 06_publishing/cut_NN_preview.mp4(나레이션+SFX+영상 탭 자막 설정 전부 번인)가
@@ -571,22 +571,38 @@ export async function finalizeReel(p) {
       const vtPreview = path.join(outDir, `cut_${pad2}_preview.mp4`)
       const vtFinal = path.join(outDir, `cut_${pad2}_final.mp4`)
       const baseM = fs.existsSync(src) ? fs.statSync(src).mtimeMs : 0
-      // 실측(SF_E01 2026-11-07): VideoTab 자동복사 설계상 06_publishing 파일이 먼저 만들어지고
-      // 그 결과가 05_video/cut_NN.mp4로 복사되는 건 항상 몇 초(실측 2~3초) "뒤"다 — 즉 정상
-      // 상태에서도 05_video가 06_publishing보다 약간 더 최신인 게 맞다. 처음엔 반대로(06_publishing
-      // 이 05_video보다 최신이어야 유효)로 짜서 실제로는 한 번도 안 걸렸던 걸 재생성 테스트로
-      // 확인·수정 — 05_video가 06_publishing보다 10초 이내로만 더 최신이면 "같은 처리의 결과물"로
-      // 보고 그대로 신뢰, 그보다 훨씬 더 최신이면(=그 뒤에 새 원본이 올라와 narration과 무관하게
-      // 다시 덮어써진 것) 무시하고 기존 reelFinalize 판단으로 폴백한다.
-      const STALE_GRACE_MS = 10000
+      // 2026-11-11 단순화: 영상 탭 "미리듣기 생성"은 이제 05_video/cut_NN.mp4를 절대 안
+      // 건드린다(전엔 06_publishing 결과를 2~3초 뒤 05_video로 자동 복사해서, 정상 상태에서도
+      // 05_video가 약간 더 최신이 되는 레이스를 10초 그레이스 윈도우로 봐줬었다 — 그 자동복사
+      // 자체가 없어져 그레이스도 필요 없다). 05_video는 새 원본(Flow 생성·클립 합성·업로드)이
+      // 들어올 때만 바뀌므로 규칙은 하나다: 06_publishing 파일이 05_video(원본)보다 최신이면
+      // "지금 원본으로 만든 결과"라 신뢰하고, 더 오래됐으면 "옛 원본으로 만든 것"이라 버리고
+      // 기존 reelFinalize 판단(자체 나레이션 믹스·자막 번인)으로 폴백한다.
+      // preview는 같은 실행에서 final "뒤"에 만들어지므로(preview ≥ final), final이 더 최신이면
+      // 그 preview는 자막을 끄고 다시 만들기 전의 옛 파일이다 — 그땐 final 쪽을 쓴다.
+      //
+      // 하위호환(레거시 컷 전용): 2026-11-11 이전에 "입히기"를 누른 컷은 05_video가 이미 나레이션
+      // 합성본으로 덮어써져 있고, 그 흔적으로 05_video가 06_publishing보다 2~4초 "더 최신"이다
+      // (실측 2026-11-11: SF_E01 컷4, SF_E02 컷3·4·6·7, LF_T01 컷10 — Δ -1.6~-3.9초). 이 컷들을
+      // 위 규칙만으로 판단하면 폴백으로 빠져, 이미 나레이션이 섞인 05_video 위에 나레이션을 또
+      // 섞는다(2중). 그래서 "05_video가 10초 이내로만 더 최신"인 경우는 옛 자동복사의 결과물로
+      // 보고 계속 06_publishing 쪽을 신뢰한다. 새로 만드는 컷은 이 분기에 올 일이 없다(원본이
+      // 미리듣기 생성 직후 10초 안에 교체되는 경우뿐). 위 컷들의 05_video를 깨끗한 원본으로
+      // 되돌리고 나면 이 상수와 isLegacyAutoCopy 분기는 지워도 된다.
+      const LEGACY_AUTOCOPY_WINDOW_MS = 10000
+      const mtimeOf = (f) => (fs.existsSync(f) ? fs.statSync(f).mtimeMs : -1)
+      const pvM = mtimeOf(vtPreview), fnM = mtimeOf(vtFinal)
+      const fresh = (m) => m >= baseM
+      const isLegacyAutoCopy = (m) => m >= 0 && m < baseM && baseM - m <= LEGACY_AUTOCOPY_WINDOW_MS
+      const usable = (m) => fresh(m) || isLegacyAutoCopy(m)
       let vtSrc = null, vtHasCaption = false
-      if (fs.existsSync(vtPreview) && fs.statSync(vtPreview).mtimeMs >= baseM - STALE_GRACE_MS) { vtSrc = vtPreview; vtHasCaption = true }
-      else if (fs.existsSync(vtFinal) && fs.statSync(vtFinal).mtimeMs >= baseM - STALE_GRACE_MS) { vtSrc = vtFinal; vtHasCaption = false }
+      if (usable(pvM) && pvM >= fnM) { vtSrc = vtPreview; vtHasCaption = true }
+      else if (usable(fnM)) { vtSrc = vtFinal; vtHasCaption = false }
       if (vtSrc) {
         src = vtSrc
         vtSkipNarrationMix = true
         if (vtHasCaption) d.caption = null
-        log(`컷 ${cut.no}: 영상 탭 처리 결과(${path.basename(vtSrc)}) 그대로 사용 — 나레이션 재믹스${vtHasCaption ? '·자막 재번인' : ''} 생략`)
+        log(`컷 ${cut.no}: 영상 탭 처리 결과(${path.basename(vtSrc)}) 그대로 사용 — 나레이션 재믹스${vtHasCaption ? '·자막 재번인' : ''} 생략${fresh(vtHasCaption ? pvM : fnM) ? '' : ' (레거시: 05_video가 이미 덮어써진 컷)'}`)
       }
     }
     d.skipNarrationMix = vtSkipNarrationMix

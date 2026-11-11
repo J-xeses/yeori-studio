@@ -451,11 +451,14 @@ export default function VideoTab() {
   // 서버 파일은 직접 프레임 추출로 매번 정상 확인됨). 이 state가 있는 컷은 세그 목록과는
   // 별도로, 실제 05_video/cut_NN.mp4를 명확히 라벨링해 보여준다.
   const [finalPreviewTs, setFinalPreviewTs] = useState({})
-  // 2026-11-07 추가 — 자막 번인 미리보기 전용 URL(컷ID별). cut_NN_final.mp4(05_video로
-  // 복사되는 "진짜" 파일)는 이제 자막을 절대 안 담으므로, 번인 결과를 보려면 서버가 따로
-  // 만들어준 cut_NN_preview.mp4(ev.previewUrl)를 여기 저장해 보여준다 — 아래 "✅ 최종
-  // 합성본" 패널 참고.
+  // 2026-11-07 추가 — 자막 번인 미리보기 전용 URL(컷ID별). cut_NN_final.mp4는 자막을 절대
+  // 안 담으므로, 번인 결과를 보려면 서버가 따로 만들어준 cut_NN_preview.mp4(ev.previewUrl)를
+  // 여기 저장해 보여준다 — 아래 "🔊 미리듣기 전용" 패널 참고.
   const [subtitlePreviewUrl, setSubtitlePreviewUrl] = useState({})
+  // 2026-11-11 추가 — "미리듣기 생성" 결과 중 자막 없는 쪽(06_publishing/cut_NN_final.mp4,
+  // 나레이션·효과음만 믹스) URL(컷ID별). 이 버튼은 이제 05_video/cut_NN.mp4도 videoClips도
+  // 전혀 건드리지 않고, 결과는 이 두 state(재생 참조)로만 남는다 — 아래 runFfmpegForCut 참고.
+  const [narrationPreviewUrl, setNarrationPreviewUrl] = useState({})
   // 메이킹 탭에서 만든 컷(텍스트카드·사진 시퀀스·목업·소스 컷)을 여기 "클립 합성"으로 덮어쓰려 할 때 한 번 더 확인
   const [composeArmed, setComposeArmed] = useState(null)   // cut.id | null
   // 큰 미리보기에 무엇을 띄울지 — 'final'(릴스에 들어갈 결과: 메이킹 탭 말풍선·자막 포함) | 'raw'(편집용 클립).
@@ -1552,7 +1555,7 @@ export default function VideoTab() {
   // 설정을 실제 번인 영상으로").
   const runFfmpegForCut = async (cut, retried = false, segments) => {
     setFfmpegStatus(p => ({ ...p, [cut.id]: 'running' }))
-    setFfmpegLog(p => ({ ...p, [cut.id]: '합성 시작…' }))
+    setFfmpegLog(p => ({ ...p, [cut.id]: '미리듣기 생성 시작…' }))
     try {
       const ep = episode?.number ?? ''
       const burnSubtitle = !isReel && subtitleEnabled && Array.isArray(segments) && segments.some(s => String(s.text || '').trim())
@@ -1615,56 +1618,23 @@ export default function VideoTab() {
             } else if (ev.type === 'complete') {
               if (ev.success) {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'done' }))
-                setFfmpegLog(p => ({ ...p, [cut.id]: `✅ ${ev.message}` }))
+                setFfmpegLog(p => ({ ...p, [cut.id]: `✅ 미리듣기 생성 완료 — 아래 "🔊 미리듣기"에서 재생하세요(05_video 원본은 그대로)` }))
                 const url = `http://localhost:3001${ev.url}?t=${Date.now()}`
-                const tempVideo = document.createElement('video')
-                tempVideo.preload = 'metadata'
-                tempVideo.src = url
-                await new Promise(resolve => {
-                  tempVideo.onloadedmetadata = resolve
-                  tempVideo.onerror = resolve
-                })
-                const ratio = tempVideo.videoWidth && tempVideo.videoHeight
-                  ? (tempVideo.videoWidth >= tempVideo.videoHeight ? '16:9' : '9:16')
-                  : undefined
-                const narratedClip = {
-                  url, name: `FFmpeg 합성 (cut_${String(cut.no).padStart(2,'00')}_final.mp4)`,
-                  duration: cut.duration || 8, trimStart: 0, trimEnd: cut.duration || 8, useFullDuration: true, ratio, createdAt: Date.now(),
-                  // stagedPath가 없으면 파일이 실제로 만들어졌어도 "⚠ 서버 미반영"으로 잘못
-                  // 표시됨(2026-09-18, 사용자 실측 — 컷20) — 서버가 내려준 절대경로를 그대로 채움.
-                  stagedPath: ev.outputPath,
-                  keepAudio: true,   // 이 클립의 존재 이유가 나레이션 오디오라 합성 때 반드시 살려야 함
-                  // 2026-11-07 수정(성준님 제보 — SF_E01 "최종 OUTPUT"에 자막 2중): 이제 이 url
-                  // (ev.url = cut_NN_final.mp4)은 서버가 자막을 절대 안 구워 넣은 "오디오만
-                  // 합친" 파일이다(05_video/cut_NN.mp4로 그대로 복사되는 바로 그 파일이라,
-                  // reelFinalize.js 등 다른 파이프라인이 또 자막을 구워도 안 겹침) — 그래서
-                  // hasBurnedSubtitle 플래그 자체가 더 이상 필요 없다(이 클립엔 캡션이 없음).
-                  // 캡션이 들어간 버전은 ev.previewUrl(있으면, subtitlePreviewUrl state)로 따로
-                  // 보여준다 — 아래 setSubtitlePreviewUrl 참고.
-                }
-                if (ev.previewUrl) {
-                  setSubtitlePreviewUrl(p => ({ ...p, [cut.id]: `http://localhost:3001${ev.previewUrl}?t=${Date.now()}` }))
-                }
-                // 2026-10-09 발견(성준님 실측, SF_E109 컷1): 비릴스 컷은 버튼 안내문구("...
-                // cut_NN.mp4 위에 나레이션·효과음만 입힙니다")가 "바로 적용된다"는 뜻으로 읽히지만,
-                // 실제로는 06_publishing/에 결과만 쓰고 05_video/cut_NN.mp4는 그대로였음 — 최종
-                // 합성본·완성본 업로드가 전부 이 파일을 읽으므로 "나레이션이 전혀 안 들린다"는
-                // 증상으로 나타남. 원래 의도된 경로는 "이 결과를 클립 목록에 추가 → 클립 합성을
-                // 한 번 더 눌러야" 였는데 그 안내가 전혀 없었다. 비릴스는 여기서 바로 클립 목록을
-                // 이 나레이션 클립 하나로 교체(기존 영상 클립과 이어붙으면 내용이 중복 재생됨)하고
-                // 자동으로 클립 합성까지 이어서 돌려, 버튼 문구가 약속한 "바로 입혀짐"을 실제로
-                // 맞춘다. 릴스는 기존 동작(추가만, 최종본은 메이킹 탭이 따로 조립) 그대로 유지.
-                if (isReel) {
-                  setVideoClips(p => ({ ...p, [cut.id]: [...(p[cut.id] || []), narratedClip] }))
-                } else {
-                  setVideoClips(p => ({ ...p, [cut.id]: [narratedClip] }))
-                  // 2026-11-07: narratedClip(=05_video로 복사될 파일)엔 이제 자막이 전혀 안
-                  // 들어있으므로(위 참고) captionBurnedIntoBase는 항상 false로 고정.
-                  // 2026-11-09: clips 목록을 상태/ref 재조회에 맡기지 않고 narratedClip을 직접
-                  // 넘긴다 — 바로 위 setVideoClips 호출이 아직 반영 안 된 시점이어도(ref가 다음
-                  // 렌더를 기다려야 함) 무조건 "방금 만든 그 클립"이 05_video로 들어가게 한다.
-                  setTimeout(() => renderCutClips(cut, false, [narratedClip]), 150)
-                }
+                // 2026-11-11 구조 수정 — 이 버튼은 "미리듣기 생성" 전용이다.
+                // 전엔 여기서 (1) 이 컷의 videoClips를 방금 만든 나레이션 합성본 하나로 통째로
+                // 교체하고 (2) setTimeout으로 renderCutClips를 자동 호출해 05_video/cut_NN.mp4
+                // (Flow/Veo 원본 자리)를 그 합성본으로 덮어썼다(2026-10-09 "바로 입혀짐" 설계).
+                // 그 결과 같은 컷을 설정만 바꿔 다시 누르면 "이미 나레이션이 섞인 파일" 위에 또
+                // 섞여 오디오 2중·자막 2중·오디오 스트림 소실 사고가 반복됐다.
+                // 이제 05_video/cut_NN.mp4는 영원히 원본 그대로 두고, 자막 번인 + 나레이션
+                // 믹스는 메이킹 탭 최종 조립(reelFinalize.js) 시점에만 일어난다. 여기서는 서버가
+                // 06_publishing에 만든 두 파일(cut_NN_final.mp4 = 나레이션·효과음만,
+                // cut_NN_preview.mp4 = 거기에 자막까지)의 재생 URL만 기억한다 — videoClips도
+                // renderCutClips도 호출하지 않는다(릴스·SF/LF 공통).
+                setNarrationPreviewUrl(p => ({ ...p, [cut.id]: url }))
+                // 자막 없이 다시 만든 경우(previewUrl 없음) 예전 자막 미리보기가 화면에 남아
+                // "방금 만든 것"처럼 보이지 않게 비운다.
+                setSubtitlePreviewUrl(p => ({ ...p, [cut.id]: ev.previewUrl ? `http://localhost:3001${ev.previewUrl}?t=${Date.now()}` : undefined }))
               } else {
                 setFfmpegStatus(p => ({ ...p, [cut.id]: 'error' }))
                 setFfmpegLog(p => ({ ...p, [cut.id]: `❌ ${ev.message}` }))
@@ -1696,6 +1666,9 @@ export default function VideoTab() {
   // 받으면 그걸 최우선으로 쓰고(호출부가 "이 클립을 쓰라"고 명시한 경우, 타이밍 의존 전혀 없음),
   // 없으면 항상 최신인 videoClipsRef(다른 비동기 콜백들도 쓰는 패턴, 위 745번째 줄 참고)를 쓴다 —
   // 둘 다 렌더 당시 state 클로저보다 신뢰할 수 있다.
+  // 2026-11-11: 위 자동 호출(runFfmpegForCut → setTimeout(renderCutClips))은 제거됐다 — 이
+  // 함수는 이제 "🎬 클립 합성" 버튼과, 컷 영상이 아예 없을 때의 최초 생성(runFfmpegForCut의
+  // 404 재시도)에서만 불린다. 나레이션·자막 결과가 05_video로 들어오는 경로는 더 이상 없다.
   const renderCutClips = async (cut, forceCaptionBurned, clipsOverride) => {
     const clips = clipsOverride || videoClipsRef.current[cut.id] || []
     if (!clips.length) return
@@ -2961,10 +2934,10 @@ export default function VideoTab() {
                     disabled={ffmpegStatus[selCut.id] === 'running'}
                     title={isReel
                       ? '이 컷 하나만 나레이션·효과음을 입혀 미리 들어봅니다(06_publishing/cut_NN_final.mp4). 릴스 최종본에는 쓰이지 않아요 — 최종본은 메이킹 탭 "릴스 최종본 생성"이 한 번에 입힙니다'
-                      : '서버에 이미 있는 cut_NN.mp4 위에 나레이션·효과음만 입힙니다'}
+                      : '이 컷에 나레이션·효과음(+자막 설정)을 입힌 미리듣기 파일만 만듭니다(06_publishing/cut_NN_final.mp4·cut_NN_preview.mp4). 05_video/cut_NN.mp4 원본은 건드리지 않아요 — 실제 번인·믹스는 메이킹 탭 최종본 생성이 한 번에 합니다'}
                     onClick={() => runFfmpegForCut(selCut, false, cutSegs)}>
                     {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…'
-                      : isReel ? '🔊 컷 단독 미리듣기(최종본에 안 쓰임)' : '🔊 나레이션·효과음 입히기'}
+                      : isReel ? '🔊 컷 단독 미리듣기(최종본에 안 쓰임)' : '🔊 나레이션·효과음 미리듣기 생성'}
                   </button>
                   <label className={s.uploadBtn} title="외부(CapCut/Veo 등)에서 이미 완성한 파일 1개를 바로 올립니다">
                     {up.busy ? '업로드 중…' : '📤 완성본 바로 업로드'}
@@ -3014,18 +2987,21 @@ export default function VideoTab() {
                     </div>
                   )
                 })()}
-                {/* 2026-11-07 추가 — 위 "✅ 최종 합성본"은 2026-09-18 결정대로 항상 자막 없는
-                    순수 영상만 보여준다(그게 05_video로 복사되는 진짜 파일이라 맞는 설계).
-                    자막이 실제로 어떻게 구워지는지 확인하고 싶을 때만 보라고, 완전히 별개
-                    파일(cut_NN_preview.mp4, 05_video/최종본엔 전혀 안 섞임)을 여기 따로
-                    보여준다 — "최종 합성본"과 섞여 보이지 않게 라벨과 테두리색을 다르게 둠. */}
-                {!isReel && subtitlePreviewUrl[selCut.id] && (
-                  <div className={s.field} style={{ marginTop: 8 }}>
-                    <label style={{ color: '#f59e0b' }}>🔤 자막 미리보기 전용 — 이 파일은 최종본과 별개이며 05_video엔 반영되지 않습니다(설정 확인용)</label>
-                    <video key={subtitlePreviewUrl[selCut.id]} src={subtitlePreviewUrl[selCut.id]} controls
-                      style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6, border: '1px solid #f59e0b' }} />
-                  </div>
-                )}
+                {/* 2026-11-11 — "미리듣기 생성" 결과 전용 패널. 여기 보이는 파일은 06_publishing의
+                    미리듣기 파일일 뿐이고 05_video/cut_NN.mp4(원본)에는 전혀 반영되지 않는다.
+                    자막 설정이 켜져 있었으면 자막까지 구운 cut_NN_preview.mp4를, 아니면
+                    나레이션·효과음만 섞은 cut_NN_final.mp4를 보여준다 — "최종 합성본"과 섞여
+                    보이지 않게 라벨과 테두리색을 다르게 둠. */}
+                {(subtitlePreviewUrl[selCut.id] || narrationPreviewUrl[selCut.id]) && (() => {
+                  const pvUrl = subtitlePreviewUrl[selCut.id] || narrationPreviewUrl[selCut.id]
+                  return (
+                    <div className={s.field} style={{ marginTop: 8 }}>
+                      <label style={{ color: '#f59e0b' }}>🔊 미리듣기 전용({subtitlePreviewUrl[selCut.id] ? '나레이션·효과음+자막' : '나레이션·효과음'}) — 05_video 원본은 그대로이며, 실제 번인·믹스는 메이킹 탭 최종본 생성에서 합니다</label>
+                      <video key={pvUrl} src={pvUrl} controls
+                        style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6, border: '1px solid #f59e0b' }} />
+                    </div>
+                  )
+                })()}
                 {videoGenLog[selCut.id] && (
                   <div className={s.aiGenLog}>{videoGenLog[selCut.id]}</div>
                 )}

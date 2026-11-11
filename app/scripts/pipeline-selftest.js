@@ -6,7 +6,7 @@
  * 고친 항목마다 "증거"를 수치로 다시 뽑아 ✅/❌ 로 보여 준다. 고정 시험 에피소드 IG_R05(완성본) 기준.
  * 새로 고친 것이 생기면 여기 점검 항목을 하나 추가하는 것이 규칙이다.
  *
- * 사용: node scripts/pipeline-selftest.js [--ep=IG_R05] [--no-flow] [--no-final]
+ * 사용: node scripts/pipeline-selftest.js [--ep=IG_R05] [--no-flow] [--no-final] [--only=N3,F2]
  *   --no-flow  : Flow 드라이런(전용 Chrome 9222 필요, 1~2분) 건너뜀
  *   --no-final : 최종본 재합성 점검(1~2분, 07_output 백업→복구) 건너뜀
  * 결과: 콘솔 요약 + downloads/state/selftest/latest.md (+ 날짜별 사본)
@@ -30,6 +30,8 @@ const results = []
 const t0 = Date.now()
 
 async function check(id, title, fn) {
+  // --only=N3,F2 : 지정한 항목만 실행(나머지는 기록도 안 함)
+  if (typeof args.only === 'string' && !args.only.split(',').includes(id)) return
   const started = Date.now()
   try {
     const r = await fn()
@@ -229,6 +231,55 @@ await check('N2', '나레이션·효과음 입히기 — 대사 TTS 잔재(cut_N
   } finally {
     if (!strayExisted) { try { fs.unlinkSync(stray) } catch { /* noop */ } }
     try { fs.unlinkSync(nrFile) } catch { /* noop */ }
+  }
+})
+
+// ── 1g-3. "나레이션·효과음 미리듣기 생성"이 05_video 원본을 절대 안 건드리는가 ──
+// 배경(2026-11-11): 영상 탭 이 버튼이 SF/LF 컷에서 결과를 05_video/cut_NN.mp4 로 자동 복사해
+// (VideoTab.jsx runFfmpegForCut → setTimeout(renderCutClips)) 같은 컷을 설정만 바꿔 다시 누르면
+// 자막 2중·오디오 2중·오디오 스트림 소실이 반복됐다. 자동 복사를 없애고 미리듣기 전용으로 격하.
+// 실제 /api/run-ffmpeg 를 자막 설정을 바꿔 두 번 연속 호출하고, 05_video 파일의
+// mtime·크기·sha256·오디오 스트림 수가 전후 동일한지 + 화면 코드에 자동 덮어쓰기 배선이 없는지 확인.
+// 06_publishing 의 기존 미리듣기 파일은 mtime 까지 그대로 복구한다(최종본 라우팅이 mtime 을 본다).
+await check('N3', '나레이션 미리듣기 생성 후 05_video 불변(설정 바꿔 2회 연속 호출)', async () => {
+  if (!epNum) return { skip: true, evidence: '에피소드 번호 없음' }
+  const { createHash } = await import('crypto')
+  const cut = cuts.find(c => fs.existsSync(path.join(videoDir, `cut_${String(c.no).padStart(2, '0')}.mp4`)))
+  if (!cut) return { skip: true, evidence: '05_video 에 컷 영상 없음' }
+  const pad = String(cut.no).padStart(2, '0')
+  const base = path.join(videoDir, `cut_${pad}.mp4`)
+  const outDir = mp.outputDir(CODE)
+  const outs = [`cut_${pad}_final.mp4`, `cut_${pad}_preview.mp4`].map(f => path.join(outDir, f))
+  const bak = fs.mkdtempSync(path.join(os.tmpdir(), 'selftest_n3_'))
+  const had = outs.map(f => fs.existsSync(f))
+  outs.forEach((f, i) => { if (had[i]) { fs.copyFileSync(f, path.join(bak, path.basename(f))); const st = fs.statSync(f); fs.utimesSync(path.join(bak, path.basename(f)), st.atime, st.mtime) } })
+  const snap = () => {
+    const st = fs.statSync(base)
+    const aud = String(spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', base], { encoding: 'utf-8' }).stdout).trim().split(/\r?\n/).filter(Boolean).length
+    return { mtime: st.mtimeMs, size: st.size, sha: createHash('sha256').update(fs.readFileSync(base)).digest('hex').slice(0, 12), aud }
+  }
+  try {
+    const before = snap()
+    const sub = (text, fontSize, position) => ({ segments: [{ text, start: 0, end: Math.min(2, cut.duration || 2) }], fontSize, position })
+    const r1 = await post('/api/run-ffmpeg', { ep: epNum, cutNo: cut.no, duration: cut.duration, subtitle: sub('자가 점검 하나', 48, 80) })
+    const mid = snap()
+    const r2 = await post('/api/run-ffmpeg', { ep: epNum, cutNo: cut.no, duration: cut.duration, subtitle: sub('자가 점검 둘', 72, 60) })
+    const after = snap()
+    const made = outs.every(f => fs.existsSync(f) && fs.statSync(f).mtimeMs > before.mtime)
+    const same = (a, b) => a.mtime === b.mtime && a.size === b.size && a.sha === b.sha && a.aud === b.aud
+    // 화면 쪽 배선: 완료 핸들러가 renderCutClips 를 자동 호출하거나 videoClips 를 바꾸면 안 된다
+    const vt = fs.readFileSync(path.join(ROOT, 'src', 'tabs', 'VideoTab.jsx'), 'utf-8')
+    const fnBody = vt.slice(vt.indexOf('const runFfmpegForCut = async'), vt.indexOf('const renderCutClips = async'))
+    const complete = fnBody.slice(fnBody.indexOf("ev.type === 'complete'"))
+    const wired = !/renderCutClips\s*\(/.test(complete.replace(/^\s*\/\/.*$/gm, '')) && !/setVideoClips\s*\(/.test(fnBody.replace(/^\s*\/\/.*$/gm, ''))
+    const ok = r1.ok && r2.ok && made && same(before, mid) && same(before, after) && wired
+    return { ok, evidence: `컷${cut.no} 호출 ${r1.ok ? 'OK' : '실패'}/${r2.ok ? 'OK' : '실패'} · 06_publishing 결과 생성 ${made} · 05_video sha ${before.sha}→${mid.sha}→${after.sha} · 크기 ${before.size}→${after.size} · mtime ${same(before, after) ? '동일' : '변함'} · 오디오 스트림 ${before.aud}→${mid.aud}→${after.aud} · 화면 자동 덮어쓰기 배선 ${wired ? '없음' : '남아있음(!)'}` }
+  } finally {
+    outs.forEach((f, i) => {
+      const b = path.join(bak, path.basename(f))
+      try { if (had[i]) { fs.copyFileSync(b, f); const st = fs.statSync(b); fs.utimesSync(f, st.atime, st.mtime) } else if (fs.existsSync(f)) fs.unlinkSync(f) } catch { /* noop */ }
+    })
+    fs.rmSync(bak, { recursive: true, force: true })
   }
 })
 
@@ -783,7 +834,7 @@ const md = [`# 파이프라인 자가 점검 — ${CODE}`, '', `실행: ${new Da
   '| | 항목 | 증거 | 초 |', '|---|---|---|---|',
   ...results.map(r => `| ${r.status === 'PASS' ? '✅' : r.status === 'SKIP' ? '⏭️' : '❌'} | ${r.id} ${r.title} | ${String(r.evidence).replace(/\|/g, '/')} | ${r.sec} |`)].join('\n')
 const outDir = mp.statePath('selftest'); fs.mkdirSync(outDir, { recursive: true })
-fs.writeFileSync(path.join(outDir, 'latest.md'), md, 'utf-8')
+if (typeof args.only !== 'string') fs.writeFileSync(path.join(outDir, 'latest.md'), md, 'utf-8')   // 부분 실행(--only)은 전체 보고서(latest)를 덮지 않음
 fs.writeFileSync(path.join(outDir, `${stamp}.md`), md, 'utf-8')
-console.log(`\n통과 ${pass} / 실패 ${fail} / 건너뜀 ${skip} — 보고서: ${path.join(outDir, 'latest.md')}`)
+console.log(`\n통과 ${pass} / 실패 ${fail} / 건너뜀 ${skip} — 보고서: ${path.join(outDir, typeof args.only === 'string' ? stamp + '.md' : 'latest.md')}`)
 process.exit(fail ? 1 : 0)
