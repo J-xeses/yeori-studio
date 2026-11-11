@@ -1,5 +1,5 @@
 {
-  "nextIdx": 3,
+  "nextIdx": 6,
   "runs": [
     {
       "at": "2026-11-04T04:46:44.793Z",
@@ -24,7 +24,19 @@
       "added": 5,
       "searches": 6,
       "errors": []
+    },
+    {
+      "at": "2026-11-11T05:43:28.812Z",
+      "handles": [
+        "fit_aitana",
+        "noonoouri",
+        "shudu.gram"
+      ],
+      "found": 0,
+      "added": 0,
+      "searches": 6,
+      "errors": []
     }
   ],
-  "lastRun": "2026-11-04T04:47:15.232Z"
+  "lastRun": "2026-11-11T05:43:28.812Z"
 }
