@@ -43,6 +43,10 @@
 .pillWarnOn { border-color: rgba(255,122,26,.4); color: #ffb37a; }
 .pillWarnOn .pillDot { background: #ff7a1a; box-shadow: 0 0 6px #ff7a1a; animation: blink 1.2s ease-in-out infinite; }
 .pillNeutral { opacity: .55; }
+.pillWarn { border-color: rgba(255,176,32,.45); color: #ffc861; }
+.pillWarn .pillDot { background: #ffb020; box-shadow: 0 0 6px #ffb020; }
+.pillFail { border-color: rgba(255,77,77,.5); color: #ff9a9a; }
+.pillFail .pillDot { background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; animation: blink .9s ease-in-out infinite; }
 @keyframes blink { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
 
 .board { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; align-items: stretch; }
@@ -61,6 +65,14 @@
 .nodeSub { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: #726858; margin-top: 2px; }
 .nodeCount { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: #a0957f; font-variant-numeric: tabular-nums; }
 .nodeCountTotal { font-size: 11px; color: #5c5349; }
+.nodeCount { text-align: right; flex: none; margin-right: 10px; }
+.nodeCountCap { font-size: 9px; font-weight: 400; letter-spacing: .04em; color: #5c5349; margin-top: 1px; }
+/* 실측 근거 한 줄 — 왜 이 색인지(예: "컷3 cut_03_final.mp4 오디오 0개") */
+.nodeEvidence { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; line-height: 1.45; color: #8a8078; margin-top: 5px; overflow-wrap: anywhere; }
+.badge { display: inline-block; margin-left: 8px; vertical-align: 1px; font-family: 'IBM Plex Mono', monospace; font-size: 9.5px; font-weight: 500; letter-spacing: .06em; padding: 1px 6px; border-radius: 4px; border: 1px solid #3a3025; color: #8a8078; }
+.badge_ok { border-color: rgba(78,230,120,.35); color: #8be6a6; }
+.badge_warn { border-color: rgba(255,176,32,.45); color: #ffc861; }
+.badge_fail { border-color: rgba(255,77,77,.55); color: #ff9a9a; background: rgba(255,77,77,.1); }
 .nodeDot { position: absolute; top: 12px; right: 12px; width: 7px; height: 7px; border-radius: 50%; background: #332c24; }
 
 .node.idle { opacity: .55; }
@@ -80,6 +92,21 @@
 .node.done .nodeDot { background: #4ee678; box-shadow: 0 0 6px #4ee678; }
 .node.done .nodeCount { color: #8be6a6; }
 
+/* 플래그는 완료인데 파일을 실측하지 못한 상태 — 초록을 켜지 않는다(점선 테두리) */
+.node.unverified { border-color: #3d4a40; border-style: dashed; }
+/* 경고: 파일은 재생되지만 정합성 의심(옛 덮어쓰기 흔적·최종본이 옛 컷 기준 등). 진행 중 주황(#ff7a1a)과 구분되는 호박색 */
+.node.warn { border-color: #ffb020; box-shadow: 0 0 0 1px rgba(255,176,32,.12); }
+.node.warn .nodeDot { background: #ffb020; box-shadow: 0 0 6px #ffb020; }
+.node.warn .nodeEvidence { color: #ffc861; }
+/* 단선: 파일을 열어보니 깨져 있음(오디오 0개·파일 없음·무음). 플래그가 완료여도 이 색이 이긴다 */
+.node.fail {
+  border-color: #ff4d4d; background: #130a09; opacity: 1;
+  box-shadow: 0 0 0 1px rgba(255,77,77,.3), 0 0 22px rgba(255,77,77,.3), inset 0 0 18px rgba(255,77,77,.07);
+}
+.node.fail .nodeLabel { color: #ffd0d0; }
+.node.fail .nodeDot { background: #ff4d4d; box-shadow: 0 0 8px #ff4d4d; animation: blink .9s ease-in-out infinite; }
+.node.fail .nodeEvidence { color: #ff9a9a; }
+
 .wire { position: relative; width: 2px; height: 26px; background: #221d18; margin: 2px 0; }
 .wire .wireCore { position: absolute; inset: 0; }
 .wire.wireDone { background: linear-gradient(180deg, #4ee678, #2a7a45); }
@@ -87,6 +114,9 @@
   background: repeating-linear-gradient(180deg, #ff7a1a 0 6px, transparent 6px 12px);
   animation: flow .5s linear infinite;
 }
+.wire.wireWarn { background: linear-gradient(180deg, #ffb020, #7a5510); }
+/* 단선 — 끊어진 전선(가운데가 비어 있는 빨간 선) */
+.wire.wireFail { background: linear-gradient(180deg, #ff4d4d 0 34%, transparent 34% 66%, #ff4d4d 66% 100%); box-shadow: 0 0 6px rgba(255,77,77,.5); }
 @keyframes flow { to { background-position: 0 -12px; } }
 
 .console {

@@ -163,6 +163,18 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// ── GET /api/pipeline-health?code=SF_E02 — 모니터 탭 "회로도" 노드별 실파일 판정(읽기 전용, 2026-11-11) ──
+// 승인 플래그가 아니라 파일을 ffprobe 로 열어본 결과로 { nodes: { compose: { state:'ok'|'warn'|'fail'|null, evidence } … } }
+// 를 돌려준다. code 생략 시 활성 에피소드. 판정 로직·배경: server/lib/pipelineHealth.js (자가 점검 H1).
+app.get('/api/pipeline-health', async (req, res) => {
+  try {
+    const { pipelineHealthFor } = await import('./lib/pipelineHealth.js')
+    const r = await pipelineHealthFor(String(req.query.code || '').trim() || undefined)
+    if (!r) return res.status(404).json({ ok: false, error: '에피소드를 찾을 수 없습니다' })
+    res.json({ ok: true, ...r })
+  } catch (e) { res.status(500).json({ ok: false, error: e.message }) }
+})
+
 // ── 파이프라인 리더 실행 여부 확인 (2026-09-17) ──────────────────────
 // "Yeori Pipeline Leader" 창이 떠 있는 채로 컷 영상을 지우면 자동으로 다시 채워 넣는다는 걸
 // 모르고 있다가 겪은 사고([[project_agent_leader_backbone]] 참고) — 파일 정리 전에 빠르게

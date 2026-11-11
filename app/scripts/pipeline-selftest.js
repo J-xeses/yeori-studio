@@ -283,6 +283,64 @@ await check('N3', '나레이션 미리듣기 생성 후 05_video 불변(설정 �
   }
 })
 
+// ── 1g-4. 파이프라인 점검판(모니터 탭 회로도)이 깨진 파일을 "단선"으로 잡는가 ──
+// 배경(2026-11-11): 11/9 에 06_publishing/cut_NN_final.mp4 가 오디오 스트림 없이 이틀 방치됐는데 화면은 계속 "완료".
+// 점검판은 승인 플래그가 아니라 파일 실측(server/lib/pipelineHealth.js)으로 노드 색을 정한다 — 그 판정 함수에
+// 실제 오염 파일(SF_E01 _manual_work/cut_06_dirty_20261107.mp4, 오디오 스트림 소실본)의 "복사본"을 임시 폴더에 놓고
+// 승인 플래그를 전부 true 로 준 상태에서도 단선으로 나오는지 본다. production 폴더는 읽기만 한다(쓰기는 임시 폴더뿐).
+await check('H1', '파이프라인 점검판 — 오염 파일 복사본을 단선으로 판정(플래그 전부 완료여도)', async () => {
+  const { evaluatePipelineHealth } = await import('../server/lib/pipelineHealth.js')
+  const audN = (f) => String(spawnSync('ffprobe', ['-v', 'error', '-select_streams', 'a', '-show_entries', 'stream=index', '-of', 'csv=p=0', f], { encoding: 'utf-8' }).stdout).trim().split(/\r?\n/).filter(Boolean).length
+  const cleanSrc = cuts.map(c => path.join(videoDir, `cut_${String(c.no).padStart(2, '0')}.mp4`)).find(f => fs.existsSync(f) && audN(f) >= 1 && (meanDb(f, 0, 60) ?? -99) > -45)   // 소리가 실제로 나는 컷(무음 판정 -45dB 기준)
+  if (!cleanSrc) return { skip: true, evidence: '소리가 나는 정상 컷 영상 없음' }
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'selftest_h1_'))
+  try {
+    // 오염 파일: 실제 사고 백업본이 있으면 그 복사본, 없으면 정상 컷에서 오디오만 뺀 사본을 임시 폴더에 만든다
+    const realDirty = path.join(mp.videoDir('SF_E01'), '_manual_work', 'cut_06_dirty_20261107.mp4')
+    const dirty = path.join(tmp, 'dirty.mp4')
+    const usedReal = fs.existsSync(realDirty) && audN(realDirty) === 0
+    if (usedReal) fs.copyFileSync(realDirty, dirty)
+    else spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', cleanSrc, '-an', '-c', 'copy', dirty])
+    if (audN(dirty) !== 0) return { ok: false, evidence: '오염 표본 준비 실패(오디오가 남아 있음)' }
+    const dur = Number(String(spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', cleanSrc], { encoding: 'utf-8' }).stdout).trim())
+    const now = Date.now() / 1000
+    // 시나리오별 임시 에피소드 폴더: v=05_video, p=06_publishing(미리듣기 final), f=07_output 에 무엇을 놓을지 + 각 파일 mtime(초 전)
+    const build = (name, { v, vAge = 600, p, pAge = 300, f }) => {
+      const root = path.join(tmp, name)
+      const dirs = Object.fromEntries(['script', 'images', 'audio', 'raw', 'video', 'publishing', 'final'].map(k => [k, path.join(root, k)]))
+      Object.values(dirs).forEach(d => fs.mkdirSync(d, { recursive: true }))
+      const put = (src, dest, age) => { if (!src) return; fs.copyFileSync(src, dest); fs.utimesSync(dest, now - age, now - age) }
+      put(v, path.join(dirs.video, 'cut_01.mp4'), vAge)
+      put(p, path.join(dirs.publishing, 'cut_01_final.mp4'), pAge)
+      put(f, path.join(dirs.final, 'H1_TEST_final.mp4'), 60)
+      return dirs
+    }
+    const cut = { no: 1, cutType: 'YEORI', duration: Math.round(dur), dialogue: '자가 점검 대사', narration: '' }
+    const gpAll = { cut_1: { g1: true, g2: true, g3: true, g4: true, g5: true } }   // 플래그는 전부 "완료"
+    const run = async (dirs) => (await evaluatePipelineHealth({ code: 'H1_TEST', cuts: [cut], gp: gpAll, dirs })).nodes
+    const A = await run(build('a_clean', { v: cleanSrc, p: cleanSrc, f: cleanSrc }))            // 대조군: 전부 정상
+    const B = await run(build('b_preview', { v: cleanSrc, p: dirty, f: cleanSrc }))             // 11/9 재현: 미리듣기 결과 오디오 소실
+    const C = await run(build('c_compose', { v: dirty, f: cleanSrc }))                          // 대사 컷 원본 오디오 소실
+    const D = await run(build('d_final', { v: cleanSrc, f: dirty }))                            // 최종본 오디오 소실
+    const E = await run(build('e_missing', {}))                                                 // 승인 플래그만 있고 파일 없음
+    const F = await run(build('f_stale', { v: cleanSrc, vAge: 300, p: dirty, pAge: 3600, f: cleanSrc }))  // 오래돼 무시되는 깨진 미리듣기 → 경고
+    const G = await run(build('g_legacy', { v: cleanSrc, vAge: 297, p: cleanSrc, pAge: 300, f: cleanSrc })) // 옛 "입히기" 덮어쓰기 흔적 → 경고
+    const want = [
+      ['정상 대조군', A.compose.state === 'ok' && A.preview.state === 'ok' && A.finalize.state === 'ok', `${A.compose.state}/${A.preview.state}/${A.finalize.state}`],
+      ['미리듣기 오디오 0개→단선', B.preview.state === 'fail' && /오디오 0개/.test(B.preview.evidence), `${B.preview.state}: ${B.preview.evidence}`],
+      ['대사 컷 오디오 0개→단선', C.compose.state === 'fail' && /오디오 0개/.test(C.compose.evidence), `${C.compose.state}: ${C.compose.evidence}`],
+      ['최종본 오디오 0개→단선', D.finalize.state === 'fail' && /오디오 0개/.test(D.finalize.evidence), `${D.finalize.state}: ${D.finalize.evidence}`],
+      ['승인인데 파일 없음→단선', E.compose.state === 'fail' && E.finalize.state === 'fail', `${E.compose.state}/${E.finalize.state}`],
+      ['무시되는 옛 미리듣기→경고', F.preview.state === 'warn', F.preview.state],
+      ['덮어쓰기 흔적→경고', G.compose.state === 'warn' && /덮어쓴 흔적/.test(G.compose.evidence), G.compose.state],
+    ]
+    const bad = want.filter(w => !w[1])
+    return { ok: !bad.length, evidence: `오염 표본 ${usedReal ? 'SF_E01 cut_06_dirty_20261107.mp4 복사본' : '합성(-an)'}(오디오 ${audN(dirty)}개) · ${want.map(w => `${w[0]} ${w[1] ? '✓' : '✗'}[${w[2]}]`).join(' · ')}` }
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true })
+  }
+})
+
 // ── 1h. 승인 기록(G포인트) 병합 — 일부 필드만 보낸 최신 기록이 다른 승인·선택 이미지를 지우지 않는가 ──
 await check('G2', '승인 기록 병합(부분 기록이 다른 승인을 지우지 않음)', async () => {
   const gp = mp.statePath('gpoints.json')
