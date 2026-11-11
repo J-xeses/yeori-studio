@@ -45,6 +45,7 @@ import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
 import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
 import { getWaveformPeaks } from './lib/waveform.js'
 import { getFilmstripFrames } from './lib/filmstrip.js'
+import { mountPipelineLayout } from './lib/pipelineLayout.js'
 
 // TTS 탭 "캐릭터 목소리 미세조정"(state.ttsSettings.speakerSettings)에서 이 캐릭터의 안정성·
 // 유사도 튜닝을 찾는다 — resolveVoice()의 speakerVoices 느슨 매칭(별칭 포함)과 같은 방식.
@@ -174,6 +175,11 @@ app.get('/api/pipeline-health', async (req, res) => {
     res.json({ ok: true, ...r })
   } catch (e) { res.status(500).json({ ok: false, error: e.message }) }
 })
+
+// ── GET/PUT /api/pipeline-layout — 모니터 탭 워크벤치 캔버스의 노드 배치(드래그 좌표) 저장 (2026-11-11) ──
+// downloads/state/pipeline-layout.json 에 { positions: { nodeId: { x, y } }, savedAt }. PUT 본문 { positions } 통째 교체.
+// 검증·저장 로직: server/lib/pipelineLayout.js
+mountPipelineLayout(app)
 
 // ── 파이프라인 리더 실행 여부 확인 (2026-09-17) ──────────────────────
 // "Yeori Pipeline Leader" 창이 떠 있는 채로 컷 영상을 지우면 자동으로 다시 채워 넣는다는 걸
