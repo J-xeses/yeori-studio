@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
 
 /* 워크벤치 토큰 — 승인된 목업과 동일(다크 #060606 · 액센트 오렌지 · 상태색 ok/hold/fail · 배선편집 보라). 이 탭의 색은 전부 여기서만 정한다. */
 .page {
   --bg: #060606;
-  --panel: #0d0b09;
+  --panel: #1a1612;
   --panel-2: #0a0908;
   --line: #241f1a;
   --line-2: #2a2622;
@@ -23,18 +23,18 @@
   height: 100%;
   min-height: 100%;
   box-sizing: border-box;
-  display: flex; flex-direction: column; gap: 14px;
+  display: flex; flex-direction: column; gap: 8px;
   background: var(--bg);
   color: var(--text);
-  padding: 22px 26px 22px;
+  padding: 8px 22px 12px;
   font-family: var(--sans);
   overflow-y: auto;
   isolation: isolate;
 }
 
-.header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; flex: none; }
-.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--accent); text-transform: uppercase; }
-.title { font-size: 22px; font-weight: 700; margin: 6px 0 0; color: #fff; text-wrap: balance; }
+/* 에피소드 제목은 상단바(EpisodeBar)에 이미 있어 생략 — 상태표시 줄을 상단바 바로 아래까지 끌어올려 세로 공간을 캔버스에 더 준다 */
+.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; flex: none; }
+.eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .16em; color: var(--accent); text-transform: uppercase; font-weight: 600; }
 
 .statusRow { display: flex; gap: 8px; flex-wrap: wrap; }
 .pill {
@@ -98,7 +98,7 @@
 .node {
   width: 340px; box-sizing: border-box;
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
-  color: var(--text); font-family: var(--sans); font-size: 12px;
+  color: var(--text); font-family: var(--sans); font-size: 12.5px;
   transition: border-color .25s, box-shadow .25s;
   cursor: grab;
 }
@@ -107,9 +107,9 @@
 .nodeHead { display: flex; align-items: flex-start; gap: 9px; padding: 12px 12px 10px; }
 .nodeIcon { font-size: 18px; line-height: 1.1; flex: none; }
 .nodeTitle { flex: 1; min-width: 0; }
-.nodeLabel { font-weight: 600; font-size: 14px; color: #e8ddd0; display: flex; align-items: center; gap: 7px; }
-.nodeNo { font-family: var(--mono); font-size: 10px; font-weight: 400; color: #665c50; border: 1px solid #2a2520; border-radius: 5px; padding: 1px 5px; }
-.nodeSub { font-family: var(--mono); font-size: 10px; color: #726858; margin-top: 3px; overflow-wrap: anywhere; }
+.nodeLabel { font-weight: 700; font-size: 14.5px; color: #f3ead9; display: flex; align-items: center; gap: 7px; }
+.nodeNo { font-family: var(--mono); font-size: 10px; font-weight: 600; color: #7a6f60; border: 1px solid #2a2520; border-radius: 5px; padding: 1px 5px; }
+.nodeSub { font-family: var(--mono); font-size: 10.5px; font-weight: 500; color: #857a69; margin-top: 3px; overflow-wrap: anywhere; }
 /* 실측 근거 한 줄 — 왜 이 색인지. 정상일 땐 머리 아래 옅게, 경고·단선일 땐 연결 섹션의 경고 줄로 간다 */
 .nodeEvidence { font-family: var(--mono); font-size: 10px; line-height: 1.45; color: var(--muted); padding: 0 12px 10px; overflow-wrap: anywhere; }
 
@@ -121,10 +121,10 @@
 .badge_idle { opacity: .8; }
 
 .section { border-top: 1px solid #1c1814; padding: 9px 12px 10px; }
-.sectionLabel { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); opacity: .85; margin-bottom: 6px; }
-.sectionHint { letter-spacing: 0; text-transform: none; color: var(--dim); margin-left: 6px; }
+.sectionLabel { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); opacity: .9; margin-bottom: 6px; }
+.sectionHint { letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--dim); margin-left: 6px; }
 .codeFile {
-  display: block; font-family: var(--mono); font-size: 10.5px; line-height: 1.5; color: var(--text-2);
+  display: block; font-family: var(--mono); font-size: 10.5px; font-weight: 500; line-height: 1.5; color: var(--text-2);
   background: #110f0c; border: 1px solid #1c1814; border-radius: 5px; padding: 2px 7px; margin-top: 3px; overflow-wrap: anywhere;
 }
 /* 플러그 줄 — 점(Handle)은 카드 가장자리에 걸치고, 바로 옆에 포트 이름 + 오가는 것. 입력은 왼쪽 정렬, 출력은 오른쪽 정렬 */
@@ -133,8 +133,8 @@
 .port { position: relative; display: flex; align-items: baseline; gap: 7px; padding: 4px 14px; min-height: 16px; }
 .portOut { flex-direction: row-reverse; text-align: right; }
 .portIn + .portOut { margin-top: 6px; padding-top: 9px; border-top: 1px dashed #1c1814; }
-.portName { font-family: var(--mono); font-size: 11px; font-weight: 500; flex: none; white-space: nowrap; }
-.portText { font-size: 10.5px; line-height: 1.4; color: var(--muted); min-width: 0; overflow-wrap: anywhere; }
+.portName { font-family: var(--mono); font-size: 11.5px; font-weight: 700; flex: none; white-space: nowrap; }
+.portText { font-size: 11px; font-weight: 500; line-height: 1.42; color: var(--text-2); min-width: 0; overflow-wrap: anywhere; }
 .node .plug { width: 11px; height: 11px; border-width: 2px; border-style: solid; box-shadow: 0 0 0 2px var(--panel); top: 13px; }
 .node .portIn + .portOut .plug { top: 18px; }
 .node .plug:hover { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--wire-edit); }
@@ -186,16 +186,16 @@
 }
 .node.fail .nodeLabel { color: #ffd0d4; }
 
-/* ── 실시간 로그 ── */
-.console { flex: none; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+/* ── 실시간 로그 — "맨 아래 안내표시", 세로 공간 확보를 위해 최소 높이로 축소 ── */
+.console { flex: none; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .consoleHead {
-  display: flex; align-items: center; gap: 7px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; color: var(--muted);
-  padding: 8px 14px; border-bottom: 1px solid #1c1814; text-transform: uppercase;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; color: var(--muted);
+  padding: 4px 12px; border-bottom: 1px solid #1c1814; text-transform: uppercase;
 }
-.consoleDot { width: 6px; height: 6px; border-radius: 50%; background: #3a332b; }
+.consoleDot { width: 5px; height: 5px; border-radius: 50%; background: #3a332b; }
 .consoleDot[data-live="true"] { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blink 1s ease-in-out infinite; }
-.consoleBody { max-height: 120px; overflow-y: auto; padding: 8px 14px; font-family: var(--mono); font-size: 11.5px; line-height: 1.7; }
+.consoleBody { max-height: 64px; overflow-y: auto; padding: 4px 12px; font-family: var(--mono); font-size: 10.5px; line-height: 1.5; }
 .logLine { color: var(--text-2); display: flex; gap: 10px; }
 .logTime { color: var(--dim); flex: none; }
 .logIdle { color: var(--dim); }

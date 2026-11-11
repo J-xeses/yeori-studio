@@ -311,10 +311,7 @@ function Workbench() {
   return (
     <div className={s.page}>
       <div className={s.header}>
-        <div>
-          <div className={s.eyebrow}>PIPELINE WORKBENCH · {epCode || '—'}</div>
-          <h1 className={s.title}>{episode?.title || '에피소드 없음'}</h1>
-        </div>
+        <div className={s.eyebrow}>PIPELINE WORKBENCH · {epCode || '—'}</div>
         <div className={s.statusRow}>
           <StatusPill ok={flowReady?.chrome} label="Flow Chrome" />
           <StatusPill ok={flowReady?.flowTab} label="Flow 탭" />
