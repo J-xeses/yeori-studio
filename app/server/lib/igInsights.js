@@ -43,6 +43,29 @@ async function mediaInsights(id, type, token) {
   }
 }
 
+// 에피소드 제목 → 코드 사전(유튜브 운영실 게시물 목록 = SF/LF/IG 코드와 제목이 다 들어 있음)
+const titleKey = (s) => String(s || '').replace(/[^0-9A-Za-z가-힣]/g, '')
+function codeByTitle(caption) {
+  const head = titleKey(String(caption || '').split('\n')[0])
+  if (!head) return null
+  try {
+    const yt = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'downloads', 'seoyeori', 'YU', '_account', 'ops.json'), 'utf-8'))
+    const hit = (yt.posts || []).find(p => { const t = titleKey(p.title); return t.length >= 4 && head.startsWith(t) })
+    return hit ? { code: hit.code, title: hit.title } : null
+  } catch { return null }
+}
+function newPostFromMedia(m, day) {
+  const reel = m.media_product_type === 'REELS' || m.media_type === 'VIDEO'
+  const hit = codeByTitle(m.caption)
+  const first = String(m.caption || '').split('\n')[0].trim().slice(0, 60)
+  const kst = new Date(Date.parse(m.timestamp) + 9 * 36e5).toISOString()
+  return {
+    id: 'ig_' + m.id, date: kst.slice(0, 10) || day, time: kst.slice(11, 16), type: reel ? '일상 Reel' : '사진 Carousel',
+    title: hit ? `${hit.code.replace(/^IG_/, '')} ${hit.title}` : (first || '인스타 게시물'), code: hit?.code || '',
+    status: '게시', img: '', link: m.permalink, note: '자동 등록(인스타 동기화 — 스튜디오 밖에서 올린 게시물)', metrics: {},
+  }
+}
+
 export async function syncInsights({ log = () => {} } = {}) {
   const sec = readSecrets()
   if (!sec.apiKeys?.instagram?.token) return { ok: false, skipped: '인스타 토큰 없음(studio-secrets.json apiKeys.instagram.token)' }
@@ -61,7 +84,9 @@ export async function syncInsights({ log = () => {} } = {}) {
     const day = m.timestamp?.slice(0, 10)
     let post = ops.posts.find(p => short(p.link) === code)
     if (!post) post = ops.posts.find(p => !p.link && p.date === day && ['완성', '예약', '제작중'].includes(p.status))
-    if (!post) continue
+    // 스튜디오 밖(인스타 앱 등)에서 올린 게시물도 운영실에 자동 등록(2026-11-11: SF_E01·SF_E02 릴스가 목록에 없어
+    // 성과가 아예 안 잡히던 문제). 캡션 첫 줄을 에피소드 제목과 대조해 코드도 붙인다.
+    if (!post) { post = newPostFromMedia(m, day); ops.posts.push(post); linked++ }
     if (!post.link) { post.link = m.permalink; linked++ }
     if (post.status !== '게시') post.status = '게시'
     const ins = insById[m.id]

@@ -3956,6 +3956,9 @@ app.get('/api/yeori-mood', async (req, res) => {
 })
 
 // 인스타 성과 자동 수집(Instagram API with Instagram Login) — 기동 1분 뒤 + 3시간마다(2026-11-02, 기존 6시간→3시간), 수동은 POST /api/ig-sync (2026-09-26)
+app.post('/api/yt-sync', async (_req, res) => {
+  try { const { syncYoutube } = await import('./lib/ytSync.js'); res.json(await syncYoutube({ log: console.log })) } catch (e) { res.status(500).json({ error: e.message }) }
+})
 app.post('/api/ig-sync', async (_req, res) => {
   try { const { syncInsights } = await import('./lib/igInsights.js'); res.json(await syncInsights({ log: console.log })) }
   catch (err) { res.status(500).json({ error: err.message }) }
@@ -3963,6 +3966,9 @@ app.post('/api/ig-sync', async (_req, res) => {
 {
   const runIg = async () => { try { const { syncInsights, igConfigured } = await import('./lib/igInsights.js'); if (igConfigured()) await syncInsights({ log: (l) => console.log('[ig-sync]', l) }) } catch (e) { console.warn('[ig-sync] 실패:', e.message) } }
   setTimeout(runIg, 60 * 1000); setInterval(runIg, 3 * 3600 * 1000)
+  // 유튜브 운영실 자동 동기화(2026-11-11) — 공개 채널 페이지 기준 게시 상태·조회수·구독자(server/lib/ytSync.js)
+  const runYt = async () => { try { const { syncYoutube } = await import('./lib/ytSync.js'); await syncYoutube({ log: (l) => console.log('[yt-sync]', l) }) } catch (e) { console.warn('[yt-sync] 실패:', e.message) } }
+  setTimeout(runYt, 180 * 1000); setInterval(runYt, 3 * 3600 * 1000)
   // 벤치마킹 트렌드 리서치 — 주 1회(2026-11-02 성준님 확정). 3시간 틱마다 7일 경과했는지만 확인(내부적으로 자체 게이트).
   const runTrend = async () => { try { const { maybeWeeklyTrendResearch } = await import('./lib/trendResearch.js'); await maybeWeeklyTrendResearch((l) => console.log('[trend-research]', l)) } catch (e) { console.warn('[trend-research] 실패:', e.message) } }
   setTimeout(runTrend, 90 * 1000); setInterval(runTrend, 3 * 3600 * 1000)
