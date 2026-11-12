@@ -1,5 +1,5 @@
 {
-  "activeTab": "script",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12566,9 +12566,59 @@
   "projectName": "새 프로젝트",
   "savedAt": "2026-11-12T09:53:19.148Z",
   "videoTabState": {
-    "videoClips": {},
-    "g4Approved": {},
-    "selectedCutId": null,
+    "videoClips": {
+      "cut-1": [
+        {
+          "url": "blob:http://localhost:5173/586bb016-a32f-4504-bb1e-e440ab6a9f29",
+          "name": "Portrait_painting_transforms_on_…_197038d9.mp4",
+          "duration": 8.04,
+          "trimStart": 0,
+          "trimEnd": 8.04,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794475136873,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\04_making\\raw\\cut_01_clip_1.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/0462f22f-c718-4d3e-b2fc-07491f91cd23",
+          "name": "Woman_turning_head_portrait_8e057d75.mp4",
+          "duration": 8.04,
+          "trimStart": 0,
+          "trimEnd": 8.04,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794475605561,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\04_making\\raw\\cut_02_clip_1.mp4"
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "blob:http://localhost:5173/6202e95d-8e8c-42e9-83c9-c0893d737fd5",
+          "name": "Woman_walks_out_of_frame_65df2f2b.mp4",
+          "duration": 10.03,
+          "trimStart": 0,
+          "trimEnd": 10.03,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": false,
+          "createdAt": 1794476556562,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\04_making\\raw\\cut_03_clip_1.mp4"
+        }
+      ]
+    },
+    "g4Approved": {
+      "cut-1": true,
+      "cut-2": true,
+      "cut-3": true
+    },
+    "selectedCutId": "cut-1",
     "subtitles": {}
   },
   "ttsTabState": {
