@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AppProvider, useApp } from './context/AppContext'
-import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode, validateEpisodeCode } from './lib/episodeCode'
+import { formatEpisodeCode, displayEpisodeCode, resolveEpisodeCode, validateEpisodeCode, parseEpisodeCode } from './lib/episodeCode'
 import { setGPoint, loadGPoints, hydrateFromServer } from './lib/gpoints'
 
 const SIDEBAR_W = 288
@@ -135,18 +135,20 @@ function EpisodeSidebar({ onClose }) {
     )
     const knownTypes = SIDEBAR_EP_GROUPS.flatMap(g => g.types)
 
-    // 다음 자동 배정될 번호 — 전체 에피소드 통틀어 최댓값+1(전역 카운터). 실제 배정은
-    // ADD_EPISODE reducer가 다시 계산하지만 코드 미리보기/검증용으로 여기서도 동일하게 계산해둔다.
-    // 주의: episode.number는 downloads/{flow,video,audio}/ep{number}/ 파일 경로에도 그대로
-    // 쓰여서, 한때(2026-08-08) 콘텐츠유형별 독립 번호로 바꿨다가 서로 다른 유형이 같은 번호를
-    // 가지면서 실제로 downloads/flow/ep1/ 같은 폴더를 여러 에피소드가 공유하는 충돌이 발생함을
-    // 확인(2026-08-15). 파일경로를 episode.code 기준으로 전면 교체하는 근본 해법("4차")은 범위가
-    // 너무 커서 보류하고, 대신 번호를 다시 전역 유일값으로 되돌려 충돌 자체를 원천 차단한다 —
-    // 트레이드오프로 코드의 "E0N" 숫자가 유형별로 1부터 시작하지 않을 수 있음(예: 두 번째로
-    // 만들어진 콘텐츠유형의 첫 에피소드가 E02로 보일 수 있음).
-    const nextNumber = Math.max(0, ...Object.values(episodes)
-        .map(e => e.episode.number)) + 1
-    const previewCode = formatEpisodeCode(newType, nextNumber, newSlug)
+    // episode.number(내부 식별자)는 전역 유일 카운터로 그대로 둔다 — downloads 경로 해석을
+    // 포함해 서버 파이프라인 전체(proxy.js 수백 개 엔드포인트)가 mediaPaths.js의
+    // numberToCodeMap()(번호 1개 → 코드 1개, 전역 flat map)으로 "이 번호가 어느 코드/폴더인지"
+    // 역추적한다 — 번호가 유형 간에 겹치면 이 맵이 번호당 코드 하나만 기억하므로 한쪽 에피소드의
+    // G1~G5·이미지/영상 생성·CapCut·퍼블리시가 조용히 다른 에피소드 폴더로 들어갈 수 있다
+    // (2026-08-08 한때 유형별 독립 번호로 바꿨다가 이 충돌을 겪고 2026-08-15 전역 유일로 되돌림).
+    //
+    // 2026-11-12: 코드에 "보이는" 번호만 유형별로 따로 센다(episode.number와 분리) — IG_R이
+    // IG_H보다 나중에 만들어져도 IG_R01부터 시작하도록. ADD_EPISODE reducer는 code를 그대로
+    // 받아 저장만 하고 number는 독립적으로(전역 max+1) 재계산하므로 안전하게 분리된다.
+    const nextTypeNumber = Math.max(0, ...Object.values(episodes)
+        .filter(e => (e.episode.contentType || 'LF') === newType)
+        .map(e => parseEpisodeCode(e.episode.code || '')?.number ?? e.episode.number ?? 0)) + 1
+    const previewCode = formatEpisodeCode(newType, nextTypeNumber, newSlug)
 
     const openAddForm = () => {
         if (Object.keys(episodes).length >= 99) { alert('에피소드는 최대 99개까지 만들 수 있어요.'); return }
@@ -154,7 +156,7 @@ function EpisodeSidebar({ onClose }) {
     }
 
     const confirmAdd = () => {
-        const code = formatEpisodeCode(newType, nextNumber, newSlug)
+        const code = formatEpisodeCode(newType, nextTypeNumber, newSlug)
         const { valid, error } = validateEpisodeCode(code)
         if (!valid) { setAddError(error); return }
         const isDup = Object.values(episodes).some(e => e.episode?.code === code)

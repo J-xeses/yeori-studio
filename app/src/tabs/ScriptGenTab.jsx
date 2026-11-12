@@ -1797,7 +1797,7 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
   // 리듀서는 그대로 남아있던 걸 2026-11-12 복원 — 컷 수를 바꾸면 makeCuts(n)로 전체 컷이
   // 새로 만들어지므로(기존 씬/대사/프롬프트 내용 유실) 되돌릴 수 없는 작업임에 유의.
   const handleCutCountChange = (n) => {
-    const count = Math.max(1, Math.min(20, parseInt(n) || 7))
+    const count = Math.max(1, parseInt(n) || 7)
     dispatch({ type: 'RESET_CUTS', n: count })
   }
 
@@ -1975,9 +1975,9 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
               <div className={s.field}>
                 <label>컷 수</label>
                 <div className={s.epNumRow}>
-                  <input type="number" min="1" max="20" value={episode.cutCount}
+                  <input type="number" min="1" value={episode.cutCount}
                     onChange={e => handleCutCountChange(e.target.value)} />
-                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>컷 (최대 20, 변경 시 컷 내용 초기화됨)</span>
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>컷 (상한 없음, 변경 시 컷 내용 초기화됨)</span>
                 </div>
               </div>
 
