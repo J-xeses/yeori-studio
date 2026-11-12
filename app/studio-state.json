@@ -1,5 +1,5 @@
 {
-  "activeTab": "publishing",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12295,7 +12295,7 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "imagePrompt": "OIL PAINTING PORTRAIT in an antique gilded frame, muted gallery wall, warm window light from screen-right, soft dust motes in the light beam. Subject: Seo Yeori — Korean woman early-20s, long wavy dark brown hair, natural skin texture, thin gold necklace, calm K-model presence. Classical portraiture brushwork, painterly texture.",
+          "imagePrompt": "OIL PAINTING PORTRAIT in an antique gilded frame, muted gallery wall, warm window light from screen-right, soft dust motes in the light beam. Subject: Seo Yeori — Korean woman early-20s, long wavy dark brown hair, natural skin texture, thin gold necklace, calm K-model presence. Classical portraiture brushwork, painterly texture. Style reference: Johannes Vermeer soft window-lit portraiture (Girl with a Pearl Earring, Girl Reading a Letter at an Open Window) blended with Corot informal atmospheric portraits (Woman with a Pearl) — diffused directional side light, intimate 3/4 turn, visible brushwork, warm muted earth-tone palette, no harsh contrast.",
           "duration": 8,
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -12310,7 +12310,7 @@
           "character": "서여리",
           "dialogue": "",
           "narration": "",
-          "imagePrompt": "CLOSEUP to MEDIUM-CLOSEUP, Seo Yeori as the painting's subject, warm interior window light, antique frame edge visible softening into live motion. Natural skin texture, soft catchlight in the eyes, loose wavy dark brown hair, thin gold necklace.",
+          "imagePrompt": "CLOSEUP to MEDIUM-CLOSEUP, Seo Yeori as the painting's subject, warm interior window light, antique frame edge visible softening into live motion. Natural skin texture, soft catchlight in the eyes, loose wavy dark brown hair, thin gold necklace. Style reference: Johannes Vermeer soft window-lit portraiture (Girl with a Pearl Earring, Girl Reading a Letter at an Open Window) blended with Corot informal atmospheric portraits (Woman with a Pearl) — diffused directional side light, intimate 3/4 turn, visible brushwork, warm muted earth-tone palette, no harsh contrast.",
           "duration": 8,
           "cutType": "YEORI",
           "cutMark": "NORMAL",
@@ -12461,7 +12461,7 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "imagePrompt": "OIL PAINTING PORTRAIT in an antique gilded frame, muted gallery wall, warm window light from screen-right, soft dust motes in the light beam. Subject: Seo Yeori — Korean woman early-20s, long wavy dark brown hair, natural skin texture, thin gold necklace, calm K-model presence. Classical portraiture brushwork, painterly texture.",
+      "imagePrompt": "OIL PAINTING PORTRAIT in an antique gilded frame, muted gallery wall, warm window light from screen-right, soft dust motes in the light beam. Subject: Seo Yeori — Korean woman early-20s, long wavy dark brown hair, natural skin texture, thin gold necklace, calm K-model presence. Classical portraiture brushwork, painterly texture. Style reference: Johannes Vermeer soft window-lit portraiture (Girl with a Pearl Earring, Girl Reading a Letter at an Open Window) blended with Corot informal atmospheric portraits (Woman with a Pearl) — diffused directional side light, intimate 3/4 turn, visible brushwork, warm muted earth-tone palette, no harsh contrast.",
       "duration": 8,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -12476,7 +12476,7 @@
       "character": "서여리",
       "dialogue": "",
       "narration": "",
-      "imagePrompt": "CLOSEUP to MEDIUM-CLOSEUP, Seo Yeori as the painting's subject, warm interior window light, antique frame edge visible softening into live motion. Natural skin texture, soft catchlight in the eyes, loose wavy dark brown hair, thin gold necklace.",
+      "imagePrompt": "CLOSEUP to MEDIUM-CLOSEUP, Seo Yeori as the painting's subject, warm interior window light, antique frame edge visible softening into live motion. Natural skin texture, soft catchlight in the eyes, loose wavy dark brown hair, thin gold necklace. Style reference: Johannes Vermeer soft window-lit portraiture (Girl with a Pearl Earring, Girl Reading a Letter at an Open Window) blended with Corot informal atmospheric portraits (Woman with a Pearl) — diffused directional side light, intimate 3/4 turn, visible brushwork, warm muted earth-tone palette, no harsh contrast.",
       "duration": 8,
       "cutType": "YEORI",
       "cutMark": "NORMAL",
@@ -12621,7 +12621,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-12T12:22:36.995Z",
+  "savedAt": "2026-11-12T13:29:18.358Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
