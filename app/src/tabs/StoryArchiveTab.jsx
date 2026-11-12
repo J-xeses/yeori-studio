@@ -419,7 +419,7 @@ ${formatsText}
                 <div className={s.archiveHeader}>
                   <span className={s.archiveTitle}>{c.title}</span>
                   <span className={s.archiveDate}>{c.savedAt}</span>
-                  <button className={s.scriptBtn} onClick={() => dispatch({ type: 'SET_EPISODE', p: { title: c.title, storyBrief: c.hook + (c.reason ? ` — ${c.reason}` : '') } })}>대본 생성 →</button>
+                  <button className={s.scriptBtn} onClick={() => { dispatch({ type: 'ADD_EPISODE_FROM_IDEA', p: { title: c.title, storyBrief: c.hook + (c.reason ? ` — ${c.reason}` : '') } }); dispatch({ type: 'SET_TAB', p: 'script' }) }}>대본 생성 →</button>
                   <button className={s.removeBtn} onClick={() => setSaved(prev => prev.filter(x => x.id !== c.id))}>✕</button>
                 </div>
                 <div className={s.comboFormula}>
@@ -495,7 +495,7 @@ function TrendEpisodesSection({ dispatch }) {
   // 넘겨 ScriptGenTab의 "스토리 디벨롭" 단계가 이걸 기반으로 확장하게 한다.
   const sendToScript = (ep, key) => {
     const ov = catOverride[key] || {}
-    dispatch({ type: 'SET_EPISODE', p: {
+    dispatch({ type: 'ADD_EPISODE_FROM_IDEA', p: {
       title: ep.title, contentType: ep.category, storyBrief: ep.angle || '',
       topicCode: ov.topicCode || ep.topicCode || 'PSY',
       scnCode: ov.scnCode || ep.scnCode || 'DOC',
@@ -680,7 +680,7 @@ function ShortIdeaTab() {
             <div className={s.archiveList}>
               {saved.map(story => (
                 <div key={story.id} className={s.archiveCard}>
-                  <div className={s.archiveHeader}><span className={s.archiveTitle}>{story.title}</span><span className={s.archiveDate}>{story.savedAt}</span><button className={s.scriptBtn} onClick={() => dispatch({ type: 'SET_EPISODE', p: { title: story.title, storyBrief: story.summary || story.hook || '' } })}>대본 생성 →</button><button className={s.removeBtn} onClick={() => setSaved(prev => prev.filter(x => x.id !== story.id))}>✕</button></div>
+                  <div className={s.archiveHeader}><span className={s.archiveTitle}>{story.title}</span><span className={s.archiveDate}>{story.savedAt}</span><button className={s.scriptBtn} onClick={() => { dispatch({ type: 'ADD_EPISODE_FROM_IDEA', p: { title: story.title, storyBrief: story.summary || story.hook || '' } }); dispatch({ type: 'SET_TAB', p: 'script' }) }}>대본 생성 →</button><button className={s.removeBtn} onClick={() => setSaved(prev => prev.filter(x => x.id !== story.id))}>✕</button></div>
                   <p className={s.archiveHook}>"{story.hook}"</p>
                 </div>
               ))}
@@ -786,7 +786,7 @@ episodes 4개.`,
                         <span className={s.epNum}>{ep.ep}화</span>
                         <div className={s.epInfo}><span className={s.epTitle}>{ep.title}</span><span className={s.epHook}>"{ep.hook}"</span></div>
                         <span className={s.epKeyword}>{ep.keyword}</span>
-                        <button className={s.scriptBtn} onClick={() => dispatch({ type: 'SET_EPISODE', p: { title: ep.title, storyBrief: `${plan.concept} — ${ep.hook}` } })}>대본 생성 →</button>
+                        <button className={s.scriptBtn} onClick={() => { dispatch({ type: 'ADD_EPISODE_FROM_IDEA', p: { title: ep.title, storyBrief: `${plan.concept} — ${ep.hook}` } }); dispatch({ type: 'SET_TAB', p: 'script' }) }}>대본 생성 →</button>
                       </div>
                     ))}
                   </div>

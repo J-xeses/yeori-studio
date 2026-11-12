@@ -165,6 +165,31 @@ function reducer(state, action) {
       }
     }
 
+    // ── 새 에피소드 추가 + 즉시 전환 (스토리 아카이브 "대본 생성 →" 전용) ────
+    // SET_EPISODE는 항상 현재 활성 에피소드를 덮어쓴다. 스토리 아카이브에서 생성한 아이디어는
+    // 완전히 새 글감인데 거기서 SET_EPISODE를 쓰면 마지막으로 열어둔 에피소드의 제목이 그
+    // 아이디어 제목으로 바뀌어버린다(2026-11-12 버그 리포트: IG_R02·IG_R05 제목이 "유튜브
+    // 자기계발 영상 500시간 본 후기"로 덮어써짐). 이 액션은 항상 새 에피소드를 만들어 그걸로
+    // 전환하고, 기존 에피소드는 손대지 않는다.
+    case 'ADD_EPISODE_FROM_IDEA': {
+      const maxNum = Math.max(0, ...Object.values(state.episodes).map(e => e.episode.number))
+      const newId = `ep_${Date.now()}`
+      const newEp = makeEpisode(newId, maxNum + 1, { contentType: action.p?.contentType })
+      newEp.episode = { ...newEp.episode, ...action.p }
+      const episodes = { ...state.episodes, [newId]: newEp }
+      const openTabIds = [...(state.openTabIds || []), newId]
+      const swapped = swapTabState({ ...state, episodes }, newId)
+      return {
+        ...state,
+        ...swapped,
+        openTabIds,
+        activeEpisodeId: newId,
+        episode: newEp.episode,
+        cuts: newEp.cuts,
+        scriptRaw: '',
+      }
+    }
+
     // ── 탭 닫기 (데이터는 유지) ──────────────────────────────
     case 'CLOSE_TAB': {
       const tabs = (state.openTabIds || []).filter(id => id !== action.id)
