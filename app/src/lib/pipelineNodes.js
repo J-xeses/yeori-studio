@@ -27,7 +27,7 @@ export const PORT_KINDS = {
 
 export const PIPELINE_NODES = [
   {
-    id: 'script', no: '01', icon: '📝', label: '대본 생성', sub: 'G1 · 대본 확정', tab: 'script', gate: 'g1', health: true, path: '01_script',
+    id: 'script', no: '01', icon: 'doc', label: '대본 생성', sub: 'G1 · 대본 확정', tab: 'script', gate: 'g1', health: true, path: '01_script',
     code: ['src/tabs/ScriptGenTab.jsx', 'server/lib/scriptParserV3.js', 'server/lib/clipPrompt.js'],
     inputs: [
       { port: 'plan', kind: 'text', text: '기획·후보 풀 / 붙여넣은 대본(v8 포맷)' },
@@ -43,7 +43,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'image', no: '02', icon: '🖼️', label: '이미지 생성', sub: 'G2 · 스튜디오(Flow)', tab: 'studio', gate: 'g2', health: true, path: '02_images',
+    id: 'image', no: '02', icon: 'photo', label: '이미지 생성', sub: 'G2 · 스튜디오(Flow)', tab: 'studio', gate: 'g2', health: true, path: '02_images',
     code: ['src/tabs/StudioTab.jsx', 'scripts/flow-image.js', 'scripts/lib/flowDriver.js', 'scripts/pipeline-leader.js'],
     inputs: [
       { port: 'IP', kind: 'text', from: 'script.IP', text: '컷별 이미지 프롬프트' },
@@ -59,7 +59,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'tts', no: '03', icon: '🎙️', label: 'TTS', sub: 'G3 · 나레이션 음성', tab: 'tts', gate: 'g3', health: true, path: '03_audio',
+    id: 'tts', no: '03', icon: 'speaker', label: 'TTS', sub: 'G3 · 나레이션 음성', tab: 'tts', gate: 'g3', health: true, path: '03_audio',
     code: ['src/tabs/TTSTab.jsx', 'server/lib/ttsText.js', 'src/lib/freeTts.js', 'server/lib/voiceQa.js'],
     inputs: [
       { port: 'narration', kind: 'text', from: 'script.narration', text: '컷별 나레이션 텍스트' },
@@ -73,7 +73,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'video', no: '04', icon: '🎬', label: '영상 생성', sub: 'Flow 원본 클립', tab: 'video', health: true, path: '04_making/raw',
+    id: 'video', no: '04', icon: 'clapper', label: '영상 생성', sub: 'Flow 원본 클립', tab: 'video', health: true, path: '04_making/raw',
     code: ['scripts/flow-submit.js', 'scripts/lib/flowDriver.js', 'server/lib/veoApi.js', 'src/lib/videoPolicy.js'],
     inputs: [
       { port: 'startFrame', kind: 'image', from: 'image.selectedImage', text: 'G2 승인 이미지(시작 프레임)' },
@@ -88,7 +88,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'compose', no: '05', icon: '🧩', label: '합성 · 컷 영상', sub: 'G4 · raw → 컷 영상', tab: 'video', gate: 'g4', health: true, path: '05_video',
+    id: 'compose', no: '05', icon: 'layers', label: '합성 · 컷 영상', sub: 'G4 · raw → 컷 영상', tab: 'video', gate: 'g4', health: true, path: '05_video',
     code: ['src/tabs/VideoTab.jsx', 'src/tabs/MakingTab.jsx', 'server/proxy.js · /api/run-ffmpeg', 'src/lib/cutDuration.js'],
     inputs: [
       { port: 'rawClip', kind: 'media', from: 'video.rawClip', text: '원본 클립(세그 조합·트림)' },
@@ -101,7 +101,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'preview', no: '06', icon: '🎧', label: '나레이션 미리듣기', sub: '영상 탭 · 나레이션+효과음', tab: 'video', health: true, path: '06_publishing',
+    id: 'preview', no: '06', icon: 'headphones', label: '나레이션 미리듣기', sub: '영상 탭 · 나레이션+효과음', tab: 'video', health: true, path: '06_publishing',
     code: ['src/tabs/VideoTab.jsx', 'server/lib/subtitleBurn.js', 'server/lib/reelOverrides.js'],
     inputs: [
       { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video/cut_NN.mp4' },
@@ -115,7 +115,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'finalize', no: '07', icon: '🏁', label: '최종화', sub: 'G5 · 릴스 최종본', tab: 'making', gate: 'g5', health: true, path: '07_output',
+    id: 'finalize', no: '07', icon: 'rocket', label: '최종화', sub: 'G5 · 릴스 최종본', tab: 'making', gate: 'g5', health: true, path: '07_output',
     code: ['server/lib/reelFinalize.js', 'server/lib/bgmSelect.js', 'server/lib/reelOverrides.js', 'server/proxy.js · /api/reel-finalize'],
     inputs: [
       { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },
@@ -132,7 +132,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'checkup', no: '08', icon: '📤', label: '체크업 · 퍼블리싱', sub: '최종본 확인·업로드', tab: 'checkup',
+    id: 'checkup', no: '08', icon: 'check', label: '체크업 · 퍼블리싱', sub: '최종본 확인·업로드', tab: 'checkup',
     code: ['src/tabs/CheckupTab.jsx', 'src/tabs/PublishingTab.jsx', 'server/lib/igPublish.js', 'server/lib/publishStatus.js'],
     inputs: [
       { port: 'finalOutput', kind: 'media', from: 'finalize.finalOutput', text: '07_output 최종본' },

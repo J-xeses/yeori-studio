@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext'
 import { getGPointSummary } from '../lib/gpoints'
 import { resolveEpisodeCode } from '../lib/episodeCode'
 import { PIPELINE_NODES, PORT_KINDS, buildEdges, autoLayout } from '../lib/pipelineNodes'
+import { NodeIcon } from '../lib/pipelineIcons'
 import s from './PipelineMonitorTab.module.css'
 
 // 파이프라인 모니터 → "워크벤치" 캔버스.
@@ -69,7 +70,7 @@ const PipelineNode = memo(function PipelineNode({ id, data, selected }) {
   return (
     <div className={`${s.node} ${s[live.state] || ''} ${selected ? s.nodeSelected : ''}`}>
       <div className={s.nodeHead}>
-        <span className={s.nodeIcon}>{def.icon}</span>
+        <div className={s.icoWrap}><NodeIcon name={def.icon} className={s.icoSvg} /></div>
         <div className={s.nodeTitle}>
           <div className={s.nodeLabel}><span className={s.nodeNo}>{def.no}</span>{def.label}</div>
           <div className={s.nodeSub}>{def.sub}{def.path ? ` · ${def.path}` : ''}</div>
