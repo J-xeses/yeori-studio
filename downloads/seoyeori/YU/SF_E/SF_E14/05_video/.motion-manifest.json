@@ -1,0 +1,20 @@
+{
+  "1": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-12T11:55:53.021Z"
+  },
+  "2": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-12T11:56:10.814Z"
+  },
+  "3": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-12T11:56:22.737Z"
+  }
+}
