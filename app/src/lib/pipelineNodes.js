@@ -14,7 +14,9 @@
 //   outputs [{ port, kind, text }] — 출력 플러그(카드 오른쪽 가장자리 점)
 //           port = 플러그 이름(노드 안에서 유일, React Flow Handle id 로 그대로 쓴다) · kind = PORT_KINDS 키(점 색) · text = 실제로 오가는 것
 //   vars    [{ key, label, type:'select'|'input', options?, value }] — 변수 칸. 지금은 시각적 틀만(로컬 상태, 백엔드 미반영). 없어도 된다.
-//   외부 앱 노드(trendRadar·agentApp)는 이 저장소에 소스가 없어 code 에 "연결 엔드포인트"를 적는다. gate 없음 · no 는 EX/FG.
+//   external true  이 저장소 밖의 별도 앱(trendRadar·agentApp) — code 엔 "연결 엔드포인트"만 적는다. gate 없음 · no 는 EX/FG.
+//                  헤더 알약(worst)·selftest 등 "지금 제작 파이프라인이 끊겼나" 집계에서 제외한다 — 켜져 있든 꺼져 있든,
+//                  가끔 손으로 쓰는 외부 도구가 오래 안 쓰였다는 신호가 실제 제작 사고 경보와 섞이면 안 된다.
 //
 // 2026-11-11(2차): 성준님 지적 — ComfyUI 처럼 "전단계에서 받는 항목마다 이름 붙은 플러그에 전선이 꽂힌 모습"이어야 한다.
 //   노드-노드 뭉뚱그린 선 1개 → 데이터 아이템 단위 포트(IP·VP·selectedImage·narrationMp3·rawClip·cutVideo…)로 쪼갰다.
@@ -30,7 +32,7 @@ export const PIPELINE_NODES = [
   // ── 외부 앱 ① 트렌드레이더 (2026-11-12) — 이 저장소 밖의 별도 앱(Next.js, localhost:3000). 대본 생성 앞단의 기획 재료 공급원.
   //   실측(pipelineHealth.js checkTrendRadar)은 "앱이 켜져 있나"가 아니라 이 앱 계열이 남기는 상태 파일의 실존·최신성만 본다.
   {
-    id: 'trendRadar', no: 'EX', icon: 'radar', label: '트렌드레이더', sub: '외부 앱 · localhost:3000', tab: 'storyarchive', health: true, path: 'state/trend_*.json',
+    id: 'trendRadar', no: 'EX', icon: 'radar', label: '트렌드레이더', sub: '외부 앱 · localhost:3000', tab: 'storyarchive', health: true, external: true, path: 'state/trend_*.json',
     code: [
       'localhost:3000 (별도 앱 · 이 저장소에 코드 없음)',
       'server/proxy.js · /api/trend-to-episode · /api/trend-episodes',
@@ -169,7 +171,7 @@ export const PIPELINE_NODES = [
   //   ★ 이 노드의 outputs 를 다른 노드의 inputs[].from 으로 가리키지 말 것 — Field Gate 가 G2 선택본(/api/genline/select)을
   //     직접 쓰긴 하지만, 같은 포트(image.selectedImage)에 생산자가 둘이 되면 "입력 1개 = from 1개" 모델과 그래프가 헷갈려진다.
   {
-    id: 'agentApp', no: 'FG', icon: 'review', label: '에이전트 앱 · Field Gate', sub: '외부 앱 · G2/G4 현장 검토', tab: 'studio', health: true, path: '01_script/.genline-review.json',
+    id: 'agentApp', no: 'FG', icon: 'review', label: '에이전트 앱 · Field Gate', sub: '외부 앱 · G2/G4 현장 검토', tab: 'studio', health: true, external: true, path: '01_script/.genline-review.json',
     code: [
       'C:/yeori-genline/index.html (별도 앱 · 이 저장소에 코드 없음)',
       'server/proxy.js · /api/genline/cut-files (후보 조회)',

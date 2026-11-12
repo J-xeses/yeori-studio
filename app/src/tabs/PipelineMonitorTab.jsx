@@ -279,7 +279,12 @@ function Workbench() {
     if (!h) return '실측 중…'
     return h.evidence
   }
-  const worst = healthNodes ? ['fail', 'warn'].find(lv => Object.values(healthNodes).some(n => n.state === lv)) || 'ok' : null
+  // 외부 앱 노드(trendRadar·agentApp)는 "가끔 손으로 쓰는 도구"라 오래 안 쓰여도 경고가 아니다 —
+  // 헤더 알약은 실제 제작 파이프라인(외부 아님)만 집계해서, 그 경고 하나로 전체가 계속 "파일 경고"로 물들지 않게 한다.
+  const CORE_NODE_IDS = PIPELINE_NODES.filter(d => !d.external).map(d => d.id)
+  const worst = healthNodes
+    ? ['fail', 'warn'].find(lv => CORE_NODE_IDS.some(id => healthNodes[id]?.state === lv)) || 'ok'
+    : null
 
   // 노드별 실시간 값 합성 → LiveCtx 로 커스텀 노드에 전달
   const byId = {}
