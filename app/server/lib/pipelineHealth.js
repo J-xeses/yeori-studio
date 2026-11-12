@@ -229,12 +229,71 @@ async function checkFinalize({ code, cuts, gp, dirs, compose, staleFn }) {
   return finish({ issues, verified: issues.some(i => i.level === 'fail') ? 0 : 1, total: 1, okText: `최종본 ${p.duration.toFixed(1)}초 · 오디오 ${p.audio}개${volText} · 현재 컷과 일치`, emptyText: '' })
 }
 
+// ── 외부 앱 노드(2026-11-12) ────────────────────────────────────────
+// 트렌드레이더·Field Gate 는 이 저장소 밖의 별도 앱이고 "가끔 손으로 쓰는" 도구다. 그래서
+//   · 앱이 지금 켜져 있는지(포트 핑)는 보지 않는다 — 꺼져 있는 게 정상 운영일 수 있다.
+//   · 다른 노드와 같은 원칙으로 "그 앱이 남긴 파일"만 연다. 파일이 없으면 고장이 아니라 "아직 안 씀"이므로 null(판정 없음).
+//   · fail 은 내지 않는다(여기서 빨강이 켜지면 에피소드 파일 단선 신호와 섞인다).
+const DAY_MS = 86400000
+const ymd = (t) => new Date(t).toLocaleDateString('sv-SE')   // YYYY-MM-DD(로컬)
+const daysAgo = (t, now) => Math.max(0, Math.floor((now - t) / DAY_MS))
+const idle = (evidence) => ({ state: null, evidence, verified: 0, total: 0, complete: false, issues: [] })
+
+// 트렌드레이더 — downloads/state/trend_episodes.json(트렌드 → 에피소드 후보, /api/trend-to-episode 가 기록)과
+// trend_candidates.json("후보풀로 전송", /api/trend-to-candidate 가 기록)의 실존·마지막 항목 시각.
+// 기준 TREND_FRESH_DAYS 는 화면 표시용 느슨한 기준이다. 대본 후보 자동 생성(proxy.js fetchTrendData)은 훨씬 엄격해서
+// 48시간(TREND_STALE_HOURS) 넘은 항목을 버리고 웹검색으로 대체한다 — 그 사실을 근거 문구에 같이 적는다.
+const TREND_FRESH_DAYS = 7
+function checkTrendRadar({ dirs, now = Date.now() }) {
+  const files = [['트렌드 후보', dirs.trendEpisodes], ['후보풀 전송', dirs.trendCandidates]].filter(([, f]) => f && statOf(f))
+  if (!files.length) return idle('트렌드 파일 없음 — 아직 사용 전')
+  const issues = []; const parts = []; let last = 0, entries = 0
+  for (const [label, f] of files) {
+    const list = readJson(f, null)
+    if (!Array.isArray(list)) { issues.push({ level: 'warn', msg: `${path.basename(f)} 읽기 실패(JSON 손상)` }); continue }
+    // 항목의 createdAt 이 실제 수집 시각이다. mtime 은 동기화·복사로 바뀔 수 있어 항목에 시각이 없을 때만 쓴다.
+    const times = list.map(e => Date.parse(e?.createdAt || '')).filter(Number.isFinite)
+    const t = times.length ? Math.max(...times) : (list.length ? statOf(f).mtimeMs : 0)
+    entries += list.length
+    last = Math.max(last, t)
+    parts.push(`${label} ${list.length}건`)
+  }
+  if (!entries && !issues.length) return idle('트렌드 파일은 있지만 항목 0건')
+  if (last && now - last > TREND_FRESH_DAYS * DAY_MS) {
+    issues.push({ level: 'warn', msg: `마지막 트렌드 ${ymd(last)}(${daysAgo(last, now)}일 전) — 대본 후보 생성은 48시간 넘은 트렌드를 버리고 웹검색으로 대체 중` })
+  }
+  return finish({ issues, verified: entries, total: entries, okText: `${parts.join(' · ')} · 마지막 ${ymd(last)}(${daysAgo(last, now)}일 전)`, emptyText: '', extra: { lastAt: last ? new Date(last).toISOString() : null } })
+}
+
+// 에이전트 앱(yeori-genline Field Gate) — 이 에피소드의 01_script/.genline-review.json (/api/genline-review 가 append).
+// 결정 원장(에이전트 리더 로그, 출처=genline)은 Notion DB 라 로컬 파일이 없다 — 15초 폴링마다 Notion 을 부를 수는 없으므로
+// 같은 판단이 로컬에 남는 이 파일만 본다. 최근 활동이 있으면 ok, 오래됐거나 없으면 "안 쓰는 중"일 뿐이라 null(경고·단선 없음).
+const REVIEW_RECENT_DAYS = 7
+function checkAgentApp({ dirs, now = Date.now() }) {
+  const file = path.join(dirs.script, '.genline-review.json')
+  if (!statOf(file)) return idle('Field Gate 검토 기록 없음 — 이 에피소드에서 미사용')
+  const store = readJson(file, null)
+  if (!store || typeof store !== 'object') return { ...idle('.genline-review.json 읽기 실패(JSON 손상)'), state: 'warn', issues: [{ level: 'warn', msg: '.genline-review.json 읽기 실패(JSON 손상)' }] }
+  const cutKeys = Object.keys(store).filter(k => Array.isArray(store[k]) && store[k].length)
+  const all = cutKeys.flatMap(k => store[k])
+  if (!all.length) return idle('Field Gate 검토 기록 0건')
+  const last = Math.max(...all.map(e => Date.parse(e?.at || '')).filter(Number.isFinite), 0)
+  const verdicts = all.filter(e => e?.kind === 'verdict')
+  const pass = verdicts.filter(e => e.value === 'pass').length
+  const summary = `검토 ${all.length}건(컷 ${cutKeys.length}개) · 판정 ${verdicts.length}건${verdicts.length ? `(통과 ${pass} · 재작업 ${verdicts.length - pass})` : ''} · 마지막 ${last ? `${ymd(last)}(${daysAgo(last, now)}일 전)` : '시각 미상'}`
+  const recent = last > 0 && now - last <= REVIEW_RECENT_DAYS * DAY_MS
+  if (!recent) return { ...idle(`${summary} — 최근 미사용`), lastAt: last ? new Date(last).toISOString() : null }
+  return { state: 'ok', evidence: summary, verified: all.length, total: all.length, complete: true, issues: [], lastAt: new Date(last).toISOString() }
+}
+
 // ── 에피소드 전체 판정 ─────────────────────────────────────────────
 // dirs 를 넘기면 그 폴더만 본다(단위 테스트: 오염 파일 "복사본"을 임시 폴더에 두고 검증 — production 경로를 건드리지 않는다).
 export function defaultDirs(code) {
   return {
     script: mp.scriptDir(code), images: mp.imagesDir(code), audio: mp.audioDir(code), raw: path.join(mp.makingDir(code), 'raw'),
     video: mp.videoDir(code), publishing: mp.outputDir(code), final: mp.finalDir(code),
+    // 외부 앱(트렌드레이더)이 남기는 전역 상태 파일 — 에피소드와 무관. 테스트용 dirs 에 없으면 판정 없음(null)으로 나온다.
+    trendEpisodes: mp.statePath('trend_episodes.json'), trendCandidates: mp.statePath('trend_candidates.json'),
   }
 }
 export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, staleFn } = {}) {
@@ -246,7 +305,10 @@ export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, s
     : { state: null, evidence: '컷 없음', verified: 0, total: 0, complete: false, issues: [] }
   const [image, tts, video, compose, preview] = await Promise.all([checkImages(ctx), checkTts(ctx), checkRaw(ctx), checkCompose(ctx), checkPreview(ctx)])
   const finalize = await checkFinalize({ ...ctx, compose, staleFn: staleFn !== undefined ? staleFn : (dirs ? null : () => checkFinalStale(code)) })
-  return { code, checkedAt: new Date().toISOString(), nodes: { script, image, tts, video, compose, preview, finalize } }
+  // 외부 앱 노드는 실패해도 에피소드 판정을 막지 않는다
+  const safe = (fn) => { try { return fn(ctx) } catch (e) { return idle(`실측 실패 — ${e.message}`) } }
+  const trendRadar = safe(checkTrendRadar), agentApp = safe(checkAgentApp)
+  return { code, checkedAt: new Date().toISOString(), nodes: { script, image, tts, video, compose, preview, finalize, trendRadar, agentApp } }
 }
 
 // studio-state.json 에서 코드에 해당하는 컷 목록(활성 에피소드는 최상위, 그 밖엔 episodes 보관본). code 생략 = 활성 에피소드.

@@ -67,6 +67,25 @@ export const PIPELINE_ICON_PATHS = {
       <path d="M8 12l3 3 5-6" {...STROKE} />
     </>
   ),
+  // 트렌드레이더(외부 앱) — 레이더 화면: 바깥 원 + 안쪽 호 + 탐지선 + 포착 점(2026-11-12 같은 스타일로 신규 제작)
+  radar: (
+    <>
+      <circle cx="12" cy="12" r="9" {...STROKE} />
+      <path d="M12 7a5 5 0 105 5" {...STROKE} />
+      <path d="M12 12l6-6" {...STROKE} />
+      <circle cx="12" cy="12" r="1" {...STROKE} />
+      <circle cx="16.5" cy="15.5" r="0.6" {...STROKE} />
+    </>
+  ),
+  // 에이전트 앱 · Field Gate(외부 앱) — 사람 검토: 눈 + 눈동자 + 우하단 승인 체크(2026-11-12 같은 스타일로 신규 제작)
+  review: (
+    <>
+      <path d="M2 11s3.5-6 10-6 10 6 10 6-1.2 2.1-3.6 3.8" {...STROKE} />
+      <path d="M2 11s3.5 6 10 6c.5 0 1-.04 1.5-.1" {...STROKE} />
+      <circle cx="12" cy="11" r="2.6" {...STROKE} />
+      <path d="M15 18.5l2.2 2.2 4.3-4.6" {...STROKE} />
+    </>
+  ),
 }
 
 export function NodeIcon({ name, className }) {
