@@ -14,7 +14,8 @@
 //   outputs [{ port, kind, text }] — 출력 플러그(카드 오른쪽 가장자리 점)
 //           port = 플러그 이름(노드 안에서 유일, React Flow Handle id 로 그대로 쓴다) · kind = PORT_KINDS 키(점 색) · text = 실제로 오가는 것
 //   vars    [{ key, label, type:'select'|'input', options?, value }] — 변수 칸. 지금은 시각적 틀만(로컬 상태, 백엔드 미반영). 없어도 된다.
-//   external true  이 저장소 밖의 별도 앱(trendRadar·agentApp) — code 엔 "연결 엔드포인트"만 적는다. gate 없음 · no 는 EX/FG.
+//   external true  생산 체인 밖의 노드 — 이 저장소 밖의 별도 앱(trendRadar·agentApp, code 엔 "연결 엔드포인트"만 적는다)과
+//                  전 단계를 가로지르는 지휘 레이어(pipelineLeader). gate 없음 · no 는 EX/FG/LD.
 //                  헤더 알약(worst)·selftest 등 "지금 제작 파이프라인이 끊겼나" 집계에서 제외한다 — 켜져 있든 꺼져 있든,
 //                  가끔 손으로 쓰는 외부 도구가 오래 안 쓰였다는 신호가 실제 제작 사고 경보와 섞이면 안 된다.
 //
@@ -169,10 +170,12 @@ export const PIPELINE_NODES = [
   },
   // ── 외부 앱 ② 에이전트 앱 = yeori-genline "Field Gate" (2026-11-12) — C:\yeori-genline (file:// 단일 HTML, 이 저장소 밖).
   //   생산 단계가 아니라 사람이 G2 이미지·G4 영상을 대본과 대조해 판정하는 "검토 사이드 노드"다. 그래서 입력만 배선한다.
+  //   2026-11-12(정정): 이 노드는 "지휘체계 전체"가 아니라 그 안의 검토 에이전트 하나다 — 리더는 아래 pipelineLeader.
+  //   leaderLog 출력만 예외적으로 pipelineLeader.genlineLog 에 꽂는다(둘 다 사이드 노드라 메인 생산 체인에는 끼어들지 않는다).
   //   ★ 이 노드의 outputs 를 다른 노드의 inputs[].from 으로 가리키지 말 것 — Field Gate 가 G2 선택본(/api/genline/select)을
   //     직접 쓰긴 하지만, 같은 포트(image.selectedImage)에 생산자가 둘이 되면 "입력 1개 = from 1개" 모델과 그래프가 헷갈려진다.
   {
-    id: 'agentApp', no: 'FG', icon: 'review', label: '에이전트 앱 · Field Gate', sub: '외부 앱 · G2/G4 현장 검토', tab: 'studio', health: true, external: true, path: '01_script/.genline-review.json',
+    id: 'agentApp', no: 'FG', icon: 'review', label: '에이전트 앱 · Field Gate', sub: '외부 앱 · G2/G4 현장 검토(리더 산하 검토 에이전트)', tab: 'studio', health: true, external: true, path: '01_script/.genline-review.json',
     code: [
       'C:/yeori-genline/index.html (별도 앱 · 이 저장소에 코드 없음)',
       'server/proxy.js · /api/genline/cut-files (후보 조회)',
@@ -188,6 +191,36 @@ export const PIPELINE_NODES = [
     outputs: [
       { port: 'reviewLog', kind: 'text', text: '01_script/.genline-review.json (판정·IP 초안·대본 수정안)' },
       { port: 'leaderLog', kind: 'text', text: '에이전트 리더 로그 DB (Notion · 출처=genline)' },
+    ],
+  },
+  // ── 에이전트 리더 = scripts/pipeline-leader.js (2026-11-12) — 성준님 정정: "에이전트 앱은 주요 생산 단계를 각각 점검하는
+  //   에이전트와 그 에이전트의 리더로 구성된 지휘체계". Field Gate(agentApp)는 그 검토 에이전트 중 하나일 뿐이고, 진짜 리더는 이것.
+  //   deriveGate() 가 매 사이클 G1→G5 전체를 스캔해 다음 액션을 정하고, shouldAutoApprove()(MAKING_AUTORUN)로 일부를 자동 승인하고,
+  //   leaderLog()/leaderEpisodeSync() 로 Notion "에이전트 리더 로그"·"에피소드 파이프라인" DB 에 기록한다.
+  //   = 특정 단계 하나에 붙는 노드가 아니라 script~finalize 전부를 가로질러 읽고 판단하는 상위 레이어.
+  //   · external:true — 생산 체인 밖(리더가 꺼져 있어도 제작 파일은 멀쩡하다). 헤더 알약 집계에서 제외.
+  //   · gateScan 입력엔 from 이 없다 — 특정 노드의 출력 포트가 아니라 studio-state.json 전체를 읽기 때문.
+  //   ★ decisionLog 출력을 다른 노드의 inputs[].from 으로 가리키지 말 것 — 리더가 G2·G4 Flow 생성과 메이킹 자동실행을 실제로
+  //     기동하긴 하지만(그래서 image·video 쪽 code 에 pipeline-leader.js 가 있다), 그걸 화살표로 그리면 모든 노드에 선이 꽂혀
+  //     생산 흐름이 안 보인다. 영향 관계는 여기 주석과 sub 로만 설명한다.
+  //   · content_matrix_v3.html 의 "에이전트 리더" 탭(7개 에이전트 카드)은 별도 지휘 주체가 아니라 이 스크립트가 하는 일을
+  //     사람이 보기 좋게 그린 표시 뷰다 — 노드를 따로 만들지 않고 code 에 참고로만 적는다.
+  //   실측(pipelineHealth.js checkPipelineLeader): 리더 자신의 중복실행 락파일(app/downloads/state/.pipeline-leader-<episodeId>.lock)만 본다.
+  {
+    id: 'pipelineLeader', no: 'LD', icon: 'conductor', label: '에이전트 리더', sub: 'pipeline-leader.js · G1~G5 전체 지휘(전 단계를 가로지르는 상위 레이어)', health: true, external: true, path: 'state/.pipeline-leader-<episodeId>.lock',
+    code: [
+      'scripts/pipeline-leader.js',
+      'server/lib/leaderLog.js',
+      'server/lib/leaderState.js',
+      'server/lib/leaderRead.js',
+      'content_matrix_v3.html (사람용 표시 뷰 — 실제 지휘자 아님)',
+    ],
+    inputs: [
+      { port: 'genlineLog', kind: 'text', from: 'agentApp.leaderLog', text: 'Field Gate 현장판단(G2/G4) — 같은 리더 로그로 합류' },
+      { port: 'gateScan', kind: 'text', text: '매 사이클 studio-state.json 전체 컷 g1~g5 스캔(deriveGate) — 특정 노드의 출력 포트가 아니라 전체 상태를 읽음' },
+    ],
+    outputs: [
+      { port: 'decisionLog', kind: 'text', text: '에이전트 리더 로그(Notion) · 자동승인·블로커·사이클요약 — 다른 노드가 이걸 입력으로 받지는 않는다(사람이 Notion에서 봄)' },
     ],
   },
 ]

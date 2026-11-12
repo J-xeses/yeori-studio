@@ -86,6 +86,68 @@ export const PIPELINE_ICON_PATHS = {
       <path d="M15 18.5l2.2 2.2 4.3-4.6" {...STROKE} />
     </>
   ),
+  // 에이전트 리더(pipeline-leader.js) — 지휘체계: 위의 리더 1 → 아래 에이전트 3 으로 갈라지는 지휘선(2026-11-12 같은 스타일로 신규 제작)
+  conductor: (
+    <>
+      <circle cx="12" cy="5" r="2.4" {...STROKE} />
+      <path d="M12 7.4v9.2" {...STROKE} />
+      <path d="M5 16.6v-2.4a2 2 0 012-2h10a2 2 0 012 2v2.4" {...STROKE} />
+      <circle cx="5" cy="18.6" r="1.8" {...STROKE} />
+      <circle cx="12" cy="18.6" r="1.8" {...STROKE} />
+      <circle cx="19" cy="18.6" r="1.8" {...STROKE} />
+    </>
+  ),
+
+  // ── 워크벤치 좌측 아이콘 바(2026-11-12) — 노드 아이콘과 같은 24x24 stroke 스타일 ──
+  // 전체 — 노드 3개가 배선으로 이어진 그래프
+  railAll: (
+    <>
+      <rect x="2.5" y="4" width="7" height="5.5" rx="1.5" {...STROKE} />
+      <rect x="14.5" y="4" width="7" height="5.5" rx="1.5" {...STROKE} />
+      <rect x="8.5" y="14.5" width="7" height="5.5" rx="1.5" {...STROKE} />
+      <path d="M9.5 6.75h5" {...STROKE} />
+      <path d="M18 9.5v5.75a2 2 0 01-2 2h-.5" {...STROKE} />
+    </>
+  ),
+  // 롱폼 — 가로(16:9) 화면 + 재생
+  railLong: (
+    <>
+      <rect x="2" y="6" width="20" height="12" rx="2" {...STROKE} />
+      <path d="M10 9.5l5 2.5-5 2.5z" {...STROKE} />
+    </>
+  ),
+  // 숏폼 — 세로(9:16) 화면 + 재생
+  railShort: (
+    <>
+      <rect x="7" y="2" width="10" height="20" rx="2" {...STROKE} />
+      <path d="M10.5 9.5l4 2.5-4 2.5z" {...STROKE} />
+    </>
+  ),
+  // 릴스 — 세로 화면 + 필름 띠(상단 사선) + 재생
+  railReel: (
+    <>
+      <rect x="5.5" y="2" width="13" height="20" rx="3" {...STROKE} />
+      <path d="M5.5 7.5h13" {...STROKE} />
+      <path d="M9.5 2l2 5.5M13.5 2l2 5.5" {...STROKE} />
+      <path d="M10.5 11.5l4 2.5-4 2.5z" {...STROKE} />
+    </>
+  ),
+  // 포스트 — 정사각 사진
+  railPost: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="2" {...STROKE} />
+      <circle cx="9" cy="9" r="1.5" {...STROKE} />
+      <path d="M4 16l4-4 3 3 4-5 5 6" {...STROKE} />
+    </>
+  ),
+  // 편집 — 플러그 두 개를 잇는 배선
+  railWire: (
+    <>
+      <circle cx="5" cy="6.5" r="2.2" {...STROKE} />
+      <circle cx="19" cy="17.5" r="2.2" {...STROKE} />
+      <path d="M7.2 6.5H10a3 3 0 013 3v5a3 3 0 003 3h.8" {...STROKE} />
+    </>
+  ),
 }
 
 export function NodeIcon({ name, className }) {

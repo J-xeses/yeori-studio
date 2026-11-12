@@ -58,7 +58,7 @@
 
 /* ── 캔버스(React Flow) ── */
 .canvas {
-  position: relative; flex: 1 1 auto; min-height: 520px;
+  position: relative; flex: 1 1 auto; min-height: 520px; display: flex;
   border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--bg);
 }
 .canvas :global(.react-flow) {
@@ -78,12 +78,67 @@
 .canvas :global(.react-flow__controls) { border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; box-shadow: none; }
 .canvas :global(.react-flow__connection-path) { stroke-width: 2; stroke-dasharray: 2 5; }
 
-.toolbar {
-  position: absolute; top: 10px; left: 10px; right: 10px; z-index: 5; pointer-events: none;
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  font-family: var(--mono); font-size: 10.5px; color: var(--muted);
+/* ── 좌측 아이콘 바 + 숨은 사이드바(2026-11-12) — 캔버스 위에 떠 있던 툴바를 대체. 색은 위 토큰만 쓴다 ── */
+.rail {
+  flex: none; width: 50px; box-sizing: border-box; z-index: 7;
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px; padding: 6px 4px;
+  background: var(--panel-2); border-right: 1px solid var(--line);
 }
-.toolbar > * { pointer-events: auto; }
+.railBtn {
+  all: unset; box-sizing: border-box; cursor: pointer; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 0 5px;
+  border: 1px solid transparent; border-radius: 8px; color: var(--muted);
+  transition: color .2s, border-color .2s, background .2s;
+}
+.railBtn:hover { color: var(--text); background: #12100d; }
+.railBtn:focus-visible { border-color: var(--accent); }
+.railIco { width: 19px; height: 19px; }
+.railLabel { font-family: var(--mono); font-size: 9px; letter-spacing: .02em; line-height: 1; }
+/* 지금 캔버스가 실제로 보여 주는 모드(전체) — 왼쪽 액센트 막대 */
+.railBtnCurrent { color: var(--accent); }
+.railBtnCurrent::before { content: ''; position: absolute; left: -4px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; background: var(--accent); }
+/* 아직 설계 전인 모드 — 흐리게 */
+.railBtnSoon { color: var(--dim); }
+/* 사이드바가 열려 있는 아이콘 */
+.railBtnOpen, .railBtnOpen:hover { border-color: var(--line-2); background: var(--panel); color: var(--text); }
+.railBtnCurrent.railBtnOpen { color: var(--accent); }
+.railSep { height: 1px; margin: 6px 6px; background: var(--line-2); flex: none; }
+.railCount {
+  position: absolute; top: 2px; right: 3px; min-width: 14px; height: 14px; box-sizing: border-box; padding: 0 3px;
+  border-radius: 999px; background: var(--wire-edit); color: #fff; font-family: var(--mono); font-size: 9px; font-weight: 700; line-height: 14px; text-align: center;
+}
+.flowArea { position: relative; flex: 1 1 auto; min-width: 0; }
+.side {
+  position: absolute; top: 0; bottom: 0; left: 0; z-index: 6; width: 300px; max-width: calc(100% - 12px); box-sizing: border-box;
+  background: var(--panel); border-right: 1px solid var(--line-2); box-shadow: 14px 0 28px rgba(0,0,0,.45);
+  overflow-y: auto; font-family: var(--sans); color: var(--text-2);
+  transform: translateX(-102%); visibility: hidden; transition: transform .2s ease, visibility 0s linear .2s;
+}
+.sideOpen { transform: none; visibility: visible; transition: transform .2s ease; }
+.sideHead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 10px; }
+.sideTitle { font-weight: 700; font-size: 14px; color: var(--text); }
+.sideTag { flex: none; font-family: var(--mono); font-size: 9.5px; letter-spacing: .04em; padding: 2px 7px; border-radius: 999px; border: 1px dashed var(--line-2); color: var(--muted); }
+.sideTagOn { border-style: solid; border-color: rgba(255,122,26,.5); color: var(--accent); }
+.sideBlock { border-top: 1px solid var(--line); padding: 11px 14px 13px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.sideLabel { font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); opacity: .9; }
+.sideLabelHint { letter-spacing: 0; text-transform: none; font-weight: 400; color: var(--muted); margin-left: 6px; }
+.sideText { margin: 0; font-size: 12px; line-height: 1.55; color: var(--text-2); }
+.sideNote { margin: 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.sideNote code, .sideText code { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); }
+.sideList { margin: 0; padding-left: 16px; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+.sideStat { align-self: stretch; display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.sideStat b { color: var(--text); font-weight: 600; }
+.sidePlaceholder { align-self: stretch; box-sizing: border-box; border: 1px dashed var(--line-2); border-radius: 8px; background: var(--panel-2); padding: 12px; font-size: 12px; line-height: 1.55; color: var(--text-2); }
+.sidePlaceholder b { display: block; margin-bottom: 5px; font-family: var(--mono); font-size: 11px; color: var(--hold); }
+.sideWarn { align-self: stretch; box-sizing: border-box; font-size: 11.5px; line-height: 1.5; color: var(--hold); background: rgba(255,210,63,.06); border: 1px solid rgba(255,210,63,.25); border-radius: 6px; padding: 7px 9px; }
+.wireRow { align-self: stretch; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); border-left: 2px solid var(--wire-edit); border-radius: 6px; background: var(--panel-2); padding: 6px 8px; }
+.wireEnds { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.wireEnd { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px; color: var(--text); overflow-wrap: anywhere; }
+.wireEnd i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+.wireEnd em { font-style: normal; color: var(--wire-edit); }
+.wireDel { all: unset; flex: none; cursor: pointer; font-family: var(--mono); font-size: 10px; color: var(--text-2); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 8px; }
+.wireDel:hover { border-color: var(--fail); color: var(--fail); }
+.side .saveState, .side .legend { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
 .saveState { padding: 5px 10px; border: 1px solid var(--line-2); border-radius: 999px; background: rgba(13,11,9,.9); }
 .saveStateErr { color: var(--hold); border-color: rgba(255,210,63,.4); }
 .toolBtn {
@@ -92,7 +147,6 @@
 }
 .toolBtn:hover { border-color: var(--accent); color: #ffd9b3; }
 .toolBtnArmed { border-color: var(--hold); color: var(--hold); }
-.toolHint { color: var(--dim); pointer-events: none; }
 
 /* ── 노드 카드: 상단 → 코드 → 연결 → 변수 → 하단 ── */
 .node {
@@ -218,5 +272,4 @@
 @media (max-width: 640px) {
   .page { padding: 16px 14px 18px; }
   .header { flex-direction: column; align-items: flex-start; }
-  .toolHint { display: none; }
 }

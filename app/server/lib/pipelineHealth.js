@@ -14,6 +14,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFile } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import * as mp from './mediaPaths.js'
 import { hasVoiceNarration, checkFinalStale } from './reelFinalize.js'
 
@@ -286,6 +287,48 @@ function checkAgentApp({ dirs, now = Date.now() }) {
   return { state: 'ok', evidence: summary, verified: all.length, total: all.length, complete: true, issues: [], lastAt: new Date(last).toISOString() }
 }
 
+// 에이전트 리더(scripts/pipeline-leader.js) — 전 단계를 가로지르는 지휘 레이어. 리더 자신의 중복실행 락파일만 본다.
+//   락 규칙(pipeline-leader.js 89~110행 · proxy.js /api/pipeline-leader-status 와 동일 기준):
+//   · 경로: <앱 루트>/downloads/state/.pipeline-leader-<episodeId>.lock — ★ mp.statePath(C:/yeori-studio/downloads/state)가 아니라
+//     앱 폴더 밑(app/downloads/state)이다. 리더가 CODE_ROOT(=app) 기준으로 쓰기 때문.
+//   · <episodeId> 는 에피소드 코드(IG_R05)가 아니라 studio-state.json 의 내부 id(ep_1790322063208 — activeEpisodeId / episodes 의 키).
+//   · 내용 = 리더 PID, mtime = 마지막 사이클(매 사이클 touchLock). 정상 종료하면 리더가 락을 지운다 → 남아 있는 옛 락은 창을 그냥 닫은 흔적.
+//   · 실행 중 = PID 살아있음 + mtime 5분 이내.
+//   판정: 실행 중이면 ok. 그 밖(락 없음·종료됨·5분 넘게 조용함)은 전부 null — 리더는 필요할 때만 켜는 도구라 꺼져 있는 게 고장이 아니다.
+//   fail·warn 은 내지 않는다. Notion(에이전트 리더 로그·/api/mcp/leader-status)은 토큰·네트워크 의존이라 여기서 부르지 않고,
+//   대신 리더가 로컬에 남기는 Flow 실패 기록(downloads/state/pipeline-leader-flow-state-<episodeId>.json)을 보조 문구로만 덧붙인다.
+const LEADER_LOCK_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'downloads', 'state')
+const LEADER_FRESH_MS = 5 * 60 * 1000
+const pidAlive = (pid) => { try { process.kill(pid, 0); return true } catch (e) { return e?.code === 'EPERM' } }   // EPERM = 있지만 권한 없음(=살아있음)
+const agoText = (ms) => ms < 60000 ? `${Math.max(0, Math.round(ms / 1000))}초 전` : ms < 3600000 ? `${Math.floor(ms / 60000)}분 전` : ms < DAY_MS ? `${Math.floor(ms / 3600000)}시간 전` : `${Math.floor(ms / DAY_MS)}일 전`
+function checkPipelineLeader({ episodeId, dirs, now = Date.now() }) {
+  if (!episodeId || !dirs.leaderLocks) return idle('리더 락 조회 불가 — 에피소드 내부 id 미상')
+  const lock = path.join(dirs.leaderLocks, `.pipeline-leader-${episodeId}.lock`)
+  const st = statOf(lock)
+  // 보조 정보(있으면 덧붙임 · 실패해도 무시): 리더가 기록한 Flow 실패 횟수·사람에게 넘긴 컷
+  let extraText = ''
+  try {
+    const fsPath = dirs.leaderFlowState ? path.join(dirs.leaderFlowState, `pipeline-leader-flow-state-${episodeId}.json`) : null
+    const flow = fsPath ? readJson(fsPath, null) : null
+    if (flow) {
+      const failN = Object.keys(flow.failures || {}).length, humanN = (flow.human || []).length
+      if (failN || humanN) extraText = ` · Flow 실패 기록 ${failN}건 · 사람에게 넘김 ${humanN}건`
+    }
+  } catch { /* 보조 정보 — 없어도 된다 */ }
+  if (!st) return idle(`리더 락 없음 — 이 에피소드(${episodeId})에 리더를 띄운 적 없거나 정상 종료됨${extraText}`)
+  let pid = null
+  try { pid = parseInt(String(fs.readFileSync(lock, 'utf-8')).trim(), 10) || null } catch { /* 못 읽으면 꺼진 것으로 */ }
+  const age = now - st.mtimeMs
+  const alive = !!pid && pidAlive(pid)
+  const lastAt = new Date(st.mtimeMs).toISOString()
+  const when = `${age >= DAY_MS ? ymd(st.mtimeMs) + ' ' : ''}${new Date(st.mtimeMs).toTimeString().slice(0, 8)}(${agoText(age)})`
+  if (alive && age < LEADER_FRESH_MS) {
+    return { state: 'ok', evidence: `리더 실행 중 · PID ${pid} · 마지막 사이클 ${when}${extraText}`, verified: 1, total: 1, complete: true, issues: [], running: true, pid, lastAt, episodeId }
+  }
+  const why = alive ? `PID ${pid} 는 살아있지만 5분 넘게 사이클 없음(유휴이거나 같은 번호의 다른 프로세스)` : `PID ${pid ?? '미상'} 종료됨`
+  return { ...idle(`${alive ? '리더 유휴' : '리더 꺼짐'} — 마지막 사이클 ${when} · ${why}${extraText}`), running: false, pid, lastAt, episodeId }
+}
+
 // ── 에피소드 전체 판정 ─────────────────────────────────────────────
 // dirs 를 넘기면 그 폴더만 본다(단위 테스트: 오염 파일 "복사본"을 임시 폴더에 두고 검증 — production 경로를 건드리지 않는다).
 export function defaultDirs(code) {
@@ -294,11 +337,13 @@ export function defaultDirs(code) {
     video: mp.videoDir(code), publishing: mp.outputDir(code), final: mp.finalDir(code),
     // 외부 앱(트렌드레이더)이 남기는 전역 상태 파일 — 에피소드와 무관. 테스트용 dirs 에 없으면 판정 없음(null)으로 나온다.
     trendEpisodes: mp.statePath('trend_episodes.json'), trendCandidates: mp.statePath('trend_candidates.json'),
+    // 에이전트 리더 락(app/downloads/state)과 Flow 실패 기록(downloads/state) — 위 checkPipelineLeader 주석 참고
+    leaderLocks: LEADER_LOCK_DIR, leaderFlowState: path.join(mp.DOWNLOADS, 'state'),
   }
 }
-export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, staleFn } = {}) {
+export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, staleFn, episodeId } = {}) {
   const d = dirs || defaultDirs(code)
-  const ctx = { code, cuts, gp, dirs: d }
+  const ctx = { code, cuts, gp, dirs: d, episodeId }
   const scriptFiles = listDir(d.script).filter(f => /\.txt$/i.test(f))
   const script = cuts.length
     ? { state: 'ok', evidence: `컷 ${cuts.length}개 파싱됨 · 대본 파일 ${scriptFiles.length}개`, verified: cuts.length, total: cuts.length, complete: true, issues: [] }
@@ -307,21 +352,22 @@ export async function evaluatePipelineHealth({ code, cuts = [], gp = {}, dirs, s
   const finalize = await checkFinalize({ ...ctx, compose, staleFn: staleFn !== undefined ? staleFn : (dirs ? null : () => checkFinalStale(code)) })
   // 외부 앱 노드는 실패해도 에피소드 판정을 막지 않는다
   const safe = (fn) => { try { return fn(ctx) } catch (e) { return idle(`실측 실패 — ${e.message}`) } }
-  const trendRadar = safe(checkTrendRadar), agentApp = safe(checkAgentApp)
-  return { code, checkedAt: new Date().toISOString(), nodes: { script, image, tts, video, compose, preview, finalize, trendRadar, agentApp } }
+  const trendRadar = safe(checkTrendRadar), agentApp = safe(checkAgentApp), pipelineLeader = safe(checkPipelineLeader)
+  return { code, checkedAt: new Date().toISOString(), nodes: { script, image, tts, video, compose, preview, finalize, trendRadar, agentApp, pipelineLeader } }
 }
 
 // studio-state.json 에서 코드에 해당하는 컷 목록(활성 에피소드는 최상위, 그 밖엔 episodes 보관본). code 생략 = 활성 에피소드.
 export function resolveEpisodeCuts(code) {
   const state = readJson(STATE_PATH, {})
   const activeCode = state.episode?.code || (state.episode?.number != null ? mp.resolveCode(state.episode.number) : null)
-  if (!code || code === activeCode) return { code: activeCode, cuts: state.cuts || [], active: true }
-  const hit = Object.values(state.episodes || {}).find(e => e.episode?.code === code)
-  return hit ? { code, cuts: hit.cuts || [], active: false } : null
+  // episodeId = 내부 id(ep_…) — 에이전트 리더 락파일 이름에 쓰인다(활성: activeEpisodeId, 보관본: episodes 의 키)
+  if (!code || code === activeCode) return { code: activeCode, cuts: state.cuts || [], active: true, episodeId: state.activeEpisodeId || null }
+  const hit = Object.entries(state.episodes || {}).find(([, e]) => e.episode?.code === code)
+  return hit ? { code, cuts: hit[1].cuts || [], active: false, episodeId: hit[0] } : null
 }
 export async function pipelineHealthFor(code) {
   const ep = resolveEpisodeCuts(code)
   if (!ep?.code) return null
   const gp = readJson(mp.statePath('gpoints.json'), {})[ep.code] || {}
-  return { ...(await evaluatePipelineHealth({ code: ep.code, cuts: ep.cuts, gp })), active: ep.active }
+  return { ...(await evaluatePipelineHealth({ code: ep.code, cuts: ep.cuts, gp, episodeId: ep.episodeId })), active: ep.active }
 }
