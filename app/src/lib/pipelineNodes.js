@@ -142,6 +142,7 @@ export const PIPELINE_NODES = [
       { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },
       { port: 'narrationMp3', kind: 'media', from: 'tts.narrationMp3', text: '나레이션 음성(직접 믹스)' },
       { port: 'previewFile', kind: 'media', from: 'preview.previewFile', text: '미리듣기 결과(원본보다 최신일 때만 사용)' },
+      { port: 'bgm', kind: 'media', from: 'trendRadar.bgm', text: '_shared/bgm 라이브러리(bgmSelect.js 자동 선곡 대상)' },
     ],
     outputs: [
       { port: 'finalOutput', kind: 'media', text: '07_output/{CODE}_final.mp4' },
