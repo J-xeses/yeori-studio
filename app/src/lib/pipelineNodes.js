@@ -248,7 +248,9 @@ export function buildEdges(defs = PIPELINE_NODES) {
 
 // 자동 배치 — 의존관계의 최장 경로 깊이를 열(왼쪽→오른쪽)로, 같은 열 안에서는 배열 순서대로 위→아래.
 // saved 에 좌표가 있는 노드는 그 좌표를 그대로 쓴다(자동 배치는 저장 안 된 노드만 채운다).
-export const LAYOUT = { colW: 420, rowH: 500, x0: 40, y0: 40 }
+// 2026-11-12: rowH 500 → 660. 카드 실측 높이가 424~580px(포트·코드 줄이 많은 finalize·agentApp·pipelineLeader 가 550 이상)라
+//   500 간격으로는 아래 행 카드가 위 카드 밑단에 겹쳤다(실측: finalize(y36·높이561) ↔ 새 노드 pipelineLeader(y547)).
+export const LAYOUT = { colW: 420, rowH: 660, x0: 40, y0: 40, stepY: 80 }
 export function autoLayout(defs = PIPELINE_NODES, saved = {}) {
   const byId = Object.fromEntries(defs.map(d => [d.id, d]))
   const depthMemo = {}
@@ -286,7 +288,8 @@ export function autoLayout(defs = PIPELINE_NODES, saved = {}) {
       if (consumers.length) { const c = consumers.reduce((a, b) => (b.x < a.x ? b : a)); pos = { x: c.x - LAYOUT.colW, y: c.y } }
       else if (sources.length) { const c = sources.reduce((a, b) => (b.x > a.x ? b : a)); pos = { x: c.x + LAYOUT.colW, y: c.y } }
       const hits = (p) => placed.some(q => Math.abs(q.x - p.x) < LAYOUT.colW - 40 && Math.abs(q.y - p.y) < LAYOUT.rowH - 40)
-      for (let guard = 0; hits(pos) && guard < 50; guard++) pos = { x: pos.x, y: pos.y + LAYOUT.rowH }
+      // 겹치면 조금씩(stepY) 아래로 — 한 행(rowH)씩 건너뛰면 이웃에서 쓸데없이 멀어진다
+      for (let guard = 0; hits(pos) && guard < 400; guard++) pos = { x: pos.x, y: pos.y + LAYOUT.stepY }
       out[d.id] = pos
       placed.push(pos)
     }
