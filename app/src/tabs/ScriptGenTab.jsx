@@ -1793,6 +1793,13 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
   const g1Count = cuts.filter(c => gData[episodeCode]?.[`cut_${c.no}`]?.g1).length
   const allG1Done = cuts.length > 0 && g1Count === cuts.length
 
+  // 2026-08-03 "UI 통일 라운드 2단계"(5748fd1) 사이드바 재배치 때 컨트롤만 빠지고 RESET_CUTS
+  // 리듀서는 그대로 남아있던 걸 2026-11-12 복원 — 컷 수를 바꾸면 makeCuts(n)로 전체 컷이
+  // 새로 만들어지므로(기존 씬/대사/프롬프트 내용 유실) 되돌릴 수 없는 작업임에 유의.
+  const handleCutCountChange = (n) => {
+    const count = Math.max(1, Math.min(20, parseInt(n) || 7))
+    dispatch({ type: 'RESET_CUTS', n: count })
+  }
 
   const handlePipelineExport = async () => {
     if (!cuts.length) { alert('컷이 없습니다. 대본을 먼저 생성하세요.'); return }
@@ -1962,6 +1969,15 @@ PL 은 임의 생성 금지 — 명시적 요청 없으면 원본 그대로 둘 
                   {numError && (
                     <div style={{ fontSize: 11, color: '#ef4444', marginTop: 3 }}>⚠️ {numError}</div>
                   )}
+                </div>
+              </div>
+
+              <div className={s.field}>
+                <label>컷 수</label>
+                <div className={s.epNumRow}>
+                  <input type="number" min="1" max="20" value={episode.cutCount}
+                    onChange={e => handleCutCountChange(e.target.value)} />
+                  <span style={{ fontSize: 11, color: 'var(--text3)' }}>컷 (최대 20, 변경 시 컷 내용 초기화됨)</span>
                 </div>
               </div>
 
