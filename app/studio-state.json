@@ -1,5 +1,5 @@
 {
-  "activeTab": "storyarchive",
+  "activeTab": "monitor",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -4546,7 +4546,7 @@
       "id": "ep_1790322063208",
       "episode": {
         "number": 5,
-        "title": "혼자인 밤, 친구들 SNS를 보다",
+        "title": "유튜브 자기계발 영상 500시간 본 후기",
         "location": "집",
         "mood": "밤",
         "cutCount": 7,
@@ -4556,7 +4556,8 @@
         "instaNum": "05",
         "character": "서여리(묶은 머리) - 20대 초반 한국 여성, 느슨하게 올려 묶은 긴 웨이비 다크 브라운 헤어, 오버사이즈 회색 후드티, 밤의 집",
         "code": "IG_R05",
-        "masterCode": "[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]"
+        "masterCode": "[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
+        "storyBrief": ""
       },
       "cuts": [
         {
@@ -12265,7 +12266,7 @@
   },
   "episode": {
     "number": 5,
-    "title": "혼자인 밤, 친구들 SNS를 보다",
+    "title": "유튜브 자기계발 영상 500시간 본 후기",
     "location": "집",
     "mood": "밤",
     "cutCount": 7,
@@ -12275,7 +12276,8 @@
     "instaNum": "05",
     "character": "서여리(묶은 머리) - 20대 초반 한국 여성, 느슨하게 올려 묶은 긴 웨이비 다크 브라운 헤어, 오버사이즈 회색 후드티, 밤의 집",
     "code": "IG_R05",
-    "masterCode": "[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]"
+    "masterCode": "[IG_R05] :: [PL:IG_RL] :: [SP:IN.HM.TZ_NT.LT_DK] :: [CH:YR_NT] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
+    "storyBrief": ""
   },
   "cuts": [
     {
@@ -12632,7 +12634,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-12T02:41:41.154Z",
+  "savedAt": "2026-11-12T06:12:29.432Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
