@@ -480,6 +480,12 @@ export default function VideoTab() {
   // 사용자가 05_video의 기존 파일을 before/로 옮긴 뒤 예전 클립칸이 빈 화면으로 보임).
   // url별로 로드 실패 여부만 기록해 명확한 안내 문구로 대체.
   const [videoLoadErrors, setVideoLoadErrors] = useState({})   // { [url]: true }
+  // 2026-11-13 — "클립 합성 직후 컷들이 재생할 수 없다며 사라짐" 신고(SF_E12): 합성 직후
+  // render-cut-clips 응답은 이미 ffmpeg 종료 후라 서버 파일 자체는 정상(ffprobe로 실측
+  // 재확인됨)인데도, 교체된 cut_NN.mp4를 브라우저가 막 다시 요청하는 그 틈에 간혹 1차
+  // 로드가 실패해 위 영구 에러 배너가 떴다. 파일이 진짜 없어진 경우(위 09-16 사고)와
+  // 구분하기 위해, src별로 딱 한 번만 자동 재시도(.load())한 뒤에도 또 실패해야 배너를 띄운다.
+  const videoRetryRef = useRef({})   // { [src]: 시도횟수 }
   // PIP 컷(CUT4류) 미리보기를 "배경 원본" ↔ "PIP 세그" 전환 — 별도 작은 <video>를 새로 만들면
   // 로딩이 불안정하고 깜빡인다는 실측 피드백(2026-09-17) — 기존에 이미 잘 동작하는 메인
   // 미리보기 <video>(에러처리·onLoadedData 다 갖춘)를 그대로 재사용하는 쪽으로 변경.
@@ -1768,6 +1774,12 @@ export default function VideoTab() {
       setComposeStatus(p => ({ ...p, [cut.id]: 'done' }))
       setComposeLog(p => ({ ...p, [cut.id]: `✅ 합성 완료 (${d.sizeKB}KB, ${d.duration?.toFixed(1)}s)` }))
       setFinalPreviewTs(p => ({ ...p, [cut.id]: Date.now() }))
+      // 2026-11-13 — 합성 성공 직후, 서버가 이번에 합성에 쓴 세그먼트 원본을 raw/_composed/로
+      // 이름을 바꿔 옮긴다(proxy.js render-cut-clips, Flow 원본 보존용 — 09-25 IG_R05 사고
+      // 이후 삭제 대신 이동으로 바뀜). 화면의 "편집용 클립" 미리보기는 옮겨지기 전 주소를 그대로
+      // 들고 있어서 합성 직후 100% 깨진다(재시도로 못 고치는 구조적 문제). 방금 만든 "최종
+      // 결과"로 바로 전환해, 사라진 편집용 클립이 아니라 실제 합성본(나레이션 포함)이 보이게 한다.
+      setBigPreviewMode(p => ({ ...p, [cut.id]: 'final' }))
       // 2026-11-06 추가(성준님 제보 — 컷4 자막 2중, 재검증에도 여전히 재현): runFfmpegForCut의
       // narratedClip.hasBurnedSubtitle 플래그는 "방금 만든 클립 객체"에만 붙어있어서, 이
       // 클립 합성(05_video/cut_NN.mp4를 실제로 덮어쓰는 단계, "바로 입혀짐"을 위해 burnSubtitle
@@ -2265,7 +2277,16 @@ export default function VideoTab() {
           const previewClip = clips[isSelected ? selectedClipIdx : 0] || clips[0]
           const bigRow = (vChk?.cuts || []).find(r => r.no === selCut.no)
           const bigHasDerived = !!bigRow?.finalDerived
-          const bigShowFinal = !!bigRow?.finalSource && (bigPreviewMode[selCut.id] || (bigHasDerived ? 'final' : 'raw')) === 'final'
+          // 2026-11-13 — "탭 이동 후 돌아오면 다시 깨진 편집용 클립으로 돌아간다" 신고: 토글
+          // 버튼으로 고른 'final'은 이 컴포넌트의 로컬 state(bigPreviewMode)라 탭을 벗어나
+          // VideoTab이 언마운트되면(다른 탭 클릭) 그대로 사라진다. 그 상태에서 기본값이
+          // bigHasDerived(자막·모션 번인본 존재) 조건부로 'raw'였던 게 문제 — 합성이 끝나면
+          // 편집용 세그 원본은 server/proxy.js render-cut-clips가 raw/_composed/로 옮겨버려
+          // 거의 항상 깨져 있는데, 탭을 오갈 때마다 바로 그 깨진 쪽으로 다시 떨어졌다.
+          // vChk(서버 파일 목록)는 마운트마다 새로 불러오므로, "로컬 토글이 없으면 raw" 대신
+          // "최종본이 있으면 최종본"을 기본으로 삼는다 — 다시 로컬 state에 의존하지 않는다.
+          // 세그 단위로 직접 편집해야 할 때만 토글 버튼으로 'raw'를 명시적으로 고르면 된다.
+          const bigShowFinal = !!bigRow?.finalSource && bigPreviewMode[selCut.id] !== 'raw'
           const bigFinalSrc = bigRow?.finalSource ? `${epMediaUrl(episode, 'video')}/${bigRow.finalSource}?t=${bigRow.finalMtimeMs || 0}` : ''
           const bigSrc = bigShowFinal ? bigFinalSrc : resolveClipSrc(previewClip)
           return (
@@ -2297,8 +2318,17 @@ export default function VideoTab() {
                     <video key={bigSrc} src={bigSrc} controls className={s.cutCardVideoPlayer}
                       onTimeUpdate={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
                       onSeeked={e => { if (isSelected) setPreviewT(e.currentTarget.currentTime) }}
-                      onError={() => setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))}
-                      onLoadedData={() => { setPreviewT(0); setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n }) }} />
+                      onError={e => {
+                        const tries = videoRetryRef.current[bigSrc] || 0
+                        if (tries < 1) {
+                          videoRetryRef.current[bigSrc] = tries + 1
+                          const el = e.currentTarget
+                          setTimeout(() => { try { el.load() } catch { /* 언마운트됐으면 무시 */ } }, 700)
+                          return
+                        }
+                        setVideoLoadErrors(p => ({ ...p, [previewClip.url]: true }))
+                      }}
+                      onLoadedData={() => { delete videoRetryRef.current[bigSrc]; setPreviewT(0); setVideoLoadErrors(p => { if (!p[previewClip.url]) return p; const n = { ...p }; delete n[previewClip.url]; return n }) }} />
                     {videoLoadErrors[previewClip.url] && (
                       <div style={{
                         position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
