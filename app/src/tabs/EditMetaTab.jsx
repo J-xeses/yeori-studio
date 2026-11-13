@@ -29,6 +29,34 @@ function toSRTTime(sec) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`
 }
 
+// "빠른 조립" 완료 직후 릴스 최종본(07_output/{code}_final.mp4)까지 자동으로 만든다 —
+// 2026-11-13: 이 탭이 G5를 찍어도 메이킹 탭의 "🎬 릴스 최종본 생성"(/api/reel-finalize)을
+// 따로 눌러야만 실제 파일이 생겼다. 그래서 모니터(07 최종화 노드)가 "G5 승인인데 최종본 없음"
+// 단선을 계속 띄웠다 — 이 함수가 그 간극을 없앤다. /api/reel-finalize 는 SSE라 MakingTab.jsx의
+// runReelFinalize와 같은 방식으로 읽고 마지막 done 이벤트만 돌려준다. BGM은 새로 생성하지 않는
+// 'library'(보유 곡만) 고정 — 조립 흐름에서 예기치 않게 유료 BGM 생성 호출이 섞이면 안 된다.
+async function finalizeReelSilently(epNum) {
+  try {
+    const res = await fetch('http://localhost:3001/api/reel-finalize', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum, bgmMode: 'library' }),
+    })
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+    let result = { ok: false, error: '응답 없음' }
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break
+      buf += dec.decode(value, { stream: true })
+      const parts = buf.split('\n\n'); buf = parts.pop()
+      for (const part of parts) {
+        const line = part.replace(/^data: /, '').trim(); if (!line) continue
+        let ev; try { ev = JSON.parse(line) } catch { continue }
+        if (ev.type === 'done') result = ev.ok ? { ok: true, videoUrl: ev.videoUrl } : { ok: false, error: ev.error }
+      }
+    }
+    return result
+  } catch (e) { return { ok: false, error: e.message } }
+}
+
 export default function EditMetaTab() {
   const { state, dispatch } = useApp()
   // episode.code(3차 정식 필드) 우선, 레거시 에피소드는 과도기 방식(번호)으로 대체
@@ -499,6 +527,13 @@ export default function EditMetaTab() {
             setAccStatus(s => `${s} ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}`)
           }
         }
+        // G5를 찍은 직후 실제 릴스 최종본(07_output)까지 만든다 — 메이킹 탭을 따로 열어
+        // "릴스 최종본 생성"을 누르지 않으면 모니터가 "G5 승인인데 최종본 없음"으로 단선 표시했다.
+        setAccStatus(s => `${s} · ⑥ 릴스 최종본 생성 중...`)
+        const fin = await finalizeReelSilently(epNum)
+        setAccStatus(s => fin.ok
+          ? `${s} · ✅ 릴스 최종본까지 생성 완료`
+          : `${s} · ⚠️ 릴스 최종본 생성 실패(${fin.error}) — 메이킹 탭에서 "🎬 릴스 최종본 생성"으로 다시 시도하세요`)
         setAccRunning(false)
         return
       }
