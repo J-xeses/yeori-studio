@@ -1,0 +1,117 @@
+================================================================
+마스터 코드
+[IG_P05] :: [PL:IG_CR] :: [SP:MIXED] :: [CH:YR_VD] :: [SH:MIXED] :: [F군:미설정]
+================================================================
+에피소드명: 서울에서 매일 듣는 한국어 5개 (저장용) — 1주차 ③
+채널: 서여리 인스타그램 캐러셀 (IG_P05) · 게시 11/20(금) 저녁 6시 전후
+총 장수: 7장 (표지 1 + 표현 5 + 마무리 1)
+콘셉트: 앞 두 편(IG_R09·IG_R10)이 밥 이야기라서 같은 흐름의 표현으로 묶는다.
+  표지에서 영어 제목으로 바로 후킹. 글자는 이미지 생성이 아니라 HTML/그래픽 카드로 얹는다(패널2~6, IG_R99/R02의
+  GR.DM 카드 제작 방식과 동일 — CapCut/HTML 직접 제작, 이미지 생성 불필요).
+  패널1(표지)만 서여리 실사 스틸 이미지 생성 필요.
+  목적: reach가 아니라 저장(saves) — 과거 캐러셀(IG_P01, IG_H01)은 reach 자체가 낮았으므로(5~7)
+  이번엔 "저장 가치가 분명한 정보형" 소재로 포맷을 재해석한다.
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE (패널1 표지만 실사 등장, 패널2~6은 그래픽 카드로 인물 미등장)
+EP    : IG_P05
+TITLE : 서울에서 매일 듣는 한국어 5개
+LOOK.A: 서여리 — 캐주얼 데일리룩, 자연광 실내 또는 카페, 밝고 친근한 표정
+BGM   : 없음(캐러셀, 무음 — 캡션/카드 텍스트 중심)
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 1] ─ 표지 — 서여리 스틸 + 제목
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서여리 캐주얼 데일리 스틸컷 위에 제목 텍스트 오버레이.
+SP: IN.CF.DY.LT_WD (카페 또는 집, 낮 자연광)
+PL: YR_IM
+CH: 서여리
+CP: 서울에서 매일 듣는 한국어 5개 / 5 Korean phrases you hear every day in Seoul
+CT: GRAPHIC
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Seo Yeori, long wavy dark brown hair falling naturally, natural skin texture on right cheek very subtle,
+casual daily outfit (soft knit top), sitting by a sunlit window in a cafe, warm natural daylight, bright friendly smile looking just off-camera,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, plenty of clean negative space in the upper third for a title overlay, no legible text or logos, no other people
+
+제작 노트: 타이포는 굵은 손글씨 계열(Gamja Flower 등, 기존 썸네일 타이포 원칙과 동일) + 사진의 네거티브 스페이스에 맞춰 배치. 얇은 캡션형 금지.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 2] ─ 그래픽 카드 1
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED (HTML/그래픽 카드)
+PL: GR_ED
+CH: 없음
+CP: 밥 먹었어? (bap meogeosseo?) / Did you eat? = I care about you
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요. HTML/그래픽 카드로 직접 제작.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 3] ─ 그래픽 카드 2
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED
+PL: GR_ED
+CH: 없음
+CP: 잘 먹겠습니다 (jal meokgesseumnida) / Said before a meal: "I will eat well"
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 4] ─ 그래픽 카드 3
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED
+PL: GR_ED
+CH: 없음
+CP: 고생했어요 (gosaenghaesseoyo) / "You worked hard." A thank-you for someone's effort
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 5] ─ 그래픽 카드 4
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED
+PL: GR_ED
+CH: 없음
+CP: 밥 한번 먹자 (bap hanbeon meokja) / "Let's eat sometime." Often a friendly goodbye, not always a real plan
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 6] ─ 그래픽 카드 5
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED
+PL: GR_ED
+CH: 없음
+CP: 대박 (daebak) / Wow! / Amazing!
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[패널 7] ─ 마무리 — 저장 유도 + 팔로우
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP: GR.ED
+PL: GR_ED
+CH: 없음
+CP: Save this for your Seoul trip 📌 / Follow for everyday Korean life with Seoyeori
+CT: GRAPHIC
+IP: 텍스트 전용 카드 — 이미지 생성 불필요.
+================================================================
+
+
+[캡션]
+EN: 5 Korean phrases you'll hear every day in Seoul 🇰🇷 Save this for your trip or your study session 📌
+KR: 서울에서 매일 듣는 한국어 5개. 저장해두고 여행이나 공부할 때 써보세요.
+JP: ソウルで毎日聞く韓国語フレーズ5選。保存して旅行や勉強に使ってくださいね。(밥 먹었어? = ご飯食べた?(気にかけてるよ) / 잘 먹겠습니다 = いただきます / 고생했어요 = お疲れさまでした / 밥 한번 먹자 = 今度ご飯行こう(挨拶として言うこともあります) / 대박 = すごい!)
+
+[해시태그]
+#LearnKorean #KoreanPhrases #KoreanDailyLife #韓国語 #韓国語勉強
+
+[체크]
+- AI 라벨 부착 확인(게시 시, 패널1 실사컷 포함)
+- 저장(saves) 지표로 성공 판정 — reach 비교 금지(포맷 특성상 reach는 릴스보다 낮게 나옴)
+- 일본어 문구는 게시 전 원어민에 가까운 분 확인

@@ -1,0 +1,246 @@
+================================================================
+마스터 코드
+[IG_R10] :: [PL:IG_RL] :: [SP:IN.HM.LR.LT_EV] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]
+================================================================
+에피소드명: '밥 먹었어?'의 숨은 뜻 (언어, 지아 등장) — 1주차 ②
+채널: 서여리 인스타그램 릴스 (IG_R10) · 게시 11/18(수) 저녁 6시 전후
+총 길이: 32초 (8+8+8+8) — 엔딩 A(①과 동일, 지아 등장이 시청 지표에 주는 영향을 보기 위해 변수 최소화)
+콘셉트: 지아의 "밥 먹었어?" 문자를 받은 서여리가 영문을 모르는데, 곧 지아가 도시락을 들고 현관 앞에 나타난다.
+  문화 포인트: '밥 먹었어?'가 걱정과 애정의 표현이라는 점.
+  제작 메모: 현관에서 신발을 벗는 동작은 한국 일상 디테일이니 반드시 살린다. 컷3·4는 두 인물 장면 — IG_R06에서 쓴
+  좌/우 앵커(고정 카메라, 동일 구도) 방식을 그대로 쓴다.
+  지아 등장: characters.json "jia" 참조(오벌 페이스, 다크브라운 아몬드 눈+윙드 아이라이너, 모브브라운 립,
+  짧은 웨이브 블랙 보브+커튼뱅, 코 옆 모). 목소리 voiceId 5n5gqmaQi9Ewevrz7bOS(Sian - Tender, Calm & Clear).
+  언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 영어 부제 한 줄(EN). 캡션은 영/한/일 3단.
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE + JIA (characters.json jia, 두 번째 등장)
+EP    : IG_R10
+TITLE : '밥 먹었어?'의 숨은 뜻
+LOOK.A: 서여리 — 거실 홈웨어(라운지 티셔츠+편한 바지), 맨발(룰셋: 집 장면 맨발), 머리 풀어 내림, 지친 기색
+LOOK.B: 지아 — 가벼운 아이보리 가디건 + 캐주얼 이너+데님, 작은 숄더백, 보자기에 싼 도시락을 손에 듦
+BG.A  : 서여리 집 거실(소파) → 현관
+LIGHT : LT_EV (저녁 실내 조명, 따뜻하고 아늑함)
+BGM   : 잔잔한 로파이, CUT4 중반 2~3초 정지(여운) 후 엔딩카드
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — 거실, 지친 서여리, 문자 알림 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+OSD(첫 3초 온스크린 텍스트): In Korean, "Did you eat?" means "I care about you"
+SC: 거실 소파에 지쳐 늘어진 서여리, 맨발. 폰을 보는데 알림이 뜬다 — 큰 글씨로 '밥 먹었어?'.
+SP: IN.HM.LR.LT_EV
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: (나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.
+EN: In Korea, "Did you eat?" isn't really about food.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AC: 0~4초 소파에 늘어져 멍하게 폰을 보는 지친 모습 → 4~8초 알림이 뜨며 화면(폰)을 바라보는 데서 나레이션
+DU: 8
+CP: 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.
+CT: YEORI
+BEAT: 훅
+오디오:
+  BGM: 잔잔한 로파이 (0초부터)
+  음성: 여리 — 나른하고 담담한 톤
+  효과음: 폰 알림음(짧게, 4초 지점)
+  앰비언스: 조용한 저녁 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 집 거실 소파, 저녁 실내조명
+CH(캐릭터):   서여리 — 라운지 홈웨어, 맨발, 머리 풀어 내림
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션
+MD(감정):     지침, 무심함
+DL(대사):     없음
+NR(나레이션): 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP — Seo Yeori, long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle,
+wearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired,
+looking down at her phone with a flat exhausted expression, warm indoor evening lighting,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-4s] Seo Yeori sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look and says in a soft, matter-of-fact Korean voice-over: "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요." No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI | 전개 — 답장 치는 손, 의미 설명 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 서여리가 답장을 치는 손(화면은 흐리게, 글자 비노출). 나레이션이 이어지고, 자막으로 실제 답장 내용이 뜬다.
+SP: IN.HM.LR.LT_EV
+PL: YR_VD
+CH: 서여리
+DL: (자막) 아직… 왜?
+NR: (나레이션) 걱정된다는 뜻으로 건네는 말이에요.
+EN: Koreans often say it to mean "I'm thinking of you." / Not yet… why?
+SH: SH_MS
+CA: CA_ST
+MD: MD_SUR
+AC: 0~5초 폰 화면(흐리게)에 답장을 입력하는 손 클로즈업, 나레이션 → 5~8초 "아직… 왜?"를 입력하고 보내기 누름
+DU: 8
+CP: 걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?
+CT: YEORI
+BEAT: 전개
+오디오:
+  BGM: 로파이 (이어서)
+  음성: 여리 — 설명하듯 차분한 톤(나레이션)
+  효과음: 타이핑 소리(가볍게), 전송음
+  앰비언스: 조용한 저녁 거실
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     거실 소파 (CUT1과 동일)
+CH(캐릭터):   서여리 (손 클로즈업 위주, 얼굴 일부만)
+SH(샷):       미디엄 샷(손+폰 중심)
+CA(카메라):   고정
+AC(동작):     0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 "아직… 왜?" 입력 후 전송
+MD(감정):     의아함, 호기심
+DL(대사):     (자막) 아직… 왜?
+NR(나레이션): 걱정된다는 뜻으로 건네는 말이에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — same Seo Yeori, same face, same lounge t-shirt, barefoot,
+seated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting,
+puzzled thoughtful expression, slightly leaning forward,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-5s] Close on Yeori's hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, while a soft Korean voice-over says: "걱정된다는 뜻으로 건네는 말이에요." [5-8s] She types "아직… 왜?" and taps send. No on-screen subtitle text or captions — the reply text appears as an on-screen caption added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI+JIA | 반전 — 초인종, 신발 벗는 지아, 도시락 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 초인종이 울린다. 현관문을 열자 지아가 도시락을 들고 서 있다. 지아가 들어오며 신발을 벗는다.
+SP: IN.HM.ENT.LT_EV
+PL: YR_VD
+CH: 서여리 + 지아
+DL: 지아 "그럴 줄 알았어. 일단 먹어." / 여리 "…진짜 왔어?"
+NR: 없음
+EN: I knew it. Eat first. / …You actually came?
+SH: SH_MS
+CA: CA_ST
+MD: MD_SUR
+AC: 0~2초 초인종 소리에 문을 여는 여리 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬 → 5~8초 여리가 놀란 표정으로 대사
+DU: 8
+CP: 그럴 줄 알았어. 일단 먹어. / …진짜 왔어?
+CT: YEORI
+BEAT: 전개
+오디오:
+  BGM: 로파이 (이어서, 살짝 고조)
+  음성: 지아 — 확신에 차고 장난스러운 톤(반말) / 여리 — 놀랍고 반가운 톤(반말, 친구 사이)
+  효과음: 초인종, 신발 벗는 소리(가볍게)
+  앰비언스: 조용한 저녁 현관
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 집 현관, 저녁 실내조명
+CH(캐릭터):   서여리(거실 홈웨어, 맨발) · 지아(아이보리 가디건+캐주얼 이너+데님, 작은 숄더백, 보자기 도시락)
+SH(샷):       미디엄 샷, 현관 정면(고정 구도)
+CA(카메라):   고정
+AC(동작):     0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사
+MD(감정):     놀람 → 반가움
+DL(대사):     지아 "그럴 줄 알았어. 일단 먹어." / 여리 "…진짜 왔어?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,
+Seo Yeori (right): long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,
+Jia (left): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, short wavy black bob with wispy curtain bangs, wearing a light ivory cardigan over a casual top and jeans, small shoulder bag, standing at the doorstep in the middle of taking off her shoes, holding up a cloth-wrapped lunchbox with a confident playful grin,
+entryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-2s] The doorbell rings; Yeori opens the door. [2-5s] Jia(left) stands on the doorstep, already bending down to take off her shoes as she steps in, holding up a cloth-wrapped lunchbox, and says in Korean, confident and playful (반말, close friend): "그럴 줄 알았어. 일단 먹어." [5-8s] Yeori(right), still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): "…진짜 왔어?" No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI+JIA | 결말 — 거실에서 도시락, 여운, 엔딩카드 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 두 사람이 거실에서 도시락을 나눠 먹는다. 중반에 정적 2~3초(BGM 정지)로 여운을 준 뒤 엔딩카드로 전환.
+SP: IN.HM.LR.LT_EV
+PL: YR_VD
+CH: 서여리 + 지아
+DL: 없음
+NR: (나레이션) 밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.
+EN: "Did you eat?" means "You matter to me."
+SH: SH_MS
+CA: CA_ST
+MD: MD_WRM
+AC: 0~4초 거실 테이블에 도시락을 펴놓고 둘이 함께 먹는 모습 → 4~6초 정적 2초(BGM 정지, 서로 마주 보며 미소) → 6~8초 여리가 카메라를 보며 나레이션
+DU: 8
+CP: 밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.
+CT: YEORI
+BEAT: 결말
+오디오:
+  BGM: 로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃
+  음성: 여리 — 잔잔하고 진심 어린 톤
+  효과음: 도시락 뚜껑 여는 소리, 수저 소리(자연스럽게)
+  앰비언스: 조용한 저녁 거실(정적 구간엔 거의 무음)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     서여리 집 거실 (CUT1과 동일 공간, 테이블 추가)
+CH(캐릭터):   서여리 · 지아 (CUT3과 동일 옷차림)
+SH(샷):       미디엄 샷, 테이블 사이로 두 사람
+CA(카메라):   고정
+AC(동작):     0~4초 도시락을 펴놓고 함께 먹음 → 4~6초 정적, 서로 마주 보며 미소 → 6~8초 여리가 카메라를 보며 나레이션
+MD(감정):     따뜻함, 편안한 친밀감
+DL(대사):     없음
+NR(나레이션): 밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — same two young Korean women, same faces, sitting together on the living room floor/low table in the evening,
+Seo Yeori (right): same lounge t-shirt, barefoot, warm genuine smile, Jia (left): same ivory cardigan, warm genuine smile,
+a cloth-wrapped lunchbox opened on the table between them with simple home-style side dishes, both eating together with chopsticks, warm cozy indoor lighting,
+photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] Yeori looks to camera and says softly in Korean: "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요." No on-screen subtitle text or captions.
+================================================================
+
+
+[엔딩 카드] (마지막 2초, 오버레이)
+"Send this to someone who always asks if you've eaten 🍚"
+"Follow for everyday Korean life with Seoyeori"
+
+[캡션]
+EN: In Korea, "Did you eat?" (밥 먹었어?) is a way of saying "I care about you" 🍚 Send this to someone who always asks if you've eaten.
+KR: 한국에서 '밥 먹었어?'는 '네가 신경 쓰여'라는 뜻이에요. 늘 밥 먹었냐고 물어보는 사람에게 보내주세요.
+JP: 韓国では「ご飯食べた?」(パブ モゴッソ?)が「あなたのことを気にかけているよ」という気持ちを伝える言葉になります。いつもご飯を気にかけてくれる人に送ってみてください。
+
+[해시태그]
+#KoreanDailyLife #LearnKorean #KoreanCulture #AICreator #韓国語 #韓国生活
+
+[체크]
+- AI 라벨 부착 확인(게시 시)
+- 룰셋: 집 장면 맨발 확인(여리), 신발 벗는 동작 디테일 살리기(지아)
+- 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조
+- 엔딩 A는 ①(IG_R09)과 동일 — 지아 등장 자체의 영향만 보기 위해 변수 최소화

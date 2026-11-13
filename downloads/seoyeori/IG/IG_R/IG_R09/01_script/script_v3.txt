@@ -1,0 +1,243 @@
+================================================================
+마스터 코드
+[IG_R09] :: [PL:IG_RL] :: [SP:IN.CVS.NT.LT_FL] :: [CH:YR_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]
+================================================================
+에피소드명: 새벽 1시 편의점 (음식) — 1주차 ①
+채널: 서여리 인스타그램 릴스 (IG_R09) · 게시 11/16(월) 저녁 6시 전후
+총 길이: 32초 (8+8+8+8, Veo 8초 생성단위 4개) — 엔딩 A
+콘셉트: 2026-11 1주차 제작 브리프 기반. 사건(또 편의점) → 감정(들킴) → 선택(그래도 먹는다)의 3막.
+  문화 포인트: "편의점이 식당이다(온수와 자리가 있다)" — 설명은 후반부·캡션에만, 본편은 끝까지 일상 드라마로 간다.
+  지아는 CUT3에서 스피커폰 목소리로만 등장(화면 미출연) — 별도 얼굴 생성 불필요, TTS만 필요.
+  첫 3초 영어 온스크린 텍스트: "1 a.m. in Korea: the convenience store is a restaurant"
+  언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 영어 부제 한 줄(EN). 캡션은 영/한/일 3단.
+================================================================
+EP.HEADER
+CHAR  : YEORI.BASE (지아 — 목소리만, characters.json jia / voiceId 5n5gqmaQi9Ewevrz7bOS, 화면 미등장)
+EP    : IG_R09
+TITLE : 새벽 1시 편의점
+LOOK.A: 서여리 — 오프카메라 진짜 모습. 오버사이즈 베이지 가디건 + 편한 잠옷 바지, 긴 웨이브 머리 느슨하게 풀어 내림, 꾸미지 않은 맨얼굴 느낌
+BG.A  : 심야 편의점 내부(진열대 → 창가 2인 테이블)
+LIGHT : LT_FL (차갑고 밝은 심야 형광등, 창밖은 어두움)
+BGM   : 잔잔한 로파이 야간 비트, CUT4 중반 2~3초 정지(여운) 후 엔딩카드에서 재생 재개 없이 페이드아웃
+================================================================
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 1] ─ YEORI | 훅 — 또 편의점, 컵라면 고르는 중 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+OSD(첫 3초 온스크린 텍스트): 1 a.m. in Korea: the convenience store is a restaurant
+SC: 한밤 편의점, 컵라면 진열대 앞에서 익숙하게 하나를 고르는 서여리. 특별할 것 없다는 듬덤한 표정.
+SP: IN.CVS.NT.LT_FL
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: (나레이션) 새벽 1시, 오늘도 편의점이에요.
+EN: 1 a.m. — I'm at the convenience store again.
+SH: SH_MS
+CA: CA_ST
+MD: MD_WRM
+AC: 0~4초 진열대를 훑어보며 느긋하게 걸음 → 4~8초 컵라면 하나를 집어 들며 나레이션
+DU: 8
+CP: 새벽 1시, 오늘도 편의점이에요.
+CT: YEORI
+BEAT: 훅
+오디오:
+  BGM: 잔잔한 로파이 야간 비트 (0초부터)
+  음성: 여리 — 담담하고 익숙한 톤(시청자 결, 반말 아님)
+  효과음: 편의점 출입문 센서음(아주 작게, 0.2초)
+  앰비언스: 늦은 밤 편의점 특유의 조용한 냉장고 모터음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 내부, 컵라면 진열대, 심야 형광등
+CH(캐릭터):   서여리 — 베이지 가디건+잠옷 바지, 머리 풀어 내림, 맨얼굴 느낌
+SH(샷):       미디엄 샷, 진열대 정면
+CA(카메라):   고정
+AC(동작):     0~4초 진열대를 훑으며 느긋하게 다가감 → 4~8초 컵라면을 집어 들고 살짝 끄덕
+MD(감정):     익숙함, 담담함(특별한 사건 아님)
+DL(대사):     없음
+NR(나레이션): 새벽 1시, 오늘도 편의점이에요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — Seo Yeori, long wavy dark brown hair falling naturally and a little loose, natural skin texture on right cheek very subtle, bare minimal-makeup face,
+wearing a cozy oversized beige cardigan over soft pajama pants, off-duty home look (not styled for camera),
+standing in front of a convenience store cup-ramen shelf late at night, picking up a cup with a calm familiar expression, slight relaxed smile,
+cold bright fluorescent store lighting, dark window visible in the background, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or brand logos on any packaging, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-4s] Seo Yeori walks slowly along a convenience store ramen shelf at night, scanning the options with a calm, unbothered expression, clearly a familiar routine. [4-8s] She picks up a cup of ramen, gives a small satisfied nod, and in a soft, matter-of-fact Korean voice-over says: "새벽 1시, 오늘도 편의점이에요." No one else speaks. No on-screen subtitle text or captions — subtitles are added in post.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 2] ─ YEORI | 온수기 + 창가 자리 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 온수기 앞에서 물을 붓고 뚜껑을 닫은 뒤, 창가 2인 테이블에 앉아 폰으로 3분 타이머를 맞춘다.
+SP: IN.CVS.NT.LT_FL
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: (나레이션) 여긴 뜨거운 물도, 앉을 자리도 있어요.
+EN: Hot water and seats, right inside the store.
+SH: SH_MS
+CA: CA_ST
+MD: MD_WRM
+AC: 0~4초 온수기에 물을 붓고 뚜껑을 닫음 → 4~8초 창가 테이블에 앉아 폰 타이머를 맞추고 턱을 괜다
+DU: 8
+CP: 여긴 뜨거운 물도, 앉을 자리도 있어요.
+CT: YEORI
+BEAT: 전개
+오디오:
+  BGM: 잔잔한 로파이 야간 비트 (이어서)
+  음성: 여리 — 편안하고 느긋한 톤
+  효과음: 온수기 물 따르는 소리, 타이머 설정음(짧게)
+  앰비언스: 늦은 밤 편의점, 조용한 냉장고 모터음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 온수기 코너 → 창가 2인 테이블
+CH(캐릭터):   서여리 (CUT1과 동일 옷차림)
+SH(샷):       미디엄 샷
+CA(카메라):   고정(온수기)→고정(테이블), 컷 내 2단계
+AC(동작):     0~4초 온수기에 물을 붓고 뚜껑 닫음 → 4~8초 창가에 앉아 폰 타이머 맞추고 느긋하게 턱을 괨
+MD(감정):     편안함, 아늑함
+DL(대사):     없음
+NR(나레이션): 여긴 뜨거운 물도, 앉을 자리도 있어요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM SHOT — same Seo Yeori, same face, same beige cardigan and pajama pants,
+seated at a window-side two-person convenience store table at night, a cup of ramen with lid closed in front of her, setting a 3-minute timer on her phone, resting her chin on one hand with a relaxed cozy expression,
+cold fluorescent store lighting mixing with a faint warm reflection from the window, dark street visible outside the glass, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-4s] She pours hot water from the self-serve station into the cup ramen and closes the lid. [4-8s] She sits down at the window-side table, sets a timer on her phone, rests her chin on her hand, relaxed, and in a soft Korean voice-over says: "여긴 뜨거운 물도, 앉을 자리도 있어요." No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 3] ─ YEORI | 반전 — 걸려온 전화, 지아 목소리 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 폰이 울린다. 스피커폰으로 받자 지아의 목소리가 흘러나온다. 서여리가 들킨 표정으로 멈춘다. (지아는 화면에 등장하지 않음, 목소리만)
+SP: IN.CVS.NT.LT_FL
+PL: YR_VD
+CH: 서여리 (지아 — 목소리만, 화면 미등장)
+DL: (지아, 음성만) 너 또 편의점이지? / (여리) …어떻게 알았어?
+NR: 없음
+EN: You're at the convenience store again, aren't you? / …How did you know?
+SH: SH_MCU
+CA: CA_ST
+MD: MD_JOY
+AC: 0~2초 테이블 위 폰이 진동, 스피커폰으로 받음 → 2~5초 지아 목소리 들림, 서여리 표정이 멈춤(들킴) → 5~8초 어이없다는 듯 웃으며 대사
+DU: 8
+CP: 너 또 편의점이지? / …어떻게 알았어?
+CT: YEORI
+BEAT: 전개
+오디오:
+  BGM: 로파이 비트 살짝 낮춤(통화 들어오는 구간)
+  음성: 지아(스피커폰, 약간 작고 먹먹한 음질) — 장난스럽고 확신에 찬 톤 / 여리 — 들켜서 당황+웃음 섞인 톤(반말, 친구 사이)
+  효과음: 전화벨(짧게) + 스피커폰 전환음
+  앰비언스: 늦은 밤 편의점, 조용한 냉장고 모터음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 창가 테이블 (CUT2와 동일)
+CH(캐릭터):   서여리만 화면에 등장(지아는 스피커폰 목소리만, 화면 미출연 — 별도 이미지 생성 불필요)
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~2초 폰 진동, 스피커폰으로 받음 → 2~5초 지아 목소리에 표정이 멈춤(들킴) → 5~8초 어이없다는 웃음과 함께 대사
+MD(감정):     들킴, 당황 섞인 웃음
+DL(대사):     지아(음성) "너 또 편의점이지?" / 여리 "…어떻게 알았어?"
+NR(나레이션): 없음
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP — same Seo Yeori, same face, same beige cardigan,
+still seated at the window-side convenience store table, cup ramen in front of her with the lid still closed, holding her phone on speakerphone near the table,
+caught off-guard expression shifting into a sheepish amused smile, as if just been found out,
+cold fluorescent store lighting, dark window behind her, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-2s] Her phone buzzes on the table; she picks it up and taps speakerphone. [2-5s] A friend's voice (Jia, off-screen, slightly tinny speakerphone audio) says in Korean, playful and confident: "너 또 편의점이지?" — Yeori's expression freezes, caught. [5-8s] Yeori breaks into a sheepish, amused laugh and replies in Korean, casual tone (반말, close friend): "…어떻게 알았어?" Only Yeori is visible on screen; Jia is heard only through the phone speaker, never seen. No on-screen subtitle text or captions.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+[CUT 4] ─ YEORI | 결말 — 먹는다, 여운, 엔딩카드 | 8
+━━━━━━━━━━━━━━━━━━━━━━━━
+SC: 김이 오르는 컵라면을 먹는 서여리. 중반에 정적 2~3초(BGM 정지)로 여운을 준 뒤 엔딩카드로 전환.
+SP: IN.CVS.NT.LT_FL
+PL: YR_VD
+CH: 서여리
+DL: 없음
+NR: (나레이션) 야식은 후회해도, 이 3분은 후회 안 해요.
+EN: I might regret the late-night snack. Not these three minutes.
+SH: SH_MCU
+CA: CA_ST
+MD: MD_COM
+AC: 0~4초 뚜껑을 열고 김이 오르는 라면을 한 젓가락 먹음, 만족스러운 표정 → 4~6초 정적 2초(BGM 정지, 시선이 창밖으로) → 6~8초 다시 카메라를 보며 나레이션
+DU: 8
+CP: 야식은 후회해도, 이 3분은 후회 안 해요.
+CT: YEORI
+BEAT: 결말
+오디오:
+  BGM: 로파이 비트 → 4~6초 지점에서 2초간 완전 정지(여운) → 6초부터 다시 낮게 흐르다 엔딩카드에서 페이드아웃
+  음성: 여리 — 잔잔하고 진심 어린 톤
+  효과음: 라면 먹는 소리(아주 자연스럽게, 과하지 않게)
+  앰비언스: 늦은 밤 편의점, 조용한 냉장고 모터음(정적 구간엔 이 소리만)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+KR (한글 컨펌본)
+━━━━━━━━━━━━━━━━━━━━━━━━
+SP(장소):     편의점 창가 테이블 (CUT2·3과 동일)
+CH(캐릭터):   서여리 (동일)
+SH(샷):       미디엄 클로즈업
+CA(카메라):   고정
+AC(동작):     0~4초 김 오르는 라면을 한 젓가락 먹고 만족스러운 표정 → 4~6초 정적, 창밖을 보는 여운 → 6~8초 카메라를 보며 나레이션
+MD(감정):     만족, 잔잔한 체념 섞인 행복
+DL(대사):     없음
+NR(나레이션): 야식은 후회해도, 이 3분은 후회 안 해요.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+IP (이미지 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+MEDIUM CLOSE-UP — same Seo Yeori, same face, same beige cardigan,
+eating steaming cup ramen with chopsticks at the window-side table, warm steam rising and softly backlit by the fluorescent light, content small smile, slightly tired but genuinely happy expression,
+dark window beside her reflecting faint store light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+VP (영상 프롬프트)
+━━━━━━━━━━━━━━━━━━━━━━━━
+[0-4s] She takes a bite of the steaming ramen with chopsticks, steam rising, a small content smile. [4-6s] She pauses, chopsticks resting, gazing quietly out the dark window — no sound but faint ambient hum, a held breath of stillness. [6-8s] She looks back to camera and says softly in Korean: "야식은 후회해도, 이 3분은 후회 안 해요." No on-screen subtitle text or captions.
+================================================================
+
+
+[엔딩 카드] (마지막 2초, 오버레이)
+"Send this to the friend who always knows 💬"
+"Follow for everyday Korean life with Seoyeori"
+
+[고정 댓글]
+다음 편: '밥 먹었어?'의 진짜 뜻 / Next: what "Did you eat?" really means in Korean.
+
+[게시 캡션]
+EN: Why Koreans eat ramen right inside the convenience store at 1 a.m. 🍜 Hot water, a window seat, and a friend who always knows. Send this to yours!
+KR: 새벽 1시 편의점은 식당이에요. 뜨거운 물도, 창가 자리도 있어요. 나를 다 아는 친구에게 보내주세요.
+JP: 韓国のコンビニは深夜1時でも"レストラン"。お湯も席もお店の中にあります。何でもお見通しの友達にも送ってみてくださいね。
+
+[해시태그]
+#KoreanDailyLife #KoreanFood #KoreanCulture #AICreator #韓国グルメ #韓国生活
+
+[체크]
+- AI 라벨 부착 확인(게시 시)
+- 룰셋: 간판/포장지 글자 흐리게, 배경 인물 최소화
+- 지아 목소리 TTS만 필요 — 얼굴 이미지 생성 불필요(비용 절감)
