@@ -187,6 +187,18 @@ function isDialogueSeg(text, dialogue) {
   return d.includes(t)
 }
 
+// 2026-11-13 — 클립 업로드 시 keepAudio 기본값이 "대사(dialogue) 칸이 채워져 있는가"만 보고
+// 정해졌다(SF_E12 실측: cut.dialogue가 비고 narration에만 대사가 적혀 있었는데, 실제 Flow
+// 영상은 그 대사를 서여리가 립싱크로 말하게 생성됨 — 그런데도 "나레이션이니 소리 필요 없음"
+// 으로 자동 판정돼 클립 합성 때 오디오가 통째로 지워졌다). 성준님 확인: YEORI 컷은 대본의
+// 대사/나레이션 구분과 무관하게 Flow가 매번 음성+립싱크를 같이 생성한다 — 그래서 YEORI
+// 컷이면 dialogue 칸이 비어 있어도 기본은 오디오 유지. GRAPHIC/BROLL/CAPCUT(메이킹 컷)은
+// 원래부터 음성 없는 소재라 기존처럼 dialogue 유무로만 판단한다. 업로드 직후 클립별 체크박스
+// (아래 "keepAudio ?? true" 토글)로 언제든 사람이 덮어쓸 수 있다.
+function defaultKeepAudio(cut) {
+  return cut?.cutType === 'YEORI' || !!cut?.dialogue
+}
+
 function ReelCaptionOverlay({ text, fontPx, y, fontReady, plate = false }) {
   const boxRef = useRef(null), textRef = useRef(null)
   const [H, setH] = useState(0)
@@ -1091,7 +1103,7 @@ export default function VideoTab() {
             // (2026-09-13 — "클립 합성"이 이 경로를 그대로 입력으로 씀).
             const dir = videoDirOverride || vChk?.videoDir
             const stagedPath = dir ? `${dir}\\${name}` : undefined
-            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: !!cut.dialogue, createdAt }
+            const obj = { url, name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath, keepAudio: defaultKeepAudio(cut), createdAt }
             setVideoClips(p => {
               const existing = p[cut.id] || []
               if (existing.some(c => c && c.url === url)) return p
@@ -1180,7 +1192,7 @@ export default function VideoTab() {
       const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
       const obj = {
         url, name: candidate.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true,
-        ratio, stagedPath: candidate.path, keepAudio: !!cut?.dialogue,
+        ratio, stagedPath: candidate.path, keepAudio: defaultKeepAudio(cut),
         createdAt: candidate.mtime || Date.now(),
       }
       setVideoClips(p => {
@@ -1251,7 +1263,7 @@ export default function VideoTab() {
             const ratio = probeVideo.videoWidth && probeVideo.videoHeight
               ? (probeVideo.videoWidth >= probeVideo.videoHeight ? '16:9' : '9:16')
               : '16:9'
-            const obj = { url, name: res.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath: res.path, keepAudio: !!cut.dialogue, createdAt: Date.now() }
+            const obj = { url, name: res.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, stagedPath: res.path, keepAudio: defaultKeepAudio(cut), createdAt: Date.now() }
             setVideoClips(p => { const arr = [...(p[cut.id] || [])]; arr[idx] = obj; return { ...p, [cut.id]: arr } })
           }
           if (credits > 0) dispatch({ type: 'CONSUME_CREDITS', p: { account: 'main', tool: 'flow', amount: credits } })
@@ -1327,7 +1339,7 @@ export default function VideoTab() {
       vid.onloadedmetadata = () => {
         const dur = Math.round(vid.duration * 100) / 100
         const ratio = vid.videoWidth >= vid.videoHeight ? '16:9' : '9:16'
-        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: !!cut?.dialogue, createdAt: f.lastModified || Date.now() }
+        const obj = { url, name: f.name, duration: dur, trimStart: 0, trimEnd: dur, useFullDuration: true, ratio, staging: true, keepAudio: defaultKeepAudio(cut), createdAt: f.lastModified || Date.now() }
         // ⚠️ setVideoClips는 이제 UPDATE_TAB_FIELD로 리듀서 안에서 나중에 계산되므로(스테일
         // 클로저 버그 수정, 2026-09-16), updater 콜백 안에서 바깥 clipIdx 변수를 대입해도
         // 그 대입은 "언젠가 리듀서가 처리할 때" 일어나지, 바로 아래 stageClip 호출 시점엔
@@ -1379,7 +1391,7 @@ export default function VideoTab() {
     if (!item.ready) { alert('아직 이 파일의 정보를 불러오는 중입니다 — 잠시 후 다시 시도해주세요.'); return }
     const obj = {
       url: item.url, name: item.file.name, duration: item.duration, trimStart: 0, trimEnd: item.duration,
-      useFullDuration: true, ratio: item.ratio, staging: true, keepAudio: !!cut.dialogue,
+      useFullDuration: true, ratio: item.ratio, staging: true, keepAudio: defaultKeepAudio(cut),
       createdAt: item.file.lastModified || Date.now(),
     }
     // 드래그 배정은 handleVideoUpload의 append 분기와 달리 한 번에 파일 하나씩만 처리되므로

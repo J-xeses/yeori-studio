@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "monitor",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12912,17 +12912,17 @@
     "videoClips": {
       "cut-1": [
         {
-          "url": "blob:http://localhost:5173/22893b1c-8f82-4039-ac80-140d7bc73e06",
-          "name": "cut_01.mp4",
-          "duration": 6,
+          "url": "blob:http://localhost:5173/d7d1cbe0-3143-4fda-9805-6e04664a026d",
+          "name": "Woman_reacting_to_phone_message_20261008225516.mp4",
+          "duration": 6.02,
           "trimStart": 0,
-          "trimEnd": 6,
-          "useFullDuration": false,
+          "trimEnd": 6.02,
+          "useFullDuration": true,
           "ratio": "9:16",
           "staging": false,
-          "keepAudio": false,
-          "createdAt": 1791511203451,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
+          "keepAudio": true,
+          "createdAt": 1791467716332,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_01_clip_new1794548399854.mp4"
         }
       ],
       "cut-2": [
@@ -13000,7 +13000,7 @@
       ]
     },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-4",
     "subtitles": {
       "cut-1": [
         {
