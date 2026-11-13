@@ -1,5 +1,5 @@
 {
-  "activeTab": "monitor",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -10787,17 +10787,17 @@
           "videoClips": {
             "cut-1": [
               {
-                "url": "blob:http://localhost:5173/22893b1c-8f82-4039-ac80-140d7bc73e06",
-                "name": "cut_01.mp4",
-                "duration": 6,
+                "url": "blob:http://localhost:5173/d7d1cbe0-3143-4fda-9805-6e04664a026d",
+                "name": "Woman_reacting_to_phone_message_20261008225516.mp4",
+                "duration": 6.02,
                 "trimStart": 0,
-                "trimEnd": 6,
-                "useFullDuration": false,
+                "trimEnd": 6.02,
+                "useFullDuration": true,
                 "ratio": "9:16",
                 "staging": false,
-                "keepAudio": false,
-                "createdAt": 1791511203451,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_01_clip_new1791511635620.mp4"
+                "keepAudio": true,
+                "createdAt": 1791467716332,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_01_clip_new1794548399854.mp4"
               }
             ],
             "cut-2": [
@@ -10805,12 +10805,12 @@
                 "url": "blob:http://localhost:5173/91936d14-1f70-40ce-b27e-6978d21038eb",
                 "name": "Woman_scrolling_phone_and_watching_20261009133728.mp4",
                 "duration": 8,
-                "trimStart": 1,
-                "trimEnd": 3,
+                "trimStart": 0.5,
+                "trimEnd": 3.5,
                 "useFullDuration": false,
                 "ratio": "9:16",
                 "staging": false,
-                "keepAudio": false,
+                "keepAudio": true,
                 "createdAt": 1791520649026,
                 "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_02_clip_1.mp4"
               }
@@ -10879,8 +10879,8 @@
           "subtitles": {
             "cut-1": [
               {
-                "start": 0,
-                "end": 6,
+                "start": 1,
+                "end": 5.5,
                 "text": "단톡방 레전드 됨 ㅋㅋ"
               }
             ],
@@ -10898,13 +10898,13 @@
             ],
             "cut-2": [
               {
-                "start": 0,
-                "end": 2,
+                "start": 0.5,
+                "end": 4,
                 "text": "근데 이때 나, 되게 신나 보이네. "
               },
               {
-                "start": 0,
-                "end": 0,
+                "start": 4.3,
+                "end": 8,
                 "text": "완벽한 피드보다, 이게 더 나 같았다."
               }
             ]
@@ -11050,7 +11050,7 @@
                 "type": "narration",
                 "text": "그 영상, 결국 단톡방 레전드가 됐다.",
                 "speaker": null,
-                "url": "blob:http://localhost:5173/dd9f30de-87fa-4a0d-93a9-ea4e1ec1dcf5",
+                "url": "blob:http://localhost:5173/44c59ec1-eafa-417e-ac5f-ea7ba0e1ba13",
                 "voiceId": "",
                 "settings": {
                   "speed": 0.85,
@@ -12907,7 +12907,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-13T05:15:00.295Z",
+  "savedAt": "2026-11-13T07:11:54.960Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
