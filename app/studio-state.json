@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "monitor",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12848,8 +12848,8 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
-    "bgImageUrl": "",
+    "ratio": "9:16",
+    "bgImageUrl": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E12/02_images/cut_02_a.jpg",
     "posterLayers": []
   },
   "publishing": {
@@ -12907,7 +12907,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-13T07:11:54.960Z",
+  "savedAt": "2026-11-13T07:52:25.279Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -12965,7 +12965,7 @@
           "useFullDuration": true,
           "ratio": "9:16",
           "staging": false,
-          "keepAudio": false,
+          "keepAudio": true,
           "createdAt": 1791521778053,
           "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E12\\04_making\\raw\\cut_04_clip_1.mp4"
         }
