@@ -12341,47 +12341,44 @@
           "videoClips": {
             "cut-1": [
               {
-                "url": "blob:http://localhost:5173/586bb016-a32f-4504-bb1e-e440ab6a9f29",
-                "name": "Portrait_painting_transforms_on_…_197038d9.mp4",
-                "duration": 8.04,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E14/05_video/cut_01.mp4?t=1794530839836",
+                "name": "cut_01.mp4",
+                "duration": 8,
                 "trimStart": 0,
-                "trimEnd": 8.04,
+                "trimEnd": 8,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "staging": false,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\05_video\\cut_01.mp4",
                 "keepAudio": false,
-                "createdAt": 1794475136873,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\04_making\\raw\\cut_01_clip_1.mp4"
+                "createdAt": 1794484552000
               }
             ],
             "cut-2": [
               {
-                "url": "blob:http://localhost:5173/0462f22f-c718-4d3e-b2fc-07491f91cd23",
-                "name": "Woman_turning_head_portrait_8e057d75.mp4",
-                "duration": 8.04,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E14/05_video/cut_02.mp4?t=1794530855807",
+                "name": "cut_02.mp4",
+                "duration": 8,
                 "trimStart": 0,
-                "trimEnd": 8.04,
+                "trimEnd": 8,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "staging": false,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\05_video\\cut_02.mp4",
                 "keepAudio": false,
-                "createdAt": 1794475605561,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\04_making\\raw\\cut_02_clip_1.mp4"
+                "createdAt": 1794484570000
               }
             ],
             "cut-3": [
               {
-                "url": "blob:http://localhost:5173/6202e95d-8e8c-42e9-83c9-c0893d737fd5",
-                "name": "Woman_walks_out_of_frame_65df2f2b.mp4",
-                "duration": 10.03,
+                "url": "http://localhost:3001/downloads/seoyeori/YU/SF_E/SF_E14/05_video/cut_03.mp4?t=1794530862575",
+                "name": "cut_03.mp4",
+                "duration": 10,
                 "trimStart": 0,
-                "trimEnd": 10.03,
+                "trimEnd": 10,
                 "useFullDuration": true,
                 "ratio": "9:16",
-                "staging": false,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\05_video\\cut_03.mp4",
                 "keepAudio": false,
-                "createdAt": 1794476556562,
-                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\YU\\SF_E\\SF_E14\\04_making\\raw\\cut_03_clip_1.mp4"
+                "createdAt": 1794484582000
               }
             ]
           },
@@ -12390,7 +12387,7 @@
             "cut-2": true,
             "cut-3": true
           },
-          "selectedCutId": "cut-3",
+          "selectedCutId": "cut-1",
           "subtitles": {}
         },
         "ttsTabState": {
@@ -12412,25 +12409,25 @@
           "shadowColor": "#000000",
           "bold": true,
           "textY": 70,
-          "ratio": "16:9",
+          "ratio": "9:16",
           "bgImageUrl": "",
           "posterLayers": []
         },
         "publishing": {
           "youtube": {
-            "title": "",
-            "description": "",
-            "tags": ""
+            "title": "일상공감 100% 🎨 명화 속 주인공으로 환생했다면?",
+            "description": "일상공감되는 순간을 명화로 표현했더니 이렇게 됐습니다 😂\n살면서 한 번쯤 겪어본 그 감정표현, 대가들은 이미 수백 년 전에 그려뒀더라고요.\n여러분의 일상공감 포인트는 몇 번이었나요? 댓글로 알려주세요!\n나만의 감정표현이 명화가 되는 순간 ✨\n\n#명화 #일상공감 #감정표현",
+            "tags": "명화, 일상공감, 감정표현, 명화패러디, 공감영상, 감성쇼츠, 미술, 유명한그림, 웃긴영상, 공감짤, 명화밈, 감정, 일상, 쇼츠, shorts"
           },
           "instagram": {
-            "title": "",
-            "description": "",
-            "tags": ""
+            "title": "🎨 명화 속 주인공으로 환생",
+            "description": "내 일상공감 포인트가 명화였다면? 🖼️✨\n수백 년 전 대가들도 이미 우리의 감정표현을 알고 있었나봐요 😂\n이 그림들 보는데 일상공감 너무 돼서 웃음 참기 힘들었음 ㅋㅋㅋ\n여러분은 몇 번 그림에서 감정표현 됐나요? 댓글로 알려줘요 👇",
+            "tags": "#일상공감 #감정표현 #명화 #명화패러디 #공감 #감성 #미술 #명화밈 #일상 #공감영상 #감정 #웃긴영상 #릴스 #reels #명화그림 #예술 #공감짤 #감성릴스 #일상기록 #유머"
           },
           "tiktok": {
-            "title": "",
-            "description": "",
-            "tags": ""
+            "title": "명화 속 주인공으로 환생 🎨 일상공감 폭발",
+            "description": "이 감정표현, 나만 아는 거 아니었어 😂🖼️\n명화 속 주인공들도 우리랑 똑같은 하루를 살았던 거 아닐까요?\n일상공감 되는 그림 몇 번이었는지 댓글로 알려줘요 👇",
+            "tags": "#일상공감 #감정표현 #명화 #명화패러디 #공감 #틱톡 #감성 #미술 #명화밈 #웃긴영상 #일상 #공감영상 #fyp #foryou #viral #감정 #예술 #유머 #shorts"
           }
         }
       }
@@ -12621,7 +12618,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-13T01:32:41.289Z",
+  "savedAt": "2026-11-13T01:35:58.864Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

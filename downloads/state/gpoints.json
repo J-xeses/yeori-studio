@@ -1384,7 +1384,7 @@
   "SF_E02": {
     "cut_6": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:14:38.558Z",
+      "updatedAt": "2026-11-13T01:49:07.396Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_06_a.jpg",
@@ -1426,11 +1426,12 @@
       "g2": true,
       "selectedImage": "cut_06_a.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_7": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:14:38.558Z",
+      "updatedAt": "2026-11-13T01:49:07.397Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_07_a.jpg",
@@ -1472,11 +1473,12 @@
       "g2": true,
       "selectedImage": "cut_07_a.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:14:38.555Z",
+      "updatedAt": "2026-11-13T01:49:07.389Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_01_a.jpg",
@@ -1500,11 +1502,12 @@
       "g2": true,
       "selectedImage": "cut_01_a.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:14:38.557Z",
+      "updatedAt": "2026-11-13T01:49:07.392Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_03_a.jpg",
@@ -1546,11 +1549,12 @@
       "g2": true,
       "selectedImage": "cut_03_b.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:14:38.557Z",
+      "updatedAt": "2026-11-13T01:49:07.394Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_04_a.jpg",
@@ -1592,11 +1596,12 @@
       "g2": true,
       "selectedImage": "cut_04_b.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_5": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:14:38.558Z",
+      "updatedAt": "2026-11-13T01:49:07.395Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_05_a.jpg",
@@ -1638,11 +1643,12 @@
       "g2": true,
       "selectedImage": "cut_05_b.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_8": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:18:25.860Z",
+      "updatedAt": "2026-11-13T01:49:07.398Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_07_a.jpg",
@@ -1684,11 +1690,12 @@
       "g2": true,
       "selectedImage": "cut_07_a.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-08T12:33:31.847Z",
+      "updatedAt": "2026-11-13T01:49:07.391Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -1730,7 +1737,8 @@
       "g2": true,
       "selectedImage": "cut_02_a.jpg",
       "g3": true,
-      "g4": true
+      "g4": true,
+      "g5": true
     }
   },
   "SF_E99_TEST": {
@@ -1992,7 +2000,32 @@
       "g4": true,
       "g5": true
     },
-    "g5m": true,
-    "g5mUpdatedAt": "2026-11-13T01:00:10.224Z"
+    "g5m": {},
+    "g5mUpdatedAt": {
+      "0": "2",
+      "1": "0",
+      "2": "2",
+      "3": "6",
+      "4": "-",
+      "5": "1",
+      "6": "1",
+      "7": "-",
+      "8": "1",
+      "9": "3",
+      "10": "T",
+      "11": "0",
+      "12": "1",
+      "13": ":",
+      "14": "0",
+      "15": "0",
+      "16": ":",
+      "17": "1",
+      "18": "0",
+      "19": ".",
+      "20": "2",
+      "21": "2",
+      "22": "4",
+      "23": "Z"
+    }
   }
 }
