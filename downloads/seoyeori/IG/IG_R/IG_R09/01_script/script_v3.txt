@@ -10,6 +10,10 @@
   지아는 CUT3에서 스피커폰 목소리로만 등장(화면 미출연) — 별도 얼굴 생성 불필요, TTS만 필요.
   첫 3초 영어 온스크린 텍스트: "1 a.m. in Korea: the convenience store is a restaurant"
   언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 영어 부제 한 줄(EN). 캡션은 영/한/일 3단.
+  ※ 나레이션(NR) 주의: Flow 영상 생성 VP 프롬프트에는 나레이션을 "says/voice-over"로 절대 넣지 않는다 —
+  캐릭터가 나레이션 텍스트에 입모양으로 반응(대사처럼 처리)하는 오류가 과거 반복됨. 나레이션 구간은 VP에
+  "mouth closed, not speaking / NO dialogue, NO lip movement"로 명시하고, 실제 나레이션 오디오는
+  04_making 단계에서 TTS로 별도 생성해 타이밍만 맞춰 삽입한다(대사DL과 구분).
 ================================================================
 EP.HEADER
 CHAR  : YEORI.BASE (지아 — 목소리만, characters.json jia / voiceId 5n5gqmaQi9Ewevrz7bOS, 화면 미등장)
@@ -43,7 +47,7 @@ CT: YEORI
 BEAT: 훅
 오디오:
   BGM: 잔잔한 로파이 야간 비트 (0초부터)
-  음성: 여리 — 담담하고 익숙한 톤(시청자 결, 반말 아님)
+  음성: 여리 — 담담하고 익숙한 톤(시청자 결, 반말 아님) — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
   효과음: 편의점 출입문 센서음(아주 작게, 0.2초)
   앰비언스: 늦은 밤 편의점 특유의 조용한 냉장고 모터음
 
@@ -62,7 +66,7 @@ NR(나레이션): 새벽 1시, 오늘도 편의점이에요.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM SHOT — Seo Yeori, long wavy dark brown hair falling naturally and a little loose, natural skin texture on right cheek very subtle, bare minimal-makeup face,
+MEDIUM SHOT — a young Korean woman in her early 20s, long wavy dark brown hair falling naturally and a little loose, natural skin texture on right cheek very subtle, bare minimal-makeup face,
 wearing a cozy oversized beige cardigan over soft pajama pants, off-duty home look (not styled for camera),
 standing in front of a convenience store cup-ramen shelf late at night, picking up a cup with a calm familiar expression, slight relaxed smile,
 cold bright fluorescent store lighting, dark window visible in the background, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or brand logos on any packaging, no other people
@@ -70,7 +74,7 @@ cold bright fluorescent store lighting, dark window visible in the background, p
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] Seo Yeori walks slowly along a convenience store ramen shelf at night, scanning the options with a calm, unbothered expression, clearly a familiar routine. [4-8s] She picks up a cup of ramen, gives a small satisfied nod, and in a soft, matter-of-fact Korean voice-over says: "새벽 1시, 오늘도 편의점이에요." No one else speaks. No on-screen subtitle text or captions — subtitles are added in post.
+[0-4s] She walks slowly along a convenience store ramen shelf at night, scanning the options with a calm, unbothered expression, clearly a familiar routine. [4-8s] She picks up a cup of ramen and gives a small satisfied nod, mouth closed, not speaking. NO dialogue, NO lip movement — this is a silent beat; the Korean narration ("새벽 1시, 오늘도 편의점이에요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -93,7 +97,7 @@ CT: YEORI
 BEAT: 전개
 오디오:
   BGM: 잔잔한 로파이 야간 비트 (이어서)
-  음성: 여리 — 편안하고 느긋한 톤
+  음성: 여리 — 편안하고 느긋한 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
   효과음: 온수기 물 따르는 소리, 타이머 설정음(짧게)
   앰비언스: 늦은 밤 편의점, 조용한 냉장고 모터음
 
@@ -112,14 +116,14 @@ NR(나레이션): 여긴 뜨거운 물도, 앉을 자리도 있어요.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM SHOT — same Seo Yeori, same face, same beige cardigan and pajama pants,
+MEDIUM SHOT — the same young Korean woman, same face, same beige cardigan and pajama pants,
 seated at a window-side two-person convenience store table at night, a cup of ramen with lid closed in front of her, setting a 3-minute timer on her phone, resting her chin on one hand with a relaxed cozy expression,
 cold fluorescent store lighting mixing with a faint warm reflection from the window, dark street visible outside the glass, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] She pours hot water from the self-serve station into the cup ramen and closes the lid. [4-8s] She sits down at the window-side table, sets a timer on her phone, rests her chin on her hand, relaxed, and in a soft Korean voice-over says: "여긴 뜨거운 물도, 앉을 자리도 있어요." No on-screen subtitle text or captions.
+[0-4s] She pours hot water from the self-serve station into the cup ramen and closes the lid. [4-8s] She sits down at the window-side table, sets a timer on her phone, and rests her chin on her hand with a relaxed expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration ("여긴 뜨거운 물도, 앉을 자리도 있어요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -161,7 +165,7 @@ NR(나레이션): 없음
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM CLOSE-UP — same Seo Yeori, same face, same beige cardigan,
+MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,
 still seated at the window-side convenience store table, cup ramen in front of her with the lid still closed, holding her phone on speakerphone near the table,
 caught off-guard expression shifting into a sheepish amused smile, as if just been found out,
 cold fluorescent store lighting, dark window behind her, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people
@@ -169,7 +173,7 @@ cold fluorescent store lighting, dark window behind her, photorealistic 8K cinem
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-2s] Her phone buzzes on the table; she picks it up and taps speakerphone. [2-5s] A friend's voice (Jia, off-screen, slightly tinny speakerphone audio) says in Korean, playful and confident: "너 또 편의점이지?" — Yeori's expression freezes, caught. [5-8s] Yeori breaks into a sheepish, amused laugh and replies in Korean, casual tone (반말, close friend): "…어떻게 알았어?" Only Yeori is visible on screen; Jia is heard only through the phone speaker, never seen. No on-screen subtitle text or captions.
+[0-2s] Her phone buzzes on the table; she picks it up and taps speakerphone. [2-5s] A close friend's voice (off-screen, slightly tinny speakerphone audio) says in Korean, playful and confident: "너 또 편의점이지?" — her expression freezes, caught. [5-8s] She breaks into a sheepish, amused laugh and replies in Korean, casual tone (반말, close friend): "…어떻게 알았어?" Only she is visible on screen; the caller is heard only through the phone speaker, never seen. No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -192,7 +196,7 @@ CT: YEORI
 BEAT: 결말
 오디오:
   BGM: 로파이 비트 → 4~6초 지점에서 2초간 완전 정지(여운) → 6초부터 다시 낮게 흐르다 엔딩카드에서 페이드아웃
-  음성: 여리 — 잔잔하고 진심 어린 톤
+  음성: 여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
   효과음: 라면 먹는 소리(아주 자연스럽게, 과하지 않게)
   앰비언스: 늦은 밤 편의점, 조용한 냉장고 모터음(정적 구간엔 이 소리만)
 
@@ -211,14 +215,14 @@ NR(나레이션): 야식은 후회해도, 이 3분은 후회 안 해요.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM CLOSE-UP — same Seo Yeori, same face, same beige cardigan,
+MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,
 eating steaming cup ramen with chopsticks at the window-side table, warm steam rising and softly backlit by the fluorescent light, content small smile, slightly tired but genuinely happy expression,
 dark window beside her reflecting faint store light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] She takes a bite of the steaming ramen with chopsticks, steam rising, a small content smile. [4-6s] She pauses, chopsticks resting, gazing quietly out the dark window — no sound but faint ambient hum, a held breath of stillness. [6-8s] She looks back to camera and says softly in Korean: "야식은 후회해도, 이 3분은 후회 안 해요." No on-screen subtitle text or captions.
+[0-4s] She takes a bite of the steaming ramen with chopsticks, steam rising, a small content smile. [4-6s] She pauses, chopsticks resting, gazing quietly out the dark window — no sound but faint ambient hum, a held breath of stillness. [6-8s] She looks back toward camera with a soft content expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration ("야식은 후회해도, 이 3분은 후회 안 해요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
 ================================================================
 
 
@@ -241,3 +245,6 @@ JP: 韓国のコンビニは深夜1時でも"レストラン"。お湯も席も�
 - AI 라벨 부착 확인(게시 시)
 - 룰셋: 간판/포장지 글자 흐리게, 배경 인물 최소화
 - 지아 목소리 TTS만 필요 — 얼굴 이미지 생성 불필요(비용 절감)
+- 나레이션 3곳(CUT1·2·4) 전부 04_making 단계에서 TTS 별도 생성 필요 — Flow 생성본엔 음성 미포함.
+  구간 길이에 맞춰 넣을 때 LF_T01 발음오류 수정과 동일한 방법(TTS 생성 → STT 단어 타임스탬프로 구간 측정 →
+  atempo로 속도 보정) 활용 가능

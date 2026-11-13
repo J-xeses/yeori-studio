@@ -12,6 +12,11 @@
   지아 등장: characters.json "jia" 참조(오벌 페이스, 다크브라운 아몬드 눈+윙드 아이라이너, 모브브라운 립,
   짧은 웨이브 블랙 보브+커튼뱅, 코 옆 모). 목소리 voiceId 5n5gqmaQi9Ewevrz7bOS(Sian - Tender, Calm & Clear).
   언어 설계: 모든 컷 한국어 자막(나레이션/대사) + 영어 부제 한 줄(EN). 캡션은 영/한/일 3단.
+  ※ 나레이션(NR) 주의: Flow 영상 생성 VP 프롬프트에는 나레이션을 "says/voice-over"로 절대 넣지 않는다 —
+  캐릭터가 나레이션 텍스트에 입모양으로 반응(대사처럼 처리)하는 오류가 과거 반복됨. 나레이션 구간은 VP에
+  "mouth closed, not speaking / NO dialogue, NO lip movement"로 명시하고, 실제 나레이션 오디오는
+  04_making 단계에서 TTS로 별도 생성해 타이밍만 맞춰 삽입한다(대사DL과 구분). CUT3의 실제 대사(DL)는 예외 —
+  입모양과 함께 Flow에서 그대로 생성.
 ================================================================
 EP.HEADER
 CHAR  : YEORI.BASE + JIA (characters.json jia, 두 번째 등장)
@@ -46,7 +51,7 @@ CT: YEORI
 BEAT: 훅
 오디오:
   BGM: 잔잔한 로파이 (0초부터)
-  음성: 여리 — 나른하고 담담한 톤
+  음성: 여리 — 나른하고 담담한 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
   효과음: 폰 알림음(짧게, 4초 지점)
   앰비언스: 조용한 저녁 거실
 
@@ -65,7 +70,7 @@ NR(나레이션): 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니�
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM CLOSE-UP — Seo Yeori, long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle,
+MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle,
 wearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired,
 looking down at her phone with a flat exhausted expression, warm indoor evening lighting,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people
@@ -73,7 +78,7 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible te
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] Seo Yeori sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look and says in a soft, matter-of-fact Korean voice-over: "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요." No on-screen subtitle text or captions.
+[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, blank expression. [4-8s] A notification pops up on her screen; she glances at it with a flat, puzzled look, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration ("한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -96,7 +101,7 @@ CT: YEORI
 BEAT: 전개
 오디오:
   BGM: 로파이 (이어서)
-  음성: 여리 — 설명하듯 차분한 톤(나레이션)
+  음성: 여리 — 설명하듯 차분한 톤(나레이션) — ※Flow 생성에는 미포함, 포스트 TTS로 별도 삽입. "아직… 왜?"도 음성 아닌 자막(타이핑) 처리
   효과음: 타이핑 소리(가볍게), 전송음
   앰비언스: 조용한 저녁 거실
 
@@ -115,7 +120,7 @@ NR(나레이션): 걱정된다는 뜻으로 건네는 말이에요.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM SHOT — same Seo Yeori, same face, same lounge t-shirt, barefoot,
+MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot,
 seated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting,
 puzzled thoughtful expression, slightly leaning forward,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people
@@ -123,7 +128,7 @@ photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible te
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-5s] Close on Yeori's hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, while a soft Korean voice-over says: "걱정된다는 뜻으로 건네는 말이에요." [5-8s] She types "아직… 왜?" and taps send. No on-screen subtitle text or captions — the reply text appears as an on-screen caption added in post.
+[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, silent, not speaking. NO dialogue, NO lip movement — the Korean narration ("걱정된다는 뜻으로 건네는 말이에요.") is added afterward as a separate voice-over in post-production, not generated here. [5-8s] She types a reply and taps send, still silent. No on-screen subtitle text or captions — both the narration and her typed reply ("아직… 왜?") are added as on-screen text/audio elements in post.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -166,14 +171,14 @@ NR(나레이션): 없음
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,
-Seo Yeori (right): long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,
-Jia (left): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, short wavy black bob with wispy curtain bangs, wearing a light ivory cardigan over a casual top and jeans, small shoulder bag, standing at the doorstep in the middle of taking off her shoes, holding up a cloth-wrapped lunchbox with a confident playful grin,
+The woman on the right: long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,
+The woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, short wavy black bob with wispy curtain bangs, wearing a light ivory cardigan over a casual top and jeans, small shoulder bag, standing at the doorstep in the middle of taking off her shoes, holding up a cloth-wrapped lunchbox with a confident playful grin,
 entryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-2s] The doorbell rings; Yeori opens the door. [2-5s] Jia(left) stands on the doorstep, already bending down to take off her shoes as she steps in, holding up a cloth-wrapped lunchbox, and says in Korean, confident and playful (반말, close friend): "그럴 줄 알았어. 일단 먹어." [5-8s] Yeori(right), still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): "…진짜 왔어?" No on-screen subtitle text or captions.
+[0-2s] The doorbell rings; the woman on the right opens the door. [2-5s] The woman on the left stands on the doorstep, already bending down to take off her shoes as she steps in, holding up a cloth-wrapped lunchbox, and says in Korean, confident and playful (반말, close friend): "그럴 줄 알았어. 일단 먹어." [5-8s] The woman on the right, still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): "…진짜 왔어?" No on-screen subtitle text or captions.
 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -196,7 +201,7 @@ CT: YEORI
 BEAT: 결말
 오디오:
   BGM: 로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃
-  음성: 여리 — 잔잔하고 진심 어린 톤
+  음성: 여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입
   효과음: 도시락 뚜껑 여는 소리, 수저 소리(자연스럽게)
   앰비언스: 조용한 저녁 거실(정적 구간엔 거의 무음)
 
@@ -216,14 +221,14 @@ NR(나레이션): 밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에�
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — same two young Korean women, same faces, sitting together on the living room floor/low table in the evening,
-Seo Yeori (right): same lounge t-shirt, barefoot, warm genuine smile, Jia (left): same ivory cardigan, warm genuine smile,
+The woman on the right: same lounge t-shirt, barefoot, warm genuine smile. The woman on the left: same ivory cardigan, warm genuine smile,
 a cloth-wrapped lunchbox opened on the table between them with simple home-style side dishes, both eating together with chopsticks, warm cozy indoor lighting,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 VP (영상 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] Yeori looks to camera and says softly in Korean: "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요." No on-screen subtitle text or captions.
+[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration ("밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions.
 ================================================================
 
 
@@ -244,3 +249,6 @@ JP: 韓国では「ご飯食べた?」(パブ モゴッソ?)が「あなたの�
 - 룰셋: 집 장면 맨발 확인(여리), 신발 벗는 동작 디테일 살리기(지아)
 - 지아 실제 얼굴 등장 — characters.json jia 레퍼런스 이미지(jia-face.jpg/jia-closeup.jpg) 생성 시 반드시 참조
 - 엔딩 A는 ①(IG_R09)과 동일 — 지아 등장 자체의 영향만 보기 위해 변수 최소화
+- 나레이션 3곳(CUT1·2·4) 전부 04_making 단계에서 TTS 별도 생성 필요 — Flow 생성본엔 음성 미포함.
+  CUT2의 "아직… 왜?"도 음성이 아니라 타이핑 자막으로 처리(①과 동일 원칙).
+  구간 길이는 LF_T01 발음오류 수정과 동일한 방법(TTS 생성 → STT 단어 타임스탬프로 구간 측정 → atempo 속도 보정) 활용 가능

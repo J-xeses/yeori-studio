@@ -34,7 +34,7 @@ CT: GRAPHIC
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM SHOT — Seo Yeori, long wavy dark brown hair falling naturally, natural skin texture on right cheek very subtle,
+MEDIUM SHOT — a young Korean woman in her early 20s, long wavy dark brown hair falling naturally, natural skin texture on right cheek very subtle,
 casual daily outfit (soft knit top), sitting by a sunlit window in a cafe, warm natural daylight, bright friendly smile looking just off-camera,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, plenty of clean negative space in the upper third for a title overlay, no legible text or logos, no other people
 
