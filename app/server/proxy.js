@@ -41,6 +41,7 @@ import { ensureDialogueInVP, buildSegClipPrompt, splitCaptionString, isCpEmpty, 
 import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import { generateThumbnailHooks } from './lib/thumbnailAi.js'
+import { generateActionCopy } from './lib/ytActionCopy.js'
 import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
 import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
 import { getWaveformPeaks } from './lib/waveform.js'
@@ -6570,6 +6571,18 @@ app.post('/api/thumbnail-ai-copy', async (req, res) => {
   const { title, scriptSummary, platform, currentText } = req.body || {}
   try {
     const result = await generateThumbnailHooks(CODE_ROOT, { title, scriptSummary, platform, currentText })
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── POST /api/yt-action-copy — 유튜브 운영실 "조치 가이드"의 에피소드별 실제 입력문구 생성
+// (고정댓글·설명 첫문장·태그5개·시의성 키워드). Gemini 사용, 키 없거나 실패 시 알고리즘 폴백 ──
+app.post('/api/yt-action-copy', async (req, res) => {
+  const { title, scriptSummary, channelKeywords } = req.body || {}
+  try {
+    const result = await generateActionCopy(CODE_ROOT, { title, scriptSummary, channelKeywords })
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: err.message })

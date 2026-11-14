@@ -67,6 +67,10 @@ export function loadOps() {
     // planDate = 최초 계획일(한 번 정해지면 안 바뀜). 옛 항목은 현재 date 를 최초 계획으로 간주, 날짜 없으면 ''(UI에서 처음 날짜 입력 시 고정)
     if (typeof p.planDate !== 'string') p.planDate = p.date || ''
     if (!Array.isArray(p.statusHistory)) p.statusHistory = []
+    // 조치 가이드(2026-11-14): CTR은 Analytics API 미연동이라 스튜디오 "도달범위" 탭 확인 후 수동 입력,
+    // actionGuide는 "48시간 심폐소생" 체크리스트(챕터/재생목록/엔딩화면/고정댓글/태그/설명키워드/시의성) 완료 여부.
+    if (p.ctr === undefined) p.ctr = ''
+    if (!p.actionGuide || typeof p.actionGuide !== 'object') p.actionGuide = {}
   }
   syncEpisodesToPosts(ops)
   return ops
@@ -157,7 +161,8 @@ function syncEpisodesToPosts(ops) {
         id: code, code, title: ep.episode?.title || '', cutCount,
         type: isSF ? '숏폼(유튜브 전용)' : '숏폼(릴스 교차)',
         status: '기획', date: '', planDate: '', statusHistory: [], link: '',
-        views: '', watchHours: '', shortsViews: '', subsGained: '', likes: '', comments: '',
+        views: '', watchHours: '', shortsViews: '', subsGained: '', likes: '', comments: '', ctr: '',
+        actionGuide: {},
       }
       ops.posts.push(post)
     } else {

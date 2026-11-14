@@ -39,6 +39,13 @@
   .bph{display:flex;flex-wrap:wrap;gap:8px}
   .bph button{border:2px solid transparent;border-radius:8px;padding:0;width:180px;height:101px;overflow:hidden;cursor:pointer;background:#000}
   .bph button.on{border-color:var(--acc)}.bph img{width:100%;height:100%;object-fit:cover}
+  .agrow{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .agrow:last-child{border-bottom:none}
+  .agbtn{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:11px;cursor:pointer;color:var(--tx2);white-space:nowrap;flex:none}
+  .agbtn:hover{border-color:var(--tx2);color:var(--tx)}
+  .agcopybox{background:var(--panel2);border:1px dashed var(--line);border-radius:6px;padding:8px 10px;margin:-4px 0 8px;font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .agcopybox.err{color:var(--bad);border-color:var(--bad)}
+  .agcopybox>span:first-child{flex:1;min-width:160px}
   .chk.auto{opacity:.85}.chk .tag{font-size:10px;border-radius:8px;padding:1px 6px;margin-left:auto;white-space:nowrap}
   .chk .tag.auto{background:#1c3324;color:var(--ok);border:1px solid #2f5b3c}
   .chk .tag.manual{background:var(--panel2);color:var(--tx2);border:1px solid var(--line)}
@@ -248,6 +255,9 @@
   <h2>지표 입력(수동)</h2>
   <p class="muted">"게시" 상태인 콘텐츠만 표시됩니다. 유튜브 스튜디오 → 분석 탭에서 확인해 입력하세요.</p>
   <div class="kpis" id="ikpis"></div>
+  <h2>🩺 에피소드별 조치 가이드 <span class="muted">(실제 데이터 기준 — 상태·경과일·조회수·CTR로 지금 할 일을 구체적으로 제시)</span></h2>
+  <div class="card" style="margin-bottom:10px"><select id="agPost" style="min-width:280px"></select></div>
+  <div id="agBlock"></div>
   <h2>유형별 집계 <span class="muted">(게시된 콘텐츠 기준)</span></h2>
   <div class="card scroll"><table id="typeBreak"></table></div>
   <h2>그래프</h2>
@@ -589,14 +599,125 @@ function renderInsight() {
     }).join('') +
     '<tr><td><b>전체</b></td><td class="num"><b>' + posted.length + '</b></td>' + cols.map(c => '<td class="num"><b>' + sum(c[0]).toLocaleString() + '</b></td>').join('') + '</tr>'
   drawCharts()
-  $('mt').innerHTML = '<tr><th>콘텐츠</th><th class="num">조회수</th><th class="num">시청시간(h)</th><th class="num">쇼츠조회수</th><th class="num">구독전환</th><th class="num">좋아요</th><th class="num">댓글</th></tr>' + (posted.length ? posted.map(p =>
+  $('mt').innerHTML = '<tr><th>콘텐츠</th><th class="num">조회수</th><th class="num">시청시간(h)</th><th class="num">쇼츠조회수</th><th class="num">구독전환</th><th class="num">좋아요</th><th class="num">댓글</th><th class="num">CTR(%)</th></tr>' + (posted.length ? posted.map(p =>
     '<tr data-id="' + esc(p.id) + '"><td>' + esc(p.code) + ' ' + esc(p.title) + '</td>' +
-    ['views','watchHours','shortsViews','subsGained','likes','comments'].map(k => '<td><input type="number" min="0" data-m="' + k + '" value="' + esc(p[k] ?? '') + '" style="width:90px"></td>').join('') + '</tr>').join('')
-    : '<tr><td colspan="7" class="muted">아직 "게시" 상태인 콘텐츠가 없습니다 — 목표·대시보드 탭에서 상태를 "게시"로 바꾸면 여기 나타납니다.</td></tr>')
+    ['views','watchHours','shortsViews','subsGained','likes','comments'].map(k => '<td><input type="number" min="0" data-m="' + k + '" value="' + esc(p[k] ?? '') + '" style="width:90px"></td>').join('') +
+    '<td><input type="number" min="0" max="100" step="0.1" data-m="ctr" value="' + esc(p.ctr ?? '') + '" style="width:90px" placeholder="분석▸도달범위"></td></tr>').join('')
+    : '<tr><td colspan="8" class="muted">아직 "게시" 상태인 콘텐츠가 없습니다 — 목표·대시보드 탭에서 상태를 "게시"로 바꾸면 여기 나타납니다.</td></tr>')
   document.querySelectorAll('#mt tr[data-id]').forEach(tr => {
     const p = S.posts.find(x => x.id === tr.dataset.id)
     tr.querySelectorAll('[data-m]').forEach(el => el.onchange = () => { p[el.dataset.m] = el.value === '' ? '' : +el.value; touch(); renderInsight(); renderGoal() })
   })
+  renderActionGuide()
+}
+
+// ── 🩺 에피소드별 조치 가이드 ──────────────────────────────────────────
+// 2026-11-14: "48시간 후 조회수 멈춘 영상 즉시 조치" 영상의 체크리스트를 반영. 실제 데이터(상태·게시일·
+// 조회수·CTR)로 지금 뭘 해야 하는지 진단하고, 체크리스트 완료 여부는 post.actionGuide 에 영속 저장.
+const AG_CHECKS = [
+  { k: 'chapters', label: '챕터(타임스탬프) 등록 — 00:00부터 시작·3개 이상·간격 10초+·제목에 핵심 키워드' },
+  { k: 'playlist', label: '재생목록에 추가 + 재생목록 설명란 작성', copy: 'descOpening' },
+  { k: 'endscreen', label: '조회수 높은 인기 영상의 최종화면에 이 영상 연결' },
+  { k: 'pinnedComment', label: '핵심 키워드가 자연스럽게 나오는 질문형 고정 댓글 작성', copy: 'pinnedComment' },
+  { k: 'tags', label: 'rapidtags.io 에서 추천 태그 중 5개 선별해 태그란에 입력', copy: 'tags', ext: { label: 'rapidtags.io', url: 'https://rapidtags.io' } },
+  { k: 'descKeyword', label: '설명란 첫 문장에 핵심 키워드 포함', copy: 'descOpening' },
+  { k: 'timelyKeyword', label: '제목·썸네일에 시의성/계절 키워드 추가(예: "2026년 최신")', copy: 'timelyKeyword' },
+]
+function buildGuide(p) {
+  const age = p.date ? diffD(p.date, today) : null
+  const ctr = (p.ctr === '' || p.ctr == null) ? null : +p.ctr
+  const ag = p.actionGuide || (p.actionGuide = {})
+  const items = []
+  if (p.status === '게시') {
+    if (ctr != null) {
+      items.push(ctr < 5
+        ? { sev: 'bad', text: 'CTR ' + ctr + '% (5% 미만) — 제목·썸네일 교체 1순위. 아래 설명·시의성 키워드 항목의 ✨ 추천 문구 참고', open: 'analytics' }
+        : { sev: 'ok', text: 'CTR ' + ctr + '% — 5% 이상, 지금은 교체 불필요' })
+    } else {
+      items.push({ sev: 'warn', text: 'CTR 미입력 — 분석 ▸ 도달범위 탭에서 확인해 지표 입력 표에 채우면 교체 필요 여부가 자동 진단됩니다', open: 'analytics' })
+    }
+    if (age != null) {
+      if (age < 2) items.push({ sev: 'ok', text: '게시 ' + age + '일째 — 아직 48시간 이전, 알고리즘 1차 판단 구간(댓글 응대·공유에 집중)' })
+      else items.push({ sev: (n(p.views) < 1000 ? 'warn' : 'ok'), text: '게시 ' + age + '일째 · 조회수 ' + n(p.views).toLocaleString() + (n(p.views) < 1000 ? ' — 아래 체크리스트로 즉시조치 권장' : ' — 아래 체크리스트는 참고로만') })
+    }
+  } else {
+    items.push({ sev: 'warn', text: '아직 "' + p.status + '" 상태 — 게시 후 48시간 지점에서 이 가이드로 즉시조치 진행' })
+  }
+  AG_CHECKS.forEach(c => items.push({ sev: ag[c.k] ? 'ok' : 'todo', chk: c.k, text: c.label }))
+  return items
+}
+const SEVI = { bad: '🔴', warn: '🟡', ok: '🟢', todo: '⬜' }
+// 실제 설정 화면 바로가기 — 게시 링크에서 영상 ID를 뽑아 그 영상의 스튜디오 편집/분석 화면으로 직행.
+// 아직 게시 전(링크 없음)이면 채널의 영상 업로드/분석 화면으로 대체.
+function ytVideoId(p) { return (String(p.link || '').match(/(?:youtu\.be\/|v=|shorts\/)([\w-]{11})/) || [])[1] }
+function ytEditUrl(p) { const id = ytVideoId(p), h = S?.settings?.handle; return id ? ('https://studio.youtube.com/video/' + id + '/edit') : (h ? 'https://studio.youtube.com/channel/@' + encodeURIComponent(h) + '/videos/upload' : 'https://studio.youtube.com/') }
+function ytAnalyticsUrl(p) { const id = ytVideoId(p), h = S?.settings?.handle; return id ? ('https://studio.youtube.com/video/' + id + '/analytics/tab-reach_viewers/period-default') : (h ? 'https://studio.youtube.com/channel/@' + encodeURIComponent(h) + '/analytics' : 'https://studio.youtube.com/') }
+// 에피소드별 실제 입력문구(고정댓글·설명 첫문장·태그·시의성 키워드) — /api/yt-action-copy(Gemini, 키 없으면
+// 알고리즘 폴백). 체크리스트 여러 항목이 한 번의 생성 결과를 공유(필드별로 다른 란에 꽂힘).
+const agCopy = {}
+async function fetchAgCopy(p) {
+  agCopy[p.id] = { loading: true }
+  renderActionGuide()
+  try {
+    const r = await fetch('/api/yt-action-copy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: p.title, channelKeywords: S?.settings?.keywords || '' }) })
+    const j = await r.json()
+    if (j.error) throw new Error(j.error)
+    agCopy[p.id] = { loading: false, data: j }
+  } catch (e) { agCopy[p.id] = { loading: false, error: e.message } }
+  renderActionGuide()
+}
+function copyToClipboard(text) { navigator.clipboard?.writeText(text).catch(() => {}) }
+function agCopyVal(data, field) { return field === 'tags' ? (data.tags || []).join(', ') : (data[field] || '') }
+function agCopyBox(p, field) {
+  const c = agCopy[p.id]
+  if (!c) return ''
+  if (c.loading) return '<div class="agcopybox">✨ 생성 중…</div>'
+  if (c.error) return '<div class="agcopybox err">생성 실패: ' + esc(c.error) + '</div>'
+  if (!c.data) return ''
+  const val = agCopyVal(c.data, field)
+  return '<div class="agcopybox"><span>' + esc(val) + '</span>' +
+    '<button class="agbtn" data-agcopytext="' + esc(val) + '">📋 복사</button>' +
+    '<button class="agbtn" data-agregen="1">🔄 재생성</button>' +
+    (c.data.source === 'algorithmic' ? '<span class="muted" style="font-size:11px">(Gemini 키 없어 템플릿 생성)</span>' : '') + '</div>'
+}
+function agChkRow(p, it, cfg) {
+  const openBtn = '<button class="agbtn" data-agopen="1" title="유튜브 스튜디오에서 이 영상의 실제 설정 화면 열기">↗ 설정 열기</button>'
+  const extBtn = cfg.ext ? '<button class="agbtn" data-agext="' + esc(cfg.ext.url) + '" title="' + esc(cfg.ext.label) + ' 열기">🔗 ' + esc(cfg.ext.label) + '</button>' : ''
+  const copyBtn = cfg.copy ? '<button class="agbtn" data-agcopy="1" title="이 에피소드 제목에 맞는 문구 생성">✨ 추천 문구</button>' : ''
+  return '<div class="chk"><input type="checkbox" id="ag_' + it.chk + '"' + (it.sev === 'ok' ? ' checked' : '') + '>' +
+    '<label for="ag_' + it.chk + '" style="flex:1">' + esc(it.text) + '</label>' + openBtn + extBtn + copyBtn + '</div>' +
+    (cfg.copy ? agCopyBox(p, cfg.copy) : '')
+}
+function renderActionGuide() {
+  const sel = $('agPost')
+  const opts = S.posts.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  const keep = sel.value
+  sel.innerHTML = opts.map(p => '<option value="' + esc(p.id) + '">' + esc(p.code) + ' ' + esc(p.title || '(제목 없음)') + ' · ' + esc(p.status) + '</option>').join('')
+  if (keep && opts.some(p => p.id === keep)) sel.value = keep
+  sel.onchange = renderActionGuide
+  const p = opts.find(x => x.id === sel.value) || opts[0]
+  if (!p) { $('agBlock').innerHTML = '<p class="muted">등록된 에피소드가 없습니다.</p>'; return }
+  const items = buildGuide(p)
+  const doneN = AG_CHECKS.filter(c => (p.actionGuide || {})[c.k]).length
+  const noLink = !ytVideoId(p)
+  $('agBlock').innerHTML = '<div class="card">' +
+    '<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><b>' + esc(p.code) + '</b><span class="muted">' + esc(p.title || '') + '</span>' +
+    '<span class="st" style="margin-left:auto;border:1px solid ' + STC[p.status] + '">' + esc(p.status) + '</span></div>' +
+    (noLink ? '<p class="muted" style="margin:0 0 10px">⚠️ 게시 링크가 아직 없어 "설정 열기"는 채널 업로드/분석 화면으로 대신 연결됩니다. 링크를 채우면 이 영상으로 바로 이동합니다.</p>' : '') +
+    items.map(it => it.chk
+      ? agChkRow(p, it, AG_CHECKS.find(c => c.k === it.chk))
+      : ('<div class="agrow"><span>' + SEVI[it.sev] + '</span><span style="flex:1">' + esc(it.text) + '</span>' +
+         (it.open ? '<button class="agbtn" data-agopenkey="' + it.open + '">↗ 분석 열기</button>' : '') + '</div>')
+    ).join('') +
+    '<p class="muted" style="margin-top:10px">체크리스트 완료 ' + doneN + ' / ' + AG_CHECKS.length + '건</p>' +
+    '</div>'
+  AG_CHECKS.forEach(c => { const el = $('ag_' + c.k); if (el) el.onchange = () => { (p.actionGuide = p.actionGuide || {})[c.k] = el.checked; touch(); renderActionGuide() } })
+  document.querySelectorAll('#agBlock [data-agopen]').forEach(b => b.onclick = () => openB({ target: 'url', url: ytEditUrl(p) }))
+  document.querySelectorAll('#agBlock [data-agopenkey]').forEach(b => b.onclick = () => openB({ target: 'url', url: b.dataset.agopenkey === 'analytics' ? ytAnalyticsUrl(p) : ytEditUrl(p) }))
+  document.querySelectorAll('#agBlock [data-agext]').forEach(b => b.onclick = () => openB({ target: 'url', url: b.dataset.agext }))
+  document.querySelectorAll('#agBlock [data-agcopy]').forEach(b => b.onclick = () => { if (!agCopy[p.id]) fetchAgCopy(p) })
+  document.querySelectorAll('#agBlock [data-agregen]').forEach(b => b.onclick = () => fetchAgCopy(p))
+  document.querySelectorAll('#agBlock [data-agcopytext]').forEach(b => b.onclick = () => copyToClipboard(b.dataset.agcopytext))
 }
 
 // ── 실시간 채널 현황 (참고 상황판 레이아웃 — API 연동 전엔 틀만) ──
