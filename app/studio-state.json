@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12436,6 +12436,117 @@
           }
         }
       }
+    },
+    "ep_1794659750628": {
+      "id": "ep_1794659750628",
+      "episode": {
+        "number": 1003,
+        "title": "",
+        "location": "카페",
+        "mood": "감성",
+        "cutCount": 7,
+        "contentType": "IG_R",
+        "topicCode": "PSY",
+        "scnCode": "DOC",
+        "instaNum": "",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "code": "IG_R09"
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        },
+        {
+          "id": "cut-5",
+          "no": 5,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        },
+        {
+          "id": "cut-6",
+          "no": 6,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        },
+        {
+          "id": "cut-7",
+          "no": 7,
+          "scene": "",
+          "action": "",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "",
+          "imagePrompt": "",
+          "duration": 5,
+          "cutType": "YEORI",
+          "cutMark": "NORMAL"
+        }
+      ],
+      "scriptRaw": "",
+      "createdAt": "2026-11-14T12:35:50.628Z"
     }
   },
   "episode": {
