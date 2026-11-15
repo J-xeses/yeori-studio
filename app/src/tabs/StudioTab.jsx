@@ -65,6 +65,11 @@ const CHECKLIST_ITEMS = [
   { key: 'shot',       group: '연출', label: '샷유형(SH)',          weight: 2, targetKey: 'sh' },
   { key: 'camera',     group: '연출', label: '카메라(CA)',          weight: 2, targetKey: 'ca' },
   { key: 'background', group: '연출', label: '배경(SP)',            weight: 2, targetKey: 'sp' },
+  // 2026-11-15 추가: IG_R09 CUT2 A/B 실측 판정 중 발견 — 같은 장면 내 소품(음료수병 유무)·
+  // 손/방향 같은 디테일이 컷 간에 안 맞는 게 분위기·연출의도보다 더 실질적인 선택 기준이었음
+  // (성준님 직접 지적: 음료수병 단독 등장 + 폰 쥔 손 좌우 반전). 비중을 다른 항목보다 높게
+  // 둘지는 아직 판단 이르다고 보셔서, 일단 다른 연출 항목과 동일한 가중치로만 반영.
+  { key: 'propContinuity', group: '연출', label: '소품/장면 연속성',   weight: 2 },
   { key: 'trend',      group: '연출', label: '트렌드 반영',         weight: 2 },
 ]
 const SCORE_LEVELS = [
@@ -128,6 +133,13 @@ async function generateImageWithGemini(prompt, apiKey) {
   if (!data.success) throw new Error(data.error || '이미지 생성 실패')
 
   return `data:${data.mimeType};base64,${data.imageData}`
+}
+
+// 비교 슬롯(작은 고정 박스)용 축소본 URL — .../02_images/cut_NN_a.jpg?t=.. → .../02_images/_thumb/cut_NN_a.jpg?t=..
+// 서버가 못 만들었으면(옛 이미지, ffmpeg 실패 등) <img onError>가 원본 url로 되돌린다.
+function thumbUrl(url) {
+  const i = url.lastIndexOf('/')
+  return i === -1 ? url : `${url.slice(0, i)}/_thumb${url.slice(i)}`
 }
 
 export default function StudioTab() {
@@ -1030,7 +1042,7 @@ export default function StudioTab() {
                         }
                       }}
                     >
-                      <img src={url} alt="" />
+                      <img src={thumbUrl(url)} onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = url }} alt="" />
                       <span className={s.compareLetter}>{String.fromCharCode(97 + idx).toUpperCase()}</span>
                       <div className={s.ratioToggle} onClick={e => e.stopPropagation()}>
                         {['9:16', '16:9'].map(r => (

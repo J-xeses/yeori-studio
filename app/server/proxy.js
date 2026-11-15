@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-import { spawn, execSync, execFileSync } from 'child_process'
+import { spawn, spawnSync, execSync, execFileSync } from 'child_process'
 import { createWriteStream } from 'fs'
 import fs from 'fs'
 import os from 'os'
@@ -2108,6 +2108,7 @@ app.post('/api/upload-cut-image', (req, res) => {
     if (!buf.length) return res.status(400).json({ error: '빈 파일' })
     try {
       fs.writeFileSync(destPath, buf)
+      ensureThumbnail(dir, path.basename(destPath))
       const urlPrefix = mp.toMediaUrl(dir)
       res.json({ success: true, file: path.basename(destPath), slot, url: `${urlPrefix}/${path.basename(destPath)}` })
     } catch (e) {
@@ -2530,6 +2531,22 @@ app.post('/api/characters/:id/analyze', async (req, res) => {
 // ── 컷 1개 이미지 생성 (Nano Banana) — studio-run-g2 루프와 genline 생성 잡이 공유하는 코어 ──
 // ep: 스튜디오 상태의 에피소드 객체, cut: 그 컷. apiKey=gemini. promptOverride 있으면 그걸 씀
 // (genline 현장 재생성: 조정된 IP 프롬프트). 파일은 cut_NN_a.jpg 로 저장(기존 있으면 _b, _c...).
+// ── 컷 이미지 미리보기용 축소본(_thumb/) 생성 (2026-11-15) ──
+// Studio 탭 비교 슬롯은 작은 고정 박스(수백px)인데 원본이 1536x2752까지 커지면서 축소율이
+// 커져 object-fit:cover 축소 시 디테일 많은 배경(편의점 진열대 등)에서 앨리어싱이 두드러지는
+// 문제가 실측됨(성준님 스크린샷 확인). 화면엔 이 축소본을, 실제 생성/합성엔 원본을 그대로 쓴다.
+// ffmpeg는 이미 이 프로젝트 전역에서 PATH로 쓰고 있어 추가 설치 없음. 실패해도(ffmpeg 없음 등)
+// 원본 서빙으로 조용히 폴백되므로(프런트 onError) 하드 에러를 던지지 않는다.
+function ensureThumbnail(imgDir, filename) {
+  try {
+    const thumbDir = path.join(imgDir, '_thumb')
+    fs.mkdirSync(thumbDir, { recursive: true })
+    const src = path.join(imgDir, filename)
+    const dst = path.join(thumbDir, filename)
+    spawnSync('ffmpeg', ['-y', '-i', src, '-vf', "scale='min(800,iw)':-2", '-q:v', '4', dst], { stdio: 'ignore' })
+  } catch { /* 썸네일 실패해도 원본엔 지장 없음 — 프런트가 원본으로 폴백 */ }
+}
+
 async function genImageForCut(ep, cut, { apiKey, modelKey = NANO_BANANA_DEFAULT, promptOverride = '', keepExisting = false } = {}) {
   const epNum = ep.episode?.number
   const imgDir = mp.imagesDir(epNum)
@@ -2574,6 +2591,7 @@ async function genImageForCut(ep, cut, { apiKey, modelKey = NANO_BANANA_DEFAULT,
   }
   const file = `cut_${padded}_${slot}.jpg`
   fs.writeFileSync(path.join(imgDir, file), gen.buffer)
+  ensureThumbnail(imgDir, file)
   return {
     cutNo: cut.no, status: 'ok', file, model: gen.model,
     aspectRatio: aspectRatio || '(프롬프트 추론)', promptChars: prompt.length,
