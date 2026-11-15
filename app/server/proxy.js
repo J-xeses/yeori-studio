@@ -3445,11 +3445,15 @@ function openChromeWindow(url, profileDir) {
   child.unref()
 }
 // { target: youtube|pinterest|instagram|instagram-signup|url, query?, url? }
+// 2026-11-15: "채널 연결 오류" 버그 수정 — 인스타그램처럼 studio.youtube.com(로그인 필요한 영상 편집·
+// 분석 화면)도 기본 Chrome 프로필(서여리 계정 로그인 안 돼 있음)이 아니라 서여리로 로그인된 sub
+// 프로필로 열어야 한다. www.youtube.com 공개 페이지(채널 열기 등)는 로그인이 필요 없어 기본 프로필 그대로.
+const NEEDS_YEORI_PROFILE_HOSTS = /(^|\.)(instagram\.com|studio\.youtube\.com)$/i
 app.post('/api/open-browser', (req, res) => {
   const url = openBrowserUrl(req.body || {})
   if (!url) return res.status(400).json({ error: '열 수 없는 주소입니다(유튜브·핀터레스트·인스타·틱톡만 허용)' })
-  const isInstagram = /(^|\.)instagram\.com$/i.test(new URL(url).hostname)
-  try { openChromeWindow(url, isInstagram ? mp.flowProfileDir('sub') : undefined); res.json({ success: true, url }) }
+  const needsYeoriProfile = NEEDS_YEORI_PROFILE_HOSTS.test(new URL(url).hostname)
+  try { openChromeWindow(url, needsYeoriProfile ? mp.flowProfileDir('sub') : undefined); res.json({ success: true, url }) }
   catch (err) { res.status(err.statusCode || 500).json({ error: err.message }) }
 })
 // 기존 메이킹 탭 호환 — 유튜브 검색 창
