@@ -153,37 +153,36 @@ export default function StudioTab() {
   const [flowRunning, setFlowRunning] = useState(false)
   const [flowLogs, setFlowLogs] = useState([])
   const [flowDone, setFlowDone] = useState(false)
-  // ── Flow 이미지 생성(신규, 2026-09-22) — 위 flowRunning/runFlowForCut(옛 puppeteer 자동화, DEPRECATED)와는
-  // 별개. scripts/flow-image.js: Nano Banana 2 "소재" 모드로 서여리 얼굴+의상 레퍼런스를 붙여 컷당 2장 생성,
-  // 02_images/cut_NN_<다음 빈 슬롯>.jpg 저장. 결과는 /api/scan-images 로 다시 읽어와 이 탭의 이미지 목록에 반영.
-  const [flowImgBusy, setFlowImgBusy] = useState({})   // cut.id → true
-  const [flowImgMsg, setFlowImgMsg] = useState({})     // cut.id → 진행 메시지
-  // 2026-10-15: 서브 구글 계정 Flow(start_gen.bat이 포트 9223에 띄움) 추가 — main/sub 전부
-  // 독립된 Chrome·일일 크레딧이라 동시에 쓸 수 있다. 기본은 main, 드롭다운으로 전환.
-  const [flowProfile, setFlowProfile] = useState('main')
-  const runFlowImageForCut = async (cut) => {
-    if (!cut.imagePrompt?.trim()) { alert(`CUT ${cut.no} 프롬프트가 없어요!`); return }
-    setFlowImgBusy(p => ({ ...p, [cut.id]: true }))
-    setFlowImgMsg(p => ({ ...p, [cut.id]: '요청 중…' }))
+  // ── 컷별 이미지 생성(2026-11-15 재정비) — 과거의 "🤖 자동 생성"(캐릭터 레퍼런스 없는 /api/gemini
+  // 단순 호출)과 "⚡ Flow로 생성"(Flow 웹 브라우저 자동화, DOM 변화에 계속 깨짐) 두 버튼을 하나로
+  // 통합. /api/genline/generate(= genImageForCut, Gemini API 직접 호출)를 쓴다 — 브라우저 자동화가
+  // 전혀 없고, CH 필드로 캐릭터 얼굴 레퍼런스를 자동 첨부해 일관성을 유지한다. 결제 활성화된
+  // Gemini API 키가 studio-secrets.json에 필요(이미지 모델은 무료 티어가 없음, IG_R09 CUT2~4 실측
+  // 완료). alert()는 쓰지 않는다 — 네이티브 다이얼로그가 화면을 멈추는 문제가 반복 발견됨, 인라인
+  // 메시지(imgGenMsg)로만 안내.
+  const [imgGenBusy, setImgGenBusy] = useState({})   // cut.id → true
+  const [imgGenMsg, setImgGenMsg] = useState({})     // cut.id → 진행/결과 메시지
+  const generateImageForCut = async (cut) => {
+    if (!cut.imagePrompt?.trim()) { setImgGenMsg(p => ({ ...p, [cut.id]: '❌ 프롬프트가 없습니다' })); return }
+    setImgGenBusy(p => ({ ...p, [cut.id]: true }))
+    setImgGenMsg(p => ({ ...p, [cut.id]: '요청 중…' }))
     try {
-      const r = await fetch('http://localhost:3001/api/flow/image', {
+      const r = await fetch('http://localhost:3001/api/genline/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ episodeCode, cutNos: [cut.no], count: 2, profile: flowProfile }),
+        body: JSON.stringify({ episodeId: state.activeEpisodeId, cutNos: [cut.no], kind: 'image', keepExisting: true }),
       })
       const d = await r.json()
-      if (!r.ok || !d.ok) throw new Error(d.error || 'Flow 이미지 요청 실패')
+      if (!r.ok || !d.ok) throw new Error(d.error || '이미지 생성 요청 실패')
       const jobId = d.jobId
       let done = false
       while (!done) {
-        await new Promise(res => setTimeout(res, 3000))
-        const jr = await fetch(`http://localhost:3001/api/flow/job/${jobId}`)
+        await new Promise(res => setTimeout(res, 2000))
+        const jr = await fetch(`http://localhost:3001/api/genline/job/${jobId}`)
         const jd = await jr.json()
-        const last = (jd.steps || [])[jd.steps.length - 1]
-        if (last) setFlowImgMsg(p => ({ ...p, [cut.id]: last.msg }))
-        if (jd.state === 'done') { done = true }
-        else if (jd.state === 'failed' || jd.state === 'cancelled') throw new Error(jd.error || 'Flow 작업 실패')
+        if (!jd.ok) throw new Error(jd.error || '작업 조회 실패')
+        if (!jd.running) done = true
       }
-      // 새로 저장된 파일만 이 컷에 조용히 반영(전체 알림 없이)
+      // 새로 저장된 파일만 이 컷에 조용히 반영(알림 없이)
       const sr = await fetch(`http://localhost:3001/api/scan-images?ep=${state.episode.number}`)
       const sd = await sr.json()
       const mine = (sd.images || []).filter(img => img.cutNo === cut.no)
@@ -192,12 +191,11 @@ export default function StudioTab() {
         const add = mine.map(img => `http://localhost:3001${img.url}?t=${Date.now()}`).filter(u => !existing.some(e => e.split('?')[0] === u.split('?')[0]))
         return add.length ? { ...p, [cut.id]: [...existing, ...add] } : p
       })
-      setFlowImgMsg(p => ({ ...p, [cut.id]: `✅ 완료(${mine.length}장)` }))
+      setImgGenMsg(p => ({ ...p, [cut.id]: `✅ 완료(${mine.length}장)` }))
     } catch (e) {
-      setFlowImgMsg(p => ({ ...p, [cut.id]: `❌ ${e.message}` }))
-      alert(`CUT ${cut.no} Flow 이미지 생성 실패: ${e.message}`)
+      setImgGenMsg(p => ({ ...p, [cut.id]: `❌ ${e.message}` }))
     } finally {
-      setFlowImgBusy(p => ({ ...p, [cut.id]: false }))
+      setImgGenBusy(p => ({ ...p, [cut.id]: false }))
     }
   }
   const [proxyOk, setProxyOk] = useState(null) // null=checking, true=ok, false=error
@@ -816,14 +814,6 @@ export default function StudioTab() {
         tools={TOOLS}
         activeTool={selected}
         onToolChange={setSelected}
-        right={
-          <select value={flowProfile} onChange={e => setFlowProfile(e.target.value)}
-            title="Flow 계정 선택 — start_gen.bat이 포트 9223에 띄운 서브 계정 Chrome을 쓰려면 '서브 계정'으로"
-            style={{ fontSize: 11, background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 4, padding: '4px 6px' }}>
-            <option value="main">Flow: 메인 계정</option>
-            <option value="sub">Flow: 서브 계정</option>
-          </select>
-        }
         actions={[
           {
             key: 'open-folder', label: '📁 폴더 열기', title: '이 에피소드 폴더를 탐색기로 열기(업로드 현황 확인)',
@@ -1117,28 +1107,18 @@ export default function StudioTab() {
                   + 이미지 추가
                 </div>
               )}
-              {apiKeys.gemini && cut.imagePrompt && !images[cut.id]?.length && (
-                <button
-                  onClick={() => generateSingleImage(cut)}
-                  disabled={generating[cut.id]}
-                  className={s.autoGenBtn}
-                >
-                  {generating[cut.id] ? '⟳ 생성 중...' : '🤖 자동 생성'}
-                </button>
-              )}
               {cut.imagePrompt && (
                 <button
-                  onClick={() => runFlowImageForCut(cut)}
-                  disabled={flowImgBusy[cut.id]}
+                  onClick={() => generateImageForCut(cut)}
+                  disabled={imgGenBusy[cut.id]}
                   className={s.autoGenBtn}
-                  title="Google Flow(Nano Banana 2)로 서여리 얼굴·의상 레퍼런스를 붙여 2장 생성 — 하루 무료 한도 내"
-                  style={{ marginTop: 6 }}
+                  title="Gemini API(Nano Banana, 캐릭터 얼굴 레퍼런스 자동 첨부)로 이미지 생성 — 결제 활성화된 GEMINI API 키 필요"
                 >
-                  {flowImgBusy[cut.id] ? '⏳ Flow 생성 중…' : '⚡ Flow로 생성'}
+                  {imgGenBusy[cut.id] ? '⏳ 생성 중…' : '🤖 이미지 생성'}
                 </button>
               )}
-              {flowImgMsg[cut.id] && (
-                <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 4, wordBreak: 'break-all' }}>{flowImgMsg[cut.id]}</div>
+              {imgGenMsg[cut.id] && (
+                <div style={{ fontSize: 10.5, color: 'var(--text-3)', marginTop: 4, wordBreak: 'break-all' }}>{imgGenMsg[cut.id]}</div>
               )}
             </div>
 
