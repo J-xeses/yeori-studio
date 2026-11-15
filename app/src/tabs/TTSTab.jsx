@@ -1278,7 +1278,13 @@ export default function TTSTab() {
                   </button>
                   {saving[activeKey] && <span className={s.savingBadge}>💾 저장 중…</span>}
                   {saved[activeKey]  && <span className={s.savedBadge}>✅ MP3 저장됨</span>}
-                  {!g3Confirmed[cut.id] ? (
+                  {/* 2026-11-15: 나레이션/대사가 Flow·Veo3 영상 자체에 이미 들어있는 컷(cut.voiceSource==='video')은
+                      G3(TTS) 자체가 해당 없음 — 승인 버튼/완료 태그 대신 비활성 배지만 보여준다. */}
+                  {cut.voiceSource === 'video' ? (
+                    <span className={s.g3Tag} style={{ opacity: 0.45, filter: 'grayscale(1)' }} title="나레이션/대사가 영상 생성에 이미 포함됨 — TTS 불필요">
+                      G3 해당없음
+                    </span>
+                  ) : !g3Confirmed[cut.id] ? (
                     <button className={s.g3Btn} onClick={() => approveG3(cut.id, cut.no)}>
                       ✅ G3 승인
                     </button>

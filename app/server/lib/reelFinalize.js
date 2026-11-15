@@ -606,10 +606,26 @@ export async function finalizeReel(p) {
       }
     }
     d.skipNarrationMix = vtSkipNarrationMix
-    // 사진 시퀀스 컷의 자체 소리는 "컷 영상에 직접 합친 나레이션"뿐이다. 대본에 나레이션이 있어 아래에서
-    // TTS 음성을 믹스할 컷이면 그 소리는 버린다 — 안 그러면 옛 나레이션과 새 나레이션이 겹쳐 들린다
-    // (2026-10-07 R02 컷5: 정식 절차로 바꾼 뒤 컷을 다시 확정하지 않은 상태에서 실측).
-    d.dropOwnAudio = hasVoiceNarration(cut) && makingManifest[String(cut.no)]?.method === 'imgseq'
+    // 2026-11-15 수정(SF_E12 실측, 성준님 제보): dropOwnAudio가 "제작방식이 imgseq(사진시퀀스)인
+    // 컷만" 버렸는데, multi-clip-compose(Flow 원본 클립 concat) 등 다른 방식도 컷 자체 오디오에
+    // 나레이션이 이미 들어있을 수 있어 같은 2중 재생 위험이 있다(imgseq는 추정일 뿐, 실제 위험
+    // 신호가 아니었음). "이 컷에 나레이션 mp3를 실제로 믹스할 것인가"를 여기서 한 번만 계산해
+    // dropOwnAudio와 ③ 나레이션 믹스 단계가 같은 값(d.nrFile)을 공유하게 한다 — 두 곳에서 따로
+    // 계산하면(예전 방식) 조건이 어긋나 "버렸는데 안 채움"(무음) 또는 "안 버렸는데 채움"(2중) 둘
+    // 다 생길 수 있었다.
+    // 2026-11-15 추가: cut.voiceSource==='video' — Flow/Veo3 생성 영상 자체에 이미 음성(나레이션
+    // V.O. 또는 대사)이 들어있는 컷(오늘 IG_R09 CUT1 실측 성공). 이 컷은 G3 TTS를 아예 돌리지
+    // 않으므로(아래 getRunFlags 참고) 03_audio에 같은 번호 mp3가 남아있어도(예: 이전 시도 흔적)
+    // 믹스 대상이 아니다 — 컷 자체 오디오가 정답이라 dropOwnAudio도 절대 안 걸리게 한다.
+    d.needsNarration = !vtSkipNarrationMix && hasVoiceNarration(cut) && cut.voiceSource !== 'video'
+    if (d.needsNarration) {
+      const pad2 = String(cut.no).padStart(2, '0')
+      const hasDl = !!String(cut.dialogue || '').trim()
+      d.nrFileExpected = path.join(mp.audioDir(epNum), hasDl ? `cut_${pad2}_nr.mp3` : `cut_${pad2}.mp3`)
+      const candidates = [path.join(mp.audioDir(epNum), `cut_${pad2}_nr.mp3`), ...(hasDl ? [] : [path.join(mp.audioDir(epNum), `cut_${pad2}.mp3`)])]
+      d.nrFile = candidates.find((f) => fs.existsSync(f)) || null
+    }
+    d.dropOwnAudio = !!d.nrFile
     if (picked.derived) {
       if (d.caption) d.caption = null
       log(`컷 ${cut.no}: 메이킹 탭 ${picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본 사용(${path.basename(src)}) — 자막 번인 생략`)
@@ -784,22 +800,14 @@ export async function finalizeReel(p) {
 
   // 나레이션(NR) 음성 — G3 TTS 의 03_audio/cut_NN.mp3 를 그 컷 시작(+0.3초)에 얹는다. 대사(DL)는 영상(Flow) 자체 음성을
   // 쓰므로 여기서 섞지 않는다. 예전엔 이 단계가 없어 릴스 나레이션 TTS 를 만들어도 최종본에 안 들어갔다(2026-09-25).
+  // 2026-11-15: d.needsNarration/d.nrFile을 위(①)에서 이미 계산해뒀다 — dropOwnAudio와 반드시 같은
+  // 조건을 보게 하려고 여기서 다시 계산하지 않는다(SF_E12 2중 재생 수정과 같은 건).
   const narrNotes = []
   for (const d of decisions) {
-    const cut = (cuts || []).find((c) => Number(c.no) === Number(d.no))
-    // "(화면 자막) …" 은 한글 확인 블록에 적은 화면 글자 — 음성 나레이션이 아니다(IG_R05 에서 5컷 모두 오경고, 2026-09-25)
-    if (!hasVoiceNarration(cut)) continue
-    // 2026-11-09: 영상 탭이 이미 나레이션을 입힌 컷(d.skipNarrationMix, 위 소스 선택 블록)은
-    // 그 오디오가 src 자체에 이미 들어있다 — 여기서 또 섞으면 2중 삽입(버그A, SF_E02 실측).
-    if (d.skipNarrationMix) continue
-    // 대사+나레이션 컷은 G3 가 cut_NN_nr.mp3 로 따로 만든다. 대사 컷의 cut_NN.mp3 는 (예전) 대사 TTS 일 수 있어 쓰지 않는다.
-    const pad2 = String(d.no).padStart(2, '0')
-    const hasDl = !!String(cut?.dialogue || '').trim()
-    const nrFile = [path.join(mp.audioDir(epNum), `cut_${pad2}_nr.mp3`), ...(hasDl ? [] : [path.join(mp.audioDir(epNum), `cut_${pad2}.mp3`)])].find((f) => fs.existsSync(f))
-      || path.join(mp.audioDir(epNum), hasDl ? `cut_${pad2}_nr.mp3` : `cut_${pad2}.mp3`)
-    if (!fs.existsSync(nrFile)) { log(`⚠ 컷 ${d.no}: 나레이션 음성 없음(${path.basename(nrFile)}) — G3 필요`); continue }
+    if (!d.needsNarration) continue
+    if (!d.nrFile) { log(`⚠ 컷 ${d.no}: 나레이션 음성 없음(${path.basename(d.nrFileExpected)}) — G3 필요`); continue }
     const ms = Math.round((d.startSec + 0.3) * 1000)
-    sfxInputs.push('-i', nrFile)
+    sfxInputs.push('-i', d.nrFile)
     sfxFilters.push(`[${idx}:a]adelay=${ms}|${ms},volume=1.0[n${idx}]`)
     sfxLabels.push(`[n${idx}]`)
     narrNotes.push(`컷${d.no}`)

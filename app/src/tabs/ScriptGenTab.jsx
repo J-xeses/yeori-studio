@@ -95,25 +95,36 @@ function commitTimelinePair(dispatch, flushSave, cut, timeline, dur, idx, which,
 }
 
 function getRunFlags(cut) {
-  switch (cut.cutType || 'YEORI') {
-    case 'BROLL':
-      return { run_g2:true, run_g3:true, g3_track:'나레이션', run_g4:true, run_g5:true }
-    case 'PIP': {
-      const f = { run_g2:true, run_g3:true, g3_track:'대사', run_g4:true, run_g5:true }
-      const t = parseInt(cut.pipTarget)
-      if (!isNaN(t) && t > 0) f.pip_target = t
-      return f
+  const flags = (() => {
+    switch (cut.cutType || 'YEORI') {
+      case 'BROLL':
+        return { run_g2:true, run_g3:true, g3_track:'나레이션', run_g4:true, run_g5:true }
+      case 'PIP': {
+        const f = { run_g2:true, run_g3:true, g3_track:'대사', run_g4:true, run_g5:true }
+        const t = parseInt(cut.pipTarget)
+        if (!isNaN(t) && t > 0) f.pip_target = t
+        return f
+      }
+      case 'GRAPHIC': {
+        const f = { run_g2:false, run_g3:true, g3_track:'나레이션', run_g4:false, run_g5:true, g5_tool:'browser_record' }
+        if (cut.graphicTool) f.graphic_tool = cut.graphicTool
+        return f
+      }
+      case 'CAPCUT':
+        return { run_g2:false, run_g3:false, run_g4:false, run_g5:true, g5_tool:'capcut_only' }
+      default: // YEORI
+        return { run_g2:true, run_g3:true, g3_track:'대사', run_g4:true, g4_mode:'lipsync', run_g5:true }
     }
-    case 'GRAPHIC': {
-      const f = { run_g2:false, run_g3:true, g3_track:'나레이션', run_g4:false, run_g5:true, g5_tool:'browser_record' }
-      if (cut.graphicTool) f.graphic_tool = cut.graphicTool
-      return f
-    }
-    case 'CAPCUT':
-      return { run_g2:false, run_g3:false, run_g4:false, run_g5:true, g5_tool:'capcut_only' }
-    default: // YEORI
-      return { run_g2:true, run_g3:true, g3_track:'대사', run_g4:true, g4_mode:'lipsync', run_g5:true }
+  })()
+  // 2026-11-15 추가: cut.voiceSource==='video' — 나레이션/대사가 Flow·Veo3 생성 영상 자체에
+  // 이미 들어있는 컷(오늘 IG_R09 CUT1 V.O. 실측 성공, 성준님 지시: "G3 승인절차를 절대적이
+  // 아니라 해당할 때만 한정적으로"). 이 컷은 G3(TTS) 자체가 불필요 — 돌릴 필요도, 승인 받을
+  // 필요도 없다.
+  if (cut.voiceSource === 'video' && flags.run_g3) {
+    flags.run_g3 = false
+    flags.g3_skip_reason = 'video-voiceover'
   }
+  return flags
 }
 
 function cleanMarkdown(text) {

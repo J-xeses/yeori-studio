@@ -2123,11 +2123,95 @@
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-14T12:44:55.574Z"
+      "updatedAt": "2026-11-15T10:39:08.385Z",
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_03_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 1,
+            "mood": 2,
+            "shot": 2,
+            "camera": 1,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 88,
+          "note": "",
+          "scoredAt": "2026-11-15T10:39:06.638Z"
+        },
+        "1": {
+          "filename": "cut_03_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 97,
+          "note": "",
+          "scoredAt": "2026-11-15T10:39:06.638Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_03_b.jpg"
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-14T12:44:55.575Z"
+      "updatedAt": "2026-11-15T10:40:13.020Z",
+      "g2Checklist": {
+        "0": {
+          "filename": "cut_04_a.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 2,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 2,
+            "trend": 1
+          },
+          "total": 97,
+          "note": "",
+          "scoredAt": "2026-11-15T10:40:11.260Z"
+        },
+        "1": {
+          "filename": "cut_04_b.jpg",
+          "scores": {
+            "face": 2,
+            "outfit": 2,
+            "proportion": 2,
+            "hair": 2,
+            "action": 1,
+            "mood": 2,
+            "shot": 2,
+            "camera": 2,
+            "background": 2,
+            "propContinuity": 1,
+            "trend": 1
+          },
+          "total": 88,
+          "note": "",
+          "scoredAt": "2026-11-15T10:40:11.260Z"
+        }
+      },
+      "g2": true,
+      "selectedImage": "cut_04_a.jpg"
     }
   }
 }
