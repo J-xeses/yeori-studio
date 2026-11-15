@@ -688,6 +688,57 @@ https://claude.ai/code/artifact/47d3b3c1-b5ed-41d3-bb5f-3b27732fedeb
 
 \---
 
+### ⑬-4 나레이션·대사 영상 내장(V.O.) 생성 — G3 조건부 전환 [v1.4.7 신설 — 2026-11-15]
+
+**배경**: 지금까지 기본값은 "NR 컷은 인물 무발화(SILENT FILM) + ElevenLabs TTS 별도 삽입"이었다
+(⑬-2, §② 위). 그런데 ElevenLabs TTS가 상황별 톤·억양·뉘앙스를 일관되게 못 잡아서(성준님,
+2026-11-15) 미세조정을 아무리 해도 효과가 별로였다. 같은 날 실측으로, **Veo3에게 나레이션을
+"화면 밖 음성(V.O.)"이라고 명시해서 영상 생성 자체에 포함**시키면 훨씬 자연스러운 목소리가
+나오고, 캐릭터가 화면에서 입을 움직이지도 않는다(= 나레이션/대사 구분이 안 깨짐)는 걸
+IG_R09 CUT1·2·3·4 전부에서 확인했다. **이제 이게 기본값을 대체하는 게 아니라, 컷마다 고를 수
+있는 조건부 경로다** — 성준님 지시: "G3 승인절차를 절대적이 아니라, 해당할 때만 한정적으로."
+
+**적용 범위**: 나레이션(NR)뿐 아니라 **대사(DL)도 포함**한다 — CUT3(지아 전화 목소리, 화면
+미등장)도 같은 방식으로 성공(성준님 확정, 2026-11-15).
+
+**VP 작성 패턴(실측 성공 문구, IG_R09 CUT1·2·4 나레이션 / CUT3 대사)**:
+```
+...(시각 묘사)..., mouth closed, not speaking on camera.
+Add an off-screen voice-over narration (V.O. — she does not speak on camera,
+no lip movement, no mouth movement): a [톤 묘사] voice says in Korean: "[나레이션 원문]."
+No on-screen subtitle text or captions.
+```
+대사(목소리만 출연하는 조연, 예: 지아)는 "off-screen voice-over narration" 대신 전화기 너머
+목소리라는 설정을 그대로 쓰고, **나이대·톤·에너지를 구체적으로 적어 "생성 DNA"가 일관된
+목소리를 잡게 유도**한다(예: "a young woman in her early 20s with a bright, slightly
+high-pitched, energetic voice, playful and confident, teasing tone"). Flow/Veo3엔
+캐릭터별 음성을 등록하는 기능이 없음(2026-11-15 Flow "Characters" 패널 실측 확인 — 외모만
+등록 가능, 음성 등록 없음) — 그래서 매번 프롬프트에 묘사를 풀어써서 재현하는 수밖에 없다.
+
+**실측으로 걸린 함정 2가지:**
+- 숫자+단위가 한국어 시간 표기(예: "1시")면 한자어로 잘못 읽힘("1시"→"원시") — 프롬프트엔
+  숫자를 **풀어쓴 고유어**("한 시")로 직접 적을 것.
+- 의상이 컷 중간에 바뀌는 연속성 오류가 간헐적으로 발생 — VP 안에 "wearing the same
+  [의상] throughout", "outfit unchanged" 처럼 의상 유지를 명시적으로 반복해 완화.
+
+**이 경로를 쓰는 컷은 `cut.voiceSource = 'video'`로 표시한다** — 그러면:
+- `scripts/flow-submit.js`/`server/lib/reelFinalize.js`: 이 컷의 나레이션 TTS 믹스(`needsNarration`)와
+  컷 자체 오디오 제거(`dropOwnAudio`)를 **절대 건드리지 않음** — 영상 자체 오디오가 곧 정답이므로.
+- `src/tabs/ScriptGenTab.jsx`의 `getRunFlags()`: `run_g3`를 자동으로 `false`로 전환(`g3_skip_reason:
+  'video-voiceover'`) — G3(TTS) 자체가 불필요해짐.
+- `src/tabs/TTSTab.jsx`: "✅ G3 승인" 버튼/"G3 완료" 태그 대신 회색 비활성 **"G3 해당없음"** 배지로 표시.
+
+**체크리스트 추가**:
+```
+□ 발화 컷(NR/DL)을 V.O. 영상 내장 방식으로 생성했다면 cut.voiceSource='video' 설정
+□ VP에 "mouth closed, not speaking on camera" + "off-screen voice-over" 둘 다 명시
+□ 시간 숫자는 고유어로 풀어씀("1시"→"한 시")
+□ 의상 유지 문구를 VP 중간에 한 번 더 반복(연속성 오류 완화)
+□ 조연(목소리만 출연)도 나이대·톤·에너지를 구체적으로 묘사
+```
+
+\---
+
 ## 제작 철학 요약 (핵심 원칙)
 
 ```
@@ -748,4 +799,12 @@ v1.4.6 (2026-10-12) — ⑥ 신체비율 베이스 보강. `K-model proportions 
                      → 이미 실전 검증된 강한 버전(SF_E01 CUT3 등)으로 베이스 교체:
                      `1:8 head-to-body ratio, supermodel body proportions, model-like slim waist,
                      K-model proportions, small face, long legs, slender figure,`
+v1.4.7 (2026-11-15) — ⑬-4 나레이션·대사 영상 내장(V.O.) 생성 신설(사용자 지시: "ElevenLabs TTS가
+                     상황별 톤을 못 잡는다" → Veo3에 "off-screen voice-over"로 명시해 나레이션을
+                     영상 생성 자체에 포함시키는 방식으로 전환, IG_R09 CUT1~4 전부 실측 성공
+                     (대사 컷 CUT3의 조연 목소리도 포함). 숫자/시간 표기 오독("1시"→"원시")과
+                     의상 중간 변경 함정 기록. 기존 "NR 컷 무발화+TTS" 기본값은 유지하되, 이
+                     방식을 쓰는 컷은 cut.voiceSource='video'로 표시 — G3(TTS) 승인절차가
+                     절대적 필수에서 컷별 조건부로 전환됨(reelFinalize.js/getRunFlags/TTSTab 배지
+                     3곳 동시 수정). Flow 자체엔 캐릭터별 음성 등록 기능이 없음(실측 확인)도 기록.
 ```

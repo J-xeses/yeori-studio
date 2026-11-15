@@ -1258,6 +1258,19 @@ export default function TTSTab() {
               </button>
             </div>
 
+            {/* 2026-11-15: voiceSource==='video'인 컷은 합친 결과가 아예 없을 수 있어(TTS를 안
+                만드니까) 아래 "합친 결과" 블록(mergedUrls 조건부)만으로는 배지가 안 뜬다 —
+                독립적으로 여기서 바로 보여준다. */}
+            {cut.voiceSource === 'video' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--text-3)', margin: '4px 0' }}>
+                <span className={s.g3Tag} style={{ opacity: 0.45, filter: 'grayscale(1)' }}
+                  title="나레이션/대사가 Flow·Veo3 영상 생성 자체에 화면 밖 음성(V.O.)으로 이미 포함됨 — TTS 불필요(yeori_ruleset §⑬-4, 2026-11-15)">
+                  G3 해당없음
+                </span>
+                <span>나레이션/대사가 영상 생성에 이미 포함된 컷 — TTS 생성 불필요</span>
+              </div>
+            )}
+
             {/* 전체 합치기 버튼 */}
             <button className={s.mergeBtn}
               disabled={merging[activeKey] || !cutTracks.some(t => t.url)}

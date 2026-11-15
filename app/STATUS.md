@@ -1620,3 +1620,20 @@ TTSTab stale-closure 클립 소실(미수정), SRT 폴백 크로스에피소드 
 
 **남은 일(이 구간 기준)**: 수집함 화면 같이 확인(북마클릿 설치 등), 영상 탭 stale closure 수정의 실제 클릭 검증, 05_video 원본/번인 분리 후속 점검, 워크벤치 4갈래 후속, 부계정 트랙A 소스 방향 확정·트랙B 오디오/업로드, Vercel 배포 재개(11/30) 후 MCP 터널 재가동.
 
+
+
+---
+### 2026-11-15 (MCP 자동 기록)
+**IG_R09 — 나레이션·대사 영상 내장(V.O.) 생성 성공, 절차 재정립**
+
+기존 혼선 정리:
+- Flow 이미지 자동화 언어/모델 판정 버그 2건 수정(flowDriver.js)
+- 이미지 생성 기본 경로를 Flow 브라우저 자동화 → Gemini API 직접 호출(genImageForCut)로 전환, Studio 탭 버튼 통합("🤖 이미지 생성" 하나로)
+- SF_E12 최종본 음성 2중 합성 버그 수정(reelFinalize.js dropOwnAudio를 imgseq 전용 → 실제 나레이션 믹스 여부 기준으로 일반화)
+- 썸네일 과다 축소 앨리어싱 수정(_thumb/ 자동 생성)
+
+오늘 새로 확립한 절차(⑬-4, yeori_ruleset v1.4.7):
+- 나레이션/대사를 Veo3 생성 시 "off-screen voice-over"로 명시하면 ElevenLabs TTS보다 훨씬 자연스러운 목소리로 영상 자체에 포함 가능 — IG_R09 CUT1~4 전부 실측 성공(조연 지아 목소리 포함)
+- 함정: 숫자+시간 표기는 고유어로 풀어쓸 것("1시"→"한 시"), 의상 유지 문구 반복 필요
+- cut.voiceSource='video' 필드 신설 — 이 컷은 G3(TTS) 승인이 자동으로 해당없음 처리(getRunFlags/reelFinalize/TTSTab 배지 3곳 수정), 기존 'NR 컷 무발화+TTS' 기본값은 유지(조건부 선택지로 추가된 것)
+- Flow 자체엔 캐릭터별 음성 등록 기능 없음(Characters 패널 실측 확인, 외모만 가능)

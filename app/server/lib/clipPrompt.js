@@ -377,12 +377,22 @@ export function buildClipPrompt(cut, k, n) {
       }
     }
   } else if (isNarration) {
-    // 2026-11-08 성준님 실측(SF_E02 CUT3 Flow 생성) — "narration"/"voiceover"/"speak"/"mouth"
-    // 같은 단어를 구간별로 여러 번 반복해서 강조할수록(부정문이라도) Flow가 오히려 말을
-    // 지어내거나 입을 움직이는 역효과가 났다. 애초에 나레이션은 입모양과 무관(전체 구간
-    // 내내 입을 안 움직이면 됨)이라 구간을 나눌 이유가 없었다 — 타이밍 분기를 걷어내고
-    // 한 번만 짧게 지시한다.
-    if (!prompt.includes(SILENT_FILM_CUE)) prompt += `\n\n${SILENT_FILM_CUE}`
+    if (cut.voiceSource === 'video') {
+      // 2026-11-15 신설(yeori_ruleset §⑬-4, IG_R09 CUT1/2/4 실측 성공) — 나레이션을 ElevenLabs
+      // TTS로 후작업에서 입히지 않고, Flow/Veo3 생성 자체에 "화면 밖 음성(V.O.)"으로 내장하는
+      // 경로. 이 분기가 없으면 voiceSource==='video'인 컷도 그냥 SILENT_FILM_CUE만 붙어서
+      // 나레이션 자체가 영상에 전혀 안 들어간다(무음 클립) — 반드시 실제 나레이션 원문을 V.O.
+      // 지시문에 넣어야 Veo가 화면 밖 목소리로 그 문장을 말한다.
+      const nrText = String(cut.narration || '').trim()
+      prompt += `\n\nShe stays silent on camera throughout — mouth closed, no lip movement, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, natural voice says in Korean: "${nrText}". No on-screen subtitle text or captions.`
+    } else if (!prompt.includes(SILENT_FILM_CUE)) {
+      // 2026-11-08 성준님 실측(SF_E02 CUT3 Flow 생성) — "narration"/"voiceover"/"speak"/"mouth"
+      // 같은 단어를 구간별로 여러 번 반복해서 강조할수록(부정문이라도) Flow가 오히려 말을
+      // 지어내거나 입을 움직이는 역효과가 났다. 애초에 나레이션은 입모양과 무관(전체 구간
+      // 내내 입을 안 움직이면 됨)이라 구간을 나눌 이유가 없었다 — 타이밍 분기를 걷어내고
+      // 한 번만 짧게 지시한다.
+      prompt += `\n\n${SILENT_FILM_CUE}`
+    }
   } else {
     // 대사도 나레이션도 없는 무성 컷(예: IG_R06 컷2 춤 챌린지) — 예전엔 여기 아무 지시도 안 붙어서
     // Veo가 임의로 화면에 자막을 태우는 사고가 났다(2026-09-28 실측, 성준님 지적).

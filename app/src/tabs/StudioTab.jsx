@@ -1209,6 +1209,26 @@ export default function StudioTab() {
               <div className={s.dialoguePreview}>
                 {cut.dialogue && <div className={s.dial}><span className={s.dialLabel}>대사</span>{cut.dialogue}</div>}
                 {cut.narration && <div className={s.narr}><span className={s.dialLabel}>VO</span>{cut.narration}</div>}
+                {/* 2026-11-15 신설 — IG_R09 CUT1~4 실측 성공 후 토글화(yeori_ruleset §⑬-4).
+                    켜면 cut.voiceSource='video'로 저장되고, reelFinalize.js(TTS 믹스·own-audio
+                    제거 안 함)·getRunFlags(G3 자동 skip)·clipPrompt.js(V.O. 지시문 자동 생성)·
+                    TTSTab(G3 해당없음 배지) 4곳이 같은 값을 보고 동작한다. */}
+                {(cut.dialogue || cut.narration) && (
+                  <label
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)', marginTop: 6, cursor: 'pointer' }}
+                    title={'2026-11-15 확립 — ElevenLabs TTS로는 상황별 톤·억양·뉘앙스가 일관되지 않고 미세조정도 효과가 적었음(성준님 실측). ' +
+                      '같은 날, Flow·Veo3 생성 시 나레이션/대사를 "화면 밖 음성(V.O.)"으로 명시하면 훨씬 자연스러운 목소리가 영상 자체에 포함된다는 걸 ' +
+                      'IG_R09 CUT1~4(나레이션 3컷+대사 1컷, 조연 지아 목소리 포함) 전부에서 확인. 켜면 G3(TTS) 승인절차가 자동으로 "해당없음" 처리됩니다 — ' +
+                      '영상 자체에 이미 음성이 들어있으니 TTS가 불필요해지기 때문. (yeori_ruleset_v1.4.md §⑬-4)'}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={cut.voiceSource === 'video'}
+                      onChange={e => updateCut(cut.id, { voiceSource: e.target.checked ? 'video' : undefined })}
+                    />
+                    나레이션/대사 영상 내장(V.O.)
+                  </label>
+                )}
               </div>
 
               <div className={s.confirmRow} style={{marginTop:'auto'}}>
