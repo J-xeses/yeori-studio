@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "making",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12969,9 +12969,70 @@
   "projectName": "새 프로젝트",
   "savedAt": "2026-11-15T12:24:03.068Z",
   "videoTabState": {
-    "videoClips": {},
+    "videoClips": {
+      "cut-1": [
+        {
+          "url": "blob:http://localhost:5173/1273a342-8cc8-4da0-a654-5f0a88b0b476",
+          "name": "cut_01_clip_1.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1794737574359,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_01_clip_1.mp4"
+        }
+      ],
+      "cut-2": [
+        {
+          "url": "blob:http://localhost:5173/c21ce33f-48d2-4a9f-977c-8099aeec5653",
+          "name": "cut_02_clip_1.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1794742301874,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_02_clip_1.mp4"
+        }
+      ],
+      "cut-3": [
+        {
+          "url": "blob:http://localhost:5173/87a7a883-c861-4429-8a6e-61f1e39a9444",
+          "name": "cut_03_clip_1.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1794742478956,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_03_clip_1.mp4"
+        }
+      ],
+      "cut-4": [
+        {
+          "url": "blob:http://localhost:5173/14039430-5108-4692-a91e-dc7ec89364ec",
+          "name": "cut_04_clip_1.mp4",
+          "duration": 7.93,
+          "trimStart": 0,
+          "trimEnd": 7.93,
+          "useFullDuration": true,
+          "ratio": "9:16",
+          "staging": false,
+          "keepAudio": true,
+          "createdAt": 1794742705747,
+          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_04_clip_1.mp4"
+        }
+      ]
+    },
     "g4Approved": {},
-    "selectedCutId": "cut-1",
+    "selectedCutId": "cut-4",
     "subtitles": {}
   },
   "ttsTabState": {
