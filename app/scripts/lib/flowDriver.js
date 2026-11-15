@@ -383,10 +383,16 @@ export function flowKit(page) {
       if (x) { await page.mouse.click(x.x, x.y); await sleep(900) }
     },
 
-    // ── 이미지 모드 (2026-09-21 실측: 새 프로젝트 화면은 영어 — 그래서 아이콘 이름·모델명·숫자로만 찾는다) ─────────
-    // 프롬프트 창 오른쪽 요약 버튼 "🍌 Nano Banana 2 crop_9_16 x2" → 팝업: 이미지/동영상 · 비율 5종 · 모델 드롭다운(Pro/2/2 Lite) · x1~x4.
+    // ── 이미지 모드 (2026-11-15 실측 정정: ?hl=en 강제가 더 이상 안 먹혀 화면이 한글로 뜬다 —
+    // document.documentElement.lang이 강제 리로드 후에도 ko로 고정됨을 확인. 아래 pill/label
+    // 비교가 전부 영어 "Nano Banana" 리터럴에 의존했던 탓에, 실제로는 모드·모델이 이미 정확히
+    // 맞게 설정돼 있는데도 "모드 전환 실패"로 오판해 자동화가 스스로 중단되는 버그가 있었음
+    // (IG_R09 CUT2 실측 — aria-checked로 직접 확인하니 image 라디오는 이미 true였음). 🍌 이모지
+    // (언어 무관)와 한글 모델명을 함께 받아들이도록 수정.
+    // 프롬프트 창 오른쪽 요약 버튼 "🍌 나노 바나나 2.1 crop_9_16 x2" → 팝업: 이미지/동영상 · 비율 5종 · 모델 드롭다운(프로/2/2 라이트) · x1~x4.
     // 이미지 모드는 "생성 시 0 크레딧"(하루 한도 내 무료). 전송하면 프롬프트와 레퍼런스가 함께 비워지므로 매번 다시 붙여야 한다.
     imageModels: ['Nano Banana Pro', 'Nano Banana 2', 'Nano Banana 2 Lite'],
+    imageModelsKo: { 'Nano Banana Pro': '나노 바나나 프로', 'Nano Banana 2': '나노 바나나 2', 'Nano Banana 2 Lite': '나노 바나나 2 라이트' },
     async imagePopupOpen() { return !!(await rectOf('x1', 'exact', 'button')) },
     async openImagePopup() {
       for (let i = 0; i < 3; i++) {
@@ -407,7 +413,7 @@ export function flowKit(page) {
         await page.mouse.click(back.x, back.y); await sleep(1500)
       }
     },
-    async isImageMode() { const p = await this.pill(); return !!p && /Nano Banana/i.test(p) },
+    async isImageMode() { const p = await this.pill(); return !!p && p.includes('🍌') },
     // 2026-10-15 실측(LF_T01 서브계정, 기존 갤러리가 쌓인 프로젝트에서 처음 발견): Flow가 최근
     // 좌측에 "전체 미디어/이미지/동영상/캐릭터/장면/업로드/도구" 내비게이션을 추가했는데, 그 안의
     // "이미지"/"동영상" 항목도 텍스트가 "image 이미지"/"videocam 동영상"로 시작해 기존
@@ -444,32 +450,37 @@ export function flowKit(page) {
     // 아니라 숫자/점으로 이어지면) 같은 모델로 인정한다.
     matchesModelLabel(label, name) {
       if (!label) return false
-      if (label === name) return true
-      const rest = label.slice(name.length)
-      return label.startsWith(name) && /^[\d.]/.test(rest)
+      for (const cand of [name, this.imageModelsKo?.[name]].filter(Boolean)) {
+        if (label === cand) return true
+        const rest = label.slice(cand.length)
+        if (label.startsWith(cand) && /^[\d.]/.test(rest)) return true
+      }
+      return false
     },
     async setImageModel(name) {
       if (!this.imageModels.includes(name)) throw new Error(`알 수 없는 이미지 모델: ${name}`)
       await this.openImagePopup()
-      const label = async () => { const p = await rectOf('arrow_drop_down', 'includes', 'button'); return p ? norm(p.t).replace('arrow_drop_down', '').replace(/^[^A-Za-z]+/, '').trim() : null }
+      const label = async () => { const p = await rectOf('arrow_drop_down', 'includes', 'button'); return p ? norm(p.t).replace('arrow_drop_down', '').replace(/🍌/g, '').trim() : null }
       if (this.matchesModelLabel(await label(), name)) return
       const dd = await rectOf('arrow_drop_down', 'includes', 'button')
       if (!dd) throw new Error('이미지 모델 드롭다운을 찾지 못했습니다')
       await clickAt(dd)
-      const item = await page.evaluate((name) => {
+      const item = await page.evaluate((name, koName) => {
         const matches = (label) => {
-          if (!label) return false
-          if (label === name) return true
-          const rest = label.slice(name.length)
-          return label.startsWith(name) && /^[\d.]/.test(rest)
+          for (const cand of [name, koName].filter(Boolean)) {
+            if (label === cand) return true
+            const rest = label.slice(cand.length)
+            if (label.startsWith(cand) && /^[\d.]/.test(rest)) return true
+          }
+          return false
         }
         for (const e of document.querySelectorAll('button, [role="menuitem"], [role="option"], li')) {
           const r = e.getBoundingClientRect()
-          const t = (e.textContent || '').replace(/\s+/g, ' ').replace(/^[^A-Za-z]+/, '').trim()
+          const t = (e.textContent || '').replace(/\s+/g, ' ').replace(/🍌/g, '').trim()
           if (r.width > 0 && r.height > 0 && matches(t) && !(e.textContent || '').includes('arrow_drop_down')) return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
         }
         return null
-      }, name)
+      }, name, this.imageModelsKo?.[name] || null)
       if (!item) throw new Error(`모델 메뉴에서 ${name} 를 찾지 못했습니다`)
       await clickAt(item)
       if (!this.matchesModelLabel(await label(), name)) throw new Error(`이미지 모델 선택 실패(현재: ${await label()})`)
@@ -569,10 +580,10 @@ export function flowKit(page) {
       const problems = []
       await this.closeImagePopup()
       const pill = await this.pill()
-      if (!pill || !/Nano Banana/i.test(pill)) problems.push(`이미지 모드가 아님: ${pill}`)
+      if (!pill || !pill.includes('🍌')) problems.push(`이미지 모드가 아님: ${pill}`)
       else {
-        const want = expect.model.replace(/^[^A-Za-z]+/, '')
-        const cur = norm(pill).replace(/^[^A-Za-z]+/, '').replace(/\s*crop_.*$/, '').trim()
+        const want = expect.model.replace(/🍌/g, '').trim()
+        const cur = norm(pill).replace(/🍌/g, '').replace(/\s*crop_.*$/, '').trim()
         if (!this.matchesModelLabel(cur, want)) problems.push(`모델 불일치: 기대 ${want} / 현재 ${cur}`)
         const icon = { '16:9': 'crop_16_9', '9:16': 'crop_9_16', '4:3': 'crop_landscape', '1:1': 'crop_square', '3:4': 'crop_portrait' }[expect.ratio]
         if (icon && !pill.includes(icon)) problems.push(`비율 불일치: 기대 ${expect.ratio} / ${pill}`)
