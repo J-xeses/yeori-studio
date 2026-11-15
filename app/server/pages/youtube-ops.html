@@ -615,7 +615,7 @@ function renderInsight() {
 // 2026-11-14: "48시간 후 조회수 멈춘 영상 즉시 조치" 영상의 체크리스트를 반영. 실제 데이터(상태·게시일·
 // 조회수·CTR)로 지금 뭘 해야 하는지 진단하고, 체크리스트 완료 여부는 post.actionGuide 에 영속 저장.
 const AG_CHECKS = [
-  { k: 'chapters', label: '챕터(타임스탬프) 등록 — 00:00부터 시작·3개 이상·간격 10초+·제목에 핵심 키워드' },
+  { k: 'chapters', label: '챕터(타임스탬프) 등록 — 00:00부터 시작·3개 이상·간격 10초+·제목에 핵심 키워드', special: 'chapters' },
   { k: 'playlist', label: '재생목록에 추가 + 재생목록 설명란 작성', copy: 'descOpening' },
   { k: 'endscreen', label: '조회수 높은 인기 영상의 최종화면에 이 영상 연결' },
   { k: 'pinnedComment', label: '핵심 키워드가 자연스럽게 나오는 질문형 고정 댓글 작성', copy: 'pinnedComment' },
@@ -667,6 +667,36 @@ async function fetchAgCopy(p) {
   renderActionGuide()
 }
 function copyToClipboard(text) { navigator.clipboard?.writeText(text).catch(() => {}) }
+// 챕터 등록 — 실제 컷 길이(studio-state.json)를 누적해 진짜 시작 시각을 계산하고, 유튜브 챕터 최소
+// 조건(3개 이상·간격 10초+)을 채우는지까지 판정한다(/api/yt-chapter-suggestion). "한 줄 설명만으론
+// 이해하기 어렵다"는 피드백으로 신설 — 이 에피소드가 실제로 챕터를 쓸 수 있는지부터 보여준다.
+const agChapters = {}
+async function fetchAgChapters(p) {
+  agChapters[p.id] = { loading: true }
+  renderActionGuide()
+  try {
+    const r = await fetch('/api/yt-chapter-suggestion?code=' + encodeURIComponent(p.code))
+    const j = await r.json()
+    if (j.error) throw new Error(j.error)
+    agChapters[p.id] = { loading: false, data: j }
+  } catch (e) { agChapters[p.id] = { loading: false, error: e.message } }
+  renderActionGuide()
+}
+function agChapterBox(p) {
+  const c = agChapters[p.id]
+  if (!c) return ''
+  if (c.loading) return '<div class="agcopybox">📐 실제 컷 길이로 계산 중…</div>'
+  if (c.error) return '<div class="agcopybox err">확인 실패: ' + esc(c.error) + '</div>'
+  const d = c.data
+  if (!d.eligible) return '<div class="agcopybox err">⚠️ ' + esc(d.reason) + '</div>'
+  const text = d.chapters.map(ch => ch.time + ' ' + ch.label).join('\n')
+  return '<div class="agcopybox" style="flex-direction:column;align-items:stretch">' +
+    '<div style="white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12px">' + esc(text) + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap">' +
+    '<button class="agbtn" data-agcopytext="' + esc(text) + '">📋 전체 복사</button>' +
+    '<button class="agbtn" data-agrechapter="1">🔄 다시 계산</button>' +
+    '<span class="muted" style="font-size:11px">총 ' + d.totalSec + '초 · 컷 ' + d.cutCount + '개 — 설명란 맨 위에 그대로 붙여넣으세요</span></div></div>'
+}
 function agCopyVal(data, field) { return field === 'tags' ? (data.tags || []).join(', ') : (data[field] || '') }
 function agCopyBox(p, field) {
   const c = agCopy[p.id]
@@ -684,9 +714,10 @@ function agChkRow(p, it, cfg) {
   const openBtn = '<button class="agbtn" data-agopen="1" title="유튜브 스튜디오에서 이 영상의 실제 설정 화면 열기">↗ 설정 열기</button>'
   const extBtn = cfg.ext ? '<button class="agbtn" data-agext="' + esc(cfg.ext.url) + '" title="' + esc(cfg.ext.label) + ' 열기">🔗 ' + esc(cfg.ext.label) + '</button>' : ''
   const copyBtn = cfg.copy ? '<button class="agbtn" data-agcopy="1" title="이 에피소드 제목에 맞는 문구 생성">✨ 추천 문구</button>' : ''
+  const chapterBtn = cfg.special === 'chapters' ? '<button class="agbtn" data-agchapter="1" title="실제 컷 길이로 챕터 가능 여부·목록 계산">📐 챕터 계산</button>' : ''
   return '<div class="chk"><input type="checkbox" id="ag_' + it.chk + '"' + (it.sev === 'ok' ? ' checked' : '') + '>' +
-    '<label for="ag_' + it.chk + '" style="flex:1">' + esc(it.text) + '</label>' + openBtn + extBtn + copyBtn + '</div>' +
-    (cfg.copy ? agCopyBox(p, cfg.copy) : '')
+    '<label for="ag_' + it.chk + '" style="flex:1">' + esc(it.text) + '</label>' + openBtn + extBtn + copyBtn + chapterBtn + '</div>' +
+    (cfg.copy ? agCopyBox(p, cfg.copy) : '') + (cfg.special === 'chapters' ? agChapterBox(p) : '')
 }
 function renderActionGuide() {
   const sel = $('agPost')
@@ -717,6 +748,8 @@ function renderActionGuide() {
   document.querySelectorAll('#agBlock [data-agext]').forEach(b => b.onclick = () => openB({ target: 'url', url: b.dataset.agext }))
   document.querySelectorAll('#agBlock [data-agcopy]').forEach(b => b.onclick = () => { if (!agCopy[p.id]) fetchAgCopy(p) })
   document.querySelectorAll('#agBlock [data-agregen]').forEach(b => b.onclick = () => fetchAgCopy(p))
+  document.querySelectorAll('#agBlock [data-agchapter]').forEach(b => b.onclick = () => { if (!agChapters[p.id]) fetchAgChapters(p) })
+  document.querySelectorAll('#agBlock [data-agrechapter]').forEach(b => b.onclick = () => fetchAgChapters(p))
   document.querySelectorAll('#agBlock [data-agcopytext]').forEach(b => b.onclick = () => copyToClipboard(b.dataset.agcopytext))
 }
 

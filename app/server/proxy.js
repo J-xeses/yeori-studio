@@ -42,6 +42,7 @@ import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
 import { generateThumbnailHooks } from './lib/thumbnailAi.js'
 import { generateActionCopy } from './lib/ytActionCopy.js'
+import { buildChapterSuggestion } from './lib/ytChapters.js'
 import { cutRegister, REGISTERS } from './lib/voiceRegister.js'
 import { checkClip, loadQa, saveQa } from './lib/voiceQa.js'
 import { getWaveformPeaks } from './lib/waveform.js'
@@ -6576,6 +6577,18 @@ app.post('/api/thumbnail-ai-copy', async (req, res) => {
   try {
     const result = await generateThumbnailHooks(CODE_ROOT, { title, scriptSummary, platform, currentText })
     res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// ── GET /api/yt-chapter-suggestion?code=SF_E14 — "조치 가이드"의 챕터 등록 항목을 실제 컷 길이로
+// 계산해 보여준다(복사용 챕터 목록 또는 조건 미달 사유) ──
+app.get('/api/yt-chapter-suggestion', (req, res) => {
+  const code = String(req.query.code || '')
+  if (!code) return res.status(400).json({ error: 'code 필요' })
+  try {
+    res.json(buildChapterSuggestion(code))
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
