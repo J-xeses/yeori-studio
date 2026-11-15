@@ -203,6 +203,7 @@ export default function StudioTab() {
   const [activeCutId, setActiveCutId] = useState(null)
   const fileRefs = useRef({})
   const cardRefs = useRef({})
+  const [dragOverId, setDragOverId] = useState(null)  // 로컬 파일 드래그 업로드 — 드래그 중인 cut.id, 테두리 하이라이트용
 
   useEffect(() => {
     const check = async () => {
@@ -1080,8 +1081,17 @@ export default function StudioTab() {
                   )
                 })}
                 {cutImages.length < 2 && (
-                  <div className={s.compareEmpty} style={{ ...slotStyle, aspectRatio: isStacked ? '16/9' : '9/16' }}
-                    onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}>
+                  <div className={s.compareEmpty}
+                    style={{ ...slotStyle, aspectRatio: isStacked ? '16/9' : '9/16', ...(dragOverId === cut.id ? { outline: '2px dashed var(--accent, #8b5cf6)', outlineOffset: -2 } : {}) }}
+                    onClick={() => !generating[cut.id] && fileRefs.current[cut.id]?.click()}
+                    onDragOver={e => { e.preventDefault(); setDragOverId(cut.id) }}
+                    onDragLeave={() => setDragOverId(p => (p === cut.id ? null : p))}
+                    onDrop={e => {
+                      e.preventDefault()
+                      setDragOverId(null)
+                      const file = e.dataTransfer.files?.[0]
+                      if (file?.type?.startsWith('image/')) handleImageUpload(cut.id, file)
+                    }}>
                     {generating[cut.id] ? (
                       <>
                         <span style={{ fontSize: 24, animation: 'spin 1s linear infinite' }}>⟳</span>
@@ -1091,7 +1101,7 @@ export default function StudioTab() {
                       <>
                         <span className={s.uploadIcon}>{cutImages.length ? '➕' : '🖼️'}</span>
                         <span>{cutImages.length ? '이미지 추가' : '이미지 업로드'}</span>
-                        <span className={s.uploadSub}>클릭하여 선택</span>
+                        <span className={s.uploadSub}>클릭 또는 드래그</span>
                       </>
                     )}
                   </div>
@@ -1103,8 +1113,18 @@ export default function StudioTab() {
                 )
               })()}
               {(images[cut.id]?.length || 0) >= 2 && (
-                <div className={s.addMoreRow} onClick={() => fileRefs.current[cut.id]?.click()}>
-                  + 이미지 추가
+                <div className={s.addMoreRow}
+                  style={dragOverId === cut.id ? { outline: '2px dashed var(--accent, #8b5cf6)', outlineOffset: -2 } : undefined}
+                  onClick={() => fileRefs.current[cut.id]?.click()}
+                  onDragOver={e => { e.preventDefault(); setDragOverId(cut.id) }}
+                  onDragLeave={() => setDragOverId(p => (p === cut.id ? null : p))}
+                  onDrop={e => {
+                    e.preventDefault()
+                    setDragOverId(null)
+                    const file = e.dataTransfer.files?.[0]
+                    if (file?.type?.startsWith('image/')) handleImageUpload(cut.id, file)
+                  }}>
+                  + 이미지 추가 (클릭 또는 드래그)
                 </div>
               )}
               {cut.imagePrompt && (
