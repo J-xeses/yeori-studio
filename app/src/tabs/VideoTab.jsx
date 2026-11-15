@@ -1918,7 +1918,7 @@ export default function VideoTab() {
         onToolChange={t => { setVideoTool(t); if (t !== 'Flow') alert(`${t} 연동은 아직 준비 중입니다 — 지금은 Flow로 생성됩니다.`) }}
         right={
           <select value={flowProfile} onChange={e => setFlowProfile(e.target.value)}
-            title="Flow 계정 선택 — '⚡ Flow 제출' 버튼에 적용(전체 AI 생성은 항상 메인 계정)"
+            title="Flow 계정 선택 — '⚡ 영상 생성' 버튼에 적용(전체 AI 생성은 항상 메인 계정)"
             style={{ fontSize: 11, background: 'var(--bg-input)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 4, padding: '4px 6px' }}>
             <option value="main">Flow: 메인 계정</option>
             <option value="sub">Flow: 서브 계정</option>
@@ -2695,7 +2695,7 @@ export default function VideoTab() {
                               <span className={s.clipDurLabel}>목표 {plannedSegs[idx] != null ? `${plannedSegs[idx]}s` : '?'}</span>
                               <button className={s.uploadBtnSm} disabled={flowBusy} title="Flow에 시작 프레임·프롬프트를 자동 입력하고 생성·다운로드까지 진행합니다"
                                 onClick={e => { e.stopPropagation(); submitToFlow(selCut, idx, clips) }}>
-                                {flowRun[`${selCut.id}:${idx}`]?.state === 'running' ? '⏳ Flow 진행 중' : '⚡ Flow 제출'}
+                                {flowRun[`${selCut.id}:${idx}`]?.state === 'running' ? '⏳ 영상 생성 중' : '⚡ 영상 생성'}
                               </button>
                               {flowRun[`${selCut.id}:${idx}`]?.state === 'running' && flowRun[`${selCut.id}:${idx}`]?.jobId && (
                                 <button className={s.uploadBtnSm} onClick={e => { e.stopPropagation(); cancelFlow(`${selCut.id}:${idx}`) }}>✋ 취소</button>
@@ -2944,7 +2944,7 @@ export default function VideoTab() {
                       <button className={s.proxyBtn} disabled={flowBusy}
                         title="세그 없는 컷: G2 승인 이미지를 시작 프레임으로 Flow에 자동 입력·생성·다운로드합니다"
                         onClick={() => submitToFlow(selCut, 0, clips)}>
-                        {flowRun[`${selCut.id}:0`]?.state === 'running' ? '⏳ Flow 진행 중' : '⚡ Flow 제출'}
+                        {flowRun[`${selCut.id}:0`]?.state === 'running' ? '⏳ 영상 생성 중' : '⚡ 영상 생성'}
                       </button>
                       {flowRun[`${selCut.id}:0`]?.state === 'running' && flowRun[`${selCut.id}:0`]?.jobId && (
                         <button className={s.proxyBtn} onClick={() => cancelFlow(`${selCut.id}:0`)}>✋ 취소</button>
