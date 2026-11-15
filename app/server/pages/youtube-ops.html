@@ -616,7 +616,7 @@ function renderInsight() {
 // 조회수·CTR)로 지금 뭘 해야 하는지 진단하고, 체크리스트 완료 여부는 post.actionGuide 에 영속 저장.
 const AG_CHECKS = [
   { k: 'chapters', label: '챕터(타임스탬프) 등록 — 00:00부터 시작·3개 이상·간격 10초+·제목에 핵심 키워드', special: 'chapters' },
-  { k: 'playlist', label: '재생목록에 추가 + 재생목록 설명란 작성', copy: 'descOpening' },
+  { k: 'playlist', label: '재생목록에 추가 + 재생목록 설명란 작성', copy: 'descOpening', guide: 'playlist' },
   { k: 'endscreen', label: '조회수 높은 인기 영상의 최종화면에 이 영상 연결' },
   { k: 'pinnedComment', label: '핵심 키워드가 자연스럽게 나오는 질문형 고정 댓글 작성', copy: 'pinnedComment' },
   { k: 'tags', label: 'rapidtags.io 에서 추천 태그 중 5개 선별해 태그란에 입력', copy: 'tags', ext: { label: 'rapidtags.io', url: 'https://rapidtags.io' } },
@@ -667,6 +667,32 @@ async function fetchAgCopy(p) {
   renderActionGuide()
 }
 function copyToClipboard(text) { navigator.clipboard?.writeText(text).catch(() => {}) }
+// 세팅 가이드(2026-11-15) — "설정 열기"는 화면만 열어주고 그 다음은 안 알려줘서 성준님이 직접 한참
+// 헤매며 알아낸 실제 조작 절차(재생목록+인기영상 묶기·순서·썸네일)를 그대로 박아둔다. "↗ 설정 열기"와는
+// 별도 버튼 — 실제 화면에서 검증된 순서라 드래그 같은 안 되는 방법은 빼고 ⋮ 메뉴 경로만 안내.
+const AG_GUIDES = {
+  playlist: {
+    title: '재생목록에 추가 + 인기 영상과 묶어서 순서·썸네일 설정',
+    steps: [
+      '재생목록 탭 → 해당 재생목록 "제목"을 클릭해서 들어가기(체크박스 아님)',
+      '왼쪽 사이드바에서 "동영상" 탭 클릭 — "세부정보" 탭은 제목·설명란이라 다른 화면',
+      '오른쪽 위 "YouTube에서 수정" 버튼 클릭 → 일반 유튜브 재생목록 화면으로 이동(여기서부터 진짜 편집)',
+      '⚠️ 인기 영상 쪽(영상 자체의 "세부정보" 페이지)에서 재생목록을 추가하면, 체크 대신 실수로 "새 재생목록 만들기"를 눌러 별도 재생목록이 생길 수 있음 — 꼭 이 재생목록 화면의 "+"(모두재생 옆) 버튼으로 추가할 것',
+      '"+" 클릭 → 검색창에 인기 영상 제목 일부 입력 → 추가',
+      '추가된 인기 영상 카드의 ⋮(점 3개) 메뉴 → "맨 위로 이동" 클릭(드래그 아님, 이 메뉴로 순서 변경됨)',
+      '같은 ⋮ 메뉴에서 "재생목록 미리보기 이미지로 설정" 클릭 → 재생목록 대표 썸네일이 그 인기 영상으로 바뀜',
+      '혹시 4번 경고대로 중복 재생목록이 생겼다면 → 재생목록 탭에서 그 항목 ⋮ → 삭제(영상 자체는 안 지워짐, 빈 재생목록만 삭제)',
+    ],
+  },
+}
+const agGuideOpen = {}
+function agGuideBox(p, key) {
+  if (!agGuideOpen[p.id + ':' + key]) return ''
+  const g = AG_GUIDES[key]; if (!g) return ''
+  return '<div class="agcopybox" style="flex-direction:column;align-items:stretch">' +
+    '<b style="font-size:12px;margin-bottom:4px">' + esc(g.title) + '</b>' +
+    '<ol style="margin:0;padding-left:18px;font-size:12px;line-height:1.7">' + g.steps.map(s => '<li>' + esc(s) + '</li>').join('') + '</ol></div>'
+}
 // 챕터 등록 — 실제 컷 길이(studio-state.json)를 누적해 진짜 시작 시각을 계산하고, 유튜브 챕터 최소
 // 조건(3개 이상·간격 10초+)을 채우는지까지 판정한다(/api/yt-chapter-suggestion). "한 줄 설명만으론
 // 이해하기 어렵다"는 피드백으로 신설 — 이 에피소드가 실제로 챕터를 쓸 수 있는지부터 보여준다.
@@ -715,9 +741,10 @@ function agChkRow(p, it, cfg) {
   const extBtn = cfg.ext ? '<button class="agbtn" data-agext="' + esc(cfg.ext.url) + '" title="' + esc(cfg.ext.label) + ' 열기">🔗 ' + esc(cfg.ext.label) + '</button>' : ''
   const copyBtn = cfg.copy ? '<button class="agbtn" data-agcopy="1" title="이 에피소드 제목에 맞는 문구 생성">✨ 추천 문구</button>' : ''
   const chapterBtn = cfg.special === 'chapters' ? '<button class="agbtn" data-agchapter="1" title="실제 컷 길이로 챕터 가능 여부·목록 계산">📐 챕터 계산</button>' : ''
+  const guideBtn = cfg.guide ? '<button class="agbtn" data-agguide="' + cfg.guide + '" title="실제 화면에서 검증된 조작 순서 보기">📖 세팅 가이드</button>' : ''
   return '<div class="chk"><input type="checkbox" id="ag_' + it.chk + '"' + (it.sev === 'ok' ? ' checked' : '') + '>' +
-    '<label for="ag_' + it.chk + '" style="flex:1">' + esc(it.text) + '</label>' + openBtn + extBtn + copyBtn + chapterBtn + '</div>' +
-    (cfg.copy ? agCopyBox(p, cfg.copy) : '') + (cfg.special === 'chapters' ? agChapterBox(p) : '')
+    '<label for="ag_' + it.chk + '" style="flex:1">' + esc(it.text) + '</label>' + openBtn + extBtn + guideBtn + copyBtn + chapterBtn + '</div>' +
+    (cfg.guide ? agGuideBox(p, cfg.guide) : '') + (cfg.copy ? agCopyBox(p, cfg.copy) : '') + (cfg.special === 'chapters' ? agChapterBox(p) : '')
 }
 function renderActionGuide() {
   const sel = $('agPost')
@@ -746,6 +773,7 @@ function renderActionGuide() {
   document.querySelectorAll('#agBlock [data-agopen]').forEach(b => b.onclick = () => openB({ target: 'url', url: ytEditUrl(p) }))
   document.querySelectorAll('#agBlock [data-agopenkey]').forEach(b => b.onclick = () => openB({ target: 'url', url: b.dataset.agopenkey === 'analytics' ? ytAnalyticsUrl(p) : ytEditUrl(p) }))
   document.querySelectorAll('#agBlock [data-agext]').forEach(b => b.onclick = () => openB({ target: 'url', url: b.dataset.agext }))
+  document.querySelectorAll('#agBlock [data-agguide]').forEach(b => b.onclick = () => { const key = p.id + ':' + b.dataset.agguide; agGuideOpen[key] = !agGuideOpen[key]; renderActionGuide() })
   document.querySelectorAll('#agBlock [data-agcopy]').forEach(b => b.onclick = () => { if (!agCopy[p.id]) fetchAgCopy(p) })
   document.querySelectorAll('#agBlock [data-agregen]').forEach(b => b.onclick = () => fetchAgCopy(p))
   document.querySelectorAll('#agBlock [data-agchapter]').forEach(b => b.onclick = () => { if (!agChapters[p.id]) fetchAgChapters(p) })
