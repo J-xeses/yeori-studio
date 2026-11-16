@@ -47,6 +47,25 @@ function ffprobeVideoSize(filePath) {
   })
 }
 
+// ── 엔딩 카드(공유·팔로우 유도 CTA, "마지막 2초 오버레이") ──────────────────
+// 대본 하단 [엔딩 카드] 섹션 — 지금까지는 어떤 파서도 캡처하지 않아 그냥 .txt 안의
+// 장식용 텍스트로만 남아있었다(2026-11-16, 성준님 질문 계기로 발견). [게시 캡션]을
+// 운영실에 꽂아주는 instaOps.js extractPublishCaption()과 같은 방식(원본 대본 텍스트를
+// 정규식으로 섹션 추출)으로, 최종 영상 조립(G5) 단계에서 실제로 번인한다(§⑬-6).
+function loadEpisodeScriptRaw(code) {
+  try {
+    const sf = path.join(mp.scriptDir(code), 'script_v3.txt')
+    if (fs.existsSync(sf)) return fs.readFileSync(sf, 'utf-8')
+  } catch { /* noop */ }
+  return ''
+}
+function extractEndCard(raw) {
+  const m = String(raw || '').replace(/\r/g, '')
+    .match(/^\s*\[엔딩\s*카드\][^\n]*\n([\s\S]*?)(?=\n\s*\[[^\]]+\]\s*\n|(?![\s\S]))/m)
+  if (!m) return []
+  return m[1].split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.replace(/^"(.*)"$/, '$1'))
+}
+
 // ── 효과음 규칙 — "AI연구소 효과음 모음집" 가이드(_shared/sfx/SFX_GUIDE.md) 기반 ─────
 // 대본 "효과음:" 텍스트(+보조로 MD 감정·SC 장면)의 키워드로 매칭. 위에서부터 먼저 맞는 것.
 //   at: 'start' | 'mid' | 'end'   layer:true → 자연소리(BGM 위에 길게 -18dB)
@@ -766,7 +785,12 @@ export async function finalizeReel(p) {
   // 박스)을 실제로 읽어서 번인한다(2026-11-16, §⑬-5). 대사(plate===true)만 배경박스 적용 —
   // 나레이션은 박스 없이 구분(성준님 확정). 실패하면 captionMode는 'none'으로 남아 아래 ass
   // 폴백(needAssBurn)이 대신 처리한다.
-  if (captionStyle === 'text' && capCount > 0) {
+  // 2026-11-16 §⑬-6: 대본 [엔딩 카드] 섹션("Send this to..."/"Follow for...")도 같은 drawtext
+  // 체인에 마지막 CARD_DUR초 세그먼트로 얹는다 — 대사/나레이션이 아니라 박스는 항상 뺌
+  // (isDialogue:false). 손글씨(handwriting) 엔진 쪽은 아직 미연결(범위 밖, 다음에 필요하면).
+  const endCardLines = extractEndCard(loadEpisodeScriptRaw(code))
+  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"`)
+  if (captionStyle === 'text' && (capCount > 0 || endCardLines.length)) {
     const allSegs = []
     for (const d of decisions) {
       if (!d.caption) continue
@@ -782,6 +806,13 @@ export async function finalizeReel(p) {
         const text = shown.map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
         allSegs.push({ text, start: st, end: en, isDialogue: seg.overlay.plate === true })
       })
+    }
+    if (endCardLines.length) {
+      // drawtext(이 엔진)는 handwriting_overlay.py 경로와 달리 컬러 이모지 폰트 폴백이 없어서
+      // 💬 같은 글자가 네모(두부)로 깨진다(실측 확인, 2026-11-16) — 번인 텍스트에서만 제거.
+      const stripEmoji = (t) => t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-➿\u{FE0F}]/gu, '').replace(/[ \t]+/g, ' ').trim()
+      const CARD_DUR = 2
+      allSegs.push({ text: endCardLines.map(stripEmoji).join('\n'), start: Math.max(0, totalDur - CARD_DUR), end: totalDur, isDialogue: false })
     }
     const { width: vW, height: vH } = await ffprobeVideoSize(concat)
     const style = {

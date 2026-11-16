@@ -538,42 +538,28 @@ export default function EditMetaTab() {
         return
       }
 
-      // ── 정밀 편집: CapCut 데스크톱에서 마무리 (서여리 에피소드 시리즈) ──
-      // ④ raw 영상 (CapCut 업로드/딜리버러블용)
-      setAccStatus('④ raw 영상 합치는 중...')
-      const concatRes = await post('http://localhost:3001/api/concat-video', { epNum })
-      if (!concatRes.success) {
-        setAccStatus(`❌ 영상 합치기 실패: ${concatRes.error}`)
-        setAccRunning(false); return
-      }
-
-      // ⑤ 에피소드 전용 CapCut 프로젝트 준비 + 커터(켄번스) + CapCut 실행
-      setAccStatus('⑤ CapCut 프로젝트 준비 + 커터 실행 (켄번스 적용)...')
-      const cutterRes = await post('http://localhost:3001/api/send-to-cutter', {
-        epNum, kenburns: kbMode, gapSec, bgm: bgmFile || null, bgmVolume,
-      })
-      if (!cutterRes.success) {
-        setAccStatus(`⚠️ CapCut 연동 실패: ${cutterRes.error}`)
-        setAccRunning(false); return
-      }
-
-      const r = cutterRes.cutterResult
-      const pname = cutterRes.project?.projectName || r?.projectName
-      const pnew = cutterRes.project?.created ? '(신규 생성) ' : ''
-      setAccStatus(r
-        ? `✅ 완료! ${pnew}CapCut 프로젝트 "${pname}"에 컷 ${r.segCount}개(총 ${r.durationSec}초) 배치 + 켄번스 적용. CapCut에서 "${pname}"을 열어 마무리하세요.`
-        : `✅ 완료! ${pnew}커터 실행 + CapCut 실행됨. "${pname}"에서 BGM/색보정/내보내기를 마무리하세요.`)
-      setCutterResult(r)
-      // G5(편집/커터) 승인 — 커터가 실제로 draft_content.json에 반영한 컷들만 자동 승인
-      // editMeta의 cutNo는 "01","02" 같은 0-패딩 문자열이지만, gpoints.js의
-      // cut_${i} 키는 숫자 그대로(1,2,3...)를 쓰므로 반드시 정수로 변환해야 매칭됨.
-      // 위 assemble 경로와 동일한 이유로, G4 승인 안 된 컷은 G5를 찍지 않는다(2026-09-14).
-      if (r?.cuts?.length) {
+      // ── "정밀 편집(CapCut)" 단계 폐지(2026-11-16, 성준님 결정) ──────────────────
+      // 캡컷+커터 수동편집 단계에서 오류·실패가 반복돼, 그 대체로 메이킹 탭·체크업 탭
+      // (Tier3/4 타임라인 편집기·눈금자·파형·redo 등)을 구축해왔고, 지난 몇 달간 CapCut을
+      // 실제로 쓴 적이 거의 없었다는 판단 — finishMode='cutter'도 이제 'assemble'처럼
+      // CapCut을 거치지 않고 바로 최종 영상 조립(reelFinalize)으로 끝낸다. send-to-cutter·
+      // run-cutter.js·CapCut 연동 코드 자체는 지우지 않고 그대로 두되(혹시 필요해지면),
+      // 이 흐름에서만 더 이상 호출하지 않는다. kbMode/gapSec/bgmVolume(아래 UI, 원래
+      // CapCut 커터용 설정)은 이 경로에서 더는 쓰이지 않음 — 필요하면 다음에 UI도 정리.
+      setAccStatus('④ 최종 영상 조립 중...')
+      {
         const freshG = loadGPoints()[episodeCode] || {}
-        for (const c of r.cuts) {
-          const cutNo = parseInt(c.cutNo, 10)
-          if (freshG[`cut_${cutNo}`]?.g4) setGPoint(episodeCode, cutNo, 'g5', true)
+        const unapproved = []
+        for (const c of cuts) {
+          const no = c.no
+          if (freshG[`cut_${no}`]?.g4) setGPoint(episodeCode, no, 'g5', true)
+          else unapproved.push(no)
         }
+        const fin = await finalizeReelSilently(epNum)
+        setAccStatus(fin.ok
+          ? `✅ 완료! 최종 영상 조립 생성됨(CapCut 없이).${unapproved.length ? ` ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}` : ''}`
+          : `❌ 최종 영상 조립 실패: ${fin.error} — 메이킹 탭에서 "🎬 최종 영상 조립"으로 다시 시도하세요`)
+        setCutterResult(null)
       }
       setAccRunning(false)
     } catch (err) {
@@ -729,7 +715,7 @@ export default function EditMetaTab() {
                     background: fm === 'assemble' ? 'rgba(74,222,128,0.12)' : 'rgba(167,139,250,0.12)',
                     border: `1px solid ${fm === 'assemble' ? 'rgba(74,222,128,0.3)' : 'rgba(167,139,250,0.3)'}`,
                     borderRadius:'20px',padding:'2px 9px'}}>
-                    {fm === 'assemble' ? '빠른 조립 (ffmpeg)' : '정밀 편집 (CapCut)'}
+                    {fm === 'assemble' ? '빠른 조립 (ffmpeg)' : '최종 영상 조립 (CapCut 폐지)'}
                   </span>
                 )
               })()}
@@ -740,7 +726,7 @@ export default function EditMetaTab() {
             <div style={{fontSize:'11.5px',color:'#9490a8',marginTop:'2px'}}>
               {resolveFinishMode(state.episode) === 'assemble'
                 ? '① 메타 → ② 저장 → ③ SRT → ④ 메이킹 필름 조립(ffmpeg) → ⑤ 발행 전달'
-                : '① 메타 → ② 저장 → ③ SRT → ④ raw 합치기 → ⑤ 커터(켄번스) + CapCut'}
+                : '① 메타 → ② 저장 → ③ SRT → ④ 최종 영상 조립(2026-11-16부터 CapCut 안 거침 — 체크업 탭에서 다듬기)'}
             </div>
             <div style={{fontSize:'11px',color:'#6b7280',marginTop:'4px'}}>
               조립 방식은 대본 생성 탭 "완성 방식"에서 · 실행은 좌측 "자동실행 조건" ON 버튼
