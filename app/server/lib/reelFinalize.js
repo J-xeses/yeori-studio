@@ -555,57 +555,20 @@ export async function finalizeReel(p) {
     if (!src) { log(`⚠ cut_${String(cut.no).padStart(2, '0')}.mp4 없음 — 건너뜀`); continue }
     const d = decideCut(cut)
     d.derived = picked.derived
-    // 2026-11-09 (SF_E01/SF_E02 성준님 제보, [[project_sf_subtitle_burn_video_tab]] 11차 버그 A/B):
-    // 영상 탭 "나레이션·효과음 미리듣기 생성"(옛 "입히기")이 이미 처리해 둔 컷은 그 결과를 그대로 쓴다. 이걸 안 하면
-    // reelFinalize가 같은 나레이션 mp3를 또 섞거나(버그A), 영상 탭이 번인한 자막과 다른 자막을
-    // 또 구워서(버그B) 2중 삽입·설정 불일치가 생긴다 — SF_E02에서 실제로 터진 사례.
-    // 06_publishing/cut_NN_preview.mp4(나레이션+SFX+영상 탭 자막 설정 전부 번인)가
-    // 05_video/cut_NN.mp4(=picked.path)보다 최신이면 그걸 그대로 쓰고(이 컷은 reelFinalize가
-    // 자막도 다시 안 구움), 없고 cut_NN_final.mp4(나레이션+SFX만, 자막 없음)만 최신이면 그걸
-    // 쓴다(이 컷은 reelFinalize가 자막만 평소대로 추가). 메이킹 탭 파생본(picked.derived)이 이미
-    // 있으면 그쪽이 기존 그대로 우선 — 이 블록을 안 거침.
-    let vtSkipNarrationMix = false
-    if (!picked.derived) {
-      const pad2 = String(cut.no).padStart(2, '0')
-      const outDir = mp.outputDir(epNum)
-      const vtPreview = path.join(outDir, `cut_${pad2}_preview.mp4`)
-      const vtFinal = path.join(outDir, `cut_${pad2}_final.mp4`)
-      const baseM = fs.existsSync(src) ? fs.statSync(src).mtimeMs : 0
-      // 2026-11-11 단순화: 영상 탭 "미리듣기 생성"은 이제 05_video/cut_NN.mp4를 절대 안
-      // 건드린다(전엔 06_publishing 결과를 2~3초 뒤 05_video로 자동 복사해서, 정상 상태에서도
-      // 05_video가 약간 더 최신이 되는 레이스를 10초 그레이스 윈도우로 봐줬었다 — 그 자동복사
-      // 자체가 없어져 그레이스도 필요 없다). 05_video는 새 원본(Flow 생성·클립 합성·업로드)이
-      // 들어올 때만 바뀌므로 규칙은 하나다: 06_publishing 파일이 05_video(원본)보다 최신이면
-      // "지금 원본으로 만든 결과"라 신뢰하고, 더 오래됐으면 "옛 원본으로 만든 것"이라 버리고
-      // 기존 reelFinalize 판단(자체 나레이션 믹스·자막 번인)으로 폴백한다.
-      // preview는 같은 실행에서 final "뒤"에 만들어지므로(preview ≥ final), final이 더 최신이면
-      // 그 preview는 자막을 끄고 다시 만들기 전의 옛 파일이다 — 그땐 final 쪽을 쓴다.
-      //
-      // 하위호환(레거시 컷 전용): 2026-11-11 이전에 "입히기"를 누른 컷은 05_video가 이미 나레이션
-      // 합성본으로 덮어써져 있고, 그 흔적으로 05_video가 06_publishing보다 2~4초 "더 최신"이다
-      // (실측 2026-11-11: SF_E01 컷4, SF_E02 컷3·4·6·7, LF_T01 컷10 — Δ -1.6~-3.9초). 이 컷들을
-      // 위 규칙만으로 판단하면 폴백으로 빠져, 이미 나레이션이 섞인 05_video 위에 나레이션을 또
-      // 섞는다(2중). 그래서 "05_video가 10초 이내로만 더 최신"인 경우는 옛 자동복사의 결과물로
-      // 보고 계속 06_publishing 쪽을 신뢰한다. 새로 만드는 컷은 이 분기에 올 일이 없다(원본이
-      // 미리듣기 생성 직후 10초 안에 교체되는 경우뿐). 위 컷들의 05_video를 깨끗한 원본으로
-      // 되돌리고 나면 이 상수와 isLegacyAutoCopy 분기는 지워도 된다.
-      const LEGACY_AUTOCOPY_WINDOW_MS = 10000
-      const mtimeOf = (f) => (fs.existsSync(f) ? fs.statSync(f).mtimeMs : -1)
-      const pvM = mtimeOf(vtPreview), fnM = mtimeOf(vtFinal)
-      const fresh = (m) => m >= baseM
-      const isLegacyAutoCopy = (m) => m >= 0 && m < baseM && baseM - m <= LEGACY_AUTOCOPY_WINDOW_MS
-      const usable = (m) => fresh(m) || isLegacyAutoCopy(m)
-      let vtSrc = null, vtHasCaption = false
-      if (usable(pvM) && pvM >= fnM) { vtSrc = vtPreview; vtHasCaption = true }
-      else if (usable(fnM)) { vtSrc = vtFinal; vtHasCaption = false }
-      if (vtSrc) {
-        src = vtSrc
-        vtSkipNarrationMix = true
-        if (vtHasCaption) d.caption = null
-        log(`컷 ${cut.no}: 영상 탭 처리 결과(${path.basename(vtSrc)}) 그대로 사용 — 나레이션 재믹스${vtHasCaption ? '·자막 재번인' : ''} 생략${fresh(vtHasCaption ? pvM : fnM) ? '' : ' (레거시: 05_video가 이미 덮어써진 컷)'}`)
-      }
-    }
-    d.skipNarrationMix = vtSkipNarrationMix
+    // 2026-11-16 철회(성준님 지시, [[project_sf_subtitle_burn_video_tab]] 큰 리팩터): 영상 탭
+    // "나레이션·효과음 미리듣기 생성"(옛 "입히기") 결과(06_publishing/cut_NN_preview·final.mp4)를
+    // 날짜 비교로 "신뢰"해 그대로 쓰던 메커니즘을 완전히 제거했다. 이 메커니즘 때문에 같은
+    // 에피소드 안에서도 "버튼을 누른 컷"만 영상 탭 설정이 반영되고 "안 누른 컷"은 reelFinalize
+    // 자체 로직(대본 손글씨 오버레이 힌트)으로 떨어지는 컷마다 다른 경로가 생겼다 — IG_R09에서
+    // "글씨체를 바꿔도 소용없는 자막" 제보로 드러남. 이제 자막 번인·나레이션 믹스는 포맷·버튼
+    // 클릭 여부와 무관하게 always 이 함수(decideCut + handwriting_overlay.py, 아래)만 담당한다.
+    // 자막 텍스트·타이밍의 "사후 조정"(영상·음성이 나온 뒤 연출에 맞게 고치는 것)은 영상 탭의
+    // 자막 입력창·타이밍 바가 이미 cut.subtitle/reel-overrides/captionSegTiming에 즉시 저장하는
+    // 경로로 충분하다 — 그 값을 reelFinalize가 항상 그대로 읽으면, "따로 안 고치면 대본 원본
+    // 유지, 고치면 그게 최종까지 간다"가 자동으로 성립한다(별도 "확정" 플래그 불필요). 영상 탭의
+    // G4(영상 승인) 체크는 이제 "이 컷의 영상+자막이 1차 픽스됐다"는 뜻도 포괄한다(워크벤치에는
+    // 기존 G4 집계가 그대로 반영됨, 새 코드 불필요) — 06_publishing 미리듣기 버튼은 모든 포맷에서
+    // 순수 "미리듣기"(청취 확인)로만 남고, 최종본에는 더 이상 쓰이지 않는다.
     // 2026-11-15 수정(SF_E12 실측, 성준님 제보): dropOwnAudio가 "제작방식이 imgseq(사진시퀀스)인
     // 컷만" 버렸는데, multi-clip-compose(Flow 원본 클립 concat) 등 다른 방식도 컷 자체 오디오에
     // 나레이션이 이미 들어있을 수 있어 같은 2중 재생 위험이 있다(imgseq는 추정일 뿐, 실제 위험
@@ -617,7 +580,7 @@ export async function finalizeReel(p) {
     // V.O. 또는 대사)이 들어있는 컷(오늘 IG_R09 CUT1 실측 성공). 이 컷은 G3 TTS를 아예 돌리지
     // 않으므로(아래 getRunFlags 참고) 03_audio에 같은 번호 mp3가 남아있어도(예: 이전 시도 흔적)
     // 믹스 대상이 아니다 — 컷 자체 오디오가 정답이라 dropOwnAudio도 절대 안 걸리게 한다.
-    d.needsNarration = !vtSkipNarrationMix && hasVoiceNarration(cut) && cut.voiceSource !== 'video'
+    d.needsNarration = hasVoiceNarration(cut) && cut.voiceSource !== 'video'
     if (d.needsNarration) {
       const pad2 = String(cut.no).padStart(2, '0')
       const hasDl = !!String(cut.dialogue || '').trim()

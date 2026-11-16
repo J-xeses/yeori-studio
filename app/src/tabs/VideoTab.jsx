@@ -317,56 +317,6 @@ function ReelCaptionTimingBar({ segs, duration, onCommit }) {
   )
 }
 
-function wrapCanvasText(ctx, text, maxWidth) {
-  const lines = []
-  for (const para of String(text ?? '').split('\n')) {
-    const words = para.split(' ')
-    let line = ''
-    for (const word of words) {
-      const test = line ? line + ' ' + word : word
-      if (ctx.measureText(test).width > maxWidth && line) {
-        if (ctx.measureText(word).width > maxWidth) {
-          let charLine = line
-          for (const ch of word) {
-            const t2 = charLine + ch
-            if (ctx.measureText(t2).width > maxWidth && charLine) {
-              lines.push(charLine)
-              charLine = ch
-            } else {
-              charLine = t2
-            }
-          }
-          line = charLine
-        } else {
-          lines.push(line)
-          line = word
-        }
-      } else {
-        line = test
-      }
-    }
-    lines.push(line)
-  }
-  return lines
-}
-
-function hexToRgba(hex, alpha) {
-  const h = (hex || '#000000').replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16)
-  const g = parseInt(h.substring(2, 4), 16)
-  const b = parseInt(h.substring(4, 6), 16)
-  return `rgba(${r},${g},${b},${alpha})`
-}
-
-// 자막 외곽선 색을 글자색과 자동으로 반대로 두기 위한 밝기 판정(표준 상대 휘도 근사).
-function isLightColor(hex) {
-  const h = (hex || '#ffffff').replace('#', '')
-  const r = parseInt(h.substring(0, 2), 16) || 0
-  const g = parseInt(h.substring(2, 4), 16) || 0
-  const b = parseInt(h.substring(4, 6), 16) || 0
-  return (0.299 * r + 0.587 * g + 0.114 * b) > 150
-}
-
 // PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
 // 하위로 라우팅할지 반환. StudioTab.jsx에 있는 것과 동일 로직(이 코드베이스의 기존 관례대로
 // 작은 순수함수라 탭마다 그대로 복제해서 씀).
@@ -398,7 +348,6 @@ export default function VideoTab() {
   // 전엔 로컬 useState('middle')뿐이라, 편집창에서 "위치" 버튼을 눌러도 새로고침/탭이동하면
   // 사라지고 최종 결과물에도 전혀 반영되지 않았음(성준님 지적: "자막 위치설정 기능도 아직 안되고").
   const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor, subtitlePosition = 'bottom' } = videoSettings
-  const canvasRef = useRef(null)
   const textareaRef = useRef(null)
   const [renderLog, setRenderLog] = useState([])
   // 2026-11-07 추가(성준님 제보 — "자막수정 타이핑 창 폭에 따라 줄바꿈 설정도 화면 자막과
@@ -931,82 +880,10 @@ export default function VideoTab() {
 
   const allG4Done = cuts.length > 0 && cuts.every(c => !needsFlowVideo(c.cutType) || g4Approved[c.id])
 
-  const drawPreview = useCallback(() => {
-    const canvas = canvasRef.current; if (!canvas) return
-    const ctx = canvas.getContext('2d')
-    const W = canvas.width, H = canvas.height
-    ctx.clearRect(0, 0, W, H)
-    if (!subtitleEnabled) return
-    if (isReel) return   // 릴스는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다 — 이 띠는 클릭해서 문구 수정용
-    const text = previewText
-    // 2026-11-03 재수정: 이 캔버스는 ReelCaptionOverlay(187번째 줄)처럼 실제 화면에 꽉 차게
-    // 반응형으로 그려지는 DOM이 아니라, <canvas width={1920} height={1080}>(아래 JSX) 고정
-    // 해상도 래스터를 CSS로 늘려 보여주는 방식이다. 전엔 이 캔버스가 640×360으로 작았는데
-    // "릴스와 같은 1920 기준으로 맞춘다"며 scale=H/1920을 그대로 가져다 썼다가, H가
-    // ReelCaptionOverlay의 실제 표시 높이(수백px)가 아니라 캔버스 내부의 작은 고정값(360)이라
-    // 거의 모든 fontSize에서 10px 바닥값에 깔려버렸다(실측: fontSize 32 기본값 → 6px → 10px로
-    // 클램프, 슬라이더를 움직여도 53 이하면 전부 똑같이 10px) — "설정한 크기보다 훨씬 작게
-    // 보인다"는 지적의 원인. 캔버스 해상도를 실제 유튜브 16:9 출력 규격(1920×1080)에 맞추고,
-    // fontSize를 그 좌표계에서 그대로(스케일 보정 없이) 픽셀값으로 써서 슬라이더 값과 화면에
-    // 보이는 크기가 1:1로 맞게 한다.
-    const fSize = Math.max(10, Math.round(fontSize))
-    // 안쪽 여백도 폰트 크기에 비례하게(전엔 18/10 고정값이라, 해상도를 올리고 나니 큰 글자에선
-    // 박스가 너무 좁아 보이고 작은 글자에선 너무 헐렁해 보임).
-    const padX = Math.round(fSize * 0.45), padY = Math.round(fSize * 0.28), lineGap = 1.3
-
-    ctx.font = `${fSize}px "${font}",sans-serif`
-    ctx.textAlign = 'center'
-
-    // 2026-10-22 재점검: 가로를 꽉 채워 보인다는 지적 — 16:9 폭 비율을 95%→80%로 좁힘.
-    const maxTextWidth = W * (aspectRatio === '16:9' ? 0.80 : 0.86)
-    const lines = wrapCanvasText(ctx, text, maxTextWidth)
-    const lineHeight = fSize * lineGap
-    const totalTextHeight = lineHeight * lines.length
-
-    const subX = W / 2
-    // 2026-10-22 재점검: 조금 더 아래로 내려 달라는 요청 — 각 위치 기준값을 3%p씩 더 내림.
-    const anchorY = subtitlePosition === 'top' ? H * 0.75
-                 : subtitlePosition === 'middle' ? H * 0.85
-                 : H * 0.93
-
-    const boxBottom = anchorY
-    let boxTop = boxBottom - totalTextHeight - padY * 2
-    const boxHeight = totalTextHeight + padY * 2
-
-    boxTop = Math.max(boxTop, 8)
-
-    if (bgStyle === '반투명 직각 박스') {
-      let maxLineWidth = 0
-      lines.forEach(l => { maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width) })
-      const bw = maxLineWidth + padX * 2
-      ctx.fillStyle = hexToRgba(boxColor || '#000000', 0.68)
-      ctx.fillRect(subX - bw / 2, boxTop, bw, boxHeight)
-    } else if (bgStyle === '그림자') {
-      ctx.shadowColor = 'rgba(0,0,0,0.95)'
-      ctx.shadowBlur = Math.max(4, Math.round(fSize * 0.28))
-      ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1
-    }
-
-    // 배경이 밝거나 복잡한 화면에서도 글자가 읽히도록, 배경 스타일(박스/그림자)과 별개로
-    // 항상 외곽선을 한 겹 깐다(2026-09-15, 사용자 지적: "색상 외에 글씨 외곽 테두리 효과
-    // 정도는 있어야 할 것 같다"). 글자색이 밝으면 검은 테두리, 어두우면 흰 테두리로 자동 반전.
-    ctx.lineJoin = 'round'
-    ctx.lineWidth = Math.max(2, Math.round(fSize * 0.09))
-    ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
-    ctx.fillStyle = color
-    // 2026-11-03: alphabetic 기준선 + 어림 보정식(-(lineHeight-fSize)/2) 대신 textBaseline='middle'로
-    // 각 줄의 실제 세로 중앙에 바로 찍는다 — 전엔 보정이 fSize/2만큼 과하게 내려가 박스 안에서
-    // 글자가 아래로 치우쳐 보였음("박스 아래로 좀 치우친 배치" 지적).
-    ctx.textBaseline = 'middle'
-    lines.forEach((l, i) => {
-      const lineCenterY = boxTop + padY + lineHeight * (i + 0.5)
-      ctx.strokeText(l, subX, lineCenterY)
-      ctx.fillText(l, subX, lineCenterY)
-    })
-    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, isReel, reelFontPx, reelStyle.y, gaeguReady, aspectRatio])
-
-  useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
+  // 2026-11-16 은퇴: 메커니즘 B(영상 탭 미리듣기 결과 재사용) 제거로 모든 포맷의 최종본이 항상
+  // Gaegu 손글씨(ReelCaptionOverlay, 아래 JSX)로 번인된다. 이 캔버스(canvasRef)는 옛 SF/LF
+  // 전용 폰트·색 미리보기였는데, 이제 실제 결과와 다른 모습을 보여주는 오래된 미리보기라
+  // drawPreview()·<canvas> 요소를 함께 뺐다.
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -1995,71 +1872,28 @@ export default function VideoTab() {
                   <span>자막 포함</span>
                 </label>
               </div>
-              {/* 글씨체·배경 스타일은 SF/LF 전용 번인 경로(/api/run-ffmpeg)로만 전송된다 — 릴스(IG)
-                  최종본은 handwriting_overlay.py가 번들 폰트 하나(Gaegu-Bold.ttf)로 고정 렌더하고
-                  색상·말풍선은 대본 overlayHint로 결정되어, 여기서 바꿔도 미리보기·최종본 어디에도
-                  반영되지 않았다(2026-11-16, 성준님 실측 "글씨체를 바꿔도 소용없는 자막"). 혼선
-                  방지를 위해 릴스에서는 숨김 — 실제 적용되는 크기·위치만 아래 보여준다. */}
-              {!isReel && (
-              <div className={s.sidePanelRow2}>
-                <div className={s.field}>
-                  <label>글씨체</label>
-                  <select value={font} onChange={e => set({ font: e.target.value })} disabled={!subtitleEnabled}>
-                    {FONTS.map(f => <option key={f}>{f}</option>)}
-                  </select>
-                </div>
-                <div className={s.field}>
-                  <label>배경 스타일</label>
-                  <select value={bgStyle} onChange={e => set({ bgStyle: e.target.value })} disabled={!subtitleEnabled}>
-                    {BG_STYLES.map(b => <option key={b}>{b}</option>)}
-                  </select>
-                </div>
-              </div>
-              )}
-              {isReel ? (<>
-                <div className={s.field}>
-                  <label>🎬 최종본 자막(손글씨) 크기 <span className={s.val}>{reelFontPx}px</span></label>
-                  <input type="range" min="36" max="110" value={reelFontPx} disabled={!subtitleEnabled}
-                    onChange={e => setReelStyle({ fontPx: parseInt(e.target.value) })} />
-                </div>
-                <div className={s.field}>
-                  <label>세로 위치 <span className={s.val}>{reelStyle.y ? `${Math.round(reelStyle.y * 100)}%` : "기본(하단)"}</span></label>
-                  <input type="range" min="65" max="86" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
-                    onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
-                  릴스는 최종본과 같은 손글씨 자막으로 미리봅니다. 여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다. 화면 72% 아래는 인스타 UI 영역이라 자동으로 올려 배치됩니다.
-                  글씨체·색상·말풍선은 대본의 "손글씨 오버레이" 힌트로 자동 결정되며, 여기서는 바꿀 수 없습니다.
-                </div>
-              </>) : (<>
+              {/* 2026-11-16 개편: 글씨체·배경 스타일·글자/박스 색상은 전부 제거했다 — 이 설정들은
+                  reelFinalize.js의 06_publishing 미리듣기 재사용 메커니즘(이번에 완전히 삭제)을
+                  통해서만 최종본에 반영되던 "임시 통로"였다. 그 메커니즘이 없어진 지금, 최종 번인은
+                  포맷·컷타입 구분 없이 항상 decideCut()+handwriting_overlay.py(번들 손글씨 폰트
+                  Gaegu-Bold.ttf 고정, 색상·말풍선은 대본 "손글씨 오버레이" 힌트로 결정)만 담당한다.
+                  영상 탭에서 실제로 최종본에 반영되는 건 크기(px)·세로 위치뿐이라 포맷 구분 없이
+                  아래 두 슬라이더만 남긴다(종전엔 릴스 전용이었음). */}
               <div className={s.field}>
-                <label>글자 크기 <span className={s.val}>{fontSize}px</span></label>
-                <input type="range" min="16" max="72" value={fontSize} disabled={!subtitleEnabled}
-                  onChange={e => set({ fontSize: parseInt(e.target.value) })} />
+                <label>🎬 최종본 자막(손글씨) 크기 <span className={s.val}>{reelFontPx}px</span></label>
+                <input type="range" min="36" max="110" value={reelFontPx} disabled={!subtitleEnabled}
+                  onChange={e => setReelStyle({ fontPx: parseInt(e.target.value) })} />
               </div>
-              <div className={s.sidePanelRow2}>
-                <div className={s.field}>
-                  <label>글자 색상</label>
-                  <div className={s.colorRow}>
-                    <input type="color" value={color} disabled={!subtitleEnabled}
-                      onChange={e => set({ color: e.target.value })} className={s.colorPicker} />
-                    <span className={s.colorVal}>{color}</span>
-                  </div>
-                </div>
-                {bgStyle === '반투명 직각 박스' && (
-                  <div className={s.field}>
-                    <label>박스 색상</label>
-                    <div className={s.colorRow}>
-                      <input type="color" value={boxColor || '#000000'}
-                        disabled={!subtitleEnabled}
-                        onChange={e => set({ boxColor: e.target.value })}
-                        className={s.colorPicker} />
-                      <span className={s.colorVal}>{boxColor || '#000000'}</span>
-                    </div>
-                  </div>
-                )}
+              <div className={s.field}>
+                <label>세로 위치 <span className={s.val}>{reelStyle.y ? `${Math.round(reelStyle.y * 100)}%` : "기본(하단)"}</span></label>
+                <input type="range" min="65" max="86" value={Math.round((reelStyle.y || 0.66) * 100)} disabled={!subtitleEnabled}
+                  onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
               </div>
-              </>)}
+              <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
+                최종본과 같은 손글씨 자막으로 미리봅니다. 여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다.
+                글씨체·색상·말풍선은 대본의 "손글씨 오버레이" 힌트로 자동 결정되며, 여기서는 바꿀 수 없습니다.
+                자막 문구·타이밍은 아래 자막 입력창·타이밍 바에서 고치면 즉시 저장되어, 고치지 않으면 대본 원본이, 고치면 그 값이 최종본까지 그대로 유지됩니다.
+              </div>
             </div>
           )}
         </div>
@@ -2369,44 +2203,18 @@ export default function VideoTab() {
                         {bigShowFinal ? `▶ 최종 결과 보는 중${bigHasDerived ? '(말풍선·자막 포함)' : ''} — 편집용 클립 보기` : '▶ 편집용 클립 보는 중 — 최종 결과 보기'}
                       </button>
                     )}
-                    {isSelected && subtitleEnabled && isReel && !subtitleEditMode && captionVisibleNow && !(bigShowFinal && bigHasDerived) && (
+                    {/* 2026-11-16: 메커니즘 B 제거로 모든 포맷의 최종본이 항상 Gaegu 손글씨로
+                        번인되므로, 미리보기도 포맷 구분 없이 항상 ReelCaptionOverlay를 쓴다 —
+                        예전엔 isReel일 때만 이걸 쓰고 그 외엔 아래 폰트/색 캔버스를 썼는데, 그
+                        캔버스가 보여주던 모습은 이제 실제 결과와 다르다(은퇴시킴). */}
+                    {isSelected && subtitleEnabled && !subtitleEditMode && captionVisibleNow && !(bigShowFinal && bigHasDerived) && (
                       <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} plate={isDialogueSeg(previewText, selCutForText?.dialogue)} />
                     )}
-                    {/* 자막은 (릴스면 ReelCaptionOverlay로 클릭 통과, 아니면 아래 캔버스로) 그리고, 수정은
-                        오른쪽 위 작은 버튼으로 연다. 예전엔 투명한 자막 띠가 영상 아래쪽을 덮어 재생 버튼
-                        클릭을 가로챘다(2026-09-28 성준님 제보) — 이 버튼은 그 수정판이었는데 isReel(=코드가
-                        IG_R로 시작하는지)로만 분기돼 있어서, SF_E처럼 똑같이 세로 숏폼인데 IG_R이 아닌
-                        콘텐츠는 여전히 옛날처럼 자막 띠를 직접 눌러야 하는 버전에 머물러 있었다(2026-10-09
-                        성준님 제보 — 재생 버튼이 수정창 영역에 가려 안 눌리는 바로 그 증상 재발). isReel
-                        여부와 무관하게 항상 버튼으로 열도록 통일하고, 아래 캔버스 div에서는 onClick을 뺐다. */}
                     {isSelected && subtitleEnabled && !subtitleEditMode && (
                       <button type="button" onClick={() => setSubtitleEditMode(true)} title="클릭하여 자막 수정"
                         style={{ position: 'absolute', top: 8, right: 8, zIndex: 4, fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,.35)', background: 'rgba(0,0,0,.55)', color: '#fff', cursor: 'pointer' }}>
                         ✏ 자막 수정
                       </button>
-                    )}
-                    {isSelected && subtitleEnabled && !subtitleEditMode && !isReel && !(bigShowFinal && bigHasDerived) && !previewClip?.hasBurnedSubtitle && !selCut.captionBurnedIntoBase && (
-                      <div
-                        className={s.subtitleDisplay}
-                        // s[`pos_${subtitlePosition}`] 문자열 조합 클래스가 이 컷카드 목록
-                        // (.map 안에서 매번 다시 렌더되는 위치)에서 비어버리는 경우가 실측
-                        // 확인됨 — position:absolute인데 bottom이 하나도 안 붙어서 자막 박스가
-                        // 문서 흐름상 원래 자리(영상 아래, 컨트롤바 위 틈)로 빠져 화면 밖처럼
-                        // 보였다(2026-09-18, 사용자 스크린샷: 컷2/3은 정상, 컷4부터 틀어짐).
-                        // CSS 모듈 클래스 대신 bottom%를 직접 계산해 인라인으로 고정.
-                        // 2026-10-09 실측(성준님: "컷1 조절 안됨" — 나레이션이 2.1s부터 시작하도록
-                        // 설정해도 0초부터 자막이 보였음): captionStartSec만 보고 visibility를
-                        // 정해서, 드래그/숫자로 잡은 실제 구간 타이밍(captionVisibleNow가 이미
-                        // 정확히 계산함, 2167번째 줄 릴스 자막엔 이미 적용 중)이 비릴스 캔버스
-                        // 자막에는 전혀 반영되지 않았다 — "타이밍바를 설정해도 실제 화면에
-                        // 적용 안 됨"의 핵심 원인. 릴스와 같은 기준으로 통일.
-                        style={{ bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
-                      >
-                        {/* 2026-11-03: 640×360 → 1920×1080(실제 16:9 유튜브 출력 해상도)로 올림 —
-                            drawPreview()의 fontSize가 이제 이 좌표계를 스케일 보정 없이 그대로 쓰므로
-                            캔버스 자체도 그 기준에 맞아야 함(아래 drawPreview 주석 참조). */}
-                        <canvas ref={canvasRef} width={1920} height={1080} className={s.overlayCanvas} />
-                      </div>
                     )}
                     {isSelected && subtitleEnabled && subtitleEditMode && (() => {
                       // editBoxVideoWidth(실제 영상이 화면에 찍히는 CSS 픽셀 폭) 기준으로
@@ -2983,12 +2791,9 @@ export default function VideoTab() {
                   <button
                     className={s.ffmpegBtn}
                     disabled={ffmpegStatus[selCut.id] === 'running'}
-                    title={isReel
-                      ? '이 컷 하나만 나레이션·효과음을 입혀 미리 들어봅니다(06_publishing/cut_NN_final.mp4). 릴스 최종본에는 쓰이지 않아요 — 최종본은 메이킹 탭 "릴스 최종본 생성"이 한 번에 입힙니다'
-                      : '이 컷에 나레이션·효과음(+자막 설정)을 입힌 미리듣기 파일만 만듭니다(06_publishing/cut_NN_final.mp4·cut_NN_preview.mp4). 05_video/cut_NN.mp4 원본은 건드리지 않아요 — 실제 번인·믹스는 메이킹 탭 최종본 생성이 한 번에 합니다'}
+                    title="이 컷 하나만 나레이션·효과음(+자막 설정)을 입혀 미리 들어봅니다(06_publishing/cut_NN_final.mp4·cut_NN_preview.mp4). 05_video/cut_NN.mp4 원본은 건드리지 않고, 최종본에도 이 결과가 쓰이지 않습니다 — 실제 번인·믹스는 메이킹 탭 최종본 조립이 자막 입력창·타이밍 바에 저장된 값으로 항상 직접 합니다(2026-11-16 개편)"
                     onClick={() => runFfmpegForCut(selCut, false, cutSegs)}>
-                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…'
-                      : isReel ? '🔊 컷 단독 미리듣기(최종본에 안 쓰임)' : '🔊 나레이션·효과음 미리듣기 생성'}
+                    {ffmpegStatus[selCut.id] === 'running' ? '⏳ 처리 중…' : '🔊 컷 단독 미리듣기(최종본에 안 쓰임)'}
                   </button>
                   <label className={s.uploadBtn} title="외부(CapCut/Veo 등)에서 이미 완성한 파일 1개를 바로 올립니다">
                     {up.busy ? '업로드 중…' : '📤 완성본 바로 업로드'}
@@ -3062,6 +2867,7 @@ export default function VideoTab() {
               <div className={s.cutCardFooter} onClick={e => e.stopPropagation()}>
                 <button
                   className={`${s.g4Btn} ${g4Approved[selCut.id] ? s.g4Done : ''}`}
+                  title="2026-11-16 개편 — G4 승인은 영상 승인뿐 아니라 '이 컷의 자막이 영상·음성에 맞게 1차 픽스됐다'는 뜻도 포괄한다. 자막은 영상·음성이 나온 뒤 연출에 맞춰 사후 조정하는 공정이라, 위 자막 입력창·타이밍 바에서 고친 값이 이 시점부터 최종본의 기준이 된다(따로 다시 고치지 않으면 그대로 유지)."
                   onClick={() => {
                     const next = !g4Approved[selCut.id]
                     setG4Approved(p => ({ ...p, [selCut.id]: next }))
