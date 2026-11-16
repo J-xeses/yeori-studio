@@ -198,7 +198,13 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
         // 영원히 false라 배지가 그냥 안 보이면 "아직 안 했나?"로 헷갈린다. 비활성 G3 배지를
         // 따로 끼워 넣어 단계 전개가 끊기지 않고 보이게 한다(성준님 요청).
         const g3NA = c.voiceSource === 'video' && stages.includes('g3')
-        const badges = stages.filter(key => g[key] && !(key === 'g3' && g3NA))
+        // 2026-11-16: g3NA 배지가 badges.map() 뒤에 따로 붙어 나와서, 실제 g4가 있는 컷은
+        // "G4, G3(흐리게)"처럼 순서가 뒤집혀 보이던 버그(성준님 지적: "G3→G4가 맞는 순서 아냐??") —
+        // g1→g2→g3(실제 또는 NA)→g4→g5 오름차순이 맞으므로, NA 자리도 stages 순서 그대로
+        // 한 배열에 끼워 넣어 렌더링한다(포함 여부 자체는 바뀌지 않음, 위치만 교정).
+        const badges = stages
+          .filter(key => (key === 'g3' && g3NA) || g[key])
+          .map(key => ({ key, na: key === 'g3' && g3NA }))
         // "제작완료" 기준(2026-09-14, 사용자 확정):
         // - doneStage가 명시되면 무조건 그 키만 봄(메이킹 탭="g4" 고정 — G5는 그 탭 스코프 밖).
         // - 안 넘기면(영상 탭 등) 컷 타입별로 자동 판단: 메이킹이 직접 만드는 유형
@@ -236,13 +242,14 @@ export function CutList({ cuts, gData, episodeCode, activeCutId, onCutClick, max
               <span className={s.cutPreview}>{previewText ? previewText(c) : (c.dialogue || c.narration || c.scene || '(내용 없음)')}</span>
               {(badges.length > 0 || madeVideo || fileReadyOnly || g3NA) && (
                 <span className={s.cutBadges}>
-                  {badges.map(key => <span key={key} className={`${s.gBadge} ${s[key]}`}>{key.toUpperCase()}</span>)}
-                  {g3NA && (
-                    <span className={s.gBadge} style={{ opacity: 0.45, filter: 'grayscale(1)' }}
+                  {badges.map(({ key, na }) => na ? (
+                    <span key={key} className={s.gBadge} style={{ opacity: 0.45, filter: 'grayscale(1)' }}
                       title="나레이션/대사가 Flow·Veo3 영상 생성 자체에 화면 밖 음성(V.O.)으로 이미 포함됨 — TTS(G3) 불필요(yeori_ruleset §⑬-4, 2026-11-15)">
                       G3
                     </span>
-                  )}
+                  ) : (
+                    <span key={key} className={`${s.gBadge} ${s[key]}`}>{key.toUpperCase()}</span>
+                  ))}
                   {madeVideo && <span className={s.doneBadge}>✅ 제작완료</span>}
                   {fileReadyOnly && <span className={s.fileReadyBadge} title="파일은 생성됐지만 아직 편집메타(G5) 승인 전입니다">📦 파일 생성됨</span>}
                 </span>

@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "editmeta",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12603,8 +12603,8 @@
           "scene": "김이 오르는 컵라면을 먹는 서여리. 중반에 정적 2~3초(BGM 정지)로 여운을 준 뒤 엔딩카드로 전환.",
           "action": "0~4초 김 오르는 라면을 한 젓가락 먹고 만족스러운 표정 → 4~6초 정적, 창밖을 보는 여운 → 6~8초 카메라를 보며 나레이션",
           "character": "서여리",
-          "dialogue": "여리 \"야식은 후회해도, 이 3분은 후회 안 해요.\"",
-          "narration": "",
+          "dialogue": "",
+          "narration": "(나레이션) 야식은 후회해도, 이 3분은 후회 안 해요.",
           "subtitle": "야식은 후회해도, 이 3분은 후회 안 해요.",
           "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,\neating steaming cup ramen with chopsticks at the window-side table, warm steam rising and softly backlit by the fluorescent light, content small smile, slightly tired but genuinely happy expression,\ndark window beside her reflecting faint store light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people",
           "videoPrompt": "[0-4s] She takes a bite of the steaming ramen with chopsticks, steam rising, a small content smile. [4-6s] She pauses, chopsticks resting, gazing quietly out the dark window — no sound but faint ambient hum, a held breath of stillness. [6-8s] She looks back toward camera with a soft content expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"야식은 후회해도, 이 3분은 후회 안 해요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
@@ -12625,7 +12625,7 @@
             "du": 8,
             "audio": {
               "bgm": "로파이 비트 → 4~6초 지점에서 2초간 완전 정지(여운) → 6초부터 다시 낮게 흐르다 엔딩카드에서 페이드아웃",
-              "voice": "여리 — 잔잔하고 진심 어린 톤 — 대사로 처리(Flow 생성 영상에 립싱크로 내장, 2026-11-16 나레이션→대사 재분류)",
+              "voice": "여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
               "sfx": "라면 먹는 소리(아주 자연스럽게, 과하지 않게)",
               "ambience": "늦은 밤 편의점, 조용한 냉장고 모터음(정적 구간엔 이 소리만)"
             },
@@ -13045,7 +13045,7 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "16:9",
+    "ratio": "9:16",
     "bgImageUrl": "",
     "posterLayers": []
   },
@@ -13104,7 +13104,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-16T08:20:29.659Z",
+  "savedAt": "2026-11-16T09:04:23.964Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -13169,7 +13169,10 @@
       ]
     },
     "g4Approved": {
-      "cut-1": true
+      "cut-1": true,
+      "cut-2": true,
+      "cut-3": true,
+      "cut-4": true
     },
     "selectedCutId": "cut-4",
     "subtitles": {
