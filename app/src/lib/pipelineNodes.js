@@ -159,6 +159,12 @@ export const PIPELINE_NODES = [
     code: ['src/tabs/CheckupTab.jsx', 'src/tabs/PublishingTab.jsx', 'server/lib/igPublish.js', 'server/lib/publishStatus.js'],
     inputs: [
       { port: 'finalOutput', kind: 'media', from: 'finalize.finalOutput', text: '07_output 최종본' },
+      // 2026-11-16(성준님 — BGM 설정을 전체 영상과 매치시켜 점검할 경로 필요): 체크업 탭은 지금
+      // 컷별 cut_NN.mp4만 이어 재생해서 BGM이 화면에 구조적으로 없다(07_output 최종본을 아예 안
+      // 틈). 계획: 메이킹 탭 구간별 음량 보정이 반영된 BGM 미리듣기 오디오를 가볍게 만들어
+      // 체크업 타임라인 재생에 맞춰 같이 틀어준다(전체 재조립 없이). 아직 미착수 — planned:true로
+      // 배선만 먼저 표시(buildEdges가 일반 배선과 다르게 그림, PipelineMonitorTab.jsx 참고).
+      { port: 'bgmPreview', kind: 'media', from: 'trendRadar.bgm', text: 'BGM 미리듣기 — 구간별 음량 보정 반영 (계획, 미구현)', planned: true },
     ],
     outputs: [
       { port: 'published', kind: 'media', text: '게시(Instagram·YouTube)' },
@@ -240,7 +246,7 @@ export function buildEdges(defs = PIPELINE_NODES) {
     for (const inp of d.inputs || []) {
       const src = parseFrom(inp.from)
       if (!src || src.node === d.id || !outPorts.has(inp.from)) continue
-      edges.push({ id: `${inp.from}->${d.id}.${inp.port}`, source: src.node, sourceHandle: src.port, target: d.id, targetHandle: inp.port })
+      edges.push({ id: `${inp.from}->${d.id}.${inp.port}`, source: src.node, sourceHandle: src.port, target: d.id, targetHandle: inp.port, planned: inp.planned === true })
     }
   }
   return edges

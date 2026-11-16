@@ -30,6 +30,7 @@ const STATE_LABEL = { active: '진행 중', unverified: '파일 미확인', pend
 const STATE_COLOR = { done: '#4ee6a8', partial: '#4ee6a8', warn: '#ffd23f', fail: '#ff5d6c', active: '#ff7a1a' }
 const IDLE_COLOR = '#3a342d'
 const USER_EDGE_COLOR = '#8d6bff'
+const PLANNED_EDGE_COLOR = '#6b7280'
 
 // 좌측 아이콘 바의 모드. ready:true 인 것만 실제 캔버스 모드다(지금은 "전체" 하나).
 const RAIL_MODES = [
@@ -344,8 +345,12 @@ function Workbench() {
   }
 
   // 배선 색 = 도착(다음) 노드의 상태. 진행 중이면 흐르는 점선, 단선이면 끊어진 빨간 점선. 화면에서 그은 임시 배선은 보라.
+  // 2026-11-16: planned(아직 구현 안 된 기능의 배선 계획, pipelineNodes.js inputs[].planned)은
+  // 실제 가동 중인 배선과 혼동되면 안 되므로 회색 점선 + "(계획)" 라벨로 명확히 구분한다 —
+  // 상태색(STATE_COLOR)·건강검진 집계(healthOf) 대상에서도 제외(실제 코드가 없으니 당연히 제외).
   const styledEdges = edges.map(e => {
     if (e.data?.user) return { ...e, type: 'default', style: { stroke: USER_EDGE_COLOR, strokeWidth: 2, strokeDasharray: '2 5' } }
+    if (e.planned) return { ...e, type: 'default', label: '계획', labelStyle: { fill: PLANNED_EDGE_COLOR, fontSize: 10 }, style: { stroke: PLANNED_EDGE_COLOR, strokeWidth: 1.5, strokeDasharray: '4 4', opacity: 0.7 } }
     const st = byId[e.target]?.state
     const color = STATE_COLOR[st] || IDLE_COLOR
     return {

@@ -252,6 +252,11 @@ export function pipelineCodeToInstaContent(plCode) {
 // 명시됨) 대본 파싱 직후 결정적으로 검사·보정한다. 캐릭터 LOOK 프롬프트 자체는 다른 컷
 // 일관성을 깨뜨릴 위험이 있어 건드리지 않음(사용자 판단, 2026-09-15).
 const INDOOR_HOME_RE = /집|소파|거실|침실|침대|원룸|자취방|욕실|화장실|주방|부엌/
+// 2026-11-17(성준님 실측, IG_R09): "집 앞 편의점"처럼 공공 판매시설이 "집"이라는 단어와 같은
+// 장면 텍스트에 섞여 있으면 INDOOR_HOME_RE가 오매칭해서, 편의점 내부인데 서여리가 양말만
+// 신고 들어온 것처럼 연출됐다. 편의점·마트 등 "누구나 신발 신고 드나드는 공공 실내 판매·
+// 서비스 시설" 키워드가 있으면 "집" 매칭과 무관하게 이 가드 자체를 건너뛴다.
+const PUBLIC_INDOOR_RE = /편의점|마트|슈퍼마켓|슈퍼|상점|매장|가게|백화점|쇼핑몰|식당|카페|병원|약국|은행|학교|학원|사무실|회사|지하철|버스|로비|엘리베이터/
 const INTENTIONAL_SHOE_RE = /신발|하이힐|구두|부츠|슬리퍼|운동화|스니커즈|페르소나/
 const SHOE_KEYWORD_EN_RE = /\b(sneakers?|shoes?|heels?|boots?|loafers?|sandals?|flats?|Converse|Chuck Taylor|stilettos?)\b/i
 const BAREFOOT_ADDENDUM = 'Barefoot or socks only, no shoes worn (indoor home setting).'
@@ -269,7 +274,7 @@ function stripShoeClausesFromLine(line) {
 
 function applyIndoorBarefootGuard(sceneKr, actionKr, ip, vp) {
   const koreanText = `${sceneKr || ''} ${actionKr || ''}`
-  if (!INDOOR_HOME_RE.test(koreanText) || INTENTIONAL_SHOE_RE.test(koreanText)) return { ip, vp }
+  if (!INDOOR_HOME_RE.test(koreanText) || INTENTIONAL_SHOE_RE.test(koreanText) || PUBLIC_INDOOR_RE.test(koreanText)) return { ip, vp }
   const finish = (text) => {
     if (!text) return text
     // 멱등성 가드 — BAREFOOT_ADDENDUM 자체에 "shoes"가 들어있어서, 이미 적용된 텍스트를
