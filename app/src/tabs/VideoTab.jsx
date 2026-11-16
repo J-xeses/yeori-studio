@@ -972,17 +972,17 @@ export default function VideoTab() {
     if (!subtitleEnabled) return
     if (reelStyle.captionStyle === 'handwriting') return   // 손글씨는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다
     const text = previewText
-    // 2026-11-03 재수정: 이 캔버스는 ReelCaptionOverlay처럼 실제 화면에 꽉 차게 반응형으로
-    // 그려지는 DOM이 아니라, <canvas width={1920} height={1080}>(아래 JSX) 고정 해상도
-    // 래스터를 CSS로 늘려 보여주는 방식이다. 캔버스 해상도를 실제 유튜브 16:9 출력 규격
-    // (1920×1080)에 맞추고, fontSize를 그 좌표계에서 그대로(스케일 보정 없이) 픽셀값으로
-    // 써서 슬라이더 값과 화면에 보이는 크기가 1:1로 맞게 한다.
-    // 2026-11-17(성준님 질문 계기 — "크기·세로 위치 설정이 작동 안 되나?"): 이 캔버스는 복구
-    // 당시(오전) 옛 변수(fontSize/subtitlePosition)를 그대로 되살렸는데, 그사이 화면의 실제
-    // 슬라이더는 전부 reelFontPx/reelStyle.y(공용, server/lib/subtitleBurn.js가 최종본에
-    // 실제로 쓰는 값)로 바뀌어 있어서 — 슬라이더를 움직여도 서버 최종본엔 반영되는데 이
-    // 미리보기만 반응을 안 했다(기능은 살아있었지만 미리보기가 거짓 정보를 보여준 것).
-    const fSize = Math.max(10, Math.round(reelFontPx))
+    // 2026-11-16(성준님 지적 — "구워진 글자크기·위치와 미리보기가 완전히 다르다, 계속
+    // 들쭉날쭉했다") 근본 수정: 캔버스가 항상 16:9(1920×1080)로 고정돼 있어서, 9:16 모드일
+    // 땐 세로 영상 박스의 아래쪽 32%만 캔버스가 차지하고(.overlayCanvas CSS가 늘 1920/1080
+    // 비율을 강제) 그 안에서 세로 위치%를 계산해 완전히 다른 좌표계였다 — 이제 캔버스의
+    // width/height 속성 자체를 aspectRatio에 맞춰 바꾸고(아래 JSX), CSS의 고정 aspect-ratio도
+    // 제거해서 캔버스 고유 치수를 그대로 따르게 했다. 또한 server/lib/subtitleBurn.js가
+    // DEFAULT_REFERENCE_HEIGHT(1920) 대비 videoHeight 비율로 글자 크기를 줄이는 것과 똑같은
+    // 공식을 여기도 적용 — 16:9(H=1080)는 0.5625배로, 9:16(H=1920)은 1배로(기존과 동일).
+    const DEFAULT_REFERENCE_HEIGHT = 1920   // server/lib/subtitleBurn.js와 반드시 같은 값
+    const scale = H / DEFAULT_REFERENCE_HEIGHT
+    const fSize = Math.max(10, Math.round(reelFontPx * scale))
     const padX = Math.round(fSize * 0.45), padY = Math.round(fSize * 0.28), lineGap = 1.3
 
     ctx.font = `${fSize}px "${font}",sans-serif`
@@ -1041,7 +1041,7 @@ export default function VideoTab() {
     if (isLastCut) {
       const ecRaw = (reelEndCardStyle.text || '').trim() ? reelEndCardStyle.text : endCardDefault.join('\n')
       if (ecRaw.trim()) {
-        const ecFSize = Math.max(10, Math.round(reelEndCardStyle.fontPx || reelFontPx))
+        const ecFSize = Math.max(10, Math.round((reelEndCardStyle.fontPx || reelFontPx) * scale))
         ctx.font = `bold ${ecFSize}px "${font}",sans-serif`
         ctx.textAlign = 'center'
         const ecMaxWidth = W * (aspectRatio === '16:9' ? 0.80 : 0.86)
@@ -2489,20 +2489,38 @@ export default function VideoTab() {
                     {isSelected && subtitleEnabled && reelStyle.captionStyle !== 'handwriting' && !subtitleEditMode && !(bigShowFinal && bigHasDerived) && !previewClip?.hasBurnedSubtitle && !selCut.captionBurnedIntoBase && (
                       <div
                         className={s.subtitleDisplay}
-                        style={{ bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                        // 2026-11-16: .subtitleDisplay 클래스 자체가 height:30%로 고정돼 있어서,
+                        // 캔버스를 9:16 실제 비율로 고친 뒤에도 화면 아래쪽 30%를 벗어나는 위치는
+                        // overflow:hidden에 전부 잘려 안 보였다(성준님 실측: "자막을 아예 못 보게
+                        // 됐다") — 세로 위치는 이제 캔버스 내부(drawPreview, H*reelStyle.y)가 전부
+                        // 계산하므로, 이 바깥 틀은 영상 전체 높이를 다 덮게 하고(top/height 인라인
+                        // 오버라이드) 더는 bottom%로 따로 밀어 올리지 않는다.
+                        style={{ top: 0, bottom: 0, height: '100%', visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
                       >
-                        <canvas ref={canvasRef} width={1920} height={1080} className={s.overlayCanvas} />
+                        {/* 2026-11-16: 캔버스 고유 해상도를 실제 미리보기 중인 비율(9:16/16:9)에 맞춤 —
+                            전엔 항상 1920×1080(16:9)이라 세로형일 땐 캔버스가 영상 박스의 아래쪽
+                            32%만 차지해 세로 위치·글자크기 계산이 완전히 다른 좌표계였다. */}
+                        <canvas ref={canvasRef}
+                          width={aspectRatio === '16:9' ? 1920 : 1080}
+                          height={aspectRatio === '16:9' ? 1080 : 1920}
+                          className={s.overlayCanvas} />
                       </div>
                     )}
                     {isSelected && subtitleEnabled && subtitleEditMode && (() => {
                       // editBoxVideoWidth(실제 영상이 화면에 찍히는 CSS 픽셀 폭) 기준으로
                       // drawPreview()·ffmpeg 번인과 같은 비율(W*0.86 세로형/0.80 가로형)을
                       // textarea 줄바꿈 폭으로, fontSize도 같은 축척으로 적용.
-                      const wrapScale = editBoxVideoWidth ? editBoxVideoWidth / 1920 : 1
+                      // 2026-11-16 수정(들쭉날쭉 미리보기 원인 ③): 여기만 죽은 전역 변수
+                      // fontSize(실제 최종본엔 안 쓰임)를 보고 있었고, 기준 폭도 세로형인데
+                      // 가로형 기준(1920)으로 나눠서 거의 2배 틀어졌었다 — 실제로 번인에 쓰이는
+                      // reelFontPx로, 기준 폭도 세로형=1080/가로형=1920(drawPreview의
+                      // DEFAULT_REFERENCE_HEIGHT와 같은 축척)으로 교정.
+                      const referenceWidth = aspectRatio === '16:9' ? 1920 : 1080
+                      const wrapScale = editBoxVideoWidth ? editBoxVideoWidth / referenceWidth : 1
                       const textMaxWidthPx = editBoxVideoWidth
                         ? Math.round(editBoxVideoWidth * (aspectRatio === '16:9' ? 0.80 : 0.86))
                         : null
-                      const editFontPx = Math.max(10, Math.round(fontSize * wrapScale))
+                      const editFontPx = Math.max(10, Math.round(reelFontPx * wrapScale))
                       return (
                       <div
                         ref={el => {

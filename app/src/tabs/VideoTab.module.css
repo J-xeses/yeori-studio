@@ -137,7 +137,10 @@
 .pos_top { bottom: 24%; }
 .pos_middle { bottom: 14%; }
 .pos_bottom { bottom: 6%; }
-.overlayCanvas { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; aspect-ratio: 1920 / 1080; pointer-events: none; }
+/* 2026-11-16: aspect-ratio를 16:9로 고정해뒀던 걸 제거 — 세로형(9:16) 미리보기일 때 캔버스가
+   영상 박스의 아래쪽 32%만 차지하던 원인이었음(VideoTab.jsx가 canvas width/height 속성을
+   이제 실제 비율에 맞게 바꿔주므로, 그 고유 치수를 CSS가 그대로 따르게 비워둔다). */
+.overlayCanvas { position: absolute; left: 0; bottom: 0; width: 100%; height: auto; pointer-events: none; }
 
 /* Selected cut card */
 .selectedCutCard { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; flex-shrink: 0; cursor: pointer; transition: border-color .12s; }

@@ -793,6 +793,14 @@ high-pitched, energetic voice, playful and confident, teasing tone"). Flow/Veo3�
 여전히 옛 `subtitlePosition`(죽은 필드)에 저장된다 — 슬라이더(세로 위치 %)는 이미 공통 경로로
 고쳤지만 이 버튼은 아직 아니다. 다음에 건드릴 때 `reelStyle.y` 공통 경로로 맞출 것.
 
+**2026-11-16 추가(§⑬-6 작업 중 발견, 근본 수정) — 미리보기 캔버스 좌표계가 9:16에서 완전히
+틀어져 있었음**: 캔버스가 CSS로 항상 16:9(1920×1080) 고정이라, 9:16(세로) 모드에선 영상 박스의
+아래쪽 32%만 캔버스가 차지하고 그 안에서 세로 위치%를 계산했다 — 릴스(이 프로젝트 주력
+포맷)가 제일 심하게 틀어진 상태였음. 캔버스 `width`/`height` 속성을 실제 비율에 맞춰 동적으로
+바꾸고, 서버와 같은 `DEFAULT_REFERENCE_HEIGHT=1920` 기준 축척을 캔버스에도 적용, 자막 수정
+입력창의 죽은 `fontSize` 참조도 `reelFontPx`로 교정. 두 공식이 기준 해상도에서 정확히 같은
+값을 내는 것을 계산으로 증명(상세: [[project_sf_subtitle_burn_video_tab]] 19차).
+
 **검증**: `node scripts/pipeline-selftest.js` 49건 중 48건 통과(M4 TYPER 미구현은 무관한 기존
 이슈) — F1(최종본 나레이션 믹스·대사 음성·영상탭 스타일 반영)을 새 drawtext 경로 기준으로
 다시 쓰고 통과 확인(옛 assertion은 handwriting_overlay.py가 항상 돈다고 가정해 더는 안 맞았음).
