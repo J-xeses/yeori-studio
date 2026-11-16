@@ -137,7 +137,7 @@ export const PIPELINE_NODES = [
     ],
   },
   {
-    id: 'finalize', no: '07', icon: 'rocket', label: '최종화', sub: 'G5 · 릴스 최종본', tab: 'making', gate: 'g5', health: true, path: '07_output',
+    id: 'finalize', no: '07', icon: 'rocket', label: '최종화', sub: 'G5 · 최종 영상 조립', tab: 'making', gate: 'g5', health: true, path: '07_output',
     code: ['server/lib/reelFinalize.js', 'server/lib/bgmSelect.js', 'server/lib/reelOverrides.js', 'server/proxy.js · /api/reel-finalize'],
     inputs: [
       { port: 'cutVideo', kind: 'media', from: 'compose.cutVideo', text: '05_video 컷 영상 전체' },

@@ -16,7 +16,11 @@ import s from './VideoTab.module.css'
 // 등)이라 Google AI Studio·runway는 StudioTab의 Zemith처럼 아직 placeholder로만 추가한다.
 const VIDEO_TOOLS = ['Flow', 'Google AI Studio', 'runway']
 
-const FONTS = ['Apple SD Gothic Neo', 'Noto Sans KR', 'Nanum Gothic', 'Nanum Myeongjo', 'Gothic A1', 'Arial', 'Impact']
+// 2026-11-16: 이 PC에 실제 파일이 있는 4개만 남김(server/lib/subtitleBurn.js FONT_CANDIDATES와
+// 키를 반드시 동일하게 유지 — 다르면 드롭다운에서 고른 이름이 서버에서 안 매칭돼 조용히
+// 기본값으로 떨어진다). 전엔 Apple SD Gothic Neo·Noto Sans KR·Nanum Myeongjo·Gothic A1도
+// 있었는데 전부 파일이 없어 맑은고딕으로 조용히 대체되던 "가짜 선택지"였음.
+const FONTS = ['맑은 고딕', '나눔고딕', 'Arial', 'Impact']
 const BG_STYLES = ['반투명 직각 박스', '없음', '그림자']
 const CLIP_MAX_SEC = 8
 
@@ -175,7 +179,7 @@ function clipTimings(clips, plannedSegs = []) {
 // 사용자 지적: "줄바꿈 설정대로 자막이 나타나는 기능이 안 된다"). 먼저 \n으로 문단을
 // 나누고, 각 문단을 기존처럼 폭 기준 자동 줄바꿈 — 수동 개행은 항상 줄 경계로 유지되고,
 // 자동 줄바꿈은 그 안에서만 동작.
-// 릴스 최종본 자막 미리보기 레이어 — 9:16 영상 영역 전체에 겹쳐 handwriting_overlay.py 배치 규칙을 그대로 재현한다.
+// 최종 영상 조립 자막 미리보기 레이어 — 9:16 영상 영역 전체에 겹쳐 handwriting_overlay.py 배치 규칙을 그대로 재현한다.
 // 크기 = fontPx × (화면 높이/1920), 기본 위치 = 블록 아래끝이 87% 기준 → 72% 안전선 위로 올림, y 지정 시 블록 중심.
 // (2026-09-25: 처음엔 영상 아래 "자막 띠" 캔버스(640×360)에 그려서 최종본보다 4~5배 작게 보였다 — 성준님 스크린샷)
 // 자막 세그먼트가 실제 대사인지 — 서버 reelFinalize.isDialogueSeg 와 같은 규칙(2026-09-28).
@@ -317,6 +321,58 @@ function ReelCaptionTimingBar({ segs, duration, onCommit }) {
   )
 }
 
+// 2026-11-16 복구(자막 스타일 "기본 텍스트"가 다시 기본값이 되어서 — 이 캔버스가 다시 실제
+// 결과와 같은 미리보기가 됨). 아침에 "모든 포맷이 손글씨 하나만 쓴다"고 오판해서 지웠었다.
+function wrapCanvasText(ctx, text, maxWidth) {
+  const lines = []
+  for (const para of String(text ?? '').split('\n')) {
+    const words = para.split(' ')
+    let line = ''
+    for (const word of words) {
+      const test = line ? line + ' ' + word : word
+      if (ctx.measureText(test).width > maxWidth && line) {
+        if (ctx.measureText(word).width > maxWidth) {
+          let charLine = line
+          for (const ch of word) {
+            const t2 = charLine + ch
+            if (ctx.measureText(t2).width > maxWidth && charLine) {
+              lines.push(charLine)
+              charLine = ch
+            } else {
+              charLine = t2
+            }
+          }
+          line = charLine
+        } else {
+          lines.push(line)
+          line = word
+        }
+      } else {
+        line = test
+      }
+    }
+    lines.push(line)
+  }
+  return lines
+}
+
+function hexToRgba(hex, alpha) {
+  const h = (hex || '#000000').replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16)
+  const g = parseInt(h.substring(2, 4), 16)
+  const b = parseInt(h.substring(4, 6), 16)
+  return `rgba(${r},${g},${b},${alpha})`
+}
+
+// 자막 외곽선 색을 글자색과 자동으로 반대로 두기 위한 밝기 판정(표준 상대 휘도 근사).
+function isLightColor(hex) {
+  const h = (hex || '#ffffff').replace('#', '')
+  const r = parseInt(h.substring(0, 2), 16) || 0
+  const g = parseInt(h.substring(2, 4), 16) || 0
+  const b = parseInt(h.substring(4, 6), 16) || 0
+  return (0.299 * r + 0.587 * g + 0.114 * b) > 150
+}
+
 // PL이 인스타그램 콘텐츠 코드(IG_FD/IG_RL/IG_PT/IG_ST)면 어느 downloads/insta/{content}/
 // 하위로 라우팅할지 반환. StudioTab.jsx에 있는 것과 동일 로직(이 코드베이스의 기존 관례대로
 // 작은 순수함수라 탭마다 그대로 복제해서 씀).
@@ -348,6 +404,7 @@ export default function VideoTab() {
   // 전엔 로컬 useState('middle')뿐이라, 편집창에서 "위치" 버튼을 눌러도 새로고침/탭이동하면
   // 사라지고 최종 결과물에도 전혀 반영되지 않았음(성준님 지적: "자막 위치설정 기능도 아직 안되고").
   const { subtitleEnabled, font, fontSize, color, bgStyle, boxColor, subtitlePosition = 'bottom' } = videoSettings
+  const canvasRef = useRef(null)
   const textareaRef = useRef(null)
   const [renderLog, setRenderLog] = useState([])
   // 2026-11-07 추가(성준님 제보 — "자막수정 타이핑 창 폭에 따라 줄바꿈 설정도 화면 자막과
@@ -630,7 +687,7 @@ export default function VideoTab() {
   }
   // 2026-10-09: 자막 시간조절 바는 "릴스냐 아니냐"와 무관하게 똑같이 필요한 기능인데(성준님:
   // "콘텐츠와 관계없이 통용되어야 하는 설정 아닌가"), 저장 경로만 릴스 전용
-  // (reelOverrides/api/reel-finalize/override, 릴스 최종본 조립이 읽는 곳)이었다. 비릴스는 그
+  // (reelOverrides/api/reel-finalize/override, 최종 영상 조립이 읽는 곳)이었다. 비릴스는 그
   // 저장소 자체가 없으니, captionSegTiming을 컷 자체 필드로 직접 저장(UPDATE_CUT)하고 즉시
   // flushSave — effectiveCaptionValue/captionVisibleNow는 이미 이 필드를 릴스 구분 없이 읽고
   // 있어서(원래부터 범용 설계) 저장 쪽만 맞추면 됨. 릴스는 기존 전용 경로 그대로 유지.
@@ -880,10 +937,78 @@ export default function VideoTab() {
 
   const allG4Done = cuts.length > 0 && cuts.every(c => !needsFlowVideo(c.cutType) || g4Approved[c.id])
 
-  // 2026-11-16 은퇴: 메커니즘 B(영상 탭 미리듣기 결과 재사용) 제거로 모든 포맷의 최종본이 항상
-  // Gaegu 손글씨(ReelCaptionOverlay, 아래 JSX)로 번인된다. 이 캔버스(canvasRef)는 옛 SF/LF
-  // 전용 폰트·색 미리보기였는데, 이제 실제 결과와 다른 모습을 보여주는 오래된 미리보기라
-  // drawPreview()·<canvas> 요소를 함께 뺐다.
+  // 2026-11-16 재복구: 오전엔 "모든 포맷이 손글씨 하나만 쓴다"고 오판해서 이 캔버스를 통째로
+  // 지웠었는데, 성준님 지시로 자막 스타일이 기본=텍스트/옵션=손글씨 토글로 바뀌면서 다시
+  // 필요해졌다 — captionStyle==='handwriting'일 때만 건너뛰고(그때는 ReelCaptionOverlay가
+  // 담당), 기본값(텍스트)에서는 이 캔버스가 실제 drawtext 번인(server/lib/subtitleBurn.js)과
+  // 같은 폭/줄바꿈/외곽선 공식으로 그린다 — "미리보기=번인 결과"를 다시 보장.
+  const drawPreview = useCallback(() => {
+    const canvas = canvasRef.current; if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    const W = canvas.width, H = canvas.height
+    ctx.clearRect(0, 0, W, H)
+    if (!subtitleEnabled) return
+    if (reelStyle.captionStyle === 'handwriting') return   // 손글씨는 영상 영역 전체 레이어(ReelCaptionOverlay)로 그린다
+    const text = previewText
+    // 2026-11-03 재수정: 이 캔버스는 ReelCaptionOverlay처럼 실제 화면에 꽉 차게 반응형으로
+    // 그려지는 DOM이 아니라, <canvas width={1920} height={1080}>(아래 JSX) 고정 해상도
+    // 래스터를 CSS로 늘려 보여주는 방식이다. 캔버스 해상도를 실제 유튜브 16:9 출력 규격
+    // (1920×1080)에 맞추고, fontSize를 그 좌표계에서 그대로(스케일 보정 없이) 픽셀값으로
+    // 써서 슬라이더 값과 화면에 보이는 크기가 1:1로 맞게 한다.
+    const fSize = Math.max(10, Math.round(fontSize))
+    const padX = Math.round(fSize * 0.45), padY = Math.round(fSize * 0.28), lineGap = 1.3
+
+    ctx.font = `${fSize}px "${font}",sans-serif`
+    ctx.textAlign = 'center'
+
+    const maxTextWidth = W * (aspectRatio === '16:9' ? 0.80 : 0.86)
+    const lines = wrapCanvasText(ctx, text, maxTextWidth)
+    const lineHeight = fSize * lineGap
+    const totalTextHeight = lineHeight * lines.length
+
+    const subX = W / 2
+    const anchorY = subtitlePosition === 'top' ? H * 0.75
+                 : subtitlePosition === 'middle' ? H * 0.85
+                 : H * 0.93
+
+    const boxBottom = anchorY
+    let boxTop = boxBottom - totalTextHeight - padY * 2
+    const boxHeight = totalTextHeight + padY * 2
+
+    boxTop = Math.max(boxTop, 8)
+
+    // 2026-11-16(성준님 확정): 나레이션 자막은 배경박스를 적용하지 않고 대사 자막과 구분한다 —
+    // server/lib/subtitleBurn.js의 isDialogue 게이트와 같은 규칙(isDialogueSeg).
+    const isDialogue = isDialogueSeg(text, selCutForText?.dialogue)
+    if (bgStyle === '반투명 직각 박스' && isDialogue) {
+      let maxLineWidth = 0
+      lines.forEach(l => { maxLineWidth = Math.max(maxLineWidth, ctx.measureText(l).width) })
+      const bw = maxLineWidth + padX * 2
+      ctx.fillStyle = hexToRgba(boxColor || '#000000', 0.68)
+      ctx.fillRect(subX - bw / 2, boxTop, bw, boxHeight)
+    } else if (bgStyle === '그림자') {
+      ctx.shadowColor = 'rgba(0,0,0,0.95)'
+      ctx.shadowBlur = Math.max(4, Math.round(fSize * 0.28))
+      ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1
+    }
+
+    // 배경이 밝거나 복잡한 화면에서도 글자가 읽히도록, 배경 스타일(박스/그림자)과 별개로
+    // 항상 외곽선을 한 겹 깐다(2026-09-15 확정). 글자색이 밝으면 검은 테두리, 어두우면 흰
+    // 테두리로 자동 반전.
+    ctx.lineJoin = 'round'
+    ctx.lineWidth = Math.max(2, Math.round(fSize * 0.09))
+    ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.85)' : 'rgba(255,255,255,0.85)'
+    ctx.fillStyle = color
+    ctx.textBaseline = 'middle'
+    lines.forEach((l, i) => {
+      const lineCenterY = boxTop + padY + lineHeight * (i + 0.5)
+      ctx.strokeText(l, subX, lineCenterY)
+      ctx.fillText(l, subX, lineCenterY)
+    })
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
+  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue])
+
+  useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -1872,15 +1997,71 @@ export default function VideoTab() {
                   <span>자막 포함</span>
                 </label>
               </div>
-              {/* 2026-11-16 개편: 글씨체·배경 스타일·글자/박스 색상은 전부 제거했다 — 이 설정들은
-                  reelFinalize.js의 06_publishing 미리듣기 재사용 메커니즘(이번에 완전히 삭제)을
-                  통해서만 최종본에 반영되던 "임시 통로"였다. 그 메커니즘이 없어진 지금, 최종 번인은
-                  포맷·컷타입 구분 없이 항상 decideCut()+handwriting_overlay.py(번들 손글씨 폰트
-                  Gaegu-Bold.ttf 고정, 색상·말풍선은 대본 "손글씨 오버레이" 힌트로 결정)만 담당한다.
-                  영상 탭에서 실제로 최종본에 반영되는 건 크기(px)·세로 위치뿐이라 포맷 구분 없이
-                  아래 두 슬라이더만 남긴다(종전엔 릴스 전용이었음). */}
+              {/* 2026-11-16 재설계(성준님 확정): 기본 자막 스타일 = "직관적인 기본 텍스트"
+                  (여기서 고른 글씨체·색·배경이 실제로 번인됨, server/lib/subtitleBurn.js). 손글씨
+                  (handwriting_overlay.py)는 가끔 올리는 인스타 포스트·짧은 스토리에 맞는 옵션이라
+                  기본에서 뺐다 — 아래 토글로 에피소드 단위 전환. 둘 다 "크기·세로 위치"는 공용
+                  슬라이더(reelOverrides._style)를 그대로 쓴다. */}
               <div className={s.field}>
-                <label>🎬 최종본 자막(손글씨) 크기 <span className={s.val}>{reelFontPx}px</span></label>
+                <label>자막 스타일</label>
+                <div style={{ display: 'flex', gap: 14, fontSize: 12.5 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                    <input type="radio" name="captionStyle" checked={reelStyle.captionStyle !== 'handwriting'}
+                      onChange={() => setReelStyle({ captionStyle: 'text' })} />
+                    기본 텍스트
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                    <input type="radio" name="captionStyle" checked={reelStyle.captionStyle === 'handwriting'}
+                      onChange={() => setReelStyle({ captionStyle: 'handwriting' })} />
+                    손글씨
+                  </label>
+                </div>
+              </div>
+              {reelStyle.captionStyle !== 'handwriting' && (
+              <>
+                <div className={s.sidePanelRow2}>
+                  <div className={s.field}>
+                    <label>글씨체</label>
+                    <select value={font} onChange={e => set({ font: e.target.value })} disabled={!subtitleEnabled}>
+                      {FONTS.map(f => <option key={f}>{f}</option>)}
+                    </select>
+                  </div>
+                  <div className={s.field}>
+                    <label>배경 스타일</label>
+                    <select value={bgStyle} onChange={e => set({ bgStyle: e.target.value })} disabled={!subtitleEnabled}>
+                      {BG_STYLES.map(b => <option key={b}>{b}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className={s.sidePanelRow2}>
+                  <div className={s.field}>
+                    <label>글자 색상</label>
+                    <div className={s.colorRow}>
+                      <input type="color" value={color} disabled={!subtitleEnabled}
+                        onChange={e => set({ color: e.target.value })} className={s.colorPicker} />
+                      <span className={s.colorVal}>{color}</span>
+                    </div>
+                  </div>
+                  {bgStyle === '반투명 직각 박스' && (
+                    <div className={s.field}>
+                      <label>박스 색상</label>
+                      <div className={s.colorRow}>
+                        <input type="color" value={boxColor || '#000000'}
+                          disabled={!subtitleEnabled}
+                          onChange={e => set({ boxColor: e.target.value })}
+                          className={s.colorPicker} />
+                        <span className={s.colorVal}>{boxColor || '#000000'}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
+                  나레이션 자막은 배경박스를 적용하지 않고 대사 자막과 구분됩니다(배경 스타일 설정과 무관).
+                </div>
+              </>
+              )}
+              <div className={s.field}>
+                <label>🎬 최종본 자막 크기 <span className={s.val}>{reelFontPx}px</span></label>
                 <input type="range" min="36" max="110" value={reelFontPx} disabled={!subtitleEnabled}
                   onChange={e => setReelStyle({ fontPx: parseInt(e.target.value) })} />
               </div>
@@ -1890,9 +2071,9 @@ export default function VideoTab() {
                   onChange={e => setReelStyle({ y: parseInt(e.target.value) / 100 })} />
               </div>
               <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
-                최종본과 같은 손글씨 자막으로 미리봅니다. 여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다.
-                글씨체·색상·말풍선은 대본의 "손글씨 오버레이" 힌트로 자동 결정되며, 여기서는 바꿀 수 없습니다.
-                자막 문구·타이밍은 아래 자막 입력창·타이밍 바에서 고치면 즉시 저장되어, 고치지 않으면 대본 원본이, 고치면 그 값이 최종본까지 그대로 유지됩니다.
+                여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다. 자막 문구·타이밍은 아래 자막
+                입력창·타이밍 바에서 고치면 즉시 저장되어, 고치지 않으면 대본 원본이, 고치면 그 값이
+                최종본까지 그대로 유지됩니다.
               </div>
             </div>
           )}
@@ -2203,11 +2384,10 @@ export default function VideoTab() {
                         {bigShowFinal ? `▶ 최종 결과 보는 중${bigHasDerived ? '(말풍선·자막 포함)' : ''} — 편집용 클립 보기` : '▶ 편집용 클립 보는 중 — 최종 결과 보기'}
                       </button>
                     )}
-                    {/* 2026-11-16: 메커니즘 B 제거로 모든 포맷의 최종본이 항상 Gaegu 손글씨로
-                        번인되므로, 미리보기도 포맷 구분 없이 항상 ReelCaptionOverlay를 쓴다 —
-                        예전엔 isReel일 때만 이걸 쓰고 그 외엔 아래 폰트/색 캔버스를 썼는데, 그
-                        캔버스가 보여주던 모습은 이제 실제 결과와 다르다(은퇴시킴). */}
-                    {isSelected && subtitleEnabled && !subtitleEditMode && captionVisibleNow && !(bigShowFinal && bigHasDerived) && (
+                    {/* 2026-11-16: 자막 스타일 토글(기본 텍스트/손글씨, reelStyle.captionStyle)에
+                        따라 미리보기도 둘 중 하나를 쓴다 — 손글씨면 ReelCaptionOverlay(Gaegu),
+                        기본(텍스트)이면 아래 캔버스(폰트/색/배경 설정 그대로, drawtext와 동일 공식). */}
+                    {isSelected && subtitleEnabled && reelStyle.captionStyle === 'handwriting' && !subtitleEditMode && captionVisibleNow && !(bigShowFinal && bigHasDerived) && (
                       <ReelCaptionOverlay text={previewText} fontPx={reelFontPx} y={reelStyle.y} fontReady={gaeguReady} plate={isDialogueSeg(previewText, selCutForText?.dialogue)} />
                     )}
                     {isSelected && subtitleEnabled && !subtitleEditMode && (
@@ -2215,6 +2395,14 @@ export default function VideoTab() {
                         style={{ position: 'absolute', top: 8, right: 8, zIndex: 4, fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid rgba(255,255,255,.35)', background: 'rgba(0,0,0,.55)', color: '#fff', cursor: 'pointer' }}>
                         ✏ 자막 수정
                       </button>
+                    )}
+                    {isSelected && subtitleEnabled && reelStyle.captionStyle !== 'handwriting' && !subtitleEditMode && !(bigShowFinal && bigHasDerived) && !previewClip?.hasBurnedSubtitle && !selCut.captionBurnedIntoBase && (
+                      <div
+                        className={s.subtitleDisplay}
+                        style={{ bottom: `${subtitlePosition === 'top' ? 21 : subtitlePosition === 'middle' ? 11 : 3}%`, visibility: captionVisibleNow ? 'visible' : 'hidden', pointerEvents: 'none' }}
+                      >
+                        <canvas ref={canvasRef} width={1920} height={1080} className={s.overlayCanvas} />
+                      </div>
                     )}
                     {isSelected && subtitleEnabled && subtitleEditMode && (() => {
                       // editBoxVideoWidth(실제 영상이 화면에 찍히는 CSS 픽셀 폭) 기준으로
@@ -2700,7 +2888,7 @@ export default function VideoTab() {
                     <span style={{ minWidth: 26 }}>{Math.round((selCut.narrationVolume ?? 1) * 100)}%</span>
                   </label>
                   {isReel ? (
-                    <span style={{ flexShrink: 0 }}>🔊 효과음은 메이킹 탭 → 릴스 최종본 표에서 정합니다</span>
+                    <span style={{ flexShrink: 0 }}>🔊 효과음은 메이킹 탭 → 최종 영상 조립 표에서 정합니다</span>
                   ) : (<>
                   <label title="효과음 시작(초)" style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
                     🔊⏱
@@ -2803,7 +2991,7 @@ export default function VideoTab() {
                 </div>
                 {isReel && (
                   <div className={s.ffmpegLog}>
-                    릴스는 여기서 소리를 따로 입힐 필요가 없어요 — 나레이션·효과음·BGM 은 메이킹 탭 "릴스 최종본 생성"이 한 번에 입힙니다. 미리듣기 결과에는 메이킹 자막 효과와 BGM 이 없습니다.
+                    릴스는 여기서 소리를 따로 입힐 필요가 없어요 — 나레이션·효과음·BGM 은 메이킹 탭 "최종 영상 조립"이 한 번에 입힙니다. 미리듣기 결과에는 메이킹 자막 효과와 BGM 이 없습니다.
                   </div>
                 )}
                 {ffmpegLog[selCut.id] && (
@@ -2814,7 +3002,7 @@ export default function VideoTab() {
                 )}
                 {finalPreviewTs[selCut.id] != null && (() => {
                   const padded = String(selCut.no).padStart(2, '0')
-                  // 릴스 최종본이 실제로 쓸 파일 — 메이킹 탭에서 자막·말풍선을 얹었으면 그 파생본(A안, 2026-10-07)
+                  // 최종 영상 조립이 실제로 쓸 파일 — 메이킹 탭에서 자막·말풍선을 얹었으면 그 파생본(A안, 2026-10-07)
                   const finalRow = (vChk?.cuts || []).find(r => r.no === selCut.no)
                   const finalName = finalRow?.finalSource || `cut_${padded}.mp4`
                   const finalUrl = `${epMediaUrl(episode, 'video')}/${finalName}?t=${finalPreviewTs[selCut.id]}`
@@ -2825,7 +3013,7 @@ export default function VideoTab() {
                   return (
                     <div className={s.field} style={{ marginTop: 8 }}>
                       <label style={{ color: 'var(--accent, #8b5cf6)' }}>✅ 최종 합성본 — 위 세그 목록은 편집용 원본만 보여줍니다, 실제 저장되는 파일은 이것입니다
-                        {finalRow?.finalDerived ? ` · 메이킹 탭 ${finalRow.finalDerived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본(${finalName}) — 릴스 최종본에 이대로 들어가고 자막은 따로 굽지 않습니다` : ''}</label>
+                        {finalRow?.finalDerived ? ` · 메이킹 탭 ${finalRow.finalDerived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'}본(${finalName}) — 최종 영상 조립에 이대로 들어가고 자막은 따로 굽지 않습니다` : ''}</label>
                       <video key={finalUrl} src={finalUrl} controls style={{ width: '100%', maxHeight: 260, background: '#000', borderRadius: 6 }} />
                       {isReel && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
@@ -2836,7 +3024,7 @@ export default function VideoTab() {
                           <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
                             {finalRow?.finalDerived
                               ? '이 컷은 메이킹 탭에서 얹은 자막·말풍선을 그대로 쓰므로 여기 설정은 적용되지 않습니다 — 메이킹 탭에서 조정하세요.'
-                              : '릴스 최종본에서 이 컷 자막이 이 시각부터 뜹니다(이 미리보기 영상에는 자막이 없고, 위 화면 미리보기와 최종본에 반영).'}
+                              : '최종 영상 조립에서 이 컷 자막이 이 시각부터 뜹니다(이 미리보기 영상에는 자막이 없고, 위 화면 미리보기와 최종본에 반영).'}
                           </span>
                         </div>
                       )}

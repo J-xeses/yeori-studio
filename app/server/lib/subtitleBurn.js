@@ -10,18 +10,23 @@ import path from 'path'
 const WIN_FONTS_DIR = 'C:\\Windows\\Fonts'
 
 // 드롭다운(VideoTab.jsx FONTS)의 표시용 이름 → 이 PC에 실제 존재하는 ttf 후보(우선순위순).
-// 애플/구글 전용 폰트는 이 윈도우 PC엔 파일 자체가 없어서(실측 확인: 설치된 글꼴 중
-// arial/impact/malgun*/NanumGothic만 매치) 맑은고딕으로 조용히 대체된다 — ffmpeg는
-// fontfile 경로가 없으면 그냥 죽어버리므로(크래시보다 낫다는 판단), 빈 번인보다 "약간
-// 다른 폰트로라도 보이는" 쪽을 택함.
+// 2026-11-16: 예전엔 애플/구글 전용 폰트 이름(Apple SD Gothic Neo/Noto Sans KR/Gothic A1/
+// Nanum Myeongjo)도 드롭다운에 있었지만, 이 윈도우 PC엔 실제 파일이 없어 전부 조용히
+// 맑은고딕으로 대체되고 있었다(실측 확인) — "선택했는데 똑같다"는 혼란의 씨앗이라, 실제로
+// 서로 다른 글꼴 파일이 있는 4개만 남긴다.
 const FONT_CANDIDATES = {
-  'Apple SD Gothic Neo': ['malgunbd.ttf', 'malgun.ttf'],
-  'Noto Sans KR': ['malgunbd.ttf', 'malgun.ttf'],
-  'Nanum Gothic': ['NanumGothic.ttf', 'malgun.ttf'],
-  'Nanum Myeongjo': ['malgun.ttf'],
-  'Gothic A1': ['malgun.ttf'],
+  '맑은 고딕': ['malgunbd.ttf', 'malgun.ttf'],
+  '나눔고딕': ['NanumGothic.ttf', 'malgun.ttf'],
   'Arial': ['arialbd.ttf', 'arial.ttf'],
   'Impact': ['impact.ttf'],
+  // 하위호환(studio-state.json에 이미 저장된 옛 영문 드롭다운 값) — 새 한글 키와 같은 파일로 매핑.
+  // 직접 state 파일을 패치하면 브라우저 자동저장이 덮어쓸 위험이 있어(2026-11-16 교훈), 여기서
+  // 두 이름 모두 받아주는 쪽을 택함 — 사용자가 드롭다운에서 아무거나 한 번 다시 고르면 자연히 새 키로 넘어감.
+  'Nanum Gothic': ['NanumGothic.ttf', 'malgun.ttf'],
+  'Apple SD Gothic Neo': ['malgunbd.ttf', 'malgun.ttf'],
+  'Noto Sans KR': ['malgunbd.ttf', 'malgun.ttf'],
+  'Gothic A1': ['malgunbd.ttf', 'malgun.ttf'],
+  'Nanum Myeongjo': ['malgun.ttf'],
 }
 
 export function resolveSubtitleFontFile(fontName) {
@@ -121,8 +126,14 @@ function wrapForDrawtext(text, maxWidth, fSize) {
   return lines.join('\n')
 }
 
-// segments: [{text, start, end}] — 빈 텍스트는 호출부가 이미 걸러서 넘겨야 함.
-// style: {font, fontSize, color, bgStyle, boxColor, position}
+// segments: [{text, start, end, isDialogue}] — 빈 텍스트는 호출부가 이미 걸러서 넘겨야 함.
+//   isDialogue: 2026-11-16 추가(성준님 확정) — 나레이션 자막은 배경박스를 적용하지 않고
+//   대사 자막과 구분한다. true/undefined면 대사로 보아 style.bgStyle 설정을 그대로 따르고,
+//   false면 나레이션으로 보아 반투명 박스를 무조건 뺀다(그림자/외곽선은 영향 없음).
+// style: {font, fontSize, color, bgStyle, boxColor, position, positionRatio}
+//   positionRatio(0~1, 선택): 영상 탭 "세로 위치" 슬라이더(reelOverrides._style.y, 손글씨
+//   경로와 공용) 값을 그대로 받아쓴다 — 있으면 style.position 문자열(top/middle/bottom)
+//   보다 우선한다. 둘 다 없으면 기본 bottom(0.93).
 // workDir: 세그먼트별 자막 텍스트를 임시 .txt로 쓸 디렉터리 — 호출부가 ffmpeg 종료 후 정리.
 // videoHeight/videoWidth: 실제 번인 대상 영상의 픽셀 크기 — 주어지면 referenceHeight
 // 대비 비율로 fontSize/패딩/외곽선을 보정하고(해상도가 다른 컷들 사이 글자 크기 통일),
@@ -154,7 +165,8 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
   const maxTextWidth = (typeof videoWidth === 'number' && videoWidth > 0)
     ? videoWidth * ((videoHeight >= videoWidth) ? 0.86 : 0.80)
     : Infinity
-  const ratio = POSITION_RATIO[style.position] ?? POSITION_RATIO.bottom
+  const ratio = (typeof style.positionRatio === 'number' && style.positionRatio > 0)
+    ? style.positionRatio : (POSITION_RATIO[style.position] ?? POSITION_RATIO.bottom)
   const boxHex = '0x' + (style.boxColor || '#000000').replace('#', '')
 
   fs.mkdirSync(workDir, { recursive: true })
@@ -177,7 +189,8 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
       `bordercolor=${outline}@0.85`,
       `line_spacing=4`,
     ]
-    if (style.bgStyle === '반투명 직각 박스') {
+    const isDialogue = seg.isDialogue !== false
+    if (style.bgStyle === '반투명 직각 박스' && isDialogue) {
       opts.push(`box=1`, `boxcolor=${boxHex}@0.68`, `boxborderw=${pad}`)
     } else if (style.bgStyle === '그림자') {
       opts.push(`shadowcolor=black@0.95`, `shadowx=1`, `shadowy=1`)

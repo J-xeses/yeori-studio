@@ -14,12 +14,38 @@ import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import * as mp from './mediaPaths.js'
 import { loadOverrides } from './reelOverrides.js'
+import { buildSubtitleDrawtextFilter } from './subtitleBurn.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // 손글씨체 — 레퍼런스(0808.mp4) 스타일. app/assets/fonts 번들.
 const FONT = 'Gaegu'
 const FONTS_SRC = path.join(__dirname, '..', '..', 'assets', 'fonts')          // Gaegu-Bold.ttf 등
 const EMOJI_FONT_WIN = 'C:\\Windows\\Fonts\\seguiemj.ttf'                       // 컬러 이모지 폴백(COLR/CPAL)
+const STUDIO_STATE_FILE = path.join(__dirname, '..', '..', 'studio-state.json')
+
+// 2026-11-16: 영상 탭 "자막 디자인 설정"(글씨체·크기·색·배경 스타일·글자색)은 studio-state.json
+// 최상위 videoSettings(앱 전체 공용 — 에피소드별이 아님, VideoTab.jsx와 같은 필드)에 저장된다.
+// 지금까지 reelFinalize.js 는 이 값을 전혀 읽지 않아 "영상 탭 설정이 최종본에 반영 안 됨"
+// (오래전부터 알려진 버그, [[project_sf_subtitle_burn_video_tab]] 11차 "버그 B")이었다 — 이제
+// 기본 자막 스타일(§⑬-5, captionStyle='text')의 입력으로 실제로 읽는다.
+function loadGlobalVideoSettings() {
+  try {
+    const j = JSON.parse(fs.readFileSync(STUDIO_STATE_FILE, 'utf-8'))
+    return j.videoSettings || {}
+  } catch { return {} }
+}
+function ffprobeVideoSize(filePath) {
+  return new Promise((resolve) => {
+    const proc = spawn('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height', '-of', 'csv=s=x:p=0', filePath], { windowsHide: true })
+    let out = ''
+    proc.stdout.on('data', (c) => { out += c.toString() })
+    proc.on('close', () => {
+      const m = out.trim().match(/^(\d+)x(\d+)/)
+      resolve(m ? { width: parseInt(m[1], 10), height: parseInt(m[2], 10) } : { width: 0, height: 0 })
+    })
+    proc.on('error', () => resolve({ width: 0, height: 0 }))
+  })
+}
 
 // ── 효과음 규칙 — "AI연구소 효과음 모음집" 가이드(_shared/sfx/SFX_GUIDE.md) 기반 ─────
 // 대본 "효과음:" 텍스트(+보조로 MD 감정·SC 장면)의 키워드로 매칭. 위에서부터 먼저 맞는 것.
@@ -522,6 +548,11 @@ export async function finalizeReel(p) {
   const code = mp.resolveCode(epNum)
   // 영상 탭에서 정한 자막 스타일(오버라이드 _style: fontPx=1920 세로 기준 px, y=블록 중심 비율) — 미리보기와 최종본 일치(2026-09-25)
   const capStyle = loadOverrides(code)._style || {}
+  // 2026-11-16 §⑬-5(성준님 확정): 기본 자막 스타일은 "직관적인 기본 텍스트"(drawtext, 영상
+  // 탭 글씨체·색·배경 설정이 실제로 적용됨) — 손글씨(handwriting_overlay.py)는 가끔 올리는
+  // 인스타 포스트·짧은 스토리 등에 맞는 옵션으로, 에피소드별로 켤 때만 쓴다.
+  const captionStyle = capStyle.captionStyle === 'handwriting' ? 'handwriting' : 'text'
+  const globalVideoSettings = loadGlobalVideoSettings()
   // 메이킹 탭 "BGM 구간별 음량" 패널(오버라이드 _bgm.gainSegments: [[시작초,끝초,배수], ...]) — 2026-10-31.
   // 곡 자체의 다이내믹(브레이크다운 등)이 컷 길이와 안 맞아 특정 구간만 죽어 들릴 때, 사람이 직접
   // 그 구간만 음량을 올리거나 내릴 수 있게. 배수 1.0=그대로, 2.0=2배. adelay 뒤에 이어 붙여서
@@ -685,9 +716,11 @@ export async function finalizeReel(p) {
   const SUBS_VF = 'subtitles=subs.ass:fontsdir=fonts'
 
   // 3b) handwriting_overlay.py 로 자막 렌더(컬러 이모지·말풍선·손그림 데코) — 실패 시 ass 폴백
+  // 2026-11-16: captionStyle==='text'(기본)이면 이 블록 자체를 건너뛰고 아래 3c(drawtext)로 간다 —
+  // 손글씨는 이제 captionStyle==='handwriting'(에피소드별 선택)일 때만 시도.
   let baseForAudio = concat
   let captionMode = 'none'
-  if (p.captionMode !== 'ass' && capCount > 0 && fs.existsSync(HW_OVERLAY_PY)) {
+  if (captionStyle === 'handwriting' && p.captionMode !== 'ass' && capCount > 0 && fs.existsSync(HW_OVERLAY_PY)) {
     const scenes = []
     for (const d of decisions) {
       if (!d.caption) continue
@@ -722,6 +755,49 @@ export async function finalizeReel(p) {
       fs.copyFileSync(cfgPath, path.join(fdir, `${code}_captions.overlay.json`))
     } else {
       log(`⚠ 오버레이 실패 → ass 자막으로 폴백: ${(r.err || r.out || '').slice(-300)}`)
+    }
+  }
+
+  // 3c) 기본 자막 스타일(평이한 텍스트, drawtext) — 영상 탭 "자막 디자인 설정"(글씨체·색·배경
+  // 박스)을 실제로 읽어서 번인한다(2026-11-16, §⑬-5). 대사(plate===true)만 배경박스 적용 —
+  // 나레이션은 박스 없이 구분(성준님 확정). 실패하면 captionMode는 'none'으로 남아 아래 ass
+  // 폴백(needAssBurn)이 대신 처리한다.
+  if (captionStyle === 'text' && capCount > 0) {
+    const allSegs = []
+    for (const d of decisions) {
+      if (!d.caption) continue
+      const segs = d.caption.segments
+      const off = Math.min(d.captionStart || 0, Math.max(d.durSec - 1, 0))
+      const timings = (d.captionSegTiming && d.captionSegTiming.length === segs.length)
+        ? d.captionSegTiming.map(([s, e]) => ({ start: s - off, end: e - off }))
+        : computeSegmentTimings(segs, d.durSec - off)
+      segs.forEach((seg, i) => {
+        const st = d.startSec + off + timings[i].start + SEG_LEAD_SEC
+        const en = d.startSec + off + (i === segs.length - 1 ? d.durSec - off : timings[i].end) - SEG_TRAIL_GUARD_SEC
+        const shown = d.caption.stack ? segs.slice(0, i + 1) : [seg]
+        const text = shown.map((s) => s.overlay.text.replace(/^"|"$/g, '')).join('\n')
+        allSegs.push({ text, start: st, end: en, isDialogue: seg.overlay.plate === true })
+      })
+    }
+    const { width: vW, height: vH } = await ffprobeVideoSize(concat)
+    const style = {
+      font: globalVideoSettings.font, fontSize: capStyle.fontPx || globalVideoSettings.fontSize,
+      color: globalVideoSettings.color, bgStyle: globalVideoSettings.bgStyle, boxColor: globalVideoSettings.boxColor,
+      position: globalVideoSettings.subtitlePosition, positionRatio: capStyle.y,
+    }
+    const workDir = path.join(tmp, 'drawtext')
+    const { filter, tempFiles } = buildSubtitleDrawtextFilter(allSegs, style, workDir, vH, vW)
+    if (filter) {
+      const capOut = path.join(tmp, 'captioned_text.mp4')
+      log(`자막 번인(기본 텍스트, drawtext) — 세그 ${allSegs.length}개 · ${style.font || '맑은 고딕'} ${style.fontSize || 32}px`)
+      try {
+        await ff(['-i', concat, '-vf', filter, '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-c:a', 'copy', capOut])
+        if (fs.existsSync(capOut) && fs.statSync(capOut).size > 10000) { baseForAudio = capOut; captionMode = 'text' }
+      } catch (e) {
+        log(`⚠ 기본 텍스트 자막 번인 실패 → ass 자막으로 폴백: ${e.message.slice(-300)}`)
+      } finally {
+        tempFiles.forEach((f) => { try { fs.unlinkSync(f) } catch { /* noop */ } })
+      }
     }
   }
 
@@ -832,7 +908,7 @@ export async function finalizeReel(p) {
   }
 
   const finalOut = path.join(fdir, `${code}_final.mp4`)
-  const needAssBurn = captionMode !== 'overlay' && capCount > 0
+  const needAssBurn = captionMode === 'none' && capCount > 0
   // sfxFilters 에는 위에서 SFX 절 + (있으면) BGM 절이 이미 모두 들어있다.
   if (sfxLabels.length || bgmFilterOut) {
     const amixIn = `[0:a]${sfxLabels.join('')}${bgmFilterOut}`

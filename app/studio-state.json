@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "monitor",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12967,7 +12967,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-16T02:25:34.958Z",
+  "savedAt": "2026-11-16T03:00:59.608Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -13033,7 +13033,9 @@
     },
     "g4Approved": {},
     "selectedCutId": "cut-1",
-    "subtitles": {}
+    "subtitles": {
+      "cut-1": "새벽 1시, 오늘도 편의점이에요."
+    }
   },
   "ttsTabState": {
     "audioUrls": {},

@@ -29,8 +29,8 @@ function toSRTTime(sec) {
   return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')},${String(ms).padStart(3,'0')}`
 }
 
-// "빠른 조립" 완료 직후 릴스 최종본(07_output/{code}_final.mp4)까지 자동으로 만든다 —
-// 2026-11-13: 이 탭이 G5를 찍어도 메이킹 탭의 "🎬 릴스 최종본 생성"(/api/reel-finalize)을
+// "빠른 조립" 완료 직후 최종 영상 조립(07_output/{code}_final.mp4)까지 자동으로 만든다 —
+// 2026-11-13: 이 탭이 G5를 찍어도 메이킹 탭의 "🎬 최종 영상 조립"(/api/reel-finalize)을
 // 따로 눌러야만 실제 파일이 생겼다. 그래서 모니터(07 최종화 노드)가 "G5 승인인데 최종본 없음"
 // 단선을 계속 띄웠다 — 이 함수가 그 간극을 없앤다. /api/reel-finalize 는 SSE라 MakingTab.jsx의
 // runReelFinalize와 같은 방식으로 읽고 마지막 done 이벤트만 돌려준다. BGM은 새로 생성하지 않는
@@ -527,13 +527,13 @@ export default function EditMetaTab() {
             setAccStatus(s => `${s} ⚠️ G4 미승인 컷 포함(제작완료 표시 안 함): ${unapproved.join(', ')}`)
           }
         }
-        // G5를 찍은 직후 실제 릴스 최종본(07_output)까지 만든다 — 메이킹 탭을 따로 열어
-        // "릴스 최종본 생성"을 누르지 않으면 모니터가 "G5 승인인데 최종본 없음"으로 단선 표시했다.
-        setAccStatus(s => `${s} · ⑥ 릴스 최종본 생성 중...`)
+        // G5를 찍은 직후 실제 최종 영상 조립(07_output)까지 만든다 — 메이킹 탭을 따로 열어
+        // "최종 영상 조립"을 누르지 않으면 모니터가 "G5 승인인데 최종본 없음"으로 단선 표시했다.
+        setAccStatus(s => `${s} · ⑥ 최종 영상 조립 중...`)
         const fin = await finalizeReelSilently(epNum)
         setAccStatus(s => fin.ok
-          ? `${s} · ✅ 릴스 최종본까지 생성 완료`
-          : `${s} · ⚠️ 릴스 최종본 생성 실패(${fin.error}) — 메이킹 탭에서 "🎬 릴스 최종본 생성"으로 다시 시도하세요`)
+          ? `${s} · ✅ 최종 영상 조립까지 생성 완료`
+          : `${s} · ⚠️ 최종 영상 조립 실패(${fin.error}) — 메이킹 탭에서 "🎬 최종 영상 조립"으로 다시 시도하세요`)
         setAccRunning(false)
         return
       }

@@ -1157,10 +1157,10 @@ export default function MakingTab() {
   const [assembleResult, setAssembleResult] = useState(null)
   const [makingPreview, setMakingPreview] = useState(false)
 
-  // ── 릴스 최종본 (자막 번인 + SFX + 컷별 편집 판단) — /api/reel-finalize ──
+  // ── 최종 영상 조립 (자막 번인 + SFX + 컷별 편집 판단) — /api/reel-finalize ──
   const [reelPlan, setReelPlan] = useState(null)      // [{no,cutType,fit,caption,sfx,hasFile}]
   const [reelBusy, setReelBusy] = useState(false)
-  // 릴스 최종본 BGM — 'auto'(보유 곡에서 고르고 없으면 새로 생성) | 'library'(보유 곡만) | 'none' | 보유 곡 파일 경로
+  // 최종 영상 조립 BGM — 'auto'(보유 곡에서 고르고 없으면 새로 생성) | 'library'(보유 곡만) | 'none' | 보유 곡 파일 경로
   const [reelBgm, setReelBgm] = useState('library')
   const [reelLog, setReelLog] = useState('')
   const [reelVideo, setReelVideo] = useState(null)
@@ -1550,6 +1550,16 @@ export default function MakingTab() {
           ...(['auto', 'library', 'none'].includes(reelBgm) ? { bgmMode: reelBgm } : { bgmFile: reelBgm }),
         }),
       })
+      // 2026-11-16: 조립 전 사전 점검(컷/대본 없음, G4 미승인 컷 있음 등)은 SSE 스트림이 아니라
+      // 평범한 JSON 400 응답이다 — 그걸 모르고 항상 스트림으로만 읽으면(옛 코드) "data: ...\n\n"
+      // 구분자가 없어 버퍼에 갇힌 채 화면에 아무 메시지도 안 뜨는 조용한 실패가 됐다(G4 관문을
+      // 새로 추가하면서 실제로 걸림 — 에러가 떴는데 안 보이면 관문이 있는지조차 알 수 없다).
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        append(`❌ ${body.error || `HTTP ${res.status}`}`)
+        setReelBusy(false)
+        return
+      }
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
       for (;;) {
         const { value, done } = await reader.read(); if (done) break
@@ -1844,7 +1854,7 @@ export default function MakingTab() {
       const res = await fetch(`${YEORI_SERVER}/api/handwriting-overlay`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         // "컷 번호로 채우기"로 고른 컷이면 그 컷의 파생본(05_video/cut_NN_overlay.mp4)으로 저장한다 —
-        // 그래야 릴스 최종본·조립·영상 탭 미리보기가 이 결과를 쓴다(A안, 2026-10-07).
+        // 그래야 최종 영상 조립·영상 탭 미리보기가 이 결과를 쓴다(A안, 2026-10-07).
         body: JSON.stringify(hwCutTarget && hwCutTarget.path === hwImgPath.trim()
           ? { epNum: episode.number, cutNo: hwCutTarget.cutNo, scenes, signature: hwSignature }
           : { inputPath: hwImgPath.trim(), scenes, signature: hwSignature }),
@@ -2933,13 +2943,13 @@ export default function MakingTab() {
         <div className={s.settingLabel}>③ 🎬 자막 효과(모션 자막) — cut_{String(cut.no).padStart(2, '0')}.mp4 위에 얹기</div>
         {/* 2026-11-05 추가(성준님 제보): 영상 만들기 탭의 나레이션·자막 타이밍(captionSegTiming)과
             이 패널은 서로 다른 저장소다 — 여기서 "합성 시작"을 누르면 cut_NN_subtitle.mp4가 생기고,
-            그게 cut_NN.mp4보다 새 파일이면 릴스 최종본·영상 만들기 탭 "최종 합성본" 전체가 이
+            그게 cut_NN.mp4보다 새 파일이면 최종 영상 조립·영상 만들기 탭 "최종 합성본" 전체가 이
             파일로 바뀐다(영상 탭에서 설정한 나레이션 타이밍이 무시된 것처럼 보이는 원인). 시작
             시각은 영상 탭 설정에서 가져와 미리 채워두지만(위 loadSubtitleCfg), 여기서 직접 고치면
             그 값이 우선하고 영상 탭과 다시 어긋날 수 있다는 점을 명시한다. */}
         <div className={s.emptyHint} style={{ background: 'var(--bg-input)', padding: '8px 10px', borderRadius: 6, border: '1px solid var(--border)' }}>
           ⚠️ 여기서 <b>✅ 합성 시작</b>을 누르면 <code>cut_{String(cut.no).padStart(2, '0')}_subtitle.mp4</code>가 새로 만들어지고,
-          이후로는 영상 만들기 탭의 "나레이션·효과음 입히기" 결과 대신 <b>이 파일이 릴스 최종본·최종 합성본으로 우선 사용</b>됩니다.
+          이후로는 영상 만들기 탭의 "나레이션·효과음 입히기" 결과 대신 <b>이 파일이 최종 영상 조립·최종 합성본으로 우선 사용</b>됩니다.
           아래 시작·끝 시각은 영상 만들기 탭에서 맞춘 나레이션 타이밍으로 초기값이 채워지지만, 별개 저장소라 여기서 직접 고치면
           그때부터 영상 탭 설정과 다시 어긋날 수 있습니다 — 나레이션 타이밍만 바꾸고 싶다면 이 패널 대신 영상 만들기 탭에서 조정하세요.
         </div>
@@ -3056,7 +3066,7 @@ export default function MakingTab() {
           ) : (
             <div className={s.resultOk}>
               {r.preview ? '👀 미리보기' : '✅ 자막 합성됨'} — {outName} ({r.sizeKB}KB){r.effect ? ` · ${r.effect}` : ''}
-              {!r.preview && <><br />이 컷의 최종 결과가 <b>{outName}</b>로 바뀌었습니다 — 릴스 최종본·영상 만들기 탭에 이대로 들어갑니다.</>}
+              {!r.preview && <><br />이 컷의 최종 결과가 <b>{outName}</b>로 바뀌었습니다 — 최종 영상 조립·영상 만들기 탭에 이대로 들어갑니다.</>}
               {r.preview && <><br />미리보기만 만든 상태입니다. <b>✅ 합성 시작</b>을 눌러야 컷에 반영됩니다.</>}
               <br />
               <video className={s.makingVideo} controls
@@ -3172,7 +3182,7 @@ export default function MakingTab() {
     )
   }
 
-  // ── 이 컷의 최종 결과 — 릴스 최종본·영상 만들기 탭이 실제로 쓰는 파일을 그대로 보여준다 ──
+  // ── 이 컷의 최종 결과 — 최종 영상 조립·영상 만들기 탭이 실제로 쓰는 파일을 그대로 보여준다 ──
   const [clearBusy, setClearBusy] = useState({})
   const [bigFinal, setBigFinal] = useState(false)   // "이 컷의 최종 결과"를 크게 보기
   const clearDerived = async (cut) => {
@@ -3203,7 +3213,7 @@ export default function MakingTab() {
           <button className={s.previewBtn} onClick={() => jumpTo(cut.no, 'bubble')}>② 말풍선·손글씨</button>
           {cut.cutType !== 'GRAPHIC' && <button className={s.previewBtn} onClick={() => jumpTo(cut.no, 'subtitle')}>③ 자막 효과(타이핑·페이드 등)</button>}
         </div>
-        <div className={s.settingLabel}>✅ 이 컷의 최종 결과 — 릴스 최종본·영상 만들기 탭에 들어가는 파일</div>
+        <div className={s.settingLabel}>✅ 이 컷의 최종 결과 — 최종 영상 조립·영상 만들기 탭에 들어가는 파일</div>
         {!fi ? (
           <div className={s.emptyHint}>아직 cut_{pad}.mp4 가 없습니다.{manual ? ' 아래 ① 화면 만들기부터 진행하세요.' : ' 스튜디오·영상 만들기 탭에서 영상을 먼저 만드세요.'}</div>
         ) : (
@@ -3212,7 +3222,7 @@ export default function MakingTab() {
               <b>{fi.file}</b>
               {fi.derived === 'subtitle' && ' — 자막 효과를 얹은 결과입니다(이 컷은 최종본에서 자막을 따로 굽지 않음).'}
               {fi.derived === 'overlay' && ' — 말풍선·손글씨를 얹은 결과입니다(이 컷은 최종본에서 자막을 따로 굽지 않음).'}
-              {!fi.derived && ' — 원본 화면입니다. 자막은 릴스 최종본 단계에서 대본 자막으로 자동으로 들어갑니다.'}
+              {!fi.derived && ' — 원본 화면입니다. 자막은 최종 영상 조립 단계에서 대본 자막으로 자동으로 들어갑니다.'}
               {' '}수정 {new Date(fi.mtimeMs).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </div>
             <video key={`${fi.file}-${fi.mtimeMs}`} className={s.makingVideo} controls preload="metadata"
@@ -3668,7 +3678,7 @@ export default function MakingTab() {
             ) : hwResult.mode === 'video' ? (
               <div className={s.resultOk}>
                 ✅ 영상에 합성됨 — {hwResult.outputPath?.split(/[/\\]/).pop()} ({hwResult.sizeKB}KB)
-                {hwResult.linkedCut ? ' · 이 컷의 최종 결과로 연결됨(릴스 최종본에 그대로 사용)' : ' · 별도 저장(컷과 연결 안 됨)'}
+                {hwResult.linkedCut ? ' · 이 컷의 최종 결과로 연결됨(최종 영상 조립에 그대로 사용)' : ' · 별도 저장(컷과 연결 안 됨)'}
                 <br />
                 <video className={s.makingVideo} controls
                   src={`${YEORI_SERVER}${hwResult.url}?t=${hwResult._ts || 0}`} />
@@ -3944,7 +3954,7 @@ export default function MakingTab() {
             ①앞레이어(글자) 모양대로 ②뒷레이어(장면들)를 잘라 보여주고, ③연출 효과(페이드·BGM)를 입힙니다.
             장면(프레임)마다 패널을 여러 개 두면 가로로 나란히 다른 영상·이미지가 들어갑니다(좌우 미러링 아님).
             소스는 이 PC의 파일 경로를 그대로 붙여넣으세요(예: C:\yeori-studio\downloads\...\07_output\IG_R07_final.mp4).
-            <b> 효과음(SFX)은 여기서 안 다룹니다</b> — 이 매트 결과물(무음 영상)을 위 "릴스 최종본" 소스로 넣거나
+            <b> 효과음(SFX)은 여기서 안 다룹니다</b> — 이 매트 결과물(무음 영상)을 위 "최종 영상 조립" 소스로 넣거나
             영상 탭에서 다른 영상처럼 다뤄서, 이미 있는 효과음 기능으로 입히는 걸 추천합니다. BGM(배경음) 한 트랙만
             여기서 바로 깔 수 있습니다.
           </div>
@@ -4357,14 +4367,17 @@ export default function MakingTab() {
               </div>
 
               <div className={s.card}>
-                <div className={s.cardTitle}>🎬 릴스 최종본 (컷별 편집 판단 · 자막 번인 · SFX)</div>
+                {/* 2026-11-16 이름 교정(성준님 지적): 이 버튼/엔진은 릴스 전용이 아니라 모든
+                    포맷(IG_R/SF_E/LF_T)의 G5(최종 영상 조립)를 담당한다 — "릴스"라는 이름이
+                    "다른 포맷이 왜 릴스에 종속되나"는 혼란을 만들었다. 표시 라벨만 중립화. */}
+                <div className={s.cardTitle}>🎬 최종 영상 조립 (컷별 편집 판단 · 자막 번인 · SFX)</div>
                 <div className={s.emptyHint}>
                   대본(CP 자막 · 효과음 · MD 감정)을 읽어 컷별로 <b>레터박스/채움</b>, <b>자막 번인</b>(반전 컷은 빨강),
                   <b>포인트 SFX</b>를 자동 판단해 <code>07_output/{'{'}CODE{'}'}_final.mp4</code>를 만듭니다.
                 </div>
                 {reelStale?.stale && (
                   <div className={s.resultError} style={{ marginBottom: 8 }}>
-                    ⚠ 최종본이 지금 05_video 컷들과 다릅니다({reelStale.reason === 'no-manifest' ? '생성 기록 없음' : reelStale.detail || '컷이 최종본 생성 이후 바뀜'}) — 아래 "릴스 최종본 생성"으로 다시 만드세요.
+                    ⚠ 최종본이 지금 05_video 컷들과 다릅니다({reelStale.reason === 'no-manifest' ? '생성 기록 없음' : reelStale.detail || '컷이 최종본 생성 이후 바뀜'}) — 아래 "최종 영상 조립"으로 다시 만드세요.
                   </div>
                 )}
                 <div className={s.editorActions}>
@@ -4383,19 +4396,19 @@ export default function MakingTab() {
                     </select>
                   </label>
                   <button className={s.captureBtn} disabled={reelBusy || !episode?.number} onClick={runReelFinalize}>
-                    {reelBusy ? '⏳ 생성 중…' : '🎬 릴스 최종본 생성'}
+                    {reelBusy ? '⏳ 조립 중…' : '🎬 최종 영상 조립'}
                   </button>
                 </div>
                 <div className={s.emptyHint}>
-                  BGM은 릴스 전체에 한 곡이 낮은 음량으로 깔립니다(컷마다 따로 지정하는 방식이 아님). 자동은 대본에서 BGM 문구가 처음 나오는 컷부터 시작하고,
-                  곡을 직접 고르면 처음부터 깝니다. 한 번 만든 뒤 다시 만들 때는 이전 최종본의 곡을 그대로 씁니다. 효과음은 아래 표에서 컷마다 정합니다 — 표에 보이는 시작 초·음량이 최종본에 그대로 들어갑니다(바꾼 뒤 “릴스 최종본 생성”).
+                  BGM은 영상 전체에 한 곡이 낮은 음량으로 깔립니다(컷마다 따로 지정하는 방식이 아님). 자동은 대본에서 BGM 문구가 처음 나오는 컷부터 시작하고,
+                  곡을 직접 고르면 처음부터 깝니다. 한 번 만든 뒤 다시 만들 때는 이전 최종본의 곡을 그대로 씁니다. 효과음은 아래 표에서 컷마다 정합니다 — 표에 보이는 시작 초·음량이 최종본에 그대로 들어갑니다(바꾼 뒤 "최종 영상 조립"). G4 미승인 컷이 있으면 조립이 막히고 어느 컷인지 알려줍니다.
                 </div>
 
                 <div style={{ marginTop: 10, padding: 8, border: '1px solid var(--border,#333)', borderRadius: 6 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>🎚 BGM 구간별 음량 보정</div>
                   <div className={s.emptyHint}>
                     곡 자체가 특정 구간에서 조용해지거나(브레이크다운) 너무 커지는 경우, 그 구간만 음량을 올리거나 내립니다. "영상 전체 기준" 초입니다(컷 시작초 아님).
-                    100%=원곡 그대로, 200%=2배, 50%=절반. 저장만 하면 바로 반영되고, "🎬 릴스 최종본 생성"을 다시 눌러야 영상에 적용됩니다.
+                    100%=원곡 그대로, 200%=2배, 50%=절반. 저장만 하면 바로 반영되고, "🎬 최종 영상 조립"을 다시 눌러야 영상에 적용됩니다.
                   </div>
                   {bgmSegments.map((seg, i) => (
                     <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 6, fontSize: 12 }}>

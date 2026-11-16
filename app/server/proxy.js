@@ -36,7 +36,7 @@ import { postLeaderLog } from './lib/leaderLog.js'
 import { recentStatusEntries, statusFileMtime } from './lib/statusFeed.js'
 import { syncEpisodeState, setHold } from './lib/leaderState.js'
 import { getLeaderStatus, getLeaderContext } from './lib/leaderRead.js'
-import { contentRatio, cutDims } from '../src/lib/videoPolicy.js'
+import { cutDims } from '../src/lib/videoPolicy.js'
 import { ensureDialogueInVP, buildSegClipPrompt, splitCaptionString, isCpEmpty, splitDialogueBySeg, SEG_UNITS } from '../src/lib/vpDialogue.js'
 import { buildClipPrompt } from './lib/clipPrompt.js'
 import { runSts, resolveVoice } from './lib/sts.js'
@@ -3745,7 +3745,7 @@ async function assembleMakingFilm(epNum) {
     const padded = String(c.no).padStart(2, '0')
     // 파생본 우선순위: 모션 자막(_subtitle) > 손글씨 오버레이(_overlay) > 원본 cut_NN.mp4.
     // (원본은 항상 보존 — 파생본은 그 위에 얹은 결과)
-    // 릴스 최종본과 같은 규칙(mp.pickCutSource) — 유효한 파생본 중 마지막에 만든 것, 없으면 원본.
+    // 최종 영상 조립과 같은 규칙(mp.pickCutSource) — 유효한 파생본 중 마지막에 만든 것, 없으면 원본.
     const p = mp.pickCutSource(videoDir, c.no).path
     if (p && fs.existsSync(p)) {
       files.push(p)
@@ -4178,6 +4178,8 @@ app.post('/api/reel-finalize', async (req, res) => {
     const code = resolveEpisodeCode(ep.episode, epId)
     const cuts = resolveEpisodeCuts(ep, code)
     if (!cuts.length) return res.status(400).json({ error: '컷/대본이 없습니다' })
+    const g4 = checkG4Complete(code, cuts)
+    if (!g4.ok) return res.status(400).json({ error: `G4 미승인 컷이 있습니다 — 컷 ${g4.missing.join(', ')}을 영상 탭에서 먼저 확인·승인하세요`, missingG4: g4.missing })
     ctx = { code, cuts }
   } catch (err) {
     return res.status(err.statusCode || 500).json({ error: err.message })
@@ -8165,7 +8167,7 @@ app.get('/api/episode-video-status', (req, res) => {
     const payload = buildStudioStatusPayload(epId)
     const videoByCut = {}
     payload.cuts.forEach(c => { videoByCut[c.no] = c.hasVideo })
-    // finalByCut: 릴스 최종본·조립이 실제로 쓸 파일(메이킹 탭 자막·말풍선본 포함) — 컷 카드의
+    // finalByCut: 최종 영상 조립이 실제로 쓸 파일(메이킹 탭 자막·말풍선본 포함) — 컷 카드의
     // "이 컷의 최종 결과" 미리보기와 배지가 이걸 본다(탭마다 다른 파일을 보여주던 문제 방지).
     const finalByCut = {}
     const vdir = mp.videoDir(epNum)
@@ -8415,7 +8417,7 @@ app.get('/api/episode-video-checklist', (req, res) => {
         hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
         hasVideo: !!savedFile,
         mtimeMs: savedFile ? fs.statSync(path.join(videoDir, savedFile)).mtimeMs : null,
-        // 릴스 최종본·조립이 실제로 쓸 파일(메이킹 탭에서 얹은 자막·말풍선본 포함) — "최종 합성본" 미리보기용
+        // 최종 영상 조립이 실제로 쓸 파일(메이킹 탭에서 얹은 자막·말풍선본 포함) — "최종 합성본" 미리보기용
         ...(() => {
           const pk = mp.pickCutSource(videoDir, c.no)
           if (!pk.path) return { finalSource: null, finalDerived: null, finalMtimeMs: null }
@@ -9064,6 +9066,18 @@ function copyToDeliverables(episodeCode, srcPath, destFilename) {
   } catch (err) {
     return { copied: false, reason: err.message }
   }
+}
+
+// 2026-11-16(성준님 지적 — "G4가 관문 역할을 안 한다는게 말이 안 된다"): G4는 "다음 단계로
+// 넘기는 관문"이라는 이름인데, 실제로는 G5(최종 영상 조립)를 막는 코드가 어디에도 없었다 —
+// 메이킹 탭 버튼이든 자동화 경로든 G4 승인 여부와 무관하게 그냥 눌리면 조립됐다. 영상생성이
+// 필요한 컷(VideoTab.jsx needsFlowVideo와 동일 규칙 — GRAPHIC/CAPCUT은 메이킹 탭 자체 리뷰
+// 게이트라 제외)에 미승인 컷이 있으면 G5를 막는다.
+function needsG4(cutType) { return !['GRAPHIC', 'CAPCUT'].includes(cutType || 'YEORI') }
+function checkG4Complete(episodeCode, cuts) {
+  const gData = loadGpointsFile()[episodeCode] || {}
+  const missing = cuts.filter((c) => needsG4(c.cutType) && !gData[`cut_${c.no}`]?.g4).map((c) => c.no)
+  return { ok: missing.length === 0, missing }
 }
 
 function approveGForCuts(episodeCode, cuts, gKey) {
@@ -9922,7 +9936,7 @@ const studioApproveG4Handler = (req, res) => {
 mcpRouter.post('/studio-approve-g4', studioApproveG4Handler)
 app.post('/mobile/studio-approve-g4', studioApproveG4Handler)
 
-// ⑩ studio-run-g5 — 편집 메타 생성 → SRT 생성 → 컷 영상 순서대로 합치기(FFmpeg concat)
+// ⑩ studio-run-g5 — 최종 영상 조립(자막 번인·SFX·BGM, assembleEpisode) + (IG_R만) 게시 준비
 mcpRouter.post('/studio-run-g5', async (req, res) => {
   const { episodeId } = req.body || {}
   if (!episodeId) return res.status(400).json({ error: 'episodeId 필요' })
@@ -9932,87 +9946,36 @@ mcpRouter.post('/studio-run-g5', async (req, res) => {
     requireActiveEpisode(state, episodeId)
     const epNum = ep.episode?.number
     const cuts = ep.cuts || []
-
-    // 2026-10-09 (성준님: "숏폼, 롱폼 콘텐츠의 자막은 영상 만들기에서 최종 완성되며, 메이킹에서는
-    // 말풍선이나 손글씨를 연출로 추가할 수 있는 기능이 연결되어야 한다") — finalizeReel은 이름만
-    // "Reel"이고 실제 로직(자막 번인·위치·타이밍·효과음·A/V 보정)은 isReel 분기가 전혀 없는 범용
-    // 엔진인데, 호출부가 IG_R로만 막혀 있었다. SF_E109의 실제 G5는 지금까지 이 아래 "옛 G5"
-    // (SRT 파일만 생성 + 단순 concat, 영상에 자막을 전혀 굽지 않음) 로만 떨어졌다 — 영상탭에서
-    // 고친 위치·타이밍·디자인이 "최종본"엔 한 번도 반영되지 않았던 진짜 원인.
-    // finalizeReel 내부(normVf·ASS PlayResX/Y·handwriting_overlay output_size)는 1080x1920
-    // 고정이라 9:16(IG_R·SF_E·TK)엔 맞지만 16:9 롱폼(LF)엔 아직 검증 안 됨 — contentRatio로
-    // 9:16만 이 경로로 보내고, LF(16:9)는 안전하게 옛 경로로 남겨둔다(16:9 지원은 별도 작업).
     const g5Code = resolveEpisodeCode(ep.episode, episodeId)
-    const useRichFinalize = /^IG_R/i.test(String(g5Code || '')) || contentRatio(ep.episode) === '9:16'
-    if (useRichFinalize) {
-      const r = await finalizeReel({ epNum: Number(epNum), cuts: resolveEpisodeCuts(ep, g5Code) })
-      const deliverable = copyToDeliverables(g5Code, r.finalPath, `${g5Code}_final.mp4`)
-      const approvedCount = approveGForCuts(g5Code, cuts, 'g5')
-      // 게시 준비(인스타그램 전용: [게시 캡션]·격자 썸네일·운영실 등록)는 IG_R에서만 — SF_E는
-      // 별도의 "유튜브 운영실" 경로가 있어 여기서 인스타 전용 로직을 같이 태우면 안 된다.
-      let publish = null
-      if (/^IG_R/i.test(String(g5Code || ''))) {
-        try {
-          const { extractPublishCaption, upsertEpisodePost } = await import('./lib/instaOps.js')
-          let raw = ep.scriptRaw || ''
-          if (!raw) { const sf = path.join(scriptDir(g5Code), 'script_v3.txt'); if (fs.existsSync(sf)) raw = fs.readFileSync(sf, 'utf-8') }
-          const caption = extractPublishCaption(raw)
-          if (caption) fs.writeFileSync(path.join(path.dirname(r.finalPath), `${g5Code}_caption.txt`), caption, 'utf-8')
-          const grid = path.join(path.dirname(r.finalPath), `${g5Code}_grid.jpg`)
-          await new Promise((ok) => { const pr = spawn('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', r.finalPath, '-frames:v', '1', '-vf', 'crop=iw:iw*4/3,scale=1080:1440', '-q:v', '3', grid], { windowsHide: true }); pr.on('close', ok); pr.on('error', ok) })
-          publish = upsertEpisodePost({ code: g5Code, title: ep.episode?.title, caption, gridSrc: grid })
-        } catch (e) { publish = { error: e.message } }
-      }
-      try { (await import('./lib/yeoriActive.js')).recordEpisodeEvent({ code: g5Code, title: ep.episode?.title, cuts: resolveEpisodeCuts(ep, g5Code) }) } catch (e) { console.warn('[yeori-events]', e.message) }  // 감정이입 P5 사건 원장
-      return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount, publish })
+
+    // 2026-11-16(성준님 지적): 이전엔 포맷·비율로 갈라서 IG_R·9:16만 assembleEpisode(옛 이름
+    // finalizeReel — 이름만 "Reel"이고 실제 로직은 포맷 분기가 전혀 없는 범용 엔진, 2026-10-09
+    // 성준님 피드백)를 타고, LF(16:9)는 자막 번인이 전혀 없는 옛 경로(SRT+단순 concat)로
+    // 조용히 떨어졌다 — 사람이 메이킹 탭에서 수동으로 조립할 땐 항상 범용 엔진을 탔는데
+    // 자동화(이 라우트) 경로만 LF를 구버전에 묶어두고 있던 구멍. 이제 포맷·비율 무관하게
+    // 항상 이 엔진 하나만 쓴다 — g4 미승인 컷이 있으면 조립 자체를 막는다(G4를 실제 관문으로).
+    const g4 = checkG4Complete(g5Code, cuts)
+    if (!g4.ok) return res.status(400).json({ error: `G4 미승인 컷이 있습니다 — 컷 ${g4.missing.join(', ')}을 영상 탭에서 먼저 확인·승인하세요`, missingG4: g4.missing })
+    const r = await finalizeReel({ epNum: Number(epNum), cuts: resolveEpisodeCuts(ep, g5Code) })
+    const deliverable = copyToDeliverables(g5Code, r.finalPath, `${g5Code}_final.mp4`)
+    const approvedCount = approveGForCuts(g5Code, cuts, 'g5')
+    // 게시 준비(인스타그램 전용: [게시 캡션]·격자 썸네일·운영실 등록)는 IG_R에서만 — SF_E/LF_T는
+    // 별도의 "유튜브 운영실" 경로가 있어 여기서 인스타 전용 로직을 같이 태우면 안 된다.
+    let publish = null
+    if (/^IG_R/i.test(String(g5Code || ''))) {
+      try {
+        const { extractPublishCaption, upsertEpisodePost } = await import('./lib/instaOps.js')
+        let raw = ep.scriptRaw || ''
+        if (!raw) { const sf = path.join(scriptDir(g5Code), 'script_v3.txt'); if (fs.existsSync(sf)) raw = fs.readFileSync(sf, 'utf-8') }
+        const caption = extractPublishCaption(raw)
+        if (caption) fs.writeFileSync(path.join(path.dirname(r.finalPath), `${g5Code}_caption.txt`), caption, 'utf-8')
+        const grid = path.join(path.dirname(r.finalPath), `${g5Code}_grid.jpg`)
+        await new Promise((ok) => { const pr = spawn('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', r.finalPath, '-frames:v', '1', '-vf', 'crop=iw:iw*4/3,scale=1080:1440', '-q:v', '3', grid], { windowsHide: true }); pr.on('close', ok); pr.on('error', ok) })
+        publish = upsertEpisodePost({ code: g5Code, title: ep.episode?.title, caption, gridSrc: grid })
+      } catch (e) { publish = { error: e.message } }
     }
-
-    let cursor = 0
-    const meta = cuts.map(c => {
-      const dur = c.duration || 5
-      const start = cursor
-      cursor += dur
-      // SRT 자막에 지문·화자명·따옴표가 그대로 노출되지 않도록 G3와 동일하게 정제
-      return {
-        cutNo: String(c.no).padStart(2, '0'),
-        label: `CUT ${String(c.no).padStart(2, '0')}`,
-        start, end: cursor, duration: dur,
-        audioFile: `cut_${String(c.no).padStart(2, '0')}.mp3`,
-        dialogue: c.dialogue ? dialogueToSubtitle(c.dialogue) : '',
-        narration: c.narration ? cleanForTTS(c.narration).clean : '',
-      }
-    })
-    const metaPath = mp.editMetaPath()
-    fs.mkdirSync(path.dirname(metaPath), { recursive: true })
-    fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8')
-
-    // 음성이 있는 컷이 하나도 없으면(전 컷 텍스트/DM목업/BGM만) SRT 생략 —
-    // 자막은 CapCut에서 CP 텍스트로 직접 넣는 유형. audioDir 자체가 없어 generate-srt가 404.
-    const hasVoice = cuts.some(c => String(c.dialogue || '').trim() || String(c.narration || '').trim())
-    let srtBody = { skipped: '음성 없는 에피소드 — SRT 생략' }
-    if (hasVoice) {
-      const srtRes = await selfFetch('/api/generate-srt', {
-        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
-      })
-      if (srtRes.status !== 200) return res.status(srtRes.status).json({ step: 'generate-srt', ...srtRes.body })
-      srtBody = srtRes.body
-    }
-
-    const concatRes = await selfFetch('/api/concat-video', {
-      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ epNum }),
-    })
-    if (concatRes.status !== 200) return res.status(concatRes.status).json({ step: 'concat-video', ...concatRes.body })
-
-    const episodeCode = resolveEpisodeCode(ep.episode, episodeId)
-    const deliverable = copyToDeliverables(
-      episodeCode,
-      path.join(mp.outputDir(epNum), `ep${epNum}_raw.mp4`),
-      `${episodeCode}_edit_raw.mp4`,
-    )
-    // G1~G4와 동일한 패턴으로 gpoints에 G5 완료 기록 — 이게 없으면 concat까지 성공해도
-    // summary.g5가 계속 0으로 남아 "G5 미완료"로 잘못 보고됨(2026-08-17 발견).
-    const approvedCount = approveGForCuts(episodeCode, cuts, 'g5')
-    res.json({ success: true, srt: srtBody, concat: concatRes.body, deliverable, approvedCount })
+    try { (await import('./lib/yeoriActive.js')).recordEpisodeEvent({ code: g5Code, title: ep.episode?.title, cuts: resolveEpisodeCuts(ep, g5Code) }) } catch (e) { console.warn('[yeori-events]', e.message) }  // 감정이입 P5 사건 원장
+    return res.json({ success: true, mode: 'reel-finalize', concat: { outputPath: r.finalPath }, deliverable, approvedCount, publish })
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message })
   }

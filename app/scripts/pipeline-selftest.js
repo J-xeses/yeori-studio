@@ -673,7 +673,7 @@ await check('REF2', '코드 정리 — SH_TXT·화면 종류(GR.*) 등록, 최�
   return { ok, evidence: `${g('sh', 'SH_TXT')} · ${g('sp', 'GR.BLK')} · ${g('sp', 'IN.BK')} · 텍스트 컷 자막 생략 새/옛 ${selfNew ? 'O' : 'X'}/${selfOld ? 'O' : 'X'} · 화면녹화 레터박스 새/옛 ${scrNew ? 'O' : 'X'}/${scrOld ? 'O' : 'X'} · 생성·수정 지시문 연결 ${wired ? 'O' : 'X'}` }
 })
 
-// ── 메이킹 탭 ↔ 영상 만들기 ↔ 릴스 최종본 연계(2026-10-07 R02 점검에서 실측된 오류들) ──
+// ── 메이킹 탭 ↔ 영상 만들기 ↔ 최종 영상 조립 연계(2026-10-07 R02 점검에서 실측된 오류들) ──
 await check('M1', '컷 소스 선택 규칙 — 원본보다 나중에 만든 자막·말풍선본만, 그중 최신(최종본·조립·미리보기 공용)', async () => {
   const mp2 = await import('../server/lib/mediaPaths.js')
   const os2 = await import('node:os'); const path2 = await import('node:path')
@@ -843,9 +843,18 @@ else await check('F1', '최종본 — 나레이션 믹스·대사 음성·영상
     const dlCut = cuts.find(c => (c.dialogue || '').trim())
     let start = 0; for (const c of cuts) { if (c.no === dlCut.no) break; start += c.duration }
     const dlDb = meanDb(r.finalPath, start, dlCut.duration)
-    const ov = JSON.parse(fs.readFileSync(path.join(fdir, `${CODE}_captions.overlay.json`), 'utf-8'))
+    // 2026-11-16 개편(§⑬-5): 기본 자막 스타일이 handwriting_overlay.py(overlay.json 생성)가 아니라
+    // drawtext(server/lib/subtitleBurn.js)로 바뀌었다 — captionStyle을 'handwriting'으로 명시
+    // override하지 않는 한 overlay.json은 이제 안 만들어진다(이전엔 그걸 읽어 폰트 크기를
+    // 검증했는데, 그 파일이 이번 실행에서 안 갱신되면 옛 파일을 읽어 거짓 통과할 위험이 있었음).
+    // drawtext 경로가 실제로 돌았다는 로그 + 거기 찍힌 폰트 크기가 videoSettings/_style.fontPx와
+    // 일치하는지로 검증.
     const style = JSON.parse(fs.readFileSync(mp.statePath(`reel-overrides/${CODE}.json`), 'utf-8'))._style || {}
-    const styleOk = !style.fontPx || ov.scenes.every(s => s.font_size === style.fontPx)
+    const textLog = logs.find(l => /자막 번인\(기본 텍스트, drawtext\)/.test(l))
+    const globalVs = JSON.parse(fs.readFileSync(path.join(ROOT, 'studio-state.json'), 'utf-8')).videoSettings || {}
+    const expectedPx = style.fontPx || globalVs.fontSize || 32
+    const loggedPx = textLog && Number((textLog.match(/(\d+)px/) || [])[1])
+    const styleOk = !!textLog && loggedPx === Number(expectedPx)
     const mixed = logs.some(l => /나레이션 음성 믹스/.test(l))
     // 최종본 길이 = 컷 길이 합(±0.5초). 2026-10-07: 컷 규격화 단계 수정이 컷을 몇 초씩 늘려
     // 전체가 25초→36.9초가 된 적이 있다 — 길이가 밀리면 자막·효과음 시각이 전부 어긋난다.

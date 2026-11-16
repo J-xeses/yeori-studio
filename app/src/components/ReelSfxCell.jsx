@@ -3,7 +3,7 @@ import SfxPicker from './SfxPicker'
 
 const YEORI_SERVER = 'http://localhost:3001'
 
-// 릴스 최종본 표의 효과음 칸 — 한 컷의 효과음 설정(무엇을 · 몇 초에 · 얼마나 크게)을 한 줄에서 끝낸다.
+// 최종 영상 조립 표의 효과음 칸 — 한 컷의 효과음 설정(무엇을 · 몇 초에 · 얼마나 크게)을 한 줄에서 끝낸다.
 // 보이는 값은 서버가 계산한 "실제로 들어갈 값"(plan 의 startSec·volumePct)이라 화면과 최종본이 항상 같다.
 // 저장은 studio-state 가 아니라 reel-overrides 파일(onChange → /api/reel-finalize/override).
 export default function ReelSfxCell({ sfx, duration, onChange }) {
