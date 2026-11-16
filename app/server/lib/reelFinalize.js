@@ -320,7 +320,11 @@ function cleanCaption(s) {
 // 자막 세그먼트가 실제 대사(DL)인지 — 대사는 어두운 반투명 직각 바탕(plate), 나레이션·장면 자막은 바탕 없음.
 // 따옴표 대신 바탕으로 구분(2026-09-28 성준님). 영상 탭 미리보기(VideoTab isDialogueSeg)와 같은 규칙.
 export function isDialogueSeg(text, dialogue) {
-  const norm = (v) => String(v || '').replace(/[\s"“”'‘’.,!?…~·-]/g, '')
+  // 2026-11-16: 괄호 안 주석(화자 태그 "(지아, 음성만)"/"(여리)", 감정 표기 "(헉)")은 DL·CP
+  // 양쪽에 서로 다르게 붙어 substring 매칭을 깨뜨린다(IG_R09 CUT3 실측: DL="(여리) …어떻게
+  // 알았어?" vs CP="(헉) 어떻게 알았어?" → 괄호 미제거 시 불일치로 대사가 나레이션 취급됨).
+  // 실제 발화 문장만 비교하도록 먼저 제거.
+  const norm = (v) => String(v || '').replace(/\([^)]*\)/g, '').replace(/[\s"“”'‘’.,!?…~·-]/g, '')
   const d = norm(dialogue), t = norm(text)
   if (!d || d === '없음' || t.length < 2) return false
   return d.includes(t)

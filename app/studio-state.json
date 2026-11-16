@@ -1,5 +1,5 @@
 {
-  "activeTab": "monitor",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12560,7 +12560,7 @@
           "character": "서여리",
           "dialogue": "(지아, 음성만) 너 또 편의점이지? / (여리) …어떻게 알았어?",
           "narration": "",
-          "subtitle": "너 또 편의점이지? / …어떻게 알았어?",
+          "subtitle": "너 또 편의점이지? / (헉) 어떻게 알았어?",
           "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,\nstill seated at the window-side convenience store table, cup ramen in front of her with the lid still closed, holding her phone on speakerphone near the table,\ncaught off-guard expression shifting into a sheepish amused smile, as if just been found out,\ncold fluorescent store lighting, dark window behind her, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people",
           "videoPrompt": "[0-2s] Her phone buzzes on the table; she picks it up and taps speakerphone. [2-5s] A close friend's voice (off-screen, slightly tinny speakerphone audio) says in Korean, playful and confident: \"너 또 편의점이지?\" — her expression freezes, caught. [5-8s] She breaks into a sheepish, amused laugh and replies in Korean, casual tone (반말, close friend): \"…어떻게 알았어?\" Only she is visible on screen; the caller is heard only through the phone speaker, never seen. No on-screen subtitle text or captions.",
           "duration": 8,
@@ -12902,7 +12902,7 @@
       "character": "서여리",
       "dialogue": "(지아, 음성만) 너 또 편의점이지? / (여리) …어떻게 알았어?",
       "narration": "",
-      "subtitle": "너 또 편의점이지? / …어떻게 알았어?",
+      "subtitle": "너 또 편의점이지? / (헉) 어떻게 알았어?",
       "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,\nstill seated at the window-side convenience store table, cup ramen in front of her with the lid still closed, holding her phone on speakerphone near the table,\ncaught off-guard expression shifting into a sheepish amused smile, as if just been found out,\ncold fluorescent store lighting, dark window behind her, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people",
       "videoPrompt": "[0-2s] Her phone buzzes on the table; she picks it up and taps speakerphone. [2-5s] A close friend's voice (off-screen, slightly tinny speakerphone audio) says in Korean, playful and confident: \"너 또 편의점이지?\" — her expression freezes, caught. [5-8s] She breaks into a sheepish, amused laugh and replies in Korean, casual tone (반말, close friend): \"…어떻게 알았어?\" Only she is visible on screen; the caller is heard only through the phone speaker, never seen. No on-screen subtitle text or captions.",
       "duration": 8,
@@ -13030,7 +13030,7 @@
     "fontSize": 50,
     "color": "#ffffff",
     "bgStyle": "반투명 직각 박스",
-    "boxColor": "#000000",
+    "boxColor": "#1a1a1a",
     "subtitlePosition": "bottom"
   },
   "renderProgress": {
@@ -13104,7 +13104,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-16T05:24:15.012Z",
+  "savedAt": "2026-11-16T07:07:39.785Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

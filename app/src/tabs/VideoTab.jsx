@@ -185,7 +185,9 @@ function clipTimings(clips, plannedSegs = []) {
 // 자막 세그먼트가 실제 대사인지 — 서버 reelFinalize.isDialogueSeg 와 같은 규칙(2026-09-28).
 // 대사 = 어두운 반투명 직각 바탕, 나레이션·장면 자막 = 바탕 없음. 따옴표는 쓰지 않는다.
 function isDialogueSeg(text, dialogue) {
-  const norm = (v) => String(v || '').replace(/[\s"“”'‘’.,!?…~·-]/g, '')
+  // 2026-11-16: 괄호 주석(화자 태그·감정 표기)은 DL·CP 양쪽에서 서로 다를 수 있어 먼저 제거
+  // 하고 비교한다 — server/lib/reelFinalize.js의 같은 수정과 동일 규칙(IG_R09 CUT3 실측).
+  const norm = (v) => String(v || '').replace(/\([^)]*\)/g, '').replace(/[\s"“”'‘’.,!?…~·-]/g, '')
   const d = norm(dialogue), t = norm(text)
   if (!d || d === '없음' || t.length < 2) return false
   return d.includes(t)
