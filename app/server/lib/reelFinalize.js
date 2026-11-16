@@ -52,14 +52,14 @@ function ffprobeVideoSize(filePath) {
 // 장식용 텍스트로만 남아있었다(2026-11-16, 성준님 질문 계기로 발견). [게시 캡션]을
 // 운영실에 꽂아주는 instaOps.js extractPublishCaption()과 같은 방식(원본 대본 텍스트를
 // 정규식으로 섹션 추출)으로, 최종 영상 조립(G5) 단계에서 실제로 번인한다(§⑬-6).
-function loadEpisodeScriptRaw(code) {
+export function loadEpisodeScriptRaw(code) {
   try {
     const sf = path.join(mp.scriptDir(code), 'script_v3.txt')
     if (fs.existsSync(sf)) return fs.readFileSync(sf, 'utf-8')
   } catch { /* noop */ }
   return ''
 }
-function extractEndCard(raw) {
+export function extractEndCard(raw) {
   const m = String(raw || '').replace(/\r/g, '')
     .match(/^\s*\[엔딩\s*카드\][^\n]*\n([\s\S]*?)(?=\n\s*\[[^\]]+\]\s*\n|(?![\s\S]))/m)
   if (!m) return []
@@ -792,8 +792,13 @@ export async function finalizeReel(p) {
   // 지적(성준님) — 캡션용 drawtext와 별도 filter 체인으로 분리해서, 크기·세로 위치를 독립적으로
   // 가질 수 있게 했다(reelOverrides._style.endCard = {fontPx, y}, 없으면 캡션과 같은 기본값
   // 그대로 — 지금까지 동작과 하위호환). 폰트·색·배경 스타일은 당장은 캡션과 공유(요청 범위 밖).
-  const endCardLines = extractEndCard(loadEpisodeScriptRaw(code))
-  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"`)
+  // 2026-11-16 추가: 영상 탭에 엔딩 카드 문구 입력창 신설 — reelOverrides._style.endCard.text에
+  // 직접 입력한 값이 있으면 그걸 최우선으로 쓰고(줄바꿈=줄 구분), 비어있으면 대본 원본 그대로.
+  const endCardOverrideText = typeof capStyle.endCard?.text === 'string' ? capStyle.endCard.text : ''
+  const endCardLines = endCardOverrideText.trim()
+    ? endCardOverrideText.split('\n').map((l) => l.trim()).filter(Boolean)
+    : extractEndCard(loadEpisodeScriptRaw(code))
+  if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"${endCardOverrideText.trim() ? '(영상 탭 입력값)' : '(대본 원본)'}`)
   if (captionStyle === 'text' && (capCount > 0 || endCardLines.length)) {
     const allSegs = []
     for (const d of decisions) {
@@ -833,6 +838,10 @@ export async function finalizeReel(p) {
         ...style,
         fontSize: capStyle.endCard?.fontPx || style.fontSize,
         positionRatio: capStyle.endCard?.y != null ? capStyle.endCard.y : style.positionRatio,
+        // 2026-11-16(성준님: "자막보다 굵게 + 테두리 추가 1차 기능") — 공유·팔로우 유도 문구는
+        // 눈에 띄어야 하므로 캡션(0.09)보다 두꺼운 외곽선으로 구분. 글꼴 자체를 굵게 바꾸는
+        // 기능은 drawtext에 없어(폰트 파일 교체가 필요) 외곽선 강조로 1차 구현.
+        outlineScale: 0.16,
       }
       const ecSegs = [{ text: endCardLines.map(stripEmoji).join('\n'), start: Math.max(0, totalDur - CARD_DUR), end: totalDur, isDialogue: false }]
       const ecWorkDir = path.join(tmp, 'drawtext_endcard')

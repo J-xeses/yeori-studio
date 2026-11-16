@@ -609,6 +609,17 @@ export default function VideoTab() {
       .then(d => setReelOverrides(d.overrides || {}))
       .catch(() => setReelOverrides({}))
   }, [state.episode?.number])
+  // 대본 원본 [엔딩 카드] 섹션(오버라이드 입력창을 비워뒀을 때 실제로 번인될 기본값) — 입력창
+  // placeholder로 보여줘서 "지금 뭐가 들어가는지" 미리 보이게 함(2026-11-16).
+  const [endCardDefault, setEndCardDefault] = useState([])
+  useEffect(() => {
+    const epNum = state.episode?.number
+    if (epNum == null) { setEndCardDefault([]); return }
+    fetch(`http://localhost:3001/api/reel-finalize/end-card-default?epNum=${epNum}`)
+      .then(r => r.json())
+      .then(d => setEndCardDefault(Array.isArray(d.lines) ? d.lines : []))
+      .catch(() => setEndCardDefault([]))
+  }, [state.episode?.number])
   // 릴스(IG_R): 미리보기 자막을 최종본(reel-finalize → handwriting_overlay.py)과 똑같이 그린다 — Gaegu 손글씨·1920 기준 px·
   // 외곽 헤일로·하단 72% 안전선. 크기/세로위치는 오버라이드 _style 에 저장되어 최종본(G5)이 그대로 쓴다(2026-09-25, 성준님:
   // "영상 탭에서 자막이 보여야 크기·위치를 정할 수 있다" — 전엔 탭 설정이 최종본과 무관했음).
@@ -1020,7 +1031,38 @@ export default function VideoTab() {
       ctx.fillText(l, subX, lineCenterY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue])
+
+    // 엔딩 카드 미리보기(2026-11-16, 성준님 요청) — 실제 번인은 에피소드 전체 타임라인의
+    // "마지막 2초"에만 들어가므로, 마지막 컷을 보고 있을 때만 겹쳐 그린다. "자막보다 굵게 +
+    // 테두리 추가"로 구분하라는 요청 — bold 글꼴 + 더 두꺼운 외곽선(server/lib/subtitleBurn.js
+    // outlineScale=0.16과 같은 비율, 캡션의 0.09보다 두꺼움).
+    const maxCutNo = (state.cuts || []).length ? Math.max(...(state.cuts || []).map(c => c.no)) : null
+    const isLastCut = selCutForText && maxCutNo != null && selCutForText.no === maxCutNo
+    if (isLastCut) {
+      const ecRaw = (reelEndCardStyle.text || '').trim() ? reelEndCardStyle.text : endCardDefault.join('\n')
+      if (ecRaw.trim()) {
+        const ecFSize = Math.max(10, Math.round(reelEndCardStyle.fontPx || reelFontPx))
+        ctx.font = `bold ${ecFSize}px "${font}",sans-serif`
+        ctx.textAlign = 'center'
+        const ecMaxWidth = W * (aspectRatio === '16:9' ? 0.80 : 0.86)
+        const ecLines = wrapCanvasText(ctx, ecRaw, ecMaxWidth)
+        const ecLineHeight = ecFSize * lineGap
+        const ecCenterY = H * (reelEndCardStyle.y != null ? reelEndCardStyle.y : (reelStyle.y || 0.66))
+        const ecTotalHeight = ecLineHeight * ecLines.length
+        const ecTop = Math.max(ecCenterY - ecTotalHeight / 2, 8)
+        ctx.lineJoin = 'round'
+        ctx.lineWidth = Math.max(3, Math.round(ecFSize * 0.16))
+        ctx.strokeStyle = isLightColor(color) ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)'
+        ctx.fillStyle = color
+        ctx.textBaseline = 'middle'
+        ecLines.forEach((l, i) => {
+          const lineCenterY = ecTop + ecLineHeight * (i + 0.5)
+          ctx.strokeText(l, subX, lineCenterY)
+          ctx.fillText(l, subX, lineCenterY)
+        })
+      }
+    }
+  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue, selCutForText?.no, state.cuts, reelEndCardStyle.text, reelEndCardStyle.fontPx, reelEndCardStyle.y, endCardDefault])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 
@@ -2094,6 +2136,14 @@ export default function VideoTab() {
               {reelStyle.captionStyle !== 'handwriting' && (
               <>
               <div className={s.field} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
+                <label>🏁 엔딩 카드 문구 (한 줄에 한 문장 · 비우면 대본 원본 사용)</label>
+                <textarea rows={2} disabled={!subtitleEnabled}
+                  value={reelEndCardStyle.text || ''}
+                  placeholder={endCardDefault.length ? endCardDefault.join('\n') : '(이 에피소드 대본엔 [엔딩 카드] 섹션이 없습니다)'}
+                  onChange={e => setEndCardStyle({ text: e.target.value })}
+                  style={{ width: '100%', resize: 'vertical', fontFamily: 'inherit', fontSize: 12.5, padding: 6, boxSizing: 'border-box' }} />
+              </div>
+              <div className={s.field}>
                 <label>🏁 엔딩 카드 자막 크기 <span className={s.val}>
                   {reelEndCardStyle.fontPx ? `${reelEndCardStyle.fontPx}px` : `캡션과 동일(${reelFontPx}px)`}
                 </span></label>

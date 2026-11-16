@@ -3940,6 +3940,19 @@ app.get('/api/reel-finalize/overrides', (req, res) => {
   }
 })
 
+// GET — 대본 원본 [엔딩 카드] 섹션 그대로(오버라이드 적용 전) — 영상 탭 입력창의 placeholder용
+// (2026-11-16, §⑬-6). 사람이 직접 입력창에 안 적으면 reelFinalize.js가 이 값을 그대로 번인한다.
+app.get('/api/reel-finalize/end-card-default', async (req, res) => {
+  try {
+    const { ep, epId } = findEpisodeByNumOrThrow(req.query.epNum)
+    const code = resolveEpisodeCode(ep.episode, epId)
+    const { extractEndCard, loadEpisodeScriptRaw } = await import('./lib/reelFinalize.js')
+    res.json({ code, lines: extractEndCard(loadEpisodeScriptRaw(code)) })
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message })
+  }
+})
+
 // POST — SFX/BGM 등 컷별 수동 오버라이드 저장 (studio-state.json 과 분리된 별도 파일,
 // 브라우저 자동저장이 절대 건드리지 않음 — reelOverrides.js 참조). patch 필드가 ''면 지정 해제.
 app.post('/api/reel-finalize/override', (req, res) => {

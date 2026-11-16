@@ -82,7 +82,11 @@
 .sidePanel { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
 .sidePanelHeader { padding: 9px 14px; font-size: 12px; font-weight: 700; color: var(--text-2); background: var(--bg-input); cursor: pointer; display: flex; justify-content: space-between; user-select: none; }
 .sidePanelHeader:hover { color: var(--text); }
-.sidePanelBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+/* 2026-11-16: 엔딩 카드 슬라이더 추가 등으로 "자막 디자인 설정" 패널이 길어져 사이드바 밖으로
+   밀려나가던 것을 성준님이 지적 — 패널 자체에 세로 스크롤을 줘서 안에서 내려볼 수 있게 함
+   (바깥 .sidebar/.sidePanel는 overflow:hidden 그대로 — 이 안쪽만 스크롤). 전역(index.css)
+   얇은 스크롤바 스타일이 자동 적용됨. */
+.sidePanelBody { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; }
 .sidePanelRow2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .g4Count { font-size: 11px; color: var(--text-3); text-align: center; padding: 2px 0; flex-shrink: 0; }
 

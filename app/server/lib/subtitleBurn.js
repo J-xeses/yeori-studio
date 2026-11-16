@@ -194,7 +194,10 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
       `x=(w-text_w)/2`,
       yExpr,
       // 배경 스타일과 무관하게 항상 외곽선 한 겹(미리보기 캔버스와 동일 — 2026-09-15 확정 방침).
-      `borderw=${Math.max(2, Math.round(fSize * 0.09))}`,
+      // outlineScale(선택, 기본 0.09) — 엔딩 카드처럼 자막보다 눈에 띄어야 하는 텍스트는 더 두꺼운
+      // 외곽선을 넘겨서 구분한다(2026-11-16, 성준님: "굵게 & 테두리 추가"). drawtext엔 글꼴
+      // 두께(bold) 선택 기능이 없어 — 외곽선을 키우는 쪽으로 "굵어 보이는" 효과를 낸다.
+      `borderw=${Math.max(2, Math.round(fSize * (typeof style.outlineScale === 'number' ? style.outlineScale : 0.09)))}`,
       `bordercolor=${outline}@0.85`,
       `line_spacing=4`,
     ]

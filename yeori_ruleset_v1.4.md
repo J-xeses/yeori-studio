@@ -830,6 +830,21 @@ high-pitched, energetic voice, playful and confident, teasing tone"). Flow/Veo3�
 - 손글씨(handwriting) 엔진 쪽엔 아직 미연결(해당 스타일을 기본으로 쓰는 에피소드가 생기면
   추가).
 
+**2026-11-16 추가 — 자막과 분리된 독립 크기·위치**: 처음엔 엔딩 카드가 캡션과 같은 `style`
+객체를 공유해서, 자막 크기를 조정하면 엔딩 카드까지 같이 커졌다(성준님 지적). 캡션용·엔딩
+카드용 `buildSubtitleDrawtextFilter()` 호출을 **각각 별도로** 실행해 두 filter 문자열을
+합치는 구조로 변경 — `reelOverrides._style.endCard = {fontPx, y}`(없으면 캡션과 같은 기본값,
+있으면 그 값으로 독립). 영상 탭에 "🏁 엔딩 카드 자막 크기"·"엔딩 카드 세로 위치" 슬라이더
+신설(손글씨 모드에선 숨김 — 아직 미연결이라). 합성 테스트로 두 레이어가 동시에 서로 다른
+크기·색·위치로 번인되는 것까지 프레임 추출로 확인.
+
+**2026-11-16 추가 — 문구 입력창 + 영상 탭 미리보기 + 자막보다 굵게/테두리**: 영상 탭에 엔딩
+카드 문구 textarea 신설(비우면 대본 원본, `/api/reel-finalize/end-card-default`로 placeholder
+표시). 미리보기(`drawPreview`)에도 에피소드 **마지막 컷**을 볼 때만 겹쳐서 그림(실제 번인도
+전체 타임라인 마지막 2초에만 들어가므로). drawtext는 글꼴 두께를 못 바꿔서, 외곽선을 캡션
+(0.09)보다 두껍게(`outlineScale=0.16`)해 "굵어 보이는" 효과로 구분 — `buildSubtitleDrawtextFilter`
+에 `style.outlineScale` 파라미터 신설(기본 0.09, 하위호환).
+
 **검증**: `extractEndCard()`를 IG_R09 실제 대본에 직접 돌려 2줄 추출 확인 + 합성 테스트
 영상(단색 배경)에 실제 ffmpeg로 번인해 프레임을 뽑아 육안 확인(텍스트 중앙정렬·박스 없음·
 이모지 제거 전/후 비교까지) — **프로덕션 데이터는 건드리지 않고 격리된 테스트로만 검증**.
