@@ -1995,6 +1995,12 @@ export default function VideoTab() {
                   <span>자막 포함</span>
                 </label>
               </div>
+              {/* 글씨체·배경 스타일은 SF/LF 전용 번인 경로(/api/run-ffmpeg)로만 전송된다 — 릴스(IG)
+                  최종본은 handwriting_overlay.py가 번들 폰트 하나(Gaegu-Bold.ttf)로 고정 렌더하고
+                  색상·말풍선은 대본 overlayHint로 결정되어, 여기서 바꿔도 미리보기·최종본 어디에도
+                  반영되지 않았다(2026-11-16, 성준님 실측 "글씨체를 바꿔도 소용없는 자막"). 혼선
+                  방지를 위해 릴스에서는 숨김 — 실제 적용되는 크기·위치만 아래 보여준다. */}
+              {!isReel && (
               <div className={s.sidePanelRow2}>
                 <div className={s.field}>
                   <label>글씨체</label>
@@ -2009,6 +2015,7 @@ export default function VideoTab() {
                   </select>
                 </div>
               </div>
+              )}
               {isReel ? (<>
                 <div className={s.field}>
                   <label>🎬 최종본 자막(손글씨) 크기 <span className={s.val}>{reelFontPx}px</span></label>
@@ -2022,13 +2029,14 @@ export default function VideoTab() {
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
                   릴스는 최종본과 같은 손글씨 자막으로 미리봅니다. 여기서 바꾼 크기·위치는 최종본(G5)에 그대로 반영됩니다. 화면 72% 아래는 인스타 UI 영역이라 자동으로 올려 배치됩니다.
+                  글씨체·색상·말풍선은 대본의 "손글씨 오버레이" 힌트로 자동 결정되며, 여기서는 바꿀 수 없습니다.
                 </div>
-              </>) : (
+              </>) : (<>
               <div className={s.field}>
                 <label>글자 크기 <span className={s.val}>{fontSize}px</span></label>
                 <input type="range" min="16" max="72" value={fontSize} disabled={!subtitleEnabled}
                   onChange={e => set({ fontSize: parseInt(e.target.value) })} />
-              </div>)}
+              </div>
               <div className={s.sidePanelRow2}>
                 <div className={s.field}>
                   <label>글자 색상</label>
@@ -2051,6 +2059,7 @@ export default function VideoTab() {
                   </div>
                 )}
               </div>
+              </>)}
             </div>
           )}
         </div>
