@@ -955,7 +955,12 @@ export default function VideoTab() {
     // 래스터를 CSS로 늘려 보여주는 방식이다. 캔버스 해상도를 실제 유튜브 16:9 출력 규격
     // (1920×1080)에 맞추고, fontSize를 그 좌표계에서 그대로(스케일 보정 없이) 픽셀값으로
     // 써서 슬라이더 값과 화면에 보이는 크기가 1:1로 맞게 한다.
-    const fSize = Math.max(10, Math.round(fontSize))
+    // 2026-11-17(성준님 질문 계기 — "크기·세로 위치 설정이 작동 안 되나?"): 이 캔버스는 복구
+    // 당시(오전) 옛 변수(fontSize/subtitlePosition)를 그대로 되살렸는데, 그사이 화면의 실제
+    // 슬라이더는 전부 reelFontPx/reelStyle.y(공용, server/lib/subtitleBurn.js가 최종본에
+    // 실제로 쓰는 값)로 바뀌어 있어서 — 슬라이더를 움직여도 서버 최종본엔 반영되는데 이
+    // 미리보기만 반응을 안 했다(기능은 살아있었지만 미리보기가 거짓 정보를 보여준 것).
+    const fSize = Math.max(10, Math.round(reelFontPx))
     const padX = Math.round(fSize * 0.45), padY = Math.round(fSize * 0.28), lineGap = 1.3
 
     ctx.font = `${fSize}px "${font}",sans-serif`
@@ -967,13 +972,11 @@ export default function VideoTab() {
     const totalTextHeight = lineHeight * lines.length
 
     const subX = W / 2
-    const anchorY = subtitlePosition === 'top' ? H * 0.75
-                 : subtitlePosition === 'middle' ? H * 0.85
-                 : H * 0.93
-
-    const boxBottom = anchorY
-    let boxTop = boxBottom - totalTextHeight - padY * 2
+    // reelStyle.y는 "글자 블록 중심"(0~1) — handwriting_overlay.py·drawtext 양쪽과 같은 의미로
+    // 맞춤(드래그 안 했으면 기본 0.66, 슬라이더 표시값과 동일 기본치).
+    const centerY = H * (reelStyle.y || 0.66)
     const boxHeight = totalTextHeight + padY * 2
+    let boxTop = centerY - boxHeight / 2
 
     boxTop = Math.max(boxTop, 8)
 
@@ -1006,7 +1009,7 @@ export default function VideoTab() {
       ctx.fillText(l, subX, lineCenterY)
     })
     ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0
-  }, [subtitleEnabled, font, fontSize, color, bgStyle, boxColor, previewText, subtitlePosition, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue])
+  }, [subtitleEnabled, font, color, bgStyle, boxColor, previewText, selectedCutId, subtitles, reelStyle.captionStyle, reelFontPx, reelStyle.y, gaeguReady, aspectRatio, selCutForText?.dialogue])
 
   useEffect(() => { drawPreview() }, [drawPreview, subtitleEditMode])
 

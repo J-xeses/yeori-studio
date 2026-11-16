@@ -1,5 +1,5 @@
 {
-  "activeTab": "monitor",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12642,7 +12642,144 @@
         }
       ],
       "scriptRaw": "",
-      "createdAt": "2026-11-14T12:35:50.628Z"
+      "createdAt": "2026-11-14T12:35:50.628Z",
+      "tabState": {
+        "videoTabState": {
+          "videoClips": {
+            "cut-1": [
+              {
+                "url": "blob:http://localhost:5173/1273a342-8cc8-4da0-a654-5f0a88b0b476",
+                "name": "cut_01_clip_1.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794737574359,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_01_clip_1.mp4"
+              }
+            ],
+            "cut-2": [
+              {
+                "url": "blob:http://localhost:5173/c21ce33f-48d2-4a9f-977c-8099aeec5653",
+                "name": "cut_02_clip_1.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794742301874,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_02_clip_1.mp4"
+              }
+            ],
+            "cut-3": [
+              {
+                "url": "blob:http://localhost:5173/87a7a883-c861-4429-8a6e-61f1e39a9444",
+                "name": "cut_03_clip_1.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794742478956,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_03_clip_1.mp4"
+              }
+            ],
+            "cut-4": [
+              {
+                "url": "blob:http://localhost:5173/14039430-5108-4692-a91e-dc7ec89364ec",
+                "name": "cut_04_clip_1.mp4",
+                "duration": 7.93,
+                "trimStart": 0,
+                "trimEnd": 7.93,
+                "useFullDuration": true,
+                "ratio": "9:16",
+                "staging": false,
+                "keepAudio": true,
+                "createdAt": 1794742705747,
+                "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_04_clip_1.mp4"
+              }
+            ]
+          },
+          "g4Approved": {},
+          "selectedCutId": "cut-1",
+          "subtitles": {
+            "cut-1": "새벽 1시, 오늘도 편의점이에요."
+          }
+        },
+        "ttsTabState": {
+          "audioUrls": {},
+          "audioTexts": {},
+          "g3Confirmed": {},
+          "focusCutId": null,
+          "voiceTabs": {
+            "cut-2": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
+            ]
+          },
+          "tracks": {
+            "cut-2__v1": [
+              {
+                "id": "track_1794745146508_2uuw",
+                "type": "narration",
+                "text": "여긴 뜨거운 물도, 앉을 자리도 있어요.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ]
+          }
+        },
+        "voiceInsertState": {
+          "tracks": {}
+        },
+        "studioTabState": {
+          "imageRatio": {}
+        },
+        "thumbnail": {
+          "text": "",
+          "fontSize": 48,
+          "color": "#ffffff",
+          "shadowColor": "#000000",
+          "bold": true,
+          "textY": 70,
+          "ratio": "16:9",
+          "bgImageUrl": "",
+          "posterLayers": []
+        },
+        "publishing": {
+          "youtube": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          },
+          "instagram": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          },
+          "tiktok": {
+            "title": "",
+            "description": "",
+            "tags": ""
+          }
+        }
+      }
     }
   },
   "episode": {
@@ -12967,7 +13104,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-16T03:29:18.776Z",
+  "savedAt": "2026-11-16T03:54:23.605Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

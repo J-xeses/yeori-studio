@@ -536,6 +536,21 @@ const INDOOR_HOME_RE = /집|소파|거실|침실|침대|원룸|자취방|욕실|
 // 신고 들어온 것처럼 연출됐다. 편의점·마트 등 "누구나 신발 신고 드나드는 공공 실내 판매·
 // 서비스 시설" 키워드가 있으면 "집" 매칭과 무관하게 이 가드 자체를 건너뛴다.
 // server/lib/scriptParserV3.js와 동일하게 유지.
+// ── 서여리 캐릭터 일관성 — 표준화된 필수 문구 (2026-11-17, 성준님 지시: "어떤 문구든 표준화
+// 설정을 하면 된다, 이후 개선·변동 때 일괄 개편 가능하게") ───────────────────────────────
+// IG_R09에서 이 중 2개가 룰셋 교정 전 구버전 그대로 생성돼 나온 게 발견됨(§①과 어긋남) — 손으로
+// 여러 군데(룰셋 지시문·체크리스트·FULLBODY 샷타입 설명 등) 따로 타이핑해두면 한쪽만 고치고
+// 나머지를 깜빡하는 일이 반복된다. 이제 이 5개 상수가 유일한 출처 — YEORI_RULESET 템플릿
+// 안에서 전부 ${}로 참조해서 쓰고, 다음에 문구를 바꿀 땐 여기만 고치면 전체에 반영된다.
+// app/yeori_ruleset_v1.4.md §①과 반드시 동일하게 유지할 것.
+const YEORI_HAIR_PHRASE = 'long wavy dark brown hair / NOT short'
+const YEORI_SKIN_PHRASE = 'natural-finish makeup, skin looking soft and real rather than airbrushed, gentle healthy sheen'
+const YEORI_SKIN_AVOID = 'avoid: acne, blemishes, redness, rough skin'
+const YEORI_NECKLACE_PHRASE = 'delicate gold necklace'
+// v1.4.6(2026-10-12) 강화 버전 — 이전의 약한 버전("K-model proportions, very small face,
+// long slim legs")은 IG_R08 CUT6 실측에서 평범한 체형으로 나와 이 버전으로 교체됨.
+const YEORI_BODY_PROPORTION_PHRASE = '1:8 head-to-body ratio, supermodel body proportions, model-like slim waist, K-model proportions, small face, long legs, slender figure'
+
 const PUBLIC_INDOOR_RE = /편의점|마트|슈퍼마켓|슈퍼|상점|매장|가게|백화점|쇼핑몰|식당|카페|병원|약국|은행|학교|학원|사무실|회사|지하철|버스|로비|엘리베이터/
 const INTENTIONAL_SHOE_RE = /신발|하이힐|구두|부츠|슬리퍼|운동화|스니커즈|페르소나/
 const SHOE_KEYWORD_EN_RE = /\b(sneakers?|shoes?|heels?|boots?|loafers?|sandals?|flats?|Converse|Chuck Taylor|stilettos?)\b/i
@@ -1142,27 +1157,25 @@ export default function ScriptGenTab() {
   - Google Flow로 생성하는 컷
   - 이미지 프롬프트: "FULLBODY SHOT —" 으로 시작
   - 얼굴이 작게 보이므로 씬·의상·체형·배경 묘사에 집중
-  - K-model proportions, very small face, long slim legs 필수 포함
+  - ${YEORI_BODY_PROPORTION_PHRASE} 필수 포함
 
-[캐릭터 일관성 — 절대 원칙] (2026-11-17 교정 — 룰셋 §①과 반드시 동일하게 유지. 아래 구버전
-문구 2개는 IG_R09 실측에서 그대로 생성돼 나온 게 발견됨: "skin texture on right cheek"는
-2026-09-09(v1.4.1)에 여드름·잡티 증폭 문제로 금지됐고, "DO NOT change clothing"은
-2026-06-14에 정책위반 오인 유발로 금지됐는데, 이 프롬프트 블록이 그 교정 전 버전 그대로
-남아있어서 매번 금지된 문구를 다시 생성시키고 있었다.)
+[캐릭터 일관성 — 절대 원칙] (2026-11-17 교정 — 룰셋 §①과 반드시 동일하게 유지, 아래 5개 문구는
+전부 파일 상단 YEORI_* 상수를 참조함(표준화 — 성준님 지시: "어떤 문구든 표준화 설정을 하면
+된다, 이후 개선·변동 때 일괄 개편 가능하게"). 이전엔 손으로 여러 군데 따로 타이핑돼 있어서
+"skin texture on right cheek"(2026-09-09 v1.4.1 금지)·"DO NOT change clothing"(2026-06-14
+금지) 같은 구버전 문구가 한쪽만 고쳐지고 다른 쪽엔 그대로 남아 IG_R09에서 실제로 재생성됨.)
 - 스타트 프레임: 반드시 서여리 얼굴 있는 이미지 기준
-- 헤어: long wavy dark brown hair / NOT short — 이중 강조 필수
-- 피부: "natural-finish makeup, skin looking soft and real rather than airbrushed, gentle
-  healthy sheen" + "avoid: acne, blemishes, redness, rough skin" 상시 포함.
+- 헤어: ${YEORI_HAIR_PHRASE} — 이중 강조 필수
+- 피부: "${YEORI_SKIN_PHRASE}" + "${YEORI_SKIN_AVOID}" 상시 포함.
   ⚠️ "skin texture on (right) cheek" 류 표현 절대 금지(여드름·잡티로 증폭됨) — 모반·주근깨
   언급은 트리거 아니므로 허용.
-- 시그니처 디테일: "delicate gold necklace" 필수 포함
+- 시그니처 디테일: "${YEORI_NECKLACE_PHRASE}" 필수 포함
 - 의상: 색상·소재·스타일 구체적으로 명시. ⚠️ "DO NOT change clothing" 등 강한 명령형 금지
   (정책위반 오인 유발, 2026-06-14 확정) — 명령형 없이 구체적 묘사로 대체
 - 소품: 가방·신발·골드 목걸이·브레이슬렛 등 디테일 명시
 - 나이: "early 20s, appearing no older than 22-23" 명시
 - 스타일: Photorealistic 8K cinematic, natural Korean beauty
-- 체형(FULLBODY 필수 포함): "1:8 head-to-body ratio, supermodel body proportions,
-  model-like slim waist, K-model proportions, small face, long legs, slender figure"
+- 체형(FULLBODY 필수 포함): "${YEORI_BODY_PROPORTION_PHRASE}"
 
 [컷 길이 기준 — 8초 단위 (필수)]
 - 1컷 기본 길이: 8초
@@ -1214,12 +1227,10 @@ export default function ScriptGenTab() {
 
 [이미지 프롬프트 생성 시 체크리스트]
 □ 샷 타입 명시: "CLOSEUP SHOT —" 또는 "FULLBODY SHOT —" 으로 시작
-□ long wavy dark brown hair, NOT short 이중 강조 포함
-□ 피부: "skin looking soft and real rather than airbrushed, gentle healthy sheen" 문구 사용,
-  "skin texture" 단어는 쓰지 않음(금지)
-□ delicate gold necklace 포함(서여리 등장 컷은 상시)
-□ FULLBODY: "1:8 head-to-body ratio, supermodel body proportions, K-model proportions,
-  small face, long legs" 포함
+□ ${YEORI_HAIR_PHRASE} 이중 강조 포함
+□ 피부: "${YEORI_SKIN_PHRASE}" 문구 사용, "skin texture" 단어는 쓰지 않음(금지)
+□ ${YEORI_NECKLACE_PHRASE} 포함(서여리 등장 컷은 상시)
+□ FULLBODY: "${YEORI_BODY_PROPORTION_PHRASE}" 포함
 □ 의상은 명령형("DO NOT change clothing") 없이 구체적으로 묘사
 □ 배경 인물 개입 방지 문구 포함
 □ 대사 텍스트 없음
@@ -1528,6 +1539,12 @@ ${hasDraft ? '\n⚠️ 다시 한번 강조: 위에 제공된 [CUT N] 초안의 
             if (!/necklace/i.test(p)) failItems.push(`CUT${cut.no}: delicate gold necklace 누락`)
             if (isFull && !p.match(/K-model|small face|long.*legs/i)) failItems.push(`CUT${cut.no}: FULLBODY 체형 문구 누락`)
             if (/DO NOT change clothing/i.test(p)) failItems.push(`CUT${cut.no}: 금지된 "DO NOT change clothing" 명령형 문구 사용`)
+            // 영상 프롬프트(VP)도 같은 금지 문구를 재생성할 수 있다(IG_R09 실측 — "a young
+            // Korean woman..., natural skin texture on right cheek very subtle..."가 VP에
+            // 그대로 나왔었음) — IP와 별개로 VP도 검사.
+            const vp = cut.videoPrompt || ''
+            if (/skin texture/i.test(vp)) failItems.push(`CUT${cut.no}: VP에 금지된 "skin texture" 문구 사용`)
+            if (/DO NOT change clothing/i.test(vp)) failItems.push(`CUT${cut.no}: VP에 금지된 "DO NOT change clothing" 명령형 문구 사용`)
           }
         }
         passCount++ // 의상 묘사는 형식 강제 없이 통과 처리 (2026-06-14/06-21 명령형 폐기 결정 반영)

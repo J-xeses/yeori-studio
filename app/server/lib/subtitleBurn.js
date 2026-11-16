@@ -165,8 +165,17 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
   const maxTextWidth = (typeof videoWidth === 'number' && videoWidth > 0)
     ? videoWidth * ((videoHeight >= videoWidth) ? 0.86 : 0.80)
     : Infinity
-  const ratio = (typeof style.positionRatio === 'number' && style.positionRatio > 0)
-    ? style.positionRatio : (POSITION_RATIO[style.position] ?? POSITION_RATIO.bottom)
+  // 2026-11-17 발견(성준님 질문 계기 — "크기·위치 설정이 작동 안 되나?"): positionRatio(영상
+  // 탭 "세로 위치" 슬라이더, reelOverrides._style.y)는 handwriting_overlay.py 쪽에서 "글자
+  // 블록 중심"(x:0.5,y 좌표) 의미로 설계됐고 UI 설명도 그렇게 적혀 있는데, 이 drawtext 쪽은
+  // 옛 POSITION_RATIO(top/middle/bottom 문자열 전용, "박스 아래쪽 가장자리" 의미)의 y 공식을
+  // 그대로 재사용해서 같은 슬라이더 값이 두 캡션 엔진에서 서로 다른 높이로 나왔다(실측: IG_R09
+  // _style.y=0.69가 손글씨 때 보던 위치보다 캡션이 더 아래로 내려가게 됨). positionRatio가
+  // 명시된 경우(=슬라이더 경로)만 중심 기준으로 바꾸고, 옛 문자열 position(top/middle/bottom,
+  // VideoTab "컷 단독 미리듣기" 버튼의 기존 경로)은 그대로 둬서 그 경로의 기존 동작은 안 바꾼다.
+  const usingSlider = typeof style.positionRatio === 'number' && style.positionRatio > 0
+  const ratio = usingSlider ? style.positionRatio : (POSITION_RATIO[style.position] ?? POSITION_RATIO.bottom)
+  const yExpr = usingSlider ? `y=h*${ratio}-text_h/2` : `y=h*${ratio}-text_h`
   const boxHex = '0x' + (style.boxColor || '#000000').replace('#', '')
 
   fs.mkdirSync(workDir, { recursive: true })
@@ -183,7 +192,7 @@ export function buildSubtitleDrawtextFilter(segments, style, workDir, videoHeigh
       `fontsize=${fSize}`,
       `fontcolor=${escFilterValue(color)}`,
       `x=(w-text_w)/2`,
-      `y=h*${ratio}-text_h`,
+      yExpr,
       // 배경 스타일과 무관하게 항상 외곽선 한 겹(미리보기 캔버스와 동일 — 2026-09-15 확정 방침).
       `borderw=${Math.max(2, Math.round(fSize * 0.09))}`,
       `bordercolor=${outline}@0.85`,
