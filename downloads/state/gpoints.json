@@ -2031,7 +2031,7 @@
   "IG_R09": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-15T09:26:53.141Z",
+      "updatedAt": "2026-11-16T07:47:44.543Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_01_a.jpg",
@@ -2073,7 +2073,8 @@
         }
       },
       "g2": true,
-      "selectedImage": "cut_01_a.jpg"
+      "selectedImage": "cut_01_a.jpg",
+      "g4": true
     },
     "cut_2": {
       "g1": true,
