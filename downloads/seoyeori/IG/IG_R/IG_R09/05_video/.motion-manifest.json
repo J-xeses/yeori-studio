@@ -1,0 +1,26 @@
+{
+  "1": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-16T05:54:39.345Z"
+  },
+  "2": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-16T05:55:13.853Z"
+  },
+  "3": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-16T05:55:43.363Z"
+  },
+  "4": {
+    "method": "multi-clip-compose",
+    "motion": null,
+    "baked": true,
+    "producedAt": "2026-11-16T05:56:13.434Z"
+  }
+}
