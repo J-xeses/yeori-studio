@@ -633,6 +633,15 @@ export default function VideoTab() {
       }).catch(() => {})
     }, 500)
   }
+  // 엔딩 카드(대본 [엔딩 카드] CTA, 마지막 2초) 전용 크기·세로위치(2026-11-16) — 자막 크기를
+  // 키우면 엔딩 카드까지 같이 커지는 게 불편하다는 지적으로, reelOverrides._style.endCard에
+  // 따로 저장해 서버(reelFinalize.js)가 캡션과 별개 drawtext 체인으로 번인하게 분리했다.
+  // 설정 안 하면(undefined) 캡션과 같은 값을 그대로 씀 — 기존 동작과 하위호환.
+  const reelEndCardStyle = reelStyle.endCard || {}
+  const setEndCardStyle = (patch) => {
+    const nextEndCard = { ...reelEndCardStyle, ...patch }
+    setReelStyle({ endCard: nextEndCard })
+  }
   // 릴스 자막 텍스트(줄바꿈 \n 포함) 수동 편집을 override 파일에 저장(2026-09-28) — studio-state.json
   // 로컬 subtitles 상태만으로는 최종본(reel-finalize) 렌더가 이 값을 전혀 못 읽는다(로컬 상태는 화면
   // 미리보기·SRT 내보내기 전용). subtitle 전체 문자열(" / "로 세그 구분, 세그 내부는 \n 그대로)로 저장.
@@ -2080,6 +2089,32 @@ export default function VideoTab() {
                 입력창·타이밍 바에서 고치면 즉시 저장되어, 고치지 않으면 대본 원본이, 고치면 그 값이
                 최종본까지 그대로 유지됩니다.
               </div>
+              {/* 엔딩 카드는 아직 drawtext(text) 엔진에만 연결돼 있음(server/lib/reelFinalize.js
+                  §⑬-6) — 손글씨(handwriting) 모드에선 효과가 없어 혼선을 막으려 그때만 숨긴다. */}
+              {reelStyle.captionStyle !== 'handwriting' && (
+              <>
+              <div className={s.field} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed var(--border)' }}>
+                <label>🏁 엔딩 카드 자막 크기 <span className={s.val}>
+                  {reelEndCardStyle.fontPx ? `${reelEndCardStyle.fontPx}px` : `캡션과 동일(${reelFontPx}px)`}
+                </span></label>
+                <input type="range" min="36" max="110" value={reelEndCardStyle.fontPx || reelFontPx} disabled={!subtitleEnabled}
+                  onChange={e => setEndCardStyle({ fontPx: parseInt(e.target.value) })} />
+              </div>
+              <div className={s.field}>
+                <label>엔딩 카드 세로 위치 <span className={s.val}>
+                  {reelEndCardStyle.y != null ? `${Math.round(reelEndCardStyle.y * 100)}%` : `캡션과 동일${reelStyle.y ? `(${Math.round(reelStyle.y * 100)}%)` : '(하단)'}`}
+                </span></label>
+                <input type="range" min="10" max="90"
+                  value={Math.round((reelEndCardStyle.y != null ? reelEndCardStyle.y : (reelStyle.y || 0.66)) * 100)}
+                  disabled={!subtitleEnabled}
+                  onChange={e => setEndCardStyle({ y: parseInt(e.target.value) / 100 })} />
+              </div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", lineHeight: 1.5 }}>
+                대본 [엔딩 카드] 섹션(마지막 2초 공유·팔로우 유도 문구)의 크기·위치 — 건드리지 않으면
+                위 자막 크기·세로 위치와 똑같이 번인됩니다. 이 에피소드에 [엔딩 카드]가 없으면 효과 없음.
+              </div>
+              </>
+              )}
             </div>
           )}
         </div>

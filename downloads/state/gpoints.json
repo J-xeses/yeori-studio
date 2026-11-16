@@ -2031,7 +2031,7 @@
   "IG_R09": {
     "cut_1": {
       "g1": true,
-      "updatedAt": "2026-11-16T07:47:44.543Z",
+      "updatedAt": "2026-11-16T11:27:03.558Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_01_a.jpg",
@@ -2074,11 +2074,12 @@
       },
       "g2": true,
       "selectedImage": "cut_01_a.jpg",
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_2": {
       "g1": true,
-      "updatedAt": "2026-11-16T08:57:08.267Z",
+      "updatedAt": "2026-11-16T11:27:03.559Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_02_a.jpg",
@@ -2121,11 +2122,12 @@
       },
       "g2": true,
       "selectedImage": "cut_02_b.jpg",
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_3": {
       "g1": true,
-      "updatedAt": "2026-11-16T08:57:28.230Z",
+      "updatedAt": "2026-11-16T11:27:03.560Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_03_a.jpg",
@@ -2168,11 +2170,12 @@
       },
       "g2": true,
       "selectedImage": "cut_03_b.jpg",
-      "g4": true
+      "g4": true,
+      "g5": true
     },
     "cut_4": {
       "g1": true,
-      "updatedAt": "2026-11-16T08:57:43.222Z",
+      "updatedAt": "2026-11-16T11:27:03.561Z",
       "g2Checklist": {
         "0": {
           "filename": "cut_04_a.jpg",
@@ -2215,7 +2218,8 @@
       },
       "g2": true,
       "selectedImage": "cut_04_a.jpg",
-      "g4": true
+      "g4": true,
+      "g5": true
     }
   }
 }

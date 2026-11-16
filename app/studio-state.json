@@ -1,5 +1,5 @@
 {
-  "activeTab": "making",
+  "activeTab": "video",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -13028,7 +13028,7 @@
     "subtitleEnabled": true,
     "font": "Nanum Gothic",
     "fontSize": 50,
-    "color": "#ffffff",
+    "color": "#d2e5dd",
     "bgStyle": "반투명 직각 박스",
     "boxColor": "#1a1a1a",
     "subtitlePosition": "bottom"
@@ -13104,7 +13104,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-16T09:04:23.964Z",
+  "savedAt": "2026-11-16T11:19:56.728Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -13174,7 +13174,7 @@
       "cut-3": true,
       "cut-4": true
     },
-    "selectedCutId": "cut-4",
+    "selectedCutId": "cut-3",
     "subtitles": {
       "cut-1": "새벽 1시, 오늘도 편의점이에요."
     }

@@ -785,9 +785,13 @@ export async function finalizeReel(p) {
   // 박스)을 실제로 읽어서 번인한다(2026-11-16, §⑬-5). 대사(plate===true)만 배경박스 적용 —
   // 나레이션은 박스 없이 구분(성준님 확정). 실패하면 captionMode는 'none'으로 남아 아래 ass
   // 폴백(needAssBurn)이 대신 처리한다.
-  // 2026-11-16 §⑬-6: 대본 [엔딩 카드] 섹션("Send this to..."/"Follow for...")도 같은 drawtext
-  // 체인에 마지막 CARD_DUR초 세그먼트로 얹는다 — 대사/나레이션이 아니라 박스는 항상 뺌
-  // (isDialogue:false). 손글씨(handwriting) 엔진 쪽은 아직 미연결(범위 밖, 다음에 필요하면).
+  // 2026-11-16 §⑬-6: 대본 [엔딩 카드] 섹션("Send this to..."/"Follow for...")도 번인한다 —
+  // 대사/나레이션이 아니라 박스는 항상 뺌(isDialogue:false). 손글씨(handwriting) 엔진 쪽은
+  // 아직 미연결(범위 밖, 다음에 필요하면).
+  // 2026-11-16 추가: 자막 크기를 키웠더니 엔딩 카드까지 같이 커져서(같은 style 공유) 곤란하다는
+  // 지적(성준님) — 캡션용 drawtext와 별도 filter 체인으로 분리해서, 크기·세로 위치를 독립적으로
+  // 가질 수 있게 했다(reelOverrides._style.endCard = {fontPx, y}, 없으면 캡션과 같은 기본값
+  // 그대로 — 지금까지 동작과 하위호환). 폰트·색·배경 스타일은 당장은 캡션과 공유(요청 범위 밖).
   const endCardLines = extractEndCard(loadEpisodeScriptRaw(code))
   if (endCardLines.length) log(`엔딩 카드 발견 — "${endCardLines.join(' / ')}"`)
   if (captionStyle === 'text' && (capCount > 0 || endCardLines.length)) {
@@ -807,13 +811,6 @@ export async function finalizeReel(p) {
         allSegs.push({ text, start: st, end: en, isDialogue: seg.overlay.plate === true })
       })
     }
-    if (endCardLines.length) {
-      // drawtext(이 엔진)는 handwriting_overlay.py 경로와 달리 컬러 이모지 폰트 폴백이 없어서
-      // 💬 같은 글자가 네모(두부)로 깨진다(실측 확인, 2026-11-16) — 번인 텍스트에서만 제거.
-      const stripEmoji = (t) => t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-➿\u{FE0F}]/gu, '').replace(/[ \t]+/g, ' ').trim()
-      const CARD_DUR = 2
-      allSegs.push({ text: endCardLines.map(stripEmoji).join('\n'), start: Math.max(0, totalDur - CARD_DUR), end: totalDur, isDialogue: false })
-    }
     const { width: vW, height: vH } = await ffprobeVideoSize(concat)
     const style = {
       font: globalVideoSettings.font, fontSize: capStyle.fontPx || globalVideoSettings.fontSize,
@@ -821,7 +818,32 @@ export async function finalizeReel(p) {
       position: globalVideoSettings.subtitlePosition, positionRatio: capStyle.y,
     }
     const workDir = path.join(tmp, 'drawtext')
-    const { filter, tempFiles } = buildSubtitleDrawtextFilter(allSegs, style, workDir, vH, vW)
+    const capResult = allSegs.length
+      ? buildSubtitleDrawtextFilter(allSegs, style, workDir, vH, vW)
+      : { filter: '', tempFiles: [] }
+
+    let endCardFilter = ''
+    let endCardTempFiles = []
+    if (endCardLines.length) {
+      // drawtext(이 엔진)는 handwriting_overlay.py 경로와 달리 컬러 이모지 폰트 폴백이 없어서
+      // 💬 같은 글자가 네모(두부)로 깨진다(실측 확인, 2026-11-16) — 번인 텍스트에서만 제거.
+      const stripEmoji = (t) => t.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').replace(/[ \t]+/g, ' ').trim()
+      const CARD_DUR = 2
+      const endCardStyle = {
+        ...style,
+        fontSize: capStyle.endCard?.fontPx || style.fontSize,
+        positionRatio: capStyle.endCard?.y != null ? capStyle.endCard.y : style.positionRatio,
+      }
+      const ecSegs = [{ text: endCardLines.map(stripEmoji).join('\n'), start: Math.max(0, totalDur - CARD_DUR), end: totalDur, isDialogue: false }]
+      const ecWorkDir = path.join(tmp, 'drawtext_endcard')
+      const ecResult = buildSubtitleDrawtextFilter(ecSegs, endCardStyle, ecWorkDir, vH, vW)
+      endCardFilter = ecResult.filter
+      endCardTempFiles = ecResult.tempFiles
+      if (endCardFilter) log(`엔딩 카드 번인 — ${endCardStyle.fontSize || 32}px · y=${endCardStyle.positionRatio ?? '(캡션과 동일)'}`)
+    }
+
+    const filter = [capResult.filter, endCardFilter].filter(Boolean).join(',')
+    const tempFiles = [...capResult.tempFiles, ...endCardTempFiles]
     if (filter) {
       const capOut = path.join(tmp, 'captioned_text.mp4')
       log(`자막 번인(기본 텍스트, drawtext) — 세그 ${allSegs.length}개 · ${style.font || '맑은 고딕'} ${style.fontSize || 32}px`)
