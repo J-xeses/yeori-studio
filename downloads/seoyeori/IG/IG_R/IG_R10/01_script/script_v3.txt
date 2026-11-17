@@ -70,7 +70,7 @@ NR(나레이션): 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니�
 ━━━━━━━━━━━━━━━━━━━━━━━━
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle,
+MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish,
 wearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired,
 looking down at her phone with a flat exhausted expression, warm indoor evening lighting,
 photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people
@@ -171,7 +171,7 @@ NR(나레이션): 없음
 IP (이미지 프롬프트)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,
-The woman on the right: long wavy dark brown hair falling loosely, natural skin texture on right cheek very subtle, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,
+The woman on the right: long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,
 The woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, short wavy black bob with wispy curtain bangs, wearing a light ivory cardigan over a casual top and jeans, small shoulder bag, standing at the doorstep in the middle of taking off her shoes, holding up a cloth-wrapped lunchbox with a confident playful grin,
 entryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people
 
