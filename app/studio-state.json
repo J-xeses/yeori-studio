@@ -1,11 +1,11 @@
 {
-  "activeTab": "script",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
     "remainingChars": 88843
   },
-  "activeEpisodeId": "ep_1794659750628",
+  "activeEpisodeId": "ep_1794927139043",
   "openTabIds": [
     "ep_1787406807164",
     "ep_1786261078428",
@@ -31,7 +31,8 @@
     "ep_1793506802870",
     "ep_1793793376185",
     "ep_1794467102083",
-    "ep_1794659750628"
+    "ep_1794659750628",
+    "ep_1794927139043"
   ],
   "episodes": {
     "ep_1786261078428": {
@@ -12707,8 +12708,13 @@
               }
             ]
           },
-          "g4Approved": {},
-          "selectedCutId": "cut-1",
+          "g4Approved": {
+            "cut-1": true,
+            "cut-2": true,
+            "cut-3": true,
+            "cut-4": true
+          },
+          "selectedCutId": "cut-4",
           "subtitles": {
             "cut-1": "새벽 1시, 오늘도 편의점이에요."
           }
@@ -12725,6 +12731,13 @@
                 "label": "목소리 1",
                 "voiceId": "RmYuvmCbqOMBJxDLW4k8"
               }
+            ],
+            "cut-4": [
+              {
+                "id": "v1",
+                "label": "목소리 1",
+                "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+              }
             ]
           },
           "tracks": {
@@ -12733,6 +12746,21 @@
                 "id": "track_1794745146508_2uuw",
                 "type": "narration",
                 "text": "여긴 뜨거운 물도, 앉을 자리도 있어요.",
+                "speaker": null,
+                "url": null,
+                "voiceId": "",
+                "settings": {
+                  "speed": 0.85,
+                  "stability": 55,
+                  "similarity": 75
+                }
+              }
+            ],
+            "cut-4__v1": [
+              {
+                "id": "track_1794815430036_fvpv",
+                "type": "narration",
+                "text": "야식은 후회해도, 이 3분은 후회 안 해요.",
                 "speaker": null,
                 "url": null,
                 "voiceId": "",
@@ -12758,229 +12786,441 @@
           "shadowColor": "#000000",
           "bold": true,
           "textY": 70,
-          "ratio": "16:9",
+          "ratio": "9:16",
           "bgImageUrl": "",
           "posterLayers": []
         },
         "publishing": {
           "youtube": {
-            "title": "",
-            "description": "",
-            "tags": ""
+            "title": "일상공감 | 새벽 1시, 서여리가 간 곳은? 🍜",
+            "description": "새벽 1시, 오늘도 편의점이에요. 이런 순간에 느끼는 감정표현, 여러분도 공감되지 않나요?\n\n뜨거운 물도 있고, 앉을 자리도 있고, 심지어 전화까지 걸려오는 그 공간.\n야식은 후회해도, 이 3분 만큼은 절대 후회 안 해요.\n\n나 혼자만 이런 거 아니죠? 이런 소소한 일상 공감 순간들을 담았어요.\n자기 전에 괜히 허전할 때, 이 영상 하나로 감정표현 되길 바라며 🧡\n\n#서여리 #새벽편의점 #일상공감",
+            "tags": "일상공감, 감정표현, 새벽편의점, 편의점브이로그, 컵라면, 새벽감성, 서여리, 야식, 공감영상, 쇼츠, 감성쇼츠, 혼자사는일상, 소확행, 새벽루틴, 감성일상"
           },
           "instagram": {
-            "title": "",
-            "description": "",
-            "tags": ""
+            "title": "새벽 1시, 서여리가 간 곳은? 🏪✨",
+            "description": "새벽 1시에 편의점 가는 거, 저만 그런 거 아니죠? 🙋\n이런 작은 순간들이 사실 제일 솔직한 일상 공감인 것 같아요.\n\n뜨거운 물, 창가 자리, 그리고 걸려오는 친구 전화까지.\n야식은 후회해도, 이 3분은 안 후회해요 🍜\n\n말로는 설명 안 되는 그 감정표현, 이 영상이 대신 해줄 거예요.\n여러분의 새벽은 어떤가요? 댓글로 알려줘요 💬\n\n#일상공감 #감정표현 #새벽편의점 #편의점감성 #컵라면 #새벽감성 #서여리 #야식 #혼자사는일상 #소확행 #공감 #감성일상 #릴스 #새벽루틴 #편의점브이로그",
+            "tags": "#일상공감 #감정표현 #새벽편의점 #편의점감성 #컵라면 #새벽감성 #서여리 #야식 #혼자사는일상 #소확행 #공감 #감성일상 #릴스 #새벽루틴 #편의점브이로그"
           },
           "tiktok": {
-            "title": "",
-            "description": "",
-            "tags": ""
+            "title": "새벽 1시 편의점 🍜 이거 완전 일상공감 아님? ㅋㅋ",
+            "description": "새벽에 혼자 편의점 간 적 있으면 이 영상 그냥 넘기지 마 👀\n이게 바로 말 없이도 되는 감정표현이지 ㅠㅠ\n\n야식은 후회해도 이 3분은 진짜 안 후회함 🙏\n너네도 일상공감 되면 댓글에 '나도' 남겨줘 💬\n\n#일상공감 #감정표현 #새벽편의점 #컵라면 #서여리 #새벽감성 #공감 #야식 #편의점 #틱톡감성 #소확행 #혼자사는일상 #새벽루틴",
+            "tags": "#일상공감 #감정표현 #새벽편의점 #컵라면 #서여리 #새벽감성 #공감 #야식 #편의점 #틱톡감성 #소확행 #혼자사는일상 #새벽루틴"
           }
         }
       }
+    },
+    "ep_1794927139043": {
+      "id": "ep_1794927139043",
+      "episode": {
+        "number": 10,
+        "title": "'밥 먹었어?'의 숨은 뜻",
+        "location": "집 (방)",
+        "mood": [
+          "K문화",
+          "일상"
+        ],
+        "cutCount": 4,
+        "contentType": "IG_R",
+        "topicCode": "REL",
+        "scnCode": "REL",
+        "instaNum": "R10",
+        "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
+        "code": "IG_R10",
+        "finishMode": "cutter",
+        "masterCode": "[IG_R10] :: [PL:IG_RL] :: [SP:IN.HM.LR.LT_EV] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
+        "epHeaderRaw": ""
+      },
+      "cuts": [
+        {
+          "id": "cut-1",
+          "no": 1,
+          "cutTitle": "거실, 지친 서여리, 문자 알림",
+          "lipsync": false,
+          "scene": "거실 소파에 지쳐 늘어진 서여리, 맨발. 폰을 보는데 알림이 뜬다 — 큰 글씨로 '밥 먹었어?'.",
+          "action": "0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "(나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
+          "subtitle": "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
+          "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, \nwearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired, \nwarm indoor evening lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting). NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
+          "duration": 8,
+          "shotType": "CLOSEUP",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "훅",
+          "masterCode": {
+            "sp": "IN.HM.LR.LT_EV",
+            "pl": "YR_VD",
+            "ch": "서여리",
+            "sh": "SH_MCU",
+            "ca": "CA_ST",
+            "md": "MD_COM",
+            "ac": "0~4초 소파에 늘어져 멍하게 폰을 보는 지친 모습 → 4~8초 알림이 뜨며 화면(폰)을 바라보는 데서 나레이션",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "잔잔한 로파이 (0초부터)",
+              "voice": "여리 — 나른하고 담담한 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
+              "sfx": "폰 알림음(짧게, 4초 지점)",
+              "ambience": "조용한 저녁 거실"
+            },
+            "kr": {
+              "sp": "서여리 집 거실 소파, 저녁 실내조명",
+              "ch": "서여리 — 라운지 홈웨어, 맨발, 머리 풀어 내림",
+              "sh": "미디엄 클로즈업",
+              "ca": "고정",
+              "ac": "0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션",
+              "md": "지침, 무심함"
+            }
+          }
+        },
+        {
+          "id": "cut-2",
+          "no": 2,
+          "cutTitle": "답장 치는 손, 의미 설명",
+          "lipsync": false,
+          "scene": "서여리가 답장을 치는 손(화면은 흐리게, 글자 비노출). 나레이션이 이어지고, 자막으로 실제 답장 내용이 뜬다.",
+          "action": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
+          "character": "서여리",
+          "dialogue": "(자막) 아직… 왜?",
+          "narration": "(나레이션) 걱정된다는 뜻으로 건네는 말이에요.",
+          "subtitle": "걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?",
+          "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot, \nseated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting, \npuzzled thoughtful expression, slightly leaning forward, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, silent, not speaking. NO dialogue, NO lip movement — the Korean narration (\"걱정된다는 뜻으로 건네는 말이에요.\") is added afterward as a separate voice-over in post-production, not generated here. [5-8s] She types a reply and taps send, still silent. No on-screen subtitle text or captions — both the narration and her typed reply (\"아직… 왜?\") are added as on-screen text/audio elements in post. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "",
+          "masterCode": {
+            "sp": "IN.HM.LR.LT_EV",
+            "pl": "YR_VD",
+            "ch": "서여리",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_SUR",
+            "ac": "0~5초 폰 화면(흐리게)에 답장을 입력하는 손 클로즈업, 나레이션 → 5~8초 \"아직… 왜?\"를 입력하고 보내기 누름",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "로파이 (이어서)",
+              "voice": "여리 — 설명하듯 차분한 톤(나레이션) — ※Flow 생성에는 미포함, 포스트 TTS로 별도 삽입. \"아직… 왜?\"도 음성 아닌 자막(타이핑) 처리",
+              "sfx": "타이핑 소리(가볍게), 전송음",
+              "ambience": "조용한 저녁 거실"
+            },
+            "kr": {
+              "sp": "거실 소파 (CUT1과 동일)",
+              "ch": "서여리 (손 클로즈업 위주, 얼굴 일부만)",
+              "sh": "미디엄 샷(손+폰 중심)",
+              "ca": "고정",
+              "ac": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
+              "md": "의아함, 호기심"
+            }
+          }
+        },
+        {
+          "id": "cut-3",
+          "no": 3,
+          "cutTitle": "초인종, 신발 벗는 지아, 도시락",
+          "lipsync": false,
+          "scene": "초인종이 울린다. 현관문을 열자 지아가 도시락을 들고 서 있다. 지아가 들어오며 신발을 벗는다.",
+          "action": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+          "character": "서여리",
+          "dialogue": "지아 \"그럴 줄 알았어. 일단 먹어.\" / 여리 \"…진짜 왔어?\"",
+          "narration": "",
+          "subtitle": "그럴 줄 알았어. 일단 먹어. / …진짜 왔어?",
+          "imagePrompt": "MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,\nThe woman on the right: long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers (mid-way through slipping them off at the doorstep), delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding up a cloth-wrapped lunchbox with a confident playful grin, no logos or text on clothing, DO NOT change clothing,\nentryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "[0-2s] The doorbell rings; the woman on the right opens the door. [2-5s] The woman on the left steps over the threshold, holds up the cloth-wrapped lunchbox in one hand, and slips off her white sneakers with a heel-to-toe motion, leaving her in black knee-high socks, and says in Korean, confident and playful (반말, close friend): \"그럴 줄 알았어. 일단 먹어.\" [5-8s] The woman on the right, still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): \"…진짜 왔어?\" No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "",
+          "masterCode": {
+            "sp": "IN.HM.ENT.LT_EV",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지아",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_SUR",
+            "ac": "0~2초 초인종 소리에 문을 여는 여리 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬 → 5~8초 여리가 놀란 표정으로 대사",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "로파이 (이어서, 살짝 고조)",
+              "voice": "지아 — 확신에 차고 장난스러운 톤(반말) / 여리 — 놀랍고 반가운 톤(반말, 친구 사이)",
+              "sfx": "초인종, 신발 벗는 소리(가볍게)",
+              "ambience": "조용한 저녁 현관"
+            },
+            "kr": {
+              "sp": "서여리 집 현관, 저녁 실내조명",
+              "ch": "서여리(거실 홈웨어, 맨발) · 지아(트위드 재킷+화이트 니트+블랙 플리츠 스커트+니삭스, 스니커즈→벗음, 숄더백, 보자기 도시락)",
+              "sh": "미디엄 샷, 현관 정면(고정 구도)",
+              "ca": "고정",
+              "ac": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+              "md": "놀람 → 반가움"
+            }
+          }
+        },
+        {
+          "id": "cut-4",
+          "no": 4,
+          "cutTitle": "거실에서 도시락, 여운, 엔딩카드",
+          "lipsync": false,
+          "scene": "두 사람이 거실에서 도시락을 나눠 먹는다. 중반에 정적 2~3초(BGM 정지)로 여운을 준 뒤 엔딩카드로 전환.",
+          "action": "0~4초 도시락을 펴놓고 함께 먹음 → 4~6초 정적, 서로 마주 보며 미소 → 6~8초 여리가 카메라를 보며 나레이션",
+          "character": "서여리",
+          "dialogue": "",
+          "narration": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
+          "subtitle": "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.",
+          "imagePrompt": "MEDIUM SHOT — same two young Korean women, same faces, sitting together on the living room floor/low table in the evening, \nThe woman on the right: same lounge t-shirt, barefoot, warm genuine smile. The woman on the left: same short wavy black bob with curtain bangs, same cropped black-and-white houndstooth tweed jacket, white ribbed knit top, black pleated mini skirt, black knee-high socks, silver heart necklace, warm genuine smile, small black shoulder bag resting on the floor beside her, DO NOT change clothing, \na cloth-wrapped lunchbox opened on the table between them with simple home-style side dishes, both eating together with chopsticks, warm cozy indoor lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting). NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
+          "duration": 8,
+          "shotType": "FULLBODY",
+          "cutType": "YEORI",
+          "cutMark": "NORMAL",
+          "beat": "결말",
+          "masterCode": {
+            "sp": "IN.HM.LR.LT_EV",
+            "pl": "YR_VD",
+            "ch": "서여리 + 지아",
+            "sh": "SH_MS",
+            "ca": "CA_ST",
+            "md": "MD_WRM",
+            "ac": "0~4초 거실 테이블에 도시락을 펴놓고 둘이 함께 먹는 모습 → 4~6초 정적 2초(BGM 정지, 서로 마주 보며 미소) → 6~8초 여리가 카메라를 보며 나레이션",
+            "lookId": "",
+            "du": 8,
+            "audio": {
+              "bgm": "로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃",
+              "voice": "여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
+              "sfx": "도시락 뚜껑 여는 소리, 수저 소리(자연스럽게)",
+              "ambience": "조용한 저녁 거실(정적 구간엔 거의 무음)"
+            },
+            "kr": {
+              "sp": "서여리 집 거실 (CUT1과 동일 공간, 테이블 추가)",
+              "ch": "서여리 · 지아 (CUT3과 동일 옷차림)",
+              "sh": "미디엄 샷, 테이블 사이로 두 사람",
+              "ca": "고정",
+              "ac": "0~4초 도시락을 펴놓고 함께 먹음 → 4~6초 정적, 서로 마주 보며 미소 → 6~8초 여리가 카메라를 보며 나레이션",
+              "md": "따뜻함, 편안한 친밀감"
+            }
+          },
+          "overrides": {
+            "narration": {
+              "value": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
+              "at": "2026-11-17T14:56:17.021Z",
+              "reason": "스튜디오 화면에서 직접 수정"
+            }
+          }
+        }
+      ],
+      "scriptRaw": "",
+      "createdAt": "2026-11-17T14:52:19.043Z"
     }
   },
   "episode": {
-    "number": 9,
-    "title": "새벽 1시, 서여리가 간 곳은?",
-    "location": "기타",
+    "number": 10,
+    "title": "'밥 먹었어?'의 숨은 뜻",
+    "location": "집 (방)",
     "mood": [
       "K문화",
       "일상"
     ],
     "cutCount": 4,
     "contentType": "IG_R",
-    "topicCode": "LIF",
+    "topicCode": "REL",
     "scnCode": "REL",
-    "instaNum": "R09",
+    "instaNum": "R10",
     "character": "서여리 - 20대 초반 한국 여성, 긴 웨이비 다크 브라운 헤어, 자연스러운 피부결, 골드 목걸이, K-모델 포스, 차분하지만 가끔은 엉뚱한 반전매력, AI 크리에이터",
-    "code": "IG_R09",
+    "code": "IG_R10",
     "finishMode": "cutter",
-    "masterCode": "[IG_R09] :: [PL:IG_RL] :: [SP:IN.CVS.NT.LT_FL] :: [CH:YR_VD] :: [SH:SH_MS+SH_MCU] :: [F군:미설정]",
+    "masterCode": "[IG_R10] :: [PL:IG_RL] :: [SP:IN.HM.LR.LT_EV] :: [CH:YR_VD+HJ_VD] :: [SH:SH_MCU+SH_MS] :: [F군:미설정]",
     "epHeaderRaw": ""
   },
   "cuts": [
     {
       "id": "cut-1",
       "no": 1,
-      "cutTitle": "또 편의점, 컵라면 고르는 중",
+      "cutTitle": "거실, 지친 서여리, 문자 알림",
       "lipsync": false,
-      "scene": "한밤 편의점, 컵라면 진열대 앞에서 익숙하게 하나를 고르는 서여리. 특별할 것 없다는 듬덤한 표정.",
-      "action": "0~4초 진열대를 훑으며 느긋하게 다가감 → 4~8초 컵라면을 집어 들고 살짝 끄덕",
+      "scene": "거실 소파에 지쳐 늘어진 서여리, 맨발. 폰을 보는데 알림이 뜬다 — 큰 글씨로 '밥 먹었어?'.",
+      "action": "0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션",
       "character": "서여리",
       "dialogue": "",
-      "narration": "(나레이션) 새벽 1시, 오늘도 편의점이에요.",
-      "subtitle": "새벽 1시, 오늘도 편의점이에요.",
-      "imagePrompt": "MEDIUM SHOT — a young Korean woman in her early 20s, long wavy dark brown hair falling naturally and a little loose, natural skin texture on right cheek very subtle, bare minimal-makeup face, \nwearing a cozy oversized beige cardigan over soft pajama pants, off-duty home look (not styled for camera), \nstanding in front of a convenience store cup-ramen shelf late at night, picking up a cup with a calm familiar expression, slight relaxed smile, \ncold bright fluorescent store lighting, dark window visible in the background, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or brand logos on any packaging, no other people, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-4s] She walks slowly along a convenience store ramen shelf at night, scanning the options with a calm, unbothered expression, clearly a familiar routine. [4-8s] She picks up a cup of ramen and gives a small satisfied nod, mouth closed, not speaking. NO dialogue, NO lip movement — this is a silent beat; the Korean narration (\"새벽 1시, 오늘도 편의점이에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting). NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
+      "narration": "(나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
+      "subtitle": "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
+      "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, \nwearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired, \nwarm indoor evening lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting). NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
       "duration": 8,
-      "shotType": "FULLBODY",
+      "shotType": "CLOSEUP",
       "cutType": "YEORI",
       "cutMark": "NORMAL",
       "beat": "훅",
       "masterCode": {
-        "sp": "IN.CVS.NT.LT_FL",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MS",
-        "ca": "CA_ST",
-        "md": "MD_WRM",
-        "ac": "0~4초 진열대를 훑어보며 느긋하게 걸음 → 4~8초 컵라면 하나를 집어 들며 나레이션",
-        "lookId": "",
-        "du": 8,
-        "audio": {
-          "bgm": "잔잔한 로파이 야간 비트 (0초부터)",
-          "voice": "여리 — 담담하고 익숙한 톤(시청자 결, 반말 아님) — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
-          "sfx": "편의점 출입문 센서음(아주 작게, 0.2초)",
-          "ambience": "늦은 밤 편의점 특유의 조용한 냉장고 모터음"
-        },
-        "kr": {
-          "sp": "편의점 내부, 컵라면 진열대, 심야 형광등",
-          "ch": "서여리 — 베이지 가디건+잠옷 바지, 머리 풀어 내림, 맨얼굴 느낌",
-          "sh": "미디엄 샷, 진열대 정면",
-          "ca": "고정",
-          "ac": "0~4초 진열대를 훑으며 느긋하게 다가감 → 4~8초 컵라면을 집어 들고 살짝 끄덕",
-          "md": "익숙함, 담담함(특별한 사건 아님)"
-        }
-      },
-      "voiceSource": "video"
-    },
-    {
-      "id": "cut-2",
-      "no": 2,
-      "cutTitle": "온수기 + 창가 자리",
-      "lipsync": false,
-      "scene": "온수기 앞에서 물을 붓고 뚜껑을 닫은 뒤, 창가 2인 테이블에 앉아 폰으로 3분 타이머를 맞춘다.",
-      "action": "0~4초 온수기에 물을 붓고 뚜껑 닫음 → 4~8초 창가에 앉아 폰 타이머 맞추고 느긋하게 턱을 괨",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "(나레이션) 여긴 뜨거운 물도, 앉을 자리도 있어요.",
-      "subtitle": "여긴 뜨거운 물도, 앉을 자리도 있어요.",
-      "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same beige cardigan and pajama pants,\nseated at a window-side two-person convenience store table at night, a cup of ramen with lid closed in front of her, setting a 3-minute timer on her phone, resting her chin on one hand with a relaxed cozy expression,\ncold fluorescent store lighting mixing with a faint warm reflection from the window, dark street visible outside the glass, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people",
-      "videoPrompt": "[0-4s] She pours hot water from the self-serve station into the cup ramen and closes the lid. [4-8s] She sits down at the window-side table, sets a timer on her phone, and rests her chin on her hand with a relaxed expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"여긴 뜨거운 물도, 앉을 자리도 있어요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
-      "duration": 8,
-      "shotType": "FULLBODY",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "",
-      "masterCode": {
-        "sp": "IN.CVS.NT.LT_FL",
-        "pl": "YR_VD",
-        "ch": "서여리",
-        "sh": "SH_MS",
-        "ca": "CA_ST",
-        "md": "MD_WRM",
-        "ac": "0~4초 온수기에 물을 붓고 뚜껑을 닫음 → 4~8초 창가 테이블에 앉아 폰 타이머를 맞추고 턱을 괜다",
-        "lookId": "",
-        "du": 8,
-        "audio": {
-          "bgm": "잔잔한 로파이 야간 비트 (이어서)",
-          "voice": "여리 — 편안하고 느긋한 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
-          "sfx": "온수기 물 따르는 소리, 타이머 설정음(짧게)",
-          "ambience": "늦은 밤 편의점, 조용한 냉장고 모터음"
-        },
-        "kr": {
-          "sp": "편의점 온수기 코너 → 창가 2인 테이블",
-          "ch": "서여리 (CUT1과 동일 옷차림)",
-          "sh": "미디엄 샷",
-          "ca": "고정(온수기)→고정(테이블), 컷 내 2단계",
-          "ac": "0~4초 온수기에 물을 붓고 뚜껑 닫음 → 4~8초 창가에 앉아 폰 타이머 맞추고 느긋하게 턱을 괨",
-          "md": "편안함, 아늑함"
-        }
-      },
-      "voiceSource": "video"
-    },
-    {
-      "id": "cut-3",
-      "no": 3,
-      "cutTitle": "걸려온 전화, 지아 목소리",
-      "lipsync": false,
-      "scene": "폰이 울린다. 스피커폰으로 받자 지아의 목소리가 흘러나온다. 서여리가 들킨 표정으로 멈춘다. (지아는 화면에 등장하지 않음, 목소리만)",
-      "action": "0~2초 폰 진동, 스피커폰으로 받음 → 2~5초 지아 목소리에 표정이 멈춤(들킴) → 5~8초 어이없다는 웃음과 함께 대사",
-      "character": "서여리",
-      "dialogue": "(지아, 음성만) 너 또 편의점이지? / (여리) …어떻게 알았어?",
-      "narration": "",
-      "subtitle": "너 또 편의점이지? / (헉) 어떻게 알았어?",
-      "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,\nstill seated at the window-side convenience store table, cup ramen in front of her with the lid still closed, holding her phone on speakerphone near the table,\ncaught off-guard expression shifting into a sheepish amused smile, as if just been found out,\ncold fluorescent store lighting, dark window behind her, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people",
-      "videoPrompt": "[0-2s] Her phone buzzes on the table; she picks it up and taps speakerphone. [2-5s] A close friend's voice (off-screen, slightly tinny speakerphone audio) says in Korean, playful and confident: \"너 또 편의점이지?\" — her expression freezes, caught. [5-8s] She breaks into a sheepish, amused laugh and replies in Korean, casual tone (반말, close friend): \"…어떻게 알았어?\" Only she is visible on screen; the caller is heard only through the phone speaker, never seen. No on-screen subtitle text or captions.",
-      "duration": 8,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "",
-      "masterCode": {
-        "sp": "IN.CVS.NT.LT_FL",
-        "pl": "YR_VD",
-        "ch": "서여리 (지아 — 목소리만, 화면 미등장)",
-        "sh": "SH_MCU",
-        "ca": "CA_ST",
-        "md": "MD_JOY",
-        "ac": "0~2초 테이블 위 폰이 진동, 스피커폰으로 받음 → 2~5초 지아 목소리 들림, 서여리 표정이 멈춤(들킴) → 5~8초 어이없다는 듯 웃으며 대사",
-        "lookId": "",
-        "du": 8,
-        "audio": {
-          "bgm": "로파이 비트 살짝 낮춤(통화 들어오는 구간)",
-          "voice": "지아(스피커폰, 약간 작고 먹먹한 음질) — 장난스럽고 확신에 찬 톤 / 여리 — 들켜서 당황+웃음 섞인 톤(반말, 친구 사이)",
-          "sfx": "전화벨(짧게) + 스피커폰 전환음",
-          "ambience": "늦은 밤 편의점, 조용한 냉장고 모터음"
-        },
-        "kr": {
-          "sp": "편의점 창가 테이블 (CUT2와 동일)",
-          "ch": "서여리만 화면에 등장(지아는 스피커폰 목소리만, 화면 미출연 — 별도 이미지 생성 불필요)",
-          "sh": "미디엄 클로즈업",
-          "ca": "고정",
-          "ac": "0~2초 폰 진동, 스피커폰으로 받음 → 2~5초 지아 목소리에 표정이 멈춤(들킴) → 5~8초 어이없다는 웃음과 함께 대사",
-          "md": "들킴, 당황 섞인 웃음"
-        }
-      },
-      "voiceSource": "video"
-    },
-    {
-      "id": "cut-4",
-      "no": 4,
-      "cutTitle": "먹는다, 여운, 엔딩카드",
-      "lipsync": false,
-      "scene": "김이 오르는 컵라면을 먹는 서여리. 중반에 정적 2~3초(BGM 정지)로 여운을 준 뒤 엔딩카드로 전환.",
-      "action": "0~4초 김 오르는 라면을 한 젓가락 먹고 만족스러운 표정 → 4~6초 정적, 창밖을 보는 여운 → 6~8초 카메라를 보며 나레이션",
-      "character": "서여리",
-      "dialogue": "",
-      "narration": "(나레이션) 야식은 후회해도, 이 3분은 후회 안 해요.",
-      "subtitle": "야식은 후회해도, 이 3분은 후회 안 해요.",
-      "imagePrompt": "MEDIUM CLOSE-UP — the same young Korean woman, same face, same beige cardigan,\neating steaming cup ramen with chopsticks at the window-side table, warm steam rising and softly backlit by the fluorescent light, content small smile, slightly tired but genuinely happy expression,\ndark window beside her reflecting faint store light, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text or logos, no other people",
-      "videoPrompt": "[0-4s] She takes a bite of the steaming ramen with chopsticks, steam rising, a small content smile. [4-6s] She pauses, chopsticks resting, gazing quietly out the dark window — no sound but faint ambient hum, a held breath of stillness. [6-8s] She looks back toward camera with a soft content expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"야식은 후회해도, 이 3분은 후회 안 해요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
-      "duration": 8,
-      "shotType": "CLOSEUP",
-      "cutType": "YEORI",
-      "cutMark": "NORMAL",
-      "beat": "결말",
-      "masterCode": {
-        "sp": "IN.CVS.NT.LT_FL",
+        "sp": "IN.HM.LR.LT_EV",
         "pl": "YR_VD",
         "ch": "서여리",
         "sh": "SH_MCU",
         "ca": "CA_ST",
         "md": "MD_COM",
-        "ac": "0~4초 뚜껑을 열고 김이 오르는 라면을 한 젓가락 먹음, 만족스러운 표정 → 4~6초 정적 2초(BGM 정지, 시선이 창밖으로) → 6~8초 다시 카메라를 보며 나레이션",
+        "ac": "0~4초 소파에 늘어져 멍하게 폰을 보는 지친 모습 → 4~8초 알림이 뜨며 화면(폰)을 바라보는 데서 나레이션",
         "lookId": "",
         "du": 8,
         "audio": {
-          "bgm": "로파이 비트 → 4~6초 지점에서 2초간 완전 정지(여운) → 6초부터 다시 낮게 흐르다 엔딩카드에서 페이드아웃",
-          "voice": "여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
-          "sfx": "라면 먹는 소리(아주 자연스럽게, 과하지 않게)",
-          "ambience": "늦은 밤 편의점, 조용한 냉장고 모터음(정적 구간엔 이 소리만)"
+          "bgm": "잔잔한 로파이 (0초부터)",
+          "voice": "여리 — 나른하고 담담한 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
+          "sfx": "폰 알림음(짧게, 4초 지점)",
+          "ambience": "조용한 저녁 거실"
         },
         "kr": {
-          "sp": "편의점 창가 테이블 (CUT2·3과 동일)",
-          "ch": "서여리 (동일)",
+          "sp": "서여리 집 거실 소파, 저녁 실내조명",
+          "ch": "서여리 — 라운지 홈웨어, 맨발, 머리 풀어 내림",
           "sh": "미디엄 클로즈업",
           "ca": "고정",
-          "ac": "0~4초 김 오르는 라면을 한 젓가락 먹고 만족스러운 표정 → 4~6초 정적, 창밖을 보는 여운 → 6~8초 카메라를 보며 나레이션",
-          "md": "만족, 잔잔한 체념 섞인 행복"
+          "ac": "0~4초 소파에 늘어져 지친 채 폰을 봄 → 4~8초 알림(큰 글씨 '밥 먹었어?')이 뜨며 화면을 바라보는 데서 나레이션",
+          "md": "지침, 무심함"
+        }
+      }
+    },
+    {
+      "id": "cut-2",
+      "no": 2,
+      "cutTitle": "답장 치는 손, 의미 설명",
+      "lipsync": false,
+      "scene": "서여리가 답장을 치는 손(화면은 흐리게, 글자 비노출). 나레이션이 이어지고, 자막으로 실제 답장 내용이 뜬다.",
+      "action": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
+      "character": "서여리",
+      "dialogue": "(자막) 아직… 왜?",
+      "narration": "(나레이션) 걱정된다는 뜻으로 건네는 말이에요.",
+      "subtitle": "걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?",
+      "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot, \nseated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting, \npuzzled thoughtful expression, slightly leaning forward, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, silent, not speaking. NO dialogue, NO lip movement — the Korean narration (\"걱정된다는 뜻으로 건네는 말이에요.\") is added afterward as a separate voice-over in post-production, not generated here. [5-8s] She types a reply and taps send, still silent. No on-screen subtitle text or captions — both the narration and her typed reply (\"아직… 왜?\") are added as on-screen text/audio elements in post. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "beat": "",
+      "masterCode": {
+        "sp": "IN.HM.LR.LT_EV",
+        "pl": "YR_VD",
+        "ch": "서여리",
+        "sh": "SH_MS",
+        "ca": "CA_ST",
+        "md": "MD_SUR",
+        "ac": "0~5초 폰 화면(흐리게)에 답장을 입력하는 손 클로즈업, 나레이션 → 5~8초 \"아직… 왜?\"를 입력하고 보내기 누름",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "로파이 (이어서)",
+          "voice": "여리 — 설명하듯 차분한 톤(나레이션) — ※Flow 생성에는 미포함, 포스트 TTS로 별도 삽입. \"아직… 왜?\"도 음성 아닌 자막(타이핑) 처리",
+          "sfx": "타이핑 소리(가볍게), 전송음",
+          "ambience": "조용한 저녁 거실"
+        },
+        "kr": {
+          "sp": "거실 소파 (CUT1과 동일)",
+          "ch": "서여리 (손 클로즈업 위주, 얼굴 일부만)",
+          "sh": "미디엄 샷(손+폰 중심)",
+          "ca": "고정",
+          "ac": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
+          "md": "의아함, 호기심"
+        }
+      }
+    },
+    {
+      "id": "cut-3",
+      "no": 3,
+      "cutTitle": "초인종, 신발 벗는 지아, 도시락",
+      "lipsync": false,
+      "scene": "초인종이 울린다. 현관문을 열자 지아가 도시락을 들고 서 있다. 지아가 들어오며 신발을 벗는다.",
+      "action": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+      "character": "서여리",
+      "dialogue": "지아 \"그럴 줄 알았어. 일단 먹어.\" / 여리 \"…진짜 왔어?\"",
+      "narration": "",
+      "subtitle": "그럴 줄 알았어. 일단 먹어. / …진짜 왔어?",
+      "imagePrompt": "MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,\nThe woman on the right: long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers (mid-way through slipping them off at the doorstep), delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding up a cloth-wrapped lunchbox with a confident playful grin, no logos or text on clothing, DO NOT change clothing,\nentryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "[0-2s] The doorbell rings; the woman on the right opens the door. [2-5s] The woman on the left steps over the threshold, holds up the cloth-wrapped lunchbox in one hand, and slips off her white sneakers with a heel-to-toe motion, leaving her in black knee-high socks, and says in Korean, confident and playful (반말, close friend): \"그럴 줄 알았어. 일단 먹어.\" [5-8s] The woman on the right, still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): \"…진짜 왔어?\" No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "beat": "",
+      "masterCode": {
+        "sp": "IN.HM.ENT.LT_EV",
+        "pl": "YR_VD",
+        "ch": "서여리 + 지아",
+        "sh": "SH_MS",
+        "ca": "CA_ST",
+        "md": "MD_SUR",
+        "ac": "0~2초 초인종 소리에 문을 여는 여리 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬 → 5~8초 여리가 놀란 표정으로 대사",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "로파이 (이어서, 살짝 고조)",
+          "voice": "지아 — 확신에 차고 장난스러운 톤(반말) / 여리 — 놀랍고 반가운 톤(반말, 친구 사이)",
+          "sfx": "초인종, 신발 벗는 소리(가볍게)",
+          "ambience": "조용한 저녁 현관"
+        },
+        "kr": {
+          "sp": "서여리 집 현관, 저녁 실내조명",
+          "ch": "서여리(거실 홈웨어, 맨발) · 지아(트위드 재킷+화이트 니트+블랙 플리츠 스커트+니삭스, 스니커즈→벗음, 숄더백, 보자기 도시락)",
+          "sh": "미디엄 샷, 현관 정면(고정 구도)",
+          "ca": "고정",
+          "ac": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+          "md": "놀람 → 반가움"
+        }
+      }
+    },
+    {
+      "id": "cut-4",
+      "no": 4,
+      "cutTitle": "거실에서 도시락, 여운, 엔딩카드",
+      "lipsync": false,
+      "scene": "두 사람이 거실에서 도시락을 나눠 먹는다. 중반에 정적 2~3초(BGM 정지)로 여운을 준 뒤 엔딩카드로 전환.",
+      "action": "0~4초 도시락을 펴놓고 함께 먹음 → 4~6초 정적, 서로 마주 보며 미소 → 6~8초 여리가 카메라를 보며 나레이션",
+      "character": "서여리",
+      "dialogue": "",
+      "narration": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
+      "subtitle": "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.",
+      "imagePrompt": "MEDIUM SHOT — same two young Korean women, same faces, sitting together on the living room floor/low table in the evening, \nThe woman on the right: same lounge t-shirt, barefoot, warm genuine smile. The woman on the left: same short wavy black bob with curtain bangs, same cropped black-and-white houndstooth tweed jacket, white ribbed knit top, black pleated mini skirt, black knee-high socks, silver heart necklace, warm genuine smile, small black shoulder bag resting on the floor beside her, DO NOT change clothing, \na cloth-wrapped lunchbox opened on the table between them with simple home-style side dishes, both eating together with chopsticks, warm cozy indoor lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking. NO dialogue, NO lip movement — the Korean narration (\"밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.\") is added afterward as a separate voice-over in post-production, not generated here. No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting). NO dialogue. NO speaking. NO lip movement. MOUTH STAYS CLOSED. SILENT FILM.",
+      "duration": 8,
+      "shotType": "FULLBODY",
+      "cutType": "YEORI",
+      "cutMark": "NORMAL",
+      "beat": "결말",
+      "masterCode": {
+        "sp": "IN.HM.LR.LT_EV",
+        "pl": "YR_VD",
+        "ch": "서여리 + 지아",
+        "sh": "SH_MS",
+        "ca": "CA_ST",
+        "md": "MD_WRM",
+        "ac": "0~4초 거실 테이블에 도시락을 펴놓고 둘이 함께 먹는 모습 → 4~6초 정적 2초(BGM 정지, 서로 마주 보며 미소) → 6~8초 여리가 카메라를 보며 나레이션",
+        "lookId": "",
+        "du": 8,
+        "audio": {
+          "bgm": "로파이 → 4~6초 지점 2초간 완전 정지(여운) → 6초부터 낮게 흐르다 엔딩카드에서 페이드아웃",
+          "voice": "여리 — 잔잔하고 진심 어린 톤 — ※나레이션, Flow 생성에는 미포함, 포스트 TTS로 별도 삽입",
+          "sfx": "도시락 뚜껑 여는 소리, 수저 소리(자연스럽게)",
+          "ambience": "조용한 저녁 거실(정적 구간엔 거의 무음)"
+        },
+        "kr": {
+          "sp": "서여리 집 거실 (CUT1과 동일 공간, 테이블 추가)",
+          "ch": "서여리 · 지아 (CUT3과 동일 옷차림)",
+          "sh": "미디엄 샷, 테이블 사이로 두 사람",
+          "ca": "고정",
+          "ac": "0~4초 도시락을 펴놓고 함께 먹음 → 4~6초 정적, 서로 마주 보며 미소 → 6~8초 여리가 카메라를 보며 나레이션",
+          "md": "따뜻함, 편안한 친밀감"
         }
       },
-      "voiceSource": "video"
+      "overrides": {
+        "narration": {
+          "value": "(나레이션) 밥 먹었냐는 말은~... 너가 신경 쓰인다는 뜻이에요.",
+          "at": "2026-11-17T14:56:17.021Z",
+          "reason": "스튜디오 화면에서 직접 수정"
+        }
+      }
     }
   ],
   "scriptRaw": "",
@@ -13045,25 +13285,25 @@
     "shadowColor": "#000000",
     "bold": true,
     "textY": 70,
-    "ratio": "9:16",
+    "ratio": "16:9",
     "bgImageUrl": "",
     "posterLayers": []
   },
   "publishing": {
     "youtube": {
-      "title": "일상공감 | 새벽 1시, 서여리가 간 곳은? 🍜",
-      "description": "새벽 1시, 오늘도 편의점이에요. 이런 순간에 느끼는 감정표현, 여러분도 공감되지 않나요?\n\n뜨거운 물도 있고, 앉을 자리도 있고, 심지어 전화까지 걸려오는 그 공간.\n야식은 후회해도, 이 3분 만큼은 절대 후회 안 해요.\n\n나 혼자만 이런 거 아니죠? 이런 소소한 일상 공감 순간들을 담았어요.\n자기 전에 괜히 허전할 때, 이 영상 하나로 감정표현 되길 바라며 🧡\n\n#서여리 #새벽편의점 #일상공감",
-      "tags": "일상공감, 감정표현, 새벽편의점, 편의점브이로그, 컵라면, 새벽감성, 서여리, 야식, 공감영상, 쇼츠, 감성쇼츠, 혼자사는일상, 소확행, 새벽루틴, 감성일상"
+      "title": "",
+      "description": "",
+      "tags": ""
     },
     "instagram": {
-      "title": "새벽 1시, 서여리가 간 곳은? 🏪✨",
-      "description": "새벽 1시에 편의점 가는 거, 저만 그런 거 아니죠? 🙋\n이런 작은 순간들이 사실 제일 솔직한 일상 공감인 것 같아요.\n\n뜨거운 물, 창가 자리, 그리고 걸려오는 친구 전화까지.\n야식은 후회해도, 이 3분은 안 후회해요 🍜\n\n말로는 설명 안 되는 그 감정표현, 이 영상이 대신 해줄 거예요.\n여러분의 새벽은 어떤가요? 댓글로 알려줘요 💬\n\n#일상공감 #감정표현 #새벽편의점 #편의점감성 #컵라면 #새벽감성 #서여리 #야식 #혼자사는일상 #소확행 #공감 #감성일상 #릴스 #새벽루틴 #편의점브이로그",
-      "tags": "#일상공감 #감정표현 #새벽편의점 #편의점감성 #컵라면 #새벽감성 #서여리 #야식 #혼자사는일상 #소확행 #공감 #감성일상 #릴스 #새벽루틴 #편의점브이로그"
+      "title": "",
+      "description": "",
+      "tags": ""
     },
     "tiktok": {
-      "title": "새벽 1시 편의점 🍜 이거 완전 일상공감 아님? ㅋㅋ",
-      "description": "새벽에 혼자 편의점 간 적 있으면 이 영상 그냥 넘기지 마 👀\n이게 바로 말 없이도 되는 감정표현이지 ㅠㅠ\n\n야식은 후회해도 이 3분은 진짜 안 후회함 🙏\n너네도 일상공감 되면 댓글에 '나도' 남겨줘 💬\n\n#일상공감 #감정표현 #새벽편의점 #컵라면 #서여리 #새벽감성 #공감 #야식 #편의점 #틱톡감성 #소확행 #혼자사는일상 #새벽루틴",
-      "tags": "#일상공감 #감정표현 #새벽편의점 #컵라면 #서여리 #새벽감성 #공감 #야식 #편의점 #틱톡감성 #소확행 #혼자사는일상 #새벽루틴"
+      "title": "",
+      "description": "",
+      "tags": ""
     }
   },
   "channelKeywords": [
@@ -13104,134 +13344,18 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-17T13:46:50.603Z",
+  "savedAt": "2026-11-17T14:51:53.852Z",
   "videoTabState": {
-    "videoClips": {
-      "cut-1": [
-        {
-          "url": "blob:http://localhost:5173/1273a342-8cc8-4da0-a654-5f0a88b0b476",
-          "name": "cut_01_clip_1.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1794737574359,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_01_clip_1.mp4"
-        }
-      ],
-      "cut-2": [
-        {
-          "url": "blob:http://localhost:5173/c21ce33f-48d2-4a9f-977c-8099aeec5653",
-          "name": "cut_02_clip_1.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1794742301874,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_02_clip_1.mp4"
-        }
-      ],
-      "cut-3": [
-        {
-          "url": "blob:http://localhost:5173/87a7a883-c861-4429-8a6e-61f1e39a9444",
-          "name": "cut_03_clip_1.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1794742478956,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_03_clip_1.mp4"
-        }
-      ],
-      "cut-4": [
-        {
-          "url": "blob:http://localhost:5173/14039430-5108-4692-a91e-dc7ec89364ec",
-          "name": "cut_04_clip_1.mp4",
-          "duration": 7.93,
-          "trimStart": 0,
-          "trimEnd": 7.93,
-          "useFullDuration": true,
-          "ratio": "9:16",
-          "staging": false,
-          "keepAudio": true,
-          "createdAt": 1794742705747,
-          "stagedPath": "C:\\yeori-studio\\downloads\\seoyeori\\IG\\IG_R\\IG_R09\\04_making\\raw\\cut_04_clip_1.mp4"
-        }
-      ]
-    },
-    "g4Approved": {
-      "cut-1": true,
-      "cut-2": true,
-      "cut-3": true,
-      "cut-4": true
-    },
-    "selectedCutId": "cut-4",
-    "subtitles": {
-      "cut-1": "새벽 1시, 오늘도 편의점이에요."
-    }
+    "videoClips": {},
+    "g4Approved": {},
+    "selectedCutId": null,
+    "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null,
-    "voiceTabs": {
-      "cut-2": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ],
-      "cut-4": [
-        {
-          "id": "v1",
-          "label": "목소리 1",
-          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
-        }
-      ]
-    },
-    "tracks": {
-      "cut-2__v1": [
-        {
-          "id": "track_1794745146508_2uuw",
-          "type": "narration",
-          "text": "여긴 뜨거운 물도, 앉을 자리도 있어요.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ],
-      "cut-4__v1": [
-        {
-          "id": "track_1794815430036_fvpv",
-          "type": "narration",
-          "text": "야식은 후회해도, 이 3분은 후회 안 해요.",
-          "speaker": null,
-          "url": null,
-          "voiceId": "",
-          "settings": {
-            "speed": 0.85,
-            "stability": 55,
-            "similarity": 75
-          }
-        }
-      ]
-    }
+    "focusCutId": null
   },
   "voiceInsertState": {
     "tracks": {}
