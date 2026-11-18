@@ -1,5 +1,5 @@
 {
-  "activeTab": "video",
+  "activeTab": "studio",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12924,14 +12924,14 @@
           "no": 3,
           "cutTitle": "초인종, 신발 벗는 지아, 도시락",
           "lipsync": false,
-          "scene": "초인종이 울린다. 현관문을 열자 지아가 도시락을 들고 서 있다. 지아가 들어오며 신발을 벗는다.",
-          "action": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+          "scene": "초인종이 울린다. 현관문이 열려 있고, 지아가 문밖에서 도시락을 들어 보인다. (컷 전환) 지아가 신발을 벗고 들어와 서 있고, 스니커즈는 현관에 놓여 있다.",
+          "action": "[클립1 0~4초] 열린 현관문, 문밖의 지아가 도시락을 들어 보이며 대사 → [클립2 4~8초, 하드컷] 지아가 이미 현관 안에 서 있고(양말, 신발은 현관에 가지런히) 여리가 놀란 표정으로 대사. 신발 벗는 장면은 직접 연출하지 않고 컷 전환으로 처리",
           "character": "서여리",
           "dialogue": "지아 \"그럴 줄 알았어. 일단 먹어.\" / 여리 \"…진짜 왔어?\"",
           "narration": "",
           "subtitle": "그럴 줄 알았어. 일단 먹어. / …진짜 왔어?",
-          "imagePrompt": "MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,\nThe woman on the right: long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers (mid-way through slipping them off at the doorstep), delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding up a cloth-wrapped lunchbox with a confident playful grin, no logos or text on clothing, DO NOT change clothing,\nentryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
-          "videoPrompt": "[0-2s] The doorbell rings; the woman on the right opens the door. [2-5s] The woman on the left steps over the threshold, holds up the cloth-wrapped lunchbox in one hand, and slips off her white sneakers with a heel-to-toe motion, leaving her in black knee-high socks, and says in Korean, confident and playful (반말, close friend): \"그럴 줄 알았어. 일단 먹어.\" [5-8s] The woman on the right, still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): \"…진짜 왔어?\" No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
+          "imagePrompt": "MEDIUM SHOT from inside a Korean apartment entryway (hyeonggwan) looking out through the open front door, evening, warm indoor lighting, the apartment corridor clearly visible OUTSIDE beyond the doorway, fixed camera,\nThe woman on the right (INSIDE the apartment, near the camera, turned toward the door, hand on the door handle, door opened inward toward the right edge of frame): long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual gray lounge t-shirt and soft gray home pants, barefoot, calm expression,\nThe woman on the left (standing OUTSIDE in the corridor at the doorway threshold, facing the camera): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers on her feet, delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding a cloth-wrapped lunchbox up in front of her chest with both hands, confident playful grin, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no clothing logos or text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+          "videoPrompt": "[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the already-open front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt, barefoot) stands inside holding the door handle, calm and silent, mouth closed. The woman on the left stands OUTSIDE in the corridor at the threshold, feet planted, does NOT step inside and does NOT touch her shoes, smiling and holding the cloth-wrapped lunchbox with both hands. After a short beat she lifts the lunchbox slightly and says in Korean, confident and playful (반말, close friend): \"그럴 줄 알았어. 일단 먹어.\" Only the woman on the left speaks. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.\n\n[CLIP 2 · 4-8s, hard cut, same camera position and framing] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest with both hands, smiling, silent, mouth closed. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt) faces her, breaks into a surprised delighted expression and says in Korean (반말, friendly): \"…진짜 왔어?\" Only the woman on the right speaks. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -12944,7 +12944,7 @@
             "sh": "SH_MS",
             "ca": "CA_ST",
             "md": "MD_SUR",
-            "ac": "0~2초 초인종 소리에 문을 여는 여리 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬 → 5~8초 여리가 놀란 표정으로 대사",
+            "ac": "[클립1 0~4초] 열린 현관문, 문밖의 지아가 도시락을 들어 보이며 대사(여리는 안에서 문을 잡고 조용히) → [클립2 4~8초, 하드컷] 지아가 이미 현관 안에 서 있고(양말, 신발은 현관에 가지런히) 여리가 놀란 표정으로 대사",
             "lookId": "",
             "du": 8,
             "audio": {
@@ -12958,10 +12958,20 @@
               "ch": "서여리(거실 홈웨어, 맨발) · 지아(트위드 재킷+화이트 니트+블랙 플리츠 스커트+니삭스, 스니커즈→벗음, 숄더백, 보자기 도시락)",
               "sh": "미디엄 샷, 현관 정면(고정 구도)",
               "ca": "고정",
-              "ac": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+              "ac": "[클립1 0~4초] 열린 현관문, 문밖의 지아가 도시락을 들어 보이며 대사 → [클립2 4~8초, 하드컷] 지아가 이미 현관 안에 서 있고(양말, 신발은 현관에 가지런히) 여리가 놀란 표정으로 대사. 신발 벗는 장면은 직접 연출하지 않고 컷 전환으로 처리",
               "md": "놀람 → 반가움"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              0,
+              4
+            ],
+            [
+              4,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-4",
@@ -13132,14 +13142,14 @@
       "no": 3,
       "cutTitle": "초인종, 신발 벗는 지아, 도시락",
       "lipsync": false,
-      "scene": "초인종이 울린다. 현관문을 열자 지아가 도시락을 들고 서 있다. 지아가 들어오며 신발을 벗는다.",
-      "action": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+      "scene": "초인종이 울린다. 현관문이 열려 있고, 지아가 문밖에서 도시락을 들어 보인다. (컷 전환) 지아가 신발을 벗고 들어와 서 있고, 스니커즈는 현관에 놓여 있다.",
+      "action": "[클립1 0~4초] 열린 현관문, 문밖의 지아가 도시락을 들어 보이며 대사 → [클립2 4~8초, 하드컷] 지아가 이미 현관 안에 서 있고(양말, 신발은 현관에 가지런히) 여리가 놀란 표정으로 대사. 신발 벗는 장면은 직접 연출하지 않고 컷 전환으로 처리",
       "character": "서여리",
       "dialogue": "지아 \"그럴 줄 알았어. 일단 먹어.\" / 여리 \"…진짜 왔어?\"",
       "narration": "",
       "subtitle": "그럴 줄 알았어. 일단 먹어. / …진짜 왔어?",
-      "imagePrompt": "MEDIUM SHOT — two young Korean women at a home entryway (hyeonggwan) in the evening, warm indoor lighting,\nThe woman on the right: long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual lounge t-shirt and soft home pants, barefoot, standing just inside the door with a surprised, delighted expression, hand still on the door,\nThe woman on the left: oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers (mid-way through slipping them off at the doorstep), delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding up a cloth-wrapped lunchbox with a confident playful grin, no logos or text on clothing, DO NOT change clothing,\nentryway with shoes neatly lined up, photorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
-      "videoPrompt": "[0-2s] The doorbell rings; the woman on the right opens the door. [2-5s] The woman on the left steps over the threshold, holds up the cloth-wrapped lunchbox in one hand, and slips off her white sneakers with a heel-to-toe motion, leaving her in black knee-high socks, and says in Korean, confident and playful (반말, close friend): \"그럴 줄 알았어. 일단 먹어.\" [5-8s] The woman on the right, still holding the door, breaks into a surprised delighted expression and replies in Korean (반말): \"…진짜 왔어?\" No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
+      "imagePrompt": "MEDIUM SHOT from inside a Korean apartment entryway (hyeonggwan) looking out through the open front door, evening, warm indoor lighting, the apartment corridor clearly visible OUTSIDE beyond the doorway, fixed camera,\nThe woman on the right (INSIDE the apartment, near the camera, turned toward the door, hand on the door handle, door opened inward toward the right edge of frame): long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, casual gray lounge t-shirt and soft gray home pants, barefoot, calm expression,\nThe woman on the left (standing OUTSIDE in the corridor at the doorway threshold, facing the camera): oval face, large dark brown almond eyes with dramatic curled lashes and subtle winged black eyeliner, softly arched dark brows, full lips in deep mauve-brown, fair warm skin with a small mole near the nose, clear healthy skin, short wavy black bob with wispy curtain bangs, NOT long hair, wearing a cropped black-and-white houndstooth tweed jacket with white buttons over a fitted white ribbed knit top, a black pleated mini skirt, black knee-high socks, white leather sneakers on her feet, delicate silver necklace with a tiny heart pendant, small black shoulder bag, holding a cloth-wrapped lunchbox up in front of her chest with both hands, confident playful grin, DO NOT change clothing,\nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no clothing logos or text, no other people in the background, only the two named women in frame, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine",
+      "videoPrompt": "[CLIP 1 · 0-4s] Fixed camera INSIDE the apartment entryway looking toward the already-open front door; the apartment corridor is visible outside. The woman on the right (long wavy hair, gray t-shirt, barefoot) stands inside holding the door handle, calm and silent, mouth closed. The woman on the left stands OUTSIDE in the corridor at the threshold, feet planted, does NOT step inside and does NOT touch her shoes, smiling and holding the cloth-wrapped lunchbox with both hands. After a short beat she lifts the lunchbox slightly and says in Korean, confident and playful (반말, close friend): \"그럴 줄 알았어. 일단 먹어.\" Only the woman on the left speaks. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.\n\n[CLIP 2 · 4-8s, hard cut, same camera position and framing] Now the woman on the left stands INSIDE the entryway beside the other woman, wearing only black knee-high socks, no shoes on her feet; a pair of white sneakers sits neatly on the entryway floor beside the other shoes by the door. She holds the cloth-wrapped lunchbox in front of her chest with both hands, smiling, silent, mouth closed. The front door is closed behind them. The woman on the right (barefoot, gray t-shirt) faces her, breaks into a surprised delighted expression and says in Korean (반말, friendly): \"…진짜 왔어?\" Only the woman on the right speaks. No on-screen subtitle text or captions. No clothing logos or text. No other people in the background, only the two named women in frame.",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -13152,7 +13162,7 @@
         "sh": "SH_MS",
         "ca": "CA_ST",
         "md": "MD_SUR",
-        "ac": "0~2초 초인종 소리에 문을 여는 여리 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬 → 5~8초 여리가 놀란 표정으로 대사",
+        "ac": "[클립1 0~4초] 열린 현관문, 문밖의 지아가 도시락을 들어 보이며 대사(여리는 안에서 문을 잡고 조용히) → [클립2 4~8초, 하드컷] 지아가 이미 현관 안에 서 있고(양말, 신발은 현관에 가지런히) 여리가 놀란 표정으로 대사",
         "lookId": "",
         "du": 8,
         "audio": {
@@ -13166,10 +13176,20 @@
           "ch": "서여리(거실 홈웨어, 맨발) · 지아(트위드 재킷+화이트 니트+블랙 플리츠 스커트+니삭스, 스니커즈→벗음, 숄더백, 보자기 도시락)",
           "sh": "미디엄 샷, 현관 정면(고정 구도)",
           "ca": "고정",
-          "ac": "0~2초 초인종에 문을 엶 → 2~5초 지아가 도시락을 들어 보이며 대사, 신발을 벗고 들어섬(한국 일상 디테일) → 5~8초 여리가 놀란 표정으로 대사",
+          "ac": "[클립1 0~4초] 열린 현관문, 문밖의 지아가 도시락을 들어 보이며 대사 → [클립2 4~8초, 하드컷] 지아가 이미 현관 안에 서 있고(양말, 신발은 현관에 가지런히) 여리가 놀란 표정으로 대사. 신발 벗는 장면은 직접 연출하지 않고 컷 전환으로 처리",
           "md": "놀람 → 반가움"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          0,
+          4
+        ],
+        [
+          4,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-4",
@@ -13344,7 +13364,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-17T14:51:53.852Z",
+  "savedAt": "2026-11-18T00:02:55.682Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
