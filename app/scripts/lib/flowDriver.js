@@ -630,7 +630,16 @@ export function flowKit(page) {
       const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'flowimg-'))
       let behaviorSet = false
       try {
-        const pos = await page.evaluate((src) => { const i = [...document.querySelectorAll('img')].find(i => (i.currentSrc || i.src) === src); if (!i) return null; const r = i.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 } }, src)
+        // 2026-11-18: 타일 2개 이상일 때 두 번째부터 getBoundingClientRect가 스크롤 밖 좌표를
+        // 돌려줘 클릭이 빗나가던 문제(결국 다운로드 버튼을 못 찾고 그 컷 전체가 실패 처리되며
+        // 앞서 저장된 타일 A만 남는 사고) 실측 — 클릭 전에 반드시 뷰포트 안으로 스크롤한다.
+        const pos = await page.evaluate((src) => {
+          const i = [...document.querySelectorAll('img')].find(i => (i.currentSrc || i.src) === src)
+          if (!i) return null
+          i.scrollIntoView({ block: 'center', inline: 'center' })
+          const r = i.getBoundingClientRect()
+          return { x: r.left + r.width / 2, y: r.top + r.height / 2 }
+        }, src)
         if (!pos) throw new Error('결과 타일을 찾지 못했습니다')
         await page.mouse.click(pos.x, pos.y)
         let dl = null

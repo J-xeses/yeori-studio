@@ -2578,6 +2578,10 @@ async function genImageForCut(ep, cut, { apiKey, modelKey = NANO_BANANA_DEFAULT,
   // 재강조하면 극단적 동작/환경 프롬프트에서 identity 드리프트가 줄어듦 — 반복 배치로 고정.
   if (descriptorText) {
     prompt += `\n\n[Identity lock: every character's facial identity — eyes, nose shape, jawline, distinguishing marks — must exactly match their reference face image provided. Do not deviate from the reference faces.]`
+    // 2026-11-18: 레퍼런스 얼굴 사진이 전부 정면이라 모델이 "정체성 유지=정면 유지"로 오해하고
+    // 장면 묘사와 무관하게 정면 위주로 생성하는 편향 실측(성준님 지적) — 각도는 장면 지시를 그대로
+    // 따르고, 정체성 고정은 각도와 무관하다는 걸 명시해 분리한다.
+    prompt += `\n\n[Camera angle: the reference face photos are frontal, but that is only for identity matching — it does NOT mean the shot itself must be frontal. Follow whatever head/body angle the scene description above calls for (3/4 view, side profile, looking away, walking past camera, etc.); match the character's identity at that angle rather than defaulting to a straight-on frontal pose.]`
   }
 
   const gen = await generateNanoBananaImage(apiKey, prompt, refImages, aspectRatio, modelKey)

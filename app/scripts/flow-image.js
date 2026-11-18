@@ -145,6 +145,8 @@ async function main() {
     // 2026-10-19: proxy.js genImageForCut 과 동일 패치(우산 테스트 실측 근거) — 무료 Flow 경로도 같은 혜택
     if (descriptorText) {
       prompt += `\n\n[Identity lock: every character's facial identity — eyes, nose shape, jawline, distinguishing marks — must exactly match their reference face image provided. Do not deviate from the reference faces.]`
+      // proxy.js genImageForCut 과 동일(2026-11-18, 정면 편향 수정) — 무료 Flow 경로도 같은 혜택
+      prompt += `\n\n[Camera angle: the reference face photos are frontal, but that is only for identity matching — it does NOT mean the shot itself must be frontal. Follow whatever head/body angle the scene description above calls for (3/4 view, side profile, looking away, walking past camera, etc.); match the character's identity at that angle rather than defaulting to a straight-on frontal pose.]`
     }
     const ratio = job.ratio || (base.match(/\b(16:9|9:16|1:1|4:3|3:4)\b/) || [])[1] || (/^LF_/.test(episodeCode) ? '16:9' : '9:16')
     plan.push({ no, prompt, refs: allRefs, ratio, ids })
@@ -196,13 +198,27 @@ async function main() {
       }
       if (res.status !== 'done') throw new Error(`컷 ${p.no}: 4분 안에 ${count}장이 나오지 않았습니다(Flow 화면을 확인하세요)`)
       const slots = nextSlots(imgDir, p.no, res.srcs.length)
-      // 타일은 최신이 앞쪽 — 화면 순서 그대로 a, b… 로 배정
+      // 2026-11-18: 타일 중 하나(보통 B)의 다운로드 단계가 DOM 변화로 가끔 깨질 때, 예전엔 그
+      // 예외가 for 루프 밖으로 그대로 던져져 이 컷(이미 저장된 A 포함)뿐 아니라 이후 plan의
+      // 다른 컷까지 전부 조용히 실패 처리되던 사고 실측 — 타일별로 잡아서 성공한 건 남기고,
+      // 실패한 타일만 1회 재시도 후 포기·명시적으로 로그에 남긴다(다음 컷은 계속 진행).
       for (let i = 0; i < res.srcs.length; i++) {
         const out = path.join(imgDir, `cut_${pad(p.no)}_${slots[i]}.jpg`)
-        const bytes = await kit.saveImage(res.srcs[i], out)
+        let bytes = null, lastErr = null
+        for (let attempt = 0; attempt < 2 && bytes == null; attempt++) {
+          try { bytes = await kit.saveImage(res.srcs[i], out) }
+          catch (e) { lastErr = e; if (attempt === 0) await sleep(2000) }
+        }
+        if (bytes == null) {
+          step(`컷 ${p.no}: 타일 ${i + 1}/${res.srcs.length} 저장 실패(2회 시도) — ${lastErr?.message || '알 수 없는 오류'}. 나머지 타일은 계속 진행`)
+          cutRes.files.push({ file: path.basename(out), status: 'failed', error: lastErr?.message || String(lastErr) })
+          continue
+        }
         cutRes.files.push({ file: path.basename(out), bytes })
         step(`컷 ${p.no}: 저장 ${path.basename(out)} (${Math.round(bytes / 1024)}KB)`)
       }
+      const failedTiles = cutRes.files.filter(f => f.status === 'failed').length
+      if (failedTiles) cutRes.partial = true
       save()
     }
   } finally {

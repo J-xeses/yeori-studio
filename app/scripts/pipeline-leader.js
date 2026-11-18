@@ -704,9 +704,13 @@ async function pollActiveFlow() {
         await leaderLog({ stage: 'G4', kind: '자동실행', summary: `${tag} Flow 자동 생성`, result: `${credits}크레딧 · 음성검수 ${qa?.verdict || '-'}`, humanInvolved: false })
       }
     } else {
-      const n = (r.data.result?.cuts || []).reduce((a, c) => a + (c.files?.length || 0), 0)
-      log('G2', `✅ ${tag} 이미지 ${n}장 생성 — G2 선택(사람) 대기`)
-      await leaderLog({ stage: 'G2', kind: '자동실행', summary: `${tag} Flow 자동 생성 ${n}장`, result: 'G2 이미지 선택 대기', humanInvolved: true })
+      // 2026-11-18: files[]에 저장 실패 타일도 기록되므로(이전엔 통째로 throw돼 여기까지 못 왔음)
+      // 성공/실패를 나눠서 세야 "A만 저장되고 B는 조용히 사라졌다"가 다시 안 숨겨진다.
+      const cutsR = r.data.result?.cuts || []
+      const n = cutsR.reduce((a, c) => a + (c.files || []).filter(f => f.status !== 'failed').length, 0)
+      const partialCuts = cutsR.filter(c => c.partial).map(c => c.no)
+      log('G2', `✅ ${tag} 이미지 ${n}장 생성 — G2 선택(사람) 대기${partialCuts.length ? ` (⚠ 컷 ${partialCuts.join(',')}는 일부 타일 저장 실패, 1장만 확보됨)` : ''}`)
+      await leaderLog({ stage: 'G2', kind: '자동실행', summary: `${tag} Flow 자동 생성 ${n}장${partialCuts.length ? ` · 컷 ${partialCuts.join(',')} 일부 실패` : ''}`, result: 'G2 이미지 선택 대기', humanInvolved: true })
     }
   } else {
     const key = job.kind === 'g2' ? `g2:${job.cutNos.join(',')}` : `g4:${job.cutNo}:${job.clipNo}`
