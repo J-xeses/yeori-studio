@@ -132,6 +132,11 @@
 .bgmTitle { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
 .bgmEmpty { color: var(--text-3); }
 .bgmVol { width: 70px; accent-color: var(--accent); }
+.bgmVolMini { display: inline-flex; align-items: center; gap: 4px; color: var(--text-3); font-size: 11px; }
+.bgmVolSmall { width: 50px; accent-color: var(--accent); }
+.bgmPosRow { display: flex; align-items: center; gap: 8px; width: 100%; font-size: 11px; color: var(--text-2); margin-top: 2px; }
+.bgmPosLabel { white-space: nowrap; flex-shrink: 0; }
+.bgmPosSlider { flex: 1; accent-color: var(--accent); }
 .bgmGainToggle {
   background: transparent; border: 1px solid var(--border); color: var(--text-3);
   font-size: 10.5px; padding: 3px 8px; border-radius: 6px; cursor: pointer; margin-left: auto; white-space: nowrap;
@@ -141,7 +146,10 @@
   display: flex; flex-direction: column; gap: 5px; width: 100%; padding: 8px; margin-top: 4px;
   background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box;
 }
+.gainHint { margin: 0 0 2px; font-size: 11px; line-height: 1.5; color: var(--text-3); }
+.gainEmptyHint { margin: 0 0 2px; font-size: 11px; color: var(--text-3); font-style: italic; }
 .gainRow { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+.gainLabel { color: var(--text-3); font-size: 10.5px; }
 .gainInput {
   width: 52px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text);
   border-radius: 4px; padding: 2px 5px; font-size: 11px;

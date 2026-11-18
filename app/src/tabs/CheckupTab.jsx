@@ -161,6 +161,16 @@ export default function CheckupTab() {
   const [bgmVol, setBgmVol] = useState(0.3)
   const [gainSegments, setGainSegments] = useState([])
   const [gainPanelOpen, setGainPanelOpen] = useState(false)
+  // 2026-11-19(성준님 제안 — "슬라이더가 차라리 bgm 원곡 런닝타임을 보여주고 타임라인 재생과
+  // 연동되면, 곡의 특정 구간을 영상과 매치시킬 수 있을 것 같다"): 기존엔 이 슬라이더가 미리듣기
+  // 음량(bgmVol)만 조절했는데, 그보다 "곡 안에서 지금 몇 초 지점이 흘러나오는지"가 더 쓸모
+  // 있다는 지적 — 곡의 전주를 건너뛰고 원하는 구간부터 영상과 맞출 수 있게 만든다.
+  // bgmOffsetSec: 영상 0초에 대응시킬 "곡 자체의" 시작 지점(초). 기본 0(곡 맨 앞부터, 기존과 동일).
+  // reelFinalize.js 에도 같은 오버라이드(_bgm.offsetSec)를 반영해 실제 최종본도 똑같이 그 지점부터 시작한다.
+  const [bgmOffsetSec, setBgmOffsetSec] = useState(0)
+  const [bgmPos, setBgmPos] = useState(0)      // 곡 자체 기준 현재 재생 위치(표시·슬라이더 값)
+  const [bgmDur, setBgmDur] = useState(0)      // 곡 자체의 전체 길이(메타데이터 로드 후)
+  const bgmDraggingRef = useRef(false)
   // 엔딩 카드(2026-11-18, 성준님 질문: "엔딩 카드 문구는 왜 누락이 되어 있는지?") — 체크업
   // 탭은 cut_NN.mp4 각 파일을 그대로 이어 재생할 뿐이라, 대본 [엔딩 카드] 섹션(에피소드
   // 전체 기준 "마지막 2초" 오버레이, reelFinalize.js의 실제 G5 조립 단계에서만 번인됨)을
@@ -176,7 +186,10 @@ export default function CheckupTab() {
     fetch(`${SERVER}/api/reel-finalize/end-card-default?epNum=${epNum}`)
       .then(r => r.json()).then(d => setEndCardDefault(Array.isArray(d.lines) ? d.lines : [])).catch(() => {})
     fetch(`${SERVER}/api/reel-finalize/overrides?epNum=${epNum}`)
-      .then(r => r.json()).then(d => setReelStyleOv(d.overrides?._style || {})).catch(() => {})
+      .then(r => r.json()).then(d => {
+        setReelStyleOv(d.overrides?._style || {})
+        setBgmOffsetSec(Math.max(0, Number(d.overrides?._bgm?.offsetSec) || 0))
+      }).catch(() => {})
   }, [epNum])
   // 2026-10-22 4차 보완 재재점검: pause()만으로는 "전체 이어보기" 체인(handleEnded가 다음
   // 컷으로 자동 전환) 때문에 편집 중에도 재생 바늘이 계속 돌았다 — 편집 중엔 자동 전환·
@@ -394,10 +407,12 @@ export default function CheckupTab() {
 
   useEffect(() => {
     const a = bgmRef.current
-    if (!a || !bgmOn || !a.duration) return
-    const target = absoluteElapsed % a.duration
+    // 드래그로 곡 위치를 직접 맞추는 중엔 이 자동 재동기화가 끼어들면 안 된다(절대위치가
+    // absoluteElapsed 기준으로 다시 튀어버림) — bgmDraggingRef 가 true 인 동안은 건너뜀.
+    if (!a || !bgmOn || !a.duration || bgmDraggingRef.current) return
+    const target = (absoluteElapsed + bgmOffsetSec) % a.duration
     if (Math.abs(a.currentTime - target) > 0.4) a.currentTime = target
-  }, [absoluteElapsed, bgmOn])
+  }, [absoluteElapsed, bgmOn, bgmOffsetSec])
 
   const toggleBgm = () => {
     setBgmOn(v => {
@@ -405,12 +420,36 @@ export default function CheckupTab() {
       const a = bgmRef.current
       if (a) {
         if (next) {
-          a.currentTime = absoluteElapsed % (a.duration || 1)
+          a.currentTime = (absoluteElapsed + bgmOffsetSec) % (a.duration || 1)
           if (isPlaying) a.play().catch(() => {})
         } else a.pause()
       }
       return next
     })
+  }
+
+  // 곡 위치 슬라이더를 드래그로 조작하는 동안: 영상 재생을 멈춰 absoluteElapsed 를 고정시키고
+  // (안 멈추면 재생 중 틱마다 위 재동기화 effect와 경쟁해 드래그가 들쭉날쭉해진다), 놓는 순간
+  // "지금 들리는 곡 위치가 지금 영상 위치와 대응된다"는 의미로 offsetSec 을 계산해 저장한다.
+  const startBgmDrag = () => {
+    bgmDraggingRef.current = true
+    if (isPlaying && videoRef.current) { videoRef.current.pause(); setIsPlaying(false) }
+  }
+  const dragBgmTo = (v) => {
+    const a = bgmRef.current
+    setBgmPos(v)
+    if (a) a.currentTime = v
+  }
+  const commitBgmDrag = () => {
+    bgmDraggingRef.current = false
+    const a = bgmRef.current
+    if (!a || !a.duration) return
+    const next = ((a.currentTime - absoluteElapsed) % a.duration + a.duration) % a.duration
+    setBgmOffsetSec(next)
+    fetch(`${SERVER}/api/reel-finalize/override`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ epNum, cutNo: '_bgm', patch: { offsetSec: Math.round(next * 10) / 10 } }),
+    }).catch(() => {})
   }
 
   // 구간별 음량(reelOverrides _bgm.gainSegments) — reelFinalize.js가 이미 읽고 있었지만
@@ -616,7 +655,15 @@ export default function CheckupTab() {
                       <div className={s.endCardOverlay}
                         style={{
                           color: color || '#fff', fontFamily: font ? `"${font}",sans-serif` : undefined,
-                          fontSize: endCardOv.fontPx ? `${(endCardOv.fontPx / 720) * 100}cqh` : `${(22 / 720) * 100}cqh`,
+                          // 2026-11-19(성준님 실측 — 미리보기에서 엔딩 카드 글자가 화면을 거의 다
+                          // 덮고 밑이 잘림): 자막(captionOverlay)의 720 분모는 "프레임 전체가 아니라
+                          // captionBand(프레임의 30%만 차지)를 기준 컨테이너로 쓸 때"만 맞는 값이다
+                          // (바로 위 .captionBand 주석 — 프레임 전체 기준으로 재면 3.3배(1/0.3) 커짐,
+                          // 2026-10-10 실측). 엔딩 카드는 캡션 띠가 아니라 .videoWrapper(프레임 전체,
+                          // container-type:size)를 기준 컨테이너로 쓰면서 분모만 그대로 720을
+                          // 복붙해서 바로 그 3.3배 버그를 다시 넣은 것 — 분모를 720×(1/0.3)≈2400으로
+                          // 바꿔 "프레임 전체 기준" 컨테이너에 맞게 보정한다.
+                          fontSize: endCardOv.fontPx ? `${(endCardOv.fontPx / 2400) * 100}cqh` : `${(22 / 2400) * 100}cqh`,
                           WebkitTextStroke: `${Math.max(1, (endCardOv.fontPx || 22) * 0.07)}px ${isLightColor(color || '#fff') ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.9)'}`,
                           paintOrder: 'stroke fill',
                         }}>
@@ -642,7 +689,11 @@ export default function CheckupTab() {
                   타임라인 자막 바를 가리는 자리라 삭제하고 그 자리에 배치했다. */}
               {bgmInfo && playable.length > 0 && (
                 <div className={s.bgmBar}>
-                  {bgmInfo.url && <audio ref={bgmRef} src={bgmInfo.url} loop style={{ display: 'none' }} />}
+                  {bgmInfo.url && (
+                    <audio ref={bgmRef} src={bgmInfo.url} loop style={{ display: 'none' }}
+                      onLoadedMetadata={e => setBgmDur(e.target.duration || 0)}
+                      onTimeUpdate={e => { if (!bgmDraggingRef.current) setBgmPos(e.target.currentTime) }} />
+                  )}
                   <button type="button" className={`${s.bgmToggle} ${bgmOn ? s.bgmOnBtn : ''}`} onClick={toggleBgm}
                     disabled={!bgmInfo.url} title={bgmInfo.url ? `${bgmInfo.title} — ${bgmInfo.reason}` : bgmInfo.reason}>
                     🎵 {bgmOn ? 'BGM 끄기' : 'BGM 미리듣기'}
@@ -650,26 +701,54 @@ export default function CheckupTab() {
                   {bgmInfo.url
                     ? <span className={s.bgmTitle}>{bgmInfo.title}{bgmInfo.tags?.length ? ` · ${bgmInfo.tags.join('·')}` : ''}</span>
                     : <span className={s.bgmEmpty}>{bgmInfo.reason || 'BGM 없음'}</span>}
-                  {bgmOn && <input type="range" className={s.bgmVol} min={0} max={1} step={0.05} value={bgmVol}
-                    onChange={e => setBgmVol(Number(e.target.value))} title="BGM 미리듣기 음량" />}
+                  {bgmOn && (
+                    <span className={s.bgmVolMini} title="BGM 미리듣기 음량(저장 안 됨, 이 미리듣기에만 적용)">
+                      🔈<input type="range" className={s.bgmVolSmall} min={0} max={1} step={0.05} value={bgmVol}
+                        onChange={e => setBgmVol(Number(e.target.value))} />
+                    </span>
+                  )}
                   <button type="button" className={s.bgmGainToggle} onClick={() => setGainPanelOpen(v => !v)}
                     title="BGM 구간별 음량 조절 — 특정 구간만 줄이거나 키울 수 있습니다(실제 최종본에도 적용됨)">
                     ⚙ 구간 음량{gainSegments.length ? ` (${gainSegments.length})` : ''}
                   </button>
                 </div>
               )}
+              {/* 2026-11-19(성준님 제안): 곡 자체의 재생 위치(전주~후렴 등)를 보여주고 드래그로
+                  영상 위치와 매치시킬 수 있는 슬라이더 — 음량과는 별개 축이라 줄을 분리했다.
+                  드래그를 시작하면(startBgmDrag) 영상이 멈춰 absoluteElapsed가 고정되고, 끌면서
+                  (dragBgmTo) 그 구간이 바로 들리고, 놓으면(commitBgmDrag) "지금 들리는 곡
+                  위치 = 지금 영상 위치"로 오프셋이 저장되어 실제 최종본에도 반영된다. */}
+              {bgmOn && bgmInfo?.url && bgmDur > 0 && (
+                <div className={s.bgmPosRow}
+                  title="곡 안에서 지금 재생 중인 위치 — 드래그해서 곡의 다른 구간을 지금 영상 위치와 맞출 수 있습니다(손을 떼면 저장되고 실제 최종본에도 반영됩니다)">
+                  <span className={s.bgmPosLabel}>🎼 곡 위치 {fmtTime(bgmPos)} / {fmtTime(bgmDur)}</span>
+                  <input type="range" className={s.bgmPosSlider} min={0} max={bgmDur} step={0.1} value={bgmPos}
+                    onPointerDown={startBgmDrag} onChange={e => dragBgmTo(Number(e.target.value))}
+                    onPointerUp={commitBgmDrag} onMouseUp={commitBgmDrag} onTouchEnd={commitBgmDrag} />
+                </div>
+              )}
               {gainPanelOpen && bgmInfo && (
                 <div className={s.gainPanel}>
+                  {/* 2026-11-19(성준님 지적 — "버튼을 눌러도 이해가 안된다"): 패널이 비어 있을 때
+                      설명이 하나도 없어서, 처음 보는 사람은 "+ 구간 추가" 버튼 하나만 보고 이게
+                      뭘 하는 기능인지 알 길이 없었다. 항상 보이는 설명 한 줄 + 각 입력칸 라벨을
+                      추가 — 숫자 3개(시작·끝·배수)만 덩그러니 있던 것을 글로 풀어준다. */}
+                  <p className={s.gainHint}>
+                    지정한 구간만 BGM 음량을 따로 줄이거나 키웁니다(0.5배=절반, 1배=원래대로, 2배=두 배) — 나레이션 위에서 BGM을 잠깐 낮출 때 씁니다. 추가·수정·삭제는 누르는 즉시 저장되고 실제 최종본에도 그대로 반영됩니다.
+                  </p>
+                  {gainSegments.length === 0 && <p className={s.gainEmptyHint}>아직 설정한 구간이 없습니다 — 아래 버튼으로 지금 재생 위치부터 추가해 보세요.</p>}
                   {gainSegments.map((seg, i) => (
                     <div key={i} className={s.gainRow}>
+                      <span className={s.gainLabel}>시작</span>
                       <input type="number" className={s.gainInput} value={seg[0]} step={0.5} min={0}
                         onChange={e => updateGainSegment(i, 0, Number(e.target.value))} title="시작(초)" />
-                      <span>~</span>
+                      <span className={s.gainLabel}>끝</span>
                       <input type="number" className={s.gainInput} value={seg[1]} step={0.5} min={0}
                         onChange={e => updateGainSegment(i, 1, Number(e.target.value))} title="끝(초)" />
                       <span>s ·</span>
+                      <span className={s.gainLabel}>음량</span>
                       <input type="number" className={s.gainInput} value={seg[2]} step={0.1} min={0} max={3}
-                        onChange={e => updateGainSegment(i, 2, Number(e.target.value))} title="음량 배수(1=기본)" />
+                        onChange={e => updateGainSegment(i, 2, Number(e.target.value))} title="음량 배수(1=기본, 0.5=절반, 2=두 배)" />
                       <span>배</span>
                       <button type="button" className={s.gainRemoveBtn} onClick={() => removeGainSegment(i)} title="이 구간 삭제">✕</button>
                     </div>

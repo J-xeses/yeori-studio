@@ -1,5 +1,5 @@
 {
-  "activeTab": "tts",
+  "activeTab": "checkup",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12996,21 +12996,6 @@
               5.5,
               8
             ]
-          ],
-          "bubbleScenesSaved": [
-            {
-              "text": "저는 여리 친구 한지아 라고 해요!!  \n잘 부탁드립니다~ 꾸벅 ^^",
-              "position": "top_left",
-              "bubble": "cloud",
-              "color": "white",
-              "start": 0.5,
-              "end": 3.7,
-              "font_size": 40,
-              "bubble_scale": 0.9,
-              "offset_x": 0,
-              "offset_y": -0.05,
-              "angle": 0
-            }
           ]
         },
         {
@@ -13436,21 +13421,6 @@
           5.5,
           8
         ]
-      ],
-      "bubbleScenesSaved": [
-        {
-          "text": "저는 여리 친구 한지아 라고 해요!!  \n잘 부탁드립니다~ 꾸벅 ^^",
-          "position": "top_left",
-          "bubble": "cloud",
-          "color": "white",
-          "start": 0.5,
-          "end": 3.7,
-          "font_size": 40,
-          "bubble_scale": 0.9,
-          "offset_x": 0,
-          "offset_y": -0.05,
-          "angle": 0
-        }
       ]
     },
     {
@@ -13634,7 +13604,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T13:51:16.014Z",
+  "savedAt": "2026-11-18T15:21:48.882Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [

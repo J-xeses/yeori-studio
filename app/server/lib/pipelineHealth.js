@@ -211,6 +211,30 @@ async function checkFinalize({ code, cuts, gp, dirs, compose, staleFn }) {
     if (g5All) issues.push({ level: 'fail', msg: `G5 승인인데 최종본(${code}_final.mp4) 없음` })
     return finish({ issues, verified: 0, total: 1, okText: '', emptyText: '최종본 아직 없음' })
   }
+  // 2026-11-18(성준님 제보 — IG_R10 CUT3 자막 완전 누락 실측): "메이킹 탭 손글씨·말풍선/모션자막
+  // 본을 쓰는 컷은 자막 번인을 생략한다"(reelFinalize.js decideCut 로직)는 그 오버레이 안에 진짜
+  // 필요한 대사가 들어있다는 걸 전제로 한다 — 틀리면(엉뚱한 문구를 얹었거나, 오버레이가 클립
+  // 일부 구간에만 있으면) 자막이 어디에도 안 나오는 채로 조용히 최종본까지 간다. 픽셀을 OCR
+  // 하지 않는 한 "그 오버레이에 맞는 대사가 들어있는지"는 자동으로 못 끊는다 — 그래서 여기선
+  // 판정하지 않고, 이 전제가 적용된 컷마다 매번 사람이 눈으로 확인하라고 warn 으로 띄운다
+  // (판정 불가 = 조용히 넘어가지 않기, [[project_g4g5_flag_vs_file_integrity_gap]] 같은 원칙).
+  for (const cut of (cuts || [])) {
+    const cp = String(cut.subtitle || '').trim()
+    if (!cp || cut.captionOff === true) continue
+    const sh = String(cut.masterCode?.sh || '')
+    if (cut.cutType === 'GRAPHIC' && /SH_TE?XT/i.test(sh)) continue
+    const picked = mp.pickCutSource(dirs.video, cut.no)
+    if (picked.derived) {
+      const kind = picked.derived === 'subtitle' ? '모션 자막' : '손글씨·말풍선'
+      issues.push({ level: 'warn', msg: `컷 ${cut.no}: 메이킹 ${kind} 오버레이가 자막 대체(번인 생략) — 오버레이에 실제 대사("${cp.slice(0, 24)}${cp.length > 24 ? '…' : ''}") 들어있는지 화면으로 직접 확인(자동 검증 불가)` })
+    }
+  }
+  // BGM 자동 선곡이 "대본엔 BGM 필요한데 라이브러리에 맞는 트랙이 없음"으로 끝난 경우 — 지금까진
+  // _finalize.json 에 문구만 조용히 남고 화면 어디에도 경보가 없었다.
+  const manifest = readJson(path.join(dirs.final, `${code}_finalize.json`), null)
+  if (manifest?.bgm && /트랙\s*없음/.test(manifest.bgm)) {
+    issues.push({ level: 'warn', msg: `BGM 자동 선곡 실패 — ${manifest.bgm}` })
+  }
   const p = await probeStreams(finalPath)
   let volText = ''
   if (!p?.ok || p.video < 1 || p.duration <= 0.3) issues.push({ level: 'fail', msg: `최종본 손상(비디오 ${p?.video ?? 0}개 · ${(p?.duration || 0).toFixed(1)}초)` })

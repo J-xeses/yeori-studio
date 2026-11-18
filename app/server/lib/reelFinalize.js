@@ -581,6 +581,12 @@ export async function finalizeReel(p) {
   // 그 구간만 음량을 올리거나 내릴 수 있게. 배수 1.0=그대로, 2.0=2배. adelay 뒤에 이어 붙여서
   // enable=between(t,..) 의 t 가 최종 영상 타임라인과 그대로 맞는다(bgmStart 오프셋과 무관).
   const bgmGainSegments = Array.isArray(loadOverrides(code)._bgm?.gainSegments) ? loadOverrides(code)._bgm.gainSegments : []
+  // BGM 트랙 안에서 "어느 지점부터" 재생을 시작할지(2026-11-19, 성준님 요청 — 체크업 탭에서
+  // 곡의 특정 구간을 영상과 매칭시켜 고를 수 있게). 기본 0초(트랙 맨 앞부터, 기존 동작과 동일).
+  // -ss 로 bgmAbs 자체를 그 지점부터 읽게 한다 — 릴스 길이(보통 수십 초)가 보통 트랙 길이보다
+  // 훨씬 짧아 -stream_loop 가 실제로 한 바퀴 도는 일이 거의 없으므로, 루프 재시작 지점이
+  // 오프셋이 아니라 트랙 처음으로 돌아가는 ffmpeg 동작은 지금 규모에선 영향이 없다.
+  const bgmOffsetSec = Math.max(0, Number(loadOverrides(code)._bgm?.offsetSec) || 0)
   const vdir = mp.videoDir(epNum)
   const fdir = mp.finalDir(epNum)
   const mdir = mp.makingDir(epNum)
@@ -957,6 +963,7 @@ export async function finalizeReel(p) {
   if (bgmAbs && fs.existsSync(bgmAbs)) {
     // 사람이 곡을 직접 고른 경우는 처음부터 깐다. 자동일 때는 대본에서 BGM 문구가 처음 나오는 컷부터.
     const bgmStart = bgmFile ? 0 : (decisions.find((d) => d.bgmText && !/없음/.test(d.bgmText))?.startSec ?? 0)
+    if (bgmOffsetSec > 0) sfxInputs.push('-ss', bgmOffsetSec.toFixed(2))
     sfxInputs.push('-stream_loop', '-1', '-i', bgmAbs)
     const bi = idx
     const fadeOut = Math.max(0, totalDur - 1.5)
@@ -967,7 +974,7 @@ export async function finalizeReel(p) {
       .join('')
     sfxFilters.push(`[${bi}:a]atrim=0:${(totalDur - bgmStart).toFixed(2)},adelay=${Math.round(bgmStart * 1000)}|${Math.round(bgmStart * 1000)},volume=0.13${segFilter},afade=t=in:st=${bgmStart.toFixed(2)}:d=1.2,afade=t=out:st=${fadeOut.toFixed(2)}:d=1.5[bgm]`)
     bgmFilterOut = '[bgm]'
-    bgmNote = `BGM: ${path.basename(bgmAbs)} (-17dB, 루프)${segFilter ? ` · 구간보정 ${bgmGainSegments.length}곳` : ''}`
+    bgmNote = `BGM: ${path.basename(bgmAbs)} (-17dB, 루프)${bgmOffsetSec > 0 ? ` · 트랙 ${bgmOffsetSec.toFixed(1)}s 지점부터` : ''}${segFilter ? ` · 구간보정 ${bgmGainSegments.length}곳` : ''}`
     idx++
   } else if (wantsBgm) {
     bgmNote = 'BGM 필요(대본) 하나 _shared/bgm 에 트랙 없음 — CapCut 에서 추가'
