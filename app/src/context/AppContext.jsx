@@ -62,7 +62,7 @@ const defaultState = {
   cuts: makeCuts(7),
   scriptRaw: '',
 
-  ttsSettings: { voiceId: 'RmYuvmCbqOMBJxDLW4k8', emotion: 35, tone: 75, speed: 1.0,
+  ttsSettings: { voiceId: 'free:ko-KR-SunHiNeural', emotion: 35, tone: 75, speed: 1.0,
     trackDefaults: {
       dialogue:  { speed: 0.9,  stability: 30, similarity: 75 },
       narration: { speed: 0.85, stability: 55, similarity: 75 },
