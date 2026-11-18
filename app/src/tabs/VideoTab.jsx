@@ -1626,15 +1626,23 @@ export default function VideoTab() {
   }
 
   // segments — 이 컷의 자막 구간(computeCaptionSegments 결과, 호출부가 cuts.map 안에서
-  // 이미 계산해둔 cutSegs를 그대로 넘김). 릴스거나 자막 OFF면 호출부가 undefined로 보냄 —
-  // 그땐 기존과 완전히 동일하게(번인 없이) 동작한다(2026-11-03, 성준님 요청: "영상 탭
-  // 설정을 실제 번인 영상으로").
+  // 이미 계산해둔 cutSegs를 그대로 넘김). 자막 OFF면 호출부가 undefined로 보냄 — 그땐
+  // 기존과 완전히 동일하게(번인 없이) 동작한다(2026-11-03, 성준님 요청: "영상 탭 설정을
+  // 실제 번인 영상으로").
+  // 2026-11-18 수정(성준님 제보 — "영상탭 컷 단독 미리듣기가 나레이션+자막 같이 확인하는
+  // 역할 아닌가?"): 이 미리듣기가 릴스는 무조건 자막을 안 구웠다(burnSubtitle에 !isReel).
+  // 그런데 reelFinalize.js(진짜 최종 조립)를 보면 자막 렌더 엔진은 포맷이 아니라
+  // reelStyle.captionStyle로 갈린다 — 'handwriting'이 아니면(기본값) 릴스도 SF/LF와 똑같이
+  // drawtext를 쓴다. R10도 handwriting 설정을 켠 적이 없어 기본(drawtext)이므로, 이 미리듣기가
+  // 릴스를 통째로 빼놓을 이유가 없었다 — 포맷이 아니라 실제로 쓰일 엔진 기준으로 바꾼다.
+  // (손글씨 엔진(handwriting_overlay.py)은 이 미리듣기 경로에 아직 안 연결돼 있어 그 설정을
+  // 쓰는 에피소드는 여전히 음성만 — 별개 후속 작업 범위.)
   const runFfmpegForCut = async (cut, retried = false, segments) => {
     setFfmpegStatus(p => ({ ...p, [cut.id]: 'running' }))
     setFfmpegLog(p => ({ ...p, [cut.id]: '미리듣기 생성 시작…' }))
     try {
       const ep = episode?.number ?? ''
-      const burnSubtitle = !isReel && subtitleEnabled && Array.isArray(segments) && segments.some(s => String(s.text || '').trim())
+      const burnSubtitle = reelStyle.captionStyle !== 'handwriting' && subtitleEnabled && Array.isArray(segments) && segments.some(s => String(s.text || '').trim())
       const res = await fetch('http://localhost:3001/api/run-ffmpeg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

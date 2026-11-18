@@ -302,6 +302,47 @@
       }
     ]
   },
+  "10": {
+    "updatedAt": "2026-11-18T11:11:50.990Z",
+    "clips": [
+      {
+        "clipId": "c-10-01-a",
+        "sourceCutNo": 1,
+        "sourceFile": "cut_01.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 7.936,
+        "effect": null,
+        "order": 0
+      },
+      {
+        "clipId": "c-10-02-a",
+        "sourceCutNo": 2,
+        "sourceFile": "cut_02.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 7.936,
+        "effect": null,
+        "order": 1
+      },
+      {
+        "clipId": "c-10-03-a",
+        "sourceCutNo": 3,
+        "sourceFile": "cut_03.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 7.933333,
+        "effect": null,
+        "order": 2
+      },
+      {
+        "clipId": "c-10-04-a",
+        "sourceCutNo": 4,
+        "sourceFile": "cut_04.mp4",
+        "trimInSec": 0,
+        "trimOutSec": 7.936,
+        "effect": null,
+        "order": 3
+      }
+    ]
+  },
   "12": {
     "updatedAt": "2026-11-13T05:09:48.142Z",
     "clips": [

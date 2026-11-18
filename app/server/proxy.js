@@ -5567,7 +5567,12 @@ app.post('/api/run-ffmpeg', async (req, res) => {
   const outDir   = mp.outputDir(ep)
   fs.mkdirSync(outDir, { recursive: true })
 
-  const videoFile = path.join(videoDir, `cut_${padded}.mp4`)
+  // 2026-11-18 수정(성준님 제보 — 메이킹 탭에서 말풍선/손글씨 효과(cut_NN_overlay.mp4)를
+  // 얹은 컷이 이 미리듣기에선 그 효과가 안 보임): 항상 cut_NN.mp4(원본)만 읽고 있어서,
+  // reelFinalize.js(진짜 최종 조립)가 쓰는 mp.pickCutSource(최신 _overlay/_subtitle 파생본
+  // 우선)와 서로 다른 영상을 보고 있었다. 같은 기준으로 통일 — 덮어씀/충돌이 아니라, 이
+  // 미리듣기 하나만 효과를 "못 보고" 있던 것뿐이었다(cut_NN_overlay.mp4 자체는 안전함).
+  const videoFile = mp.pickCutSource(videoDir, cutNo).path || path.join(videoDir, `cut_${padded}.mp4`)
   // 대사(DL) 있는 컷은 영상(Flow/Veo) 자체 음성을 이미 쓴다 — TTSTab 미리듣기 "합치기"가
   // 대사 트랙까지 같이 cut_NN.mp3 로 저장해버린 경우, 그걸 "나레이션"으로 여기서 또 얹으면
   // 영상에 이미 있는 대사 위에 TTS 대사가 겹쳐 들려 대사가 꼬인다(2026-09-29, IG_R06 컷1 실측
