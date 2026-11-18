@@ -8,7 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID, createHash } from 'node:crypto'
 import { isV3Format, parseCutsV3, parseV3GlobalHeader, pipelineCodeToInstaContent } from './lib/scriptParserV3.js'
-import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings } from './lib/reelFinalize.js'
+import { finalizeReel, enrichCutsFromScript, checkFinalStale, autoCaptionTimings, hasVoiceNarration } from './lib/reelFinalize.js'
 import { applyOverrides as applyReelOverrides, setOverride as setReelOverride, loadOverrides as loadReelOverrides } from './lib/reelOverrides.js'
 import { renderTrackMatte, renderTrackMattePreview, listTrackMatteResults, loadTrackMatteConfig } from './lib/trackMatte.js'
 import { buildSubtitleDrawtextFilter } from './lib/subtitleBurn.js'
@@ -8396,12 +8396,20 @@ app.get('/api/episode-video-checklist', (req, res) => {
       let startFrame = null
       if (g.selectedImage && flowFiles.includes(g.selectedImage)) startFrame = g.selectedImage
       if (!startFrame) startFrame = flowFiles.find(f => new RegExp(`^cut_${p}(_[a-z0-9]{1,2})?\\.(jpe?g|png|webp)$`, 'i').test(f))
-      // 다운스트림 소비자(run-cutter / assembleMakingFilm / concat-video)가 전부 이 파일명을 읽는다
-      const savedFile = videoFiles.find(f => new RegExp(`^cut_${p}(_final|_overlay)?\\.mp4$`, 'i').test(f)) || null
+      // 2026-11-18 수정(성준님 지적 — "체크업 탭에 배치되는 파일 경로가 실제로 맞는지 점검하자"):
+      // 이 필드가 이전엔 videoFiles 배열에서 regex.find()로 "cut_NN(_final|_overlay)?.mp4"만
+      // 찾았는데, ① _subtitle.mp4(메이킹 탭 "자막 효과" 합성 결과)는 전혀 인식 못 했고 ②
+      // find()는 mtime을 안 보고 배열 순서상 먼저 나오는 파일을 반환하므로, base(cut_NN.mp4)가
+      // 있으면 그보다 새로 만들어진 _final/_overlay가 있어도 항상 base를 먼저 찾아버렸다(실측
+      // 확인됨) — 즉 체크업 탭 미리보기(videoUrl)가 실제 최종 조립(reelFinalize.js, 아래
+      // finalSource와 동일 로직)과 다른, 더 오래된 영상을 보여줄 수 있었다. mp.pickCutSource를
+      // 그대로 써서 둘을 아예 같은 값으로 통일한다 — 미리보기≠실제발행 가능성을 원천 차단.
+      const picked = mp.pickCutSource(videoDir, c.no)
+      const savedFile = picked.path ? path.basename(picked.path) : null
       const targetSec = serverCutTargetDuration(c, reelOv[String(c.no)])
       // 체크업 탭 뱃지용 실측 — 대본 목표(targetSec)보다 실제 렌더 파일이 짧으면(Veo 8/10초
       // 생성단위 제약 등으로) run-cutter가 캡컷 배치 시 자동으로 길이를 잘라낸다 — 사전에 표시.
-      const probed = savedFile ? mp.probeMedia(path.join(videoDir, savedFile), true) : null
+      const probed = picked.path ? mp.probeMedia(picked.path, true) : null
       const actualDurationSec = probed ? probed.durationUs / 1000000 : null
       return {
         no: c.no,
@@ -8431,17 +8439,22 @@ app.get('/api/episode-video-checklist', (req, res) => {
         startFrame: startFrame ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.imagesDir(epNum), startFrame))}` : null,
         startFrameName: startFrame || null,
         hasImage: !!startFrame,
-        hasAudio: fs.existsSync(path.join(audioDir, `cut_${p}.mp3`)),
+        // 2026-11-18 수정: 예전엔 cut_NN.mp3만 봤는데, reelFinalize.js(진짜 최종 조립)는 대사가
+        // 있는 컷은 cut_NN_nr.mp3를, 없는 컷은 cut_NN.mp3를 찾는다(d.nrFileExpected) — 또한
+        // voiceSource==='video'(나레이션이 Flow/Veo 영상 자체에 내장된 컷, ⑬-4)는 TTS 파일을
+        // 아예 안 쓰므로 needsNarration 자체가 false. 이 셋을 그대로 반영해 "오디오 파일이 실제로
+        // 최종본에 쓰일 것"만 true가 되게 한다(03_audio에 예전 방식 흔적 mp3가 남아있어도 무시).
+        needsNarration: hasVoiceNarration(c) && c.voiceSource !== 'video',
+        hasAudio: (hasVoiceNarration(c) && c.voiceSource !== 'video')
+          ? fs.existsSync(path.join(audioDir, String(c.dialogue || '').trim() ? `cut_${p}_nr.mp3` : `cut_${p}.mp3`))
+          : false,
         hasVideo: !!savedFile,
-        mtimeMs: savedFile ? fs.statSync(path.join(videoDir, savedFile)).mtimeMs : null,
-        // 최종 영상 조립이 실제로 쓸 파일(메이킹 탭에서 얹은 자막·말풍선본 포함) — "최종 합성본" 미리보기용
-        ...(() => {
-          const pk = mp.pickCutSource(videoDir, c.no)
-          if (!pk.path) return { finalSource: null, finalDerived: null, finalMtimeMs: null }
-          return { finalSource: path.basename(pk.path), finalDerived: pk.derived, finalMtimeMs: fs.statSync(pk.path).mtimeMs }
-        })(),
-        savedFile,                              // 실제 저장된 파일명(cut_NN.mp4 / _overlay / _final)
-        videoUrl: savedFile ? `http://localhost:3001${mp.toMediaUrl(path.join(mp.videoDir(epNum), savedFile))}` : null,
+        mtimeMs: picked.path ? fs.statSync(picked.path).mtimeMs : null,
+        // finalSource/finalDerived — 위 picked와 완전히 같은 호출 결과(이제 videoUrl도 이걸 씀) —
+        // 필드명은 호환을 위해 유지하되 중복 fs.stat은 없앤다.
+        finalSource: savedFile, finalDerived: picked.derived || null, finalMtimeMs: picked.path ? fs.statSync(picked.path).mtimeMs : null,
+        savedFile,                              // 실제 쓰일 파일명(cut_NN.mp4 / _overlay / _subtitle) — finalSource와 동일
+        videoUrl: picked.path ? `http://localhost:3001${mp.toMediaUrl(picked.path)}` : null,
         savePath: mp.toMediaUrl(path.join(mp.videoDir(epNum), `cut_${p}.mp4`)).replace(/^\//, ''),   // 업로드 시 정규화되어 저장되는 위치
         g2: !!g.g2, g4: !!g.g4,
         motionBaked: isMotionBaked(c),           // true면 캡컷 켄번스 적용 안 됨(메이킹 탭에서 이미 모션 내장)

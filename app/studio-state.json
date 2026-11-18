@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "tts",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12891,11 +12891,10 @@
           "action": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
           "character": "서여리",
           "dialogue": "(자막) 아직… 왜?",
-          "narration": "(나레이션) 걱정된다는 뜻으로 건네는 말이에요.",
-          "subtitle": "걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?",
+          "narration": "(나레이션) 걱정된다는 뜻으로 하는 말이에요.",
+          "subtitle": "걱정된다는 뜻으로 하는 말이에요. / 아직… 왜?",
           "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot, \nseated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting, \npuzzled thoughtful expression, slightly leaning forward, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, explaining young woman's voice says in Korean: \"걱정된다는 뜻으로 건네는 말이에요.\" [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply (\"아직… 왜?\") is added as on-screen text in post. Barefoot or socks only, no shoes worn (indoor home setting).",
-          "voiceSource": "video",
+          "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking. NO dialogue, NO lip movement — this is a silent beat; the Korean narration (\"걱정된다는 뜻으로 하는 말이에요.\") is added afterward as a separate voice-over in post-production, not generated here. [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply (\"아직… 왜?\") is added as on-screen text in post. Barefoot or socks only, no shoes worn (indoor home setting).",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -12935,11 +12934,11 @@
           },
           "captionSegTiming": [
             [
-              1,
+              0,
               5
             ],
             [
-              5.5,
+              5,
               8
             ]
           ]
@@ -13141,11 +13140,10 @@
       "action": "0~5초 폰 화면(흐리게)에 답장 입력하는 손, 나레이션 → 5~8초 \"아직… 왜?\" 입력 후 전송",
       "character": "서여리",
       "dialogue": "(자막) 아직… 왜?",
-      "narration": "(나레이션) 걱정된다는 뜻으로 건네는 말이에요.",
-      "subtitle": "걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?",
+      "narration": "(나레이션) 걱정된다는 뜻으로 하는 말이에요.",
+      "subtitle": "걱정된다는 뜻으로 하는 말이에요. / 아직… 왜?",
       "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot, \nseated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting, \npuzzled thoughtful expression, slightly leaning forward, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, explaining young woman's voice says in Korean: \"걱정된다는 뜻으로 건네는 말이에요.\" [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply (\"아직… 왜?\") is added as on-screen text in post. Barefoot or socks only, no shoes worn (indoor home setting).",
-      "voiceSource": "video",
+      "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking. NO dialogue, NO lip movement — this is a silent beat; the Korean narration (\"걱정된다는 뜻으로 하는 말이에요.\") is added afterward as a separate voice-over in post-production, not generated here. [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply (\"아직… 왜?\") is added as on-screen text in post. Barefoot or socks only, no shoes worn (indoor home setting).",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -13185,11 +13183,11 @@
       },
       "captionSegTiming": [
         [
-          1,
+          0,
           5
         ],
         [
-          5.5,
+          5,
           8
         ]
       ]
@@ -13428,7 +13426,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T06:50:22.794Z",
+  "savedAt": "2026-11-18T09:24:45.821Z",
   "videoTabState": {
     "videoClips": {
       "cut-1": [
@@ -13480,14 +13478,56 @@
     "g4Approved": {
       "cut-1": true
     },
-    "selectedCutId": "cut-3",
+    "selectedCutId": "cut-2",
     "subtitles": {}
   },
   "ttsTabState": {
     "audioUrls": {},
     "audioTexts": {},
     "g3Confirmed": {},
-    "focusCutId": null
+    "focusCutId": null,
+    "voiceTabs": {
+      "cut-2": [
+        {
+          "id": "v1",
+          "label": "목소리 1",
+          "voiceId": "RmYuvmCbqOMBJxDLW4k8"
+        }
+      ]
+    },
+    "tracks": {
+      "cut-2__v1": [
+        {
+          "id": "track_1794994126097_2nop",
+          "type": "dialogue",
+          "text": "아직… 왜?",
+          "speaker": null,
+          "url": null,
+          "voiceId": "",
+          "settings": {
+            "speed": 0.95,
+            "stability": 30,
+            "similarity": 75
+          }
+        },
+        {
+          "id": "track_1794994126098_jzsg",
+          "type": "narration",
+          "text": "걱정된다는 뜻으로 하는 말이에요.",
+          "speaker": null,
+          "url": "http://localhost:3001/downloads/seoyeori/IG/IG_R/IG_R10/03_audio/tts-previews/cut_02_track_1794994126098_jzsg.mp3?t=1794994160683",
+          "voiceId": "",
+          "settings": {
+            "speed": 0.85,
+            "stability": 53,
+            "similarity": 75
+          }
+        }
+      ]
+    },
+    "mergedUrls": {
+      "cut-2__v1": "blob:http://localhost:5173/c61ebc05-a716-453c-b668-5202d90d022b"
+    }
   },
   "voiceInsertState": {
     "tracks": {}
