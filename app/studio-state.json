@@ -1,5 +1,5 @@
 {
-  "activeTab": "studio",
+  "activeTab": "script",
   "vertexAI": true,
   "elevenLabsStatus": {
     "connected": true,
@@ -12843,7 +12843,8 @@
           "narration": "(나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
           "subtitle": "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
           "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, \nwearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired, \nwarm indoor evening lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-          "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy, flat young woman's voice says in Korean: \"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\" No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "voiceSource": "video",
           "duration": 8,
           "shotType": "CLOSEUP",
           "cutType": "YEORI",
@@ -12874,7 +12875,12 @@
               "md": "지침, 무심함"
             }
           },
-          "voiceSource": "video"
+          "captionSegTiming": [
+            [
+              3,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-2",
@@ -12889,6 +12895,7 @@
           "subtitle": "걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?",
           "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot, \nseated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting, \npuzzled thoughtful expression, slightly leaning forward, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
           "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, explaining young woman's voice says in Korean: \"걱정된다는 뜻으로 건네는 말이에요.\" [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply (\"아직… 왜?\") is added as on-screen text in post. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "voiceSource": "video",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -12926,7 +12933,16 @@
               "reason": "스튜디오 화면에서 직접 수정"
             }
           },
-          "voiceSource": "video"
+          "captionSegTiming": [
+            [
+              1,
+              5
+            ],
+            [
+              5.5,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-3",
@@ -12970,7 +12986,17 @@
               "ac": "[클립1 0~4초] 여리가 문을 활짝 열어 지아를 보고 반가운 표정(대사 없음), 문밖의 지아는 도시락을 살짝 들어 보임 → [클립2 4~8초, 하드컷·미들샷] 지아가 이미 현관 안에 서 있고(양말, 스니커즈는 현관에 가지런히) 여리가 먼저 대사, 이어 지아가 대사하며 도시락을 내밈. 신발 벗는 장면은 직접 연출하지 않고 컷 전환으로 처리",
               "md": "반가움 → 다정함"
             }
-          }
+          },
+          "captionSegTiming": [
+            [
+              4,
+              5.5
+            ],
+            [
+              5.5,
+              8
+            ]
+          ]
         },
         {
           "id": "cut-4",
@@ -12985,6 +13011,7 @@
           "subtitle": "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.",
           "imagePrompt": "MEDIUM SHOT — same two young Korean women, same faces, sitting together on the living room floor/low table in the evening, \nThe woman on the right: same lounge t-shirt, barefoot, warm genuine smile. The woman on the left: same short wavy black bob with curtain bangs, same cropped black-and-white houndstooth tweed jacket, white ribbed knit top, black pleated mini skirt, black knee-high socks, silver heart necklace, warm genuine smile, small black shoulder bag resting on the floor beside her, DO NOT change clothing, \na cloth-wrapped lunchbox opened on the table between them with simple home-style side dishes, both eating together with chopsticks, warm cozy indoor lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
           "videoPrompt": "[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a warm, sincere young woman's voice says in Korean: \"밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.\" No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+          "voiceSource": "video",
           "duration": 8,
           "shotType": "FULLBODY",
           "cutType": "YEORI",
@@ -13021,8 +13048,7 @@
               "at": "2026-11-17T14:56:17.021Z",
               "reason": "스튜디오 화면에서 직접 수정"
             }
-          },
-          "voiceSource": "video"
+          }
         }
       ],
       "scriptRaw": "",
@@ -13061,7 +13087,8 @@
       "narration": "(나레이션) 한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
       "subtitle": "한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.",
       "imagePrompt": "MEDIUM CLOSE-UP — a young Korean woman in her early 20s, long wavy dark brown hair falling loosely, clear healthy skin, smooth even complexion with a soft natural finish, \nwearing a casual lounge t-shirt and soft home pants, barefoot, sitting slouched on a living room sofa in the evening, visibly tired, \nwarm indoor evening lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on phone screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
-      "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy, flat young woman's voice says in Korean: \"한국에서 '밥 먹었어?'는 진짜 밥 질문이 아니에요.\" No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "videoPrompt": "[0-4s] She sits slumped on her living room sofa, barefoot, scrolling her phone with a tired, puzzled look, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a drowsy. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "voiceSource": "video",
       "duration": 8,
       "shotType": "CLOSEUP",
       "cutType": "YEORI",
@@ -13092,7 +13119,12 @@
           "md": "지침, 무심함"
         }
       },
-      "voiceSource": "video"
+      "captionSegTiming": [
+        [
+          3,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-2",
@@ -13107,6 +13139,7 @@
       "subtitle": "걱정된다는 뜻으로 건네는 말이에요. / 아직… 왜?",
       "imagePrompt": "MEDIUM SHOT — the same young Korean woman, same face, same lounge t-shirt, barefoot, \nseated on the sofa, close framing on her hand typing a reply on her phone, the phone screen softly blurred and not legible, warm indoor evening lighting, \npuzzled thoughtful expression, slightly leaning forward, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no legible text on screen, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
       "videoPrompt": "[0-5s] Close on her hand typing a reply on her phone (screen softly blurred), puzzled thoughtful expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a calm, explaining young woman's voice says in Korean: \"걱정된다는 뜻으로 건네는 말이에요.\" [5-8s] She types a reply and taps send, still silent, mouth closed. No on-screen subtitle text or captions — her typed reply (\"아직… 왜?\") is added as on-screen text in post. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "voiceSource": "video",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -13144,7 +13177,16 @@
           "reason": "스튜디오 화면에서 직접 수정"
         }
       },
-      "voiceSource": "video"
+      "captionSegTiming": [
+        [
+          1,
+          5
+        ],
+        [
+          5.5,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-3",
@@ -13188,7 +13230,17 @@
           "ac": "[클립1 0~4초] 여리가 문을 활짝 열어 지아를 보고 반가운 표정(대사 없음), 문밖의 지아는 도시락을 살짝 들어 보임 → [클립2 4~8초, 하드컷·미들샷] 지아가 이미 현관 안에 서 있고(양말, 스니커즈는 현관에 가지런히) 여리가 먼저 대사, 이어 지아가 대사하며 도시락을 내밈. 신발 벗는 장면은 직접 연출하지 않고 컷 전환으로 처리",
           "md": "반가움 → 다정함"
         }
-      }
+      },
+      "captionSegTiming": [
+        [
+          4,
+          5.5
+        ],
+        [
+          5.5,
+          8
+        ]
+      ]
     },
     {
       "id": "cut-4",
@@ -13203,6 +13255,7 @@
       "subtitle": "밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.",
       "imagePrompt": "MEDIUM SHOT — same two young Korean women, same faces, sitting together on the living room floor/low table in the evening, \nThe woman on the right: same lounge t-shirt, barefoot, warm genuine smile. The woman on the left: same short wavy black bob with curtain bangs, same cropped black-and-white houndstooth tweed jacket, white ribbed knit top, black pleated mini skirt, black knee-high socks, silver heart necklace, warm genuine smile, small black shoulder bag resting on the floor beside her, DO NOT change clothing, \na cloth-wrapped lunchbox opened on the table between them with simple home-style side dishes, both eating together with chopsticks, warm cozy indoor lighting, \nphotorealistic 8K cinematic, natural Korean beauty, vertical 9:16, no other people, avoid: acne, pimples, blemishes, skin blotches, redness, oily shine, Barefoot or socks only, no shoes worn (indoor home setting).",
       "videoPrompt": "[0-4s] The two women sit together at the living room table, eating from the shared lunchbox, warm and relaxed. [4-6s] They pause, chopsticks resting, exchanging a quiet smile — a held breath of stillness, no sound but faint ambient room noise. [6-8s] The woman on the right looks toward camera with a warm soft expression, mouth closed, not speaking on camera. Add an off-screen voice-over narration (V.O. — she does not speak on camera, no lip movement, no mouth movement): a warm, sincere young woman's voice says in Korean: \"밥 먹었냐는 말은, 네가 신경 쓰인다는 뜻이에요.\" No on-screen subtitle text or captions. Barefoot or socks only, no shoes worn (indoor home setting).",
+      "voiceSource": "video",
       "duration": 8,
       "shotType": "FULLBODY",
       "cutType": "YEORI",
@@ -13239,8 +13292,7 @@
           "at": "2026-11-17T14:56:17.021Z",
           "reason": "스튜디오 화면에서 직접 수정"
         }
-      },
-      "voiceSource": "video"
+      }
     }
   ],
   "scriptRaw": "",
@@ -13364,7 +13416,7 @@
     "lastCheckedAt": null
   },
   "projectName": "새 프로젝트",
-  "savedAt": "2026-11-18T06:24:25.820Z",
+  "savedAt": "2026-11-18T06:50:22.794Z",
   "videoTabState": {
     "videoClips": {},
     "g4Approved": {},
