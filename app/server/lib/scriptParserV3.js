@@ -326,7 +326,10 @@ const SILENT_FILM_ADDENDUM = 'NO dialogue. NO speaking. NO lip movement. MOUTH S
 // 가드가 그 뒤에 "SILENT FILM"(음성 자체를 내지 말라는 뜻)을 또 붙이면 같은 VP 안에서 서로
 // 모순되는 지시가 된다. VP가 이미 voice-over/V.O. 생성을 명시했으면 이 가드를 건너뛴다 —
 // 그 외(기존 "포스트 TTS로 별도 삽입" 방식) 컷은 그대로 SILENT FILM 강제 유지.
-const VOICEOVER_VP_RE = /voice-over|\bV\.O\.\b/i
+// "off-screen"도 포함 — CUT3류(지아 전화 목소리처럼 화면엔 안 나오고 목소리만 출연하는 조연)
+// 대사 VP는 "voice-over"/"V.O."란 단어 없이 "a close friend's voice (off-screen, ...) says in
+// Korean"처럼 쓰기 때문(2026-11-18, IG_R09 CUT3로 재확인).
+const VOICEOVER_VP_RE = /voice-over|\bV\.O\.\b|off-screen/i
 function applyNarrationSilentGuard(dl, nr, vp) {
   if (dl || !nr || !vp) return vp
   if (vp.includes(SILENT_FILM_ADDENDUM)) return vp // 멱등성
@@ -383,6 +386,11 @@ export function parseCutsV3(raw) {
     const barefootGuarded = applyIndoorBarefootGuard(spaceDetectionText, kr.AC, ip, vp)
     const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
     const silentGuardedVp = applyNarrationSilentGuard(dl, nr, castGuarded.vp)
+    // 2026-11-18(IG_R10 실측): voiceSource를 사람이 따로 표시해두는 값으로 두면, 대본을
+    // 다시 파싱할 때마다(이 함수가 매번 cuts를 새로 만듦) 날아간다 — VP 문구 자체가 이미
+    // "off-screen voice-over narration (V.O. ...)"를 명시하는지로 매번 다시 판정해서, 재파싱
+    // 되어도 절대 틀어지지 않게 한다(사람이 따로 안 챙겨도 됨).
+    const voiceSource = VOICEOVER_VP_RE.test(silentGuardedVp) ? 'video' : undefined
 
     return {
       id: `cut-${rc.no}`,
@@ -397,6 +405,7 @@ export function parseCutsV3(raw) {
       narration: nr,
       imagePrompt: castGuarded.ip,
       videoPrompt: silentGuardedVp,
+      ...(voiceSource ? { voiceSource } : {}),
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,

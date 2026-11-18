@@ -614,7 +614,10 @@ const SILENT_FILM_ADDENDUM = 'NO dialogue. NO speaking. NO lip movement. MOUTH S
 // 2026-11-18(IG_R10 실측, server/lib/scriptParserV3.js와 동일 유지): ⑬-4(V.O. 영상 내장 생성,
 // v1.4.7 2026-11-15) VP는 "Add an off-screen voice-over narration (V.O. ...)"로 Flow가 음성을
 // 직접 생성하게 지시하는데, 이 가드가 SILENT FILM을 또 붙이면 서로 모순되는 지시가 된다.
-const VOICEOVER_VP_RE = /voice-over|\bV\.O\.\b/i
+// "off-screen"도 포함 — CUT3류(화면엔 안 나오고 목소리만 출연하는 조연) 대사 VP는 "voice-over"/
+// "V.O."란 단어 없이 "a close friend's voice (off-screen, ...) says in Korean"처럼 쓰기 때문
+// (2026-11-18, IG_R09 CUT3로 재확인, server/lib/scriptParserV3.js와 동일 유지).
+const VOICEOVER_VP_RE = /voice-over|\bV\.O\.\b|off-screen/i
 function applyNarrationSilentGuard(dl, nr, vp) {
   if (dl || !nr || !vp) return vp
   if (vp.includes(SILENT_FILM_ADDENDUM)) return vp // 멱등성
@@ -668,6 +671,10 @@ export function parseCutsV3(raw) {
     const castGuarded = applyPrivateCastGuard(spaceDetectionText, fields.CH, barefootGuarded.ip, barefootGuarded.vp)
     const silentGuardedVp = applyNarrationSilentGuard(dl, nr, castGuarded.vp)
     const beatVal = normalizeBeat(fields.BEAT)
+    // 2026-11-18(IG_R10 실측, server/lib/scriptParserV3.js와 동일 유지): voiceSource를 사람이
+    // 따로 표시해두는 값으로 두면 대본을 다시 파싱할 때마다 날아간다 — VP 문구가 이미
+    // off-screen voice-over(V.O.)를 명시하는지로 매번 다시 판정해 재파싱에도 안 틀어지게 한다.
+    const voiceSource = VOICEOVER_VP_RE.test(silentGuardedVp) ? 'video' : undefined
 
     return {
       id: `cut-${rc.no}`,
@@ -682,6 +689,7 @@ export function parseCutsV3(raw) {
       subtitle: cp,
       imagePrompt: castGuarded.ip,
       videoPrompt: silentGuardedVp,
+      ...(voiceSource ? { voiceSource } : {}),
       duration: parseInt(fields.DU, 10) || 8,
       shotType: MASTER_CLOSEUP_SHOTS.has(firstSh) ? 'CLOSEUP' : 'FULLBODY',
       cutType,
